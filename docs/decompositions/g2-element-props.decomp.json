@@ -75,5 +75,86 @@
     "deliverable": "PropType<T>/Types + prop.* (PropConfig) + ReactiveProps<S>, plus a tsc-gated typing fixture: `interface X extends ReactiveProps<typeof props> {}` over a `prop.enum([...] as const, …)` schema, with `// @ts-expect-error` lines proving an enum accessor is the literal union ('solid'|'soft'|'ghost'), NOT widened to `string`, and that a wrong-literal assignment fails.",
     "smallest_dep": "the strict tsconfig only (erasableSyntaxOnly/verbatimModuleSyntax). The typing proof is purely compile-time — no kernel, no element, no DOM. The runtime install (p-install, finalize → signal-backed accessors) is the NEXT slice and is the first that touches the kernel.",
     "why": "goals.md G2 DoD1 says verbatim: 'This validates the headline TS bet — do it before any control depends on it.' plan.md §12 lists the declare-merge pattern as the G2 risk to validate early. Proving it in isolation de-risks every downstream control and the catalog factories."
+  },
+  "_element_build_order": {
+    "_note": "Metadata-only annotation: the ordered build plan for the element host (element.ts), the remaining G2 work after the props subsystem shipped. Adds NO node/action/host and alters NO id/label/leaf/edge — coverage_check stays clean. Authored by the design seat for the e-* slice of G2.",
+    "ordering_finding": "No dependency cycle among the e-* nodes. e-lifecycle is the root host (base class + connection scope/AbortController + the one render effect); e-helpers, e-attrs, e-upgrade, e-internals are mutually-independent SIBLINGS that each compose additively on e-lifecycle (the connect path / constructor accretes statements, never restructures). They could be parallelized; the linear sequence below is the recommended verify-one-at-a-time order by risk × downstream leverage. d-barrel is the closing surface/layering lock.",
+    "finalize_wiring": "e-lifecycle's constructor calls the already-shipped finalize(this.constructor) — idempotent via props.ts FINALIZED. This is the bridge that lights the props-as-signals subsystem on the host; props.ts already exports finalize, so this call needs NO props.ts change. props.ts' own comment anticipates this seam ('the element host composes on this store unchanged — its constructor may pre-warm signals, but is not required to').",
+    "props_surface_change_required": {
+      "owner": "props.ts (the attribute↔prop NAME mapping, currently behind the module-private attrNameOf)",
+      "why": "e-attrs' static observedAttributes + attributeChangedCallback must map attribute-name ↔ prop-name (they differ under `attribute: 'override'` / `attribute: false`); coerceAttribute already takes the PROP name, the platform callback gives the ATTRIBUTE name.",
+      "add": [
+        "export function observedAttributesFor(ctor: Finalizable): string[] — the attribute names to observe; the static observedAttributes getter delegates to it",
+        "export function propForAttribute(ctor: Finalizable, attr: string): string | undefined — reverse lookup so attributeChangedCallback resolves the prop name before calling coerceAttribute"
+      ],
+      "constraints": "Additive only (keeps the 117 prop tests green). NOT re-exported from the dom barrel — an internal cross-module seam, so D7's 'surface is exactly the intended set' stays clean. Keeps the string↔typed NAME mapping owned by props.ts (single source); element.ts stays a thin platform-callback adapter.",
+      "decomposition_impact": "none — an implementation surface addition inside the existing p-config/p-reflect leaf, not a new node/action/host."
+    },
+    "slices": [
+      {
+        "order": 1,
+        "node": "e-lifecycle",
+        "first": true,
+        "smallest": true,
+        "deliverable": "export class UIElement extends HTMLElement: constructor calls finalize(ctor); private #scope:Scope|null + #ac:AbortController|null; connectedCallback opens scope=createScope() + ac=new AbortController() and installs the ONE render effect via #scope.run(() => effect(() => this.render())); disconnectedCallback runs #scope.dispose() + #ac.abort() then nulls both; an overridable render(): void no-op hook. The smallest independently-testable host.",
+        "acceptance": "rubric D4 (scope/subscriber half) + DoD box 3. Probes: connect-disconnect-zero — a signal read in render() shows inspect(sig).subscribers 1→0 across connect→disconnect; the AbortSignal check — #ac.signal.aborted===true post-disconnect (the mechanism that guarantees zero live listeners); reconnect-zero-residue — connect→disconnect→reconnect re-subscribes clean (the K2 cycle G1 deferred to G2).",
+        "defers": "the render-effect BODY / html`` template → G3 (render() stays a no-op hook); the public this.effect/this.listen/this.emit surface AND the this.listen 0-live-listeners demonstration → e-helpers (slice 2); attribute inbound → e-attrs; the upgrade dance → e-upgrade; internals/ARIA → e-internals; form participation (setFormValue/validity) → G4.",
+        "depends_on": "props.ts finalize() (shipped). No new export."
+      },
+      {
+        "order": 2,
+        "node": "e-helpers",
+        "deliverable": "this.effect(fn) = #scope.run(() => effect(fn)) (scope-owned, returns the disposer); this.listen(target,type,fn,opts?) = addEventListener with { ...opts, signal: #ac.signal }; this.emit(type,detail) dispatches a composed/bubbling/cancelable CustomEvent (typed via the CustomEvent map); get updateComplete = whenFlushed().",
+        "acceptance": "a-helpers (plan §5). Completes rubric D4's LISTENER half — a this.listen-registered listener stops firing after disconnect (0 live listeners via the aborted signal) — and contributes D7 (this.emit typed via the event map). Together with slice 1 this brings D4 ≥ 4 and fully satisfies DoD box 3 (zero subscribers AND zero live listeners).",
+        "defers": "—",
+        "depends_on": "e-lifecycle (#scope, #ac). whenFlushed imported from ../reactive (the one allowed import direction). this.effect is literally e-lifecycle's render-effect-install primitive promoted to a public method — factor the scope.run(effect) helper once."
+      },
+      {
+        "order": 3,
+        "node": "e-attrs",
+        "deliverable": "static get observedAttributes() { return observedAttributesFor(this) }; attributeChangedCallback(attr,_old,value) { const p = propForAttribute(this.constructor, attr); if (p) coerceAttribute(this, this.constructor, p, value) } — the inbound string→typed crossing wired to the platform callback.",
+        "acceptance": "rubric D3 attr-cross-typed + DoD box 2 (attributeChangedCallback crosses string→typed). The inbound directional lock that stops the reflect echo from looping is already proven inside props.ts (coerceAttribute's outbound-in-flight guard); e-attrs only supplies the platform-callback adapter, so json-no-reloop / reflect-once round out D3 against the shipped p-reflect.",
+        "props_surface": "REQUIRES the two new props.ts exports (observedAttributesFor, propForAttribute) — the one required surface change, detailed in props_surface_change_required.",
+        "defers": "—",
+        "depends_on": "e-lifecycle (base class) + props.ts coerceAttribute (shipped) + the new name-mapping exports."
+      },
+      {
+        "order": 4,
+        "node": "e-upgrade",
+        "deliverable": "upgradeProps() at connect: for each name of Object.keys(ctor.props ?? {}), if Object.hasOwn(this,name) capture v=this[name], delete this[name] (dissolves the own-property shadow, re-exposing the prototype accessor finalize installed), then this[name]=v (replays through the accessor setter → signal updates, reflect fires once). upgradeProperty(name) — the manual-accessor variant for hand-written array/object accessors (primitive lands now, exercised fully by a later control).",
+        "acceptance": "rubric D5 lazy-upgrade-replay (primitive) + no-accessor-shadow (post-upgrade Object.hasOwn(this,name) is false, value lives in the signal) + DoD box 2 (pre-upgrade .prop= replays, no shadowing). A silent-failure pin — needs the explicit probe, not 'handled'.",
+        "defers": "—",
+        "depends_on": "e-lifecycle connect path + finalize() having installed the prototype accessors in the constructor (props.ts, shipped) — so at connect the accessor exists to be re-exposed by delete. No props.ts change (static props is already public on the ctor)."
+      },
+      {
+        "order": 5,
+        "node": "e-internals",
+        "deliverable": "constructor: #internals = this.attachInternals() (ONCE — a second call throws NotSupportedError); a protected `get internals()` so the G4 form subclass reuses the single handle without re-acquiring (a #private field cannot cross to the subclass). ARIA is set only via #internals (role / aria*), never host setAttribute. Light-DOM default: no shadow root unless `static shadow` opts one in; the render root is this.shadowRoot ?? this.",
+        "acceptance": "rubric D6 aria-internals-only + no-host-aria (probe asserts no role/aria-* attribute on the host) + light-dom-default (no shadowRoot unless static shadow) + DoD box 4.",
+        "defers": "setFormValue / setValidity / formResetCallback / formDisabledCallback (form participation) → G4 — UIFormElement REUSES this single internals acquisition, it does not call attachInternals again.",
+        "depends_on": "e-lifecycle (constructor). Mutually independent of e-attrs / e-upgrade."
+      },
+      {
+        "order": 6,
+        "node": "d-barrel",
+        "closing": true,
+        "deliverable": "dom/index.ts exports exactly the intended public surface: UIElement + re-export prop, PropConfig, ReactiveProps, PropType, Types from props.ts. Internal seams (finalize, coerceAttribute, observedAttributesFor, propForAttribute) are NOT re-exported. Grows incrementally as each slice lands; locks here.",
+        "acceptance": "rubric D7 — a-surface (surface is exactly the intended set, events typed via the map, no internal field leaks) + a-layering (the import-layering trip-wire stays green: dom imports ONLY ../reactive; no enum/namespace/decorator under erasableSyntaxOnly).",
+        "defers": "—",
+        "depends_on": "all e-* slices."
+      }
+    ],
+    "seams": {
+      "e-attrs ∘ coerceAttribute": "Platform callback (attribute name) → propForAttribute → coerceAttribute (prop name) → through the installed accessor under the inbound lock. REQUIRES the two new props.ts exports — the only required surface change.",
+      "e-helpers' this.effect rides the connection scope": "this.effect = #scope.run(() => effect(fn)); this.listen rides #ac.signal; both #scope and #ac are owned by e-lifecycle and disposed/aborted at disconnect, so the helper lifetimes ARE the component lifetime. this.effect = the render-effect-install primitive made public.",
+      "e-upgrade ∘ the prototype accessors": "finalize (constructor, e-lifecycle) installs the PROTOTYPE accessor; a pre-upgrade .prop= creates an OWN data property that silently shadows it. upgradeProps at connect deletes-captures-reassigns so the value replays through the accessor — order within an instance: constructor(finalize) → connect(upgradeProps).",
+      "e-internals acquires internals once": "attachInternals() called exactly once in the constructor, stored in #internals, surfaced to the G4 form subclass via a protected get internals() (no re-acquire). The single acquisition point + light-DOM-default render-root (this.shadowRoot ?? this) are the forward seams G4 form participation builds on."
+    },
+    "coverage_prediction": {
+      "command": "python3 .claude/skills/decomposition-work/scripts/coverage_check.py docs/decompositions/g2-element-props.decomp.json --strict",
+      "expected_stdout": "== coverage: 14 nodes · 14 actions · 14 hosts == / [OK] coverage clean — both planes cross-check",
+      "expected_exit": 0,
+      "rationale": "This annotation adds a top-level metadata key only; nodes/actions/hosts are untouched (14/14/14). Every leaf hosts ≥1 action (no UNJUSTIFIED-LEAF), every action is hosted (no UNHOSTED), every hosts edge resolves (no DANGLING), ids unique (no DUP-ID) — so even under --strict the gate stays at exit 0."
+    }
   }
 }
