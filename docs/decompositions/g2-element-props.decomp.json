@@ -1,0 +1,79 @@
+{
+  "domain": "technical-architecture",
+  "_about": {
+    "title": "G2 — UIElement (FACE host) + typed props-as-signals (@agent-ui/components src/dom/)",
+    "serves": "goals.md G2 (Element + typed props) — unblocks A2UI's control-dependent A1 tail",
+    "domain_choice": "technical-architecture, not the visual `components` domain: G2 is dom-layer INFRASTRUCTURE (a custom-element host + a compile-time props typing system + an attribute↔value reflection boundary), not a visual control with geometry/anatomy. The components domain fits G5+ (ui-button onward).",
+    "sources": [
+      "docs/goals.md G2 (the 4 DoD boxes = acceptance) + the standing DoD",
+      "docs/plan.md §5 (UIElement host; prop.* / PropType / PropConfig; ReactiveProps<S>; declare-merge; reflection + directional locks; finalize(); lazy-upgrade), §3 (layering), §9 (decorator-free TS conventions)",
+      "docs/process.md governance (true/false→gate; judgment→rubric) + the import-layering trip-wire (dom imports ONLY ../reactive)"
+    ],
+    "method": "decomposition-work, both planes. OUTSIDE-IN = the dom layer's two G2 modules (element.ts, props.ts) + the dom barrel, divided to buildable units. INSIDE-OUT = the G2 capabilities anchored to the goals.md DoD boxes + plan.md §5. The `build` key overlays the ground state (kernel exists at G1; the whole dom/ layer is an empty stub ready to fill — nothing here is blocked).",
+    "ground_state": "@agent-ui/components is at G1: the reactive/ kernel exists (signal/computed/effect/createScope/inspect/whenFlushed). src/dom/ is an empty `export {}` stub — G2 fills it. The only dependency is the kernel (present), so every G2 unit is buildable now; the typing proof (first slice) needs only the strict tsconfig."
+  },
+  "nodes": [
+    { "id": "sys", "label": "G2 — UIElement + typed props (dom layer)", "leaf": false },
+
+    { "id": "sub-props", "label": "props.ts — typed props-as-signals", "leaf": false },
+    { "id": "p-types",        "label": "PropType<T> / Types — string↔typed codecs (from/to; enumType, jsonType)", "leaf": true, "file": "props.ts", "trace": "plan §5", "build": "now" },
+    { "id": "p-config",       "label": "PropConfig<T> + prop.* constructors (string/number/boolean/enum/json; const type-param)", "leaf": true, "file": "props.ts", "trace": "plan §5; goals G2 DoD1", "build": "now", "firstSlice": true },
+    { "id": "p-reactiveprops","label": "ReactiveProps<S> mapped type + the declare-merge pattern (the headline TS bet)", "leaf": true, "file": "props.ts", "trace": "goals G2 DoD1; plan §5", "build": "now", "firstSlice": true },
+    { "id": "p-install",      "label": "finalize() — install signal-backed prototype accessors from static props", "leaf": true, "file": "props.ts", "trace": "plan §5; goals G2 DoD2", "build": "now" },
+    { "id": "p-reflect",      "label": "attribute↔value reflection boundary + directional locks (typed→string, echo-once)", "leaf": true, "file": "props.ts", "trace": "goals G2 DoD2; plan §5", "build": "now" },
+
+    { "id": "sub-element", "label": "element.ts — UIElement FACE host", "leaf": false },
+    { "id": "e-lifecycle",  "label": "connection scope + AbortController; render-effect + scope ownership; connect/disconnect", "leaf": true, "file": "element.ts", "trace": "goals G2 DoD3; plan §5", "build": "now" },
+    { "id": "e-helpers",    "label": "this.effect (scope-owned) / this.listen ({signal}) / this.emit (CustomEvent) / updateComplete", "leaf": true, "file": "element.ts", "trace": "plan §5", "build": "now" },
+    { "id": "e-attrs",      "label": "observedAttributes + attributeChangedCallback — string→typed inbound crossing", "leaf": true, "file": "element.ts", "trace": "goals G2 DoD2; plan §5", "build": "now" },
+    { "id": "e-upgrade",    "label": "lazy-property upgrade dance (upgradeProps at connect; upgradeProperty for manual accessors)", "leaf": true, "file": "element.ts", "trace": "goals G2 DoD2; plan §5", "build": "now" },
+    { "id": "e-internals",  "label": "attachInternals + internals-only ARIA; light-DOM default (static shadow opt-in)", "leaf": true, "file": "element.ts", "trace": "goals G2 DoD4; plan §5", "build": "now" },
+
+    { "id": "d-barrel", "label": "dom/index.ts — public dom surface + inward-only layering boundary", "leaf": true, "file": "dom/index.ts", "trace": "plan §3, §9", "build": "now" }
+  ],
+  "actions": [
+    { "id": "a-typing",        "label": "prove `interface X extends ReactiveProps<typeof props> {}` compiles under strict tsconfig and yields correctly-typed accessors (enum→literal union, NOT string)", "trace": "goals G2 DoD1 (headline bet)" },
+    { "id": "a-codec",         "label": "convert each prop value between its attribute string and typed form (from/to) at exactly two functions", "trace": "plan §5" },
+    { "id": "a-constructors",  "label": "build a typed PropConfig dict via prop.* constructors; a `const` type-param preserves enum literal unions + json<T>", "trace": "plan §5; goals G2 DoD1" },
+    { "id": "a-install",       "label": "finalize() installs signal-backed prototype accessors from `static props` at runtime (no decorators)", "trace": "plan §5" },
+    { "id": "a-track",         "label": "a prop read inside an effect tracks it; a prop write invalidates dependents", "trace": "goals G2 DoD2" },
+    { "id": "a-reflect-once",  "label": "a `reflect` prop echoes to the attribute exactly once (no loop); a JSON round-trip does not re-loop — directional locks", "trace": "goals G2 DoD2" },
+    { "id": "a-attr-cross",    "label": "attributeChangedCallback crosses an attribute string → the typed prop signal (inbound)", "trace": "goals G2 DoD2" },
+    { "id": "a-lazy-upgrade",  "label": "a `.prop=` assignment set before upgrade replays through the accessor (no own-property shadowing)", "trace": "goals G2 DoD2" },
+    { "id": "a-scope-lifetime","label": "connectedCallback creates a connection scope + AbortController; the render effect + this.effect/listen ride them", "trace": "plan §5" },
+    { "id": "a-zero-residue",  "label": "connect→disconnect leaves 0 subscribers (inspect) + 0 live listeners (AbortSignal); reconnect re-subscribes clean", "trace": "goals G2 DoD3" },
+    { "id": "a-helpers",       "label": "this.effect / this.listen / this.emit (composed CustomEvent) / updateComplete behave on the connection scope", "trace": "plan §5" },
+    { "id": "a-internals-aria","label": "ARIA is set only via attachInternals()/ElementInternals, never host attributes; light-DOM by default", "trace": "goals G2 DoD4; plan §5" },
+    { "id": "a-surface",       "label": "the dom barrel exports exactly the intended typed surface (UIElement, prop, PropConfig, ReactiveProps, types)", "trace": "plan §9" },
+    { "id": "a-layering",      "label": "dom imports ONLY ../reactive (inward-only trip-wire); no enum/namespace/decorator (erasableSyntaxOnly)", "trace": "plan §3; process.md trip-wire" }
+  ],
+  "hosts": [
+    { "action": "a-typing",         "node": "p-reactiveprops" },
+    { "action": "a-codec",          "node": "p-types" },
+    { "action": "a-constructors",   "node": "p-config" },
+    { "action": "a-install",        "node": "p-install" },
+    { "action": "a-track",          "node": "p-install" },
+    { "action": "a-reflect-once",   "node": "p-reflect" },
+    { "action": "a-attr-cross",     "node": "e-attrs" },
+    { "action": "a-lazy-upgrade",   "node": "e-upgrade" },
+    { "action": "a-scope-lifetime", "node": "e-lifecycle" },
+    { "action": "a-zero-residue",   "node": "e-lifecycle" },
+    { "action": "a-helpers",        "node": "e-helpers" },
+    { "action": "a-internals-aria", "node": "e-internals" },
+    { "action": "a-surface",        "node": "d-barrel" },
+    { "action": "a-layering",       "node": "d-barrel" }
+  ],
+  "_dod_map": {
+    "goals.md G2 DoD1 (declare-merge typing, enum→literal union)": ["a-typing", "a-constructors"],
+    "goals.md G2 DoD2 (probes: write invalidates · reflect once/no-loop · attr string→typed · lazy-upgrade replay)": ["a-track", "a-reflect-once", "a-attr-cross", "a-lazy-upgrade"],
+    "goals.md G2 DoD3 (connect→disconnect zero residue: inspect + AbortSignal)": ["a-zero-residue", "a-scope-lifetime"],
+    "goals.md G2 DoD4 (ARIA only via internals, never host attributes)": ["a-internals-aria"]
+  },
+  "_first_slice": {
+    "name": "the ReactiveProps declare-merge typing proof — in isolation (goals.md G2 DoD box 1)",
+    "nodes": ["p-types", "p-config", "p-reactiveprops"],
+    "deliverable": "PropType<T>/Types + prop.* (PropConfig) + ReactiveProps<S>, plus a tsc-gated typing fixture: `interface X extends ReactiveProps<typeof props> {}` over a `prop.enum([...] as const, …)` schema, with `// @ts-expect-error` lines proving an enum accessor is the literal union ('solid'|'soft'|'ghost'), NOT widened to `string`, and that a wrong-literal assignment fails.",
+    "smallest_dep": "the strict tsconfig only (erasableSyntaxOnly/verbatimModuleSyntax). The typing proof is purely compile-time — no kernel, no element, no DOM. The runtime install (p-install, finalize → signal-backed accessors) is the NEXT slice and is the first that touches the kernel.",
+    "why": "goals.md G2 DoD1 says verbatim: 'This validates the headline TS bet — do it before any control depends on it.' plan.md §12 lists the declare-merge pattern as the G2 risk to validate early. Proving it in isolation de-risks every downstream control and the catalog factories."
+  }
+}
