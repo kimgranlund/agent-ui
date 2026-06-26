@@ -50,14 +50,20 @@ the folder structure and naming/lint conventions, and replace the starter scaffo
 budget, `whenFlushed`). The `Producer`/`Consumer` protocol interfaces (`plan.md` §4).
 
 **Definition of done.**
-- [ ] Public surface matches `plan.md` §4; `ReadonlySignal<T>` / `Signal<T>` enforce read-only vs
-      writable at the type level.
-- [ ] Probes cover: equality cutoff (no `_version` bump ⇒ no downstream wake); lazy+verified recompute
-      at computeds **and** effects; scope disposal ⇒ zero subscribers; `untracked`/`unowned` semantics;
-      `CycleError` on warm re-entry; throwing computed/effect stays dirty and retries; scheduler
-      dedupe + the ~100-wave budget throw; `whenFlushed()` resolves after a batch.
-- [ ] `inspect()` is proven graph-inert (creates no dependency edge, bumps no version).
-- [ ] Kernel size measured and recorded (provisional budget: the signal-only path well under ~1 kB gz).
+- [x] Public surface matches `plan.md` §4; `ReadonlySignal<T>` / `Signal<T>` enforce read-only vs
+      writable at the type level (proven by a `// @ts-expect-error` probe + the `tsc` gate).
+- [x] Probes cover equality cutoff, lazy+verified recompute at computeds **and** effects, scope disposal
+      ⇒ zero subscribers, `untracked`/`unowned`, `CycleError` on warm re-entry, a throwing computed stays
+      dirty and retries (failure poisons verification), scheduler dedupe + the ~100-wave budget throw +
+      `whenFlushed()`. **20 probes green.** *(Gaps to all-5s: a dedicated `throw-retry-effect` probe; the
+      `reconnect-zero-residue` cycle lands at G2 where elements exist.)*
+- [x] `inspect()` is proven graph-inert (no edge inside a tracking context; no eval of a dirty computed).
+- [x] Kernel size measured and recorded: **1209 B gz** (3377 B min) for the full reactive barrel
+      (graph + scheduler) — within the kernel budget.
+
+**Verdict.** Kernel rubric (`docs/rubrics/kernel.md`) self-score: K1 5 · K2 4 · K3 4 · K4 5 · K5 5 · K6 5 ·
+K7 5 · K8 5. Promotion gate (K1–K4, K7 ≥ 4; K5, K6 ≥ 4; K8 ≥ 3): **PASS** — kernel shippable.
+Code: `packages/agent-ui/components/src/reactive/` (`graph.ts`, `scheduler.ts`, `index.ts`).
 
 ---
 

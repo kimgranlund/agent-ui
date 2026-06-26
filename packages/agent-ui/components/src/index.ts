@@ -1,2 +1,2 @@
-// agent-ui — library barrel. Re-exports the public surface as the layers land (reactive → dom → traits → controls).
-export {}
+// @agent-ui/components — package barrel. Re-exports each layer's public surface as it lands.
+export * from './reactive/index.ts'
