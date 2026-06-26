@@ -16,6 +16,7 @@ export default defineConfig({
     alias: {
       '@agent-ui/components': r('./packages/agent-ui/components/src/index.ts'),
       '@agent-ui/shared': r('./packages/agent-ui/shared/src/index.ts'),
+      '@agent-ui/a2ui': r('./packages/agent-ui/a2ui/src/index.ts'),
     },
   },
 })
