@@ -4,6 +4,8 @@
 > A milestone is **done** only when every box in its Definition of Done is checked.
 > First component family = FACE form controls (button → text-field/checkbox/switch → listbox/select/field).
 > Layout: npm-workspaces monorepo — `src/core/*` in milestone text now lives under `packages/agent-ui/components/src/*`.
+> Consumed by the A2UI effort (`docs/specs/`, `@agent-ui/a2ui`), which tracks these milestones (its
+> Assumption A-2 ≈ G7) and is coordinated by the planning/execution team (`.claude/agents/`).
 
 ## Standing definition of done (applies to every milestone)
 

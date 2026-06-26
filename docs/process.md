@@ -3,6 +3,7 @@
 > How we keep a growing component framework from drifting, bloating, or wasting context.
 > Companion to [`plan.md`](./plan.md) (what we build) and [`goals.md`](./goals.md) (when).
 > This system is designed against the orchestration rubric; the scorecard is at the end.
+> Ratified design changes (the repair-the-owner up-loop) are logged as ADRs in [`adr/`](./adr/).
 
 ## The governing model
 
@@ -31,15 +32,15 @@ Three placement rules follow, and they decide every governance artifact below:
 | Artifact | Axis | Mode | Unit | Prevents | Authored via | Lands |
 |---|---|---|---|---|---|---|
 | **Trip-wire suite** (probes + scripts + hook) | behavioral | contract | scripts/hook | drift + bloat | hand + `update-config` (hook) | G0→G1 |
-| `component-author` | behavioral | procedure | **skill** | drift (by construction) | `harness-skill-authoring` | by G5 |
-| `component-audit` | behavioral | procedure | **skill** | drift (detection) | `harness-skill-authoring` | ~G6 |
-| `component-reviewer` | behavioral | — | **subagent** | drift + bloat (judgment) | `harness-agent-authoring` | G5 |
-| `tokens-specialist` | behavioral | — | **subagent** | drift (tokens) | `harness-agent-authoring` | G6 |
+| `component-author` | behavioral | procedure | **skill** | drift (by construction) | `authoring-skills` | by G5 |
+| `component-audit` | behavioral | procedure | **skill** | drift (detection) | `authoring-skills` | ~G6 |
+| `component-reviewer` | behavioral | — | **subagent** | drift + bloat (judgment) | `authoring-agents` | G5 |
+| `tokens-specialist` | behavioral | — | **subagent** | drift (tokens) | `authoring-agents` | G6 |
 | api-contract schema | referential | rubric/check | json-schema | drift | hand (draft-2020-12) | G5 |
-| component rubric (COMPOSE/REALIZE) | referential | rubric | doc | drift + bloat | `harness-rubric-authoring` | G5 |
-| kernel rubric | referential | rubric | doc | bloat | `harness-rubric-authoring` | G1 |
-| coherence/health rubric | referential | rubric | doc | drift | `harness-rubric-authoring` | ~G6 |
-| `CLAUDE.md` (thin index) | behavioral | instruction | doc | context | `harness-entry-file-authoring` | G0 |
+| component rubric (COMPOSE/REALIZE) | referential | rubric | doc | drift + bloat | `authoring-rubrics` | G5 |
+| kernel rubric | referential | rubric | doc | bloat | `authoring-rubrics` | G1 |
+| coherence/health rubric | referential | rubric | doc | drift | `authoring-rubrics` | ~G6 |
+| `CLAUDE.md` (thin index) | behavioral | instruction | doc | context | `authoring-entry-files` | G0 |
 
 Most teams build only the behavioral axis and neglect the referential one — and a loop with nothing
 to check against can't repair anything. We treat the rubrics + contract as first-class, not afterthoughts.
@@ -86,7 +87,7 @@ Valuable only once 3+ components exist.
 > layout symmetry and per-component budgets, producing a severity-ranked drift report. Use when 3+
 > components exist, or before shipping a batch of component changes.*
 
-(Authored as **our own** skill via `harness-skill-authoring` — not a generic root audit skill.)
+(Authored as **our own** skill via `authoring-skills` — not a generic root audit skill.)
 
 ## 3. Subagents — result-only delegation (isolated judgment)
 
@@ -141,7 +142,7 @@ These are read to check, never obeyed. They are the single source of truth revie
   above are versioned like API signatures — when a skill's behavior changes, its description changes.
 - **Continuation (when the next turn fires):** **human-driven for now.** The only automation is the
   Stop/pre-commit **hook** running the fast gate suite (enforcement, not selection). A per-component DoD
-  as a `/goal` condition (authored via `harness-control-patterns`) is a *later* option, considered only
+  as a `/goal` condition (authored via `agent-controls`) is a *later* option, considered only
   if the buildout fans out to the full catalog — not for ~7 controls. We never expect `/goal` to *select*
   the reviewer or the author skill; discovery does that underneath, goal or no goal.
 

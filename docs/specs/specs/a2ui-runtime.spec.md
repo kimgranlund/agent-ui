@@ -1,0 +1,170 @@
+# SPEC — A2UI Runtime (`@agent-ui/a2ui` renderer)
+
+> Status: proposed · v0.1 · 2026-06-26 · Layer: SPEC (execution contract)
+> Refines: [`../a2ui-expert-system.prd.md`](../a2ui-expert-system.prd.md) — primarily **PRD-G1**; supports PRD-G2, PRD-G4, PRD-G6, PRD-G7. Target protocol: **A2UI v1.0** (Constraint C1; v0.9.1 supported via version pin).
+> Refined by: [`../llds/a2ui-renderer.lld.md`](../llds/a2ui-renderer.lld.md). The component **catalog** (type→widget mapping) is owned by [`./a2ui-catalog.spec.md`](./a2ui-catalog.spec.md); this SPEC owns the *runtime that consumes a stream and drives a catalog*.
+> Altitude: owns the renderer **behavior + message contract**. Module/signal internals are the LLD's. Requirements reference PRD goal IDs; they do not restate them.
+> Requirement IDs are file-scoped (`SPEC-R1…`); cross-document references qualify by doc name (e.g. "corpus SPEC-R8").
+
+---
+
+## 1. Purpose
+
+Define the behavior of `@agent-ui/a2ui`'s **zero-dependency native renderer**: the client that consumes an ordered A2UI v1.0 message stream and progressively renders it into live, interactive `@agent-ui/components` controls, closing the gap that A2UI's upstream Lit/`web_core` renderers cannot (they violate Constraint **C2**). This is the foundation milestone **A1** and the substrate the catalog (PRD-G2), gates (PRD-G4), and pipelines (PRD-G7) build on.
+
+A2UI facts this SPEC conforms to (external; Constraint C1): the message envelope, the flat adjacency-list component model, JSON-Pointer data binding, progressive rendering, and the v1.0 action request/response model. They are cited, not redefined.
+
+## 2. Definitions
+
+- **Surface** — an isolated UI context keyed by `surfaceId`, bound to one catalog, with its own component set and data model.
+- **Message** — one JSON object from the stream (server→client) or to the server (client→server), §5.
+- **Binding** — a value that is either a literal or `{ "path": <JSONPointer> }` resolved against the surface data model.
+- **Widget** — a live `@agent-ui/components` control instance the renderer creates for a component node, via the catalog (a2ui-catalog SPEC).
+
+---
+
+## 3. Requirements
+
+Normative per RFC 2119. Each carries a stable ID, a PRD trace, and acceptance criteria.
+
+### 3.1 Stream consumption
+
+**SPEC-R1 — Line-delimited message ingestion + dispatch.** The renderer MUST consume a JSONL stream, decoding each line as one message and dispatching by its top-level type (`createSurface`, `updateComponents`, `updateDataModel`, `deleteSurface`, `actionResponse`). Messages MUST be applied in arrival order. *(→ PRD-G1)*
+- **AC1** *Given* a stream of N well-formed messages, *when* ingested, *then* each is dispatched to its handler exactly once, in order.
+- **AC2** *Given* a malformed line, *when* ingested, *then* the renderer emits an `error` (§5.2, code `PARSE`) and continues with the next line without tearing down existing surfaces (SPEC-N4).
+
+### 3.2 Surface lifecycle
+
+**SPEC-R2 — Surface create/delete.** On `createSurface` the renderer MUST create a surface keyed by `surfaceId`, bind its `catalogId`, register `surfaceProperties` (v1.0; `theme` accepted for v0.9.x) and `sendDataModel`, and prepare empty component + data state. On `deleteSurface` it MUST release the surface and all its components, data, widgets, and listeners. *(→ PRD-G1)*
+- **AC1** *Given* a `createSurface{surfaceId,catalogId}`, *when* applied, *then* a surface exists bound to that catalog with empty component/data state.
+- **AC2** *Given* a `deleteSurface`, *when* applied, *then* the surface's widgets are disconnected and its memory released (no retained signals/listeners — provable per SPEC-N3).
+- **AC3** *Given* a `createSurface` whose `catalogId` is unknown, *when* applied, *then* the renderer emits `error{code:"CATALOG_UNKNOWN"}` and does not create the surface.
+
+### 3.3 Component tree & progressive rendering
+
+**SPEC-R3 — Buffer, reconstruct, render-on-root.** `updateComponents` MUST buffer flat components by `id`, reconstruct the tree via `child`/`children` ID references, and begin rendering as soon as a valid `root` exists (there is no explicit "begin" signal in v0.9.1+). Exactly one `root` per surface. *(→ PRD-G1)*
+- **AC1** *Given* components including `id:"root"`, *when* applied, *then* the surface renders the tree rooted at `root`.
+- **AC2** *Given* a second component with `id:"root"`, *when* applied, *then* the renderer emits `error{code:"IDGRAPH"}` and does not replace the existing root.
+
+**SPEC-R4 — Out-of-order / incomplete tolerance.** A component MAY reference a `child`/`children` ID not yet delivered, or a `path` not yet in the data model. The renderer MUST render what is available, hold unresolved references, and patch them in when later messages arrive — never blocking or erroring on a not-yet-defined reference. *(→ PRD-G1)*
+- **AC1** *Given* a parent referencing a child ID that arrives in a later message, *when* the child arrives, *then* it is patched into place with no full re-render of the unaffected subtree.
+- **AC2** *Given* a binding to an undefined `path`, *when* rendered, *then* the widget shows an empty/placeholder value (not an error) and updates when the data arrives.
+
+### 3.4 Data model & binding
+
+**SPEC-R5 — Data model upsert + binding resolution.** `updateDataModel` MUST apply upsert semantics at the given JSON-Pointer `path` (whole-model when `path` omitted), per surface. Bindings (`{path}`) MUST resolve against the surface data model and MUST re-resolve (update the widget) when the bound data changes. *(→ PRD-G1)*
+- **AC1** *Given* `updateDataModel{path:"/user/name",value:"Ada"}` then a `Text` bound to `/user/name`, *when* applied, *then* the text renders "Ada"; *when* the path is later updated, *then* the text updates without a message re-send.
+- **AC2** *Given* `updateDataModel` with no `path`, *when* applied, *then* it replaces/merges the whole surface data model per upsert semantics.
+
+**SPEC-R6 — Dynamic lists (template iteration).** A container MAY bind `children` to an array `path` with an item template; the renderer MUST render one instance per array element, resolving relative (child-scope) paths within each item, and MUST add/remove instances reactively as the array changes. *(→ PRD-G1)*
+- **AC1** *Given* a list bound to `/items` (length 3) with a template, *when* rendered, *then* 3 instances exist; *when* an element is appended via `updateDataModel`, *then* a 4th appears without re-rendering the first 3.
+
+### 3.5 Interaction & actions (v1.0)
+
+**SPEC-R7 — Two-way input binding (optimistic).** For input widgets (e.g. `TextField`, `ChoicePicker`, `Slider`), the renderer MUST display the bound value, update the local data model optimistically on user input, and surface the new value in the action context when an action commits. *(→ PRD-G1)*
+- **AC1** *Given* a `TextField` bound to `/form/email`, *when* the user types, *then* `/form/email` updates locally; *when* a submit action fires, *then* the action context carries the current `/form/email`.
+
+**SPEC-R8 — Action emission + actionResponse (v1.0).** On a triggered action the renderer MUST emit an `action` message that includes a client-generated `actionId` (v1.0 requirement), the resolved context, `wantResponse:true` when a reply is expected, and the full data model when `sendDataModel` was set. It MUST correlate an incoming `actionResponse{actionId,value|error}` to the originating action. *(→ PRD-G1)*
+- **AC1** *Given* a button action with `wantResponse:true`, *when* triggered, *then* the emitted `action` carries a unique `actionId` and resolved context; *when* `actionResponse{actionId}` arrives, *then* it is delivered to the awaiting caller (value or error).
+- **AC2** *Given* `sendDataModel:true` on the surface, *when* an action fires, *then* the action metadata includes the full surface data model.
+
+### 3.6 Catalog binding & functions
+
+**SPEC-R9 — Catalog-driven widget resolution.** The renderer MUST instantiate each component by resolving its `component` type against the surface's bound catalog to a widget factory, and MUST map component properties + bindings to the widget. The *mapping definitions* are owned by the catalog (a2ui-catalog SPEC); the renderer owns resolution + instantiation + the unknown-type failure. *(→ PRD-G1, PRD-G2)*
+- **AC1** *Given* a component whose `component` type is registered in the bound catalog, *when* rendered, *then* the mapped widget is created and bound.
+- **AC2** *Given* a `component` type absent from the catalog, *when* rendered, *then* the renderer emits `error{code:"CATALOG"}` and renders a non-fatal placeholder (the rest of the tree still renders).
+
+**SPEC-R10 — Client-side function evaluation.** The renderer MUST evaluate catalog-defined client functions referenced in bindings/checks (e.g. `formatString` interpolation, validation `checks`), producing the derived value or validation result. *(→ PRD-G1)*
+- **AC1** *Given* a `TextField` with a `required` check, *when* empty and an action commits, *then* the check fails and the renderer surfaces the validation message on the widget (no server round-trip required).
+
+### 3.7 Conformance
+
+**SPEC-R11 — Validation & structured errors.** The renderer MUST validate payloads (MIME `application/a2ui+json`) and, on a schema/catalog/idgraph/pointer failure, emit a structured `error` (client→server, §5.2) rather than rendering invalid UI. The validator MUST be the single shared implementation also used by the corpus admission gate (corpus SPEC-N1). *(→ PRD-G1, PRD-G4)*
+- **AC1** *Given* an invalid message, *when* validated, *then* a structured `error{code,surfaceId,path,message}` is produced and the invalid content is not rendered.
+- **AC2** *Given* the same payload, *when* validated here and in corpus admission, *then* both return the identical verdict (parity).
+
+**SPEC-R12 — Capabilities exchange.** The renderer MUST be able to declare an `a2uiClientCapabilities` object (supported protocol versions, surfaces, action features) to the server; under A2A transport it MUST place it in the A2A `Message` metadata. *(→ PRD-G1, PRD-G7)*
+- **AC1** *Given* a capabilities request (or A2A handshake), *when* the renderer responds, *then* the declared object lists its supported `protocolVersion`(s) including `v1.0`.
+
+**SPEC-R13 — Version handling.** The renderer MUST honor each message's `version`, support the pinned set (default `v1.0`; `v0.9.1` supported), and reject an unsupported version with `error{code:"VERSION_UNSUPPORTED"}`. *(→ PRD-G6)*
+- **AC1** *Given* a message with a supported `version`, *when* dispatched, *then* it is handled by that version's semantics (e.g. `surfaceProperties` for v1.0, `theme` for v0.9.x).
+- **AC2** *Given* an unsupported `version`, *when* dispatched, *then* the renderer emits `VERSION_UNSUPPORTED` and skips the message.
+
+---
+
+## 4. Non-functional requirements
+
+| ID | Requirement | Target |
+|---|---|---|
+| **SPEC-N1** | Progressive first paint | Renders the partial tree on `root` arrival without waiting for stream end; a streamed payload shows incremental UI (not a single final paint). *(→ PRD-G1)* |
+| **SPEC-N2** | Reactive update cost | A `updateDataModel` to one path updates only the widgets bound to it (per-binding `Object.is` cutoff via the signals kernel); no full-surface re-render. |
+| **SPEC-N3** | Teardown is leak-free | After `deleteSurface` (or renderer disposal), the surface leaves zero live signals/effects/listeners — provable via the kernel's `inspect()` + AbortSignal (mirrors the component foundation's discipline). |
+| **SPEC-N4** | Fault isolation | One malformed message or one unknown component type MUST NOT tear down the surface or stop the stream. |
+| **SPEC-N5** | Zero runtime dependencies | The renderer adds no third-party runtime dependency (Constraint C2); it builds on `@agent-ui/components` (signals + controls) only — it MUST NOT use `@a2ui/web_core`. |
+| **SPEC-N6** | Validator parity | The validation in SPEC-R11 is the same code path as corpus admission (one implementation, two callers). |
+
+## 5. Typed contracts
+
+### 5.1 Inbound messages (server→client, A2UI v1.0)
+
+```ts
+type A2uiServerMessage =
+  | { version: string; createSurface:   { surfaceId: string; catalogId: string;
+                                          surfaceProperties?: object; theme?: object; sendDataModel?: boolean } }
+  | { version: string; updateComponents:{ surfaceId: string; components: A2uiComponent[] } }
+  | { version: string; updateDataModel: { surfaceId: string; path?: string; value?: unknown } }
+  | { version: string; deleteSurface:   { surfaceId: string } }
+  | { version: string; actionResponse:  { surfaceId: string; actionId: string; value?: unknown; error?: A2uiError } };
+
+interface A2uiComponent {
+  id: string; component: string;            // type discriminator, e.g. "Text" | "Button" | "TextField"
+  child?: string; children?: string[];      // ID references (adjacency list)
+  [prop: string]: unknown;                  // component-specific props + bindings ({path} | literal)
+}
+type Binding<T> = T | { path: string };     // JSON-Pointer reference (RFC 6901), relative in child scope
+```
+
+### 5.2 Outbound messages (client→server)
+
+```ts
+type A2uiClientMessage =
+  | { version: string; action: { surfaceId: string; actionId: string; name: string;
+                                 sourceComponentId: string; timestamp: string;
+                                 context: Record<string, unknown>; wantResponse?: boolean; dataModel?: unknown } }
+  | { version: string; error:  A2uiError };
+
+interface A2uiError { code: ErrorCode; surfaceId?: string; path?: string; message: string }
+type ErrorCode =
+  | "PARSE" | "SCHEMA" | "CATALOG" | "CATALOG_UNKNOWN" | "IDGRAPH"
+  | "POINTER" | "VERSION_UNSUPPORTED" | "FUNCTION";
+```
+
+### 5.3 Renderer surface (behavioral; signatures illustrative — internals are the LLD)
+
+```ts
+interface A2uiRenderer {
+  mount(host: HTMLElement, catalogs: CatalogRegistry): void;     // SPEC-R9
+  ingest(message: A2uiServerMessage): void;                      // SPEC-R1..R8, R13
+  onClientMessage(cb: (m: A2uiClientMessage) => void): void;     // SPEC-R8, R11, R12: actions/errors out
+  capabilities(): A2uiClientCapabilities;                        // SPEC-R12
+  dispose(): void;                                               // SPEC-N3
+}
+```
+
+## 6. Open items (non-normative)
+
+- **Transport** — this SPEC consumes/produces messages; *how* the stream arrives (raw JSONL/stdio, AG-UI, A2A, MCP) is owned by the streaming-pipeline SPEC (PRD-D2). The renderer only assumes line-delimited JSON messages and the capabilities/A2A-metadata hook (SPEC-R12).
+- **Catalog mapping table** — owned by a2ui-catalog SPEC; this SPEC depends on it for SPEC-R9 but does not define the per-type mapping.
+
+## 7. Traceability
+
+| Requirement | PRD goal(s) |
+|---|---|
+| SPEC-R1–R8, R10, N1, N2, N4 | PRD-G1 (default-catalog generation renders) |
+| SPEC-R9 | PRD-G1, PRD-G2 (catalog-driven; extensible) |
+| SPEC-R11, N6 | PRD-G4 (provable validity) + PRD-G1 |
+| SPEC-R12 | PRD-G1, PRD-G7 (transport interop) |
+| SPEC-R13 | PRD-G6 (version coherence) |
+| SPEC-N3, N5 | PRD-G1 + Constraint C2 (zero-dep, leak-free) |
+
+_Covers PRD-G1 fully; PRD-G2/G4/G6/G7 are co-served with sibling SPECs (catalog, harness, streaming-pipeline). See [`../README.md`](../README.md)._

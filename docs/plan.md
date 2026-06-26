@@ -3,6 +3,9 @@
 > Status: planning. Companion: [`goals.md`](./goals.md) (the milestone/DoD breakdown).
 > Reference standards: [`references/dimensional-standard.md`](./references/dimensional-standard.md),
 > [`references/geometry-sizing-spec.md`](./references/geometry-sizing-spec.md).
+> Coordination: the A2UI layer that consumes this foundation is specced under [`specs/`](./specs/)
+> (PRD→SPEC→LLD) and built by the planning/execution team in [`../.claude/agents/`](../.claude/agents/);
+> ratified design changes are logged as ADRs in [`adr/`](./adr/).
 
 ## 1. What this is
 
@@ -44,7 +47,8 @@ control family is proven end-to-end.
 ## 3. Architecture & directory layout
 
 The kernel is small (rce's is ~2.3k lines across 8 modules). agent-ui is an **npm-workspaces monorepo**:
-the framework is one package, with `shared` for cross-cutting tokens/styles/utils and a future `a2ui`.
+the framework is one package, with `shared` for cross-cutting tokens/styles/utils and `a2ui` (the A2UI
+layer, now team-led under `docs/specs/`).
 
 ```
 packages/agent-ui/
@@ -71,7 +75,7 @@ packages/agent-ui/
     src/
       tokens/  raw-color-tokens.css  semantic-color-tokens.css  runtime-tokens.css  tokens.css (barrel)
       index.ts
-  a2ui/                        # @agent-ui/a2ui — future (depends on @agent-ui/components)
+  a2ui/                        # @agent-ui/a2ui — A2UI layer, team-led (docs/specs/); depends on @agent-ui/components
 docs/  plan.md  goals.md  process.md  references/    # repo root
 ```
 

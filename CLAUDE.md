@@ -26,7 +26,7 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   - `traits/` — `(host, opts) => cleanup` traits + controllers, registered via `host.use()`
   - `controls/` — `ui-*` FACE controls; one folder per component; self-define on import
 - `packages/agent-ui/shared/` — `@agent-ui/shared`, cross-cutting tokens, styles, utility types (lands G5)
-- `packages/agent-ui/a2ui/` — `@agent-ui/a2ui`, future (will depend on `@agent-ui/components`)
+- `packages/agent-ui/a2ui/` — `@agent-ui/a2ui`, the A2UI layer (team-led, `docs/specs/`); depends on `@agent-ui/components`
 - `docs/` — plan, goals, process, references (repo root) · `*.test.ts` co-located with source
 
 ## Conventions (non-obvious only)
