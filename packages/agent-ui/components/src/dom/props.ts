@@ -6,6 +6,13 @@
 // install, `finalize()`, which turns that contract into per-instance signal-backed prototype accessors
 // (goals.md G2 DoD2). `finalize` is the FIRST dom module code to touch the `../reactive` kernel —
 // the one allowed direction (dom → reactive). No decorators / enum / namespace (erasableSyntaxOnly).
+//
+// The runtime half also owns the attribute↔value REFLECTION BOUNDARY (goals.md G2 DoD2; rubric D3).
+// The string↔typed boundary lives at EXACTLY TWO functions: `coerceAttribute` (inbound, string→typed
+// via `PropType.from`) and `reflectOut` (outbound, typed→string via `PropType.to`). A per-instance
+// DIRECTIONAL LOCK guards each against the other so the platform's `attributeChangedCallback` echo
+// cannot loop: while a value→attribute reflect is in flight the inbound echo it triggers is suppressed,
+// and while an attribute→value coercion is in flight the setter does not reflect it back out.
 
 import { signal } from '../reactive/index.ts'
 import type { Signal } from '../reactive/index.ts'
@@ -164,6 +171,61 @@ function signalFor(instance: object, name: string, config: PropConfig<unknown>):
   return sig
 }
 
+// ── reflection + directional locks (p-reflect) ───────────────────────────────
+//
+// A per-instance crossing guard. `outbound` holds the prop names whose attribute is being written RIGHT
+// NOW (value→attribute); `inbound` holds the names whose value is being written from an attribute RIGHT
+// NOW (attribute→value). The reads (`isCrossing`) never allocate — only an actual crossing creates the
+// guard. Sets (not booleans) so a re-entrant crossing of a *different* prop is never falsely suppressed.
+
+interface CrossGuard {
+  outbound: Set<string>
+  inbound: Set<string>
+}
+
+const GUARD = new WeakMap<object, CrossGuard>()
+
+function guardOf(instance: object): CrossGuard {
+  let g = GUARD.get(instance)
+  if (!g) {
+    g = { outbound: new Set(), inbound: new Set() }
+    GUARD.set(instance, g)
+  }
+  return g
+}
+
+function isCrossing(instance: object, dir: 'outbound' | 'inbound', name: string): boolean {
+  return GUARD.get(instance)?.[dir].has(name) ?? false
+}
+
+/** Resolve a prop's attribute name: `attribute: false` ⇒ no attribute (property-only); else the override or the prop name. */
+function attrNameOf(config: PropConfig<unknown>, name: string): string | null {
+  return config.attribute === false ? null : (config.attribute ?? name)
+}
+
+/**
+ * Outbound seam (the second of the two boundary functions): cross a TYPED value → its attribute string
+ * via the prop's `PropType.to` codec, and write it to the host attribute exactly once. Holds the
+ * `outbound` directional lock across the write so the synchronous `attributeChangedCallback` echo the
+ * platform fires re-enters `coerceAttribute` LOCKED and is suppressed — the loop is broken at the gate,
+ * not after a redundant round-trip. A `null` from `to` (boolean-false / number-null / property-only)
+ * removes the attribute. Called only from the reflect setter, only when `config.reflect` is set.
+ */
+function reflectOut(instance: object, name: string, config: PropConfig<unknown>, value: unknown): void {
+  const attr = attrNameOf(config, name)
+  if (attr === null) return // property-only prop: nothing to reflect to
+  const host = instance as unknown as Element // a reflect prop's host is an Element; setAttribute is a DOM API, not an import
+  const guard = guardOf(instance)
+  guard.outbound.add(name)
+  try {
+    const serialized = config.type.to(value) // OUTBOUND boundary: typed → string
+    if (serialized === null) host.removeAttribute(attr)
+    else host.setAttribute(attr, serialized)
+  } finally {
+    guard.outbound.delete(name)
+  }
+}
+
 /** Install signal-backed prototype accessors from `Ctor.props`. Idempotent (safe to call once per class). */
 export function finalize(ctor: Finalizable): void {
   if (FINALIZED.has(ctor)) return
@@ -180,21 +242,40 @@ export function finalize(ctor: Finalizable): void {
       },
       set(this: object, next: unknown): void {
         signalFor(this, name, config).value = next
+        // Reflect value→attribute exactly once, unless this write IS an inbound coercion (the
+        // directional lock): an attribute→value crossing must not bounce straight back out.
+        if (config.reflect && !isCrossing(this, 'inbound', name)) {
+          reflectOut(this, name, config, next)
+        }
       },
     })
   }
 }
 
 /**
- * Inbound seam: cross an attribute STRING (or `null` for absence) into the typed prop signal via the
- * prop's `PropType.from` codec, and return the coerced value. This is the primitive the element slice's
- * `attributeChangedCallback` (e-attrs, later) composes on — p-install owns the per-instance store + the
- * string→typed crossing; it does NOT own the platform callback. A no-op for an unknown prop name.
+ * Inbound seam (the first of the two boundary functions): cross an attribute STRING (or `null` for
+ * absence) into the typed prop signal via the prop's `PropType.from` codec, and return the coerced
+ * value. This is the primitive the element slice's `attributeChangedCallback` (e-attrs, later) composes
+ * on — p-install owns the per-instance store + the string→typed crossing; it does NOT own the platform
+ * callback. A no-op for an unknown prop name.
+ *
+ * Two directional-lock interactions (rubric D3): (1) if an outbound reflect for this prop is in flight,
+ * this call is that reflect's own platform echo — suppress it (return `undefined`) so it cannot loop.
+ * (2) Otherwise write through the installed accessor under the `inbound` lock, so the setter applies the
+ * value but does NOT reflect it straight back out. The write goes through the setter (not the raw signal)
+ * precisely so that symmetric guard is load-bearing: one write path, the lock decides whether it reflects.
  */
 export function coerceAttribute(instance: object, ctor: Finalizable, name: string, attr: string | null): unknown {
   const config = ctor.props?.[name]
   if (!config) return undefined
-  const value = config.type.from(attr)
-  signalFor(instance, name, config).value = value
+  if (isCrossing(instance, 'outbound', name)) return undefined // our own reflect's echo → suppress (no loop)
+  const value = config.type.from(attr) // INBOUND boundary: string → typed
+  const guard = guardOf(instance)
+  guard.inbound.add(name)
+  try {
+    ;(instance as Record<string, unknown>)[name] = value // through the accessor; the inbound lock stops a reflect-back
+  } finally {
+    guard.inbound.delete(name)
+  }
   return value
 }
