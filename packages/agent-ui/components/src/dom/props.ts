@@ -279,3 +279,33 @@ export function coerceAttribute(instance: object, ctor: Finalizable, name: strin
   }
   return value
 }
+
+// ── attribute↔prop NAME mapping (the e-attrs seam) ───────────────────────────
+//
+// The platform's `observedAttributes` / `attributeChangedCallback` speak ATTRIBUTE names; `coerceAttribute`
+// speaks PROP names. These two functions own the attribute↔prop NAME mapping (via the same `attrNameOf`
+// the reflect path uses), so the string↔typed boundary AND the name mapping stay single-sourced in
+// props.ts; element.ts (e-attrs) is a thin platform-callback adapter over them. Internal seam — used by
+// element.ts, NOT re-exported from the dom barrel.
+
+/** The attribute names to observe for a finalized ctor: each prop's attribute name, minus property-only props. */
+export function observedAttributesFor(ctor: Finalizable): string[] {
+  const props = ctor.props
+  if (!props) return []
+  const names: string[] = []
+  for (const name of Object.keys(props)) {
+    const attr = attrNameOf(props[name], name)
+    if (attr !== null) names.push(attr)
+  }
+  return names
+}
+
+/** Reverse the mapping: the prop name owning a given attribute name (respecting `attribute` overrides), or `undefined`. */
+export function propForAttribute(ctor: Finalizable, attr: string): string | undefined {
+  const props = ctor.props
+  if (!props) return undefined
+  for (const name of Object.keys(props)) {
+    if (attrNameOf(props[name], name) === attr) return name
+  }
+  return undefined
+}
