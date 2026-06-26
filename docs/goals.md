@@ -79,15 +79,28 @@ the lazy-property upgrade dance. Typed props: `prop.*` constructors, `PropType`/
 `ReactiveProps<S>`, the attribute↔value reflection with the directional locks.
 
 **Definition of done.**
-- [ ] The `declare`-merge prop pattern (`interface X extends ReactiveProps<typeof props> {}`) compiles
+- [x] The `declare`-merge prop pattern (`interface X extends ReactiveProps<typeof props> {}`) compiles
       under the strict tsconfig and yields correctly-typed accessors (`enum` props are literal unions,
       not `string`). **This validates the headline TS bet — do it before any control depends on it.**
-- [ ] Probes: a prop write inside an effect invalidates; reflect echoes to the attribute exactly once
+      *(props-typing.test.ts; negative-control verified: a bare `string` → `TS2322` against the union.)*
+- [x] Probes: a prop write inside an effect invalidates; reflect echoes to the attribute exactly once
       (no loop) and a JSON round-trip doesn't re-loop; `attributeChangedCallback` crosses string→typed;
       pre-upgrade `.prop=` assignment replays through the accessor (no shadowing).
-- [ ] Connect→disconnect leaves zero subscribers and zero live listeners (provable via `inspect` +
-      an AbortSignal check).
-- [ ] ARIA is set only via `internals`, never host attributes (probe asserts no `role`/`aria-*` on host).
+      *(props-install · props-reflect · element-attrs · element-upgrade; the no-loop lock proven
+      end-to-end through the real `attributeChangedCallback`.)*
+- [x] Connect→disconnect leaves zero subscribers and zero live listeners (provable via `inspect` +
+      an AbortSignal check). *(element-lifecycle: subscriber half + reconnect-zero-residue, the K2 cycle
+      G1 deferred; element-helpers: listener half via the connection `AbortSignal`.)*
+- [x] ARIA is set only via `internals`, never host attributes (probe asserts no `role`/`aria-*` on host).
+      *(element-internals; the AX-tree read-back is a browser-smoke deferral to G5, not faked.)*
+
+**Verdict.** Element rubric (`docs/rubrics/element.md`): D1 5 · D2 5 · D3 5 · D4 4 · D5 5 · D6 4 · D7 4 ·
+D8 5. Promotion gate (D1,D3,D4,D5,D6 ≥ 4; D2,D7 ≥ 4; D8 ≥ 3): **PASS** — ratified by orchestration-lead
+against per-slice independently-gated evidence (a negative control per slice). Suite: 148 probes green;
+import-layering trip-wire green. Size: **2427 B gz** (reactive+dom barrel, 6575 B min; `npm run size`,
+within the ≤ ~6 kB budget). Code: `packages/agent-ui/components/src/dom/` (`props.ts`, `element.ts`,
+`index.ts`). Deferred to G5 (planning calls): the lazy-upgrade **attribute-wins vs property-wins**
+precedence, and **camelCase→kebab** attribute folding. **G2 shippable.**
 
 ---
 
