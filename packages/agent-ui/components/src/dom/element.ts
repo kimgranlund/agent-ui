@@ -7,9 +7,9 @@
 // wiring + the ONE render effect (e-lifecycle), and the public helper surface — `this.effect` (scope-
 // owned), `this.listen` (rides the abort signal → auto-removed on disconnect), `this.emit` (typed
 // `CustomEvent`), `updateComplete` (e-helpers), and the attribute inbound crossing —
-// `observedAttributes` + `attributeChangedCallback` → `coerceAttribute` (e-attrs). The lazy-upgrade
-// dance and internals/ARIA each compose additively on this base in later slices; `render()` stays a
-// no-op hook until the template layer (G3).
+// `observedAttributes` + `attributeChangedCallback` → `coerceAttribute` (e-attrs), and the lazy-property
+// upgrade dance — `upgradeProps`/`upgradeProperty` at connect (e-upgrade). Internals/ARIA composes
+// additively on this base in a later slice; `render()` stays a no-op hook until the template layer (G3).
 //
 // Imports only `../reactive` (the kernel) + `./props.ts` (same dom layer). `HTMLElement` /
 // `AbortController` / `AbortSignal` / `CustomEvent` are ambient DOM globals, not imports.
@@ -40,6 +40,9 @@ export class UIElement extends HTMLElement {
   }
 
   connectedCallback(): void {
+    // FIRST: replay any pre-upgrade `.prop=` shadow into its signal — before the render effect installs
+    // and before anything reads a prop, so first render sees the assigned value, not the default.
+    this.upgradeProps()
     this.#scope = createScope()
     this.#ac = new AbortController()
     // The ONE render effect, installed through `this.effect` so there is a SINGLE scope-owned-effect
@@ -67,6 +70,33 @@ export class UIElement extends HTMLElement {
     const ctor = this.constructor as unknown as Finalizable
     const name = propForAttribute(ctor, attr)
     if (name !== undefined) coerceAttribute(this, ctor, name, next)
+  }
+
+  /**
+   * Resolve one pre-upgrade property shadow. A `.prop=` assignment made BEFORE the element upgraded (so
+   * before `finalize` installed the prototype accessor) created an OWN data property that now MASKS the
+   * accessor — reads/writes hit the dead own property, never the signal. Capture it, `delete` it
+   * (revealing the accessor), then reassign so the value flows THROUGH the accessor into the signal.
+   * No-op when there is no own-property shadow. Also the manual seam a control calls for a hand-written
+   * array/object accessor.
+   */
+  protected upgradeProperty(name: string): void {
+    if (!Object.hasOwn(this, name)) return
+    const value = (this as Record<string, unknown>)[name]
+    delete (this as Record<string, unknown>)[name]
+    ;(this as Record<string, unknown>)[name] = value
+  }
+
+  /**
+   * Replay every declared prop's pre-upgrade shadow. Run at the START of `connectedCallback`. Ordering
+   * note (the lazy-upgrade ↔ attributeChanged seam): an INITIAL observed attribute is applied during
+   * upgrade — before connect — while the shadow is still present, so its inbound write lands on the
+   * shadow; this reconciles it at connect to the own-property's current value. See element-upgrade.test.ts.
+   */
+  protected upgradeProps(): void {
+    const props = (this.constructor as unknown as Finalizable).props
+    if (!props) return
+    for (const name of Object.keys(props)) this.upgradeProperty(name)
   }
 
   /**
