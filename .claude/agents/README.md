@@ -9,7 +9,7 @@
 |---|---|---|---|
 | [`orchestration-lead`](./orchestration-lead.md) | coordinator | chain-of-command, routing, the eval gate, the escalation loop, report rollups | `agent-orchestration`, `agent-controls` |
 | [`planning-lead`](./planning-lead.md) | design | decomposition (two planes) + PRD · SPEC · LLD · ADR + knowledge distillation | `decomposition-work`, `authoring-prds/specs/llds` |
-| [`execution-lead`](./execution-lead.md) | build | implement to the LLD; enforce system-design rules; run the gates | `authoring-llds`, `decomposition-work` |
+| [`execution-lead`](./execution-lead.md) | build | implement to the LLD; enforce system-design rules; run the gates | `authoring-llds`, `decomposition-work`, `authoring-components` |
 
 Each is authored to the `authoring-agents` contract (scoped `tools`, deliberate `model`, trigger `description`, judgment-frame body). They are reusable role files: the host (or a team) composes them; a subagent does not spawn other subagents.
 
