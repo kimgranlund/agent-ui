@@ -12,7 +12,8 @@ Scores a SKILL.md (and its bundle) for triggerability and behavioral quality. Sc
 | D6 | Cold-start usability | [review] | A worked example / quick start; concepts defined inline | 1: no example, undefined terms · 3: example present · 5: concrete worked example + inline definitions |
 | D7 | Tool reference hygiene | [gate] | MCP/tool references fully qualified (`Server:tool`) | 1: bare names · 3: mostly qualified · 5: all qualified |
 | D8 | Drift resistance | [review] | No duplicated facts; references not fossil-prone; single source | 1: duplicates owned facts · 3: minor duplication · 5: canonical/derived, nothing to fossilize |
+| D9 | References bundle | [gate] | Ships `references/{foundations,best-practices,rubric}.md`, each substantive + grounded | 1: missing any of the three · 3: all present but thin · 5: all present, researched + sourced, scaled to the skill, canonical-or-derived (no filler, no duplication) |
 
-**Gate to promote:** D1, D2, D5, D7 must each score ≥ 3. A skill that cannot be triggered (D1) or has no check (D5) is not production-ready regardless of body quality.
+**Gate to promote:** D1, D2, D5, D7, D9 must each score ≥ 3. A skill that cannot be triggered (D1), has no check (D5), or ships without its references bundle (D9) is not production-ready regardless of body quality.
 
 **Top failure to look for first:** a precise body behind a vague description (D1 low, D3/D4 high) — a dead capability that never fires.

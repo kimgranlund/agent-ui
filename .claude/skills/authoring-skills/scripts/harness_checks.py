@@ -50,7 +50,7 @@ class Result:
         return 0 if not failed else 1
 
 
-def check_skill(t, r):
+def check_skill(t, r, path=None):
     lines = t.count("\n") + 1
     r.add(lines <= 500, "D2 body \u2264 500 lines", f"{lines} lines")
     fm = frontmatter(t)
@@ -60,6 +60,13 @@ def check_skill(t, r):
     if desc:
         r.add(re.search(r"\buse\b", desc.group(1), re.I),
               "D1 description states a trigger", "no 'use when/whenever' phrasing")
+    # D9: every skill ships a references bundle (foundations + best-practices + rubric)
+    p = Path(path) if path else None
+    if p and p.is_file():
+        refs = p.parent / "references"
+        for fname in ("foundations.md", "best-practices.md", "rubric.md"):
+            r.add((refs / fname).is_file(), f"D9 references/{fname} present",
+                  "missing \u2014 every skill ships a foundations/best-practices/rubric bundle")
 
 
 def check_agent(t, r):
@@ -148,7 +155,10 @@ def main(argv):
     kind, arg = argv[1], argv[2]
     text = read(arg)
     r = Result()
-    CHECKS[kind](text, r)
+    if kind == "skill":
+        check_skill(text, r, arg)  # path-aware: D9 checks the sibling references/ bundle
+    else:
+        CHECKS[kind](text, r)
     return r.report(kind)
 
 
