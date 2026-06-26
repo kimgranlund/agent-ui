@@ -13,18 +13,18 @@ description: >-
 
 The one procedure for adding a `ui-*` component, so 60 components don't drift into 60 dialects. It is
 **anti-drift by construction**: every component built this way is born coherent (see
-[`docs/process.md`](../../../docs/process.md)). This skill is the *method*; the specifics live in
+`docs/process.md`). This skill is the *method*; the specifics live in
 canonical docs it **cites, never copies** — read them, don't restate them.
 
 ## Canonical sources (read these; do not duplicate them)
 
 - **API** — base classes, `static props`/`ReactiveProps` declare-merge, `host.use()`, `root`, `upgrade`,
-  events: [`docs/plan.md`](../../../docs/plan.md) §5, realized in `packages/agent-ui/components/src/dom/`.
+  events: `docs/plan.md` §5, realized in `packages/agent-ui/components/src/dom/`.
 - **Geometry & sizing** — the centering law, the two families, size-classes, the ramp:
-  [`docs/references/geometry.md`](../../../docs/references/geometry.md).
+  `docs/references/geometry.md`.
 - **Color tokens** — the `--c-{family}-{role}` role system + consumption invariants:
-  [`docs/references/tokens.md`](../../../docs/references/tokens.md).
-- **Naming / TS / layering** — [`CLAUDE.md`](../../../CLAUDE.md). **Quality bar** — the COMPOSE/REALIZE
+  `docs/references/tokens.md`.
+- **Naming / TS / layering** — `CLAUDE.md`. **Quality bar** — the COMPOSE/REALIZE
   component rubric + the api-contract schema (both land at G5; cite as forthcoming until then).
 
 ## When to use / when not
