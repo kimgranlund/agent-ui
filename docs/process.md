@@ -32,8 +32,8 @@ Three placement rules follow, and they decide every governance artifact below:
 | Artifact | Axis | Mode | Unit | Prevents | Authored via | Lands |
 |---|---|---|---|---|---|---|
 | **Trip-wire suite** (probes + scripts + hook) | behavioral | contract | scripts/hook | drift + bloat | hand + `update-config` (hook) | G0→G1 |
-| `component-author` | behavioral | procedure | **skill** | drift (by construction) | `authoring-skills` | by G5 |
-| `component-audit` | behavioral | procedure | **skill** | drift (detection) | `authoring-skills` | ~G6 |
+| `authoring-components` | behavioral | procedure | **skill** | drift (by construction) | `authoring-skills` | by G5 |
+| `auditing-components` | behavioral | procedure | **skill** | drift (detection) | `authoring-skills` | ~G6 |
 | `component-reviewer` | behavioral | — | **subagent** | drift + bloat (judgment) | `authoring-agents` | G5 |
 | `tokens-specialist` | behavioral | — | **subagent** | drift (tokens) | `authoring-agents` | G6 |
 | api-contract schema | referential | rubric/check | json-schema | drift | hand (draft-2020-12) | G5 |
@@ -71,7 +71,7 @@ lifecycle boundary, not a sentence in a doc).
 
 A skill is the right unit only for a *recurring multi-step method*. Two qualify:
 
-**`component-author`** — the canonical procedure for adding/upgrading a `ui-*` component. It is the
+**`authoring-components`** — the canonical procedure for adding/upgrading a `ui-*` component. It is the
 primary anti-drift instrument: divergence can't happen if every component is built the same way. Its
 description (the router-facing interface):
 
@@ -80,7 +80,7 @@ description (the router-facing interface):
 > trio + `@scope`, the `.api.json` descriptor, probes, and the per-component definition-of-done. Use
 > when adding a new control/component or bringing an existing one up to standard.*
 
-**`component-audit`** — the library-wide drift sweep, producing a severity-ranked `drift-report.md`.
+**`auditing-components`** — the library-wide drift sweep, producing a severity-ranked `drift-report.md`.
 Valuable only once 3+ components exist.
 
 > *Sweep the agent-ui component library for drift and bloat across API/token/lifecycle/event-name/
@@ -104,7 +104,7 @@ description: Adversarially review ONE agent-ui ui-* component against the COMPOS
   PROACTIVELY at a component's definition-of-done, before marking it shippable.
 tools: Read, Grep, Glob, Bash
 model: sonnet            # judgment task — a stronger model than the search tier
-skills: [component-author]   # standing knowledge of the standard shape, no discovery needed
+skills: [authoring-components]   # standing knowledge of the standard shape, no discovery needed
 ---
 ```
 
@@ -134,7 +134,7 @@ These are read to check, never obeyed. They are the single source of truth revie
   no self-owned margin, tier discipline).
 - **kernel rubric** — the kernel's *different* concerns (invariants preserved, surface minimal+typed,
   zero leaks, budget); G1–G4 grade against this, not the component rubric.
-- **coherence/health rubric** — the scoring backbone of `component-audit`.
+- **coherence/health rubric** — the scoring backbone of `auditing-components`.
 
 ## 5. Discovery vs. continuation (how it's wired)
 
@@ -149,7 +149,7 @@ These are read to check, never obeyed. They are the single source of truth revie
 ## How this maps to the three risks
 
 - **Drift** → fails loudly at the trip-wires (contract/naming/layering/tokens), is built-out by the
-  `component-author` procedure, detected library-wide by `component-audit`, and judged by
+  `authoring-components` procedure, detected library-wide by `auditing-components`, and judged by
   `component-reviewer` against the contract+rubric.
 - **Bloat** → the size/tree-shake gate (mechanical) + the rubric's API-minimalism dimensions + the
   per-tier council red-team. And the discipline: **no rubric/agent for what a probe already checks** —
@@ -164,8 +164,8 @@ These are read to check, never obeyed. They are the single source of truth revie
 ```
 G0  thin CLAUDE.md · fast-gate hook · naming/layering/contract-drift probes · size script
 G1  kernel rubric
-G5  component-author skill · api-contract schema · component rubric · component-reviewer agent   (land WITH ui-button)
-G6  component-audit skill · coherence rubric · tokens-specialist agent
+G5  authoring-components skill · api-contract schema · component rubric · component-reviewer agent   (land WITH ui-button)
+G6  auditing-components skill · coherence rubric · tokens-specialist agent
 per-tier  council bloat red-team (occasional, justified fan-out)
 ```
 

@@ -1,5 +1,5 @@
 ---
-name: component-author
+name: authoring-components
 description: >-
   Author or upgrade a ui-* component in @agent-ui/components to the standard shape — pick the base
   class + size-class, scaffold the per-component folder, declare typed props (static props +
@@ -9,7 +9,7 @@ description: >-
   to the framework standard ("add a ui-button", "build the checkbox", "is this component up to standard").
 ---
 
-# Component author
+# Authoring components
 
 The one procedure for adding a `ui-*` component, so 60 components don't drift into 60 dialects. It is
 **anti-drift by construction**: every component built this way is born coherent (see
