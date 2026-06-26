@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "esnext",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Workspace package resolution (@agent-ui/* -> package src) */
+    "paths": {
+      "@agent-ui/components": ["./packages/agent-ui/components/src/index.ts"],
+      "@agent-ui/components/*": ["./packages/agent-ui/components/src/*"],
+      "@agent-ui/shared": ["./packages/agent-ui/shared/src/index.ts"],
+      "@agent-ui/shared/*": ["./packages/agent-ui/shared/src/*"]
+    },
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["packages/agent-ui/*/src"]
+}

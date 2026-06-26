@@ -1,0 +1,51 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+`agent-ui` is a zero-dependency, signals-based web-component library authored in strict, modern
+TypeScript — carrying over the `rce` architecture: signals reactivity · FACE custom elements ·
+tagged-template rendering · traits. First component family = FACE form controls.
+
+Plan `docs/plan.md` · Goals + per-milestone DoD `docs/goals.md` · Coherence process `docs/process.md` · Standards `docs/references/`
+
+## Commands
+
+- `npm run check` — `tsc` type-check (the standing type gate; `noEmit`)
+- `npm test` — Vitest (jsdom), once · `npm run test:watch` — watch mode
+- `npm run dev` / `npm run build` — need an app entry (`index.html`); dormant until the gallery (G8)
+
+`tsc` only type-checks (no emit); `check` + `test` are the gates that must stay green.
+
+## Layout
+
+npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
+
+- `packages/agent-ui/components/` — `@agent-ui/components`, the whole framework. `src/` layers (downward-only):
+  - `reactive/` — signals kernel; imports nothing (bottom layer)
+  - `dom/` — `UIElement`/`UIFormElement`, props, template, directives; imports only `../reactive`
+  - `traits/` — `(host, opts) => cleanup` traits + controllers, registered via `host.use()`
+  - `controls/` — `ui-*` FACE controls; one folder per component; self-define on import
+- `packages/agent-ui/shared/` — `@agent-ui/shared`, cross-cutting tokens, styles, utility types (lands G5)
+- `packages/agent-ui/a2ui/` — `@agent-ui/a2ui`, future (will depend on `@agent-ui/components`)
+- `docs/` — plan, goals, process, references (repo root) · `*.test.ts` co-located with source
+
+## Conventions (non-obvious only)
+
+- tsconfig is strict in load-bearing ways: `erasableSyntaxOnly` bans `enum`/`namespace`/decorators
+  (use `as const` objects + literal unions, and `declare`-merged accessors instead of decorators);
+  `verbatimModuleSyntax` ⇒ `import type` for type-only imports; `allowImportingTsExtensions` ⇒ keep
+  the explicit `.ts` on local imports.
+- Vite 8 is Rolldown-based (not esbuild/Rollup) — bundler/plugin behaviour follows Rolldown-Vite.
+- Imports point inward only: layers `reactive` ← `dom` ← `traits`/`controls`; cross-package, only
+  `components` → `@agent-ui/shared`. Nothing imports upward. (Enforced by the import-layering trip-wire.)
+- Naming: tags `ui-{name}`, classes `UI{Name}Element`, tokens `--ui-{name}-*` / roles `--c-{family}-{role}`;
+  event names ∈ `change · input · select · open · close · toggle`.
+- Components are light-DOM by default; ARIA via `ElementInternals`, never host attributes; no native form elements.
+- Props are typed signals via `static props` + `ReactiveProps<typeof props>` (plan §5).
+
+## Always
+
+- Run `npm run check && npm test` green before treating a change as done.
+
+<!-- Coherence gates (naming/layering/contract-drift/size/zero-native) are scripts + a planned Stop/pre-commit hook, NOT prose rules — see docs/process.md §1. Enforcement lives there, not in this file. -->
+<!-- Architecture detail lives in docs/plan.md; the buildout sequence + DoD in docs/goals.md — referenced as paths, not @-inlined, to keep standing context thin. -->

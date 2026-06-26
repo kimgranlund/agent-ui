@@ -1,0 +1,20 @@
+{
+  "name": "agent-ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "workspaces": [
+    "packages/agent-ui/*"
+  ],
+  "scripts": {
+    "check": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.0",
+    "vitest": "^4.1.9"
+  }
+}
