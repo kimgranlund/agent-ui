@@ -30,7 +30,7 @@ The defect quadrant is the point of the skill: a clean structure that can't host
 
 ## Process
 
-1. **Pick the domain reference** (`references/<domain>.md`) for the concrete vocabulary of each plane; read `references/method.md` for the general method depth. If no domain fits, use `references/_template.md` to add one.
+1. **Pick the domain reference** (`references/<domain>.md`) for the concrete vocabulary of each plane; read `references/method.md` (procedure), `references/foundations.md` (the models it rests on), and `references/best-practices.md` (the do/don't); grade the result against `references/rubric.md`. If no domain fits, use `references/_template.md` to add one.
 2. **Run OUTSIDE-IN** → a node tree. Mark leaf nodes; tag any pure-structure node with a `justify` (why it exists with no action — e.g. `affordance`, `grouping`).
 3. **Run INSIDE-OUT** → an action/atom set (the verbs/needs/capabilities), independent of the structure so it can contradict it.
 4. **Map** each action to the node(s) that host it.
