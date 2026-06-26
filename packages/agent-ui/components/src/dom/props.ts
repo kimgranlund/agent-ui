@@ -1,10 +1,14 @@
-// props.ts — typed props-as-signals, the compile-time half (G2 first slice; plan §5).
+// props.ts — typed props-as-signals (plan §5).
 //
-// This slice is PURE TYPES + PURE CODECS — it proves the headline TS bet (`ReactiveProps<typeof
-// props>` declare-merges to correctly-typed accessors, enum → literal union, never widened to
-// `string`) in isolation, before any control depends on it (goals.md G2 DoD1). It imports nothing:
-// the runtime install (`finalize()` → signal-backed prototype accessors) is the NEXT slice and is
-// the first to touch the `../reactive` kernel. No decorators / enum / namespace (erasableSyntaxOnly).
+// Two halves: (1) the COMPILE-TIME typing contract — `PropType`/`PropConfig`/`prop.*`/`ReactiveProps`
+// — that proves the headline TS bet (an `as const` enum prop declare-merges to its literal union,
+// never widened to `string`; goals.md G2 DoD1, proven in `props-typing.test.ts`); and (2) the RUNTIME
+// install, `finalize()`, which turns that contract into per-instance signal-backed prototype accessors
+// (goals.md G2 DoD2). `finalize` is the FIRST dom module code to touch the `../reactive` kernel —
+// the one allowed direction (dom → reactive). No decorators / enum / namespace (erasableSyntaxOnly).
+
+import { signal } from '../reactive/index.ts'
+import type { Signal } from '../reactive/index.ts'
 
 // ── PropType<T> — the string↔typed codec (p-types) ───────────────────────────
 //
@@ -123,4 +127,74 @@ export type PropsSchema = Record<string, PropConfig<unknown>>
 
 export type ReactiveProps<S extends PropsSchema> = {
   [K in keyof S]: S[K] extends PropConfig<infer T> ? T : never
+}
+
+// ── finalize() — the runtime install (p-install) ─────────────────────────────
+//
+// `finalize(Ctor)` reads the `static props` dict and installs ONE prototype accessor per prop, each
+// backed by a PER-INSTANCE kernel signal. Reading `this.variant` inside an `effect` tracks it; writing
+// invalidates dependents (and the kernel's `Object.is` cutoff carries straight through the accessor).
+//
+// The per-instance signal store is a module-private `WeakMap<instance, Map<name, Signal>>`, populated
+// LAZILY on first access. This is the seam's key property: it needs NO constructor, so `finalize` is
+// fully isolable from the element lifecycle (the connection scope / AbortController / attribute
+// callbacks are the later element slice). The element host composes on this store unchanged — its
+// constructor may pre-warm signals, but is not required to.
+
+/** A constructor-like with a `static props` schema — what `finalize` installs accessors onto. */
+export interface Finalizable {
+  prototype: object
+  props?: PropsSchema
+}
+
+const STORE = new WeakMap<object, Map<string, Signal<unknown>>>()
+const FINALIZED = new WeakSet<Finalizable>()
+
+function signalFor(instance: object, name: string, config: PropConfig<unknown>): Signal<unknown> {
+  let signals = STORE.get(instance)
+  if (!signals) {
+    signals = new Map()
+    STORE.set(instance, signals)
+  }
+  let sig = signals.get(name)
+  if (!sig) {
+    sig = signal(config.default) // lazy init to the declared default
+    signals.set(name, sig)
+  }
+  return sig
+}
+
+/** Install signal-backed prototype accessors from `Ctor.props`. Idempotent (safe to call once per class). */
+export function finalize(ctor: Finalizable): void {
+  if (FINALIZED.has(ctor)) return
+  FINALIZED.add(ctor)
+  const props = ctor.props
+  if (!props) return
+  for (const name of Object.keys(props)) {
+    const config = props[name]
+    Object.defineProperty(ctor.prototype, name, {
+      configurable: true,
+      enumerable: true,
+      get(this: object): unknown {
+        return signalFor(this, name, config).value
+      },
+      set(this: object, next: unknown): void {
+        signalFor(this, name, config).value = next
+      },
+    })
+  }
+}
+
+/**
+ * Inbound seam: cross an attribute STRING (or `null` for absence) into the typed prop signal via the
+ * prop's `PropType.from` codec, and return the coerced value. This is the primitive the element slice's
+ * `attributeChangedCallback` (e-attrs, later) composes on — p-install owns the per-instance store + the
+ * string→typed crossing; it does NOT own the platform callback. A no-op for an unknown prop name.
+ */
+export function coerceAttribute(instance: object, ctor: Finalizable, name: string, attr: string | null): unknown {
+  const config = ctor.props?.[name]
+  if (!config) return undefined
+  const value = config.type.from(attr)
+  signalFor(instance, name, config).value = value
+  return value
 }
