@@ -1,8 +1,9 @@
 # agent-ui — foundation plan
 
 > Status: planning. Companion: [`goals.md`](./goals.md) (the milestone/DoD breakdown).
-> Reference standards: [`references/dimensional-standard.md`](./references/dimensional-standard.md),
-> [`references/geometry-sizing-spec.md`](./references/geometry-sizing-spec.md).
+> Reference standards (canonical, distilled): [`references/geometry.md`](./references/geometry.md) ·
+> [`references/tokens.md`](./references/tokens.md). Provenance (rce ledgers + token values):
+> `references/{dimensional-standard,geometry-sizing-spec}.md`, `references/tokens.css`.
 > Coordination: the A2UI layer that consumes this foundation is specced under [`specs/`](./specs/)
 > (PRD→SPEC→LLD) and built by the planning/execution team in [`../.claude/agents/`](../.claude/agents/);
 > ratified design changes are logged as ADRs in [`adr/`](./adr/).
