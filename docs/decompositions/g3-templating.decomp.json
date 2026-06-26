@@ -1,0 +1,197 @@
+{
+  "domain": "technical-architecture",
+  "_about": {
+    "title": "G3 — template layer + the opt-in directive seam (@agent-ui/components src/dom/)",
+    "serves": "goals.md G3 (Templating + directives) — fills UIElement.render() (the no-op hook G2 left), and delivers `repeat`, the keyed reconcile the A2UI renderer's dynamic lists reuse (unblocks renderer LLD-C6)",
+    "domain_choice": "technical-architecture, not the visual `components` domain: G3 is dom-layer INFRASTRUCTURE (a tagged-template parse/cache/commit engine + an opt-in directive seam), a peer of element.ts/props.ts, not a visual control with geometry/anatomy. The components domain still fits G5+ (ui-button onward).",
+    "sources": [
+      "docs/goals.md G3 (the 4 DoD boxes = acceptance) + the standing DoD",
+      "docs/plan.md §6 (html/svg → inert results; prepare → one <template> parse → parts manifest, WeakMap keyed by `strings` identity; part kinds by sigil child/attr/?bool/.prop/@event, each Object.is-guarded; @event stable listener identity; directives = branded update fns threading state across commits with dispose(); repeat/watch/classMap/ref/unsafeHTML), §2 (signals-not-VDOM: value-diff vs a cached instance, one render effect per host, per-part Object.is below it), §3 (layering), §9 (decorator-free TS; DOM.Iterable for the NodeList/attributes spread)",
+      "packages/agent-ui/components/src/dom/element.ts — the render seam shipped at G2: `this.effect(() => this.render())` (the ONE scope-owned render effect), `render(): void` (no-op hook awaiting G3), `get renderRoot()` (= this.shadowRoot ?? this, light-DOM default), and `this.effect`/`this.listen`/`updateComplete`",
+      "docs/process.md governance (true/false→gate; judgment→rubric) + the import-layering trip-wire (dom imports ONLY ../reactive)",
+      "docs/rubrics/template.md — the G3 promotion gate authored alongside this decomposition"
+    ],
+    "method": "decomposition-work, both planes. OUTSIDE-IN = the dom layer's two G3 modules (template.ts, directives.ts) divided to buildable units + the dom barrel close. INSIDE-OUT = the G3 capabilities anchored to the goals.md DoD boxes + plan.md §6, derived independently of the structure so they can contradict it. The `_build_order` overlay sequences the units by dependency × risk and names the minimal first renderable slice.",
+    "ground_state": "@agent-ui/components is at G2: reactive/ kernel + dom/{element.ts, props.ts} ship (element rubric PASS, 148 probes, 2427 B gz). element.ts already exposes the render seam (render() no-op hook, renderRoot, the one scope-owned render effect). template.ts and directives.ts do not yet exist. The only dependency is the kernel + the element host (both present), so every G3 unit is buildable now; nothing here is blocked.",
+    "plane_independence": "INSIDE-OUT was enumerated from the DoD/plan verbs (re-parse nothing, skip equal holes, commit each kind, keyed-reconcile, scoped-watch, end-to-end render) BEFORE mapping to the OUTSIDE-IN file structure. The contradiction it surfaced and resolved: `a-part-skip` (the Object.is dirty-skip) is not owned by any single part file — it is a shared part-base behavior demonstrated at BOTH the child part and the attr-family parts, so it hosts on two nodes rather than being force-fit into one. A second contradiction: the end-to-end render proof (`a-e2e`) is a cross-module SEAM (reactive ∘ element ∘ template), not a file — it hosts on t-render (the commit entry the host's render() drives) and is described in `_build_order.seams`, rather than inventing a phantom 'integration' node."
+  },
+  "nodes": [
+    { "id": "sys", "label": "G3 — template layer + directive seam (dom layer)", "leaf": false },
+
+    { "id": "sub-template", "label": "template.ts — html/svg/render + the part engine", "leaf": false },
+    { "id": "t-result",     "label": "html / svg → an inert TemplateResult (frozen `strings` identity + values; svg namespace flag); no DOM work at call time", "leaf": true, "file": "template.ts", "trace": "plan §6", "build": "now", "firstSlice": true },
+    { "id": "t-prepare",    "label": "prepare(strings) — marker insertion → ONE <template> parse → a parts manifest, memoized in a WeakMap keyed by `strings` IDENTITY (re-renders re-parse nothing)", "leaf": true, "file": "template.ts", "trace": "plan §6, §2; goals G3 DoD1", "build": "now", "firstSlice": true },
+    { "id": "t-render",     "label": "render(result, container) — first call instantiates (clone fragment + bind parts); later calls update in place (commit values, no re-parse); the entry point UIElement.render() drives", "leaf": true, "file": "template.ts", "trace": "plan §6; goals G3 DoD4", "build": "now", "firstSlice": true },
+    { "id": "t-child-part", "label": "ChildPart — commit a child hole across its kinds (text / nested template / array / directive), managing its DOM range; owns its Object.is dirty-skip", "leaf": true, "file": "template.ts", "trace": "plan §6; goals G3 DoD1", "build": "now", "firstSlice": "basic (text + nested template); array → slice 2" },
+    { "id": "t-attr-parts", "label": "the attribute-family parts — AttrPart / BooleanPart(?bool) / PropertyPart(.prop) / EventPart(@event, stable listener identity), each one site + its Object.is skip", "leaf": true, "file": "template.ts", "trace": "plan §6; goals G3 DoD1", "build": "now", "firstSlice": "basic `attr` only; ?bool/.prop/@event → slice 2" },
+    { "id": "t-positions",  "label": "static-shape correctness — namespace-correct parse (svg fragments in the SVG namespace) + parse-time validation (unsupported binding position throws a useful message; tag-name indirection throws)", "leaf": true, "file": "template.ts", "trace": "goals G3 DoD1; plan §6", "build": "now" },
+
+    { "id": "sub-directives", "label": "directives.ts — the opt-in directive seam + the shipped directives", "leaf": false },
+    { "id": "d-seam",   "label": "the directive contract — a branded factory → an update fn threading state across commits of the SAME hole, with dispose(); the child part routes a directive result to it; teardown is isolated (a throwing disposer doesn't abort siblings)", "leaf": true, "file": "directives.ts", "trace": "plan §6; goals G3 DoD3", "build": "now" },
+    { "id": "d-repeat", "label": "repeat(items, key, template) — keyed DOM reconcile: reuse by key, move by identity, throw on duplicate key; append/remove/stable-prefix cost zero DOM moves", "leaf": true, "file": "directives.ts", "trace": "goals G3 DoD2; plan §6", "build": "now", "programFlag": "A2UI renderer dynamic lists (LLD-C6) reuse this directive — its scheduling matters to the broader program" },
+    { "id": "d-watch",  "label": "watch(signal) — subscribe ONLY this hole to the signal; commit just the hole on change WITHOUT re-running the host render effect; die on disconnect, respawn on reconnect", "leaf": true, "file": "directives.ts", "trace": "goals G3 DoD3; plan §6", "build": "now", "seamFlag": "needs the render-context/connection-scope seam ratified (see _build_order.scope_seam) — the per-hole effect must be owned by the connection scope, not the transient render effect" },
+    { "id": "d-simple", "label": "classMap / ref / unsafeHTML — the three stateless(-ish) riders on the seam (token-set toggle on an attr part / element callback / the named raw-HTML sharp edge)", "leaf": true, "file": "directives.ts", "trace": "plan §6", "build": "now" },
+
+    { "id": "d-barrel", "label": "dom/index.ts — re-export the intended G3 surface (html, svg, render, repeat, watch, classMap, ref, unsafeHTML + result/part types) + keep inward-only layering", "leaf": true, "file": "dom/index.ts", "trace": "plan §3, §9", "build": "now" }
+  ],
+  "actions": [
+    { "id": "a-inert-result",       "label": "produce an inert TemplateResult from html/svg — capture frozen `strings` + values (and the svg namespace flag) with no DOM work at the call site", "trace": "plan §6" },
+    { "id": "a-prepare-cache",      "label": "prepare a call site's `strings` ONCE (markers → one <template> parse → a parts manifest), memoized by `strings` identity in a WeakMap, so a re-render re-parses nothing (same `strings` ⇒ same prepared instance)", "trace": "goals G3 DoD1; plan §6, §2" },
+    { "id": "a-render-commit",      "label": "render(result, container) instantiates on the first call and updates in place after — commit each value to its part (no re-parse); the host's render effect drives it", "trace": "plan §6; goals G3 DoD4" },
+    { "id": "a-child-commit",       "label": "commit a child hole across its kinds — text, a nested TemplateResult (clone + reconcile), an array (iterate), a directive — managing its DOM range", "trace": "goals G3 DoD1; plan §6" },
+    { "id": "a-part-skip",          "label": "an Object.is-equal hole writes no DOM — the part base's dirty-skip carries the kernel equality cutoff through to the commit (no part writes for an unchanged hole)", "trace": "goals G3 DoD1; plan §2" },
+    { "id": "a-attr-commit",        "label": "commit the attribute-family parts to their one site — `attr` (string), `?bool` (toggle), `.prop` (assign), `@event` (dispatch)", "trace": "goals G3 DoD1; plan §6" },
+    { "id": "a-event-identity",     "label": "an @event part keeps ONE stable platform listener whose inner handler swaps — no add/remove churn on re-render, no event dropped mid-swap", "trace": "goals G3 DoD1; plan §6" },
+    { "id": "a-positions",          "label": "reject an unsupported binding position (and tag-name indirection) at PREPARE time with a useful, position-naming error message", "trace": "goals G3 DoD1; plan §6" },
+    { "id": "a-svg-ns",             "label": "svg`` fragments parse in the SVG namespace so elements are created correctly (not in the HTML namespace)", "trace": "goals G3 DoD1; plan §6" },
+    { "id": "a-directive-seam",     "label": "a directive is a branded factory whose update fn threads state across commits of the SAME hole and exposes dispose() for teardown; the child part recognizes a directive result and routes commits to it (the SOLE extension point)", "trace": "goals G3 DoD3; plan §6" },
+    { "id": "a-teardown-isolation", "label": "directive teardown is isolated — a throwing disposer does not abort sibling parts' teardown", "trace": "goals G3 DoD3" },
+    { "id": "a-repeat",             "label": "repeat reconciles a keyed list — reuse DOM by key, move by identity, throw on a duplicate key; append/remove/stable-prefix cost zero DOM moves", "trace": "goals G3 DoD2; plan §6" },
+    { "id": "a-watch",              "label": "watch(signal) updates ONLY its hole on the signal's change WITHOUT re-running the host render effect; the subscription dies on disconnect and respawns on reconnect", "trace": "goals G3 DoD3; plan §6" },
+    { "id": "a-simple-directives",  "label": "classMap / ref / unsafeHTML ride the seam — a token-set toggle on an attr part, an element callback, and the named raw-HTML injection", "trace": "plan §6" },
+    { "id": "a-e2e",                "label": "one UIElement subclass's render() commits an html`` template into renderRoot through the connection-scoped render effect; a tracked prop change re-runs the host render effect and commits only the changed hole (the G1–G3 integration proof)", "trace": "goals G3 DoD4; element.ts render()/renderRoot seam" },
+    { "id": "a-surface",            "label": "the dom barrel exports exactly the intended G3 surface (html, svg, render, repeat, watch, classMap, ref, unsafeHTML, the result/part types) — no internal manifest/part fields leak", "trace": "plan §9" },
+    { "id": "a-layering",           "label": "template.ts / directives.ts import ONLY ../reactive (the import-layering trip-wire stays green); no enum/namespace/decorator (erasableSyntaxOnly); the part-kind union is exhaustiveness-checked", "trace": "plan §3, §9; process.md trip-wire" }
+  ],
+  "hosts": [
+    { "action": "a-inert-result",       "node": "t-result" },
+    { "action": "a-prepare-cache",      "node": "t-prepare" },
+    { "action": "a-render-commit",      "node": "t-render" },
+    { "action": "a-e2e",                "node": "t-render" },
+    { "action": "a-child-commit",       "node": "t-child-part" },
+    { "action": "a-part-skip",          "node": "t-child-part" },
+    { "action": "a-part-skip",          "node": "t-attr-parts" },
+    { "action": "a-attr-commit",        "node": "t-attr-parts" },
+    { "action": "a-event-identity",     "node": "t-attr-parts" },
+    { "action": "a-positions",          "node": "t-positions" },
+    { "action": "a-svg-ns",             "node": "t-positions" },
+    { "action": "a-directive-seam",     "node": "d-seam" },
+    { "action": "a-teardown-isolation", "node": "d-seam" },
+    { "action": "a-repeat",             "node": "d-repeat" },
+    { "action": "a-watch",              "node": "d-watch" },
+    { "action": "a-simple-directives",  "node": "d-simple" },
+    { "action": "a-surface",            "node": "d-barrel" },
+    { "action": "a-layering",           "node": "d-barrel" }
+  ],
+  "_dod_map": {
+    "goals.md G3 DoD1 (re-parse nothing; per-part Object.is skip; each part kind commits; svg parses + tag-indirection throws; bad position throws useful msg)": ["a-prepare-cache", "a-part-skip", "a-child-commit", "a-attr-commit", "a-event-identity", "a-svg-ns", "a-positions"],
+    "goals.md G3 DoD2 (repeat: reuse by key, move by identity, dup-key throw; append/remove/stable-prefix zero moves)": ["a-repeat"],
+    "goals.md G3 DoD3 (watch updates hole without host re-render, dies/respawns on disconnect/reconnect; teardown isolated)": ["a-watch", "a-directive-seam", "a-teardown-isolation"],
+    "goals.md G3 DoD4 (one UIElement renders via html`` end-to-end — the G1–G3 proof)": ["a-e2e", "a-render-commit"]
+  },
+  "_rubric_map": {
+    "_note": "Each rubric dimension (docs/rubrics/template.md) → the action(s) it grades. Budget (D9) is a meta-check, not a node-hosted action.",
+    "D1 prepare & cache":              ["a-inert-result", "a-prepare-cache"],
+    "D2 per-part commit & Object.is":  ["a-child-commit", "a-attr-commit", "a-event-identity", "a-part-skip"],
+    "D3 directive seam":               ["a-directive-seam", "a-teardown-isolation", "a-simple-directives"],
+    "D4 repeat":                       ["a-repeat"],
+    "D5 watch":                        ["a-watch"],
+    "D6 svg & static-shape errors":    ["a-svg-ns", "a-positions"],
+    "D7 html`` end-to-end proof":      ["a-e2e", "a-render-commit"],
+    "D8 layering, surface & TS":       ["a-surface", "a-layering"],
+    "D9 budget":                       []
+  },
+  "_first_slice": {
+    "name": "the template core — the smallest thing that renders (goals.md G3 DoD4, minimal)",
+    "nodes": ["t-result", "t-prepare", "t-render", "t-child-part (text + nested template)", "t-attr-parts (the plain `attr` kind)"],
+    "deliverable": "html`` → an inert TemplateResult; prepare(strings) → one <template> parse + a parts manifest, memoized in a WeakMap keyed by `strings` identity; render(result, container) instantiate-or-update; a ChildPart that commits a text hole + a nested TemplateResult; an AttrPart that commits a string attribute — each with its Object.is dirty-skip. PLUS a minimal UIElement subclass whose render() commits a STATIC html`` into renderRoot (seeds the render()/renderRoot seam early, the seed of the D7 proof).",
+    "acceptance": "rubric D1 (`prepare-cache`: same `strings` ⇒ the same prepared instance; a second render parses nothing) + the child-text/attr halves of D2 (`child-commit`, `attr-commit`) + `part-skip` (an Object.is-equal hole writes no DOM) + the static-render seed of D7 (`html-e2e`-minimal: a UIElement renders a static html`` into renderRoot through the scope-owned render effect).",
+    "smallest_dep": "the reactive kernel + the G2 element host, both shipped. No new element.ts/props.ts export is required for this slice — element.ts already exposes render() (the hook to override), renderRoot (the commit target), and the one scope-owned render effect. The render-context/scope seam (for directive effects) is NOT needed until the watch slice.",
+    "why": "plan §2's headline architecture is 'signals, not a VDOM: updates are value-diffs against a CACHED template instance.' The prepare/WeakMap cache + the part-commit skip ARE that architecture; proving re-parse-nothing + per-part skip first de-risks every later directive (they all commit through the same part engine) and fills UIElement.render() — the no-op hook G2 deliberately left for G3."
+  },
+  "_build_order": {
+    "_note": "Metadata-only overlay: the ordered build plan + seams for G3. Adds NO node/action/host and alters NO id/label/leaf/edge — coverage_check stays clean. Authored by the design seat.",
+    "ordering_finding": "Two dependency spines, joined at the child part. SPINE A (template.ts): t-result → t-prepare → t-render compose the parse/cache/commit pipeline; the parts (t-child-part, t-attr-parts) are what render() commits THROUGH; t-positions is additive parse-time validation. SPINE B (directives.ts): d-seam is the root the directives stand on — d-repeat, d-watch, d-simple are mutually-independent riders that the child part routes to (so d-seam MUST precede them, and the child part must recognize a directive result first). The barrel locks the surface last. Recommended linear order by dependency × risk × downstream leverage below.",
+    "render_seam": "The composition seam element.ts shipped at G2 and G3 fills: the host installs ONE scope-owned render effect — `this.effect(() => this.render())`. A G3 control overrides the protected `render()` no-op to call the template engine: `render() { render(html`…`, this.renderRoot) }`. Because the host effect re-runs render() whenever a signal READ during render() changes, a tracked-prop write → the host render effect re-runs → the template render() commits, and the part engine's per-part Object.is skip writes only the changed holes. renderRoot = `this.shadowRoot ?? this` (light-DOM default), already wired. NOTHING in element.ts changes for the template-core slice.",
+    "scope_seam": {
+      "_flag": "THE one G3 design decision to ratify before the watch slice (the analog of G2's props.ts name-mapping addition). Does NOT block slices 1–5.",
+      "problem": "watch's per-hole subscription must (1) survive host re-renders that don't touch it, (2) die on disconnect, (3) NOT be torn down each time the host render effect re-runs. If the watch effect were created as a child of the host render effect, the kernel would dispose it on the render effect's next run — defeating 'updates without re-running the host.' So the watch effect must be owned by the CONNECTION SCOPE, not the transient render effect. The template engine's render(result, container) takes a container, not the host — so it has no handle to the connection scope today.",
+      "recommendation": "Thread the host's render CONTEXT into the template render path so a directive can install a connection-scope-owned effect. Concretely: either (a) render(result, container, host) where host exposes the scope-owned `effect` installer (element.ts already has `this.effect`), or (b) the host sets an ambient current-render-host around its render() call that directives read on first commit. Recommend (a) — explicit over ambient, and it reuses element.ts's existing `this.effect` (no new kernel surface). The host effect must read only the directive INSTANCE (untracked w.r.t. the watched signal) so the host render effect gains no source on it.",
+      "element_ts_impact": "A small, additive element.ts change is likely (pass `this` or a minimal render-context into the template render call from the overridden render()). It is NOT re-exported as public surface — an internal host↔template seam, so D8's 'surface is exactly the intended set' stays clean. repeat (slice 5) does NOT need this (its reconcile runs during a commit, owning no persistent effect); watch (slice 6) does. Ratify during slices 1–4.",
+      "decomposition_impact": "none — an implementation/seam decision inside the existing d-watch + t-render leaves, not a new node/action/host."
+    },
+    "slices": [
+      {
+        "order": 1,
+        "first": true,
+        "smallest": true,
+        "nodes": ["t-result", "t-prepare", "t-render", "t-child-part (text+template)", "t-attr-parts (attr)"],
+        "deliverable": "see _first_slice — html``/prepare+WeakMap cache/render/basic child(text,template)+attr parts, plus a static-render UIElement seed. The smallest independently-testable thing that renders.",
+        "acceptance": "rubric D1 + the child-text/attr halves of D2 + part-skip + the static seed of D7. Probes: `prepare-cache` (same `strings` ⇒ same prepared; second render parses nothing), `child-commit` (text+template), `attr-commit`, `part-skip` (equal hole writes no DOM), `html-e2e`-minimal (a UIElement renders a static html`` into renderRoot).",
+        "defers": "child array + nested-template reconcile, ?bool/.prop/@event → slice 2; positions/svg → slice 3; ALL directives → slices 4–7; the full reactive e2e (tracked-prop re-render + watch-driven hole) → slice 8.",
+        "depends_on": "reactive kernel + G2 element host (both shipped). No new export."
+      },
+      {
+        "order": 2,
+        "nodes": ["t-child-part (array+reconcile)", "t-attr-parts (?bool/.prop/@event)"],
+        "deliverable": "complete the part family: the child array kind (iterate + nested-template, positional reconcile) and the rest of the attr family — BooleanPart (?bool toggle), PropertyPart (.prop assign), EventPart (@event with a STABLE listener identity whose inner handler swaps).",
+        "acceptance": "completes rubric D2 ≥ 4. Probes: `child-commit` (array), `event-stable-identity` (ONE platform listener across re-renders, no add/remove churn, no dropped event mid-swap), `part-skip` extended to each kind.",
+        "defers": "—",
+        "depends_on": "t-render + t-child-part + t-attr-parts (slice 1)."
+      },
+      {
+        "order": 3,
+        "nodes": ["t-positions"],
+        "deliverable": "static-shape correctness at prepare time: svg`` fragments parse in the SVG namespace; an unsupported binding position throws a useful, position-naming message; tag-name indirection (`${x}` in tag position) throws.",
+        "acceptance": "rubric D6. Probes: `svg-namespace` (svg elements created in the SVG namespace), `bad-position-throws` (useful message), `tag-indirection-throws`.",
+        "defers": "—",
+        "depends_on": "t-prepare (the parse pass slice 1 owns; this adds validation + the namespace branch to it)."
+      },
+      {
+        "order": 4,
+        "nodes": ["d-seam"],
+        "deliverable": "the directive contract: a branded directive factory → an update fn threading state across commits of the SAME hole + a dispose(); the child part recognizes a directive result and routes commits to it; teardown isolation (a throwing disposer is caught, siblings still torn down). The SOLE extension point — repeat/watch/simple are riders, not special-cased in the part engine.",
+        "acceptance": "rubric D3. Probes: `directive-seam` (state threads across commits; dispose() runs), `directive-teardown-isolation` (a throwing disposer leaves siblings torn down).",
+        "defers": "the concrete directives → slices 5–7.",
+        "depends_on": "t-child-part (the directive child-kind, slice 1/2). PRECONDITION for slices 5–7."
+      },
+      {
+        "order": 5,
+        "nodes": ["d-repeat"],
+        "programFlag": "DELIVERS `repeat` — the keyed reconcile the A2UI renderer's dynamic lists reuse (unblocks renderer LLD-C6). Its scheduling (move-by-identity, zero-move stable prefix) is a program-level interface, not just a control concern.",
+        "deliverable": "repeat(items, key, template): keyed DOM reconcile — reuse by key, move by identity, throw on a duplicate key; append/remove/stable-prefix perform zero DOM moves.",
+        "acceptance": "rubric D4. Probes: `repeat-keyed` (reuse by key), `repeat-dup-throw`, `repeat-move-identity` (a reorder MOVES nodes, preserving element state/focus), `repeat-zero-move` (append/remove/stable-prefix → zero moves).",
+        "defers": "—",
+        "depends_on": "d-seam (slice 4). Does NOT need the scope_seam — repeat's reconcile runs during a commit, owning no persistent effect."
+      },
+      {
+        "order": 6,
+        "nodes": ["d-watch"],
+        "seamFlag": "REQUIRES the scope_seam ratified (see _build_order.scope_seam) — the per-hole effect must be owned by the connection scope, not the transient render effect.",
+        "deliverable": "watch(signal): subscribe ONLY this hole to the signal via a connection-scope-owned effect; commit just the hole on change WITHOUT re-running the host render effect (the host effect reads only the directive instance, untracked w.r.t. the signal); the subscription dies on disconnect and respawns on reconnect.",
+        "acceptance": "rubric D5. Probes: `watch-isolated-rerender` (the hole updates; the host render effect does NOT re-run — it gained no source on the signal), `watch-reconnect` (dies on disconnect, respawns on reconnect, zero residue).",
+        "defers": "—",
+        "depends_on": "d-seam (slice 4) + the ratified scope_seam (the host render-context exposing a scope-owned `effect`)."
+      },
+      {
+        "order": 7,
+        "nodes": ["d-simple"],
+        "deliverable": "classMap (diff a token set onto an attr part), ref (call back with the element on attach), unsafeHTML (the named sharp edge — set innerHTML for raw markup). The three stateless(-ish) seam riders.",
+        "acceptance": "rounds out rubric D3. Probes: `classmap-toggle`, `ref-fires`, `unsafe-html-injects`.",
+        "defers": "—",
+        "depends_on": "d-seam (slice 4)."
+      },
+      {
+        "order": 8,
+        "closing": true,
+        "nodes": ["t-render (full e2e)", "d-barrel"],
+        "deliverable": "the FULL G1–G3 integration proof — a UIElement subclass whose tracked prop change re-runs the host render effect and commits ONLY the changed hole (Object.is-skip end-to-end), and a watch-driven hole that updates WITHOUT the host re-rendering. THEN lock dom/index.ts: re-export exactly { html, svg, render, repeat, watch, classMap, ref, unsafeHTML, result/part types }; internal seams (prepare, the part classes, the manifest) NOT re-exported.",
+        "acceptance": "rubric D7 ≥ 4 (`html-e2e` full: tracked-prop re-render commits only the changed hole; a watch hole updates without host re-render) + D8 (a-surface: exactly the intended set, no internal leak; a-layering: the import-layering trip-wire stays green — template/directives import ONLY ../reactive; no enum/namespace/decorator) + D9 (budget: the reactive+dom+template gz measured and recorded).",
+        "defers": "—",
+        "depends_on": "all template + directive slices. The barrel grows incrementally as each slice lands; locks here."
+      }
+    ],
+    "seams": {
+      "element.render() ∘ template.render()": "The host's ONE scope-owned render effect calls the overridden render(), which calls the template engine's render(html``, this.renderRoot). A tracked-prop write re-runs the host render effect → the template render() re-commits → the part engine's Object.is skip writes only the changed holes. renderRoot = this.shadowRoot ?? this (already wired). No element.ts change for the template core.",
+      "the child part ∘ the directive seam": "A ChildPart, on commit, recognizes a directive result (branded) and routes the value to the directive's update fn instead of treating it as text/template/array; on replacement it calls the directive's dispose(). This routing is what makes the seam the SOLE extension point — repeat/watch/simple are not special-cased in the part engine.",
+      "watch ∘ the connection scope (the scope_seam)": "watch's per-hole effect must be owned by the connection scope (dies on disconnect, survives unrelated host re-renders), NOT created as a child of the transient render effect (which would dispose it every render). Requires the render-context threading the host's scope-owned `effect` into the template render path. The host render effect reads only the directive instance (untracked w.r.t. the watched signal) so it gains no source on it. THE seam to ratify before slice 6.",
+      "repeat ∘ the host render effect": "repeat reconciles during a commit driven by the host render effect (a new items array re-runs render → repeat diffs old vs new keys), or it sits inside a watch hole (then the watch effect drives it). repeat itself owns no persistent effect, so it does NOT need the scope_seam — unblocking the program-critical d-repeat slice independent of the scope decision."
+    },
+    "coverage_prediction": {
+      "command": "python3 .claude/skills/decomposition-work/scripts/coverage_check.py docs/decompositions/g3-templating.decomp.json --strict",
+      "expected_stdout": "== coverage: 14 nodes · 17 actions · 18 hosts == / [OK] coverage clean — both planes cross-check",
+      "expected_exit": 0,
+      "rationale": "Every action is hosted (no UNHOSTED): all 17 appear in `hosts`. Every leaf hosts ≥1 action (no UNJUSTIFIED-LEAF even under --strict): the 11 leaves are t-result, t-prepare, t-render(2), t-child-part(2), t-attr-parts(3), t-positions(2), d-seam(2), d-repeat, d-watch, d-simple, d-barrel(2). Every hosts edge references a declared id (no DANGLING). All node/action ids unique (no DUP-ID). a-part-skip carries TWO host edges (t-child-part + t-attr-parts) — coverage needs ≥1, so this is clean and intentional (a shared part-base behavior). Hosts = 18 (17 actions, one with 2 edges). The _build_order/_dod_map/_rubric_map/_about/_first_slice keys are top-level metadata the script ignores."
+    }
+  }
+}
