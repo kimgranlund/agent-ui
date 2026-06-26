@@ -7,12 +7,13 @@
 // wiring + the ONE render effect (e-lifecycle), and the public helper surface — `this.effect` (scope-
 // owned), `this.listen` (rides the abort signal → auto-removed on disconnect), `this.emit` (typed
 // `CustomEvent`), `updateComplete` (e-helpers), and the attribute inbound crossing —
-// `observedAttributes` + `attributeChangedCallback` → `coerceAttribute` (e-attrs), and the lazy-property
-// upgrade dance — `upgradeProps`/`upgradeProperty` at connect (e-upgrade). Internals/ARIA composes
-// additively on this base in a later slice; `render()` stays a no-op hook until the template layer (G3).
+// `observedAttributes` + `attributeChangedCallback` → `coerceAttribute` (e-attrs), the lazy-property
+// upgrade dance — `upgradeProps`/`upgradeProperty` at connect (e-upgrade), and internals-only ARIA + the
+// light-DOM-default render root (e-internals). Only the dom barrel remains to close G2; `render()` stays
+// a no-op hook until the template layer (G3).
 //
 // Imports only `../reactive` (the kernel) + `./props.ts` (same dom layer). `HTMLElement` /
-// `AbortController` / `AbortSignal` / `CustomEvent` are ambient DOM globals, not imports.
+// `AbortController` / `AbortSignal` / `CustomEvent` / `ElementInternals` are ambient DOM globals, not imports.
 
 import { createScope, effect as createEffect, whenFlushed } from '../reactive/index.ts'
 import type { Scope } from '../reactive/index.ts'
@@ -23,6 +24,12 @@ export class UIElement extends HTMLElement {
   // disconnect. `#`-private (real JS privacy) so nothing outside the host can hold or revive them.
   #scope: Scope | null = null
   #ac: AbortController | null = null
+  // The single `ElementInternals` handle, acquired ONCE here (a second `attachInternals()` throws).
+  // Surfaced to subclasses via the protected `internals` getter — a `#private` field can't cross to one.
+  #internals: ElementInternals = this.attachInternals()
+
+  /** Light DOM by default; a subclass sets `static shadow = true` to render into a shadow root instead. */
+  static shadow = false
 
   // The attribute names the platform watches, derived from `static props` (property-only props excluded;
   // `attribute` overrides honoured). Read once by `customElements.define`, before any instance exists —
@@ -33,6 +40,8 @@ export class UIElement extends HTMLElement {
 
   constructor() {
     super()
+    // Opt-in shadow root (light DOM is the default), attached once here so `renderRoot` is a pure getter.
+    if ((this.constructor as typeof UIElement).shadow) this.attachShadow({ mode: 'open' })
     // Light the props-as-signals subsystem on this host: install the signal-backed prototype accessors
     // declared by `static props`. Idempotent per class (props.ts' FINALIZED set), so every instance
     // calls it but only the first instance of a class finalizes it — no props.ts change needed.
@@ -137,6 +146,24 @@ export class UIElement extends HTMLElement {
   /** Resolves after the next render flush settles — `await el.updateComplete` waits for a pending render. */
   get updateComplete(): Promise<void> {
     return whenFlushed()
+  }
+
+  /**
+   * The render target: the shadow root when `static shadow` opted one in, else the host itself (light DOM
+   * is the default). G3's render effect commits into this — the seam lands now so G3 + the barrel compose.
+   */
+  get renderRoot(): ShadowRoot | HTMLElement {
+    return this.shadowRoot ?? this
+  }
+
+  /**
+   * The single `ElementInternals` handle (acquired once in the constructor). ARIA is set THROUGH this —
+   * `this.internals.role = …`, `this.internals.ariaChecked = …` — NEVER host attributes, so the host
+   * stays free of `role`/`aria-*`. The protected seam the G4 form subclass + traits reuse without
+   * re-acquiring (a second `attachInternals()` throws).
+   */
+  protected get internals(): ElementInternals {
+    return this.#internals
   }
 
   /**
