@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 
 docs/other
+
+# Vitest browser-mode run artifacts (Playwright screenshots/attachments)
+.vitest-attachments/
+**/__screenshots__/
