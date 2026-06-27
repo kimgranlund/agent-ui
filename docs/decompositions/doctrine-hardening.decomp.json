@@ -1,0 +1,117 @@
+{
+  "domain": "technical-architecture",
+  "_about": {
+    "title": "Doctrine-hardening — 7 improvements to the agent/governance doctrine, sliced file-disjoint",
+    "serves": "task #45 (planning-harden host: gate → fan out file-disjoint slices → negative-control the new code → commit). This is the DESIGN: both planes + a coverage-clean file-disjoint slicing, the canonical-source-vs-reference ownership map, the collision map, and the PREP/reference DAG. The #4/#5 CODE design is returned in the handoff (load-bearing detail), summarized under _code_design here.",
+    "domain_choice": "technical-architecture — the doctrine is a SYSTEM of artifacts (agent role files · skills · process/ADR docs · governance code); the slices are its modules, the improvements its capabilities. Not the visual `components` domain.",
+    "method": "decomposition-work, both planes. OUTSIDE-IN = the doctrine artifacts grouped (agent-docs · skills · docs · code) down to the single OWNING FILE per slice. INSIDE-OUT = the 7 improvements decomposed into concrete capability-actions, each split into its CANONICAL-owner action and its REFERENCE actions (repair-the-owner: one fact, one home, pointers elsewhere). The hosts crossing is exactly the ownership map.",
+    "slicing_principle": "FILE-DISJOINT by OWNING FILE, not by improvement. Improvements collide on files (e.g. #1 and #2 both touch orchestration-lead.md), so a per-improvement fan-out would race. Instead each leaf slice = one file (or one tightly-coupled file group) owned by ONE worker that applies EVERY improvement touching it. That makes the fan-out collision-free in a single tree — which is itself improvement #2's pattern, dog-fooded here."
+  },
+  "nodes": [
+    { "id": "root", "label": "Doctrine-hardening (7 improvements)", "leaf": false },
+
+    { "id": "g-agentdocs", "label": "agent role/contract docs (.claude/agents/)", "leaf": false, "parent": "root" },
+    { "id": "s1", "label": "orchestration-lead.md — dispatch directive + fan-out rule", "leaf": true, "parent": "g-agentdocs", "file": ".claude/agents/orchestration-lead.md" },
+    { "id": "s2", "label": "handoff-contract.md — Files-changed honesty + gate≠commit clause", "leaf": true, "parent": "g-agentdocs", "file": ".claude/agents/handoff-contract.md" },
+    { "id": "s6", "label": "component-reviewer.md — NC-anchor adversarial check + generator/critic reinforce", "leaf": true, "parent": "g-agentdocs", "file": ".claude/agents/component-reviewer.md" },
+
+    { "id": "g-skills", "label": "skills (.claude/skills/)", "leaf": false, "parent": "root" },
+    { "id": "s3", "label": "orchestration-design — codify disjoint same-tree fan-out + PREP slice, demote worktrees", "leaf": true, "parent": "g-skills", "file": ".claude/skills/orchestration-design/ (SKILL.md + references/best-practices.md)" },
+    { "id": "s4", "label": "decomposing-systems — file-disjoint slicing + PREP node · NC-anchor · ADR Decision→action", "leaf": true, "parent": "g-skills", "file": ".claude/skills/decomposing-systems/ (SKILL.md + references/method.md + references/goals.md)" },
+    { "id": "s10", "label": "authoring-components — document the broadened trip-wire + the fleet-sweep/site guards", "leaf": true, "parent": "g-skills", "file": ".claude/skills/authoring-components/SKILL.md" },
+
+    { "id": "g-docs", "label": "process + ADR docs (docs/)", "leaf": false, "parent": "root" },
+    { "id": "s5", "label": "process.md — gate≠commit + NC-anchor + generator/critic (the gate doctrine, CANONICAL)", "leaf": true, "parent": "g-docs", "file": "docs/process.md" },
+    { "id": "s7", "label": "adr/README.md — foreseen-amendment ADR pattern", "leaf": true, "parent": "g-docs", "file": "docs/adr/README.md" },
+
+    { "id": "g-code", "label": "governance code (CODE — negative-controlled before commit)", "leaf": false, "parent": "root" },
+    { "id": "s8", "label": "#5 broaden the descriptor trip-wire to customStates/slots (component-descriptor.ts compare fns + the static registry the live class adopts)", "leaf": true, "parent": "g-code", "file": "packages/agent-ui/components/src/descriptor/component-descriptor.ts + .test + controls/button/button.ts (registry adoption)" },
+    { "id": "s9", "label": "#4 contract-change fleet migration sweep + /site fail-closed guard", "leaf": true, "parent": "g-code", "file": "packages/agent-ui/components/src/descriptor/<fleet-sweep>.test.ts + site/lib/frontmatter.ts + site/lib/<guard>.test.ts" }
+  ],
+  "actions": [
+    { "id": "a1", "label": "pack a SELF-CONTAINED dispatch directive (the worker knows only what is handed) AND name the frozen/committed paths it must not re-edit", "improvement": 1, "role": "canonical" },
+    { "id": "a2", "label": "Files-changed reports ONLY this slice's paths; never relist already-committed files (report-side honesty)", "improvement": 1, "role": "canonical" },
+
+    { "id": "a3", "label": "codify the disjoint same-tree fan-out PATTERN + the PREP slice (land shared scaffolding first); worktrees demoted to the fallback when file-disjointness cannot be guaranteed", "improvement": 2, "role": "canonical" },
+    { "id": "a4", "label": "the dispatch rule references the same-tree fan-out pattern; worktrees are the fallback, not the default", "improvement": 2, "role": "reference" },
+    { "id": "a5", "label": "decomposition slicing guidance: produce FILE-DISJOINT slices + a PREP node for shared scaffolding (the decomposition-side of the pattern)", "improvement": 2, "role": "canonical-adjacent" },
+
+    { "id": "a6", "label": "gate-pass != committed/landed — a green gate is not a landed change (the gate doctrine)", "improvement": 3, "role": "canonical" },
+    { "id": "a7", "label": "Tests/checks-run states gate-pass is not landing (the gate≠commit clause referenced)", "improvement": 3, "role": "reference" },
+    { "id": "a8", "label": "every new gate/probe carries a NEGATIVE-CONTROL ANCHOR — a deliberately-failing case proving the check is non-vacuous", "improvement": 3, "role": "canonical" },
+    { "id": "a9", "label": "the coverage/probe method requires an NC-anchor when adding a new check (apply the doctrine)", "improvement": 3, "role": "reference" },
+    { "id": "a10", "label": "the adversarial critic looks for the missing NC-anchor / vacuous gate, and is structurally separate from the maker (generator/critic reinforced)", "improvement": 3, "role": "reference" },
+    { "id": "a11", "label": "reinforce generator/critic separation — a maker never grades its own output; verification is a separate step (the gate doctrine)", "improvement": 3, "role": "canonical" },
+
+    { "id": "a12", "label": "fleet contract-change MIGRATION SWEEP: discover every {name}.md + its live class, run schema-validate + descriptor↔props (+ the new states/slots checks) across the whole fleet in ONE gate, so a contract change surfaces every component to migrate", "improvement": 4, "role": "canonical" },
+    { "id": "a13", "label": "/site GUARD: the site descriptor loader fail-CLOSES on a schema-invalid or drifted descriptor, so the site can never render a broken contract", "improvement": 4, "role": "canonical" },
+    { "id": "a14", "label": "authoring-components validation loop documents the fleet-sweep + /site guard gates", "improvement": 4, "role": "reference" },
+
+    { "id": "a15", "label": "the live single-source for non-attribute surface: static customStates / static slots registries on the component (mirrors static props), the contract the trip-wire binds to", "improvement": 5, "role": "canonical" },
+    { "id": "a16", "label": "compareDescriptorToStates / compareDescriptorToSlots: descriptor.customStates/slots in faithful BIJECTION with the static registries (DRIFT_* codes, reusing the attributes pattern)", "improvement": 5, "role": "canonical" },
+    { "id": "a17", "label": "authoring-components documents the customStates/slots registries + the broadened trip-wire in the descriptor + DoD steps", "improvement": 5, "role": "reference" },
+
+    { "id": "a18", "label": "decomp COMPLETENESS pass: every ratified ADR Decision becomes an INSIDE-OUT action node in the decomposition it drives (no Decision without a hosted action)", "improvement": 6, "role": "canonical" },
+
+    { "id": "a19", "label": "the FORESEEN-AMENDMENT ADR pattern: a forward relationship recording an ADR that anticipates a future extension/amendment, distinct from supersede/deprecate (e.g. ADR-0006 <-> ADR-0012)", "improvement": 7, "role": "canonical" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "s1" },
+    { "action": "a4", "node": "s1" },
+    { "action": "a2", "node": "s2" },
+    { "action": "a7", "node": "s2" },
+    { "action": "a3", "node": "s3" },
+    { "action": "a5", "node": "s4" },
+    { "action": "a9", "node": "s4" },
+    { "action": "a18", "node": "s4" },
+    { "action": "a6", "node": "s5" },
+    { "action": "a8", "node": "s5" },
+    { "action": "a11", "node": "s5" },
+    { "action": "a10", "node": "s6" },
+    { "action": "a19", "node": "s7" },
+    { "action": "a15", "node": "s8" },
+    { "action": "a16", "node": "s8" },
+    { "action": "a12", "node": "s9" },
+    { "action": "a13", "node": "s9" },
+    { "action": "a14", "node": "s10" },
+    { "action": "a17", "node": "s10" }
+  ],
+  "_ownership_map": {
+    "_rule": "repair-the-owner: each FACT has exactly one canonical home; every other touch is a pointer (reference-by-name/ID). A reference slice must point at the owner's settled anchor, never restate the fact.",
+    "improvement_1_self_contained_directives": { "canonical": "s1 orchestration-lead.md (the self-contained directive + name-the-frozen-paths rule)", "also_canonical_distinct_fact": "s2 handoff-contract.md (Files-changed reports only this slice's paths — a distinct, report-side fact, NOT a duplicate)" },
+    "improvement_2_fan_out_pattern": { "canonical": "s3 orchestration-design (the disjoint same-tree fan-out + PREP slice + worktree-as-fallback pattern)", "references": ["s1 orchestration-lead.md dispatch rule", "decomposing-systems s4 owns the decomposition-side 'produce file-disjoint slices' guidance — adjacent, not a duplicate", "agents/README.md 'Context isolation' invariant should be re-pointed (flagged: README is an implied touch, fold into s1's worker or a tiny s-readme follow-on)"] },
+    "improvement_3_gate_ne_commit_nc_gencritic": { "canonical": "s5 process.md §1 (gate≠commit; NC-anchor for every new gate; generator/critic separation reinforced)", "references": ["s2 handoff-contract.md (gate≠commit clause in Tests/checks-run)", "s4 decomposing-systems (NC-anchor applied to the coverage/probe method)", "s6 component-reviewer.md (adversarial NC-anchor check + critic separate from maker)"] },
+    "improvement_4_migration_sweep_site_guard": { "canonical": "s9 CODE (the fleet sweep + the /site fail-closed guard)", "references": ["s10 authoring-components validation loop documents the gates"] },
+    "improvement_5_broaden_tripwire": { "canonical": "s8 CODE (component-descriptor.ts compare fns + the static customStates/slots registry convention the live class adopts — button.ts)", "references": ["s10 authoring-components documents the registries + broadened trip-wire"] },
+    "improvement_6_adr_decision_to_action": { "canonical": "s4 decomposing-systems (the ADR Decision→action completeness pass)" },
+    "improvement_7_foreseen_amendment_adr": { "canonical": "s7 adr/README.md (the foreseen-amendment pattern + lifecycle)" }
+  },
+  "_collision_map": {
+    "_purpose": "files touched by >1 improvement — the reason slicing is by-file, not by-improvement.",
+    "orchestration-lead.md": ["#1 (a1)", "#2 (a4)"],
+    "handoff-contract.md": ["#1 (a2)", "#3 (a7)"],
+    "decomposing-systems": ["#2 (a5)", "#3 (a9)", "#6 (a18)"],
+    "process.md": ["#3 (a6, a8, a11)"],
+    "authoring-components": ["#4 (a14)", "#5 (a17)"],
+    "component-descriptor.ts (+button.ts)": ["#5 (a15, a16)"],
+    "implied_touches_flagged": ["agents/README.md ('Context isolation' invariant names worktrees — should be re-pointed for #2; not in the named file set, so flagged as a follow-on, not silently bundled)", "button.ts (#5 needs the static registry adopted for the trip-wire to bind a live source; named scope was component-descriptor.ts + authoring-components, so button.ts adoption is flagged as the required consequence)"]
+  },
+  "_prep_dag": {
+    "_note": "the reference slices must point at SETTLED anchors, so canonical-owner slices land first (improvement #2's PREP-slice pattern, applied to this very effort).",
+    "prep_wave_canonical_owners": ["s3 (fan-out pattern)", "s5 (gate doctrine)", "s8 (descriptor compare fns + registry)"],
+    "then": ["s9 depends on s8 (the sweep runs the new states/slots checks)"],
+    "reference_wave": ["s1 -> s3", "s2 -> s5", "s4 -> {s3 pattern, s5 NC} (also owns a18, self-contained)", "s6 -> s5", "s10 -> {s8, s9}"],
+    "independent": ["s7 (foreseen-amendment ADR — self-contained)"]
+  },
+  "_code_design": {
+    "_note": "summary; the load-bearing detail is in the handoff to planning-harden.",
+    "s8_improvement_5": "Add `static customStates` / `static slots` (`as const` string arrays) to the component as the single source — the exact pattern `static props` already uses for attributes. component-descriptor.ts gains `compareDescriptorToStates(descStates, liveStates)` + `compareDescriptorToSlots(descSlots, liveSlots)` returning DRIFT_MISSING/DRIFT_EXTRA (name bijection; slots/states have no codec, so no TYPE/DEFAULT/REFLECT). NC-anchor: a drifted state/slot FAILS (mirroring the existing reflect/default negative control). Flag: button.ts must adopt the registries (and SHOULD drive `internals.states.add` off `static customStates` so the registry is load-bearing like finalize, not a second copy).",
+    "s9_improvement_4": "Fleet sweep (components package test): discover controls/*/{name}.md + components/*/{name}.md via node:fs, parse with the canonical parser, run validateComponentDescriptor (schema) on each, and compareDescriptorToProps (+states/slots) for each importable class — ONE gate that goes red when a contract change breaks any component. /site guard (site package): site/lib/frontmatter.ts runs validateComponentDescriptor on load and THROWS on failure (fail-closed, so a broken descriptor can't build the site) + a site test asserting the loaded doc is schema-valid and drift-free. Both reuse the canonical descriptor functions — no forked logic (the drift the process kills)."
+  },
+  "_coverage_prediction": {
+    "command": "python3 .claude/skills/decomposition-work/scripts/coverage_check.py docs/decompositions/doctrine-hardening.decomp.json --strict",
+    "expected_stdout": "== coverage: 15 nodes · 19 actions · 19 hosts == / [OK] coverage clean — both planes cross-check",
+    "expected_exit": 0,
+    "rationale": "15 nodes (5 non-leaf groups + 10 leaf slices), 19 actions, 19 hosts. Every action is hosted (no UNHOSTED), every hosts edge resolves to a real id (no DANGLING), all ids unique (no DUP-ID), and every leaf slice (s1..s10) hosts >=1 action (no UNJUSTIFIED-LEAF even under --strict). Non-leaf groups carry leaf:false so they are exempt."
+  }
+}
