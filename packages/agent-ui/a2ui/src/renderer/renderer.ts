@@ -35,7 +35,6 @@ import type { Surface } from './surface.ts'
 import { SurfaceTree } from './tree.ts'
 import { makeCreateWidget } from './widget.ts'
 import { ActionDispatcher } from './action.ts'
-import type { A2uiActionMessage } from './action.ts'
 import { validateA2ui } from './validate.ts'
 import type { CreateWidget } from './types.ts'
 import { Registry } from '../catalog/registry.ts'
@@ -50,6 +49,7 @@ import type {
   A2uiComponent,
   A2uiError,
   A2uiServerMessage,
+  A2uiActionMessage,
 } from '../protocol.ts'
 
 /** An `error` client→server envelope (runtime SPEC §5.2) — the second `A2uiClientMessage` arm. */

@@ -21,6 +21,7 @@
 // `updateComponents`. A 2nd `root` and a cycle are always invalid. The corpus passes a complete
 // `a2uiOutput`, so both callers judge the same set → identical verdict (N6).
 
+import { SUPPORTED_VERSIONS } from '../protocol.ts'
 import type { A2uiComponent, Failure } from '../protocol.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 import { validateCatalogConformance } from '../catalog/conformance.ts'
@@ -30,8 +31,8 @@ export interface ValidationVerdict {
   failures: Failure[]
 }
 
-// Pinned protocol set (renderer SPEC-R13): default v1.0, v0.9.1 supported.
-const SUPPORTED_VERSIONS = new Set(['v1.0', 'v0.9.1'])
+// `SUPPORTED_VERSIONS` (the pinned protocol set, SPEC-R13) is imported from `protocol.ts` — the single
+// source shared with the dispatch router so the two can't drift on which versions are routable (N6).
 const MESSAGE_KINDS = ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface', 'actionResponse'] as const
 // Structural adjacency keys, not bindable catalog props (kept out of pointer scanning).
 const RESERVED = new Set(['id', 'component', 'child', 'children'])

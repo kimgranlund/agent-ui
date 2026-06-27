@@ -14,26 +14,12 @@
 // resolves bound paths + input values via the binding slice, LLD-C5) and handed in via `opts.context`.
 // This module only assembles the message and owns the correlation map — it imports no binding code.
 
-import type { A2uiActionResponse, A2uiComponent } from '../protocol.ts'
+import type { A2uiAction, A2uiActionMessage, A2uiActionResponse, A2uiComponent } from '../protocol.ts'
 import type { Surface } from './surface.ts'
 
-/** The v1.0 `action` body the renderer sends on a triggered action (runtime SPEC §5.2). */
-export interface A2uiAction {
-  surfaceId: string
-  actionId: string
-  name: string
-  sourceComponentId: string
-  timestamp: string
-  context: Record<string, unknown>
-  wantResponse?: boolean
-  dataModel?: unknown
-}
-
-/** The `action` client→server envelope (runtime SPEC §5.2). */
-export interface A2uiActionMessage {
-  version: string
-  action: A2uiAction
-}
+// The §5.2 client `action` wire types now live in `protocol.ts` (one home for the wire contract, N6);
+// re-exported so existing consumers (renderer/index.ts, the action tests) keep importing them here.
+export type { A2uiAction, A2uiActionMessage }
 
 /** Injected, deterministic-by-construction dependencies of the action dispatcher (LLD-C9). */
 export interface ActionDeps {

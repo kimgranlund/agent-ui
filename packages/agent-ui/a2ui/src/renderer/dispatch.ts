@@ -14,6 +14,7 @@
 // AC1). Errors are returned, not emitted: dispatch stays side-effect-free; the host emits the
 // returned `A2uiError` to the server and skips the message (LLD §9).
 
+import { SUPPORTED_VERSIONS } from '../protocol.ts'
 import type {
   A2uiServerMessage,
   A2uiCreateSurface,
@@ -23,10 +24,6 @@ import type {
   A2uiActionResponse,
   A2uiError,
 } from '../protocol.ts'
-
-// Pinned protocol set (renderer SPEC-R13: default v1.0, v0.9.1 supported). Mirrors validate.ts's
-// own pinned set so dispatch and the shared validator agree on which versions are routable.
-const SUPPORTED_VERSIONS = new Set(['v1.0', 'v0.9.1'])
 
 /**
  * The handler per server message kind, injected by the renderer host (LLD-C13). Each receives the
