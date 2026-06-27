@@ -3,7 +3,7 @@ import { whenFlushed } from '@agent-ui/components'
 import { UIButtonElement } from '@agent-ui/components/components'
 import { createRenderer } from './renderer.ts'
 import type { A2uiClientMessage, RendererHost } from './renderer.ts'
-import type { A2uiActionMessage } from './action.ts'
+import type { A2uiAction, A2uiActionMessage } from './action.ts'
 import type { A2uiErrorMessage } from './renderer.ts'
 import type { A2uiServerMessage } from '../protocol.ts'
 
@@ -170,5 +170,54 @@ describe('renderer host — stream faults + lifecycle (renderer LLD §9, SPEC-N3
     expect(mount.querySelector('ui-button')).toBeNull()
 
     cleanup()
+  })
+})
+
+// ADR-0011 pins the canonical inbound action-prop shape `{ action, context?, wantResponse? }` (the
+// `readActionSpec` consumer), keeping the lenient `name`-synonym + bare-string fallbacks as documented
+// Postel's-law tolerance. These exercise that contract end-to-end: a Button's `action` prop → the
+// emitted client action — asserting the canonical path surfaces `context`/`wantResponse` and that the
+// fallbacks still resolve a name.
+describe('renderer host — action-prop reading (ADR-0011 canonical {action,context?,wantResponse?})', () => {
+  /** Render one Button with the given `action` prop, click it, and return the single emitted action body. */
+  function emitFor(action: unknown): A2uiAction {
+    const { r, mount, sent, cleanup } = harness()
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sa', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'sa', components: [{ id: 'root', component: 'Button', label: 'Go', action }] },
+      }),
+    )
+    ;(mount.querySelector('ui-button') as HTMLElement).click()
+    const actions = sent.filter(isAction)
+    expect(actions).toHaveLength(1)
+    cleanup()
+    return actions[0]!.action
+  }
+
+  it('reads the CANONICAL shape — `action` is the name, with `context` + `wantResponse` surfaced', () => {
+    const action = emitFor({ action: 'submit', context: { topic: 'orders' }, wantResponse: true })
+    expect(action.name).toBe('submit') // canonical `action` key → action name
+    expect(action.context).toEqual({ topic: 'orders' }) // context surfaced off the canonical object
+    expect(action.wantResponse).toBe(true) // wantResponse surfaced off the canonical object
+  })
+
+  it('canonical `action` wins over the `name` synonym when both are present', () => {
+    const action = emitFor({ action: 'submit', name: 'cancel' })
+    expect(action.name).toBe('submit')
+  })
+
+  it('keeps the lenient `name`-synonym fallback (Postel)', () => {
+    const action = emitFor({ name: 'cancel', context: { from: 'name-shape' } })
+    expect(action.name).toBe('cancel') // `name` accepted as the tolerated synonym
+    expect(action.context).toEqual({ from: 'name-shape' })
+  })
+
+  it('keeps the lenient bare-string fallback (Postel)', () => {
+    const action = emitFor('refresh')
+    expect(action.name).toBe('refresh') // a bare string is taken as the action name
+    expect(action.context).toEqual({}) // …carrying no context
+    expect(action.wantResponse).toBe(false) // …nor a wantResponse
   })
 })

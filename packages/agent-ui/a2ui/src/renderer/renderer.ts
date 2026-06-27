@@ -378,16 +378,22 @@ function versionOf(message: A2uiServerMessage, fallback: string): string {
 }
 
 /**
- * Interpret a Button's `action` prop value into the action-emission inputs. The established payload
- * convention is `{ action: <name> }` (see the default-catalog fixtures); `name` is accepted as a
- * synonym, `context`/`wantResponse` pass through. A bare string is taken as the action name.
- * (The full inbound action-prop schema is a catalog/spec concern — see the build hand-back's open item.)
+ * Interpret a Button's `action` prop value into the action-emission inputs. The CANONICAL inbound
+ * shape is `{ action, context?, wantResponse? }` (ADR-0011, pinned in the catalog SPEC §5.1/§5.2 +
+ * `catalog/default/catalog.json`): `action` is the action NAME, and `context`/`wantResponse` are
+ * surfaced straight off the canonical object. Two fallbacks are RETAINED as documented Postel's-law
+ * tolerance — not silent guesses: `name` is accepted as a synonym for the name key, and a bare string
+ * is taken as the action name (carrying no `context`/`wantResponse`). Canonical `action` wins when
+ * both keys are present.
  */
 function readActionSpec(spec: unknown): { name: string; wantResponse?: boolean; context?: Record<string, unknown> } {
+  // Tolerance: a bare string is the action name (no context/wantResponse to surface).
   if (typeof spec === 'string') return { name: spec }
   if (isObject(spec)) {
+    // Canonical `action` (ADR-0011); `name` is the tolerated synonym, taken only when `action` is absent.
     const name = typeof spec.action === 'string' ? spec.action : typeof spec.name === 'string' ? spec.name : ''
     const out: { name: string; wantResponse?: boolean; context?: Record<string, unknown> } = { name }
+    // `context`/`wantResponse` surface from the canonical object (also honored on the `name`-synonym shape).
     if (spec.wantResponse === true) out.wantResponse = true
     if (isObject(spec.context)) out.context = spec.context
     return out

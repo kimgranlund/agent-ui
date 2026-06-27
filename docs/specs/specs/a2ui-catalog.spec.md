@@ -96,6 +96,12 @@ interface ComponentDef {
 interface PropDef { type: JSONSchema; bindable?: boolean; mapsTo: string }   // A2UI prop → ui-* prop/attr
 interface FunctionDef { args: JSONSchema[]; returns: JSONSchema }
 
+// Action-typed prop (`mapsTo: 'action'`, e.g. Button.action) — canonical inbound shape (ADR-0011):
+//   { action: string; context?: object; wantResponse?: boolean }   // `action` = the action NAME (required)
+// PropDef.type carries this as the object schema { type: 'object', properties: { action, context,
+// wantResponse }, required: ['action'] }; the renderer's tolerant reader keeps `name`/bare-string
+// fallbacks (Postel), so the declaration stays open (no additionalProperties: false).
+
 interface WidgetFactory {                                  // consumed by renderer SPEC-R9 / LLD-C7
   tag: string;                                             // e.g. "ui-button"
   create(): HTMLElement;
@@ -114,7 +120,7 @@ Initial coverage tracks the control family (A-2). Types absent until their contr
 
 | A2UI type | `ui-*` widget | Notes |
 |---|---|---|
-| `Button` | `ui-button` | `variant`→variant; triggers `action` |
+| `Button` | `ui-button` | `variant`→variant; `action` object → click triggers the named action (shape per §5.1, ADR-0011) |
 | `TextField` | `ui-text-field` | `label`,`value`,`placeholder`(v1.0),`variant`(shortText/longText),`checks` |
 | `Checkbox` | `ui-checkbox` | boolean `value`; Indicator class |
 | `Switch` | `ui-switch` | boolean `value` |
