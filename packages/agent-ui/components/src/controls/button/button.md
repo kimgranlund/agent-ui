@@ -52,12 +52,14 @@ aria:
   role: button         # set via ElementInternals — never a host role/aria-* attribute
   roleSource: internals
   labelSource: textContent  # the light-DOM label text is the accessible name
+  disabledState: internals.ariaDisabled  # disabled AX state — a reactive effect sets ariaDisabled 'true' when disabled / null otherwise off the `disabled` prop (ADR-0010); never a host aria-disabled attr, and not a native form `disabled` (ui-button is not form-associated)
 
 keyboard:
   - keys: Space
     action: Activate on keyup; keydown calls preventDefault to suppress page scroll → click
   - keys: Enter
     action: Activate on keydown → click
+  - note: Focusable by default — the `tabbable` trait sets tabindex=0 (role=button focus parity); disabled removes the host from the tab order (native <button disabled> parity), so a disabled control is never keyboard-focusable
   - note: Disabled is fully inert — no activation, no key handling
 
 geometry:
@@ -98,6 +100,23 @@ ADR-0006). ARIA `role="button"` is applied through `ElementInternals`, never as 
 height and font; an ancestor `[scale]` multiplies the frame and an ancestor `[density]` multiplies the
 icon↔label gap. The block-size is the vertical lever — `padding-block` is always `0`.
 
+## States
+
+The control authors its own interaction states — these are **real**, not browser defaults. Each variant takes
+its `:hover`/`:active` shades from a colour-role **ladder step** (never a `color-mix` — components hold zero
+colour opinions; ADR-0008), so the change reads in the real palette and survives `forced-colors` for free
+(every value is a `--c-{family}-{role}` role):
+
+- **solid** — `--c-primary` idle → `--c-primary-dim` on `:hover` → `--c-primary-high` on `:active`.
+- **soft** — `--c-primary-container-low` idle → `--c-primary-container` on `:hover` → `--c-primary-container-high` on `:active`.
+- **ghost** — `transparent` idle, gaining a low container wash on `:hover`/`:active` (`--c-primary-container-low` → `--c-primary-container`).
+
+Keyboard focus draws the **shared focus ring** — a `:focus-visible` `outline` from the fleet-wide
+`--c-focus-ring` role (ADR-0009): keyboard-only (no ring on a mouse click), identical across every control, and
+layout-neutral (`outline` paints outside the box, so the geometry law is untouched). `disabled` holds at idle —
+`pointer-events: none` means `:hover`/`:active` never match, and a disabled host is out of the tab order, so the
+focus ring never lifts on it either.
+
 ## Slots & roles
 
 The anatomy separates **position** (which slot) from **role** (what's placed in it). There are three
@@ -113,6 +132,13 @@ keeps the taxonomy off the ARIA channel; adornments are decorative, so mark them
 stays the accessible name. Position drives layout; a role only adds tuning when it needs it (e.g. a
 `caret`'s rotation).
 
+Sizing is **role-driven**, not slot-driven. A `data-role="icon"` fills the icon-sized cell
+(`--ui-button-icon`, the icon ramp). A `data-role="caret"` is an **inline affordance sized to the label
+font** — `--ui-button-glyph` (`= --ui-button-font`), *not* the icon ramp — so it stays at text scale,
+**centers** within the icon-sized cell, and lands at the emergent `½(h − font)` trailing edge instead of
+rendering oversized. This two-axis anatomy (positional slots × a `data-role` role axis) **extends** the
+host-as-grid of ADR-0006 and is the family adornment standard (ADR-0012).
+
 ```html
 <ui-button>Save</ui-button>                                                          <!-- [ label ] -->
 <ui-button><svg slot="leading" data-role="icon">…</svg>Download</ui-button>          <!-- [ leading | label ] -->
@@ -126,15 +152,27 @@ cells (the one quantity that rides `--ui-density`; the frame stays density-invar
 is **layout only** — express any popup/disclosure meaning as ARIA on the host (`aria-haspopup` /
 `aria-expanded` via `ElementInternals`), never on the glyph.
 
-## Keyboard
+## Keyboard & focus
 
+- **Tab** — the host is focusable by default: the `tabbable` trait sets `tabindex="0"` (role=button focus
+  parity), so a keyboard user reaches it like a native button. The trait reacts to the `disabled` prop —
+  `disabled` removes the host from the tab order (`removeAttribute('tabindex')`, native `<button disabled>`
+  parity), so a disabled control is skipped.
 - **Space** — activates on `keyup`; `keydown` calls `preventDefault` to suppress page scroll, then a
   native-parity `click` fires on `keyup`.
 - **Enter** — activates on `keydown` (a native-parity `click`).
-- **disabled** — fully inert: no activation, no key handling, and the host is pointer-inert.
+- **disabled** — fully inert: no activation, no key handling, the host is pointer-inert, and it is removed
+  from the tab order (so the focus ring never shows on a disabled control).
 
 ## Accessibility
 
 - `role="button"` is set via `ElementInternals` (no host `role`/`aria-*` attribute).
 - The accessible name comes from the light-DOM label text.
-- A `forced-colors` block preserves the ink and border so the label and outline survive high-contrast modes.
+- **Disabled is announced** via `ElementInternals.ariaDisabled` — a reactive effect sets it `'true'` when the
+  `disabled` prop is set and clears it (`null`) otherwise (ADR-0010). It is an AX state on `internals`, never a
+  host `aria-disabled` attribute, and not a native form `disabled` (`ui-button` is not form-associated, so it
+  has no platform disabled state).
+- **Keyboard focus shows a ring** — a `:focus-visible` `outline` from the shared `--c-focus-ring` role
+  (ADR-0009): identical across the fleet, keyboard-only, and layout-neutral.
+- A `forced-colors` block preserves the ink and border so the label and outline survive high-contrast modes;
+  the focus ring's `--c-focus-ring → Highlight` mapping keeps the ring visible there too.

@@ -3,13 +3,18 @@
  *   [1] TOKEN BLOCK  — `:where(ui-button)` (specificity 0,0,0) DECLARES the `--ui-button-*` chain from the
  *       colour roles (`--c-{family}-{role}`; default family = primary) and the dimensional ramp
  *       (`--ui-{height,font,gap}-{size}` from `@agent-ui/shared/dimensions.css`). `[variant]` repoints the
- *       colour channels (solid=filled · soft=tonal · ghost=text); `[size]` repoints the geometry.
- *   [2] STYLES BLOCK — `@scope (ui-button)` CONSUMES only `--ui-button-*`. Geometry per references/geometry.md
- *       (the law): `block-size` off the ramp, `padding-block: 0`. Anatomy per ADR-0006 (extended): host-as-grid
- *       with OPTIONAL leading `[slot=leading]` AND trailing `[slot=trailing]` adornment slots via presence-driven
- *       `:has()` — `[label]` (`1fr`, pad h/2) · `[leading|label]` (`auto 1fr`) · `[label|trailing]` (`1fr auto`) ·
- *       `[leading|label|trailing]` (`auto 1fr auto`); each adornment edge = ½(h−icon), `column-gap` = the density-bearing
- *       gap. Forced-colors keeps the ink/border. The reflected `disabled` attribute makes the host inert.
+ *       colour channels (solid=filled · soft=tonal · ghost=text), declaring per-state `-bg-hover`/`-bg-active`
+ *       from a ROLE-LADDER step (never a `color-mix` — colour opinions live in the token layer; ADR-0008);
+ *       `[size]` repoints the geometry.
+ *   [2] STYLES BLOCK — `@scope (ui-button)` CONSUMES only `--ui-button-*` for its OWN tokens. Geometry per
+ *       references/geometry.md (the law): `block-size` off the ramp, `padding-block: 0`. Anatomy per ADR-0006
+ *       (extended by ADR-0012): host-as-grid with OPTIONAL leading `[slot=leading]` AND trailing `[slot=trailing]`
+ *       adornment slots via presence-driven `:has()` — placement is POSITION-driven (the slot), glyph size is
+ *       ROLE-driven (`[data-role]`: icon = frame `--ui-button-icon`, caret = rhythm `--ui-button-glyph` = font).
+ *       Interaction states (ADR-0008): `:hover`/`:active` repoint `background` from the per-state tokens;
+ *       `:focus-visible` draws the SHARED focus ring (ADR-0009 — the fleet `--c-focus-ring`/`--ui-focus-ring-*`,
+ *       keyboard-only, layout-neutral `outline`). Forced-colors keeps the ink/border (the ring survives via the
+ *       token layer's `--c-focus-ring → Highlight` mapping). The reflected `disabled` attribute makes the host inert.
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected from
  * button.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -18,8 +23,11 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-button) declares --ui-button-* ════════════════ */
 
 :where(ui-button) {
-  /* Colour channel (default family = primary). solid = filled (accent bg, on-accent ink). */
+  /* Colour channel (default family = primary). solid = filled (accent bg, on-accent ink). Per-state bg
+     from the ACCENT ladder step (--c-primary · -dim · -high) — a role step, NOT a color-mix (ADR-0008). */
   --ui-button-bg: var(--c-primary);
+  --ui-button-bg-hover: var(--c-primary-dim);
+  --ui-button-bg-active: var(--c-primary-high);
   --ui-button-ink: var(--c-primary-on-primary);
   --ui-button-border: transparent;
 
@@ -28,15 +36,22 @@
   --ui-button-font: var(--ui-font-md);
   --ui-button-gap: var(--ui-gap-md);
   --ui-button-icon: calc(18px * var(--ui-scale)); /* content-icon ramp md=18 (geometry-sizing-spec §1) */
+  --ui-button-glyph: var(--ui-button-font); /* inline-affordance (caret) ramp = font (--ui-glyph-ratio 1, §4.1) */
 }
 
-/* variant → colour roles (the channel pattern, tokens.md) */
+/* variant → colour roles (the channel pattern, tokens.md). Per-state bg steps the matching ladder:
+   soft = CONTAINER ladder (-container-low · -container · -container-high); ghost = TEXT (transparent idle,
+   a low container WASH on hover/active — ADR-0008's ghost wash). No color-mix; every value is a role. */
 :where(ui-button[variant='soft']) {
   --ui-button-bg: var(--c-primary-container-low);
+  --ui-button-bg-hover: var(--c-primary-container);
+  --ui-button-bg-active: var(--c-primary-container-high);
   --ui-button-ink: var(--c-primary-on-surface);
 }
 :where(ui-button[variant='ghost']) {
   --ui-button-bg: transparent;
+  --ui-button-bg-hover: var(--c-primary-container-low);
+  --ui-button-bg-active: var(--c-primary-container);
   --ui-button-ink: var(--c-primary);
 }
 
@@ -54,9 +69,13 @@
   --ui-button-icon: calc(20px * var(--ui-scale));
 }
 
-/* disabled → muted neutral roles (overrides the family) */
+/* disabled → muted neutral roles (overrides the family). HOLDS at idle: -bg-hover/-bg-active repoint to the
+   same muted neutral so no path lifts (and :hover/:active never match — the styles block makes the host
+   pointer-inert; ADR-0008). */
 :where(ui-button[disabled]) {
   --ui-button-bg: var(--c-neutral-surface-high);
+  --ui-button-bg-hover: var(--c-neutral-surface-high);
+  --ui-button-bg-active: var(--c-neutral-surface-high);
   --ui-button-ink: var(--c-neutral-on-surface-variant);
 }
 
@@ -84,21 +103,38 @@
     user-select: none;
   }
 
-  /* Anatomy (ADR-0006, extended): host-as-grid with three POSITION regions — an OPTIONAL leading
+  /* Anatomy (ADR-0006, extended by ADR-0012): host-as-grid with three POSITION regions — an OPTIONAL leading
      [slot=leading] adornment, the LABEL (the default/unnamed children — the accessible name), and an OPTIONAL
      trailing [slot=trailing] adornment — each presence-driven via :has(). Four structures:
      [label] · [leading | label] · [label | trailing] · [leading | label | trailing]. Each adornment gets a
-     square, icon-sized cell with edge-pad ½(h−icon); a bare (slotless) edge stays h/2; the column-gap is the
+     square, icon-sized CELL with edge-pad ½(h−icon); a bare (slotless) edge stays h/2; the column-gap is the
      one density-bearing quantity (gap = font/2 × density).
-     POSITION (the slot) is separate from ROLE (what's placed in it): a slotted adornment carries its content
-     role on the node as `data-role` — `icon` · `caret` now, `tag` · `badge` later — a styling hook
-     independent of which edge it sits on. Layout here is position-driven; role-specific tuning targets
-     `[data-role='…']` when a role needs it. Adornments are decorative (aria-hidden) and carry no semantics —
-     popup/disclosure meaning belongs on the host via ARIA (ElementInternals), never on the glyph. */
+     POSITION (the slot) PLACES; ROLE (`data-role` on the node — icon · caret now, tag · badge later) SIZES the
+     glyph (ADR-0012 / geometry-sizing-spec §1.4, §4.6 — frame ∝ height vs rhythm ∝ font). Adornments are
+     decorative (aria-hidden); popup/disclosure meaning belongs on the host via ARIA (ElementInternals). */
+
+  /* The CELL — both adornment slots get the SAME square, icon-sized cell (border-box, so a role's inset stays
+     WITHIN the icon-sized cell). The cell stays icon-sized for BOTH roles → the grid column is icon-wide and
+     the centering law (slot edge-pad ½(h−icon)) holds whichever role sits in it. */
   :scope > [slot='leading'],
   :scope > [slot='trailing'] {
     inline-size: var(--ui-button-icon);
-    block-size: var(--ui-button-icon); /* the square slot, icon-sized */
+    block-size: var(--ui-button-icon); /* the square slot, icon-sized — the CELL */
+    box-sizing: border-box; /* padding insets the glyph WITHIN the icon-sized cell (the caret centering) */
+  }
+
+  /* ROLE = glyph size (the "position places, role sizes" split). The CELL above stays icon-sized for both
+     roles; only the GLYPH inside differs by role:
+       • icon  — a content icon (FRAME family) FILLS the icon-sized cell (= --ui-button-icon).
+       • caret — an inline affordance (RHYTHM family) is sized to the FONT (--ui-button-glyph = font) and
+         CENTERED in the icon-sized cell by a ½(icon−font) inset, so its glyph lands at the EMERGENT ½(h−font)
+         edge — never --ui-ind (an inline affordance at icon size is the named oversize "button caret" bug,
+         geometry.md §"Affordance vs content-icon"; locked by the BTN-CARET probe). */
+  :scope > [data-role='icon'] {
+    padding: 0; /* fills its icon-sized cell */
+  }
+  :scope > [data-role='caret'] {
+    padding: calc((var(--ui-button-icon) - var(--ui-button-glyph)) / 2); /* inset the font glyph, centered in the icon cell */
   }
 
   /* [leading | label] (no trailing): auto 1fr — leading slot edge ½(h−icon), trailing label edge h/2 */
@@ -125,13 +161,37 @@
     padding-inline-end: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
   }
 
-  /* disabled host — pointer-inert (the reflected `disabled` attribute) */
+  /* Interaction states (ADR-0008) — repoint ONLY `background`, from the per-state ladder tokens (the geometry
+     law is untouched). Disabled holds at idle: the disabled host is pointer-inert (below), so :hover/:active
+     never match it. */
+  :scope:hover {
+    background: var(--ui-button-bg-hover);
+  }
+  :scope:active {
+    background: var(--ui-button-bg-active);
+  }
+
+  /* Focus ring (ADR-0009) — the SHARED fleet ring: `:focus-visible` (KEYBOARD-only, no ring on a mouse click)
+     draws a layout-neutral `outline` from the shared tokens. These are the ONE deliberate exception to the
+     "consume only --ui-button-*" rule: a focus ring is a fleet constant (read directly, NOT repointed through
+     the component chain) so every control draws the identical ring. `outline`/`outline-offset` do not
+     participate in box geometry — the geometry law stays intact. (Disabled is removed from the tab order by
+     the tabbable trait, so a disabled host never draws the ring.) */
+  :scope:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* disabled host — pointer-inert (the reflected `disabled` attribute); makes :hover/:active inert so the
+     state overlay holds at idle */
   :scope:is([disabled]) {
     pointer-events: none;
     cursor: default;
   }
 
-  /* forced-colors — keep the ink + border visible (the label/outline must not vanish) */
+  /* forced-colors — keep the ink + border visible (the label/outline must not vanish). The focus ring
+     survives for free: `--c-focus-ring` carries the token layer's `→ Highlight` WHCM mapping, so the
+     `:focus-visible` outline above resolves to the system focus colour with no per-control rule. */
   @media (forced-colors: active) {
     :scope {
       color: ButtonText;

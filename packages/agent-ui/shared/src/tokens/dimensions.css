@@ -16,6 +16,13 @@
      (custom properties inherit, so the nearest ancestor wins by cascade proximity). */
   --ui-scale: 1;
   --ui-density: 1;
+
+  /* Focus-ring geometry (ADR-0009) — CONSTANTS, not derived via a subtree-repointable multiplier, so they
+     stay on :root, NOT on `*`: ADR-0007's universal-selector rule covers only DERIVED tokens (a var() over
+     --ui-scale/--ui-density that must re-substitute per element); a constant on `*` would be needless churn.
+     2px width / 2px offset — the shared ring every control's `:focus-visible` outline reads. */
+  --ui-focus-ring-width: 2px;
+  --ui-focus-ring-offset: 2px;
 }
 
 /* The DERIVED ramp lives on `*` (universal), NOT `:root` — deliberately. A var() inside a custom-property

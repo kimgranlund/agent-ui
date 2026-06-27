@@ -86,6 +86,38 @@ describe('UIButtonElement (s5)', () => {
     el.remove()
   })
 
+  it('button-tabbable-default: focusable by default (tabindex=0) — the tabbable trait (ADR-0010)', () => {
+    const el = new UIButtonElement()
+    document.body.append(el)
+    expect(el.getAttribute('tabindex')).toBe('0') // role=button focus parity; lets the focus ring show
+    el.remove()
+  })
+
+  it('button-disabled-untabbable: disabled removes the host from the tab order (native parity)', async () => {
+    const el = new UIButtonElement()
+    document.body.append(el)
+    el.disabled = true
+    await el.updateComplete // the tabbable effect re-runs are microtask-batched — wait for the flush
+    expect(el.hasAttribute('tabindex')).toBe(false) // disabled → not keyboard-focusable, like <button disabled>
+    el.remove()
+  })
+
+  it('button-aria-disabled: ariaDisabled reflects the disabled prop via internals (announced / omitted)', async () => {
+    const el = new ProbeButton()
+    document.body.append(el)
+    expect(el.probeInternals.ariaDisabled).toBeNull() // enabled → AX state omitted (initial run, synchronous)
+
+    el.disabled = true
+    await el.updateComplete
+    expect(el.probeInternals.ariaDisabled).toBe('true') // disabled → announced to AT
+
+    el.disabled = false
+    await el.updateComplete
+    expect(el.probeInternals.ariaDisabled).toBeNull() // re-enabled → omitted again
+    expect(el.hasAttribute('aria-disabled')).toBe(false) // never a host attribute — internals only
+    el.remove()
+  })
+
   it('button-host-as-grid: render() is void — the user’s light-DOM children are NOT clobbered', () => {
     const el = new UIButtonElement()
     el.innerHTML = '<svg class="icon"></svg><span>Save</span>' // user content (optional icon + label)
@@ -137,6 +169,26 @@ describe('UIButtonElement — zero residue across connect/disconnect (s11)', () 
     document.body.append(el) // reconnect → connected() re-runs on a FRESH AbortController
     key(el, 'keydown', 'Enter')
     expect(clicks).toBe(2) // exactly ONE more — a single re-wired listener, not a leaked old one stacked atop it
+    el.remove()
+  })
+
+  it('button-effects-residue: the tabbable + ariaDisabled effects die on disconnect, re-install once on reconnect', async () => {
+    const el = new ProbeButton()
+    document.body.append(el) // connect → connected() installs the scope-owned tabbable + ariaDisabled effects
+    el.disabled = true
+    await el.updateComplete
+    expect(el.hasAttribute('tabindex')).toBe(false) // tabbable effect live: disabled removed the tabindex
+    expect(el.probeInternals.ariaDisabled).toBe('true') // ariaDisabled effect live: announced
+
+    el.remove() // disconnect → the connection scope is disposed → both effects die with it
+    el.disabled = false // mutate the disabled signal while disconnected
+    await el.updateComplete // give any leaked effect a chance to flush
+    expect(el.hasAttribute('tabindex')).toBe(false) // a leaked tabbable effect would re-add tabindex; none does
+    expect(el.probeInternals.ariaDisabled).toBe('true') // a leaked ariaDisabled effect would clear it; none does
+
+    document.body.append(el) // reconnect → connected() re-runs → exactly one fresh pair of effects installs (sync)
+    expect(el.getAttribute('tabindex')).toBe('0') // re-applied from the now-enabled signal — not stacked
+    expect(el.probeInternals.ariaDisabled).toBeNull() // re-applied → omitted
     el.remove()
   })
 })

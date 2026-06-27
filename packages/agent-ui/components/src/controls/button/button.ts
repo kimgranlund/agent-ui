@@ -7,11 +7,15 @@
 // nothing → the user's children are never clobbered). Geometry/colour live entirely in button.css.
 //
 // Keyboard activation is the `pressActivation` trait (Space/Enter → a native-parity `host.click()`),
-// invoked from `connected()` so its listeners ride the connection AbortSignal. ARIA `role` is set through
-// `ElementInternals`, never a host attribute. `controls → dom + traits` is the allowed import direction.
+// invoked from `connected()` so its listeners ride the connection AbortSignal. Focusability is the
+// `tabbable` trait (ADR-0010): tabindex=0 while enabled, out of the tab order while disabled — the inert
+// half that lives in a trait. ARIA `role` is set through `ElementInternals`, never a host attribute, and so
+// is the disabled AX state (`ariaDisabled`) — a control-level effect because `internals` is protected and a
+// trait cannot reach it. `controls → dom + traits` is the allowed import direction.
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { pressActivation } from '../../traits/press-activation.ts'
+import { tabbable } from '../../traits/tabbable.ts'
 
 const props = {
   // variant/size REFLECT so the attribute-selector styling (`[variant]`/`[size]` in button.css repointing
@@ -29,7 +33,13 @@ export class UIButtonElement extends UIElement {
 
   protected connected(): void {
     this.internals.role = 'button' // ARIA via internals — never a host role/aria-* attribute
+    tabbable(this, { disabled: () => this.disabled }) // tabindex=0 enabled / out of tab order disabled (ADR-0010)
     pressActivation(this, { disabled: () => this.disabled }) // Space/Enter → click; auto-cleans on disconnect
+    // The disabled AX state — control-level (internals is protected, unreachable from a trait); scope-owned,
+    // so it re-runs on the disabled signal and is disposed on disconnect (zero residue).
+    this.effect(() => {
+      this.internals.ariaDisabled = this.disabled ? 'true' : null
+    })
   }
 }
 

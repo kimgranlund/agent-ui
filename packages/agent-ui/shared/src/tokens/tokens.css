@@ -608,4 +608,19 @@
   --c-danger-surface-high: light-dark(var(--c-danger-150), var(--c-danger-850));
   --c-danger-surface-higher: light-dark(var(--c-danger-175), var(--c-danger-825));
   --c-danger-surface-highest: light-dark(var(--c-danger-200), var(--c-danger-800));
+
+  /* Focus — the shared focus-ring role (ADR-0009) */
+  /* A DEDICATED accent-leaning role, NOT `--c-primary` reused: every control's `:focus-visible` ring is
+     one consistent colour, so a ghost/secondary/neutral control gets the same ring, not one tinted by its
+     own family. Resolved via light-dark() like every other role. */
+  --c-focus-ring: light-dark(var(--c-primary-500), var(--c-primary-400));
+}
+
+/* Forced-colors (WHCM) — roles carry the WHCM mapping in the token layer (tokens.md), so components survive
+   forced-colors for free. The focus ring maps to the system focus colour `Highlight`, so the keyboard ring
+   stays visible under forced-colors with zero per-control rules (ADR-0009). */
+@media (forced-colors: active) {
+  :root {
+    --c-focus-ring: Highlight;
+  }
 }

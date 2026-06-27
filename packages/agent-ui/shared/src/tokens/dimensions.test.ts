@@ -74,3 +74,15 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
     }
   })
 })
+
+// tok-focus (ADR-0009) — the shared focus-ring geometry. Width + offset are CONSTANTS (no var() over a
+// subtree-repointable multiplier), so they belong on :root, NOT on the `*` ramp: ADR-0007's universal-
+// selector rule covers only DERIVED tokens. The probe pins them ON :root and OFF `*`.
+describe('dimensions.css — the shared focus-ring geometry constants (ADR-0009)', () => {
+  it('declares --ui-focus-ring-width/-offset (2px/2px) on :root — constants, not on the `*` ramp', () => {
+    expect(rootBlock).toMatch(/--ui-focus-ring-width:\s*2px\s*;/)
+    expect(rootBlock).toMatch(/--ui-focus-ring-offset:\s*2px\s*;/)
+    // constants, so they stay OFF the `*` block (ADR-0007's `*` rule is for derived tokens only)
+    expect(universalBlock).not.toMatch(/--ui-focus-ring/)
+  })
+})

@@ -37,10 +37,18 @@ describe('button.css — structure + token hygiene (s7)', () => {
     expect(tokenBlock).toMatch(/ui-button\[size='lg'\]/)
   })
 
-  it('@scope CONSUMES only --ui-button-* (no raw --c- role or ramp refs leak into the styles)', () => {
+  it('@scope CONSUMES only --ui-button-* for its own tokens (+ the shared focus-ring fleet tokens, ADR-0009)', () => {
     const refs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1])
     expect(refs.length).toBeGreaterThan(0)
-    for (const v of refs) expect(v).toMatch(/^--ui-button-/) // the component reads only its own chain
+    // The component reads only its own --ui-button-* chain, with ONE deliberate exception: the shared
+    // focus-ring fleet constants (ADR-0009), read DIRECTLY (never repointed through the component chain)
+    // so every control draws the identical ring — a fleet token, not a per-control colour opinion.
+    const focusRingFleet = new Set(['--c-focus-ring', '--ui-focus-ring-width', '--ui-focus-ring-offset'])
+    for (const v of refs) {
+      if (focusRingFleet.has(v as string)) continue
+      expect(v).toMatch(/^--ui-button-/) // the component otherwise reads only its own chain
+    }
+    expect(refs.some((v) => focusRingFleet.has(v as string))).toBe(true) // anti-vacuous: the ring tokens ARE consumed
   })
 
   it('geometry per the LAW: block-size off the ramp, padding-block 0, slotless inline-pad = h/2', () => {
@@ -58,5 +66,102 @@ describe('button.css — structure + token hygiene (s7)', () => {
 
   it('a forced-colors block keeps the ink/border from vanishing', () => {
     expect(stylesBlock).toMatch(/@media \(forced-colors: active\)/)
+  })
+})
+
+// ── Interaction states + the shared focus ring (ADR-0008 / ADR-0009) ─────────────────────────────────
+// The per-state BACKGROUND comes from a ROLE-LADDER step declared per-variant in the token block (NEVER a
+// color-mix — colour opinions live in the token layer); the @scope styles consume the per-state tokens on the
+// platform pseudo-classes. The focus ring is the SHARED fleet ring (a layout-neutral, keyboard-only outline).
+// jsdom can't compute the rendered colours — these pin the CSS-text/structure; the px change + forced-colors
+// survival is the wave-2 cross-engine smoke.
+
+/** The declaration block for a `:where(...)` variant selector in the token block — marker to its closing brace. */
+const variantBlock = (marker: string): string => {
+  const start = tokenBlock.indexOf(marker)
+  return start < 0 ? '' : tokenBlock.slice(start, tokenBlock.indexOf('}', start))
+}
+
+describe('button.css — interaction states from role ladders (ADR-0008)', () => {
+  it('solid (default) steps the ACCENT ladder: idle --c-primary · hover -dim · active -high', () => {
+    const b = variantBlock(':where(ui-button) {')
+    expect(b).toMatch(/--ui-button-bg:\s*var\(--c-primary\)/)
+    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--c-primary-dim\)/)
+    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--c-primary-high\)/)
+  })
+
+  it('soft steps the CONTAINER ladder: idle -container-low · hover -container · active -container-high', () => {
+    const b = variantBlock(":where(ui-button[variant='soft'])")
+    expect(b).toMatch(/--ui-button-bg:\s*var\(--c-primary-container-low\)/)
+    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--c-primary-container\)/)
+    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--c-primary-container-high\)/)
+  })
+
+  it('ghost is a WASH: transparent idle · hover -container-low · active -container', () => {
+    const b = variantBlock(":where(ui-button[variant='ghost'])")
+    expect(b).toMatch(/--ui-button-bg:\s*transparent/)
+    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--c-primary-container-low\)/)
+    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--c-primary-container\)/)
+  })
+
+  it('@scope consumes the per-state tokens on :hover/:active (background only); NO color-mix anywhere', () => {
+    expect(stylesBlock).toMatch(/:scope:hover\s*\{\s*background:\s*var\(--ui-button-bg-hover\)/)
+    expect(stylesBlock).toMatch(/:scope:active\s*\{\s*background:\s*var\(--ui-button-bg-active\)/)
+    expect(css).not.toContain('color-mix(') // states are role steps, never a synthesized mix() (ADR-0008)
+  })
+
+  it('disabled HOLDS at idle: -bg-hover/-bg-active repoint to the muted neutral, and the host is pointer-inert', () => {
+    const b = variantBlock(":where(ui-button[disabled])")
+    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--c-neutral-surface-high\)/)
+    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--c-neutral-surface-high\)/)
+    expect(stylesBlock).toMatch(/:scope:is\(\[disabled\]\)\s*\{[^}]*pointer-events:\s*none/) // :hover/:active can't match
+  })
+})
+
+describe('button.css — the shared focus ring (ADR-0009)', () => {
+  it(':focus-visible draws the fleet ring: a layout-neutral outline from the shared --c-focus-ring/--ui-focus-ring-*', () => {
+    const m = stylesBlock.match(/:scope:focus-visible\s*\{([^}]*)\}/)
+    expect(m, ':scope:focus-visible rule missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--c-focus-ring\)/)
+    expect(rule).toMatch(/outline-offset:\s*var\(--ui-focus-ring-offset\)/)
+  })
+
+  it('the ring is KEYBOARD-only: :focus-visible, never a bare :focus (no ring on a mouse click)', () => {
+    expect(stylesBlock).not.toMatch(/:focus\s*\{/) // a bare `:focus {` rule — would ring on mouse focus too
+  })
+})
+
+// ── Role-driven glyph sizing — caret = font (ADR-0012 / geometry-sizing-spec §4.1, §4.6) ──────────────
+// PLACEMENT stays position-driven (the :has() grid, edge-pad ½(h−icon)); GLYPH SIZE becomes role-driven.
+// The CELL stays icon-sized for both roles; the caret glyph is the FONT, centered within the icon cell so it
+// lands at the emergent ½(h−font) edge — NOT --ui-ind (an inline affordance at icon size is the oversize bug).
+describe('button.css — role-driven glyph sizing, caret = font (ADR-0012)', () => {
+  it('--ui-button-glyph is declared = the font (the inline-affordance ramp; --ui-glyph-ratio 1)', () => {
+    expect(tokenBlock).toMatch(/--ui-button-glyph:\s*var\(--ui-button-font\)/)
+  })
+
+  it('the CELL stays icon-sized for BOTH slots (border-box, so a role inset stays within the icon cell)', () => {
+    const start = stylesBlock.indexOf(":scope > [slot='leading']")
+    const block = stylesBlock.slice(start, stylesBlock.indexOf('}', start) + 1)
+    expect(block).toMatch(/\[slot='leading'\]/)
+    expect(block).toMatch(/\[slot='trailing'\]/)
+    expect(block).toMatch(/inline-size:\s*var\(--ui-button-icon\)/)
+    expect(block).toMatch(/block-size:\s*var\(--ui-button-icon\)/)
+    expect(block).toMatch(/box-sizing:\s*border-box/)
+  })
+
+  it('[data-role=caret] sizes the GLYPH to font (--ui-button-glyph), inset/centered in the icon cell — not --ui-ind', () => {
+    const m = stylesBlock.match(/:scope > \[data-role='caret'\]\s*\{([^}]*)\}/)
+    expect(m, "[data-role='caret'] rule missing").not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    // inset = ½(icon − glyph) → the font glyph centers in the icon-sized cell, landing at the emergent ½(h−font).
+    // The glyph reduces from icon to --ui-button-glyph (= font) — NOT left at --ui-ind (the oversize-caret bug).
+    expect(rule).toMatch(/padding:\s*calc\(\(var\(--ui-button-icon\)\s*-\s*var\(--ui-button-glyph\)\)\s*\/\s*2\)/)
+    expect(rule).toContain('--ui-button-glyph') // sized to the font ramp, not the icon ramp
+  })
+
+  it('[data-role=icon] FILLS the icon cell (the content-icon FRAME role)', () => {
+    expect(stylesBlock).toMatch(/:scope > \[data-role='icon'\]\s*\{[^}]*padding:\s*0/)
   })
 })

@@ -1,2 +1,3 @@
 // traits — stateless `(host, opts) => cleanup` behaviours and stateful controllers, registered via host.use().
-export {}
+export { tabbable } from './tabbable.ts'
+export type { TabbableOptions } from './tabbable.ts'
