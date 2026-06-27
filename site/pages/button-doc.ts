@@ -96,26 +96,37 @@ function specimenRow(children: readonly HTMLElement[]): HTMLElement {
 
 // ── anatomy specimens (hand-authored: the position × role adornment structures, ADR-0012) ───────────────
 
-// The structure of one anatomy specimen: a structure caption + which adornment slots are filled. These are
-// markup SHAPES (slot = position × data-role = kind), not attributes, so they are hand-authored here rather
-// than derived from the parser.
+// The structure of one anatomy specimen: a structure caption + the ROLE filling each adornment slot (or none).
+// These are markup SHAPES (slot = position × data-role = kind), not attributes, so they are hand-authored here
+// rather than derived from the parser. POSITION and ROLE are orthogonal (ADR-0012) — leading/trailing each
+// carry an independent role, so the same slots read FORWARD (icon · caret) or REVERSED (caret · icon).
+type AdornmentRole = 'icon' | 'caret'
+type SlotName = 'leading' | 'trailing'
 interface AnatomyShape {
   readonly caption: string
-  readonly leading: boolean
-  readonly trailing: boolean
+  readonly leading?: AdornmentRole
+  readonly trailing?: AdornmentRole
 }
 
-// renderAnatomy — a real <ui-button> per structure the family standard names (ADR-0012): a leading icon, a
-// trailing caret, and the full [ icon | label | caret ]. The shapes are local (not a module const) so they
-// initialise when this runs, inside the eager line-18 render. Each specimen is captioned with its notation.
+// renderAnatomy — a real <ui-button> per structure the family standard names (ADR-0012). The FORWARD set
+// (leading icon × trailing caret) and the REVERSED set (leading caret × trailing icon) — proving position ⊥
+// role: any role sits in either slot. The shapes are local (not a module const) so they initialise when this
+// runs, inside the eager line-18 render. Each specimen is captioned with its notation.
 function renderAnatomy(): HTMLElement {
   const shapes: readonly AnatomyShape[] = [
-    { caption: '[ icon | label ]', leading: true, trailing: false },
-    { caption: '[ label | caret ]', leading: false, trailing: true },
-    { caption: '[ icon | label | caret ]', leading: true, trailing: true },
+    { caption: '[ icon | label ]', leading: 'icon' },
+    { caption: '[ label | caret ]', trailing: 'caret' },
+    { caption: '[ icon | label | caret ]', leading: 'icon', trailing: 'caret' },
+    // Reversed (ADR-0012: position ⊥ role) — the caret on the LEFT, the icon on the RIGHT.
+    { caption: '[ caret | label ]', leading: 'caret' },
+    { caption: '[ label | icon ]', trailing: 'icon' },
+    { caption: '[ caret | label | icon ]', leading: 'caret', trailing: 'icon' },
   ]
   const section = document.createElement('section')
-  section.append(heading(2, 'Anatomy — [ icon | label | caret ]'), specimenRow(shapes.map(anatomySpecimen)))
+  section.append(
+    heading(2, 'Anatomy — [ icon | label | caret ] and reversed [ caret | label | icon ]'),
+    specimenRow(shapes.map(anatomySpecimen)),
+  )
   return section
 }
 
@@ -132,22 +143,29 @@ function anatomySpecimen(shape: AnatomyShape): HTMLElement {
   return figure
 }
 
-// anatomyButton — a live <ui-button> with the structure's adornments in DOM order (icon → label → caret). The
-// label text is the accessible name; the leading icon and trailing caret are decorative slotted children.
+// anatomyButton — a live <ui-button> with the structure's adornments in DOM order (leading → label → trailing).
+// The label text is the accessible name; the slotted adornments are decorative. ROLE is dispatched per slot —
+// the same slot can carry an icon or a caret (position ⊥ role), so the reversed shapes lead with a caret.
 function anatomyButton(shape: AnatomyShape): HTMLElement {
   const el = document.createElement('ui-button')
-  if (shape.leading) el.append(makeIcon()) // slot="leading" data-role="icon"
+  if (shape.leading) el.append(makeAdornment('leading', shape.leading))
   el.append(document.createTextNode('Label')) // the label region (the accessible name)
-  if (shape.trailing) el.append(makeCaret()) // slot="trailing" data-role="caret"
+  if (shape.trailing) el.append(makeAdornment('trailing', shape.trailing))
   return el
 }
 
-// makeIcon — a decorative leading icon (download glyph), mirroring permutations.ts so the doc renders the same.
-// slot="leading" places it (POSITION); data-role="icon" is the content role (sized to the icon cell, ADR-0012).
-// `currentColor` inherits the button ink; `aria-hidden` keeps the label as the accessible name.
-function makeIcon(): SVGElement {
+// makeAdornment — dispatch on ROLE to the matching glyph helper, PLACED in the given slot (POSITION). The
+// orthogonality (ADR-0012): any role can sit in either slot — a caret can lead, an icon can trail.
+function makeAdornment(slot: SlotName, role: AdornmentRole): SVGElement {
+  return role === 'icon' ? makeIcon(slot) : makeCaret(slot)
+}
+
+// makeIcon — a decorative icon (download glyph), mirroring permutations.ts so the doc renders the same. The
+// slot PLACES it (POSITION, default leading — its canonical home); data-role="icon" is the content role (sized
+// to fill the icon cell, ADR-0012). `currentColor` inherits the button ink; `aria-hidden` keeps the label name.
+function makeIcon(slot: SlotName = 'leading'): SVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg')
-  svg.setAttribute('slot', 'leading') // POSITION (start cell)
+  svg.setAttribute('slot', slot) // POSITION (start/end cell)
   svg.setAttribute('data-role', 'icon') // CONTENT role (icon · caret · future tag/badge)
   svg.setAttribute('aria-hidden', 'true')
   svg.setAttribute('viewBox', '0 0 24 24')
@@ -162,12 +180,13 @@ function makeIcon(): SVGElement {
   return svg
 }
 
-// makeCaret — a decorative trailing chevron-down (the dropdown/disclosure adornment), mirroring permutations.ts.
-// slot="trailing" places it (POSITION); data-role="caret" is the inline-affordance role (sized = font, ADR-0012
-// §4.6). The caret carries NO semantics — disclosure AX rides the host (G7), so a plain button never lies.
-function makeCaret(): SVGElement {
+// makeCaret — a decorative chevron-down (the dropdown/disclosure adornment), mirroring permutations.ts. The
+// slot PLACES it (POSITION, default trailing — its canonical home); data-role="caret" is the inline-affordance
+// role (the GLYPH sized = font, centered in the icon cell, ADR-0012 §4.6 — wherever the caret sits). The caret
+// carries NO semantics — disclosure AX rides the host (G7), so a plain button never lies.
+function makeCaret(slot: SlotName = 'trailing'): SVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg')
-  svg.setAttribute('slot', 'trailing') // POSITION (end cell)
+  svg.setAttribute('slot', slot) // POSITION (start/end cell)
   svg.setAttribute('data-role', 'caret') // CONTENT role
   svg.setAttribute('aria-hidden', 'true')
   svg.setAttribute('viewBox', '0 0 24 24')

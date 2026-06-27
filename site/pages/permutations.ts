@@ -1,7 +1,8 @@
 // site/pages/permutations.ts — slice A2, the permutations grid page (the headline demo). Renders the FULL
 // ui-button matrix — every size × variant × disabled, bare-label AND with the optional leading icon slot
-// (3 × 3 × 2 × 2 = 36 live controls) — the [ icon | label | caret ] structural anatomy axis (leading icon ×
-// trailing caret, ADR-0006 extended), and a [scale]/[density] subtree-geometry demo (ADR-0007).
+// (3 × 3 × 2 × 2 = 36 live controls) — the structural anatomy axis: FORWARD [ icon | label | caret ] AND its
+// REVERSED [ caret | label | icon ] (position ⊥ role — ADR-0006 host-as-grid, extended by ADR-0012), and a
+// [scale]/[density] subtree-geometry demo (ADR-0007).
 //
 // The matrix is built PROGRAMMATICALLY (loops over the size/variant/column arrays) rather than hand-written,
 // so completeness is provable from the structure: |sizes| × |variants| × |columns| = 3 × 3 × 4 = 36.
@@ -19,6 +20,12 @@ const SVG_NS = 'http://www.w3.org/2000/svg'
 const sizes = ['sm', 'md', 'lg'] as const
 const variants = ['solid', 'soft', 'ghost'] as const
 
+// An adornment is a POSITION (the slot) × a ROLE (data-role) — orthogonal per ADR-0012. The slot PLACES it
+// (start/end cell); the role SIZES the glyph (icon fills the icon-sized cell; caret is font-sized + centered).
+// Because they are independent, a caret can lead and an icon can trail (the reversed structures below).
+type SlotName = 'leading' | 'trailing'
+type AdornmentRole = 'icon' | 'caret'
+
 // The four columns per variant row: the (icon × disabled) cross. `disabled` is marked in the header label;
 // the disabled control also renders muted (button.css repoints to the neutral roles).
 interface Column {
@@ -33,12 +40,13 @@ const columns: readonly Column[] = [
   { label: '+ icon · disabled', icon: true, disabled: true },
 ]
 
-// A leading icon for the optional `slot="leading"` cell — a decorative download glyph. `currentColor` makes it
-// inherit the button ink (proving the slot tints with the variant); `aria-hidden` keeps the label text as the
-// accessible name (the doc's guidance for decorative icons). Sized by button.css (var(--ui-button-icon)).
-function makeIcon(): SVGElement {
+// A decorative download glyph — an `data-role="icon"` adornment for the given POSITION (default `leading`, its
+// canonical home; the reversed structures place it `trailing`). `currentColor` makes it inherit the button ink
+// (proving the slot tints with the variant); `aria-hidden` keeps the label text as the accessible name (the
+// doc's guidance for decorative icons). Sized by button.css to fill the icon cell (var(--ui-button-icon)).
+function makeIcon(slot: SlotName = 'leading'): SVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg')
-  svg.setAttribute('slot', 'leading') // POSITION (start cell)
+  svg.setAttribute('slot', slot) // POSITION (start/end cell)
   svg.setAttribute('data-role', 'icon') // CONTENT role (icon · caret · future tag/badge)
   svg.setAttribute('aria-hidden', 'true')
   svg.setAttribute('viewBox', '0 0 24 24')
@@ -53,13 +61,14 @@ function makeIcon(): SVGElement {
   return svg
 }
 
-// A trailing caret for the optional `slot="trailing"` cell — a decorative chevron-down (the common
-// dropdown/disclosure adornment). `currentColor` tints it with the variant ink; `aria-hidden` keeps the
-// label as the accessible name (the caret carries NO semantics — popup/disclosure meaning belongs on the
-// host via ARIA). Sized by button.css to the same square `var(--ui-button-icon)` cell as the leading icon.
-function makeCaret(): SVGElement {
+// A decorative chevron-down (the common dropdown/disclosure adornment) — a `data-role="caret"` for the given
+// POSITION (default `trailing`, its canonical home; the reversed structures place it `leading`). `currentColor`
+// tints it with the variant ink; `aria-hidden` keeps the label as the accessible name (the caret carries NO
+// semantics — popup/disclosure meaning belongs on the host via ARIA). The cell is icon-sized for BOTH roles;
+// button.css insets the caret GLYPH to font size and centers it (ADR-0012), wherever the caret sits.
+function makeCaret(slot: SlotName = 'trailing'): SVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg')
-  svg.setAttribute('slot', 'trailing') // POSITION (end cell)
+  svg.setAttribute('slot', slot) // POSITION (start/end cell)
   svg.setAttribute('data-role', 'caret') // CONTENT role
   svg.setAttribute('aria-hidden', 'true')
   svg.setAttribute('viewBox', '0 0 24 24')
@@ -74,26 +83,32 @@ function makeCaret(): SVGElement {
   return svg
 }
 
+// makeAdornment — dispatch on ROLE to the matching glyph helper, PLACED in the given slot (POSITION). The
+// orthogonality (ADR-0012): any role can sit in either slot — a caret can lead, an icon can trail.
+function makeAdornment(slot: SlotName, role: AdornmentRole): SVGElement {
+  return role === 'icon' ? makeIcon(slot) : makeCaret(slot)
+}
+
 interface ButtonSpec {
   readonly size: (typeof sizes)[number]
   readonly variant: (typeof variants)[number]
   readonly disabled: boolean
-  readonly icon: boolean
-  readonly trailing?: boolean
+  readonly leading?: AdornmentRole // the start-cell adornment role (icon · caret), if any
+  readonly trailing?: AdornmentRole // the end-cell adornment role, if any
 }
 
 // Build one real <ui-button>. Attributes are the author surface — variant/size/disabled all REFLECT, so
-// setAttribute drives the same styling/behaviour as author-set markup. Icon-first child order (leading slot),
-// then the label text — the label is the accessible name.
+// setAttribute drives the same styling/behaviour as author-set markup. Child order IS column order — the
+// leading adornment, then the label text (the accessible name), then the trailing adornment.
 function makeButton(spec: ButtonSpec): HTMLElement {
   const button = document.createElement('ui-button')
   button.setAttribute('variant', spec.variant)
   button.setAttribute('size', spec.size)
   if (spec.disabled) button.setAttribute('disabled', '')
-  // Child order IS column order (host-as-grid auto-places in DOM order): icon → label → caret.
-  if (spec.icon) button.append(makeIcon())
+  // Child order IS column order (host-as-grid auto-places in DOM order): leading → label → trailing.
+  if (spec.leading) button.append(makeAdornment('leading', spec.leading))
   button.append(document.createTextNode('Button'))
-  if (spec.trailing) button.append(makeCaret())
+  if (spec.trailing) button.append(makeAdornment('trailing', spec.trailing))
   return button
 }
 
@@ -127,7 +142,7 @@ function sizeSection(size: (typeof sizes)[number]): HTMLElement {
     for (const column of columns) {
       const cell = document.createElement('div')
       cell.className = 'matrix-cell'
-      cell.append(makeButton({ size, variant, disabled: column.disabled, icon: column.icon }))
+      cell.append(makeButton({ size, variant, disabled: column.disabled, leading: column.icon ? 'icon' : undefined }))
       matrix.append(cell)
     }
   }
@@ -136,33 +151,48 @@ function sizeSection(size: (typeof sizes)[number]): HTMLElement {
   return section
 }
 
-// The structural anatomy axis (ADR-0006, extended): the host-as-grid composes an OPTIONAL leading icon and an
-// OPTIONAL trailing caret into four structures — [ label ] · [ icon | label ] · [ label | caret ] ·
-// [ icon | label | caret ] — the affordance the trailing caret signals (menu / disclosure / nav).
+// The structural anatomy axis (ADR-0006, extended by ADR-0012): the host-as-grid composes an OPTIONAL leading
+// adornment and an OPTIONAL trailing adornment, each carrying a ROLE independent of its POSITION. POSITION (the
+// slot) places the cell; ROLE (data-role) sizes the glyph — so the SAME four structures read FORWARD (leading
+// icon × trailing caret) or REVERSED (leading caret × trailing icon).
 interface Anatomy {
   readonly label: string
-  readonly icon: boolean
-  readonly trailing: boolean
+  readonly leading?: AdornmentRole
+  readonly trailing?: AdornmentRole
 }
-const anatomies: readonly Anatomy[] = [
-  { label: 'label', icon: false, trailing: false },
-  { label: 'icon · label', icon: true, trailing: false },
-  { label: 'label · caret', icon: false, trailing: true },
-  { label: 'icon · label · caret', icon: true, trailing: true },
+
+// Forward structures: the leading ICON × trailing CARET cross — [ label ] · [ icon | label ] ·
+// [ label | caret ] · [ icon | label | caret ] (the affordance the trailing caret signals: menu / disclosure).
+const forwardAnatomies: readonly Anatomy[] = [
+  { label: 'label' },
+  { label: 'icon · label', leading: 'icon' },
+  { label: 'label · caret', trailing: 'caret' },
+  { label: 'icon · label · caret', leading: 'icon', trailing: 'caret' },
 ]
 
-// The anatomy matrix: a row per variant × the four structures (size md). Same 5-column grid as the size
-// matrices (corner/rowhead + 4) — so the [ icon | label | caret ] structure reads as a first-class axis.
-function anatomySection(): HTMLElement {
+// Reversed structures (ADR-0012: position ⊥ role): the CARET on the leading edge, the ICON on the trailing
+// edge. Padding stays slot-presence-driven (role-agnostic), so the inline pads are symmetric whenever BOTH
+// slots fill — and the leading caret glyph is still font-sized (the BTN-CARET law holds on either edge).
+const reversedAnatomies: readonly Anatomy[] = [
+  { label: 'caret · label', leading: 'caret' },
+  { label: 'label · icon', trailing: 'icon' },
+  { label: 'caret · label · icon', leading: 'caret', trailing: 'icon' },
+]
+
+// The anatomy matrix: a row per variant × one column per structure (size md). Reuses the .matrix chrome, but
+// the column count is DERIVED from the structure list (one column per anatomy) — the shared .matrix grid is
+// fixed at 4 columns, so set the template explicitly to stay provably-complete for any structure set.
+function anatomySection(title: string, anatomies: readonly Anatomy[]): HTMLElement {
   const section = document.createElement('section')
   section.className = 'size-group'
 
   const heading = document.createElement('h2')
-  heading.textContent = 'Anatomy — [ icon | label | caret ]'
+  heading.textContent = title
   section.append(heading)
 
   const matrix = document.createElement('div')
   matrix.className = 'matrix'
+  matrix.style.gridTemplateColumns = `max-content repeat(${anatomies.length}, minmax(7rem, 1fr))`
 
   matrix.append(gridText('', 'matrix-corner'))
   for (const anatomy of anatomies) matrix.append(gridText(anatomy.label, 'matrix-head'))
@@ -172,7 +202,7 @@ function anatomySection(): HTMLElement {
     for (const anatomy of anatomies) {
       const cell = document.createElement('div')
       cell.className = 'matrix-cell'
-      cell.append(makeButton({ size: 'md', variant, disabled: false, icon: anatomy.icon, trailing: anatomy.trailing }))
+      cell.append(makeButton({ size: 'md', variant, disabled: false, leading: anatomy.leading, trailing: anatomy.trailing }))
       matrix.append(cell)
     }
   }
@@ -197,8 +227,8 @@ function geometryRow(attr: 'scale' | 'density', value: string | null): HTMLEleme
   const cluster = document.createElement('div')
   cluster.className = 'geo-cluster'
   if (value !== null) cluster.setAttribute(attr, value)
-  cluster.append(makeButton({ size: 'md', variant: 'solid', disabled: false, icon: true }))
-  cluster.append(makeButton({ size: 'lg', variant: 'soft', disabled: false, icon: true }))
+  cluster.append(makeButton({ size: 'md', variant: 'solid', disabled: false, leading: 'icon' }))
+  cluster.append(makeButton({ size: 'lg', variant: 'soft', disabled: false, leading: 'icon' }))
   row.append(cluster)
 
   return row
@@ -230,15 +260,17 @@ const { content } = mountPage({
   title: 'Button — permutations',
   intro:
     'Every size × variant × disabled combination of ui-button — bare-label and with the optional leading ' +
-    'icon slot (36 live controls) — the [ icon | label | caret ] structural anatomy, and a [scale] / ' +
-    '[density] subtree-geometry demo (ADR-0007).',
+    'icon slot (36 live controls) — the [ icon | label | caret ] structural anatomy and its reversed ' +
+    '[ caret | label | icon ] (position ⊥ role), and a [scale] / [density] subtree-geometry demo (ADR-0007).',
 })
 
 // [1] The full matrix — one section per size.
 for (const size of sizes) content.append(sizeSection(size))
 
-// [2] The structural anatomy — [ icon | label | caret ] (leading icon × trailing caret).
-content.append(anatomySection())
+// [2] The structural anatomy — position ⊥ role (ADR-0012): the FORWARD leading-icon × trailing-caret cross,
+// then its REVERSED mirror (caret on the leading edge, icon on the trailing edge).
+content.append(anatomySection('Anatomy — [ icon | label | caret ]', forwardAnatomies))
+content.append(anatomySection('Anatomy (reversed) — [ caret | label | icon ]', reversedAnatomies))
 
 // [3] The subtree-geometry demo — [scale] resizes the frame; [density] resizes only the icon↔label gap.
 const geometry = document.createElement('section')

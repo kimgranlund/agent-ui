@@ -142,6 +142,39 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     expect(allEqual(padEnds), `[density] moved the trailing h/2 pad: ${padEnds.join()}`).toBe(true)
   })
 
+  it('REVERSED anatomy [caret|label|icon]: the inline-pads are SYMMETRIC ½(h−icon) (role-AGNOSTIC), and the LEADING caret glyph = font < icon', () => {
+    // ADR-0012: POSITION (slot) ⊥ ROLE (data-role). Put a CARET in the leading slot and an ICON in the
+    // trailing slot — the reversed structure. Two laws under proof on the reversed config:
+    //   • PADDING is SLOT-PRESENCE-driven (role-AGNOSTIC): both slots present ⇒ start = end = ½(h−icon). The
+    //     pad must NOT track which role sits where — the caret leading does not widen/narrow the start pad.
+    //   • BTN-CARET on the LEADING edge: the caret GLYPH is font-sized (< the icon-sized cell), centered — the
+    //     affordance is not oversized just because it leads (the law holds either edge, not only trailing).
+    const { btn } = mount(
+      '<ui-button><svg slot="leading" data-role="caret"></svg>Label<span slot="trailing" data-role="icon">●</span></ui-button>',
+    )
+    const caret = btn.querySelector('[data-role="caret"]') as HTMLElement
+
+    const h = frameHeight(btn) //   md frame (border-box height) = 28
+    const font = fontPx(btn) //     md font = 14
+    const iconCell = caret.getBoundingClientRect().width // the leading caret CELL is icon-sized = --ui-button-icon = 18
+
+    // [1] symmetric + role-agnostic pads: both slots present ⇒ start = end = ½(h−icon) (= 5 @ md), regardless
+    // of which ROLE fills which slot. If start ≠ end here, the padding tracked the role (a real bug — escalate).
+    const start = padStartPx(btn)
+    const end = padEndPx(btn)
+    expect(start, `reversed inline-pads are not symmetric — padding tracked role not slot-presence: ${start} vs ${end}`).toBeCloseTo(end, 1)
+    expect(start, 'leading inline-pad is not ½(h−icon)').toBeCloseTo((h - iconCell) / 2, 1)
+    expect(end, 'trailing inline-pad is not ½(h−icon)').toBeCloseTo((h - iconCell) / 2, 1)
+
+    // [2] anti-vacuous (BTN-CARET on the LEADING side): the leading caret's GLYPH content box = font (14), and
+    // is STRICTLY smaller than its icon-sized cell (18) — NOT the named --ui-ind oversize bug on the lead edge.
+    const cs = getComputedStyle(caret)
+    const caretContent = caret.getBoundingClientRect().width - px(cs.paddingInlineStart) - px(cs.paddingInlineEnd)
+    expect(caretContent, 'leading caret content box is not font-sized (the --ui-ind oversize bug on the leading edge)').toBeCloseTo(font, 0)
+    expect(caretContent, 'leading caret glyph is not strictly smaller than its icon-sized cell').toBeLessThan(iconCell)
+    expect(font, 'font is not strictly smaller than the icon cell').toBeLessThan(iconCell)
+  })
+
   it('forced-colors keeps the ink + border visible — Chromium emulates (CDP); WebKit asserts the baseline', async () => {
     const { btn } = mount(BARE)
 
