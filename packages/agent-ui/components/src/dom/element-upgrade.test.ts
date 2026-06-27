@@ -90,13 +90,11 @@ describe('e-upgrade — lazy-property upgrade dance (D5)', () => {
     expect(el.variant).toBe('ghost')
   })
 
-  it('upgrade↔attribute-ordering (WATCH): a pre-upgrade shadow coexisting with an initial attribute reconciles at connect', () => {
-    // attributeChangedCallback fires DURING upgrade, before connect, while the shadow is still present —
-    // so the inbound write lands on the own-property shadow (not the signal). upgradeProps then replays
-    // the shadow's CURRENT value at connect. Net: the LAST writer to the own-property — here the initial
-    // attribute — wins, and the signal is reconciled before first render. No crash / loss / loop.
-    // (Whether the JS property or the initial attribute SHOULD win is a precedence convention pending a
-    // planning decision — flagged in the handoff; this probe pins the CURRENT, defined behavior.)
+  it('upgrade↔attribute-ordering (WATCH): a pre-upgrade property BEATS an initial attribute (property-wins, ADR-0005)', () => {
+    // attributeChangedCallback fires DURING upgrade, before connect, while the shadow is still present, so
+    // its inbound write lands on the own-property shadow. BUT the constructor already CAPTURED the
+    // pre-upgrade property value ('soft') before that write — and upgradeProps replays the captured value,
+    // so the imperatively-set property wins over the initial attribute. No crash / loss / loop.
     const el = document.createElement('ui-upgrade-watch')
     ;(el as unknown as Record<string, unknown>).variant = 'soft' // pre-upgrade JS property (own-property shadow)
     el.setAttribute('variant', 'ghost') // initial attribute for the same prop
@@ -105,14 +103,28 @@ describe('e-upgrade — lazy-property upgrade dance (D5)', () => {
       static props = upgradeSchema
     }
     customElements.define('ui-upgrade-watch', WatchUpEl)
-    document.body.append(el) // upgrade (attr written to the shadow) → connect (upgradeProps reconciles)
+    document.body.append(el) // upgrade (ctor captures 'soft'; attr writes 'ghost' to the shadow) → connect (replay captured)
 
     expect(Object.getOwnPropertyDescriptor(el, 'variant')).toBeUndefined() // shadow dissolved
     let seen: string | undefined
     const dispose = effect(() => {
       seen = (el as unknown as Record<string, unknown>).variant as string
     })
-    expect(seen).toBe('ghost') // initial attribute (last writer to the shadow) won; signal reconciled at connect
+    expect(seen).toBe('soft') // the captured pre-upgrade property won over the initial attribute
     dispose()
+  })
+
+  it('property-wins: created un-upgraded, `.prop=` then matching attribute → the property value wins (ADR-0005)', () => {
+    const el = document.createElement('ui-upgrade-pw') as HTMLElement & { variant?: string }
+    ;(el as unknown as Record<string, unknown>).variant = 'soft' // imperatively set BEFORE upgrade
+    el.setAttribute('variant', 'solid') // an initial attribute carrying a different value
+
+    class PwEl extends UIElement {
+      static props = upgradeSchema
+    }
+    customElements.define('ui-upgrade-pw', PwEl)
+    document.body.append(el) // define + connect → upgrade
+
+    expect(el.variant).toBe('soft') // the property won; the attribute did not override it
   })
 })

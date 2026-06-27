@@ -28,6 +28,8 @@ export class UIElement extends HTMLElement {
   // The single `ElementInternals` handle, acquired ONCE here (a second `attachInternals()` throws).
   // Surfaced to subclasses via the protected `internals` getter — a `#private` field can't cross to one.
   #internals: ElementInternals = this.attachInternals()
+  // Pre-upgrade `.prop=` values captured in the constructor (property-wins, ADR-0005). See the constructor.
+  #captured = new Map<string, unknown>()
 
   /** Light DOM by default; a subclass sets `static shadow = true` to render into a shadow root instead. */
   static shadow = false
@@ -46,7 +48,16 @@ export class UIElement extends HTMLElement {
     // Light the props-as-signals subsystem on this host: install the signal-backed prototype accessors
     // declared by `static props`. Idempotent per class (props.ts' FINALIZED set), so every instance
     // calls it but only the first instance of a class finalizes it — no props.ts change needed.
-    finalize(this.constructor as unknown as Finalizable)
+    const ctor = this.constructor as unknown as Finalizable
+    finalize(ctor)
+    // Property-wins (ADR-0005): snapshot each declared prop's pre-upgrade own-property value HERE — the
+    // constructor runs during upgrade BEFORE attributeChangedCallback can overwrite the shadow — so an
+    // imperatively-set `.prop=` beats an initial attribute. `upgradeProperty` replays the captured value.
+    if (ctor.props) {
+      for (const name of Object.keys(ctor.props)) {
+        if (Object.hasOwn(this, name)) this.#captured.set(name, (this as Record<string, unknown>)[name])
+      }
+    }
   }
 
   connectedCallback(): void {
@@ -94,25 +105,29 @@ export class UIElement extends HTMLElement {
   }
 
   /**
-   * Resolve one pre-upgrade property shadow. A `.prop=` assignment made BEFORE the element upgraded (so
-   * before `finalize` installed the prototype accessor) created an OWN data property that now MASKS the
-   * accessor — reads/writes hit the dead own property, never the signal. Capture it, `delete` it
-   * (revealing the accessor), then reassign so the value flows THROUGH the accessor into the signal.
-   * No-op when there is no own-property shadow. Also the manual seam a control calls for a hand-written
-   * array/object accessor.
+   * Resolve one pre-upgrade property shadow. A `.prop=` set BEFORE the element upgraded (before `finalize`
+   * installed the accessor) created an OWN data property that MASKS the accessor — reads/writes hit the
+   * dead own property, never the signal. Replay the value THROUGH the accessor: prefer the value the
+   * CONSTRUCTOR captured (property-wins, ADR-0005 — it predates any initial-attribute write to the shadow);
+   * fall back to the current own-property value when nothing was captured (e.g. a manual array/object
+   * accessor a control upgrades by hand, or a shadow created after construction). No-op with neither.
    */
   protected upgradeProperty(name: string): void {
-    if (!Object.hasOwn(this, name)) return
-    const value = (this as Record<string, unknown>)[name]
-    delete (this as Record<string, unknown>)[name]
-    ;(this as Record<string, unknown>)[name] = value
+    const hasCaptured = this.#captured.has(name)
+    const hasOwn = Object.hasOwn(this, name)
+    if (!hasCaptured && !hasOwn) return
+    const value = hasCaptured ? this.#captured.get(name) : (this as Record<string, unknown>)[name]
+    this.#captured.delete(name)
+    if (hasOwn) delete (this as Record<string, unknown>)[name] // dissolve the shadow → reveal the accessor
+    ;(this as Record<string, unknown>)[name] = value // replay through the accessor → the signal (+ reflect once)
   }
 
   /**
    * Replay every declared prop's pre-upgrade shadow. Run at the START of `connectedCallback`. Ordering
    * note (the lazy-upgrade ↔ attributeChanged seam): an INITIAL observed attribute is applied during
    * upgrade — before connect — while the shadow is still present, so its inbound write lands on the
-   * shadow; this reconciles it at connect to the own-property's current value. See element-upgrade.test.ts.
+   * shadow; but the constructor already CAPTURED the pre-upgrade property value, so the replay restores
+   * the property over the attribute (property-wins, ADR-0005). See element-upgrade.test.ts.
    */
   protected upgradeProps(): void {
     const props = (this.constructor as unknown as Finalizable).props
