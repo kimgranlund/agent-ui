@@ -1,0 +1,14 @@
+{
+  "catalogId": "agent-ui",
+  "protocolVersion": "v1.0",
+  "components": {
+    "Button": {
+      "properties": {
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" },
+        "variant": { "type": { "type": "string" }, "mapsTo": "variant" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "action": { "type": { "type": "object" }, "mapsTo": "action" }
+      }
+    }
+  }
+}
