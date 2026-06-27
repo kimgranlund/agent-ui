@@ -77,7 +77,10 @@ export class UIElement extends HTMLElement {
     // `render()` returns a `TemplateResult` (or nothing); when it returns one, commit it into `renderRoot`.
     this.effect(() => {
       const result = this.render()
-      if (result instanceof TemplateResult) commitTemplate(result, this.renderRoot)
+      // Pass `this` as the RenderContext (the scope_seam): `UIElement` structurally satisfies it via the
+      // scope-owned `effect`, so a per-hole directive (`watch`) installs its effect under the connection
+      // scope — surviving unrelated re-renders, dying on disconnect — not under this transient render effect.
+      if (result instanceof TemplateResult) commitTemplate(result, this.renderRoot, this)
     })
   }
 

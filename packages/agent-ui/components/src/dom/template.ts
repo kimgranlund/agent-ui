@@ -7,13 +7,15 @@
 // values changed (per-part `Object.is` skip). This fills `UIElement.render()` (the no-op G2 left): the
 // host's one scope-owned render effect calls `render()`, which calls this engine into `renderRoot`.
 //
-// Parts: ChildPart (text · nested template · array), AttrPart (string attribute), BooleanPart (`?bool`),
-// PropertyPart (`.prop`), EventPart (`@event`, stable listener identity). `svg\`\`` fragments parse in the
-// SVG namespace, and unsupported binding positions (tag-name, comment, partial attribute) throw at prepare
-// naming the position. The directive seam lands in a later slice. Imports nothing — the engine is pure
-// DOM; reactivity comes from the host render effect re-running `render()`.
-// `render(result, container)` stays positionally extensible: a later slice adds an optional trailing
-// render-context (the host exposing its scope-owned `effect`) for `watch`, without breaking 2-arg calls.
+// Parts: ChildPart (text · nested template · array · directive), AttrPart (string attribute), BooleanPart
+// (`?bool`), PropertyPart (`.prop`), EventPart (`@event`, stable listener identity). `svg\`\`` fragments
+// parse in the SVG namespace, and unsupported binding positions (tag-name, comment, partial attribute)
+// throw at prepare naming the position. A child hole also routes a branded `DirectiveResult` to a stateful
+// `Directive` (the opt-in seam below; `repeat`/`watch` are riders that import it from here). Imports nothing
+// — the engine is pure DOM; reactivity comes from the host render effect re-running `render()`.
+// `render(result, container, ctx?)` threads an optional `RenderContext` (the host's scope-owned `effect`)
+// down to directives, so a per-hole directive effect (`watch`) is owned by the connection scope; 2-arg
+// calls keep working. The seam types are module-internal — NOT re-exported from the dom barrel.
 
 // ── TemplateResult — the inert result (t-result) ─────────────────────────────
 
@@ -269,27 +271,165 @@ export function prepare(strings: TemplateStringsArray, svg = false): PreparedTem
   return prepared
 }
 
+// ── directives — the opt-in extension seam (d-seam) ──────────────────────────
+//
+// A directive is a BRANDED factory → a stateful instance whose `update` threads state across commits of
+// the SAME child hole, with a `dispose()`. `ChildPart` recognizes a branded `DirectiveResult` and routes
+// to the instance — the SOLE extension point; `repeat`/`watch` (later slices) are riders, never special-
+// cased in the part engine. The seam base lives HERE (beside `ChildPart`) so the rider files import it
+// from this module with no import cycle; none of it is re-exported from the dom barrel (an internal seam).
+
+const DIRECTIVE_BRAND = Symbol('ui.directive')
+
+/**
+ * The render-side handle a directive uses to reach the host's CONNECTION SCOPE — the scope_seam. A host
+ * (`UIElement`) satisfies it structurally via its scope-owned `effect`. Threaded read-only into the render
+ * path so a per-hole directive effect (e.g. `watch`) is owned by the connection scope, NOT the transient
+ * render effect — which re-runs (scheduler flush) with no active owner, so a bare `effect()` created there
+ * would leak. `ctx.effect` re-establishes scope ownership explicitly on every render.
+ */
+export interface RenderContext {
+  effect(fn: () => void | (() => void)): () => void
+}
+
+/** A directive's `update` returns this when it manages its OWN DOM (via sub-parts) — the host part commits nothing. */
+export const NO_COMMIT = Symbol('ui.directive.no-commit')
+
+/**
+ * A directive instance: `update` runs on every commit of its hole (threading state across commits of the
+ * SAME hole), returning a value the host part commits through its normal child path OR `NO_COMMIT` when the
+ * directive drives its own DOM; `dispose` tears it down. The host `ChildPart` is handed to the constructor
+ * so a DOM-owning directive can drive sub-parts via the `protected` primitives below. Subclassed by the
+ * rider files (repeat.ts/watch.ts) — never instantiated by consumers; reached only through `directive()`.
+ */
+export abstract class Directive {
+  readonly #part: ChildPart
+  constructor(part: ChildPart) {
+    this.#part = part
+  }
+
+  /**
+   * Create a sub-`ChildPart` rendering into THIS directive's hole (its anchor sits just before the host
+   * hole's anchor). `watch` drives one inner part; `repeat` drives one per item. The returned part's
+   * `commit` / `dispose` / `moveBefore` / `startNode` are the directive's DOM primitives.
+   */
+  protected createPart(): ChildPart {
+    return this.#part.createChild()
+  }
+
+  /** The host hole's end boundary — sub-part content orders BEFORE this node (a `repeat` reorder reference). */
+  protected get endNode(): ChildNode {
+    return this.#part.endNode
+  }
+
+  /** Recognize the directive on each commit of the hole; return a value to commit, or `NO_COMMIT`. */
+  abstract update(args: readonly unknown[], ctx?: RenderContext): unknown
+
+  /** Tear down owned DOM/effects. Default no-op; the part isolates a throw so sibling teardown still runs. */
+  dispose(): void {}
+}
+
+type DirectiveConstructor = new (part: ChildPart) => Directive
+
+/** The inert product of a directive factory call — like `TemplateResult`, no DOM work at the call site. */
+export interface DirectiveResult {
+  readonly [DIRECTIVE_BRAND]: true
+  readonly ctor: DirectiveConstructor
+  readonly args: readonly unknown[]
+}
+
+function isDirectiveResult(value: unknown): value is DirectiveResult {
+  return typeof value === 'object' && value !== null && (value as Partial<DirectiveResult>)[DIRECTIVE_BRAND] === true
+}
+
+/**
+ * Wrap a `Directive` subclass into a factory: `const repeat = directive(RepeatDirective)`. Calling the
+ * factory returns an inert branded `DirectiveResult` that a child hole routes to its (per-hole, state-
+ * threading) instance. Rider files import this from template.ts — the one extension point.
+ */
+export function directive(ctor: DirectiveConstructor): (...args: unknown[]) => DirectiveResult {
+  return (...args) => ({ [DIRECTIVE_BRAND]: true, ctor, args })
+}
+
+/** Teardown isolation: a throwing directive disposer is reported, never rethrown, so siblings still tear down. */
+function reportDirectiveError(err: unknown): void {
+  console.error('directive dispose threw (isolated):', err)
+}
+
 // ── parts — one site, one Object.is dirty check (t-child-part, t-attr-parts) ──
 
 const UNCOMMITTED = Symbol('uncommitted') // never Object.is-equal to any committed value → first commit always runs
 
 interface Part {
-  commit(value: unknown): void
+  commit(value: unknown, ctx?: RenderContext): void
 }
 
-/** A child hole: commits a primitive (text, updated in place), a nested `TemplateResult`, or an array. */
+/** A child hole: commits a primitive (text, updated in place), a nested `TemplateResult`, an array, or a directive. */
 class ChildPart implements Part {
   #anchor: Comment // the marker comment; content is inserted as its previous siblings
   #committed: unknown = UNCOMMITTED
   #nodes: ChildNode[] = [] // the nodes this part directly owns (text / nested-template top nodes)
   #nested: Instance | null = null // the live instance when the value is a nested template
   #items: ChildPart[] | null = null // one sub-part per array item, each with its own anchor
+  #directive: Directive | null = null // the live directive when the value is a branded DirectiveResult
+  #directiveCtor: DirectiveConstructor | null = null // its ctor, so a same-ctor re-commit threads state
+  #ctx: RenderContext | undefined = undefined // the render context for THIS commit pass (handed to directives)
 
   constructor(anchor: Comment) {
     this.#anchor = anchor
   }
 
-  commit(value: unknown): void {
+  commit(value: unknown, ctx?: RenderContext): void {
+    this.#ctx = ctx
+    if (isDirectiveResult(value)) {
+      this.#commitDirective(value)
+      return
+    }
+    if (this.#directive) {
+      // Leaving directive mode (the hole is no longer a directive) → dispose it (it owned the DOM) and reset.
+      this.#disposeDirective() // isolated; #clear() only touches content, never the directive
+      this.#clear()
+      this.#committed = UNCOMMITTED
+    }
+    this.#commitChild(value)
+  }
+
+  /** Remove this part's content + its directive AND its own anchor — for an array sub-part being dropped. */
+  dispose(): void {
+    this.#disposeDirective()
+    this.#clear()
+    this.#anchor.remove()
+  }
+
+  /** Create a sub-part whose anchor sits just before THIS part's anchor — a directive's DOM primitive. */
+  createChild(): ChildPart {
+    const anchor = document.createComment('')
+    this.#anchor.before(anchor)
+    return new ChildPart(anchor)
+  }
+
+  /** This part's end boundary — a directive orders sub-part content before it. */
+  get endNode(): ChildNode {
+    return this.#anchor
+  }
+
+  /** The first DOM node of this part's range (its first owned node, else its anchor) — a reorder reference. */
+  get startNode(): ChildNode {
+    return this.#nodes.length > 0 ? this.#nodes[0] : this.#anchor
+  }
+
+  /**
+   * Relocate this part's owned nodes + anchor to just before `ref` (move-by-identity — preserves element
+   * state/focus). Covers a part holding text or a single nested template (the `repeat` item norm); a part
+   * holding an array/nested directive keeps deeper content in sub-anchors `#nodes` does not track.
+   */
+  moveBefore(ref: ChildNode): void {
+    for (const node of this.#nodes) ref.before(node)
+    ref.before(this.#anchor)
+  }
+
+  /** Commit a plain (non-directive) value through the text/template/array dispatch, honoring the Object.is skip. */
+  #commitChild(value: unknown): void {
     if (Object.is(value, this.#committed)) return // Object.is skip — an equal (same-ref) hole writes no DOM
     if (Array.isArray(value)) this.#commitArray(value)
     else if (value instanceof TemplateResult) this.#commitTemplate(value)
@@ -297,10 +437,40 @@ class ChildPart implements Part {
     this.#committed = value
   }
 
-  /** Remove this part's content AND its own anchor — for an array sub-part being dropped. */
-  dispose(): void {
-    this.#clear()
-    this.#anchor.remove()
+  /**
+   * Route a branded `DirectiveResult` to its instance: a same-ctor re-commit reuses the instance (state
+   * threads across commits of the same hole); a different ctor (or first entry) disposes the prior content
+   * + directive and constructs a fresh one. The instance's `update` either RETURNS a value committed through
+   * the normal child path, or `NO_COMMIT` when it drives its own DOM. The ctx (the host's connection scope)
+   * is handed through so a per-hole effect (`watch`) is scope-owned.
+   */
+  #commitDirective(result: DirectiveResult): void {
+    if (this.#directiveCtor !== result.ctor) {
+      this.#disposeDirective() // dispose any prior directive (isolated) before swapping in a different one
+      this.#clear() // clear leftover content (a value-producing directive's host-owned DOM)
+      this.#committed = UNCOMMITTED
+      this.#directive = new result.ctor(this)
+      this.#directiveCtor = result.ctor
+    }
+    const out = this.#directive!.update(result.args, this.#ctx)
+    if (out === NO_COMMIT) {
+      this.#committed = result // in directive mode; a fresh DirectiveResult each render never Object.is-skips
+      return
+    }
+    this.#commitChild(out) // a value-producing directive commits through the normal child path
+  }
+
+  /** Dispose the live directive, ISOLATING a throwing disposer (reported, not rethrown) so siblings tear down. */
+  #disposeDirective(): void {
+    const dir = this.#directive
+    if (!dir) return
+    this.#directive = null
+    this.#directiveCtor = null
+    try {
+      dir.dispose()
+    } catch (err) {
+      reportDirectiveError(err)
+    }
   }
 
   #commitText(value: unknown): void {
@@ -318,12 +488,12 @@ class ChildPart implements Part {
 
   #commitTemplate(result: TemplateResult): void {
     if (this.#nested && this.#nested.strings === result.strings) {
-      commitInstance(this.#nested, result.values) // same call site → update parts in place (recursive skip)
+      commitInstance(this.#nested, result.values, this.#ctx) // same call site → update parts in place (recursive skip)
       return
     }
     this.#clear() // a DIFFERENT template (or leaving text/array mode) → replace
     const created = createInstance(result)
-    commitInstance(created.instance, result.values)
+    commitInstance(created.instance, result.values, this.#ctx)
     this.#nodes = Array.from(created.fragment.childNodes) // capture BEFORE insertion empties the fragment
     this.#anchor.before(created.fragment)
     this.#nested = created.instance
@@ -342,9 +512,12 @@ class ChildPart implements Part {
       parts.push(new ChildPart(anchor))
     }
     while (parts.length > items.length) parts.pop()?.dispose()
-    for (let i = 0; i < items.length; i++) parts[i].commit(items[i])
+    for (let i = 0; i < items.length; i++) parts[i].commit(items[i], this.#ctx)
   }
 
+  /** Clear CONTENT only (items / owned nodes / nested instance). The directive is torn down separately, at
+   *  the real teardown points (leaving directive mode, swapping directives, disposing the part) — never on a
+   *  value-producing directive's own #commitChild, which routes through here. */
   #clear(): void {
     if (this.#items) {
       for (const item of this.#items) item.dispose()
@@ -491,9 +664,9 @@ function createInstance(result: TemplateResult): { instance: Instance; fragment:
   return { instance: { strings: result.strings, parts }, fragment }
 }
 
-/** Commit each value to its part (each part owns its own `Object.is` skip). */
-function commitInstance(instance: Instance, values: readonly unknown[]): void {
-  for (let i = 0; i < instance.parts.length; i++) instance.parts[i].commit(values[i])
+/** Commit each value to its part (each part owns its own `Object.is` skip); thread the render context to directives. */
+function commitInstance(instance: Instance, values: readonly unknown[], ctx?: RenderContext): void {
+  for (let i = 0; i < instance.parts.length; i++) instance.parts[i].commit(values[i], ctx)
 }
 
 const RENDERED = new WeakMap<Node, Instance>()
@@ -501,10 +674,11 @@ const RENDERED = new WeakMap<Node, Instance>()
 /**
  * Commit `result` into `container`. The first render of a given `strings` at a container instantiates the
  * prepared template; a re-render with the SAME `strings` reuses that instance and writes only the changed
- * holes (per-part `Object.is`). A different `strings` replaces the container's content. Designed to accept
- * an additive trailing render-context param (for the `watch` directive) in a later slice — non-breaking.
+ * holes (per-part `Object.is`). A different `strings` replaces the container's content. The optional `ctx`
+ * (the host's scope-owned `effect`) threads to directives so a per-hole effect (`watch`) is scope-owned;
+ * 2-arg calls keep working (`ctx` undefined → directives that need it simply have none).
  */
-export function render(result: TemplateResult, container: Node): void {
+export function render(result: TemplateResult, container: Node, ctx?: RenderContext): void {
   let instance = RENDERED.get(container)
   if (!instance || instance.strings !== result.strings) {
     container.textContent = '' // this container is render-owned; clear before a fresh instantiation
@@ -513,5 +687,5 @@ export function render(result: TemplateResult, container: Node): void {
     container.appendChild(created.fragment)
     RENDERED.set(container, instance)
   }
-  commitInstance(instance, result.values)
+  commitInstance(instance, result.values, ctx)
 }
