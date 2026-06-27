@@ -18,7 +18,7 @@ v1.0 payload into live @agent-ui/components controls (PRD-G1).
 HOW (honor the operating model):
 1. orchestration-lead — route + sequence the work, run the eval gate between phases,
    surface blockers to me, and keep the loop bounded.
-2. planning-lead — FIRST decompose A1 with decomposition-work (both planes; clear
+2. planning-lead — FIRST decompose A1 with decomposing-systems (both planes; clear
    scripts/coverage_check.py) against the existing LLDs (docs/specs/llds/a2ui-renderer.lld.md
    and a2ui-catalog.lld.md), reusing their build sequences. Surface any DEPENDENCY GAPS —
    A1 assumes @agent-ui/components ≈ G7 (PRD Assumption A-2); if the control family isn't

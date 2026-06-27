@@ -1,5 +1,5 @@
 ---
-name: agent-controls
+name: loop-design
 description: >
   Design or review continuation patterns — /goal, /loop, Stop hooks, auto mode —
   that drive autonomous work, scoring against the bundled rubric. Use whenever

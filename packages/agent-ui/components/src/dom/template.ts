@@ -8,27 +8,39 @@
 // host's one scope-owned render effect calls `render()`, which calls this engine into `renderRoot`.
 //
 // Parts: ChildPart (text · nested template · array), AttrPart (string attribute), BooleanPart (`?bool`),
-// PropertyPart (`.prop`), EventPart (`@event`, stable listener identity). The directive seam + svg/position
-// validation land in later slices. Imports nothing — the engine is pure DOM; reactivity comes from the
-// host render effect re-running `render()`.
+// PropertyPart (`.prop`), EventPart (`@event`, stable listener identity). `svg\`\`` fragments parse in the
+// SVG namespace, and unsupported binding positions (tag-name, comment, partial attribute) throw at prepare
+// naming the position. The directive seam lands in a later slice. Imports nothing — the engine is pure
+// DOM; reactivity comes from the host render effect re-running `render()`.
 // `render(result, container)` stays positionally extensible: a later slice adds an optional trailing
 // render-context (the host exposing its scope-owned `effect`) for `watch`, without breaking 2-arg calls.
 
 // ── TemplateResult — the inert result (t-result) ─────────────────────────────
 
-/** The inert product of `html\`…\``: the call site's frozen `strings` + this render's dynamic `values`. */
+/**
+ * The inert product of `html\`…\`` / `svg\`…\``: the call site's frozen `strings`, this render's dynamic
+ * `values`, and the parse MODE (`svg` fragments parse in the SVG namespace). No DOM work happens at the
+ * call site — preparation is lazy, at render.
+ */
 export class TemplateResult {
   readonly strings: TemplateStringsArray
   readonly values: readonly unknown[]
-  constructor(strings: TemplateStringsArray, values: readonly unknown[]) {
+  readonly svg: boolean
+  constructor(strings: TemplateStringsArray, values: readonly unknown[], svg = false) {
     this.strings = strings
     this.values = values
+    this.svg = svg
   }
 }
 
-/** Tagged-template tag → an inert `TemplateResult`. No DOM work happens here (preparation is lazy, at render). */
+/** Tagged-template tag → an inert HTML `TemplateResult`. */
 export function html(strings: TemplateStringsArray, ...values: unknown[]): TemplateResult {
   return new TemplateResult(strings, values)
+}
+
+/** Like `html`, but the fragment parses in the SVG NAMESPACE — `<circle>`/`<path>`/… become real SVGElements. */
+export function svg(strings: TemplateStringsArray, ...values: unknown[]): TemplateResult {
+  return new TemplateResult(strings, values, true)
 }
 
 // ── prepare — parse once, cache by `strings` identity (t-prepare) ─────────────
@@ -81,14 +93,71 @@ const CHILD_MARKER = `<!--${MARKER}-->`
 
 const PREPARED = new WeakMap<TemplateStringsArray, PreparedTemplate>()
 
-/** Crude tag-state scan: are we inside a tag (attribute position) after this static chunk? */
-function scanInTag(chunk: string, inTag: boolean): boolean {
-  for (let i = 0; i < chunk.length; i++) {
-    const c = chunk.charCodeAt(i)
-    if (c === 60 /* < */) inTag = true
-    else if (c === 62 /* > */) inTag = false
+/**
+ * One hole's source position. `child` and `attr` (whole value) are supported; the rest are unsupported
+ * binding positions that throw at prepare with a NAMING message (rubric D6).
+ */
+type HolePosition =
+  | { kind: 'child' }
+  | { kind: 'attr'; name: string }
+  | { kind: 'tag' } // `<${x}>` / `</${x}>` — dynamic tag name
+  | { kind: 'comment' } // inside `<!-- … -->`
+  | { kind: 'partial-attr' } // mixed into a multi-string attribute value
+
+const ST_TEXT = 0
+const ST_TAG_NAME = 1
+const ST_TAG_ATTRS = 2
+const ST_COMMENT = 3
+
+const isNameStart = (c: string): boolean => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+const isSpace = (c: string): boolean => c === ' ' || c === '\t' || c === '\n' || c === '\r' || c === '\f'
+
+/**
+ * Classify each hole's position by a minimal state scan of the static source. Deliberately NOT a full
+ * tokenizer: quotes inside attribute values are not tracked, so a literal `>` inside a quoted value can
+ * misclassify (same crude-scan caveat as slices 1–2). Enough to route child/attr and to NAME the three
+ * unsupported positions (tag-name, comment, partial attribute).
+ */
+function classifyHoles(strings: TemplateStringsArray): HolePosition[] {
+  const out: HolePosition[] = []
+  let state = ST_TEXT
+  for (let i = 0; i < strings.length; i++) {
+    const s = strings[i]
+    for (let j = 0; j < s.length; j++) {
+      const c = s[j]
+      if (state === ST_COMMENT) {
+        if (s.startsWith('-->', j)) {
+          state = ST_TEXT
+          j += 2 // + the loop's ++ skips `-->`
+        }
+      } else if (state === ST_TEXT) {
+        if (s.startsWith('<!--', j)) {
+          state = ST_COMMENT
+          j += 3
+        } else if (c === '<') {
+          const n = s[j + 1]
+          if (n === undefined || n === '/' || isNameStart(n)) state = ST_TAG_NAME // a real tag (or a tag-name hole)
+        }
+      } else if (state === ST_TAG_NAME) {
+        if (c === '>') state = ST_TEXT
+        else if (isSpace(c)) state = ST_TAG_ATTRS
+      } else if (c === '>') {
+        state = ST_TEXT // ST_TAG_ATTRS
+      }
+    }
+    if (i < strings.length - 1) out.push(classifyAt(state, s))
   }
-  return inTag
+  return out
+}
+
+function classifyAt(state: number, chunk: string): HolePosition {
+  if (state === ST_COMMENT) return { kind: 'comment' }
+  if (state === ST_TAG_NAME) return { kind: 'tag' }
+  if (state === ST_TAG_ATTRS) {
+    const name = attrNameBefore(chunk)
+    return name != null ? { kind: 'attr', name } : { kind: 'partial-attr' }
+  }
+  return { kind: 'child' }
 }
 
 /**
@@ -97,26 +166,56 @@ function scanInTag(chunk: string, inTag: boolean): boolean {
  * re-render of the same call site hits the cache and re-parses nothing. Exported for the cache probes
  * (an internal seam; NOT re-exported from the dom barrel).
  */
-export function prepare(strings: TemplateStringsArray): PreparedTemplate {
+export function prepare(strings: TemplateStringsArray, svg = false): PreparedTemplate {
   const cached = PREPARED.get(strings)
   if (cached) return cached
 
-  // Pass 1 — build the marker HTML and capture each hole's SOURCE attribute name (with sigil), since the
-  // HTML parser lowercases attribute names (which would corrupt a `.prop`'s camelCase). `null` = a child hole.
+  // Pass 0 — classify each hole's position and throw (NAMING the position) on an unsupported one.
+  const positions = classifyHoles(strings)
+  positions.forEach((pos, i) => {
+    if (pos.kind === 'tag') {
+      throw new Error(`template: hole #${i} is in TAG-NAME position (\`<\${…}>\` / \`</\${…}>\`) — the tag name must be static; a dynamic tag is not supported.`)
+    }
+    if (pos.kind === 'comment') {
+      throw new Error(`template: hole #${i} is inside an HTML COMMENT (\`<!-- \${…} -->\`) — not a supported binding position.`)
+    }
+    if (pos.kind === 'partial-attr') {
+      throw new Error(`template: hole #${i} is in a PARTIAL attribute value (\`name="… \${…} …"\`) — only a whole-value attribute hole (\`name=\${…}\`) is supported.`)
+    }
+  })
+
+  // Pass 1 — build the marker HTML from the validated positions, capturing each hole's SOURCE attribute
+  // name (the HTML parser lowercases attribute names, which would corrupt a `.prop`'s camelCase). `null` = child.
   let markup = ''
-  let inTag = false
   const holeNames: (string | null)[] = []
   for (let i = 0; i < strings.length; i++) {
     markup += strings[i]
-    inTag = scanInTag(strings[i], inTag)
     if (i < strings.length - 1) {
-      markup += inTag ? MARKER : CHILD_MARKER
-      holeNames.push(inTag ? attrNameBefore(strings[i]) : null)
+      const pos = positions[i]
+      if (pos.kind === 'attr') {
+        markup += MARKER
+        holeNames.push(pos.name)
+      } else {
+        markup += CHILD_MARKER // 'child' (tag/comment/partial already threw)
+        holeNames.push(null)
+      }
     }
   }
 
+  // Parse. For `svg`, wrap the markup in an `<svg>` so its children parse in the SVG namespace, then LIFT
+  // those children up to the template content (their namespace is fixed at creation, so lifting/cloning
+  // keeps it) and drop the wrapper.
   const template = document.createElement('template')
-  template.innerHTML = markup
+  if (svg) {
+    template.innerHTML = `<svg>${markup}</svg>`
+    const wrap = template.content.firstElementChild
+    if (wrap) {
+      while (wrap.firstChild) template.content.appendChild(wrap.firstChild)
+      wrap.remove()
+    }
+  } else {
+    template.innerHTML = markup
+  }
 
   // Pass 2 — walk pre-order (element + comment); collect the marker sites in document order (= source
   // order), cleaning marker attributes. A marker comment is a child site; a marker-valued attribute is an
@@ -223,7 +322,7 @@ class ChildPart implements Part {
       return
     }
     this.#clear() // a DIFFERENT template (or leaving text/array mode) → replace
-    const created = createInstance(result.strings)
+    const created = createInstance(result)
     commitInstance(created.instance, result.values)
     this.#nodes = Array.from(created.fragment.childNodes) // capture BEFORE insertion empties the fragment
     this.#anchor.before(created.fragment)
@@ -368,8 +467,8 @@ function collectNodes(root: Node): Node[] {
 }
 
 /** Clone a prepared template and bind a live part to each manifest entry. The fragment is the new content. */
-function createInstance(strings: TemplateStringsArray): { instance: Instance; fragment: DocumentFragment } {
-  const prepared = prepare(strings)
+function createInstance(result: TemplateResult): { instance: Instance; fragment: DocumentFragment } {
+  const prepared = prepare(result.strings, result.svg)
   const fragment = prepared.template.content.cloneNode(true) as DocumentFragment
   const nodes = collectNodes(fragment)
   const parts = prepared.parts.map((info): Part => {
@@ -389,7 +488,7 @@ function createInstance(strings: TemplateStringsArray): { instance: Instance; fr
         return assertNever(info)
     }
   })
-  return { instance: { strings, parts }, fragment }
+  return { instance: { strings: result.strings, parts }, fragment }
 }
 
 /** Commit each value to its part (each part owns its own `Object.is` skip). */
@@ -409,7 +508,7 @@ export function render(result: TemplateResult, container: Node): void {
   let instance = RENDERED.get(container)
   if (!instance || instance.strings !== result.strings) {
     container.textContent = '' // this container is render-owned; clear before a fresh instantiation
-    const created = createInstance(result.strings)
+    const created = createInstance(result)
     instance = created.instance
     container.appendChild(created.fragment)
     RENDERED.set(container, instance)

@@ -1,6 +1,6 @@
 # The two-plane method (depth)
 
-> Reference for `decomposition-work`. The SKILL.md owns the one-screen summary; this file owns the method depth. · 2026-06-26
+> Reference for `decomposing-systems`. The SKILL.md owns the one-screen summary; this file owns the method depth. · 2026-06-26
 
 ## Why two planes
 

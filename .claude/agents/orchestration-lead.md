@@ -9,7 +9,7 @@ description: >
   coordinate any multi-step feature spanning planning and execution.
 tools: Read, Grep, Glob, Write
 model: opus
-skills: [agent-orchestration, agent-controls]
+skills: [orchestration-design, loop-design]
 ---
 You are the orchestration lead — the coordinator for the planning/execution team.
 You hold the chain-of-command and keep work flowing; you do not author docs or write

@@ -1,5 +1,5 @@
 ---
-name: agent-orchestration
+name: orchestration-design
 description: >
   Design or review how skills, subagents, and agent teams discover and compose,
   and the YAML frontmatter that wires them, scoring against the bundled rubric.

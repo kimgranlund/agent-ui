@@ -9,7 +9,7 @@
       "docs/plan.md §5 (UIElement host; prop.* / PropType / PropConfig; ReactiveProps<S>; declare-merge; reflection + directional locks; finalize(); lazy-upgrade), §3 (layering), §9 (decorator-free TS conventions)",
       "docs/process.md governance (true/false→gate; judgment→rubric) + the import-layering trip-wire (dom imports ONLY ../reactive)"
     ],
-    "method": "decomposition-work, both planes. OUTSIDE-IN = the dom layer's two G2 modules (element.ts, props.ts) + the dom barrel, divided to buildable units. INSIDE-OUT = the G2 capabilities anchored to the goals.md DoD boxes + plan.md §5. The `build` key overlays the ground state (kernel exists at G1; the whole dom/ layer is an empty stub ready to fill — nothing here is blocked).",
+    "method": "decomposing-systems, both planes. OUTSIDE-IN = the dom layer's two G2 modules (element.ts, props.ts) + the dom barrel, divided to buildable units. INSIDE-OUT = the G2 capabilities anchored to the goals.md DoD boxes + plan.md §5. The `build` key overlays the ground state (kernel exists at G1; the whole dom/ layer is an empty stub ready to fill — nothing here is blocked).",
     "ground_state": "@agent-ui/components is at G1: the reactive/ kernel exists (signal/computed/effect/createScope/inspect/whenFlushed). src/dom/ is an empty `export {}` stub — G2 fills it. The only dependency is the kernel (present), so every G2 unit is buildable now; the typing proof (first slice) needs only the strict tsconfig."
   },
   "nodes": [
@@ -151,7 +151,7 @@
       "e-internals acquires internals once": "attachInternals() called exactly once in the constructor, stored in #internals, surfaced to the G4 form subclass via a protected get internals() (no re-acquire). The single acquisition point + light-DOM-default render-root (this.shadowRoot ?? this) are the forward seams G4 form participation builds on."
     },
     "coverage_prediction": {
-      "command": "python3 .claude/skills/decomposition-work/scripts/coverage_check.py docs/decompositions/g2-element-props.decomp.json --strict",
+      "command": "python3 .claude/skills/decomposing-systems/scripts/coverage_check.py docs/decompositions/g2-element-props.decomp.json --strict",
       "expected_stdout": "== coverage: 14 nodes · 14 actions · 14 hosts == / [OK] coverage clean — both planes cross-check",
       "expected_exit": 0,
       "rationale": "This annotation adds a top-level metadata key only; nodes/actions/hosts are untouched (14/14/14). Every leaf hosts ≥1 action (no UNJUSTIFIED-LEAF), every action is hosted (no UNHOSTED), every hosts edge resolves (no DANGLING), ids unique (no DUP-ID) — so even under --strict the gate stays at exit 0."

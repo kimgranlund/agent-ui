@@ -1,6 +1,6 @@
 # Domain: Components
 
-> `decomposition-work` domain reference. Method depth in `method.md`. · 2026-06-26
+> `decomposing-systems` domain reference. Method depth in `method.md`. · 2026-06-26
 
 Two crossing sub-planes — **COMPOSE** (how parts nest) and **REALIZE** (how a part becomes a real element). Treat COMPOSE as the OUTSIDE-IN axis and REALIZE as the INSIDE-OUT axis.
 

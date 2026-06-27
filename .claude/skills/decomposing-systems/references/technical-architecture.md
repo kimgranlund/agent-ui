@@ -1,6 +1,6 @@
 # Domain: Technical Architecture
 
-> `decomposition-work` domain reference. Method depth in `method.md`. · 2026-06-26
+> `decomposing-systems` domain reference. Method depth in `method.md`. · 2026-06-26
 
 ## OUTSIDE-IN axis (structure)
 

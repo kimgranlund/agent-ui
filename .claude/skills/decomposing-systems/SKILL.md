@@ -1,5 +1,5 @@
 ---
-name: decomposition-work
+name: decomposing-systems
 description: >
   Decompose any design or planning problem along two crossing planes — OUTSIDE-IN
   (whole → parts, top-down structure) and INSIDE-OUT (atoms/actions → surfaces,

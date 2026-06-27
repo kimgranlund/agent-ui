@@ -1,6 +1,6 @@
 # Domain: <NAME>
 
-> Source: `decomposition-work` domain-reference template. Method depth in `method.md`. Set a real `· YYYY-MM-DD` freshness marker when you copy.
+> Source: `decomposing-systems` domain-reference template. Method depth in `method.md`. Set a real `· YYYY-MM-DD` freshness marker when you copy.
 >
 > Copy this file to `references/<name>.md`, fill the axes + stop rule, add a worked pass, and add a row to the SKILL.md domain table.
 

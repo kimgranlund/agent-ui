@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """coverage_check.py — cross-plane coverage gate for a two-plane decomposition.
 
-Routes the deterministic half of decomposition-work to code: given a manifest of
+Routes the deterministic half of decomposing-systems to code: given a manifest of
 OUTSIDE-IN nodes, INSIDE-OUT actions, and the hosts mapping that crosses them, it
 reports the defect quadrant mechanically instead of by eyeballing.
 

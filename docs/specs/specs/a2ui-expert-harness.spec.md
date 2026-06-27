@@ -46,7 +46,7 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 
 ### 3.2 How they compose & verify
 
-**SPEC-R5 — Discovery & composition (orchestration).** Skills, agents, rubrics, and gates MUST discover and compose through declared wiring (frontmatter + descriptions), with an explicit skill-vs-subagent boundary: a skill captures a *procedure*; a subagent is dispatched for *isolated making*; a rubric is *referenced* for judgment; a gate is *invoked* for a true/false check. The wiring MUST be authored via `agent-orchestration`. *(→ PRD-G3)*
+**SPEC-R5 — Discovery & composition (orchestration).** Skills, agents, rubrics, and gates MUST discover and compose through declared wiring (frontmatter + descriptions), with an explicit skill-vs-subagent boundary: a skill captures a *procedure*; a subagent is dispatched for *isolated making*; a rubric is *referenced* for judgment; a gate is *invoked* for a true/false check. The wiring MUST be authored via `orchestration-design`. *(→ PRD-G3)*
 - **AC1** *Given* the artifact set, *when* the orchestration map is inspected, *then* every agent names its grading rubric, every skill names the gates/rubrics it invokes, and no capability is unreachable (no orphan).
 
 **SPEC-R6 — Generation→verification→self-correction loop.** The harness MUST encode A2UI's prompt→generate→validate→self-correct loop: an agent generates an artifact conditioned by the corpus (few-shot/retrieval), the deterministic gates + the relevant rubric verify it, and on failure the agent self-corrects before the artifact is accepted. The loop MUST be bounded (a stop condition). *(→ PRD-G3, PRD-G4)*

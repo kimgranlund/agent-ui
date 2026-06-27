@@ -142,7 +142,7 @@ These are read to check, never obeyed. They are the single source of truth revie
   above are versioned like API signatures — when a skill's behavior changes, its description changes.
 - **Continuation (when the next turn fires):** **human-driven for now.** The only automation is the
   Stop/pre-commit **hook** running the fast gate suite (enforcement, not selection). A per-component DoD
-  as a `/goal` condition (authored via `agent-controls`) is a *later* option, considered only
+  as a `/goal` condition (authored via `loop-design`) is a *later* option, considered only
   if the buildout fans out to the full catalog — not for ~7 controls. We never expect `/goal` to *select*
   the reviewer or the author skill; discovery does that underneath, goal or no goal.
 
