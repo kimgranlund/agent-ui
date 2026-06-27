@@ -1,0 +1,250 @@
+/* text-field.css — ui-text-field, the single-file component stylesheet (ADR-0003). Two clearly-SECTIONED
+ * blocks, mirroring button.css:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-text-field)` (specificity 0,0,0) DECLARES the `--ui-text-field-*` chain from
+ *       the colour roles (`--c-{family}-{role}`; family = neutral, the field-frame map pinned in ADR-0014 cl.2c)
+ *       and the dimensional ramp (`--ui-{height,font,gap}-{size}` from `@agent-ui/shared/dimensions.css`).
+ *       The state is a BORDER channel, not a background channel (ADR-0014 cl.2c — a text field has no
+ *       pressed/active state, so the button's background-fill ladder does not apply). The SOLID border ladder
+ *       (NOT soft-alpha — alpha outlines resolve sub-3:1 against the field surface, failing WCAG 1.4.11) is
+ *       declared as per-state `--ui-text-field-border[-hover|-focus|-invalid|-invalid-hover]` tokens, each from
+ *       a ROLE (never a `color-mix` — colour opinions live in the token layer). `[size]` repoints the geometry
+ *       ramp + INLINES `--ui-text-field-icon` the way button.css does (no shared `--ui-ind` edit). DISABLED is a
+ *       role-REPOINT (bg → muted surface, ink → variant, a faint outline-variant frame), NOT opacity (tokens.md).
+ *   [2] STYLES BLOCK — `@scope (ui-text-field)` CONSUMES only `--ui-text-field-*` for its OWN tokens (the one
+ *       fleet exception: the shared focus-ring + motion constants, read DIRECTLY so every control draws the
+ *       identical ring / uses the identical timing). Geometry per references/geometry.md (the law — Control
+ *       class): `block-size` off the ramp, `padding-block: 0`, value edge `h/2`, slot edge `½(h − icon)`.
+ *       Anatomy per references/anatomy.md (ADR-0006/0012, host-as-grid): a presence-driven `:has()` grid with
+ *       OPTIONAL `[slot=leading]` / `[slot=trailing]` adornments — `order` places `[leading? | editor | trailing?]`
+ *       because the editor is a CONTROL-INJECTED part (`[data-part=editor]`, the centre value cell), not DOM-ordered.
+ *       The BORDER-ON-HOST field frame (border + radius on the host) so a slotted adornment sits INSIDE the box.
+ *       Focus (ADR-0014 dev#1) = BOTH a `border-color` step AND the shared `outline` ring, BOTH on `:focus-within`
+ *       (ALL focus — native text-input parity), NOT `:focus-visible` (the focusable element is the editor child).
+ *       The outline is the FORCED-COLORS indicator (`border-color` is dropped by `forced-colors`; the outline
+ *       survives via `--c-focus-ring → Highlight`). State PAINT motion gated behind `:state(ready)`, reduced-motion
+ *       zeroed. A forced-colors block keeps the border + ink + placeholder visible (CanvasText).
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel (s12); NEVER injected from
+ * text-field.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-text-field) declares --ui-text-field-* ════════════════ */
+
+:where(ui-text-field) {
+  /* Field-frame colour channel (family = neutral; the role map pinned in ADR-0014 cl.2c). The state is a
+     BORDER channel: idle/hover/focus/user-invalid/invalid+hover are SOLID role steps (NOT soft-alpha — alpha
+     outlines measured sub-3:1 against the field surface, failing WCAG 1.4.11). Declared here, consumed at the
+     matching pseudo-/custom-state in the @scope block (so @scope reads only --ui-text-field-*, never a role). */
+  --ui-text-field-border: var(--c-neutral); /* idle */
+  --ui-text-field-border-hover: var(--c-neutral-high); /* :hover */
+  --ui-text-field-border-focus: var(--c-focus-ring); /* :focus-within border step (the screen enhancement) */
+  --ui-text-field-border-invalid: var(--c-danger); /* :state(user-invalid) */
+  --ui-text-field-border-invalid-hover: var(--c-danger-high); /* user-invalid + :hover */
+  --ui-text-field-bg: var(--c-neutral-surface);
+  --ui-text-field-ink: var(--c-neutral-on-surface);
+  --ui-text-field-placeholder: var(--c-neutral-on-surface-variant);
+
+  /* Geometry — off the s6 dimensional ramp (default size = md). [size] repoints below. */
+  --ui-text-field-height: var(--ui-height-md);
+  --ui-text-field-font: var(--ui-font-md);
+  --ui-text-field-gap: var(--ui-gap-md); /* the one density-bearing quantity (slot↔editor column-gap) */
+  --ui-text-field-icon: calc(18px * var(--ui-scale)); /* content-icon ramp md=18 (geometry-sizing-spec §1) */
+}
+
+/* size → dimensional ramp (size is reflected, so the attribute is present) */
+:where(ui-text-field[size='sm']) {
+  --ui-text-field-height: var(--ui-height-sm);
+  --ui-text-field-font: var(--ui-font-sm);
+  --ui-text-field-gap: var(--ui-gap-sm);
+  --ui-text-field-icon: calc(16px * var(--ui-scale));
+}
+:where(ui-text-field[size='lg']) {
+  --ui-text-field-height: var(--ui-height-lg);
+  --ui-text-field-font: var(--ui-font-lg);
+  --ui-text-field-gap: var(--ui-gap-lg);
+  --ui-text-field-icon: calc(20px * var(--ui-scale));
+}
+
+/* disabled → a role-REPOINT (NOT opacity, tokens.md canon). Matches BOTH the own/reflected [disabled] AND the
+   effective :state(disabled) (own || form-disabled — ADR-0013/0014 cl.2b). Declared LAST so it wins the
+   specificity-0 cascade. The state-border tokens are held at the faint frame too (belt-and-suspenders: the
+   @scope makes the host pointer-inert and the editor is non-focusable when disabled, so :hover / :focus-within
+   never match a disabled host anyway). user-invalid cannot co-occur (a disabled field does not willValidate —
+   text-field.ts gates it), so the danger border is left untouched. */
+:where(ui-text-field:is([disabled], :state(disabled))) {
+  --ui-text-field-bg: var(--c-neutral-surface-high);
+  --ui-text-field-ink: var(--c-neutral-on-surface-variant);
+  --ui-text-field-border: var(--c-neutral-outline-variant); /* the faint disabled frame */
+  --ui-text-field-border-hover: var(--c-neutral-outline-variant);
+  --ui-text-field-border-focus: var(--c-neutral-outline-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-text-field) consumes ONLY --ui-text-field-* ════════════════ */
+
+@scope (ui-text-field) {
+  :scope {
+    display: inline-grid;
+    grid-template-columns: 1fr; /* bare editor — slotless */
+    align-items: center;
+    box-sizing: border-box;
+
+    block-size: var(--ui-text-field-height); /* the vertical lever — geometry.md (Control class) */
+    padding-block: 0; /* NEVER block-padding */
+    padding-inline: calc(var(--ui-text-field-height) / 2); /* slotless value edge = h/2 */
+
+    font-size: var(--ui-text-field-font);
+    background: var(--ui-text-field-bg);
+    color: var(--ui-text-field-ink);
+
+    /* the BORDER-ON-HOST field frame (§5): border + radius on the host, so a slotted adornment sits INSIDE the
+       box. The radius is the frame-family pill (= h/2, geometry.md) — derived from --ui-text-field-height, so it
+       reads only a component token (a dedicated radius token, if the family wants a sub-pill corner, is a future
+       token-layer concern, not a per-control opinion). */
+    border: 1px solid var(--ui-text-field-border);
+    border-radius: calc(var(--ui-text-field-height) / 2);
+    cursor: text;
+  }
+
+  /* Anatomy (references/anatomy.md — ADR-0006 extended by ADR-0012): host-as-grid with three POSITION regions —
+     an OPTIONAL leading [slot=leading] adornment, the EDITOR (the control-injected centre value cell, the
+     accessible textbox), and an OPTIONAL trailing [slot=trailing] adornment — each presence-driven via :has().
+     Because the editor is control-INJECTED (appended in connected(), so NOT reliably between the user-slotted
+     adornments in DOM order), placement is by `order`, not source order:
+       [leading?] order 0 · [editor] order 1 · [trailing?] order 2. */
+  :scope > [slot='leading'] {
+    order: 0;
+  }
+  :scope > [data-part='editor'] {
+    order: 1;
+    font-size: var(--ui-text-field-font);
+    color: var(--ui-text-field-ink);
+    min-inline-size: 0; /* let the 1fr cell shrink so the editor scrolls (overflow) instead of widening the grid */
+    white-space: nowrap; /* single-line */
+    overflow: hidden; /* clip the overflow; the editor self-scrolls to keep the caret in view */
+    outline: none; /* the focus ring is on the HOST frame, never the editor child */
+  }
+  :scope > [slot='trailing'] {
+    order: 2;
+  }
+
+  /* the placeholder — a control-toggled `data-empty` attr keys generated content carrying the `data-placeholder`
+     prop (NOT `:empty` — a cleared contenteditable can carry a bogus trailing <br>; ADR-0014 consequences).
+     `pointer-events: none` + generated content ⇒ it never participates in the editable text or the caret. */
+  :scope > [data-part='editor'][data-empty]::before {
+    content: attr(data-placeholder);
+    color: var(--ui-text-field-placeholder);
+    pointer-events: none;
+  }
+
+  /* The adornment CELL — both slots get the SAME square, icon-sized cell (border-box), so the grid column is
+     icon-wide and the per-edge centering pad (½(h − icon)) holds whichever adornment sits in it. Glyph SIZING
+     (icon fills / caret = font) is the role axis — out of G6 scope here (the minimal field is editor + value +
+     validity); a leading content-icon (the active role) fills its icon-sized cell. */
+  :scope > [slot='leading'],
+  :scope > [slot='trailing'] {
+    inline-size: var(--ui-text-field-icon);
+    block-size: var(--ui-text-field-icon); /* the square slot, icon-sized — the CELL */
+    box-sizing: border-box;
+  }
+
+  /* [leading | editor] (no trailing): auto 1fr — leading slot edge ½(h−icon), trailing value edge h/2 */
+  :scope:has(> [slot='leading']):not(:has(> [slot='trailing'])) {
+    grid-template-columns: auto 1fr;
+    column-gap: var(--ui-text-field-gap);
+    padding-inline-start: calc((var(--ui-text-field-height) - var(--ui-text-field-icon)) / 2);
+    padding-inline-end: calc(var(--ui-text-field-height) / 2);
+  }
+
+  /* [editor | trailing] (no leading): 1fr auto — leading value edge h/2, trailing slot edge ½(h−icon) */
+  :scope:has(> [slot='trailing']):not(:has(> [slot='leading'])) {
+    grid-template-columns: 1fr auto;
+    column-gap: var(--ui-text-field-gap);
+    padding-inline-start: calc(var(--ui-text-field-height) / 2);
+    padding-inline-end: calc((var(--ui-text-field-height) - var(--ui-text-field-icon)) / 2);
+  }
+
+  /* [leading | editor | trailing]: auto 1fr auto — both adornment edges ½(h−icon), one gap rhythm on each side */
+  :scope:has(> [slot='leading']):has(> [slot='trailing']) {
+    grid-template-columns: auto 1fr auto;
+    column-gap: var(--ui-text-field-gap);
+    padding-inline-start: calc((var(--ui-text-field-height) - var(--ui-text-field-icon)) / 2);
+    padding-inline-end: calc((var(--ui-text-field-height) - var(--ui-text-field-icon)) / 2);
+  }
+
+  /* The BORDER-channel state ladder (ADR-0014 cl.2c) — repoint ONLY `border-color` from the per-state tokens
+     declared in the :where() block (the geometry law is untouched). Source order + pseudo-class specificity fix
+     the precedence: idle (0,1,0) < hover ≡ focus-within ≡ user-invalid (0,2,0, later wins) < invalid+hover
+     (0,3,0). So a focused field shows the focus border, a focused-AND-invalid field keeps the danger border
+     while the outline ring still signals focus, and invalid+hover deepens to --c-danger-high. */
+  :scope:hover {
+    border-color: var(--ui-text-field-border-hover);
+  }
+
+  /* Focus (ADR-0014 dev#1) = BOTH a `border-color` step AND the shared `outline` ring, BOTH on :focus-within
+     (ALL focus — a text field must visibly signal where typing lands, including on a mouse click), NOT
+     :focus-visible. :focus-within (not :focus-visible on the editor) is used because the focusable element is
+     the editor child; the ring + border are drawn on the host frame off the focused editor. The OUTLINE is the
+     load-bearing FORCED-COLORS indicator — `border-color` does NOT survive `forced-colors: active`, the
+     `outline` does (via --c-focus-ring → Highlight) — so the all-focus reading applies to the outline too.
+     The outline reads the SHARED fleet tokens DIRECTLY (the one --ui-text-field-* exception, same as button) so
+     every control draws the identical ring; outline/outline-offset do not participate in box geometry. */
+  :scope:focus-within {
+    border-color: var(--ui-text-field-border-focus);
+    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* user-invalid (the danger border) — appears only AFTER the first interaction; the trackUserInvalid
+     controller (G4) owns that timing and text-field.ts toggles the :state(user-invalid) custom state. */
+  :scope:state(user-invalid) {
+    border-color: var(--ui-text-field-border-invalid);
+  }
+  :scope:state(user-invalid):hover {
+    border-color: var(--ui-text-field-border-invalid-hover);
+  }
+
+  /* disabled host — pointer-inert (matches BOTH own [disabled] and the effective :state(disabled), so a
+     fieldset-disabled field is inert too); makes :hover / :focus-within never match, holding the muted frame
+     repointed in the :where() block. The editor's non-focusability + the role repoint do the rest (text-field.ts). */
+  :scope:is([disabled], :state(disabled)) {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  /* Motion (ADR-0008 / interaction-states standard) — transition the state-PAINT properties ONLY
+     (border/background/colour), enumerated (never `transition: all`). Geometry is NEVER transitioned (a
+     [scale]/[size]/[density] change must SNAP — animating the ramp fights the sizing law), and the focus ring
+     stays instant (outline omitted). Gated behind the :state(ready) custom state, set in text-field.ts one frame
+     past first paint, so the upgrade/first paint snaps and only SUBSEQUENT state changes animate. */
+  :scope:state(ready) {
+    transition:
+      border-color var(--ui-motion-fast) var(--ui-ease-standard),
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope:state(ready) {
+      transition: none; /* accessibility (non-negotiable) — reduced motion zeroes the state transitions */
+    }
+  }
+
+  /* forced-colors — keep the field border + ink + placeholder VISIBLE (they must not vanish). The focus ring
+     survives for free: `--c-focus-ring` carries the token layer's `→ Highlight` WHCM mapping, so the
+     :focus-within outline above resolves to the system focus colour with no per-control rule (border-color is
+     dropped by forced-colors — which is WHY deviation #1 keeps BOTH the border step and the outline). A disabled
+     field reads GrayText (the system disabled colour). */
+  @media (forced-colors: active) {
+    :scope {
+      border-color: CanvasText;
+      color: CanvasText;
+    }
+    :scope > [data-part='editor'][data-empty]::before {
+      color: CanvasText; /* the placeholder stays visible */
+    }
+    :scope:is([disabled], :state(disabled)) {
+      border-color: GrayText;
+      color: GrayText;
+    }
+  }
+}
