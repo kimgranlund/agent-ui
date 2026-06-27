@@ -162,10 +162,10 @@ contract↔props trip-wire (ADR-0004), the **COMPOSE/REALIZE component rubric** 
 a devDep + config add; absent today, jsdom-only).
 
 **Definition of done (the gold bar — G5 is declared done from this).**
-- [ ] Behaviour: Space/Enter activation via the `pressActivation` trait; disabled is fully inert; emits
+- [x] Behaviour: Space/Enter activation via the `pressActivation` trait; disabled is fully inert; emits
       native-parity `click`; `variant`/`size` props are typed literal unions; renders via `html\`\`` end-to-end
       (this is also the G3 integration proof — the `render()`→engine host commit lands here).
-- [ ] Anatomy + geometry (Control class, per `references/geometry.md` — the slot/slotless law that
+- [x] Anatomy + geometry (Control class, per `references/geometry.md` — the slot/slotless law that
       **supersedes** `dimensional-standard.md`'s `2px+…` formula; anatomy per **ADR-0006**): the button carries
       an **optional leading icon slot** (presence-driven `:has()` grid). `block-size: var(--ui-button-height)`
       off the ramp, `padding-block: 0`; **slotless** (bare-label) inline-pad `= h/2`; **slot** (icon) edge-pad
@@ -177,14 +177,31 @@ a devDep + config add; absent today, jsdom-only).
      quantity) on the **icon+label** variant, **and does NOT change the bare-label FRAME** (height + the `h/2`
      pads) — the law's frame-invariance, asserted on the bare variant. (A slotless button is correctly
      density-invariant; `[density]` is proven on the gap, not the frame.)
-- [ ] Styling: behaviour-only `.ts`; single `button.css` with the `@scope (ui-button)` styles block
+- [x] Styling: behaviour-only `.ts`; single `button.css` with the `@scope (ui-button)` styles block
       consuming only `--ui-button-*` and the `:where(ui-button)` token block from `--c-{family}-{role}`
       roles; survives `forced-colors: active` (the ink doesn't vanish).
-- [ ] `button.md` frontmatter validates against the frontmatter contract schema and matches the live
+- [x] `button.md` frontmatter validates against the frontmatter contract schema and matches the live
       `finalize(Class)` table (the contract↔props trip-wire); the COMPOSE/REALIZE rubric scores both axes
       ≥ 4 via the `component-reviewer` agent.
-- [ ] `tsc` clean, probes green (jsdom), the cross-engine geometry/forced-colors smoke green (Chromium
+- [x] `tsc` clean, probes green (jsdom), the cross-engine geometry/forced-colors smoke green (Chromium
       **and** WebKit), marginal size within budget. The token sheet is loaded first in the host page.
+
+**Verdict.** Component rubric (`docs/rubrics/component.md`), scored by the **`component-reviewer`** (s16 —
+the separate critic): **COMPOSE 5/5** (C1–C5 all 5) · **REALIZE 4/5** (C6–C9 = 5; C10 = 4). Promotion gate
+(both axes ≥ 4; no `[gate]` dimension < 4; zero blockers): **PASS — G5-DONE, `ui-button` shippable as the
+reference control.** Evidence: **245 jsdom probes** green; the **cross-engine geometry/forced-colors smoke
+12/12 in Chromium AND WebKit** (`npm run test:browser`); the contract↔props trip-wire (`button.md` ≡
+`finalize`) green; tree-shake/file-set/barrels green. Size: **4334 B gz** (the self-defining `ui-*` family /
+button entry, within the ≤ 8 kB budget). Each slice was independently negative-control-verified by
+orchestration-lead. *(The `html\`\`` render path + the G3 integration proof are met by s1 —
+`element-render.test.ts` via a `UIElement` subclass; the button itself is **host-as-grid** (`render()` void,
+ADR-0006), styling the host + placing the user's light-DOM icon/label, so it needs no `html\`\`` template.)*
+Code: `controls/button/`, `traits/press-activation.ts`, `descriptor/component-descriptor.ts`, shared
+`dimensions.css`. ADRs: 0003 (packaging) · 0004 (descriptor) · 0005 (property-wins) · 0006 (icon-slot
+anatomy) · 0007 (subtree ramp). **Tracked, non-blocking — the G4 focus/accessibility pass:**
+`internals.ariaDisabled` is not wired (a disabled button doesn't announce *disabled* to assistive tech) and
+`tabIndex` is absent (not Tab-reachable — the `tabbable` trait is G4 scope). Both close when G4 / the first
+focus trait lands. **G5 done.**
 
 ---
 
