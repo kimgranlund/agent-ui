@@ -75,8 +75,8 @@ variants on the `primary` family:
 > branch: `--c-primary-dim` and `--c-primary-high` both land on `--c-primary-650` in light, collapsing solid
 > `hover`==`active` there (distinct in dark — the wave-2 cross-engine smoke caught it). The remedy is token-layer,
 > NEVER a component `color-mix`: dedicated `--c-{f}-hover/-active` roles with a real three-step ladder in BOTH
-> schemes — `--c-primary-hover` = `light-dark(650, 400)`, `--c-primary-active` = `light-dark(750, 350)` (light
-> 550→650→750, dark 450→400→350). The solid row above uses them; the next solid-filled control of any family
+> schemes — `--c-primary-hover` = `light-dark(700, 600)`, `--c-primary-active` = `light-dark(750, 350)` (light
+> 550→700→750, dark 450→600→350). The solid row above uses them; the next solid-filled control of any family
 > gets its own `-hover/-active` roles the same way.
 
 ### Disabled holds at idle (no lift)

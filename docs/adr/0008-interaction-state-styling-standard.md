@@ -120,9 +120,9 @@ of `light-dark()`**, so a pressed solid button was visually indistinguishable fr
 token-layer dedicated `--c-{f}-hover/-active` roles, never a component `color-mix`" — the remedy was applied
 (`tok-states` slice; host-ratified values):
 
-- **Two new fleet roles** in `tokens.css`: `--c-primary-hover: light-dark(--c-primary-650, --c-primary-400)` and
+- **Two new fleet roles** in `tokens.css`: `--c-primary-hover: light-dark(--c-primary-700, --c-primary-600)` and
   `--c-primary-active: light-dark(--c-primary-750, --c-primary-350)` — a real three-step ladder in BOTH schemes
-  (light 550→650→750, dark 450→400→350).
+  (light 550→700→750, dark 450→600→350). *(Hover steps host-adjusted 2026-06-27: light 650→700, dark 400→600.)*
 - The button's SOLID variant repoints `--ui-button-bg-hover`/`-bg-active` to these roles; soft/ghost stay on the
   (already-distinct) container ladder, the disabled hold is unchanged.
 - The smoke's RISK-1 tripwire flipped from `hover==active` to `hover != active` — green in Chromium AND WebKit;
