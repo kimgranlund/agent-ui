@@ -287,6 +287,12 @@ const DIRECTIVE_BRAND = Symbol('ui.directive')
  * path so a per-hole directive effect (e.g. `watch`) is owned by the connection scope, NOT the transient
  * render effect — which re-runs (scheduler flush) with no active owner, so a bare `effect()` created there
  * would leak. `ctx.effect` re-establishes scope ownership explicitly on every render.
+ *
+ * Install-once invariant for an effect-owning directive: gate the install on a flag, but re-assert that flag
+ * at the TOP of the effect body — NOT once after `ctx.effect`. The kernel runs an effect's cleanup before
+ * EVERY re-run (not only on disposal), so a cleanup that clears the flag clears it on normal re-runs too;
+ * re-asserting in the body nets `true` on a re-run and `false` only on disposal, so a later host re-render
+ * won't double-install. (See `watch.ts`; the `scope_seam` probe in template-directives.test.ts pins it.)
  */
 export interface RenderContext {
   effect(fn: () => void | (() => void)): () => void

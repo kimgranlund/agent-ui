@@ -187,6 +187,7 @@ describe('the scope_seam — the host threads its connection scope into the rend
 
   it('scope_seam: rendering through UIElement threads `this` as ctx; an effect via ctx.effect is scope-owned', async () => {
     const sig = signal('first')
+    const hostSig = signal('h1') // a host-tracked signal in a STATIC hole — its change re-runs `update`
     let installs = 0
     class ScopedEffectDir extends Directive {
       readonly #inner = this.createPart()
@@ -197,12 +198,18 @@ describe('the scope_seam — the host threads its connection scope into the rend
           // ctx.effect = the host's scope-owned effect — so this per-hole effect is owned by the CONNECTION
           // scope (dies on disconnect), not by the transient render effect that is currently running.
           ctx.effect(() => {
+            // Re-assert `installed` at the TOP of the body — NOT once after `ctx.effect`. The kernel calls an
+            // effect's cleanup before EVERY re-run (graph.ts; not only on disposal), so the cleanup's
+            // `installed = false` fires on a normal signal-driven re-run too. Setting the flag HERE means a
+            // re-run nets `true` (cleanup false → body true) while a DISPOSAL nets `false` (body never runs),
+            // so the next host re-render won't double-install. The canonical pattern for an effect-owning
+            // directive (mirrors watch.ts; setting it after `ctx.effect` instead would double-install).
+            this.#installed = true
             this.#inner.commit(sig.value) // tracked by THIS effect, NOT the host render effect
             return () => {
               this.#installed = false
             }
           })
-          this.#installed = true
         }
         return NO_COMMIT
       }
@@ -214,7 +221,7 @@ describe('the scope_seam — the host threads its connection scope into the rend
 
     class ScopeSeamHost extends UIElement {
       protected render(): TemplateResult {
-        return html`<p>${scoped()}</p>`
+        return html`<i>${hostSig.value}</i><p>${scoped()}</p>`
       }
     }
     customElements.define('ui-scope-seam-probe', ScopeSeamHost)
@@ -228,6 +235,16 @@ describe('the scope_seam — the host threads its connection scope into the rend
     sig.value = 'second' // wakes ONLY the directive's scope-owned effect (the host effect has no source on it)
     await el.updateComplete
     expect(el.querySelector('p')?.textContent).toBe('second')
+
+    // A HOST re-render (after the signal-driven re-run above) must NOT re-install the directive effect — the
+    // hardened `installed` flag stays true. With the buggy pattern (flag set after ctx.effect), the prior
+    // re-run's cleanup would have cleared it and this host re-render would double-install (installs → 2,
+    // subscribers → 2). Self-verifies the canonical example above.
+    hostSig.value = 'h2'
+    await el.updateComplete
+    expect(el.querySelector('i')?.textContent).toBe('h2')
+    expect(installs).toBe(1) // no re-install across the host re-render
+    expect(inspect(sig).subscribers).toBe(1) // exactly one directive effect on the signal (no double-install)
 
     el.remove() // disconnect disposes the connection scope → the directive effect dies with it
     expect(inspect(sig).subscribers).toBe(0) // zero residue → the per-hole effect WAS scope-owned (the scope_seam)
