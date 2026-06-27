@@ -133,6 +133,13 @@ Everything outside that protocol uses `#private`. This is the typed equivalent o
 
 ## 5. The FACE element layer
 
+Two base elements, matching the descriptor schema's `BASE_CLASSES` (`['UIElement', 'UIFormElement']`) and
+a control's `extends:` descriptor field (which names exactly one): **`UIElement`** — the reactive *display*
+control host (the realized base today; `ui-button` extends it directly) — and **`UIFormElement`** — the
+FACE *form-associated* control host that the value-carrying controls extend (planned for G4; not yet
+shipped — only `UIElement` exists in `dom/` so far). A third orchestration base, `UIComponent`
+(`component.ts`, §3), is future/unscheduled and deliberately absent from `BASE_CLASSES`.
+
 ### `UIElement` (the host)
 
 Maps the four platform callbacks onto the graph's two lifetimes:
@@ -189,7 +196,7 @@ const props = {
 } satisfies PropsSchema
 
 export interface UIButtonElement extends ReactiveProps<typeof props> {} // declaration merge → typed accessors
-export class UIButtonElement extends UIFormElement {
+export class UIButtonElement extends UIElement {           // the reference control is a display control (not form-associated); form controls swap the base to UIFormElement
   static props = props
   // `this.variant` is 'solid'|'soft'|'ghost', `this.disabled` is boolean — inferred, runtime-installed by finalize()
 }
@@ -205,7 +212,10 @@ class installs at runtime via `finalize()` — the modern, decorator-free expres
 a `value` signal-prop, and connection-scoped effects wiring `setFormValue` and (optionally)
 `setValidity` from a `validity()` hook. Platform doors `formResetCallback` / `formDisabledCallback`
 make reset and disabled reactive. User-invalid timing (`aria-invalid` only after interaction) is a
-small shared trait. This is the base every control in the first family extends.
+small shared trait. This is the base the **form-associated** controls extend (`ui-text-field` /
+`ui-checkbox` / `ui-switch` / `ui-select` / `ui-listbox`); the reference control `ui-button` is a
+*display* control and extends `UIElement` directly (`formAssociated: false`). Planned for G4 — not yet
+realized (only `UIElement` ships today), though `BASE_CLASSES` already enumerates both.
 
 ## 6. Templating & directives
 
