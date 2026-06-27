@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Button permutations</title>
+  </head>
+  <body>
+    <!-- Slice A2 — the permutations grid page (the headline demo). The vite MPA glob (vite.config.ts)
+         discovers this shell at site root and emits dist/permutations.html. pages/permutations.ts pulls the
+         foundation CSS cascade + self-defining ui-* controls via _page.ts, then fills #app with the matrix. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/permutations.ts"></script>
+  </body>
+</html>

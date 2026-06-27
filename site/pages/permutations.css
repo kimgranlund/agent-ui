@@ -1,0 +1,98 @@
+/* permutations.css — slice A2 page scaffold. Styles ONLY the page chrome (sections, the matrix grid, the
+ * geometry-demo rows) — never ui-button internals, which own their own geometry/colour. Imported AFTER
+ * _page.ts (permutations.ts), so the foundation `--c-*` colour roles are already declared and reused here for
+ * a cohesive page surface that tracks light/dark via the roles' light-dark(). */
+
+[data-page-content] {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  inline-size: min(64rem, 100% - 3rem);
+  margin-inline: auto;
+  margin-block: 2rem;
+  font-family: system-ui, sans-serif;
+  color: var(--c-neutral-on-surface);
+}
+
+.size-group > h2,
+.geometry-demo > h2 {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* The matrix: a fixed grid — a row-header column + one column per (icon × disabled) combination. */
+.matrix {
+  display: grid;
+  grid-template-columns: max-content repeat(4, minmax(7rem, 1fr));
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+  padding: 1.25rem;
+  border: 1px solid var(--c-neutral-outline-variant);
+  border-radius: 0.75rem;
+  background: var(--c-neutral-surface-low);
+}
+
+.matrix-head,
+.matrix-rowhead {
+  font-size: 0.78rem;
+  color: var(--c-neutral-on-surface-variant);
+}
+
+.matrix-head {
+  font-weight: 500;
+  padding-block-end: 0.25rem;
+  border-block-end: 1px solid var(--c-neutral-outline-variant);
+}
+
+.matrix-rowhead {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.matrix-cell {
+  display: flex;
+  align-items: center;
+}
+
+/* The geometry demo — each block stacks labelled rows so the per-subtree delta reads top-to-bottom. */
+.geometry-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.geo-block > h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.geo-note {
+  margin: 0 0 0.9rem;
+  font-size: 0.82rem;
+  color: var(--c-neutral-on-surface-variant);
+}
+
+.geo-row {
+  display: grid;
+  grid-template-columns: 14rem 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding-block: 0.6rem;
+  border-block-start: 1px solid var(--c-neutral-outline-variant);
+}
+
+.geo-label {
+  margin: 0;
+  font-size: 0.8rem;
+  font-family: ui-monospace, monospace;
+  color: var(--c-neutral-on-surface-variant);
+}
+
+/* The cluster wrapper carries [scale]/[density]; lay its buttons out in a row so the geometry delta shows. */
+.geo-cluster {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}

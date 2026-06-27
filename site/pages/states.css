@@ -1,0 +1,70 @@
+/* states.css — PAGE-LOCAL layout chrome for the A3 interaction-states showcase. This styles the page
+ * scaffold ONLY: the per-state sections, their instruction text, the demo rows, and the activation log.
+ * The interaction-state appearance (hover cursor, disabled muted colours, pointer-inertness) lives entirely
+ * in the control's own button.css — this page never restyles a <ui-button>. */
+
+.state-section {
+  margin-block: 2rem 0;
+  padding-block-start: 1.5rem;
+  border-block-start: 1px solid var(--c-neutral-surface-high, #e2e2e2);
+}
+
+.state-section > h2 {
+  margin-block: 0 0.25rem;
+  font-size: 1.1rem;
+}
+
+.state-instruction {
+  margin-block: 0 1rem;
+  max-inline-size: 60ch;
+  color: var(--c-neutral-on-surface-variant, #555);
+  line-height: 1.5;
+}
+
+.state-instruction code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875em;
+}
+
+/* A demo row — lays the live control(s) beside a short caption. Layout only; the controls keep their own CSS. */
+.state-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  margin-block-end: 0.75rem;
+}
+
+.state-caption {
+  font-size: 0.85rem;
+  color: var(--c-neutral-on-surface-variant, #555);
+}
+
+/* The activation log — a real <click> sink proving pointer AND keyboard (trait) activation reach the host. */
+.activation-log {
+  margin-block: 0.5rem 0;
+  padding: 0.75rem 1rem;
+  min-block-size: 6rem;
+  max-block-size: 14rem;
+  overflow-y: auto;
+  border: 1px solid var(--c-neutral-surface-high, #e2e2e2);
+  border-radius: 8px;
+  background: var(--c-neutral-surface-low, #fafafa);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  list-style: none;
+}
+
+.activation-log:empty::before {
+  content: 'No activations yet — focus a button and press Space or Enter, or click it.';
+  color: var(--c-neutral-on-surface-variant, #888);
+}
+
+.activation-log > li {
+  white-space: pre;
+}
+
+.activation-log > li[data-source='keyboard'] {
+  color: var(--c-primary, #1a56db);
+}
