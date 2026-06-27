@@ -93,3 +93,18 @@ Imports stay layer-clean: only `../reactive` + same-layer `./element.ts` / `./pr
   platform flag) and the platform form lifecycle callbacks (`formResetCallback` etc. are prototype methods the UA
   invokes) — neither is expressible as a `(host, opts) => release` trait. Form participation is correctly a base
   class; per-control behaviours (focusability, user-invalid timing) stay traits.
+
+## Amendment — `formValidity()` hook naming + `name` reflects (2026-06-27, on the s1/s5 build)
+
+> Status: ratified 2026-06-27 (orchestration-lead, during the G4/G6 build). Append-only; corrects two clause
+> details to match the shipped `form.ts` (the source of truth) without changing the decision.
+
+1. **The verdict hook is `formValidity()`, NOT `validity()`.** Clauses 3 and 6 both wrote `validity`, but one
+   member cannot be both the overridable verdict hook (`ValidityResult`) AND the native IDL getter
+   (`ValidityState`). Resolved in favour of native parity: `validity` stays the IDL getter (clause 6); the verdict
+   hook is **`formValidity()`** (parallel to `formValue()`, clause 3). A subclass overrides `formValidity()`.
+2. **`name` reflects.** Clause 2's `formProps` first set `name` non-reflect; corrected to
+   `name: { ...prop.string(), reflect: true }` — native parity (the HTML `name` IDL attribute reflects its
+   content attribute) and FACE submission keys the entry by the `name` CONTENT attribute, so the imperative
+   `el.name = …` path must update it. `disabled`/`required` already reflected. (The s3/s11 browser proof confirms
+   real `<form>` submission.)

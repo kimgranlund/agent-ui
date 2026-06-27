@@ -149,10 +149,10 @@ describe('clause 2 — the spreadable formProps', () => {
     expect('value' in UIFormElement.formProps).toBe(false) // value belongs to the subclass
   })
 
-  it('disabled/required reflect; name does not (native parity)', () => {
+  it('name/disabled/required all reflect (native parity + FACE submission keys by the name attribute)', () => {
     expect(UIFormElement.formProps.disabled.reflect).toBe(true)
     expect(UIFormElement.formProps.required.reflect).toBe(true)
-    expect(UIFormElement.formProps.name.reflect).toBeUndefined()
+    expect(UIFormElement.formProps.name.reflect).toBe(true)
   })
 
   it('a subclass folds them into its own static props alongside its typed value', () => {

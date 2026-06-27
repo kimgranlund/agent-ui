@@ -41,13 +41,15 @@ export type ValidityResult =
   | { valid: true }
   | { valid: false; flags: ValidityStateFlags; message: string; anchor?: HTMLElement }
 
-// The three universal form attributes every value-carrying control shares (clause 2). `name` is NOT
-// reflected (native parity — the `name` attribute is author-set/observed, not property-reflected); `disabled`
-// / `required` reflect so attribute-selector styling (`[disabled]` / `[required]`) applies to JS-set values
-// too. `value` is ABSENT — its type/codec belong to the subclass. A subclass spreads this into its own
-// `static props`: `static props = { ...UIFormElement.formProps, value: prop.string(), … }`.
+// The three universal form attributes every value-carrying control shares (clause 2). All three REFLECT:
+// `name` reflects for native parity (the HTML `name` IDL attribute reflects its content attribute) AND
+// because FACE submission keys the entry by the `name` CONTENT attribute — so the imperative `el.name = …`
+// path must update the attribute or the value submits unkeyed; `disabled` / `required` reflect so
+// attribute-selector styling (`[disabled]` / `[required]`) applies to JS-set values too. `value` is ABSENT —
+// its type/codec belong to the subclass. A subclass spreads this into its own `static props`:
+// `static props = { ...UIFormElement.formProps, value: prop.string(), … }`.
 const formProps = {
-  name: prop.string(),
+  name: { ...prop.string(), reflect: true },
   disabled: { ...prop.boolean(), reflect: true },
   required: { ...prop.boolean(), reflect: true },
 } satisfies PropsSchema
