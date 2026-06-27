@@ -17,11 +17,14 @@ const { content } = mountPage({
 })
 
 // ── hero — live ui-button specimens (the headline artefact) ──────────────────────────────────────────────
-// A decorative leading icon for the slot demo; `currentColor` makes it inherit the button ink, `aria-hidden`
-// keeps the label as the accessible name. Sized by button.css (var(--ui-button-icon)).
+// A decorative leading icon for the slot demo. Canonical anatomy markup (ADR-0012): `slot="leading"` is the
+// POSITION (start cell) and `data-role="icon"` is the CONTENT role that sizes the glyph to the icon cell
+// (var(--ui-button-icon)). `currentColor` inherits the button ink; `aria-hidden` keeps the label as the
+// accessible name. (The pre-`12fdf49` `slot="icon"` name no longer matches `:has([slot=leading])`.)
 function makeIcon(): SVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg')
-  svg.setAttribute('slot', 'icon')
+  svg.setAttribute('slot', 'leading') // POSITION — the start cell
+  svg.setAttribute('data-role', 'icon') // CONTENT role — sized to the icon cell by button.css
   svg.setAttribute('aria-hidden', 'true')
   svg.setAttribute('viewBox', '0 0 24 24')
   const path = document.createElementNS(SVG_NS, 'path')
