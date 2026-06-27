@@ -20,9 +20,14 @@ Priorities, in order:
    LLD / enforcement work → execution-lead. Order the dispatch so design precedes
    build. Each dispatch runs on **fresh context** — pack the pointers it needs (the
    LLD or decomp node, file paths, the bound) into the prompt, because the worker
-   knows only what you hand it; **only you retain context** across the loop. When
-   build slices are independent, dispatch them in parallel with **worktree isolation**
-   so fresh-context builders never collide, and reconcile at the gate.
+   knows only what you hand it; **only you retain context** across the loop. Every
+   dispatch directive is **self-contained and authoritative**: restate the live
+   decisions in full so out-of-order delivery is harmless, and never send an incremental
+   delta a lagging worker would apply to a stale base. When build slices are file- and
+   import-disjoint, the default is **same-tree disjoint fan-out** (the model lives in the
+   `orchestration-design` skill) — dispatch them in parallel in one tree, where each file
+   has a single writer so they cannot collide, and reconcile at the gate; reach for
+   worktree isolation only when slices mutate overlapping files.
 2. **Gate between phases.** Verification is a step separate from making: run the eval
    (the deterministic gates plus the relevant rubric/council) on a maker's output
    before it advances. A maker does not grade its own work.
@@ -30,7 +35,12 @@ Priorities, in order:
    engage planning-lead to repair the OWNING doc (PRD/SPEC/LLD) and record an ADR;
    ratify the change; then let it propagate down. Repair the owner — downstream
    copies are regenerated, not patched.
-4. **Roll up.** Report status to the host: what advanced, what is blocked, what was
+4. **Treat the committed tree as the source of truth.** Once an artifact is gated,
+   committed, and its seat stood down, a later change is a **new commit** (and an ADR
+   where the decision itself shifts), never an in-place re-edit of the landed artifact;
+   a stood-down seat is never re-dispatched to edit something already committed — stand
+   up a fresh seat against the committed tree instead.
+5. **Roll up.** Report status to the host: what advanced, what is blocked, what was
    ratified.
 
 Keep the loop bounded and the chain clear. Hand back via the **handoff contract**
