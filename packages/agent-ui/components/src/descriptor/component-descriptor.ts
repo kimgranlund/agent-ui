@@ -65,6 +65,10 @@ const unquote = (s: string): string => /^(['"])([\s\S]*)\1$/.exec(s)?.[2] ?? s
 /** A scalar value: comment-stripped, unquoted, trimmed. */
 const scalarValue = (raw: string): string => unquote(stripComment(raw))
 
+/** Sentinel key a BARE-SCALAR sequence item (`- ready`, no `key:` of its own) stores its value under. `#` can
+ *  never be a real field name (fields match `[A-Za-z][\w]*`), so it cannot collide — and `scalarSeq` reads it back. */
+const BARE_SCALAR_KEY = '#scalar'
+
 interface RawBlock {
   key: string
   inline: string
@@ -88,10 +92,15 @@ function toBlocks(fence: string): RawBlock[] {
   return blocks
 }
 
-/** Parse a `key: value` field line into a sequence item (inline `[a, b]` → string[]). */
+/** Parse a `key: value` field line into a sequence item (inline `[a, b]` → string[]); a bare scalar with no
+ *  `key:` of its own (e.g. customStates `- ready`) is kept under BARE_SCALAR_KEY (was DROPPED before this fix). */
 function addField(item: SequenceItem, text: string): void {
   const m = /^\s*([A-Za-z][\w]*):\s*([\s\S]*)$/.exec(text)
-  if (!m) return
+  if (!m) {
+    const bare = scalarValue(text)
+    if (bare !== '') item.set(BARE_SCALAR_KEY, bare)
+    return
+  }
   const value = scalarValue(m[2])
   if (/^\[.*\]$/.test(value)) {
     item.set(m[1], value.replace(/^\[|\]$/g, '').split(',').map((s) => s.trim()).filter((s) => s !== ''))
@@ -159,6 +168,20 @@ export function parseDescriptor(fence: string): ParsedDescriptor {
   const topLevelKeys = new Set<string>([...scalars.keys(), ...sequences.keys(), ...maps.keys()])
   const attributes = (sequences.get('attributes') ?? []).map(toAttribute)
   return { topLevelKeys, scalars, sequences, maps, attributes }
+}
+
+/**
+ * Read a BARE-SCALAR sequence field as the list of values its items carry (e.g. customStates `- ready` →
+ * `['ready']`). A bare-scalar item parses to a single-entry map keyed by BARE_SCALAR_KEY (the addField fix);
+ * this reads those back. Items that are full `key: value` mappings (e.g. attributes/slots) contribute nothing.
+ */
+export function scalarSeq(desc: ParsedDescriptor, field: string): string[] {
+  const out: string[] = []
+  for (const item of desc.sequences.get(field) ?? []) {
+    const v = item.get(BARE_SCALAR_KEY)
+    if (typeof v === 'string') out.push(v)
+  }
+  return out
 }
 
 // ── schema ──────────────────────────────────────────────────────────────────────────────────────────────
@@ -414,6 +437,104 @@ export function compareDescriptorToProps(attributes: ParsedAttribute[], props: L
     if (descReflect !== liveReflect) {
       add('DRIFT_REFLECT', at('reflect'), `descriptor reflect ${descReflect} != live reflect ${liveReflect}`)
     }
+  }
+
+  return failures
+}
+
+// ── contract↔source trip-wire ───────────────────────────────────────────────────────────────────────────
+//
+// compareDescriptorToProps closes the props gap, but two facts the descriptor records have NO `static props`
+// row to compare against — they are not class fields at all:
+//
+//   • customStates — a control's custom states are added IMPERATIVELY and conditionally (button.ts:
+//     `requestAnimationFrame(() => this.internals.states?.add('ready'))`, optional-chained, behind rAF), and a
+//     state may also be referenced ONLY by the stylesheet (`:state(ready)`). Neither is a statically-inspectable
+//     field, so the truth lives in the .ts/.css source text.
+//   • slots — light-DOM, host-as-grid components place slotted children purely in CSS (`[slot='leading']`);
+//     there is no slot manifest in the class. The truth lives in the .css selectors.
+//
+// compareDescriptorToSource cross-checks the descriptor against that SOURCE USAGE (the caller passes the .ts and
+// .css TEXT — this module stays import-free; it never reads the filesystem). It is a NAME-BIJECTION trip-wire,
+// like compareDescriptorToProps, but states/slots carry no codec, so there is no TYPE/DEFAULT/REFLECT — only the
+// name sets are compared. STATES are bidirectional (used ≡ documented); SLOTS are one-directional — every
+// CSS-styled slot must be documented, but a documented slot need NOT be CSS-selected (`label`, button.md's
+// default centre cell, is a real slot the grid never selects by name — the one asymmetry, mirroring the live
+// member the enum probe cannot enumerate in enumMembersMatch).
+
+/**
+ * The custom states a component USES — the union of the imperative `internals.states` mutations in the .ts
+ * (`.states?.add('X')` / `.delete` / `.toggle` / `.replace` / `.has`, optional-chain tolerant) AND the
+ * `:state(X)` selectors in the .css. A state is "used" if EITHER source references it.
+ */
+export function collectUsedStates(ts: string, css: string): Set<string> {
+  const names = new Set<string>()
+  for (const m of ts.matchAll(/\.states\??\.(?:add|delete|toggle|replace|has)\(\s*['"]([^'"]+)['"]/g)) names.add(m[1])
+  for (const m of css.matchAll(/:state\(\s*([A-Za-z][\w-]*)\s*\)/g)) names.add(m[1])
+  return names
+}
+
+/** The slot POSITIONS the .css styles — every `[slot='X']` attribute selector (quoting optional, `:has()`-nested or not). */
+export function collectStyledSlots(css: string): Set<string> {
+  const names = new Set<string>()
+  for (const m of css.matchAll(/\[slot\s*=\s*['"]?([A-Za-z][\w-]*)['"]?\s*\]/g)) names.add(m[1])
+  return names
+}
+
+/** The content ROLES the .css styles — every `[data-role='X']` attribute selector (quoting optional). Reused by the /site dead-name guard (s12). */
+export function collectStyledRoles(css: string): Set<string> {
+  const names = new Set<string>()
+  for (const m of css.matchAll(/\[data-role\s*=\s*['"]?([A-Za-z][\w-]*)['"]?\s*\]/g)) names.add(m[1])
+  return names
+}
+
+/** The drift defects compareDescriptorToSource reports (the descriptor disagrees with the component .ts/.css). */
+export const SOURCE_DRIFT_CODES = ['STATE_UNDOCUMENTED', 'STATE_UNUSED', 'SLOT_UNDOCUMENTED'] as const
+export type SourceDriftCode = (typeof SOURCE_DRIFT_CODES)[number]
+
+/** One source-drift defect: a stable code + the descriptor path it occurred at + a human message. */
+export interface SourceDriftFailure {
+  code: SourceDriftCode
+  path: string
+  message: string
+}
+
+/** The slot names a descriptor declares (the `slots[]` sequence rows' `name:` values). */
+function declaredSlotNames(desc: ParsedDescriptor): Set<string> {
+  const names = new Set<string>()
+  for (const item of desc.sequences.get('slots') ?? []) {
+    const name = item.get('name')
+    if (typeof name === 'string' && name !== '') names.add(name)
+  }
+  return names
+}
+
+/**
+ * The contract↔source trip-wire: assert the descriptor's customStates/slots tell the truth about where the fact
+ * ACTUALLY lives (the component .ts/.css). TOTAL — never throws; every disagreement is a structured
+ * SourceDriftFailure. STATES (bidirectional): used-states (collectUsedStates) ≡ descriptor.customStates —
+ * STATE_UNDOCUMENTED for a used state the descriptor omits, STATE_UNUSED for a documented state no source uses.
+ * SLOTS (one-directional): every CSS-styled slot (collectStyledSlots) must be IN descriptor.slots —
+ * SLOT_UNDOCUMENTED otherwise; a documented-but-unstyled slot (`label`, the default cell) is NOT a defect.
+ */
+export function compareDescriptorToSource(desc: ParsedDescriptor, source: { ts: string; css: string }): SourceDriftFailure[] {
+  const failures: SourceDriftFailure[] = []
+  const add = (code: SourceDriftCode, path: string, message: string): void => void failures.push({ code, path, message })
+
+  // STATES — bijection between source usage (.ts add + .css :state) and the documented customStates.
+  const usedStates = collectUsedStates(source.ts, source.css)
+  const declaredStates = new Set(scalarSeq(desc, 'customStates'))
+  for (const s of usedStates) {
+    if (!declaredStates.has(s)) add('STATE_UNDOCUMENTED', `customStates.${s}`, `state "${s}" is used in source but absent from customStates`)
+  }
+  for (const s of declaredStates) {
+    if (!usedStates.has(s)) add('STATE_UNUSED', `customStates.${s}`, `customStates declares "${s}" but no source (.ts/.css) uses it`)
+  }
+
+  // SLOTS — one-directional: every CSS-styled slot must be documented (an undocumented styled slot is the drift).
+  const declaredSlots = declaredSlotNames(desc)
+  for (const s of collectStyledSlots(source.css)) {
+    if (!declaredSlots.has(s)) add('SLOT_UNDOCUMENTED', `slots.${s}`, `slot "${s}" is styled in css but absent from slots`)
   }
 
   return failures
