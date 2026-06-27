@@ -21,7 +21,9 @@ declare const process: { cwd(): string }
 //     discipline). The SAME shape with the token documented returns [] — proving each check is non-vacuous.
 //   • the bare-scalar reader fix (s10 addField) is load-bearing — scalarSeq over the REAL button.md keeps ['ready'].
 
-const BTN = `${process.cwd()}/packages/agent-ui/components/src/controls/button`
+const SRC = `${process.cwd()}/packages/agent-ui/components/src/controls`
+
+const BTN = `${SRC}/button`
 const buttonTs = readFileSync(`${BTN}/button.ts`, 'utf8') as string
 const buttonCss = readFileSync(`${BTN}/button.css`, 'utf8') as string
 const buttonMd = readFileSync(`${BTN}/button.md`, 'utf8') as string
@@ -37,6 +39,31 @@ describe('source-scan trip-wire — the REAL button is drift-free (s11 positive)
 
   it('the bare-scalar reader fix survives on the real button.md (customStates `- ready` → ["ready"])', () => {
     expect(scalarSeq(buttonDesc, 'customStates')).toEqual(['ready'])
+  })
+})
+
+// G6 s12 — extend the POSITIVE plane to ui-text-field. text-field-descriptor.test.ts (s10) deliberately scoped
+// the contract↔SOURCE check OUT (it covers only the schema + the contract↔props trip-wire), so the integration
+// slice is where text-field.md's customStates/slots are cross-checked against where they actually live —
+// text-field.ts's internals.states usage + text-field.css's :state()/[slot] selectors. The three custom states
+// (ready/disabled/user-invalid) are all add/delete'd in the .ts AND keyed in the .css, and the two adornment
+// slots (leading/trailing) are both styled — so the shipped descriptor is drift-free.
+const TF = `${SRC}/text-field`
+const textFieldTs = readFileSync(`${TF}/text-field.ts`, 'utf8') as string
+const textFieldCss = readFileSync(`${TF}/text-field.css`, 'utf8') as string
+const textFieldMd = readFileSync(`${TF}/text-field.md`, 'utf8') as string
+const textFieldDesc = parseDescriptor(splitFrontmatter(textFieldMd).fence)
+
+describe('source-scan trip-wire — the REAL text-field is drift-free (s12 positive)', () => {
+  it('text-field.md customStates/slots tell the truth about text-field.ts + text-field.css (0 source-drift)', () => {
+    // anti-vacuous: the extractors actually matched the real source before zero-drift is asserted.
+    expect([...collectUsedStates(textFieldTs, textFieldCss)].sort()).toEqual(['disabled', 'ready', 'user-invalid'])
+    expect([...collectStyledSlots(textFieldCss)].sort()).toEqual(['leading', 'trailing'])
+    expect(compareDescriptorToSource(textFieldDesc, { ts: textFieldTs, css: textFieldCss })).toEqual([])
+  })
+
+  it('the bare-scalar reader carries all three states off the real text-field.md', () => {
+    expect(scalarSeq(textFieldDesc, 'customStates').sort()).toEqual(['disabled', 'ready', 'user-invalid'])
   })
 })
 

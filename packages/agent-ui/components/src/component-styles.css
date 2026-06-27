@@ -4,5 +4,11 @@
  * `--ui-{height,font,gap}-*` ramp) is already declared when a control's `:where()` block reads it. Exposed
  * as the package `./component-styles.css` export. Pure CSS — NEVER injected from a control's `.ts`
  * (behaviour-only `.ts`, no runtime style injection — plan §2). Grows one `@import` per control.
+ *
+ * DO NOT REORDER — the imports are append-only in control-addition order. Each control's sheet is fully
+ * self-scoped (a `:where(ui-{name})` token block + an `@scope (ui-{name})` styles block), so the controls do
+ * not interact across the cascade; the stable order keeps any future shared/global rule deterministic. New
+ * controls APPEND after the last import.
  */
 @import './controls/button/button.css';
+@import './controls/text-field/text-field.css';
