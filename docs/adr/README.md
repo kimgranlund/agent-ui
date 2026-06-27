@@ -40,3 +40,4 @@ When `execution-lead` (or anyone) hits a constraint that the design can't satisf
 | [0003](./0003-single-file-component-css-barrels-host-page.md) | Single-file component CSS + barrels + host-page packaging | accepted | plan §8 · goals §G5 · process §1 · authoring-components |
 | [0004](./0004-component-descriptor-md-frontmatter.md) | Component descriptor: `{name}.md` frontmatter replaces `{name}.api.json` | accepted | plan §10 · process §1/§4 · goals §G5 · authoring-components |
 | [0005](./0005-lazy-upgrade-property-wins.md) | Lazy-property upgrade precedence: property-wins | accepted | goals §G2 · plan §5 |
+| [0006](./0006-button-anatomy-optional-icon-slot-density-acceptance.md) | Button anatomy: optional leading icon slot + law-true `[density]` acceptance | accepted | goals §G5 |

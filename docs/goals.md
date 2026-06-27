@@ -151,7 +151,8 @@ Traits in `src/core/traits/`: `pressActivation`, `tabbable`, `trackUserInvalid`.
 Includes the **global token wiring** (load `tokens.css` first so dimensional vars resolve).
 
 **Scope.** `controls/button/` (the full folder: `button.ts` + single `button.css` (ADR-0003) +
-`button.test.ts` + `button.md` descriptor (ADR-0004)); the dimensional token ramp authored in
+`button.test.ts` + `button.md` descriptor (ADR-0004)) — with an **optional leading icon slot** (ADR-0006)
+so the reference control exercises the full slot/gap/density law; the dimensional token ramp authored in
 `@agent-ui/shared` (the `--ui-{height,font}-{sm,md,lg}` ramp **plus** the `[scale]`/`[density]`
 multipliers the geometry smoke asserts); the `components` / `component-styles` / `foundation-styles`
 barrels + the host page (tokens loaded first). The G5 governance machinery lands **with** the button
@@ -164,11 +165,18 @@ a devDep + config add; absent today, jsdom-only).
 - [ ] Behaviour: Space/Enter activation via the `pressActivation` trait; disabled is fully inert; emits
       native-parity `click`; `variant`/`size` props are typed literal unions; renders via `html\`\`` end-to-end
       (this is also the G3 integration proof — the `render()`→engine host commit lands here).
-- [ ] Geometry (Control class, per `references/geometry.md` — the slot/slotless law that **supersedes**
-      `dimensional-standard.md`'s `2px+…` formula): `block-size: var(--ui-button-height)` off the ramp,
-      `padding-block: 0`, slotless inline-pad `= h/2`. **Browser smoke asserts the rendered px *changes***
-      across `size=sm→md→lg`, under an ancestor `[scale]`, and under `[density]` (anti-vacuous: assert it
-      changed, not just present), in **Chromium AND WebKit**.
+- [ ] Anatomy + geometry (Control class, per `references/geometry.md` — the slot/slotless law that
+      **supersedes** `dimensional-standard.md`'s `2px+…` formula; anatomy per **ADR-0006**): the button carries
+      an **optional leading icon slot** (presence-driven `:has()` grid). `block-size: var(--ui-button-height)`
+      off the ramp, `padding-block: 0`; **slotless** (bare-label) inline-pad `= h/2`; **slot** (icon) edge-pad
+      `= ½(h−icon)` with `column-gap: var(--ui-gap-{size})` between icon and label. **Browser smoke (Chromium
+      AND WebKit), anti-vacuous both ways:**
+   - `[size]` sm→md→lg **and** `[scale]` (compact→spacious, via `--ui-scale`) **change** the rendered px
+     (frame height + font) — on **both** the bare and icon variants.
+   - `[density]` (compact→spacious) **changes the icon↔label gap** (`--ui-gap`, the *one* density-bearing
+     quantity) on the **icon+label** variant, **and does NOT change the bare-label FRAME** (height + the `h/2`
+     pads) — the law's frame-invariance, asserted on the bare variant. (A slotless button is correctly
+     density-invariant; `[density]` is proven on the gap, not the frame.)
 - [ ] Styling: behaviour-only `.ts`; single `button.css` with the `@scope (ui-button)` styles block
       consuming only `--ui-button-*` and the `:where(ui-button)` token block from `--c-{family}-{role}`
       roles; survives `forced-colors: active` (the ink doesn't vanish).
