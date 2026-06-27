@@ -1,0 +1,8 @@
+/* component-styles.css — the per-component stylesheet barrel (ADR-0003). Aggregates every FACE control's
+ * single `{name}.css` (each = a `:where(ui-{name})` token block + an `@scope (ui-{name})` styles block).
+ * A host page links this AFTER foundation-styles.css so the foundation (the `--c-*` colour roles + the
+ * `--ui-{height,font,gap}-*` ramp) is already declared when a control's `:where()` block reads it. Exposed
+ * as the package `./component-styles.css` export. Pure CSS — NEVER injected from a control's `.ts`
+ * (behaviour-only `.ts`, no runtime style injection — plan §2). Grows one `@import` per control.
+ */
+@import './controls/button/button.css';

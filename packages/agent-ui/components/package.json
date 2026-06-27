@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./components": "./src/controls/index.ts",
+    "./component-styles.css": "./src/component-styles.css",
+    "./foundation-styles.css": "./src/foundation-styles.css"
   }
 }
