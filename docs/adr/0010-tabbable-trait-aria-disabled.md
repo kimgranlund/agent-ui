@@ -93,15 +93,14 @@ and **announced disabled** (`internals.ariaDisabled`).
   a later ADR adds an opt-out. (Noted so the limitation is a decision, not an oversight.)
 - **Disabled controls leave the tab order** — see the Open question for the AX tradeoff this accepts.
 
-## Open question (needs host/user ratification — an a11y stance)
+## Resolved on ratification (2026-06-27 — orchestration-lead)
 
-This pass implements the host directive: **disabled → removed from the tab order** (native `<button disabled>`
-parity; the rubric's "fully inert"). The deliberate alternative is the **"accessible disabled"** stance — keep
-the control focusable (`tabindex=0` + `aria-disabled`) so AT users can *reach* it and hear it is disabled,
-while activation stays inert. The tradeoff: native-parity is more familiar and matches the rubric, but a
-keyboard/AT user never encounters the disabled control (it is skipped), so they cannot perceive that a disabled
-action exists. Recommendation: **adopt native-parity** (the host's call), with this tradeoff on record; revisit
-per-component if a flow needs the disabled affordance perceivable.
+CONFIRMED — **native parity:** disabled → **removed from the tab order** + `internals.ariaDisabled = true`
+(the rubric's "fully inert"). The **"accessible disabled"** alternative (keep the control focusable +
+`aria-disabled` so AT users can reach and hear it, activation still inert) is **reserved for future
+toolbar/menu-style controls** — not the base button. The tradeoff is on record: native-parity skips the
+disabled control in the tab order, so an AT user does not encounter it; the toolbar/menu pattern reopens this
+where a disabled affordance must stay perceivable.
 
 ## Alternatives considered
 

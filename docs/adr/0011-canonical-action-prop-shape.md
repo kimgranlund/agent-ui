@@ -59,13 +59,12 @@ We **pin the canonical inbound `action`-prop shape** as an object, in the catalo
 - **Track-disjoint.** This change lives entirely in `@agent-ui/a2ui` + the catalog SPEC — file-disjoint from
   the `ui-button` standards work, so it fans out concurrently (decomposition Track B).
 
-## Open question (needs host ratification — minor)
+## Resolved on ratification (2026-06-27 — orchestration-lead)
 
-**Tighten or keep-lenient?** Pin `{ action, context?, wantResponse? }` as canonical (decided). The reader can
-either (a) be tightened to canonical-only, or (b) **keep** the `name`-synonym + bare-string fallbacks as
-documented tolerance. Recommendation: **(b) keep-lenient** + document `action` as canonical — low-risk, since
-training-corpus fixtures may use a fallback shape, and Postel's law on an inbound contract is defensible.
-Confirm before `act-reader` finalizes.
+CONFIRMED — **(b) keep-lenient (Postel):** pin `{ action, context?, wantResponse? }` as **THE canonical
+shape** (catalog SPEC + `catalog.json`), and the reader **keeps** the `name`-synonym + bare-string fallbacks
+as documented inbound tolerance (training-corpus fixtures may use a fallback shape; Postel's law on an inbound
+contract is defensible). `act-reader` documents `action` as canonical with the fallbacks marked tolerance.
 
 ## Alternatives considered
 

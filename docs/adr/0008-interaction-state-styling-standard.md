@@ -88,14 +88,13 @@ unchanged by that refactor.
 - **No geometry impact.** State styling repoints `background` only; the geometry law (`geometry.md`) and the
   ramp (ADR-0007) are untouched.
 
-## Open question (needs host/user ratification — an aesthetic call)
+## Resolved on ratification (2026-06-27 — orchestration-lead)
 
-`tokens.md` itself flags it: the ladder steps must give **adequate visual separation in the real palette**.
-Confirm (a) the solid/soft ladder steps read as distinct idle→hover→active, and (b) the **ghost wash** is
-acceptable. If a step is too close, the fix is token-layer dedicated state roles (a separate `tok-states` slice
-+ an amendment to this ADR), **not** a component `color-mix`. Recommendation: adopt the ladders as specified,
-verify in the wave-2 cross-engine smoke, and only commission dedicated roles if the smoke/eyeball shows a
-collapse.
+CONFIRMED: reuse `tokens.md`'s vetted role ladders (solid `--c-primary`→`-dim`→`-high`; soft
+`-container-low`→`-container`→`-container-high`; ghost `transparent`→`-container-low`→`-container`), and the
+**ghost wash is approved**. The ladder separation is **verified at the wave-2 cross-engine smoke** (Risk 1);
+**only** if a step collapses do we add token-layer dedicated `--c-{f}-hover`/`-active` roles (a separate
+`tok-states` slice + an amendment to this ADR) — **never** a component `color-mix`.
 
 ## Alternatives considered
 

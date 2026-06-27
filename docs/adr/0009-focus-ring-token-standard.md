@@ -73,13 +73,13 @@ draws the ring.
   and the two dimension tokens edits `@agent-ui/shared` — owned by the token layer / tokens-specialist. This
   ADR pins the **names + contract**; the exact hue is the token-layer's call (see Open question).
 
-## Open question (needs host/user ratification — an aesthetic call)
+## Resolved on ratification (2026-06-27 — orchestration-lead)
 
-The **exact ring hue** and the **width/offset** (recommended `2px`/`2px`) are a token-layer aesthetic call:
-should `--c-focus-ring` be an accent-tinted colour or a neutral high-contrast one? Recommendation: a dedicated
-accent-leaning role (distinct from `--c-primary`) at `2px`/`2px`, via `outline`. Confirm (or delegate to the
-tokens-specialist) before the `tok-focus` slice writes the value. This blocks nothing structural — the
-NAMES are pinned, so `css-button` builds against them concurrently.
+CONFIRMED: a **dedicated `--c-focus-ring`** role (not `--c-primary`), via **`outline` at `2px` width / `2px`
+offset**, **`:focus-visible` only**, and it **MUST** carry the forced-colors `→ Highlight` mapping (Risk 3).
+The **exact hue is delegated to the `tok-focus` token slice** (default to a distinct, high-contrast focus
+accent). The names are pinned, so this blocks nothing structural — `css-button` builds the `:focus-visible`
+recipe against them concurrently.
 
 ## Alternatives considered
 
