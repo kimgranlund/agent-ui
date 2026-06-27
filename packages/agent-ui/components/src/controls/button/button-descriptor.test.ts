@@ -1,15 +1,18 @@
 import { describe, it, expect } from 'vitest'
 import { UIButtonElement } from './button.ts'
-import { splitFrontmatter, parseDescriptor } from '../../descriptor/component-descriptor.ts'
+import { splitFrontmatter, parseDescriptor, compareDescriptorToProps } from '../../descriptor/component-descriptor.ts'
+import type { ParsedAttribute } from '../../descriptor/component-descriptor.ts'
 // Read button.md as text (vite strips `.md?raw`; no `@types/node` devDep — same approach as the s6/s7 probes).
 // @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
-// Phase-1 s8 — button.md descriptor (ADR-0004). MINIMAL structural probe: the YAML frontmatter fence
-// parses, carries the ADR-0004 / plan §10 descriptor field set, and its `attributes[]` MATCHES the live
-// `UIButtonElement.props` (variant/size/disabled — type/reflect/default). The full contract↔props
-// trip-wire with a negative control (s10) is a LATER slice — not here.
+// Phase-1 s8 + s10 — button.md descriptor (ADR-0004). Two layers:
+//   • s8 (structural) — the YAML frontmatter fence parses and carries the ADR-0004 / plan §10 field set.
+//   • s10 (contract↔props) — the descriptor's `attributes[]` is a faithful BIJECTION with the live
+//     `UIButtonElement.props` (what `finalize` installs from), via the fleet-wide compareDescriptorToProps
+//     trip-wire. This SUPERSEDES s8's by-hand attribute checks: the gate now lives in ONE reusable function
+//     (proven fleet-wide in src/descriptor/component-descriptor-driftwire.test.ts), applied here to the button.
 // The fence READER lives in ../../descriptor/component-descriptor.ts (factored out at s9 so this probe, the
 // s9 schema, and the s10 trip-wire share ONE parser — never a divergent copy).
 
@@ -17,13 +20,8 @@ const md = readFileSync(`${process.cwd()}/packages/agent-ui/components/src/contr
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const byName = new Map(parsed.attributes.map((a) => [a.name, a] as const))
 
-// The live contract surface, read off the class (NOT hardcoded) so this probe tracks button.ts.
-type LiveConfig = { type: { from(a: string | null): unknown }; default: unknown; reflect?: boolean }
-const liveProps = (UIButtonElement as unknown as { props: Record<string, LiveConfig> }).props
-
-describe('button.md descriptor — frontmatter parses + matches static props (s8)', () => {
+describe('button.md descriptor — frontmatter parses (s8)', () => {
   it('has a leading frontmatter fence and a prose body', () => {
     expect(fence.length).toBeGreaterThan(0)
     expect(body.trim().length).toBeGreaterThan(0)
@@ -42,32 +40,25 @@ describe('button.md descriptor — frontmatter parses + matches static props (s8
     expect(/^tag:\s*ui-button\s*$/m.test(fence)).toBe(true)
     expect(/formAssociated:\s*false/.test(fence)).toBe(true) // extends UIElement, NOT UIFormElement
   })
+})
 
-  it('attributes[] mirrors the live UIButtonElement.props (same names — no drift, no omission)', () => {
-    const fmNames = parsed.attributes.map((a) => a.name).sort()
-    const liveNames = Object.keys(liveProps).sort()
-    expect(fmNames).toEqual(liveNames) // exactly variant/size/disabled
+describe('button.md descriptor — contract↔props trip-wire (s10)', () => {
+  it('attributes[] is a faithful bijection with finalize(UIButtonElement).props (0 drift)', () => {
+    // anti-vacuous: the reader actually parsed variant/size/disabled before the trip-wire is consulted
+    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant', 'size', 'disabled'])
+    expect(compareDescriptorToProps(parsed.attributes, UIButtonElement.props)).toEqual([])
   })
 
-  it('each attribute records type/default/reflect matching the live prop config', () => {
-    for (const [name, config] of Object.entries(liveProps)) {
-      const attr = byName.get(name)
-      expect(attr, `descriptor is missing attribute ${name}`).toBeDefined()
-      if (!attr) continue
-      // default — the frontmatter token equals the live default serialized to text
-      expect(attr.default).toBe(String(config.default))
-      // reflect — the frontmatter boolean equals the live reflect flag
-      expect(attr.reflect ?? false).toBe(config.reflect ?? false)
-      // type — declared and behaviourally consistent with the live codec
-      expect(attr.type, `attribute ${name} has no type`).toBeTruthy()
-      if (attr.type === 'enum') {
-        expect(attr.values, `enum ${name} has no values`).toBeTruthy()
-        for (const v of attr.values ?? []) expect(config.type.from(v)).toBe(v) // each member round-trips
-        expect(config.type.from('__not-a-member__')).toBe((attr.values ?? [])[0]) // snaps to the first member
-      } else if (attr.type === 'boolean') {
-        expect(config.type.from('')).toBe(true) // presence semantics
-        expect(config.type.from(null)).toBe(false)
-      }
-    }
+  it('a drifted attribute FAILS the trip-wire (negative control — reflect + default)', () => {
+    // mutate a COPY of the parsed descriptor (button.md is never touched); each patch flips ONE field.
+    const flipReflect: ParsedAttribute[] = parsed.attributes.map((a) => (a.name === 'variant' ? { ...a, reflect: false } : { ...a }))
+    expect(compareDescriptorToProps(flipReflect, UIButtonElement.props)).toContainEqual(
+      expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.variant.reflect' }),
+    )
+
+    const flipDefault: ParsedAttribute[] = parsed.attributes.map((a) => (a.name === 'size' ? { ...a, default: 'sm' } : { ...a }))
+    expect(compareDescriptorToProps(flipDefault, UIButtonElement.props)).toContainEqual(
+      expect.objectContaining({ code: 'DRIFT_DEFAULT', path: 'attributes.size.default' }),
+    )
   })
 })

@@ -10,8 +10,14 @@
 //   2. validateComponentDescriptor(desc) — the descriptor SCHEMA: a hand-rolled, TOTAL structural validator
 //                                          that IS the referential standard the frontmatter is checked
 //                                          against (process.md §4's "api-contract schema", now a frontmatter
-//                                          schema per ADR-0004). It is the STRUCTURAL standard only — the
-//                                          live-props comparison (frontmatter ≡ finalize(Class)) is s10.
+//                                          schema per ADR-0004). It is the STRUCTURAL standard only — it does
+//                                          NOT compare the frontmatter against the live class.
+//   3. compareDescriptorToProps(a, p)    — the contract↔props TRIP-WIRE (process.md §1): asserts the
+//                                          descriptor's `attributes[]` and the live `static props` table
+//                                          (what `finalize(Class)` installs from) are a faithful BIJECTION,
+//                                          so the descriptor cannot drift from the real component. Fleet-wide
+//                                          (any component runs it); kept import-free by reading the live props
+//                                          STRUCTURALLY (LivePropConfig) instead of pulling the dom layer.
 //
 // Zero-dep by ruling: no YAML parser is installed and the descriptor is a CONTROLLED format, so the reader is
 // a small indentation-scoped parser over the subset the descriptor uses (top-level scalars · `- ` sequences ·
@@ -252,6 +258,162 @@ export function validateComponentDescriptor(d: ParsedDescriptor): DescriptorFail
   if (face !== undefined) {
     const fa = face.get('formAssociated')
     if (fa === undefined || !has(BOOLEANS, fa)) add('BAD_FACE', 'face.formAssociated', 'face.formAssociated must be true|false')
+  }
+
+  return failures
+}
+
+// ── contract↔props trip-wire ────────────────────────────────────────────────────────────────────────────
+//
+// The schema above proves the frontmatter is STRUCTURALLY well-formed; it does NOT prove the descriptor tells
+// the truth about the component. compareDescriptorToProps closes that gap (process.md §1): it asserts the
+// descriptor's `attributes[]` and the live `static props` table (what `finalize(Class)` installs accessors
+// from) are in BIJECTION and field-consistent, so the descriptor cannot drift from the real component without
+// a red probe.
+//
+// The live props are read STRUCTURALLY (LivePropConfig) so this module stays import-free — it never pulls the
+// dom layer; a caller passes `Class.props`, which satisfies LiveProps structurally. The codecs carry no kind
+// tag, so a prop's type kind is recovered by PROBING `config.type.from` (kindOf), never by reading a field
+// that does not exist.
+
+/** A live `static props` entry, read structurally (no dom import — this module imports nothing). */
+export interface LivePropConfig {
+  type: { from(attr: string | null): unknown }
+  default: unknown
+  attribute?: string | false
+  reflect?: boolean
+}
+
+/** A live `static props` table keyed by prop name (a control's `Class.props` satisfies this structurally). */
+export type LiveProps = Record<string, LivePropConfig>
+
+/** The drift defects compareDescriptorToProps reports (the descriptor disagrees with the live class). */
+export const DRIFT_CODES = ['DRIFT_MISSING', 'DRIFT_EXTRA', 'DRIFT_TYPE', 'DRIFT_DEFAULT', 'DRIFT_REFLECT', 'DRIFT_VALUES'] as const
+export type DriftCode = (typeof DRIFT_CODES)[number]
+
+/** One drift defect: a stable code + the descriptor path it occurred at + a human message. */
+export interface DriftFailure {
+  code: DriftCode
+  path: string
+  message: string
+}
+
+/** The codec kinds a descriptor `type` can name (mirrors props.ts ATTR_TYPES); kindOf recovers it by probing. */
+export type DriftKind = 'enum' | 'boolean' | 'number' | 'string' | 'json' | 'unknown'
+
+/** A sentinel attribute string that is never a valid enum member nor valid JSON (probes the codec fallback). */
+const NON_MEMBER = ' __agent-ui-non-member__'
+
+type Probe = { ok: true; value: unknown } | { ok: false }
+
+/** Run a codec probe, swallowing throws (an opaque codec may throw on input it cannot parse, e.g. JSON). */
+function probe(fn: () => unknown): Probe {
+  try {
+    return { ok: true, value: fn() }
+  } catch {
+    return { ok: false }
+  }
+}
+
+/**
+ * Recover a live codec's KIND by behaviour (the codecs carry no kind tag — props.ts). Each branch keys off
+ * `config.type.from` on a few probe inputs: boolean maps absence→false / presence→true; string maps
+ * absence→''; number and json both map absence→null but split on `from('5')` vs `from('"x"')` (json parses,
+ * number does not); an enum snaps a non-member to its fixed first member, so `from(NON_MEMBER)` equals the
+ * non-empty string `from(null)`. Returns 'unknown' when no branch matches (the natural DRIFT_TYPE signal).
+ */
+function kindOf(config: LivePropConfig): DriftKind {
+  const from = (a: string | null): Probe => probe(() => config.type.from(a))
+  const nul = from(null)
+  if (!nul.ok) return 'unknown'
+  if (nul.value === false) {
+    const empty = from('')
+    return empty.ok && empty.value === true ? 'boolean' : 'unknown'
+  }
+  if (nul.value === '') return 'string'
+  if (nul.value === null) {
+    const empty = from('')
+    const five = from('5')
+    if (empty.ok && empty.value === null && five.ok && five.value === 5) return 'number'
+    const quoted = from('"x"')
+    return quoted.ok && quoted.value === 'x' ? 'json' : 'unknown'
+  }
+  if (typeof nul.value === 'string') {
+    const fallback = from(NON_MEMBER)
+    if (fallback.ok && fallback.value === nul.value) return 'enum'
+  }
+  return 'unknown'
+}
+
+/**
+ * Probe whether a live enum codec accepts EXACTLY the descriptor's `values` (order-significant): every
+ * declared member must round-trip (be a real live member) and the fallback for a non-member must equal
+ * `values[0]` (so the first member — the codec's snap target — agrees). NOTE the one asymmetry probing an
+ * opaque closure cannot close: a live member the descriptor OMITS while preserving the prefix is invisible
+ * (you cannot enumerate the closure), so values[] must be the declared contract a human keeps complete.
+ */
+function enumMembersMatch(config: LivePropConfig, values: string[]): boolean {
+  if (values.length === 0) return false
+  const from = (a: string | null): Probe => probe(() => config.type.from(a))
+  const everyMember = values.every((v) => {
+    const r = from(v)
+    return r.ok && r.value === v
+  })
+  const fallback = from(NON_MEMBER)
+  return everyMember && fallback.ok && fallback.value === values[0]
+}
+
+/**
+ * The contract↔props trip-wire: assert the descriptor `attributes[]` and the live `static props` are a
+ * faithful BIJECTION. TOTAL — never throws; every disagreement is a structured DriftFailure. Checks: (NAME)
+ * every live prop has a descriptor attribute and vice-versa (DRIFT_MISSING / DRIFT_EXTRA); then per matched
+ * name the (TYPE) live codec behaves as the declared kind (DRIFT_TYPE), the (DEFAULT) `String(config.default)`
+ * equals the descriptor token (DRIFT_DEFAULT), the (REFLECT) `config.reflect ?? false` equals the flag
+ * (DRIFT_REFLECT), and (VALUES) an enum's declared members are the live member set (DRIFT_VALUES). The
+ * descriptor is assumed schema-valid first (validateComponentDescriptor); nameless attributes are that
+ * validator's concern and are skipped here.
+ */
+export function compareDescriptorToProps(attributes: ParsedAttribute[], props: LiveProps): DriftFailure[] {
+  const failures: DriftFailure[] = []
+  const add = (code: DriftCode, path: string, message: string): void => void failures.push({ code, path, message })
+
+  const byName = new Map<string, ParsedAttribute>()
+  for (const a of attributes) if (a.name !== undefined && a.name !== '') byName.set(a.name, a)
+  const liveNames = Object.keys(props)
+  const liveSet = new Set(liveNames)
+
+  // 1 — NAME bijection: a live prop with no descriptor row is MISSING; a descriptor row with no live prop is EXTRA.
+  for (const name of liveNames) {
+    if (!byName.has(name)) add('DRIFT_MISSING', `attributes.${name}`, `live prop "${name}" has no descriptor attribute`)
+  }
+  for (const name of byName.keys()) {
+    if (!liveSet.has(name)) add('DRIFT_EXTRA', `attributes.${name}`, `descriptor attribute "${name}" has no live prop`)
+  }
+
+  // 2 — per matched name: type kind · default · reflect · enum members consistent with the live PropConfig.
+  for (const name of liveNames) {
+    const attr = byName.get(name)
+    if (attr === undefined) continue
+    const config = props[name]
+    const at = (sub: string): string => `attributes.${name}.${sub}`
+
+    const liveKind = kindOf(config)
+    if (attr.type !== liveKind) {
+      add('DRIFT_TYPE', at('type'), `descriptor type "${attr.type ?? ''}" != live codec kind "${liveKind}"`)
+    } else if (liveKind === 'enum' && !enumMembersMatch(config, attr.values ?? [])) {
+      add('DRIFT_VALUES', at('values'), `enum "${name}" values [${(attr.values ?? []).join(', ')}] are not the live member set`)
+    }
+
+    const liveDefault = String(config.default)
+    if (attr.default !== liveDefault) {
+      add('DRIFT_DEFAULT', at('default'), `descriptor default "${attr.default ?? ''}" != live default "${liveDefault}"`)
+    }
+
+    const descReflect = attr.reflect ?? false
+    const liveReflect = config.reflect ?? false
+    if (descReflect !== liveReflect) {
+      add('DRIFT_REFLECT', at('reflect'), `descriptor reflect ${descReflect} != live reflect ${liveReflect}`)
+    }
   }
 
   return failures
