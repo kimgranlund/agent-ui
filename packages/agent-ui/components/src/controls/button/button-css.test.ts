@@ -49,9 +49,9 @@ describe('button.css — structure + token hygiene (s7)', () => {
     expect(stylesBlock).toMatch(/padding-inline:\s*calc\(var\(--ui-button-height\)\s*\/\s*2\)/)
   })
 
-  it('host-as-grid (ADR-0006): a presence-driven :has() icon slot + the density-bearing column-gap', () => {
-    expect(stylesBlock).toMatch(/:scope:has\(>\s*\[slot='icon'\]\)/) // optional leading icon slot
-    expect(stylesBlock).toMatch(/grid-template-columns:\s*auto 1fr/) // icon + label
+  it('host-as-grid (ADR-0006): a presence-driven :has() leading slot + the density-bearing column-gap', () => {
+    expect(stylesBlock).toMatch(/:scope:has\(>\s*\[slot='leading'\]\)/) // optional leading adornment slot
+    expect(stylesBlock).toMatch(/grid-template-columns:\s*auto 1fr/) // leading + label
     expect(stylesBlock).toMatch(/column-gap:\s*var\(--ui-button-gap\)/) // the gap rides --ui-density
     expect(stylesBlock).toMatch(/calc\(\(var\(--ui-button-height\)\s*-\s*var\(--ui-button-icon\)\)\s*\/\s*2\)/) // slot ½(h−icon)
   })

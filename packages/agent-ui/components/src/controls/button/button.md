@@ -31,13 +31,16 @@ events:
     detail: 'null'
     description: Native-parity activation; fired by pointer and by Space/Enter keyboard activation. Inert while disabled.
 
-slots:
-  - name: icon
+slots:                 # slots name a POSITION; a slotted adornment's CONTENT role is carried on the node via `data-role` (see Slots & roles)
+  - name: leading
     optional: true
-    description: Optional leading icon — a light-DOM `[slot="icon"]` child placed by the presence-driven host-as-grid (ADR-0006). Absent ⇒ slotless bare-label layout.
+    description: Optional leading adornment — a light-DOM `[slot="leading"]` child placed in the start cell by the presence-driven host-as-grid (ADR-0006; renamed from `icon` — the slot names a POSITION, not its content). Absent ⇒ the slotless bare-label layout.
+  - name: label
+    optional: false
+    description: The label — the default/unnamed children (an explicit `[slot="label"]` is equivalent); the accessible name, filling the 1fr centre cell.
   - name: trailing
     optional: true
-    description: Optional trailing adornment — a light-DOM `[slot="trailing"]` child (a caret, chevron, or arrow) placed by the presence-driven host-as-grid. Layout only; carry any popup/disclosure meaning via ARIA on the host and mark the glyph aria-hidden.
+    description: Optional trailing adornment — a light-DOM `[slot="trailing"]` child (commonly a caret/chevron/arrow with `data-role="caret"`) placed in the end cell. Layout only; carry any popup/disclosure meaning via ARIA on the host and mark the glyph aria-hidden.
 
 parts: []              # light-DOM, host-as-grid — no shadow parts exposed
 customStates: []       # no ElementInternals custom states (:state()) at G5
@@ -71,9 +74,9 @@ forcedColors: A `@media (forced-colors: active)` block keeps the ink + border vi
 
 `ui-button` is the reference FACE control — a light-DOM custom element that renders an activatable
 button. It is **not** form-associated: it carries no value and does not participate in form
-validation; it styles its host and lets the user's light-DOM children (an optional leading icon and
-the label) flow through a presence-driven CSS grid (host-as-grid, ADR-0006). ARIA `role="button"` is
-applied through `ElementInternals`, never as a host attribute.
+validation; it styles its host and lets the user's light-DOM children (an optional leading adornment,
+the label, and an optional trailing adornment) flow through a presence-driven CSS grid (host-as-grid,
+ADR-0006). ARIA `role="button"` is applied through `ElementInternals`, never as a host attribute.
 
 ```html
 <ui-button>Save</ui-button>
@@ -95,41 +98,33 @@ applied through `ElementInternals`, never as a host attribute.
 height and font; an ancestor `[scale]` multiplies the frame and an ancestor `[density]` multiplies the
 icon↔label gap. The block-size is the vertical lever — `padding-block` is always `0`.
 
-## Icon slot
+## Slots & roles
 
-An **optional** leading icon is a light-DOM child carrying `slot="icon"`:
+The anatomy separates **position** (which slot) from **role** (what's placed in it). There are three
+position regions:
 
-```html
-<ui-button>
-  <svg slot="icon" aria-hidden="true"><!-- … --></svg>
-  Download
-</ui-button>
-```
+- **`slot="leading"`** — an optional adornment in the start cell.
+- **the label** — the default/unnamed children (an explicit `slot="label"` is equivalent); the accessible name, in the centre cell.
+- **`slot="trailing"`** — an optional adornment in the end cell.
 
-When present, the host grid switches from `1fr` (slotless, inline-pad `h/2`) to `auto 1fr`: the icon
-gets a square, icon-sized cell with edge-pad `½(h − icon)` and a `column-gap` between icon and label.
-That gap is the single density-bearing quantity — it rides `--ui-density`, while the frame stays
-density-invariant. The label text is the button's accessible name, so mark decorative icons
-`aria-hidden`.
-
-## Trailing adornment
-
-A symmetric **optional** trailing slot takes a caret, chevron, or arrow — the affordance that signals
-"opens a menu", "discloses", or "navigates". It is a light-DOM child carrying `slot="trailing"`, and it
-composes with the leading icon to give four anatomies:
+What goes *into* a leading/trailing slot carries its own **role** on the node via **`data-role`** —
+`icon` or `caret` today, `tag` / `badge` reserved for later. `data-role` (not the ARIA `role` attribute)
+keeps the taxonomy off the ARIA channel; adornments are decorative, so mark them `aria-hidden` — the label
+stays the accessible name. Position drives layout; a role only adds tuning when it needs it (e.g. a
+`caret`'s rotation).
 
 ```html
-<ui-button>Save</ui-button>                              <!-- [ label ] -->
-<ui-button><svg slot="icon">…</svg>Download</ui-button>  <!-- [ icon | label ] -->
-<ui-button>Options<svg slot="trailing">…</svg></ui-button>            <!-- [ label | caret ] -->
-<ui-button><svg slot="icon">…</svg>Account<svg slot="trailing">…</svg></ui-button> <!-- [ icon | label | caret ] -->
+<ui-button>Save</ui-button>                                                          <!-- [ label ] -->
+<ui-button><svg slot="leading" data-role="icon">…</svg>Download</ui-button>          <!-- [ leading | label ] -->
+<ui-button>Options<svg slot="trailing" data-role="caret">…</svg></ui-button>         <!-- [ label | trailing ] -->
+<ui-button><svg slot="leading" data-role="icon">…</svg>Account<svg slot="trailing" data-role="caret">…</svg></ui-button> <!-- [ leading | label | trailing ] -->
 ```
 
 The host grid picks the column template by presence — `1fr` · `auto 1fr` · `1fr auto` · `auto 1fr auto` —
-and gives each adornment the same square `½(h − icon)`-edged cell as the leading icon, with the
-density-bearing `column-gap` on each side. The trailing glyph is **layout only**: it carries no
-semantics, so mark it `aria-hidden` and express any popup/disclosure meaning as ARIA on the host
-(`aria-haspopup` / `aria-expanded` via `ElementInternals`), not on the icon.
+giving each adornment a square, `½(h − icon)`-edged cell with the density-bearing `column-gap` between
+cells (the one quantity that rides `--ui-density`; the frame stays density-invariant). The trailing glyph
+is **layout only** — express any popup/disclosure meaning as ARIA on the host (`aria-haspopup` /
+`aria-expanded` via `ElementInternals`), never on the glyph.
 
 ## Keyboard
 

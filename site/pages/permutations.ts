@@ -9,7 +9,7 @@
 // All geometry/colour/ARIA come from ui-button itself (the real control); this page only owns the page
 // scaffold layout (permutations.css). The props used are the real attributes-as-API from button.md /
 // button.ts `static props`: variant ∈ {solid, soft, ghost}, size ∈ {sm, md, lg}, disabled (boolean); the
-// optional leading icon is a light-DOM child carrying `slot="icon"` (ADR-0006 host-as-grid).
+// optional leading icon is a light-DOM child carrying `slot="leading"` + `data-role="icon"` (ADR-0006 host-as-grid).
 import { mountPage } from './_page.ts' // MUST be first — pulls the load-bearing foundation CSS + ui-* controls
 import './permutations.css' // AFTER _page.ts so the page scaffold cascades after the component layer
 
@@ -33,12 +33,13 @@ const columns: readonly Column[] = [
   { label: '+ icon · disabled', icon: true, disabled: true },
 ]
 
-// A leading icon for the optional `slot="icon"` cell — a decorative download glyph. `currentColor` makes it
+// A leading icon for the optional `slot="leading"` cell — a decorative download glyph. `currentColor` makes it
 // inherit the button ink (proving the slot tints with the variant); `aria-hidden` keeps the label text as the
 // accessible name (the doc's guidance for decorative icons). Sized by button.css (var(--ui-button-icon)).
 function makeIcon(): SVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg')
-  svg.setAttribute('slot', 'icon')
+  svg.setAttribute('slot', 'leading') // POSITION (start cell)
+  svg.setAttribute('data-role', 'icon') // CONTENT role (icon · caret · future tag/badge)
   svg.setAttribute('aria-hidden', 'true')
   svg.setAttribute('viewBox', '0 0 24 24')
   const path = document.createElementNS(SVG_NS, 'path')
@@ -58,7 +59,8 @@ function makeIcon(): SVGElement {
 // host via ARIA). Sized by button.css to the same square `var(--ui-button-icon)` cell as the leading icon.
 function makeCaret(): SVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg')
-  svg.setAttribute('slot', 'trailing')
+  svg.setAttribute('slot', 'trailing') // POSITION (end cell)
+  svg.setAttribute('data-role', 'caret') // CONTENT role
   svg.setAttribute('aria-hidden', 'true')
   svg.setAttribute('viewBox', '0 0 24 24')
   const path = document.createElementNS(SVG_NS, 'path')

@@ -20,7 +20,7 @@ import '@agent-ui/components/components'
 
 // ── markup: the two variants the smoke proves in parallel ───────────────────────────────────────────
 const BARE = '<ui-button>Label</ui-button>' //                          slotless — density-INVARIANT frame
-const ICON = '<ui-button><span slot="icon">●</span>Label</ui-button>' // host-as-grid — density-BEARING gap
+const ICON = '<ui-button><span slot="leading" data-role="icon">●</span>Label</ui-button>' // host-as-grid — density-BEARING gap
 
 // ── mount/cleanup: each button rides a wrapper that carries the [scale]/[density] ancestor attributes
 // (dimensions.css keys off bare `[scale="…"]`/`[density="…"]`; custom props inherit down to the host). ──

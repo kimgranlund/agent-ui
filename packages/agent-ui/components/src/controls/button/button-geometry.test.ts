@@ -11,7 +11,7 @@ declare const process: { cwd(): string }
 // a probe is not enforced"). This suite pins the geometry LAW that button-css.test.ts (s7) does NOT:
 //   • 0 < glyph ≤ box — the content-icon ramp fits inside the height box, at every scale (a CROSS-FILE
 //     static relation between button.css's `--ui-button-icon` and dimensions.css's `--ui-height-{size}`).
-//   • the glyph IS the slot — `[slot=icon]` is a SQUARE cell sized to `--ui-button-icon` (the slot model).
+//   • the glyph IS the slot — `[slot=leading]` is a SQUARE cell sized to `--ui-button-icon` (the slot model).
 //   • per-edge ASYMMETRY by design — the leading slot edge is ½(h−icon), the trailing label edge is h/2.
 // NOT duplicated here (already pinned by button-css.test.ts s7 — referenced, not re-asserted): the two
 // sectioned blocks, `padding-block: 0`, the slotless `padding-inline: h/2`, `column-gap: --ui-button-gap`,
@@ -77,13 +77,13 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     }
   })
 
-  it('the glyph IS the slot: [slot=icon] AND [slot=trailing] are SQUARE cells sized to --ui-button-icon on BOTH axes', () => {
+  it('the glyph IS the slot: [slot=leading] AND [slot=trailing] are SQUARE cells sized to --ui-button-icon on BOTH axes', () => {
     // the slot model (geometry.md): the slotted glyph IS the square cell — inline-size == block-size ==
     // the glyph size, so it centers in a square of its own size (no phantom box around it). The leading icon
     // and the trailing adornment (caret/arrow, ADR-0006 extended) share the one square-cell rule.
-    const slotRule = stylesBlock.slice(stylesBlock.indexOf(":scope > [slot='icon']"))
+    const slotRule = stylesBlock.slice(stylesBlock.indexOf(":scope > [slot='leading']"))
     const block = slotRule.slice(0, slotRule.indexOf('}') + 1)
-    expect(block).toMatch(/\[slot='icon'\]/) // the leading icon cell
+    expect(block).toMatch(/\[slot='leading'\]/) // the leading icon cell
     expect(block).toMatch(/\[slot='trailing'\]/) // the trailing adornment cell — same square model
     expect(block).toMatch(/inline-size:\s*var\(--ui-button-icon\)/)
     expect(block).toMatch(/block-size:\s*var\(--ui-button-icon\)/)
@@ -93,7 +93,7 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     // geometry.md §"Per-edge inline padding": with an icon present the control is asymmetric BY DESIGN —
     // the leading slot edge insets ½(h−icon) while the trailing (slotless) label edge stays h/2. s7 pins
     // that ½(h−icon) appears; here we pin it is the START edge and that END is the slotless h/2.
-    const hasBlock = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='icon']):not"))
+    const hasBlock = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='leading']):not"))
     expect(hasBlock).toMatch(/padding-inline-start:\s*calc\(\(var\(--ui-button-height\)\s*-\s*var\(--ui-button-icon\)\)\s*\/\s*2\)/)
     expect(hasBlock).toMatch(/padding-inline-end:\s*calc\(var\(--ui-button-height\)\s*\/\s*2\)/)
   })
@@ -105,7 +105,7 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     expect(trailingOnly).toMatch(/grid-template-columns:\s*1fr\s+auto/)
     expect(trailingOnly).toMatch(/padding-inline-end:\s*calc\(\(var\(--ui-button-height\)\s*-\s*var\(--ui-button-icon\)\)\s*\/\s*2\)/)
     // [icon | label | caret]: auto 1fr auto — both adornment edges ½(h−icon).
-    const both = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='icon']):has(> [slot='trailing'])"))
+    const both = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='leading']):has(> [slot='trailing'])"))
     expect(both).toMatch(/grid-template-columns:\s*auto\s+1fr\s+auto/)
   })
 })
