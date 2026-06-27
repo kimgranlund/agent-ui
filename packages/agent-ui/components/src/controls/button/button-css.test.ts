@@ -87,11 +87,11 @@ const variantBlock = (marker: string): string => {
 }
 
 describe('button.css — interaction states from role ladders (ADR-0008)', () => {
-  it('solid (default) steps the ACCENT ladder: idle --c-primary · hover -dim · active -high', () => {
+  it('solid (default) steps the DEDICATED interaction roles: idle --c-primary · hover -hover · active -active', () => {
     const b = variantBlock(':where(ui-button) {')
     expect(b).toMatch(/--ui-button-bg:\s*var\(--c-primary\)/)
-    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--c-primary-dim\)/)
-    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--c-primary-high\)/)
+    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--c-primary-hover\)/) // tok-states (ADR-0008 amendment)
+    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--c-primary-active\)/)
   })
 
   it('soft steps the CONTAINER ladder: idle -container-low · hover -container · active -container-high', () => {

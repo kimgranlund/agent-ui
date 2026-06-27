@@ -110,3 +110,25 @@ CONFIRMED: reuse `tokens.md`'s vetted role ladders (solid `--c-primary`→`-dim`
   scope. The per-variant rows refactor into intermediates later with no seam change.
 - **A `[state]` attribute the control sets in JS** — rejected: violates the pure-CSS, no-`observedAttributes`
   styling discipline; `:hover`/`:active` are platform pseudo-classes that need no JS.
+
+## Amendment — dedicated primary hover/active roles (2026-06-27, the foreseen ladder-collapse remedy)
+
+The wave-2 cross-engine smoke confirmed the resolved-on-ratification note's anticipated risk: the SOLID variant's
+hover (`--c-primary-dim`) and active (`--c-primary-high`) **both resolve to `--c-primary-650` in the light branch
+of `light-dark()`**, so a pressed solid button was visually indistinguishable from a hovered one in light scheme
+(dark was a genuine three-step ladder). Per this ADR's resolved decision — "only if a step collapses do we add
+token-layer dedicated `--c-{f}-hover/-active` roles, never a component `color-mix`" — the remedy was applied
+(`tok-states` slice; host-ratified values):
+
+- **Two new fleet roles** in `tokens.css`: `--c-primary-hover: light-dark(--c-primary-650, --c-primary-400)` and
+  `--c-primary-active: light-dark(--c-primary-750, --c-primary-350)` — a real three-step ladder in BOTH schemes
+  (light 550→650→750, dark 450→400→350).
+- The button's SOLID variant repoints `--ui-button-bg-hover`/`-bg-active` to these roles; soft/ghost stay on the
+  (already-distinct) container ladder, the disabled hold is unchanged.
+- The smoke's RISK-1 tripwire flipped from `hover==active` to `hover != active` — green in Chromium AND WebKit;
+  the resolved solid ladder is three distinct oklch steps per scheme.
+
+This is the **family-role pattern** the next solid-filled control reuses: a family that ships a solid fill gets
+its own `--c-{family}-hover/-active` roles when (and only when) its generic `-dim/-high` ladder collapses in a
+scheme. The old `--c-primary-dim`/`-high` roles are unchanged (no other consumer). Token-layer only — no
+component change. `references/interaction-states.md` documents the pattern.

@@ -110,23 +110,23 @@ describe('ui-button states — per-variant :hover repaint (ADR-0008, both engine
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
-//  [2] RISK-1 — the per-scheme solid hover-vs-active ladder diagnostic (the key finding)
+//  [2] RISK-1 (RESOLVED) — the per-scheme solid idle→hover→active ladder is three distinct steps
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 //
-// css-button predicted (and the source confirms): solid `-bg-hover`=`--c-primary-dim`, `-bg-active`=
-// `--c-primary-high`, and in LIGHT both `light-dark()` to `--c-primary-650` → solid hover == active in
-// light; in DARK they split (`-700` vs `-400`) → distinct. This resolves the chain per scheme and DIAGNOSES
-// the collapse empirically in BOTH engines. The HARD requirement (ADR-0008's REALIZE leg) is that the
-// active state is a real, distinct ladder step — proven by DARK distinctness. The LIGHT hover==active
-// collapse is a KNOWN design-escalation (the tok-states ladder), pinned (not silently passed) so a future
-// token fix flips this probe and forces an update — never failing the suite on a recorded escalation.
+// The tok-states amendment (ADR-0008's foreseen path) gave the solid fill DEDICATED --c-primary-hover/
+// -active roles instead of the --c-primary-dim/-high pairing. Source now: solid `-bg-hover`=
+// `--c-primary-hover`, `-bg-active`=`--c-primary-active`. They resolve to a real three-step ladder in BOTH
+// schemes — LIGHT 550 → 650 → 750, DARK 450 → 400 → 350 — so idle ≠ hover ≠ active everywhere. The earlier
+// collapse (LIGHT hover==active, both light-dark()-ing onto --c-primary-650) is GONE. This probe resolves the
+// chain per scheme and proves the full three-step ladder empirically in BOTH engines (the REALIZE leg of
+// ADR-0008): a pressed solid button now reads distinct from a hovered one in light too.
 //
 // These reads are TRANSITION-IMMUNE by construction: `resolveToken` measures a throwaway probe span that is
 // not a `ui-button` and never enters `:state(ready)`, so its background is the statically-resolved token —
 // never a mid-fade value. The hover/active diagnosis is the SETTLED ladder colour, not an intermediate.
 
-describe('ui-button states — RISK-1 solid hover-vs-active per color-scheme (both engines)', () => {
-  it('DARK: solid :hover and :active are DISTINCT ladder steps; idle lifts to both', () => {
+describe('ui-button states — RISK-1 solid idle→hover→active ladder per color-scheme (both engines)', () => {
+  it('DARK: solid idle → hover → active are three DISTINCT ladder steps', () => {
     const { btn } = mount('<ui-button variant="solid">Label</ui-button>')
     const idle = resolveToken(btn, '--ui-button-bg', 'dark')
     const hover = resolveToken(btn, '--ui-button-bg-hover', 'dark')
@@ -137,18 +137,19 @@ describe('ui-button states — RISK-1 solid hover-vs-active per color-scheme (bo
     expect(active, 'dark idle did not lift on active').not.toBe(idle)
   })
 
-  it('LIGHT: idle lifts to BOTH states, but hover==active — the KNOWN --c-primary-650 collapse (escalation)', () => {
+  it('LIGHT: solid idle → hover → active are three DISTINCT ladder steps (RISK-1 collapse FIXED — tok-states)', () => {
     const { btn } = mount('<ui-button variant="solid">Label</ui-button>')
     const idle = resolveToken(btn, '--ui-button-bg', 'light')
     const hover = resolveToken(btn, '--ui-button-bg-hover', 'light')
     const active = resolveToken(btn, '--ui-button-bg-active', 'light')
-    // the button still REACTS in light: both hover and active lift off idle (550 → 650) — the control is alive.
+    // both states lift off idle (550 → 650 / 750) — the control reacts in light.
     expect(hover, 'light idle did not lift on hover').not.toBe(idle)
     expect(active, 'light idle did not lift on active').not.toBe(idle)
-    // …but hover and active land on the SAME step (both --c-primary-650). Pinned as the known collapse: the
-    // user-facing distinction (a pressed solid button looking different from a hovered one) is INVISIBLE in
-    // light. If the tok-states ladder later splits them, this assertion flips RED → update + drop the note.
-    expect(hover, 'light solid hover/active are NO LONGER collapsed — RISK-1 resolved; update this probe').toBe(active)
+    // …and hover ≠ active now: the dedicated --c-primary-hover/-active roles (650 vs 750) split the former
+    // --c-primary-650 collapse, so a pressed solid button reads distinct from a hovered one in LIGHT too. This
+    // is the flipped RISK-1 tripwire (was the KNOWN escalation; the tok-states ladder resolved it) — if a
+    // regression re-collapses these onto one step, this assertion fails RED.
+    expect(hover, 'light solid hover==active — the RISK-1 --c-primary-650 collapse has regressed').not.toBe(active)
   })
 })
 

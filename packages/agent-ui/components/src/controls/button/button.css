@@ -23,11 +23,12 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-button) declares --ui-button-* ════════════════ */
 
 :where(ui-button) {
-  /* Colour channel (default family = primary). solid = filled (accent bg, on-accent ink). Per-state bg
-     from the ACCENT ladder step (--c-primary · -dim · -high) — a role step, NOT a color-mix (ADR-0008). */
+  /* Colour channel (default family = primary). solid = filled (accent bg, on-accent ink). Per-state bg from
+     the DEDICATED interaction roles (--c-primary · -hover · -active) — distinct steps in BOTH schemes, a role
+     step NOT a color-mix (ADR-0008 + its tok-states amendment that split the LIGHT --c-primary-650 collapse). */
   --ui-button-bg: var(--c-primary);
-  --ui-button-bg-hover: var(--c-primary-dim);
-  --ui-button-bg-active: var(--c-primary-high);
+  --ui-button-bg-hover: var(--c-primary-hover);
+  --ui-button-bg-active: var(--c-primary-active);
   --ui-button-ink: var(--c-primary-on-primary);
   --ui-button-border: transparent;
 
