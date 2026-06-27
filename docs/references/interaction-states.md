@@ -185,6 +185,50 @@ rides `ElementInternals.ariaDisabled`.
 `ariaDisabled` *cannot* be a trait (protected `internals`) → a one-line **control-level effect** any control with
 a `disabled` prop copies. Do not try to push `ariaDisabled` into a trait.
 
+## 4 · Motion — transition the state paint, snap the geometry, gate past first paint
+
+State changes (hover/active, and a JS-driven variant/colour change) **animate**; the first render and every
+geometry change **snap**. Three fleet-wide rules:
+
+**[a] Transition the state-PAINT properties only — never geometry, never `all`.** Enumerate
+`background-color` / `color` / `border-color` (add `box-shadow` / `opacity`, or a caret `transform`, if the
+control uses them). A `[scale]` / `[size]` / `[density]` change must be **instant** — the geometry ramp
+(`geometry.md`) is never in the transition list; animating it fights the sizing law and reads as jank. The
+keyboard focus ring stays instant too (omit `outline`): keyboard users want immediate, unambiguous feedback.
+Durations/easings are **tokens** (`--ui-motion-fast`, `--ui-ease-standard` in `dimensions.css`) — constants on
+`:root` like the focus-ring geometry, not magic numbers.
+
+**[b] Gate the transition behind a post-first-paint `:state(ready)`.** A custom element paints once on upgrade
+(UA defaults) before `@scope` styling applies; if `transition` is already declared, that first change animates —
+the flash. So declare **no** transition until the control has settled, via an `ElementInternals` **custom state**
+(not a host attribute), flipped one frame past first paint:
+
+```ts
+// connected(), after the role/trait/effect wiring:
+requestAnimationFrame(() => this.internals.states?.add('ready'))
+```
+```css
+:scope:state(ready) {
+  transition: background-color var(--ui-motion-fast) var(--ui-ease-standard),
+              color            var(--ui-motion-fast) var(--ui-ease-standard),
+              border-color     var(--ui-motion-fast) var(--ui-ease-standard);
+}
+```
+
+`requestAnimationFrame` (not `updateComplete`, a microtask *before* paint) clears the first paint; adding `ready`
+afterward grants the *capability* without changing any transitioned value at that instant, so only **subsequent**
+state changes animate. It also covers token/CSS-load races (ready flips only after the frame), and is idempotent
+(a Set) so reconnect is safe. The fleet motion tokens are read DIRECTLY in `@scope` (like the focus-ring
+constants) — a fleet token, not a per-control opinion.
+
+**[c] Honour `prefers-reduced-motion: reduce` — zero the transitions (non-negotiable).**
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  :scope:state(ready) { transition: none; }
+}
+```
+
 ## Mechanization
 
 Each state lands with a probe (per [`process.md`](../process.md)) — a state without a probe is not enforced.
@@ -196,6 +240,10 @@ The carrier decides the harness:
 - **tabbable / ariaDisabled** are DOM/AX state: proven in **jsdom unit tests** — `tabIndex === 0` while enabled,
   no `tabindex` attribute while disabled (and re-applied on reconnect); `internals.ariaDisabled` toggles
   `'true'`/`null` with the `disabled` prop, with **zero residue** after disconnect.
+- **motion** is gated CSS + a one-line JS state flip: the `:state(ready)` transition rule (state-paint only, no
+  geometry, no `all`) and the reduced-motion zero are pinned by the **jsdom CSS-text probe**; that the first
+  paint does NOT animate and a subsequent hover DOES is the **cross-engine smoke**'s (jsdom has no
+  `CustomStateSet`, so the `:state(ready)` behaviour can't be computed there).
 
 ## Decisions (source)
 

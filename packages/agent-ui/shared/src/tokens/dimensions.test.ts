@@ -86,3 +86,13 @@ describe('dimensions.css — the shared focus-ring geometry constants (ADR-0009)
     expect(universalBlock).not.toMatch(/--ui-focus-ring/)
   })
 })
+
+// Motion (interaction-states standard) — state-transition timing. Like the focus-ring geometry these are
+// CONSTANTS (no var() over a subtree-repointable multiplier), so they live on :root, NOT the derived `*` ramp.
+describe('dimensions.css — the motion timing constants (interaction-states standard)', () => {
+  it('declares --ui-motion-fast + --ui-ease-standard on :root — constants, not on the `*` ramp', () => {
+    expect(rootBlock).toMatch(/--ui-motion-fast:\s*\d+ms\s*;/)
+    expect(rootBlock).toMatch(/--ui-ease-standard:\s*cubic-bezier\([^)]*\)\s*;/)
+    expect(universalBlock).not.toMatch(/--ui-motion|--ui-ease/) // constants stay off the derived `*` ramp
+  })
+})

@@ -40,6 +40,12 @@ export class UIButtonElement extends UIElement {
     this.effect(() => {
       this.internals.ariaDisabled = this.disabled ? 'true' : null
     })
+    // Motion gate (interaction-states standard) — flip the `ready` custom state ONE FRAME PAST first paint, so
+    // the upgrade/first-paint styling SNAPS in and only subsequent state changes animate (the button.css
+    // transition is gated behind `:state(ready)`). requestAnimationFrame — NOT updateComplete (a microtask,
+    // before paint) — to clear the first paint; `states` is optional-chained because jsdom has no CustomStateSet
+    // (the real motion behaviour is the cross-engine smoke). Idempotent (a Set), so reconnect is safe.
+    requestAnimationFrame(() => this.internals.states?.add('ready'))
   }
 }
 

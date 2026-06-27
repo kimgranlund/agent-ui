@@ -182,6 +182,24 @@
     outline-offset: var(--ui-focus-ring-offset);
   }
 
+  /* Motion (ADR-0008 / interaction-states standard) — transition the state-PAINT properties ONLY
+     (background/colour/border colour), enumerated (never `transition: all`). Geometry is NEVER transitioned: a
+     [scale]/[size]/[density] change must SNAP — animating the --ui ramp fights the sizing law (geometry.md) and
+     reads as jank — and the keyboard focus ring stays instant (outline is omitted from the list). The rule is
+     gated behind the :state(ready) custom state, set in button.ts ONE FRAME PAST first paint, so the upgrade/
+     first-paint styling snaps in and only SUBSEQUENT hover/active/variant changes animate (no first-render flash). */
+  :scope:state(ready) {
+    transition:
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      color var(--ui-motion-fast) var(--ui-ease-standard),
+      border-color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope:state(ready) {
+      transition: none; /* accessibility (non-negotiable) — reduced motion zeroes the state transitions */
+    }
+  }
+
   /* disabled host — pointer-inert (the reflected `disabled` attribute); makes :hover/:active inert so the
      state overlay holds at idle */
   :scope:is([disabled]) {

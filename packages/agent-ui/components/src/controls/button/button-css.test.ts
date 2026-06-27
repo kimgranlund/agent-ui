@@ -37,18 +37,22 @@ describe('button.css — structure + token hygiene (s7)', () => {
     expect(tokenBlock).toMatch(/ui-button\[size='lg'\]/)
   })
 
-  it('@scope CONSUMES only --ui-button-* for its own tokens (+ the shared focus-ring fleet tokens, ADR-0009)', () => {
+  it('@scope CONSUMES only --ui-button-* for its own tokens (+ the shared focus-ring/motion fleet tokens)', () => {
     const refs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1])
     expect(refs.length).toBeGreaterThan(0)
-    // The component reads only its own --ui-button-* chain, with ONE deliberate exception: the shared
-    // focus-ring fleet constants (ADR-0009), read DIRECTLY (never repointed through the component chain)
-    // so every control draws the identical ring — a fleet token, not a per-control colour opinion.
-    const focusRingFleet = new Set(['--c-focus-ring', '--ui-focus-ring-width', '--ui-focus-ring-offset'])
+    // The component reads only its own --ui-button-* chain, with deliberate exceptions: the shared FLEET
+    // constants read DIRECTLY (never repointed through the component chain) so every control draws the
+    // identical ring / uses the identical motion timing — fleet tokens, not per-control opinions: the focus
+    // ring (ADR-0009) and the state-transition motion (interaction-states standard).
+    const sharedFleet = new Set([
+      '--c-focus-ring', '--ui-focus-ring-width', '--ui-focus-ring-offset', // the shared focus ring (ADR-0009)
+      '--ui-motion-fast', '--ui-ease-standard', // the shared state-transition motion (interaction-states standard)
+    ])
     for (const v of refs) {
-      if (focusRingFleet.has(v as string)) continue
+      if (sharedFleet.has(v as string)) continue
       expect(v).toMatch(/^--ui-button-/) // the component otherwise reads only its own chain
     }
-    expect(refs.some((v) => focusRingFleet.has(v as string))).toBe(true) // anti-vacuous: the ring tokens ARE consumed
+    expect(refs.some((v) => sharedFleet.has(v as string))).toBe(true) // anti-vacuous: the fleet tokens ARE consumed
   })
 
   it('geometry per the LAW: block-size off the ramp, padding-block 0, slotless inline-pad = h/2', () => {
@@ -163,5 +167,37 @@ describe('button.css — role-driven glyph sizing, caret = font (ADR-0012)', () 
 
   it('[data-role=icon] FILLS the icon cell (the content-icon FRAME role)', () => {
     expect(stylesBlock).toMatch(/:scope > \[data-role='icon'\]\s*\{[^}]*padding:\s*0/)
+  })
+})
+
+// ── Motion: state transitions, gated past first paint (interaction-states standard) ──────────────────
+// Transition the state-PAINT props ONLY (never geometry, never `all`), gated behind a :state(ready) custom
+// state flipped one frame past first paint (so the upgrade/first paint snaps), zeroed under reduced-motion.
+// The rendered behaviour (first paint does NOT animate; a later hover DOES) is the cross-engine smoke;
+// jsdom has no CustomStateSet, so here we pin the CSS-text structure.
+describe('button.css — state-transition motion, gated past first paint', () => {
+  it('transitions the state-PAINT properties only — enumerated, never `all`, never geometry', () => {
+    const m = stylesBlock.match(/:scope:state\(ready\)\s*\{([^}]*)\}/)
+    expect(m, ':scope:state(ready) transition rule missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/transition:/)
+    expect(rule).toContain('background-color')
+    expect(rule).not.toMatch(/transition:\s*all/) // enumerated longhands, never the `all` keyword
+    // geometry must SNAP, and the focus ring stays instant — none of these may appear in the transition list
+    expect(rule).not.toMatch(/height|padding|inline-size|\bwidth\b|gap|transform|outline/)
+    expect(rule).toContain('--ui-motion-fast') // timing from the shared motion token, not a magic number
+  })
+
+  it('is GATED behind :state(ready) — the base :scope rule declares NO transition (so the first paint snaps)', () => {
+    const baseStart = stylesBlock.indexOf(':scope {')
+    const baseScope = stylesBlock.slice(baseStart, stylesBlock.indexOf('}', baseStart) + 1)
+    expect(baseScope).not.toMatch(/transition/) // unconditional transition would animate the upgrade/first paint
+    expect(stylesBlock).toContain(':scope:state(ready)') // the gate exists
+  })
+
+  it('zeroes the transition under prefers-reduced-motion (accessibility — non-negotiable)', () => {
+    expect(stylesBlock).toMatch(/prefers-reduced-motion:\s*reduce/)
+    const rm = stylesBlock.slice(stylesBlock.indexOf('prefers-reduced-motion'))
+    expect(rm).toMatch(/:scope:state\(ready\)\s*\{\s*transition:\s*none/)
   })
 })

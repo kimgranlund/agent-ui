@@ -23,6 +23,14 @@
      2px width / 2px offset — the shared ring every control's `:focus-visible` outline reads. */
   --ui-focus-ring-width: 2px;
   --ui-focus-ring-offset: 2px;
+
+  /* Motion (the interaction-states standard) — state-transition timing. CONSTANTS (no var() over a
+     subtree-repointable multiplier), so on :root like the focus-ring geometry, NOT the `*` ramp. A control's
+     `@scope` block transitions ONLY its state-PAINT properties (background/colour/border) over --ui-motion-fast,
+     NEVER geometry (a [scale]/[density]/[size] change must snap — animating the ramp fights the sizing law).
+     prefers-reduced-motion is honoured at the consumption site (the control zeroes the transition). */
+  --ui-motion-fast: 300ms;
+  --ui-ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1); /* Apple "smooth" easing */
 }
 
 /* The DERIVED ramp lives on `*` (universal), NOT `:root` — deliberately. A var() inside a custom-property
