@@ -21,7 +21,8 @@ Design how capabilities compose, or review an arrangement. The unit is chosen by
 1. Match the unit to the task; justify team fan-out by genuine parallel value.
 2. Each description a precise interface; `tools` scoped, `model` to task class, `skills:` only for standing expertise; verify keys against the installed build.
 3. Keep teammate roles as subagent definitions (teams compose them at runtime).
-4. Self-score (below); fix until every gate dimension (A2, A4) ≥ 3.
+4. For a parallel BUILD team, dispatch the disjoint same-tree fan-out (`references/best-practices.md`): file- and import-disjoint slices concurrently in one tree, each worker self-gating its own path, the host running the whole-tree gate + negative controls at the wave boundary; worktrees only when slices must mutate overlapping files.
+5. Self-score (below); fix until every gate dimension (A2, A4) ≥ 3.
 
 ## Review
 1. This skill's gates are systemic judgment, not a single-file mechanical check — there is no `harness_checks` subcommand. Score by inspection against `references/rubric.md`, citing evidence on the 1–5 anchors.

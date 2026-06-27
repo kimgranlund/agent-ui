@@ -36,7 +36,7 @@ The defect quadrant is the point of the skill: a clean structure that can't host
 4. **Map** each action to the node(s) that host it.
 5. **Check coverage** — write the decomposition to a manifest (schema below) and run `python scripts/coverage_check.py <manifest.json>`. It is deterministic; do not eyeball it.
 6. **Fix** every `UNHOSTED` action (add or reshape structure) and every `DANGLING` ref; resolve each `UNJUSTIFIED-LEAF` (add the action it should host, add a `justify`, or delete the node).
-7. **Re-check; finalize only when the script exits 0.** Hand the node tree + action map to the downstream author (planning-lead → PRD/SPEC/LLD).
+7. **Re-check; finalize only when the script exits 0.** Hand the node tree + action map to the downstream author (planning-lead → PRD/SPEC/LLD). **If the decomposition feeds a parallel build,** slice it for the fan-out first — one writer per file, every shared/barrel edit deferred to one serial integration slice, a serial PREP slice ahead of a wide fan-out, and a negative control for each new gate/probe (`references/best-practices.md`; the dispatch/gate execution model is `orchestration-design`).
 
 ## Manifest schema (what the check reads)
 
@@ -70,3 +70,5 @@ Map → `reject invalid payload` hosts on `validation`; `bind data` finds **no n
 ## Validation loop
 
 draft both planes → write manifest → `python scripts/coverage_check.py <manifest.json>` → fix `UNHOSTED`/`DANGLING`/`UNJUSTIFIED-LEAF` → re-run → finalize at exit 0. The script is the gate; the prose is the method.
+
+**Scope of the gate.** `coverage_check.py` verifies the two planes cross-check (node ↔ action) — it does NOT verify real-world completeness. A need that was never written as an action (e.g. a ratified ADR Decision) has nothing to leave `UNHOSTED`, so the manifest passes clean while the need ships nothing. Catch that upstream with the ADR-Decision → action completeness review (`references/best-practices.md`), a judgement step, not this gate.

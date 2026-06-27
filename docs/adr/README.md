@@ -22,7 +22,41 @@ When `execution-lead` (or anyone) hits a constraint that the design can't satisf
 
 - **proposed** — authored, not yet ratified.
 - **accepted** — ratified by `orchestration-lead`; the repair propagates and dependents regenerate.
-- **superseded / deprecated** — a later ADR replaced it (link forward), or the decision no longer applies. ADRs are append-only history; never edit an accepted decision's substance — write a new ADR that supersedes it.
+- **superseded / deprecated** — a later ADR replaced it (link forward), or the decision no longer applies. ADRs are append-only history; never edit an accepted decision's substance — write a new ADR that supersedes it. The one append-only exception is a **foreseen amendment** (see *[Amendment vs supersession](#amendment-vs-supersession)*): it *adds* a follow-through the decision already anticipated, without editing the original.
+
+## Amendment vs supersession
+
+A later decision can touch an earlier accepted ADR in two non-interchangeable ways. The test is whether the
+original **Decision still stands**:
+
+- **Foreseen amendment — amend in place.** The decision **stands**, and an extension it **already anticipated**
+  lands. Record it as an append-only **`## Amendment`** section at the foot of the *same* ADR — never a new file.
+  Example: **ADR-0008** booked, in its *Resolved on ratification* note, that "*only* if a ladder step collapses
+  do we add token-layer dedicated `--c-{f}-hover/-active` roles (a separate `tok-states` slice + **an amendment
+  to this ADR**)". When the wave-2 smoke confirmed the collapse, the follow-through was appended as
+  `## Amendment — dedicated primary hover/active roles`, **not** opened as a new ADR. The decision did not change;
+  its anticipated branch resolved.
+- **Supersession — a new ADR.** The decision **changes** — a reversal, a different choice, or a no-longer-applicable
+  call. Write a **new** ADR that supersedes it (`Status: superseded by ADR-NNNN`, link forward); the old ADR's
+  Decision is left intact as history. This is the existing lifecycle arrow.
+
+**The append-only rule holds for both.** A `## Amendment` **adds** the foreseen follow-through; it does **not**
+edit the original Context / Decision / Consequences — so it does not breach *never edit an accepted decision's
+substance*. If you find yourself wanting to *change* a sentence inside the accepted Decision, that is a
+supersession, not an amendment: open a new ADR.
+
+| | the original Decision … | record as |
+|---|---|---|
+| **Foreseen amendment** | stands; an anticipated extension lands | append-only `## Amendment` in the same ADR |
+| **Supersession** | is reversed / replaced | a new ADR, `superseded by` link forward |
+| **Extension** | stands; a *separate, new* decision builds on it | a new ADR, `Extends` ↔ `extended by` cross-reference |
+
+**Cross-reference convention.** A new ADR that builds on an earlier one **without reversing it** records the
+link in its *Supersedes / Superseded by* field as **`Extends ADR-NNNN`**, and the earlier ADR is marked
+**`Extended by ADR-NNNN`** (a two-way link) — e.g. **ADR-0012** *extends* **ADR-0006** (leading-icon anatomy →
+the position×role family standard; ADR-0006's host-as-grid mechanism stays in force). An extension differs from
+both neighbours: unlike an in-place amendment it is a *separate* ADR (a genuinely new decision, not a foreseen
+branch of the old one), and unlike a supersession it leaves the earlier decision **standing**.
 
 ## How to add one
 

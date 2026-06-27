@@ -1,6 +1,10 @@
 # agent-ui — agent handoff contract
 
-> The standard block every team agent emits when it hands work back (to `orchestration-lead`, or to the host). Single source of truth; the agent files inline the field list so it is always in-prompt. Roles + loop: [`README.md`](./README.md). · 2026-06-26
+> The standard block every team agent emits when it hands work back (to `orchestration-lead`, or to the host). Single source of truth; the agent files inline the field list so it is always in-prompt. Roles + loop: [`README.md`](./README.md). · 2026-06-27
+
+## Before you hand back
+
+**Drain your full inbox first.** Read every message still pending before you compose the block — a handoff written one message behind is already wrong the moment it ships. The failure modes are concrete: re-asking a question a later message already answered, re-editing an artifact a teammate has already committed, or retracting a finding a newer commit has fixed. Compose the block only once nothing is left unread.
 
 ## The block
 
@@ -13,6 +17,8 @@ Every handoff returns exactly these fields, in order. Keep each tight; omit noth
 - **Risks** — what could be wrong or fragile, assumptions made, blast radius. Honest, not reassuring.
 - **Open questions** — unresolved decisions needing a human or another role; "(none)" if none.
 - **Recommended next action** — the single best next step **and who owns it** (`planning-lead` / `execution-lead` / host). Feeds routing and the up-loop.
+
+On **Tests/checks run**: a green gate is not a landed change. Read the gate output, *then* commit as a separate step — never chain a commit onto a test run with `&&`, or a regression rides in on a gate whose output was never read.
 
 ## Why this shape
 

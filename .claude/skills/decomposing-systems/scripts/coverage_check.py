@@ -5,6 +5,14 @@ Routes the deterministic half of decomposing-systems to code: given a manifest o
 OUTSIDE-IN nodes, INSIDE-OUT actions, and the hosts mapping that crosses them, it
 reports the defect quadrant mechanically instead of by eyeballing.
 
+Scope (what this does NOT check): it verifies the two PLANES cross-check — every
+action has a node, every leaf has an action (node <-> action). It does NOT verify
+real-world completeness. A need that was never written as an action (e.g. a ratified
+ADR Decision nobody turned into a node/action) has nothing to leave UNHOSTED, so the
+manifest passes clean while the need ships nothing. Catch that upstream with the
+ADR-Decision -> action completeness review (references/best-practices.md), a judgement
+step, not this gate.
+
 Failures (exit 1):
   UNHOSTED        an action mapped to no node — a need with nowhere to live
   DANGLING        a hosts entry referencing an unknown action or node

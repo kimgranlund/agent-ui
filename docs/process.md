@@ -67,6 +67,27 @@ check, so each is a script or a probe, never an agent. Two speeds:
 The fast gates are wired as a hook so they fire without anyone remembering (required reliability →
 lifecycle boundary, not a sentence in a doc).
 
+**A gate is only as good as its negative control** — anchor each NC on a *unique* code token and confirm
+the mutation actually applied before trusting a green run (the full anchor discipline is owned by
+`decomposing-systems`). And a green gate is not yet a landed change — read it, *then* commit as a separate
+step (`handoff-contract`).
+
+**Contract-change migration — when a slot / role / prop *name* changes.** The trip-wires above catch a
+descriptor that silently *drifted*; a deliberate **rename** is the opposite case — an intended contract
+change that nothing flags, so it must be propagated by hand to every call site before it counts as done.
+This is a loop that repairs the source, not the symptom: change the name at its origin (the CSS + the
+descriptor) **and** every dependent. Renaming a `slot`, a `data-role`, or a prop attribute → **grep the
+whole repo for every spelling of the old name**, across `packages/` **and** `site/`, in BOTH forms:
+
+- the declarative markup form — `slot="x"` / `slot='x'` (and `data-role="x"`, the bare attribute name);
+- the imperative JS form — `setAttribute('slot', 'x')` (and `setAttribute('data-role', 'x')` / the
+  property setter).
+
+Migrating the CSS and one demo is not enough. The `icon`→`leading` slot rename (`12fdf49`) updated
+`button.css` and the descriptor but left a stale `setAttribute('slot', 'icon')` in `site/main.ts` —
+invisible to a grep for the HTML `slot="icon"` form alone — and shipped a user-visible oversized-icon bug
+(the old name no longer matched `:has([slot=leading])`). Both spellings, both trees, every time.
+
 ## 2. Skills — procedures (recurring methods)
 
 A skill is the right unit only for a *recurring multi-step method*. Two qualify:
