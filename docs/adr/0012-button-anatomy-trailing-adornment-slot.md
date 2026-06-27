@@ -99,10 +99,14 @@ We ratify the **two-axis anatomy as the canonical family adornment standard** an
   second control needs the icon ramp), **not** this pass — recorded so it is not re-derived.
 - **Reserved roles are additive.** `tag`/`badge` land later as one `[data-role]` rule each — no slot, column,
   or descriptor surface change. This is the refinement's payoff.
-- **Most of the migration is already shipped.** `12fdf49` did the position rename, the `data-role` convention,
-  `button.md`, the tests, and the `permutations.ts` markup. The remaining build is small: the role-driven
-  sizing in `button.css` (+ `--ui-button-glyph`), the `button-doc.ts` specimens, a caret-sizing line in
-  `button.md`, and swapping the stale "ADR-0006 extended" citation to ADR-0012.
+- **Most of the migration is already shipped; `permutations.ts` is DONE.** `12fdf49` committed the position
+  rename, the `data-role` convention, `button.md`, the tests, **and the `permutations.ts` markup** (it now
+  emits `slot="leading" data-role="icon"` / `slot="trailing" data-role="caret"` across the four-structure
+  axis). So the **remaining anatomy build is exactly two things**: **(a)** the caret-sizing fix in `button.css`
+  (`--ui-button-glyph: var(--ui-button-font)` + a `[data-role="caret"]` font rule; the cell stays icon-sized),
+  and **(b)** the `button-doc.ts` anatomy specimens (button-doc still has none). Trailing residue only: a
+  caret-sizing line in `button.md` + swapping the stale "ADR-0006 extended" citation to ADR-0012 (and an
+  optional one-line `makeCaret` comment touch in the already-migrated `permutations.ts`).
 - **`button.css` is single-writer.** The role-sizing delta and the interaction-states deltas (ADR-0008/0009)
   both edit `button.css`, so one slice owns both (see the decomposition) — no collision.
 - **No popup AX debt** by recording the disclosure boundary explicitly.
@@ -116,6 +120,10 @@ We ratify the **two-axis anatomy as the canonical family adornment standard** an
    unchanged.
 2. **Role vocabulary — RESOLVED:** `icon` · `caret` active; `tag` · `badge` reserved; the attribute is
    `data-role`. Later additions are purely additive (one `[data-role]` rule each).
+3. **Trailing content icon — RESOLVED (YES).** A trailing `slot="trailing" data-role="icon"` content icon
+   (icon-sized, `= --ui-button-icon`, filling the cell) is a **supported role**, distinct from the caret
+   affordance — the natural reading of position ⟂ role, and it needs **no extra CSS** (the `[data-role="icon"]`
+   sizing rule already covers it at either edge).
 
 **Remaining note (not a blocker):** the shared `--ui-ind` icon ramp + `--ui-glyph-ratio` the spec names are
 inlined per-control today (`--ui-button-icon`; this adds `--ui-button-glyph`). Hoisting them into
