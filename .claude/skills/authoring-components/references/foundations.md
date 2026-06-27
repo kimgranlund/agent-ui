@@ -25,9 +25,10 @@ declaration-merge — **no decorators** (`erasableSyntaxOnly` bans them). (`docs
 
 ## Traits vs controllers
 
-Cross-cutting behaviour composes through `host.use()`: a **trait** is a stateless `(host, opts) => cleanup`
-applied *to* the host; a **controller** is a stateful object the host reads *from* (owns signals, exposes
-an API). Both ride the connection scope and die on disconnect. (`docs/plan.md` §7)
+Cross-cutting behaviour composes by calling the trait directly from the control's `connected()` (there is no
+`host.use()`): a **trait** is a stateless `(host, opts) => cleanup` applied *to* the host (e.g.
+`tabbable(this, …)`); a **controller** is a stateful object the host reads *from* (owns signals, exposes an
+API). Both ride the connection scope and die on disconnect. (`docs/plan.md` §7)
 
 ## The two design axes
 

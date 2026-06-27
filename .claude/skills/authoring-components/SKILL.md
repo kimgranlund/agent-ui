@@ -3,10 +3,11 @@ name: authoring-components
 description: >-
   Author or upgrade a ui-* component in @agent-ui/components to the standard shape — pick the base
   class + size-class, scaffold the per-component folder, declare typed props (static props +
-  ReactiveProps), wire behaviour with traits/controllers via host.use(), write the CSS trio (@scope +
-  geometry + token roles), the .api.json descriptor, the probes, and clear the per-component
-  definition-of-done. Use when adding a new ui-* control or component, or bringing an existing one up
-  to the framework standard ("add a ui-button", "build the checkbox", "is this component up to standard").
+  ReactiveProps), wire behaviour with traits invoked as (host, opts) => release from connected(),
+  write the single {name}.css (one @scope reading --ui-{name}-* token roles + geometry), the {name}.md
+  frontmatter descriptor, the probes, and clear the per-component definition-of-done. Use when adding a
+  new ui-* control or component, or bringing an existing one up to the framework standard
+  ("add a ui-button", "build the checkbox", "is this component up to standard").
 ---
 
 # Authoring components
@@ -18,14 +19,19 @@ canonical docs it **cites, never copies** — read them, don't restate them.
 
 ## Canonical sources (read these; do not duplicate them)
 
-- **API** — base classes, `static props`/`ReactiveProps` declare-merge, `host.use()`, `root`, `upgrade`,
-  events: `docs/plan.md` §5, realized in `packages/agent-ui/components/src/dom/`.
-- **Geometry & sizing** — the centering law, the two families, size-classes, the ramp:
-  `docs/references/geometry.md`.
-- **Color tokens** — the `--c-{family}-{role}` role system + consumption invariants:
-  `docs/references/tokens.md`.
-- **Naming / TS / layering** — `CLAUDE.md`. **Quality bar** — the COMPOSE/REALIZE
-  component rubric + the `{name}.md` frontmatter contract schema (both land at G5; cite as forthcoming until then).
+- **API** — base classes, `static props`/`ReactiveProps` declare-merge, `this.effect`/`this.listen`,
+  `internals`, prop upgrade, events: `docs/plan.md` §5, realized in `packages/agent-ui/components/src/dom/`.
+- **Traits** — the behaviour seam: a free `(host, opts) => release` function invoked from `connected()`
+  (no registry, no `host.use()`), in `packages/agent-ui/components/src/traits/` (`tabbable.ts`, `press-activation.ts`).
+- **Anatomy** — parts, slots, and the content model (host-as-grid vs a rendered cell): `docs/references/anatomy.md`.
+- **Geometry & sizing** — the centering law, the two families, size-classes, the ramp: `docs/references/geometry.md`.
+- **Color tokens** — the `--c-{family}-{role}` role system + consumption invariants: `docs/references/tokens.md`.
+- **Interaction states & motion** — the custom-state set + the first-paint motion-gate (`ready`):
+  `docs/references/interaction-states.md`.
+- **Packaging** — the per-component folder/files, the marginal-size budget + tree-shaking: `docs/references/component-packaging.md`.
+- **Naming / TS / layering** — `CLAUDE.md`. **Descriptor schema** — the `{name}.md` frontmatter contract
+  validator + the contract trip-wires: `packages/agent-ui/components/src/descriptor/component-descriptor.ts`.
+  **Quality bar** — the COMPOSE/REALIZE rubric (`references/rubric.md`; the `component-reviewer` agent scores it).
 
 ## When to use / when not
 
@@ -42,14 +48,20 @@ canonical docs it **cites, never copies** — read them, don't restate them.
 2. **Scaffold** the per-component folder — `controls/{name}/` (FACE form controls) or `components/{name}/`
    (display/layout/pattern catalog), holding exactly:
    `{name}.ts` · `{name}.css` (single file, ADR-0003) · `{name}.md` (descriptor, ADR-0004) · `{name}.test.ts`.
+   The folder layout, the marginal-size budget, and the tree-shake contract are `docs/references/component-packaging.md`.
 3. **Typed props** (`{name}.ts`) — declare `static props` with the `prop.*` constructors and the
    `interface UI{Name}Element extends ReactiveProps<typeof props> {}` declare-merge (plan.md §5). Closed
    sets are `prop.enum([...] )` (literal unions), never `enum`. Don't re-specify the API — follow it.
-4. **Behaviour** (`{name}.ts`) — extend the base; in `connected()` wire effects via `this.effect`,
-   listeners via `this.listen`, traits/controllers via `this.use`; `render()` returns `html\`\`` for a
-   content cell; ARIA via `this.internals` (never host attributes); emit only `change·input·select·open·
-   close·toggle`. Self-define `UI{Name}Element.define('ui-{name}')`. Re-route manual value-taking
-   accessors through `upgrade(...)` at connect.
+4. **Behaviour** (`{name}.ts`) — extend the base; in `connected()` wire effects via `this.effect` and
+   listeners via `this.listen`, and **call each trait directly** as `traitName(this, opts)` — the
+   `(host, opts) => release` seam (`tabbable(this, …)`, `pressActivation(this, …)`), never a registry/`this.use`.
+   The returned `release` is an early-teardown escape hatch; otherwise the trait auto-cleans on disconnect (its
+   listeners/effect ride the connection AbortSignal/scope). The content model is anatomy's call
+   (`docs/references/anatomy.md`): host-as-grid (ADR-0006) leaves `render()` the inherited no-op and places
+   light-DOM children in CSS, or `render()` returns `html\`\`` for a rendered content cell. Gate first-paint
+   motion behind the `ready` state (`docs/references/interaction-states.md`). ARIA via `this.internals` (never
+   host attributes); emit only `change·input·select·open·close·toggle`. Self-define at module scope:
+   `if (!customElements.get('ui-{name}')) customElements.define('ui-{name}', UI{Name}Element)`.
 5. **CSS** (single `{name}.css`, ADR-0003) — behaviour-only `.ts`; styling is pure CSS, two sectioned blocks:
    - a `:where(ui-{name})` **token block** declaring `--ui-{name}-*` from family roles
      (`var(--c-{family}-{role})`, tokens.md) and the dimensional ramps; `[size]`/`[tone]` repoint in pure CSS.
@@ -98,8 +110,9 @@ If any fails, fix the component (not the check) and re-run. Finalize only when a
 
 ## Worked example
 
-`ui-button` is the reference control — built end-to-end at **G5** (Control class; `variant`/`size` enum
-props; `pressActivation` trait; slotless `h/2` inline-pad geometry; single `button.css` + `button.md`
-descriptor (ADR-0003/0004); the dimensional-token adoption + first geometry trip-wire). Until it lands,
-this procedure is authored from the canonical docs above; the example fills in at G5 and becomes the
-copy-from template.
+`ui-button` is the realized reference — the copy-from template, built end-to-end at **G5**: `UIElement`;
+reflected `variant`/`size` enum + `disabled` boolean props; the `tabbable` + `pressActivation` traits
+called from `connected()`; host-as-grid content model (ADR-0006, `render()` stays the inherited no-op); the
+`ready` first-paint motion gate; single `button.css` + `button.md` descriptor (ADR-0003/0004); the
+dimensional-token adoption + the first geometry trip-wire. Read it end-to-end at
+`packages/agent-ui/components/src/controls/button/button.{ts,css,md}` (+ `button.test.ts`).

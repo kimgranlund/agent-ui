@@ -1,6 +1,6 @@
 # agent-ui — team roles & chain of command
 
-> Three reusable subagent role files that compose into a planning/execution team.
+> Reusable subagent role files — a planning/execution core (coordinator · design · build) plus specialists (a review critic, a token maker) — that compose into a team.
 > Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` (set in `.claude/settings.json`; env vars load at session start, so **restart the session** for teams to activate). · 2026-06-26
 
 ## The roles
@@ -10,6 +10,8 @@
 | [`orchestration-lead`](./orchestration-lead.md) | coordinator | chain-of-command, routing, the eval gate, the escalation loop, report rollups | `orchestration-design`, `loop-design` |
 | [`planning-lead`](./planning-lead.md) | design | decomposition (two planes) + PRD · SPEC · LLD · ADR + knowledge distillation | `decomposing-systems`, `authoring-prds/specs/llds` |
 | [`execution-lead`](./execution-lead.md) | build | implement to the LLD; enforce system-design rules; run the gates | `authoring-llds`, `decomposing-systems`, `authoring-components` |
+| [`component-reviewer`](./component-reviewer.md) | critic | adversarial review of one `ui-*` against the COMPOSE/REALIZE rubric + its `{name}.md` contract (read-only) | `authoring-components` |
+| [`tokens-specialist`](./tokens-specialist.md) | specialist | the token layer — `shared/src/tokens/{tokens.css,dimensions.css}`: the `--c-{family}-{role}` colour ladders (+ `-hover`/`-active` state roles), `--c-focus-ring`, the dimensional/motion constants | `authoring-components` |
 
 Each is authored to the `authoring-agents` contract (scoped `tools`, deliberate `model`, trigger `description`, judgment-frame body). They are reusable role files: the host (or a team) composes them; a subagent does not spawn other subagents.
 
