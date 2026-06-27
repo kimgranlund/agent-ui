@@ -7,6 +7,8 @@
     "packages/agent-ui/*"
   ],
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
     "check": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
