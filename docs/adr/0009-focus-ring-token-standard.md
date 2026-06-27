@@ -9,7 +9,7 @@
 > | **Proposed by** | planning-lead — the design seat, establishing the fleet focus-indicator standard |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |
 > | **Repairs** | **NEW** `@agent-ui/shared/src/tokens/tokens.css` (the `--c-focus-ring` role + its forced-colors mapping) · **NEW** `@agent-ui/shared/src/tokens/dimensions.css` (`--ui-focus-ring-width` / `--ui-focus-ring-offset`) · `references/interaction-states.md` (the focus-ring section) · `controls/button/button.css` (the first `:focus-visible` consumer) · `goals §G5` (the booked G4 focus deferral) |
-> | **Supersedes / Superseded by** | Relates: **ADR-0008** (focus is the fourth interaction state) · **ADR-0010** (the `tabbable` trait makes the host focusable so the ring can show) · **ADR-0007** (the dimensions layer this extends) |
+> | **Supersedes / Superseded by** | Relates: **ADR-0008** (focus is the fourth interaction state) · **ADR-0010** (the `tabbable` trait makes the host focusable so the ring can show) · **ADR-0007** (the dimensions layer this extends) · **Amended by ADR-0014** (the `:focus-within` text-entry-control variant — see the `## Amendment` below) |
 
 ## Context
 
@@ -80,6 +80,37 @@ offset**, **`:focus-visible` only**, and it **MUST** carry the forced-colors `�
 The **exact hue is delegated to the `tok-focus` token slice** (default to a distinct, high-contrast focus
 accent). The names are pinned, so this blocks nothing structural — `css-button` builds the `:focus-visible`
 recipe against them concurrently.
+
+## Amendment — `:focus-within` for text-entry controls (2026-06-27, introduced by ADR-0014)
+
+> Status: ratified 2026-06-27 (orchestration-lead, on accept of **ADR-0014**). Append-only; this **adds** a
+> variant and does **not** edit the Context / Decision / Consequences above.
+
+The original Decision **stands**: keyboard-operated controls (`ui-button` and its siblings) draw the shared ring on
+`:focus-visible` — keyboard-only, no ring on a mouse click. **ADR-0014 (`ui-text-field`) introduces the first
+*text-entry* control**, where native parity requires the field to show focus on **all** focus — including a mouse
+click — because a text input must visibly signal where typing will land.
+
+We add a **text-entry-control variant of the SAME ring**: the field's `@scope` block uses **`:focus-within`** (not
+`:focus-visible`), reading the **identical** shared tokens (`--c-focus-ring`, `--ui-focus-ring-width` /
+`--ui-focus-ring-offset`) and the same layout-neutral `outline` recipe — **only the trigger pseudo-class differs**:
+
+```css
+:scope:focus-within {   /* text-entry control — ring on ALL focus, incl. pointer (native input parity) */
+  outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+  outline-offset: var(--ui-focus-ring-offset);
+}
+```
+
+`:focus-within` (not `:focus-visible` on the editor) is used because the focusable element is the editor **child**,
+not the host; the ring is drawn on the host frame off the focused editor. The selection rule for future controls:
+
+- **keyboard-operated control** (button, checkbox, switch, radio) → **`:focus-visible`** (the original Decision).
+- **text-entry control** (a focusable editable surface: text-field, number-field, …) → **`:focus-within`**.
+
+Both are the one fleet ring on the one set of tokens; only the trigger reflects the control kind. This is a foreseen
+follow-through (a second consumer needing the same ring on a different trigger), not a reversal — the keyboard-control
+default and the shared tokens/recipe are unchanged.
 
 ## Alternatives considered
 
