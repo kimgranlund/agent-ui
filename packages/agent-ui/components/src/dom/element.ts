@@ -55,6 +55,10 @@ export class UIElement extends HTMLElement {
     this.upgradeProps()
     this.#scope = createScope()
     this.#ac = new AbortController()
+    // The connection scope + AbortController are now live, so a `this.effect`/`this.listen` registered in
+    // `connected()` is scope-owned + rides the abort signal. `connected()` runs BEFORE the first render so
+    // host-level setup (traits, signals) is in place before the first commit — see the ordering note below.
+    this.connected()
     // The ONE render effect, installed through `this.effect` so there is a SINGLE scope-owned-effect
     // path (no duplication). It is created inside the scope (the kernel's `activeOwner.add`) and
     // disposed with it at disconnect — every render pass runs under the scope, so a directive attaching
@@ -67,6 +71,9 @@ export class UIElement extends HTMLElement {
   }
 
   disconnectedCallback(): void {
+    // Let the control act while its connected resources are STILL live (scope/effects alive, listeners
+    // unaborted) — `disconnected()` runs BEFORE the teardown below.
+    this.disconnected()
     this.#scope?.dispose() // every computed/effect created under the scope dies → zero subscribers
     this.#ac?.abort() // every listener riding the connection signal dies → zero live listeners
     this.#scope = null
@@ -179,6 +186,22 @@ export class UIElement extends HTMLElement {
   protected get connectionSignal(): AbortSignal | null {
     return this.#ac?.signal ?? null
   }
+
+  /**
+   * Overridable connect hook. Runs on connect with the connection scope + `AbortSignal` live, so a
+   * `this.effect`/`this.listen` registered here is scope-owned and auto-removed on disconnect. It runs
+   * BEFORE the first render (the ordering: upgradeProps → scope/ac → `connected()` → render effect), so a
+   * control's host-level setup (traits, signals) is in place before the first commit. Override instead of
+   * `connectedCallback` — no `super` call needed. (Post-render DOM work belongs in `updateComplete`.)
+   */
+  protected connected(): void {}
+
+  /**
+   * Overridable disconnect hook. Runs on disconnect BEFORE the connection scope is disposed / the signal
+   * aborted, so the control can act while its connected resources are still live. Override instead of
+   * `disconnectedCallback` — no `super` call needed.
+   */
+  protected disconnected(): void {}
 
   /**
    * Overridable render hook. Return a `TemplateResult` (`html\`…\``) and the scope-owned render effect
