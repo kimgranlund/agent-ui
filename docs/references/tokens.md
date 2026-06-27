@@ -99,11 +99,21 @@ ui-button[mode=default]:state(--selected) { --ui-button-bg: var(--_tonal-sel); }
 
 `-border` = `transparent` (or `var(--c-{f}-outline-variant)` when the tonal mode is the *outlined* variant).
 
-**disabled** overrides family with muted neutral roles and goes inert (no hover/selected):
+**disabled** overrides family with muted neutral roles on **both** triggers — the author attribute
+`[mode=disabled]` and the platform state `:disabled` — and holds the state overlay at idle (no
+hover/selected lift):
 
 ```css
-ui-button[mode=disabled] { --ui-button-bg: var(--c-neutral-surface-high); --ui-button-ink: var(--c-neutral-on-surface-variant); --ui-button-border: transparent; }
+:where(ui-button[mode=disabled]), :where(ui-button:disabled) {
+  --ui-button-bg: var(--c-neutral-surface-high); --ui-button-ink: var(--c-neutral-on-surface-variant); --ui-button-border: transparent;
+}
+:scope:is([mode=disabled], :disabled):hover,
+:scope:is([mode=disabled], :disabled):state(--selected) { background: var(--ui-button-bg); }
 ```
+
+(The *behavior* — `:disabled` is canonical, `mode=disabled` reflects into the `disabled` property, and
+inertness + forced-colors `GrayText` key off `:disabled` not the attribute — is a FACE rule; see
+`authoring-components`.)
 
 **forced-colors is free** — every value resolves through a `--c-{f}-{role}` role, so the token layer's
 WHCM mapping (anchors → `Highlight`, on-color → `HighlightText`, inks → `CanvasText`, disabled →

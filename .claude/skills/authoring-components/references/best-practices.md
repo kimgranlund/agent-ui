@@ -11,6 +11,10 @@
 - Model closed sets as `prop.enum([...])` (literal unions) — never `enum` (banned), never a free `string`.
 - Keep the host **light DOM**; set ARIA **only** through `internals`; emit only
   `change · input · select · open · close · toggle`.
+- **Disabled is `:disabled`, not just an attribute.** Inertness (no activation, non-focusable,
+  `aria-disabled`, no form participation) keys off `:disabled` / `formDisabledCallback`; a
+  `disabled` / `[mode=disabled]` attribute MUST reflect into the `disabled` property so `:disabled` is
+  canonical and forced-colors `GrayText` applies. A styled-but-clickable disabled is the classic a11y trap.
 - Write the **CSS trio**: tokens in `:where(ui-{name})` from `--c-` roles; styles in `@scope (ui-{name})`
   consuming **only** `--ui-{name}-*`; a barrel `@import`ing both.
 - Wire geometry **off the ramp** (`block-size`, `padding-block: 0`, the slot/slotless inline-pad,
