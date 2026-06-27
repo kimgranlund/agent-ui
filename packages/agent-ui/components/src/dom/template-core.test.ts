@@ -66,9 +66,9 @@ describe('template core — per-part commit (D2: child + attr)', () => {
 
   it('unsupported-position fails LOUD, not silent (slice-1 invariant; slice 3 enriches the diagnostics)', () => {
     const c = document.createElement('div')
-    // A hole mixed into static attribute text — the marker is a substring, not a whole-value hole — would
-    // otherwise drop the value silently. The hole-count invariant throws instead.
-    expect(() => render(html`<div class="a ${'b'}"></div>`, c)).toThrow(/unsupported binding position/)
+    // A hole mixed into static attribute text — not a whole-value hole — would otherwise drop the value
+    // silently. It throws instead. (Slice 3 enriched the message to NAME the position; see template-positions.test.ts.)
+    expect(() => render(html`<div class="a ${'b'}"></div>`, c)).toThrow(/PARTIAL attribute/)
   })
 })
 
