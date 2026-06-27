@@ -41,3 +41,4 @@ When `execution-lead` (or anyone) hits a constraint that the design can't satisf
 | [0004](./0004-component-descriptor-md-frontmatter.md) | Component descriptor: `{name}.md` frontmatter replaces `{name}.api.json` | accepted | plan §10 · process §1/§4 · goals §G5 · authoring-components |
 | [0005](./0005-lazy-upgrade-property-wins.md) | Lazy-property upgrade precedence: property-wins | accepted | goals §G2 · plan §5 |
 | [0006](./0006-button-anatomy-optional-icon-slot-density-acceptance.md) | Button anatomy: optional leading icon slot + law-true `[density]` acceptance | accepted | goals §G5 |
+| [0007](./0007-universal-selector-ramp-tokens.md) | Universal-selector ramp tokens: derived dimensions on `*` for subtree scale/density | accepted | shared `dimensions.css` (s6) · delivers ADR-0006 subtree `[density]` |

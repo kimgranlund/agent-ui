@@ -15,30 +15,45 @@ declare const process: { cwd(): string }
 const css = readFileSync(`${process.cwd()}/packages/agent-ui/shared/src/tokens/dimensions.css`, 'utf8') as string
 const flat = css.replace(/\s+/g, ' ') // whitespace-insensitive `calc(...)` matching
 
+// Isolate a selector's block to pin WHERE a token is declared. Strip CSS comments first (they hold `}`,
+// e.g. `{size}`, which would truncate a `[^}]*` block); custom-property VALUES hold no `}`, so on the
+// comment-free text `[^}]*` cleanly captures one block. The derived ramp MUST live on `*` (universal), not
+// `:root`: a var() in a custom-property value is substituted where the property is DECLARED, so on :root the
+// ramp would freeze --ui-scale/--ui-density = 1 and a subtree [scale]/[density] would be dead. The probe
+// pins the ramp to the `*` block (and OFF :root) to guard that.
+const bare = flat.replace(/\/\*.*?\*\//g, '') // comment-free, single-spaced
+const rootBlock = (bare.match(/:root\s*\{[^}]*\}/) ?? [''])[0]
+const universalBlock = (bare.match(/(?:^|}|;)\s*\*\s*\{[^}]*\}/) ?? [''])[0]
+
 describe('dimensions.css — the Control-band ramp + scale/density multipliers (s6)', () => {
-  it('declares the global multipliers, defaulting to 1', () => {
+  it('declares the global multipliers on :root, defaulting to 1', () => {
     expect(css.length).toBeGreaterThan(0) // anti-vacuous: the ?raw glob actually found the CSS
-    expect(flat).toMatch(/--ui-scale:\s*1\s*;/)
-    expect(flat).toMatch(/--ui-density:\s*1\s*;/)
+    expect(rootBlock).toMatch(/--ui-scale:\s*1\s*;/)
+    expect(rootBlock).toMatch(/--ui-density:\s*1\s*;/)
   })
 
-  it('declares the height ramp (sm·md·lg = 24·28·36) scaled by --ui-scale', () => {
-    expect(flat).toMatch(/--ui-height-sm:\s*calc\(\s*24px\s*\*\s*var\(--ui-scale\)\s*\)/)
-    expect(flat).toMatch(/--ui-height-md:\s*calc\(\s*28px\s*\*\s*var\(--ui-scale\)\s*\)/)
-    expect(flat).toMatch(/--ui-height-lg:\s*calc\(\s*36px\s*\*\s*var\(--ui-scale\)\s*\)/)
+  it('declares the height ramp (sm·md·lg = 24·28·36) scaled by --ui-scale, on the `*` block', () => {
+    expect(universalBlock).toMatch(/--ui-height-sm:\s*calc\(\s*24px\s*\*\s*var\(--ui-scale\)\s*\)/)
+    expect(universalBlock).toMatch(/--ui-height-md:\s*calc\(\s*28px\s*\*\s*var\(--ui-scale\)\s*\)/)
+    expect(universalBlock).toMatch(/--ui-height-lg:\s*calc\(\s*36px\s*\*\s*var\(--ui-scale\)\s*\)/)
   })
 
-  it('declares the font ramp (sm·md·lg = 13·14·16) scaled by --ui-scale', () => {
-    expect(flat).toMatch(/--ui-font-sm:\s*calc\(\s*13px\s*\*\s*var\(--ui-scale\)\s*\)/)
-    expect(flat).toMatch(/--ui-font-md:\s*calc\(\s*14px\s*\*\s*var\(--ui-scale\)\s*\)/)
-    expect(flat).toMatch(/--ui-font-lg:\s*calc\(\s*16px\s*\*\s*var\(--ui-scale\)\s*\)/)
+  it('declares the font ramp (sm·md·lg = 13·14·16) scaled by --ui-scale, on the `*` block', () => {
+    expect(universalBlock).toMatch(/--ui-font-sm:\s*calc\(\s*13px\s*\*\s*var\(--ui-scale\)\s*\)/)
+    expect(universalBlock).toMatch(/--ui-font-md:\s*calc\(\s*14px\s*\*\s*var\(--ui-scale\)\s*\)/)
+    expect(universalBlock).toMatch(/--ui-font-lg:\s*calc\(\s*16px\s*\*\s*var\(--ui-scale\)\s*\)/)
   })
 
-  it('derives the rhythm gap from font/2 and multiplies it by --ui-density (the ONE density-bearing quantity)', () => {
+  it('derives the rhythm gap from font/2 and multiplies it by --ui-density (the ONE density-bearing quantity), on the `*` block', () => {
     for (const size of ['sm', 'md', 'lg']) {
       const re = new RegExp(`--ui-gap-${size}:\\s*calc\\(\\s*var\\(--ui-font-${size}\\)\\s*/\\s*2\\s*\\*\\s*var\\(--ui-density\\)\\s*\\)`)
-      expect(flat).toMatch(re)
+      expect(universalBlock).toMatch(re)
     }
+  })
+
+  it('keeps the DERIVED ramp OFF :root (the var() pre-substitution gotcha) — so subtree scale/density stay live', () => {
+    expect(universalBlock.length).toBeGreaterThan(0) // anti-vacuous: the `*` block was actually isolated
+    expect(rootBlock).not.toMatch(/--ui-height|--ui-font|--ui-gap/)
   })
 
   it('[scale] ancestor selectors repoint --ui-scale (the frame multiplier)', () => {

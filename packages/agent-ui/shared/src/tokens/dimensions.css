@@ -16,7 +16,17 @@
      (custom properties inherit, so the nearest ancestor wins by cascade proximity). */
   --ui-scale: 1;
   --ui-density: 1;
+}
 
+/* The DERIVED ramp lives on `*` (universal), NOT `:root` — deliberately. A var() inside a custom-property
+   value is substituted where the property is DECLARED, not where it is read: declared on :root, every ramp
+   token would freeze the :root values of --ui-scale/--ui-density (= 1) into a literal, so a SUBTREE
+   [scale]/[density] (on a wrapper, not <html>) would repoint the multiplier but the ramp would never
+   re-multiply — subtree scale/density would be dead. Declaring the ramp on `*` makes EACH element
+   re-substitute the --ui-scale/--ui-density IT inherits, so subtree repointing works. Do NOT "simplify"
+   this back onto :root — that re-breaks subtree scale/density. (~9 inheritable custom-prop declarations per
+   element; declarations don't trigger layout/paint, so the cost is negligible.) */
+* {
   /* Control-band ramp, base px @ scale 1 (geometry-sizing-spec.md §1): SM·MD·LG height = 24·28·36,
      font = 13·14·16 (`font ≈ 3.16·height^0.45`, rounded). Frame + font → `× var(--ui-scale)`. */
   --ui-height-sm: calc(24px * var(--ui-scale));
