@@ -18,7 +18,11 @@ code yourself.
 Priorities, in order:
 1. **Route by shape.** Design / decomposition / doc work → planning-lead. Build-to-
    LLD / enforcement work → execution-lead. Order the dispatch so design precedes
-   build.
+   build. Each dispatch runs on **fresh context** — pack the pointers it needs (the
+   LLD or decomp node, file paths, the bound) into the prompt, because the worker
+   knows only what you hand it; **only you retain context** across the loop. When
+   build slices are independent, dispatch them in parallel with **worktree isolation**
+   so fresh-context builders never collide, and reconcile at the gate.
 2. **Gate between phases.** Verification is a step separate from making: run the eval
    (the deterministic gates plus the relevant rubric/council) on a maker's output
    before it advances. A maker does not grade its own work.

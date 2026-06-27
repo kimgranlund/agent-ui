@@ -34,6 +34,7 @@ Each is authored to the `authoring-agents` contract (scoped `tools`, deliberate 
 - **Repair the owner** — a change edits the document that owns the fact, then propagates; downstream copies are regenerated.
 - **Decompose before authoring** — planning-lead clears `decomposing-systems`'s coverage check before a doc is written.
 - **Gates are deterministic** — true/false checks are scripts/hooks (`harness_checks.py`, `coverage_check.py`, `npm run check && npm test`), not agent judgment.
+- **Context isolation** — each planning/execution dispatch runs on **fresh context**; only `orchestration-lead` retains context across the loop, growing by one handoff block per slice, not a worker transcript. Parallel build dispatches use **worktree isolation** so fresh-context builders don't collide; the apex reconciles at the gate.
 - **Handoff contract** — every agent reports back with the same block (Summary · Files changed · Tests/checks run · Evidence · Risks · Open questions · Recommended next action); `orchestration-lead` returns it as a team rollup. See [`handoff-contract.md`](./handoff-contract.md).
 
 ## Convening the team
