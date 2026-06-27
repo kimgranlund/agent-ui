@@ -120,7 +120,7 @@
      distinct from idle AND from each other in BOTH schemes, replacing the --c-primary-dim/-high pairing whose
      LIGHT steps collapsed onto --c-primary-650. Fleet roles: any control's primary solid fill steps these. */
   --c-primary-hover: light-dark(var(--c-primary-700), var(--c-primary-600));
-  --c-primary-active: light-dark(var(--c-primary-750), var(--c-primary-350));
+  --c-primary-active: light-dark(var(--c-primary-750), var(--c-primary-700));
   --c-primary-dim: light-dark(var(--c-primary-650), var(--c-primary-700));
   --c-primary-bright: light-dark(var(--c-primary-350), var(--c-primary-400));
   --c-primary-low: light-dark(var(--c-primary-350), var(--c-primary-700));

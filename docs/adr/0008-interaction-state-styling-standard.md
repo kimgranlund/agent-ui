@@ -121,8 +121,9 @@ token-layer dedicated `--c-{f}-hover/-active` roles, never a component `color-mi
 (`tok-states` slice; host-ratified values):
 
 - **Two new fleet roles** in `tokens.css`: `--c-primary-hover: light-dark(--c-primary-700, --c-primary-600)` and
-  `--c-primary-active: light-dark(--c-primary-750, --c-primary-350)` — a real three-step ladder in BOTH schemes
-  (light 550→700→750, dark 450→600→350). *(Hover steps host-adjusted 2026-06-27: light 650→700, dark 400→600.)*
+  `--c-primary-active: light-dark(--c-primary-750, --c-primary-700)` — a real three-step **monotonic-darkening**
+  ladder in BOTH schemes (light 550→700→750, dark 450→600→700). *(Host-tuned 2026-06-27: hover light 650→700 /
+  dark 400→600; active dark 350→700 so hover and active darken in the same direction in both schemes.)*
 - The button's SOLID variant repoints `--ui-button-bg-hover`/`-bg-active` to these roles; soft/ghost stay on the
   (already-distinct) container ladder, the disabled hold is unchanged.
 - The smoke's RISK-1 tripwire flipped from `hover==active` to `hover != active` — green in Chromium AND WebKit;
