@@ -7,6 +7,7 @@
 tag: ui-button
 tier: control          # geometry size-class (Control band — full control height; geometry.md §"five size-classes")
 extends: UIElement     # reactive display control, NOT form-associated (face below)
+# bundle: the self-defining ui-* family is 4435 B gz (11660 B min) — within the 8192 B gz budget; enforced each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors button.ts `static props`
   - name: variant
@@ -43,7 +44,8 @@ slots:                 # slots name a POSITION; a slotted adornment's CONTENT ro
     description: Optional trailing adornment — a light-DOM `[slot="trailing"]` child (commonly a caret/chevron/arrow with `data-role="caret"`) placed in the end cell. Layout only; carry any popup/disclosure meaning via ARIA on the host and mark the glyph aria-hidden.
 
 parts: []              # light-DOM, host-as-grid — no shadow parts exposed
-customStates: []       # no ElementInternals custom states (:state()) at G5
+customStates:          # :state(ready) — the motion gate (ADR-0008): armed one frame past first paint via internals.states (never a host attr) so the upgrade SNAPS and only subsequent state changes animate
+  - ready
 
 face:
   formAssociated: false  # NOT a FACE form control — extends UIElement, no value/validity participation
