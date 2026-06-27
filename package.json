@@ -10,10 +10,14 @@
     "check": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:browser": "vitest run --config vitest.browser.config.ts",
     "size": "node scripts/measure-size.mjs"
   },
   "devDependencies": {
+    "@vitest/browser": "^4.1.9",
+    "@vitest/browser-playwright": "^4.1.9",
     "jsdom": "^29.1.1",
+    "playwright": "^1.61.1",
     "typescript": "~6.0.2",
     "vite": "^8.1.0",
     "vitest": "^4.1.9"
