@@ -4,10 +4,13 @@
  * colour roles declared by the foundation barrels (imported first via _page.ts), so it tracks light/dark. */
 
 /* ── the 3-region flow: three cards with arrow connectors, wrapping to a stack on narrow viewports ──────── */
-.canvas-flow,
-[data-page-content] {
-  inline-size: min(72rem, 100% - 3rem);
-  margin-inline: auto;
+/* This page is a full-bleed gen-UI canvas. a2ui-canvas.css only loads here, so OVERRIDE the shared shell's
+ * centered 72rem column to use the WHOLE viewport width AND height — the three regions fill the available
+ * space and scroll INSIDE themselves rather than growing a whole-page scrollbar. */
+#app {
+  min-block-size: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 [data-page-content] {
@@ -15,12 +18,18 @@
   flex-wrap: wrap;
   align-items: stretch;
   gap: 1rem;
-  margin-block: 1.5rem 3rem;
+  inline-size: auto; /* override the shell's min(72rem, …) centered column */
+  margin-inline: 0;
+  padding-inline: 1.5rem; /* a viewport gutter, not a max-width */
+  margin-block: 1.5rem;
+  flex: 1; /* take the height left under the header */
+  min-block-size: 0; /* let the regions' inner content scroll instead of growing the page */
 }
 
 .region {
   flex: 1 1 19rem;
   min-inline-size: 0; /* let <pre> shrink + scroll instead of forcing the card wider */
+  min-block-size: 0; /* …and the body scroll instead of growing the card past the viewport */
   display: flex;
   flex-direction: column;
   padding: 1.1rem 1.2rem 1.3rem;
@@ -62,6 +71,7 @@
   flex-direction: column;
   gap: 0.85rem;
   flex: 1;
+  min-block-size: 0; /* allow a scrolling child (the log) to fit rather than grow the region */
 }
 
 /* The arrow between regions — horizontal on a row, rotating to point down once the cards wrap into a stack. */
@@ -94,6 +104,7 @@
   margin: 0;
   padding: 0.7rem 0.85rem;
   overflow-x: auto;
+  scrollbar-width: none; /* Firefox — chromeless scroll */
   border: 1px solid var(--c-neutral-outline-variant, #e2e2e2);
   border-radius: 8px;
   background: var(--c-neutral-surface, #fff);
@@ -101,6 +112,13 @@
   font-size: 0.76rem;
   line-height: 1.5;
   white-space: pre;
+}
+
+/* Chromeless scroll on the scroll regions (WebKit/Chromium) — kept scrollable, just no visible bar. */
+.code::-webkit-scrollbar,
+.msg-log::-webkit-scrollbar {
+  inline-size: 0;
+  block-size: 0;
 }
 
 /* ── the toolbar (page affordances) ────────────────────────────────────────────────────────────────────── */
@@ -134,9 +152,9 @@
   margin: 0;
   padding: 0;
   flex: 1;
-  min-block-size: 8rem;
-  max-block-size: 22rem;
+  min-block-size: 0; /* fill the messages region + scroll INSIDE it (no whole-page scrollbar) */
   overflow-y: auto;
+  scrollbar-width: none; /* Firefox — chromeless scroll */
   list-style: none;
 }
 
