@@ -28,4 +28,19 @@ describe('ui-button browser-truth harness (s12)', () => {
 
     el.remove()
   })
+
+  it('disables text selection on the control surface in a real engine (incl. WebKit)', () => {
+    const el = document.createElement('ui-button')
+    el.textContent = 'Go'
+    document.body.append(el)
+
+    // The label is a control affordance, not selectable text. WebKit/Safari only honours this via the
+    // `-webkit-user-select` prefix AND exposes the computed value under the prefixed CSSOM name — the
+    // unprefixed `userSelect` is empty there (proven by this test: it was the failure before the prefix).
+    // Chromium exposes the unprefixed name. Read both so the assertion is cross-engine-true.
+    const cs = getComputedStyle(el) as CSSStyleDeclaration & { webkitUserSelect?: string }
+    expect(cs.userSelect || cs.webkitUserSelect).toBe('none')
+
+    el.remove()
+  })
 })

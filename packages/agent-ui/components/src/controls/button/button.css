@@ -79,6 +79,7 @@
     border: 1px solid var(--ui-button-border);
     border-radius: calc(var(--ui-button-height) / 2); /* pill radius = h/2 */
     cursor: pointer;
+    -webkit-user-select: none; /* WebKit/Safari still needs the prefix — the label is a control surface, not selectable text */
     user-select: none;
   }
 
