@@ -49,6 +49,82 @@ Every family exposes the same roles, so a component swaps families by changing o
   survive forced-colors for free.
 - **Contrast**: surface-text roles are WCAG-AA gated; accent on-color pairs are report-only.
 
+## Applying roles to a control — the channel pattern
+
+A control's color is **three channels**, not a `family × mode × state` matrix. In `:where(ui-{cmp})`
+declare, and have `@scope` styles read, only:
+
+```css
+--ui-{cmp}-bg      /* fill    */
+--ui-{cmp}-ink     /* label   */
+--ui-{cmp}-border  /* outline */
+```
+
+Every resolved value is a `var(--c-{family}-{role})` — **no `color-mix`**: a mix ratio is a
+component-authored *color opinion*, and the rule is that components hold zero color opinions; all color
+stays in the token layer. CSS also can't interpolate a role *name* from an attribute, so the mapping is
+two layers.
+
+**1. family → pointer rows (once per family).** Each `[family]` selector binds that family's roles to
+family-agnostic intermediates; all the mode/state logic below reads only the intermediates:
+
+```css
+ui-button[family=primary] {
+  --_fill-idle: var(--c-primary);  --_fill-hover: var(--c-primary-dim);  --_fill-sel: var(--c-primary-high);
+  --_on-fill:   var(--c-primary-on-primary);
+  --_tonal-idle: var(--c-primary-container-low); --_tonal-hover: var(--c-primary-container); --_tonal-sel: var(--c-primary-container-high);
+  --_on-tonal:  var(--c-primary-on-surface);
+}
+/* …one row per supported family, identical shape, swapping the family token */
+```
+
+**2. mode × state → shared, family-agnostic logic** over the intermediates (`disabled` is an override,
+so the authored matrix is 2 modes × 3 states):
+
+| | idle | hover | selected |
+|---|---|---|---|
+| **filled** bg | `--c-{f}` | `--c-{f}-dim` | `--c-{f}-high` |
+| **filled** ink | `--c-{f}-on-{f}` | ″ | ″ |
+| **tonal** bg | `--c-{f}-container-low` | `--c-{f}-container` | `--c-{f}-container-high` |
+| **tonal** ink | `--c-{f}-on-surface` | ″ | ″ |
+
+```css
+:where(ui-button) { --ui-button-bg: var(--_fill-idle); --ui-button-ink: var(--_on-fill); --ui-button-border: transparent; }
+ui-button:hover                           { --ui-button-bg: var(--_fill-hover); }
+ui-button:state(--selected)               { --ui-button-bg: var(--_fill-sel); }
+ui-button[mode=default]                   { --ui-button-bg: var(--_tonal-idle); --ui-button-ink: var(--_on-tonal); }
+ui-button[mode=default]:hover             { --ui-button-bg: var(--_tonal-hover); }
+ui-button[mode=default]:state(--selected) { --ui-button-bg: var(--_tonal-sel); }
+```
+
+`-border` = `transparent` (or `var(--c-{f}-outline-variant)` when the tonal mode is the *outlined* variant).
+
+**disabled** overrides family with muted neutral roles and goes inert (no hover/selected):
+
+```css
+ui-button[mode=disabled] { --ui-button-bg: var(--c-neutral-surface-high); --ui-button-ink: var(--c-neutral-on-surface-variant); --ui-button-border: transparent; }
+```
+
+**forced-colors is free** — every value resolves through a `--c-{f}-{role}` role, so the token layer's
+WHCM mapping (anchors → `Highlight`, on-color → `HighlightText`, inks → `CanvasText`, disabled →
+`GrayText`) covers every cell with zero per-control rules.
+
+**Net:** N family pointer-rows + one family-agnostic mode×state block (3 fill steps + 3 tonal steps + 2
+constant inks) + 1 disabled override — all `var()` over semantic roles, **no `color-mix`**, never a
+72-cell grid. First worked example: `ui-button` (G5).
+
+> **Two decisions to record (resolve once, fleet-wide):**
+> 1. **Family vocabulary.** The proposed control vocabulary `neutral · primary · secondary · tertiary ·
+>    system · positive · warning · critical` maps to the token families with three renames:
+>    **system↔info · positive↔success · critical↔danger**. Resolve: **(a)** *alias at the component
+>    boundary* — the `family` attr maps `system→info` etc.; tokens keep `info/success/danger`
+>    *(recommended, low-risk)*; or **(b)** *rename the token families*. Default = alias.
+> 2. **State separation — the no-`color-mix` consequence.** hover/selected now lean on the **accent
+>    ladder** (`--c-{f}` / `-dim` / `-high`) and **container ladder** (`-container-low` / `-container` /
+>    `-container-high`) giving enough visual separation idle → hover → selected. **Verify in the real
+>    palette**; if a step is too close, the token layer needs dedicated per-state roles (`--c-{f}-hover` /
+>    `-selected`) + a `--c-*-disabled` pair — states can no longer be synthesized in the component.
+
 ## Source
 
 The OKLCH values are canonical in `@agent-ui/shared/src/tokens/tokens.css` (8 families × {primitives +
