@@ -1,0 +1,18 @@
+{
+  // The /site type gate (wave-2 prep). `site/` is real shipped code, so it type-checks to the same gold bar
+  // as the packages. This EXTENDS the root tsconfig, inheriting every strict flag (erasableSyntaxOnly,
+  // verbatimModuleSyntax, allowImportingTsExtensions, moduleResolution "bundler", noUnusedLocals/Parameters,
+  // the `@agent-ui/*` `paths`, and `types: ["vite/client"]`) — single source of truth, no drift. Only the two
+  // site-specific deltas are overridden below. Run via `npm run check:site` (root `npm run check` does NOT
+  // cover site/, since the root `include` is `packages/agent-ui/*/src`).
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    // The site is a browser app: widen the lib to ESNext + the DOM surfaces it uses.
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "noEmit": true
+  },
+  // Everything under site/ — page modules, lib/, the shared shell, and the css-modules shim (`*.d.ts`
+  // matches `**/*.ts`). Bare `@agent-ui/*` specifiers resolve through the package `exports` maps (bundler
+  // resolution); `.css` side-effect imports resolve via the `*.css` ambient shim in css-modules.d.ts.
+  "include": ["**/*.ts"]
+}

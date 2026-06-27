@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "check": "tsc",
+    "check:site": "tsc -p site/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:browser": "vitest run --config vitest.browser.config.ts",
