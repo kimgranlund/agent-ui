@@ -1,0 +1,61 @@
+/* dimensions.css — the dimensional token ramp (geometry.md, the law; values from geometry-sizing-spec.md
+ * §1, the hand-tabled ramp). The CONTROL band: per-size height + font for sm/md/lg, plus the two global
+ * multipliers the geometry consumes — [scale] (the frame size) and [density] (the rhythm).
+ *
+ * The two families (geometry.md): FRAME ∝ height (height, inline-pad, min-inline-size, radius) and RHYTHM
+ * ∝ font (gap = font/2, caret = font). [scale] multiplies BOTH the frame and the font; [density] multiplies
+ * the RHYTHM ONLY (the gap) — never the frame, since scaling the frame un-centers the glyph and breaks the
+ * square. So height/font carry `var(--ui-scale)`; the gap carries `var(--ui-density)` (and font, hence scale).
+ *
+ * Loaded AFTER tokens.css (color) in the foundation CSS stack; consumed by a control's `:where(ui-{cmp})`
+ * block (e.g. button.css repoints `--ui-button-height: var(--ui-height-md)` etc.). Pure tokens — no imports.
+ */
+
+:root {
+  /* The two global multipliers. Default = 1; an ancestor [scale]/[density] repoints them for its subtree
+     (custom properties inherit, so the nearest ancestor wins by cascade proximity). */
+  --ui-scale: 1;
+  --ui-density: 1;
+
+  /* Control-band ramp, base px @ scale 1 (geometry-sizing-spec.md §1): SM·MD·LG height = 24·28·36,
+     font = 13·14·16 (`font ≈ 3.16·height^0.45`, rounded). Frame + font → `× var(--ui-scale)`. */
+  --ui-height-sm: calc(24px * var(--ui-scale));
+  --ui-height-md: calc(28px * var(--ui-scale));
+  --ui-height-lg: calc(36px * var(--ui-scale));
+
+  --ui-font-sm: calc(13px * var(--ui-scale));
+  --ui-font-md: calc(14px * var(--ui-scale));
+  --ui-font-lg: calc(16px * var(--ui-scale));
+
+  /* Rhythm: the gap = font / 2, and density rides it (× var(--ui-density)). This is the ONE quantity
+     density touches — the frame (height/font/inline-pad) is density-invariant. (gap also carries scale,
+     via font.) A control reads `--ui-gap-{size}` for its slot↔label spacing. */
+  --ui-gap-sm: calc(var(--ui-font-sm) / 2 * var(--ui-density));
+  --ui-gap-md: calc(var(--ui-font-md) / 2 * var(--ui-density));
+  --ui-gap-lg: calc(var(--ui-font-lg) / 2 * var(--ui-density));
+}
+
+/* [scale] — the global FRAME multiplier (theme size). Repoints --ui-scale for its subtree, so every ramp
+   token above recomputes (height, font, and — via font — the gap). Initial 3-step vocabulary; refinable
+   with the control family. */
+[scale="compact"] {
+  --ui-scale: 0.875;
+}
+[scale="comfortable"] {
+  --ui-scale: 1;
+}
+[scale="spacious"] {
+  --ui-scale: 1.25;
+}
+
+/* [density] — multiplies the RHYTHM only (the gap), never the frame (geometry.md). Repoints --ui-density,
+   so the gap recomputes while height/font/inline-pad hold. */
+[density="compact"] {
+  --ui-density: 0.5;
+}
+[density="comfortable"] {
+  --ui-density: 1;
+}
+[density="spacious"] {
+  --ui-density: 1.5;
+}

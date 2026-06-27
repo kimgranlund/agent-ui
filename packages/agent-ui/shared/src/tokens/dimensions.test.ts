@@ -1,0 +1,61 @@
+import { describe, it, expect } from 'vitest'
+// We read the CSS as text. vite strips `.css?raw` to empty (its CSS pipeline intercepts), so the
+// trip-wire's `?raw` glob can't be used for stylesheets; and there is no `@types/node` devDep, so the
+// node builtin is untyped here. Suppress the untyped-import + declare the one global we touch.
+// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+import { readFileSync } from 'node:fs'
+declare const process: { cwd(): string }
+
+// Phase-1 s6 — the dimensional token ramp (geometry.md; values geometry-sizing-spec.md §1). A STATIC
+// structural check: the Control-band height+font ramp tokens exist with the tabled values, and the
+// [scale]/[density] multiplier wiring is present and correct (scale on the frame+font; density on the
+// rhythm/gap only). The actual rendered-px CHANGE is s13's browser smoke (jsdom can't compute layout px).
+
+// vitest runs from the repo root; read the source CSS as text.
+const css = readFileSync(`${process.cwd()}/packages/agent-ui/shared/src/tokens/dimensions.css`, 'utf8') as string
+const flat = css.replace(/\s+/g, ' ') // whitespace-insensitive `calc(...)` matching
+
+describe('dimensions.css — the Control-band ramp + scale/density multipliers (s6)', () => {
+  it('declares the global multipliers, defaulting to 1', () => {
+    expect(css.length).toBeGreaterThan(0) // anti-vacuous: the ?raw glob actually found the CSS
+    expect(flat).toMatch(/--ui-scale:\s*1\s*;/)
+    expect(flat).toMatch(/--ui-density:\s*1\s*;/)
+  })
+
+  it('declares the height ramp (sm·md·lg = 24·28·36) scaled by --ui-scale', () => {
+    expect(flat).toMatch(/--ui-height-sm:\s*calc\(\s*24px\s*\*\s*var\(--ui-scale\)\s*\)/)
+    expect(flat).toMatch(/--ui-height-md:\s*calc\(\s*28px\s*\*\s*var\(--ui-scale\)\s*\)/)
+    expect(flat).toMatch(/--ui-height-lg:\s*calc\(\s*36px\s*\*\s*var\(--ui-scale\)\s*\)/)
+  })
+
+  it('declares the font ramp (sm·md·lg = 13·14·16) scaled by --ui-scale', () => {
+    expect(flat).toMatch(/--ui-font-sm:\s*calc\(\s*13px\s*\*\s*var\(--ui-scale\)\s*\)/)
+    expect(flat).toMatch(/--ui-font-md:\s*calc\(\s*14px\s*\*\s*var\(--ui-scale\)\s*\)/)
+    expect(flat).toMatch(/--ui-font-lg:\s*calc\(\s*16px\s*\*\s*var\(--ui-scale\)\s*\)/)
+  })
+
+  it('derives the rhythm gap from font/2 and multiplies it by --ui-density (the ONE density-bearing quantity)', () => {
+    for (const size of ['sm', 'md', 'lg']) {
+      const re = new RegExp(`--ui-gap-${size}:\\s*calc\\(\\s*var\\(--ui-font-${size}\\)\\s*/\\s*2\\s*\\*\\s*var\\(--ui-density\\)\\s*\\)`)
+      expect(flat).toMatch(re)
+    }
+  })
+
+  it('[scale] ancestor selectors repoint --ui-scale (the frame multiplier)', () => {
+    expect(flat).toMatch(/\[scale="compact"\]\s*\{\s*--ui-scale:\s*0\.875/)
+    expect(flat).toMatch(/\[scale="spacious"\]\s*\{\s*--ui-scale:\s*1\.25/)
+    // and a comfortable (=1) baseline exists
+    expect(flat).toMatch(/\[scale="comfortable"\]\s*\{\s*--ui-scale:\s*1\s*;/)
+  })
+
+  it('[density] ancestor selectors repoint --ui-density (the rhythm multiplier) — NOT the frame', () => {
+    expect(flat).toMatch(/\[density="compact"\]\s*\{\s*--ui-density:\s*0\.5/)
+    expect(flat).toMatch(/\[density="spacious"\]\s*\{\s*--ui-density:\s*1\.5/)
+    // density must NOT repoint the frame: no [density] rule touches --ui-scale or a height/font token
+    const densityBlocks = css.match(/\[density="[^"]+"\]\s*\{[^}]*\}/g) ?? []
+    expect(densityBlocks.length).toBeGreaterThan(0)
+    for (const block of densityBlocks) {
+      expect(block).not.toMatch(/--ui-scale|--ui-height|--ui-font/)
+    }
+  })
+})
