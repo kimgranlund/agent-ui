@@ -10,11 +10,58 @@
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css -> dimensions.css (FIRST)
 import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation
 import '@agent-ui/components/components' // [3] self-defining ui-* controls (registers ui-button on import)
+import './_page.css' // [4] shared page chrome (nav + header), AFTER the foundation so it reads the --c-* roles
 
 // What a page builder gets back from mountPage: the <main> container to append its content into. Kept to a
 // single field so the three wave-2 page slices share a stable, minimal contract.
 export interface PageHandle {
   readonly content: HTMLElement
+}
+
+// ── shared site nav (A5) ─────────────────────────────────────────────────────────────────────────────────
+// One entry per /site page, rendered into the `[data-site-nav]` slot of EVERY page so the whole site shares
+// one nav. Hrefs are sibling-relative (`./x.html`): every page shell lives at the site root, so these resolve
+// from any page. `a2ui-canvas.html` lands in wave-4 — the link is declared now and simply resolves once that
+// shell exists; a not-yet-built target is a runtime 404 on click, never a build error (it's a link, not an import).
+interface NavLink {
+  readonly href: string
+  readonly label: string
+}
+const NAV_LINKS: readonly NavLink[] = [
+  { href: './index.html', label: 'Home' },
+  { href: './permutations.html', label: 'Permutations' },
+  { href: './states.html', label: 'States' },
+  { href: './button-doc.html', label: 'API' },
+  { href: './a2ui-canvas.html', label: 'A2UI Canvas' },
+]
+
+// isCurrent — is this link the page we are on? Compare resolved pathnames, treating the site root (`/`) as
+// `index.html` so Home highlights on the landing. Marks the active link with `aria-current="page"`.
+function isCurrent(href: string): boolean {
+  const target = new URL(href, location.href).pathname
+  const normalize = (path: string): string => (path.endsWith('/') ? `${path}index.html` : path)
+  return normalize(location.pathname) === normalize(target)
+}
+
+// buildNav — the shared cross-page nav: a labelled `<nav data-site-nav>` (pages key off the attribute) with a
+// `<ul>` of links, the current page flagged. Dependency-free light DOM; styling lives in `_page.css`.
+function buildNav(): HTMLElement {
+  const nav = document.createElement('nav')
+  nav.setAttribute('data-site-nav', '')
+  nav.setAttribute('aria-label', 'Site')
+
+  const list = document.createElement('ul')
+  for (const link of NAV_LINKS) {
+    const item = document.createElement('li')
+    const anchor = document.createElement('a')
+    anchor.href = link.href
+    anchor.textContent = link.label
+    if (isCurrent(link.href)) anchor.setAttribute('aria-current', 'page')
+    item.append(anchor)
+    list.append(item)
+  }
+  nav.append(list)
+  return nav
 }
 
 export interface PageOptions {
@@ -25,18 +72,17 @@ export interface PageOptions {
 }
 
 // mountPage — stamp the consistent page chrome into `#app` (falling back to <body>) and hand back the content
-// container. Chrome = a `<nav data-site-nav>` placeholder (wave-3 / A5 fills the cross-page links), the <h1>
+// container. Chrome = the shared `<nav data-site-nav>` (A5 cross-page links, current page flagged), the <h1>
 // title, an optional intro <p class="page-intro">, and the `<main data-page-content>` the page fills.
 // Framework-free: plain light-DOM + the self-defining ui-* controls imported above.
 export function mountPage(options: PageOptions): PageHandle {
   const root = document.querySelector('#app') ?? document.body
 
   const header = document.createElement('header')
+  header.className = 'site-header'
 
-  // Cross-page nav placeholder — empty until wave-3 (A5) populates it; pages key off [data-site-nav].
-  const nav = document.createElement('nav')
-  nav.setAttribute('data-site-nav', '')
-  header.append(nav)
+  // Cross-page nav — the shared site nav, identical on every page (it lives here, in the one shell).
+  header.append(buildNav())
 
   const heading = document.createElement('h1')
   heading.textContent = options.title

@@ -1,0 +1,70 @@
+/* _page.css — SHARED page chrome for every /site page (A5). Imported by _page.ts, so it loads on every page
+ * (after the foundation barrels, so it reads the `--c-*` colour roles and tracks light/dark via their
+ * light-dark()). It styles ONLY the shared shell: the site nav, the page header/title/intro, and a coherent
+ * body base. Per-page CSS (permutations.css / states.css / landing.css) still imports AFTER this and owns the
+ * `[data-page-content]` layout — this file never restyles a ui-* control. */
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--c-neutral-on-surface);
+  background: var(--c-neutral-surface);
+}
+
+/* ── the page header (shared shell) ─────────────────────────────────────────────────────────────────────── */
+.site-header {
+  inline-size: min(64rem, 100% - 3rem);
+  margin-inline: auto;
+  margin-block: 1.5rem 0;
+}
+
+.site-header > h1 {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.site-header > .page-intro {
+  margin: 0.5rem 0 0;
+  max-inline-size: 62ch;
+  color: var(--c-neutral-on-surface-variant);
+  line-height: 1.5;
+}
+
+/* ── the shared site nav ────────────────────────────────────────────────────────────────────────────────── */
+nav[data-site-nav] {
+  margin-block-end: 1.75rem;
+  padding-block-end: 0.85rem;
+  border-block-end: 1px solid var(--c-neutral-outline-variant);
+}
+
+nav[data-site-nav] > ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+nav[data-site-nav] a {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border-radius: 0.5rem;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+nav[data-site-nav] a:hover {
+  background: var(--c-neutral-surface-low);
+  color: var(--c-neutral-on-surface);
+}
+
+/* The current page — flagged by mountPage with aria-current, so the marker tracks the route, not a class. */
+nav[data-site-nav] a[aria-current='page'] {
+  background: var(--c-neutral-surface-high);
+  color: var(--c-neutral-on-surface);
+  font-weight: 600;
+}
