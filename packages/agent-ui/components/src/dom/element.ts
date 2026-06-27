@@ -18,6 +18,7 @@
 import { createScope, effect as createEffect, whenFlushed } from '../reactive/index.ts'
 import type { Scope } from '../reactive/index.ts'
 import { finalize, coerceAttribute, observedAttributesFor, propForAttribute, type Finalizable } from './props.ts'
+import { render as commitTemplate, TemplateResult } from './template.ts'
 
 export class UIElement extends HTMLElement {
   // The connection lifetimes. Null while disconnected; opened on connect, torn down + nulled on
@@ -58,7 +59,11 @@ export class UIElement extends HTMLElement {
     // path (no duplication). It is created inside the scope (the kernel's `activeOwner.add`) and
     // disposed with it at disconnect — every render pass runs under the scope, so a directive attaching
     // on a later conditional re-render is scope-owned too. The disposer is intentionally discarded.
-    this.effect(() => this.render())
+    // `render()` returns a `TemplateResult` (or nothing); when it returns one, commit it into `renderRoot`.
+    this.effect(() => {
+      const result = this.render()
+      if (result instanceof TemplateResult) commitTemplate(result, this.renderRoot)
+    })
   }
 
   disconnectedCallback(): void {
@@ -176,8 +181,10 @@ export class UIElement extends HTMLElement {
   }
 
   /**
-   * Overridable render hook. A no-op until the template layer (G3) supplies `html\`\`` → `render`.
-   * Runs inside the connection-scoped render effect, so any signal it reads re-runs only this render.
+   * Overridable render hook. Return a `TemplateResult` (`html\`…\``) and the scope-owned render effect
+   * commits it into `renderRoot`; return nothing to render imperatively (or not at all). Runs inside the
+   * connection-scoped render effect, so any signal it reads re-runs only this render, committing only the
+   * holes whose values changed (the template engine's per-part `Object.is` skip).
    */
-  protected render(): void {}
+  protected render(): TemplateResult | void {}
 }
