@@ -419,6 +419,63 @@ describe('ui-text-field — reset + state restore', () => {
     expect(editorOf(el).textContent).toBe('restored')
     el.remove()
   })
+
+  it('formReset clears the touched state — a required-empty field is NOT user-invalid post-reset until re-interaction', async () => {
+    const { el } = makeField()
+    el.required = true
+    document.body.append(el)
+    const editor = editorOf(el)
+    const message = messageOf(el)
+
+    // interact → invalid (required + empty) → the danger treatment is on
+    editor.dispatchEvent(new Event('blur')) // first interaction (capture reaches the host → trackUserInvalid)
+    await whenFlushed()
+    expect(editor.getAttribute('aria-invalid')).toBe('true')
+
+    // reset: value ← '' (still required-empty, so STILL invalid) but the touched state is cleared, so the danger
+    // treatment is gated off again — a reset must not leave the field flagged until the user re-interacts.
+    el.formResetCallback()
+    await whenFlushed()
+    expect(el.value).toBe('') // restored to the (empty) defaultValue — still constraint-invalid…
+    expect(el.formValidityProbe().valid).toBe(false) // …the field IS still invalid…
+    expect(editor.hasAttribute('aria-invalid')).toBe(false) // …but the user-invalid cue is cleared
+    expect(editor.hasAttribute('aria-describedby')).toBe(false)
+    expect(message.textContent).toBe('')
+
+    // re-arm: a fresh blur after the reset re-surfaces the danger treatment
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    expect(editor.getAttribute('aria-invalid')).toBe('true')
+    el.remove()
+  })
+
+  it('NC: a formReset that does NOT call the controller reset leaves the field showing user-invalid post-reset', async () => {
+    // The negative control: reproduce the pre-fix formReset (value-restore ONLY, no `trackUserInvalid.reset()`).
+    // The value restore is a no-op on an already-empty required field, so without the reset() the touched state
+    // (interacted=true) persists and the field WRONGLY keeps aria-invalid after a reset — exactly the bug the fix
+    // removes. This subclass proves the reset() call is load-bearing, not the value restore.
+    class NoResetField extends UITextFieldElement {
+      protected formReset(): void {
+        this.value = '' // the OLD behaviour: restore the (empty) defaultValue, but do NOT clear the touched state
+      }
+    }
+    customElements.define('ui-text-field-noreset', NoResetField)
+
+    const el = new NoResetField()
+    stubFormInternals((el as unknown as { internals: ElementInternals }).internals)
+    el.required = true
+    document.body.append(el)
+    const editor = editorOf(el)
+
+    editor.dispatchEvent(new Event('blur')) // interact → user-invalid on
+    await whenFlushed()
+    expect(editor.getAttribute('aria-invalid')).toBe('true')
+
+    el.formResetCallback() // value-only restore (no reset()) — the touched state survives
+    await whenFlushed()
+    expect(editor.getAttribute('aria-invalid')).toBe('true') // NC bites: still flagged, the bug the fix removes
+    el.remove()
+  })
 })
 
 // ── zero residue — scope-owned effects + abort-owned listeners (tf-probes) ────

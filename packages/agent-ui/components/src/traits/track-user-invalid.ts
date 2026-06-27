@@ -42,6 +42,13 @@ export interface TrackUserInvalidController {
    * so validity is untracked until the user has interacted, which is the whole point).
    */
   userInvalid: () => boolean
+  /**
+   * Clear the touched state back to its first-paint suppression: flips `interacted` to false so the
+   * user-invalid treatment is gated off again until the next blur/change. The control calls this from its
+   * `formReset()` so a form reset does not leave a required-empty field showing `:state(user-invalid)` (native
+   * parity). Idempotent (a no-op when already false — an Object.is-equal set); does not touch the listeners.
+   */
+  reset: () => void
   /** Idempotent early teardown: stops the behaviour. Otherwise the listeners die with the connection. */
   release: () => void
 }
@@ -70,6 +77,9 @@ export function trackUserInvalid(host: UIElement, opts: TrackUserInvalidOptions)
   return {
     interacted,
     userInvalid: () => interacted.value && opts.invalid(),
+    reset: () => {
+      interacted.value = false // back to first-paint suppression; equal-set is an Object.is no-op (idempotent)
+    },
     release: () => {
       released = true
     },

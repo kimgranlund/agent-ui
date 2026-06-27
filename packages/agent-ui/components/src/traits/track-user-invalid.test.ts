@@ -8,7 +8,7 @@ import { trackUserInvalid, type TrackUserInvalidController } from './track-user-
 // CONTROL applies the AX/custom state (a controller cannot reach the protected `internals`). Listeners ride
 // `host.listen` → the connection AbortSignal (zero residue on disconnect, re-armed on reconnect); `release()`
 // is idempotent early teardown. Named probes: interacted-timing · userinvalid-gate · capture-descendant ·
-// idempotent · release · zero-residue · re-arm · negative-control.
+// idempotent · reset · release · zero-residue · re-arm · negative-control.
 
 // A throwaway host that installs the controller in `connected()` and an `applied` effect that mirrors the
 // control's apply step — reading `userInvalid()` so a scope-owned effect SUBSCRIBES to `interacted` (the
@@ -98,6 +98,28 @@ describe('trackUserInvalid — first-interaction timing (ADR-0014 §2c)', () => 
     change(el)
     blur(el) // multiple interactions
     expect(el.controller!.interacted.value).toBe(true) // stays true; the Object.is-equal sets are no-ops
+    el.remove()
+  })
+
+  it('reset: flips interacted back to false (re-gating user-invalid), idempotent, then a fresh blur re-arms', () => {
+    const el = new InvalidEl()
+    el.invalidFlag = true // invalid throughout — only the timing gate moves
+    document.body.append(el)
+    const c = el.controller!
+
+    blur(el)
+    expect(c.interacted.value).toBe(true)
+    expect(c.userInvalid()).toBe(true) // interacted && invalid → the danger treatment is on
+
+    c.reset()
+    expect(c.interacted.value).toBe(false) // back to first-paint suppression
+    expect(c.userInvalid()).toBe(false) // gated off again even though invalid is still true
+    c.reset() // idempotent — safe twice, equal-set is a no-op
+    expect(c.interacted.value).toBe(false)
+
+    blur(el) // a fresh interaction re-arms the timing after the reset
+    expect(c.interacted.value).toBe(true)
+    expect(c.userInvalid()).toBe(true)
     el.remove()
   })
 

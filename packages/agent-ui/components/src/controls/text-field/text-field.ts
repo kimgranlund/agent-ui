@@ -211,9 +211,15 @@ export class UITextFieldElement extends UIFormElement {
     return { valid: true }
   }
 
-  /** Form reset → value ← the initial `value` attribute (native-parity defaultValue). */
+  /**
+   * Form reset → value ← the initial `value` attribute (native-parity defaultValue) + clear the touched state.
+   * A reset must not leave a required-empty field showing `:state(user-invalid)` until the user re-interacts, so
+   * the timing controller is reset to its first-paint suppression (the danger treatment re-arms on the next
+   * blur/change). The optional chain is defensive — `formReset` only fires while connected (the controller is live).
+   */
   protected formReset(): void {
     this.value = this.#defaultValue
+    this.#userInvalid?.reset()
   }
 
   /** Restore the value after navigation/autofill (FACE state restore). */
