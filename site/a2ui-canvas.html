@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2UI canvas</title>
+  </head>
+  <body>
+    <!-- Wave-4 CAPSTONE (B-canvas): the A2UI gen-UI canvas. A 2-line A2UI payload is fed through the REAL
+         @agent-ui/a2ui renderer (createRenderer) into a LIVE ui-button, and the click round-trips as an A2UI
+         action. An MPA entry auto-discovered by vite.config.ts's site/**/*.html glob (matches the A5 nav link
+         ./a2ui-canvas.html) — no config edit needed. The page module imports pages/_page.ts FIRST for the
+         foundation CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2ui-canvas.ts"></script>
+  </body>
+</html>

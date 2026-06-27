@@ -1,0 +1,174 @@
+/* a2ui-canvas.css — PAGE-LOCAL layout chrome for the wave-4 capstone canvas. Styles the 3-region flow
+ * (payload → rendered surface → messages), the code/payload blocks, and the client-message log ONLY. The
+ * rendered <ui-button> keeps its own button.css — this page never restyles a ui-* control. Reads the `--c-*`
+ * colour roles declared by the foundation barrels (imported first via _page.ts), so it tracks light/dark. */
+
+/* ── the 3-region flow: three cards with arrow connectors, wrapping to a stack on narrow viewports ──────── */
+.canvas-flow,
+[data-page-content] {
+  inline-size: min(72rem, 100% - 3rem);
+  margin-inline: auto;
+}
+
+[data-page-content] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 1rem;
+  margin-block: 1.5rem 3rem;
+}
+
+.region {
+  flex: 1 1 19rem;
+  min-inline-size: 0; /* let <pre> shrink + scroll instead of forcing the card wider */
+  display: flex;
+  flex-direction: column;
+  padding: 1.1rem 1.2rem 1.3rem;
+  border: 1px solid var(--c-neutral-outline-variant, #ddd);
+  border-radius: 12px;
+  background: var(--c-neutral-surface-low, #fafafa);
+}
+
+.region > h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.region-step {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+  border-radius: 50%;
+  background: var(--c-primary, #1a56db);
+  color: var(--c-on-primary, #fff);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.region-blurb {
+  margin: 0 0 0.9rem;
+  color: var(--c-neutral-on-surface-variant, #555);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.region-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  flex: 1;
+}
+
+/* The arrow between regions — horizontal on a row, rotating to point down once the cards wrap into a stack. */
+.flow-arrow {
+  align-self: center;
+  color: var(--c-neutral-on-surface-variant, #999);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+@media (max-width: 60rem) {
+  .flow-arrow {
+    transform: rotate(90deg);
+  }
+}
+
+/* ── payload blocks + the shared code/JSON style ───────────────────────────────────────────────────────── */
+.payload-line {
+  margin: 0;
+}
+
+.payload-line > figcaption {
+  margin-block-end: 0.3rem;
+  color: var(--c-neutral-on-surface-variant, #555);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.code {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  overflow-x: auto;
+  border: 1px solid var(--c-neutral-outline-variant, #e2e2e2);
+  border-radius: 8px;
+  background: var(--c-neutral-surface, #fff);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+/* ── the toolbar (page affordances) ────────────────────────────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-block-start: 0.2rem;
+}
+
+/* ── the rendered-surface mount — a framed canvas so the live control reads as the "output" ─────────────── */
+.surface {
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+  flex: 1;
+  min-block-size: 6rem;
+  border: 1px dashed var(--c-neutral-outline, #cbd5e1);
+  border-radius: 8px;
+  background: var(--c-neutral-surface, #fff);
+}
+
+.surface:empty::before {
+  content: 'No surface mounted.';
+  color: var(--c-neutral-on-surface-variant, #888);
+  font-size: 0.85rem;
+}
+
+/* ── the client→server message log ─────────────────────────────────────────────────────────────────────── */
+.msg-log {
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-block-size: 8rem;
+  max-block-size: 22rem;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.msg-log:empty::before {
+  content: 'No messages yet — click the rendered button to round-trip an action.';
+  display: block;
+  padding: 0.6rem 0;
+  color: var(--c-neutral-on-surface-variant, #888);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.msg-log > li {
+  margin-block-end: 0.7rem;
+}
+
+.msg-log > li:last-child {
+  margin-block-end: 0;
+}
+
+.msg-head {
+  margin-block-end: 0.3rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: pre;
+}
+
+.msg-log > li[data-kind='action'] .msg-head {
+  color: var(--c-primary, #1a56db);
+}
+
+.msg-log > li[data-kind='error'] .msg-head {
+  color: var(--c-danger, #c2410c);
+}
