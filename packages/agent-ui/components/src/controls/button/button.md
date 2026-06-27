@@ -35,6 +35,9 @@ slots:
   - name: icon
     optional: true
     description: Optional leading icon — a light-DOM `[slot="icon"]` child placed by the presence-driven host-as-grid (ADR-0006). Absent ⇒ slotless bare-label layout.
+  - name: trailing
+    optional: true
+    description: Optional trailing adornment — a light-DOM `[slot="trailing"]` child (a caret, chevron, or arrow) placed by the presence-driven host-as-grid. Layout only; carry any popup/disclosure meaning via ARIA on the host and mark the glyph aria-hidden.
 
 parts: []              # light-DOM, host-as-grid — no shadow parts exposed
 customStates: []       # no ElementInternals custom states (:state()) at G5
@@ -58,7 +61,7 @@ geometry:
   sizeClass: control
   blockSize: var(--ui-button-height)   # the vertical lever off the s6 dimensional ramp; padding-block is 0
   paddingBlock: 0
-  inlinePad: h/2 (slotless bare label) · ½(h−icon) (leading icon slot edge)   # the centering law, geometry.md
+  inlinePad: h/2 (slotless bare label) · ½(h−icon) (leading icon / trailing adornment slot edge)   # the centering law, geometry.md
   gap: var(--ui-button-gap)            # icon↔label column-gap — the one density-bearing quantity (gap = font/2 × density)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the ink + border visible (ButtonText) so the label/outline never vanishes.
@@ -108,6 +111,25 @@ gets a square, icon-sized cell with edge-pad `½(h − icon)` and a `column-gap`
 That gap is the single density-bearing quantity — it rides `--ui-density`, while the frame stays
 density-invariant. The label text is the button's accessible name, so mark decorative icons
 `aria-hidden`.
+
+## Trailing adornment
+
+A symmetric **optional** trailing slot takes a caret, chevron, or arrow — the affordance that signals
+"opens a menu", "discloses", or "navigates". It is a light-DOM child carrying `slot="trailing"`, and it
+composes with the leading icon to give four anatomies:
+
+```html
+<ui-button>Save</ui-button>                              <!-- [ label ] -->
+<ui-button><svg slot="icon">…</svg>Download</ui-button>  <!-- [ icon | label ] -->
+<ui-button>Options<svg slot="trailing">…</svg></ui-button>            <!-- [ label | caret ] -->
+<ui-button><svg slot="icon">…</svg>Account<svg slot="trailing">…</svg></ui-button> <!-- [ icon | label | caret ] -->
+```
+
+The host grid picks the column template by presence — `1fr` · `auto 1fr` · `1fr auto` · `auto 1fr auto` —
+and gives each adornment the same square `½(h − icon)`-edged cell as the leading icon, with the
+density-bearing `column-gap` on each side. The trailing glyph is **layout only**: it carries no
+semantics, so mark it `aria-hidden` and express any popup/disclosure meaning as ARIA on the host
+(`aria-haspopup` / `aria-expanded` via `ElementInternals`), not on the icon.
 
 ## Keyboard
 

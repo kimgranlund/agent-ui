@@ -77,19 +77,35 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     }
   })
 
-  it('the glyph IS the slot: [slot=icon] is a SQUARE cell sized to --ui-button-icon on BOTH axes', () => {
+  it('the glyph IS the slot: [slot=icon] AND [slot=trailing] are SQUARE cells sized to --ui-button-icon on BOTH axes', () => {
     // the slot model (geometry.md): the slotted glyph IS the square cell — inline-size == block-size ==
-    // the glyph size, so it centers in a square of its own size (no phantom box around it).
-    expect(stylesBlock).toMatch(/:scope\s*>\s*\[slot='icon'\]\s*\{[^}]*inline-size:\s*var\(--ui-button-icon\)/)
-    expect(stylesBlock).toMatch(/:scope\s*>\s*\[slot='icon'\]\s*\{[^}]*block-size:\s*var\(--ui-button-icon\)/)
+    // the glyph size, so it centers in a square of its own size (no phantom box around it). The leading icon
+    // and the trailing adornment (caret/arrow, ADR-0006 extended) share the one square-cell rule.
+    const slotRule = stylesBlock.slice(stylesBlock.indexOf(":scope > [slot='icon']"))
+    const block = slotRule.slice(0, slotRule.indexOf('}') + 1)
+    expect(block).toMatch(/\[slot='icon'\]/) // the leading icon cell
+    expect(block).toMatch(/\[slot='trailing'\]/) // the trailing adornment cell — same square model
+    expect(block).toMatch(/inline-size:\s*var\(--ui-button-icon\)/)
+    expect(block).toMatch(/block-size:\s*var\(--ui-button-icon\)/)
   })
 
   it('per-edge ASYMMETRY by design: leading slot edge = ½(h−icon), trailing label edge = h/2', () => {
     // geometry.md §"Per-edge inline padding": with an icon present the control is asymmetric BY DESIGN —
     // the leading slot edge insets ½(h−icon) while the trailing (slotless) label edge stays h/2. s7 pins
     // that ½(h−icon) appears; here we pin it is the START edge and that END is the slotless h/2.
-    const hasBlock = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='icon'])"))
+    const hasBlock = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='icon']):not"))
     expect(hasBlock).toMatch(/padding-inline-start:\s*calc\(\(var\(--ui-button-height\)\s*-\s*var\(--ui-button-icon\)\)\s*\/\s*2\)/)
     expect(hasBlock).toMatch(/padding-inline-end:\s*calc\(var\(--ui-button-height\)\s*\/\s*2\)/)
+  })
+
+  it('the trailing adornment anatomy: [label|caret] is 1fr auto, [icon|label|caret] is auto 1fr auto (ADR-0006 extended)', () => {
+    // host-as-grid extended (ADR-0006): a trailing [slot=trailing] caret/arrow gives the symmetric structures.
+    // [label | caret] (no icon): 1fr auto, trailing slot edge ½(h−icon), leading label edge stays h/2.
+    const trailingOnly = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='trailing']):not"))
+    expect(trailingOnly).toMatch(/grid-template-columns:\s*1fr\s+auto/)
+    expect(trailingOnly).toMatch(/padding-inline-end:\s*calc\(\(var\(--ui-button-height\)\s*-\s*var\(--ui-button-icon\)\)\s*\/\s*2\)/)
+    // [icon | label | caret]: auto 1fr auto — both adornment edges ½(h−icon).
+    const both = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='icon']):has(> [slot='trailing'])"))
+    expect(both).toMatch(/grid-template-columns:\s*auto\s+1fr\s+auto/)
   })
 })

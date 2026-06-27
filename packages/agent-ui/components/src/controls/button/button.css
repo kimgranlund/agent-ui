@@ -5,10 +5,11 @@
  *       (`--ui-{height,font,gap}-{size}` from `@agent-ui/shared/dimensions.css`). `[variant]` repoints the
  *       colour channels (solid=filled · soft=tonal · ghost=text); `[size]` repoints the geometry.
  *   [2] STYLES BLOCK — `@scope (ui-button)` CONSUMES only `--ui-button-*`. Geometry per references/geometry.md
- *       (the law): `block-size` off the ramp, `padding-block: 0`. Anatomy per ADR-0006: host-as-grid with an
- *       OPTIONAL leading icon slot via a presence-driven `:has()` — bare label is slotless (`1fr`, pad = h/2,
- *       density-invariant); icon+label is `auto 1fr` (slot edge = ½(h−icon), `column-gap` = the density-bearing
- *       gap). Forced-colors keeps the ink/border. The reflected `disabled` attribute makes the host inert.
+ *       (the law): `block-size` off the ramp, `padding-block: 0`. Anatomy per ADR-0006 (extended): host-as-grid
+ *       with OPTIONAL leading `[slot=icon]` AND trailing `[slot=trailing]` (caret/arrow) slots via presence-driven
+ *       `:has()` — `[label]` (`1fr`, pad h/2) · `[icon|label]` (`auto 1fr`) · `[label|caret]` (`1fr auto`) ·
+ *       `[icon|label|caret]` (`auto 1fr auto`); each adornment edge = ½(h−icon), `column-gap` = the density-bearing
+ *       gap. Forced-colors keeps the ink/border. The reflected `disabled` attribute makes the host inert.
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected from
  * button.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -83,17 +84,40 @@
     user-select: none;
   }
 
-  /* icon + label (ADR-0006 host-as-grid): a leading [slot=icon] child gets a square, icon-sized slot. The
-     leading edge becomes the slot pad ½(h−icon); the trailing label edge stays slotless h/2. */
-  :scope:has(> [slot='icon']) {
-    grid-template-columns: auto 1fr;
-    column-gap: var(--ui-button-gap); /* the rhythm — density rides this (gap = font/2 × density) */
-    padding-inline-start: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2); /* slot edge = ½(h−icon) */
-    padding-inline-end: calc(var(--ui-button-height) / 2); /* trailing label = h/2 */
-  }
-  :scope > [slot='icon'] {
+  /* Anatomy (ADR-0006, extended): host-as-grid with an OPTIONAL leading [slot=icon] AND an OPTIONAL trailing
+     [slot=trailing] adornment (a caret/chevron/arrow), each a presence-driven :has() — four structures:
+     [label] · [icon | label] · [label | caret] · [icon | label | caret]. Each adornment gets a square,
+     icon-sized cell with edge-pad ½(h−icon); a bare (slotless) edge stays h/2; the column-gap is the one
+     density-bearing quantity (gap = font/2 × density). The trailing glyph carries no semantics — popup/
+     disclosure meaning belongs on the host via ARIA (ElementInternals); mark the glyph aria-hidden. */
+  :scope > [slot='icon'],
+  :scope > [slot='trailing'] {
     inline-size: var(--ui-button-icon);
     block-size: var(--ui-button-icon); /* the square slot, icon-sized */
+  }
+
+  /* [icon | label] (no trailing): auto 1fr — leading slot edge ½(h−icon), trailing label edge h/2 */
+  :scope:has(> [slot='icon']):not(:has(> [slot='trailing'])) {
+    grid-template-columns: auto 1fr;
+    column-gap: var(--ui-button-gap);
+    padding-inline-start: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
+    padding-inline-end: calc(var(--ui-button-height) / 2);
+  }
+
+  /* [label | caret] (no icon): 1fr auto — leading label edge h/2, trailing slot edge ½(h−icon) */
+  :scope:has(> [slot='trailing']):not(:has(> [slot='icon'])) {
+    grid-template-columns: 1fr auto;
+    column-gap: var(--ui-button-gap);
+    padding-inline-start: calc(var(--ui-button-height) / 2);
+    padding-inline-end: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
+  }
+
+  /* [icon | label | caret]: auto 1fr auto — both adornment edges ½(h−icon), one gap rhythm on each side */
+  :scope:has(> [slot='icon']):has(> [slot='trailing']) {
+    grid-template-columns: auto 1fr auto;
+    column-gap: var(--ui-button-gap);
+    padding-inline-start: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
+    padding-inline-end: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
   }
 
   /* disabled host — pointer-inert (the reflected `disabled` attribute) */

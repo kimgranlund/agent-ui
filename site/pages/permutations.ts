@@ -1,6 +1,7 @@
 // site/pages/permutations.ts — slice A2, the permutations grid page (the headline demo). Renders the FULL
 // ui-button matrix — every size × variant × disabled, bare-label AND with the optional leading icon slot
-// (3 × 3 × 2 × 2 = 36 live controls) — plus a [scale]/[density] subtree-geometry demo (ADR-0007).
+// (3 × 3 × 2 × 2 = 36 live controls) — the [ icon | label | caret ] structural anatomy axis (leading icon ×
+// trailing caret, ADR-0006 extended), and a [scale]/[density] subtree-geometry demo (ADR-0007).
 //
 // The matrix is built PROGRAMMATICALLY (loops over the size/variant/column arrays) rather than hand-written,
 // so completeness is provable from the structure: |sizes| × |variants| × |columns| = 3 × 3 × 4 = 36.
@@ -51,11 +52,32 @@ function makeIcon(): SVGElement {
   return svg
 }
 
+// A trailing caret for the optional `slot="trailing"` cell — a decorative chevron-down (the common
+// dropdown/disclosure adornment). `currentColor` tints it with the variant ink; `aria-hidden` keeps the
+// label as the accessible name (the caret carries NO semantics — popup/disclosure meaning belongs on the
+// host via ARIA). Sized by button.css to the same square `var(--ui-button-icon)` cell as the leading icon.
+function makeCaret(): SVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg')
+  svg.setAttribute('slot', 'trailing')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('viewBox', '0 0 24 24')
+  const path = document.createElementNS(SVG_NS, 'path')
+  path.setAttribute('d', 'M6 9l6 6 6-6') // chevron-down
+  path.setAttribute('fill', 'none')
+  path.setAttribute('stroke', 'currentColor')
+  path.setAttribute('stroke-width', '2')
+  path.setAttribute('stroke-linecap', 'round')
+  path.setAttribute('stroke-linejoin', 'round')
+  svg.append(path)
+  return svg
+}
+
 interface ButtonSpec {
   readonly size: (typeof sizes)[number]
   readonly variant: (typeof variants)[number]
   readonly disabled: boolean
   readonly icon: boolean
+  readonly trailing?: boolean
 }
 
 // Build one real <ui-button>. Attributes are the author surface — variant/size/disabled all REFLECT, so
@@ -66,8 +88,10 @@ function makeButton(spec: ButtonSpec): HTMLElement {
   button.setAttribute('variant', spec.variant)
   button.setAttribute('size', spec.size)
   if (spec.disabled) button.setAttribute('disabled', '')
+  // Child order IS column order (host-as-grid auto-places in DOM order): icon → label → caret.
   if (spec.icon) button.append(makeIcon())
   button.append(document.createTextNode('Button'))
+  if (spec.trailing) button.append(makeCaret())
   return button
 }
 
@@ -102,6 +126,51 @@ function sizeSection(size: (typeof sizes)[number]): HTMLElement {
       const cell = document.createElement('div')
       cell.className = 'matrix-cell'
       cell.append(makeButton({ size, variant, disabled: column.disabled, icon: column.icon }))
+      matrix.append(cell)
+    }
+  }
+
+  section.append(matrix)
+  return section
+}
+
+// The structural anatomy axis (ADR-0006, extended): the host-as-grid composes an OPTIONAL leading icon and an
+// OPTIONAL trailing caret into four structures — [ label ] · [ icon | label ] · [ label | caret ] ·
+// [ icon | label | caret ] — the affordance the trailing caret signals (menu / disclosure / nav).
+interface Anatomy {
+  readonly label: string
+  readonly icon: boolean
+  readonly trailing: boolean
+}
+const anatomies: readonly Anatomy[] = [
+  { label: 'label', icon: false, trailing: false },
+  { label: 'icon · label', icon: true, trailing: false },
+  { label: 'label · caret', icon: false, trailing: true },
+  { label: 'icon · label · caret', icon: true, trailing: true },
+]
+
+// The anatomy matrix: a row per variant × the four structures (size md). Same 5-column grid as the size
+// matrices (corner/rowhead + 4) — so the [ icon | label | caret ] structure reads as a first-class axis.
+function anatomySection(): HTMLElement {
+  const section = document.createElement('section')
+  section.className = 'size-group'
+
+  const heading = document.createElement('h2')
+  heading.textContent = 'Anatomy — [ icon | label | caret ]'
+  section.append(heading)
+
+  const matrix = document.createElement('div')
+  matrix.className = 'matrix'
+
+  matrix.append(gridText('', 'matrix-corner'))
+  for (const anatomy of anatomies) matrix.append(gridText(anatomy.label, 'matrix-head'))
+
+  for (const variant of variants) {
+    matrix.append(gridText(`variant = ${variant}`, 'matrix-rowhead'))
+    for (const anatomy of anatomies) {
+      const cell = document.createElement('div')
+      cell.className = 'matrix-cell'
+      cell.append(makeButton({ size: 'md', variant, disabled: false, icon: anatomy.icon, trailing: anatomy.trailing }))
       matrix.append(cell)
     }
   }
@@ -159,13 +228,17 @@ const { content } = mountPage({
   title: 'Button — permutations',
   intro:
     'Every size × variant × disabled combination of ui-button — bare-label and with the optional leading ' +
-    'icon slot (36 live controls) — plus a [scale] / [density] subtree-geometry demo (ADR-0007).',
+    'icon slot (36 live controls) — the [ icon | label | caret ] structural anatomy, and a [scale] / ' +
+    '[density] subtree-geometry demo (ADR-0007).',
 })
 
 // [1] The full matrix — one section per size.
 for (const size of sizes) content.append(sizeSection(size))
 
-// [2] The subtree-geometry demo — [scale] resizes the frame; [density] resizes only the icon↔label gap.
+// [2] The structural anatomy — [ icon | label | caret ] (leading icon × trailing caret).
+content.append(anatomySection())
+
+// [3] The subtree-geometry demo — [scale] resizes the frame; [density] resizes only the icon↔label gap.
 const geometry = document.createElement('section')
 geometry.className = 'geometry-demo'
 const geoHeading = document.createElement('h2')
