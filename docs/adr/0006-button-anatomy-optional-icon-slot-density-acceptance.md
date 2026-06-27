@@ -9,7 +9,7 @@
 > | **Proposed by** | planning-lead — reconciling a law-vs-acceptance collision execution-lead surfaced building s6 (the dimensional token ramp, 11ca123) |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |
 > | **Repairs** | `docs/goals.md` §G5 (the geometry/smoke acceptance + the button anatomy). *(No edit: `references/geometry.md` is the law and is already correct; `@agent-ui/shared` dimensions.css (s6) is already law-correct — this ADR aligns the consumer to the token it shipped.)* |
-> | **Supersedes / Superseded by** | *(none)* |
+> | **Supersedes / Superseded by** | Extended by **ADR-0012** (anatomy: optional leading icon slot → leading + trailing adornments, position-vs-role; the host-as-grid/`:has()` mechanism + the `[density]` acceptance below remain in force). |
 
 ## Context
 
