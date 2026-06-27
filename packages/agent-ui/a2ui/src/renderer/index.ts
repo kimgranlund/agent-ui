@@ -16,6 +16,8 @@ export type { TreeDeps, UpdateComponentsMessage } from './tree.ts'
 export { makeCreateWidget } from './widget.ts'
 export type { WidgetDeps } from './widget.ts'
 
+export { resolve, setPointer } from './binding.ts'
+
 export { ActionDispatcher } from './action.ts'
 export type { A2uiAction, A2uiActionMessage, ActionDeps, EmitActionOptions } from './action.ts'
 

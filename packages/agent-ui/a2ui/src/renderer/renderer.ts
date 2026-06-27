@@ -36,6 +36,7 @@ import { SurfaceTree } from './tree.ts'
 import { makeCreateWidget } from './widget.ts'
 import { ActionDispatcher } from './action.ts'
 import { validateA2ui } from './validate.ts'
+import { resolve, setPointer } from './binding.ts'
 import type { CreateWidget } from './types.ts'
 import { Registry } from '../catalog/registry.ts'
 import type { WidgetFactory } from '../catalog/types.ts'
@@ -243,9 +244,9 @@ class Renderer implements RendererHost {
   #onUpdateDataModel(body: A2uiUpdateDataModel): void {
     const surface = this.#store.get(body.surfaceId)
     if (surface === undefined) return
-    // Whole-document replace when no path; else an immutable RFC-6901 set. Per-path *wake granularity*
-    // (SPEC-N2) is the binding slice's job (LLD-C5, not yet built) — this writes the one data signal so
-    // every bound-prop effect re-resolves; correct, if coarse, until LLD-C5 memoizes per-path computeds.
+    // Whole-document replace when no path; else an immutable, structural-sharing RFC-6901 set via the
+    // binding module (LLD-C5). Sharing untouched sibling subtrees by reference is what lets the per-path
+    // computeds' `Object.is` cutoff keep unrelated bindings asleep (SPEC-N2) — see binding.ts.
     if (body.path === undefined || body.path === '') {
       surface.data.value = body.value
       return
@@ -276,10 +277,10 @@ class Renderer implements RendererHost {
     const base = makeCreateWidget({
       registry: this.#registry,
       emitError: (error) => this.#emit({ version: this.#versionFor(error.surfaceId), error }),
-      // Interim binding resolver (an absolute RFC-6901 read off the surface data signal). The full
-      // per-path-computed resolver is LLD-C5 (not yet built); reading `data.value` here keeps bound
-      // props live and lets the bound-prop effect track the data model.
-      resolveBinding: (binding, surface) => resolvePointer(surface.data.value, binding.path),
+      // The per-path binding resolver (LLD-C5, binding.ts). Called inside each bound-prop effect, it
+      // reads a per-path memoized computed over `surface.data`, so a data-model change wakes only the
+      // widgets bound to the path that changed (SPEC-N2 fine-grained waking).
+      resolveBinding: (binding, surface) => resolve(binding, surface),
     })
 
     return (node, surface) => {
@@ -406,42 +407,4 @@ function withoutProps(node: A2uiComponent, props: Map<string, unknown>): A2uiCom
   const out: A2uiComponent = { ...node }
   for (const prop of props.keys()) delete out[prop]
   return out
-}
-
-/** Decode one RFC-6901 reference token (`~1`→`/`, `~0`→`~`). */
-const decodeToken = (token: string): string => token.replace(/~1/g, '/').replace(/~0/g, '~')
-
-/**
- * Read an absolute RFC-6901 pointer off a document, or `undefined` if any step is absent (a render-time
- * placeholder, SPEC-R4 AC2 — never an error). Relative/list-scope pointers are LLD-C6's concern.
- */
-function resolvePointer(doc: unknown, pointer: string): unknown {
-  if (pointer === '') return doc
-  if (pointer[0] !== '/') return undefined
-  let cur: unknown = doc
-  for (const raw of pointer.slice(1).split('/')) {
-    const key = decodeToken(raw)
-    if (Array.isArray(cur)) cur = cur[Number(key)]
-    else if (isObject(cur)) cur = cur[key]
-    else return undefined
-    if (cur === undefined) return undefined
-  }
-  return cur
-}
-
-/** Immutably set `value` at an absolute RFC-6901 `pointer` within `doc`, materializing missing objects. */
-function setPointer(doc: unknown, pointer: string, value: unknown): unknown {
-  const tokens = pointer.slice(1).split('/').map(decodeToken)
-  const set = (node: unknown, i: number): unknown => {
-    if (i === tokens.length) return value
-    const key = tokens[i]!
-    if (Array.isArray(node)) {
-      const copy = node.slice()
-      copy[Number(key)] = set(node[Number(key)], i + 1)
-      return copy
-    }
-    const base = isObject(node) ? node : {}
-    return { ...base, [key]: set(base[key], i + 1) }
-  }
-  return set(doc, 0)
 }

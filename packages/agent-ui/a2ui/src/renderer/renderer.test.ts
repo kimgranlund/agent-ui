@@ -221,3 +221,41 @@ describe('renderer host — action-prop reading (ADR-0011 canonical {action,cont
     expect(action.wantResponse).toBe(false) // …nor a wantResponse
   })
 })
+
+// The binding wiring proof (renderer LLD-C5, the B2 integration): a unit test on binding.ts can show the
+// resolver memoizes per-path computeds, but only this can show the LIVE host wires `resolveBinding →
+// resolve` AND routes `updateDataModel` through `binding.setPointer` end-to-end — a `{path}`-bound prop
+// reflecting the data model and re-applying when that path is written. (Per-path waking GRANULARITY is
+// binding.test.ts's job; here we prove the host actually drives the bound prop through the binding module.)
+describe('renderer host — bound prop end-to-end (renderer LLD-C5, the B2 wiring proof)', () => {
+  it('a {path}-bound label resolves off the data model and updates on updateDataModel', async () => {
+    const { r, mount, sent, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sb', catalogId: 'agent-ui' } }))
+    // `label` is a `{path}` binding (catalog Button.label is bindable, mapsTo textContent), not a literal.
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'sb', components: [{ id: 'root', component: 'Button', label: { path: '/greeting' } }] },
+      }),
+    )
+
+    const btn = mount.querySelector('ui-button')
+    expect(btn).toBeInstanceOf(UIButtonElement)
+
+    // Data arrives AFTER mount: the bound-prop effect (which started on a placeholder undefined path,
+    // SPEC-R4 AC2) wakes through the host's setPointer write and the resolve read.
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sb', path: '/greeting', value: 'Hello' } }))
+    await whenFlushed()
+    expect(btn!.textContent).toBe('Hello') // resolveBinding → resolve → the bound path's value
+
+    // A second write to the same path re-applies the prop — the live per-path computed updates.
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sb', path: '/greeting', value: 'Goodbye' } }))
+    await whenFlushed()
+    expect(btn!.textContent).toBe('Goodbye')
+
+    expect(sent.filter(isError)).toEqual([]) // no PARSE/CATALOG/IDGRAPH along the way
+
+    cleanup()
+  })
+})
