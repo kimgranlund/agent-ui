@@ -120,6 +120,10 @@ describe('ui-button states — per-variant :hover repaint (ADR-0008, both engine
 // active state is a real, distinct ladder step — proven by DARK distinctness. The LIGHT hover==active
 // collapse is a KNOWN design-escalation (the tok-states ladder), pinned (not silently passed) so a future
 // token fix flips this probe and forces an update — never failing the suite on a recorded escalation.
+//
+// These reads are TRANSITION-IMMUNE by construction: `resolveToken` measures a throwaway probe span that is
+// not a `ui-button` and never enters `:state(ready)`, so its background is the statically-resolved token —
+// never a mid-fade value. The hover/active diagnosis is the SETTLED ladder colour, not an intermediate.
 
 describe('ui-button states — RISK-1 solid hover-vs-active per color-scheme (both engines)', () => {
   it('DARK: solid :hover and :active are DISTINCT ladder steps; idle lifts to both', () => {
@@ -262,5 +266,86 @@ describe('ui-button BTN-CARET — caret = font, icon = icon (ADR-0012 §6, both 
 
     const hostPadEnd = px(getComputedStyle(btn).paddingInlineEnd) // [label│trailing] trailing slot edge = ½(h−icon)
     expect(hostPadEnd + cellPadEnd, 'caret does not land ½(h−font) from the host edge').toBeCloseTo((box - font) / 2, 1)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [5] Motion — the gated :state(ready) state-paint transition (interaction-states standard)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// button.css transitions ONLY the state-PAINT properties (background-color · color · border-color) over
+// --ui-motion-fast, behind `:scope:state(ready)`; button.ts arms `ready` ONE FRAME PAST first paint (rAF in
+// connected()). The intent: the upgrade/first paint SNAPS to its colour (no first-render fade-in), and only
+// SUBSEQUENT state changes animate. Geometry + the focus outline are NEVER transitioned (they snap); reduced
+// motion zeroes it. jsdom cannot evaluate `:state(ready)`/the CustomStateSet at all — this is the cross-engine
+// proof. (--ui-motion-fast is read empirically, not hard-coded — it is 300ms in the shipped dimensions.css.)
+
+const transDurMs = (el: HTMLElement): number => px(getComputedStyle(el).transitionDuration) * 1000
+
+describe('ui-button motion — gated :state(ready) paint transition (both engines)', () => {
+  it('first paint SNAPS (no transition pre-ready), then :state(ready) ARMS the transition', async () => {
+    const { btn } = mount('<ui-button variant="solid">Label</ui-button>')
+    // SYNCHRONOUSLY after mount, before the rAF fires: no transition is armed → the control is at its idle
+    // colour instantly (the first-paint snap — never a fade-in from a default/transparent).
+    expect(transDurMs(btn), 'a transition was armed at first paint (would fade-in on load)').toBe(0)
+    expect(bg(btn), 'idle colour is not present instantly on load (it faded in)').toBe(
+      resolveToken(btn, '--ui-button-bg', 'light'),
+    )
+    // one frame past first paint, button.ts adds the `ready` custom state → the transition arms.
+    await nextFrames(2)
+    expect(transDurMs(btn), ':state(ready) did not arm the transition').toBeGreaterThan(0)
+  })
+
+  it('once armed, a colour change ANIMATES a paint property — NOT geometry or the outline', async () => {
+    const { btn } = mount('<ui-button variant="solid">Label</ui-button>')
+
+    // BEFORE ready: a colour change does NOT spawn a running transition (the pre-ready snap), proven via the
+    // Web Animations view of CSS transitions — getAnimations() stays empty.
+    btn.setAttribute('variant', 'soft')
+    void getComputedStyle(btn).backgroundColor // force a style flush so any transition would have started
+    expect(btn.getAnimations().length, 'a colour change animated BEFORE :state(ready)').toBe(0)
+
+    btn.setAttribute('variant', 'solid') // reset, then arm
+    await nextFrames(2)
+    expect(transDurMs(btn), 'transition not armed after :state(ready)').toBeGreaterThan(0)
+
+    // AFTER ready: the same colour change now spawns a running CSS transition on a PAINT property.
+    btn.setAttribute('variant', 'soft')
+    void getComputedStyle(btn).backgroundColor
+    const anims = btn.getAnimations()
+    expect(anims.length, 'a colour change did NOT animate after :state(ready)').toBeGreaterThan(0)
+    const animatedProps = anims.map((a) => (a as CSSTransition).transitionProperty)
+    expect(
+      animatedProps.some((p) => p === 'background-color' || p === 'color' || p === 'border-color'),
+      'the running transition is not a state-paint property',
+    ).toBe(true)
+    // the standard: geometry + the focus ring SNAP — they must never appear in the transition list.
+    const declared = getComputedStyle(btn).transitionProperty
+    expect(declared, 'outline is transitioned (the focus ring must snap)').not.toContain('outline')
+    expect(declared, 'block-size is transitioned (geometry must snap)').not.toContain('block-size')
+    expect(animatedProps, 'the outline is animating (the focus ring must snap)').not.toContain('outline')
+  })
+
+  it('reduced-motion ZEROES the transition — Chromium emulates (CDP); WebKit asserts the baseline', async () => {
+    const { btn } = mount('<ui-button>Label</ui-button>')
+    await nextFrames(2) // arm :state(ready)
+    expect(transDurMs(btn), 'transition not armed in normal mode').toBeGreaterThan(0)
+
+    if (server.browser !== 'chromium') {
+      // WebKit exposes no CDP media emulation (the documented split) — assert we are genuinely NOT in
+      // reduced-motion (so the Chromium proof is not silently faked), and stop.
+      expect(window.matchMedia('(prefers-reduced-motion: reduce)').matches).toBe(false)
+      return
+    }
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
+    try {
+      expect(window.matchMedia('(prefers-reduced-motion: reduce)').matches).toBe(true)
+      // the @media (prefers-reduced-motion: reduce) block sets `transition: none` even with `:state(ready)`.
+      expect(transDurMs(btn), 'reduced-motion did not zero the state transition').toBe(0)
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
   })
 })
