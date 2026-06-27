@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import * as componentsBarrel from './index.ts'
 import { UIButtonElement } from './button/button.ts'
+import { UITextFieldElement } from './text-field/text-field.ts'
 // Read package.json + the CSS barrels as text (vite strips `.css?raw`; no `@types/node` devDep — same
 // approach as the s6/s7 probes).
 // @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
@@ -23,6 +24,11 @@ describe('components barrel — self-defines the ui-* family (s17)', () => {
     expect(componentsBarrel.UIButtonElement).toBe(UIButtonElement) // the class is surfaced for typed references
   })
 
+  it('importing the barrel ALSO registers ui-text-field and re-exports its element class (s12)', () => {
+    expect(customElements.get('ui-text-field')).toBe(UITextFieldElement) // `export * from './text-field/text-field.ts'` ran the self-define
+    expect(componentsBarrel.UITextFieldElement).toBe(UITextFieldElement) // the class is surfaced for typed references
+  })
+
   it('is exported as `./components` and points at controls/index.ts', () => {
     expect(pkg.exports['./components']).toBe('./src/controls/index.ts')
     expect(existsSync(`${PKG}/${pkg.exports['./components']}`)).toBe(true)
@@ -30,10 +36,13 @@ describe('components barrel — self-defines the ui-* family (s17)', () => {
 })
 
 describe('CSS barrels — wired into exports + the load-bearing order (s17)', () => {
-  it('`./component-styles.css` aggregates each control stylesheet (today: button.css)', () => {
+  it('`./component-styles.css` aggregates each control stylesheet (button.css, text-field.css) in addition order', () => {
     expect(pkg.exports['./component-styles.css']).toBe('./src/component-styles.css')
     const css = read('src/component-styles.css')
-    expect(css).toContain("@import './controls/button/button.css'")
+    const buttonAt = css.indexOf("@import './controls/button/button.css'")
+    const textFieldAt = css.indexOf("@import './controls/text-field/text-field.css'")
+    expect(buttonAt).toBeGreaterThanOrEqual(0)
+    expect(textFieldAt).toBeGreaterThan(buttonAt) // append-only in control-addition order (do-not-reorder, s12)
   })
 
   it('`./foundation-styles.css` aggregates @agent-ui/shared tokens FIRST, then dimensions', () => {

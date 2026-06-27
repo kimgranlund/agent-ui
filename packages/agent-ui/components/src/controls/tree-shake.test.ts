@@ -8,9 +8,10 @@ import { describe, it, expect } from 'vitest'
 // runtime BUNDLE assertion is `npm run size` (the components barrel bundles within budget via Rolldown);
 // this probe pins the import-graph SHAPE deterministically, no bundler.
 //
-// With ONE control "doesn't drag a sibling control" cannot yet bite (the family is just ui-button). We
-// assert tightness today against the descriptor module — a real same-package NON-dep — and LOG that the
-// sibling-control exclusion goes live the moment a second control lands.
+// The "doesn't drag a sibling control" exclusion is now LIVE — ui-text-field is the second control (G6), so
+// each control's graph is crawled separately and asserted to reach NEITHER the other control NOR the
+// descriptor tooling. (No control imports another; the only shared modules are the dom + reactive layers and
+// the traits each one composes.)
 
 // '../**/*.ts' from src/controls/ → every production .ts in the package. import.meta.glob keys are relative
 // to THIS file's directory (src/controls/), a mix of './button/...' and '../dom/...'; we normalise each to a
@@ -41,26 +42,36 @@ const specifiersOf = (src: string): string[] => {
 const sources = new Map<string, string>()
 for (const [k, v] of Object.entries(raw)) sources.set(resolveRel(IMPORTER_DIR, k), v)
 
-const ENTRY = 'controls/button/button.ts'
-const reached = new Set<string>()
-const external = new Set<string>()
-const queue: string[] = [ENTRY]
-while (queue.length) {
-  const cur = queue.pop() as string
-  if (reached.has(cur)) continue
-  reached.add(cur)
-  const src = sources.get(cur)
-  if (src === undefined) continue // a relative spec that resolved outside the glob — treated as unreachable
-  for (const spec of specifiersOf(src)) {
-    if (spec.startsWith('.')) {
-      const target = resolveRel(dirOf(cur), spec)
-      if (!reached.has(target)) queue.push(target)
-    } else {
-      external.add(spec) // any non-relative specifier (a sibling package or a third-party dep)
+/** Crawl the transitive relative-import graph from one control entry; collect reached modules + external specs. */
+const crawl = (entry: string): { reached: Set<string>; external: Set<string> } => {
+  const reached = new Set<string>()
+  const external = new Set<string>()
+  const queue: string[] = [entry]
+  while (queue.length) {
+    const cur = queue.pop() as string
+    if (reached.has(cur)) continue
+    reached.add(cur)
+    const src = sources.get(cur)
+    if (src === undefined) continue // a relative spec that resolved outside the glob — treated as unreachable
+    for (const spec of specifiersOf(src)) {
+      if (spec.startsWith('.')) {
+        const target = resolveRel(dirOf(cur), spec)
+        if (!reached.has(target)) queue.push(target)
+      } else {
+        external.add(spec) // any non-relative specifier (a sibling package or a third-party dep)
+      }
     }
   }
+  return { reached, external }
 }
+
+const ENTRY = 'controls/button/button.ts'
+const { reached, external } = crawl(ENTRY)
 const layers = (prefix: string) => [...reached].filter((p) => p.startsWith(prefix))
+
+const TF_ENTRY = 'controls/text-field/text-field.ts'
+const tf = crawl(TF_ENTRY)
+const tfLayers = (prefix: string) => [...tf.reached].filter((p) => p.startsWith(prefix))
 
 describe('ui-button tree-shake — the entry graph is tight (s17)', () => {
   it('the glob found the package source and reached the entry (anti-vacuous)', () => {
@@ -75,11 +86,14 @@ describe('ui-button tree-shake — the entry graph is tight (s17)', () => {
     expect(layers('reactive/').length).toBeGreaterThan(0)
   })
 
-  it('drags ONLY {controls/button, dom, traits, reactive} — no other package module', () => {
+  it('drags ONLY {controls/button, dom, traits, reactive} — and NOT the sibling ui-text-field', () => {
     const ALLOWED = ['controls/button/', 'dom/', 'traits/', 'reactive/']
     for (const p of reached) {
       expect(ALLOWED.some((a) => p.startsWith(a)), `unexpected module in button graph: ${p}`).toBe(true)
     }
+    // the sibling-control exclusion, now live with a second control: button's graph reaches no text-field module.
+    expect(layers('controls/text-field/')).toEqual([])
+    expect(new Set(layers('controls/').map((p) => p.split('/')[1]))).toEqual(new Set(['button']))
   })
 
   it('does NOT drag the descriptor tooling (a real same-package non-dep)', () => {
@@ -89,15 +103,35 @@ describe('ui-button tree-shake — the entry graph is tight (s17)', () => {
   it('pulls ZERO non-relative imports — no @agent-ui/a2ui, no @agent-ui/shared in JS, no third-party', () => {
     expect([...external]).toEqual([])
   })
+})
 
-  it('LOG: the sibling-control exclusion goes live at ≥2 controls', () => {
-    const controlsReached = new Set(layers('controls/').map((p) => p.split('/')[1]))
-    const layerSpan = [...new Set([...reached].map((p) => p.split('/')[0]))].join(', ')
-    console.log(
-      `[s17 tree-shake] ui-button graph = ${reached.size} modules across {${layerSpan}}; controls reached: ` +
-        `{${[...controlsReached].join(', ')}}. With one control the sibling-control exclusion is not yet ` +
-        `bitten — it bites the moment a second control lands (no control imports another).`,
-    )
-    expect(controlsReached).toEqual(new Set(['button'])) // today the only control in the graph is itself
+// ── ui-text-field (the second control, G6 s12) — the same tightness, now with the sibling exclusion LIVE ──
+
+describe('ui-text-field tree-shake — the entry graph is tight (s12)', () => {
+  it('the glob reached the text-field entry with a real, non-trivial dep set (anti-vacuous)', () => {
+    expect(tf.reached.has(TF_ENTRY)).toBe(true)
+    expect(tf.reached.size).toBeGreaterThan(3) // text-field drags the form base + the trait + dom + reactive
+  })
+
+  it('reaches its REAL deps: the dom layer + the UIFormElement base + the trackUserInvalid trait + reactive', () => {
+    expect(tf.reached.has('dom/index.ts')).toBe(true)
+    expect(tf.reached.has('dom/form.ts')).toBe(true) // the UIFormElement form-associated base (s1)
+    expect(tf.reached.has('traits/track-user-invalid.ts')).toBe(true) // the user-invalid timing controller (s2)
+    expect(tfLayers('reactive/').length).toBeGreaterThan(0)
+  })
+
+  it('drags ONLY {controls/text-field, dom, traits, reactive} — and NOT the sibling ui-button', () => {
+    const ALLOWED = ['controls/text-field/', 'dom/', 'traits/', 'reactive/']
+    for (const p of tf.reached) {
+      expect(ALLOWED.some((a) => p.startsWith(a)), `unexpected module in text-field graph: ${p}`).toBe(true)
+    }
+    // the sibling exclusion, the other direction: text-field's graph reaches no button module (no press-activation).
+    expect(tfLayers('controls/button/')).toEqual([])
+    expect(tf.reached.has('traits/press-activation.ts')).toBe(false)
+  })
+
+  it('does NOT drag the descriptor tooling, and pulls ZERO non-relative imports', () => {
+    expect(tfLayers('descriptor/')).toEqual([])
+    expect([...tf.external]).toEqual([])
   })
 })
