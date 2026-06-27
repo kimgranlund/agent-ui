@@ -61,7 +61,11 @@ canonical docs it **cites, never copies** — read them, don't restate them.
 6. **Descriptor** (`{name}.md`, ADR-0004) — YAML frontmatter is the attributes-as-API record (validates
    against the frontmatter contract schema, G5): tag · tier · extends · attributes (from `static props`) ·
    properties (manual accessors) · events · slots · parts · customStates · face · aria · keyboard ·
-   geometry · forcedColors. The markdown body is the component's `/site` doc prose.
+   geometry · forcedColors. The markdown body is the component's `/site` doc prose. Declare `slots` and
+   `customStates` **truthfully** — they are now trip-wired against the component *source*
+   (`compareDescriptorToSource`, `descriptor/component-descriptor.ts`): `customStates` must match the
+   `internals.states` calls in `{name}.ts` + the `:state(…)` set in `{name}.css`, and every CSS-styled slot
+   (`[slot=…]`) must be declared. A stale `customStates: []` left behind after adding a `:state()` is caught.
 7. **Probes** (`{name}.test.ts`) — behaviour (jsdom) + the geometry/token trip-wire checks from
    geometry.md "Mechanization" (`edge-pad == (height−glyph)/2`; `padding-block == 0`; `0 < glyph ≤ box`;
    affordance `== font`) and token hygiene (no raw primitive refs; every `--ui-{cmp}-*` in `:where()`).
@@ -73,8 +77,11 @@ canonical docs it **cites, never copies** — read them, don't restate them.
 Draft → check → fix → re-check:
 
 1. `npm run check` (tsc) and `npm test` (Vitest) both green.
-2. The standing trip-wires pass: import-layering, naming/structure, `{name}.md` frontmatter ↔ `static props`,
+2. The standing trip-wires pass: import-layering, naming/structure, `{name}.md` frontmatter ↔ `static props`
+   **and ↔ source** (`customStates`/`slots` vs the `.ts`/`.css`, `compareDescriptorToSource`),
    zero-native + internals-ARIA, the geometry/token checks (step 7).
+   A slot/role/prop **rename** is a deliberate contract change the trip-wires don't flag (drift ≠ intent) —
+   run the contract-change **migration** step (`docs/process.md`) before treating it as done.
 3. (G5+) the `component-reviewer` agent scores **both** COMPOSE and REALIZE axes ≥ 4.
 
 If any fails, fix the component (not the check) and re-run. Finalize only when all are clean.
@@ -85,7 +92,7 @@ If any fails, fix the component (not the check) and re-run. Finalize only when a
 - [ ] Light DOM; ARIA via `internals`; no native form elements; events ∈ the allowlist.
 - [ ] Single `{name}.css` with `@scope`; tokens in `:where()` from `--c-` roles; geometry off the ramp
       (`padding-block: 0`); affordances `= font`.
-- [ ] `{name}.md` frontmatter validates and matches `static props`.
+- [ ] `{name}.md` frontmatter validates and matches `static props` **and the source** (`customStates`/`slots` ↔ the `.ts`/`.css`).
 - [ ] Probes green (jsdom) + browser-truth smoke (G5); `npm run check && npm test` green.
 - [ ] Marginal size within the tier budget; tree-shake clean (importing it drags only it + real deps).
 

@@ -26,12 +26,19 @@ Score **COMPOSE** (C1–C5) and **REALIZE** (C6–C10) as two independent axes �
 API (high COMPOSE) does not earn a pass if the realization is inert (low REALIZE); read each axis on its own
 evidence so neither hides the other.
 
-- **Ground every score in evidence.** A `[gate]` dimension is scored from the named probe / gate being
-  green (cite the test `file:line` or the committed result); a `[review]` dimension is judgment, but still
-  cited to `file:line`. An unproven claim caps the score at 3.
-- **Take the adversarial stance.** Look for the inert realization behind a clean surface: a geometry
-  asserted in source but not measured in a real engine; a `[density]` smoke that is vacuous; a descriptor
-  that drifts from `static props`; a trait release that leaks on reconnect; a boolean that should be a slot.
+- **Ground every score in evidence.** A `[gate]` dimension is scored from the named probe being green AND
+  its negative control biting (cite the test `file:line` or the committed result) — a green assertion with
+  no NC, or an NC that never fired, is not yet evidence; a `[review]` dimension is judgment, but still cited
+  to `file:line`. An unproven claim caps the score at 3.
+- **Take the adversarial stance — find the green-but-hollow gate.** Your structural separation from the
+  maker is the leverage: a green surface is the builder's claim, not your verdict, so distrust it and hunt
+  the inert realization behind it. The reference build (G5 `ui-button`) names the patterns to look for — a
+  geometry asserted in source but never *measured* in a real engine (jsdom green ≠ proven; the cross-engine
+  smoke is what caught the real subtree-geometry bug jsdom missed); a `[density]` or state smoke that is
+  vacuous (it would stay green with the behaviour deleted); a `[gate]` whose **negative control never bit**,
+  or a new check that shipped with **no negative control at all**. Also the quieter tells: a descriptor that
+  drifts from `static props`, a trait release that leaks on reconnect, a boolean that should be a slot. A
+  gate you cannot watch fail has not earned its score — cap it and name the NC that is missing or inert.
 - **Read against the rubric, not the library.** The rubric is the standard — score the component in front
   of you, citing the dimension anchors. Reach for a sibling only to judge C5 (dialect drift).
 
