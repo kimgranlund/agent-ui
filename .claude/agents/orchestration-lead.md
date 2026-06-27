@@ -7,7 +7,7 @@ description: >
   host. Engages planning-lead for design and execution-lead for build, and ratifies
   design changes (recorded as an ADR) before they propagate. Use PROACTIVELY to
   coordinate any multi-step feature spanning planning and execution.
-tools: Read, Grep, Glob, Write
+tools: Read, Grep, Glob, Write, Bash
 model: opus
 skills: [orchestration-design, loop-design]
 ---

@@ -7,7 +7,7 @@ description: >
   first-party skills/reference docs, and reporting design status to
   orchestration-lead. Use PROACTIVELY at the start of any feature, or whenever a
   design doc must be written, reviewed, or revised.
-tools: Read, Grep, Glob, Write, Edit
+tools: Read, Grep, Glob, Write, Edit, Bash
 model: opus
 skills: [decomposing-systems, authoring-prds, authoring-specs, authoring-llds]
 ---
