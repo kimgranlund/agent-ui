@@ -47,13 +47,13 @@
   --ui-button-bg: var(--c-primary-container-low);
   --ui-button-bg-hover: var(--c-primary-container);
   --ui-button-bg-active: var(--c-primary-container-high);
-  --ui-button-ink: var(--c-primary-on-surface);
+  --ui-button-ink: var(--c-primary-high); /* accent label ink — reads as a primary-family action, not neutral text */
 }
 :where(ui-button[variant='ghost']) {
   --ui-button-bg: transparent;
   --ui-button-bg-hover: var(--c-primary-container-low);
   --ui-button-bg-active: var(--c-primary-container);
-  --ui-button-ink: var(--c-primary);
+  --ui-button-ink: var(--c-primary-high); /* accent label ink (same as soft) — the transparent/wash variant still reads as primary */
 }
 
 /* size → dimensional ramp */
