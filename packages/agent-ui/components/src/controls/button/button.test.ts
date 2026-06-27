@@ -113,3 +113,30 @@ describe('UIButtonElement (s5)', () => {
     }).not.toThrow() // the get() guard prevents a duplicate-registration throw
   })
 })
+
+// Phase-1 s11 — the button-level zero-residue probe (the connect→disconnect residue check the s5 suite
+// above does not cover). button-activation proves the listeners are LIVE while connected; this proves they
+// are abort-OWNED: disconnect tears down `pressActivation`'s keydown/keyup (via the connection AbortSignal),
+// and a reconnect re-wires exactly one set — no leaked listener stacks across the cycle. (Subscriber-count
+// residue is proven at the base in dom/element-hooks.test.ts s2; the button's no-op render() subscribes to
+// nothing, so there is no prop-signal subscriber to leak — the keyboard listeners ARE the button's residue.)
+describe('UIButtonElement — zero residue across connect/disconnect (s11)', () => {
+  it('button-zero-residue: disconnect removes pressActivation listeners; reconnect re-wires exactly one', () => {
+    const el = new UIButtonElement()
+    let clicks = 0
+    el.addEventListener('click', () => clicks++)
+
+    document.body.append(el) // connect → connected() wires pressActivation on the connection AbortSignal
+    key(el, 'keydown', 'Enter')
+    expect(clicks).toBe(1) // the listener is live while connected
+
+    el.remove() // disconnect → ac.abort() removes the keydown/keyup listeners
+    key(el, 'keydown', 'Enter')
+    expect(clicks).toBe(1) // no new click — the listener was abort-owned and torn down (zero live listeners)
+
+    document.body.append(el) // reconnect → connected() re-runs on a FRESH AbortController
+    key(el, 'keydown', 'Enter')
+    expect(clicks).toBe(2) // exactly ONE more — a single re-wired listener, not a leaked old one stacked atop it
+    el.remove()
+  })
+})
