@@ -14,8 +14,10 @@ import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom
 import { pressActivation } from '../../traits/press-activation.ts'
 
 const props = {
-  variant: prop.enum(['solid', 'soft', 'ghost'] as const, 'solid'),
-  size: prop.enum(['sm', 'md', 'lg'] as const, 'md'),
+  // variant/size REFLECT so the attribute-selector styling (`[variant]`/`[size]` in button.css repointing
+  // the colour roles + dimensional ramp) applies to JS-set values too, not only author-set attributes.
+  variant: { ...prop.enum(['solid', 'soft', 'ghost'] as const, 'solid'), reflect: true },
+  size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
   // `disabled` reflects to a `disabled` attribute so CSS can render the host pointer-inert (s7); the
   // trait already guards keyboard activation off `() => this.disabled`.
   disabled: { ...prop.boolean(false), reflect: true },

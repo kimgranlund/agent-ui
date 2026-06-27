@@ -1,0 +1,111 @@
+/* button.css — ui-button, the single-file component stylesheet (ADR-0003). Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-button)` (specificity 0,0,0) DECLARES the `--ui-button-*` chain from the
+ *       colour roles (`--c-{family}-{role}`; default family = primary) and the dimensional ramp
+ *       (`--ui-{height,font,gap}-{size}` from `@agent-ui/shared/dimensions.css`). `[variant]` repoints the
+ *       colour channels (solid=filled · soft=tonal · ghost=text); `[size]` repoints the geometry.
+ *   [2] STYLES BLOCK — `@scope (ui-button)` CONSUMES only `--ui-button-*`. Geometry per references/geometry.md
+ *       (the law): `block-size` off the ramp, `padding-block: 0`. Anatomy per ADR-0006: host-as-grid with an
+ *       OPTIONAL leading icon slot via a presence-driven `:has()` — bare label is slotless (`1fr`, pad = h/2,
+ *       density-invariant); icon+label is `auto 1fr` (slot edge = ½(h−icon), `column-gap` = the density-bearing
+ *       gap). Forced-colors keeps the ink/border. The reflected `disabled` attribute makes the host inert.
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected from
+ * button.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-button) declares --ui-button-* ════════════════ */
+
+:where(ui-button) {
+  /* Colour channel (default family = primary). solid = filled (accent bg, on-accent ink). */
+  --ui-button-bg: var(--c-primary);
+  --ui-button-ink: var(--c-primary-on-primary);
+  --ui-button-border: transparent;
+
+  /* Geometry — off the s6 dimensional ramp (default size = md). [size] repoints below. */
+  --ui-button-height: var(--ui-height-md);
+  --ui-button-font: var(--ui-font-md);
+  --ui-button-gap: var(--ui-gap-md);
+  --ui-button-icon: calc(18px * var(--ui-scale)); /* content-icon ramp md=18 (geometry-sizing-spec §1) */
+}
+
+/* variant → colour roles (the channel pattern, tokens.md) */
+:where(ui-button[variant='soft']) {
+  --ui-button-bg: var(--c-primary-container-low);
+  --ui-button-ink: var(--c-primary-on-surface);
+}
+:where(ui-button[variant='ghost']) {
+  --ui-button-bg: transparent;
+  --ui-button-ink: var(--c-primary);
+}
+
+/* size → dimensional ramp */
+:where(ui-button[size='sm']) {
+  --ui-button-height: var(--ui-height-sm);
+  --ui-button-font: var(--ui-font-sm);
+  --ui-button-gap: var(--ui-gap-sm);
+  --ui-button-icon: calc(16px * var(--ui-scale));
+}
+:where(ui-button[size='lg']) {
+  --ui-button-height: var(--ui-height-lg);
+  --ui-button-font: var(--ui-font-lg);
+  --ui-button-gap: var(--ui-gap-lg);
+  --ui-button-icon: calc(20px * var(--ui-scale));
+}
+
+/* disabled → muted neutral roles (overrides the family) */
+:where(ui-button[disabled]) {
+  --ui-button-bg: var(--c-neutral-surface-high);
+  --ui-button-ink: var(--c-neutral-on-surface-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-button) consumes ONLY --ui-button-* ════════════════ */
+
+@scope (ui-button) {
+  :scope {
+    display: inline-grid;
+    grid-template-columns: 1fr; /* bare label — slotless */
+    align-items: center;
+    box-sizing: border-box;
+
+    block-size: var(--ui-button-height); /* the vertical lever — geometry.md */
+    padding-block: 0; /* NEVER block-padding */
+    padding-inline: calc(var(--ui-button-height) / 2); /* slotless edge = h/2 */
+    min-inline-size: var(--ui-button-height); /* frame: icon-only ≈ square */
+
+    font-size: var(--ui-button-font);
+    background: var(--ui-button-bg);
+    color: var(--ui-button-ink);
+    border: 1px solid var(--ui-button-border);
+    border-radius: calc(var(--ui-button-height) / 2); /* pill radius = h/2 */
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* icon + label (ADR-0006 host-as-grid): a leading [slot=icon] child gets a square, icon-sized slot. The
+     leading edge becomes the slot pad ½(h−icon); the trailing label edge stays slotless h/2. */
+  :scope:has(> [slot='icon']) {
+    grid-template-columns: auto 1fr;
+    column-gap: var(--ui-button-gap); /* the rhythm — density rides this (gap = font/2 × density) */
+    padding-inline-start: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2); /* slot edge = ½(h−icon) */
+    padding-inline-end: calc(var(--ui-button-height) / 2); /* trailing label = h/2 */
+  }
+  :scope > [slot='icon'] {
+    inline-size: var(--ui-button-icon);
+    block-size: var(--ui-button-icon); /* the square slot, icon-sized */
+  }
+
+  /* disabled host — pointer-inert (the reflected `disabled` attribute) */
+  :scope:is([disabled]) {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  /* forced-colors — keep the ink + border visible (the label/outline must not vanish) */
+  @media (forced-colors: active) {
+    :scope {
+      color: ButtonText;
+      border-color: ButtonText;
+    }
+  }
+}

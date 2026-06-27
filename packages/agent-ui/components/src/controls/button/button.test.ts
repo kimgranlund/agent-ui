@@ -96,6 +96,16 @@ describe('UIButtonElement (s5)', () => {
     el.remove()
   })
 
+  it('button-reflect: variant/size reflect a JS-set value to the attribute (the CSS [variant]/[size] hook)', () => {
+    const el = new UIButtonElement()
+    document.body.append(el)
+    el.variant = 'ghost'
+    el.size = 'lg'
+    expect(el.getAttribute('variant')).toBe('ghost') // reflects synchronously (p-reflect) → CSS [variant=ghost] matches
+    expect(el.getAttribute('size')).toBe('lg')
+    el.remove()
+  })
+
   it('button-self-define: registered as ui-button, guarded against double-define', () => {
     expect(customElements.get('ui-button')).toBe(UIButtonElement)
     expect(() => {
