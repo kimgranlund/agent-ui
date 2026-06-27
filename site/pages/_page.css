@@ -11,6 +11,15 @@ body {
   background: var(--c-neutral-surface);
 }
 
+/* Outer containment is a SHELL concern — every page's <main data-page-content> aligns with the header and
+ * stays within the viewport, so a new page can't forget the gutter (the states.html overflow regression).
+ * Per-page CSS owns the INNER layout and MAY override the width when it needs more room (e.g. the A2UI
+ * canvas's 72rem). */
+[data-page-content] {
+  inline-size: min(64rem, 100% - 3rem);
+  margin-inline: auto;
+}
+
 /* ── the page header (shared shell) ─────────────────────────────────────────────────────────────────────── */
 .site-header {
   inline-size: min(64rem, 100% - 3rem);
