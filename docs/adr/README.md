@@ -37,3 +37,6 @@ When `execution-lead` (or anyone) hits a constraint that the design can't satisf
 |---|---|---|---|
 | [0001](./0001-start-a1-validation-spine-ahead-of-g7.md) | Start A1 with the control-free validation spine ahead of G7 | accepted | (none — sequencing) |
 | [0002](./0002-validator-parity-reconciliation.md) | Validator parity: missing-root, finalize granularity, syntactic-only pointer | accepted | renderer LLD-C11/C13 · corpus LLD-C5/C6 |
+| [0003](./0003-single-file-component-css-barrels-host-page.md) | Single-file component CSS + barrels + host-page packaging | accepted | plan §8 · goals §G5 · process §1 · authoring-components |
+| [0004](./0004-component-descriptor-md-frontmatter.md) | Component descriptor: `{name}.md` frontmatter replaces `{name}.api.json` | accepted | plan §10 · process §1/§4 · goals §G5 · authoring-components |
+| [0005](./0005-lazy-upgrade-property-wins.md) | Lazy-property upgrade precedence: property-wins | accepted | goals §G2 · plan §5 |

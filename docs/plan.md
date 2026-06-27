@@ -70,7 +70,7 @@ packages/agent-ui/
         press-activation.ts, tabbable.ts, roving-tabindex.ts, track-user-invalid.ts, …
       controls/
         button/  text-field/  checkbox/  switch/  listbox/  select/  field/
-          <name>.ts  <name>.css  <name>-tokens.css  <name>-styles.css  <name>.test.ts  <name>.api.json
+          <name>.ts  <name>.css  <name>.md  <name>.test.ts    # single-file CSS + md-frontmatter descriptor (ADR-0003/0004)
       index.ts          # the package barrel (@agent-ui/components)
   shared/                      # @agent-ui/shared — tokens, styles, utility types
     src/
@@ -148,6 +148,7 @@ Maps the four platform callbacks onto the graph's two lifetimes:
 - ARIA via `attachInternals()`, never host attributes.
 - The lazy-property upgrade dance (`upgradeProps` at connect; `upgradeProperty(...)` for manual
   array/object accessors) — a `.prop=` binding set before upgrade otherwise shadows the accessor.
+  **Precedence: property-wins** (ADR-0005) — a pre-upgrade property beats an initial attribute.
 
 ### Props as typed signals (the headline TS pattern)
 
@@ -231,13 +232,18 @@ Traits needed for the control family (build alongside the controls that need the
 
 ## 8. Styling & the dimensional system
 
-Every component is a folder of behaviour-only `.ts` + a CSS trio:
+Every component is a folder of behaviour-only `.ts` + a **single `{name}.css`** (ADR-0003) with two
+sectioned blocks:
 
-- `{name}-tokens.css` — `:where(ui-{name})` (specificity 0,0,0) declares `--ui-{name}-*` defaults from
+- a `:where(ui-{name})` token block (specificity 0,0,0) declaring `--ui-{name}-*` defaults from
   family-prefixed color roles (`--c-{family}-{role}`) and the dimensional ramps; `[size]` / `[tone]`
-  selectors repoint them in pure CSS (no JS, no `observedAttributes`).
-- `{name}-styles.css` — `@scope (ui-{name}) { :scope { … } }`, consuming only `--ui-{name}-*`.
-- `{name}.css` — barrel: `@import` tokens then styles.
+  selectors repoint them in pure CSS (no JS, no `observedAttributes`), **then**
+- an `@scope (ui-{name}) { :scope { … } }` styles block, consuming only `--ui-{name}-*`.
+
+The two blocks stay clearly sectioned so the "tokens in `:where()`" probe distinguishes the declaration
+layer from the consumption layer in one file. The package exposes `components` / `component-styles` /
+`foundation-styles` barrels, consumed by a host page that links the styles (tokens first) and self-defining
+modules.
 
 **Dimensional standard** (see `references/dimensional-standard.md`): vertical size is
 `block-size: var(--ui-{cmp}-height)`, **never** block-padding (`padding-block: 0`); inline-padding is
@@ -295,10 +301,12 @@ This section is itself a deliverable — the foundation's job is to set the patt
 
 Three instruments, ported from rce's discipline:
 
-1. **API contract** — each control ships `{name}.api.json`: an "attributes-as-API" descriptor
-   (tag · tier · extends · attributes[type/reflect/default] · properties[manual/readonly] · events ·
-   slots · parts · customStates · face[formAssociated/value/validity] · aria[role/labelSource] ·
-   keyboard · geometry · forcedColors). Machine-checkable; keeps the public surface from drifting.
+1. **API contract** — each control ships `{name}.md` with YAML frontmatter (ADR-0004): an
+   "attributes-as-API" descriptor (tag · tier · extends · attributes[type/reflect/default] ·
+   properties[manual/readonly] · events · slots · parts · customStates · face[formAssociated/value/validity] ·
+   aria[role/labelSource] · keyboard · geometry · forcedColors) in the frontmatter, the prose doc in the
+   body. Machine-checkable (frontmatter schema + contract↔props trip-wire) and the `/site` doc source —
+   one artifact, two consumers; keeps the public surface from drifting.
 2. **Evaluation rubric** — two crossing axes scored separately: **COMPOSE** (layer/anatomy/API/
    composition/coherence) and **REALIZE** (geometry/element/semantics/interaction/fidelity). Shippable =
    both review axes ≥ 4 and zero gate fails. A clean API can't hide an inert build.

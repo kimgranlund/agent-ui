@@ -25,7 +25,7 @@ canonical docs it **cites, never copies** — read them, don't restate them.
 - **Color tokens** — the `--c-{family}-{role}` role system + consumption invariants:
   `docs/references/tokens.md`.
 - **Naming / TS / layering** — `CLAUDE.md`. **Quality bar** — the COMPOSE/REALIZE
-  component rubric + the api-contract schema (both land at G5; cite as forthcoming until then).
+  component rubric + the `{name}.md` frontmatter contract schema (both land at G5; cite as forthcoming until then).
 
 ## When to use / when not
 
@@ -41,7 +41,7 @@ canonical docs it **cites, never copies** — read them, don't restate them.
      the sizing lever.
 2. **Scaffold** the per-component folder — `controls/{name}/` (FACE form controls) or `components/{name}/`
    (display/layout/pattern catalog), holding exactly:
-   `{name}.ts` · `{name}-tokens.css` · `{name}-styles.css` · `{name}.css` (barrel) · `{name}.test.ts` · `{name}.api.json`.
+   `{name}.ts` · `{name}.css` (single file, ADR-0003) · `{name}.md` (descriptor, ADR-0004) · `{name}.test.ts`.
 3. **Typed props** (`{name}.ts`) — declare `static props` with the `prop.*` constructors and the
    `interface UI{Name}Element extends ReactiveProps<typeof props> {}` declare-merge (plan.md §5). Closed
    sets are `prop.enum([...] )` (literal unions), never `enum`. Don't re-specify the API — follow it.
@@ -50,16 +50,18 @@ canonical docs it **cites, never copies** — read them, don't restate them.
    content cell; ARIA via `this.internals` (never host attributes); emit only `change·input·select·open·
    close·toggle`. Self-define `UI{Name}Element.define('ui-{name}')`. Re-route manual value-taking
    accessors through `upgrade(...)` at connect.
-5. **CSS trio** — behaviour-only `.ts`; styling is pure CSS:
-   - `{name}-tokens.css` — `:where(ui-{name})` declares `--ui-{name}-*` from family roles
+5. **CSS** (single `{name}.css`, ADR-0003) — behaviour-only `.ts`; styling is pure CSS, two sectioned blocks:
+   - a `:where(ui-{name})` **token block** declaring `--ui-{name}-*` from family roles
      (`var(--c-{family}-{role})`, tokens.md) and the dimensional ramps; `[size]`/`[tone]` repoint in pure CSS.
-   - `{name}-styles.css` — `@scope (ui-{name}) { :scope { … } }`, consuming **only** `--ui-{name}-*`. Wire
+   - an `@scope (ui-{name}) { :scope { … } }` **styles block**, consuming **only** `--ui-{name}-*`. Wire
      geometry per geometry.md: `block-size` off the ramp, `padding-block: 0`, the slot/slotless inline-pad,
      the `(height−glyph)/2` centering law, affordance `= font` vs content-icon `= --ui-ind`.
-   - `{name}.css` — barrel: `@import` tokens then styles.
-6. **Descriptor** (`{name}.api.json`) — the attributes-as-API record (validates against the api-contract
-   schema, G5): tag · tier · extends · attributes (from `static props`) · properties (manual accessors) ·
-   events · slots · parts · customStates · face · aria · keyboard · geometry · forcedColors.
+   - Keep the two blocks clearly sectioned so the "tokens in `:where()`" probe distinguishes declaration
+     from consumption in one file.
+6. **Descriptor** (`{name}.md`, ADR-0004) — YAML frontmatter is the attributes-as-API record (validates
+   against the frontmatter contract schema, G5): tag · tier · extends · attributes (from `static props`) ·
+   properties (manual accessors) · events · slots · parts · customStates · face · aria · keyboard ·
+   geometry · forcedColors. The markdown body is the component's `/site` doc prose.
 7. **Probes** (`{name}.test.ts`) — behaviour (jsdom) + the geometry/token trip-wire checks from
    geometry.md "Mechanization" (`edge-pad == (height−glyph)/2`; `padding-block == 0`; `0 < glyph ≤ box`;
    affordance `== font`) and token hygiene (no raw primitive refs; every `--ui-{cmp}-*` in `:where()`).
@@ -71,7 +73,7 @@ canonical docs it **cites, never copies** — read them, don't restate them.
 Draft → check → fix → re-check:
 
 1. `npm run check` (tsc) and `npm test` (Vitest) both green.
-2. The standing trip-wires pass: import-layering, naming/structure, `{name}.api.json` ↔ `static props`,
+2. The standing trip-wires pass: import-layering, naming/structure, `{name}.md` frontmatter ↔ `static props`,
    zero-native + internals-ARIA, the geometry/token checks (step 7).
 3. (G5+) the `component-reviewer` agent scores **both** COMPOSE and REALIZE axes ≥ 4.
 
@@ -81,15 +83,16 @@ If any fails, fix the component (not the check) and re-run. Finalize only when a
 
 - [ ] Right base class + size-class; props typed (literal unions, not `string`).
 - [ ] Light DOM; ARIA via `internals`; no native form elements; events ∈ the allowlist.
-- [ ] CSS trio with `@scope`; tokens in `:where()` from `--c-` roles; geometry off the ramp
+- [ ] Single `{name}.css` with `@scope`; tokens in `:where()` from `--c-` roles; geometry off the ramp
       (`padding-block: 0`); affordances `= font`.
-- [ ] `{name}.api.json` validates and matches `static props`.
+- [ ] `{name}.md` frontmatter validates and matches `static props`.
 - [ ] Probes green (jsdom) + browser-truth smoke (G5); `npm run check && npm test` green.
 - [ ] Marginal size within the tier budget; tree-shake clean (importing it drags only it + real deps).
 
 ## Worked example
 
 `ui-button` is the reference control — built end-to-end at **G5** (Control class; `variant`/`size` enum
-props; `pressActivation` trait; `(height−glyph)/2` caret geometry; the `tokens.css` adoption + first
-geometry trip-wire). Until it lands, this procedure is authored from the canonical docs above; the
-example fills in at G5 and becomes the copy-from template.
+props; `pressActivation` trait; slotless `h/2` inline-pad geometry; single `button.css` + `button.md`
+descriptor (ADR-0003/0004); the dimensional-token adoption + first geometry trip-wire). Until it lands,
+this procedure is authored from the canonical docs above; the example fills in at G5 and becomes the
+copy-from template.

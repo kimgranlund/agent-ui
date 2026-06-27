@@ -36,7 +36,7 @@ Three placement rules follow, and they decide every governance artifact below:
 | `auditing-components` | behavioral | procedure | **skill** | drift (detection) | `authoring-skills` | ~G6 |
 | `component-reviewer` | behavioral | — | **subagent** | drift + bloat (judgment) | `authoring-agents` | G5 |
 | `tokens-specialist` | behavioral | — | **subagent** | drift (tokens) | `authoring-agents` | G6 |
-| api-contract schema | referential | rubric/check | json-schema | drift | hand (draft-2020-12) | G5 |
+| contract schema (`{name}.md` frontmatter) | referential | rubric/check | json-schema | drift | hand (draft-2020-12) | G5 |
 | component rubric (COMPOSE/REALIZE) | referential | rubric | doc | drift + bloat | `authoring-rubrics` | G5 |
 | kernel rubric | referential | rubric | doc | bloat | `authoring-rubrics` | G1 |
 | coherence/health rubric | referential | rubric | doc | drift | `authoring-rubrics` | ~G6 |
@@ -53,7 +53,7 @@ check, so each is a script or a probe, never an agent. Two speeds:
 **Fast static gates (a Stop / pre-commit hook):**
 - naming/structure — `ui-*` ↔ `UI*Element`; the exact per-component file set; `--ui-{name}-*` prefix;
   event names ∈ the allowlist.
-- contract↔props drift — `{name}.api.json` `attributes[]` === live `finalize(Class)` table.
+- contract↔props drift — `{name}.md` frontmatter `attributes[]` === live `finalize(Class)` table (ADR-0004).
 - import-layering — `reactive/` imports nothing; `dom/` imports only `reactive/`; no upward imports.
 - zero-native + ARIA — no native form elements (allowlist, comment-aware); no literal `role`/`aria-*` on host.
 - lifecycle/`upgrade` — every manual value-taking accessor re-applied via `upgrade(...)` at connect.
@@ -127,8 +127,8 @@ component** — that cadence is what makes the fan-out earn its token cost.
 
 These are read to check, never obeyed. They are the single source of truth review grounds against:
 
-- **api-contract schema** (`docs/component-api-contract.json`) — the machine-checkable public surface;
-  also the target of the contract↔props trip-wire.
+- **contract schema** (the `{name}.md` frontmatter schema, ADR-0004) — the machine-checkable public
+  surface; also the target of the contract↔props trip-wire, and the `/site` doc source.
 - **component rubric** (COMPOSE/REALIZE) — two axes scored separately; shippable = both ≥ 4, zero gate
   fails. Carries the explicit bloat dimensions (API minimalism / no boolean explosion, marginal size,
   no self-owned margin, tier discipline).
@@ -164,7 +164,7 @@ These are read to check, never obeyed. They are the single source of truth revie
 ```
 G0  thin CLAUDE.md · fast-gate hook · naming/layering/contract-drift probes · size script
 G1  kernel rubric
-G5  authoring-components skill · api-contract schema · component rubric · component-reviewer agent   (land WITH ui-button)
+G5  authoring-components skill · frontmatter contract schema · component rubric · component-reviewer agent   (land WITH ui-button)
 G6  auditing-components skill · coherence rubric · tokens-specialist agent
 per-tier  council bloat red-team (occasional, justified fan-out)
 ```

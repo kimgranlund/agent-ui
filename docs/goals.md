@@ -12,7 +12,7 @@
 - [ ] `npm run check` (tsc) and `npm test` (Vitest) are green. (`vite build` is dormant until the gallery — G8.)
 - [ ] No unused locals/parameters; type-only imports use `import type`; local imports keep `.ts`.
 - [ ] New behaviour is covered by probes; the whole suite stays green (monotonic — nothing regresses).
-- [ ] Public surface changes are reflected in the relevant `.api.json` and in `plan.md` if a decision moved.
+- [ ] Public surface changes are reflected in the relevant `{name}.md` frontmatter (ADR-0004) and in `plan.md` if a decision moved.
 
 ---
 
@@ -99,8 +99,9 @@ D8 5. Promotion gate (D1,D3,D4,D5,D6 ≥ 4; D2,D7 ≥ 4; D8 ≥ 3): **PASS** —
 against per-slice independently-gated evidence (a negative control per slice). Suite: 148 probes green;
 import-layering trip-wire green. Size: **2427 B gz** (reactive+dom barrel, 6575 B min; `npm run size`,
 within the ≤ ~6 kB budget). Code: `packages/agent-ui/components/src/dom/` (`props.ts`, `element.ts`,
-`index.ts`). Deferred to G5 (planning calls): the lazy-upgrade **attribute-wins vs property-wins**
-precedence, and **camelCase→kebab** attribute folding. **G2 shippable.**
+`index.ts`). Resolved at G5: lazy-upgrade precedence = **property-wins** (ADR-0005). Still deferred (the
+button doesn't exercise it): **camelCase→kebab** attribute folding — to be resolved at the first
+camelCase-prop control. **G2 shippable.**
 
 ---
 
@@ -149,22 +150,33 @@ Traits in `src/core/traits/`: `pressActivation`, `tabbable`, `trackUserInvalid`.
 **Goal.** Take **one** control fully to the quality bar — the template every later control copies.
 Includes the **global token wiring** (load `tokens.css` first so dimensional vars resolve).
 
-**Scope.** `src/core/controls/button/` (the full folder: `.ts` + CSS trio + `.test.ts` + `.api.json`),
-plus `src/core/tokens/` seeded from the nonoun *studio-54* set and linked first in the demo HTML.
+**Scope.** `controls/button/` (the full folder: `button.ts` + single `button.css` (ADR-0003) +
+`button.test.ts` + `button.md` descriptor (ADR-0004)); the dimensional token ramp authored in
+`@agent-ui/shared` (the `--ui-{height,font}-{sm,md,lg}` ramp **plus** the `[scale]`/`[density]`
+multipliers the geometry smoke asserts); the `components` / `component-styles` / `foundation-styles`
+barrels + the host page (tokens loaded first). The G5 governance machinery lands **with** the button
+(`process.md` sequencing): the `authoring-components` skill, the **frontmatter contract schema** +
+contract↔props trip-wire (ADR-0004), the **COMPOSE/REALIZE component rubric** (`docs/rubrics/`), the
+**`component-reviewer`** agent, and the **browser-truth harness** (`@vitest/browser` + Playwright —
+a devDep + config add; absent today, jsdom-only).
 
-**Definition of done.**
-- [ ] Behaviour: Space/Enter activation via `pressActivation`; disabled is fully inert; emits native-parity
-      `click`; `variant`/`size` props are typed literal unions.
-- [ ] Geometry (Control class, per `references/dimensional-standard.md`): `block-size:
-      var(--ui-button-height)`, `padding-block: 0`, inline-padding from the `2px + height×0.375×density`
-      formula. **Browser smoke asserts the rendered px *changes*** across `size=sm→md→lg`, under an
-      ancestor `[scale]`, and under `[density]` (anti-vacuous: assert it changed, not just present).
-- [ ] Styling: behaviour-only `.ts`; `@scope (ui-button)` styles consuming only `--ui-button-*`; tokens
-      in `:where()`; survives `forced-colors: active` (the glyph/ink doesn't vanish).
-- [ ] `button.api.json` validates against the API-contract schema; the COMPOSE/REALIZE rubric scores
-      both axes ≥ 4.
-- [ ] `tsc` clean, probes green (jsdom), smoke green (Chromium **and** WebKit if feasible), marginal
-      size within budget. The token sheet is loaded first in `index.html`.
+**Definition of done (the gold bar — G5 is declared done from this).**
+- [ ] Behaviour: Space/Enter activation via the `pressActivation` trait; disabled is fully inert; emits
+      native-parity `click`; `variant`/`size` props are typed literal unions; renders via `html\`\`` end-to-end
+      (this is also the G3 integration proof — the `render()`→engine host commit lands here).
+- [ ] Geometry (Control class, per `references/geometry.md` — the slot/slotless law that **supersedes**
+      `dimensional-standard.md`'s `2px+…` formula): `block-size: var(--ui-button-height)` off the ramp,
+      `padding-block: 0`, slotless inline-pad `= h/2`. **Browser smoke asserts the rendered px *changes***
+      across `size=sm→md→lg`, under an ancestor `[scale]`, and under `[density]` (anti-vacuous: assert it
+      changed, not just present), in **Chromium AND WebKit**.
+- [ ] Styling: behaviour-only `.ts`; single `button.css` with the `@scope (ui-button)` styles block
+      consuming only `--ui-button-*` and the `:where(ui-button)` token block from `--c-{family}-{role}`
+      roles; survives `forced-colors: active` (the ink doesn't vanish).
+- [ ] `button.md` frontmatter validates against the frontmatter contract schema and matches the live
+      `finalize(Class)` table (the contract↔props trip-wire); the COMPOSE/REALIZE rubric scores both axes
+      ≥ 4 via the `component-reviewer` agent.
+- [ ] `tsc` clean, probes green (jsdom), the cross-engine geometry/forced-colors smoke green (Chromium
+      **and** WebKit), marginal size within budget. The token sheet is loaded first in the host page.
 
 ---
 
