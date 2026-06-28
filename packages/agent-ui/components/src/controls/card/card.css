@@ -74,7 +74,7 @@
     padding: var(--ui-card-padding);
     border: 1px solid var(--ui-card-border);
     border-radius: var(--ui-card-radius);
-    min-inline-size: 0; /* a card inside a flex/grid parent may shrink (so [scroll] content can too) */
+    min-inline-size: 0; /* a card inside a flex/grid parent may shrink (so [scrollable] content can too) */
   }
 
   /* Presence-driven rows (anatomy.md host-as-grid, applied to the ROW axis): the header takes a top `auto`
@@ -143,10 +143,11 @@
 }
 
 @scope (ui-card-content) {
-  /* `scroll` — a scrolling viewport. overflow:auto + the min-block-size:0 above let the 1fr grid track shrink
-     BELOW its content and actually scroll. It needs a CONSTRAINED card block-size to bite (a max-block-size /
-     height on the card, or a sized flex/grid parent) — documented in card.md. */
-  :scope[scroll] {
+  /* `scrollable` — a scrolling viewport. overflow:auto + the min-block-size:0 above let the 1fr grid track
+     shrink BELOW its content and actually scroll. It needs a CONSTRAINED card block-size to bite (a
+     max-block-size / height on the card, or a sized flex/grid parent) — documented in card.md. (Named
+     `scrollable`, not `scroll`, to avoid shadowing the native Element.scroll() method — see card-content.ts.) */
+  :scope[scrollable] {
     overflow: auto;
   }
 

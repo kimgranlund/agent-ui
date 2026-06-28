@@ -99,9 +99,10 @@ the grid *structure* is reused, not the control-frame glyph sizing.
 
 `ui-card-content` is the body — plain flow content, no anatomy — and carries two pure-CSS hooks:
 
-- **`scroll`** → a scrolling viewport (`overflow:auto`; the body's `min-block-size:0` lets the `1fr` track
-  shrink below its content). It **requires a constrained card block-size** to bite — give the card a
+- **`scrollable`** → a scrolling viewport (`overflow:auto`; the body's `min-block-size:0` lets the `1fr`
+  track shrink below its content). It **requires a constrained card block-size** to bite — give the card a
   `max-block-size` / `height`, or place it in a sized flex/grid parent — otherwise the card just grows.
+  (Named `scrollable`, not `scroll`, to avoid shadowing the native `Element.scroll()` method.)
 - **`scroll-fade`** → a `mask-image` edge fade (the top/bottom band fades to transparent so scrolled
   content reads as continuing past the edge). The shipped behaviour is a **static symmetric fade** (robust
   on every engine, WebKit included); a scroll-driven refinement (fading only at the *scrollable* edge via

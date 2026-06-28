@@ -4,8 +4,8 @@ import { server, cdp } from '@vitest/browser/context'
 // G9 s7 — the CROSS-ENGINE card smoke (decomp g9-containers s7 browser gate). Runs in BOTH Chromium and WebKit
 // (vitest.browser.config.ts). Where card-geometry.test.ts / card-css.test.ts pin the DECLARED formulas, this
 // pins the RENDERED px a real engine resolves — ANTI-VACUOUS: the nested radius genuinely DECREMENTS (measured
-// px, not equal-to-self), the presence-driven rows genuinely change track count, the [scroll] body genuinely
-// contains its overflow. @scope / :has() / max()/calc() / the surface seam are only TRUE in a real engine.
+// px, not equal-to-self), the presence-driven rows genuinely change track count, the [scrollable] body
+// genuinely contains its overflow. @scope / :has() / max()/calc() / the surface seam are only TRUE in a real engine.
 //
 // Side-effect CSS imports — the load-bearing order: foundation roles + dimensional ramp FIRST, then the SHARED
 // container surface seam (controls/_surface/container.css — the [elevation]/[brightness] mapping + the
@@ -91,12 +91,12 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(trackCount(full)).toBeGreaterThan(trackCount(contentOnly))
   })
 
-  it('[scroll] contains the body within a sized card (the content scrolls, the card stays bounded)', () => {
+  it('[scrollable] contains the body within a sized card (the content scrolls, the card stays bounded)', () => {
     const card = mount(
-      '<ui-card style="max-block-size: 100px"><ui-card-content scroll><div style="block-size: 400px">tall</div></ui-card-content></ui-card>',
+      '<ui-card style="max-block-size: 100px"><ui-card-content scrollable><div style="block-size: 400px">tall</div></ui-card-content></ui-card>',
     )
     const content = card.querySelector('ui-card-content') as HTMLElement
-    expect(getComputedStyle(content).overflowY, '[scroll] did not become an overflow viewport').toBe('auto')
+    expect(getComputedStyle(content).overflowY, '[scrollable] did not become an overflow viewport').toBe('auto')
     // the body's content overflows and is scrollable (scrollHeight beyond the visible clientHeight)
     expect(content.scrollHeight, 'the content did not overflow its viewport').toBeGreaterThan(content.clientHeight)
     // the card stayed bounded — it did NOT grow to fit the 400px child (the constraint held)

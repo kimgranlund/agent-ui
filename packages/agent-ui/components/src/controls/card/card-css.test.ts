@@ -95,9 +95,9 @@ describe('card.css — @scope token hygiene (consume only --ui-card-* / --ui-con
   })
 })
 
-describe('card.css — scroll + scroll-fade hooks + forced-colors', () => {
-  it('[scroll] is an overflow viewport; [scroll-fade] is a mask-image edge fade (with the -webkit- prefix)', () => {
-    expect(scopeContent).toMatch(/:scope\[scroll\]\s*\{[^}]*overflow:\s*auto/)
+describe('card.css — scrollable + scroll-fade hooks + forced-colors', () => {
+  it('[scrollable] is an overflow viewport; [scroll-fade] is a mask-image edge fade (with the -webkit- prefix)', () => {
+    expect(scopeContent).toMatch(/:scope\[scrollable\]\s*\{[^}]*overflow:\s*auto/)
     expect(scopeContent).toMatch(/:scope\[scroll-fade\]\s*\{[^}]*mask-image:\s*linear-gradient/)
     expect(scopeContent).toMatch(/-webkit-mask-image:\s*linear-gradient/) // WebKit still needs the prefix
   })

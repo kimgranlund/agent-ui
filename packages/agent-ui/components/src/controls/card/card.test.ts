@@ -85,26 +85,24 @@ describe('ui-card — surface axes only (NO flexProps)', () => {
   })
 })
 
-// `scroll` is a runtime reflecting accessor not declare-merged into the TYPE (it shadows Element.scroll() —
-// see card-content.ts), so reach it through a typed view, exactly as the A2UI catalog's accessorFactory casts.
-const scrollOf = (el: UICardContentElement): { scroll: boolean } => el as unknown as { scroll: boolean }
-
-describe('ui-card-content — the scroll / scroll-fade hooks reflect', () => {
-  it('static props is { scroll, scrollFade }, both boolean, defaulting false', () => {
-    expect(Object.keys(UICardContentElement.props)).toEqual(['scroll', 'scrollFade'])
+describe('ui-card-content — the scrollable / scroll-fade hooks reflect', () => {
+  it('static props is { scrollable, scrollFade }, both boolean, defaulting false', () => {
+    expect(Object.keys(UICardContentElement.props)).toEqual(['scrollable', 'scrollFade'])
     const el = new UICardContentElement()
-    expect(scrollOf(el).scroll).toBe(false) // the runtime accessor returns the signal default
+    // `scrollable` (NOT `scroll`) — `scroll` would shadow the native Element.scroll() method (TS 2320/2416);
+    // `scrollable` has no native collision, so it is a fully-typed reflecting prop (no cast needed).
+    expect(el.scrollable).toBe(false)
     expect(el.scrollFade).toBe(false)
   })
 
-  it('scroll reflects to a `scroll` attribute; scrollFade reflects to the kebab `scroll-fade` attribute', () => {
+  it('scrollable reflects to a `scrollable` attribute; scrollFade reflects to the kebab `scroll-fade` attribute', () => {
     const el = new UICardContentElement()
-    scrollOf(el).scroll = true // the catalog's `el.scroll = true` contract → reflects to [scroll]
+    el.scrollable = true
     el.scrollFade = true
-    expect(el.hasAttribute('scroll')).toBe(true)
+    expect(el.hasAttribute('scrollable')).toBe(true)
     expect(el.hasAttribute('scroll-fade')).toBe(true) // camelCase prop → hyphenated DOM attribute (the CSS hook)
-    scrollOf(el).scroll = false
-    expect(el.hasAttribute('scroll')).toBe(false) // boolean-false removes the attribute
+    el.scrollable = false
+    expect(el.hasAttribute('scrollable')).toBe(false) // boolean-false removes the attribute
   })
 
   it('header/footer carry NO props (the leading/label/trailing anatomy is pure CSS, no observedAttributes)', () => {
