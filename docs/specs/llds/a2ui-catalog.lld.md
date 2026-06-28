@@ -72,7 +72,19 @@ const uiButton: WidgetFactory = {
 const uiTextField: WidgetFactory = { tag: "ui-text-field", create: …, applyProp: … };
 ```
 
-**Coverage discipline (SPEC-N2):** a component type whose control has not shipped is either omitted from `catalog.json` or carries `"x-status":"experimental"`; `loadCatalog` warns on an experimental type so there are no silent dead types. **Edge:** `Text`/layout map to minimal primitives (a `<span>`/box) until `ui-text`/layout primitives land (Assumption A-2).
+**G9 container family (decomp `s11`, SPEC §5.2 shipped).** The default catalog declares the container set
+DIRECTLY (SPEC-R8): `Row`→`ui-row`, `Column`→`ui-column`, `Card`→`ui-card`, `Tabs`→`ui-tabs`, `Modal`→`ui-modal`,
+plus the component-native region/item sub-types (the ratified *regions = sub-elements*) `CardHeader`/`CardContent`/`CardFooter`→`ui-card-{header,content,footer}` and `Tab`/`TabPanel`→`ui-tab`/`ui-tab-panel`. The container
+family + `ui-text-field` share **one** `accessorFactory(tag, value?)` builder: every catalog property is declared
+with `mapsTo` EQUAL to the control prop name (the SPEC-R8 1:1 reflection — surface axes, the flex grammar,
+`selected`/`open`/`dismissable`/`scroll`, the text-field value surface), so `applyProp` sets the JS accessor
+directly (`el[prop] = value`) — no per-prop switch, unlike `Button.label`→`textContent`. **Two-way (SPEC-R4 / ADR-0019):**
+`Tabs` declares `value:{prop:'selected',event:'select'}`, `Modal` declares `value:{prop:'open',event:'toggle'}`, and
+the back-filled `TextField` declares `value:{prop:'value',event:'change'}` — all consumed by the renderer's generic
+input controller (LLD-C8 / renderer `input.ts`, decomp `s10`). `ui-list`/`ui-grid` are NOT catalog types (direct
+`ui-*` primitives — the ratified G9 scope, ADR-0016).
+
+**Coverage discipline (SPEC-N2):** a component type whose control has not shipped is either omitted from `catalog.json` or carries `"x-status":"experimental"`; `loadCatalog` warns on an experimental type so there are no silent dead types. **Edge:** `Text` maps to a minimal primitive (a `<span>`/box) until `ui-text` lands; `Image`/`Video` stay absent until media primitives land (Assumption A-2).
 
 ## 6. Conformance validator — LLD-C6 (SPEC-R7, R9, N3)
 
@@ -130,7 +142,7 @@ packages/agent-ui/a2ui/src/catalog/
 2. **LLD-C1 catalog model + loader** — load/validate a fixture catalog; malformed throws.
 3. **LLD-C3 registry** — register/get/supportedCatalogIds; factory-missing throws; duplicate-id replace. *(checkpoint: a synthetic 10-type project catalog registers with 0 package edits — SPEC-R6 AC1 / N1)*
 4. **LLD-C6 conformance** — unknown-type / unknown-prop / type-mismatch → `CATALOG`; bindable accepts `{path}`. *(checkpoint: same verdict when called from renderer `validate.ts` and corpus admission — N3 parity)*
-5. **LLD-C5 factories + LLD-C4 default catalog** — Button/TextField/Checkbox/Switch/Select/Field factories; `catalog.json` reflecting them. *(checkpoint: a default-catalog payload renders 0 `CATALOG` errors — SPEC-R3 AC2 / PRD-G1)*
+5. **LLD-C5 factories + LLD-C4 default catalog** — Button/TextField/Checkbox/Switch/Select/Field factories; `catalog.json` reflecting them. *(checkpoint: a default-catalog payload renders 0 `CATALOG` errors — SPEC-R3 AC2 / PRD-G1)* — **G9 (decomp `s11`)** extended this with the container family (`Row`/`Column`/`Card`+regions/`Tabs`+tab/panel/`Modal`, the shared `accessorFactory`), the two-way `value` binds (Tabs `select`, Modal `toggle`, the TextField `change` back-fill — ADR-0019), and the SPEC §5.2 experimental→shipped flip.
 6. **LLD-C7 functions** — required/email/regex/formatString.
 7. **LLD-C8 theming** — surfaceProperties → token-role repoint; v0.9.x `theme` normalized.
 8. **Integration** — wire conformance into renderer `validate.ts`; factories into renderer widget resolution; the renderer's step-5 stub catalog is replaced by the real default catalog.

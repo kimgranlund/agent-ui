@@ -8,10 +8,12 @@
 // onto the control as a prop or attribute — the renderer's widget resolution (renderer LLD-C7) calls
 // `create` once, then `applyProp` for each static prop and inside each scope-owned bound-prop effect.
 //
-// Coverage tracks the shipped control family (SPEC-N2, Assumption A-2): wave-1 ships only `Button`
-// (→ `ui-button`, G5); more factories land as their controls do, keyed by A2UI component type.
+// Coverage tracks the shipped control family (SPEC-N2, Assumption A-2): G5 `Button`, G6 `TextField`, and
+// the G9 container family — `Row`/`Column` (catalog-shipped, SPEC §5.2), `Card` + its region sub-elements
+// (`CardHeader`/`CardContent`/`CardFooter`), `Tabs` + `Tab`/`TabPanel`, and `Modal`. `ui-list`/`ui-grid`
+// are NOT catalog types (they ship as direct `ui-*` primitives — the ratified G9 scope, ADR-0016).
 
-import '@agent-ui/components/components' // self-defines ui-button (+ the rest of the family) on import
+import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
 
 // Generic attribute fallback for an A2UI prop with no dedicated mapping. `null`/`undefined`/`false`
@@ -47,8 +49,77 @@ export const buttonFactory: WidgetFactory = {
   },
 }
 
+// ── the container + form-input family (accessor-prop factories) ────────────────
+//
+// Unlike `Button` (whose `label` is light-DOM text, so its `mapsTo` is `textContent` ≠ the prop name),
+// every catalog property on the container family and on `ui-text-field` is declared with `mapsTo` EQUAL
+// to its name — the SPEC-R8 1:1 reflection: the surface axes (`elevation`/`brightness`), the flex grammar
+// (`align`/`justify`/`gap`/`wrap`), the bindable state (`selected`/`open`), `dismissable`/`scrollable`, and
+// the text-field's `value`/`label`/… each name a reflecting prop ACCESSOR on the control. Because the
+// A2UI property name IS the control prop name for this family, `el[prop]` is exactly the `mapsTo` target,
+// so `applyProp` sets the JS accessor directly (the `buttonFactory` `variant` precedent) and the control
+// reflects it to its attribute. Setting a property BEFORE the element upgrades is the platform-supported
+// lazy-upgrade path (`UIElement`'s upgrade dance), so this is correct whether or not the tag has
+// self-defined yet. INVARIANT: a property whose `mapsTo` differs from its name (a non-identity mapping,
+// like `Button.label`) needs a bespoke factory — it must NOT be routed through `accessorFactory`.
+function setProp(el: HTMLElement, prop: string, value: unknown): void {
+  ;(el as unknown as Record<string, unknown>)[prop] = value
+}
+
+/**
+ * Build a factory for a control whose catalog properties all map 1:1 onto reflecting prop accessors
+ * (the container family + text-field). `value` (optional) declares the two-way commit contract the
+ * renderer's input controller (LLD-C8, SPEC-R7) reads: the control's bindable prop + its commit event.
+ */
+function accessorFactory(tag: string, value?: { prop: string; event: string }): WidgetFactory {
+  const factory: WidgetFactory = {
+    tag,
+    create: () => document.createElement(tag),
+    applyProp: setProp,
+  }
+  if (value) factory.value = value
+  return factory
+}
+
+// Layout primitives (ADR-0016) — surface axes + the shared flex grammar; not inputs (no `value`).
+export const rowFactory: WidgetFactory = accessorFactory('ui-row')
+export const columnFactory: WidgetFactory = accessorFactory('ui-column')
+
+// Card + its region sub-elements (the ratified "regions = sub-elements", ChildList children). The regions
+// are structural (their content is their children) — `ui-card-content` adds the `scrollable` prop.
+export const cardFactory: WidgetFactory = accessorFactory('ui-card')
+export const cardHeaderFactory: WidgetFactory = accessorFactory('ui-card-header')
+export const cardContentFactory: WidgetFactory = accessorFactory('ui-card-content')
+export const cardFooterFactory: WidgetFactory = accessorFactory('ui-card-footer')
+
+// Tabs + its tab/panel sub-elements. `Tabs` is two-way bindable on `selected` via the `select` commit
+// event (ADR-0019 cl.2) — the renderer's LLD-C8 controller writes the active tab back into surface.data.
+export const tabsFactory: WidgetFactory = accessorFactory('ui-tabs', { prop: 'selected', event: 'select' })
+export const tabFactory: WidgetFactory = accessorFactory('ui-tab')
+export const tabPanelFactory: WidgetFactory = accessorFactory('ui-tab-panel')
+
+// Modal (native <dialog>, ADR-0017) — two-way bindable on `open` via the `toggle` event (ADR-0019 cl.2)
+// so the agent learns of a platform dismissal (Escape / backdrop).
+export const modalFactory: WidgetFactory = accessorFactory('ui-modal', { prop: 'open', event: 'toggle' })
+
+// TextField (G6) — the deferred value bind goes live through the same LLD-C8 controller (ADR-0019 cl.3):
+// `value` commits on the control's `change` event (blur / Enter), zero text-field code change.
+export const textFieldFactory: WidgetFactory = accessorFactory('ui-text-field', { prop: 'value', event: 'change' })
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
- *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). */
+ *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
+ *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
 export const defaultFactories: Record<string, WidgetFactory> = {
   Button: buttonFactory,
+  TextField: textFieldFactory,
+  Row: rowFactory,
+  Column: columnFactory,
+  Card: cardFactory,
+  CardHeader: cardHeaderFactory,
+  CardContent: cardContentFactory,
+  CardFooter: cardFooterFactory,
+  Tabs: tabsFactory,
+  Tab: tabFactory,
+  TabPanel: tabPanelFactory,
+  Modal: modalFactory,
 }

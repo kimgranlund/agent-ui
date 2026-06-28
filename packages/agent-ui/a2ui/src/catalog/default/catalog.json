@@ -20,6 +20,100 @@
           "mapsTo": "action"
         }
       }
+    },
+
+    "TextField": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "placeholder": { "type": { "type": "string" }, "bindable": true, "mapsTo": "placeholder" },
+        "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "mapsTo": "size" },
+        "readonly": { "type": { "type": "boolean" }, "mapsTo": "readonly" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "required": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "required" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" }
+      },
+      "value": { "prop": "value", "event": "change" }
+    },
+
+    "Row": {
+      "properties": {
+        "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
+        "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" },
+        "align": { "type": { "type": "string", "enum": ["start", "center", "end", "stretch", "baseline"] }, "mapsTo": "align" },
+        "justify": { "type": { "type": "string", "enum": ["start", "center", "end", "between", "around", "evenly"] }, "mapsTo": "justify" },
+        "gap": { "type": { "type": "string", "enum": ["none", "xs", "sm", "md", "lg", "xl", "2xl"] }, "mapsTo": "gap" },
+        "wrap": { "type": { "type": "boolean" }, "mapsTo": "wrap" }
+      },
+      "children": "ChildList"
+    },
+
+    "Column": {
+      "properties": {
+        "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
+        "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" },
+        "align": { "type": { "type": "string", "enum": ["start", "center", "end", "stretch", "baseline"] }, "mapsTo": "align" },
+        "justify": { "type": { "type": "string", "enum": ["start", "center", "end", "between", "around", "evenly"] }, "mapsTo": "justify" },
+        "gap": { "type": { "type": "string", "enum": ["none", "xs", "sm", "md", "lg", "xl", "2xl"] }, "mapsTo": "gap" },
+        "wrap": { "type": { "type": "boolean" }, "mapsTo": "wrap" }
+      },
+      "children": "ChildList"
+    },
+
+    "Card": {
+      "properties": {
+        "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
+        "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" }
+      },
+      "children": "ChildList"
+    },
+
+    "CardHeader": {
+      "properties": {},
+      "children": "ChildList"
+    },
+
+    "CardContent": {
+      "properties": {
+        "scrollable": { "type": { "type": "boolean" }, "mapsTo": "scrollable" }
+      },
+      "children": "ChildList"
+    },
+
+    "CardFooter": {
+      "properties": {},
+      "children": "ChildList"
+    },
+
+    "Tabs": {
+      "properties": {
+        "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
+        "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" },
+        "selected": { "type": { "type": ["string", "number"] }, "bindable": true, "mapsTo": "selected" }
+      },
+      "value": { "prop": "selected", "event": "select" },
+      "children": "ChildList"
+    },
+
+    "Tab": {
+      "properties": {},
+      "children": "ChildList"
+    },
+
+    "TabPanel": {
+      "properties": {},
+      "children": "ChildList"
+    },
+
+    "Modal": {
+      "properties": {
+        "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
+        "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" },
+        "open": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "open" },
+        "dismissable": { "type": { "type": "boolean" }, "mapsTo": "dismissable" }
+      },
+      "value": { "prop": "open", "event": "toggle" },
+      "children": "ChildList"
     }
   }
 }
