@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · ui-text-field permutations</title>
+  </head>
+  <body>
+    <!-- The ui-text-field permutation matrix. The vite MPA glob (vite.config.ts) discovers this shell at site
+         root and emits dist/text-field-permutations.html. pages/text-field-permutations.ts pulls the foundation
+         CSS cascade + self-defining ui-* controls via _page.ts, then fills #app with the size × state matrix.
+         Page-naming convention: {name}-{page-type}.html (coverage gate: site-coverage.test.ts). -->
+    <div id="app"></div>
+    <script type="module" src="./pages/text-field-permutations.ts"></script>
+  </body>
+</html>

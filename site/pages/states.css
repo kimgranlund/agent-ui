@@ -1,7 +1,7 @@
-/* states.css — PAGE-LOCAL layout chrome for the A3 interaction-states showcase. This styles the page
- * scaffold ONLY: the per-state sections, their instruction text, the demo rows, and the activation log.
- * The interaction-state appearance (hover cursor, disabled muted colours, pointer-inertness) lives entirely
- * in the control's own button.css — this page never restyles a <ui-button>. */
+/* states.css — SHARED page-scaffold chrome for every {name}-states interaction-states showcase (button + text-field
+ * today). Styles the page scaffold ONLY: the per-state sections, their instruction text, the demo rows, and the
+ * activity log. The interaction-state appearance (hover/focus/active/disabled paint) lives entirely in each
+ * control's own {name}.css — a states page never restyles a ui-* control. */
 
 .state-section {
   margin-block: 2rem 0;

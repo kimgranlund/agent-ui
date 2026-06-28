@@ -18,21 +18,41 @@ export interface PageHandle {
   readonly content: HTMLElement
 }
 
-// ── shared site nav (A5) ─────────────────────────────────────────────────────────────────────────────────
-// One entry per /site page, rendered into the `[data-site-nav]` slot of EVERY page so the whole site shares
-// one nav. Hrefs are sibling-relative (`./x.html`): every page shell lives at the site root, so these resolve
-// from any page. `a2ui-canvas.html` lands in wave-4 — the link is declared now and simply resolves once that
-// shell exists; a not-yet-built target is a runtime 404 on click, never a build error (it's a link, not an import).
+// ── shared site nav ──────────────────────────────────────────────────────────────────────────────────────
+// The site's table of contents, rendered into the `[data-site-nav]` slot of EVERY page so the whole site shares
+// one nav. It is GROUPED per component: a labelled cluster (`ui-button`, `ui-text-field`, …) of that control's
+// per-type pages, bracketed by the ungrouped site-level links (Home, A2UI Canvas). A new component's docs append
+// ONE group here. Hrefs are sibling-relative (`./x.html`): every page shell lives at the site root, so these
+// resolve from any page. Per-component page filenames follow the one convention `{name}-{page-type}.html`
+// (the coverage gate, site-coverage.test.ts, derives the required set from it).
 interface NavLink {
   readonly href: string
   readonly label: string
 }
-const NAV_LINKS: readonly NavLink[] = [
-  { href: './index.html', label: 'Home' },
-  { href: './permutations.html', label: 'Permutations' },
-  { href: './states.html', label: 'States' },
-  { href: './button-doc.html', label: 'API' },
-  { href: './a2ui-canvas.html', label: 'A2UI Canvas' },
+interface NavGroup {
+  /** The component label for a per-component cluster; absent for the ungrouped site-level links. */
+  readonly label?: string
+  readonly links: readonly NavLink[]
+}
+const NAV: readonly NavGroup[] = [
+  { links: [{ href: './index.html', label: 'Home' }] },
+  {
+    label: 'ui-button',
+    links: [
+      { href: './button-permutations.html', label: 'Permutations' },
+      { href: './button-states.html', label: 'States' },
+      { href: './button-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-text-field',
+    links: [
+      { href: './text-field-permutations.html', label: 'Permutations' },
+      { href: './text-field-states.html', label: 'States' },
+      { href: './text-field-doc.html', label: 'API' },
+    ],
+  },
+  { links: [{ href: './a2ui-canvas.html', label: 'A2UI Canvas' }] },
 ]
 
 // isCurrent — is this link the page we are on? Compare resolved pathnames, treating the site root (`/`) as
@@ -43,24 +63,39 @@ function isCurrent(href: string): boolean {
   return normalize(location.pathname) === normalize(target)
 }
 
-// buildNav — the shared cross-page nav: a labelled `<nav data-site-nav>` (pages key off the attribute) with a
-// `<ul>` of links, the current page flagged. Dependency-free light DOM; styling lives in `_page.css`.
+// buildNav — the shared cross-page nav: a labelled `<nav data-site-nav>` (pages key off the attribute) holding
+// one `<div class="nav-group">` per group — an optional `<span class="nav-group-label">` (the component name)
+// above a `<ul>` of that group's links, the current page flagged with `aria-current`. Dependency-free light DOM;
+// styling lives in `_page.css`.
 function buildNav(): HTMLElement {
   const nav = document.createElement('nav')
   nav.setAttribute('data-site-nav', '')
   nav.setAttribute('aria-label', 'Site')
 
-  const list = document.createElement('ul')
-  for (const link of NAV_LINKS) {
-    const item = document.createElement('li')
-    const anchor = document.createElement('a')
-    anchor.href = link.href
-    anchor.textContent = link.label
-    if (isCurrent(link.href)) anchor.setAttribute('aria-current', 'page')
-    item.append(anchor)
-    list.append(item)
+  for (const group of NAV) {
+    const groupEl = document.createElement('div')
+    groupEl.className = 'nav-group'
+
+    if (group.label) {
+      const label = document.createElement('span')
+      label.className = 'nav-group-label'
+      label.textContent = group.label
+      groupEl.append(label)
+    }
+
+    const list = document.createElement('ul')
+    for (const link of group.links) {
+      const item = document.createElement('li')
+      const anchor = document.createElement('a')
+      anchor.href = link.href
+      anchor.textContent = link.label
+      if (isCurrent(link.href)) anchor.setAttribute('aria-current', 'page')
+      item.append(anchor)
+      list.append(item)
+    }
+    groupEl.append(list)
+    nav.append(groupEl)
   }
-  nav.append(list)
   return nav
 }
 

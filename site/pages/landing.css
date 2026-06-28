@@ -35,7 +35,27 @@
   gap: 1rem;
 }
 
-/* ── card grid — one card per page, each a link with a one-line blurb ───────────────────────────────────── */
+/* ── card grid — grouped per component (mirrors the nav); each card a link with a one-line blurb ──────────── */
+.card-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.card-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card-group-label {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--c-neutral-on-surface-variant);
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));

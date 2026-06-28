@@ -12,9 +12,13 @@ const { content } = mountPage({
   title: 'agent-ui',
   intro:
     'A zero-dependency, signals-based web-component library in strict, modern TypeScript. The first component ' +
-    'family is FACE form controls — the live ui-button below — and A2UI renders the same controls from a tiny ' +
-    'agent-driven payload. Explore the pieces below.',
+    'family is FACE form controls — the live ui-button and ui-text-field below — and A2UI renders the same ' +
+    'controls from a tiny agent-driven payload. Explore the pieces below.',
 })
+
+// Page-supplied display width for the text-field hero specimen — the control has no intrinsic width yet (#74),
+// so the landing sizes it (layout context, not a restyle of the control's own appearance).
+const FIELD_HERO_WIDTH = '18rem'
 
 // ── hero — live ui-button specimens (the headline artefact) ──────────────────────────────────────────────
 // A decorative leading icon for the slot demo. Canonical anatomy markup (ADR-0012): `slot="leading"` is the
@@ -52,77 +56,173 @@ function makeButton(spec: Specimen): HTMLElement {
   return button
 }
 
+// A live ui-text-field hero specimen — a real field with a leading search icon (canonical slot=leading +
+// data-role=icon) and a placeholder. Given a display width by the page (the control has no intrinsic width, #74).
+function makeFieldSpecimen(): HTMLElement {
+  const field = document.createElement('ui-text-field')
+  field.setAttribute('label', 'Search')
+  field.setAttribute('placeholder', 'Type to search…')
+
+  const icon = document.createElementNS(SVG_NS, 'svg')
+  icon.setAttribute('slot', 'leading') // POSITION — the start cell
+  icon.setAttribute('data-role', 'icon') // CONTENT role — sized to the icon cell by text-field.css
+  icon.setAttribute('aria-hidden', 'true')
+  icon.setAttribute('viewBox', '0 0 24 24')
+  const circle = document.createElementNS(SVG_NS, 'circle')
+  circle.setAttribute('cx', '11')
+  circle.setAttribute('cy', '11')
+  circle.setAttribute('r', '7')
+  circle.setAttribute('fill', 'none')
+  circle.setAttribute('stroke', 'currentColor')
+  circle.setAttribute('stroke-width', '2')
+  const handle = document.createElementNS(SVG_NS, 'path')
+  handle.setAttribute('d', 'M21 21l-4.3-4.3')
+  handle.setAttribute('fill', 'none')
+  handle.setAttribute('stroke', 'currentColor')
+  handle.setAttribute('stroke-width', '2')
+  handle.setAttribute('stroke-linecap', 'round')
+  icon.append(circle, handle)
+
+  field.append(icon)
+  field.style.inlineSize = FIELD_HERO_WIDTH // layout context only (see note above)
+  return field
+}
+
+// buildHero — one hero card carrying a labelled live specimen row per shipped control family (ui-button +
+// ui-text-field), so the landing dogfoods the real controls as its headline artefact.
 function buildHero(): HTMLElement {
   const hero = document.createElement('section')
   hero.className = 'hero'
 
-  const label = document.createElement('p')
-  label.className = 'hero-label'
-  label.textContent = 'Live ui-button — the reference FACE control'
-  hero.append(label)
+  const buttonLabel = document.createElement('p')
+  buttonLabel.className = 'hero-label'
+  buttonLabel.textContent = 'Live ui-button — the reference FACE control'
+  hero.append(buttonLabel)
 
-  const specimens = document.createElement('div')
-  specimens.className = 'hero-specimens'
-  const buttons: readonly Specimen[] = [
+  const buttons = document.createElement('div')
+  buttons.className = 'hero-specimens'
+  const specs: readonly Specimen[] = [
     { label: 'Get started', variant: 'solid', icon: true },
     { label: 'Soft', variant: 'soft' },
     { label: 'Ghost', variant: 'ghost' },
   ]
-  for (const spec of buttons) specimens.append(makeButton(spec))
-  hero.append(specimens)
+  for (const spec of specs) buttons.append(makeButton(spec))
+  hero.append(buttons)
+
+  const fieldLabel = document.createElement('p')
+  fieldLabel.className = 'hero-label'
+  fieldLabel.textContent = 'Live ui-text-field — the first FACE form control'
+  hero.append(fieldLabel)
+
+  const fields = document.createElement('div')
+  fields.className = 'hero-specimens'
+  fields.append(makeFieldSpecimen())
+  hero.append(fields)
 
   return hero
 }
 
-// ── card grid — one card per page, linking the same destinations as the shared nav ───────────────────────
+// ── card grid — one card per page, grouped per component to mirror the shared nav (one table of contents,
+// two renderings). A new component's docs append one group here AND one in _page.ts's NAV. ─────────────────
 interface Card {
   readonly href: string
   readonly title: string
   readonly blurb: string
 }
-const CARDS: readonly Card[] = [
+interface CardGroup {
+  /** The component label for a per-component cluster; absent for the ungrouped site-level cards. */
+  readonly label?: string
+  readonly cards: readonly Card[]
+}
+const CARD_GROUPS: readonly CardGroup[] = [
   {
-    href: './permutations.html',
-    title: 'Permutations',
-    blurb: 'Every size × variant × disabled of ui-button, plus the [scale]/[density] subtree-geometry demo.',
+    label: 'ui-button',
+    cards: [
+      {
+        href: './button-permutations.html',
+        title: 'Permutations',
+        blurb: 'Every size × variant × disabled of ui-button, plus the [scale]/[density] subtree-geometry demo.',
+      },
+      {
+        href: './button-states.html',
+        title: 'Interaction states',
+        blurb: 'The live control across hover, focus, active, keyboard activation, and disabled.',
+      },
+      {
+        href: './button-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-button attribute surface, generated from its button.md descriptor — it cannot drift.',
+      },
+    ],
   },
   {
-    href: './states.html',
-    title: 'Interaction states',
-    blurb: 'The live control across hover, focus, active, keyboard activation, and disabled.',
+    label: 'ui-text-field',
+    cards: [
+      {
+        href: './text-field-permutations.html',
+        title: 'Permutations',
+        blurb: 'Every size × state of ui-text-field, the adornment anatomy, and the [scale]/[density] geometry demo.',
+      },
+      {
+        href: './text-field-states.html',
+        title: 'Interaction states',
+        blurb: 'The live field across placeholder, focus, hover, validation, disabled, and readonly — with an event log.',
+      },
+      {
+        href: './text-field-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-text-field attribute surface, generated from its text-field.md descriptor — it cannot drift.',
+      },
+    ],
   },
   {
-    href: './button-doc.html',
-    title: 'API reference',
-    blurb: 'The ui-button attribute surface, generated from its button.md descriptor — it cannot drift.',
-  },
-  {
-    href: './a2ui-canvas.html',
-    title: 'A2UI canvas',
-    blurb: 'A two-line A2UI payload rendered live into a ui-button — the agent-driven payoff (wave 4).',
+    cards: [
+      {
+        href: './a2ui-canvas.html',
+        title: 'A2UI canvas',
+        blurb: 'A two-line A2UI payload rendered live into a ui-button — the agent-driven payoff.',
+      },
+    ],
   },
 ]
 
+function buildCard(card: Card): HTMLElement {
+  const anchor = document.createElement('a')
+  anchor.className = 'card'
+  anchor.href = card.href
+
+  const title = document.createElement('span')
+  title.className = 'card-title'
+  title.textContent = card.title
+
+  const blurb = document.createElement('span')
+  blurb.className = 'card-blurb'
+  blurb.textContent = card.blurb
+
+  anchor.append(title, blurb)
+  return anchor
+}
+
+// buildCards — one labelled `.card-group` per group (a component name above its card grid), mirroring the nav.
 function buildCards(): HTMLElement {
-  const grid = document.createElement('section')
-  grid.className = 'cards'
-  for (const card of CARDS) {
-    const anchor = document.createElement('a')
-    anchor.className = 'card'
-    anchor.href = card.href
-
-    const title = document.createElement('span')
-    title.className = 'card-title'
-    title.textContent = card.title
-
-    const blurb = document.createElement('span')
-    blurb.className = 'card-blurb'
-    blurb.textContent = card.blurb
-
-    anchor.append(title, blurb)
-    grid.append(anchor)
+  const wrap = document.createElement('div')
+  wrap.className = 'card-groups'
+  for (const group of CARD_GROUPS) {
+    const section = document.createElement('section')
+    section.className = 'card-group'
+    if (group.label) {
+      const label = document.createElement('h2')
+      label.className = 'card-group-label'
+      label.textContent = group.label
+      section.append(label)
+    }
+    const grid = document.createElement('div')
+    grid.className = 'cards'
+    for (const card of group.cards) grid.append(buildCard(card))
+    section.append(grid)
+    wrap.append(section)
   }
-  return grid
+  return wrap
 }
 
 content.append(buildHero(), buildCards())

@@ -1,4 +1,4 @@
-// site/pages/permutations.ts — slice A2, the permutations grid page (the headline demo). Renders the FULL
+// site/pages/button-permutations.ts — the ui-button permutations grid page (the headline demo). Renders the FULL
 // ui-button matrix — every size × variant × disabled, bare-label AND with the optional leading icon slot
 // (3 × 3 × 2 × 2 = 36 live controls) — the structural anatomy axis: FORWARD [ icon | label | caret ] AND its
 // REVERSED [ caret | label | icon ] (position ⊥ role — ADR-0006 host-as-grid, extended by ADR-0012), and a
@@ -8,11 +8,11 @@
 // so completeness is provable from the structure: |sizes| × |variants| × |columns| = 3 × 3 × 4 = 36.
 //
 // All geometry/colour/ARIA come from ui-button itself (the real control); this page only owns the page
-// scaffold layout (permutations.css). The props used are the real attributes-as-API from button.md /
+// scaffold layout (permutations.css — a SHARED scaffold every {name}-permutations page reuses). The props used are the real attributes-as-API from button.md /
 // button.ts `static props`: variant ∈ {solid, soft, ghost}, size ∈ {sm, md, lg}, disabled (boolean); the
 // optional leading icon is a light-DOM child carrying `slot="leading"` + `data-role="icon"` (ADR-0006 host-as-grid).
 import { mountPage } from './_page.ts' // MUST be first — pulls the load-bearing foundation CSS + ui-* controls
-import './permutations.css' // AFTER _page.ts so the page scaffold cascades after the component layer
+import './permutations.css' // SHARED page scaffold (matrix/geo chrome), reused by every {name}-permutations page; AFTER _page.ts
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 

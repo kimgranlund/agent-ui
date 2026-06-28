@@ -1,4 +1,4 @@
-// states.ts — A3 interaction-states showcase. Stages the REAL <ui-button> in each interaction state
+// site/pages/button-states.ts — ui-button interaction-states showcase. Stages the REAL <ui-button> in each interaction state
 // (hover · :focus-visible · :active · keyboard activation · disabled) with instructions so a human can observe
 // each one. This page NEVER restyles the control: the state appearance lives entirely in the control's own
 // button.css (ADR-0008 per-variant role-ladder states · ADR-0009 shared focus ring · ADR-0010 inert disabled).
@@ -11,7 +11,7 @@
 // left to leave the tab order on their own (native `<button disabled>` parity), which is the point being shown.
 
 import { mountPage } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls
-import './states.css' // page-local layout chrome only (sections, captions, the log) — not state styling
+import './states.css' // SHARED page scaffold (sections, captions, the activation log), reused by every {name}-states page — not state styling
 
 const { content } = mountPage({
   title: 'Button — interaction states',
