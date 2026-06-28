@@ -52,6 +52,39 @@ const NAV: readonly NavGroup[] = [
       { href: './text-field-doc.html', label: 'API' },
     ],
   },
+  {
+    // The layout primitives share one tier showcase (overview + surface×layout) + a per-component API doc each.
+    label: 'Layout primitives',
+    links: [
+      { href: './layout-overview.html', label: 'Overview' },
+      { href: './layout-permutations.html', label: 'Surface × layout' },
+      { href: './row-doc.html', label: 'row' },
+      { href: './column-doc.html', label: 'column' },
+      { href: './list-doc.html', label: 'list' },
+      { href: './grid-doc.html', label: 'grid' },
+    ],
+  },
+  {
+    label: 'ui-card',
+    links: [
+      { href: './card-demo.html', label: 'Demo' },
+      { href: './card-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-tabs',
+    links: [
+      { href: './tabs-demo.html', label: 'Demo' },
+      { href: './tabs-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-modal',
+    links: [
+      { href: './modal-demo.html', label: 'Demo' },
+      { href: './modal-doc.html', label: 'API' },
+    ],
+  },
   { links: [{ href: './a2ui-canvas.html', label: 'A2UI Canvas' }] },
 ]
 

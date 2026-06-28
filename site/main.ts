@@ -176,6 +176,71 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    label: 'Layout primitives',
+    cards: [
+      {
+        href: './layout-overview.html',
+        title: 'Overview',
+        blurb: 'The layout family — ui-row, ui-column, ui-list, ui-grid — its shared shape, with the member list derived from the descriptors.',
+      },
+      {
+        href: './layout-permutations.html',
+        title: 'Surface × layout',
+        blurb: 'Every primitive under the shared axes: the flex grammar (align/justify/gap), the surface ladder, and the grid auto-fit.',
+      },
+      {
+        href: './row-doc.html',
+        title: 'API references',
+        blurb: 'Descriptor-derived API docs for ui-row, ui-column, ui-list, and ui-grid (linked from the overview).',
+      },
+    ],
+  },
+  {
+    label: 'ui-card',
+    cards: [
+      {
+        href: './card-demo.html',
+        title: 'Demo',
+        blurb: 'The region sub-elements composed, the elevation × brightness surface range, nested radius, and scrollable content.',
+      },
+      {
+        href: './card-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-card surface attributes, generated from its card.md descriptor — it cannot drift.',
+      },
+    ],
+  },
+  {
+    label: 'ui-tabs',
+    cards: [
+      {
+        href: './tabs-demo.html',
+        title: 'Demo',
+        blurb: 'The live tabs compound — selection + roving keyboard, with a real select event log.',
+      },
+      {
+        href: './tabs-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-tabs attributes (surface + the bindable selected), generated from its tabs.md descriptor.',
+      },
+    ],
+  },
+  {
+    label: 'ui-modal',
+    cards: [
+      {
+        href: './modal-demo.html',
+        title: 'Demo',
+        blurb: 'The native-<dialog> modal — open/close, dismissable vs blocking, focus restore, with a close/toggle log.',
+      },
+      {
+        href: './modal-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-modal attributes (surface + open/dismissable), generated from its modal.md descriptor.',
+      },
+    ],
+  },
+  {
     cards: [
       {
         href: './a2ui-canvas.html',

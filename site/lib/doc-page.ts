@@ -52,6 +52,17 @@ export function typeLabel(attr: ParsedAttribute): string {
 export const findAttr = (d: ParsedDescriptor, name: string): ParsedAttribute | undefined =>
   d.attributes.find((a) => a.name === name)
 
+/**
+ * composeDocPage — the standard T4 page body, in one order every control doc page shares: the descriptor-derived
+ * attribute table, an optional live-specimens section, then the rendered markdown body. Keeps the 7 container
+ * docs (and the two control docs) on ONE render path, so the page shape can't drift between them.
+ */
+export function composeDocPage(content: HTMLElement, descriptor: ParsedDescriptor, body: string, specimens?: HTMLElement): void {
+  content.append(renderApiTable(descriptor.attributes))
+  if (specimens) content.append(specimens)
+  content.append(renderMarkdownBody(body))
+}
+
 // ── prose body (the markdown under the fence) ─────────────────────────────────────────────────────────────
 
 /**

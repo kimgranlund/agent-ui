@@ -16,6 +16,13 @@ import type { ParsedDescriptor } from '@agent-ui/components/descriptor'
 // the in-package contract trip-wire and its /site doc page.
 import buttonMd from '../../packages/agent-ui/components/src/controls/button/button.md?raw'
 import textFieldMd from '../../packages/agent-ui/components/src/controls/text-field/text-field.md?raw'
+import rowMd from '../../packages/agent-ui/components/src/controls/row/row.md?raw'
+import columnMd from '../../packages/agent-ui/components/src/controls/column/column.md?raw'
+import listMd from '../../packages/agent-ui/components/src/controls/list/list.md?raw'
+import gridMd from '../../packages/agent-ui/components/src/controls/grid/grid.md?raw'
+import cardMd from '../../packages/agent-ui/components/src/controls/card/card.md?raw'
+import tabsMd from '../../packages/agent-ui/components/src/controls/tabs/tabs.md?raw'
+import modalMd from '../../packages/agent-ui/components/src/controls/modal/modal.md?raw'
 
 /** A parsed control descriptor: the structured frontmatter (its attributes-as-API drive the table) + the prose body. */
 export interface ComponentDoc {
@@ -29,8 +36,42 @@ export function parseDoc(raw: string): ComponentDoc {
   return { descriptor: parseDescriptor(fence), body }
 }
 
-/** Read `button.md` (the reference control) through the canonical parser. */
+// ── per-control loaders (one 2-line loader per documented control — the convention) ──────────────────────────
 export const loadButtonDoc = (): ComponentDoc => parseDoc(buttonMd)
-
-/** Read `text-field.md` (the first FACE form control) through the canonical parser. */
 export const loadTextFieldDoc = (): ComponentDoc => parseDoc(textFieldMd)
+export const loadRowDoc = (): ComponentDoc => parseDoc(rowMd)
+export const loadColumnDoc = (): ComponentDoc => parseDoc(columnMd)
+export const loadListDoc = (): ComponentDoc => parseDoc(listMd)
+export const loadGridDoc = (): ComponentDoc => parseDoc(gridMd)
+export const loadCardDoc = (): ComponentDoc => parseDoc(cardMd)
+export const loadTabsDoc = (): ComponentDoc => parseDoc(tabsMd)
+export const loadModalDoc = (): ComponentDoc => parseDoc(modalMd)
+
+// ── tier enumeration (for the family overview + tier showcase — a DERIVED member list) ───────────────────────
+// The whole `{name}.md` descriptor set, globbed at build time (Vite resolves `import.meta.glob` statically). The
+// family overview / tier showcase derive their member list from THIS — a new control in a tier appears
+// automatically, so the listing cannot drift from the shipped fleet (the T7 coverage discipline).
+const ALL_DESCRIPTORS = import.meta.glob(
+  '../../packages/agent-ui/components/src/controls/*/*.md',
+  { query: '?raw', import: 'default', eager: true },
+) as Record<string, string>
+
+/** One enumerated member: its tag-derived name + its parsed descriptor doc. */
+export interface TierMember {
+  readonly name: string
+  readonly tag: string
+  readonly doc: ComponentDoc
+}
+
+/** Every shipped control whose descriptor `tier` matches, sorted by name — the DERIVED member list for a tier page. */
+export function membersOfTier(tier: string): TierMember[] {
+  const members: TierMember[] = []
+  for (const raw of Object.values(ALL_DESCRIPTORS)) {
+    const doc = parseDoc(raw)
+    const tag = doc.descriptor.scalars.get('tag')
+    if (doc.descriptor.scalars.get('tier') === tier && typeof tag === 'string' && tag.startsWith('ui-')) {
+      members.push({ name: tag.slice('ui-'.length), tag, doc })
+    }
+  }
+  return members.sort((a, b) => a.name.localeCompare(b.name))
+}

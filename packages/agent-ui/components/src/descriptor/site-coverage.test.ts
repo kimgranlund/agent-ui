@@ -13,18 +13,17 @@ declare const process: { cwd(): string }
 //
 // The contract:
 //   • The page-naming convention is the ONE rule `{name}-{page-type}.html` (name = the descriptor tag minus
-//     `ui-`), so the required page set is DERIVED from the descriptor, not a hand-list. button conforms
-//     (button-permutations / button-states / button-doc); text-field conforms; every future control follows it.
-//   • A control's REQUIRED page set is keyed off its geometry `tier`:
-//       - tier `control`  → a form/interactive CONTROL: {permutations, states, doc}  (RATIFIED — ui-button G5
-//         established it; ui-text-field G6 follows). This is the live coverage that BITES today.
-//       - else (container/layout/pattern/…) → a STRUCTURAL container: {permutations, doc}, NO interaction-states
-//         page (a container has no per-control interaction state). This set is the steward's RECOMMENDATION for
-//         the G9 container fan-out; it does not bite until a container leaves the known-gap list below.
-//   • The G9 containers have no pages yet — that gap is made EXPLICIT as KNOWN_UNDOCUMENTED. The gate asserts a
-//     descriptor is documented IFF it is NOT in that list, so (a) a surprise undocumented component fails, and
-//     (b) the list must SHRINK as pages land (a container that gains its pages must be removed, or the gate
-//     flags it as documented-yet-still-listed). When the list is empty, every shipped component is documented.
+//     `ui-`), so the required page set is DERIVED from the descriptor, not a hand-list.
+//   • A control's REQUIRED page set is keyed off its geometry `tier` (the RATIFIED per-tier sets):
+//       - control   (button, text-field)     → {permutations, states, doc}   — per-component (G5 established it)
+//       - layout    (row, column, list, grid) → {doc}                         — per-component API doc each, PLUS the
+//         shared LAYOUT_SHOWCASE (one overview + one surface×layout demo) required once at the TIER level (not 4
+//         near-identical permutation pages)
+//       - container (card)                    → {doc, demo}                   — API doc + a composition demo
+//       - pattern   (tabs, modal)             → {doc, demo}                   — API doc + an interaction demo
+//   • KNOWN_UNDOCUMENTED is the explicit gap of shipped descriptors with no pages yet. It SHRINKS as pages land
+//     (a documented component must NOT be listed; an undocumented one MUST be) — empty here: the whole G9 fleet
+//     is documented, so a missing required page on ANY shipped component now fails the build.
 
 const ROOT = process.cwd()
 const COMPONENTS_SRC = `${ROOT}/packages/agent-ui/components/src`
@@ -83,13 +82,17 @@ function shippedComponents(): ShippedComponent[] {
   return components
 }
 
-// ── the required-page sets (derived from the convention) ────────────────────────────────────────────────────
+// ── the RATIFIED per-tier required-page sets (derived from the convention) ────────────────────────────────────
 
-const CONTROL_PAGES = ['permutations', 'states', 'doc'] as const // tier `control` — RATIFIED (G5)
-const STRUCTURAL_PAGES = ['permutations', 'doc'] as const // container/layout/pattern — recommended (no states page)
+const PAGES_BY_TIER: Record<string, readonly string[]> = {
+  control: ['permutations', 'states', 'doc'], // form/interactive control (button, text-field)
+  layout: ['doc'], // a layout primitive — API doc per-component; the rich matrix is the shared tier showcase
+  container: ['doc', 'demo'], // a surface container (card) — API doc + a composition demo
+  pattern: ['doc', 'demo'], // an interactive pattern (tabs, modal) — API doc + an interaction demo
+}
 
-/** The page-types a component must ship, keyed off its geometry tier (control vs structural container). */
-const requiredPages = (tier: string): readonly string[] => (tier === 'control' ? CONTROL_PAGES : STRUCTURAL_PAGES)
+/** The page-types a component must ship, keyed off its geometry tier (fallback: at least a `doc`). */
+const requiredPages = (tier: string): readonly string[] => PAGES_BY_TIER[tier] ?? ['doc']
 
 /** The required page FILENAMES for a component (the convention `{name}-{type}.html`). */
 const requiredFiles = (name: string, tier: string): string[] =>
@@ -103,11 +106,12 @@ function missingPages(name: string, tier: string, htmlSet: ReadonlySet<string>):
   return requiredFiles(name, tier).filter((f) => !htmlSet.has(f))
 }
 
-// ── the known G9 container gap (explicit; SHRINKS as pages land) ──────────────────────────────────────────────
-// The shipped G9 container descriptors that have no /site pages YET. Each entry is removed when its pages land
-// (the gate forces it: a documented component must NOT be listed here). When this set is empty, the fleet is
-// fully documented.
-const KNOWN_UNDOCUMENTED = new Set<string>(['card', 'column', 'grid', 'list', 'modal', 'row', 'tabs'])
+// The TIER-LEVEL pages the layout family shares (required ONCE, not per layout primitive): the family overview
+// (T7) + the shared surface×layout showcase. Required whenever any layout primitive is shipped.
+const LAYOUT_SHOWCASE = ['layout-overview.html', 'layout-permutations.html'] as const
+
+// ── the explicit gap (SHRINKS as pages land; empty = the whole fleet is documented) ──────────────────────────
+const KNOWN_UNDOCUMENTED = new Set<string>() // emptied at increment 2 — every shipped G9 container now documented
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
@@ -131,41 +135,54 @@ describe('site coverage — the descriptor fleet is enumerable (anti-vacuous)', 
   it('discovered the real site/ html shells (an empty/broken scan cannot pass silently)', () => {
     expect(HTML.has('button-permutations.html')).toBe(true)
     expect(HTML.has('text-field-doc.html')).toBe(true)
-    expect(HTML.size).toBeGreaterThanOrEqual(6)
+    expect(HTML.size).toBeGreaterThanOrEqual(20) // 8 control/site pages + 7 container docs + 2 layout-showcase + 3 demos
   })
 })
 
-describe('site coverage — every shipped CONTROL has its required page set', () => {
-  // The live bite: a tier-`control` descriptor (button, text-field) MUST have {permutations, states, doc}. Drop
-  // or rename one of those pages and this fails — the gate that keeps the control docs in lock-step with the fleet.
-  const controls = COMPONENTS.filter((c) => c.tier === 'control')
-
-  it('sourced the controls (button + text-field today)', () => {
-    expect(controls.map((c) => c.name).sort()).toEqual(['button', 'text-field'])
-  })
-
-  for (const c of controls) {
-    it(`${c.tag} has all of {${CONTROL_PAGES.join(', ')}} pages`, () => {
+describe('site coverage — every shipped component has its required per-tier page set', () => {
+  // The live bite: every descriptor (control + container) must have all its tier-required `{name}-{type}.html`
+  // pages. Drop or rename one and this fails — the gate that keeps the docs in lock-step with the fleet.
+  for (const c of COMPONENTS) {
+    it(`${c.tag} (tier=${c.tier}) has all of {${requiredPages(c.tier).join(', ')}} pages`, () => {
       expect(missingPages(c.name, c.tier, HTML)).toEqual([])
     })
-    it(`${c.tag} is not parked in the known-undocumented gap (a control must be documented now)`, () => {
-      expect(KNOWN_UNDOCUMENTED.has(c.name)).toBe(false)
+  }
+
+  it('sourced the controls (button + text-field) and the containers (the 7 G9 descriptors)', () => {
+    expect(COMPONENTS.filter((c) => c.tier === 'control').map((c) => c.name).sort()).toEqual(['button', 'text-field'])
+    expect(COMPONENTS.filter((c) => c.tier !== 'control').map((c) => c.name).sort()).toEqual(
+      ['card', 'column', 'grid', 'list', 'modal', 'row', 'tabs'],
+    )
+  })
+})
+
+describe('site coverage — the shared layout-tier showcase exists (T7 overview + surface×layout demo)', () => {
+  const layoutShipped = COMPONENTS.some((c) => c.tier === 'layout')
+
+  it('a layout primitive is shipped (anti-vacuous — the showcase requirement is live)', () => {
+    expect(layoutShipped).toBe(true)
+  })
+
+  for (const file of LAYOUT_SHOWCASE) {
+    it(`${file} exists (the layout family's required tier-level page)`, () => {
+      expect(HTML.has(file)).toBe(true)
     })
   }
 })
 
-describe('site coverage — every descriptor is documented XOR a known gap (the gap shrinks as pages land)', () => {
+describe('site coverage — every descriptor is documented (the gap is empty)', () => {
   for (const c of COMPONENTS) {
     it(`${c.tag} — documented(${isDocumented(c)}) === not-in-known-gap`, () => {
-      // documented IFF not listed: a fully-documented component must be removed from KNOWN_UNDOCUMENTED (shrink),
-      // and a not-yet-documented one must be listed (no surprise gap slips through).
+      // documented IFF not listed: a documented component must NOT be in KNOWN_UNDOCUMENTED, an undocumented one
+      // MUST be. The gap is empty, so every shipped component must be fully documented.
       expect(isDocumented(c)).toBe(!KNOWN_UNDOCUMENTED.has(c.name))
     })
   }
 
-  it('KNOWN_UNDOCUMENTED lists only real, still-undocumented shipped descriptors (no stale name lingers)', () => {
+  it('KNOWN_UNDOCUMENTED is empty and lists only real undocumented descriptors (no stale name lingers)', () => {
     const undocumentedNames = COMPONENTS.filter((c) => !isDocumented(c)).map((c) => c.name).sort()
     expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(undocumentedNames)
+    expect(KNOWN_UNDOCUMENTED.size).toBe(0)
   })
 })
 
@@ -186,14 +203,20 @@ describe('site coverage — the page-existence check BITES (synthetic negative c
     expect(missingPages('button', 'control', dropped)).toEqual(['button-states.html'])
   })
 
-  it('passes when every required page is present (the predicate can go true)', () => {
-    const complete = new Set(['demo-permutations.html', 'demo-states.html', 'demo-doc.html'])
-    expect(missingPages('demo', 'control', complete)).toEqual([])
+  it('catches a dropped CONTAINER demo page (simulate a deleted card-demo.html)', () => {
+    const dropped = new Set(HTML)
+    dropped.delete('card-demo.html')
+    expect(missingPages('card', 'container', dropped)).toEqual(['card-demo.html'])
   })
 
-  it('a STRUCTURAL container requires {permutations, doc} but NOT a states page', () => {
-    const docOnly = new Set(['row-doc.html', 'row-permutations.html'])
-    expect(missingPages('row', 'layout', docOnly)).toEqual([]) // no row-states.html required
-    expect(missingPages('row', 'control', docOnly)).toEqual(['row-states.html']) // …unless it were a control
+  it('applies the RATIFIED per-tier sets: layout→{doc}, container/pattern→{doc,demo}, control→{perm,states,doc}', () => {
+    expect(missingPages('row', 'layout', new Set(['row-doc.html']))).toEqual([]) // layout needs only its doc
+    expect(missingPages('card', 'container', new Set(['card-doc.html']))).toEqual(['card-demo.html']) // …+ a demo
+    expect(missingPages('tabs', 'pattern', new Set(['tabs-doc.html', 'tabs-demo.html']))).toEqual([])
+    expect(missingPages('demo', 'control', new Set())).toEqual(['demo-permutations.html', 'demo-states.html', 'demo-doc.html'])
+  })
+
+  it('the layout-showcase membership predicate can fail (an absent showcase page is caught)', () => {
+    expect(new Set<string>().has('layout-overview.html')).toBe(false)
   })
 })
