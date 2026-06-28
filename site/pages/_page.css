@@ -311,27 +311,13 @@ body {
 }
 
 /* ── the shared site nav (the rail) ───────────────────────────────────────────────────────────────────────
- * A vertical stack of GROUPS down the rail; each `.nav-group` is an optional component label above a column of
- * its page links. A new component appends one group (in _page.ts's NAV). */
+ * A single flat list down the rail: one entry per COMPONENT (linking to its first page) plus the site-level
+ * links (Home, A2UI Canvas). A component's per-type pages are NOT listed here — the page-header tab strip offers
+ * them. A new component appends one group in _page.ts's NAV (contributing one rail entry). */
 nav[data-site-nav] {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
   padding: var(--ui-space-lg) var(--ui-space-md);
-}
-
-.nav-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.nav-group-label {
-  padding-inline: 0.3rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.02em;
-  color: var(--c-neutral-on-surface-variant);
 }
 
 nav[data-site-nav] ul {
@@ -357,8 +343,10 @@ nav[data-site-nav] a:hover {
   color: var(--c-neutral-on-surface);
 }
 
-/* The current page — flagged by buildNav with aria-current, so the marker tracks the route, not a class. */
-nav[data-site-nav] a[aria-current='page'] {
+/* The active entry — flagged by buildNav with aria-current (so the marker tracks the route, not a class): the
+ * exact page (`page` — a site link, or a component on its landing page) OR the active SECTION (`true` — a
+ * component while you are on one of its sub-pages). Both spellings light the same. */
+nav[data-site-nav] a[aria-current] {
   background: var(--c-neutral-surface-high);
   color: var(--c-neutral-on-surface);
   font-weight: 600;
@@ -383,7 +371,7 @@ nav[data-site-nav] a[aria-current='page'] {
     border-block-end: 1px solid var(--c-neutral-outline-variant);
   }
 
-  /* horizontal scroller across the top: groups side-by-side, each still a small labelled column */
+  /* horizontal scroller across the top: the component + site links in one nowrap row */
   nav[data-site-nav] {
     flex-direction: row;
     flex-wrap: nowrap;

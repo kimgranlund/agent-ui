@@ -25,14 +25,16 @@ export interface PageHandle {
 }
 
 // ── shared site nav ──────────────────────────────────────────────────────────────────────────────────────
-// The site's table of contents, rendered into the LEFT RAIL of EVERY page so the whole site shares one nav. It
-// is GROUPED per component: a labelled cluster (`ui-button`, `ui-text-field`, …) of that control's per-type
-// pages, bracketed by the ungrouped site-level links (Home, A2UI Canvas). A new component's docs append ONE
-// group here. Hrefs are sibling-relative (`./x.html`): every page shell lives at the site root, so these
-// resolve from any page. Per-component page filenames follow the one convention `{name}-{page-type}.html`
-// (the coverage gate, site-coverage.test.ts, derives the required set from it). The same grouping also DERIVES
-// each page's context-label + tab strip (see mountPage), so a component's page-type pages tab between each other
-// for free.
+// The site's table of contents, rendered into the LEFT RAIL of EVERY page so the whole site shares one nav. The
+// rail lists COMPONENTS, not pages: each per-component group (`ui-button`, `ui-text-field`, …) collapses to ONE
+// entry linking to that control's first page — its per-type pages are NOT repeated in the rail, because the
+// page-header tab strip (DERIVED from the same group) already offers them once you are on the component. The
+// component entries are bracketed by the ungrouped site-level links (Home, A2UI Canvas). A new component's docs
+// append ONE group here. Hrefs are sibling-relative (`./x.html`): every page shell lives at the site root, so
+// these resolve from any page. Per-component page filenames follow the one convention `{name}-{page-type}.html`
+// (the coverage gate, site-coverage.test.ts, derives the required set from it). The same grouping DERIVES each
+// page's context-label + tab strip (see mountPage), so a component's page-type pages tab between each other for
+// free — which is exactly why the rail need not list them a second time.
 interface NavLink {
   readonly href: string
   readonly label: string
@@ -111,39 +113,45 @@ function activeGroup(): NavGroup | undefined {
   return NAV.find((group) => group.links.some((link) => isCurrent(link.href)))
 }
 
-// buildNav — the shared cross-page nav: a labelled `<nav data-site-nav>` (it lives here, in the one shell, and
-// is identical on every page) holding one `<div class="nav-group">` per group — an optional
-// `<span class="nav-group-label">` (the component name) above a `<ul>` of that group's links, the current page
-// flagged with `aria-current`. Dependency-free light DOM; styling (the left rail) lives in `_page.css`.
+// navItem — one rail entry (`<li><a>`): a sibling-relative link, flagged active via aria-current when `active`.
+// `exact` picks the token — `page` when the href IS the current page (a site-level link, or a component sitting
+// on its landing page), `true` when the entry merely represents the active SECTION (a component while you are on
+// one of its sub-pages, which the tab strip is showing). Both spellings get the active rail style (_page.css).
+function navItem(href: string, label: string, active: boolean, exact: boolean): HTMLElement {
+  const item = document.createElement('li')
+  const anchor = document.createElement('a')
+  anchor.href = href
+  anchor.textContent = label
+  if (active) anchor.setAttribute('aria-current', exact ? 'page' : 'true')
+  item.append(anchor)
+  return item
+}
+
+// buildNav — the shared cross-page nav: a `<nav data-site-nav>` (one shell, identical on every page) holding a
+// single flat `<ul>`. A per-component group contributes ONE entry — the component name, linking to its first
+// page and highlighted across the WHOLE group (the section you are in); its per-type pages live in the page-
+// header tab strip, not the rail. An ungrouped site-level group contributes its link(s) directly. Dependency-
+// free light DOM; the rail styling lives in `_page.css`.
 function buildNav(): HTMLElement {
   const nav = document.createElement('nav')
   nav.setAttribute('data-site-nav', '')
   nav.setAttribute('aria-label', 'Site')
 
+  const active = activeGroup()
+  const list = document.createElement('ul')
+
   for (const group of NAV) {
-    const groupEl = document.createElement('div')
-    groupEl.className = 'nav-group'
-
     if (group.label) {
-      const label = document.createElement('span')
-      label.className = 'nav-group-label'
-      label.textContent = group.label
-      groupEl.append(label)
+      // A component group → ONE rail entry, linking to its first page; the tab strip offers its per-type pages.
+      const [first] = group.links
+      list.append(navItem(first.href, group.label, active === group, isCurrent(first.href)))
+    } else {
+      // Ungrouped site-level links (Home, A2UI Canvas) — a direct link each, active only on its exact page.
+      for (const link of group.links) list.append(navItem(link.href, link.label, isCurrent(link.href), true))
     }
-
-    const list = document.createElement('ul')
-    for (const link of group.links) {
-      const item = document.createElement('li')
-      const anchor = document.createElement('a')
-      anchor.href = link.href
-      anchor.textContent = link.label
-      if (isCurrent(link.href)) anchor.setAttribute('aria-current', 'page')
-      item.append(anchor)
-      list.append(item)
-    }
-    groupEl.append(list)
-    nav.append(groupEl)
   }
+
+  nav.append(list)
   return nav
 }
 
