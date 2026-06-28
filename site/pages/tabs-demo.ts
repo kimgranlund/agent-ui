@@ -13,6 +13,8 @@ const { content } = mountPage({
 })
 
 const text = (s: string): Text => document.createTextNode(s)
+const strong = (s: string): HTMLElement => el('strong', {}, [text(s)]) // inline emphasis, built as DOM (no innerHTML)
+const code = (s: string): HTMLElement => el('code', {}, [text(s)])
 
 // ── the live tabs (real compound — three tabs + three panels, the first selected by default) ────────────────
 const tabs = el('ui-tabs', { selected: 'overview' }, [
@@ -38,12 +40,13 @@ tabs.addEventListener('select', (event) => {
   log.scrollTop = log.scrollHeight
 })
 
-const keyboard = document.createElement('p')
-keyboard.innerHTML =
-  'The strip uses a <strong>roving tabindex</strong>: Tab enters the whole strip as one stop. Within it, ' +
-  '<strong>ArrowLeft / ArrowRight</strong> move selection + focus (wrapping), and <strong>Home / End</strong> ' +
-  'jump to the first / last tab — selection follows focus (APG automatic activation). Only a user gesture emits ' +
-  '<code>select</code>; a programmatic <code>selected</code> write applies silently (binding hygiene).'
+const keyboard = el('p', {}, [
+  text('The strip uses a '), strong('roving tabindex'),
+  text(': Tab enters the whole strip as one stop. Within it, '), strong('ArrowLeft / ArrowRight'),
+  text(' move selection + focus (wrapping), and '), strong('Home / End'),
+  text(' jump to the first / last tab — selection follows focus (APG automatic activation). Only a user gesture emits '),
+  code('select'), text('; a programmatic '), code('selected'), text(' write applies silently (binding hygiene).'),
+])
 
 content.append(
   exampleSection('Live tabs', tabs),

@@ -20,9 +20,10 @@ const elevations = findAttr(rowDoc.descriptor, 'elevation')?.values ?? []
 
 const { content } = mountPage({
   title: 'Layout primitives — surface × layout',
-  intro: 'Every layout primitive under the shared axes — the four primitives side by side, the flex grammar ' +
-    '(align / justify / gap, derived from the parsed row enums), the surface elevation ladder, and the grid ' +
-    'auto-fit. The live containers are the real controls; the boxes are demo content.',
+  intro: 'The layout primitives under their shared axes: the four side by side, then ui-row\'s flex grammar ' +
+    '(align / justify / gap, derived from the parsed row enums), the shared surface elevation ladder, a live ' +
+    'container reflow (drag to narrow it and watch ui-row stack), and ui-grid\'s auto-fit. The live containers ' +
+    'are the real controls; the boxes are demo content.',
 })
 
 // A short + a tall demo box, so a cross-axis [align] value (start/center/end/stretch/baseline) is visible.
@@ -89,7 +90,25 @@ for (const value of elevations) {
 }
 surfaceSection.append(surfaceGrid)
 
-// ── [6] grid auto-fit / min — the track floor sets how many columns pack ────────────────────────────────────
+// ── [6] container reflow (LIVE) — a ui-row in a user-resizable query container; drag it narrow to watch it stack
+// The flex primitives reflow on their nearest ANCESTOR query container's width (row.css `@container (inline-size <
+// 24rem)`), NOT a viewport breakpoint (ADR-0016). The `.reflow-frame` wrapper IS that query container and is
+// `resize: horizontal`, so dragging it below 24rem stacks the row to a column live — the same intrinsic
+// responsiveness ui-column / ui-list share, and the flex sibling of the grid auto-fit below.
+const reflowSection = document.createElement('section')
+reflowSection.append(heading(2, 'Container reflow (live) — drag the frame narrow'))
+const reflowProse = document.createElement('p')
+reflowProse.textContent =
+  'ui-row reflows on its nearest ancestor query container, not the viewport (no breakpoint prop). Drag the ' +
+  'frame\'s bottom-right handle to narrow it — under 24rem the row stacks to a column, then springs back when ' +
+  'widened. The same @container intrinsic responsiveness ui-column and ui-list share.'
+reflowSection.append(reflowProse)
+const reflowFrame = document.createElement('div')
+reflowFrame.className = 'reflow-frame'
+reflowFrame.append(el('ui-row', { gap: 'md', align: 'center' }, ['Alpha', 'Beta', 'Gamma', 'Delta'].map(demoBox)))
+reflowSection.append(reflowFrame)
+
+// ── [7] grid auto-fit / min — the track floor sets how many columns pack ────────────────────────────────────
 const gridSection = document.createElement('section')
 gridSection.append(heading(2, 'Grid — auto-fit / min (the track floor)'))
 const gridProse = document.createElement('p')
@@ -101,4 +120,4 @@ for (const min of ['6rem', '12rem']) {
   gridSection.append(captioned(`[min="${min}"]`, el('ui-grid', { gap: 'md', min }, [1, 2, 3, 4, 5, 6, 7, 8].map((n) => demoBox(`Cell ${n}`)))))
 }
 
-content.append(primitives, alignSection, justifySection, gapSection, surfaceSection, gridSection)
+content.append(primitives, alignSection, justifySection, gapSection, surfaceSection, reflowSection, gridSection)

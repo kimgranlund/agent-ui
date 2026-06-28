@@ -65,6 +65,23 @@
   gap: 1rem;
 }
 
+/* A user-resizable QUERY CONTAINER for the live @container reflow demo (the layout showcase). `container-type:
+ * inline-size` makes this frame the query container a child ui-row resolves its `@container (inline-size < 24rem)`
+ * stack-rule against (ADR-0016 — reflow on the ancestor container's width, not the viewport); `resize: horizontal`
+ * lets the reader drag it narrow to watch the row reflow to a column LIVE. Bounded so the drag handle stays usable. */
+.reflow-frame {
+  container-type: inline-size;
+  resize: horizontal;
+  overflow: auto;
+  inline-size: 100%;
+  min-inline-size: 12rem;
+  max-inline-size: 100%;
+  padding: 1rem;
+  border: 1px dashed var(--c-neutral-outline);
+  border-radius: 0.6rem;
+  background: var(--c-neutral-surface-low);
+}
+
 /* The shared event log for the interactive demos (tabs select · modal close/toggle). */
 .event-log {
   margin: 0.5rem 0 0;

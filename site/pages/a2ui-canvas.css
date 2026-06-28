@@ -1,7 +1,8 @@
 /* a2ui-canvas.css — PAGE-LOCAL layout chrome for the wave-4 capstone canvas. Styles the 3-region flow
  * (payload → rendered surface → messages), the code/payload blocks, and the client-message log ONLY. The
  * rendered <ui-button> keeps its own button.css — this page never restyles a ui-* control. Reads the `--c-*`
- * colour roles declared by the foundation barrels (imported first via _page.ts), so it tracks light/dark. */
+ * colour roles declared by the foundation barrels (imported first via _page.ts), so it tracks light/dark.
+ * Tokens-only — every colour is a `--c-*` role, no raw-literal fallbacks (matching _page.css). */
 
 /* ── the 3-region flow: three cards with arrow connectors, wrapping to a stack on narrow viewports ──────── */
 /* This page mounts via mountFullBleedPage: the shell's `.app-page--full-bleed` variant already hands the page
@@ -23,9 +24,9 @@
   display: flex;
   flex-direction: column;
   padding: 1.1rem 1.2rem 1.3rem;
-  border: 1px solid var(--c-neutral-outline-variant, #ddd);
+  border: 1px solid var(--c-neutral-outline-variant);
   border-radius: 12px;
-  background: var(--c-neutral-surface-low, #fafafa);
+  background: var(--c-neutral-surface-low);
 }
 
 .region > h2 {
@@ -43,15 +44,15 @@
   inline-size: 1.6rem;
   block-size: 1.6rem;
   border-radius: 50%;
-  background: var(--c-primary, #1a56db);
-  color: var(--c-on-primary, #fff);
+  background: var(--c-primary);
+  color: var(--c-primary-on-primary); /* the canonical ink for a --c-primary fill (button.css) — NOT --c-on-primary (no such role) */
   font-size: 0.85rem;
   font-weight: 700;
 }
 
 .region-blurb {
   margin: 0 0 0.9rem;
-  color: var(--c-neutral-on-surface-variant, #555);
+  color: var(--c-neutral-on-surface-variant);
   font-size: 0.85rem;
   line-height: 1.45;
 }
@@ -67,7 +68,7 @@
 /* The arrow between regions — horizontal on a row, rotating to point down once the cards wrap into a stack. */
 .flow-arrow {
   align-self: center;
-  color: var(--c-neutral-on-surface-variant, #999);
+  color: var(--c-neutral-on-surface-variant);
   font-size: 1.5rem;
   line-height: 1;
 }
@@ -87,7 +88,7 @@
 
 .payload-line > figcaption {
   margin-block-end: 0.3rem;
-  color: var(--c-neutral-on-surface-variant, #555);
+  color: var(--c-neutral-on-surface-variant);
   font-size: 0.78rem;
   font-weight: 600;
 }
@@ -112,14 +113,14 @@
   padding: 2rem 1rem;
   flex: 1;
   min-block-size: 6rem;
-  border: 1px dashed var(--c-neutral-outline, #cbd5e1);
+  border: 1px dashed var(--c-neutral-outline);
   border-radius: 8px;
-  background: var(--c-neutral-surface, #fff);
+  background: var(--c-neutral-surface);
 }
 
 .surface:empty::before {
   content: 'No surface mounted.';
-  color: var(--c-neutral-on-surface-variant, #888);
+  color: var(--c-neutral-on-surface-variant);
   font-size: 0.85rem;
 }
 
@@ -138,7 +139,7 @@
   content: 'No messages yet — click the rendered button to round-trip an action.';
   display: block;
   padding: 0.6rem 0;
-  color: var(--c-neutral-on-surface-variant, #888);
+  color: var(--c-neutral-on-surface-variant);
   font-size: 0.85rem;
   line-height: 1.5;
 }
@@ -160,9 +161,9 @@
 }
 
 .msg-log > li[data-kind='action'] .msg-head {
-  color: var(--c-primary, #1a56db);
+  color: var(--c-primary);
 }
 
 .msg-log > li[data-kind='error'] .msg-head {
-  color: var(--c-danger, #c2410c);
+  color: var(--c-danger);
 }

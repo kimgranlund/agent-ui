@@ -29,6 +29,10 @@ shapeProse.textContent =
   'track grid (auto-fit / minmax) with a gap and a min floor instead.'
 shape.append(shapeProse)
 
+// The surface axes every container shares (UIContainerElement.surfaceProps) — excluded from the per-member
+// grammar cell so it lists only the primitive's OWN layout attributes, never the inherited surface axes.
+const SURFACE_AXES = new Set(['elevation', 'brightness'])
+
 // ── the members (DERIVED from the shipped layout descriptors) ───────────────────────────────────────────────
 const members = membersOfTier('layout')
 
@@ -51,8 +55,12 @@ const tbody = document.createElement('tbody')
 for (const member of members) {
   const d = member.doc.descriptor
   const role = d.maps.get('aria')?.get('role') ?? 'none'
-  // Grammar is DERIVED from the attribute surface: an `align` attr ⇒ the flex grammar; a `min` attr ⇒ the track grid.
-  const grammar = findAttr(d, 'align') ? 'flex (align · justify · gap · wrap)' : findAttr(d, 'min') ? 'track grid (auto-fit · gap · min)' : '—'
+  // Grammar — the FAMILY word is a coarse heuristic (an `align` attr ⇒ flex; a `min` attr ⇒ the track grid; the
+  // only signal short of a descriptor `grammar` field), but the AXIS LIST is derived from the primitive's own
+  // non-surface attributes, so the cell never claims an axis the descriptor does not actually carry.
+  const axes = d.attributes.map((a) => a.name).filter((n): n is string => n !== undefined && !SURFACE_AXES.has(n))
+  const family = findAttr(d, 'align') ? 'flex' : findAttr(d, 'min') ? 'track grid' : '—'
+  const grammar = family !== '—' && axes.length > 0 ? `${family} (${axes.join(' · ')})` : family
 
   const tr = document.createElement('tr')
 
@@ -80,8 +88,14 @@ table.append(tbody)
 list.append(table)
 
 const more = document.createElement('p')
-more.innerHTML = 'See the <a href="./layout-permutations.html">surface × layout showcase</a> for every primitive ' +
-  'under the shared axes — the flex grammar, the surface ladder, and the grid auto-fit.'
+const showcaseLink = document.createElement('a')
+showcaseLink.href = './layout-permutations.html'
+showcaseLink.textContent = 'surface × layout showcase'
+more.append(
+  document.createTextNode('See the '),
+  showcaseLink,
+  document.createTextNode(' for every primitive under the shared axes — the flex grammar, the surface ladder, the live container reflow, and the grid auto-fit.'),
+)
 list.append(more)
 
 content.append(shape, list)
