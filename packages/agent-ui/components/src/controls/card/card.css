@@ -1,0 +1,190 @@
+/* card.css — the SINGLE-file stylesheet for the whole ui-card family (ADR-0003 one-sheet-per-folder):
+ * ui-card + ui-card-header / ui-card-content / ui-card-footer. Sectioned, one TOKEN `:where()` block + one
+ * STYLES block per element, mirroring button.css / text-field.css (declaration vs consumption split).
+ *
+ * Role-purity (ADR-0008 / tokens.md): the `--c-*` colour roles and the shared `--ui-space-*` / `--ui-radius-base`
+ * ramps enter ONLY in the `:where()` TOKEN blocks (the variable-definition side); every STYLES block (`@scope` /
+ * the region anatomy) consumes ONLY the element's own `--ui-card-*` chain plus the role-pure container surface
+ * seam `--ui-container-bg` (ADR-0015 cl.2 — the cross-family surface seam, not a raw role). A card holds zero
+ * colour opinion; forced-colors is handled by the role layer + the block at the foot.
+ *
+ * Surface (ADR-0015): ui-card sits on the shared container seam (controls/_surface/container.css paints
+ * `background-color: var(--ui-container-bg)` and maps [elevation]/[brightness] for the family). The base default
+ * is `transparent`; a card seeds its OWN default `--ui-container-bg: var(--c-neutral-surface)` below so an
+ * UN-elevated card still reads as a surface (card.css is `@import`-ed AFTER container.css in s12 — later source,
+ * equal `:where()` specificity, wins).
+ *
+ * Nested radius (ADR-0018, one level): the concentric-corner law is `r_child = max(0, r_parent − pad_parent)`.
+ * The literal ADR formula (a card both reads AND declares `--ui-card-child-radius`) is a SELF-REFERENTIAL custom
+ * property — a CSS cycle (guaranteed-invalid), the exact failure ADR-0018 records. The cycle-free realization of
+ * the SAME seam: a card computes its own inner radius (`--ui-card-inner-radius`, NOT read back into its radius)
+ * and PUBLISHES it to its DESCENDANTS as `--ui-card-child-radius` (the `:where(ui-card) > *` rule — set on the
+ * children, never on self, so the publishing card never reads what it writes). A nested card (inside a region)
+ * reads the INHERITED `--ui-card-child-radius` for its own radius → one-level decrement, no cycle. The normal
+ * structure is card › ui-card-content › card; a card placed as a DIRECT child of another card (no region
+ * between) is the depth-≥2 manual case (set an explicit border-radius to reseed) — documented in card.md.
+ *
+ * Standalone sheet — linked via the component-styles barrel (s12), NEVER injected from card.ts (behaviour-only
+ * `.ts`, no runtime style; plan §2). */
+
+/* ════════════════ [ui-card] TOKEN BLOCK — :where(ui-card) declares the chain ════════════════ */
+
+:where(ui-card) {
+  /* Surface: the card's OWN default plane (the base seam defaults transparent — ADR-0015 cl.1). [elevation]/
+     [brightness] still repoint this via container.css; this is only the un-elevated default. */
+  --ui-container-bg: var(--c-neutral-surface);
+
+  /* Layout spacing — off the density-responsive --ui-space ladder (geometry.md Container/layout class; NEVER a
+     control height). Padding insets the regions; the row-gap is the rhythm between stacked regions. */
+  --ui-card-padding: var(--ui-space-md);
+  --ui-card-gap: var(--ui-space-md);
+
+  /* Frame: the neutral hairline border + the corner radius. The radius reads the inherited
+     --ui-card-child-radius a PARENT card published (one-level nesting, ADR-0018), else the shared
+     --ui-radius-base (a root card — the channel is unset → the fallback). */
+  --ui-card-border: var(--c-neutral-outline-variant);
+  --ui-card-radius: var(--ui-card-child-radius, var(--ui-radius-base));
+
+  /* The card's INNER radius (the concentric-corner law) — what a painted region clips to AND the value handed
+     down to a nested card. Computed from THIS card's resolved radius/padding; it is NOT read back into
+     --ui-card-radius, so there is no self-referential cycle (ADR-0018). */
+  --ui-card-inner-radius: max(0px, calc(var(--ui-card-radius) - var(--ui-card-padding)));
+}
+
+/* PUBLISH the child radius ONE level (ADR-0018): hand every direct child the card's inner radius as the
+   inherited --ui-card-child-radius. Set on the CHILDREN (`> *`), never on the card itself, so the publishing
+   card never reads the property it writes (the cycle-free realization of the published seam). A nested card —
+   normally inside ui-card-content — inherits this through the region wrapper and reads it for its own radius. */
+:where(ui-card) > * {
+  --ui-card-child-radius: var(--ui-card-inner-radius);
+}
+
+/* ════════════════ [ui-card] STYLES — @scope (ui-card) consumes ONLY --ui-card-* ════════════════ */
+
+@scope (ui-card) {
+  /* The surface container: a presence-driven region grid. The surface PAINT itself rides the shared container
+     seam (container.css); here we own the frame (border/radius), the padding inset and the region layout. */
+  :scope {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr; /* content-only default — a single 1fr body row */
+    gap: var(--ui-card-gap);
+    box-sizing: border-box;
+
+    padding: var(--ui-card-padding);
+    border: 1px solid var(--ui-card-border);
+    border-radius: var(--ui-card-radius);
+    min-inline-size: 0; /* a card inside a flex/grid parent may shrink (so [scroll] content can too) */
+  }
+
+  /* Presence-driven rows (anatomy.md host-as-grid, applied to the ROW axis): the header takes a top `auto`
+     row, the footer a bottom `auto` row, the content the `1fr` slack. An ABSENT region leaves NO phantom row —
+     the template only allocates the rows the present regions need (the four :has() structures). */
+  :scope:has(> ui-card-header):not(:has(> ui-card-footer)) {
+    grid-template-rows: auto 1fr;
+  }
+  :scope:has(> ui-card-footer):not(:has(> ui-card-header)) {
+    grid-template-rows: 1fr auto;
+  }
+  :scope:has(> ui-card-header):has(> ui-card-footer) {
+    grid-template-rows: auto 1fr auto;
+  }
+}
+
+/* ════════════════ [ui-card-header / -footer] TOKEN + anatomy — the host-as-grid ════════════════ */
+
+/* The header/footer reuse the family leading/label/trailing anatomy (anatomy.md / ADR-0006): a presence-driven
+   `:has()` host-as-grid where the `slot` PLACES (leading start cell · the default/label `1fr` centre · trailing
+   end cell). A Container-class region has NO control height, so the adornment cells size INTRINSICALLY (`auto`)
+   — the structure is reused, not the control-frame glyph sizing. A region that paints a fill clips its
+   card-edge corners to the card INNER radius (inherited --ui-card-inner-radius — concentric, ADR-0018). */
+:where(ui-card-header, ui-card-footer) {
+  --ui-card-region-gap: var(--ui-space-sm); /* adornment↔label column-gap (off the --ui-space ladder) */
+
+  display: grid;
+  grid-template-columns: 1fr; /* [label] — slotless */
+  align-items: center;
+  column-gap: var(--ui-card-region-gap);
+}
+
+/* [leading | label] — auto 1fr */
+:where(ui-card-header, ui-card-footer):has(> [slot='leading']):not(:has(> [slot='trailing'])) {
+  grid-template-columns: auto 1fr;
+}
+/* [label | trailing] — 1fr auto */
+:where(ui-card-header, ui-card-footer):has(> [slot='trailing']):not(:has(> [slot='leading'])) {
+  grid-template-columns: 1fr auto;
+}
+/* [leading | label | trailing] — auto 1fr auto */
+:where(ui-card-header, ui-card-footer):has(> [slot='leading']):has(> [slot='trailing']) {
+  grid-template-columns: auto 1fr auto;
+}
+
+/* Region fill → the card INNER radius on the card-edge corners (concentric): the header rounds its TOP corners,
+   the footer its BOTTOM corners. Harmless when the region is transparent (the default); load-bearing the moment
+   an author paints the region. */
+:where(ui-card-header) {
+  border-start-start-radius: var(--ui-card-inner-radius);
+  border-start-end-radius: var(--ui-card-inner-radius);
+}
+:where(ui-card-footer) {
+  border-end-start-radius: var(--ui-card-inner-radius);
+  border-end-end-radius: var(--ui-card-inner-radius);
+}
+
+/* ════════════════ [ui-card-content] TOKEN + STYLES — the body + scroll ════════════════ */
+
+:where(ui-card-content) {
+  --ui-card-fade: var(--ui-space-lg); /* the [scroll-fade] mask edge depth (off the --ui-space ladder) */
+
+  display: block;
+  min-block-size: 0; /* the body may shrink in the 1fr track (so a constrained card can scroll its content) */
+  min-inline-size: 0;
+}
+
+@scope (ui-card-content) {
+  /* `scroll` — a scrolling viewport. overflow:auto + the min-block-size:0 above let the 1fr grid track shrink
+     BELOW its content and actually scroll. It needs a CONSTRAINED card block-size to bite (a max-block-size /
+     height on the card, or a sized flex/grid parent) — documented in card.md. */
+  :scope[scroll] {
+    overflow: auto;
+  }
+
+  /* `scroll-fade` — a mask-image edge fade on the scroll viewport. STATIC symmetric fade (the cross-engine
+     fallback that ALWAYS paints): the top + bottom `--ui-card-fade` band of the body fades to transparent so
+     scrolled content reads as continuing past the edge. (A scroll-driven refinement — fading ONLY at the
+     scrollable edge via `animation-timeline: scroll()` — is a documented follow-up; the static fade is the
+     shipped behaviour, robust on every engine including WebKit.) The mask alpha uses literal black/transparent
+     — a mask channel, not a theme paint. */
+  :scope[scroll-fade] {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 var(--ui-card-fade),
+      #000 calc(100% - var(--ui-card-fade)),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 var(--ui-card-fade),
+      #000 calc(100% - var(--ui-card-fade)),
+      transparent 100%
+    );
+  }
+}
+
+/* ════════════════ forced-colors (WHCM) ════════════════ */
+
+/* Keep the card frame visible as a system colour and drop the edge-fade mask (a mask over system text harms
+   legibility under forced-colors). The surface itself survives via container.css's forced-colors block (the
+   role layer maps it to Canvas). */
+@media (forced-colors: active) {
+  :where(ui-card) {
+    border-color: CanvasText;
+  }
+  :where(ui-card-content[scroll-fade]) {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
