@@ -54,6 +54,10 @@
   --ui-text-field-font: var(--ui-font-md);
   --ui-text-field-gap: var(--ui-gap-md); /* the one density-bearing quantity (slot↔editor column-gap) */
   --ui-text-field-icon: calc(18px * var(--ui-scale)); /* content-icon ramp md=18 (geometry-sizing-spec §1) */
+
+  /* Size-INVARIANT frame quantities — declared ONCE in the base block (NOT in the per-[size] blocks below): */
+  --ui-text-field-radius: var(--ui-radius-base); /* fixed --ui-radius-base rounded-rect — the container-fleet referent an ENTRY control takes (NOT the action family's h/2 pill); overridable per-field; ADR-0015 cl.5 / #71 amendment. */
+  --ui-text-field-min-inline-size: 20ch; /* the host typing-width floor (entry-control frame-law leg, ADR-0021) — ch is font-relative so one ~20ch already scales with --ui-text-field-font across [size]; native <input size> parity so a bare field is hittable (width above the floor is the layout's job). */
 }
 
 /* size → dimensional ramp (size is reflected, so the attribute is present) */
@@ -94,6 +98,13 @@
     box-sizing: border-box;
 
     block-size: var(--ui-text-field-height); /* the vertical lever — geometry.md (Control class) */
+    /* the host typing-width floor (the entry-control leg of the frame-law min-inline-size, ADR-0021 — the sibling
+       of button's action-control square floor) so a BARE, unsized field is hittable instead of collapsing its 1fr
+       editor cell to a ~0-width typing target (the box keeps only its ~30px padding+border chrome). Width ABOVE the floor stays the layout's / author's job (a flex/grid
+       track or an explicit inline-size grows it; --ui-text-field-min-inline-size is the per-field / theme override).
+       COMPLEMENTARY to the editor cell's `min-inline-size: 0` below: that lets long text scroll WITHIN the field,
+       this holds the box open. */
+    min-inline-size: var(--ui-text-field-min-inline-size);
     padding-block: 0; /* NEVER block-padding */
     padding-inline: calc(var(--ui-text-field-height) / 2); /* slotless value edge = h/2 */
 
@@ -102,11 +113,13 @@
     color: var(--ui-text-field-ink);
 
     /* the BORDER-ON-HOST field frame (§5): border + radius on the host, so a slotted adornment sits INSIDE the
-       box. The radius is the frame-family pill (= h/2, geometry.md) — derived from --ui-text-field-height, so it
-       reads only a component token (a dedicated radius token, if the family wants a sub-pill corner, is a future
-       token-layer concern, not a per-control opinion). */
+       box. The radius is the fixed --ui-radius-base rounded-rect — the SAME referent the container fleet (card /
+       modal) uses, because a field is an entry SURFACE kin to a container, NOT the action/keyboard family's
+       press-affordance h/2 pill (ADR-0015 cl.5 / the #71 amendment; geometry.md "Corner radius"). It reads the
+       component --ui-text-field-radius token (role-purity + per-field override). The browser clamps border-radius
+       to ≤ h/2, so a very dense/short field degrades gracefully to the pill — never overflows. */
     border: 1px solid var(--ui-text-field-border);
-    border-radius: calc(var(--ui-text-field-height) / 2);
+    border-radius: var(--ui-text-field-radius);
     cursor: text;
   }
 

@@ -8,6 +8,7 @@
 tag: ui-text-field
 tier: control          # geometry size-class (Control band — full control height; geometry.md "five size-classes")
 extends: UIFormElement  # FACE form-associated control (value/validity participation via ElementInternals; ADR-0013)
+# marginal: ui-text-field adds 1110 B gz (4539 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — it + UIFormElement + trackUserInvalid) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors text-field.ts `static props` (control-specific first, then the spread formProps)
   - name: value
@@ -110,6 +111,8 @@ geometry:
   paddingBlock: 0
   inlinePad: h/2 (value/text edge) · ½(h−icon) (leading / trailing slot edge)   # the centering law, geometry.md
   gap: var(--ui-text-field-gap)            # adornment↔editor column-gap — the one density-bearing quantity (gap = font/2 × density)
+  radius: var(--ui-radius-base)            # fixed rounded-rect — the container-fleet referent, NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5 (#71 amendment)
+  minInlineSize: var(--ui-text-field-min-inline-size) (~20ch — entry-control typing-width floor, native <input size> parity; ADR-0021)   # the host floor so a bare field is hittable; size-invariant (ch is font-relative)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the idle field border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --c-focus-ring → Highlight (the focus border is transparent — the ring is the sole, load-bearing focus indicator) — ADR-0014.
 ---
@@ -146,7 +149,12 @@ and font; an ancestor `[scale]` multiplies the frame and an ancestor `[density]`
 adornment↔editor gap. The geometry follows the **Control size-class** in `geometry.md`: the block-size is
 the vertical lever (`padding-block` is always `0`), the value/text edge sits at `h/2`, and a leading/trailing
 slot edge at the emergent `½(h − icon)`. The field frame (border + radius) is drawn **on the host** so a
-slotted adornment sits inside the box.
+slotted adornment sits inside the box; the corner is the fixed `--ui-radius-base` rounded-rect (the
+container-fleet referent an entry control takes, not the action family's `h/2` pill — ADR-0015 cl.5).
+A bare field carries a default minimum **typing width** (`min-inline-size: ~20ch`, native `<input size>`
+parity) so an unsized field stays hittable; **layout owns the width above that floor** (a flex/grid track
+or an explicit `inline-size`; the `--ui-text-field-min-inline-size` token is the per-field override) —
+ADR-0021.
 
 ## Slots & anatomy
 

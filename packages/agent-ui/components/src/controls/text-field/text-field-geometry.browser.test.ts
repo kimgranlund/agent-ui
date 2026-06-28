@@ -48,6 +48,7 @@ const padStartPx = (field: HTMLElement): number => px(getComputedStyle(field).pa
 const padEndPx = (field: HTMLElement): number => px(getComputedStyle(field).paddingInlineEnd)
 
 const allDistinct = (xs: number[]): boolean => new Set(xs.map((x) => x.toFixed(2))).size === xs.length
+const allEqual = (xs: number[]): boolean => new Set(xs.map((x) => x.toFixed(2))).size === 1
 
 describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => {
   it('[size] sm→md→lg CHANGES the frame height + the editor font px — on BOTH the bare and leading-icon variants', () => {
@@ -120,5 +121,55 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
     expect(padStartPx(field), 'the slot edge did not differ from the value edge (per-edge formula collapsed)').toBeLessThan(
       padEndPx(field),
     )
+  })
+
+  // ── ADR-0021: the entry-control min-inline-size floor (native <input size> parity) ──────────────────────
+  it('BARE+unsized: carries the min-inline-size typing-width floor — offsetWidth ≥ the resolved ~20ch, NOT the ~0 collapse', () => {
+    const { field } = mount(BARE) // no [size], empty — the exact case the s11 smoke caught collapsing the 1fr editor cell
+    const floorPx = px(getComputedStyle(field).minInlineSize) // 20ch resolves to an absolute px on a real engine
+    // the floor resolved to a real, substantial typing width (native <input size> parity), not a zero/symbolic value.
+    expect(floorPx, 'the --ui-text-field-min-inline-size floor did not resolve to a positive px').toBeGreaterThan(0)
+    // the bare field's box is held open to AT LEAST the floor — a real pointer can land on it.
+    const withFloor = field.offsetWidth
+    expect(withFloor, 'the bare field is narrower than its min-inline-size floor').toBeGreaterThanOrEqual(Math.floor(floorPx))
+    // NON-VACUOUS — the floor is load-bearing: REMOVE it (host min-inline-size → 0) and the unsized 1fr editor
+    // collapses the box back to just its frame chrome, far below the floor (the ~0 typing sliver this fixes). So
+    // the assertion above is not vacuously true of any field — it FAILS if the floor is gone.
+    field.style.minInlineSize = '0'
+    const withoutFloor = field.offsetWidth
+    expect(withoutFloor, 'removing the floor did NOT shrink the field below the floor — the floor is not load-bearing').toBeLessThan(
+      floorPx,
+    )
+    expect(withFloor - withoutFloor, 'the floor did not meaningfully widen the bare field').toBeGreaterThan(20)
+  })
+
+  // ── ADR-0006 / geometry.md: [density] rides the rhythm (the slot↔editor gap), NEVER the frame (C6 polish) ──
+  it('[density] compact→spacious CHANGES the adornment↔editor column-gap (--ui-text-field-gap); the BARE frame is INVARIANT', () => {
+    // density multiplies the ONE rhythm quantity (the slot↔editor column-gap) on the leading-icon grid, while the
+    // frame (block-size + the h/2 value edges) holds — the sharp ADR-0006 split, mirrored from the button smoke.
+    const icon = mount(ICON) // size stays md (default); the `auto 1fr` grid carries the column-gap
+    const gaps: number[] = []
+    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
+      icon.wrap.setAttribute('density', density)
+      gaps.push(px(getComputedStyle(icon.field).columnGap)) // the slot↔editor rhythm
+    }
+    // gap_md = font_md / 2 × --ui-density = 7 × {0.5, 1, 1.5} @ scale 1 (the one density-bearing quantity).
+    expect(gaps[0]).toBeCloseTo(3.5, 1)
+    expect(gaps[1]).toBeCloseTo(7, 1)
+    expect(gaps[2]).toBeCloseTo(10.5, 1)
+    // anti-vacuous: the three gaps are genuinely DISTINCT px — [density] truly moved the rhythm.
+    expect(allDistinct(gaps), `the column-gap did not change across [density]: ${gaps.join()}`).toBe(true)
+
+    // the COMPLEMENTARY invariant: density rides the gap ONLY — the BARE field's frame must NOT move (geometry.md).
+    const bare = mount(BARE)
+    const heights: number[] = []
+    const valueEdges: number[] = []
+    for (const density of ['compact', 'comfortable', 'spacious'] as const) {
+      bare.wrap.setAttribute('density', density)
+      heights.push(frameHeight(bare.field))
+      valueEdges.push(padStartPx(bare.field))
+    }
+    expect(allEqual(heights), `[density] moved the bare frame height: ${heights.join()}`).toBe(true)
+    expect(allEqual(valueEdges), `[density] moved the bare h/2 value edge: ${valueEdges.join()}`).toBe(true)
   })
 })
