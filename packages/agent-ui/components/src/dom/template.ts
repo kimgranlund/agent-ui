@@ -425,13 +425,32 @@ class ChildPart implements Part {
   }
 
   /**
-   * Relocate this part's owned nodes + anchor to just before `ref` (move-by-identity — preserves element
-   * state/focus). Covers a part holding text or a single nested template (the `repeat` item norm); a part
-   * holding an array/nested directive keeps deeper content in sub-anchors `#nodes` does not track.
+   * Relocate this part's owned nodes + anchor to just before `ref`. TWO-TIER guarantee (ADR-0022): NODE
+   * IDENTITY is preserved always, on every engine (the same node objects move, never re-created). ELEMENT
+   * STATE — focus, selection, transitions, `<iframe>`/media — survives ONLY on the native path, where the
+   * parent supports `Node.prototype.moveBefore` (an atomic move that never detaches the node from the
+   * document); on the `before()` fallback (native absent) the nodes are detached + re-inserted, so identity
+   * is kept but focus/state are NOT (graceful degradation — the reconcile stays correct, only the focus
+   * nicety is absent). Covers a part holding text or a single nested template (the `repeat` item norm); a
+   * part holding an array/nested directive keeps deeper content in sub-anchors `#nodes` does not track.
+   *
+   * Caller invariant (repeat): `ref` and the moving `#nodes`/`#anchor` always share the same connected
+   * parent (the directive's container) — native `moveBefore`'s happy path, so no `try/catch` is needed; a
+   * future caller that violated same-parent/connected would get a loud `HierarchyRequestError`, not a
+   * silent mis-move.
    */
   moveBefore(ref: ChildNode): void {
-    for (const node of this.#nodes) ref.before(node)
-    ref.before(this.#anchor)
+    const parent = ref.parentNode
+    if (parent && 'moveBefore' in parent) {
+      // native atomic move: relocate WITHOUT leaving the document → focus/selection/state survive
+      const p = parent as ParentNode & { moveBefore(node: Node, child: Node | null): void }
+      for (const node of this.#nodes) p.moveBefore(node, ref)
+      p.moveBefore(this.#anchor, ref)
+    } else {
+      // fallback: detach+reinsert — identity preserved, focus/selection NOT (graceful degradation)
+      for (const node of this.#nodes) ref.before(node)
+      ref.before(this.#anchor)
+    }
   }
 
   /** Commit a plain (non-directive) value through the text/template/array dispatch, honoring the Object.is skip. */

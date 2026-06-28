@@ -5,10 +5,15 @@
 // kernel/binding primitive — list reconciliation is pure DOM + key bookkeeping, it owns no effect (so it
 // needs no scope_seam / `ctx`). The reconcile is a head/tail two-pointer trim plus a key→old-index map for
 // the disordered middle: a surviving key REUSES its sub-part (commit the new template value → the part's
-// `Object.is` skip), a moved key relocates its sub-part by IDENTITY via `moveBefore` (so DOM node identity —
-// and thus element state / focus / selection — is preserved across a reorder), a new key creates a sub-part,
-// a removed key disposes one, and a duplicate key THROWS. Append / remove-tail / a stable prefix perform
-// ZERO moves of existing nodes (the head/tail fast paths never reach the move/map branches).
+// `Object.is` skip), a moved key relocates its sub-part by IDENTITY via `moveBefore`, a new key creates a
+// sub-part, a removed key disposes one, and a duplicate key THROWS. Append / remove-tail / a stable prefix
+// perform ZERO moves of existing nodes (the head/tail fast paths never reach the move/map branches).
+//
+// Reorder guarantee — TWO-TIER (ADR-0022, the `moveBefore` seam): DOM node IDENTITY is preserved across a
+// reorder ALWAYS, on every engine (the same node objects move, never re-created — what the keyed reconcile
+// guarantees). ELEMENT STATE — focus / selection / transitions — additionally survives where the platform's
+// native `Node.prototype.moveBefore` is supported (an atomic move); on engines without it the seam falls back
+// to detach+reinsert: identity-only, focus NOT preserved (graceful degradation, no regression).
 //
 // SCOPE LIMIT (from the seam's `moveBefore`): a sub-part's move relocates its owned nodes + anchor —
 // complete for an item rendering text or a SINGLE template (the norm). An item whose template renders an
@@ -207,8 +212,9 @@ const repeatDirective = directive(RepeatDirective)
  * `repeat(items, keyFn, template)` — render a keyed list into a child hole, reusing DOM by key across data
  * changes. `keyFn(item, index)` must return a value UNIQUE per item (a duplicate throws); `template(item,
  * index)` renders each item (text, a `TemplateResult`, …). A reorder MOVES surviving items by identity
- * (preserving their element state / focus), while append / remove-tail / a stable prefix cost zero moves.
- * Prefer `repeat` over a positional array hole when items carry identity or interactive state.
+ * (node identity preserved always; focus / selection preserved where native `moveBefore` is supported,
+ * identity-only fallback otherwise — ADR-0022), while append / remove-tail / a stable prefix cost zero
+ * moves. Prefer `repeat` over a positional array hole when items carry identity or interactive state.
  */
 export function repeat<T>(
   items: Iterable<T>,

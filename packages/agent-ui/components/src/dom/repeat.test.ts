@@ -130,9 +130,11 @@ describe('repeat — move by identity on a reorder (D4 = 5)', () => {
     expect(Array.from(c.querySelectorAll('input')).map((i) => i.getAttribute('data-k'))).toEqual(['keepFocusC', 'a', 'b'])
     // The discriminating guarantee: each surviving input is the SAME node, relocated by `moveBefore`, not a
     // fresh node created by index. NC: replace move-by-identity with dispose+re-create → these `===` checks
-    // (the `keepFocusC` node included) go RED. (jsdom's `before()`-based `moveBefore` blurs activeElement on
-    // the detach+reinsert, so focus survival itself is a native-atomic-moveBefore property — see the handoff
-    // escalation; node identity, asserted here, is what `repeat` guarantees at this seam.)
+    // (the `keepFocusC` node included) go RED. This jsdom run exercises the FALLBACK leg of the two-tier
+    // `moveBefore` seam (ADR-0022): jsdom has no native `Node.prototype.moveBefore`, so the seam takes the
+    // `before()` detach+reinsert path — node identity (asserted here) is preserved, focus is NOT (jsdom
+    // blurs activeElement on the reinsert). Focus survival is a native-atomic-moveBefore property proven on
+    // the SUPPORTED leg in repeat.browser.test.ts (Chromium); here node identity is what `repeat` guarantees.
     expect(c.querySelector('[data-k="a"]')).toBe(inA)
     expect(c.querySelector('[data-k="b"]')).toBe(inB)
     expect(c.querySelector('[data-k="keepFocusC"]')).toBe(inC)
