@@ -111,7 +111,7 @@ geometry:
   inlinePad: h/2 (value/text edge) · ½(h−icon) (leading / trailing slot edge)   # the centering law, geometry.md
   gap: var(--ui-text-field-gap)            # adornment↔editor column-gap — the one density-bearing quantity (gap = font/2 × density)
 
-forcedColors: A `@media (forced-colors: active)` block keeps the field border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --c-focus-ring → Highlight (the focus border-color step does not, which is why the ring is load-bearing) — ADR-0014.
+forcedColors: A `@media (forced-colors: active)` block keeps the idle field border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --c-focus-ring → Highlight (the focus border is transparent — the ring is the sole, load-bearing focus indicator) — ADR-0014.
 ---
 
 # ui-text-field
@@ -168,10 +168,11 @@ ADR-0014 dev#c). The border steps through a solid colour-role ladder — idle �
 Two deviations from the button-derived standard are explicit (ADR-0014):
 
 - **Focus shows on `:focus-within`** (ALL focus, native text-input parity), not `:focus-visible`
-  (keyboard-only). The treatment is **both** a `border-color` step **and** the shared `outline` ring — both
-  keyed on `:focus-within`, reading the fleet-wide `--c-focus-ring` / `--ui-focus-ring-*` tokens (ADR-0009,
-  as amended). The outline is the forced-colors indicator (`--c-focus-ring → Highlight`); the focus
-  `border-color` does not survive forced-colors, which is why both are drawn.
+  (keyboard-only). The shared `outline` ring is the **sole** focus indicator; the field border steps to
+  **`transparent`** on `:focus-within` (a `--c-focus-ring` border-color step would double with the ring into a
+  visible double border — corrected per ADR-0014's amendment). The ring reads the fleet-wide `--c-focus-ring` /
+  `--ui-focus-ring-*` tokens (ADR-0009, as amended), and a transparent border preserves the box geometry (no
+  layout shift). The outline is the forced-colors indicator (`--c-focus-ring → Highlight`).
 - **`disabled` rides the editor + the platform form-disabled channel** (`effectiveDisabled = own || form`),
   not host `ariaDisabled` — disabled → editor `contenteditable=false` + not focusable + `aria-disabled` +
   host inert + `:state(disabled)`. **`readonly`** → editor `contenteditable=false` **but** focusable

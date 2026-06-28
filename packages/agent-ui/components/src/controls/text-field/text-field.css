@@ -8,7 +8,9 @@
  *       pressed/active state, so the button's background-fill ladder does not apply). The SOLID border ladder
  *       (NOT soft-alpha — alpha outlines resolve sub-3:1 against the field surface, failing WCAG 1.4.11) is
  *       declared as per-state `--ui-text-field-border[-hover|-focus|-invalid|-invalid-hover]` tokens, each from
- *       a ROLE (never a `color-mix` — colour opinions live in the token layer). `[size]` repoints the geometry
+ *       a ROLE (never a `color-mix` — colour opinions live in the token layer) — EXCEPT the focus step, which is
+ *       `transparent` (the shared `outline` ring is the sole focus indicator; a focus border-color step would
+ *       double with the ring; ADR-0014 dev#1). `[size]` repoints the geometry
  *       ramp + INLINES `--ui-text-field-icon` the way button.css does (no shared `--ui-ind` edit). DISABLED is a
  *       role-REPOINT (bg → muted surface, ink → variant, a faint outline-variant frame), NOT opacity (tokens.md).
  *   [2] STYLES BLOCK — `@scope (ui-text-field)` CONSUMES only `--ui-text-field-*` for its OWN tokens (the one
@@ -19,10 +21,12 @@
  *       OPTIONAL `[slot=leading]` / `[slot=trailing]` adornments — `order` places `[leading? | editor | trailing?]`
  *       because the editor is a CONTROL-INJECTED part (`[data-part=editor]`, the centre value cell), not DOM-ordered.
  *       The BORDER-ON-HOST field frame (border + radius on the host) so a slotted adornment sits INSIDE the box.
- *       Focus (ADR-0014 dev#1) = BOTH a `border-color` step AND the shared `outline` ring, BOTH on `:focus-within`
- *       (ALL focus — native text-input parity), NOT `:focus-visible` (the focusable element is the editor child).
- *       The outline is the FORCED-COLORS indicator (`border-color` is dropped by `forced-colors`; the outline
- *       survives via `--c-focus-ring → Highlight`). State PAINT motion gated behind `:state(ready)`, reduced-motion
+ *       Focus (ADR-0014 dev#1) = the shared `outline` ring as the SOLE indicator, with the field border stepped
+ *       to `transparent` (NOT a `--c-focus-ring` border-color step — that doubled with the ring into a visible
+ *       double border), BOTH on `:focus-within` (ALL focus — native text-input parity), NOT `:focus-visible`
+ *       (the focusable element is the editor child). The transparent border holds the box geometry (no layout
+ *       shift); the outline is also the FORCED-COLORS indicator (`border-color` is dropped by `forced-colors`;
+ *       the outline survives via `--c-focus-ring → Highlight`). State PAINT motion gated behind `:state(ready)`, reduced-motion
  *       zeroed. A forced-colors block keeps the border + ink + placeholder visible (CanvasText).
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel (s12); NEVER injected from
@@ -38,7 +42,7 @@
      matching pseudo-/custom-state in the @scope block (so @scope reads only --ui-text-field-*, never a role). */
   --ui-text-field-border: var(--c-neutral); /* idle */
   --ui-text-field-border-hover: var(--c-neutral-high); /* :hover */
-  --ui-text-field-border-focus: var(--c-focus-ring); /* :focus-within border step (the screen enhancement) */
+  --ui-text-field-border-focus: transparent; /* :focus-within — TRANSPARENT, not a colour step: the shared outline ring is the SOLE focus indicator (a --c-focus-ring border-color step doubled with the ring into a visible double border — a defect found on the live site; ADR-0014 dev#1). Transparent holds the box geometry (the 1px frame still occupies its track — no layout shift). */
   --ui-text-field-border-invalid: var(--c-danger); /* :state(user-invalid) */
   --ui-text-field-border-invalid-hover: var(--c-danger-high); /* user-invalid + :hover */
   --ui-text-field-bg: var(--c-neutral-surface);
@@ -175,18 +179,22 @@
   /* The BORDER-channel state ladder (ADR-0014 cl.2c) — repoint ONLY `border-color` from the per-state tokens
      declared in the :where() block (the geometry law is untouched). Source order + pseudo-class specificity fix
      the precedence: idle (0,1,0) < hover ≡ focus-within ≡ user-invalid (0,2,0, later wins) < invalid+hover
-     (0,3,0). So a focused field shows the focus border, a focused-AND-invalid field keeps the danger border
-     while the outline ring still signals focus, and invalid+hover deepens to --c-danger-high. */
+     (0,3,0). So a focused field shows a TRANSPARENT border (the outline ring is its sole indicator), a
+     focused-AND-invalid field keeps the danger border (user-invalid is source-later than focus-within) while the
+     outline ring still signals focus, and invalid+hover deepens to --c-danger-high. */
   :scope:hover {
     border-color: var(--ui-text-field-border-hover);
   }
 
-  /* Focus (ADR-0014 dev#1) = BOTH a `border-color` step AND the shared `outline` ring, BOTH on :focus-within
-     (ALL focus — a text field must visibly signal where typing lands, including on a mouse click), NOT
-     :focus-visible. :focus-within (not :focus-visible on the editor) is used because the focusable element is
-     the editor child; the ring + border are drawn on the host frame off the focused editor. The OUTLINE is the
-     load-bearing FORCED-COLORS indicator — `border-color` does NOT survive `forced-colors: active`, the
-     `outline` does (via --c-focus-ring → Highlight) — so the all-focus reading applies to the outline too.
+  /* Focus (ADR-0014 dev#1) = the shared `outline` ring as the SOLE indicator, with the field border stepped to
+     TRANSPARENT (the --ui-text-field-border-focus token), BOTH on :focus-within (ALL focus — a text field must
+     visibly signal where typing lands, including on a mouse click), NOT :focus-visible. A `--c-focus-ring`
+     border-color step here doubled with the ring into a visible DOUBLE border (a defect found on the live site);
+     transparent makes the ring the lone focus indicator AND preserves the box geometry (no layout shift — the
+     1px border still occupies its track). :focus-within (not :focus-visible on the editor) is used because the
+     focusable element is the editor child; the ring is drawn on the host frame off the focused editor. The
+     OUTLINE is the load-bearing FORCED-COLORS indicator — `border-color` does NOT survive `forced-colors: active`,
+     the `outline` does (via --c-focus-ring → Highlight) — so the ring is the focus indicator there too.
      The outline reads the SHARED fleet tokens DIRECTLY (the one --ui-text-field-* exception, same as button) so
      every control draws the identical ring; outline/outline-offset do not participate in box geometry. */
   :scope:focus-within {
@@ -232,8 +240,9 @@
   /* forced-colors — keep the field border + ink + placeholder VISIBLE (they must not vanish). The focus ring
      survives for free: `--c-focus-ring` carries the token layer's `→ Highlight` WHCM mapping, so the
      :focus-within outline above resolves to the system focus colour with no per-control rule (border-color is
-     dropped by forced-colors — which is WHY deviation #1 keeps BOTH the border step and the outline). A disabled
-     field reads GrayText (the system disabled colour). */
+     dropped by forced-colors — which is WHY deviation #1 makes the OUTLINE the sole focus indicator: the
+     transparent focus border carries nothing, the ring carries it). A disabled field reads GrayText (the system
+     disabled colour). */
   @media (forced-colors: active) {
     :scope {
       border-color: CanvasText;

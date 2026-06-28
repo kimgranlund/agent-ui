@@ -135,3 +135,38 @@ colour-only danger border perceivable without colour).
   editor + value + validity); it lands as an additive role later.
 - **A visible label in G6** — rejected (Q1): the visible label / description / error wrapper is `ui-field`'s job
   (G7); G6 keeps the minimal `aria-label` seam so the field is usable standalone.
+
+## Amendment — deviation #1 focus treatment: a TRANSPARENT border, not a `--c-focus-ring` border-color step (2026-06-28)
+
+> Status: ratified 2026-06-28 (orchestration-lead/host, on gate). Append-only; this **narrows** deviation #1's
+> focus treatment after a defect found on the live site. It leaves the Context / Decision / Consequences above
+> intact as history. NOTE — this removes the "**BOTH** a border-color step" half of clause (2a), so it sits closer
+> to a *supersession* than a foreseen amendment under `docs/adr/README.md`; recorded append-only here at the host's
+> direction (a bounded, defect-driven correction), with the supersession-vs-amendment routing flagged to
+> planning-lead for confirmation.
+
+**What stands (unchanged).** Everything load-bearing in deviation #1: focus is keyed on **`:focus-within`** (ALL
+focus — native text-input parity, not the button's keyboard-only `:focus-visible`), drawn on the **host** frame off
+the focused editor child, using the **shared** `outline` ring on the identical `--c-focus-ring` /
+`--ui-focus-ring-width` / `--ui-focus-ring-offset` fleet tokens. The outline is still the **forced-colors** indicator
+(it survives `forced-colors: active` via `--c-focus-ring → Highlight`, which `border-color` does not). The ADR-0009
+`## Amendment` (its ring-only `:focus-within` snippet) already anticipated exactly this shape.
+
+**What changes.** Clause (2a) drew the focus treatment as **BOTH** a `border-color` step to `--c-focus-ring` **AND**
+the `outline` ring. On the live site that **doubled**: the field showed two concentric blue frames (the stepped
+border *plus* the offset ring). The `border-color` step is dropped — on `:focus-within` the field border steps to
+**`transparent`** (the `--ui-text-field-border-focus` ladder token is `transparent`, not `var(--c-focus-ring)`), so
+the **outline ring is the SOLE focus indicator** and there is no second frame. A transparent border preserves the
+box geometry (the 1px frame still occupies its track — no layout shift on focus).
+
+**forced-colors is unaffected.** The dropped half carried nothing under forced colors anyway — `border-color` does
+not survive `forced-colors: active`, so the outline (→ `Highlight`) was already the lone survivor. With the border
+transparent on focus, the unfocused field still repaints its border to `CanvasText`; a focused field shows the
+`Highlight` outline (the field's transparent focus border is honoured by forced colors). Proven in the cross-engine
+states smoke (`text-field-states.browser.test.ts`): the ring is drawn on mouse focus, the focus border is
+transparent, and under emulated forced-colors the ring survives while the idle border / ink / placeholder do not
+vanish.
+
+**Realized by** `text-field.css` (the `--ui-text-field-border-focus: transparent` token + the `:focus-within` rule
+keeping only the `outline`) and its probes (`text-field-css.test.ts` asserts the transparent focus token + the
+ring; `text-field-states.browser.test.ts` asserts the transparent focus border + ring survival).

@@ -13,8 +13,9 @@ import type { UITextFieldElement } from '@agent-ui/components/components'
 // Under proof: (1) a real contenteditable editor accepts typed input and `this.value` tracks it; (2) the value
 // round-trips a real <form>'s FormData and `form.reset()` restores the default; (3) the :focus-within ring is
 // present on MOUSE focus too (native text-input parity — the ADR-0014 dev#1 deviation from the button's
-// keyboard-only :focus-visible ring) and survives forced-colors; (4) the field border + ink + placeholder
-// survive forced-colors (do not vanish).
+// keyboard-only :focus-visible ring), it is the SOLE focus indicator (the field border steps TRANSPARENT, no
+// double border), and it survives forced-colors; (4) the IDLE field border + ink + placeholder survive
+// forced-colors (do not vanish).
 //
 // Side-effect imports — the load-bearing CSS order (ADR-0003): foundation roles + dimensional ramp FIRST,
 // then the component sheet, then the self-defining family barrel. Vite injects them.
@@ -134,6 +135,14 @@ describe('ui-text-field — :focus-within ring on the HOST frame (both engines)'
     // :focus-within — so unlike the button's :focus-visible ring, a mouse click DOES surface it (text-entry parity).
     expect(ringDrawn(field), `${server.browser}: the :focus-within ring was not drawn on mouse focus`).toBe(true)
 
+    // the ring is the SOLE focus indicator — the field border steps TRANSPARENT on focus (a --c-focus-ring
+    // border-color step would double with the ring into a visible double border; ADR-0014 dev#1). MOTION-AWARE
+    // read: once :state(ready) is armed the border-color FADES to transparent over --ui-motion-fast, so poll
+    // until it settles to alpha 0 (rgba(0,0,0,0)) — no second blue frame is painted.
+    await expect
+      .poll(() => alphaOf(getComputedStyle(field).borderTopColor), { timeout: 1500 })
+      .toBe(0)
+
     // the ring lives on the host, never the editor child (the editor sets outline:none).
     expect(getComputedStyle(editor).outlineStyle, 'the editor child drew its own outline').toBe('none')
     // the ring width is the shared 2px fleet ring (read from --ui-focus-ring-width).
@@ -157,20 +166,28 @@ describe('ui-text-field — :focus-within ring on the HOST frame (both engines)'
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-text-field — forced-colors survival (Chromium emulates via CDP; WebKit asserts the baseline)', () => {
-  it('the :focus-within ring + the border/ink/placeholder survive forced-colors', async () => {
+  it('the :focus-within ring survives forced-colors AND the idle border/ink/placeholder do not vanish', async () => {
     // an empty, placeholdered field so the [data-empty]::before placeholder is actually generated.
     const { field, editor } = mount(`<ui-text-field placeholder="Search…" ${SIZED}></ui-text-field>`)
 
-    // baseline (BOTH engines, normal mode): the field paints a visible border + ink + placeholder, and the
-    // editor focus draws the host ring — so the forced-colors assertions below cannot be vacuous.
-    await userEvent.click(editor)
-    expect(ringDrawn(field), 'no :focus-within ring in normal mode').toBe(true)
-    expect(alphaOf(getComputedStyle(field).borderTopColor), 'border invisible in normal mode').toBeGreaterThan(0)
+    // baseline (BOTH engines, normal mode): the IDLE (unfocused) field paints a visible border + ink +
+    // placeholder — so the forced-colors assertions below cannot be vacuous. (The border is checked idle because
+    // a FOCUSED field's border is transparent by design — see the focus assertion next.)
+    expect(alphaOf(getComputedStyle(field).borderTopColor), 'idle border invisible in normal mode').toBeGreaterThan(0)
     expect(alphaOf(getComputedStyle(field).color), 'ink invisible in normal mode').toBeGreaterThan(0)
     expect(
       alphaOf(getComputedStyle(editor, '::before').color),
       'placeholder ink invisible in normal mode',
     ).toBeGreaterThan(0)
+
+    // focus draws the host ring AND steps the field border TRANSPARENT (the ring is the sole indicator — no
+    // double border; ADR-0014 dev#1). MOTION-AWARE: the border-color FADES to transparent over --ui-motion-fast
+    // once :state(ready) is armed, so poll until it settles to alpha 0.
+    await userEvent.click(editor)
+    expect(ringDrawn(field), 'no :focus-within ring in normal mode').toBe(true)
+    await expect
+      .poll(() => alphaOf(getComputedStyle(field).borderTopColor), { timeout: 1500 })
+      .toBe(0)
 
     if (server.browser !== 'chromium') {
       // WebKit exposes no CDP / forced-colors emulation (the documented split) — assert we are genuinely NOT in
@@ -186,11 +203,20 @@ describe('ui-text-field — forced-colors survival (Chromium emulates via CDP; W
       // active) block is the one applying.
       expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
 
-      // the ring SURVIVES — the :focus-within outline resolves via --c-focus-ring → Highlight (the WHCM ring is
-      // free). border-color is dropped by forced-colors; the outline is WHY dev#1 keeps BOTH the border + the ring.
+      // the ring SURVIVES (the field is still focused) — the :focus-within outline resolves via
+      // --c-focus-ring → Highlight (the WHCM ring is free). The focus border-color is dropped by forced-colors;
+      // the outline is WHY dev#1 makes the ring the SOLE focus indicator (the transparent border carries nothing).
       expect(ringDrawn(field), 'the :focus-within ring vanished under forced-colors').toBe(true)
-      // the border + ink + placeholder do NOT vanish — the forced-colors block repaints them to CanvasText.
-      expect(alphaOf(getComputedStyle(field).borderTopColor), 'the field border vanished under forced-colors').toBeGreaterThan(0)
+
+      // the IDLE border + ink + placeholder do NOT vanish — blur to the idle frame, then the forced-colors block
+      // repaints the border + ink to CanvasText (the focus border is transparent, so it must be checked
+      // unfocused). MOTION-AWARE: the border-color fades off transparent back to the idle frame, so poll the
+      // border until it leaves alpha 0.
+      editor.blur()
+      expect(field.matches(':focus-within'), 'the field did not blur').toBe(false)
+      await expect
+        .poll(() => alphaOf(getComputedStyle(field).borderTopColor), { timeout: 1500 })
+        .toBeGreaterThan(0)
       expect(alphaOf(getComputedStyle(field).color), 'the field ink vanished under forced-colors').toBeGreaterThan(0)
       expect(
         alphaOf(getComputedStyle(editor, '::before').color),

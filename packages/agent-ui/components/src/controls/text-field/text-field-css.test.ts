@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
 // G6 s9 — text-field.css static structural check (ADR-0003 sectioning + token hygiene; ADR-0014 the
-// BORDER-channel state ladder + the :focus-within dual-key focus + the disabled role-repoint; anatomy.md
+// BORDER-channel state ladder + the :focus-within ring-only focus (transparent border) + the disabled role-repoint; anatomy.md
 // host-as-grid). jsdom can't compute the rendered colours/px — these pin the STRUCTURE + the CSS text; the
 // rendered px CHANGE + forced-colors survival is s11's cross-engine smoke. The geometry LAW is
 // text-field-geometry.test.ts.
@@ -77,7 +77,7 @@ describe('text-field.css — the SOLID border-channel ladder (ADR-0014 cl.2c)', 
     const b = whereBlock(':where(ui-text-field) {')
     expect(b).toMatch(/--ui-text-field-border:\s*var\(--c-neutral\)/) // idle
     expect(b).toMatch(/--ui-text-field-border-hover:\s*var\(--c-neutral-high\)/) // hover
-    expect(b).toMatch(/--ui-text-field-border-focus:\s*var\(--c-focus-ring\)/) // focus (the screen enhancement)
+    expect(b).toMatch(/--ui-text-field-border-focus:\s*transparent/) // focus = transparent (the outline ring is the sole indicator; ADR-0014 dev#1)
     expect(b).toMatch(/--ui-text-field-border-invalid:\s*var\(--c-danger\)/) // user-invalid
     expect(b).toMatch(/--ui-text-field-border-invalid-hover:\s*var\(--c-danger-high\)/) // invalid + hover
   })
@@ -149,15 +149,16 @@ describe('text-field.css — @scope token hygiene (s9)', () => {
   })
 })
 
-// ── Focus — BOTH a border step AND the shared outline ring, BOTH on :focus-within (ADR-0014 dev#1) ────────
-describe('text-field.css — the :focus-within dual-key focus (ADR-0014 dev#1)', () => {
-  it(':focus-within draws BOTH the border step AND the shared outline ring (all-focus, native text-input parity)', () => {
+// ── Focus — the shared outline ring is the SOLE indicator + a TRANSPARENT border, BOTH on :focus-within (ADR-0014 dev#1) ──
+describe('text-field.css — the :focus-within ring-only focus, transparent border (ADR-0014 dev#1)', () => {
+  it(':focus-within draws the shared outline ring AND steps the border TRANSPARENT (no double border, all-focus parity)', () => {
     const m = stylesBlock.match(/:scope:focus-within\s*\{([^}]*)\}/)
     expect(m, ':scope:focus-within rule missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
-    // the screen enhancement — the border steps to the focus role (via the own ladder token)
+    // the border steps to the focus token (via the own ladder token) — which resolves to `transparent` (asserted
+    // in the token-block ladder test), so the ring is the sole indicator and there is no second blue frame.
     expect(rule).toMatch(/border-color:\s*var\(--ui-text-field-border-focus\)/)
-    // the forced-colors indicator — the shared outline ring, read DIRECTLY from the fleet tokens
+    // the SOLE focus indicator — the shared outline ring, read DIRECTLY from the fleet tokens
     expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--c-focus-ring\)/)
     expect(rule).toMatch(/outline-offset:\s*var\(--ui-focus-ring-offset\)/)
   })
