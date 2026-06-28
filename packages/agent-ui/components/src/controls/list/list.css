@@ -1,0 +1,109 @@
+/* list.css — ui-list, the single-file component stylesheet (ADR-0003). Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-list)` (specificity 0,0,0) DECLARES the `--ui-list-*` flex chain. Each
+ *       `flexProps` literal-union (align/justify/gap/wrap — ADR-0016 cl.1) is mapped here to its CSS keyword
+ *       (start→flex-start, between→space-between, …) or to a `--ui-space` ladder step, via `[attr=value]`
+ *       attribute selectors. The `--ui-space-*` layout-spacing ladder (the SHARED, density-responsive gap
+ *       vocabulary — dimensions.css / ADR-0015 cl.4) is read ONLY here, on the declaration side — exactly as
+ *       button.css reads the `--c-*` colour roles only in its `:where()` token block.
+ *   [2] STYLES BLOCK — `@scope (ui-list)` CONSUMES only `--ui-list-*` for its layout. `ui-list` is a
+ *       `ui-column` SPECIALIZATION: `display:flex; flex-direction:column` (the vertical stack — the tag's
+ *       identity, A2UI-faithful, ADR-0016 cl.2/3). No control height (geometry.md "Container/layout" class —
+ *       spacing rides `--ui-space` × `[density]`, never `--ui-height-*`).
+ *
+ * Surface + container-query — NOT here. The role-pure surface seam (`--ui-container-bg`/`-tint` consumption,
+ * the `[elevation]`/`[brightness]` mapping) AND the `container-type: inline-size` establishment + the
+ * forced-colors surface survival are owned by the SHARED `controls/_surface/container.css` (ADR-0015 /
+ * ADR-0016 cl.4), which lists `ui-list` among the surface-bearing tags. list.css therefore carries NO colour
+ * opinion and needs no forced-colors block — there is nothing of its own to protect (it owns layout only).
+ *
+ * Standalone stylesheet — linked via the component-styles barrel (wired in s12, AFTER container.css); NEVER
+ * injected from list.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-list) declares --ui-list-* ════════════════ */
+
+:where(ui-list) {
+  /* The flex chain — defaults are each `flexProps` prop's `values[0]` (align/justify=start, gap=none,
+     wrap=nowrap). A custom property holds the resolved CSS keyword; `[attr=value]` repoints it below. */
+  --ui-list-align: flex-start; /* align (cross-axis) → align-items */
+  --ui-list-justify: flex-start; /* justify (main-axis distribution) → justify-content */
+  --ui-list-gap: var(--ui-space-none); /* gap → a --ui-space ladder step (0 = no gap) */
+  --ui-list-wrap: nowrap; /* wrap → flex-wrap (boolean presence) */
+}
+
+/* align → align-items (start is the default above; the other four members repoint) */
+:where(ui-list[align='center']) {
+  --ui-list-align: center;
+}
+:where(ui-list[align='end']) {
+  --ui-list-align: flex-end;
+}
+:where(ui-list[align='stretch']) {
+  --ui-list-align: stretch;
+}
+:where(ui-list[align='baseline']) {
+  --ui-list-align: baseline;
+}
+
+/* justify → justify-content (start is the default; between/around/evenly map to the space-* keywords) */
+:where(ui-list[justify='center']) {
+  --ui-list-justify: center;
+}
+:where(ui-list[justify='end']) {
+  --ui-list-justify: flex-end;
+}
+:where(ui-list[justify='between']) {
+  --ui-list-justify: space-between;
+}
+:where(ui-list[justify='around']) {
+  --ui-list-justify: space-around;
+}
+:where(ui-list[justify='evenly']) {
+  --ui-list-justify: space-evenly;
+}
+
+/* gap → the SHARED density-responsive --ui-space ladder (read only here, the declaration side). `none` is the
+   default above; each step is `calc(<base px> * var(--ui-density))`, so a subtree [density] re-multiplies the
+   list's row-gap (the one density-bearing quantity — the geometry smoke proves it CHANGES with [density]). */
+:where(ui-list[gap='xs']) {
+  --ui-list-gap: var(--ui-space-xs);
+}
+:where(ui-list[gap='sm']) {
+  --ui-list-gap: var(--ui-space-sm);
+}
+:where(ui-list[gap='md']) {
+  --ui-list-gap: var(--ui-space-md);
+}
+:where(ui-list[gap='lg']) {
+  --ui-list-gap: var(--ui-space-lg);
+}
+:where(ui-list[gap='xl']) {
+  --ui-list-gap: var(--ui-space-xl);
+}
+:where(ui-list[gap='2xl']) {
+  --ui-list-gap: var(--ui-space-2xl);
+}
+
+/* wrap → flex-wrap (boolean presence: present ⇒ wrap) */
+:where(ui-list[wrap]) {
+  --ui-list-wrap: wrap;
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-list) consumes ONLY --ui-list-* ════════════════ */
+
+@scope (ui-list) {
+  :scope {
+    display: flex;
+    flex-direction: column; /* the vertical stack — the list's identity (ADR-0016 cl.2/3) */
+    box-sizing: border-box;
+
+    /* The flex mapping — every value reads the own `--ui-list-*` chain (role-pure; no raw --ui-space/--c-*
+       leaks into the consumption, mirroring button.css's @scope hygiene). The surface background + the
+       container-type seam ride the shared controls/_surface/container.css. NO control height. */
+    align-items: var(--ui-list-align);
+    justify-content: var(--ui-list-justify);
+    gap: var(--ui-list-gap); /* the density-bearing quantity — rides --ui-space × [density] */
+    flex-wrap: var(--ui-list-wrap);
+  }
+}

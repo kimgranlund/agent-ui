@@ -1,0 +1,69 @@
+/* grid.css — ui-grid, the single-file component stylesheet (ADR-0003). Two clearly-SECTIONED blocks, mirroring
+ * button.css / text-field.css:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-grid)` (specificity 0,0,0) DECLARES the `--ui-grid-*` chain: the `--ui-grid-min`
+ *       track FLOOR (a sensible default; grid.ts repoints it inline for a per-instance `min` override) and the
+ *       `--ui-grid-gap` off the `--ui-space-{step}` density-responsive LAYOUT-spacing ladder (ADR-0015 cl.4 /
+ *       geometry.md "--space-* is layout spacing, not control geometry"). `[gap=step]` repoints the gap (gap
+ *       reflects, so the attribute is present). NO `--ui-height-*` — a Container/layout primitive has no control
+ *       height (geometry.md "five size-classes"); spacing rides `--ui-space` × `[density]` only.
+ *   [2] STYLES BLOCK — `@scope (ui-grid)` CONSUMES only `--ui-grid-*` for its layout: `display: grid` with the
+ *       INTRINSIC auto-fit/`minmax` track model (ADR-0016 cl.3/4) — `repeat(auto-fit, minmax(var(--ui-grid-min),
+ *       1fr))` reflows by the grid's OWN rendered width (more tracks when wide, fewer when narrow) with NO
+ *       explicit column-count prop and NO `@container` rule (auto-fit IS the responsiveness — unlike ui-row/
+ *       ui-column, which wrap via `@container`). `gap` rides `--ui-grid-gap`.
+ *
+ * SURFACE + FORCED-COLORS are the shared sheet's job, NOT duplicated here: the `--ui-container-bg`/`-tint`
+ * elevation×brightness seam AND the `@media (forced-colors: active)` survival both cover `ui-grid` from
+ * controls/_surface/container.css (the `@import`-FIRST sheet in the component-styles barrel, s12) — which also
+ * establishes `container-type: inline-size`. A bare ui-grid is transparent (an unset container is unchanged);
+ * `[elevation]`/`[brightness]` repoint the shared seam. This sheet owns LAYOUT only.
+ *
+ * Standalone stylesheet — linked via the component-styles barrel (s12); NEVER injected from grid.ts
+ * (behaviour-only `.ts`, no runtime style injection — plan §2; the `min` token thread is the values-API, not a
+ * style rule). */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-grid) declares --ui-grid-* ════════════════ */
+
+:where(ui-grid) {
+  /* the auto-fit/minmax track FLOOR (ADR-0016 cl.3) — a sensible default; grid.ts repoints this INLINE for a
+     per-instance `min` override (inline custom property outranks this `:where()` declaration). */
+  --ui-grid-min: 16rem;
+  /* gap off the --ui-space density-responsive ladder (ADR-0015 cl.4); default = none (a bare grid has no gap).
+     [gap=step] repoints below — gap reflects, so the attribute is present for these selectors. */
+  --ui-grid-gap: var(--ui-space-none);
+}
+
+/* gap → the --ui-space ladder (the step vocabulary mirrors flexProps' gap enum 1:1) */
+:where(ui-grid[gap='xs']) {
+  --ui-grid-gap: var(--ui-space-xs);
+}
+:where(ui-grid[gap='sm']) {
+  --ui-grid-gap: var(--ui-space-sm);
+}
+:where(ui-grid[gap='md']) {
+  --ui-grid-gap: var(--ui-space-md);
+}
+:where(ui-grid[gap='lg']) {
+  --ui-grid-gap: var(--ui-space-lg);
+}
+:where(ui-grid[gap='xl']) {
+  --ui-grid-gap: var(--ui-space-xl);
+}
+:where(ui-grid[gap='2xl']) {
+  --ui-grid-gap: var(--ui-space-2xl);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-grid) consumes ONLY --ui-grid-* ════════════════ */
+
+@scope (ui-grid) {
+  :scope {
+    display: grid;
+    /* the INTRINSIC reflow (ADR-0016 cl.3/4): auto-fit packs as many `--ui-grid-min`-floored tracks as the
+       grid's OWN width fits and reflows the column count by width — no explicit column-count prop, no
+       `@container` rule. Each track flexes 1fr between the floor and the available share. */
+    grid-template-columns: repeat(auto-fit, minmax(var(--ui-grid-min), 1fr));
+    gap: var(--ui-grid-gap);
+    box-sizing: border-box;
+  }
+}

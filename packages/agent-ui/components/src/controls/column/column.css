@@ -1,0 +1,125 @@
+/* column.css — ui-column, the single-file component stylesheet (ADR-0003). The vertical layout primitive —
+ * `ui-row`'s sibling with the main axis flipped to the block axis. Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-column)` (specificity 0,0,0) DECLARES the `--ui-column-*` flex chain from the
+ *       shared layout grammar: the four reflected `flexProps` attributes (`align`/`justify`/`gap`/`wrap`) are
+ *       mapped 1:1 onto a CSS flex value (the literal-union → CSS-keyword repoint, ADR-0016 cl.1). `gap` reads
+ *       the density-responsive `--ui-space-*` ladder (ADR-0015 cl.4), NEVER a control dimension. The defaults
+ *       are the `flexProps` defaults (align=start, justify=start, gap=none, wrap=nowrap); each non-default
+ *       attribute value repoints its token.
+ *   [2] STYLES BLOCK — `@scope (ui-column)` CONSUMES only `--ui-column-*`. `display: flex` with
+ *       `flex-direction: column` — the tag's IDENTITY (the main axis is the block axis; not a prop, ADR-0016
+ *       cl.2). A `@container inline-size` reflow rule mirrors `ui-row` (which stacks to a column under a NARROW
+ *       container) with the axis flipped: under a WIDE container the column spreads its children into a row —
+ *       the canonical "switcher", reflowing on the container's width with NO breakpoint props (ADR-0016 cl.4).
+ *       NO control height (geometry.md Container/layout class — block-size is content-driven; spacing rides
+ *       `--ui-space` × `[density]`, never `--ui-height-*`). A forced-colors block drops any tonal wash.
+ *
+ * The SURFACE (elevation/brightness → `--ui-container-bg`/`-tint`) is painted by the shared
+ * controls/_surface/container.css on `:where(…, ui-column, …)`; this sheet holds ZERO colour opinion (no raw
+ * `--c-*` role anywhere — role-purity, ADR-0008). Standalone stylesheet — linked via the component-styles
+ * barrel (wired in s12); NEVER injected from column.ts (behaviour-only `.ts` — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-column) declares --ui-column-* ════════════════ */
+
+:where(ui-column) {
+  /* The flex grammar, defaulted to the flexProps defaults. Each maps 1:1 onto a CSS flex property consumed in
+     the @scope block; the [attr] selectors below repoint the non-default keywords (start = the default). */
+  --ui-column-align: flex-start; /* align (cross axis = inline) → align-items */
+  --ui-column-justify: flex-start; /* justify (main axis = block) → justify-content */
+  --ui-column-gap: var(--ui-space-none); /* gap → the density-responsive --ui-space ladder (ADR-0015 cl.4) */
+  --ui-column-wrap: nowrap; /* wrap → flex-wrap (boolean presence repoints below) */
+}
+
+/* align → align-items (start = the flex-start default above) */
+:where(ui-column[align='center']) {
+  --ui-column-align: center;
+}
+:where(ui-column[align='end']) {
+  --ui-column-align: flex-end;
+}
+:where(ui-column[align='stretch']) {
+  --ui-column-align: stretch;
+}
+:where(ui-column[align='baseline']) {
+  --ui-column-align: baseline;
+}
+
+/* justify → justify-content (between/around/evenly → the space-* keywords; start = the flex-start default) */
+:where(ui-column[justify='center']) {
+  --ui-column-justify: center;
+}
+:where(ui-column[justify='end']) {
+  --ui-column-justify: flex-end;
+}
+:where(ui-column[justify='between']) {
+  --ui-column-justify: space-between;
+}
+:where(ui-column[justify='around']) {
+  --ui-column-justify: space-around;
+}
+:where(ui-column[justify='evenly']) {
+  --ui-column-justify: space-evenly;
+}
+
+/* gap → the --ui-space ladder (none = the var(--ui-space-none) default above). The step vocabulary mirrors the
+   flexProps `gap` union 1:1; --ui-space-* carries var(--ui-density), so the gap responds to a subtree [density]. */
+:where(ui-column[gap='xs']) {
+  --ui-column-gap: var(--ui-space-xs);
+}
+:where(ui-column[gap='sm']) {
+  --ui-column-gap: var(--ui-space-sm);
+}
+:where(ui-column[gap='md']) {
+  --ui-column-gap: var(--ui-space-md);
+}
+:where(ui-column[gap='lg']) {
+  --ui-column-gap: var(--ui-space-lg);
+}
+:where(ui-column[gap='xl']) {
+  --ui-column-gap: var(--ui-space-xl);
+}
+:where(ui-column[gap='2xl']) {
+  --ui-column-gap: var(--ui-space-2xl);
+}
+
+/* wrap → flex-wrap (boolean presence: the reflected `wrap` attribute is present ⇒ wrap onto multiple lines) */
+:where(ui-column[wrap]) {
+  --ui-column-wrap: wrap;
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-column) consumes ONLY --ui-column-* ════════════════ */
+
+@scope (ui-column) {
+  :scope {
+    display: flex;
+    flex-direction: column; /* the tag's IDENTITY — the main axis is the block axis (ADR-0016 cl.2), not a prop */
+    align-items: var(--ui-column-align);
+    justify-content: var(--ui-column-justify);
+    gap: var(--ui-column-gap);
+    flex-wrap: var(--ui-column-wrap);
+    box-sizing: border-box;
+    /* NO control height — a layout primitive (geometry.md Container/layout class): block-size is content-driven,
+       spacing rides --ui-space × [density]. It never reads --ui-height-* (that is the control band's lever). */
+  }
+
+  /* Container-query intrinsic responsiveness (ADR-0016 cl.4) — mirrors ui-row (which stacks to a column under a
+     NARROW container) with the axis flipped: when the nearest query container (each layout primitive establishes
+     one via controls/_surface/container.css `container-type: inline-size`, so a wrapping/nesting context drives
+     this) is WIDE, the column spreads its children into a row — the canonical "switcher". Reflows on the
+     container's width, NOT the viewport (no breakpoint props); the cross-engine smoke resizes the wrapper. */
+  @container (min-width: 30rem) {
+    :scope {
+      flex-direction: row;
+    }
+  }
+
+  /* forced-colors (WHCM) — the surface survives as a system colour via the shared container.css role layer; this
+     belt-and-braces block guarantees no tonal wash paints over system text on the layout box. */
+  @media (forced-colors: active) {
+    :scope {
+      background-image: none;
+    }
+  }
+}
