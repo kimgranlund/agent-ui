@@ -58,6 +58,14 @@ interface CdpSession {
 describe('ui-tabs — keyboard roving moves focus + switches the visible panel (both engines)', () => {
   it('ArrowRight roves focus to the next tab and shows its panel; ArrowLeft/Home/End too', async () => {
     const { tabs, tabEls, panelEls } = mount(THREE)
+    // C6 geometry — the tab rows resolve to a REAL MEASURED control height in a live engine, not a silent
+    // 0-collapse if the token chain broke (e.g. a dropped token block — the `*/`-in-comment class of bug the
+    // css-text regex cannot see). Anti-vacuous: it equals the --ui-height-md ramp step (28px @ scale 1), not
+    // merely >0 — so a broken --ui-tabs-tab-height → --ui-height-md chain fails HERE, where jsdom/css-text can't.
+    const rowHeight = Number.parseFloat(getComputedStyle(tabEls[0]).blockSize)
+    expect(rowHeight, 'the tab row collapsed — the --ui-tabs-tab-height → --ui-height-md chain did not resolve').toBeGreaterThan(0)
+    expect(rowHeight, 'the tab row height is not the --ui-height-md ramp step (28px @ scale 1)').toBeCloseTo(28, 0)
+
     // baseline: tab 0 selected → its panel shows, the others are display:none (the [hidden] author rule).
     expect(getComputedStyle(panelEls[0]).display, 'panel 0 not shown at baseline').toBe('block')
     expect(getComputedStyle(panelEls[1]).display, 'panel 1 not hidden at baseline').toBe('none')
