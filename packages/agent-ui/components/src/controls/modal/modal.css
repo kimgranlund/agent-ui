@@ -1,0 +1,85 @@
+/* modal.css — ui-modal, the single-file component stylesheet (ADR-0003 / ADR-0017). Two clearly-SECTIONED
+ * blocks, mirroring button.css / text-field.css:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-modal)` (specificity 0,0,0) sets the modal's OWN default surface and DECLARES
+ *       the `--ui-modal-*` chain from the colour roles (`--c-{family}-{role}`, family = neutral) and the
+ *       dimensions (`--ui-space-*` / `--ui-radius-base`). This is where roles enter, exactly as button.css's
+ *       `:where()` token block does. The container surface base defaults `--ui-container-bg` to TRANSPARENT (an
+ *       unset layout primitive is unchanged — ADR-0015 cl.1); a modal is an OPAQUE plane, so it repoints its own
+ *       default. The signed `elevation`/`brightness` axes still repoint `--ui-container-bg`/`-tint` on the HOST
+ *       via container.css (higher specificity), and the value INHERITS to the dialog part below.
+ *   [2] STYLES BLOCK — `@scope (ui-modal)` CONSUMES only the role-pure `--ui-container-*` surface seam + the own
+ *       `--ui-modal-*` chain (never a raw `--c-*`). The host is `display: contents` — a logical wrapper that
+ *       generates no box; only the control-owned `<dialog data-part="dialog">` PART renders, in the platform TOP
+ *       LAYER when `showModal()` is called (ADR-0017). The native UA dialog frame (1em padding, solid border,
+ *       Canvas bg, centring margin) is fully repointed onto the surface seam + the space/radius tokens. The
+ *       `::backdrop` scrim is the platform-painted blocking layer. Geometry is the Pattern/container size-class
+ *       (geometry.md): the shell spaces off `--ui-space-*` × density — NO control height (`--ui-height-*`).
+ *
+ * Standalone stylesheet — linked via the component-styles barrel (s12); NEVER injected from modal.ts
+ * (behaviour-only `.ts`, no runtime style injection — plan §2). component-styles.css @imports container.css
+ * FIRST (the shared surface seam), then this sheet.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-modal) declares the surface default + --ui-modal-* ════════════════ */
+
+:where(ui-modal) {
+  /* The modal's OWN default surface (the container base defaults transparent — ADR-0015 cl.1; a modal is an
+     opaque plane). `[elevation]`/`[brightness]` on the host still win (container.css repoints at (0,1,0)), and
+     the seam value inherits down to the dialog part. */
+  --ui-container-bg: var(--c-neutral-surface);
+
+  /* the own chain — @scope consumes ONLY these (+ the --ui-container-* seam), never a raw --c-* role */
+  --ui-modal-ink: var(--c-neutral-on-surface);
+  --ui-modal-outline: var(--c-neutral-outline-variant); /* the faint dialog frame */
+  --ui-modal-radius: var(--ui-radius-base); /* the shared fleet radius (ADR-0015 cl.5) */
+  --ui-modal-padding: var(--ui-space-lg); /* the shell pad off the density-responsive ladder (NOT a control height) */
+  --ui-modal-scrim: var(--c-neutral-scrim); /* the ::backdrop blocking wash — a translucent scrim role (ADR-0017) */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-modal) consumes ONLY --ui-modal-* + the --ui-container-* seam ════════════════ */
+
+@scope (ui-modal) {
+  /* the host is a logical wrapper — it generates no box; only the dialog PART renders (in the top layer when
+     shown). The surface custom props set on the host inherit through display:contents to the dialog. */
+  :scope {
+    display: contents;
+  }
+
+  /* the dialog surface — the modal plane. The base plane (elevation) is the solid --ui-container-bg; the tonal
+     wash (brightness composition) is the flat same-colour background-image stacked above it (ADR-0015 cl.3), so
+     the two surface axes composite. Everything else is the own --ui-modal-* chain. The native UA frame is fully
+     overridden. `margin: auto` keeps the showModal centring; the size caps keep a long modal scrollable. */
+  :scope > [data-part='dialog'] {
+    box-sizing: border-box;
+    margin: auto; /* centre in the top layer (the showModal default — restated so a UA reset cannot drop it) */
+    max-inline-size: min(92vw, 32rem);
+    max-block-size: 85svh;
+    overflow: auto; /* a tall modal scrolls within the cap, not off-screen */
+
+    background-color: var(--ui-container-bg); /* the base plane (elevation) */
+    background-image: linear-gradient(var(--ui-container-tint), var(--ui-container-tint)); /* the tonal wash (composition) */
+    color: var(--ui-modal-ink);
+    border: 1px solid var(--ui-modal-outline);
+    border-radius: var(--ui-modal-radius);
+    padding: var(--ui-modal-padding);
+  }
+
+  /* the ::backdrop scrim — the platform-painted blocking layer behind the modal (top layer). A translucent
+     neutral scrim role, so the page dims but is not fully hidden. */
+  :scope > [data-part='dialog']::backdrop {
+    background-color: var(--ui-modal-scrim);
+  }
+
+  /* forced-colors (WHCM) — keep the dialog surface + frame + ink visible as system colours (the wash drops; a
+     translucent overlay would paint over the forced Canvas base and defeat it). The ::backdrop is left to the
+     scrim role / UA so the blocking layer still paints (it must not vanish — the modal stays distinguishable). */
+  @media (forced-colors: active) {
+    :scope > [data-part='dialog'] {
+      background-color: Canvas;
+      background-image: none;
+      border-color: CanvasText;
+      color: CanvasText;
+    }
+  }
+}
