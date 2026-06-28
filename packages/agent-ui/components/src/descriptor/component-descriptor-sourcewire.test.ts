@@ -67,6 +67,55 @@ describe('source-scan trip-wire — the REAL text-field is drift-free (s12 posit
   })
 })
 
+// G9 s12 — extend the POSITIVE plane to the container family whose per-element descriptor probe deliberately
+// scoped the contract↔SOURCE check OUT (card/list/modal). row/column/grid/tabs already cross-check source in
+// their own `-descriptor.test.ts`; the three below defer to this integration slice (the text-field s12
+// precedent above). The headline is CARD — a MULTI-ELEMENT folder (card.ts + three region sub-elements, ONE
+// card.md): the source scan must CONCAT the folder's `.ts` files (a state/slot can live in any of them) before
+// it cross-checks card.md, exactly as tabs-descriptor.test.ts already concats tabs.ts+tab.ts+tab-panel.ts.
+const CARD = `${SRC}/card`
+// concat ALL of the card family's behaviour files — the multi-element-folder rule (states/slots span files).
+const cardTs = ['card.ts', 'card-header.ts', 'card-content.ts', 'card-footer.ts']
+  .map((f) => readFileSync(`${CARD}/${f}`, 'utf8') as string)
+  .join('\n')
+const cardCss = readFileSync(`${CARD}/card.css`, 'utf8') as string
+const cardDesc = parseDescriptor(splitFrontmatter(readFileSync(`${CARD}/card.md`, 'utf8') as string).fence)
+
+describe('source-scan trip-wire — the REAL card family is drift-free (s12, MULTI-ELEMENT concat)', () => {
+  it('card.md slots/customStates tell the truth about the CONCATENATED card.ts + region sub-elements + card.css', () => {
+    // anti-vacuous: the header/footer adornment cells are styled in card.css; the body/region surface declares
+    // no :state() custom states — a card is a static surface (card.md customStates: []).
+    expect([...collectUsedStates(cardTs, cardCss)]).toEqual([]) // no interaction states across the four files
+    expect([...collectStyledSlots(cardCss)].sort()).toEqual(['leading', 'trailing']) // `label` is the unstyled default cell
+    expect(scalarSeq(cardDesc, 'customStates')).toEqual([]) // documented as stateless
+    expect(compareDescriptorToSource(cardDesc, { ts: cardTs, css: cardCss })).toEqual([])
+  })
+})
+
+// list / modal — single-element container folders that likewise deferred their source cross-check here.
+const LIST = `${SRC}/list`
+const listDesc = parseDescriptor(splitFrontmatter(readFileSync(`${LIST}/list.md`, 'utf8') as string).fence)
+const MODAL = `${SRC}/modal`
+const modalDesc = parseDescriptor(splitFrontmatter(readFileSync(`${MODAL}/modal.md`, 'utf8') as string).fence)
+
+describe('source-scan trip-wire — the REAL list + modal are drift-free (s12)', () => {
+  it('list.md is 0-drift: a semantic stack declares no :state() and no styled [slot] (items are default children)', () => {
+    const ts = readFileSync(`${LIST}/list.ts`, 'utf8') as string
+    const css = readFileSync(`${LIST}/list.css`, 'utf8') as string
+    expect([...collectUsedStates(ts, css)]).toEqual([])
+    expect([...collectStyledSlots(css)]).toEqual([]) // `items` is documented as the default/unnamed children — not a styled cell
+    expect(compareDescriptorToSource(listDesc, { ts, css })).toEqual([])
+  })
+
+  it('modal.md is 0-drift: the dialog visibility is the native [open]/top-layer, not a custom :state()', () => {
+    const ts = readFileSync(`${MODAL}/modal.ts`, 'utf8') as string
+    const css = readFileSync(`${MODAL}/modal.css`, 'utf8') as string
+    expect([...collectUsedStates(ts, css)]).toEqual([])
+    expect([...collectStyledSlots(css)]).toEqual([])
+    expect(compareDescriptorToSource(modalDesc, { ts, css })).toEqual([])
+  })
+})
+
 // ── per-code negative controls (#3b — each anchored on a UNIQUE token, each proven non-vacuous) ──
 
 describe('source-scan trip-wire — per-code negative controls (s11 / #5)', () => {

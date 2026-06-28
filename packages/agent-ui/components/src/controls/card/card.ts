@@ -21,6 +21,13 @@
 
 import type { PropsSchema, ReactiveProps } from '../../dom/index.ts'
 import { UIContainerElement } from '../../dom/container.ts'
+// Self-define the region sub-elements as a side effect of importing the family entry, so `ui-card` is a
+// self-contained compound (the `ui-tabs` → `ui-tab`/`ui-tab-panel` precedent): importing `card.ts` — directly
+// or via the controls barrel (decomp s12) — registers all four card tags, and a consumer who imports only
+// `ui-card` still gets its regions. Side-effect imports (no binding needed): each module self-defines its tag.
+import './card-header.ts'
+import './card-content.ts'
+import './card-footer.ts'
 
 // `static props = { ...surfaceProps }` — the elevation/brightness axes only (no flexProps; a card is a grid
 // surface, not a flex line). Spread, not inherited (props.ts has no static-props prototype merge — the

@@ -61,18 +61,16 @@ describe('tabs.md descriptor — frontmatter parses + schema-valid (s8 part a)',
     expect(fence).toMatch(/panelRole:\s*tabpanel\b/)
   })
 
-  it('validateComponentDescriptor reports ZERO structural failures (modulo the s12-pending BASE_CLASSES edit)', () => {
+  it('validateComponentDescriptor reports ZERO structural failures aside from the deferred extends (schema-valid)', () => {
     // anti-vacuous: the reader actually parsed the three attributes in order before the schema is consulted
     expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES)
-    // FILTER the single BAD_EXTENDS for UIContainerElement (the schema's BASE_CLASSES gains it at decomp s12).
-    const failures = validateComponentDescriptor(parsed).filter(
-      (f) => !(f.code === 'BAD_EXTENDS' && /UIContainerElement/.test(f.message)),
-    )
-    expect(failures).toEqual([])
-    // and PROVE the only filtered failure is exactly that one (so the filter is not masking a real defect)
-    expect(validateComponentDescriptor(parsed)).toContainEqual(
-      expect.objectContaining({ code: 'BAD_EXTENDS', path: 'extends' }),
-    )
+    const failures = validateComponentDescriptor(parsed)
+    // Robust across the s12 transition (mirrors row/card-descriptor): before s12, extends:UIContainerElement is
+    // flagged BAD_EXTENDS (filtered); after s12 registers the base in BASE_CLASSES, there is no such failure
+    // (the filter is a no-op). Either way: ZERO other structural defects.
+    expect(failures.filter((f) => f.code !== 'BAD_EXTENDS')).toEqual([])
+    // and any BAD_EXTENDS that IS present is exactly the (deferred) `extends` field — never a hidden second defect.
+    expect(failures.filter((f) => f.code === 'BAD_EXTENDS').every((f) => f.path === 'extends')).toBe(true)
   })
 })
 

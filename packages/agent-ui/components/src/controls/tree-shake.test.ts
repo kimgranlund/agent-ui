@@ -135,3 +135,57 @@ describe('ui-text-field tree-shake — the entry graph is tight (s12)', () => {
     expect([...tf.external]).toEqual([])
   })
 })
+
+// ── G9 container family (s12) — each container extends the dom UIContainerElement surface base (no trait), so
+//    its graph is {controls/{family}, dom, reactive}. The headline tree-shake property: importing ONE container
+//    drags only IT + UIContainerElement + dom/reactive, and NOT a sibling container family. A COMPOUND (ui-card)
+//    additionally drags its OWN region sub-elements (the transitive self-define) — but still no sibling family.
+
+const ROW_ENTRY = 'controls/row/row.ts'
+const row = crawl(ROW_ENTRY)
+const rowLayers = (prefix: string) => [...row.reached].filter((p) => p.startsWith(prefix))
+
+const CARD_ENTRY = 'controls/card/card.ts'
+const card = crawl(CARD_ENTRY)
+const cardLayers = (prefix: string) => [...card.reached].filter((p) => p.startsWith(prefix))
+
+describe('ui-row tree-shake — a layout primitive drags only itself + the surface base (s12)', () => {
+  it('reached the entry with a real dep set, including the dom UIContainerElement surface base', () => {
+    expect(row.reached.has(ROW_ENTRY)).toBe(true)
+    expect(row.reached.has('dom/container.ts')).toBe(true) // the shared surface base it extends
+    expect(rowLayers('reactive/').length).toBeGreaterThan(0)
+  })
+
+  it('drags ONLY {controls/row, dom, reactive} — no trait, no sibling container, no descriptor tooling', () => {
+    const ALLOWED = ['controls/row/', 'dom/', 'reactive/']
+    for (const p of row.reached) {
+      expect(ALLOWED.some((a) => p.startsWith(a)), `unexpected module in row graph: ${p}`).toBe(true)
+    }
+    expect(rowLayers('traits/')).toEqual([]) // a pure layout primitive composes no trait
+    expect(rowLayers('descriptor/')).toEqual([])
+    // the sibling-family exclusion: row's graph reaches no OTHER container folder (column/list/grid/card/tabs/modal)
+    expect(new Set(rowLayers('controls/').map((p) => p.split('/')[1]))).toEqual(new Set(['row']))
+    expect([...row.external]).toEqual([]) // zero non-relative imports
+  })
+})
+
+describe('ui-card tree-shake — a compound drags its OWN regions but no sibling family (s12)', () => {
+  it('reaches its three region sub-elements (the transitive self-define) + the surface base', () => {
+    expect(card.reached.has('controls/card/card-header.ts')).toBe(true)
+    expect(card.reached.has('controls/card/card-content.ts')).toBe(true)
+    expect(card.reached.has('controls/card/card-footer.ts')).toBe(true)
+    expect(card.reached.has('dom/container.ts')).toBe(true)
+  })
+
+  it('drags ONLY {controls/card, dom, reactive} — its own regions, and NOT a sibling container family', () => {
+    const ALLOWED = ['controls/card/', 'dom/', 'reactive/']
+    for (const p of card.reached) {
+      expect(ALLOWED.some((a) => p.startsWith(a)), `unexpected module in card graph: ${p}`).toBe(true)
+    }
+    // only the card family — no row/column/list/grid/tabs/modal sibling is pulled in.
+    expect(new Set(cardLayers('controls/').map((p) => p.split('/')[1]))).toEqual(new Set(['card']))
+    expect(cardLayers('traits/')).toEqual([])
+    expect(cardLayers('descriptor/')).toEqual([])
+    expect([...card.external]).toEqual([])
+  })
+})

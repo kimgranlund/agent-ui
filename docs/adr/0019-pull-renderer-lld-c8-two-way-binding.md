@@ -27,9 +27,10 @@ G9 changes that. Two of the new containers carry **bindable state** the agent mu
 - **`ui-modal` `open`** — whether the modal is shown (ADR-0017 — the platform `close`/Escape must report back).
 
 And the form family left a matching gap: the **`ui-text-field` value input bind** was deferred for the same reason
-(the catalog `TextField` declared its `value`/event, but no renderer controller consumed it). G9 is the first
-milestone with concrete two-way consumers, so building LLD-C8 here serves all three at once rather than shipping a
-third partial renderer pass later.
+— G6 shipped the `ui-text-field` control with a bindable `value`, but **neither a `TextField` catalog entry nor a
+renderer controller** existed to wire it (the catalog entry is *added* at G9 `s11`, not carried over from G6 —
+finding #88). G9 is the first milestone with concrete two-way consumers, so building LLD-C8 here serves all three
+at once rather than shipping a third partial renderer pass later.
 
 ## Decision
 
@@ -43,9 +44,13 @@ We **pull renderer LLD-C8 into the G9 milestone**. Three clauses (decomp `s10` r
 2. **The new bindable containers declare `value: { prop, event }`.** The catalog (`s11`) declares
    `Tabs → value: { prop: 'selected', event: 'select' }` and `Modal → value: { prop: 'open', event: 'toggle' }`,
    so the generic controller wires their two-way bind with no special-casing (SPEC-R4 AC1).
-3. **Back-fill the deferred `ui-text-field` value bind.** With the controller in place, the catalog's `TextField`
-   `value` declaration (already present) becomes live: a `ui-text-field` two-way-binds its `value` through the same
-   `input.ts` controller — closing the form-family deferral with zero text-field code change.
+3. **Add the `TextField` catalog entry + back-fill the deferred `ui-text-field` value bind.** The `TextField`
+   component type is **added to the default catalog at G9 (`s11`)** — it was **not** present before this milestone
+   (finding #88: G6 shipped the *control*, not its catalog entry; an earlier draft of this clause wrongly called it
+   "already present"). With the controller in place and the new entry declaring
+   `value: { prop: 'value', event: 'change' }`, a `ui-text-field` two-way-binds its `value` through the same generic
+   `input.ts` controller — closing the form-family deferral with **zero `ui-text-field` control code change** (the
+   addition is the catalog entry, not the control).
 
 ## Consequences
 

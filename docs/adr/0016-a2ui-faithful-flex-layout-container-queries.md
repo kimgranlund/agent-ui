@@ -95,3 +95,28 @@ shared prop set in `s2`):
 - **Per-element duplicated layout props** (no shared `flexProps`) — rejected: four copies of `align`/`justify`/
   `gap`/`wrap` drift; the `formProps` precedent (ADR-0013) proved the spreadable-base pattern keeps a fleet prop
   set single-homed.
+
+## Amendments
+
+> Append-only. The clauses above are unchanged; these entries refine wording the build surfaced.
+
+### A1 — container-query responsiveness is **ancestor-context**, not self-width (finding #90, decomp `s12`)
+
+The Context and Decision (clauses 4) phrase the responsiveness as a primitive reflowing on its **"own"**
+rendered width. That is loose: per the CSS Containment spec an element that declares `container-type:
+inline-size` becomes a query container for its **descendants**, and an `@container` rule resolves against the
+**nearest ancestor** query container — an element cannot size-query *itself* (the spec forbids it to avoid a
+layout↔style loop). The precise statement of the contract:
+
+- A layout primitive's `@container` rule reflows it on the width of its **nearest ancestor container**. Because
+  the whole family establishes `container-type: inline-size` (the shared `UIContainerElement` seam, clause 4),
+  a **nested** primitive's nearest ancestor container is its **parent container** — so dropping a `ui-row`
+  inside any family container makes it reflow on that parent's width, intrinsically and context-free. This is
+  what the cross-engine smoke already exercises: it resizes the **wrapper** (the ancestor container), not the
+  viewport, and asserts the child reflows.
+- A **top-level** primitive with **no container ancestor** has no container context to query, so its
+  `@container` rule never matches and it does not reflow on its own. To be responsive it needs a
+  **container-context parent** — a family container (or the renderer mount / page) that establishes
+  `container-type` above it. The A2UI canvas mounts surfaces under a container context, so an agent-emitted
+  root primitive is covered; a primitive used standalone on a host page should be wrapped in (or given) a
+  container-context parent. No clause changes — this records the precondition the wording implied.

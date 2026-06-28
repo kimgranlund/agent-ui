@@ -3,6 +3,7 @@ import * as dom from './index.ts'
 import {
   UIElement,
   UIFormElement,
+  UIContainerElement,
   prop,
   Types,
   repeat,
@@ -14,11 +15,17 @@ import {
   type FormValue,
   type ValidityResult,
 } from './index.ts'
-import { UIElement as PkgUIElement, prop as pkgProp, UIFormElement as PkgUIFormElement } from '@agent-ui/components'
+import {
+  UIElement as PkgUIElement,
+  prop as pkgProp,
+  UIFormElement as PkgUIFormElement,
+  UIContainerElement as PkgUIContainerElement,
+} from '@agent-ui/components'
 
 // d-barrel (rubric element.md D7 — a-surface). The dom barrel exports EXACTLY the intended consumer surface:
-// the element hosts (UIElement + the FACE form base UIFormElement), the typed-prop authoring API (prop, Types,
-// and the types PropType/PropConfig/PropsSchema/ReactiveProps), the form value/verdict types
+// the element hosts (UIElement + the FACE form base UIFormElement + the FACE container surface base
+// UIContainerElement), the typed-prop authoring API (prop, Types, and the types
+// PropType/PropConfig/PropsSchema/ReactiveProps), the form value/verdict types
 // (FormValue/ValidityResult), and the two G3 child directives (repeat, watch). The props/element wiring seams
 // (finalize, coerceAttribute, observedAttributesFor, propForAttribute) and the codec factories
 // (enumType/jsonType) are internal — NOT re-exported; the template.ts DIRECTIVE SEAM (Directive, directive,
@@ -27,7 +34,15 @@ import { UIElement as PkgUIElement, prop as pkgProp, UIFormElement as PkgUIFormE
 
 describe('d-barrel — the dom public surface (D7)', () => {
   it('a-surface: the runtime (value) exports are EXACTLY the hosts + prop API + the two directives', () => {
-    expect(Object.keys(dom).sort()).toEqual(['Types', 'UIElement', 'UIFormElement', 'prop', 'repeat', 'watch'])
+    expect(Object.keys(dom).sort()).toEqual([
+      'Types',
+      'UIContainerElement',
+      'UIElement',
+      'UIFormElement',
+      'prop',
+      'repeat',
+      'watch',
+    ])
   })
 
   it('a-surface: the internal props/element wiring seams + codec factories are NOT re-exported', () => {
@@ -65,6 +80,12 @@ describe('d-barrel — the dom public surface (D7)', () => {
     expect(typeof UIElement).toBe('function') // the FACE element host class
     expect(typeof UIFormElement).toBe('function') // the FACE form-associated base class
     expect(UIFormElement.formAssociated).toBe(true) // the form-participation activation flag (clause 1)
+    expect(typeof UIContainerElement).toBe('function') // the FACE container surface base (G9)
+    expect('formAssociated' in UIContainerElement).toBe(false) // a container contributes nothing to a form (ADR-0015)
+    // The spreadable surface + flex schemas ride the class statics (the formProps precedent) — the surface IS
+    // the class, so there is no standalone schema value on the barrel; a subclass spreads these into `static props`.
+    expect(Object.keys(UIContainerElement.surfaceProps).sort()).toEqual(['brightness', 'elevation'])
+    expect(Object.keys(UIContainerElement.flexProps).sort()).toEqual(['align', 'gap', 'justify', 'wrap'])
     expect(typeof prop.enum).toBe('function') // the typed prop constructors
     expect(Types.string.from('x')).toBe('x') // the fixed codecs
     expect(typeof repeat).toBe('function') // the G3 keyed-list directive
@@ -89,6 +110,7 @@ describe('d-barrel — the dom public surface (D7)', () => {
   it('a-surface: the package barrel (@agent-ui/components) re-exports the dom surface', () => {
     expect(PkgUIElement).toBe(UIElement) // same class, reachable from the package root
     expect(PkgUIFormElement).toBe(UIFormElement)
+    expect(PkgUIContainerElement).toBe(UIContainerElement) // the container surface base flows through the package barrel too
     expect(pkgProp).toBe(prop)
   })
 })

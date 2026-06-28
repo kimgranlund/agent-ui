@@ -5,6 +5,9 @@ import type { WidgetDeps } from './widget.ts'
 import { createSurface, disposeSurface } from './surface.ts'
 import type { A2uiComponent, A2uiError } from '../protocol.ts'
 import type { CatalogEntry, CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
+// The REAL default factories (which import + self-define the `@agent-ui/components` control family) — used by
+// the render-integration block to prove the LLD-C8 two-way wiring end-to-end against a live `ui-*` control.
+import { defaultFactories } from '../catalog/default/factories.ts'
 
 // ── Synthetic stubs ───────────────────────────────────────────────────────────
 // This slice is decoupled from B-factory / B-registry / binding.ts: it is proven against a stub
@@ -162,5 +165,47 @@ describe('widget resolution — bound props (scope-owned effect, SPEC-N2/R5/N3)'
 
     disposeSurface(surface)
     expect(inspect(surface.data).subscribers).toBe(0) // scope.dispose() removed it
+  })
+})
+
+// ── render-integration: the LLD-C8 two-way wiring, end-to-end against the REAL default factories ──
+//
+// The s12 integration assertion (the deferred render-integration the wide fan-out could not run): widget
+// resolution now installs the generic input controller (`installInputBinding`, LLD-C8/ADR-0019) right after
+// the bound props. This block proves it through the REAL catalog factory + a live `ui-*` control (no stub):
+// a container payload resolves to its real control, and a value commit writes BACK into surface.data with no
+// per-component code. `defaultFactories` import self-defines the control family, so `create()` yields the
+// upgraded element; the resolveBinding stub is the single-segment reader (the bound paths here are flat).
+describe('widget resolution — two-way input binding wired (render-integration, s12 / LLD-C8)', () => {
+  it('a container payload resolves a live ui-* control and a value commit writes the data model', () => {
+    const { createWidget } = harness(defaultFactories)
+    const surface = createSurface(init)
+    surface.data.value = { tab: 'one' }
+
+    // A Tabs container node, `selected` two-way-bound to /tab (the default catalog marks value:{selected,select}).
+    const el = createWidget(comp({ id: 't1', component: 'Tabs', selected: { path: '/tab' } }), surface)
+    expect(el.tagName.toLowerCase()).toBe('ui-tabs') // the REAL upgraded control, not a placeholder
+    expect((el as { selected?: unknown }).selected).toBe('one') // the data→control bound prop applied on mount
+
+    // A user gesture commits a new selection: the control's `selected` carries it; its `select` event fires.
+    ;(el as { selected?: unknown }).selected = 'two'
+    el.dispatchEvent(new Event('select'))
+
+    // The generic controller wrote it back into surface.data at the bound path — the control→data direction (N2).
+    expect((surface.data.peek() as { tab: unknown }).tab).toBe('two')
+  })
+
+  it('a non-input container (Row) installs no writeback listener — opt-in by the factory mark', () => {
+    const { createWidget } = harness(defaultFactories)
+    const surface = createSurface(init)
+    surface.data.value = { x: 1 }
+
+    const el = createWidget(comp({ id: 'r1', component: 'Row', gap: 'md' }), surface)
+    expect(el.tagName.toLowerCase()).toBe('ui-row')
+
+    // `Row`'s factory carries no `value` mark, so no listener was installed: a stray commit event is inert.
+    el.dispatchEvent(new Event('select'))
+    el.dispatchEvent(new Event('change'))
+    expect(surface.data.peek()).toEqual({ x: 1 }) // data model untouched
   })
 })

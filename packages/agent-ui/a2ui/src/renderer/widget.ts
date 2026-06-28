@@ -2,9 +2,11 @@
 //
 // Resolves one A2UI component node to a live `ui-*` control: looks `node.component` up in the
 // surface's bound catalog (via the `CatalogRegistry` — `get(catalogId)?.factories[type]`),
-// instantiates the resolved `WidgetFactory`'s element, applies the static props, and installs a
+// instantiates the resolved `WidgetFactory`'s element, applies the static props, installs a
 // `surface.scope`-owned effect per bound (`{path}`) prop so a data-model change re-applies only that
-// prop (SPEC-N2). The pointer walk itself is delegated to the injected binding resolver (LLD-C5).
+// prop (SPEC-N2), and — for an input widget — wires the reverse direction via the generic two-way input
+// controller (`installInputBinding`, LLD-C8/ADR-0019) so a committed value flows control→data. The pointer
+// walk itself is delegated to the injected binding resolver (LLD-C5).
 // An unknown component type is NON-fatal: it emits `error{code:"CATALOG"}` and returns a placeholder
 // element so sibling nodes still render (SPEC-R9 AC2). The resolver therefore ALWAYS returns an
 // element — it never throws and never returns null.
@@ -19,6 +21,7 @@ import type { A2uiComponent, A2uiError } from '../protocol.ts'
 import type { CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
 import type { CreateWidget } from './types.ts'
 import type { Surface } from './surface.ts'
+import { installInputBinding } from './input.ts'
 
 /** Structural adjacency keys (SPEC-R3/§5.1) — never catalog-declared props, so never applied. */
 const RESERVED = new Set<string>(['id', 'component', 'child', 'children'])
@@ -75,6 +78,12 @@ export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
       if (isBinding(value)) bindProp(el, factory, prop, value, surface, resolveBinding)
       else factory.applyProp(el, prop, value) // static literal → set once
     }
+    // Two-way input binding (renderer LLD-C8, ADR-0019). Wired here — right after the data→control props are
+    // applied, with `el`/`factory`/`node`/`surface` all in scope — so a control marked `value:{prop,event}`
+    // (Tabs `selected`/`select`, Modal `open`/`toggle`, the back-filled TextField `value`/`change`) commits
+    // its value BACK into surface.data on its commit event. A no-op for a non-input factory or a literal-bound
+    // value prop (opt-in by the factory mark; see input.ts), so non-input controls are untouched.
+    installInputBinding(el, factory, node, surface)
     return el
   }
 }

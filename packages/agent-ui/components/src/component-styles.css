@@ -1,14 +1,32 @@
 /* component-styles.css — the per-component stylesheet barrel (ADR-0003). Aggregates every FACE control's
  * single `{name}.css` (each = a `:where(ui-{name})` token block + an `@scope (ui-{name})` styles block).
  * A host page links this AFTER foundation-styles.css so the foundation (the `--c-*` colour roles + the
- * `--ui-{height,font,gap}-*` ramp) is already declared when a control's `:where()` block reads it. Exposed
- * as the package `./component-styles.css` export. Pure CSS — NEVER injected from a control's `.ts`
- * (behaviour-only `.ts`, no runtime style injection — plan §2). Grows one `@import` per control.
+ * `--ui-{height,font,gap,space}-*` ramp + `--ui-radius-base`) is already declared when a control's `:where()`
+ * block reads it. Exposed as the package `./component-styles.css` export. Pure CSS — NEVER injected from a
+ * control's `.ts` (behaviour-only `.ts`, no runtime style injection — plan §2). Grows one `@import` per control.
  *
  * DO NOT REORDER — the imports are append-only in control-addition order. Each control's sheet is fully
  * self-scoped (a `:where(ui-{name})` token block + an `@scope (ui-{name})` styles block), so the controls do
  * not interact across the cascade; the stable order keeps any future shared/global rule deterministic. New
  * controls APPEND after the last import.
+ *
+ * THE ONE SHARED SEAM (decomp s12): `_surface/container.css` is NOT a control sheet — it is the cross-family
+ * surface mapping (the `--ui-container-bg`/`-tint` consumption seam + `container-type`, ADR-0015/0016) that the
+ * whole G9 container/layout family sits on. It is imported FIRST, before any element sheet, so its `:where()`
+ * surface tokens are declared when a container element's own `@scope` block consumes them. The container
+ * element sheets follow it in a stable, annotated order (also do-not-reorder).
  */
+@import './controls/_surface/container.css';
+
+/* form controls (G5/G6) */
 @import './controls/button/button.css';
 @import './controls/text-field/text-field.css';
+
+/* G9 container / layout family — each sheet consumes the shared `_surface/container.css` seam above. */
+@import './controls/row/row.css';
+@import './controls/column/column.css';
+@import './controls/list/list.css';
+@import './controls/grid/grid.css';
+@import './controls/card/card.css';
+@import './controls/tabs/tabs.css';
+@import './controls/modal/modal.css';
