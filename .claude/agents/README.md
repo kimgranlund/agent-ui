@@ -12,6 +12,7 @@
 | [`execution-lead`](./execution-lead.md) | build | implement to the LLD; enforce system-design rules; run the gates | `authoring-llds`, `decomposing-systems`, `authoring-components` |
 | [`component-reviewer`](./component-reviewer.md) | critic | adversarial review of one `ui-*` against the COMPOSE/REALIZE rubric + its `{name}.md` contract (read-only) | `authoring-components` |
 | [`tokens-specialist`](./tokens-specialist.md) | specialist | the token layer — `shared/src/tokens/{tokens.css,dimensions.css}`: the `--c-{family}-{role}` colour ladders (+ `-hover`/`-active` state roles), `--c-focus-ring`, the dimensional/motion constants | `authoring-components` |
+| [`docs-site-steward`](./docs-site-steward.md) | docs maker | the docs site — `site/` pages/CSS/demos + the MPA entries, and the deterministic drift gates (`descriptor/site-canon.test.ts` + the contract↔props trip-wires) that fail the build when the site falls behind the components | `authoring-docs`, `authoring-components` |
 
 Each is authored to the `authoring-agents` contract (scoped `tools`, deliberate `model`, trigger `description`, judgment-frame body). They are reusable role files: the host (or a team) composes them; a subagent does not spawn other subagents.
 
