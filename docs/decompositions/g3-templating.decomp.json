@@ -150,7 +150,7 @@
         "nodes": ["d-repeat"],
         "programFlag": "DELIVERS `repeat` — the keyed reconcile the A2UI renderer's dynamic lists reuse (unblocks renderer LLD-C6). Its scheduling (move-by-identity, zero-move stable prefix) is a program-level interface, not just a control concern.",
         "deliverable": "repeat(items, key, template): keyed DOM reconcile — reuse by key, move by identity, throw on a duplicate key; append/remove/stable-prefix perform zero DOM moves.",
-        "acceptance": "rubric D4. Probes: `repeat-keyed` (reuse by key), `repeat-dup-throw`, `repeat-move-identity` (a reorder MOVES nodes, preserving element state/focus), `repeat-zero-move` (append/remove/stable-prefix → zero moves).",
+        "acceptance": "rubric D4. Probes: `repeat-keyed` (reuse by key), `repeat-dup-throw`, `repeat-move-identity` (a reorder MOVES nodes by identity — identity always; element state/focus where native moveBefore supported, identity-only fallback, ADR-0022), `repeat-zero-move` (append/remove/stable-prefix → zero moves).",
         "defers": "—",
         "depends_on": "d-seam (slice 4). Does NOT need the scope_seam — repeat's reconcile runs during a commit, owning no persistent effect."
       },
