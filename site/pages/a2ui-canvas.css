@@ -4,26 +4,16 @@
  * colour roles declared by the foundation barrels (imported first via _page.ts), so it tracks light/dark. */
 
 /* ── the 3-region flow: three cards with arrow connectors, wrapping to a stack on narrow viewports ──────── */
-/* This page is a full-bleed gen-UI canvas. a2ui-canvas.css only loads here, so OVERRIDE the shared shell's
- * centered 72rem column to use the WHOLE viewport width AND height — the three regions fill the available
- * space and scroll INSIDE themselves rather than growing a whole-page scrollbar. */
-#app {
-  min-block-size: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
+/* This page mounts via mountFullBleedPage: the shell's `.app-page--full-bleed` variant already hands the page
+ * the whole `.app-page` region (edge-to-edge fill + inner-scroll, no centered column, no sticky header/footer —
+ * see _page.css). Here we only lay the three regions out as a wrapping row with a viewport gutter. */
 [data-page-content] {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
   gap: 1rem;
-  inline-size: auto; /* override the shell's min(72rem, …) centered column */
-  margin-inline: 0;
   padding-inline: 1.5rem; /* a viewport gutter, not a max-width */
   margin-block: 1.5rem;
-  flex: 1; /* take the height left under the header */
-  min-block-size: 0; /* let the regions' inner content scroll instead of growing the page */
 }
 
 .region {
@@ -88,7 +78,9 @@
   }
 }
 
-/* ── payload blocks + the shared code/JSON style ───────────────────────────────────────────────────────── */
+/* ── payload blocks ────────────────────────────────────────────────────────────────────────────────────── */
+/* The JSON itself renders through the shared codeBlock helper (`.code-block`, styled in _page.css); this page
+ * styles only the figure caption around it. */
 .payload-line {
   margin: 0;
 }
@@ -100,25 +92,9 @@
   font-weight: 600;
 }
 
-.code {
-  margin: 0;
-  padding: 0.7rem 0.85rem;
-  overflow-x: auto;
-  scrollbar-width: none; /* Firefox — chromeless scroll */
-  border: 1px solid var(--c-neutral-outline-variant, #e2e2e2);
-  border-radius: 8px;
-  background: var(--c-neutral-surface, #fff);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.76rem;
-  line-height: 1.5;
-  white-space: pre;
-}
-
-/* Chromeless scroll on the scroll regions (WebKit/Chromium) — kept scrollable, just no visible bar. */
-.code::-webkit-scrollbar,
+/* Chromeless scroll on the message log (WebKit/Chromium) — kept scrollable, just no visible bar. */
 .msg-log::-webkit-scrollbar {
-  inline-size: 0;
-  block-size: 0;
+  display: none;
 }
 
 /* ── the toolbar (page affordances) ────────────────────────────────────────────────────────────────────── */

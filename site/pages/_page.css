@@ -33,6 +33,7 @@ body {
   grid-column: 1;
   grid-row: 1 / -1;
   overflow-y: auto;
+  scrollbar-width: none; /* hide the scrollbar — scroll stays functional (Firefox/standards) */
   min-block-size: 0; /* allow the rail to scroll inside the 100dvh grid rather than grow it */
   background: var(--c-neutral-surface-low);
   border-inline-end: 1px solid var(--c-neutral-outline-variant);
@@ -77,16 +78,23 @@ body {
   color: var(--c-neutral-on-surface-variant);
 }
 
-/* The app footer — right column, row 3, fixed. */
+/* The app footer — right column, row 3, fixed. The bar spans the column edge-to-edge (background + top divider). */
 .app-context-footer {
   grid-column: 2;
   grid-row: 3;
-  display: flex;
-  align-items: center;
-  padding-inline: var(--ui-space-xl);
-  padding-block: var(--ui-space-sm);
   background: var(--c-neutral-surface-low);
   border-block-start: 1px solid var(--c-neutral-outline-variant);
+}
+
+/* Inner gutter — the footer's CONTENT is constrained to the SAME reading column as `.page-header-inner`,
+ * `[data-page-content]`, and `.page-footer-inner`, so header, content, and footer line up as one column instead
+ * of the footer line floating at a different inset from the page body. */
+.app-context-footer-inner {
+  inline-size: min(64rem, 100% - 3rem);
+  margin-inline: auto;
+  padding-block: var(--ui-space-sm);
+  display: flex;
+  align-items: center;
   font-size: 0.78rem;
   color: var(--c-neutral-on-surface-variant);
 }
@@ -99,10 +107,29 @@ body {
   grid-column: 2;
   grid-row: 2;
   overflow-y: auto;
+  scrollbar-width: none; /* hide the scrollbar — scroll stays functional (Firefox/standards) */
   min-block-size: 0;
   display: flex;
   flex-direction: column;
   background: var(--c-neutral-surface);
+}
+
+/* WebKit/Chromium counterpart to `scrollbar-width: none` on the two scroll containers (the nav rail + the page
+ * region): a hidden bar, scroll still works. */
+.app-shell > nav[data-site-nav]::-webkit-scrollbar,
+.app-page::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── full-bleed page variant (mountFullBleedPage) ─────────────────────────────────────────────────────────
+ * The page owns the WHOLE `.app-page` region: no sticky page-header/footer (the shell appends neither), and the
+ * content fills the region edge-to-edge — not the centered reading column — and may scroll its OWN inner
+ * regions. The page's CSS owns the inner layout (e.g. the A2UI canvas's 3-region flow). */
+.app-page--full-bleed > [data-page-content] {
+  inline-size: 100%;
+  margin-inline: 0;
+  flex: 1 1 auto; /* fill the region under the context-header */
+  min-block-size: 0; /* let the page's inner regions scroll instead of growing the region */
 }
 
 /* ── the per-page sticky header ───────────────────────────────────────────────────────────────────────────
@@ -126,6 +153,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--ui-space-xs);
+}
+
+/* When the header carries a tab strip, seat it FLUSH to the header's bottom edge (drop the bottom padding) so the
+ * active-tab underline sits ON the header's bottom divider — one line — rather than a second underline floating a
+ * pad above it. The tab's own top margin keeps it separated from the description above. */
+.page-header-inner:has(.page-tabs) {
+  padding-block-end: 0;
 }
 
 .page-context-label {
@@ -175,9 +209,12 @@ body {
   opacity: 0.9;
 }
 
-/* The page tab strip — the component's page-type links as an underline tab bar. */
+/* The page tab strip — the component's page-type links as an underline tab bar. It seats flush to the bottom of
+ * the page-header (see `.page-header-inner:has(.page-tabs)`), so the page-header's own `border-block-end` is the
+ * single divider the active underline rides — the strip carries NO second border-line of its own. The top margin
+ * gives clean separation from the description above. */
 .page-tabs {
-  margin-block-start: var(--ui-space-xs);
+  margin-block-start: var(--ui-space-sm);
 }
 
 .page-tabs ul {
@@ -187,13 +224,12 @@ body {
   margin: 0;
   padding: 0;
   list-style: none;
-  border-block-end: 1px solid var(--c-neutral-outline-variant);
 }
 
 .page-tabs a {
   display: inline-block;
   padding: 0.35rem 0.1rem;
-  margin-block-end: -1px; /* overlap the strip border so the active underline aligns */
+  margin-block-end: -1px; /* straddle the header's 1px divider so the active 2px underline sits ON it */
   border-block-end: 2px solid transparent;
   color: var(--c-neutral-on-surface-variant);
   font-size: 0.85rem;
@@ -242,6 +278,36 @@ body {
   flex: 1 0 auto;
   inline-size: min(64rem, 100% - 3rem);
   margin-inline: auto;
+}
+
+/* ── code previews (the shared codeBlock helper — site/lib/code-block.ts) ──────────────────────────────────
+ * Every code sample on the site renders as `<pre class="code-block"><code>` (textContent, never innerHTML — a
+ * sample is data, not markup). ONE chrome: a bordered raised-surface panel (surface-high reads as a panel over
+ * BOTH a doc page's `surface` and the canvas regions' `surface-low`), monospace, horizontal-scroll for long
+ * lines (bar hidden, scroll kept). The doc-page markdown renderer routes its fenced blocks through the same
+ * helper, so a control's `{name}.md` examples share this exact treatment. */
+.code-block {
+  margin: 0;
+  padding: var(--ui-space-sm) var(--ui-space-md);
+  overflow-x: auto;
+  scrollbar-width: none; /* hide the bar — horizontal scroll stays functional */
+  border: 1px solid var(--c-neutral-outline-variant);
+  border-radius: 0.5rem;
+  background: var(--c-neutral-surface-high);
+  color: var(--c-neutral-on-surface);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.code-block::-webkit-scrollbar {
+  display: none;
+}
+
+.code-block code {
+  white-space: pre;
+  font: inherit;
+  color: inherit;
 }
 
 /* ── the shared site nav (the rail) ───────────────────────────────────────────────────────────────────────

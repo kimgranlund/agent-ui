@@ -8,18 +8,16 @@
 // SURFACE (the upgraded ui-button mounts under #surface) → click → [3] MESSAGES (every onClientMessage —
 // actions on click, plus any PARSE/SCHEMA/CATALOG/IDGRAPH errors — appended, pretty-printed).
 
-import { mountPage } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls
+import { mountFullBleedPage } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls
 import './a2ui-canvas.css' // page-local layout chrome only (the 3-region flow + the log)
+import { codeBlock } from '../lib/code-block.ts' // shared <pre><code> previews (textContent, no injection)
 import { createRenderer } from '@agent-ui/a2ui'
 import type { RendererHost, A2uiClientMessage, A2uiServerMessage } from '@agent-ui/a2ui'
 
-const { content } = mountPage({
-  title: 'A2UI canvas',
-  intro:
-    'A two-line A2UI payload, fed through the real @agent-ui/a2ui renderer, becomes the live ui-button on the ' +
-    'right. Click it and the activation round-trips back out as an A2UI action message in the log. This is the ' +
-    'whole stack in one view: payload → rendered control → client→server message.',
-})
+// FULL-BLEED: the canvas owns the whole `.app-page` region (no sticky page-header/footer) and lays out its own
+// 3-region view (payload → rendered surface → messages), each region carrying its own heading + blurb. The
+// per-region context replaces a page-level intro; the document <title> in a2ui-canvas.html names the page.
+const { content } = mountFullBleedPage()
 
 // ── the payload: the exact two server messages fed as JSONL (renderer dispatch.ts envelope shape) ──────────
 // Line 1 stands up surface "canvas" on the default `agent-ui` catalog (pre-registered by createRenderer).
@@ -88,9 +86,7 @@ for (const [i, message] of PAYLOAD.entries()) {
   figure.className = 'payload-line'
   const caption = document.createElement('figcaption')
   caption.textContent = `Line ${i + 1} — ${key}`
-  const code = document.createElement('pre')
-  code.className = 'code'
-  code.textContent = JSON.stringify(message, null, 2) // pretty for reading; fed compact via jsonl() below
+  const code = codeBlock(JSON.stringify(message, null, 2), 'json') // pretty for reading; fed compact via jsonl() below
   figure.append(caption, code)
   payload.body.append(figure)
 }
@@ -116,9 +112,7 @@ function appendLog(message: A2uiClientMessage): void {
   const head = document.createElement('div')
   head.className = 'msg-head'
   head.textContent = `#${String(seq).padStart(2, '0')}  ${kind === 'action' ? 'action ▸ server' : 'error ▸ server'}`
-  const pre = document.createElement('pre')
-  pre.className = 'code'
-  pre.textContent = JSON.stringify(message, null, 2)
+  const pre = codeBlock(JSON.stringify(message, null, 2), 'json')
   item.append(head, pre)
   logList.append(item)
   logList.scrollTop = logList.scrollHeight

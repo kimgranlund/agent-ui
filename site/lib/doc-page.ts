@@ -9,6 +9,7 @@
 // hand-authored. The table/body here cannot drift from a control's `{name}.md` because they are read straight
 // from the parse the contract trip-wire validates (ADR-0004).
 import type { ParsedAttribute, ParsedDescriptor } from '@agent-ui/components/descriptor'
+import { codeBlock } from './code-block.ts' // shared `<pre><code>` previews — one chrome for every code sample on the site
 
 // ── API table (derived from the parsed attributes) ────────────────────────────────────────────────────────
 
@@ -102,15 +103,12 @@ export function renderMarkdownBody(src: string): HTMLElement {
     if (line.startsWith('```')) {
       flushParagraph()
       flushList()
+      const lang = line.slice(3).trim() // the info string after the opening fence (```ts → "ts"), if any
       const code: string[] = []
       i++
       while (i < lines.length && !lines[i].startsWith('```')) code.push(lines[i++])
       i++ // consume the closing fence
-      const pre = document.createElement('pre')
-      const codeEl = document.createElement('code')
-      codeEl.textContent = code.join('\n')
-      pre.append(codeEl)
-      article.append(pre)
+      article.append(codeBlock(code.join('\n'), lang || undefined)) // shared <pre><code> chrome (textContent, no injection)
       continue
     }
 

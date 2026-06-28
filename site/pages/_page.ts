@@ -176,13 +176,19 @@ function buildContextHeader(): HTMLElement {
   return bar
 }
 
-// buildContextFooter — the app footer (right column, row 3, fixed): a slim placeholder app-level line.
+// buildContextFooter — the app footer (right column, row 3, fixed): a slim placeholder app-level line. The bar
+// itself spans the column edge-to-edge (background + top divider); its CONTENT sits in an inner wrapper pinned to
+// the SAME reading column as `.page-header-inner` / `[data-page-content]`, so header, content, and footer read as
+// one column rather than the line floating at a different inset from the page body.
 function buildContextFooter(): HTMLElement {
   const footer = document.createElement('footer')
   footer.className = 'app-context-footer'
+  const inner = document.createElement('div')
+  inner.className = 'app-context-footer-inner'
   const line = document.createElement('span')
   line.textContent = 'agent-ui — zero-dependency, signals-based web components · docs shell placeholder'
-  footer.append(line)
+  inner.append(line)
+  footer.append(inner)
   return footer
 }
 
@@ -319,6 +325,30 @@ export function mountPage(options: PageOptions): PageHandle {
   const page = document.createElement('div')
   page.className = 'app-page'
   page.append(buildPageHeader(options), content, buildPageFooter())
+
+  const shell = document.createElement('div')
+  shell.className = 'app-shell'
+  shell.append(buildNav(), buildContextHeader(), page, buildContextFooter())
+
+  root.append(shell)
+  return { content }
+}
+
+// mountFullBleedPage — the FULL-BLEED page variant. Same app shell (nav rail · context-header · context-footer),
+// but the PAGE region (row 2) is handed wholesale to the page: NO sticky page-header / page-footer, and the
+// content fills `.app-page` edge-to-edge (no centered reading column) and scrolls its OWN inner regions. For a
+// page that owns its in-region layout end to end — the A2UI gen-UI canvas, a 3-region view that scrolls inside
+// itself. The `.app-page--full-bleed` modifier (see _page.css) drops the centered-column constraint; the page's
+// own CSS owns the inner layout. Returns the same PageHandle, so a page's body code is unchanged.
+export function mountFullBleedPage(): PageHandle {
+  const root = document.querySelector('#app') ?? document.body
+
+  const content = document.createElement('main')
+  content.setAttribute('data-page-content', '')
+
+  const page = document.createElement('div')
+  page.className = 'app-page app-page--full-bleed'
+  page.append(content) // no sticky page-header / page-footer — the page owns the whole region
 
   const shell = document.createElement('div')
   shell.className = 'app-shell'
