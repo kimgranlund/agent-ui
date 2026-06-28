@@ -1,8 +1,13 @@
-/* _page.css — SHARED page chrome for every /site page (A5). Imported by _page.ts, so it loads on every page
+/* _page.css — the SHARED app shell for every /site page. Imported by _page.ts, so it loads on every page
  * (after the foundation barrels, so it reads the `--c-*` colour roles and tracks light/dark via their
- * light-dark()). It styles ONLY the shared shell: the site nav, the page header/title/intro, and a coherent
- * body base. Per-page CSS (permutations.css / states.css / landing.css) still imports AFTER this and owns the
- * `[data-page-content]` layout — this file never restyles a ui-* control. */
+ * light-dark()). It styles ONLY the shared shell: the outer nav-rail / context frame, the per-page sticky
+ * header/footer, the nav, and a coherent body base. Per-page CSS (permutations.css / states.css / landing.css)
+ * still imports AFTER this and owns the `[data-page-content]` INNER layout — this file never restyles a ui-*
+ * control.
+ *
+ * CSS-ONLY app shell (no `ui-*` components) — see the SHELL NOTE in _page.ts: a deliberate placeholder, to be
+ * rebuilt to dogfood an app-shell component family once one ships. Every colour is a `--c-*` role (no raw
+ * literals); every gutter a token where the ramp has one. */
 
 body {
   margin: 0;
@@ -11,47 +16,242 @@ body {
   background: var(--c-neutral-surface);
 }
 
-/* Outer containment is a SHELL concern — every page's <main data-page-content> aligns with the header and
- * stays within the viewport, so a new page can't forget the gutter (the states.html overflow regression).
- * Per-page CSS owns the INNER layout and MAY override the width when it needs more room (e.g. the A2UI
- * canvas's 72rem). */
-[data-page-content] {
-  inline-size: min(64rem, 100% - 3rem);
-  margin-inline: auto;
+/* ── the outer shell grid ─────────────────────────────────────────────────────────────────────────────────
+ * A full-viewport (100dvh) grid: a left nav RAIL spanning all rows, and a right column of three rows —
+ * [ context-header | page | context-footer ]. `minmax(0, …)` on the content column AND the middle row is
+ * load-bearing: it lets those tracks shrink BELOW their content so the page (row 2) can actually become a
+ * scroll container rather than growing the whole grid. */
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  block-size: 100dvh;
 }
 
-/* ── the page header (shared shell) ─────────────────────────────────────────────────────────────────────── */
-.site-header {
-  inline-size: min(64rem, 100% - 3rem);
-  margin-inline: auto;
-  margin-block: 1.5rem 0;
+/* The nav RAIL — column 1, spanning all three rows; its own scroll if the TOC overflows. */
+.app-shell > nav[data-site-nav] {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  overflow-y: auto;
+  min-block-size: 0; /* allow the rail to scroll inside the 100dvh grid rather than grow it */
+  background: var(--c-neutral-surface-low);
+  border-inline-end: 1px solid var(--c-neutral-outline-variant);
 }
 
-.site-header > h1 {
+/* The app top-bar — right column, row 1, fixed (non-scrolling). */
+.app-context-header {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-md);
+  padding-inline: var(--ui-space-xl);
+  padding-block: var(--ui-space-sm);
+  background: var(--c-neutral-surface);
+  border-block-end: 1px solid var(--c-neutral-outline-variant);
+}
+
+.app-brand {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--c-neutral-on-surface);
+  text-decoration: none;
+}
+
+/* The app-level chrome placeholder region (search / theme toggle). Inert spans today — the future app-shell
+ * component supplies the real controls. */
+.app-context-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-xs);
+}
+
+.app-context-slot {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--c-neutral-outline-variant);
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--c-neutral-on-surface-variant);
+}
+
+/* The app footer — right column, row 3, fixed. */
+.app-context-footer {
+  grid-column: 2;
+  grid-row: 3;
+  display: flex;
+  align-items: center;
+  padding-inline: var(--ui-space-xl);
+  padding-block: var(--ui-space-sm);
+  background: var(--c-neutral-surface-low);
+  border-block-start: 1px solid var(--c-neutral-outline-variant);
+  font-size: 0.78rem;
+  color: var(--c-neutral-on-surface-variant);
+}
+
+/* ── the page (right column, row 2) — THE scroll region ───────────────────────────────────────────────────
+ * The one element with `overflow-y: auto`; a flex column of [ sticky header | content | sticky footer ]. The
+ * content grows to fill on short pages (so the footer rests at the bottom) and keeps its natural height on long
+ * pages (so the region scrolls). `min-block-size: 0` lets it shrink below its content inside the grid row. */
+.app-page {
+  grid-column: 2;
+  grid-row: 2;
+  overflow-y: auto;
+  min-block-size: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-neutral-surface);
+}
+
+/* ── the per-page sticky header ───────────────────────────────────────────────────────────────────────────
+ * Sticks to the TOP of the page scroll region (which already sits below the context-header), so it pins while
+ * the content scrolls under it. Opaque background so scrolled content does not bleed through. */
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex: 0 0 auto;
+  background: var(--c-neutral-surface);
+  border-block-end: 1px solid var(--c-neutral-outline-variant);
+}
+
+/* Inner gutter — the header bar spans the column edge-to-edge (background + border), its content constrained to
+ * the same reading column as `[data-page-content]`. */
+.page-header-inner {
+  inline-size: min(64rem, 100% - 3rem);
+  margin-inline: auto;
+  padding-block: var(--ui-space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-xs);
+}
+
+.page-context-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  color: var(--c-neutral-on-surface-variant);
+}
+
+/* The heading row carries the <h1> and (optionally) the CTA pushed to the far end. */
+.page-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-md);
+}
+
+.page-heading {
   margin: 0;
-  font-size: 1.7rem;
+  font-size: 1.55rem;
   font-weight: 650;
   letter-spacing: -0.01em;
 }
 
-.site-header > .page-intro {
-  margin: 0.5rem 0 0;
+.page-description {
+  margin: 0;
   max-inline-size: 62ch;
   color: var(--c-neutral-on-surface-variant);
   line-height: 1.5;
 }
 
-/* ── the shared site nav (grouped per component) ─────────────────────────────────────────────────────────── */
-/* The nav is a flex row of GROUPS; each `.nav-group` is a small column — an optional component label above a
- * row of its page links — so the per-component clusters read as clusters. A new component appends one group. */
-nav[data-site-nav] {
+/* The CTA — a styled link reading as a primary (filled) button, using the strongest neutral contrast pair
+ * (no brand-accent role exists in the neutral ramp). CSS-only until an app-shell ui-* button lands. */
+.page-cta {
+  flex: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 0.6rem;
+  background: var(--c-neutral-inverse-surface);
+  color: var(--c-neutral-inverse-on-surface);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.page-cta:hover {
+  opacity: 0.9;
+}
+
+/* The page tab strip — the component's page-type links as an underline tab bar. */
+.page-tabs {
+  margin-block-start: var(--ui-space-xs);
+}
+
+.page-tabs ul {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.5rem 1.25rem;
-  margin-block-end: 1.75rem;
-  padding-block-end: 0.85rem;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   border-block-end: 1px solid var(--c-neutral-outline-variant);
+}
+
+.page-tabs a {
+  display: inline-block;
+  padding: 0.35rem 0.1rem;
+  margin-block-end: -1px; /* overlap the strip border so the active underline aligns */
+  border-block-end: 2px solid transparent;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.page-tabs a:hover {
+  color: var(--c-neutral-on-surface);
+}
+
+.page-tabs a[aria-current='page'] {
+  color: var(--c-neutral-on-surface);
+  border-block-end-color: var(--c-neutral-on-surface);
+  font-weight: 600;
+}
+
+/* ── the per-page sticky footer ───────────────────────────────────────────────────────────────────────────
+ * Sticks to the BOTTOM of the page scroll region. Slim placeholder (prev/next or actions land here later). */
+.page-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  flex: 0 0 auto;
+  background: var(--c-neutral-surface);
+  border-block-start: 1px solid var(--c-neutral-outline-variant);
+}
+
+.page-footer-inner {
+  inline-size: min(64rem, 100% - 3rem);
+  margin-inline: auto;
+  padding-block: var(--ui-space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--c-neutral-on-surface-variant);
+}
+
+/* ── the content column ───────────────────────────────────────────────────────────────────────────────────
+ * `[data-page-content]` is the returned <main> the page fills. The shell owns its OUTER containment (the
+ * centered reading column + grow-to-fill so the sticky footer rests at the bottom on short pages); per-page CSS
+ * owns the INNER layout and MAY override the width when it needs more room (e.g. the A2UI canvas). `flex: 1 0
+ * auto` fills free space yet never shrinks below the content (so a long page keeps its height and the region
+ * scrolls). */
+[data-page-content] {
+  flex: 1 0 auto;
+  inline-size: min(64rem, 100% - 3rem);
+  margin-inline: auto;
+}
+
+/* ── the shared site nav (the rail) ───────────────────────────────────────────────────────────────────────
+ * A vertical stack of GROUPS down the rail; each `.nav-group` is an optional component label above a column of
+ * its page links. A new component appends one group (in _page.ts's NAV). */
+nav[data-site-nav] {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: var(--ui-space-lg) var(--ui-space-md);
 }
 
 .nav-group {
@@ -61,7 +261,7 @@ nav[data-site-nav] {
 }
 
 .nav-group-label {
-  padding-inline: 0.2rem;
+  padding-inline: 0.3rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.68rem;
   letter-spacing: 0.02em;
@@ -70,16 +270,16 @@ nav[data-site-nav] {
 
 nav[data-site-nav] ul {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.4rem;
+  flex-direction: column;
+  gap: 0.1rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 nav[data-site-nav] a {
-  display: inline-block;
-  padding: 0.3rem 0.7rem;
+  display: block;
+  padding: 0.3rem 0.55rem;
   border-radius: 0.5rem;
   color: var(--c-neutral-on-surface-variant);
   font-size: 0.875rem;
@@ -87,13 +287,57 @@ nav[data-site-nav] a {
 }
 
 nav[data-site-nav] a:hover {
-  background: var(--c-neutral-surface-low);
+  background: var(--c-neutral-surface-high);
   color: var(--c-neutral-on-surface);
 }
 
-/* The current page — flagged by mountPage with aria-current, so the marker tracks the route, not a class. */
+/* The current page — flagged by buildNav with aria-current, so the marker tracks the route, not a class. */
 nav[data-site-nav] a[aria-current='page'] {
   background: var(--c-neutral-surface-high);
   color: var(--c-neutral-on-surface);
   font-weight: 600;
+}
+
+/* ── narrow viewports — collapse the rail to a top bar, stacking the whole shell into one column ──────────── */
+@media (max-width: 48rem) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+
+  .app-context-header {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .app-shell > nav[data-site-nav] {
+    grid-column: 1;
+    grid-row: 2;
+    border-inline-end: none;
+    border-block-end: 1px solid var(--c-neutral-outline-variant);
+  }
+
+  /* horizontal scroller across the top: groups side-by-side, each still a small labelled column */
+  nav[data-site-nav] {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 1rem;
+    padding: var(--ui-space-sm) var(--ui-space-md);
+  }
+
+  nav[data-site-nav] ul {
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+
+  .app-page {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .app-context-footer {
+    grid-column: 1;
+    grid-row: 4;
+  }
 }
