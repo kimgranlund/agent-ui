@@ -1,6 +1,6 @@
 // site/pages/modal-demo.ts — the ui-modal interaction demo (the ratified container `demo`). Mounts the REAL
-// native-<dialog> modal and proves its behaviour honestly: a dismissable modal (Escape / backdrop close) and a
-// non-dismissable one (the agent owns the close), with a live close/toggle event log. The platform supplies the
+// native-<dialog> modal and proves its behaviour honestly: a default modal (Escape / backdrop close it) and a
+// `persistent` one (the agent owns the close), with a live close/toggle event log. The platform supplies the
 // top layer + backdrop + focus trap + Escape; the control adds focus restore + the open↔platform sync. This
 // page only stages the modals, opens them by setting the bindable `open` prop, and logs the user-dismissal events.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
@@ -56,15 +56,19 @@ const dismissable = modalDemo(
 
 const blocking = modalDemo(
   'Blocking modal',
-  { dismissable: 'false', 'aria-label': 'Blocking modal' },
-  'dismissable="false": Escape and a backdrop click are ignored — the agent owns the close. Use the Close button (it sets open=false). No close/toggle is emitted because the close is programmatic.',
+  { persistent: '', 'aria-label': 'Blocking modal' },
+  'persistent (a presence attribute): Escape and a backdrop click are ignored — the agent owns the close. Use the Close button (it sets open=false). No close/toggle is emitted because the close is programmatic.',
 )
 
-const focusNote = document.createElement('p')
-focusNote.innerHTML =
-  'showModal() <strong>traps</strong> focus inside the dialog and the page behind it is inert. The platform does ' +
-  'not restore focus to the opener on close, so the control records <code>document.activeElement</code> at open ' +
-  'and <strong>restores</strong> it on close — open a modal, dismiss it, and focus returns to the trigger button.'
+const focusNote = el('p', {}, [
+  text('showModal() '),
+  el('strong', {}, [text('traps')]),
+  text(' focus inside the dialog and the page behind it is inert. The platform does not restore focus to the opener on close, so the control records '),
+  el('code', {}, [text('document.activeElement')]),
+  text(' at open and '),
+  el('strong', {}, [text('restores')]),
+  text(' it on close — open a modal, dismiss it, and focus returns to the trigger button.'),
+])
 
 content.append(
   exampleSection('Dismissable (Escape / backdrop)', dismissable),

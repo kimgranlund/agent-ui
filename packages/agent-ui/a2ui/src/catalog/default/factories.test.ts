@@ -123,9 +123,9 @@ describe('default catalog factories — G9 container family (catalog LLD-C5, SPE
     expect(modalFactory.value).toEqual({ prop: 'open', event: 'toggle' })
     const el = modalFactory.create()
     modalFactory.applyProp(el, 'open', true)
-    modalFactory.applyProp(el, 'dismissable', false)
+    modalFactory.applyProp(el, 'persistent', true)
     expect((el as unknown as Record<string, unknown>).open).toBe(true)
-    expect((el as unknown as Record<string, unknown>).dismissable).toBe(false)
+    expect((el as unknown as Record<string, unknown>).persistent).toBe(true)
   })
 
   it('applyProp honours every declared accessor prop for each container/input factory (mapsTo == name)', () => {

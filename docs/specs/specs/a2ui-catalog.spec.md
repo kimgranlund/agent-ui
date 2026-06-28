@@ -133,7 +133,7 @@ Initial coverage tracks the control family (A-2). Types absent until their contr
 | `CardHeader` / `CardContent` / `CardFooter` | `ui-card-header` / `-content` / `-footer` | **shipped** (G9). Region sub-types — the ratified *regions = sub-elements* (component-native `ChildList` children, SPEC-R3/R4); `CardContent` adds `scroll` |
 | `Tabs` | `ui-tabs` | **shipped** (G9). `elevation`,`brightness`; bindable `selected`; `value:{prop:'selected',event:'select'}` (two-way, renderer SPEC-R7 / ADR-0019); `ChildList` children |
 | `Tab` / `TabPanel` | `ui-tab` / `ui-tab-panel` | **shipped** (G9). Tab + panel sub-types (`ChildList` children) |
-| `Modal` | `ui-modal` | **shipped** (G9, ADR-0017 native `<dialog>`). `elevation`,`brightness`; bindable `open`; `dismissable`; `value:{prop:'open',event:'toggle'}` (two-way); `ChildList` children |
+| `Modal` | `ui-modal` | **shipped** (G9, ADR-0017 native `<dialog>`). `elevation`,`brightness`; bindable `open`; `persistent` (presence-boolean, default off → non-dismissable; `<ui-modal>` is dismissable, ADR-0020); `value:{prop:'open',event:'toggle'}` (two-way); `ChildList` children |
 | `Image` / `Video` | — | `absent` until media primitives land (A-2) |
 
 > `ui-list` / `ui-grid` ship as **direct `ui-*` layout primitives**, NOT catalog types (the ratified G9 scope, ADR-0016): an agent composes the catalog `Row`/`Column`/`Card` set; `ui-list`/`ui-grid` are app-side primitives. Their omission is intentional, not a silent dead type (SPEC-N2).

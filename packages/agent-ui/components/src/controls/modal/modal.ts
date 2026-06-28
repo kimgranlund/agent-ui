@@ -18,7 +18,7 @@
 //     `.close()`) syncs `open=false` and emits the family `close` + `toggle` (the two-way bind, ADR-0019);
 //     a close WE drove (the prop already went false) only restores focus — no redundant emit. `this.open` is
 //     the discriminator (still true ⇒ the platform closed it), so no async flag is needed.
-//   • dismissal gate — `dismissable` (default on); when off, the dialog's `cancel` event (Escape, the platform
+//   • dismissal gate — `persistent` (default OFF); when set, the dialog's `cancel` event (Escape, the platform
 //     light-dismiss request) is preventDefault-ed, and a backdrop click is ignored. Backdrop click is detected
 //     rect-wise (a click whose target is the dialog box but lands OUTSIDE its content rect ⇒ the `::backdrop`).
 //
@@ -37,9 +37,11 @@ const props = {
   // own [open] is the platform's — but reflecting keeps the host's declared state inspectable/serializable) and
   // BINDABLE: the catalog declares value:{prop:'open',event:'toggle'} so the renderer two-way-binds it (ADR-0019).
   open: { ...prop.boolean(false), reflect: true },
-  // `dismissable` (default ON) — gates user dismissal (Escape via the `cancel` event + backdrop click). Reflected
-  // so a JS-set value still keys any author styling and stays inspectable.
-  dismissable: { ...prop.boolean(true), reflect: true },
+  // `persistent` (default OFF) — when present, the modal is NON-dismissable: the dialog's `cancel` event (Escape)
+  // is preventDefault-ed and a backdrop click is ignored, so the agent owns the close (set open=false). Reflected
+  // (presence-boolean: <ui-modal persistent> ⇒ true, absent ⇒ false) — the declarative override the old default-on
+  // `dismissable` could not express (attribute presence always coerced true). See ADR-0020.
+  persistent: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 export interface UIModalElement extends ReactiveProps<typeof props> {}
@@ -68,14 +70,14 @@ export class UIModalElement extends UIContainerElement {
       this.#restoreFocus() // restore on EVERY close (platform-driven or our own) — the platform omits this
     })
 
-    // ── dismissal gate — Escape / the platform light-dismiss request fires `cancel`; block it when not dismissable ──
+    // ── dismissal gate — Escape / the platform light-dismiss request fires `cancel`; block it when persistent ──
     this.listen(dialog, 'cancel', (event) => {
-      if (!this.dismissable) event.preventDefault() // the dialog stays open; no `close` follows
+      if (this.persistent) event.preventDefault() // the dialog stays open; no `close` follows
     })
 
     // ── backdrop click — a click on the dialog box OUTSIDE its content rect is the `::backdrop`; dismiss if allowed ──
     this.listen(dialog, 'click', (event) => {
-      if (!this.dismissable) return
+      if (this.persistent) return
       const e = event as MouseEvent
       if (e.target !== dialog) return // a click on content targets the child; the backdrop/box targets the dialog
       const r = dialog.getBoundingClientRect()

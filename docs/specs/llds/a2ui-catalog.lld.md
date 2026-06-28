@@ -77,7 +77,7 @@ DIRECTLY (SPEC-R8): `Row`→`ui-row`, `Column`→`ui-column`, `Card`→`ui-card`
 plus the component-native region/item sub-types (the ratified *regions = sub-elements*) `CardHeader`/`CardContent`/`CardFooter`→`ui-card-{header,content,footer}` and `Tab`/`TabPanel`→`ui-tab`/`ui-tab-panel`. The container
 family + `ui-text-field` share **one** `accessorFactory(tag, value?)` builder: every catalog property is declared
 with `mapsTo` EQUAL to the control prop name (the SPEC-R8 1:1 reflection — surface axes, the flex grammar,
-`selected`/`open`/`dismissable`/`scroll`, the text-field value surface), so `applyProp` sets the JS accessor
+`selected`/`open`/`persistent`/`scroll`, the text-field value surface), so `applyProp` sets the JS accessor
 directly (`el[prop] = value`) — no per-prop switch, unlike `Button.label`→`textContent`. **Two-way (SPEC-R4 / ADR-0019):**
 `Tabs` declares `value:{prop:'selected',event:'select'}`, `Modal` declares `value:{prop:'open',event:'toggle'}`, and
 the back-filled `TextField` declares `value:{prop:'value',event:'change'}` — all consumed by the renderer's generic

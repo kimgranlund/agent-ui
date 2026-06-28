@@ -157,18 +157,19 @@ describe('ui-modal — Escape dismissal + focus restore (both engines)', () => {
     expect(document.activeElement, `${server.browser}: focus was not restored to the exact opener`).toBe(opener)
   })
 
-  it('dismissable=false: Escape does NOT close the modal (the cancel is blocked)', async () => {
-    // `dismissable` is a presence-boolean defaulting true — it is turned OFF via the PROPERTY (the A2UI renderer
-    // path), never the `dismissable="false"` attribute (which is PRESENT → coerces back to true). See the handoff.
+  it('persistent: Escape does NOT close the modal (the cancel is blocked)', async () => {
+    // `persistent` is a presence-boolean defaulting false — when set, the modal is non-dismissable. Unlike the old
+    // `dismissable`, it CAN be expressed by attribute presence (`<ui-modal persistent>`): presence ⇒ true is exactly
+    // the declarative override the inversion fixes (ADR-0020). Here we set the property, equivalent to that attribute.
     const { modal, dialog } = mount('<ui-modal><button>inside</button></ui-modal>')
-    modal.dismissable = false
+    modal.persistent = true
     modal.open = true
     await modal.updateComplete
     expect(dialog.open).toBe(true)
 
     await userEvent.keyboard('{Escape}')
     await modal.updateComplete
-    expect(dialog.open, `${server.browser}: Escape closed a non-dismissable modal`).toBe(true)
+    expect(dialog.open, `${server.browser}: Escape closed a persistent modal`).toBe(true)
     expect(modal.open).toBe(true)
   })
 })

@@ -38,11 +38,20 @@ We implement nested radius in **pure CSS, one level deep**. Three clauses (decom
 1. **Root radius from `--ui-radius-base`.** A `ui-card` with no ancestor card rounds to
    `border-radius: var(--ui-card-radius, var(--ui-radius-base))` (the shared token, ADR-0015). An author may
    override with an explicit `border-radius` (or `--ui-card-radius`) — that becomes the chain root.
-2. **A parent publishes one child radius.** A `ui-card` declares, for its children to read, a single
-   `--ui-card-child-radius: max(0px, var(--ui-card-radius) − var(--ui-card-padding))` (the concentric-corner law,
-   the parent's padding folded in; the ~1px border term ignored). A nested `ui-card` reads it for its **own** radius:
-   `--ui-card-radius: var(--ui-card-child-radius, var(--ui-radius-base))`. A region (`ui-card-content` etc.) that
-   paints a fill clips to the card's **inner** radius `= --ui-card-radius − --ui-card-padding`.
+2. **A parent publishes one child radius — via a separate name, never read back into its own.** A `ui-card`
+   computes its **own** inner radius under a distinct token, `--ui-card-inner-radius: max(0px,
+   calc(var(--ui-card-radius) − var(--ui-card-padding)))` (the concentric-corner law, the parent's padding folded
+   in; the ~1px border term ignored) — and it is **not** read back into the card's `--ui-card-radius`, so the card
+   never references on itself a property it writes. It then **publishes** that value to its **descendants** as the
+   inherited `--ui-card-child-radius` through a `:where(ui-card) > *` rule set on the **children** (never on the
+   card itself). A nested `ui-card` reads the **inherited** child radius for its **own** radius:
+   `--ui-card-radius: var(--ui-card-child-radius, var(--ui-radius-base))` (a root card, with the channel unset,
+   falls back to the shared base). A region (`ui-card-content` etc.) that paints a fill clips to the card's
+   **inner** radius `--ui-card-inner-radius`. The two-token split (`--ui-card-inner-radius` computed on self,
+   `--ui-card-child-radius` published to `> *`) is the **cycle-free** realization of the one published seam: a
+   single token both declared on a card *and* read into that same card's radius would be a self-referential custom
+   property (a CSS cycle, `guaranteed-invalid` — the exact failure this ADR records), which the publish-to-children
+   split avoids.
 3. **One level only; manual past it; explicit reseeds.** The published `--ui-card-child-radius` is **not**
    re-decremented down the tree (that would need the cycle/depth-counter CSS cannot express). At depth ≥ 2 a card
    either inherits the level-1 child radius (acceptable — the visible error is small and only at deep nesting) or an

@@ -20,7 +20,7 @@ declare const process: { cwd(): string }
 //     decomp s12 acceptance + the handoff escalation). So we tolerate EXACTLY that one pending failure and
 //     require every other field schema-clean; once s12 lands, the filter still passes (failures == []).
 //   • (b) CONTRACT↔PROPS — the descriptor's `attributes[]` is a faithful BIJECTION with the live
-//     UIModalElement.props (the ...surfaceProps spread elevation/brightness + open/dismissable), via the
+//     UIModalElement.props (the ...surfaceProps spread elevation/brightness + open/persistent), via the
 //     fleet-wide compareDescriptorToProps trip-wire. Independent of BASE_CLASSES → a FULL green now.
 // The fence READER + schema + trip-wire all live in ../../descriptor/component-descriptor.ts (one parser).
 
@@ -31,7 +31,7 @@ const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
 // The settled attribute surface, in declaration order on the fence (the spread surface axes first).
-const ATTR_NAMES = ['elevation', 'brightness', 'open', 'dismissable']
+const ATTR_NAMES = ['elevation', 'brightness', 'open', 'persistent']
 
 // UIContainerElement enters the descriptor BASE_CLASSES at the integration slice s12; until then `extends:
 // UIContainerElement` is the ONE tolerated structural failure.
@@ -78,13 +78,13 @@ describe('modal.md descriptor — the bindable open + the dialog part (s9)', () 
     expect(events).toContain('toggle') // the value:{event:'toggle'} two-way signal
   })
 
-  it('declares the dialog PART (not a user slot) and dismissable defaults true', () => {
+  it('declares the dialog PART (not a user slot) and persistent defaults false', () => {
     const parts = (parsed.sequences.get('parts') ?? []).map((i) => i.get('name'))
     expect(parts).toContain('dialog')
-    const dismissable = parsed.attributes.find((a) => a.name === 'dismissable')
-    expect(dismissable?.type).toBe('boolean')
-    expect(dismissable?.default).toBe('true') // default ON
-    expect(dismissable?.reflect).toBe(true)
+    const persistent = parsed.attributes.find((a) => a.name === 'persistent')
+    expect(persistent?.type).toBe('boolean')
+    expect(persistent?.default).toBe('false') // default OFF
+    expect(persistent?.reflect).toBe(true)
   })
 })
 
@@ -101,9 +101,9 @@ describe('modal.md descriptor — contract↔props trip-wire (s9 part b)', () =>
       expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.open.reflect' }),
     )
 
-    const flipDefault: ParsedAttribute[] = parsed.attributes.map((a) => (a.name === 'dismissable' ? { ...a, default: 'false' } : { ...a }))
+    const flipDefault: ParsedAttribute[] = parsed.attributes.map((a) => (a.name === 'persistent' ? { ...a, default: 'true' } : { ...a }))
     expect(compareDescriptorToProps(flipDefault, UIModalElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_DEFAULT', path: 'attributes.dismissable.default' }),
+      expect.objectContaining({ code: 'DRIFT_DEFAULT', path: 'attributes.persistent.default' }),
     )
   })
 

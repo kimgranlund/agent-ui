@@ -82,7 +82,7 @@ describe('default catalog — G9 container declarations (SPEC-R3/R4/R8)', () => 
     const modal = defaultCatalog.components.Modal
     expect(modal.value).toEqual({ prop: 'open', event: 'toggle' })
     expect(modal.properties.open?.bindable).toBe(true)
-    expect(modal.properties.dismissable?.mapsTo).toBe('dismissable')
+    expect(modal.properties.persistent?.mapsTo).toBe('persistent')
   })
 
   it('TextField is value-bound on the change event — the deferred bind, now live (ADR-0019 cl.3)', () => {
@@ -102,7 +102,7 @@ describe('default catalog — conformance (SPEC-R7/R9)', () => {
       { id: 'tabs', component: 'Tabs', selected: 0, children: ['t1', 'p1'] },
       { id: 't1', component: 'Tab', children: ['t1label'] },
       { id: 'p1', component: 'TabPanel' },
-      { id: 'modal', component: 'Modal', open: false, dismissable: true },
+      { id: 'modal', component: 'Modal', open: false, persistent: false },
       { id: 'tf', component: 'TextField', value: 'hi', label: 'Name', required: true },
     ]
     for (const node of nodes) {

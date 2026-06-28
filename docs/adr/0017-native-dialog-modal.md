@@ -9,7 +9,7 @@
 > | **Proposed by** | planning-lead — the design seat, ratified G9 container-family session |
 > | **Ratified by** | orchestration-lead (on gate) |
 > | **Repairs** | `goals §G9` (NEW — the `ui-modal` DoD) · `a2ui-catalog SPEC §5.2` (`Modal` `experimental → shipped`) · `plan §2` (the "no native form elements" rule — scopes it to form *widgets*) · **NEW** `controls/modal/*` |
-> | **Supersedes / Superseded by** | Relates: **ADR-0014** (the same "rule bars native form *widgets*, not all native elements" reasoning that cleared `contenteditable`) · **ADR-0019** (the bindable `open` two-way bind) |
+> | **Supersedes / Superseded by** | **Superseded in part by ADR-0020** (cl.3 dismissal-gate prop: `dismissable` → `persistent`; cl.1/2/4/5 stand) · Relates: **ADR-0014** (the same "rule bars native form *widgets*, not all native elements" reasoning that cleared `contenteditable`) · **ADR-0019** (the bindable `open` two-way bind) |
 
 ## Context
 

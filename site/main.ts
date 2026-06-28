@@ -211,12 +211,12 @@ const CARD_GROUPS: readonly CardGroup[] = [
       {
         href: './modal-demo.html',
         title: 'Demo',
-        blurb: 'The native-<dialog> modal — open/close, dismissable vs blocking, focus restore, with a close/toggle log.',
+        blurb: 'The native-<dialog> modal — open/close, dismissable vs persistent, focus restore, with a close/toggle log.',
       },
       {
         href: './modal-doc.html',
         title: 'API reference',
-        blurb: 'The ui-modal attributes (surface + open/dismissable), generated from its modal.md descriptor.',
+        blurb: 'The ui-modal attributes (surface + open/persistent), generated from its modal.md descriptor.',
       },
     ],
   },

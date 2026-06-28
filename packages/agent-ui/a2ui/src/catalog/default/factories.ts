@@ -54,7 +54,7 @@ export const buttonFactory: WidgetFactory = {
 // Unlike `Button` (whose `label` is light-DOM text, so its `mapsTo` is `textContent` ≠ the prop name),
 // every catalog property on the container family and on `ui-text-field` is declared with `mapsTo` EQUAL
 // to its name — the SPEC-R8 1:1 reflection: the surface axes (`elevation`/`brightness`), the flex grammar
-// (`align`/`justify`/`gap`/`wrap`), the bindable state (`selected`/`open`), `dismissable`/`scrollable`, and
+// (`align`/`justify`/`gap`/`wrap`), the bindable state (`selected`/`open`), `persistent`/`scrollable`, and
 // the text-field's `value`/`label`/… each name a reflecting prop ACCESSOR on the control. Because the
 // A2UI property name IS the control prop name for this family, `el[prop]` is exactly the `mapsTo` target,
 // so `applyProp` sets the JS accessor directly (the `buttonFactory` `variant` precedent) and the control

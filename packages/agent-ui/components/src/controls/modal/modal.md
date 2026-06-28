@@ -2,14 +2,14 @@
 # modal.md frontmatter — the attributes-as-API descriptor for ui-modal (ADR-0004 / ADR-0017). The
 # machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the /site doc.
 # The `attributes[]` block MUST mirror modal.ts `static props` (the ...UIContainerElement.surfaceProps spread —
-# elevation/brightness — plus open/dismissable) — the contract↔props trip-wire (modal-descriptor.test.ts) and
+# elevation/brightness — plus open/persistent) — the contract↔props trip-wire (modal-descriptor.test.ts) and
 # the frontmatter schema both target this fence. Field set per docs/plan.md §10 / ADR-0004; the native-dialog
 # modal per ADR-0017; the bindable `open` two-way per ADR-0019.
 tag: ui-modal
 tier: pattern             # geometry size-class — geometry.md lists `dialog` under the Pattern band (the shell uses the --ui-space scale, NO control height)
 extends: UIContainerElement  # the FACE surface base — NOT form-associated (no value/validity); reuses the inherited ElementInternals for nothing here (the dialog carries its own ARIA)
 
-attributes:               # attributes-as-API — mirrors modal.ts `static props` (the surface axes first, then open/dismissable)
+attributes:               # attributes-as-API — mirrors modal.ts `static props` (the surface axes first, then open/persistent)
   - name: elevation
     type: enum
     values: [0, 1, 2, 3, -1, -2, -3]   # the scheme-INVERTING surface plane (ADR-0015 cl.1); 0 = the neutral base. `0` LEADS so an out-of-range attr snaps to neutral
@@ -24,16 +24,16 @@ attributes:               # attributes-as-API — mirrors modal.ts `static props
     type: boolean
     default: false
     reflect: true         # reflects + BINDABLE — the catalog declares value:{prop:'open',event:'toggle'} so the renderer two-way-binds it (ADR-0019); drives showModal()/close()
-  - name: dismissable
+  - name: persistent
     type: boolean
-    default: true         # default ON — Escape (the `cancel` event) + a backdrop click dismiss the modal; set false to make it non-dismissable (the agent owns the close)
-    reflect: true         # reflects so a JS-set value stays inspectable/serializable
+    default: false        # default OFF — Escape (the `cancel` event) + a backdrop click dismiss the modal; set `persistent` (presence) to BLOCK user dismissal (the agent owns the close)
+    reflect: true         # reflects so the declared/JS-set value stays inspectable/serializable
 
 properties:               # IDL beyond attributes-as-API — the reflected props read/write as element properties
   - name: open
     description: Whether the modal is shown (boolean). Setting it true calls the dialog's showModal() (top layer + ::backdrop + focus trap + Escape); false calls close(). Reflected + bindable (the two-way `open`, ADR-0019).
-  - name: dismissable
-    description: Whether user dismissal (Escape + backdrop click) is allowed (boolean, default true). When false the dialog's cancel event is preventDefault-ed and a backdrop click is ignored — the agent closes it by setting open=false.
+  - name: persistent
+    description: Whether the modal BLOCKS user dismissal (boolean, default false). When present/true the dialog's cancel event (Escape) is preventDefault-ed and a backdrop click is ignored — the agent owns the close (set open=false). Absent ⇒ the user can dismiss it (Escape + backdrop click).
 
 events:
   - name: close
@@ -62,7 +62,7 @@ aria:
 
 keyboard:
   - keys: Escape
-    action: Dismisses the modal when `dismissable` (the platform `cancel`/`close` events → open=false + close/toggle + focus restore). When `dismissable` is false the cancel is preventDefault-ed and Escape does nothing.
+    action: Dismisses the modal when NOT `persistent` (the platform `cancel`/`close` events → open=false + close/toggle + focus restore). When `persistent` the cancel is preventDefault-ed and Escape does nothing.
   - keys: Tab / Shift+Tab
     action: Focus is TRAPPED within the dialog by the platform's showModal() (the modal top layer is inert to the page behind it). Focus is RESTORED to the opener on close (the one platform gap the control owns — ADR-0017 cl.4).
 
@@ -95,7 +95,7 @@ the `open`↔platform **sync**.
   </ui-row>
 </ui-modal>
 
-<ui-modal dismissable="false" elevation="2"><!-- a blocking, non-dismissable modal --></ui-modal>
+<ui-modal persistent elevation="2"><!-- a blocking, non-dismissable modal --></ui-modal>
 ```
 
 ## The dialog part
@@ -117,10 +117,11 @@ writes back into the data model (`value: { prop: 'open', event: 'toggle' }`, ADR
 
 ## Dismissal
 
-`dismissable` (default **on**) gates user dismissal. When it is **false**, the dialog's `cancel` event (Escape /
-the platform light-dismiss request) is `preventDefault`-ed and a backdrop click is ignored — the agent owns the
-close (set `open = false`). A backdrop click is detected rect-wise: a click whose target is the dialog box but
-lands **outside** its content rect is the `::backdrop`.
+`persistent` (default **off**) gates user dismissal. By default the user can dismiss a modal with Escape or a
+backdrop click; set **`persistent`** (`<ui-modal persistent>`) and the dialog's `cancel` event (Escape / the
+platform light-dismiss request) is `preventDefault`-ed and a backdrop click is ignored — the agent owns the close
+(set `open = false`). A backdrop click is detected rect-wise: a click whose target is the dialog box but lands
+**outside** its content rect is the `::backdrop`.
 
 ## Focus
 

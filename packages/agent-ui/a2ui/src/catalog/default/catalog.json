@@ -110,7 +110,7 @@
         "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
         "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" },
         "open": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "open" },
-        "dismissable": { "type": { "type": "boolean" }, "mapsTo": "dismissable" }
+        "persistent": { "type": { "type": "boolean" }, "mapsTo": "persistent" }
       },
       "value": { "prop": "open", "event": "toggle" },
       "children": "ChildList"

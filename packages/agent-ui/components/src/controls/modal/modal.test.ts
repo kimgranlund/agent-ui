@@ -9,7 +9,7 @@ import { UIModalElement } from './modal.ts'
 // stub) with a minimal mirror of the platform contract — `open` getter/setter, `showModal()` → open, `close()`
 // → close + a `close` event — and drive the platform `close`/`cancel` events DIRECTLY. The REAL top-layer /
 // focus-trap / Escape / backdrop behaviour is the cross-engine modal.browser.test.ts; these pin the control's
-// own logic: the open↔platform sync, the close-event state sync + emit, the dismissable cancel gate, and focus
+// own logic: the open↔platform sync, the close-event state sync + emit, the persistent cancel gate, and focus
 // restore. The dialog PART is a queryable light-DOM child.
 
 // ── the native-dialog stub (jsdom lacks the whole modal surface) ──────────────────────────────────────────
@@ -80,16 +80,16 @@ function fireCancel(dialog: HTMLDialogElement): Event {
 // ── upgrade + the typed prop surface ──────────────────────────────────────────
 
 describe('ui-modal — upgrade + typed prop surface', () => {
-  it('upgrades to the class with the surface axes + open/dismissable at their defaults', () => {
+  it('upgrades to the class with the surface axes + open/persistent at their defaults', () => {
     const el = document.createElement('ui-modal') as UIModalElement
     expect(el).toBeInstanceOf(UIModalElement)
     expect(el.elevation).toBe('0')
     expect(el.brightness).toBe('0')
     expect(el.open).toBe(false)
-    expect(el.dismissable).toBe(true) // default ON
+    expect(el.persistent).toBe(false) // default OFF
   })
 
-  it('typed: elevation is the signed literal union + open/dismissable are boolean (compile-time negative control)', () => {
+  it('typed: elevation is the signed literal union + open/persistent are boolean (compile-time negative control)', () => {
     const fn = (): void => {
       const el = new UIModalElement()
       el.elevation = '0'
@@ -242,19 +242,19 @@ describe('ui-modal — platform close syncs open=false and emits close + toggle'
   })
 })
 
-// ── dismissable gates the cancel (Escape) dismissal (modal-escape) ─────────────
+// ── persistent gates the cancel (Escape) dismissal (modal-escape) ──────────────
 
-describe('ui-modal — dismissable gates the cancel (Escape) dismissal', () => {
-  it('dismissable (default) lets the cancel through; dismissable=false preventDefaults it', async () => {
+describe('ui-modal — persistent gates the cancel (Escape) dismissal', () => {
+  it('default (not persistent) lets the cancel through; persistent=true preventDefaults it', async () => {
     const { el, dialog } = makeModal()
     el.open = true
     await whenFlushed()
 
-    // default dismissable → the platform cancel is NOT blocked (Escape would close)
+    // default (not persistent) → the platform cancel is NOT blocked (Escape would close)
     expect(fireCancel(dialog).defaultPrevented).toBe(false)
 
-    // dismissable=false → the control blocks the cancel (the dialog stays open; no close follows)
-    el.dismissable = false
+    // persistent=true → the control blocks the cancel (the dialog stays open; no close follows)
+    el.persistent = true
     await whenFlushed()
     expect(fireCancel(dialog).defaultPrevented).toBe(true)
     el.remove()

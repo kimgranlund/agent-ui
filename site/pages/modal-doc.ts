@@ -1,5 +1,5 @@
 // site/pages/modal-doc.ts — the ui-modal API doc page (T4). DERIVED from `modal.md` via the shared doc-page.ts
-// renderer (the attribute table is surfaceProps + open/dismissable). One representative LIVE specimen mounts the
+// renderer (the attribute table is surfaceProps + open/persistent). One representative LIVE specimen mounts the
 // real native-<dialog> modal behind a trigger button. The rich interaction (open/close + focus restore + the
 // close/toggle log) is the Modal demo.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
