@@ -1,6 +1,52 @@
-# Container family — design notes (PARKED / UNRATIFIED)
+# Container family — design notes
 
-> **Status: parked exploration, not a committed design.** Captured 2026-06-28 from three background
+> **Status: design decisions RATIFIED via a planning session (2026-06-28); handed to planning-lead for
+> the PRD → coverage-clean decomp → ADRs (the gate before any build).** See "Ratified design" immediately
+> below — it supersedes the parked card-centric exploration further down (which is kept as supporting
+> detail; some of it, e.g. the JS nested-radius controller, was NOT chosen).
+
+## Ratified design (planning session, 2026-06-28)
+
+**This milestone = "A2UI's layout primitives land"** — the catalog's reserved `Row/Column/Card/Tabs/Modal`
+(a2ui-catalog.spec §5.2, currently `experimental`) go to shipped, bound **directly** to new `ui-*` controls
+(SPEC-R8, no adapter), with the `ChildList` child model.
+
+**Outside-in (Structural):**
+- **Scope:** the full A2UI container set — `ui-row`, `ui-column`, `ui-card` (+ `ui-card-header/-content/-footer`),
+  `ui-list`, `ui-grid`, `ui-tabs` (+ `ui-tab`/`ui-tab-panel`), `ui-modal` (~12 elements).
+- **Driver:** A2UI-catalog-first; regions are **sub-elements** composed as `ChildList` children (component-native).
+- **Build:** **all-at-once parallel fan-out** (one large agent-team wave, file-disjoint slices).
+- **A2UI binding:** **renderer LLD-C8 (two-way binding) is pulled into this milestone** — Tabs `selected` /
+  Modal `open` bind in the catalog (and it back-fills the deferred text-field two-way input).
+
+**Inside-out (Mechanism):**
+- **Layout:** A2UI-faithful flexbox (Row/Column with alignment / distribution / gap / wrap); **container-query
+  intrinsic responsiveness** (primitives reflow on their OWN container width — no breakpoint props).
+- **Surface:** elevation (**tint-only**) + brightness, **7 steps each**, **reusing the EXISTING
+  `--c-neutral-surface-*` ladders** (already in `tokens.css`: `-lowest…-low / -high…-highest` = the
+  scheme-INVERTING elevation axis; `-dimmest…-dim / -bright…-brightest` = the scheme-consistent brightness
+  axis). Container repoints `--ui-container-bg` to the role per `[elevation=n]`/`[brightness=n]`. **No new
+  surface tokens** — the open detail is only how the two axes COMPOSE when both set (tokens-specialist call).
+  Signed `n ∈ [-3..3]` literal-union reflected props.
+- **Radius:** CSS **one-level** only (a parent publishes `--ui-card-child-radius`; manual past one level — the
+  JS controller was REJECTED). Wants the shared `--ui-radius-base` token (also #71).
+- **Spacing:** a dedicated **`--ui-space`** token ladder (tokens-specialist), **density-responsive** (scales
+  with the `[density]` attribute, like the controls).
+- **Modal:** native **`<dialog>` `showModal()`** — top-layer / `::backdrop` / focus containment / Escape come
+  free (NOT a form widget, so it honours "no native form elements"; zero-dependency).
+- **Tabs/Modal a11y (full widget contract):** Tabs = roving-tabindex arrow-key nav + `tablist/tab/tabpanel`
+  ARIA + bindable `selected`; Modal = focus trap + restore + Escape + dialog ARIA + bindable `open`.
+
+**ADRs this needs** (planning-lead to author): the surface/space token model + the two-axis composition rule ·
+the A2UI-faithful flex layout system + container-query responsiveness · native-`<dialog>` Modal · CSS-one-level
+radius · pulling renderer LLD-C8 (two-way binding) into scope. Where it sits in `goals.md`: a new milestone
+(provisionally **G9 — containers/layout**), after the form family.
+
+---
+
+# Appendix — the original card-centric exploration (UNRATIFIED; superseded above)
+
+> Captured 2026-06-28 from three background
 > fork outputs during the G3/text-field build. A container/card family is **unplanned** — it is not in
 > `docs/goals.md` (G0–G8 cover only the FACE form-control family). Before any build, this must go through
 > the normal intake: **planning-lead → `decomposing-systems` (coverage-clean) → an ADR for the
