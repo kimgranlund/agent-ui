@@ -1,0 +1,142 @@
+/* container.css — the SHARED `UIContainerElement` surface seam (ADR-0015) + the container-query seam
+ * (ADR-0016 cl.4). The one stylesheet every container/layout `ui-*` element sits on; it is `@import`-ed
+ * FIRST (before any element sheet) by component-styles.css (wired in decomp s12). It owns NO per-element
+ * layout (display/flex/grid is each element's own `@scope` block) — only the cross-family surface + the
+ * query-container establishment.
+ *
+ * Role-purity (ADR-0008 / tokens.md): the CONSUMPTION (the two `background-*` declarations) reads ONLY the
+ * `--ui-container-*` seam — never a raw `--c-*` role. The TOKEN repoints below (`--ui-container-bg:
+ * var(--c-neutral-surface-high)`) are where the colour roles enter, exactly as button.css's `:where()`
+ * token block does — the `--c-*` is confined to the variable-definition side, so a container holds zero
+ * colour opinion and forced-colors is handled in the role/system layer.
+ *
+ * Two surface axes (ADR-0015 cl.1–3), both signed `-3…3`, realized against the s1 token ladders:
+ *   • elevation → the scheme-INVERTING base PLANE: a SOLID `--c-neutral-surface-{lowest…highest}` step.
+ *   • brightness → the scheme-CONSISTENT tonal shift. Two realizations (s1's AA-verified split):
+ *       – SOLO (brightness set, elevation 0/unset): the SOLID `--c-neutral-surface-{dimmest…brightest}`
+ *         ladder is the base plane (no overlay) — ADR-0015 cl.1.
+ *       – COMPOSITION (elevation≠0 AND brightness≠0): the elevation plane is the base, and brightness becomes
+ *         a TRANSLUCENT wash (`--c-neutral-tint-{step}`) composited alpha-over it — ADR-0015 cl.3 — so the
+ *         `−m` wash sits over the `+n` plane and neither axis overwrites the other. (The tint roles exist
+ *         ONLY for this case; s1 budgets their 14% alpha ceiling against the brightest dark elevation plane.)
+ *   The single `--ui-container-bg`/`--ui-container-tint` consumption seam is fixed regardless (ADR-0015 cl.2);
+ *   the SOLO/COMPOSITION choice is just which token each axis-state repoints to (source order below is
+ *   load-bearing — elevation overrides the brightness base plane when both axes are set).
+ *
+ * Default (no axis set) = transparent: an UNSET container is unchanged (it passes its parent's surface
+ * through), so a bare layout primitive adds no plane. Container elements that want a default surface
+ * (card/modal/tabs) set `--ui-container-bg` in their OWN sheet (specificity wins over this `:where()`).
+ *
+ * Standalone sheet — linked via the component-styles barrel, NEVER injected from container.ts (behaviour
+ * `.ts` holds no runtime style; plan §2). */
+
+/* ════════════════ surface seam — the 7 surface-bearing container tags ════════════════ */
+
+:where(ui-row, ui-column, ui-list, ui-grid, ui-card, ui-tabs, ui-modal) {
+  /* The role-pure seam, default = transparent (an unset container is unchanged — ADR-0015 cl.1). */
+  --ui-container-bg: transparent; /* the base plane */
+  --ui-container-tint: transparent; /* the tonal wash (composition only); 0 ⇒ no-op */
+
+  /* elevation=0 — the explicit neutral base. Placed FIRST so an active axis (a brightness ladder step below,
+     or an elevation step) overrides it; an unset container stays transparent (this rule needs the attribute). */
+  &[elevation='0'] {
+    --ui-container-bg: var(--c-neutral-surface);
+  }
+
+  /* brightness SOLO → the SOLID scheme-consistent ladder as the base plane (ADR-0015 cl.1). When elevation is
+     ALSO set, the elevation block below overrides this base (source order) and brightness moves to the wash. */
+  &[brightness='-3'] {
+    --ui-container-bg: var(--c-neutral-surface-dimmest);
+  }
+  &[brightness='-2'] {
+    --ui-container-bg: var(--c-neutral-surface-dimmer);
+  }
+  &[brightness='-1'] {
+    --ui-container-bg: var(--c-neutral-surface-dim);
+  }
+  &[brightness='1'] {
+    --ui-container-bg: var(--c-neutral-surface-bright);
+  }
+  &[brightness='2'] {
+    --ui-container-bg: var(--c-neutral-surface-brighter);
+  }
+  &[brightness='3'] {
+    --ui-container-bg: var(--c-neutral-surface-brightest);
+  }
+
+  /* elevation → the SOLID scheme-inverting base plane (-3..3 → lowest…highest). After the brightness block,
+     so elevation WINS the base plane when both axes are set (equal specificity → later source wins). */
+  &[elevation='-3'] {
+    --ui-container-bg: var(--c-neutral-surface-lowest);
+  }
+  &[elevation='-2'] {
+    --ui-container-bg: var(--c-neutral-surface-lower);
+  }
+  &[elevation='-1'] {
+    --ui-container-bg: var(--c-neutral-surface-low);
+  }
+  &[elevation='1'] {
+    --ui-container-bg: var(--c-neutral-surface-high);
+  }
+  &[elevation='2'] {
+    --ui-container-bg: var(--c-neutral-surface-higher);
+  }
+  &[elevation='3'] {
+    --ui-container-bg: var(--c-neutral-surface-highest);
+  }
+
+  /* COMPOSITION tonal WASH — brightness as a translucent overlay, ONLY when elevation is non-zero (s1: the
+     tint roles are composition-only). Composites alpha-over the elevation plane set above → the `−m` wash over
+     the `+n` plane (ADR-0015 cl.3). The `:is(non-zero elevation)` gate keeps SOLO brightness on the solid
+     ladder; the two-attribute selector (0,2,0) outranks the base-plane repoints, but it only sets the tint. */
+  &:is([elevation='-3'], [elevation='-2'], [elevation='-1'], [elevation='1'], [elevation='2'], [elevation='3']) {
+    &[brightness='-3'] {
+      --ui-container-tint: var(--c-neutral-tint-dimmest);
+    }
+    &[brightness='-2'] {
+      --ui-container-tint: var(--c-neutral-tint-dimmer);
+    }
+    &[brightness='-1'] {
+      --ui-container-tint: var(--c-neutral-tint-dim);
+    }
+    &[brightness='1'] {
+      --ui-container-tint: var(--c-neutral-tint-bright);
+    }
+    &[brightness='2'] {
+      --ui-container-tint: var(--c-neutral-tint-brighter);
+    }
+    &[brightness='3'] {
+      --ui-container-tint: var(--c-neutral-tint-brightest);
+    }
+  }
+
+  /* The CONSUMPTION — role-pure, reads ONLY the `--ui-container-*` seam. The base plane is the solid
+     `background-color`; the tonal wash is a flat same-colour `background-image` gradient stacked ABOVE it, so
+     the two axes composite (ADR-0015 cl.3). `:where()` keeps these at specificity 0 so an element's own
+     `@scope` surface (card/tabs/modal) cleanly overrides. */
+  background-color: var(--ui-container-bg);
+  background-image: linear-gradient(var(--ui-container-tint), var(--ui-container-tint));
+}
+
+/* ════════════════ container-query seam — the layout primitives (ADR-0016 cl.4) ════════════════ */
+
+/* `container-type: inline-size` establishes each layout primitive as a QUERY CONTAINER, so it reflows on its
+   OWN rendered width via the `@container` rules in each element's `@scope` block (no breakpoint props — the
+   primitive is intrinsically responsive). Scoped to the four layout primitives (per ADR-0016 cl.4 "each
+   layout primitive establishes a query container"); card/tabs/modal opt in via their own sheet if needed. */
+:where(ui-row, ui-column, ui-list, ui-grid) {
+  container-type: inline-size;
+}
+
+/* ════════════════ forced-colors (WHCM) ════════════════ */
+
+/* Keep the surface a system colour and drop the tonal wash. The colour ROLES already carry the WHCM mapping
+   in the token layer (tokens.md / s1 — the tint roles map to transparent under forced-colors), so this is
+   mostly belt-and-braces: it guarantees a container's surface survives as `Canvas` and the wash never paints
+   over system text. */
+@media (forced-colors: active) {
+  :where(ui-row, ui-column, ui-list, ui-grid, ui-card, ui-tabs, ui-modal) {
+    background-color: Canvas;
+    background-image: none;
+  }
+}

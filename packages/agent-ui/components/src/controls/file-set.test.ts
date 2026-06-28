@@ -11,7 +11,11 @@ declare const process: { cwd(): string }
 // inside a control folder, so it is not a control and is not scanned.
 
 const CONTROLS = `${process.cwd()}/packages/agent-ui/components/src/controls`
-const controlDirs: string[] = readdirSync(CONTROLS).filter((e: string) => statSync(`${CONTROLS}/${e}`).isDirectory())
+// Leading-underscore folders (e.g. `_surface/`, the shared container surface CSS the G9 containers extend) are
+// SHARED assets, not controls — they hold no `{name}.{ts,css,md}` triple, so they are excluded from the scan.
+const controlDirs: string[] = readdirSync(CONTROLS).filter(
+  (e: string) => !e.startsWith('_') && statSync(`${CONTROLS}/${e}`).isDirectory(),
+)
 
 describe('controls/ file-set gate (s17)', () => {
   it('finds at least one control folder to check (anti-vacuous)', () => {
