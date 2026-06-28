@@ -15,11 +15,45 @@ control height. `padding-block` is `0` — **block-size is the vertical lever, n
 
 Every derived quantity scales with one of two things:
 
-- **Frame — ∝ height** (the box): icon, slot, inline-pad, `min-inline-size`, pill radius.
+- **Frame — ∝ height** (the box): icon, slot, inline-pad; **corner radius** and **`min-inline-size`**
+  split by control class (see *[Frame quantities that split by control class](#frame-quantities-that-split-by-control-class)*).
 - **Rhythm — ∝ font** (text-adjacent marks & spacing): `gap = font / 2`, `caret = font`.
 
 Density multiplies the **rhythm only** (the gap), never the frame — scaling the frame un-centers the
 glyph and breaks the square.
+
+## Frame quantities that split by control class
+
+Two frame quantities are **not** uniformly `∝ height` — they split by what the control *is*: an
+**action / keyboard control** (the button family — a press affordance) vs. an **entry / surface control**
+(`ui-text-field` and the field family — a typing surface, kin to a container).
+
+### Corner radius
+
+- **Action** → **pill `= h/2`** (the frame-∝-height stadium; the press affordance). Scales with height.
+- **Entry** → a **fixed `--ui-radius-base`** rounded-rect — the **same** fleet referent the container family
+  (card / modal) uses, because a field is an entry *surface* kin to a container, not an action affordance. Fixed
+  (a `:root` constant — ADR-0015 cl.5; **not** `[scale]`-derived), so a field corner does not balloon at large
+  scale; the browser clamps `border-radius` to `≤ h/2` automatically, so a very dense / short field degrades
+  gracefully to the pill, never overflows.
+
+One fleet radius (`--ui-radius-base`) therefore serves both **containers** and **entry controls**; only the
+**action**-control class keeps the scaled pill. (ADR-0015 cl.5 + its `ui-text-field` #71 amendment.)
+
+### Minimum inline size (the bare-control floor)
+
+`min-inline-size` is the floor that keeps a control from collapsing to a 0-width, unhittable sliver when it is
+**bare and unsized** (no content, no layout track sizing it). It splits the same way — calibrated to what a
+sensible *minimum* is for the control class:
+
+- **Action** → **`min-inline-size = height`** (an icon-only button is ≥ a square tap target; `button.css`).
+- **Entry** → a **typing-width floor** (`--ui-text-field-min-inline-size`, default ~`20ch` — native
+  `<input size>` parity), so a bare `ui-text-field` reads as a usable, hittable field, not a square or a
+  collapsed sliver. The square floor that fits an icon-only action control is wrong for a typing surface; an
+  entry control's minimum is measured in **characters**. Above the floor, width stays the **layout's / author's**
+  job — a flex/grid track or an explicit `inline-size` grows it; the token is the per-field / theme override.
+  (The editor cell keeps `min-inline-size: 0` so long text scrolls within the field rather than widening it —
+  complementary to the host floor, ADR-0021.)
 
 ## The slot model (no authored trailing-pad)
 

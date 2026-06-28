@@ -113,3 +113,51 @@ token. Five clauses, each a buildable acceptance (decomp slices `s1` tokens / `s
 - **`--ui-space` on `:root` (not the `*` ramp)** — rejected: a subtree `[density]` must re-multiply layout spacing
   the same way it re-multiplies the gap (ADR-0007's exact lesson — a `:root` constant freezes density at 1 for
   subtrees). Layout spacing is density-responsive, so it joins the `*` ramp.
+
+## Amendment — `ui-text-field` adopts `--ui-radius-base` (2026-06-28, the foreseen #71 radius branch resolves)
+
+Clause 5 booked, when it added the shared `--ui-radius-base`, that it is the radius "the `ui-text-field` radius
+follow-up (**#71**) also adopts — one fleet radius serving both controls and containers." Task #71 resolved
+**yes**: `ui-text-field` replaces its pill frame radius (`calc(--ui-text-field-height / 2)`, the `h/2` stadium it
+shipped with at G6 because no fleet radius token yet existed) with the **fixed `--ui-radius-base` rounded-rect**.
+The decision of clause 5 does not change — `--ui-radius-base` is the one fleet radius; this is the anticipated
+second consumer arriving. (The task's other branch — "engage tokens-specialist to add a `--ui-radius-base` token"
+— is now **moot**: the token already shipped at `s1`, value `12px`.)
+
+The principle the adoption articulates — recorded normatively in `geometry.md` ("Corner radius"):
+
+- **Action / keyboard controls** (the button family) keep the **pill `= h/2`** (frame-∝-height, the press
+  affordance). Unchanged.
+- **Entry / surface controls** (`ui-text-field`, the field family) take the **fixed `--ui-radius-base`** — the
+  **same** referent the container family (card/modal) uses, because a field is an entry *surface* kin to a
+  container, not an action affordance. A fixed corner (the `:root` constant of clause 5, **not** `[scale]`-derived)
+  reads as a typing surface and visually unifies fields with the surfaces they sit on. The browser clamps
+  `border-radius` to `≤ h/2` automatically, so a very dense/short field degrades gracefully to the pill — never
+  overflows.
+
+This is the **field-radius pattern** the next entry control reuses (a future number-field / select-field /
+textarea takes `--ui-radius-base`, not `h/2`). It is token-/CSS-layer only — no new token, no JS, no behaviour
+change. `references/geometry.md` records the law; ADR-0014 (the `ui-text-field` control) is the consumer whose
+frame radius changes.
+
+### Build brief — for execution-lead (no re-decision)
+
+No new shared token (`--ui-radius-base` exists, `12px`, `dimensions.css`); **no `tokens-specialist`**; **no test
+churn** (verified — the text-field geometry probes pin the inline-**padding** `h/2` / `½(h−icon)`, which is
+**unchanged**; nothing asserts `border-radius`). Two files, role-purity preserved:
+
+1. **`controls/text-field/text-field.css`** —
+   - In the **`:where(ui-text-field)` TOKEN block** (where the fleet dimension tokens are already consumed, e.g.
+     `--ui-text-field-height: var(--ui-height-md)`), add the component alias next to the `bg`/`ink`/`border`
+     tokens (it is size-**invariant**, so it goes in the base block **once**, not in the per-size `[scale]` blocks):
+     `--ui-text-field-radius: var(--ui-radius-base);`
+   - In the **`@scope (ui-text-field)` `:scope` rule** (currently `border-radius: calc(var(--ui-text-field-height)
+     / 2)`), consume the **component token** (role-purity — `@scope` reads only `--ui-text-field-*`):
+     `border-radius: var(--ui-text-field-radius);`
+   - Reword the frame comment (the "frame-family pill (= h/2)" note) to: a fixed `--ui-radius-base` rounded-rect —
+     the container fleet referent, overridable per-field via `--ui-text-field-radius` (ADR-0015 cl.5 / this
+     amendment). Gate: `npm run check && npm test` (+ the existing css-hygiene/geometry probes stay green —
+     padding is untouched; the `:where()` read of `--ui-radius-base` parallels the existing `--ui-height-*` read).
+2. **`controls/text-field/text-field.md`** — in the `geometry:` frontmatter block, add a `radius:` line:
+   `radius: var(--ui-radius-base) (fixed rounded-rect — the container-fleet referent, NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5 #71 amendment)`. No pill claim exists elsewhere in the
+   descriptor to unwind (the `inlinePad` line is padding, not radius — leave it).
