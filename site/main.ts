@@ -5,8 +5,9 @@
 // FIRST and never repeats those imports.
 import { mountPage } from './pages/_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './pages/landing.css' // landing-local layout (hero + card grid), after the shared shell
+import { applyDemoWidth, searchIcon } from './lib/specimens.ts'
 
-const SVG_NS = 'http://www.w3.org/2000/svg'
+const SVG_NS = 'http://www.w3.org/2000/svg' // the button-hero arrow glyph builds its own SVG; the field uses searchIcon
 
 const { content } = mountPage({
   title: 'agent-ui',
@@ -16,8 +17,8 @@ const { content } = mountPage({
     'controls from a tiny agent-driven payload. Explore the pieces below.',
 })
 
-// Page-supplied display width for the text-field hero specimen — the control has no intrinsic width yet (#74),
-// so the landing sizes it (layout context, not a restyle of the control's own appearance).
+// The display width passed to applyDemoWidth for the text-field hero (the #74 no-intrinsic-width rationale
+// lives in that helper).
 const FIELD_HERO_WIDTH = '18rem'
 
 // ── hero — live ui-button specimens (the headline artefact) ──────────────────────────────────────────────
@@ -56,35 +57,14 @@ function makeButton(spec: Specimen): HTMLElement {
   return button
 }
 
-// A live ui-text-field hero specimen — a real field with a leading search icon (canonical slot=leading +
-// data-role=icon) and a placeholder. Given a display width by the page (the control has no intrinsic width, #74).
+// A live ui-text-field hero specimen — a real field with a leading search icon (the shared canonical glyph) and
+// a placeholder. applyDemoWidth supplies the display width (the #74 no-intrinsic-width rationale lives there).
 function makeFieldSpecimen(): HTMLElement {
   const field = document.createElement('ui-text-field')
   field.setAttribute('label', 'Search')
   field.setAttribute('placeholder', 'Type to search…')
-
-  const icon = document.createElementNS(SVG_NS, 'svg')
-  icon.setAttribute('slot', 'leading') // POSITION — the start cell
-  icon.setAttribute('data-role', 'icon') // CONTENT role — sized to the icon cell by text-field.css
-  icon.setAttribute('aria-hidden', 'true')
-  icon.setAttribute('viewBox', '0 0 24 24')
-  const circle = document.createElementNS(SVG_NS, 'circle')
-  circle.setAttribute('cx', '11')
-  circle.setAttribute('cy', '11')
-  circle.setAttribute('r', '7')
-  circle.setAttribute('fill', 'none')
-  circle.setAttribute('stroke', 'currentColor')
-  circle.setAttribute('stroke-width', '2')
-  const handle = document.createElementNS(SVG_NS, 'path')
-  handle.setAttribute('d', 'M21 21l-4.3-4.3')
-  handle.setAttribute('fill', 'none')
-  handle.setAttribute('stroke', 'currentColor')
-  handle.setAttribute('stroke-width', '2')
-  handle.setAttribute('stroke-linecap', 'round')
-  icon.append(circle, handle)
-
-  field.append(icon)
-  field.style.inlineSize = FIELD_HERO_WIDTH // layout context only (see note above)
+  field.append(searchIcon('leading'))
+  applyDemoWidth(field, FIELD_HERO_WIDTH)
   return field
 }
 

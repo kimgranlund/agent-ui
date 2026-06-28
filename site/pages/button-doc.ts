@@ -19,8 +19,9 @@ const { descriptor, body } = loadButtonDoc()
 
 const { content } = mountPage({
   title: 'ui-button — API',
-  intro: 'The reference FACE control. This page is generated from button.md: the API table and the live ' +
-    'specimens are derived from the same frontmatter the contract trip-wire validates, so they cannot drift.',
+  intro: 'The reference FACE control. This page is generated from button.md: the API table and the variant/size ' +
+    'specimens are derived from the same frontmatter the contract trip-wire validates, so they cannot drift; the ' +
+    'States examples and the anatomy shapes are hand-authored.',
 })
 
 content.append(renderApiTable(descriptor.attributes), renderExamples(descriptor), renderAnatomy(), renderMarkdownBody(body))

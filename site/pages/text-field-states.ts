@@ -14,9 +14,9 @@
 // inline-size on the host) — layout context, not a restyle.
 import { mountPage } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls
 import './states.css' // SHARED page scaffold (sections, captions, the activity log) — not state styling
+import { applyDemoWidth, searchIcon } from '../lib/specimens.ts'
 
-const SVG_NS = 'http://www.w3.org/2000/svg'
-const SPECIMEN_WIDTH = '16rem' // page-supplied display width (layout context) — text-field has no intrinsic width (#74)
+const SPECIMEN_WIDTH = '16rem' // the display width passed to applyDemoWidth (the #74 rationale lives there)
 
 const { content } = mountPage({
   title: 'ui-text-field — interaction states',
@@ -49,32 +49,9 @@ function makeField(spec: FieldSpec): HTMLElement {
   if (spec.required) el.setAttribute('required', '')
   if (spec.readonly) el.setAttribute('readonly', '')
   if (spec.disabled) el.setAttribute('disabled', '')
-  if (spec.leading) el.append(makeIcon('leading'))
-  el.style.inlineSize = SPECIMEN_WIDTH // layout context only (see header note)
+  if (spec.leading) el.append(searchIcon('leading'))
+  applyDemoWidth(el, SPECIMEN_WIDTH)
   return el
-}
-
-function makeIcon(slot: 'leading' | 'trailing'): SVGElement {
-  const svg = document.createElementNS(SVG_NS, 'svg')
-  svg.setAttribute('slot', slot) // POSITION (start/end cell)
-  svg.setAttribute('data-role', 'icon') // CONTENT role — sized to the icon cell by text-field.css
-  svg.setAttribute('aria-hidden', 'true')
-  svg.setAttribute('viewBox', '0 0 24 24')
-  const circle = document.createElementNS(SVG_NS, 'circle')
-  circle.setAttribute('cx', '11')
-  circle.setAttribute('cy', '11')
-  circle.setAttribute('r', '7')
-  circle.setAttribute('fill', 'none')
-  circle.setAttribute('stroke', 'currentColor')
-  circle.setAttribute('stroke-width', '2')
-  const path = document.createElementNS(SVG_NS, 'path')
-  path.setAttribute('d', 'M21 21l-4.3-4.3')
-  path.setAttribute('fill', 'none')
-  path.setAttribute('stroke', 'currentColor')
-  path.setAttribute('stroke-width', '2')
-  path.setAttribute('stroke-linecap', 'round')
-  svg.append(circle, path)
-  return svg
 }
 
 function makeSection(title: string, instructionHtml: string): HTMLElement {
@@ -116,7 +93,7 @@ function attachLog(field: HTMLElement, label: string): void {
     eventCount += 1
     const value = (field as HTMLElement & { value: string }).value
     const line = document.createElement('li')
-    line.dataset.source = kind === 'change' ? 'keyboard' : 'pointer' // reuse the log's two-tone styling
+    line.dataset.kind = kind // the honest event kind (input|change); states.css tints `change` lines
     line.textContent = `#${String(eventCount).padStart(2, '0')}  ${label.padEnd(16)}${kind.padEnd(8)}value=${JSON.stringify(value)}`
     log.append(line)
     log.scrollTop = log.scrollHeight

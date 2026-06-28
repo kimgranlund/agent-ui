@@ -6,7 +6,7 @@ import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-d
 import './containers.css' // shared demo-content chrome; never restyles a ui-* control
 import { loadCardDoc } from '../lib/frontmatter.ts'
 import { composeDocPage } from '../lib/doc-page.ts'
-import { el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { applyDemoWidth, el, exampleSection, uiButton } from '../lib/specimens.ts'
 
 const { descriptor, body } = loadCardDoc()
 
@@ -20,12 +20,12 @@ const { content } = mountPage({
 const text = (s: string): Text => document.createTextNode(s)
 
 // A representative composed card: header (title) · content (body) · footer (an action). The regions are real
-// ui-card-* sub-elements; the card is given a display width so the grid reads.
+// ui-card-* sub-elements; applyDemoWidth gives it a display width so the grid reads.
 const card = el('ui-card', {}, [
   el('ui-card-header', {}, [text('Account')]),
   el('ui-card-content', {}, [text('A card composes three region sub-elements as a presence-driven grid.')]),
   el('ui-card-footer', {}, [uiButton('Save', 'solid')]),
 ])
-card.style.inlineSize = '22rem'
+applyDemoWidth(card, '22rem')
 
 composeDocPage(content, descriptor, body, exampleSection('Example', card))

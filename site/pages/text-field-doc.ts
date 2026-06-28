@@ -9,21 +9,18 @@
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import { loadTextFieldDoc } from '../lib/frontmatter.ts'
 import { findAttr, heading, renderApiTable, renderMarkdownBody, specimenRow } from '../lib/doc-page.ts'
+import { applyDemoWidth, searchIcon } from '../lib/specimens.ts'
 import type { ParsedDescriptor } from '@agent-ui/components/descriptor'
 
-const SVG_NS = 'http://www.w3.org/2000/svg'
-
-// ui-text-field has no intrinsic width yet (the editor cell is 1fr / min-inline-size:0 — a known control gap,
-// follow-up #74), so a doc specimen must be given a display width by the PAGE. This is layout context (an
-// inline-size on the host), not a restyle of the control's appearance/state — those remain text-field.css's.
-const SPECIMEN_WIDTH = '16rem'
+const SPECIMEN_WIDTH = '16rem' // the page-supplied display width (the #74 rationale lives in applyDemoWidth)
 
 const { descriptor, body } = loadTextFieldDoc()
 
 const { content } = mountPage({
   title: 'ui-text-field — API',
   intro: 'The first FACE form-associated control. This page is generated from text-field.md: the API table and ' +
-    'the live specimens are derived from the same frontmatter the contract trip-wire validates, so they cannot drift.',
+    'the size specimens are derived from the same frontmatter the contract trip-wire validates, so they cannot ' +
+    'drift; the States examples and the anatomy shapes are hand-authored.',
 })
 
 content.append(renderApiTable(descriptor.attributes), renderExamples(descriptor), renderAnatomy(), renderMarkdownBody(body))
@@ -59,11 +56,11 @@ function renderExamples(d: ParsedDescriptor): HTMLElement {
 }
 
 // field — a live specimen: a real <ui-text-field> with the given attributes set. The label becomes the editor's
-// aria-label (the labelling seam); the SPECIMEN_WIDTH is the page-supplied display width (see note above).
+// aria-label (the labelling seam); applyDemoWidth supplies the display width (the #74 rationale lives there).
 function field(attrs: Record<string, string>): HTMLElement {
   const el = document.createElement('ui-text-field')
   for (const [name, value] of Object.entries(attrs)) el.setAttribute(name, value)
-  el.style.inlineSize = SPECIMEN_WIDTH // layout context only — text-field has no intrinsic width yet (#74)
+  applyDemoWidth(el, SPECIMEN_WIDTH)
   return el
 }
 
@@ -103,39 +100,13 @@ function anatomySpecimen(shape: AnatomyShape): HTMLElement {
   const el = document.createElement('ui-text-field')
   el.setAttribute('label', shape.caption)
   el.setAttribute('placeholder', 'Search…')
-  el.style.inlineSize = SPECIMEN_WIDTH
-  if (shape.leading) el.append(makeIcon('leading'))
-  if (shape.trailing) el.append(makeIcon('trailing'))
+  applyDemoWidth(el, SPECIMEN_WIDTH)
+  if (shape.leading) el.append(searchIcon('leading'))
+  if (shape.trailing) el.append(searchIcon('trailing'))
   const caption = document.createElement('figcaption')
   const code = document.createElement('code')
   code.textContent = shape.caption
   caption.append(code)
   figure.append(el, caption)
   return figure
-}
-
-// makeIcon — a decorative search glyph for the given POSITION (slot=leading|trailing). data-role="icon" is the
-// CONTENT role (the canonical role text-field.css sizes to the icon cell); `currentColor` inherits the field
-// ink; `aria-hidden` keeps the editor's aria-label as the accessible name (a decorative glyph names nothing).
-function makeIcon(slot: 'leading' | 'trailing'): SVGElement {
-  const svg = document.createElementNS(SVG_NS, 'svg')
-  svg.setAttribute('slot', slot) // POSITION (start/end cell)
-  svg.setAttribute('data-role', 'icon') // CONTENT role — sized to the icon cell by text-field.css
-  svg.setAttribute('aria-hidden', 'true')
-  svg.setAttribute('viewBox', '0 0 24 24')
-  const circle = document.createElementNS(SVG_NS, 'circle')
-  circle.setAttribute('cx', '11')
-  circle.setAttribute('cy', '11')
-  circle.setAttribute('r', '7')
-  circle.setAttribute('fill', 'none')
-  circle.setAttribute('stroke', 'currentColor')
-  circle.setAttribute('stroke-width', '2')
-  const path = document.createElementNS(SVG_NS, 'path')
-  path.setAttribute('d', 'M21 21l-4.3-4.3') // the search handle
-  path.setAttribute('fill', 'none')
-  path.setAttribute('stroke', 'currentColor')
-  path.setAttribute('stroke-width', '2')
-  path.setAttribute('stroke-linecap', 'round')
-  svg.append(circle, path)
-  return svg
 }

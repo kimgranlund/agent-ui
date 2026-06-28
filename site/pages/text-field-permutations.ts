@@ -6,16 +6,15 @@
 // subtree-geometry demo (ADR-0007) — text-field's density-bearing quantity is the adornment↔editor gap, so the
 // [density] leg leads with a leading icon to make the gap delta visible.
 //
-// text-field has no intrinsic width yet (the editor cell is 1fr / min-inline-size:0 — a known control gap,
-// follow-up #74), so every specimen is given a display width by the PAGE (an inline-size on the host). That is
-// layout context, not a restyle — all geometry/colour/state appearance still comes from text-field.css.
+// Every specimen is given a page-supplied display width via applyDemoWidth (the #74 no-intrinsic-width rationale
+// lives there, once) — layout context, not a restyle; all geometry/colour/state appearance is text-field.css's.
 import { mountPage } from './_page.ts' // MUST be first — pulls the load-bearing foundation CSS + ui-* controls
 import './permutations.css' // SHARED page scaffold (matrix/geo chrome), reused by every {name}-permutations page; AFTER _page.ts
 import { loadTextFieldDoc } from '../lib/frontmatter.ts'
 import { findAttr } from '../lib/doc-page.ts'
+import { applyDemoWidth, searchIcon } from '../lib/specimens.ts'
 
-const SVG_NS = 'http://www.w3.org/2000/svg'
-const SPECIMEN_WIDTH = '14rem' // page-supplied display width (layout context) — text-field has no intrinsic width (#74)
+const SPECIMEN_WIDTH = '14rem' // the display width passed to applyDemoWidth
 
 const { descriptor } = loadTextFieldDoc()
 
@@ -42,31 +41,6 @@ const columns: readonly Column[] = [
   { label: 'disabled', value: 'Inert', disabled: true },
 ]
 
-// makeIcon — a decorative search glyph in the given POSITION (slot=leading|trailing); data-role="icon" is the
-// canonical CONTENT role text-field.css sizes to the icon cell. aria-hidden keeps the editor's accessible name.
-function makeIcon(slot: 'leading' | 'trailing'): SVGElement {
-  const svg = document.createElementNS(SVG_NS, 'svg')
-  svg.setAttribute('slot', slot) // POSITION (start/end cell)
-  svg.setAttribute('data-role', 'icon') // CONTENT role
-  svg.setAttribute('aria-hidden', 'true')
-  svg.setAttribute('viewBox', '0 0 24 24')
-  const circle = document.createElementNS(SVG_NS, 'circle')
-  circle.setAttribute('cx', '11')
-  circle.setAttribute('cy', '11')
-  circle.setAttribute('r', '7')
-  circle.setAttribute('fill', 'none')
-  circle.setAttribute('stroke', 'currentColor')
-  circle.setAttribute('stroke-width', '2')
-  const path = document.createElementNS(SVG_NS, 'path')
-  path.setAttribute('d', 'M21 21l-4.3-4.3')
-  path.setAttribute('fill', 'none')
-  path.setAttribute('stroke', 'currentColor')
-  path.setAttribute('stroke-width', '2')
-  path.setAttribute('stroke-linecap', 'round')
-  svg.append(circle, path)
-  return svg
-}
-
 // FieldSpec — the field-attribute recipe makeField builds a real control from (distinct from Column, whose
 // `label` is the matrix HEADER text, not a field attribute).
 interface FieldSpec {
@@ -89,9 +63,9 @@ function makeField(spec: FieldSpec): HTMLElement {
   if (spec.placeholder !== undefined) el.setAttribute('placeholder', spec.placeholder)
   if (spec.readonly) el.setAttribute('readonly', '')
   if (spec.disabled) el.setAttribute('disabled', '')
-  if (spec.leading) el.append(makeIcon('leading'))
-  if (spec.trailing) el.append(makeIcon('trailing'))
-  el.style.inlineSize = SPECIMEN_WIDTH // layout context only (see header note)
+  if (spec.leading) el.append(searchIcon('leading'))
+  if (spec.trailing) el.append(searchIcon('trailing'))
+  applyDemoWidth(el, SPECIMEN_WIDTH)
   return el
 }
 

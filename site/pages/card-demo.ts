@@ -7,7 +7,7 @@ import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-d
 import './containers.css' // shared demo-content chrome (.demo-grid / captions)
 import { loadCardDoc } from '../lib/frontmatter.ts'
 import { findAttr } from '../lib/doc-page.ts'
-import { captioned, el, exampleSection, uiButton } from '../lib/specimens.ts'
+import { applyDemoWidth, captioned, el, exampleSection, uiButton } from '../lib/specimens.ts'
 
 const { descriptor } = loadCardDoc()
 const elevations = findAttr(descriptor, 'elevation')?.values ?? [] // the parsed surface ladder
@@ -36,7 +36,7 @@ const composed = el('ui-card', {}, [
   el('ui-card-content', {}, [text('A card composes ui-card-header, ui-card-content, and ui-card-footer as a presence-driven grid — an absent region leaves no phantom row.')]),
   el('ui-card-footer', {}, [el('ui-row', { gap: 'sm', justify: 'end' }, [uiButton('Cancel', 'ghost'), uiButton('Save', 'solid')])]),
 ])
-composed.style.inlineSize = '24rem'
+applyDemoWidth(composed, '24rem')
 
 // ── [2] elevation range — the surface ladder (derived from the parsed enum) ─────────────────────────────────
 const surfaceGrid = document.createElement('div')
@@ -55,7 +55,7 @@ const nested = el('ui-card', { elevation: '1' }, [
     el('ui-card', { elevation: '2' }, [el('ui-card-content', {}, [text('Nested card — its radius shrinks with the parent padding.')])]),
   ]),
 ])
-nested.style.inlineSize = '24rem'
+applyDemoWidth(nested, '24rem')
 
 // ── [4] scrollable + scroll-fade — a constrained card whose content scrolls with an edge fade ───────────────
 const longText = 'Scrollable content. '.repeat(40)
@@ -63,7 +63,7 @@ const scrollCard = el('ui-card', {}, [
   el('ui-card-header', {}, [text('Scrollable')]),
   el('ui-card-content', { scrollable: '', 'scroll-fade': '' }, [text(longText)]),
 ])
-scrollCard.style.inlineSize = '24rem'
+applyDemoWidth(scrollCard, '24rem')
 scrollCard.style.maxBlockSize = '12rem' // constrain the card so `scrollable` bites (the body's 1fr can shrink)
 const scrollNote = document.createElement('p')
 scrollNote.textContent =
