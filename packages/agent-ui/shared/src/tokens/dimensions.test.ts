@@ -96,3 +96,49 @@ describe('dimensions.css — the motion timing constants (interaction-states sta
     expect(universalBlock).not.toMatch(/--ui-motion|--ui-ease/) // constants stay off the derived `*` ramp
   })
 })
+
+// tok-space (ADR-0015 cl.4) — the --ui-space LAYOUT-SPACING ladder. The container ledger, distinct from the
+// control-frame ramp: density rides it (it joins the derived `*` ramp so a subtree [density] re-multiplies),
+// but [scale] does NOT touch it (the base px is a literal — layout rhythm is not control-frame size). The
+// step VALUES are tokens-specialist's; this pins the contract (where it lives, what multiplier it carries).
+describe('dimensions.css — the --ui-space layout-spacing ladder (ADR-0015 cl.4)', () => {
+  const STEPS: Array<[string, number]> = [
+    ['xs', 4], ['sm', 8], ['md', 12], ['lg', 16], ['xl', 24], ['2xl', 32],
+  ]
+
+  it('declares each --ui-space step as calc(<px> * var(--ui-density)) on the `*` block (density-responsive)', () => {
+    expect(universalBlock.length).toBeGreaterThan(0) // anti-vacuous: the `*` block was isolated
+    expect(universalBlock).toMatch(/--ui-space-none:\s*0\s*;/) // the no-gap rung
+    for (const [name, px] of STEPS) {
+      const re = new RegExp(`--ui-space-${name}:\\s*calc\\(\\s*${px}px\\s*\\*\\s*var\\(--ui-density\\)\\s*\\)`)
+      expect(universalBlock).toMatch(re)
+    }
+  })
+
+  it('keeps --ui-space SCALE-invariant — the ladder carries --ui-density only, never --ui-scale (layout rhythm ≠ control frame)', () => {
+    // every --ui-space declaration references --ui-density, none references --ui-scale
+    const decls = universalBlock.match(/--ui-space-[\w-]+:[^;]*;/g) ?? []
+    expect(decls.length).toBeGreaterThanOrEqual(STEPS.length) // anti-vacuous
+    for (const d of decls) {
+      expect(d).not.toMatch(/--ui-scale/)
+    }
+    // and no [scale] selector touches --ui-space (it is rhythm, not frame)
+    const scaleBlocks = css.match(/\[scale="[^"]+"\]\s*\{[^}]*\}/g) ?? []
+    expect(scaleBlocks.length).toBeGreaterThan(0)
+    for (const block of scaleBlocks) expect(block).not.toMatch(/--ui-space/)
+  })
+
+  it('keeps the derived --ui-space ladder OFF :root (the var() pre-substitution gotcha — subtree density stays live)', () => {
+    expect(rootBlock).not.toMatch(/--ui-space-/)
+  })
+})
+
+// tok-radius (ADR-0015 cl.5) — the shared --ui-radius-base. A CONSTANT (not subtree-derived), so on :root,
+// NOT the `*` ramp: a container's corner radius does not scale with [scale] (the ADR is explicit). One fleet
+// radius seeding the card chain (ADR-0018) + the text-field follow-up (#71).
+describe('dimensions.css — the shared --ui-radius-base constant (ADR-0015 cl.5)', () => {
+  it('declares --ui-radius-base on :root (a px constant), NOT on the `*` ramp', () => {
+    expect(rootBlock).toMatch(/--ui-radius-base:\s*\d+px\s*;/)
+    expect(universalBlock).not.toMatch(/--ui-radius-base/) // a constant stays off the derived `*` ramp
+  })
+})

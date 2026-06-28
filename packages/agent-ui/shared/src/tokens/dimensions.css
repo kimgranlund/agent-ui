@@ -31,6 +31,14 @@
      prefers-reduced-motion is honoured at the consumption site (the control zeroes the transition). */
   --ui-motion-fast: 300ms;
   --ui-ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1); /* Apple "smooth" easing */
+
+  /* Container radius (ADR-0015 cl.5) — ONE shared fleet radius. A CONSTANT on :root, NOT the `*` ramp:
+     unlike a control's pill radius (frame family ∝ height, scaled), a container's corner radius is fixed
+     regardless of [scale] (the ADR is explicit — "not subtree-derived"). A root container reads
+     `border-radius: var(--ui-card-radius, var(--ui-radius-base))`; it seeds the one-level nested-radius
+     chain (ADR-0018: child = max(0px, radius − padding)) and is the radius the ui-text-field follow-up
+     (#71) adopts — one referent serving controls and containers. */
+  --ui-radius-base: 12px;
 }
 
 /* The DERIVED ramp lives on `*` (universal), NOT `:root` — deliberately. A var() inside a custom-property
@@ -58,6 +66,25 @@
   --ui-gap-sm: calc(var(--ui-font-sm) / 2 * var(--ui-density));
   --ui-gap-md: calc(var(--ui-font-md) / 2 * var(--ui-density));
   --ui-gap-lg: calc(var(--ui-font-lg) / 2 * var(--ui-density));
+
+  /* --ui-space — the LAYOUT-SPACING ladder (ADR-0015 cl.4, geometry.md "--space-* is layout spacing,
+     not control geometry"). The gap/padding/margin BETWEEN laid-out children (Row/Column/List/Grid gap,
+     Card padding) — a DIFFERENT ledger from the control frame (the h/2 centring law). Two rules set it
+     apart from the ramp above:
+       • density rides it (rhythm family): each step is `calc(<base px> * var(--ui-density))`, so a subtree
+         [density] re-multiplies it (declared on `*`, not :root — same pre-substitution reason as the gap).
+       • [scale] does NOT touch it: the base px is a LITERAL (no var(--ui-scale)), because layout rhythm is
+         not control-frame size — a [scale] theme resizes the controls, not the gutters between them.
+     A 4px-grid t-shirt vocabulary; `none`=0 (the no-gap case). The flexProps `gap` enum (s2) is exactly
+     these step names. Extensible (add 3xl… with the family) — repointing a value is seam-stable; a new
+     step name widens the gap enum (a deliberate addition, not drift). */
+  --ui-space-none: 0;
+  --ui-space-xs: calc(4px * var(--ui-density));
+  --ui-space-sm: calc(8px * var(--ui-density));
+  --ui-space-md: calc(12px * var(--ui-density));
+  --ui-space-lg: calc(16px * var(--ui-density));
+  --ui-space-xl: calc(24px * var(--ui-density));
+  --ui-space-2xl: calc(32px * var(--ui-density));
 }
 
 /* [scale] — the global FRAME multiplier (theme size). Repoints --ui-scale for its subtree, so every ramp

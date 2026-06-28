@@ -38,6 +38,17 @@
   --c-neutral-500-800: oklch(0.6046 0.0553 257.68 / 80%);
   --c-neutral-500-900: oklch(0.6046 0.0553 257.68 / 90%);
   --c-neutral-500-950: oklch(0.6046 0.0553 257.68 / 95%);
+  /* Brightness-wash alpha primitives (ADR-0015 cl.3) — translucent WHITE (050) + near-black (950) stops,
+     the only two anchors a scheme-CONSISTENT brightness overlay can use (white always lightens, black
+     always darkens, in BOTH schemes). Three alpha steps (5 / 10 / 14%) feed the tint roles below; the 14%
+     ceiling is the AA budget — the strongest wash that keeps on-surface AND on-surface-variant ≥ AA over
+     the brightest dark elevation plane (the binding cell). Suffix = alpha×10, mirroring --c-neutral-500-NN. */
+  --c-neutral-050-50: oklch(1 0 89.88 / 5%);
+  --c-neutral-050-100: oklch(1 0 89.88 / 10%);
+  --c-neutral-050-140: oklch(1 0 89.88 / 14%);
+  --c-neutral-950-50: oklch(0.1774 0.0044 264.46 / 5%);
+  --c-neutral-950-100: oklch(0.1774 0.0044 264.46 / 10%);
+  --c-neutral-950-140: oklch(0.1774 0.0044 264.46 / 14%);
   /* Neutral — semantic roles */
   --c-neutral: light-dark(var(--c-neutral-550), var(--c-neutral-450));
   --c-neutral-dim: light-dark(var(--c-neutral-650), var(--c-neutral-700));
@@ -76,6 +87,20 @@
   --c-neutral-surface-high: light-dark(var(--c-neutral-150), var(--c-neutral-850));
   --c-neutral-surface-higher: light-dark(var(--c-neutral-175), var(--c-neutral-825));
   --c-neutral-surface-highest: light-dark(var(--c-neutral-200), var(--c-neutral-800));
+  /* Brightness tonal-wash roles (ADR-0015 cl.3) — the translucent OVERLAY a container's --ui-container-tint
+     reads in the BOTH-axes case (elevation≠0 AND brightness≠0): the brightness shift composites alpha-over
+     the SOLID elevation base-plane (--ui-container-bg → --c-neutral-surface-{lowest…highest}), so neither
+     axis overwrites the other. SOLO brightness keeps reusing the solid -dimmest…-brightest ladder (no role
+     here) — these roles exist only for the composition. dim → near-black wash (darkens), bright → white wash
+     (lightens) — scheme-consistent by construction (light/dark branches equal today; wrapped in light-dark()
+     to keep the role shape uniform and leave a per-scheme alpha seam if the AA budget ever needs to differ).
+     Forced-colors → transparent (the overlay drops out; the UA-forced Canvas base shows — mapped below). */
+  --c-neutral-tint-dim: light-dark(var(--c-neutral-950-50), var(--c-neutral-950-50));
+  --c-neutral-tint-dimmer: light-dark(var(--c-neutral-950-100), var(--c-neutral-950-100));
+  --c-neutral-tint-dimmest: light-dark(var(--c-neutral-950-140), var(--c-neutral-950-140));
+  --c-neutral-tint-bright: light-dark(var(--c-neutral-050-50), var(--c-neutral-050-50));
+  --c-neutral-tint-brighter: light-dark(var(--c-neutral-050-100), var(--c-neutral-050-100));
+  --c-neutral-tint-brightest: light-dark(var(--c-neutral-050-140), var(--c-neutral-050-140));
 
   /* Primary — flat mode-independent primitives */
   --c-primary-100: oklch(0.9568 0.0091 258.34);
@@ -627,5 +652,14 @@
 @media (forced-colors: active) {
   :root {
     --c-focus-ring: Highlight;
+    /* The brightness wash drops out under forced-colors: a translucent gradient overlay would paint OVER
+       the UA-forced system `Canvas` base and defeat it, so each tint role goes `transparent` and the
+       container surface resolves to the system colour for free (ADR-0015 cl.3 — forced-colors-safe). */
+    --c-neutral-tint-dim: transparent;
+    --c-neutral-tint-dimmer: transparent;
+    --c-neutral-tint-dimmest: transparent;
+    --c-neutral-tint-bright: transparent;
+    --c-neutral-tint-brighter: transparent;
+    --c-neutral-tint-brightest: transparent;
   }
 }
