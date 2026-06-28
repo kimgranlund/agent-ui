@@ -268,4 +268,84 @@ symmetry.
 - [ ] `plan.md` open decisions (§12) are all resolved or explicitly deferred with a reason.
 - [ ] A short `CHANGELOG`/status note records the foundation milestone; next tier (layout/display
       primitives, or the agent-app surfaces) is a scope-dial decision left to you.
+
+---
+
+## G9 — Container / layout family (A2UI's layout primitives land)
+
+**Goal.** Ship A2UI's reserved layout primitives as `ui-*` **containers** — the first non-form component family.
+A2UI-catalog-first: the catalog's reserved `Row` / `Column` / `Card` / `Tabs` / `Modal` (a2ui-catalog SPEC §5.2,
+currently `experimental`) flip to **shipped**, bound **directly** (SPEC-R8, no adapter) to new `ui-*` controls with
+the `ChildList` child model, plus two non-catalog layout primitives (`ui-list`, `ui-grid`) the family needs. These
+are **structural** controls: they extend `UIElement` via a shared `UIContainerElement` surface base — **not**
+form-associated (no `ElementInternals` value/validity; Tabs/Modal still use `internals` for ARIA + custom states).
+Pulls renderer **LLD-C8 (two-way input binding)** into scope.
+
+**Scope.** ~12 elements across 7 folders, an all-at-once file-disjoint parallel fan-out:
+- `controls/row/` `ui-row` · `controls/column/` `ui-column` — A2UI-faithful flex (ADR-0016).
+- `controls/list/` `ui-list` · `controls/grid/` `ui-grid` — the two layout extensions (ADR-0016).
+- `controls/card/` `ui-card` + `ui-card-header` / `-content` / `-footer` — the surface/region/nested-radius family
+  (ADR-0015 surface, ADR-0018 one-level radius).
+- `controls/tabs/` `ui-tabs` + `ui-tab` / `ui-tab-panel` — full a11y (roving tabindex + tablist/tab/tabpanel ARIA +
+  bindable `selected`).
+- `controls/modal/` `ui-modal` — native `<dialog>` `showModal()`, focus trap/restore + Escape + dialog ARIA +
+  bindable `open` (ADR-0017).
+- A serial PREP: the shared tokens (`--ui-space` density-responsive ladder + the surface elevation/brightness
+  composition + `--ui-radius-base`, tokens-specialist; ADR-0015) and the `UIContainerElement` surface base +
+  spreadable `surfaceProps`/`flexProps` + the shared `container.css`.
+- A2UI: renderer **LLD-C8** (`a2ui/src/renderer/input.ts`, two-way) + the catalog entries (Row/Column/Card/Tabs/
+  Modal → `ui-*` factories; `value:{prop,event}` for Tabs `selected` / Modal `open`; the back-filled text-field
+  value bind) + the SPEC §5.2 flip. ADRs **0015–0019**.
+
+**Definition of done.**
+
+*Per element (the G5/G6 control bar, applied to each of the ~12 elements):*
+- [ ] Behaviour probes (jsdom) + the cross-engine browser smoke (Chromium AND WebKit) + the `{name}.md` descriptor
+      validating against the frontmatter schema with the contract↔props trip-wire green + the COMPOSE/REALIZE
+      rubric ≥ 4 on both axes via the `component-reviewer`.
+- [ ] `tsc` clean; single `{name}.css` (ADR-0003) — `:where()` token block + `@scope` styles consuming only
+      `--ui-{name}-*`; survives `forced-colors: active`; the import-layering trip-wire stays green
+      (containers extend `UIContainerElement`/`UIElement`, imports point inward only).
+
+*Surface + spacing (ADR-0015):*
+- [ ] `elevation` / `brightness` are signed reflected literal-union props (`-3..3`, default `0`, `0`=neutral base);
+      a `@ts-expect-error` proves a bare number is rejected. The container reads one role-pure `--ui-container-bg`
+      seam; both axes set composes to a defined surface (the proposed base-plane + tonal-overlay mechanism); the
+      surface survives `forced-colors`. `--ui-space` is density-responsive (a subtree `[density]` re-multiplies it);
+      `--ui-radius-base` seeds the card radius chain. *(Exact ladder values, any shadow ramp, and the 7×7 AA
+      surface are tokens-specialist's, gated separately.)*
+
+*Layout (ADR-0016):*
+- [ ] Row/Column/List/Grid consume the shared `flexProps` (`align`/`justify`/`gap`/`wrap`, reflected literal
+      unions → CSS flex props, gap off `--ui-space`); `ui-list` carries `role=list`; `ui-grid` reflows by
+      `auto-fit`/`minmax`. **Container-query intrinsic responsiveness**: a layout primitive reflows on its OWN
+      container width (no breakpoint props) — the browser smoke resizes the wrapper, not the viewport.
+
+*Card (ADR-0015/0018):*
+- [ ] Presence-driven region grid (`:has()` — header?/content/footer?); header/footer reuse the leading/label/
+      trailing anatomy (`anatomy.md`); `ui-card-content` supports `scroll`/`scroll-fade`; one-level nested radius
+      via the published `--ui-card-child-radius` (geometry probe asserts `child == max(0, parent − padding)`; depth
+      ≥ 2 documented manual; the JS controller is rejected).
+
+*Tabs / Modal a11y (full widget contract):*
+- [ ] Tabs: roving-tabindex arrow-key nav, `tablist`/`tab`/`tabpanel` ARIA (via `internals`), bindable `selected`,
+      panel show/hide by selection, click/keyboard commit emits `select`. Modal: native `<dialog>` `showModal()`
+      (top-layer + `::backdrop`), focus **trap** (platform) + **restore** (control), Escape + backdrop dismissal
+      sync `open` and emit `close`/`toggle`, dialog ARIA on the part, host carries no role/aria attribute, bindable
+      `open` (ADR-0017).
+
+*A2UI integration (catalog-first; SPEC-R3/R4/R8 + LLD-C8):*
+- [ ] The default catalog declares Row/Column/Card/Tabs/Modal (+ the region/item sub-types CardHeader/CardContent/
+      CardFooter, Tab/TabPanel) bound directly to `ui-*` factories (no adapter, SPEC-R8); the `ChildList` child
+      model composes regions as sub-elements; SPEC §5.2 flips those types `experimental → shipped` (Image/Video
+      stay absent; List/Grid ship as non-catalog `ui-*` primitives). **LLD-C8 (`input.ts`) is built** — one generic
+      two-way input controller wires Tabs `selected` / Modal `open` (each declaring `value:{prop,event}`) and
+      back-fills the deferred `ui-text-field` value bind, with 0 per-component renderer code.
+
+*Packaging:*
+- [ ] One serial integration slice wires the barrels (`controls/index.ts` `export *` per element · `component-
+      styles.css` `@import` per `{name}.css` after the shared `container.css` · `dom/index.ts` for
+      `UIContainerElement`/`surfaceProps`/`flexProps`); the catalog wiring (a2ui package) is its own single-writer
+      slice; `npm run check && npm test && npm run size` green; tree-shake clean (importing one container drags only
+      it + the base + real deps).
 ```
