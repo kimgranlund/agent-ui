@@ -308,20 +308,66 @@ body {
   white-space: pre;
   font: inherit;
   color: inherit;
+  /* reset the inline-code chip (below) — a fenced block is ONE panel (the .code-block chrome above), not a
+     string of per-glyph chips, so null the chip's box treatment for `code` INSIDE a block. */
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+/* ── inline code — the `code` chip ────────────────────────────────────────────────────────────────────────
+ * The shared treatment for inline `code` in docs content: markdown backtick spans (renderMarkdownBody →
+ * appendInline), API-table code cells (codeCell), and anatomy captions. A monospace CHIP: a stepped surface
+ * (--c-neutral-surface-high — the same panel role .code-block uses, a contrast step from the page surface in
+ * BOTH schemes) + a hairline outline + a small radius, so a token reads as code without leaving running text.
+ * `font-size: 0.85em` rides the surrounding text (mono renders larger than the sans body, so < 1em keeps it
+ * from looming). `box-decoration-break: clone` keeps the border/padding/radius whole when an inline span wraps
+ * across lines. Scheme (light-dark) + forced-colors safety ride the --c-* role layer, as .code-block does.
+ * The `.code-block code` reset above keeps fenced BLOCK code a plain panel. */
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  padding: 0.1em 0.35em;
+  border: 1px solid var(--c-neutral-outline-variant);
+  border-radius: 0.3rem;
+  background: var(--c-neutral-surface-high);
+  color: var(--c-neutral-on-surface);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 /* ── the shared site nav (the rail) ───────────────────────────────────────────────────────────────────────
  * A single flat list down the rail: one entry per COMPONENT (linking to its first page) plus the site-level
  * links (Home, A2UI Canvas). A component's per-type pages are NOT listed here — the page-header tab strip offers
- * them. A new component appends one group in _page.ts's NAV (contributing one rail entry). */
+ * them. A new component appends one group in _page.ts's NAV (contributing one rail entry).
+ *
+ * The list is wrapped in a `<details data-site-nav-disclosure>` (a `<summary>` trigger over the `<ul>`). At rail
+ * width — THIS block — the disclosure is inert chrome: the summary is hidden and the list shows ALWAYS (the
+ * `display: flex` below overrides the UA rule that hides a closed `<details>`'s non-summary content), so the rail
+ * looks exactly as before. The collapse to a real dropdown happens only in the narrow media query at the end. */
 nav[data-site-nav] {
   display: flex;
   flex-direction: column;
   padding: var(--ui-space-lg) var(--ui-space-md);
 }
 
+/* At rail width the disclosure is structural only — the trigger is hidden; the list is the rail. */
+nav[data-site-nav] > [data-site-nav-disclosure] > summary {
+  display: none;
+}
+
+/* Force a CLOSED `<details>` to still reveal its content at rail width. Two UA hiding mechanisms exist for a
+ * collapsed disclosure — the legacy `display:none` on non-summary children (defeated by the `display:flex` on
+ * the `<ul>` below), and the modern `content-visibility:hidden` on the `::details-content` wrapper (Chromium
+ * 120+) — so both are overridden here. Without this, a rail-width page whose `<details>` happens to be closed
+ * would render an empty rail in a modern engine. */
+nav[data-site-nav] > [data-site-nav-disclosure]::details-content {
+  content-visibility: visible;
+}
+
 nav[data-site-nav] ul {
-  display: flex;
+  display: flex; /* always visible at rail width — overrides the legacy UA closed-<details> child hiding */
   flex-direction: column;
   gap: 0.1rem;
   margin: 0;
@@ -352,7 +398,68 @@ nav[data-site-nav] a[aria-current] {
   font-weight: 600;
 }
 
-/* ── narrow viewports — collapse the rail to a top bar, stacking the whole shell into one column ──────────── */
+/* ── the disclosure trigger (the collapsed-state dropdown button) ──────────────────────────────────────────
+ * The `<summary>` is hidden at rail width (above) and revealed only below the breakpoint, where it is the
+ * dropdown trigger. Styled as a full-width control naming the current page, with a chevron that flips on
+ * `[open]`. `list-style: none` + the WebKit marker reset remove the native disclosure triangle so only our
+ * chevron shows. `<summary>` is focusable and toggles on Enter/Space natively (keyboard for free). */
+.site-nav-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-sm);
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--c-neutral-outline-variant);
+  border-radius: 0.5rem;
+  background: var(--c-neutral-surface-high);
+  color: var(--c-neutral-on-surface);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none; /* drop the native disclosure triangle (standards) */
+}
+
+.site-nav-trigger::-webkit-details-marker {
+  display: none; /* drop the native disclosure triangle (WebKit/Chromium) */
+}
+
+/* The chevron — a CSS-drawn caret after the label; rotates a half-turn when the disclosure is open. */
+.site-nav-trigger::after {
+  content: '';
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-inline-end: 1.5px solid currentColor;
+  border-block-end: 1.5px solid currentColor;
+  transform: rotate(45deg); /* points down — closed */
+  transform-origin: center;
+  transition: transform 120ms ease;
+  margin-block-end: 0.15rem; /* optical centring of the rotated square */
+}
+
+[data-site-nav-disclosure][open] .site-nav-trigger::after {
+  transform: rotate(-135deg); /* points up — open */
+}
+
+.site-nav-trigger:focus-visible {
+  outline: 2px solid var(--c-neutral-on-surface);
+  outline-offset: 2px;
+}
+
+/* The label leg of the trigger fills the row, pushing the chevron to the far end; truncate a long page name. */
+.site-nav-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── narrow viewports — collapse the rail to a DROPDOWN top bar, stacking the whole shell into one column ────
+ * Below the breakpoint the 10-item rail would overflow a one-row bar, so instead of a horizontal scroller the
+ * nav becomes a `<details>` DISCLOSURE: the `<summary>` trigger (current page + chevron) shows, and the link
+ * list is revealed as a dropdown panel ONLY when the disclosure is open. Zero JS — `<details>` gives the
+ * open/close, `aria-expanded`-equivalent state, and keyboard operation natively. 48rem (~768px) is where the
+ * 10 entries stop fitting one rail-width row; the canvas/full-bleed pages collapse here too (the shell is one
+ * shared grid). The rail's own scroll container settings (overflow-y / scrollbar-width) are dropped so the
+ * dropdown panel can size to its content rather than scroll inside a 100dvh row. */
 @media (max-width: 48rem) {
   .app-shell {
     grid-template-columns: minmax(0, 1fr);
@@ -369,20 +476,42 @@ nav[data-site-nav] a[aria-current] {
     grid-row: 2;
     border-inline-end: none;
     border-block-end: 1px solid var(--c-neutral-outline-variant);
+    overflow-y: visible; /* not a scroll container here — the dropdown sizes to its content */
   }
 
-  /* horizontal scroller across the top: the component + site links in one nowrap row */
   nav[data-site-nav] {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: 1rem;
     padding: var(--ui-space-sm) var(--ui-space-md);
   }
 
+  /* The disclosure relatively-positions the panel, so the open list overlays the page rather than pushing it. */
+  nav[data-site-nav] > [data-site-nav-disclosure] {
+    position: relative;
+  }
+
+  /* Reveal the trigger (hidden at rail width) as the dropdown button. */
+  nav[data-site-nav] > [data-site-nav-disclosure] > summary {
+    display: flex;
+  }
+
+  /* The link list is the dropdown PANEL: hidden when closed, shown as a raised overlay when the disclosure is
+   * open. It overlays the page content (absolute, full trigger width) so opening the menu does not reflow the
+   * page; a high z-index keeps it above the sticky page-header. */
   nav[data-site-nav] ul {
-    flex-direction: row;
-    flex-wrap: nowrap;
+    display: none;
+  }
+
+  [data-site-nav-disclosure][open] > ul {
+    display: flex;
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: calc(100% + 0.4rem);
+    z-index: 5;
+    gap: 0.1rem;
+    padding: var(--ui-space-xs);
+    border: 1px solid var(--c-neutral-outline-variant);
+    border-radius: 0.6rem;
+    background: var(--c-neutral-surface);
+    box-shadow: 0 0.5rem 1.5rem var(--c-neutral-scrim); /* scrim role (theme-adaptive) — not a raw literal */
   }
 
   .app-page {

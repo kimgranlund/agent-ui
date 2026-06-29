@@ -137,11 +137,25 @@ function navItem(href: string, label: string, active: boolean, exact: boolean): 
   return item
 }
 
-// buildNav — the shared cross-page nav: a `<nav data-site-nav>` (one shell, identical on every page) holding a
-// single flat `<ul>`. A per-component group contributes ONE entry — the component name, linking to its first
-// page and highlighted across the WHOLE group (the section you are in); its per-type pages live in the page-
-// header tab strip, not the rail. An ungrouped site-level group contributes its link(s) directly. Dependency-
-// free light DOM; the rail styling lives in `_page.css`.
+// currentNavLabel — the label of the rail entry for the page we are on, for the collapsed disclosure trigger.
+// Mirrors buildNav's entry rule: a component group contributes ONE entry labelled by the component name (active
+// across its whole section), so a sub-page reports the component label; a site-level link reports its own label.
+// Falls back to 'Menu' off any known route (defensive — every shipped page is in NAV).
+function currentNavLabel(): string {
+  const group = activeGroup()
+  if (group) return group.label ?? group.links.find((link) => isCurrent(link.href))?.label ?? 'Menu'
+  return 'Menu'
+}
+
+// buildNav — the shared cross-page nav: a `<nav data-site-nav>` (one shell, identical on every page). At rail
+// width it is a single flat `<ul>` down the left; below the shell's collapse breakpoint that same list becomes a
+// zero-JS `<details>` DROPDOWN — a `<summary>` trigger (current page + chevron, `aria-expanded` for free) over
+// the list, so the 10-item bar no longer overflows into a horizontal scroller. ONE list is built; CSS alone
+// (the `_page.css` media query) decides rail-vs-dropdown — no per-width markup, so the nav structure (and the
+// drift gates that mirror it) is untouched. A per-component group contributes ONE entry — the component name,
+// linking to its first page and highlighted across the WHOLE group; its per-type pages live in the page-header
+// tab strip, not the rail. An ungrouped site-level group contributes its link(s) directly. Dependency-free light
+// DOM; the rail/dropdown styling lives in `_page.css`.
 function buildNav(): HTMLElement {
   const nav = document.createElement('nav')
   nav.setAttribute('data-site-nav', '')
@@ -161,7 +175,22 @@ function buildNav(): HTMLElement {
     }
   }
 
-  nav.append(list)
+  // Wrap the list in a `<details>` disclosure. At rail width CSS hides the summary and shows the list always
+  // (the disclosure is inert chrome); below the breakpoint the summary IS the trigger and the list shows only
+  // when open. `<details>`/`<summary>` is keyboard-operable and exposes expanded/collapsed state with zero JS —
+  // the zero-dependency choice. The summary carries the current page label so the collapsed trigger names where
+  // you are; the chevron (a CSS pseudo-element, `_page.css`) flips with `[open]`.
+  const disclosure = document.createElement('details')
+  disclosure.setAttribute('data-site-nav-disclosure', '')
+  const summary = document.createElement('summary')
+  summary.className = 'site-nav-trigger'
+  const triggerLabel = document.createElement('span')
+  triggerLabel.className = 'site-nav-trigger-label'
+  triggerLabel.textContent = currentNavLabel()
+  summary.append(triggerLabel)
+  disclosure.append(summary, list)
+
+  nav.append(disclosure)
   return nav
 }
 

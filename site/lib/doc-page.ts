@@ -153,7 +153,7 @@ export function renderMarkdownBody(src: string): HTMLElement {
   const flushParagraph = (): void => {
     if (paragraph.length === 0) return
     const p = document.createElement('p')
-    p.textContent = paragraph.join(' ')
+    appendInline(p, paragraph.join(' ')) // render inline `code` spans as chips (not literal backticks)
     article.append(p)
     paragraph = []
   }
@@ -162,7 +162,7 @@ export function renderMarkdownBody(src: string): HTMLElement {
     const ul = document.createElement('ul')
     for (const item of list) {
       const li = document.createElement('li')
-      li.textContent = item
+      appendInline(li, item) // render inline `code` spans as chips (not literal backticks)
       ul.append(li)
     }
     article.append(ul)
@@ -220,9 +220,30 @@ export function renderMarkdownBody(src: string): HTMLElement {
 
 // ── small DOM helpers (shared scaffold; carry no per-control fact) ─────────────────────────────────────────
 
+/**
+ * appendInline — append `text` to `parent`, rendering inline `` `code` `` spans as `<code>` chips and the rest
+ * as plain text. The simplified inline grammar the docs corpus uses: a single-backtick-delimited run is inline
+ * code (the body renderer is dependency-free and intentionally small). An unpaired backtick is left as literal
+ * text (graceful). SAFETY: every span is assigned via `textContent` / a string-append (a Text node), NEVER
+ * `innerHTML` — the markdown body is DATA, so it can never inject markup.
+ */
+export function appendInline(parent: HTMLElement, text: string): void {
+  const re = /`([^`]+)`/g
+  let last = 0
+  let m: RegExpExecArray | null
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parent.append(text.slice(last, m.index)) // literal run before the span (Text node)
+    const code = document.createElement('code')
+    code.textContent = m[1] // the backtick span content, verbatim
+    parent.append(code)
+    last = m.index + m[0].length
+  }
+  if (last < text.length) parent.append(text.slice(last)) // trailing literal run
+}
+
 export function heading(level: number, text: string): HTMLElement {
   const h = document.createElement(`h${level}`)
-  h.textContent = text
+  appendInline(h, text) // a markdown heading may carry inline `code`; plain headings append one text node
   return h
 }
 

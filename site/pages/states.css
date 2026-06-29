@@ -21,11 +21,6 @@
   line-height: 1.5;
 }
 
-.state-instruction code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.875em;
-}
-
 /* A demo row — lays the live control(s) beside a short caption. Layout only; the controls keep their own CSS. */
 .state-row {
   display: flex;
