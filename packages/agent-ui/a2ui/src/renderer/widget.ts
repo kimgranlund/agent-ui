@@ -26,8 +26,10 @@ import type { Surface } from './surface.ts'
 import { installInputBinding } from './input.ts'
 import { isInterpolated } from './interpolate.ts'
 
-/** Structural adjacency keys (SPEC-R3/§5.1) — never catalog-declared props, so never applied. */
-const RESERVED = new Set<string>(['id', 'component', 'child', 'children'])
+/** Structural adjacency keys (SPEC-R3/§5.1) — never catalog-declared props, so never applied.
+ *  `checks` is a component-level array (ADR-0029), handled by the renderer host like `action` —
+ *  it is read off the node and wired into a reactive controller, never `applyProp`'d. */
+const RESERVED = new Set<string>(['id', 'component', 'child', 'children', 'checks'])
 
 /**
  * A dynamic binding value: `{path}` data-model reference, `{call}` function call (ADR-0026), or a

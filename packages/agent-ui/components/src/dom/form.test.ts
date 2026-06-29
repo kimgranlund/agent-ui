@@ -319,6 +319,54 @@ describe('clause 6 — IDL delegators read through internals', () => {
   })
 })
 
+// ── setCustomValidity — the renderer-driven custom-validity seam (ADR-0029 §5) ──
+
+describe('setCustomValidity — renderer-driven custom-validity seam (ADR-0029)', () => {
+  it('setCustomValidity("x") → customError true + validationMessage "x"', async () => {
+    const { el, calls } = makeField()
+    document.body.append(el)
+    el.setCustomValidity('Zip code is required')
+    await el.updateComplete // effects re-run on a microtask flush
+    const last = calls.validitySets.at(-1)
+    expect(last?.flags).toEqual({ customError: true })
+    expect(last?.message).toBe('Zip code is required')
+    el.remove()
+  })
+
+  it("setCustomValidity('') clears the custom contribution — resolves to valid", async () => {
+    const { el, calls } = makeField()
+    document.body.append(el)
+    el.setCustomValidity('some error')
+    await el.updateComplete
+    el.setCustomValidity('') // clear
+    await el.updateComplete
+    const last = calls.validitySets.at(-1)
+    expect(last?.flags).toEqual({}) // valid clear
+    el.remove()
+  })
+
+  it('native valueMissing wins over a custom message when both are non-empty', async () => {
+    const { el, calls } = makeField()
+    document.body.append(el)
+    el.required = true // triggers valueMissing (value is '')
+    el.setCustomValidity('custom message')
+    await el.updateComplete
+    const last = calls.validitySets.at(-1)
+    expect(last?.flags).toEqual({ valueMissing: true }) // native wins
+    expect(last?.message).toBe('Required')
+    el.remove()
+  })
+
+  it('negative control — no setCustomValidity call: behaves identically to today', () => {
+    const el = new AlwaysValidEl()
+    const calls = stubFormInternals(el.internalsProbe)
+    document.body.append(el)
+    // No setCustomValidity call — only the initial clear should appear
+    for (const v of calls.validitySets) expect(Object.keys(v.flags)).toHaveLength(0)
+    el.remove()
+  })
+})
+
 // ── zero residue — the form effects ride the connection scope ─────────────────
 
 describe('zero residue — the form effects are scope-owned', () => {

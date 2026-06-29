@@ -222,3 +222,30 @@ describe('text-field.css — anatomy, placeholder, motion, forced-colors', () =>
     expect(fc).toMatch(/\[data-empty\]::before\s*\{\s*color:\s*CanvasText/) // the placeholder survives
   })
 })
+
+// ── Visible inline-validation message (ADR-0029 A1 — extends ADR-0014) ──────────────────────────────────────
+// The control-managed `.ui-text-field-message` node becomes VISIBLE when :state(user-invalid) is active
+// and the node carries a non-empty message. Two changes: two new tokens declared in the :where() block, and
+// one new display rule inside @scope gated by :state(user-invalid). The @scope hygiene predicate already
+// passes because the new scope refs are `--ui-text-field-message-*` (the own chain).
+describe('text-field.css — visible message node (ADR-0029 A1, extends ADR-0014)', () => {
+  it('declares the --ui-text-field-message-font and --ui-text-field-message-ink tokens in the :where() block', () => {
+    expect(tokenBlock).toMatch(/--ui-text-field-message-font:\s*var\(--ui-font-sm\)/)
+    expect(tokenBlock).toMatch(/--ui-text-field-message-ink:\s*var\(--c-danger\)/)
+  })
+
+  it('the @scope :state(user-invalid) > .ui-text-field-message rule gives it display:block + danger-text treatment', () => {
+    const m = stylesBlock.match(/:scope:state\(user-invalid\)\s*>\s*\.ui-text-field-message\s*\{([^}]*)\}/)
+    expect(m, ':state(user-invalid) > .ui-text-field-message rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/display:\s*block/) // makes the node visible (overrides `hidden`)
+    expect(rule).toMatch(/font-size:\s*var\(--ui-text-field-message-font\)/) // small type from the token
+    expect(rule).toMatch(/color:\s*var\(--ui-text-field-message-ink\)/) // danger ink from the token
+  })
+
+  it('@scope hygiene still passes with the new message tokens (they are --ui-text-field-* own chain)', () => {
+    // foreignScopeRefs already covers the whole stylesBlock including the new rule; asserting here
+    // documents that the ADR-0029 rule was not a scope-hygiene regression.
+    expect(foreignScopeRefs(stylesBlock)).toEqual([])
+  })
+})

@@ -58,6 +58,12 @@
   /* Size-INVARIANT frame quantities — declared ONCE in the base block (NOT in the per-[size] blocks below): */
   --ui-text-field-radius: var(--ui-radius-base); /* fixed --ui-radius-base rounded-rect — the container-fleet referent an ENTRY control takes (NOT the action family's h/2 pill); overridable per-field; ADR-0015 cl.5 / #71 amendment. */
   --ui-text-field-min-inline-size: 20ch; /* the host typing-width floor (entry-control frame-law leg, ADR-0021) — ch is font-relative so one ~20ch already scales with --ui-text-field-font across [size]; native <input size> parity so a bare field is hittable (width above the floor is the layout's job). */
+
+  /* Visible inline-validation message tokens (ADR-0029 A1 — extends ADR-0014): the .ui-text-field-message
+     node (control-managed, aria-describedby target) becomes VISIBLE when non-empty under :state(user-invalid).
+     Declared here (specificity 0, overridable), consumed in the @scope block. */
+  --ui-text-field-message-font: var(--ui-font-sm); /* small type — subordinate to the field's own label/value */
+  --ui-text-field-message-ink: var(--c-danger); /* danger ink — mirrors the danger border channel (ADR-0014 cl.2c) */
 }
 
 /* size → dimensional ramp (size is reflected, so the attribute is present) */
@@ -223,6 +229,19 @@
   }
   :scope:state(user-invalid):hover {
     border-color: var(--ui-text-field-border-invalid-hover);
+  }
+
+  /* Visible inline-validation message (ADR-0029 A1 — extends ADR-0014). The control-managed
+     `.ui-text-field-message` node (the aria-describedby target, ADR-0014 cl.4) is `hidden` by default
+     (out of flow) and has no base display rule. When :state(user-invalid) is active AND the node carries
+     a message text (text-field.ts toggles `hidden` false only when non-empty), it becomes visible:
+     danger ink, small type — subordinate to the field, consistent with the danger border. Gated by
+     :state(user-invalid) to keep the ADR-0014 interaction-state timing (only after first blur/change).
+     `ui-field` (G7), when it lands, will relayout/host this node rather than re-introduce it. */
+  :scope:state(user-invalid) > .ui-text-field-message {
+    display: block;
+    font-size: var(--ui-text-field-message-font);
+    color: var(--ui-text-field-message-ink);
   }
 
   /* disabled host — pointer-inert (matches BOTH own [disabled] and the effective :state(disabled), so a

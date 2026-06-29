@@ -152,18 +152,24 @@ export class UITextFieldElement extends UIFormElement {
     })
 
     // ── user-invalid → aria-invalid + the non-colour message cue + :state(user-invalid) (ADR-0014 cl.2c/4) ──
+    // ADR-0029 A1 (user-ratified): when carrying a message the message node is VISIBLE — `message.hidden`
+    // toggled false (dangerous treatment: --c-danger ink, small type, gated by :state(user-invalid) in CSS).
+    // The `aria-describedby` wiring is unchanged; making the node visible is an extension only.
     this.effect(() => {
       if (controller.userInvalid()) {
         // userInvalid ⇒ invalid, so formValidity() is the invalid branch carrying the message + flags.
         const verdict = this.formValidity()
+        const text = verdict.valid ? '' : verdict.message // the WCAG 1.4.1 non-colour reinforcement
         editor.setAttribute('aria-invalid', 'true')
         editor.setAttribute('aria-describedby', message.id)
-        message.textContent = verdict.valid ? '' : verdict.message // the WCAG 1.4.1 non-colour reinforcement
+        message.textContent = text
+        message.hidden = text === '' // visible when there is a message (ADR-0029 A1)
         this.internals.states?.add('user-invalid')
       } else {
         editor.removeAttribute('aria-invalid')
         editor.removeAttribute('aria-describedby')
         message.textContent = ''
+        message.hidden = true // no message → out of flow
         this.internals.states?.delete('user-invalid')
       }
     })

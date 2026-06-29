@@ -227,3 +227,47 @@ describe('ui-text-field — forced-colors survival (Chromium emulates via CDP; W
     }
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [5] ADR-0029 A1 — visible inline-validation message (extends ADR-0014)
+//      (team-lead's S2 browser smoke: run `npm run test:browser` to verify the message block is truly
+//      rendered visible and carries the danger ink, gated by :state(user-invalid) — non-negotiable for
+//      a real layout engine since jsdom does not evaluate `display:block` vs `hidden`.)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-text-field — visible inline-validation message (ADR-0029 A1, extends ADR-0014)', () => {
+  it('the .ui-text-field-message node appears visible with danger ink ONLY after :state(user-invalid) is active', async () => {
+    // A required field that is empty fires `valueMissing` on blur (the user-invalid timing controller
+    // arms :state(user-invalid) on the first blur or change — ADR-0014 cl.2c / interaction-states).
+    const { field, editor } = mount(`<ui-text-field required ${SIZED}></ui-text-field>`)
+    const message = field.querySelector('.ui-text-field-message') as HTMLElement
+
+    // BEFORE interaction: message is `hidden` and produces no layout box.
+    expect(message.hidden, 'message node should start hidden before any interaction').toBe(true)
+    expect(getComputedStyle(message).display, 'message node should be non-rendered before user-invalid').toBe('none')
+
+    // USER-INVALID: click then blur triggers the timing controller → :state(user-invalid) added → the
+    // CSS rule `display:block` overrides `hidden`'s `display:none`, making the message visible.
+    await userEvent.click(editor)
+    await userEvent.click(document.body) // blur the field — triggers the user-invalid controller
+    await field.updateComplete
+
+    expect(field.matches(':state(user-invalid)'), ':state(user-invalid) was not armed on blur').toBe(true)
+    expect(message.hidden, 'message.hidden was not toggled false by the user-invalid effect').toBe(false)
+    // CSS `display:block` + the node being un-hidden means the node produces a layout box.
+    expect(getComputedStyle(message).display, ':state(user-invalid) did not give the message display:block').toBe('block')
+    // the message carries the validation message text (set by text-field.ts from formValidity().message)
+    expect(message.textContent?.length, 'message node has no text content under user-invalid').toBeGreaterThan(0)
+    // danger ink: the `color` property resolves to a non-transparent colour via --ui-text-field-message-ink → --c-danger
+    expect(alphaOf(getComputedStyle(message).color), 'message ink is transparent — danger colour not applied').toBeGreaterThan(0)
+
+    // RECOVERY: filling the field should clear user-invalid and hide the message again.
+    await userEvent.click(editor)
+    await userEvent.keyboard('hello')
+    await userEvent.click(document.body) // blur to commit
+    await field.updateComplete
+
+    expect(field.matches(':state(user-invalid)'), ':state(user-invalid) persists after the field is filled').toBe(false)
+    expect(message.hidden, 'message node is still visible after user-invalid cleared').toBe(true)
+  })
+})

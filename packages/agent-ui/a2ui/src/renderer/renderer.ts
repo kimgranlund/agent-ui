@@ -34,6 +34,7 @@ import { SurfaceStore } from './surface.ts'
 import type { Surface } from './surface.ts'
 import { SurfaceTree } from './tree.ts'
 import { makeCreateWidget } from './widget.ts'
+import { wireChecks } from './checks.ts'
 import { ActionDispatcher } from './action.ts'
 import { validateA2ui } from './validate.ts'
 import { resolveValue as dispatchValue } from './functions.ts'
@@ -290,6 +291,10 @@ class Renderer implements RendererHost {
       const actionProps = this.#actionPropsOf(node, surface)
       const el = base(actionProps.size === 0 ? node : withoutProps(node, actionProps), surface, scope, itemScope, ac)
       for (const spec of actionProps.values()) this.#wireAction(el, node, surface, spec, ac)
+      // Wire the checks controller (ADR-0029): reads node.checks, installs one scope-owned effect that
+      // evaluates each check via evaluate (LLD-C10) and drives setCustomValidity / el.disabled.
+      // A no-op when node.checks is absent or empty (the common case — no overhead).
+      wireChecks(el, node, surface, scope, ac, itemScope, emitError, this.#registry)
       return el
     }
   }

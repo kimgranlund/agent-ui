@@ -9,7 +9,7 @@
 > | **Proposed by** | planning-lead — the design seat, resolving the G6 first form control |
 > | **Ratified by** | orchestration-lead (host) — 2026-06-27, on gate (token map confirmed by tokens-specialist, folded into clauses 2a/2c/4) |
 > | **Repairs** | `goals §G6` (the `ui-text-field` DoD) · **NEW** `components/src/controls/text-field/*` · **NEW** `components/src/traits/track-user-invalid.ts` · `references/interaction-states.md` (the text-entry focus + form-control disabled variants) |
-> | **Supersedes / Superseded by** | **Extends ADR-0013** (the `UIFormElement` base it extends) · **Extends ADR-0006 / ADR-0012** (the host-as-grid anatomy reused for the editor centre cell) · **Amends ADR-0009** (the `:focus-within` text-entry variant — see its `## Amendment`) · Relates **ADR-0008** (interaction states — the border-channel variant) · Relates **ADR-0010** (the non-form-control disabled standard this diverges from) |
+> | **Supersedes / Superseded by** | **Extends ADR-0013** (the `UIFormElement` base it extends) · **Extends ADR-0006 / ADR-0012** (the host-as-grid anatomy reused for the editor centre cell) · **Amends ADR-0009** (the `:focus-within` text-entry variant — see its `## Amendment`) · Relates **ADR-0008** (interaction states — the border-channel variant) · Relates **ADR-0010** (the non-form-control disabled standard this diverges from) · **Extended by ADR-0029** (the control-managed message node becomes VISIBLE when carrying a message — A2UI `checks` inline validation) |
 
 ## Context
 

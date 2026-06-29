@@ -9,7 +9,9 @@ import type { A2uiComponent, Failure } from '../protocol.ts'
 import type { Catalog, JsonSchema, PropDef } from './catalog.ts'
 
 // Structural keys owned by the adjacency model — not catalog-declared properties.
-const RESERVED = new Set(['id', 'component', 'child', 'children'])
+// `checks` is a component-level array (ADR-0029, SPEC-R4) — a renderer-layer construct like `action`,
+// never a bindable catalog prop. Any node may legally carry `checks` without a CATALOG unknown-property failure.
+const RESERVED = new Set(['id', 'component', 'child', 'children', 'checks'])
 
 /** Validate one component against its catalog definition. Returns `[]` when conformant. */
 export function validateCatalogConformance(component: A2uiComponent, catalog: Catalog): Failure[] {

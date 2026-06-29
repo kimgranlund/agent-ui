@@ -66,6 +66,11 @@ export class UIFormElement extends UIElement {
   // is reactive — a subclass effect reading it re-runs when an ancestor fieldset toggles disabled.
   #formDisabled: Signal<boolean> = signal(false)
 
+  // Renderer-driven custom validity (ADR-0029 §5 — the A2UI `checks` controller seam). A signal so the
+  // merged validity effect below re-runs when the renderer calls `setCustomValidity` (live validation).
+  // Empty string = no custom message = no custom-error contribution (native-parity clear, like `input.setCustomValidity('')`).
+  #customValidity: Signal<string> = signal('')
+
   /**
    * Super-wrapped wiring (clause 4). `super.connectedCallback()` opens the connection scope + AbortController,
    * runs the no-`super` `connected()` hook, and installs the render effect; the scope is now live, so the two
@@ -81,8 +86,19 @@ export class UIFormElement extends UIElement {
       this.internals.setFormValue(this.formValue())
     })
     // Publish the control's validity verdict to the platform, reactively (same tracking discipline).
+    // Merges the subclass `formValidity()` verdict with the renderer-driven `#customValidity` signal
+    // (ADR-0029 §5, setCustomValidity seam): native wins when already invalid; a non-empty custom
+    // message produces `{valid:false, flags:{customError:true}, message}`; both empty → valid (clear).
     this.effect(() => {
-      this.#applyValidity(this.formValidity())
+      const native = this.formValidity()
+      const custom = this.#customValidity.value
+      if (!native.valid) {
+        this.#applyValidity(native) // native wins (e.g. valueMissing overrides the custom message)
+      } else if (custom !== '') {
+        this.#applyValidity({ valid: false, flags: { customError: true }, message: custom })
+      } else {
+        this.#applyValidity(native) // both valid: clear
+      }
     })
   }
 
@@ -90,6 +106,18 @@ export class UIFormElement extends UIElement {
   #applyValidity(result: ValidityResult): void {
     if (result.valid) this.internals.setValidity({})
     else this.internals.setValidity(result.flags, result.message, result.anchor)
+  }
+
+  /**
+   * Set a renderer-driven custom validity message (ADR-0029 §5 — the A2UI `checks` seam, native-parity name).
+   * An empty string clears the custom contribution (native parity: `el.setCustomValidity('')` = valid).
+   * A non-empty message drives `{valid:false, flags:{customError:true}, message}` unless `formValidity()`
+   * is already invalid (native wins — e.g. `valueMissing` takes the display slot over a custom message).
+   * The reactive effect in `connectedCallback` picks up the `#customValidity` signal change and re-publishes
+   * through `#applyValidity` without any direct caller → `internals.setValidity` call here.
+   */
+  setCustomValidity(message: string): void {
+    this.#customValidity.value = message
   }
 
   // ── overridable control hooks (clause 3) ──────────────────────────────────────
