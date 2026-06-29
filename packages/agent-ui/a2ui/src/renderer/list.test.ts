@@ -221,6 +221,55 @@ describe('per-item child-scope disposal + leak-free teardown (SPEC-N3)', () => {
     expect(inspect(surface.data).subscribers).toBe(0) // scope.dispose() + the teardown carrier released all
   })
 
+  it('removing an instance aborts its per-item ac — an input listener on the removed element is inert (SPEC-N3 item-granular)', async () => {
+    // This test is the headline proof for the listener-leak fix (#3). The input factory marks
+    // `value:{prop:'value', event:'change'}` so installInputBinding wires a listener. Without the fix
+    // that listener is registered on surface.ac and persists after removal; with the fix it is on a
+    // per-item AbortController aborted in removeLast() — the commit on the detached element is inert.
+    const inputFactory: WidgetFactory = {
+      tag: 'ui-input',
+      create: () => document.createElement('ui-input'),
+      applyProp: () => {},
+      value: { prop: 'value', event: 'change' },
+    }
+    const createWidget = makeCreateWidget({
+      registry: stubRegistry('demo', { Item: inputFactory }),
+      emitError: () => {},
+      resolveBinding: (b, s, itemScope) => resolve(b, s, itemScope),
+    })
+    const surface = createSurface(init)
+    surface.data.value = { items: [{ x: 'a' }, { x: 'b' }, { x: 'c' }] }
+    surface.components.set('tpl', comp({ id: 'tpl', component: 'Item', value: { path: 'x' } }))
+    const container = document.createElement('div')
+    renderList({ container, template: { path: '/items', componentId: 'tpl' }, surface, createWidget })
+
+    const [e0, , e2] = childEls(container)
+
+    // e2 is at index 2; its input listener is live — verify a commit before removal.
+    ;(e2 as { value?: unknown }).value = 'c-typed'
+    e2.dispatchEvent(new Event('change'))
+    expect(resolve({ path: '/items/2/x' }, surface)).toBe('c-typed')
+
+    // Shrink to 2: e2 is the trailing instance, removed via removeLast() which aborts its per-item ac.
+    surface.data.value = setPointer(surface.data.peek(), '/items', [{ x: 'a' }, { x: 'b' }])
+    await whenFlushed()
+    expect(e2.isConnected).toBe(false)
+    // Only the per-item ac was aborted — the surface ac is still live.
+    expect(surface.ac.signal.aborted).toBe(false)
+
+    // A commit on the detached e2 must NOT write (its per-item ac was aborted, listener removed).
+    ;(e2 as { value?: unknown }).value = 'ghost'
+    e2.dispatchEvent(new Event('change'))
+    // NON-VACUOUS: without the fix, the listener fires and setPointer materializes /items/2/x, growing
+    // the array to length 3 ({x:'ghost'}). With the fix, no write at all — the array stays at length 2.
+    expect((surface.data.peek() as { items: unknown[] }).items.length).toBe(2)
+    expect(resolve({ path: '/items/2/x' }, surface)).toBeUndefined()
+    // e0's listener on its OWN per-item ac is still live and works.
+    ;(e0 as { value?: unknown }).value = 'a-typed'
+    e0.dispatchEvent(new Event('change'))
+    expect(resolve({ path: '/items/0/x' }, surface)).toBe('a-typed')
+  })
+
   it('add/remove churn does not accumulate subscribers on surface.data (bounded by distinct paths)', async () => {
     const five = [{ label: '0' }, { label: '1' }, { label: '2' }, { label: '3' }, { label: '4' }]
     const { surface, container, setItems } = listHarness(five)

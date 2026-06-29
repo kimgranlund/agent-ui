@@ -50,14 +50,20 @@ const isBinding = (v: unknown): v is { path: string } =>
 /**
  * Install the two-way input bind for one widget (renderer LLD-C8, SPEC-R7). A no-op unless the factory
  * marks a `value: { prop, event }` AND the node's `value.prop` is a `{path}` binding — then it listens
- * (via `surface.ac`) on `value.event` and, on each commit, writes the control's current `value.prop`
- * into `surface.data` at the bound path via the structural-sharing `setPointer` (so per-path waking holds,
- * SPEC-N2). The write is optimistic and untracked (`peek` base ⇒ the handler never subscribes to data).
+ * on `value.event` and, on each commit, writes the control's current `value.prop` into `surface.data` at
+ * the bound path via the structural-sharing `setPointer` (so per-path waking holds, SPEC-N2). The write
+ * is optimistic and untracked (`peek` base ⇒ the handler never subscribes to data).
  *
  * `itemScope`, when present (a list item, ADR-0024 amendment), rewrites a RELATIVE bound path to its
  * absolute pointer `{path}/{index}/…` via `scopedPointer` — symmetric with the read direction — so a
  * relative two-way binding reads and writes the same `/items/{i}/x` pointer. An absolute path or absent
  * itemScope is unchanged, preserving the pre-list no-itemScope behavior byte-for-byte.
+ *
+ * `ac` defaults to `surface.ac` (the surface lifetime). The list renderer passes a per-item
+ * AbortController (created in `appendInstance` and aborted in `removeLast`) so the listener is
+ * gated on the item's lifetime, not the surface's. This is the SPEC-N3 item-granular listener
+ * discipline: a removed list item immediately loses its commit listener so churn does not accumulate
+ * registrations on `surface.ac`. A late commit on the detached element is then also silently inert.
  *
  * Called by widget resolution (LLD-C7) right after the control + bound props are wired; everything it
  * needs is in scope there. Generic by construction — no component name appears below.
@@ -68,6 +74,7 @@ export function installInputBinding(
   node: A2uiComponent,
   surface: Surface,
   itemScope?: ItemScope,
+  ac: AbortController = surface.ac,
 ): void {
   const spec = factory.value
   if (spec === undefined) return // non-input control — no commit event to bind (opt-in by the factory mark)
@@ -84,6 +91,9 @@ export function installInputBinding(
       // bindings stay Object.is-equal and asleep (SPEC-N2). peek() base ⇒ the handler stays untracked.
       surface.data.value = setPointer(surface.data.peek(), valuePath, committed)
     },
-    { signal: surface.ac.signal }, // scope-owned: disposeSurface's ac.abort() removes it (SPEC-N3, zero residue)
+    // `ac` is surface.ac by default (static nodes) or the per-item AbortController (list items).
+    // Either abort removes the listener: the per-item abort fires on positional removal
+    // (list.ts removeLast), the surface abort fires on disposeSurface (SPEC-N3, zero residue).
+    { signal: ac.signal },
   )
 }

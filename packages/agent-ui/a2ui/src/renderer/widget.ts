@@ -61,7 +61,7 @@ export interface WidgetDeps {
 export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
   const { registry, emitError, resolveBinding } = deps
 
-  return (node, surface, scope = surface.scope, itemScope) => {
+  return (node, surface, scope = surface.scope, itemScope, ac = surface.ac) => {
     const factory = registry.get(surface.catalogId)?.factories[node.component]
     if (factory === undefined) {
       // Unknown component type — or, defensively, a catalog that vanished after createSurface's
@@ -85,9 +85,10 @@ export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
     // applied, with `el`/`factory`/`node`/`surface` all in scope — so a control marked `value:{prop,event}`
     // (Tabs `selected`/`select`, Modal `open`/`toggle`, the back-filled TextField `value`/`change`) commits
     // its value BACK into surface.data on its commit event. For a list item, `itemScope` threads through so
-    // the writeback resolves the same absolute pointer as the read (ADR-0024 amendment, symmetric rewrite).
+    // the writeback resolves the same absolute pointer as the read (ADR-0024 amendment, symmetric rewrite);
+    // `ac` threads the per-item AbortController so the listener is removed on item removal (SPEC-N3).
     // A no-op for a non-input factory or a literal-bound value prop (opt-in by the factory mark; see input.ts).
-    installInputBinding(el, factory, node, surface, itemScope)
+    installInputBinding(el, factory, node, surface, itemScope, ac)
     return el
   }
 }

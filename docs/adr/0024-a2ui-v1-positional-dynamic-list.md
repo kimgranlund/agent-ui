@@ -4,11 +4,11 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(amended 2026-06-28: (1) write-side itemScope #139, (2) subtree + nested item templates — see [Amendments](#amendment--write-side-itemscope-two-way-relative-inputs-in-list-items) below)* |
-> | **Date** | 2026-06-29 *(authored)* · 2026-06-28 *(amended ×2: write-side itemScope; subtree + nested)* |
+> | **Status** | accepted *(amended 2026-06-28: (1) write-side itemScope #139, (2) subtree + nested item templates, (3) per-item listener lifetime #140 — see [Amendments](#amendment--write-side-itemscope-two-way-relative-inputs-in-list-items) below)* |
+> | **Date** | 2026-06-29 *(authored)* · 2026-06-28 *(amended ×3: write-side itemScope; subtree + nested; per-item listener lifetime)* |
 > | **Proposed by** | planning-lead — the design seat, on the #137 v1.0-conformance grounding |
 > | **Ratified by** | the **user** chose A2UI v1.0 + vehicle B2; orchestration-lead ratifies on the build gate |
-> | **Repairs** | `a2ui-renderer LLD-C6 §5` (keyed→positional — already edited) · `a2ui-renderer LLD` "kernel reuse" note (`repeat`→positional loop) · **NEW** `a2ui/protocol.ts` ChildList template union · **NEW** `a2ui/renderer/list.ts` · **(amendment 1)** `a2ui-renderer LLD-C8` write-side itemScope · `a2ui/renderer/input.ts` · `a2ui/renderer/widget.ts` (input call site) · `a2ui/renderer/binding.ts` (`scopedPointer` export) · `a2ui/renderer/types.ts` (`ItemScope` no longer read-only) · **(amendment 2)** `a2ui-renderer LLD-C6` (single-root → full item subtree + nested) · `a2ui/renderer/tree.ts` (shared `#mountChildrenInto` / `#mountInstance` recursion) · `a2ui/renderer/list.ts` (renderList subtree deps) |
+> | **Repairs** | `a2ui-renderer LLD-C6 §5` (keyed→positional — already edited) · `a2ui-renderer LLD` "kernel reuse" note (`repeat`→positional loop) · **NEW** `a2ui/protocol.ts` ChildList template union · **NEW** `a2ui/renderer/list.ts` · **(amendment 1)** `a2ui-renderer LLD-C8` write-side itemScope · `a2ui/renderer/input.ts` · `a2ui/renderer/widget.ts` (input call site) · `a2ui/renderer/binding.ts` (`scopedPointer` export) · `a2ui/renderer/types.ts` (`ItemScope` no longer read-only) · **(amendment 2)** `a2ui-renderer LLD-C6` (single-root → full item subtree + nested) · `a2ui/renderer/tree.ts` (shared `#mountChildrenInto` / `#mountInstance` recursion) · `a2ui/renderer/list.ts` (renderList subtree deps) · **(amendment 3)** per-item **listener** lifetime #140 — `a2ui-renderer LLD-C3` (per-item `(scope, ac)` pair) · `LLD-C6` (item ac dispose-on-removal) · `LLD-C8` (input listener via item ac) · `LLD-C13` (action listener via item ac) · `a2ui/renderer/types.ts` (`CreateWidget` gains `ac?`) · `a2ui/renderer/renderer.ts` (`#wireAction` per-item ac) · `a2ui/renderer/input.ts` (`installInputBinding` per-item ac) · `a2ui/renderer/widget.ts` (ac threaded to input) · `a2ui/renderer/tree.ts` (ac through `#mountChildrenInto`/`#mountInstance`) · `a2ui/renderer/list.ts` (per-item `AbortController`, aborted in `removeLast`) |
 > | **Supersedes / Superseded by** | Relates **ADR-0023** (the `mount()` seam — stands as general infra, not used by `list.ts` under B2) · Relates **ADR-0022** (`repeat`/`moveBefore` — stays the *keyed*-list vehicle) |
 
 ## Context
@@ -274,3 +274,95 @@ tail) · `list.ts` (`renderList` subtree deps; `parentScope`-owned loop; `scoped
 · LLD-C6 (single-root → full item subtree + nested) · the new subtree + nested tests (`tree.test.ts` "children-template
 routes…" describe, on the real `SurfaceTree` + widget path) · the static-children DFS tests (`tree.test.ts:43/62`,
 out-of-order `:149-208`) stay green = the byte-for-byte guard.
+
+## Amendment — per-item listener lifetime (the `(scope, ac)` pair, #140)
+
+> 2026-06-28 · #140 · append-only (the Decision above stands and is *completed*, not changed). The exact
+> mechanism below was **already named** by the subtree amendment's *Out of scope* para ("*the fix gives each
+> item the **(scope, ac) pair** the surface has — a per-item `AbortController` aborted in `removeLast()`,
+> mirroring `disposeSurface` exactly*"); this amendment is that booked follow-through landing — no new design
+> choice (hence an amendment, not an `Extends`-ADR).
+
+**The gap (an item-granular SPEC-N3 leak — listeners, not effects).** The per-item ownership this ADR built gives
+each instance a per-index **`childScope`** (`list.ts:94`) that owns its bound-prop **effects** and is disposed on
+positional removal (`removeLast` → `childScope.dispose()`, `list.ts:107`). That covers the *reactive* half of SPEC-N3
+at item granularity — but **not the DOM-listener half**. Exactly two listener registrations are reachable per item,
+and **both** register on the **surface-level** `surface.ac`, removed only at *surface* teardown (`disposeSurface` =
+`scope.dispose()` + `ac.abort()`, `surface.ts:61-64`):
+
+- the per-item **action** listener — the host's `createWidget` closure (`renderer.ts:287-292`) calls `#wireAction`
+  (`renderer.ts:307-314`), which does `el.addEventListener('click', …, { signal: surface.ac.signal })`. Reached for
+  *every* widget, including a list-item Card-with-button.
+- the per-item **input** listener — `installInputBinding` (`input.ts:65-89`), called from `makeCreateWidget`
+  (`widget.ts:90`), does `el.addEventListener(value.event, …, { signal: surface.ac.signal })`. Reached for *every*
+  input widget, including an editable list-item field.
+
+So a positionally-removed item (`removeLast`) disposes its child scope (effects gone) and detaches its element, but
+its action/input listener registration is **retained on `surface.ac`** — the detached node won't fire, but the
+registration accumulates **unbounded over add/remove churn**. A memory **leak**, not corruption. Latent since the
+leaf list (#137/#139); the subtree amendment promotes it from edge-case to **common** (every Card-with-button /
+interactive row is now an item subtree).
+
+**The completion (no new design choice).** Give each item the **`(scope, ac)` pair** the surface already has, so the
+two halves of an item's lifetime release together — mirroring `disposeSurface`'s `scope.dispose() + ac.abort()`
+byte-for-byte, at item granularity. The ac threads **exactly parallel to the `scope`/`itemScope`** the read-side
+amendments already thread — through the *same one* `createWidget` call the list drives per item, and the *same*
+`tree.ts` recursion. There is no alternative to weigh: the listener half *must* die with the item or it is the leak
+above.
+
+1. **`types.ts`** — `CreateWidget` gains a trailing optional **`ac?: AbortController`** (sibling to `scope?`). Every
+   implementation defaults it to `surface.ac`, so the non-list/static caller (`tree.ts:133` `#mountNode →
+   createWidget(node, surface)`) omits it ⇒ `surface.ac` ⇒ **byte-for-byte** unchanged.
+2. **`renderer.ts`** — the host `createWidget` closure (`:287`) gains `ac = surface.ac`, forwards it to `base(…, ac)`
+   and to `#wireAction(el, node, surface, spec, ac)`; `#wireAction` (`:307`) registers on **`ac.signal`** instead of
+   `surface.ac.signal`.
+3. **`widget.ts`** — `makeCreateWidget`'s returned fn (`:64`) gains `ac = surface.ac`, passes it as the trailing arg
+   to `installInputBinding(el, factory, node, surface, itemScope, ac)` (`:90`). `bindProp` is **untouched** (its
+   effects are already `scope`-owned — that half was never the leak).
+4. **`input.ts`** — `installInputBinding` (`:65`) gains a trailing **`ac: AbortController = surface.ac`**; the listener
+   registers on **`ac.signal`** (`:87`). Direct test callers (`input.test.ts`) omit it ⇒ `surface.ac` ⇒ unchanged.
+5. **`tree.ts`** — the ac rides the **same recursion** the `itemScope` does: `#mountChildrenInto` and `#mountInstance`
+   gain an `ac` param; `#mountInstance` passes it to `createWidget(node, surface, scope, itemScope, ac)` and recurses
+   with it; the static `#mountNode` tail passes the surface default
+   (`#mountChildrenInto(el, node, surface.scope, undefined, false, surface.ac)`); the `renderList` `mountChildren`
+   callback gains the trailing `ac` (`(childEl, childNode, childScope, childItemScope, childAc) =>
+   #mountChildrenInto(childEl, childNode, childScope, childItemScope, true, childAc)`).
+6. **`list.ts`** — `ListItem` gains `ac: AbortController`; `appendInstance` (`:93`) mints `const childAc = new
+   AbortController()` **alongside** `childScope`, passes it to `createWidget(…, childScope, itemScope, childAc)` **and**
+   to `mountChildren?.(el, templateNode, childScope, itemScope, childAc)`, and pushes `{ el, scope: childScope, ac:
+   childAc }`; `removeLast` (`:104`) calls **`item.ac.abort()`** alongside `item.scope.dispose()`; the teardown carrier
+   (`:134-139`) **aborts** every still-live item ac alongside disposing its scope. The `mountChildren` dep signature
+   gains the trailing `ac` param.
+
+**The crux confirmed — `#wireAction` takes a per-item ac cleanly (no fork).** The flagged risk was that the action
+path might wire *separately* from `createWidget` and so be unable to reach a per-item ac. It does **not**: `#wireAction`
+is called **inside** the host's `createWidget` closure (`renderer.ts:290`), in the same lexical scope that already
+receives `scope` and `itemScope` — the ac threads to it identically. There is **no** separate host-side action-wiring
+pass. Both listener registrations (action via the host closure, input via `makeCreateWidget`) are reached through the
+**single** `createWidget` call the list already drives per item — the ac is one 5th param on that one signature.
+
+**Why correct + paired (and nested-safe).** `childAc` is minted once per `appendInstance`, paired **1:1** with the
+`childScope`, and aborted at exactly the two points the scope is disposed — `removeLast` (positional removal) **and**
+the teardown carrier (surface- or parent-scope teardown). **Nested lists compose for free** by the same chain the
+scopes already use: an inner list's per-item acs are minted by the inner `renderList`, whose teardown carrier is owned
+by the **outer** item's `childScope` (`parentScope.run`) — so removing the outer item disposes the inner carrier →
+aborts every inner item ac, while the outer item's own `childAc.abort()` removes the outer root's listeners. No new
+cross-scope machinery: the ac rides the exact recursion the `itemScope`/`childScope` already ride (the same
+re-rooting the shipped leaf list relies on).
+
+**Out of scope / unchanged.**
+- **Static tree + server-driven writes stay on `surface.ac`** (the default) — every existing `#wireAction` /
+  `installInputBinding` caller is byte-for-byte unchanged; the host's `updateDataModel` (`renderer.ts:254`) is untouched.
+- **Action *context* relative-path resolution is a SEPARATE #140 concern, not this amendment.** `collectContext`
+  (LLD-C9 — resolving a list-item action's *bound context paths* through `itemScope`) is "out of this slice"
+  (`action.ts:13`) and **not yet wired** — `#wireAction` passes the *static* `context` off the action prop
+  (`renderer.ts:308`, via `readActionSpec`), so there is no relative-context resolution in play to leak or mis-resolve.
+  That is a binding-**correctness** gap (separate from this listener-**lifetime** gap) and is left for the context slice.
+
+**Stale → re-verify on the build gate:** `types.ts` (`CreateWidget` `ac?`) · `renderer.ts` (`#wireAction` on item ac)
+· `input.ts` (`installInputBinding` on item ac) · `widget.ts:90` (ac threaded) · `tree.ts`
+(`#mountChildrenInto`/`#mountInstance` ac; `#mountNode` tail passes `surface.ac`) · `list.ts` (per-item
+`AbortController`, aborted in `removeLast` + teardown carrier) · LLD-C3/C6/C8/C13 (the per-item `(scope, ac)` pair) ·
+the **new no-leak tests** (a detached removed item's action/input listener no longer fires — `renderer.test.ts` for the
+action path, `list.test.ts` for the input path) · the existing `list.test.ts` child-scope/no-accumulation suites
+(`:190-247`) + every static-tree/byte-for-byte guard stay green.

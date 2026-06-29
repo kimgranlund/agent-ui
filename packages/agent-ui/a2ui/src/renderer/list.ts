@@ -38,10 +38,17 @@ import type { Surface } from './surface.ts'
 import type { CreateWidget, ItemScope } from './types.ts'
 import { resolve, scopedPointer } from './binding.ts'
 
-/** One rendered list item: its single-root control + the per-index child scope owning its bind effects. */
+/**
+ * One rendered list item: its single-root control, the per-index child scope owning its bind effects,
+ * and the per-index AbortController owning its DOM listeners (action + input). The (scope, ac) pair
+ * mirrors the surface's own (scope, ac) pair at item granularity — `removeLast` does both dispose +
+ * abort, exactly as `disposeSurface` does, so DOM listener registrations never outlive the item
+ * (SPEC-N3 item-granular listener discipline; see task brief #3 / ADR-0024 amendment).
+ */
 interface ListItem {
   el: HTMLElement
   scope: Scope
+  ac: AbortController
 }
 
 /**
@@ -66,7 +73,7 @@ export function renderList(deps: {
   template: A2uiChildTemplate
   surface: Surface
   createWidget: CreateWidget
-  mountChildren?: (el: HTMLElement, templateNode: A2uiComponent, scope: Scope, itemScope: ItemScope) => void
+  mountChildren?: (el: HTMLElement, templateNode: A2uiComponent, scope: Scope, itemScope: ItemScope, ac: AbortController) => void
   parentScope?: Scope
   parentItemScope?: ItemScope
 }): void {
@@ -92,20 +99,23 @@ export function renderList(deps: {
 
   const appendInstance = (index: number, templateNode: A2uiComponent): void => {
     const childScope = createScope() // per-index; flat scope, torn down on removal / scope teardown
+    const itemAc = new AbortController() // per-index; aborted on removal / scope teardown (SPEC-N3)
     const itemScope: ItemScope = { path: absolutePath, index }
-    const el = createWidget(templateNode, surface, childScope, itemScope)
-    // Walk the template's own children into `el` (CONTAINER item case). For a leaf item template
+    const el = createWidget(templateNode, surface, childScope, itemScope, itemAc)
+    // Walk the template's own children into `el` (CONTAINER item case), threading the per-item ac
+    // so descendants' listeners are also gated on this item's lifetime. For a leaf item template
     // `mountChildren` is absent (undefined) and this is a no-op — existing behavior preserved.
-    mountChildren?.(el, templateNode, childScope, itemScope)
+    mountChildren?.(el, templateNode, childScope, itemScope, itemAc)
     container.appendChild(el)
-    items.push({ el, scope: childScope })
+    items.push({ el, scope: childScope, ac: itemAc })
   }
 
   const removeLast = (): void => {
     const item = items.pop()
     if (item === undefined) return
     item.scope.dispose() // dispose the item's bound-prop effects → zero residual subscribers (SPEC-N3)
-    item.el.remove() // detach the trailing instance from the container
+    item.ac.abort()      // abort the item's listener ac → removes action + input DOM listeners (SPEC-N3)
+    item.el.remove()     // detach the trailing instance from the container
   }
 
   // Reconcile loop: positional grow/shrink to the current length (boundary-only, SPEC-R6 AC1). Owned by
@@ -128,12 +138,16 @@ export function renderList(deps: {
   )
 
   // Teardown carrier (FLAT scopes do not cascade). Subscribes to nothing ⇒ its cleanup fires ONLY when
-  // `parentScope` disposes it, never on a reconcile re-run — disposing every item scope still live at
-  // teardown so no item's effects outlive the owning scope (SPEC-N3). For a nested list this means the
-  // inner item scopes are disposed when the outer item's childScope is disposed.
+  // `parentScope` disposes it, never on a reconcile re-run — disposing every item scope AND aborting
+  // every item ac still live at teardown so no item's effects or listeners outlive the owning scope
+  // (SPEC-N3). For a nested list this means the inner items' (scope, ac) pairs are released when the
+  // outer item's childScope is disposed, mirroring the surface's own (scope, ac) release at teardown.
   parentScope.run(() =>
     effect(() => () => {
-      for (const item of items) item.scope.dispose()
+      for (const item of items) {
+        item.scope.dispose()
+        item.ac.abort()
+      }
       items.length = 0
     }),
   )

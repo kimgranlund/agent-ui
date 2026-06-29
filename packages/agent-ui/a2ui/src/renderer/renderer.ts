@@ -284,10 +284,10 @@ class Renderer implements RendererHost {
       resolveBinding: (binding, surface, itemScope) => resolve(binding, surface, itemScope),
     })
 
-    return (node, surface, scope = surface.scope, itemScope) => {
+    return (node, surface, scope = surface.scope, itemScope, ac = surface.ac) => {
       const actionProps = this.#actionPropsOf(node, surface)
-      const el = base(actionProps.size === 0 ? node : withoutProps(node, actionProps), surface, scope, itemScope)
-      for (const spec of actionProps.values()) this.#wireAction(el, node, surface, spec)
+      const el = base(actionProps.size === 0 ? node : withoutProps(node, actionProps), surface, scope, itemScope, ac)
+      for (const spec of actionProps.values()) this.#wireAction(el, node, surface, spec, ac)
       return el
     }
   }
@@ -303,13 +303,18 @@ class Renderer implements RendererHost {
     return out
   }
 
-  /** Wire a control's `click` to emit an A2UI action for `node` (listener owned by `surface.ac`, N3). */
-  #wireAction(el: HTMLElement, node: A2uiComponent, surface: Surface, spec: unknown): void {
+  /**
+   * Wire a control's `click` to emit an A2UI action for `node`. The listener is gated on `ac`
+   * (surface.ac for static nodes, the per-item AbortController for list items aborted on positional
+   * removal). This is the action-side SPEC-N3 item-granular discipline: a removed list item's click
+   * listener dies with the item, not at surface teardown.
+   */
+  #wireAction(el: HTMLElement, node: A2uiComponent, surface: Surface, spec: unknown, ac: AbortController): void {
     const { name, wantResponse, context } = readActionSpec(spec)
     el.addEventListener(
       'click',
       () => void this.#actions.emitAction(node, surface, { name, wantResponse, context }),
-      { signal: surface.ac.signal },
+      { signal: ac.signal },
     )
   }
 

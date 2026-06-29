@@ -222,6 +222,83 @@ describe('renderer host — action-prop reading (ADR-0011 canonical {action,cont
   })
 })
 
+// Per-item action-listener leak (ADR-0024 amendment 3). Each list item's Button registers its click→action
+// listener on a per-item AbortController (list.ts `appendInstance` → renderer.ts `#wireAction`). When the
+// item is removed (`removeLast` aborts that ac), the listener is torn down immediately so no click on the
+// detached element ever reaches `ActionDispatcher`. Two proofs: (1) basic — shrink by 1, click trailing
+// button → 0 actions; (2) churn ×3 — accumulate ALL removed buttons across 3 grow/shrink cycles, click
+// every collected button → 0 actions total (ensures no accumulation with repeated churn).
+describe('renderer host — per-item action-listener no-leak proof (ADR-0024 amendment 3, SPEC-N3)', () => {
+  // A Column root whose `children` is a v1.0 positional list template over `/rows`. Each item is a
+  // Button with `action:{action:'go'}` — the default catalog wires a click→action listener per item.
+  const listComponents = [
+    { id: 'root', component: 'Column', children: { path: '/rows', componentId: 'rowTpl' } },
+    { id: 'rowTpl', component: 'Button', label: 'Row', action: { action: 'go' } },
+  ] as const
+
+  it('clicking a removed Button list item emits no action — per-item ac aborted on removal (SPEC-N3)', async () => {
+    const { r, mount, sent, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sl', catalogId: 'agent-ui' } }))
+    r.ingest(line({ version: 'v1.0', updateComponents: { surfaceId: 'sl', components: [...listComponents] } }))
+
+    // Populate 3 rows — the reconcile effect fires on the next flush.
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sl', path: '/rows', value: [{}, {}, {}] } }))
+    await whenFlushed()
+
+    const btns = [...mount.querySelectorAll('ui-button')] as HTMLElement[]
+    expect(btns).toHaveLength(3)
+    const btn2 = btns[2]! // the trailing instance (index 2)
+
+    // NON-VACUOUS: btn2 is live before removal — click WOULD emit an action without removal.
+    btn2.click()
+    expect(sent.filter(isAction)).toHaveLength(1)
+    sent.length = 0 // reset; from here we assert 0 actions on the detached button
+
+    // Shrink to 2 — btn2's per-item ac is aborted, its click listener removed.
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sl', path: '/rows', value: [{}, {}] } }))
+    await whenFlushed()
+    expect(btn2.isConnected).toBe(false) // btn2 is detached
+
+    // A click on the detached btn2 is now inert — no action emitted (SPEC-N3 item-granular).
+    btn2.click()
+    expect(sent.filter(isAction)).toHaveLength(0)
+
+    cleanup()
+  })
+
+  it('churn x3: clicking ALL removed buttons across 3 grow/shrink cycles emits no action', async () => {
+    const { r, mount, sent, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'slc', catalogId: 'agent-ui' } }))
+    r.ingest(line({ version: 'v1.0', updateComponents: { surfaceId: 'slc', components: [...listComponents] } }))
+
+    const removed: HTMLElement[] = []
+
+    for (let cycle = 0; cycle < 3; cycle++) {
+      // Grow to 3 rows
+      r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'slc', path: '/rows', value: [{}, {}, {}] } }))
+      await whenFlushed()
+      const btns = [...mount.querySelectorAll('ui-button')] as HTMLElement[]
+      expect(btns).toHaveLength(3)
+
+      // Shrink to 0 — all 3 instances removed, their per-item acs aborted.
+      r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'slc', path: '/rows', value: [] } }))
+      await whenFlushed()
+      expect(mount.querySelectorAll('ui-button')).toHaveLength(0)
+
+      removed.push(...btns) // accumulate all removed buttons from this cycle
+    }
+
+    // Click every button collected across all 3 cycles — none should emit an action.
+    expect(removed).toHaveLength(9) // 3 cycles × 3 buttons
+    for (const btn of removed) btn.click()
+    expect(sent.filter(isAction)).toHaveLength(0)
+
+    cleanup()
+  })
+})
+
 // The binding wiring proof (renderer LLD-C5, the B2 integration): a unit test on binding.ts can show the
 // resolver memoizes per-path computeds, but only this can show the LIVE host wires `resolveBinding →
 // resolve` AND routes `updateDataModel` through `binding.setPointer` end-to-end — a `{path}`-bound prop

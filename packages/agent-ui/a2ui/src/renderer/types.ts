@@ -35,11 +35,14 @@ export interface ItemScope {
  * `scope` defaults to `surface.scope` (the surface lifetime) so every existing caller is unchanged; a
  * dynamic-list item (renderer LLD-C6) passes its per-index CHILD scope so the item's bound-prop effects
  * dispose with the item, not the surface. `itemScope` threads the relative-path resolution context for a
- * list item (absent for an ordinary node).
+ * list item (absent for an ordinary node). `ac` defaults to `surface.ac`; a dynamic-list item passes its
+ * per-index AbortController so DOM listeners (action + input) are removed when the item is removed, not
+ * only at surface teardown (SPEC-N3 item-granular listener discipline).
  */
 export type CreateWidget = (
   node: A2uiComponent,
   surface: Surface,
   scope?: Scope,
   itemScope?: ItemScope,
+  ac?: AbortController,
 ) => HTMLElement

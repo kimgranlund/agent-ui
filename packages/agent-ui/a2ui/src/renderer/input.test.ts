@@ -135,6 +135,37 @@ describe('zero-residue teardown (SPEC-N3)', () => {
     el.dispatchEvent(new Event('input'))
     expect(resolve({ path: '/name' }, s)).toBe('first') // unchanged — zero residue
   })
+
+  it('a per-item AbortController abort removes the listener without touching the surface ac (SPEC-N3 item-granular)', () => {
+    // This is the listener-leak fix (task #3): list.ts passes a per-item ac to installInputBinding.
+    // Aborting it removes the listener immediately on item removal, not only at surface teardown;
+    // the surface's own ac remains live so other (non-removed) items are unaffected.
+    const s = createSurface(init)
+    s.data.value = { name: 'a' }
+    const el = stubControl()
+    const itemAc = new AbortController()
+    installInputBinding(el, inputFactory({ prop: 'value', event: 'input' }), { id: 'n1', component: 'TextField', value: { path: '/name' } }, s, undefined, itemAc)
+
+    ;(el as { value?: unknown }).value = 'first'
+    el.dispatchEvent(new Event('input'))
+    expect(resolve({ path: '/name' }, s)).toBe('first') // listener live before per-item abort
+
+    // Abort the per-item controller (mirrors list.ts removeLast).
+    itemAc.abort()
+    expect(s.ac.signal.aborted).toBe(false) // surface-level ac is still live — only the item ac was aborted
+
+    // A commit after per-item abort is inert: the per-item signal removed the listener.
+    ;(el as { value?: unknown }).value = 'ghost'
+    el.dispatchEvent(new Event('input'))
+    expect(resolve({ path: '/name' }, s)).toBe('first') // unchanged — listener removed with the item
+
+    // Surface is still functional: a new listener registered on surface.ac still works.
+    const el2 = stubControl()
+    installInputBinding(el2, inputFactory({ prop: 'value', event: 'input' }), { id: 'n2', component: 'TextField', value: { path: '/name' } }, s)
+    ;(el2 as { value?: unknown }).value = 'surface-live'
+    el2.dispatchEvent(new Event('input'))
+    expect(resolve({ path: '/name' }, s)).toBe('surface-live')
+  })
 })
 
 describe('negative control — opt-in by the factory mark', () => {

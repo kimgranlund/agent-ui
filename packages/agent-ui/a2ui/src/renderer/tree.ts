@@ -132,13 +132,14 @@ export class SurfaceTree {
 
     const el = this.#deps.createWidget(node, this.#surface)
     this.#surface.widgets.set(id, el)
-    this.#mountChildrenInto(el, node, this.#surface.scope, undefined, false)
+    this.#mountChildrenInto(el, node, this.#surface.scope, undefined, false, this.#surface.ac)
     return el
   }
 
   /**
-   * Walk `node`'s children into `el`, threading `scope` and `itemScope` so every descendant resolves
-   * bindings in the right context (renderer LLD-C6 / ADR-0024 amendment). Two modes:
+   * Walk `node`'s children into `el`, threading `scope`, `itemScope`, and `ac` so every descendant
+   * resolves bindings in the right context and registers DOM listeners on the right controller
+   * (renderer LLD-C6 / ADR-0024 amendment + listener-leak fix). Two modes:
    *  - `instance=false` (static tree): each child id is looked up via `#mountNode` — the ordinary DFS
    *    that registers anchors in `#pendingParents` and records widgets by id. Byte-for-byte equivalent
    *    to the previous inline children-loop in `#mountNode`, so all static-tree tests are unchanged.
@@ -146,21 +147,24 @@ export class SurfaceTree {
    *    does NOT register in `#pendingParents` or `widgets` (ids alias across N instances). A missing
    *    id in instance mode yields an inert comment anchor and is NOT patched later.
    * A `children`-TEMPLATE at any depth hands off to `renderList` with `mountChildren` bound to this
-   * same `#mountChildrenInto` (instance mode), so subtrees and NESTED lists compose for free.
+   * same `#mountChildrenInto` (instance mode), so subtrees and NESTED lists compose for free. The
+   * `mountChildren` callback receives the per-item `ac` created by `appendInstance` so every
+   * descendant's DOM listeners are gated on the item's lifetime, not the surface's.
    */
-  #mountChildrenInto(el: HTMLElement, node: A2uiComponent, scope: Scope, itemScope: ItemScope | undefined, instance: boolean): void {
+  #mountChildrenInto(el: HTMLElement, node: A2uiComponent, scope: Scope, itemScope: ItemScope | undefined, instance: boolean, ac: AbortController): void {
     // A `children`-TEMPLATE (`{path, componentId}`, A2UI v1.0) is a dynamic list: hand the container
     // to the positional loop. Pass `mountChildren` so list items that are themselves containers recurse
     // back here; pass `parentScope`/`parentItemScope` so the inner loop is scoped to `scope` — for a
-    // nested list this binds the inner list's lifetime to the outer item's child scope.
+    // nested list this binds the inner list's lifetime to the outer item's child scope. The callback
+    // receives `childAc` (the per-item AbortController from `appendInstance`) so descendants thread it.
     if (isChildTemplate(node.children)) {
       renderList({
         container: el,
         template: node.children,
         surface: this.#surface,
         createWidget: this.#deps.createWidget,
-        mountChildren: (childEl, childNode, childScope, childItemScope) =>
-          this.#mountChildrenInto(childEl, childNode, childScope, childItemScope, true),
+        mountChildren: (childEl, childNode, childScope, childItemScope, childAc) =>
+          this.#mountChildrenInto(childEl, childNode, childScope, childItemScope, true, childAc),
         parentScope: scope,
         parentItemScope: itemScope,
       })
@@ -168,7 +172,7 @@ export class SurfaceTree {
       for (const childId of childRefs(node)) {
         el.appendChild(
           instance
-            ? this.#mountInstance(childId, scope, itemScope)
+            ? this.#mountInstance(childId, scope, itemScope, ac)
             : this.#mountNode(childId),
         )
       }
@@ -180,18 +184,18 @@ export class SurfaceTree {
    * Differences from `#mountNode`: (a) a missing id produces an INERT comment anchor that is NOT
    * registered in `#pendingParents` (ids alias across N instances — a patch triggered for one alias
    * would not reach the others); (b) the widget is NOT stored in `surface.widgets` (only the item
-   * root is relevant to the host via `widgets.get('root')`); (c) the per-item `scope` and `itemScope`
-   * are threaded so every descendant's bound-prop effects are owned by the item scope and resolve
-   * relative bindings to this item's pointer.
+   * root is relevant to the host via `widgets.get('root')`); (c) the per-item `scope`, `itemScope`,
+   * and `ac` are threaded so every descendant's bound-prop effects are owned by the item scope,
+   * relative bindings resolve to this item's pointer, and DOM listeners are gated on the item's `ac`.
    */
-  #mountInstance(id: string, scope: Scope, itemScope: ItemScope | undefined): Node {
+  #mountInstance(id: string, scope: Scope, itemScope: ItemScope | undefined, ac: AbortController): Node {
     const node = this.#surface.components.get(id)
     if (node === undefined) {
       // Not yet delivered: inert anchor. Not patched in later (see class header; instance ids alias).
       return document.createComment(`a2ui:pending:${id}`)
     }
-    const el = this.#deps.createWidget(node, this.#surface, scope, itemScope)
-    this.#mountChildrenInto(el, node, scope, itemScope, true)
+    const el = this.#deps.createWidget(node, this.#surface, scope, itemScope, ac)
+    this.#mountChildrenInto(el, node, scope, itemScope, true, ac)
     return el
   }
 
