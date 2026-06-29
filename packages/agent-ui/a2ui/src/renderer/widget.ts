@@ -3,10 +3,11 @@
 // Resolves one A2UI component node to a live `ui-*` control: looks `node.component` up in the
 // surface's bound catalog (via the `CatalogRegistry` — `get(catalogId)?.factories[type]`),
 // instantiates the resolved `WidgetFactory`'s element, applies the static props, installs a
-// `surface.scope`-owned effect per bound (`{path}`) prop so a data-model change re-applies only that
-// prop (SPEC-N2), and — for an input widget — wires the reverse direction via the generic two-way input
-// controller (`installInputBinding`, LLD-C8/ADR-0019) so a committed value flows control→data. The pointer
-// walk itself is delegated to the injected binding resolver (LLD-C5).
+// `surface.scope`-owned effect per DYNAMIC prop so a data-model change re-applies only that prop
+// (SPEC-N2). Dynamic props are: `{path}` bindings (LLD-C5), `{call}` function calls (ADR-0026),
+// and `${…}` DynamicString template strings (ADR-0027) — `isBinding` routes all three through the
+// scope-owned bound-prop effect. A static non-template literal is applied once via `applyProp`.
+// For input widgets the reverse direction is wired via `installInputBinding` (LLD-C8/ADR-0019).
 // An unknown component type is NON-fatal: it emits `error{code:"CATALOG"}` and returns a placeholder
 // element so sibling nodes still render (SPEC-R9 AC2). The resolver therefore ALWAYS returns an
 // element — it never throws and never returns null.
@@ -23,21 +24,25 @@ import type { CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
 import type { CreateWidget, ItemScope } from './types.ts'
 import type { Surface } from './surface.ts'
 import { installInputBinding } from './input.ts'
+import { isInterpolated } from './interpolate.ts'
 
 /** Structural adjacency keys (SPEC-R3/§5.1) — never catalog-declared props, so never applied. */
 const RESERVED = new Set<string>(['id', 'component', 'child', 'children'])
 
 /**
- * A dynamic binding value — either a `{path}` data-model reference or a `{call}` function call
- * (ADR-0026 three-armed Binding union). Both are deferred-resolution: they need the scope-owned
- * bound-prop effect and `resolveValue` to produce a render value; a static literal falls through
- * to the `else` branch and is `applyProp`'d once. The `{path}` arm is the existing LLD-C5 path;
- * the `{call}` arm is the new LLD-C10 evaluator path (ADR-0026).
+ * A dynamic binding value: `{path}` data-model reference, `{call}` function call (ADR-0026), or a
+ * `${…}` DynamicString template string (ADR-0027). All three are deferred-resolution — they need the
+ * scope-owned bound-prop effect and `resolveValue` to produce a render value. A static non-template
+ * literal falls through to the `else` branch and is `applyProp`'d once.
+ *
+ * Adding template strings to the binding class is the load-bearing widget-layer change for ADR-0027:
+ * without it a template string would be treated as a static prop value (applied once, never reactive).
  */
-const isBinding = (v: unknown): v is { path: string } | FunctionCall =>
-  typeof v === 'object' && v !== null && !Array.isArray(v) &&
-  (typeof (v as { path?: unknown }).path === 'string' ||
-   typeof (v as { call?: unknown }).call === 'string')
+const isBinding = (v: unknown): v is { path: string } | FunctionCall | string =>
+  (typeof v === 'object' && v !== null && !Array.isArray(v) &&
+    (typeof (v as { path?: unknown }).path === 'string' ||
+     typeof (v as { call?: unknown }).call === 'string')) ||
+  (typeof v === 'string' && isInterpolated(v))
 
 /**
  * Injected collaborators for widget resolution. Supplied by the renderer host (LLD-C13) at

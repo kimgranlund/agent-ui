@@ -18,7 +18,7 @@ A2UI facts this SPEC conforms to (external; Constraint C1): the message envelope
 
 - **Surface** — an isolated UI context keyed by `surfaceId`, bound to one catalog, with its own component set and data model.
 - **Message** — one JSON object from the stream (server→client) or to the server (client→server), §5.
-- **Binding** — a value that is a literal, a `{ "path": <JSONPointer> }` reference resolved against the surface data model, or a **function call** `{ "call": <name>, "args"?: {…} }` evaluated client-side (SPEC-R10).
+- **Binding** — a value that is a literal, a `{ "path": <JSONPointer> }` reference resolved against the surface data model, or a **function call** `{ "call": <name>, "args"?: {…} }` evaluated client-side (SPEC-R10). A literal **string** is additionally a **DynamicString**: at *runtime* a string containing an unescaped `${…}` is an interpolation template, re-resolved against the data model (SPEC-R10, ADR-0027) — the literal-string arm is therefore not always opaque, though the wire shape is unchanged (a DynamicString is a plain JSON string).
 - **Widget** — a live `@agent-ui/components` control instance the renderer creates for a component node, via the catalog (a2ui-catalog SPEC).
 
 ---
@@ -74,8 +74,19 @@ Normative per RFC 2119. Each carries a stable ID, a PRD trace, and acceptance cr
 - **AC1** *Given* a component whose `component` type is registered in the bound catalog, *when* rendered, *then* the mapped widget is created and bound.
 - **AC2** *Given* a `component` type absent from the catalog, *when* rendered, *then* the renderer emits `error{code:"CATALOG"}` and renders a non-fatal placeholder (the rest of the tree still renders).
 
-**SPEC-R10 — Client-side function evaluation.** The renderer MUST evaluate **function-call bindings** — a `{ "call": <name>, "args"?: {…named…} }` value (alongside a literal and a `{path}`) — by resolving the named function (a `@`-prefixed **system** function, the only v1.0 one being `@index` = the innermost collection-scope index + optional `offset`; or a **catalog** function from the bound catalog's `functions`), resolving its args **recursively** (each arg a literal, a `{path}`, or a nested `{call}`), and producing the derived value or validation result. An unknown/throwing function (or `@index` outside a collection scope) MUST emit `error{code:"FUNCTION"}` and render a placeholder, not tear down the surface (SPEC-N4). *(→ PRD-G1)* (String interpolation is the DynamicString `${…}` feature, not a function; validation `checks` run through this evaluator.)
+**SPEC-R10 — Client-side function evaluation.** The renderer MUST evaluate **function-call bindings** — a `{ "call": <name>, "args"?: {…named…} }` value (alongside a literal and a `{path}`) — by resolving the named function (a `@`-prefixed **system** function, the only v1.0 one being `@index` = the innermost collection-scope index + optional `offset`; or a **catalog** function from the bound catalog's `functions`), resolving its args **recursively** (each arg a literal, a `{path}`, or a nested `{call}`), and producing the derived value or validation result. An unknown/throwing function (or `@index` outside a collection scope) MUST emit `error{code:"FUNCTION"}` and render a placeholder, not tear down the surface (SPEC-N4). *(→ PRD-G1)* (Validation `checks` run through this evaluator.)
+
+Additionally, the renderer MUST support **DynamicString `${…}` interpolation** in any bindable **string** value: a literal string containing an **unescaped** `${…}` is an interpolation template whose `${…}` expressions are resolved and spliced into the surrounding literal text (ADR-0027). For **this version** an expression is a **JSON-Pointer path** — absolute (`${/user/name}`) or relative within a collection scope (`${name}`, resolved like a relative `{path}`/`@index`); a `${…}` **function-expression** form (`${fn(arg:val)}`) is a deferred follow-up and MUST render its `${…}` segment **literally** (no error). A literal `${` is escaped `\${`. Resolved values MUST coerce to string per the table below; the template MUST re-resolve when an embedded path's data changes (SPEC-N2). A non-`${` literal string is unchanged.
+
+| resolved value | coercion |
+|---|---|
+| number / boolean | standard string (`String(v)`) |
+| `null` / `undefined` | empty string `""` |
+| object / array | JSON-stringified (`JSON.stringify(v)`) |
+| string | itself |
+
 - **AC1** *Given* a `TextField` with a `required` check, *when* empty and an action commits, *then* the check fails and the renderer surfaces the validation message on the widget (no server round-trip required).
+- **AC2** *Given* a `Text` whose `text` is `"Hi ${/user/firstName} (${/user/age})"` and `/user = {firstName:"Ada", age:36}`, *when* rendered, *then* it shows `"Hi Ada (36)"`; *when* `/user/firstName` later updates to `"Grace"`, *then* it shows `"Hi Grace (36)"` (path interpolation + coercion + reactive re-resolve); *given* an absent path the segment renders `""`; *given* `"\${literal}"` it renders `"${literal}"`.
 
 ### 3.7 Conformance
 

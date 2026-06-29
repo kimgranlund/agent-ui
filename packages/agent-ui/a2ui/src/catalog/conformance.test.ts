@@ -59,4 +59,24 @@ describe('validateCatalogConformance (catalog LLD-C6, SPEC-R7/R9/N3)', () => {
       { code: 'CATALOG', path: 'b.disabled' },
     ])
   })
+
+  it('accepts a DynamicString template on a bindable string prop — no false CATALOG (ADR-0027 proof point 8)', () => {
+    // A `${…}` template is a plain string literal at the wire level (typeof === 'string'), so
+    // conformance.ts `matchesType` accepts it via the ordinary `'string'` leg — no deferred-binding
+    // branch involved, zero CATALOG failures (ADR-0027 §2.7 "conformance is a no-op — confirmed").
+    // NON-VACUOUS: a string on a non-bindable prop IS rejected (the test below this one proves it).
+    const f = validateCatalogConformance(
+      comp({ id: 't', component: 'Text', text: 'Hello ${/user/firstName}! You are ${/user/age} years old.' }),
+      demoCatalog,
+    )
+    expect(f).toEqual([])
+  })
+
+  it('negative control: a {path} binding on a non-bindable string prop still raises CATALOG', () => {
+    // `Text.variant` is a non-bindable string — a binding object is not a string literal → CATALOG.
+    // Confirms the template test above is non-vacuous (the string-type leg would pass a plain string,
+    // but only bindable props accept binding objects).
+    const f = validateCatalogConformance(comp({ id: 't', component: 'Text', variant: { path: '/v' } }), demoCatalog)
+    expect(f).toEqual([{ code: 'CATALOG', path: 't.variant' }])
+  })
 })

@@ -35,6 +35,7 @@
 // throwing impl → `undefined`. Sibling props and widgets are unaffected (SPEC-N4 / fault isolation).
 
 import { resolve } from './binding.ts'
+import { isInterpolated, interpolate } from './interpolate.ts'
 import { catalogFunctions } from '../catalog/functions.ts'
 import type { FunctionCall, A2uiError } from '../protocol.ts'
 import type { Surface } from './surface.ts'
@@ -54,11 +55,14 @@ const isPathBinding = (v: unknown): v is { path: string } =>
 // ── public API ─────────────────────────────────────────────────────────────────────────────────
 
 /**
- * Resolve any binding value to its current render value (renderer LLD-C10 / ADR-0026). The single
- * dispatcher that `widget.ts`'s `WidgetDeps.resolveValue` delegates to. A literal is returned as-is;
- * a `{path}` binding defers to the per-path memo in `binding.ts` (reads reactively inside the calling
- * effect — SPEC-N2); a `{call}` defers to `evaluate` below. Called inside a scope-owned bound-prop
- * effect, so per-path waking is preserved for all call paths through here.
+ * Resolve any binding value to its current render value (renderer LLD-C5/C10 / ADR-0026/ADR-0027).
+ * The single dispatcher `widget.ts`'s `WidgetDeps.resolveValue` delegates to. Four cases:
+ *   `{call}` → `evaluate` (LLD-C10 function evaluator, ADR-0026).
+ *   `{path}` → `resolve` in binding.ts (per-path memo, SPEC-N2, LLD-C5).
+ *   template string (literal with unescaped `${`) → `interpolate` (DynamicString, ADR-0027).
+ *   other literal → as-is (no reactive dep, byte-identical to today).
+ * Called inside a scope-owned bound-prop effect, so per-path waking is preserved for every arm:
+ * the `{path}` arm and each `${/expr}` inside a template all read the same per-path memo.
  */
 export function resolveValue(
   value: unknown,
@@ -69,7 +73,12 @@ export function resolveValue(
 ): unknown {
   if (isFunctionCall(value)) return evaluate(value, surface, itemScope, emitError, registry)
   if (isPathBinding(value)) return resolve(value, surface, itemScope)
-  return value // literal
+  // DynamicString interpolation (ADR-0027): a literal string containing an unescaped `${` is a
+  // template — route it through the scanner/classifier/resolver. A non-template string (or any
+  // non-string literal) falls through byte-identical to the old `return value` arm.
+  if (typeof value === 'string' && isInterpolated(value))
+    return interpolate(value, surface, itemScope, resolve)
+  return value // literal (no template marker — returned byte-identical)
 }
 
 /**
