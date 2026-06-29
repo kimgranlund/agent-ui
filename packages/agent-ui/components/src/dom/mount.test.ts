@@ -1,5 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { mount, repeat, watch, Directive, directive, NO_COMMIT, type RenderContext } from './index.ts'
+import { html } from './template.ts' // the PRIVATE template tag — used ONLY to build the keyed item template in
+// the reactive-repeat probe below; the public-surface-only path (mount WITHOUT html``) is proven in mount-commit.
 import { signal, effect, createScope, inspect, whenFlushed } from '../reactive/index.ts'
 
 // ADR-0023 — the public `mount()` directive-host seam + the directive-authoring trio. These probe the seam
@@ -7,8 +9,9 @@ import { signal, effect, createScope, inspect, whenFlushed } from '../reactive/i
 // reaches — NOT template.ts directly, so they double as the contract-widening proof: an imperative consumer
 // can INVOKE a kernel directive (`mount(repeat(...))`) and AUTHOR its own (`directive(class extends Directive
 // …)`), all without the still-private `html``/`render` template entry. Named probes: mount-commit ·
-// mount-cleanup · mount-authoring · mount-ctx-scope · mount-ctx-teardown. The seam stands ALONE (decoupled
-// from the parked a2ui list.ts) — every probe drives a real public directive (`repeat`/`watch`) or a throwaway.
+// mount-cleanup · mount-authoring · mount-ctx-scope · mount-ctx-teardown · mount-repeat-reactive. The seam
+// stands ALONE (decoupled from the parked a2ui list.ts) — every probe drives a real public directive
+// (`repeat`/`watch`) or a throwaway; the last hosts repeat reactively (the actual #137 use case) under mount.
 
 function host(): HTMLElement {
   const c = document.createElement('div')
@@ -125,5 +128,62 @@ describe('mount — ctx threads the connection scope (ADR-0023)', () => {
     expect(inspect(sig).subscribers).toBe(0)
     expect(c.textContent).toBe('')
     expect(c.childNodes.length).toBe(0)
+  })
+})
+
+describe('mount — hosts the real `repeat` directive reactively (the a2ui #137 use case)', () => {
+  it('mount-repeat-reactive: a signal change delta-updates the keyed list (reuse/move by identity); cleanup → zero residue', async () => {
+    const items = signal(['a', 'b', 'c'])
+    const scope = createScope()
+    const ctx: RenderContext = { effect: (fn) => scope.run(() => effect(fn)) }
+    const c = host()
+
+    // The minimal reactive-list shape the parked #137 list.ts will take: a custom directive that, on each
+    // scope-owned effect run, re-commits `repeat(items.value)` into ONE inner sub-part → repeat reconciles by
+    // key. Proves the mount seam hosts repeat's REACTIVE delta path (reuse/move by key), not just a one-shot
+    // commit. It captures + disposes its own effect (the canonical watch.ts discipline) so cleanup is leak-free.
+    class ReactiveList extends Directive {
+      readonly #inner = this.createPart()
+      #installed = false
+      #disposeEffect: (() => void) | undefined
+      update(_args: readonly unknown[], rctx?: RenderContext): unknown {
+        if (!this.#installed && rctx) {
+          this.#disposeEffect = rctx.effect(() => {
+            this.#installed = true
+            this.#inner.commit(repeat(items.value, (k) => k, (k) => html`<li data-k=${k}>${k}</li>`))
+            return () => {
+              this.#installed = false
+            }
+          })
+        }
+        return NO_COMMIT
+      }
+      dispose(): void {
+        this.#disposeEffect?.() // stop the effect before tearing down the inner part (no commit into a dead part)
+        this.#disposeEffect = undefined
+        this.#inner.dispose()
+      }
+    }
+    const list = directive(ReactiveList)
+    const order = (): (string | null)[] => Array.from(c.querySelectorAll('li')).map((l) => l.getAttribute('data-k'))
+
+    const cleanup = mount(list(), c, ctx)
+    expect(order()).toEqual(['a', 'b', 'c'])
+    expect(inspect(items).subscribers).toBe(1) // the list driver's scope-owned effect tracks the items signal
+    const liB = c.querySelector('[data-k="b"]') // capture a survivor's node to prove reuse-by-identity below
+
+    items.value = ['c', 'a', 'b'] // a reorder repeat resolves by key (move, not re-create)
+    await whenFlushed()
+    expect(order()).toEqual(['c', 'a', 'b']) // delta-updated order
+    expect(c.querySelector('[data-k="b"]')).toBe(liB) // the SAME node moved — keyed reuse/move under mount
+
+    items.value = ['c', 'a'] // drop a key → repeat removes that sub-part
+    await whenFlushed()
+    expect(order()).toEqual(['c', 'a'])
+
+    cleanup() // the mount teardown disposes the list directive → its effect stops + its DOM clears
+    expect(c.querySelector('li')).toBe(null) // content removed
+    expect(c.childNodes.length).toBe(0) // mount anchor removed too
+    expect(inspect(items).subscribers).toBe(0) // zero residue — the scope-owned effect died with the part
   })
 })
