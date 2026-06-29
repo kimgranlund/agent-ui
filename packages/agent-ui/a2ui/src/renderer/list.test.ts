@@ -246,6 +246,76 @@ describe('per-item child-scope disposal + leak-free teardown (SPEC-N3)', () => {
   })
 })
 
+describe('write-side itemScope round-trip on the REAL widget+list path (ADR-0024 amendment)', () => {
+  /** A factory that records applyProp AND marks a value:{prop,event} — both read and write exercised. */
+  function inputStubFactory(tag = 'ui-input'): { factory: WidgetFactory; applied: AppliedProp[] } {
+    const applied: AppliedProp[] = []
+    const factory: WidgetFactory = {
+      tag,
+      create: () => document.createElement(tag),
+      applyProp: (el, prop, value) => void applied.push({ el, prop, value }),
+      value: { prop: 'value', event: 'change' },
+    }
+    return { factory, applied }
+  }
+
+  /** A list harness where the template binds RELATIVE value:{path:'x'} with an input factory. */
+  function inputListHarness(initialItems: unknown[]) {
+    const { factory, applied } = inputStubFactory()
+    const errors: A2uiError[] = []
+    const createWidget = makeCreateWidget({
+      registry: stubRegistry('demo', { Item: factory }),
+      emitError: (e) => void errors.push(e),
+      resolveBinding: (b, s, itemScope) => resolve(b, s, itemScope),
+    })
+    const surface = createSurface(init)
+    surface.data.value = { items: initialItems }
+    surface.components.set('tpl', comp({ id: 'tpl', component: 'Item', value: { path: 'x' } }))
+    const container = document.createElement('div')
+    renderList({ container, template: { path: '/items', componentId: 'tpl' }, surface, createWidget })
+    const setItems = (items: unknown[]): void => {
+      surface.data.value = setPointer(surface.data.peek(), '/items', items)
+    }
+    return { applied, errors, surface, container, setItems }
+  }
+
+  it('commit inside slot-1 writes /items/1/x — NOT the raw relative key /x', () => {
+    const { container, surface } = inputListHarness([{ x: 'a' }, { x: 'b' }])
+    const [, e1] = childEls(container)
+
+    ;(e1 as { value?: unknown }).value = 'typed'
+    e1.dispatchEvent(new Event('change'))
+
+    // Headline: relative 'x' resolved through itemScope → /items/1/x, not a top-level /x key.
+    expect(resolve({ path: '/items/1/x' }, surface)).toBe('typed')
+    expect(resolve({ path: '/items/0/x' }, surface)).toBe('a') // slot-0 untouched
+    expect((surface.data.peek() as Record<string, unknown>).x).toBeUndefined() // NO raw /x key
+  })
+
+  it('after a mid-array insert the same slot-1 node writes /items/1 (the slot, no re-wiring)', async () => {
+    const { container, surface, setItems } = inputListHarness([{ x: 'a' }, { x: 'b' }])
+    const [e0, e1] = childEls(container)
+
+    // Insert at index 0 → [{x:'NEW'},{x:'a'},{x:'b'}]. Length 2→3: boundary append only.
+    setItems([{ x: 'NEW' }, { x: 'a' }, { x: 'b' }])
+    await whenFlushed()
+
+    const els = childEls(container)
+    expect(els).toHaveLength(3)
+    expect(els[0]).toBe(e0) // identity preserved — no re-create, no move
+    expect(els[1]).toBe(e1) // same node at slot-1
+
+    // Commit on slot-1: its listener was wired with itemScope.index=1 at creation; after the insert,
+    // /items/1 now holds {x:'a'} (shifted), and the writeback still targets /items/1/x — the SLOT.
+    ;(e1 as { value?: unknown }).value = 'typed'
+    e1.dispatchEvent(new Event('change'))
+
+    expect(resolve({ path: '/items/1/x' }, surface)).toBe('typed') // the slot
+    expect(resolve({ path: '/items/0/x' }, surface)).toBe('NEW')   // slot-0 untouched
+    expect(resolve({ path: '/items/2/x' }, surface)).toBe('b')     // slot-2 untouched
+  })
+})
+
 describe('absolute vs relative bindings inside a template (LLD-C6 / ADR-0024)', () => {
   it('an ABSOLUTE binding inside the template resolves from the data ROOT (not the item)', async () => {
     // `heading` is absolute (/title), `text` is relative (label) — proving the two resolve differently.

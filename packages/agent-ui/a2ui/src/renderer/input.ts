@@ -24,6 +24,12 @@
 //     (LLD-C9, already shipped) reads it straight off the data model — input feeds action with no extra
 //     wiring here.
 //
+// Write-side itemScope (ADR-0024 amendment, LLD-C8). A relative binding inside a list item must write
+// the same absolute pointer it reads. `installInputBinding` accepts a trailing optional `itemScope` —
+// the same `{path, index}` the list renderer passes to `createWidget` — and resolves the writeback
+// target through the shared `scopedPointer` rewrite (binding.ts). An absolute path or no itemScope is
+// unchanged; the no-itemScope path is byte-for-byte the pre-list behavior.
+//
 // `value.prop` names BOTH sides of the round-trip by contract: the A2UI node prop that carries the bind
 // (`node[prop]` → the `{path}` writeback target) and the DOM value property read off the control on
 // commit (`el[prop]` → the committed value). The default catalog names them to match by design. If a
@@ -33,7 +39,8 @@
 import type { A2uiComponent } from '../protocol.ts'
 import type { WidgetFactory } from '../catalog/types.ts'
 import type { Surface } from './surface.ts'
-import { setPointer } from './binding.ts'
+import type { ItemScope } from './types.ts'
+import { scopedPointer, setPointer } from './binding.ts'
 
 /** A bound prop value: a JSON-Pointer reference rather than a literal — the writeback target. Mirrors
  *  widget.ts's `isBinding` (the same protocol `Binding` shape) so both sides judge a bind identically. */
@@ -47,6 +54,11 @@ const isBinding = (v: unknown): v is { path: string } =>
  * into `surface.data` at the bound path via the structural-sharing `setPointer` (so per-path waking holds,
  * SPEC-N2). The write is optimistic and untracked (`peek` base ⇒ the handler never subscribes to data).
  *
+ * `itemScope`, when present (a list item, ADR-0024 amendment), rewrites a RELATIVE bound path to its
+ * absolute pointer `{path}/{index}/…` via `scopedPointer` — symmetric with the read direction — so a
+ * relative two-way binding reads and writes the same `/items/{i}/x` pointer. An absolute path or absent
+ * itemScope is unchanged, preserving the pre-list no-itemScope behavior byte-for-byte.
+ *
  * Called by widget resolution (LLD-C7) right after the control + bound props are wired; everything it
  * needs is in scope there. Generic by construction — no component name appears below.
  */
@@ -55,6 +67,7 @@ export function installInputBinding(
   factory: WidgetFactory,
   node: A2uiComponent,
   surface: Surface,
+  itemScope?: ItemScope,
 ): void {
   const spec = factory.value
   if (spec === undefined) return // non-input control — no commit event to bind (opt-in by the factory mark)
@@ -62,7 +75,7 @@ export function installInputBinding(
   const bound = node[spec.prop]
   if (!isBinding(bound)) return // value is a literal/absent — no `{path}` to write back to, nothing to bind
 
-  const valuePath = bound.path
+  const valuePath = scopedPointer(bound.path, itemScope)
   el.addEventListener(
     spec.event,
     () => {

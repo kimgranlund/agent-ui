@@ -11,9 +11,11 @@ import type { Scope } from '@agent-ui/components'
 /**
  * A dynamic-list item's binding scope (renderer LLD-C6, A2UI v1.0 / ADR-0024). Carries the array
  * `path` (the template's pointer) and this instance's 0-based `index`, so a RELATIVE binding inside
- * the template resolves to `{path}/{index}/…` (an ABSOLUTE binding resolves to root). It is the read-
- * direction scope only — the per-path memo (binding.ts) keys on the RESOLVED absolute pointer, so no
- * `ItemScope` key is needed there. `@index` (the LLD-C10 function evaluator) reads `index` off this.
+ * the template resolves to `{path}/{index}/…` (an ABSOLUTE binding resolves to root). It scopes BOTH
+ * the read direction (the per-path memo in binding.ts keys on the resolved absolute pointer — so no
+ * `ItemScope` key is needed there) AND the write direction (the input controller, LLD-C8, calls
+ * `scopedPointer` with itemScope so a relative two-way binding writes the same absolute pointer it
+ * reads). `@index` (the LLD-C10 function evaluator) reads `index` off this.
  */
 export interface ItemScope {
   /** The JSON-Pointer to the bound array — the list template's `path`. */

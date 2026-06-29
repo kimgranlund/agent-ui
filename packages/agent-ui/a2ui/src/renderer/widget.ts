@@ -84,9 +84,10 @@ export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
     // Two-way input binding (renderer LLD-C8, ADR-0019). Wired here — right after the data→control props are
     // applied, with `el`/`factory`/`node`/`surface` all in scope — so a control marked `value:{prop,event}`
     // (Tabs `selected`/`select`, Modal `open`/`toggle`, the back-filled TextField `value`/`change`) commits
-    // its value BACK into surface.data on its commit event. A no-op for a non-input factory or a literal-bound
-    // value prop (opt-in by the factory mark; see input.ts), so non-input controls are untouched.
-    installInputBinding(el, factory, node, surface)
+    // its value BACK into surface.data on its commit event. For a list item, `itemScope` threads through so
+    // the writeback resolves the same absolute pointer as the read (ADR-0024 amendment, symmetric rewrite).
+    // A no-op for a non-input factory or a literal-bound value prop (opt-in by the factory mark; see input.ts).
+    installInputBinding(el, factory, node, surface, itemScope)
     return el
   }
 }

@@ -111,8 +111,10 @@ function pathSignal(surface: Surface, pointer: string): ReadonlySignal<unknown> 
  * path (no leading `/`) resolves WITHIN a list item's scope: `{path}/{index}` for the item itself (an
  * empty relative path) else `{path}/{index}/{rest}`. With no `itemScope` the path is returned unchanged,
  * preserving the pre-list behavior (a bare relative path then walks to `undefined` in `resolvePointer`).
+ * Exported so the write-side controller (input.ts LLD-C8) resolves the same absolute pointer on writeback
+ * — both directions key on the same rewrite, so a relative two-way binding reads and writes symmetrically.
  */
-function scopedPointer(path: string, itemScope?: ItemScope): string {
+export function scopedPointer(path: string, itemScope?: ItemScope): string {
   if (path.startsWith('/')) return path
   if (itemScope === undefined) return path
   return path === '' ? `${itemScope.path}/${itemScope.index}` : `${itemScope.path}/${itemScope.index}/${path}`

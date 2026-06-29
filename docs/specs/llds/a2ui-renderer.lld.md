@@ -80,7 +80,7 @@ interface Surface {
 
 **LLD-C7 `createWidget(node, surface)`:** resolve `node.component` against `catalogs.get(surface.catalogId)` → a `WidgetFactory`. Unknown type → emit `error{code:"CATALOG"}`, return a non-fatal placeholder element so siblings still render (SPEC-R9 AC2). The factory (owned by a2ui-catalog) declares the `ui-*` tag and the prop/binding map; this component instantiates the element, sets static props, and installs a scope-owned effect per bound prop.
 
-**LLD-C8 input controller:** for input widgets the factory marks `valueBinding` + `valuePath`. The controller listens (via `surface.ac`) to the control's `input`/`change` event and writes the new value into `surface.data` at `valuePath` (optimistic, SPEC-R7). On action commit, the resolved value is already in `data` and flows into action context (LLD-C9).
+**LLD-C8 input controller:** for input widgets the factory marks `valueBinding` + `valuePath`. The controller listens (via `surface.ac`) to the control's `input`/`change` event and writes the new value into `surface.data` at `valuePath` (optimistic, SPEC-R7). On action commit, the resolved value is already in `data` and flows into action context (LLD-C9). **Inside a dynamic-list item the writeback resolves `valuePath` through the item's `itemScope` first** — a relative path → `{path}/{index}/…`, reusing the **same** LLD-C5/C6 `scopedPointer` rewrite the read direction uses, so write and read land at the **same** absolute pointer (ADR-0024 write-side amendment). An absolute path and the ordinary no-`itemScope` case are unchanged; `itemScope` is captured once per instance and immutable (positional `index === position`), so the writeback target is a per-instance constant.
 
 ## 7. Actions & functions — LLD-C9, LLD-C10
 

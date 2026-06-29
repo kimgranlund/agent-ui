@@ -21,6 +21,7 @@ import { resolve } from './binding.ts'
 import { installInputBinding } from './input.ts'
 import type { A2uiComponent } from '../protocol.ts'
 import type { WidgetFactory } from '../catalog/types.ts'
+import type { ItemScope } from './types.ts'
 
 const init = { id: 's1', catalogId: 'demo', version: 'v1.0' }
 
@@ -162,6 +163,49 @@ describe('negative control — opt-in by the factory mark', () => {
     ;(el as { value?: unknown }).value = 'typed'
     el.dispatchEvent(new Event('input'))
     expect(s.data.peek()).toEqual({ name: 'a' }) // unchanged — no writeback target, no listener
+  })
+})
+
+describe('two-way input inside a list item (write-side itemScope, ADR-0024 amendment)', () => {
+  it('a RELATIVE binding with itemScope writes the absolute /items/{i}/x — NOT the raw relative key', () => {
+    const s = createSurface(init)
+    s.data.value = { items: [{ x: 'a' }, { x: 'b' }] }
+    const el = stubControl()
+    const factory = inputFactory({ prop: 'value', event: 'change' })
+    // Relative binding: 'x' — without itemScope this would resolve garbage; with itemScope it is /items/1/x.
+    const node: A2uiComponent = { id: 'n1', component: 'TextField', value: { path: 'x' } }
+    const itemScope: ItemScope = { path: '/items', index: 1 }
+
+    installInputBinding(el, factory, node, s, itemScope)
+
+    ;(el as { value?: unknown }).value = 'typed'
+    el.dispatchEvent(new Event('change'))
+
+    // Headline assertion: the relative 'x' resolves through itemScope → /items/1/x.
+    expect(resolve({ path: '/items/1/x' }, s)).toBe('typed')
+    // Sibling slot untouched.
+    expect(resolve({ path: '/items/0/x' }, s)).toBe('a')
+    // NO raw top-level 'x' key created — setPointer applied scopedPointer, not the raw path.
+    expect((s.data.peek() as Record<string, unknown>).x).toBeUndefined()
+  })
+
+  it('an ABSOLUTE binding with itemScope still writes the absolute path — itemScope is ignored', () => {
+    const s = createSurface(init)
+    s.data.value = { shared: 'original', items: [{ x: 'a' }, { x: 'b' }] }
+    const el = stubControl()
+    const factory = inputFactory({ prop: 'value', event: 'change' })
+    // Absolute path: itemScope must NOT re-scope it — /shared is always /shared regardless of index.
+    const node: A2uiComponent = { id: 'n1', component: 'TextField', value: { path: '/shared' } }
+    const itemScope: ItemScope = { path: '/items', index: 1 }
+
+    installInputBinding(el, factory, node, s, itemScope)
+
+    ;(el as { value?: unknown }).value = 'updated'
+    el.dispatchEvent(new Event('change'))
+
+    expect(resolve({ path: '/shared' }, s)).toBe('updated')
+    // items array untouched — the absolute path bypassed itemScope.
+    expect(resolve({ path: '/items/1/x' }, s)).toBe('b')
   })
 })
 

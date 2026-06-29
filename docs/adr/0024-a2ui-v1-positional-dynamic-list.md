@@ -4,11 +4,11 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted |
-> | **Date** | 2026-06-29 *(authored)* |
+> | **Status** | accepted *(amended 2026-06-28: write-side itemScope, #139 — see [Amendment](#amendment--write-side-itemscope-two-way-relative-inputs-in-list-items))* |
+> | **Date** | 2026-06-29 *(authored)* · 2026-06-28 *(amended)* |
 > | **Proposed by** | planning-lead — the design seat, on the #137 v1.0-conformance grounding |
 > | **Ratified by** | the **user** chose A2UI v1.0 + vehicle B2; orchestration-lead ratifies on the build gate |
-> | **Repairs** | `a2ui-renderer LLD-C6 §5` (keyed→positional — already edited) · `a2ui-renderer LLD` "kernel reuse" note (`repeat`→positional loop) · **NEW** `a2ui/protocol.ts` ChildList template union · **NEW** `a2ui/renderer/list.ts` |
+> | **Repairs** | `a2ui-renderer LLD-C6 §5` (keyed→positional — already edited) · `a2ui-renderer LLD` "kernel reuse" note (`repeat`→positional loop) · **NEW** `a2ui/protocol.ts` ChildList template union · **NEW** `a2ui/renderer/list.ts` · **(amendment)** `a2ui-renderer LLD-C8` write-side itemScope · `a2ui/renderer/input.ts` · `a2ui/renderer/widget.ts` (input call site) · `a2ui/renderer/binding.ts` (`scopedPointer` export) · `a2ui/renderer/types.ts` (`ItemScope` no longer read-only) |
 > | **Supersedes / Superseded by** | Relates **ADR-0023** (the `mount()` seam — stands as general infra, not used by `list.ts` under B2) · Relates **ADR-0022** (`repeat`/`moveBefore` — stays the *keyed*-list vehicle) |
 
 ## Context
@@ -127,3 +127,64 @@ Gate: `npm run check && npm test && npm run test:browser`.
 - **Amending SPEC-N5** (as the dispatch first framed it) — **rejected as mis-scoped**: SPEC-N5 is the
   zero-third-party-dependency invariant, which B2 honors; it never said "reuse `repeat`." The relaxed clause is in
   the LLD, so the amendment is LLD-local — SPEC-N5 stays as written.
+
+## Amendment — write-side itemScope (two-way relative inputs in list items)
+
+> 2026-06-28 · #139 · append-only (the Decision above stands and is *completed*, not changed). Flagged by
+> `exec-a2ui-list` during #137 as "out of ADR-0024's read-only scope."
+
+**The gap.** The Decision states a list item's bindings "resolve `{path}/{index}/…`" — generically, both
+directions. The #137 build delivered only the **read** half: `binding.ts:129 resolve(binding, surface,
+itemScope)` rewrites a relative path to its absolute pointer via `scopedPointer` (`binding.ts:115`) before the
+per-path memo, and `widget.ts:64 createWidget(node, surface, scope, itemScope)` threads `itemScope` into
+`resolveBinding` (`widget.ts:113`). The **write** half — the two-way input controller (`input.ts:53
+installInputBinding`, LLD-C8/ADR-0019) — was **left unscoped**: it computes the writeback pointer from the **raw**
+`node[value.prop].path` (`input.ts:65`, `valuePath = bound.path`) and hands it to `setPointer` (`input.ts:72`).
+So a **relative** two-way binding inside a list item **reads** from `/items/{i}/x` but **writes** to the raw
+`x` — and because `setPointer` (`binding.ts:67`) assumes a leading-slash pointer and slices the first token off
+(`pointer.slice(1)`), a relative `label` writes to the garbage key `abel`. Silent data-model corruption, the
+moment a list item carries an interactive (two-way) input. Absolute-path two-way bindings already work (both
+directions use the same absolute pointer); `widget.ts:89` already has `itemScope` in lexical scope but does not
+pass it to `installInputBinding`.
+
+**The completion (no new design choice).** Extend the **same** `itemScope` to the write direction by reusing the
+**same** read-side rewrite — the write must resolve relative→absolute identically, or it is a bug; there is no
+alternative to weigh, no new principle, no rejected option (this is why it is an *amendment*, not a new
+`Extends`-ADR — the README's new-ADR bar is "a genuinely new decision," and this is the foreseen write-half of the
+Decision's own word "bindings," not a new decision):
+
+1. `binding.ts` — **export** the existing module-private `scopedPointer` (`binding.ts:115`). One keyword; the
+   function already returns absolute paths unchanged, relative paths as `{path}/{index}/{rest}`, and — with no
+   `itemScope` — the raw path (the byte-for-byte current write behavior). It becomes the single relative→absolute
+   rewrite **both** directions key on (the read memo and the writeback), so read and write resolve to the **same**
+   absolute pointer by construction.
+2. `input.ts` — `installInputBinding` gains a trailing `itemScope?: ItemScope`; the writeback pointer is
+   `scopedPointer(bound.path, itemScope)` (`input.ts:65`) instead of the raw `bound.path`. Computed once at
+   install (it is a constant per instance — see below), closed over by the listener exactly as today.
+3. `widget.ts:89` — pass the `itemScope` already in scope: `installInputBinding(el, factory, node, surface,
+   itemScope)`. The default (omitted ⇒ `undefined` ⇒ `scopedPointer` returns the raw path) keeps **every existing
+   non-list two-way input byte-for-byte unchanged**.
+4. `types.ts:18` — the `ItemScope` doc no longer reads "the read-direction scope only"; it now scopes **both**
+   directions. (Code-comment artifact of the gap; retired by this amendment.)
+
+**Why the threading is trivial and correct.** `itemScope` is captured **once** at `appendInstance`
+(`list.ts:75`, `{ path, index }`) and is **immutable** for the instance's lifetime — positional reconcile only
+adds/removes at the **boundary**, so a surviving instance keeps its index *and* its DOM slot across any mid-array
+shift (ADR-0024's core invariant: `index === position`). The writeback pointer is therefore a per-instance
+constant, valid forever; no re-wiring on a shift. After a mid-array insert that re-binds the instance at position
+`i` to the new `/items/{i}` datum (read side, already proven by `list.test.ts:135`), a commit on that **same**
+node writes to `/items/{i}` — which now holds the shifted datum. The write follows the **slot**, exactly as the
+display does. Per-path waking (SPEC-N2) is preserved unchanged: the scoped write still goes through the
+structural-sharing `setPointer`, so only `/items/{i}/…` wakes and siblings stay `Object.is`-asleep.
+
+**Out of scope / unchanged.** The host's server-driven `updateDataModel` write (`renderer.ts:254`) uses an
+absolute protocol path — untouched. List-item **action** context (`collectContext`, LLD-C9) resolving relative
+paths through `itemScope` is a **separate** concern, tracked under **#140** (per-item action scope), not this
+amendment. A **relative** two-way binding with **no** `itemScope` (a malformed input outside any list) still
+writes to a garbage key exactly as today — a **pre-existing**, strictly-out-of-scope asymmetry (the read side
+returns `undefined`/placeholder for the same input; whether `setPointer`/the write path should guard a non-`/`
+pointer the way `resolvePointer` does is a separate question, deliberately **not** opened here).
+
+**Stale → re-verify on the build gate:** `input.ts` (scoped writeback) · `widget.ts:89` (itemScope passed) ·
+`binding.ts` (`scopedPointer` exported) · `types.ts:18` (`ItemScope` both-direction) · LLD-C8 (the write-side
+itemScope clause) · the new round-trip test (`list.test.ts` / `input.test.ts`).
