@@ -714,3 +714,21 @@ export function render(result: TemplateResult, container: Node, ctx?: RenderCont
   }
   commitInstance(instance, result.values, ctx)
 }
+
+/**
+ * Mount a kernel directive IMPERATIVELY (ADR-0023): commit `result` into `container` and return a teardown
+ * that disposes the directive (+ its sub-parts), clears its content, and removes the mount anchor. Reuses
+ * the SAME `ChildPart` engine `render()` rides — no parallel commit path: an anchor comment is appended to
+ * `container` (the directive's content commits as the anchor's previous siblings → inside `container`,
+ * leaving any pre-existing content untouched), a `ChildPart` is bound to it, and `result` is committed
+ * through the normal directive route. `ctx` threads the connection scope, so a per-hole effect (the `watch`
+ * pattern) stays scope-owned exactly as under `render()`. The public host for imperative consumers (the a2ui
+ * renderer) that need a kernel directive — e.g. `repeat` — WITHOUT the private `html\`\`` template entry.
+ */
+export function mount(result: DirectiveResult, container: Node, ctx?: RenderContext): () => void {
+  const anchor = document.createComment('')
+  container.appendChild(anchor)
+  const part = new ChildPart(anchor)
+  part.commit(result, ctx)
+  return () => part.dispose()
+}

@@ -3,13 +3,17 @@
 // ../reactive (and same-layer ./element.ts / ./props.ts / ./form.ts / ./container.ts / ./repeat.ts / ./watch.ts).
 //
 // The PUBLIC dom surface (rubric D7): the element hosts and the typed-prop schema API a control author uses,
-// plus the two child directives a template author drives. The wiring seams that connect them stay
-// module-private and are deliberately NOT re-exported here:
+// the two child directives a template author drives, PLUS the directive-AUTHORING trio + the imperative
+// `mount` host (ADR-0023). The wiring seams that connect them stay module-private and are deliberately NOT
+// re-exported here:
 //   • props.ts/element.ts plumbing — `finalize`, `coerceAttribute`, `observedAttributesFor`, `propForAttribute`,
 //     and the codec factories behind `prop.*` (`enumType`/`jsonType`).
-//   • the template.ts DIRECTIVE SEAM — `Directive` / `directive` / `NO_COMMIT` / `RenderContext` and the
-//     `ChildPart` engine the directives ride. `repeat` / `watch` are the only PUBLIC directives; the seam they
-//     are built on is internal cross-module plumbing, not consumer surface.
+//   • the template ENTRY — `render` / `html` / `svg` / `TemplateResult` / `ChildPart` / `prepare`. The template
+//     machinery is internal cross-module plumbing; a directive is the only PUBLIC render unit.
+// PUBLIC since ADR-0023: directive-AUTHORING (`Directive` / `directive` / `NO_COMMIT`, plus the `RenderContext`
+// and `DirectiveResult` types) and the imperative `mount(result, container, ctx?)` host that commits a kernel
+// directive (e.g. `repeat`) into a container WITHOUT the private `html\`\`` entry — what an imperative consumer
+// (the a2ui renderer) needs to invoke AND author directives. `repeat` / `watch` remain the shipped directives.
 export { UIElement } from './element.ts'
 export { UIFormElement } from './form.ts'
 export type { FormValue, ValidityResult } from './form.ts'
@@ -22,3 +26,6 @@ export { prop, Types } from './props.ts'
 export type { PropType, PropConfig, PropsSchema, ReactiveProps } from './props.ts'
 export { repeat } from './repeat.ts'
 export { watch } from './watch.ts'
+// The directive-authoring trio + the imperative mount host (ADR-0023). `render`/`html`/`ChildPart` stay private.
+export { Directive, directive, NO_COMMIT, mount } from './template.ts'
+export type { RenderContext, DirectiveResult } from './template.ts'
