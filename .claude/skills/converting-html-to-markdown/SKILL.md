@@ -1,5 +1,5 @@
 ---
-name: html-to-markdown
+name: converting-html-to-markdown
 description: >
   Convert HTML content into markdown source — map semantic elements to markdown syntax
   (headings, strong/em, code/pre, links, lists, blockquotes), drop presentational markup,
@@ -11,7 +11,7 @@ description: >
 
 # Harness — HTML → Markdown (transcription)
 
-Take HTML (a fragment, a rendered page, a pasted block) and produce equivalent **markdown source**. This is the inverse of `markdown-to-markup`: there, markdown is the data and DOM the output; here, HTML structure is the input and markdown the output. The transform is **semantic and lossy by design** — it keeps meaning (a heading, a list, emphasis) and discards presentation (a `div`, a class, an inline style).
+Take HTML (a fragment, a rendered page, a pasted block) and produce equivalent **markdown source**. This is the inverse of `converting-markdown-to-markup`: there, markdown is the data and DOM the output; here, HTML structure is the input and markdown the output. The transform is **semantic and lossy by design** — it keeps meaning (a heading, a list, emphasis) and discards presentation (a `div`, a class, an inline style).
 
 ## Map semantics to syntax, drop presentation
 

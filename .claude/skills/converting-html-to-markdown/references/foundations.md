@@ -12,7 +12,7 @@ Because markdown has no slot for class, style, or arbitrary wrappers, dropping t
 
 ## 3. Round-trip equivalence is the oracle
 
-The test of a conversion is not "does it look like the input" but: **feed the markdown back through a renderer — is the result semantically the same?** Same heading levels, same emphasis spans, same link targets, same list structure. This oracle is what tells you an escape was missed (a literal `*` became emphasis on the way back) or a structure was flattened (a nested list lost a level). Pairs naturally with the `markdown-to-markup` skill: that renderer is the round-trip's second half.
+The test of a conversion is not "does it look like the input" but: **feed the markdown back through a renderer — is the result semantically the same?** Same heading levels, same emphasis spans, same link targets, same list structure. This oracle is what tells you an escape was missed (a literal `*` became emphasis on the way back) or a structure was flattened (a nested list lost a level). Pairs naturally with the `converting-markdown-to-markup` skill: that renderer is the round-trip's second half.
 
 ## 4. Escaping is the silent-corruption guard
 

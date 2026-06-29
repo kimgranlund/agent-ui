@@ -41,4 +41,4 @@ Code spans and `<pre>` content are **never escaped** (their content is literal b
 - **Don't escape inside code/pre** — that corrupts literal content.
 - **Don't flatten nesting** — indent/repeat to preserve list and quote depth.
 - **Don't delete a presentational wrapper's children** — unwrap, keep the content.
-- **Verify by round-trip** — render the output and confirm semantic equivalence (`foundations.md` §3); pair with the `markdown-to-markup` skill for the second half.
+- **Verify by round-trip** — render the output and confirm semantic equivalence (`foundations.md` §3); pair with the `converting-markdown-to-markup` skill for the second half.

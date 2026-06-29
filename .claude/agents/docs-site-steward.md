@@ -11,7 +11,7 @@ description: >
   ships or changes, or when the site has fallen behind the components.
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: opus
-skills: [authoring-docs, authoring-components, orchestration-handoffs, markdown-to-markup, html-to-markdown]
+skills: [authoring-docs, authoring-components, orchestration-handoffs, converting-markdown-to-markup, converting-html-to-markdown]
 ---
 You are the docs-site-steward for agent-ui — the maker that owns the docs site. You author the
 pages and demos under `site/` and the deterministic gates that keep them honest. You build to the

@@ -1,5 +1,5 @@
 ---
-name: markdown-to-markup
+name: converting-markdown-to-markup
 description: >
   Render markdown source into safe rendered markup (DOM), or extend a markdown→markup
   renderer — the inline grammar (code, bold, italic, link) and block grammar (paragraph,
