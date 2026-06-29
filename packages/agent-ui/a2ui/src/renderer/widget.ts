@@ -18,7 +18,7 @@
 
 import { effect } from '@agent-ui/components'
 import type { Scope } from '@agent-ui/components'
-import type { A2uiComponent, A2uiError } from '../protocol.ts'
+import type { A2uiComponent, A2uiError, FunctionCall } from '../protocol.ts'
 import type { CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
 import type { CreateWidget, ItemScope } from './types.ts'
 import type { Surface } from './surface.ts'
@@ -27,9 +27,17 @@ import { installInputBinding } from './input.ts'
 /** Structural adjacency keys (SPEC-R3/§5.1) — never catalog-declared props, so never applied. */
 const RESERVED = new Set<string>(['id', 'component', 'child', 'children'])
 
-/** A bound prop value: a JSON-Pointer reference rather than a literal (protocol `Binding`). */
-const isBinding = (v: unknown): v is { path: string } =>
-  typeof v === 'object' && v !== null && !Array.isArray(v) && typeof (v as { path?: unknown }).path === 'string'
+/**
+ * A dynamic binding value — either a `{path}` data-model reference or a `{call}` function call
+ * (ADR-0026 three-armed Binding union). Both are deferred-resolution: they need the scope-owned
+ * bound-prop effect and `resolveValue` to produce a render value; a static literal falls through
+ * to the `else` branch and is `applyProp`'d once. The `{path}` arm is the existing LLD-C5 path;
+ * the `{call}` arm is the new LLD-C10 evaluator path (ADR-0026).
+ */
+const isBinding = (v: unknown): v is { path: string } | FunctionCall =>
+  typeof v === 'object' && v !== null && !Array.isArray(v) &&
+  (typeof (v as { path?: unknown }).path === 'string' ||
+   typeof (v as { call?: unknown }).call === 'string')
 
 /**
  * Injected collaborators for widget resolution. Supplied by the renderer host (LLD-C13) at
@@ -43,14 +51,15 @@ export interface WidgetDeps {
   /** Sink for the non-fatal `CATALOG` error raised on an unknown component type (SPEC-R9 AC2). */
   emitError: (error: A2uiError) => void
   /**
-   * Resolve a `{path}` binding to its current value off `surface.data` (renderer LLD-C5). Called
-   * INSIDE a `scope`-owned effect, so whatever reactive state it reads — the per-path computed the
-   * resolver memoizes for SPEC-N2 — becomes that effect's dependency, and a data change re-applies
-   * only the affected prop. `itemScope`, when passed (a dynamic-list item, LLD-C6/ADR-0024), rewrites
-   * a relative path into the item's `{path}/{index}/…` pointer. Injected so this slice stays decoupled
-   * from `binding.ts`.
+   * Resolve any binding value (literal | `{path}` | `{call}`) to its current render value
+   * (ADR-0026 LLD-C10 / LLD-C5). Called INSIDE the scope-owned bound-prop effect so that
+   * reactive deps from `{path}` args (inside a `{call}` or at the top level) are tracked —
+   * a data-model change re-applies only the affected prop (SPEC-N2). `itemScope`, when present
+   * (a dynamic-list item, LLD-C6/ADR-0024), threads the collection-scope context for `@index`
+   * and relative-path resolution. Injected so this slice stays decoupled from `binding.ts` /
+   * `functions.ts` and can be stubbed in isolation tests.
    */
-  resolveBinding: (binding: { path: string }, surface: Surface, itemScope?: ItemScope) => unknown
+  resolveValue: (value: unknown, surface: Surface, itemScope?: ItemScope) => unknown
 }
 
 /**
@@ -59,7 +68,7 @@ export interface WidgetDeps {
  * `CATALOG` and returns a placeholder; it ALWAYS returns an element (non-fatal, SPEC-R9 AC2).
  */
 export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
-  const { registry, emitError, resolveBinding } = deps
+  const { registry, emitError, resolveValue } = deps
 
   return (node, surface, scope = surface.scope, itemScope, ac = surface.ac) => {
     const factory = registry.get(surface.catalogId)?.factories[node.component]
@@ -78,7 +87,7 @@ export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
     const el = factory.create()
     for (const [prop, value] of Object.entries(node)) {
       if (RESERVED.has(prop)) continue
-      if (isBinding(value)) bindProp(el, factory, prop, value, surface, resolveBinding, scope, itemScope)
+      if (isBinding(value)) bindProp(el, factory, prop, value, surface, resolveValue, scope, itemScope)
       else factory.applyProp(el, prop, value) // static literal → set once
     }
     // Two-way input binding (renderer LLD-C8, ADR-0019). Wired here — right after the data→control props are
@@ -95,24 +104,26 @@ export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
 
 /**
  * Install a `scope`-owned effect that re-applies one bound prop whenever its resolved value changes
- * (renderer LLD-C7 + C5). Owning the effect in `scope` means it dies when that scope is disposed —
- * `surface.scope` for an ordinary node (so it dies with the surface, SPEC-N3), or a dynamic-list item's
- * per-index CHILD scope (so it dies with the item on positional removal, LLD-C6/ADR-0024 — never leaked
- * into `surface.scope`). `itemScope` rewrites a relative binding into the item's pointer (LLD-C6).
+ * (renderer LLD-C7 + C5 + C10). `value` is any dynamic binding (`{path}` or `{call,args?}`);
+ * `resolveValue` dispatches through the evaluator so both kinds update reactively. Owning the effect
+ * in `scope` means it dies when that scope is disposed — `surface.scope` for an ordinary node (so it
+ * dies with the surface, SPEC-N3), or a dynamic-list item's per-index CHILD scope (LLD-C6/ADR-0024 —
+ * never leaked into `surface.scope`). `itemScope` threads `@index` + relative-path context (LLD-C6,
+ * ADR-0026).
  */
 function bindProp(
   el: HTMLElement,
   factory: WidgetFactory,
   prop: string,
-  binding: { path: string },
+  value: unknown,
   surface: Surface,
-  resolveBinding: WidgetDeps['resolveBinding'],
+  resolveValue: WidgetDeps['resolveValue'],
   scope: Scope,
   itemScope: ItemScope | undefined,
 ): void {
   scope.run(() => {
     effect(() => {
-      factory.applyProp(el, prop, resolveBinding(binding, surface, itemScope))
+      factory.applyProp(el, prop, resolveValue(value, surface, itemScope))
     })
   })
 }

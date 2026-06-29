@@ -46,7 +46,7 @@
     { "id": "cat-c4", "label": "default/catalog.json — default catalog defn",  "leaf": true, "lld": "catalog LLD-C4",  "spec": "catalog SPEC-R3,R8,N2", "build": "partial", "dep": "a minimal Text→primitive catalog now (SPEC-N2 coverage discipline); the useful Button/TextField/Checkbox/Switch/Select/Field set blocked:controls" },
     { "id": "cat-c5", "label": "default/factories.ts — ui-* widget factories", "leaf": true, "lld": "catalog LLD-C5",  "spec": "catalog SPEC-R3,R4", "build": "blocked:controls", "dep": "imports ui-button/ui-text-field/… from @agent-ui/components controls/ (empty stub)" },
     { "id": "cat-c6", "label": "conformance.ts — catalog-conformance validator","leaf": true, "lld": "catalog LLD-C6",  "spec": "catalog SPEC-R7,R9,N3", "build": "shipped", "dep": "SHIPPED + committed: pure (Catalog + component → Failure[]); composed into r-c11 validate.ts. Pointer-resolution is a corpus-only stage, not here (ADR-0002)." },
-    { "id": "cat-c7", "label": "functions.ts — client function library",       "leaf": true, "lld": "catalog LLD-C7",  "spec": "catalog SPEC-R5",    "build": "now", "dep": "pure required/email/regex/formatString" },
+    { "id": "cat-c7", "label": "functions.ts — client function library",       "leaf": true, "lld": "catalog LLD-C7",  "spec": "catalog SPEC-R5",    "build": "now", "dep": "pure required/email/regex (named args; formatString→DynamicString ${…}, ADR-0026)" },
     { "id": "cat-c8", "label": "theme.ts — surfaceProperties / token applier",  "leaf": true, "lld": "catalog LLD-C8",  "spec": "catalog SPEC-R5",    "build": "blocked:tokens", "dep": "CSS-var repoint mechanism now; token roles need @agent-ui/shared (G5)" }
   ],
   "actions": [
@@ -79,7 +79,7 @@
     { "id": "ca-factories",    "label": "widget factories bind each component type to a ui-* control", "spec": "catalog SPEC-R3,R4" },
     { "id": "ca-conformance",  "label": "payload conformance — unknown type/prop or type-mismatch → CATALOG", "spec": "catalog SPEC-R7,R9,N3" },
     { "id": "ca-security",     "label": "security allowlist — only cataloged components render; no unsafe sinks", "spec": "catalog SPEC-R9" },
-    { "id": "ca-functions",    "label": "client function library — required/email/regex/formatString", "spec": "catalog SPEC-R5" },
+    { "id": "ca-functions",    "label": "client function library — required/email/regex (named args)", "spec": "catalog SPEC-R5" },
     { "id": "ca-theming",      "label": "surfaceProperties → token-role repoint (pure CSS-var indirection)", "spec": "catalog SPEC-R5" }
   ],
   "hosts": [

@@ -18,7 +18,7 @@ A2UI facts this SPEC conforms to (external; Constraint C1): the message envelope
 
 - **Surface** — an isolated UI context keyed by `surfaceId`, bound to one catalog, with its own component set and data model.
 - **Message** — one JSON object from the stream (server→client) or to the server (client→server), §5.
-- **Binding** — a value that is either a literal or `{ "path": <JSONPointer> }` resolved against the surface data model.
+- **Binding** — a value that is a literal, a `{ "path": <JSONPointer> }` reference resolved against the surface data model, or a **function call** `{ "call": <name>, "args"?: {…} }` evaluated client-side (SPEC-R10).
 - **Widget** — a live `@agent-ui/components` control instance the renderer creates for a component node, via the catalog (a2ui-catalog SPEC).
 
 ---
@@ -74,7 +74,7 @@ Normative per RFC 2119. Each carries a stable ID, a PRD trace, and acceptance cr
 - **AC1** *Given* a component whose `component` type is registered in the bound catalog, *when* rendered, *then* the mapped widget is created and bound.
 - **AC2** *Given* a `component` type absent from the catalog, *when* rendered, *then* the renderer emits `error{code:"CATALOG"}` and renders a non-fatal placeholder (the rest of the tree still renders).
 
-**SPEC-R10 — Client-side function evaluation.** The renderer MUST evaluate catalog-defined client functions referenced in bindings/checks (e.g. `formatString` interpolation, validation `checks`), producing the derived value or validation result. *(→ PRD-G1)*
+**SPEC-R10 — Client-side function evaluation.** The renderer MUST evaluate **function-call bindings** — a `{ "call": <name>, "args"?: {…named…} }` value (alongside a literal and a `{path}`) — by resolving the named function (a `@`-prefixed **system** function, the only v1.0 one being `@index` = the innermost collection-scope index + optional `offset`; or a **catalog** function from the bound catalog's `functions`), resolving its args **recursively** (each arg a literal, a `{path}`, or a nested `{call}`), and producing the derived value or validation result. An unknown/throwing function (or `@index` outside a collection scope) MUST emit `error{code:"FUNCTION"}` and render a placeholder, not tear down the surface (SPEC-N4). *(→ PRD-G1)* (String interpolation is the DynamicString `${…}` feature, not a function; validation `checks` run through this evaluator.)
 - **AC1** *Given* a `TextField` with a `required` check, *when* empty and an action commits, *then* the check fails and the renderer surfaces the validation message on the widget (no server round-trip required).
 
 ### 3.7 Conformance
@@ -119,9 +119,10 @@ type A2uiServerMessage =
 interface A2uiComponent {
   id: string; component: string;            // type discriminator, e.g. "Text" | "Button" | "TextField"
   child?: string; children?: string[];      // ID references (adjacency list)
-  [prop: string]: unknown;                  // component-specific props + bindings ({path} | literal)
+  [prop: string]: unknown;                  // component-specific props + bindings ({path} | {call} | literal)
 }
-type Binding<T> = T | { path: string };     // JSON-Pointer reference (RFC 6901), relative in child scope
+type Binding<T> = T | { path: string } | FunctionCall;        // literal | JSON-Pointer ref (RFC 6901, relative in child scope) | client fn call
+interface FunctionCall { call: string; args?: Record<string, Binding<unknown>>; message?: string } // SPEC-R10; args named + recursive
 ```
 
 ### 5.2 Outbound messages (client→server)

@@ -44,7 +44,7 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 **SPEC-R4 — Component definition contract.** Each component definition MUST declare: the type `name`; a typed `properties` schema (each property mapped to a control prop/attribute, marked `bindable` where it accepts `{path}`); the `value` property + event for input components (for two-way binding, renderer SPEC-R7); and the child model (`child`/`children`/`ChildList`). *(→ PRD-G1, PRD-G2)*
 - **AC1** *Given* an input component (e.g. `TextField`), *when* defined, *then* it declares a `value` property and the control event that commits it; the renderer's input controller (renderer LLD-C8) binds them without per-component code.
 
-**SPEC-R5 — Client functions & theming.** The default catalog MUST declare its client functions (at least `required`, `email`, `regex`, `formatString`) with typed signatures (evaluated by the renderer's function evaluator — a2ui-runtime §3.6), and a `surfaceProperties` schema mapping theme variables to the design system's `--ui-*` / `--c-{family}-{role}` token roles. *(→ PRD-G1)*
+**SPEC-R5 — Client functions & theming.** The default catalog MUST declare its client functions (at least `required`, `email`, `regex`) with typed **named-args** signatures (the A2UI v1.0 call shape `{ call, args: {…named…} }`; evaluated by the renderer's function evaluator — a2ui-runtime §3.6, SPEC-R10), and a `surfaceProperties` schema mapping theme variables to the design system's `--ui-*` / `--c-{family}-{role}` token roles. String composition is the DynamicString `${…}` interpolation feature (a2ui-runtime SPEC-R10), **not** a `formatString` catalog function (ADR-0026); a project catalog MAY still register one. *(→ PRD-G1)*
 - **AC1** *Given* a `TextField` with a `required` check, *when* evaluated empty, *then* the declared function returns `{valid:false, message}`.
 - **AC2** *Given* a `surfaceProperties` value on `createSurface`, *when* applied, *then* it repoints the corresponding token roles (no JS restyle — pure-CSS token indirection, per the dimensional system).
 
@@ -94,7 +94,7 @@ interface ComponentDef {
   value?: { prop: string; event: string };                // input two-way binding (SPEC-R4)
 }
 interface PropDef { type: JSONSchema; bindable?: boolean; mapsTo: string }   // A2UI prop → ui-* prop/attr
-interface FunctionDef { args: JSONSchema[]; returns: JSONSchema }
+interface FunctionDef { args: Record<string, JSONSchema>; returns: JSONSchema }   // NAMED args (A2UI v1.0 call shape; ADR-0026)
 
 // Action-typed prop (`mapsTo: 'action'`, e.g. Button.action) — canonical inbound shape (ADR-0011):
 //   { action: string; context?: object; wantResponse?: boolean }   // `action` = the action NAME (required)

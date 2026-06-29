@@ -32,8 +32,13 @@ export interface PropDef {
   mapsTo: string
 }
 
+/**
+ * A catalog function declaration (catalog LLD-C7, ADR-0026). `args` is a NAMED object
+ * (`Record<string, JsonSchema>`) matching the wire `{call, args:{…}}` shape — the positional
+ * `JsonSchema[]` form was non-conformant with A2UI v1.0 and is corrected here.
+ */
 export interface FunctionDef {
-  args: JsonSchema[]
+  args: Record<string, JsonSchema>
   returns: JsonSchema
 }
 
@@ -165,10 +170,11 @@ function validateFunctions(raw: unknown): Record<string, FunctionDef> {
   for (const fn of Object.keys(raw)) {
     if (!validName(fn)) badName(`function name "${fn}" is not a valid UAX-31 / non-@ name`)
     const def = raw[fn]
-    if (!isObject(def) || !Array.isArray(def.args) || def.returns === undefined) {
-      bad(`function "${fn}" must be { args: JsonSchema[]; returns: JsonSchema }`)
+    // `args` is a NAMED object (ADR-0026: corrected from the prior positional JsonSchema[] shape).
+    if (!isObject(def) || !isObject(def.args) || def.returns === undefined) {
+      bad(`function "${fn}" must be { args: Record<string,JsonSchema>; returns: JsonSchema }`)
     }
-    out[fn] = { args: def.args as JsonSchema[], returns: def.returns as JsonSchema }
+    out[fn] = { args: def.args as Record<string, JsonSchema>, returns: def.returns as JsonSchema }
   }
   return out
 }

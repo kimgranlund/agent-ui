@@ -44,10 +44,18 @@ function stubRegistry(catalogId: string, factories: Record<string, WidgetFactory
   }
 }
 
-/** A single-segment JSON-pointer reader off `surface.data` — stands in for LLD-C5 (tracks `data`). */
-const resolveBinding: WidgetDeps['resolveBinding'] = (binding, surface) => {
-  const data = surface.data.value as Record<string, unknown> | undefined
-  return data?.[binding.path.replace(/^\//, '')]
+/**
+ * A single-segment value dispatcher — stands in for LLD-C10 (ADR-0026): routes a `{path}` binding
+ * through a flat `surface.data` read (so the effect tracks `data` reactively), and returns any other
+ * value as-is (literal pass-through). The real dispatcher also handles `{call}` via `functions.ts`;
+ * those are tested in `functions.test.ts` and `renderer.test.ts` respectively.
+ */
+const resolveValue: WidgetDeps['resolveValue'] = (value, surface) => {
+  if (typeof value === 'object' && value !== null && !Array.isArray(value) && 'path' in value) {
+    const data = surface.data.value as Record<string, unknown> | undefined
+    return data?.[(value as { path: string }).path.replace(/^\//, '')]
+  }
+  return value
 }
 
 const init = { id: 's1', catalogId: 'demo', version: 'v1.0' }
@@ -55,7 +63,7 @@ const init = { id: 's1', catalogId: 'demo', version: 'v1.0' }
 function harness(factories: Record<string, WidgetFactory>, registryCatalogId = 'demo') {
   const errors: A2uiError[] = []
   const registry = stubRegistry(registryCatalogId, factories)
-  const createWidget = makeCreateWidget({ registry, emitError: (e) => void errors.push(e), resolveBinding })
+  const createWidget = makeCreateWidget({ registry, emitError: (e) => void errors.push(e), resolveValue })
   return { createWidget, errors }
 }
 

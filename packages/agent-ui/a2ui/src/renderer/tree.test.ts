@@ -224,7 +224,7 @@ describe('children-template routes to the positional dynamic list (LLD-C6)', () 
       get: (id) => (id === 'demo' ? entry : undefined),
       supportedCatalogIds: () => ['demo'],
     }
-    const createWidget = makeCreateWidget({ registry, emitError: () => {}, resolveBinding: () => undefined })
+    const createWidget = makeCreateWidget({ registry, emitError: () => {}, resolveValue: (v) => v })
     const surface = createSurface({ id: 's1', catalogId: 'demo', version: 'v1.0' })
     const tree = new SurfaceTree(surface, { createWidget, onError: () => {} })
     return { surface, tree, applied }
@@ -272,7 +272,7 @@ describe('children-template routes to the positional dynamic list (LLD-C6)', () 
     const createWidget = makeCreateWidget({
       registry,
       emitError: () => {},
-      resolveBinding: (b, s, itemScope) => resolve(b, s, itemScope),
+      resolveValue: (v, s, itemScope) => (typeof v === 'object' && v !== null && !Array.isArray(v) && 'path' in v ? resolve(v as { path: string }, s, itemScope) : v),
     })
     const surface = createSurface({ id: 's1', catalogId: 'demo', version: 'v1.0' })
     const tree = new SurfaceTree(surface, { createWidget, onError: () => {} })

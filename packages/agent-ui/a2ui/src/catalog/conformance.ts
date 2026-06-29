@@ -29,12 +29,23 @@ export function validateCatalogConformance(component: A2uiComponent, catalog: Ca
   return out
 }
 
-const isBinding = (v: unknown): v is { path: string } =>
-  typeof v === 'object' && v !== null && !Array.isArray(v) && typeof (v as { path?: unknown }).path === 'string'
+/**
+ * A deferred-resolution binding: a `{path}` data-model reference OR a `{call}` function-call
+ * (ADR-0026 three-armed union). Both occupy the same "binding" position in a prop value and are
+ * evaluated at render time by LLD-C5 / LLD-C10 respectively — neither is a static literal.
+ */
+const isBinding = (v: unknown): v is { path: string } | { call: string } =>
+  typeof v === 'object' && v !== null && !Array.isArray(v) &&
+  (typeof (v as { path?: unknown }).path === 'string' ||
+   typeof (v as { call?: unknown }).call === 'string')
 
-/** A value conforms if it is a literal matching `pd.type`, or — when `pd.bindable` — a `{path}` binding. */
+/**
+ * A value conforms if it is a literal matching `pd.type`, or — when `pd.bindable` — a `{path}`
+ * or `{call}` deferred-resolution binding (ADR-0026: both arms are deferred, so conformance must
+ * accept both; static type checking of a `{call}` result is out-of-scope for the static validator).
+ */
 function matchesType(value: unknown, pd: PropDef): boolean {
-  if (pd.bindable && isBinding(value)) return true // deferred resolution at render (LLD-C5)
+  if (pd.bindable && isBinding(value)) return true // deferred resolution at render (LLD-C5/LLD-C10)
   return matchesSchemaType(value, pd.type)
 }
 

@@ -68,9 +68,10 @@ interface Surface {
 
 ## 5. Binding resolver & dynamic lists — LLD-C5, LLD-C6
 
-**LLD-C5 `resolve(binding, surface, itemScope?)`:**
+**LLD-C5 `resolve(binding, surface, itemScope?)`:** A bound prop value is one of **three** kinds — `literal | {path} | {call}` — dispatched by `resolveValue` (LLD-C10); `resolve` owns the `{path}` arm:
 - Literal → return as-is.
 - `{path}` → a **computed** that reads `surface.data` and walks the RFC-6901 pointer (absolute from root; relative resolves within `itemScope` for child scope, SPEC-R6). Undefined path → `undefined` (widget shows placeholder, SPEC-R4 AC2). Each bound prop is set inside a `surface.scope`-owned `effect`, so a data change re-resolves only that prop (SPEC-N2).
+- `{call}` → a **function call** (`{ call, args? }`, A2UI v1.0 / ADR-0026), evaluated by `functions.ts` (LLD-C10) — handled in the **same** bound-prop effect, so a `{path}` *inside* its args re-resolves reactively (SPEC-N2 unchanged).
 
 > **As-built reconciliation (B2, LLD-C5 shipped — no contract change).** Two precisions on the bullets above:
 > - **The literal split lives in widget.ts, not `resolve`.** "Literal → return as-is" is realized one layer up: widget.ts's `isBinding(value)` decides per prop — a literal is `applyProp`'d once, only a `{path}` value reaches `binding.ts`. So `resolve` only ever sees the `{path}` branch (LLD-C7 owns the split, D6); the bullet is the *subsystem* contract, not the `resolve` signature.
@@ -104,7 +105,27 @@ function emitAction(node, surface, opts:{name; wantResponse?:boolean}) {
 
 **Action listener lifetime (LLD-C13 wiring, ADR-0024 amendment 3).** The host strips the action-typed props before the base resolver and re-expresses them as a `click → emitAction` listener (`renderer.ts` `#wireAction`). That listener is registered on the **item's `AbortController`** when the action control is a dynamic-list item, else `surface.ac` — so a positionally-removed action row (e.g. a Card-with-button) drops its click listener with the item (SPEC-N3, item-granular). The ac threads to `#wireAction` through the **same** host `createWidget` closure that already receives the item's `scope`/`itemScope` (no separate action-wiring pass); the non-list default is `surface.ac`, unchanged.
 
-**LLD-C10 functions:** evaluate catalog client functions referenced in bindings/`checks`. `formatString` interpolates resolved bindings; validation `checks` (e.g. `required`, `email`, `regex`) run on the bound value and return `{valid, message?}`; a failing check surfaces `message` on the widget without a server round-trip (SPEC-R10 AC1). Unknown/throwing function → `error{code:"FUNCTION"}`, treated as `{valid:false}` for checks.
+**LLD-C10 functions (ADR-0026 — A2UI v1.0 function-call bindings):** a binding value has a **third kind** beyond a literal and a `{path}` — a **function call** `{ call: string; args?: Record<string, Binding>; message? }` (`protocol.ts` `FunctionCall`). `functions.ts` is the read-side twin of `binding.ts resolve`; it plugs into the **same per-prop split in widget.ts** (LLD-C7) that already separates literal vs `{path}`, via a single dispatcher:
+
+```ts
+function resolveValue(value, surface, itemScope?) {           // literal | {path} | {call}
+  if (isCallBinding(value)) return evaluate(value, surface, itemScope);   // LLD-C10
+  if (isBinding(value))     return resolve(value, surface, itemScope);    // LLD-C5 {path}
+  return value;                                                           // literal
+}
+function evaluate({ call, args }, surface, itemScope?) {
+  const named = mapValues(args ?? {}, (a) => resolveValue(a, surface, itemScope)); // recursive args
+  if (call[0] === '@') return system(call, named, surface, itemScope);   // @index (the only v1.0 system fn)
+  const fn = catalogOf(surface).functions[call];                          // catalog registry (LLD-C7)
+  if (fn === undefined) return fail('FUNCTION', surface, call);           // unknown → emitError + undefined
+  try { return fn(named); } catch { return fail('FUNCTION', surface, call); }
+}
+```
+
+- **Args are a NAMED object, not positional** (corrects `FunctionDef.args` to named — catalog LLD-C7). Each arg is itself a binding value, **resolved recursively** through `resolveValue` (a literal, a `{path}`, or a nested `{call}`). A `{path}` arg re-resolves reactively because `evaluate` runs **inside** the bound-prop `effect` (LLD-C7, `widget.ts`) — so SPEC-N2 per-path waking holds for function-call bindings unchanged.
+- **`@index` is the only v1.0 system function and is INNERMOST-ONLY** — it returns `itemScope.index + (args.offset ?? 0)` (the `offset` is a numeric addend, e.g. 1-based display; **not** outer-scope addressing). The list already exposes the index via the single-frame `itemScope` (`list.ts` / LLD-C6), so `evaluate` reads it off the **same** `(binding, surface, itemScope)` signature `resolve` takes — no threading change, no scope chain (ADR-0026 settles ADR-0024's deferred "outer-index = a chain decision": single-frame is sufficient and v1.0-faithful). **Outside a Collection Scope (`itemScope` absent) `@index` is a `FUNCTION` error** (v1.0: "outside iteration the client MUST treat it as an error").
+- **FUNCTION is render-time, not a validator verdict.** Unknown/throwing fn — a `@`-name not in the system table, a catalog name absent from `catalog.functions`, `@index` outside a list, or a throwing impl — emits `error{code:"FUNCTION"}` via the **same `emitError` sink** the unknown-type `CATALOG` uses (LLD-C7), and yields `undefined` for the prop (render-time placeholder, like an undefined `{path}`, SPEC-R4 AC2). `validate.ts` stays pure/total — it adds **no** FUNCTION stage (the §9 table already places FUNCTION here, not at LLD-C11); `conformance.ts matchesType` only **accepts** a `{call}` on a `bindable` prop (deferred resolution, symmetric with `{path}`) so it raises no false `CATALOG`.
+- **Catalog functions (LLD-C7):** the pure `required(args)→{valid,message?}` / `email` / `regex` trio, looked up from the bound catalog's `functions` registry. **String composition is the DynamicString `${…}` interpolation feature, NOT a `formatString` function** (ADR-0026 / catalog SPEC-R5) — `${…}` is a **scoped follow-up** (a string-template parser layered on `resolveValue`, orthogonal to the `{call}` value kind), as is **`checks`-surfacing** (a component `checks:[{call,args,message}]` array runs each entry through this evaluator, but the field-error display channel + a `VALIDATION_FAILED` code are a dependent follow-up; SPEC-R10 AC1's *surfacing* rides on that, this LLD delivers the evaluation).
 
 ## 8. Validator (shared) — LLD-C11 (SPEC-R11, N6)
 
@@ -162,7 +183,7 @@ packages/agent-ui/a2ui/src/renderer/
 5. **LLD-C7 widget factory** — against a stub catalog (a `Text`+`Button` mapping) until a2ui-catalog lands; unknown-type placeholder.
 6. **LLD-C4 tree** — render-on-root, out-of-order patch, idgraph errors.
 7. **LLD-C8 input + LLD-C9 action** — two-way optimistic; actionId/wantResponse/actionResponse correlation; sendDataModel.
-8. **LLD-C10 functions** — formatString + checks.
+8. **LLD-C10 functions** — the `{call}` binding evaluator: `@index` (innermost + `offset`) + catalog functions (named args) + recursive args + the `FUNCTION` error (ADR-0026). (`${…}` string interpolation + `checks`-surfacing are scoped follow-ups.)
 9. **LLD-C6 dynamic list** — positional/index iteration (A2UI v1.0, no per-item key), child scope, delta-only boundary updates.
 10. **LLD-C12 capabilities** — declare protocolVersion set; A2A metadata hook.
 11. **LLD-C13 host** — wire mount/ingest/onClientMessage/dispose; the §9 error table becomes the test matrix; a streamed multi-message fixture renders progressively into real `ui-*` controls (the A1 integration proof). The host invokes `validate.ts` id-graph at **finalize** granularity (the complete component set), never per `updateComponents` message — out-of-order streaming (SPEC-R4) must not raise a false `IDGRAPH` (the missing-root/dangling false-positive).

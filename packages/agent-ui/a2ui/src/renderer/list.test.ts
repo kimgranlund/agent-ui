@@ -72,7 +72,7 @@ function listHarness(initialItems: unknown[], templateProps: Record<string, unkn
   const createWidget = makeCreateWidget({
     registry: stubRegistry('demo', { Item: factory }),
     emitError: (e) => void errors.push(e),
-    resolveBinding: (b, s, itemScope) => resolve(b, s, itemScope),
+    resolveValue: (v, s, itemScope) => (typeof v === 'object' && v !== null && !Array.isArray(v) && 'path' in v ? resolve(v as { path: string }, s, itemScope) : v),
   })
   const surface = createSurface(init)
   surface.data.value = { items: initialItems }
@@ -235,7 +235,7 @@ describe('per-item child-scope disposal + leak-free teardown (SPEC-N3)', () => {
     const createWidget = makeCreateWidget({
       registry: stubRegistry('demo', { Item: inputFactory }),
       emitError: () => {},
-      resolveBinding: (b, s, itemScope) => resolve(b, s, itemScope),
+      resolveValue: (v, s, itemScope) => (typeof v === 'object' && v !== null && !Array.isArray(v) && 'path' in v ? resolve(v as { path: string }, s, itemScope) : v),
     })
     const surface = createSurface(init)
     surface.data.value = { items: [{ x: 'a' }, { x: 'b' }, { x: 'c' }] }
@@ -315,7 +315,7 @@ describe('write-side itemScope round-trip on the REAL widget+list path (ADR-0024
     const createWidget = makeCreateWidget({
       registry: stubRegistry('demo', { Item: factory }),
       emitError: (e) => void errors.push(e),
-      resolveBinding: (b, s, itemScope) => resolve(b, s, itemScope),
+      resolveValue: (v, s, itemScope) => (typeof v === 'object' && v !== null && !Array.isArray(v) && 'path' in v ? resolve(v as { path: string }, s, itemScope) : v),
     })
     const surface = createSurface(init)
     surface.data.value = { items: initialItems }
@@ -372,7 +372,7 @@ describe('absolute vs relative bindings inside a template (LLD-C6 / ADR-0024)', 
     const createWidget = makeCreateWidget({
       registry: stubRegistry('demo', { Item: factory }),
       emitError: () => {},
-      resolveBinding: (b, s, itemScope) => resolve(b, s, itemScope),
+      resolveValue: (v, s, itemScope) => (typeof v === 'object' && v !== null && !Array.isArray(v) && 'path' in v ? resolve(v as { path: string }, s, itemScope) : v),
     })
     const surface = createSurface(init)
     surface.data.value = { title: 'ROOT', items: [{ label: 'a' }, { label: 'b' }] }

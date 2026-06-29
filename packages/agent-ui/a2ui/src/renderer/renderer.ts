@@ -36,7 +36,8 @@ import { SurfaceTree } from './tree.ts'
 import { makeCreateWidget } from './widget.ts'
 import { ActionDispatcher } from './action.ts'
 import { validateA2ui } from './validate.ts'
-import { resolve, setPointer } from './binding.ts'
+import { resolveValue as dispatchValue } from './functions.ts'
+import { setPointer } from './binding.ts'
 import type { CreateWidget } from './types.ts'
 import { Registry } from '../catalog/registry.ts'
 import type { WidgetFactory } from '../catalog/types.ts'
@@ -274,14 +275,15 @@ class Renderer implements RendererHost {
    * DOM) and re-expressed as a `click → emitAction` listener owned by the surface's `AbortController`.
    */
   #makeHostCreateWidget(): CreateWidget {
+    const emitError = (error: A2uiError) => this.#emit({ version: this.#versionFor(error.surfaceId), error })
     const base = makeCreateWidget({
       registry: this.#registry,
-      emitError: (error) => this.#emit({ version: this.#versionFor(error.surfaceId), error }),
-      // The per-path binding resolver (LLD-C5, binding.ts). Called inside each bound-prop effect, it
-      // reads a per-path memoized computed over `surface.data`, so a data-model change wakes only the
-      // widgets bound to the path that changed (SPEC-N2 fine-grained waking). `itemScope` threads a
-      // dynamic-list item's relative-path resolution (LLD-C6/ADR-0024).
-      resolveBinding: (binding, surface, itemScope) => resolve(binding, surface, itemScope),
+      emitError,
+      // The value dispatcher (LLD-C5 + LLD-C10, ADR-0026): routes a literal, a `{path}` binding
+      // (per-path memo in binding.ts — SPEC-N2 fine-grained waking), or a `{call}` function-call
+      // (evaluator in functions.ts — @index, required/email/regex, recursive args) to its resolver.
+      // Closed over `emitError` + registry so FUNCTION errors surface through the same sink.
+      resolveValue: (value, surface, itemScope) => dispatchValue(value, surface, itemScope, emitError, this.#registry),
     })
 
     return (node, surface, scope = surface.scope, itemScope, ac = surface.ac) => {

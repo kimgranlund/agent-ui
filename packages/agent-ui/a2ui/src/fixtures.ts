@@ -38,9 +38,11 @@ export const demoCatalogDoc = {
       children: 'child',
     },
   },
+  // Named args per ADR-0026 (corrected from the prior positional JsonSchema[] shape).
   functions: {
-    required: { args: [{ type: 'string' }], returns: { type: 'object' } },
-    email: { args: [{ type: 'string' }], returns: { type: 'object' } },
+    required: { args: { value: { type: ['string', 'null'] } }, returns: { type: 'object' } },
+    email: { args: { value: { type: 'string' } }, returns: { type: 'object' } },
+    regex: { args: { value: { type: 'string' }, pattern: { type: 'string' } }, returns: { type: 'object' } },
   },
 } as const
 

@@ -25,8 +25,24 @@ export interface A2uiError {
   message: string
 }
 
-/** A bound value: a literal, or a JSON-Pointer reference (RFC 6901), relative in child scope. */
-export type Binding<T> = T | { path: string }
+/**
+ * A function-call binding value (A2UI v1.0 / ADR-0026). Evaluated at render time — not a data-model
+ * pointer. `call` names a SYSTEM function (`@index`, `@`-prefixed) or a CATALOG function (keyed in
+ * the bound catalog's `functions` registry). `args` is a NAMED object; each arg is itself a `Binding`
+ * (literal | `{path}` | nested `{call}`) resolved recursively. `message` is the human-readable string
+ * for a `checks` entry on failure (a dependent follow-up — LLD-C10 delivers the evaluator, not surfacing).
+ */
+export interface FunctionCall {
+  call: string
+  args?: Record<string, Binding<unknown>>
+  message?: string
+}
+
+/**
+ * A bound value (A2UI v1.0 / ADR-0026): a literal, a JSON-Pointer reference (RFC 6901, relative in
+ * child scope), OR a function-call binding (`{call,args?}` — evaluated at render time via LLD-C10).
+ */
+export type Binding<T> = T | { path: string } | FunctionCall
 
 /**
  * A dynamic-list child template (A2UI v1.0): the renderer instantiates `componentId` once per element
