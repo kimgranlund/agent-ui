@@ -6,7 +6,7 @@
 //   3. Escaping: `\${x}` → `${x}` (no interpolation); mixed literal+resolved+literal.
 //   4. Reactivity POSITIVE: template re-resolves on an embedded-path updateDataModel.
 //      Reactivity NEGATIVE CONTROL: unrelated path write does NOT re-run the bound-prop effect (SPEC-N2).
-//   6. Deferred fn-expr: `${now()}` → literal `${now()}`, errors.length === 0.
+//   6. fn-expr evaluation (ADR-0028): unknown fn → "" + FUNCTION error; registered fn → coerced result.
 //   7. Malformed unterminated `${` → verbatim, errors.length === 0.
 //
 // Proof point 5 (plain-string regression) is covered by the existing functions.test.ts literal
@@ -16,6 +16,7 @@
 import { describe, it, expect } from 'vitest'
 import { isInterpolated, interpolate } from './interpolate.ts'
 import { resolveValue } from './functions.ts'
+import { catalogFunctions } from '../catalog/functions.ts'
 import { makeCreateWidget } from './widget.ts'
 import { createSurface, disposeSurface } from './surface.ts'
 import { resolve, setPointer } from './binding.ts'
@@ -229,24 +230,85 @@ describe('interpolate — reactivity proof (proof point 4, SPEC-N2)', () => {
   })
 })
 
-// ── Proof point 6: deferred function-expression ───────────────────────────────
+// ── Proof point 6: function-expression evaluation (ADR-0028) ─────────────────
+//
+// 6a: a call whose name is absent from the catalog → evaluate emits FUNCTION + returns undefined
+//     → coerce(undefined) = "" → result is "" + one error.
+// 6b: a call whose impl IS registered → evaluate resolves → coerce → interpolated string, zero errors.
+// 6c: a positional/unnamed-arg call (Fork 1, deferred #18) → parseFunctionExpr returns null →
+//     render-literally with ZERO errors (it is a deferred grammar form, not an unknown function).
 
-describe('interpolate — deferred fn-expr renders verbatim (proof point 6)', () => {
-  it('${now()} renders as literal "${now()}", zero errors (task-#15 deferral)', () => {
+describe('interpolate — fn-expr evaluation (proof point 6, ADR-0028)', () => {
+  it('${now()} with no "now" in catalog → "" + FUNCTION error (proof point 6a)', () => {
     const surface = createSurface({ id: 's', catalogId: 'c', version: 'v1.0' })
     surface.data.value = {}
-    // The `(` in the body classifies it as a function-expression — not yet implemented.
-    const result = interpolate('${now()}', surface, undefined, stubResolve)
-    expect(result).toBe('${now()}')
+    const errors: A2uiError[] = []
+    const emitError = (e: A2uiError) => void errors.push(e)
+    // Registry keyed to 'demo', not 'c' → registry.get('c') = undefined → FUNCTION error.
+    const registry = stubRegistry('demo', {})
+    // NON-VACUOUS: the old (task-#13) assertion was '${now()}' (verbatim); now it must be "".
+    const result = interpolate('${now()}', surface, undefined, stubResolve, emitError, registry)
+    expect(result).toBe('') // undefined from evaluate → coerce → ''
+    expect(errors).toHaveLength(1)
+    expect(errors[0]!.code).toBe('FUNCTION')
+    expect(errors[0]!.message).toContain('now')
     disposeSurface(surface)
   })
 
-  it('${formatDate(value:${/d}, format:"yyyy")} renders verbatim (nested ${} inside fn-expr still deferred)', () => {
+  it('${formatDate(value:${/d}, format:"yyyy")} with registered impl → coerced string (proof point 6b)', () => {
+    // Hermetic: add a stub formatDate to catalogFunctions, restored unconditionally in finally.
+    ;(catalogFunctions as Record<string, (args: Record<string, unknown>) => unknown>)['formatDate'] =
+      (args) => `${String(args.value)}_${String(args.format)}`
+
     const surface = createSurface({ id: 's', catalogId: 'c', version: 'v1.0' })
     surface.data.value = { d: '2026-01-01' }
-    const template = '${formatDate(value:${/d}, format:"yyyy")}'
-    const result = interpolate(template, surface, undefined, stubResolve)
-    expect(result).toBe(template) // verbatim — the outer `(` classifies the whole body as deferred
+
+    // Minimal catalog entry that declares formatDate in its functions map.
+    const testEntry = {
+      catalog: {
+        catalogId: 'c', protocolVersion: 'v1.0', components: {},
+        functions: { formatDate: { args: {}, returns: { type: 'string' } } },
+      },
+      factories: {},
+    }
+    const registry: CatalogRegistry = {
+      register: () => {},
+      get: (id) => (id === 'c' ? testEntry as unknown as CatalogEntry : undefined),
+      supportedCatalogIds: () => ['c'],
+    }
+
+    const errors: A2uiError[] = []
+    const emitError = (e: A2uiError) => void errors.push(e)
+
+    try {
+      // NON-VACUOUS: the old assertion was the template string verbatim; now it resolves.
+      const result = interpolate(
+        '${formatDate(value:${/d}, format:"yyyy")}',
+        surface, undefined, stubResolve, emitError, registry,
+      )
+      expect(result).toBe('2026-01-01_yyyy')
+      expect(errors).toHaveLength(0)
+    } finally {
+      delete (catalogFunctions as Record<string, unknown>)['formatDate']
+      disposeSurface(surface)
+    }
+  })
+
+  it('${upper(${now()})} — positional arg (Fork 1, #18) → verbatim, ZERO errors (proof point 6c)', () => {
+    // `upper` receives the result of `${now()}` as an UNNAMED positional arg (no `name:` prefix).
+    // parseFunctionExpr('upper(${now()})') detects no top-level ':' in the arg → positional → null.
+    // The classifier falls back to render-literally with no error — this is NOT a FUNCTION error:
+    // the evaluator is never called, so unknown-fn detection never fires.
+    // NON-VACUOUS: if we mistakenly called evaluate, it would emit a FUNCTION error for 'upper'.
+    const surface = createSurface({ id: 's', catalogId: 'c', version: 'v1.0' })
+    surface.data.value = {}
+    const errors: A2uiError[] = []
+    const emitError = (e: A2uiError) => void errors.push(e)
+    const registry = stubRegistry('demo', {})
+    const template = '${upper(${now()})}'
+    const result = interpolate(template, surface, undefined, stubResolve, emitError, registry)
+    expect(result).toBe(template) // render-literally — deferred grammar form
+    expect(errors).toHaveLength(0) // zero errors — parseFunctionExpr returned null, evaluate never called
     disposeSurface(surface)
   })
 })

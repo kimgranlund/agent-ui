@@ -1,24 +1,25 @@
-// interpolate.ts — `${…}` DynamicString path interpolation (renderer ADR-0027).
+// interpolate.ts — `${…}` DynamicString path/function interpolation (renderer ADR-0027/ADR-0028).
 //
 // A2UI v1.0: any literal string containing an unescaped `${` is a DynamicString template, not an
 // opaque constant. This module owns the two public exports that `functions.ts` gates behind:
 //
-//   isInterpolated(s)          — fast guard: true iff `s` contains an unescaped `${`.
-//   interpolate(s, surface, itemScope, resolve) — scanner + classifier + path resolver + coerce + concat.
+//   isInterpolated(s)                                      — fast guard: true iff `s` contains an unescaped `${`.
+//   interpolate(s, surface, itemScope, resolve, emitError, registry) — scanner + classifier + resolver + coerce + concat.
 //
-// DESIGN (ADR-0027 §2–5):
+// DESIGN (ADR-0027 §2–5, ADR-0028):
 //
 //   Scanner. A single left-to-right scan turns `s` into ordered segments:
 //     · `\${`          → literal `${` (backslash consumed; the ONLY defined escape).
 //     · unescaped `${` → expression, closed by its matching `}` (brace-depth tracked; plain `{` inside
-//                        an expression increments depth, so a future nested `${…}` is parse-stable).
+//                        an expression increments depth, so nested `${…}` in a fn-expr arg is parse-stable).
 //     · everything else → literal character.
 //
 //   Classifier (the forward-compat seam, ADR-0027 §3). Each `${expr}` body is one of:
-//     · No `(`  → JSON-Pointer PATH (this wave): absolute `/…` or relative `name` in item scope.
-//     · Has `(` → function-expression grammar — DEFERRED (task #15); emit verbatim, no error.
-//       When the function arm lands this single branch is extended to parse `body` into a FunctionCall
-//       and route it to evaluate() — no scanner change required.
+//     · No `(`  → JSON-Pointer PATH (absolute `/…` or relative `name` in item scope).
+//     · Has `(` → function-expression grammar (ADR-0028): parse body via parseFunctionExpr →
+//       FunctionCall → evaluate → coerce. If parseFunctionExpr returns null (malformed body or
+//       positional arg, Fork 1, deferred #18) → render verbatim, no error (ADR-0027 render-literally
+//       model preserved — only the successful parse arm routes through evaluate).
 //
 //   Malformed / unterminated `${` (no closing `}`): verbatim, no error. The spec defines only the
 //   `\${` escape and no error code for parse failures; rendering literally is consistent with SPEC-N4
@@ -36,8 +37,16 @@
 //   limitation). `\\${expr}` is treated as escaped (the `\` before `$` matches the escape rule) and
 //   renders as the literal `\${expr}` — a spec-undefined edge, logged here, not an error.
 
+// NOTE: `evaluate` (functions.ts) imports `isInterpolated`/`interpolate` from this module, and
+// this module imports `evaluate` from functions.ts — a sibling circular dependency. It is safe
+// in ESM because both exports are `function` declarations (hoisted and live before module body
+// runs); neither module calls the other at initialisation time.
+import { evaluate } from './functions.ts'
+import { parseFunctionExpr } from './fn-expr.ts'
 import type { Surface } from './surface.ts'
 import type { ItemScope } from './types.ts'
+import type { A2uiError } from '../protocol.ts'
+import type { CatalogRegistry } from '../catalog/types.ts'
 
 /** The binding.ts `resolve` signature — the per-path memo reader (LLD-C5). */
 type ResolveFn = (binding: { path: string }, surface: Surface, itemScope?: ItemScope) => unknown
@@ -69,21 +78,24 @@ function coerce(v: unknown): string {
 }
 
 /**
- * Interpolate a `${…}` DynamicString template (ADR-0027). Scans `s` escape-aware into ordered
- * segments, classifies each expression body, resolves path segments through `resolve`, coerces
+ * Interpolate a `${…}` DynamicString template (ADR-0027 / ADR-0028). Scans `s` escape-aware into
+ * ordered segments, classifies each expression body, resolves path or function segments, coerces
  * each resolved value, and concatenates in source order.
  *
- * Must be called INSIDE the scope-owned bound-prop effect (widget.ts:125) — `resolve` reads
- * the per-path computed there, subscribing the effect to exactly the embedded paths (SPEC-N2).
+ * Must be called INSIDE the scope-owned bound-prop effect (widget.ts:125) — `resolve` reads the
+ * per-path computed there, subscribing the effect to exactly the embedded paths (SPEC-N2).
  *
- * Does NOT take `emitError` — it never emits an error code. Malformed input renders literally
- * (ADR-0027 render-literally model; consistent with SPEC-N4/R4 AC2).
+ * `emitError` and `registry` are forwarded to `evaluate` for the function-expression arm (ADR-0028).
+ * They have no-op defaults so call-sites that never hit the fn-expr branch (tests, the path arm)
+ * may omit them.
  */
 export function interpolate(
   s: string,
   surface: Surface,
   itemScope: ItemScope | undefined,
   resolve: ResolveFn,
+  emitError: (error: A2uiError) => void = () => {},
+  registry: CatalogRegistry = { register() {}, get() { return undefined }, supportedCatalogIds() { return [] } },
 ): string {
   let out = ''
   let i = 0
@@ -125,11 +137,15 @@ export function interpolate(
         // Unterminated `${` (no matching `}`) — render verbatim, no error (ADR-0027 render-literally).
         out += '${' + body
       } else if (body.includes('(')) {
-        // Function-expression form (e.g. `${now()}`, `${formatDate(value:${/d}, format:'yyyy')}`).
-        // DEFERRED — task #15 owns the tokenizer (identifiers, parens, arg:val, single-quoted
-        // strings, recursive `${…}`). Emit verbatim, no error; when task #15 lands, this branch
-        // routes `body` to a parser → FunctionCall → evaluate() — an additive classifier extension.
-        out += '${' + body + '}'
+        // Function-expression form (ADR-0028): parse `body` into a FunctionCall → evaluate → coerce.
+        // `parseFunctionExpr` returns null for a malformed body or a positional arg (Fork 1, deferred
+        // #18) — null falls back to render-literally with no error (ADR-0027 render-literally model).
+        const call = parseFunctionExpr(body)
+        if (call !== null) {
+          out += coerce(evaluate(call, surface, itemScope, emitError, registry))
+        } else {
+          out += '${' + body + '}'
+        }
       } else {
         // JSON-Pointer path (absolute `/…` or relative in item scope, no `(`).
         // Resolve via binding.ts — the same per-path memo the `{path}` value kind uses (LLD-C5).

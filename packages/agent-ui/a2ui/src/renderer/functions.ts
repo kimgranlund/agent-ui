@@ -77,7 +77,7 @@ export function resolveValue(
   // template — route it through the scanner/classifier/resolver. A non-template string (or any
   // non-string literal) falls through byte-identical to the old `return value` arm.
   if (typeof value === 'string' && isInterpolated(value))
-    return interpolate(value, surface, itemScope, resolve)
+    return interpolate(value, surface, itemScope, resolve, emitError, registry)
   return value // literal (no template marker — returned byte-identical)
 }
 
