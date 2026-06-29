@@ -11,9 +11,10 @@
 // two halves the agent emits) and the LIVE rendered surface that payload produces. The displayed JSON is derived
 // from the SAME message objects fed to the renderer, so the shown input and the fed input can never drift.
 //
-// Demos, in order of value: (1) a leaf display list; (2) a CONTAINER template (a Card subtree per item); (3) an
-// INTERACTIVE list whose edits round-trip into the data model (proven by an `action` carrying the live
-// `dataModel`); (4) a NESTED list (a template whose items hold their own template).
+// Demos, in order of value: (1) a leaf display list; (2) a CONTAINER template (a Card subtree per item) whose
+// labels are `${…}` DynamicString TEMPLATES — the agent composes each from data (ADR-0027), proving literal +
+// relative-path mixing in one bindable string; (3) an INTERACTIVE list whose edits round-trip into the data model
+// (proven by an `action` carrying the live `dataModel`); (4) a NESTED list (a template whose items hold their own).
 
 import { mountPage } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './a2ui-list.css' // page-local layout chrome only (the demo grid + the live-surface frame + the log)
@@ -26,8 +27,10 @@ const { content } = mountPage({
   intro:
     'A2UI v1.0 lets a container bind its children to a data array: `children: { path, componentId }` renders one ' +
     'instance of the template component per element, positionally. Relative bindings inside the template resolve ' +
-    'to that element; container templates render a whole subtree; nested lists compose. Each demo below feeds a ' +
-    'real A2UI payload through the same renderer the canvas uses — the live surface is the renderer’s output.',
+    'to that element; container templates render a whole subtree; nested lists compose. Inside any bindable string ' +
+    'a `${…}` DynamicString template composes a label from data — literal runs and relative-or-absolute paths mixed ' +
+    'and concatenated (demo 2). Each demo below feeds a real A2UI payload through the same renderer the canvas ' +
+    'uses — the live surface is the renderer’s output.',
 })
 
 // ── payload extractors — read the data model + the component set straight off the fed messages (no drift) ─────
@@ -163,7 +166,10 @@ const displayMessages: readonly A2uiServerMessage[] = [
   },
 ]
 
-// ── demo 2 — container template: a Card subtree per /people element, descendants bound to relative paths ──────
+// ── demo 2 — container template + ${…} interpolation: a Card per /people element, its labels COMPOSED ─────────
+// The headline of ADR-0027: each card's text is a DynamicString TEMPLATE — a literal string carrying `${…}`
+// relative paths — not a single path binding. The agent composes the label from data: `"${name} — ${role}"`
+// mixes a literal em-dash run with two relative-in-scope paths, resolved at /people/{index}/name and /role.
 const PEOPLE_ID = 'list-people'
 const peopleMessages: readonly A2uiServerMessage[] = [
   { version: 'v1.0', createSurface: { surfaceId: PEOPLE_ID, catalogId: 'agent-ui' } },
@@ -173,9 +179,9 @@ const peopleMessages: readonly A2uiServerMessage[] = [
       surfaceId: PEOPLE_ID,
       value: {
         people: [
-          { name: 'Ada Lovelace', role: 'Engineer' },
-          { name: 'Grace Hopper', role: 'Architect' },
-          { name: 'Lin Clark', role: 'Writer' },
+          { name: 'Ada Lovelace', role: 'Engineer', team: 'Reactive' },
+          { name: 'Grace Hopper', role: 'Architect', team: 'Compiler' },
+          { name: 'Lin Clark', role: 'Writer', team: 'Docs' },
         ],
       },
     },
@@ -186,10 +192,11 @@ const peopleMessages: readonly A2uiServerMessage[] = [
       surfaceId: PEOPLE_ID,
       components: [
         { id: 'root', component: 'Column', gap: 'md', children: { path: '/people', componentId: 'person_card' } },
-        { id: 'person_card', component: 'Card', elevation: '1', children: ['person_row'] },
-        { id: 'person_row', component: 'Row', gap: 'md', align: 'center', justify: 'between', children: ['person_name', 'person_role'] },
-        { id: 'person_name', component: 'Text', variant: 'h5', text: { path: 'name' } },
-        { id: 'person_role', component: 'Text', variant: 'caption', text: { path: 'role' } },
+        { id: 'person_card', component: 'Card', elevation: '1', children: ['person_col'] },
+        { id: 'person_col', component: 'Column', gap: 'xs', children: ['person_name', 'person_meta'] },
+        // Two ${…} TEMPLATES, each over RELATIVE item paths — composed by the agent, not single-path binds.
+        { id: 'person_name', component: 'Text', variant: 'h5', text: '${name} — ${role}' },
+        { id: 'person_meta', component: 'Text', variant: 'caption', text: '${role} · ${team} team' },
       ],
     },
   },
@@ -269,9 +276,9 @@ content.append(
   }),
   demoSection({
     step: '2',
-    title: 'Container template — a subtree per item',
+    title: 'Container template — a subtree per item, labels composed with ${…}',
     blurb:
-      'The template componentId is a Card, not a leaf. Each /people element renders the Card’s whole subtree — a Row with a name (ui-text h5) and a role (ui-text caption) — every descendant binding resolved relative to that element (/people/{index}/name, /role).',
+      'The template componentId is a Card, not a leaf. Each /people element renders the Card’s whole subtree, and its two labels are DynamicString templates — the agent composes each from data rather than binding one path. The heading is “${name} — ${role}” (a literal em-dash run between two relative paths), the caption “${role} · ${team} team”. ${…} resolves relative-in-scope (/people/{index}/name, /role, /team), coerced and concatenated in source order — reactive per embedded path.',
     messages: peopleMessages,
     surfaceId: PEOPLE_ID,
   }),
