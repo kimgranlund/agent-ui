@@ -173,3 +173,43 @@ describe('placeholder + parent/child semantics (SPEC-R4 AC2 / R5 / N2)', () => {
     expect(b.count).toBe(2)
   })
 })
+
+describe('list-item scope resolution (renderer LLD-C6 / ADR-0024)', () => {
+  it('a RELATIVE path resolves within the item scope to {path}/{index}/…; an ABSOLUTE one to root', () => {
+    const s = createSurface(init)
+    s.data.value = { title: 'ROOT', items: [{ label: 'a' }, { label: 'b' }, { label: 'c' }] }
+
+    // Relative (no leading `/`): resolves to /items/{index}/label.
+    expect(resolve({ path: 'label' }, s, { path: '/items', index: 0 })).toBe('a')
+    expect(resolve({ path: 'label' }, s, { path: '/items', index: 2 })).toBe('c')
+    // Empty relative path = the item itself (/items/{index}).
+    expect(resolve({ path: '' }, s, { path: '/items', index: 1 })).toEqual({ label: 'b' })
+    // Absolute (leading `/`): resolves from root REGARDLESS of the item scope.
+    expect(resolve({ path: '/title' }, s, { path: '/items', index: 2 })).toBe('ROOT')
+  })
+
+  it('the per-path memo distinguishes indices because it keys on the RESOLVED absolute pointer', async () => {
+    const s = createSurface(init)
+    s.data.value = { items: [{ label: 'a' }, { label: 'b' }] }
+    // Two bindings to the SAME relative path but DIFFERENT item indices → two distinct computeds.
+    const i0 = bindCounting(s, 'label', (b, surf) => resolve(b, surf, { path: '/items', index: 0 }))
+    const i1 = bindCounting(s, 'label', (b, surf) => resolve(b, surf, { path: '/items', index: 1 }))
+    expect(i0.value).toBe('a')
+    expect(i1.value).toBe('b')
+    expect(inspect(s.data).subscribers).toBe(2) // /items/0/label and /items/1/label — NOT one shared computed
+
+    // A write to /items/1/label wakes only the index-1 binding (per-path waking holds across item scopes).
+    s.data.value = setPointer(s.data.peek(), '/items/1/label', 'B')
+    await whenFlushed()
+    expect(i1.value).toBe('B')
+    expect(i1.count).toBe(2)
+    expect(i0.count).toBe(1) // index-0 binding stayed asleep
+  })
+
+  it('with NO item scope a relative path resolves to undefined (pre-list behavior preserved)', () => {
+    const s = createSurface(init)
+    s.data.value = { label: 'x' }
+    expect(resolve({ path: 'label' }, s)).toBeUndefined() // no leading slash, no scope → undefined
+    expect(resolve({ path: '' }, s)).toEqual({ label: 'x' }) // '' is still whole-doc when unscoped
+  })
+})

@@ -17,9 +17,10 @@
 // `CreateWidget` (pinned in `./types.ts`); `makeCreateWidget` is its constructor.
 
 import { effect } from '@agent-ui/components'
+import type { Scope } from '@agent-ui/components'
 import type { A2uiComponent, A2uiError } from '../protocol.ts'
 import type { CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
-import type { CreateWidget } from './types.ts'
+import type { CreateWidget, ItemScope } from './types.ts'
 import type { Surface } from './surface.ts'
 import { installInputBinding } from './input.ts'
 
@@ -43,11 +44,13 @@ export interface WidgetDeps {
   emitError: (error: A2uiError) => void
   /**
    * Resolve a `{path}` binding to its current value off `surface.data` (renderer LLD-C5). Called
-   * INSIDE a `surface.scope`-owned effect, so whatever reactive state it reads — the per-path
-   * computed the resolver memoizes for SPEC-N2 — becomes that effect's dependency, and a data change
-   * re-applies only the affected prop. Injected so this slice stays decoupled from `binding.ts`.
+   * INSIDE a `scope`-owned effect, so whatever reactive state it reads — the per-path computed the
+   * resolver memoizes for SPEC-N2 — becomes that effect's dependency, and a data change re-applies
+   * only the affected prop. `itemScope`, when passed (a dynamic-list item, LLD-C6/ADR-0024), rewrites
+   * a relative path into the item's `{path}/{index}/…` pointer. Injected so this slice stays decoupled
+   * from `binding.ts`.
    */
-  resolveBinding: (binding: { path: string }, surface: Surface) => unknown
+  resolveBinding: (binding: { path: string }, surface: Surface, itemScope?: ItemScope) => unknown
 }
 
 /**
@@ -58,7 +61,7 @@ export interface WidgetDeps {
 export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
   const { registry, emitError, resolveBinding } = deps
 
-  return (node, surface) => {
+  return (node, surface, scope = surface.scope, itemScope) => {
     const factory = registry.get(surface.catalogId)?.factories[node.component]
     if (factory === undefined) {
       // Unknown component type — or, defensively, a catalog that vanished after createSurface's
@@ -75,7 +78,7 @@ export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
     const el = factory.create()
     for (const [prop, value] of Object.entries(node)) {
       if (RESERVED.has(prop)) continue
-      if (isBinding(value)) bindProp(el, factory, prop, value, surface, resolveBinding)
+      if (isBinding(value)) bindProp(el, factory, prop, value, surface, resolveBinding, scope, itemScope)
       else factory.applyProp(el, prop, value) // static literal → set once
     }
     // Two-way input binding (renderer LLD-C8, ADR-0019). Wired here — right after the data→control props are
@@ -89,9 +92,11 @@ export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
 }
 
 /**
- * Install a `surface.scope`-owned effect that re-applies one bound prop whenever its resolved value
- * changes (renderer LLD-C7 + C5). Owning the effect in `surface.scope` means it dies with the
- * surface on `deleteSurface`, so the widget leaves no live subscriber (SPEC-N3).
+ * Install a `scope`-owned effect that re-applies one bound prop whenever its resolved value changes
+ * (renderer LLD-C7 + C5). Owning the effect in `scope` means it dies when that scope is disposed —
+ * `surface.scope` for an ordinary node (so it dies with the surface, SPEC-N3), or a dynamic-list item's
+ * per-index CHILD scope (so it dies with the item on positional removal, LLD-C6/ADR-0024 — never leaked
+ * into `surface.scope`). `itemScope` rewrites a relative binding into the item's pointer (LLD-C6).
  */
 function bindProp(
   el: HTMLElement,
@@ -100,10 +105,12 @@ function bindProp(
   binding: { path: string },
   surface: Surface,
   resolveBinding: WidgetDeps['resolveBinding'],
+  scope: Scope,
+  itemScope: ItemScope | undefined,
 ): void {
-  surface.scope.run(() => {
+  scope.run(() => {
     effect(() => {
-      factory.applyProp(el, prop, resolveBinding(binding, surface))
+      factory.applyProp(el, prop, resolveBinding(binding, surface, itemScope))
     })
   })
 }

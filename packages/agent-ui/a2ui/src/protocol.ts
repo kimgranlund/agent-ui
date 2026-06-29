@@ -28,12 +28,24 @@ export interface A2uiError {
 /** A bound value: a literal, or a JSON-Pointer reference (RFC 6901), relative in child scope. */
 export type Binding<T> = T | { path: string }
 
+/**
+ * A dynamic-list child template (A2UI v1.0): the renderer instantiates `componentId` once per element
+ * of the array at `path`, POSITIONALLY (one instance per index — v1.0 has no per-item key; ADR-0024).
+ * Inside the template, a RELATIVE binding (no leading `/`) resolves to `{path}/{index}/…`, an ABSOLUTE
+ * one to root. The alternative to a static `string[]` for a container's `children` (renderer LLD-C6).
+ */
+export interface A2uiChildTemplate {
+  path: string
+  componentId: string
+}
+
 /** A flat adjacency-list component node (runtime SPEC §5.1). */
 export interface A2uiComponent {
   id: string
   component: string
   child?: string
-  children?: string[]
+  /** Static child refs (`string[]`) OR a v1.0 dynamic-list template (`{path, componentId}`, LLD-C6). */
+  children?: string[] | A2uiChildTemplate
   [prop: string]: unknown
 }
 

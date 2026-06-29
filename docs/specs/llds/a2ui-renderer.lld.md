@@ -25,7 +25,7 @@
 | **LLD-C12** | Capabilities | SPEC-R12 | `capabilities.ts` |
 | **LLD-C13** | Renderer host / orchestrator | SPEC-R1, N3, N4 | `renderer.ts` |
 
-**Kernel reuse (SPEC-N5).** All reactivity is the `@agent-ui/components` `reactive/` kernel — `signal`/`computed`/`effect`/`createScope`/`inspect`. No `@a2ui/web_core`, no third-party dep. Dynamic lists reuse the `repeat` directive; widgets are `ui-*` controls created as custom elements.
+**Kernel reuse (SPEC-N5).** All reactivity is the `@agent-ui/components` `reactive/` kernel — `signal`/`computed`/`effect`/`createScope`/`inspect`. No `@a2ui/web_core`, no third-party dep. A **positional** (A2UI v1.0) dynamic list uses a **kernel positional reconcile** (a length-`effect` + per-index `createScope` + `createWidget`) — **not** the `repeat` directive (positional lists never reorder, so a keyed-move primitive is mismatched; ADR-0024 / B2). `repeat` remains the vehicle for a **keyed** list (hand-authored, stable-key, where #69's focus-preserving move applies). Both are kernel-reuse — SPEC-N5 (zero third-party dep) holds either way. Widgets are `ui-*` controls created as custom elements.
 
 ## 2. Surface model — LLD-C3 (SPEC-R2, N3)
 
@@ -74,7 +74,7 @@ interface Surface {
 > - **The literal split lives in widget.ts, not `resolve`.** "Literal → return as-is" is realized one layer up: widget.ts's `isBinding(value)` decides per prop — a literal is `applyProp`'d once, only a `{path}` value reaches `binding.ts`. So `resolve` only ever sees the `{path}` branch (LLD-C7 owns the split, D6); the bullet is the *subsystem* contract, not the `resolve` signature.
 > - **Per-path waking is a value-cutoff, not per-path invalidation.** There is ONE writable signal (`surface.data`); every path is a memoized `computed(() => resolvePointer(data.value, pointer))` over it (a module-private `WeakMap<Surface, Map<pointer, computed>>`, created inside `surface.scope` ⇒ disposed by `scope.dispose()`, SPEC-N3). A write marks *every* path computed possibly-stale — cheap, no DOM work — but the kernel's `Object.is` equality cutoff settles each one before its bound-prop effect runs: a computed that re-resolves to an `Object.is`-equal value does not bump its version, so the effect's verification concludes "unchanged" and skips `applyProp`. That cutoff only bites because `updateDataModel`'s `setPointer` write is IMMUTABLE with structural sharing — an untouched sibling subtree keeps its reference identity across a write, so a `/b` binding resolves to the same object after a `/a` write and stays asleep. `setPointer` is therefore the SPEC-N2 enabler, not an implementation detail: it must never deep-clone.
 
-**LLD-C6 dynamic list:** a `children`-bound array path renders via the kernel `repeat` directive keyed by item identity. Each item gets a child scope whose relative pointers resolve into that array element. Append/remove mutate only the delta (SPEC-R6 AC1); item scopes dispose on removal (no leak).
+**LLD-C6 dynamic list:** a `children`-**template** ChildList (`{ path, componentId }`, A2UI v1.0) renders one instance per array element, **positionally / index-based** — A2UI v1.0 defines **no per-item key**: items match by array **index**, reconciliation is positional and never a keyed move (corrected from the earlier "keyed by item identity" over-specification — v1.0 has no identity concept). Each item gets a child scope whose **relative** pointers resolve to `{path}/{index}/…` and **absolute** pointers to root (`@index` = the 0-based iteration index, a system function in the collection scope). A length change adds/removes instances at the **boundary** (SPEC-R6 AC1); a mid-array shift re-binds positionally through the per-path computeds, **not** a move; item scopes dispose on removal (no leak). The reconcile is a **bespoke positional loop** (ADR-0024 / B2): a `surface.scope` `effect` on a length-computed grows/shrinks item instances by index, each built via `createWidget` in a per-index child scope bound to `{path}/{index}` — **not** the `repeat` directive (positional never moves).
 
 ## 6. Widget factory & input — LLD-C7, LLD-C8
 
@@ -159,7 +159,7 @@ packages/agent-ui/a2ui/src/renderer/
 6. **LLD-C4 tree** — render-on-root, out-of-order patch, idgraph errors.
 7. **LLD-C8 input + LLD-C9 action** — two-way optimistic; actionId/wantResponse/actionResponse correlation; sendDataModel.
 8. **LLD-C10 functions** — formatString + checks.
-9. **LLD-C6 dynamic list** — repeat-keyed iteration, child scope, delta-only updates.
+9. **LLD-C6 dynamic list** — positional/index iteration (A2UI v1.0, no per-item key), child scope, delta-only boundary updates.
 10. **LLD-C12 capabilities** — declare protocolVersion set; A2A metadata hook.
 11. **LLD-C13 host** — wire mount/ingest/onClientMessage/dispose; the §9 error table becomes the test matrix; a streamed multi-message fixture renders progressively into real `ui-*` controls (the A1 integration proof). The host invokes `validate.ts` id-graph at **finalize** granularity (the complete component set), never per `updateComponents` message — out-of-order streaming (SPEC-R4) must not raise a false `IDGRAPH` (the missing-root/dangling false-positive).
 

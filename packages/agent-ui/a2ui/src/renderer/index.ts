@@ -13,6 +13,8 @@ export { parseLine, ParseError, isParseError } from './parser.ts'
 export { SurfaceTree } from './tree.ts'
 export type { TreeDeps, UpdateComponentsMessage } from './tree.ts'
 
+export { renderList } from './list.ts'
+
 export { makeCreateWidget } from './widget.ts'
 export type { WidgetDeps } from './widget.ts'
 
@@ -27,4 +29,4 @@ export type { Surface, SurfaceInit } from './surface.ts'
 export { validateA2ui } from './validate.ts'
 export type { ValidationVerdict } from './validate.ts'
 
-export type { CreateWidget } from './types.ts'
+export type { CreateWidget, ItemScope } from './types.ts'

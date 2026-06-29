@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest'
+import { whenFlushed } from '@agent-ui/components'
 import type { A2uiComponent, A2uiError } from '../protocol.ts'
 import type { CreateWidget } from './types.ts'
 import { createSurface } from './surface.ts'
+import { setPointer } from './binding.ts'
+import { makeCreateWidget } from './widget.ts'
+import type { CatalogEntry, CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
 import { SurfaceTree, type UpdateComponentsMessage } from './tree.ts'
 
 // — harness ————————————————————————————————————————————————————————————————————
@@ -200,5 +204,47 @@ describe('out-of-order child held + patched (SPEC-R4 AC1)', () => {
     const mid = tree.rootElement!.children[0] as HTMLElement
     expect(mid.getAttribute('data-id')).toBe('mid')
     expect(childIds(mid)).toEqual(['c'])
+  })
+})
+
+// A children-TEMPLATE container routes to the positional list (renderer LLD-C6 / ADR-0024) instead of
+// the static childRefs DFS. Uses the REAL widget factory path so the list's per-element instantiation +
+// length reactivity are proven through the actual `createWidget`, against a stub catalog factory.
+describe('children-template routes to the positional dynamic list (LLD-C6)', () => {
+  function listHarness() {
+    const applied: { el: HTMLElement; value: unknown }[] = []
+    const factory: WidgetFactory = {
+      tag: 'ui-text',
+      create: () => document.createElement('ui-text'),
+      applyProp: (el, _prop, value) => void applied.push({ el, value }),
+    }
+    const entry = { factories: { List: factory, Item: factory } } as unknown as CatalogEntry
+    const registry: CatalogRegistry = {
+      register: () => {},
+      get: (id) => (id === 'demo' ? entry : undefined),
+      supportedCatalogIds: () => ['demo'],
+    }
+    const createWidget = makeCreateWidget({ registry, emitError: () => {}, resolveBinding: () => undefined })
+    const surface = createSurface({ id: 's1', catalogId: 'demo', version: 'v1.0' })
+    const tree = new SurfaceTree(surface, { createWidget, onError: () => {} })
+    return { surface, tree, applied }
+  }
+
+  it('renders one instance per array element under the container and grows on a length change', async () => {
+    const { surface, tree } = listHarness()
+    surface.data.value = { items: [{ label: 'a' }, { label: 'b' }] }
+    tree.apply(
+      msg([
+        { id: 'root', component: 'List', children: { path: '/items', componentId: 'item' } },
+        { id: 'item', component: 'Item', text: { path: 'label' } },
+      ]),
+    )
+    const root = tree.rootElement!
+    expect(root.children.length).toBe(2) // two item instances — NOT a single childRefs/anchor mount
+    expect([...root.children].every((c) => c.tagName.toLowerCase() === 'ui-text')).toBe(true)
+
+    surface.data.value = setPointer(surface.data.peek(), '/items', [{ label: 'a' }, { label: 'b' }, { label: 'c' }])
+    await whenFlushed()
+    expect(root.children.length).toBe(3) // grew to the new length, positionally
   })
 })

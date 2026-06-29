@@ -279,13 +279,14 @@ class Renderer implements RendererHost {
       emitError: (error) => this.#emit({ version: this.#versionFor(error.surfaceId), error }),
       // The per-path binding resolver (LLD-C5, binding.ts). Called inside each bound-prop effect, it
       // reads a per-path memoized computed over `surface.data`, so a data-model change wakes only the
-      // widgets bound to the path that changed (SPEC-N2 fine-grained waking).
-      resolveBinding: (binding, surface) => resolve(binding, surface),
+      // widgets bound to the path that changed (SPEC-N2 fine-grained waking). `itemScope` threads a
+      // dynamic-list item's relative-path resolution (LLD-C6/ADR-0024).
+      resolveBinding: (binding, surface, itemScope) => resolve(binding, surface, itemScope),
     })
 
-    return (node, surface) => {
+    return (node, surface, scope = surface.scope, itemScope) => {
       const actionProps = this.#actionPropsOf(node, surface)
-      const el = base(actionProps.size === 0 ? node : withoutProps(node, actionProps), surface)
+      const el = base(actionProps.size === 0 ? node : withoutProps(node, actionProps), surface, scope, itemScope)
       for (const spec of actionProps.values()) this.#wireAction(el, node, surface, spec)
       return el
     }

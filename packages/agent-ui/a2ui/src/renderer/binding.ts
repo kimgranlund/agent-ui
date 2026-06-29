@@ -21,13 +21,17 @@
 // INSIDE `surface.scope`, so `scope.dispose()` on `deleteSurface` disposes every one of them and the
 // data signal drops to zero subscribers (SPEC-N3, leak-free).
 //
-// Absolute pointers only. Relative-path / list-item resolution (the `itemScope` argument, reserved
-// below) is LLD-C6, gated on G3 `repeat`. Literal (non-`{path}`) values are split out upstream in
-// widget.ts (`isBinding`), so this module only ever sees the `{path}` branch.
+// Absolute AND list-item-relative pointers. A list item's `itemScope` ({path,index}, LLD-C6/ADR-0024)
+// rewrites a RELATIVE binding (no leading `/`) to its absolute pointer `{path}/{index}/…` BEFORE the
+// memo — so the memo still keys on the resolved ABSOLUTE pointer (`/items/0/x` ≠ `/items/1/x`) and needs
+// no itemScope key. With no itemScope a relative path resolves as it did before (→ `undefined`); an
+// absolute path is unchanged. Literal (non-`{path}`) values are split out upstream in widget.ts
+// (`isBinding`), so this module only ever sees the `{path}` branch.
 
 import { computed } from '@agent-ui/components'
 import type { ReadonlySignal } from '@agent-ui/components'
 import type { Surface } from './surface.ts'
+import type { ItemScope } from './types.ts'
 
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -102,15 +106,26 @@ function pathSignal(surface: Surface, pointer: string): ReadonlySignal<unknown> 
 }
 
 /**
- * Resolve a `{path}` binding to its current value off `surface.data` (renderer LLD-C5). Reading the
- * memoized path-signal's `.value` inside the calling bound-prop effect makes that effect depend ONLY on
- * this path's computed, so an unrelated data write never re-applies the prop (SPEC-N2).
- *
- * Signature-compatible with the pinned `WidgetDeps.resolveBinding` (widget.ts) — the host wires
- * `resolveBinding: (b, s) => resolve(b, s)` with zero widget.ts change. `_itemScope` is RESERVED for the
- * list-item / relative-path resolution that lands in LLD-C6 (G3 `repeat`); it is typed but unused today,
- * so a relative path with no scope resolves as it does now (→ `undefined`).
+ * Rewrite a binding path to the ABSOLUTE pointer the memo keys on (renderer LLD-C6 / ADR-0024). A path
+ * with a leading `/` is already absolute (resolves from the data root — the ordinary case). A RELATIVE
+ * path (no leading `/`) resolves WITHIN a list item's scope: `{path}/{index}` for the item itself (an
+ * empty relative path) else `{path}/{index}/{rest}`. With no `itemScope` the path is returned unchanged,
+ * preserving the pre-list behavior (a bare relative path then walks to `undefined` in `resolvePointer`).
  */
-export function resolve(binding: { path: string }, surface: Surface, _itemScope?: unknown): unknown {
-  return pathSignal(surface, binding.path).value
+function scopedPointer(path: string, itemScope?: ItemScope): string {
+  if (path.startsWith('/')) return path
+  if (itemScope === undefined) return path
+  return path === '' ? `${itemScope.path}/${itemScope.index}` : `${itemScope.path}/${itemScope.index}/${path}`
+}
+
+/**
+ * Resolve a `{path}` binding to its current value off `surface.data` (renderer LLD-C5/C6). Reading the
+ * memoized path-signal's `.value` inside the calling bound-prop effect makes that effect depend ONLY on
+ * this path's computed, so an unrelated data write never re-applies the prop (SPEC-N2). `itemScope`, when
+ * present (a list item, LLD-C6/ADR-0024), rewrites a relative path to its absolute pointer FIRST, so the
+ * per-path memo still keys on the resolved absolute pointer — `/items/0/x` and `/items/1/x` are distinct
+ * computeds. Signature-compatible with the pinned `WidgetDeps.resolveBinding` (widget.ts).
+ */
+export function resolve(binding: { path: string }, surface: Surface, itemScope?: ItemScope): unknown {
+  return pathSignal(surface, scopedPointer(binding.path, itemScope)).value
 }

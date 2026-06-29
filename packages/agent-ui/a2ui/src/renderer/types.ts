@@ -6,13 +6,38 @@
 
 import type { A2uiComponent } from '../protocol.ts'
 import type { Surface } from './surface.ts'
+import type { Scope } from '@agent-ui/components'
+
+/**
+ * A dynamic-list item's binding scope (renderer LLD-C6, A2UI v1.0 / ADR-0024). Carries the array
+ * `path` (the template's pointer) and this instance's 0-based `index`, so a RELATIVE binding inside
+ * the template resolves to `{path}/{index}/…` (an ABSOLUTE binding resolves to root). It is the read-
+ * direction scope only — the per-path memo (binding.ts) keys on the RESOLVED absolute pointer, so no
+ * `ItemScope` key is needed there. `@index` (the LLD-C10 function evaluator) reads `index` off this.
+ */
+export interface ItemScope {
+  /** The JSON-Pointer to the bound array — the list template's `path`. */
+  path: string
+  /** This instance's 0-based position within the array (positional reconcile, ADR-0024). */
+  index: number
+}
 
 /**
  * Resolve + instantiate the live control for one component node (renderer LLD-C7, SPEC-R9). Looks the
  * `node.component` type up in the surface's catalog, instantiates the `WidgetFactory`'s element, sets
- * static props, and installs a scope-owned effect per bound prop. An unknown type emits `error{CATALOG}`
- * and returns a non-fatal placeholder so siblings still render (SPEC-R9 AC2) — hence it always returns
- * an element. The tree reconstructor (renderer LLD-C4) calls this; pinned so the tree slice can build
- * against a stub while the widget slice is built in parallel.
+ * static props, and installs a bound-prop effect per `{path}` prop OWNED BY `scope`. An unknown type
+ * emits `error{CATALOG}` and returns a non-fatal placeholder so siblings still render (SPEC-R9 AC2) —
+ * hence it always returns an element. The tree reconstructor (renderer LLD-C4) calls this; pinned so
+ * the tree slice can build against a stub while the widget slice is built in parallel.
+ *
+ * `scope` defaults to `surface.scope` (the surface lifetime) so every existing caller is unchanged; a
+ * dynamic-list item (renderer LLD-C6) passes its per-index CHILD scope so the item's bound-prop effects
+ * dispose with the item, not the surface. `itemScope` threads the relative-path resolution context for a
+ * list item (absent for an ordinary node).
  */
-export type CreateWidget = (node: A2uiComponent, surface: Surface) => HTMLElement
+export type CreateWidget = (
+  node: A2uiComponent,
+  surface: Surface,
+  scope?: Scope,
+  itemScope?: ItemScope,
+) => HTMLElement

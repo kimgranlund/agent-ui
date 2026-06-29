@@ -23,9 +23,10 @@
 // (LLD-C13) owns one `SurfaceTree` per surface, wires `createWidget` + the client-error `onError`
 // callback, and reads `surface.widgets.get('root')` to attach the rendered root into the document.
 
-import type { A2uiComponent, A2uiError, A2uiServerMessage } from '../protocol.ts'
+import type { A2uiChildTemplate, A2uiComponent, A2uiError, A2uiServerMessage } from '../protocol.ts'
 import type { Surface } from './surface.ts'
 import type { CreateWidget } from './types.ts'
+import { renderList } from './list.ts'
 
 /** The `updateComponents` server-message envelope — the only message the tree consumes (LLD-C4). */
 export type UpdateComponentsMessage = Extract<A2uiServerMessage, { updateComponents: object }>
@@ -130,6 +131,13 @@ export class SurfaceTree {
 
     const el = this.#deps.createWidget(node, this.#surface)
     this.#surface.widgets.set(id, el)
+    // A `children`-TEMPLATE (`{path, componentId}`, A2UI v1.0) is a dynamic list (renderer LLD-C6 /
+    // ADR-0024): hand the container to the positional loop, which owns the per-element instances under
+    // it. A static `children: string[]` (and `child`) keep the ordinary DFS reconstruction below.
+    if (isChildTemplate(node.children)) {
+      renderList({ container: el, template: node.children, surface: this.#surface, createWidget: this.#deps.createWidget })
+      return el
+    }
     for (const childId of childRefs(node)) el.appendChild(this.#mountNode(childId))
     return el
   }
@@ -149,6 +157,21 @@ export class SurfaceTree {
   #idgraph(path: string): void {
     this.#deps.onError({ code: 'IDGRAPH', surfaceId: this.#surface.id, path, message: `id-graph violation: ${path}` })
   }
+}
+
+/**
+ * A `children` that is the v1.0 dynamic-list TEMPLATE form (`{path, componentId}`) rather than a static
+ * `string[]` (renderer LLD-C6). Unambiguous: the static form is an array, the template is an object with
+ * both string keys — so this never misreads a `string[]` as a template (or vice versa).
+ */
+function isChildTemplate(children: A2uiComponent['children']): children is A2uiChildTemplate {
+  return (
+    typeof children === 'object' &&
+    children !== null &&
+    !Array.isArray(children) &&
+    typeof children.path === 'string' &&
+    typeof children.componentId === 'string'
+  )
 }
 
 /** A node's child ids in render order: `child` first, then `children` in array order (semantic). */
