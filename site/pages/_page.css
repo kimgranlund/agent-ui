@@ -12,6 +12,10 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  /* Docs text DEFAULT leading — the type-scale body step (1.5), one source of truth with --ui-type-body-*.
+     Multi-line prose (the rendered <article>: paragraphs, lists) reads at 1.5; headings and other contexts that
+     want tighter leading set their own and win by specificity. Without this the body inherited the UA ~1.2. */
+  line-height: var(--ui-type-body-leading);
   color: var(--c-neutral-on-surface);
   background: var(--c-neutral-surface);
 }
