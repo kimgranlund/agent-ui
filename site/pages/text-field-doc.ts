@@ -12,7 +12,7 @@ import { findAttr, heading, renderApiTable, renderMarkdownBody, specimenRow } fr
 import { applyDemoWidth, searchIcon } from '../lib/specimens.ts'
 import type { ParsedDescriptor } from '@agent-ui/components/descriptor'
 
-const SPECIMEN_WIDTH = '16rem' // the page-supplied display width (the #74 rationale lives in applyDemoWidth)
+const SPECIMEN_WIDTH = '16rem' // the page-supplied display width (the ADR-0021 width rationale lives in applyDemoWidth)
 
 const { descriptor, body } = loadTextFieldDoc()
 
@@ -56,7 +56,7 @@ function renderExamples(d: ParsedDescriptor): HTMLElement {
 }
 
 // field — a live specimen: a real <ui-text-field> with the given attributes set. The label becomes the editor's
-// aria-label (the labelling seam); applyDemoWidth supplies the display width (the #74 rationale lives there).
+// aria-label (the labelling seam); applyDemoWidth supplies the display width (the ADR-0021 width rationale lives there).
 function field(attrs: Record<string, string>): HTMLElement {
   const el = document.createElement('ui-text-field')
   for (const [name, value] of Object.entries(attrs)) el.setAttribute(name, value)

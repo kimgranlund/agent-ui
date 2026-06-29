@@ -6,8 +6,9 @@
 // subtree-geometry demo (ADR-0007) — text-field's density-bearing quantity is the adornment↔editor gap, so the
 // [density] leg leads with a leading icon to make the gap delta visible.
 //
-// Every specimen is given a page-supplied display width via applyDemoWidth (the #74 no-intrinsic-width rationale
-// lives there, once) — layout context, not a restyle; all geometry/colour/state appearance is text-field.css's.
+// Every specimen is given a page-supplied display width via applyDemoWidth (the ADR-0021 width rationale — a
+// ~20ch floor, layout owns the width above it — lives there, once) — layout context, not a restyle; all
+// geometry/colour/state appearance is text-field.css's.
 import { mountPage } from './_page.ts' // MUST be first — pulls the load-bearing foundation CSS + ui-* controls
 import './permutations.css' // SHARED page scaffold (matrix/geo chrome), reused by every {name}-permutations page; AFTER _page.ts
 import { loadTextFieldDoc } from '../lib/frontmatter.ts'

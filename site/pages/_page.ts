@@ -95,7 +95,12 @@ const NAV: readonly NavGroup[] = [
       { href: './modal-doc.html', label: 'API' },
     ],
   },
-  { links: [{ href: './a2ui-canvas.html', label: 'A2UI Canvas' }] },
+  {
+    links: [
+      { href: './a2ui-canvas.html', label: 'A2UI Canvas' },
+      { href: './a2ui-list.html', label: 'A2UI Dynamic List' },
+    ],
+  },
 ]
 
 // isCurrent — is this link the page we are on? Compare resolved pathnames, treating the site root (`/`) as

@@ -5,27 +5,28 @@
 // the disabled role-repoint). This module only stages, labels, and wires a live event log — a real `input` +
 // `change` sink — that proves the surface→model + commit round-trip is genuine, not faked.
 //
-// The states are the CONTROL's, not the page's: hover/focus step the BORDER colour (a field has no pressed
-// state), :focus-within draws BOTH a border step AND the shared ring on ALL focus (native text-input parity,
-// NOT :focus-visible — ADR-0014 dev#1), user-invalid surfaces only AFTER the first blur/change (the
-// trackUserInvalid controller), and disabled is a role-repoint (muted surface/ink/frame), never opacity.
+// The states are the CONTROL's, not the page's: hover steps the BORDER colour (a field has no pressed state);
+// on :focus-within the border steps to TRANSPARENT and the shared fleet ring is the SOLE focus indicator, on ALL
+// focus (native text-input parity, NOT :focus-visible — a coloured focus border would double with the ring into a
+// visible double border, corrected per ADR-0014's amendment); user-invalid surfaces only AFTER the first
+// blur/change (the trackUserInvalid controller), and disabled is a role-repoint (muted surface/ink/frame), never opacity.
 //
-// text-field has no intrinsic width yet (#74), so each specimen is given a display width by the page (an
-// inline-size on the host) — layout context, not a restyle.
+// text-field carries a ~20ch min-inline-size floor (#74 / ADR-0021) but layout owns the width above it, so each
+// specimen is given a display width by the page (an inline-size on the host) — layout context, not a restyle.
 import { mountPage } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls
 import './states.css' // SHARED page scaffold (sections, captions, the activity log) — not state styling
 import { applyDemoWidth, searchIcon } from '../lib/specimens.ts'
 
-const SPECIMEN_WIDTH = '16rem' // the display width passed to applyDemoWidth (the #74 rationale lives there)
+const SPECIMEN_WIDTH = '16rem' // the display width passed to applyDemoWidth (the ADR-0021 width rationale lives there)
 
 const { content } = mountPage({
   title: 'ui-text-field — interaction states',
   intro:
     'The live <ui-text-field> below, staged in each interaction state. Every state here is authored by the ' +
-    'control itself in text-field.css — this page only stages and labels, never restyling a field. Hover and ' +
-    'focus step the BORDER colour (a text field has no pressed state); :focus-within draws both a border step ' +
-    'and the shared focus ring on all focus (native text-input parity); a required field shows its danger ' +
-    'border only after the first interaction; a disabled field is muted and inert.',
+    'control itself in text-field.css — this page only stages and labels, never restyling a field. Hover steps ' +
+    'the BORDER colour (a text field has no pressed state); on :focus-within the border steps to transparent and ' +
+    'the shared focus ring becomes the sole focus indicator, on all focus (native text-input parity); a required ' +
+    'field shows its danger border only after the first interaction; a disabled field is muted and inert.',
 })
 
 // ── small DOM helpers (page scaffold only) ───────────────────────────────────────────────────────────────
@@ -114,21 +115,22 @@ const typeMe = makeField({ label: 'Your name', placeholder: 'Start typing…' })
 attachLog(typeMe, 'Name')
 placeholder.append(makeRow(typeMe, caption('type here — placeholder clears, value tracks')))
 
-// ── [2] focus — :focus-within draws BOTH a border step AND the shared ring (ALL focus) ───────────────────
+// ── [2] focus — :focus-within: the border steps to TRANSPARENT, the shared ring is the sole indicator (ALL focus) ─
 const focus = makeSection(
   'Focus — :focus-within (all focus, native parity)',
-  'Click <em>or</em> Tab into a field. The control steps its <strong>border-color</strong> to the focus role ' +
-    'AND draws the shared fleet focus ring (ADR-0009) — both keyed on <code>:focus-within</code>, so unlike a ' +
-    'button (<code>:focus-visible</code>, keyboard-only) the ring shows on a <strong>mouse click too</strong>: a ' +
-    'text field must visibly signal where typing will land (ADR-0014 dev#1). The outline is the load-bearing ' +
-    'forced-colors indicator — the focus <code>border-color</code> does not survive <code>forced-colors</code>, ' +
-    'the outline does.',
+  'Click <em>or</em> Tab into a field. On <code>:focus-within</code> the field <strong>border steps to ' +
+    'transparent</strong> and the shared fleet focus ring (ADR-0009) is the <strong>sole</strong> focus ' +
+    'indicator — a coloured border step would double with the ring into a visible double border (corrected per ' +
+    'ADR-0014’s amendment), and a transparent border preserves the box geometry (no layout shift). Because ' +
+    'it keys on <code>:focus-within</code> — not a button’s keyboard-only <code>:focus-visible</code> — the ' +
+    'ring shows on a <strong>mouse click too</strong>: a text field must visibly signal where typing will land. ' +
+    'The ring is also the load-bearing <code>forced-colors</code> indicator (<code>--c-focus-ring → Highlight</code>).',
 )
 focus.append(
   makeRow(
     makeField({ label: 'Click me', placeholder: 'click or Tab in' }),
     makeField({ label: 'Or me', placeholder: 'ring shows on pointer focus too' }),
-    caption('click OR Tab → border step + ring'),
+    caption('click OR Tab → focus ring (the border goes transparent)'),
   ),
 )
 

@@ -10,10 +10,12 @@ const SVG_NS = 'http://www.w3.org/2000/svg'
 
 /**
  * applyDemoWidth — give a specimen a page-supplied display width. This is layout context, NOT a restyle of the
- * control's appearance/state (those stay in the control's own CSS). It is REQUIRED for a ui-text-field specimen:
- * the field has no intrinsic width yet (its editor cell is 1fr / min-inline-size:0 — a known control gap,
- * follow-up #74), so an unsized field collapses to ~0. Other containers fill their parent and are sized here
- * only for a tidy demo. The #74 rationale lives here, once — call sites just pass a width.
+ * control's appearance/state (those stay in the control's own CSS). A ui-text-field now carries a ~20ch
+ * min-inline-size typing-width FLOOR (`--ui-text-field-min-inline-size`, native `<input size>` parity; #74 /
+ * ADR-0021), so a bare field is hittable rather than collapsed — but the width ABOVE that floor is the layout's
+ * job, so a specimen still gets an explicit width here for a consistent, tidy demo. Other containers fill their
+ * parent and are sized here only for the same reason. The width rationale lives here, once — call sites just
+ * pass a width.
  */
 export function applyDemoWidth(element: HTMLElement, width: string): void {
   element.style.inlineSize = width

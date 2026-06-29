@@ -17,8 +17,8 @@ const { content } = mountPage({
     'controls from a tiny agent-driven payload. Explore the pieces below.',
 })
 
-// The display width passed to applyDemoWidth for the text-field hero (the #74 no-intrinsic-width rationale
-// lives in that helper).
+// The display width passed to applyDemoWidth for the text-field hero (the ADR-0021 width rationale — a ~20ch
+// floor, with layout owning the width above it — lives in that helper).
 const FIELD_HERO_WIDTH = '18rem'
 
 // ── hero — live ui-button specimens (the headline artefact) ──────────────────────────────────────────────
@@ -58,7 +58,7 @@ function makeButton(spec: Specimen): HTMLElement {
 }
 
 // A live ui-text-field hero specimen — a real field with a leading search icon (the shared canonical glyph) and
-// a placeholder. applyDemoWidth supplies the display width (the #74 no-intrinsic-width rationale lives there).
+// a placeholder. applyDemoWidth supplies the display width (the ADR-0021 width rationale lives there).
 function makeFieldSpecimen(): HTMLElement {
   const field = document.createElement('ui-text-field')
   field.setAttribute('label', 'Search')
@@ -226,6 +226,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
         href: './a2ui-canvas.html',
         title: 'A2UI canvas',
         blurb: 'A two-line A2UI payload rendered live into a ui-button — the agent-driven payoff.',
+      },
+      {
+        href: './a2ui-list.html',
+        title: 'A2UI dynamic list',
+        blurb: 'A container whose children is a template over a data array — display, container, interactive, and nested lists, all live (A2UI v1.0).',
       },
     ],
   },
