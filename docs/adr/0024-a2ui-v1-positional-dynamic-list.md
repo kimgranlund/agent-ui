@@ -4,11 +4,11 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(amended 2026-06-28: write-side itemScope, #139 — see [Amendment](#amendment--write-side-itemscope-two-way-relative-inputs-in-list-items))* |
-> | **Date** | 2026-06-29 *(authored)* · 2026-06-28 *(amended)* |
+> | **Status** | accepted *(amended 2026-06-28: (1) write-side itemScope #139, (2) subtree + nested item templates — see [Amendments](#amendment--write-side-itemscope-two-way-relative-inputs-in-list-items) below)* |
+> | **Date** | 2026-06-29 *(authored)* · 2026-06-28 *(amended ×2: write-side itemScope; subtree + nested)* |
 > | **Proposed by** | planning-lead — the design seat, on the #137 v1.0-conformance grounding |
 > | **Ratified by** | the **user** chose A2UI v1.0 + vehicle B2; orchestration-lead ratifies on the build gate |
-> | **Repairs** | `a2ui-renderer LLD-C6 §5` (keyed→positional — already edited) · `a2ui-renderer LLD` "kernel reuse" note (`repeat`→positional loop) · **NEW** `a2ui/protocol.ts` ChildList template union · **NEW** `a2ui/renderer/list.ts` · **(amendment)** `a2ui-renderer LLD-C8` write-side itemScope · `a2ui/renderer/input.ts` · `a2ui/renderer/widget.ts` (input call site) · `a2ui/renderer/binding.ts` (`scopedPointer` export) · `a2ui/renderer/types.ts` (`ItemScope` no longer read-only) |
+> | **Repairs** | `a2ui-renderer LLD-C6 §5` (keyed→positional — already edited) · `a2ui-renderer LLD` "kernel reuse" note (`repeat`→positional loop) · **NEW** `a2ui/protocol.ts` ChildList template union · **NEW** `a2ui/renderer/list.ts` · **(amendment 1)** `a2ui-renderer LLD-C8` write-side itemScope · `a2ui/renderer/input.ts` · `a2ui/renderer/widget.ts` (input call site) · `a2ui/renderer/binding.ts` (`scopedPointer` export) · `a2ui/renderer/types.ts` (`ItemScope` no longer read-only) · **(amendment 2)** `a2ui-renderer LLD-C6` (single-root → full item subtree + nested) · `a2ui/renderer/tree.ts` (shared `#mountChildrenInto` / `#mountInstance` recursion) · `a2ui/renderer/list.ts` (renderList subtree deps) |
 > | **Supersedes / Superseded by** | Relates **ADR-0023** (the `mount()` seam — stands as general infra, not used by `list.ts` under B2) · Relates **ADR-0022** (`repeat`/`moveBefore` — stays the *keyed*-list vehicle) |
 
 ## Context
@@ -188,3 +188,89 @@ pointer the way `resolvePointer` does is a separate question, deliberately **not
 **Stale → re-verify on the build gate:** `input.ts` (scoped writeback) · `widget.ts:89` (itemScope passed) ·
 `binding.ts` (`scopedPointer` exported) · `types.ts:18` (`ItemScope` both-direction) · LLD-C8 (the write-side
 itemScope clause) · the new round-trip test (`list.test.ts` / `input.test.ts`).
+
+## Amendment — subtree + nested templates (full item subtrees in list items)
+
+> 2026-06-28 · the subtree/container-template completion · append-only (the Decision above stands and is
+> *completed*, not changed). Flagged by `exec-a2ui-list` during #137; designed + ratified 2026-06-28.
+
+**The gap.** The Decision's "Out of scope" para and `list.ts:30-32` scoped the #137 build to **single-root** item
+templates: each instance is `createWidget(templateNode, surface, childScope, itemScope)` (`list.ts:76`), which builds
+the template component's ONE root and does **not** recurse into its own `child`/`children`. Real A2UI v1.0 lists
+routinely use **container** templates (a Card or Row per element, with its own descendants), so a single-root item
+renders only its root — a conformance gap. A **nested** template (an item subtree that itself contains another
+`{ path, componentId }` list) was the same follow-up. Both were named as planned follow-ups in the original Decision,
+so this is the **subtree-half of the same decision** — there is no new design principle to weigh (hence an
+*amendment*, like the #139 write-side completion, not an `Extends`-ADR).
+
+**The completion (no new design choice).** A list item renders its template's **full subtree by reusing the static
+tree's own recursion**, threaded with the item's `childScope` + `itemScope` — descendants inherit the **same**
+positional mechanism (per-index child scope, `scopedPointer` relative→absolute resolution) the root already uses, so
+a relative binding on **any** descendant resolves to `{path}/{index}/…` and an absolute one to root. No parallel
+renderer:
+
+1. `tree.ts` — extract the static `#mountNode` child-walk (`tree.ts:137-141`) into a shared
+   `#mountChildrenInto(el, node, scope, itemScope, instance)`, and add `#mountInstance(id, scope, itemScope)` for a
+   list-item **descendant** (a missing id → an **inert** comment anchor, **no** `#pendingParents` patch-in; **no**
+   `surface.widgets` registration — an item-template id aliases across the N instances, and nothing reads a descendant
+   by id: only `widgets.get('root')` is read, `renderer.ts:344`). `#mountNode` keeps its lookup / out-of-order-anchor
+   / widgets-memo head and delegates its tail to `#mountChildrenInto(el, node, surface.scope, undefined, false)` —
+   **byte-for-byte** for the static tree.
+2. `list.ts` — `renderList` keeps `createWidget` (the item **root**, a guaranteed `HTMLElement` since the loop guards
+   template presence, `list.ts:93/97`) and gains **three optional, defaulted** deps: `mountChildren?` (recurse the
+   root's subtree; **default no-op = leaf**, so the shipped leaf list and every existing `list.test.ts` harness +
+   `index.ts` consumer are byte-for-byte unchanged), `parentScope?` (default `surface.scope`), `parentItemScope?`
+   (default `undefined`). `appendInstance` builds the root via `createWidget`, then
+   `mountChildren?.(el, templateNode, childScope, itemScope)`. The loop / teardown-carrier / length-computed move from
+   `surface.scope.run` to `parentScope.run`, and the array path becomes `scopedPointer(template.path, parentItemScope)`
+   (used for both the length-resolve and `itemScope.path`). For a **top-level** list all three defaults reproduce the
+   shipped behavior exactly (`scopedPointer('/items', undefined) === '/items'`, `parentScope === surface.scope`).
+
+The chosen vehicle is **Option 2** (renderList keeps `createWidget` for the root + `mountChildren` for descendants) over
+Option 1 (a single `mountItem(): HTMLElement` seam replacing `createWidget`) — Option 2 preserves the `renderList`
+public API + every existing test byte-for-byte, at the cost of a two-line root-build that the descendant recursion
+also has.
+
+**Why nested lists fall out for free — the Collection-Scope chain is the pointer.** A template subtree containing
+another `{ path, componentId }` is reached by `#mountChildrenInto` in **instance** mode → `renderList` with
+`parentScope = the outer item's childScope`, `parentItemScope = the outer item's itemScope`. The inner item's
+`itemScope.path = scopedPointer(innerTemplate.path, outerItemScope)` is the **fully-resolved absolute pointer**
+(`scopedPointer('sublist', { path:'/items', index:i }) === '/items/i/sublist'`), so an inner relative `name` resolves
+to `/items/i/sublist/{j}/name` — the entire collection-scope chain is **baked into the absolute pointer**, with no
+explicit chain object. Teardown composes by construction: removing the outer item (`list.ts:81 removeLast` →
+`childScope_i.dispose()`) disposes the inner reconcile effect **and** teardown carrier (both now owned by
+`childScope_i` via `parentScope.run`), whose cleanup disposes every inner item scope; the outer `el.remove()` drops the
+inner DOM with it. This is the **same** cross-effect-scope re-rooting the shipped leaf list already relies on
+(`childScope.run(effect)` owns its effects independent of the surrounding reconcile effect), so it is proven, not new.
+**Cycle safety needs no new guard:** `hasCycle` (`tree.ts:190`) walks **all** buffered ids at `apply`, so a cycle in a
+template's `child`/`children` subtree poisons the surface **before** the list ever instantiates.
+
+**Single-frame itemScope, NOT a scope-chain (deliberate).** For binding resolution — read and write — the single-frame
+`{ path, index }` (`types.ts:20`) **composes** because the inner frame's `path` already encodes every outer index. An
+explicit scope-**chain** would be needed only if the LLD-C10 `@index` function ever had to address an **outer** loop's
+index; standard A2UI v1.0 `@index` is the **innermost** iteration index (`= itemScope.index`), so single-frame is the
+v1.0-faithful choice (YAGNI). **Documented consequence:** nesting bakes the outer indices into the inner item's `path`,
+so they are not separately addressable from a single frame — if C10 ever needs outer-index addressing, promoting
+`ItemScope` to a frame **chain** is a **C10-era decision**, not this slice's.
+
+**Out of scope / deferred (unchanged by this amendment).**
+- **Out-of-order template / descendant arrival.** `surface.components` is a plain `Map` (not reactive), so a template —
+  or, now, a subtree **descendant** — arriving *after* its container mounts renders nothing until a length change
+  (`list.ts:95-96`). Subtree only **widens** the surface (more ids per item), which is why a list-item descendant uses
+  an **inert** anchor with no patch-in (the id-keyed `#pendingParents` cannot disambiguate one id across N instances).
+  The fix is a separate **reactive-component-buffer** follow-up (re-poking a mounted list on new deliveries naturally
+  re-mounts items, picking up late descendants); priority unchanged.
+- **Per-item listener lifetime (HIGH-priority follow-up, deferred under #140).** `#wireAction` (`renderer.ts:309`)
+  **and** `installInputBinding` (`input.ts:79`) both register their DOM listeners on `surface.ac`, removed only at
+  **surface** teardown — so a **positionally-removed** item's action/input listener leaks (detached, won't fire, but
+  retained → unbounded over churn). A pre-existing item-granular **SPEC-N3** gap that subtree promotes from edge-case to
+  common (every Card-with-button / interactive row). The fix gives each item the **(scope, ac) pair** the surface has —
+  a per-item `AbortController` aborted in `removeLast()`, mirroring `disposeSurface` (`surface.ts:61`) exactly — and is
+  **deliberately not bundled** here (it touches the host + input controller, outside this slice's tree/list recursion).
+  Tracked under **#140** (per-item action scope), extended to cover the input listener.
+
+**Stale → re-verify on the build gate:** `tree.ts` (`#mountChildrenInto` / `#mountInstance`; `#mountNode` delegates its
+tail) · `list.ts` (`renderList` subtree deps; `parentScope`-owned loop; `scopedPointer(template.path, parentItemScope)`)
+· LLD-C6 (single-root → full item subtree + nested) · the new subtree + nested tests (`tree.test.ts` "children-template
+routes…" describe, on the real `SurfaceTree` + widget path) · the static-children DFS tests (`tree.test.ts:43/62`,
+out-of-order `:149-208`) stay green = the byte-for-byte guard.

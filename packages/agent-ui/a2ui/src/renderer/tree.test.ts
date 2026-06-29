@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { whenFlushed } from '@agent-ui/components'
+import { inspect, whenFlushed } from '@agent-ui/components'
 import type { A2uiComponent, A2uiError } from '../protocol.ts'
 import type { CreateWidget } from './types.ts'
-import { createSurface } from './surface.ts'
-import { setPointer } from './binding.ts'
+import { createSurface, disposeSurface } from './surface.ts'
+import { resolve, setPointer } from './binding.ts'
 import { makeCreateWidget } from './widget.ts'
 import type { CatalogEntry, CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
 import { SurfaceTree, type UpdateComponentsMessage } from './tree.ts'
@@ -246,5 +246,127 @@ describe('children-template routes to the positional dynamic list (LLD-C6)', () 
     surface.data.value = setPointer(surface.data.peek(), '/items', [{ label: 'a' }, { label: 'b' }, { label: 'c' }])
     await whenFlushed()
     expect(root.children.length).toBe(3) // grew to the new length, positionally
+  })
+
+  // ── subtree/container tests — verify #mountChildrenInto recursion (ADR-0024 amendment) ─────────
+  //
+  // These use the REAL binding resolver so relative-path resolution can be asserted end-to-end.
+  // They are NON-VACUOUS: the descendant-renders-to-/items/{index} proof FAILS on the pre-patch tree
+  // (createWidget was never called for descendants — no subtree walk existed).
+  function subtreeHarness(factoryTags: Record<string, string>) {
+    const applied: { el: HTMLElement; prop: string; value: unknown }[] = []
+    const factories: Record<string, WidgetFactory> = {}
+    for (const [name, tag] of Object.entries(factoryTags)) {
+      factories[name] = {
+        tag,
+        create: () => document.createElement(tag),
+        applyProp: (el, prop, value) => void applied.push({ el, prop, value }),
+      }
+    }
+    const entry = { factories } as unknown as CatalogEntry
+    const registry: CatalogRegistry = {
+      register: () => {},
+      get: (id) => (id === 'demo' ? entry : undefined),
+      supportedCatalogIds: () => ['demo'],
+    }
+    const createWidget = makeCreateWidget({
+      registry,
+      emitError: () => {},
+      resolveBinding: (b, s, itemScope) => resolve(b, s, itemScope),
+    })
+    const surface = createSurface({ id: 's1', catalogId: 'demo', version: 'v1.0' })
+    const tree = new SurfaceTree(surface, { createWidget, onError: () => {} })
+    const latestProp = (el: Element, prop: string): unknown =>
+      [...applied].reverse().find((a) => a.el === el && a.prop === prop)?.value
+    return { surface, tree, latestProp }
+  }
+
+  it('a CONTAINER template renders its full subtree; a relative descendant binding resolves to /items/{index}/... (NON-VACUOUS)', () => {
+    const { surface, tree, latestProp } = subtreeHarness({ List: 'ui-list', Card: 'ui-card', Text: 'ui-text' })
+    surface.data.value = { items: [{ label: 'item0' }, { label: 'item1' }] }
+    tree.apply(
+      msg([
+        { id: 'root', component: 'List', children: { path: '/items', componentId: 'card' } },
+        { id: 'card', component: 'Card', child: 'text-node' },
+        { id: 'text-node', component: 'Text', text: { path: 'label' } },
+      ]),
+    )
+    const root = tree.rootElement!
+    expect(root.children.length).toBe(2)
+    const [card0, card1] = [...root.children] as HTMLElement[]
+    expect(card0.tagName.toLowerCase()).toBe('ui-card')
+    // descendants rendered — fails on the pre-patch tree (no subtree walk)
+    const text0 = card0.firstElementChild as HTMLElement
+    const text1 = card1.firstElementChild as HTMLElement
+    expect(text0?.tagName.toLowerCase()).toBe('ui-text')
+    expect(text1?.tagName.toLowerCase()).toBe('ui-text')
+    // relative 'label' threaded through itemScope → /items/0/label and /items/1/label
+    expect(latestProp(text0, 'text')).toBe('item0')
+    expect(latestProp(text1, 'text')).toBe('item1')
+  })
+
+  it('an ABSOLUTE descendant binding resolves from the data root (not the item)', () => {
+    const { surface, tree, latestProp } = subtreeHarness({ List: 'ui-list', Card: 'ui-card', Text: 'ui-text' })
+    surface.data.value = { title: 'ROOT', items: [{ label: 'a' }, { label: 'b' }] }
+    tree.apply(
+      msg([
+        { id: 'root', component: 'List', children: { path: '/items', componentId: 'card' } },
+        { id: 'card', component: 'Card', child: 'text-node' },
+        { id: 'text-node', component: 'Text', text: { path: 'label' }, heading: { path: '/title' } },
+      ]),
+    )
+    const root = tree.rootElement!
+    const [card0, card1] = [...root.children] as HTMLElement[]
+    const text0 = card0.firstElementChild as HTMLElement
+    const text1 = card1.firstElementChild as HTMLElement
+    // relative resolves per-item; absolute resolves from data root regardless of depth
+    expect(latestProp(text0, 'text')).toBe('a')
+    expect(latestProp(text0, 'heading')).toBe('ROOT')
+    expect(latestProp(text1, 'text')).toBe('b')
+    expect(latestProp(text1, 'heading')).toBe('ROOT')
+  })
+
+  it('a NESTED list: inner relative resolves to /items/{i}/sublist/{j}/...; outer item removal disposes inner scopes (inner DOM gone)', async () => {
+    const { surface, tree, latestProp } = subtreeHarness({ List: 'ui-list', Card: 'ui-card', Text: 'ui-text' })
+    surface.data.value = {
+      items: [
+        { sublist: [{ name: 'a0' }, { name: 'a1' }] },
+        { sublist: [{ name: 'b0' }] },
+      ],
+    }
+    tree.apply(
+      msg([
+        { id: 'root', component: 'List', children: { path: '/items', componentId: 'outer' } },
+        { id: 'outer', component: 'Card', children: { path: 'sublist', componentId: 'inner' } },
+        { id: 'inner', component: 'Text', text: { path: 'name' } },
+      ]),
+    )
+    const root = tree.rootElement!
+    const [outerEl0, outerEl1] = [...root.children] as HTMLElement[]
+
+    // two outer items with the correct inner child counts
+    expect(outerEl0.children.length).toBe(2)
+    expect(outerEl1.children.length).toBe(1)
+
+    // inner relative path 'name' resolves through nested itemScopes → /items/{i}/sublist/{j}/name
+    const inner00 = outerEl0.children[0] as HTMLElement
+    const inner01 = outerEl0.children[1] as HTMLElement
+    const inner10 = outerEl1.children[0] as HTMLElement
+    expect(latestProp(inner00, 'text')).toBe('a0') // /items/0/sublist/0/name
+    expect(latestProp(inner01, 'text')).toBe('a1') // /items/0/sublist/1/name
+    expect(latestProp(inner10, 'text')).toBe('b0') // /items/1/sublist/0/name
+
+    // remove outer item 1 (the trailing item); its child scope disposes the inner list's
+    // parentScope effects (teardown carrier → disposes inner item scopes)
+    surface.data.value = setPointer(surface.data.peek(), '/items', [{ sublist: [{ name: 'a0' }, { name: 'a1' }] }])
+    await whenFlushed()
+
+    expect(root.children.length).toBe(1)
+    expect(outerEl1.isConnected).toBe(false) // outer item 1 detached
+    expect(inner10.isConnected).toBe(false)  // inner DOM under outer-1 gone (parent detached)
+
+    // full surface teardown: path signals (owned by surface.scope) release surface.data → 0 subscribers
+    disposeSurface(surface)
+    expect(inspect(surface.data).subscribers).toBe(0)
   })
 })
