@@ -16,6 +16,8 @@ declare const process: { cwd(): string }
 //     `ui-`), so the required page set is DERIVED from the descriptor, not a hand-list.
 //   • A control's REQUIRED page set is keyed off its geometry `tier` (the RATIFIED per-tier sets):
 //       - control   (button, text-field)     → {permutations, states, doc}   — per-component (G5 established it)
+//       - display   (text)                    → {doc}                         — API doc only (a non-interactive display
+//         leaf has no states/permutations matrix; tier=display, ADR-0025)
 //       - layout    (row, column, list, grid) → {doc}                         — per-component API doc each, PLUS the
 //         shared LAYOUT_SHOWCASE (one overview + one surface×layout demo) required once at the TIER level (not 4
 //         near-identical permutation pages)
@@ -86,6 +88,7 @@ function shippedComponents(): ShippedComponent[] {
 
 const PAGES_BY_TIER: Record<string, readonly string[]> = {
   control: ['permutations', 'states', 'doc'], // form/interactive control (button, text-field)
+  display: ['doc'], // a non-interactive display leaf (text) — API doc only (tier=display, ADR-0025; no states/permutations)
   layout: ['doc'], // a layout primitive — API doc per-component; the rich matrix is the shared tier showcase
   container: ['doc', 'demo'], // a surface container (card) — API doc + a composition demo
   pattern: ['doc', 'demo'], // an interactive pattern (tabs, modal) — API doc + an interaction demo
@@ -129,7 +132,8 @@ describe('site coverage — the descriptor fleet is enumerable (anti-vacuous)', 
     const names = COMPONENTS.map((c) => c.name)
     expect(names).toContain('button')
     expect(names).toContain('text-field')
-    expect(COMPONENTS.length).toBeGreaterThanOrEqual(9) // 2 controls + 7 container descriptors
+    expect(names).toContain('text') // the display leaf (ADR-0025)
+    expect(COMPONENTS.length).toBeGreaterThanOrEqual(10) // 2 controls + 1 display leaf + 7 container descriptors
   })
 
   it('discovered the real site/ html shells (an empty/broken scan cannot pass silently)', () => {
@@ -148,9 +152,10 @@ describe('site coverage — every shipped component has its required per-tier pa
     })
   }
 
-  it('sourced the controls (button + text-field) and the containers (the 7 G9 descriptors)', () => {
+  it('sourced the controls (button + text-field), the display leaf (text), and the containers (the 7 G9 descriptors)', () => {
     expect(COMPONENTS.filter((c) => c.tier === 'control').map((c) => c.name).sort()).toEqual(['button', 'text-field'])
-    expect(COMPONENTS.filter((c) => c.tier !== 'control').map((c) => c.name).sort()).toEqual(
+    expect(COMPONENTS.filter((c) => c.tier === 'display').map((c) => c.name).sort()).toEqual(['text'])
+    expect(COMPONENTS.filter((c) => c.tier !== 'control' && c.tier !== 'display').map((c) => c.name).sort()).toEqual(
       ['card', 'column', 'grid', 'list', 'modal', 'row', 'tabs'],
     )
   })
@@ -209,8 +214,10 @@ describe('site coverage — the page-existence check BITES (synthetic negative c
     expect(missingPages('card', 'container', dropped)).toEqual(['card-demo.html'])
   })
 
-  it('applies the RATIFIED per-tier sets: layout→{doc}, container/pattern→{doc,demo}, control→{perm,states,doc}', () => {
+  it('applies the RATIFIED per-tier sets: display→{doc}, layout→{doc}, container/pattern→{doc,demo}, control→{perm,states,doc}', () => {
     expect(missingPages('row', 'layout', new Set(['row-doc.html']))).toEqual([]) // layout needs only its doc
+    expect(missingPages('text', 'display', new Set())).toEqual(['text-doc.html']) // display needs only its doc — and BITES when absent
+    expect(missingPages('text', 'display', new Set(['text-doc.html']))).toEqual([]) // …present ⇒ clean
     expect(missingPages('card', 'container', new Set(['card-doc.html']))).toEqual(['card-demo.html']) // …+ a demo
     expect(missingPages('tabs', 'pattern', new Set(['tabs-doc.html', 'tabs-demo.html']))).toEqual([])
     expect(missingPages('demo', 'control', new Set())).toEqual(['demo-permutations.html', 'demo-states.html', 'demo-doc.html'])

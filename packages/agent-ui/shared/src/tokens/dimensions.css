@@ -39,6 +39,29 @@
      chain (ADR-0018: child = max(0px, radius − padding)) and is the radius the ui-text-field follow-up
      (#71) adopts — one referent serving controls and containers. */
   --ui-radius-base: 12px;
+
+  /* Type scale (ADR-0025 cl.3) — the FLEET typographic ramp's scale-free legs. -weight + -leading are
+     CONSTANTS on :root (like the focus-ring / motion constants), NOT the `*` ramp: neither rides
+     [scale]/[density] — a subtree theme rescales the -size leg only (below). weight is a plain
+     font-weight number; leading is a UNITLESS line-height multiplier, so it scales WITH the already-
+     scaled -size. Three weight tiers — 700 display (h1·h2), 600 semibold subhead (h3·h4·h5), 400 regular
+     (body·caption); leading tightens as type grows (h1 1.15 → body 1.5, the standard inverse). A control
+     never reads these — ui-text reads --ui-text-* (text.css), which repoints to --ui-type-*. */
+  --ui-type-h1-weight: 700;
+  --ui-type-h2-weight: 700;
+  --ui-type-h3-weight: 600;
+  --ui-type-h4-weight: 600;
+  --ui-type-h5-weight: 600;
+  --ui-type-body-weight: 400;
+  --ui-type-caption-weight: 400;
+
+  --ui-type-h1-leading: 1.15;
+  --ui-type-h2-leading: 1.2;
+  --ui-type-h3-leading: 1.25;
+  --ui-type-h4-leading: 1.3;
+  --ui-type-h5-leading: 1.35;
+  --ui-type-body-leading: 1.5;
+  --ui-type-caption-leading: 1.4;
 }
 
 /* The DERIVED ramp lives on `*` (universal), NOT `:root` — deliberately. A var() inside a custom-property
@@ -66,6 +89,24 @@
   --ui-gap-sm: calc(var(--ui-font-sm) / 2 * var(--ui-density));
   --ui-gap-md: calc(var(--ui-font-md) / 2 * var(--ui-density));
   --ui-gap-lg: calc(var(--ui-font-lg) / 2 * var(--ui-density));
+
+  /* --ui-type-*-size — the FLEET typographic scale (ADR-0025 cl.3), a peer of --ui-font-* but a SEPARATE
+     ledger: --ui-font-* is the control-band glyph (paired to --ui-height-*, the square-centring law);
+     --ui-type-* is free-standing DOCUMENT typography (its own line-height, no control frame). The -size leg
+     rides [scale] (× var(--ui-scale)) — the same pre-substitution reason as --ui-font-*, so a subtree
+     [scale] re-multiplies type — and is declared on `*` (NOT :root) so each element re-substitutes the
+     --ui-scale it inherits. Type is DENSITY-INVARIANT: glyph size is a frame-family quantity, not rhythm,
+     so NO var(--ui-density) here ([density] re-multiplies gaps only — geometry.md's frame/rhythm split).
+     A ratio-1.2 modular scale anchored at body = 16 (16 to the power n, rounded to the nearest integer):
+     caption 13 ties to control-sm font, body 16 to control-lg. The scale-free -weight/-leading legs are
+     :root constants (above). */
+  --ui-type-h1-size: calc(40px * var(--ui-scale));
+  --ui-type-h2-size: calc(33px * var(--ui-scale));
+  --ui-type-h3-size: calc(28px * var(--ui-scale));
+  --ui-type-h4-size: calc(23px * var(--ui-scale));
+  --ui-type-h5-size: calc(19px * var(--ui-scale));
+  --ui-type-body-size: calc(16px * var(--ui-scale));
+  --ui-type-caption-size: calc(13px * var(--ui-scale));
 
   /* --ui-space — the LAYOUT-SPACING ladder (ADR-0015 cl.4, geometry.md "--space-* is layout spacing,
      not control geometry"). The gap/padding/margin BETWEEN laid-out children (Row/Column/List/Grid gap,

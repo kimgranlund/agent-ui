@@ -142,3 +142,64 @@ describe('dimensions.css — the shared --ui-radius-base constant (ADR-0015 cl.5
     expect(universalBlock).not.toMatch(/--ui-radius-base/) // a constant stays off the derived `*` ramp
   })
 })
+
+// tok-type (ADR-0025 cl.3) — the --ui-type-* FLEET typographic scale (the fleet's FIRST type ramp; the
+// control-band --ui-font-* is a SEPARATE ledger — document typography, not control-frame glyph). Three legs
+// per level: -size on the `*` ramp (× --ui-scale, density-INVARIANT — glyph size is frame-family, not rhythm),
+// and -weight + -leading CONSTANTS on :root (leading UNITLESS — a line-height multiplier). A ratio-1.2 modular
+// scale anchored at body = 16. ui-text reads --ui-text-* (text.css), never --ui-type-* directly — this pins the
+// fleet ramp's shape (each leg's value, where it lives, what multiplier it carries). jsdom can't compute the
+// rendered px (the actual subtree-[scale] rescale is the browser smoke); this is the static structural pin.
+describe('dimensions.css — the --ui-type-* fleet typographic scale (ADR-0025 cl.3)', () => {
+  // level, size-px, weight, leading (unitless). The finalized ramp: 16·1.2^n rounded to nearest integer.
+  const LEVELS: Array<[string, number, number, string]> = [
+    ['h1', 40, 700, '1.15'],
+    ['h2', 33, 700, '1.2'],
+    ['h3', 28, 600, '1.25'],
+    ['h4', 23, 600, '1.3'],
+    ['h5', 19, 600, '1.35'],
+    ['body', 16, 400, '1.5'],
+    ['caption', 13, 400, '1.4'],
+  ]
+
+  it('declares each -size as calc(<px> * var(--ui-scale)) on the `*` block (scale-responsive, like --ui-font-*)', () => {
+    expect(universalBlock.length).toBeGreaterThan(0) // anti-vacuous: the `*` block was isolated
+    for (const [level, px] of LEVELS) {
+      const re = new RegExp(`--ui-type-${level}-size:\\s*calc\\(\\s*${px}px\\s*\\*\\s*var\\(--ui-scale\\)\\s*\\)`)
+      expect(universalBlock).toMatch(re)
+    }
+  })
+
+  it('declares each -weight + -leading as a CONSTANT on :root (scale-free, like the focus-ring/motion constants)', () => {
+    expect(rootBlock.length).toBeGreaterThan(0) // anti-vacuous: :root was isolated
+    for (const [level, , weight, leading] of LEVELS) {
+      expect(rootBlock).toMatch(new RegExp(`--ui-type-${level}-weight:\\s*${weight}\\s*;`))
+      expect(rootBlock).toMatch(new RegExp(`--ui-type-${level}-leading:\\s*${leading.replace('.', '\\.')}\\s*;`))
+    }
+  })
+
+  it('keeps -leading UNITLESS (a bare line-height multiplier — it scales WITH the already-scaled -size)', () => {
+    const leadingDecls = rootBlock.match(/--ui-type-[\w-]+-leading:[^;]*;/g) ?? []
+    expect(leadingDecls.length).toBe(LEVELS.length) // anti-vacuous: all 7 levels present
+    for (const d of leadingDecls) {
+      expect(d).toMatch(/--ui-type-[\w-]+-leading:\s*[\d.]+\s*;/) // a number only…
+      expect(d).not.toMatch(/px|em|rem|%/) // …no unit (a unit would break the multiplier semantics)
+    }
+  })
+
+  it('keeps type DENSITY-INVARIANT — no -size references --ui-density, and no [density] selector touches --ui-type', () => {
+    const sizeDecls = universalBlock.match(/--ui-type-[\w-]+-size:[^;]*;/g) ?? []
+    expect(sizeDecls.length).toBe(LEVELS.length) // anti-vacuous: all 7 -size legs present
+    for (const d of sizeDecls) {
+      expect(d).not.toMatch(/--ui-density/) // glyph size is frame-family, not rhythm
+    }
+    const densityBlocks = css.match(/\[density="[^"]+"\]\s*\{[^}]*\}/g) ?? []
+    expect(densityBlocks.length).toBeGreaterThan(0)
+    for (const block of densityBlocks) expect(block).not.toMatch(/--ui-type/) // [density] never re-multiplies type
+  })
+
+  it('puts each leg in the right place — -size OFF :root (the pre-substitution gotcha), -weight/-leading OFF `*` (constants)', () => {
+    expect(rootBlock).not.toMatch(/--ui-type-[\w-]+-size/) // derived sizes → the `*` ramp only
+    expect(universalBlock).not.toMatch(/--ui-type-[\w-]+-(?:weight|leading)/) // scale-free constants → :root only
+  })
+})

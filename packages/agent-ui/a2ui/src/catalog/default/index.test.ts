@@ -14,10 +14,11 @@ describe('default catalog (catalog LLD-C4, SPEC-R1/R3/R8/N2)', () => {
     expect(defaultCatalog.protocolVersion).toBe('v1.0')
   })
 
-  it('declares the shipped family — Button + TextField + the G9 containers (SPEC-N2: no silent dead types)', () => {
-    // Shipped: Button (G5), TextField (G6), the G9 containers (Row/Column/Card + regions, Tabs + tab/panel,
-    // Modal). ABSENT by discipline: Image/Video (no media primitive yet); ui-list/ui-grid are direct ui-*
-    // primitives, NOT catalog types (ratified G9 scope). No `@`-namespaced or dead types.
+  it('declares the shipped family — Text + Button + TextField + the G9 containers (SPEC-N2: no silent dead types)', () => {
+    // Shipped: Text (ADR-0025 Display display type), Button (G5), TextField (G6), the G9 containers
+    // (Row/Column/Card + regions, Tabs + tab/panel, Modal). ABSENT by discipline: Image/Video (no media
+    // primitive yet); ui-list/ui-grid are direct ui-* primitives, NOT catalog types (ratified G9 scope).
+    // No `@`-namespaced or dead types.
     expect(Object.keys(defaultCatalog.components).sort()).toEqual(
       [
         'Button',
@@ -31,6 +32,7 @@ describe('default catalog (catalog LLD-C4, SPEC-R1/R3/R8/N2)', () => {
         'Tab',
         'TabPanel',
         'Tabs',
+        'Text',
         'TextField',
       ].sort(),
     )

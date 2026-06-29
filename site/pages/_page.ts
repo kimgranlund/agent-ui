@@ -63,6 +63,11 @@ const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // The Display-class text primitive — a single descriptor-derived API doc (tier=display ⇒ {doc} only).
+    label: 'ui-text',
+    links: [{ href: './text-doc.html', label: 'API' }],
+  },
+  {
     // The layout primitives share one tier showcase (overview + surface×layout) + a per-component API doc each.
     label: 'Layout primitives',
     links: [

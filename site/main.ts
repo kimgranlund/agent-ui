@@ -156,6 +156,16 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    label: 'ui-text',
+    cards: [
+      {
+        href: './text-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class text primitive — its single variant enum + the live type ramp, generated from text.md.',
+      },
+    ],
+  },
+  {
     label: 'Layout primitives',
     cards: [
       {

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   buttonFactory,
+  textFactory,
   textFieldFactory,
   rowFactory,
   columnFactory,
@@ -12,6 +13,8 @@ import {
 } from './factories.ts'
 import { defaultCatalog } from './index.ts'
 import { Registry, RegistryError, RegistryErrorCode } from '../registry.ts'
+import { validateCatalogConformance } from '../conformance.ts'
+import type { A2uiComponent } from '../../protocol.ts'
 
 // factories.ts imports the @agent-ui/components controls barrel, so the SHIPPED tags self-define on load
 // (ui-button G5, ui-text-field G6; the G9 container tags self-define once their folders + the s12 barrel
@@ -50,6 +53,36 @@ describe('default catalog factories — table parity (catalog LLD-C5, SPEC-R3 AC
     }
     expect(thrown).toBeInstanceOf(RegistryError)
     expect((thrown as RegistryError).code).toBe(RegistryErrorCode.FACTORY_MISSING)
+  })
+})
+
+describe('default catalog factories — Text (ADR-0025, catalog LLD-C5)', () => {
+  it('Text → ui-text maps text (textContent) + variant (accessor prop); not an input (no value bind)', () => {
+    expect(textFactory.tag).toBe('ui-text')
+    expect(textFactory.value).toBeUndefined() // Text is a display leaf — no two-way binding
+    const el = textFactory.create()
+    textFactory.applyProp(el, 'text', 'Hello world')
+    expect(el.textContent).toBe('Hello world')
+    textFactory.applyProp(el, 'variant', 'h1')
+    expect((el as { variant?: unknown }).variant).toBe('h1')
+  })
+
+  it('null/undefined text coerces to empty string (the value == null guard)', () => {
+    const el = textFactory.create()
+    textFactory.applyProp(el, 'text', null)
+    expect(el.textContent).toBe('')
+    textFactory.applyProp(el, 'text', undefined)
+    expect(el.textContent).toBe('')
+  })
+
+  it('Text → ui-text conformance payload yields 0 CATALOG errors', () => {
+    const textNode: A2uiComponent = { id: 'txt1', component: 'Text', text: 'Hello', variant: 'h1' }
+    expect(validateCatalogConformance(textNode, defaultCatalog)).toEqual([])
+  })
+
+  it('Text with a {path} binding for text is accepted (bindable: true)', () => {
+    const bound: A2uiComponent = { id: 'txt2', component: 'Text', text: { path: '/name' }, variant: 'body' }
+    expect(validateCatalogConformance(bound, defaultCatalog)).toEqual([])
   })
 })
 

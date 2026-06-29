@@ -116,7 +116,7 @@ A component's sizing lever is set by its class:
 | **Indicator** (smaller box) | checkbox · radio · switch · slider · tag | `block/inline-size: var(--ui-{cmp}-size)` off `--ui-ind-{size}` (or the compact ramp) |
 | **Pattern** (container + control-height rows) | tabs · segmented-control · toolbar · accordion · menu · dialog | interactive rows take the control height; the shell uses the space scale |
 | **Container/layout** | spacer · stack · grid | gaps/margins/padding off `--space-*` × density; no control height |
-| **Display** | divider · icon · spinner · progress · alert · badge · tooltip | `font-size: var(--ui-font-{size})` where text-bearing; intrinsic structural sizing |
+| **Display** | divider · icon · spinner · progress · alert · badge · tooltip · **text** | **text-bearing** reads the typographic ramp `--ui-type-{level}-{size,weight,leading}` (`level` = the `variant` h1–h5/body/caption — `ui-text`, ADR-0025 cl.3); non-text display takes the control-band `font-size: var(--ui-font-{size})` where it sizes a glyph label; intrinsic structural sizing otherwise. No control height, no `padding-block` law — the lever is the type scale, not `--ui-height-*`. |
 
 ## The compact realm (a separate size system)
 

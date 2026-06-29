@@ -73,6 +73,10 @@ const TF_ENTRY = 'controls/text-field/text-field.ts'
 const tf = crawl(TF_ENTRY)
 const tfLayers = (prefix: string) => [...tf.reached].filter((p) => p.startsWith(prefix))
 
+const TEXT_ENTRY = 'controls/text/text.ts'
+const txt = crawl(TEXT_ENTRY)
+const txtLayers = (prefix: string) => [...txt.reached].filter((p) => p.startsWith(prefix))
+
 describe('ui-button tree-shake — the entry graph is tight (s17)', () => {
   it('the glob found the package source and reached the entry (anti-vacuous)', () => {
     expect(sources.size).toBeGreaterThan(10)
@@ -133,6 +137,40 @@ describe('ui-text-field tree-shake — the entry graph is tight (s12)', () => {
   it('does NOT drag the descriptor tooling, and pulls ZERO non-relative imports', () => {
     expect(tfLayers('descriptor/')).toEqual([])
     expect([...tf.external]).toEqual([])
+  })
+})
+
+// ── ui-text (ADR-0025) — a Display-class leaf (extends UIElement directly; no form base, no surface base,
+//    no traits). Its graph is {controls/text, dom, reactive} — like a layout primitive, but even tighter
+//    (no UIContainerElement surface base). Importing ui-text drags only its own folder + the dom/reactive
+//    kernel — zero trait, zero sibling control, zero descriptor tooling.
+
+describe('ui-text tree-shake — Display-class leaf drags only itself + the dom/reactive kernel (ADR-0025)', () => {
+  it('reached the entry with a real dep set (anti-vacuous)', () => {
+    expect(txt.reached.has(TEXT_ENTRY)).toBe(true)
+    expect(txt.reached.size).toBeGreaterThan(2) // text drags dom + reactive — not nothing
+  })
+
+  it('reaches its REAL deps: the dom layer (UIElement) and the reactive kernel', () => {
+    expect(txt.reached.has('dom/index.ts')).toBe(true)
+    expect(txtLayers('reactive/').length).toBeGreaterThan(0)
+  })
+
+  it('drags ONLY {controls/text, dom, reactive} — no trait, no sibling control, no surface base', () => {
+    const ALLOWED = ['controls/text/', 'dom/', 'reactive/']
+    for (const p of txt.reached) {
+      expect(ALLOWED.some((a) => p.startsWith(a)), `unexpected module in text graph: ${p}`).toBe(true)
+    }
+    // no sibling controls — button, text-field, and the G9 family are not reachable from ui-text
+    expect(txtLayers('controls/button/')).toEqual([])
+    expect(txtLayers('controls/text-field/')).toEqual([])
+    expect(new Set(txtLayers('controls/').map((p) => p.split('/')[1]))).toEqual(new Set(['text']))
+    expect(txtLayers('traits/')).toEqual([]) // a Display leaf composes no trait
+  })
+
+  it('does NOT drag the descriptor tooling, and pulls ZERO non-relative imports', () => {
+    expect(txtLayers('descriptor/')).toEqual([])
+    expect([...txt.external]).toEqual([])
   })
 })
 

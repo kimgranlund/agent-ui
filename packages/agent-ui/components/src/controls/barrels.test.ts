@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import * as componentsBarrel from './index.ts'
 import { UIButtonElement } from './button/button.ts'
 import { UITextFieldElement } from './text-field/text-field.ts'
+import { UITextElement } from './text/text.ts'
 import { UIRowElement } from './row/row.ts'
 import { UIColumnElement } from './column/column.ts'
 import { UIListElement } from './list/list.ts'
@@ -34,6 +35,11 @@ describe('components barrel — self-defines the ui-* family (s17)', () => {
   it('importing the barrel ALSO registers ui-text-field and re-exports its element class (s12)', () => {
     expect(customElements.get('ui-text-field')).toBe(UITextFieldElement) // `export * from './text-field/text-field.ts'` ran the self-define
     expect(componentsBarrel.UITextFieldElement).toBe(UITextFieldElement) // the class is surfaced for typed references
+  })
+
+  it('importing the barrel registers ui-text (ADR-0025) and re-exports its element class', () => {
+    expect(customElements.get('ui-text')).toBe(UITextElement) // `export * from './text/text.ts'` ran the self-define
+    expect(componentsBarrel.UITextElement).toBe(UITextElement) // the class is surfaced for typed references
   })
 
   it('importing the barrel self-defines the WHOLE G9 container family — all ~14 tags (s12)', () => {
@@ -78,13 +84,15 @@ describe('components barrel — self-defines the ui-* family (s17)', () => {
 })
 
 describe('CSS barrels — wired into exports + the load-bearing order (s17)', () => {
-  it('`./component-styles.css` aggregates each control stylesheet (button.css, text-field.css) in addition order', () => {
+  it('`./component-styles.css` aggregates each control stylesheet (button.css, text-field.css, text.css) in addition order', () => {
     expect(pkg.exports['./component-styles.css']).toBe('./src/component-styles.css')
     const css = read('src/component-styles.css')
     const buttonAt = css.indexOf("@import './controls/button/button.css'")
     const textFieldAt = css.indexOf("@import './controls/text-field/text-field.css'")
+    const textAt = css.indexOf("@import './controls/text/text.css'")
     expect(buttonAt).toBeGreaterThanOrEqual(0)
     expect(textFieldAt).toBeGreaterThan(buttonAt) // append-only in control-addition order (do-not-reorder, s12)
+    expect(textAt).toBeGreaterThan(textFieldAt) // text display control appended after text-field (ADR-0025)
   })
 
   it('`./component-styles.css` imports the shared `_surface/container.css` seam FIRST, before any element sheet (s12)', () => {

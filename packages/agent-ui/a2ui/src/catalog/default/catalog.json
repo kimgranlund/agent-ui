@@ -2,6 +2,13 @@
   "catalogId": "agent-ui",
   "protocolVersion": "v1.0",
   "components": {
+    "Text": {
+      "properties": {
+        "text": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" },
+        "variant": { "type": { "type": "string", "enum": ["h1", "h2", "h3", "h4", "h5", "caption", "body"] }, "mapsTo": "variant" }
+      }
+    },
+
     "Button": {
       "properties": {
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" },

@@ -140,7 +140,7 @@ function demoSection(opts: {
   return section
 }
 
-// ── demo 1 — display list: a leaf Button template over /tags (one chip per element, label from a relative path) ─
+// ── demo 1 — display list: a leaf Text template over /tags (one ui-text per element, text from a relative path) ─
 const DISPLAY_ID = 'list-display'
 const displayMessages: readonly A2uiServerMessage[] = [
   { version: 'v1.0', createSurface: { surfaceId: DISPLAY_ID, catalogId: 'agent-ui' } },
@@ -156,8 +156,8 @@ const displayMessages: readonly A2uiServerMessage[] = [
     updateComponents: {
       surfaceId: DISPLAY_ID,
       components: [
-        { id: 'root', component: 'Row', gap: 'sm', wrap: true, children: { path: '/tags', componentId: 'tag_chip' } },
-        { id: 'tag_chip', component: 'Button', variant: 'soft', label: { path: 'name' } },
+        { id: 'root', component: 'Row', gap: 'md', wrap: true, children: { path: '/tags', componentId: 'tag_chip' } },
+        { id: 'tag_chip', component: 'Text', variant: 'body', text: { path: 'name' } },
       ],
     },
   },
@@ -188,8 +188,8 @@ const peopleMessages: readonly A2uiServerMessage[] = [
         { id: 'root', component: 'Column', gap: 'md', children: { path: '/people', componentId: 'person_card' } },
         { id: 'person_card', component: 'Card', elevation: '1', children: ['person_row'] },
         { id: 'person_row', component: 'Row', gap: 'md', align: 'center', justify: 'between', children: ['person_name', 'person_role'] },
-        { id: 'person_name', component: 'Button', variant: 'ghost', label: { path: 'name' } },
-        { id: 'person_role', component: 'Button', variant: 'soft', label: { path: 'role' } },
+        { id: 'person_name', component: 'Text', variant: 'h5', text: { path: 'name' } },
+        { id: 'person_role', component: 'Text', variant: 'caption', text: { path: 'role' } },
       ],
     },
   },
@@ -249,10 +249,10 @@ const nestedMessages: readonly A2uiServerMessage[] = [
         { id: 'root', component: 'Column', gap: 'md', children: { path: '/sections', componentId: 'section_card' } },
         { id: 'section_card', component: 'Card', elevation: '1', children: ['section_col'] },
         { id: 'section_col', component: 'Column', gap: 'sm', children: ['section_title', 'items_row'] },
-        { id: 'section_title', component: 'Button', variant: 'ghost', label: { path: 'title' } },
+        { id: 'section_title', component: 'Text', variant: 'h4', text: { path: 'title' } },
         // A RELATIVE template path ('items', no leading slash) → /sections/{i}/items — the inner list.
-        { id: 'items_row', component: 'Row', gap: 'xs', wrap: true, children: { path: 'items', componentId: 'item_chip' } },
-        { id: 'item_chip', component: 'Button', variant: 'soft', label: { path: 'name' } },
+        { id: 'items_row', component: 'Row', gap: 'md', wrap: true, children: { path: 'items', componentId: 'item_chip' } },
+        { id: 'item_chip', component: 'Text', variant: 'body', text: { path: 'name' } },
       ],
     },
   },
@@ -263,7 +263,7 @@ content.append(
     step: '1',
     title: 'Display list',
     blurb:
-      'A Row whose children is a template over /tags. The renderer renders one ui-button per array element, each label bound to the relative path “name” — i.e. /tags/{index}/name. Add an element to the array and a chip appears, positionally.',
+      'A Row whose children is a template over /tags. The renderer renders one ui-text per array element, each bound to the relative path “name” — i.e. /tags/{index}/name. Add an element to the array and an item appears, positionally.',
     messages: displayMessages,
     surfaceId: DISPLAY_ID,
   }),
@@ -271,7 +271,7 @@ content.append(
     step: '2',
     title: 'Container template — a subtree per item',
     blurb:
-      'The template componentId is a Card, not a leaf. Each /people element renders the Card’s whole subtree — a Row with a name and a role button — every descendant binding resolved relative to that element (/people/{index}/name, /role).',
+      'The template componentId is a Card, not a leaf. Each /people element renders the Card’s whole subtree — a Row with a name (ui-text h5) and a role (ui-text caption) — every descendant binding resolved relative to that element (/people/{index}/name, /role).',
     messages: peopleMessages,
     surfaceId: PEOPLE_ID,
   }),

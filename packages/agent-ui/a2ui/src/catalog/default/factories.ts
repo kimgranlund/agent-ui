@@ -8,10 +8,11 @@
 // onto the control as a prop or attribute — the renderer's widget resolution (renderer LLD-C7) calls
 // `create` once, then `applyProp` for each static prop and inside each scope-owned bound-prop effect.
 //
-// Coverage tracks the shipped control family (SPEC-N2, Assumption A-2): G5 `Button`, G6 `TextField`, and
-// the G9 container family — `Row`/`Column` (catalog-shipped, SPEC §5.2), `Card` + its region sub-elements
-// (`CardHeader`/`CardContent`/`CardFooter`), `Tabs` + `Tab`/`TabPanel`, and `Modal`. `ui-list`/`ui-grid`
-// are NOT catalog types (they ship as direct `ui-*` primitives — the ratified G9 scope, ADR-0016).
+// Coverage tracks the shipped control family (SPEC-N2, Assumption A-2): G5 `Button`, G6 `TextField`, the
+// G9 container family — `Row`/`Column` (catalog-shipped, SPEC §5.2), `Card` + its region sub-elements
+// (`CardHeader`/`CardContent`/`CardFooter`), `Tabs` + `Tab`/`TabPanel`, and `Modal` — plus the ADR-0025
+// `Text` display type (the first Display-class catalog entry). `ui-list`/`ui-grid` are NOT catalog types
+// (they ship as direct `ui-*` primitives — the ratified G9 scope, ADR-0016).
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
@@ -42,6 +43,29 @@ export const buttonFactory: WidgetFactory = {
         break
       case 'label':
         el.textContent = value == null ? '' : String(value)
+        break
+      default:
+        setAttr(el, prop, value)
+    }
+  },
+}
+
+/**
+ * `Text` → `ui-text` (ADR-0025, catalog LLD-C5). `text` is the display content (maps to `textContent` —
+ * a non-identity `mapsTo`, so this is a bespoke factory like `buttonFactory`); `variant` maps to the
+ * control's reflecting `variant` accessor prop. Not an input ⇒ no `value`. A display leaf — no children,
+ * no action (ADR-0025 cl.5).
+ */
+export const textFactory: WidgetFactory = {
+  tag: 'ui-text',
+  create: () => document.createElement('ui-text'),
+  applyProp: (el, prop, value) => {
+    switch (prop) {
+      case 'text':
+        el.textContent = value == null ? '' : String(value)
+        break
+      case 'variant':
+        ;(el as { variant?: unknown }).variant = value
         break
       default:
         setAttr(el, prop, value)
@@ -111,6 +135,7 @@ export const textFieldFactory: WidgetFactory = accessorFactory('ui-text-field', 
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
 export const defaultFactories: Record<string, WidgetFactory> = {
   Button: buttonFactory,
+  Text: textFactory,
   TextField: textFieldFactory,
   Row: rowFactory,
   Column: columnFactory,

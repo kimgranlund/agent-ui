@@ -1,0 +1,83 @@
+/* text.css — ui-text, the Display-class text primitive (ADR-0025). Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-text)` (specificity 0,0,0) DECLARES the `--ui-text-*` component
+ *       chain from the fleet typographic scale (`--ui-type-{level}-{size,weight,leading}` from
+ *       `@agent-ui/shared/dimensions.css`). Default level = `body`. Each `[variant]` selector REPOINTS
+ *       the three component tokens to the matching `--ui-type-{level}-*` triplet — the role-pure seam
+ *       (ADR-0025 cl.3a). `--ui-text-color` ties to the AA-gated surface-text ink role.
+ *   [2] STYLES BLOCK — `@scope (ui-text)` CONSUMES only `--ui-text-*` for its OWN tokens (font-size,
+ *       font-weight, line-height, color). Display class (ADR-0025 cl.1): NO control height, NO
+ *       padding-block law, NO min-inline-size frame — the lever is the type scale, not --ui-height-*.
+ *       `display: block` (a text primitive is a block, like <p>/<h*>); `user-select: text` (ENABLED —
+ *       deliberate contrast with ui-button which disables it). forced-colors keeps the ink visible.
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
+ * from text.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-text) declares --ui-text-* ════════════════ */
+
+:where(ui-text) {
+  /* Typography tokens — default level = body. Each [variant] selector below repoints these three to the
+     matching --ui-type-{level}-* triplet (ADR-0025 cl.3 / cl.3a role-pure seam). The component reads only
+     --ui-text-* (never --ui-type-* directly), so a scale-value change never touches the control logic. */
+  --ui-text-size: var(--ui-type-body-size);
+  --ui-text-weight: var(--ui-type-body-weight);
+  --ui-text-leading: var(--ui-type-body-leading);
+  /* Color — the AA-gated surface-text ink role (the ONLY --c-* role ui-text needs; ADR-0025 cl.3). */
+  --ui-text-color: var(--c-neutral-on-surface);
+}
+
+/* variant → typographic level repoints (ADR-0025 cl.3a). body is the default above — no repoint needed. */
+:where(ui-text[variant='h1']) {
+  --ui-text-size: var(--ui-type-h1-size);
+  --ui-text-weight: var(--ui-type-h1-weight);
+  --ui-text-leading: var(--ui-type-h1-leading);
+}
+:where(ui-text[variant='h2']) {
+  --ui-text-size: var(--ui-type-h2-size);
+  --ui-text-weight: var(--ui-type-h2-weight);
+  --ui-text-leading: var(--ui-type-h2-leading);
+}
+:where(ui-text[variant='h3']) {
+  --ui-text-size: var(--ui-type-h3-size);
+  --ui-text-weight: var(--ui-type-h3-weight);
+  --ui-text-leading: var(--ui-type-h3-leading);
+}
+:where(ui-text[variant='h4']) {
+  --ui-text-size: var(--ui-type-h4-size);
+  --ui-text-weight: var(--ui-type-h4-weight);
+  --ui-text-leading: var(--ui-type-h4-leading);
+}
+:where(ui-text[variant='h5']) {
+  --ui-text-size: var(--ui-type-h5-size);
+  --ui-text-weight: var(--ui-type-h5-weight);
+  --ui-text-leading: var(--ui-type-h5-leading);
+}
+:where(ui-text[variant='caption']) {
+  --ui-text-size: var(--ui-type-caption-size);
+  --ui-text-weight: var(--ui-type-caption-weight);
+  --ui-text-leading: var(--ui-type-caption-leading);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-text) consumes ONLY --ui-text-* ════════════════ */
+
+@scope (ui-text) {
+  :scope {
+    display: block; /* a text primitive is a block element — lays out like <p>/<h*> */
+    font-size: var(--ui-text-size);
+    font-weight: var(--ui-text-weight);
+    line-height: var(--ui-text-leading);
+    color: var(--ui-text-color);
+    /* user-select ENABLED — display text is selectable (the deliberate inverse of ui-button, which disables it) */
+    user-select: text;
+    /* NO block-size / padding-block / min-inline-size — Display class has no frame law (ADR-0025 cl.1) */
+  }
+
+  /* forced-colors — keep the text visible (CanvasText maps to the platform high-contrast text ink) */
+  @media (forced-colors: active) {
+    :scope {
+      color: CanvasText;
+    }
+  }
+}

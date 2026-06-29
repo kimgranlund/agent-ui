@@ -6,6 +6,7 @@
 //
 // Today's family:
 //   • form controls — ui-button (G5), ui-text-field (G6).
+//   • display controls — ui-text (ADR-0025), the Display-class text primitive (typographic scale leaf).
 //   • the G9 container/layout family (extends the dom UIContainerElement surface base, NOT form-associated):
 //     the flex/grid layout primitives ui-row · ui-column · ui-list · ui-grid; the compound ui-card (whose
 //     family entry transitively self-defines its region sub-elements ui-card-header/-content/-footer); the
@@ -14,6 +15,7 @@
 // registers the WHOLE family — importing the barrel self-defines all ~14 tags.
 export * from './button/button.ts'
 export * from './text-field/text-field.ts'
+export * from './text/text.ts'
 
 // G9 container / layout family — surface axes + the shared flex grammar (ADR-0015/0016).
 export * from './row/row.ts'
