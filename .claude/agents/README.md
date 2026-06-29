@@ -7,12 +7,12 @@
 
 | Role | Seat | Owns | Standing skills (`skills:` preload) |
 |---|---|---|---|
-| [`orchestration-lead`](./orchestration-lead.md) | coordinator | chain-of-command, routing, the eval gate, the escalation loop, report rollups | `orchestration-design`, `loop-design` |
-| [`planning-lead`](./planning-lead.md) | design | decomposition (two planes) + PRD · SPEC · LLD · ADR + knowledge distillation | `decomposing-systems`, `authoring-prds/specs/llds` |
-| [`execution-lead`](./execution-lead.md) | build | implement to the LLD; enforce system-design rules; run the gates | `authoring-llds`, `decomposing-systems`, `authoring-components` |
+| [`orchestration-lead`](./orchestration-lead.md) | coordinator | chain-of-command, routing, the eval gate, the escalation loop, report rollups | `orchestration-design`, `loop-design`, `orchestration-handoffs` |
+| [`planning-lead`](./planning-lead.md) | design | decomposition (two planes) + PRD · SPEC · LLD · ADR + knowledge distillation | `decomposing-systems`, `authoring-prds/specs/llds`, `orchestration-handoffs` |
+| [`execution-lead`](./execution-lead.md) | build | implement to the LLD; enforce system-design rules; run the gates | `authoring-llds`, `decomposing-systems`, `authoring-components`, `orchestration-handoffs` |
 | [`component-reviewer`](./component-reviewer.md) | critic | adversarial review of one `ui-*` against the COMPOSE/REALIZE rubric + its `{name}.md` contract (read-only) | `authoring-components` |
-| [`tokens-specialist`](./tokens-specialist.md) | specialist | the token layer — `shared/src/tokens/{tokens.css,dimensions.css}`: the `--c-{family}-{role}` colour ladders (+ `-hover`/`-active` state roles), `--c-focus-ring`, the dimensional/motion constants | `authoring-components` |
-| [`docs-site-steward`](./docs-site-steward.md) | docs maker | the docs site — `site/` pages/CSS/demos + the MPA entries, and the deterministic drift gates (`descriptor/site-canon.test.ts` + the contract↔props trip-wires) that fail the build when the site falls behind the components | `authoring-docs`, `authoring-components` |
+| [`tokens-specialist`](./tokens-specialist.md) | specialist | the token layer — `shared/src/tokens/{tokens.css,dimensions.css}`: the `--c-{family}-{role}` colour ladders (+ `-hover`/`-active` state roles), `--c-focus-ring`, the dimensional/motion constants | `authoring-components`, `orchestration-handoffs` |
+| [`docs-site-steward`](./docs-site-steward.md) | docs maker | the docs site — `site/` pages/CSS/demos + the MPA entries, and the deterministic drift gates (`descriptor/site-canon.test.ts` + the contract↔props trip-wires) that fail the build when the site falls behind the components | `authoring-docs`, `authoring-components`, `orchestration-handoffs` |
 
 Each is authored to the `authoring-agents` contract (scoped `tools`, deliberate `model`, trigger `description`, judgment-frame body). They are reusable role files: the host (or a team) composes them; a subagent does not spawn other subagents.
 
@@ -39,7 +39,7 @@ Each is authored to the `authoring-agents` contract (scoped `tools`, deliberate 
 - **Decompose before authoring** — planning-lead clears `decomposing-systems`'s coverage check before a doc is written.
 - **Gates are deterministic** — true/false checks are scripts/hooks (`harness_checks.py`, `coverage_check.py`, `npm run check && npm test`), not agent judgment.
 - **Context isolation** — each planning/execution dispatch runs on **fresh context**; only `orchestration-lead` retains context across the loop, growing by one handoff block per slice, not a worker transcript. Parallel build dispatches default to a **disjoint same-tree fan-out** (the `orchestration-design` skill); worktrees are the overlap-only fallback, used only when slices must mutate the same file. The apex reconciles at the gate.
-- **Handoff contract** — every agent reports back with the same block (Summary · Files changed · Tests/checks run · Evidence · Risks · Open questions · Recommended next action); `orchestration-lead` returns it as a team rollup. See [`handoff-contract.md`](./handoff-contract.md).
+- **Handoff contract** — every agent reports back with the same block (Summary · Files changed · Tests/checks run · Evidence · Risks · Open questions · Recommended next action); `orchestration-lead` returns it as a team rollup. The contract is the `orchestration-handoffs` skill (preloaded by every reporting seat).
 
 ## Convening the team
 

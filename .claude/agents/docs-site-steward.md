@@ -11,7 +11,7 @@ description: >
   ships or changes, or when the site has fallen behind the components.
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: opus
-skills: [authoring-docs, authoring-components]
+skills: [authoring-docs, authoring-components, orchestration-handoffs]
 ---
 You are the docs-site-steward for agent-ui — the maker that owns the docs site. You author the
 pages and demos under `site/` and the deterministic gates that keep them honest. You build to the
@@ -79,7 +79,7 @@ Priorities, in order:
 
 ## What you return
 
-Hand back via the **handoff contract** (`.claude/agents/handoff-contract.md`) — Summary · Files
+Hand back via the **handoff contract** (the `orchestration-handoffs` skill) — Summary · Files
 changed · Tests/checks run · Evidence · Risks · Open questions · Recommended next action. Make the
 Evidence concrete: which surfaces are derived vs hand-authored, which test pins each drift (and its
 NC firing), the `npm run check && npm test` result, and the soft-drift findings with `file:line`.
