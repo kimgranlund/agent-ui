@@ -153,7 +153,7 @@ export function renderMarkdownBody(src: string): HTMLElement {
   const flushParagraph = (): void => {
     if (paragraph.length === 0) return
     const p = document.createElement('p')
-    appendInline(p, paragraph.join(' ')) // render inline `code` spans as chips (not literal backticks)
+    appendInline(p, paragraph.join(' ')) // render inline `code` chips + **bold** spans (not literal markers)
     article.append(p)
     paragraph = []
   }
@@ -162,7 +162,7 @@ export function renderMarkdownBody(src: string): HTMLElement {
     const ul = document.createElement('ul')
     for (const item of list) {
       const li = document.createElement('li')
-      appendInline(li, item) // render inline `code` spans as chips (not literal backticks)
+      appendInline(li, item) // render inline `code` chips + **bold** spans (not literal markers)
       ul.append(li)
     }
     article.append(ul)
@@ -221,29 +221,47 @@ export function renderMarkdownBody(src: string): HTMLElement {
 // ── small DOM helpers (shared scaffold; carry no per-control fact) ─────────────────────────────────────────
 
 /**
- * appendInline — append `text` to `parent`, rendering inline `` `code` `` spans as `<code>` chips and the rest
- * as plain text. The simplified inline grammar the docs corpus uses: a single-backtick-delimited run is inline
- * code (the body renderer is dependency-free and intentionally small). An unpaired backtick is left as literal
- * text (graceful). SAFETY: every span is assigned via `textContent` / a string-append (a Text node), NEVER
- * `innerHTML` — the markdown body is DATA, so it can never inject markup.
+ * appendInline — append `text` to `parent`, rendering the docs corpus's small inline-markdown grammar, the rest
+ * as plain text. Two spans: a single-backtick run `` `code` `` → a `<code>` chip (VERBATIM — no markup parsed
+ * inside code, so `**stars**` inside backticks stays literal), and a `**bold**` run → a `<strong>` whose inner
+ * text IS re-parsed (so an inline `code` span inside **bold** still renders). The earliest-starting span wins,
+ * then the remainder recurses, so the two compose without pulling in a markdown engine. An unpaired `` ` `` or
+ * `*` is left as literal text (graceful — no crash). SAFETY: every run is a Text node / `textContent`, NEVER
+ * `innerHTML` — the markdown body is DATA; the `<strong>`/`<code>` elements are ours, their text is the parsed
+ * content, so the body can never inject markup.
  */
 export function appendInline(parent: HTMLElement, text: string): void {
-  const re = /`([^`]+)`/g
-  let last = 0
-  let m: RegExpExecArray | null
-  while ((m = re.exec(text)) !== null) {
-    if (m.index > last) parent.append(text.slice(last, m.index)) // literal run before the span (Text node)
-    const code = document.createElement('code')
-    code.textContent = m[1] // the backtick span content, verbatim
-    parent.append(code)
-    last = m.index + m[0].length
+  // The earliest inline span wins: a code span (verbatim) or a bold span (its content re-parsed). A code span
+  // starting at or before a `**` is taken as code first, keeping `**…**` inside backticks literal.
+  const codeM = /`([^`]+)`/.exec(text)
+  const boldM = /\*\*(.+?)\*\*/.exec(text)
+  const useCode = codeM !== null && (boldM === null || codeM.index <= boldM.index)
+  const useBold = boldM !== null && !useCode
+
+  if (!useCode && !useBold) {
+    if (text.length > 0) parent.append(text) // no span left — the whole run is literal text
+    return
   }
-  if (last < text.length) parent.append(text.slice(last)) // trailing literal run
+
+  const m = (useCode ? codeM : boldM) as RegExpExecArray
+  if (m.index > 0) parent.append(text.slice(0, m.index)) // literal run before the span (Text node)
+
+  if (useCode) {
+    const code = document.createElement('code')
+    code.textContent = m[1] // verbatim — code is literal, no inline parsing inside
+    parent.append(code)
+  } else {
+    const strong = document.createElement('strong')
+    appendInline(strong, m[1]) // recurse — inline `code` inside **bold** is still parsed
+    parent.append(strong)
+  }
+
+  appendInline(parent, text.slice(m.index + m[0].length)) // continue after the span (recurse on the remainder)
 }
 
 export function heading(level: number, text: string): HTMLElement {
   const h = document.createElement(`h${level}`)
-  appendInline(h, text) // a markdown heading may carry inline `code`; plain headings append one text node
+  appendInline(h, text) // a markdown heading may carry inline `code`/**bold**; plain headings append one text node
   return h
 }
 
