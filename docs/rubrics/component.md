@@ -46,3 +46,112 @@ The two axes gate **independently** — the defect-quadrant rule:
 Shippable = both axes clear ≥ 4 **and** zero [gate] fails. The `component-reviewer` agent scores against this
 rubric and returns the per-axis verdict (the adversarial half of the gate; the probes / cross-engine smoke /
 contract trip-wire are the deterministic half).
+
+## Class lens — the **Display** control class (ui-text)
+
+The C1–C10 anchors above are written against the reference control `ui-button`, a **Control**-class
+*frame-bearing* control: it has a frame — a `--ui-height-*` box, `padding-block: 0`, the slot/slotless edge-pad
+formula, the geometry law (`geometry.md`). The entry-control (`text-field`) and container-control (`card`/`row`/
+`column`) classes are likewise frame-bearing — they carry a frame's quantities (radius, surface, the
+`min-inline-size` floor; the "frame quantities split by control class" law, ADR-0021). **The frame-bearing
+criteria below are NOT weakened by this lens** — for an entry/container control, score C1–C10 exactly as the
+anchors read.
+
+A **Display**-class control has **no frame**. It is a typographic/structural *leaf* (`geometry.md` §size-classes:
+`divider · icon · spinner · … · text`): no control height, no `padding-block` law, no edge-pad formula, no
+surface/elevation, no `min-inline-size` floor. The worked precedent is **`ui-text`** (ADR-0025) — a light-DOM
+display leaf whose lever is the `--ui-type-*` typographic scale, not `--ui-height-*`. The C6/C7 frame anchors
+cannot fairly score it (they assume a frame), and the type-scale + heading-semantics facts the anchors omit are
+exactly what a Display leaf must be judged on. This lens says, per dimension, what is **N/A** (do not score it as
+a fail — record `N/A — Display`), what **still fully applies**, and what is **NEW for Display** and must be scored.
+
+The two-axis spine, the independent ≥ 4 gates, and the defect-quadrant rule are **unchanged** — a Display control
+still gates COMPOSE and REALIZE separately, and every [gate] dimension is still hard.
+
+### What is N/A for a Display leaf (record `N/A — Display`, never a silent fail)
+
+- **C2 — the *frame* anatomy.** Host-as-**grid** with the `:has()` optional-icon slot, and the *Control*
+  size-class assertion, are Control-specific. A Display leaf is **host-as-content** (ADR-0006: void `render()`,
+  light-DOM children flow through) and the *Display* size-class. Score C2's host/anatomy on the Display facts
+  below, not the grid anatomy.
+- **C6 — the geometry law (frame quantities).** `block-size` off the `--ui-height-*` ramp, `padding-block: 0`,
+  the slotless inline-pad `= h/2`, the slot edge-pad `= ½(h−icon)`, the `gap = font/2` — **all N/A**. A Display
+  leaf has no control height and no padding law (`block-size` is content-driven). C6 is re-pointed for Display
+  (below) onto the *type-scale* lever; do not fail it for the absent frame formulae.
+- **C7 — interaction behaviour.** `pressActivation` (Space/Enter→`click`), the disabled-inert path, and
+  native-`click` parity are N/A for a non-interactive leaf (`ui-text` has no focus, no keyboard contract, no
+  `disabled`; `user-select` stays **enabled** — the deliberate inverse of `button`). C7 is re-pointed for Display
+  onto *semantics* (heading roles), below.
+- **The frame-law / `min-inline-size` floor / surface-elevation criteria** (ADR-0021; the G9 container surface)
+  are **N/A** — a leaf bears no frame and no surface. If a future Display-class rubric row names them, mark
+  `N/A — Display`.
+
+### What still fully applies (score exactly as the anchors read)
+
+- **C1 — API surface & minimalism.** Literal-union props (`variant` is `'h1'|…|'body'`, a `@ts-expect-error`
+  rejects a bare string — the `button.size` precedent), the event allowlist (a Display leaf emits **nothing** —
+  `events: []`), and **no boolean explosion**. The content-as-**slot-not-prop** call (ADR-0025 Fork 1: text is
+  light-DOM children, not a `text` prop) is a *strong* C1 fact — it is the minimal surface, not a gap.
+- **C3 — Contract fidelity** [gate]. The `{name}.md` frontmatter ≡ live `finalize(Class)` trip-wire (ADR-0004)
+  applies unchanged; the frontmatter must validate against the schema and record every field — including the
+  Display-specific rows (`tier: display`, `geometry.sizeClass: display`, and the `aria` heading role/level
+  rows, below). A drifting descriptor is a C3 fail for a Display leaf exactly as for a Control.
+- **C4 — Packaging & tree-shake** [gate]. Single `{name}.css`, the `{name}.{ts,css,md,test.ts}` file-set, the
+  three barrels, the marginal-size budget — unchanged.
+- **C5 — Layer & composition coherence.** Import-layering (`controls/` imports only `dom`+`traits`), the naming
+  convention, and zero sibling-dialect drift apply unchanged. *Trait-seam note:* a pure Display leaf may carry
+  **no trait** (`ui-text`'s only behaviour is the cl.4 heading effect, a `connected()` leg off the `variant`
+  signal — not a `use()`-registered trait). "Behaviour composes via a trait" is therefore satisfied vacuously
+  when there is no behaviour to compose; do not invent a trait. The heading effect's coherence is scored under
+  C7-Display and its residue under C10.
+- **C8 — Styling & tokens** [gate]. **Fully applies, and is core for Display.** `@scope (ui-{name})` consuming
+  **only** `--ui-{name}-*`; component tokens declared in `:where()` and repointed from roles; survives
+  `forced-colors: active`. For `ui-text` this is the role-pure **two-block** seam (ADR-0025 cl.3a): the
+  `:where(ui-text)` block declares `--ui-text-{size,weight,leading}` from the fleet `--ui-type-body-*` and each
+  `:where(ui-text[variant='h1'])…` repoints them; the `@scope` block consumes **only** `--ui-text-*`, never a
+  `--ui-type-*` or `--c-*` literal. A Display leaf reading the fleet scale directly is a C8 fail.
+- **C9 — Cross-engine fidelity** [gate] and **C10 — Zero residue & budget** [gate] apply unchanged in *form*
+  (Chromium AND WebKit; connect→disconnect zero subscribers/listeners; marginal gz recorded) — their *content*
+  for Display is named below.
+
+### What is NEW for Display and MUST be scored
+
+These re-point the frame gates (C6/C7) and sharpen C2/C9/C10 onto the Display facts. They are the Display leaf's
+"is the realization real?" — judge them with the same 1→3→5 rigour as the frame anchors.
+
+- **C2-Display — no-intrinsic-frame + Display size-class.** *1:* claims a frame a leaf must not have (a control
+  height, a `padding-block` law, a surface) or wrong size-class. *3:* host-as-content (void `render()`, light-DOM
+  children untouched, ADR-0006); declared `tier: display` / Display size-class; host owns no margin. *5:* + the
+  leaf is genuinely frameless — `block-size` is content-driven, no `--ui-height-*`/floor/surface anywhere, and
+  the content model is a slot not a clobbering text-prop effect.
+- **C6-Display — the type-scale binding (re-points the geometry gate)** [gate]. The lever is the `--ui-type-*`
+  ramp (ADR-0025 cl.3), not the frame. *1:* hard-coded sizes/weights, or the leaf reads `--ui-type-*`/raw px
+  directly (no component-token seam). *3:* the static probes prove `font-size: var(--ui-text-size)` resolves
+  from the `[variant]`-repointed `--ui-type-{level}-size`, weight/leading likewise; type is **density-invariant**
+  (size carries `× var(--ui-scale)` but **not** `var(--ui-density)`). *5:* + the cross-engine smoke proves a
+  subtree `[scale]` **re-multiplies** the type px (the `*`-ramp pre-substitution, ADR-0007) while `[density]`
+  leaves type untouched — type is *measured*, not asserted. (This is the Display analogue of C6's "geometry is
+  measured": the *type scale* is the law a Display leaf obeys.)
+- **C7-Display — heading semantics correctness (re-points the behaviour gate)** [gate]. The content model +
+  ARIA hierarchy (ADR-0025 cl.2/cl.4). *1:* a host `role`/`aria-*` attribute, or wrong/absent heading semantics
+  (e.g. a `role="button"` on inert text — the very lie ADR-0025 fixes). *3:* slotted light-DOM text is the
+  accessible name; for `variant ∈ h1…h5` `internals.role = 'heading'` + `internals.ariaLevel = 1…5` via
+  `ElementInternals`; `body`/`caption` clear **both** (generic styled text). *5:* + the level mapping is exact
+  and reactive (`h1→1 … h5→5`, flips live when `variant` changes), set **only** through `internals` (never a host
+  attribute — the FACE pattern), and the leaf is correctly non-focusable with `user-select` enabled.
+- **C9-Display — cross-engine content.** The browser-truth smoke (Chromium AND WebKit) asserts the *type-scale*
+  facts, not the frame law: `[scale]` changes the type px on both engines, `[density]` does **not** touch type,
+  and the `forced-colors` block keeps the text visible (`CanvasText`). Anti-vacuous both ways (the scale moves px;
+  density holds them).
+- **C10-Display — heading-effect residue.** The `connected()` heading effect (the leaf's only behaviour) must
+  leave **zero** residue on disconnect — zero subscribers (`inspect`) off the `variant` signal — and reconnect
+  must re-subscribe clean. A Display leaf with no trait still has this one effect to account for; a leaked
+  `variant` subscriber is a C10 fail.
+
+### Display gate to promote
+
+Unchanged spine: **COMPOSE** = C1–C5 ≥ 4; **REALIZE** = C6–C10 ≥ 4; no cross-axis compensation; every [gate]
+dimension hard (C3, C4, **C6-Display**, **C7-Display**, C8, C9, C10). Score the re-pointed C6/C7 on their
+Display content; record N/A dimensions as `N/A — Display` (not a fail). A Display leaf is shippable when both
+axes clear ≥ 4 with the frame criteria correctly marked N/A and the type-scale + heading-semantics facts scored
+real. Worked precedent: `ui-text` (ADR-0025).

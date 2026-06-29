@@ -127,7 +127,7 @@ acceptance.
   (`controls/text/{text.ts,text.css,text.md}` + the per-component probes; the barrel registration in
   `controls/index.ts` + the `barrels.test.ts`/`tree-shake.test.ts` family enumerations; the catalog wiring —
   `factories.ts` `textFactory`, `catalog.json` `Text`, and the `index.test.ts`/`factories.test.ts`/conformance
-  updates) → **docs-site-steward** (the demo switch, below) → **component-reviewer** (the Display-class DoD).
+  updates) → **docs-site-steward** (the demo switch, below) → **component-reviewer** (the Display-class DoD — realized as the [`component.md`](../rubrics/component.md) §"Class lens — the Display control class" addendum, #8).
 - **The demo switch is this wave's scope; `ui-text` gets NO `/site` doc page yet** (a follow-up). In
   `site/pages/a2ui-list.ts`: demo 1 `tag_chip` Button→`Text` `body`; demo 2 `person_name` Button→`Text` `h5`,
   `person_role` Button→`Text` `caption`; demo 4 `section_title` Button→`Text` `h4`, `item_chip` Button→`Text`
