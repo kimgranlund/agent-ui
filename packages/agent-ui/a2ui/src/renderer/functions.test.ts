@@ -25,6 +25,7 @@ import type { CatalogRegistry } from '../catalog/types.ts'
 import { Registry } from '../catalog/registry.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { defaultFactories } from '../catalog/default/factories.ts'
+import { catalogFunctions } from '../catalog/functions.ts'
 
 // ── Harness helpers ───────────────────────────────────────────────────────────
 
@@ -305,5 +306,44 @@ describe('evaluate — fault isolation when impl throws', () => {
     expect(errors).toHaveLength(1)
     expect(errors[0]!.code).toBe('FUNCTION')
     disposeSurface(surface)
+  })
+
+  it('step-3 throw-catch: a registered impl that THROWS yields FUNCTION + undefined (ADR-0026 fault isolation)', () => {
+    // Step-3 catch requires the name to pass BOTH the catalog declaration check (step 1) AND the
+    // catalogFunctions lookup (step 2) before the try{impl(args)} catch block fires. The three built-in
+    // impls (required/email/regex) catch their own throws, so this test temporarily extends
+    // `catalogFunctions` with a new 'thrower' key that throws unconditionally, then restores in finally
+    // so no state leaks to sibling tests. The local registry is also patched to declare 'thrower' in the
+    // bound catalog (step 1). Both patches are scoped to this test.
+    const { surface, registry, errors, emitError } = testEnv()
+
+    // Step-1 patch: declare 'thrower' in the bound catalog (local registry instance, not a singleton).
+    const catalogEntry = registry.get('agent-ui')!
+    const patchedEntry = {
+      ...catalogEntry,
+      catalog: {
+        ...catalogEntry.catalog,
+        functions: { ...catalogEntry.catalog.functions, thrower: { args: {}, returns: { type: 'object' } } },
+      },
+    }
+    registry.get = (id) => (id === 'agent-ui' ? patchedEntry : undefined)
+
+    // Step-2/3 patch: add a throwing impl to the module-level table (new key, NOT overwriting existing).
+    // Restored unconditionally in finally — cannot leak even on assertion failure.
+    ;(catalogFunctions as Record<string, unknown>)['thrower'] = () => {
+      throw new Error('intentional throw for step-3 coverage')
+    }
+    try {
+      const call: FunctionCall = { call: 'thrower' }
+      const result = evaluate(call, surface, undefined, emitError, registry)
+
+      expect(result).toBeUndefined()
+      expect(errors).toHaveLength(1)
+      expect(errors[0]!.code).toBe('FUNCTION')
+      expect(errors[0]!.message).toContain('thrower') // the function name is in the error message
+    } finally {
+      delete (catalogFunctions as Record<string, unknown>)['thrower']
+      disposeSurface(surface)
+    }
   })
 })
