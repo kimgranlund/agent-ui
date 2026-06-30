@@ -154,7 +154,7 @@
 
 .msg-head {
   margin-block-end: 0.3rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--ui-mono);
   font-size: 0.76rem;
   font-weight: 600;
   white-space: pre;

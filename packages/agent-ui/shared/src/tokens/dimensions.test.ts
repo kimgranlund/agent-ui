@@ -143,6 +143,19 @@ describe('dimensions.css — the shared --ui-radius-base constant (ADR-0015 cl.5
   })
 })
 
+// tok-mono — the shared monospace FONT-FAMILY constant (code blocks, inline-code chips, captions). A
+// :root constant like the focus-ring / radius constants, NOT the `*` ramp: a font-family carries no
+// [scale]/[density] multiplier. Named --ui-mono (NOT --ui-font-*) to stay clear of the --ui-font-* SIZE
+// namespace and the :root `--ui-font` guard above (line ~56). The probe pins the stack ON :root + OFF `*`.
+describe('dimensions.css — the shared --ui-mono font-family constant', () => {
+  it('declares --ui-mono (the ui-monospace stack) on :root — a constant, not on the `*` ramp', () => {
+    expect(rootBlock).toMatch(/--ui-mono:\s*ui-monospace,\s*SFMono-Regular,\s*Menlo,\s*monospace\s*;/)
+    expect(universalBlock).not.toMatch(/--ui-mono/) // a constant stays off the derived `*` ramp
+    // and it must NOT trip the :root `--ui-font` guard — --ui-mono is its own namespace, not a font SIZE
+    expect(rootBlock).not.toMatch(/--ui-font/)
+  })
+})
+
 // tok-type (ADR-0025 cl.3) — the --ui-type-* FLEET typographic scale (the fleet's FIRST type ramp; the
 // control-band --ui-font-* is a SEPARATE ledger — document typography, not control-frame glyph). Three legs
 // per level: -size on the `*` ramp (× --ui-scale, density-INVARIANT — glyph size is frame-family, not rhythm),

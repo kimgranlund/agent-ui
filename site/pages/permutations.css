@@ -84,7 +84,7 @@
 .geo-label {
   margin: 0;
   font-size: 0.8rem;
-  font-family: ui-monospace, monospace;
+  font-family: var(--ui-mono);
   color: var(--c-neutral-on-surface-variant);
 }
 

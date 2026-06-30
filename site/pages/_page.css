@@ -58,7 +58,7 @@ body {
 }
 
 .app-brand {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--ui-mono);
   font-size: 1rem;
   font-weight: 650;
   letter-spacing: -0.01em;
@@ -167,7 +167,7 @@ body {
 }
 
 .page-context-label {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--ui-mono);
   font-size: 0.7rem;
   letter-spacing: 0.02em;
   color: var(--c-neutral-on-surface-variant);
@@ -299,7 +299,7 @@ body {
   border-radius: 0.5rem;
   background: var(--c-neutral-surface-high);
   color: var(--c-neutral-on-surface);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--ui-mono);
   font-size: 0.8rem;
   line-height: 1.5;
 }
@@ -330,7 +330,7 @@ body {
  * across lines. Scheme (light-dark) + forced-colors safety ride the --c-* role layer, as .code-block does.
  * The `.code-block code` reset above keeps fenced BLOCK code a plain panel. */
 code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--ui-mono);
   font-size: 0.85em;
   padding: 0.1em 0.35em;
   border: 1px solid var(--c-neutral-outline-variant);

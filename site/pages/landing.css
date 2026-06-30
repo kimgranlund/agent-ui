@@ -50,7 +50,7 @@
 
 .card-group-label {
   margin: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--ui-mono);
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--c-neutral-on-surface-variant);

@@ -40,6 +40,13 @@
      (#71) adopts — one referent serving controls and containers. */
   --ui-radius-base: 12px;
 
+  /* Monospace family — the shared typeface CONSTANT for code/figure surfaces (code blocks, inline-code
+     chips, captions). A :root constant like the focus-ring / radius constants, NOT the `*` ramp: a
+     font-family carries no [scale]/[density] multiplier (it has no scheme/AA/forced-colors dimension
+     either — it is a typeface, not a colour role). Named --ui-mono (NOT --ui-font-*) to stay clear of the
+     --ui-font-{sm,md,lg} SIZE namespace and the :root `--ui-font` guard (dimensions.test.ts). */
+  --ui-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
   /* Type scale (ADR-0025 cl.3) — the FLEET typographic ramp's scale-free legs. -weight + -leading are
      CONSTANTS on :root (like the focus-ring / motion constants), NOT the `*` ramp: neither rides
      [scale]/[density] — a subtree theme rescales the -size leg only (below). weight is a plain
