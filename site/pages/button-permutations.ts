@@ -133,12 +133,12 @@ function sizeSection(size: (typeof sizes)[number]): HTMLElement {
   matrix.className = 'matrix'
 
   // Header row: an empty corner, then one label per column.
-  matrix.append(gridText('', 'matrix-corner'))
+  matrix.append(gridText('variant', 'matrix-head')) // the corner names the row axis (the variant dimension)
   for (const column of columns) matrix.append(gridText(column.label, 'matrix-head'))
 
   // One row per variant.
   for (const variant of variants) {
-    matrix.append(gridText(`variant = ${variant}`, 'matrix-rowhead'))
+    matrix.append(gridText(variant, 'matrix-rowhead')) // bare value; the corner header names the axis
     for (const column of columns) {
       const cell = document.createElement('div')
       cell.className = 'matrix-cell'
@@ -194,11 +194,11 @@ function anatomySection(title: string, anatomies: readonly Anatomy[]): HTMLEleme
   matrix.className = 'matrix'
   matrix.style.gridTemplateColumns = `max-content repeat(${anatomies.length}, minmax(7rem, 1fr))`
 
-  matrix.append(gridText('', 'matrix-corner'))
+  matrix.append(gridText('variant', 'matrix-head')) // the corner names the row axis (the variant dimension)
   for (const anatomy of anatomies) matrix.append(gridText(anatomy.label, 'matrix-head'))
 
   for (const variant of variants) {
-    matrix.append(gridText(`variant = ${variant}`, 'matrix-rowhead'))
+    matrix.append(gridText(variant, 'matrix-rowhead')) // bare value; the corner header names the axis
     for (const anatomy of anatomies) {
       const cell = document.createElement('div')
       cell.className = 'matrix-cell'
