@@ -33,10 +33,17 @@ const whereBlock = (marker: string): string => {
   return buttonCss.slice(start, buttonCss.indexOf('}', start))
 }
 
-/** Parse a `--ui-button-icon: calc(<n>px * pow(var(--ui-scale), 0.58))` glyph BASE size (px @ scale 1) from a
- *  block. The icon is SUBLINEAR in [scale] (§1.1, ADR-0033) — the base is the multiplicand, the scale-1 size. */
-const iconPx = (block: string): number | null => {
-  const m = block.match(/--ui-button-icon:\s*calc\(\s*(\d+(?:\.\d+)?)px\s*\*\s*pow\(\s*var\(--ui-scale\)\s*,\s*0\.58\s*\)\s*\)/)
+/** The comment-stripped `:root` block of dimensions.css — the no-[scale] DEFAULT tier (where --ui-icon's
+ *  ui-md band lives). Strip comments first so `[^}]*` cleanly captures the one block. */
+const dimRoot = ((): string => {
+  const noComments = dimCss.replace(/\/\*[\s\S]*?\*\//g, '')
+  return (noComments.match(/:root\s*\{[^}]*\}/) ?? [''])[0]
+})()
+
+/** Parse the :root default `--ui-icon-{size}: <n>px` — the §1-SET icon table's ui-md band (ADR-0035 4a hoist).
+ *  The icon is the shared --ui-icon-* token now (hoisted from button.css); the px @ scale 1 lives here. */
+const iconPx = (size: string): number | null => {
+  const m = dimRoot.match(new RegExp(`--ui-icon-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
   return m ? Number(m[1]) : null
 }
 
@@ -46,17 +53,18 @@ const heightPx = (size: string): number | null => {
   return m ? Number(m[1]) : null
 }
 
-// The per-size `--ui-button-icon`: md is the default (`:where(ui-button)`), sm/lg repoint via `[size]`.
+// The §1-SET icon ramp's no-[scale] default (dimensions.css :root, ADR-0035 4a hoist): sm·md·lg = 16·18·20.
+// button.css reads var(--ui-icon-{size}) per [size]; the px @ scale 1 is dimensions.css's :root default.
 const iconBySize: Record<string, number | null> = {
-  sm: iconPx(whereBlock(":where(ui-button[size='sm'])")),
-  md: iconPx(whereBlock(':where(ui-button) {')),
-  lg: iconPx(whereBlock(":where(ui-button[size='lg'])")),
+  sm: iconPx('sm'),
+  md: iconPx('md'),
+  lg: iconPx('lg'),
 }
 
 describe('button.css — STATIC geometry trip-wires (s11)', () => {
   it('0 < glyph ≤ box: the content-icon ramp is positive and fits the height box at every size', () => {
-    // anti-vacuous: the parse actually found the tabled content-icon ramp (geometry-sizing-spec §1) — NOT
-    // an empty match silently passing the relation below.
+    // anti-vacuous: the parse actually found the §1-SET --ui-icon ramp's :root default (ADR-0035 4a hoist,
+    // dimensions.css) — NOT an empty match silently passing the relation below.
     expect(iconBySize).toEqual({ sm: 16, md: 18, lg: 20 })
 
     for (const size of ['sm', 'md', 'lg'] as const) {
@@ -69,18 +77,19 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     }
   })
 
-  it('ADR-0033: the icon is SUBLINEAR in [scale] (pow 0.58) while the box height stays LINEAR — so icon ≤ box is preserved a fortiori (the ratio only TIGHTENS as scale climbs)', () => {
-    // Pre-ADR-0033 the icon and box BOTH carried a bare var(--ui-scale) (a scale-invariant ratio). ADR-0033
-    // (§1.1) decouples them: the icon grows on pow(var(--ui-scale), 0.58) — STRICTLY slower than the box's
-    // linear var(--ui-scale) — so the content-icon never overruns the frame at the content-* tiers; the
-    // base-px `icon ≤ box` proven above only tightens as scale climbs. Pin the two distinct scaling forms.
-    const md = whereBlock(':where(ui-button) {')
-    expect(md).toMatch(/--ui-button-icon:\s*calc\(\s*\d+px\s*\*\s*pow\(\s*var\(--ui-scale\)\s*,\s*0\.58\s*\)\s*\)/) // sublinear icon
-    expect(md).not.toMatch(/--ui-button-icon:\s*calc\(\s*\d+px\s*\*\s*var\(--ui-scale\)\s*\)/) // the OLD bare-linear icon form is gone
+  it('ADR-0035: the icon is the shared §1-SET --ui-icon table (hoisted to dimensions.css) — button reads var(--ui-icon-{size}), NO pow/calc; box height stays LINEAR', () => {
+    // ADR-0035 (4a hoist) supersedes ADR-0033's pow(scale,0.58): button.css drops the local calc and reads the
+    // shared --ui-icon-{size} (the §1-SET per-[scale] table in dimensions.css). Pin the wiring + that pow is gone.
+    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-icon:\s*var\(--ui-icon-md\)/) //          md → shared token
+    expect(whereBlock(":where(ui-button[size='sm'])")).toMatch(/--ui-button-icon:\s*var\(--ui-icon-sm\)/) // sm
+    expect(whereBlock(":where(ui-button[size='lg'])")).toMatch(/--ui-button-icon:\s*var\(--ui-icon-lg\)/) // lg
+    // the OLD calc/pow icon form is gone — the decl is a bare var(), not a calc()
+    expect(whereBlock(':where(ui-button) {')).not.toMatch(/--ui-button-icon:\s*calc\(/)
+    // box height stays LINEAR (the frame lever) — bare var(--ui-scale), no pow
     for (const size of ['sm', 'md', 'lg'] as const) {
       const decl = (dimCss.match(new RegExp(`--ui-height-${size}:[^;]*;`)) ?? [''])[0]
       expect(decl, `--ui-height-${size} decl not found`).toMatch(/\*\s*var\(--ui-scale\)/) // the box stays LINEAR…
-      expect(decl).not.toMatch(/pow\(/) //                                                    …NOT sublinear (the frame lever holds linear)
+      expect(decl).not.toMatch(/pow\(/) //                                                    …NOT sublinear (frame lever holds linear)
     }
   })
 

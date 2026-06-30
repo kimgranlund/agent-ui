@@ -85,17 +85,18 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     }
   })
 
-  it('[scale] ui-sm→content-lg CHANGES the frame height + font px (via --ui-scale) across all SIX tiers — on BOTH variants', () => {
-    // The six-tier two-band ladder (ADR-0032): ui-* tight {0.875, 1, 1.125} · content-* generous {1.375, 1.5, 1.75}.
-    // md base 28/14: HEIGHT linear (× --ui-scale), FONT sublinear (× pow(--ui-scale, 0.45), ADR-0033) — font
-    // grows slower than the box (content-lg = 49/18, not the old linear 49/24.5). ui-md = 1 ⇒ baseline 28/14.
+  it('[scale] ui-sm→content-lg: HEIGHT climbs linearly while FONT STEPS to the §1-SET integers (ADR-0035) — md base, BOTH variants', () => {
+    // md base height 28 × --ui-scale (LINEAR); md font = the §1-SET --ui-font-md per tier (ADR-0035, was pow).
+    // The font STEPS — adjacent tiers SHARE a value (ui-md/ui-lg both 14, content-sm/md both 16) while the height
+    // climbs continuously: the accepted §1-set stepping (NOT pow's smooth curve). content-lg/md = 18, NOT the old
+    // linear 24.5 or pow's 18.01. So heights are all-distinct; the fonts are NOT (the plateau is the proof).
     const TIERS: Array<[string, number, number]> = [
-      ['ui-sm', 24.5, 13.18],
+      ['ui-sm', 24.5, 13],
       ['ui-md', 28, 14],
-      ['ui-lg', 31.5, 14.76],
-      ['content-sm', 38.5, 16.16],
-      ['content-md', 42, 16.8],
-      ['content-lg', 49, 18.01],
+      ['ui-lg', 31.5, 14],
+      ['content-sm', 38.5, 16],
+      ['content-md', 42, 16],
+      ['content-lg', 49, 18],
     ]
     for (const markup of [BARE, ICON]) {
       const { wrap, btn } = mount(markup) // size stays md (default)
@@ -106,55 +107,56 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
         const gotH = frameHeight(btn)
         const gotF = fontPx(btn)
         expect(gotH, `height @ [scale="${tier}"]`).toBeCloseTo(h, 1)
-        expect(gotF, `font @ [scale="${tier}"]`).toBeCloseTo(f, 1)
+        expect(gotF, `font @ [scale="${tier}"] is not the §1-SET integer`).toBe(f) // EXACT (no pow decimal)
         heights.push(gotH)
         fonts.push(gotF)
       }
-      // anti-vacuous: every tier resolves to a DISTINCT px — the ladder genuinely moves the frame at each rung.
+      // height climbs continuously (all-distinct, LINEAR); font STEPS to the §1 set (NOT all-distinct — the
+      // deliberate ADR-0035 plateau: a font shared across adjacent [scale] tiers while the box keeps growing).
       expect(allDistinct(heights), `heights did not change across the six [scale] tiers: ${heights.join()}`).toBe(true)
-      expect(allDistinct(fonts), `fonts did not change across the six [scale] tiers: ${fonts.join()}`).toBe(true)
+      expect(new Set(fonts).size, `font should STEP to the §1 set (adjacent tiers share): ${fonts.join()}`).toBeLessThan(fonts.length)
     }
   })
 
-  it('ADR-0033 sublinear font/glyph: [scale] grows the FRAME linearly but font (pow 0.45) + icon (pow 0.58) SUBLINEARLY — the user\'s lg×content-lg case', () => {
-    // Decoupled scaling (geometry-sizing-spec §1.1): height = base × scale (LINEAR); font = base × pow(scale,
-    // 0.45); icon = base × pow(scale, 0.58). At content-lg a linearly-scaled font/icon would OVER-grow (lg →
-    // font 28, icon 35) — the powers hold them to reading/affordance sizes (~20.6 / ~27.7) while the box still
-    // hits its linear 63. The icon CELL is the slotted [data-role=icon] box (= --ui-button-icon), per s11.
-    const iconCellPx = (b: HTMLElement): number =>
-      (b.querySelector('[data-role="icon"]') as HTMLElement).getBoundingClientRect().width
+  it('ADR-0035 §1-SET fonts/icons: [scale] renders the EXACT §1 integers (NOT pow decimals) — the user\'s lg×content-lg case', () => {
+    // ADR-0035 supersedes ADR-0033's pow with explicit §1-SET tables: lg×content-lg → font 20 / icon 28 (the §1
+    // 64-row), NOT pow's 20.6 / 27.7; height stays linear (63). The NEGATIVE control is the INTEGER itself — a
+    // literal …12·13·14·16·18·20px resolves to an exact integer px, so any decimal would mean pow survived.
+    const iconPx = (b: HTMLElement): number =>
+      px(getComputedStyle(b.querySelector('[data-role="icon"]') as HTMLElement).width) // explicit inline-size → exact px
     const read = (size: string, scale: string | null): { h: number; f: number; icon: number } => {
       const { wrap, btn } = mount(ICON)
       btn.setAttribute('size', size)
       if (scale) wrap.setAttribute('scale', scale)
-      return { h: frameHeight(btn), f: fontPx(btn), icon: iconCellPx(btn) }
+      return { h: frameHeight(btn), f: fontPx(btn), icon: iconPx(btn) }
     }
-    const near = (got: number, want: number, msg: string): void =>
-      expect(Math.abs(got - want), `${msg}: got ${got}, want ~${want}`).toBeLessThanOrEqual(1)
 
-    // ── THE USER'S CASE — [size=lg][scale=content-lg] (scale 1.75): font ~20.6 (NOT 28), icon ~27.7 (NOT 35) ──
+    // ── THE USER'S CASE — [size=lg][scale=content-lg]: font EXACTLY 20 (not 20.6), icon EXACTLY 28 (not 27.7) ──
     const lgCL = read('lg', 'content-lg')
-    near(lgCL.h, 63, 'lg×content-lg height (LINEAR 36×1.75)') //                         frame stays linear
-    near(lgCL.f, 20.6, 'lg×content-lg font (16×pow(1.75,0.45))') //                      sublinear font
-    near(lgCL.icon, 27.7, 'lg×content-lg icon (20×pow(1.75,0.58))') //                   sublinear icon
-    expect(lgCL.f, 'lg×content-lg font regressed to the LINEAR 28').toBeLessThan(22) //  NEGATIVE control: 28 is gone
-    expect(lgCL.icon, 'lg×content-lg icon regressed to the LINEAR 35').toBeLessThan(32)
+    expect(lgCL.h, 'lg×content-lg height (LINEAR 36×1.75)').toBeCloseTo(63, 0)
+    expect(lgCL.f, 'lg×content-lg font is not the §1-SET 20').toBe(20)
+    expect(lgCL.icon, 'lg×content-lg icon is not the §1-SET 28').toBe(28)
+    // NEGATIVE control (AC3/AC4): the rendered values are INTEGERS — pow's 20.6/27.7 are gone, not just absent
+    expect(Number.isInteger(lgCL.f), `font ${lgCL.f} is not an integer — pow survived`).toBe(true)
+    expect(Number.isInteger(lgCL.icon), `icon ${lgCL.icon} is not an integer — pow survived`).toBe(true)
 
-    // ── [size=md][scale=content-lg]: height 49 (linear), font ~18 (NOT linear 24.5) ──────────────────────
+    // ── [size=md][scale=content-lg]: font 18 (not pow 18.01), height 49 (linear) ─────────────────────────
     const mdCL = read('md', 'content-lg')
-    near(mdCL.h, 49, 'md×content-lg height (28×1.75)')
-    near(mdCL.f, 18, 'md×content-lg font (14×pow(1.75,0.45))')
-    expect(mdCL.f, 'md×content-lg font regressed to the LINEAR 24.5').toBeLessThan(20)
+    expect(mdCL.h, 'md×content-lg height (28×1.75)').toBeCloseTo(49, 0)
+    expect(mdCL.f, 'md×content-lg font is not the §1-SET 18').toBe(18)
 
-    // ── default ([size=md], no [scale] → scale 1): BYTE-IDENTICAL to pre-ADR-0033 (pow(1,x)=1) ────────────
+    // ── default ([size=md], no [scale]): font 14 / height 28 — BYTE-IDENTICAL (AC2) ──────────────────────
     const mdDefault = read('md', null)
-    near(mdDefault.f, 14, 'md default font (pow(1)=1, unchanged)')
-    near(mdDefault.h, 28, 'md default height (unchanged)')
+    expect(mdDefault.f, 'md default font (byte-identical)').toBe(14)
+    expect(mdDefault.h, 'md default height (unchanged)').toBeCloseTo(28, 0)
 
     // ── [size=lg] scale 1 (ui-md): the §1 LG row is unchanged — font 16, icon 20 ─────────────────────────
     const lgBase = read('lg', 'ui-md')
-    near(lgBase.f, 16, 'lg scale-1 font (unchanged §1 LG row)')
-    near(lgBase.icon, 20, 'lg scale-1 icon (unchanged §1 LG row)')
+    expect(lgBase.f, 'lg scale-1 font (unchanged §1 LG row)').toBe(16)
+    expect(lgBase.icon, 'lg scale-1 icon (unchanged §1 LG row)').toBe(20)
+
+    // ── AC1 sample — [size=sm][scale=ui-sm]: the smallest §1 font is 12 ──────────────────────────────────
+    expect(read('sm', 'ui-sm').f, 'sm×ui-sm font is not the §1-SET 12').toBe(12)
   })
 
   it('[density] compact→spacious CHANGES the icon↔label gap (--ui-gap) — the icon+label variant', () => {

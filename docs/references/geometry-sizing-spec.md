@@ -1,11 +1,12 @@
 # Geometry & Sizing Spec — the centering law + the size ramp
 
-**Status:** design-of-record — **LANDED (v4, 2026-06-18).** **Authority:** the **§1 master table below** —
-the hand-tuned **XS→2XL ramp** and the **centering law** it encodes. (`component-sizes.md` was the
-working-name precursor for this ramp; it was never materialized as a file — its hand-tuned values are §1
-here. Kim 2026-06-18: this file is the *reference/law*; the shipped `scale × size(sm/md/lg) × density`
-model **maps onto** it — there is no size-ramp migration. The job *was* to make the implementation obey
-the law; **it now does.**)
+**Status:** design-of-record — **LANDED (v4, 2026-06-18; §1 ramp extended to 8 rows, Kim-ratified
+2026-06-30).** **Authority:** the **§1 master table below** — the hand-tuned **eight-row height ramp
+(16→64)** and the **centering law** it encodes. (`component-sizes.md` was the working-name precursor for
+this ramp; it was never materialized as a file — its hand-tuned values are §1 here. Kim 2026-06-18: this
+file is the *reference/law*; the shipped `scale × size(sm/md/lg) × density` model **maps onto** it — there
+is no size-ramp migration. The job *was* to make the implementation obey the law; **it now does.** Kim
+2026-06-30: the ramp gained two rows below XS, 16·18 — forward-ready, unconsumed by the current grid.)
 
 **What landed (the §5 gap is closed):** `caret = font` globally (`--ui-glyph-ratio: 1`), for **both** mask
 glyphs **and** slotted `<ui-icon name=caret>` carets (§4.1/§4.6); the **comfortable controls** (button,
@@ -24,38 +25,54 @@ That single rule generates the whole tabled ramp. *Geometry is arithmetic, not t
 
 ## 1 · The ramp + the codified scaling law
 
-Master table — the six reference sizes (`component-sizes.md`). `lead/trail-pad` are **derived** by
-the law (§2); `%` = glyph ÷ height (the *fraction of the box* the glyph occupies):
+Master table — the **eight-row height ramp** (Kim-ratified 2026-06-30). The ramp is keyed by **height**
+(the lever); every derived quantity comes from the §1.4 families + the §1.5 slot-presence pad model, so
+the table carries them directly: `caret = font` and `gap = font/2` (rhythm); the **value-edge pad** is
+`h/2`, the **slot-edge pad** `½(h − icon)`, the **slot** `= icon` (frame). `%` = glyph ÷ height (the
+*fraction of the box* the glyph occupies — the sublinear optical correction, §1.1):
 
-| size | height | icon | caret | font | lead-pad | spacer | trail-pad | icon% | caret% | font% |
-|---|---|---|---|---|---|---|---|---|---|---|
-| **XS** | 20 | 14 | 12 | 12 | 3 | 4 | 4 | 70% | 60% | 60% |
-| **SM** | 24 | 16 | 14 | 13 | 4 | 4 | 5 | 67% | 58% | 54% |
-| **MD** | 28 | 18 | 14 | 14 | 5 | 4 | 7 | 64% | 50% | 50% |
-| **LG** | 36 | 20 | 16 | 16 | 8 | 8 | 10 | 56% | 44% | 44% |
-| **XL** | 48 | 24 | 16 | 18 | 12 | 8 | 16 | 50% | 33% | 38% |
-| **2XL** | 64 | 28 | 18 | 20 | 18 | 8 | 23 | 44% | 28% | 31% |
+| height | font | caret `= font` | icon | gap `= f/2` | value-edge pad `= h/2` | slot-edge pad `= ½(h−icon)` | slot `= icon` | icon% | font% |
+|---|---|---|---|---|---|---|---|---|---|
+| **16** † | 11 | 11 | 12 | 5.5 | 8 | 2 | 12 | 75% | 69% |
+| **18** † | 11 | 11 | 14 | 5.5 | 9 | 2 | 14 | 78% | 61% |
+| 20 | 12 | 12 | 14 | 6 | 10 | 3 | 14 | 70% | 60% |
+| 24 | 13 | 13 | 16 | 6.5 | 12 | 4 | 16 | 67% | 54% |
+| 28 | 14 | 14 | 18 | 7 | 14 | 5 | 18 | 64% | 50% |
+| 36 | 16 | 16 | 20 | 8 | 18 | 8 | 20 | 56% | 44% |
+| 48 | 18 | 18 | 24 | 9 | 24 | 12 | 24 | 50% | 38% |
+| 64 | 20 | 20 | 28 | 10 | 32 | 18 | 28 | 44% | 31% |
 
-The full button anatomy: `| lead-pad | icon | spacer | label fills | spacer | caret | trail-pad |`.
-(Caret = the even-rounded power law — Kim 2026-06-18, §1.3; `component-sizes.md` floor-rounds SM·LG to
-`12·14`, this rounds to `14·16`.)
+**† = the two new rows** (heights 16·18) extend the ramp **below** the legacy XS (20). They are
+**forward-ready / unconsumed**: the shipped `scale × size` grid's minimum effective height is **21**
+(snaps to row 20), so no current `[size]×[scale]` tier reaches 16/18 (ADR-0035; re-grounding the per-tier
+realization against this 8-row ramp changes **no** consumed value — proven byte-identical to the prior
+6-row grounding). Legacy enum, for traceability: 20 = XS · 24 = SM · 28 = MD · 36 = LG · 48 = XL · 64 = 2XL.
+
+**Live anatomy = the §1.5 presence-driven grid** (no authored trailing-pad): `| value-edge pad | [slot] |
+1fr | [slot] | value-edge pad |`, each edge taking `½(h − icon)` when a slot is present and `h/2` when it
+is slotless. The historical authored-anatomy columns (`lead-pad / spacer / trail-pad`) and the
+even-rounded **power-law caret column** are **retired** — superseded by §1.4 (`caret = font`, `gap = f/2`)
+and the §1.5 pad model above; see §1.3 for the retired caret's historical note.
 
 ### 1.1 · The non-linearity, codified — glyphs scale **sublinearly** (the optical correction)
 
 A glyph does **not** grow in proportion to the box. As height grows, each glyph occupies a *shrinking
-fraction* of it (icon 70%→44% · font 60%→31% · caret 60%→28% — the `%` columns). This is the
-"not purely linear across the scales" Kim flagged, and it is a **power law of height with exponent <
-1**:
+fraction* of it (across the consumed 20→64 range: icon 70%→44% · font 60%→31%; `caret% ≡ font%` now,
+§1.4). This is the "not purely linear across the scales" Kim flagged, and it is a **power law of height
+with exponent < 1**:
 
 ```
 icon  = 2.49 · height^0.58          font  = 3.16 · height^0.45   (≈ 2.65·√height)
 caret = 4.08 · height^0.35   (≈ √[3]{height}; tracks font a touch under)
 ```
 
-These reproduce every tabled value to **±1px** — so the table is not six hand-picked points, it is
-**one rule sampled six times**. The practical payoff: the same rule gives the glyphs for *any* height,
+These reproduce every tabled value to **±1px** — so the table is not eight hand-picked points, it is
+**one rule sampled eight times**. The practical payoff: the same rule gives the glyphs for *any* height,
 which is exactly the bridge that lets a shipped `scale × size` height **map onto the law** (§3) — feed
-the mapped height to the formula, get its tabled icon/caret/font.
+the mapped height to the formula, get its tabled icon/caret/font. *(The two forward-ready sub-XS rows
+16·18 floor higher — icon ~75–78%, font ~61–69% — because a tiny box can't shrink its glyph below
+legibility; they sit below the consumed 20→64 range. The `caret = 4.08·h^0.35` formula is historical:
+`caret = font` now, §1.4.)*
 
 > **REALIZED UNDER `[scale]` (ADR-0033, 2026-06-30).** This sublinear law was honored across `[size]`
 > (the tabled sm/md/lg) but **not** under `[scale]`, which scaled font **linearly** (`× --ui-scale`) —
@@ -82,14 +99,18 @@ Height accelerates (geometric) while glyphs stay near-linear → the fraction sh
 ### 1.3 · The generating rule (one rule — Kim ruled 2026-06-18)
 
 **The ramp is generated by one rule: round the power law — glyphs to nearest even, font to nearest
-integer.** That makes the table self-consistent and the derived pads monotonic in *both* value and
-acceleration (lead Δ `+1,+1,+3,+4,+6`; trail Δ `+1,+2,+3,+6,+7`). The icon tail stays capped at 28
-(1px under the formula's 29 — a deliberate max-icon).
+integer.** That is exactly what the ratified 8-row ramp obeys: every **icon** is even
+(`12·14·14·16·18·20·24·28`) and every **font** is an integer (`11·11·12·13·14·16·18·20`). The icon tail
+stays capped at 28 (1px under the formula's 29 — a deliberate max-icon). The derived **§1.5 pads** then
+fall out monotonic in height — value-edge `h/2` (`8,9,10,12,14,18,24,32`) and slot-edge `½(h − icon)`
+(`2,2,3,4,5,8,12,18`). *(The new row 18 takes icon **14** by this even-rounding — the raw law gives 13.3,
+nearest-even 14, which also keeps the icon column all-even and shares row 18's icon with row 20; Kim
+ratified 2026-06-30, §1 fork 2.)*
 
-The one place this departs from the raw `component-sizes.md` ink: that file **floor**-rounds the caret
-to flat-pairs (`12,12…14,14`), which dips the trail-pad acceleration (Δ `+2,+1,…`). Even-rounding
-gives caret `12,14,14,16,16,18`. *(Superseded for the caret by §1.4 — `caret = font`; this even-round
-column remains the historical reference.)*
+**Retired — the historical caret column.** The earlier ramp carried an even-rounded **power-law caret**
+column (`12·14·14·16·16·18` over the 6-row 20→64 ramp; `component-sizes.md` floor-rounded SM·LG to
+`12·14`). It is **retired**: `caret = font` now (§1.4 / §4.1, landed), so the master table's `caret`
+column simply restates `font`. The even-round figures are kept here only as the historical reference.
 
 ### 1.4 · The two families + the slot-container model (Kim ruled 2026-06-18)
 

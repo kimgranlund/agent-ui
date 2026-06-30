@@ -38,29 +38,76 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
     expect(universalBlock).toMatch(/--ui-height-lg:\s*calc\(\s*36px\s*\*\s*var\(--ui-scale\)\s*\)/)
   })
 
-  it('declares the font ramp (sm·md·lg = 13·14·16) SUBLINEAR in --ui-scale — × pow(var(--ui-scale), 0.45) (§1.1, ADR-0033), on the `*` block', () => {
-    expect(universalBlock).toMatch(/--ui-font-sm:\s*calc\(\s*13px\s*\*\s*pow\(\s*var\(--ui-scale\)\s*,\s*0\.45\s*\)\s*\)/)
-    expect(universalBlock).toMatch(/--ui-font-md:\s*calc\(\s*14px\s*\*\s*pow\(\s*var\(--ui-scale\)\s*,\s*0\.45\s*\)\s*\)/)
-    expect(universalBlock).toMatch(/--ui-font-lg:\s*calc\(\s*16px\s*\*\s*pow\(\s*var\(--ui-scale\)\s*,\s*0\.45\s*\)\s*\)/)
+  it('declares --ui-font-{sm,md,lg} as the EXPLICIT §1-SET per-[scale] table (ADR-0035, supersedes ADR-0033 pow) — :root default + each tier, OFF `*`', () => {
+    // tier → [sm,md,lg] font px (the §1-SET integer for that tier's snapped height). NO pow, NO calc — literals.
+    const TABLE: Array<[string, [number, number, number]]> = [
+      ['ui-sm', [12, 13, 14]],
+      ['ui-md', [13, 14, 16]],
+      ['ui-lg', [14, 14, 16]],
+      ['content-sm', [16, 16, 18]],
+      ['content-md', [16, 16, 18]],
+      ['content-lg', [16, 18, 20]],
+    ]
+    // :root default = the ui-md triple (13/14/16) — byte-identical to today
+    expect(rootBlock).toMatch(/--ui-font-sm:\s*13px\s*;/)
+    expect(rootBlock).toMatch(/--ui-font-md:\s*14px\s*;/)
+    expect(rootBlock).toMatch(/--ui-font-lg:\s*16px\s*;/)
+    // each [scale] tier re-tables the triple to its §1-SET integers (content-lg/lg = 20, Kim's case)
+    for (const [tier, [sm, md, lg]] of TABLE) {
+      const block = (flat.match(new RegExp(`\\[scale="${tier}"\\]\\s*\\{[^}]*\\}`)) ?? [''])[0]
+      expect(block.length, `[scale="${tier}"] block not found`).toBeGreaterThan(0)
+      expect(block).toMatch(new RegExp(`--ui-font-sm:\\s*${sm}px\\s*;`))
+      expect(block).toMatch(new RegExp(`--ui-font-md:\\s*${md}px\\s*;`))
+      expect(block).toMatch(new RegExp(`--ui-font-lg:\\s*${lg}px\\s*;`))
+    }
+    // OFF the `*` ramp (a literal can't ride `*` — it would re-declare per descendant + defeat subtree); the `*`
+    // gap still REFERENCES var(--ui-font-*), so guard on the DECLARATION form (`--ui-font-x:`), not the reference
+    expect(universalBlock).not.toMatch(/--ui-font-\w+:/)
+    // pure px literals — the pow mechanism is GONE from the font path
+    const fontDecls = flat.match(/--ui-font-(?:sm|md|lg):[^;]*;/g) ?? []
+    expect(fontDecls.length).toBeGreaterThanOrEqual(21) // 6 tiers × 3 + 3 :root = 21
+    for (const d of fontDecls) expect(d).not.toMatch(/pow\(|calc\(|var\(/)
   })
 
-  it('scopes the ADR-0033 sublinear fork to font/glyph — --ui-height-* and --ui-type-*-size stay LINEAR (× var(--ui-scale), NO pow)', () => {
-    // height is the FRAME lever (the square-centring law) — must stay linear; --ui-type-* is ADR-0025's own
-    // ledger (the ruled fork: document typography keeps its linear modular scale). Only the control-band font
-    // (+ the glyph that follows it, button.css) is sublinear.
+  it('declares --ui-icon-{sm,md,lg} as the EXPLICIT §1-SET per-[scale] table (ADR-0035 4a hoist) — :root default + each tier, OFF `*`', () => {
+    // The icon ramp HOISTED out of button.css to a shared token (fork 4a). Same §1-SET table shape as --ui-font.
+    const TABLE: Array<[string, [number, number, number]]> = [
+      ['ui-sm', [14, 16, 18]],
+      ['ui-md', [16, 18, 20]],
+      ['ui-lg', [18, 18, 20]],
+      ['content-sm', [20, 20, 24]],
+      ['content-md', [20, 20, 24]],
+      ['content-lg', [20, 24, 28]],
+    ]
+    // :root default = the ui-md icon triple (16/18/20) — byte-identical to today's button icon ramp
+    expect(rootBlock).toMatch(/--ui-icon-sm:\s*16px\s*;/)
+    expect(rootBlock).toMatch(/--ui-icon-md:\s*18px\s*;/)
+    expect(rootBlock).toMatch(/--ui-icon-lg:\s*20px\s*;/)
+    for (const [tier, [sm, md, lg]] of TABLE) {
+      const block = (flat.match(new RegExp(`\\[scale="${tier}"\\]\\s*\\{[^}]*\\}`)) ?? [''])[0]
+      expect(block).toMatch(new RegExp(`--ui-icon-sm:\\s*${sm}px\\s*;`))
+      expect(block).toMatch(new RegExp(`--ui-icon-md:\\s*${md}px\\s*;`))
+      expect(block).toMatch(new RegExp(`--ui-icon-lg:\\s*${lg}px\\s*;`)) // content-lg/lg = 28 (Kim's case)
+    }
+    expect(universalBlock).not.toMatch(/--ui-icon-\w+:/) // a literal table — off the `*` ramp
+    const iconDecls = flat.match(/--ui-icon-(?:sm|md|lg):[^;]*;/g) ?? []
+    expect(iconDecls.length).toBeGreaterThanOrEqual(21)
+    for (const d of iconDecls) expect(d).not.toMatch(/pow\(|calc\(|var\(/) // pure px — pow(scale,0.58) is gone
+  })
+
+  it('the ADR-0033 pow mechanism is GONE (ADR-0035) — no pow() anywhere; height + --ui-type-*-size stay LINEAR; font/icon are literal tables OFF `*`', () => {
+    // ADR-0035 replaces pow with explicit §1-SET tables, so pow() leaves the font/icon path entirely.
+    expect(bare).not.toMatch(/pow\(/) // file-wide (comment-stripped): the pow primitive is gone
+    // height = the FRAME lever, stays LINEAR on `*` (× var(--ui-scale)); --ui-type-* is ADR-0025's ruled fork
     const heightDecls = universalBlock.match(/--ui-height-[\w-]+:[^;]*;/g) ?? []
     expect(heightDecls.length).toBe(3) // anti-vacuous: all three height steps isolated
-    for (const d of heightDecls) {
-      expect(d).toMatch(/var\(--ui-scale\)/) // linear multiplier present…
-      expect(d).not.toMatch(/pow\(/) // …and NO pow (the frame is not sublinear)
-    }
+    for (const d of heightDecls) expect(d).toMatch(/calc\(\s*\d+px\s*\*\s*var\(--ui-scale\)\s*\)/)
     const typeSizeDecls = universalBlock.match(/--ui-type-[\w-]+-size:[^;]*;/g) ?? []
-    expect(typeSizeDecls.length).toBe(7) // anti-vacuous: all seven type levels
-    for (const d of typeSizeDecls) expect(d).not.toMatch(/pow\(/) // ADR-0025 type stays linear (the ruled fork)
-    // and the fork is REAL, not vacuous — the control-band font IS the sublinear leg (pow 0.45)
-    const fontDecls = universalBlock.match(/--ui-font-[\w-]+:[^;]*;/g) ?? []
-    expect(fontDecls.length).toBe(3)
-    for (const d of fontDecls) expect(d).toMatch(/pow\(\s*var\(--ui-scale\)\s*,\s*0\.45\s*\)/)
+    expect(typeSizeDecls.length).toBe(7) // anti-vacuous: all seven type levels stay linear
+    for (const d of typeSizeDecls) expect(d).toMatch(/var\(--ui-scale\)/)
+    // font + icon are NOT declared on `*` (literal §1-SET tables → :root + [scale]; a literal on `*` defeats subtree)
+    expect(universalBlock).not.toMatch(/--ui-font-\w+:/)
+    expect(universalBlock).not.toMatch(/--ui-icon-\w+:/)
   })
 
   it('derives the rhythm gap from font/2 and multiplies it by --ui-density (the ONE density-bearing quantity), on the `*` block', () => {
@@ -70,9 +117,12 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
     }
   })
 
-  it('keeps the DERIVED ramp OFF :root (the var() pre-substitution gotcha) — so subtree scale/density stay live', () => {
+  it('keeps the DERIVED ramp (--ui-height, --ui-gap — they carry var(--ui-scale)/var(--ui-density)) OFF :root', () => {
     expect(universalBlock.length).toBeGreaterThan(0) // anti-vacuous: the `*` block was actually isolated
-    expect(rootBlock).not.toMatch(/--ui-height|--ui-font|--ui-gap/)
+    // ONLY the genuinely-derived tokens must stay off :root (the var() pre-substitution gotcha). --ui-font +
+    // --ui-icon are now LITERAL §1-SET tables (ADR-0035), so they legitimately live ON :root (the default) —
+    // dropped from this guard (the font/icon-table tests above pin them ON :root).
+    expect(rootBlock).not.toMatch(/--ui-height|--ui-gap/)
   })
 
   it('[scale] is the SIX-tier two-band ladder (ADR-0032) — each tier repoints --ui-scale to its confirmed value', () => {
@@ -224,14 +274,15 @@ describe('dimensions.css — the shared --ui-radius-base constant (ADR-0015 cl.5
 
 // tok-mono — the shared monospace FONT-FAMILY constant (code blocks, inline-code chips, captions). A
 // :root constant like the focus-ring / radius constants, NOT the `*` ramp: a font-family carries no
-// [scale]/[density] multiplier. Named --ui-mono (NOT --ui-font-*) to stay clear of the --ui-font-* SIZE
-// namespace and the :root `--ui-font` guard above (line ~56). The probe pins the stack ON :root + OFF `*`.
+// [scale]/[density] multiplier. Named --ui-mono (NOT --ui-font-*) to stay in its own namespace, distinct from
+// the --ui-font-{sm,md,lg} SIZE table (which ALSO lives on :root now — the §1-SET table, ADR-0035). The probe
+// pins the stack ON :root + OFF `*`.
 describe('dimensions.css — the shared --ui-mono font-family constant', () => {
   it('declares --ui-mono (the ui-monospace stack) on :root — a constant, not on the `*` ramp', () => {
     expect(rootBlock).toMatch(/--ui-mono:\s*ui-monospace,\s*SFMono-Regular,\s*Menlo,\s*monospace\s*;/)
     expect(universalBlock).not.toMatch(/--ui-mono/) // a constant stays off the derived `*` ramp
-    // and it must NOT trip the :root `--ui-font` guard — --ui-mono is its own namespace, not a font SIZE
-    expect(rootBlock).not.toMatch(/--ui-font/)
+    // --ui-mono is a font-FAMILY stack, never a px SIZE — distinct from the --ui-font-{sm,md,lg} table
+    expect(rootBlock).not.toMatch(/--ui-mono:\s*\d/)
   })
 })
 
@@ -254,7 +305,7 @@ describe('dimensions.css — the --ui-type-* fleet typographic scale (ADR-0025 c
     ['caption', 13, 400, '1.4'],
   ]
 
-  it('declares each -size as calc(<px> * var(--ui-scale)) on the `*` block (scale-responsive, like --ui-font-*)', () => {
+  it('declares each -size as calc(<px> * var(--ui-scale)) on the `*` block (scale-responsive — the LINEAR type leg; the control-band --ui-font-* is now a §1-set TABLE, ADR-0035, not this calc form)', () => {
     expect(universalBlock.length).toBeGreaterThan(0) // anti-vacuous: the `*` block was isolated
     for (const [level, px] of LEVELS) {
       const re = new RegExp(`--ui-type-${level}-size:\\s*calc\\(\\s*${px}px\\s*\\*\\s*var\\(--ui-scale\\)\\s*\\)`)
