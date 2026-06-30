@@ -171,7 +171,7 @@ a devDep + config add; absent today, jsdom-only).
       off the ramp, `padding-block: 0`; **slotless** (bare-label) inline-pad `= h/2`; **slot** (icon) edge-pad
       `= ½(h−icon)` with `column-gap: var(--ui-gap-{size})` between icon and label. **Browser smoke (Chromium
       AND WebKit), anti-vacuous both ways:**
-   - `[size]` sm→md→lg **and** `[scale]` (compact→spacious, via `--ui-scale`) **change** the rendered px
+   - `[size]` sm→md→lg **and** `[scale]` (ui-sm→content-lg, via `--ui-scale`) **change** the rendered px
      (frame height + font) — on **both** the bare and icon variants.
    - `[density]` (compact→spacious) **changes the icon↔label gap** (`--ui-gap`, the *one* density-bearing
      quantity) on the **icon+label** variant, **and does NOT change the bare-label FRAME** (height + the `h/2`

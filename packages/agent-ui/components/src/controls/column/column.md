@@ -89,7 +89,7 @@ the element's **identity** (the tag names the main axis, A2UI-faithfully) — no
 
 - **`align`** (cross axis = inline) → `align-items`: `stretch` (default — children fill the column's width; use `start` to shrink-wrap to content width) · `center` · `end` · `start` · `baseline`. (ADR-0030: default changed from `start` to `stretch`.)
 - **`justify`** (main axis = block) → `justify-content`: `start` (default) · `center` · `end` · `between` · `around` · `evenly` (the `between`/`around`/`evenly` keywords map to `space-*`).
-- **`gap`** → `gap: var(--ui-space-{step})`: `none` (default) · `xs` · `sm` · `md` · `lg` · `xl` · `2xl` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), **never** a control dimension. An ancestor `[density]` re-multiplies the gap; `[scale]` does not touch it (spacing is rhythm, not frame).
+- **`gap`** → `gap: var(--ui-space-{step})`: `none` (default) · `xs` · `sm` · `md` · `lg` · `xl` · `2xl` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), **never** a control dimension. An ancestor `[density]` (`compact/comfortable/spacious`) re-multiplies the gap; `[scale]` (the `ui-sm…content-lg` tier, ADR-0032) does not touch it (spacing is rhythm, not frame).
 - **`wrap`** → `flex-wrap` (boolean presence): present ⇒ children wrap onto multiple lines.
 
 ## Surface

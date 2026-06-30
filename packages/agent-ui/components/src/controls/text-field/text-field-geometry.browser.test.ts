@@ -74,23 +74,23 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
     }
   })
 
-  it('[scale] compact→spacious CHANGES the frame height + the editor font px (via --ui-scale) — on BOTH variants', () => {
+  it('[scale] ui-sm→content-lg CHANGES the frame height + the editor font px (via --ui-scale) — on BOTH variants', () => {
     for (const markup of [BARE, ICON]) {
       const { wrap, field, editor } = mount(markup) // size stays md (default)
       const heights: number[] = []
       const fonts: number[] = []
-      for (const scale of ['compact', 'comfortable', 'spacious'] as const) {
+      for (const scale of ['ui-sm', 'ui-md', 'content-lg'] as const) {
         wrap.setAttribute('scale', scale)
         heights.push(frameHeight(field))
         fonts.push(fontPx(editor))
       }
-      // md base (28/14) × --ui-scale {0.875, 1, 1.25} — [scale] multiplies the WHOLE frame + the font.
+      // md base (28/14) × --ui-scale {0.875, 1, 1.75} — [scale] multiplies the WHOLE frame + the font.
       expect(heights[0]).toBeCloseTo(24.5, 1)
       expect(heights[1]).toBeCloseTo(28, 1)
-      expect(heights[2]).toBeCloseTo(35, 1)
+      expect(heights[2]).toBeCloseTo(49, 1)
       expect(fonts[0]).toBeCloseTo(12.25, 1)
       expect(fonts[1]).toBeCloseTo(14, 1)
-      expect(fonts[2]).toBeCloseTo(17.5, 1)
+      expect(fonts[2]).toBeCloseTo(24.5, 1)
       expect(allDistinct(heights), `heights did not change across [scale]: ${heights.join()}`).toBe(true)
       expect(allDistinct(fonts), `editor fonts did not change across [scale]: ${fonts.join()}`).toBe(true)
     }

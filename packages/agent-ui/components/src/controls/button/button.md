@@ -99,7 +99,8 @@ ADR-0006). ARIA `role="button"` is applied through `ElementInternals`, never as 
 ## Sizes
 
 `size` selects a step on the dimensional ramp (`sm` · `md` (default) · `lg`), setting the control
-height and font; an ancestor `[scale]` multiplies the frame and an ancestor `[density]` multiplies the
+height and font; an ancestor `[scale]` (the two-band tier `ui-sm…content-lg`, default `ui-md`; ADR-0032)
+multiplies the frame and an ancestor `[density]` (`compact/comfortable/spacious`) multiplies the
 icon↔label gap. The block-size is the vertical lever — `padding-block` is always `0`.
 
 ## States

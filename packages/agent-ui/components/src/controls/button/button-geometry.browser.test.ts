@@ -85,25 +85,33 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     }
   })
 
-  it('[scale] compact→spacious CHANGES the frame height + font px (via --ui-scale) — on BOTH variants', () => {
+  it('[scale] ui-sm→content-lg CHANGES the frame height + font px (via --ui-scale) across all SIX tiers — on BOTH variants', () => {
+    // The six-tier two-band ladder (ADR-0032): ui-* tight {0.875, 1, 1.125} · content-* generous {1.375, 1.5, 1.75}.
+    // md base (28/14) × --ui-scale. ui-md = 1 ⇒ exactly today's baseline (28/14) — anti-regression on the default.
+    const TIERS: Array<[string, number, number]> = [
+      ['ui-sm', 24.5, 12.25],
+      ['ui-md', 28, 14],
+      ['ui-lg', 31.5, 15.75],
+      ['content-sm', 38.5, 19.25],
+      ['content-md', 42, 21],
+      ['content-lg', 49, 24.5],
+    ]
     for (const markup of [BARE, ICON]) {
       const { wrap, btn } = mount(markup) // size stays md (default)
       const heights: number[] = []
       const fonts: number[] = []
-      for (const scale of ['compact', 'comfortable', 'spacious'] as const) {
-        wrap.setAttribute('scale', scale)
-        heights.push(frameHeight(btn))
-        fonts.push(fontPx(btn))
+      for (const [tier, h, f] of TIERS) {
+        wrap.setAttribute('scale', tier)
+        const gotH = frameHeight(btn)
+        const gotF = fontPx(btn)
+        expect(gotH, `height @ [scale="${tier}"]`).toBeCloseTo(h, 1)
+        expect(gotF, `font @ [scale="${tier}"]`).toBeCloseTo(f, 1)
+        heights.push(gotH)
+        fonts.push(gotF)
       }
-      // md base (28/14) × --ui-scale {0.875, 1, 1.25} — [scale] multiplies the WHOLE frame + the font.
-      expect(heights[0]).toBeCloseTo(24.5, 1)
-      expect(heights[1]).toBeCloseTo(28, 1)
-      expect(heights[2]).toBeCloseTo(35, 1)
-      expect(fonts[0]).toBeCloseTo(12.25, 1)
-      expect(fonts[1]).toBeCloseTo(14, 1)
-      expect(fonts[2]).toBeCloseTo(17.5, 1)
-      expect(allDistinct(heights), `heights did not change across [scale]: ${heights.join()}`).toBe(true)
-      expect(allDistinct(fonts), `fonts did not change across [scale]: ${fonts.join()}`).toBe(true)
+      // anti-vacuous: every tier resolves to a DISTINCT px — the ladder genuinely moves the frame at each rung.
+      expect(allDistinct(heights), `heights did not change across the six [scale] tiers: ${heights.join()}`).toBe(true)
+      expect(allDistinct(fonts), `fonts did not change across the six [scale] tiers: ${fonts.join()}`).toBe(true)
     }
   })
 

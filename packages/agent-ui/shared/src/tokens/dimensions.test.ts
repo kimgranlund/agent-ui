@@ -56,11 +56,25 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
     expect(rootBlock).not.toMatch(/--ui-height|--ui-font|--ui-gap/)
   })
 
-  it('[scale] ancestor selectors repoint --ui-scale (the frame multiplier)', () => {
-    expect(flat).toMatch(/\[scale="compact"\]\s*\{\s*--ui-scale:\s*0\.875/)
-    expect(flat).toMatch(/\[scale="spacious"\]\s*\{\s*--ui-scale:\s*1\.25/)
-    // and a comfortable (=1) baseline exists
-    expect(flat).toMatch(/\[scale="comfortable"\]\s*\{\s*--ui-scale:\s*1\s*;/)
+  it('[scale] is the SIX-tier two-band ladder (ADR-0032) — each tier repoints --ui-scale to its confirmed value', () => {
+    // tier → --ui-scale. ui-* tight cluster (0.875·1·1.125) · content-* generous band (1.375·1.5·1.75).
+    const TIERS: Array<[string, string]> = [
+      ['ui-sm', '0\\.875'],
+      ['ui-md', '1'],
+      ['ui-lg', '1\\.125'],
+      ['content-sm', '1\\.375'],
+      ['content-md', '1\\.5'],
+      ['content-lg', '1\\.75'],
+    ]
+    for (const [tier, val] of TIERS) {
+      // --ui-scale is the FIRST declaration in each tier block, so this also pins the co-located shape
+      expect(flat).toMatch(new RegExp(`\\[scale="${tier}"\\]\\s*\\{\\s*--ui-scale:\\s*${val}\\s*;`))
+    }
+    // ui-md = 1 is the DEFAULT (matches :root --ui-scale — today's baseline, no visual shift)
+    expect(rootBlock).toMatch(/--ui-scale:\s*1\s*;/)
+    // the OLD 3-step SCALE vocab is gone — compact/comfortable/spacious is now DENSITY's alone (vocab de-overlapped)
+    expect(flat).not.toMatch(/\[scale="comfortable"\]/)
+    expect(flat).not.toMatch(/\[scale="spacious"\]/)
   })
 
   it('[density] ancestor selectors repoint --ui-density (the rhythm multiplier) — NOT the frame', () => {
@@ -71,6 +85,52 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
     expect(densityBlocks.length).toBeGreaterThan(0)
     for (const block of densityBlocks) {
       expect(block).not.toMatch(/--ui-scale|--ui-height|--ui-font/)
+    }
+  })
+})
+
+// DIM-COMPACT (geometry-sizing-spec §5.2) — the --ui-compact-* compact-box ramp: a forward-ready
+// compact-widget frame (NO consumer yet; compact widgets unbuilt). NOT a --ui-scale multiplier — the two
+// bands are NON-uniform (ui-* steps 2px, content-* steps 4px), so each [scale] tier HAND-TABLES its
+// sm·md·lg literals, with a ui-md band default on :root. The literals can't ride the `*` ramp (a literal on
+// `*` re-declares on every descendant and defeats subtree inheritance), so they live on the [scale] selector
+// + the :root default and inherit down a subtree exactly like --ui-scale. The browser can't prove the
+// rendered compact box (no consuming control yet) — this static probe IS its verifier.
+describe('dimensions.css — the --ui-compact-* compact-box ramp (geometry-sizing-spec §5.2, two NON-uniform bands)', () => {
+  // tier → [sm, md, lg] compact px. ui-* tight (2px steps) · content-* generous (4px steps).
+  const TABLE: Array<[string, [number, number, number]]> = [
+    ['ui-sm', [12, 14, 16]],
+    ['ui-md', [14, 16, 18]],
+    ['ui-lg', [16, 18, 20]],
+    ['content-sm', [18, 22, 26]],
+    ['content-md', [20, 24, 28]],
+    ['content-lg', [24, 28, 32]],
+  ]
+
+  it('re-tables --ui-compact-{sm,md,lg} per [scale] tier with the §5.2 literals (the two bands)', () => {
+    for (const [tier, [sm, md, lg]] of TABLE) {
+      const block = (flat.match(new RegExp(`\\[scale="${tier}"\\]\\s*\\{[^}]*\\}`)) ?? [''])[0]
+      expect(block.length, `[scale="${tier}"] block not found`).toBeGreaterThan(0)
+      expect(block).toMatch(new RegExp(`--ui-compact-sm:\\s*${sm}px\\s*;`))
+      expect(block).toMatch(new RegExp(`--ui-compact-md:\\s*${md}px\\s*;`))
+      expect(block).toMatch(new RegExp(`--ui-compact-lg:\\s*${lg}px\\s*;`))
+    }
+  })
+
+  it('defaults --ui-compact-* to the ui-md band (14·16·18) on :root — the no-[scale] inherited default', () => {
+    expect(rootBlock).toMatch(/--ui-compact-sm:\s*14px\s*;/)
+    expect(rootBlock).toMatch(/--ui-compact-md:\s*16px\s*;/)
+    expect(rootBlock).toMatch(/--ui-compact-lg:\s*18px\s*;/)
+  })
+
+  it('keeps --ui-compact-* OFF the `*` ramp — a literal table, NOT a --ui-scale multiplier (subtree via the [scale] selector)', () => {
+    expect(universalBlock).not.toMatch(/--ui-compact/) // not derived/multiplied — never on the `*` ramp
+    // every --ui-compact declaration is a pure px LITERAL — no var() multiplier anywhere (it is a hand-table)
+    const compactDecls = flat.match(/--ui-compact-[\w-]+:[^;]*;/g) ?? []
+    expect(compactDecls.length).toBeGreaterThanOrEqual(21) // 6 tiers × 3 + 3 :root default = 21
+    for (const d of compactDecls) {
+      expect(d).not.toMatch(/var\(/)
+      expect(d).toMatch(/--ui-compact-(?:sm|md|lg):\s*\d+px\s*;/)
     }
   })
 })

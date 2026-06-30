@@ -146,14 +146,14 @@ describe('ui-text browser-truth harness (ADR-0025)', () => {
 
 // ── C6/C9 subtree-[scale] proof (ADR-0025 cl.3 / the * ramp pre-substitution law) ─────────────────
 // The --ui-type-*-size tokens are declared on `*` (not :root) so each element re-substitutes the
-// --ui-scale it inherits from its subtree ancestor. A [scale=spacious] wrapper re-multiplies them:
-// h1 at scale=1 is 40px; at scale=1.25 it must become 50px. Proves the dimensions.css `*` law works
+// --ui-scale it inherits from its subtree ancestor. A [scale=content-lg] wrapper re-multiplies them:
+// h1 at scale=1 is 40px; at scale=1.75 it must become 70px. Proves the dimensions.css `*` law works
 // in a real engine (where the pre-substitution can only be confirmed through computed px).
 
 describe('ui-text subtree-[scale] — the --ui-type-* size re-multiplies for a scaled ancestor (C6/C9)', () => {
-  it('h1 under [scale=spacious] resolves to 50px (40px × 1.25 — the * pre-substitution law)', () => {
+  it('h1 under [scale=content-lg] resolves to 70px (40px × 1.75 — the * pre-substitution law)', () => {
     const wrap = document.createElement('div')
-    wrap.setAttribute('scale', 'spacious') // --ui-scale → 1.25
+    wrap.setAttribute('scale', 'content-lg') // --ui-scale → 1.75
     document.body.append(wrap)
 
     const el = document.createElement('ui-text')
@@ -163,8 +163,8 @@ describe('ui-text subtree-[scale] — the --ui-type-* size re-multiplies for a s
 
     // baseline without scale: h1 = 40px at scale 1
     const scaledSize = Number.parseFloat(getComputedStyle(el).fontSize)
-    // at scale 1.25: 40 × 1.25 = 50px
-    expect(scaledSize).toBeCloseTo(50, 0) // the * ramp re-multiplied (anti-vacuous: not the 40px baseline)
+    // at scale 1.75: 40 × 1.75 = 70px
+    expect(scaledSize).toBeCloseTo(70, 0) // the * ramp re-multiplied (anti-vacuous: not the 40px baseline)
 
     wrap.remove()
   })
@@ -178,16 +178,16 @@ describe('ui-text subtree-[scale] — the --ui-type-* size re-multiplies for a s
     unscaled.remove()
 
     const wrap = document.createElement('div')
-    wrap.setAttribute('scale', 'compact') // --ui-scale → 0.875 (a SMALLER multiplier for clear contrast)
+    wrap.setAttribute('scale', 'ui-sm') // --ui-scale → 0.875 (a SMALLER multiplier for clear contrast)
     document.body.append(wrap)
     const scaled = document.createElement('ui-text')
     scaled.setAttribute('variant', 'h1')
-    scaled.textContent = 'compact'
+    scaled.textContent = 'ui-sm'
     wrap.append(scaled)
     const compactPx = Number.parseFloat(getComputedStyle(scaled).fontSize)
     wrap.remove()
 
-    // compact (×0.875) is smaller than baseline (×1) — the ramp genuinely re-multiplied in a real engine
+    // ui-sm (×0.875) is smaller than baseline (×1) — the ramp genuinely re-multiplied in a real engine
     expect(compactPx).toBeLessThan(basePx)
     expect(compactPx).toBeCloseTo(basePx * 0.875, 0)
   })

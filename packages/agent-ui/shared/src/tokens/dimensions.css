@@ -17,6 +17,16 @@
   --ui-scale: 1;
   --ui-density: 1;
 
+  /* --ui-compact-* default (the ui-md band; geometry-sizing-spec §5.2) — the no-[scale] inherited default
+     of the compact-box ramp, the sm·md·lg frame a compact widget reads when no [scale] ancestor re-tables
+     it. A LITERAL per-tier table (the [scale] block below re-tables it), NOT a --ui-scale multiplier — the
+     two bands are NON-uniform, so it sits on :root (default) + the [scale] selectors, never the `*` ramp (a
+     literal on `*` would re-declare on every descendant and defeat subtree inheritance). NO consumer yet
+     (compact widgets unbuilt) — forward-ready for the §5.2 compact frame. */
+  --ui-compact-sm: 14px;
+  --ui-compact-md: 16px;
+  --ui-compact-lg: 18px;
+
   /* Focus-ring geometry (ADR-0009) — CONSTANTS, not derived via a subtree-repointable multiplier, so they
      stay on :root, NOT on `*`: ADR-0007's universal-selector rule covers only DERIVED tokens (a var() over
      --ui-scale/--ui-density that must re-substitute per element); a constant on `*` would be needless churn.
@@ -135,17 +145,57 @@
   --ui-space-2xl: calc(32px * var(--ui-density));
 }
 
-/* [scale] — the global FRAME multiplier (theme size). Repoints --ui-scale for its subtree, so every ramp
-   token above recomputes (height, font, and — via font — the gap). Initial 3-step vocabulary; refinable
-   with the control family. */
-[scale="compact"] {
+/* [scale] — the global FRAME multiplier (theme size), now a SIX-tier TWO-BAND ladder (ADR-0032). Each tier
+   repoints --ui-scale for its subtree, so every derived ramp token above recomputes (height, font, and —
+   via font — the gap). The base ramp + the `*` substitution mechanism (ADR-0007) are UNCHANGED — the tiers
+   only feed --ui-scale. Two bands, split by reading distance:
+     • ui-* — the TIGHT control cluster (0.875 · 1.0 · 1.125): UI chrome at arm's length. ui-md = 1.0 is the
+       DEFAULT (= :root --ui-scale, today's baseline — no visual shift), so the vocab no longer overlaps
+       [density]'s compact/comfortable/spacious (scale = ui-sm…content-lg, density = compact/comfortable/spacious).
+     • content-* — the GENEROUS reading band (1.375 · 1.5 · 1.75): long-form / projected content. The jump
+       from ui-lg (1.125) to content-sm (1.375) is the band gap — a step in READING density, not a continuation.
+
+   Each tier ALSO re-tables the --ui-compact-* box ramp (geometry-sizing-spec §5.2) — the forward-ready
+   compact-widget frame. Unlike the band ramp, compact is NOT a multiplier: the two bands are NON-uniform
+   (ui-* steps 2px, content-* steps 4px), so each tier HAND-TABLES its sm·md·lg literals rather than scaling
+   a base. Because the values are LITERALS (no var(--ui-scale)) they cannot ride the `*` ramp — a literal on
+   `*` re-declares on every descendant and defeats subtree inheritance — so they live on the [scale] selector
+   itself (+ the :root ui-md default above), inheriting down to a subtree exactly like --ui-scale. */
+[scale="ui-sm"] {
   --ui-scale: 0.875;
+  --ui-compact-sm: 12px;
+  --ui-compact-md: 14px;
+  --ui-compact-lg: 16px;
 }
-[scale="comfortable"] {
+[scale="ui-md"] {
   --ui-scale: 1;
+  --ui-compact-sm: 14px;
+  --ui-compact-md: 16px;
+  --ui-compact-lg: 18px;
 }
-[scale="spacious"] {
-  --ui-scale: 1.25;
+[scale="ui-lg"] {
+  --ui-scale: 1.125;
+  --ui-compact-sm: 16px;
+  --ui-compact-md: 18px;
+  --ui-compact-lg: 20px;
+}
+[scale="content-sm"] {
+  --ui-scale: 1.375;
+  --ui-compact-sm: 18px;
+  --ui-compact-md: 22px;
+  --ui-compact-lg: 26px;
+}
+[scale="content-md"] {
+  --ui-scale: 1.5;
+  --ui-compact-sm: 20px;
+  --ui-compact-md: 24px;
+  --ui-compact-lg: 28px;
+}
+[scale="content-lg"] {
+  --ui-scale: 1.75;
+  --ui-compact-sm: 24px;
+  --ui-compact-md: 28px;
+  --ui-compact-lg: 32px;
 }
 
 /* [density] — multiplies the RHYTHM only (the gap), never the frame (geometry.md). Repoints --ui-density,

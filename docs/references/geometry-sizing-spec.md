@@ -178,9 +178,20 @@ For a **label-only / slotless** edge (no glyph there), the law has no glyph to c
 
 ## 3 · How the shipped sizes map onto the law (reference/law-only — Kim's ruling)
 
+> **REALIZED (ADR-0032, 2026-06-30 — closes the #24 scale-framing finding).** The `ui-sm…content-lg`
+> two-band `[scale]` tier is now **implemented** in `dimensions.css`, replacing the 3-step
+> `compact/comfortable/spacious` placeholder. The **control ramp** scales by a per-tier `--ui-scale`
+> **multiplier** (`ui-sm 0.875 · ui-md 1.0 · ui-lg 1.125 · content-sm 1.375 · content-md 1.5 · content-lg 1.75`,
+> the ADR-0007 mechanism); the **§5.2 compact-box ramp** is a separate per-tier **re-table** (`--ui-compact-*`).
+> **Caveat (the magnitude-consistency design choice):** §5.2 formally tables the **compact box** — a *separate*
+> system from the control ramp (§5.1). The control multiplier ladder **deliberately reuses §5.2's per-tier
+> magnitudes** (each tier's compact md ÷ ui-md's 16) so **one `[scale]` tier scales the control frame AND the
+> compact box by the same per-tier proportion** (ADR-0032) — a ratified design choice, not a spec-mandated
+> control table. So this §3 framing is no longer intended-only — it is the shipped model.
+
 No size-ramp migration. The shipped two-axis model stays:
 - `scale` (`ui-sm…content-lg`) × `size` (`sm/md/lg`) → a **height** (the `--ui-height-{size}` table in
-  `runtime-tokens.css`); `font` → `--ui-font-{size}`.
+  `dimensions.css`, via the `--ui-scale` multiplier); `font` → `--ui-font-{size}`.
 - A control resolves its **height** + **font** from those tables, then **obeys §1.4**: icon = `--ui-ind`
   (the frame); the identical `icon`-sized slot; uniform `inline-pad = ½(height − icon)`; and the rhythm
   rules `gap = font/2`, `caret = font`.
@@ -301,7 +312,12 @@ controls", §4.6).
 
 ### 5.2 · The compact box ramp — the two-band ladder (Kim ruled 2026-06-19)
 
-The compact/dense realm sizes its box on `--ui-compact-{sm,md,lg}` (`runtime-tokens.css`), a ramp SEPARATE
+> **REALIZED (ADR-0032, 2026-06-30).** `--ui-compact-{sm,md,lg}` is now **built** in `dimensions.css` as a
+> per-tier re-table across the 6 `[scale]` tiers (the table below), keyed by the same `[scale]` as the
+> control ramp. **Forward-ready** — no compact widget consumes it yet (the realm — slider/kbd/tag/radio/
+> switch/checkbox/chip/badge — is unbuilt); locked by the `DIM-COMPACT` probe.
+
+The compact/dense realm sizes its box on `--ui-compact-{sm,md,lg}` (`dimensions.css`), a ramp SEPARATE
 from `--ui-ind` and from the comfortable height ramp. It is **two bands**, mirroring the comfortable
 controls' two-band structure (§1.2): the **`ui-*` band is tight** (compact UI density), the **`content-*`
 band is generous** (reading density — the widgets get real presence).
