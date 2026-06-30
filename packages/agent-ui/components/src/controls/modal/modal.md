@@ -8,6 +8,7 @@
 tag: ui-modal
 tier: pattern             # geometry size-class — geometry.md lists `dialog` under the Pattern band (the shell uses the --ui-space scale, NO control height)
 extends: UIContainerElement  # the FACE surface base — NOT form-associated (no value/validity); reuses the inherited ElementInternals for nothing here (the dialog carries its own ARIA)
+# marginal: ui-modal adds 330 B gz (1322 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:               # attributes-as-API — mirrors modal.ts `static props` (the surface axes first, then open/persistent)
   - name: elevation

@@ -325,9 +325,13 @@ Three instruments, ported from rce's discipline:
 3. **Per-component definition of done** (see `goals.md`): probes green, `tsc` clean, budget held,
    browser-truth smoke green, contrast re-validated, forced-colors survived.
 
-**Budgets** (gz; provisional, confirm with a `size` script): reactive+dom kernel ≤ ~6 kB consumer;
-per-control marginal ≤ ~1.5–2 kB; a keep-all library ratchet that is shrink-only. Tree-shake proof:
-importing one control drags only it + real deps.
+**Budgets** (gz; confirmed by `npm run size` / `scripts/measure-size.mjs`): reactive+dom kernel ≤ ~7 kB
+consumer (re-based 6→7 kB, **ADR-0040** — legitimate ADR-0023 public-API growth: `mount` + the
+directive-authoring trio + `repeat`/`watch`; the barrel measures ~6.2 kB gz with ~1 kB headroom); the
+self-defining `ui-*` family barrel ≤ 8 kB; per-control marginal ≤ ~1.5–2 kB; a keep-all library ratchet that
+is shrink-only **above the re-based floor**. Tree-shake proof: importing one control drags only it + real deps.
+*(Recommended — ADR-0040: wire `npm run size` into the standard gate so a budget regression FAILS rather than
+going silent.)*
 
 **Test strategy.** agent-ui has no runner yet. **Recommendation: Vitest** (Vite-native, TS-native) —
 jsdom/happy-dom for the fast structural/behaviour probes, `@vitest/browser` (Playwright) for the

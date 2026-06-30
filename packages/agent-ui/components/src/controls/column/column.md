@@ -10,6 +10,7 @@
 tag: ui-column
 tier: layout           # geometry size-class (Container/layout band — NO control height; geometry.md "size-classes")
 extends: UIContainerElement  # the surface base (ADR-0015/0016) — a structural container, NOT form-associated (face below)
+# marginal: ui-column adds 31 B gz (223 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors column.ts `static props` (surfaceProps then flexProps)
   - name: elevation    # surface axis (ADR-0015) — the scheme-inverting plane; 0 = the neutral base

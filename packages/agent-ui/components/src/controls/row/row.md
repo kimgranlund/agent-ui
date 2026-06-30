@@ -11,6 +11,7 @@
 tag: ui-row
 tier: layout           # geometry size-class (Container/layout band — NO control height; spacing off --ui-space × density; geometry.md §"five size-classes")
 extends: UIContainerElement   # structural surface container, NOT form-associated (face below)
+# marginal: ui-row adds 30 B gz (167 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors row.ts `static props` (the surfaceProps + flexProps spread)
   - name: elevation

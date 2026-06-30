@@ -8,6 +8,7 @@
 tag: ui-card
 tier: container         # geometry size-class (Container/layout band — spacing off --ui-space × density, NO control height; geometry.md)
 extends: UIContainerElement  # the FACE container surface base (NOT form-associated; ADR-0015 / ADR-0016)
+# marginal: ui-card adds 146 B gz (723 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — the card family: ui-card + ui-card-header/-content/-footer) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors card.ts `static props` (the surfaceProps spread; NO flexProps — a card is a grid surface, not a flex line)
   - name: elevation

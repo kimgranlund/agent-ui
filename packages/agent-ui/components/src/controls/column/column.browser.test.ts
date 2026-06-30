@@ -103,6 +103,78 @@ describe('ui-column browser-truth harness (s4)', () => {
     expect(childWShrunk).toBeLessThan(colW) // shrink-wrapped: narrower than the column
   })
 
+  it('ADR-0039 no-op proof — AC1: align=start/end and justify=end render at the expected edge in all reachable states', () => {
+    // In a flex column (main axis = block, cross axis = inline/LTR), box-alignment `start`/`end` are
+    // equivalent to `flex-start`/`flex-end` in every reachable state — there is no wrap-reverse or
+    // direction-reversal (see AC2). Use a plain wrapper (no containerType ancestor) so flex-direction
+    // stays column — the @container row-flip requires an ancestor query container (ADR-0016 cl.4).
+    const wrap = document.createElement('div')
+    wrap.style.display = 'block'
+    host.append(wrap)
+
+    // ── Cross-axis (align-items): inline / LTR ──
+    // One child explicitly constrained to 60px wide inside a 200px column → alignment is observable.
+    const colA = document.createElement('ui-column')
+    colA.setAttribute('align', 'start')
+    colA.style.inlineSize = '200px'
+    const childA = document.createElement('div')
+    childA.style.inlineSize = '60px'
+    colA.append(childA)
+    wrap.append(colA)
+
+    const colALeft = colA.getBoundingClientRect().left
+    const startLeft = childA.getBoundingClientRect().left - colALeft
+    expect(startLeft, 'align=start: child not at the inline-start edge (0)').toBeCloseTo(0, 1)
+
+    colA.setAttribute('align', 'end')
+    const endLeft = childA.getBoundingClientRect().left - colALeft
+    const colAW = colA.getBoundingClientRect().width
+    const childAW = childA.getBoundingClientRect().width
+    expect(endLeft, 'align=end: child not at the inline-end edge (colW − childW)').toBeCloseTo(colAW - childAW, 1)
+    // anti-vacuous: start < end (both are real, distinct positions in the 200px column)
+    expect(startLeft, 'start and end positions are equal (cross-axis alignment has no effect)').toBeLessThan(endLeft)
+
+    // ── Main-axis (justify-content): block ──
+    // Column 200px tall with a single 40px child → justify=end positions it at the bottom.
+    const colJ = document.createElement('ui-column')
+    colJ.style.blockSize = '200px'
+    colJ.style.inlineSize = '200px'
+    const childJ = document.createElement('div')
+    childJ.style.blockSize = '40px'
+    colJ.append(childJ)
+    wrap.append(colJ)
+
+    const colJTop = colJ.getBoundingClientRect().top
+    const topStart = childJ.getBoundingClientRect().top - colJTop
+    expect(topStart, 'justify default (start): child not at the block-start edge (0)').toBeCloseTo(0, 1)
+
+    colJ.setAttribute('justify', 'end')
+    const topEnd = childJ.getBoundingClientRect().top - colJTop
+    const colJH = colJ.getBoundingClientRect().height
+    const childJH = childJ.getBoundingClientRect().height
+    expect(topEnd, 'justify=end: child not at the block-end edge (colH − childH)').toBeCloseTo(colJH - childJH, 1)
+    // anti-vacuous: start < end (real distinct positions in the 200px block)
+    expect(topStart, 'start and end positions are equal (justify has no effect)').toBeLessThan(topEnd)
+  })
+
+  it('ADR-0039 no-op proof — AC2: wrap is only nowrap|wrap; wrap-reverse is unreachable (start/end ≡ flex-start/flex-end in every reachable state)', () => {
+    // The `wrap` attribute maps to `flex-wrap: wrap` (boolean presence, column.css:35/91) only.
+    // `flex-direction` is the tag identity, not a prop (ADR-0016 cl.2) — no direction-reversal is
+    // exposed. Since wrap-reverse and direction-reversal are both unreachable, `start`/`end` and
+    // `flex-start`/`flex-end` are equivalent in every reachable state — the ADR-0039 normalization
+    // is a provable render no-op across the full reachable state space.
+    const el = column()
+    host.append(el)
+    expect(getComputedStyle(el).flexWrap, 'default: flex-wrap is not nowrap').toBe('nowrap')
+    expect(getComputedStyle(el).flexWrap, 'default: wrap-reverse is reachable (it should not be)').not.toBe('wrap-reverse')
+    el.setAttribute('wrap', '')
+    expect(getComputedStyle(el).flexWrap, '[wrap]: flex-wrap is not wrap').toBe('wrap')
+    expect(getComputedStyle(el).flexWrap, '[wrap]: wrap-reverse is reachable (it should not be)').not.toBe('wrap-reverse')
+    // anti-vacuous: the two reachable states are distinct (so neither check is vacuously true)
+    el.removeAttribute('wrap')
+    expect(getComputedStyle(el).flexWrap, 'removing [wrap] should restore nowrap').not.toBe('wrap')
+  })
+
   it('REFLOWS by CONTAINER width: a wide query container spreads the column into a row (ADR-0016 cl.4)', () => {
     // the intrinsic-responsiveness proof: resize the WRAPPER (a query container), not the viewport. The column's
     // @container rule flips flex-direction column→row above 30rem — mirroring ui-row's narrow→column, axis flipped.

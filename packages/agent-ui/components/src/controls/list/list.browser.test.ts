@@ -85,6 +85,76 @@ describe('ui-list cross-engine smoke (s5)', () => {
     wrapper.remove()
   })
 
+  it('ADR-0039 no-op proof — AC1: align=start/end and justify=end render at the expected edge in all reachable states', () => {
+    // ui-list: flex-direction:column always (no @container reflow), cross-axis = inline/LTR, main-axis = block.
+    // box-alignment `start`/`end` are equivalent to `flex-start`/`flex-end` in every reachable state (see AC2).
+    const wrapper = document.createElement('div')
+    wrapper.style.display = 'block'
+    document.body.append(wrapper)
+
+    // ── Cross-axis (align-items): inline / LTR ──
+    // One child constrained to 60px in a 200px list → alignment position is observable.
+    const listA = document.createElement('ui-list')
+    listA.setAttribute('align', 'start')
+    listA.style.inlineSize = '200px'
+    const childA = document.createElement('div')
+    childA.style.inlineSize = '60px'
+    listA.append(childA)
+    wrapper.append(listA)
+
+    const listALeft = listA.getBoundingClientRect().left
+    const startLeft = childA.getBoundingClientRect().left - listALeft
+    expect(startLeft, 'align=start: child not at the inline-start edge (0)').toBeCloseTo(0, 1)
+
+    listA.setAttribute('align', 'end')
+    const endLeft = childA.getBoundingClientRect().left - listALeft
+    const listAW = listA.getBoundingClientRect().width
+    const childAW = childA.getBoundingClientRect().width
+    expect(endLeft, 'align=end: child not at the inline-end edge (listW − childW)').toBeCloseTo(listAW - childAW, 1)
+    // anti-vacuous: start < end (both are real, distinct positions in the 200px list)
+    expect(startLeft, 'start and end positions are equal (cross-axis alignment has no effect)').toBeLessThan(endLeft)
+
+    // ── Main-axis (justify-content): block ──
+    // List 200px tall with a single 40px child → justify=end positions it at the bottom.
+    const listJ = document.createElement('ui-list')
+    listJ.style.blockSize = '200px'
+    listJ.style.inlineSize = '200px'
+    const childJ = document.createElement('div')
+    childJ.style.blockSize = '40px'
+    listJ.append(childJ)
+    wrapper.append(listJ)
+
+    const listJTop = listJ.getBoundingClientRect().top
+    const topStart = childJ.getBoundingClientRect().top - listJTop
+    expect(topStart, 'justify default (start): child not at the block-start edge (0)').toBeCloseTo(0, 1)
+
+    listJ.setAttribute('justify', 'end')
+    const topEnd = childJ.getBoundingClientRect().top - listJTop
+    const listJH = listJ.getBoundingClientRect().height
+    const childJH = childJ.getBoundingClientRect().height
+    expect(topEnd, 'justify=end: child not at the block-end edge (listH − childH)').toBeCloseTo(listJH - childJH, 1)
+    // anti-vacuous: start < end (real distinct positions in the 200px block)
+    expect(topStart, 'start and end positions are equal (justify has no effect)').toBeLessThan(topEnd)
+
+    wrapper.remove()
+  })
+
+  it('ADR-0039 no-op proof — AC2: wrap is only nowrap|wrap; wrap-reverse is unreachable (start/end ≡ flex-start/flex-end in every reachable state)', () => {
+    // list.css:35/93: flex-wrap mapped to boolean nowrap|wrap only. flex-direction is the tag identity
+    // (ADR-0016 cl.2; ui-list inherits the column tag-identity — no direction-reversal exposed as a prop).
+    // wrap-reverse is unreachable in every state the family exposes → ADR-0039 is a provable render no-op.
+    const { el, done } = mount('ui-list', {})
+    expect(getComputedStyle(el).flexWrap, 'default: flex-wrap is not nowrap').toBe('nowrap')
+    expect(getComputedStyle(el).flexWrap, 'default: wrap-reverse is reachable (it should not be)').not.toBe('wrap-reverse')
+    el.setAttribute('wrap', '')
+    expect(getComputedStyle(el).flexWrap, '[wrap]: flex-wrap is not wrap').toBe('wrap')
+    expect(getComputedStyle(el).flexWrap, '[wrap]: wrap-reverse is reachable (it should not be)').not.toBe('wrap-reverse')
+    // anti-vacuous: the two reachable states are distinct (so neither check is vacuously true)
+    el.removeAttribute('wrap')
+    expect(getComputedStyle(el).flexWrap, 'removing [wrap] should restore nowrap').not.toBe('wrap')
+    done()
+  })
+
   it('host-at-boundary AX: role=list rides internals — a real engine applies it, the host has no role attr', () => {
     const { el, done } = mount('ui-list-probe', {})
     expect((el as ProbeList).probeInternals.role).toBe('list') // the AX role a real engine retained

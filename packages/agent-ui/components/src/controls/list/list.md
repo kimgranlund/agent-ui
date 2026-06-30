@@ -8,6 +8,7 @@
 tag: ui-list
 tier: layout            # geometry size-class (Container/layout band — gaps/padding off --ui-space × density; NO control height; geometry.md "five size-classes")
 extends: UIContainerElement  # the FACE container surface base (NOT form-associated — no value/validity; ADR-0015). NOTE: UIContainerElement joins the descriptor schema's BASE_CLASSES in s12 (the integration barrel slice)
+# marginal: ui-list adds 34 B gz (257 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors list.ts `static props` (the surfaceProps spread, then the flexProps spread)
   - name: elevation
