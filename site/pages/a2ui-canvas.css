@@ -106,6 +106,23 @@
   margin-block-start: 0.2rem;
 }
 
+/* The server-RPC affordances — a captioned group set off from the run/clear toolbar by a rule above it. */
+.rpc-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-block-start: 0.5rem;
+  padding-block-start: 0.8rem;
+  border-block-start: 1px solid var(--c-neutral-outline-variant);
+}
+
+.rpc-caption {
+  margin: 0;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
 /* ── the rendered-surface mount — a framed canvas so the live control reads as the "output" ─────────────── */
 .surface {
   display: grid;
@@ -136,7 +153,7 @@
 }
 
 .msg-log:empty::before {
-  content: 'No messages yet — click the rendered button to round-trip an action.';
+  content: 'No messages yet — click the rendered button, or simulate a server callFunction, to see a message.';
   display: block;
   padding: 0.6rem 0;
   color: var(--c-neutral-on-surface-variant);
@@ -162,6 +179,10 @@
 
 .msg-log > li[data-kind='action'] .msg-head {
   color: var(--c-primary);
+}
+
+.msg-log > li[data-kind='response'] .msg-head {
+  color: var(--c-success);
 }
 
 .msg-log > li[data-kind='error'] .msg-head {

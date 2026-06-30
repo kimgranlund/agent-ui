@@ -1,19 +1,21 @@
-// functions.ts — pure catalog function implementations (catalog LLD-C7, SPEC-R5 / ADR-0026).
+// functions.ts — pure catalog function implementations (catalog LLD-C7, SPEC-R5 / ADR-0026/ADR-0034).
 //
-// The three v1.0 catalog functions required by catalog SPEC-R5: `required` (non-empty check),
-// `email` (format check), and `regex` (pattern check). All are PURE — no DOM, no signals, no
-// catalog/registry access; they take a named `args` object (keyed by the wire arg name, matching
-// the corrected `FunctionDef.args: Record<string, JsonSchema>` shape from ADR-0026) and return a
-// `FunctionResult` bearing `{valid, message?}`. The renderer's evaluator (`renderer/functions.ts`)
-// calls these after resolving each arg through `resolveValue` (literal | {path} | nested {call}).
+// The v1.0 catalog functions:
+//   `required` / `email` / `regex`  — binding-eval validators (SPEC-R5, callableFrom:clientOnly).
+//   `ping`                           — server-invocable no-op probe (ADR-0034, callableFrom:clientOrRemote).
 //
-// The default catalog (`default/catalog.json`) declares these three in its `functions` block; the
-// evaluator looks them up here via the shared `catalogFunctions` registry below. A project catalog
-// that registers its OWN function names would need to register implementations separately — the
-// v1.0 extension point for that is a future follow-up.
+// All are PURE — no DOM, no signals, no catalog/registry access. The shared `catalogFunctions` table
+// is the single impl source used by BOTH invocation surfaces (ADR-0034 fork 2):
+//   - binding-eval path (`renderer/functions.ts evaluate`): ignores `callableFrom`; consumer
+//     (`checks.ts checkPassed`) narrows the `unknown` result through runtime type checks.
+//   - server-invoke path (`renderer/call-function.ts`): checks `callableFrom` first; only reaches
+//     here if the catalog declares the function `clientOrRemote` or `remoteOnly` in ALL active catalogs.
 //
-// Zero dependencies: no imports. This is the bottom-of-stack implementation that the renderer
-// evaluator can import downward (renderer → catalog, the allowed direction within a2ui).
+// The table's value type is `(args: NamedArgs) => unknown` because server functions (like `ping`)
+// return arbitrary values — not the `{valid, message?}` shape. The binding-eval consumer always
+// treats the result as `unknown` via `checkPassed`, so the widening does not change behavior.
+//
+// Zero dependencies: no imports. Bottom-of-stack; renderer imports downward (renderer → catalog).
 
 /** The return shape of every catalog function (the `{valid, message?}` check result). */
 export interface FunctionResult {
@@ -66,13 +68,25 @@ export function regex(args: NamedArgs): FunctionResult {
 }
 
 /**
- * The shared pure-function implementation table for the default catalog (catalog LLD-C7). Keyed by
- * the same name the catalog declares in its `functions` block — the evaluator (`renderer/functions.ts`)
- * looks here after verifying the name appears in `catalog.functions[name]`. A project catalog that
- * extends this table will require a future plugin registration seam (v1.0 out-of-scope, tracked).
+ * `ping` — server-invocable no-op probe (ADR-0034, SPEC-R14). Takes no args, returns the constant
+ * `true`. Used to verify the callFunction RPC round-trip. Declared `callableFrom:clientOrRemote`
+ * in the default catalog. Has no side effects and no binding-eval usage.
  */
-export const catalogFunctions: Record<string, (args: NamedArgs) => FunctionResult> = {
+export function ping(): boolean {
+  return true
+}
+
+/**
+ * The shared pure-function implementation table for the default catalog (catalog LLD-C7 / ADR-0034
+ * fork 2). Keyed by the same name the catalog declares in its `functions` block — BOTH invocation
+ * surfaces look here: the binding-eval evaluator (`renderer/functions.ts`) and the server-invoke
+ * handler (`renderer/call-function.ts`). Return type is `unknown` because server functions (like
+ * `ping`) return arbitrary values; the binding-eval consumer (`checks.ts checkPassed`) narrows
+ * the result through runtime type checks and is unaffected by the widened type.
+ */
+export const catalogFunctions: Record<string, (args: NamedArgs) => unknown> = {
   required,
   email,
   regex,
+  ping,
 }

@@ -1,11 +1,11 @@
-// functions.test.ts — pure catalog function implementations (catalog LLD-C7 / ADR-0026).
+// functions.test.ts — pure catalog function implementations (catalog LLD-C7 / ADR-0026/ADR-0034).
 //
-// Table-driven unit tests for `required`, `email`, and `regex`. Each test checks the function in
-// isolation — no DOM, no signals, no registry. The `catalogFunctions` registry is also exercised to
-// confirm the three names are all reachable at the shared lookup key.
+// Table-driven unit tests for `required`, `email`, `regex`, and `ping`. Each test checks the
+// function in isolation — no DOM, no signals, no registry. The `catalogFunctions` registry is also
+// exercised to confirm all four names are reachable at the shared lookup key.
 
 import { describe, it, expect } from 'vitest'
-import { required, email, regex, catalogFunctions } from './functions.ts'
+import { required, email, regex, ping, catalogFunctions } from './functions.ts'
 
 // ── required ─────────────────────────────────────────────────────────────────
 
@@ -100,14 +100,15 @@ describe('regex — pattern match gate', () => {
 // ── catalogFunctions registry ─────────────────────────────────────────────────
 
 describe('catalogFunctions — shared lookup table', () => {
-  it('contains exactly the three declared names', () => {
-    expect(Object.keys(catalogFunctions).sort()).toEqual(['email', 'regex', 'required'])
+  it('contains exactly the four declared names (required/email/regex/ping)', () => {
+    expect(Object.keys(catalogFunctions).sort()).toEqual(['email', 'ping', 'regex', 'required'])
   })
 
   it('each entry is the same function as the named export', () => {
     expect(catalogFunctions.required).toBe(required)
     expect(catalogFunctions.email).toBe(email)
     expect(catalogFunctions.regex).toBe(regex)
+    expect(catalogFunctions.ping).toBe(ping)
   })
 
   it('invoking via the registry produces the same result as a direct call', () => {
@@ -116,5 +117,19 @@ describe('catalogFunctions — shared lookup table', () => {
     expect(catalogFunctions.regex({ value: 'abc', pattern: '^[a-z]+$' })).toEqual(
       regex({ value: 'abc', pattern: '^[a-z]+$' }),
     )
+    expect(catalogFunctions.ping({})).toBe(true) // ping() → true, always; args ignored
+  })
+})
+
+// ── ping ─────────────────────────────────────────────────────────────────────
+
+describe('ping', () => {
+  it('returns true with no args', () => {
+    expect(ping()).toBe(true)
+  })
+
+  it('returns true regardless of args passed (server-invoke path passes empty args object)', () => {
+    // `call-function.ts` calls `impl(args ?? {})` — ping ignores the args object entirely.
+    expect((ping as (args?: unknown) => boolean)({})).toBe(true)
   })
 })

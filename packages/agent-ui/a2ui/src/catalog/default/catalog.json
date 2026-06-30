@@ -139,6 +139,11 @@
       "callableFrom": "clientOnly",
       "args": { "value": { "type": "string" }, "pattern": { "type": "string" } },
       "returns": { "type": "object" }
+    },
+    "ping": {
+      "callableFrom": "clientOrRemote",
+      "args": {},
+      "returns": { "type": "boolean" }
     }
   }
 }

@@ -7,6 +7,11 @@
 // Data flow, left→right: [1] PAYLOAD (the two JSONL lines, shown as readable JSON) → ingest() → [2] RENDERED
 // SURFACE (the upgraded ui-button mounts under #surface) → click → [3] MESSAGES (every onClientMessage —
 // actions on click, plus any PARSE/SCHEMA/CATALOG/IDGRAPH errors — appended, pretty-printed).
+//
+// The payload also drives a SECOND server-message kind: a server-initiated `callFunction` RPC (ADR-0034 /
+// SPEC-R14). Two buttons fire one each — a `clientOrRemote` ping that round-trips a `functionResponse`, and a
+// `clientOnly` call the renderer rejects with `INVALID_FUNCTION_CALL` (the hard-floor guard) — both surfacing
+// on the SAME client→server channel (region 3), proving the RPC path through the public host surface.
 
 import { mountFullBleedPage } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls
 import './a2ui-canvas.css' // page-local layout chrome only (the 3-region flow + the log)
@@ -40,6 +45,24 @@ const UPDATE_COMPONENTS: A2uiServerMessage = {
 // the SAME objects shown in the payload pane, so the displayed input and the fed input can never drift.
 const PAYLOAD: readonly A2uiServerMessage[] = [CREATE_SURFACE, UPDATE_COMPONENTS]
 const jsonl = (message: A2uiServerMessage): string => JSON.stringify(message)
+
+// ── server-initiated callFunction RPC (ADR-0034 / SPEC-R14) — two simulated server calls ───────────────────
+// A `callFunction` is surfaceless: the server invokes a catalog function by name with CONCRETE args, and the
+// renderer answers on the client→server channel. `functionCallId` is the top-level correlation id copied
+// verbatim into the reply. `ping` (clientOrRemote) → `functionResponse{call:'ping', value:true}` when
+// `wantResponse`. `required` is clientOnly → the renderer rejects it `INVALID_FUNCTION_CALL` regardless of
+// wantResponse (the hard-floor guard, ADR-0034 amendment) — the same guard the gallery's checks rely on.
+const PING_CALL: A2uiServerMessage = {
+  version: 'v1.0',
+  functionCallId: 'fc1',
+  wantResponse: true,
+  callFunction: { call: 'ping' },
+}
+const REQUIRED_CALL: A2uiServerMessage = {
+  version: 'v1.0',
+  functionCallId: 'fc2',
+  callFunction: { call: 'required', args: { value: '' } },
+}
 
 // ── small light-DOM scaffold helpers (page chrome only — they never restyle a ui-* control) ────────────────
 function region(step: string, title: string, blurb: string): { section: HTMLElement; body: HTMLElement } {
@@ -99,19 +122,31 @@ surfaceEl.className = 'surface'
 rendered.body.append(surfaceEl)
 
 // ── [3] MESSAGES region — the client→server log: every onClientMessage (actions + errors), pretty-printed ──
-const messages = region('3', 'Client → server messages', 'Every message the renderer emits — actions on click, any errors.')
+const messages = region('3', 'Client → server messages', 'Every message the renderer emits — actions on click, callFunction responses/errors, any validation errors.')
 const logList = document.createElement('ol')
 logList.className = 'msg-log'
 logList.setAttribute('aria-live', 'polite')
 let seq = 0
+// Discriminate the three outbound arms (A2uiClientMessage = action | functionResponse | error) into a styled
+// kind + a scannable head line; the full envelope still pretty-prints below (the source of truth).
+function describe(message: A2uiClientMessage): { kind: string; label: string } {
+  if ('action' in message) return { kind: 'action', label: 'action ▸ server' }
+  if ('functionResponse' in message) {
+    const r = message.functionResponse
+    return { kind: 'response', label: `functionResponse ▸ server · ${r.call} = ${JSON.stringify(r.value)} (${r.functionCallId})` }
+  }
+  const e = message.error // A2uiWireError: VALIDATION_FAILED+surfaceId | INVALID_FUNCTION_CALL+functionCallId
+  const id = 'functionCallId' in e ? e.functionCallId : e.surfaceId
+  return { kind: 'error', label: `error ▸ server · ${e.code} (${id})` }
+}
 function appendLog(message: A2uiClientMessage): void {
   seq += 1
-  const kind = 'action' in message ? 'action' : 'error'
+  const { kind, label } = describe(message)
   const item = document.createElement('li')
   item.dataset.kind = kind
   const head = document.createElement('div')
   head.className = 'msg-head'
-  head.textContent = `#${String(seq).padStart(2, '0')}  ${kind === 'action' ? 'action ▸ server' : 'error ▸ server'}`
+  head.textContent = `#${String(seq).padStart(2, '0')}  ${label}`
   const pre = codeBlock(JSON.stringify(message, null, 2), 'json')
   item.append(head, pre)
   logList.append(item)
@@ -137,6 +172,13 @@ function run(): void {
   host.finalize(SURFACE_ID) // validate the COMPLETE set (ADR-0002); a valid root finalizes clean
 }
 
+// Fire one server-initiated callFunction into the CURRENT renderer via the same public `ingest` the transport
+// uses — the renderer's reply (functionResponse or INVALID_FUNCTION_CALL) emits back through onClientMessage
+// into the log. `host` is always live here (run() ran on first paint); the `?.` only narrows the type.
+function simulateCall(message: A2uiServerMessage): void {
+  host?.ingest(jsonl(message))
+}
+
 // Toolbar affordances (dogfooding ui-button): re-run the payload (fresh button + cleared log), or clear the
 // log alone. Placed in the payload region so "feed input" reads as the start of the flow.
 const toolbar = document.createElement('div')
@@ -149,6 +191,23 @@ toolbar.append(
   }),
 )
 payload.body.append(toolbar)
+
+// The server-RPC affordances (dogfooding ui-button) — a captioned group below the run controls: fire a
+// callFunction and watch the renderer answer in region 3. "Ping" (clientOrRemote) round-trips a
+// functionResponse; "Call required" (clientOnly) is rejected INVALID_FUNCTION_CALL — the guard, demoed live.
+const rpc = document.createElement('div')
+rpc.className = 'rpc-group'
+const rpcCaption = document.createElement('p')
+rpcCaption.className = 'rpc-caption'
+rpcCaption.textContent = 'Server-initiated callFunction (RPC) — ADR-0034'
+const rpcTools = document.createElement('div')
+rpcTools.className = 'toolbar'
+rpcTools.append(
+  controlButton('Ping (server-invocable)', 'soft', () => simulateCall(PING_CALL)),
+  controlButton('Call required (clientOnly)', 'soft', () => simulateCall(REQUIRED_CALL)),
+)
+rpc.append(rpcCaption, rpcTools)
+payload.body.append(rpc)
 
 content.append(payload.section, arrow(), rendered.section, arrow(), messages.section)
 

@@ -660,4 +660,56 @@ describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 + amendment / 
 
     c1(); c2()
   })
+
+  // ── ping: default catalog integration (ADR-0034, no fixture needed) ───────────────────────────
+  // `ping` is declared `callableFrom:clientOrRemote` in the agent-ui default catalog and has an
+  // impl in `catalogFunctions`. These tests use `harness()` (default catalog only — no fixture).
+
+  it('ping — happy path: default catalog clientOrRemote + wantResponse:true → functionResponse{value:true}', () => {
+    // `harness()` registers the default catalog (which now includes ping:clientOrRemote). No fixture
+    // catalog needed — ping is a real default-catalog fn.
+    const { r, sent, cleanup } = harness()
+
+    r.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc-ping-1',
+      wantResponse: true,
+      callFunction: { call: 'ping' },
+    } as unknown as A2uiServerMessage)
+
+    const responses = sent.filter(isFunctionResponse)
+    expect(responses).toHaveLength(1)
+    expect(responses[0]!.functionResponse).toMatchObject({
+      functionCallId: 'fc-ping-1',
+      call: 'ping',
+      value: true, // ping() → true, always
+    })
+    expect(sent.filter(isError)).toEqual([])
+
+    cleanup()
+  })
+
+  it('ping — clientOnly regression: required still rejected from server (most-restrictive-wins, default catalog)', () => {
+    // `required` remains clientOnly in the default catalog (unchanged). Confirms that adding `ping`
+    // (clientOrRemote) does not affect the most-restrictive-wins gate for other functions.
+    const { r, sent, cleanup } = harness()
+
+    r.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc-ping-2',
+      wantResponse: true,
+      callFunction: { call: 'required', args: { value: 'x' } },
+    } as unknown as A2uiServerMessage)
+
+    const errors = sent.filter(isError)
+    expect(errors).toHaveLength(1)
+    const wire = errors[0]!.error
+    expect(wire.code).toBe('INVALID_FUNCTION_CALL')
+    expect(wire).toHaveProperty('functionCallId', 'fc-ping-2')
+    expect(wire).not.toHaveProperty('surfaceId') // no surfaceId on server-invoke path (ADR-0034 clause 1)
+    expect(wire.message).toContain('clientOnly')
+    expect(sent.filter(isFunctionResponse)).toHaveLength(0)
+
+    cleanup()
+  })
 })
