@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import { UIButtonElement } from '@agent-ui/components/components'
 import { createRenderer } from './renderer.ts'
@@ -390,60 +390,69 @@ describe('renderer host — bound prop end-to-end (renderer LLD-C5, the B2 wirin
   })
 })
 
-// ── SPEC-R14 / ADR-0034: callFunction RPC round-trip (LLD-C14) ──────────────────────────────────────
+// ── SPEC-R14 / ADR-0034 (+ amendment): callFunction RPC round-trip (LLD-C14) ─────────────────────────
 //
 // The server-initiated function-call surface: an inbound `callFunction` envelope → `handleCallFunction`
 // in call-function.ts → emits `functionResponse` (success) or `error{INVALID_FUNCTION_CALL}` (reject).
-// This is MESSAGE-LEVEL (no DOM, no signals) — jsdom suffices. All 6 acceptance criteria from ADR-0034.
+// MESSAGE-LEVEL (no DOM, no signals) — jsdom suffices. AC1-AC7 from ADR-0034 + the amendment.
 //
-// Test setup: `required`/`email`/`regex` in the default agent-ui catalog are all `callableFrom:clientOnly`
-// (ADR-0034 clause 2 / catalog.json). To get a remote-callable function, a fixture catalog (`fixture`)
-// is registered with `required` declared as `clientOrRemote` — the "first-allows-match" lookup skips
-// the default's `clientOnly` and takes the fixture's `clientOrRemote` declaration. The impl comes from
-// `catalogFunctions` (the shared pure-impl table, ADR-0034 fork 2).
-describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 / LLD-C14)', () => {
-  // Minimal fixture catalog: declares required as clientOrRemote (overriding the default's clientOnly in
-  // the "first-allows-match" scan). Needs ≥1 component + a factory for it (loadCatalog invariant).
-  const FIXTURE_CATALOG = {
-    catalogId: 'fixture',
+// Fixture function: `getScreenResolution` — declared ONLY in the fixture catalog (not in agent-ui),
+// so no cross-catalog `clientOnly` collision occurs on the happy path (most-restrictive-wins does
+// not fire when only one catalog declares the function). Impl added to `catalogFunctions` in
+// beforeAll/afterAll (the `thrower` pattern from functions.test.ts — scoped, no state leak).
+describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 + amendment / LLD-C14)', () => {
+  // Fixture function return value — simple, deterministic.
+  const SCREEN_RES = { width: 1920, height: 1080 }
+
+  beforeAll(() => {
+    // Add the fixture impl to the shared catalogFunctions table. Removed in afterAll.
+    // Key is non-colliding with any default catalog function (required/email/regex).
+    ;(catalogFunctions as Record<string, unknown>)['getScreenResolution'] = () => SCREEN_RES
+  })
+  afterAll(() => {
+    delete (catalogFunctions as Record<string, unknown>)['getScreenResolution']
+  })
+
+  // Fixture catalog A: declares getScreenResolution as clientOrRemote (the server-invocable fixture).
+  // Non-colliding: this name is not in agent-ui, so most-restrictive-wins has no clientOnly to trigger.
+  const FIXTURE_CALLABLE = {
+    catalogId: 'fixture-callable',
     protocolVersion: 'v1.0',
-    components: {
-      Text: { properties: { text: { type: { type: 'string' }, bindable: true, mapsTo: 'textContent' } } },
-    },
-    functions: {
-      required: {
-        callableFrom: 'clientOrRemote',
-        args: { value: { type: ['string', 'null'] } },
-        returns: { type: 'object' },
-      },
-    },
+    components: { Text: { properties: { text: { type: { type: 'string' }, bindable: true, mapsTo: 'textContent' } } } },
+    functions: { getScreenResolution: { callableFrom: 'clientOrRemote', args: {}, returns: { type: 'object' } } },
   }
 
-  /** Harness + fixture catalog pre-registered; returns the harness helpers. */
+  // Fixture catalog B: declares the same function as clientOnly (for AC7 hard-floor test).
+  const FIXTURE_GUARDED = {
+    catalogId: 'fixture-guarded',
+    protocolVersion: 'v1.0',
+    components: { Text: { properties: { text: { type: { type: 'string' }, bindable: true, mapsTo: 'textContent' } } } },
+    functions: { getScreenResolution: { callableFrom: 'clientOnly', args: {}, returns: { type: 'object' } } },
+  }
+
+  /** Harness + the callable fixture catalog registered. */
   function rpcHarness() {
     const h = harness()
-    // Register the fixture catalog (Text component; required as clientOrRemote).
-    // The "first-allows-match" scan will skip agent-ui's clientOnly and take this entry.
-    h.r.register(FIXTURE_CATALOG, { Text: defaultFactories.Text })
+    h.r.register(FIXTURE_CALLABLE, { Text: defaultFactories.Text })
     return h
   }
 
-  it('AC1 — happy path: clientOrRemote function + wantResponse:true → functionResponse{functionCallId,call,value}', () => {
+  it('AC1 — happy path: non-colliding clientOrRemote function + wantResponse:true → functionResponse{functionCallId,call,value}', () => {
     const { r, sent, cleanup } = rpcHarness()
 
     r.ingestMessage({
       version: 'v1.0',
       functionCallId: 'fc1',
       wantResponse: true,
-      callFunction: { call: 'required', args: { value: 'hello' } },
+      callFunction: { call: 'getScreenResolution', args: {} },
     } as unknown as A2uiServerMessage)
 
     const responses = sent.filter(isFunctionResponse)
     expect(responses).toHaveLength(1)
     expect(responses[0]!.functionResponse).toMatchObject({
       functionCallId: 'fc1', // verbatim copy (SPEC-R14 fact 2)
-      call: 'required',
-      value: { valid: true }, // required({ value: 'hello' }) → { valid: true }
+      call: 'getScreenResolution',
+      value: SCREEN_RES,
     })
     expect(sent.filter(isError)).toEqual([]) // no error on success
 
@@ -451,13 +460,13 @@ describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 / LLD-C14)', (
   })
 
   it('AC2 — reject clientOnly: default catalog\'s required is clientOnly → INVALID_FUNCTION_CALL, no invoke, surfaceId ABSENT', () => {
-    // Only the default catalog is registered here (no fixture). required is clientOnly → reject.
+    // Default catalog only (no fixture). required is clientOnly → most-restrictive-wins → reject.
     const { r, sent, cleanup } = harness()
 
     r.ingestMessage({
       version: 'v1.0',
       functionCallId: 'fc2',
-      wantResponse: true, // irrelevant for a reject — error is always emitted
+      wantResponse: true,
       callFunction: { call: 'required', args: { value: '' } },
     } as unknown as A2uiServerMessage)
 
@@ -465,15 +474,15 @@ describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 / LLD-C14)', (
     expect(errors).toHaveLength(1)
     const wire = errors[0]!.error
     expect(wire.code).toBe('INVALID_FUNCTION_CALL')
-    expect(wire).toHaveProperty('functionCallId', 'fc2') // functionCallId on the wire
-    expect(wire).not.toHaveProperty('surfaceId') // surfaceId EXCLUDED (no contextID tie, ADR-0034 clause 1)
+    expect(wire).toHaveProperty('functionCallId', 'fc2')
+    expect(wire).not.toHaveProperty('surfaceId') // surfaceId EXCLUDED (ADR-0034 clause 1 / ADR-0031)
     expect(wire.message).toContain('clientOnly')
     expect(sent.filter(isFunctionResponse)).toEqual([]) // no functionResponse on reject
 
     cleanup()
   })
 
-  it('AC3 — reject unregistered: unknown function name → INVALID_FUNCTION_CALL + functionCallId; @index also rejects (ADR-0034 clause 6)', () => {
+  it('AC3 — reject unregistered: unknown function name → INVALID_FUNCTION_CALL; @index (system fn) also rejects', () => {
     const { r, sent, cleanup } = harness()
 
     r.ingestMessage({
@@ -488,7 +497,7 @@ describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 / LLD-C14)', (
     expect(e1[0]!.error.code).toBe('INVALID_FUNCTION_CALL')
     expect(e1[0]!.error).toHaveProperty('functionCallId', 'fc3')
 
-    // @index is a SYSTEM function (not a catalog function) — must also reject (ADR-0034 clause 6)
+    // @index is a SYSTEM binding-helper — not a catalog function → unregistered → rejected
     const { r: r2, sent: sent2, cleanup: cleanup2 } = harness()
     r2.ingestMessage({
       version: 'v1.0',
@@ -503,45 +512,42 @@ describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 / LLD-C14)', (
     cleanup(); cleanup2()
   })
 
-  it('AC4 — wantResponse:false → no functionResponse emitted; functionCallId copied verbatim in all cases', () => {
+  it('AC4 — wantResponse:false/absent → no functionResponse (fire-and-forget); functionCallId copied verbatim on reject', () => {
     const { r, sent, cleanup } = rpcHarness()
 
-    // wantResponse false/absent → fire-and-forget (ADR-0034 fork 4)
+    // wantResponse:false → fire-and-forget (ADR-0034 fork 4)
     r.ingestMessage({
       version: 'v1.0',
       functionCallId: 'fc4',
       wantResponse: false,
-      callFunction: { call: 'required', args: { value: 'ok' } },
+      callFunction: { call: 'getScreenResolution', args: {} },
     } as unknown as A2uiServerMessage)
+    expect(sent.filter(isFunctionResponse)).toHaveLength(0)
+    expect(sent.filter(isError)).toHaveLength(0)
 
-    expect(sent.filter(isFunctionResponse)).toHaveLength(0) // no response on fire-and-forget
-    expect(sent.filter(isError)).toHaveLength(0) // no error either (success path)
-
-    // wantResponse absent (undefined) also → fire-and-forget
+    // wantResponse absent → also fire-and-forget
     r.ingestMessage({
       version: 'v1.0',
       functionCallId: 'fc4b',
-      callFunction: { call: 'required', args: { value: 'ok' } },
+      callFunction: { call: 'getScreenResolution', args: {} },
     } as unknown as A2uiServerMessage)
-    expect(sent.filter(isFunctionResponse)).toHaveLength(0) // still no response
+    expect(sent.filter(isFunctionResponse)).toHaveLength(0)
 
-    // Verify functionCallId is copied verbatim into a reject (functionCallId='fc4-reject' → must appear verbatim)
+    // functionCallId verbatim on a reject
     r.ingestMessage({
       version: 'v1.0',
       functionCallId: 'fc4-reject',
       callFunction: { call: 'no-such' },
     } as unknown as A2uiServerMessage)
-    const rejectErr = sent.filter(isError)[0]!
-    expect(rejectErr.error).toHaveProperty('functionCallId', 'fc4-reject')
+    expect(sent.filter(isError)[0]!.error).toHaveProperty('functionCallId', 'fc4-reject')
 
     cleanup()
   })
 
-  it('AC5 — the two surfaces are distinct: clientOnly required/email/regex still evaluate in checks/bindings (ADR-0026/0029 regression)', async () => {
-    // `callableFrom` is read ONLY by the server-invoke path (call-function.ts).
-    // The binding-eval path (functions.ts evaluate + checks.ts) ignores it entirely —
-    // so `required`/`email`/`regex` remain usable in `checks` even though they are `clientOnly`.
-    // This test proves the binding-eval surface is UNCHANGED by callableFrom (ADR-0034 fact 6).
+  it('AC5 — two surfaces distinct: clientOnly required/email/regex still evaluate in checks/bindings (ADR-0026/0029 no regression)', async () => {
+    // `callableFrom` is read ONLY by call-function.ts (the server-invoke path). The binding-eval
+    // path (functions.ts + checks.ts, ADR-0026/0029) ignores it — `required`/`email`/`regex` remain
+    // usable in `checks` even though they are `clientOnly` for server invocation (ADR-0034 fact 6).
     const { r, mount, sent, cleanup } = harness()
 
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sc5', catalogId: 'agent-ui' } }))
@@ -550,31 +556,27 @@ describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 / LLD-C14)', (
         version: 'v1.0',
         updateComponents: {
           surfaceId: 'sc5',
-          components: [
-            {
-              id: 'root',
-              component: 'Button',
-              label: 'Go',
-              // `required` is clientOnly but must still evaluate locally in `checks` (ADR-0034 fact 6)
-              checks: [{ call: 'required', args: { value: { path: '/val' } }, message: 'Required' }],
-            },
-          ],
+          components: [{
+            id: 'root',
+            component: 'Button',
+            label: 'Go',
+            checks: [{ call: 'required', args: { value: { path: '/val' } }, message: 'Required' }],
+          }],
         },
       }),
     )
     await whenFlushed()
 
-    // Before data: required({ value: undefined }) → invalid → button disabled
     const btn = mount.querySelector('ui-button') as UIButtonElement
     expect(btn).toBeInstanceOf(UIButtonElement)
-    expect(btn.disabled).toBe(true) // required check failed (no data yet)
+    expect(btn.disabled).toBe(true) // required({ value: undefined }) → invalid
 
-    // After data: required({ value: 'Ada' }) → valid → button enabled
     r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sc5', path: '/val', value: 'Ada' } }))
     await whenFlushed()
-    expect(btn.disabled).toBe(false) // required check passed
+    expect(btn.disabled).toBe(false) // required({ value: 'Ada' }) → valid
 
-    // No INVALID_FUNCTION_CALL emitted by the binding-eval path (VALIDATION_FAILED only if unknown fn)
+    // Binding-eval path never emits INVALID_FUNCTION_CALL (ADR-0031 maps all 8 internal codes
+    // through toWireError → VALIDATION_FAILED; INVALID_FUNCTION_CALL is the server-invoke path only)
     expect(sent.filter(isError).filter(e => e.error.code === 'INVALID_FUNCTION_CALL')).toHaveLength(0)
 
     cleanup()
@@ -583,9 +585,9 @@ describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 / LLD-C14)', (
   it('AC6 — throwing impl → INVALID_FUNCTION_CALL + functionCallId, renderer intact (ADR-0034 fork 5 / SPEC-N4)', () => {
     const { r, sent, cleanup } = rpcHarness()
 
-    // Make the next `required` invocation throw (via spy). This simulates a server-invocable impl
-    // that throws at runtime (fork 5: the spec is silent; INVALID_FUNCTION_CALL is the nearest code).
-    const spy = vi.spyOn(catalogFunctions, 'required').mockImplementationOnce(() => {
+    // Spy on the fixture impl to throw once (fork 5: spec-silent; INVALID_FUNCTION_CALL is the
+    // nearest conformant code — carries functionCallId, non-fatal, ADR-0034 fork 5).
+    const spy = vi.spyOn(catalogFunctions, 'getScreenResolution' as keyof typeof catalogFunctions).mockImplementationOnce(() => {
       throw new Error('unexpected server-side error')
     })
 
@@ -593,9 +595,8 @@ describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 / LLD-C14)', (
       version: 'v1.0',
       functionCallId: 'fc6',
       wantResponse: true,
-      callFunction: { call: 'required', args: { value: 'test' } },
+      callFunction: { call: 'getScreenResolution', args: {} },
     } as unknown as A2uiServerMessage)
-
     spy.mockRestore()
 
     const errors = sent.filter(isError)
@@ -605,15 +606,58 @@ describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 / LLD-C14)', (
     expect(wire).toHaveProperty('functionCallId', 'fc6')
     expect(wire.message).toContain('unexpected server-side error')
 
-    // Renderer is intact (non-fatal) — a subsequent valid call still works
+    // Non-fatal: renderer intact — subsequent call still works
     r.ingestMessage({
       version: 'v1.0',
       functionCallId: 'fc6-ok',
       wantResponse: true,
-      callFunction: { call: 'required', args: { value: 'hello' } },
+      callFunction: { call: 'getScreenResolution', args: {} },
     } as unknown as A2uiServerMessage)
-    expect(sent.filter(isFunctionResponse)).toHaveLength(1) // renderer intact after fork-5 throw
+    expect(sent.filter(isFunctionResponse)).toHaveLength(1)
 
     cleanup()
+  })
+
+  it('AC7 — hard-floor positive control: clientOnly in ANY active catalog → reject, impl NOT invoked, ORDER-INDEPENDENT (ADR-0034 amendment)', () => {
+    // Two catalogs: CALLABLE (clientOrRemote) + GUARDED (clientOnly) for the same function name.
+    // most-restrictive-wins: clientOnly is a hard floor — INVALID_FUNCTION_CALL regardless of
+    // registration order. A permissive sibling does NOT loosen the guard.
+    const spyImpl = vi.spyOn(catalogFunctions, 'getScreenResolution' as keyof typeof catalogFunctions)
+
+    // Order 1: CALLABLE first, GUARDED second
+    const { r: r1, sent: s1, cleanup: c1 } = harness()
+    r1.register(FIXTURE_CALLABLE, { Text: defaultFactories.Text })
+    r1.register(FIXTURE_GUARDED, { Text: defaultFactories.Text })
+    r1.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc7a',
+      wantResponse: true,
+      callFunction: { call: 'getScreenResolution', args: {} },
+    } as unknown as A2uiServerMessage)
+
+    expect(s1.filter(isError)).toHaveLength(1)
+    expect(s1.filter(isError)[0]!.error.code).toBe('INVALID_FUNCTION_CALL')
+    expect(s1.filter(isFunctionResponse)).toHaveLength(0) // no functionResponse on reject
+
+    // Order 2: GUARDED first, CALLABLE second — same verdict (order-independence)
+    const { r: r2, sent: s2, cleanup: c2 } = harness()
+    r2.register(FIXTURE_GUARDED, { Text: defaultFactories.Text })
+    r2.register(FIXTURE_CALLABLE, { Text: defaultFactories.Text })
+    r2.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc7b',
+      wantResponse: true,
+      callFunction: { call: 'getScreenResolution', args: {} },
+    } as unknown as A2uiServerMessage)
+
+    expect(s2.filter(isError)).toHaveLength(1)
+    expect(s2.filter(isError)[0]!.error.code).toBe('INVALID_FUNCTION_CALL')
+    expect(s2.filter(isFunctionResponse)).toHaveLength(0)
+
+    // The impl was NEVER invoked (rejected before invoke in both orders)
+    expect(spyImpl).not.toHaveBeenCalled()
+    spyImpl.mockRestore()
+
+    c1(); c2()
   })
 })

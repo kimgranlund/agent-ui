@@ -7,11 +7,10 @@
 // fork 2). They MUST NOT be merged. Zero surface coupling: no `surfaceId`, no data model,
 // no `resolveValue` — args are concrete literals the server provides (ADR-0034 fork 1).
 //
-// The `callableFrom` lookup uses "first-allows-match": catalogs are scanned in registration order;
-// a `clientOnly` declaration is SKIPPED (a project catalog can opt a function into remote invocation
-// even when the default catalog marks it `clientOnly` — ADR-0034 clause 4b). `catalogFunctions` is
-// the single impl source (ADR-0034 fork 2: NOT a parallel registry; the same functions serve both
-// the binding-eval and the server-invoke surface).
+// Cross-catalog collision: MOST-RESTRICTIVE-WINS (`clientOnly` is a hard floor, ADR-0034 amendment).
+// ALL registered catalogs are scanned; if ANY declares the function `clientOnly`, the call is
+// rejected — registration order does not change the verdict. `catalogFunctions` is the single impl
+// source (ADR-0034 fork 2: NOT a parallel registry).
 
 import type { CatalogRegistry } from '../catalog/types.ts'
 import { catalogFunctions } from '../catalog/functions.ts'
@@ -24,13 +23,13 @@ type Emit = (msg: A2uiFunctionResponseMessage | A2uiErrorMessage) => void
  *
  * Gate: `INVALID_FUNCTION_CALL` is emitted (carrying `functionCallId`, NOT `surfaceId`) when:
  *   - the function is unregistered in every catalog, OR
- *   - every catalog that declares it marks it `clientOnly`, OR
+ *   - ANY active catalog declares it `clientOnly` (most-restrictive-wins — a hard floor; a permissive
+ *     sibling does NOT loosen it; order-independent; ADR-0034 amendment + SPEC-R14), OR
  *   - the function has no registered impl in `catalogFunctions`, OR
  *   - the impl throws during invocation (fork 5: non-fatal, renderer intact — SPEC-N4).
- * Rejection is ALWAYS emitted — not gated on `wantResponse` (ADR-0034 fork 4: the server must learn
- * its call was invalid regardless of whether it wanted a response value).
+ * Rejection is ALWAYS emitted — not gated on `wantResponse` (ADR-0034 fork 4).
  *
- * On success: `wantResponse:true` → emit `functionResponse{functionCallId, call, value}` with the
+ * On success: `wantResponse:true` → emit `functionResponse{functionCallId, call, value}` with
  * `functionCallId` copied verbatim (SPEC-R14 fact 2); `wantResponse` false/absent → fire-and-forget.
  */
 export function handleCallFunction(
@@ -41,38 +40,47 @@ export function handleCallFunction(
 ): void {
   const { functionCallId, wantResponse, callFunction: { call, args } } = body
 
-  // ── catalog lookup: first-allows-match ────────────────────────────────────────────
-  // Scan all registered catalogs in registration order. A `clientOnly` declaration is skipped
-  // (another catalog may opt the function in). Stop at the first `remoteOnly`/`clientOrRemote`.
-  // Track whether we saw a `clientOnly` declaration for the diagnostic message.
-  let foundAllowsRemote = false
-  let foundClientOnly = false
+  // ── catalog scan: most-restrictive-wins (ADR-0034 amendment / SPEC-R14) ────────────
+  // Scan ALL registered catalogs for the function name. `clientOnly` is a hard floor:
+  // if ANY catalog declares it clientOnly, the call is rejected regardless of other catalogs.
+  // Result is order-independent — registration order has no effect on the verdict.
+  let declaredInAny = false
+  let anyClientOnly = false
   for (const catalogId of registry.supportedCatalogIds()) {
     const entry = registry.get(catalogId)
     if (entry === undefined) continue
     const def = entry.catalog.functions[call]
-    if (def === undefined) continue // not declared in this catalog
+    if (def === undefined) continue // not declared in this catalog — keep scanning
+    declaredInAny = true
     if (def.callableFrom === 'clientOnly') {
-      foundClientOnly = true
-      continue // skip — another catalog may opt it in
+      anyClientOnly = true
+      // Do NOT break — all catalogs must be checked (order-independence requires full scan)
     }
-    // callableFrom is 'remoteOnly' or 'clientOrRemote' — remote invocation permitted
-    foundAllowsRemote = true
-    break
   }
 
-  if (!foundAllowsRemote) {
-    const message = foundClientOnly
-      ? `function "${call}" is configured as clientOnly and cannot be invoked by the server`
-      : `function "${call}" is not registered in any catalog`
-    emit({ version, error: { code: 'INVALID_FUNCTION_CALL', functionCallId, message } })
+  if (!declaredInAny) {
+    emit({
+      version,
+      error: { code: 'INVALID_FUNCTION_CALL', functionCallId, message: `function "${call}" is not registered in any catalog` },
+    })
+    return
+  }
+  if (anyClientOnly) {
+    // Hard floor: clientOnly in any active catalog → server-un-invocable (fail-closed security gate)
+    emit({
+      version,
+      error: {
+        code: 'INVALID_FUNCTION_CALL',
+        functionCallId,
+        message: `function "${call}" is marked clientOnly in one or more active catalogs and cannot be invoked by the server`,
+      },
+    })
     return
   }
 
   // ── impl lookup from the shared catalogFunctions table ────────────────────────────
   // ADR-0034 fork 2: SHARE the registry — catalogFunctions is the single impl source.
-  // A declared-but-unimplemented function is a catalog misconfiguration (the "project catalog
-  // future follow-up" gap noted in catalog/functions.ts).
+  // A declared-but-unimplemented function is a catalog misconfiguration.
   const impl = catalogFunctions[call]
   if (impl === undefined) {
     emit({
@@ -92,9 +100,8 @@ export function handleCallFunction(
     value = impl(args ?? {})
   } catch (err) {
     // Fork 5: a throwing server-invocable impl → INVALID_FUNCTION_CALL + functionCallId, non-fatal
-    // (renderer stays intact, SPEC-N4). Maps to INVALID_FUNCTION_CALL (not VALIDATION_FAILED):
-    // the error must carry `functionCallId` (the server's correlation key); only the
-    // INVALID_FUNCTION_CALL arm does (ADR-0034 fork 5 / ADR-0031 §9 error table).
+    // (renderer stays intact, SPEC-N4). INVALID_FUNCTION_CALL is the only wire arm that carries
+    // functionCallId (ADR-0034 fork 5 / ADR-0031 §9 error table).
     const message = err instanceof Error ? err.message : `function "${call}" threw during server invocation`
     emit({ version, error: { code: 'INVALID_FUNCTION_CALL', functionCallId, message } })
     return
