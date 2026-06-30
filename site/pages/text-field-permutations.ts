@@ -197,9 +197,10 @@ geometry.append(geoHeading)
 geometry.append(
   geometryBlock(
     '[scale] — the frame multiplier',
-    'An ancestor [scale] multiplies both the frame (height) and the font; the per-subtree ramp recomputes.',
+    'An ancestor [scale] selects a frame tier — the tight ui-* control band or the generous content-* reading ' +
+      'band (ADR-0032) — and the per-subtree ramp recomputes both the frame (height) and the font.',
     'scale',
-    [null, 'compact', 'spacious'],
+    [null, 'ui-sm', 'ui-lg', 'content-lg'],
   ),
 )
 geometry.append(
