@@ -2,7 +2,7 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-list)` (specificity 0,0,0) DECLARES the `--ui-list-*` flex chain. Each
  *       `flexProps` literal-union (align/justify/gap/wrap — ADR-0016 cl.1) is mapped here to its CSS keyword
- *       (start→flex-start, between→space-between, …) or to a `--ui-space` ladder step, via `[attr=value]`
+ *       (start→start, end→end, between→space-between, … — box-alignment dialect, ADR-0039) or to a `--ui-space` ladder step, via `[attr=value]`
  *       attribute selectors. The `--ui-space-*` layout-spacing ladder (the SHARED, density-responsive gap
  *       vocabulary — dimensions.css / ADR-0015 cl.4) is read ONLY here, on the declaration side — exactly as
  *       button.css reads the `--c-*` colour roles only in its `:where()` token block.
@@ -30,7 +30,7 @@
      `[attr=value]` repoints the NON-DEFAULT keywords below. A default is NOT reflected as an attribute
      (ADR-0005), so the base token must carry the new default. */
   --ui-list-align: stretch; /* align (cross-axis) → align-items: stretch (ADR-0030 flip start→stretch) */
-  --ui-list-justify: flex-start; /* justify (main-axis distribution) → justify-content */
+  --ui-list-justify: start; /* justify (main-axis distribution) → justify-content; box-alignment start (ADR-0039) */
   --ui-list-gap: var(--ui-space-none); /* gap → a --ui-space ladder step (0 = no gap) */
   --ui-list-wrap: nowrap; /* wrap → flex-wrap (boolean presence) */
 }
@@ -38,13 +38,13 @@
 /* align → align-items (stretch = the new default above; start is now a non-default needing its own repoint).
    ADR-0030: `start` gains a repoint rule; the now-redundant `stretch` rule is removed (stretch = the base). */
 :where(ui-list[align='start']) {
-  --ui-list-align: flex-start; /* start is a non-default: the [align='start'] repoint restores flex-start */
+  --ui-list-align: start; /* start is a non-default: the [align='start'] repoint (box-alignment start — ADR-0039) */
 }
 :where(ui-list[align='center']) {
   --ui-list-align: center;
 }
 :where(ui-list[align='end']) {
-  --ui-list-align: flex-end;
+  --ui-list-align: end; /* box-alignment end (ADR-0039) */
 }
 :where(ui-list[align='baseline']) {
   --ui-list-align: baseline;
@@ -55,7 +55,7 @@
   --ui-list-justify: center;
 }
 :where(ui-list[justify='end']) {
-  --ui-list-justify: flex-end;
+  --ui-list-justify: end; /* box-alignment end (ADR-0039) */
 }
 :where(ui-list[justify='between']) {
   --ui-list-justify: space-between;

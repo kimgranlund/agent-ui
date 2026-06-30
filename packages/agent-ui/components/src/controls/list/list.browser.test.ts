@@ -43,13 +43,14 @@ describe('ui-list cross-engine smoke (s5)', () => {
     done()
   })
 
-  it('ADR-0030 align default is stretch; align="start" repoints to flex-start (the literal-union → CSS map)', () => {
+  it('ADR-0030 align default is stretch; align="start" repoints to start — box-alignment dialect (ADR-0039)', () => {
     const { el, done } = mount('ui-list', {})
-    // ADR-0030: the default align is now `stretch` (not `flex-start`) — children fill the list width.
+    // ADR-0030: the default align is now `stretch` (not `start`) — children fill the list width.
     expect(getComputedStyle(el).alignItems).toBe('stretch')
-    // align='start' must explicitly repoint to flex-start (start is now a non-default)
+    // ADR-0039: align='start' repoints to box-alignment `start`; computed returns 'start', not 'flex-start'.
+    // Rendered result is UNCHANGED from flex-start in standard LTR orientation (writing-mode-relative ≡ flex-flow-relative here).
     el.setAttribute('align', 'start')
-    expect(getComputedStyle(el).alignItems).toBe('flex-start')
+    expect(getComputedStyle(el).alignItems).toBe('start')
     done()
   })
 
@@ -75,7 +76,8 @@ describe('ui-list cross-engine smoke (s5)', () => {
     expect(childW).toBeCloseTo(listW, 1) // child fills the list (anti-vacuous: listW > 0)
     expect(listW).toBeGreaterThan(100) // the list actually has width
 
-    // NEGATIVE control: align='start' → child shrink-wraps to intrinsic width
+    // NEGATIVE control: align='start' → box-alignment start (ADR-0039) — child shrink-wraps to intrinsic width.
+    // Rendered result is UNCHANGED from flex-start in standard LTR orientation.
     list.setAttribute('align', 'start')
     const childWShrunk = child.getBoundingClientRect().width
     expect(childWShrunk).toBeLessThan(listW) // shrink-wrapped: narrower than the list

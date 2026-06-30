@@ -103,6 +103,51 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(card.getBoundingClientRect().height, 'the card grew past its max-block-size').toBeLessThanOrEqual(120)
   })
 
+  it('[density] compact→comfortable→spacious SHIFTS padding+gap (--ui-space-driven); border+radius HOLD', () => {
+    // card.css:39-40: --ui-card-padding and --ui-card-gap both ride --ui-space-md (density-responsive).
+    // The frame (border: 1px solid; radius: --ui-radius-base = 12px constant) is NOT a --ui-space quantity
+    // and must stay invariant. Anti-vacuous: prove the spacing change is measurably nonzero AND that the
+    // frame value is > 0 (so the "holds" proof is not vacuously equal-because-both-zero).
+    const card = mount(
+      '<ui-card><ui-card-header>H</ui-card-header><ui-card-content>C</ui-card-content></ui-card>',
+    )
+
+    // comfortable (no [density] attr = --ui-density 1): the baseline spacing
+    const padBase = px(getComputedStyle(card).paddingTop)
+    const gapBase = px(getComputedStyle(card).rowGap)
+    expect(padBase, 'comfortable padding is not a positive px').toBeGreaterThan(0)
+    expect(gapBase, 'comfortable gap is not a positive px').toBeGreaterThan(0)
+
+    // compact (density 0.5) — padding+gap halve
+    card.setAttribute('density', 'compact')
+    const padCompact = px(getComputedStyle(card).paddingTop)
+    const gapCompact = px(getComputedStyle(card).rowGap)
+    expect(padCompact, 'compact padding did not shrink from comfortable').toBeCloseTo(padBase / 2, 1)
+    expect(gapCompact, 'compact gap did not shrink from comfortable').toBeCloseTo(gapBase / 2, 1)
+
+    // spacious (density 1.5) — padding+gap grow
+    card.setAttribute('density', 'spacious')
+    const padSpacious = px(getComputedStyle(card).paddingTop)
+    const gapSpacious = px(getComputedStyle(card).rowGap)
+    expect(padSpacious, 'spacious padding did not grow from comfortable').toBeCloseTo(padBase * 1.5, 1)
+    expect(gapSpacious, 'spacious gap did not grow from comfortable').toBeCloseTo(gapBase * 1.5, 1)
+
+    // anti-vacuity: the density extremes are measurably distinct (compact < spacious)
+    expect(padCompact, 'padding is the same at compact and spacious (density has no effect)').toBeLessThan(padSpacious)
+    expect(gapCompact, 'gap is the same at compact and spacious (density has no effect)').toBeLessThan(gapSpacious)
+
+    // FRAME is density-INVARIANT — border (1px solid) and radius (--ui-radius-base = 12px constant) must hold
+    card.setAttribute('density', 'compact')
+    const borderCompact = px(getComputedStyle(card).borderTopWidth)
+    const radiusCompact = radiusPx(card)
+    card.setAttribute('density', 'spacious')
+    expect(px(getComputedStyle(card).borderTopWidth), 'border width changed with density').toBe(borderCompact)
+    expect(radiusPx(card), 'radius changed with density').toBe(radiusCompact)
+    // anti-vacuous: both are real painted values (not 0) so the invariant proves something
+    expect(borderCompact, 'border is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
+    expect(radiusCompact, 'radius is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
+  })
+
   it('forced-colors keeps the card border visible — Chromium emulates (CDP); WebKit asserts the baseline', async () => {
     const card = mount('<ui-card><ui-card-content>Body</ui-card-content></ui-card>')
 

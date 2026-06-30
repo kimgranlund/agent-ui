@@ -30,7 +30,7 @@
      repoint the NON-DEFAULT keywords. A default is NOT reflected as an attribute (ADR-0005), so the base
      token carries the default value — the prop default and the CSS base token must match. */
   --ui-column-align: stretch; /* align (cross axis = inline) → align-items: stretch (ADR-0030 flip start→stretch) */
-  --ui-column-justify: flex-start; /* justify (main axis = block) → justify-content */
+  --ui-column-justify: start; /* justify (main axis = block) → justify-content; box-alignment start (ADR-0039) */
   --ui-column-gap: var(--ui-space-none); /* gap → the density-responsive --ui-space ladder (ADR-0015 cl.4) */
   --ui-column-wrap: nowrap; /* wrap → flex-wrap (boolean presence repoints below) */
 }
@@ -38,24 +38,24 @@
 /* align → align-items (stretch = the new default above; start is now a non-default needing its own repoint).
    ADR-0030: `start` gains a repoint rule; the now-redundant `stretch` rule is removed (stretch = the base). */
 :where(ui-column[align='start']) {
-  --ui-column-align: flex-start; /* start is a non-default: the [align='start'] repoint restores flex-start */
+  --ui-column-align: start; /* start is a non-default: the [align='start'] repoint (box-alignment start — ADR-0039) */
 }
 :where(ui-column[align='center']) {
   --ui-column-align: center;
 }
 :where(ui-column[align='end']) {
-  --ui-column-align: flex-end;
+  --ui-column-align: end; /* box-alignment end (ADR-0039) */
 }
 :where(ui-column[align='baseline']) {
   --ui-column-align: baseline;
 }
 
-/* justify → justify-content (between/around/evenly → the space-* keywords; start = the flex-start default) */
+/* justify → justify-content (between/around/evenly → space-*; start is the box-alignment default — ADR-0039) */
 :where(ui-column[justify='center']) {
   --ui-column-justify: center;
 }
 :where(ui-column[justify='end']) {
-  --ui-column-justify: flex-end;
+  --ui-column-justify: end; /* box-alignment end (ADR-0039) */
 }
 :where(ui-column[justify='between']) {
   --ui-column-justify: space-between;

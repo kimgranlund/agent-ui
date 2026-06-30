@@ -40,6 +40,8 @@ afterEach(async () => {
   }
 })
 
+const px = (v: string): number => Number.parseFloat(v)
+
 /** Alpha of a computed colour — 0 ⇒ the paint has VANISHED (a bare system keyword with no rgb() is opaque). */
 const alphaOf = (color: string): number => {
   if (color === 'transparent') return 0
@@ -175,7 +177,51 @@ describe('ui-modal — Escape dismissal + focus restore (both engines)', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
-//  [5] ::backdrop — paints a scrim AND survives forced-colors (Chromium via CDP; WebKit asserts the baseline)
+//  [5] [density] — shell padding shifts (--ui-space-lg); frame (border + radius) HOLDS (both engines)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-modal — [density] shifts shell padding; frame is density-invariant (both engines)', () => {
+  it('[density] compact→comfortable→spacious SHIFTS dialog padding (--ui-space-lg-driven); border+radius HOLD', async () => {
+    // modal.css:36: --ui-modal-padding rides --ui-space-lg (density-responsive). The frame (border: 1px solid;
+    // radius: --ui-radius-base = 12px constant) is NOT a --ui-space quantity and must stay invariant.
+    // The modal is opened so the dialog is in the top layer — CSS inheritance flows through the DOM tree,
+    // so density set on the ui-modal host propagates to the [data-part="dialog"] child.
+    const { modal, dialog } = mount('<ui-modal><p>Body</p></ui-modal>')
+    modal.open = true
+    await modal.updateComplete
+
+    // comfortable (no [density] attr = --ui-density 1): the baseline shell padding
+    const padBase = px(getComputedStyle(dialog).paddingTop)
+    expect(padBase, 'comfortable padding is not a positive px').toBeGreaterThan(0)
+
+    // compact (density 0.5) — shell padding halves
+    modal.setAttribute('density', 'compact')
+    const padCompact = px(getComputedStyle(dialog).paddingTop)
+    expect(padCompact, 'compact padding did not shrink from comfortable').toBeCloseTo(padBase / 2, 1)
+
+    // spacious (density 1.5) — shell padding grows
+    modal.setAttribute('density', 'spacious')
+    const padSpacious = px(getComputedStyle(dialog).paddingTop)
+    expect(padSpacious, 'spacious padding did not grow from comfortable').toBeCloseTo(padBase * 1.5, 1)
+
+    // anti-vacuity: the density extremes are measurably distinct (compact < spacious)
+    expect(padCompact, 'padding is the same at compact and spacious (density has no effect)').toBeLessThan(padSpacious)
+
+    // FRAME is density-INVARIANT — border (1px solid) and radius (--ui-radius-base = 12px constant) must hold
+    modal.setAttribute('density', 'compact')
+    const borderCompact = px(getComputedStyle(dialog).borderTopWidth)
+    const radiusCompact = px(getComputedStyle(dialog).borderTopLeftRadius)
+    modal.setAttribute('density', 'spacious')
+    expect(px(getComputedStyle(dialog).borderTopWidth), 'border width changed with density').toBe(borderCompact)
+    expect(px(getComputedStyle(dialog).borderTopLeftRadius), 'radius changed with density').toBe(radiusCompact)
+    // anti-vacuous: the frame values are real painted quantities (not 0)
+    expect(borderCompact, 'border is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
+    expect(radiusCompact, 'radius is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [6] ::backdrop — paints a scrim AND survives forced-colors (Chromium via CDP; WebKit asserts the baseline)
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-modal — the ::backdrop scrim (Chromium emulates forced-colors via CDP; WebKit asserts the baseline)', () => {

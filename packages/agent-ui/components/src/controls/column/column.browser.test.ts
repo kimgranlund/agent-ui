@@ -39,17 +39,19 @@ describe('ui-column browser-truth harness (s4)', () => {
   it('align/justify CHANGE the computed flex properties (the literal-union → CSS-keyword repoint)', () => {
     const el = column()
     host.append(el)
-    // ADR-0030: the default align is now `stretch` (not `flex-start`) — children fill the column width.
+    // ADR-0030: the default align is now `stretch` (not `start`) — children fill the column width.
     expect(getComputedStyle(el).alignItems).toBe('stretch')
-    expect(getComputedStyle(el).justifyContent).toBe('flex-start')
+    // ADR-0039: justify default is `start` (box-alignment); computed returns 'start', not 'flex-start'
+    // — writing-mode-relative and flex-flow-relative are equivalent in LTR/standard orientation (rendered identically)
+    expect(getComputedStyle(el).justifyContent).toBe('start')
     // a non-default keyword repoints the computed value (between → space-between)
     el.setAttribute('align', 'center')
     el.setAttribute('justify', 'between')
     expect(getComputedStyle(el).alignItems).toBe('center')
     expect(getComputedStyle(el).justifyContent).toBe('space-between')
-    // align='start' must explicitly repoint to flex-start (start is now a non-default)
+    // align='start' repoints to box-alignment `start` (ADR-0039); computed returns 'start', not 'flex-start'
     el.setAttribute('align', 'start')
-    expect(getComputedStyle(el).alignItems).toBe('flex-start')
+    expect(getComputedStyle(el).alignItems).toBe('start')
   })
 
   it('gap responds to [density]: the --ui-space ladder re-multiplies on a subtree [density] (anti-vacuous)', () => {
@@ -74,7 +76,8 @@ describe('ui-column browser-truth harness (s4)', () => {
   it('ADR-0030 fill-width: a width-LESS child FILLS the column width by default; align="start" shrink-wraps', () => {
     // The visual DoD for ADR-0030. A card with no explicit width (only content: "X") should fill the column
     // because align-items:stretch (the new default) sizes children on their cross axis to the container.
-    // NEGATIVE: align='start' keeps flex-start — the child shrink-wraps to its content width.
+    // NEGATIVE: align='start' → box-alignment start (ADR-0039) — the child shrink-wraps to its content width.
+    // Rendered result is UNCHANGED from flex-start in standard LTR orientation (writing-mode-relative ≡ flex-flow-relative here).
     const wrap = document.createElement('div')
     wrap.style.inlineSize = '300px' // a fixed-width column so we can measure children against it
     wrap.style.display = 'block'

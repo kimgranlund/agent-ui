@@ -54,15 +54,15 @@ describe('list.css — the flex mapping (ADR-0016)', () => {
     expect(tokenBlock).toMatch(/ui-list\[align='start'\]/) // the new non-default repoint (ADR-0030)
     expect(tokenBlock).not.toMatch(/ui-list\[align='stretch'\]/) // stretch = the base; no repoint needed
     expect(tokenBlock).toMatch(/:where\(ui-list\[align='center'\]\)\s*\{\s*--ui-list-align:\s*center/)
-    expect(tokenBlock).toMatch(/:where\(ui-list\[align='end'\]\)\s*\{\s*--ui-list-align:\s*flex-end/)
+    expect(tokenBlock).toMatch(/:where\(ui-list\[align='end'\]\)\s*\{\s*--ui-list-align:\s*end/) // box-alignment end (ADR-0039)
     expect(tokenBlock).toMatch(/:where\(ui-list\[align='baseline'\]\)\s*\{\s*--ui-list-align:\s*baseline/)
   })
 
-  it('base token --ui-list-align is `stretch` (the new ADR-0030 default; [align="start"] repoints to flex-start)', () => {
+  it('base token --ui-list-align is `stretch` (the new ADR-0030 default; [align="start"] repoints to start — box-alignment dialect, ADR-0039)', () => {
     // The CSS base token must carry the prop default (ADR-0005: default is NOT reflected as an attribute).
     expect(tokenBlock).toMatch(/--ui-list-align:\s*stretch/) // base = stretch (ADR-0030 flip)
-    // [align='start'] repoints to flex-start — the one non-default keyword needing a rule
-    expect(tokenBlock).toMatch(/ui-list\[align='start'\][^{]*\{[^}]*--ui-list-align:\s*flex-start/)
+    // [align='start'] repoints to `start` — box-alignment dialect (ADR-0039); writing-mode-relative
+    expect(tokenBlock).toMatch(/ui-list\[align='start'\][^{]*\{[^}]*--ui-list-align:\s*start/)
   })
 
   it('justify → justify-content keywords (between/around/evenly → space-*)', () => {

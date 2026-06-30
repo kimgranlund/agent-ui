@@ -38,6 +38,8 @@ const THREE = `
     <ui-tab-panel>P1</ui-tab-panel><ui-tab-panel>P2</ui-tab-panel><ui-tab-panel>P3</ui-tab-panel>
   </ui-tabs>`
 
+const px = (v: string): number => Number.parseFloat(v)
+
 /** Alpha of a computed colour — 0 ⇒ the paint is transparent / has vanished. */
 const alphaOf = (color: string): number => {
   if (color === 'transparent') return 0
@@ -127,7 +129,55 @@ describe('ui-tabs — the selected-tab indicator paints + survives forced-colors
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
-//  [3] The ARIA wiring is live in a real engine — roles via internals + the element-reflection relations
+//  [3] [density] — strip-gap + panel-pad SHIFT; the tab CONTROL HEIGHT HOLDS (both engines)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-tabs — [density] shifts shell spacing; the tab control height is density-invariant (both engines)', () => {
+  it('[density] strip-gap + panel-pad SHIFT (--ui-space-driven); the tab block-size (--ui-height) HOLDS', () => {
+    // tabs.css:29-30: --ui-tabs-strip-gap rides --ui-space-xs; --ui-tabs-panel-pad rides --ui-space-md.
+    // Both are shell/layout-ladder quantities (density-responsive). The tab CONTROL HEIGHT is --ui-height-md
+    // (28px explicit literal, ADR-0038 — not a --ui-space quantity, density-invariant). Anti-vacuous: strip-gap
+    // and panel-pad must measurably CHANGE, AND the tab height must be the same at compact and spacious.
+    const { tabs, tabEls, panelEls } = mount(THREE)
+    const tablist = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+    const panel = panelEls[0] // the visible panel (tab 0 selected by default)
+
+    // comfortable (no [density] attr = --ui-density 1): the baseline shell spacing + control height
+    const stripGapBase = px(getComputedStyle(tablist).columnGap)
+    const panelPadBase = px(getComputedStyle(panel).paddingTop)
+    const tabHeightBase = px(getComputedStyle(tabEls[0]).blockSize)
+    expect(stripGapBase, 'comfortable strip-gap is not a positive px').toBeGreaterThan(0)
+    expect(panelPadBase, 'comfortable panel-pad is not a positive px').toBeGreaterThan(0)
+    expect(tabHeightBase, 'comfortable tab height is not 28px').toBeCloseTo(28, 0)
+
+    // compact (density 0.5) — shell spacing halves; control height HOLDS
+    tabs.setAttribute('density', 'compact')
+    const stripGapCompact = px(getComputedStyle(tablist).columnGap)
+    const panelPadCompact = px(getComputedStyle(panel).paddingTop)
+    const tabHeightCompact = px(getComputedStyle(tabEls[0]).blockSize)
+    expect(stripGapCompact, 'compact strip-gap did not shrink from comfortable').toBeCloseTo(stripGapBase / 2, 1)
+    expect(panelPadCompact, 'compact panel-pad did not shrink from comfortable').toBeCloseTo(panelPadBase / 2, 1)
+    expect(tabHeightCompact, `${server.browser}: tab height changed at compact (control height must be density-invariant)`).toBeCloseTo(tabHeightBase, 0)
+
+    // spacious (density 1.5) — shell spacing grows; control height HOLDS
+    tabs.setAttribute('density', 'spacious')
+    const stripGapSpacious = px(getComputedStyle(tablist).columnGap)
+    const panelPadSpacious = px(getComputedStyle(panel).paddingTop)
+    const tabHeightSpacious = px(getComputedStyle(tabEls[0]).blockSize)
+    expect(stripGapSpacious, 'spacious strip-gap did not grow from comfortable').toBeCloseTo(stripGapBase * 1.5, 1)
+    expect(panelPadSpacious, 'spacious panel-pad did not grow from comfortable').toBeCloseTo(panelPadBase * 1.5, 1)
+    expect(tabHeightSpacious, `${server.browser}: tab height changed at spacious (control height must be density-invariant)`).toBeCloseTo(tabHeightBase, 0)
+
+    // anti-vacuity: shell spacing change is measurably nonzero (compact < spacious)
+    expect(stripGapCompact, 'strip-gap is the same at compact and spacious (density has no effect)').toBeLessThan(stripGapSpacious)
+    expect(panelPadCompact, 'panel-pad is the same at compact and spacious (density has no effect)').toBeLessThan(panelPadSpacious)
+    // anti-vacuity: the tab height invariant is a real value (28px), not vacuously zero
+    expect(tabHeightCompact, 'tab height is 0 (control-height invariant is vacuous)').toBeGreaterThan(0)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [4] The ARIA wiring is live in a real engine — roles via internals + the element-reflection relations
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 // Probe subclasses re-expose the protected internals so the test can read the role + the aria-controls/
