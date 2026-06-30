@@ -124,7 +124,7 @@ A component's sizing lever is set by its class:
 | Class | Examples | Lever |
 |---|---|---|
 | **Control** (full height) | button · text-field · number-field · select · field | `block-size: var(--ui-{cmp}-height)` off `--ui-height-{size}`; font `--ui-font-{size}`; **`line-height: 1`** (single-line, ADR-0036); inline-pad per the slot/slotless model |
-| **Indicator** (smaller box) | checkbox · radio · switch · slider · tag | `block/inline-size: var(--ui-{cmp}-size)` off `--ui-ind-{size}` (or the compact ramp) |
+| **Indicator** (smaller box) | checkbox · radio · switch · slider · tag | `block/inline-size: var(--ui-{cmp}-size)` off the **widget ramp `--ui-compact-{size}`** (Kim's 8-value `12·14·16·18·20·22·24·28`, ADR-0041 — *not* `--ui-ind`, which never shipped); a thumbed widget (switch/range) insets `--ui-widget-inset: 2px` (`thumb = box − 2×2px`, flat, density-invariant) |
 | **Pattern** (container + control-height rows) | tabs · segmented-control · toolbar · accordion · menu · dialog | interactive rows take the control height; the shell uses the space scale |
 | **Container/layout** | spacer · stack · grid | gaps/margins/padding off `--space-*` × density; no control height |
 | **Display** | divider · icon · spinner · progress · alert · badge · tooltip · **text** | **text-bearing** reads the typographic ramp `--ui-type-{level}-{size,weight,leading}` (`level` = the `variant` h1–h5/body/caption — `ui-text`, ADR-0025 cl.3); non-text display takes the control-band `font-size: var(--ui-font-{size})` where it sizes a glyph label; intrinsic structural sizing otherwise. No control height, no `padding-block` law — the lever is the type scale, not `--ui-height-*`. |

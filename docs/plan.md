@@ -261,7 +261,7 @@ vertical size is `block-size: var(--ui-{cmp}-height)`, **never** block-padding (
 inline-padding follows the **v4 slot model** (`h/2` slotless / `½(h − icon)` slotted, density on the gap —
 **not** the old `2px + height × 0.375 × density`); `--ui-scale` (numeric, on `*`, ADR-0007) × `size` →
 `{height, font, indicator}`; density multiplies inline spacing only. Controls are the **Control class** (full height); checkbox/
-switch are the **Indicator class** (the box rides `--ui-ind-{size}`). Affordance glyphs (the select
+switch are the **Indicator class** (the box rides the widget ramp `--ui-compact-{size}`, ADR-0041 — `--ui-ind` never shipped). Affordance glyphs (the select
 caret, field steppers, clear ×) follow the geometry law in `references/geometry-sizing-spec.md`:
 a `--ui-glyph-{size}` ramp token and the `(height − glyph) / 2` centering law, with asymmetric padding
 where an affordance sits inside the box. The nonoun *studio-54* token set

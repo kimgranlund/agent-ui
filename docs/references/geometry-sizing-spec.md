@@ -361,31 +361,37 @@ controls", §4.6).
 
 ### 5.2 · The compact box ramp — the two-band ladder (Kim ruled 2026-06-19)
 
-> **REALIZED (ADR-0032, 2026-06-30).** `--ui-compact-{sm,md,lg}` is now **built** in `dimensions.css` as a
-> per-tier re-table across the 6 `[scale]` tiers (the table below), keyed by the same `[scale]` as the
-> control ramp. **Forward-ready** — no compact widget consumes it yet (the realm — slider/kbd/tag/radio/
-> switch/checkbox/chip/badge — is unbuilt); locked by the `DIM-COMPACT` probe.
+> **REVISED — Kim's 8-value widget ramp (ADR-0041, Kim-ratified 2026-06-30).** The two-band §5.2 ladder is
+> replaced by Kim's **single 8-value widget ramp** `12·14·16·18·20·22·24·28` — the widget analog of the §1
+> control ramp — sized via the **same explicit per-`[scale]` lookup as ADR-0038** (no multiplier). The table
+> below is updated to it (the off-ramp `26`/`32` are dropped; the content band is now 2px-stepped, all 6
+> tiers DISTINCT). Default `ui-md` `14·16·18` byte-identical. **The realm becomes CONSUMED** — the Indicator
+> (checkbox/switch/radio) + Range (slider) controls build on `--ui-compact-*` (#49). Adds the **2px inset law**
+> (clause below) via `--ui-widget-inset: 2px`. *(Prior — ADR-0032 built the `--ui-compact-*` per-`[scale]`
+> re-table mechanism, forward-ready/unconsumed; that mechanism stays, the VALUES are revised here.)*
 
-The compact/dense realm sizes its box on `--ui-compact-{sm,md,lg}` (`dimensions.css`), a ramp SEPARATE
-from `--ui-ind` and from the comfortable height ramp. It is **two bands**, mirroring the comfortable
-controls' two-band structure (§1.2): the **`ui-*` band is tight** (compact UI density), the **`content-*`
-band is generous** (reading density — the widgets get real presence).
+The widget realm sizes its box on `--ui-compact-{sm,md,lg}` (`dimensions.css`) — Kim's 8-value ramp, distinct
+from the **glyph** ramp `--ui-icon-*` (ADR-0035, what the stale `--ui-ind` name meant) and from the
+comfortable **control-height** ramp (§1, ADR-0038). All 6 `[scale]` tiers resolve to **distinct** widget
+triples (the widget ramp is denser/more-linear than the sparse §1 control ramp, so — unlike ADR-0038's
+`content-sm≡ui-md` overlap — the widget tiers do not collapse):
 
-| scale | sm | md | lg | band |
-|---|---|---|---|---|
-| **ui-sm** | 12 | 14 | 16 | tight — 2px steps |
-| **ui-md** (default `:root`) | 14 | 16 | 18 | |
-| **ui-lg** | 16 | 18 | 20 | |
-| **content-sm** | 18 | 22 | 26 | generous — 4px within-scale |
-| **content-md** | 20 | 24 | 28 | |
-| **content-lg** | 24 | 28 | 32 | |
+| scale | sm | md | lg |
+|---|---|---|---|
+| **ui-sm** | 12 | 14 | 16 |
+| **ui-md** (default `:root`) | 14 | 16 | 18 |
+| **ui-lg** | 16 | 18 | 20 |
+| **content-sm** | 18 | 20 | 22 |
+| **content-md** | 20 | 22 | 24 |
+| **content-lg** | 22 | 24 | 28 |
 
-The **`ui-*` band** realizes `12·14·16·18·20` (2px steps); the **`content-*` band** realizes
-`18·20·22·24·26·28·32` (4px within a scale, +2 then +4 between scales). The box is **density-invariant**
-(density rides the pad, not the box, §1.4); the compact pad stays `2px + box·ratio·density` (§5.1).
-Mechanized: `DIM-COMPACT` (per-cell exact + the two bands asserted separately) + the smoke `COMPACT_LANES`
-(the rendered box in Chromium). Demoed across the `[scale] × [size]` grid in the **"Compact controls"**
-section of `geometry.html`.
+Every cell ∈ Kim's ramp `12·14·16·18·20·22·24·28`; monotonic both axes; all 8 values used. The box is
+**density-invariant** (density rides the pad, not the box, §1.4); the compact pad stays `2px +
+box·ratio·density` (§5.1). **The 2px inset law (thumbed widgets — switch/range):** a thumb in a track insets
+`2px` on every edge → `thumb = box − 2×2px`, `track = the widget box`; **flat 2px** (a frame constant, like a
+1px border — not box-scaled), density-invariant (`--ui-widget-inset: 2px`). Mechanized: `DIM-COMPACT`
+(per-cell exact + **all-6-tiers-distinct** asserted — the widget box does NOT step) + the smoke
+`COMPACT_LANES` (the rendered box + the 2px inset in Chromium).
 
 ---
 

@@ -41,7 +41,7 @@ demos/barrels. The system is currently decorative. This standard connects produc
 | Class | Components | Sizing lever |
 |---|---|---|
 | **Control** (full height) | `button` · `text-field` · `number-field` · `select` · `combobox` · `field` | `--ui-{cmp}-height = var(--ui-height-{size})` + font + height-derived inline-pad |
-| **Indicator** (smaller box) | `checkbox` · `radio`(radio-group) · `switch` · `slider` · `tag` | the box = `var(--ui-ind-{size})` |
+| **Indicator** (smaller box) | `checkbox` · `radio`(radio-group) · `switch` · `slider` · `tag` | the box = `var(--ui-compact-{size})` (the widget ramp, ADR-0041 — *not* `--ui-ind`, which never shipped) |
 | **Pattern** (container + control-height rows) | `tabs` · `segmented-control` · `toolbar` · `accordion` · `menu` · `dialog` | interactive rows take the control height; the shell uses the space scale |
 | **Container/layout** (space scale only) | `spacer` · `stack` · `grid` (+ `container`) | gaps/margins/padding = `--space-*` × density; no control height |
 | **Display** (font where text-bearing) | `divider` · `icon` · `spinner` · `progress` · `alert` · `badge` · `tooltip` | `font-size: var(--ui-font-{size})` where text; intrinsic structural sizing |
@@ -74,7 +74,7 @@ padding-inline: var(--ui-button-pad-inline);
 padding-block:  var(--ui-button-pad-block, 0);   /* delete any block-padding-as-sizing */
 ```
 ### Indicator-class
-Same shape, but the box rides the indicator table: `--ui-{cmp}-size: var(--ui-ind-{size})`
+Same shape, but the box rides the widget ramp: `--ui-{cmp}-size: var(--ui-compact-{size})` (ADR-0041; `--ui-ind` never shipped)
 + `[size]` overrides; `block-size`/`inline-size: var(--ui-{cmp}-size)`. (Slider track height, tag
 height, the checkbox/radio/switch box.)
 ### Container/layout & Display

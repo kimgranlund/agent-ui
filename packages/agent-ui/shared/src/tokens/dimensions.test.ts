@@ -193,25 +193,26 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
   })
 })
 
-// DIM-COMPACT (geometry-sizing-spec §5.2) — the --ui-compact-* compact-box ramp: a forward-ready
-// compact-widget frame (NO consumer yet; compact widgets unbuilt). NOT a --ui-scale multiplier — the two
-// bands are NON-uniform (ui-* steps 2px, content-* steps 4px), so each [scale] tier HAND-TABLES its
-// sm·md·lg literals, with a ui-md band default on :root. The literals can't ride the `*` ramp (a literal on
-// `*` re-declares on every descendant and defeats subtree inheritance), so they live on the [scale] selector
-// + the :root default and inherit down a subtree exactly like --ui-scale. The browser can't prove the
-// rendered compact box (no consuming control yet) — this static probe IS its verifier.
-describe('dimensions.css — the --ui-compact-* compact-box ramp (geometry-sizing-spec §5.2, two NON-uniform bands)', () => {
-  // tier → [sm, md, lg] compact px. ui-* tight (2px steps) · content-* generous (4px steps).
+// DIM-COMPACT (ADR-0041) — the --ui-compact-* WIDGET-BOX ramp: the box of the Indicator (checkbox/switch/radio)
+// + Range (slider) classes (geometry-sizing-spec §5.1's separate size system — NOT --ui-height-*). Kim's clean
+// 8-value ramp (12·14·16·18·20·22·24·28). Same explicit lookup as ADR-0038's control table: a LITERAL per-[scale]
+// table (:root default + [scale] re-tables; [size] picks sm/md/lg), NO --ui-scale multiplier, so it can't ride
+// `*` (a literal on `*` re-declares per descendant + defeats subtree inheritance). The realm is now CONSUMED
+// (ADR-0041 retires §5.2's "forward-ready" note). The browser proves the rendered box with the first widget
+// (exec's smoke) — this static probe pins the table + the ALL-DISTINCT-tiers property + the 2px inset.
+describe("dimensions.css — the --ui-compact-* widget-box ramp (ADR-0041, Kim's 8-value ramp)", () => {
+  // tier → [sm, md, lg] widget-box px (ADR-0041 cl.2). ui band byte-unchanged from §5.2; content band re-tabled
+  // onto Kim's ramp (off the §5.2 off-ramp 26/32). All 6 triples DISTINCT (the widget box does NOT step).
   const TABLE: Array<[string, [number, number, number]]> = [
     ['ui-sm', [12, 14, 16]],
     ['ui-md', [14, 16, 18]],
     ['ui-lg', [16, 18, 20]],
-    ['content-sm', [18, 22, 26]],
-    ['content-md', [20, 24, 28]],
-    ['content-lg', [24, 28, 32]],
+    ['content-sm', [18, 20, 22]],
+    ['content-md', [20, 22, 24]],
+    ['content-lg', [22, 24, 28]],
   ]
 
-  it('re-tables --ui-compact-{sm,md,lg} per [scale] tier with the §5.2 literals (the two bands)', () => {
+  it('re-tables --ui-compact-{sm,md,lg} per [scale] tier with the ADR-0041 widget-ramp literals', () => {
     for (const [tier, [sm, md, lg]] of TABLE) {
       const block = (flat.match(new RegExp(`\\[scale="${tier}"\\]\\s*\\{[^}]*\\}`)) ?? [''])[0]
       expect(block.length, `[scale="${tier}"] block not found`).toBeGreaterThan(0)
@@ -236,6 +237,28 @@ describe('dimensions.css — the --ui-compact-* compact-box ramp (geometry-sizin
       expect(d).not.toMatch(/var\(/)
       expect(d).toMatch(/--ui-compact-(?:sm|md|lg):\s*\d+px\s*;/)
     }
+  })
+
+  it('all SIX [scale] tiers render DISTINCT widget-box triples — the widget box does NOT step (unlike control fonts, ADR-0038)', () => {
+    // ADR-0041 cl.2: the widget ramp is dense/linear, so every tier's (sm,md,lg) triple is unique — NO
+    // content-sm ≡ ui-md overlap (the control-font stepping). Read each triple straight from the CSS + assert distinct.
+    const triples = TABLE.map(([tier]) => {
+      const block = (flat.match(new RegExp(`\\[scale="${tier}"\\]\\s*\\{[^}]*\\}`)) ?? [''])[0]
+      const sm = block.match(/--ui-compact-sm:\s*(\d+)px/)?.[1]
+      const md = block.match(/--ui-compact-md:\s*(\d+)px/)?.[1]
+      const lg = block.match(/--ui-compact-lg:\s*(\d+)px/)?.[1]
+      return `${sm}·${md}·${lg}`
+    })
+    for (const t of triples) expect(t, `a [scale] tier's compact triple failed to parse: ${t}`).not.toMatch(/undefined/)
+    expect(new Set(triples).size, `widget-box tiers are not all-distinct (a tier stepped): ${triples.join(' / ')}`).toBe(TABLE.length)
+  })
+
+  it('declares --ui-widget-inset: 2px on :root (ADR-0041 cl.3) — a FLAT thumb-inset constant, not on the `*` ramp', () => {
+    // the thumb inset law (thumb = box − 2×inset); a fleet constant, flat across the ramp (frame family,
+    // density-invariant) — like --ui-radius-base: on :root, off the derived `*` ramp, no multiplier.
+    expect(rootBlock).toMatch(/--ui-widget-inset:\s*2px\s*;/)
+    expect(universalBlock).not.toMatch(/--ui-widget-inset/) // a constant — off the derived `*` ramp
+    expect(rootBlock).not.toMatch(/--ui-widget-inset:[^;]*var\(/) // flat literal — no multiplier
   })
 })
 

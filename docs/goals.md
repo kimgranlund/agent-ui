@@ -212,8 +212,8 @@ focus trait lands. **G5 done.**
 **Scope.**
 - `ui-text-field`: a `contenteditable` surface (no native `<input>`) mirroring value↔surface, with
   caret guard, `input`/`change`, FACE value + `validity()`.
-- `ui-checkbox` / `ui-switch`: Indicator class (box rides `--ui-ind-{size}`), `--checked` custom state,
-  keyboard activation, `ariaChecked` via internals.
+- `ui-checkbox` / `ui-switch`: Indicator class (box rides the widget ramp `--ui-compact-{size}`, ADR-0041 —
+  *not* `--ui-ind`, which never shipped), `--checked` custom state, keyboard activation, `ariaChecked` via internals.
 
 **Definition of done.**
 - [ ] Per control: behaviour probes + browser smoke + `.api.json` + rubric ≥ 4 on both axes (the G5 DoD,
