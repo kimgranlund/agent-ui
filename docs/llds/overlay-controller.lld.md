@@ -1,6 +1,6 @@
 # LLD — the Overlay controller (the non-modal popover primitive: select-popup · menu · tooltip · popover)
 
-> Component LLD for the control suite (#49 Wave 0). Trace: ADRs + `goals.md §G7`. · proposed · 2026-06-30 ·
+> Component LLD for the control suite (#49 Wave 0). Trace: ADRs + `goals.md §G7` (`SPEC-R#` **N/A by design** — the components layer has no SPEC family). · proposed · 2026-06-30 ·
 > planning-lead
 >
 > **Composes on:** the native **Popover API** + a **zero-dep JS positioning controller** (mechanism settled by

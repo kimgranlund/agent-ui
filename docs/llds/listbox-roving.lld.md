@@ -1,6 +1,6 @@
 # LLD — the roving-focus trait + UIListboxElement + selection-commit (listbox · menu · select-options · radio-group)
 
-> Component LLD for the control suite (#49 Wave 0). Trace: ADRs + `goals.md §G7`. · proposed · 2026-06-30 ·
+> Component LLD for the control suite (#49 Wave 0). Trace: ADRs + `goals.md §G7` (`SPEC-R#` **N/A by design** — the components layer has no SPEC family). · proposed · 2026-06-30 ·
 > planning-lead
 >
 > **Composes on:** `ui-tabs` roving prior art (`tabs.ts:130-168` — EXTRACT) · `UIFormElement` (ADR-0013, for

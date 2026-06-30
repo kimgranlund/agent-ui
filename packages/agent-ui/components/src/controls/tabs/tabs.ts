@@ -11,7 +11,8 @@
 // reflection), and a single scope-owned effect re-applies selection — `aria-selected` + the roving tabindex
 // (exactly the selected tab is tabindex=0) + `:state(selected)` on the tabs, and the `hidden` attribute on the
 // panels (only the selected panel shows; the rest stay in the DOM). ArrowLeft/Right + Home/End move selection
-// AND focus together (selection-follows-focus), committing through the same path as a click.
+// AND focus together (selection-follows-focus), committing through the same path as a click. The keyboard
+// navigation is handled by the shared `rovingFocus` trait (listbox-roving LLD-C1).
 //
 // `selected` is a plain reflected string the renderer two-way-binds via LLD-C8 (ADR-0019): the agent SETS it
 // (programmatic → the effect applies it, NO event echoed), a user gesture COMMITS it (the ONE `select` event
@@ -21,6 +22,7 @@
 
 import { UIContainerElement } from '../../dom/container.ts'
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+import { rovingFocus } from '../../traits/roving-focus.ts'
 import { UITabElement } from './tab.ts'
 import { UITabPanelElement } from './tab-panel.ts'
 
@@ -74,9 +76,8 @@ export class UITabsElement extends UIContainerElement {
       panel.link(tab, panelId)
     })
 
-    // Roving + commit listeners on the strip (ride the connection AbortSignal → auto-removed on disconnect, re-
-    // armed on reconnect). keydown bubbles from the focused tab; click is delegated to find the tab ancestor.
-    this.listen(strip, 'keydown', this.#onKeydown)
+    // Click commit listener — delegated to the tablist strip (rides the connection AbortSignal).
+    // Keydown is handled by the rovingFocus trait below.
     this.listen(strip, 'click', this.#onClick)
 
     // The selection effect — re-applies on every `selected` change (and re-arms on reconnect). Runs once now
@@ -88,6 +89,21 @@ export class UITabsElement extends UIContainerElement {
         panel.hidden = i !== index // standard `hidden` (NOT ARIA) — only the selected panel shows; the rest stay in DOM
       })
       this.#activeIndex = index
+    })
+
+    // Roving keyboard focus — the shared trait (listbox-roving LLD-C1) replaces the former inline #onKeydown.
+    // The effect above runs synchronously and sets #activeIndex before we get here, so initialIndex reads
+    // the correct position even after reconnect with a non-first tab selected. syncIndex reconciles on each
+    // keydown after a click or programmatic selection change that bypassed the trait's onMove.
+    rovingFocus(this, {
+      container: strip,
+      items: () => this.#tabs as HTMLElement[],
+      orientation: 'horizontal',
+      loop: true,
+      typeAhead: false,
+      initialIndex: () => this.#activeIndex,
+      syncIndex: () => this.#activeIndex,
+      onMove: (index) => this.#commit(index, false), // trait already moved focus; commit without re-focusing
     })
 
     // Motion gate (interaction-states standard) — arm `ready` ONE FRAME past first paint so the synchronous
@@ -125,34 +141,6 @@ export class UITabsElement extends UIContainerElement {
       if (n >= 0 && n < tabs.length) return n
     }
     return 0
-  }
-
-  // ── roving keyboard nav — ArrowLeft/Right + Home/End move selection AND focus together (APG automatic
-  //    activation: selection follows focus) ──────────────────────────────────────────────────────────────
-  #onKeydown = (event: Event): void => {
-    const e = event as KeyboardEvent
-    const tabs = this.#tabs
-    if (tabs.length === 0) return
-    const current = this.#activeIndex < 0 ? 0 : this.#activeIndex
-    let next = current
-    switch (e.key) {
-      case 'ArrowRight':
-        next = (current + 1) % tabs.length
-        break
-      case 'ArrowLeft':
-        next = (current - 1 + tabs.length) % tabs.length
-        break
-      case 'Home':
-        next = 0
-        break
-      case 'End':
-        next = tabs.length - 1
-        break
-      default:
-        return // not a nav key — let it through
-    }
-    e.preventDefault()
-    this.#commit(next, true)
   }
 
   // ── click commit — delegated: find the clicked tab among ours (instanceof-safe across subclasses) ──
