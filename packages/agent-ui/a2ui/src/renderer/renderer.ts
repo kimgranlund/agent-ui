@@ -51,14 +51,21 @@ import type {
   A2uiDeleteSurface,
   A2uiComponent,
   A2uiError,
+  A2uiWireError,
   A2uiServerMessage,
   A2uiActionMessage,
 } from '../protocol.ts'
+import { toWireError } from '../protocol.ts'
 
-/** An `error` client→server envelope (runtime SPEC §5.2) — the second `A2uiClientMessage` arm. */
+/**
+ * An `error` client→server envelope (runtime SPEC §5.2, ADR-0031) — the second `A2uiClientMessage`
+ * arm. `error` carries the WIRE shape (`A2uiWireError`: the v1.0 two-code discriminated union); the
+ * internal `A2uiError` (8 codes) is mapped to `A2uiWireError` by `toWireError` at `#emitInternalError`
+ * — the single outbound chokepoint. Consumers of this envelope see only the wire codes.
+ */
 export interface A2uiErrorMessage {
   version: string
-  error: A2uiError
+  error: A2uiWireError
 }
 
 /** Everything the renderer emits to the server: a triggered action, or an error (runtime SPEC §5.2). */
@@ -169,7 +176,7 @@ class Renderer implements RendererHost {
     const result = parseLine(line)
     if (isParseError(result)) {
       // PARSE has no surface/version context — use the host default (LLD §9 / N4: stream continues).
-      this.#emit({ version: this.#defaultVersion, error: { code: 'PARSE', message: result.message } })
+      this.#emitInternalError(this.#defaultVersion, { code: 'PARSE', message: result.message })
       return
     }
     this.ingestMessage(result)
@@ -177,7 +184,7 @@ class Renderer implements RendererHost {
 
   ingestMessage(message: A2uiServerMessage): void {
     const error = dispatch(message, this.#handlers)
-    if (error !== undefined) this.#emit({ version: versionOf(message, this.#defaultVersion), error })
+    if (error !== undefined) this.#emitInternalError(versionOf(message, this.#defaultVersion), error)
   }
 
   onClientMessage(listener: ClientMessageListener): () => void {
@@ -207,9 +214,10 @@ class Renderer implements RendererHost {
   #onCreateSurface(body: A2uiCreateSurface, version: string): void {
     // Resolve catalogId against the registry — an unbound catalog is `CATALOG_UNKNOWN`, no surface (R2 AC3).
     if (this.#registry.get(body.catalogId) === undefined) {
-      this.#emit({
-        version,
-        error: { code: 'CATALOG_UNKNOWN', surfaceId: body.surfaceId, message: `unknown catalogId "${body.catalogId}"` },
+      this.#emitInternalError(version, {
+        code: 'CATALOG_UNKNOWN',
+        surfaceId: body.surfaceId,
+        message: `unknown catalogId "${body.catalogId}"`,
       })
       return
     }
@@ -265,7 +273,7 @@ class Renderer implements RendererHost {
     // The tree only emits IDGRAPH (2nd root / cycle), in-stream. Mark the surface so `finalize` does not
     // re-report the same id-graph defect (the always-invalid cases are the tree's, not finalize's).
     this.#poisoned.add(surfaceId)
-    this.#emit({ version: this.#versionFor(surfaceId), error })
+    this.#emitInternalError(this.#versionFor(surfaceId), error)
   }
 
   // ── widget resolution + action wiring ─────────────────────────────────────────────
@@ -276,7 +284,11 @@ class Renderer implements RendererHost {
    * DOM) and re-expressed as a `click → emitAction` listener owned by the surface's `AbortController`.
    */
   #makeHostCreateWidget(): CreateWidget {
-    const emitError = (error: A2uiError) => this.#emit({ version: this.#versionFor(error.surfaceId), error })
+    // The internal error sink: applies toWireError at the single client→server chokepoint (ADR-0031
+    // clause 1/2) so every outbound error carries the v1.0 two-code wire shape. Internal callers
+    // (functions.ts / checks.ts) still receive and emit `A2uiError` (the 8-code internal taxonomy)
+    // unchanged — the map is applied HERE, not at the emit sites.
+    const emitError = (error: A2uiError): void => this.#emitInternalError(this.#versionFor(error.surfaceId), error)
     const base = makeCreateWidget({
       registry: this.#registry,
       emitError,
@@ -342,9 +354,11 @@ class Renderer implements RendererHost {
     }
     for (const failure of validateA2ui(complete, entry.catalog).failures) {
       if (failure.code !== 'IDGRAPH') continue
-      this.#emit({
-        version: surface.version,
-        error: { code: 'IDGRAPH', surfaceId: id, path: failure.path, message: `id-graph violation: ${failure.path}` },
+      this.#emitInternalError(surface.version, {
+        code: 'IDGRAPH',
+        surfaceId: id,
+        path: failure.path,
+        message: `id-graph violation: ${failure.path}`,
       })
     }
   }
@@ -365,6 +379,17 @@ class Renderer implements RendererHost {
     this.#trees.delete(id)
     this.#attached.delete(id)
     this.#poisoned.delete(id)
+  }
+
+  /**
+   * The single outbound client→server error chokepoint (ADR-0031 clause 1). Applies `toWireError`
+   * to map the 8-code internal `A2uiError` to the v1.0 two-code `A2uiWireError` before emitting.
+   * Internal callers (emitError, #onCreateSurface, #onTreeError, #finalizeSurface, ingest) all
+   * route here — keeping the mapping in one place so no emit site produces a raw internal code on
+   * the wire. The `#emit` method below is the pure mechanical broadcaster (actions use it directly).
+   */
+  #emitInternalError(version: string, error: A2uiError): void {
+    this.#emit({ version, error: toWireError(error) })
   }
 
   #emit(message: A2uiClientMessage): void {

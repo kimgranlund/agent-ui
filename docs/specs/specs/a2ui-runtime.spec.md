@@ -147,8 +147,20 @@ type A2uiClientMessage =
   | { version: string; action: { surfaceId: string; actionId: string; name: string;
                                  sourceComponentId: string; timestamp: string;
                                  context: Record<string, unknown>; wantResponse?: boolean; dataModel?: unknown } }
-  | { version: string; error:  A2uiError };
+  | { version: string; error:  A2uiWireError };
 
+// WIRE error (client→server) — the A2UI v1.0 two-code contract (ADR-0031). The contextID is TIED to the
+// code (NOT a free XOR), and there is NO `path` field — the wire shape is exactly {code, message, ctxID}:
+type A2uiWireError =
+  | { code: "VALIDATION_FAILED";     message: string; surfaceId: string }       // requires surfaceId
+  | { code: "INVALID_FUNCTION_CALL"; message: string; functionCallId: string }; // requires functionCallId
+type WireErrorCode = "INVALID_FUNCTION_CALL" | "VALIDATION_FAILED";
+
+// INTERNAL diagnostic taxonomy (the validator's Failure codes + render-time emits; shared with corpus
+// admission, SPEC-N6 parity). Richer than the wire; mapped to A2uiWireError at the `#emit` boundary
+// (ADR-0031): EVERY code → VALIDATION_FAILED (+surfaceId) this wave — incl. FUNCTION (render-time
+// binding-eval = message validation, NOT the server-initiated INVALID_FUNCTION_CALL, which the repo has
+// no path for; that arm is reserved for #23). The internal `path` locus folds into the wire `message`.
 interface A2uiError { code: ErrorCode; surfaceId?: string; path?: string; message: string }
 type ErrorCode =
   | "PARSE" | "SCHEMA" | "CATALOG" | "CATALOG_UNKNOWN" | "IDGRAPH"

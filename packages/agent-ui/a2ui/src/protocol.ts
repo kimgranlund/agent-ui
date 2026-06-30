@@ -6,7 +6,13 @@
 // and `conformance.ts` needs the component + failure shapes, so a shared root avoids a renderer↔catalog
 // import cycle while keeping one definition of the wire types.
 
-/** Client→server error codes (runtime SPEC §5.2). Catalog-load diagnostics live in `catalog/catalog.ts`. */
+/**
+ * Internal error codes — the rich 8-code diagnostic taxonomy used by the renderer, validator, and
+ * corpus subsystems (SPEC-N6 parity). NOT the wire codes: these are mapped to `WireErrorCode` at the
+ * single client→server boundary (`renderer.ts #emitInternalError → toWireError`, ADR-0031 clause 2).
+ * The internal codes are kept for the validator's fine-grained `Failure` (corpus admission distinguishes
+ * SCHEMA vs IDGRAPH; collapsing to two codes would gut that diagnostic — see ADR-0031 Alternatives A).
+ */
 export type ErrorCode =
   | 'PARSE'
   | 'SCHEMA'
@@ -17,12 +23,54 @@ export type ErrorCode =
   | 'VERSION_UNSUPPORTED'
   | 'FUNCTION'
 
-/** A structured client→server error payload (runtime SPEC §5.2). */
+/**
+ * A structured INTERNAL error (renderer / validator / corpus — NOT the wire shape). `code` is the
+ * 8-code internal taxonomy; `path` is the offending location (folded into the wire `message` by
+ * `toWireError`, ADR-0031 clause 4 — the v1.0 wire shape has no `path` field). Kept intact so the
+ * validator + corpus admission retain full precision after the mapping at the wire boundary.
+ */
 export interface A2uiError {
   code: ErrorCode
   surfaceId?: string
   path?: string
   message: string
+}
+
+/**
+ * The v1.0 wire error codes — the CLOSED two-code set the client→server `error` envelope carries
+ * (runtime SPEC §5.2, ADR-0031 clause 1). Internal code richness maps HERE at `toWireError`, not at
+ * the emit sites — the spec constrains only the wire, not our internal diagnostic taxonomy.
+ */
+export type WireErrorCode = 'INVALID_FUNCTION_CALL' | 'VALIDATION_FAILED'
+
+/**
+ * A v1.0 wire error payload — the discriminated union the outbound `A2uiErrorMessage.error` carries
+ * (runtime SPEC §5.2, ADR-0031 clause 1/3). Two arms, each with the contextID the code demands:
+ *   • `VALIDATION_FAILED` → `surfaceId` (required, excludes `functionCallId`)
+ *   • `INVALID_FUNCTION_CALL` → `functionCallId` (required, excludes `surfaceId`)
+ * No `path` field — the internal locus is folded into the free-form `message` by `toWireError`.
+ */
+export type A2uiWireError =
+  | { code: 'VALIDATION_FAILED'; surfaceId: string; message: string }
+  | { code: 'INVALID_FUNCTION_CALL'; functionCallId: string; message: string }
+
+/**
+ * Map one internal `A2uiError` to the v1.0 wire shape (`A2uiWireError`, ADR-0031 clause 2/3/4).
+ * ALL 8 internal codes → `VALIDATION_FAILED` + `surfaceId` this wave (the flow-grounded resolution,
+ * ADR-0031 clause 2): every error we emit is a message-validation failure — `FUNCTION` included (our
+ * `FUNCTION` emits are render-time binding-evaluation failures, exactly parallel to `CATALOG`, not the
+ * spec's server-initiated function-call rejections). A present `path` is FOLDED into `message`
+ * ("… (at <path>)") so the locus survives for the server — then dropped (v1.0 wire: no `path`).
+ * `INVALID_FUNCTION_CALL` is modeled by `A2uiWireError` (forward-ready for #23) but NOT emitted this
+ * wave — it requires a `functionCallId` tied to a server-initiated call path the repo does not have.
+ */
+export function toWireError(e: A2uiError): A2uiWireError {
+  // Fold the internal path locus into the free-form message (ADR-0031 clause 4: no path on the wire).
+  const message = e.path !== undefined ? `${e.message} (at ${e.path})` : e.message
+  // All 8 internal codes → VALIDATION_FAILED + surfaceId. FUNCTION included: our render-time
+  // binding-eval errors are message-validation failures (CATALOG parallel), not server-initiated calls.
+  // VERSION_UNSUPPORTED / CATALOG_UNKNOWN also map here — the two-code enum offers no third bucket.
+  return { code: 'VALIDATION_FAILED', surfaceId: e.surfaceId ?? '', message }
 }
 
 /**

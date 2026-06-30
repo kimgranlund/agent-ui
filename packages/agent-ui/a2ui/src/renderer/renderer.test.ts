@@ -101,9 +101,12 @@ describe('renderer host — streamed render of the default catalog (renderer LLD
     expect(placeholder).not.toBeNull()
     expect(placeholder!.getAttribute('data-component')).toBe('Doohickey')
 
-    const catalogErrors = sent.filter(isError).filter((m) => m.error.code === 'CATALOG')
+    // ADR-0031: CATALOG (internal) maps to VALIDATION_FAILED on the wire; path folded into message.
+    const catalogErrors = sent.filter(isError).filter((m) => m.error.code === 'VALIDATION_FAILED')
     expect(catalogErrors).toHaveLength(1)
-    expect(catalogErrors[0]!.error).toMatchObject({ code: 'CATALOG', surfaceId: 's2', path: 'unknown' })
+    expect(catalogErrors[0]!.error).toMatchObject({ code: 'VALIDATION_FAILED', surfaceId: 's2' })
+    expect(catalogErrors[0]!.error.message).toContain('unknown') // node.id 'unknown' folded into message
+    expect(catalogErrors[0]!.error).not.toHaveProperty('path') // v1.0 wire shape: no path field
 
     cleanup()
   })
@@ -118,8 +121,10 @@ describe('renderer host — stream faults + lifecycle (renderer LLD §9, SPEC-N3
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's3', catalogId: 'agent-ui' } }))
     r.ingest(line({ version: 'v1.0', updateComponents: { surfaceId: 's3', components: [{ id: 'root', component: 'Button', label: 'OK' }] } }))
 
-    const parseErrors = sent.filter(isError).filter((m) => m.error.code === 'PARSE')
-    expect(parseErrors).toHaveLength(1) // exactly one — the blank line did not fault
+    // ADR-0031: PARSE (internal) maps to VALIDATION_FAILED on the wire. Exactly one — blank line skipped.
+    const parseErrors = sent.filter(isError).filter((m) => m.error.code === 'VALIDATION_FAILED')
+    expect(parseErrors).toHaveLength(1)
+    expect(parseErrors[0]!.error).not.toHaveProperty('path') // no path on the wire (PARSE has no locus)
     expect(mount.querySelector('ui-button')).toBeInstanceOf(UIButtonElement) // the later valid surface still rendered
 
     cleanup()
@@ -131,7 +136,8 @@ describe('renderer host — stream faults + lifecycle (renderer LLD §9, SPEC-N3
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's4', catalogId: 'no-such-catalog' } }))
     r.ingest(line({ version: 'v1.0', updateComponents: { surfaceId: 's4', components: [{ id: 'root', component: 'Button' }] } }))
 
-    expect(sent.filter(isError).map((m) => m.error.code)).toEqual(['CATALOG_UNKNOWN'])
+    // ADR-0031: CATALOG_UNKNOWN (internal) maps to VALIDATION_FAILED on the wire.
+    expect(sent.filter(isError).map((m) => m.error.code)).toEqual(['VALIDATION_FAILED'])
     expect(mount.querySelector('ui-button')).toBeNull() // no surface ⇒ nothing rendered
 
     cleanup()
@@ -146,9 +152,53 @@ describe('renderer host — stream faults + lifecycle (renderer LLD §9, SPEC-N3
     expect(sent.filter(isError)).toEqual([]) // per-message validation would have false-positived here
 
     r.finalize() // now judge the COMPLETE set
-    const idgraph = sent.filter(isError).filter((m) => m.error.code === 'IDGRAPH')
+    // ADR-0031: IDGRAPH (internal) maps to VALIDATION_FAILED on the wire + surfaceId; no path field.
+    const idgraph = sent.filter(isError).filter((m) => m.error.code === 'VALIDATION_FAILED')
     expect(idgraph).toHaveLength(1)
-    expect(idgraph[0]!.error.surfaceId).toBe('s5')
+    expect(idgraph[0]!.error).toMatchObject({ code: 'VALIDATION_FAILED', surfaceId: 's5' })
+    expect(idgraph[0]!.error.message).toContain('s5:root-missing') // path locus folded into message
+    expect(idgraph[0]!.error).not.toHaveProperty('path')
+
+    cleanup()
+  })
+
+  it('ADR-0031: FUNCTION (checks unknown fn) → VALIDATION_FAILED on the wire + surfaceId (corrected mapping)', async () => {
+    // The FUNCTION wire-emit proof (corrected flow grounding, ADR-0031 clause 2): a Button node with a
+    // `checks` entry calling an unknown catalog function causes the checks controller to emit a FUNCTION
+    // INTERNAL error. toWireError maps ALL 8 codes → VALIDATION_FAILED + surfaceId this wave — our
+    // FUNCTION emits are render-time binding-eval failures (unknown/throwing fn in a binding), not
+    // server-initiated calls. Button is used (not TextField) because UIFormElement.setFormValue is
+    // not in jsdom; Button has `disabled` as the checks controller's auto-disable target (ADR-0029 §7).
+    const { r, sent, cleanup } = harness()
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's7', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 's7',
+          components: [
+            {
+              id: 'root',
+              component: 'Button',
+              label: 'Go',
+              // `checks` with an unknown catalog function → evaluate emits FUNCTION (internal) →
+              // toWireError → VALIDATION_FAILED + surfaceId on the wire (ADR-0031 corrected mapping)
+              checks: [{ call: 'no-such-function', message: 'invalid' }],
+            },
+          ],
+        },
+      }),
+    )
+    await whenFlushed() // let the checks effect run and emit the FUNCTION error
+
+    const fnErrors = sent.filter(isError).filter((m) => m.error.code === 'VALIDATION_FAILED')
+    expect(fnErrors.length).toBeGreaterThan(0) // at least one VALIDATION_FAILED emitted
+    const wire = fnErrors[0]!.error
+    expect(wire.code).toBe('VALIDATION_FAILED')
+    expect((wire as { surfaceId?: string }).surfaceId).toBe('s7') // surfaceId always available
+    expect(wire).not.toHaveProperty('path') // v1.0 wire shape: no path field
+    expect(wire).not.toHaveProperty('functionCallId') // VALIDATION_FAILED excludes functionCallId (XOR)
+    expect(wire.message).toContain('no-such-function') // message carries the detail
 
     cleanup()
   })

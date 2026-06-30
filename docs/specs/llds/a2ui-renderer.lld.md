@@ -164,20 +164,24 @@ Pure and total (never throws). Produces the `error` payloads of §5.2.
 
 ## 9. Error & edge-case handling (the enumeration this LLD owns)
 
-| Code / edge | Stage | Handling |
-|---|---|---|
-| `PARSE` | LLD-C1 | malformed line → emit error, continue stream (N4) |
-| `VERSION_UNSUPPORTED` | LLD-C2 | unknown `version` → emit error, skip message (SPEC-R13 AC2) |
-| `SCHEMA` | LLD-C2/C11 | unknown envelope key / schema fail → error, do not render |
-| `CATALOG_UNKNOWN` | LLD-C3 | `createSurface` with unbound `catalogId` → error, no surface (R2 AC3) |
-| `IDGRAPH` | LLD-C11 (validate, at finalize) | **missing `root`**, 2nd `root`, cycle, or dangling — all evaluated on a COMPLETE component set at finalize, never per-message (SPEC-R4) → error; existing root kept (R3 AC2). LLD-C4 eager-guards the always-invalid 2nd `root`/cycle in-stream. |
-| `CATALOG` | LLD-C7 | unknown `component` type → error + placeholder; siblings render (R9 AC2) |
-| undefined `path` | LLD-C5 | placeholder value, not an error; updates when data arrives (R4 AC2) |
-| `FUNCTION` | LLD-C10 | unknown/throwing client fn → error; checks treated as invalid |
-| unknown `actionId` | LLD-C9 | drop with warning; no throw |
-| out-of-order child | LLD-C4 | hold in `pendingParents`, patch on arrival (R4 AC1) |
-| `deleteSurface` mid-stream | LLD-C3 | dispose scope + abort; late messages for that surface → no-op |
-| teardown | LLD-C3 | `inspect()` asserts zero subscribers; AbortSignal asserts zero listeners (N3) |
+The first column is the **internal** diagnostic code; the **wire** column is the v1.0 two-code (`VALIDATION_FAILED` / `INVALID_FUNCTION_CALL`) the `#emit` boundary maps it to (ADR-0031). The wire `message` (with the internal `path` locus folded in — there is no wire `path`) carries the specificity the coarse wire code drops; the validator's internal codes are unchanged (corpus parity, SPEC-N6).
+
+| Code / edge | Stage | → wire | Handling |
+|---|---|---|---|
+| `PARSE` | LLD-C1 | `VALIDATION_FAILED` | malformed line → emit error, continue stream (N4) |
+| `VERSION_UNSUPPORTED` | LLD-C2 | `VALIDATION_FAILED` | unknown `version` → emit error, skip message (SPEC-R13 AC2) |
+| `SCHEMA` | LLD-C2/C11 | `VALIDATION_FAILED` | unknown envelope key / schema fail → error, do not render |
+| `CATALOG_UNKNOWN` | LLD-C3 | `VALIDATION_FAILED` | `createSurface` with unbound `catalogId` → error, no surface (R2 AC3) |
+| `IDGRAPH` | LLD-C11 (validate, at finalize) | `VALIDATION_FAILED` | **missing `root`**, 2nd `root`, cycle, or dangling — all evaluated on a COMPLETE component set at finalize, never per-message (SPEC-R4) → error; existing root kept (R3 AC2). LLD-C4 eager-guards the always-invalid 2nd `root`/cycle in-stream. |
+| `CATALOG` | LLD-C7 | `VALIDATION_FAILED` | unknown `component` type → error + placeholder; siblings render (R9 AC2) |
+| undefined `path` | LLD-C5 | — (no emit) | placeholder value, not an error; updates when data arrives (R4 AC2) |
+| `FUNCTION` | LLD-C10 | `VALIDATION_FAILED` | unknown/throwing client fn in a binding → error; checks treated as invalid. **Render-time binding-eval, NOT server-initiated** → `VALIDATION_FAILED` (the message references an invalid function, like `CATALOG`); `INVALID_FUNCTION_CALL` is reserved for a server-initiated path (none yet, #23). |
+| unknown `actionId` | LLD-C9 | — (no emit) | drop with warning; no throw |
+| out-of-order child | LLD-C4 | — | hold in `pendingParents`, patch on arrival (R4 AC1) |
+| `deleteSurface` mid-stream | LLD-C3 | — | dispose scope + abort; late messages for that surface → no-op |
+| teardown | LLD-C3 | — | `inspect()` asserts zero subscribers; AbortSignal asserts zero listeners (N3) |
+
+**Wire boundary (LLD-C13, ADR-0031).** `renderer.ts #emit` is the single client→server chokepoint; it applies `toWireError(internal): A2uiWireError`. The contextID is **tied to the code** (v1.0: `INVALID_FUNCTION_CALL` requires `functionCallId` and excludes `surfaceId`; `VALIDATION_FAILED` requires `surfaceId`), so the wire type is a discriminated union. **This wave EVERY code maps to `VALIDATION_FAILED` + `surfaceId`** — including `FUNCTION` (render-time binding-eval = message validation, **not** the server-initiated `INVALID_FUNCTION_CALL`, for which the repo has no path). The internal `path` locus is **folded into the wire `message`** — there is NO wire `path` field. The internal `emitError`/validator codes (and their ~33 tests) are unchanged; only the outbound message maps. `INVALID_FUNCTION_CALL` + `functionCallId` is **reserved** for a future server-initiated function-call path (#23).
 
 ## 10. File & integration plan
 
