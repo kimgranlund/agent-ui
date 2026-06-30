@@ -11,6 +11,15 @@
 Edge padding for a glyph = **(height − glyph) / 2**. Each glyph centers in a square cell of side = the
 control height. `padding-block` is `0` — **block-size is the vertical lever, never block-padding**.
 
+**Vertical-text companion — single-line Control text is `line-height: 1`.** A single-line **Control**-class
+control (`button`, `text-field`, `select`, the field family — the full-height `block-size` class) sets
+`line-height: var(--ui-control-line-height)` (`= 1`): the single line, like a glyph, centers in the fixed frame
+(the host grid's `align-items: center`) with **no extra leading**. The frame height is unchanged — `line-height 1`
+tightens the line box, it never grows the box. **EXCLUDES the Display class** (`ui-text`): multi-line document text
+keeps its per-level type leading `--ui-type-{level}-leading` (ADR-0025). `--ui-control-line-height` is a fleet
+`:root` constant (ADR-0036), named with `line-height` (not `leading`) to stay clear of the leading/trailing **slot**
+vocabulary.
+
 ## The two families
 
 Every derived quantity scales with one of two things:
@@ -95,9 +104,11 @@ is always to size it `= --ui-{cmp}-glyph` (font).
 
 ## The size ramp (two bands)
 
-`scale × size(sm/md/lg)` → a **height** (`--ui-height-{size}`) and a **font** (`--ui-font-{size}`); a
-control resolves height+font, then obeys the families above. The ramp is two bands that change gear at
-the **MD|LG seam**:
+`(scale × size)` **selects a §1 row** (Kim's explicit lookup — **no multiplier**; ADR-0038): the cell
+names one §1 row and `--ui-{height,font,icon}-{size}` all come from it (height + glyphs consistent), so a
+control resolves height+font+icon from one row, then obeys the families above. (`--ui-scale` is gone from
+the control path — it survives only as the `--ui-type-*` **display** multiplier.) The §1 ramp it selects
+from is two bands that change gear at the **MD|LG seam**:
 
 - **compact band** (XS·SM·MD = 20·24·28): height `+4` linear; gentle glyph step.
 - **expressive band** (LG·XL·2XL = 36·48·64): height `×4/3` geometric; doubled glyph step.
@@ -112,7 +123,7 @@ A component's sizing lever is set by its class:
 
 | Class | Examples | Lever |
 |---|---|---|
-| **Control** (full height) | button · text-field · number-field · select · field | `block-size: var(--ui-{cmp}-height)` off `--ui-height-{size}`; font `--ui-font-{size}`; inline-pad per the slot/slotless model |
+| **Control** (full height) | button · text-field · number-field · select · field | `block-size: var(--ui-{cmp}-height)` off `--ui-height-{size}`; font `--ui-font-{size}`; **`line-height: 1`** (single-line, ADR-0036); inline-pad per the slot/slotless model |
 | **Indicator** (smaller box) | checkbox · radio · switch · slider · tag | `block/inline-size: var(--ui-{cmp}-size)` off `--ui-ind-{size}` (or the compact ramp) |
 | **Pattern** (container + control-height rows) | tabs · segmented-control · toolbar · accordion · menu · dialog | interactive rows take the control height; the shell uses the space scale |
 | **Container/layout** | spacer · stack · grid | gaps/margins/padding off `--space-*` × density; no control height |

@@ -27,14 +27,20 @@
   --ui-compact-md: 16px;
   --ui-compact-lg: 18px;
 
-  /* Control-band FONT + ICON — the EXPLICIT §1-SET tables (ADR-0035, supersedes ADR-0033's pow). The ui-md
-     default triples (font 13·14·16, icon 16·18·20 — byte-identical to today); each [scale] tier re-tables them
-     below to the §1-SET integer for that tier's snapped height (NOT pow/a multiplier — the §1 ramp is hand-
-     tuned + non-uniform, so it is tabled per tier, the #25 --ui-compact pattern). LITERALS, so they sit on
-     :root (default) + the [scale] selectors, NEVER `*` (a literal on `*` re-declares per descendant and
-     defeats subtree inheritance). gap = font/2 (on `*`, reads the inherited --ui-font) and caret = font follow
-     for free; height + --ui-type-* stay LINEAR (the ADR-0033 height leg + the ADR-0025 type fork). The §1-set
-     fonts STEP (adjacent [scale] tiers can share a font while the height climbs) — deliberate (ADR-0035). */
+  /* Control-band HEIGHT + FONT + ICON — Kim's explicit (scale × size) → §1-row LOOKUP (ADR-0038, supersedes
+     the MULTIPLIER: ADR-0007's control leg + ADR-0032's 0.875…1.75 ladder; re-tables ADR-0035's non-default
+     font/icon). The ui-md default triples (height 24·28·36, font 13·14·16, icon 16·18·20 — byte-identical to
+     today); each [scale] tier re-tables ALL THREE below to its §1 row — height picks the row, font/icon/caret/
+     gap/pad all derive from that ONE row (the consistency the multiplier broke). NO multiplier: `× var(--ui-
+     scale)` LEAVES the control path entirely; --ui-scale survives for --ui-type-* DISPLAY only (below). LITERALS,
+     so they sit on :root (default) + the [scale] selectors, NEVER `*` (a literal on `*` re-declares per
+     descendant and defeats subtree inheritance — the #25 --ui-compact proof). gap = font/2 (on `*`, reads the
+     inherited --ui-font) + caret = font follow for free. Kim's band overlap: content-sm ≡ ui-md, content-md ≡
+     ui-lg (the 6 [scale] names render 4 distinct registers). */
+  --ui-height-sm: 24px;
+  --ui-height-md: 28px;
+  --ui-height-lg: 36px;
+
   --ui-font-sm: 13px;
   --ui-font-md: 14px;
   --ui-font-lg: 16px;
@@ -42,6 +48,12 @@
   --ui-icon-sm: 16px;
   --ui-icon-md: 18px;
   --ui-icon-lg: 20px;
+
+  /* Single-line control line-height (ADR-0036) — a CONSTANT 1: a control glyph is ONE line centred in the
+     frame by the h/2 law, so line-height 1 keeps the text box = the font box (a >1 leading would inflate the
+     line box and fight the square-centring). Controls read `line-height: var(--ui-control-line-height)` on
+     :scope. Not [scale]/[density]-derived → :root, like the focus-ring / motion constants. */
+  --ui-control-line-height: 1;
 
   /* Focus-ring geometry (ADR-0009) — CONSTANTS, not derived via a subtree-repointable multiplier, so they
      stay on :root, NOT on `*`: ADR-0007's universal-selector rule covers only DERIVED tokens (a var() over
@@ -106,13 +118,11 @@
    this back onto :root — that re-breaks subtree scale/density. (~9 inheritable custom-prop declarations per
    element; declarations don't trigger layout/paint, so the cost is negligible.) */
 * {
-  /* Control-band HEIGHT, base px @ scale 1 (geometry-sizing-spec.md §1): SM·MD·LG = 24·28·36. The FRAME
-     (height) scales LINEARLY → `× var(--ui-scale)`. Font + icon are NO LONGER on the `*` ramp — ADR-0035 makes
-     them explicit §1-SET per-[scale]-tier tables (on :root + the [scale] selectors, the #25 --ui-compact
-     pattern), superseding ADR-0033's pow. The gap below still reads the (now inherited) --ui-font. */
-  --ui-height-sm: calc(24px * var(--ui-scale));
-  --ui-height-md: calc(28px * var(--ui-scale));
-  --ui-height-lg: calc(36px * var(--ui-scale));
+  /* Control HEIGHT + FONT + ICON are NO LONGER on this `*` ramp — ADR-0038 makes all three explicit Kim's-table
+     per-[scale] literals (:root default + the [scale] selectors, the #25 --ui-compact pattern); `× var(--ui-scale)`
+     left the control path. What stays on `*` below is genuinely DERIVED (a var() over a subtree-repointable
+     multiplier that MUST re-substitute per element): the gap (× --ui-density, reads the inherited --ui-font),
+     --ui-type-*-size (× --ui-scale, the surviving DISPLAY consumer), and --ui-space-* (× --ui-density). */
 
   /* Rhythm: the gap = font / 2, and density rides it (× var(--ui-density)). This is the ONE quantity
      density touches — the frame (height/font/inline-pad) is density-invariant. (gap also carries scale,
@@ -159,95 +169,105 @@
   --ui-space-2xl: calc(32px * var(--ui-density));
 }
 
-/* [scale] — the global FRAME multiplier (theme size), now a SIX-tier TWO-BAND ladder (ADR-0032). Each tier
-   repoints --ui-scale for its subtree, so every derived ramp token above recomputes (height, font, and —
-   via font — the gap). The base ramp + the `*` substitution mechanism (ADR-0007) are UNCHANGED — the tiers
-   only feed --ui-scale. Two bands, split by reading distance:
-     • ui-* — the TIGHT control cluster (0.875 · 1.0 · 1.125): UI chrome at arm's length. ui-md = 1.0 is the
-       DEFAULT (= :root --ui-scale, today's baseline — no visual shift), so the vocab no longer overlaps
-       [density]'s compact/comfortable/spacious (scale = ui-sm…content-lg, density = compact/comfortable/spacious).
-     • content-* — the GENEROUS reading band (1.375 · 1.5 · 1.75): long-form / projected content. The jump
-       from ui-lg (1.125) to content-sm (1.375) is the band gap — a step in READING density, not a continuation.
-
-   Each tier ALSO re-tables the explicit §1-SET --ui-font + --ui-icon tables (ADR-0035, supersedes ADR-0033's
-   pow) and the --ui-compact-* box ramp (geometry-sizing-spec §5.2, the forward-ready compact-widget frame).
-   None is a multiplier: the §1 ramp + the compact bands are hand-tuned + NON-uniform, so each tier HAND-TABLES
-   its sm·md·lg literals (the font/icon = the §1-SET integer for that tier's snapped height; e.g. content-lg/lg
-   font 20 / icon 28, NOT pow's 20.6 / 27.7). Because the values are LITERALS (no var(--ui-scale)) they cannot
-   ride the `*` ramp — a literal on `*` re-declares on every descendant and defeats subtree inheritance — so
-   they live on the [scale] selector itself (+ the :root ui-md defaults above), inheriting down to a subtree
-   exactly like --ui-scale; gap (font/2, on `*`) + caret (= font) follow the inherited --ui-font for free. */
+/* [scale] — Kim's (scale × size) → §1-row LOOKUP selector (ADR-0038, supersedes ADR-0032's multiplier ladder
+   for CONTROLS). Each tier re-tables --ui-{height,font,icon}-{sm,md,lg} to its chosen §1 row (height picks the
+   row; font/icon derive from it — ONE consistent row per cell, the thing the multiplier broke). Descendants
+   inherit the re-tabled tokens, so subtree [scale] works WITHOUT --ui-scale (the #25 --ui-compact proof). The
+   tiers ALSO re-table --ui-compact-* (§5.2, forward-ready). Two bands by reading distance — ui-* tight (UI
+   density), content-* generous (reading density) — and content-* is the ui-* band SHIFTED UP ONE §1 row, so
+   content-sm ≡ ui-md and content-md ≡ ui-lg (Kim's design: 6 names → 4 distinct registers; only content-lg
+   exceeds the ui band). ui-md is the DEFAULT (= :root, byte-identical). Each tier STILL sets --ui-scale to its
+   tier value — but ONLY --ui-type-* (DISPLAY, the ADR-0025/0033 ruled-linear fork) reads it now; --ui-scale
+   has LEFT the control path (controls are the explicit literals above/here). */
 [scale="ui-sm"] {
   --ui-scale: 0.875;
-  --ui-compact-sm: 12px;
-  --ui-compact-md: 14px;
-  --ui-compact-lg: 16px;
+  --ui-height-sm: 20px;
+  --ui-height-md: 24px;
+  --ui-height-lg: 28px;
   --ui-font-sm: 12px;
   --ui-font-md: 13px;
   --ui-font-lg: 14px;
   --ui-icon-sm: 14px;
   --ui-icon-md: 16px;
   --ui-icon-lg: 18px;
+  --ui-compact-sm: 12px;
+  --ui-compact-md: 14px;
+  --ui-compact-lg: 16px;
 }
 [scale="ui-md"] {
   --ui-scale: 1;
-  --ui-compact-sm: 14px;
-  --ui-compact-md: 16px;
-  --ui-compact-lg: 18px;
+  --ui-height-sm: 24px;
+  --ui-height-md: 28px;
+  --ui-height-lg: 36px;
   --ui-font-sm: 13px;
   --ui-font-md: 14px;
   --ui-font-lg: 16px;
   --ui-icon-sm: 16px;
   --ui-icon-md: 18px;
   --ui-icon-lg: 20px;
+  --ui-compact-sm: 14px;
+  --ui-compact-md: 16px;
+  --ui-compact-lg: 18px;
 }
 [scale="ui-lg"] {
   --ui-scale: 1.125;
+  --ui-height-sm: 28px;
+  --ui-height-md: 36px;
+  --ui-height-lg: 48px;
+  --ui-font-sm: 14px;
+  --ui-font-md: 16px;
+  --ui-font-lg: 18px;
+  --ui-icon-sm: 18px;
+  --ui-icon-md: 20px;
+  --ui-icon-lg: 24px;
   --ui-compact-sm: 16px;
   --ui-compact-md: 18px;
   --ui-compact-lg: 20px;
-  --ui-font-sm: 14px;
-  --ui-font-md: 14px;
-  --ui-font-lg: 16px;
-  --ui-icon-sm: 18px;
-  --ui-icon-md: 18px;
-  --ui-icon-lg: 20px;
 }
 [scale="content-sm"] {
   --ui-scale: 1.375;
+  --ui-height-sm: 24px;
+  --ui-height-md: 28px;
+  --ui-height-lg: 36px;
+  --ui-font-sm: 13px;
+  --ui-font-md: 14px;
+  --ui-font-lg: 16px;
+  --ui-icon-sm: 16px;
+  --ui-icon-md: 18px;
+  --ui-icon-lg: 20px;
   --ui-compact-sm: 18px;
   --ui-compact-md: 22px;
   --ui-compact-lg: 26px;
-  --ui-font-sm: 16px;
-  --ui-font-md: 16px;
-  --ui-font-lg: 18px;
-  --ui-icon-sm: 20px;
-  --ui-icon-md: 20px;
-  --ui-icon-lg: 24px;
 }
 [scale="content-md"] {
   --ui-scale: 1.5;
+  --ui-height-sm: 28px;
+  --ui-height-md: 36px;
+  --ui-height-lg: 48px;
+  --ui-font-sm: 14px;
+  --ui-font-md: 16px;
+  --ui-font-lg: 18px;
+  --ui-icon-sm: 18px;
+  --ui-icon-md: 20px;
+  --ui-icon-lg: 24px;
   --ui-compact-sm: 20px;
   --ui-compact-md: 24px;
   --ui-compact-lg: 28px;
-  --ui-font-sm: 16px;
-  --ui-font-md: 16px;
-  --ui-font-lg: 18px;
-  --ui-icon-sm: 20px;
-  --ui-icon-md: 20px;
-  --ui-icon-lg: 24px;
 }
 [scale="content-lg"] {
   --ui-scale: 1.75;
-  --ui-compact-sm: 24px;
-  --ui-compact-md: 28px;
-  --ui-compact-lg: 32px;
+  --ui-height-sm: 36px;
+  --ui-height-md: 48px;
+  --ui-height-lg: 64px;
   --ui-font-sm: 16px;
   --ui-font-md: 18px;
   --ui-font-lg: 20px;
   --ui-icon-sm: 20px;
   --ui-icon-md: 24px;
   --ui-icon-lg: 28px;
+  --ui-compact-sm: 24px;
+  --ui-compact-md: 28px;
+  --ui-compact-lg: 32px;
 }
 
 /* [density] — multiplies the RHYTHM only (the gap), never the frame (geometry.md). Repoints --ui-density,

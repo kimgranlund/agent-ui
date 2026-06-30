@@ -4,12 +4,12 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — delivers ADR-0006 subtree [density]; unblocks s13)* *(font/glyph leg superseded by ADR-0033 — the `× var(--ui-scale)` on `--ui-font` becomes sublinear `× pow(scale, 0.45)`; the universal-`*` mechanism + the height leg STAND)* |
+> | **Status** | accepted *(ratified 2026-06-27 — delivers ADR-0006 subtree [density]; unblocks s13)* *(font/glyph leg superseded by ADR-0033/0035; **the whole control-ramp `*`×`--ui-scale` leg superseded by ADR-0038** — `--ui-{height,font,icon}` become explicit per-`[scale]` tables (Kim's (scale×size)→§1-row lookup), no multiplier; the `*`-declaration + `--ui-scale` survive for `--ui-type-*` DISPLAY only)* |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — encoding the host-ratified fix for a geometry bug the gold cross-engine smoke (s13) caught and execution-lead diagnosed |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |
 > | **Repairs** | `packages/agent-ui/shared/src/tokens/dimensions.css` (s6 — the derived ramp-token declarations: `--ui-{height,font,gap}-{sm,md,lg}`). *(No edit: `references/geometry.md` is the law and is correct — it always intended subtree scale/density; this is a CSS-mechanics repair.)* |
-> | **Supersedes / Superseded by** | Relates: **ADR-0006** (its subtree `[density]` smoke is now actually *delivered*, not merely assumed). · **Extended by ADR-0032** (the numeric `--ui-scale` mechanism here is kept; the `[scale]` attribute vocabulary widens from the 3-step placeholder to the 6-tier `ui-sm…content-lg` two-band system). · **Font/glyph leg superseded by ADR-0033** (the linear `--ui-font = base × scale` becomes sublinear `base × pow(scale, 0.45)` per §1.1; the universal-`*` declaration mechanism + the `--ui-height` linear leg STAND). |
+> | **Supersedes / Superseded by** | Relates: **ADR-0006** (its subtree `[density]` smoke is now actually *delivered*, not merely assumed). · **Extended by ADR-0032** (the numeric `--ui-scale` mechanism here is kept; the `[scale]` attribute vocabulary widens from the 3-step placeholder to the 6-tier `ui-sm…content-lg` two-band system). · **Font/glyph leg superseded by ADR-0033** (→ sublinear `pow`, then ADR-0035 → explicit §1 table) · **Whole control-ramp leg superseded by ADR-0038** (the entire `* { --ui-{height,font,icon} × var(--ui-scale) }` control ramp → explicit `:root`+`[scale]` tables from Kim's `(scale × size) → §1-row` lookup; ADR-0037's height-snap is folded into it; **no multiplier**. The `*`-declaration + `--ui-scale` SURVIVE for the `--ui-type-*` **display** leg only — ADR-0025/0033. ADR-0032's vocabulary widening (the `[scale]` tier names) STANDS as the row-selectors). |
 
 ## Context
 

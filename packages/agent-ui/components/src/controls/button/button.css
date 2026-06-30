@@ -95,6 +95,7 @@
     min-inline-size: var(--ui-button-height); /* frame: icon-only ≈ square */
 
     font-size: var(--ui-button-font);
+    line-height: var(--ui-control-line-height); /* single-line control standard — ADR-0036; tight line box centered in the fixed frame */
     background: var(--ui-button-bg);
     color: var(--ui-button-ink);
     border: 1px solid var(--ui-button-border);

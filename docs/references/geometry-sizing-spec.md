@@ -83,6 +83,13 @@ legibility; they sit below the consumed 20→64 range. The `caret = 4.08·h^0.35
 > `gap = font/2` follow. So `[size]` and `[scale]` now agree — **any** final height gets this law's glyphs.
 > (Display type `--ui-type-*` stays **linear** — it has no box, so the in-box optical correction does not
 > apply; ADR-0033 / ADR-0025.)
+>
+> **Update — superseded by ADR-0038 (Kim, 2026-06-30, "no multipliers").** The `pow` realization is gone:
+> glyphs now come **directly from the `(scale × size)`-selected §1 row** (§3) — no `pow`, no `× --ui-scale`.
+> The **sublinear OUTCOME stands** (the §1 ramp is sublinear *by construction*, and the lookup picks §1
+> rows, so a larger box still gets a proportionally smaller glyph). `caret = font` / `gap = font/2` follow
+> the selected row. Display `--ui-type-*` still scales `× --ui-scale` (linear, untouched — the only
+> surviving `--ui-scale` consumer).
 
 ### 1.2 · The same law, read structurally — **two bands**
 
@@ -201,6 +208,11 @@ toggle).
   *inside* the square, never widening it. Contents centered.
 - **density** multiplies the **rhythm** (gap) only — never the frame (pad/slot/icon), or the icon
   un-centers and the square breaks.
+- **single-line Control text: `line-height = 1`** (the vertical-text companion — ADR-0036): the single line
+  centers in the fixed frame (`align-items: center`) with no extra leading, exactly as a glyph centers in its
+  square cell; `line-height 1` tightens the line box, never the box. A fleet `:root` constant
+  `--ui-control-line-height: 1`. **EXCLUDES** the Display class (`ui-text`), which keeps its multi-line
+  `--ui-type-{level}-leading` (ADR-0025).
 
 For a **label-only / slotless** edge (no glyph there), the law has no glyph to center; the edge takes
 **`h/2`** (§1.5 — the text pad `½(h − font)` plus the absent slot's gap `½·font`), not `(height − glyph)/2`.
@@ -209,28 +221,29 @@ For a **label-only / slotless** edge (no glyph there), the law has no glyph to c
 
 ## 3 · How the shipped sizes map onto the law (reference/law-only — Kim's ruling)
 
-> **REALIZED (ADR-0032, 2026-06-30 — closes the #24 scale-framing finding).** The `ui-sm…content-lg`
-> two-band `[scale]` tier is now **implemented** in `dimensions.css`, replacing the 3-step
-> `compact/comfortable/spacious` placeholder. The **control ramp** scales by a per-tier `--ui-scale`
-> **multiplier** (`ui-sm 0.875 · ui-md 1.0 · ui-lg 1.125 · content-sm 1.375 · content-md 1.5 · content-lg 1.75`,
-> the ADR-0007 mechanism); the **§5.2 compact-box ramp** is a separate per-tier **re-table** (`--ui-compact-*`).
-> **Caveat (the magnitude-consistency design choice):** §5.2 formally tables the **compact box** — a *separate*
-> system from the control ramp (§5.1). The control multiplier ladder **deliberately reuses §5.2's per-tier
-> magnitudes** (each tier's compact md ÷ ui-md's 16) so **one `[scale]` tier scales the control frame AND the
-> compact box by the same per-tier proportion** (ADR-0032) — a ratified design choice, not a spec-mandated
-> control table. **Glyph refinement (ADR-0033):** the `--ui-scale` multiplier is **linear on HEIGHT** but
-> **sublinear on the GLYPHS** — under `[scale]`, `--ui-font = base × pow(--ui-scale, 0.45)` and
-> `--ui-icon = base × pow(--ui-scale, 0.58)` (§1.1), so the glyphs track the law at the *scaled* height,
-> not the linear height ratio. So this §3 framing is no longer intended-only — it is the shipped model.
+> **REALIZED — Kim's `(scale × size) → §1-row` lookup (ADR-0038, 2026-06-30; NO multipliers).** Kim ruled
+> *"let's not use multipliers."* The control ramp is an **explicit per-`[scale]` table**: each
+> `(scale × size)` cell names **one §1 row**, and `--ui-{height,font,icon}` (plus caret/gap/pad) **all come
+> from that one row** — height and glyphs are mutually consistent. `[scale]` re-tables the tokens (the
+> `--ui-compact` re-table mechanism, extended to height/font/icon); `[size]` selects sm/md/lg; descendants
+> inherit (no `--ui-scale` in the control path). The **default (`ui-md`) is byte-identical** (24·28·36 /
+> font 13·14·16 / icon 16·18·20). Kim's design is a **shift-by-one-row ladder**: the `content-*` band is the
+> `ui-*` band shifted up one §1 row, so `content-sm ≡ ui-md` and `content-md ≡ ui-lg` (the 6 `[scale]` names
+> render 4 distinct registers — deliberate). Kim's authoritative table is in **ADR-0038 clause 1**.
+>
+> *(History — superseded by ADR-0038: the control ramp was a per-tier `--ui-scale` **multiplier**
+> (ADR-0032 `0.875…1.75`) with **sublinear `pow` glyphs** (ADR-0033), then **snapped to §1**
+> (ADR-0035/0037). Kim replaced the whole multiplier with the explicit lookup. `--ui-scale` survives for
+> `--ui-type-*` **display** only — the ruled-linear fork, ADR-0025/0033. The §5.2 `--ui-compact-*` box ramp
+> is a **separate** re-table, unaffected.)*
 
-No size-ramp migration. The shipped two-axis model stays:
-- `scale` (`ui-sm…content-lg`) × `size` (`sm/md/lg`) → a **height** (the `--ui-height-{size}` table in
-  `dimensions.css`, via the linear `--ui-scale` multiplier); **font** → `--ui-font-{size}`, which under
-  `[scale]` re-derives **sublinearly** (`base × pow(--ui-scale, 0.45)`, §1.1 / ADR-0033) — not the linear
-  height ratio.
-- A control resolves its **height** + **font** from those tables, then **obeys §1.4**: icon = `--ui-ind`
-  (the frame); the identical `icon`-sized slot; uniform `inline-pad = ½(height − icon)`; and the rhythm
-  rules `gap = font/2`, `caret = font`.
+No size-ramp migration. The two-axis model:
+- `scale` (`ui-sm…content-lg`) × `size` (`sm/md/lg`) **selects a §1 row** (Kim's table, ADR-0038);
+  `--ui-{height,font,icon}-{size}` are that row's values, re-tabled per `[scale]` in `dimensions.css` (no
+  multiplier, no `pow`).
+- A control resolves its **height + font + icon** from the **one** selected row, then **obeys §1.4**:
+  the icon-sized slot; uniform `inline-pad = ½(height − icon)`; the rhythm rules `gap = font/2`,
+  `caret = font` — all from the same row.
 
 The ramp in §1 is the **reference** for choosing the tabled icon/caret/font at a given height (e.g. a
 28px control → MD row → icon 18 · caret 14 · font 14). The point is the *relationships*, not a forced

@@ -32,20 +32,43 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
     expect(rootBlock).toMatch(/--ui-density:\s*1\s*;/)
   })
 
-  it('declares the height ramp (sm·md·lg = 24·28·36) scaled by --ui-scale, on the `*` block', () => {
-    expect(universalBlock).toMatch(/--ui-height-sm:\s*calc\(\s*24px\s*\*\s*var\(--ui-scale\)\s*\)/)
-    expect(universalBlock).toMatch(/--ui-height-md:\s*calc\(\s*28px\s*\*\s*var\(--ui-scale\)\s*\)/)
-    expect(universalBlock).toMatch(/--ui-height-lg:\s*calc\(\s*36px\s*\*\s*var\(--ui-scale\)\s*\)/)
+  it('declares --ui-height-{sm,md,lg} as the EXPLICIT per-[scale] table (ADR-0038 Kim lookup — supersedes the × var(--ui-scale) multiplier) — :root default + each tier, OFF `*`', () => {
+    // tier → [sm,md,lg] height px (Kim's (scale×size) → §1-row table). NO calc, NO var(--ui-scale) — literals.
+    const TABLE: Array<[string, [number, number, number]]> = [
+      ['ui-sm', [20, 24, 28]],
+      ['ui-md', [24, 28, 36]],
+      ['ui-lg', [28, 36, 48]],
+      ['content-sm', [24, 28, 36]], // ≡ ui-md (Kim's band overlap)
+      ['content-md', [28, 36, 48]], // ≡ ui-lg
+      ['content-lg', [36, 48, 64]],
+    ]
+    // :root default = the ui-md triple (24/28/36) — byte-identical to today
+    expect(rootBlock).toMatch(/--ui-height-sm:\s*24px\s*;/)
+    expect(rootBlock).toMatch(/--ui-height-md:\s*28px\s*;/)
+    expect(rootBlock).toMatch(/--ui-height-lg:\s*36px\s*;/)
+    for (const [tier, [sm, md, lg]] of TABLE) {
+      const block = (flat.match(new RegExp(`\\[scale="${tier}"\\]\\s*\\{[^}]*\\}`)) ?? [''])[0]
+      expect(block.length, `[scale="${tier}"] block not found`).toBeGreaterThan(0)
+      expect(block).toMatch(new RegExp(`--ui-height-sm:\\s*${sm}px\\s*;`))
+      expect(block).toMatch(new RegExp(`--ui-height-md:\\s*${md}px\\s*;`))
+      expect(block).toMatch(new RegExp(`--ui-height-lg:\\s*${lg}px\\s*;`))
+    }
+    // OFF the `*` ramp + NO multiplier — `× var(--ui-scale)` left the control path (AC5 static analog)
+    expect(universalBlock).not.toMatch(/--ui-height-\w+:/)
+    const heightDecls = flat.match(/--ui-height-(?:sm|md|lg):[^;]*;/g) ?? []
+    expect(heightDecls.length).toBeGreaterThanOrEqual(21) // 6 tiers × 3 + 3 :root = 21
+    for (const d of heightDecls) expect(d).not.toMatch(/calc\(|var\(/)
   })
 
-  it('declares --ui-font-{sm,md,lg} as the EXPLICIT §1-SET per-[scale] table (ADR-0035, supersedes ADR-0033 pow) — :root default + each tier, OFF `*`', () => {
-    // tier → [sm,md,lg] font px (the §1-SET integer for that tier's snapped height). NO pow, NO calc — literals.
+  it('declares --ui-font-{sm,md,lg} as the EXPLICIT per-[scale] table (ADR-0038 Kim rows — re-tables ADR-0035) — :root default + each tier, OFF `*`', () => {
+    // tier → [sm,md,lg] font px — the §1 row each cell's height picks (ADR-0038). NO pow, NO calc — literals.
+    // ADR-0038 re-derived these from Kim's heights: ui-lg ↑ (md 14→16, lg 16→18); content-sm/md ↓ (= ui-md/ui-lg).
     const TABLE: Array<[string, [number, number, number]]> = [
       ['ui-sm', [12, 13, 14]],
       ['ui-md', [13, 14, 16]],
-      ['ui-lg', [14, 14, 16]],
-      ['content-sm', [16, 16, 18]],
-      ['content-md', [16, 16, 18]],
+      ['ui-lg', [14, 16, 18]],
+      ['content-sm', [13, 14, 16]], // ≡ ui-md (Kim's band overlap)
+      ['content-md', [14, 16, 18]], // ≡ ui-lg
       ['content-lg', [16, 18, 20]],
     ]
     // :root default = the ui-md triple (13/14/16) — byte-identical to today
@@ -69,14 +92,15 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
     for (const d of fontDecls) expect(d).not.toMatch(/pow\(|calc\(|var\(/)
   })
 
-  it('declares --ui-icon-{sm,md,lg} as the EXPLICIT §1-SET per-[scale] table (ADR-0035 4a hoist) — :root default + each tier, OFF `*`', () => {
-    // The icon ramp HOISTED out of button.css to a shared token (fork 4a). Same §1-SET table shape as --ui-font.
+  it('declares --ui-icon-{sm,md,lg} as the EXPLICIT per-[scale] table (ADR-0038 Kim rows — re-tables ADR-0035 4a hoist) — :root default + each tier, OFF `*`', () => {
+    // The shared icon token (ADR-0035 4a hoist); ADR-0038 re-derives the per-cell values from Kim's heights:
+    // ui-lg ↑ (md 18→20, lg 20→24); content-sm/md ↓ (= ui-md/ui-lg icons). Same explicit-table shape as --ui-font.
     const TABLE: Array<[string, [number, number, number]]> = [
       ['ui-sm', [14, 16, 18]],
       ['ui-md', [16, 18, 20]],
-      ['ui-lg', [18, 18, 20]],
-      ['content-sm', [20, 20, 24]],
-      ['content-md', [20, 20, 24]],
+      ['ui-lg', [18, 20, 24]],
+      ['content-sm', [16, 18, 20]], // ≡ ui-md (Kim's band overlap)
+      ['content-md', [18, 20, 24]], // ≡ ui-lg
       ['content-lg', [20, 24, 28]],
     ]
     // :root default = the ui-md icon triple (16/18/20) — byte-identical to today's button icon ramp
@@ -95,19 +119,23 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
     for (const d of iconDecls) expect(d).not.toMatch(/pow\(|calc\(|var\(/) // pure px — pow(scale,0.58) is gone
   })
 
-  it('the ADR-0033 pow mechanism is GONE (ADR-0035) — no pow() anywhere; height + --ui-type-*-size stay LINEAR; font/icon are literal tables OFF `*`', () => {
-    // ADR-0035 replaces pow with explicit §1-SET tables, so pow() leaves the font/icon path entirely.
-    expect(bare).not.toMatch(/pow\(/) // file-wide (comment-stripped): the pow primitive is gone
-    // height = the FRAME lever, stays LINEAR on `*` (× var(--ui-scale)); --ui-type-* is ADR-0025's ruled fork
-    const heightDecls = universalBlock.match(/--ui-height-[\w-]+:[^;]*;/g) ?? []
-    expect(heightDecls.length).toBe(3) // anti-vacuous: all three height steps isolated
-    for (const d of heightDecls) expect(d).toMatch(/calc\(\s*\d+px\s*\*\s*var\(--ui-scale\)\s*\)/)
-    const typeSizeDecls = universalBlock.match(/--ui-type-[\w-]+-size:[^;]*;/g) ?? []
-    expect(typeSizeDecls.length).toBe(7) // anti-vacuous: all seven type levels stay linear
-    for (const d of typeSizeDecls) expect(d).toMatch(/var\(--ui-scale\)/)
-    // font + icon are NOT declared on `*` (literal §1-SET tables → :root + [scale]; a literal on `*` defeats subtree)
+  it('CONTROLS have NO multiplier (ADR-0038) — height/font/icon are literal tables OFF `*` (no calc/var(--ui-scale)); --ui-scale survives for --ui-type-* DISPLAY only; no pow()', () => {
+    // ADR-0038: `× var(--ui-scale)` LEAVES the control path — height/font/icon are explicit Kim's-table literals.
+    expect(bare).not.toMatch(/pow\(/) // file-wide (comment-stripped): the pow primitive is long gone (ADR-0035)
+    // none of the three control tokens is declared on `*` (literal tables → :root + [scale])
+    expect(universalBlock).not.toMatch(/--ui-height-\w+:/)
     expect(universalBlock).not.toMatch(/--ui-font-\w+:/)
     expect(universalBlock).not.toMatch(/--ui-icon-\w+:/)
+    // …and NO control-geometry declaration carries a multiplier (no calc/var(--ui-scale)) — the AC5 static analog
+    for (const tok of ['height', 'font', 'icon'] as const) {
+      const decls = flat.match(new RegExp(`--ui-${tok}-(?:sm|md|lg):[^;]*;`, 'g')) ?? []
+      expect(decls.length, `--ui-${tok}-* decls`).toBeGreaterThanOrEqual(21) // 3 :root + 18 tiers
+      for (const d of decls) expect(d).not.toMatch(/calc\(|var\(/) // pure px literal — no --ui-scale multiplier
+    }
+    // DISPLAY --ui-type-*-size STILL rides --ui-scale (the ruled-linear fork — the ONLY surviving --ui-scale consumer)
+    const typeSizeDecls = universalBlock.match(/--ui-type-[\w-]+-size:[^;]*;/g) ?? []
+    expect(typeSizeDecls.length).toBe(7) // anti-vacuous: all seven type levels
+    for (const d of typeSizeDecls) expect(d).toMatch(/calc\(\s*\d+px\s*\*\s*var\(--ui-scale\)\s*\)/)
   })
 
   it('derives the rhythm gap from font/2 and multiplies it by --ui-density (the ONE density-bearing quantity), on the `*` block', () => {
@@ -117,16 +145,23 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
     }
   })
 
-  it('keeps the DERIVED ramp (--ui-height, --ui-gap — they carry var(--ui-scale)/var(--ui-density)) OFF :root', () => {
+  it('keeps the genuinely-DERIVED ramp (--ui-gap, --ui-type-*-size, --ui-space — they carry var(--ui-scale)/var(--ui-density)) OFF :root', () => {
     expect(universalBlock.length).toBeGreaterThan(0) // anti-vacuous: the `*` block was actually isolated
-    // ONLY the genuinely-derived tokens must stay off :root (the var() pre-substitution gotcha). --ui-font +
-    // --ui-icon are now LITERAL §1-SET tables (ADR-0035), so they legitimately live ON :root (the default) —
-    // dropped from this guard (the font/icon-table tests above pin them ON :root).
-    expect(rootBlock).not.toMatch(/--ui-height|--ui-gap/)
+    // ONLY the tokens that carry a subtree-repointable multiplier must stay off :root (the var() pre-substitution
+    // gotcha). ADR-0038 made --ui-height a LITERAL table too (joining --ui-font/--ui-icon from ADR-0035), so all
+    // three control tokens legitimately live ON :root (default) — dropped from this guard (the table tests pin them).
+    expect(rootBlock).not.toMatch(/--ui-gap-|--ui-type-[\w-]+-size|--ui-space-/)
   })
 
-  it('[scale] is the SIX-tier two-band ladder (ADR-0032) — each tier repoints --ui-scale to its confirmed value', () => {
-    // tier → --ui-scale. ui-* tight cluster (0.875·1·1.125) · content-* generous band (1.375·1.5·1.75).
+  it('declares --ui-control-line-height: 1 on :root (ADR-0036) — a single-line control constant, not on the `*` ramp', () => {
+    expect(rootBlock).toMatch(/--ui-control-line-height:\s*1\s*;/)
+    expect(universalBlock).not.toMatch(/--ui-control-line-height/) // a constant, off the derived `*` ramp
+  })
+
+  it('[scale] still sets --ui-scale per tier (ADR-0032 values) — but post-ADR-0038 it feeds --ui-type-* DISPLAY only', () => {
+    // tier → --ui-scale (ui-* 0.875·1·1.125 · content-* 1.375·1.5·1.75). ADR-0038 removed --ui-scale from the
+    // CONTROL path (height/font/icon are explicit tables now); these per-tier values survive solely for the
+    // display --ui-type-* × var(--ui-scale) consumer — so they must still be declared on each [scale] selector.
     const TIERS: Array<[string, string]> = [
       ['ui-sm', '0\\.875'],
       ['ui-md', '1'],

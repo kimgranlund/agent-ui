@@ -74,7 +74,11 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
     }
   })
 
-  it('[scale] ui-sm→content-lg CHANGES the frame height + the editor font px (via --ui-scale) — on BOTH variants', () => {
+  it('[scale] ui-sm→content-lg CHANGES the frame height + the editor font px — on BOTH variants (ADR-0038 explicit §1-row lookup)', () => {
+    // Kim's explicit (scale × size) table (ADR-0038 clause 1): each cell is one §1 row; no multiplier.
+    // md column sampled at 3 tiers: ui-sm→24 (row 24→f13), ui-md→28 (row 28→f14, default), content-lg→48 (row 48→f18).
+    // The OLD multiplier heights (24.5, 49) are gone — Kim's §1 rows are exact integers.
+    // Editor font = §1-SET integers from the explicit font table (also ADR-0038; unchanged for these three tiers).
     for (const markup of [BARE, ICON]) {
       const { wrap, field, editor } = mount(markup) // size stays md (default)
       const heights: number[] = []
@@ -84,14 +88,15 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
         heights.push(frameHeight(field))
         fonts.push(fontPx(editor))
       }
-      // md base height 28 × --ui-scale {0.875,1,1.75} (LINEAR); editor FONT = the §1-SET --ui-font-md per tier
-      // (ADR-0035, was pow): ui-sm 13 · ui-md 14 · content-lg 18 — the EXACT §1 integers (not pow's 13.18/18.01).
-      expect(heights[0]).toBeCloseTo(24.5, 1)
+      // ADR-0038 md column: ui-sm→24, ui-md→28, content-lg→48 (§1 rows, exact integers — no multiplier decimals)
+      expect(heights[0]).toBeCloseTo(24, 1)  // was 24.5 (28×0.875 multiplier) — Kim's §1 row 24
       expect(heights[1]).toBeCloseTo(28, 1)
-      expect(heights[2]).toBeCloseTo(49, 1)
+      expect(heights[2]).toBeCloseTo(48, 1)  // was 49 (28×1.75 multiplier) — Kim's §1 row 48
+      // Editor font — §1-SET integers (unchanged for these three tiers: 13·14·18)
       expect(fonts[0]).toBeCloseTo(13, 0)
       expect(fonts[1]).toBeCloseTo(14, 0)
       expect(fonts[2]).toBeCloseTo(18, 0)
+      // anti-vacuous: all three sampled tiers produce distinct heights and fonts
       expect(allDistinct(heights), `heights did not change across [scale]: ${heights.join()}`).toBe(true)
       expect(allDistinct(fonts), `editor fonts did not change across [scale]: ${fonts.join()}`).toBe(true)
     }
@@ -107,6 +112,8 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
   })
 
   it('LEADING-ICON: the trailing value edge == h/2 and the leading slot edge == ½(h−icon); 0 < icon ≤ box', () => {
+    // icon = var(--ui-icon-md) = 18px at default scale (ADR-0038 / ADR-0035 conformance: text-field now reads
+    // the shared --ui-icon-* table, dropping the old calc(18px * var(--ui-scale)) local formula).
     const { field } = mount(ICON) // md @ scale 1 → h = 28, icon = 18, slot edge = ½(28−18) = 5, value edge = 14
     const leadingCell = field.querySelector('[slot="leading"]') as HTMLElement
     const h = frameHeight(field)
@@ -172,5 +179,27 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
     }
     expect(allEqual(heights), `[density] moved the bare frame height: ${heights.join()}`).toBe(true)
     expect(allEqual(valueEdges), `[density] moved the bare h/2 value edge: ${valueEdges.join()}`).toBe(true)
+  })
+
+  // ── ADR-0036: single-line control line-height = font (the editor cell) ─────────────────────────────────
+  it('ADR-0036 line-height = font: computed line-height on the editor equals the editor font-size', () => {
+    // ADR-0036 law: the editor (`[data-part=editor]`) sets line-height: var(--ui-control-line-height) = 1
+    // (declared in text-field.css, consuming the fleet token from dimensions.css). The line box collapses to
+    // the em height and the host grid centers it — no phantom inherited leading from an ancestor body (1.5).
+    // AC1 proof: computed line-height px == computed editor font-size px. Sampled at two sizes for anti-vacuity.
+    const { field: fieldMd, editor: edMd } = mount(BARE)
+    fieldMd.setAttribute('size', 'md')
+    const fontMd = fontPx(edMd)
+    const lhMd = px(getComputedStyle(edMd).lineHeight)
+    expect(lhMd, 'editor md line-height is not equal to editor font-size (ADR-0036)').toBeCloseTo(fontMd, 0)
+
+    const { field: fieldSm, editor: edSm } = mount(BARE)
+    fieldSm.setAttribute('size', 'sm')
+    const fontSm = fontPx(edSm)
+    const lhSm = px(getComputedStyle(edSm).lineHeight)
+    expect(lhSm, 'editor sm line-height is not equal to editor font-size (ADR-0036)').toBeCloseTo(fontSm, 0)
+
+    // anti-vacuous: the two sizes render different font/line-height
+    expect(fontMd, 'md and sm editor fonts must differ so the line-height proof is non-vacuous').not.toBe(fontSm)
   })
 })

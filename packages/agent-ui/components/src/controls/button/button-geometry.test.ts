@@ -47,9 +47,9 @@ const iconPx = (size: string): number | null => {
   return m ? Number(m[1]) : null
 }
 
-/** Parse the `--ui-height-{size}: calc(<n>px * var(--ui-scale))` box height (px @ scale 1) from dimensions.css. */
+/** Parse `--ui-height-{size}: <n>px` from dimensions.css :root (ADR-0038 explicit literal table; no × --ui-scale). */
 const heightPx = (size: string): number | null => {
-  const m = dimCss.match(new RegExp(`--ui-height-${size}:\\s*calc\\(\\s*(\\d+(?:\\.\\d+)?)px\\s*\\*\\s*var\\(--ui-scale\\)\\s*\\)`))
+  const m = dimRoot.match(new RegExp(`--ui-height-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
   return m ? Number(m[1]) : null
 }
 
@@ -77,20 +77,17 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     }
   })
 
-  it('ADR-0035: the icon is the shared §1-SET --ui-icon table (hoisted to dimensions.css) — button reads var(--ui-icon-{size}), NO pow/calc; box height stays LINEAR', () => {
-    // ADR-0035 (4a hoist) supersedes ADR-0033's pow(scale,0.58): button.css drops the local calc and reads the
-    // shared --ui-icon-{size} (the §1-SET per-[scale] table in dimensions.css). Pin the wiring + that pow is gone.
+  it('ADR-0038/ADR-0035: the icon is the shared §1-SET --ui-icon table (dimensions.css) — button reads var(--ui-icon-{size}), NO pow/calc', () => {
+    // ADR-0038 supersedes ADR-0032/0037 (multiplier/snap): height is Kim's explicit lookup, not × --ui-scale.
+    // ADR-0035 (4a hoist) established the icon table and the var(--ui-icon-*) wiring — button.css still reads it.
+    // Pin the icon wiring (that pow and calc are gone from the icon decl); height format is tok-mono's (dimensions.test.ts).
     expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-icon:\s*var\(--ui-icon-md\)/) //          md → shared token
     expect(whereBlock(":where(ui-button[size='sm'])")).toMatch(/--ui-button-icon:\s*var\(--ui-icon-sm\)/) // sm
     expect(whereBlock(":where(ui-button[size='lg'])")).toMatch(/--ui-button-icon:\s*var\(--ui-icon-lg\)/) // lg
     // the OLD calc/pow icon form is gone — the decl is a bare var(), not a calc()
     expect(whereBlock(':where(ui-button) {')).not.toMatch(/--ui-button-icon:\s*calc\(/)
-    // box height stays LINEAR (the frame lever) — bare var(--ui-scale), no pow
-    for (const size of ['sm', 'md', 'lg'] as const) {
-      const decl = (dimCss.match(new RegExp(`--ui-height-${size}:[^;]*;`)) ?? [''])[0]
-      expect(decl, `--ui-height-${size} decl not found`).toMatch(/\*\s*var\(--ui-scale\)/) // the box stays LINEAR…
-      expect(decl).not.toMatch(/pow\(/) //                                                    …NOT sublinear (frame lever holds linear)
-    }
+    // ADR-0036: button.css sets line-height: var(--ui-control-line-height) on :scope (the single-line law)
+    expect(stylesBlock).toMatch(/line-height:\s*var\(--ui-control-line-height\)/)
   })
 
   it('the glyph IS the slot: [slot=leading] AND [slot=trailing] are SQUARE cells sized to --ui-button-icon on BOTH axes', () => {

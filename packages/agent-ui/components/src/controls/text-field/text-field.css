@@ -53,7 +53,7 @@
   --ui-text-field-height: var(--ui-height-md);
   --ui-text-field-font: var(--ui-font-md);
   --ui-text-field-gap: var(--ui-gap-md); /* the one density-bearing quantity (slot↔editor column-gap) */
-  --ui-text-field-icon: calc(18px * var(--ui-scale)); /* content-icon ramp md=18 (geometry-sizing-spec §1) */
+  --ui-text-field-icon: var(--ui-icon-md); /* §1-SET icon per [scale]-tier (ADR-0038 / ADR-0035 conformance gap); repoints with [scale] from dimensions.css — was calc(18px * var(--ui-scale)) */
 
   /* Size-INVARIANT frame quantities — declared ONCE in the base block (NOT in the per-[size] blocks below): */
   --ui-text-field-radius: var(--ui-radius-base); /* fixed --ui-radius-base rounded-rect — the container-fleet referent an ENTRY control takes (NOT the action family's h/2 pill); overridable per-field; ADR-0015 cl.5 / #71 amendment. */
@@ -71,13 +71,13 @@
   --ui-text-field-height: var(--ui-height-sm);
   --ui-text-field-font: var(--ui-font-sm);
   --ui-text-field-gap: var(--ui-gap-sm);
-  --ui-text-field-icon: calc(16px * var(--ui-scale));
+  --ui-text-field-icon: var(--ui-icon-sm); /* §1-SET icon per [scale]-tier (ADR-0038) */
 }
 :where(ui-text-field[size='lg']) {
   --ui-text-field-height: var(--ui-height-lg);
   --ui-text-field-font: var(--ui-font-lg);
   --ui-text-field-gap: var(--ui-gap-lg);
-  --ui-text-field-icon: calc(20px * var(--ui-scale));
+  --ui-text-field-icon: var(--ui-icon-lg); /* §1-SET icon per [scale]-tier (ADR-0038) */
 }
 
 /* disabled → a role-REPOINT (NOT opacity, tokens.md canon). Matches BOTH the own/reflected [disabled] AND the
@@ -141,6 +141,7 @@
   :scope > [data-part='editor'] {
     order: 1;
     font-size: var(--ui-text-field-font);
+    line-height: var(--ui-control-line-height); /* single-line control standard — ADR-0036; explicit here because the editor re-declares font-size (the host `:scope` inherits, but the explict editor decl makes the contract visible at both sites) */
     color: var(--ui-text-field-ink);
     min-inline-size: 0; /* let the 1fr cell shrink so the editor scrolls (overflow) instead of widening the grid */
     white-space: nowrap; /* single-line */

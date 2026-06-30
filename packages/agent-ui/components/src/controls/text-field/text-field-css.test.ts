@@ -32,6 +32,7 @@ const sharedFleet = new Set([
   '--ui-focus-ring-offset',
   '--ui-motion-fast',
   '--ui-ease-standard',
+  '--ui-control-line-height', // the single-line Control line-height fleet constant (ADR-0036)
 ])
 
 /** @scope token-hygiene predicate — every var() ref that is NEITHER the own --ui-text-field-* chain NOR a fleet
@@ -62,7 +63,8 @@ describe('text-field.css — structure + sectioning (s9)', () => {
     for (const size of ['sm', 'lg'] as const) {
       const b = whereBlock(`:where(ui-text-field[size='${size}'])`)
       expect(b).toMatch(/--ui-text-field-height:/)
-      expect(b).toMatch(/--ui-text-field-icon:\s*calc\(\d+px\s*\*\s*var\(--ui-scale\)\)/)
+      // ADR-0038 / ADR-0035 conformance: icon is now the shared §1-SET --ui-icon-* table (not calc × --ui-scale)
+      expect(b).toMatch(new RegExp(`--ui-text-field-icon:\\s*var\\(--ui-icon-${size}\\)`))
     }
   })
 })

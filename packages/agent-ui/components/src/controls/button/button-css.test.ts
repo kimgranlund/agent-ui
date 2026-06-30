@@ -47,6 +47,7 @@ describe('button.css — structure + token hygiene (s7)', () => {
     const sharedFleet = new Set([
       '--c-focus-ring', '--ui-focus-ring-width', '--ui-focus-ring-offset', // the shared focus ring (ADR-0009)
       '--ui-motion-fast', '--ui-ease-standard', // the shared state-transition motion (interaction-states standard)
+      '--ui-control-line-height', // the single-line Control line-height fleet constant (ADR-0036)
     ])
     for (const v of refs) {
       if (sharedFleet.has(v as string)) continue

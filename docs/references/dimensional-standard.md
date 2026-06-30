@@ -69,6 +69,7 @@ ui-button[size="lg"] { --ui-button-height: var(--ui-height-lg, 36px); --ui-butto
 box-sizing: border-box;
 block-size: var(--ui-button-height);
 font-size:  var(--ui-button-font);
+line-height: var(--ui-control-line-height);       /* single-line: = 1, the centering-law companion (ADR-0036); NOT for Display/ui-text */
 padding-inline: var(--ui-button-pad-inline);
 padding-block:  var(--ui-button-pad-block, 0);   /* delete any block-padding-as-sizing */
 ```

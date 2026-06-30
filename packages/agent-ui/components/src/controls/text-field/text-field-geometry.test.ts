@@ -26,25 +26,29 @@ const whereBlock = (marker: string): string => {
   return tfCss.slice(start, tfCss.indexOf('}', start))
 }
 
-/** Parse a `--ui-text-field-icon: calc(<n>px * var(--ui-scale))` glyph size (px @ scale 1) from a block. */
-const iconPx = (block: string): number | null => {
-  const m = block.match(/--ui-text-field-icon:\s*calc\(\s*(\d+(?:\.\d+)?)px\s*\*\s*var\(--ui-scale\)\s*\)/)
+/** The comment-stripped `:root` block of dimensions.css (the ui-md default tier, ADR-0038 explicit table). */
+const dimRoot = ((): string => {
+  const noComments = dimCss.replace(/\/\*[\s\S]*?\*\//g, '')
+  return (noComments.match(/:root\s*\{[^}]*\}/) ?? [''])[0]
+})()
+
+/** Parse `--ui-icon-{size}: <n>px` from dimensions.css :root (ADR-0038 / ADR-0035 §1-SET table). */
+const iconPx = (size: string): number | null => {
+  const m = dimRoot.match(new RegExp(`--ui-icon-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
   return m ? Number(m[1]) : null
 }
 
-/** Parse the `--ui-height-{size}: calc(<n>px * var(--ui-scale))` box height (px @ scale 1) from dimensions.css. */
+/** Parse `--ui-height-{size}: <n>px` from dimensions.css :root (ADR-0038 explicit literal table, no × --ui-scale). */
 const heightPx = (size: string): number | null => {
-  const m = dimCss.match(
-    new RegExp(`--ui-height-${size}:\\s*calc\\(\\s*(\\d+(?:\\.\\d+)?)px\\s*\\*\\s*var\\(--ui-scale\\)\\s*\\)`),
-  )
+  const m = dimRoot.match(new RegExp(`--ui-height-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
   return m ? Number(m[1]) : null
 }
 
-// The per-size `--ui-text-field-icon`: md is the default (`:where(ui-text-field)`), sm/lg repoint via `[size]`.
+// The §1-SET icon ramp's ui-md default (dimensions.css :root, ADR-0038 clause 2): sm·md·lg = 16·18·20.
 const iconBySize: Record<string, number | null> = {
-  sm: iconPx(whereBlock(":where(ui-text-field[size='sm'])")),
-  md: iconPx(whereBlock(':where(ui-text-field) {')),
-  lg: iconPx(whereBlock(":where(ui-text-field[size='lg'])")),
+  sm: iconPx('sm'),
+  md: iconPx('md'),
+  lg: iconPx('lg'),
 }
 
 /** The geometry LAW as a reusable predicate, so the negative control runs the SAME check on a planted bad scope. */
@@ -66,30 +70,35 @@ describe('text-field.css — STATIC geometry law (s9)', () => {
     expect(paddingBlockIsZero(planted)).toBe(false)
   })
 
-  it('0 < glyph ≤ box: the content-icon ramp is positive and fits the height box at every size', () => {
-    // anti-vacuous: the parse actually found the tabled content-icon ramp (geometry-sizing-spec §1, mirrored
-    // off button md=18/sm=16/lg=20) — NOT an empty match silently passing the relation below.
+  it('0 < glyph ≤ box: the §1-SET icon ramp is positive and fits the height box at every size (ADR-0038 ui-md defaults)', () => {
+    // anti-vacuous: the parse found the explicit §1-SET icon ramp from dimensions.css :root (ADR-0038 clause 2,
+    // the ui-md default tier): sm=16, md=18, lg=20 — NOT an empty match silently passing the relation below.
     expect(iconBySize).toEqual({ sm: 16, md: 18, lg: 20 })
 
     for (const size of ['sm', 'md', 'lg'] as const) {
       const icon = iconBySize[size]
       const box = heightPx(size)
-      expect(icon, `--ui-text-field-icon for ${size} did not parse`).not.toBeNull()
-      expect(box, `--ui-height-${size} did not parse`).not.toBeNull()
+      expect(icon, `--ui-icon-${size} did not parse from dimensions.css :root`).not.toBeNull()
+      expect(box, `--ui-height-${size} did not parse from dimensions.css :root`).not.toBeNull()
       expect(icon as number).toBeGreaterThan(0) //                  0 < glyph
       expect(icon as number).toBeLessThanOrEqual(box as number) //  glyph ≤ box
     }
   })
 
-  it('the glyph↔box relation is SCALE-INVARIANT: both `icon` and `height` carry the same var(--ui-scale)', () => {
-    // both glyph and box multiply by --ui-scale, so the base-px comparison above holds at EVERY scale; density
-    // never touches either (it rides the gap only).
-    expect(whereBlock(':where(ui-text-field) {')).toMatch(
-      /--ui-text-field-icon:\s*calc\([^)]*\*\s*var\(--ui-scale\)\s*\)/,
-    )
-    for (const size of ['sm', 'md', 'lg'] as const) {
-      expect(dimCss).toMatch(new RegExp(`--ui-height-${size}:\\s*calc\\([^)]*\\*\\s*var\\(--ui-scale\\)\\s*\\)`))
-    }
+  it('ADR-0038 / ADR-0035 wiring: icon reads the shared §1-SET --ui-icon-* table (not a local calc); height is an explicit literal (not × --ui-scale)', () => {
+    // ADR-0038 supersedes the multiplier: text-field.css drops calc(Npx × --ui-scale) for icon and reads the
+    // shared --ui-icon-* table (ADR-0035 conformance gap now closed — button adopted the table first).
+    // dimensions.css :root has explicit `<n>px` literals for height (no × --ui-scale — ADR-0038 clause 5).
+    // text-field.css icon wiring
+    expect(whereBlock(':where(ui-text-field) {')).toMatch(/--ui-text-field-icon:\s*var\(--ui-icon-md\)/)
+    expect(whereBlock(":where(ui-text-field[size='sm'])")).toMatch(/--ui-text-field-icon:\s*var\(--ui-icon-sm\)/)
+    expect(whereBlock(":where(ui-text-field[size='lg'])")).toMatch(/--ui-text-field-icon:\s*var\(--ui-icon-lg\)/)
+    // the old local calc is gone (ADR-0035 conformance gap closed)
+    expect(whereBlock(':where(ui-text-field) {')).not.toMatch(/--ui-text-field-icon:\s*calc\(/)
+    // dimensions.css :root: height is now a literal px (no multiplier), confirmed by the `heightPx` parse above
+    expect(heightPx('sm'), '--ui-height-sm :root literal parse returned null').not.toBeNull()
+    expect(heightPx('md'), '--ui-height-md :root literal parse returned null').not.toBeNull()
+    expect(heightPx('lg'), '--ui-height-lg :root literal parse returned null').not.toBeNull()
   })
 
   it('the slot IS the square cell: [slot=leading] AND [slot=trailing] are sized to --ui-text-field-icon on BOTH axes', () => {
