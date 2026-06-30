@@ -146,6 +146,8 @@ export type A2uiServerMessage =
   | { version: string; updateDataModel: A2uiUpdateDataModel }
   | { version: string; deleteSurface: A2uiDeleteSurface }
   | { version: string; actionResponse: A2uiActionResponse }
+  /** Server-initiated function-call RPC (SPEC-R14 / ADR-0034). `functionCallId` is TOP-LEVEL. */
+  | { version: string; functionCallId: string; wantResponse?: boolean; callFunction: A2uiCallFunction }
 
 /** An ordered A2UI message stream — the generated/streamed output (corpus LLD `A2uiOutput`). */
 export type A2uiOutput = A2uiServerMessage[]
@@ -183,4 +185,62 @@ export interface A2uiActionMessage {
 export interface Failure {
   code: ErrorCode
   path: string
+}
+
+// ── server-initiated function-call RPC (A2UI v1.0, SPEC-R14 / ADR-0034) ────────────────────────────
+
+/**
+ * The `callFunction.call+args` inner body (A2UI v1.0, SPEC-R14 / ADR-0034 clause 1).
+ * `args` carries CONCRETE literal values — NOT binding-resolved (no `{path}`, no `{call}`): the server
+ * provides flat values per the function's catalog schema (ADR-0034 fork 1 — surfaceless RPC).
+ */
+export interface A2uiCallFunction {
+  call: string
+  args?: Record<string, unknown>
+}
+
+/**
+ * The body the `callFunction` dispatch handler receives (ADR-0034 clause 3): the top-level envelope
+ * fields the handler needs, extracted from the inbound `A2uiServerMessage` arm by `dispatch`.
+ * `functionCallId` is TOP-LEVEL in the wire envelope (sibling to `callFunction`, SPEC-R14 fact 2)
+ * and MUST be copied verbatim into every response or error.
+ */
+export interface A2uiCallFunctionBody {
+  functionCallId: string
+  wantResponse?: boolean
+  callFunction: A2uiCallFunction
+}
+
+/**
+ * The `functionResponse` outbound body (A2UI v1.0, SPEC-R14 / ADR-0034 clause 1): emitted on a
+ * successful server-initiated function invocation when `wantResponse` is true. `functionCallId`
+ * copied verbatim from the inbound envelope (SPEC-R14 fact 2).
+ */
+export interface A2uiFunctionResponse {
+  functionCallId: string
+  call: string
+  value: unknown
+}
+
+/**
+ * The `functionResponse` client→server envelope (SPEC §5.2 / ADR-0034 clause 1). Emitted on a
+ * successful `callFunction` RPC when `wantResponse:true`; fire-and-forget (no emit) when false/absent
+ * (ADR-0034 fork 4). Sibling to `A2uiActionMessage` in the outbound stream.
+ */
+export interface A2uiFunctionResponseMessage {
+  version: string
+  functionResponse: A2uiFunctionResponse
+}
+
+/**
+ * An `error` client→server envelope (runtime SPEC §5.2, ADR-0031) — one of the `A2uiClientMessage`
+ * arms. `error` carries the WIRE shape (`A2uiWireError`: the v1.0 two-code discriminated union);
+ * the internal `A2uiError` (8 codes) is mapped to `A2uiWireError` by `toWireError` at the renderer's
+ * `#emitInternalError` — the single outbound error chokepoint. The `INVALID_FUNCTION_CALL` arm is
+ * emitted directly (bypassing `toWireError`) by the `callFunction` RPC handler (ADR-0034 clause 5)
+ * because it carries `functionCallId`, not `surfaceId`.
+ */
+export interface A2uiErrorMessage {
+  version: string
+  error: A2uiWireError
 }

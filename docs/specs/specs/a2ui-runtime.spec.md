@@ -92,6 +92,10 @@ Additionally, the renderer MUST support **DynamicString `${…}` interpolation**
 - **AC3** *Given* a `Text` whose `text` embeds a function-expression `"${fmt(value:${/d}, format:'yyyy')}"`, a catalog declaring `fmt`, and `/d = "2026-01-01"`, *when* rendered, *then* the parsed call evaluates with `value` resolved from `/d` and `format:"yyyy"` and its result is spliced into the text; *when* `/d` changes, *then* the text re-resolves (the nested `${/d}` arg wakes per SPEC-N2). *Given* `"${now()}"` and a catalog **without** `now`, *then* the renderer emits `FUNCTION` and the segment renders `""`. *Given* a malformed function-expression, *then* the segment renders literally (no error).
 - **AC4** *Given* a `Button` with a `checks` entry whose call resolves FALSE, *when* rendered, *then* the button is disabled; *when* the bound data later makes the check resolve TRUE, *then* the button re-enables (reactive). *Given* a failed check on any component, *then* **no** server `error` is emitted (client-side only).
 
+**SPEC-R14 — Server-initiated function invocation (`callFunction` RPC).** The renderer MUST handle an inbound **`callFunction`** envelope — a server→client RPC `{ functionCallId, wantResponse?, callFunction:{ call, args? } }`, **envelope-level** (no `surfaceId`) — by looking `call` up in the active-catalog registry and **invoking** it with the **concrete** `args` (per the function's catalog schema), then: on success with `wantResponse:true`, emitting a **`functionResponse`** (§5.2) carrying the **verbatim `functionCallId`**, the `call`, and the `value`; with `wantResponse` false/absent, fire-and-forget (no response). The renderer MUST **reject** — emitting `error{code:"INVALID_FUNCTION_CALL", functionCallId, message}` (§5.2; `surfaceId` excluded) — when the function is **unregistered** OR its catalog `callableFrom` is **`clientOnly`** (a throwing invocation is also rejected non-fatally, ADR-0034). This is a **distinct surface** from the local function-bindings of SPEC-R10 (those evaluate locally with no round-trip); the two share the function *registry*, not the dispatch. *(→ PRD-G1, PRD-G7)*
+- **AC1** *Given* a registered `clientOrRemote`/`remoteOnly` function and `callFunction{functionCallId:"fc1", wantResponse:true, callFunction:{call,args}}`, *when* handled, *then* the renderer emits `functionResponse{functionCallId:"fc1", call, value}`.
+- **AC2** *Given* `callFunction` for a `clientOnly` (or unregistered) function, *when* handled, *then* the renderer emits `error{code:"INVALID_FUNCTION_CALL", functionCallId}` with **no** `surfaceId`, and does not invoke; `wantResponse:false` on a successful invoke emits no `functionResponse`. In all cases the `functionCallId` is copied verbatim.
+
 ### 3.7 Conformance
 
 **SPEC-R11 — Validation & structured errors.** The renderer MUST validate payloads (MIME `application/a2ui+json`) and, on a schema/catalog/idgraph/pointer failure, emit a structured `error` (client→server, §5.2) rather than rendering invalid UI. The validator MUST be the single shared implementation also used by the corpus admission gate (corpus SPEC-N1). *(→ PRD-G1, PRD-G4)*
@@ -129,7 +133,9 @@ type A2uiServerMessage =
   | { version: string; updateComponents:{ surfaceId: string; components: A2uiComponent[] } }
   | { version: string; updateDataModel: { surfaceId: string; path?: string; value?: unknown } }
   | { version: string; deleteSurface:   { surfaceId: string } }
-  | { version: string; actionResponse:  { surfaceId: string; actionId: string; value?: unknown; error?: A2uiError } };
+  | { version: string; actionResponse:  { surfaceId: string; actionId: string; value?: unknown; error?: A2uiError } }
+  | { version: string; functionCallId: string; wantResponse?: boolean;          // SPEC-R14, ADR-0034: server→client RPC
+      callFunction:   { call: string; args?: Record<string, unknown> } };       // envelope-level (NO surfaceId); args CONCRETE
 
 interface A2uiComponent {
   id: string; component: string;            // type discriminator, e.g. "Text" | "Button" | "TextField"
@@ -147,6 +153,7 @@ type A2uiClientMessage =
   | { version: string; action: { surfaceId: string; actionId: string; name: string;
                                  sourceComponentId: string; timestamp: string;
                                  context: Record<string, unknown>; wantResponse?: boolean; dataModel?: unknown } }
+  | { version: string; functionResponse: { functionCallId: string; call: string; value: unknown } }  // SPEC-R14, ADR-0034: callFunction success (functionCallId copied verbatim)
   | { version: string; error:  A2uiWireError };
 
 // WIRE error (client→server) — the A2UI v1.0 two-code contract (ADR-0031). The contextID is TIED to the

@@ -1,11 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import { UIButtonElement } from '@agent-ui/components/components'
 import { createRenderer } from './renderer.ts'
 import type { A2uiClientMessage, RendererHost } from './renderer.ts'
 import type { A2uiAction, A2uiActionMessage } from './action.ts'
 import type { A2uiErrorMessage } from './renderer.ts'
-import type { A2uiServerMessage } from '../protocol.ts'
+import type { A2uiFunctionResponseMessage, A2uiServerMessage } from '../protocol.ts'
+import { defaultFactories } from '../catalog/default/factories.ts'
+import { catalogFunctions } from '../catalog/functions.ts'
 
 // The A1 integration proof (renderer LLD-C13): a STREAMED, multi-message JSONL fixture is fed line by
 // line into the host and must render into REAL `ui-*` controls under the mount — the nine wave-1 modules
@@ -16,6 +18,7 @@ import type { A2uiServerMessage } from '../protocol.ts'
 const line = (message: A2uiServerMessage): string => JSON.stringify(message)
 const isAction = (m: A2uiClientMessage): m is A2uiActionMessage => 'action' in m
 const isError = (m: A2uiClientMessage): m is A2uiErrorMessage => 'error' in m
+const isFunctionResponse = (m: A2uiClientMessage): m is A2uiFunctionResponseMessage => 'functionResponse' in m
 
 /** A host wired to a capturing client-message sink + a real mount in the document. */
 function harness(): { r: RendererHost; mount: HTMLElement; sent: A2uiClientMessage[]; cleanup: () => void } {
@@ -382,6 +385,234 @@ describe('renderer host — bound prop end-to-end (renderer LLD-C5, the B2 wirin
     expect(btn!.textContent).toBe('Goodbye')
 
     expect(sent.filter(isError)).toEqual([]) // no PARSE/CATALOG/IDGRAPH along the way
+
+    cleanup()
+  })
+})
+
+// ── SPEC-R14 / ADR-0034: callFunction RPC round-trip (LLD-C14) ──────────────────────────────────────
+//
+// The server-initiated function-call surface: an inbound `callFunction` envelope → `handleCallFunction`
+// in call-function.ts → emits `functionResponse` (success) or `error{INVALID_FUNCTION_CALL}` (reject).
+// This is MESSAGE-LEVEL (no DOM, no signals) — jsdom suffices. All 6 acceptance criteria from ADR-0034.
+//
+// Test setup: `required`/`email`/`regex` in the default agent-ui catalog are all `callableFrom:clientOnly`
+// (ADR-0034 clause 2 / catalog.json). To get a remote-callable function, a fixture catalog (`fixture`)
+// is registered with `required` declared as `clientOrRemote` — the "first-allows-match" lookup skips
+// the default's `clientOnly` and takes the fixture's `clientOrRemote` declaration. The impl comes from
+// `catalogFunctions` (the shared pure-impl table, ADR-0034 fork 2).
+describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 / LLD-C14)', () => {
+  // Minimal fixture catalog: declares required as clientOrRemote (overriding the default's clientOnly in
+  // the "first-allows-match" scan). Needs ≥1 component + a factory for it (loadCatalog invariant).
+  const FIXTURE_CATALOG = {
+    catalogId: 'fixture',
+    protocolVersion: 'v1.0',
+    components: {
+      Text: { properties: { text: { type: { type: 'string' }, bindable: true, mapsTo: 'textContent' } } },
+    },
+    functions: {
+      required: {
+        callableFrom: 'clientOrRemote',
+        args: { value: { type: ['string', 'null'] } },
+        returns: { type: 'object' },
+      },
+    },
+  }
+
+  /** Harness + fixture catalog pre-registered; returns the harness helpers. */
+  function rpcHarness() {
+    const h = harness()
+    // Register the fixture catalog (Text component; required as clientOrRemote).
+    // The "first-allows-match" scan will skip agent-ui's clientOnly and take this entry.
+    h.r.register(FIXTURE_CATALOG, { Text: defaultFactories.Text })
+    return h
+  }
+
+  it('AC1 — happy path: clientOrRemote function + wantResponse:true → functionResponse{functionCallId,call,value}', () => {
+    const { r, sent, cleanup } = rpcHarness()
+
+    r.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc1',
+      wantResponse: true,
+      callFunction: { call: 'required', args: { value: 'hello' } },
+    } as unknown as A2uiServerMessage)
+
+    const responses = sent.filter(isFunctionResponse)
+    expect(responses).toHaveLength(1)
+    expect(responses[0]!.functionResponse).toMatchObject({
+      functionCallId: 'fc1', // verbatim copy (SPEC-R14 fact 2)
+      call: 'required',
+      value: { valid: true }, // required({ value: 'hello' }) → { valid: true }
+    })
+    expect(sent.filter(isError)).toEqual([]) // no error on success
+
+    cleanup()
+  })
+
+  it('AC2 — reject clientOnly: default catalog\'s required is clientOnly → INVALID_FUNCTION_CALL, no invoke, surfaceId ABSENT', () => {
+    // Only the default catalog is registered here (no fixture). required is clientOnly → reject.
+    const { r, sent, cleanup } = harness()
+
+    r.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc2',
+      wantResponse: true, // irrelevant for a reject — error is always emitted
+      callFunction: { call: 'required', args: { value: '' } },
+    } as unknown as A2uiServerMessage)
+
+    const errors = sent.filter(isError)
+    expect(errors).toHaveLength(1)
+    const wire = errors[0]!.error
+    expect(wire.code).toBe('INVALID_FUNCTION_CALL')
+    expect(wire).toHaveProperty('functionCallId', 'fc2') // functionCallId on the wire
+    expect(wire).not.toHaveProperty('surfaceId') // surfaceId EXCLUDED (no contextID tie, ADR-0034 clause 1)
+    expect(wire.message).toContain('clientOnly')
+    expect(sent.filter(isFunctionResponse)).toEqual([]) // no functionResponse on reject
+
+    cleanup()
+  })
+
+  it('AC3 — reject unregistered: unknown function name → INVALID_FUNCTION_CALL + functionCallId; @index also rejects (ADR-0034 clause 6)', () => {
+    const { r, sent, cleanup } = harness()
+
+    r.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc3',
+      wantResponse: true,
+      callFunction: { call: 'no-such-function' },
+    } as unknown as A2uiServerMessage)
+
+    const e1 = sent.filter(isError)
+    expect(e1).toHaveLength(1)
+    expect(e1[0]!.error.code).toBe('INVALID_FUNCTION_CALL')
+    expect(e1[0]!.error).toHaveProperty('functionCallId', 'fc3')
+
+    // @index is a SYSTEM function (not a catalog function) — must also reject (ADR-0034 clause 6)
+    const { r: r2, sent: sent2, cleanup: cleanup2 } = harness()
+    r2.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc3b',
+      wantResponse: true,
+      callFunction: { call: '@index' },
+    } as unknown as A2uiServerMessage)
+    const e2 = sent2.filter(isError)
+    expect(e2).toHaveLength(1)
+    expect(e2[0]!.error.code).toBe('INVALID_FUNCTION_CALL')
+
+    cleanup(); cleanup2()
+  })
+
+  it('AC4 — wantResponse:false → no functionResponse emitted; functionCallId copied verbatim in all cases', () => {
+    const { r, sent, cleanup } = rpcHarness()
+
+    // wantResponse false/absent → fire-and-forget (ADR-0034 fork 4)
+    r.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc4',
+      wantResponse: false,
+      callFunction: { call: 'required', args: { value: 'ok' } },
+    } as unknown as A2uiServerMessage)
+
+    expect(sent.filter(isFunctionResponse)).toHaveLength(0) // no response on fire-and-forget
+    expect(sent.filter(isError)).toHaveLength(0) // no error either (success path)
+
+    // wantResponse absent (undefined) also → fire-and-forget
+    r.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc4b',
+      callFunction: { call: 'required', args: { value: 'ok' } },
+    } as unknown as A2uiServerMessage)
+    expect(sent.filter(isFunctionResponse)).toHaveLength(0) // still no response
+
+    // Verify functionCallId is copied verbatim into a reject (functionCallId='fc4-reject' → must appear verbatim)
+    r.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc4-reject',
+      callFunction: { call: 'no-such' },
+    } as unknown as A2uiServerMessage)
+    const rejectErr = sent.filter(isError)[0]!
+    expect(rejectErr.error).toHaveProperty('functionCallId', 'fc4-reject')
+
+    cleanup()
+  })
+
+  it('AC5 — the two surfaces are distinct: clientOnly required/email/regex still evaluate in checks/bindings (ADR-0026/0029 regression)', async () => {
+    // `callableFrom` is read ONLY by the server-invoke path (call-function.ts).
+    // The binding-eval path (functions.ts evaluate + checks.ts) ignores it entirely —
+    // so `required`/`email`/`regex` remain usable in `checks` even though they are `clientOnly`.
+    // This test proves the binding-eval surface is UNCHANGED by callableFrom (ADR-0034 fact 6).
+    const { r, mount, sent, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sc5', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sc5',
+          components: [
+            {
+              id: 'root',
+              component: 'Button',
+              label: 'Go',
+              // `required` is clientOnly but must still evaluate locally in `checks` (ADR-0034 fact 6)
+              checks: [{ call: 'required', args: { value: { path: '/val' } }, message: 'Required' }],
+            },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+
+    // Before data: required({ value: undefined }) → invalid → button disabled
+    const btn = mount.querySelector('ui-button') as UIButtonElement
+    expect(btn).toBeInstanceOf(UIButtonElement)
+    expect(btn.disabled).toBe(true) // required check failed (no data yet)
+
+    // After data: required({ value: 'Ada' }) → valid → button enabled
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sc5', path: '/val', value: 'Ada' } }))
+    await whenFlushed()
+    expect(btn.disabled).toBe(false) // required check passed
+
+    // No INVALID_FUNCTION_CALL emitted by the binding-eval path (VALIDATION_FAILED only if unknown fn)
+    expect(sent.filter(isError).filter(e => e.error.code === 'INVALID_FUNCTION_CALL')).toHaveLength(0)
+
+    cleanup()
+  })
+
+  it('AC6 — throwing impl → INVALID_FUNCTION_CALL + functionCallId, renderer intact (ADR-0034 fork 5 / SPEC-N4)', () => {
+    const { r, sent, cleanup } = rpcHarness()
+
+    // Make the next `required` invocation throw (via spy). This simulates a server-invocable impl
+    // that throws at runtime (fork 5: the spec is silent; INVALID_FUNCTION_CALL is the nearest code).
+    const spy = vi.spyOn(catalogFunctions, 'required').mockImplementationOnce(() => {
+      throw new Error('unexpected server-side error')
+    })
+
+    r.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc6',
+      wantResponse: true,
+      callFunction: { call: 'required', args: { value: 'test' } },
+    } as unknown as A2uiServerMessage)
+
+    spy.mockRestore()
+
+    const errors = sent.filter(isError)
+    expect(errors).toHaveLength(1)
+    const wire = errors[0]!.error
+    expect(wire.code).toBe('INVALID_FUNCTION_CALL')
+    expect(wire).toHaveProperty('functionCallId', 'fc6')
+    expect(wire.message).toContain('unexpected server-side error')
+
+    // Renderer is intact (non-fatal) — a subsequent valid call still works
+    r.ingestMessage({
+      version: 'v1.0',
+      functionCallId: 'fc6-ok',
+      wantResponse: true,
+      callFunction: { call: 'required', args: { value: 'hello' } },
+    } as unknown as A2uiServerMessage)
+    expect(sent.filter(isFunctionResponse)).toHaveLength(1) // renderer intact after fork-5 throw
 
     cleanup()
   })

@@ -51,25 +51,24 @@ import type {
   A2uiDeleteSurface,
   A2uiComponent,
   A2uiError,
-  A2uiWireError,
   A2uiServerMessage,
   A2uiActionMessage,
+  A2uiErrorMessage,
+  A2uiFunctionResponseMessage,
 } from '../protocol.ts'
 import { toWireError } from '../protocol.ts'
+import { handleCallFunction } from './call-function.ts'
+
+// `A2uiErrorMessage` is now defined in `../protocol.ts` (co-located with the other wire types).
+// It is re-exported here for backward compat so existing test/host imports of
+// `A2uiErrorMessage` from `renderer.ts` continue to resolve.
+export type { A2uiErrorMessage }
 
 /**
- * An `error` client→server envelope (runtime SPEC §5.2, ADR-0031) — the second `A2uiClientMessage`
- * arm. `error` carries the WIRE shape (`A2uiWireError`: the v1.0 two-code discriminated union); the
- * internal `A2uiError` (8 codes) is mapped to `A2uiWireError` by `toWireError` at `#emitInternalError`
- * — the single outbound chokepoint. Consumers of this envelope see only the wire codes.
+ * Everything the renderer emits to the server (runtime SPEC §5.2): a triggered action, a
+ * `functionResponse` (SPEC-R14 / ADR-0034 clause 1), or a structured error (ADR-0031).
  */
-export interface A2uiErrorMessage {
-  version: string
-  error: A2uiWireError
-}
-
-/** Everything the renderer emits to the server: a triggered action, or an error (runtime SPEC §5.2). */
-export type A2uiClientMessage = A2uiActionMessage | A2uiErrorMessage
+export type A2uiClientMessage = A2uiActionMessage | A2uiErrorMessage | A2uiFunctionResponseMessage
 
 /** A subscriber to the client→server message stream; the returned function unsubscribes it. */
 export type ClientMessageListener = (message: A2uiClientMessage) => void
@@ -155,6 +154,12 @@ class Renderer implements RendererHost {
       updateDataModel: (body) => this.#onUpdateDataModel(body),
       deleteSurface: (body) => this.#onDeleteSurface(body),
       actionResponse: (body) => void this.#actions.actionResponse(body),
+      // LLD-C14: server-initiated function-call RPC (ADR-0034 / SPEC-R14). Envelope-level — no
+      // surface context. The handler looks up the function across all registered catalogs, gates on
+      // `callableFrom`, invokes via `catalogFunctions`, and emits `functionResponse` or
+      // `INVALID_FUNCTION_CALL` through the shared `#emit` chokepoint (bypasses `toWireError`
+      // because the error carries `functionCallId`, not `surfaceId` — ADR-0034 clause 5).
+      callFunction: (body, version) => handleCallFunction(body, this.#registry, version, (msg) => this.#emit(msg)),
     }
   }
 

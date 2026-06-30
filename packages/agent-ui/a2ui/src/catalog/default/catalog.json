@@ -126,14 +126,17 @@
 
   "functions": {
     "required": {
+      "callableFrom": "clientOnly",
       "args": { "value": { "type": ["string", "null"] } },
       "returns": { "type": "object" }
     },
     "email": {
+      "callableFrom": "clientOnly",
       "args": { "value": { "type": "string" } },
       "returns": { "type": "object" }
     },
     "regex": {
+      "callableFrom": "clientOnly",
       "args": { "value": { "type": "string" }, "pattern": { "type": "string" } },
       "returns": { "type": "object" }
     }

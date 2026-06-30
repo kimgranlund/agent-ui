@@ -33,13 +33,16 @@ export interface PropDef {
 }
 
 /**
- * A catalog function declaration (catalog LLD-C7, ADR-0026). `args` is a NAMED object
+ * A catalog function declaration (catalog LLD-C7, ADR-0026 / ADR-0034). `args` is a NAMED object
  * (`Record<string, JsonSchema>`) matching the wire `{call, args:{…}}` shape — the positional
- * `JsonSchema[]` form was non-conformant with A2UI v1.0 and is corrected here.
+ * `JsonSchema[]` form was non-conformant with A2UI v1.0 and is corrected here. `callableFrom`
+ * is the v1.0 execution-boundary enum (ADR-0034 clause 2 / SPEC-R14 / fact 5): absent → `clientOnly`
+ * (the spec default; least-authority; a function is not server-invocable unless explicitly opted in).
  */
 export interface FunctionDef {
   args: Record<string, JsonSchema>
   returns: JsonSchema
+  callableFrom: 'clientOnly' | 'remoteOnly' | 'clientOrRemote'
 }
 
 /** Load-time diagnostic codes. `NAME_INVALID` is the catalog SPEC §5.3 `CATALOG_NAME_INVALID`; */
@@ -163,6 +166,8 @@ function validatePropDef(key: string, prop: string, raw: unknown): PropDef {
   return pd
 }
 
+const CALLABLE_FROM_VALUES = new Set(['clientOnly', 'remoteOnly', 'clientOrRemote'])
+
 function validateFunctions(raw: unknown): Record<string, FunctionDef> {
   if (raw === undefined) return {}
   if (!isObject(raw)) bad('catalog.functions must be an object')
@@ -174,7 +179,17 @@ function validateFunctions(raw: unknown): Record<string, FunctionDef> {
     if (!isObject(def) || !isObject(def.args) || def.returns === undefined) {
       bad(`function "${fn}" must be { args: Record<string,JsonSchema>; returns: JsonSchema }`)
     }
-    out[fn] = { args: def.args as Record<string, JsonSchema>, returns: def.returns as JsonSchema }
+    // `callableFrom` defaults to 'clientOnly' (v1.0 spec default, ADR-0034 clause 2 / fact 5:
+    // "If omitted, it defaults to clientOnly"). Least-authority: a function is not server-invocable
+    // unless explicitly declared `remoteOnly`/`clientOrRemote`.
+    let callableFrom: FunctionDef['callableFrom'] = 'clientOnly'
+    if (def.callableFrom !== undefined) {
+      if (typeof def.callableFrom !== 'string' || !CALLABLE_FROM_VALUES.has(def.callableFrom)) {
+        bad(`function "${fn}".callableFrom must be 'clientOnly' | 'remoteOnly' | 'clientOrRemote' (or absent)`)
+      }
+      callableFrom = def.callableFrom as FunctionDef['callableFrom']
+    }
+    out[fn] = { args: def.args as Record<string, JsonSchema>, returns: def.returns as JsonSchema, callableFrom }
   }
   return out
 }

@@ -22,6 +22,7 @@ import type {
   A2uiUpdateDataModel,
   A2uiDeleteSurface,
   A2uiActionResponse,
+  A2uiCallFunctionBody,
   A2uiError,
 } from '../protocol.ts'
 
@@ -37,6 +38,12 @@ export interface DispatchHandlers {
   updateDataModel(body: A2uiUpdateDataModel, version: string): void
   deleteSurface(body: A2uiDeleteSurface, version: string): void
   actionResponse(body: A2uiActionResponse, version: string): void
+  /**
+   * Server-initiated function-call RPC (SPEC-R14 / ADR-0034 clause 3). Envelope-level — no
+   * `surfaceId`. `body` carries the top-level fields the handler needs (functionCallId + wantResponse
+   * + the inner callFunction object), extracted from the narrowed `A2uiServerMessage` arm by `dispatch`.
+   */
+  callFunction(body: A2uiCallFunctionBody, version: string): void
 }
 
 /**
@@ -74,6 +81,13 @@ export function dispatch(msg: A2uiServerMessage, handlers: DispatchHandlers): A2
   }
   if ('actionResponse' in msg) {
     handlers.actionResponse(msg.actionResponse, version)
+    return
+  }
+  if ('callFunction' in msg) {
+    // Narrowed to the callFunction arm: { version; functionCallId; wantResponse?; callFunction }.
+    // Extract the body the handler needs (version is already the second arg; exclude it from body).
+    const { functionCallId, wantResponse, callFunction } = msg
+    handlers.callFunction({ functionCallId, wantResponse, callFunction }, version)
     return
   }
 

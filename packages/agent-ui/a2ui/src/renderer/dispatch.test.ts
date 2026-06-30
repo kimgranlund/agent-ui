@@ -12,6 +12,7 @@ function spyHandlers(): DispatchHandlers {
     updateDataModel: vi.fn(),
     deleteSurface: vi.fn(),
     actionResponse: vi.fn(),
+    callFunction: vi.fn(),
   }
 }
 
@@ -104,5 +105,28 @@ describe('dispatch — version-aware envelope routing (renderer LLD-C2, SPEC-R1/
     const err = dispatch(bad, h)
 
     expect(err?.code).toBe('VERSION_UNSUPPORTED')
+  })
+
+  it('routes callFunction to its handler with the extracted body (functionCallId+wantResponse+callFunction) and version (ADR-0034 clause 3)', () => {
+    const h = spyHandlers()
+    const callFunctionBody = { call: 'required', args: { value: 'hello' } }
+    const msg = {
+      version: 'v1.0',
+      functionCallId: 'fc-1',
+      wantResponse: true,
+      callFunction: callFunctionBody,
+    } as unknown as A2uiServerMessage
+
+    const err = dispatch(msg, h)
+
+    expect(err).toBeUndefined()
+    expect(h.callFunction).toHaveBeenCalledTimes(1)
+    expect(h.callFunction).toHaveBeenCalledWith(
+      { functionCallId: 'fc-1', wantResponse: true, callFunction: callFunctionBody },
+      'v1.0',
+    )
+    // no other handler fired
+    expect(h.createSurface).not.toHaveBeenCalled()
+    expect(h.actionResponse).not.toHaveBeenCalled()
   })
 })

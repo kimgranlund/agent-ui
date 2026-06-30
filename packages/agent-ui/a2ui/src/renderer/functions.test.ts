@@ -291,7 +291,8 @@ describe('evaluate — fault isolation when impl throws', () => {
         ...catalogEntry.catalog,
         functions: {
           ...catalogEntry.catalog.functions,
-          thrower: { args: {}, returns: { type: 'object' } },
+          // callableFrom required by FunctionDef (ADR-0034 clause 2); binding-eval ignores it
+          thrower: { args: {}, returns: { type: 'object' }, callableFrom: 'clientOnly' as const },
         },
       },
     }
@@ -323,7 +324,11 @@ describe('evaluate — fault isolation when impl throws', () => {
       ...catalogEntry,
       catalog: {
         ...catalogEntry.catalog,
-        functions: { ...catalogEntry.catalog.functions, thrower: { args: {}, returns: { type: 'object' } } },
+        functions: {
+          ...catalogEntry.catalog.functions,
+          // callableFrom required by FunctionDef (ADR-0034 clause 2); binding-eval ignores it
+          thrower: { args: {}, returns: { type: 'object' }, callableFrom: 'clientOnly' as const },
+        },
       },
     }
     registry.get = (id) => (id === 'agent-ui' ? patchedEntry : undefined)
