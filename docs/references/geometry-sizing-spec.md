@@ -1,9 +1,11 @@
 # Geometry & Sizing Spec — the centering law + the size ramp
 
-**Status:** design-of-record — **LANDED (v4, 2026-06-18).** **Authority:** `docs/references/component-sizes.md`
-— the hand-tuned **XS→2XL ramp** and the **centering law** it encodes. (Kim 2026-06-18: this file is the
-*reference/law*; the shipped `scale × size(sm/md/lg) × density` model **maps onto** it — there is no
-size-ramp migration. The job *was* to make the implementation obey the law; **it now does.**)
+**Status:** design-of-record — **LANDED (v4, 2026-06-18).** **Authority:** the **§1 master table below** —
+the hand-tuned **XS→2XL ramp** and the **centering law** it encodes. (`component-sizes.md` was the
+working-name precursor for this ramp; it was never materialized as a file — its hand-tuned values are §1
+here. Kim 2026-06-18: this file is the *reference/law*; the shipped `scale × size(sm/md/lg) × density`
+model **maps onto** it — there is no size-ramp migration. The job *was* to make the implementation obey
+the law; **it now does.**)
 
 **What landed (the §5 gap is closed):** `caret = font` globally (`--ui-glyph-ratio: 1`), for **both** mask
 glyphs **and** slotted `<ui-icon name=caret>` carets (§4.1/§4.6); the **comfortable controls** (button,
@@ -346,9 +348,11 @@ set, or a control not in a `*-DIM` probe, is unguarded. The **96-component rende
 
 ## 7 · Ratified decisions (Kim, 2026-06-18)
 
-1. **`component-sizes.md` is the authority** for the geometry **law** (the centering padding + the
-   tabled icon/caret/font ramp). **Reference/law only** — the `scale × size(sm/md/lg)` model maps onto
-   it; **no size-ramp migration**.
+1. **The §1 master table (this document) is the authority** for the geometry **law** (the centering
+   padding + the tabled icon/caret/font ramp). *(`component-sizes.md` was a working-name precursor for
+   the hand-tuned ramp; it was never materialized as a file — its values live in §1 here, even-rounded.
+   References to `component-sizes.md` below are to that absorbed precursor, not a live file.)* **Reference/law
+   only** — the `scale × size(sm/md/lg)` model maps onto it; **no size-ramp migration**.
 1b. **The glyph ramp is codified as a sublinear power law** (§1.1): `icon = 2.49·h^0.58`,
    `font = 3.16·h^0.45 (≈√h)`, `caret = 4.08·h^0.35` — reproduces the table to ±1px and generalizes to
    any mapped height. The fraction-of-box shrinks as the box grows (the optical correction).

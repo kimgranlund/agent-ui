@@ -255,10 +255,12 @@ layer from the consumption layer in one file. The package exposes `components` /
 `foundation-styles` barrels, consumed by a host page that links the styles (tokens first) and self-defining
 modules.
 
-**Dimensional standard** (see `references/dimensional-standard.md`): vertical size is
-`block-size: var(--ui-{cmp}-height)`, **never** block-padding (`padding-block: 0`); inline-padding is
-*derived* from height (`2px + height × 0.375 × density`); `scale × size → {height, font, indicator}`;
-density multiplies inline spacing only. Controls are the **Control class** (full height); checkbox/
+**Dimensional standard** (the *law* is `references/geometry-sizing-spec.md` v4 + the resolved
+`references/geometry.md`; `references/dimensional-standard.md` is the SUPERSEDED wiring-history note):
+vertical size is `block-size: var(--ui-{cmp}-height)`, **never** block-padding (`padding-block: 0`);
+inline-padding follows the **v4 slot model** (`h/2` slotless / `½(h − icon)` slotted, density on the gap —
+**not** the old `2px + height × 0.375 × density`); `--ui-scale` (numeric, on `*`, ADR-0007) × `size` →
+`{height, font, indicator}`; density multiplies inline spacing only. Controls are the **Control class** (full height); checkbox/
 switch are the **Indicator class** (the box rides `--ui-ind-{size}`). Affordance glyphs (the select
 caret, field steppers, clear ×) follow the geometry law in `references/geometry-sizing-spec.md`:
 a `--ui-glyph-{size}` ramp token and the `(height − glyph) / 2` centering law, with asymmetric padding
