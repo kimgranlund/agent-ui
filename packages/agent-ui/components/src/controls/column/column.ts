@@ -26,9 +26,14 @@ import type { PropsSchema, ReactiveProps } from '../../dom/index.ts'
 // (surfaceProps then flexProps — the canonical consumer order; no re-declaration of the grammar, ADR-0016 cl.1).
 //   • surfaceProps — elevation/brightness (the two signed surface axes, ADR-0015)
 //   • flexProps    — align/justify/gap/wrap (the shared A2UI layout grammar, ADR-0016)
+// ADR-0030: the cross-axis `align` default is OVERRIDDEN from `start` to `stretch` here (direction-appropriate
+// — column's cross axis is inline/width; children should fill the width by default). Only the `default` field
+// is replaced; the shared `type` (the 5-member enum) is REUSED via spread so any future grammar change
+// propagates automatically. The shared `flexProps.align` default stays `start` (ui-row is unchanged).
 const props = {
   ...UIContainerElement.surfaceProps,
   ...UIContainerElement.flexProps,
+  align: { ...UIContainerElement.flexProps.align, default: 'stretch' as const }, // ADR-0030: override default ONLY; `as const` preserves the literal-union type (prevents string widening)
 } satisfies PropsSchema
 
 export interface UIColumnElement extends ReactiveProps<typeof props> {}

@@ -38,12 +38,23 @@ describe('column.css — structure + token hygiene (s4)', () => {
   })
 
   it('[align]/[justify]/[gap]/[wrap] attribute selectors repoint the tokens (the literal-union → CSS map)', () => {
+    // ADR-0030: `start` is now a non-default → it has its own [align='start'] repoint to flex-start.
+    // The [align='stretch'] rule is REMOVED (stretch is the base — no repoint needed).
+    expect(tokenBlock).toMatch(/ui-column\[align='start'\]/) // the new non-default repoint (ADR-0030)
+    expect(tokenBlock).not.toMatch(/ui-column\[align='stretch'\]/) // stretch = the base; no repoint needed
     expect(tokenBlock).toMatch(/ui-column\[align='center'\]/)
     expect(tokenBlock).toMatch(/ui-column\[justify='between'\]/) // between → space-between
     expect(tokenBlock).toContain('space-between')
     expect(tokenBlock).toMatch(/ui-column\[gap='md'\]/)
     expect(tokenBlock).toMatch(/var\(--ui-space-md\)/) // gap=md → the --ui-space-md step
     expect(tokenBlock).toMatch(/ui-column\[wrap\]/) // boolean-presence repoint
+  })
+
+  it('base token --ui-column-align is `stretch` (the new ADR-0030 default; [align="start"] repoints to flex-start)', () => {
+    // The CSS base token must carry the prop default (ADR-0005: default is NOT reflected as an attribute).
+    expect(tokenBlock).toMatch(/--ui-column-align:\s*stretch/) // base = stretch (ADR-0030 flip)
+    // [align='start'] repoints to flex-start — the one non-default keyword needing a rule
+    expect(tokenBlock).toMatch(/ui-column\[align='start'\][^{]*\{[^}]*--ui-column-align:\s*flex-start/)
   })
 
   it('@scope CONSUMES only --ui-column-* (role-pure — no fleet/role token leaks for a layout primitive)', () => {

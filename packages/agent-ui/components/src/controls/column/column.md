@@ -22,10 +22,10 @@ attributes:            # attributes-as-API — mirrors column.ts `static props` 
     values: [0, 1, 2, 3, -1, -2, -3]
     default: 0
     reflect: true
-  - name: align        # cross-axis (inline) alignment → align-items
+  - name: align        # cross-axis (inline) alignment → align-items (ADR-0030: default changed start→stretch)
     type: enum
     values: [start, center, end, stretch, baseline]
-    default: start
+    default: stretch
     reflect: true      # reflects so the [align] flex repoint in column.css applies to JS-set values
   - name: justify      # main-axis (block) distribution → justify-content (between/around/evenly → space-*)
     type: enum
@@ -87,7 +87,7 @@ the element's **identity** (the tag names the main axis, A2UI-faithfully) — no
 `ui-column` consumes the shared, spreadable `flexProps` — the same one grammar four layout primitives share
 (ADR-0016 cl.1), each reflected attribute mapping 1:1 onto a CSS flex property in column.css:
 
-- **`align`** (cross axis = inline) → `align-items`: `start` (default) · `center` · `end` · `stretch` · `baseline`.
+- **`align`** (cross axis = inline) → `align-items`: `stretch` (default — children fill the column's width; use `start` to shrink-wrap to content width) · `center` · `end` · `start` · `baseline`. (ADR-0030: default changed from `start` to `stretch`.)
 - **`justify`** (main axis = block) → `justify-content`: `start` (default) · `center` · `end` · `between` · `around` · `evenly` (the `between`/`around`/`evenly` keywords map to `space-*`).
 - **`gap`** → `gap: var(--ui-space-{step})`: `none` (default) · `xs` · `sm` · `md` · `lg` · `xl` · `2xl` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), **never** a control dimension. An ancestor `[density]` re-multiplies the gap; `[scale]` does not touch it (spacing is rhythm, not frame).
 - **`wrap`** → `flex-wrap` (boolean presence): present ⇒ children wrap onto multiple lines.

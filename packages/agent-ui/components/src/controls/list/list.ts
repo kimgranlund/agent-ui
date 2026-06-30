@@ -28,9 +28,12 @@ import { UIContainerElement } from '../../dom/container.ts'
 // The full prop surface = the two shared spreadable sets folded into this control's own `static props` (each
 // already carries `reflect: true` from the base, so the `[elevation]`/`[align]`/etc. attribute selectors in
 // list.css apply to JS-set values too). No re-declaration of the surface/flex grammar — one home, ADR-0016.
+// ADR-0030: `align` default overridden from `start` to `stretch` (parity with ui-column — a ui-list IS a
+// ui-column specialization; its cross axis is inline/width; children should fill the width by default).
 const props = {
   ...UIContainerElement.surfaceProps, // elevation / brightness (ADR-0015)
   ...UIContainerElement.flexProps, // align / justify / gap / wrap (ADR-0016) — a vertical stack
+  align: { ...UIContainerElement.flexProps.align, default: 'stretch' as const }, // ADR-0030: override default ONLY; `as const` preserves the literal-union type (prevents string widening)
 } satisfies PropsSchema
 
 export interface UIListElement extends ReactiveProps<typeof props> {}

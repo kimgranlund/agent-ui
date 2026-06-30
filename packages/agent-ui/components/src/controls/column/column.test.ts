@@ -25,7 +25,8 @@ describe('UIColumnElement (s4)', () => {
     expect(el).toBeInstanceOf(UIContainerElement) // the surface base
     // surfaceProps defaults (the neutral base) + flexProps defaults (the A2UI grammar defaults)
     expect([el.elevation, el.brightness]).toEqual(['0', '0'])
-    expect([el.align, el.justify, el.gap, el.wrap]).toEqual(['start', 'start', 'none', false])
+    // ADR-0030: align default changed from 'start' to 'stretch' (cross-axis direction-appropriate override)
+    expect([el.align, el.justify, el.gap, el.wrap]).toEqual(['stretch', 'start', 'none', false])
     el.remove()
   })
 

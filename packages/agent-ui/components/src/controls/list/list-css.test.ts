@@ -48,11 +48,21 @@ describe('list.css — structure + sectioning (s5)', () => {
 
 // ── The flexProps literal-union → CSS-keyword mapping (ADR-0016 cl.1) ─────────────────────────────────────
 describe('list.css — the flex mapping (ADR-0016)', () => {
-  it('align → align-items keywords (center/end/stretch/baseline; start is the default)', () => {
+  it('align → align-items keywords (ADR-0030: stretch is the default; start/center/end/baseline have repoints)', () => {
+    // ADR-0030: `stretch` is the base token default — the [align='stretch'] repoint is REMOVED (equals base).
+    // `start` is now a non-default and gains its own repoint to flex-start.
+    expect(tokenBlock).toMatch(/ui-list\[align='start'\]/) // the new non-default repoint (ADR-0030)
+    expect(tokenBlock).not.toMatch(/ui-list\[align='stretch'\]/) // stretch = the base; no repoint needed
     expect(tokenBlock).toMatch(/:where\(ui-list\[align='center'\]\)\s*\{\s*--ui-list-align:\s*center/)
     expect(tokenBlock).toMatch(/:where\(ui-list\[align='end'\]\)\s*\{\s*--ui-list-align:\s*flex-end/)
-    expect(tokenBlock).toMatch(/:where\(ui-list\[align='stretch'\]\)\s*\{\s*--ui-list-align:\s*stretch/)
     expect(tokenBlock).toMatch(/:where\(ui-list\[align='baseline'\]\)\s*\{\s*--ui-list-align:\s*baseline/)
+  })
+
+  it('base token --ui-list-align is `stretch` (the new ADR-0030 default; [align="start"] repoints to flex-start)', () => {
+    // The CSS base token must carry the prop default (ADR-0005: default is NOT reflected as an attribute).
+    expect(tokenBlock).toMatch(/--ui-list-align:\s*stretch/) // base = stretch (ADR-0030 flip)
+    // [align='start'] repoints to flex-start — the one non-default keyword needing a rule
+    expect(tokenBlock).toMatch(/ui-list\[align='start'\][^{]*\{[^}]*--ui-list-align:\s*flex-start/)
   })
 
   it('justify → justify-content keywords (between/around/evenly → space-*)', () => {

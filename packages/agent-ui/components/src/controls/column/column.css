@@ -24,23 +24,27 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-column) declares --ui-column-* ════════════════ */
 
 :where(ui-column) {
-  /* The flex grammar, defaulted to the flexProps defaults. Each maps 1:1 onto a CSS flex property consumed in
-     the @scope block; the [attr] selectors below repoint the non-default keywords (start = the default). */
-  --ui-column-align: flex-start; /* align (cross axis = inline) → align-items */
+  /* The flex grammar, defaulted to the column-specific defaults (ADR-0030: align defaults to stretch — the
+     direction-appropriate cross-axis default for a column; flexProps.align default stays start for row).
+     Each maps 1:1 onto a CSS flex property consumed in the @scope block; the [attr] selectors below
+     repoint the NON-DEFAULT keywords. A default is NOT reflected as an attribute (ADR-0005), so the base
+     token carries the default value — the prop default and the CSS base token must match. */
+  --ui-column-align: stretch; /* align (cross axis = inline) → align-items: stretch (ADR-0030 flip start→stretch) */
   --ui-column-justify: flex-start; /* justify (main axis = block) → justify-content */
   --ui-column-gap: var(--ui-space-none); /* gap → the density-responsive --ui-space ladder (ADR-0015 cl.4) */
   --ui-column-wrap: nowrap; /* wrap → flex-wrap (boolean presence repoints below) */
 }
 
-/* align → align-items (start = the flex-start default above) */
+/* align → align-items (stretch = the new default above; start is now a non-default needing its own repoint).
+   ADR-0030: `start` gains a repoint rule; the now-redundant `stretch` rule is removed (stretch = the base). */
+:where(ui-column[align='start']) {
+  --ui-column-align: flex-start; /* start is a non-default: the [align='start'] repoint restores flex-start */
+}
 :where(ui-column[align='center']) {
   --ui-column-align: center;
 }
 :where(ui-column[align='end']) {
   --ui-column-align: flex-end;
-}
-:where(ui-column[align='stretch']) {
-  --ui-column-align: stretch;
 }
 :where(ui-column[align='baseline']) {
   --ui-column-align: baseline;

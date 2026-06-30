@@ -9,7 +9,7 @@
 > | **Proposed by** | planning-lead — the design seat, ratified G9 container-family session |
 > | **Ratified by** | orchestration-lead (on gate) |
 > | **Repairs** | `goals §G9` (NEW — the layout-primitive DoD) · `a2ui-catalog SPEC §5.2` (`Row`/`Column` `experimental → shipped`) · `references/geometry.md` (the *Container/layout* size-class — the flex layout law) · **NEW** `controls/{row,column,list,grid}/*` · the shared `flexProps` (decomp `s2`) |
-> | **Supersedes / Superseded by** | Relates: **ADR-0015** (the `--ui-space` gap ladder these consume) · the `formProps`-spread precedent (ADR-0013 — `flexProps` is the same spreadable-base pattern) |
+> | **Supersedes / Superseded by** | Relates: **ADR-0015** (the `--ui-space` gap ladder these consume) · the `formProps`-spread precedent (ADR-0013 — `flexProps` is the same spreadable-base pattern) · **Extended by ADR-0030** (ui-column/ui-list override the `flexProps.align` *default* to `stretch` — a per-consumer default; the grammar stands) |
 
 ## Context
 

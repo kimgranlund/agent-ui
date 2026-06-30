@@ -27,8 +27,8 @@ describe('UIListElement (s5)', () => {
     // surfaceProps (ADR-0015): both axes default to the neutral base '0'
     expect(el.elevation).toBe('0')
     expect(el.brightness).toBe('0')
-    // flexProps (ADR-0016): align/justify default to 'start', gap to 'none', wrap to false
-    expect(el.align).toBe('start')
+    // flexProps (ADR-0016): align defaults to 'stretch' (ADR-0030 flip), justify 'start', gap 'none', wrap false
+    expect(el.align).toBe('stretch')
     expect(el.justify).toBe('start')
     expect(el.gap).toBe('none')
     expect(el.wrap).toBe(false)

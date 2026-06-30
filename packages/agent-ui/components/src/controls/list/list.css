@@ -24,23 +24,27 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-list) declares --ui-list-* ════════════════ */
 
 :where(ui-list) {
-  /* The flex chain — defaults are each `flexProps` prop's `values[0]` (align/justify=start, gap=none,
-     wrap=nowrap). A custom property holds the resolved CSS keyword; `[attr=value]` repoints it below. */
-  --ui-list-align: flex-start; /* align (cross-axis) → align-items */
+  /* The flex chain — defaults are each `flexProps` prop's value, with the ADR-0030 column-parity override:
+     `align` defaults to `stretch` (the cross-axis inline default for a vertical stack — a list IS a column;
+     flexProps.align default stays `start` for row). A custom property holds the resolved CSS keyword;
+     `[attr=value]` repoints the NON-DEFAULT keywords below. A default is NOT reflected as an attribute
+     (ADR-0005), so the base token must carry the new default. */
+  --ui-list-align: stretch; /* align (cross-axis) → align-items: stretch (ADR-0030 flip start→stretch) */
   --ui-list-justify: flex-start; /* justify (main-axis distribution) → justify-content */
   --ui-list-gap: var(--ui-space-none); /* gap → a --ui-space ladder step (0 = no gap) */
   --ui-list-wrap: nowrap; /* wrap → flex-wrap (boolean presence) */
 }
 
-/* align → align-items (start is the default above; the other four members repoint) */
+/* align → align-items (stretch = the new default above; start is now a non-default needing its own repoint).
+   ADR-0030: `start` gains a repoint rule; the now-redundant `stretch` rule is removed (stretch = the base). */
+:where(ui-list[align='start']) {
+  --ui-list-align: flex-start; /* start is a non-default: the [align='start'] repoint restores flex-start */
+}
 :where(ui-list[align='center']) {
   --ui-list-align: center;
 }
 :where(ui-list[align='end']) {
   --ui-list-align: flex-end;
-}
-:where(ui-list[align='stretch']) {
-  --ui-list-align: stretch;
 }
 :where(ui-list[align='baseline']) {
   --ui-list-align: baseline;

@@ -39,14 +39,17 @@ describe('ui-column browser-truth harness (s4)', () => {
   it('align/justify CHANGE the computed flex properties (the literal-union → CSS-keyword repoint)', () => {
     const el = column()
     host.append(el)
-    // defaults map to flex-start
-    expect(getComputedStyle(el).alignItems).toBe('flex-start')
+    // ADR-0030: the default align is now `stretch` (not `flex-start`) — children fill the column width.
+    expect(getComputedStyle(el).alignItems).toBe('stretch')
     expect(getComputedStyle(el).justifyContent).toBe('flex-start')
     // a non-default keyword repoints the computed value (between → space-between)
     el.setAttribute('align', 'center')
     el.setAttribute('justify', 'between')
     expect(getComputedStyle(el).alignItems).toBe('center')
     expect(getComputedStyle(el).justifyContent).toBe('space-between')
+    // align='start' must explicitly repoint to flex-start (start is now a non-default)
+    el.setAttribute('align', 'start')
+    expect(getComputedStyle(el).alignItems).toBe('flex-start')
   })
 
   it('gap responds to [density]: the --ui-space ladder re-multiplies on a subtree [density] (anti-vacuous)', () => {
@@ -66,6 +69,35 @@ describe('ui-column browser-truth harness (s4)', () => {
 
     wrap.setAttribute('density', 'spacious') // --ui-density → 1.5
     expect(gapPx()).toBeCloseTo(base * 1.5, 1) // and grows — density is the one quantity that moves the gap
+  })
+
+  it('ADR-0030 fill-width: a width-LESS child FILLS the column width by default; align="start" shrink-wraps', () => {
+    // The visual DoD for ADR-0030. A card with no explicit width (only content: "X") should fill the column
+    // because align-items:stretch (the new default) sizes children on their cross axis to the container.
+    // NEGATIVE: align='start' keeps flex-start — the child shrink-wraps to its content width.
+    const wrap = document.createElement('div')
+    wrap.style.inlineSize = '300px' // a fixed-width column so we can measure children against it
+    wrap.style.display = 'block'
+    host.append(wrap)
+
+    const col = column() // no align attr → default (stretch, ADR-0030)
+    const child = document.createElement('div')
+    child.textContent = 'X' // minimal content — intrinsic width much less than 300px
+    col.innerHTML = '' // clear the default children from column()
+    col.append(child)
+    wrap.append(col)
+    col.style.inlineSize = '100%' // span the wrapper
+
+    // default → stretch: the child width should equal the column width
+    const colW = col.getBoundingClientRect().width
+    const childW = child.getBoundingClientRect().width
+    expect(childW).toBeCloseTo(colW, 1) // child fills the column (anti-vacuous: colW > 0)
+    expect(colW).toBeGreaterThan(100) // the column actually has width
+
+    // NEGATIVE control: align='start' → child shrink-wraps to intrinsic width
+    col.setAttribute('align', 'start')
+    const childWShrunk = child.getBoundingClientRect().width
+    expect(childWShrunk).toBeLessThan(colW) // shrink-wrapped: narrower than the column
   })
 
   it('REFLOWS by CONTAINER width: a wide query container spreads the column into a row (ADR-0016 cl.4)', () => {

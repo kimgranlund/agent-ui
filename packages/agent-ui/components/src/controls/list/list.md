@@ -23,8 +23,8 @@ attributes:            # attributes-as-API — mirrors list.ts `static props` (t
   - name: align
     type: enum
     values: [start, center, end, stretch, baseline]
-    default: start
-    reflect: true      # reflects → align-items (cross-axis) repoint in list.css (ADR-0016)
+    default: stretch
+    reflect: true      # reflects → align-items (cross-axis) repoint in list.css (ADR-0016); default changed start→stretch per ADR-0030
   - name: justify
     type: enum
     values: [start, center, end, between, around, evenly]
@@ -98,7 +98,7 @@ children (`render()` stays void).
 `ui-list` consumes the shared **`flexProps`** layout grammar (ADR-0016), each prop mapping 1:1 onto a CSS flex
 property (a role-pure repoint in CSS, never an inline style):
 
-- **`align`** (cross-axis) → `align-items`: `start` · `center` · `end` · `stretch` · `baseline`.
+- **`align`** (cross-axis) → `align-items`: `stretch` (default — items fill the list's width; use `start` to shrink-wrap) · `center` · `end` · `start` · `baseline`. (ADR-0030: default changed from `start` to `stretch`.)
 - **`justify`** (main-axis distribution) → `justify-content`: `start` · `center` · `end` · `between` · `around` · `evenly`.
 - **`gap`** → `gap: var(--ui-space-{step})` — the density-responsive layout-spacing ladder (`none` · `xs` · `sm`
   · `md` · `lg` · `xl` · `2xl`). The inter-item gap is the one quantity that rides `[density]` (an ancestor

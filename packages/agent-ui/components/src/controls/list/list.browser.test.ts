@@ -43,6 +43,46 @@ describe('ui-list cross-engine smoke (s5)', () => {
     done()
   })
 
+  it('ADR-0030 align default is stretch; align="start" repoints to flex-start (the literal-union → CSS map)', () => {
+    const { el, done } = mount('ui-list', {})
+    // ADR-0030: the default align is now `stretch` (not `flex-start`) — children fill the list width.
+    expect(getComputedStyle(el).alignItems).toBe('stretch')
+    // align='start' must explicitly repoint to flex-start (start is now a non-default)
+    el.setAttribute('align', 'start')
+    expect(getComputedStyle(el).alignItems).toBe('flex-start')
+    done()
+  })
+
+  it('ADR-0030 fill-width: a width-LESS child FILLS the list width by default; align="start" shrink-wraps', () => {
+    // The visual DoD for ADR-0030 on ui-list (parity with ui-column). A child with no explicit width (only
+    // content: "X") should fill the list because align-items:stretch (the new default) sizes children on
+    // their cross axis to the container. NEGATIVE: align='start' → child shrink-wraps to content width.
+    const wrapper = document.createElement('div')
+    wrapper.style.inlineSize = '300px'
+    wrapper.style.display = 'block'
+    document.body.append(wrapper)
+
+    const list = document.createElement('ui-list') // no align attr → default (stretch, ADR-0030)
+    const child = document.createElement('div')
+    child.textContent = 'X' // minimal content — intrinsic width much less than 300px
+    list.append(child)
+    wrapper.append(list)
+    list.style.inlineSize = '100%'
+
+    // default → stretch: the child width should equal the list width
+    const listW = list.getBoundingClientRect().width
+    const childW = child.getBoundingClientRect().width
+    expect(childW).toBeCloseTo(listW, 1) // child fills the list (anti-vacuous: listW > 0)
+    expect(listW).toBeGreaterThan(100) // the list actually has width
+
+    // NEGATIVE control: align='start' → child shrink-wraps to intrinsic width
+    list.setAttribute('align', 'start')
+    const childWShrunk = child.getBoundingClientRect().width
+    expect(childWShrunk).toBeLessThan(listW) // shrink-wrapped: narrower than the list
+
+    wrapper.remove()
+  })
+
   it('host-at-boundary AX: role=list rides internals — a real engine applies it, the host has no role attr', () => {
     const { el, done } = mount('ui-list-probe', {})
     expect((el as ProbeList).probeInternals.role).toBe('list') // the AX role a real engine retained
