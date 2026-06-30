@@ -4,12 +4,12 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — delivers ADR-0006 subtree [density]; unblocks s13)* |
+> | **Status** | accepted *(ratified 2026-06-27 — delivers ADR-0006 subtree [density]; unblocks s13)* *(font/glyph leg superseded by ADR-0033 — the `× var(--ui-scale)` on `--ui-font` becomes sublinear `× pow(scale, 0.45)`; the universal-`*` mechanism + the height leg STAND)* |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — encoding the host-ratified fix for a geometry bug the gold cross-engine smoke (s13) caught and execution-lead diagnosed |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |
 > | **Repairs** | `packages/agent-ui/shared/src/tokens/dimensions.css` (s6 — the derived ramp-token declarations: `--ui-{height,font,gap}-{sm,md,lg}`). *(No edit: `references/geometry.md` is the law and is correct — it always intended subtree scale/density; this is a CSS-mechanics repair.)* |
-> | **Supersedes / Superseded by** | Relates: **ADR-0006** (its subtree `[density]` smoke is now actually *delivered*, not merely assumed). · **Extended by ADR-0032** (the numeric `--ui-scale` mechanism here is kept; the `[scale]` attribute vocabulary widens from the 3-step placeholder to the 6-tier `ui-sm…content-lg` two-band system). |
+> | **Supersedes / Superseded by** | Relates: **ADR-0006** (its subtree `[density]` smoke is now actually *delivered*, not merely assumed). · **Extended by ADR-0032** (the numeric `--ui-scale` mechanism here is kept; the `[scale]` attribute vocabulary widens from the 3-step placeholder to the 6-tier `ui-sm…content-lg` two-band system). · **Font/glyph leg superseded by ADR-0033** (the linear `--ui-font = base × scale` becomes sublinear `base × pow(scale, 0.45)` per §1.1; the universal-`*` declaration mechanism + the `--ui-height` linear leg STAND). |
 
 ## Context
 

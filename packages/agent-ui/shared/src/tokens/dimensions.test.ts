@@ -38,10 +38,29 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
     expect(universalBlock).toMatch(/--ui-height-lg:\s*calc\(\s*36px\s*\*\s*var\(--ui-scale\)\s*\)/)
   })
 
-  it('declares the font ramp (sm·md·lg = 13·14·16) scaled by --ui-scale, on the `*` block', () => {
-    expect(universalBlock).toMatch(/--ui-font-sm:\s*calc\(\s*13px\s*\*\s*var\(--ui-scale\)\s*\)/)
-    expect(universalBlock).toMatch(/--ui-font-md:\s*calc\(\s*14px\s*\*\s*var\(--ui-scale\)\s*\)/)
-    expect(universalBlock).toMatch(/--ui-font-lg:\s*calc\(\s*16px\s*\*\s*var\(--ui-scale\)\s*\)/)
+  it('declares the font ramp (sm·md·lg = 13·14·16) SUBLINEAR in --ui-scale — × pow(var(--ui-scale), 0.45) (§1.1, ADR-0033), on the `*` block', () => {
+    expect(universalBlock).toMatch(/--ui-font-sm:\s*calc\(\s*13px\s*\*\s*pow\(\s*var\(--ui-scale\)\s*,\s*0\.45\s*\)\s*\)/)
+    expect(universalBlock).toMatch(/--ui-font-md:\s*calc\(\s*14px\s*\*\s*pow\(\s*var\(--ui-scale\)\s*,\s*0\.45\s*\)\s*\)/)
+    expect(universalBlock).toMatch(/--ui-font-lg:\s*calc\(\s*16px\s*\*\s*pow\(\s*var\(--ui-scale\)\s*,\s*0\.45\s*\)\s*\)/)
+  })
+
+  it('scopes the ADR-0033 sublinear fork to font/glyph — --ui-height-* and --ui-type-*-size stay LINEAR (× var(--ui-scale), NO pow)', () => {
+    // height is the FRAME lever (the square-centring law) — must stay linear; --ui-type-* is ADR-0025's own
+    // ledger (the ruled fork: document typography keeps its linear modular scale). Only the control-band font
+    // (+ the glyph that follows it, button.css) is sublinear.
+    const heightDecls = universalBlock.match(/--ui-height-[\w-]+:[^;]*;/g) ?? []
+    expect(heightDecls.length).toBe(3) // anti-vacuous: all three height steps isolated
+    for (const d of heightDecls) {
+      expect(d).toMatch(/var\(--ui-scale\)/) // linear multiplier present…
+      expect(d).not.toMatch(/pow\(/) // …and NO pow (the frame is not sublinear)
+    }
+    const typeSizeDecls = universalBlock.match(/--ui-type-[\w-]+-size:[^;]*;/g) ?? []
+    expect(typeSizeDecls.length).toBe(7) // anti-vacuous: all seven type levels
+    for (const d of typeSizeDecls) expect(d).not.toMatch(/pow\(/) // ADR-0025 type stays linear (the ruled fork)
+    // and the fork is REAL, not vacuous — the control-band font IS the sublinear leg (pow 0.45)
+    const fontDecls = universalBlock.match(/--ui-font-[\w-]+:[^;]*;/g) ?? []
+    expect(fontDecls.length).toBe(3)
+    for (const d of fontDecls) expect(d).toMatch(/pow\(\s*var\(--ui-scale\)\s*,\s*0\.45\s*\)/)
   })
 
   it('derives the rhythm gap from font/2 and multiplies it by --ui-density (the ONE density-bearing quantity), on the `*` block', () => {

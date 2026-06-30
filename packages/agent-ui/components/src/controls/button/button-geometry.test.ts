@@ -33,9 +33,10 @@ const whereBlock = (marker: string): string => {
   return buttonCss.slice(start, buttonCss.indexOf('}', start))
 }
 
-/** Parse a `--ui-button-icon: calc(<n>px * var(--ui-scale))` glyph size (px @ scale 1) from a block. */
+/** Parse a `--ui-button-icon: calc(<n>px * pow(var(--ui-scale), 0.58))` glyph BASE size (px @ scale 1) from a
+ *  block. The icon is SUBLINEAR in [scale] (§1.1, ADR-0033) — the base is the multiplicand, the scale-1 size. */
 const iconPx = (block: string): number | null => {
-  const m = block.match(/--ui-button-icon:\s*calc\(\s*(\d+(?:\.\d+)?)px\s*\*\s*var\(--ui-scale\)\s*\)/)
+  const m = block.match(/--ui-button-icon:\s*calc\(\s*(\d+(?:\.\d+)?)px\s*\*\s*pow\(\s*var\(--ui-scale\)\s*,\s*0\.58\s*\)\s*\)/)
   return m ? Number(m[1]) : null
 }
 
@@ -68,12 +69,18 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     }
   })
 
-  it('the glyph↔box relation is SCALE-INVARIANT: both `icon` and `height` carry the same var(--ui-scale)', () => {
-    // both the glyph and the box multiply by --ui-scale, so the base-px comparison above holds at EVERY
-    // scale (the ratio is scale-invariant) — density never touches either (it rides the gap only, s6).
-    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-icon:\s*calc\([^)]*\*\s*var\(--ui-scale\)\s*\)/)
+  it('ADR-0033: the icon is SUBLINEAR in [scale] (pow 0.58) while the box height stays LINEAR — so icon ≤ box is preserved a fortiori (the ratio only TIGHTENS as scale climbs)', () => {
+    // Pre-ADR-0033 the icon and box BOTH carried a bare var(--ui-scale) (a scale-invariant ratio). ADR-0033
+    // (§1.1) decouples them: the icon grows on pow(var(--ui-scale), 0.58) — STRICTLY slower than the box's
+    // linear var(--ui-scale) — so the content-icon never overruns the frame at the content-* tiers; the
+    // base-px `icon ≤ box` proven above only tightens as scale climbs. Pin the two distinct scaling forms.
+    const md = whereBlock(':where(ui-button) {')
+    expect(md).toMatch(/--ui-button-icon:\s*calc\(\s*\d+px\s*\*\s*pow\(\s*var\(--ui-scale\)\s*,\s*0\.58\s*\)\s*\)/) // sublinear icon
+    expect(md).not.toMatch(/--ui-button-icon:\s*calc\(\s*\d+px\s*\*\s*var\(--ui-scale\)\s*\)/) // the OLD bare-linear icon form is gone
     for (const size of ['sm', 'md', 'lg'] as const) {
-      expect(dimCss).toMatch(new RegExp(`--ui-height-${size}:\\s*calc\\([^)]*\\*\\s*var\\(--ui-scale\\)\\s*\\)`))
+      const decl = (dimCss.match(new RegExp(`--ui-height-${size}:[^;]*;`)) ?? [''])[0]
+      expect(decl, `--ui-height-${size} decl not found`).toMatch(/\*\s*var\(--ui-scale\)/) // the box stays LINEAR…
+      expect(decl).not.toMatch(/pow\(/) //                                                    …NOT sublinear (the frame lever holds linear)
     }
   })
 

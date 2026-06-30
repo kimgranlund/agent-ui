@@ -57,6 +57,16 @@ These reproduce every tabled value to **±1px** — so the table is not six hand
 which is exactly the bridge that lets a shipped `scale × size` height **map onto the law** (§3) — feed
 the mapped height to the formula, get its tabled icon/caret/font.
 
+> **REALIZED UNDER `[scale]` (ADR-0033, 2026-06-30).** This sublinear law was honored across `[size]`
+> (the tabled sm/md/lg) but **not** under `[scale]`, which scaled font **linearly** (`× --ui-scale`) —
+> so `content-lg` md font was 24.5px (50% of a 49px box) instead of §1.1's ~18px (~37%). Now, under
+> `[scale]`, **height stays linear** (the frame lever) but **glyphs re-derive sublinearly from the scaled
+> height**: `--ui-font = base × pow(--ui-scale, 0.45)` and `--ui-icon = base × pow(--ui-scale, 0.58)`
+> (anchored on `--ui-scale`, so the hand-tuned base is exact at `scale = 1`); `caret = font` and
+> `gap = font/2` follow. So `[size]` and `[scale]` now agree — **any** final height gets this law's glyphs.
+> (Display type `--ui-type-*` stays **linear** — it has no box, so the in-box optical correction does not
+> apply; ADR-0033 / ADR-0025.)
+
 ### 1.2 · The same law, read structurally — **two bands**
 
 The sublinearity reads structurally as two bands that change gear together at the **MD|LG seam**:
@@ -187,11 +197,16 @@ For a **label-only / slotless** edge (no glyph there), the law has no glyph to c
 > system from the control ramp (§5.1). The control multiplier ladder **deliberately reuses §5.2's per-tier
 > magnitudes** (each tier's compact md ÷ ui-md's 16) so **one `[scale]` tier scales the control frame AND the
 > compact box by the same per-tier proportion** (ADR-0032) — a ratified design choice, not a spec-mandated
-> control table. So this §3 framing is no longer intended-only — it is the shipped model.
+> control table. **Glyph refinement (ADR-0033):** the `--ui-scale` multiplier is **linear on HEIGHT** but
+> **sublinear on the GLYPHS** — under `[scale]`, `--ui-font = base × pow(--ui-scale, 0.45)` and
+> `--ui-icon = base × pow(--ui-scale, 0.58)` (§1.1), so the glyphs track the law at the *scaled* height,
+> not the linear height ratio. So this §3 framing is no longer intended-only — it is the shipped model.
 
 No size-ramp migration. The shipped two-axis model stays:
 - `scale` (`ui-sm…content-lg`) × `size` (`sm/md/lg`) → a **height** (the `--ui-height-{size}` table in
-  `dimensions.css`, via the `--ui-scale` multiplier); `font` → `--ui-font-{size}`.
+  `dimensions.css`, via the linear `--ui-scale` multiplier); **font** → `--ui-font-{size}`, which under
+  `[scale]` re-derives **sublinearly** (`base × pow(--ui-scale, 0.45)`, §1.1 / ADR-0033) — not the linear
+  height ratio.
 - A control resolves its **height** + **font** from those tables, then **obeys §1.4**: icon = `--ui-ind`
   (the frame); the identical `icon`-sized slot; uniform `inline-pad = ½(height − icon)`; and the rhythm
   rules `gap = font/2`, `caret = font`.

@@ -36,7 +36,7 @@
   --ui-button-height: var(--ui-height-md);
   --ui-button-font: var(--ui-font-md);
   --ui-button-gap: var(--ui-gap-md);
-  --ui-button-icon: calc(18px * var(--ui-scale)); /* content-icon ramp md=18 (geometry-sizing-spec §1) */
+  --ui-button-icon: calc(18px * pow(var(--ui-scale), 0.58)); /* content-icon ramp md=18 (§1); SUBLINEAR in [scale] (§1.1, ADR-0033) — a steeper 0.58 power than font's 0.45, still slower than the linear box (lg×content-lg → ~28px, not linear 35) */
   --ui-button-glyph: var(--ui-button-font); /* inline-affordance (caret) ramp = font (--ui-glyph-ratio 1, §4.1) */
 }
 
@@ -61,13 +61,13 @@
   --ui-button-height: var(--ui-height-sm);
   --ui-button-font: var(--ui-font-sm);
   --ui-button-gap: var(--ui-gap-sm);
-  --ui-button-icon: calc(16px * var(--ui-scale));
+  --ui-button-icon: calc(16px * pow(var(--ui-scale), 0.58)); /* sublinear glyph (§1.1, ADR-0033) */
 }
 :where(ui-button[size='lg']) {
   --ui-button-height: var(--ui-height-lg);
   --ui-button-font: var(--ui-font-lg);
   --ui-button-gap: var(--ui-gap-lg);
-  --ui-button-icon: calc(20px * var(--ui-scale));
+  --ui-button-icon: calc(20px * pow(var(--ui-scale), 0.58)); /* sublinear glyph (§1.1, ADR-0033) */
 }
 
 /* disabled → muted neutral roles (overrides the family). HOLDS at idle: -bg-hover/-bg-active repoint to the

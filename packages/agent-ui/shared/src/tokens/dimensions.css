@@ -91,14 +91,20 @@
    element; declarations don't trigger layout/paint, so the cost is negligible.) */
 * {
   /* Control-band ramp, base px @ scale 1 (geometry-sizing-spec.md §1): SM·MD·LG height = 24·28·36,
-     font = 13·14·16 (`font ≈ 3.16·height^0.45`, rounded). Frame + font → `× var(--ui-scale)`. */
+     font = 13·14·16 (`font ≈ 3.16·height^0.45`, rounded). The FRAME (height) scales LINEARLY → `× var(--ui-scale)`. */
   --ui-height-sm: calc(24px * var(--ui-scale));
   --ui-height-md: calc(28px * var(--ui-scale));
   --ui-height-lg: calc(36px * var(--ui-scale));
 
-  --ui-font-sm: calc(13px * var(--ui-scale));
-  --ui-font-md: calc(14px * var(--ui-scale));
-  --ui-font-lg: calc(16px * var(--ui-scale));
+  /* Font is SUBLINEAR in [scale] (§1.1 sublinear law, ADR-0033): `× pow(var(--ui-scale), 0.45)`, NOT linear.
+     A linearly-scaled font over-grows at the content-* tiers (lg×content-lg would hit 28px); the 0.45 power
+     lets type track the frame's growth while staying a READING size — lg×content-lg → ~20.6px, not 28. Bases
+     (13·14·16) and the identity at scale 1 are unchanged: pow(1, 0.45) = 1, so scale 1 is byte-identical (no
+     visual shift). Height stays LINEAR above (the square-centring lever); --ui-type-* (ADR-0025) stays LINEAR
+     too — the fork is scoped to the control-band font + the glyph/icon that follows it (button.css, pow 0.58). */
+  --ui-font-sm: calc(13px * pow(var(--ui-scale), 0.45));
+  --ui-font-md: calc(14px * pow(var(--ui-scale), 0.45));
+  --ui-font-lg: calc(16px * pow(var(--ui-scale), 0.45));
 
   /* Rhythm: the gap = font / 2, and density rides it (× var(--ui-density)). This is the ONE quantity
      density touches — the frame (height/font/inline-pad) is density-invariant. (gap also carries scale,

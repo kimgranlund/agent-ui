@@ -84,13 +84,14 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
         heights.push(frameHeight(field))
         fonts.push(fontPx(editor))
       }
-      // md base (28/14) × --ui-scale {0.875, 1, 1.75} — [scale] multiplies the WHOLE frame + the font.
+      // md base 28/14: HEIGHT linear (× --ui-scale {0.875,1,1.75}), editor FONT sublinear (× pow(--ui-scale, 0.45),
+      // ADR-0033) — the font grows slower than the frame (content-lg = 49/18, not the old linear 49/24.5).
       expect(heights[0]).toBeCloseTo(24.5, 1)
       expect(heights[1]).toBeCloseTo(28, 1)
       expect(heights[2]).toBeCloseTo(49, 1)
-      expect(fonts[0]).toBeCloseTo(12.25, 1)
+      expect(fonts[0]).toBeCloseTo(13.18, 1)
       expect(fonts[1]).toBeCloseTo(14, 1)
-      expect(fonts[2]).toBeCloseTo(24.5, 1)
+      expect(fonts[2]).toBeCloseTo(18.01, 1)
       expect(allDistinct(heights), `heights did not change across [scale]: ${heights.join()}`).toBe(true)
       expect(allDistinct(fonts), `editor fonts did not change across [scale]: ${fonts.join()}`).toBe(true)
     }

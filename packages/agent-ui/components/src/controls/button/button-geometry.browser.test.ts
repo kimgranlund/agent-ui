@@ -87,14 +87,15 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
 
   it('[scale] ui-sm→content-lg CHANGES the frame height + font px (via --ui-scale) across all SIX tiers — on BOTH variants', () => {
     // The six-tier two-band ladder (ADR-0032): ui-* tight {0.875, 1, 1.125} · content-* generous {1.375, 1.5, 1.75}.
-    // md base (28/14) × --ui-scale. ui-md = 1 ⇒ exactly today's baseline (28/14) — anti-regression on the default.
+    // md base 28/14: HEIGHT linear (× --ui-scale), FONT sublinear (× pow(--ui-scale, 0.45), ADR-0033) — font
+    // grows slower than the box (content-lg = 49/18, not the old linear 49/24.5). ui-md = 1 ⇒ baseline 28/14.
     const TIERS: Array<[string, number, number]> = [
-      ['ui-sm', 24.5, 12.25],
+      ['ui-sm', 24.5, 13.18],
       ['ui-md', 28, 14],
-      ['ui-lg', 31.5, 15.75],
-      ['content-sm', 38.5, 19.25],
-      ['content-md', 42, 21],
-      ['content-lg', 49, 24.5],
+      ['ui-lg', 31.5, 14.76],
+      ['content-sm', 38.5, 16.16],
+      ['content-md', 42, 16.8],
+      ['content-lg', 49, 18.01],
     ]
     for (const markup of [BARE, ICON]) {
       const { wrap, btn } = mount(markup) // size stays md (default)
@@ -113,6 +114,47 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
       expect(allDistinct(heights), `heights did not change across the six [scale] tiers: ${heights.join()}`).toBe(true)
       expect(allDistinct(fonts), `fonts did not change across the six [scale] tiers: ${fonts.join()}`).toBe(true)
     }
+  })
+
+  it('ADR-0033 sublinear font/glyph: [scale] grows the FRAME linearly but font (pow 0.45) + icon (pow 0.58) SUBLINEARLY — the user\'s lg×content-lg case', () => {
+    // Decoupled scaling (geometry-sizing-spec §1.1): height = base × scale (LINEAR); font = base × pow(scale,
+    // 0.45); icon = base × pow(scale, 0.58). At content-lg a linearly-scaled font/icon would OVER-grow (lg →
+    // font 28, icon 35) — the powers hold them to reading/affordance sizes (~20.6 / ~27.7) while the box still
+    // hits its linear 63. The icon CELL is the slotted [data-role=icon] box (= --ui-button-icon), per s11.
+    const iconCellPx = (b: HTMLElement): number =>
+      (b.querySelector('[data-role="icon"]') as HTMLElement).getBoundingClientRect().width
+    const read = (size: string, scale: string | null): { h: number; f: number; icon: number } => {
+      const { wrap, btn } = mount(ICON)
+      btn.setAttribute('size', size)
+      if (scale) wrap.setAttribute('scale', scale)
+      return { h: frameHeight(btn), f: fontPx(btn), icon: iconCellPx(btn) }
+    }
+    const near = (got: number, want: number, msg: string): void =>
+      expect(Math.abs(got - want), `${msg}: got ${got}, want ~${want}`).toBeLessThanOrEqual(1)
+
+    // ── THE USER'S CASE — [size=lg][scale=content-lg] (scale 1.75): font ~20.6 (NOT 28), icon ~27.7 (NOT 35) ──
+    const lgCL = read('lg', 'content-lg')
+    near(lgCL.h, 63, 'lg×content-lg height (LINEAR 36×1.75)') //                         frame stays linear
+    near(lgCL.f, 20.6, 'lg×content-lg font (16×pow(1.75,0.45))') //                      sublinear font
+    near(lgCL.icon, 27.7, 'lg×content-lg icon (20×pow(1.75,0.58))') //                   sublinear icon
+    expect(lgCL.f, 'lg×content-lg font regressed to the LINEAR 28').toBeLessThan(22) //  NEGATIVE control: 28 is gone
+    expect(lgCL.icon, 'lg×content-lg icon regressed to the LINEAR 35').toBeLessThan(32)
+
+    // ── [size=md][scale=content-lg]: height 49 (linear), font ~18 (NOT linear 24.5) ──────────────────────
+    const mdCL = read('md', 'content-lg')
+    near(mdCL.h, 49, 'md×content-lg height (28×1.75)')
+    near(mdCL.f, 18, 'md×content-lg font (14×pow(1.75,0.45))')
+    expect(mdCL.f, 'md×content-lg font regressed to the LINEAR 24.5').toBeLessThan(20)
+
+    // ── default ([size=md], no [scale] → scale 1): BYTE-IDENTICAL to pre-ADR-0033 (pow(1,x)=1) ────────────
+    const mdDefault = read('md', null)
+    near(mdDefault.f, 14, 'md default font (pow(1)=1, unchanged)')
+    near(mdDefault.h, 28, 'md default height (unchanged)')
+
+    // ── [size=lg] scale 1 (ui-md): the §1 LG row is unchanged — font 16, icon 20 ─────────────────────────
+    const lgBase = read('lg', 'ui-md')
+    near(lgBase.f, 16, 'lg scale-1 font (unchanged §1 LG row)')
+    near(lgBase.icon, 20, 'lg scale-1 icon (unchanged §1 LG row)')
   })
 
   it('[density] compact→spacious CHANGES the icon↔label gap (--ui-gap) — the icon+label variant', () => {
