@@ -53,11 +53,15 @@
    self-referencing custom property (which CSS treats as a cycle → invalid): L1 12 · L2 8 · L3+ 4 (the block-pad
    floor). Three levels covers real nesting; deeper content stays at the 4px floor. */
 :where([data-region='content'], main) {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ui-box-gap);
+  display: block; /* NOT flex — overflow:auto scrolls a block, and a block child keeps its height (flex would
+                     shrink it and break a scroll viewport). The region gap comes from an adjacent-sibling margin. */
   padding-inline: var(--ui-box-pad-inline); /* L1 = 12px */
   padding-block: var(--ui-box-pad-block);
+}
+/* The 8px region rhythm between content children — a gap-without-flex adjacent-sibling margin (scroll-safe);
+   the first child takes no top margin (the block padding provides the inset). */
+:where([data-region='content'], main) > * + * {
+  margin-block-start: var(--ui-box-gap);
 }
 :where([data-region='content'], main) :where([data-region='content'], main) {
   padding-inline: calc(var(--ui-box-pad-inline) - var(--ui-box-inset)); /* L2 = 8px (12 − 4) */

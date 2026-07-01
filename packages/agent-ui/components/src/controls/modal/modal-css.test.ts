@@ -68,7 +68,9 @@ describe('modal.css — the @scope dialog surface + ::backdrop (s9)', () => {
     expect(rule).toMatch(/background-image:\s*linear-gradient\(var\(--ui-container-tint\),\s*var\(--ui-container-tint\)\)/) // the brightness wash
     expect(rule).toMatch(/color:\s*var\(--ui-modal-ink\)/)
     expect(rule).toMatch(/border-radius:\s*var\(--ui-modal-radius\)/)
-    expect(rule).toMatch(/padding:\s*var\(--ui-modal-padding\)/)
+    // Box-model (container-box.css): the dialog is a [data-box] with NO shell padding — its children carry the
+    // inset (author regions get the 12/4 region padding; loose content the 4px box inset).
+    expect(rule).toMatch(/padding:\s*0/)
   })
 
   it('the ::backdrop reads the scrim from the own chain (the blocking layer)', () => {

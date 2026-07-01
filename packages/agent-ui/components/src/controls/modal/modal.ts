@@ -124,6 +124,7 @@ export class UIModalElement extends UIContainerElement {
 
     const dialog = document.createElement('dialog')
     dialog.setAttribute('data-part', 'dialog')
+    dialog.setAttribute('data-box', '') // adopt the shared container box-model (region padding / inset margins)
 
     // Forward the accessible name onto the dialog part, then strip it from the host (host carries no aria-*).
     const labelledby = this.getAttribute('aria-labelledby')

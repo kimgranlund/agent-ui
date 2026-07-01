@@ -34,10 +34,15 @@
      [brightness] still repoint this via container.css; this is only the un-elevated default. */
   --ui-container-bg: var(--c-neutral-surface);
 
-  /* Layout spacing — off the density-responsive --ui-space ladder (geometry.md Container/layout class; NEVER a
-     control height). Padding insets the regions; the row-gap is the rhythm between stacked regions. */
-  --ui-card-padding: var(--ui-space-md);
-  --ui-card-gap: var(--ui-space-md);
+  /* Layout spacing — the container BOX-MODEL (container-box.css): the card holds NO padding + NO grid gap; each
+     region (header/content/footer) is full-bleed and carries its OWN region padding (inline 12 · block 4) so
+     adjacent regions read as an 8px rhythm (4px block-pad each side). The `--ui-box-*` tokens fall back to
+     0.75rem/0.25rem when the card is not under a [data-box] ancestor. */
+  --ui-card-padding: 0;
+  --ui-card-gap: 0;
+  --ui-card-region-pad-inline: var(--ui-box-pad-inline, 0.75rem); /* 12px region inline padding */
+  --ui-card-region-pad-block: var(--ui-box-pad-block, 0.25rem); /* 4px region block padding */
+  --ui-card-content-gap: var(--ui-box-gap, 0.5rem); /* 8px region rhythm between content children */
 
   /* Frame: the neutral hairline border + the corner radius. The radius reads the inherited
      --ui-card-child-radius a PARENT card published (one-level nesting, ADR-0018), else the shared
@@ -45,10 +50,11 @@
   --ui-card-border: var(--c-neutral-outline-variant);
   --ui-card-radius: var(--ui-card-child-radius, var(--ui-radius-base));
 
-  /* The card's INNER radius (the concentric-corner law) — what a painted region clips to AND the value handed
-     down to a nested card. Computed from THIS card's resolved radius/padding; it is NOT read back into
-     --ui-card-radius, so there is no self-referential cycle (ADR-0018). */
-  --ui-card-inner-radius: max(0px, calc(var(--ui-card-radius) - var(--ui-card-padding)));
+  /* The card's INNER radius (the concentric-corner law) — the value handed down to a nested card. Under the
+     box-model the inset is the CONTENT region's inline padding (a nested card lives inside ui-card-content),
+     so the chain re-bases off that, NOT the (now-zero) card padding. Not read back into --ui-card-radius → no
+     self-referential cycle (ADR-0018). */
+  --ui-card-inner-radius: max(0px, calc(var(--ui-card-radius) - var(--ui-card-region-pad-inline)));
 }
 
 /* PUBLISH the child radius ONE level (ADR-0018): hand every direct child the card's inner radius as the
@@ -105,6 +111,10 @@
   grid-template-columns: 1fr; /* [label] — slotless */
   align-items: center;
   column-gap: var(--ui-card-region-gap);
+  /* Box-model region padding — the header/footer are full-bleed; their inline 12 / block 4 padding insets the
+     ink from the card edge (container-box.css region system). */
+  padding-inline: var(--ui-card-region-pad-inline);
+  padding-block: var(--ui-card-region-pad-block);
 }
 
 /* [leading | label] — auto 1fr */
@@ -120,16 +130,17 @@
   grid-template-columns: auto 1fr auto;
 }
 
-/* Region fill → the card INNER radius on the card-edge corners (concentric): the header rounds its TOP corners,
-   the footer its BOTTOM corners. Harmless when the region is transparent (the default); load-bearing the moment
-   an author paints the region. */
+/* Region fill → the card OUTER radius on the card-edge corners (concentric): under the box-model the regions are
+   FULL-BLEED (the card holds no padding), so a painted header/footer meets the card's rounded border and rounds
+   its card-edge corners to match — the header its TOP corners, the footer its BOTTOM. Harmless when the region
+   is transparent (the default); load-bearing the moment an author paints the region. */
 :where(ui-card-header) {
-  border-start-start-radius: var(--ui-card-inner-radius);
-  border-start-end-radius: var(--ui-card-inner-radius);
+  border-start-start-radius: var(--ui-card-radius);
+  border-start-end-radius: var(--ui-card-radius);
 }
 :where(ui-card-footer) {
-  border-end-start-radius: var(--ui-card-inner-radius);
-  border-end-end-radius: var(--ui-card-inner-radius);
+  border-end-start-radius: var(--ui-card-radius);
+  border-end-end-radius: var(--ui-card-radius);
 }
 
 /* ════════════════ [ui-card-content] TOKEN + STYLES — the body + scroll ════════════════ */
@@ -137,12 +148,24 @@
 :where(ui-card-content) {
   --ui-card-fade: var(--ui-space-lg); /* the [scroll-fade] mask edge depth (off the --ui-space ladder) */
 
+  /* Box-model content region — full-bleed, with the region inline 12 / block 4 padding. Stays `display: block`
+     (NOT flex): overflow:auto scrolls a block, and a block child keeps its height (a flex-column would shrink
+     it and break [scrollable]). The 8px region rhythm between children comes from an adjacent-sibling margin
+     (gap-without-flex — scroll-safe), applied in the @scope block below. */
   display: block;
+  padding-inline: var(--ui-card-region-pad-inline);
+  padding-block: var(--ui-card-region-pad-block);
   min-block-size: 0; /* the body may shrink in the 1fr track (so a constrained card can scroll its content) */
   min-inline-size: 0;
 }
 
 @scope (ui-card-content) {
+  /* The 8px region rhythm between content children — an adjacent-sibling margin (gap-without-flex, so the block
+     scroll viewport is unaffected). The FIRST child has no top margin (the block padding provides the inset). */
+  :scope > * + * {
+    margin-block-start: var(--ui-card-content-gap);
+  }
+
   /* `scrollable` — a scrolling viewport. overflow:auto + the min-block-size:0 above let the 1fr grid track
      shrink BELOW its content and actually scroll. It needs a CONSTRAINED card block-size to bite (a
      max-block-size / height on the card, or a sized flex/grid parent) — documented in card.md. (Named

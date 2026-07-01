@@ -66,14 +66,17 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
       '<ui-card style="--ui-card-radius: 32px"><ui-card-content><ui-card>nested</ui-card></ui-card-content></ui-card>',
     )
     const nested = root.querySelector('ui-card-content > ui-card') as HTMLElement
+    const content = root.querySelector('ui-card-content') as HTMLElement
     const rootR = radiusPx(root)
     const nestedR = radiusPx(nested)
-    const pad = px(getComputedStyle(root).paddingTop)
+    // Box-model: the card holds no padding — a nested card sits inside ui-card-content, inset by the CONTENT
+    // region's inline padding, so the concentric decrement measures against THAT (12px), not the card's.
+    const pad = px(getComputedStyle(content).paddingLeft)
 
     expect(rootR, 'root radius did not reseed to 32px').toBeCloseTo(32, 0)
-    expect(pad, 'padding is not a positive px').toBeGreaterThan(0)
-    // the concentric-corner law, measured: child == max(0, parent − padding)
-    expect(nestedR, 'nested radius != max(0, parent − padding)').toBeCloseTo(Math.max(0, rootR - pad), 1)
+    expect(pad, 'content inline padding is not a positive px').toBeGreaterThan(0)
+    // the concentric-corner law, measured: child == max(0, parent − content inline padding)
+    expect(nestedR, 'nested radius != max(0, parent − content inline padding)').toBeCloseTo(Math.max(0, rootR - pad), 1)
     // anti-vacuous negative control: the nested radius is genuinely SMALLER than the parent (the decrement is
     // real — a same-radius/no-decrement bug would make these equal and FAIL here)
     expect(nestedR, 'nested radius did not decrement below the parent').toBeLessThan(rootR)
@@ -103,49 +106,33 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(card.getBoundingClientRect().height, 'the card grew past its max-block-size').toBeLessThanOrEqual(120)
   })
 
-  it('[density] compact→comfortable→spacious SHIFTS padding+gap (--ui-space-driven); border+radius HOLD', () => {
-    // card.css:39-40: --ui-card-padding and --ui-card-gap both ride --ui-space-md (density-responsive).
-    // The frame (border: 1px solid; radius: --ui-radius-base = 12px constant) is NOT a --ui-space quantity
-    // and must stay invariant. Anti-vacuous: prove the spacing change is measurably nonzero AND that the
-    // frame value is > 0 (so the "holds" proof is not vacuously equal-because-both-zero).
+  it('[box-model] region padding is FIXED (inline 12 · block 4) + density-INVARIANT; the frame HOLDS too', () => {
+    // Box-model rollout (container-box.css): the card itself has zero padding; the regions carry a FIXED region
+    // padding off the rem-based --ui-box-* tokens (inline 0.75rem = 12px · block 0.25rem = 4px). Because they are
+    // rem-based (not --ui-space × --ui-density), the region padding — like the frame — is density-INVARIANT.
     const card = mount(
       '<ui-card><ui-card-header>H</ui-card-header><ui-card-content>C</ui-card-content></ui-card>',
     )
+    const content = card.querySelector('ui-card-content') as HTMLElement
 
-    // comfortable (no [density] attr = --ui-density 1): the baseline spacing
-    const padBase = px(getComputedStyle(card).paddingTop)
-    const gapBase = px(getComputedStyle(card).rowGap)
-    expect(padBase, 'comfortable padding is not a positive px').toBeGreaterThan(0)
-    expect(gapBase, 'comfortable gap is not a positive px').toBeGreaterThan(0)
+    // comfortable baseline: the fixed 12/4 region padding
+    const padInlineBase = px(getComputedStyle(content).paddingLeft)
+    const padBlockBase = px(getComputedStyle(content).paddingTop)
+    const borderBase = px(getComputedStyle(card).borderTopWidth)
+    const radiusBase = radiusPx(card)
+    expect(padInlineBase, 'content inline padding is not ~12px').toBeCloseTo(12, 0)
+    expect(padBlockBase, 'content block padding is not ~4px').toBeCloseTo(4, 0)
+    expect(borderBase, 'border is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
+    expect(radiusBase, 'radius is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
 
-    // compact (density 0.5) — padding+gap halve
-    card.setAttribute('density', 'compact')
-    const padCompact = px(getComputedStyle(card).paddingTop)
-    const gapCompact = px(getComputedStyle(card).rowGap)
-    expect(padCompact, 'compact padding did not shrink from comfortable').toBeCloseTo(padBase / 2, 1)
-    expect(gapCompact, 'compact gap did not shrink from comfortable').toBeCloseTo(gapBase / 2, 1)
-
-    // spacious (density 1.5) — padding+gap grow
-    card.setAttribute('density', 'spacious')
-    const padSpacious = px(getComputedStyle(card).paddingTop)
-    const gapSpacious = px(getComputedStyle(card).rowGap)
-    expect(padSpacious, 'spacious padding did not grow from comfortable').toBeCloseTo(padBase * 1.5, 1)
-    expect(gapSpacious, 'spacious gap did not grow from comfortable').toBeCloseTo(gapBase * 1.5, 1)
-
-    // anti-vacuity: the density extremes are measurably distinct (compact < spacious)
-    expect(padCompact, 'padding is the same at compact and spacious (density has no effect)').toBeLessThan(padSpacious)
-    expect(gapCompact, 'gap is the same at compact and spacious (density has no effect)').toBeLessThan(gapSpacious)
-
-    // FRAME is density-INVARIANT — border (1px solid) and radius (--ui-radius-base = 12px constant) must hold
-    card.setAttribute('density', 'compact')
-    const borderCompact = px(getComputedStyle(card).borderTopWidth)
-    const radiusCompact = radiusPx(card)
-    card.setAttribute('density', 'spacious')
-    expect(px(getComputedStyle(card).borderTopWidth), 'border width changed with density').toBe(borderCompact)
-    expect(radiusPx(card), 'radius changed with density').toBe(radiusCompact)
-    // anti-vacuous: both are real painted values (not 0) so the invariant proves something
-    expect(borderCompact, 'border is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
-    expect(radiusCompact, 'radius is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
+    // density-INVARIANT: compact + spacious leave the region padding + frame unchanged (rem, not --ui-space)
+    for (const d of ['compact', 'spacious']) {
+      card.setAttribute('density', d)
+      expect(px(getComputedStyle(content).paddingLeft), `inline padding changed at ${d}`).toBeCloseTo(padInlineBase, 1)
+      expect(px(getComputedStyle(content).paddingTop), `block padding changed at ${d}`).toBeCloseTo(padBlockBase, 1)
+      expect(px(getComputedStyle(card).borderTopWidth), `border width changed at ${d}`).toBe(borderBase)
+      expect(radiusPx(card), `radius changed at ${d}`).toBe(radiusBase)
+    }
   })
 
   it('forced-colors keeps the card border visible — Chromium emulates (CDP); WebKit asserts the baseline', async () => {

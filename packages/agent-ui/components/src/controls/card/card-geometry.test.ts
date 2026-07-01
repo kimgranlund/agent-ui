@@ -31,9 +31,11 @@ describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)
     )
   })
 
-  it('the inner radius IS the concentric-corner law max(0, radius − padding)', () => {
+  it('the inner radius IS the concentric-corner law max(0, radius − content inline padding) [box-model]', () => {
+    // Under the box-model the card holds NO padding; the inset that a nested card sits inside is the CONTENT
+    // region's inline padding, so the concentric chain re-bases off --ui-card-region-pad-inline.
     expect(cardTokens).toMatch(
-      /--ui-card-inner-radius:\s*max\(\s*0px\s*,\s*calc\(\s*var\(--ui-card-radius\)\s*-\s*var\(--ui-card-padding\)\s*\)\s*\)/,
+      /--ui-card-inner-radius:\s*max\(\s*0px\s*,\s*calc\(\s*var\(--ui-card-radius\)\s*-\s*var\(--ui-card-region-pad-inline\)\s*\)\s*\)/,
     )
   })
 
@@ -54,9 +56,13 @@ describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)
 })
 
 describe('card.css — padding/gap off the --ui-space ladder (Container/layout class, no control height)', () => {
-  it('padding + the region row-gap read --ui-space-* (NEVER --ui-height-*)', () => {
-    expect(cardTokens).toMatch(/--ui-card-padding:\s*var\(--ui-space-md\)/)
-    expect(cardTokens).toMatch(/--ui-card-gap:\s*var\(--ui-space-/)
+  it('the box-model: the card holds NO padding/gap; the region padding rides the --ui-box-* tokens (NO --ui-height-*)', () => {
+    // Box-model rollout (container-box.css): the card itself has zero padding + zero grid gap — each region is
+    // full-bleed and carries its OWN region padding off the shared --ui-box-* tokens (inline 12 · block 4).
+    expect(cardTokens).toMatch(/--ui-card-padding:\s*0/)
+    expect(cardTokens).toMatch(/--ui-card-gap:\s*0/)
+    expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--ui-box-pad-inline,/)
+    expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--ui-box-pad-block,/)
     expect(css).not.toMatch(/--ui-height-/) // a container has NO control height (geometry.md)
   })
 
@@ -89,8 +95,10 @@ describe('card.css — header/footer host-as-grid anatomy (anatomy.md leading/la
     expect(css).toMatch(/:has\(>\s*\[slot='leading'\]\):has\(>\s*\[slot='trailing'\]\)\s*\{\s*grid-template-columns:\s*auto 1fr auto/)
   })
 
-  it('a region fill clips its CARD-EDGE corners to the inner radius (header top · footer bottom)', () => {
-    expect(css).toMatch(/:where\(ui-card-header\)\s*\{[^}]*border-start-start-radius:\s*var\(--ui-card-inner-radius\)/)
-    expect(css).toMatch(/:where\(ui-card-footer\)\s*\{[^}]*border-end-start-radius:\s*var\(--ui-card-inner-radius\)/)
+  it('a full-bleed region fill clips its CARD-EDGE corners to the OUTER radius (header top · footer bottom)', () => {
+    // Box-model: regions are full-bleed (no card padding), so a painted header/footer meets the card's rounded
+    // border and rounds its card-edge corners to the OUTER --ui-card-radius (not the inner/decremented radius).
+    expect(css).toMatch(/:where\(ui-card-header\)\s*\{[^}]*border-start-start-radius:\s*var\(--ui-card-radius\)/)
+    expect(css).toMatch(/:where\(ui-card-footer\)\s*\{[^}]*border-end-start-radius:\s*var\(--ui-card-radius\)/)
   })
 })

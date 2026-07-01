@@ -33,10 +33,13 @@ function logEvent(label: string, name: string): void {
 // dismissal emits). The close/toggle listeners log the USER-driven dismissals (Escape / backdrop click).
 function modalDemo(label: string, attrs: Record<string, string>, note: string): HTMLElement {
   const close = uiButton('Close', 'soft')
+  // The modal content, structured with the container box-model regions (container-box.css): a full-bleed
+  // sticky <header>, a [data-region=content] body (12/4 region padding + the 8px child rhythm), and a
+  // full-bleed sticky <footer> for the action — the ratified header/content/footer pattern.
   const modal = el('ui-modal', attrs, [
-    el('h2', {}, [text(label)]),
-    el('p', {}, [text(note)]),
-    el('ui-row', { gap: 'sm', justify: 'end' }, [close]),
+    el('header', {}, [el('h2', { style: 'margin:0' }, [text(label)])]),
+    el('div', { 'data-region': 'content' }, [el('p', { style: 'margin:0' }, [text(note)])]),
+    el('footer', { style: 'justify-content:flex-end' }, [close]),
   ])
   modal.addEventListener('close', () => logEvent(label, 'close'))
   modal.addEventListener('toggle', () => logEvent(label, 'toggle'))

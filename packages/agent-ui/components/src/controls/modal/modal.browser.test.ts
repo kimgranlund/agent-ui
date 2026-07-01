@@ -16,6 +16,7 @@ import type { UIModalElement } from './modal.ts'
 // after this slice, so the test is self-contained.
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container.css'
+import '../_surface/container-box.css' // the box-model layer — provides the [data-region] region padding
 import './modal.css'
 import './modal.ts'
 
@@ -180,43 +181,37 @@ describe('ui-modal — Escape dismissal + focus restore (both engines)', () => {
 //  [5] [density] — shell padding shifts (--ui-space-lg); frame (border + radius) HOLDS (both engines)
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
-describe('ui-modal — [density] shifts shell padding; frame is density-invariant (both engines)', () => {
-  it('[density] compact→comfortable→spacious SHIFTS dialog padding (--ui-space-lg-driven); border+radius HOLD', async () => {
-    // modal.css:36: --ui-modal-padding rides --ui-space-lg (density-responsive). The frame (border: 1px solid;
-    // radius: --ui-radius-base = 12px constant) is NOT a --ui-space quantity and must stay invariant.
-    // The modal is opened so the dialog is in the top layer — CSS inheritance flows through the DOM tree,
-    // so density set on the ui-modal host propagates to the [data-part="dialog"] child.
-    const { modal, dialog } = mount('<ui-modal><p>Body</p></ui-modal>')
+describe('ui-modal — [box-model] the dialog is a padding-less box; region padding + frame are density-invariant (both engines)', () => {
+  it('the dialog shell has NO padding (box-model); a content region carries the FIXED 12/4 padding; the frame HOLDS', async () => {
+    // Box-model rollout (container-box.css): the dialog is a [data-box] with ZERO shell padding — a content
+    // region inside carries the FIXED region padding (inline 0.75rem=12px · block 0.25rem=4px, rem-based → NOT
+    // --ui-space × --ui-density, so density-INVARIANT). The frame (border 1px · radius) is invariant too.
+    const { modal, dialog } = mount('<ui-modal><div data-region="content"><p>Body</p></div></ui-modal>')
     modal.open = true
     await modal.updateComplete
+    const content = dialog.querySelector('[data-region="content"]') as HTMLElement
 
-    // comfortable (no [density] attr = --ui-density 1): the baseline shell padding
-    const padBase = px(getComputedStyle(dialog).paddingTop)
-    expect(padBase, 'comfortable padding is not a positive px').toBeGreaterThan(0)
+    // the dialog shell holds no padding — the region provides the inset
+    expect(px(getComputedStyle(dialog).paddingTop), 'the dialog shell has padding (box-model expects 0)').toBe(0)
 
-    // compact (density 0.5) — shell padding halves
-    modal.setAttribute('density', 'compact')
-    const padCompact = px(getComputedStyle(dialog).paddingTop)
-    expect(padCompact, 'compact padding did not shrink from comfortable').toBeCloseTo(padBase / 2, 1)
+    // the content region's FIXED 12/4 region padding
+    const padInlineBase = px(getComputedStyle(content).paddingLeft)
+    const padBlockBase = px(getComputedStyle(content).paddingTop)
+    const borderBase = px(getComputedStyle(dialog).borderTopWidth)
+    const radiusBase = px(getComputedStyle(dialog).borderTopLeftRadius)
+    expect(padInlineBase, 'content inline padding is not ~12px').toBeCloseTo(12, 0)
+    expect(padBlockBase, 'content block padding is not ~4px').toBeCloseTo(4, 0)
+    expect(borderBase, 'border is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
+    expect(radiusBase, 'radius is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
 
-    // spacious (density 1.5) — shell padding grows
-    modal.setAttribute('density', 'spacious')
-    const padSpacious = px(getComputedStyle(dialog).paddingTop)
-    expect(padSpacious, 'spacious padding did not grow from comfortable').toBeCloseTo(padBase * 1.5, 1)
-
-    // anti-vacuity: the density extremes are measurably distinct (compact < spacious)
-    expect(padCompact, 'padding is the same at compact and spacious (density has no effect)').toBeLessThan(padSpacious)
-
-    // FRAME is density-INVARIANT — border (1px solid) and radius (--ui-radius-base = 12px constant) must hold
-    modal.setAttribute('density', 'compact')
-    const borderCompact = px(getComputedStyle(dialog).borderTopWidth)
-    const radiusCompact = px(getComputedStyle(dialog).borderTopLeftRadius)
-    modal.setAttribute('density', 'spacious')
-    expect(px(getComputedStyle(dialog).borderTopWidth), 'border width changed with density').toBe(borderCompact)
-    expect(px(getComputedStyle(dialog).borderTopLeftRadius), 'radius changed with density').toBe(radiusCompact)
-    // anti-vacuous: the frame values are real painted quantities (not 0)
-    expect(borderCompact, 'border is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
-    expect(radiusCompact, 'radius is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
+    // density-INVARIANT: compact + spacious leave the region padding + frame unchanged (rem, not --ui-space)
+    for (const d of ['compact', 'spacious']) {
+      modal.setAttribute('density', d)
+      expect(px(getComputedStyle(content).paddingLeft), `inline padding changed at ${d}`).toBeCloseTo(padInlineBase, 1)
+      expect(px(getComputedStyle(content).paddingTop), `block padding changed at ${d}`).toBeCloseTo(padBlockBase, 1)
+      expect(px(getComputedStyle(dialog).borderTopWidth), `border width changed at ${d}`).toBe(borderBase)
+      expect(px(getComputedStyle(dialog).borderTopLeftRadius), `radius changed at ${d}`).toBe(radiusBase)
+    }
   })
 })
 

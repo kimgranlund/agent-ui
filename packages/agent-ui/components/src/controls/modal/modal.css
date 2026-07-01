@@ -62,7 +62,9 @@
     color: var(--ui-modal-ink);
     border: 1px solid var(--ui-modal-outline);
     border-radius: var(--ui-modal-radius);
-    padding: var(--ui-modal-padding);
+    /* Box-model (container-box.css): the dialog is a [data-box] — no shell padding; its children carry the
+       inset (author header/content/footer regions get the 12/4 region padding; loose content the 4px inset). */
+    padding: 0;
   }
 
   /* the ::backdrop scrim — the platform-painted blocking layer behind the modal (top layer). A translucent
