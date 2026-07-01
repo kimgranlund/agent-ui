@@ -166,6 +166,51 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    label: 'ui-checkbox',
+    cards: [
+      {
+        href: './checkbox-doc.html',
+        title: 'API reference',
+        blurb: 'The FACE tri-state checkbox (Indicator class) — the size + state specimens and attribute surface, generated from checkbox.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-switch',
+    cards: [
+      {
+        href: './switch-doc.html',
+        title: 'API reference',
+        blurb: 'The FACE switch — a pill track with a 2px-inset thumb (ADR-0041) — its size + state specimens, generated from switch.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-radio',
+    cards: [
+      {
+        href: './radio-doc.html',
+        title: 'API reference',
+        blurb: 'The FACE radio (Indicator class) — its dot glyph, size + state specimens; grouping lives on the ui-radio-group page. From radio.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-radio-group',
+    cards: [
+      {
+        href: './radio-group-demo.html',
+        title: 'Demo',
+        blurb: 'The live single-selection group: click or Arrow-rove between radios, with a select event log proving the value round-trips.',
+      },
+      {
+        href: './radio-group-doc.html',
+        title: 'API reference',
+        blurb: 'The FACE radio-group container — owns exclusivity, roving, the group value, and required → valueMissing. From radio-group.md.',
+      },
+    ],
+  },
+  {
     label: 'Layout primitives',
     cards: [
       {

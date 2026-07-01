@@ -1,0 +1,178 @@
+/* checkbox.css — ui-checkbox, the Indicator-class widget stylesheet (decomp S1 · ADR-0041 · ADR-0042).
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-checkbox)` (specificity 0,0,0) declares the --ui-checkbox-* chain from
+ *       the colour roles (--c-{family}-{role}) and the widget-box ramp (--ui-compact-{size}, ADR-0041).
+ *       [size] repoints the box to the correct compact tier; [disabled] mutes to neutral roles.
+ *   [2] STYLES BLOCK — `@scope (ui-checkbox)` consumes ONLY --ui-checkbox-*. The host is inline-flex
+ *       (box + optional label text). ::before paints the square widget box (2px border + background fill).
+ *       ::after paints the glyph (checkmark or indeterminate-dash), positioned absolutely within the box
+ *       column so it centers on the box regardless of label-text height. :state(checked)/:state(indeterminate)
+ *       drive the visual states; :focus-visible draws the shared fleet ring (ADR-0009); forced-colors maps to
+ *       Highlight/HighlightText so the glyph always survives (CanvasText ink on Highlight fill; ADR-0009 ring
+ *       free via --c-focus-ring → Highlight from the token layer).
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel (decomp s14); NEVER injected
+ * from checkbox.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-checkbox) declares --ui-checkbox-* ════════════════ */
+
+:where(ui-checkbox) {
+  /* Widget-box size — the compact-class square, per ADR-0041. Default size = md (16px at ui-md scale). */
+  --ui-checkbox-box: var(--ui-compact-md);
+
+  /* Colour channel: unchecked = neutral border on transparent; checked/indeterminate = primary fill + ink.
+     The border-color and bg-checked ride the same --c-primary ladder step as button.css's solid variant
+     (the design-system's primary fill); the ink is the on-primary pair for readability (WCAG AA). */
+  --ui-checkbox-bg: transparent;
+  --ui-checkbox-border: var(--c-neutral-high);
+  --ui-checkbox-bg-checked: var(--c-primary);
+  --ui-checkbox-border-checked: var(--c-primary);
+  --ui-checkbox-ink: var(--c-primary-on-primary); /* checkmark / indeterminate-dash fill */
+
+  /* Label gap — the rhythm between the box and the optional label text (density-bearing, via --ui-gap-md). */
+  --ui-checkbox-gap: var(--ui-gap-md);
+}
+
+/* [size] → widget-box tier (ADR-0041 clause 2: sm/md/lg at the default ui-md scale = 14/16/18 px). */
+:where(ui-checkbox[size='sm']) {
+  --ui-checkbox-box: var(--ui-compact-sm);
+  --ui-checkbox-gap: var(--ui-gap-sm);
+}
+:where(ui-checkbox[size='lg']) {
+  --ui-checkbox-box: var(--ui-compact-lg);
+  --ui-checkbox-gap: var(--ui-gap-lg);
+}
+
+/* [disabled] → mute the border + fill to neutral roles. The state holds at idle: pointer-events:none (below)
+   prevents :hover from ever matching, so no path can lift the muted tokens. */
+:where(ui-checkbox[disabled]) {
+  --ui-checkbox-border: var(--c-neutral-surface-high);
+  --ui-checkbox-bg-checked: var(--c-neutral-surface-high);
+  --ui-checkbox-border-checked: var(--c-neutral-surface-high);
+  --ui-checkbox-ink: var(--c-neutral-on-surface-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-checkbox) consumes ONLY --ui-checkbox-* ════════════════ */
+
+@scope (ui-checkbox) {
+  :scope {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-checkbox-gap);
+    position: relative; /* containing block for the absolutely-positioned ::after glyph */
+    cursor: pointer;
+    -webkit-user-select: none; /* WebKit/Safari still requires the prefix; the label is a control surface, not selectable text */
+    user-select: none;
+  }
+
+  /* The visual box — first flex item (flex-shrink:0), the checkbox's physical affordance.
+     border + fill are the two state-PAINT properties that transition on check/uncheck. */
+  :scope::before {
+    content: '';
+    display: block;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    inline-size: var(--ui-checkbox-box);
+    block-size: var(--ui-checkbox-box);
+    border: 2px solid var(--ui-checkbox-border);
+    border-radius: calc(var(--ui-checkbox-box) / 5); /* proportional slight rounding (~3px at 16px default) */
+    background-color: var(--ui-checkbox-bg);
+    /* State-PAINT transition only — geometry never animates (geometry.md). */
+    transition:
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      border-color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  /* Checked: fill the box with the primary colour (border disappears into the fill). */
+  :scope:state(checked)::before {
+    background-color: var(--ui-checkbox-bg-checked);
+    border-color: var(--ui-checkbox-border-checked);
+  }
+
+  /* Indeterminate: same primary fill as checked (the dash glyph differentiates the two states visually). */
+  :scope:state(indeterminate)::before {
+    background-color: var(--ui-checkbox-bg-checked);
+    border-color: var(--ui-checkbox-border-checked);
+  }
+
+  /* Glyph base — absolutely positioned at the inline-start of the host, centered in the block direction.
+     The box (::before) is the first flex item whose inline-start IS the host's inline-start, so
+     inset-inline-start:0 aligns the glyph column with the box. inset-block-start:50% + translateY(-50%)
+     centers the glyph vertically relative to the host; because align-items:center makes the box flex-center
+     within the host, this equals the box's vertical center regardless of label-text height. No background
+     by default (the glyph is invisible in the unchecked state). */
+  :scope::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  /* Checkmark glyph — a clip-path polygon tick, the classic ✓ shape within [0,100%]×[0,100%] canvas.
+     Inset 20% from inline-start; sized 60%×55% of the box (the glyph bounding box). The :scope::after
+     base rule supplies position:absolute and the vertical centering (not repeated here). */
+  :scope:state(checked)::after {
+    background-color: var(--ui-checkbox-ink);
+    inset-inline-start: calc(var(--ui-checkbox-box) * 0.2);
+    inline-size: calc(var(--ui-checkbox-box) * 0.6);
+    block-size: calc(var(--ui-checkbox-box) * 0.55);
+    clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  }
+
+  /* Indeterminate dash — a thin horizontal bar centered within the box (2px tall, 60% wide, 20% inset). */
+  :scope:state(indeterminate)::after {
+    background-color: var(--ui-checkbox-ink);
+    inset-inline-start: calc(var(--ui-checkbox-box) * 0.2);
+    inline-size: calc(var(--ui-checkbox-box) * 0.6);
+    block-size: 2px;
+    border-radius: 1px;
+  }
+
+  /* Focus ring (ADR-0009) — the shared fleet ring: :focus-visible (keyboard-only) draws a layout-neutral
+     outline on the host. This encircles the whole control (box + label), the fleet standard. The ring
+     reads the fleet-wide --c-focus-ring / --ui-focus-ring-* tokens (never a per-control repoint). */
+  :scope:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* Motion (interaction-states standard) — zero the box transition under reduced motion. */
+  @media (prefers-reduced-motion: reduce) {
+    :scope::before {
+      transition: none;
+    }
+  }
+
+  /* Disabled — pointer-inert + cursor reset. The [disabled] token block already muted the colours;
+     pointer-events:none ensures :hover/:active never match (so the muted idle holds forever). */
+  :scope[disabled] {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  /* Forced-colors — use system colours so the box and glyph are always visible in high-contrast modes.
+     Unchecked: ButtonText border on ButtonFace. Checked/indeterminate: Highlight fill with HighlightText
+     glyph (the system accent + its reading-pair, WCAG AA guaranteed by the OS). forced-color-adjust:none
+     preserves our explicit system-colour mappings so the browser does not re-override them. The :focus-visible
+     ring is free: --c-focus-ring carries the token layer's Highlight mapping (ADR-0009) — no per-control rule. */
+  @media (forced-colors: active) {
+    :scope::before {
+      border-color: ButtonText;
+      background-color: ButtonFace;
+    }
+    :scope:state(checked)::before,
+    :scope:state(indeterminate)::before {
+      background-color: Highlight;
+      border-color: Highlight;
+      forced-color-adjust: none;
+    }
+    :scope:state(checked)::after,
+    :scope:state(indeterminate)::after {
+      background-color: HighlightText;
+      forced-color-adjust: none;
+    }
+  }
+}

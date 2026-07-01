@@ -217,7 +217,15 @@ const FIELD_SHAPE: Record<string, DescriptorShape> = {
 
 const SIZE_CLASSES = ['control', 'indicator', 'pattern', 'container', 'layout', 'display'] as const // geometry.md "five size-classes"
 const ATTR_TYPES = ['enum', 'boolean', 'number', 'string', 'json'] as const // the attribute codec set
-const BASE_CLASSES = ['UIElement', 'UIFormElement', 'UIContainerElement'] as const // the three dom/ base elements (G9: the container surface base)
+const BASE_CLASSES = [
+  'UIElement',
+  'UIFormElement',
+  'UIContainerElement',
+  // Wave 0/1 control-suite bases (controls/_base/); each is a direct-extends target for leaf controls.
+  'UIIndicatorElement', // checkbox / switch / radio (ADR-0042)
+  'UIRangeElement',     // slider family
+  'UIListboxElement',   // listbox / select options (listbox-roving LLD-C3)
+] as const
 const BOOLEANS = ['true', 'false'] as const
 
 const has = (set: readonly string[], v: string): boolean => set.includes(v)

@@ -22,14 +22,27 @@ value, the checked-state machine + ARIA, the widget-box geometry + toggle) into 
 
 ## Components
 
-- **LLD-C1 — the value.** `checked: boolean` (reflected prop, the form value). `formValue()` → `checked ?
-  value : null` (the platform's checkbox semantics — unchecked submits nothing; `value` defaults `"on"`).
-  `indeterminate: boolean` (property-only, NOT submitted) for tri-state checkbox. Traces ADR-0013 (the
-  `formValue()` hook).
-- **LLD-C2 — the state machine + ARIA.** A scope-owned effect publishes `:state(checked)` /
-  `:state(indeterminate)` (custom states via `internals`) AND `internals.ariaChecked` (`"true"`/`"false"`/
-  `"mixed"`) — ARIA over `ElementInternals`, never host attributes (FACE). The subclass declares the **role**
-  (`checkbox` / `switch` / `radio`) via `internals.role`.
+- **LLD-C1 — the shared value + size (BASE props).** The base owns the props EVERY indicator shares:
+  `checked: boolean` (reflected, the form value), `value: string` (default `"on"`), and
+  **`size: enum(['sm','md','lg'], 'md')` (reflected)**. `formValue()` → `checked ? value : null` (platform
+  checkbox semantics — unchecked submits nothing). Traces ADR-0013 (`formValue()`).
+  **`size` is a SHARED widget-box property** — the box rides `--ui-compact-{size}`, so it is ONE typed reflected
+  prop on the base that checkbox/switch/radio inherit, NOT a per-leaf re-declaration.
+  **`indeterminate` is NOT a base prop** — it is checkbox-specific (tri-state); it moves DOWN to
+  `UICheckboxElement` (the subclass contract). The base contract is `{checked, value, size}`.
+  *(G6-review refinement, 2026-06-30: only checkbox declared `size` locally; switch/radio had `[size]` CSS
+  selectors but no typed prop — a JS no-op — so `size` is hoisted to the base. And radio/switch wrongly
+  inherited a nonsensical `indeterminate` attribute, so it descends to checkbox.)*
+- **LLD-C6 — motion (the Indicator family pattern, NOT button's).** Indicators use **unconditional CSS
+  transitions + `@media (prefers-reduced-motion: reduce)`** (the `checkbox.css` pattern) — **NOT** a
+  `:state(ready)` first-paint gate. `UIIndicatorElement` does **not** arm `ready` (no rAF), so any
+  `:state(ready)` CSS in an indicator is **dead** (it never matches). Future indicators must not copy
+  `ui-button`'s ready-gate. *(G6-review caught a dead `ready` gate + a false "armed" claim in `radio.css`.)*
+- **LLD-C2 — the state machine + ARIA.** A base scope-owned effect publishes `:state(checked)` (custom state
+  via `internals`) + `internals.ariaChecked` (`"true"`/`"false"`) — ARIA over `ElementInternals`, never host
+  attributes (FACE). The subclass declares the **role** (`checkbox`/`switch`/`radio`) via `internals.role`.
+  **`UICheckboxElement` extends the effect** for its tri-state: `:state(indeterminate)` + `ariaChecked="mixed"`
+  when `indeterminate` (the checkbox-only prop, LLD-C1) — switch/radio never publish indeterminate/mixed.
 - **LLD-C3 — the toggle.** The base wires `host.use(pressActivation)` so click/Space toggles `checked`
   (Enter does NOT toggle a checkbox — platform parity). A disabled host is inert (the `tabbable`/disabled
   path, ADR-0010). The toggle emits `change` (+ `input` on the same tick) — the event allowlist.
@@ -45,13 +58,16 @@ value, the checked-state machine + ARIA, the widget-box geometry + toggle) into 
 
 ```
 class UICheckboxElement extends UIIndicatorElement {
-  static role = 'checkbox'            // LLD-C2
-  // glyph: a checkmark/indeterminate-dash mask in {name}.css; box on --ui-compact
+  static role = 'checkbox'
+  static props = { ...UIIndicatorElement.props, indeterminate: prop.boolean() }  // tri-state — checkbox-ONLY (LLD-C1)
+  // glyph: a checkmark + an indeterminate-dash mask in checkbox.css; box on --ui-compact
 }
-class UISwitchElement extends UIIndicatorElement { static role = 'switch' /* thumb + 2px inset, LLD-C4 */ }
-class UIRadioElement  extends UIIndicatorElement { static role = 'radio'  /* + group, LLD-C5 */ }
+class UISwitchElement extends UIIndicatorElement { static role = 'switch' /* thumb + 2px inset, LLD-C4; NO indeterminate */ }
+class UIRadioElement  extends UIIndicatorElement { static role = 'radio'  /* + group, LLD-C5; NO indeterminate */ }
 ```
-The base owns LLD-C1..C4; the subclass declares `role`, the glyph (`.css`), and (radio) the group wiring.
+The base owns `{checked, value, size}` (LLD-C1) + the state machine / toggle / geometry / motion
+(LLD-C2/C3/C4/C6); the subclass declares `role`, the glyph (`.css`), `indeterminate` (checkbox only), and
+(radio) the group wiring.
 
 ## Error / edge handling (L5)
 

@@ -25,6 +25,12 @@
 /* display controls (ADR-0025) */
 @import './controls/text/text.css';
 
+/* Indicator controls — Wave 1 (ADR-0041/0042: widget-box geometry + UIIndicatorElement base) */
+@import './controls/checkbox/checkbox.css';
+@import './controls/switch/switch.css';
+@import './controls/radio/radio.css';
+@import './controls/radio/radio-group.css';
+
 /* G9 container / layout family — each sheet consumes the shared `_surface/container.css` seam above. */
 @import './controls/row/row.css';
 @import './controls/column/column.css';

@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed *(the widget table + the inset law are **Kim-ratified 2026-06-30** — all 3 forks resolved; the ADR moves `proposed → accepted` on the token green gate)* |
+> | **Status** | accepted — ratified 2026-07-01 on the green G6 gate: the ui-switch browser smoke proves the rendered widget box + `thumb = box − 4px` (the 2px inset law) per `[size]×[scale]` in Chromium + WebKit, and the Indicator family renders on `--ui-compact` (browser 240, jsdom 1333). Kim-ratified the table 2026-06-30 (all 3 forks resolved). |
 > | **Date** | 2026-06-30 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, on the team-lead's control-suite brief (#49 B): the widget-size geometry for the Indicator/Range classes |
 > | **Ratified by** | Kim ratified the **widget [size]×[scale] table** exactly as proposed (clause 2; as she did the control table, ADR-0038); orchestration-lead ratifies the ADR on the green gate |

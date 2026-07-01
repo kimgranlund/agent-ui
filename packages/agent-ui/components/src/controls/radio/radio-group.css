@@ -1,0 +1,39 @@
+/* radio-group.css — ui-radio-group, the radio-button container stylesheet (Wave 1 S3, ADR-0003).
+ *
+ * The container convention requires a .css even when layout-neutral (process.md §4, container-family rule):
+ * every FACE component ships a stylesheet that at minimum carries the `:where(ui-{name})` token block and
+ * the `@scope (ui-{name})` block (so future per-group tokens have a stable registration point and the barrel
+ * import order is permanent). The group itself has no visual surface — it is a layout-neutral block container
+ * whose children (ui-radio) carry all visible affordances. The forced-colors block is intentionally minimal.
+ *
+ * Standalone stylesheet — linked via the component-styles barrel (s12, after radio.css); NEVER injected
+ * from radio-group.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════ [1] TOKEN BLOCK — :where(ui-radio-group) (specificity 0,0,0) ════════════ */
+
+:where(ui-radio-group) {
+  /* No group-level design tokens: the radio-group is layout-neutral — spacing and alignment are
+     the page author's responsibility. Token registrations reserved here for future density/gap
+     props without a cascade-order change (the barrel import is append-only). */
+}
+
+/* ════════════ [2] STYLES BLOCK — @scope (ui-radio-group) ════════════ */
+
+@scope (ui-radio-group) {
+  /* The group is a block container: radios stack in block flow by default. No explicit height or
+     inline-size — the group sizes to its content. No padding/gap: the page author controls layout. */
+  :scope {
+    display: block;
+  }
+
+  /* Forced colors (WHCM) — the group itself has no visual surface: the ui-radio children carry their
+     own forced-color treatments. This block is present for fleet discipline (every FACE control's scope
+     includes a forced-colors rule) and serves as the hook point if a future variant adds a surface. */
+  @media (forced-colors: active) {
+    :scope {
+      /* no group-level WHCM adjustments; the children carry their own forced-color rules */
+      forced-color-adjust: none;
+    }
+  }
+}

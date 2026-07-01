@@ -24,6 +24,10 @@ import gridMd from '../../packages/agent-ui/components/src/controls/grid/grid.md
 import cardMd from '../../packages/agent-ui/components/src/controls/card/card.md?raw'
 import tabsMd from '../../packages/agent-ui/components/src/controls/tabs/tabs.md?raw'
 import modalMd from '../../packages/agent-ui/components/src/controls/modal/modal.md?raw'
+import checkboxMd from '../../packages/agent-ui/components/src/controls/checkbox/checkbox.md?raw'
+import switchMd from '../../packages/agent-ui/components/src/controls/switch/switch.md?raw'
+import radioMd from '../../packages/agent-ui/components/src/controls/radio/radio.md?raw'
+import radioGroupMd from '../../packages/agent-ui/components/src/controls/radio/radio-group.md?raw'
 
 /** A parsed control descriptor: the structured frontmatter (its attributes-as-API drive the table) + the prose body. */
 export interface ComponentDoc {
@@ -48,6 +52,10 @@ export const loadGridDoc = (): ComponentDoc => parseDoc(gridMd)
 export const loadCardDoc = (): ComponentDoc => parseDoc(cardMd)
 export const loadTabsDoc = (): ComponentDoc => parseDoc(tabsMd)
 export const loadModalDoc = (): ComponentDoc => parseDoc(modalMd)
+export const loadCheckboxDoc = (): ComponentDoc => parseDoc(checkboxMd)
+export const loadSwitchDoc = (): ComponentDoc => parseDoc(switchMd)
+export const loadRadioDoc = (): ComponentDoc => parseDoc(radioMd)
+export const loadRadioGroupDoc = (): ComponentDoc => parseDoc(radioGroupMd)
 
 // ── tier enumeration (for the family overview + tier showcase — a DERIVED member list) ───────────────────────
 // The whole `{name}.md` descriptor set, globbed at build time (Vite resolves `import.meta.glob` statically). The

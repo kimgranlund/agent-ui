@@ -6,7 +6,10 @@
 // is available via ARIAMixin on ElementInternals. CustomStateSet is absent in jsdom; state assertions are
 // gated with a capability check (browser smoke covers it).
 //
-// Named probes: ind-checked-default · ind-form-value · ind-indeterminate · ind-role · ind-aria-checked ·
+// NOTE: `indeterminate` is NOT tested here — it is checkbox-specific tri-state and lives on UICheckboxElement.
+// The base owns only `checked`, `value`, `size`, and the binary ariaChecked ("true"/"false") state machine.
+//
+// Named probes: ind-checked-default · ind-size-default · ind-form-value · ind-role · ind-aria-checked ·
 // ind-aria-states · ind-space-toggles · ind-enter-no-toggle · ind-click-toggles · ind-disabled-inert ·
 // ind-tabindex · ind-reflect-checked · ind-reconnect.
 
@@ -67,6 +70,10 @@ describe('UIIndicatorElement — IND-C1 (value)', () => {
     expect(el.value).toBe('on')
   })
 
+  it('ind-size-default: size defaults "md" (the widget-box size axis, LLD-C4 / ADR-0041)', () => {
+    expect(el.size).toBe('md')
+  })
+
   it('ind-form-value-unchecked: formValue() returns null when unchecked', () => {
     // formValue() is protected; cast to reach it for the probe.
     const fv = (el as unknown as { formValue(): string | null }).formValue
@@ -84,19 +91,6 @@ describe('UIIndicatorElement — IND-C1 (value)', () => {
     el.checked = true
     const fv = (el as unknown as { formValue(): string | null }).formValue
     expect(fv.call(el)).toBe('yes')
-  })
-
-  it('ind-indeterminate-default: indeterminate defaults false', () => {
-    expect(el.indeterminate).toBe(false)
-  })
-
-  it('ind-indeterminate-no-submit: indeterminate does not affect formValue (checked still drives it)', () => {
-    const fv = (el as unknown as { formValue(): string | null }).formValue
-    el.indeterminate = true
-    el.checked = true
-    expect(fv.call(el)).toBe('on') // checked=true → submits value
-    el.checked = false
-    expect(fv.call(el)).toBeNull() // checked=false → null (indeterminate is display-only)
   })
 
   it('ind-reflect-checked: JS-set checked reflects to/from the attribute (boolean presence)', () => {
@@ -130,7 +124,7 @@ describe('UIIndicatorElement — IND-C2 (ARIA + state machine)', () => {
     expect(el.getAttribute('role')).toBeNull() // FACE: ARIA via internals only
   })
 
-  it('ind-aria-checked-false: ariaChecked="false" on connect (unchecked + determinate)', () => {
+  it('ind-aria-checked-false: ariaChecked="false" on connect (unchecked)', () => {
     // The state effect runs synchronously on first connect.
     expect(el.testInternals.ariaChecked).toBe('false')
   })
@@ -149,19 +143,6 @@ describe('UIIndicatorElement — IND-C2 (ARIA + state machine)', () => {
     expect(el.testInternals.ariaChecked).toBe('false')
   })
 
-  it('ind-aria-checked-mixed: ariaChecked="mixed" when indeterminate (overrides checked=false)', async () => {
-    el.indeterminate = true
-    await el.updateComplete
-    expect(el.testInternals.ariaChecked).toBe('mixed')
-  })
-
-  it('ind-aria-checked-mixed-override: ariaChecked="mixed" when indeterminate even if checked=true', async () => {
-    el.checked = true
-    el.indeterminate = true
-    await el.updateComplete
-    expect(el.testInternals.ariaChecked).toBe('mixed') // indeterminate wins
-  })
-
   it('ind-aria-states-checked: :state(checked) present when checked, absent otherwise', async () => {
     // CustomStateSet is absent in jsdom — capability-gated; browser smoke covers the real assertion.
     el.checked = true
@@ -169,22 +150,13 @@ describe('UIIndicatorElement — IND-C2 (ARIA + state machine)', () => {
     expect(el.testInternals.ariaChecked).toBe('true') // ariaChecked is the jsdom-accessible proxy
     if (el.testInternals.states) {
       expect(el.testInternals.states.has('checked')).toBe(true)
-      expect(el.testInternals.states.has('indeterminate')).toBe(false)
+      // NOTE: 'indeterminate' state is not managed at the base level (checkbox-only); the base
+      // only manages 'checked'. No assertion on 'indeterminate' here.
     }
 
     el.checked = false
     await el.updateComplete
     if (el.testInternals.states) {
-      expect(el.testInternals.states.has('checked')).toBe(false)
-    }
-  })
-
-  it('ind-aria-states-indeterminate: :state(indeterminate) present when indeterminate, :state(checked) absent', async () => {
-    el.indeterminate = true
-    await el.updateComplete
-    expect(el.testInternals.ariaChecked).toBe('mixed') // ariaChecked proxy
-    if (el.testInternals.states) {
-      expect(el.testInternals.states.has('indeterminate')).toBe(true)
       expect(el.testInternals.states.has('checked')).toBe(false)
     }
   })
@@ -256,14 +228,6 @@ describe('UIIndicatorElement — IND-C3 (toggle)', () => {
     key(el, 'keydown', ' ')
     key(el, 'keyup', ' ') // pressActivation sees disabled() → no host.click()
     expect(el.checked).toBe(false)
-  })
-
-  it('ind-indeterminate-clears-on-toggle: click on indeterminate clears it and toggles checked', () => {
-    el.indeterminate = true
-    el.checked = false
-    el.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    expect(el.indeterminate).toBe(false) // cleared
-    expect(el.checked).toBe(true) // toggled
   })
 
   it('ind-tabindex-enabled: enabled indicator is keyboard-focusable (tabindex=0)', () => {

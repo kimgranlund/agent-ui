@@ -1,0 +1,190 @@
+/* switch.css — ui-switch, the single-file component stylesheet (indicator-element.lld.md LLD-C4 / ADR-0041).
+ * Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-switch)` (specificity 0,0,0) DECLARES the `--ui-switch-*` chain from the
+ *       colour roles (`--c-{family}-{role}`) and the compact widget ramp (`--ui-compact-{size}` / ADR-0041).
+ *       `[size]` repoints the box token (the widget ramp step); `:state(checked)` repoints the track + thumb
+ *       colour channels to the primary family (ON = filled primary, OFF = muted neutral); `[disabled]` mutes
+ *       everything. No `color-mix` — colour opinions live in the token layer (ADR-0008).
+ *   [2] STYLES BLOCK — `@scope (ui-switch)` CONSUMES only `--ui-switch-*` for its OWN tokens. The host is
+ *       an `inline-flex` row: the TRACK (`::before`) is the pill (block-size = box, inline-size ≈ 1.8× box,
+ *       border-radius = box/2) and sits as the first flex item; the label slot follows it. The THUMB (`::after`)
+ *       is a circle (`position: absolute`) inset by `--ui-widget-inset` (2px) → thumb = box − 4px (ADR-0041
+ *       cl.3: the 2px inset law). The thumb slides from `inset-inline-start: inset` (unchecked) to
+ *       `translate: calc(box * 0.8)` on `:state(checked)` — a net shift of 0.8× box, landing the thumb
+ *       with a symmetric 2px inset from the track end (the ADR-0041 rendered-px proof).
+ *       `:focus-visible` ring (keyboard-only, ADR-0009). Forced-colors safe. Density-invariant.
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected from
+ * switch.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-switch) declares --ui-switch-* ════════════════ */
+
+:where(ui-switch) {
+  /* Track colour (unchecked default = muted neutral). A per-state ROLE-LADDER step, never a color-mix
+     (ADR-0008). Hover steps one role brighter. */
+  --ui-switch-track: var(--c-neutral-outline-variant);
+  --ui-switch-track-hover: var(--c-neutral-outline);
+  /* Thumb colour (unchecked default = brightest neutral surface ≈ white). Constant across schemes. */
+  --ui-switch-thumb: var(--c-neutral-surface-brightest);
+
+  /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md). `[size]` repoints. */
+  --ui-switch-box: var(--ui-compact-md);
+
+  /* Label gap — the rhythm between the pill and the optional label text (density-bearing, via --ui-gap-md). */
+  --ui-switch-gap: var(--ui-gap-md);
+}
+
+/* [size] → compact widget ramp repoint (ADR-0041: the LITERAL per-[scale] table in dimensions.css
+   re-tables --ui-compact-{sm,md,lg}; `[size]` on the host picks which step the switch box targets). */
+:where(ui-switch[size='sm']) {
+  --ui-switch-box: var(--ui-compact-sm);
+  --ui-switch-gap: var(--ui-gap-sm);
+}
+:where(ui-switch[size='lg']) {
+  --ui-switch-box: var(--ui-compact-lg);
+  --ui-switch-gap: var(--ui-gap-lg);
+}
+
+/* :state(checked) — primary-family track + on-primary thumb: the ON state, solid primary fill.
+   Hover steps to a darker primary (same ADR-0008 role-ladder pattern as the button). */
+:where(ui-switch):state(checked) {
+  --ui-switch-track: var(--c-primary);
+  --ui-switch-track-hover: var(--c-primary-hover);
+  --ui-switch-thumb: var(--c-primary-on-primary);
+}
+
+/* [disabled] → muted neutral roles (overrides all states). HOLDS at idle: the disabled host is
+   pointer-inert (styles block), so `:hover` never matches it (ADR-0008 disabled pattern). */
+:where(ui-switch[disabled]) {
+  --ui-switch-track: var(--c-neutral-surface-high);
+  --ui-switch-track-hover: var(--c-neutral-surface-high);
+  --ui-switch-thumb: var(--c-neutral-on-surface-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-switch) consumes ONLY --ui-switch-* ════════════════ */
+
+@scope (ui-switch) {
+  /* Host: inline-flex row — the pill track (::before) + optional label slot side by side. */
+  :scope {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-switch-gap);
+    position: relative; /* containing block for the absolutely-positioned ::after thumb */
+    cursor: pointer;
+    -webkit-user-select: none; /* WebKit/Safari still requires the prefix */
+    user-select: none;
+  }
+
+  /* TRACK (::before) — the pill; a sized flex item.
+     block-size = --ui-switch-box; inline-size ≈ 1.8× box; pill radius = box/2.
+     State-PAINT transition only — geometry never animates (geometry.md). */
+  :scope::before {
+    content: '';
+    display: block;
+    flex-shrink: 0; /* never crushed by a long label */
+    box-sizing: border-box;
+
+    block-size: var(--ui-switch-box);
+    inline-size: calc(var(--ui-switch-box) * 1.8);
+    border-radius: calc(var(--ui-switch-box) / 2); /* pill radius = box/2 */
+
+    background: var(--ui-switch-track);
+    transition: background-color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  /* THUMB (::after) — a circle inset by --ui-widget-inset (2px) on all sides (ADR-0041 cl.3).
+   *
+   * Size:    thumb = box − 2×inset = box − 4px.
+   * Block:   inset-block-start: 50% + transform: translateY(-50%) centres the thumb in the host height.
+   *          With align-items: center on the host, the track (::before) is also vertically centred, so
+   *          the thumb centre coincides with the track centre in both the bare-pill and with-label cases.
+   * Inline:  unchecked → inset-inline-start = inset (2px from inline-start of the host = of the track).
+   *          checked   → translate = 0.8×box (derived: track_width − thumb_size − inset − inset_start
+   *                      = 1.8×box − (box−4) − 2 − 2 = 0.8×box — start and end insets are symmetric).
+   *
+   * Motion: `translate` transitions the thumb slide — a paint-only transform (no layout shift). The
+   * transition is suppressed under `prefers-reduced-motion` (accessibility non-negotiable). */
+  :scope::after {
+    content: '';
+    position: absolute;
+    box-sizing: border-box;
+
+    /* ADR-0041 cl.3: thumb = box − 2×inset = box − 4px */
+    --ui-switch-thumb-size: calc(var(--ui-switch-box) - 2 * var(--ui-widget-inset));
+    inline-size: var(--ui-switch-thumb-size);
+    block-size: var(--ui-switch-thumb-size);
+    border-radius: 50%; /* circle */
+
+    /* Unchecked starting position: 2px from inline-start + vertically centred in the host */
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    inset-inline-start: var(--ui-widget-inset);
+
+    background: var(--ui-switch-thumb);
+    transition: translate var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  /* :state(checked) — slide the thumb to the END by 0.8×box (the net shift from the start position).
+   * The end-side inset = track_width − (inset_start + 0.8×box + thumb_size) = 2px = --ui-widget-inset ✓
+   * (the 2px inset law holds on BOTH edges and in BOTH states — the ADR-0041 rendered-px proof). */
+  :scope:state(checked)::after {
+    translate: calc(var(--ui-switch-box) * 0.8) 0;
+  }
+
+  /* Hover — repoints `background` of the track from the per-state token (ADR-0008). Disabled is
+     pointer-inert so :hover never matches it (the disabled token holds at the idle value, no lift possible). */
+  :scope:hover::before {
+    background: var(--ui-switch-track-hover);
+  }
+
+  /* Focus ring (ADR-0009) — the SHARED fleet ring: `:focus-visible` keyboard-only. These are the ONE
+     deliberate exception to "consume only --ui-switch-*": a focus ring is a fleet constant, read directly
+     so every control draws the identical ring. `outline` is layout-neutral (no box geometry shift). */
+  :scope:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* Reduced motion — zero all transitions on this control (geometry.md: NEVER animate the ramp;
+     accessibility: non-negotiable for users who need it). */
+  @media (prefers-reduced-motion: reduce) {
+    :scope::before {
+      transition: none;
+    }
+    :scope::after {
+      transition: none; /* the thumb slide must also be suppressed */
+    }
+  }
+
+  /* disabled host — pointer-inert so :hover/:active never lift the muted neutral tokens */
+  :scope:is([disabled]) {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  /* forced-colors — keep the track visible as a border + Canvas fill (unchecked) or Highlight (checked);
+     the thumb paints as ButtonText (off) / HighlightText (on). forced-color-adjust:none preserves our
+     explicit system-colour mappings so the browser does not re-override them (matches checkbox.css pattern).
+     The `:focus-visible` ring survives for free: `--c-focus-ring → Highlight` from the token layer. */
+  @media (forced-colors: active) {
+    :scope::before {
+      border: 2px solid ButtonText;
+      background: Canvas;
+    }
+    :scope:state(checked)::before {
+      border-color: Highlight;
+      background: Highlight;
+      forced-color-adjust: none;
+    }
+    :scope::after {
+      background: ButtonText;
+      forced-color-adjust: none;
+    }
+    :scope:state(checked)::after {
+      background: HighlightText;
+      forced-color-adjust: none;
+    }
+  }
+}

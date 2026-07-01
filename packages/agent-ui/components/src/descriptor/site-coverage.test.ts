@@ -89,8 +89,9 @@ function shippedComponents(): ShippedComponent[] {
 const PAGES_BY_TIER: Record<string, readonly string[]> = {
   control: ['permutations', 'states', 'doc'], // form/interactive control (button, text-field)
   display: ['doc'], // a non-interactive display leaf (text) — API doc only (tier=display, ADR-0025; no states/permutations)
+  indicator: ['doc'], // an Indicator-class widget control (checkbox, switch, radio — Wave 1, ADR-0041/0042) — API doc
   layout: ['doc'], // a layout primitive — API doc per-component; the rich matrix is the shared tier showcase
-  container: ['doc', 'demo'], // a surface container (card) — API doc + a composition demo
+  container: ['doc', 'demo'], // a surface container (card) / form container (radio-group) — API doc + a demo
   pattern: ['doc', 'demo'], // an interactive pattern (tabs, modal) — API doc + an interaction demo
 }
 
@@ -114,7 +115,11 @@ function missingPages(name: string, tier: string, htmlSet: ReadonlySet<string>):
 const LAYOUT_SHOWCASE = ['layout-overview.html', 'layout-permutations.html'] as const
 
 // ── the explicit gap (SHRINKS as pages land; empty = the whole fleet is documented) ──────────────────────────
-const KNOWN_UNDOCUMENTED = new Set<string>() // emptied at increment 2 — every shipped G9 container now documented
+// Wave 1 Indicator family shipped (checkbox, switch, radio, radio-group) without site pages — tracked here.
+// Empty = the whole fleet is documented. The Wave-1 Indicator pages (checkbox/switch/radio doc + radio-group
+// doc & demo) landed, so their stopgap entries were removed — a missing required page on ANY shipped component
+// now fails the build again (not silently parked here).
+const KNOWN_UNDOCUMENTED = new Set<string>()
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
@@ -133,7 +138,7 @@ describe('site coverage — the descriptor fleet is enumerable (anti-vacuous)', 
     expect(names).toContain('button')
     expect(names).toContain('text-field')
     expect(names).toContain('text') // the display leaf (ADR-0025)
-    expect(COMPONENTS.length).toBeGreaterThanOrEqual(10) // 2 controls + 1 display leaf + 7 container descriptors
+    expect(COMPONENTS.length).toBeGreaterThanOrEqual(14) // 2 controls + 1 display leaf + 3 indicators + 7 G9 descriptors + radio-group
   })
 
   it('discovered the real site/ html shells (an empty/broken scan cannot pass silently)', () => {
@@ -152,12 +157,21 @@ describe('site coverage — every shipped component has its required per-tier pa
     })
   }
 
-  it('sourced the controls (button + text-field), the display leaf (text), and the containers (the 7 G9 descriptors)', () => {
+  it('sourced the controls, the display leaf, the Wave 1 indicators, and the G9 containers/patterns/layout', () => {
     expect(COMPONENTS.filter((c) => c.tier === 'control').map((c) => c.name).sort()).toEqual(['button', 'text-field'])
     expect(COMPONENTS.filter((c) => c.tier === 'display').map((c) => c.name).sort()).toEqual(['text'])
-    expect(COMPONENTS.filter((c) => c.tier !== 'control' && c.tier !== 'display').map((c) => c.name).sort()).toEqual(
-      ['card', 'column', 'grid', 'list', 'modal', 'row', 'tabs'],
+    // Wave 1 Indicator family (checkbox, switch, radio, radio-group): tier=indicator/container (not control/display)
+    expect(COMPONENTS.filter((c) => c.tier === 'indicator').map((c) => c.name).sort()).toEqual(
+      ['checkbox', 'radio', 'switch'],
     )
+    // G9 containers/layout/pattern family (unchanged from the G9 fleet):
+    expect(COMPONENTS.filter((c) => c.tier === 'container').map((c) => c.name).sort()).toEqual(
+      ['card', 'radio-group'],
+    )
+    expect(COMPONENTS.filter((c) => c.tier === 'layout').map((c) => c.name).sort()).toEqual(
+      ['column', 'grid', 'list', 'row'],
+    )
+    expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(['modal', 'tabs'])
   })
 })
 

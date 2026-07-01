@@ -6,10 +6,13 @@
 // The subclass declares `static role` (LLD-C2), the glyph in its `.css` (LLD-C4), and (radio) the
 // group wiring via `grouped()` (LLD-C5).
 //
+// `indeterminate` is deliberately NOT in the base — it is checkbox-specific tri-state (checkbox overrides
+// `beforeToggle()` to clear it and runs its own supplemental effect). Switch and radio are binary; they
+// should not carry an indeterminate property at all.
+//
 // Layer: controls/_base/ — imports dom + traits (inward-only ✓).
 // Inward-only ✓ (controls ← traits ← dom ← reactive).
 
-import { signal } from '../../reactive/index.ts'
 import { UIFormElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import type { FormValue } from '../../dom/index.ts'
 import { tabbable } from '../../traits/tabbable.ts'
@@ -21,6 +24,9 @@ const indicatorProps = {
   checked: { ...prop.boolean(false), reflect: true },
   // LLD-C1: the submitted string when checked (HTML checkbox semantics, default 'on'); reflected.
   value: { ...prop.string('on'), reflect: true },
+  // LLD-C4: the widget-box size axis — selects --ui-compact-{size} via [size] in the leaf's CSS (ADR-0041).
+  // All Indicator controls share this axis; each leaf's stylesheet rewires the token.
+  size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
 } satisfies PropsSchema
 
 export interface UIIndicatorElement extends ReactiveProps<typeof indicatorProps> {}
@@ -28,22 +34,10 @@ export class UIIndicatorElement extends UIFormElement {
   static props = indicatorProps
 
   /**
-   * The ARIA role this indicator carries — declared by each leaf subclass (LLD-C2).
+   * LLD-C2: the ARIA role this indicator carries — declared by each leaf subclass (LLD-C2).
    * `'checkbox'` / `'switch'` / `'radio'`; the base sets `internals.role` from it in `connected()`.
    */
   static role: string = ''
-
-  // LLD-C1: indeterminate is property-only (NOT reflected, NOT submitted). Visual override only:
-  // `ariaChecked="mixed"` when true; `checked` retains its boolean for the form value.
-  // Backed by a private signal so the checked-state effect (LLD-C2) re-runs on every change.
-  #indeterminate = signal(false)
-
-  get indeterminate(): boolean {
-    return this.#indeterminate.value
-  }
-  set indeterminate(v: boolean) {
-    this.#indeterminate.value = v
-  }
 
   // LLD-C3: suppress the next click when it originated from an Enter keydown.
   // Platform parity: Enter does NOT toggle a checkbox; but pressActivation fires host.click() on Enter,
@@ -52,7 +46,6 @@ export class UIIndicatorElement extends UIFormElement {
 
   /**
    * LLD-C1: platform checkbox semantics — unchecked submits nothing; checked submits `this.value`.
-   * `indeterminate` does not affect the submitted value (only the visual `ariaChecked="mixed"`).
    */
   protected override formValue(): FormValue {
     return this.checked ? this.value : null
@@ -81,38 +74,33 @@ export class UIIndicatorElement extends UIFormElement {
     pressActivation(this, { disabled: () => this.effectiveDisabled() })
 
     // LLD-C3: click → toggle checked (mouse clicks + Space-activated synthetic clicks; Enter suppressed).
-    // Platform parity: clicking an indeterminate checkbox clears `indeterminate`, then toggles `checked`.
+    // `beforeToggle()` is called first so subclasses can hook in pre-toggle side effects (checkbox clears
+    // its `indeterminate` here; switch/radio leave it a no-op via the base implementation).
     this.listen(this, 'click', () => {
       if (this.#suppressNextClick) {
         this.#suppressNextClick = false
         return // Enter-click: no toggle (platform checkbox parity)
       }
       if (this.effectiveDisabled()) return
-      if (this.indeterminate) this.indeterminate = false
+      this.beforeToggle()
       this.checked = !this.checked
       this.emit('input')
       this.emit('change')
     })
 
-    // LLD-C2: checked-state effect — reactive on `checked` + `#indeterminate`, publishes:
-    //   · custom states :state(checked) / :state(indeterminate) (CustomStateSet, absent in jsdom)
-    //   · internals.ariaChecked ("true" / "false" / "mixed") — the jsdom-accessible ARIA proxy.
-    // `indeterminate` overrides: when true, ariaChecked="mixed" even when checked=true (platform parity).
+    // LLD-C2: checked-state effect — reactive on `checked`, publishes:
+    //   · custom state :state(checked) (CustomStateSet, absent in jsdom)
+    //   · internals.ariaChecked ("true" / "false") — the jsdom-accessible ARIA proxy.
+    // NOTE: `indeterminate` is NOT tracked here — checkbox adds its own supplemental effect (which runs
+    // after this one) to override ariaChecked="mixed" and :state(indeterminate) when needed.
     this.effect(() => {
       const checked = this.checked
-      const indeterminate = this.#indeterminate.value
       const states = this.internals.states // CustomStateSet; absent in jsdom (optional-chained below)
-      if (indeterminate) {
-        states?.add('indeterminate')
-        states?.delete('checked')
-        this.internals.ariaChecked = 'mixed'
-      } else if (checked) {
+      if (checked) {
         states?.add('checked')
-        states?.delete('indeterminate')
         this.internals.ariaChecked = 'true'
       } else {
         states?.delete('checked')
-        states?.delete('indeterminate')
         this.internals.ariaChecked = 'false'
       }
     })
@@ -125,6 +113,14 @@ export class UIIndicatorElement extends UIFormElement {
     // LLD-C5: delegate to the subclass's group wiring (radio overrides; checkbox/switch leave it no-op).
     this.grouped()
   }
+
+  /**
+   * LLD-C3: pre-toggle hook — called immediately before `this.checked` is flipped in the click handler.
+   * The base is a no-op. `UICheckboxElement` overrides this to clear `indeterminate` (so clicking an
+   * indeterminate checkbox clears the indeterminate visual and then toggles checked — platform parity).
+   * Switch and radio are binary; they do not override this.
+   */
+  protected beforeToggle(): void {}
 
   /**
    * LLD-C5: grouping hook — the radio subclass overrides this to wire roving-focus + exclusive

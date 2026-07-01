@@ -7,15 +7,24 @@
 // Today's family:
 //   • form controls — ui-button (G5), ui-text-field (G6).
 //   • display controls — ui-text (ADR-0025), the Display-class text primitive (typographic scale leaf).
+//   • Indicator controls — Wave 1 (ADR-0041/0042): ui-checkbox · ui-switch · ui-radio · ui-radio-group.
+//     All four extend UIIndicatorElement (boolean form value + checked-state machine + pressActivation
+//     toggle); ui-radio-group extends UIFormElement directly and owns the group value + rovingFocus.
 //   • the G9 container/layout family (extends the dom UIContainerElement surface base, NOT form-associated):
 //     the flex/grid layout primitives ui-row · ui-column · ui-list · ui-grid; the compound ui-card (whose
 //     family entry transitively self-defines its region sub-elements ui-card-header/-content/-footer); the
 //     compound ui-tabs (transitively self-defines ui-tab/-tab-panel); and ui-modal (native <dialog>).
 // A compound's main `.ts` imports its sub-element modules so `export * from './{family}/{family}.ts'` here
-// registers the WHOLE family — importing the barrel self-defines all ~14 tags.
+// registers the WHOLE family — importing the barrel self-defines all ~18+ tags.
 export * from './button/button.ts'
 export * from './text-field/text-field.ts'
 export * from './text/text.ts'
+
+// Indicator controls — Wave 1 (ADR-0041/0042).
+export * from './checkbox/checkbox.ts'
+export * from './switch/switch.ts'
+export * from './radio/radio.ts'        // self-defines ui-radio
+export * from './radio/radio-group.ts'  // self-defines ui-radio-group
 
 // G9 container / layout family — surface axes + the shared flex grammar (ADR-0015/0016).
 export * from './row/row.ts'

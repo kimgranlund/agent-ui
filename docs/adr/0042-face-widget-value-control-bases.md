@@ -4,8 +4,8 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
-> | **Date** | 2026-06-30 *(authored)* |
+> | **Status** | accepted — ratified 2026-07-01 on the green G6 gate: the `controls/_base/` layer + `UIIndicatorElement` (as refined at the review gate — clause 2) are proven by 4 G6-done Indicator controls (checkbox/switch/radio + radio-group; browser 240, jsdom 1333). The Range half (`UIRangeElement` + `value-drag`) is unit-tested and control-proven at Wave 2 / G6.5 (ui-slider); the base architecture stands. |
+> | **Date** | 2026-06-30 *(authored)* · 2026-07-01 *(ratified)* |
 > | **Proposed by** | planning-lead — the design seat, on the control-suite foundation (#49 Wave 0); details in `docs/llds/indicator-element.lld.md` + `range-element.lld.md` |
 > | **Ratified by** | orchestration-lead — on the green **G6 / G6.5** gates (when checkbox/switch/radio + slider prove the bases) |
 > | **Repairs** | **NEW** `controls/_base/indicator-element.ts` (`UIIndicatorElement`) + `controls/_base/range-element.ts` (`UIRangeElement`) + `traits/value-drag.ts` (the pointer→value controller) + their tests + `controls/_base/index.ts` barrel · `goals.md §G6` (the Indicator-class detail) + `§G6.5` (Range, new) · **establishes the `controls/_base/` shared control-base sub-layer** (sibling of `controls/_surface/`). **Extends ADR-0013** (UIFormElement — the value base both extend) + **ADR-0041** (the widget-box geometry both consume). |
@@ -25,10 +25,17 @@ so they live **above** the traits layer: a new `controls/_base/` sub-layer (cont
 1. **NEW `controls/_base/` layer.** A shared control-base sub-layer (like `controls/_surface/`): base classes
    that `extends` a dom base (`UIFormElement`) AND wire traits (`host.use(...)`). Layering-legal — `controls/`
    is the outermost ring; importing dom + traits is inward-only. Leaf controls extend these bases.
-2. **`UIIndicatorElement`** (`controls/_base/indicator-element.ts`) — the Indicator base: boolean `checked`
-   (form value via `formValue()`), `indeterminate`, the `:state(checked)`/`ariaChecked` machine (internals), the
-   subclass-declared `role`, the `pressActivation` toggle, and the `--ui-compact`/`--ui-widget-inset` geometry.
-   Full contract: `indicator-element.lld.md` (LLD-C1..C5).
+2. **`UIIndicatorElement`** (`controls/_base/indicator-element.ts`) — the Indicator base: the SHARED props
+   **`{checked, value, size}`** (`size: enum(['sm','md','lg'],'md')`, reflected — a shared widget-box prop), the
+   `:state(checked)`/`ariaChecked` machine (internals), the subclass-declared `role`, the `pressActivation`
+   toggle, and the `--ui-compact`/`--ui-widget-inset` geometry. **`indeterminate` is checkbox-specific** — it
+   lives on `UICheckboxElement`, NOT the base (switch/radio have no tri-state). Motion = **unconditional CSS
+   transitions + reduced-motion** (the base does NOT arm `:state(ready)` — no rAF; a `ready` gate is dead in an
+   indicator, unlike `ui-button`). Full contract: `indicator-element.lld.md` (LLD-C1..C6).
+   *(**G6-review refinement, 2026-06-30** — the decision stands; the base's prop ownership was sharpened at the
+   review gate: `size` hoisted UP to the base (switch/radio had `[size]` CSS but no typed prop — a no-op);
+   `indeterminate` descended DOWN to checkbox (radio/switch wrongly inherited it); the family motion pattern
+   pinned (no ready-gate). checkbox passed G5-done; this corrects switch/radio/radio-group.)*
 3. **`UIRangeElement`** (`controls/_base/range-element.ts`) + **the `value-drag` controller**
    (`traits/value-drag.ts`) — the Range base: numeric `value`/`min`/`max`/`step` (clamped+snapped), the
    `ariaValueNow/Min/Max` slider machine, keyboard step (Arrow/Page/Home/End), and the **separable

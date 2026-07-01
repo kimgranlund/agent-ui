@@ -35,6 +35,11 @@ export interface PageHandle {
 // (the coverage gate, site-coverage.test.ts, derives the required set from it). The same grouping DERIVES each
 // page's context-label + tab strip (see mountPage), so a component's page-type pages tab between each other for
 // free — which is exactly why the rail need not list them a second time.
+//
+// EXPORTED so the cross-engine nav smoke (site-nav.browser.test.ts) derives its expected rail-entry count from
+// this single source rather than a magic constant: the rendered `<a>` count must equal ONE entry per labelled
+// group + each ungrouped link (buildNav's rule), so the rail can't silently drop/duplicate entries AND the gate
+// never re-drifts when a component group is appended here.
 interface NavLink {
   readonly href: string
   readonly label: string
@@ -44,7 +49,7 @@ interface NavGroup {
   readonly label?: string
   readonly links: readonly NavLink[]
 }
-const NAV: readonly NavGroup[] = [
+export const NAV: readonly NavGroup[] = [
   { links: [{ href: './index.html', label: 'Home' }] },
   {
     label: 'ui-button',
@@ -66,6 +71,27 @@ const NAV: readonly NavGroup[] = [
     // The Display-class text primitive — a single descriptor-derived API doc (tier=display ⇒ {doc} only).
     label: 'ui-text',
     links: [{ href: './text-doc.html', label: 'API' }],
+  },
+  {
+    // The Indicator-class form controls (Wave 1, ADR-0041/0042) — per-component groups, tag-labelled (the
+    // site-toc rule: control/container/pattern tiers each get ONE ui-{tag} group; only layout bundles).
+    label: 'ui-checkbox',
+    links: [{ href: './checkbox-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-switch',
+    links: [{ href: './switch-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-radio',
+    links: [{ href: './radio-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-radio-group',
+    links: [
+      { href: './radio-group-demo.html', label: 'Demo' },
+      { href: './radio-group-doc.html', label: 'API' },
+    ],
   },
   {
     // The layout primitives share one tier showcase (overview + surface×layout) + a per-component API doc each.

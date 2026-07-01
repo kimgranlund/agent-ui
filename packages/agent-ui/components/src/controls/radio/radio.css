@@ -1,0 +1,153 @@
+/* radio.css — ui-radio, the radio-button indicator (Wave 1 S3, ADR-0042 / ADR-0041).
+ *
+ * Two SECTIONED blocks:
+ *   [1] TOKEN BLOCK  — `:where(ui-radio)` declares `--ui-radio-*` from the compact ramp + colour roles.
+ *       [size] repoints the box from the --ui-compact-{sm/md/lg} widget ramp (ADR-0041). No --ui-scale
+ *       multiplier: the compact ramp is an EXPLICIT per-[scale] lookup re-tabled in dimensions.css, so the
+ *       radio box tracks scale automatically (ADR-0038 pattern). [checked] reflects so the dot selector
+ *       works as a CSS attribute hook (the custom state :state(checked) is the browser-only alternative;
+ *       both selectors appear for coverage).
+ *   [2] STYLES BLOCK — `@scope (ui-radio)` consumes only `--ui-radio-*`.
+ *       Anatomy: the host is an inline-flex row; `::before` is the circular indicator box (border-radius
+ *       50%); the default slot content flows after it as the optional label. The dot glyph is an inset
+ *       box-shadow on `::before` when checked (no separate element needed). Focus ring: `:focus-visible`
+ *       on `:scope` (the whole host), not only on the circle — standard fleet focus treatment (ADR-0009).
+ *       Forced-colors: the border + dot survive via `ButtonText`; the focus ring via `--c-focus-ring`.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-radio) declares --ui-radio-* ════════════════ */
+
+:where(ui-radio) {
+  /* Box size from the widget ramp (ADR-0041). Default = md. */
+  --ui-radio-box: var(--ui-compact-md);
+
+  /* Dot inset: inset box-shadow that fills ~44% of the diameter.
+     22% of diameter = half the dot diameter → dot fills 44% of the circle area. */
+  --ui-radio-dot-inset: calc(var(--ui-radio-box) * 0.22);
+
+  /* Border: idle ring colour. */
+  --ui-radio-border: var(--c-neutral-on-surface-variant);
+
+  /* Ink: the checked (selected) dot + ring repoint. */
+  --ui-radio-ink: var(--c-primary);
+
+  /* Gap: between the circle and the label slot (font/2, the anatomy gap law — density-bearing). */
+  --ui-radio-gap: var(--ui-gap-md);
+}
+
+/* [size] → compact ramp repoint (ADR-0041). Gap follows the font-size tier (density gap = font/2). */
+:where(ui-radio[size='sm']) {
+  --ui-radio-box: var(--ui-compact-sm);
+  --ui-radio-gap: var(--ui-gap-sm);
+}
+:where(ui-radio[size='lg']) {
+  --ui-radio-box: var(--ui-compact-lg);
+  --ui-radio-gap: var(--ui-gap-lg);
+}
+
+/* disabled → muted neutral roles. Holds at idle (pointer-inert below). */
+:where(ui-radio[disabled]) {
+  --ui-radio-border: var(--c-neutral-on-surface-variant);
+  --ui-radio-ink: var(--c-neutral-on-surface-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-radio) consumes ONLY --ui-radio-* ════════════════ */
+
+@scope (ui-radio) {
+  /* Host: inline-flex row — circle (::before) + optional label slot side by side. */
+  :scope {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-radio-gap);
+
+    /* Control-standard single-line line-height (ADR-0036): 1 keeps the text box = the font box. */
+    line-height: var(--ui-control-line-height);
+
+    cursor: pointer;
+    -webkit-user-select: none; /* WebKit/Safari: prefix needed */
+    user-select: none;
+  }
+
+  /* ── Circular indicator box ──────────────────────────────────────────────────────────────────── */
+
+  /* ::before = the circle. Sized to --ui-radio-box; circular via border-radius 50%; ring via border. */
+  :scope::before {
+    content: '';
+    display: block;
+    flex-shrink: 0; /* never crushed by label text */
+
+    inline-size: var(--ui-radio-box);
+    block-size: var(--ui-radio-box);
+    border-radius: 50%;
+
+    /* 2px border (same weight as the focus ring and --ui-widget-inset's 2px law; ADR-0041). */
+    border: 2px solid var(--ui-radio-border);
+    box-sizing: border-box;
+
+  }
+
+  /* ── Checked: dot glyph via inset box-shadow ────────────────────────────────────────────────── */
+
+  /* [checked] is the reflected attribute (boolean prop, reflect=true). :state(checked) is the
+     custom-state equivalent (absent in jsdom; browser-only). Both selectors ensure coverage. */
+  :scope:is([checked])::before,
+  :scope:state(checked)::before {
+    border-color: var(--ui-radio-ink);
+    box-shadow: inset 0 0 0 var(--ui-radio-dot-inset) var(--ui-radio-ink);
+  }
+
+  /* ── Interaction states ──────────────────────────────────────────────────────────────────────── */
+
+  /* hover: subtle border lift — repoint border to the ink colour (matches native <input type=radio>
+     hover treatment: the ring reinforces intent before click). No background change (no filled bg). */
+  :scope:hover::before {
+    border-color: var(--ui-radio-ink);
+  }
+
+  /* Focus ring (ADR-0009): fleet-wide shared `:focus-visible` outline on the HOST (covers the circle
+     AND the label text — standard for labelled controls). Not on ::before alone, so screen-reader
+     users see a full enclosing ring. layout-neutral (outline outside the box model). */
+  :scope:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* Motion (interaction-states standard) — transition state-PAINT properties on ::before (the circle).
+     border-color and box-shadow (the dot) are the only things that change visually; geometry (box size)
+     is never transitioned. Unconditional — no :state(ready) gate (the base sets no such state). */
+  :scope::before {
+    transition:
+      border-color var(--ui-motion-fast) var(--ui-ease-standard),
+      box-shadow var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope::before {
+      transition: none;
+    }
+  }
+
+  /* Disabled: pointer-inert + cursor reset (the reflected [disabled] attribute makes the host inert). */
+  :scope:is([disabled]) {
+    pointer-events: none;
+    cursor: default;
+    opacity: 0.5; /* disabled dimming — a simple global dim vs. per-token repoint (v1, no danger repoint needed) */
+  }
+
+  /* ── Forced colors (WHCM) ────────────────────────────────────────────────────────────────────── */
+
+  @media (forced-colors: active) {
+    /* Ensure the idle ring is visible. */
+    :scope::before {
+      border-color: ButtonText;
+    }
+    /* Checked: preserve the inset box-shadow dot by opting out of forced-color replacement on ::before.
+       forced-color-adjust: none keeps our border-color + box-shadow values intact so the dot shows
+       as ButtonText ink on a Canvas background — the highest-contrast option in WHCM. */
+    :scope:is([checked])::before,
+    :scope:state(checked)::before {
+      forced-color-adjust: none;
+      border-color: ButtonText;
+      box-shadow: inset 0 0 0 var(--ui-radio-dot-inset) ButtonText;
+    }
+  }
+}

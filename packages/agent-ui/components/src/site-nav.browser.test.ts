@@ -20,7 +20,14 @@ import { userEvent } from '@vitest/browser/context'
 // `mountPage` performs the load-bearing foundation cascade (ADR-0003) on import, pulling the foundation roles +
 // dimensional ramp, the self-defining controls, and `_page.css` (the nav styling under test). The browser config
 // resolves the `@agent-ui/*` CSS subpaths via package exports.
-import { mountPage } from '../../../../site/pages/_page.ts'
+import { mountPage, NAV } from '../../../../site/pages/_page.ts'
+
+// The rail entry count is DERIVED from NAV — buildNav's rule, mirrored: a labelled per-component group renders ONE
+// rail `<a>` (the component name, its sub-pages live in the tab strip); an ungrouped site-level group renders one
+// `<a>` per link. Asserting the rendered count equals this proves the bijection NAV-entry ↔ rendered-anchor holds
+// in a real engine (no entry dropped/duplicated) WITHOUT a magic constant that re-drifts each time a component
+// group is appended to NAV. Anti-vacuous floor below guards against an empty/failed NAV import reading as 0.
+const RAIL_ENTRIES = NAV.reduce((n, group) => n + (group.label ? 1 : group.links.length), 0)
 
 // ── mount/cleanup ──────────────────────────────────────────────────────────────────────────────────────────
 // Point the route at a known page so the active-link + trigger-label logic resolves deterministically, then
@@ -59,7 +66,8 @@ describe('site nav disclosure — structure (both engines)', () => {
     expect(summary().tagName.toLowerCase()).toBe('summary')
     expect(list().tagName.toLowerCase()).toBe('ul')
     expect(triggerLabel()).toBe('A2UI Dynamic List') // the collapsed-state active indication
-    expect(list().querySelectorAll('a').length).toBe(10) // every rail entry survives (structure intact)
+    expect(RAIL_ENTRIES, 'NAV import looks empty — the count below would be vacuous').toBeGreaterThanOrEqual(10)
+    expect(list().querySelectorAll('a').length).toBe(RAIL_ENTRIES) // every NAV entry survives as one rail <a> (no drop/dup)
     expect(list().querySelector('a[aria-current]')?.textContent).toBe('A2UI Dynamic List')
   })
 })
