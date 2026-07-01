@@ -3,6 +3,9 @@
 > Companion to [`plan.md`](./plan.md). Milestones are sequential: each `Gn` depends on the prior.
 > A milestone is **done** only when every box in its Definition of Done is checked.
 > First component family = FACE form controls (button → text-field/checkbox/switch → listbox/select/field).
+> The form-control family landed as the **Control Suite** track (Waves 0–5, at the foot of this file) — the full
+> Indicator/Range/Input/Overlay families + `ui-calendar` + the 12-type input field; `ui-field` + `form-provider`
+> remain the open G7 items. **State (2026-07-01):** G0–G6 + G9 + the Control Suite DONE; G7 partial; G8 pending.
 > Layout: npm-workspaces monorepo — `src/core/*` in milestone text now lives under `packages/agent-ui/components/src/*`.
 > Consumed by the A2UI effort (`docs/specs/`, `@agent-ui/a2ui`), which tracks these milestones (its
 > Assumption A-2 ≈ G7) and is coordinated by the planning/execution team (`.claude/agents/`).
@@ -113,15 +116,23 @@ camelCase-prop control. **G2 shippable.**
 WeakMap cache) and `directives.ts` (`repeat`, `watch`, `classMap`, `ref`, `unsafeHTML`).
 
 **Definition of done.**
-- [ ] Probes: re-render re-parses nothing (same `strings` ⇒ same prepared instance); per-part
+- [x] Probes: re-render re-parses nothing (same `strings` ⇒ same prepared instance); per-part
       `Object.is` skips unchanged holes; each part kind commits correctly (`child` text/template/array,
       `attr`, `?bool`, `.prop`, `@event` with stable listener identity); `svg` namespace fragments
       parse and tag-indirection throws; unsupported binding positions throw with a useful message.
-- [ ] `repeat` reuses DOM by key, moves by identity, throws on duplicate keys; append/remove/stable
+- [x] `repeat` reuses DOM by key, moves by identity, throws on duplicate keys; append/remove/stable
       prefix cost zero DOM moves.
-- [ ] `watch` updates its hole without re-running the host render effect, dies on disconnect, and
+- [x] `watch` updates its hole without re-running the host render effect, dies on disconnect, and
       respawns on reconnect; directive teardown is isolated (a throwing disposer doesn't abort siblings).
-- [ ] One `UIElement` subclass renders via `html\`\`` end-to-end (the integration proof of G1–G3).
+- [x] One `UIElement` subclass renders via `html\`\`` end-to-end (the integration proof of G1–G3).
+
+**Verdict.** **G3 DONE** (built after G5's vertical slice, as the A2UI renderer's needs pulled the directive
+seam in). Evidence (verified green 2026-07-01): `dom/template.ts` + `dom/repeat.ts` + `dom/watch.ts` +
+`template-{core,parts,positions,directives}.test.ts` · `repeat.test.ts` + `repeat.browser.test.ts` ·
+`watch.test.ts` · the html-render integration proof `element-render.test.ts`. **ADR-0022** (`repeat`'s
+`ChildPart.moveBefore` atomic-reorder focus seam) · **ADR-0023** (public `mount()` directive-host seam +
+the directive-authoring trio; `render`/`html` stay private). *(`classMap`/`ref`/`unsafeHTML` are covered by
+the directive seam; `mount` is the public entry the A2UI renderer consumes.)*
 
 ---
 
@@ -134,14 +145,22 @@ WeakMap cache) and `directives.ts` (`repeat`, `watch`, `classMap`, `ref`, `unsaf
 Traits in `src/core/traits/`: `pressActivation`, `tabbable`, `trackUserInvalid`.
 
 **Definition of done.**
-- [ ] Probes (against an internals stub for jsdom + browser-truth smoke for the real thing): a value
+- [x] Probes (against an internals stub for jsdom + browser-truth smoke for the real thing): a value
       write contributes to `FormData`; `validity()` non-null sets `setValidity` + `aria-invalid` only
       after interaction; `formResetCallback` restores from the attribute; `formDisabledCallback` makes
       disabled reactive.
-- [ ] Each trait obeys the contract: attach in `connected()`, idempotent `release()`, listeners/effects
+- [x] Each trait obeys the contract: attach in `connected()`, idempotent `release()`, listeners/effects
       ride the connection scope, declared `data-*` only, zero residue after disconnect.
-- [ ] A minimal throwaway `UIFormElement` subclass round-trips a value through a `<form>` in the browser
+- [x] A minimal throwaway `UIFormElement` subclass round-trips a value through a `<form>` in the browser
       smoke (the integration proof of G4).
+
+**Verdict.** **G4 DONE.** Evidence (verified green 2026-07-01): `dom/form.ts` (`UIFormElement`, FACE
+value/validity via `ElementInternals`) + `form.test.ts` + the cross-engine `form.browser.test.ts` (the G4
+round-trip proof — a required-empty field BLOCKS submit in **both engines**, screenshot-locked) · the traits
+`press-activation.ts` / `tabbable.ts` / `track-user-invalid.ts` each with its `*.test.ts` (contract +
+zero-residue). **ADR-0013** (`UIFormElement` FACE base) · **ADR-0010** (`tabbable` + `internals.ariaDisabled`
+— closes the G5 deferred AX items). Consumed by every form control (text-field, the Indicator/Range/Overlay
+families, ui-calendar).
 
 ---
 
@@ -216,12 +235,22 @@ focus trait lands. **G5 done.**
   *not* `--ui-ind`, which never shipped), `--checked` custom state, keyboard activation, `ariaChecked` via internals.
 
 **Definition of done.**
-- [ ] Per control: behaviour probes + browser smoke + `.api.json` + rubric ≥ 4 on both axes (the G5 DoD,
-      applied to each).
-- [ ] `ui-text-field` round-trips through a `<form>` and reports validity; the value is a tracked signal.
-- [ ] Indicator geometry responds to `[size]`/`[scale]`/`[density]` in the browser; `--checked` state
+- [x] Per control: behaviour probes + browser smoke + the `{name}.md` descriptor (**ADR-0004 replaced
+      `.api.json`** with `.md` frontmatter) + rubric ≥ 4 on both axes (the G5 DoD, applied to each). *(All
+      three ship a `.md` + jsdom + cross-engine browser tests; the `component-reviewer` gated each ≥4 both
+      axes before commit — `ui-checkbox` was taken to the gold bar as the family template.)*
+- [x] `ui-text-field` round-trips through a `<form>` and reports validity; the value is a tracked signal.
+- [x] Indicator geometry responds to `[size]`/`[scale]`/`[density]` in the browser; `--checked` state
       survives `forced-colors`.
-- [ ] No native form elements introduced (the zero-native sweep stays clean).
+- [x] No native form elements introduced (the zero-native sweep stays clean — `file-set.test.ts`).
+
+**Verdict.** **G6 DONE.** Evidence (verified green 2026-07-01): `controls/text-field/` (contenteditable FACE
+surface, caret guard, `input`/`change`, `.md` descriptor + trip-wire + geometry/states browser smokes) ·
+`controls/checkbox/` + `controls/switch/` (Indicator class on the `--ui-compact-*` widget ramp + 2px inset,
+`--checked` state, keyboard activation). Built as **Control-Suite Wave 1** (Indicator family) — see the
+**Control Suite** track below; the shared `UIIndicatorElement` base is **ADR-0042**, the widget geometry
+**ADR-0041**. `ui-text-field` subsequently grew a 12-value `type` family (Waves 3/5 — ADR-0044/0047/0048),
+recorded in the Control Suite track. **ADR-0013/0014** (FACE base + contenteditable surface).
 
 ---
 
@@ -239,16 +268,34 @@ mechanics, the field wrapper, and form-level coordination.
 - A `form-provider` that discovers `UIFormElement` descendants by `name` and publishes values/errors/valid
   via context (introduces the context/provider primitive).
 
-**Definition of done.**
-- [ ] Each control meets the per-control DoD (probes, smoke, `.api.json`, rubric ≥ 4).
-- [ ] `ui-select` opens/closes in the top layer, dismisses on outside click, keyboard-navigates the
+**Definition of done.** **G7 = PARTIAL** — the overlay/selection *mechanics* shipped (and overshot the
+original select-only scope; see the **Control Suite** track below); the **field wrapper + form-level
+coordination remain the two open items.** Marked honestly:
+- [~] Each control meets the per-control DoD (probes, smoke, `{name}.md` descriptor [ADR-0004, was
+      `.api.json`], rubric ≥ 4). — **`ui-select` DONE** (Control-Suite Wave 4, both-engine smoke, reviewer
+      ≥4). **`ui-listbox` shipped as a BASE, not a standalone tag:** `controls/_base/listbox-element.ts`
+      (`UIListboxElement` — roving + selection over `[role=option]`, consumed by `ui-select`; ADR-0042/0043).
+      **`ui-field` NOT built** (deferred — text-field's `label`/message seam stands in; `text-field.css`/`.md`
+      record "ui-field, when it lands").
+- [x] `ui-select` opens/closes in the top layer, dismisses on outside click, keyboard-navigates the
       listbox, and shows the caret per the geometry law (browser smoke; verify in WebKit too — overlays
       that depend solely on their own stylesheet have a catastrophic failure mode, so the hidden-by-default
-      baseline must be stylesheet-independent).
+      baseline must be stylesheet-independent). — **DONE** (`select.browser.test.ts`, Chromium **and**
+      WebKit; open→navigate→commit→close + Escape/outside-click light-dismiss, screenshot-locked; ADR-0045).
 - [ ] `form-provider` aggregates a multi-control form's values/errors reactively; a late-added field is
-      discovered (MutationObserver); submit/reset work.
+      discovered (MutationObserver); submit/reset work. — **NOT built** (the context/provider primitive is
+      unshipped; each `UIFormElement` still participates via its own `ElementInternals`/`<form>` association).
 - [ ] **The first component family is shippable**: an end-to-end form (button + text-field + checkbox +
-      switch + select inside a field, under a form-provider) round-trips in the browser, keyboard-only.
+      switch + select inside a field, under a form-provider) round-trips in the browser, keyboard-only. —
+      **NOT proven as specified** (needs `ui-field` + `form-provider`). The pieces exist and each round-trips
+      through a native `<form>` (the G4 `form.browser.test.ts` proof), but the **provider-coordinated**
+      end-to-end box is open.
+
+**Status.** The G7 *overlay + selection* ambition was delivered and **exceeded** by Control-Suite Waves 0/4:
+`ui-select` **plus** the whole Overlay family (`ui-popover`/`-tooltip`/`-menu`/`-combo-box`) on one shared
+`overlay` controller + `roving-focus` + `selection-commit` (ADR-0043/0045). **Two G7 items remain open:**
+`ui-field` (label/description/error wrapper + `user-invalid` timing) and `form-provider` (context-based
+multi-control aggregation) — the next planning intake for the form family.
 
 ---
 
@@ -300,15 +347,15 @@ Pulls renderer **LLD-C8 (two-way input binding)** into scope.
 **Definition of done.**
 
 *Per element (the G5/G6 control bar, applied to each of the ~12 elements):*
-- [ ] Behaviour probes (jsdom) + the cross-engine browser smoke (Chromium AND WebKit) + the `{name}.md` descriptor
+- [x] Behaviour probes (jsdom) + the cross-engine browser smoke (Chromium AND WebKit) + the `{name}.md` descriptor
       validating against the frontmatter schema with the contract↔props trip-wire green + the COMPOSE/REALIZE
       rubric ≥ 4 on both axes via the `component-reviewer`.
-- [ ] `tsc` clean; single `{name}.css` (ADR-0003) — `:where()` token block + `@scope` styles consuming only
+- [x] `tsc` clean; single `{name}.css` (ADR-0003) — `:where()` token block + `@scope` styles consuming only
       `--ui-{name}-*`; survives `forced-colors: active`; the import-layering trip-wire stays green
       (containers extend `UIContainerElement`/`UIElement`, imports point inward only).
 
 *Surface + spacing (ADR-0015):*
-- [ ] `elevation` / `brightness` are signed reflected literal-union props (`-3..3`, default `0`, `0`=neutral base);
+- [x] `elevation` / `brightness` are signed reflected literal-union props (`-3..3`, default `0`, `0`=neutral base);
       a `@ts-expect-error` proves a bare number is rejected. The container reads one role-pure `--ui-container-bg`
       seam; both axes set composes to a defined surface (the proposed base-plane + tonal-overlay mechanism); the
       surface survives `forced-colors`. `--ui-space` is density-responsive (a subtree `[density]` re-multiplies it);
@@ -316,26 +363,26 @@ Pulls renderer **LLD-C8 (two-way input binding)** into scope.
       surface are tokens-specialist's, gated separately.)*
 
 *Layout (ADR-0016):*
-- [ ] Row/Column/List/Grid consume the shared `flexProps` (`align`/`justify`/`gap`/`wrap`, reflected literal
+- [x] Row/Column/List/Grid consume the shared `flexProps` (`align`/`justify`/`gap`/`wrap`, reflected literal
       unions → CSS flex props, gap off `--ui-space`); `ui-list` carries `role=list`; `ui-grid` reflows by
       `auto-fit`/`minmax`. **Container-query intrinsic responsiveness**: a layout primitive reflows on its OWN
       container width (no breakpoint props) — the browser smoke resizes the wrapper, not the viewport.
 
 *Card (ADR-0015/0018):*
-- [ ] Presence-driven region grid (`:has()` — header?/content/footer?); header/footer reuse the leading/label/
+- [x] Presence-driven region grid (`:has()` — header?/content/footer?); header/footer reuse the leading/label/
       trailing anatomy (`anatomy.md`); `ui-card-content` supports `scroll`/`scroll-fade`; one-level nested radius
       via the published `--ui-card-child-radius` (geometry probe asserts `child == max(0, parent − padding)`; depth
       ≥ 2 documented manual; the JS controller is rejected).
 
 *Tabs / Modal a11y (full widget contract):*
-- [ ] Tabs: roving-tabindex arrow-key nav, `tablist`/`tab`/`tabpanel` ARIA (via `internals`), bindable `selected`,
+- [x] Tabs: roving-tabindex arrow-key nav, `tablist`/`tab`/`tabpanel` ARIA (via `internals`), bindable `selected`,
       panel show/hide by selection, click/keyboard commit emits `select`. Modal: native `<dialog>` `showModal()`
       (top-layer + `::backdrop`), focus **trap** (platform) + **restore** (control), Escape + backdrop dismissal
       sync `open` and emit `close`/`toggle`, dialog ARIA on the part, host carries no role/aria attribute, bindable
       `open` (ADR-0017).
 
 *A2UI integration (catalog-first; SPEC-R3/R4/R8 + LLD-C8):*
-- [ ] The default catalog declares Row/Column/Card/Tabs/Modal (+ the region/item sub-types CardHeader/CardContent/
+- [x] The default catalog declares Row/Column/Card/Tabs/Modal (+ the region/item sub-types CardHeader/CardContent/
       CardFooter, Tab/TabPanel) bound directly to `ui-*` factories (no adapter, SPEC-R8); the `ChildList` child
       model composes regions as sub-elements; SPEC §5.2 flips those types `experimental → shipped` (Image/Video
       stay absent; List/Grid ship as non-catalog `ui-*` primitives). **LLD-C8 (`input.ts`) is built** — one generic
@@ -343,9 +390,70 @@ Pulls renderer **LLD-C8 (two-way input binding)** into scope.
       back-fills the deferred `ui-text-field` value bind, with 0 per-component renderer code.
 
 *Packaging:*
-- [ ] One serial integration slice wires the barrels (`controls/index.ts` `export *` per element · `component-
+- [x] One serial integration slice wires the barrels (`controls/index.ts` `export *` per element · `component-
       styles.css` `@import` per `{name}.css` after the shared `container.css` · `dom/index.ts` for
       `UIContainerElement`/`surfaceProps`/`flexProps`); the catalog wiring (a2ui package) is its own single-writer
       slice; `npm run check && npm test && npm run size` green; tree-shake clean (importing one container drags only
       it + the base + real deps).
-```
+
+**Verdict.** **G9 DONE.** The container/layout family shipped (12 elements across 7 folders: `ui-row`/`-column`/
+`-list`/`-grid`/`-card`(+header/content/footer)/`-tabs`(+tab/tab-panel)/`-modal`) + the A2UI catalog flip +
+`renderer/input.ts` (LLD-C8 two-way binding), browser-proven cross-engine. **ADRs 0015–0021** (surface ·
+layout · two-way bind · nested-radius · native-`<dialog>` modal · modal `persistent` · text-field radius/min-
+inline-size) + **#102 G9 consistency sweep** (ADR-0039 box-alignment dialect · ADR-0040 foundation-barrel
+budget). The container box-model (ADR-0046) later re-based card/modal spacing (see the Control Suite track).
+
+---
+
+## Control Suite — the full FACE control family (Waves 0–5)
+
+> **A milestone TRACK, not a strict `Gn`** (Kim's "maximally use agent teams" directive). It **realizes and
+> extends** the G6/G7 control ambitions into a complete control family, built as file-disjoint parallel **waves**
+> rather than the sequential march. All work on branch `feat/control-suite-waves-3-4` (**9 commits, NOT pushed**
+> as of 2026-07-01). The load-bearing discipline held every wave: **`component-reviewer` ≥4 both axes + the
+> cross-engine browser gate run BEFORE each wave-commit** (jsdom-green ≠ done — the browser gate caught 18
+> cross-engine bugs in Wave 4 alone; `ui-checkbox` is the gold template).
+
+**Scope delivered.**
+- **Wave 0 — foundation.** The **widget-box geometry** sub-system (Kim's 8-value ramp `--ui-compact-*` +
+  `--ui-widget-inset: 2px`, **ADR-0041**); the shared `controls/_base/` control-base layer + `UIIndicatorElement`
+  / `UIRangeElement` / `UIListboxElement` (**ADR-0042**); the composable traits `overlay` / `roving-focus` /
+  `selection-commit` / `value-drag` / `value-codec` (**ADR-0043**); `ui-tabs` migrated onto shared `roving-focus`.
+- **Wave 1 — Indicator family.** `ui-checkbox` (gold) · `ui-switch` · `ui-radio` + `ui-radio-group` (the widget
+  ramp + 2px inset, `--checked` state, keyboard activation) — these ARE the G6 checkbox/switch DoD.
+- **Wave 2 — Range family.** `ui-slider` · `ui-slider-multi` (`value-drag` ARIA-slider + keyboard step; the
+  whole-shape floor lesson — a control needing width takes a `min-inline-size` floor).
+- **Wave 3 — Input variants.** `ui-text-field` grows a reflected `type` prop + a static type-resolver +
+  `value-codec` (**ADR-0044** contenteditable password masking).
+- **Wave 4 — Overlay family.** `ui-popover` · `ui-tooltip` · `ui-menu` · `ui-select` · `ui-combo-box` on the
+  shared `overlay` controller (Popover API top-layer + JS flip/shift + light-dismiss). **ADR-0045** dismissal
+  semantics (platform owns Escape/outside-click · anchor focus-restore · `:popover-open`-resilient close ·
+  `selectionCommit` Enter `preventDefault` · 0.25rem anchor↔panel gap). *This is the G7 `ui-select` DoD — and
+  overshoots it with the full family.*
+- **Container box-model — ADR-0046.** The shared `_surface/container-box.css` (`[data-box]` margin inset ·
+  sticky header/content/footer · region padding inline 12/block 4/gap 8) rolled onto the overlay panels +
+  `ui-card` + `ui-modal`.
+- **Wave 5 — Input codecs + date/time pickers.** **ADR-0047** numeric-codec expansion (multi-currency ISO-4217
+  · NEW `unit`/`percent` types · generalized `step`/`min`/`max` steppers + range validity · percent canonical =
+  the typed number). **ADR-0048** NEW **`ui-calendar`** (`UIFormElement`, bespoke 2D grid, ISO `YYYY-MM-DD`
+  value, `[data-box]` panel) + `ui-text-field` `type=date`/`time` (date/time codecs; `type=date` lazily
+  `import()`s the calendar into the Wave-4 overlay — the tree-shake proof holds; `datetime-local`/`month` are
+  documented STRETCH follow-ups). The fleet's first AA text-on-accent role `--c-primary-selected`; **ADR-0049**
+  family-barrel budget 16 → 22 kB. → the **12-type input family**: `text · email · url · tel · password ·
+  search · number · currency · unit · percent · date · time`.
+
+**Definition of done.**
+- [x] Every control meets the G5/G6 control bar (jsdom probes + cross-engine browser smoke + `{name}.md`
+      descriptor + contract↔props trip-wire + `component-reviewer` ≥4 both axes) **before** its wave-commit.
+- [x] `npm run check` (incl. `check:site`) + `npm test` **green** — re-verified 2026-07-01: **1936 jsdom tests,
+      118 files, 0 failures**; `tsc` + `tsc -p site` clean.
+- [x] The cross-engine browser gate (Chromium **and** WebKit) green — **514 browser tests** (host-run;
+      screenshot-locked, incl. the `type=date` calendar-overlay top-layer + focus-restore smokes).
+- [x] `npm run size` within budget — **19 889 B gz of the 22 528 B (22 kB) family budget** (ADR-0049); the
+      per-control marginals + shrink-only ratchet hold; tree-shake proof green (`type=date` does NOT drag the
+      calendar into a plain field).
+- [x] ADRs **0041–0049** authored + ratified (`accepted`); the geometry-sizing-spec §5.2 widget ramp realized.
+
+**Open follow-ups** (recorded, not this track): the two G7 items **`ui-field` + `form-provider`** (above);
+`datetime-local`/`month`/time-list/date-range (Wave-5 STRETCH/future; `--ui-calendar-range-*` reserved); the
+A2UI **LLD-C6 dynamic-list** tail (#137) + the `repeat` moveBefore focus-seam (#69). The branch is **unpushed**.
