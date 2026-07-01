@@ -24,6 +24,46 @@
 :where([data-box]) {
   --ui-box-inset: 0.25rem; /* 4px — the uniform inset/gap unit; a box may repoint it */
   display: flow-root; /* BFC: child margins collapse to ONE inset between siblings + hold the edge inset */
+
+  /* ── Region padding system (header / footer / content wrappers) — ruled with Kim ──
+   * The named regions carry their OWN internal padding + gap, distinct from the inset margin above:
+   *   inline 12px · block 4px · gap 8px.
+   * A NESTED content steps its INLINE padding IN by one inset (4px) per level (12 → 8 → 4…, floored), so a
+   * content-inside-content stays concentric with its parent's ink: parent inline-pad 12 = child inset margin 4
+   * + child inline-pad 8. Block padding + gap stay constant at every level. */
+  --ui-box-pad-inline: 0.75rem; /* 12px — region inline padding */
+  --ui-box-pad-block: 0.25rem; /* 4px — region block padding */
+  --ui-box-gap: 0.5rem; /* 8px — gap between a region's own children */
+}
+
+/* header / footer — the region padding + gap (they are also the full-bleed sticky brackets, set below). A row
+   of controls sits comfortably: inline 12 / block 4 with an 8px gap. `display: flex` makes the gap apply; the
+   element's own @scope may override the direction/alignment. */
+:where([data-box]) > :where(header, footer, [data-region='header'], [data-region='footer']) {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-box-gap);
+  padding-inline: var(--ui-box-pad-inline);
+  padding-block: var(--ui-box-pad-block);
+}
+
+/* content — the region between the brackets: a column of stacked children with the 8px region gap. The INLINE
+   padding steps IN one inset per NESTING level so a content-inside-content stays concentric with its parent's
+   ink (parent 12 = child inset-margin 4 + child pad 8). Expressed as explicit descendant levels rather than a
+   self-referencing custom property (which CSS treats as a cycle → invalid): L1 12 · L2 8 · L3+ 4 (the block-pad
+   floor). Three levels covers real nesting; deeper content stays at the 4px floor. */
+:where([data-region='content'], main) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-box-gap);
+  padding-inline: var(--ui-box-pad-inline); /* L1 = 12px */
+  padding-block: var(--ui-box-pad-block);
+}
+:where([data-region='content'], main) :where([data-region='content'], main) {
+  padding-inline: calc(var(--ui-box-pad-inline) - var(--ui-box-inset)); /* L2 = 8px (12 − 4) */
+}
+:where([data-region='content'], main) :where([data-region='content'], main) :where([data-region='content'], main) {
+  padding-inline: var(--ui-box-pad-block); /* L3+ floor = 4px */
 }
 
 /* Every direct child carries the uniform inset margin (→ 4px from the edges, 4px between siblings). */
@@ -31,8 +71,10 @@
   margin: var(--ui-box-inset);
 }
 
-/* Full-bleed children — span the box edge-to-edge (sticky header/footer, a divider, or an explicit opt-out). */
-:where([data-box]) > :where(header, footer, hr, [data-full-bleed]) {
+/* Full-bleed children — span the box edge-to-edge (the region wrappers header/content/footer, a divider, or an
+   explicit opt-out). The region wrappers carry their OWN internal padding (below), so they span the box and
+   inset their ink; loose non-region children keep the inset margin above. */
+:where([data-box]) > :where(header, footer, main, hr, [data-full-bleed], [data-region]) {
   margin: 0;
 }
 

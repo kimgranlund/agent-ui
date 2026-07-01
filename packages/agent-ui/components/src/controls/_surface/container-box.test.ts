@@ -26,8 +26,8 @@ describe('container-box.css — the shared box-model foundation', () => {
     expect(CODE).toMatch(/:where\(\[data-box\]\)\s*>\s*\*\s*\{[^}]*margin:\s*var\(--ui-box-inset\)/)
   })
 
-  it('full-bleed children (header/footer/hr/[data-full-bleed]) override the inset to margin:0', () => {
-    expect(CODE).toMatch(/:where\(\[data-box\]\)\s*>\s*:where\(header,\s*footer,\s*hr,\s*\[data-full-bleed\]\)\s*\{[^}]*margin:\s*0/)
+  it('full-bleed children (the region wrappers + hr/[data-full-bleed]) override the inset to margin:0', () => {
+    expect(CODE).toMatch(/:where\(\[data-box\]\)\s*>\s*:where\(header,\s*footer,\s*main,\s*hr,\s*\[data-full-bleed\],\s*\[data-region\]\)\s*\{[^}]*margin:\s*0/)
   })
 
   it('[padded] = full-bleed box with inset padding (margin:0 + padding:inset)', () => {
@@ -56,5 +56,35 @@ describe('container-box.css — the shared box-model foundation', () => {
     expect(CODE).toMatch(/@media\s*\(forced-colors:\s*active\)/)
     const fc = CODE.slice(CODE.indexOf('forced-colors'))
     expect(fc).toMatch(/background:\s*Canvas/)
+  })
+})
+
+describe('container-box.css — region padding system (header/footer/content: inline 12 · block 4 · gap 8)', () => {
+  it('declares the region padding tokens: inline 0.75rem (12px), block 0.25rem (4px), gap 0.5rem (8px)', () => {
+    expect(CODE).toMatch(/--ui-box-pad-inline:\s*0\.75rem/)
+    expect(CODE).toMatch(/--ui-box-pad-block:\s*0\.25rem/)
+    expect(CODE).toMatch(/--ui-box-gap:\s*0\.5rem/)
+  })
+
+  it('header/footer regions carry inline+block padding + the region gap', () => {
+    const m = CODE.match(/:where\(\[data-box\]\)\s*>\s*:where\(header,\s*footer,\s*\[data-region='header'\],\s*\[data-region='footer'\]\)\s*\{([^}]*)\}/)
+    expect(m).toBeTruthy()
+    expect(m![1]).toMatch(/padding-inline:\s*var\(--ui-box-pad-inline\)/)
+    expect(m![1]).toMatch(/padding-block:\s*var\(--ui-box-pad-block\)/)
+    expect(m![1]).toMatch(/gap:\s*var\(--ui-box-gap\)/)
+  })
+
+  it('content L1 = pad-inline (12px), and nested content STEPS IN one inset per level (L2 = 12−4, L3 = 4 floor)', () => {
+    // L1
+    expect(CODE).toMatch(/:where\(\[data-region='content'\],\s*main\)\s*\{[^}]*padding-inline:\s*var\(--ui-box-pad-inline\)/)
+    // L2 = one inset in (concentric with the parent ink) — expressed as an explicit descendant level, NOT a
+    // self-referencing custom property (a CSS cycle → invalid). This is the load-bearing correctness point.
+    expect(CODE).toMatch(/:where\(\[data-region='content'\],\s*main\)\s*:where\(\[data-region='content'\],\s*main\)\s*\{[^}]*padding-inline:\s*calc\(var\(--ui-box-pad-inline\)\s*-\s*var\(--ui-box-inset\)\)/)
+    // L3+ floor
+    expect(CODE).toMatch(/:where\(\[data-region='content'\],\s*main\)\s*:where\(\[data-region='content'\],\s*main\)\s*:where\(\[data-region='content'\],\s*main\)\s*\{[^}]*padding-inline:\s*var\(--ui-box-pad-block\)/)
+  })
+
+  it('the region wrappers (header/footer/content/main + [data-region]) are full-bleed (their padding insets the ink)', () => {
+    expect(CODE).toMatch(/:where\(\[data-box\]\)\s*>\s*:where\(header,\s*footer,\s*main,\s*hr,\s*\[data-full-bleed\],\s*\[data-region\]\)\s*\{[^}]*margin:\s*0/)
   })
 })
