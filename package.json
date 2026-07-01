@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "check": "tsc",
+    "check": "tsc && npm run check:site",
     "check:site": "tsc -p site/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",

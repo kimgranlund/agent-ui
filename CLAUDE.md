@@ -10,7 +10,7 @@ Plan `docs/plan.md` · Goals + per-milestone DoD `docs/goals.md` · Coherence pr
 
 ## Commands
 
-- `npm run check` — `tsc` type-check (the standing type gate; `noEmit`)
+- `npm run check` — `tsc` type-check of the packages AND the site (`&& check:site`; the standing type gate; `noEmit`)
 - `npm test` — Vitest (jsdom), once · `npm run test:watch` — watch mode
 - `npm run dev` / `npm run build` — need an app entry (`index.html`); dormant until the gallery (G8)
 
