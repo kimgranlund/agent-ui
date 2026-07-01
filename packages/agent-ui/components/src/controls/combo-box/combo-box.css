@@ -152,8 +152,11 @@
 
   :scope [role='option'] {
     display: block;
+    margin: var(--ui-box-inset, 0.25rem); /* the box-model inset — 4px from the panel edge + between rows */
     padding-block: var(--ui-combo-box-option-padding-block);
     padding-inline: var(--ui-combo-box-option-padding-inline);
+    /* nested-radius (ADR-0018): the highlight corner inset from the panel by the box margin */
+    border-radius: calc(var(--ui-combo-box-panel-radius) - var(--ui-box-inset, 0.25rem));
     cursor: pointer;
   }
 

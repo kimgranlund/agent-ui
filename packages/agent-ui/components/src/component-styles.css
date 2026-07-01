@@ -17,6 +17,9 @@
  * element sheets follow it in a stable, annotated order (also do-not-reorder).
  */
 @import './controls/_surface/container.css';
+/* The shared container BOX-MODEL (margin inset + sticky-region pattern) — a surface opts in with [data-box].
+ * After the surface PAINT layer above, before any element sheet (so an element's @scope can override it). */
+@import './controls/_surface/container-box.css';
 
 /* form controls (G5/G6) */
 @import './controls/button/button.css';

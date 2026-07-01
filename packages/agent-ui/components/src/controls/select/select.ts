@@ -288,6 +288,7 @@ export class UISelectElement extends UIFormElement {
 
     const listbox = document.createElement('div')
     listbox.setAttribute('data-part', 'listbox')
+    listbox.setAttribute('data-box', '') // adopt the shared container box-model (inset margins + sticky headers)
     // role="listbox" on the panel element (NOT on the host — the listbox is the PANEL, not the
     // select wrapper). The host carries no explicit role (a logical select wrapper).
     listbox.setAttribute('role', 'listbox')

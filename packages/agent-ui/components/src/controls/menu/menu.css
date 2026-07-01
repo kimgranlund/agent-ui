@@ -74,7 +74,7 @@
     box-sizing: border-box;
     margin: 0;
     min-inline-size: var(--ui-menu-min-inline-size);
-    padding: var(--ui-menu-padding);
+    padding: 0; /* the box-model menuitem margins provide the inset (container-box.css); no shell padding */
 
     background-color: var(--ui-menu-bg);
     color: var(--ui-menu-ink);
@@ -89,6 +89,7 @@
     box-sizing: border-box;
     display: flex;
     align-items: center;
+    margin: var(--ui-box-inset, 0.25rem); /* the box-model inset — 4px from the panel edge + between rows */
     padding-block: var(--ui-menu-item-pad-block);
     padding-inline: var(--ui-menu-item-pad-inline);
     border-radius: var(--ui-menu-item-radius);

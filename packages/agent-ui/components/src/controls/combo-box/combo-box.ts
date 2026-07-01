@@ -287,6 +287,7 @@ export class UIComboBoxElement extends UIFormElement {
     const panelId = ++_nextPanelId
     const listbox = document.createElement('div')
     listbox.setAttribute('data-part', 'listbox')
+    listbox.setAttribute('data-box', '') // adopt the shared container box-model (inset margins)
     // role="listbox" on the part (NOT the host; FACE pattern).
     listbox.setAttribute('role', 'listbox')
     // tabindex="-1": the overlay controller's moveFocusIn() can land here if needed; in practice

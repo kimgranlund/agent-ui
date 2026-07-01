@@ -1,0 +1,79 @@
+/* container-box.css — the shared container BOX-MODEL (margin inset + the sticky-region pattern). The second
+ * shared surface layer (after `_surface/container.css` which owns the elevation/brightness PAINT); this one
+ * owns the SPACING + region rhythm every container/panel adopts by marking itself `[data-box]`. Imported by
+ * component-styles.css right after container.css, before any element sheet.
+ *
+ * THE MODEL (ruled with Kim, flow-root + margin-collapse):
+ *   • L1 `[data-box]` establishes a BFC (`display: flow-root`) and holds NO inner padding — the children's
+ *     margins provide the inset. A BFC means adjacent children's block margins COLLAPSE to one inset (a
+ *     uniform 4px between siblings) AND the edge margins are preserved (4px from the box edge) — not doubled.
+ *   • L2 direct children get `margin: var(--ui-box-inset)` (4px) by default. A child OVERRIDES its own margin
+ *     to go full-bleed (`margin: 0`).
+ *   • `[padded]` = a full-bleed child (margin 0) whose CONTENT is inset (`padding: var(--ui-box-inset)`) — e.g.
+ *     a header/row that spans the box edge-to-edge but keeps its text off the edge.
+ *   • Region pattern: `header`/`footer` (or `[data-region=header|footer]`) are full-bleed + `position: sticky`
+ *     and take `background: inherit` (the box surface) so scrolled content never shows through — trivially
+ *     overridden (a child that sets its own background wins). `hr` is a full-bleed divider. `main`/content is
+ *     the scroll region between them (it may itself be another container, or a list).
+ *
+ * Everything is specificity-0 (`:where()`), so an element's own `@scope` block cleanly overrides any of it.
+ * Opt-in only: an element is unaffected until it (or its control) marks the surface `[data-box]`.
+ *
+ * `--ui-box-inset` defaults to 0.25rem (4px at the 16px root) and is themeable per box. */
+
+:where([data-box]) {
+  --ui-box-inset: 0.25rem; /* 4px — the uniform inset/gap unit; a box may repoint it */
+  display: flow-root; /* BFC: child margins collapse to ONE inset between siblings + hold the edge inset */
+}
+
+/* Every direct child carries the uniform inset margin (→ 4px from the edges, 4px between siblings). */
+:where([data-box]) > * {
+  margin: var(--ui-box-inset);
+}
+
+/* Full-bleed children — span the box edge-to-edge (sticky header/footer, a divider, or an explicit opt-out). */
+:where([data-box]) > :where(header, footer, hr, [data-full-bleed]) {
+  margin: 0;
+}
+
+/* `[padded]` — full-bleed box, content inset (margin 0 + inset padding). */
+:where([data-box]) > :where([padded]) {
+  margin: 0;
+  padding: var(--ui-box-inset);
+}
+
+/* Sticky regions — pinned to the box's scroll edges, inheriting the box surface so scrolled content does not
+   bleed through. `background: inherit` copies the parent's resolved background value (a header itself easily
+   overrides by declaring its own background). */
+:where([data-box]) > :where(header, [data-region='header']) {
+  position: sticky;
+  inset-block-start: 0;
+  background: inherit;
+  z-index: 1;
+}
+:where([data-box]) > :where(footer, [data-region='footer']) {
+  position: sticky;
+  inset-block-end: 0;
+  background: inherit;
+  z-index: 1;
+}
+
+/* Divider — a full-bleed hairline rule between regions. Zero block-size so it adds no row height beyond the
+   1px rule; the surrounding children's margins provide the breathing room. */
+:where([data-box]) > hr {
+  border: 0;
+  border-block-start: 1px solid var(--c-neutral-outline-variant);
+  block-size: 0;
+  margin: 0;
+}
+
+/* forced-colors — the sticky regions must stay opaque as a system colour (a transparent sticky header would
+   let scrolled text show through). The divider maps to a system border. */
+@media (forced-colors: active) {
+  :where([data-box]) > :where(header, footer, [data-region='header'], [data-region='footer']) {
+    background: Canvas;
+  }
+  :where([data-box]) > hr {
+    border-block-start-color: CanvasText;
+  }
+}

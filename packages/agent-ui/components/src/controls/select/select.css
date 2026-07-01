@@ -217,7 +217,7 @@
     color: var(--ui-select-listbox-ink);
     border: 1px solid var(--ui-select-listbox-outline);
     border-radius: var(--ui-select-listbox-radius);
-    padding: var(--ui-select-listbox-padding);
+    padding: 0; /* the box-model child margins provide the inset (container-box.css); no shell padding */
   }
 
   /* ── Option rows (legacy item-pad — §5.1 / ROV-C5) ──────────────────────────────────────────
@@ -227,6 +227,7 @@
   :scope > [data-part='listbox'] [role='option'] {
     box-sizing: border-box;
     display: block;
+    margin: var(--ui-box-inset, 0.25rem); /* the box-model inset — 4px from the panel edge + between rows */
     padding-block: var(--ui-select-option-block);
     padding-inline: var(--ui-select-option-inline);
     border-radius: var(--ui-select-option-radius);
@@ -236,13 +237,26 @@
     outline: none; /* suppress the default UA outline — :focus-visible provides the ring below */
   }
 
+  /* Groups are STRUCTURAL, not visible boxes — full-bleed (no inset margin); their options + sticky header
+     carry the box rhythm. (Overrides the shared `[data-box] > *` margin for the group wrapper.) */
+  :scope > [data-part='listbox'] > [role='group'] {
+    margin: 0;
+    display: block;
+  }
+
   /* Group header (optgroup parity) — a non-interactive label; NOT a [role=option], so rovingFocus +
-     selectionCommit skip it. Aligned to the option ink edge; muted + small-caps emphasis. */
+     selectionCommit skip it. STICKY: pins to the panel's scroll top and takes the panel surface so scrolled
+     options never show through (the container box-model region pattern). Full-bleed edge-to-edge. */
   :scope > [data-part='listbox'] [data-part='group-label'] {
     box-sizing: border-box;
     display: block;
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 1;
+    margin: 0; /* full-bleed — spans the panel width so the sticky surface fully occludes scrolled rows */
     padding-block: var(--ui-select-option-block);
     padding-inline: var(--ui-select-option-inline);
+    background-color: var(--ui-select-listbox-bg); /* the panel surface — occludes scrolled content */
     color: var(--ui-select-group-label-ink);
     font-size: 0.85em;
     font-weight: 600;
@@ -252,9 +266,8 @@
     user-select: none;
   }
 
-  /* A group after the first gets a hairline separator above its header (visual grouping). */
+  /* A group after the first gets a hairline divider above it (visual grouping between sticky sections). */
   :scope > [data-part='listbox'] > [role='group'] + [role='group'] {
-    margin-block-start: var(--ui-select-option-block);
     border-block-start: 1px solid var(--ui-select-listbox-outline);
   }
 

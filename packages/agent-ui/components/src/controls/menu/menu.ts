@@ -194,6 +194,7 @@ export class UIMenuElement extends UIElement {
     // internals.role rule applies to the host element only).
     const panel = document.createElement('div')
     panel.setAttribute('data-part', 'panel')
+    panel.setAttribute('data-box', '') // adopt the shared container box-model (inset margins)
     panel.setAttribute('role', 'menu')
     // tabindex="-1" lets moveFocusIn() (overlay LLD-C4) land on the panel itself when there
     // are no enabled menuitems — the fallback panel.focus() requires the element to be focusable.
