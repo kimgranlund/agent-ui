@@ -47,6 +47,14 @@ export function selectionCommit(host: UIElement, opts: SelectionCommitOptions): 
   const keyOf: (el: HTMLElement) => string = opts.keyOf ??
     ((el) => el.dataset['key'] ?? '')
 
+  // A disabled option is non-committable — guards BOTH commit paths (click + Enter) so a disabled
+  // option cannot be selected even where CSS `pointer-events:none` is absent (jsdom) or bypassed
+  // (keyboard). Matches the rovingFocus/menu disabled convention: the HTML `[disabled]` attribute OR
+  // `aria-disabled="true"`. (Selection-follows-focus hosts already skip disabled at the roving layer;
+  // this is the commit-layer backstop.)
+  const isDisabled = (el: HTMLElement): boolean =>
+    el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true'
+
   // Single-mode cursor; multi-mode Set; anchor key held across moves for Shift-range extension.
   let singleKey = ''
   let multiKeys = new Set<string>()
@@ -85,7 +93,7 @@ export function selectionCommit(host: UIElement, opts: SelectionCommitOptions): 
     if (released) return
     const e = event as MouseEvent
     const item = optionFromTarget(e.target)
-    if (!item) return
+    if (!item || isDisabled(item)) return
     const key = keyOf(item)
     if (key === '') return
 
@@ -134,9 +142,14 @@ export function selectionCommit(host: UIElement, opts: SelectionCommitOptions): 
     const active = document.activeElement as HTMLElement | null
     if (!active || !host.contains(active)) return
     const item = active.closest('[role=option]') as HTMLElement | null
-    if (!item) return
+    if (!item || isDisabled(item)) return
     const key = keyOf(item)
     if (key === '') return
+
+    // Enter COMMITS here — suppress its default action so a host that closes an overlay on commit and
+    // restores focus to a <button> trigger does NOT let the SAME Enter re-activate that button (which
+    // would re-toggle the popup open). Cross-engine bug caught by ui-select's commit-close smoke.
+    e.preventDefault()
 
     if (mode === 'single') {
       singleKey = key

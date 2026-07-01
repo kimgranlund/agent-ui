@@ -136,6 +136,43 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // The Overlay family (Wave 4, ADR-0043) — tier=pattern controls on the overlay controller, each a per-component
+    // ui-{tag} group with a live interaction Demo + a descriptor-derived API doc (the site-toc pattern-tier rule).
+    label: 'ui-popover',
+    links: [
+      { href: './popover-demo.html', label: 'Demo' },
+      { href: './popover-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-tooltip',
+    links: [
+      { href: './tooltip-demo.html', label: 'Demo' },
+      { href: './tooltip-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-menu',
+    links: [
+      { href: './menu-demo.html', label: 'Demo' },
+      { href: './menu-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-select',
+    links: [
+      { href: './select-demo.html', label: 'Demo' },
+      { href: './select-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-combo-box',
+    links: [
+      { href: './combo-box-demo.html', label: 'Demo' },
+      { href: './combo-box-doc.html', label: 'API' },
+    ],
+  },
+  {
     links: [
       { href: './a2ui-canvas.html', label: 'A2UI Canvas' },
       { href: './a2ui-list.html', label: 'A2UI Dynamic List' },

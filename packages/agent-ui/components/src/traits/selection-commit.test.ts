@@ -9,7 +9,7 @@ import { selectionCommit, type SelectionMode } from './selection-commit.ts'
 // AbortSignal (auto-removed on disconnect); release() is idempotent early teardown.
 //
 // Named probes: sel-single · sel-multi-add · sel-multi-remove · sel-shift-range · sel-ctrl-anchor ·
-// sel-aria-selected · sel-event · sel-event-multi · sel-enter · sel-auto-cleanup · sel-release
+// sel-aria-selected · sel-event · sel-event-multi · sel-enter · sel-disabled · sel-auto-cleanup · sel-release
 
 class SelectEl extends UIElement {
   releaseFn: (() => void) | null = null
@@ -186,6 +186,36 @@ describe('selectionCommit — single/multi selection controller (LLD-C2)', () =>
     expect(host.lastSelection).toBe('b')
     expect(ariaSelected(getItem(host, 'b'))).toBe('true')
     expect(ariaSelected(getItem(host, 'a'))).toBe('false')
+
+    host.remove()
+  })
+
+  it('sel-disabled: a disabled option is non-committable via click AND Enter ([disabled] or aria-disabled)', () => {
+    const host = makeHost('single')
+    let selectEvents = 0
+    host.addEventListener('select', () => { selectEvents += 1 })
+
+    const b = getItem(host, 'b')
+    b.setAttribute('aria-disabled', 'true') // aria-disabled path
+    const c = getItem(host, 'c')
+    c.setAttribute('disabled', '') // HTML [disabled] path
+
+    // Click on a disabled option does NOT commit (no onSelect, no select event).
+    click(b)
+    click(c)
+    expect(host.lastSelection).toBeNull()
+    expect(selectEvents).toBe(0)
+
+    // Enter on a focused disabled option does NOT commit either.
+    c.focus()
+    enter(host)
+    expect(host.lastSelection).toBeNull()
+    expect(selectEvents).toBe(0)
+
+    // Anti-vacuous: a NON-disabled option still commits (the guard isn't blocking everything).
+    click(getItem(host, 'a'))
+    expect(host.lastSelection).toBe('a')
+    expect(selectEvents).toBe(1)
 
     host.remove()
   })

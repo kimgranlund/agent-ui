@@ -1,0 +1,83 @@
+/* popover.css — ui-popover, the single-file component stylesheet (ADR-0003 · overlay-controller.lld.md).
+ * Two clearly-SECTIONED blocks, mirroring modal.css / button.css:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-popover)` (specificity 0,0,0) sets the popover's OWN default
+ *       surface tokens and DECLARES the `--ui-popover-*` chain from the colour roles
+ *       (`--c-{family}-{role}`, family = neutral) and the dimensions (`--ui-space-*` /
+ *       `--ui-radius-base`). Raw `--c-*` roles enter ONLY here; `@scope` never reads them.
+ *   [2] STYLES BLOCK — `@scope (ui-popover)` CONSUMES only the role-pure `--ui-popover-*` chain.
+ *       The host is `display: contents` — a logical disclosure wrapper that generates no box.
+ *       The trigger child stays in the document flow (the author provides it; we mark it with
+ *       `data-part="trigger"` but do not style it — it is the author's to own). The panel part
+ *       (`[data-part="panel"]`) is the Container/surface: `--ui-container-bg` equivalent sourced
+ *       from `--ui-popover-bg`, `--ui-radius-base`, `--ui-space-md` padding — NOT a control height
+ *       (`--ui-height-*` is never read). The panel needs a `min-inline-size` floor to prevent
+ *       collapse when content is absent (the ui-text-field #74 / ui-slider trap, ADR-0021).
+ *       A `forced-color-adjust: auto` block keeps the surface and frame in system colours.
+ *
+ * Standalone stylesheet — NOT injected from popover.ts (behaviour-only `.ts`, no runtime injection
+ * per plan §2). Linked via the component-styles barrel (s12); the barrel @imports foundation roles
+ * FIRST. The panel's `popover` attribute (set by the overlay controller) gives it `display: none`
+ * in the UA stylesheet until `showPopover()` places it in the top layer — our CSS only applies to
+ * the visible (open) panel, which is correct since `[popover]` elements are normally hidden.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-popover) declares the surface default + --ui-popover-* ════════════════ */
+
+:where(ui-popover) {
+  /* Surface plane — the popup panel is an opaque neutral surface (like a modal / card).
+     @scope consumes --ui-popover-bg, never the raw --c-* role. */
+  --ui-popover-bg: var(--c-neutral-surface);
+  --ui-popover-ink: var(--c-neutral-on-surface);
+
+  /* Frame */
+  --ui-popover-outline: var(--c-neutral-outline-variant);
+  --ui-popover-radius: var(--ui-radius-base); /* the shared fleet radius (ADR-0015 cl.5) */
+
+  /* Shell spacing — panel-class geometry (Container/surface, NOT a control height) */
+  --ui-popover-padding: var(--ui-space-md);
+
+  /* Size floor — prevents collapse when content is absent or narrow (the ADR-0021 lesson:
+     a surface that can be empty needs a min-inline-size; the overlay JS positions against
+     the measured bounds so a zero-width panel would place at the wrong coords too). */
+  --ui-popover-min-inline-size: 8rem;
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-popover) consumes ONLY --ui-popover-* ════════════════ */
+
+@scope (ui-popover) {
+  /* The host is a logical disclosure wrapper — it generates no box; only the trigger (in flow)
+     and the panel (in the top layer when open) render as visible surfaces. */
+  :scope {
+    display: contents;
+  }
+
+  /* The surface panel — a Container/surface in the top layer (the Popover API places it there).
+     The UA `[popover]` rule hides this with display:none until showPopover(); our padding / bg
+     only paint when the panel is in the top layer (already visible). `position: fixed` and the
+     inset are set by the JS positioning controller (overlay.ts) on open — we do NOT fix a position
+     here; the controller owns the placement completely. `margin: 0` prevents UA-default centering
+     from conflicting with the controller's explicit inset. */
+  :scope > [data-part='panel'] {
+    box-sizing: border-box;
+    margin: 0; /* the controller sets position:fixed + top/left — UA margin must not override */
+    min-inline-size: var(--ui-popover-min-inline-size);
+
+    background-color: var(--ui-popover-bg);
+    color: var(--ui-popover-ink);
+    border: 1px solid var(--ui-popover-outline);
+    border-radius: var(--ui-popover-radius);
+    padding: var(--ui-popover-padding);
+  }
+
+  /* forced-colors (WHCM) — the surface, frame, and ink stay visible as system colours.
+     The opacity-based overlay wash (if any) is not used here — the surface is a solid
+     Canvas plane so the paint cannot defeat the forced-color Canvas base. */
+  @media (forced-colors: active) {
+    :scope > [data-part='panel'] {
+      background-color: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
+    }
+  }
+}

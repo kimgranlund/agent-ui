@@ -1,0 +1,80 @@
+/* tooltip.css — ui-tooltip, the single-file component stylesheet (ADR-0003 · overlay-controller.lld.md).
+ * Two clearly-SECTIONED blocks, mirroring popover.css:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-tooltip)` (specificity 0,0,0) sets the tooltip's OWN default
+ *       surface tokens and DECLARES the `--ui-tooltip-*` chain from the colour roles
+ *       (`--c-{family}-{role}`, family = neutral) and the dimensions (`--ui-space-*` /
+ *       `--ui-radius-base`). Raw `--c-*` roles enter ONLY here; `@scope` never reads them.
+ *   [2] STYLES BLOCK — `@scope (ui-tooltip)` CONSUMES only the `--ui-tooltip-*` chain. The host
+ *       is `display: contents` — a logical wrapper that generates no box. The panel part
+ *       (`[data-part="panel"]`) is the Container/surface: `--ui-tooltip-bg`, `--ui-radius-base`,
+ *       `--ui-space-sm` padding — NOT a control height (`--ui-height-*` is never read).
+ *       A `min-inline-size` floor prevents collapse (the ADR-0021 lesson: the overlay JS
+ *       positions against measured bounds, so a zero-width panel places at wrong coords).
+ *       A `forced-color-adjust` block keeps the surface visible in system colours.
+ *
+ * The panel's `popover="manual"` attribute (set by the overlay controller) gives it
+ * `display: none` in the UA stylesheet until `showPopover()` places it in the top layer —
+ * our CSS only applies to the visible (open) panel, which is correct.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-tooltip) declares --ui-tooltip-* ════════════════ */
+
+:where(ui-tooltip) {
+  /* Surface plane — the neutral floating-overlay surface (same opaque role popover uses; the
+     earlier `--c-neutral-surface-variant` was a non-existent role → transparent panel, caught by
+     the cross-engine smoke). @scope consumes --ui-tooltip-bg / --ui-tooltip-ink, never the raw --c-* roles. */
+  --ui-tooltip-bg: var(--c-neutral-surface);
+  --ui-tooltip-ink: var(--c-neutral-on-surface-variant);
+
+  /* Frame */
+  --ui-tooltip-outline: var(--c-neutral-outline-variant);
+  --ui-tooltip-radius: var(--ui-radius-base); /* the shared fleet radius (ADR-0015 cl.5) */
+
+  /* Shell spacing — panel-class geometry (Container/surface, NOT a control height) */
+  --ui-tooltip-padding: var(--ui-space-sm); /* tooltips are compact — sm, not md */
+
+  /* Size floor — prevents collapse when tooltip content is absent or narrow.
+     The overlay JS positions against the measured bounding box, so a zero-width
+     panel would be placed at incorrect coordinates (the ADR-0021 lesson). A shorter
+     floor than popover: tooltips are compact inline labels, not panel surfaces. */
+  --ui-tooltip-min-inline-size: 4rem;
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-tooltip) consumes ONLY --ui-tooltip-* ════════════════ */
+
+@scope (ui-tooltip) {
+  /* The host is a logical tooltip wrapper — it generates no box; only the anchor (in the
+     document flow) and the panel (in the top layer when open) render as visible surfaces. */
+  :scope {
+    display: contents;
+  }
+
+  /* The tooltip panel — a Container/surface in the top layer (the Popover API places it).
+     `position: fixed` and the inset are set by the JS positioning controller (overlay.ts)
+     on open — we do NOT fix a position here; the controller owns placement completely.
+     `margin: 0` prevents UA-default centering from conflicting with the controller's inset.
+     The UA `[popover]` rule hides this with display:none until `showPopover()` is called;
+     our styles paint only when the panel is in the top layer (already visible). */
+  :scope > [data-part='panel'] {
+    box-sizing: border-box;
+    margin: 0; /* the controller sets position:fixed + top/left — UA margin must not override */
+    min-inline-size: var(--ui-tooltip-min-inline-size);
+
+    background-color: var(--ui-tooltip-bg);
+    color: var(--ui-tooltip-ink);
+    border: 1px solid var(--ui-tooltip-outline);
+    border-radius: var(--ui-tooltip-radius);
+    padding: var(--ui-tooltip-padding);
+  }
+
+  /* forced-colors (WHCM) — the surface, frame, and ink stay visible as system colours.
+     Tooltip surfaces are opaque (not washed overlays), so Canvas/CanvasText applies cleanly. */
+  @media (forced-colors: active) {
+    :scope > [data-part='panel'] {
+      background-color: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
+    }
+  }
+}

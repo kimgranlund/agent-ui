@@ -88,47 +88,60 @@ export function computePosition(
   popupRect: DOMRect,
   vw: number,
   vh: number,
+  gap = 0,
 ): { top: number; left: number; placement: OverlayPlacement } {
   let [side, align] = splitPlacement(pref)
   const pH = popupRect.height
   const pW = popupRect.width
 
   // Flip: switch to the opposite side when the preferred side lacks space but the opposite has room.
+  // The gap counts against the space needed, so a panel flips when the preferred side can't fit the
+  // panel PLUS its anchor gap (viewport-collision-aware placement).
   const spaceFor = {
     bottom: vh - anchorRect.bottom,
     top: anchorRect.top,
     right: vw - anchorRect.right,
     left: anchorRect.left,
   } as const satisfies Record<Side, number>
-  const needed = side === 'bottom' || side === 'top' ? pH : pW
+  const needed = (side === 'bottom' || side === 'top' ? pH : pW) + gap
   if (spaceFor[side] < needed && spaceFor[FLIP_SIDE[side]] >= needed) {
     side = FLIP_SIDE[side]
   }
 
-  // Compute initial offset from the anchor for the resolved side + alignment.
+  // Compute the anchored offset for the resolved side + alignment. The gap separates the panel edge
+  // from the anchor edge (a small breathing margin between the trigger and its dropdown).
   let top: number
   let left: number
 
   if (side === 'bottom') {
-    top = anchorRect.bottom
+    top = anchorRect.bottom + gap
     left = align === 'start' ? anchorRect.left : anchorRect.right - pW
   } else if (side === 'top') {
-    top = anchorRect.top - pH
+    top = anchorRect.top - pH - gap
     left = align === 'start' ? anchorRect.left : anchorRect.right - pW
   } else if (side === 'right') {
     top = align === 'start' ? anchorRect.top : anchorRect.bottom - pH
-    left = anchorRect.right
+    left = anchorRect.right + gap
   } else {
     // side === 'left'
     top = align === 'start' ? anchorRect.top : anchorRect.bottom - pH
-    left = anchorRect.left - pW
+    left = anchorRect.left - pW - gap
   }
 
-  // Shift: clamp so no edge escapes the viewport.
+  // Shift: clamp so no edge escapes the viewport (keeps the panel on-screen even after the gap offset).
   top = Math.max(0, Math.min(top, vh - pH))
   left = Math.max(0, Math.min(left, vw - pW))
 
   return { top, left, placement: `${side}-${align}` as OverlayPlacement }
+}
+
+/** Is the popup ACTUALLY in the top layer? `:popover-open` throws in engines that lack it — guard it. */
+function matchesPopoverOpen(popup: HTMLElement): boolean {
+  try {
+    return popup.matches(':popover-open')
+  } catch {
+    return false // pre-`:popover-open` engine — fall back to the internal flag at the call site
+  }
 }
 
 // ── The controller ───────────────────────────────────────────────────────────────────────────────
@@ -157,12 +170,17 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   // ── Positioning (LLD-C3) ─────────────────────────────────────────────────────────────────────
 
   function position(): void {
+    // The anchor↔panel gap = 0.25rem, resolved against the root font-size so it scales with the theme
+    // (a small breathing margin between a trigger and its dropdown; also counts toward flip collision).
+    const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+    const gap = 0.25 * rootPx
     const { top, left, placement } = computePosition(
       prefPlacement,
       anchor.getBoundingClientRect(),
       popup.getBoundingClientRect(),
       window.innerWidth,
       window.innerHeight,
+      gap,
     )
     popup.style.position = 'fixed'
     popup.style.top = `${top}px`
@@ -211,9 +229,14 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   }
 
   function restoreFocus(): void {
-    const el = opener
+    // Restore to the ANCHOR (the trigger) — the deterministic, DoD-expected target ("focus returns
+    // to the trigger on close"). `document.activeElement` at open() time is unreliable: WebKit does
+    // not focus a <button> on click (so it would be `body`), and it can be stale by the time the
+    // scope-owned effect runs. The captured `opener` is only a fallback for a non-focusable anchor.
+    const target =
+      anchor && anchor.isConnected && typeof anchor.focus === 'function' ? anchor : opener
     opener = null
-    if (el && el.isConnected && typeof el.focus === 'function') el.focus()
+    if (target && target.isConnected && typeof target.focus === 'function') target.focus()
   }
 
   // ── Platform → model: the Popover toggle listener (LLD-C2: light-dismiss) ──────────────────
@@ -250,11 +273,21 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   }
 
   function close(): void {
-    if (cleaned || !isOpen) return // double-close is a no-op (idempotent)
+    if (cleaned) return
+    // Idempotent, but resilient to flag desync: hide whenever the popup is ACTUALLY in the top layer,
+    // even if `isOpen` drifted false (a spurious/async platform toggle can desync the flag while the
+    // panel stays open — observed on the commit→close path). Basing the guard on `:popover-open`
+    // (with `isOpen` as the fallback for engines pre-`:popover-open`) makes model-driven close reliable.
+    const actuallyOpen = isOpen || matchesPopoverOpen(popup)
+    if (!actuallyOpen) return // double-close is a no-op
     // Set isOpen BEFORE hidePopover() so the echo-toggle (newState:'closed') sees isOpen=false and
     // does NOT re-emit close/toggle — only a platform-driven close emits (the discriminator pattern).
     isOpen = false
-    popup.hidePopover()
+    try {
+      popup.hidePopover() // throws InvalidStateError only if not currently showing — a harmless no-op then
+    } catch (_) {
+      // intentional: the popup was not in the top layer (already hidden) — nothing to do
+    }
     stopPositioning()
     if (focusOnOpen) restoreFocus()
   }

@@ -43,3 +43,11 @@
 @import './controls/card/card.css';
 @import './controls/tabs/tabs.css';
 @import './controls/modal/modal.css';
+
+/* Overlay controls — Wave 4 (ADR-0043): each is self-scoped (a `:where(ui-{name})` token block + an
+ * `@scope (ui-{name})` styles block); the popup panels are Container/surface, the triggers Control-class. */
+@import './controls/popover/popover.css';
+@import './controls/tooltip/tooltip.css';
+@import './controls/menu/menu.css';
+@import './controls/select/select.css';
+@import './controls/combo-box/combo-box.css';

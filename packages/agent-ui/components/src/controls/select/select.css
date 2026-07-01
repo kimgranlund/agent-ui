@@ -1,0 +1,328 @@
+/* select.css — ui-select, the single-file component stylesheet (ADR-0003).
+ * Two clearly-SECTIONED blocks, mirroring button.css / text-field.css / popover.css:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-select)` (specificity 0,0,0) DECLARES the `--ui-select-*`
+ *       chain from the colour roles (`--c-{family}-{role}`; family = neutral for the trigger frame)
+ *       and the dimensional ramp (`--ui-height-{size}` / `--ui-font-{size}` / `--ui-icon-{size}`).
+ *       The trigger is a Control-class surface (border channel, like text-field — the state is the
+ *       frame colour, NOT a background fill; a caret = font inline affordance, §4.1). The listbox
+ *       panel is a Container/surface (bg + outline + radius + padding — NOT a control height). The
+ *       option rows use the legacy item-pad (§5.1 / ROV-C5: fixed padding, NOT --ui-compact widget
+ *       box — option rows are text items, not stand-alone widgets). `[size]` repoints the geometry.
+ *   [2] STYLES BLOCK — `@scope (ui-select)` CONSUMES only `--ui-select-*` for its OWN tokens.
+ *       The host is `display: inline-block` with a min-inline-size floor (the ADR-0021 lesson:
+ *       a control that can be empty needs a floor; the trigger inherits full width from the host).
+ *       The trigger is `display: inline-grid; grid-template-columns: 1fr auto` — always a
+ *       [label | caret] anatomy (the trailing caret slot is always present, so the grid is fixed
+ *       at two columns). The caret span is an icon-sized cell (the CELL stays icon-sized for both
+ *       icon and caret roles; only the GLYPH inside differs — padding: (icon−glyph)/2 centers the
+ *       font-sized glyph in the icon cell, the §4.1 caret centering law). The listbox panel uses
+ *       the overlay controller's position:fixed + inset (we do NOT fix position here). Option rows
+ *       get hover/selected/focus states; focus ring on :focus-visible (real DOM focus via rovingFocus).
+ *       Forced-colors keeps the trigger frame, label, and panel surface visible as system colours.
+ *
+ * Standalone stylesheet — NOT injected from select.ts (behaviour-only `.ts`, no runtime injection
+ * per plan §2). Linked via the component-styles barrel (s12); the barrel @imports foundation roles
+ * FIRST. The listbox's `popover` attribute (set by the overlay controller) gives it `display: none`
+ * in the UA stylesheet until `showPopover()` places it in the top layer.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-select) declares --ui-select-* ════════════════ */
+
+:where(ui-select) {
+  /* ── Trigger frame — the state is the BORDER channel (like text-field, NOT a background fill):
+     a select trigger is an entry-class surface — it announces state through its frame colour.
+     The idle/hover/focus steps are SOLID role steps (NOT soft-alpha — alpha outlines can fail
+     WCAG 1.4.11 against the trigger bg). Focus = transparent: the shared outline ring is the
+     SOLE focus indicator (ADR-0014 dev#1; a border-focus step doubles with the ring). */
+  --ui-select-border: var(--c-neutral);
+  --ui-select-border-hover: var(--c-neutral-high);
+  --ui-select-border-focus: transparent;    /* transparent holds the geometry — no layout shift */
+  --ui-select-bg: var(--c-neutral-surface);
+  --ui-select-ink: var(--c-neutral-on-surface);
+  --ui-select-placeholder-ink: var(--c-neutral-on-surface-variant);
+  --ui-select-radius: var(--ui-radius-base); /* fixed rounded-rect radius, like text-field */
+
+  /* ── Trigger geometry (Control class, default size = md) — off the §1-row ramp (ADR-0038).
+     height/font/icon from the explicit per-[scale] table; gap = font/2 × density (on `*`).
+     The caret (inline affordance) follows the §4.1 law: glyph size = font (RHYTHM family,
+     not frame) → glyph is font-sized, centred in the icon cell by padding=(icon−glyph)/2. */
+  --ui-select-height: var(--ui-height-md);
+  --ui-select-font: var(--ui-font-md);
+  --ui-select-gap: var(--ui-gap-md);          /* the density-bearing column-gap */
+  --ui-select-icon: var(--ui-icon-md);        /* the icon-cell size (caret CELL is icon-wide) */
+  --ui-select-glyph: var(--ui-select-font);   /* caret GLYPH = font (§4.1 caret law) */
+
+  /* ── Sizing floor (ADR-0021 lesson) — a select with no selection or an empty placeholder
+     needs a floor so it is hittable and the overlay positions against a real anchor rect. */
+  --ui-select-min-inline-size: 10ch;
+
+  /* ── Disabled state — muted neutral roles (the same pattern as button/text-field disabled) */
+  --ui-select-border-disabled: var(--c-neutral-outline-variant);
+  --ui-select-bg-disabled: var(--c-neutral-surface-high);
+  --ui-select-ink-disabled: var(--c-neutral-on-surface-variant);
+
+  /* ── Listbox panel — Container/surface geometry (NOT a control height; like modal/card/popover) */
+  --ui-select-listbox-bg: var(--c-neutral-surface);
+  --ui-select-listbox-ink: var(--c-neutral-on-surface);
+  --ui-select-listbox-outline: var(--c-neutral-outline-variant);
+  --ui-select-listbox-radius: var(--ui-radius-base);
+  --ui-select-listbox-padding: var(--ui-space-xs); /* small shell padding — options provide their own rows */
+  --ui-select-listbox-min-inline-size: 12ch;       /* floor: at least as wide as a short option */
+
+  /* ── Option rows — legacy item-pad (§5.1 / ROV-C5): padding-based row height, NOT a fixed
+     --ui-compact widget box. Options are text list items, not stand-alone widgets. The row
+     radius is inset from the listbox shell radius (nested-radius: shell − padding, ADR-0018). */
+  --ui-select-option-block: 6px;              /* legacy item-pad block */
+  --ui-select-option-inline: 12px;            /* legacy item-pad inline */
+  --ui-select-option-radius: calc(var(--ui-select-listbox-radius) - 4px);
+  --ui-select-option-bg-hover: var(--c-neutral-surface-high);
+  --ui-select-option-bg-selected: var(--c-primary-container-low);
+  --ui-select-option-ink-selected: var(--c-primary-high);
+  --ui-select-option-bg-focus: var(--c-primary-container-low);
+  --ui-select-option-ink-focus: var(--c-primary-high);
+
+  /* ── Group header (optgroup parity) — a non-interactive label above a [role=group]'s options.
+     Muted, small, slightly emphasised; the option rows below it keep the standard item-pad. */
+  --ui-select-group-label-ink: var(--c-neutral-on-surface-variant);
+}
+
+/* ── size → dimensional ramp repoint ────────────────────────────────────────────────────────── */
+
+:where(ui-select[size='sm']) {
+  --ui-select-height: var(--ui-height-sm);
+  --ui-select-font: var(--ui-font-sm);
+  --ui-select-gap: var(--ui-gap-sm);
+  --ui-select-icon: var(--ui-icon-sm);
+}
+
+:where(ui-select[size='lg']) {
+  --ui-select-height: var(--ui-height-lg);
+  --ui-select-font: var(--ui-font-lg);
+  --ui-select-gap: var(--ui-gap-lg);
+  --ui-select-icon: var(--ui-icon-lg);
+}
+
+/* ── disabled → muted neutral roles ────────────────────────────────────────────────────────── */
+
+:where(ui-select[disabled]) {
+  --ui-select-border: var(--ui-select-border-disabled);
+  --ui-select-bg: var(--ui-select-bg-disabled);
+  --ui-select-ink: var(--ui-select-ink-disabled);
+  --ui-select-placeholder-ink: var(--ui-select-ink-disabled);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-select) consumes ONLY --ui-select-* ════════════════ */
+
+@scope (ui-select) {
+  /* The host: an inline-block with a min-inline-size floor. The trigger child fills the host
+     width (width: 100%) so the select is as wide as its container or at least 10ch. */
+  :scope {
+    display: inline-block;
+    min-inline-size: var(--ui-select-min-inline-size);
+    vertical-align: middle; /* align with adjacent form controls (like a native <select>) */
+  }
+
+  /* The trigger button (Control class): a [label | caret] inline-grid. The trigger ALWAYS
+     has the caret trailing — unlike button.css which is presence-driven. So the grid is fixed
+     at two columns: 1fr (the label grows to fill) + auto (the caret icon cell). The label side
+     gets the h/2 start pad; the caret side gets the ½(h−icon) end pad (same as a trailing slot
+     in button.css — the icon-cell-edge law). block-size is the Control-class ramp height.
+     line-height: 1 (ADR-0036 single-line control standard — the glyph is centred by the frame). */
+  :scope > [data-part='trigger'] {
+    display: inline-grid;
+    grid-template-columns: 1fr auto;
+    column-gap: var(--ui-select-gap);
+    align-items: center;
+    box-sizing: border-box;
+    width: 100%; /* fill the host's inline-size */
+
+    block-size: var(--ui-select-height);
+    padding-block: 0; /* NEVER block padding — geometry law */
+    padding-inline-start: calc(var(--ui-select-height) / 2);   /* h/2 label edge */
+    padding-inline-end: calc((var(--ui-select-height) - var(--ui-select-icon)) / 2); /* ½(h−icon) caret edge */
+    min-inline-size: 0; /* allow the trigger to shrink within a narrow host (the host sets the floor) */
+
+    font-size: var(--ui-select-font);
+    line-height: var(--ui-control-line-height); /* single-line control standard (ADR-0036) */
+    background: var(--ui-select-bg);
+    color: var(--ui-select-ink);
+    border: 1px solid var(--ui-select-border);
+    border-radius: var(--ui-select-radius);
+    cursor: pointer;
+    text-align: start;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* The label span: fills the 1fr column; clipped for overflow. */
+  :scope > [data-part='trigger'] > [data-part='label'] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The caret span: an icon-sized CELL (box-sizing border-box). The glyph inside is font-sized
+     and centred by padding = ½(icon − glyph), the §4.1 caret law (same as button.css [data-role='caret']).
+     aria-hidden is set in select.ts; the glyph is decorative. */
+  :scope > [data-part='trigger'] > [data-part='caret'] {
+    inline-size: var(--ui-select-icon);
+    block-size: var(--ui-select-icon);
+    box-sizing: border-box;
+    padding: calc((var(--ui-select-icon) - var(--ui-select-glyph)) / 2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--ui-select-glyph); /* the caret glyph = font (§4.1) */
+    line-height: 1;
+  }
+
+  /* Trigger hover/focus states (state-PAINT only; geometry is never transitioned). */
+  :scope > [data-part='trigger']:hover {
+    border-color: var(--ui-select-border-hover);
+  }
+
+  :scope > [data-part='trigger']:focus-within,
+  :scope > [data-part='trigger']:focus-visible {
+    outline: none; /* the outline ring below replaces the UA default */
+  }
+
+  :scope > [data-part='trigger']:focus-visible {
+    border-color: var(--ui-select-border-focus);
+    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* Disabled trigger: pointer-inert; :hover/:active become inert (host attribute reflects). */
+  :scope[disabled] > [data-part='trigger'] {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  /* ── The listbox panel (Container/surface in the Popover API top layer) ───────────────────────
+     The UA `[popover]` rule hides this with display:none until showPopover(). The overlay
+     controller sets position:fixed + inset on open — we do NOT set position here. `margin: 0`
+     prevents UA-default centering from conflicting with the controller's explicit placement. */
+  :scope > [data-part='listbox'] {
+    box-sizing: border-box;
+    margin: 0;
+    min-inline-size: var(--ui-select-listbox-min-inline-size);
+    /* Matching the trigger width is done in JS (see select.ts model→overlay effect): in the
+       Popover API top layer `100%` resolves to 100vw (the viewport), NOT the trigger width.
+       select.ts stamps `listbox.style.minInlineSize = triggerWidth + 'px'` before showPopover(). */
+    max-block-size: 40vh; /* prevent the panel from occupying the entire viewport height */
+    overflow-y: auto;
+
+    background-color: var(--ui-select-listbox-bg);
+    color: var(--ui-select-listbox-ink);
+    border: 1px solid var(--ui-select-listbox-outline);
+    border-radius: var(--ui-select-listbox-radius);
+    padding: var(--ui-select-listbox-padding);
+  }
+
+  /* ── Option rows (legacy item-pad — §5.1 / ROV-C5) ──────────────────────────────────────────
+     Options are text list items with padding-based row height (not a fixed widget-box height).
+     rovingFocus manages tabindex (0 = roving current, -1 = others). The focus ring on :focus-visible
+     is the fleet ring (the direct --c-focus-ring read, the one permitted exception — same as button). */
+  :scope > [data-part='listbox'] [role='option'] {
+    box-sizing: border-box;
+    display: block;
+    padding-block: var(--ui-select-option-block);
+    padding-inline: var(--ui-select-option-inline);
+    border-radius: var(--ui-select-option-radius);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    outline: none; /* suppress the default UA outline — :focus-visible provides the ring below */
+  }
+
+  /* Group header (optgroup parity) — a non-interactive label; NOT a [role=option], so rovingFocus +
+     selectionCommit skip it. Aligned to the option ink edge; muted + small-caps emphasis. */
+  :scope > [data-part='listbox'] [data-part='group-label'] {
+    box-sizing: border-box;
+    display: block;
+    padding-block: var(--ui-select-option-block);
+    padding-inline: var(--ui-select-option-inline);
+    color: var(--ui-select-group-label-ink);
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: default;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* A group after the first gets a hairline separator above its header (visual grouping). */
+  :scope > [data-part='listbox'] > [role='group'] + [role='group'] {
+    margin-block-start: var(--ui-select-option-block);
+    border-block-start: 1px solid var(--ui-select-listbox-outline);
+  }
+
+  :scope > [data-part='listbox'] [role='option']:hover {
+    background-color: var(--ui-select-option-bg-hover);
+  }
+
+  :scope > [data-part='listbox'] [role='option'][aria-selected='true'] {
+    background-color: var(--ui-select-option-bg-selected);
+    color: var(--ui-select-option-ink-selected);
+  }
+
+  :scope > [data-part='listbox'] [role='option']:focus-visible {
+    background-color: var(--ui-select-option-bg-focus);
+    color: var(--ui-select-option-ink-focus);
+    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* Disabled option — not interactive; rovingFocus skips disabled items. */
+  :scope > [data-part='listbox'] [role='option'][aria-disabled='true'],
+  :scope > [data-part='listbox'] [role='option'][disabled] {
+    color: var(--ui-select-ink-disabled);
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* ── Motion (state-PAINT only; geometry snaps — ADR-0008) ─────────────────────────────────── */
+
+  :scope > [data-part='trigger']:state(ready) {
+    transition:
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      border-color var(--ui-motion-fast) var(--ui-ease-standard),
+      color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope > [data-part='trigger']:state(ready) {
+      transition: none;
+    }
+  }
+
+  /* ── forced-colors (WHCM) ─────────────────────────────────────────────────────────────────── */
+
+  @media (forced-colors: active) {
+    /* Trigger: keep ink and border as system ButtonText/ButtonBorder; background stays as
+       ButtonFace. The focus ring survives via --c-focus-ring → Highlight. */
+    :scope > [data-part='trigger'] {
+      color: ButtonText;
+      border-color: ButtonBorder;
+      background: ButtonFace;
+      forced-color-adjust: none; /* preserve our explicit border/bg/color from the OS wash */
+    }
+
+    /* Panel: Canvas/CanvasText for the surface; CanvasText for the border. */
+    :scope > [data-part='listbox'] {
+      background-color: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
+      forced-color-adjust: none;
+    }
+
+    /* Option selected/hover: Highlight/HighlightText (system selection colours). */
+    :scope > [data-part='listbox'] [role='option']:hover,
+    :scope > [data-part='listbox'] [role='option'][aria-selected='true'],
+    :scope > [data-part='listbox'] [role='option']:focus-visible {
+      background-color: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+  }
+}

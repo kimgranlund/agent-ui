@@ -13,7 +13,7 @@ import type { OverlayHandle, OverlayOptions } from './overlay.ts'
 //
 // Named probes:
 //   overlay-popover-attr · overlay-open · overlay-close · overlay-toggle · overlay-double-open ·
-//   overlay-light-dismiss · overlay-flip · overlay-shift · overlay-focus-open ·
+//   overlay-light-dismiss · overlay-flip · overlay-gap · overlay-shift · overlay-focus-open ·
 //   overlay-focus-noop · overlay-cleanup · overlay-auto-cleanup · overlay-data-placement
 
 // ── Popover API stub (jsdom lacks it entirely) ────────────────────────────────────────────────
@@ -114,6 +114,21 @@ describe('computePosition — flip/shift math', () => {
     expect(placement).toBe('top-start')
     expect(top).toBe(500 - 200) // anchorRect.top - popupH
     expect(left).toBe(100) // anchorRect.left (start alignment)
+  })
+
+  it('overlay-gap: the gap offsets the panel from the anchor AND counts toward flip collision', () => {
+    const anchor = rect(100, 100, 120, 40) // bottom = 140
+    const popup = rect(0, 0, 150, 200)
+    // bottom placement: the panel edge sits `gap` px below the anchor's bottom edge.
+    const placed = computePosition('bottom-start', anchor, popup, 800, 600, 8)
+    expect(placed.placement).toBe('bottom-start')
+    expect(placed.top).toBe(140 + 8) // anchor.bottom + gap
+
+    // The gap counts toward the flip collision: an anchor where the panel fits below WITHOUT the gap
+    // but NOT with it flips to the side that has room (viewport-collision-aware placement).
+    const tight = rect(100, 350, 120, 40) // bottom = 390; space below = 600 - 390 = 210; space above = 350
+    expect(computePosition('bottom-start', tight, popup, 800, 600, 0).placement).toBe('bottom-start') // 210 ≥ 200
+    expect(computePosition('bottom-start', tight, popup, 800, 600, 20).placement).toBe('top-start') // 210 < 220 → flip
   })
 
   it('overlay-flip: top-end flips to bottom-end when there is not enough space above', () => {

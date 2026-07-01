@@ -38,3 +38,12 @@ export * from './grid/grid.ts'
 export * from './card/card.ts' // transitively self-defines ui-card-header / -content / -footer
 export * from './tabs/tabs.ts' // transitively self-defines ui-tab / -tab-panel
 export * from './modal/modal.ts'
+
+// Overlay controls — Wave 4 (ADR-0043 / overlay-controller.lld): the `overlay` controller composed into five
+// controls. Non-form disclosure/hover/action overlays (UIElement hosts) + the two form-associated pickers
+// (UIFormElement + a role=listbox popup). All emit the family two-way-`open` contract (toggle/close, ADR-0019).
+export * from './popover/popover.ts'     // disclosure overlay — proves the overlay controller
+export * from './tooltip/tooltip.ts'     // hover/focus overlay (popover=manual, never steals focus)
+export * from './menu/menu.ts'           // action overlay — rovingFocus over [role=menuitem], commit→select
+export * from './select/select.ts'       // form-associated single-select (overlay + roving + selectionCommit)
+export * from './combo-box/combo-box.ts' // form-associated filter combobox (overlay + active-descendant)

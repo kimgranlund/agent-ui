@@ -1,0 +1,210 @@
+/* combo-box.css — ui-combo-box, the single-file component stylesheet (ADR-0003).
+ * Two clearly-SECTIONED blocks, mirroring popover.css / text-field.css:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-combo-box)` (specificity 0,0,0) declares the `--ui-combo-box-*`
+ *       chain from the colour roles (`--c-{family}-{role}`) and the dimensional ramp
+ *       (`--ui-height-md` / `--ui-radius-base` / `--ui-space-*`). Raw `--c-*` roles enter ONLY
+ *       here; `@scope` never reads them. This is the "Geometry-by-part" three-class pattern
+ *       from the decomp: the editor is Control-class, the panel is Container/surface, and the
+ *       option rows are the legacy item-pad (ROV-C5 / §4.6/5.1).
+ *   [2] STYLES BLOCK — `@scope (ui-combo-box)` CONSUMES only `--ui-combo-box-*` for its OWN
+ *       tokens plus the shared fleet constants (`--c-focus-ring`, `--ui-motion-*`).
+ *       The host is `display: inline-grid` with a `min-inline-size` floor (ADR-0021: entry-
+ *       control frame law; the same trap that collapsed ui-text-field + ui-slider). The editor
+ *       part is Control-class: `block-size` off `--ui-combo-box-height`. The listbox panel is
+ *       Container/surface: `--ui-container-bg` equivalent, `--ui-radius-base` rounding, `--ui-
+ *       space-sm` item padding. Options use the item-pad row model. `[data-active]` highlights
+ *       the active-descendant option without moving DOM focus.
+ *
+ * Standalone stylesheet — NOT injected from combo-box.ts (behaviour-only `.ts`, plan §2).
+ * Linked via the component-styles barrel (wave-4 integration slice). The panel's `[popover]`
+ * attribute gives it `display:none` until `showPopover()` opens it into the top layer.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-combo-box) ════════════════ */
+
+:where(ui-combo-box) {
+  /* ── Editor (Control-class) ─────────────────────────────────────────── */
+  /* Geometry: control height off the md-scale ramp (the combo-box trigger is the editor). */
+  --ui-combo-box-height: var(--ui-height-md);
+  --ui-combo-box-font: var(--ui-font-md);
+  --ui-combo-box-padding-inline: var(--ui-space-sm);
+
+  /* Frame — matches the text-field border channel (solid, not alpha — WCAG 1.4.11 parity). */
+  --ui-combo-box-border: var(--c-neutral);
+  --ui-combo-box-border-hover: var(--c-neutral-high);
+  --ui-combo-box-border-focus: transparent; /* sole focus indicator = shared outline ring */
+  --ui-combo-box-bg: var(--c-neutral-surface);
+  --ui-combo-box-ink: var(--c-neutral-on-surface);
+  --ui-combo-box-placeholder: var(--c-neutral-on-surface-variant);
+
+  /* Frame shape */
+  --ui-combo-box-radius: var(--ui-radius-base);
+
+  /* Min-inline-size floor (ADR-0021 entry-control lesson — must NOT be 0 or the editor
+     collapses to a zero-width typing target in a flex row, just like text-field #74). */
+  --ui-combo-box-min-inline-size: 20ch;
+
+  /* ── Listbox panel (Container/surface-class) ────────────────────────── */
+  --ui-combo-box-panel-bg: var(--c-neutral-surface);
+  --ui-combo-box-panel-ink: var(--c-neutral-on-surface);
+  --ui-combo-box-panel-outline: var(--c-neutral-outline-variant);
+  --ui-combo-box-panel-radius: var(--ui-radius-base);
+  --ui-combo-box-panel-min-inline-size: 12rem; /* prevent empty-panel collapse (ADR-0021) */
+
+  /* ── Option rows (legacy item-pad — ROV-C5 / §4.6/5.1) ─────────────── */
+  --ui-combo-box-option-padding-block: var(--ui-space-xs);
+  --ui-combo-box-option-padding-inline: var(--ui-space-sm);
+  --ui-combo-box-option-active-bg: var(--c-neutral-tint-5); /* active-descendant highlight */
+  --ui-combo-box-option-active-ink: var(--c-neutral-on-surface);
+  --ui-combo-box-option-selected-bg: var(--c-primary-tint-5);
+  --ui-combo-box-option-selected-ink: var(--c-primary-on-surface);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-combo-box) ════════════════ */
+
+@scope (ui-combo-box) {
+  /* Host: inline-grid so width is the layout's job, but a min-inline-size floor prevents
+     collapse (the ADR-0021 entry-control law; same pattern as text-field + slider). */
+  :scope {
+    display: inline-grid;
+    min-inline-size: var(--ui-combo-box-min-inline-size);
+    grid-template-columns: 1fr;
+    position: relative; /* stacking context for any decorative caret pseudo */
+  }
+
+  /* ── Editor part (Control-class) ──────────────────────────────────────── */
+
+  :scope > [data-part='editor'] {
+    box-sizing: border-box;
+    /* Control-class height (block-size off the ramp, not a content-height).
+       line-height: 1 + padding-block: 0 = the text fills the box without double-spacing
+       (matches --ui-control-line-height, ADR-0036). */
+    min-block-size: var(--ui-combo-box-height);
+    line-height: 1;
+    padding-block: 0;
+    padding-inline: var(--ui-combo-box-padding-inline);
+
+    display: flex;
+    align-items: center;
+
+    font: var(--ui-combo-box-font);
+    background-color: var(--ui-combo-box-bg);
+    color: var(--ui-combo-box-ink);
+    border: 1px solid var(--ui-combo-box-border);
+    border-radius: var(--ui-combo-box-radius);
+    cursor: text;
+    outline: none; /* focus ring handled via :focus-visible outline on this element */
+
+    /* Prevent collapsing inline when empty — the 1fr grid column already handles host width,
+       but the editor cell can collapse its OWN inline-size if content is absent.
+       min-inline-size: 0 here (the floor is on the HOST, not the editor cell). */
+    min-inline-size: 0;
+  }
+
+  /* Placeholder via ::before + attr(data-placeholder) (text-field pattern):
+     the [data-empty] attribute is toggled by TS when editor.textContent is empty. */
+  :scope > [data-part='editor'][data-empty]::before {
+    content: attr(data-placeholder);
+    color: var(--ui-combo-box-placeholder);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  :scope > [data-part='editor']:hover {
+    border-color: var(--ui-combo-box-border-hover);
+  }
+
+  /* Focus: the shared outline ring is the SOLE indicator (matches text-field's transparent
+     border-focus approach — a coloured border-focus would double with the ring). */
+  :scope > [data-part='editor']:focus {
+    border-color: var(--ui-combo-box-border-focus);
+    outline: 2px solid var(--c-focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Disabled */
+  :scope > [data-part='editor'][aria-disabled='true'] {
+    cursor: default;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* ── Listbox panel (Container/surface in the top layer) ──────────────── */
+
+  :scope > [data-part='listbox'] {
+    box-sizing: border-box;
+    margin: 0; /* JS positioning controller sets position:fixed + top/left; no UA margin */
+    min-inline-size: var(--ui-combo-box-panel-min-inline-size);
+
+    background-color: var(--ui-combo-box-panel-bg);
+    color: var(--ui-combo-box-panel-ink);
+    border: 1px solid var(--ui-combo-box-panel-outline);
+    border-radius: var(--ui-combo-box-panel-radius);
+
+    /* No panel padding — options have their own padding-inline to align the ink edge */
+    padding: 0;
+    overflow: hidden; /* clip options to panel radius */
+    list-style: none;
+  }
+
+  /* ── Option rows (legacy item-pad) ───────────────────────────────────── */
+
+  :scope [role='option'] {
+    display: block;
+    padding-block: var(--ui-combo-box-option-padding-block);
+    padding-inline: var(--ui-combo-box-option-padding-inline);
+    cursor: pointer;
+  }
+
+  /* Active-descendant highlight: [data-active] is set by TS on the highlighted option.
+     This is the CSS face of the aria-activedescendant visual highlight — NOT :focus (focus
+     stays on the editor) but a dedicated attribute-driven style. */
+  :scope [role='option'][data-active] {
+    background-color: var(--ui-combo-box-option-active-bg);
+    color: var(--ui-combo-box-option-active-ink);
+  }
+
+  /* Selected option (aria-selected="true", set by the selection-commit pattern on prior commits) */
+  :scope [role='option'][aria-selected='true'] {
+    background-color: var(--ui-combo-box-option-selected-bg);
+    color: var(--ui-combo-box-option-selected-ink);
+  }
+
+  /* Hidden options (filtered out): the `hidden` HTML attribute already gives display:none
+     in the UA stylesheet — no extra rule needed. The `[hidden]` selector here is purely
+     defensive in case a UA omits the base `[hidden]` rule. */
+  :scope [role='option'][hidden] {
+    display: none;
+  }
+
+  /* ── Forced colors (WHCM) ─────────────────────────────────────────────── */
+  /* The editor frame, ink, and panel stay visible as system colours.
+     forced-color-adjust: none is NOT used — the system palette handles the field
+     correctly without it. The active-descendant highlight (Highlight/HighlightText)
+     and the focus ring (Highlight) must survive. */
+  @media (forced-colors: active) {
+    :scope > [data-part='editor'] {
+      background-color: Field;
+      color: FieldText;
+      border-color: FieldText;
+      forced-color-adjust: none;
+    }
+
+    :scope > [data-part='editor']:focus {
+      outline-color: Highlight;
+    }
+
+    :scope > [data-part='listbox'] {
+      background-color: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
+    }
+
+    :scope [role='option'][data-active] {
+      background-color: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+  }
+}

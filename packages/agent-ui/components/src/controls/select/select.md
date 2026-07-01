@@ -1,0 +1,185 @@
+---
+# select.md frontmatter — the attributes-as-API descriptor for ui-select (ADR-0004 /
+# control-suite-wave4-overlay.decomp.md S4 / ADR-0043). The machine-checkable public
+# surface lives HERE (frontmatter); the prose below the fence is the /site doc. The
+# `attributes[]` block MUST mirror UISelectElement.props — the contract↔props trip-wire
+# (select.test.ts) and the frontmatter schema (validateComponentDescriptor) both target
+# this fence. Field set per docs/plan.md §10 / ADR-0004; overlay mechanism per the
+# overlay-controller LLD-C1..C4; bindable `open` two-way per ADR-0019; form-value
+# per UIFormElement / ADR-0013; ADR-0043 = the overlay + listbox select gate (S4).
+tag: ui-select
+tier: pattern           # geometry composite: trigger = Control class; panel = Container/surface; rows = legacy item-pad
+extends: UIFormElement  # form-associated: formValue() = selected key; formValidity() = valueMissing
+# marginal: tracked at the wave-4 integration slice (s12 barrel pass); ≤ ~3 kB tier budget (plan §10)
+
+attributes:             # attributes-as-API — mirrors UISelectElement.props (formProps spread first, then own)
+  - name: name
+    type: string
+    default: ''
+    reflect: true       # reflects for native form-submission keying (FACE form-control parity)
+  - name: disabled
+    type: boolean
+    default: false
+    reflect: true       # reflects so [disabled] attribute-selector styling applies to JS-set values
+  - name: required
+    type: boolean
+    default: false
+    reflect: true       # reflects so [required] styling applies; drives formValidity() valueMissing
+  - name: value
+    type: string
+    default: ''
+    reflect: true       # reflects + BINDABLE — value:{prop:'value',event:'select'} two-way bind; '' = nothing selected
+  - name: open
+    type: boolean
+    default: false
+    reflect: true       # reflects + BINDABLE — value:{prop:'open',event:'toggle'} two-way bind (ADR-0019); drives the overlay handle
+  - name: placeholder
+    type: string
+    default: ''
+    reflect: false      # not reflected — placeholder is a runtime display hint, not a structural attribute
+
+properties:             # IDL beyond attributes-as-API
+  - name: name
+    description: The form-submission key (string). Reflects the `name` attribute.
+  - name: disabled
+    description: Whether the control is disabled (boolean). Reflects `disabled`. The trigger is pointer-inert when disabled.
+  - name: required
+    description: Whether a selection is required (boolean). Reflects `required`. Drives formValidity() → valueMissing when nothing selected.
+  - name: value
+    description: The selected option key (the `value` attribute of the committed [role=option] child). '' = nothing selected. Reflected + bindable (two-way via `select` event). Setting it programmatically updates the trigger label via a scope-owned effect.
+  - name: open
+    description: Whether the listbox panel is shown (boolean). Setting true calls showPopover() on the panel (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected + bindable (two-way `open`, ADR-0019). Light-dismiss emits `close` + `toggle` on the host.
+  - name: placeholder
+    description: The text shown on the trigger when nothing is selected (no option key committed). Not reflected. Updated reactively by a scope-owned effect reading `value` + `placeholder` signals.
+
+events:
+  - name: select
+    detail: 'string'
+    description: Fired when the user commits a selection (click or Enter on an option). Detail is the committed option key string. Also drives the value two-way bind (value:{prop:'value',event:'select'}).
+  - name: toggle
+    detail: 'null'
+    description: Fired when the panel is light-dismissed by the platform (Escape / outside-click) — the value:{event:'toggle'} two-way signal for the `open` bind (ADR-0019). Emitted by the overlay controller only on platform-driven state changes.
+  - name: close
+    detail: 'null'
+    description: Fired alongside `toggle` on a platform light-dismiss — the family close event. NOT fired when the agent programmatically sets open=false.
+
+slots:
+  - name: options
+    optional: false
+    description: Provide [role=option] children as direct children of ui-select BEFORE connection. They are moved into the control-created listbox panel at first connect (idempotent). Each option must have a `value` attribute (the option key) and text content (the visible label). GROUPS (optgroup parity) — wrap options in a `<div role="group" label="…">`; the control renders a non-interactive group header from `label` (or `aria-label`), moves the group with its nested options, and names the group for AT via aria-labelledby → the header. rovingFocus + selectionCommit operate on [role=option] (found nested), so keyboard/selection traverse groups transparently and never land on a header.
+
+parts:
+  - name: trigger
+    description: The control-created `<button data-part="trigger" type="button">`. Control-class height from --ui-select-height. Contains [data-part=label] (the visible label / placeholder) and [data-part=caret] (the ▾ glyph, aria-hidden, sized = font per the §4.1 caret law). Always lays out as [label | caret] (1fr + auto grid). Gets aria-haspopup="listbox", aria-expanded (synced via scope-owned effect), aria-controls pointing to the listbox id.
+  - name: label
+    description: A `<span data-part="label">` inside the trigger. Shows the text content of the selected [role=option], or the placeholder text when nothing is selected. Updated by a scope-owned reactive effect reading the `value` + `placeholder` signals.
+  - name: caret
+    description: A `<span data-part="caret" aria-hidden="true">▾</span>` inside the trigger. An inline affordance glyph sized = font (the §4.1 caret law). CSS centres it in an icon-sized cell by padding = ½(icon−glyph).
+  - name: listbox
+    description: The control-created `<div data-part="listbox" role="listbox">`. Container/surface in the Popover API top layer when open. Author's [role=option] children (and [role=group] containers) are moved here at first connect. The overlay controller sets popover="auto" + position:fixed + inset; CSS adds bg/border/radius/padding. tabindex="-1" allows fallback focus when no option has tabindex=0.
+  - name: group-label
+    description: A control-created `<div data-part="group-label">` prepended inside each author `<div role="group" label="…">` (optgroup parity). Renders the group's `label` (or `aria-label`) as a non-interactive, muted header; the group's aria-labelledby points to it. NOT a [role=option] — rovingFocus + selectionCommit skip it, so it never receives focus or commits.
+
+customStates: []        # no :state() hooks — open/closed is the panel's popover top-layer presence, not a custom state
+
+face:
+  formAssociated: true  # form-associated FACE control — submits the selected option key under `name`
+  formValue: The selected option's `value` attribute string. null (no FormData entry) when nothing is selected.
+  formValidity: required + nothing selected → valueMissing. Default: valid.
+  formReset: Restores `value` to '' (nothing selected) on HTMLFormElement reset.
+
+aria:
+  role: none                # the host has no explicit ARIA role (a logical select wrapper)
+  roleSource: none          # role is on the trigger (aria-haspopup) and the panel (role=listbox attribute)
+  labelSource: The trigger's visible [data-part=label] text provides the accessible name via its text content.
+
+keyboard:
+  - keys: Enter / Space
+    action: Activates the trigger button (native button behaviour handles Space/Enter — the button's click fires and handle.toggle() opens the panel).
+  - keys: ArrowDown / ArrowUp (on closed trigger)
+    action: Opens the listbox panel. Focus moves to the current selection (or first option) via the overlay controller's moveFocusIn, which targets the tabindex=0 option maintained by rovingFocus.
+  - keys: ArrowDown / ArrowUp (in open panel)
+    action: Moves roving focus to the next/previous non-disabled option (vertical rovingFocus with looping). The type-ahead buffer (200ms) also activates.
+  - keys: Home / End (in open panel)
+    action: Moves roving focus to the first/last non-disabled option.
+  - keys: Enter (on focused option)
+    action: Commits the focused option (selectionCommit Enter handler). Sets value to the option key, closes the panel, restores focus to the trigger, emits `select`.
+  - keys: Escape
+    action: Closes the open panel (Popover API popover=auto light-dismiss; emits `close` + `toggle` on the host; syncs open=false).
+  - keys: Tab
+    action: When the panel is open, Tab moves focus outside the panel and closes it via outside-click/focus-loss (popover=auto behaviour).
+
+geometry:
+  sizeClass: composite
+  trigger:
+    height: var(--ui-select-height)           # Control class — off the §1-row ramp (ADR-0038)
+    font: var(--ui-select-font)
+    icon: var(--ui-select-icon)               # the caret CELL is icon-wide
+    glyph: var(--ui-select-glyph)             # = font, the §4.1 caret law
+    radius: var(--ui-select-radius)           # = --ui-radius-base (shared fleet radius)
+    minInlineSize: var(--ui-select-min-inline-size)  # the 10ch host floor (ADR-0021 lesson)
+  listbox:
+    sizeClass: Container/surface
+    bg: var(--ui-select-listbox-bg)
+    radius: var(--ui-select-listbox-radius)
+    padding: var(--ui-select-listbox-padding)
+    minInlineSize: var(--ui-select-listbox-min-inline-size)
+  options:
+    sizeClass: legacy item-pad (ROV-C5 / §5.1)
+    paddingBlock: var(--ui-select-option-block)
+    paddingInline: var(--ui-select-option-inline)
+
+forcedColors: A `@media (forced-colors: active)` block keeps the trigger (ButtonText/ButtonBorder/ButtonFace), the listbox panel (Canvas/CanvasText), and the option hover/selected/focus states (Highlight/HighlightText) visible in Windows High Contrast Mode.
+---
+
+# ui-select
+
+`ui-select` is a **single-select form control** built on the Overlay controller
+(overlay-controller.lld.md · ADR-0043), `rovingFocus`, and `selectionCommit`. It extends
+`UIFormElement` and is **form-associated** — the selected option key submits under `name`.
+It **proves** overlay + listbox together: Wave-4 S4's green smoke (Chromium + WebKit) is
+the ⭐ **ADR-0043 select gate**.
+
+```html
+<!-- Basic single-select -->
+<ui-select name="fruit" placeholder="Choose a fruit">
+  <div role="option" value="apple">Apple</div>
+  <div role="option" value="banana">Banana</div>
+  <div role="option" value="cherry">Cherry</div>
+</ui-select>
+
+<!-- Required, with a pre-selected value -->
+<ui-select name="tier" value="pro" required>
+  <div role="option" value="free">Free</div>
+  <div role="option" value="pro">Pro</div>
+  <div role="option" value="enterprise">Enterprise</div>
+</ui-select>
+
+<!-- Disabled -->
+<ui-select name="region" disabled>
+  <div role="option" value="us">United States</div>
+  <div role="option" value="eu">Europe</div>
+</ui-select>
+```
+
+## Anatomy
+
+The control creates two internal parts on first connect:
+
+- **trigger** — a `<button type="button">` with `aria-haspopup="listbox"` + `aria-expanded` + `aria-controls`. Contains a **label span** (the selected option's text or the placeholder) and a **caret span** (▾, sized = font).
+- **listbox** — a `<div role="listbox">` panel in the Popover API top layer when open. The author's `[role=option]` children are moved into this panel at first connect.
+
+## Selection
+
+Set or read the selected option key via the `value` property (or `value` attribute). The
+trigger label updates reactively. `formValue()` submits the key under `name`. When nothing
+is selected (`value = ''`), the placeholder is shown and the form entry is absent (`null`).
+
+## Keyboard
+
+- **Closed trigger**: Enter/Space opens the panel (native button). ArrowDown/ArrowUp also opens it, landing focus on the current selection.
+- **Open panel**: Arrow keys rove focus through options; Home/End jump to first/last; Enter commits; Escape closes.
+
+## Accessibility
+
+The trigger has `aria-haspopup="listbox"` + `aria-expanded` (synced to `open`). The panel carries `role="listbox"`. Each option carries `aria-selected` (driven by `selectionCommit`). Focus is restored to the trigger on close. The host has no explicit role.

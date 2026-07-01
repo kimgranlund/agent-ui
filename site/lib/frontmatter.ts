@@ -30,6 +30,11 @@ import radioMd from '../../packages/agent-ui/components/src/controls/radio/radio
 import radioGroupMd from '../../packages/agent-ui/components/src/controls/radio/radio-group.md?raw'
 import sliderMd from '../../packages/agent-ui/components/src/controls/slider/slider.md?raw'
 import sliderMultiMd from '../../packages/agent-ui/components/src/controls/slider-multi/slider-multi.md?raw'
+import popoverMd from '../../packages/agent-ui/components/src/controls/popover/popover.md?raw'
+import tooltipMd from '../../packages/agent-ui/components/src/controls/tooltip/tooltip.md?raw'
+import menuMd from '../../packages/agent-ui/components/src/controls/menu/menu.md?raw'
+import selectMd from '../../packages/agent-ui/components/src/controls/select/select.md?raw'
+import comboBoxMd from '../../packages/agent-ui/components/src/controls/combo-box/combo-box.md?raw'
 
 /** A parsed control descriptor: the structured frontmatter (its attributes-as-API drive the table) + the prose body. */
 export interface ComponentDoc {
@@ -60,6 +65,12 @@ export const loadRadioDoc = (): ComponentDoc => parseDoc(radioMd)
 export const loadRadioGroupDoc = (): ComponentDoc => parseDoc(radioGroupMd)
 export const loadSliderDoc = (): ComponentDoc => parseDoc(sliderMd)
 export const loadSliderMultiDoc = (): ComponentDoc => parseDoc(sliderMultiMd)
+// The Wave 4 Overlay family (popover, tooltip, menu, select, combo-box — tier=pattern, ADR-0043).
+export const loadPopoverDoc = (): ComponentDoc => parseDoc(popoverMd)
+export const loadTooltipDoc = (): ComponentDoc => parseDoc(tooltipMd)
+export const loadMenuDoc = (): ComponentDoc => parseDoc(menuMd)
+export const loadSelectDoc = (): ComponentDoc => parseDoc(selectMd)
+export const loadComboBoxDoc = (): ComponentDoc => parseDoc(comboBoxMd)
 
 // ── tier enumeration (for the family overview + tier showcase — a DERIVED member list) ───────────────────────
 // The whole `{name}.md` descriptor set, globbed at build time (Vite resolves `import.meta.glob` statically). The

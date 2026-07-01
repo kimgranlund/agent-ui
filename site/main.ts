@@ -297,6 +297,83 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // The Overlay family (Wave 4, ADR-0043): tier=pattern controls on the overlay controller — a live interaction
+    // Demo + a descriptor-derived API doc each, mirroring the nav (one table of contents, two renderings).
+    label: 'ui-popover',
+    cards: [
+      {
+        href: './popover-demo.html',
+        title: 'Demo',
+        blurb: 'The disclosure popover — a trigger toggling a top-layer panel, light-dismissed by Escape / outside-click, with a close/toggle log.',
+      },
+      {
+        href: './popover-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-popover attributes (open + placement) and its overlay surface, generated from its popover.md descriptor.',
+      },
+    ],
+  },
+  {
+    label: 'ui-tooltip',
+    cards: [
+      {
+        href: './tooltip-demo.html',
+        title: 'Demo',
+        blurb: 'The non-modal tooltip — shown on hover (with a show-delay) and keyboard focus (immediately); it never steals focus.',
+      },
+      {
+        href: './tooltip-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-tooltip attributes (open + placement + delay), generated from its tooltip.md descriptor.',
+      },
+    ],
+  },
+  {
+    label: 'ui-menu',
+    cards: [
+      {
+        href: './menu-demo.html',
+        title: 'Demo',
+        blurb: 'The overlay menu — a trigger opening [role=menuitem] rows (one disabled), Arrow-rove + type-ahead, with a commit → select log.',
+      },
+      {
+        href: './menu-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-menu attributes (open + placement), its select event, and the roving keyboard, generated from its menu.md descriptor.',
+      },
+    ],
+  },
+  {
+    label: 'ui-select',
+    cards: [
+      {
+        href: './select-demo.html',
+        title: 'Demo',
+        blurb: 'The single-select form control, live in a <form> — the value round-trips into FormData; required + a disabled option, with a select/toggle log.',
+      },
+      {
+        href: './select-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-select attributes (name/value/open/required + placeholder) and form participation, generated from its select.md descriptor.',
+      },
+    ],
+  },
+  {
+    label: 'ui-combo-box',
+    cards: [
+      {
+        href: './combo-box-demo.html',
+        title: 'Demo',
+        blurb: 'The form-associated combo-box — free-text filtering with active-descendant (focus stays in the editor), plus a strict variant, with a change/select log.',
+      },
+      {
+        href: './combo-box-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-combo-box attributes (value/open/strict + form props) and the active-descendant pattern, generated from its combo-box.md descriptor.',
+      },
+    ],
+  },
+  {
     cards: [
       {
         href: './a2ui-canvas.html',

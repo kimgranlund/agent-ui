@@ -174,7 +174,11 @@ describe('site coverage — every shipped component has its required per-tier pa
     expect(COMPONENTS.filter((c) => c.tier === 'layout').map((c) => c.name).sort()).toEqual(
       ['column', 'grid', 'list', 'row'],
     )
-    expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(['modal', 'tabs'])
+    // Pattern tier = the G9 patterns (modal, tabs) + the Wave 4 Overlay family (popover, tooltip, menu, select,
+    // combo-box — all tier=pattern on the overlay controller, ADR-0043). Each requires its {doc, demo} pages.
+    expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
+      ['combo-box', 'menu', 'modal', 'popover', 'select', 'tabs', 'tooltip'],
+    )
   })
 })
 
