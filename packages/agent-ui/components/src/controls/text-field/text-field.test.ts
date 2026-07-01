@@ -99,10 +99,10 @@ describe('ui-text-field — upgrade + typed prop surface', () => {
       el.type = 'email'
       el.type = 'password'
       el.type = 'currency'
-      el.type = 'unit'    // Wave 5A — in the 10-value union
-      el.type = 'percent' // Wave 5A — in the 10-value union
-      // @ts-expect-error — 'date' is not a type member: proves the 10-value literal union
-      el.type = 'date'
+      el.type = 'unit'    // Wave 5A — in the 12-value union
+      el.type = 'percent' // Wave 5A — in the 12-value union
+      el.type = 'date'    // Wave 5B — in the 12-value union
+      el.type = 'time'    // Wave 5B — in the 12-value union
       // @ts-expect-error — a bare string is wider than the type union
       el.type = 'xyz' as string
     }
@@ -1420,6 +1420,244 @@ describe('ui-text-field type change — C10 adornment cleanup', () => {
     await whenFlushed()
     expect(el.querySelector('[data-part="leading-adornment"]')).toBeNull()
     expect(el.querySelector('[data-part="trailing-adornment"]')).toBeNull()
+    el.remove()
+  })
+})
+
+// ── Wave 5B — type=date / type=time (ADR-0048) ────────────────────────────────
+// date: codec='date' (dateCodecOptions) + a trailing calendar-button affordance + overlay popup.
+// time: codec='time' (timeCodecOptions). No steppers for either.
+// formValidity uses typeMismatch (not customError) for parse failures.
+// The ui-calendar lazy import is NOT tested here (jsdom, no Popover API) — that rides the browser smoke.
+
+describe('ui-text-field type=date — calendar affordance + codec + typeMismatch (Wave 5B)', () => {
+  it('has a trailing calendar affordance container (data-role=calendar)', async () => {
+    const { el } = makeTyped('date')
+    await whenFlushed()
+    const trailing = el.querySelector('[data-part="trailing-adornment"][data-role="calendar"]')
+    expect(trailing).not.toBeNull()
+    el.remove()
+  })
+
+  it('calendar trailing has a calendar-button (aria-haspopup=dialog, aria-label)', async () => {
+    const { el } = makeTyped('date')
+    await whenFlushed()
+    const btn = el.querySelector('[data-part="calendar-button"]') as HTMLElement | null
+    expect(btn).not.toBeNull()
+    expect(btn?.getAttribute('aria-haspopup')).toBe('dialog')
+    expect(btn?.getAttribute('aria-label')).toBeTruthy()
+    el.remove()
+  })
+
+  it('has a calendar popup element (data-part=calendar-popup with a ui-calendar inside)', async () => {
+    const { el } = makeTyped('date')
+    await whenFlushed()
+    const popup = el.querySelector('[data-part="calendar-popup"]')
+    expect(popup).not.toBeNull()
+    expect(popup?.querySelector('ui-calendar')).not.toBeNull()
+    el.remove()
+  })
+
+  it('has NO steppers — type=date breaks the "codec ≠ null → steppers" rule for numeric types only', async () => {
+    const { el } = makeTyped('date')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="step-up"]')).toBeNull()
+    expect(el.querySelector('[data-part="step-down"]')).toBeNull()
+    el.remove()
+  })
+
+  it('has no leading adornment for date type', async () => {
+    const { el } = makeTyped('date')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="leading-adornment"]')).toBeNull()
+    el.remove()
+  })
+
+  it('inputmode is NOT set on the editor (type=date uses a text inputmode — the contenteditable, not native)', async () => {
+    const { el, editor } = makeTyped('date')
+    await whenFlushed()
+    // The TYPE_CONFIG date entry has inputmode='text' → the identity (no inputmode attribute is set,
+    // just as type=text) — a contenteditable date field is not a native date input.
+    expect(editor.hasAttribute('inputmode')).toBe(false)
+    el.remove()
+  })
+
+  it('invalid date input → typeMismatch (not customError) — ADR-0048', async () => {
+    const { el, editor } = makeTyped('date')
+    await whenFlushed()
+    el.value = 'not-a-date'
+    editor.textContent = 'not-a-date'
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    const verdict = el.formValidityProbe()
+    expect(verdict.valid).toBe(false)
+    if (!verdict.valid) {
+      expect(verdict.flags).toEqual({ typeMismatch: true }) // NOT customError — ADR-0048
+      expect(verdict.message).toContain('date')
+    }
+    el.remove()
+  })
+
+  it('calendar select event (detail=ISO) → sets field value + emits input + change', async () => {
+    const { el } = makeTyped('date')
+    await whenFlushed()
+
+    const calEl = el.querySelector('ui-calendar') as HTMLElement
+    expect(calEl).not.toBeNull()
+
+    const inputs: Event[] = []
+    const changes: Event[] = []
+    el.addEventListener('input', (e) => inputs.push(e))
+    el.addEventListener('change', (e) => changes.push(e))
+
+    // Simulate a calendar commit by dispatching the `select` CustomEvent with ISO detail.
+    calEl.dispatchEvent(new CustomEvent('select', { detail: '2024-07-04', bubbles: false }))
+
+    expect(el.value).toBe('2024-07-04')
+    expect(inputs).toHaveLength(1)
+    expect(changes).toHaveLength(1)
+    el.remove()
+  })
+
+  it('calendar select sets canonical — formValue() returns the ISO date', async () => {
+    // After a calendar pick, the codec canonical is the ISO date, so formValue() returns it.
+    // This exercises the `this.#codec?.setCanonical(iso)` call in the select listener.
+    const { el } = makeTyped('date')
+    await whenFlushed()
+
+    const calEl = el.querySelector('ui-calendar') as HTMLElement
+    calEl.dispatchEvent(new CustomEvent('select', { detail: '2024-02-29', bubbles: false }))
+
+    // The codec canonical is '2024-02-29'. A valid date — no error.
+    const verdict = el.formValidityProbe()
+    expect(verdict.valid).toBe(true)
+    el.remove()
+  })
+
+  it('C10: calendar popup is REMOVED from the DOM on type-change', async () => {
+    const { el } = makeTyped('date')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="calendar-popup"]'), 'popup must be present while type=date').not.toBeNull()
+
+    el.type = 'text'
+    await whenFlushed()
+    expect(el.querySelector('[data-part="calendar-popup"]'), 'popup must be removed after switching away').toBeNull()
+    expect(el.querySelector('[data-role="calendar"]'), 'calendar button must be removed too').toBeNull()
+    el.remove()
+  })
+
+  it('C10: calendar popup is REMOVED from the DOM on disconnect', async () => {
+    const { el } = makeTyped('date')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="calendar-popup"]'), 'popup must be present while connected').not.toBeNull()
+
+    el.remove() // disconnect
+    // After disconnect the effect cleanup fires via scope.dispose(): calendarPopup.remove() is called.
+    // The popup is a child of the host; removing the host removes the child too — either way it's gone.
+    expect(el.querySelector('[data-part="calendar-popup"]'), 'popup must be gone after disconnect').toBeNull()
+    el.remove()
+  })
+
+  it('C10: switching date→text→date re-creates exactly ONE calendar popup (no accumulation)', async () => {
+    const { el } = makeTyped('date')
+    await whenFlushed()
+    el.type = 'text'; await whenFlushed()
+    el.type = 'date'; await whenFlushed()
+
+    expect(el.querySelectorAll('[data-part="calendar-popup"]').length).toBe(1)
+    expect(el.querySelectorAll('[data-part="calendar-button"]').length).toBe(1)
+    el.remove()
+  })
+
+  it('B1: calendar boundary guard — field `change` fires EXACTLY once per commit (not twice)', async () => {
+    // B1 regression: the calendar's own `change` event (UIElement.emit → bubbles:true, composed:true)
+    // bubbles from <ui-calendar> through the popup to the field and reaches external listeners BEFORE
+    // the field's `select` handler re-emits its own `change` — the consumer sees 2 changes per pick;
+    // native <input type=date> emits 1. Fix (ADR-0048 §3): stopPropagation on `calEl.change`.
+    //
+    // Approach: dispatch the EXACT event sequence that UICalendarElement.#commitDate() fires —
+    //   this.emit('change')  → CustomEvent('change', {bubbles:true, composed:true, cancelable:true})
+    //   this.emit('select', iso) → CustomEvent('select', {bubbles:true, composed:true, …, detail:iso})
+    // — directly from calEl (a plain HTMLElement; calendar.ts is NOT imported in this test file,
+    // so <ui-calendar> is an unknown element — no ElementInternals no-op errors). The B1 guard must
+    // block the first event; the select handler must fire once → field emits one change.
+    //
+    // This is more targeted than a real grid-click: it tests the event-boundary contract, not the
+    // calendar's internal navigation. M1 note: the calendar.ts slow-path import is documented in
+    // text-field.md; this file deliberately omits the import to keep ElementInternals errors absent.
+    const { el } = makeTyped('date')
+    await whenFlushed() // let the type-effect run so calEl + guard + select listener are wired
+
+    const calEl = el.querySelector('ui-calendar') as HTMLElement
+    expect(calEl, '<ui-calendar> must be present in the type=date popup').not.toBeNull()
+
+    const changes: Event[] = []
+    el.addEventListener('change', (e) => changes.push(e))
+
+    // Step 1: the calendar's own `change` — the B1 guard (stopPropagation) must stop this.
+    calEl.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true, cancelable: true }))
+    // Step 2: the calendar's `select` (detail = ISO string) — the field's select handler fires and
+    //         re-emits one `change` from the field itself.
+    calEl.dispatchEvent(new CustomEvent('select', { bubbles: true, composed: true, cancelable: true, detail: '2024-07-04' }))
+
+    // Exactly 1 change must reach the field's external listener (native parity).
+    expect(changes.length, 'field change must fire exactly once per calendar commit (B1 guard)').toBe(1)
+    // Target must be el (the field), not calEl (the calendar) — the stopped change targets calEl.
+    expect(changes[0]!.target, 'the change event target must be the text-field, not the calendar').toBe(el)
+
+    el.remove()
+  })
+})
+
+// ── Wave 5B — type=time ────────────────────────────────────────────────────────
+
+describe('ui-text-field type=time — codec + typeMismatch (Wave 5B)', () => {
+  it('has no trailing adornment — type=time is codec-only, no button and no steppers', async () => {
+    const { el } = makeTyped('time')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="trailing-adornment"]')).toBeNull()
+    expect(el.querySelector('[data-part="step-up"]')).toBeNull()
+    el.remove()
+  })
+
+  it('has no leading adornment for time type', async () => {
+    const { el } = makeTyped('time')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="leading-adornment"]')).toBeNull()
+    el.remove()
+  })
+
+  it('inputmode is NOT set on the editor (type=time uses text inputmode)', async () => {
+    const { el, editor } = makeTyped('time')
+    await whenFlushed()
+    expect(editor.hasAttribute('inputmode')).toBe(false)
+    el.remove()
+  })
+
+  it('invalid time input → typeMismatch (not customError) — ADR-0048', async () => {
+    const { el, editor } = makeTyped('time')
+    await whenFlushed()
+    el.value = 'not-a-time'
+    editor.textContent = 'not-a-time'
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    const verdict = el.formValidityProbe()
+    expect(verdict.valid).toBe(false)
+    if (!verdict.valid) {
+      expect(verdict.flags).toEqual({ typeMismatch: true }) // NOT customError — ADR-0048
+      expect(verdict.message).toContain('time')
+    }
+    el.remove()
+  })
+
+  it('valid 24h time (14:30) → valid; codec parses and canonical is set on blur', async () => {
+    const { el, editor } = makeTyped('time')
+    await whenFlushed()
+    el.value = '14:30'
+    editor.textContent = '14:30'
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    expect(el.formValidityProbe().valid).toBe(true)
     el.remove()
   })
 })

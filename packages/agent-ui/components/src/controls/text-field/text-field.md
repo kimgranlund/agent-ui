@@ -30,9 +30,9 @@ attributes:            # attributes-as-API — mirrors text-field.ts `static pro
     reflect: true      # reflects so the [size] dimensional-ramp repoint in text-field.css applies to JS-set values
   - name: type
     type: enum
-    values: [text, email, url, tel, password, search, number, currency, unit, percent]
+    values: [text, email, url, tel, password, search, number, currency, unit, percent, date, time]
     default: text
-    reflect: true      # reflects so [type] CSS selectors (e.g. [type=password] for -webkit-text-security masking) + the type-resolver apply to JS-set values; type='text' is the identity config (byte-identical to the pre-Wave-3 shipped control; ADR-0044). Wave 5A (ADR-0047) adds unit + percent.
+    reflect: true      # reflects so [type] CSS selectors (e.g. [type=password] for -webkit-text-security masking) + the type-resolver apply to JS-set values; type='text' is the identity config (byte-identical to the pre-Wave-3 shipped control; ADR-0044). Wave 5A (ADR-0047) adds unit + percent. Wave 5B (ADR-0048) adds date + time.
   - name: readonly
     type: boolean
     default: false
@@ -92,7 +92,7 @@ events:
     description: Fired on each edit of the editor (surface→model) as the value tracks the contenteditable. Suppressed mid IME composition. The host re-emits; matches native <input> input semantics. Also fired by the clear button (type=search) and steppers (type=number) when they change the value.
   - name: change
     detail: 'null'
-    description: Fired on commit — blur-with-change or Enter (Enter also suppresses the newline). Also fired by the clear button and steppers. Matches native <input> change semantics.
+    description: Fired on commit — blur-with-change or Enter (Enter also suppresses the newline). Also fired by the clear button and steppers. For type=date, fired once when the user picks a date in the calendar (the field is the sole emitter — the calendar's own change is stopped at the field boundary so consumers see exactly one change per pick, matching native <input type=date> semantics). Matches native <input> change semantics.
   - name: toggle
     detail: 'null'
     description: Fired by the password reveal button (type=password) when the user toggles password masking on/off. The :state(revealed) custom state reflects the current revealed condition.
@@ -111,7 +111,7 @@ parts:                 # the contenteditable editable surface is a control-owned
   - name: leading-adornment
     description: Control-injected leading adornment (type=search → magnifier ⌕; type=currency → narrow currency symbol per `currency` attr, e.g. '$' for USD, '¥' for JPY). `[slot="leading"]` element with aria-hidden="true". Present only when the type resolver maps a leading role (search/currency).
   - name: trailing-adornment
-    description: Control-injected trailing adornment container. type=search → clear button (data-role="clear"); type=password → reveal button (data-role="reveal"); type=number or type=currency → stepper only (data-role="stepper"); type=unit or type=percent → suffix span + steppers (data-role="numeric"). Present only for these types.
+    description: Control-injected trailing adornment container. type=search → clear button (data-role="clear"); type=password → reveal button (data-role="reveal"); type=number or type=currency → stepper only (data-role="stepper"); type=unit or type=percent → suffix span + steppers (data-role="numeric"); type=date → calendar button (data-role="calendar"). Present only for these types.
   - name: suffix
     description: Inside the trailing-adornment for type=unit and type=percent. A `<span data-part="suffix" aria-hidden="true">` carrying the trailing text label — the localized unit label (e.g. 'kg') for type=unit, or '%' for type=percent. Sized = font (§4.6 inline affordance law); decorative only.
   - name: clear-button
@@ -122,6 +122,10 @@ parts:                 # the contenteditable editable surface is a control-owned
     description: Inside the trailing-adornment for type=number/currency/unit/percent. A `<button>` (aria-label="Increase") that increments the numeric value by `step` (clamped to max), emitting input + change. Also triggered by ArrowUp on the editor.
   - name: step-down
     description: Inside the trailing-adornment for type=number/currency/unit/percent. A `<button>` (aria-label="Decrease") that decrements the numeric value by `step` (clamped to min), emitting input + change. Also triggered by ArrowDown on the editor.
+  - name: calendar-button
+    description: Inside the trailing-adornment for type=date. A `<button data-part="calendar-button" aria-haspopup="dialog" aria-label="Open date picker">` that opens the calendar popup overlay. Button chrome is reset (no border/background) and forced-color-adjust is none (ADR-0048 §2). Created and removed with the type-effect lifecycle.
+  - name: calendar-popup
+    description: For type=date only. A `<div data-part="calendar-popup" popover="auto">` wrapper hosting a `<ui-calendar>` in the Popover API top layer. The wrapper has no visual chrome (padding/border/background reset to 0); the `<ui-calendar>` owns all spacing. Created and removed with the type-effect lifecycle (C10). The calendar module (`ui-calendar`) is loaded lazily via a dynamic `import('../calendar/calendar.ts')` on first open when not already registered; if the module is pre-registered (barrel import), the open is synchronous. NOTE — dynamic-import slow path: the test suite cannot exercise the slow path in isolation because the spec does not allow unregistering a custom element once defined. The fast path (`customElements.get('ui-calendar') !== undefined`) is always taken in tests.
 
 customStates:          # :state() hooks the stylesheet keys off — set via internals.states, never host attrs
   - ready              # the motion gate (ADR-0008): armed one frame past first paint so the upgrade SNAPS and only subsequent state changes animate
@@ -131,8 +135,8 @@ customStates:          # :state() hooks the stylesheet keys off — set via inte
 
 face:
   formAssociated: true   # a FACE form-associated control — value + validity participate via ElementInternals (ADR-0013)
-  value: value           # the prop whose value is published to internals.setFormValue; for number/currency types, formValue() returns the codec's canonical parsed value, not this.value (the formatted display)
-  validity: valueMissing | customError | typeMismatch | rangeUnderflow | rangeOverflow # valueMissing (required+empty); customError (numeric parse failure via valueCodec hasError); typeMismatch (email pattern / URL parse failure); rangeUnderflow (canonical < min); rangeOverflow (canonical > max). stepMismatch is NOT enforced (ADR-0047).
+  value: value           # the prop whose value is published to internals.setFormValue; for number/currency/date/time types, formValue() returns the codec's canonical parsed value, not this.value (the formatted display)
+  validity: valueMissing | customError | typeMismatch | rangeUnderflow | rangeOverflow # valueMissing (required+empty); customError (numeric parse failure via valueCodec hasError — type=number/currency/unit/percent); typeMismatch (email/URL pattern failure, OR date/time codec parse failure — ADR-0048: date+time use typeMismatch not customError, matching native <input type=date>); rangeUnderflow (canonical < min); rangeOverflow (canonical > max). stepMismatch is NOT enforced (ADR-0047).
 
 aria:
   role: textbox          # set on the EDITOR part (data-part=editor), NOT the host — the host carries no role/aria-* attribute (form semantics ride internals)
@@ -150,6 +154,10 @@ keyboard:
     action: For numeric types — decrements the value by `step` (clamped to min), emitting input + change. No-op for non-numeric types or mid-IME composition.
   - keys: typing
     action: Edits the editor surface; each edit updates value (surface→model) and emits input (suppressed mid IME composition).
+  - keys: Space / Enter (on calendar-button)
+    action: For type=date — activates the calendar-button, opening the `<ui-calendar>` overlay popup. Standard button keyboard activation; the button carries aria-haspopup="dialog".
+  - keys: Calendar grid keys (when popup is open)
+    action: Delegated entirely to `<ui-calendar>`'s own keyboard model (Arrow keys navigate days; Enter commits the focused date; Escape closes via Popover API light-dismiss; Tab/Shift-Tab move to the month nav buttons). See the `ui-calendar` descriptor for details.
   - note: The editor is intrinsically focusable (contenteditable). host.focus() forwards to the editor (label-association + .focus() parity). disabled removes it from focus (contenteditable=false, no tabindex); readonly keeps it focusable (tabindex=0) and selectable but not editable.
 
 geometry:
@@ -161,7 +169,9 @@ geometry:
   radius: var(--ui-radius-base)            # fixed rounded-rect — the container-fleet referent, NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5 (#71 amendment)
   minInlineSize: var(--ui-text-field-min-inline-size) (~20ch — entry-control typing-width floor, native <input size> parity; ADR-0021)   # the host floor so a bare field is hittable; size-invariant (ch is font-relative)
 
-forcedColors: A `@media (forced-colors: active)` block keeps the idle field border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --c-focus-ring → Highlight (ADR-0014). Control-injected adornment glyphs (magnifier/symbol/reveal/steppers) use `forced-color-adjust:none` to keep their inherited ink — they are aria-hidden decorative cues, so bypassing the system palette is intentional (ADR-0044).
+forcedColors: A `@media (forced-colors: active)` block keeps the idle field border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --c-focus-ring → Highlight (ADR-0014). Control-injected adornment glyphs (magnifier/symbol/reveal/steppers/calendar-button) use `forced-color-adjust:none` to keep their inherited ink — they are aria-hidden decorative cues, so bypassing the system palette is intentional (ADR-0044/ADR-0048).
+
+localeParse: The date codec (`type=date`) uses `Intl.DateTimeFormat` to FORMAT the display value (locale-aware) but PARSES via a strict YYYY-MM-DD regex (the ISO 8601 canonical form that `<ui-calendar>` emits). Locale-aware parsing of user-typed dates is a **best-effort** fallback: when the editor blurs with a non-ISO string, the codec attempts a `Date` parse; if it fails, `typeMismatch` is set. The time codec (`type=time`) uses `Intl.DateTimeFormat({ timeStyle:'short' })` for display and parses via `HH:MM` / `HH:MM:SS` regex. Consumers should treat the localized display as decorative — the canonical `value` is always ISO (YYYY-MM-DD or HH:MM).
 ---
 
 # ui-text-field

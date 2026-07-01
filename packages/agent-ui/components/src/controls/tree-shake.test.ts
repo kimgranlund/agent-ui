@@ -132,6 +132,10 @@ describe('ui-text-field tree-shake — the entry graph is tight (s12)', () => {
     // the sibling exclusion, the other direction: text-field's graph reaches no button module (no press-activation).
     expect(tfLayers('controls/button/')).toEqual([])
     expect(tf.reached.has('traits/press-activation.ts')).toBe(false)
+    // Wave 5B tree-shake proof: the date picker uses a DYNAMIC import('../calendar/calendar.ts') on
+    // first button-click — the static regex crawler cannot match `import()` expressions, so the
+    // calendar module is invisible to the graph and `controls/calendar/` stays empty here.
+    expect(tfLayers('controls/calendar/')).toEqual([])
   })
 
   it('does NOT drag the descriptor tooling, and pulls ZERO non-relative imports', () => {

@@ -47,3 +47,7 @@ export * from './tooltip/tooltip.ts'     // hover/focus overlay (popover=manual,
 export * from './menu/menu.ts'           // action overlay — rovingFocus over [role=menuitem], commit→select
 export * from './select/select.ts'       // form-associated single-select (overlay + roving + selectionCommit)
 export * from './combo-box/combo-box.ts' // form-associated filter combobox (overlay + active-descendant)
+
+// Picker controls — Wave 5B (ADR-0048): standalone month-grid date picker; also the popup body
+// for ui-text-field type=date (lazily imported there in slice 5B-3).
+export * from './calendar/calendar.ts'   // form-associated date picker (bespoke 2D grid, UIFormElement base)

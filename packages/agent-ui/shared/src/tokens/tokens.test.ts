@@ -152,3 +152,65 @@ describe('tokens.css — the composed surface stays WCAG-AA (ADR-0015 cl.3 — t
     expect(worst('variant').ratio).toBeGreaterThanOrEqual(AA) // the declared 14% ceiling holds
   })
 })
+
+// tok-selected (ADR-0048) — the AA-guaranteed persistent-SELECTED accent fill. The accent ANCHOR pair
+// (--c-primary + --c-primary-on-primary/white) is report-only and drops to 3.32:1 in dark — fine for a GLYPH
+// at the 3:1 non-text bar (the checkmark/thumb of every prior solid control), but BELOW the 4.5:1 bar for real
+// TEXT. The ui-calendar selected-day NUMERAL is text, so it reads a DEDICATED --c-primary-selected whose BOTH
+// light-dark() legs clear AA against --c-primary-on-primary. This probe re-derives the contrast from the
+// DECLARED role legs (not hardcoded stops), so a future repoint re-runs the math. Same OKLCH→sRGB→WCAG path
+// as the surface-AA block above (jsdom paints nothing — the contrast is recomputed from the token values).
+describe('tokens.css — the AA-guaranteed --c-primary-selected fill (ADR-0048)', () => {
+  const AA = 4.5
+  // parse a primitive --c-primary-NNN OKLCH triple from the comment-free CSS
+  const oklchOfPrimary = (stop: string): [number, number, number] => {
+    const m = bare.match(new RegExp(`--c-primary-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
+    if (!m) throw new Error(`primitive --c-primary-${stop} not found`)
+    return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])]
+  }
+  const oklchToLin = ([L, C, H]: [number, number, number]): number[] => {
+    const h = (H * Math.PI) / 180, a = C * Math.cos(h), b = C * Math.sin(h)
+    const l_ = L + 0.3963377774 * a + 0.2158037573 * b
+    const m_ = L - 0.1055613458 * a - 0.0638541728 * b
+    const s_ = L - 0.0894841775 * a - 1.291485548 * b
+    const l = l_ ** 3, m = m_ ** 3, s = s_ ** 3
+    return [
+      4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+      -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+    ]
+  }
+  const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
+  const toGamma = (c: number) => { c = clamp01(c); return c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055 }
+  const toLin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+  const gammaOf = (stop: string) => oklchToLin(oklchOfPrimary(stop)).map(toGamma)
+  const lum = (g: number[]) => { const [r, gg, b] = g.map(toLin); return 0.2126 * r + 0.7152 * gg + 0.0722 * b }
+  const contrast = (f: number[], b: number[]) => { const a = lum(f), c = lum(b), hi = Math.max(a, c), lo = Math.min(a, c); return (hi + 0.05) / (lo + 0.05) }
+
+  // the two primitive legs of a --c-{role} declared as light-dark(var(--c-primary-X), var(--c-primary-Y))
+  const legsOf = (role: string): [string, string] => {
+    const m = rootBlock.match(new RegExp(`--c-${role}:\\s*light-dark\\(\\s*var\\(--c-primary-(\\d+)\\)\\s*,\\s*var\\(--c-primary-(\\d+)\\)\\s*\\)`))
+    if (!m) throw new Error(`role --c-${role} not found as a two-leg primary light-dark()`)
+    return [m[1], m[2]]
+  }
+
+  it('declares --c-primary-selected as a two-leg primary light-dark() role', () => {
+    expect(rootBlock).toMatch(/--c-primary-selected:\s*light-dark\(\s*var\(--c-primary-\d+\)\s*,\s*var\(--c-primary-\d+\)\s*\)/)
+  })
+
+  it('clears WCAG-AA (≥4.5:1) against --c-primary-on-primary TEXT in BOTH light and dark', () => {
+    const [fillL, fillD] = legsOf('primary-selected')
+    const [inkL, inkD] = legsOf('primary-on-primary')
+    const light = contrast(gammaOf(inkL), gammaOf(fillL))
+    const dark = contrast(gammaOf(inkD), gammaOf(fillD))
+    expect(light, `light: on-primary(${inkL}) on selected(${fillL}) = ${light.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+    expect(dark, `dark: on-primary(${inkD}) on selected(${fillD}) = ${dark.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+  })
+
+  it('NEGATIVE control: the plain --c-primary anchor pair FAILS the 4.5:1 TEXT bar in dark (why the dedicated role exists)', () => {
+    const [, anchorD] = legsOf('primary') // --c-primary dark leg = the report-only 450
+    const [, inkD] = legsOf('primary-on-primary')
+    const dark = contrast(gammaOf(inkD), gammaOf(anchorD))
+    expect(dark, `dark: on-primary(${inkD}) on --c-primary(${anchorD}) = ${dark.toFixed(2)}:1 (report-only)`).toBeLessThan(AA)
+  })
+})

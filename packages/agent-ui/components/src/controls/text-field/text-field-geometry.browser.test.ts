@@ -420,3 +420,208 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     }
   })
 })
+
+// ── Wave 5B (ADR-0048): type=date calendar picker + type=time codec — cross-engine browser smoke ─────
+//
+// These tests prove what jsdom cannot:
+//   1. SHAPE — type=date field is not a collapsed dot in a flex row (the calendar button adornment
+//      carries min-inline-size just like a text adornment — anti-dot proof).
+//   2. OVERLAY — the calendar button opens the popup in the top layer (Popover API) on BOTH engines.
+//   3. SELECTION — a calendar `select` dispatch → updates the field value AND closes the popup.
+//   4. FOCUS-RESTORE — after overlay close the calendar button has focus (ADR-0045 guarantee).
+//   5. CODEC (time) — "14:30" blurs to a localized string on a real ICU stack.
+//
+// The `@agent-ui/components/components` barrel already registers `<ui-calendar>` (controls/index.ts
+// line 53). The text-field's click handler checks `customElements.get('ui-calendar')` at runtime —
+// since the calendar IS already registered, `open()` fires SYNCHRONOUSLY on the first click (the
+// dynamic import is skipped). Only the Popover API toggle event needs a task-queue drain:
+// all awaits use `setTimeout(r, 0)`, matching select.browser.test.ts lines 192–225.
+
+describe('ui-text-field Wave-5B — type=date calendar picker (s11 Wave-5B, both engines)', () => {
+  it('SHAPE: type=date field in a flex row has positive bounding-box and is wider than tall (not a dot)', () => {
+    // The whole-shape gestalt: a date field is a text input + calendar button, not a square widget.
+    // The min-inline-size floor (ADR-0021) keeps the field hittable even without an explicit width.
+    const wrap = document.createElement('div')
+    wrap.style.display = 'flex'
+    wrap.style.flexDirection = 'row'
+    wrap.innerHTML = '<ui-text-field type="date"></ui-text-field>'
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const field = wrap.querySelector('ui-text-field') as HTMLElement
+    const box = field.getBoundingClientRect()
+
+    expect(box.width, 'type=date field collapsed to zero width in a flex row').toBeGreaterThan(0)
+    expect(box.height, 'type=date field collapsed to zero height in a flex row').toBeGreaterThan(0)
+    expect(box.width, 'type=date field is narrower than tall — should be a text-input shape').toBeGreaterThan(box.height)
+  })
+
+  it('OVERLAY: calendar button click opens the popup in the top layer (:popover-open)', async () => {
+    // The barrel pre-registers ui-calendar, so the click handler opens synchronously (customElements.get
+    // shortcut). One `setTimeout(r, 0)` lets the Popover toggle event (a queued task) settle.
+    const { field } = mount('<ui-text-field type="date"></ui-text-field>')
+    const calBtn = field.querySelector('[data-part="calendar-button"]') as HTMLElement
+    const popup = field.querySelector('[data-part="calendar-popup"]') as HTMLElement
+
+    expect(calBtn, 'calendar-button must be present for type=date').not.toBeNull()
+    expect(popup, 'calendar-popup must be present for type=date').not.toBeNull()
+
+    calBtn.click()
+    await new Promise<void>((r) => setTimeout(r, 0)) // let Popover toggle event (queued task) settle
+
+    expect(popup.matches(':popover-open'), 'popup must be in the Popover top layer after button click').toBe(true)
+  })
+
+  it('SELECTION: calendar `select` dispatch → updates the field value AND closes the popup', async () => {
+    // Verifies the calEl `select` listener: this.value = iso, this.#codec.setCanonical(iso),
+    // emit input+change, calendarHandle.close(). The popup must leave the top layer after close.
+    const { field } = mount('<ui-text-field type="date"></ui-text-field>')
+    const calBtn = field.querySelector('[data-part="calendar-button"]') as HTMLElement
+    const popup = field.querySelector('[data-part="calendar-popup"]') as HTMLElement
+    const calEl = popup.querySelector('ui-calendar') as HTMLElement
+
+    // Open the popup (ui-calendar pre-registered → synchronous open; one task round for toggle event)
+    calBtn.click()
+    await new Promise<void>((r) => setTimeout(r, 0))
+    expect(popup.matches(':popover-open'), 'popup must be open before selection').toBe(true)
+
+    // Track events
+    const events: string[] = []
+    field.addEventListener('input', () => events.push('input'))
+    field.addEventListener('change', () => events.push('change'))
+
+    // Simulate calendar commit (what UICalendarElement fires on day click / Enter)
+    calEl.dispatchEvent(new CustomEvent('select', { detail: '2024-07-04', bubbles: false }))
+
+    // Field value is updated immediately (synchronous in the listener)
+    expect((field as HTMLElement & { value: string }).value, 'field value must be set to the ISO date').toBe('2024-07-04')
+    expect(events, 'must emit input then change').toEqual(['input', 'change'])
+
+    // hidePopover() + Popover toggle event settle before the `:popover-open` check
+    await new Promise<void>((r) => setTimeout(r, 0))
+    expect(popup.matches(':popover-open'), 'popup must leave the top layer after selection').toBe(false)
+  })
+
+  it('FOCUS-RESTORE: after overlay close via selection, focus returns to the calendar button (ADR-0045)', async () => {
+    // ADR-0045 / overlay.ts: restoreFocus() targets the `anchor` element (the calendar button).
+    // After a calendar pick, the overlay's close() calls restoreFocus() → button.focus().
+    //
+    // WebKit does not focus a <button> on click — pre-focus explicitly so the anchor is well-defined
+    // as the focus target regardless of engine (matching the select.browser.test.ts pattern, line 183).
+    const { field } = mount('<ui-text-field type="date"></ui-text-field>')
+    const calBtn = field.querySelector('[data-part="calendar-button"]') as HTMLElement
+    const popup = field.querySelector('[data-part="calendar-popup"]') as HTMLElement
+    const calEl = popup.querySelector('ui-calendar') as HTMLElement
+
+    calBtn.focus() // establish anchor as the pre-open active element (WebKit does not auto-focus on click)
+    calBtn.click()
+    await new Promise<void>((r) => setTimeout(r, 0)) // Popover toggle event (queued task)
+
+    calEl.dispatchEvent(new CustomEvent('select', { detail: '2024-07-04', bubbles: false }))
+    // restoreFocus() is synchronous in overlay.close(), but the Popover toggle event fires as a task
+    await new Promise<void>((r) => setTimeout(r, 0)) // let hidePopover() toggle task drain
+
+    // After close(), restoreFocus() must move focus to the calendar button (the anchor).
+    expect(document.activeElement, 'focus must return to the calendar button after overlay close').toBe(calBtn)
+  })
+
+  it('TOP-LAYER (m1): the calendar popup renders in the top layer — it escapes an overflow:hidden + stacking-context ancestor', async () => {
+    // The Popover API spec: `[popover]` elements are placed in the document's top layer, which is
+    // painted ABOVE any overflow:hidden ancestor or compositing stacking context. If the popup were a
+    // normal positioned child it would be clipped to the 5px×5px clip box. Two proofs:
+    //   (1) :popover-open — the popup is in the top layer.
+    //   (2) popup bounding rect is WIDER than the 5px clip box — it escaped overflow:hidden.
+    const clip = document.createElement('div')
+    Object.assign(clip.style, {
+      overflow: 'hidden',
+      transform: 'translateZ(0)', // stacking context / compositing layer
+      width: '5px',
+      height: '5px',
+      position: 'absolute',
+      insetInlineStart: '0px',
+      insetBlockStart: '0px',
+    })
+    clip.innerHTML = '<ui-text-field type="date"></ui-text-field>'
+    document.body.append(clip)
+    mounted.push(clip)
+
+    const field = clip.querySelector('ui-text-field') as HTMLElement
+    const calBtn = field.querySelector('[data-part="calendar-button"]') as HTMLElement
+    const popup = field.querySelector('[data-part="calendar-popup"]') as HTMLElement
+
+    expect(calBtn, 'calendar-button must be present for type=date').not.toBeNull()
+    expect(popup, 'calendar-popup must be present').not.toBeNull()
+
+    calBtn.click()
+    await new Promise<void>((r) => setTimeout(r, 0)) // Popover toggle event (queued task)
+
+    // Proof 1: the popup entered the Popover top layer.
+    expect(popup.matches(':popover-open'), 'popup must be in the Popover top layer after click').toBe(true)
+
+    // Proof 2: the popup rendered WIDER than the 5px overflow:hidden clip box — top-layer escape.
+    // The calendar grid (7 weekday columns × day-cell buttons) always exceeds 20px; the clip is 5px.
+    const clipRect = clip.getBoundingClientRect()
+    const popupRect = popup.getBoundingClientRect()
+    expect(
+      popupRect.width,
+      `popup width (${popupRect.width.toFixed(1)}px) must exceed the ${clipRect.width}px clip ancestor — top-layer escape proof`,
+    ).toBeGreaterThan(clipRect.width)
+  })
+
+  // Wave 5B — calendar-button forced-colors (Chromium only, m3): [data-part="calendar-button"] is in
+  // the forced-color-adjust: none block (ADR-0048 §2 / text-field.css) so its calendar-icon glyph
+  // keeps its inherited colour under system high-contrast (the same law as adornment buttons/suffix).
+  it('forced-colors: calendar-button carries forced-color-adjust: none (Chromium only, m3)', async () => {
+    if (server.browser !== 'chromium') {
+      // WebKit baseline: confirm we are NOT already in forced-colors so the Chromium proof is not faked.
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+    const { field } = mount('<ui-text-field type="date"></ui-text-field>')
+    const calBtn = field.querySelector('[data-part="calendar-button"]') as HTMLElement
+    expect(calBtn, 'calendar-button must be present for type=date').not.toBeNull()
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches, 'engine must enter forced-colors').toBe(true)
+      // ADR-0048 §2: calendar-button is in the forced-color-adjust: none block so its calendar-icon
+      // glyph is exempted from the forced-color system palette and keeps its declared colour.
+      const fca = getComputedStyle(calBtn).getPropertyValue('forced-color-adjust').trim()
+      expect(fca, 'calendar-button must have forced-color-adjust: none under forced-colors (m3)').toBe('none')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] }) // restore
+    }
+  })
+})
+
+describe('ui-text-field Wave-5B — type=time codec (s11 Wave-5B, both engines)', () => {
+  it('CODEC: "14:30" → blur → localized display string (non-empty, the real ICU stack formats it)', () => {
+    // The timeCodecOptions format() uses Intl.DateTimeFormat({ timeStyle: 'short' }) on a real ICU stack,
+    // producing a locale-appropriate display. This test pins the non-vacuous behavioral outcome: the
+    // display is a NON-EMPTY string and DIFFERS from the canonical "14:30" (it is localized).
+    const { field, editor } = mount('<ui-text-field type="time"></ui-text-field>')
+
+    ;(field as HTMLElement & { value: string }).value = '14:30'
+    editor.textContent = '14:30'
+    editor.dispatchEvent(new Event('blur'))
+
+    const display = (field as HTMLElement & { value: string }).value
+    expect(display, 'time codec must produce a non-empty display string after blur').toBeTruthy()
+    // anti-vacuous: the localized display differs from the canonical HH:MM form (ICU formats it)
+    expect(display, 'the localized display must differ from the canonical "14:30"').not.toBe('14:30')
+  })
+
+  it('GESTALT: type=time field is wider than tall in a flex row (not a dot)', () => {
+    const wrap = document.createElement('div')
+    wrap.style.display = 'flex'
+    wrap.style.flexDirection = 'row'
+    wrap.innerHTML = '<ui-text-field type="time"></ui-text-field>'
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const field = wrap.querySelector('ui-text-field') as HTMLElement
+    const box = field.getBoundingClientRect()
+
+    expect(box.width, 'type=time field collapsed to zero width in a flex row').toBeGreaterThan(0)
+    expect(box.width, 'type=time field is narrower than tall (should be a text-input shape)').toBeGreaterThan(box.height)
+  })
+})

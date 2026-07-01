@@ -54,3 +54,6 @@
 @import './controls/menu/menu.css';
 @import './controls/select/select.css';
 @import './controls/combo-box/combo-box.css';
+
+/* Picker controls — Wave 5B (ADR-0048): standalone month-grid date picker. */
+@import './controls/calendar/calendar.css';

@@ -1,0 +1,303 @@
+/* calendar.css — ui-calendar, the standalone month-grid date picker control (ADR-0048 / Wave-5B-1).
+ *
+ * Two clearly-sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-calendar)` (specificity 0,0,0) DECLARES the `--ui-calendar-*`
+ *       chain from colour roles (`--c-{family}-{role}`) and the dimensional ramp. Fallback values
+ *       are sensible until the tokens-specialist delivers the canonical token definitions. The
+ *       `[size]` repoint triples follow the button/select/text-field precedent; `[disabled]` mutes
+ *       the nav buttons. `--ui-calendar-range-*` is RESERVED (future range-selection wave).
+ *
+ *   [2] STYLES BLOCK — `@scope (ui-calendar)` CONSUMES only `--ui-calendar-*` for its OWN selectors.
+ *       The panel (`[data-part=panel][data-box]`) adopts the shared container box-model (inset margins
+ *       + sticky header) from `_surface/container-box.css` at zero specificity. The grid is a CSS
+ *       grid of 7 columns; `[role=row]` divs use `display:contents` so cells participate directly in
+ *       the parent grid (a clean flat-grid layout; `[role=row]`'s ARIA role is set via attribute, not
+ *       CSS, so `display:contents` does not affect the accessibility tree). Day cells are square
+ *       buttons whose side = `--ui-calendar-cell-size`. The [data-today] ring and [aria-selected] fill
+ *       are load-bearing colour values protected under forced-colors via `forced-color-adjust:none`.
+ *
+ * Standalone — NOT injected from calendar.ts (behaviour-only `.ts`, no runtime style injection
+ * per plan §2). Linked via component-styles.css; foundation roles FIRST in the load order.
+ */
+
+/* ══════════════════════ [1] TOKEN BLOCK — :where(ui-calendar) ══════════════════════════════ */
+
+:where(ui-calendar) {
+  /* ── Cell geometry — the day cell is a square; side = --ui-calendar-cell-size.
+     Aliases --ui-height-md so the cell rides the explicit per-[scale] height ramp (ADR-0038),
+     tracking scale automatically without a multiplier. [size] repoints below.
+     --ui-calendar-gap is the inter-cell gap; aliases --ui-space-xs (4px × density). */
+  --ui-calendar-cell-size: var(--ui-height-md);
+  --ui-calendar-gap: var(--ui-space-xs);
+
+  /* ── Day-cell typography — font-size at a comfortable reading size inside the cell. */
+  --ui-calendar-font: var(--ui-font-md, 14px);
+
+  /* ── Selected-day fill (the committed value cell).
+     --c-primary-selected is the AA primary-on-accent role (tokens-calendar); fall back to
+     --c-primary so the build stays green if it lands a moment after this component. */
+  --ui-calendar-selected-fill: var(--c-primary-selected, var(--c-primary));
+  --ui-calendar-selected-ink:  var(--c-primary-on-primary); /* white — the on-primary pair */
+
+  /* ── Today's ring (the current date, whether selected or not).
+     Aliases --c-primary-outline; drawn as an INSET box-shadow so it sits inside the cell
+     and stays distinct from the offset-outside focus outline (see forced-colors note below). */
+  --ui-calendar-today-ring: var(--c-primary-outline);
+
+  /* ── Disabled / out-of-range day ink (muted; WCAG exempts inactive controls). */
+  --ui-calendar-disabled-ink: var(--c-neutral-on-surface-variant);
+
+  /* ── Adjacent-month day ink (prev/next month overflow cells — dimmed to neutral mid). */
+  --ui-calendar-outside-ink: var(--c-neutral);
+
+  /* ── Nav button geometry — the ‹ and › inline affordances are sized = font (§4.6 law).
+     They are plain buttons; no fixed icon-cell needed (they're typography glyphs). */
+  --ui-calendar-nav-font: var(--ui-font-md, 14px);
+
+  /* ── Panel surface — inherits the container/surface tokens for bg/border/radius.
+     The panel is a Container/surface (NOT a Control-class surface), so it uses bg + outline. */
+  --ui-calendar-panel-bg:      var(--c-neutral-surface, #fff);
+  --ui-calendar-panel-ink:     var(--c-neutral-on-surface, #1c1c1e);
+  --ui-calendar-panel-outline: var(--c-neutral-outline-variant, #c4c4c4);
+  --ui-calendar-panel-radius:  var(--ui-radius-base, 0.375rem);
+
+  /* ── Weekday column-header ink (muted row above the cells). */
+  --ui-calendar-header-ink: var(--c-neutral-on-surface-variant, #767676);
+
+  /* ── Cell hover background (non-selected, non-disabled). */
+  --ui-calendar-cell-hover-bg: var(--c-neutral-surface-high, #f0f0f0);
+
+  /* RESERVED — future range-selection wave: --ui-calendar-range-fill · --ui-calendar-range-ink. */
+}
+
+/* [size] repoints cell size onto the §1-ramp height entries (ADR-0038: explicit per-[scale] table,
+   24/28/36px at the default ui-md scale). Pattern mirrors checkbox [size]→--ui-compact-* repoints. */
+:where(ui-calendar[size='sm']) {
+  --ui-calendar-cell-size: var(--ui-height-sm); /* 24px default; retables under [scale] */
+  --ui-calendar-font: var(--ui-font-sm, 13px);
+  --ui-calendar-nav-font: var(--ui-font-sm, 13px);
+}
+
+:where(ui-calendar[size='lg']) {
+  --ui-calendar-cell-size: var(--ui-height-lg); /* 36px default ≈ 2.25rem target; retables under [scale] */
+  --ui-calendar-font: var(--ui-font-lg, 16px);
+  --ui-calendar-nav-font: var(--ui-font-lg, 16px);
+}
+
+/* Disabled host — mute the nav-button ink (day cells carry their own aria-disabled state). */
+:where(ui-calendar[disabled]) {
+  --ui-calendar-panel-ink: var(--c-neutral-on-surface-variant, #767676);
+}
+
+/* ══════════════════════ [2] STYLES BLOCK — @scope (ui-calendar) ════════════════════════════ */
+
+@scope (ui-calendar) {
+  /* Host: inline-block so ui-calendar shrink-wraps its panel (like a compact form widget).
+     Callers set width or place the element in a flex/grid cell to control sizing. */
+  :scope {
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  /* ── Panel ([data-part=panel][data-box]) ────────────────────────────────────────────────
+     The [data-box] attribute opts this element into container-box.css's box-model:
+       • display: flow-root (BFC; child margins provide inset)
+       • <header> children: full-bleed, sticky, flex-row, padding inline=12/block=4, gap=8
+       • other direct children: margin: 4px (the uniform inset)
+     We add paint: background + border + radius. No position/size overrides needed — the
+     grid sizes the panel naturally to 7×cell-size + gaps. */
+  :scope [data-part='panel'] {
+    display: flow-root;               /* BFC — child margins collapse; also set by container-box.css */
+    background-color: var(--ui-calendar-panel-bg);
+    color: var(--ui-calendar-panel-ink);
+    border: 1px solid var(--ui-calendar-panel-outline);
+    border-radius: var(--ui-calendar-panel-radius);
+    box-sizing: border-box;
+  }
+
+  /* ── Nav header (<header data-part="nav">) ──────────────────────────────────────────────
+     container-box.css already gives the <header>: display:flex; align-items:center; gap=8px;
+     padding-inline=12px; padding-block=4px; position:sticky; inset-block-start:0; z-index:1.
+     We add: space-between so ‹ title › spreads, and the title grows to fill. */
+  :scope [data-part='nav'] {
+    justify-content: space-between;
+  }
+
+  /* Month/year title: grows to fill the space between the two nav buttons. Centred text. */
+  :scope [data-part='title'] {
+    flex: 1;
+    text-align: center;
+    font-size: var(--ui-calendar-nav-font);
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  /* Nav buttons (‹ ›): plain icon affordances — no background, no border, just the glyph. */
+  :scope [data-part='prev'],
+  :scope [data-part='next'] {
+    flex-shrink: 0;
+    padding: 0.25rem;
+    font-size: var(--ui-calendar-nav-font);
+    line-height: 1;
+    background: transparent;
+    border: none;
+    border-radius: var(--ui-calendar-panel-radius);
+    color: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :scope [data-part='prev']:hover,
+  :scope [data-part='next']:hover {
+    background-color: var(--ui-calendar-cell-hover-bg);
+  }
+
+  :scope [data-part='prev']:focus-visible,
+  :scope [data-part='next']:focus-visible {
+    outline: var(--ui-focus-ring-width, 2px) solid var(--c-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset, 2px);
+  }
+
+  /* ── Grid container ([data-part="grid"]) ────────────────────────────────────────────────
+     A CSS grid of 7 equal columns (one per day of the week). The [role=row] divs use
+     display:contents so their children (columnheaders and gridcells) participate directly
+     in the flat 7-column grid — each week flows into the next row automatically. The
+     weekday header row and the 6 week rows are all part of the same flat grid, avoiding
+     a nested-flex layout that would need explicit sizing on every row. */
+  :scope [data-part='grid'] {
+    display: grid;
+    grid-template-columns: repeat(7, var(--ui-calendar-cell-size, 2rem));
+    gap: var(--ui-calendar-gap, 0.125rem);
+    /* The direct-child margin from [data-box] applies here (4px all around).
+       We keep the default inset margin — the grid sits slightly inside the panel. */
+  }
+
+  /* [role=row] is transparent to the parent CSS grid — cells participate directly.
+     The ARIA role is set via the HTML attribute, NOT by CSS, so display:contents does
+     NOT remove the row from the accessibility tree (the role attribute is authoritative). */
+  :scope [data-part='grid'] [role='row'] {
+    display: contents;
+  }
+
+  /* ── Weekday column headers ──────────────────────────────────────────────────────────────
+     Non-interactive; muted ink; centred. The <span role="columnheader"> elements sit in
+     the first grid row and establish the 7-column visual header. */
+  :scope [data-part='grid'] [role='columnheader'] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    block-size: calc(var(--ui-calendar-cell-size, 2rem) * 0.75); /* slightly smaller than cells */
+    font-size: calc(var(--ui-calendar-font, 14px) * 0.85);
+    color: var(--ui-calendar-header-ink);
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* ── Day cells ([role=gridcell]) ─────────────────────────────────────────────────────────
+     Square buttons sized to --ui-calendar-cell-size. The click / keyboard commit path is in
+     calendar.ts; CSS handles visual states only (ADR-0003 behaviour-only .ts principle).
+     line-height:1 (ADR-0036: single-line control glyph centred by the frame). */
+  :scope [data-part='grid'] [role='gridcell'] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: var(--ui-calendar-cell-size, 2rem);
+    block-size: var(--ui-calendar-cell-size, 2rem);
+    border: none;
+    border-radius: 50%;                /* circular cells — standard calendar look */
+    background: transparent;
+    color: inherit;
+    font-size: var(--ui-calendar-font, 14px);
+    line-height: var(--ui-control-line-height, 1);
+    cursor: pointer;
+    padding: 0;
+    -webkit-user-select: none;
+    user-select: none;
+    outline: none;                     /* :focus-visible provides the ring below */
+  }
+
+  :scope [data-part='grid'] [role='gridcell']:hover {
+    background-color: var(--ui-calendar-cell-hover-bg);
+  }
+
+  :scope [data-part='grid'] [role='gridcell']:focus-visible {
+    outline: var(--ui-focus-ring-width, 2px) solid var(--c-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset, 2px);
+  }
+
+  /* ── Today ring — an outline that marks the current date (whether selected or not).
+     Uses box-shadow so it stacks on top of the selected fill when the selected day = today.
+     `forced-color-adjust: none` ensures the ring survives WHCM (load-bearing colour). */
+  :scope [data-part='grid'] [role='gridcell'][data-today] {
+    box-shadow: inset 0 0 0 1.5px var(--ui-calendar-today-ring, currentcolor);
+    forced-color-adjust: none;
+  }
+
+  /* ── Selected fill — the committed value cell.
+     Overrides hover; `forced-color-adjust:none` keeps the fill in WHCM. */
+  :scope [data-part='grid'] [role='gridcell'][aria-selected='true'] {
+    background-color: var(--ui-calendar-selected-fill, #0057d8);
+    color: var(--ui-calendar-selected-ink, #fff);
+    forced-color-adjust: none;
+  }
+
+  /* ── Adjacent-month cells (data-outside) — muted ink; still clickable (navigates month). */
+  :scope [data-part='grid'] [role='gridcell'][data-outside] {
+    color: var(--ui-calendar-outside-ink, #767676);
+  }
+
+  /* ── Disabled / out-of-range cells (aria-disabled=true) — pointer-inert; muted. */
+  :scope [data-part='grid'] [role='gridcell'][aria-disabled='true'] {
+    color: var(--ui-calendar-disabled-ink, #767676);
+    cursor: default;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  /* ── forced-colors (WHCM) ────────────────────────────────────────────────────────────────
+     Three visually distinct states must survive system-colour flattening:
+       focus   = Highlight outline (offset-outside) — free via --c-focus-ring → Highlight
+       selected = Highlight fill + HighlightText numeral — explicit below
+       today   = ButtonText INSET ring (offset-inside, inside the cell border)
+     today MUST NOT use Highlight here — it would merge with the selected fill AND with the
+     focus ring, collapsing all three states into one indistinguishable Highlight blob.
+     Both cells already carry `forced-color-adjust:none` in the rules above, so the
+     explicit system-colour overrides below take effect under the OS forced-colour wash. */
+  @media (forced-colors: active) {
+    /* Panel surface: Canvas / CanvasText (standard surface mapping). */
+    :scope [data-part='panel'] {
+      background-color: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
+    }
+
+    /* Selected fill: Highlight / HighlightText (system selection pair — WCAG AA guaranteed by OS). */
+    :scope [data-part='grid'] [role='gridcell'][aria-selected='true'] {
+      background-color: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+
+    /* Today ring: ButtonText INSET border — deliberately NOT Highlight so focus/selected/today
+       remain visually distinct: focus=Highlight-outside, selected=Highlight-fill, today=ButtonText-inset. */
+    :scope [data-part='grid'] [role='gridcell'][data-today] {
+      box-shadow: inset 0 0 0 2px ButtonText;
+      forced-color-adjust: none;
+    }
+
+    /* Disabled cells: GrayText (the system muted role). */
+    :scope [data-part='grid'] [role='gridcell'][aria-disabled='true'] {
+      color: GrayText;
+    }
+
+    /* Nav buttons: ButtonText. */
+    :scope [data-part='prev'],
+    :scope [data-part='next'] {
+      color: ButtonText;
+    }
+  }
+}

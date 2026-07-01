@@ -125,6 +125,34 @@ describe('text-field.css — STATIC geometry law (s9)', () => {
     expect(leadingOnly).toMatch(/padding-inline-end:\s*calc\(var\(--ui-text-field-height\)\s*\/\s*2\)/)
   })
 
+  it('M2 (ADR-0048): calendar-button is in the adornment-button chrome-reset block (no UA border/background)', () => {
+    // text-field.css reset block: clear/reveal/step-up/step-down/calendar-button all share the same
+    // `border:none; background:none; padding:0; cursor:pointer; font:inherit; color:inherit` reset.
+    // Absence would render the calendar icon with default browser button chrome (border + gradient BG).
+    expect(stylesBlock).toContain("[data-part='calendar-button']")
+    // The calendar-button selector must appear BEFORE the opening brace of the reset declaration block
+    // that contains `border: none` — i.e., the button IS in that reset.
+    const resetBlockStart = stylesBlock.indexOf("[data-part='calendar-button']")
+    const resetBlockEnd   = stylesBlock.indexOf('}', resetBlockStart)
+    const resetDecls = stylesBlock.slice(resetBlockStart, resetBlockEnd)
+    expect(resetDecls).toMatch(/border:\s*none/)
+    expect(resetDecls).toMatch(/background:\s*none/)
+    expect(resetDecls).toMatch(/padding:\s*0/)
+    expect(resetDecls).toMatch(/cursor:\s*pointer/)
+  })
+
+  it('M3 (ADR-0048): calendar-popup [popover] wrapper strips all UA popover chrome to zero', () => {
+    // text-field.css: `[popover][data-part='calendar-popup'] { padding:0; border:0; background:transparent; margin:0 }`
+    // Without this, UA adds padding/border/background — doubling the visual spacing around the calendar panel.
+    const popupStart = stylesBlock.indexOf("[data-part='calendar-popup']")
+    expect(popupStart, "calendar-popup rule must exist in text-field.css").toBeGreaterThan(0)
+    const popupBlock = stylesBlock.slice(popupStart, stylesBlock.indexOf('}', popupStart))
+    expect(popupBlock).toMatch(/padding:\s*0/)
+    expect(popupBlock).toMatch(/border:\s*0/)
+    expect(popupBlock).toMatch(/background:\s*transparent/)
+    expect(popupBlock).toMatch(/margin:\s*0/)
+  })
+
   it('host-as-grid presence structures: 1fr · auto 1fr · 1fr auto · auto 1fr auto, placed by `order`', () => {
     // anatomy.md (ADR-0006/0012): the four presence-driven :has() templates; the editor is the centre value cell,
     // placed by `order` (control-injected, not DOM-ordered).

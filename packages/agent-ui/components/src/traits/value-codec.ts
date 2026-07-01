@@ -1,6 +1,7 @@
 // value-codec.ts — the valueCodec controller: format-on-blur + parse-on-commit for display-codec fields
 // (Wave 3 ui-text-field type=number/currency — ADR-0044). Rebuilt in Wave 5A (ADR-0047) on a shared
-// numeric core for multi-currency fraction digits + unit/percent codecs.
+// numeric core for multi-currency fraction digits + unit/percent codecs. Extended in Wave 5B (ADR-0048)
+// with date and time codecs (dateCodecOptions / timeCodecOptions).
 //
 // Codec-agnostic: parse and format are caller-supplied. The trait manages the display↔canonical split:
 //   • Focus (capture on host, fires BEFORE the control's direct editor focus listener): host.value ←
@@ -282,5 +283,187 @@ export function unitLabel(unit: string, locale?: string): string {
   } catch {
     // Intl throws a RangeError for invalid CLDR unit ids → use the raw string as the suffix.
     return unit
+  }
+}
+
+// ── Date/time codecs (Wave 5B, ADR-0048) ─────────────────────────────────────
+//
+// Both codecs share the same parse→format contract as the numeric codecs: `format` takes the
+// canonical form value and returns a localized display string; `parse` takes the display string
+// and returns the canonical form (or null on invalid input). They plug into the same
+// valueCodec(host, opts, typeSignal) seam with no new listener wiring — 5B-3 passes
+// typeAc.signal identically to the numeric codecs.
+//
+// TIMEZONE NOTE (date codec): Never use new Date('YYYY-MM-DD') — it parses as UTC midnight,
+// which at negative UTC offsets (e.g. US Pacific = UTC-8) renders the PREVIOUS calendar day.
+// Throughout this codec, dates are constructed with new Date(year, month-1, day) (local time)
+// and read back with getFullYear() / getMonth() / getDate() (local time).
+//
+// Locale caveat (date parse): Intl has NO parser. The codec accepts ISO reliably (step 1).
+// The locale heuristic (step 2: formatToParts learns y/m/d order from a reference date, then
+// splits the typed input on delimiters) handles numeric date entry. Named-month input falls
+// through to new Date(display) as a last resort (step 3). null on unrecognised input. The
+// calendar is the authoritative entry path; typing is intentionally lenient (ADR-0048 §4).
+
+/**
+ * Codec options for type=date. Canonical form: ISO `YYYY-MM-DD`. Format: localized medium
+ * date string via Intl.DateTimeFormat `{dateStyle:'medium'}`. Parse: ISO always accepted
+ * (timezone-safe local-time constructor); locale heuristic for numeric inputs (e.g. "03/04/2024"
+ * in en-US → 2024-03-04); last-resort new Date() for named-month forms; null on invalid.
+ * Error message: 'Please enter a valid date.'
+ *
+ * @param locale  BCP 47 locale (default: runtime locale). Pin to 'en-US' in tests for determinism.
+ */
+export function dateCodecOptions(locale?: string): ValueCodecOptions {
+  const fmt = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' })
+
+  // Learn the component ORDER (year/month/day) from a reference date whose digits are all
+  // distinct: 2001-03-04 (year=2001, month=3, day=4). Named month in the formatToParts output
+  // is irrelevant — we only need the positional ordering, which is locale-specific (en-US is
+  // month/day/year; de-DE is day/month/year).
+  const componentOrder = fmt
+    .formatToParts(new Date(2001, 2, 4)) // local-time constructor for 2001-03-04
+    .filter((p) => p.type === 'year' || p.type === 'month' || p.type === 'day')
+    .map((p) => p.type as 'year' | 'month' | 'day')
+
+  /** Parse an ISO YYYY-MM-DD string to a local-time Date (timezone-safe). Returns null on invalid. */
+  function parseIso(str: string): Date | null {
+    const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (!m) return null
+    const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3])
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) return null
+    // Construct in LOCAL time to avoid the UTC-midnight / timezone off-by-one trap.
+    const date = new Date(y, mo - 1, d)
+    // Round-trip validation: JS Date overflow wraps invalid days (e.g. Feb 29 in a non-leap
+    // year becomes Mar 1). A mismatch between what we asked for and what we got means the
+    // input day/month exceeded the calendar — reject it.
+    if (date.getFullYear() !== y || date.getMonth() !== mo - 1 || date.getDate() !== d) return null
+    return date
+  }
+
+  /** Serialize a local-time Date to an ISO YYYY-MM-DD string. */
+  function dateToIso(date: Date): string {
+    const y = date.getFullYear()
+    const mo = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}-${mo}-${d}`
+  }
+
+  /**
+   * Locale heuristic for numeric inputs (e.g. "03/04/2024" in en-US → 2024-03-04).
+   * Splits on any delimiter and maps three numeric tokens to y/m/d using the component order
+   * learned from formatToParts. Named-month tokens fail parseInt → returns null, letting the
+   * caller fall through to the new Date() last-resort path.
+   */
+  function parseWithHeuristic(display: string): Date | null {
+    const tokens = display.split(/[\s/\-.,:]+/).filter(Boolean)
+    if (tokens.length !== 3 || componentOrder.length !== 3) return null
+    let y = 0, mo = 0, d = 0
+    for (let i = 0; i < 3; i++) {
+      const n = parseInt(tokens[i], 10)
+      if (!Number.isFinite(n)) return null
+      if (componentOrder[i] === 'year') y = n
+      else if (componentOrder[i] === 'month') mo = n
+      else d = n
+    }
+    if (!y || !mo || !d) return null
+    const date = new Date(y, mo - 1, d)
+    if (date.getFullYear() !== y || date.getMonth() !== mo - 1 || date.getDate() !== d) return null
+    return date
+  }
+
+  return {
+    parse(display: string): string | null {
+      const trimmed = display.trim()
+      if (!trimmed) return null
+      // 1. ISO — always accepted; timezone-safe construction.
+      const fromIso = parseIso(trimmed)
+      if (fromIso) return dateToIso(fromIso)
+      // 2. Locale heuristic — numeric month/day/year in locale component order.
+      const fromHeuristic = parseWithHeuristic(trimmed)
+      if (fromHeuristic) return dateToIso(fromHeuristic)
+      // 3. Last-resort fallback — new Date() handles named-month forms ("Jul 4, 2024").
+      //    Non-ISO strings parse in LOCAL time in V8 (not UTC), so getDate() is timezone-safe.
+      //    Guard: skip if the input looks like ISO (step 1 already rejected it). Without this
+      //    guard, V8 normalizes invalid ISO dates ("2023-02-29" → Feb 28) instead of returning
+      //    Invalid Date, silently producing a wrong canonical.
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+        const fromNative = new Date(trimmed)
+        if (!Number.isNaN(fromNative.getTime())) return dateToIso(fromNative)
+      }
+      return null
+    },
+    format(iso: string): string {
+      const date = parseIso(iso)
+      return date ? fmt.format(date) : iso
+    },
+    errorMessage: 'Please enter a valid date.',
+  }
+}
+
+/**
+ * Codec options for type=time. Canonical form: `HH:MM` (24h, zero-padded). Format: localized
+ * short time string via Intl.DateTimeFormat `{timeStyle:'short'}`. Parse: accepts HH:MM (24h)
+ * and H:MM AM/PM (best-effort 12h → 24h conversion, handles en-US Intl output including
+ * narrow no-break space variants); null on invalid. Error message: 'Please enter a valid time.'
+ *
+ * @param locale  BCP 47 locale (default: runtime locale). Pin to 'en-US' in tests for determinism.
+ */
+export function timeCodecOptions(locale?: string): ValueCodecOptions {
+  const fmt = new Intl.DateTimeFormat(locale, { timeStyle: 'short' })
+
+  /** Zero-pad hours and minutes to HH:MM canonical form. */
+  function toHHMM(h: number, m: number): string {
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+  }
+
+  return {
+    parse(display: string): string | null {
+      const trimmed = display.trim()
+      if (!trimmed) return null
+
+      // 1. HH:MM (24h) — canonical form; always accepted as typed.
+      const m24 = trimmed.match(/^(\d{1,2}):(\d{2})$/)
+      if (m24) {
+        const h = Number(m24[1]), m = Number(m24[2])
+        if (h <= 23 && m <= 59) return toHHMM(h, m)
+        return null
+      }
+
+      // 2. H:MM AM/PM — best-effort 12h → 24h conversion.
+      //    \s* matches both regular space and narrow no-break space (U+202F), which some
+      //    ICU versions emit between the time and the AM/PM period (Unicode CLDR change).
+      const m12 = trimmed.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i)
+      if (m12) {
+        let h = Number(m12[1])
+        const m = Number(m12[2])
+        const period = m12[3].toLowerCase()
+        if (m > 59) return null
+        if (period === 'am') {
+          if (h === 12) h = 0       // 12:xx AM → 00:xx (midnight)
+          else if (h > 12) return null
+        } else {
+          if (h === 12) { /* 12:xx PM → stays 12 (noon) */ }
+          else if (h < 12) h += 12  // 1..11 PM → 13..23
+          else return null           // h > 12 PM is invalid
+        }
+        if (h > 23) return null
+        return toHHMM(h, m)
+      }
+
+      return null
+    },
+    format(canonical: string): string {
+      const match = canonical.match(/^(\d{2}):(\d{2})$/)
+      if (!match) return canonical
+      const h = Number(match[1]), m = Number(match[2])
+      if (h > 23 || m > 59) return canonical
+      // Construct in local time on a fixed reference date so DST transitions don't shift
+      // the displayed hour (the specific calendar date Jan 1 2000 is arbitrary — it is
+      // never shown, only the time component is formatted).
+      const date = new Date(2000, 0, 1, h, m, 0, 0)
+      return fmt.format(date)
+    },
+    errorMessage: 'Please enter a valid time.',
   }
 }

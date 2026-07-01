@@ -28,6 +28,14 @@
 // `{ leading, suffix, affordance, codec }`. NEW types `unit` and `percent`. Multi-currency fraction digits,
 // generalized steppers with `step`/`min`/`max`, suffix spans, ArrowUp/Down stepping, and range validity
 // (rangeUnderflow/rangeOverflow). type='text' stays byte-identical.
+//
+// Wave 5B growth (ADR-0048): date/time types. `type=date` — display↔ISO-canonical split via dateCodecOptions()
+// + a trailing calendar-button affordance that opens a lazily-imported `<ui-calendar>` in an overlay popup.
+// `type=time` — display↔HH:MM-canonical split via timeCodecOptions(). Both use `typeMismatch` (not
+// `customError`) for parse failures. The dynamic `import('../calendar/calendar.ts')` on first open keeps
+// the calendar out of the text-field's STATIC import graph (tree-shake safe — the static regex crawl
+// does not match `import()` expressions). date and time have codec but NO steppers (ADR-0047 "codec ⇒ steppers"
+// applies to numeric types only). datetime-local/month = deferred (STRETCH, not this wave).
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIFormElement, type FormValue, type ValidityResult } from '../../dom/form.ts'
@@ -37,10 +45,13 @@ import {
   numberCodecOptions,
   currencyCodecOptions,
   unitCodecOptions,
+  dateCodecOptions,
+  timeCodecOptions,
   currencySymbol,
   unitLabel,
   type ValueCodecController,
 } from '../../traits/value-codec.ts'
+import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
 
 // The editor's editable mode (ADR-0014 cl.1) and a per-instance id seed for aria-describedby.
 const EDITABLE = 'plaintext-only'
@@ -55,38 +66,42 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 //
 // The single `trailing` role from v1 is split into independent facets so `unit`/`percent` can carry a
 // suffix TEXT label AND steppers in the same trailing cell. Key invariants:
-//   • A non-null `codec` IMPLIES steppers (all numeric types are steppable — ADR-0047).
+//   • A non-null `codec` with a NUMERIC kind ('number'|'currency'|'unit') implies steppers (ADR-0047).
+//     date/time have codec but NOT steppers — the stepper branch guards `codec !== 'date' && 'time'`.
 //   • `affordance` (exclusive interactive button) NEVER coexists with steppers.
+//   • `affordance === 'calendar'` DOES coexist with `codec === 'date'` (the one exception — ADR-0048).
 //   • `suffix` is the trailing text label ('percent' → '%', 'unit' → this.unit via unitLabel()).
 //   • `percent` reuses codec='number' — its canonical is the TYPED number ("50", not ÷100).
 
 type LeadingRole = 'magnifier' | 'currency'
 type SuffixKind = 'percent' | 'unit'
-type AffordanceRole = 'clear' | 'reveal'
-type ValidationType = 'email' | 'url' | 'number'
-type CodecKind = 'number' | 'currency' | 'unit'
+type AffordanceRole = 'clear' | 'reveal' | 'calendar'
+type ValidationType = 'email' | 'url' | 'number' | 'date' | 'time'
+type CodecKind = 'number' | 'currency' | 'unit' | 'date' | 'time'
 
 interface TypeConfig {
   readonly inputmode: string
   readonly leading: LeadingRole | null
-  readonly suffix: SuffixKind | null       // trailing text label ('percent'=static '%', 'unit'=dynamic this.unit)
-  readonly affordance: AffordanceRole | null  // exclusive interactive trailing button (never with steppers)
+  readonly suffix: SuffixKind | null          // trailing text label ('percent'=static '%', 'unit'=dynamic this.unit)
+  readonly affordance: AffordanceRole | null   // exclusive interactive trailing button
   readonly validation: ValidationType | null
-  readonly codec: CodecKind | null           // non-null ⇒ steppers present
+  readonly codec: CodecKind | null             // non-null → display↔canonical split is active
 }
 
 const TYPE_CONFIG = {
-  //            inputmode    leading        suffix       affordance    validation   codec
-  text:     { inputmode: 'text',    leading: null,        suffix: null,      affordance: null,     validation: null,     codec: null       },
-  email:    { inputmode: 'email',   leading: null,        suffix: null,      affordance: null,     validation: 'email',  codec: null       },
-  url:      { inputmode: 'url',     leading: null,        suffix: null,      affordance: null,     validation: 'url',    codec: null       },
-  tel:      { inputmode: 'tel',     leading: null,        suffix: null,      affordance: null,     validation: null,     codec: null       },
-  search:   { inputmode: 'search',  leading: 'magnifier', suffix: null,      affordance: 'clear',  validation: null,     codec: null       },
-  password: { inputmode: 'text',    leading: null,        suffix: null,      affordance: 'reveal',  validation: null,     codec: null       },
-  number:   { inputmode: 'numeric', leading: null,        suffix: null,      affordance: null,     validation: 'number', codec: 'number'   },
-  currency: { inputmode: 'decimal', leading: 'currency',  suffix: null,      affordance: null,     validation: 'number', codec: 'currency' },
-  unit:     { inputmode: 'decimal', leading: null,        suffix: 'unit',    affordance: null,     validation: 'number', codec: 'unit'     },
-  percent:  { inputmode: 'decimal', leading: null,        suffix: 'percent', affordance: null,     validation: 'number', codec: 'number'   },
+  //            inputmode    leading        suffix       affordance      validation   codec
+  text:     { inputmode: 'text',    leading: null,        suffix: null,      affordance: null,       validation: null,     codec: null       },
+  email:    { inputmode: 'email',   leading: null,        suffix: null,      affordance: null,       validation: 'email',  codec: null       },
+  url:      { inputmode: 'url',     leading: null,        suffix: null,      affordance: null,       validation: 'url',    codec: null       },
+  tel:      { inputmode: 'tel',     leading: null,        suffix: null,      affordance: null,       validation: null,     codec: null       },
+  search:   { inputmode: 'search',  leading: 'magnifier', suffix: null,      affordance: 'clear',    validation: null,     codec: null       },
+  password: { inputmode: 'text',    leading: null,        suffix: null,      affordance: 'reveal',   validation: null,     codec: null       },
+  number:   { inputmode: 'numeric', leading: null,        suffix: null,      affordance: null,       validation: 'number', codec: 'number'   },
+  currency: { inputmode: 'decimal', leading: 'currency',  suffix: null,      affordance: null,       validation: 'number', codec: 'currency' },
+  unit:     { inputmode: 'decimal', leading: null,        suffix: 'unit',    affordance: null,       validation: 'number', codec: 'unit'     },
+  percent:  { inputmode: 'decimal', leading: null,        suffix: 'percent', affordance: null,       validation: 'number', codec: 'number'   },
+  date:     { inputmode: 'text',    leading: null,        suffix: null,      affordance: 'calendar', validation: 'date',   codec: 'date'     },
+  time:     { inputmode: 'text',    leading: null,        suffix: null,      affordance: null,       validation: 'time',   codec: 'time'     },
 } as const satisfies Record<string, TypeConfig>
 
 // ── props ─────────────────────────────────────────────────────────────────────
@@ -105,7 +120,7 @@ const props = {
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
   // type reflects so [type] CSS selectors (e.g. [type=password] for masking) and the type-resolver apply
   // to JS-set values; 'text' is the identity config (byte-identical to the pre-Wave-3 shipped control).
-  type: { ...prop.enum(['text', 'email', 'url', 'tel', 'password', 'search', 'number', 'currency', 'unit', 'percent'] as const, 'text'), reflect: true },
+  type: { ...prop.enum(['text', 'email', 'url', 'tel', 'password', 'search', 'number', 'currency', 'unit', 'percent', 'date', 'time'] as const, 'text'), reflect: true },
   readonly: { ...prop.boolean(false), reflect: true },
   // Wave 5A — the five new numeric-type props (ADR-0047). All reflected for native attribute-IDL parity.
   // Reading this.currency / this.unit inside the type-effect's currency/unit branch makes the effect reactive
@@ -232,14 +247,16 @@ export class UITextFieldElement extends UIFormElement {
       }
       const leadingEl = config.leading ? this.#createLeadingAdornment(config.leading, leadingText) : null
 
-      // Trailing adornment: affordance (search/password) XOR numeric (steppers ± suffix).
-      // These two never coexist — the TYPE_CONFIG invariant (ADR-0047).
+      // Trailing adornment: affordance (search/password/calendar) XOR numeric steppers ± suffix.
+      // These two never coexist — affordance 'calendar' is the one exception that ALSO carries a codec
+      // (type=date: affordance='calendar' + codec='date'), but STILL no steppers (ADR-0048).
       let trailingEl: HTMLElement | null = null
       if (config.affordance !== null) {
-        // Exclusive interactive button (clear / reveal) — no steppers alongside.
+        // Exclusive interactive button (clear / reveal / calendar) — no steppers alongside.
         trailingEl = this.#createAffordanceAdornment(config.affordance, typeAc.signal)
-      } else if (config.codec !== null) {
-        // Steppers, optionally with a suffix span.
+      } else if (config.codec !== null && config.codec !== 'time') {
+        // Steppers, optionally with a suffix span (NUMERIC types only — type=time has codec but no steppers;
+        // type=date never reaches this branch because its affordance='calendar' takes the first branch).
         // For unit: reading this.unit makes the effect re-run when unit changes (only while type=unit).
         const suffixText =
           config.suffix === 'percent'
@@ -250,19 +267,107 @@ export class UITextFieldElement extends UIFormElement {
         trailingEl = this.#createNumericAdornment(suffixText, typeAc.signal)
       }
 
-      // Codec: number/currency/unit get the display↔canonical split (formValue + formValidity check it).
-      // percent reuses numberCodecOptions (canonical = the typed number, not ÷100 — ADR-0047).
-      // typeAc.signal is passed so the codec's focus/blur listeners die on the NEXT type change, not just
-      // on disconnect — closing the M1 listener-accumulation gap without needing the released=true guard
-      // (which masked but did not fix the root cause). Wave 5B date/time codecs reuse this same seam.
+      // Calendar overlay (type=date only): a lazily-imported `<ui-calendar>` in a popover popup.
+      // The popup + overlay handle are per-type-effect-run; cleanup below tears them down on type-change.
+      // The dynamic `import('../calendar/calendar.ts')` on first button-click keeps the calendar module
+      // OUT of this file's static import graph — the tree-shake regex crawler cannot match `import()`
+      // expressions, so `controls/calendar/` stays absent from `ui-text-field`'s static graph.
+      let calendarPopup: HTMLElement | null = null
+      let calendarHandle: OverlayHandle | null = null
+
+      if (config.affordance === 'calendar' && trailingEl !== null) {
+        const calBtn = trailingEl.querySelector('[data-part="calendar-button"]') as HTMLElement
+
+        // Create the calendar popup: a `<ui-calendar>` inside a `[data-part=calendar-popup]` wrapper.
+        // The `<ui-calendar>` is an UNKNOWN element until the lazy import resolves — it upgrades in
+        // place without any re-render (the overlay popup doesn't re-mount the element on upgrade).
+        const calEl = document.createElement('ui-calendar')
+        calendarPopup = document.createElement('div')
+        calendarPopup.setAttribute('data-part', 'calendar-popup')
+        calendarPopup.append(calEl)
+        this.append(calendarPopup)
+
+        // Wire the overlay controller. The connection-scoped `host.listen(popup, 'toggle', …)` inside
+        // overlay() persists until disconnect; the explicit `calendarHandle.cleanup()` in the effect
+        // cleanup fires on type-change (setting `cleaned=true` so the toggle handler becomes a no-op).
+        calendarHandle = overlay(this, {
+          popup: calendarPopup,
+          anchor: calBtn,
+          placement: 'bottom-start',
+          auto: true,
+          focusOnOpen: true,
+        })
+
+        // Event-boundary guard (ADR-0048 §3 — B1): UIElement.emit() fires events with bubbles:true
+        // composed:true, so the calendar's own `change` event bubbles out of <ui-calendar> and reaches
+        // ui-text-field's external listeners BEFORE the field's select→re-emit fires — doubling the
+        // event (consumer sees 2 change per pick; native <input type=date> emits 1). Stop the calendar's
+        // `change` at the calEl boundary; the field remains the sole emitter for its own events.
+        calEl.addEventListener('change', (e) => { e.stopPropagation() }, { signal: typeAc.signal })
+
+        let calendarLoaded = false
+
+        // Button click: sync field value/bounds → calendar, then open.
+        // Fast path: if ui-calendar is ALREADY REGISTERED (e.g., statically imported via the barrel or
+        // by another part of the app), open synchronously — `customElements.get` is a runtime check,
+        // not a static import, so the tree-shaker still excludes calendar.ts from the text-field graph.
+        // Slow path: dynamic import on first open; after that, `calendarLoaded` keeps it synchronous.
+        //
+        // NOTE — M1 test gap: the slow path (dynamic import) is NOT exercised by the test suite because
+        // both the barrel (controls/index.ts) and the browser test harness pre-register <ui-calendar>,
+        // making customElements.get('ui-calendar') always truthy. Isolating an unregistered-calendar
+        // context would require unregistering a custom element, which the spec forbids. The slow path
+        // is correct by code-review (same try-free import chain as `calendarLoaded=true → open()`); the
+        // limitation is documented in text-field.md.
+        calBtn.addEventListener('click', () => {
+          calEl.setAttribute('value', this.value)
+          if (this.min) calEl.setAttribute('min', this.min)
+          if (this.max) calEl.setAttribute('max', this.max)
+
+          if (calendarLoaded || customElements.get('ui-calendar') !== undefined) {
+            calendarLoaded = true
+            calendarHandle!.open()
+          } else {
+            // First open: dynamic import (NOT a static import — keeps ui-calendar out of the static graph).
+            import('../calendar/calendar.ts').then(() => {
+              calendarLoaded = true
+              calendarHandle!.open()
+            })
+          }
+        }, { signal: typeAc.signal })
+
+        // Calendar selection: `select` fires with the chosen ISO date in event.detail (ADR-0048 §2).
+        // The codec's setCanonical keeps the canonical in sync so blur-formatting starts from the new date.
+        calEl.addEventListener('select', (event) => {
+          const iso = (event as CustomEvent<string>).detail
+          if (iso) {
+            this.value = iso
+            this.#codec?.setCanonical(iso)
+            this.emit('input')
+            this.emit('change')
+          }
+          calendarHandle!.close()
+        }, { signal: typeAc.signal })
+      }
+
+      // Codec: number/currency/unit/percent get the numeric display↔canonical split (ADR-0047).
+      // date/time get the locale display↔ISO-canonical split (ADR-0048). typeAc.signal is passed so
+      // the codec's focus/blur listeners die on the NEXT type change (the M1-fix seam).
+      // Local variable captures config.codec so TypeScript can narrow the literal union correctly
+      // through the ternary chain (narrowing through `config.codec` on a union config type is fragile).
+      const codecKind = config.codec
       const codec: ValueCodecController | null =
-        config.codec === 'number'
+        codecKind === 'number'
           ? valueCodec(this, numberCodecOptions(), typeAc.signal)
-          : config.codec === 'currency'
+          : codecKind === 'currency'
             ? valueCodec(this, currencyCodecOptions(this.currency ?? 'USD'), typeAc.signal)
-            : config.codec === 'unit'
+            : codecKind === 'unit'
               ? valueCodec(this, unitCodecOptions(this.unit ?? ''), typeAc.signal)
-              : null
+              : codecKind === 'date'
+                ? valueCodec(this, dateCodecOptions(), typeAc.signal)
+                : codecKind === 'time'
+                  ? valueCodec(this, timeCodecOptions(), typeAc.signal)
+                  : null
       this.#codec = codec
 
       // Clear reveal state on type change so switching away from 'password' doesn't leave ghost state.
@@ -273,9 +378,11 @@ export class UITextFieldElement extends UIFormElement {
 
       // Effect cleanup: runs before the next type-change run AND on scope.dispose() (disconnect).
       return (): void => {
-        typeAc.abort() // removes adornment-button listeners registered with typeAc.signal
+        typeAc.abort() // removes adornment-button listeners (clear/reveal/calendar) registered with typeAc.signal
         leadingEl?.remove()
         trailingEl?.remove()
+        calendarPopup?.remove()   // remove the calendar popup panel from the host on type-change or disconnect
+        calendarHandle?.cleanup() // early-teardown of the overlay controller (closed, cleaned=true — idempotent)
         codec?.release()
         this.#codec = null
       }
@@ -379,9 +486,10 @@ export class UITextFieldElement extends UIFormElement {
   }
 
   /**
-   * The validity verdict: `required && value === ''` → `valueMissing`; codec parse error → `customError`;
-   * range check (min/max) → `rangeUnderflow`/`rangeOverflow`; email/url type mismatch → `typeMismatch`;
-   * valid otherwise. A disabled field is barred from constraint validation (native parity).
+   * The validity verdict: `required && value === ''` → `valueMissing`; codec parse error → `customError`
+   * (numeric) or `typeMismatch` (date/time — ADR-0048); range check (min/max) → `rangeUnderflow`/
+   * `rangeOverflow` (numeric types only); email/url format error → `typeMismatch`; valid otherwise.
+   * A disabled field is barred from constraint validation (native parity).
    * `stepMismatch` is NOT enforced — too strict for free numeric entry (ADR-0047).
    */
   protected formValidity(): ValidityResult {
@@ -397,11 +505,16 @@ export class UITextFieldElement extends UIFormElement {
       }
     }
 
-    // Codec parse error (number/currency/unit/percent): hasError is set by the valueCodec controller on blur.
+    // Read type once — used for both codec-error flag discrimination and type-specific validation below.
+    const type = this.type
+
+    // Codec parse error: hasError is set by the valueCodec controller on blur (all codec types).
+    // date/time → typeMismatch (the platform validity flag for wrong-format date/time — ADR-0048);
+    // numeric types → customError (a free-form parse failure, not a native input-type mismatch).
     if (this.#codec?.hasError.value) {
       return {
         valid: false,
-        flags: { customError: true },
+        flags: type === 'date' || type === 'time' ? { typeMismatch: true } : { customError: true },
         message: this.#codec.errorMessage,
         anchor: this.#editor ?? undefined,
       }
@@ -410,10 +523,10 @@ export class UITextFieldElement extends UIFormElement {
     // Type-specific validation (non-empty values only — empty passes to avoid double-reporting).
     const v = this.value
     if (v !== '') {
-      // Range validity for numeric types (ADR-0047): rangeUnderflow / rangeOverflow from min/max.
-      // Checked against the codec's canonical (the last successfully parsed value — updated on blur).
-      // stepMismatch is NOT enforced (recorded in ADR-0047 — too strict for free numeric entry).
-      if (this.#codec !== null) {
+      // Range validity for NUMERIC types only (ADR-0047): rangeUnderflow / rangeOverflow from min/max.
+      // date/time are excluded — their min/max are ISO strings, not numeric bounds (parseFloat would
+      // silently truncate to the year portion, producing wrong comparisons). Date-range is a future item.
+      if (this.#codec !== null && type !== 'date' && type !== 'time') {
         const canonical = this.#codec.canonical.value
         if (canonical !== '') {
           const numVal = parseFloat(canonical)
@@ -444,7 +557,6 @@ export class UITextFieldElement extends UIFormElement {
         }
       }
 
-      const type = this.type
       if (type === 'email' && !EMAIL_PATTERN.test(v)) {
         return {
           valid: false,
@@ -510,9 +622,11 @@ export class UITextFieldElement extends UIFormElement {
   }
 
   /**
-   * Create and append a control-injected TRAILING affordance adornment (clear / reveal). The exclusive
-   * interactive buttons register their listeners with `typeAc` so they are aborted on type change and
-   * on disconnect (the cleanup's typeAc.abort()). Returns the element for the effect cleanup to remove.
+   * Create and append a control-injected TRAILING affordance adornment (clear / reveal / calendar).
+   * The clear and reveal buttons register their click listeners with `typeAc` so they are aborted on
+   * type change and on disconnect (the cleanup's typeAc.abort()). The calendar button's click listener
+   * is wired by the CALLER (the type-effect) after overlay creation — this method only creates the
+   * button element. Returns the container for the effect cleanup to remove.
    */
   #createAffordanceAdornment(role: AffordanceRole, typeAc: AbortSignal): HTMLElement {
     const container = document.createElement('span')
@@ -535,7 +649,7 @@ export class UITextFieldElement extends UIFormElement {
         this.#editor?.focus()
       }, { signal: typeAc })
       container.append(btn)
-    } else {
+    } else if (role === 'reveal') {
       // reveal: toggle password masking via :state(revealed) (ADR-0044)
       const btn = document.createElement('button')
       btn.type = 'button'
@@ -554,6 +668,17 @@ export class UITextFieldElement extends UIFormElement {
         }
         this.emit('toggle')
       }, { signal: typeAc })
+      container.append(btn)
+    } else {
+      // 'calendar': trailing icon button that opens the date picker popup.
+      // The click listener + overlay wiring are done by the type-effect AFTER overlay() is called —
+      // the button must exist first so it can serve as the overlay anchor.
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.setAttribute('data-part', 'calendar-button')
+      btn.setAttribute('aria-label', 'Open date picker')
+      btn.setAttribute('aria-haspopup', 'dialog')
+      btn.textContent = '📅'
       container.append(btn)
     }
 

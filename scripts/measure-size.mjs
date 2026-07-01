@@ -21,8 +21,9 @@ const targets = [
   // [label, entry (relative to this script), budget in gz bytes]
   ['@agent-ui/components . (reactive+dom barrel)', '../packages/agent-ui/components/src/index.ts', 7 * KB],
   // family-total re-based for the control suite; the per-control marginal ≤~2KB is the real cap,
-  // real consumers tree-shake. 16 KB gives ~77% headroom above the Wave-1 total (9032 B gz).
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 16 * KB],
+  // real consumers tree-shake. 22 KB re-based at Wave 5B (ADR-0049): the suite now holds the full
+  // control family incl. ui-calendar + the date/time picker paths (19889 B gz actual; ~13% headroom).
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 22 * KB],
 ]
 
 let over = false

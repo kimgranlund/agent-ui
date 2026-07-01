@@ -37,6 +37,17 @@ Every family exposes the same roles, so a component swaps families by changing o
 - **surface ladder** — `-background` · `-surface` · the dim ladder (`-surface-dimmest…-dim`) · the bright
   ladder (`-surface-bright…-brightest`) · the low/high ladder (`-surface-lowest…-highest`)
 
+**Interaction-state fill roles (per-family, added on demand — `primary` only today).** Beyond the uniform
+roles above, the solid-filled channel adds dedicated state steps as a control needs them (not on all 8
+families):
+
+- `-hover` · `-active` — the idle→hover→active solid steps (ADR-0008), each distinct from idle and from each
+  other in **both** `light-dark()` branches (they replaced the `-dim`/`-high` pairing that collapsed in light).
+- `-selected` — the persistent **chosen** fill, **guaranteed WCAG-AA (≥4.5:1) against `-on-{f}` TEXT in BOTH
+  schemes** (light `550`/dark `600`). Use it wherever selected TEXT sits on an accent fill; the accent anchor
+  pair (`--c-{f}` + `-on-{f}`) is report-only and drops below 4.5:1 in dark — fine for a *glyph* (3:1 bar), not
+  for a *numeral/label*. First consumer: the `ui-calendar` selected day (ADR-0048).
+
 ## Consumption invariants
 
 - Components reference **roles** (or their own `--ui-{cmp}-*` chain pointing at roles), never raw

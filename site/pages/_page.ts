@@ -172,6 +172,14 @@ export const NAV: readonly NavGroup[] = [
       { href: './combo-box-doc.html', label: 'API' },
     ],
   },
+  // Picker controls — Wave 5B (ADR-0048): standalone date picker + future type=date overlay body.
+  {
+    label: 'ui-calendar',
+    links: [
+      { href: './calendar-demo.html', label: 'Demo' },
+      { href: './calendar-doc.html', label: 'API' },
+    ],
+  },
   {
     links: [
       { href: './a2ui-canvas.html', label: 'A2UI Canvas' },

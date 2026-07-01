@@ -298,12 +298,13 @@
 
   /* adornment button baseline: no default browser button chrome, inherit the field's font/color, sized to
      the slot cell (the [slot='leading']/[slot='trailing'] CSS above sizes the cell to --ui-text-field-icon;
-     the button fills it). Interactive affordances (clear / reveal / steppers) use data-part='clear-button' /
-     'reveal-button' / 'step-up' / 'step-down' — they share the same reset. */
+     the button fills it). Interactive affordances (clear / reveal / steppers / calendar) use data-part names;
+     they share the same reset so they render chrome-free and glyph-sized out of the box. */
   :scope [data-part='clear-button'],
   :scope [data-part='reveal-button'],
   :scope [data-part='step-up'],
-  :scope [data-part='step-down'] {
+  :scope [data-part='step-down'],
+  :scope [data-part='calendar-button'] {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -356,6 +357,17 @@
     line-height: 1;
   }
 
+  /* Wave 5B (ADR-0048): calendar popup wrapper (type=date). The `[data-part='calendar-popup']` div is
+     the `[popover]` element that hosts the `<ui-calendar>`. Strip UA popover defaults (padding / border /
+     background) so the calendar's own `[data-box]` panel owns all spacing and appearance — the wrapper
+     is a transparent host for the top-layer popup; it contributes no visual chrome of its own. */
+  :scope > [popover][data-part='calendar-popup'] {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    margin: 0;
+  }
+
   /* suffix span: the trailing unit label ('kg') or percent sign ('%) — sized = font (§4.6 inline
      affordance law), decorative (aria-hidden). Subdued ink (the placeholder role) so it reads as
      a unit annotation, not competing with the editor value. */
@@ -405,8 +417,9 @@
     :scope [data-part='clear-button'],
     :scope [data-part='reveal-button'],
     :scope [data-part='step-up'],
-    :scope [data-part='step-down'] {
-      forced-color-adjust: none; /* the magnifier / symbol / reveal / suffix / steppers survive forced-colors */
+    :scope [data-part='step-down'],
+    :scope [data-part='calendar-button'] {
+      forced-color-adjust: none; /* the magnifier / symbol / reveal / suffix / steppers / calendar glyph survive */
     }
   }
 }

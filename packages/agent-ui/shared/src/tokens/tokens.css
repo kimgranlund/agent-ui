@@ -146,6 +146,14 @@
      LIGHT steps collapsed onto --c-primary-650. Fleet roles: any control's primary solid fill steps these. */
   --c-primary-hover: light-dark(var(--c-primary-700), var(--c-primary-600));
   --c-primary-active: light-dark(var(--c-primary-750), var(--c-primary-700));
+  /* Persistent-SELECTED solid fill — the resting "chosen" accent (NOT a transient hover/active), guaranteed
+     WCAG-AA (≥4.5:1) against --c-primary-on-primary TEXT in BOTH schemes: light 550 = 4.79:1 (byte-identical
+     to the --c-primary anchor's light leg), dark 600 = 5.73:1. It exists because the accent anchor pair
+     (--c-primary + white) is report-only and drops to 3.32:1 in dark — fine for a GLYPH at the 3:1 bar (the
+     checkmark/thumb of every prior solid control) but below the 4.5:1 bar for real TEXT. First consumer: the
+     ui-calendar selected-day NUMERAL (ADR-0048). Resting-only — no -selected-hover/-active step (no consumer
+     needs one; the state siblings are added per-family on demand, like the -hover/-active pair above). */
+  --c-primary-selected: light-dark(var(--c-primary-550), var(--c-primary-600));
   --c-primary-dim: light-dark(var(--c-primary-650), var(--c-primary-700));
   --c-primary-bright: light-dark(var(--c-primary-350), var(--c-primary-400));
   --c-primary-low: light-dark(var(--c-primary-350), var(--c-primary-700));

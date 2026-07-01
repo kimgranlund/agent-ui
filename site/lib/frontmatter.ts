@@ -35,6 +35,7 @@ import tooltipMd from '../../packages/agent-ui/components/src/controls/tooltip/t
 import menuMd from '../../packages/agent-ui/components/src/controls/menu/menu.md?raw'
 import selectMd from '../../packages/agent-ui/components/src/controls/select/select.md?raw'
 import comboBoxMd from '../../packages/agent-ui/components/src/controls/combo-box/combo-box.md?raw'
+import calendarMd from '../../packages/agent-ui/components/src/controls/calendar/calendar.md?raw'
 
 /** A parsed control descriptor: the structured frontmatter (its attributes-as-API drive the table) + the prose body. */
 export interface ComponentDoc {
@@ -71,6 +72,7 @@ export const loadTooltipDoc = (): ComponentDoc => parseDoc(tooltipMd)
 export const loadMenuDoc = (): ComponentDoc => parseDoc(menuMd)
 export const loadSelectDoc = (): ComponentDoc => parseDoc(selectMd)
 export const loadComboBoxDoc = (): ComponentDoc => parseDoc(comboBoxMd)
+export const loadCalendarDoc  = (): ComponentDoc => parseDoc(calendarMd)
 
 // ── tier enumeration (for the family overview + tier showcase — a DERIVED member list) ───────────────────────
 // The whole `{name}.md` descriptor set, globbed at build time (Vite resolves `import.meta.glob` statically). The

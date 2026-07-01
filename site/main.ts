@@ -373,6 +373,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // Picker controls — Wave 5B (ADR-0048): standalone date picker + future type=date overlay body.
+  {
+    label: 'ui-calendar',
+    cards: [
+      {
+        href: './calendar-demo.html',
+        title: 'Demo',
+        blurb: 'The standalone month-grid date picker — click or keyboard to select a date, with min/max range, required validation, and form submission.',
+      },
+      {
+        href: './calendar-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-calendar attributes (value/min/max + form props), keyboard grid navigation, and form-associated ISO YYYY-MM-DD value, generated from its calendar.md descriptor.',
+      },
+    ],
+  },
   {
     cards: [
       {

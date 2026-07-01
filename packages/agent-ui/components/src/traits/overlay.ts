@@ -309,6 +309,10 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
       }
     }
     stopPositioning()
+    // restoreFocus() is intentionally NOT called here: on host disconnect the anchor is also
+    // leaving the document (it is a child of the same host). focus() on a detached element is a
+    // no-op; the browser correctly moves focus to body, which is the right behaviour on disconnect.
+    // This mirrors native <dialog>.close() co-removal: the trigger goes with the dialog.
   }
 
   // Register the cleanup as a scope-owned effect disposer so it fires automatically on host
