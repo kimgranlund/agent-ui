@@ -24,6 +24,23 @@ function drag(target: HTMLElement, startX: number, endX: number, id = 1): void {
   target.dispatchEvent(new PointerEvent('pointerup',   { clientX: endX,   pointerId: id, bubbles: true }))
 }
 
+// ── AC0: RENDERED SHAPE — a range slider must LOOK like a slider, not two collapsed dots ─────────
+describe('ui-slider-multi AC0 — renders as a horizontal track, not collapsed thumbs (regression)', () => {
+  it('in a flex row, the host floors to a wide horizontal bar (width ≥ 12rem, width ≫ height)', () => {
+    const row = document.createElement('div')
+    row.style.display = 'flex'
+    row.style.alignItems = 'center'
+    document.body.append(row)
+    const el = document.createElement('ui-slider-multi') as UISliderMultiElement
+    row.append(el)
+
+    const rect = el.getBoundingClientRect()
+    expect(rect.width, `slider-multi collapsed to ${rect.width}px — must floor to ~12rem, a horizontal track`).toBeGreaterThanOrEqual(180)
+    expect(rect.width, 'a range slider must be far wider than tall (a track, not dots)').toBeGreaterThan(rect.height * 4)
+    row.remove()
+  })
+})
+
 /**
  * Stub setPointerCapture on the RAIL element (the value-drag controller's track).
  *

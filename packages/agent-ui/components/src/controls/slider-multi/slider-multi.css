@@ -61,6 +61,9 @@
   :scope {
     display: flex;
     align-items: center;
+    /* A range slider is a HORIZONTAL track — without an intrinsic width it collapses to the thumbs (dots)
+       in a shrink-wrapping flex/inline context (ui-text-field #74 failure class). Floor the inline-size. */
+    min-inline-size: var(--ui-slider-multi-min-inline-size, 12rem);
     block-size: var(--ui-slider-multi-box);    /* interactive box = compact widget ramp step (ADR-0041) */
     position: relative;
     -webkit-user-select: none;

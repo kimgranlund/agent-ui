@@ -68,6 +68,10 @@
   :scope {
     display: block;
     position: relative;
+    /* A slider is a HORIZONTAL track — without an intrinsic width it collapses to the thumb (a dot) in
+       a shrink-wrapping flex/inline context (the same failure class as ui-text-field #74). A
+       min-inline-size floor prevents the collapse; above it, width is the layout's job. */
+    min-inline-size: var(--ui-slider-min-inline-size, 12rem);
     block-size: var(--ui-slider-box);
     cursor: pointer;
     touch-action: none; /* give pointer events exclusively to the slider during drag (no scroll-conflict) */

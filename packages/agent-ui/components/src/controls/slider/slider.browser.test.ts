@@ -36,6 +36,30 @@ function stubCapture(el: UISliderElement): void {
 const ptr = (type: string, x: number, id = 1): PointerEvent =>
   new PointerEvent(type, { clientX: x, pointerId: id, bubbles: true, cancelable: true })
 
+// ── AC0: RENDERED SHAPE — a slider must LOOK like a slider ───────────────────────────────────────
+// A slider that collapses to its thumb (a dot) passes every per-PART px assertion (box=--ui-compact,
+// thumb=box−4) yet is visually broken. The prior suite measured only HEIGHT + thumb width — never the
+// host's overall WIDTH — so a dot shipped. This asserts the WHOLE shape in the SHRINK-WRAPPING flex
+// context that exposed the bug (the doc-page specimen row).
+
+describe('ui-slider AC0 — renders as a horizontal track, not a collapsed dot (regression)', () => {
+  it('in a flex row, the host floors to a wide horizontal bar (width ≥ 12rem, width ≫ height)', () => {
+    const row = document.createElement('div')
+    row.style.display = 'flex' // the doc-specimen layout: shrink-wraps its children
+    row.style.alignItems = 'center'
+    document.body.append(row)
+    const el = document.createElement('ui-slider') as UISliderElement
+    row.append(el)
+
+    const rect = el.getBoundingClientRect()
+    // 12rem = 192px at the 16px root. Assert the slider did NOT shrink-wrap to ~the thumb box.
+    expect(rect.width, `slider collapsed to ${rect.width}px — must floor to ~12rem, a horizontal track`).toBeGreaterThanOrEqual(180)
+    // A slider is far wider than tall; a dot has width ≈ height. This is the anti-collapse invariant.
+    expect(rect.width, 'a slider must be far wider than tall (a track, not a dot)').toBeGreaterThan(rect.height * 4)
+    row.remove()
+  })
+})
+
 // ── AC1: box = --ui-compact-{size} per [size]×[scale] — EXACT px (anti-vacuous) ─────────────────
 
 describe('ui-slider browser smoke (AC1 — interactive box exact px per [size]×[scale])', () => {
