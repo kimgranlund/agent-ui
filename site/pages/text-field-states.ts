@@ -26,10 +26,14 @@ const { content } = mountPage({
     'control itself in text-field.css — this page only stages and labels, never restyling a field. Hover steps ' +
     'the BORDER colour (a text field has no pressed state); on :focus-within the border steps to transparent and ' +
     'the shared focus ring becomes the sole focus indicator, on all focus (native text-input parity); a required ' +
-    'field shows its danger border only after the first interaction; a disabled field is muted and inert.',
+    'field shows its danger border only after the first interaction; a disabled field is muted and inert. The ' +
+    'last two sections stage the numeric types (steppers, min/max, multi-currency, unit, percent) and the picker ' +
+    'types (type=date opening the ui-calendar overlay, type=time typed).',
 })
 
 // ── small DOM helpers (page scaffold only) ───────────────────────────────────────────────────────────────
+// type/currency/unit/step/min/max feed the numeric + picker types (Wave 5A/ADR-0047, Wave 5B/ADR-0048) so a
+// specimen renders the real control-injected adornments (steppers, currency symbol, unit suffix, calendar button).
 interface FieldSpec {
   readonly label: string
   readonly value?: string
@@ -39,6 +43,12 @@ interface FieldSpec {
   readonly readonly?: boolean
   readonly disabled?: boolean
   readonly leading?: boolean
+  readonly type?: string
+  readonly currency?: string
+  readonly unit?: string
+  readonly step?: string
+  readonly min?: string
+  readonly max?: string
 }
 
 function makeField(spec: FieldSpec): HTMLElement {
@@ -50,6 +60,12 @@ function makeField(spec: FieldSpec): HTMLElement {
   if (spec.required) el.setAttribute('required', '')
   if (spec.readonly) el.setAttribute('readonly', '')
   if (spec.disabled) el.setAttribute('disabled', '')
+  if (spec.type) el.setAttribute('type', spec.type)
+  if (spec.currency) el.setAttribute('currency', spec.currency)
+  if (spec.unit) el.setAttribute('unit', spec.unit)
+  if (spec.step) el.setAttribute('step', spec.step)
+  if (spec.min) el.setAttribute('min', spec.min)
+  if (spec.max) el.setAttribute('max', spec.max)
   if (spec.leading) el.append(searchIcon('leading'))
   applyDemoWidth(el, SPECIMEN_WIDTH)
   return el
@@ -198,6 +214,54 @@ ro.setAttribute('readonly', '')
 attachLog(ro, 'ReadOnly')
 readonly.append(makeRow(ro, caption('Tab in → focus + select, but not edit; still submits')))
 
+// ── [7] numeric types — steppers, min/max, multi-currency, unit, percent (Wave 5A / ADR-0047) ─────────────
+const numeric = makeSection(
+  'Numeric types — steppers, min/max, multi-currency, unit & percent',
+  'These types resolve a numeric codec plus control-injected adornments. Use the <strong>▲▼ steppers</strong> ' +
+    '(or <code>ArrowUp</code>/<code>ArrowDown</code> in the editor) to increment by <code>step</code>, clamped ' +
+    'to <code>[min, max]</code> — each step fires <code>input</code> + <code>change</code> into the log. A ' +
+    '<code>currency</code> field renders the per-currency symbol and fraction digits (USD 2 · JPY 0 · EUR 2); a ' +
+    '<code>unit</code> / <code>percent</code> field renders a trailing suffix. A value outside <code>[min, max]' +
+    '</code> raises <code>rangeUnderflow</code> / <code>rangeOverflow</code> after the first interaction.',
+)
+const usd = makeField({ label: 'Amount (USD)', type: 'currency', currency: 'USD', value: '1299.99', step: '10' })
+const jpy = makeField({ label: 'Amount (JPY)', type: 'currency', currency: 'JPY', value: '150000', step: '1000' })
+const eur = makeField({ label: 'Amount (EUR)', type: 'currency', currency: 'EUR', value: '1299.5', step: '10' })
+attachLog(usd, 'USD')
+numeric.append(
+  makeRow(usd, jpy, eur, caption('same value, three currencies → symbol + fraction digits differ')),
+)
+const count = makeField({ label: 'Quantity', type: 'number', value: '10', step: '5', min: '0', max: '20' })
+const mass = makeField({ label: 'Mass', type: 'unit', unit: 'kilogram', value: '72', step: '1' })
+const pct = makeField({ label: 'Complete', type: 'percent', value: '65', step: '5', min: '0', max: '100' })
+attachLog(count, 'Quantity')
+attachLog(mass, 'Mass')
+attachLog(pct, 'Percent')
+numeric.append(
+  makeRow(count, caption('number · step 5 · clamped to [0, 20]')),
+  makeRow(mass, caption('unit=kilogram → “kg” suffix · steppers')),
+  makeRow(pct, caption('percent → “%” suffix · step 5 · [0, 100]')),
+)
+
+// ── [8] picker types — type=date opens the calendar overlay, type=time is typed (Wave 5B / ADR-0048) ──────
+const pickers = makeSection(
+  'Picker types — type=date opens the calendar, type=time typed',
+  'A <code>type=date</code> field shows a <strong>calendar button</strong> (<code>aria-haspopup="dialog"</code>) ' +
+    'that opens a <code>&lt;ui-calendar&gt;</code> in a top-layer Popover overlay — pick a day (click or ' +
+    'Arrow+Enter) and the field’s <code>value</code> becomes the ISO <code>YYYY-MM-DD</code> and fires exactly ' +
+    'one <code>change</code> (the calendar’s own change is stopped at the field boundary, matching native ' +
+    '<code>&lt;input type=date&gt;</code>). A <code>type=time</code> field is typed (<code>HH:MM</code>), its ' +
+    'canonical value ISO while the display is locale-formatted.',
+)
+const date = makeField({ label: 'Date', type: 'date', value: '2026-07-15' })
+const time = makeField({ label: 'Time', type: 'time', value: '14:30' })
+attachLog(date, 'Date')
+attachLog(time, 'Time')
+pickers.append(
+  makeRow(date, caption('click the calendar button → pick a day → one change')),
+  makeRow(time, caption('typed HH:MM · canonical value stays ISO')),
+)
+
 // ── the live log (shared sink for the wired fields above) ────────────────────────────────────────────────
 const logSection = makeSection(
   'Live event log — the real input / change round-trip',
@@ -207,4 +271,4 @@ const logSection = makeSection(
 )
 logSection.append(log)
 
-content.append(placeholder, focus, hover, invalid, disabled, readonly, logSection)
+content.append(placeholder, focus, hover, invalid, disabled, readonly, numeric, pickers, logSection)

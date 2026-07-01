@@ -43,7 +43,8 @@ const columns: readonly Column[] = [
 ]
 
 // FieldSpec — the field-attribute recipe makeField builds a real control from (distinct from Column, whose
-// `label` is the matrix HEADER text, not a field attribute).
+// `label` is the matrix HEADER text, not a field attribute). currency/unit/step/min/max feed the numeric types
+// (currency · unit · percent · number, Wave 5A/ADR-0047) so their type specimens render representatively.
 interface FieldSpec {
   readonly size?: string
   readonly type?: string
@@ -53,12 +54,17 @@ interface FieldSpec {
   readonly trailing?: boolean
   readonly readonly?: boolean
   readonly disabled?: boolean
+  readonly currency?: string
+  readonly unit?: string
+  readonly step?: string
+  readonly min?: string
+  readonly max?: string
 }
 
-// makeField — one real <ui-text-field>. Attributes are the author surface (size/type/readonly/disabled all
-// REFLECT, so setAttribute drives the same styling + the type-resolver's control-injected adornments as
-// author-set markup); `value` seeds the editor part. The leading / trailing icons are light-DOM children carrying
-// the canonical slot POSITION + data-role="icon".
+// makeField — one real <ui-text-field>. Attributes are the author surface (size/type/readonly/disabled +
+// currency/unit/step/min/max all REFLECT, so setAttribute drives the same styling + the type-resolver's
+// control-injected adornments as author-set markup); `value` seeds the editor part. The leading / trailing icons
+// are light-DOM children carrying the canonical slot POSITION + data-role="icon".
 function makeField(spec: FieldSpec): HTMLElement {
   const el = document.createElement('ui-text-field')
   if (spec.size) el.setAttribute('size', spec.size)
@@ -67,6 +73,11 @@ function makeField(spec: FieldSpec): HTMLElement {
   if (spec.placeholder !== undefined) el.setAttribute('placeholder', spec.placeholder)
   if (spec.readonly) el.setAttribute('readonly', '')
   if (spec.disabled) el.setAttribute('disabled', '')
+  if (spec.currency) el.setAttribute('currency', spec.currency)
+  if (spec.unit) el.setAttribute('unit', spec.unit)
+  if (spec.step) el.setAttribute('step', spec.step)
+  if (spec.min) el.setAttribute('min', spec.min)
+  if (spec.max) el.setAttribute('max', spec.max)
   if (spec.leading) el.append(searchIcon('leading'))
   if (spec.trailing) el.append(searchIcon('trailing'))
   applyDemoWidth(el, SPECIMEN_WIDTH)
@@ -155,6 +166,11 @@ interface TypeSample {
   readonly value: string
   readonly placeholder: string
   readonly note: string // what the type-resolver adds (adornment / inputmode / codec) — shown as the caption
+  readonly currency?: string // type=currency — the ISO 4217 code driving the leading symbol + fraction digits
+  readonly unit?: string // type=unit — the CLDR unit id driving the trailing suffix label
+  readonly step?: string // numeric types — the stepper / ArrowUp-Down increment
+  readonly min?: string // numeric types — the lower bound (rangeUnderflow)
+  readonly max?: string // numeric types — the upper bound (rangeOverflow)
 }
 const TYPE_SAMPLES: Record<string, TypeSample> = {
   text: { value: 'Plain text', placeholder: 'Text', note: 'identity — no adornment' },
@@ -163,8 +179,12 @@ const TYPE_SAMPLES: Record<string, TypeSample> = {
   tel: { value: '+1 555 010 1234', placeholder: '+1 555 …', note: 'inputmode=tel' },
   password: { value: 'correct horse', placeholder: 'Password', note: 'masked · reveal toggle (trailing)' },
   search: { value: 'query text', placeholder: 'Search…', note: 'magnifier (leading) · clear button (trailing)' },
-  number: { value: '42', placeholder: '0', note: 'inputmode=numeric · step ± buttons · numeric codec' },
-  currency: { value: '1234.5', placeholder: '0.00', note: 'currency symbol (leading) · money codec' },
+  number: { value: '42', placeholder: '0', note: 'inputmode=numeric · steppers · min 0 / max 100', step: '1', min: '0', max: '100' },
+  currency: { value: '1234.5', placeholder: '0.00', note: 'symbol (leading, per currency=EUR) · steppers · money codec', currency: 'EUR' },
+  unit: { value: '72', placeholder: '0', note: 'suffix (kg, per unit=kilogram) · steppers · numeric codec', unit: 'kilogram', step: '1' },
+  percent: { value: '65', placeholder: '0', note: 'percent suffix (%) · steppers · numeric codec', step: '5', min: '0', max: '100' },
+  date: { value: '2026-07-15', placeholder: 'YYYY-MM-DD', note: 'calendar button (trailing) → ui-calendar overlay' },
+  time: { value: '14:30', placeholder: 'HH:MM', note: 'time codec · HH:MM · typed' },
 }
 
 // typeSection — one section iterating the parsed `type` enum: a live field per type, seeded with a plausible
@@ -174,16 +194,17 @@ function typeSection(): HTMLElement {
   const section = document.createElement('section')
   section.className = 'size-group'
   const heading = document.createElement('h2')
-  heading.textContent = 'Type variants — the auto-adornments, inputmode & codec (ADR-0044)'
+  heading.textContent = 'Type variants — the auto-adornments, inputmode & codec (ADR-0044/0047/0048)'
   section.append(heading)
 
   const intro = document.createElement('p')
   intro.className = 'geo-note'
   intro.textContent =
     'The [type] enum (' + (types.join(' · ') || 'no types parsed') + ') selects a resolver that injects the ' +
-    'right adornments (search magnifier + clear, password reveal, currency symbol, number steppers), sets the ' +
-    'editor inputmode, and applies the value codec (number / currency). Interact with a specimen to see the ' +
-    'reveal toggle, the clear button, or the steppers.'
+    'right adornments (search magnifier + clear, password reveal, currency symbol, unit/percent suffix, ' +
+    'number steppers, date calendar button), sets the editor inputmode, and applies the value codec (number / ' +
+    'currency / unit / percent / date / time). Interact with a specimen to see the reveal toggle, the clear ' +
+    'button, the steppers, or the date picker overlay.'
   section.append(intro)
 
   const matrix = document.createElement('div')
@@ -194,7 +215,10 @@ function typeSection(): HTMLElement {
     const sample = TYPE_SAMPLES[type] ?? { value: '', placeholder: type, note: type }
     const cell = document.createElement('div')
     cell.className = 'matrix-cell'
-    cell.append(makeField({ size: 'md', type, value: sample.value, placeholder: sample.placeholder }))
+    cell.append(makeField({
+      size: 'md', type, value: sample.value, placeholder: sample.placeholder,
+      currency: sample.currency, unit: sample.unit, step: sample.step, min: sample.min, max: sample.max,
+    }))
     const caption = document.createElement('p')
     caption.className = 'geo-label'
     caption.textContent = sample.note
@@ -243,8 +267,8 @@ const { content } = mountPage({
   intro:
     'Every size × state of ui-text-field — empty, filled, with a leading icon, readonly, and disabled — built ' +
     'programmatically from the parsed size enum (' + (sizes.join(' · ') || 'no sizes parsed') + '). Below: the ' +
-    'optional leading/trailing adornment anatomy, the eight [type] variants (their auto-adornments, inputmode & ' +
-    'codec), and a [scale] / [density] subtree-geometry demo (ADR-0007).',
+    'optional leading/trailing adornment anatomy, the ' + types.length + ' [type] variants (their auto-adornments, ' +
+    'inputmode & codec), and a [scale] / [density] subtree-geometry demo (ADR-0007).',
 })
 
 // [1] The matrix — one section per parsed size.

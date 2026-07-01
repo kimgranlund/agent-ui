@@ -1,6 +1,8 @@
 // site/pages/calendar-doc.ts — the ui-calendar API doc page (Wave 5B-1, ADR-0048). DERIVED from `calendar.md` via
-// the shared doc-page.ts renderer (the descriptor-derived tables cannot drift). A live calendar specimen shows
-// the real form control; the value round-trip in a <form> + the change/select log is on the calendar demo page.
+// the shared doc-page.ts renderer (composeDocPage): the attribute / properties / events / slots tables are read
+// straight from the descriptor the contract trip-wire validates, so they cannot drift. Two LIVE specimens sit
+// between the tables and the prose — a plain seeded picker and a min/max-constrained one — mounting the real
+// form control; the value round-trip in a <form> + the change/select log is on the calendar demo page.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo-content chrome; never restyles a ui-* control
 import { loadCalendarDoc } from '../lib/frontmatter.ts'
@@ -16,29 +18,17 @@ const { content } = mountPage({
     'calendar.md (descriptor-derived tables). See the calendar demo for the live form round-trip + event log.',
 })
 
-// ── live specimen — a calendar seeded to a recent date ───────────────────────────────────────
+// ── live specimens (real <ui-calendar>s, placed between the tables and the prose) ─────────────────────────────
+// A seeded picker, and a second one whose min/max clamp the selectable range so the out-of-range (aria-disabled)
+// cells show. Attributes are the author surface — value/min/max all reflect, so setAttribute drives the same
+// selection + range styling as author-set markup.
+const specimen = el('ui-calendar', { name: 'specimen-date', value: '2026-07-15' })
+const rangeEl = el('ui-calendar', { name: 'range-date', value: '2026-07-10', min: '2026-07-01', max: '2026-07-15' })
 
-const specimenSection = exampleSection('Live specimen')
+const specimens = document.createElement('div')
+specimens.append(
+  exampleSection('Live specimen', specimen),
+  exampleSection('Range constraint (min = 1st · max = 15th)', rangeEl),
+)
 
-const specimen = document.createElement('ui-calendar') as HTMLElement & { value: string }
-specimen.setAttribute('value', '2026-07-15')
-specimen.setAttribute('name', 'specimen-date')
-specimenSection.append(specimen)
-content.append(specimenSection)
-
-// ── descriptor-derived API tables ────────────────────────────────────────────────────────────
-
-composeDocPage(content, descriptor, body, { tag: 'ui-calendar' })
-
-// ── a second specimen with min/max (range constraint demonstration) ───────────────────────────
-
-const rangeSection = exampleSection('Range constraint (min=first of month, max=15th)')
-
-const rangeEl = document.createElement('ui-calendar') as HTMLElement & { min: string; max: string }
-rangeEl.setAttribute('value', '2026-07-10')
-rangeEl.setAttribute('min', '2026-07-01')
-rangeEl.setAttribute('max', '2026-07-15')
-rangeSection.append(rangeEl)
-content.append(rangeSection)
-
-void el // suppress unused-import lint if el is only used via exampleSection
+composeDocPage(content, descriptor, body, specimens)

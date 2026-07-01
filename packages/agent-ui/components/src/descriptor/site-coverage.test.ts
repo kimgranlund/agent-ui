@@ -249,3 +249,74 @@ describe('site coverage — the page-existence check BITES (synthetic negative c
     expect(new Set<string>().has('layout-overview.html')).toBe(false)
   })
 })
+
+// ── the ui-text-field [type] → representative-sample coverage gate (Wave 5A/5B) ───────────────────────────────
+// The text-field permutations page DERIVES the SET of type specimens from the parsed `type` enum (a new type
+// renders automatically), but the per-type editorial seed + caption (its TYPE_SAMPLES map) is HAND-AUTHORED. That
+// seam is exactly where the hand-authored half can fall behind the descriptor: Wave 5 grew the enum 8 → 12
+// (unit/percent/date/time) while the samples sat at 8, so the four new types rendered with a bare fallback
+// caption. This gate closes it — every parsed `type` MUST have a TYPE_SAMPLES entry, so a future type addition
+// either ships a representative sample or FAILS the build rather than a silent bare caption.
+
+const TEXT_FIELD_MD = `${COMPONENTS_SRC}/controls/text-field/text-field.md`
+const PERMUTATIONS_PAGE = `${SITE}/pages/text-field-permutations.ts`
+
+/** The parsed `type` enum members from text-field.md — the derived SET the permutations page iterates over. */
+function textFieldTypes(): string[] {
+  const parsed = parseDescriptor(splitFrontmatter(read(TEXT_FIELD_MD)).fence)
+  return parsed.attributes.find((a) => a.name === 'type')?.values ?? []
+}
+
+/**
+ * The TYPE_SAMPLES object-literal keys in `src` (a permutations-page source). Comment-stripped first (a
+ * commented-out key does NOT count), then scoped to the `const TYPE_SAMPLES = { … }` block so no unrelated
+ * 2-space-indented `key: {` elsewhere in the file is mistaken for a sample. Each entry is a `\n  <name>: {` line.
+ */
+function sampleKeys(src: string): Set<string> {
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*$/gm, '$1')
+  const start = code.indexOf('const TYPE_SAMPLES')
+  const keys = new Set<string>()
+  if (start < 0) return keys
+  const block = code.slice(start, code.indexOf('\n}', start))
+  for (const m of block.matchAll(/\n\s{2}([a-z][\w-]*):\s*\{/g)) keys.add(m[1])
+  return keys
+}
+
+/** The parsed types with NO representative sample in `keys` — the drift a new type addition would introduce. */
+function typesMissingSample(types: readonly string[], keys: ReadonlySet<string>): string[] {
+  return types.filter((t) => !keys.has(t))
+}
+
+describe('site coverage — every ui-text-field [type] has a representative permutations sample', () => {
+  const TYPES = textFieldTypes()
+  const KEYS = sampleKeys(read(PERMUTATIONS_PAGE))
+
+  it('parsed the type enum (anti-vacuous — the 12 Wave-5 types are present)', () => {
+    expect(TYPES.length).toBeGreaterThanOrEqual(12)
+    for (const t of ['unit', 'percent', 'date', 'time']) expect(TYPES, `missing parsed type: ${t}`).toContain(t)
+  })
+
+  it('found the TYPE_SAMPLES keys (anti-vacuous — a broken scan cannot pass silently)', () => {
+    expect(KEYS.size).toBeGreaterThanOrEqual(12)
+  })
+
+  it('every parsed type has a TYPE_SAMPLES entry (a new type cannot ship a bare fallback caption)', () => {
+    expect(typesMissingSample(TYPES, KEYS)).toEqual([])
+  })
+})
+
+describe('site coverage — the type-sample check BITES (synthetic negative controls)', () => {
+  const KEYS = sampleKeys(read(PERMUTATIONS_PAGE))
+
+  it('flags a synthetic type with no sample (the check is not vacuously true)', () => {
+    expect(typesMissingSample(['text', 'zzdatetime'], KEYS)).toEqual(['zzdatetime'])
+  })
+
+  it('does NOT count a sample key that lives only in a comment (comment-stripped scan)', () => {
+    const keys = sampleKeys(
+      "const TYPE_SAMPLES: Record<string, TypeSample> = {\n  // zzcmt: { value: 'x' },\n  zzreal: { value: 'y' },\n}",
+    )
+    expect(keys.has('zzcmt')).toBe(false)
+    expect(keys.has('zzreal')).toBe(true)
+  })
+})

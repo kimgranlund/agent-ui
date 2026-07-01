@@ -102,11 +102,12 @@ cal3.setAttribute('name', 'date-required')
 
 const validity3 = el('p', {}, [text('Validity: '), code('valueMissing')])
 cal3.addEventListener('change', () => {
-  const vc = code((cal3 as unknown as { validity: ValidityState }).validity.valid ? 'valid' : 'invalid')
-  const vmiss = (cal3 as unknown as { validity: ValidityState }).validity.valueMissing
-    ? code('valueMissing')
-    : text('')
-  validity3.replaceChildren(text('Validity: '), vc, vmiss.nodeName === '#text' ? vmiss : vmiss)
+  const v = (cal3 as unknown as { validity: ValidityState }).validity
+  validity3.replaceChildren(
+    text('Validity: '),
+    code(v.valid ? 'valid' : 'invalid'),
+    v.valueMissing ? code(' · valueMissing') : text(''),
+  )
 })
 
 form3.append(cal3, validity3)
@@ -121,5 +122,3 @@ content.append(section3)
 const logSection = exampleSection('Event log')
 logSection.append(log)
 content.append(logSection)
-
-void el // suppress unused-import lint

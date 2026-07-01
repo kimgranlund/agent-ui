@@ -141,12 +141,12 @@ const CARD_GROUPS: readonly CardGroup[] = [
       {
         href: './text-field-permutations.html',
         title: 'Permutations',
-        blurb: 'Every size × state of ui-text-field, the adornment anatomy, and the [scale]/[density] geometry demo.',
+        blurb: 'Every size × state of ui-text-field, the adornment anatomy, every [type] variant, and the [scale]/[density] geometry demo.',
       },
       {
         href: './text-field-states.html',
         title: 'Interaction states',
-        blurb: 'The live field across placeholder, focus, hover, validation, disabled, and readonly — with an event log.',
+        blurb: 'The live field across placeholder, focus, hover, validation, disabled, readonly, plus the numeric & picker types — with an event log.',
       },
       {
         href: './text-field-doc.html',
