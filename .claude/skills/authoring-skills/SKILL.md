@@ -12,7 +12,7 @@ description: >
 A skill is a *procedure* artifact loaded on demand. Author one that triggers reliably and behaves consistently, or review one against the rubric. Two modes: **author** and **review**.
 
 ## Operating model (essentials; depth in `references/foundations.md`)
-- Calibration test per line: cut what the model knows, route the deterministic to a script, state only the specific and non-obvious.
+- Calibration test per line: cut what the model knows, route the deterministic to a script, state only the specific and non-obvious — and **lead with the reasoning-frame word** (hoist the operative imperative/priority/conditional to the front; cut openers like `It is important to…`). Leading words are the densest tokens you spend — depth in `references/best-practices.md` "Lead with the frame".
 - The description is the interface — pre-loaded, matched on. A precise body behind a vague description is a dead capability.
 - Progressive disclosure: SKILL.md lean; depth in `references/`; determinism in `scripts/`.
 

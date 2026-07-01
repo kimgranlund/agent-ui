@@ -14,6 +14,26 @@ A skill is a *procedure* artifact. Calibrate its description and body separately
 
 The articulation question is not "conversational vs. prescriptive." It is "what does the model not already know, and what must be exact." Be prescriptive precisely where reliability matters; trust the model everywhere else.
 
+### Lead with the frame
+
+**Prefer** words that front-load the reasoning mode before the detail — a leading word tells the model *how to read what follows*, so the instruction lands in one pass instead of being re-derived. These are the densest tokens you can spend: each compresses a paragraph of "here's how to think about this" into a word the model already holds. This is the sharp edge of the calibration test — not *fewer* words, but words that **imply the reasoning**.
+
+**Open** each instruction with the word that names what it wants:
+- **Priority / strength** — `Prefer`, `Default to`, `Favor`, `Avoid`, `Never`, `Always`, `Only`, `At minimum`.
+- **Sequence / dependency** — `First… then`, `Before X`, `Once X`, `Until`.
+- **Conditional routing** — `When X`, `If X`, `Unless`, `Otherwise`.
+- **Reasoning mode** — `Verify`, `Decompose`, `Reconcile`, `Root-cause`, `Derive from`, `Treat X as Y`.
+- **Rationale-implying** — `X because Y`, `X so that Y`, `X — otherwise Z`; the consequence clause carries the *why*, which generalizes the rule to cases you never enumerated.
+
+- ❌ `The description should be written carefully and include information about when the skill is used.`
+- ✅ `Write the description first: capability + trigger, in the user's words — vagueness here silently kills the skill.`
+
+Same length; the ✅ leads with the imperative, front-loads the two required parts, and appends a consequence clause carrying the *why*.
+
+**Two guardrails**, or it backfires:
+- **Precision over punch.** A leading word is dense only when *accurate* — `Never` on a soft preference, or `Verify` where nothing is checkable, mislead more than filler would. Match the word's strength to the rule's.
+- **One frame per line.** Density fails when leading words stack into telegraphic mush the model must decompress (`Prefer-first reconcile-derive verify-always…`). One clear frame per instruction; the rest of the line stays plain.
+
 ### Skill do / don't
 
 Do: make the description carry discovery weight; keep the body lean; route exact work to scripts; bake in a check; build incrementally against real prompts.
