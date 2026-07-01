@@ -46,6 +46,7 @@ const columns: readonly Column[] = [
 // `label` is the matrix HEADER text, not a field attribute).
 interface FieldSpec {
   readonly size?: string
+  readonly type?: string
   readonly value?: string
   readonly placeholder?: string
   readonly leading?: boolean
@@ -54,12 +55,14 @@ interface FieldSpec {
   readonly disabled?: boolean
 }
 
-// makeField — one real <ui-text-field>. Attributes are the author surface (size/readonly/disabled all REFLECT,
-// so setAttribute drives the same styling as author-set markup); `value` seeds the editor part. The leading /
-// trailing icons are light-DOM children carrying the canonical slot POSITION + data-role="icon".
+// makeField — one real <ui-text-field>. Attributes are the author surface (size/type/readonly/disabled all
+// REFLECT, so setAttribute drives the same styling + the type-resolver's control-injected adornments as
+// author-set markup); `value` seeds the editor part. The leading / trailing icons are light-DOM children carrying
+// the canonical slot POSITION + data-role="icon".
 function makeField(spec: FieldSpec): HTMLElement {
   const el = document.createElement('ui-text-field')
   if (spec.size) el.setAttribute('size', spec.size)
+  if (spec.type) el.setAttribute('type', spec.type)
   if (spec.value !== undefined) el.setAttribute('value', spec.value)
   if (spec.placeholder !== undefined) el.setAttribute('placeholder', spec.placeholder)
   if (spec.readonly) el.setAttribute('readonly', '')
@@ -141,6 +144,67 @@ function anatomySection(): HTMLElement {
   return section
 }
 
+// ── the `type` variants (Wave 3, ADR-0044) — the type-resolver's control-injected adornments + inputmode + codec ─
+// The type axis iterates the EXACT parsed `type` enum from text-field.md (NOT a hand-list), so adding a type to
+// the descriptor adds its specimen for free. Each type maps to a representative seed value + a one-line note of
+// what the resolver injects — the editorial CONTENT (a plausible value per type) is hand-authored, but the SET of
+// types is derived, and `type='text'` is the identity config (byte-identical to the pre-Wave-3 control).
+const types: readonly string[] = findAttr(descriptor, 'type')?.values ?? []
+
+interface TypeSample {
+  readonly value: string
+  readonly placeholder: string
+  readonly note: string // what the type-resolver adds (adornment / inputmode / codec) — shown as the caption
+}
+const TYPE_SAMPLES: Record<string, TypeSample> = {
+  text: { value: 'Plain text', placeholder: 'Text', note: 'identity — no adornment' },
+  email: { value: 'user@example.com', placeholder: 'you@example.com', note: 'inputmode=email · pattern → typeMismatch' },
+  url: { value: 'https://example.com', placeholder: 'https://…', note: 'inputmode=url · URL parse → typeMismatch' },
+  tel: { value: '+1 555 010 1234', placeholder: '+1 555 …', note: 'inputmode=tel' },
+  password: { value: 'correct horse', placeholder: 'Password', note: 'masked · reveal toggle (trailing)' },
+  search: { value: 'query text', placeholder: 'Search…', note: 'magnifier (leading) · clear button (trailing)' },
+  number: { value: '42', placeholder: '0', note: 'inputmode=numeric · step ± buttons · numeric codec' },
+  currency: { value: '1234.5', placeholder: '0.00', note: 'currency symbol (leading) · money codec' },
+}
+
+// typeSection — one section iterating the parsed `type` enum: a live field per type, seeded with a plausible
+// value so the control-injected adornments (search magnifier + clear, password reveal, currency symbol, number
+// steppers) actually render, above a caption naming what that type injects. |types| specimens by construction.
+function typeSection(): HTMLElement {
+  const section = document.createElement('section')
+  section.className = 'size-group'
+  const heading = document.createElement('h2')
+  heading.textContent = 'Type variants — the auto-adornments, inputmode & codec (ADR-0044)'
+  section.append(heading)
+
+  const intro = document.createElement('p')
+  intro.className = 'geo-note'
+  intro.textContent =
+    'The [type] enum (' + (types.join(' · ') || 'no types parsed') + ') selects a resolver that injects the ' +
+    'right adornments (search magnifier + clear, password reveal, currency symbol, number steppers), sets the ' +
+    'editor inputmode, and applies the value codec (number / currency). Interact with a specimen to see the ' +
+    'reveal toggle, the clear button, or the steppers.'
+  section.append(intro)
+
+  const matrix = document.createElement('div')
+  matrix.className = 'matrix'
+  matrix.style.gridTemplateColumns = `repeat(${types.length}, minmax(11rem, 1fr))`
+  for (const type of types) matrix.append(gridText(`type = ${type}`, 'matrix-head'))
+  for (const type of types) {
+    const sample = TYPE_SAMPLES[type] ?? { value: '', placeholder: type, note: type }
+    const cell = document.createElement('div')
+    cell.className = 'matrix-cell'
+    cell.append(makeField({ size: 'md', type, value: sample.value, placeholder: sample.placeholder }))
+    const caption = document.createElement('p')
+    caption.className = 'geo-label'
+    caption.textContent = sample.note
+    cell.append(caption)
+    matrix.append(cell)
+  }
+  section.append(matrix)
+  return section
+}
+
 // ── subtree geometry (ADR-0007) — [scale] resizes the frame; [density] resizes the adornment↔editor gap ───────
 function geometryRow(attr: 'scale' | 'density', value: string | null): HTMLElement {
   const row = document.createElement('div')
@@ -179,7 +243,8 @@ const { content } = mountPage({
   intro:
     'Every size × state of ui-text-field — empty, filled, with a leading icon, readonly, and disabled — built ' +
     'programmatically from the parsed size enum (' + (sizes.join(' · ') || 'no sizes parsed') + '). Below: the ' +
-    'optional leading/trailing adornment anatomy, and a [scale] / [density] subtree-geometry demo (ADR-0007).',
+    'optional leading/trailing adornment anatomy, the eight [type] variants (their auto-adornments, inputmode & ' +
+    'codec), and a [scale] / [density] subtree-geometry demo (ADR-0007).',
 })
 
 // [1] The matrix — one section per parsed size.
@@ -188,7 +253,10 @@ for (const size of sizes) content.append(sizeSection(size))
 // [2] The optional-adornment anatomy.
 content.append(anatomySection())
 
-// [3] The subtree-geometry demo — [scale] resizes the frame; [density] resizes only the adornment↔editor gap.
+// [3] The `type` variants — the type-resolver's adornments/inputmode/codec, iterated over the parsed type enum.
+content.append(typeSection())
+
+// [4] The subtree-geometry demo — [scale] resizes the frame; [density] resizes only the adornment↔editor gap.
 const geometry = document.createElement('section')
 geometry.className = 'geometry-demo'
 const geoHeading = document.createElement('h2')

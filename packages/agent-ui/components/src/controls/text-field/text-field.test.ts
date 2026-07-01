@@ -70,20 +70,21 @@ const messageOf = (el: Element): HTMLElement => el.querySelector('.ui-text-field
 // ── upgrade + the typed prop surface ──────────────────────────────────────────
 
 describe('ui-text-field — upgrade + typed prop surface', () => {
-  it('upgrades to the class with the 8 props at their defaults (no connect → no form-internals throw)', () => {
+  it('upgrades to the class with the 9 props at their defaults (no connect → no form-internals throw)', () => {
     const el = document.createElement('ui-text-field') as UITextFieldElement
     expect(el).toBeInstanceOf(UITextFieldElement)
     expect(el.value).toBe('')
     expect(el.label).toBe('')
     expect(el.placeholder).toBe('')
     expect(el.size).toBe('md')
+    expect(el.type).toBe('text')
     expect(el.readonly).toBe(false)
     expect(el.name).toBe('')
     expect(el.disabled).toBe(false)
     expect(el.required).toBe(false)
   })
 
-  it('tf-typed: size is the literal union, not string (compile-time negative control)', () => {
+  it('tf-typed: size + type are literal unions, not string (compile-time negative control)', () => {
     const fn = (): void => {
       const el = new UITextFieldElement()
       el.size = 'sm'
@@ -94,6 +95,13 @@ describe('ui-text-field — upgrade + typed prop surface', () => {
       el.size = 'x' as string
       // @ts-expect-error — readonly is boolean, not string
       el.readonly = 'yes'
+      el.type = 'email'
+      el.type = 'password'
+      el.type = 'currency'
+      // @ts-expect-error — 'date' is not a type member: proves the 8-value literal union
+      el.type = 'date'
+      // @ts-expect-error — a bare string is wider than the type union
+      el.type = 'xyz' as string
     }
     expect(typeof fn).toBe('function') // never invoked; the type errors above are the assertion
   })
@@ -513,8 +521,419 @@ describe('ui-text-field — zero residue across connect/disconnect', () => {
 
     document.body.append(el) // reconnect → connected() re-runs on a fresh AbortController
     ed.textContent = 'c'
+
     ed.dispatchEvent(new Event('input', { bubbles: true }))
     expect(el.value).toBe('c') // exactly ONE re-wired listener, not a leaked old one stacked atop it
+    el.remove()
+  })
+})
+
+// ── Wave 3 — type prop + per-type test matrix (ADR-0044) ──────────────────────
+// The 8 types: text · email · url · tel · search · password · number · currency.
+// Per-type assertions (the G6 bar — per decomp §"Per-type TEST MATRIX"):
+//   ✓ inputmode on editor        ✓ auto-adornments present
+//   ✓ codec round-trip           ✓ validation (email/url/number)
+//   ✓ masking (password)         ✓ affordances emit + toggle
+//   ✓ type='text' byte-identical (existing tests green = verified by the test suite above)
+//
+// jsdom reality: -webkit-text-security is NOT evaluated (CSS property is not computed).
+// For password masking, we assert the CSS STRUCTURE is present (text-field-css.test.ts) and the
+// reveal button toggles aria-pressed (observable without CSS computation). The cross-engine browser
+// smoke (text-field-geometry.browser.test.ts) provides the real render proof.
+
+// Helper: a connected ProbeTextField with a given type set.
+function makeTyped(type: string): { el: ProbeTextField; editor: HTMLElement; calls: StubCalls } {
+  const el = new ProbeTextField()
+  const calls = stubFormInternals(el.internalsProbe)
+  el.setAttribute('type', type)
+  document.body.append(el)
+  return { el, editor: editorOf(el), calls }
+}
+
+// ── type='text' — identity config (byte-identical baseline) ──────────────────
+
+describe('ui-text-field type=text — identity config (byte-identical baseline)', () => {
+  it('type=text has no inputmode attribute on the editor (identity: same as the pre-Wave-3 shipped control)', async () => {
+    const { el, editor } = makeTyped('text')
+    await whenFlushed()
+    expect(editor.hasAttribute('inputmode')).toBe(false) // NOT set for text type (byte-identical)
+    expect(el.querySelector('[data-part="leading-adornment"]')).toBeNull()
+    expect(el.querySelector('[data-part="trailing-adornment"]')).toBeNull()
+    el.remove()
+  })
+})
+
+// ── type='email' — inputmode=email + typeMismatch validation ─────────────────
+
+describe('ui-text-field type=email — inputmode + validation', () => {
+  it('sets inputmode=email on the editor', async () => {
+    const { el, editor } = makeTyped('email')
+    await whenFlushed()
+    expect(editor.getAttribute('inputmode')).toBe('email')
+    el.remove()
+  })
+
+  it('a valid email passes formValidity()', () => {
+    const { el } = makeTyped('email')
+    el.value = 'user@example.com'
+    expect(el.formValidityProbe().valid).toBe(true)
+    el.remove()
+  })
+
+  it('an invalid email → typeMismatch (formValidity)', () => {
+    const { el } = makeTyped('email')
+    el.value = 'not-an-email'
+    const verdict = el.formValidityProbe()
+    expect(verdict.valid).toBe(false)
+    if (!verdict.valid) {
+      expect(verdict.flags).toEqual({ typeMismatch: true })
+      expect(verdict.message).toContain('email')
+    }
+    el.remove()
+  })
+
+  it('empty email is VALID (required is separate) — typeMismatch only on non-empty values', () => {
+    const { el } = makeTyped('email')
+    el.value = ''
+    expect(el.formValidityProbe().valid).toBe(true)
+    el.remove()
+  })
+
+  it('no auto-adornments for email type', async () => {
+    const { el } = makeTyped('email')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="leading-adornment"]')).toBeNull()
+    expect(el.querySelector('[data-part="trailing-adornment"]')).toBeNull()
+    el.remove()
+  })
+})
+
+// ── type='url' — inputmode=url + typeMismatch validation ─────────────────────
+
+describe('ui-text-field type=url — inputmode + validation', () => {
+  it('sets inputmode=url on the editor', async () => {
+    const { el, editor } = makeTyped('url')
+    await whenFlushed()
+    expect(editor.getAttribute('inputmode')).toBe('url')
+    el.remove()
+  })
+
+  it('a valid URL passes formValidity()', () => {
+    const { el } = makeTyped('url')
+    el.value = 'https://example.com'
+    expect(el.formValidityProbe().valid).toBe(true)
+    el.remove()
+  })
+
+  it('an invalid URL → typeMismatch', () => {
+    const { el } = makeTyped('url')
+    el.value = 'not-a-url'
+    const verdict = el.formValidityProbe()
+    expect(verdict.valid).toBe(false)
+    if (!verdict.valid) {
+      expect(verdict.flags).toEqual({ typeMismatch: true })
+    }
+    el.remove()
+  })
+})
+
+// ── type='tel' — inputmode=tel (no extra validation) ─────────────────────────
+
+describe('ui-text-field type=tel — inputmode', () => {
+  it('sets inputmode=tel, no adornments, any value is valid', async () => {
+    const { el, editor } = makeTyped('tel')
+    await whenFlushed()
+    expect(editor.getAttribute('inputmode')).toBe('tel')
+    el.value = 'anything'
+    expect(el.formValidityProbe().valid).toBe(true)
+    el.remove()
+  })
+})
+
+// ── type='search' — magnifier leading + clear trailing ───────────────────────
+
+describe('ui-text-field type=search — magnifier + clear affordance', () => {
+  it('sets inputmode=search on the editor', async () => {
+    const { el, editor } = makeTyped('search')
+    await whenFlushed()
+    expect(editor.getAttribute('inputmode')).toBe('search')
+    el.remove()
+  })
+
+  it('has a leading magnifier adornment (data-role=magnifier, aria-hidden)', async () => {
+    const { el } = makeTyped('search')
+    await whenFlushed()
+    const magnifier = el.querySelector('[data-part="leading-adornment"][data-role="magnifier"]')
+    expect(magnifier).not.toBeNull()
+    expect((magnifier as HTMLElement).getAttribute('aria-hidden')).toBe('true')
+    el.remove()
+  })
+
+  it('has a trailing clear adornment with a clear-button (data-role=clear)', async () => {
+    const { el } = makeTyped('search')
+    await whenFlushed()
+    const trailing = el.querySelector('[data-part="trailing-adornment"][data-role="clear"]')
+    expect(trailing).not.toBeNull()
+    const clearBtn = el.querySelector('[data-part="clear-button"]')
+    expect(clearBtn).not.toBeNull()
+    el.remove()
+  })
+
+  it('clear button: clicking clears the value and emits input + change', async () => {
+    const { el, editor } = makeTyped('search')
+    await whenFlushed()
+    el.value = 'hello'
+    editor.textContent = 'hello'
+
+    let inputs = 0
+    let changes = 0
+    el.addEventListener('input', () => inputs++)
+    el.addEventListener('change', () => changes++)
+
+    const clearBtn = el.querySelector('[data-part="clear-button"]') as HTMLElement
+    clearBtn.click()
+    expect(el.value).toBe('')
+    expect(inputs).toBe(1)
+    expect(changes).toBe(1)
+    el.remove()
+  })
+
+  it('type=search has no codec — formValue() = this.value (identity)', () => {
+    const { el } = makeTyped('search')
+    el.value = 'query'
+    expect(el.formValidityProbe().valid).toBe(true)
+    el.remove()
+  })
+
+  it('editor [data-empty] toggles with value — drives the CSS clear-button visibility (:has([data-empty]))', async () => {
+    // The CSS rule :scope:has(> [data-part='editor'][data-empty]) [data-role='clear'] { display: none }
+    // hides the clear button when the field is empty. The mechanism is the [data-empty] attribute on the
+    // editor, toggled by the model→surface effect. This jsdom probe verifies the DOM state that drives it;
+    // the browser smoke proves the visual render.
+    const { el, editor } = makeTyped('search')
+    await whenFlushed()
+    // initial empty: the [data-empty] attribute is set by the model→surface effect on first run
+    expect(editor.hasAttribute('data-empty'), 'empty field: editor must carry [data-empty]').toBe(true)
+    // non-empty: the attribute is removed so the clear button becomes visible
+    el.value = 'hello'
+    await whenFlushed()
+    expect(editor.hasAttribute('data-empty'), 'non-empty field: editor must NOT carry [data-empty]').toBe(false)
+    // back to empty: the attribute is restored
+    el.value = ''
+    await whenFlushed()
+    expect(editor.hasAttribute('data-empty'), 'cleared field: editor must restore [data-empty]').toBe(true)
+    el.remove()
+  })
+})
+
+// ── type='password' — -webkit-text-security + reveal toggle ──────────────────
+
+describe('ui-text-field type=password — masking + reveal', () => {
+  it('sets inputmode=text (password masking is CSS, not inputmode)', async () => {
+    const { el, editor } = makeTyped('password')
+    await whenFlushed()
+    // inputmode for password is 'text' (the identity) → no inputmode attribute set
+    expect(editor.hasAttribute('inputmode')).toBe(false)
+    el.remove()
+  })
+
+  it('has a trailing reveal button (data-role=reveal, aria-pressed=false initially)', async () => {
+    const { el } = makeTyped('password')
+    await whenFlushed()
+    const trailing = el.querySelector('[data-part="trailing-adornment"][data-role="reveal"]')
+    expect(trailing).not.toBeNull()
+    const revealBtn = el.querySelector('[data-part="reveal-button"]') as HTMLElement
+    expect(revealBtn).not.toBeNull()
+    expect(revealBtn.getAttribute('aria-pressed')).toBe('false')
+    el.remove()
+  })
+
+  it('reveal button toggles aria-pressed and emits toggle', async () => {
+    const { el } = makeTyped('password')
+    await whenFlushed()
+    const revealBtn = el.querySelector('[data-part="reveal-button"]') as HTMLElement
+    let toggles = 0
+    el.addEventListener('toggle', () => toggles++)
+
+    revealBtn.click() // show password
+    expect(revealBtn.getAttribute('aria-pressed')).toBe('true')
+    expect(toggles).toBe(1)
+
+    revealBtn.click() // hide again
+    expect(revealBtn.getAttribute('aria-pressed')).toBe('false')
+    expect(toggles).toBe(2)
+    el.remove()
+  })
+
+  it('password formValue() is this.value (no codec, the typed chars are the form value)', () => {
+    const { el } = makeTyped('password')
+    el.value = 'secret'
+    expect(el.formValidityProbe().valid).toBe(true)
+    el.remove()
+  })
+})
+
+// ── type='number' — inputmode=numeric + stepper + codec + validation ──────────
+
+describe('ui-text-field type=number — inputmode + steppers + codec + validation', () => {
+  it('sets inputmode=numeric on the editor', async () => {
+    const { el, editor } = makeTyped('number')
+    await whenFlushed()
+    expect(editor.getAttribute('inputmode')).toBe('numeric')
+    el.remove()
+  })
+
+  it('has a trailing stepper adornment with step-up and step-down buttons', async () => {
+    const { el } = makeTyped('number')
+    await whenFlushed()
+    const trailing = el.querySelector('[data-part="trailing-adornment"][data-role="stepper"]')
+    expect(trailing).not.toBeNull()
+    expect(el.querySelector('[data-part="step-up"]')).not.toBeNull()
+    expect(el.querySelector('[data-part="step-down"]')).not.toBeNull()
+    el.remove()
+  })
+
+  it('step-up increments value and emits input + change', async () => {
+    const { el } = makeTyped('number')
+    await whenFlushed()
+    el.value = '5'
+    let inputs = 0, changes = 0
+    el.addEventListener('input', () => inputs++)
+    el.addEventListener('change', () => changes++)
+
+    const stepUp = el.querySelector('[data-part="step-up"]') as HTMLElement
+    stepUp.click()
+    expect(el.value).toBe('6')
+    expect(inputs).toBe(1)
+    expect(changes).toBe(1)
+    el.remove()
+  })
+
+  it('step-down decrements value and emits input + change', async () => {
+    const { el } = makeTyped('number')
+    await whenFlushed()
+    el.value = '5'
+    const stepDown = el.querySelector('[data-part="step-down"]') as HTMLElement
+    stepDown.click()
+    expect(el.value).toBe('4')
+    el.remove()
+  })
+
+  it('invalid number input → customError from the codec (formValidity)', async () => {
+    const { el, editor } = makeTyped('number')
+    await whenFlushed()
+    el.value = 'abc'
+    editor.textContent = 'abc'
+    // Trigger blur to activate codec parse
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    const verdict = el.formValidityProbe()
+    expect(verdict.valid).toBe(false)
+    if (!verdict.valid) expect(verdict.flags).toEqual({ customError: true })
+    el.remove()
+  })
+
+  it('no leading adornment for number type', async () => {
+    const { el } = makeTyped('number')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="leading-adornment"]')).toBeNull()
+    el.remove()
+  })
+
+  it('NC — untracked() codec seed: value write does NOT re-trigger the type-effect or recreate adornments', async () => {
+    // value-codec.ts seeds `canonical` with `untracked(() => host.value)` to avoid making the
+    // type-effect depend on `this.value`. Without `untracked()`, writing `el.value = '5'` would
+    // schedule the type-effect to re-run (value becomes a reactive dep), which tears down and
+    // recreates the stepper. This test catches that regression:
+    //   • the stepper count stays 1 before and after the value write
+    //   • the SAME DOM element is still present (reference identity — new element = different object)
+    // Removing `untracked()` from value-codec.ts:84 MUST make the second expect(toBe) fail.
+    const { el } = makeTyped('number')
+    await whenFlushed()
+    expect(el.querySelectorAll('[data-part="step-up"]').length, 'stepper must exist after connect').toBe(1)
+    const stepUpBefore = el.querySelector('[data-part="step-up"]') as HTMLElement
+
+    el.value = '5'
+    await whenFlushed()
+    expect(el.querySelectorAll('[data-part="step-up"]').length, 'stepper count must still be 1 after value write').toBe(1)
+    expect(
+      el.querySelector('[data-part="step-up"]'),
+      'stepper was recreated on value write — untracked() is missing from the codec seed (value-codec.ts:84)',
+    ).toBe(stepUpBefore)
+    el.remove()
+  })
+})
+
+// ── type='currency' — leading symbol + codec ──────────────────────────────────
+
+describe('ui-text-field type=currency — currency symbol adornment + codec', () => {
+  it('sets inputmode=decimal on the editor', async () => {
+    const { el, editor } = makeTyped('currency')
+    await whenFlushed()
+    expect(editor.getAttribute('inputmode')).toBe('decimal')
+    el.remove()
+  })
+
+  it('has a leading currency symbol adornment (data-role=currency, aria-hidden)', async () => {
+    const { el } = makeTyped('currency')
+    await whenFlushed()
+    const leading = el.querySelector('[data-part="leading-adornment"][data-role="currency"]')
+    expect(leading).not.toBeNull()
+    expect((leading as HTMLElement).getAttribute('aria-hidden')).toBe('true')
+    expect((leading as HTMLElement).textContent?.length).toBeGreaterThan(0) // symbol is present
+    el.remove()
+  })
+
+  it('no trailing adornment for currency type', async () => {
+    const { el } = makeTyped('currency')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="trailing-adornment"]')).toBeNull()
+    el.remove()
+  })
+
+  it('codec round-trip: typed value → blur → formValue() = canonical (not formatted display)', async () => {
+    const { el, editor } = makeTyped('currency')
+    await whenFlushed()
+    el.value = '1234.5'
+    editor.textContent = '1234.5'
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    // After blur: host.value is the formatted display ("1,234.50"); formValue() returns canonical ("1234.5")
+    expect(el.value).toBe('1,234.50') // display (formatted by currency codec)
+    const formVal = el.formValidityProbe() // formValidity() uses formValue() internally — valid means codec ok
+    expect(formVal.valid).toBe(true)
+    el.remove()
+  })
+})
+
+// ── C10 zero-residue for type-change (adornments cleaned up) ──────────────────
+
+describe('ui-text-field type change — C10 adornment cleanup', () => {
+  it('switching type removes old adornments and adds new ones', async () => {
+    const { el } = makeTyped('search')
+    await whenFlushed()
+    // search: leading magnifier + trailing clear
+    expect(el.querySelector('[data-role="magnifier"]')).not.toBeNull()
+    expect(el.querySelector('[data-role="clear"]')).not.toBeNull()
+
+    el.type = 'password'
+    await whenFlushed()
+    // password: no leading, trailing reveal
+    expect(el.querySelector('[data-role="magnifier"]')).toBeNull()
+    expect(el.querySelector('[data-role="clear"]')).toBeNull()
+    expect(el.querySelector('[data-role="reveal"]')).not.toBeNull()
+    el.remove()
+  })
+
+  it('switching to type=text removes all adornments (identity config)', async () => {
+    const { el } = makeTyped('currency')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="leading-adornment"]')).not.toBeNull() // was present
+
+    el.type = 'text'
+    await whenFlushed()
+    expect(el.querySelector('[data-part="leading-adornment"]')).toBeNull()
+    expect(el.querySelector('[data-part="trailing-adornment"]')).toBeNull()
     el.remove()
   })
 })

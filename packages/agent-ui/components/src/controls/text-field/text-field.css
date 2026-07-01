@@ -34,6 +34,10 @@
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-text-field) declares --ui-text-field-* ════════════════ */
+/* Wave 3 (ADR-0044): type-specific styles are in [2] @scope — password masking via -webkit-text-security
+   (a de-facto-standard property, universally supported despite the -webkit- prefix), search clear-button
+   visibility via :has([data-empty]), and forced-color-adjust:none on decorative adornment glyphs so the
+   magnifier/symbol/reveal survive forced-colors (they are aria-hidden decoration, not the text content). */
 
 :where(ui-text-field) {
   /* Field-frame colour channel (family = neutral; the role map pinned in ADR-0014 cl.2c). The state is a
@@ -270,12 +274,83 @@
     }
   }
 
+  /* ── Wave 3 type-specific styles (ADR-0044) ─────────────────────────────────────────────────────── */
+
+  /* password masking (ADR-0044): -webkit-text-security is a de-facto-standard property (Chrome/Safari/Firefox)
+     that renders the editable text as bullet discs while the real value stays in textContent. The :state(revealed)
+     custom state (toggled by the reveal button in text-field.ts) flips it to none so the user can see their
+     password. The contenteditable editor carries the masking — the host NEVER carries a type attribute (it is the
+     class host, not a native input), so we scope on :scope[type='password'] (the reflected type prop attribute). */
+  :scope[type='password'] > [data-part='editor'] {
+    -webkit-text-security: disc; /* the password mask — discs hide the typed characters visually */
+  }
+  :scope[type='password']:state(revealed) > [data-part='editor'] {
+    -webkit-text-security: none; /* reveal toggle: show raw text */
+  }
+
+  /* search: the clear button (data-role='clear') is hidden when the field is empty — keyed off the
+     [data-empty] attribute on the editor PART (toggled by the model→surface effect in text-field.ts).
+     :has() reaches the editor sibling to check emptiness. When non-empty, the button is visible so the
+     user can clear the search field with one click. */
+  :scope:has(> [data-part='editor'][data-empty]) [data-role='clear'] {
+    display: none; /* empty field: hide the clear affordance */
+  }
+
+  /* adornment button baseline: no default browser button chrome, inherit the field's font/color, sized to
+     the slot cell (the [slot='leading']/[slot='trailing'] CSS above sizes the cell to --ui-text-field-icon;
+     the button fills it). Interactive affordances (clear / reveal / steppers) use data-part='clear-button' /
+     'reveal-button' / 'step-up' / 'step-down' — they share the same reset. */
+  :scope [data-part='clear-button'],
+  :scope [data-part='reveal-button'],
+  :scope [data-part='step-up'],
+  :scope [data-part='step-down'] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    font: inherit; /* inherit the field font — the glyph is font-sized */
+    color: inherit;
+    line-height: 1;
+  }
+
+  /* stepper container: stacks the two step buttons vertically in the trailing icon-sized cell */
+  :scope [data-role='stepper'] {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--ui-text-field-icon);
+    block-size: var(--ui-text-field-icon);
+  }
+  :scope [data-part='step-up'],
+  :scope [data-part='step-down'] {
+    block-size: 50%; /* each stepper takes half the icon cell height */
+    inline-size: 100%;
+  }
+
+  /* leading/trailing adornment text content (magnifier glyph, currency symbol): font-sized, centered.
+     The cell is icon-sized (--ui-text-field-icon from the slot rule above); the glyph text fits within it. */
+  :scope [data-part='leading-adornment'],
+  :scope [data-part='trailing-adornment'] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--ui-text-field-font); /* the glyph is sized = font (§4.6 law) */
+    line-height: 1;
+    user-select: none;
+  }
+
   /* forced-colors — keep the field border + ink + placeholder VISIBLE (they must not vanish). The focus ring
      survives for free: `--c-focus-ring` carries the token layer's `→ Highlight` WHCM mapping, so the
      :focus-within outline above resolves to the system focus colour with no per-control rule (border-color is
      dropped by forced-colors — which is WHY deviation #1 makes the OUTLINE the sole focus indicator: the
      transparent focus border carries nothing, the ring carries it). A disabled field reads GrayText (the system
-     disabled colour). */
+     disabled colour). The decorative adornment glyphs (magnifier / currency symbol / reveal eye / steppers) are
+     aria-hidden and use forced-color-adjust:none so they keep their inherited ink in forced-colors mode — they
+     are VISUAL cues, not the accessible text content (which lives in the editor). */
   @media (forced-colors: active) {
     :scope {
       border-color: CanvasText;
@@ -287,6 +362,15 @@
     :scope:is([disabled], :state(disabled)) {
       border-color: GrayText;
       color: GrayText;
+    }
+    /* adornment glyphs: keep their ink (they are decorative, aria-hidden — not a text content channel) */
+    :scope [data-part='leading-adornment'],
+    :scope [data-part='trailing-adornment'],
+    :scope [data-part='clear-button'],
+    :scope [data-part='reveal-button'],
+    :scope [data-part='step-up'],
+    :scope [data-part='step-down'] {
+      forced-color-adjust: none; /* the magnifier / symbol / reveal glyph survives forced-colors */
     }
   }
 }

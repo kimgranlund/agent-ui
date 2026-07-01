@@ -225,6 +225,44 @@ describe('text-field.css — anatomy, placeholder, motion, forced-colors', () =>
   })
 })
 
+// ── Wave 3 (ADR-0044): CSS structure probes — password masking, reveal flip, adornment token chain ─────────
+// Three targeted structure checks for the Wave-3 rules added to the @scope block. The computed rendering
+// (exact px, -webkit-text-security: disc/none) is the browser smoke's job (s11 Wave-3); these pin the
+// source text of the rules so a refactor that accidentally removes or breaks the selector chain is caught
+// immediately in jsdom, before the browser smoke runs.
+describe('text-field.css — Wave-3 type-specific rules (ADR-0044 CSS structure, s9 extension)', () => {
+  it('(a) password masking: the -webkit-text-security: disc selector is present in @scope', () => {
+    // :scope[type='password'] > [data-part='editor'] { -webkit-text-security: disc }
+    // This is the rule that renders typed text as bullet discs when type=password. The @scope rule
+    // scopes on :scope[type='password'] (the reflected attribute on the host) not on the editor attribute.
+    expect(stylesBlock, 'the password masking selector is missing from @scope').toContain("-webkit-text-security: disc")
+    expect(stylesBlock).toMatch(/\[type='password'\]\s*>\s*\[data-part='editor'\]/)
+  })
+
+  it('(b) reveal flip: the :state(revealed) override (→ -webkit-text-security: none) is present', () => {
+    // :scope[type='password']:state(revealed) > [data-part='editor'] { -webkit-text-security: none }
+    // This is the CSS companion to the reveal button click handler — when :state(revealed) is active,
+    // the none override lifts the disc mask so the user can read their password.
+    expect(stylesBlock, 'the :state(revealed) flip rule is missing from @scope').toContain("-webkit-text-security: none")
+    expect(stylesBlock).toMatch(/:state\(revealed\)\s*>\s*\[data-part='editor'\]/)
+  })
+
+  it('(c) adornment rules consume --ui-text-field-font / --ui-text-field-icon (own chain) — @scope hygiene still passes', () => {
+    // The leading/trailing adornment container has font-size: var(--ui-text-field-font) (§4.6 law); the
+    // stepper container uses var(--ui-text-field-icon) for its cell sizing. Both are own-chain tokens
+    // (--ui-text-field-* prefix), so they pass the foreignScopeRefs predicate.
+    //
+    // This test proves:
+    //   (i) the adornment DOES use the own-chain token (not a raw px / fleet token)
+    //   (ii) the hygiene predicate still fires clean with the Wave-3 rules added
+    expect(stylesBlock).toContain("font-size: var(--ui-text-field-font)") // adornment glyph sizing
+    expect(stylesBlock).toContain("var(--ui-text-field-icon)")             // stepper cell sizing
+    // Hygiene: zero foreign refs in the full @scope block including the new Wave-3 rules
+    // (the negative-control that catches foreign refs is already in the 'NEGATIVE control' test above)
+    expect(foreignScopeRefs(stylesBlock)).toEqual([])
+  })
+})
+
 // ── Visible inline-validation message (ADR-0029 A1 — extends ADR-0014) ──────────────────────────────────────
 // The control-managed `.ui-text-field-message` node becomes VISIBLE when :state(user-invalid) is active
 // and the node carries a non-empty message. Two changes: two new tokens declared in the :where() block, and

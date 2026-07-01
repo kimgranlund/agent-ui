@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { server, cdp } from '@vitest/browser/context'
 
 // s11 (geometry leg) — the CROSS-ENGINE geometry smoke for ui-text-field (decomp g4-g6 node s11). Where the
 // jsdom text-field-geometry.test.ts (s9) pins the DECLARED calc()s, this pins the RENDERED px a real engine
@@ -19,6 +20,11 @@ import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import '@agent-ui/components/components'
+
+// Minimal CDP session interface for forced-colors emulation (Chromium only — WebKit has no CDP emulation).
+interface CdpSession {
+  send(method: string, params?: Record<string, unknown>): Promise<unknown>
+}
 
 // ── markup: the two variants the smoke proves in parallel (the editor is control-injected on connect) ───
 const BARE = '<ui-text-field></ui-text-field>' //                                       slotless — value edge h/2 both sides
@@ -201,5 +207,126 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
 
     // anti-vacuous: the two sizes render different font/line-height
     expect(fontMd, 'md and sm editor fonts must differ so the line-height proof is non-vacuous').not.toBe(fontSm)
+  })
+})
+
+// ── Wave 3 (ADR-0044): auto-adornment geometry + password masking + reveal + forced-colors ──────────────
+// (a) Each auto-adornment cell renders at var(--ui-text-field-font) per [size]×[scale] — EXACT px, anti-
+//     vacuous (adornment font genuinely tracks the ramp, not a fixed size-blind value).
+// (b) type=password: the editor -webkit-text-security is disc (the password mask).
+// (c) The reveal button flips -webkit-text-security to none and back.
+// (d) Under forced-colors, forced-color-adjust:none keeps adornment ink visible (Chromium CDP only — WebKit
+//     has no CDP emulation support).
+// All tests run on BOTH engines; the forced-colors segment is Chromium-only with a WebKit baseline fallback.
+
+describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 Wave-3, both engines)', () => {
+  it('search type: magnifier + clear-button font-size == --ui-text-field-font across [size] — EXACT px', () => {
+    // The magnifier (leading-adornment) and clear-button (inside trailing-adornment) both carry
+    // font-size: var(--ui-text-field-font) or inherit it. Proved at all three [size] stops with EXACT
+    // integers (sm→13, md→14, lg→16 px at default scale — the §1 ramp from ADR-0038).
+    const { field, editor } = mount('<ui-text-field type="search"></ui-text-field>')
+    const magnifier = field.querySelector('[data-part="leading-adornment"]') as HTMLElement
+    const clearBtn = field.querySelector('[data-part="clear-button"]') as HTMLElement
+
+    for (const [size, expectedFont] of [['sm', 13], ['md', 14], ['lg', 16]] as [string, number][]) {
+      field.setAttribute('size', size)
+      const ef = fontPx(editor)
+      expect(ef, `editor font at size=${size} must be ${expectedFont}px`).toBeCloseTo(expectedFont, 0)
+      expect(fontPx(magnifier), `magnifier font at size=${size} must equal editor font`).toBeCloseTo(ef, 0)
+      expect(fontPx(clearBtn), `clear-button font at size=${size} must equal editor font`).toBeCloseTo(ef, 0)
+    }
+    // anti-vacuous: the adornment font GENUINELY CHANGES across sizes (not a fixed, size-blind font)
+    field.setAttribute('size', 'sm'); const smF = fontPx(magnifier)
+    field.setAttribute('size', 'lg'); const lgF = fontPx(magnifier)
+    expect(lgF, 'adornment font did not change between sm and lg (size-blind — font-size: var() not applied)').toBeGreaterThan(smF)
+  })
+
+  it('number type: step-up / step-down font-size == --ui-text-field-font at each [size]', () => {
+    // The stepper buttons inherit from [data-part="trailing-adornment"] which carries
+    // font-size: var(--ui-text-field-font). The button reset rule (font: inherit) passes it through.
+    const { field, editor } = mount('<ui-text-field type="number"></ui-text-field>')
+    const stepUp = field.querySelector('[data-part="step-up"]') as HTMLElement
+    const stepDown = field.querySelector('[data-part="step-down"]') as HTMLElement
+
+    for (const [size, expectedFont] of [['sm', 13], ['md', 14], ['lg', 16]] as [string, number][]) {
+      field.setAttribute('size', size)
+      const ef = fontPx(editor)
+      expect(ef).toBeCloseTo(expectedFont, 0)
+      expect(fontPx(stepUp), `step-up font at size=${size} must equal editor font`).toBeCloseTo(ef, 0)
+      expect(fontPx(stepDown), `step-down font at size=${size} must equal editor font`).toBeCloseTo(ef, 0)
+    }
+  })
+
+  it('[scale] content-lg: adornment font tracks the elevated §1-row — EXACT px at md size', () => {
+    // ADR-0038 md×content-lg = 18px (explicit §1-row table, not a multiplier). The adornment must
+    // track the editor via the shared --ui-text-field-font token at every [scale] tier.
+    const { wrap, field, editor } = mount('<ui-text-field type="search"></ui-text-field>')
+    const magnifier = field.querySelector('[data-part="leading-adornment"]') as HTMLElement
+
+    wrap.setAttribute('scale', 'content-lg')
+    const ef = fontPx(editor)
+    expect(ef, 'editor font at content-lg×md must be 18px (ADR-0038 §1-row)').toBeCloseTo(18, 0)
+    expect(fontPx(magnifier), 'magnifier font at content-lg×md must track editor (= 18px via --ui-text-field-font)').toBeCloseTo(18, 0)
+    // anti-vacuous: the content-lg font (18) is measurably larger than the default (14)
+    wrap.removeAttribute('scale')
+    const efDefault = fontPx(editor)
+    expect(ef, 'content-lg font must exceed the default-scale font').toBeGreaterThan(efDefault)
+  })
+
+  it('type=password: the editor -webkit-text-security is disc (the password mask is applied)', () => {
+    // The CSS rule :scope[type='password'] > [data-part='editor'] { -webkit-text-security: disc }
+    // applies when the reflected type='password' attribute is present on the host.
+    const { field, editor } = mount('<ui-text-field type="password" value="secret"></ui-text-field>')
+    expect(field.getAttribute('type'), 'type attribute must be reflected on the host').toBe('password')
+    const sec = getComputedStyle(editor).getPropertyValue('-webkit-text-security')
+    expect(sec, 'editor -webkit-text-security must be disc when type=password').toBe('disc')
+  })
+
+  it('reveal button: clicking flips -webkit-text-security disc → none → disc (the :state(revealed) CSS flip)', () => {
+    // The reveal button click sets/clears :state(revealed) via internals.states; the CSS
+    // :scope[type='password']:state(revealed) > [data-part='editor'] { -webkit-text-security: none }
+    // overrides the disc mask so the typed text is visible.
+    const { field, editor } = mount('<ui-text-field type="password" value="secret"></ui-text-field>')
+    const revealBtn = field.querySelector('[data-part="reveal-button"]') as HTMLElement
+    expect(revealBtn, 'reveal button must be present for type=password').not.toBeNull()
+
+    // initial state: masked (disc)
+    expect(getComputedStyle(editor).getPropertyValue('-webkit-text-security'), 'initial state must be disc (masked)').toBe('disc')
+
+    // first click → reveal (none)
+    revealBtn.click()
+    expect(getComputedStyle(editor).getPropertyValue('-webkit-text-security'), 'after reveal click must be none (revealed)').toBe('none')
+
+    // second click → mask again (disc)
+    revealBtn.click()
+    expect(getComputedStyle(editor).getPropertyValue('-webkit-text-security'), 'after second click must restore disc').toBe('disc')
+  })
+
+  // Forced-colors (Chromium CDP only — WebKit has no CDP forced-colors emulation).
+  // The CSS @media (forced-colors: active) block sets forced-color-adjust: none on all adornment
+  // elements, exempting them from the system forced-color palette so their glyphs remain visible.
+  it('forced-colors: adornment elements carry forced-color-adjust: none (Chromium only)', async () => {
+    if (server.browser !== 'chromium') {
+      // WebKit: assert we are genuinely NOT in forced-colors so the Chromium proof is not faked.
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+    const { field } = mount('<ui-text-field type="search"></ui-text-field>')
+    const magnifier = field.querySelector('[data-part="leading-adornment"]') as HTMLElement
+    const clearBtn = field.querySelector('[data-part="clear-button"]') as HTMLElement
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches, 'the engine must enter forced-colors').toBe(true)
+      // The @media (forced-colors: active) block applies forced-color-adjust: none to adornment elements,
+      // exempting them from forced-color override so their glyphs keep their inherited ink.
+      const fcaMagnifier = getComputedStyle(magnifier).getPropertyValue('forced-color-adjust').trim()
+      const fcaClear = getComputedStyle(clearBtn).getPropertyValue('forced-color-adjust').trim()
+      expect(fcaMagnifier, 'magnifier must have forced-color-adjust: none under forced-colors').toBe('none')
+      expect(fcaClear, 'clear-button must have forced-color-adjust: none under forced-colors').toBe('none')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] }) // restore
+    }
   })
 })

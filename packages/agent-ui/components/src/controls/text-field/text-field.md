@@ -28,6 +28,11 @@ attributes:            # attributes-as-API — mirrors text-field.ts `static pro
     values: [sm, md, lg]
     default: md
     reflect: true      # reflects so the [size] dimensional-ramp repoint in text-field.css applies to JS-set values
+  - name: type
+    type: enum
+    values: [text, email, url, tel, password, search, number, currency]
+    default: text
+    reflect: true      # reflects so [type] CSS selectors (e.g. [type=password] for -webkit-text-security masking) + the type-resolver apply to JS-set values; type='text' is the identity config (byte-identical to the pre-Wave-3 shipped control; ADR-0044)
   - name: readonly
     type: boolean
     default: false
@@ -64,10 +69,13 @@ properties:            # IDL beyond attributes-as-API: the value property + the 
 events:
   - name: input
     detail: 'null'
-    description: Fired on each edit of the editor (surface→model) as the value tracks the contenteditable. Suppressed mid IME composition. The host re-emits; matches native <input> input semantics.
+    description: Fired on each edit of the editor (surface→model) as the value tracks the contenteditable. Suppressed mid IME composition. The host re-emits; matches native <input> input semantics. Also fired by the clear button (type=search) and steppers (type=number) when they change the value.
   - name: change
     detail: 'null'
-    description: Fired on commit — blur-with-change or Enter (Enter also suppresses the newline). Matches native <input> change semantics.
+    description: Fired on commit — blur-with-change or Enter (Enter also suppresses the newline). Also fired by the clear button and steppers. Matches native <input> change semantics.
+  - name: toggle
+    detail: 'null'
+    description: Fired by the password reveal button (type=password) when the user toggles password masking on/off. The :state(revealed) custom state reflects the current revealed condition.
 
 slots:                 # leading/trailing name a POSITION in the host-as-grid (anatomy.md); the EDITOR is a control PART, not a user slot (see parts)
   - name: leading
@@ -79,17 +87,30 @@ slots:                 # leading/trailing name a POSITION in the host-as-grid (a
 
 parts:                 # the contenteditable editable surface is a control-owned PART, not a slot (ADR-0014 cl.1)
   - name: editor
-    description: The editable surface — a control-created light-DOM `<div data-part="editor" contenteditable="plaintext-only" role="textbox" aria-multiline="false">` in the centre value cell. Created ONCE (idempotent guard) and NEVER re-rendered (render() stays the inherited void — re-committing a contenteditable subtree destroys the caret; ADR-0014). Carries role=textbox; the host carries no role/aria-* attribute.
+    description: The editable surface — a control-created light-DOM `<div data-part="editor" contenteditable="plaintext-only" role="textbox" aria-multiline="false">` in the centre value cell. Created ONCE (idempotent guard) and NEVER re-rendered. Carries role=textbox; the host carries no role/aria-* attribute.
+  - name: leading-adornment
+    description: Control-injected leading adornment (type=search → magnifier ⌕; type=currency → currency symbol). `[slot="leading"]` element with aria-hidden="true". Present only when the type resolver maps a leading role (search/currency).
+  - name: trailing-adornment
+    description: Control-injected trailing adornment container. type=search → clear button `[data-part="clear-button"]` (hidden when empty, emits input+change on click); type=password → reveal button `[data-part="reveal-button"]` (aria-pressed, emits toggle); type=number → step-up/step-down buttons (emits input+change). Present only for search/password/number types.
+  - name: clear-button
+    description: Inside the trailing-adornment for type=search. A `<button>` (aria-label="Clear") that clears the value and emits input + change. Hidden by CSS when the field is empty (`:has([data-part="editor"][data-empty])`).
+  - name: reveal-button
+    description: Inside the trailing-adornment for type=password. A `<button>` (aria-pressed="false"/"true") that toggles password masking (-webkit-text-security: disc/none) by adding/removing :state(revealed) and emits a `toggle` event.
+  - name: step-up
+    description: Inside the trailing-adornment for type=number. A `<button>` (aria-label="Increase") that increments the numeric value by 1, emitting input + change.
+  - name: step-down
+    description: Inside the trailing-adornment for type=number. A `<button>` (aria-label="Decrease") that decrements the numeric value by 1, emitting input + change.
 
 customStates:          # :state() hooks the stylesheet keys off — set via internals.states, never host attrs
   - ready              # the motion gate (ADR-0008): armed one frame past first paint so the upgrade SNAPS and only subsequent state changes animate
   - disabled           # effectiveDisabled (own || form-disabled channel) — the form-control disabled channel, NOT host ariaDisabled (ADR-0014 dev#b)
   - user-invalid       # set only AFTER the first interaction (blur/change) via the trackUserInvalid controller, gating the danger border (ADR-0014 dev#c)
+  - revealed           # set when the password reveal button is toggled ON (:state(revealed) flips -webkit-text-security from disc to none in CSS; ADR-0044)
 
 face:
   formAssociated: true   # a FACE form-associated control — value + validity participate via ElementInternals (ADR-0013)
-  value: value           # the prop whose value is published to internals.setFormValue (formValue() = this.value)
-  validity: valueMissing # the constraint this control raises — required && value === '' → valueMissing (anchored on the editor)
+  value: value           # the prop whose value is published to internals.setFormValue; for number/currency types, formValue() returns the codec's canonical parsed value, not this.value (the formatted display)
+  validity: valueMissing | customError | typeMismatch # valueMissing (required+empty); customError (number/currency parse failure via valueCodec hasError); typeMismatch (email pattern / URL parse failure)
 
 aria:
   role: textbox          # set on the EDITOR part (data-part=editor), NOT the host — the host carries no role/aria-* attribute (form semantics ride internals)
@@ -114,7 +135,7 @@ geometry:
   radius: var(--ui-radius-base)            # fixed rounded-rect — the container-fleet referent, NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5 (#71 amendment)
   minInlineSize: var(--ui-text-field-min-inline-size) (~20ch — entry-control typing-width floor, native <input size> parity; ADR-0021)   # the host floor so a bare field is hittable; size-invariant (ch is font-relative)
 
-forcedColors: A `@media (forced-colors: active)` block keeps the idle field border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --c-focus-ring → Highlight (the focus border is transparent — the ring is the sole, load-bearing focus indicator) — ADR-0014.
+forcedColors: A `@media (forced-colors: active)` block keeps the idle field border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --c-focus-ring → Highlight (ADR-0014). Control-injected adornment glyphs (magnifier/symbol/reveal/steppers) use `forced-color-adjust:none` to keep their inherited ink — they are aria-hidden decorative cues, so bypassing the system palette is intentional (ADR-0044).
 ---
 
 # ui-text-field

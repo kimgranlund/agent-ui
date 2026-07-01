@@ -17,16 +17,60 @@
 // but focusable (still submits). `user-invalid` timing comes from the `trackUserInvalid` controller (the
 // danger treatment surfaces only after the first blur/change), reinforced by a non-colour `aria-describedby`
 // message node (WCAG 1.4.1, ADR-0014 cl.4). `controls → dom + traits` is the allowed import direction.
+//
+// Wave 3 growth (ADR-0044): a `type` prop (8 variants, reflected) drives a static type-resolver (TYPE_CONFIG,
+// an as-const map — erasableSyntaxOnly: no enum) that maps type → inputmode + auto-adornments + codec +
+// validation. type='text' resolves to the identity config — no adornments, no codec, no extra validation —
+// preserving byte-identical behaviour with the shipped text-field. Number/currency types use the valueCodec
+// trait (traits/value-codec.ts) for the display↔canonical split (formValue() returns canonical, not display).
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIFormElement, type FormValue, type ValidityResult } from '../../dom/form.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
+import {
+  valueCodec,
+  numberCodecOptions,
+  currencyCodecOptions,
+  type ValueCodecController,
+} from '../../traits/value-codec.ts'
 
-// The editor's editable mode (ADR-0014 cl.1; a `true` + input-sanitize fallback for an engine lacking
-// `plaintext-only` is a noted, deferred risk in the ADR consequences — out of the G6 build) and a per-instance
-// id seed so each field's `aria-describedby` message node has a unique IDREF.
+// The editor's editable mode (ADR-0014 cl.1) and a per-instance id seed for aria-describedby.
 const EDITABLE = 'plaintext-only'
 let messageSeq = 0
+
+// ── email / URL validation patterns ──────────────────────────────────────────
+
+// A practical email pattern (RFC 5321 simple form): local@domain.tld — no embedded whitespace or @.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// ── type-resolver (the static as-const config map, erasableSyntaxOnly: no enum) ─────────────────
+
+type LeadingRole = 'magnifier' | 'currency'
+type TrailingRole = 'clear' | 'reveal' | 'stepper'
+type ValidationType = 'email' | 'url' | 'number'
+type CodecKind = 'number' | 'currency'
+
+interface TypeConfig {
+  readonly inputmode: string
+  readonly leading: LeadingRole | null
+  readonly trailing: TrailingRole | null
+  readonly validation: ValidationType | null
+  readonly codec: CodecKind | null
+}
+
+const TYPE_CONFIG = {
+  //            inputmode    leading        trailing    validation  codec
+  text:     { inputmode: 'text',    leading: null,         trailing: null,       validation: null,     codec: null       },
+  email:    { inputmode: 'email',   leading: null,         trailing: null,       validation: 'email',  codec: null       },
+  url:      { inputmode: 'url',     leading: null,         trailing: null,       validation: 'url',    codec: null       },
+  tel:      { inputmode: 'tel',     leading: null,         trailing: null,       validation: null,     codec: null       },
+  search:   { inputmode: 'search',  leading: 'magnifier',  trailing: 'clear',    validation: null,     codec: null       },
+  password: { inputmode: 'text',    leading: null,         trailing: 'reveal',   validation: null,     codec: null       },
+  number:   { inputmode: 'numeric', leading: null,         trailing: 'stepper',  validation: 'number', codec: 'number'   },
+  currency: { inputmode: 'decimal', leading: 'currency',   trailing: null,       validation: 'number', codec: 'currency' },
+} as const satisfies Record<string, TypeConfig>
+
+// ── props ─────────────────────────────────────────────────────────────────────
 
 const props = {
   // The universal form attributes (name / disabled(reflect) / required(reflect)) are SPREAD, not inherited —
@@ -40,6 +84,9 @@ const props = {
   // size/readonly reflect so the [size] dimensional-ramp repoint + the [readonly]/[disabled] CSS hooks apply
   // to JS-set values too, not only author-set attributes.
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
+  // type reflects so [type] CSS selectors (e.g. [type=password] for masking) and the type-resolver apply
+  // to JS-set values; 'text' is the identity config (byte-identical to the pre-Wave-3 shipped control).
+  type: { ...prop.enum(['text', 'email', 'url', 'tel', 'password', 'search', 'number', 'currency'] as const, 'text'), reflect: true },
   readonly: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
@@ -62,6 +109,14 @@ export class UITextFieldElement extends UIFormElement {
 
   // The user-invalid TIMING controller, created per connection (re-arms on reconnect; released on disconnect).
   #userInvalid: TrackUserInvalidController | null = null
+
+  // The active value-codec controller for number/currency types. Null for all other types.
+  // formValue() returns codec.canonical.value when set; formValidity() checks codec.hasError.
+  #codec: ValueCodecController | null = null
+
+  // Password reveal state: tracks whether -webkit-text-security is suppressed.
+  // Drives :state(revealed) on internals and aria-pressed on the reveal button.
+  #revealed = false
 
   protected connected(): void {
     // Seed the reset baseline ONCE from the INITIAL `value` attribute (native `defaultValue` — the value
@@ -108,6 +163,57 @@ export class UITextFieldElement extends UIFormElement {
     // ── the user-invalid TIMING controller — gates the danger treatment until the first blur/change ──
     const controller = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
     this.#userInvalid = controller
+
+    // ── type-dependent behavior: inputmode + auto-adornments + codec + validation (Wave 3 / ADR-0044) ──
+    // The effect re-runs when this.type changes, running the cleanup from the previous run first (the
+    // kernel's cleanup return mechanism). type='text' is the identity config (no adornments, no codec).
+    this.effect((): (() => void) => {
+      const type = this.type
+      const config = TYPE_CONFIG[type]
+
+      // inputmode: virtual-keyboard hint (omit for 'text' to stay byte-identical to the pre-Wave-3 editor).
+      if (config.inputmode !== 'text') {
+        editor.setAttribute('inputmode', config.inputmode)
+      } else {
+        editor.removeAttribute('inputmode')
+      }
+
+      // Per-type AbortController: adornment-button click listeners live for one type config lifetime
+      // (aborted in the effect cleanup on type change or scope.dispose() on disconnect).
+      const typeAc = new AbortController()
+
+      // Control-injected leading adornment (magnifier for search, currency symbol for currency).
+      const leadingEl = config.leading ? this.#createLeadingAdornment(config.leading) : null
+
+      // Control-injected trailing adornment (clear-✕ for search, eye-reveal for password, ▲▼ for number).
+      const trailingEl = config.trailing
+        ? this.#createTrailingAdornment(config.trailing, typeAc.signal)
+        : null
+
+      // Codec: number/currency get the display↔canonical split (formValue + formValidity check it).
+      const codec: ValueCodecController | null =
+        config.codec === 'number'
+          ? valueCodec(this, numberCodecOptions())
+          : config.codec === 'currency'
+            ? valueCodec(this, currencyCodecOptions())
+            : null
+      this.#codec = codec
+
+      // Clear reveal state on type change so switching away from 'password' doesn't leave ghost state.
+      if (type !== 'password') {
+        this.#revealed = false
+        this.internals.states?.delete('revealed')
+      }
+
+      // Effect cleanup: runs before the next type-change run AND on scope.dispose() (disconnect).
+      return (): void => {
+        typeAc.abort() // removes adornment-button listeners registered with typeAc.signal
+        leadingEl?.remove()
+        trailingEl?.remove()
+        codec?.release()
+        this.#codec = null
+      }
+    })
 
     // ── model → surface (ADR-0014 cl.1: the CARET GUARD) + the placeholder presence flag ──
     this.effect(() => {
@@ -183,6 +289,9 @@ export class UITextFieldElement extends UIFormElement {
   protected disconnected(): void {
     this.#userInvalid?.release() // idempotent — the controller's listeners already die with the connection scope
     this.#userInvalid = null
+    // #codec is released + nulled by the type-effect's cleanup (which fires on scope.dispose()); explicit
+    // null here is defensive for any code that reads #codec after disconnect.
+    this.#codec = null
   }
 
   /** Forward host focus to the editor PART (label-association + native `.focus()` parity). */
@@ -193,19 +302,25 @@ export class UITextFieldElement extends UIFormElement {
 
   // ── form hooks (overrides of the UIFormElement seams) ─────────────────────────
 
-  /** The value contributed to the owning form (FACE — the base publishes it via internals.setFormValue). */
+  /**
+   * The value contributed to the owning form (FACE — the base publishes it via internals.setFormValue).
+   * When a value codec is active (number/currency types), the CANONICAL parsed value is the form value,
+   * not `this.value` which holds the formatted display string after blur. For all other types, `this.value`
+   * IS the form value (the editor textContent is the submission value).
+   */
   protected formValue(): FormValue {
-    return this.value
+    return this.#codec?.canonical.value ?? this.value
   }
 
   /**
-   * The validity verdict: `required && value === ''` → `valueMissing` (anchored on the editor); valid
-   * otherwise. A disabled field is barred from constraint validation (native parity), so it reports valid —
-   * which also gates the `user-invalid` treatment off (text-field.css relies on this: its disabled block does
-   * NOT repoint the danger border, so an un-gated disabled+invalid field would wrongly show the danger colour).
+   * The validity verdict: `required && value === ''` → `valueMissing` (anchored on the editor); codec
+   * parse error → `customError`; email/url type mismatch → `typeMismatch`; valid otherwise. A disabled
+   * field is barred from constraint validation (native parity), so it reports valid.
    */
   protected formValidity(): ValidityResult {
     if (this.effectiveDisabled()) return { valid: true }
+
+    // valueMissing: required + empty (gated on this.value, the display; an empty field is empty in all types).
     if (this.required && this.value === '') {
       return {
         valid: false,
@@ -214,6 +329,43 @@ export class UITextFieldElement extends UIFormElement {
         anchor: this.#editor ?? undefined,
       }
     }
+
+    // Codec parse error (number/currency): hasError is set by the valueCodec controller on blur.
+    if (this.#codec?.hasError.value) {
+      return {
+        valid: false,
+        flags: { customError: true },
+        message: this.#codec.errorMessage,
+        anchor: this.#editor ?? undefined,
+      }
+    }
+
+    // Type-specific validation (non-empty values only — empty passes to avoid double-reporting).
+    const v = this.value
+    if (v !== '') {
+      const type = this.type
+      if (type === 'email' && !EMAIL_PATTERN.test(v)) {
+        return {
+          valid: false,
+          flags: { typeMismatch: true },
+          message: 'Please enter a valid email address.',
+          anchor: this.#editor ?? undefined,
+        }
+      }
+      if (type === 'url') {
+        try {
+          new URL(v) // throws for invalid URLs
+        } catch {
+          return {
+            valid: false,
+            flags: { typeMismatch: true },
+            message: 'Please enter a valid URL.',
+            anchor: this.#editor ?? undefined,
+          }
+        }
+      }
+    }
+
     return { valid: true }
   }
 
@@ -225,12 +377,138 @@ export class UITextFieldElement extends UIFormElement {
    */
   protected formReset(): void {
     this.value = this.#defaultValue
+    this.#codec?.setCanonical(this.#defaultValue) // keep canonical in sync on reset
     this.#userInvalid?.reset()
   }
 
   /** Restore the value after navigation/autofill (FACE state restore). */
   protected formStateRestore(state: File | string | FormData | null): void {
     if (typeof state === 'string') this.value = state
+  }
+
+  // ── auto-adornment creation (Wave 3) ──────────────────────────────────────────
+
+  /**
+   * Create and prepend a control-injected LEADING adornment. Placed BEFORE the editor in the DOM so
+   * the host-as-grid's `order` property (slot leading=0 · editor=1 · trailing=2) correctly positions
+   * it in the leading cell. Returns the element for the effect cleanup to remove.
+   */
+  #createLeadingAdornment(role: LeadingRole): HTMLElement {
+    const el = document.createElement('span')
+    el.setAttribute('slot', 'leading')
+    el.setAttribute('data-part', 'leading-adornment')
+    el.setAttribute('data-role', role)
+    el.setAttribute('aria-hidden', 'true') // decorative — the editor carries the accessible name
+    if (role === 'magnifier') {
+      el.textContent = '⌕' // the search magnifier glyph
+    } else {
+      // currency: extract the narrow symbol from Intl (falls back to '$' for default USD).
+      el.textContent = UITextFieldElement.#currencySymbol()
+    }
+    // prepend: appears before the editor in DOM order, but slot+order CSS positions it correctly.
+    this.prepend(el)
+    return el
+  }
+
+  /**
+   * Create and append a control-injected TRAILING adornment. The interactive affordances (clear button,
+   * reveal toggle, steppers) register their listeners with `typeAc.signal` so they are aborted on
+   * type change (the effect cleanup) and on disconnect (the typeAc.abort() in the cleanup). Returns
+   * the element for the effect cleanup to remove.
+   */
+  #createTrailingAdornment(role: TrailingRole, typeAc: AbortSignal): HTMLElement {
+    const container = document.createElement('span')
+    container.setAttribute('slot', 'trailing')
+    container.setAttribute('data-part', 'trailing-adornment')
+    container.setAttribute('data-role', role)
+
+    if (role === 'clear') {
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.setAttribute('data-part', 'clear-button')
+      btn.setAttribute('aria-label', 'Clear')
+      btn.textContent = '✕'
+      btn.addEventListener('click', () => {
+        if (this.value === '') return // nothing to clear
+        this.value = ''
+        this.#codec?.setCanonical('')
+        this.emit('input')
+        this.emit('change')
+        this.#editor?.focus()
+      }, { signal: typeAc })
+      container.append(btn)
+    } else if (role === 'reveal') {
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.setAttribute('data-part', 'reveal-button')
+      btn.setAttribute('aria-label', 'Show password')
+      btn.setAttribute('aria-pressed', 'false')
+      btn.textContent = '👁'
+      btn.addEventListener('click', () => {
+        this.#revealed = !this.#revealed
+        btn.setAttribute('aria-pressed', String(this.#revealed))
+        btn.setAttribute('aria-label', this.#revealed ? 'Hide password' : 'Show password')
+        if (this.#revealed) {
+          this.internals.states?.add('revealed')
+        } else {
+          this.internals.states?.delete('revealed')
+        }
+        this.emit('toggle')
+      }, { signal: typeAc })
+      container.append(btn)
+    } else {
+      // stepper: two buttons for number fields (▲ step up, ▼ step down)
+      const up = document.createElement('button')
+      up.type = 'button'
+      up.setAttribute('data-part', 'step-up')
+      up.setAttribute('aria-label', 'Increase')
+      up.textContent = '▲'
+      up.addEventListener('click', () => { this.#step(1) }, { signal: typeAc })
+
+      const down = document.createElement('button')
+      down.type = 'button'
+      down.setAttribute('data-part', 'step-down')
+      down.setAttribute('aria-label', 'Decrease')
+      down.textContent = '▼'
+      down.addEventListener('click', () => { this.#step(-1) }, { signal: typeAc })
+
+      container.append(up, down)
+    }
+
+    this.append(container)
+    return container
+  }
+
+  /** Increment or decrement the numeric value by `delta` (used by the stepper buttons). */
+  #step(delta: number): void {
+    // Prefer codec canonical (the last successfully parsed value); fall back to this.value for cases
+    // where the user hasn't blurred yet (canonical is still the initial empty seed). Use || not ??
+    // so an empty-string canonical (never blurred) falls through to this.value.
+    const current = parseFloat(this.#codec?.canonical.value || this.value)
+    const next = Number.isFinite(current) ? current + delta : delta
+    const nextStr = String(next)
+    this.value = nextStr // raw numeric string (will format on next blur)
+    this.#codec?.setCanonical(nextStr) // keep canonical in sync immediately
+    this.emit('input')
+    this.emit('change')
+  }
+
+  /**
+   * Extract the narrow currency symbol for the default currency (USD) using Intl.
+   * Used as the text content of the currency leading adornment. Falls back to '$' if Intl fails.
+   * Static so it can be called from the private method without `this` depending on instance state.
+   */
+  static #currencySymbol(): string {
+    try {
+      const parts = new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency: 'USD',
+        currencyDisplay: 'narrowSymbol',
+      }).formatToParts(0)
+      return parts.find((p) => p.type === 'currency')?.value ?? '$'
+    } catch {
+      return '$'
+    }
   }
 
   /**

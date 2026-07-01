@@ -32,7 +32,8 @@ const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
 // The settled attribute surface, in declaration order on the fence (anti-vacuous anchor for both layers).
-const ATTR_NAMES = ['value', 'label', 'placeholder', 'size', 'readonly', 'name', 'disabled', 'required']
+// Wave 3 growth: `type` added after `size` (the Wave-3 field-variant axis — ADR-0044).
+const ATTR_NAMES = ['value', 'label', 'placeholder', 'size', 'type', 'readonly', 'name', 'disabled', 'required']
 
 describe('text-field.md descriptor — frontmatter parses + schema-valid (s10 part a)', () => {
   it('has a leading frontmatter fence and a prose body', () => {
