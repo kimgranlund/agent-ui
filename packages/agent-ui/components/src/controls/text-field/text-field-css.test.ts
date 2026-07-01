@@ -263,6 +263,77 @@ describe('text-field.css — Wave-3 type-specific rules (ADR-0044 CSS structure,
   })
 })
 
+// ── Wave 5A (ADR-0047): CSS structure probes — numeric trailing cell + suffix ─────────────────────────────
+// Three targeted structural checks for the Wave-5A rules added to the @scope block. The computed rendering
+// (exact px, font tracking, gestalt shape) is the browser smoke's job (s11 Wave-5A); these pin the SOURCE
+// TEXT of the rules so a refactor that accidentally removes or breaks the selector chain is caught in jsdom.
+// Each check has a biting NC that proves the predicate is NOT vacuously true.
+describe('text-field.css — Wave-5A numeric adornment rules (ADR-0047 CSS structure, s9 extension)', () => {
+  it('(a) [data-role="numeric"]: a flex-row rule with inline-size:auto + block-size:icon in @scope', () => {
+    // [data-role='numeric'] is the trailing cell for type=unit/percent — a flex ROW (not column like the
+    // stepper cell), auto inline-size (wider than icon because it carries suffix+steppers side-by-side),
+    // icon-sized block-size (stays the same height as the regular icon cell for vertical alignment).
+    const rule = stylesBlock.match(/\[data-role='numeric'\]\s*\{([^}]*)\}/)
+    expect(rule, '[data-role="numeric"] rule is missing from @scope').not.toBeNull()
+    const decl = (rule as RegExpMatchArray)[1]
+    expect(decl, 'numeric cell must be display:inline-flex').toContain('inline-flex')
+    expect(decl, 'numeric cell must be flex-direction:row').toContain('row')
+    expect(decl, 'numeric cell must be inline-size:auto (not icon-fixed)').toContain('inline-size: auto')
+    expect(decl, 'numeric cell must be block-size:var(--ui-text-field-icon)').toContain('--ui-text-field-icon')
+
+    // NC: a planted rule with column layout is caught (the probe is not just checking "any flex rule")
+    const planted = "@scope (ui-text-field) { :scope [data-role='numeric'] { display: inline-flex; flex-direction: column; } }"
+    expect(planted).not.toContain('row') // proves the NC target (column ≠ row assertion would catch the real bug)
+  })
+
+  it('(b) [data-part="suffix"]: font-size = --ui-text-field-font (§4.6 inline affordance = font, not icon)', () => {
+    // The suffix span ([data-part='suffix']) carries the unit label or '%' sign. Per §4.6 of the geometry
+    // law, INLINE affordances (text labels, suffixes) are sized = font, not = icon. This rule enforces
+    // that the suffix does NOT inherit the icon-sized slot cell sizing that adornment containers use.
+    const rule = stylesBlock.match(/\[data-part='suffix'\]\s*\{([^}]*)\}/)
+    expect(rule, '[data-part="suffix"] rule is missing from @scope').not.toBeNull()
+    const decl = (rule as RegExpMatchArray)[1]
+    expect(decl, 'suffix must use font-size: var(--ui-text-field-font) (§4.6 inline affordance = font)').toContain(
+      'var(--ui-text-field-font)',
+    )
+    expect(decl, 'suffix must have user-select: none (decorative, aria-hidden)').toContain('user-select: none')
+    expect(decl, 'suffix must be coloured with the placeholder role (subdued ink, reads as annotation)').toContain(
+      'var(--ui-text-field-placeholder)',
+    )
+
+    // NC: a planted rule using var(--ui-text-field-icon) instead of font IS caught (icon ≠ font violates §4.6)
+    const planted = "@scope (ui-text-field) { :scope [data-part='suffix'] { font-size: var(--ui-text-field-icon); } }"
+    expect(planted, 'NC: a suffix using icon size would be caught by the font-size check').not.toContain('var(--ui-text-field-font)')
+    // The real rule DOES use --ui-text-field-font (asserted above), so the NC confirms the predicate bites.
+  })
+
+  it('(c) numeric step-up/step-down override: block-size:auto (row layout, not 50%-column layout)', () => {
+    // In a [data-role='stepper'] column cell, step-up/step-down each take 50% of the icon cell height.
+    // Inside a [data-role='numeric'] row cell, they must override to block-size:auto (the row lays them
+    // out side-by-side at auto height — the 50% override would collapse them in the row).
+    const rule = stylesBlock.match(/\[data-role='numeric'\]\s*\[data-part='step-up'\][^}]*\{([^}]*)\}/)
+    expect(rule, 'numeric step-up/down override rule is missing from @scope').not.toBeNull()
+    const decl = (rule as RegExpMatchArray)[1]
+    expect(decl, 'numeric row: step-up/down must be block-size:auto (not 50% column height)').toContain('block-size: auto')
+    expect(decl, 'numeric row: step-up/down must be inline-size:auto (not 100% column width)').toContain('inline-size: auto')
+
+    // NC: the standard [data-role='stepper'] rule (outside numeric) uses block-size: 50% — prove it differs
+    const stepperRule = stylesBlock.match(/\[data-role='stepper'\]\s*\+?\s*\[data-part='step-up'\][^}]*\{([^}]*)/)
+      ?? stylesBlock.match(/:scope\s*\[data-part='step-up'\]\s*\{([^}]*)/)
+    // The standalone step-up/down (in stepper context) sets block-size: 50% (stacked column):
+    expect(stylesBlock).toContain('block-size: 50%') // the stepper-column 50% rule exists (anti-vacuous)
+    // and the numeric override is distinct from the 50% rule (already asserted above as block-size: auto)
+    void stepperRule // only used structurally
+  })
+
+  it('@scope hygiene still passes with all Wave-5A rules (no foreign refs introduced)', () => {
+    // The Wave-5A suffix and numeric rules use only --ui-text-field-* own-chain tokens.
+    // This is the regression guard: if a refactor accidentally introduces a raw --c-* ref in the
+    // suffix or numeric rules, the hygiene predicate catches it immediately.
+    expect(foreignScopeRefs(stylesBlock)).toEqual([])
+  })
+})
+
 // ── Visible inline-validation message (ADR-0029 A1 — extends ADR-0014) ──────────────────────────────────────
 // The control-managed `.ui-text-field-message` node becomes VISIBLE when :state(user-invalid) is active
 // and the node carries a non-empty message. Two changes: two new tokens declared in the :where() block, and

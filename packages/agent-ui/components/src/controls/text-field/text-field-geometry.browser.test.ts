@@ -302,6 +302,74 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     expect(getComputedStyle(editor).getPropertyValue('-webkit-text-security'), 'after second click must restore disc').toBe('disc')
   })
 
+  it('currency type: leading symbol font-size == --ui-text-field-font at each [size] (§4.6 inline affordance = font)', () => {
+    // The currency leading-adornment carries font-size: var(--ui-text-field-font) (same law as the
+    // magnifier). Proved at all three [size] stops with EXACT integers (sm→13, md→14, lg→16).
+    const { field, editor } = mount('<ui-text-field type="currency"></ui-text-field>')
+    const symbol = field.querySelector('[data-part="leading-adornment"][data-role="currency"]') as HTMLElement
+    expect(symbol, 'currency leading-adornment must be present').not.toBeNull()
+
+    for (const [size, expectedFont] of [['sm', 13], ['md', 14], ['lg', 16]] as [string, number][]) {
+      field.setAttribute('size', size)
+      const ef = fontPx(editor)
+      expect(ef, `editor font at size=${size}`).toBeCloseTo(expectedFont, 0)
+      expect(fontPx(symbol), `currency symbol font at size=${size} must equal editor font`).toBeCloseTo(ef, 0)
+    }
+    // anti-vacuous: font GENUINELY CHANGES (not a fixed, size-blind value)
+    field.setAttribute('size', 'sm'); const smSym = fontPx(symbol)
+    field.setAttribute('size', 'lg'); const lgSym = fontPx(symbol)
+    expect(lgSym, 'currency symbol font did not change between sm and lg').toBeGreaterThan(smSym)
+  })
+
+  it('unit/percent suffix font-size == --ui-text-field-font at each [size] (§4.6 inline affordance = font)', () => {
+    // The [data-part="suffix"] span on unit/percent types carries font-size: var(--ui-text-field-font)
+    // (§4.6 of the geometry law: inline affordances are sized to the font, not the icon). Proved on
+    // BOTH unit (labelled suffix) and percent ('% ' suffix) at all three [size] stops.
+    for (const markup of [
+      '<ui-text-field type="unit" unit="kilogram"></ui-text-field>',
+      '<ui-text-field type="percent"></ui-text-field>',
+    ] as const) {
+      const { field, editor } = mount(markup)
+      const suffix = field.querySelector('[data-part="suffix"]') as HTMLElement
+      expect(suffix, `suffix must be present for ${markup}`).not.toBeNull()
+
+      for (const [size, expectedFont] of [['sm', 13], ['md', 14], ['lg', 16]] as [string, number][]) {
+        field.setAttribute('size', size)
+        const ef = fontPx(editor)
+        expect(ef, `editor font at size=${size}`).toBeCloseTo(expectedFont, 0)
+        expect(fontPx(suffix), `suffix font at size=${size} must equal editor font (§4.6)`).toBeCloseTo(ef, 0)
+      }
+      // anti-vacuous: the suffix font GENUINELY CHANGES across sizes
+      field.setAttribute('size', 'sm'); const smSuf = fontPx(suffix)
+      field.setAttribute('size', 'lg'); const lgSuf = fontPx(suffix)
+      expect(lgSuf, 'suffix font did not change between sm and lg (size-blind)').toBeGreaterThan(smSuf)
+    }
+  })
+
+  it('unit/percent fields in a flex row carry a positive bounding width (not a collapsed dot)', () => {
+    // The overall shape assertion (per the build-lead DoD). A unit/percent field MUST have a trailing
+    // numeric adornment (suffix+steppers in a flex row) AND the field itself must be wider than tall —
+    // it is a text input, not a stepper widget. Mounts in the doc-specimen context (display:flex row).
+    // Proved for BOTH type=unit AND type=percent — both use [data-role='numeric'] (m3 twin assertion).
+    for (const markup of [
+      '<ui-text-field type="unit" unit="kilogram"></ui-text-field>',
+      '<ui-text-field type="percent"></ui-text-field>',
+    ] as const) {
+      const wrap = document.createElement('div')
+      wrap.style.display = 'flex'
+      wrap.style.flexDirection = 'row'
+      wrap.innerHTML = markup
+      document.body.append(wrap)
+      mounted.push(wrap)
+      const field = wrap.querySelector('ui-text-field') as HTMLElement
+      const box = field.getBoundingClientRect()
+      // the field is wider than it is tall (it is a text input with a suffix, not a square widget)
+      expect(box.width, `[${markup}] collapsed to zero width in a flex row`).toBeGreaterThan(0)
+      expect(box.height, `[${markup}] collapsed to zero height in a flex row`).toBeGreaterThan(0)
+      expect(box.width, `[${markup}] is narrower than tall (should be wider than tall, like a text input)`).toBeGreaterThan(box.height)
+    }
+  })
+
   // Forced-colors (Chromium CDP only — WebKit has no CDP forced-colors emulation).
   // The CSS @media (forced-colors: active) block sets forced-color-adjust: none on all adornment
   // elements, exempting them from the system forced-color palette so their glyphs remain visible.
@@ -325,6 +393,28 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
       const fcaClear = getComputedStyle(clearBtn).getPropertyValue('forced-color-adjust').trim()
       expect(fcaMagnifier, 'magnifier must have forced-color-adjust: none under forced-colors').toBe('none')
       expect(fcaClear, 'clear-button must have forced-color-adjust: none under forced-colors').toBe('none')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] }) // restore
+    }
+  })
+
+  // Wave 5A — suffix forced-colors (Chromium only): the [data-part="suffix"] span is in the forced-
+  // color-adjust: none block so its glyph keeps its inherited colour under system high-contrast.
+  it('forced-colors: Wave-5A suffix span carries forced-color-adjust: none (Chromium only)', async () => {
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+    const { field } = mount('<ui-text-field type="percent"></ui-text-field>')
+    const suffix = field.querySelector('[data-part="suffix"]') as HTMLElement
+    expect(suffix, 'percent suffix must be present').not.toBeNull()
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches, 'engine must enter forced-colors').toBe(true)
+      const fca = getComputedStyle(suffix).getPropertyValue('forced-color-adjust').trim()
+      expect(fca, 'percent suffix must have forced-color-adjust: none under forced-colors').toBe('none')
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] }) // restore
     }

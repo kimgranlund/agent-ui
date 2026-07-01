@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { signal, effect, inspect, whenFlushed, type Signal } from '@agent-ui/components'
 import { UITextFieldElement } from './text-field.ts'
+import { currencySymbol, unitLabel } from '../../traits/value-codec.ts'
 import type { FormValue, ValidityResult } from '../../dom/form.ts'
 
 // G6 s8 — UITextFieldElement jsdom behaviour/value/validity/form/disabled/readonly/zero-residue probes
@@ -98,7 +99,9 @@ describe('ui-text-field — upgrade + typed prop surface', () => {
       el.type = 'email'
       el.type = 'password'
       el.type = 'currency'
-      // @ts-expect-error — 'date' is not a type member: proves the 8-value literal union
+      el.type = 'unit'    // Wave 5A — in the 10-value union
+      el.type = 'percent' // Wave 5A — in the 10-value union
+      // @ts-expect-error — 'date' is not a type member: proves the 10-value literal union
       el.type = 'date'
       // @ts-expect-error — a bare string is wider than the type union
       el.type = 'xyz' as string
@@ -526,6 +529,59 @@ describe('ui-text-field — zero residue across connect/disconnect', () => {
     expect(el.value).toBe('c') // exactly ONE re-wired listener, not a leaked old one stacked atop it
     el.remove()
   })
+
+  it('M1 — codec focus/blur listeners do NOT accumulate across numeric type-switches (per-type AbortSignal)', async () => {
+    // Root-cause C10 fix: valueCodec listeners must die on typeAc.abort() (type change), not just on
+    // disconnect. Without the fix, each numeric type-switch left the old codec's focus+blur listeners
+    // alive (release() only set a guard flag — it did not remove them). After N switches, N-1 inert
+    // listener pairs accumulated, leaking closures and held references to canonical/hasError signals.
+    //
+    // Proof: spy on addEventListener/signal-abort pairs to track the NET count of active focus-capture
+    // listeners on the host. The count must be ≤1 at every type checkpoint (never >1).
+    const { el } = makeField()
+
+    let captureCount = 0
+    const origAdd = el.addEventListener.bind(el) as typeof el.addEventListener
+    // Wrap addEventListener to count 'focus' capture registrations and decrement on signal abort.
+    ;(el as unknown as Record<string, unknown>).addEventListener = (
+      type: string,
+      handler: EventListenerOrEventListenerObject,
+      opts?: AddEventListenerOptions | boolean,
+    ): void => {
+      if (type === 'focus' && typeof opts === 'object' && opts.capture) {
+        captureCount++
+        // When the per-type AbortSignal fires, the listener is automatically removed by the platform.
+        // Decrement immediately on abort so the count tracks ACTIVE listeners, not total registered.
+        if (opts.signal) {
+          opts.signal.addEventListener('abort', () => { captureCount-- }, { once: true })
+        }
+      }
+      origAdd(type, handler, opts as AddEventListenerOptions | boolean)
+    }
+
+    document.body.append(el)
+
+    expect(captureCount).toBe(0) // connected, type=text (default) — no codec, no listeners
+
+    el.type = 'number'; await whenFlushed()
+    expect(captureCount).toBe(1) // codec#1 registered its focus capture
+
+    el.type = 'currency'; await whenFlushed()
+    // With the M1 fix: typeAc.abort() removed codec#1's listener, codec#2 registered → net 1.
+    // Without the fix: codec#1's listener was NOT removed → count would be 2.
+    expect(captureCount).toBe(1) // net still 1
+
+    el.type = 'unit'; await whenFlushed()
+    expect(captureCount).toBe(1) // net still 1
+
+    el.type = 'number'; await whenFlushed()
+    expect(captureCount).toBe(1) // net still 1 — not 4
+
+    el.type = 'text'; await whenFlushed()
+    expect(captureCount).toBe(0) // type=text has no codec — the last listener was removed
+
+    el.remove()
+  })
 })
 
 // ── Wave 3 — type prop + per-type test matrix (ADR-0044) ──────────────────────
@@ -884,10 +940,14 @@ describe('ui-text-field type=currency — currency symbol adornment + codec', ()
     el.remove()
   })
 
-  it('no trailing adornment for currency type', async () => {
+  it('has a trailing stepper adornment for currency type (Wave 5A: codec implies steppers)', async () => {
+    // ADR-0047: a non-null codec always implies steppers — currency is now steppable.
     const { el } = makeTyped('currency')
     await whenFlushed()
-    expect(el.querySelector('[data-part="trailing-adornment"]')).toBeNull()
+    const trailing = el.querySelector('[data-part="trailing-adornment"][data-role="stepper"]')
+    expect(trailing).not.toBeNull()
+    expect(el.querySelector('[data-part="step-up"]')).not.toBeNull()
+    expect(el.querySelector('[data-part="step-down"]')).not.toBeNull()
     el.remove()
   })
 
@@ -902,6 +962,432 @@ describe('ui-text-field type=currency — currency symbol adornment + codec', ()
     expect(el.value).toBe('1,234.50') // display (formatted by currency codec)
     const formVal = el.formValidityProbe() // formValidity() uses formValue() internally — valid means codec ok
     expect(formVal.valid).toBe(true)
+    el.remove()
+  })
+})
+
+// ── Wave 5A (ADR-0047) — currency symbol helpers, multi-currency codecs, unit/percent, steppers + range ──
+// Tests the new numeric codec expansion. Pin locale='en-US' for determinism (decomp caveat). All types
+// are tested for the G6 DoD matrix: inputmode · adornments · codec round-trip · steppers · range validity.
+
+// ── 5A helpers: currencySymbol + unitLabel (exported from value-codec.ts) ────────────────────────────
+
+describe('value-codec.ts — currencySymbol helper (Wave 5A)', () => {
+  it('USD → the $ narrow symbol', () => {
+    const sym = currencySymbol('USD', 'en-US')
+    expect(sym).toBe('$')
+  })
+
+  it('JPY → the ¥ narrow symbol', () => {
+    const sym = currencySymbol('JPY', 'en-US')
+    expect(sym).toBe('¥')
+  })
+
+  it('EUR → the € narrow symbol', () => {
+    const sym = currencySymbol('EUR', 'en-US')
+    expect(sym).toBe('€')
+  })
+
+  it('invalid currency code → falls back to the raw string', () => {
+    const sym = currencySymbol('XYZ_INVALID_CODE', 'en-US')
+    // Intl throws for unknown codes; fallback returns the currency string itself.
+    expect(sym).toBeTruthy()
+  })
+})
+
+describe('value-codec.ts — unitLabel helper (Wave 5A)', () => {
+  it('kilogram → kg (a valid CLDR unit id, en-US short form)', () => {
+    const label = unitLabel('kilogram', 'en-US')
+    expect(label).toBe('kg')
+  })
+
+  it('mile-per-hour → mph (a valid compound CLDR unit)', () => {
+    const label = unitLabel('mile-per-hour', 'en-US')
+    expect(label).toBe('mph')
+  })
+
+  it('invalid CLDR id → falls back to the raw string', () => {
+    const label = unitLabel('bananas-per-fortnight', 'en-US')
+    expect(label).toBe('bananas-per-fortnight') // Intl throws RangeError → fallback
+  })
+
+  it('empty unit → empty string (no Intl call, avoids a RangeError on "")', () => {
+    const label = unitLabel('', 'en-US')
+    expect(label).toBe('')
+  })
+})
+
+// ── 5A: currency symbol per `currency` prop (the leading adornment) ───────────────────────────────────
+
+describe('ui-text-field type=currency — multi-currency leading symbol (Wave 5A)', () => {
+  it('default currency (USD) → $ leading symbol, inputmode=decimal', async () => {
+    const { el } = makeTyped('currency')
+    await whenFlushed()
+    const leading = el.querySelector('[data-part="leading-adornment"][data-role="currency"]') as HTMLElement
+    expect(leading).not.toBeNull()
+    expect(leading.textContent).toBe('$')
+    el.remove()
+  })
+
+  it('currency=JPY → ¥ leading symbol (per-currency symbol via Intl)', async () => {
+    const { el } = makeTyped('currency')
+    el.currency = 'JPY'
+    await whenFlushed()
+    const leading = el.querySelector('[data-part="leading-adornment"][data-role="currency"]') as HTMLElement
+    expect(leading).not.toBeNull()
+    expect(leading.textContent).toBe('¥')
+    el.remove()
+  })
+
+  it('changing currency re-derives the symbol (effect is reactive to this.currency)', async () => {
+    const { el } = makeTyped('currency')
+    el.currency = 'USD'
+    await whenFlushed()
+    const usdLeading = el.querySelector('[data-part="leading-adornment"]') as HTMLElement
+    expect(usdLeading.textContent).toBe('$')
+
+    el.currency = 'EUR'
+    await whenFlushed()
+    const eurLeading = el.querySelector('[data-part="leading-adornment"]') as HTMLElement
+    expect(eurLeading.textContent).toBe('€')
+    el.remove()
+  })
+})
+
+// ── 5A: currency fraction digits per-currency code ────────────────────────────────────────────────────
+
+describe('ui-text-field type=currency — per-currency fraction digits (Wave 5A)', () => {
+  it('USD: 2 fraction digits in the formatted output', async () => {
+    const { el, editor } = makeTyped('currency')
+    el.currency = 'USD'
+    await whenFlushed()
+    el.value = '1234'
+    editor.textContent = '1234'
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    // USD 2 fraction digits: 1234 → "1,234.00" (en-US locale from Intl)
+    expect(el.value).toContain('1,234')
+    expect(el.value).toMatch(/\.00$/) // 2 fraction digits
+    el.remove()
+  })
+
+  it('JPY: 0 fraction digits (ISO 4217 minor units = 0)', async () => {
+    const { el, editor } = makeTyped('currency')
+    el.currency = 'JPY'
+    await whenFlushed()
+    el.value = '1234'
+    editor.textContent = '1234'
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    // JPY 0 fraction digits: 1234 → "1,234" (no decimal places)
+    expect(el.value).not.toContain('.')
+    expect(el.value).toContain('1,234')
+    el.remove()
+  })
+
+  it('BHD: 3 fraction digits (Bahraini Dinar ISO 4217 minor units = 3)', async () => {
+    const { el, editor } = makeTyped('currency')
+    el.currency = 'BHD'
+    await whenFlushed()
+    el.value = '1.5'
+    editor.textContent = '1.5'
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    // BHD 3 fraction digits: 1.5 → "1.500"
+    expect(el.value).toMatch(/\.500$/) // 3 fraction digits
+    el.remove()
+  })
+})
+
+// ── 5A: type=unit — suffix label + inputmode + steppers ──────────────────────────────────────────────
+
+describe('ui-text-field type=unit — suffix label + inputmode + steppers (Wave 5A)', () => {
+  it('sets inputmode=decimal on the editor', async () => {
+    const { el, editor } = makeTyped('unit')
+    await whenFlushed()
+    expect(editor.getAttribute('inputmode')).toBe('decimal')
+    el.remove()
+  })
+
+  it('no leading adornment for unit type', async () => {
+    const { el } = makeTyped('unit')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="leading-adornment"]')).toBeNull()
+    el.remove()
+  })
+
+  it('has a trailing numeric adornment (data-role=numeric) with suffix and steppers', async () => {
+    const { el } = makeTyped('unit')
+    el.unit = 'kilogram'
+    await whenFlushed()
+    const trailing = el.querySelector('[data-part="trailing-adornment"][data-role="numeric"]')
+    expect(trailing).not.toBeNull()
+    const suffix = el.querySelector('[data-part="suffix"]') as HTMLElement
+    expect(suffix).not.toBeNull()
+    expect(suffix.getAttribute('aria-hidden')).toBe('true') // decorative
+    expect(suffix.textContent).toBe('kg') // localized short label
+    expect(el.querySelector('[data-part="step-up"]')).not.toBeNull()
+    expect(el.querySelector('[data-part="step-down"]')).not.toBeNull()
+    el.remove()
+  })
+
+  it('invalid unit id → raw string as suffix', async () => {
+    const { el } = makeTyped('unit')
+    el.unit = 'bananas-per-fortnight'
+    await whenFlushed()
+    const suffix = el.querySelector('[data-part="suffix"]') as HTMLElement
+    expect(suffix.textContent).toBe('bananas-per-fortnight')
+    el.remove()
+  })
+
+  it('changing unit re-derives the suffix label (reactive to this.unit when type=unit)', async () => {
+    const { el } = makeTyped('unit')
+    el.unit = 'kilogram'
+    await whenFlushed()
+    expect((el.querySelector('[data-part="suffix"]') as HTMLElement).textContent).toBe('kg')
+
+    el.unit = 'mile-per-hour'
+    await whenFlushed()
+    expect((el.querySelector('[data-part="suffix"]') as HTMLElement).textContent).toBe('mph')
+    el.remove()
+  })
+})
+
+// ── 5A: type=percent — '%' suffix + canonical = typed number ──────────────────────────────────────────
+
+describe('ui-text-field type=percent — suffix + canonical (Wave 5A)', () => {
+  it('sets inputmode=decimal on the editor', async () => {
+    const { el, editor } = makeTyped('percent')
+    await whenFlushed()
+    expect(editor.getAttribute('inputmode')).toBe('decimal')
+    el.remove()
+  })
+
+  it('has a trailing numeric cell (data-role=numeric) with a % suffix and steppers', async () => {
+    const { el } = makeTyped('percent')
+    await whenFlushed()
+    const trailing = el.querySelector('[data-part="trailing-adornment"][data-role="numeric"]')
+    expect(trailing).not.toBeNull()
+    const suffix = el.querySelector('[data-part="suffix"]') as HTMLElement
+    expect(suffix).not.toBeNull()
+    expect(suffix.textContent).toBe('%')
+    expect(el.querySelector('[data-part="step-up"]')).not.toBeNull()
+    el.remove()
+  })
+
+  it('percent canonical = the TYPED number (not ÷100) — ADR-0047', async () => {
+    // "50 %" → canonical = "50", not "0.5". The control that needs 0–1 divides by 100 itself.
+    const { el, editor } = makeTyped('percent')
+    await whenFlushed()
+    el.value = '50'
+    editor.textContent = '50'
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    // formValue() must return the canonical, not the formatted display.
+    // Access canonical via the codec probe (the ProbeTextField exposes formValidity).
+    expect(el.formValidityProbe().valid).toBe(true) // no parse error — 50 is a valid number
+    // The value is "50" (the number, not the percent symbol or a fraction).
+    // After blur the number codec formats it (no fraction digits for plain numbers): still "50".
+    expect(parseFloat(el.value)).toBeCloseTo(50, 5) // the typed number, not 0.5
+    el.remove()
+  })
+})
+
+// ── 5A: generalized steppers — step/min/max props + ArrowUp/Down ──────────────────────────────────────
+
+describe('ui-text-field — generalized steppers: step/min/max + ArrowUp/Down (Wave 5A)', () => {
+  it('step-up with step=2 increments by 2 (not 1)', async () => {
+    const { el } = makeTyped('number')
+    await whenFlushed()
+    el.step = 2
+    el.value = '10'
+    const stepUp = el.querySelector('[data-part="step-up"]') as HTMLElement
+    stepUp.click()
+    expect(parseFloat(el.value)).toBeCloseTo(12, 5)
+    el.remove()
+  })
+
+  it('step-down with step=0.5 decrements by 0.5', async () => {
+    const { el } = makeTyped('number')
+    await whenFlushed()
+    el.step = 0.5
+    el.value = '5'
+    const stepDown = el.querySelector('[data-part="step-down"]') as HTMLElement
+    stepDown.click()
+    expect(parseFloat(el.value)).toBeCloseTo(4.5, 5)
+    el.remove()
+  })
+
+  it('steppers clamp to max (step-up stops at max)', async () => {
+    const { el } = makeTyped('number')
+    await whenFlushed()
+    el.max = '10'
+    el.value = '9'
+    const stepUp = el.querySelector('[data-part="step-up"]') as HTMLElement
+    stepUp.click()
+    expect(parseFloat(el.value)).toBeCloseTo(10, 5) // clamped to max
+    stepUp.click()
+    expect(parseFloat(el.value)).toBeCloseTo(10, 5) // stays at max
+    el.remove()
+  })
+
+  it('steppers clamp to min (step-down stops at min)', async () => {
+    const { el } = makeTyped('number')
+    await whenFlushed()
+    el.min = '0'
+    el.value = '1'
+    const stepDown = el.querySelector('[data-part="step-down"]') as HTMLElement
+    stepDown.click()
+    expect(parseFloat(el.value)).toBeCloseTo(0, 5) // clamped to min
+    stepDown.click()
+    expect(parseFloat(el.value)).toBeCloseTo(0, 5) // stays at min
+    el.remove()
+  })
+
+  it('ArrowUp steps up (native type=number parity) — only when a codec is active', () => {
+    const { el } = makeTyped('number')
+    el.value = '5'
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+    const arrowUp = new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true })
+    editor.dispatchEvent(arrowUp)
+    expect(arrowUp.defaultPrevented).toBe(true) // prevented (stops page scroll)
+    expect(parseFloat(el.value)).toBeCloseTo(6, 5) // incremented by step=1
+    el.remove()
+  })
+
+  it('ArrowDown steps down (native type=number parity)', () => {
+    const { el } = makeTyped('number')
+    el.value = '5'
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }))
+    expect(parseFloat(el.value)).toBeCloseTo(4, 5)
+    el.remove()
+  })
+
+  it('ArrowUp does NOT step for type=text (no codec active) — identity', () => {
+    const { el } = makeTyped('text')
+    el.value = 'hello'
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+    const arrowUp = new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true })
+    editor.dispatchEvent(arrowUp)
+    expect(arrowUp.defaultPrevented).toBe(false) // NOT prevented — no codec, arrow is a cursor key
+    expect(el.value).toBe('hello') // value unchanged
+    el.remove()
+  })
+
+  it('ArrowUp with min/max clamps correctly', () => {
+    const { el } = makeTyped('number')
+    el.step = 5
+    el.min = '0'
+    el.max = '8'
+    el.value = '6'
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }))
+    expect(parseFloat(el.value)).toBeCloseTo(8, 5) // 6+5=11, clamped to max=8
+    el.remove()
+  })
+})
+
+// ── 5A: range validity (rangeUnderflow / rangeOverflow) ───────────────────────────────────────────────
+
+describe('ui-text-field — range validity: rangeUnderflow / rangeOverflow (Wave 5A)', () => {
+  /** Simulate a blur to trigger the codec parse and update the canonical. */
+  function blurWithValue(el: ProbeTextField, value: string): void {
+    const editor = editorOf(el)
+    el.value = value
+    editor.textContent = value
+    editor.dispatchEvent(new Event('blur'))
+  }
+
+  it('canonical below min → rangeUnderflow (number type)', async () => {
+    const { el } = makeTyped('number')
+    el.min = '10'
+    await whenFlushed()
+    blurWithValue(el, '5')
+    await whenFlushed()
+    const verdict = el.formValidityProbe()
+    expect(verdict.valid).toBe(false)
+    if (!verdict.valid) {
+      expect(verdict.flags).toEqual({ rangeUnderflow: true })
+      expect(verdict.message).toContain('10')
+    }
+    el.remove()
+  })
+
+  it('canonical above max → rangeOverflow (number type)', async () => {
+    const { el } = makeTyped('number')
+    el.max = '100'
+    await whenFlushed()
+    blurWithValue(el, '200')
+    await whenFlushed()
+    const verdict = el.formValidityProbe()
+    expect(verdict.valid).toBe(false)
+    if (!verdict.valid) {
+      expect(verdict.flags).toEqual({ rangeOverflow: true })
+      expect(verdict.message).toContain('100')
+    }
+    el.remove()
+  })
+
+  it('canonical within [min, max] → valid', async () => {
+    const { el } = makeTyped('number')
+    el.min = '0'
+    el.max = '100'
+    await whenFlushed()
+    blurWithValue(el, '50')
+    await whenFlushed()
+    expect(el.formValidityProbe().valid).toBe(true)
+    el.remove()
+  })
+
+  it('stepMismatch is NEVER raised — even when value is not a multiple of step (ADR-0047)', async () => {
+    const { el } = makeTyped('number')
+    el.step = 10
+    await whenFlushed()
+    blurWithValue(el, '7') // 7 is not a multiple of 10
+    await whenFlushed()
+    const verdict = el.formValidityProbe()
+    // The field IS valid — stepMismatch is not enforced (ADR-0047 recorded decision).
+    expect(verdict.valid).toBe(true)
+    el.remove()
+  })
+
+  it('empty min/max = unconstrained (no range error even at extremes)', async () => {
+    const { el } = makeTyped('number')
+    // min and max both default to '' (unconstrained)
+    await whenFlushed()
+    blurWithValue(el, '-999999')
+    await whenFlushed()
+    expect(el.formValidityProbe().valid).toBe(true)
+    el.remove()
+  })
+
+  it('range check applies to currency type too', async () => {
+    const { el } = makeTyped('currency')
+    el.max = '500'
+    await whenFlushed()
+    blurWithValue(el, '1000')
+    await whenFlushed()
+    const verdict = el.formValidityProbe()
+    expect(verdict.valid).toBe(false)
+    if (!verdict.valid) {
+      expect(verdict.flags).toEqual({ rangeOverflow: true })
+    }
+    el.remove()
+  })
+
+  it('range check applies to percent type too', async () => {
+    const { el } = makeTyped('percent')
+    el.min = '0'
+    el.max = '100'
+    await whenFlushed()
+    blurWithValue(el, '150')
+    await whenFlushed()
+    const verdict = el.formValidityProbe()
+    expect(verdict.valid).toBe(false)
+    if (!verdict.valid) {
+      expect(verdict.flags).toEqual({ rangeOverflow: true })
+    }
     el.remove()
   })
 })

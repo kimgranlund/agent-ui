@@ -8,7 +8,7 @@
 tag: ui-text-field
 tier: control          # geometry size-class (Control band — full control height; geometry.md "five size-classes")
 extends: UIFormElement  # FACE form-associated control (value/validity participation via ElementInternals; ADR-0013)
-# marginal: ui-text-field adds 1110 B gz (4539 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — it + UIFormElement + trackUserInvalid) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
+# marginal: ui-text-field adds 2623 B gz (10975 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — it + UIFormElement + trackUserInvalid + the Wave 5A codec factories/helpers). Wave 5A (ADR-0047) grew the marginal from 1110 B gz (Wave 3) by adding currencyCodecOptions/unitCodecOptions/currencySymbol/unitLabel, TYPE_CONFIG v2 (10 types), numeric adornment factories, ArrowUp/Down, and range validity. The family total is gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors text-field.ts `static props` (control-specific first, then the spread formProps)
   - name: value
@@ -30,13 +30,33 @@ attributes:            # attributes-as-API — mirrors text-field.ts `static pro
     reflect: true      # reflects so the [size] dimensional-ramp repoint in text-field.css applies to JS-set values
   - name: type
     type: enum
-    values: [text, email, url, tel, password, search, number, currency]
+    values: [text, email, url, tel, password, search, number, currency, unit, percent]
     default: text
-    reflect: true      # reflects so [type] CSS selectors (e.g. [type=password] for -webkit-text-security masking) + the type-resolver apply to JS-set values; type='text' is the identity config (byte-identical to the pre-Wave-3 shipped control; ADR-0044)
+    reflect: true      # reflects so [type] CSS selectors (e.g. [type=password] for -webkit-text-security masking) + the type-resolver apply to JS-set values; type='text' is the identity config (byte-identical to the pre-Wave-3 shipped control; ADR-0044). Wave 5A (ADR-0047) adds unit + percent.
   - name: readonly
     type: boolean
     default: false
     reflect: true      # reflects to a `readonly` attribute → CSS hook; editor contenteditable=false but still focusable + still submits (ADR-0014 dev#b)
+  - name: currency
+    type: string
+    default: USD
+    reflect: true      # ISO 4217 currency code (e.g. 'JPY', 'EUR'). Only meaningful for type=currency. Drives the leading narrow symbol + the per-currency fraction-digit count via Intl (USD 2 · JPY 0 · BHD 3). Changing currency while type=currency re-derives both symbol and codec fraction digits.
+  - name: unit
+    type: string
+    default: ''
+    reflect: true      # CLDR unit identifier (e.g. 'kilogram', 'mile-per-hour') → localized short suffix via Intl (e.g. 'kg', 'mph'). Only meaningful for type=unit. An invalid CLDR id falls back to the raw string as the suffix. Changing unit while type=unit re-derives the suffix label.
+  - name: step
+    type: number
+    default: 1
+    reflect: true      # The stepper-button and ArrowUp/Down increment for all numeric types (number · currency · unit · percent). null (cleared attr) → treated as 1 at runtime. step="any" is unsupported (stepMismatch is not enforced — ADR-0047).
+  - name: min
+    type: string
+    default: ''
+    reflect: true      # '' = unconstrained. A numeric string sets the lower bound; canonical < min → rangeUnderflow validity flag. Matches native <input min> string semantics where '' = no bound.
+  - name: max
+    type: string
+    default: ''
+    reflect: true      # '' = unconstrained. A numeric string sets the upper bound; canonical > max → rangeOverflow validity flag. Matches native <input max> string semantics where '' = no bound.
   - name: name
     type: string
     default: ''
@@ -89,17 +109,19 @@ parts:                 # the contenteditable editable surface is a control-owned
   - name: editor
     description: The editable surface — a control-created light-DOM `<div data-part="editor" contenteditable="plaintext-only" role="textbox" aria-multiline="false">` in the centre value cell. Created ONCE (idempotent guard) and NEVER re-rendered. Carries role=textbox; the host carries no role/aria-* attribute.
   - name: leading-adornment
-    description: Control-injected leading adornment (type=search → magnifier ⌕; type=currency → currency symbol). `[slot="leading"]` element with aria-hidden="true". Present only when the type resolver maps a leading role (search/currency).
+    description: Control-injected leading adornment (type=search → magnifier ⌕; type=currency → narrow currency symbol per `currency` attr, e.g. '$' for USD, '¥' for JPY). `[slot="leading"]` element with aria-hidden="true". Present only when the type resolver maps a leading role (search/currency).
   - name: trailing-adornment
-    description: Control-injected trailing adornment container. type=search → clear button `[data-part="clear-button"]` (hidden when empty, emits input+change on click); type=password → reveal button `[data-part="reveal-button"]` (aria-pressed, emits toggle); type=number → step-up/step-down buttons (emits input+change). Present only for search/password/number types.
+    description: Control-injected trailing adornment container. type=search → clear button (data-role="clear"); type=password → reveal button (data-role="reveal"); type=number or type=currency → stepper only (data-role="stepper"); type=unit or type=percent → suffix span + steppers (data-role="numeric"). Present only for these types.
+  - name: suffix
+    description: Inside the trailing-adornment for type=unit and type=percent. A `<span data-part="suffix" aria-hidden="true">` carrying the trailing text label — the localized unit label (e.g. 'kg') for type=unit, or '%' for type=percent. Sized = font (§4.6 inline affordance law); decorative only.
   - name: clear-button
     description: Inside the trailing-adornment for type=search. A `<button>` (aria-label="Clear") that clears the value and emits input + change. Hidden by CSS when the field is empty (`:has([data-part="editor"][data-empty])`).
   - name: reveal-button
     description: Inside the trailing-adornment for type=password. A `<button>` (aria-pressed="false"/"true") that toggles password masking (-webkit-text-security: disc/none) by adding/removing :state(revealed) and emits a `toggle` event.
   - name: step-up
-    description: Inside the trailing-adornment for type=number. A `<button>` (aria-label="Increase") that increments the numeric value by 1, emitting input + change.
+    description: Inside the trailing-adornment for type=number/currency/unit/percent. A `<button>` (aria-label="Increase") that increments the numeric value by `step` (clamped to max), emitting input + change. Also triggered by ArrowUp on the editor.
   - name: step-down
-    description: Inside the trailing-adornment for type=number. A `<button>` (aria-label="Decrease") that decrements the numeric value by 1, emitting input + change.
+    description: Inside the trailing-adornment for type=number/currency/unit/percent. A `<button>` (aria-label="Decrease") that decrements the numeric value by `step` (clamped to min), emitting input + change. Also triggered by ArrowDown on the editor.
 
 customStates:          # :state() hooks the stylesheet keys off — set via internals.states, never host attrs
   - ready              # the motion gate (ADR-0008): armed one frame past first paint so the upgrade SNAPS and only subsequent state changes animate
@@ -110,7 +132,7 @@ customStates:          # :state() hooks the stylesheet keys off — set via inte
 face:
   formAssociated: true   # a FACE form-associated control — value + validity participate via ElementInternals (ADR-0013)
   value: value           # the prop whose value is published to internals.setFormValue; for number/currency types, formValue() returns the codec's canonical parsed value, not this.value (the formatted display)
-  validity: valueMissing | customError | typeMismatch # valueMissing (required+empty); customError (number/currency parse failure via valueCodec hasError); typeMismatch (email pattern / URL parse failure)
+  validity: valueMissing | customError | typeMismatch | rangeUnderflow | rangeOverflow # valueMissing (required+empty); customError (numeric parse failure via valueCodec hasError); typeMismatch (email pattern / URL parse failure); rangeUnderflow (canonical < min); rangeOverflow (canonical > max). stepMismatch is NOT enforced (ADR-0047).
 
 aria:
   role: textbox          # set on the EDITOR part (data-part=editor), NOT the host — the host carries no role/aria-* attribute (form semantics ride internals)
@@ -122,6 +144,10 @@ aria:
 keyboard:
   - keys: Enter
     action: Commits the value (emits change) and is preventDefault-suppressed — single-line field, no newline is inserted.
+  - keys: ArrowUp
+    action: For numeric types (number · currency · unit · percent) — increments the value by `step` (clamped to max), emitting input + change. preventDefault prevents page scroll. No-op for non-numeric types or mid-IME composition.
+  - keys: ArrowDown
+    action: For numeric types — decrements the value by `step` (clamped to min), emitting input + change. No-op for non-numeric types or mid-IME composition.
   - keys: typing
     action: Edits the editor surface; each edit updates value (surface→model) and emits input (suppressed mid IME composition).
   - note: The editor is intrinsically focusable (contenteditable). host.focus() forwards to the editor (label-association + .focus() parity). disabled removes it from focus (contenteditable=false, no tabindex); readonly keeps it focusable (tabindex=0) and selectable but not editable.

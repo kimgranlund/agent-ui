@@ -33,7 +33,8 @@ const parsed = parseDescriptor(fence)
 
 // The settled attribute surface, in declaration order on the fence (anti-vacuous anchor for both layers).
 // Wave 3 growth: `type` added after `size` (the Wave-3 field-variant axis — ADR-0044).
-const ATTR_NAMES = ['value', 'label', 'placeholder', 'size', 'type', 'readonly', 'name', 'disabled', 'required']
+// Wave 5A growth (ADR-0047): currency/unit/step/min/max added after `readonly` (5 new numeric-type props).
+const ATTR_NAMES = ['value', 'label', 'placeholder', 'size', 'type', 'readonly', 'currency', 'unit', 'step', 'min', 'max', 'name', 'disabled', 'required']
 
 describe('text-field.md descriptor — frontmatter parses + schema-valid (s10 part a)', () => {
   it('has a leading frontmatter fence and a prose body', () => {

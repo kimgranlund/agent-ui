@@ -316,7 +316,8 @@
     line-height: 1;
   }
 
-  /* stepper container: stacks the two step buttons vertically in the trailing icon-sized cell */
+  /* stepper container: stacks the two step buttons vertically in the trailing icon-sized cell.
+     Used for type=number and type=currency (no suffix — just ▲▼ stacked in the icon square). */
   :scope [data-role='stepper'] {
     display: inline-flex;
     flex-direction: column;
@@ -329,6 +330,40 @@
   :scope [data-part='step-down'] {
     block-size: 50%; /* each stepper takes half the icon cell height */
     inline-size: 100%;
+  }
+
+  /* Wave 5A (ADR-0047): numeric trailing cell — suffix span + steppers in a flex ROW.
+     Used for type=unit (localized label) and type=percent (%).
+     inline-size is auto (wider than the icon square); block-size stays icon-sized for vertical centering. */
+  :scope [data-role='numeric'] {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    inline-size: auto;
+    block-size: var(--ui-text-field-icon);
+    gap: 0;
+  }
+  /* Override the slot's fixed icon inline-size for numeric cells (they carry suffix + steppers). */
+  :scope > [slot='trailing'][data-role='numeric'] {
+    inline-size: auto;
+  }
+  /* Numeric steppers inside a numeric cell: each is font-sized and shares the row (no 50%-block override). */
+  :scope [data-role='numeric'] [data-part='step-up'],
+  :scope [data-role='numeric'] [data-part='step-down'] {
+    block-size: auto;
+    inline-size: auto;
+    line-height: 1;
+  }
+
+  /* suffix span: the trailing unit label ('kg') or percent sign ('%) — sized = font (§4.6 inline
+     affordance law), decorative (aria-hidden). Subdued ink (the placeholder role) so it reads as
+     a unit annotation, not competing with the editor value. */
+  :scope [data-part='suffix'] {
+    font-size: var(--ui-text-field-font);
+    line-height: 1;
+    user-select: none;
+    color: var(--ui-text-field-placeholder);
   }
 
   /* leading/trailing adornment text content (magnifier glyph, currency symbol): font-sized, centered.
@@ -366,11 +401,12 @@
     /* adornment glyphs: keep their ink (they are decorative, aria-hidden — not a text content channel) */
     :scope [data-part='leading-adornment'],
     :scope [data-part='trailing-adornment'],
+    :scope [data-part='suffix'],
     :scope [data-part='clear-button'],
     :scope [data-part='reveal-button'],
     :scope [data-part='step-up'],
     :scope [data-part='step-down'] {
-      forced-color-adjust: none; /* the magnifier / symbol / reveal glyph survives forced-colors */
+      forced-color-adjust: none; /* the magnifier / symbol / reveal / suffix / steppers survive forced-colors */
     }
   }
 }
