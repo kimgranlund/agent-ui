@@ -100,12 +100,14 @@ aria:
       aria-valuenow: valueLo (clamped)
       aria-valuemin: min
       aria-valuemax: valueHi (current hi — the lo thumb cannot exceed hi)
+      aria-valuetext: valueLo (clamped, stringified — mirrors aria-valuenow as a human-readable label)
       aria-label: Low value
     - element: .thumb[data-thumb=hi]
       role: slider
       aria-valuenow: valueHi (clamped)
       aria-valuemin: valueLo (current lo — the hi thumb cannot go below lo)
       aria-valuemax: max
+      aria-valuetext: valueHi (clamped, stringified — mirrors aria-valuenow as a human-readable label)
       aria-label: High value
 
 keyboard:

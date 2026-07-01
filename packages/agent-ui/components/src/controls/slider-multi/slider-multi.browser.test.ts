@@ -279,6 +279,35 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     el.remove()
   })
 
+  // ── density-invariance — thumb/host geometry HOLDS across [density] (widget-box is scale-only) ──
+  //
+  // The compact widget-box ramp (--ui-compact-{size}) is re-tabled by [scale], NOT by [density].
+  // Density shifts layout-ladder quantities (--ui-space-*, gap, padding) but never the control box.
+  // A [density=compact/comfortable/spacious] wrapper must produce identical thumb px (anti-vacuous).
+
+  it('density-invariant: thumb size is unchanged under [density=compact], default, and [density=spacious]', () => {
+    function makeWithDensity(density: string | null): number {
+      const wrapper = document.createElement('div')
+      if (density !== null) wrapper.setAttribute('density', density)
+      const el = document.createElement('ui-slider-multi')
+      wrapper.append(el)
+      document.body.append(wrapper)
+      const thumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
+      const w = Number.parseFloat(getComputedStyle(thumb).width)
+      wrapper.remove()
+      return w
+    }
+
+    const compact    = makeWithDensity('compact')
+    const comfortable = makeWithDensity(null)       // no [density] attr = comfortable baseline
+    const spacious   = makeWithDensity('spacious')
+
+    // All three must be identical: --ui-compact-md = 16px → thumb = 12px regardless of density
+    expect(compact,    'compact density changed the thumb size').toBe(comfortable)
+    expect(spacious,   'spacious density changed the thumb size').toBe(comfortable)
+    expect(comfortable, '[density=none] thumb must be 12px (--ui-compact-md − 4)').toBe(12)
+  })
+
   // ── forced-colors (AC3 — stylesheet presence; behavior is system-determined) ────────────────
 
   it('AC3 forced-colors: slider-multi.css carries a @media (forced-colors: active) block (stylesheet check)', () => {

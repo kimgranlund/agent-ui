@@ -40,11 +40,6 @@ export interface UISliderMultiElement extends ReactiveProps<typeof sliderMultiPr
 export class UISliderMultiElement extends UIRangeElement {
   static override props = sliderMultiProps
 
-  // LLD-C2 / decomp S2: the role identifier for this family. UIRangeElement does not declare `role` as a static
-  // field (it sets internals.role directly in connected()); slider-multi overrides at the leaf by setting its
-  // internals.role = 'group' (the composite role for a dual-thumb control) in connected().
-  static role = 'slider'
-
   // Light-DOM element refs — created once on first connect; null until then.
   // NOTE: #fill is not stored — the fill div is position-driven by CSS custom properties alone; the JS
   // geometry seam writes --value-pct-lo/hi on the host and CSS computes fill geometry from those.

@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { UISliderMultiElement } from './slider-multi.ts'
+import { signal, inspect } from '../../reactive/index.ts'
+import type { FormValue } from '../../dom/index.ts'
 import {
   splitFrontmatter,
   parseDescriptor,
@@ -36,6 +38,16 @@ function stubFormAssoc(internals: ElementInternals): void {
 type ReleaseBinding = (() => void) | null
 
 class ProbeSliderMulti extends UISliderMultiElement {
+  /** Inspectable probe signal; co-subscribed to the connection-scope form effect via formValue().
+   *  When the scope disposes on disconnect, the form effect loses all subscribers → this signal
+   *  drops to 0 subscribers (the C10 zero-residue proof via inspect()). */
+  readonly loSig = signal(0)
+
+  protected override formValue(): FormValue {
+    void this.loSig.value  // subscribe loSig via the scope-owned form effect
+    return super.formValue()
+  }
+
   /** Re-expose the protected `internals` seam for assertions on role/ARIA. */
   get probeInternals(): ElementInternals { return this.internalsSeam }
   /** Lo valueDrag cleanup function (null before first connect). */
@@ -600,6 +612,25 @@ describe('UISliderMultiElement — disabled state', () => {
 // ── zero residue (connect / disconnect) — C10 ────────────────────────────────────────────────────
 
 describe('UISliderMultiElement — zero residue (C10)', () => {
+  it('signal zero-residue: loSig has 0 subscribers before connect, ≥1 after, 0 after disconnect, 1 after reconnect', () => {
+    const el = make()
+
+    // Before connect: no scope → no form effect → 0 subscribers on the probe signal.
+    expect(inspect(el.loSig).subscribers).toBe(0)
+
+    document.body.append(el)
+    // After connect: scope-owned form effect reads formValue() → subscribes loSig.
+    expect(inspect(el.loSig).subscribers).toBeGreaterThanOrEqual(1)
+
+    el.remove()
+    // After disconnect: scope.dispose() tears every effect → 0 subscribers (zero residue).
+    expect(inspect(el.loSig).subscribers).toBe(0)
+
+    document.body.append(el) // reconnect → connected() re-runs → fresh scope → re-subscribes once
+    expect(inspect(el.loSig).subscribers).toBe(1) // exactly one, not stacked from the old scope
+    el.remove()
+  })
+
   it('disconnect removes keyboard listeners; reconnect re-arms exactly once (not stacked)', () => {
     const el = make()
     document.body.append(el)

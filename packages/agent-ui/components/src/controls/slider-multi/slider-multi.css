@@ -36,6 +36,11 @@
   /* Thumb colours — surface + border. The thumb is a bright circle outlined in primary. */
   --ui-slider-multi-thumb:        var(--c-neutral-surface-brightest);
   --ui-slider-multi-thumb-border: var(--c-primary);
+
+  /* Focus ring — tunnelled through a component token so the full token chain is local.
+     The fleet ring constant (--c-focus-ring) flows through here; override only this token
+     to remap the focus colour for this component (WHCM: --c-focus-ring → Highlight). */
+  --ui-slider-multi-focus-ring: var(--c-focus-ring);
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the LITERAL per-[scale] table in dimensions.css
@@ -147,9 +152,10 @@
 
   /* Focus ring (ADR-0009) — shared fleet ring on keyboard-focused thumbs. Applied via :focus-visible
      (keyboard-only) directly on the thumb element since the thumbs ARE the focusable nodes.
-     The ONE deliberate exception to "consume only --ui-slider-multi-*": fleet-constant, same as switch. */
+     Consumes the local --ui-slider-multi-focus-ring (declared in the token block, chained from
+     --c-focus-ring) — the full token chain is now component-local, no direct fleet reference here. */
   .thumb:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline: var(--ui-focus-ring-width) solid var(--ui-slider-multi-focus-ring);
     outline-offset: var(--ui-focus-ring-offset);
   }
 
