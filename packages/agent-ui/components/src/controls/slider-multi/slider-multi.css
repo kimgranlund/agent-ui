@@ -1,0 +1,188 @@
+/* slider-multi.css — ui-slider-multi, the dual-thumb Range-class control stylesheet (decomp S2 · ADR-0042 · ADR-0041).
+ * Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-slider-multi)` (specificity 0,0,0) DECLARES the `--ui-slider-multi-*`
+ *       chain from the colour roles (`--c-{family}-{role}`) and the compact widget ramp
+ *       (`--ui-compact-{size}` / ADR-0041). `[size]` repoints the box token (the widget ramp step);
+ *       `[disabled]` mutes the rail/fill/thumb colours to the neutral muted family.
+ *       No `color-mix` — colour opinions live in the token layer (ADR-0008).
+ *   [2] STYLES BLOCK — `@scope (ui-slider-multi)` CONSUMES only `--ui-slider-multi-*` for its OWN
+ *       tokens. The host is a block-level flex column that sizes to its content; the RAIL (.rail) is a
+ *       thin horizontal bar inside the interactive-box-height container; the FILL (.fill) spans lo→hi
+ *       using `--value-pct-lo`/`--value-pct-hi` (set by the JS geometry seam); each THUMB (.thumb) is
+ *       a circle `box − 4px` = `box − 2×--ui-widget-inset` (ADR-0041 cl.3: the 2px-inset law) positioned
+ *       absolutely on the rail by `left: calc(var(--value-pct-{lo|hi}) * 1%)`.
+ *       `:focus-visible` ring (keyboard-only, ADR-0009). Unconditional transitions + reduced-motion
+ *       (the Indicator/Range family pattern — NO :state(ready) gate; ADR-0042 LLD-C6). Forced-colors safe.
+ *       Density-invariant (box/thumb scale with `--ui-compact-{size}`, never a raw px override here).
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
+ * from slider-multi.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-slider-multi) declares --ui-slider-multi-* ════════════════ */
+
+:where(ui-slider-multi) {
+  /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md). `[size]` repoints.
+     The box drives the thumb size (box − 4px) and the host's interactive-area height. */
+  --ui-slider-multi-box: var(--ui-compact-md);
+
+  /* Rail colour — the unfilled background track (muted neutral outline, same as switch unchecked track). */
+  --ui-slider-multi-rail: var(--c-neutral-outline-variant);
+
+  /* Fill colour — the lo→hi active range (primary, matching the single-slider convention). */
+  --ui-slider-multi-fill: var(--c-primary);
+
+  /* Thumb colours — surface + border. The thumb is a bright circle outlined in primary. */
+  --ui-slider-multi-thumb:        var(--c-neutral-surface-brightest);
+  --ui-slider-multi-thumb-border: var(--c-primary);
+}
+
+/* [size] → compact widget ramp repoint (ADR-0041: the LITERAL per-[scale] table in dimensions.css
+   re-tables --ui-compact-{sm,md,lg}; `[size]` on the host picks which step the slider box targets). */
+:where(ui-slider-multi[size='sm']) { --ui-slider-multi-box: var(--ui-compact-sm); }
+:where(ui-slider-multi[size='lg']) { --ui-slider-multi-box: var(--ui-compact-lg); }
+
+/* [disabled] → muted neutral roles (overrides all states). HOLDS at idle: the disabled host is
+   pointer-inert (styles block), so `:hover` never matches it (ADR-0008 disabled pattern). */
+:where(ui-slider-multi[disabled]) {
+  --ui-slider-multi-rail:         var(--c-neutral-surface-high);
+  --ui-slider-multi-fill:         var(--c-neutral-surface-high);
+  --ui-slider-multi-thumb:        var(--c-neutral-on-surface-variant);
+  --ui-slider-multi-thumb-border: var(--c-neutral-outline-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-slider-multi) consumes ONLY --ui-slider-multi-* ════════════════ */
+
+@scope (ui-slider-multi) {
+  /* Host: block container that centres the rail vertically within the interactive box height.
+     display:flex + align-items:center means the rail aligns to the middle of the box,
+     and the absolutely-positioned thumbs extend out from the rail's midline. */
+  :scope {
+    display: flex;
+    align-items: center;
+    block-size: var(--ui-slider-multi-box);    /* interactive box = compact widget ramp step (ADR-0041) */
+    position: relative;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: pointer;
+    /* The host is the outer sizing container for left:X% on the thumbs (via .rail containing block). */
+  }
+
+  /* RAIL (.rail) — the thin horizontal track bar. Fills the full inline width of the host. Position:
+     relative makes the rail the containing block for the fill and thumb absolute children.
+     block-size = box/4 ≈ 4px at md scale — the slot height, not the interactive area. */
+  .rail {
+    position: relative;
+    flex: 1;
+    block-size: calc(var(--ui-slider-multi-box) / 4);
+    border-radius: 999px;                       /* pill — fully rounded ends */
+    background: var(--ui-slider-multi-rail);
+    overflow: visible;                          /* thumbs extend beyond the rail's block-size */
+  }
+
+  /* FILL (.fill) — the lo→hi active range highlight. Absolutely positioned within the rail.
+   * inset-block: 0 stretches it to the full rail height; inset-inline-start + inline-size
+   * map the [lo, hi] interval:
+   *   left edge  = --value-pct-lo × 1%  (of the rail width)
+   *   right edge = (100 − --value-pct-hi) × 1% from the end
+   *
+   * Transitions: the fill endpoints animate on value change (unconditional; the Indicator/Range
+   * pattern — no :state(ready) gate, ADR-0042 LLD-C6). Suppressed under prefers-reduced-motion. */
+  .fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--value-pct-lo, 0) * 1%);
+    /* inline-size spans from lo% to hi% of the rail */
+    inline-size: calc((var(--value-pct-hi, 100) - var(--value-pct-lo, 0)) * 1%);
+    background: var(--ui-slider-multi-fill);
+    border-radius: 999px;
+    pointer-events: none;                       /* the fill is purely decorative — thumbs capture pointer */
+    transition:
+      inset-inline-start var(--ui-motion-fast) var(--ui-ease-standard),
+      inline-size        var(--ui-motion-fast) var(--ui-ease-standard),
+      background-color   var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  /* THUMBS (.thumb) — circles inset 2px (--ui-widget-inset) inside the widget box (ADR-0041 cl.3).
+   *
+   * Size:   thumb = box − 2×inset = box − 4px (the ADR-0041 2px-inset law).
+   * Block:  top:50% + transform:translateY(-50%) centres the thumb on the rail's midline.
+   * Inline: left is set per data-thumb (lo/hi) using the --value-pct-* geometry custom property:
+   *           `left: calc(var(--value-pct-{thumb}) * 1%)`
+   *         translateX(-50%) on the transform centres the circle on the computed position.
+   *
+   * Motion: `translate` / `left` transitions animate the thumb slide — paint-only transforms.
+   *         Suppressed under prefers-reduced-motion. */
+  .thumb {
+    position: absolute;
+
+    /* ADR-0041 cl.3: thumb = box − 2×inset = box − 4px */
+    --ui-slider-multi-thumb-size: calc(var(--ui-slider-multi-box) - 2 * var(--ui-widget-inset));
+    inline-size: var(--ui-slider-multi-thumb-size);
+    block-size:  var(--ui-slider-multi-thumb-size);
+    border-radius: 50%;                         /* circle */
+    box-sizing: border-box;
+
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+
+    border: 2px solid var(--ui-slider-multi-thumb-border);
+    background: var(--ui-slider-multi-thumb);
+    cursor: pointer;
+
+    transition:
+      left             var(--ui-motion-fast) var(--ui-ease-standard),
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      border-color     var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  /* Per-thumb inline position — driven by the JS geometry seam (--value-pct-lo / --value-pct-hi set via
+     element.style on the host; they cascade into this @scope as inherited custom properties). */
+  .thumb[data-thumb='lo'] { left: calc(var(--value-pct-lo, 0) * 1%); }
+  .thumb[data-thumb='hi'] { left: calc(var(--value-pct-hi, 100) * 1%); }
+
+  /* Focus ring (ADR-0009) — shared fleet ring on keyboard-focused thumbs. Applied via :focus-visible
+     (keyboard-only) directly on the thumb element since the thumbs ARE the focusable nodes.
+     The ONE deliberate exception to "consume only --ui-slider-multi-*": fleet-constant, same as switch. */
+  .thumb:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* Reduced motion — zero all transitions on the fill and thumbs (accessibility non-negotiable;
+     geometry.md: NEVER animate the ramp; the Indicator/Range unconditional-transitions contract). */
+  @media (prefers-reduced-motion: reduce) {
+    .fill  { transition: none; }
+    .thumb { transition: none; }
+  }
+
+  /* Disabled host — pointer-inert so :hover/:active never lift the muted neutral tokens. */
+  :scope[disabled] {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  /* forced-colors — keep the rail, fill, and thumbs visible as system-colour elements.
+     forced-color-adjust:none preserves our explicit system-colour mappings so the browser does not
+     re-override them (matches switch.css / checkbox.css pattern for the range family). */
+  @media (forced-colors: active) {
+    .rail {
+      border: 2px solid ButtonText;
+      background: Canvas;
+      forced-color-adjust: none;
+    }
+    .fill {
+      background: Highlight;
+      forced-color-adjust: none;
+    }
+    .thumb {
+      border: 2px solid ButtonText;
+      background: ButtonFace;
+      forced-color-adjust: none;
+    }
+    .thumb:focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}

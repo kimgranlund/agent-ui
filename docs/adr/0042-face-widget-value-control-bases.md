@@ -37,7 +37,9 @@ so they live **above** the traits layer: a new `controls/_base/` sub-layer (cont
    `indeterminate` descended DOWN to checkbox (radio/switch wrongly inherited it); the family motion pattern
    pinned (no ready-gate). checkbox passed G5-done; this corrects switch/radio/radio-group.)*
 3. **`UIRangeElement`** (`controls/_base/range-element.ts`) + **the `value-drag` controller**
-   (`traits/value-drag.ts`) — the Range base: numeric `value`/`min`/`max`/`step` (clamped+snapped), the
+   (`traits/value-drag.ts`) — the Range base: the props `{value, min, max, step, **size**}` (numeric
+   value/min/max/step clamped+snapped; **`size: enum(['sm','md','lg'],'md')` reflected — the SHARED widget-box
+   axis, same as UIIndicatorElement, typed on the base so slider/slider-multi inherit it, NOT per-leaf**), the
    `ariaValueNow/Min/Max` slider machine, keyboard step (Arrow/Page/Home/End), and the **separable
    `value-drag` controller** (`valueDrag(host,{track,min,max,step,onValue})` → cleanup) for the pointer→value
    gesture. Full contract: `range-element.lld.md` (LLD-C1..C5); slider-multi's value-pair + nearer-thumb + lo≤hi

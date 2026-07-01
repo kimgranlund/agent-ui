@@ -28,6 +28,8 @@ import checkboxMd from '../../packages/agent-ui/components/src/controls/checkbox
 import switchMd from '../../packages/agent-ui/components/src/controls/switch/switch.md?raw'
 import radioMd from '../../packages/agent-ui/components/src/controls/radio/radio.md?raw'
 import radioGroupMd from '../../packages/agent-ui/components/src/controls/radio/radio-group.md?raw'
+import sliderMd from '../../packages/agent-ui/components/src/controls/slider/slider.md?raw'
+import sliderMultiMd from '../../packages/agent-ui/components/src/controls/slider-multi/slider-multi.md?raw'
 
 /** A parsed control descriptor: the structured frontmatter (its attributes-as-API drive the table) + the prose body. */
 export interface ComponentDoc {
@@ -56,6 +58,8 @@ export const loadCheckboxDoc = (): ComponentDoc => parseDoc(checkboxMd)
 export const loadSwitchDoc = (): ComponentDoc => parseDoc(switchMd)
 export const loadRadioDoc = (): ComponentDoc => parseDoc(radioMd)
 export const loadRadioGroupDoc = (): ComponentDoc => parseDoc(radioGroupMd)
+export const loadSliderDoc = (): ComponentDoc => parseDoc(sliderMd)
+export const loadSliderMultiDoc = (): ComponentDoc => parseDoc(sliderMultiMd)
 
 // ── tier enumeration (for the family overview + tier showcase — a DERIVED member list) ───────────────────────
 // The whole `{name}.md` descriptor set, globbed at build time (Vite resolves `import.meta.glob` statically). The

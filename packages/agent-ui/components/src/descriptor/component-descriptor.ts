@@ -215,7 +215,7 @@ const FIELD_SHAPE: Record<string, DescriptorShape> = {
   forcedColors: 'scalar',
 }
 
-const SIZE_CLASSES = ['control', 'indicator', 'pattern', 'container', 'layout', 'display'] as const // geometry.md "five size-classes"
+const SIZE_CLASSES = ['control', 'indicator', 'range', 'pattern', 'container', 'layout', 'display'] as const // geometry.md size-class set (range added for Wave-2 Range family)
 const ATTR_TYPES = ['enum', 'boolean', 'number', 'string', 'json'] as const // the attribute codec set
 const BASE_CLASSES = [
   'UIElement',

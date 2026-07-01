@@ -90,6 +90,7 @@ const PAGES_BY_TIER: Record<string, readonly string[]> = {
   control: ['permutations', 'states', 'doc'], // form/interactive control (button, text-field)
   display: ['doc'], // a non-interactive display leaf (text) — API doc only (tier=display, ADR-0025; no states/permutations)
   indicator: ['doc'], // an Indicator-class widget control (checkbox, switch, radio — Wave 1, ADR-0041/0042) — API doc
+  range: ['doc'], // a Range-class widget control (slider, slider-multi — Wave 2, ADR-0042) — API doc
   layout: ['doc'], // a layout primitive — API doc per-component; the rich matrix is the shared tier showcase
   container: ['doc', 'demo'], // a surface container (card) / form container (radio-group) — API doc + a demo
   pattern: ['doc', 'demo'], // an interactive pattern (tabs, modal) — API doc + an interaction demo
@@ -157,13 +158,15 @@ describe('site coverage — every shipped component has its required per-tier pa
     })
   }
 
-  it('sourced the controls, the display leaf, the Wave 1 indicators, and the G9 containers/patterns/layout', () => {
+  it('sourced the controls, the display leaf, the Wave 1 indicators, the Wave 2 Range controls, and the G9 containers/patterns/layout', () => {
     expect(COMPONENTS.filter((c) => c.tier === 'control').map((c) => c.name).sort()).toEqual(['button', 'text-field'])
     expect(COMPONENTS.filter((c) => c.tier === 'display').map((c) => c.name).sort()).toEqual(['text'])
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group): tier=indicator/container (not control/display)
     expect(COMPONENTS.filter((c) => c.tier === 'indicator').map((c) => c.name).sort()).toEqual(
-      ['checkbox', 'radio', 'switch'],
+      ['checkbox', 'radio', 'slider', 'switch'],
     )
+    // Wave 2 Range family (slider, slider-multi — ADR-0042): tier=range
+    expect(COMPONENTS.filter((c) => c.tier === 'range').map((c) => c.name).sort()).toEqual(['slider-multi'])
     // G9 containers/layout/pattern family (unchanged from the G9 fleet):
     expect(COMPONENTS.filter((c) => c.tier === 'container').map((c) => c.name).sort()).toEqual(
       ['card', 'radio-group'],

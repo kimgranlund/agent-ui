@@ -94,6 +94,15 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // The Range-class controls (Wave 2, ADR-0042) — per-component indicator-tier groups, tag-labelled.
+    label: 'ui-slider',
+    links: [{ href: './slider-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-slider-multi',
+    links: [{ href: './slider-multi-doc.html', label: 'API' }],
+  },
+  {
     // The layout primitives share one tier showcase (overview + surface×layout) + a per-component API doc each.
     label: 'Layout primitives',
     links: [

@@ -17,10 +17,13 @@ the numeric value is the host's form identity.
 
 ## Components
 
-- **LLD-C1 — the value model.** `min` / `max` / `step` / `value: number` (reflected props; `value` is the form
-  value via `formValue()`). `slider-multi` carries `value: [number, number]` (a low/high pair) — the subclass
-  widens the value type + the codec. Clamping: `value` is clamped to `[min, max]` and snapped to `step` on every
-  set (the base's normalizer).
+- **LLD-C1 — the value model + size (BASE props `{value, min, max, step, size}`).** `min` / `max` / `step` /
+  `value: number` (reflected; `value` is the form value via `formValue()`) + **`size: enum(['sm','md','lg'],'md')`
+  (reflected)** — the SHARED widget-box axis (the track/thumb ride `--ui-compact-{size}`), typed on the base so
+  slider/slider-multi inherit ONE prop, NOT a per-leaf re-declaration (the same size↑ lesson as
+  `UIIndicatorElement`, ADR-0042). `slider-multi` widens `value: [number, number]` (a low/high pair) — the
+  subclass widens the value type + the codec. Clamping: `value` is clamped to `[min, max]` and snapped to `step`
+  on every set (the base's normalizer).
 - **LLD-C2 — ARIA slider.** A scope-owned effect publishes `internals.ariaValueNow/Min/Max` (+ `ariaValueText`
   hook for formatted values) and `internals.role = 'slider'`. slider-multi exposes two foci (two `slider`
   roles, or `aria-valuetext` lo/hi). ARIA over `ElementInternals` (FACE).

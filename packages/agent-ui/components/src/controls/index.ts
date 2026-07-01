@@ -26,6 +26,10 @@ export * from './switch/switch.ts'
 export * from './radio/radio.ts'        // self-defines ui-radio
 export * from './radio/radio-group.ts'  // self-defines ui-radio-group
 
+// Range controls — Wave 2 (ADR-0042 Range half): single + dual-thumb slider.
+export * from './slider/slider.ts'
+export * from './slider-multi/slider-multi.ts'
+
 // G9 container / layout family — surface axes + the shared flex grammar (ADR-0015/0016).
 export * from './row/row.ts'
 export * from './column/column.ts'

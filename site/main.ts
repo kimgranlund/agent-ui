@@ -211,6 +211,27 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // Range-class controls (Wave 2, ADR-0042): Indicator-geometry rail + thumb, pointer drag + keyboard step.
+    label: 'ui-slider',
+    cards: [
+      {
+        href: './slider-doc.html',
+        title: 'API reference',
+        blurb: 'The FACE single-thumb range slider (Range class) — rail fill + 2px-inset thumb (ADR-0041), pointer drag and keyboard step. From slider.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-slider-multi',
+    cards: [
+      {
+        href: './slider-multi-doc.html',
+        title: 'API reference',
+        blurb: 'The FACE dual-thumb range slider (Range class) — lo/hi thumbs define a value range, pointer drag and keyboard step for each. From slider-multi.md.',
+      },
+    ],
+  },
+  {
     label: 'Layout primitives',
     cards: [
       {

@@ -1,0 +1,178 @@
+/* slider.css — ui-slider, the single-thumb Range-class control (range-element.lld.md · ADR-0042 · ADR-0041).
+ * Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-slider)` (specificity 0,0,0) DECLARES the `--ui-slider-*` chain from
+ *       the colour roles (`--c-{family}-{role}`) and the compact widget ramp (`--ui-compact-{size}`,
+ *       ADR-0041). `[size]` repoints the box token; `[disabled]` mutes to neutral roles. No `color-mix`
+ *       — colour opinions live in the token layer (ADR-0008). `--ui-slider-rail-height` is a thin fleet
+ *       constant (3px), NOT widget-box derived — the rail height does NOT scale with the thumb box.
+ *   [2] STYLES BLOCK — `@scope (ui-slider)` CONSUMES only `--ui-slider-*` for its OWN tokens. The host
+ *       is a `block` container: its block-size = the widget box (`--ui-compact-{size}`). The RAIL (`::before`)
+ *       is a thin horizontal bar, full-width, vertically centred, with a gradient fill from the primary
+ *       colour up to `--value-pct %` and neutral beyond — one declaration paints both the fill and the
+ *       remainder. The THUMB (`::after`) is a circle `box − 2×inset = box − 4px` (ADR-0041 cl.3: the
+ *       two-pixel inset law) centred vertically and positioned horizontally at `calc(--value-pct * 1%)`
+ *       with `transform: translate(-50%, -50%)` so the circle centre lands on that percentage of the host.
+ *       `--value-pct` is a UNITLESS number (0–100) set by UIRangeElement on the host inline style.
+ *       `:focus-visible` ring (keyboard-only, ADR-0009). Forced-colors safe. Density-invariant.
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from
+ * slider.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-slider) declares --ui-slider-* ════════════════ */
+
+:where(ui-slider) {
+  /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md). `[size]` repoints. */
+  --ui-slider-box: var(--ui-compact-md);
+
+  /* Rail colour — the unselected portion of the track (neutral outline-variant). */
+  --ui-slider-rail: var(--c-neutral-outline-variant);
+
+  /* Fill colour — the selected portion (min → value), primary family. */
+  --ui-slider-fill: var(--c-primary);
+
+  /* Thumb colour — the drag handle, brightest neutral surface (≈ white on light; dark on dark). */
+  --ui-slider-thumb: var(--c-neutral-surface-brightest);
+
+  /* Rail height — thin constant, NOT derived from the widget box (ADR-0041 geometry: the inset law
+     governs the THUMB size only; the rail is a separate cosmetic layer). 3px reads cleanly at all
+     widget-box sizes (12–28 px). */
+  --ui-slider-rail-height: 3px;
+}
+
+/* [size] → compact widget ramp repoint (ADR-0041: the per-[scale] table in dimensions.css re-tables
+   --ui-compact-{sm,md,lg}; `[size]` on the host picks which step the slider box targets). */
+:where(ui-slider[size='sm']) {
+  --ui-slider-box: var(--ui-compact-sm);
+}
+:where(ui-slider[size='lg']) {
+  --ui-slider-box: var(--ui-compact-lg);
+}
+
+/* [disabled] → muted neutral roles for rail, fill, and thumb. The state holds at idle: the styles
+   block sets `pointer-events: none` so `:hover` never matches, preventing any token lift. */
+:where(ui-slider[disabled]) {
+  --ui-slider-rail: var(--c-neutral-outline-variant);
+  --ui-slider-fill: var(--c-neutral-surface-high);
+  --ui-slider-thumb: var(--c-neutral-on-surface-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-slider) consumes ONLY --ui-slider-* ════════════════ */
+
+@scope (ui-slider) {
+  /* Host: a block container whose block-size equals the widget box (the interactive hit area is the
+     full height of the slider, spanning the thumb diameter). `position: relative` is the containing
+     block for both the rail and thumb absolute pseudo-elements. `touch-action: none` prevents the
+     browser from claiming pointer events for scroll/pan while a drag is in progress. */
+  :scope {
+    display: block;
+    position: relative;
+    block-size: var(--ui-slider-box);
+    cursor: pointer;
+    touch-action: none; /* give pointer events exclusively to the slider during drag (no scroll-conflict) */
+    -webkit-user-select: none; /* WebKit/Safari still requires the prefix */
+    user-select: none;
+  }
+
+  /* RAIL (::before) — thin horizontal bar, full-width, centred in the block dimension.
+     A single `background: linear-gradient` paints BOTH the fill (primary, from 0 to --value-pct%)
+     and the remaining rail (neutral, from --value-pct% to 100%). `--value-pct` is a unitless number
+     (0–100) so `calc(var(--value-pct, 0) * 1%)` converts it to a CSS percentage. No `color-mix` —
+     fill and rail are distinct colour roles (ADR-0008). No position transition: the fill updates in
+     real-time during drag; animating a gradient can lag. Background-color transitions (disabled↔enabled
+     state) could be added here but are omitted — the rail gradient change is instant. */
+  :scope::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    inset-inline-start: 0;
+    inline-size: 100%;
+    block-size: var(--ui-slider-rail-height);
+    border-radius: calc(var(--ui-slider-rail-height) / 2);
+    background: linear-gradient(
+      to right,
+      var(--ui-slider-fill) calc(var(--value-pct, 0) * 1%),
+      var(--ui-slider-rail) calc(var(--value-pct, 0) * 1%)
+    );
+  }
+
+  /* THUMB (::after) — a circle inset by --ui-widget-inset (2px) on all sides (ADR-0041 cl.3).
+   *
+   * Size:     thumb = box − 2×inset = box − 4px (the two-pixel inset law, density-invariant flat fleet constant).
+   * Block:    inset-block-start: 50% places the top edge at 50% of the host height; `transform: translate(-50%,
+   *           -50%)` shifts the element back by half its own height and width, so its CENTRE lands at (50% of
+   *           host height, --value-pct% of host width) — vertically centred in the widget box.
+   * Inline:   inset-inline-start: calc(var(--value-pct, 0) * 1%) positions the left edge at N% of the host;
+   *           the -50% X component of the same translate() centres the circle on that point. At value-pct=0
+   *           and 100 the thumb centre is exactly on the host edge (slight overhang of radius; standard slider
+   *           behaviour, no overflow clipping needed for the interaction — the hit area is the full host).
+   *
+   * Motion: NO position transition (drag lag). Background-color transitions for disabled/enabled state.
+   *         Transition is zeroed under prefers-reduced-motion (accessibility non-negotiable). */
+  :scope::after {
+    content: '';
+    position: absolute;
+    box-sizing: border-box;
+
+    /* ADR-0041 cl.3: thumb = box − 2×inset = box − 4px */
+    --ui-slider-thumb-size: calc(var(--ui-slider-box) - 2 * var(--ui-widget-inset));
+    inline-size: var(--ui-slider-thumb-size);
+    block-size: var(--ui-slider-thumb-size);
+    border-radius: 50%; /* circle */
+
+    background: var(--ui-slider-thumb);
+
+    /* Centre the thumb circle on the point (--value-pct% of host width, 50% of host height). */
+    inset-block-start: 50%;
+    inset-inline-start: calc(var(--value-pct, 0) * 1%);
+    transform: translate(-50%, -50%);
+
+    transition: background-color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  /* Focus ring (ADR-0009) — the shared fleet ring: `:focus-visible` (keyboard-only). Surrounds the
+     whole control (host box), the fleet standard. Reads fleet-wide tokens directly — the one deliberate
+     exception to "consume only --ui-slider-*", matching the checkbox/switch pattern. */
+  :scope:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* Reduced motion — zero ALL transitions (accessibility non-negotiable). */
+  @media (prefers-reduced-motion: reduce) {
+    :scope::after {
+      transition: none;
+    }
+  }
+
+  /* Disabled — pointer-inert + cursor reset. The [disabled] token block already muted the colours;
+     `pointer-events: none` ensures `:hover` never matches (muted tokens hold at idle forever). */
+  :scope[disabled] {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  /* Forced-colors — map the rail and thumb to system colours so the slider survives high-contrast mode.
+     The rail gradient uses Highlight for the fill and ButtonText for the track; the thumb uses Canvas
+     with a Highlight border so the handle is distinct from the fill.
+     `forced-color-adjust: none` preserves our explicit system-colour mappings, preventing the browser
+     from re-overriding them (same pattern as switch.css / checkbox.css — ADR-0009 ring is free via
+     --c-focus-ring → Highlight from the token layer). */
+  @media (forced-colors: active) {
+    :scope::before {
+      background: linear-gradient(
+        to right,
+        Highlight calc(var(--value-pct, 0) * 1%),
+        ButtonText calc(var(--value-pct, 0) * 1%)
+      );
+      forced-color-adjust: none;
+    }
+    :scope::after {
+      background: Canvas;
+      border: 2px solid Highlight;
+      forced-color-adjust: none;
+    }
+  }
+}
