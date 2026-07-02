@@ -38,7 +38,7 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 ### 3.2 Default catalog
 
 **SPEC-R3 — The default catalog reflects `@agent-ui/components`.** `@agent-ui/a2ui` MUST ship a default catalog whose component types render directly to `ui-*` controls. Initial coverage MUST track the control family (Assumption A-2); the mapping is normative in §5.2. Names SHOULD align with A2UI's Basic catalog where a component corresponds (e.g. `Button`, `TextField`, `Text`) for LLM familiarity and corpus reuse. *(→ PRD-G1)*
-- **AC1** *Given* the default catalog, *when* loaded, *then* every declared component type resolves to a registered widget factory whose tag is a `ui-*` control (or a sanctioned primitive for `Text`/layout).
+- **AC1** *Given* the default catalog, *when* loaded, *then* every declared component type resolves to a registered widget factory whose tag is a `ui-*` control (or a sanctioned primitive, e.g. `Option` → `div[role=option]`, ADR-0053 — `Text` itself shipped as `ui-text`, ADR-0025).
 - **AC2** *Given* a default-catalog payload using only declared component types, *when* rendered by the renderer, *then* it renders interactive controls with 0 `CATALOG` errors (the PRD-G1 default-catalog eval condition).
 
 **SPEC-R4 — Component definition contract.** Each component definition MUST declare: the type `name`; a typed `properties` schema (each property mapped to a control prop/attribute, marked `bindable` where it accepts `{path}`); the `value` property + event for input components (for two-way binding, renderer SPEC-R7); and the child model (`child`/`children`/`ChildList`). A component MAY carry a **component-level `checks` array** — `[{call,args,message}]` validation entries (a function-call + a human message; the Button `{condition:{call,args},message}` wrapper is tolerantly read, ADR-0029) — a **component-level construct, not a bindable property** (it is `RESERVED`, never `applyProp`'d). The renderer evaluates checks **client-side** and surfaces a failure **inline** (an input → its validity message; a Button → auto-disable; a2ui-runtime SPEC-R10, ADR-0029); checks emit **no** server error. **Recognition is `RESERVED`-only**: a per-component *declaration* of which components accept `checks` is **deferred** — the catalog `validatePropDef` requires `mapsTo` on every declared property, so a no-`mapsTo` `checks` marker is infeasible without a validator extension (ADR-0029, a catalog-schema follow-up). A `checks` on a non-input/non-Button is accepted structurally and the controller no-ops (acceptable for a v1.0 renderer — it does not reject valid payloads). *(→ PRD-G1, PRD-G2, PRD-G4)*
@@ -100,21 +100,32 @@ interface PropDef { type: JSONSchema; bindable?: boolean; mapsTo: string }   // 
 interface FunctionDef { args: Record<string, JSONSchema>; returns: JSONSchema;   // NAMED args (A2UI v1.0 call shape; ADR-0026)
   callableFrom?: "clientOnly" | "remoteOnly" | "clientOrRemote" }                 // SPEC-R14/ADR-0034: server-invoke gate; default clientOnly
 
-// Action-typed prop (`mapsTo: 'action'`, e.g. Button.action) — canonical inbound shape (ADR-0011):
-//   { action: string; context?: object; wantResponse?: boolean }   // `action` = the action NAME (required)
+// Action-typed prop (`mapsTo: 'action'`, e.g. Button.action) — canonical inbound shape (ADR-0011,
+// extended by ADR-0054):
+//   { action: string; context?: object; wantResponse?: boolean; submit?: boolean }
+//   // `action` = the action NAME (required); `submit` is CLIENT-consumed only (ADR-0054) — it gates
+//   // the click on the nearest `submitGate` ancestor and NEVER reaches the emitted wire `action` message.
 // PropDef.type carries this as the object schema { type: 'object', properties: { action, context,
 // wantResponse }, required: ['action'] }; the renderer's tolerant reader keeps `name`/bare-string
-// fallbacks (Postel), so the declaration stays open (no additionalProperties: false).
+// fallbacks (Postel), so the declaration stays open (no additionalProperties: false) — `submit` needs
+// no catalog.json edit, the open schema already tolerates it (ADR-0054 clause 1).
 
 interface WidgetFactory {                                  // consumed by renderer SPEC-R9 / LLD-C7
   tag: string;                                             // e.g. "ui-button"
   create(): HTMLElement;
   applyProp(el: HTMLElement, prop: string, value: unknown): void;
+  value?: { prop: string; event: string };                 // input two-way commit (renderer LLD-C8)
+  submitGate?: true;          // ADR-0054: marks this factory's control a submit-action gate. The
+                               // control MUST expose a public `submit(): boolean` (structural contract) —
+                               // FormProvider (→ ui-form-provider) is the default catalog's one gate.
 }
 interface CatalogRegistry {                                // the two-tier extension point (SPEC-R6)
   register(catalog: Catalog, factories: Record<string, WidgetFactory>): void;  // throws CATALOG_FACTORY_MISSING / CATALOG_NAME_INVALID
   get(catalogId: string): { catalog: Catalog; factories: Record<string, WidgetFactory> } | undefined;
   supportedCatalogIds(): string[];                         // → renderer capabilities (a2ui-runtime §3.7)
+  submitGateSelector(): string;    // ADR-0054: CSS selector over every registered submitGate factory's
+                                    // tag (two-tier, aggregated across ALL registered catalogs); '' when
+                                    // none — callers MUST treat that as a no-op (never `closest('')`).
 }
 ```
 
@@ -124,13 +135,15 @@ Initial coverage tracks the control family (A-2). Types absent until their contr
 
 | A2UI type | `ui-*` widget | Notes |
 |---|---|---|
-| `Button` | `ui-button` | `variant`→variant; `action` object → click triggers the named action (shape per §5.1, ADR-0011); `checks` → any failure auto-disables (ADR-0029) |
-| `TextField` | `ui-text-field` | `label`,`value`,`placeholder`(v1.0),`variant`(shortText/longText),`checks` |
-| `Checkbox` | `ui-checkbox` | boolean `value`; Indicator class |
-| `Switch` | `ui-switch` | boolean `value` |
-| `ChoicePicker` | `ui-select` / `ui-listbox` | `options`,`variant`(mutuallyExclusive/multipleSelection) |
-| `Field` | `ui-field` | label/description/error wrapper |
-| `Text` | text primitive | `variant` styling hint; a minimal primitive until a `ui-text` lands |
+| `Button` | `ui-button` | `variant`→variant; `action` object → click triggers the named action (shape per §5.1, ADR-0011; `submit:true` gates the click on the nearest `submitGate` ancestor, ADR-0054); `checks` → any failure auto-disables (ADR-0029) |
+| `TextField` | `ui-text-field` | **shipped** (G6, widened ADR-0044/0047/0048/0053). `value`,`label`,`placeholder`,`size`,`readonly`,`disabled`,`required`,`name`,`checks` + the 12-value `type` enum (`text/email/url/tel/password/search/number/currency/unit/percent/date/time`) · `currency` (ISO-4217) · `unit` · `step`/`min`/`max` (generalized steppers + range validity) — all 1:1 reflecting accessor props (ADR-0053 cl.6); `value:{prop:'value',event:'change'}` |
+| `Field` | `ui-field` | **shipped** (G7, ADR-0050/0051/0053). label/description/error wrapper; `label`,`description` bindable 1:1 accessor props; child model **`child`** (the ONE wrapped control) |
+| `FormProvider` | `ui-form-provider` | **shipped** (G7, ADR-0050/0053/0054). **Zero properties** — mirrors the attribute-less coordination element faithfully; `ChildList` children; its factory carries the ADR-0054 `submitGate` mark (structural contract: the control exposes `submit(): boolean`) |
+| `Checkbox` | `ui-checkbox` | **shipped** (Indicator class, ADR-0041/0042/0053). Bindable **`checked`** (boolean — NOT Basic's `value`, ADR-0053 fork F2 naming law); `label` (string → textContent, bespoke); `disabled`,`required`,`name`; `value:{prop:'checked',event:'change'}` |
+| `Switch` | `ui-switch` | **shipped** (Indicator class, ADR-0053). As `Checkbox` minus `required` (deliberately no required row); bindable `checked`; `label`,`disabled`,`name`; `value:{prop:'checked',event:'change'}` |
+| `Select` | `ui-select` | **shipped** (Wave 4, ADR-0043/0053) — **supersedes the planned `ChoicePicker`**. Bindable `value` (the selected `Option`'s key); `placeholder`,`disabled`,`required`,`name`; `value:{prop:'value',event:'select'}`; `ChildList` of `Option`. `open` is deliberately NOT declared — one `value` mark per component; a one-way `open` would silently desync on platform light-dismiss |
+| `Option` | `div[role=option]` primitive | **shipped** (ADR-0053) — a sanctioned NON-`ui-*` primitive (the pre-`ui-text` `Text` precedent, SPEC-R3 AC1): `ui-select` moves `[role=option]` light-DOM children into its listbox panel at first connect. `value` → the `value` attribute (not bindable); bindable `label` → textContent. **Known limitation:** Options reach the panel only at FIRST connect — a later `updateComponents` adding Options to an already-connected `Select` does not reach the moved panel (the Tab/TabPanel class of limitation) |
+| `Text` | `ui-text` | **shipped** (ADR-0025, the Display-class text primitive). `text`→textContent (bindable); `variant` (h1-h5/caption/body) |
 | `Row` | `ui-row` | **shipped** (G9, ADR-0016). `elevation`,`brightness` (surface, ADR-0015); `align`,`justify`,`gap`,`wrap` (flex grammar); `ChildList` children |
 | `Column` | `ui-column` | **shipped** (G9). As `Row`, column main axis (direction is the tag's identity, not a prop) |
 | `Card` | `ui-card` | **shipped** (G9). `elevation`,`brightness`; `ChildList` regions |
@@ -139,6 +152,10 @@ Initial coverage tracks the control family (A-2). Types absent until their contr
 | `Tab` / `TabPanel` | `ui-tab` / `ui-tab-panel` | **shipped** (G9). Tab + panel sub-types (`ChildList` children) |
 | `Modal` | `ui-modal` | **shipped** (G9, ADR-0017 native `<dialog>`). `elevation`,`brightness`; bindable `open`; `persistent` (presence-boolean, default off → non-dismissable; `<ui-modal>` is dismissable, ADR-0020); `value:{prop:'open',event:'toggle'}` (two-way); `ChildList` children |
 | `Image` / `Video` | — | `absent` until media primitives land (A-2) |
+
+> **Deferred (not this wave, ADR-0053):** option groups (`role=group` optgroup parity), `RadioGroup`, `Slider`,
+> `Calendar`, `ComboBox` rows; `datetime-local`/`month` stay out of the `TextField` `type` enum (unshipped
+> STRETCH, ADR-0048). Absence is intentional, not a silent dead type (SPEC-N2).
 
 > `ui-list` / `ui-grid` ship as **direct `ui-*` layout primitives**, NOT catalog types (the ratified G9 scope, ADR-0016): an agent composes the catalog `Row`/`Column`/`Card` set; `ui-list`/`ui-grid` are app-side primitives. Their omission is intentional, not a silent dead type (SPEC-N2).
 

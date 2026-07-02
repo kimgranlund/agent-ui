@@ -26,6 +26,14 @@
 // are action-typed: it STRIPS those props from the node before the base widget resolver runs (so the
 // action object is never `applyProp`'d/stringified onto the DOM) and instead wires the control's
 // `click` → `ActionDispatcher.emitAction` (listener owned by `surface.ac`, so it dies with the surface).
+//
+// The submit-gated action (ADR-0054). An action object may carry a CLIENT-consumed `submit: true` flag
+// (never on the wire — stripped by `readActionSpec`, ADR-0011's shape stays byte-identical). On such a
+// flagged click, `#wireAction` resolves `el.closest(registry.submitGateSelector())` — the registry's
+// derived selector over every registered catalog's `submitGate`-marked factories (two-tier). A matched
+// gate's own `submit()` is the sole arbiter (`false` → no emit, the gate already ran first-invalid
+// `reportValidity`; `true` → emit); no gate ancestor, or an empty selector (no `submitGate` factory
+// registered anywhere), is the SAME graceful fallthrough as an unflagged Button.
 
 import { dispatch } from './dispatch.ts'
 import type { DispatchHandlers } from './dispatch.ts'
@@ -332,14 +340,36 @@ class Renderer implements RendererHost {
    * (surface.ac for static nodes, the per-item AbortController for list items aborted on positional
    * removal). This is the action-side SPEC-N3 item-granular discipline: a removed list item's click
    * listener dies with the item, not at surface teardown.
+   *
+   * ADR-0054: a `submit:true`-flagged action additionally gates on `#submitGatePermits` before
+   * emitting — an un-flagged action (the common case) is byte-for-byte the pre-ADR-0054 behavior.
    */
   #wireAction(el: HTMLElement, node: A2uiComponent, surface: Surface, spec: unknown, ac: AbortController): void {
-    const { name, wantResponse, context } = readActionSpec(spec)
+    const { name, wantResponse, context, submit } = readActionSpec(spec)
     el.addEventListener(
       'click',
-      () => void this.#actions.emitAction(node, surface, { name, wantResponse, context }),
+      () => {
+        if (submit === true && !this.#submitGatePermits(el)) return // gated + refused — no emit (ADR-0054)
+        void this.#actions.emitAction(node, surface, { name, wantResponse, context })
+      },
       { signal: ac.signal },
     )
+  }
+
+  /**
+   * ADR-0054 gate check for a `submit:true` action click. The registry's derived selector (across ALL
+   * registered catalogs, two-tier) is empty when no factory carries `submitGate` — the provable no-op
+   * (never call `closest('')`, a `SyntaxError`). No matching ancestor is the same graceful fallthrough
+   * as an unflagged Button (an un-nested submit Button keeps working). A matched gate's `submit()` is
+   * the sole arbiter, per the structural contract (catalog SPEC §5.1) — defensively optional-chained
+   * so a non-conforming gate control degrades to "permit" rather than throw.
+   */
+  #submitGatePermits(el: HTMLElement): boolean {
+    const selector = this.#registry.submitGateSelector()
+    if (selector === '') return true
+    const gate = el.closest(selector)
+    if (gate === null) return true
+    return (gate as unknown as { submit?: () => boolean }).submit?.() ?? true
   }
 
   // ── finalize + emit helpers ────────────────────────────────────────────────────────
@@ -423,23 +453,28 @@ function versionOf(message: A2uiServerMessage, fallback: string): string {
 
 /**
  * Interpret a Button's `action` prop value into the action-emission inputs. The CANONICAL inbound
- * shape is `{ action, context?, wantResponse? }` (ADR-0011, pinned in the catalog SPEC §5.1/§5.2 +
- * `catalog/default/catalog.json`): `action` is the action NAME, and `context`/`wantResponse` are
- * surfaced straight off the canonical object. Two fallbacks are RETAINED as documented Postel's-law
- * tolerance — not silent guesses: `name` is accepted as a synonym for the name key, and a bare string
- * is taken as the action name (carrying no `context`/`wantResponse`). Canonical `action` wins when
- * both keys are present.
+ * shape is `{ action, context?, wantResponse?, submit? }` (ADR-0011 + the ADR-0054 `submit` extension,
+ * pinned in the catalog SPEC §5.1/§5.2 + `catalog/default/catalog.json`): `action` is the action NAME,
+ * `context`/`wantResponse` are surfaced straight off the canonical object, and `submit:true` is a
+ * CLIENT-consumed flag `#wireAction` reads to gate the click — it is NEVER part of the emitted wire
+ * message (ADR-0054 clause 1; the outbound `A2uiAction` shape is untouched). Two fallbacks are
+ * RETAINED as documented Postel's-law tolerance — not silent guesses: `name` is accepted as a synonym
+ * for the name key, and a bare string is taken as the action name (carrying no
+ * `context`/`wantResponse`/`submit`). Canonical `action` wins when both keys are present.
  */
-function readActionSpec(spec: unknown): { name: string; wantResponse?: boolean; context?: Record<string, unknown> } {
-  // Tolerance: a bare string is the action name (no context/wantResponse to surface).
+function readActionSpec(
+  spec: unknown,
+): { name: string; wantResponse?: boolean; context?: Record<string, unknown>; submit?: boolean } {
+  // Tolerance: a bare string is the action name (no context/wantResponse/submit to surface).
   if (typeof spec === 'string') return { name: spec }
   if (isObject(spec)) {
     // Canonical `action` (ADR-0011); `name` is the tolerated synonym, taken only when `action` is absent.
     const name = typeof spec.action === 'string' ? spec.action : typeof spec.name === 'string' ? spec.name : ''
-    const out: { name: string; wantResponse?: boolean; context?: Record<string, unknown> } = { name }
-    // `context`/`wantResponse` surface from the canonical object (also honored on the `name`-synonym shape).
+    const out: { name: string; wantResponse?: boolean; context?: Record<string, unknown>; submit?: boolean } = { name }
+    // `context`/`wantResponse`/`submit` surface from the canonical object (also honored on the `name`-synonym shape).
     if (spec.wantResponse === true) out.wantResponse = true
     if (isObject(spec.context)) out.context = spec.context
+    if (spec.submit === true) out.submit = true
     return out
   }
   return { name: '' }

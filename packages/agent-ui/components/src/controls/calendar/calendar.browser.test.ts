@@ -229,17 +229,22 @@ describe('ui-calendar — today / selected / disabled render (both engines)', ()
     ).toBeGreaterThan(0)
   })
 
-  it('[data-today] is present on the current-day cell (2026-07-01)', async () => {
-    // Navigate to July 2026 (the "today" month per the session date 2026-07-01)
-    const { el } = mount('<ui-calendar value="2026-07-01"></ui-calendar>')
+  it('[data-today] is present on the current-day cell (clock-relative)', async () => {
+    // Derive today from the REAL clock — a hardcoded date rots the day the wall-clock rolls past it
+    // (this test originally pinned 2026-07-01 and broke on 2026-07-02). Same local-date arithmetic as
+    // the control's own today-detection (timezone-safe explicit Y/M/D, never new Date('YYYY-MM-DD')).
+    const now = new Date()
+    const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    // Seed value = today so the rendered month is the current month (today's cell is in the grid).
+    const { el } = mount(`<ui-calendar value="${iso}"></ui-calendar>`)
     await el.updateComplete
 
     const todayCell = el.querySelector<HTMLElement>('[data-today]')
-    expect(todayCell, `${server.browser}: [data-today] cell not found in July 2026`).not.toBeNull()
+    expect(todayCell, `${server.browser}: [data-today] cell not found in the current month`).not.toBeNull()
     expect(
       todayCell?.dataset['date'],
-      `${server.browser}: [data-today] should be on 2026-07-01`,
-    ).toBe('2026-07-01')
+      `${server.browser}: [data-today] should be on the real current date`,
+    ).toBe(iso)
   })
 
   it('today cell has a box-shadow ring (today-ring token applied)', async () => {

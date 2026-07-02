@@ -465,3 +465,65 @@ describe('announceFormConnect (F1) — the base catch-up re-announce', () => {
     wrapper.remove()
   })
 })
+
+// ── nested-member guard — a UIFormElement inside another UIFormElement is an INTERNAL PART ───────
+//
+// Defect repair (A2UI patterns-page-caught, coordinator-ruled): `ui-text-field type=date` nests its own
+// internal `<ui-calendar>` (itself a `UIFormElement`) inside itself; a wrapping `ui-form-provider`'s
+// catch-up scan discovered it as a phantom SECOND member, causing an aggregation write-loop (>100 waves,
+// the kernel budget throw). Fix: a control with a `UIFormElement` ANCESTOR never announces — neither the
+// initial connect dispatch nor a catch-up `announceFormConnect()` re-announce reaches a listener, so it
+// can never register anywhere (dom/form.ts `#dispatchFormConnect`/`#hasFormElementAncestor`). These probes
+// pin the guard at the base level with two nested `FieldEl` fixtures (no text-field/calendar needed here);
+// the REAL repro shape (an actual `ui-text-field type=date` inside a `ui-form-provider`, converging to
+// exactly one member with no write-loop) is a controls-layer concern — dom tests cannot import controls
+// (the layering trip-wire) — added instead to controls/form-provider/form-provider-date.test.ts (a NEW
+// file beside form-provider.test.ts; s9's file was left untouched rather than assuming its conventions
+// welcome an addition — flagged in the handoff).
+
+describe('nested-member guard (defect repair) — a UIFormElement inside another UIFormElement never announces', () => {
+  it('nested-never-announces: the INNER control never reaches a listener; the OUTER (no UIFormElement ancestor) still announces normally', () => {
+    const { el: outer } = makeField()
+    const { el: inner } = makeField()
+    outer.append(inner) // nest BEFORE connecting — inner has a UIFormElement ancestor (outer) from the start
+
+    const received: UIFormElement[] = []
+    document.addEventListener(FORM_CONNECT_EVENT, (e) => {
+      received.push((e as CustomEvent<FormConnectDetail>).detail.control)
+    })
+
+    document.body.append(outer) // bulk connect: outer's connectedCallback runs, then inner's
+
+    expect(received).toContain(outer) // the outer control has no UIFormElement ancestor — announces normally
+    expect(received).not.toContain(inner) // the inner control is an internal part — never announces
+    outer.remove()
+  })
+
+  it('nested-announce-form-connect-noop: a catch-up announceFormConnect() on the inner control is ALSO a no-op — the guard covers both dispatch sites, matching a provider/field catch-up scan discovering the internal part late', () => {
+    const { el: outer } = makeField()
+    const { el: inner } = makeField()
+    outer.append(inner)
+    document.body.append(outer)
+
+    let count = 0
+    document.addEventListener(FORM_CONNECT_EVENT, () => { count++ })
+    inner.announceFormConnect()
+    expect(count).toBe(0)
+    outer.remove()
+  })
+
+  it('nested-negative-control: a form control nested inside a PLAIN (non-UIFormElement) wrapper still announces — the guard is UIFormElement-ancestor-specific, not any-ancestor', () => {
+    const wrapper = document.createElement('div') // a structural ancestor, NOT a UIFormElement
+    const { el: inner } = makeField()
+    wrapper.append(inner)
+
+    const received: UIFormElement[] = []
+    document.addEventListener(FORM_CONNECT_EVENT, (e) => {
+      received.push((e as CustomEvent<FormConnectDetail>).detail.control)
+    })
+
+    document.body.append(wrapper)
+    expect(received).toContain(inner) // an ordinary (non-UIFormElement) ancestor never suppresses the dispatch
+    wrapper.remove()
+  })
+})

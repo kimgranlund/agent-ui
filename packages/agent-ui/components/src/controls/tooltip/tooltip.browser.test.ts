@@ -88,16 +88,21 @@ describe('ui-tooltip — show on hover after delay (both engines)', () => {
     const { el, anchor, panel } = mount(
       '<ui-tooltip><button style="padding:4px 12px">Hover me</button>Tooltip text</ui-tooltip>',
     )
-    el.delay = 50 // fast for tests — still proves the delay mechanism
+    // TIMING HEADROOM (load-flake hardening): under a full-suite parallel run the hover dispatch
+    // itself can exceed a small delay budget, so a 50ms delay raced the "not open yet" assertion
+    // (the timer had already fired). 1000ms gives the pre-fire assertion real headroom against
+    // runner latency, and the post-fire check POLLS instead of waiting a fixed margin.
+    el.delay = 1000
 
     expect(panel.matches(':popover-open'), 'panel should be hidden before hover').toBe(false)
 
     await userEvent.hover(anchor)
-    // NOT open yet — delay pending
+    // NOT open yet — delay pending (1000ms headroom vs event-dispatch latency)
     expect(panel.matches(':popover-open'), 'panel must not open before the delay fires').toBe(false)
 
-    // Wait for the delay + a safety margin
-    await waitMs(150)
+    // Poll until the delay fires (generous ceiling — asserts the EVENT, not a wall-clock guess)
+    const deadline = Date.now() + 8000
+    while (!panel.matches(':popover-open') && Date.now() < deadline) await waitMs(50)
     await el.updateComplete
 
     expect(panel.matches(':popover-open'), `${server.browser}: panel did not enter the top layer after hover delay`).toBe(true)
@@ -108,12 +113,12 @@ describe('ui-tooltip — show on hover after delay (both engines)', () => {
     const { el, anchor, panel } = mount(
       '<ui-tooltip><button style="padding:4px 12px">Hover me</button>Tooltip text</ui-tooltip>',
     )
-    el.delay = 300
+    el.delay = 1000 // headroom: hover+unhover dispatch must complete well inside the delay (load-flake hardening)
 
     await userEvent.hover(anchor)
     // unhover before the delay fires
     await userEvent.unhover(anchor)
-    await waitMs(400) // past original delay — the cancelled timer must not fire
+    await waitMs(1400) // past the original delay — the cancelled timer must not fire
     await el.updateComplete
 
     expect(panel.matches(':popover-open'), `${server.browser}: tooltip opened after hover was cancelled`).toBe(false)

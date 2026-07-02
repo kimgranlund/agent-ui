@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2UI generative form</title>
+  </head>
+  <body>
+    <!-- The A2UI form-family CAPSTONE: ONE A2UI v1.0 payload is fed through the REAL @agent-ui/a2ui renderer
+         (createRenderer) into a complete, validated form — Card > FormProvider > Fields + Switch + Checkbox +
+         Button — and a valid submit round-trips the typed aggregate as one A2UI action. An MPA entry
+         auto-discovered by vite.config.ts's site/**/*.html glob (matches the nav link ./a2ui-form.html, wired in
+         Wave 3) — no config edit needed. The page module imports pages/_page.ts FIRST for the foundation CSS
+         cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2ui-form.ts"></script>
+  </body>
+</html>

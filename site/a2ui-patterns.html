@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2UI patterns</title>
+  </head>
+  <body>
+    <!-- The A2UI PATTERNS page: five real-world agent UIs — settings form, confirmation card, wizard,
+         dashboard tiles, schedule picker — each streamed as a VALID A2UI v1.0 payload through the REAL
+         @agent-ui/a2ui renderer (createRenderer) into a live ui-* surface. Every demo shows, side by side,
+         the payload the agent emits and the live surface it produces (shown ≡ fed). An MPA entry auto-
+         discovered by vite.config.ts's site/**/*.html glob (matches the nav link ./a2ui-patterns.html) —
+         no config edit needed. The page module imports pages/_page.ts FIRST for the foundation CSS cascade
+         + self-defining ui-* controls (ADR-0003). -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2ui-patterns.ts"></script>
+  </body>
+</html>

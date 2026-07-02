@@ -28,6 +28,15 @@ export interface WidgetFactory {
    * (renderer LLD-C8) wires for two-way binding. Absent for non-input controls.
    */
   value?: { prop: string; event: string }
+  /**
+   * Marks this factory's control as a submit-action GATE (ADR-0054). The renderer's `#wireAction`
+   * resolves `el.closest(<the registry's derived selector>)` for a `submit:true`-flagged action and,
+   * on a match, defers to the gate's own `submit()` verdict before emitting. A `submitGate` factory's
+   * control MUST expose a public `submit(): boolean` method (the structural contract, catalog SPEC
+   * §5.1) — the default catalog's `FormProvider` (→ `ui-form-provider`) carries the mark; a project
+   * catalog MAY mark its own gate (two-tier, SPEC-R6).
+   */
+  submitGate?: true
 }
 
 /**
@@ -51,4 +60,11 @@ export interface CatalogRegistry {
   get(id: string): CatalogEntry | undefined
   /** Every registered catalog id — feeds renderer capabilities (renderer LLD-C12). */
   supportedCatalogIds(): string[]
+  /**
+   * The CSS selector matching every registered `submitGate` factory's tag, across ALL registered
+   * catalogs (ADR-0054, two-tier). Empty string when no factory carries the mark — callers MUST treat
+   * that as "no gate exists anywhere" and skip `Element.closest` (an empty string is an invalid
+   * selector, a `SyntaxError`); the renderer's `#wireAction` guards this.
+   */
+  submitGateSelector(): string
 }

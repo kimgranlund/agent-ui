@@ -1,0 +1,181 @@
+/* a2ui-patterns.css — PAGE-LOCAL layout chrome for the A2UI patterns page. Styles the stacked pattern
+ * demos, the two-pane [payload | live surface] grid, the live-surface frame, the two-line pedagogy block,
+ * the round-trip message log, and the P2 destructive-tone note ONLY. The rendered ui-* controls keep their
+ * own {name}.css — this page never restyles a ui-* control. Colours are `--c-*` roles declared by the
+ * foundation barrels (imported first via _page.ts), so the page tracks light/dark; spacing rides the
+ * `--ui-space-*` ramp. Tokens-only — no raw-literal colours (matching a2ui-list.css / _page.css). */
+
+/* ── a pattern demo: heading + blurb + pedagogy + the two-pane grid ──────────────────────────────────────── */
+.demo {
+  margin-block: 2rem 2.5rem;
+}
+
+.demo:first-of-type {
+  margin-block-start: 1rem;
+}
+
+.demo > h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 650;
+}
+
+/* The step badge — a numbered chip, the same affordance the A2UI list/canvas use for their flow steps. */
+.demo-step {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: var(--c-primary-on-primary); /* the canonical ink for a --c-primary fill (button.css) */
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.demo-blurb {
+  margin: 0 0 0.75rem;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+/* ── the two-line pedagogy block: WHAT IT PROVES about the protocol + WHAT IT TEACHES an agent author ────── */
+.demo-teach {
+  margin: 0 0 1rem;
+  padding-inline-start: 0.75rem;
+  border-inline-start: 2px solid var(--c-primary);
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.demo-teach > span {
+  display: block;
+}
+
+.demo-teach > span + span {
+  margin-block-start: 0.2rem;
+}
+
+.demo-teach b {
+  color: var(--c-neutral-on-surface);
+  font-weight: 650;
+}
+
+/* ── the two-pane grid: streamed payload on the left, live rendered surface on the right ──────────────────── */
+.demo-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* Stack the panes once there isn't room for two readable columns side by side. */
+@media (max-width: 52rem) {
+  .demo-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.payload-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-inline-size: 0; /* let the <pre> scroll instead of forcing the column wider */
+}
+
+.code-figure {
+  margin: 0;
+}
+
+.code-figure > figcaption {
+  margin-block-end: 0.3rem;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* ── the live rendered surface — a framed canvas so the renderer output reads as the "result" ─────────────── */
+.output-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-inline-size: 0;
+}
+
+.surface {
+  padding: 1.25rem;
+  border: 1px dashed var(--c-neutral-outline);
+  border-radius: 8px;
+  background: var(--c-neutral-surface);
+}
+
+.surface:empty::before {
+  content: 'No surface mounted.';
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.85rem;
+}
+
+/* ── the P2 destructive-tone note — an honest callout that the fleet ships NO danger Button tone (solid|soft|
+ *    ghost only). Tinted with the `--c-danger-*` role family so the note itself stands in for the missing
+ *    control tone; it styles a page annotation, never a ui-* control. ───────────────────────────────────── */
+.tone-gap {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-inline-start: 3px solid var(--c-danger-outline-variant);
+  border-radius: 6px;
+  background: var(--c-danger-surface);
+  color: var(--c-danger-on-surface);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* ── the interactive demo's round-trip log ────────────────────────────────────────────────────────────────── */
+.demo-hint {
+  margin: 0;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.msg-log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.msg-log:empty::before {
+  content: 'No messages yet — interact with the surface above.';
+  display: block;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.msg-log > li {
+  margin-block-end: 0.6rem;
+}
+
+.msg-log > li:last-child {
+  margin-block-end: 0;
+}
+
+.msg-head {
+  margin-block-end: 0.3rem;
+  font-family: var(--ui-mono);
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: pre;
+}
+
+.msg-log > li[data-kind='action'] .msg-head {
+  color: var(--c-primary);
+}
+
+.msg-log > li[data-kind='error'] .msg-head {
+  color: var(--c-danger);
+}

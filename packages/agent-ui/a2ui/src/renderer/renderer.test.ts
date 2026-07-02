@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
-import { whenFlushed } from '@agent-ui/components'
+import { whenFlushed, UIFormElement, prop } from '@agent-ui/components'
+import type { FormValue, ValidityResult, PropsSchema, ReactiveProps } from '@agent-ui/components'
 import { UIButtonElement } from '@agent-ui/components/components'
 import { createRenderer } from './renderer.ts'
 import type { A2uiClientMessage, RendererHost } from './renderer.ts'
@@ -8,6 +9,7 @@ import type { A2uiErrorMessage } from './renderer.ts'
 import type { A2uiFunctionResponseMessage, A2uiServerMessage } from '../protocol.ts'
 import { defaultFactories } from '../catalog/default/factories.ts'
 import { catalogFunctions } from '../catalog/functions.ts'
+import type { WidgetFactory } from '../catalog/types.ts'
 
 // The A1 integration proof (renderer LLD-C13): a STREAMED, multi-message JSONL fixture is fed line by
 // line into the host and must render into REAL `ui-*` controls under the mount — the nine wave-1 modules
@@ -709,6 +711,230 @@ describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 + amendment / 
     expect(wire).not.toHaveProperty('surfaceId') // no surfaceId on server-invoke path (ADR-0034 clause 1)
     expect(wire.message).toContain('clientOnly')
     expect(sent.filter(isFunctionResponse)).toHaveLength(0)
+
+    cleanup()
+  })
+})
+
+// ── ADR-0054: the submit-gated action (#wireAction, FormProvider is the shipped gate) ────────────────
+//
+// A REAL `ui-form-provider` (`UIElement` — jsdom-safe, form-provider.test.ts precedent) gates a
+// `submit:true` Button's click. Its member is a throwaway `UIFormElement` leaf (the
+// form-provider.test.ts `MemberEl` precedent): jsdom lacks `ElementInternals.setFormValue`/
+// `setValidity` (verified at the base, checkbox.test.ts/form-provider.test.ts) — stubbed in the
+// factory's `create()`, BEFORE the renderer ever connects it (the renderer builds the whole subtree
+// offline, then attaches it to the mount in one shot, so `create()` always runs ahead of
+// `connectedCallback` here). A fixture catalog (Provider/Member/Button) keeps this decoupled from the
+// default catalog's real form controls — the same jsdom gap input.test.ts/checks.test.ts route around
+// with a synthetic stub.
+
+const gateProbeMemberProps = { ...UIFormElement.formProps, value: prop.string() } satisfies PropsSchema
+
+/** Re-exposes `internals` so the factory's `create()` can stub the jsdom-absent form-association surface. */
+interface GateProbeMember extends ReactiveProps<typeof gateProbeMemberProps> {}
+class GateProbeMember extends UIFormElement {
+  static props = gateProbeMemberProps
+  get internalsProbe(): ElementInternals {
+    return this.internals
+  }
+  protected formValue(): FormValue {
+    return this.value
+  }
+  protected formValidity(): ValidityResult {
+    return this.required && this.value === ''
+      ? { valid: false, flags: { valueMissing: true }, message: 'Required' }
+      : { valid: true }
+  }
+}
+if (!customElements.get('ui-gate-probe-member')) customElements.define('ui-gate-probe-member', GateProbeMember)
+
+const GATE_FIXTURE_CATALOG = {
+  catalogId: 'gate-fixture',
+  protocolVersion: 'v1.0',
+  components: {
+    Provider: { properties: {}, children: 'ChildList' },
+    Member: {
+      properties: {
+        value: { type: { type: 'string' }, bindable: true, mapsTo: 'value' },
+        required: { type: { type: 'boolean' }, mapsTo: 'required' },
+      },
+      value: { prop: 'value', event: 'change' },
+    },
+    Button: {
+      properties: {
+        label: { type: { type: 'string' }, mapsTo: 'textContent' },
+        action: { type: { type: 'object' }, mapsTo: 'action' },
+      },
+    },
+  },
+  functions: {},
+}
+
+const gateFactories: Record<string, WidgetFactory> = {
+  // The REAL ui-form-provider — UIElement-based, so it needs no jsdom stubbing itself (only ITS
+  // MEMBERS do). `submitGate: true` is the ADR-0054 mark under test.
+  Provider: {
+    tag: 'ui-form-provider',
+    create: () => document.createElement('ui-form-provider'),
+    applyProp: () => {},
+    submitGate: true,
+  },
+  Member: {
+    tag: 'ui-gate-probe-member',
+    create: () => {
+      const el = new GateProbeMember()
+      const i = el.internalsProbe as unknown as Record<string, unknown> // jsdom stub — see header
+      if (typeof i['setFormValue'] !== 'function') {
+        i['setFormValue'] = () => {}
+        i['setValidity'] = () => {}
+      }
+      return el
+    },
+    applyProp: (el, p, value) => void ((el as unknown as Record<string, unknown>)[p] = value),
+    value: { prop: 'value', event: 'change' },
+  },
+  Button: defaultFactories.Button, // reuse the real ui-button factory — safe (UIElement, not form-associated)
+}
+
+/** A harness with the gate fixture catalog registered, on top of the default `harness()`. */
+function gateHarness() {
+  const h = harness()
+  h.r.register(GATE_FIXTURE_CATALOG, gateFactories)
+  return h
+}
+
+describe('renderer host — the ADR-0054 submit-gated action (#wireAction, FormProvider is the shipped gate)', () => {
+  it('invalid submit: NO action emitted; reportValidity() called on the FIRST invalid member (registration order)', () => {
+    const { r, mount, sent, cleanup } = gateHarness()
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sg1', catalogId: 'gate-fixture' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sg1',
+          components: [
+            { id: 'root', component: 'Provider', children: ['m1', 'm2', 'm3', 'btn'] },
+            { id: 'm1', component: 'Member', value: 'ok' }, // valid (not required)
+            { id: 'm2', component: 'Member', required: true, value: '' }, // first invalid — registered 2nd
+            { id: 'm3', component: 'Member', required: true, value: '' }, // also invalid — registered 3rd
+            { id: 'btn', component: 'Button', label: 'Submit', action: { action: 'submit_profile', submit: true } },
+          ],
+        },
+      }),
+    )
+
+    const [m1, m2, m3] = [...mount.querySelectorAll('ui-gate-probe-member')] as GateProbeMember[]
+    const report1 = vi.spyOn(m1!, 'reportValidity').mockReturnValue(true)
+    const report2 = vi.spyOn(m2!, 'reportValidity').mockReturnValue(true)
+    const report3 = vi.spyOn(m3!, 'reportValidity').mockReturnValue(true)
+
+    ;(mount.querySelector('ui-button') as HTMLElement).click()
+
+    expect(sent.filter(isAction)).toHaveLength(0) // invalid — no action emitted
+    expect(report1).not.toHaveBeenCalled() // m1 is valid — never consulted
+    expect(report2).toHaveBeenCalledTimes(1) // the FIRST invalid member, registration order
+    expect(report3).not.toHaveBeenCalled() // not the SECOND invalid member
+
+    cleanup()
+  })
+
+  it('valid submit: exactly ONE action emitted, carrying the data model when sendDataModel is set', async () => {
+    const { r, mount, sent, cleanup } = gateHarness()
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sg2', catalogId: 'gate-fixture', sendDataModel: true } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sg2',
+          components: [
+            { id: 'root', component: 'Provider', children: ['m1', 'btn'] },
+            { id: 'm1', component: 'Member', value: { path: '/form/m1' } },
+            { id: 'btn', component: 'Button', label: 'Submit', action: { action: 'submit_profile', submit: true } },
+          ],
+        },
+      }),
+    )
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sg2', path: '/form/m1', value: 'hello' } }))
+    await whenFlushed()
+
+    ;(mount.querySelector('ui-button') as HTMLElement).click()
+
+    const actions = sent.filter(isAction)
+    expect(actions).toHaveLength(1)
+    expect(actions[0]!.action.name).toBe('submit_profile')
+    expect(actions[0]!.action.dataModel).toEqual({ form: { m1: 'hello' } })
+
+    cleanup()
+  })
+
+  it('submit:true with NO gate ancestor emits normally (graceful fallthrough, an un-nested Button)', () => {
+    const { r, mount, sent, cleanup } = gateHarness()
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sg3', catalogId: 'gate-fixture' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sg3',
+          components: [{ id: 'root', component: 'Button', label: 'Go', action: { action: 'go', submit: true } }],
+        },
+      }),
+    )
+
+    ;(mount.querySelector('ui-button') as HTMLElement).click()
+    expect(sent.filter(isAction)).toHaveLength(1)
+
+    cleanup()
+  })
+
+  it('an UNFLAGGED action inside an INVALID provider still fires unconditionally (opt-in gating only — a Cancel button)', () => {
+    const { r, mount, sent, cleanup } = gateHarness()
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sg4', catalogId: 'gate-fixture' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sg4',
+          components: [
+            { id: 'root', component: 'Provider', children: ['m1', 'btn'] },
+            { id: 'm1', component: 'Member', required: true, value: '' }, // invalid
+            { id: 'btn', component: 'Button', label: 'Cancel', action: { action: 'cancel' } }, // NOT submit-flagged
+          ],
+        },
+      }),
+    )
+
+    const m1 = mount.querySelector('ui-gate-probe-member') as GateProbeMember
+    const report = vi.spyOn(m1, 'reportValidity').mockReturnValue(true)
+
+    ;(mount.querySelector('ui-button') as HTMLElement).click()
+    expect(sent.filter(isAction)).toHaveLength(1) // fires unconditionally — gating is opt-in per Button
+    expect(report).not.toHaveBeenCalled() // no gate check ran at all — #wireAction never reads `submit`
+
+    cleanup()
+  })
+
+  it('zero-drift: an unflagged action inside a VALID provider is byte-for-byte the pre-ADR-0054 shape', () => {
+    const { r, mount, sent, cleanup } = gateHarness()
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sg5', catalogId: 'gate-fixture' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sg5',
+          components: [
+            { id: 'root', component: 'Provider', children: ['m1', 'btn'] },
+            { id: 'm1', component: 'Member', value: 'ok' },
+            { id: 'btn', component: 'Button', label: 'Go', action: { action: 'go' } },
+          ],
+        },
+      }),
+    )
+
+    ;(mount.querySelector('ui-button') as HTMLElement).click()
+    const actions = sent.filter(isAction)
+    expect(actions).toHaveLength(1)
+    expect(actions[0]!.action).toMatchObject({ name: 'go', sourceComponentId: 'btn' })
+    expect('submit' in actions[0]!.action).toBe(false) // the client-consumed flag never reaches the wire
 
     cleanup()
   })

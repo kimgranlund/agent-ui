@@ -95,7 +95,12 @@ export function interpolate(
   itemScope: ItemScope | undefined,
   resolve: ResolveFn,
   emitError: (error: A2uiError) => void = () => {},
-  registry: CatalogRegistry = { register() {}, get() { return undefined }, supportedCatalogIds() { return [] } },
+  registry: CatalogRegistry = {
+    register() {},
+    get() { return undefined },
+    supportedCatalogIds() { return [] },
+    submitGateSelector() { return '' },
+  },
 ): string {
   let out = ''
   let i = 0

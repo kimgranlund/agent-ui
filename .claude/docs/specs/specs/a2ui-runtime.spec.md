@@ -61,7 +61,7 @@ Normative per RFC 2119. Each carries a stable ID, a PRD trace, and acceptance cr
 
 ### 3.5 Interaction & actions (v1.0)
 
-**SPEC-R7 — Two-way input binding (optimistic).** For input widgets (e.g. `TextField`, `ChoicePicker`, `Slider`), the renderer MUST display the bound value, update the local data model optimistically on user input, and surface the new value in the action context when an action commits. *(→ PRD-G1)*
+**SPEC-R7 — Two-way input binding (optimistic).** For input widgets (e.g. `TextField`, `Select`, `Slider`), the renderer MUST display the bound value, update the local data model optimistically on user input, and surface the new value in the action context when an action commits. *(→ PRD-G1)*
 - **AC1** *Given* a `TextField` bound to `/form/email`, *when* the user types, *then* `/form/email` updates locally; *when* a submit action fires, *then* the action context carries the current `/form/email`.
 
 **SPEC-R8 — Action emission + actionResponse (v1.0).** On a triggered action the renderer MUST emit an `action` message that includes a client-generated `actionId` (v1.0 requirement), the resolved context, `wantResponse:true` when a reply is expected, and the full data model when `sendDataModel` was set. It MUST correlate an incoming `actionResponse{actionId,value|error}` to the originating action. *(→ PRD-G1)*

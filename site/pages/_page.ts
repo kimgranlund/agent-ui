@@ -200,6 +200,8 @@ export const NAV: readonly NavGroup[] = [
     links: [
       { href: './a2ui-canvas.html', label: 'A2UI Canvas' },
       { href: './a2ui-list.html', label: 'A2UI Dynamic List' },
+      { href: './a2ui-form.html', label: 'A2UI Generative Form' },
+      { href: './a2ui-patterns.html', label: 'A2UI Patterns' },
     ],
   },
 ]

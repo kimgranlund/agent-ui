@@ -39,6 +39,11 @@
 //     fires into the void). `announceFormConnect()` (public) re-dispatches the SAME event with a fresh
 //     detail on demand — a provider/field's one-shot catch-up scan calls it per already-connected control
 //     it discovers late. Blanket-safe: the registry/field acceptance guards are already idempotent.
+//   • Nested-member guard (defect repair — A2UI patterns-page-caught): a `UIFormElement` never announces
+//     when it has a `UIFormElement` ANCESTOR — it is an INTERNAL PART (e.g. text-field type=date's own
+//     `<ui-calendar>`; a radio inside its radio-group), never a registry/field member. Both dispatch sites
+//     route through the one `#dispatchFormConnect` choke point so the guard can never be bypassed by one
+//     of the two. See `#dispatchFormConnect`'s own doc for the write-loop this closes.
 //
 // Imports only `../reactive` (the kernel) + same-layer `./element.ts` / `./props.ts` (the layering holds).
 // `ElementInternals` / `ValidityState` / `ValidityStateFlags` / `HTMLFormElement` / `HTMLElement` / `File` /
@@ -182,8 +187,35 @@ export class UIFormElement extends UIElement {
     })
     // ADR-0050 — announce full connection to the nearest provider/field ancestor. Dispatched LAST — the
     // scope is open, `connected()` has run, and all three effects above are installed, so a listener sees
-    // a fully-wired control. `dispatchEvent` directly (not `this.emit`): composed + bubbling, NOT cancelable
-    // — this is base↔provider/field plumbing, not a consumer-facing semantic event.
+    // a fully-wired control.
+    this.#dispatchFormConnect()
+  }
+
+  /**
+   * The ONE dispatch choke point — both the initial connect dispatch above and `announceFormConnect`
+   * (F1, below) route through this, so the nested-member guard (bug repair, below) and the dispatch shape
+   * itself never drift apart between the two call sites. `dispatchEvent` directly (not `this.emit`):
+   * composed + bubbling, NOT cancelable — this is base↔provider/field plumbing, not a consumer-facing
+   * semantic event.
+   *
+   * GUARD (defect repair — a nested `UIFormElement` is an INTERNAL PART, never a registry/field MEMBER):
+   * native form controls do not nest as members of each other (there is no such thing as an `<input>`
+   * inside an `<input>`'s own submission graph) — ADR-0050's intent was always to discover form-owning
+   * MEMBERS, not every `UIFormElement`-shaped node regardless of where it sits. `ui-text-field type=date`
+   * creates its OWN internal `<ui-calendar>` (itself a `UIFormElement`, for its own unrelated internal
+   * value-picking UI) and appends it inside itself — undetected, a wrapping `ui-form-provider`'s catch-up
+   * scan (`querySelectorAll('*')` + `instanceof`) discovers the calendar as a SECOND, phantom member,
+   * whose aggregate reads feed back into the field's own effects → an unbounded write-loop (the kernel's
+   * ~100-wave budget throws). The fix: a control with a `UIFormElement` ANCESTOR never announces at all —
+   * neither the initial dispatch nor a catch-up re-announce reaches a listener, so it can never register
+   * anywhere. `#hasFormElementAncestor` walks `parentElement` (O(depth), stops at the first hit) — cheap,
+   * connect-time-only, no observer. This also correctly covers `ui-radio` nested in `ui-radio-group`
+   * (`UIRadioGroupElement extends UIFormElement`) — the group is the aggregation owner of its own radios,
+   * which are internal parts of ITS submission graph the same way the calendar is the text-field's; each
+   * radio's own `formValidity()` was always trivially valid, so no outer aggregate observably changes.
+   */
+  #dispatchFormConnect(): void {
+    if (this.#hasFormElementAncestor()) return
     this.dispatchEvent(new CustomEvent<FormConnectDetail>(FORM_CONNECT_EVENT, {
       bubbles: true,
       composed: true,
@@ -191,12 +223,25 @@ export class UIFormElement extends UIElement {
     }))
   }
 
+  /** Walk the parentElement chain for the nearest `UIFormElement` ancestor (O(depth), stops at the first
+   *  hit) — the nested-member guard `#dispatchFormConnect` applies. Ancestors only: `this` itself is
+   *  always a `UIFormElement` and is deliberately excluded from the walk. */
+  #hasFormElementAncestor(): boolean {
+    let node = this.parentElement
+    while (node !== null) {
+      if (node instanceof UIFormElement) return true
+      node = node.parentElement
+    }
+    return false
+  }
+
   /**
-   * Mint a FRESH `FormConnectDetail` off the CURRENT connection signal — the single source both the
-   * connect dispatch above and `announceFormConnect` (F1, below) construct from, so the two never drift
-   * apart. Only meaningful while connected (`connectionSignal` is live); the non-null assertion holds
-   * because both call sites already guard on `connectionSignal !== null` before calling this (not
-   * `isConnected` — see `announceFormConnect`'s doc for why that guard is the wrong one).
+   * Mint a FRESH `FormConnectDetail` off the CURRENT connection signal — the single source
+   * `#dispatchFormConnect` constructs from (both the initial dispatch and `announceFormConnect` route
+   * through it), so the two never drift apart. Only meaningful while connected (`connectionSignal` is
+   * live); the non-null assertion holds because both call sites already guard on `connectionSignal !==
+   * null` before reaching here (not `isConnected` — see `announceFormConnect`'s doc for why that guard is
+   * the wrong one).
    */
   #connectDetail(): FormConnectDetail {
     return {
@@ -245,14 +290,15 @@ export class UIFormElement extends UIElement {
    * end-of-`connectedCallback` dispatch (below the guard here — see that dispatch's own signal, always live
    * by construction) carry the association instead, once the field/provider is already listening — so the
    * abort listener installs correctly, every time.
+   *
+   * Also routes through `#dispatchFormConnect`'s nested-member guard — a catch-up scan's
+   * `querySelectorAll('*')` finds every `UIFormElement` descendant indiscriminately (it cannot itself
+   * distinguish an internal part like a text-field's calendar from a real member), so the guard MUST live
+   * here too, not only on the initial dispatch, or a late-discovered internal part would still register.
    */
   announceFormConnect(): void {
     if (this.connectionSignal === null) return
-    this.dispatchEvent(new CustomEvent<FormConnectDetail>(FORM_CONNECT_EVENT, {
-      bubbles: true,
-      composed: true,
-      detail: this.#connectDetail(),
-    }))
+    this.#dispatchFormConnect()
   }
 
   /** Map a `ValidityResult` onto `internals.setValidity`: valid clears it; invalid sets flags + message (+ anchor). */

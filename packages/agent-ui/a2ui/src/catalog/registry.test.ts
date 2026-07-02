@@ -133,3 +133,34 @@ describe('Registry — duplicate catalogId is last-wins (catalog LLD-C3, SPEC-R6
     expect(reg.get('default')?.factories.Custom).toBeDefined()
   })
 })
+
+describe('Registry — submitGateSelector (catalog LLD-C3, ADR-0054 the submit-gated action seam)', () => {
+  it('NEGATIVE: no submitGate factory anywhere yields an empty selector (the provable no-op)', () => {
+    const reg = new Registry()
+    reg.register(synthCatalog('proj', ['Widget']), factoriesFor(['Widget']))
+    expect(reg.submitGateSelector()).toBe('')
+  })
+
+  it('derives a CSS selector from the one marked factory\'s tag', () => {
+    const reg = new Registry()
+    reg.register(synthCatalog('proj', ['Provider', 'Widget']), {
+      Provider: { ...fakeFactory('ui-provider'), submitGate: true },
+      Widget: fakeFactory('ui-widget'), // unmarked — not a gate
+    })
+    expect(reg.submitGateSelector()).toBe('ui-provider')
+  })
+
+  it('aggregates across multiple registered catalogs (two-tier — a project catalog may add its own gate)', () => {
+    const reg = new Registry()
+    reg.register(synthCatalog('a', ['Provider']), { Provider: { ...fakeFactory('ui-provider'), submitGate: true } })
+    reg.register(synthCatalog('b', ['OtherGate']), { OtherGate: { ...fakeFactory('ui-other-gate'), submitGate: true } })
+    expect(reg.submitGateSelector().split(', ').sort()).toEqual(['ui-other-gate', 'ui-provider'])
+  })
+
+  it('dedupes a tag declared submitGate by more than one catalog', () => {
+    const reg = new Registry()
+    reg.register(synthCatalog('a', ['Provider']), { Provider: { ...fakeFactory('ui-provider'), submitGate: true } })
+    reg.register(synthCatalog('b', ['Provider2']), { Provider2: { ...fakeFactory('ui-provider'), submitGate: true } })
+    expect(reg.submitGateSelector()).toBe('ui-provider') // one tag, not 'ui-provider, ui-provider'
+  })
+})

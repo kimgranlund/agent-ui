@@ -31,9 +31,17 @@
    realized modules before scoping).
 3. **The expert harness** — `a2ui-expert-harness.spec.md` + `a2ui-harness-wiring.lld.md`
    (rubrics + wiring; unrealized).
-4. **G7-unblocked integration work** — the form family is now shippable: catalog entries /
-   two-way bindings for `ui-field`-wrapped forms and the `ui-form-provider` aggregate surface are
-   design intakes (system-planner first — SPEC/catalog rows before code).
+4. ~~G7-unblocked integration work~~ — **DONE 2026-07-02** (ADR-0053/0054, decomp
+   `a2ui-form-catalog-examples`): six catalog rows (Field · FormProvider · Checkbox · Switch ·
+   Select · Option) + the 12-type TextField reach + the submit-gated action; the examples suite is
+   now FOUR pages (canvas · dynamic list · **generative form** · **patterns**), all wired into the
+   dual TOC. Follow-ups it minted: a `danger` Button tone (the P2 confirmation pattern exposed the
+   gap — components backlog) · a check-time demo-payload validity gate (site payloads validate at
+   runtime only; a package-side corpus probe is the candidate home) · defer `<ui-calendar>` element
+   creation to first-open (ADR-0048's lazy spirit; the eager element is guarded but still built).
+5. **The streaming + live-agent examples** — the remaining example-ladder rungs: payloads arriving
+   incrementally (rides open item 2), then a real LLM emitting A2UI over the wire (rides item 3's
+   harness + item 1's corpus).
 
 ## How to start a unit
 

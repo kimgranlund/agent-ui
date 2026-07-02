@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { defaultCatalog } from './index.ts'
 import { validateCatalogConformance } from '../conformance.ts'
+import { validateA2ui } from '../../renderer/validate.ts'
 import type { A2uiComponent } from '../../protocol.ts'
 
 // The catalog loaded at import via `loadCatalog` (catalog LLD-C1) — so its mere presence already proves
@@ -14,11 +15,12 @@ describe('default catalog (catalog LLD-C4, SPEC-R1/R3/R8/N2)', () => {
     expect(defaultCatalog.protocolVersion).toBe('v1.0')
   })
 
-  it('declares the shipped family — Text + Button + TextField + the G9 containers (SPEC-N2: no silent dead types)', () => {
-    // Shipped: Text (ADR-0025 Display display type), Button (G5), TextField (G6), the G9 containers
+  it('declares the shipped family — Text + Button + TextField + the form family + the G9 containers (SPEC-N2: no silent dead types)', () => {
+    // Shipped: Text (ADR-0025 Display display type), Button (G5), TextField (G6, widened Wave-5 reach),
+    // the ADR-0053 form family (Field/FormProvider/Checkbox/Switch/Select/Option — G7), the G9 containers
     // (Row/Column/Card + regions, Tabs + tab/panel, Modal). ABSENT by discipline: Image/Video (no media
-    // primitive yet); ui-list/ui-grid are direct ui-* primitives, NOT catalog types (ratified G9 scope).
-    // No `@`-namespaced or dead types.
+    // primitive yet); ui-list/ui-grid are direct ui-* primitives, NOT catalog types (ratified G9 scope);
+    // the planned `ChoicePicker` name is SUPERSEDED by `Select` (ADR-0053). No `@`-namespaced or dead types.
     expect(Object.keys(defaultCatalog.components).sort()).toEqual(
       [
         'Button',
@@ -26,9 +28,15 @@ describe('default catalog (catalog LLD-C4, SPEC-R1/R3/R8/N2)', () => {
         'CardContent',
         'CardFooter',
         'CardHeader',
+        'Checkbox',
         'Column',
+        'Field',
+        'FormProvider',
         'Modal',
+        'Option',
         'Row',
+        'Select',
+        'Switch',
         'Tab',
         'TabPanel',
         'Tabs',
@@ -36,6 +44,7 @@ describe('default catalog (catalog LLD-C4, SPEC-R1/R3/R8/N2)', () => {
         'TextField',
       ].sort(),
     )
+    expect(defaultCatalog.components.ChoicePicker).toBeUndefined() // superseded by Select (ADR-0053)
   })
 
   it('does NOT declare the deliberately-absent / non-catalog types (Image/Video/List/Grid)', () => {
@@ -128,5 +137,44 @@ describe('default catalog — conformance (SPEC-R7/R9)', () => {
 
     const unknownProp: A2uiComponent = { id: 'm2', component: 'Modal', bogus: 1 }
     expect(validateCatalogConformance(unknownProp, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'm2.bogus' })
+  })
+})
+
+describe('default catalog — form-family rows via the shared validator (ADR-0053, SPEC-R3 AC2/R7)', () => {
+  it('a full coordinated form — Field/FormProvider/Checkbox/Switch/Select/Option + the widened TextField reach — validates 0 failures via validateA2ui', () => {
+    // ONE complete, valid id-graph exercising every new row in the same shape a real agent payload would
+    // (the decomp's Generative Form sketch) — including the Wave-5 numeric reach (type=currency + step/
+    // min/max) on the SAME TextField node the n2a accept criterion asks for.
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'Card', children: ['form'] },
+          { id: 'form', component: 'FormProvider', children: ['f_name', 'f_plan', 'row'] },
+          { id: 'f_name', component: 'Field', label: 'Budget', child: 'in_budget' },
+          {
+            id: 'in_budget', component: 'TextField', name: 'budget',
+            type: 'currency', currency: 'EUR', step: 50, min: '0', max: '500', value: '120',
+          },
+          { id: 'f_plan', component: 'Field', label: 'Plan', child: 'in_plan' },
+          {
+            id: 'in_plan', component: 'Select', name: 'plan', placeholder: 'Choose…',
+            value: 'pro', children: ['opt_a', 'opt_b'],
+          },
+          { id: 'opt_a', component: 'Option', value: 'starter', label: 'Starter' },
+          { id: 'opt_b', component: 'Option', value: 'pro', label: 'Pro' },
+          { id: 'row', component: 'Row', children: ['cb', 'sw'] },
+          { id: 'cb', component: 'Checkbox', name: 'terms', label: 'I accept the terms', checked: true, required: true },
+          { id: 'sw', component: 'Switch', name: 'notify', label: 'Notify me', checked: false },
+        ],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('NEGATIVE: an unknown prop on Field still fails CATALOG (SPEC-R9 security allowlist)', () => {
+    const bogus: A2uiComponent = { id: 'f1', component: 'Field', label: 'Name', bogus: 1 }
+    expect(validateCatalogConformance(bogus, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'f1.bogus' })
   })
 })

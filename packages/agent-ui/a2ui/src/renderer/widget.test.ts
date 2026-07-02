@@ -41,6 +41,7 @@ function stubRegistry(catalogId: string, factories: Record<string, WidgetFactory
     register: () => {},
     get: (id) => (id === catalogId ? entry : undefined),
     supportedCatalogIds: () => [catalogId],
+    submitGateSelector: () => '',
   }
 }
 

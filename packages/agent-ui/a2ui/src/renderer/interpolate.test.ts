@@ -52,6 +52,7 @@ function stubRegistry(catalogId: string, factories: Record<string, WidgetFactory
     register: () => {},
     get: (id) => (id === catalogId ? entry : undefined),
     supportedCatalogIds: () => [catalogId],
+    submitGateSelector: () => '',
   }
 }
 
@@ -275,6 +276,7 @@ describe('interpolate — fn-expr evaluation (proof point 6, ADR-0028)', () => {
       register: () => {},
       get: (id) => (id === 'c' ? testEntry as unknown as CatalogEntry : undefined),
       supportedCatalogIds: () => ['c'],
+      submitGateSelector: () => '',
     }
 
     const errors: A2uiError[] = []

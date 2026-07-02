@@ -433,6 +433,16 @@ const CARD_GROUPS: readonly CardGroup[] = [
         title: 'A2UI dynamic list',
         blurb: 'A container whose children is a template over a data array — display, container, interactive, and nested lists, all live (A2UI v1.0).',
       },
+      {
+        href: './a2ui-form.html',
+        title: 'A2UI generative form',
+        blurb: 'One payload renders a complete coordinated form — field-wrapped controls under a form-provider, inline checks, and a submit-gated action that refuses to emit while invalid (ADR-0053/0054).',
+      },
+      {
+        href: './a2ui-patterns.html',
+        title: 'A2UI patterns',
+        blurb: 'Five agent-emittable UI constructs, each payload beside its live surface — settings form, confirmation, wizard, dashboard tiles, and a schedule picker.',
+      },
     ],
   },
 ]

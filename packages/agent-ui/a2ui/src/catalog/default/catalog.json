@@ -38,9 +38,68 @@
         "readonly": { "type": { "type": "boolean" }, "mapsTo": "readonly" },
         "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
         "required": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "required" },
-        "name": { "type": { "type": "string" }, "mapsTo": "name" }
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "type": { "type": { "type": "string", "enum": ["text", "email", "url", "tel", "password", "search", "number", "currency", "unit", "percent", "date", "time"] }, "mapsTo": "type" },
+        "currency": { "type": { "type": "string" }, "mapsTo": "currency" },
+        "unit": { "type": { "type": "string" }, "mapsTo": "unit" },
+        "step": { "type": { "type": "number" }, "mapsTo": "step" },
+        "min": { "type": { "type": "string" }, "mapsTo": "min" },
+        "max": { "type": { "type": "string" }, "mapsTo": "max" }
       },
       "value": { "prop": "value", "event": "change" }
+    },
+
+    "Field": {
+      "properties": {
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "description": { "type": { "type": "string" }, "bindable": true, "mapsTo": "description" }
+      },
+      "children": "child"
+    },
+
+    "FormProvider": {
+      "properties": {},
+      "children": "ChildList"
+    },
+
+    "Checkbox": {
+      "properties": {
+        "checked": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "checked" },
+        "label": { "type": { "type": "string" }, "mapsTo": "textContent" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "required": { "type": { "type": "boolean" }, "mapsTo": "required" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" }
+      },
+      "value": { "prop": "checked", "event": "change" }
+    },
+
+    "Switch": {
+      "properties": {
+        "checked": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "checked" },
+        "label": { "type": { "type": "string" }, "mapsTo": "textContent" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" }
+      },
+      "value": { "prop": "checked", "event": "change" }
+    },
+
+    "Select": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "placeholder": { "type": { "type": "string" }, "mapsTo": "placeholder" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "required": { "type": { "type": "boolean" }, "mapsTo": "required" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" }
+      },
+      "value": { "prop": "value", "event": "select" },
+      "children": "ChildList"
+    },
+
+    "Option": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "mapsTo": "value" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" }
+      }
     },
 
     "Row": {

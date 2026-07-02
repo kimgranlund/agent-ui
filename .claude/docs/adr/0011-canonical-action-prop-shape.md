@@ -9,7 +9,7 @@
 > | **Proposed by** | planning-lead — the design seat, pinning the contract the renderer's tolerant reader currently guesses |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |
 > | **Repairs** | `a2ui-catalog SPEC §5.1` (the `PropDef` for an action-typed prop) + `§5.2` (the `Button` row) · `catalog/default/catalog.json` (`Button.action` prop type) · renderer `LLD-C13` / `renderer.ts` `readActionSpec` (the consumer) |
-> | **Supersedes / Superseded by** | Relates: **ADR-0002** (validator/renderer parity — the shared-contract discipline this continues) |
+> | **Supersedes / Superseded by** | Relates: **ADR-0002** (validator/renderer parity — the shared-contract discipline this continues). **Extended by ADR-0054** (adds an optional, client-consumed `submit: true` key to this ADR's canonical shape — the wire `action` message stays byte-identical; this ADR's Decision stands unmodified) |
 
 ## Context
 

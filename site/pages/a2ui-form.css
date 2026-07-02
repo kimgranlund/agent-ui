@@ -1,0 +1,221 @@
+/* a2ui-form.css — PAGE-LOCAL layout chrome for the Generative Form capstone. Styles the 3-region flow
+ * (payload → rendered form → messages), the payload/code blocks, the page-IDL panel (submit outcome + provider
+ * aggregate), and the client-message log ONLY. The rendered ui-* controls keep their own component CSS — this
+ * page NEVER restyles a ui-* control. Reads the `--c-*` colour roles declared by the foundation barrels (imported
+ * first via _page.ts), so it tracks light/dark. Tokens-only — every colour is a `--c-*` role, no raw literals. */
+
+/* ── the 3-region flow: three cards with arrow connectors, wrapping to a stack on narrow viewports ──────────── */
+/* Mounted via mountFullBleedPage: the shell hands the page the whole `.app-page` region (edge-to-edge, inner
+ * scroll, no sticky header/footer). Here we lay the three regions out as a wrapping row with a viewport gutter;
+ * the `.app-page` scroll container (see _page.css) absorbs any overflow when a region grows taller than the row. */
+[data-page-content] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 1rem;
+  padding-inline: 1.5rem; /* a viewport gutter, not a max-width */
+  margin-block: 1.5rem;
+}
+
+.region {
+  flex: 1 1 20rem;
+  min-inline-size: 0; /* let <pre> shrink + scroll instead of forcing the card wider */
+  display: flex;
+  flex-direction: column;
+  padding: 1.1rem 1.2rem 1.3rem;
+  border: 1px solid var(--c-neutral-outline-variant);
+  border-radius: 12px;
+  background: var(--c-neutral-surface-low);
+}
+
+.region > h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.region-step {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: var(--c-primary-on-primary); /* the canonical ink for a --c-primary fill (button.css) */
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.region-blurb {
+  margin: 0 0 0.9rem;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.region-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  flex: 1;
+  min-block-size: 0; /* allow a scrolling child (the log) to fit rather than grow the region */
+}
+
+/* The arrow between regions — horizontal on a row, rotating to point down once the cards wrap into a stack. */
+.flow-arrow {
+  align-self: center;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+@media (max-width: 60rem) {
+  .flow-arrow {
+    transform: rotate(90deg);
+  }
+}
+
+/* ── payload blocks ──────────────────────────────────────────────────────────────────────────────────────── */
+/* The JSON renders through the shared codeBlock helper (`.code-block`, styled in _page.css); this page styles the
+ * figure caption + caps the (tall) updateComponents block so region 1 doesn't dominate — it scrolls inside. */
+.payload-line {
+  margin: 0;
+}
+
+.payload-line > figcaption {
+  margin-block-end: 0.3rem;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.payload-line .code-block {
+  max-block-size: 22rem;
+  overflow: auto;
+}
+
+/* Chromeless scroll on the payload/log blocks (WebKit/Chromium) — kept scrollable, just no visible bar. */
+.payload-line .code-block::-webkit-scrollbar,
+.msg-log::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── the toolbar (page affordances) ────────────────────────────────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-block-start: 0.2rem;
+}
+
+/* ── the rendered-form mount — a framed canvas so the live form reads as the "output" ──────────────────────── */
+.surface {
+  display: grid;
+  padding: 1.3rem 1.2rem;
+  border: 1px dashed var(--c-neutral-outline);
+  border-radius: 8px;
+  background: var(--c-neutral-surface);
+}
+
+.surface:empty::before {
+  content: 'No form mounted.';
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.85rem;
+}
+
+/* ── the page-IDL panel: submit outcome + the provider's own aggregate (client-side, NOT the wire) ─────────── */
+.idl-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-block-start: 0.8rem;
+  border-block-start: 1px solid var(--c-neutral-outline-variant);
+}
+
+.idl-caption {
+  margin: 0;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.form-status {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--c-neutral-on-surface);
+}
+
+.form-status[data-kind='blocked'] {
+  color: var(--c-danger);
+  font-weight: 600;
+}
+
+.form-status[data-kind='sent'] {
+  color: var(--c-success);
+  font-weight: 600;
+}
+
+.aggregate {
+  margin: 0;
+}
+
+.aggregate > figcaption {
+  margin-block-end: 0.3rem;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* ── the client→server message log ─────────────────────────────────────────────────────────────────────────── */
+.msg-log {
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-block-size: 4rem; /* fill the messages region + scroll INSIDE it (no whole-page scrollbar) */
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox — chromeless scroll */
+  list-style: none;
+}
+
+.msg-log:empty::before {
+  content: 'No messages yet. Try Submit while the form is invalid — nothing reaches the server. Fill the required fields, then submit to see one action.';
+  display: block;
+  padding: 0.6rem 0;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.msg-log > li {
+  margin-block-end: 0.7rem;
+}
+
+.msg-log > li:last-child {
+  margin-block-end: 0;
+}
+
+.msg-head {
+  margin-block-end: 0.3rem;
+  font-family: var(--ui-mono);
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: pre;
+}
+
+.msg-log > li[data-kind='action'] .msg-head {
+  color: var(--c-primary);
+}
+
+.msg-log > li[data-kind='response'] .msg-head {
+  color: var(--c-success);
+}
+
+.msg-log > li[data-kind='error'] .msg-head {
+  color: var(--c-danger);
+}

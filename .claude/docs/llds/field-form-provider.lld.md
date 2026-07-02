@@ -77,6 +77,20 @@ install), so the control announces itself fully wired. Ancestors connect before 
 **insertion** path, so a provider/field listener is live before a descendant dispatches — late-added
 controls register by construction (ADR-0050; no MutationObserver).
 
+**Nested-member guard (defect repair, coordinator-ruled 2026-07-02; A2UI patterns-page-caught):** a
+`UIFormElement` with a `UIFormElement` ANCESTOR never announces — neither the initial connect dispatch
+nor `announceFormConnect()` reaches a listener. Native form controls do not nest as members of each
+other; ADR-0050's intent was always to discover form-owning MEMBERS, not every `UIFormElement`-shaped
+node regardless of position. `ui-text-field type=date` creates its own internal `<ui-calendar>` (itself a
+`UIFormElement`) and appends it INSIDE itself — undetected, a wrapping `ui-form-provider`'s catch-up scan
+discovered the calendar as a phantom SECOND member, whose aggregate reads fed back into the field's own
+effects and wrote an unbounded loop (the kernel's ~100-wave budget throw). Both dispatch sites route
+through the ONE choke point (`#dispatchFormConnect`, `dom/form.ts`) that applies the guard
+(`#hasFormElementAncestor`: a `parentElement` walk, O(depth), stops at the first hit) — so it cannot be
+bypassed by using one path and not the other. This also correctly covers `ui-radio` nested in
+`ui-radio-group` (itself a `UIFormElement`) — the group is the aggregation owner of its own radios, the
+same relationship as the calendar's to its text-field.
+
 **The upgrade caveat + catch-up (ADR-0051 cl.5):** custom-element **UPGRADE follows define order, not
 tree order** — with pre-existing DOM and granular imports a control can be defined/upgraded BEFORE its
 provider/field is, and its connect dispatch lands in the void (no listener yet); the field's
@@ -473,6 +487,13 @@ G7 only text-field does).
   them (a structural `isConnected` guard announced null handles and the registry threw — the s9 crash);
   each same-cascade control self-covers via its own end-of-connectedCallback dispatch moments later,
   when the consumer is already listening.
+- **Nested `UIFormElement` (defect repair, coordinator-ruled 2026-07-02)** → a `UIFormElement` with a
+  `UIFormElement` ANCESTOR never announces (neither dispatch site) — it is an INTERNAL PART of that
+  ancestor's own submission graph, never a registry/field member. Closes the `ui-text-field type=date` ↔
+  its internal `<ui-calendar>` phantom-member write-loop (a provider aggregating BOTH as separate members
+  fed back into the field's own effects, tripping the kernel's ~100-wave budget); also correctly covers
+  `ui-radio` inside `ui-radio-group` (the group is the aggregation owner of its own radios). Negative
+  control: an ordinary (non-`UIFormElement`) ancestor never suppresses the dispatch (s1 `dom/form.test.ts`).
 - **Editor part not yet created when the labelling effect first runs** → cannot happen for text-field
   (parts are created in `connected()`, the effect installs after), but every override guards a null part
   (contract in LLD-C2).

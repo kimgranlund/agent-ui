@@ -3,6 +3,12 @@ import {
   buttonFactory,
   textFactory,
   textFieldFactory,
+  fieldFactory,
+  formProviderFactory,
+  checkboxFactory,
+  switchFactory,
+  selectFactory,
+  optionFactory,
   rowFactory,
   columnFactory,
   cardFactory,
@@ -28,10 +34,14 @@ describe('default catalog factories — table parity (catalog LLD-C5, SPEC-R3 AC
     expect(Object.keys(defaultFactories).sort()).toEqual(Object.keys(defaultCatalog.components).sort())
   })
 
-  it('every declared component resolves to a ui-* factory', () => {
+  it('every declared component resolves to a ui-* factory (Option is the sanctioned-primitive exception, SPEC-R3 AC1)', () => {
     for (const type of Object.keys(defaultCatalog.components)) {
       const factory = defaultFactories[type]
       expect(factory, `factory for ${type}`).toBeDefined()
+      if (type === 'Option') {
+        expect(factory.tag).toBe('div[role=option]') // the pre-ui-text Text precedent — not a custom element
+        continue
+      }
       expect(factory.tag).toMatch(/^ui-/)
     }
   })
@@ -162,11 +172,13 @@ describe('default catalog factories — G9 container family (catalog LLD-C5, SPE
   })
 
   it('applyProp honours every declared accessor prop for each container/input factory (mapsTo == name)', () => {
-    // The container family + text-field declare `mapsTo` equal to the property name (the SPEC-R8 1:1
-    // reflection), so `applyProp(el, name, v)` must land `v` on `el[mapsTo]`. Walk the catalog and assert
-    // it for every accessor-mapped type (Button's label→textContent is the one non-identity map — skip it).
+    // The container family + text-field + the ADR-0053 Field/FormProvider/Select rows declare `mapsTo`
+    // equal to the property name (the SPEC-R8 1:1 reflection), so `applyProp(el, name, v)` must land `v`
+    // on `el[mapsTo]`. Walk the catalog and assert it for every accessor-mapped type — skip the bespoke
+    // non-identity-`mapsTo` factories (Button.label, Checkbox/Switch.label, Option.label all → textContent;
+    // Option.value → an attribute, not a prop), each covered by its own dedicated describe block below.
     for (const [type, def] of Object.entries(defaultCatalog.components)) {
-      if (type === 'Button') continue
+      if (type === 'Button' || type === 'Checkbox' || type === 'Switch' || type === 'Option') continue
       const factory = defaultFactories[type]
       const el = factory.create()
       for (const [name, pd] of Object.entries(def.properties)) {
@@ -175,5 +187,88 @@ describe('default catalog factories — G9 container family (catalog LLD-C5, SPE
         expect((el as unknown as Record<string, unknown>)[pd.mapsTo], `${type}.${name} → ${pd.mapsTo}`).toBe(sentinel)
       }
     }
+  })
+})
+
+describe('default catalog factories — Field / FormProvider (ADR-0053, catalog LLD-C5)', () => {
+  it('Field → ui-field maps label + description via accessorFactory (1:1 reflecting props); no value bind', () => {
+    expect(fieldFactory.tag).toBe('ui-field')
+    expect(fieldFactory.value).toBeUndefined() // not an input — no two-way commit event
+    const el = fieldFactory.create()
+    fieldFactory.applyProp(el, 'label', 'Name')
+    fieldFactory.applyProp(el, 'description', 'Your full name')
+    expect((el as unknown as Record<string, unknown>).label).toBe('Name')
+    expect((el as unknown as Record<string, unknown>).description).toBe('Your full name')
+  })
+
+  it('FormProvider → ui-form-provider carries zero properties + the ADR-0054 submitGate mark', () => {
+    expect(formProviderFactory.tag).toBe('ui-form-provider')
+    expect(formProviderFactory.value).toBeUndefined() // no bindable prop of its own — the aggregate rides the data model
+    expect(formProviderFactory.submitGate).toBe(true)
+    expect(Object.keys(defaultCatalog.components.FormProvider.properties)).toEqual([])
+  })
+})
+
+describe('default catalog factories — Checkbox / Switch (ADR-0053, the Indicator naming law)', () => {
+  it('Checkbox → ui-checkbox: checked/disabled/required/name are 1:1 accessors; label is bespoke textContent', () => {
+    expect(checkboxFactory.tag).toBe('ui-checkbox')
+    expect(checkboxFactory.value).toEqual({ prop: 'checked', event: 'change' }) // the naming law: bindable = the control's own prop
+    const el = checkboxFactory.create()
+    checkboxFactory.applyProp(el, 'checked', true)
+    checkboxFactory.applyProp(el, 'disabled', true)
+    checkboxFactory.applyProp(el, 'required', true)
+    checkboxFactory.applyProp(el, 'name', 'terms')
+    checkboxFactory.applyProp(el, 'label', 'I accept the terms')
+    const box = el as unknown as Record<string, unknown>
+    expect(box.checked).toBe(true)
+    expect(box.disabled).toBe(true)
+    expect(box.required).toBe(true)
+    expect(box.name).toBe('terms')
+    expect(el.textContent).toBe('I accept the terms') // bespoke — ui-checkbox has no `label` prop
+  })
+
+  it('Switch → ui-switch: checked/disabled/name are 1:1 accessors; label is bespoke textContent (no required row)', () => {
+    expect(switchFactory.tag).toBe('ui-switch')
+    expect(switchFactory.value).toEqual({ prop: 'checked', event: 'change' })
+    const el = switchFactory.create()
+    switchFactory.applyProp(el, 'checked', true)
+    switchFactory.applyProp(el, 'label', 'Email me updates')
+    expect((el as unknown as Record<string, unknown>).checked).toBe(true)
+    expect(el.textContent).toBe('Email me updates')
+    expect(defaultCatalog.components.Switch.properties.required).toBeUndefined() // deliberately no required row
+  })
+
+  it('null/undefined label coerces to empty string on both (the value == null guard, the buttonFactory precedent)', () => {
+    const cb = checkboxFactory.create()
+    checkboxFactory.applyProp(cb, 'label', null)
+    expect(cb.textContent).toBe('')
+    const sw = switchFactory.create()
+    switchFactory.applyProp(sw, 'label', undefined)
+    expect(sw.textContent).toBe('')
+  })
+})
+
+describe('default catalog factories — Select / Option (ADR-0053, ChoicePicker → Select rename)', () => {
+  it('Select → ui-select is two-way bound on value via the select event; value/disabled bindable, no open row', () => {
+    expect(selectFactory.tag).toBe('ui-select')
+    expect(selectFactory.value).toEqual({ prop: 'value', event: 'select' })
+    const el = selectFactory.create()
+    selectFactory.applyProp(el, 'value', 'pro')
+    selectFactory.applyProp(el, 'placeholder', 'Choose a plan…')
+    expect((el as unknown as Record<string, unknown>).value).toBe('pro')
+    expect((el as unknown as Record<string, unknown>).placeholder).toBe('Choose a plan…')
+    expect(defaultCatalog.components.Select.properties.open).toBeUndefined() // one value mark per component
+  })
+
+  it('Option → div[role=option] (the sanctioned-primitive exception, SPEC-R3 AC1): value→attribute, label→textContent', () => {
+    expect(optionFactory.tag).toBe('div[role=option]')
+    expect(optionFactory.value).toBeUndefined() // a passive list item, not a bindable component
+    const el = optionFactory.create()
+    expect(el.tagName.toLowerCase()).toBe('div')
+    expect(el.getAttribute('role')).toBe('option')
+    optionFactory.applyProp(el, 'value', 'starter')
+    optionFactory.applyProp(el, 'label', 'Starter')
+    expect(el.getAttribute('value')).toBe('starter')
+    expect(el.textContent).toBe('Starter')
   })
 })

@@ -223,6 +223,7 @@ describe('children-template routes to the positional dynamic list (LLD-C6)', () 
       register: () => {},
       get: (id) => (id === 'demo' ? entry : undefined),
       supportedCatalogIds: () => ['demo'],
+      submitGateSelector: () => '',
     }
     const createWidget = makeCreateWidget({ registry, emitError: () => {}, resolveValue: (v) => v })
     const surface = createSurface({ id: 's1', catalogId: 'demo', version: 'v1.0' })
@@ -268,6 +269,7 @@ describe('children-template routes to the positional dynamic list (LLD-C6)', () 
       register: () => {},
       get: (id) => (id === 'demo' ? entry : undefined),
       supportedCatalogIds: () => ['demo'],
+      submitGateSelector: () => '',
     }
     const createWidget = makeCreateWidget({
       registry,

@@ -1,10 +1,11 @@
 // registry.ts — the two-tier CatalogRegistry (catalog LLD-C3, SPEC-R6/R7, N1).
 //
-// Holds the registered catalogs + their factory tables and answers the renderer's two reads: widget
-// resolution (`get`, renderer LLD-C7) and capabilities (`supportedCatalogIds`, renderer LLD-C12).
-// Two-tier (SPEC-R6/N1): a project registers its OWN catalog with zero package edits — `register` is
-// the public seam. Registration enforces the SPEC-R7 AC1 invariant (every declared component type has
-// a factory) and the intentional-override path (duplicate `catalogId` ⇒ last-wins). Pure within-package
+// Holds the registered catalogs + their factory tables and answers the renderer's three reads: widget
+// resolution (`get`, renderer LLD-C7), capabilities (`supportedCatalogIds`, renderer LLD-C12), and the
+// submit-gate selector (`submitGateSelector`, ADR-0054 — the `#wireAction` gate branch). Two-tier
+// (SPEC-R6/N1): a project registers its OWN catalog with zero package edits — `register` is the public
+// seam. Registration enforces the SPEC-R7 AC1 invariant (every declared component type has a factory)
+// and the intentional-override path (duplicate `catalogId` ⇒ last-wins). Pure within-package
 // dependencies: the loader (the single shape gate) + the pinned render contracts.
 
 import { loadCatalog } from './catalog.ts'
@@ -66,5 +67,19 @@ export class Registry implements CatalogRegistry {
 
   supportedCatalogIds(): string[] {
     return [...this.#catalogs.keys()]
+  }
+
+  submitGateSelector(): string {
+    // Aggregate across ALL registered catalogs (two-tier, ADR-0054) — a project catalog may mark its
+    // own gate alongside the default's `FormProvider`. Keyed by tag (a `Set` dedupes a tag declared by
+    // more than one catalog's factory). Recomputed on every call (cheap — factory tables are small) so
+    // a later `register` is picked up without a cache-invalidation seam.
+    const tags = new Set<string>()
+    for (const entry of this.#catalogs.values()) {
+      for (const factory of Object.values(entry.factories)) {
+        if (factory.submitGate === true) tags.add(factory.tag)
+      }
+    }
+    return [...tags].join(', ')
   }
 }

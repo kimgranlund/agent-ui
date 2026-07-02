@@ -13,6 +13,12 @@
 // (`CardHeader`/`CardContent`/`CardFooter`), `Tabs` + `Tab`/`TabPanel`, and `Modal` — plus the ADR-0025
 // `Text` display type (the first Display-class catalog entry). `ui-list`/`ui-grid` are NOT catalog types
 // (they ship as direct `ui-*` primitives — the ratified G9 scope, ADR-0016).
+//
+// ADR-0053 (form-family rows) adds `Field`/`FormProvider`/`Checkbox`/`Switch`/`Select`/`Option` — the
+// first two ride `accessorFactory` (1:1 reflecting props, `FormProvider` carrying the ADR-0054
+// `submitGate` mark), `Checkbox`/`Switch` are bespoke (the `buttonFactory` non-identity-`label` shape),
+// `Select` rides `accessorFactory`, and `Option` is a sanctioned NON-`ui-*` primitive (`div[role=option]`
+// — the pre-`ui-text` `Text` precedent, catalog SPEC-R3 AC1).
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
@@ -92,16 +98,19 @@ function setProp(el: HTMLElement, prop: string, value: unknown): void {
 
 /**
  * Build a factory for a control whose catalog properties all map 1:1 onto reflecting prop accessors
- * (the container family + text-field). `value` (optional) declares the two-way commit contract the
- * renderer's input controller (LLD-C8, SPEC-R7) reads: the control's bindable prop + its commit event.
+ * (the container family + text-field + the ADR-0053 `Field`/`FormProvider`/`Select` rows). `value`
+ * (optional) declares the two-way commit contract the renderer's input controller (LLD-C8, SPEC-R7)
+ * reads: the control's bindable prop + its commit event. `submitGate` (optional, ADR-0054) marks the
+ * control as a submit-action gate — the registry aggregates it into its derived selector.
  */
-function accessorFactory(tag: string, value?: { prop: string; event: string }): WidgetFactory {
+function accessorFactory(tag: string, value?: { prop: string; event: string }, submitGate?: true): WidgetFactory {
   const factory: WidgetFactory = {
     tag,
     create: () => document.createElement(tag),
     applyProp: setProp,
   }
   if (value) factory.value = value
+  if (submitGate) factory.submitGate = true
   return factory
 }
 
@@ -127,8 +136,82 @@ export const tabPanelFactory: WidgetFactory = accessorFactory('ui-tab-panel')
 export const modalFactory: WidgetFactory = accessorFactory('ui-modal', { prop: 'open', event: 'toggle' })
 
 // TextField (G6) — the deferred value bind goes live through the same LLD-C8 controller (ADR-0019 cl.3):
-// `value` commits on the control's `change` event (blur / Enter), zero text-field code change.
+// `value` commits on the control's `change` event (blur / Enter), zero text-field code change. The
+// Wave-5 reach (ADR-0047/0048) + the ADR-0053 catalog widening (`type`/`currency`/`unit`/`step`/`min`/
+// `max`) are ALL 1:1 reflecting accessor props — zero factory code beyond the catalog.json PropDefs.
 export const textFieldFactory: WidgetFactory = accessorFactory('ui-text-field', { prop: 'value', event: 'change' })
+
+// ── the ADR-0053 form-family rows ───────────────────────────────────────────────
+
+// Field — the label/description/error wrapper (G7, ADR-0050/0051). `label`/`description` are 1:1
+// reflecting accessor props; the wrapped control rides the structural `child` key (RESERVED — never
+// `applyProp`'d, handled generically by the tree walk, LLD-C4). Not an input of its own (no `value`).
+export const fieldFactory: WidgetFactory = accessorFactory('ui-field')
+
+// FormProvider — the discovery/aggregation coordination element (G7, ADR-0050). ZERO catalog
+// properties (its factory's `applyProp` is never called — the row declares none); `submitGate: true`
+// (ADR-0054) is the load-bearing mark — the registry's derived selector picks up `ui-form-provider` as
+// a submit-gate ancestor. No `value` mark — the provider commits no bindable prop of its own; the
+// aggregate rides the data model (two-way binds + `sendDataModel`), not a catalog prop.
+export const formProviderFactory: WidgetFactory = accessorFactory('ui-form-provider', undefined, true)
+
+/**
+ * `Checkbox`/`Switch` → `ui-checkbox`/`ui-switch` (ADR-0053, the Indicator class). `checked`/
+ * `disabled`/`required`/`name` are 1:1 reflecting accessors (`setProp`); `label` is bespoke — the
+ * anatomy's slotted light-DOM text (checkbox.md/switch.md `label` slot), a non-identity `mapsTo` like
+ * `Button.label` — so it must NOT route through `accessorFactory` (the factories.ts INVARIANT).
+ * Two-way bindable on `checked` via `change` (ADR-0053 fork F2, the naming law: the bindable catalog
+ * prop is named by the CONTROL's own prop, `Tabs.selected`/`Modal.open` precedent — NOT Basic's
+ * `value`, which `ui-checkbox` already uses for the submitted string).
+ */
+function indicatorFactory(tag: string): WidgetFactory {
+  return {
+    tag,
+    create: () => document.createElement(tag),
+    applyProp: (el, prop, value) => {
+      if (prop === 'label') el.textContent = value == null ? '' : String(value)
+      else setProp(el, prop, value)
+    },
+    value: { prop: 'checked', event: 'change' },
+  }
+}
+export const checkboxFactory: WidgetFactory = indicatorFactory('ui-checkbox')
+export const switchFactory: WidgetFactory = indicatorFactory('ui-switch')
+
+// Select → ui-select (ADR-0053, renames the planned `ChoicePicker`) — `value`/`placeholder`/
+// `disabled`/`required`/`name` are 1:1 reflecting accessors; two-way bindable on `value` via the
+// control's `select` commit event. `open` is deliberately NOT declared (one `value` mark per
+// component; a one-way `open` would silently desync on platform light-dismiss).
+export const selectFactory: WidgetFactory = accessorFactory('ui-select', { prop: 'value', event: 'select' })
+
+/**
+ * Option → `div[role=option]` (ADR-0053) — a sanctioned NON-`ui-*` primitive (the pre-`ui-text` `Text`
+ * precedent, catalog SPEC-R3 AC1's "sanctioned primitive" exception): `ui-select` moves author
+ * `[role=option]` light-DOM children into its listbox panel at first connect (select.ts), so Option
+ * never self-defines a custom element of its own. `value` → the `value` attribute (the match key
+ * `ui-select` reads); `label` → textContent (bespoke, the non-identity-`mapsTo` invariant). Not an
+ * input (no `value` mark — Option is a passive list item, not a bindable component).
+ */
+export const optionFactory: WidgetFactory = {
+  tag: 'div[role=option]',
+  create: () => {
+    const el = document.createElement('div')
+    el.setAttribute('role', 'option')
+    return el
+  },
+  applyProp: (el, prop, value) => {
+    switch (prop) {
+      case 'value':
+        setAttr(el, 'value', value)
+        break
+      case 'label':
+        el.textContent = value == null ? '' : String(value)
+        break
+      default:
+        setAttr(el, prop, value)
+    }
+  },
+}
 
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
@@ -137,6 +220,12 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Button: buttonFactory,
   Text: textFactory,
   TextField: textFieldFactory,
+  Field: fieldFactory,
+  FormProvider: formProviderFactory,
+  Checkbox: checkboxFactory,
+  Switch: switchFactory,
+  Select: selectFactory,
+  Option: optionFactory,
   Row: rowFactory,
   Column: columnFactory,
   Card: cardFactory,
