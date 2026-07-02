@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { signal, effect, inspect, whenFlushed, type Signal } from '@agent-ui/components'
 import { prop, type PropsSchema } from '@agent-ui/components'
-import { UIFormElement, type FormValue, type ValidityResult } from './form.ts'
+import { UIFormElement, FORM_CONNECT_EVENT, type FormValue, type ValidityResult, type FormConnectDetail } from './form.ts'
+import { UIElement } from './element.ts'
 
 // s1 — UIFormElement, the FACE form-associated base (ADR-0013). jsdom reality (verified before writing):
 // `attachInternals()` works (+ the second-call throw, e-internals), but the form-association surface is
@@ -125,6 +126,30 @@ class AlwaysValidEl extends UIFormElement {
   }
 }
 customElements.define('ui-form-alwaysvalid', AlwaysValidEl)
+
+// ── a plain UIElement wrapper whose connected() races a descendant's OWN connectedCallback — the F1
+// bulk-insert hazard (an s9 repro against the real ui-form-provider), reproduced here at the base layer:
+// ancestors' connectedCallback fires before a descendant's, so a catch-up scan (querySelectorAll +
+// announceFormConnect — the exact shape form-provider.ts's connected() uses) can reach a descendant that
+// is already `isConnected` but has not yet run its OWN connectedCallback (connectionSignal still null). ──
+
+class RaceWrapperEl extends UIElement {
+  raceResults: Array<{ isConnected: boolean; threw: boolean }> = []
+  protected connected(): void {
+    for (const el of this.querySelectorAll('*')) {
+      if (el instanceof UIFormElement) {
+        let threw = false
+        try {
+          el.announceFormConnect()
+        } catch {
+          threw = true
+        }
+        this.raceResults.push({ isConnected: el.isConnected, threw })
+      }
+    }
+  }
+}
+customElements.define('ui-form-race-wrapper', RaceWrapperEl)
 
 // ── clause 1 — form-associated, internals reused (not re-acquired) ────────────
 
@@ -389,5 +414,54 @@ describe('zero residue — the form effects are scope-owned', () => {
     document.body.append(el) // reconnect
     expect(inspect(el.probe).subscribers).toBe(1) // re-subscribed cleanly — exactly one
     el.remove()
+  })
+})
+
+// ── announceFormConnect (F1) — the base catch-up re-announce ──────────────────
+
+describe('announceFormConnect (F1) — the base catch-up re-announce', () => {
+  it('no-ops before this control has ever connected (connectionSignal null) — no listener notified', () => {
+    const el = new FieldEl() // constructed, never appended
+    let count = 0
+    document.addEventListener(FORM_CONNECT_EVENT, () => { count++ })
+    el.announceFormConnect()
+    expect(count).toBe(0)
+  })
+
+  it('re-dispatches ui-form-connect with a FRESH detail once actually connected', () => {
+    const { el } = makeField()
+    document.body.append(el)
+    const received: FormConnectDetail[] = []
+    document.addEventListener(FORM_CONNECT_EVENT, (e) => {
+      received.push((e as CustomEvent<FormConnectDetail>).detail)
+    })
+    el.announceFormConnect()
+    expect(received).toHaveLength(1)
+    expect(received[0].control).toBe(el)
+    expect(received[0].signal.aborted).toBe(false) // the CURRENT (live) connection signal, not a stale one
+    el.remove()
+  })
+
+  it('no-ops again after disconnect (connectionSignal nulled by disconnectedCallback)', () => {
+    const { el } = makeField()
+    document.body.append(el)
+    el.remove()
+    let count = 0
+    document.addEventListener(FORM_CONNECT_EVENT, () => { count++ })
+    el.announceFormConnect()
+    expect(count).toBe(0)
+  })
+
+  it('the upgrade-order hazard (the s9-caught bug): a bulk offline-subtree insert calls announceFormConnect on a descendant whose OWN connectedCallback has not run yet — isConnected is already true there, but the guard is connectionSignal, so it must NOT throw', () => {
+    const wrapper = new RaceWrapperEl()
+    const { el: child } = makeField()
+    wrapper.append(child) // offline — wrapper not yet connected, so child's connectedCallback hasn't run either
+    expect(() => document.body.append(wrapper)).not.toThrow() // the bulk insert IS the repro
+    // The hazard, observed AND survived: by the time wrapper.connected() ran its catch-up scan, child
+    // already reported isConnected (DOM structural fact, set the instant the subtree was spliced in) —
+    // yet announceFormConnect correctly no-op'd (connectionSignal was still null) instead of crashing on
+    // a null connect-detail signal (the pre-fix bug: `detail.signal.aborted` in a registry listener).
+    expect(wrapper.raceResults).toEqual([{ isConnected: true, threw: false }])
+    wrapper.remove()
   })
 })

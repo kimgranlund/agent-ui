@@ -36,9 +36,18 @@
 // the calendar out of the text-field's STATIC import graph (tree-shake safe — the static regex crawl
 // does not match `import()` expressions). date and time have codec but NO steppers (ADR-0047 "codec ⇒ steppers"
 // applies to numeric types only). datetime-local/month = deferred (STRETCH, not this wave).
+//
+// G7 growth (ADR-0051 — the reference part-role override of the base's field-labelling seam): the editor
+// carries `role=textbox` on a PART, not `internals.role`, so the base's guarded internals-reflection default
+// (dom/form.ts) never fires here — this override id-references the editor's `aria-labelledby`/
+// `aria-describedby` directly against the `ui-field` part elements it receives. Under association the
+// internal message node (ADR-0014 cl.4/ADR-0029 A1) YIELDS — empty, hidden, dropped from
+// `aria-describedby` — so the field's error node is the ONE AT-announced error. `label` prop → `aria-label`
+// stays the bare-usage stand-in, yielding to `aria-labelledby` (accname precedence) the moment a field
+// associates.
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
-import { UIFormElement, type FormValue, type ValidityResult } from '../../dom/form.ts'
+import { UIFormElement, type FormValue, type ValidityResult, type FieldLabelling } from '../../dom/form.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
 import {
   valueCodec,
@@ -400,7 +409,10 @@ export class UITextFieldElement extends UIFormElement {
 
     // ── editor attribute mirror — the label seam, the placeholder text, the required mirror ──
     this.effect(() => {
-      if (this.label) editor.setAttribute('aria-label', this.label)
+      // ADR-0051 yield: aria-label is the BARE stand-in only — a `ui-field` association carries the name
+      // via aria-labelledby (applyFieldLabelling below), which beats aria-label in accname resolution
+      // anyway; clearing it here keeps the editor's AX tree clean under association.
+      if (this.label && this.fieldLabelling === null) editor.setAttribute('aria-label', this.label)
       else editor.removeAttribute('aria-label')
       editor.setAttribute('data-placeholder', this.placeholder) // the CSS placeholder reads attr(data-placeholder)
       if (this.required) editor.setAttribute('aria-required', 'true')
@@ -434,19 +446,33 @@ export class UITextFieldElement extends UIFormElement {
     // ADR-0029 A1 (user-ratified): when carrying a message the message node is VISIBLE — `message.hidden`
     // toggled false (dangerous treatment: --c-danger ink, small type, gated by :state(user-invalid) in CSS).
     // The `aria-describedby` wiring is unchanged; making the node visible is an extension only.
+    // ADR-0051 cl.4 yield: under a `ui-field` association the internal message stays empty + hidden and OUT
+    // of aria-describedby (that attribute is owned by applyFieldLabelling below) — the field's own error
+    // part is the ONE AT-announced error; no double-announce.
+    // F3 (review-caught dual-writer): `aria-describedby` ownership transfers WHOLLY to `applyFieldLabelling`
+    // during association and reverts to this effect only when `fieldLabelling` is `null` — so BOTH branches
+    // below gate every `aria-describedby` set/remove on `!fielded`; while fielded, this effect never sets OR
+    // removes it, in EITHER validity leg (an unconditional `removeAttribute` on the invalid→valid leg would
+    // otherwise clobber the field's ids the moment a fielded control becomes valid).
     this.effect(() => {
+      const fielded = this.fieldLabelling !== null
       if (controller.userInvalid()) {
         // userInvalid ⇒ invalid, so formValidity() is the invalid branch carrying the message + flags.
         const verdict = this.formValidity()
         const text = verdict.valid ? '' : verdict.message // the WCAG 1.4.1 non-colour reinforcement
         editor.setAttribute('aria-invalid', 'true')
-        editor.setAttribute('aria-describedby', message.id)
-        message.textContent = text
-        message.hidden = text === '' // visible when there is a message (ADR-0029 A1)
+        if (fielded) {
+          message.textContent = ''
+          message.hidden = true
+        } else {
+          editor.setAttribute('aria-describedby', message.id)
+          message.textContent = text
+          message.hidden = text === '' // visible when there is a message (ADR-0029 A1)
+        }
         this.internals.states?.add('user-invalid')
       } else {
         editor.removeAttribute('aria-invalid')
-        editor.removeAttribute('aria-describedby')
+        if (!fielded) editor.removeAttribute('aria-describedby') // F3 — never touch it while fielded
         message.textContent = ''
         message.hidden = true // no message → out of flow
         this.internals.states?.delete('user-invalid')
@@ -597,6 +623,50 @@ export class UITextFieldElement extends UIFormElement {
   /** Restore the value after navigation/autofill (FACE state restore). */
   protected formStateRestore(state: File | string | FormData | null): void {
     if (typeof state === 'string') this.value = state
+  }
+
+  // ── ADR-0051 — the field-labelling seam wire (the reference part-role override) ──────────────
+
+  /**
+   * The part-role override (ADR-0051 cl.2/LLD-C2 §wire) — the editor's `role=textbox` rides a light-DOM
+   * PART, not `internals.role`, so the base's guarded internals-reflection default (dom/form.ts) never
+   * fires for this control; id-reference the editor directly instead.
+   *
+   * `aria-labelledby` is this method's OWN, exclusive concern in both directions (no other effect ever
+   * touches it): set from `refs.label` when present, removed when `null`.
+   *
+   * `aria-describedby` is only WRITTEN here on association (`refs !== null`) — on dissociation it is
+   * deliberately left untouched, NOT unconditionally cleared. Why: the user-invalid/message effect above
+   * is the exclusive, correct owner of `aria-describedby` whenever `this.fieldLabelling === null` (it
+   * fully recomputes the bare-mode value — set to the message id when invalid, removed otherwise) — and
+   * BOTH effects re-run in the SAME flush wave on a `setFieldLabelling` write. Two effects racing to write
+   * one attribute makes the OUTCOME depend on which one the kernel happens to run last (subscriber-order,
+   * an incidental scheduling detail, not a documented invariant) — clearing it here too would sometimes
+   * win that race and erase what the message effect just (correctly) set. Touching only what is
+   * EXCLUSIVELY this method's own — never the other effect's — makes the result order-independent.
+   *
+   * Guards a not-yet-created editor (the LLD-C2 override contract) — cannot happen in practice
+   * (`#ensureParts()` runs synchronously at the top of `connected()`, before the base's forwarding effect
+   * installs), but the guard costs nothing and documents the contract.
+   */
+  protected applyFieldLabelling(refs: FieldLabelling | null): void {
+    const editor = this.#editor
+    if (!editor) return
+    if (refs === null) {
+      editor.removeAttribute('aria-labelledby') // aria-describedby is NOT this branch's concern — see above
+      return
+    }
+    if (refs.label) editor.setAttribute('aria-labelledby', refs.label.id)
+    else editor.removeAttribute('aria-labelledby')
+    const described = [refs.description, refs.error].filter((el): el is HTMLElement => el !== null)
+    if (described.length > 0) editor.setAttribute('aria-describedby', described.map((el) => el.id).join(' '))
+    else editor.removeAttribute('aria-describedby')
+  }
+
+  /** Feeds `FormConnectDetail.userInvalid` (ADR-0050) — the existing `trackUserInvalid` tracker IS the one
+   *  timing source; this override just exposes its gate. */
+  protected formUserInvalid(): boolean {
+    return this.#userInvalid?.userInvalid() ?? false
   }
 
   // ── auto-adornment creation (Wave 3 + Wave 5A) ─────────────────────────────────

@@ -2,7 +2,7 @@
 # column.md frontmatter — the attributes-as-API descriptor for ui-column (ADR-0004). The machine-checkable
 # public surface lives HERE (frontmatter); the prose below the fence is the /site doc. The `attributes[]` block
 # MUST mirror column.ts `static props` (the spread surfaceProps + flexProps) — the contract↔props trip-wire
-# (column-descriptor.test.ts) targets this fence. Field set per docs/plan.md §10 / ADR-0004.
+# (column-descriptor.test.ts) targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 #
 # NOTE `extends: UIContainerElement` is the new G9 surface base; the descriptor-schema BASE_CLASSES gains it in
 # the s12 packaging slice. Until then the schema flags only `extends` (BAD_EXTENDS); every other rule is clean

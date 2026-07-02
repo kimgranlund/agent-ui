@@ -57,3 +57,8 @@
 
 /* Picker controls — Wave 5B (ADR-0048): standalone month-grid date picker. */
 @import './controls/calendar/calendar.css';
+
+/* Coordination controls — G7 (ADR-0050/ADR-0051): the label/description/error wrapper + the aggregation
+ * provider. form-provider.css declares no --ui-form-provider-* tokens (LLD-C8 — pure coordination, no paint). */
+@import './controls/field/field.css';
+@import './controls/form-provider/form-provider.css';

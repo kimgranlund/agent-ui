@@ -4,7 +4,7 @@
 # surface lives HERE (frontmatter); the prose below the fence is the /site doc. The
 # `attributes[]` block MUST mirror UISelectElement.props — the contract↔props trip-wire
 # (select.test.ts) and the frontmatter schema (validateComponentDescriptor) both target
-# this fence. Field set per docs/plan.md §10 / ADR-0004; overlay mechanism per the
+# this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; overlay mechanism per the
 # overlay-controller LLD-C1..C4; bindable `open` two-way per ADR-0019; form-value
 # per UIFormElement / ADR-0013; ADR-0043 = the overlay + listbox select gate (S4).
 tag: ui-select

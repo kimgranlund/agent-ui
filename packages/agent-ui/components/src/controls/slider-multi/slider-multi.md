@@ -3,7 +3,7 @@
 # machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the /site doc.
 # The `attributes[]` block MUST mirror UISliderMultiElement.props — the contract↔props trip-wire in
 # slider-multi.test.ts and the frontmatter schema (validateComponentDescriptor) both target this fence.
-# Field set per docs/plan.md §10 / ADR-0004; form participation per ADR-0013; base per ADR-0042/0041.
+# Field set per .claude/docs/plan.md §10 / ADR-0004; form participation per ADR-0013; base per ADR-0042/0041.
 tag: ui-slider-multi
 tier: range           # geometry size-class (Range band — widget box + fill + dual thumbs; geometry.md)
 extends: UIRangeElement   # the Range base (ADR-0042); UISliderMultiElement → UIRangeElement → UIFormElement

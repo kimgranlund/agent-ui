@@ -1,0 +1,80 @@
+{
+  "domain": "technical-architecture",
+  "_about": {
+    "title": "A2UI binding slice — LLD-C5 per-path waking (binding.ts + host rewire)",
+    "serves": ".claude/docs/specs/llds/a2ui-renderer.lld.md §5 LLD-C5 + .claude/docs/specs/specs/a2ui-runtime.spec.md SPEC-N2/R5/R4-AC2/N3. Replaces renderer.ts's COARSE INTERIM binding resolver (absolute pointer read off surface.data.value with a whole-surface effect wake) with a per-path memoized-computed resolver that delivers SPEC-N2 fine-grained waking.",
+    "method": "system-decompose, both planes, technical-architecture domain. OUTSIDE-IN = the binding subsystem divided into units by owning file (binding.ts pointer/memo/resolve units · renderer.ts+index.ts rewire unit · binding.test.ts verification units) — the structure. INSIDE-OUT = the per-path-waking capabilities (resolve · per-path wake · equality cutoff · structural sharing · shared-path memo · leak-free · placeholder · parent/child · itemScope-ready · no-regress · anti-vacuous), derived from SPEC-N2/R5/R4/N3 INDEPENDENT of the structure so they can contradict it. `hosts` crosses them. The `slice`/`owner_file`/`wave`/`build`/`acceptance`/`gate` keys overlay the file-disjoint fan-out plan onto the coverage-clean structure (the gate ignores non-node/action/host keys).",
+    "ground_state": "Wave-1 a2ui renderer built + green (parser/dispatch/surface/tree/widget/action/validate/renderer; 355 it-cases repo-wide, canvas green). binding.ts and binding.test.ts DO NOT EXIST. The INTERIM resolver lives inline in renderer.ts: `#makeHostCreateWidget`'s `resolveBinding: (b,s) => resolvePointer(s.data.value, b.path)` reads surface.data DIRECTLY inside the bound-prop effect (widget.ts bindProp), so EVERY bound-prop effect subscribes to the one data signal and re-runs applyProp on EVERY updateDataModel (coarse, correct). `#onUpdateDataModel` already writes per-path via an immutable structural-sharing `setPointer` (whole-replace only when path omitted) — so the WRITE side is already fine-grained; the coarseness is purely on the READ side (no computed between data and the effect). resolvePointer/setPointer are module-private helpers in renderer.ts. The cross-slice seam is ALREADY pinned: widget.ts `WidgetDeps.resolveBinding: (binding:{path:string}, surface) => unknown` + types.ts `CreateWidget` — binding.ts implements this shape, the host adapts to it. surface.ts `Surface.data` is one `signal`; `surface.scope` owns binding effects (disposeSurface => scope.dispose()).",
+    "decisions": "D1 per-path memoized COMPUTEDS over the SINGLE surface.data signal — NOT per-path signals (kernel mechanism: a computed over a pointer-read gives path-granular WAKING via the value-verified Object.is cutoff + structural sharing, NOT path-granular invalidation; see Risks). D2 the memo is a module-private WeakMap<Surface, Map<pointer, ReadonlySignal>> in binding.ts — surface.ts UNTOUCHED (file-disjoint). D3 path computeds created inside surface.scope.run() => disposed by scope.dispose() (leak-free N3). D4 the structural-sharing setPointer is RETAINED (relocated to binding.ts) — it is the cutoff enabler; updateDataModel's write strategy is UNCHANGED, only relocated. D5 resolve(binding, surface, itemScope?) reserves the itemScope param but defers list-item relative resolution to LLD-C6 (G3 repeat gates lists). D6 literal handling STAYS in widget.ts (the isBinding split) — resolve owns only the {path} branch; LLD-C5 §5 prose ('Literal => return as-is') is realized by LLD-C7 widget.ts, a doc-reconciliation flagged for the host. No ADR: the design IMPLEMENTS LLD-C5 + SPEC-N2 as ratified; it does not deviate from the contract."
+  },
+  "_build_legend": {
+    "now": "buildable at current ground state",
+    "shared-edit": "edits a file two slices could both touch — deferred to the lone serial integration slice",
+    "gate": "verified by a script (check + test); judgment-gate where a reviewer/canvas confirms"
+  },
+  "_first_slice": "B1 binding.ts + binding.test.ts — new files, zero collision; the per-path-waking probe (u-test-wake) is the headline DoD. B2 (the renderer.ts + index.ts rewire) is serial after B1 and is the LONE shared/integration edit.",
+  "_waves": {
+    "wave-0-prep": "ALREADY SATISFIED — the cross-slice seam `resolveBinding: (binding:{path:string}, surface) => unknown` was pinned when widget.ts declared WidgetDeps + types.ts pinned CreateWidget. No new prep file needed; B1 implements that fixed shape and B2 adapts to it.",
+    "wave-1": "B1 — author binding.ts (u-pointer, u-memo, u-resolve) + binding.test.ts (u-test-wake, u-test-memo, u-test-leak, u-test-edge). Touches only NEW files => collision-free; one writer for the binding.ts+binding.test.ts tightly-coupled group.",
+    "wave-2": "B2 — the LONE integration slice (serial, last): edit renderer.ts (swap interim resolveBinding => binding.resolve; route #onUpdateDataModel through binding.setPointer; delete dead interim resolvePointer/setPointer) + edit index.ts (re-export binding.ts, matching the per-module barrel pattern). u-regress runs the standing suite + canvas green here."
+  },
+  "_predicted_gates": {
+    "decomp": "python .claude/skills/system-decompose/scripts/coverage_check.py .claude/docs/decompositions/a2ui-binding-perpath.decomp.json --strict  ->  exit 0",
+    "standing": "npm run check && npm test  ->  green (B1 adds binding.test.ts; B2 keeps the 355-case suite + canvas green — no-regression)",
+    "perpath-wake": "binding.test.ts u-test-wake: a change to /a re-runs ONLY /a's widget applyProp; /b's count is unchanged (SPEC-N2). Negative control: route resolve through surface.data.value directly (bypass the memo) MUST turn the '/b count unchanged' assertion RED.",
+    "leak": "binding.test.ts u-test-leak: after disposeSurface, inspect(surface.data).subscribers === 0 (N3)"
+  },
+  "nodes": [
+    { "id": "root", "label": "A2UI binding slice — LLD-C5 per-path waking", "leaf": false },
+
+    { "id": "grp-module", "label": "binding.ts module (the resolver)", "leaf": false },
+    { "id": "u-pointer", "label": "pointer machinery — resolvePointer (absolute RFC-6901 read, undefined on absent step) + setPointer (immutable, structural-sharing set), relocated from renderer.ts", "leaf": true, "slice": "B1", "owner_file": "binding.ts", "wave": 1, "build": "now", "dep": "none (pure functions; lifted verbatim from renderer.ts §module helpers)", "acceptance": "resolvePointer('' )=>doc, leading-non-'/' =>undefined, absent step =>undefined (R4 AC2); setPointer copies ONLY along the path and SHARES untouched sibling subtrees by reference (the cutoff enabler — proven by an identity assert: setPointer(d,'/a',x) leaves d.b === result.b).", "gate": "npm run check && npm test" },
+    { "id": "u-memo", "label": "per-path computed memo — WeakMap<Surface, Map<pointer, ReadonlySignal>>; on miss create computed(()=>resolvePointer(surface.data.value, pointer)) INSIDE surface.scope.run() and store; shared per surface", "leaf": true, "slice": "B1", "owner_file": "binding.ts", "wave": 1, "build": "now", "dep": "u-pointer", "acceptance": "first read of path P creates+owns (scope) one computed; subsequent reads of P (any widget) reuse it (one pointer-walk per path per data change); the computed subscribes to surface.data; the equality cutoff (computed does not bump version when resolvePointer returns an Object.is-equal value) is what delivers SPEC-N2. Created in scope => disposed by scope.dispose() (N3).", "gate": "npm run check && npm test" },
+    { "id": "u-resolve", "label": "resolve(binding:{path:string}, surface, itemScope?) — reads the memoized path-signal's .value (tracking the caller effect); absolute-only; itemScope param RESERVED + deferred to LLD-C6", "leaf": true, "slice": "B1", "owner_file": "binding.ts", "wave": 1, "build": "now", "dep": "u-memo", "acceptance": "signature ≡ the pinned widget.ts WidgetDeps.resolveBinding shape so the host wires `resolveBinding: (b,s) => resolve(b,s)` with ZERO widget.ts change; reading .value inside the bound-prop effect makes the effect depend ONLY on path P's computed; itemScope is typed-but-unused (a relative path with no itemScope resolves as today => undefined). Literal handling is NOT here (stays in widget.ts isBinding split, D6).", "gate": "npm run check && npm test" },
+
+    { "id": "grp-integration", "label": "host rewire (the lone shared edit)", "leaf": false },
+    { "id": "u-rewire", "label": "renderer.ts + index.ts rewire — swap interim resolveBinding => binding.resolve; route #onUpdateDataModel through binding.setPointer; delete dead interim resolvePointer/setPointer; barrel-export binding.ts", "leaf": true, "slice": "B2", "owner_file": "renderer.ts, index.ts", "wave": 2, "build": "shared-edit", "dep": "B1 (imports binding.ts)", "acceptance": "#makeHostCreateWidget's resolveBinding becomes `(b,s) => resolve(b,s)`; #onUpdateDataModel's path-set calls binding.setPointer (whole-replace branch unchanged); the now-dead module-private resolvePointer/setPointer are removed from renderer.ts; index.ts re-exports binding.ts (matching the per-module barrel pattern). The SINGLE file two slices could touch — done once, serial, last.", "gate": "npm run check && npm test" },
+
+    { "id": "grp-verify", "label": "verification (binding.test.ts + the standing gate)", "leaf": false },
+    { "id": "u-test-wake", "label": "per-path-waking test (anti-vacuous) + negative control — change to /a wakes ONLY /a's widget; /b stays asleep; changing /b proves the harness CAN detect a wake", "leaf": true, "slice": "B1", "owner_file": "binding.test.ts", "wave": 1, "build": "now", "dep": "u-resolve", "acceptance": "two widgets bound to disjoint paths /a,/b via a counting stub factory; mount => each applyProp once; updateDataModel{path:'/a'} + await whenFlushed => /a count +1, /b count UNCHANGED (SPEC-N2); control arm: updateDataModel{path:'/b'} => /b count +1 (the harness detects wakes, so the '/b unchanged' assert is meaningful). NEGATIVE CONTROL: rewiring resolve to read surface.data.value directly (bypass the memo) MUST turn the '/b count unchanged' assertion RED — anchored on the unique '/b' counter token, grep-confirm the mutation applied.", "gate": "npm test (the perpath-wake probe + its NC)" },
+    { "id": "u-test-memo", "label": "shared-path memo proof — two bindings to the same path resolve through ONE computed (one pointer walk per data change)", "leaf": true, "slice": "B1", "owner_file": "binding.test.ts", "wave": 1, "build": "now", "dep": "u-memo", "acceptance": "spy/count resolvePointer (or instrument the shared computed): two widgets bound to /x => an updateDataModel touching /x triggers ONE resolvePointer evaluation for the shared computed, not two (memoization, not per-binding re-walk).", "gate": "npm test" },
+    { "id": "u-test-leak", "label": "leak-free teardown (N3) — after disposeSurface, surface.data has zero subscribers", "leaf": true, "slice": "B1", "owner_file": "binding.test.ts", "wave": 1, "build": "now", "dep": "u-memo", "acceptance": "bind N distinct paths => inspect(surface.data).subscribers === (count of distinct paths) [the path computeds subscribe to data]; disposeSurface => inspect(surface.data).subscribers === 0 (scope.dispose() disposed every path computed AND every bound-prop effect).", "gate": "npm test" },
+    { "id": "u-test-edge", "label": "placeholder + parent/child semantics — undefined path => undefined then updates (R4 AC2/R5 AC1); a child-path write wakes a parent-path binding but not a sibling-path binding", "leaf": true, "slice": "B1", "owner_file": "binding.test.ts", "wave": 1, "build": "now", "dep": "u-resolve", "acceptance": "bind /missing => undefined on mount, then updateDataModel{path:'/missing'} updates it; bind /user (parent) + /user/name (child) + /other (sibling): updateDataModel{path:'/user/name'} wakes /user AND /user/name but NOT /other; whole-model replace (path omitted) re-resolves ALL paths.", "gate": "npm test" },
+    { "id": "u-regress", "label": "no-regression gate — the 355-case suite + the A2UI canvas stay green after the host rewire (static-prop path + bound-prop behavior unchanged)", "leaf": true, "slice": "B2", "owner_file": "(standing suite — no new file)", "wave": 2, "build": "gate", "dep": "u-rewire", "acceptance": "npm run check && npm test green; widget.test.ts (its own stub resolver) untouched; renderer.test.ts behavior (rendered text updates on data change) preserved; canvas renders unchanged.", "gate": "npm run check && npm test" }
+  ],
+  "actions": [
+    { "id": "cap-resolve", "label": "resolve a {path} binding to its current value off the surface data model (the read)" },
+    { "id": "cap-perpath-wake", "label": "a data change to ONE path updates only the widgets bound to that path (SPEC-N2)" },
+    { "id": "cap-cutoff", "label": "an unchanged bound path does NOT re-run its widget applyProp on an unrelated data change (Object.is cutoff)" },
+    { "id": "cap-share", "label": "an immutable per-path data set preserves reference identity for untouched subtrees (the cutoff mechanism)" },
+    { "id": "cap-memo", "label": "two bindings to the same path share one computed / one pointer-walk (no redundant resolution)" },
+    { "id": "cap-leakfree", "label": "bindings leave zero live subscribers on surface.data after deleteSurface (SPEC-N3)" },
+    { "id": "cap-placeholder", "label": "an undefined path resolves to undefined (placeholder, R4 AC2) and updates when data arrives (R5 AC1)" },
+    { "id": "cap-parentchild", "label": "a child-path write wakes a parent-path binding; a sibling-path binding stays asleep" },
+    { "id": "cap-itemscope-ready", "label": "the resolve signature accommodates a future list-item scope without building it (deferred to LLD-C6)" },
+    { "id": "cap-no-regress", "label": "the static-prop path + existing suite/canvas behavior is unchanged after the host rewire" },
+    { "id": "cap-anti-vacuous", "label": "the per-path-waking probe has a negative control proving it can go red" }
+  ],
+  "hosts": [
+    { "action": "cap-resolve", "node": "u-resolve" },
+    { "action": "cap-perpath-wake", "node": "u-memo" },
+    { "action": "cap-perpath-wake", "node": "u-resolve" },
+    { "action": "cap-perpath-wake", "node": "u-test-wake" },
+    { "action": "cap-cutoff", "node": "u-memo" },
+    { "action": "cap-cutoff", "node": "u-test-wake" },
+    { "action": "cap-share", "node": "u-pointer" },
+    { "action": "cap-share", "node": "u-rewire" },
+    { "action": "cap-memo", "node": "u-memo" },
+    { "action": "cap-memo", "node": "u-test-memo" },
+    { "action": "cap-leakfree", "node": "u-memo" },
+    { "action": "cap-leakfree", "node": "u-test-leak" },
+    { "action": "cap-placeholder", "node": "u-pointer" },
+    { "action": "cap-placeholder", "node": "u-test-edge" },
+    { "action": "cap-parentchild", "node": "u-pointer" },
+    { "action": "cap-parentchild", "node": "u-test-edge" },
+    { "action": "cap-itemscope-ready", "node": "u-resolve" },
+    { "action": "cap-no-regress", "node": "u-rewire" },
+    { "action": "cap-no-regress", "node": "u-regress" },
+    { "action": "cap-anti-vacuous", "node": "u-test-wake" }
+  ]
+}

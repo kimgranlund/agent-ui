@@ -4,7 +4,7 @@
 # The `attributes[]` block MUST mirror UISliderElement.props (the ...UIRangeElement.props spread:
 # name/disabled/required from formProps, plus min/max/step/value/size from Range-specific props) —
 # the contract↔props trip-wire in slider.test.ts and the frontmatter schema (validateComponentDescriptor)
-# both target this fence. Field set per docs/plan.md §10 / ADR-0004; form participation per ADR-0013;
+# both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; form participation per ADR-0013;
 # geometry per ADR-0042 / ADR-0041; Range-class base per range-element.lld.md.
 tag: ui-slider
 tier: indicator        # geometry size-class (Indicator band — widget box, same ramp as checkbox/switch; geometry.md)

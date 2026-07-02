@@ -3,7 +3,7 @@
 # machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the /site doc.
 # The `attributes[]` block MUST mirror radio-group.ts `static props` (the groupProps = UIFormElement.formProps
 # spread: name/disabled/required) — the contract↔props trip-wire and the frontmatter schema both target
-# this fence. Field set per docs/plan.md §10 / ADR-0004.
+# this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-radio-group
 tier: container        # geometry size-class (not a sized control — a container that holds ui-radio children)
 extends: UIFormElement  # FACE form-associated container (value/validity participation via ElementInternals; ADR-0013)

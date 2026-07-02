@@ -12,12 +12,16 @@ import {
   directive,
   NO_COMMIT,
   mount,
+  FORM_CONNECT_EVENT,
+  FORM_RESET_EVENT,
   type PropType,
   type PropConfig,
   type PropsSchema,
   type ReactiveProps,
   type FormValue,
   type ValidityResult,
+  type FormConnectDetail,
+  type FieldLabelling,
   type RenderContext,
   type DirectiveResult,
 } from './index.ts'
@@ -35,16 +39,26 @@ import {
 // PropType/PropConfig/PropsSchema/ReactiveProps), the form value/verdict types
 // (FormValue/ValidityResult), the two G3 child directives (repeat, watch), AND — since ADR-0023 — the
 // directive-AUTHORING trio (Directive, directive, NO_COMMIT) + the imperative mount() host (with the
-// RenderContext / DirectiveResult types). The props/element wiring seams (finalize, coerceAttribute,
-// observedAttributesFor, propForAttribute) and the codec factories (enumType/jsonType) are internal — NOT
-// re-exported; the template ENTRY (html/render/svg/TemplateResult, the ChildPart engine, prepare) stays
-// internal too — a directive is the only PUBLIC render unit. The package barrel (@agent-ui/components)
-// re-exports the dom surface so consumers reach it.
+// RenderContext / DirectiveResult types). G7 (ADR-0050/0051) adds the `ui-`-prefixed protocol surface:
+// FORM_CONNECT_EVENT/FORM_RESET_EVENT (the event names) + the FormConnectDetail/FieldLabelling types — a
+// registry controller (traits/form-registry.ts) and a consuming control (controls/field/) need these
+// reachable off the barrel without importing `./form.ts` directly. The props/element wiring seams
+// (finalize, coerceAttribute, observedAttributesFor, propForAttribute) and the codec factories
+// (enumType/jsonType) are internal — NOT re-exported; the template ENTRY (html/render/svg/TemplateResult,
+// the ChildPart engine, prepare) stays internal too — a directive is the only PUBLIC render unit. The
+// package barrel (@agent-ui/components) re-exports the dom surface so consumers reach it.
+
+// A registered throwaway subclass — `UIFormElement` cannot be `new`'d directly (jsdom's custom-element
+// registry check fires on the base class constructor same as any unregistered subclass would).
+class ProbeFormEl extends UIFormElement {}
+customElements.define('ui-form-surface-probe', ProbeFormEl)
 
 describe('d-barrel — the dom public surface (D7)', () => {
-  it('a-surface: the runtime (value) exports are EXACTLY the hosts + prop API + directives + the authoring trio + mount', () => {
+  it('a-surface: the runtime (value) exports are EXACTLY the hosts + prop API + directives + the authoring trio + mount + the ADR-0050 protocol events', () => {
     expect(Object.keys(dom).sort()).toEqual([
       'Directive',
+      'FORM_CONNECT_EVENT',
+      'FORM_RESET_EVENT',
       'NO_COMMIT',
       'Types',
       'UIContainerElement',
@@ -107,6 +121,8 @@ describe('d-barrel — the dom public surface (D7)', () => {
     expect(typeof directive).toBe('function') // the directive-factory wrapper
     expect(typeof NO_COMMIT).toBe('symbol') // the DOM-owning directive's sentinel
     expect(typeof mount).toBe('function') // the imperative directive host
+    expect(FORM_CONNECT_EVENT).toBe('ui-form-connect') // the ADR-0050 protocol event names
+    expect(FORM_RESET_EVENT).toBe('ui-form-reset')
 
     // The type exports are proven present by being importable + used as annotations: erased at runtime,
     // so if any were not exported the import at the top of this file would fail `npm run check`.
@@ -116,6 +132,14 @@ describe('d-barrel — the dom public surface (D7)', () => {
     const reactive: ReactiveProps<typeof schema> = { v: 'a' }
     const value: FormValue = 'submitted' // File | string | FormData | null — the setFormValue value type
     const verdict: ValidityResult = { valid: true } // the discriminated validity verdict the base maps to setValidity
+    const labelling: FieldLabelling = { label: null, description: null, error: null } // the ADR-0051 handoff shape
+    const detail: FormConnectDetail = {
+      control: new ProbeFormEl(),
+      signal: new AbortController().signal,
+      value: () => null,
+      validity: () => ({ valid: true }),
+      userInvalid: () => false,
+    } // the ADR-0050 connect-event detail shape
     // RenderContext + DirectiveResult (ADR-0023) typed: mount's signature is (DirectiveResult, Node, ctx?) → cleanup.
     const result: DirectiveResult = repeat([], (k) => k, (k) => k) // repeat() returns a branded DirectiveResult
     const mountFn: (r: DirectiveResult, c: Node, ctx?: RenderContext) => () => void = mount
@@ -127,6 +151,8 @@ describe('d-barrel — the dom public surface (D7)', () => {
     expect(verdict.valid).toBe(true)
     expect(typeof result).toBe('object') // the inert branded result mount commits
     expect(mountFn).toBe(mount)
+    expect(labelling.label).toBe(null)
+    expect(detail.control).toBeInstanceOf(UIFormElement) // ProbeFormEl IS-A UIFormElement
   })
 
   it('a-surface: the package barrel (@agent-ui/components) re-exports the dom surface', () => {

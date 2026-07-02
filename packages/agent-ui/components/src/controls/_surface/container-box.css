@@ -15,6 +15,11 @@
  *     and take `background: inherit` (the box surface) so scrolled content never shows through — trivially
  *     overridden (a child that sets its own background wins). `hr` is a full-bleed divider. `main`/content is
  *     the scroll region between them (it may itself be another container, or a list).
+ *   • Z-DEPTH SCOPE (ADR-0052): `[data-box]` is also its own stacking context (`isolation: isolate` — the one
+ *     purpose-built property: no containing block, no paint side effects). Every descendant z-index (the sticky
+ *     brackets' `z-index: 1` below, a panel's internal chrome) resolves INSIDE the box and can never fight a
+ *     sibling container or the page — no global z ladder can exist. Overlays are unaffected: popover/dialog
+ *     surfaces ride the native TOP LAYER (ADR-0043/0045), which is immune to stacking contexts by spec.
  *
  * Everything is specificity-0 (`:where()`), so an element's own `@scope` block cleanly overrides any of it.
  * Opt-in only: an element is unaffected until it (or its control) marks the surface `[data-box]`.
@@ -24,6 +29,9 @@
 :where([data-box]) {
   --ui-box-inset: 0.25rem; /* 4px — the uniform inset/gap unit; a box may repoint it */
   display: flow-root; /* BFC: child margins collapse to ONE inset between siblings + hold the edge inset */
+  isolation: isolate; /* the box is its own Z-DEPTH SCOPE (ADR-0052): descendant z-indexes (the sticky
+                         brackets below, panel-internal chrome) resolve inside THIS stacking context and
+                         cannot paint over a sibling container — layout BFC + paint scope, one opt-in */
 
   /* ── Region padding system (header / footer / content wrappers) — ruled with Kim ──
    * The named regions carry their OWN internal padding + gap, distinct from the inset margin above:
@@ -34,6 +42,18 @@
   --ui-box-pad-inline: 0.75rem; /* 12px — region inline padding */
   --ui-box-pad-block: 0.25rem; /* 4px — region block padding */
   --ui-box-gap: 0.5rem; /* 8px — gap between a region's own children */
+}
+
+/* Popover-carrier re-assertion (the s13 e2e finding, 2026-07-01): the unconditional `display: flow-root`
+ * above is AUTHOR-origin CSS, and author beats user-agent regardless of specificity — so on a box that is
+ * ALSO a `[popover]` (select/menu/combo-box's panels, ADR-0046), it silently defeats the UA's own
+ * `[popover]:not(:popover-open) { display: none }` hidden-until-shown rule. The bug class: a CLOSED panel
+ * kept participating in layout AND focus (rovingFocus's `tabindex=0` current option stayed real), so Tab
+ * landed inside a closed listbox instead of skipping to the next control. This rule re-asserts the UA
+ * semantics at specificity 0 (`:where`, same as everything else here) — an OPEN popover, or any non-popover
+ * box, keeps `flow-root` from the block above untouched; a component may still deliberately override. */
+:where([data-box][popover]:not(:popover-open)) {
+  display: none;
 }
 
 /* header / footer — the region padding + gap (they are also the full-bleed sticky brackets, set below). A row

@@ -36,6 +36,9 @@ import menuMd from '../../packages/agent-ui/components/src/controls/menu/menu.md
 import selectMd from '../../packages/agent-ui/components/src/controls/select/select.md?raw'
 import comboBoxMd from '../../packages/agent-ui/components/src/controls/combo-box/combo-box.md?raw'
 import calendarMd from '../../packages/agent-ui/components/src/controls/calendar/calendar.md?raw'
+// The G7 form-composition family (ADR-0050/0051): the label/description/error wrapper + the coordination provider.
+import fieldMd from '../../packages/agent-ui/components/src/controls/field/field.md?raw'
+import formProviderMd from '../../packages/agent-ui/components/src/controls/form-provider/form-provider.md?raw'
 
 /** A parsed control descriptor: the structured frontmatter (its attributes-as-API drive the table) + the prose body. */
 export interface ComponentDoc {
@@ -73,6 +76,9 @@ export const loadMenuDoc = (): ComponentDoc => parseDoc(menuMd)
 export const loadSelectDoc = (): ComponentDoc => parseDoc(selectMd)
 export const loadComboBoxDoc = (): ComponentDoc => parseDoc(comboBoxMd)
 export const loadCalendarDoc  = (): ComponentDoc => parseDoc(calendarMd)
+// The G7 form-composition family (ADR-0050/0051 — both tier=container ⇒ {doc, demo}).
+export const loadFieldDoc        = (): ComponentDoc => parseDoc(fieldMd)
+export const loadFormProviderDoc = (): ComponentDoc => parseDoc(formProviderMd)
 
 // ── tier enumeration (for the family overview + tier showcase — a DERIVED member list) ───────────────────────
 // The whole `{name}.md` descriptor set, globbed at build time (Vite resolves `import.meta.glob` statically). The

@@ -26,6 +26,17 @@ describe('container-box.css — the shared box-model foundation', () => {
     expect(CODE).toMatch(/:where\(\[data-box\]\)\s*>\s*\*\s*\{[^}]*margin:\s*var\(--ui-box-inset\)/)
   })
 
+  it('[data-box] is its own Z-DEPTH SCOPE — isolation: isolate on the SAME opt-in rule (ADR-0052)', () => {
+    // The one purpose-built stacking-context property (no containing block, no paint side effects): every
+    // descendant z-index — incl. the sticky brackets' z-index:1 below — resolves INSIDE the box, so no
+    // container's chrome can fight a sibling container or the page (no global z ladder can exist). The
+    // rendered sibling-overlap proof is container-box.browser.test.ts; this pins the declaration.
+    expect(CODE).toMatch(/:where\(\[data-box\]\)\s*\{[^}]*isolation:\s*isolate/)
+    // The sticky brackets stay SMALL and LOCAL (z-index: 1) — meaningful only inside the scope. A large
+    // value appearing here would signal someone re-fighting a global war the isolation was built to end.
+    expect(CODE).not.toMatch(/z-index:\s*(?:[2-9]\d|\d{3,})/)
+  })
+
   it('full-bleed children (the region wrappers + hr/[data-full-bleed]) override the inset to margin:0', () => {
     expect(CODE).toMatch(/:where\(\[data-box\]\)\s*>\s*:where\(header,\s*footer,\s*main,\s*hr,\s*\[data-full-bleed\],\s*\[data-region\]\)\s*\{[^}]*margin:\s*0/)
   })

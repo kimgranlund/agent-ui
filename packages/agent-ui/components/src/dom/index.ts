@@ -15,8 +15,11 @@
 // directive (e.g. `repeat`) into a container WITHOUT the private `html\`\`` entry — what an imperative consumer
 // (the a2ui renderer) needs to invoke AND author directives. `repeat` / `watch` remain the shipped directives.
 export { UIElement } from './element.ts'
-export { UIFormElement } from './form.ts'
-export type { FormValue, ValidityResult } from './form.ts'
+// The ADR-0050/0051 protocol surface (G7): the `ui-form-connect`/`ui-form-reset` event names + the connect
+// detail shape are PUBLIC so a registry controller (traits/form-registry.ts) and a consuming control
+// (controls/field/) can listen/type against them without reaching into `./form.ts` directly.
+export { UIFormElement, FORM_CONNECT_EVENT, FORM_RESET_EVENT } from './form.ts'
+export type { FormValue, ValidityResult, FormConnectDetail, FieldLabelling } from './form.ts'
 // The FACE container surface base (G9, ADR-0015/0016) — NOT form-associated. The shared spreadable surface +
 // flex prop schemas ride its statics (`UIContainerElement.surfaceProps` / `.flexProps`), the ADR-0013 formProps
 // precedent: a subclass folds them into its OWN `static props`, so there is no standalone schema value to

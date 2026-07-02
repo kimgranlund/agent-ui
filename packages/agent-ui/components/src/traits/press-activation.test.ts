@@ -3,8 +3,11 @@ import { UIElement } from '../dom/index.ts'
 import { pressActivation } from './press-activation.ts'
 
 // Phase-1 s4 — the pressActivation trait. Space activates on keyUP (keydown preventDefaults scroll); Enter
-// activates on keydown; disabled() ⇒ inert; listeners ride the host AbortSignal (auto-clean on disconnect);
-// release() is early teardown. Named probes: press-space · press-enter · press-disabled-inert ·
+// activates on keydown, ALSO preventDefault'd (bug-B fix — consumes Enter's default action so it cannot
+// leak to wherever focus lands after a mid-dispatch synchronous cascade, e.g. Enter-on-submit refocusing
+// an invalid sibling field mid-keydown; the Chromium contenteditable-newline corruption an s13 e2e caught);
+// disabled() ⇒ inert; listeners ride the host AbortSignal (auto-clean on disconnect); release() is early
+// teardown. Named probes: press-space · press-enter · press-enter-preventdefault · press-disabled-inert ·
 // press-auto-cleanup · press-release.
 
 class PressEl extends UIElement {
@@ -46,6 +49,15 @@ describe('pressActivation — Space/Enter → click (s4)', () => {
 
     key(el, 'keydown', 'Enter')
     expect(clicks).toBe(1) // Enter activates on keydown
+    el.remove()
+  })
+
+  it('press-enter-preventdefault: Enter keydown is preventDefault\'d (bug-B fix — consumes the default action so it cannot survive to chase a mid-dispatch focus change, e.g. the Chromium contenteditable-newline corruption)', () => {
+    const el = new PressEl()
+    document.body.append(el)
+
+    const kd = key(el, 'keydown', 'Enter')
+    expect(kd.defaultPrevented).toBe(true)
     el.remove()
   })
 

@@ -14,8 +14,11 @@
 //     the flex/grid layout primitives ui-row · ui-column · ui-list · ui-grid; the compound ui-card (whose
 //     family entry transitively self-defines its region sub-elements ui-card-header/-content/-footer); the
 //     compound ui-tabs (transitively self-defines ui-tab/-tab-panel); and ui-modal (native <dialog>).
+//   • Coordination controls — G7 (ADR-0050/ADR-0051): ui-field (the label/description/error wrapper around
+//     ONE slotted form control) and ui-form-provider (the discovery/aggregation layer over UIFormElement
+//     descendants). Neither carries a form value of its own — both extend UIElement directly.
 // A compound's main `.ts` imports its sub-element modules so `export * from './{family}/{family}.ts'` here
-// registers the WHOLE family — importing the barrel self-defines all ~18+ tags.
+// registers the WHOLE family — importing the barrel self-defines all ~20+ tags.
 export * from './button/button.ts'
 export * from './text-field/text-field.ts'
 export * from './text/text.ts'
@@ -51,3 +54,7 @@ export * from './combo-box/combo-box.ts' // form-associated filter combobox (ove
 // Picker controls — Wave 5B (ADR-0048): standalone month-grid date picker; also the popup body
 // for ui-text-field type=date (lazily imported there in slice 5B-3).
 export * from './calendar/calendar.ts'   // form-associated date picker (bespoke 2D grid, UIFormElement base)
+
+// Coordination controls — G7 (ADR-0050/ADR-0051): the labelling wrapper + the aggregation/discovery provider.
+export * from './field/field.ts'               // the label/description/error wrapper (LLD-C4)
+export * from './form-provider/form-provider.ts' // also surfaces FormSubmitDetail (LLD-C7)

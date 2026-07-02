@@ -3,7 +3,7 @@
 # public surface lives HERE (frontmatter); the prose below the fence is the /site doc (Phase 3). The
 # `attributes[]` block MUST mirror button.ts `static props` (variant/size/disabled) — the contract↔props
 # trip-wire (s10) and the frontmatter schema (s9) target this fence; s8 ships a minimal "parses + matches
-# static props" probe. Field set per docs/plan.md §10 / ADR-0004.
+# static props" probe. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-button
 tier: control          # geometry size-class (Control band — full control height; geometry.md §"five size-classes")
 extends: UIElement     # reactive display control, NOT form-associated (face below)

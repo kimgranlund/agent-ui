@@ -278,3 +278,94 @@ describe('UIIndicatorElement — reconnect (zero residue)', () => {
     el.remove()
   })
 })
+
+// ── formReset — the defaultChecked baseline (bug-A fix: Indicator controls never reset) ──────────
+
+describe('UIIndicatorElement — formReset (bug-A fix: defaultChecked baseline)', () => {
+  it('ind-default-checked-false: defaultChecked mirrors the checked state at first connect (false)', () => {
+    const el = make()
+    document.body.append(el)
+    expect(el.defaultChecked).toBe(false)
+    el.remove()
+  })
+
+  it('ind-default-checked-true: defaultChecked captures an initially-checked control (attribute in markup)', () => {
+    const el = make()
+    el.setAttribute('checked', '') // markup-equivalent — set before connect
+    document.body.append(el)
+    expect(el.defaultChecked).toBe(true)
+    el.remove()
+  })
+
+  it('ind-reset-native-path: formResetCallback() (native form.reset() parity) restores checked ← defaultChecked (false baseline)', () => {
+    const el = make()
+    document.body.append(el)
+    el.checked = true
+    expect(el.checked).toBe(true)
+    el.formResetCallback()
+    expect(el.checked).toBe(false) // ← defaultChecked
+    el.remove()
+  })
+
+  it('ind-reset-restores-true-baseline: a control default-checked=true resets BACK to true after being unchecked', () => {
+    const el = make()
+    el.setAttribute('checked', '')
+    document.body.append(el)
+    expect(el.checked).toBe(true)
+    el.checked = false
+    expect(el.checked).toBe(false)
+    el.formResetCallback()
+    expect(el.checked).toBe(true) // ← defaultChecked (true), not false
+    el.remove()
+  })
+
+  it('ind-reset-provider-path: a form-less provider calling formResetCallback() directly gets the identical restore (both reset paths converge on the one hook)', () => {
+    // Both reset paths funnel through the same public platform callback (LLD-C1/dom/form.ts): native
+    // form.reset() (the platform invokes this per FACE member) and a form-less ui-form-provider's direct
+    // call (form-provider.ts's reset()). No jsdom native-<form> plumbing exists to drive the first path
+    // (form.test.ts's own documented jsdom gap) — calling the callback directly IS the proof that both
+    // converge on identical behavior, since there is only ONE hook for either caller to invoke.
+    const el = make()
+    document.body.append(el)
+    el.checked = true
+    el.formResetCallback()
+    expect(el.checked).toBe(false)
+    el.remove()
+  })
+
+  it('ind-reset-silent: formResetCallback() does NOT emit input/change (a reset is not a user edit — text-field parity)', () => {
+    const el = make()
+    document.body.append(el)
+    el.checked = true
+    let inputCount = 0
+    let changeCount = 0
+    el.addEventListener('input', () => inputCount++)
+    el.addEventListener('change', () => changeCount++)
+    el.formResetCallback()
+    expect(el.checked).toBe(false)
+    expect(inputCount).toBe(0)
+    expect(changeCount).toBe(0)
+    el.remove()
+  })
+
+  it('ind-reset-noop-negative-control: a control whose checked never changed resets to the SAME value (no-op)', () => {
+    const el = make()
+    document.body.append(el)
+    expect(el.checked).toBe(false)
+    el.formResetCallback()
+    expect(el.checked).toBe(false) // unchanged — never toggled, nothing to restore
+    el.remove()
+  })
+
+  it('ind-reset-baseline-survives-reconnect: the ORIGINAL default (captured once) survives disconnect→reconnect, not re-snapshotted from a toggled value', () => {
+    const el = make()
+    document.body.append(el) // defaultChecked captured here: false
+    el.checked = true // toggled BEFORE any disconnect
+    el.remove() // disconnect — must NOT re-arm the capture guard
+    document.body.append(el) // reconnect — connected() re-runs; #defaultCaptured must stay true
+    expect(el.defaultChecked).toBe(false) // still the ORIGINAL baseline, not re-snapshotted as `true`
+    el.formResetCallback()
+    expect(el.checked).toBe(false) // restores the true original default
+    el.remove()
+  })
+})

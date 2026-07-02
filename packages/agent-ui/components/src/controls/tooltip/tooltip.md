@@ -4,7 +4,7 @@
 # (frontmatter); the prose below the fence is the /site doc. The `attributes[]` block MUST
 # mirror UITooltipElement.props (open + placement + delay) — the contract↔props trip-wire
 # (tooltip.test.ts) and the frontmatter schema (validateComponentDescriptor) both target this
-# fence. Field set per docs/plan.md §10 / ADR-0004; overlay mechanism per the overlay-controller
+# fence. Field set per .claude/docs/plan.md §10 / ADR-0004; overlay mechanism per the overlay-controller
 # LLD-C1..C4; bindable `open` two-way per ADR-0019; ADR-0043 = the overlay controller gate.
 tag: ui-tooltip
 tier: pattern           # geometry size-class — the panel uses --ui-space padding (Container/surface, NOT a control height)

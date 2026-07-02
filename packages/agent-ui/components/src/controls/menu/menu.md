@@ -4,7 +4,7 @@
 # machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the
 # /site doc. The `attributes[]` block MUST mirror UIMenuElement.props (open + placement) — the
 # contract↔props trip-wire (menu.test.ts) and the frontmatter schema (validateComponentDescriptor)
-# both target this fence. Field set per docs/plan.md §10 / ADR-0004; overlay mechanism per
+# both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; overlay mechanism per
 # the overlay-controller LLD-C1..C4; bindable `open` two-way per ADR-0019.
 tag: ui-menu
 tier: pattern           # geometry size-class — panel uses Container/surface geometry; items use the legacy item-pad (NOT a control height)

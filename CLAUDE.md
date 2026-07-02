@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 TypeScript — carrying over the `rce` architecture: signals reactivity · FACE custom elements ·
 tagged-template rendering · traits. First component family = FACE form controls.
 
-Plan `docs/plan.md` · Goals + per-milestone DoD `docs/goals.md` · Coherence process `docs/process.md` · Standards `docs/references/`
+Plan `.claude/docs/plan.md` · Goals + per-milestone DoD `.claude/docs/goals.md` · Coherence process `.claude/docs/process.md` · Standards `.claude/docs/references/`
 
 ## Commands
 
@@ -27,8 +27,8 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   - `controls/` — `ui-*` FACE controls; one folder per component; self-define on import
 - `packages/agent-ui/shared/` — `@agent-ui/shared`, cross-cutting tokens/styles/utility types. Color
   `tokens.css` adopted (`src/tokens/`, exported as `@agent-ui/shared/tokens.css`); dimensional/runtime tokens land G5
-- `packages/agent-ui/a2ui/` — `@agent-ui/a2ui`, the A2UI layer (team-led, `docs/specs/`); depends on `@agent-ui/components`
-- `docs/` — plan, goals, process, references (repo root) · `*.test.ts` co-located with source
+- `packages/agent-ui/a2ui/` — `@agent-ui/a2ui`, the A2UI layer (team-led, `.claude/docs/specs/`); depends on `@agent-ui/components`
+- `.claude/docs/` — plan, goals, process, references, adr, specs, llds, decompositions, rubrics (agent-scoped project docs) · `*.test.ts` co-located with source
 
 ## Conventions (non-obvious only)
 
@@ -48,5 +48,5 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
 
 - Run `npm run check && npm test` green before treating a change as done.
 
-<!-- Coherence gates (naming/layering/contract-drift/size/zero-native) are scripts + a planned Stop/pre-commit hook, NOT prose rules — see docs/process.md §1. Enforcement lives there, not in this file. -->
-<!-- Architecture detail lives in docs/plan.md; the buildout sequence + DoD in docs/goals.md — referenced as paths, not @-inlined, to keep standing context thin. -->
+<!-- Coherence gates (naming/layering/contract-drift/size/zero-native) are scripts + a planned Stop/pre-commit hook, NOT prose rules — see .claude/docs/process.md §1. Enforcement lives there, not in this file. -->
+<!-- Architecture detail lives in .claude/docs/plan.md; the buildout sequence + DoD in .claude/docs/goals.md — referenced as paths, not @-inlined, to keep standing context thin. -->

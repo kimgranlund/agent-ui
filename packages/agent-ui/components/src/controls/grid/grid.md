@@ -3,7 +3,7 @@
 # surface lives HERE (frontmatter); the prose below the fence is the /site doc. The `attributes[]` block MUST
 # mirror grid.ts `static props` (the ...UIContainerElement.surfaceProps spread — elevation/brightness — plus
 # the single `gap` flexProps entry and `min`) — the contract↔props trip-wire (grid-descriptor.test.ts) and the
-# frontmatter schema both target this fence. Field set per docs/plan.md §10 / ADR-0004; the container surface +
+# frontmatter schema both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; the container surface +
 # auto-fit/minmax layout per ADR-0015 / ADR-0016.
 tag: ui-grid
 tier: layout            # geometry size-class (Container/layout band — gaps off --ui-space × density, no control height; geometry.md "five size-classes")

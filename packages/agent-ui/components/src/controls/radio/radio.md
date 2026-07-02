@@ -3,7 +3,7 @@
 # public surface lives HERE (frontmatter); the prose below the fence is the /site doc. The `attributes[]`
 # block MUST mirror radio.ts `static props` (the UIIndicatorElement.indicatorProps — the ...UIFormElement.formProps
 # spread: name/disabled/required — plus checked/value) — the contract↔props trip-wire and the frontmatter
-# schema both target this fence. Field set per docs/plan.md §10 / ADR-0004.
+# schema both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-radio
 tier: indicator        # geometry size-class (Indicator band — widget box, not full control height; geometry.md)
 extends: UIIndicatorElement  # Indicator-class base (ADR-0042) — boolean form value + checked-state machine + pressActivation toggle

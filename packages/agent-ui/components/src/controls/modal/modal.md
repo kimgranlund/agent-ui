@@ -3,7 +3,7 @@
 # machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the /site doc.
 # The `attributes[]` block MUST mirror modal.ts `static props` (the ...UIContainerElement.surfaceProps spread —
 # elevation/brightness — plus open/persistent) — the contract↔props trip-wire (modal-descriptor.test.ts) and
-# the frontmatter schema both target this fence. Field set per docs/plan.md §10 / ADR-0004; the native-dialog
+# the frontmatter schema both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; the native-dialog
 # modal per ADR-0017; the bindable `open` two-way per ADR-0019.
 tag: ui-modal
 tier: pattern             # geometry size-class — geometry.md lists `dialog` under the Pattern band (the shell uses the --ui-space scale, NO control height)

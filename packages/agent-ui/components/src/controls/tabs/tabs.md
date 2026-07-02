@@ -4,7 +4,7 @@
 # the /site doc and documents all THREE elements (ui-tabs · ui-tab · ui-tab-panel — one folder, one writer). The
 # `attributes[]` block MUST mirror tabs.ts `static props` (the ...UIContainerElement.surfaceProps spread —
 # elevation/brightness — plus the bindable `selected`) — the contract↔props trip-wire (tabs-descriptor.test.ts)
-# targets this fence. Field set per docs/plan.md §10 / ADR-0004; the surface axes per ADR-0015; the two-way
+# targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; the surface axes per ADR-0015; the two-way
 # `selected` bind per ADR-0019 (renderer LLD-C8).
 tag: ui-tabs
 tier: pattern          # geometry size-class — geometry.md "Pattern" (container + control-height rows); tabs is the named example: the interactive tab rows take the CONTROL height, the shell uses the --ui-space ladder

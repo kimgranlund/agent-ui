@@ -174,6 +174,24 @@ export class UIRadioGroupElement extends UIFormElement {
     }
     return { valid: true }
   }
+
+  /**
+   * Form reset — group-level coordination (bug-A fix). Each child radio is its OWN `UIFormElement`
+   * participant with its OWN `formResetCallback` (now fixed, indicator-element.ts) that silently restores
+   * ITS `checked` to ITS `defaultChecked` — but the GROUP owns a SEPARATE `#selectedValue` signal
+   * (`formValue()`/`formValidity()` above), which no radio's own reset can reach. Recompute it here from
+   * every child's `defaultChecked` (a stable, native-parity PUBLIC getter — see UIIndicatorElement) rather
+   * than each child's live `checked`: the platform resets the group and its radios as INDEPENDENT
+   * `UIFormElement`s, in an order this class must not assume (tree order suggests ancestor-first, i.e.
+   * this runs BEFORE the radios' own resets — reading live `checked` here would see PRE-reset values).
+   * `defaultChecked` sidesteps the ordering question entirely: it is a fixed snapshot from each radio's
+   * first connect, unaffected by reset order on either side. Silent — no `change` emitted (a reset is not
+   * a user commit; matches `#commit`'s own emit-on-user-action-only discipline).
+   */
+  protected override formReset(): void {
+    const defaultRadio = this.#radios().find((r) => r.defaultChecked)
+    this.#selectedValue.value = defaultRadio ? defaultRadio.value : null
+  }
 }
 
 if (!customElements.get('ui-radio-group')) customElements.define('ui-radio-group', UIRadioGroupElement)

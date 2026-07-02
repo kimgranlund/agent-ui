@@ -1,0 +1,131 @@
+/* field.css — ui-field, the label/description/error wrapper stylesheet (ADR-0051 · LLD-C5).
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-field)` (specificity 0,0,0) declares the `--ui-field-*` chain: a single
+ *       density-bearing spacing token (`--ui-field-gap`, off `--ui-space-xs` — the label↔control↔description
+ *       rhythm) plus the three part inks/fonts (label / description / error), each a ROLE (`--c-{family}-{role}`)
+ *       or a font-ramp read (`--ui-font-*`) — never a `color-mix` (colour opinions live in the token layer). The
+ *       error ink/font MATCH text-field's own message tokens (`--ui-text-field-message-*`) — one visual voice for
+ *       the ONE error, whichever control renders it. `:has([disabled])` on the slotted control REPOINTS the
+ *       label/description ink to the muted on-surface-variant role (role REPOINT, NOT opacity — tokens.md); kept
+ *       in this `:where()` block (specificity 0, declared after the base) so the @scope block below still reads
+ *       only `--ui-field-*`, same pattern as text-field's/checkbox's own `[disabled]` repoint.
+ *   [2] STYLES BLOCK — `@scope (ui-field)` consumes ONLY `--ui-field-*`. Geometry class: Container/layout (the
+ *       decomp's "STRUCTURE" intent) — NO control height anywhere, NO `[size]` prop/ramp; the host is a column
+ *       flex stack (`row-gap: --ui-field-gap`) and the slotted control brings its own ADR-0021 width floor (the
+ *       field adds none). Parts styled by `[data-part=label|description|error]`; DOM placement (label prepended,
+ *       description/error appended — field.ts) already IS the reading order, so no CSS `order` is needed. The
+ *       error part defaults to `display: none`, shown by `:scope:state(user-invalid) [data-part=error]` PLUS an
+ *       explicit `[hidden]` guard written AFTER it (both (0,3,0) — source order breaks the tie; the guard must
+ *       win so a state flip can't out-race the control's own hide — a frozen m4 repair, do not reorder). Motion:
+ *       an UNCONDITIONAL small transition on the error part (the INDICATOR family pattern — no `:state(ready)`
+ *       gate, because user-invalid is interaction-gated and the error literally cannot show at first paint, so
+ *       the first-paint-flash concern :state(ready) exists for elsewhere never applies here), reduced-motion
+ *       zeroes it. Forced-colors: the inks stay CanvasText (real text, not decorative glyphs — no
+ *       `forced-color-adjust: none`); the error stays distinguishable by presence, not colour alone (WCAG 1.4.1).
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel (s12); NEVER injected from
+ * field.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-field) declares --ui-field-* ════════════════ */
+
+:where(ui-field) {
+  /* Layout rhythm — the ONE density-bearing quantity (label↔control↔description column gap). */
+  --ui-field-gap: var(--ui-space-xs);
+
+  /* Label — the field's own name text, above/beside the slotted control. */
+  --ui-field-label-ink: var(--c-neutral-on-surface);
+  --ui-field-label-font: var(--ui-font-md);
+  --ui-field-label-weight: 500;
+
+  /* Description — the muted helper text under the control. */
+  --ui-field-description-ink: var(--c-neutral-on-surface-variant);
+  --ui-field-description-font: var(--ui-font-sm);
+
+  /* Error — matches text-field's own message voice (--ui-text-field-message-*): one visual voice for
+     the ONE error, whichever control renders it. */
+  --ui-field-error-ink: var(--c-danger);
+  --ui-field-error-font: var(--ui-font-sm);
+}
+
+/* disabled → a role-REPOINT of the label/description ink (NOT opacity, tokens.md canon), keyed off the
+   SLOTTED control's reflected [disabled] attr (the field carries no disabled prop of its own — LLD-C4).
+   :where() holds this at specificity 0 so it wins the cascade by declaration order alone, the same pattern
+   as text-field's/checkbox's own [disabled] repoint block. */
+:where(ui-field:has([disabled])) {
+  --ui-field-label-ink: var(--c-neutral-on-surface-variant);
+  --ui-field-description-ink: var(--c-neutral-on-surface-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-field) consumes ONLY --ui-field-* ════════════════ */
+
+@scope (ui-field) {
+  /* Container/layout geometry class (no control height, no [size] ramp — the radio-group precedent):
+     a column stack, spacing off --ui-space-* × density. The parts' DOM order (label prepended,
+     description/error appended around the slotted control — field.ts) already IS the reading order. */
+  :scope {
+    display: flex;
+    flex-direction: column;
+    row-gap: var(--ui-field-gap);
+    min-inline-size: 0; /* the slotted control brings its own ADR-0021 width floor; the field adds none */
+  }
+
+  :scope [data-part='label'] {
+    color: var(--ui-field-label-ink);
+    font-size: var(--ui-field-label-font);
+    font-weight: var(--ui-field-label-weight);
+  }
+
+  :scope [data-part='description'] {
+    color: var(--ui-field-description-ink);
+    font-size: var(--ui-field-description-font);
+  }
+
+  /* required affordance — pure CSS off the slotted control's reflected [required] attr (LLD-C4/C5); no
+     field-side state duplication. */
+  :scope:has([required]) [data-part='label']::after {
+    content: ' *';
+    color: var(--ui-field-error-ink);
+  }
+
+  /* Error visibility — default hidden; field.ts toggles the host's :state(user-invalid) custom state and
+     the part's [hidden] attribute together (#renderValidity), but the CSS gate is the custom state (the
+     part's own text emptiness is the content guard). Base rule at (0,2,0) carries the ink/font always. */
+  :scope [data-part='error'] {
+    display: none;
+    color: var(--ui-field-error-ink);
+    font-size: var(--ui-field-error-font);
+    transition: color var(--ui-motion-fast) var(--ui-ease-standard); /* unconditional — the INDICATOR pattern: no :state(ready) gate, the error cannot show at first paint (user-invalid is interaction-gated) */
+  }
+
+  /* Shown when the associated control's user-invalid gate is live (LLD-C1's userInvalid() read, mirrored
+     onto this host's own :state(user-invalid) by field.ts's #renderValidity). */
+  :scope:state(user-invalid) [data-part='error'] {
+    display: block;
+  }
+
+  /* The explicit [hidden] guard — written AFTER the state rule above. Both compute specificity (0,3,0),
+     so source order decides; this guard MUST win so field.ts's own hidden toggle (e.g. an empty
+     validationMessage while user-invalid) can always suppress the box. Frozen m4 repair — do not reorder. */
+  :scope [data-part='error'][hidden] {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :scope [data-part='error'] {
+      transition: none; /* accessibility (non-negotiable) — reduced motion zeroes the error transition */
+    }
+  }
+
+  /* Forced colors (WHCM) — label/description/error stay CanvasText (real text content, not decorative
+     glyphs — no forced-color-adjust:none). The error remains distinguishable by PRESENCE, not colour
+     alone (WCAG 1.4.1 — the text IS the cue; --c-danger already degrades to CanvasText's fleet mapping
+     via the token layer, this rule documents the intent rather than overriding a colour that survives). */
+  @media (forced-colors: active) {
+    :scope [data-part='label'],
+    :scope [data-part='description'],
+    :scope [data-part='error'] {
+      color: CanvasText;
+    }
+  }
+}

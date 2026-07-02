@@ -128,7 +128,10 @@ export function renderSlotsTable(d: ParsedDescriptor): HTMLElement | undefined {
  * is read straight from `{name}.md`.
  */
 export function composeDocPage(content: HTMLElement, descriptor: ParsedDescriptor, body: string, specimens?: HTMLElement): void {
-  content.append(renderApiTable(descriptor.attributes))
+  // The Attributes table renders only when the descriptor declares attributes: an attribute-less control
+  // (ui-form-provider — `attributes: []`, a pure coordination element) ships NO vacuous "Attributes" header +
+  // empty table, the same "no empty table" discipline the properties/events/slots sequences already follow.
+  if (descriptor.attributes.length > 0) content.append(renderApiTable(descriptor.attributes))
   for (const table of [renderPropertiesTable(descriptor), renderEventsTable(descriptor), renderSlotsTable(descriptor)]) {
     if (table) content.append(table)
   }

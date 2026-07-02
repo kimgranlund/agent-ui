@@ -3,7 +3,7 @@
 # public surface lives HERE (frontmatter); the prose below the fence is the /site doc (a FOLLOW-UP wave — this wave
 # is the demo switch + the control only, NOT a /site page, per ADR-0025 Consequences). The `attributes[]` block MUST
 # mirror text.ts `static props` (just `variant`) — the contract↔props trip-wire (text-descriptor.test.ts) targets
-# this fence. Field set per docs/plan.md §10 / ADR-0004.
+# this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-text
 tier: display          # geometry size-class (Display band — NO control frame/height; geometry.md "size-classes" + ADR-0025 cl.1: the typographic ramp is the lever, not --ui-height-*)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (face below), NOT a UIContainerElement surface

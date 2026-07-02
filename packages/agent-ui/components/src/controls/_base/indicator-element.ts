@@ -44,6 +44,17 @@ export class UIIndicatorElement extends UIFormElement {
   // so a keydown guard registered BEFORE pressActivation marks the pending Enter-click for suppression.
   #suppressNextClick = false
 
+  // The native-parity reset baseline — `defaultChecked` (LLD-C1 extended, the bug-A fix). Captured ONCE
+  // at the FIRST connect (guarded — a later reconnect must not re-snapshot an already-toggled value; the
+  // text-field `#defaultValue`/`#defaultCaptured` precedent). Reading `this.checked` here is equivalent to
+  // reading the `checked` ATTRIBUTE (native `<input type=checkbox>.defaultChecked` parity): `checked`
+  // REFLECTS (props.ts's outbound reflect fires synchronously on every property write, including the
+  // ADR-0005 property-wins upgrade replay), so `this.hasAttribute('checked') === this.checked` holds at
+  // every point `connected()` can observe it — reading the resolved prop is equivalent and avoids
+  // re-parsing the attribute string.
+  #defaultChecked = false
+  #defaultCaptured = false
+
   /**
    * LLD-C1: platform checkbox semantics — unchecked submits nothing; checked submits `this.value`.
    */
@@ -51,7 +62,25 @@ export class UIIndicatorElement extends UIFormElement {
     return this.checked ? this.value : null
   }
 
+  /**
+   * The reset baseline — native `HTMLInputElement.defaultChecked` parity: a PUBLIC, read-only reflection
+   * of the checked state this control was upgraded/connected with (see `#defaultChecked` above). Exposed
+   * so a coordinating ancestor (`ui-radio-group`) can recompute ITS OWN post-reset state from every
+   * child's default WITHOUT depending on `formResetCallback` invocation order between the group and its
+   * radios (both are separate `UIFormElement` participants the platform resets independently) — reading
+   * this getter is stable regardless of whether the group's or the radio's own reset runs first.
+   */
+  get defaultChecked(): boolean {
+    return this.#defaultChecked
+  }
+
   protected connected(): void {
+    // Seed the reset baseline ONCE from the checked state at first connect (see `#defaultChecked` above).
+    if (!this.#defaultCaptured) {
+      this.#defaultChecked = this.checked
+      this.#defaultCaptured = true
+    }
+
     const ctor = this.constructor as typeof UIIndicatorElement
 
     // LLD-C2: set the ARIA role from the subclass's static declaration. Never a host attribute (FACE).
@@ -128,4 +157,23 @@ export class UIIndicatorElement extends UIFormElement {
    * Checkbox/switch leave it a no-op.
    */
   protected grouped(): void {}
+
+  /**
+   * Form reset → checked ← `defaultChecked` (native `<input type=checkbox/radio>.defaultChecked` parity;
+   * the bug-A fix — this was missing entirely, so every Indicator control ignored BOTH reset paths:
+   * native `form.reset()` and a form-less provider's direct `formResetCallback()` call). Silent — no
+   * `input`/`change` emitted, matching text-field's own `formReset()` (a reset is not a user edit).
+   * `indeterminate` (checkbox-only) is untouched here — a reset restores the boolean `checked` value;
+   * native `<input type=checkbox>` does not reset `indeterminate` either (it is never form-serialized and
+   * carries no default of its own).
+   *
+   * A `ui-radio` inside a `ui-radio-group`: this restores THIS radio's own visual `checked` correctly, but
+   * the GROUP is a SEPARATE `UIFormElement` participant with its OWN `#selectedValue` signal — this reset
+   * alone cannot update it (no click/change event fires). `UIRadioGroupElement` carries its own
+   * `formReset()` override (radio-group.ts) that recomputes `#selectedValue` from every child's
+   * `defaultChecked` getter (above) — stable regardless of which of the two resets the platform runs first.
+   */
+  protected override formReset(): void {
+    this.checked = this.#defaultChecked
+  }
 }

@@ -31,7 +31,15 @@ const resolveRel = (fromDir: string, spec: string): string => {
 }
 const specifiersOf = (src: string): string[] => {
   const out: string[] = []
-  const fromRe = /\b(?:import|export)\b[^\n;]*?\bfrom\s*['"]([^'"]+)['"]/g
+  // No `\n` exclusion (G7 s12 fix): a multi-line destructured import (field.ts's ~8-name clause) previously
+  // fell through this regex entirely (only `;`-bounded, single-line clauses matched), silently truncating the
+  // crawl at that file. But dropping ONLY the `\n` exclusion re-opens a worse hole in this semicolon-free
+  // codebase: a bare `export interface`/`export class` (no `from` clause of its own) would run the non-greedy
+  // scan forward, unbounded, into a LATER unrelated `from '…'` sitting inside a comment (caught here on
+  // text-field.ts: "switching away from 'password'"). Excluding `'`/`"` from the middle span (real import
+  // clauses never contain a quote before their own `from`) closes that: any comment/string quote encountered
+  // first aborts the match, so the scan cannot cross into unrelated later code.
+  const fromRe = /\b(?:import|export)\b[^;'"]*?\bfrom\s*['"]([^'"]+)['"]/g
   const bareRe = /\bimport\s*['"]([^'"]+)['"]/g
   let m: RegExpExecArray | null
   while ((m = fromRe.exec(src))) out.push(m[1])
@@ -229,5 +237,55 @@ describe('ui-card tree-shake — a compound drags its OWN regions but no sibling
     expect(cardLayers('traits/')).toEqual([])
     expect(cardLayers('descriptor/')).toEqual([])
     expect([...card.external]).toEqual([])
+  })
+})
+
+// ── ui-field / ui-form-provider (G7, s12) — the LLD-C1 tree-shake pin: field.ts imports dom ONLY (no
+//    registry, no provider trait); form-provider.ts imports dom + traits/form-registry.ts. Neither imports
+//    the other, so importing one control must not drag the other's graph.
+
+const FIELD_ENTRY = 'controls/field/field.ts'
+const field = crawl(FIELD_ENTRY)
+const fieldLayers = (prefix: string) => [...field.reached].filter((p) => p.startsWith(prefix))
+
+const FORM_PROVIDER_ENTRY = 'controls/form-provider/form-provider.ts'
+const formProvider = crawl(FORM_PROVIDER_ENTRY)
+const formProviderLayers = (prefix: string) => [...formProvider.reached].filter((p) => p.startsWith(prefix))
+
+describe('ui-field tree-shake — dom only, no form-registry trait, no form-provider (G7 s12)', () => {
+  it('reaches its real deps: dom + reactive, and composes NO trait', () => {
+    expect(field.reached.has(FIELD_ENTRY)).toBe(true)
+    expect(field.reached.has('dom/index.ts')).toBe(true)
+    expect(fieldLayers('reactive/').length).toBeGreaterThan(0)
+    expect(fieldLayers('traits/')).toEqual([]) // the field never invokes formRegistry — that's the provider's job
+  })
+
+  it('drags ONLY {controls/field, dom, reactive} — NOT ui-form-provider or its registry trait', () => {
+    const ALLOWED = ['controls/field/', 'dom/', 'reactive/']
+    for (const p of field.reached) {
+      expect(ALLOWED.some((a) => p.startsWith(a)), `unexpected module in field graph: ${p}`).toBe(true)
+    }
+    expect(fieldLayers('controls/form-provider/')).toEqual([])
+    expect(field.reached.has('traits/form-registry.ts')).toBe(false)
+    expect([...field.external]).toEqual([])
+  })
+})
+
+describe('ui-form-provider tree-shake — dom + form-registry trait, NOT ui-field (G7 s12)', () => {
+  it('reaches its real deps: dom + reactive + the form-registry controller', () => {
+    expect(formProvider.reached.has(FORM_PROVIDER_ENTRY)).toBe(true)
+    expect(formProvider.reached.has('dom/index.ts')).toBe(true)
+    expect(formProvider.reached.has('traits/form-registry.ts')).toBe(true)
+    expect(formProviderLayers('reactive/').length).toBeGreaterThan(0)
+  })
+
+  it('drags ONLY {controls/form-provider, dom, traits/form-registry, reactive} — NOT ui-field', () => {
+    const ALLOWED = ['controls/form-provider/', 'dom/', 'traits/', 'reactive/']
+    for (const p of formProvider.reached) {
+      expect(ALLOWED.some((a) => p.startsWith(a)), `unexpected module in form-provider graph: ${p}`).toBe(true)
+    }
+    expect(new Set(formProviderLayers('traits/'))).toEqual(new Set(['traits/form-registry.ts']))
+    expect(formProviderLayers('controls/field/')).toEqual([])
+    expect([...formProvider.external]).toEqual([])
   })
 })

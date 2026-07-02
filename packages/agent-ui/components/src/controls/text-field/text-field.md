@@ -4,7 +4,7 @@
 # The `attributes[]` block MUST mirror text-field.ts `static props` (the ...UIFormElement.formProps spread
 # — name/disabled/required — plus value/label/placeholder/size/readonly) — the contract↔props trip-wire
 # (s10, text-field-descriptor.test.ts) and the frontmatter schema both target this fence. Field set per
-# docs/plan.md §10 / ADR-0004; the form participation + the contenteditable editor part per ADR-0013 / ADR-0014.
+# .claude/docs/plan.md §10 / ADR-0004; the form participation + the contenteditable editor part per ADR-0013 / ADR-0014.
 tag: ui-text-field
 tier: control          # geometry size-class (Control band — full control height; geometry.md "five size-classes")
 extends: UIFormElement  # FACE form-associated control (value/validity participation via ElementInternals; ADR-0013)
@@ -18,7 +18,7 @@ attributes:            # attributes-as-API — mirrors text-field.ts `static pro
   - name: label
     type: string
     default: ''
-    reflect: false     # → the editor's aria-label (the labelling SEAM; the visible label wrapper is ui-field at G7)
+    reflect: false     # → the editor's aria-label (the labelling SEAM; the visible label/description/error wrapper is ui-field, SHIPPED — ADR-0051, controls/field/field.md)
   - name: placeholder
     type: string
     default: ''
@@ -141,7 +141,7 @@ face:
 aria:
   role: textbox          # set on the EDITOR part (data-part=editor), NOT the host — the host carries no role/aria-* attribute (form semantics ride internals)
   roleSource: editor part
-  labelSource: label / aria-label   # the `label` prop → the editor's aria-label (the seam); the visible label/description/error wrapper is ui-field at G7
+  labelSource: label / aria-label   # bare usage: the `label` prop → the editor's aria-label; inside a ui-field (SHIPPED, ADR-0051) applyFieldLabelling overrides this — the field's label/description/error part ids are id-referenced onto the editor's aria-labelledby/aria-describedby instead, and this aria-label yields — see controls/field/field.md
   disabledState: editor aria-disabled + the form-disabled channel   # effectiveDisabled = own disabled || form-disabled (ADR-0013); NOT host ariaDisabled (the ADR-0010 channel is for non-form controls) — ADR-0014 dev#b
   describedBy: editor aria-describedby → a control-managed message node carrying validity().message under :state(user-invalid)   # the WCAG 1.4.1 non-colour validity cue (ADR-0014 cl.4)
 
@@ -249,8 +249,12 @@ Two deviations from the button-derived standard are explicit (ADR-0014):
 and `aria-invalid` appear **only after the first interaction** (blur/change), timed by the `trackUserInvalid`
 controller (ADR-0014 dev#c). Because the invalid cue leans on colour, the editor points at a control-managed
 message node via `aria-describedby` carrying `validity().message` — a non-colour reinforcement per **WCAG
-1.4.1** (ADR-0014 cl.4). The `label` prop becomes the editor's `aria-label` (the labelling seam); the
-visible label / description / error wrapper is `ui-field`'s job at G7.
+1.4.1** (ADR-0014 cl.4). In bare usage the `label` prop becomes the editor's `aria-label`. The visible
+label / description / error wrapper is [`ui-field`](../field/field.md), shipped (ADR-0051): once associated,
+its `applyFieldLabelling` override id-references the field's label/description/error parts directly onto
+the editor's `aria-labelledby`/`aria-describedby` (beating `aria-label` in accname resolution), and the
+editor's own internal message node yields — emptied + hidden — so assistive tech hears exactly one
+announced error, the field's.
 
 ## Form participation
 

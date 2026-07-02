@@ -4,6 +4,10 @@ export { tabbable } from './tabbable.ts'
 export type { TabbableOptions } from './tabbable.ts'
 export { trackUserInvalid } from './track-user-invalid.ts'
 export type { TrackUserInvalidOptions, TrackUserInvalidController } from './track-user-invalid.ts'
+// The form registry controller (G7 — ADR-0050/ADR-0051, LLD-C3): the ui-form-provider discovery/aggregation
+// controller, invoked from a provider's `connected()` — the same trackUserInvalid controller pattern above.
+export { formRegistry } from './form-registry.ts'
+export type { FormRegistryController, FormMember } from './form-registry.ts'
 // Wave 0 PREP stubs — interfaces pinned; implementations are the listbox-roving / overlay-controller /
 // range-element LLD build slices.
 export { rovingFocus } from './roving-focus.ts'

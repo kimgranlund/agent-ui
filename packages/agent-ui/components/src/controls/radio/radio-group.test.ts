@@ -446,6 +446,93 @@ describe('UIRadioGroupElement — C10 signal zero-residue (inspect)', () => {
   })
 })
 
+// ── formReset — group-level coordination (bug-A fix: Indicator controls never reset) ─────────────
+//
+// Each radio is its OWN UIFormElement participant with its OWN formResetCallback (indicator-element.ts,
+// now fixed) that silently restores ITS checked ← defaultChecked. The GROUP owns a SEPARATE
+// #selectedValue signal that no radio's own reset can reach — these probes cover the group's own
+// formReset() override (radio-group.ts), which recomputes #selectedValue from every child's
+// `defaultChecked` getter rather than live `checked` (so it is correct regardless of which of the two
+// resets — the group's or its radios' — the platform runs first; the platform resets FACE members
+// independently, in an order this suite must not assume).
+
+describe('UIRadioGroupElement — formReset (bug-A fix: group-level coordination)', () => {
+  it('group-reset-no-initial-selection: reset restores "nothing selected" when no radio was default-checked', () => {
+    const [group, r1, r2, r3] = buildGroup(3)
+    click(r2)
+    expect(group.testFormValue).toBe('r2')
+
+    // Simulate the platform resetting every FACE member independently (order unspecified).
+    group.formResetCallback()
+    r1.formResetCallback()
+    r2.formResetCallback()
+    r3.formResetCallback()
+
+    expect(group.testFormValue).toBeNull()
+    expect(r1.checked).toBe(false)
+    expect(r2.checked).toBe(false)
+    expect(r3.checked).toBe(false)
+    group.remove()
+  })
+
+  it('group-reset-restores-initial-checked: reset restores the ORIGINALLY-checked radio, not the current selection', () => {
+    const group = makeGroup()
+    const r1 = makeRadio('r1')
+    r1.setAttribute('checked', '') // markup-equivalent default — set before connect
+    const r2 = makeRadio('r2')
+    const r3 = makeRadio('r3')
+    group.append(r1, r2, r3)
+    document.body.append(group)
+
+    expect(r1.checked).toBe(true) // seeded from markup (the group's existing connected()-time seed)
+    expect(group.testFormValue).toBe('r1')
+
+    click(r3) // user selects r3 instead
+    expect(group.testFormValue).toBe('r3')
+    expect(r1.checked).toBe(false)
+
+    group.formResetCallback()
+    r1.formResetCallback()
+    r2.formResetCallback()
+    r3.formResetCallback()
+
+    expect(r1.checked).toBe(true)          // ← its own defaultChecked
+    expect(r3.checked).toBe(false)         // ← its own defaultChecked (false)
+    expect(group.testFormValue).toBe('r1') // ← the group's own recompute from defaultChecked
+
+    group.remove()
+  })
+
+  it('group-reset-order-independent: the group\'s OWN reset alone (before any radio has reset) already recomputes correctly — no dependency on radios resetting first', () => {
+    const group = makeGroup()
+    const r1 = makeRadio('r1')
+    r1.setAttribute('checked', '')
+    const r2 = makeRadio('r2')
+    group.append(r1, r2)
+    document.body.append(group)
+
+    click(r2) // select r2 instead of the default r1 — r1.checked is now false, r2.checked is true
+    expect(group.testFormValue).toBe('r2')
+
+    // ONLY the group resets — r1/r2 have NOT reset their own `checked` (still mid-transition: r2=true).
+    group.formResetCallback()
+    expect(group.testFormValue).toBe('r1') // already correct — read from r1.defaultChecked, not live checked
+
+    group.remove()
+  })
+
+  it('group-reset-negative-control: nothing ever selected — reset is a no-op', () => {
+    const [group, r1, r2, r3] = buildGroup(3)
+    expect(group.testFormValue).toBeNull()
+    group.formResetCallback()
+    expect(group.testFormValue).toBeNull()
+    expect(r1.checked).toBe(false)
+    expect(r2.checked).toBe(false)
+    expect(r3.checked).toBe(false)
+    group.remove()
+  })
+})
+
 // ── descriptor trip-wire (contract↔props) ────────────────────────────────────────────────────────
 //
 // Two layers: (a) STRUCTURAL — validateComponentDescriptor reports ZERO failures.

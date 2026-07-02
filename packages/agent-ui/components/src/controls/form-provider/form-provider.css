@@ -1,0 +1,34 @@
+/* form-provider.css — ui-form-provider, the single-file component stylesheet (ADR-0003). The degenerate
+ * minimal case of the fleet's two-block shape (text-field.css / column.css): a pure coordination element
+ * carries NO visual voice, so both sections collapse to their smallest legal form —
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-form-provider)` declares NOTHING. The provider discovers/aggregates
+ *       `UIFormElement` descendants and composes with an optional native `<form>` (LLD-C7,
+ *       field-form-provider.lld.md); it has no colour, geometry, or spacing opinion of its own, so there is
+ *       no `--ui-form-provider-*` chain to declare. An EMPTY token block is deliberately NOT invented here
+ *       (LLD-C8) — this comment stands in for the section, so the token-hygiene probes need no special
+ *       case: an absent chain is still zero raw `--c-*` leakage, zero non-`--ui-form-provider-*` consumption.
+ *   [2] STYLES BLOCK — `@scope (ui-form-provider)` sets exactly one declaration: `display: block`. An
+ *       unstyled custom element defaults to `inline`, which would lay its slotted block-level descendants
+ *       (fields, buttons) out inline against the host — a first-paint layout defect. No further rule: no
+ *       colour, no spacing, no geometry: the coordination host paints nothing, the slotted subtree owns
+ *       every box.
+ *
+ * Standalone stylesheet — linked via the component-styles barrel (wired in s12); NEVER injected from
+ * form-provider.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-form-provider) declares NOTHING ════════════════ */
+/* Deliberate absence (LLD-C8): a pure coordination element has no visual voice — there is no
+   --ui-form-provider-* token chain to declare, and nothing rides [size]/[tone]/state to repoint (LLD-C7:
+   NO static props on this element — attributes: []). */
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-form-provider) consumes NOTHING ════════════════ */
+
+@scope (ui-form-provider) {
+  :scope {
+    display: block; /* the host's only rule: an unstyled custom element defaults to `inline`, which would
+       lay its slotted block-level descendants (fields, buttons) out inline against it — `block` is the
+       coordination host's structural default, not a styling opinion. */
+  }
+}

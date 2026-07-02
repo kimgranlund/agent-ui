@@ -180,6 +180,22 @@ export const NAV: readonly NavGroup[] = [
       { href: './calendar-doc.html', label: 'API' },
     ],
   },
+  // The G7 form-composition family (ADR-0050/0051) — the field wrapper + the coordination provider, each a
+  // per-component container group (Demo + API), the site-toc container-tier rule.
+  {
+    label: 'ui-field',
+    links: [
+      { href: './field-demo.html', label: 'Demo' },
+      { href: './field-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-form-provider',
+    links: [
+      { href: './form-provider-demo.html', label: 'Demo' },
+      { href: './form-provider-doc.html', label: 'API' },
+    ],
+  },
   {
     links: [
       { href: './a2ui-canvas.html', label: 'A2UI Canvas' },

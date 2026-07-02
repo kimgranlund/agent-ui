@@ -3,7 +3,7 @@
 # public surface lives HERE (frontmatter); the prose below the fence is the /site doc.
 # The `attributes[]` block MUST mirror indicator-element.ts `indicatorProps` (the ...UIFormElement.formProps
 # spread — name/disabled/required — plus checked/value/size) — the contract↔props trip-wire and the frontmatter
-# schema both target this fence. Field set per docs/plan.md §10 / ADR-0004.
+# schema both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 # Indicator-class geometry: the box rides `--ui-compact-{size}` (ADR-0041); the thumb insets
 # `--ui-widget-inset` (2px) so thumb = box − 4px (LLD-C4 / ADR-0041 cl.3 — proven by switch.browser.test.ts,
 # which RATIFIES ADR-0041 as the S2 green gate).

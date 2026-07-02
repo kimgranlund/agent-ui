@@ -167,9 +167,10 @@ describe('site coverage — every shipped component has its required per-tier pa
     )
     // Wave 2 Range family (slider, slider-multi — ADR-0042): tier=range
     expect(COMPONENTS.filter((c) => c.tier === 'range').map((c) => c.name).sort()).toEqual(['slider-multi'])
-    // G9 containers/layout/pattern family (unchanged from the G9 fleet):
+    // Container tier = the G9 surface/form containers (card, radio-group) + the G7 form-composition family
+    // (field, form-provider — both tier=container, ADR-0050/0051). Each requires its {doc, demo} pages.
     expect(COMPONENTS.filter((c) => c.tier === 'container').map((c) => c.name).sort()).toEqual(
-      ['card', 'radio-group'],
+      ['card', 'field', 'form-provider', 'radio-group'],
     )
     expect(COMPONENTS.filter((c) => c.tier === 'layout').map((c) => c.name).sort()).toEqual(
       ['column', 'grid', 'list', 'row'],

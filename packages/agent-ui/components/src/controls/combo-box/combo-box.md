@@ -4,7 +4,7 @@
 # lives HERE (frontmatter); the prose below the fence is the /site doc. The `attributes[]`
 # block MUST mirror UIComboBoxElement.props — the contract↔props trip-wire (combo-box.test.ts)
 # and the frontmatter schema (validateComponentDescriptor) both target this fence. Field set per
-# docs/plan.md §10 / ADR-0004; form participation per ADR-0013; overlay per ADR-0043.
+# .claude/docs/plan.md §10 / ADR-0004; form participation per ADR-0013; overlay per ADR-0043.
 tag: ui-combo-box
 tier: pattern          # geometry size-class — the editor is Control-class; the panel is Container/surface; the options are item-pad rows (the Geometry-by-part three-class pattern from the decomp)
 extends: UIFormElement # form-associated: value + validity participate via ElementInternals (ADR-0013)

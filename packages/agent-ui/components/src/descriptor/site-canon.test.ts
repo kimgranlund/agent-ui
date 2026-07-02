@@ -23,7 +23,7 @@ declare const process: { cwd(): string }
 // COMMENTS ARE NOT CODE. The guard scans the shipped names, so it strips `//`+`/* */` (.ts) and `<!-- -->`
 // (.html) before matching — a historical note in a comment is not a live usage. This is load-bearing here:
 // main.ts STILL documents the pre-rename `slot="icon"` in a `//` comment, yet the page is clean. Scanning raw
-// text would flag that comment (the exact NC-anchor trap decomposing-systems warns about — a dead literal that
+// text would flag that comment (the exact NC-anchor trap system-decompose warns about — a dead literal that
 // survives in a comment); the live bug it replaced lived in CODE (`setAttribute('slot','icon')`) and IS caught.
 
 const ROOT = process.cwd()

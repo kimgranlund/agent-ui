@@ -4,7 +4,7 @@
 # block MUST mirror list.ts `static props` — the two SPREAD sets: UIContainerElement.surfaceProps
 # (elevation/brightness) + UIContainerElement.flexProps (align/justify/gap/wrap) — the contract↔props
 # trip-wire (list-descriptor.test.ts) and the frontmatter schema both target this fence. Field set per
-# docs/plan.md §10 / ADR-0004; the surface axes per ADR-0015, the flex layout grammar per ADR-0016.
+# .claude/docs/plan.md §10 / ADR-0004; the surface axes per ADR-0015, the flex layout grammar per ADR-0016.
 tag: ui-list
 tier: layout            # geometry size-class (Container/layout band — gaps/padding off --ui-space × density; NO control height; geometry.md "five size-classes")
 extends: UIContainerElement  # the FACE container surface base (NOT form-associated — no value/validity; ADR-0015). NOTE: UIContainerElement joins the descriptor schema's BASE_CLASSES in s12 (the integration barrel slice)

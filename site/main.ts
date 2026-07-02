@@ -389,6 +389,38 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // The G7 form-composition family (ADR-0050/0051): the label/description/error wrapper + the coordination
+  // provider (both tier=container → a Demo + a descriptor-derived API doc each).
+  {
+    label: 'ui-field',
+    cards: [
+      {
+        href: './field-demo.html',
+        title: 'Demo',
+        blurb: 'The label/description/error wrapper around a required text-field — blur it empty to reveal the error part, type to clear.',
+      },
+      {
+        href: './field-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-field attributes (label · description), slots, the ADR-0051 labelling seam + option-A bridge, and the event-driven error, from field.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-form-provider',
+    cards: [
+      {
+        href: './form-provider-demo.html',
+        title: 'Demo',
+        blurb: 'A provider coordinating a fielded text-field + checkbox + switch — a live values()/valid() readout, a submit() aggregate, and an event log.',
+      },
+      {
+        href: './form-provider-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-form-provider surface (controls/entries/values/invalid/valid/submit/reset), the change submit event, and the ui-form-connect protocol, from form-provider.md.',
+      },
+    ],
+  },
   {
     cards: [
       {

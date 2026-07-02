@@ -4,7 +4,7 @@
 # public surface lives HERE (frontmatter); the prose below the fence is the /site doc. The
 # `attributes[]` block MUST mirror UICalendarElement.props — the contract↔props trip-wire
 # (calendar.test.ts) and the frontmatter schema (validateComponentDescriptor) both target this
-# fence. Field set per docs/plan.md §10 / ADR-0004; grid navigation per ADR-0048 decision 2;
+# fence. Field set per .claude/docs/plan.md §10 / ADR-0004; grid navigation per ADR-0048 decision 2;
 # form-value per UIFormElement / ADR-0013; [data-box] panel per ADR-0046.
 tag: ui-calendar
 tier: pattern           # a composite picker: nav + 2D grid + form-associated selection
