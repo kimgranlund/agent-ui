@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { signal, effect, inspect, whenFlushed, type Signal } from '@agent-ui/components'
 import { UITextFieldElement } from './text-field.ts'
 import { currencySymbol, unitLabel } from '../../traits/value-codec.ts'
@@ -604,6 +604,33 @@ function makeTyped(type: string): { el: ProbeTextField; editor: HTMLElement; cal
   el.setAttribute('type', type)
   document.body.append(el)
   return { el, editor: editorOf(el), calls }
+}
+
+// ── Popover API stub (jsdom lacks it — the sanctioned overlay-test pattern, mirrors select.test.ts) ──
+// The follow-up first-open change (ADR-0048) moved calendar-popup/`<ui-calendar>` creation off the
+// type-effect and onto the calendar-button's first click — so a jsdom probe that needs `<ui-calendar>`
+// to exist must now CLICK the button rather than read it straight after `whenFlushed()`. `ui-calendar`
+// is never imported in this file (the M1 comment above the date-type describe block), so the click's
+// fast/slow-path branch always takes the slow path (a real dynamic import, not awaited) — `open()` is
+// never called synchronously here, but the stub guards the case where that import resolves before the
+// field disconnects (harmless either way — `cleaned` no-ops a post-disconnect open()).
+beforeAll(() => {
+  const proto = HTMLElement.prototype as unknown as { showPopover?: () => void; hidePopover?: () => void }
+  if (typeof proto.showPopover === 'function') return // real engine — leave the platform alone
+  proto.showPopover = function (this: HTMLElement): void {
+    this.dispatchEvent(Object.assign(new Event('toggle'), { newState: 'open' }))
+  }
+  proto.hidePopover = function (this: HTMLElement): void {
+    this.dispatchEvent(Object.assign(new Event('toggle'), { newState: 'closed' }))
+  }
+})
+
+/** Click the type=date calendar-button, triggering `ensureCalendar()` (first-open creation) — returns
+ *  the now-present `<ui-calendar>`. Synchronous: `ensureCalendar()` runs inline in the click listener. */
+function openCalendar(el: Element): HTMLElement {
+  const btn = el.querySelector('[data-part="calendar-button"]') as HTMLElement
+  btn.click()
+  return el.querySelector('ui-calendar') as HTMLElement
 }
 
 // ── type='text' — identity config (byte-identical baseline) ──────────────────
@@ -1428,7 +1455,10 @@ describe('ui-text-field type change — C10 adornment cleanup', () => {
 // date: codec='date' (dateCodecOptions) + a trailing calendar-button affordance + overlay popup.
 // time: codec='time' (timeCodecOptions). No steppers for either.
 // formValidity uses typeMismatch (not customError) for parse failures.
-// The ui-calendar lazy import is NOT tested here (jsdom, no Popover API) — that rides the browser smoke.
+// The ui-calendar lazy MODULE import is NOT tested here (jsdom, no Popover API) — that rides the
+// browser smoke. The calendar-popup/`<ui-calendar>` ELEMENT is ALSO lazy now (the first-open follow-up
+// to ADR-0048 decision 3): it does not exist until `openCalendar(el)` clicks the calendar-button, so
+// every probe below that reads `<ui-calendar>` or `[data-part="calendar-popup"]` opens first.
 
 describe('ui-text-field type=date — calendar affordance + codec + typeMismatch (Wave 5B)', () => {
   it('has a trailing calendar affordance container (data-role=calendar)', async () => {
@@ -1449,9 +1479,18 @@ describe('ui-text-field type=date — calendar affordance + codec + typeMismatch
     el.remove()
   })
 
-  it('has a calendar popup element (data-part=calendar-popup with a ui-calendar inside)', async () => {
+  it('has NO calendar popup/`<ui-calendar>` until the calendar-button is first clicked (first-open creation)', async () => {
     const { el } = makeTyped('date')
     await whenFlushed()
+    expect(el.querySelector('[data-part="calendar-popup"]'), 'the popup wrapper must not exist before first open').toBeNull()
+    expect(el.querySelector('ui-calendar'), 'the calendar element must not exist before first open').toBeNull()
+    el.remove()
+  })
+
+  it('has a calendar popup element (data-part=calendar-popup with a ui-calendar inside) after first open', async () => {
+    const { el } = makeTyped('date')
+    await whenFlushed()
+    openCalendar(el)
     const popup = el.querySelector('[data-part="calendar-popup"]')
     expect(popup).not.toBeNull()
     expect(popup?.querySelector('ui-calendar')).not.toBeNull()
@@ -1502,7 +1541,7 @@ describe('ui-text-field type=date — calendar affordance + codec + typeMismatch
     const { el } = makeTyped('date')
     await whenFlushed()
 
-    const calEl = el.querySelector('ui-calendar') as HTMLElement
+    const calEl = openCalendar(el)
     expect(calEl).not.toBeNull()
 
     const inputs: Event[] = []
@@ -1525,7 +1564,7 @@ describe('ui-text-field type=date — calendar affordance + codec + typeMismatch
     const { el } = makeTyped('date')
     await whenFlushed()
 
-    const calEl = el.querySelector('ui-calendar') as HTMLElement
+    const calEl = openCalendar(el)
     calEl.dispatchEvent(new CustomEvent('select', { detail: '2024-02-29', bubbles: false }))
 
     // The codec canonical is '2024-02-29'. A valid date — no error.
@@ -1534,10 +1573,11 @@ describe('ui-text-field type=date — calendar affordance + codec + typeMismatch
     el.remove()
   })
 
-  it('C10: calendar popup is REMOVED from the DOM on type-change', async () => {
+  it('C10: calendar popup is REMOVED from the DOM on type-change (after first open)', async () => {
     const { el } = makeTyped('date')
     await whenFlushed()
-    expect(el.querySelector('[data-part="calendar-popup"]'), 'popup must be present while type=date').not.toBeNull()
+    openCalendar(el)
+    expect(el.querySelector('[data-part="calendar-popup"]'), 'popup must be present after first open').not.toBeNull()
 
     el.type = 'text'
     await whenFlushed()
@@ -1546,10 +1586,11 @@ describe('ui-text-field type=date — calendar affordance + codec + typeMismatch
     el.remove()
   })
 
-  it('C10: calendar popup is REMOVED from the DOM on disconnect', async () => {
+  it('C10: calendar popup is REMOVED from the DOM on disconnect (after first open)', async () => {
     const { el } = makeTyped('date')
     await whenFlushed()
-    expect(el.querySelector('[data-part="calendar-popup"]'), 'popup must be present while connected').not.toBeNull()
+    openCalendar(el)
+    expect(el.querySelector('[data-part="calendar-popup"]'), 'popup must be present after first open').not.toBeNull()
 
     el.remove() // disconnect
     // After disconnect the effect cleanup fires via scope.dispose(): calendarPopup.remove() is called.
@@ -1558,11 +1599,23 @@ describe('ui-text-field type=date — calendar affordance + codec + typeMismatch
     el.remove()
   })
 
-  it('C10: switching date→text→date re-creates exactly ONE calendar popup (no accumulation)', async () => {
+  it('C10: calendar popup that is NEVER opened leaves no residue on disconnect (the laziness itself)', async () => {
+    // The direct payoff of first-open creation: a type=date field that the user never interacts with
+    // never built a popup/`<ui-calendar>` at all — disconnect has nothing to remove either way.
     const { el } = makeTyped('date')
     await whenFlushed()
+    expect(el.querySelector('[data-part="calendar-popup"]')).toBeNull()
+    el.remove()
+    expect(el.querySelector('[data-part="calendar-popup"]')).toBeNull()
+  })
+
+  it('C10: switching date→text→date re-creates exactly ONE calendar popup on re-open (no accumulation)', async () => {
+    const { el } = makeTyped('date')
+    await whenFlushed()
+    openCalendar(el) // first open while type=date
     el.type = 'text'; await whenFlushed()
     el.type = 'date'; await whenFlushed()
+    openCalendar(el) // open again on the SECOND date-type run — a fresh ensureCalendar(), not a leak
 
     expect(el.querySelectorAll('[data-part="calendar-popup"]').length).toBe(1)
     expect(el.querySelectorAll('[data-part="calendar-button"]').length).toBe(1)
@@ -1586,9 +1639,9 @@ describe('ui-text-field type=date — calendar affordance + codec + typeMismatch
     // calendar's internal navigation. M1 note: the calendar.ts slow-path import is documented in
     // text-field.md; this file deliberately omits the import to keep ElementInternals errors absent.
     const { el } = makeTyped('date')
-    await whenFlushed() // let the type-effect run so calEl + guard + select listener are wired
+    await whenFlushed() // let the type-effect run so the calendar-button exists
 
-    const calEl = el.querySelector('ui-calendar') as HTMLElement
+    const calEl = openCalendar(el) // first open — wires calEl + the B1 guard + the select listener
     expect(calEl, '<ui-calendar> must be present in the type=date popup').not.toBeNull()
 
     const changes: Event[] = []

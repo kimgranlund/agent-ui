@@ -1,5 +1,5 @@
-// a2ui-canvas.ts — the wave-4 CAPSTONE page (B-canvas). This is the payoff of the whole stack: a literal
-// 2-line A2UI payload is fed through the REAL @agent-ui/a2ui renderer and becomes a LIVE, clickable
+// a2ui-canvas.ts — the wave-4 CAPSTONE page (B-canvas). This is the payoff of the whole stack: a shared
+// 2-line A2UI seed payload is fed through the REAL @agent-ui/a2ui renderer and becomes a LIVE, clickable
 // <ui-button>, and the click round-trips back out as an A2UI `action` client→server message. Nothing here
 // reaches into renderer internals — it uses the public host surface (`createRenderer`) exactly as the server
 // transport would, so the page IS the integration proof the renderer.test.ts asserts, made visible.
@@ -18,32 +18,22 @@ import './a2ui-canvas.css' // page-local layout chrome only (the 3-region flow +
 import { codeBlock } from '../lib/code-block.ts' // shared <pre><code> previews (textContent, no injection)
 import { createRenderer } from '@agent-ui/a2ui'
 import type { RendererHost, A2uiClientMessage, A2uiServerMessage } from '@agent-ui/a2ui'
+import { canvasButtonSeed } from '@agent-ui/a2ui/examples' // the shared seed shelf (ADR-0055) — shown ≡ fed ≡ GATED
 
 // FULL-BLEED: the canvas owns the whole `.app-page` region (no sticky page-header/footer) and lays out its own
 // 3-region view (payload → rendered surface → messages), each region carrying its own heading + blurb. The
 // per-region context replaces a page-level intro; the document <title> in a2ui-canvas.html names the page.
 const { content } = mountFullBleedPage()
 
-// ── the payload: the exact two server messages fed as JSONL (renderer dispatch.ts envelope shape) ──────────
-// Line 1 stands up surface "canvas" on the default `agent-ui` catalog (pre-registered by createRenderer).
-// Line 2 sends one Button root; `action:{action:'submit'}` is the action-prop shape the host's readActionSpec
-// accepts (`{ action: <name> }`), which the host STRIPS from the DOM node and re-wires as click→emitAction.
-// Typed as A2uiServerMessage so this page type-checks against the real wire contract (protocol.ts).
-const SURFACE_ID = 'canvas'
-const CREATE_SURFACE: A2uiServerMessage = {
-  version: 'v1.0',
-  createSurface: { surfaceId: SURFACE_ID, catalogId: 'agent-ui' },
-}
-const UPDATE_COMPONENTS: A2uiServerMessage = {
-  version: 'v1.0',
-  updateComponents: {
-    surfaceId: SURFACE_ID,
-    components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Click me', action: { action: 'submit' } }],
-  },
-}
-// The literal JSONL the renderer ingests: one compact JSON object per line (newline-delimited). Derived from
-// the SAME objects shown in the payload pane, so the displayed input and the fed input can never drift.
-const PAYLOAD: readonly A2uiServerMessage[] = [CREATE_SURFACE, UPDATE_COMPONENTS]
+// ── the payload: the shared canvas-button seed (ADR-0055) fed as JSONL (renderer dispatch.ts envelope shape) ─
+// The two server messages now live ONCE on the example seed shelf (`@agent-ui/a2ui/examples`), extracted from
+// this page's former literal: line 1 stands up surface "canvas" on the default `agent-ui` catalog, line 2 sends
+// one Button root whose `action:{action:'submit'}` the host STRIPS from the DOM node and re-wires as
+// click→emitAction. Importing the seed makes shown ≡ fed ≡ GATED — the SAME objects this page displays and
+// feeds are what `examples.test.ts` validates + render-smokes at check time; drift is now a failing test, not a
+// visual surprise. The seed's `surfaceId` is the `finalize` target.
+const SURFACE_ID = canvasButtonSeed.surfaceId
+const PAYLOAD = canvasButtonSeed.messages
 const jsonl = (message: A2uiServerMessage): string => JSON.stringify(message)
 
 // ── server-initiated callFunction RPC (ADR-0034 / SPEC-R14) — two simulated server calls ───────────────────

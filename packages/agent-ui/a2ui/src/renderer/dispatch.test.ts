@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
-import { dispatch } from './dispatch.ts'
+import { dispatch, DISPATCHED_ENVELOPE_KEYS } from './dispatch.ts'
 import type { DispatchHandlers } from './dispatch.ts'
+import { MESSAGE_KINDS } from './validate.ts'
 import type { A2uiServerMessage } from '../protocol.ts'
 
 // A fresh recording handler set: each kind is a spy so a test can assert exactly one routed and read
@@ -128,5 +129,19 @@ describe('dispatch — version-aware envelope routing (renderer LLD-C2, SPEC-R1/
     // no other handler fired
     expect(h.createSurface).not.toHaveBeenCalled()
     expect(h.actionResponse).not.toHaveBeenCalled()
+  })
+})
+
+// ── dispatch ↔ validator envelope parity (ADR-0055 §1.2 discovered gap, closed) ──────────────────────
+//
+// `dispatch.ts` routes an envelope key ⇒ the shared validator (`validate.ts`) must recognize it as
+// SCHEMA-legal, or a spec-legal stream would be called invalid by the gate that judges it (renderer
+// LLD-C11, corpus SPEC-N1 parity). The two lists are hand-maintained in their respective files (a fully
+// data-driven dispatch would need its own special case for `callFunction`'s differently-shaped body
+// anyway) — this probe is the drift guard: it fails the moment either list gains/loses a key the other
+// doesn't mirror.
+describe('dispatch ↔ validator envelope-key parity (no silent drift)', () => {
+  it('MESSAGE_KINDS (validate.ts) equals DISPATCHED_ENVELOPE_KEYS (dispatch.ts), as sets', () => {
+    expect([...MESSAGE_KINDS].sort()).toEqual([...DISPATCHED_ENVELOPE_KEYS].sort())
   })
 })

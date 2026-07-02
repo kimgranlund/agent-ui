@@ -1,6 +1,12 @@
 # SPEC — A2UI Streaming Pipeline (production · transport · MCP)
 
-> Status: proposed · v0.1 · 2026-06-26 · Layer: SPEC (execution contract)
+> Status: proposed · v0.2 · 2026-07-02 (v0.1 2026-06-26) · Layer: SPEC (execution contract)
+> **v0.2 reconciliation (2026-07-02):** realization boundary pinned — the CONSUMER-side streaming behaviors
+> (line ingestion, arrival-order dispatch, progressive render-on-root, out-of-order tolerance, fault
+> isolation, validate-at-finalize) are owned by the runtime SPEC and are REALIZED in the renderer
+> (`renderer/{parser,renderer,tree}.ts`, ADR-0002). THIS SPEC's own scope — producer, codec, transports,
+> MCP — is entirely unrealized. SPEC-R1's healing note sharpened (below): healing is producer/admission-side
+> only; the renderer never heals.
 > Refines: [`../a2ui-expert-system.prd.md`](../a2ui-expert-system.prd.md) — primarily **PRD-G1, PRD-G7**; closes **PRD-D2** (transport) and contributes to **PRD-D5** (MCP). Target protocol: **A2UI v1.0**.
 > Refined by: [`../llds/a2ui-streaming-pipeline.lld.md`](../llds/a2ui-streaming-pipeline.lld.md). Produces the message stream the renderer ([`./a2ui-runtime.spec.md`](./a2ui-runtime.spec.md)) consumes; conditioned by the corpus ([`./a2ui-training-corpus.spec.md`](./a2ui-training-corpus.spec.md)).
 > Altitude: owns the **producer + transport behavior + message codec contract**. Wiring internals are the LLD's. Requirement IDs file-scoped (`SPEC-R1…`).
@@ -28,7 +34,7 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 
 ### 3.1 Codec & production
 
-**SPEC-R1 — JSONL message codec.** The system MUST encode an ordered A2UI message sequence as line-delimited JSON (one envelope message per line) and decode the same, preserving order. The decoder MUST tolerate partial/streamed input and apply healing parity (`parse_response`/`payload_fixer`) so a model's formatting noise does not break a semantically valid stream. *(→ PRD-G1)*
+**SPEC-R1 — JSONL message codec.** The system MUST encode an ordered A2UI message sequence as line-delimited JSON (one envelope message per line) and decode the same, preserving order. The decoder MUST tolerate partial/streamed input and apply healing parity (`parse_response`/`payload_fixer`) so a model's formatting noise does not break a semantically valid stream. **Healing ownership:** healing lives in THIS codec and in corpus admission (the ONE shared healer, corpus LLD-C7) — the renderer's parser deliberately does NOT heal: a malformed line is a `PARSE` error + stream-continue (runtime SPEC-N4), so client-side provable validity (PRD-G4) is never masked by silent repair. *(→ PRD-G1)*
 - **AC1** *Given* an ordered message sequence, *when* encoded then decoded, *then* the sequence round-trips identically and in order.
 - **AC2** *Given* a streamed input with a markdown-fenced or trailing-comma message, *when* decoded, *then* healing recovers it and the message is delivered (no stream abort).
 

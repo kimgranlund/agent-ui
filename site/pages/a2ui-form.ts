@@ -6,10 +6,10 @@
 // host surface exactly as the server transport would, so the page IS the integration proof made visible.
 //
 // Data flow, left→right (the a2ui-canvas 3-region flow):
-//   [1] PAYLOAD    the three server messages (createSurface · updateDataModel · updateComponents), shown as
-//                  readable JSON DERIVED from the same objects fed to the renderer — so shown ≡ fed, drift is
-//                  structurally impossible.
-//   [2] FORM       the live rendered surface: Card > FormProvider > four Fields (name / email / currency budget /
+//   [1] PAYLOAD    the nine fine-grained server messages (createSurface · a root updateComponents · updateDataModel
+//                  · one updateComponents per field/control · the submit action), shown as readable JSON DERIVED
+//                  from the same objects fed to the renderer — so shown ≡ fed, drift is structurally impossible.
+//   [2] FORM       the live rendered surface: Card > CardContent > FormProvider > four Fields (name / email / currency budget /
 //                  Select plan) + a Switch + a required Checkbox + a submit Button. Below it, a page-IDL panel:
 //                  the submit outcome + the provider's OWN `change` aggregate (LLD-C7 FormSubmitDetail).
 //   [3] MESSAGES   the client→server log: an INVALID submit emits NOTHING (the ADR-0054 gate refuses + the
@@ -35,92 +35,27 @@ import './a2ui-form.css' // page-local layout chrome only (the 3-region flow + t
 import { codeBlock } from '../lib/code-block.ts' // shared <pre><code> previews (textContent, no injection)
 import { createRenderer } from '@agent-ui/a2ui'
 import type { RendererHost, A2uiClientMessage, A2uiServerMessage } from '@agent-ui/a2ui'
+import { generativeFormSeed } from '@agent-ui/a2ui/examples' // the shared, fine-grained form seed (ADR-0055, fork F1)
 import { UIFormProviderElement, type FormSubmitDetail } from '@agent-ui/components/components'
 
 // FULL-BLEED: the page owns the whole `.app-page` region (no sticky page-header/footer); its own CSS lays out the
 // three regions. The document <title> in a2ui-form.html names the page; each region carries its own heading+blurb.
 const { content } = mountFullBleedPage()
 
-// ── the payload: the three server messages fed as JSONL (renderer dispatch.ts envelope shape) ───────────────────
-// Order is createSurface → updateDataModel → updateComponents so the seeded model is present as the components
-// mount (the initial field values render immediately; budget shows 450, the notify switch reads on). Typed as
-// A2uiServerMessage[] so this page type-checks against the real wire contract (protocol.ts). Every prop below is
-// a DECLARED default-catalog row (catalog/default/catalog.json): Field/FormProvider/Checkbox/Switch/Select/Option
-// + the TextField `type/currency/step/min` reach — a payload only a coordinated form catalog can render.
-const SURFACE_ID = 'form'
-
-const CREATE_SURFACE: A2uiServerMessage = {
-  version: 'v1.0',
-  // sendDataModel:true ⇒ a triggered action carries the live data model (SPEC-R8 AC2) — the typed aggregate.
-  createSurface: { surfaceId: SURFACE_ID, catalogId: 'agent-ui', sendDataModel: true },
-}
-
-const UPDATE_DATA_MODEL: A2uiServerMessage = {
-  version: 'v1.0',
-  // The initial model the inputs two-way-bind against under `/form/*`. name/email/plan empty + terms:false ⇒ the
-  // form loads INVALID (name/plan/terms are required) — which is exactly what makes the blocked-submit demo live.
-  updateDataModel: {
-    surfaceId: SURFACE_ID,
-    value: { form: { name: '', email: '', budget: '450', plan: '', notify: true, terms: false } },
-  },
-}
-
-const UPDATE_COMPONENTS: A2uiServerMessage = {
-  version: 'v1.0',
-  updateComponents: {
-    surfaceId: SURFACE_ID,
-    components: [
-      { id: 'root', component: 'Card', children: ['form'] },
-      { id: 'form', component: 'FormProvider', children: ['f_name', 'f_email', 'f_budget', 'f_plan', 'row_toggles', 'actions'] },
-
-      // Field wraps ONE control; its `label` becomes the editor's accessible name (ADR-0051 seam). The `required`
-      // check surfaces the message via the text-field inline-error leg (LLD-C9); `required:true` also drives the
-      // native constraint the gate's reportValidity focuses.
-      { id: 'f_name', component: 'Field', label: 'Full name', child: 'in_name' },
-      {
-        id: 'in_name', component: 'TextField', name: 'name', required: true, value: { path: '/form/name' },
-        checks: [{ call: 'required', args: { value: { path: '/form/name' } }, message: 'Name is required' }],
-      },
-
-      // email: format-only (no `required`) — `email('')` is VALID (empty is not a format error; catalog/functions).
-      // So an empty email does NOT block submit; a non-empty malformed one shows the inline message.
-      { id: 'f_email', component: 'Field', label: 'Email', description: 'We reply within a day', child: 'in_email' },
-      {
-        id: 'in_email', component: 'TextField', name: 'email', type: 'email', value: { path: '/form/email' },
-        checks: [{ call: 'email', args: { value: { path: '/form/email' } }, message: 'Enter a valid email' }],
-      },
-
-      // The Wave-5 TextField reach through the catalog, zero factory code (all 1:1 accessor props): an ISO-4217
-      // currency field with a 50-step and a floor. Seeded 450 in the model.
-      { id: 'f_budget', component: 'Field', label: 'Budget', child: 'in_budget' },
-      { id: 'in_budget', component: 'TextField', name: 'budget', type: 'currency', currency: 'EUR', step: 50, min: '0', value: { path: '/form/budget' } },
-
-      // Select ingests its `[role=option]` children at first connect — the initial payload works by construction
-      // (the renderer assembles children before root-attach). `required` + empty ⇒ a submit blocker.
-      { id: 'f_plan', component: 'Field', label: 'Plan', child: 'in_plan' },
-      {
-        id: 'in_plan', component: 'Select', name: 'plan', required: true, placeholder: 'Choose a plan…',
-        value: { path: '/form/plan' }, children: ['opt_s', 'opt_m', 'opt_l'],
-      },
-      { id: 'opt_s', component: 'Option', value: 'starter', label: 'Starter' },
-      { id: 'opt_m', component: 'Option', value: 'pro', label: 'Pro' },
-      { id: 'opt_l', component: 'Option', value: 'scale', label: 'Scale' },
-
-      // A wrapping Row of the two boolean controls. Both two-way-bind their `checked` (the bindable prop is named
-      // by the CONTROL's own prop — Checkbox.checked / Switch.checked — the ADR-0053 naming law). terms is required.
-      { id: 'row_toggles', component: 'Row', gap: 'lg', wrap: true, children: ['sw_notify', 'cb_terms'] },
-      { id: 'sw_notify', component: 'Switch', name: 'notify', label: 'Email me updates', checked: { path: '/form/notify' } },
-      { id: 'cb_terms', component: 'Checkbox', name: 'terms', label: 'I accept the terms', required: true, checked: { path: '/form/terms' } },
-
-      // The submit-flagged action (ADR-0054): `submit:true` is a CLIENT-consumed flag `#wireAction` reads to gate
-      // the click — it never leaves the client (the emitted `action` wire shape is byte-identical to a plain one).
-      { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_submit'] },
-      { id: 'btn_submit', component: 'Button', variant: 'solid', label: 'Submit', action: { action: 'submit_profile', submit: true } },
-    ],
-  },
-}
-
-const PAYLOAD: readonly A2uiServerMessage[] = [CREATE_SURFACE, UPDATE_DATA_MODEL, UPDATE_COMPONENTS]
+// ── the payload: the shared, FINE-GRAINED generative-form seed (ADR-0055, fork F1) fed as JSONL ─────────────────
+// The form payload now lives ONCE on the example seed shelf (`@agent-ui/a2ui/examples`), extracted from this
+// page's former three-message literal and RE-SLICED into a fine-grained nine-line stream: createSurface → a root
+// updateComponents (Card > CardContent > FormProvider naming every field id) → updateDataModel → one small
+// updateComponents per field/control unit → the submit action. Root arrives EARLY and each field lands in its own
+// line — exactly what makes a stream *feel* progressive (the SAME seed the a2ui-stream page paces line by line, so
+// the two pages can never fork the payload). The seeded model arrives before any field's control mounts, so the
+// initial field values still render immediately (budget shows 450, the notify switch reads on). Importing the seed
+// makes shown ≡ fed ≡ GATED — the SAME objects the payload pane shows and the renderer ingests are what
+// `examples.test.ts` validates + render-smokes at check time; drift is now a failing test. Every prop is a DECLARED
+// default-catalog row (Field/FormProvider/Checkbox/Switch/Select/Option + the TextField `type/currency/step/min`
+// reach) — a payload only a coordinated form catalog can render.
+const SURFACE_ID = generativeFormSeed.surfaceId
+const PAYLOAD = generativeFormSeed.messages
 // The literal JSONL the renderer ingests: one compact JSON object per line. Derived from the SAME objects the
 // payload pane shows, and fed through the real parse path (`ingest`, not `ingestMessage`) — the transport's path.
 const jsonl = (message: A2uiServerMessage): string => JSON.stringify(message)
@@ -162,8 +97,8 @@ function controlButton(label: string, variant: 'solid' | 'soft' | 'ghost', onCli
   return el
 }
 
-// ── [1] PAYLOAD region — the three messages, shown as readable JSON, labelled by envelope key ──────────────────
-const payload = region('1', 'A2UI payload', 'The three server messages fed to the renderer. Every property is a declared default-catalog row — the checks (ADR-0029) ride the TextFields, and the Submit button’s action carries submit:true.')
+// ── [1] PAYLOAD region — the nine messages, shown as readable JSON, labelled by envelope key ───────────────────
+const payload = region('1', 'A2UI payload', 'The nine fine-grained server messages fed to the renderer — the root Card arrives early, then one field lands per line (the same seed the streaming page paces). Every property is a declared default-catalog row — the checks (ADR-0029) ride the TextFields, and the Submit button’s action carries submit:true.')
 for (const [i, message] of PAYLOAD.entries()) {
   const key = Object.keys(message).find((k) => k !== 'version') ?? '?'
   const figure = document.createElement('figure')

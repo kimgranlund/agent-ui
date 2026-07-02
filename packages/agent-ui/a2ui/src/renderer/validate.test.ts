@@ -158,11 +158,58 @@ describe('validateA2ui (renderer LLD-C11, SPEC-R11)', () => {
     )
     expect(v.valid).toBe(true)
   })
+  // Discovered building the ADR-0055 examples gate: a bare relative (list-item-scoped) binding path —
+  // `{path:'name'}` with NO leading digit — is what the shipped list pages actually use (binding.ts's
+  // `scopedPointer`, ADR-0024); the prior rule ("relative paths begin with a digit") false-flagged them.
+  it('accepts a bare relative (list-item-scoped) binding path — e.g. {path:"name"}, no leading digit', () => {
+    const v = validateA2ui(
+      [{ version: 'v1.0', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'Text', text: { path: 'name' } }] } }],
+      demoCatalog,
+    )
+    expect(v).toEqual({ valid: true, failures: [] })
+  })
+  it('POINTER: a malformed ~ escape in a RELATIVE binding is still rejected', () => {
+    const v = validateA2ui(
+      [{ version: 'v1.0', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'Text', text: { path: 'bad~2' } }] } }],
+      demoCatalog,
+    )
+    expect(v.failures).toEqual([{ code: 'POINTER', path: 'root.text' }])
+  })
+  it('a relative (non-"/"-led) updateDataModel.path is STILL rejected — no list scope applies to a data-model push', () => {
+    const v = validateA2ui([{ version: 'v1.0', updateDataModel: { surfaceId: 's', path: 'name' } }], demoCatalog)
+    expect(v.failures).toEqual([{ code: 'POINTER', path: '[0].updateDataModel.path' }])
+  })
 
   // — totality —
   it('is total: never throws on hostile input', () => {
     for (const x of [null, undefined, true, [], [null], [[]], { version: 'v1.0' }]) {
       expect(() => validateA2ui(x, demoCatalog)).not.toThrow()
     }
+  })
+
+  // — callFunction envelope (SPEC-R14 / ADR-0034; the MESSAGE_KINDS parity gap discovered + closed in
+  // ADR-0055 §1.2 — dispatch.ts routed this envelope before the validator recognized it). Envelope-level:
+  // `functionCallId` is a TOP-LEVEL sibling of `callFunction`, no `surfaceId` at all.
+  it('accepts a spec-legal callFunction envelope (functionCallId + callFunction.call; no surfaceId)', () => {
+    const v = validateA2ui(
+      [{ version: 'v1.0', functionCallId: 'fc1', wantResponse: true, callFunction: { call: 'ping' } }],
+      demoCatalog,
+    )
+    expect(v).toEqual({ valid: true, failures: [] })
+  })
+  it('accepts callFunction with args and without wantResponse (both optional)', () => {
+    const v = validateA2ui(
+      [{ version: 'v1.0', functionCallId: 'fc2', callFunction: { call: 'required', args: { value: '' } } }],
+      demoCatalog,
+    )
+    expect(v).toEqual({ valid: true, failures: [] })
+  })
+  it('SCHEMA: callFunction missing the top-level functionCallId', () => {
+    const v = validateA2ui([{ version: 'v1.0', callFunction: { call: 'ping' } }], demoCatalog)
+    expect(v.failures).toEqual([{ code: 'SCHEMA', path: '[0].functionCallId' }])
+  })
+  it('SCHEMA: callFunction.call missing/non-string', () => {
+    const v = validateA2ui([{ version: 'v1.0', functionCallId: 'fc3', callFunction: {} }], demoCatalog)
+    expect(v.failures).toEqual([{ code: 'SCHEMA', path: '[0].callFunction.call' }])
   })
 })

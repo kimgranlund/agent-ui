@@ -27,6 +27,22 @@ import type {
 } from '../protocol.ts'
 
 /**
+ * Every server-message envelope key `dispatch` routes below (LLD-C2). A static mirror of the `if`-chain
+ * (not the loop driver — `callFunction`'s body shape differs from the other five, so a fully data-driven
+ * dispatch would need its own special case anyway) — exported so the shared validator's `MESSAGE_KINDS`
+ * (`validate.ts`) can be probed for parity against it (`dispatch.test.ts`), closing the ADR-0055 §1.2
+ * discovered gap for good: the two lists must never silently drift again.
+ */
+export const DISPATCHED_ENVELOPE_KEYS = [
+  'createSurface',
+  'updateComponents',
+  'updateDataModel',
+  'deleteSurface',
+  'actionResponse',
+  'callFunction',
+] as const
+
+/**
  * The handler per server message kind, injected by the renderer host (LLD-C13). Each receives the
  * typed envelope body plus the message `version`, so a handler can apply version-specific semantics
  * (e.g. map v0.9.x `theme`→`surfaceProperties` when standing up a surface, SPEC-R13 AC1). Handlers

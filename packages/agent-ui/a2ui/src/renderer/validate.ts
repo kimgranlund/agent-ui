@@ -33,7 +33,13 @@ export interface ValidationVerdict {
 
 // `SUPPORTED_VERSIONS` (the pinned protocol set, SPEC-R13) is imported from `protocol.ts` — the single
 // source shared with the dispatch router so the two can't drift on which versions are routable (N6).
-const MESSAGE_KINDS = ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface', 'actionResponse'] as const
+//
+// Exported (not just internal) so a parity probe (dispatch.test.ts) can assert this set equals
+// `dispatch.ts`'s `DISPATCHED_ENVELOPE_KEYS` — the two lists must never drift (ADR-0055 §1.2 discovered
+// gap: `callFunction` was routed by dispatch.ts, SPEC-R14/ADR-0034 shipped, but unrecognized here, so a
+// spec-legal callFunction stream was called SCHEMA-invalid; closed by adding it below, no ADR needed —
+// it completes an already-ratified contract).
+export const MESSAGE_KINDS = ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface', 'actionResponse', 'callFunction'] as const
 // Structural adjacency keys, not bindable catalog props (kept out of pointer scanning).
 const RESERVED = new Set(['id', 'component', 'child', 'children'])
 
@@ -128,6 +134,14 @@ function validateMessage(
       requireStr(body, 'surfaceId', `${loc}.actionResponse`, failures)
       requireStr(body, 'actionId', `${loc}.actionResponse`, failures)
       return
+    case 'callFunction':
+      // SPEC-R14 / ADR-0034: envelope-level (no `surfaceId`) — `functionCallId` is a TOP-LEVEL sibling
+      // of `callFunction`, not nested inside it (unlike every other kind's body-only fields), so it is
+      // checked against `msg`, not `body`. `args`/`wantResponse` are optional and left unchecked (open
+      // schema, matching this validator's Postel stance on other envelopes' optional fields).
+      requireStr(msg, 'functionCallId', loc, failures)
+      requireStr(body, 'call', `${loc}.callFunction`, failures)
+      return
   }
 }
 
@@ -155,10 +169,12 @@ function validateUpdateComponents(
     // Stage 3 — catalog conformance (CATALOG).
     for (const f of validateCatalogConformance(comp, catalog)) failures.push(f)
 
-    // Stage 5 — JSON-pointer validity on bound props (POINTER).
+    // Stage 5 — JSON-pointer validity on bound props (POINTER). A component binding may be ABSOLUTE or
+    // list-item-RELATIVE (ADR-0024) — `isValidBindingPointer`, not the absolute-only `isValidPointer`
+    // `updateDataModel.path` uses (there is no list scope for a document-root data-model write).
     for (const [k, v] of Object.entries(comp)) {
       if (RESERVED.has(k)) continue
-      if (isBinding(v) && !isValidPointer(v.path)) push(failures, 'POINTER', `${comp.id}.${k}`)
+      if (isBinding(v) && !isValidBindingPointer(v.path)) push(failures, 'POINTER', `${comp.id}.${k}`)
     }
   })
 }
@@ -214,13 +230,30 @@ function hasCycle(byId: Map<string, A2uiComponent>): boolean {
 }
 
 // RFC-6901 syntactic validity (NOT resolution — an undefined-but-well-formed path is a runtime
-// placeholder, R4 AC2, never a POINTER error). Absolute pointers begin with `/`; relative
-// child-scope pointers begin with a digit (lenient — list scope is out of this slice).
+// placeholder, R4 AC2, never a POINTER error). ABSOLUTE-ONLY: used for `updateDataModel.path`, which
+// addresses the data-model ROOT directly — a data-model push has no enclosing list-item scope, so a
+// relative (non-`/`-led) form has no meaning here and stays rejected.
 function isValidPointer(p: string): boolean {
   if (p === '') return true
   if (/~(?![01])/.test(p)) return false // a `~` escape must be `~0` or `~1`
-  if (p[0] === '/') return true
-  return /^[0-9]/.test(p)
+  return p[0] === '/'
+}
+
+/**
+ * Syntactic validity for a component-property BINDING's `{path}` (renderer LLD-C5/C6, ADR-0024): either
+ * ABSOLUTE (root-relative, `/`-led — `isValidPointer`'s rule) OR list-item-RELATIVE, resolved against
+ * the enclosing item's scope. The relative grammar mirrors what `binding.ts`'s `scopedPointer` actually
+ * implements — ANY non-empty, non-`/`-led string (a plain identifier or a `/`-separated chain), NOT the
+ * narrower "must start with a digit" placeholder this replaces (discovered building the ADR-0055
+ * examples gate: the shipped `/site` list pages already bind plain relative names like `{path:'name'}`,
+ * `{path:'title'}`, `{path:'items'}` — the old digit-only rule flagged every one of them POINTER-invalid
+ * despite the renderer resolving them correctly at runtime; no ADR needed, a prior rule marked
+ * "lenient — list scope is out of this slice" completed to match the shipped resolver, not reversed).
+ * Both arms share the `~`-escape-validity rule.
+ */
+function isValidBindingPointer(p: string): boolean {
+  if (/~(?![01])/.test(p)) return false // a `~` escape must be `~0` or `~1`
+  return true // '/'-led absolute or bare relative (list-item scope) — both syntactically legal here
 }
 
 // — small helpers —————————————————————————————————————————————————————————————

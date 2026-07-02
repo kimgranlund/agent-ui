@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2UI streaming</title>
+  </head>
+  <body>
+    <!-- The A2UI STREAMING page: the SHARED generative-form seed (@agent-ui/a2ui/examples) is fed line-by-line
+         through the REAL @agent-ui/a2ui renderer (createRenderer) so the surface ASSEMBLES as the JSONL arrives.
+         Demo 1 streams the seed in order (root arrives early → progressive first paint, SPEC-N1); Demo 2 feeds a
+         runtime root-LAST permutation of the SAME objects (blank until root, then full paint — SPEC-R3/R4); an
+         Inject-fault button feeds one page-local malformed line the parser isolates while the stream continues
+         (SPEC-N4). An MPA entry auto-discovered by vite.config.ts's site/**/*.html glob (matches the nav link
+         ./a2ui-stream.html, wired in Wave 3) — no config edit needed. The page module imports pages/_page.ts
+         FIRST for the foundation CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2ui-stream.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,232 @@
+/* a2ui-stream.css — PAGE-LOCAL layout chrome for the A2UI streaming page. Styles the stacked demo sections, the
+ * per-demo toolbar, the two-pane [feed log | live surface] grid, the growing feed log, the stream-status/first-
+ * paint readout, and the client→server log ONLY. The rendered ui-* controls keep their own {name}.css — this
+ * page never restyles a ui-* control. Colours are `--c-*` roles declared by the foundation barrels (imported
+ * first via _page.ts), so the page tracks light/dark; spacing rides literal rem to match a2ui-list.css. Tokens-
+ * only — no raw-literal colours (matching a2ui-canvas.css / a2ui-list.css). */
+
+/* ── a demo section: heading + blurb (+ prompt) + toolbar + the two-pane grid ─────────────────────────────── */
+.demo {
+  margin-block: 2rem 2.5rem;
+}
+
+.demo:first-of-type {
+  margin-block-start: 1rem;
+}
+
+.demo > h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 650;
+}
+
+/* The step badge — a numbered chip, the same affordance a2ui-list / the canvas use for their flow steps. */
+.demo-step {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.6rem;
+  block-size: 1.6rem;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: var(--c-primary-on-primary); /* the canonical ink for a --c-primary fill (button.css) */
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.demo-blurb {
+  margin: 0 0 1rem;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+/* The prompt the agent "received" (Demo 1) — a quiet quote block above the stream, derived from the seed. */
+.demo-prompt {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.9rem;
+  border-inline-start: 3px solid var(--c-neutral-outline);
+  border-radius: 6px;
+  background: var(--c-neutral-surface-low);
+}
+
+.demo-prompt-label {
+  display: block;
+  margin-block-end: 0.25rem;
+  color: var(--c-neutral-on-surface-variant);
+  font-family: var(--ui-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.demo-prompt > p {
+  margin: 0;
+  color: var(--c-neutral-on-surface);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* ── the toolbar: the feed controls (Replay · Step · Inject fault) ─────────────────────────────────────────── */
+.stream-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-block-end: 1rem;
+}
+
+/* ── the two-pane grid: growing feed log on the left, live surface + logs on the right ────────────────────── */
+.demo-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* Stack the panes once there isn't room for two readable columns side by side. */
+@media (max-width: 52rem) {
+  .demo-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── the feed pane: a counter and the log that GROWS as lines are fed (shown ≡ fed) ───────────────────────── */
+.feed-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-inline-size: 0; /* let the <pre> scroll instead of forcing the column wider */
+}
+
+.feed-counter {
+  color: var(--c-neutral-on-surface-variant);
+  font-family: var(--ui-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.feed-log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.feed-log:empty::before {
+  content: 'No lines fed yet.';
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.82rem;
+}
+
+.feed-head {
+  margin-block-end: 0.3rem;
+  font-family: var(--ui-mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--c-neutral-on-surface-variant);
+  white-space: pre;
+}
+
+/* The injected malformed line — marked as the out-of-band fault it is (never a payload line). */
+.feed-log > li[data-kind='fault'] .feed-head {
+  color: var(--c-danger);
+}
+
+.feed-log > li[data-kind='fault'] .code-block {
+  border: 1px dashed var(--c-danger-outline-variant);
+  background: var(--c-danger-surface);
+}
+
+/* ── the output pane: the live surface, the status readout, and the client→server log ─────────────────────── */
+.output-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-inline-size: 0;
+}
+
+.surface {
+  padding: 1.25rem;
+  border: 1px dashed var(--c-neutral-outline);
+  border-radius: 8px;
+  background: var(--c-neutral-surface);
+}
+
+.surface:empty::before {
+  content: 'Nothing painted yet — waiting for the root component.';
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.85rem;
+}
+
+/* The stream-status / first-paint readout — the visible SPEC-N1 metric. */
+.stream-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.status-phase {
+  color: var(--c-neutral-on-surface-variant);
+}
+
+.status-phase[data-phase='done'] {
+  color: var(--c-success);
+  font-weight: 600;
+}
+
+.status-first-paint {
+  color: var(--c-primary);
+  font-family: var(--ui-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* ── the client → server log (actions · the injected PARSE fault) ─────────────────────────────────────────── */
+.msg-log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.msg-log:empty::before {
+  content: 'No client messages yet — the stream is clean. Inject a malformed line, or interact with the form, to see one.';
+  display: block;
+  color: var(--c-neutral-on-surface-variant);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.msg-log > li {
+  margin-block-end: 0.6rem;
+}
+
+.msg-log > li:last-child {
+  margin-block-end: 0;
+}
+
+.msg-head {
+  margin-block-end: 0.3rem;
+  font-family: var(--ui-mono);
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: pre;
+}
+
+.msg-log > li[data-kind='action'] .msg-head {
+  color: var(--c-primary);
+}
+
+.msg-log > li[data-kind='response'] .msg-head {
+  color: var(--c-success);
+}
+
+.msg-log > li[data-kind='error'] .msg-head {
+  color: var(--c-danger);
+}

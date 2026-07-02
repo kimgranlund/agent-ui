@@ -21,6 +21,10 @@ import './a2ui-list.css' // page-local layout chrome only (the demo grid + the l
 import { codeBlock } from '../lib/code-block.ts' // shared <pre><code> previews (textContent, no injection)
 import { createRenderer } from '@agent-ui/a2ui'
 import type { A2uiServerMessage, A2uiClientMessage, A2uiComponent } from '@agent-ui/a2ui'
+// The four dynamic-list payloads now live ONCE on the example seed shelf (ADR-0055), extracted from this page's
+// former literals. Importing them makes shown ≡ fed ≡ GATED — the SAME objects each demo displays and feeds are
+// what `examples.test.ts` validates + render-smokes at check time. The blurbs below stay page-local.
+import { listDisplaySeed, listPeopleSeed, listFormSeed, listNestedSeed } from '@agent-ui/a2ui/examples'
 
 const { content } = mountPage({
   title: 'A2UI dynamic list',
@@ -143,152 +147,34 @@ function demoSection(opts: {
   return section
 }
 
-// ── demo 1 — display list: a leaf Text template over /tags (one ui-text per element, text from a relative path) ─
-const DISPLAY_ID = 'list-display'
-const displayMessages: readonly A2uiServerMessage[] = [
-  { version: 'v1.0', createSurface: { surfaceId: DISPLAY_ID, catalogId: 'agent-ui' } },
-  {
-    version: 'v1.0',
-    updateDataModel: {
-      surfaceId: DISPLAY_ID,
-      value: { tags: [{ name: 'signals' }, { name: 'web-components' }, { name: 'zero-dep' }, { name: 'A2UI' }] },
-    },
-  },
-  {
-    version: 'v1.0',
-    updateComponents: {
-      surfaceId: DISPLAY_ID,
-      components: [
-        { id: 'root', component: 'Row', gap: 'md', wrap: true, children: { path: '/tags', componentId: 'tag_chip' } },
-        { id: 'tag_chip', component: 'Text', variant: 'body', text: { path: 'name' } },
-      ],
-    },
-  },
-]
-
-// ── demo 2 — container template + ${…} interpolation: a Card per /people element, its labels COMPOSED ─────────
-// The headline of ADR-0027: each card's text is a DynamicString TEMPLATE — a literal string carrying `${…}`
-// relative paths — not a single path binding. The agent composes the label from data: `"${name} — ${role}"`
-// mixes a literal em-dash run with two relative-in-scope paths, resolved at /people/{index}/name and /role.
-const PEOPLE_ID = 'list-people'
-const peopleMessages: readonly A2uiServerMessage[] = [
-  { version: 'v1.0', createSurface: { surfaceId: PEOPLE_ID, catalogId: 'agent-ui' } },
-  {
-    version: 'v1.0',
-    updateDataModel: {
-      surfaceId: PEOPLE_ID,
-      value: {
-        people: [
-          { name: 'Ada Lovelace', role: 'Engineer', team: 'Reactive' },
-          { name: 'Grace Hopper', role: 'Architect', team: 'Compiler' },
-          { name: 'Lin Clark', role: 'Writer', team: 'Docs' },
-        ],
-      },
-    },
-  },
-  {
-    version: 'v1.0',
-    updateComponents: {
-      surfaceId: PEOPLE_ID,
-      components: [
-        { id: 'root', component: 'Column', gap: 'md', children: { path: '/people', componentId: 'person_card' } },
-        { id: 'person_card', component: 'Card', elevation: '1', children: ['person_col'] },
-        { id: 'person_col', component: 'Column', gap: 'xs', children: ['person_name', 'person_meta'] },
-        // Two ${…} TEMPLATES, each over RELATIVE item paths — composed by the agent, not single-path binds.
-        { id: 'person_name', component: 'Text', variant: 'h5', text: '${name} — ${role}' },
-        { id: 'person_meta', component: 'Text', variant: 'caption', text: '${role} · ${team} team' },
-      ],
-    },
-  },
-]
-
-// ── demo 3 — interactive list: TextField items whose edits round-trip; an action carries the live data model ──
-const FORM_ID = 'list-form'
-const formMessages: readonly A2uiServerMessage[] = [
-  { version: 'v1.0', createSurface: { surfaceId: FORM_ID, catalogId: 'agent-ui', sendDataModel: true } },
-  {
-    version: 'v1.0',
-    updateDataModel: {
-      surfaceId: FORM_ID,
-      value: {
-        fields: [
-          { label: 'First name', value: 'Ada' },
-          { label: 'Last name', value: 'Lovelace' },
-        ],
-      },
-    },
-  },
-  {
-    version: 'v1.0',
-    updateComponents: {
-      surfaceId: FORM_ID,
-      components: [
-        { id: 'root', component: 'Column', gap: 'md', children: ['fields_col', 'send_btn'] },
-        { id: 'fields_col', component: 'Column', gap: 'sm', children: { path: '/fields', componentId: 'field_input' } },
-        { id: 'field_input', component: 'TextField', label: { path: 'label' }, value: { path: 'value' } },
-        { id: 'send_btn', component: 'Button', variant: 'solid', label: 'Send to agent', action: { action: 'submit' } },
-      ],
-    },
-  },
-]
-
-// ── demo 4 — nested list: a template whose items hold their own (relative-path) template ──────────────────────
-const NESTED_ID = 'list-nested'
-const nestedMessages: readonly A2uiServerMessage[] = [
-  { version: 'v1.0', createSurface: { surfaceId: NESTED_ID, catalogId: 'agent-ui' } },
-  {
-    version: 'v1.0',
-    updateDataModel: {
-      surfaceId: NESTED_ID,
-      value: {
-        sections: [
-          { title: 'Fruit', items: [{ name: 'Apple' }, { name: 'Pear' }] },
-          { title: 'Reactive primitives', items: [{ name: 'signal' }, { name: 'effect' }, { name: 'scope' }] },
-        ],
-      },
-    },
-  },
-  {
-    version: 'v1.0',
-    updateComponents: {
-      surfaceId: NESTED_ID,
-      components: [
-        { id: 'root', component: 'Column', gap: 'md', children: { path: '/sections', componentId: 'section_card' } },
-        { id: 'section_card', component: 'Card', elevation: '1', children: ['section_col'] },
-        { id: 'section_col', component: 'Column', gap: 'sm', children: ['section_title', 'items_row'] },
-        { id: 'section_title', component: 'Text', variant: 'h4', text: { path: 'title' } },
-        // A RELATIVE template path ('items', no leading slash) → /sections/{i}/items — the inner list.
-        { id: 'items_row', component: 'Row', gap: 'md', wrap: true, children: { path: 'items', componentId: 'item_chip' } },
-        { id: 'item_chip', component: 'Text', variant: 'body', text: { path: 'name' } },
-      ],
-    },
-  },
-]
-
+// ── the four demos — each fed straight from its shelf seed (the payloads that were once local to this page) ────
+// demo 1 = listDisplaySeed (leaf Text template over /tags) · demo 2 = listPeopleSeed (a Card subtree per item,
+// labels composed with ${…}) · demo 3 = listFormSeed (interactive items round-trip) · demo 4 = listNestedSeed
+// (a template whose items hold their own). Each demo reads `messages`/`surfaceId` off its seed — no local literal.
 content.append(
   demoSection({
     step: '1',
     title: 'Display list',
     blurb:
       'A Row whose children is a template over /tags. The renderer renders one ui-text per array element, each bound to the relative path “name” — i.e. /tags/{index}/name. Add an element to the array and an item appears, positionally.',
-    messages: displayMessages,
-    surfaceId: DISPLAY_ID,
+    messages: listDisplaySeed.messages,
+    surfaceId: listDisplaySeed.surfaceId,
   }),
   demoSection({
     step: '2',
     title: 'Container template — a subtree per item, labels composed with ${…}',
     blurb:
       'The template componentId is a Card, not a leaf. Each /people element renders the Card’s whole subtree, and its two labels are DynamicString templates — the agent composes each from data rather than binding one path. The heading is “${name} — ${role}” (a literal em-dash run between two relative paths), the caption “${role} · ${team} team”. ${…} resolves relative-in-scope (/people/{index}/name, /role, /team), coerced and concatenated in source order — reactive per embedded path.',
-    messages: peopleMessages,
-    surfaceId: PEOPLE_ID,
+    messages: listPeopleSeed.messages,
+    surfaceId: listPeopleSeed.surfaceId,
   }),
   demoSection({
     step: '3',
     title: 'Interactive items round-trip',
     blurb:
       'Each /fields element renders a ui-text-field bound to a relative value. A relative path resolves the same pointer for READ and WRITE, so committing an edit writes back to /fields/{index}/value. Press “Send to agent” to emit an action carrying the live data model — your edits are in it.',
-    messages: formMessages,
-    surfaceId: FORM_ID,
+    messages: listFormSeed.messages,
+    surfaceId: listFormSeed.surfaceId,
     interactive: true,
   }),
   demoSection({
@@ -296,7 +182,7 @@ content.append(
     title: 'Nested lists compose',
     blurb:
       'A list item is itself a container whose children is a template. The inner template path is relative (“items”), so it resolves under the outer element — /sections/{i}/items/{j}/name. Each section card carries its own independently-sized list.',
-    messages: nestedMessages,
-    surfaceId: NESTED_ID,
+    messages: listNestedSeed.messages,
+    surfaceId: listNestedSeed.surfaceId,
   }),
 )

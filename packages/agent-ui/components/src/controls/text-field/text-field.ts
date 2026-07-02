@@ -278,45 +278,70 @@ export class UITextFieldElement extends UIFormElement {
 
       // Calendar overlay (type=date only): a lazily-imported `<ui-calendar>` in a popover popup.
       // The popup + overlay handle are per-type-effect-run; cleanup below tears them down on type-change.
-      // The dynamic `import('../calendar/calendar.ts')` on first button-click keeps the calendar module
-      // OUT of this file's static import graph — the tree-shake regex crawler cannot match `import()`
-      // expressions, so `controls/calendar/` stays absent from `ui-text-field`'s static graph.
+      // ADR-0048 decision 3 + its first-open follow-up: BOTH the calendar MODULE (the dynamic `import()`)
+      // AND the calendar ELEMENT (the popup wrapper + `<ui-calendar>` + its overlay wiring) are deferred
+      // to the SAME activation moment — the calendar button's first click. Until then a type=date field
+      // carries no popup subtree at all: no extra light-DOM children, nothing to upgrade, no overlay
+      // listeners — a first-paint cost win, and defense-in-depth alongside dom/form.ts's
+      // `#hasFormElementAncestor` guard for the nested-`UIFormElement` phantom-member hazard (the
+      // internal `<ui-calendar>` is now built even later than before). `ensureCalendar()` is the ONE
+      // creation choke point — idempotent, so the 2nd+ click reads the already-built refs back.
       let calendarPopup: HTMLElement | null = null
       let calendarHandle: OverlayHandle | null = null
 
       if (config.affordance === 'calendar' && trailingEl !== null) {
         const calBtn = trailingEl.querySelector('[data-part="calendar-button"]') as HTMLElement
-
-        // Create the calendar popup: a `<ui-calendar>` inside a `[data-part=calendar-popup]` wrapper.
-        // The `<ui-calendar>` is an UNKNOWN element until the lazy import resolves — it upgrades in
-        // place without any re-render (the overlay popup doesn't re-mount the element on upgrade).
-        const calEl = document.createElement('ui-calendar')
-        calendarPopup = document.createElement('div')
-        calendarPopup.setAttribute('data-part', 'calendar-popup')
-        calendarPopup.append(calEl)
-        this.append(calendarPopup)
-
-        // Wire the overlay controller. The connection-scoped `host.listen(popup, 'toggle', …)` inside
-        // overlay() persists until disconnect; the explicit `calendarHandle.cleanup()` in the effect
-        // cleanup fires on type-change (setting `cleaned=true` so the toggle handler becomes a no-op).
-        calendarHandle = overlay(this, {
-          popup: calendarPopup,
-          anchor: calBtn,
-          placement: 'bottom-start',
-          auto: true,
-          focusOnOpen: true,
-        })
-
-        // Event-boundary guard (ADR-0048 §3 — B1): UIElement.emit() fires events with bubbles:true
-        // composed:true, so the calendar's own `change` event bubbles out of <ui-calendar> and reaches
-        // ui-text-field's external listeners BEFORE the field's select→re-emit fires — doubling the
-        // event (consumer sees 2 change per pick; native <input type=date> emits 1). Stop the calendar's
-        // `change` at the calEl boundary; the field remains the sole emitter for its own events.
-        calEl.addEventListener('change', (e) => { e.stopPropagation() }, { signal: typeAc.signal })
-
+        let calEl: HTMLElement | null = null
         let calendarLoaded = false
 
-        // Button click: sync field value/bounds → calendar, then open.
+        // Build the popup + `<ui-calendar>` + overlay wiring + the calendar's own listeners ONCE, on
+        // first activation. The `<ui-calendar>` is an UNKNOWN element until the lazy import resolves —
+        // it upgrades in place without any re-render (the overlay popup doesn't re-mount on upgrade).
+        const ensureCalendar = (): { calEl: HTMLElement; handle: OverlayHandle } => {
+          if (calendarPopup !== null) return { calEl: calEl!, handle: calendarHandle! }
+
+          calEl = document.createElement('ui-calendar')
+          calendarPopup = document.createElement('div')
+          calendarPopup.setAttribute('data-part', 'calendar-popup')
+          calendarPopup.append(calEl)
+          this.append(calendarPopup)
+
+          // Wire the overlay controller. The connection-scoped `host.listen(popup, 'toggle', …)` inside
+          // overlay() persists until disconnect; the explicit `calendarHandle.cleanup()` in the effect
+          // cleanup fires on type-change (setting `cleaned=true` so the toggle handler becomes a no-op).
+          calendarHandle = overlay(this, {
+            popup: calendarPopup,
+            anchor: calBtn,
+            placement: 'bottom-start',
+            auto: true,
+            focusOnOpen: true,
+          })
+
+          // Event-boundary guard (ADR-0048 §3 — B1): UIElement.emit() fires events with bubbles:true
+          // composed:true, so the calendar's own `change` event bubbles out of <ui-calendar> and reaches
+          // ui-text-field's external listeners BEFORE the field's select→re-emit fires — doubling the
+          // event (consumer sees 2 change per pick; native <input type=date> emits 1). Stop the calendar's
+          // `change` at the calEl boundary; the field remains the sole emitter for its own events.
+          calEl.addEventListener('change', (e) => { e.stopPropagation() }, { signal: typeAc.signal })
+
+          // Calendar selection: `select` fires with the chosen ISO date in event.detail (ADR-0048 §2).
+          // The codec's setCanonical keeps the canonical in sync so blur-formatting starts from the new date.
+          calEl.addEventListener('select', (event) => {
+            const iso = (event as CustomEvent<string>).detail
+            if (iso) {
+              this.value = iso
+              this.#codec?.setCanonical(iso)
+              this.emit('input')
+              this.emit('change')
+            }
+            calendarHandle!.close()
+          }, { signal: typeAc.signal })
+
+          return { calEl, handle: calendarHandle }
+        }
+
+        // Button click: build the calendar on first activation (ensureCalendar, idempotent), sync
+        // field value/bounds → calendar, then open.
         // Fast path: if ui-calendar is ALREADY REGISTERED (e.g., statically imported via the barrel or
         // by another part of the app), open synchronously — `customElements.get` is a runtime check,
         // not a static import, so the tree-shaker still excludes calendar.ts from the text-field graph.
@@ -329,33 +354,21 @@ export class UITextFieldElement extends UIFormElement {
         // is correct by code-review (same try-free import chain as `calendarLoaded=true → open()`); the
         // limitation is documented in text-field.md.
         calBtn.addEventListener('click', () => {
+          const { calEl, handle } = ensureCalendar()
           calEl.setAttribute('value', this.value)
           if (this.min) calEl.setAttribute('min', this.min)
           if (this.max) calEl.setAttribute('max', this.max)
 
           if (calendarLoaded || customElements.get('ui-calendar') !== undefined) {
             calendarLoaded = true
-            calendarHandle!.open()
+            handle.open()
           } else {
             // First open: dynamic import (NOT a static import — keeps ui-calendar out of the static graph).
             import('../calendar/calendar.ts').then(() => {
               calendarLoaded = true
-              calendarHandle!.open()
+              handle.open()
             })
           }
-        }, { signal: typeAc.signal })
-
-        // Calendar selection: `select` fires with the chosen ISO date in event.detail (ADR-0048 §2).
-        // The codec's setCanonical keeps the canonical in sync so blur-formatting starts from the new date.
-        calEl.addEventListener('select', (event) => {
-          const iso = (event as CustomEvent<string>).detail
-          if (iso) {
-            this.value = iso
-            this.#codec?.setCanonical(iso)
-            this.emit('input')
-            this.emit('change')
-          }
-          calendarHandle!.close()
         }, { signal: typeAc.signal })
       }
 

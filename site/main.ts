@@ -443,6 +443,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
         title: 'A2UI patterns',
         blurb: 'Five agent-emittable UI constructs, each payload beside its live surface — settings form, confirmation, wizard, dashboard tiles, and a schedule picker.',
       },
+      {
+        href: './a2ui-stream.html',
+        title: 'A2UI streaming',
+        blurb: 'The same payload streamed line-by-line — root-early paints progressively, root-last stays blank until the end, and a malformed line is fault-isolated live (replay + step).',
+      },
     ],
   },
 ]

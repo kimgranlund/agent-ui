@@ -135,6 +135,79 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     }
   })
 
+  it('a BARE card (no region children) renders region-equivalent padding + rhythm (ADR-0056, anti-vacuous)', () => {
+    // Two loose children, no header/content/footer — the wild-payload default. The fallback should apply the
+    // SAME inline/block padding a real region carries (12px/4px) plus the 8px content-rhythm gap between them.
+    const bare = mount('<ui-card><div>First</div><div>Second</div></ui-card>')
+    const bareStyle = getComputedStyle(bare)
+    expect(px(bareStyle.paddingLeft), 'bare card inline padding is not ~12px').toBeCloseTo(12, 0)
+    expect(px(bareStyle.paddingTop), 'bare card block padding is not ~4px').toBeCloseTo(4, 0)
+    expect(px(bareStyle.rowGap), 'bare card content rhythm is not ~8px').toBeCloseTo(8, 0)
+
+    // anti-vacuous vs a region card: a card WITH a real region does NOT get the fallback on its OWN box (its
+    // own padding stays the box-model 0 — the region itself carries the padding, not the card).
+    const withRegion = mount('<ui-card><ui-card-content>Body</ui-card-content></ui-card>')
+    expect(px(getComputedStyle(withRegion).paddingLeft), 'region-bearing card padding is not the box-model 0').toBe(0)
+  })
+
+  it('a region-bearing card is BYTE-IDENTICAL to the pre-ADR-0056 shape (negative control, no regression)', () => {
+    // The exact case card.browser.test.ts already prints elsewhere (surface + box-model tests) — pinned again
+    // here as the explicit negative control for THIS leg: :has() finds ui-card-content, so the fallback never
+    // engages, and the card's own box stays zero-padding/zero-gap (the ADR-0046 box-model, unchanged).
+    const card = mount('<ui-card><ui-card-content>Body</ui-card-content></ui-card>')
+    const style = getComputedStyle(card)
+    expect(px(style.paddingLeft)).toBe(0)
+    expect(px(style.paddingTop)).toBe(0)
+    expect(px(style.rowGap) || 0).toBe(0)
+  })
+
+  it('the STREAMING flip: a late-arriving ui-card-header drops the fallback + the region grid takes over', () => {
+    // The exact case that ruled out a factory/mount-time decision (ADR-0056 alternative (c)): a card starts
+    // bare (streamed with no regions yet) and a header streams in AFTER. The :has() re-evaluation must catch
+    // it live, with no double padding at any point.
+    const card = mount('<ui-card><div>Body</div></ui-card>')
+    expect(px(getComputedStyle(card).paddingLeft), 'bare card did not get the fallback padding').toBeCloseTo(12, 0)
+
+    const header = document.createElement('ui-card-header')
+    header.textContent = 'Title'
+    card.prepend(header) // a late-arriving region child, same as a streamed CardHeader landing after the body
+
+    expect(px(getComputedStyle(card).paddingLeft), 'the fallback did not drop once a region child arrived').toBe(0)
+    expect(trackCount(card), 'the presence-driven row template did not take over post-flip').toBe(2) // auto 1fr
+  })
+
+  it('MIXED composition (a region PLUS a loose sibling) gets NO fallback — regions present, author owns it', () => {
+    const mixed = mount('<ui-card><ui-card-content>Body</ui-card-content><div>Loose</div></ui-card>')
+    // :has() finds ui-card-content — the fallback stays off; the card's own box is unchanged box-model 0.
+    expect(px(getComputedStyle(mixed).paddingLeft), 'mixed composition wrongly got the fallback padding').toBe(0)
+  })
+
+  it('a DIRECT card > card nesting (no region wrapper, outer card bare) stays the pre-existing manual case — ADR-0056 re-proof', () => {
+    // ADR-0056 re-proof (the ADR names this explicitly as an open question — verify which way it resolves):
+    // a card nested DIRECTLY inside another card (no ui-card-content between) matches BOTH `:where(ui-card)`
+    // (declaring its own --ui-card-inner-radius) AND its parent's `:where(ui-card) > *` publish rule (setting
+    // --ui-card-child-radius directly ON it) — a genuine multi-property CSS CYCLE
+    // (radius → child-radius → inner-radius → radius) that collapses the nested radius to 0, independent of
+    // any padding value. This is PRE-EXISTING (ADR-0018), not something ADR-0056 introduces: the region-less
+    // fallback only ever sets padding/gap, never touches the radius chain — so direct nesting stays exactly
+    // the documented manual-reseed case, whether or not the outer (bare) card now also carries fallback
+    // padding. Measured, not assumed: the fallback's OWN leg (the padding) still applies independently.
+    const root = mount('<ui-card style="--ui-card-radius: 32px"><ui-card>nested, no region wrapper</ui-card></ui-card>')
+    const nested = root.querySelector('ui-card') as HTMLElement
+
+    expect(radiusPx(root), 'root radius did not reseed to 32px').toBeCloseTo(32, 0)
+    // the region-less fallback (an unrelated, independent leg) still applies its own padding to the bare outer
+    // card even though its radius chain doesn't reach the nested card cleanly.
+    expect(px(getComputedStyle(root).paddingLeft), 'the bare outer card lost its own fallback padding').toBeCloseTo(12, 0)
+    // the pre-existing cycle still collapses the DIRECT nested card's radius — unchanged by ADR-0056
+    expect(radiusPx(nested), 'direct nesting unexpectedly escaped the pre-existing radius cycle (ADR-0018)').toBe(0)
+
+    // the documented workaround (an explicit border-radius reseed) still recovers the radius under the
+    // fallback — the manual case remains manually fixable, it is simply not automatic.
+    nested.style.setProperty('--ui-card-radius', '10px')
+    expect(radiusPx(nested), 'an explicit reseed did not recover the radius under the fallback').toBeCloseTo(10, 0)
+  })
+
   it('forced-colors keeps the card border visible — Chromium emulates (CDP); WebKit asserts the baseline', async () => {
     const card = mount('<ui-card><ui-card-content>Body</ui-card-content></ui-card>')
 

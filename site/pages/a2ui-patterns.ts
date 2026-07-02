@@ -24,6 +24,17 @@ import './a2ui-patterns.css' // page-local layout chrome only (the demo grid + t
 import { codeBlock } from '../lib/code-block.ts' // shared <pre><code> previews (textContent, no injection)
 import { createRenderer } from '@agent-ui/a2ui'
 import type { A2uiServerMessage, A2uiClientMessage } from '@agent-ui/a2ui'
+// The five pattern payloads now live ONCE on the example seed shelf (ADR-0055), extracted from this page's former
+// literals. Importing them makes shown ≡ fed ≡ GATED — the SAME objects each demo displays and feeds are what
+// `examples.test.ts` validates + render-smokes at check time. The hand-authored pedagogy (blurb/proves/teaches/
+// toneGap/hint below) stays page-local — it is teaching prose, not payload data.
+import {
+  patternSettingsSeed,
+  patternConfirmSeed,
+  patternWizardSeed,
+  patternDashboardSeed,
+  patternScheduleSeed,
+} from '@agent-ui/a2ui/examples'
 
 const { content } = mountPage({
   title: 'A2UI patterns',
@@ -178,220 +189,18 @@ function patternSection(opts: {
   return section
 }
 
-// ── P1 — settings form: Field-wrapped controls + Switch toggles under a FormProvider; submit gated ───────────
-// The everyday coordinated-form ask. Inputs two-way-bind under /settings/*; `sendDataModel: true` makes a valid
-// submit's action carry the live typed aggregate. The submit Button's action is `submit: true` — a CLIENT-only
-// flag the renderer reads to gate the click on the FormProvider's own validity (ADR-0054): all members valid →
-// the action emits with the aggregate; a required field left empty → NO emit + first-invalid focus.
-const SETTINGS_ID = 'pattern-settings'
-const settingsMessages: readonly A2uiServerMessage[] = [
-  { version: 'v1.0', createSurface: { surfaceId: SETTINGS_ID, catalogId: 'agent-ui', sendDataModel: true } },
-  {
-    version: 'v1.0',
-    updateDataModel: {
-      surfaceId: SETTINGS_ID,
-      value: { settings: { workspace: 'Acme Inc', plan: 'pro', notify: true, weekly: false, twofa: true } },
-    },
-  },
-  {
-    version: 'v1.0',
-    updateComponents: {
-      surfaceId: SETTINGS_ID,
-      components: [
-        { id: 'root', component: 'Card', elevation: '1', children: ['form'] },
-        { id: 'form', component: 'FormProvider', children: ['col'] },
-        { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_workspace', 'toggles', 'f_plan', 'actions'] },
-        { id: 'title', component: 'Text', variant: 'h4', text: 'Workspace settings' },
-        { id: 'f_workspace', component: 'Field', label: 'Workspace name', child: 'in_workspace' },
-        { id: 'in_workspace', component: 'TextField', name: 'workspace', required: true, value: { path: '/settings/workspace' } },
-        { id: 'toggles', component: 'Column', gap: 'sm', children: ['sw_notify', 'sw_weekly', 'sw_twofa'] },
-        { id: 'sw_notify', component: 'Switch', name: 'notify', label: 'Product announcements', checked: { path: '/settings/notify' } },
-        { id: 'sw_weekly', component: 'Switch', name: 'weekly', label: 'Weekly digest email', checked: { path: '/settings/weekly' } },
-        { id: 'sw_twofa', component: 'Switch', name: 'twofa', label: 'Require two-factor sign-in', checked: { path: '/settings/twofa' } },
-        { id: 'f_plan', component: 'Field', label: 'Plan', child: 'in_plan' },
-        {
-          id: 'in_plan', component: 'Select', name: 'plan', value: { path: '/settings/plan' },
-          children: ['opt_free', 'opt_pro', 'opt_scale'],
-        },
-        { id: 'opt_free', component: 'Option', value: 'free', label: 'Free' },
-        { id: 'opt_pro', component: 'Option', value: 'pro', label: 'Pro' },
-        { id: 'opt_scale', component: 'Option', value: 'scale', label: 'Scale' },
-        { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_save'] },
-        { id: 'btn_save', component: 'Button', variant: 'solid', label: 'Save settings', action: { action: 'save_settings', submit: true } },
-      ],
-    },
-  },
-]
-
-// ── P2 — confirmation card with a destructive action: action NAMES are the contract ──────────────────────────
-// Works with today's catalog (no form). Two Buttons carry two intents by their action NAME: `confirm_delete`
-// vs `cancel`. The confirm sets `wantResponse: true` — the client registers a correlation slot and the reply
-// (whether the delete happened) is the SERVER's to send. No danger Button tone exists in the fleet, so the
-// destructive weight is carried by wording + a solid/soft variant contrast; the tone gap is noted honestly.
-const CONFIRM_ID = 'pattern-confirm'
-const confirmMessages: readonly A2uiServerMessage[] = [
-  { version: 'v1.0', createSurface: { surfaceId: CONFIRM_ID, catalogId: 'agent-ui' } },
-  {
-    version: 'v1.0',
-    updateComponents: {
-      surfaceId: CONFIRM_ID,
-      components: [
-        { id: 'root', component: 'Card', elevation: '1', children: ['col'] },
-        { id: 'col', component: 'Column', gap: 'md', children: ['title', 'body', 'actions'] },
-        { id: 'title', component: 'Text', variant: 'h4', text: 'Delete workspace?' },
-        {
-          id: 'body', component: 'Text', variant: 'body',
-          text: 'This permanently deletes “Reactive Labs” and all 42 projects, boards, and files. This cannot be undone.',
-        },
-        { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_cancel', 'btn_delete'] },
-        { id: 'btn_cancel', component: 'Button', variant: 'soft', label: 'Cancel', action: { action: 'cancel' } },
-        { id: 'btn_delete', component: 'Button', variant: 'solid', label: 'Delete workspace', action: { action: 'confirm_delete', wantResponse: true } },
-      ],
-    },
-  },
-]
-
-// ── P3 — wizard / stepper via bindable Tabs: `selected` is client state that rides the data model ────────────
-// Staged data entry across three Tab panels. The catalog's Tab rows carry no `value`, so `selected` addresses
-// tabs by INDEX ('0'|'1'|'2') and two-way-binds to /wizard/step — the client tracks which step the user is on
-// with NO server round-trip. Fields across every panel two-way-bind under /wizard/*; the final panel's submit
-// (gated by the FormProvider) emits ONE action carrying the whole aggregate, step included.
-const WIZARD_ID = 'pattern-wizard'
-const wizardMessages: readonly A2uiServerMessage[] = [
-  { version: 'v1.0', createSurface: { surfaceId: WIZARD_ID, catalogId: 'agent-ui', sendDataModel: true } },
-  {
-    version: 'v1.0',
-    updateDataModel: {
-      surfaceId: WIZARD_ID,
-      value: { wizard: { step: '0', email: 'ada@example.com', workspace: 'Reactive Labs', size: '11-50' } },
-    },
-  },
-  {
-    version: 'v1.0',
-    updateComponents: {
-      surfaceId: WIZARD_ID,
-      components: [
-        { id: 'root', component: 'Card', elevation: '1', children: ['form'] },
-        { id: 'form', component: 'FormProvider', children: ['tabs'] },
-        {
-          id: 'tabs', component: 'Tabs', selected: { path: '/wizard/step' },
-          children: ['tab0', 'tab1', 'tab2', 'panel0', 'panel1', 'panel2'],
-        },
-        { id: 'tab0', component: 'Tab', children: ['tl0'] },
-        { id: 'tl0', component: 'Text', variant: 'body', text: 'Account' },
-        { id: 'tab1', component: 'Tab', children: ['tl1'] },
-        { id: 'tl1', component: 'Text', variant: 'body', text: 'Workspace' },
-        { id: 'tab2', component: 'Tab', children: ['tl2'] },
-        { id: 'tl2', component: 'Text', variant: 'body', text: 'Review' },
-        { id: 'panel0', component: 'TabPanel', children: ['f_email'] },
-        { id: 'f_email', component: 'Field', label: 'Work email', child: 'in_email' },
-        { id: 'in_email', component: 'TextField', name: 'email', type: 'email', value: { path: '/wizard/email' } },
-        { id: 'panel1', component: 'TabPanel', children: ['f_ws'] },
-        { id: 'f_ws', component: 'Field', label: 'Workspace name', child: 'in_ws' },
-        { id: 'in_ws', component: 'TextField', name: 'workspace', required: true, value: { path: '/wizard/workspace' } },
-        { id: 'panel2', component: 'TabPanel', children: ['review_col'] },
-        { id: 'review_col', component: 'Column', gap: 'md', children: ['f_size', 'actions'] },
-        { id: 'f_size', component: 'Field', label: 'Team size', child: 'in_size' },
-        {
-          id: 'in_size', component: 'Select', name: 'size', value: { path: '/wizard/size' },
-          children: ['sz1', 'sz2', 'sz3'],
-        },
-        { id: 'sz1', component: 'Option', value: '1-10', label: '1–10 people' },
-        { id: 'sz2', component: 'Option', value: '11-50', label: '11–50 people' },
-        { id: 'sz3', component: 'Option', value: '51+', label: '51+ people' },
-        { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_finish'] },
-        { id: 'btn_finish', component: 'Button', variant: 'solid', label: 'Create workspace', action: { action: 'create_workspace', submit: true } },
-      ],
-    },
-  },
-]
-
-// ── P4 — dashboard tiles: a display-only list template over /metrics with `${…}` label composition ───────────
-// The cheapest surface an agent emits: ONE data array + ONE template Card. The Row's `children` is the v1.0
-// template `{ path: '/metrics', componentId: 'tile' }` — one Card per element, positionally. Each tile's value
-// and delta are `${…}` DynamicString templates that COMPOSE a label from relative item paths (value + unit,
-// delta + a literal run) rather than binding a single path. No interaction, no data round-trip.
-const DASH_ID = 'pattern-dashboard'
-const dashMessages: readonly A2uiServerMessage[] = [
-  { version: 'v1.0', createSurface: { surfaceId: DASH_ID, catalogId: 'agent-ui' } },
-  {
-    version: 'v1.0',
-    updateDataModel: {
-      surfaceId: DASH_ID,
-      value: {
-        metrics: [
-          { label: 'Revenue', value: '128.4', unit: 'k€', delta: '+12%' },
-          { label: 'Active users', value: '8,204', unit: '', delta: '+3.1%' },
-          { label: 'Churn', value: '1.8', unit: '%', delta: '−0.4%' },
-        ],
-      },
-    },
-  },
-  {
-    version: 'v1.0',
-    updateComponents: {
-      surfaceId: DASH_ID,
-      components: [
-        { id: 'root', component: 'Row', gap: 'md', wrap: true, children: { path: '/metrics', componentId: 'tile' } },
-        { id: 'tile', component: 'Card', elevation: '1', children: ['tile_col'] },
-        { id: 'tile_col', component: 'Column', gap: 'xs', children: ['tile_label', 'tile_value', 'tile_delta'] },
-        { id: 'tile_label', component: 'Text', variant: 'caption', text: { path: 'label' } },
-        // Two ${…} TEMPLATES over relative item paths — the agent composes each label from data.
-        { id: 'tile_value', component: 'Text', variant: 'h3', text: '${value}${unit}' },
-        { id: 'tile_delta', component: 'Text', variant: 'caption', text: '${delta} vs last month' },
-      ],
-    },
-  },
-]
-
-// ── P5 — schedule picker card: the Wave-5 date/time reach through the catalog ─────────────────────────────────
-// TextField `type=date` + `type=time` come through the catalog's 12-value type enum; `type=date` opens a calendar
-// overlay inside the control (no renderer/catalog involvement). The values in the model are ISO-canonical (a
-// `YYYY-MM-DD` date, an `HH:MM` time, an IANA time zone) while the control renders a localized display — the
-// aggregate the action carries is the wire-portable ISO form (createSurface sets sendDataModel).
+// ── the five patterns — each fed straight from its shelf seed (the payloads that were once local to this page) ──
+// P1 = patternSettingsSeed (a settings form gated by a FormProvider) · P2 = patternConfirmSeed (a destructive-
+// action confirmation whose action NAMES carry the intent) · P3 = patternWizardSeed (a bindable-Tabs stepper) ·
+// P4 = patternDashboardSeed (a display-only /metrics template) · P5 = patternScheduleSeed (the Wave-5 date/time
+// reach). Each demo reads `messages`/`surfaceId` off its seed — no local literal.
 //
-// Deliberately NOT wrapped in a FormProvider (unlike P1/P3): a `type=date` field nested in a ui-form-provider
-// currently triggers a component-side reactive write-loop (the field's hidden ui-calendar, a UIFormElement, is
-// discovered as a SECOND provider member and the calendar↔field↔provider aggregation fails to converge — a2ui-
-// form-catalog-examples wave, flagged to the coordinator for the components backlog). P5's lesson is the date/
-// time reach + ISO-canonical values, which needs no provider; the gated-form idiom is already P1's and P3's.
-const SCHEDULE_ID = 'pattern-schedule'
-const scheduleMessages: readonly A2uiServerMessage[] = [
-  { version: 'v1.0', createSurface: { surfaceId: SCHEDULE_ID, catalogId: 'agent-ui', sendDataModel: true } },
-  {
-    version: 'v1.0',
-    updateDataModel: {
-      surfaceId: SCHEDULE_ID,
-      value: { schedule: { date: '2026-07-15', time: '09:30', tz: 'Europe/Helsinki' } },
-    },
-  },
-  {
-    version: 'v1.0',
-    updateComponents: {
-      surfaceId: SCHEDULE_ID,
-      components: [
-        { id: 'root', component: 'Card', elevation: '1', children: ['col'] },
-        { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_date', 'f_time', 'f_tz', 'actions'] },
-        { id: 'title', component: 'Text', variant: 'h4', text: 'Schedule a call' },
-        { id: 'f_date', component: 'Field', label: 'Date', child: 'in_date' },
-        { id: 'in_date', component: 'TextField', name: 'date', type: 'date', value: { path: '/schedule/date' } },
-        { id: 'f_time', component: 'Field', label: 'Time', child: 'in_time' },
-        { id: 'in_time', component: 'TextField', name: 'time', type: 'time', value: { path: '/schedule/time' } },
-        { id: 'f_tz', component: 'Field', label: 'Time zone', child: 'in_tz' },
-        {
-          id: 'in_tz', component: 'Select', name: 'tz', value: { path: '/schedule/tz' },
-          children: ['tz_hel', 'tz_lon', 'tz_nyc'],
-        },
-        { id: 'tz_hel', component: 'Option', value: 'Europe/Helsinki', label: 'Helsinki (EET)' },
-        { id: 'tz_lon', component: 'Option', value: 'Europe/London', label: 'London (GMT)' },
-        { id: 'tz_nyc', component: 'Option', value: 'America/New_York', label: 'New York (EST)' },
-        { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_schedule'] },
-        { id: 'btn_schedule', component: 'Button', variant: 'solid', label: 'Schedule', action: { action: 'schedule_call' } },
-      ],
-    },
-  },
-]
-
+// PAGE-LOCAL rationale that is NOT seed data (the seed encodes the STRUCTURE, this note explains the CHOICE):
+// P5's schedule card is deliberately NOT wrapped in a FormProvider (unlike P1/P3). A `type=date` field nested in a
+// ui-form-provider currently triggers a component-side reactive write-loop (the field's hidden ui-calendar, a
+// UIFormElement, is discovered as a SECOND provider member and the calendar↔field↔provider aggregation fails to
+// converge — flagged to the coordinator for the components backlog). P5's lesson is the date/time reach + ISO-
+// canonical values, which needs no provider; the gated-form idiom is already P1's and P3's.
 content.append(
   patternSection({
     step: '1',
@@ -402,8 +211,8 @@ content.append(
       'the coordinated-form idiom an agent emits in the wild — Field-labelled controls, toggles that two-way-bind, and a submit gated by the FormProvider’s own validity (ADR-0054), all from one payload.',
     teaches:
       'set createSurface.sendDataModel, bind every input to /form/* (or /settings/*), and flag the submit Button’s action with submit: true — the provider becomes the gate and the aggregate rides the action’s dataModel.',
-    messages: settingsMessages,
-    surfaceId: SETTINGS_ID,
+    messages: patternSettingsSeed.messages,
+    surfaceId: patternSettingsSeed.surfaceId,
     interactive: true,
     hint:
       'Toggle a switch or edit the workspace name, then press “Save settings” — the action below carries the live /settings aggregate. Now clear the workspace name and submit again: the provider gate suppresses the action and focuses the empty required field (no message emitted).',
@@ -417,8 +226,8 @@ content.append(
       'the action name IS the contract — two Buttons, two intents, no shared state; and wantResponse: true opens a correlation the server’s actionResponse settles.',
     teaches:
       'name actions for the intent, not the widget; set wantResponse only when you need the server’s answer back. There is no need for client-side branching — the server reads the action name.',
-    messages: confirmMessages,
-    surfaceId: CONFIRM_ID,
+    messages: patternConfirmSeed.messages,
+    surfaceId: patternConfirmSeed.surfaceId,
     interactive: true,
     hint:
       'Press either button — its action appears below. “Delete workspace” carries wantResponse: true (a reply is expected); “Cancel” does not.',
@@ -434,8 +243,8 @@ content.append(
       'a bindable Tabs.selected is client state the agent can READ — staged disclosure without a server round-trip, and the current step rides the data model on submit.',
     teaches:
       'bind Tabs.selected to a data path to make the active step part of the aggregate; keep fields for every step in the tree (hidden panels stay mounted) so one gated submit collects them all.',
-    messages: wizardMessages,
-    surfaceId: WIZARD_ID,
+    messages: patternWizardSeed.messages,
+    surfaceId: patternWizardSeed.surfaceId,
     interactive: true,
     hint:
       'Click through the tabs — each selection writes /wizard/step in the model (no message sent). Fill any step, land on “Review”, and press “Create workspace”: the action carries the full /wizard aggregate, step and all.',
@@ -449,8 +258,8 @@ content.append(
       'display surfaces are cheap: one data array + one template Card renders the whole grid, and ${…} composes each label from data in source order.',
     teaches:
       'reach for a children template ({ path, componentId }) the moment you have a list of like things; compose labels with ${…} over relative paths instead of pre-formatting strings server-side.',
-    messages: dashMessages,
-    surfaceId: DASH_ID,
+    messages: patternDashboardSeed.messages,
+    surfaceId: patternDashboardSeed.surfaceId,
   }),
   patternSection({
     step: '5',
@@ -461,10 +270,47 @@ content.append(
       'the Wave-5 date/time reach is fully catalog-expressible — type=date/time are ordinary reflecting props — and the data model stays ISO-canonical regardless of the localized display.',
     teaches:
       'pick the TextField type (date, time, currency, …) in the payload and bind its value like any string; trust the model’s ISO value as the wire form and let the control own the localized presentation.',
-    messages: scheduleMessages,
-    surfaceId: SCHEDULE_ID,
+    messages: patternScheduleSeed.messages,
+    surfaceId: patternScheduleSeed.surfaceId,
     interactive: true,
     hint:
       'Open the date field (a calendar), pick a day, set a time, choose a zone, then press “Schedule” — the action carries the ISO /schedule aggregate the server would store.',
   }),
+  composingContainers(),
 )
+
+// ── the "Composing containers" teaching block (ADR-0056 pedagogy leg 3) ─────────────────────────────
+// The composition rules a payload author must know — the capability-bearing idioms the patterns above
+// MODEL. Kept beside the demos (not seed data): these are authored teaching, gated only by review.
+function composingContainers(): HTMLElement {
+  const section = document.createElement('section')
+  section.className = 'demo'
+  const h2 = document.createElement('h2')
+  h2.textContent = 'Composing containers — the region rules'
+  const intro = document.createElement('p')
+  intro.textContent =
+    'Every pattern above follows three composition rules an agent-emitted payload should honor:'
+  const list = document.createElement('ul')
+  for (const [rule, why] of [
+    [
+      'Card children SHOULD be regions (CardHeader / CardContent / CardFooter).',
+      'Regions carry the spacing system, and sticky header/footer + scrollable content REQUIRE them. A region-less Card still renders humanely (a CSS fallback pads the box — ADR-0056), but that is mercy, not parity: the fallback cannot give sticky or scroll.',
+    ],
+    [
+      'A Field wraps exactly ONE form control.',
+      'The field labels, describes, and error-reports its single slotted control (first-wins); compose multiple inputs as sibling Fields under one FormProvider.',
+    ],
+    [
+      'Select children are Option components.',
+      'Options carry value + label; the Select owns the popup, the keyboard model, and the committed value bind.',
+    ],
+  ] as const) {
+    const li = document.createElement('li')
+    const strong = document.createElement('strong')
+    strong.textContent = rule
+    li.append(strong, ' ', why)
+    list.append(li)
+  }
+  section.append(h2, intro, list)
+  return section
+}

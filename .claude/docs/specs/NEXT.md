@@ -26,9 +26,13 @@
 
 1. **The corpus STORE** — `a2ui-corpus-store.lld.md` is designed but unrealized (`corpus/` holds
    only the validation half). Admission rides the shared spine (N6).
-2. **The streaming pipeline tail** — `a2ui-streaming-pipeline.spec.md`/`.lld.md` beyond the
-   in-renderer parse (`parser.ts`/`surface.ts` exist; reconcile the LLD build sequence against the
-   realized modules before scoping).
+2. **The streaming pipeline tail** — RECONCILED at v0.2 (2026-07-02): every CONSUMER-side streaming
+   behavior is realized in the renderer (parse/fault-isolation/arrival-order/render-on-root); the
+   pipeline's OWN scope (codec · driver · transports · MCP — LLD-C1..C7) is entirely unbuilt and
+   stays deliberately unscoped until a producer need arrives. The fabricated "renderer heal.ts"
+   citations were excised — healing belongs to the corpus store's ONE shared healer (its LLD-C7).
+   The STREAMING EXAMPLE shipped (`site/a2ui-stream` — root-early vs root-last on the shared seed,
+   the live first-paint metric, mid-stream fault isolation).
 3. **The expert harness** — `a2ui-expert-harness.spec.md` + `a2ui-harness-wiring.lld.md`
    (rubrics + wiring; unrealized).
 4. ~~G7-unblocked integration work~~ — **DONE 2026-07-02** (ADR-0053/0054, decomp
@@ -39,9 +43,13 @@
    gap — components backlog) · a check-time demo-payload validity gate (site payloads validate at
    runtime only; a package-side corpus probe is the candidate home) · defer `<ui-calendar>` element
    creation to first-open (ADR-0048's lazy spirit; the eager element is guarded but still built).
-5. **The streaming + live-agent examples** — the remaining example-ladder rungs: payloads arriving
-   incrementally (rides open item 2), then a real LLM emitting A2UI over the wire (rides item 3's
-   harness + item 1's corpus).
+5. **The live-agent example** — the ladder's last rung (streaming SHIPPED 2026-07-02, item 2): a
+   real LLM emitting A2UI over the wire — prompt → streamed payload → rendered surface → the human
+   interacts → client messages return → the agent continues. Rides item 3's harness + item 1's
+   corpus (whose seed shelf now exists: ADR-0055 — the seeds ARE the store's authored admission
+   candidates, field-aligned with CorpusRecord). Also shipped this wave: ADR-0056 (the region-less
+   card humane default + the container pedagogy) · the validator/dispatch envelope parity closed ·
+   `type=date`'s calendar now built on first-open.
 
 ## How to start a unit
 

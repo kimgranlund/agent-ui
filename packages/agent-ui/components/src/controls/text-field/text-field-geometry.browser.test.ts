@@ -436,6 +436,10 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
 // since the calendar IS already registered, `open()` fires SYNCHRONOUSLY on the first click (the
 // dynamic import is skipped). Only the Popover API toggle event needs a task-queue drain:
 // all awaits use `setTimeout(r, 0)`, matching select.browser.test.ts lines 192–225.
+//
+// The first-open follow-up (ADR-0048): `[data-part="calendar-popup"]`/`<ui-calendar>` do not exist in the
+// DOM until the calendar-button's first click (`ensureCalendar()` in text-field.ts) — so every test below
+// queries `popup`/`calEl` AFTER `calBtn.click()`, not before (a pre-click query would be null).
 
 describe('ui-text-field Wave-5B — type=date calendar picker (s11 Wave-5B, both engines)', () => {
   it('SHAPE: type=date field in a flex row has positive bounding-box and is wider than tall (not a dot)', () => {
@@ -460,12 +464,12 @@ describe('ui-text-field Wave-5B — type=date calendar picker (s11 Wave-5B, both
     // shortcut). One `setTimeout(r, 0)` lets the Popover toggle event (a queued task) settle.
     const { field } = mount('<ui-text-field type="date"></ui-text-field>')
     const calBtn = field.querySelector('[data-part="calendar-button"]') as HTMLElement
-    const popup = field.querySelector('[data-part="calendar-popup"]') as HTMLElement
-
     expect(calBtn, 'calendar-button must be present for type=date').not.toBeNull()
-    expect(popup, 'calendar-popup must be present for type=date').not.toBeNull()
+    expect(field.querySelector('[data-part="calendar-popup"]'), 'popup must not exist before first open').toBeNull()
 
-    calBtn.click()
+    calBtn.click() // first open: builds the popup + <ui-calendar> (ensureCalendar) AND opens synchronously
+    const popup = field.querySelector('[data-part="calendar-popup"]') as HTMLElement
+    expect(popup, 'calendar-popup must be present after first open').not.toBeNull()
     await new Promise<void>((r) => setTimeout(r, 0)) // let Popover toggle event (queued task) settle
 
     expect(popup.matches(':popover-open'), 'popup must be in the Popover top layer after button click').toBe(true)
@@ -476,11 +480,12 @@ describe('ui-text-field Wave-5B — type=date calendar picker (s11 Wave-5B, both
     // emit input+change, calendarHandle.close(). The popup must leave the top layer after close.
     const { field } = mount('<ui-text-field type="date"></ui-text-field>')
     const calBtn = field.querySelector('[data-part="calendar-button"]') as HTMLElement
+
+    // Open the popup (ui-calendar pre-registered → synchronous open; one task round for toggle event).
+    // First open also BUILDS the popup + <ui-calendar> (ensureCalendar) — query them only after the click.
+    calBtn.click()
     const popup = field.querySelector('[data-part="calendar-popup"]') as HTMLElement
     const calEl = popup.querySelector('ui-calendar') as HTMLElement
-
-    // Open the popup (ui-calendar pre-registered → synchronous open; one task round for toggle event)
-    calBtn.click()
     await new Promise<void>((r) => setTimeout(r, 0))
     expect(popup.matches(':popover-open'), 'popup must be open before selection').toBe(true)
 
@@ -509,11 +514,11 @@ describe('ui-text-field Wave-5B — type=date calendar picker (s11 Wave-5B, both
     // as the focus target regardless of engine (matching the select.browser.test.ts pattern, line 183).
     const { field } = mount('<ui-text-field type="date"></ui-text-field>')
     const calBtn = field.querySelector('[data-part="calendar-button"]') as HTMLElement
-    const popup = field.querySelector('[data-part="calendar-popup"]') as HTMLElement
-    const calEl = popup.querySelector('ui-calendar') as HTMLElement
 
     calBtn.focus() // establish anchor as the pre-open active element (WebKit does not auto-focus on click)
-    calBtn.click()
+    calBtn.click() // first open: builds the popup + <ui-calendar> (ensureCalendar) — query them after
+    const popup = field.querySelector('[data-part="calendar-popup"]') as HTMLElement
+    const calEl = popup.querySelector('ui-calendar') as HTMLElement
     await new Promise<void>((r) => setTimeout(r, 0)) // Popover toggle event (queued task)
 
     calEl.dispatchEvent(new CustomEvent('select', { detail: '2024-07-04', bubbles: false }))
@@ -546,12 +551,12 @@ describe('ui-text-field Wave-5B — type=date calendar picker (s11 Wave-5B, both
 
     const field = clip.querySelector('ui-text-field') as HTMLElement
     const calBtn = field.querySelector('[data-part="calendar-button"]') as HTMLElement
-    const popup = field.querySelector('[data-part="calendar-popup"]') as HTMLElement
-
     expect(calBtn, 'calendar-button must be present for type=date').not.toBeNull()
-    expect(popup, 'calendar-popup must be present').not.toBeNull()
+    expect(field.querySelector('[data-part="calendar-popup"]'), 'popup must not exist before first open').toBeNull()
 
-    calBtn.click()
+    calBtn.click() // first open: builds the popup + <ui-calendar> (ensureCalendar) — query it after
+    const popup = field.querySelector('[data-part="calendar-popup"]') as HTMLElement
+    expect(popup, 'calendar-popup must be present after first open').not.toBeNull()
     await new Promise<void>((r) => setTimeout(r, 0)) // Popover toggle event (queued task)
 
     // Proof 1: the popup entered the Popover top layer.

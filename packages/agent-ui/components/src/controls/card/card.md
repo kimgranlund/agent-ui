@@ -4,7 +4,8 @@
 # `attributes[]` block mirrors card.ts `static props` (the ...UIContainerElement.surfaceProps spread —
 # elevation/brightness) — the contract↔props trip-wire (card-descriptor.test.ts) targets this fence. The
 # region sub-elements (ui-card-header/-content/-footer) are documented in the prose body + parts/childModel
-# notes; the surface axes per ADR-0015, the one-level nested radius per ADR-0018, the host-as-grid per anatomy.md.
+# notes; the surface axes per ADR-0015, the one-level nested radius per ADR-0018, the host-as-grid per anatomy.md,
+# the region-less humane default (a bare card gets region-equivalent padding) per ADR-0056.
 tag: ui-card
 tier: container         # geometry size-class (Container/layout band — spacing off --ui-space × density, NO control height; geometry.md)
 extends: UIContainerElement  # the FACE container surface base (NOT form-associated; ADR-0015 / ADR-0016)
@@ -109,6 +110,36 @@ the grid *structure* is reused, not the control-frame glyph sizing.
   on every engine, WebKit included); a scroll-driven refinement (fading only at the *scrollable* edge via
   `animation-timeline: scroll()`) is a noted follow-up.
 
+## The region-less humane default (ADR-0056)
+
+A `ui-card` with **no region child** (no `ui-card-header` / `ui-card-content` / `ui-card-footer`) applies
+region-equivalent padding + content rhythm to its own box, so a bare-children card reads as **padded** rather
+than the box-model's zero-padding default:
+
+```html
+<ui-card>
+  <p>First</p>
+  <p>Second</p>
+</ui-card>
+```
+
+renders with the same inline/block inset a real region would carry (12px/4px) and the same 8px rhythm between
+its children. This is a **CSS-only fallback**, not a factory rewrite — the payload tree, the component tree,
+and the rendered DOM stay identical; nothing synthetic is inserted. It is `:has()`-driven, so it is
+**streaming-safe by construction**: a region child arriving after the fact (a `ui-card-header` streamed in
+once the bare body already rendered) flips the fallback off and the presence-driven region grid on, in the
+same reflow, with no double padding.
+
+**Mixed composition gets no fallback.** A card that already has a region child PLUS loose siblings (`<ui-card>
+<ui-card-content>…</ui-card-content><div>…</div></ui-card>`) is not touched — a region present means the
+author owns the structure; the loose sibling renders at the plain box-model default. This is documented
+behaviour, not a bug to repair.
+
+**The fallback is mercy, not parity.** Sticky header/footer and `scrollable`/`scroll-fade` content are
+capabilities of the real region sub-elements — the fallback cannot give a bare card sticky edges or a scroll
+viewport. Reach for `ui-card-header` / `ui-card-content` / `ui-card-footer` whenever the card needs those; the
+fallback exists only to keep the default humane, not to replace the taught idiom.
+
 ## Surface — elevation × brightness
 
 `elevation` (the scheme-**inverting** plane) and `brightness` (the scheme-**consistent** tonal shift) are
@@ -125,8 +156,13 @@ Concentric rounded rectangles need the inner radius to shrink with nesting: the 
 is `r_child = max(0, r_parent − padding_parent)`. A root `ui-card` rounds to the shared `--ui-radius-base`;
 a card publishes its inner radius to descendants as `--ui-card-child-radius`, and a **nested** card (inside
 a `ui-card-content`) reads it for its own radius — **one level**, pure CSS, no JS observer. The normal
-nesting is **card › ui-card-content › card**. A card placed as a *direct* child of another card (no region
-between) is the **depth-≥2 manual case**: set an explicit `border-radius` to reseed the chain. (The JS
+nesting is **card › ui-card-content › card**. A card placed as a *direct* child of **another card** (no region
+wrapper between — regardless of whether the outer card is bare or region-bearing) is the **depth-≥2 manual
+case**: the direct-child card matches both `:where(ui-card)` (declaring its own inner radius) and its parent's
+publish rule (setting `--ui-card-child-radius` directly on it) — a genuine multi-property CSS cycle that
+collapses its radius to `0`. Set an explicit `border-radius` on the nested card to reseed the chain. **The
+ADR-0056 region-less fallback does not change this** — it only ever sets padding/gap, never the radius chain,
+so direct nesting stays the pre-existing manual case whether or not the outer card is bare. (The JS
 arbitrary-depth controller was rejected — ADR-0018.)
 
 ## Accessibility

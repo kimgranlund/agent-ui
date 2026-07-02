@@ -146,7 +146,7 @@ Initial coverage tracks the control family (A-2). Types absent until their contr
 | `Text` | `ui-text` | **shipped** (ADR-0025, the Display-class text primitive). `text`→textContent (bindable); `variant` (h1-h5/caption/body) |
 | `Row` | `ui-row` | **shipped** (G9, ADR-0016). `elevation`,`brightness` (surface, ADR-0015); `align`,`justify`,`gap`,`wrap` (flex grammar); `ChildList` children |
 | `Column` | `ui-column` | **shipped** (G9). As `Row`, column main axis (direction is the tag's identity, not a prop) |
-| `Card` | `ui-card` | **shipped** (G9). `elevation`,`brightness`; `ChildList` regions |
+| `Card` | `ui-card` | **shipped** (G9). `elevation`,`brightness`; `ChildList` regions. **Composition note (ADR-0056):** children SHOULD be region sub-types (`CardHeader`/`CardContent`/`CardFooter`) — regions carry the spacing system and are REQUIRED for sticky header/footer + `scroll`; a region-less Card renders with the CSS humane-default padding (mercy, not parity); mixed region+loose children get no fallback (regions present ⇒ the author owns the structure) |
 | `CardHeader` / `CardContent` / `CardFooter` | `ui-card-header` / `-content` / `-footer` | **shipped** (G9). Region sub-types — the ratified *regions = sub-elements* (component-native `ChildList` children, SPEC-R3/R4); `CardContent` adds `scroll` |
 | `Tabs` | `ui-tabs` | **shipped** (G9). `elevation`,`brightness`; bindable `selected`; `value:{prop:'selected',event:'select'}` (two-way, renderer SPEC-R7 / ADR-0019); `ChildList` children |
 | `Tab` / `TabPanel` | `ui-tab` / `ui-tab-panel` | **shipped** (G9). Tab + panel sub-types (`ChildList` children) |

@@ -1,22 +1,30 @@
 # LLD — A2UI Streaming Pipeline (codec · transports · MCP)
 
-> Status: proposed · v0.1 · 2026-06-26 · Layer: LLD (implementation plan)
+> Status: proposed · v0.2 · 2026-07-02 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
 > Implements: [`../specs/a2ui-streaming-pipeline.spec.md`](../specs/a2ui-streaming-pipeline.spec.md) (SPEC-R1..R8, SPEC-N1..N4), targeting A2UI **v1.0**. Consolidates the previously-planned `a2ui-stream-codec` + `a2ui-mcp` LLDs.
-> Altitude: adds the **how**; cites `SPEC-R*`. Reuses the renderer's healer (`heal.ts`) and shared validator (`validate.ts`), and the corpus store's retriever/exporters — no forks (parity).
+> Altitude: adds the **how**; cites `SPEC-R*`. Reuses the shared validator (`renderer/validate.ts`) and the corpus store's healer (`corpus/heal.ts`, corpus-store LLD-C7 — unbuilt) + retriever/exporters — no forks (parity).
+> **v0.2 reconciliation (2026-07-02):** realized/unrealized column added; the v0.1 "renderer healer `heal.ts`" citations repaired — no renderer healer exists or ever did. The RENDERER deliberately does not heal: its shipped parser (`src/renderer/parser.ts`) fault-isolates a malformed line as a `PARSE` error and continues (runtime SPEC-N4), so client-side provable validity (PRD-G4) is never masked. Healing is producer/admission-side ONLY — the ONE healer is the corpus store's LLD-C7, shared by admission and this codec when built.
 
 ---
 
-## 1. Component map (traceability)
+## 1. Component map (traceability · realized-state 2026-07-02)
 
-| ID | Component | Implements | File (under `packages/agent-ui/a2ui/`) | Scope |
-|---|---|---|---|---|
-| **LLD-C1** | JSONL codec | SPEC-R1 | `src/stream/codec.ts` | runtime |
-| **LLD-C2** | Generation pipeline driver | SPEC-R2 | `tools/pipeline/produce.ts` | dev/CI |
-| **LLD-C3** | Transport abstraction + stdio | SPEC-R3, R8 | `src/stream/transport.ts` + `tools/pipeline/stdio.ts` | runtime (iface) / dev (stdio) |
-| **LLD-C4** | AG-UI adapter | SPEC-R4 | `tools/pipeline/transports/ag-ui.ts` | dev/server |
-| **LLD-C5** | A2A adapter | SPEC-R5 | `tools/pipeline/transports/a2a.ts` | dev/server |
-| **LLD-C6** | MCP server | SPEC-R6 | `tools/pipeline/mcp-server.ts` | dev/CLI |
-| **LLD-C7** | Conformance/negotiation | SPEC-R7, N3 | `src/stream/conformance.ts` | runtime |
+**Every LLD-C\* module below is UNBUILT** (no `src/stream/`, no `tools/pipeline/` exist). The consumer-side
+streaming *behaviors* are already REALIZED — but they live in the RENDERER under the runtime SPEC's
+ownership, not here: JSONL line decode + fault isolation (`renderer/parser.ts`, runtime SPEC-R1/N4), the
+`ingest(line)` public host + arrival-order dispatch (`renderer/renderer.ts`), progressive render-on-root +
+out-of-order tolerance (`renderer/tree.ts`, runtime SPEC-R3/R4/N1), validate-at-finalize (ADR-0002), and
+`capabilities()` (runtime SPEC-R12). This LLD owns only the PRODUCER/TRANSPORT/MCP half.
+
+| ID | Component | Implements | File (under `packages/agent-ui/a2ui/`) | Scope | State |
+|---|---|---|---|---|---|
+| **LLD-C1** | JSONL codec | SPEC-R1 | `src/stream/codec.ts` | runtime | unbuilt |
+| **LLD-C2** | Generation pipeline driver | SPEC-R2 | `tools/pipeline/produce.ts` | dev/CI | unbuilt · blocked by corpus retriever (corpus LLD-C9) + harness generate loop (harness LLD-C6) |
+| **LLD-C3** | Transport abstraction + stdio | SPEC-R3, R8 | `src/stream/transport.ts` + `tools/pipeline/stdio.ts` | runtime (iface) / dev (stdio) | unbuilt |
+| **LLD-C4** | AG-UI adapter | SPEC-R4 | `tools/pipeline/transports/ag-ui.ts` | dev/server | unbuilt |
+| **LLD-C5** | A2A adapter | SPEC-R5 | `tools/pipeline/transports/a2a.ts` | dev/server | unbuilt |
+| **LLD-C6** | MCP server | SPEC-R6 | `tools/pipeline/mcp-server.ts` | dev/CLI | unbuilt · blocked by corpus store (retrieve/admit) |
+| **LLD-C7** | Conformance/negotiation | SPEC-R7, N3 | `src/stream/conformance.ts` | runtime | unbuilt |
 
 **Split (SPEC-N2):** `src/stream/{codec,transport,conformance}.ts` are zero-dep runtime; the pipeline driver + concrete transports + MCP are dev/server-scoped (they orchestrate agents/IO) and never enter the renderer's consumer bundle.
 
@@ -29,7 +37,7 @@ function encode(messages: A2uiServerMessage[]): string =
 async function* decode(src: string | AsyncIterable<string>): AsyncIterable<A2uiServerMessage> {
   for await (const line of lines(src)) {                 // line splitter tolerant of chunk boundaries
     const trimmed = line.trim(); if (!trimmed) continue;
-    const healed = heal(trimmed);                        // renderer heal.ts parity (SPEC-R1 AC2)
+    const healed = heal(trimmed);                        // corpus heal.ts (corpus LLD-C7) — the ONE healer, shared with admission (SPEC-R1 AC2)
     if (!healed.ok) { yield errorMessage("PARSE", trimmed); continue; }  // one bad line ≠ stream abort
     yield healed.value;
   }
@@ -101,7 +109,7 @@ packages/agent-ui/a2ui/
   tools/pipeline/  produce.ts stdio.ts mcp-server.ts  transports/{ag-ui,a2a}.ts
 ```
 
-**Integration:** `codec.decode` reuses renderer `heal.ts`; `produce`/`mcp-server` reuse the shared `validate.ts` (renderer LLD) + the corpus retriever/exporters (`a2ui-corpus-store` LLD) + the catalog registry (`a2ui-catalog` LLD); `a2a.ts` reuses the renderer's `capabilities()` (renderer LLD-C12). The stdio transport's output is exactly what `A2uiRenderer.ingest` consumes — closing the produce→render loop (the A1/A3 integration proof).
+**Integration:** `codec.decode` reuses the corpus healer (`corpus/heal.ts`, corpus LLD-C7 — the renderer has NO healer by design; its parser fault-isolates, runtime SPEC-N4); `produce`/`mcp-server` reuse the shared `validate.ts` (renderer LLD) + the corpus retriever/exporters (`a2ui-corpus-store` LLD) + the catalog registry (`a2ui-catalog` LLD); `a2a.ts` reuses the renderer's `capabilities()` (renderer LLD-C12). The stdio transport's output is exactly what the renderer host's `ingest(line)` consumes — closing the produce→render loop (the A1/A3 integration proof; the consumer side of this loop is SHIPPED — the `/site` example pages already drive `ingest` line-by-line through the public host).
 
 ## 9. Build sequence (dependency-ordered; each step verifiable)
 

@@ -21,8 +21,23 @@
  * and PUBLISHES it to its DESCENDANTS as `--ui-card-child-radius` (the `:where(ui-card) > *` rule — set on the
  * children, never on self, so the publishing card never reads what it writes). A nested card (inside a region)
  * reads the INHERITED `--ui-card-child-radius` for its own radius → one-level decrement, no cycle. The normal
- * structure is card › ui-card-content › card; a card placed as a DIRECT child of another card (no region
- * between) is the depth-≥2 manual case (set an explicit border-radius to reseed) — documented in card.md.
+ * structure is card › ui-card-content › card; a card nested DIRECTLY inside another card (no region wrapper
+ * between, regardless of whether the outer card is bare or region-bearing) is the depth-≥2 manual case (set
+ * an explicit border-radius to reseed) — documented in card.md. The direct-child card matches BOTH
+ * `:where(ui-card)` (declaring its OWN `--ui-card-inner-radius`) and its parent's `:where(ui-card) > *` publish
+ * rule (setting `--ui-card-child-radius` directly ON it) — a genuine multi-property CYCLE
+ * (radius → child-radius → inner-radius → radius) collapses its radius to 0, independent of any padding value.
+ * ADR-0056's fallback below only ever sets padding/gap — it does not touch this chain, so it neither fixes nor
+ * worsens the pre-existing manual case (re-verified, card.browser.test.ts).
+ *
+ * Region-less humane default (ADR-0056): a card with NO region child (no header/content/footer) applies the
+ * region-equivalent padding + content rhythm to its OWN box (the `:not(:has(...))` leg in the STYLES block
+ * below) — a bare-children card, the wild-payload DEFAULT an LLM emits against a catalog whose Card has no
+ * region sub-types, reads as padded instead of the box-model's zero-padding law. `:has()` re-evaluation is
+ * streaming-safe by construction: a region child arriving late flips the fallback off and the presence-driven
+ * row template on in the same reflow, no double padding, no synthetic DOM (payload tree ≡ DOM tree). Mixed
+ * composition (a region PLUS loose siblings) does NOT match — regions present means the author owns the
+ * structure; the loose siblings render at the box-model default (documented, not repaired).
  *
  * Standalone sheet — linked via the component-styles barrel (s12), NEVER injected from card.ts (behaviour-only
  * `.ts`, no runtime style; plan §2). */
@@ -94,6 +109,19 @@
   }
   :scope:has(> ui-card-header):has(> ui-card-footer) {
     grid-template-rows: auto 1fr auto;
+  }
+
+  /* Region-less humane default (ADR-0056): NO region child present → apply the region-equivalent padding +
+     content rhythm to the card's own box (the same values a region would carry: inline 12 · block 4 · gap 8).
+     Higher selector specificity than the base `:scope` rule above wins outright (an extra :not(:has()) clause,
+     the same pattern the row legs already use), so this leg overrides the box-model's zero padding/gap ONLY
+     when it applies. The moment any region child exists, `:has()` re-evaluates false and this leg drops —
+     no double padding, no phantom transition state (streaming-safe). Mixed composition (a region present PLUS
+     loose siblings) is excluded by the same :has() test — regions present means the author owns the layout. */
+  :scope:not(:has(> ui-card-header, > ui-card-content, > ui-card-footer)) {
+    padding-inline: var(--ui-card-region-pad-inline);
+    padding-block: var(--ui-card-region-pad-block);
+    gap: var(--ui-card-content-gap);
   }
 }
 

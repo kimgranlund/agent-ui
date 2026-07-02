@@ -1,0 +1,77 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "meta": {
+    "title": "Streaming reconciliation + Streaming example page + example-payload seed shelf",
+    "date": "2026-07-02",
+    "author": "planner (design seat)",
+    "companion": "a2ui-streaming-examples.decomp.md",
+    "upstream": [
+      ".claude/docs/specs/NEXT.md (open items 1/2 bridge; item-2 scope-before-building)",
+      ".claude/docs/specs/specs/a2ui-streaming-pipeline.spec.md (v0.2 reconciled this intake)",
+      ".claude/docs/specs/llds/a2ui-streaming-pipeline.lld.md (v0.2 reconciled this intake)",
+      ".claude/docs/specs/llds/a2ui-corpus-store.lld.md (the seed-shelf alignment)",
+      ".claude/docs/specs/specs/a2ui-training-corpus.spec.md (SPEC-R1/R2/R5/R9 record fields)",
+      ".claude/docs/adr/0055-a2ui-example-seeds-package-home.md (proposed)",
+      ".claude/docs/adr/0002-validator-parity-reconciliation.md (finalize validation the gate reuses)"
+    ]
+  },
+  "nodes": [
+    { "id": "n0", "label": "Streaming + examples-seed wave", "leaf": false, "justify": "grouping" },
+    { "id": "n1", "label": "Streaming SPEC/LLD v0.2 reconciliation (done in this intake)", "leaf": true,
+      "accept": "a2ui-streaming-pipeline.{spec,lld}.md at v0.2: zero `renderer heal.ts` citations remain (grep); the LLD component map carries a State column with all C1-C7 unbuilt + the realized-in-renderer boundary note; SPEC-R1 carries the healing-ownership sentence; all cross-references resolve" },
+    { "id": "n2", "label": "ADR-0055 (example seed shelf) PROPOSED → ratified", "leaf": true,
+      "accept": "adr_check.py exits 0; Status stays `proposed` until Kim rules forks F1/F2; build slices dispatch only after acceptance" },
+    { "id": "n3", "label": "examples seed shelf (packages/agent-ui/a2ui/src/examples/)", "leaf": false, "justify": "grouping" },
+    { "id": "n3a", "label": "seed modules + ExampleSeed type + the \"./examples\" subpath export", "leaf": true,
+      "accept": "src/examples/{types,canvas-button,dynamic-lists,generative-form,patterns,index}.ts exist; 11 seeds exported (1 canvas + 4 lists + 1 form + 5 patterns); package.json exports gains \"./examples\" and the ROOT barrel does not re-export them (tree-shake: a root-barrel consumer bundles zero examples bytes); the form seed is the re-sliced fine-grained stream" },
+    { "id": "n3b", "label": "the standing validity gate (src/examples/examples.test.ts)", "leaf": true,
+      "accept": "npm test runs it with zero vitest-config change: per seed, validateA2ui verdict valid AND a jsdom real-host smoke (mount → ingest each message as a JSONL line → finalize) emits zero error messages; a deliberately-broken local fixture (negative control, not exported) fails the gate" },
+    { "id": "n3c", "label": "validate.ts callFunction-envelope widening (the MESSAGE_KINDS parity gap)", "leaf": true,
+      "accept": "validateA2ui accepts a spec-legal callFunction envelope (functionCallId string + callFunction.call string, no surfaceId) and still rejects a malformed one as SCHEMA; existing validate.test.ts stays green; dispatch/validator envelope sets are asserted equal by a parity probe" },
+    { "id": "n4", "label": "page migration (canvas · list · form · patterns import the seeds)", "leaf": true,
+      "accept": "all four pages import @agent-ui/a2ui/examples and feed the SAME seed objects they display; no payload const remains in site/pages/*.ts except the canvas RPC literals; check:site green; pages behavior-identical in a hand browser pass" },
+    { "id": "n5", "label": "Streaming example page (site/a2ui-stream.html + pages/a2ui-stream.{ts,css})", "leaf": true,
+      "accept": "check green; demo 1 streams the SHARED generative-form seed line-by-line (payload pane grows with the feed, first-paint metric line k/N shown); demo 2 feeds a root-last PERMUTATION of the same seed objects (blank until root, then full paint); the labeled fault-injection affordance emits PARSE + the stream continues; Replay + Step controls, auto-run once, no loops; finalize fires at stream end with a clean log" },
+    { "id": "n6", "label": "site TOC entries (pages/_page.ts NAV + main.ts CARD_GROUPS)", "leaf": true,
+      "accept": "both renderings list the streaming page in the A2UI group; site-toc gate green; no dead hrefs" },
+    { "id": "n7", "label": "wave integration gate", "leaf": true,
+      "accept": "npm run check && npm test exit 0 at the integration commit; the examples gate is part of the run; no components-package source touched" }
+  ],
+  "actions": [
+    { "id": "a1", "label": "reconcile the streaming docs to the realized tree (honest realized/unrealized boundary)" },
+    { "id": "a2", "label": "pin the seed-shelf home + gate as a ratifiable decision" },
+    { "id": "a3", "label": "own every example payload once, package-side, corpus-aligned" },
+    { "id": "a4", "label": "prove every seed valid + renderable at check time (close the runtime-only gap)" },
+    { "id": "a5", "label": "teach the shared validator every envelope the dispatcher routes" },
+    { "id": "a6", "label": "derive the four pages from the seeds (shown ≡ fed ≡ gated)" },
+    { "id": "a7", "label": "stream one payload incrementally with replay/step pacing" },
+    { "id": "a8", "label": "prove ordering tolerance and fault isolation live" },
+    { "id": "a9", "label": "surface progressive first paint as a visible metric" },
+    { "id": "a10", "label": "navigate to the streaming page from both TOC renderings" },
+    { "id": "a11", "label": "hold the wave green across type + behavior gates" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n1" },
+    { "action": "a2", "node": "n2" },
+    { "action": "a3", "node": "n3a" },
+    { "action": "a4", "node": "n3b" },
+    { "action": "a5", "node": "n3c" },
+    { "action": "a6", "node": "n4" },
+    { "action": "a7", "node": "n5" },
+    { "action": "a8", "node": "n5" },
+    { "action": "a9", "node": "n5" },
+    { "action": "a10", "node": "n6" },
+    { "action": "a11", "node": "n7" }
+  ],
+  "edges": [
+    { "from": "n2", "to": "n3a", "why": "the seed shape, subpath policy, and RPC-stays-page-local rule are ADR-0055's ratified contract — the modules encode it" },
+    { "from": "n3a", "to": "n3b", "why": "the gate iterates the exported seed set; it cannot exist before the seeds it validates" },
+    { "from": "n3a", "to": "n4", "why": "the pages import the seed modules — migration needs the exports to exist" },
+    { "from": "n3a", "to": "n5", "why": "the streaming page imports the SAME generative-form seed (single-owner reuse is the point)" },
+    { "from": "n4", "to": "n7", "why": "check:site covers the migrated page modules at the integration commit" },
+    { "from": "n3b", "to": "n7", "why": "the integration gate includes the new examples test in npm test" },
+    { "from": "n5", "to": "n6", "why": "TOC links must point at an existing page (dead-href guard)" },
+    { "from": "n6", "to": "n7", "why": "the site-toc gate runs green only after both renderings are edited" }
+  ]
+}

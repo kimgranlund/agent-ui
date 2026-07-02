@@ -95,6 +95,30 @@ describe('card.css — @scope token hygiene (consume only --ui-card-* / --ui-con
   })
 })
 
+describe('card.css — region-less humane default (ADR-0056)', () => {
+  // jsdom cannot evaluate :has() (no cascade truth here) — these pin the DECLARED rule + its token hygiene;
+  // the rendered flip (bare→padded, region→unchanged, the streaming re-evaluation) is card.browser.test.ts.
+  const fallbackMarker = ':scope:not(:has(> ui-card-header, > ui-card-content, > ui-card-footer))'
+  const fallbackBlock = whereBlock(`${fallbackMarker} {`)
+
+  it('the fallback leg exists inside @scope (ui-card), keyed off the same three region tags as the row legs', () => {
+    expect(scopeCard).toContain(fallbackMarker)
+    expect(fallbackBlock.length).toBeGreaterThan(0)
+  })
+
+  it('the fallback consumes ONLY the region-equivalent --ui-card-* tokens (the ones a real region carries)', () => {
+    expect(fallbackBlock).toMatch(/padding-inline:\s*var\(--ui-card-region-pad-inline\)/)
+    expect(fallbackBlock).toMatch(/padding-block:\s*var\(--ui-card-region-pad-block\)/)
+    expect(fallbackBlock).toMatch(/gap:\s*var\(--ui-card-content-gap\)/)
+    // hygiene: no foreign (--c-* / bare ramp) reference sneaks into the fallback leg
+    expect(foreignRefs(fallbackBlock)).toEqual([])
+  })
+
+  it('does NOT touch grid-template-rows (the fallback is a padding/gap leg only, not a row-structure leg)', () => {
+    expect(fallbackBlock).not.toMatch(/grid-template-rows/)
+  })
+})
+
 describe('card.css — scrollable + scroll-fade hooks + forced-colors', () => {
   it('[scrollable] is an overflow viewport; [scroll-fade] is a mask-image edge fade (with the -webkit- prefix)', () => {
     expect(scopeContent).toMatch(/:scope\[scrollable\]\s*\{[^}]*overflow:\s*auto/)
