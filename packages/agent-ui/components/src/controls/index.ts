@@ -6,7 +6,8 @@
 //
 // Today's family:
 //   • form controls — ui-button (G5), ui-text-field (G6).
-//   • display controls — ui-text (ADR-0025), the Display-class text primitive (typographic scale leaf).
+//   • display controls — ui-text (ADR-0025), the Display-class text primitive (typographic scale leaf);
+//     ui-icon (ADR-0065/0066), the icon-adapter's declarative consumer (imports @agent-ui/icons).
 //   • Indicator controls — Wave 1 (ADR-0041/0042): ui-checkbox · ui-switch · ui-radio · ui-radio-group.
 //     All four extend UIIndicatorElement (boolean form value + checked-state machine + pressActivation
 //     toggle); ui-radio-group extends UIFormElement directly and owns the group value + rovingFocus.
@@ -22,6 +23,7 @@
 export * from './button/button.ts'
 export * from './text-field/text-field.ts'
 export * from './text/text.ts'
+export * from './icon/icon.ts' // ui-icon (ADR-0065/0066) — the icon-adapter's declarative consumer surface
 
 // Indicator controls — Wave 1 (ADR-0041/0042).
 export * from './checkbox/checkbox.ts'

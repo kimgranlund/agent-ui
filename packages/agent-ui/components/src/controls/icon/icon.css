@@ -1,0 +1,37 @@
+/* icon.css — ui-icon, the Display-class icon primitive (LLD-C5 §3, ADR-0065/0066). Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-icon)` declares --ui-icon-size: 1em. ui-icon has NO size/tone lever
+ *       (no [size] ramp, no [variant] repoint) — it is a 1em×1em cell by design; a consumer sizes it via
+ *       ambient `font-size` or an explicit `inline-size` override on the host (LLD §3, geometry.md Display
+ *       class: "intrinsic structural sizing").
+ *   [2] STYLES BLOCK — `@scope (ui-icon)` consumes ONLY --ui-icon-size. `color: inherit` so the injected
+ *       <svg fill="currentColor"> (resolve.ts) tracks the surrounding ink with no per-icon color plumbing —
+ *       including in forced-colors mode, where the CONSUMING context's ink already resolves to the platform
+ *       system color, so ui-icon needs no dedicated `@media (forced-colors: active)` block of its own.
+ *
+ * The content-into-cell contract (LLD §3) is what makes this file this small: an injected <svg width=100%
+ * height=100%> fills whatever cell it lands in — an [data-role='icon'] cell at icon size, a
+ * [data-role='caret'] cell inset to font-rhythm by that cell's OWN existing padding — with ZERO change to
+ * button.css/select.css. This sheet only styles the STANDALONE <ui-icon> host itself.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-icon) declares --ui-icon-* ════════════════ */
+
+:where(ui-icon) {
+  --ui-icon-size: 1em;
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-icon) consumes ONLY --ui-icon-* ════════════════ */
+
+@scope (ui-icon) {
+  :scope {
+    display: inline-flex;
+    inline-size: var(--ui-icon-size);
+    block-size: var(--ui-icon-size);
+    color: inherit;
+  }
+
+  :scope svg {
+    display: block;
+  }
+}

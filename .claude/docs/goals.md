@@ -470,3 +470,67 @@ NAME/ERROR-axis forwarding wires for select/combo-box + the calendar labelling m
 Still open: `datetime-local`/`month`/time-list/date-range (Wave-5 STRETCH/future; `--ui-calendar-range-*`
 reserved); the A2UI **LLD-C6 dynamic-list** tail (#137) + the `repeat` moveBefore focus-seam (#69). The
 branch is **unpushed**.
+
+## Icon adapter — the swappable icon-pack architecture (2026-07-04, ADR-0065/0066, accepted)
+
+**Goal.** Replace ad-hoc, hand-drawn icon/caret glyphs with a single, swappable icon-sourcing
+architecture — Phosphor as the concrete default pack, behind a uniform adapter interface so other packs
+could be swapped in later without touching consuming components.
+
+**Shipped.** A new zero-dependency leaf package `@agent-ui/icons` (sibling of `@agent-ui/shared`,
+mirrors the corpus-store's pure-core + subpath shape): `types.ts` (the curated `IconName` union +
+`IconPack`), `registry.ts` (`IconRegistry`/`Registry`/`iconRegistry`, `body(name)` override-then-active-
+pack precedence, `overrideIcon` survives `setActivePack`), `resolve.ts` (`resolveIcon`/`setIcon`,
+non-throwing unknown-name fallback), the root barrel (zero Phosphor bytes reachable), and
+`phosphor/{icons.gen.ts,index.ts}` — a curated 9-icon `regular`-weight subset vendored at BUILD TIME via
+`scripts/vendor-phosphor.mjs` from a devDependency-only `@phosphor-icons/core`, self-registering behind
+the `"./phosphor"` subpath only. A new declarative `ui-icon` control (`controls/icon/`) consumes it,
+slotting into the *existing* `[data-role=icon]`/`[data-role=caret]` cell geometry with **zero edits to
+any existing control's CSS** (verified by git diff) — the same SVG asset naturally serves an icon-sized
+cell and insets to font-rhythm in a caret cell via the pre-existing padding law.
+
+**Definition of done.**
+- [x] Design intake (system-planner) → independent doc-review (3 must-fix + 4 polish, incl. a real
+      contradiction between the frozen registry interface and the `ui-icon` prose — resolved by
+      deferring pack-swap reactivity rather than inverting the `icons ↛ components` dependency arrow) →
+      revision → build (3 seats, prep → parallel core/Phosphor chains → integration → verify).
+- [x] One real bug caught mid-build: the LLD's own frozen `aria-hidden` snippet never cleared the
+      attribute in the meaningful branch (a labelled icon that was ever decorative would stay hidden
+      from assistive tech forever); fixed via `ElementInternals` both directions, LLD corrected to match.
+- [x] `npm run check` + `npm test` green — **143 files, 2311 tests**; `npm run test:browser` green —
+      **64 files, 564 tests**, Chromium + WebKit both.
+- [x] `npm run size` within budget — **22 193 B gz of the 22 528 B family budget** (335 B headroom).
+- [x] Independent `component-reviewer` pass: GO, zero blocker/major (4 minor/note items, 2 folded into
+      the same wave as hardening — synthetic-violation assertions added to both architectural negative
+      controls so they're proven to bite, not just proven-by-construction).
+- [x] ADRs **0065–0066** authored + ratified (`accepted`).
+
+**Migration audit** (grounded against the tree; the 8 real touchpoints — all confirmed UNTOUCHED by this
+wave, migration is deliberately a separate later effort, one control per slice):
+
+| # | Site | Current | Canonical icon |
+|---|---|---|---|
+| 1 | `controls/select/select.ts:282` | `'▾'` | `caret-down` |
+| 2 | `controls/calendar/calendar.ts:318` | `'‹'` | `caret-left` |
+| 3 | `controls/calendar/calendar.ts:332` | `'›'` | `caret-right` |
+| 4 | `controls/text-field/text-field.ts:725` | `'✕'` | `x` |
+| 5 | `controls/text-field/text-field.ts:742` | `'👁'` (emoji) | `eye`/`eye-slash` |
+| 6 | `controls/text-field/text-field.ts:764` | `'📅'` (emoji) | `calendar-blank` |
+| 7 | `controls/text-field/text-field.ts:798` | `'▲'` | `caret-up` |
+| 8 | `controls/text-field/text-field.ts:805` | `'▼'` | `caret-down` |
+
+Recommended order (lowest-risk first): (1) `ui-select` caret — the canonical template. (2) `ui-calendar`
+month-nav. (3) `ui-text-field` adornments (highest fan-in, incl. the eye/eye-slash toggle-state browser
+leg) — do last. Each migration = swap the literal for `setIcon(cell, '<name>')`, NO CSS change, done-when
+check+test+test:browser green and the migrated cell's rendered box is unchanged vs. the pre-migration
+snapshot. `ui-combo-box` has **no caret today** — a parity caret there is net-new work, not a migration
+(optional design decision, not scoped). The checkbox `clip-path` tick stays CSS by design; the vendored
+`check` icon is only the forward companion if a future ADR elects otherwise.
+
+**Open follow-ups** (recorded, not this track): the 8-site migration roadmap above (separate waves); two
+non-blocking hardening items the reviewer flagged as done-but-worth-watching — the geometry-reconciliation
+"no CSS edit" claim has no *permanent* regression gate (verified once by hand at ship, not a standing
+test — a future wave touching `icon.css`/the adornment cells should re-verify); the icons↛components /
+zero-runtime-Phosphor grep gates are static-import-only (a dynamic `import()` would slip past both,
+mirroring the same pre-existing blind spot in `components/layering.test.ts` — low risk, no dynamic
+imports exist today).

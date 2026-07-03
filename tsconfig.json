@@ -21,7 +21,9 @@
       "@agent-ui/shared": ["./packages/agent-ui/shared/src/index.ts"],
       "@agent-ui/shared/*": ["./packages/agent-ui/shared/src/*"],
       "@agent-ui/a2ui": ["./packages/agent-ui/a2ui/src/index.ts"],
-      "@agent-ui/a2ui/*": ["./packages/agent-ui/a2ui/src/*"]
+      "@agent-ui/a2ui/*": ["./packages/agent-ui/a2ui/src/*"],
+      "@agent-ui/icons": ["./packages/agent-ui/icons/src/index.ts"],
+      "@agent-ui/icons/*": ["./packages/agent-ui/icons/src/*"]
     },
 
     /* Linting */

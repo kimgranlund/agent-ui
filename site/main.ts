@@ -166,6 +166,16 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    label: 'ui-icon',
+    cards: [
+      {
+        href: './icon-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class icon primitive over the @agent-ui/icons adapter — the API table + a live Phosphor gallery, generated from icon.md.',
+      },
+    ],
+  },
+  {
     label: 'ui-checkbox',
     cards: [
       {

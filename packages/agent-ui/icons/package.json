@@ -1,0 +1,13 @@
+{
+  "name": "@agent-ui/icons",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./phosphor": "./src/phosphor/index.ts"
+  },
+  "devDependencies": {
+    "@phosphor-icons/core": "2.1.1"
+  }
+}

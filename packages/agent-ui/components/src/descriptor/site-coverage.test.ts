@@ -160,7 +160,8 @@ describe('site coverage — every shipped component has its required per-tier pa
 
   it('sourced the controls, the display leaf, the Wave 1 indicators, the Wave 2 Range controls, and the G9 containers/patterns/layout', () => {
     expect(COMPONENTS.filter((c) => c.tier === 'control').map((c) => c.name).sort()).toEqual(['button', 'text-field'])
-    expect(COMPONENTS.filter((c) => c.tier === 'display').map((c) => c.name).sort()).toEqual(['text'])
+    // Display tier: ui-text (ADR-0025) + ui-icon (ADR-0065/0066, the icon-adapter's declarative consumer).
+    expect(COMPONENTS.filter((c) => c.tier === 'display').map((c) => c.name).sort()).toEqual(['icon', 'text'])
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group): tier=indicator/container (not control/display)
     expect(COMPONENTS.filter((c) => c.tier === 'indicator').map((c) => c.name).sort()).toEqual(
       ['checkbox', 'radio', 'slider', 'switch'],

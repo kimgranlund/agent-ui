@@ -28,6 +28,9 @@
 /* display controls (ADR-0025) */
 @import './controls/text/text.css';
 
+/* the icon adapter's declarative consumer (ADR-0065/0066) */
+@import './controls/icon/icon.css';
+
 /* Indicator controls — Wave 1 (ADR-0041/0042: widget-box geometry + UIIndicatorElement base) */
 @import './controls/checkbox/checkbox.css';
 @import './controls/switch/switch.css';

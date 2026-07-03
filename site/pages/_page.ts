@@ -73,6 +73,11 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './text-doc.html', label: 'API' }],
   },
   {
+    // The Display-class icon primitive (ADR-0065/0066) — a single descriptor-derived API doc + live gallery.
+    label: 'ui-icon',
+    links: [{ href: './icon-doc.html', label: 'API' }],
+  },
+  {
     // The Indicator-class form controls (Wave 1, ADR-0041/0042) — per-component groups, tag-labelled (the
     // site-toc rule: control/container/pattern tiers each get ONE ui-{tag} group; only layout bundles).
     label: 'ui-checkbox',

@@ -3,9 +3,11 @@ import { describe, it, expect } from 'vitest'
 // Trip-wire: the layer-dependency direction inside @agent-ui/components. Every production .ts under
 // src/ is read as raw text (no execution) and its imports are checked against the layering law —
 //   reactive(0) ← dom(1) ← traits(2) ← controls(3) ← barrel(4)
-// A file may import only from its own or a LOWER layer; the only non-relative import allowed is the
-// sibling package @agent-ui/shared (tokens/styles/utils). Vacuously green until the layers have code;
-// it bites from the first file that imports upward or pulls a third-party dependency.
+// A file may import only from its own or a LOWER layer; the only non-relative imports allowed are the
+// sibling packages @agent-ui/shared (tokens/styles/utils) and @agent-ui/icons (the icon adapter,
+// ADR-0065/0066 — components → icons, inward, mirroring components → shared). Vacuously green until
+// the layers have code; it bites from the first file that imports upward or pulls a third-party
+// dependency, or a future sibling that isn't a deliberate ADR-reviewed allowlist addition.
 const raw = import.meta.glob('./**/*.ts', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
 
 const LAYERS: ReadonlyArray<readonly [string, number]> = [
@@ -54,10 +56,13 @@ describe('import layering', () => {
         if (spec.startsWith('.')) {
           const li = layerOf(resolveRel(dirOf(path), spec))
           if (li > lf) violations.push(`${path} (L${lf}) -> ${spec} (L${li}): upward import`)
-        } else if (spec === '@agent-ui/shared' || spec.startsWith('@agent-ui/shared/')) {
-          // allowed: the one lower-tier sibling package
+        } else if (
+          spec === '@agent-ui/shared' || spec.startsWith('@agent-ui/shared/') ||
+          spec === '@agent-ui/icons' || spec.startsWith('@agent-ui/icons/')
+        ) {
+          // allowed: the two lower-tier sibling packages
         } else {
-          violations.push(`${path} -> "${spec}": external import (only @agent-ui/shared + zero third-party deps)`)
+          violations.push(`${path} -> "${spec}": external import (only @agent-ui/shared/@agent-ui/icons + zero third-party deps)`)
         }
       }
     }

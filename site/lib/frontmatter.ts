@@ -16,6 +16,7 @@ import type { ParsedDescriptor } from '@agent-ui/components/descriptor'
 // the in-package contract trip-wire and its /site doc page.
 import buttonMd from '../../packages/agent-ui/components/src/controls/button/button.md?raw'
 import textMd from '../../packages/agent-ui/components/src/controls/text/text.md?raw'
+import iconMd from '../../packages/agent-ui/components/src/controls/icon/icon.md?raw'
 import textFieldMd from '../../packages/agent-ui/components/src/controls/text-field/text-field.md?raw'
 import rowMd from '../../packages/agent-ui/components/src/controls/row/row.md?raw'
 import columnMd from '../../packages/agent-ui/components/src/controls/column/column.md?raw'
@@ -55,6 +56,7 @@ export function parseDoc(raw: string): ComponentDoc {
 // ── per-control loaders (one 2-line loader per documented control — the convention) ──────────────────────────
 export const loadButtonDoc = (): ComponentDoc => parseDoc(buttonMd)
 export const loadTextDoc = (): ComponentDoc => parseDoc(textMd)
+export const loadIconDoc = (): ComponentDoc => parseDoc(iconMd)
 export const loadTextFieldDoc = (): ComponentDoc => parseDoc(textFieldMd)
 export const loadRowDoc = (): ComponentDoc => parseDoc(rowMd)
 export const loadColumnDoc = (): ComponentDoc => parseDoc(columnMd)
