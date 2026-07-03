@@ -8,9 +8,11 @@ description: >-
   protocol conformance. Use PROACTIVELY for any generative-UI, A2UI-payload, agent-to-agent UI,
   catalog, or renderer task ("render this A2UI payload", "add the catalog entry", "implement
   LLD-C6", "wire the A2A extension", "the validator rejects this message"). It builds; a reviewer
-  seat grades (generator ≠ critic). Not for ui-* controls or their CSS/geometry
-  (component-builder), kernel/base-class work (dom/, reactive/), or spec/LLD authoring
-  (system-planner).
+  seat grades (generator ≠ critic). Not for A2UI PAYLOAD composition — authoring the message
+  stream / node shapes an agent emits against a catalog (a2ui-composer; this seat owns the
+  package / renderer / catalog CODE those payloads render through), ui-* controls or their
+  CSS/geometry (component-builder), kernel/base-class work (dom/, reactive/), or spec/LLD
+  authoring (system-planner).
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
 effort: high
@@ -85,8 +87,10 @@ your own output.
 `npm run check` and `npm test` green — run and read them, separately. The validator-parity leg
 (N6) re-proven when the spine is touched. Hand off via the handoff contract with the trace IDs
 you implemented; the reviewer seat the host names grades against the owning SPEC/LLD acceptance
-rows (the a2ui-specific rubrics land with the expert harness — pending, per
-`a2ui-expert-harness.spec.md`) — fix the unit, not the check.
+rows (the a2ui-specific rubrics have LANDED — `.claude/docs/rubrics/a2ui-{payload,catalog,corpus}.md` —
+grading a2ui ARTIFACTS: payloads · catalog rows · corpus records via the `a2ui-reviewer` critic; this
+seat's package units still trace to the SPEC/LLD acceptance rows, and `a2ui-harness-wiring.lld.md` §9
+keeps `a2ui-builder` out of the maker→rubric wiring check) — fix the unit, not the check.
 
 `renderer/binding.ts` + `renderer/list.ts` are realized references — read one end-to-end before
 your first build. Escalate design conflicts to the coordinator or host; never edit a SPEC, LLD,

@@ -485,6 +485,17 @@ describe('admit — the admission pipeline (LLD-C5)', () => {
       if (!result.ok) return
       expect(result.record.meta.qualityScore).toBe(0.95)
     })
+
+    it('a judge that THROWS (createVerdictJudge\'s unjudged-candidate case, ADR-0068) rejects admit() itself — never silently swallowed, nothing written', async () => {
+      const deps = mkDeps()
+      deps.judge = {
+        score: () => {
+          throw new Error('no verdict for record "sample" — fail-closed')
+        },
+      }
+      await expect(admit(mkCandidate(), deps)).rejects.toThrow('no verdict for record "sample"')
+      expect(deps.store.get('sample')).toBeUndefined()
+    })
   })
 
   describe('tier-1 parity (SPEC-N1 / R8-AC3)', () => {

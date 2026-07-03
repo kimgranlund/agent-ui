@@ -4,9 +4,9 @@
 > `git log -- packages/agent-ui/a2ui/` + the realized modules and their co-located probes** — this
 > file only orients; when it disagrees with the tree, the tree wins and this file gets repaired.
 > Build seat: the **`a2ui-builder`** agent (`.claude/agents/a2ui-builder.md`) — one unit per
-> dispatch, spec-faithful, escalates protocol-silence to the host. · updated 2026-07-03
+> dispatch, spec-faithful, escalates protocol-silence to the host. · updated 2026-07-04
 
-## Realized (verified against the tree, 605 tests green across 35 files in the a2ui package)
+## Realized (verified against the tree, 144 files / 2342 tests green repo-wide)
 
 - **A1 runtime foundation** — the shared validation spine (`renderer/validate.ts` +
   `corpus/validate.ts`, SPEC-N6 parity) + `surface.ts`/`parser.ts` (streamed payload parse) +
@@ -37,26 +37,41 @@
   guarded by a standing check-time gate (`corpus-data.test.ts`) — this also closes the
   `danger`-tone item below's sibling ask, the package-side corpus probe. Independent review: GO,
   zero blocker/major; two LATENT minors booked below.
+- **The expert harness** — **DONE 2026-07-04** (ADRs 0067–0068, `a2ui-expert-harness.spec.md` v0.2,
+  `a2ui-harness-wiring.lld.md` v0.2.1, decomp `a2ui-expert-harness` v2). The v0.1 design (4 skills,
+  3 maker agents, gate scripts, a Node loop driver) right-sized onto the realized corpus store:
+  TWO skills (`a2ui-compose` — merged patterns+composition+the SPEC-R6 loop; `a2ui-corpus-curate` —
+  a thin pointer over the shipped pipeline) · ONE maker/critic agent pair (`a2ui-composer` graded
+  by `a2ui-payload.md`; `a2ui-reviewer`, the critic that also authors ADR-0068 verdicts files) ·
+  THREE rubrics (`a2ui-payload.md`, `a2ui-catalog.md`, `a2ui-corpus.md` — the last IS the runtime
+  tier-2 quality standard, not just a doc) · the `validate-payload.ts` CLI (the loop's deterministic
+  gate) · `scripts/harness_wiring_check.py` (the governance proof, manual gate). **The ADR-0060
+  judge seam is ACTIVATED**: `src/corpus/judge.ts` (a pure verdicts-file adapter) + `store.ts`'s
+  `includeQuarantined` + the amended standing gate (quarantined lines now legal in the shard,
+  tier-1/hash skipped for them) + `tools/corpus/rescore.ts` (back-scoring) + `import-seeds.ts`'s
+  `--verdicts`/`--replace` (the judged quarantine exit — now GUARDED to require `--verdicts`,
+  closing a real gap an independent review caught: `--replace` alone silently skipped judging).
+  All 11 phase-1 shard records adversarially graded and back-scored to `qualityScore: 4` (byte-
+  stable shard diff — only that field changed); `E_QUALITY` proven end-to-end via a real
+  plant/revert cycle. A reference artifact (a newsletter-signup payload) cleared the full
+  compose→validate→critique loop in round 1, all 7 payload-rubric dims ≥4 — candidate for a future
+  `src/examples/` shelf addition or a committed test fixture (not admitted this wave). Two
+  independent whole-wave reviews: GO both times, one real MAJOR fixed (the `--replace` guard
+  above), two minors booked as follow-ups below. Corpus LLD-C12 SPLIT: the judge half is now done;
+  the Inspect-AI scoring/lift half stays deferred with corpus LLD-C8 (the first eval record).
 
 ## Open (the real next intakes, in likely order)
 
-1. **The expert harness** — `a2ui-expert-harness.spec.md` + `a2ui-harness-wiring.lld.md`
-   (rubrics + wiring; unrealized). Inherits four surfaces from the corpus store, all behind
-   `@agent-ui/a2ui/corpus`: `validateA2ui` (the admission/runtime/CI parity anchor) · `heal` (the
-   SAME closed healer, so pre-scoring healing and admission grade intent, not formatting) ·
-   `retrieve`/`exportCatalogExamples` (conditioning material) · the ADR-0060 judge seam (the
-   harness's corpus-quality rubric is the FIRST real tier-2 judge — plugging it in activates
-   E_QUALITY and can back-score phase-1's unjudged records via the absent `qualityScore` marker).
-   The harness's first eval set is authored held-out prompts admitted only once its own
-   contamination guard (corpus LLD-C8) lands — phase 1 ships no eval facet at all (fail-closed).
-2. **The streaming pipeline tail** — RECONCILED at v0.2 (2026-07-02): every CONSUMER-side streaming
+1. **The streaming pipeline tail** — RECONCILED at v0.2 (2026-07-02): every CONSUMER-side streaming
    behavior is realized in the renderer (parse/fault-isolation/arrival-order/render-on-root); the
    pipeline's OWN scope (codec · driver · transports · MCP — LLD-C1..C7) is entirely unbuilt and
    stays deliberately unscoped until a producer need arrives. Healing belongs to the corpus store's
    ONE shared healer (`corpus/heal.ts`, ADR-0061 — now realized, text-first signature designed for
-   per-line codec reuse). The STREAMING EXAMPLE shipped (`site/a2ui-stream` — root-early vs
-   root-last on the shared seed, the live first-paint metric, mid-stream fault isolation).
-3. ~~G7-unblocked integration work~~ — **DONE 2026-07-02** (ADR-0053/0054, decomp
+   per-line codec reuse). The programmatic generate→verify loop driver (harness SPEC-R6, procedural
+   only today) is this wave's named trigger too — the first real programmatic generator. The
+   STREAMING EXAMPLE shipped (`site/a2ui-stream` — root-early vs root-last on the shared seed, the
+   live first-paint metric, mid-stream fault isolation).
+2. ~~G7-unblocked integration work~~ — **DONE 2026-07-02** (ADR-0053/0054, decomp
    `a2ui-form-catalog-examples`): six catalog rows (Field · FormProvider · Checkbox · Switch ·
    Select · Option) + the 12-type TextField reach + the submit-gated action; the examples suite is
    now FOUR pages (canvas · dynamic list · **generative form** · **patterns**), all wired into the
@@ -64,13 +79,14 @@
    gap — components backlog; still open) · ~~a check-time demo-payload validity gate~~ — **DONE**,
    see the corpus store's `corpus-data.test.ts` above · defer `<ui-calendar>` element creation to
    first-open (ADR-0048's lazy spirit; the eager element is guarded but still built — still open).
-4. **The live-agent example** — the ladder's last rung (streaming SHIPPED 2026-07-02, item 2): a
-   real LLM emitting A2UI over the wire — prompt → streamed payload → rendered surface → the human
-   interacts → client messages return → the agent continues. Rides item 1's harness + the corpus
-   store's `retrieve()` for its few-shot conditioning (over the SAME 11 seed payloads the example
-   pages render — shown ≡ fed ≡ retrieved). Also shipped this wave: ADR-0056 (the region-less
-   card humane default + the container pedagogy) · the validator/dispatch envelope parity closed ·
-   `type=date`'s calendar now built on first-open.
+3. **The live-agent example** — the ladder's last rung (streaming SHIPPED 2026-07-02, harness
+   SHIPPED 2026-07-04): a real LLM emitting A2UI over the wire — prompt → streamed payload →
+   rendered surface → the human interacts → client messages return → the agent continues. Rides
+   the harness's `a2ui-compose`/`a2ui-composer` loop contract (procedural today — this wave owns
+   the FIRST programmatic realization) + `retrieve()` over the now-JUDGED 11-record shard for
+   few-shot conditioning (shown ≡ fed ≡ retrieved ≡ judged). Also shipped along the way: ADR-0056
+   (the region-less card humane default + the container pedagogy) · the validator/dispatch envelope
+   parity closed · `type=date`'s calendar now built on first-open.
 
 ## Corpus-store follow-ups (from the 2026-07-03 wave, all latent/safe-direction — none blocking)
 
@@ -92,6 +108,19 @@
 - No `@agent-ui/a2ui` line-item exists in `scripts/measure-size.mjs` — acceptable by construction
   today (no consumer bundle carries corpus bytes; the package is in-repo-only); mint one at the
   first external consumer of `@agent-ui/a2ui`, per ADR-0040 §3's manual-size discipline.
+
+## Expert-harness follow-ups (from the 2026-07-04 wave, both minor/latent — none blocking)
+
+- `scripts/harness_wiring_check.py`'s self-grade regex (`_REFLEX_SCORE`) has real blind spots —
+  verb-immediately-before-reflexive-pronoun constructions are caught, but possessive/reordered
+  phrasing ("trusts itself to grade", "is the sole judge of its own output") slips through. Not
+  currently exploited (both shipped maker files read clean), but the mechanism itself is fragile
+  for any future maker file — a stronger detector is a candidate hardening item, not a fix owed now.
+- `a2ui-compose`'s routing description over-triggers on at least one adversarial phrase its own
+  routing corpus never tested ("the payload validator in the a2ui package needs a new check for
+  this catalog type" — genuinely `a2ui-builder` territory, scores above threshold). Low severity
+  per the tool's own tripwire-not-certification policy; worth widening the negative corpus if the
+  routing seat is touched again.
 
 ## How to start a unit
 

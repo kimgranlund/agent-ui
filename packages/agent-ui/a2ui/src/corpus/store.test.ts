@@ -169,6 +169,39 @@ describe('createStore — the pure store core (LLD-C1)', () => {
     })
   })
 
+  describe('all({includeQuarantined}) — the storage-integrity read (ADR-0068 cl.5a)', () => {
+    it('default (or explicit false) excludes quarantined — byte-identical to the pre-existing behavior', () => {
+      const store = createStore()
+      store.put(mkRecord('kept', { status: 'valid' }))
+      store.put(mkRecord('hidden', { status: 'quarantined' }))
+
+      const noArg = store.all()
+      const explicitFalse = store.all({ includeQuarantined: false })
+      expect(noArg.map((r) => r.name)).toEqual(['kept'])
+      expect(explicitFalse).toEqual(noArg)
+    })
+
+    it('includeQuarantined:true includes them, composed with the other filters', () => {
+      const store = createStore()
+      store.put(mkRecord('kept', { status: 'valid', facet: 'exemplar', catalogId: 'agent-ui' }))
+      store.put(mkRecord('hidden', { status: 'quarantined', facet: 'exemplar', catalogId: 'agent-ui' }))
+      store.put(mkRecord('other-catalog-hidden', { status: 'quarantined', facet: 'exemplar', catalogId: 'demo' }))
+
+      expect(
+        store
+          .all({ includeQuarantined: true })
+          .map((r) => r.name)
+          .sort(),
+      ).toEqual(['hidden', 'kept', 'other-catalog-hidden'])
+      expect(
+        store
+          .all({ includeQuarantined: true, catalogId: 'agent-ui' })
+          .map((r) => r.name)
+          .sort(),
+      ).toEqual(['hidden', 'kept'])
+    })
+  })
+
   describe('put() — the single in-memory write, upserts by name', () => {
     it('a second put() with the same name overwrites the first', () => {
       const store = createStore()

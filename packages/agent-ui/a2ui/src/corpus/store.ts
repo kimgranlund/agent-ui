@@ -36,6 +36,11 @@ export interface CorpusStoreFilter {
   facet?: Facet
   catalogId?: string
   protocolVersion?: string
+  /** Include `status:"quarantined"` records too (default `false` — every existing caller's
+   * consumption semantics is unchanged). The storage-integrity read (ADR-0068 clause 5a): dedup
+   * warming needs to see quarantined records so a routine re-import can never silently overwrite
+   * one; ordinary consumers (retrieve/export/the leak gate) never pass this. */
+  includeQuarantined?: boolean
 }
 
 export interface CorpusStore {
@@ -113,7 +118,10 @@ export function createStore(shards: ShardText[] = []): CorpusStore {
   const all = (filter?: CorpusStoreFilter): CorpusRecord[] => {
     const out: CorpusRecord[] = []
     for (const rec of records.values()) {
-      if (rec.meta.status === 'quarantined') continue // the consumption-exclusion rule, SPEC-R13
+      // the consumption-exclusion rule (SPEC-R13) — `includeQuarantined:true` opts a caller INTO
+      // seeing them (ADR-0068 clause 5a: dedup warming, rescore's own audit read); every existing
+      // consumer never passes it, so its default (false) reproduces today's behavior exactly.
+      if (rec.meta.status === 'quarantined' && filter?.includeQuarantined !== true) continue
       if (filter?.facet !== undefined && rec.meta.facet !== filter.facet) continue
       if (filter?.catalogId !== undefined && rec.meta.catalogId !== filter.catalogId) continue
       if (filter?.protocolVersion !== undefined && rec.meta.protocolVersion !== filter.protocolVersion) continue

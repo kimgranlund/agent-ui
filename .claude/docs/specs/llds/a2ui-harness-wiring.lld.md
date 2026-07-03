@@ -61,7 +61,7 @@
 | Skill dir | Covers | Body shape |
 |---|---|---|
 | `a2ui-compose/` | idiomatic node shapes per catalog type + adjacency trees, `ChildList` templating, bindings, actions/checks, and the SPEC-R6 bounded loop | procedure + `references/` idiom cards DERIVED from the realized catalog (`src/catalog/default/`) and the 11-seed shelf (`src/examples/`) — file cites, never restated `protocol.ts` facts |
-| `a2ui-corpus-curate/` | seed authoring → `import-seeds --verdicts` → gates → judge verdicts → `rescore` | THIN pointer at corpus LLD §6 + ADR-0055/0060..0064; states the two halt escalations (θ_dup between distinct seeds; unjudged candidate under a wired judge) |
+| `a2ui-corpus-curate/` | seed authoring → `import-seeds --verdicts` → gates → judge verdicts → `rescore` | THIN pointer at corpus LLD §6 + ADR-0055/0060..0064/0068; states the three halt escalations (θ_dup between distinct seeds; unjudged candidate under a wired judge; quarantined-name collision — ADR-0068 cl.5, `--replace` is the exit) |
 
 **Invariant:** each passes `harness_checks.py skill`; descriptions fence siblings (each other, `component-author`, `docs-author`, `a2ui-builder` dispatch phrasings). Bodies/`references/` load on demand (SPEC-N1).
 

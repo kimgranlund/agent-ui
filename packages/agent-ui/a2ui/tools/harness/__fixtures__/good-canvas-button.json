@@ -1,0 +1,10 @@
+Here is the requested UI:
+
+```json
+[
+  {"createSurface":{"catalogId":"agent-ui","surfaceId":"canvas"},"version":"v1.0"},
+  {"updateComponents":{"components":[{"action":{"action":"submit"},"component":"Button","id":"root","label":"Click me","variant":"solid",}],"surfaceId":"canvas"},"version":"v1.0"},
+]
+```
+
+Let me know if you'd like any adjustments!

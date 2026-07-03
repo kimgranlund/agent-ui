@@ -34,6 +34,8 @@ describe('the corpus core barrel — public surface (LLD §12, ADR-0062)', () =>
     expect(corpus.exportCatalogExamples).toBeTypeOf('function')
     expect(corpus.exportFineTune).toBeTypeOf('function')
     expect(corpus.validateA2ui).toBeTypeOf('function') // the re-exported shared validator (LLD-C6)
+    expect(corpus.parseVerdictsFile).toBeTypeOf('function') // the ADR-0068 verdict adapter (LLD-C8)
+    expect(corpus.createVerdictJudge).toBeTypeOf('function')
   })
 
   it('wires a candidate through record→heal→canonicalize→store→admit→retrieve→export using ONLY the barrel\'s exports', async () => {

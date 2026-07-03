@@ -6,12 +6,24 @@
 // type-stripping from the repo root:
 //
 //   node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts
+//   node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --verdicts <path>
+//   node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --verdicts <path> --replace <name>
 //
 // (`erasableSyntaxOnly` in the repo tsconfig guarantees this source strips cleanly — ADR-0062.)
 // Idempotent: a re-run's candidates collide (exact canonical hash) with their own prior record and are
 // reported as already-present, not written again. A near/exact duplicate between two DISTINCT seeds
 // HALTS the run for a human ruling (LLD §5/§8 "seed near-dup at import" — never silent-skip). Collision
 // identity is read directly off `AdmitResult.collidesWith` (SPEC §5.2's typed contract, realized).
+//
+// `--verdicts <path>` (ADR-0068 clause 2/3): wires `createVerdictJudge(parseVerdictsFile(...))` into
+// `deps.judge` — every candidate this run must be judged, or `admit()`'s judge throws and this script
+// reports + halts (the θ_dup halt precedent, never a silent unjudged admit into a judged-era corpus).
+// Quarantine survivability (ADR-0068 clause 5): dedup warming now enumerates quarantined records too
+// (a plain re-import of an identical seed hits `E_DUP` against its quarantined predecessor rather than
+// re-admitting it), and a candidate that clears dedup whose NAME matches a stored QUARANTINED record
+// HALTS with nothing written. `--replace <name>` is the sanctioned exit: a deliberate, judged
+// re-admission of that one seed, with its predecessor's dedup signatures omitted from warming for this
+// run only (an improved seed is near-identical to its predecessor BY CONSTRUCTION).
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -20,8 +32,9 @@ import { createDedupIndex, minHashSignature } from '../../src/corpus/dedup.ts'
 import type { DedupIndex } from '../../src/corpus/dedup.ts'
 import { canonicalize } from '../../src/corpus/canonical.ts'
 import { admit } from '../../src/corpus/admit.ts'
-import type { AdmitDeps } from '../../src/corpus/admit.ts'
+import type { AdmitDeps, AdmitResult } from '../../src/corpus/admit.ts'
 import type { CorpusStore } from '../../src/corpus/store.ts'
+import { createVerdictJudge, parseVerdictsFile, UnjudgedCandidateError } from '../../src/corpus/judge.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import type { ExampleSeed } from '../../src/examples/types.ts'
@@ -37,8 +50,44 @@ import {
 } from '../../src/examples/patterns.ts'
 import { allSeeds } from '../../src/examples/index.ts'
 
-declare const process: { cwd(): string; exit(code?: number): never }
+declare const process: { cwd(): string; argv: string[]; exit(code?: number): never }
 declare const console: { log(...args: unknown[]): void; error(...args: unknown[]): void }
+
+// The estate's rubric home — `a2ui-corpus.md` carries the explicit `version:` marker every verdicts
+// file's `rubricVersion` MUST cite (ADR-0068 clause 1, SPEC-R3). Duplicated in `rescore.ts` rather than
+// factored out — each Node shell independently owns "where the rubric doc lives", the same split
+// `CORPUS_DATA_DIR` draws between `store.ts` and `fs-store.ts` (ADR-0062).
+const RUBRIC_PATH = '.claude/docs/rubrics/a2ui-corpus.md'
+
+function readRubricVersion(repoRoot: string): string {
+  let text: string
+  try {
+    text = readFileSync(join(repoRoot, RUBRIC_PATH), 'utf8') as string
+  } catch {
+    console.error(`import-seeds: could not read ${RUBRIC_PATH} — the rubric document must exist and carry a "version:" marker.`)
+    process.exit(1)
+  }
+  const match = text.match(/^version:\s*(\S+)\s*$/m)
+  if (!match) {
+    console.error(`import-seeds: ${RUBRIC_PATH} carries no "version:" marker (ADR-0068 clause 1) — cannot validate the verdicts file.`)
+    process.exit(1)
+  }
+  return match[1]!
+}
+
+interface CliArgs {
+  verdictsPath?: string
+  replaceName?: string
+}
+
+function parseArgs(argv: string[]): CliArgs {
+  const args: CliArgs = {}
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--verdicts') args.verdictsPath = argv[++i]
+    else if (argv[i] === '--replace') args.replaceName = argv[++i]
+  }
+  return args
+}
 
 // `ExampleSeed` carries no "which file declared me" field (that's a static-authoring fact, not
 // runtime data) — so the ADR-0055 `origin: 'src/examples/<module>.ts'` mapping is transcribed here,
@@ -99,9 +148,16 @@ function seedToCandidate(seed: ExampleSeed, moduleFile: string): unknown {
  * record's MinHash signature via the EXACT recipe `admit.ts` itself uses
  * (`` `${promptText} ${canonical.serialized}` ``) so a warmed signature is bit-for-bit what `admit()`
  * would have produced — the signature isn't persisted on the record, only `canonicalHash` is.
+ *
+ * Enumerates WITH `includeQuarantined: true` (ADR-0068 clause 5a, the M1 fix): a quarantined record's
+ * signatures must be warmed too, or a plain re-import of an identical seed would find no collision and
+ * silently re-admit it unjudged, erasing the quarantine. `excludeName` (the `--replace <name>` case,
+ * clause 5c) omits ONE record's own signatures from warming — the record being replaced is
+ * near-identical to its predecessor BY CONSTRUCTION, so warming it would falsely self-collide.
  */
-async function warmDedupIndex(store: CorpusStore, dedupIndex: DedupIndex): Promise<void> {
-  for (const rec of store.all()) {
+async function warmDedupIndex(store: CorpusStore, dedupIndex: DedupIndex, excludeName?: string): Promise<void> {
+  for (const rec of store.all({ includeQuarantined: true })) {
+    if (rec.name === excludeName) continue
     if (rec.meta.canonicalHash !== undefined) dedupIndex.addExact(rec.name, rec.meta.canonicalHash)
     if (rec.a2uiOutput !== undefined) {
       const canonical = await canonicalize(rec.a2uiOutput)
@@ -114,6 +170,16 @@ interface ImportReport {
   admitted: string[]
   alreadyPresent: string[]
   errors: Array<{ name: string; code: string; message: string; paths?: string[] }>
+}
+
+/** The `--replace <name>` sanctioned exit's audit trail (ADR-0068 clause 5c): the prior record's
+ * status + canonicalHash, captured BEFORE admission overwrites it — `status` on the NEW record is
+ * always recomputed honestly by `admit()` itself (valid/repaired from heal's real `changed` fact),
+ * never copied from here. */
+interface ReplacedInfo {
+  name: string
+  priorStatus: string
+  priorCanonicalHash?: string
 }
 
 /**
@@ -134,18 +200,69 @@ function loadDefaultCatalog(repoRoot: string): Catalog {
 async function main(): Promise<void> {
   checkGrouping()
 
+  const { verdictsPath, replaceName } = parseArgs(process.argv.slice(2))
+  if (replaceName !== undefined && verdictsPath === undefined) {
+    console.error('import-seeds: --replace requires --verdicts — a quarantine exit must be judged (ADR-0068 clause 5c). Nothing was written.')
+    process.exit(1)
+  }
   const repoRoot = process.cwd()
   const store = loadStore(repoRoot)
   const dedupIndex = createDedupIndex()
-  await warmDedupIndex(store, dedupIndex)
+  await warmDedupIndex(store, dedupIndex, replaceName)
 
   const deps: AdmitDeps = { catalog: loadDefaultCatalog(repoRoot), store, dedupIndex }
+
+  if (verdictsPath !== undefined) {
+    const rubricVersion = readRubricVersion(repoRoot)
+    const verdictsText = readFileSync(verdictsPath, 'utf8') as string
+    const parsed = parseVerdictsFile(verdictsText, rubricVersion)
+    if (!parsed.ok) {
+      console.error(`import-seeds: the verdicts file is malformed (${parsed.issues.length} issue(s)):`)
+      for (const issue of parsed.issues) console.error(`  - ${issue.path || '(root)'}: ${issue.message}`)
+      console.error('Nothing was written.')
+      process.exit(1)
+    }
+    deps.judge = createVerdictJudge(parsed.file)
+  }
+
   const report: ImportReport = { admitted: [], alreadyPresent: [], errors: [] }
+  let replaced: ReplacedInfo | undefined
 
   for (const group of SEEDS_BY_MODULE) {
     for (const seed of group.seeds) {
+      // Captured BEFORE admit() runs — the true prior state, since a name is only ever processed once
+      // per run. `store.get()` sees every status (unlike `store.all()`), so this also sees quarantined.
+      const existing = store.get(seed.name)
+      if (seed.name === replaceName && existing !== undefined) {
+        replaced = { name: seed.name, priorStatus: existing.meta.status, priorCanonicalHash: existing.meta.canonicalHash }
+      }
+
       const candidate = seedToCandidate(seed, group.module)
-      const result = await admit(candidate, deps)
+      let result: AdmitResult
+      try {
+        result = await admit(candidate, deps)
+      } catch (e) {
+        if (e instanceof UnjudgedCandidateError) {
+          console.error(`import-seeds: HALTED — ${e.message} (seed "${seed.name}"). Nothing was written.`)
+          process.exit(1)
+        }
+        throw e
+      }
+
+      if (result.ok && seed.name !== replaceName && existing !== undefined && existing.meta.status === 'quarantined') {
+        // The candidate cleared dedup (its content differs enough from the quarantined predecessor
+        // that neither exact nor near dedup caught it) and `admit()` just wrote over it IN MEMORY.
+        // Routine imports can never overwrite a quarantined line (ADR-0068 clause 5b) — the sanctioned
+        // exit is the explicit, judged `--replace <name>` re-admission. Nothing reaches disk until
+        // `saveStore()` below; halting here (before that call) leaves the on-disk shard untouched —
+        // this in-memory store is simply discarded with the process.
+        console.error(
+          `import-seeds: HALTED — "${seed.name}" matches a QUARANTINED record in the store. Routine ` +
+            `imports never overwrite a quarantined line; use "--replace ${seed.name}" for the ` +
+            'sanctioned, judged re-admission (ADR-0068 clause 5b). Nothing was written.',
+        )
+        process.exit(1)
+      }
 
       if (result.ok) {
         report.admitted.push(seed.name)
@@ -193,6 +310,9 @@ async function main(): Promise<void> {
   )
   if (report.admitted.length > 0) console.log(`  admitted: ${report.admitted.join(', ')}`)
   if (report.alreadyPresent.length > 0) console.log(`  already present: ${report.alreadyPresent.join(', ')}`)
+  if (replaced !== undefined) {
+    console.log(`  replaced: "${replaced.name}" (prior status: ${replaced.priorStatus}, prior canonicalHash: ${replaced.priorCanonicalHash ?? 'none'})`)
+  }
 }
 
 main().catch((e: unknown) => {

@@ -1,0 +1,25 @@
+{
+  "skill": "a2ui-corpus-curate",
+  "_note": "h13 routing tripwire (decomp a2ui-expert-harness.decomp-v2 node h13). Positives: import/admit a seed, back-score/rescore records, resolve an admission HALT, judged --replace quarantine exit, incl. 2 reworded paraphrases (#9,#10). Negatives drawn from SIBLING territory the description fences: a2ui-compose (payload composition), a2ui-builder agent dispatch (package/renderer/validator/catalog CODE), component-author (ui-* controls), docs-author (site pages). A tripwire, not a certification — the pass condition is description-lint + a human read of the named misses/grabs (SPEC-N2 v0.2).",
+  "positives": [
+    "import this authored seed into the A2UI corpus",
+    "back-score the phase-1 records with the rescore tool",
+    "run import-seeds with the verdicts file",
+    "resolve the near-duplicate halt between two distinct seeds",
+    "the import halted on an unjudged candidate — grade it and rescore",
+    "admit this exemplar through the corpus store pipeline",
+    "re-admit the quarantined seed through the judged --replace path",
+    "quarantine this corpus record after judging its quality",
+    "add a new hand-written example to the training set and admit it",
+    "the admission pipeline halted because a corpus record has no verdict — grade it and rescore"
+  ],
+  "negatives": [
+    "compose an A2UI payload for a dashboard surface",
+    "author the updateComponents message stream against the catalog",
+    "implement the renderer's binding logic in the a2ui package",
+    "fix the validator code in the a2ui package",
+    "the validator rejects this message — fix the renderer",
+    "build the ui-checkbox control with ElementInternals",
+    "write the docs-site page for the corpus guide"
+  ]
+}
