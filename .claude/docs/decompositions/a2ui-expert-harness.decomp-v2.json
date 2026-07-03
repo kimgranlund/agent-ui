@@ -1,0 +1,189 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "meta": {
+    "title": "A2UI expert harness — reconciled scope: 2 skills + composer/reviewer agent pair · 3 rubrics (.claude/docs/rubrics/) · judge activation (corpus ADR-0060 seam) · procedural compose-verify loop + validate CLI · wiring governance",
+    "date": "2026-07-03",
+    "author": "planner (design seat — the expert-harness intake, NEXT item 1)",
+    "version": 2,
+    "upstream": [
+      ".claude/docs/specs/NEXT.md (open item 1 — this intake; tree-wins rule)",
+      ".claude/docs/specs/a2ui-expert-system.prd.md (PRD-G3/G4; C3 governance)",
+      ".claude/docs/specs/specs/a2ui-expert-harness.spec.md (v0.1 → v0.2 reconciled this intake)",
+      ".claude/docs/specs/llds/a2ui-harness-wiring.lld.md (v0.1 → v0.2.1 reconciled this intake)",
+      ".claude/docs/specs/specs/a2ui-training-corpus.spec.md (v0.5 — SPEC-R8 tier-2 bar; R3 AC2 calibration)",
+      ".claude/docs/specs/llds/a2ui-corpus-store.lld.md (v0.5.1 — the realized substrate; the C12 split; §0 deferred tail C8)",
+      ".claude/docs/adr/0060-corpus-store-phase1-admission-seams.md (accepted — the judge seam this wave activates)",
+      ".claude/docs/adr/0067-harness-right-sizing-realized-estate.md (proposed this intake)",
+      ".claude/docs/adr/0068-corpus-quality-judge-verdict-adapter.md (proposed this intake)",
+      ".claude/docs/process.md (placement rules 1-3; generator ≠ critic)"
+    ],
+    "seat": "authoring slices h3-h9 (rubrics/skills/agents): planner-or-host via rubric-author/skill-author/agent-author, graded by the global doc-reviewer/skill-reviewer/agent-reviewer seats; PACKAGE-CODE slices h10/h11: a2ui-builder; activation h12 + reference-artifact h15: host-coordinated with a2ui-reviewer as the critic; h13 routing corpora + h14 wiring script: planner/host. Gates per slice named in each accept.",
+    "deferred": "a2ui-jsonl-mcp skill (trigger: the streaming producer wave, NEXT item 2) · programmatic loop driver (trigger: the live-agent wave, NEXT item 4 — streaming LLD-C2's dependency re-pointed there, edit APPLIED this intake) · retrieval CLI (trigger: live-agent wave or corpus >20 records) · corpus LLD-C8 contamination + the first eval set + LLD-C12's Inspect-AI scoring/lift leg (trigger: the first eval record; upstream eval/a2ui_eval/{scorers,dataset}.py fetches escalated for THAT wave) · wiring-check promotion to a standing gate (trigger: the first observed wiring-drift incident)",
+    "companion": "a2ui-expert-harness.decomp.json (v1) — the earlier record",
+    "diff": "v1 → v2 (2026-07-03, the independent doc-review's revision pass — 1 blocker + 4 majors + minors, architecture unchanged): meta.seat slice numbers CORRECTED (v1 mis-said h8/h9 = builder and h10/h13 = activation; it is h10/h11 = a2ui-builder, h12 = activation, h15 = reference artifact — M2); h11's accept absorbs the B1 gate amendment (corpus-data.test.ts:45's never-quarantined assertion is amended in the SAME slice that makes quarantine reachable, its facet-only invariant-ii cite corrected) and the M1 quarantine-survivability guards (store.all includeQuarantined warming · quarantined-name import halt · --replace judged exit · rescore all-or-nothing/halt-on-unknown-or-conflict/one-way semantics — ADR-0068 cl.4-6); h12's accept expects the AMENDED gate and names the plant/revert procedure (temporary shelf seed, exits 1, nothing written, reverted); h15's accept rephrased per M3 (host-orchestrated rounds; the composer never SELF-GRADES but receives the critic's verdict between rounds); h3's [gate] evidence = the validate-payload CLI (not the shard-scoped corpus-data gate); h5 adds the explicit rubric version: marker the VerdictsFile cites; h8 adds the a2ui-builder stale rubrics-pending line repair; h14 states a2ui-builder is OUT of the maker→graded-by enumeration; h6's label drops the ambiguous R1a+R1b lettering (v0.2 re-lettered); upstream cites bumped to corpus LLD v0.5.1 / harness LLD v0.2.1. Nodes/actions/hosts/edges are otherwise IDENTICAL to v1. IN-PLACE ACCEPT REFINEMENT (2026-07-03, the PROMOTE micro-pass — sanctioned on this UNDISPATCHED manifest, no structural change): h11's accept gains (a) the parseVerdictsFile(text, expectedRubricVersion) signature (caller supplies the version; the pure core never reads the rubric doc), (b) the rescore inverse clause (records not named in the file → untouched, reported still-unjudged), and (c) the --replace dedup self-collision rule (predecessor's exact+near signatures omitted from warming for that run) with the NEAR-IDENTICAL fixture requirement; the quarantined-name halt tightened to 'clears dedup whose name matches'."
+  },
+  "nodes": [
+    {
+      "id": "h0",
+      "label": "Expert-harness wave (harness SPEC v0.2 / LLD v0.2.1)",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "h1",
+      "label": "harness SPEC v0.2 + LLD v0.2.1 reconciliation (done in this intake, incl. the review revision pass)",
+      "leaf": true,
+      "accept": "a2ui-expert-harness.spec.md at v0.2 and a2ui-harness-wiring.lld.md at v0.2.1: every v0.1 SPEC-R#/LLD-C# carries a REALIZED-ELSEWHERE (file:line cite) / STILL-NEEDED (reshaped how) / OBSOLETE (why) ruling; rubric home corrected to .claude/docs/rubrics/; SPEC-N2 re-bound to the realized routing_eval.py tripwire + human-read policy; the loop contract split procedural-now / programmatic-at-live-agent with rounds HOST-orchestrated (LLD §6); the streaming LLD-C2 re-point APPLIED (a2ui-streaming-pipeline.lld.md §1 row + §3 lead); harness_checks.py spec + lld exit 0 on the two docs; all cross-references resolve"
+    },
+    {
+      "id": "h2",
+      "label": "ADR-0067 (harness right-sizing) + ADR-0068 (judge verdict-adapter + quarantine contract) PROPOSED → ratified",
+      "leaf": true,
+      "accept": "adr_check.py exits 0 on 0067 and 0068; both carry Status: proposed (never self-ratified) with index rows in adr/README.md; ADR-0068's Repairs names the corpus LLD §0/§1/§11 C12-split edit, the corpus-data.test.ts gate amendment, and the store.ts includeQuarantined flag; ADR-0067's Repairs names the applied streaming-LLD re-point; build slices h3-h11 dispatch only after the host accepts the ADR each encodes"
+    },
+    {
+      "id": "h3",
+      "label": "rubric .claude/docs/rubrics/a2ui-payload.md",
+      "leaf": true,
+      "accept": "python3 ~/.claude/skills/skill-author/scripts/harness_checks.py rubric exits 0 on the file; every dimension typed [gate]/[review] with 1/3/5 anchors and a what-it-checks column; gate-to-promote rule states every [gate] dim hard + gated dims >= 4; [gate] dims CITE the validate-payload CLI's verdicts as their evidence (the payload-scoped probe — NOT the shard-scoped corpus-data gate) rather than re-judging them (process.md rule 1 — no dimension owns a true/false a script already decides); [review] dims cover composition/idiom (against the seed shelf + catalog docs), binding hygiene, accessibility intent; doc-reviewer (fresh context) scores >= 4 on rubric-author's references/rubric.md gated dims"
+    },
+    {
+      "id": "h4",
+      "label": "rubric .claude/docs/rubrics/a2ui-catalog.md",
+      "leaf": true,
+      "accept": "harness_checks.py rubric exits 0; [gate] dims cite the REALIZED naming/conformance probes (src/catalog/naming.ts UAX-31 + conformance.ts) as their evidence; [review] dims cover mapping fidelity to ui-* controls, PropDef typing idiom, example/doc coverage per row; gate-to-promote present; anchors cite a realized catalog row (the form-family rows, ADR-0053) as the reference artifact; doc-reviewer >= 4 gated"
+    },
+    {
+      "id": "h5",
+      "label": "rubric .claude/docs/rubrics/a2ui-corpus.md (the tier-2 judge standard)",
+      "leaf": true,
+      "accept": "harness_checks.py rubric exits 0; dimensions cover ground-truth validity (CITES a2ui-payload.md for the a2uiOutput leg — no duplicated dimensions), prompt/description quality, target-clarity (the target ?? description consumer rule, ADR-0063), provenance integrity, dedup adjacency; defines the SPEC-R8 aggregation the Judge seam reads: qualityScore = MIN across [gate]-typed dims on the 1-5 scale, passed = qualityScore >= 4; carries an EXPLICIT version: marker that every VerdictsFile must cite as rubricVersion (ADR-0068 cl.1 / SPEC §5.3); CALIBRATION record committed in the rubric (SPEC-R3 AC2): the same reference record scored twice in independent fresh contexts agrees within +/-1 on every gated dim, tolerance stated; doc-reviewer >= 4 gated"
+    },
+    {
+      "id": "h6",
+      "label": "skill .claude/skills/a2ui-compose/ (merged the v0.1 patterns+composition areas)",
+      "leaf": true,
+      "accept": "harness_checks.py skill exits 0 on SKILL.md (trigger in first ~200 chars; <= 500 lines; validation loop present); description fences siblings (NOT for ui-* control code [component-author], a2ui package source [a2ui-builder], corpus curation [a2ui-corpus-curate], site pages [docs-author]); body encodes the SPEC-R6 bounded loop — compose, run the validate-payload CLI, self-correct, maxRounds 3 then halt-and-report, with rounds HOST-orchestrated and rubric grading the CRITIC's not the composer's (harness LLD §6 round-orchestration rules); references/ carries per-type idiom cards DERIVED from the realized catalog + the 11-seed shelf (file cites, no restated protocol.ts facts); skill-reviewer >= 4 gated"
+    },
+    {
+      "id": "h7",
+      "label": "skill .claude/skills/a2ui-corpus-curate/ (thin pointer over the realized pipeline)",
+      "leaf": true,
+      "accept": "harness_checks.py skill exits 0; the body is a THIN procedure over the REALIZED pipeline — author seed (src/examples shape, ADR-0055) -> import-seeds --verdicts -> gates (the AMENDED corpus-data.test.ts) -> judge verdicts (a2ui-reviewer against a2ui-corpus.md) -> rescore for back-scoring, --replace for the judged quarantine exit — citing corpus LLD §6 + harness LLD §7 + ADR-0055/0060..0064/0068 rather than restating them; states the THREE halt escalations (theta_dup near-dup between distinct seeds; unjudged candidate under a wired judge; quarantined-name collision); NO restated record schema (record.ts owns it); skill-reviewer >= 4 gated"
+    },
+    {
+      "id": "h8",
+      "label": "agents .claude/agents/a2ui-composer.md + the a2ui-builder.md routing repair",
+      "leaf": true,
+      "accept": "harness_checks.py agent exits 0 on a2ui-composer.md; frontmatter: scoped tools (Read, Grep, Glob, Write, Bash — Bash justified solely for the validate-payload CLI), model+effort set, maker trigger description with sibling fence; body names 'graded by: a2ui-payload rubric (.claude/docs/rubrics/a2ui-payload.md)' and NEVER self-grades (SPEC-R8 — it receives the critic's verdict between host-orchestrated rounds but never assigns its own scores); charter encodes corpus conditioning (read corpus/exemplar/v1_0/agent-ui.jsonl + the examples pages directly at <= ~20 records; the retrieval CLI is the NAMED scale trigger, not built) and the SPEC-R6 loop with the CLI as the deterministic check; a2ui-builder.md repaired in the same slice: (a) payload COMPOSITION routes to a2ui-composer, package source/renderer/catalog CODE stays a2ui-builder (both descriptions fence each other) and (b) its stale 'the a2ui-specific rubrics land with the expert harness — pending' line updated to cite the landed .claude/docs/rubrics/a2ui-*.md set; agent-reviewer >= 4 gated on both files"
+    },
+    {
+      "id": "h9",
+      "label": "agent .claude/agents/a2ui-reviewer.md (the a2ui critic seat)",
+      "leaf": true,
+      "accept": "harness_checks.py agent exits 0; critic charter: adversarially grade ONE a2ui artifact (payload | catalog row | corpus record) against the NAMED .claude/docs/rubrics/a2ui-{payload,catalog,corpus}.md rubric, returning severity-classified file:line-cited findings, per-dimension scores, and — when judging corpus records — the ADR-0068 VerdictsFile JSON shape citing the rubric's version: marker; never edits source; tools Read/Grep/Glob/Bash; generator≠critic asserted (no maker verbs in description); fences the component-reviewer (ui-* controls) and doc-reviewer (prose docs) siblings; agent-reviewer >= 4 gated"
+    },
+    {
+      "id": "h10",
+      "label": "tools/harness/validate-payload.ts (the loop's deterministic instrument)",
+      "leaf": true,
+      "accept": "node --experimental-strip-types packages/agent-ui/a2ui/tools/harness/validate-payload.ts <payload.json> [--catalog agent-ui] exits 0 printing {ok:true, repairs:[...]} on a known-good seed payload (healed form noted when heal changed it) and exits 1 printing structured {code, path, message} failures on planted-invalid fixtures (unknown component · dangling child · malformed pointer · wrong version pin — one fixture each, checked in a slice-report run log); composes heal + validateA2ui + the default catalog via relative imports of the pure core (ADR-0062: the core computes, the shell does IO; the catalog JSON-import Node workaround mirrors import-seeds.ts); zero new deps; npm run check green"
+    },
+    {
+      "id": "h11",
+      "label": "judge machinery + the quarantine contract: src/corpus/judge.ts (pure verdict adapter) · store.ts includeQuarantined · corpus-data.test.ts AMENDMENT (B1) · tools/corpus/rescore.ts · import-seeds --verdicts/--replace + quarantined-name halt",
+      "leaf": true,
+      "accept": "npm run check green and npm test green with src/corpus/judge.test.ts: parseVerdictsFile(text, expectedRubricVersion) validates the ADR-0068 shape (rubric id + rubricVersion matching the CALLER-supplied expected version — the Node shell reads a2ui-corpus.md's version: marker, the pure core never touches the fs [ADR-0062] — + judgedBy + per-name {qualityScore, passed, failingDimensions?}) rejecting malformed input with structured errors; createVerdictJudge(file) returns a Judge (admit.ts:48 interface) whose score() maps record.name -> verdict; a name ABSENT from the file makes score() throw the named unjudged-candidate error (fail-closed) and import-seeds surfaces it as report+halt (the theta_dup precedent); the corpus barrel (src/corpus/index.ts) exports the adapter (TEN core modules; purity greps stay green). STORE: all() gains includeQuarantined?: boolean (default false — every existing caller's consumption semantics unchanged, tested). GATE AMENDMENT (ADR-0068 cl.6, B1): corpus-data.test.ts's never-quarantined assertion (:45) REMOVED and its over-broad 'invariant ii' cite corrected to facet-only — quarantined lines are legal (parse + validateRecord + facet assert for ALL lines; tier-1 + hash-recompute legs run for NON-quarantined lines only); a planted quarantined line passes, a planted quarantined line with a schema defect still fails (negative control). RESCORE (Node shell): whole verdicts file validated + ALL updates computed BEFORE one serialize (all-or-nothing, proven by a planted mid-file failure writing NOTHING); applies ONLY to records with absent qualityScore — at/above bar writes meta.qualityScore, below bar sets status:'quarantined' (ONE-WAY under rescore); unknown name → halt; conflicting re-verdict → halt; identical verdict → no-op (second identical run is a byte-level no-op); records NOT named in the verdicts file are untouched and reported still-unjudged (the inverse clause — rescore is deliberately partial). IMPORT GUARDS (M1): warmDedupIndex enumerates with includeQuarantined:true (re-importing an identical seed against a quarantined record yields E_DUP, tested); a candidate that clears dedup whose name matches a stored QUARANTINED record HALTS with nothing written; import-seeds --replace <name> re-admits through the FULL judged pipeline with the replaced record's exact+near dedup signatures OMITTED from warming for that run (the self-collision rule — an improved seed is near-identical to its predecessor BY CONSTRUCTION; the test fixture MUST be a near-identical improved variant of the quarantined seed, not a dissimilar payload), logging prior status + canonicalHash in the run report, status recomputed by admission"
+    },
+    {
+      "id": "h12",
+      "label": "activation: back-score the 11 phase-1 records + prove E_QUALITY end-to-end",
+      "leaf": true,
+      "accept": "a2ui-reviewer grades all 11 committed shard records against a2ui-corpus.md producing ONE verdicts file citing the rubric's version: marker (its repo home named in the slice report); rescore run updates corpus/exemplar/v1_0/agent-ui.jsonl: every record carries meta.qualityScore or is status:'quarantined' with the failing dims in the run report; the AMENDED corpus-data.test.ts (h11) is green either way; git diff over the shard shows only qualityScore/status fields changed (byte-stable otherwise); the E_QUALITY negative control is a PLANTED below-bar candidate authored as a TEMPORARY shelf seed (touches src/examples/<module>.ts + index.ts + SEEDS_BY_MODULE), whose import-seeds --verdicts run exits 1 with E_QUALITY + failingDimensions and writes NOTHING — then the plant is REVERTED and the working tree shown clean (both facts in the run log; corpus SPEC-R8 AC2 falsifiable at last — ADR-0060's named trigger honored); the 'absent qualityScore' marker count goes 11 -> 0 (or the quarantine delta is itemized)"
+    },
+    {
+      "id": "h13",
+      "label": "routing-trigger corpora + routing_eval tripwire for the two new skills",
+      "leaf": true,
+      "accept": "each new skill ships scripts/routing-corpus.json (>= 8 positives incl. >= 2 paraphrases, >= 6 negatives drawn from sibling-skill territory: component-author, a2ui-builder dispatch phrasings, docs-author); python3 ~/.claude/skills/skill-author/scripts/routing_eval.py <desc> <corpus> --min-f1 0.7 exits 0 for both; the named misses/grabs are READ and dispositioned in the slice report (the aid is a tripwire, not certification — the SPEC-N2 v0.2 reading); harness_checks description-lint arms stay green"
+    },
+    {
+      "id": "h14",
+      "label": "scripts/harness_wiring_check.py (governance + reachability, manual gate)",
+      "leaf": true,
+      "accept": "python3 scripts/harness_wiring_check.py exits 0: runs harness_checks.py (skill|agent|rubric mode) over the ENUMERATED harness artifact set (SPEC §5.1 — a2ui-builder deliberately OUT of the maker→graded-by enumeration, stated in the script's enumeration comment: it is graded by SPEC/LLD acceptance rows + wave reviewer seats, not a harness rubric) AND asserts reachability — every maker agent's 'graded by' rubric file exists; every skill's referenced tools/gates/rubrics resolve to real paths; every a2ui-*.md rubric is referenced by >= 1 agent or skill (no orphan — SPEC-R5 AC1); a planted dangling rubric reference AND a planted self-grading maker line each make it exit 1 (negative controls, run and shown in the slice report); stdlib-only python; wired as a MANUAL gate (the npm-run-size precedent, ADR-0040 §3) with the promotion trigger recorded in the LLD"
+    },
+    {
+      "id": "h15",
+      "label": "reference artifact: the compose→verify loop proven end-to-end (SPEC-N4)",
+      "leaf": true,
+      "accept": "a2ui-composer, dispatched with a realistic intent and corpus conditioning, produces a payload that (a) passes validate-payload with zero failures and (b) is graded >= 4/5 on every gated a2ui-payload dimension by a2ui-reviewer in a fresh context, within <= 3 HOST-orchestrated compose->verify rounds (the SPEC-R6 bound; harness LLD §6 — gate failures feed back to the composer freely, and a below-bar critic verdict returns to it VERBATIM as the next round's input); the round count, gate outputs, and every verdict recorded by the host in the slice report (SPEC-N4 evidence); the composer never SELF-GRADES (it assigns no rubric scores to its own output — SPEC-R8); the artifact's home is named in the report (candidate seed for a future shelf addition or a committed test fixture — admission NOT required this wave)"
+    }
+  ],
+  "actions": [
+    { "id": "a1", "label": "reconcile the harness docs to the realized corpus-store estate (honest realized/still-needed/obsolete boundary)" },
+    { "id": "a2", "label": "pin the right-sizing and judge-mechanism decisions as ratifiable ADRs" },
+    { "id": "a3", "label": "define what a good A2UI payload is (the referential standard judgment grades against)" },
+    { "id": "a4", "label": "define what a good catalog row is" },
+    { "id": "a5", "label": "define what a corpus-admissible record is (the SPEC-R8 tier-2 bar, aggregation + version included)" },
+    { "id": "a6", "label": "teach payload composition as a recurring procedure (patterns + composition + the bounded loop)" },
+    { "id": "a7", "label": "teach corpus curation as a thin procedure over the realized pipeline" },
+    { "id": "a8", "label": "make payloads corpus-conditioned and mechanically self-checked (the maker seat)" },
+    { "id": "a9", "label": "grade a2ui artifacts against the rubrics in a fresh context (the critic seat)" },
+    { "id": "a10", "label": "let any seat validate a payload deterministically from the CLI (the loop's floor)" },
+    { "id": "a11", "label": "adapt critic verdicts into the admission judge seam with quarantine survivable end-to-end (E_QUALITY activation, fail-closed on the unjudged, gate amended, imports guarded)" },
+    { "id": "a12", "label": "back-score the phase-1 unjudged records honestly (score or quarantine, never silent)" },
+    { "id": "a13", "label": "trip-wire the skills' routing surface mechanically" },
+    { "id": "a14", "label": "keep the harness wiring reachable and governed by a script, not judgment" },
+    { "id": "a15", "label": "prove the whole loop on one reference artifact (generation -> gates -> critic, bounded, host-orchestrated)" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "h1" },
+    { "action": "a2", "node": "h2" },
+    { "action": "a3", "node": "h3" },
+    { "action": "a4", "node": "h4" },
+    { "action": "a5", "node": "h5" },
+    { "action": "a6", "node": "h6" },
+    { "action": "a7", "node": "h7" },
+    { "action": "a8", "node": "h8" },
+    { "action": "a9", "node": "h9" },
+    { "action": "a10", "node": "h10" },
+    { "action": "a11", "node": "h11" },
+    { "action": "a12", "node": "h12" },
+    { "action": "a13", "node": "h13" },
+    { "action": "a14", "node": "h14" },
+    { "action": "a15", "node": "h15" }
+  ],
+  "edges": [
+    { "from": "h2", "to": "h3", "why": "the rubric's existence/home/gate-role encodes ADR-0067's reshape — authoring before ratification pre-empts the host (corpus-wave n2 precedent)" },
+    { "from": "h2", "to": "h4", "why": "encodes ADR-0067 (which rubrics exist, where they live)" },
+    { "from": "h2", "to": "h5", "why": "encodes ADR-0067 (rubric home) AND ADR-0068 (the aggregation + version marker the Judge reads)" },
+    { "from": "h2", "to": "h6", "why": "the skill set (2 not 4, jsonl-mcp deferred) is ADR-0067's ruling" },
+    { "from": "h2", "to": "h7", "why": "the thin-pointer shape over the realized pipeline is ADR-0067's ruling" },
+    { "from": "h2", "to": "h8", "why": "the composer/builder routing boundary is ADR-0067's ruling" },
+    { "from": "h2", "to": "h9", "why": "the critic-seat unit (reviewer agent, not a curator agent) is ADR-0067's ruling" },
+    { "from": "h2", "to": "h10", "why": "the CLI-as-loop-floor (procedural loop, no programmatic driver) is ADR-0067's ruling" },
+    { "from": "h2", "to": "h11", "why": "judge.ts/rescore.ts/the gate amendment/the import guards encode ADR-0068's contract (cl.2/4/5/6)" },
+    { "from": "h3", "to": "h8", "why": "the composer's frontmatter names a2ui-payload as its grading rubric — the file must exist to reference" },
+    { "from": "h6", "to": "h8", "why": "the composer's charter preloads/cites the a2ui-compose skill (the procedure it executes)" },
+    { "from": "h3", "to": "h9", "why": "the reviewer cites the payload rubric it grades with" },
+    { "from": "h4", "to": "h9", "why": "the reviewer cites the catalog rubric it grades with" },
+    { "from": "h5", "to": "h9", "why": "the reviewer cites the corpus rubric + emits the verdicts shape (incl. its version marker) its judging role rides" },
+    { "from": "h5", "to": "h12", "why": "back-scoring grades against the ratified corpus rubric (the standard precedes the verdicts)" },
+    { "from": "h9", "to": "h12", "why": "the critic seat that authors the 11 verdicts is the h9 agent" },
+    { "from": "h11", "to": "h12", "why": "rescore/import --verdicts + the AMENDED standing gate are the machinery the back-score run executes and is judged green against" },
+    { "from": "h6", "to": "h13", "why": "the routing corpus rides the shipped skill description it evaluates" },
+    { "from": "h7", "to": "h13", "why": "the routing corpus rides the shipped skill description it evaluates" },
+    { "from": "h3", "to": "h14", "why": "the wiring check's green run enumerates the shipped rubric files" },
+    { "from": "h4", "to": "h14", "why": "the wiring check's green run enumerates the shipped rubric files" },
+    { "from": "h5", "to": "h14", "why": "the wiring check's green run enumerates the shipped rubric files" },
+    { "from": "h6", "to": "h14", "why": "the wiring check resolves the skill's referenced tools/rubrics" },
+    { "from": "h7", "to": "h14", "why": "the wiring check resolves the skill's referenced tools/rubrics" },
+    { "from": "h8", "to": "h14", "why": "the wiring check asserts the maker's graded-by edge resolves" },
+    { "from": "h9", "to": "h14", "why": "the wiring check asserts the critic cites resolvable rubrics" },
+    { "from": "h8", "to": "h15", "why": "the reference artifact is composed by the h8 maker seat" },
+    { "from": "h9", "to": "h15", "why": "the reference artifact is graded by the h9 critic seat" },
+    { "from": "h10", "to": "h15", "why": "the loop's deterministic check step is the h10 CLI" }
+  ]
+}

@@ -19,7 +19,7 @@ out-of-order tolerance (`renderer/tree.ts`, runtime SPEC-R3/R4/N1), validate-at-
 | ID | Component | Implements | File (under `packages/agent-ui/a2ui/`) | Scope | State |
 |---|---|---|---|---|---|
 | **LLD-C1** | JSONL codec | SPEC-R1 | `src/stream/codec.ts` | runtime | unbuilt |
-| **LLD-C2** | Generation pipeline driver | SPEC-R2 | `tools/pipeline/produce.ts` | dev/CI | unbuilt · blocked by corpus retriever (corpus LLD-C9) + harness generate loop (harness LLD-C6) |
+| **LLD-C2** | Generation pipeline driver | SPEC-R2 | `tools/pipeline/produce.ts` | dev/CI | unbuilt · blocked by corpus retriever (corpus LLD-C9, REALIZED) + the SPEC-R6 loop's first PROGRAMMATIC driver — the LIVE-AGENT wave's (NEXT item 4; the harness realizes the loop procedurally only — harness LLD v0.2 §6 / ADR-0067) |
 | **LLD-C3** | Transport abstraction + stdio | SPEC-R3, R8 | `src/stream/transport.ts` + `tools/pipeline/stdio.ts` | runtime (iface) / dev (stdio) | unbuilt |
 | **LLD-C4** | AG-UI adapter | SPEC-R4 | `tools/pipeline/transports/ag-ui.ts` | dev/server | unbuilt |
 | **LLD-C5** | A2A adapter | SPEC-R5 | `tools/pipeline/transports/a2a.ts` | dev/server | unbuilt |
@@ -47,7 +47,7 @@ async function* decode(src: string | AsyncIterable<string>): AsyncIterable<A2uiS
 
 ## 3. Pipeline driver — LLD-C2 (SPEC-R2)
 
-Reuses the harness generate→verify loop (harness LLD-C6) specialized to stream production:
+Reuses the harness loop CONTRACT (harness SPEC-R6: gates-first, bounded, halt-and-report) specialized to stream production — its programmatic realization arrives with the live-agent wave's driver (harness LLD v0.2 §6; the harness itself realizes the loop procedurally):
 ```ts
 async function* produce(task, opts) {
   const exemplars = retrieveCorpus(task.intent, task.catalogId, K);   // corpus store retriever
