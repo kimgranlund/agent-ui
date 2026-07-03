@@ -1,0 +1,323 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "meta": {
+    "title": "A2UI corpus store — record/JSONL home · admission (heal→validate→dedupe→record) · the ONE shared healer · seed-import (ADR-0055 handshake) · retrieval/exporters",
+    "date": "2026-07-03",
+    "author": "planner (design seat)",
+    "version": 5,
+    "upstream": [
+      ".claude/docs/specs/NEXT.md (open item 1 — this intake)",
+      ".claude/docs/specs/specs/a2ui-training-corpus.spec.md (v0.2 — SPEC-R1..R16, N1..N6)",
+      ".claude/docs/specs/llds/a2ui-corpus-store.lld.md (v0.2 reconciled this intake — slice s-numbers = its §13)",
+      ".claude/docs/specs/llds/a2ui-streaming-pipeline.lld.md (v0.2 — healing ownership; the codec is heal's 2nd caller)",
+      ".claude/docs/adr/0055-a2ui-example-seeds-package-home.md (accepted — the seed-import handshake this wave honors)",
+      ".claude/docs/adr/0060-corpus-store-phase1-admission-seams.md (proposed)",
+      ".claude/docs/adr/0061-corpus-shared-healer-contract.md (proposed)",
+      ".claude/docs/adr/0062-corpus-packaging-pure-core-subpath-data-home.md (proposed)",
+      ".claude/docs/adr/0063-corpus-record-upstream-dataset-schema-alignment.md (proposed)",
+      ".claude/docs/adr/0064-corpus-record-single-surface-v1.md (proposed)"
+    ],
+    "seat": "a2ui-builder (one slice per dispatch); gates per slice: `npm run check` then `npm test` (run separately); NO browser legs — nothing renders",
+    "deferred": "LLD-C8 contamination (trigger: first eval record) · LLD-C11 repair loop (trigger: first pin bump) · LLD-C12 scoring/lift (trigger: harness wave) · MCP exposure (owned by streaming LLD-C6) — designed in the LLD, deliberately not nodes here",
+    "companion": "a2ui-corpus-store.decomp.json (v1) · -v2 · -v3 · -v4 — the earlier records",
+    "diff": "v4 → v5 (2026-07-03, WAVE CLOSE — s1–s10 all landed and team-lead-verified; tree green: check · 2254 tests · size untouched): ONE accept precision fix — n3's 'E_NO_TARGET appears nowhere in src/corpus/ (grep-clean)' sharpened to match the shipped-and-verified guard: the probe (record.test.ts:220-230) deliberately SELF-EXCLUDES its own file, which names the string as the retirement's historical record. No other accept changed; every node's accept was met as written (the s7-found pointer-scope bug was fixed WITHIN n8's standing matrix — corpus resolution scope now mirrors the renderer's list threading by construction, LLD §6 v0.5). This manifest is the closed record of the wave."
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "label": "Corpus-store wave (LLD v0.2 §13 s1–s10)",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "n1",
+      "label": "corpus LLD v0.2 reconciliation (done in this intake)",
+      "leaf": true,
+      "accept": "a2ui-corpus-store.lld.md at v0.2: §0 realized/unrealized table with file:line citations; LLD-C6 marked REALIZED; the dangling a2ui-mcp.lld.md reference gone (LLD-C13 re-pointed to streaming LLD-C6); LLD-C14/C15 added; §6 shows the ADR-0060 seams + the tier-1→E_* mapping table; §7 carries the ADR-0061 heal contract; corpus SPEC at v0.2 with the R8/R4 phasing notes; all cross-references resolve"
+    },
+    {
+      "id": "n2",
+      "label": "ADR-0060/0061/0062 PROPOSED → ratified",
+      "leaf": true,
+      "accept": "adr_check.py exits 0 on all three (verified 2026-07-03); Status stays `proposed` until the host ratifies; build slices s3/s6/s7/s10 dispatch only after acceptance of the ADR each encodes"
+    },
+    {
+      "id": "n3",
+      "label": "s1 · LLD-C2 record model + validateRecord (src/corpus/record.ts)",
+      "leaf": true,
+      "accept": "npm run check green; npm test green with record.test.ts: a valid exemplar and a valid eval record return []; missing any of name/description/promptText → E_SCHEMA with the failing JSON path — description UNCONDITIONALLY required for every facet (ADR-0063; upstream-verified); an eval record WITHOUT target but WITH description returns [] (the upstream target-defaults-to-description positive control); an eval record with target but WITHOUT description FAILS E_SCHEMA at path 'description' (the inverted v0.3-carve-out control); E_NO_TARGET appears nowhere in src/corpus/ EXCEPT the self-excluding grep-guard probe's own deliberate mentions (record.test.ts:220-230 — it fs-scans the directory at test time and names the string as the retirement's historical record; AdmitCode has no such member); SINGLE-SURFACE (ADR-0064): an exemplar a2uiOutput addressing two surfaces → E_SCHEMA at the second surface's message path; one addressing none (callFunction-only) → E_SCHEMA; one surface plus surfaceless callFunction envelopes → passes; exemplar without a2uiOutput → E_SCHEMA; missing meta pins → E_PIN; validateRecord never throws on hostile input (fuzz arm incl. null/array/cyclic-free junk); the stale 'flagged to the team lead' comment is replaced by a SPEC-v0.5/ADR-0063/ADR-0064 citation. (SPEC v0.5 §5.1 + R1-AC2/R2-AC2/R2-AC3 are the contract.)"
+    },
+    {
+      "id": "n4",
+      "label": "s2 · LLD-C3 canonicalizer (src/corpus/canonical.ts)",
+      "leaf": true,
+      "accept": "npm run check green; npm test green with canonical.test.ts: two outputs differing only by component-array order / whitespace / ID spelling canonicalize to byte-identical serialization + equal SHA-256 (SPEC-R6 AC1); a changed bound path, component type, tree structure, or folded data model changes the hash (AC2); a children-template's componentId is rewritten + reachable; disconnected components dropped and noted; hash computed via crypto.subtle (async) and stable across repeated calls (N6)"
+    },
+    {
+      "id": "n5",
+      "label": "s3 · LLD-C7 healer — the ONE shared healer (src/corpus/heal.ts)",
+      "leaf": true,
+      "accept": "npm run check green; npm test green with heal.test.ts: each ADR-0061 closed-list arm heals with the repair named (fence-strip · trailing comma · single-object→array · version-fill-from-pin); a semantically invalid payload (unknown component / two roots / bad pointer) passes through UNCHANGED (no-laundering negative control); non-JSON after fence-strip → {ok:false}; a structured ADR-0055 seed → changed:false; pin absent ⇒ the version arm is inert"
+    },
+    {
+      "id": "n6",
+      "label": "s4 · LLD-C4 dedup (src/corpus/dedup.ts)",
+      "leaf": true,
+      "accept": "npm run check green; npm test green with dedup.test.ts: exact canonical-hash collision → the colliding name; MinHash(128 perms, k=3 shingles) near-match at exactly θ_dup=0.9 counts as duplicate (inclusive bound, SPEC-R7 AC2); a clearly distinct pair passes; empty index admits the first record; θ_dup is a documented parameter, not a literal buried in code"
+    },
+    {
+      "id": "n7",
+      "label": "s5 · LLD-C1 pure store core (src/corpus/store.ts)",
+      "leaf": true,
+      "accept": "npm run check green; npm test green with store.test.ts: createStore(serialize()) round-trips byte-identically (one record per line, stable key order); shardPath maps facet+pin+catalogId ('v1.0' → v1_0); a facet/shard mismatch is rejected at parse; index.json content is derived and regenerable; all() excludes status:'quarantined'; grep proves zero node:* imports under src/corpus/"
+    },
+    {
+      "id": "n8",
+      "label": "s6 · LLD-C5 admission pipeline (src/corpus/admit.ts)",
+      "leaf": true,
+      "accept": "npm run check green; npm test green with admit.test.ts: the LLD §8 table is the test matrix — every reachable code (E_SCHEMA·E_PIN·E_CATALOG·E_IDGRAPH·E_POINTER syntax AND resolution·E_DUP·E_LEAK eval-fail-closed·E_QUALITY via an injected fake judge) is exercised (E_NO_TARGET retired, ADR-0063); the tier-1→E_* mapping matches the LLD table; tier-1 parity holds (admission's verdict on a payload === validateA2ui's, the shared function); no judge ⇒ admit with qualityScore absent; heal changed ⇒ status:'repaired'; admitted record carries canonicalHash + componentsUsed"
+    },
+    {
+      "id": "n9",
+      "label": "s7 · LLD-C14 seed-import + LLD-C1 Node shell + LLD-C15 standing gate (tools/corpus/{fs-store,import-seeds}.ts · corpus/exemplar/v1_0/agent-ui.jsonl · src/corpus/corpus-data.test.ts)",
+      "leaf": true,
+      "accept": "the import script runs via node type-stripping and maps every ExampleSeed per ADR-0055 (provenance {source:'authored', origin:'src/examples/<module>.ts'}; surfaceId dropped; pins → meta) through admit(); all 11 shelf seeds admit into corpus/exemplar/v1_0/agent-ui.jsonl + index.json (a near-dup between two DISTINCT seeds halts with a θ_dup escalation report, never silent-skip); an idempotent re-run admits 0 (all E_DUP) and leaves the tree byte-identical; the committed shard is guarded by src/corpus/corpus-data.test.ts inside npm test: every line parses, validateRecord returns [], and its a2uiOutput passes validateA2ui against the default catalog; only tools/corpus wrote the data dir"
+    },
+    {
+      "id": "n10",
+      "label": "s8 · LLD-C9 retriever (src/corpus/retrieve.ts)",
+      "leaf": true,
+      "accept": "npm run check green; npm test green with retrieve.test.ts: TF-IDF cosine top-k over promptText+componentsUsed returns ≤k records scoped to catalogId+protocolVersion in descending relevance (a fixture where the intended best match is unambiguous); empty scope → [] not an error (SPEC-R11 AC2); a 10⁴-synthetic-record scan completes ≤200 ms p95 on the dev machine (SPEC-N2, measured in-test with a generous CI-safe bound documented)"
+    },
+    {
+      "id": "n11",
+      "label": "s9 · LLD-C10 exporters (src/corpus/export.ts)",
+      "leaf": true,
+      "accept": "npm run check green; npm test green with export.test.ts: exportCatalogExamples emits Array<{name, content}> in the HOST-VERIFIED upstream shape (content = a bare JSON array of A2UI messages, one entry per example; upstream consumes these as a directory of named *.json files whose basename = name, loader sorts by filename and adds its own ---BEGIN/END wrappers — LLD §9 carries the verbatim cites; the fs materialization is the Node shell's, not this module's), every entry pins the requested scope and its content is tier-1 valid (SPEC-R10 AC1) — checked against a committed upstream-shape fixture; exportFineTune yields {prompt,context,output} JSONL from exemplars only and a PLANTED eval record is excluded with the leak assertion firing (SPEC-R12 AC1 mechanism); quarantined records appear in neither export"
+    },
+    {
+      "id": "n12",
+      "label": "s10 · \"./corpus\" subpath + core barrel + wave integration gate (package.json · src/corpus/index.ts)",
+      "leaf": true,
+      "accept": "package.json exports gains \"./corpus\": \"./src/corpus/index.ts\" and the ROOT barrel is untouched (grep: src/index.ts has no corpus re-export; a root-only consumer bundles zero corpus bytes — the ADR-0055 proof shape); the barrel exports the pure core surface (validateRecord·canonicalize·heal·createStore·admit·retrieve·exporters·types); npm run check && npm test exit 0 at the integration commit with every corpus suite in the run"
+    }
+  ],
+  "actions": [
+    {
+      "id": "a1",
+      "label": "reconcile the corpus LLD/SPEC to the realized tree (honest realized/unrealized boundary)"
+    },
+    {
+      "id": "a2",
+      "label": "pin the phase-1/healer/packaging decisions as ratifiable ADRs"
+    },
+    {
+      "id": "a3",
+      "label": "validate a candidate record's shape, facets, and pins"
+    },
+    {
+      "id": "a4",
+      "label": "reduce an A2UI output to a canonical form + deterministic hash"
+    },
+    {
+      "id": "a5",
+      "label": "heal form-only transport defects without laundering invalidity (one healer for admission AND the future codec)"
+    },
+    {
+      "id": "a6",
+      "label": "reject exact and near duplicates with the collider named"
+    },
+    {
+      "id": "a7",
+      "label": "persist and reload records as sharded JSONL + a derived index, byte-stably"
+    },
+    {
+      "id": "a8",
+      "label": "admit through ONE write path with every failure mapped to a SPEC error code"
+    },
+    {
+      "id": "a9",
+      "label": "import the seed shelf as authored candidates per the ADR-0055 handshake, idempotently"
+    },
+    {
+      "id": "a10",
+      "label": "guard the committed corpus data at check time (the standing gate)"
+    },
+    {
+      "id": "a11",
+      "label": "retrieve top-k exemplars by intent within the latency budget"
+    },
+    {
+      "id": "a12",
+      "label": "export few-shot and fine-tune surfaces with zero eval leakage"
+    },
+    {
+      "id": "a13",
+      "label": "expose the read surface without touching any consumer bundle"
+    },
+    {
+      "id": "a14",
+      "label": "hold the wave green across the type + behavior gates"
+    }
+  ],
+  "hosts": [
+    {
+      "action": "a1",
+      "node": "n1"
+    },
+    {
+      "action": "a2",
+      "node": "n2"
+    },
+    {
+      "action": "a3",
+      "node": "n3"
+    },
+    {
+      "action": "a4",
+      "node": "n4"
+    },
+    {
+      "action": "a5",
+      "node": "n5"
+    },
+    {
+      "action": "a6",
+      "node": "n6"
+    },
+    {
+      "action": "a7",
+      "node": "n7"
+    },
+    {
+      "action": "a7",
+      "node": "n9"
+    },
+    {
+      "action": "a8",
+      "node": "n8"
+    },
+    {
+      "action": "a9",
+      "node": "n9"
+    },
+    {
+      "action": "a10",
+      "node": "n9"
+    },
+    {
+      "action": "a11",
+      "node": "n10"
+    },
+    {
+      "action": "a12",
+      "node": "n11"
+    },
+    {
+      "action": "a13",
+      "node": "n12"
+    },
+    {
+      "action": "a14",
+      "node": "n12"
+    }
+  ],
+  "edges": [
+    {
+      "from": "n2",
+      "to": "n5",
+      "why": "heal.ts encodes ADR-0061's contract (closed repair list, text-first shape) — building against a proposed fork would pre-empt the host"
+    },
+    {
+      "from": "n2",
+      "to": "n8",
+      "why": "admit.ts encodes ADR-0060's seams (injected judge, eval fail-closed)"
+    },
+    {
+      "from": "n2",
+      "to": "n9",
+      "why": "the import script writes into ADR-0062's ratified data home via the Node shell it defines"
+    },
+    {
+      "from": "n2",
+      "to": "n12",
+      "why": "the \"./corpus\" subpath is ADR-0062's public-surface decision"
+    },
+    {
+      "from": "n3",
+      "to": "n7",
+      "why": "the store serializes/parses the CorpusRecord shape record.ts defines"
+    },
+    {
+      "from": "n3",
+      "to": "n8",
+      "why": "admission's schema/field + pin stages call validateRecord"
+    },
+    {
+      "from": "n4",
+      "to": "n6",
+      "why": "the near-dup signature is computed over the canonical serialization canonical.ts emits"
+    },
+    {
+      "from": "n4",
+      "to": "n8",
+      "why": "admission's canonical+hash stage fills canonicalHash/componentsUsed"
+    },
+    {
+      "from": "n5",
+      "to": "n8",
+      "why": "heal runs first in the admission pipeline (SPEC-R8: the healed form is what is admitted)"
+    },
+    {
+      "from": "n6",
+      "to": "n8",
+      "why": "admission's dedup stage consults the DedupIndex"
+    },
+    {
+      "from": "n6",
+      "to": "n11",
+      "why": "exportFineTune's leak assertion reuses the MinHash near-match"
+    },
+    {
+      "from": "n7",
+      "to": "n8",
+      "why": "write — the pipeline's final stage is store.put(); the single mutation path"
+    },
+    {
+      "from": "n8",
+      "to": "n9",
+      "why": "the seed-import's ONLY write path is admit() (ADR-0055 clause 2 — the single-writer invariant)"
+    },
+    {
+      "from": "n3",
+      "to": "n10",
+      "why": "the retriever ranks CorpusRecord values (promptText + meta.componentsUsed)"
+    },
+    {
+      "from": "n3",
+      "to": "n11",
+      "why": "the exporters select/emit CorpusRecord values by facet + pins + status"
+    },
+    {
+      "from": "n9",
+      "to": "n12",
+      "why": "the integration gate includes the standing corpus-data gate over the committed shard"
+    },
+    {
+      "from": "n10",
+      "to": "n12",
+      "why": "the core barrel + subpath export the retriever surface; the wave gate runs its suite"
+    },
+    {
+      "from": "n11",
+      "to": "n12",
+      "why": "the core barrel + subpath export the exporter surface; the wave gate runs its suite"
+    },
+    {
+      "from": "n2",
+      "to": "n3",
+      "why": "the s1 FOLLOW-UP edit (ADR-0063 carve-out removal + E_NO_TARGET retirement + the ADR-0064 single-surface check) implements two proposed ADRs — building against a proposed reversal would pre-empt the host (the original s1 land was spec-driven and predated this edge)"
+    }
+  ]
+}
