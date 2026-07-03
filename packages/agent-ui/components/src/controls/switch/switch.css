@@ -22,10 +22,14 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-switch) declares --ui-switch-* ════════════════ */
 
 :where(ui-switch) {
-  /* Track colour (unchecked default = muted neutral). A per-state ROLE-LADDER step, never a color-mix
-     (ADR-0008). Hover steps one role brighter. */
-  --ui-switch-track: var(--c-neutral-outline-variant);
-  --ui-switch-track-hover: var(--c-neutral-outline);
+  /* Track colour (unchecked default = solid neutral). A per-state ROLE-LADDER step, never a color-mix
+     (ADR-0008). The OFF track is a state-bearing control part → the SOLID --c-neutral-track (SC 1.4.11
+     3:1 vs every surface plane), NOT the old translucent --c-neutral-outline-variant which composited to
+     1.51:1 light / 1.73:1 (an SC 1.4.11 fail — the off switch went near-invisible; the white thumb did
+     not carry it either, 1.22–1.84:1). Hover steps one role more prominent (2026-07-02 color audit item 4
+     · ADR-0059). The CHECKED track (primary, below) already clears 3.94:1 light / 4.68:1 dark — untouched. */
+  --ui-switch-track: var(--c-neutral-track);
+  --ui-switch-track-hover: var(--c-neutral-track-hover);
   /* Thumb colour (unchecked default = brightest neutral surface ≈ white). Constant across schemes. */
   --ui-switch-thumb: var(--c-neutral-surface-brightest);
 

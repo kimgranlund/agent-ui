@@ -258,7 +258,7 @@ describe('ui-text-field — visible inline-validation message (ADR-0029 A1, exte
     expect(getComputedStyle(message).display, ':state(user-invalid) did not give the message display:block').toBe('block')
     // the message carries the validation message text (set by text-field.ts from formValidity().message)
     expect(message.textContent?.length, 'message node has no text content under user-invalid').toBeGreaterThan(0)
-    // danger ink: the `color` property resolves to a non-transparent colour via --ui-text-field-message-ink → --c-danger
+    // danger ink: the `color` property resolves to a non-transparent colour via --ui-text-field-message-ink → --c-danger-on-surface-variant
     expect(alphaOf(getComputedStyle(message).color), 'message ink is transparent — danger colour not applied').toBeGreaterThan(0)
 
     // RECOVERY: filling the field should clear user-invalid and hide the message again.

@@ -31,6 +31,11 @@ Every family exposes the same roles, so a component swaps families by changing o
 - **anchor** — `--c-{f}` · `-dim` · `-bright` · `-low` · `-high`
 - **on-color** — `-on-{f}` · `-on-{f}-variant` · `-on-surface` · `-on-surface-variant`
 - **outline** — `-outline` · `-outline-variant`
+- **track** *(neutral only)* — `--c-neutral-track` · `--c-neutral-track-hover` — the **solid** unselected-track
+  fill for a state-bearing widget (switch off-track, slider rail), held to **SC 1.4.11 3:1 vs every surface
+  plane in both schemes**. NOT `-outline-variant` (a translucent *decorative* outline that composites to only
+  ~1.5–1.7:1 — an SC 1.4.11 fail for an interactive control part). Disabled tracks are 1.4.11-exempt and keep
+  their muted roles. ADR-0059.
 - **container** — `-container` · `-container-low` · `-container-high`
 - **scrim** — `-scrim-weakest … -scrim-strongest` (+ `-scrim`)
 - **inverse** — `-inverse-surface` · `-inverse-on-surface`
@@ -46,7 +51,11 @@ families):
 - `-selected` — the persistent **chosen** fill, **guaranteed WCAG-AA (≥4.5:1) against `-on-{f}` TEXT in BOTH
   schemes** (light `550`/dark `600`). Use it wherever selected TEXT sits on an accent fill; the accent anchor
   pair (`--c-{f}` + `-on-{f}`) is report-only and drops below 4.5:1 in dark — fine for a *glyph* (3:1 bar), not
-  for a *numeral/label*. First consumer: the `ui-calendar` selected day (ADR-0048).
+  for a *numeral/label*. First consumer: the `ui-calendar` selected day (ADR-0048). The four intent families
+  (`danger/warning/success/info`) have **no `-selected` step yet**: white-on-intent-FILL TEXT is a measured but
+  currently *unreachable* AA gap (the anchor dark leg is 3.13–3.41:1, below 4.5 — but no filled intent control
+  exists). The siblings are **reserved** with a pre-computed remedy (`light-dark({f}-550, {f}-600)`, verified
+  ≥4.5:1 both legs) that mints at the first filled intent control (ADR-0058).
 
 ## Consumption invariants
 

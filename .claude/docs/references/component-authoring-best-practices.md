@@ -19,6 +19,13 @@
   consuming **only** `--ui-{name}-*`; a barrel `@import`ing both.
 - Wire geometry **off the ramp** (`block-size`, `padding-block: 0`, the slot/slotless inline-pad,
   affordance `= font`) — per `docs/references/geometry.md`.
+- **Intent never travels by color alone** (WCAG SC 1.4.1; ADR-0057). The intent anchors are L-matched,
+  so intent is hue-only at the token level and collapses under CVD (danger↔success is indistinguishable
+  under deuteranopia). Wherever an intent role (`--c-danger/-warning/-success/-info` — or any color role
+  carrying validity/status/kind/selection) styles a state or variant, a **visible non-color signifier
+  co-carries the meaning**: text naming the state (text-field's validity message, ADR-0014 cl.4), a
+  glyph/shape (checkbox's tick; calendar's ring-vs-fill), position (switch's thumb), or a pattern (a
+  dashed border). The ARIA state is required alongside but is never the visible cue.
 - Make `{name}.api.json` mirror `static props` exactly (the contract↔props trip-wire enforces it).
 
 ## Don't
@@ -27,6 +34,8 @@
 - A **self-owned outer margin** — a component owns its inside, not its surroundings (composition breaks).
 - **Raw primitive token refs** (`--c-{family}-{stop}`) in component CSS — read **roles** only.
 - **Block-padding as the sizing lever** — `block-size` is the lever; `padding-block` is `0`.
+- **A color-only state diff** — if two states/variants of a surface differ only in color values, the
+  surface fails CVD and fails review (ADR-0057); a color-only status dot / hue-only badge is unshippable.
 - **Re-specify** the props API or restate the geometry/token law — point to the canonical docs. Copying
   them is the drift the rubric's coherence dimension penalizes.
 

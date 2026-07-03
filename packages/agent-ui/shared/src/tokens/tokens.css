@@ -61,6 +61,18 @@
   --c-neutral-on-surface-variant: light-dark(var(--c-neutral-750), var(--c-neutral-250));
   --c-neutral-outline: light-dark(var(--c-neutral-500-600), var(--c-neutral-500-600));
   --c-neutral-outline-variant: light-dark(var(--c-neutral-500-400), var(--c-neutral-500-400));
+  /* State-bearing TRACK role (2026-07-02 color audit item 4 · ADR-0059) — a SOLID neutral for the
+     UNSELECTED track of a state-bearing widget (switch off-track, slider rail), held to SC 1.4.11's 3:1
+     non-text bar against every surface plane it can sit on. It replaces the general -outline-variant
+     (neutral-500 @ 40%), a translucent DECORATIVE outline that composites to only 1.51:1 light / 1.73:1
+     dark over the surface — fine as a passive border, an SC 1.4.11 FAIL for a control part. Solid 600/400
+     clears EVERY plane in BOTH schemes (3.80:1 worst case on light --c-neutral-surface-highest → 6.06:1 on
+     dark background). -hover steps one role more prominent and stays MONOTONIC + distinct in BOTH schemes
+     (light 600→700 darkens, dark 400→300 lightens — no light-mode collapse; -hover clears 5.56–7.81:1).
+     Disabled tracks are SC 1.4.11-EXEMPT (inactive components) and keep their own muted roles — not this.
+     Forced-colors: unused here — switch/slider map their track to system colours directly in-sheet. */
+  --c-neutral-track: light-dark(var(--c-neutral-600), var(--c-neutral-400));
+  --c-neutral-track-hover: light-dark(var(--c-neutral-700), var(--c-neutral-300));
   --c-neutral-container: light-dark(var(--c-neutral-500-200), var(--c-neutral-500-200));
   --c-neutral-container-low: light-dark(var(--c-neutral-500-100), var(--c-neutral-500-100));
   --c-neutral-container-high: light-dark(var(--c-neutral-500-300), var(--c-neutral-500-300));
@@ -650,8 +662,14 @@
   /* Focus — the shared focus-ring role (ADR-0009) */
   /* A DEDICATED accent-leaning role, NOT `--c-primary` reused: every control's `:focus-visible` ring is
      one consistent colour, so a ghost/secondary/neutral control gets the same ring, not one tinted by its
-     own family. Resolved via light-dark() like every other role. */
-  --c-focus-ring: light-dark(var(--c-primary-500), var(--c-primary-400));
+     own family. Resolved via light-dark() like every other role.
+     Light leg = primary-550 (NOT 500): a focus ring is a non-text UI signal held to SC 1.4.11's 3:1 bar
+     against EVERY plane it can land on. primary-500 fell to 2.67:1 on --c-neutral-surface-highest and
+     2.86:1 on -surface-higher (the two darkest LIGHT elevation planes) — an SC 1.4.11 fail. primary-550
+     clears every light plane (3.22:1 worst case on -surface-highest, up to 4.79:1 on white). The dark leg
+     (primary-400) already clears everywhere (4.39–6.03:1) — untouched. ADR-0009 delegates the ring hue to
+     this token slice, so this is an in-charter adjustment, not a new ADR (2026-07-02 color audit item 2). */
+  --c-focus-ring: light-dark(var(--c-primary-550), var(--c-primary-400));
 }
 
 /* Forced-colors (WHCM) — roles carry the WHCM mapping in the token layer (tokens.md), so components survive

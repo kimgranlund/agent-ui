@@ -342,7 +342,7 @@ describe('text-field.css — Wave-5A numeric adornment rules (ADR-0047 CSS struc
 describe('text-field.css — visible message node (ADR-0029 A1, extends ADR-0014)', () => {
   it('declares the --ui-text-field-message-font and --ui-text-field-message-ink tokens in the :where() block', () => {
     expect(tokenBlock).toMatch(/--ui-text-field-message-font:\s*var\(--ui-font-sm\)/)
-    expect(tokenBlock).toMatch(/--ui-text-field-message-ink:\s*var\(--c-danger\)/)
+    expect(tokenBlock).toMatch(/--ui-text-field-message-ink:\s*var\(--c-danger-on-surface-variant\)/) // AA-gated danger TEXT ink (2026-07-02 audit item 1; bare --c-danger is 4.05:1 light, an AA text fail)
   })
 
   it('the @scope :state(user-invalid) > .ui-text-field-message rule gives it display:block + danger-text treatment', () => {

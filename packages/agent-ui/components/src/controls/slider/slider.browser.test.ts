@@ -60,6 +60,29 @@ describe('ui-slider AC0 — renders as a horizontal track, not a collapsed dot (
   })
 })
 
+// ── SC 1.4.11: the rail is a SOLID, opaque neutral (2026-07-02 audit item 4 · ADR-0059) ───────────
+
+describe('ui-slider — solid rail (SC 1.4.11, ADR-0059)', () => {
+  it('--ui-slider-rail resolves to an OPAQUE neutral (--c-neutral-track), not the old translucent outline-variant', () => {
+    // The rail was --c-neutral-outline-variant (neutral-500 @ 40%) — composited to 1.51:1 light / 1.73:1
+    // dark over the surface, an SC 1.4.11 fail (at value 0 the whole track vanished). The fix is the SOLID
+    // --c-neutral-track; the VALUE rides the high-contrast thumb, so the fill↔rail luminance may stay low.
+    // The rail lives inside the ::before gradient, so we read it via an INHERITING probe child: the custom
+    // property --ui-slider-rail inherits from the host, and `background-color: var(--ui-slider-rail)`
+    // resolves it to an OPAQUE colour a real engine paints (alpha 1) — which the old 0.4 role never could.
+    const el = document.createElement('ui-slider') as UISliderElement
+    document.body.append(el)
+    const probe = document.createElement('div')
+    probe.style.backgroundColor = 'var(--ui-slider-rail)'
+    el.append(probe)
+    const bg = getComputedStyle(probe).backgroundColor
+    const m = bg.match(/rgba?\(([^)]+)\)/i)
+    const alpha = m ? (m[1].split(/[\s,/]+/).filter(Boolean)[3] ?? '1') : '1'
+    expect(Number(alpha), `slider rail must resolve OPAQUE (solid --c-neutral-track), got "${bg}"`).toBe(1)
+    el.remove()
+  })
+})
+
 // ── AC1: box = --ui-compact-{size} per [size]×[scale] — EXACT px (anti-vacuous) ─────────────────
 
 describe('ui-slider browser smoke (AC1 — interactive box exact px per [size]×[scale])', () => {

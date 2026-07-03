@@ -159,6 +159,21 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
   })
 })
 
+// ── SC 1.4.11: the OFF track is a SOLID, opaque neutral (2026-07-02 audit item 4 · ADR-0059) ─────────────
+
+describe('ui-switch cross-engine browser smoke — solid off-track (SC 1.4.11, ADR-0059)', () => {
+  it('the UNCHECKED track (::before) paints an OPAQUE neutral — --c-neutral-track resolved, not the old translucent outline-variant', () => {
+    // The off-track was --c-neutral-outline-variant (neutral-500 @ 40%), which composited to only 1.51:1
+    // light / 1.73:1 dark over the surface — an SC 1.4.11 fail; the near-white thumb didn't carry it either
+    // (1.22–1.84:1 in the off state). The fix is the SOLID --c-neutral-track. A headless env can't paint the
+    // composited alpha, so this real-engine read is the proof: the track background is fully OPAQUE (alpha 1),
+    // which the old translucent 0.4 role could never be. This probe PINS the ADR-0059 repoint.
+    const { sw } = mount('<ui-switch></ui-switch>') // unchecked (off) by default
+    const bg = getComputedStyle(sw, '::before').backgroundColor
+    expect(alphaOf(bg), `off-track background must be OPAQUE (solid --c-neutral-track), got "${bg}"`).toBe(1)
+  })
+})
+
 // ── forced-colors ─────────────────────────────────────────────────────────────────────────────────────
 
 describe('ui-switch cross-engine browser smoke — forced-colors', () => {

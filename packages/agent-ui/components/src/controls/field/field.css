@@ -44,7 +44,7 @@
 
   /* Error — matches text-field's own message voice (--ui-text-field-message-*): one visual voice for
      the ONE error, whichever control renders it. */
-  --ui-field-error-ink: var(--c-danger);
+  --ui-field-error-ink: var(--c-danger-on-surface-variant); /* danger TEXT ink — AA-gated on-surface (8.48:1 light / 8.91:1 dark). Bare --c-danger is 4.05:1 light = an AA text FAIL; only the TEXT ink moves (any danger BORDER channel stays --c-danger, the 3:1 UI bar). 2026-07-02 color audit item 1. */
   --ui-field-error-font: var(--ui-font-sm);
 }
 

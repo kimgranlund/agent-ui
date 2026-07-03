@@ -26,8 +26,13 @@
   /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md). `[size]` repoints. */
   --ui-slider-box: var(--ui-compact-md);
 
-  /* Rail colour — the unselected portion of the track (neutral outline-variant). */
-  --ui-slider-rail: var(--c-neutral-outline-variant);
+  /* Rail colour — the unselected portion of the track. A state-bearing control part → the SOLID
+     --c-neutral-track (SC 1.4.11 3:1 vs every surface plane), NOT the old translucent
+     --c-neutral-outline-variant which composited to 1.51:1 light / 1.73:1 dark (an SC 1.4.11 fail — at
+     value 0 the whole track went near-invisible). The fill↔rail luminance boundary is intentionally low
+     (primary and neutral are L-close) — the VALUE is carried by the high-contrast THUMB, which clears 3:1
+     against both the fill (4.79/3.67) and this rail (4.69/3.74). 2026-07-02 color audit item 4 · ADR-0059. */
+  --ui-slider-rail: var(--c-neutral-track);
 
   /* Fill colour — the selected portion (min → value), primary family. */
   --ui-slider-fill: var(--c-primary);
@@ -51,7 +56,9 @@
 }
 
 /* [disabled] → muted neutral roles for rail, fill, and thumb. The state holds at idle: the styles
-   block sets `pointer-events: none` so `:hover` never matches, preventing any token lift. */
+   block sets `pointer-events: none` so `:hover` never matches, preventing any token lift. The rail
+   deliberately stays the translucent --c-neutral-outline-variant (NOT the solid --c-neutral-track): a
+   disabled/inactive component is SC 1.4.11-EXEMPT, and the muted rail correctly reads as inactive. */
 :where(ui-slider[disabled]) {
   --ui-slider-rail: var(--c-neutral-outline-variant);
   --ui-slider-fill: var(--c-neutral-surface-high);

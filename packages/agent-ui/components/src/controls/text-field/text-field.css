@@ -67,7 +67,7 @@
      node (control-managed, aria-describedby target) becomes VISIBLE when non-empty under :state(user-invalid).
      Declared here (specificity 0, overridable), consumed in the @scope block. */
   --ui-text-field-message-font: var(--ui-font-sm); /* small type — subordinate to the field's own label/value */
-  --ui-text-field-message-ink: var(--c-danger); /* danger ink — mirrors the danger border channel (ADR-0014 cl.2c) */
+  --ui-text-field-message-ink: var(--c-danger-on-surface-variant); /* danger TEXT ink — AA-gated on-surface (8.48:1 light / 8.91:1 dark). Bare --c-danger is 4.05:1 light = an AA text FAIL, so the TEXT ink moves; the danger BORDER channel above (--ui-text-field-border-invalid) stays --c-danger (border = 3:1 UI bar). ADR-0014 cl.2c · 2026-07-02 color audit item 1. */
 }
 
 /* size → dimensional ramp (size is reflected, so the attribute is present) */
