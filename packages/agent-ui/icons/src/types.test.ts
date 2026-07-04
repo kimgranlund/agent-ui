@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { ICON_NAMES, type IconName, type IconPack } from './types.ts'
 
 describe('ICON_NAMES', () => {
-  it('has exactly nine names', () => {
-    expect(ICON_NAMES.length).toBe(9)
+  it('has exactly eleven names', () => {
+    expect(ICON_NAMES.length).toBe(11)
   })
 
   it('is all distinct strings', () => {
@@ -19,6 +19,7 @@ describe('ICON_NAMES', () => {
       [
         'caret-down', 'caret-up', 'caret-left', 'caret-right',
         'x', 'eye', 'eye-slash', 'calendar-blank', 'check',
+        'arrow-right', 'magnifying-glass',
       ].sort(),
     )
   })

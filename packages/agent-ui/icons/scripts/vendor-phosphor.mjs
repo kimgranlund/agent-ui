@@ -19,6 +19,8 @@ const NAME_MAP = {
   'eye-slash': 'eye-slash',
   'calendar-blank': 'calendar-blank',
   check: 'check',
+  'arrow-right': 'arrow-right',
+  'magnifying-glass': 'magnifying-glass',
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'

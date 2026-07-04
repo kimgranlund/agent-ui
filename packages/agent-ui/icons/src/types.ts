@@ -4,6 +4,7 @@
 export const ICON_NAMES = [
   'caret-down', 'caret-up', 'caret-left', 'caret-right',
   'x', 'eye', 'eye-slash', 'calendar-blank', 'check',
+  'arrow-right', 'magnifying-glass',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 

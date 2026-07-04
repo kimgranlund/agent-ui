@@ -6,8 +6,8 @@
 import { mountPage } from './pages/_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './pages/landing.css' // landing-local layout (hero + card grid), after the shared shell
 import { applyDemoWidth, searchIcon } from './lib/specimens.ts'
-
-const SVG_NS = 'http://www.w3.org/2000/svg' // the button-hero arrow glyph builds its own SVG; the field uses searchIcon
+import { resolveIcon } from '@agent-ui/icons'
+import '@agent-ui/icons/phosphor' // registers + activates the Phosphor default pack (ADR-0066)
 
 const { content } = mountPage({
   title: 'agent-ui',
@@ -22,24 +22,15 @@ const { content } = mountPage({
 const FIELD_HERO_WIDTH = '18rem'
 
 // ── hero — live ui-button specimens (the headline artefact) ──────────────────────────────────────────────
-// A decorative leading icon for the slot demo. Canonical anatomy markup (ADR-0012): `slot="leading"` is the
-// POSITION (start cell) and `data-role="icon"` is the CONTENT role that sizes the glyph to the icon cell
-// (var(--ui-button-icon)). `currentColor` inherits the button ink; `aria-hidden` keeps the label as the
-// accessible name. (The pre-`12fdf49` `slot="icon"` name no longer matches `:has([slot=leading])`.)
+// A decorative leading icon for the slot demo — the REAL Phosphor `arrow-right` resolved through the
+// @agent-ui/icons adapter (ADR-0065/0066) instead of a hand-drawn path. Canonical anatomy markup (ADR-0012):
+// `slot="leading"` is the POSITION (start cell) and `data-role="icon"` is the CONTENT role that sizes the glyph
+// to the icon cell (var(--ui-button-icon)). resolveIcon emits `fill="currentColor"` (inherits the button ink),
+// `aria-hidden` (the label stays the accessible name), and `width/height=100%` so it fills the icon cell.
 function makeIcon(): SVGElement {
-  const svg = document.createElementNS(SVG_NS, 'svg')
+  const svg = resolveIcon('arrow-right') // authentic Phosphor from the active pack (registered on import)
   svg.setAttribute('slot', 'leading') // POSITION — the start cell
   svg.setAttribute('data-role', 'icon') // CONTENT role — sized to the icon cell by button.css
-  svg.setAttribute('aria-hidden', 'true')
-  svg.setAttribute('viewBox', '0 0 24 24')
-  const path = document.createElementNS(SVG_NS, 'path')
-  path.setAttribute('d', 'M5 12h14m0 0l-6-6m6 6l-6 6')
-  path.setAttribute('fill', 'none')
-  path.setAttribute('stroke', 'currentColor')
-  path.setAttribute('stroke-width', '2')
-  path.setAttribute('stroke-linecap', 'round')
-  path.setAttribute('stroke-linejoin', 'round')
-  svg.append(path)
   return svg
 }
 

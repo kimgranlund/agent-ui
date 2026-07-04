@@ -5,8 +5,8 @@
 // once in pages/containers.css; the live controls keep all their own geometry/colour/surface from their
 // {name}.css. Every glyph + the demo-width rationale (#74) lives HERE once, so the pattern multiplies cleanly.
 import { heading } from './doc-page.ts'
-
-const SVG_NS = 'http://www.w3.org/2000/svg'
+import { resolveIcon } from '@agent-ui/icons'
+import '@agent-ui/icons/phosphor' // registers + activates the Phosphor default pack (ADR-0066)
 
 /**
  * applyDemoWidth — give a specimen a page-supplied display width. This is layout context, NOT a restyle of the
@@ -22,31 +22,17 @@ export function applyDemoWidth(element: HTMLElement, width: string): void {
 }
 
 /**
- * searchIcon — the shared decorative search glyph (a circle + handle) for an adornment POSITION (slot=leading|
- * trailing). data-role="icon" is the canonical CONTENT role each control's CSS sizes to the icon cell;
- * aria-hidden keeps the control's accessible name (a decorative glyph names nothing). One definition for every
- * page that shows a leading/trailing field adornment.
+ * searchIcon — the shared decorative search glyph for an adornment POSITION (slot=leading|trailing). Resolved
+ * from the REAL Phosphor `magnifying-glass` through the @agent-ui/icons adapter (ADR-0065/0066) instead of a
+ * hand-drawn circle+handle — authentic pack data, `fill="currentColor"` + `width/height=100%` so it fills the
+ * control's icon cell exactly like the adapter's own injected glyphs. data-role="icon" is the canonical CONTENT
+ * role each control's CSS sizes to the icon cell; resolveIcon already sets aria-hidden (a decorative glyph names
+ * nothing). One definition for every page that shows a leading/trailing field adornment.
  */
 export function searchIcon(slot: 'leading' | 'trailing'): SVGElement {
-  const svg = document.createElementNS(SVG_NS, 'svg')
+  const svg = resolveIcon('magnifying-glass') // authentic Phosphor from the active pack (registered on import)
   svg.setAttribute('slot', slot) // POSITION (start/end cell)
   svg.setAttribute('data-role', 'icon') // CONTENT role — sized to the icon cell by the control's CSS
-  svg.setAttribute('aria-hidden', 'true')
-  svg.setAttribute('viewBox', '0 0 24 24')
-  const circle = document.createElementNS(SVG_NS, 'circle')
-  circle.setAttribute('cx', '11')
-  circle.setAttribute('cy', '11')
-  circle.setAttribute('r', '7')
-  circle.setAttribute('fill', 'none')
-  circle.setAttribute('stroke', 'currentColor')
-  circle.setAttribute('stroke-width', '2')
-  const handle = document.createElementNS(SVG_NS, 'path')
-  handle.setAttribute('d', 'M21 21l-4.3-4.3') // the search handle
-  handle.setAttribute('fill', 'none')
-  handle.setAttribute('stroke', 'currentColor')
-  handle.setAttribute('stroke-width', '2')
-  handle.setAttribute('stroke-linecap', 'round')
-  svg.append(circle, handle)
   return svg
 }
 
