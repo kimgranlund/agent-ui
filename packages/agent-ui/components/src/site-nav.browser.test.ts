@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest'
-import { userEvent } from '@vitest/browser/context'
+import { userEvent } from 'vitest/browser'
 
 // site-nav.browser.test.ts — the CROSS-ENGINE smoke for the shared docs-site nav's RESPONSIVE DROPDOWN
 // (site/pages/_page.ts + _page.css). Below the shell's 48rem collapse breakpoint the nav rail becomes a zero-JS

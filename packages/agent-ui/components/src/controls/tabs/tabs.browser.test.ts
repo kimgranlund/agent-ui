@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from '@vitest/browser/context'
+import { server, cdp, userEvent } from 'vitest/browser'
 import { UITabsElement } from './tabs.ts'
 import { UITabElement } from './tab.ts'
 import { UITabPanelElement } from './tab-panel.ts'

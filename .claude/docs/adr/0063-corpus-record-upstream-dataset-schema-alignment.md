@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-04 — ratified on Kim's "proceed"; the reversal was independently host-verified against the live google/A2UI `dataset_schema.json` before this ADR was written [C1 evidence], not merely inferred; `record.ts` ships the corrected contract with the retired `E_NO_TARGET` code grep-clean under `src/corpus/**`.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-03 |
 > | **Proposed by** | planner (design seat — ruling on the host-verified upstream schema facts) |
 > | **Ratified by** | orchestration (host), 2026-07-04 — on Kim's "proceed" + the green wave gate |

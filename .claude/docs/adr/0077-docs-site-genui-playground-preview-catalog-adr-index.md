@@ -25,7 +25,7 @@ The site already had the pieces to derive from — the canonical `{name}.md` des
 
 **3. The rendered specimen is AUTHORITATIVE for its own live state; `#state` is only the seed.** The canvas stays interactive, and direct interaction SURVIVES knob edits via **read-back-before-rebuild**: a2ui reads the live root's mapped `value` (typed text, toggled control, dismissed modal `open`) back into `#state` before the dispose+rebuild, skipping the just-edited knob (the user's explicit edit wins); component mode DIFF-applies only the changed prop and read-back listeners (`change`/`input`/`toggle`/`select`) reflect direct interaction into the matching knob. Documented residual: an a2ui rebuild resets caret/focus (the VALUE survives), and a container root's non-knob sample children reset on its own edit.
 
-**4. A shared `canvas-surface` module** (`site/lib/canvas-surface.*`) holds the translate-centered, definite-width artboard, DERIVED (copied) from the a2ui-live canvas's proven CSS. `a2ui-live` is LEFT UNTOUCHED this wave — consolidating it onto the shared module is a deferred follow-up, so the freshly-shipped live-agent gates stay green.
+**4. A shared `canvas-surface` module** (`site/lib/canvas-surface.*`) holds the translate-centered, definite-width artboard, DERIVED (copied) from the a2ui-live canvas's proven CSS. `a2ui-live` was LEFT UNTOUCHED this wave so the freshly-shipped live-agent gates stayed green; a follow-up wave consolidated `a2ui-live` onto the shared module (its own `.canvas-stage`/`.canvas-surface` CSS removed, construction routed through `createCanvasSurface()`/`applyRootStretch()`), preserving the module's public API unchanged.
 
 **5. Container/nested policy:** hand-authored `SAMPLE_TREES` sample children + a generic single-`Text` fallback give container roots legible content; knobs edit the ROOT only; nested-only helper types (Option/Tab/TabPanel/Card regions) are skipped in the gallery. `site-preview-catalog.test.ts` pins every `A2UI_INITIAL`/`SAMPLE_TREES` key ⊆ the catalog's component names, so a catalog rename/drop fails the build.
 
@@ -45,7 +45,7 @@ The site already had the pieces to derive from — the canonical `{name}.md` des
 ## Acceptance
 
 - `npm run check` (tsc + check:site) green · jsdom **2407** · browser **582** (Chromium + WebKit; component-preview **14**, incl. the canvas→knob direction that hid the desync) · `build` green (a2ui-catalog 11.8 kB js / 4.5 kB css).
-- `site-adr-index.test.ts` (33 tests): every parsed `statusShort ∈ StatusKey`, with 0037→superseded and 0007/0033→accepted spot-checks. `site-preview-catalog.test.ts`: the hand-authored-map ⊆ catalog gate, with biting negative controls.
+- `site/lib/adr.test.ts` (the ADR parser + the status lint gate): every parsed `statusShort ∈ StatusKey`, with 0037→superseded and 0007/0033→accepted (now a LITERAL cell read, not the old ALL-CAPS heuristic — de-hack T2). `site/lib/component-preview-catalog.test.ts`: the hand-authored-map ⊆ catalog gate, with biting negative controls. (Both moved from the packages tree into the new `site` vitest project — de-hack T1.)
 
 ## Alternatives considered
 
@@ -55,10 +55,8 @@ The site already had the pieces to derive from — the canonical `{name}.md` des
 - **`Button.variant` enforcement at the validator (reject + self-correct).** Deferred, per ADR-0076's own recorded alternative (broader blast radius); the catalog enum + render-skip is the lower-risk realization.
 - **ADR index: full-content-inline / metadata-only.** Rejected per Kim's ratified searchable-expand fork.
 
-## Follow-ups (deferred — recorded, not done)
+## Follow-ups
 
-- Consolidate `a2ui-live` onto the shared `canvas-surface` module (the CSS is currently a proven copy).
-- Document the ADR **status-cell convention** (ALL-CAPS `SUPERSEDED`/`DEPRECATED` = whole-ADR status override) OR make ADR status machine-readable — the badge derivation now depends on the convention.
-- Repo-wide `@vitest/browser/context` → `vitest/browser` migration (every `*.browser.test.ts`, pre-existing).
-- Optional: refine or formally accept the a2ui preview residual (caret/focus reset on rebuild; container non-knob children reset on a root edit).
-- Optional: a rendered-page browser smoke for the ADR index (currently unit-floor only; a smoke would have caught the 0037 mis-badge directly).
+- ✅ RESOLVED (de-hack / standardization wave — [`de-hack-standardization.decomp.md`](../decompositions/de-hack-standardization.decomp.md)): ADR status is now a machine-readable canonical keyword + a biting lint gate (T2 — the ALL-CAPS heuristic is gone); the shared `canvas-surface` is the single source, a2ui-live consumes it (T3); the repo is off the deprecated `@vitest/browser/context` (T4); and `site/` has its own vitest project so its tests no longer smuggle into the packages tree (T1).
+- Open (optional): refine or formally accept the a2ui preview residual (caret/focus reset on rebuild; container non-knob children reset on a root edit).
+- Open (optional): a rendered-page browser smoke for the ADR index (unit-floor only today; a smoke would have caught the 0037 mis-badge directly).

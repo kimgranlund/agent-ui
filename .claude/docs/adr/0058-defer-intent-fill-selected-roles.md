@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-03 — the DEFER decision confirmed by Kim ("proceed"): no filled intent control exists; the pre-computed remedy [--md-sys-color-{f}-selected: light-dark({f}-550,{f}-600), checker-verified ≥4.5 both legs] + the activation trigger [the first filled intent control] are recorded — the "no silent gap" requirement satisfied by a written deferral, the ADR-0031/0051 reserved-arm precedent.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-02 |
 > | **Proposed by** | tokens-specialist (item 3 of the 2026-07-02 color-verify audit; Kim-directed) |
 > | **Ratified by** | orchestration (the coordinator seat) — 2026-07-03, on Kim's confirmation + the green wave gate |

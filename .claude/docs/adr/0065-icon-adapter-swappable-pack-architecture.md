@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-04 — ratified on Kim's "proceed"; the full adapter [types/registry/resolve/barrel + `ui-icon`] shipped to the revised LLD exactly, incl. the deferred-pack-swap-reactivity call and the `icons ↛ components` negative control; independently reviewed GO — zero blocker/major; gates check · jsdom 2311 · browser 564/564 both engines · size 22193/22528.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-03 |
 > | **Proposed by** | planner (design seat — the icon-adapter-architecture intake) |
 > | **Ratified by** | orchestration (host), 2026-07-04 — on Kim's "proceed" + the green wave gate |

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from '@vitest/browser/context'
+import { server, cdp, userEvent } from 'vitest/browser'
 import type { UITooltipElement } from './tooltip.ts'
 
 // Wave-4 S2 browser smoke — ui-tooltip (decomp S2 · overlay-controller.lld.md LLD-C1..C4 · ADR-0043).

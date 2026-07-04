@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-04 — ratified on Kim's "proceed"; the right-sizing survived a full doc-review + a delta re-check [PROMOTE] with zero architectural reopening — one blocker + four majors fixed in the corpus-quality judge's realized-code fidelity, not this ADR's shape; harness_checks spec/lld + coverage --strict + adr_check all green at ratification.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-03 |
 > | **Proposed by** | planner (design seat — the expert-harness intake, NEXT item 1) |
 > | **Ratified by** | orchestration (host), 2026-07-04 — on Kim's "proceed" + the green gate |

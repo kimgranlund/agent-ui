@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from '@vitest/browser/context'
+import { server, cdp, userEvent } from 'vitest/browser'
 import type { UICalendarElement } from './calendar.ts'
 
 // Wave-5B browser smoke — ui-calendar (decomp 5B-1 · ADR-0048).

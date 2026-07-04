@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-02 — fork F4 ruled (d)+(b) [the CSS humane default + the pedagogy contract], recommendation-defaulted and CONFIRMED by Kim ("proceed"); ratified by the orchestrator on the green wave gate: the fallback leg + cross-engine probes [incl. the streaming :has() flip and the byte-identical region-card no-regression leg] shipped; the nested card>card radius case verified UNCHANGED by the fallback — a pre-existing ADR-0018 depth-≥2 cycle, honestly re-documented after the builder's own browser gate falsified its first draft; all three pedagogy legs live: the seeds model the idiom, the SPEC §5.2 composition note, the patterns-page teaching block)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-02 |
 > | **Proposed by** | planner (design seat — item 4 of the streaming/examples intake, from Kim's forked diagnosis of the 8 bare example Cards) |
 > | **Ratified by** | orchestration (the coordinator seat) — 2026-07-02, on the green wave gate; the fork ruling confirmed by Kim |

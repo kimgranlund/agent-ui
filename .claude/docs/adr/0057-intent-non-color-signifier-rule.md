@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-03 — Kim-directed item 5 of the color-verify audit, ratified by the orchestrator on Kim's "proceed" + the green wave gate [check · jsdom 2079 · browser 558/558 both engines]. The recommended C8 rubric line LANDED at ratification per the Consequences; the conformance table's danger-ink rows refreshed to the item-1 repointed role before the flip.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-02 |
 > | **Proposed by** | planner (design seat — item 5 of the 2026-07-02 color-verify audit; Kim-directed: "mandate a non-color signifier wherever intent is communicated — the rule lands in the docs, not the ramps") |
 > | **Ratified by** | orchestration (the coordinator seat) — 2026-07-03, on Kim's confirmation + the green wave gate |

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server } from '@vitest/browser/context'
+import { server } from 'vitest/browser'
 
 // container-box.browser.test.ts — the CROSS-ENGINE z-depth-scope proof (ADR-0052). Runs in BOTH Chromium and
 // WebKit (vitest.browser.config.ts). Where container-box.test.ts pins the DECLARED `isolation: isolate`, this

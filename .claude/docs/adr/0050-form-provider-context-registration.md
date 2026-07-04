@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-01 — fork 1 user-ratified: Kim, "1b + 2B, go", on the presented recommendation; intake gates green at ratification [adr_check exit 0 · decomp coverage_check --strict exit 0]. The build slices it unblocks carry their own gates.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-01 |
 > | **Proposed by** | the host session (design intake, G7 completion — the system-planner seat was infra-blocked; authored inline against the adr-author standard) |
 > | **Ratified by** | Kim (user) — 2026-07-01, the explicit fork ruling "1b + 2B, go" |

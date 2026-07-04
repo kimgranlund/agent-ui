@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-02 — forks F2 [control-prop bind names] and F4 [TextField all-12-types] recommendation-defaulted during the build and CONFIRMED by Kim ("proceed"); ratified by the orchestrator on the green wave gate: check + jsdom 2036 + browser 544/544 both engines + size 21649/22528; the six rows + factories shipped with per-row negative controls and the SPEC §5.2 table byte-equal to catalog.json)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-02 |
 > | **Proposed by** | planner (design seat — the NEXT.md item-4 examples intake) |
 > | **Ratified by** | orchestration (the coordinator seat) — 2026-07-02, on the green wave gate; forks confirmed by Kim |

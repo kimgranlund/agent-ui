@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-04 — ratified on Kim's "proceed"; the full corpus-store wave [s1–s10] shipped and independently reviewed GO [zero blocker/major]; the injected-judge seam and fail-closed eval facet realized in `admit.ts` exactly as decided; gates check · jsdom 2311 · size 6542/7168 + 22193/22528.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-03 |
 > | **Proposed by** | planner (design seat — the corpus-store intake, NEXT item 1) |
 > | **Ratified by** | orchestration (host), 2026-07-04 — on Kim's "proceed" + the green wave gate |

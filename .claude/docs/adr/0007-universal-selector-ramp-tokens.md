@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — delivers ADR-0006 subtree [density]; unblocks s13)* *(font/glyph leg superseded by ADR-0033/0035; **the whole control-ramp `*`×`--ui-scale` leg superseded by ADR-0038** — `--ui-{height,font,icon}` become explicit per-`[scale]` tables (Kim's (scale×size)→§1-row lookup), no multiplier; the `*`-declaration + `--ui-scale` survive for `--ui-type-*` DISPLAY only)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — encoding the host-ratified fix for a geometry bug the gold cross-engine smoke (s13) caught and execution-lead diagnosed |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |

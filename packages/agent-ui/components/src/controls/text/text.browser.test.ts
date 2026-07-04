@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { server, cdp } from '@vitest/browser/context'
+import { server, cdp } from 'vitest/browser'
 
 // ADR-0025 — ui-text cross-engine browser smoke. jsdom computes no real font metrics, so the REAL
 // proofs live here: the typographic ramp resolves to distinct computed font-sizes per variant, and the

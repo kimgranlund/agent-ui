@@ -14,6 +14,7 @@
 import { mountFullBleedPage } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './a2ui-live.css'
 import { codeBlock } from '../lib/code-block.ts'
+import { createCanvasSurface, applyRootStretch } from '../lib/canvas-surface.ts'
 import { createRenderer } from '@agent-ui/a2ui'
 import type { RendererHost, A2uiClientMessage, A2uiServerMessage } from '@agent-ui/a2ui'
 import {
@@ -150,11 +151,9 @@ tabStrip.addEventListener('keydown', (e) => {
   target.btn.focus()
 })
 
-// Canvas tab → a stage whose surface is CENTERED via a CSS translate transform (see a2ui-live.css).
+// Canvas tab → the shared artboard (translate-centered stage/surface pair — lib/canvas-surface).
 const canvasPanel = registered[0]!.panel
-const stage = el('div', 'canvas-stage')
-const surfaceEl = el('div', 'canvas-surface')
-stage.append(surfaceEl)
+const { stage, surface: surfaceEl } = createCanvasSurface()
 canvasPanel.append(stage)
 // JSON + HTML tabs → scrollable <pre><code> blocks (rebuilt each turn).
 const jsonPanel = registered[1]!.panel
@@ -213,14 +212,6 @@ function summarize(lines: string[]): string {
   return `Emitted ${lines.length} A2UI message(s): ${kinds.join(', ')}. See the JSON / HTML tabs.`
 }
 
-// When the agent roots its surface at a ui-column, stretch it to FILL the artboard: a column shrink-wraps to
-// content, but as the ROOT of the canvas it should fill the artboard width (Kim's `stretch` attribute on
-// ui-column). Re-applied after every render — a turn's updateComponents can replace the root node.
-function applyRootStretch(): void {
-  const root = surfaceEl.firstElementChild
-  if (root && root.tagName.toLowerCase() === 'ui-column') root.setAttribute('stretch', '')
-}
-
 async function runTurn(input: TurnInput): Promise<void> {
   if (busy) return
   setBusy(true)
@@ -232,7 +223,7 @@ async function runTurn(input: TurnInput): Promise<void> {
       host.ingest(line) // validated JSONL streamed line-by-line → progressive paint (SPEC-N4)
     }
     host.finalize()
-    applyRootStretch() // a root ui-column fills the artboard (before refreshHtml so the HTML tab reflects it)
+    applyRootStretch(surfaceEl) // a root ui-column fills the artboard (before refreshHtml so the HTML tab reflects it)
     if (turnLines.length === 0) {
       addMessage('system', 'The agent has no further turns in this recorded transcript. Reset to start over.')
       return

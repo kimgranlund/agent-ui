@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-01 — ratified on the green Wave-5A gate: component-reviewer G5-done shippable [COMPOSE 4.8 · REALIZE 4.8], check + jsdom 153 + cross-engine browser 46 green, the 4 review findings cleared [M1 per-type-signal codec-listener fix + m2 marginal + m3 percent gestalt twin + m4 CSS NCs])* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-01 |
 > | **Proposed by** | planning-lead — the design seat, on the Wave-5 brief (#49 / #98): complete the `ui-text-field` numeric `type` family (Kim: "currencies, units, units with steppers"). |
 > | **Ratified by** | orchestration-lead — on the green G6 gate (the per-type numeric matrix + the cross-engine adornment-geometry smoke) |

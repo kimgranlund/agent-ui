@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from '@vitest/browser/context'
+import { server, cdp, userEvent } from 'vitest/browser'
 import type { UIPopoverElement } from './popover.ts'
 
 // Wave-4 S1 browser smoke — ui-popover (decomp S1 · overlay-controller.lld.md LLD-C1..C4 · ADR-0043).

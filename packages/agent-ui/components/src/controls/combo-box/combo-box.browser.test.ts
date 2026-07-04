@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from '@vitest/browser/context'
+import { server, cdp, userEvent } from 'vitest/browser'
 import type { UIComboBoxElement } from './combo-box.ts'
 
 // Wave-4 S5 browser smoke — ui-combo-box (decomp S5 · overlay-controller.lld.md · ADR-0043).

@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed → accepted → superseded/deprecated *(start: proposed)* |
+> | **Status** | proposed *(one bare keyword only: `proposed` \| `accepted` \| `superseded` \| `deprecated` — never trailing prose; ratification detail goes in **Ratified by**, supersession detail in **Supersedes / Superseded by**)* |
 > | **Date** | YYYY-MM-DD *(set on author; add ratified date on accept)* |
 > | **Proposed by** | <role/agent — usually the escalation source> |
 > | **Ratified by** | <orchestration-lead, on accept> |

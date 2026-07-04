@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-04 — ratified on Kim's "proceed"; the curated 9-icon `regular`-weight subset ships vendored at build time via `scripts/vendor-phosphor.mjs`; `@phosphor-icons/core` confirmed devDependency-only [`package-lock.json` "dev": true] with zero runtime bytes reachable outside the `"./phosphor"` subpath, verified by the independent review and a dedicated negative-control test.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-03 |
 > | **Proposed by** | planner (design seat — the icon-adapter-architecture intake) |
 > | **Ratified by** | orchestration (host), 2026-07-04 — on Kim's "proceed" + the green wave gate |

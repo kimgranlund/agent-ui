@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-01 — ratified by the orchestrator on the green s14 gate: promotion review PROMOTE [ui-field both axes ≥4, C3 re-scored 5 after the descriptor repair; ui-form-provider PROMOTE]; full gates check + jsdom 2014 + cross-engine browser 544/544 + size 21599/22528. The fork itself was user-ratified — Kim, 2026-07-01, "1b + 2B, go". The seam absorbed three build-time refinements while proposed: cl.5 upgrade catch-up + the connectionSignal guard, the gen-3 reactive error rendering, the RESERVED `ui-form-reset` characterization.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-01 |
 > | **Proposed by** | g7-planner (the design seat, decomp `g7-field-form-provider` slice s0) |
 > | **Ratified by** | orchestration (the coordinator seat) — 2026-07-01, on the green s14 gate; the A/B/C fork choice itself was ruled by Kim |

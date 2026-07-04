@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(proposed → accepted, ratified 2026-06-26)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-26 *(authored + ratified)* |
 > | **Proposed by** | planning-lead — surfaced by the A1 decomposition dependency-gap finding |
 > | **Ratified by** | orchestration-lead |

@@ -1,10 +1,10 @@
 /* canvas-surface.css — the SHARED A2UI artboard chrome, derived from the proven `.canvas-stage` +
- * `.canvas-surface` rules the live-agent canvas shipped (site/pages/a2ui-live.css). Extracted here so a second
- * consumer (the component-preview element's right column) mounts the SAME translate-centered, checkered
- * artboard rather than a divergent copy. The rendered A2UI surface keeps its own ui-* control CSS — this module
- * never restyles a control; every colour is a `--md-sys-color-*` role (the page loads the foundation cascade
- * via _page.ts first), so the artboard tracks light/dark. Adopting this module in a2ui-live is a DEFERRED host
- * follow-up (ADR-0077) — a2ui-live is left untouched this wave so its freshly-shipped gates stay green. */
+ * `.canvas-surface` rules the live-agent canvas shipped (site/pages/a2ui-live.css). Both a2ui-live's Canvas
+ * tab and the component-preview element's right column mount the SAME translate-centered, checkered artboard
+ * rather than a divergent copy (a2ui-live overrides only its empty-state copy, in a2ui-live.css). The rendered
+ * A2UI surface keeps its own ui-* control CSS — this module never restyles a control; every colour is a
+ * `--md-sys-color-*` role (the page loads the foundation cascade via _page.ts first), so the artboard tracks
+ * light/dark. */
 
 /* The artboard box — the rendered surface is CENTERED via a CSS translate transform (per the canvas spec). */
 .canvas-stage {

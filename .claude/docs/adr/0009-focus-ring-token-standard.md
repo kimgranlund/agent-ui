@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — orchestration-lead; dedicated --md-sys-color-focus-ring, outline 2px width / 2px offset, :focus-visible only, forced-colors→Highlight; exact hue delegated to the token slice)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, establishing the fleet focus-indicator standard |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |

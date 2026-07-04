@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-02 — forks F1 [the fine-grained canonical form seed] and F2 [the fault-injection affordance] recommendation-defaulted during the build and CONFIRMED by Kim ("proceed"); ratified by the orchestrator on the green wave gate: check + jsdom 2079 + browser 554/554 both engines; the standing gate examples.test.ts live with its negative control + the stream-narration shape pins; shown ≡ fed ≡ gated holds across all five pages)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-02 |
 > | **Proposed by** | planner (design seat — the streaming/corpus-seed examples intake) |
 > | **Ratified by** | orchestration (the coordinator seat) — 2026-07-02, on the green wave gate; forks confirmed by Kim |

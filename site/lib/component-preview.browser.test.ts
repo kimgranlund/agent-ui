@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest'
-import { userEvent } from '@vitest/browser/context'
+import { userEvent } from 'vitest/browser'
 
 // component-preview.browser.test.ts — the CROSS-ENGINE VISUAL smoke for the docs-site <component-preview> element
 // (site/lib/component-preview.ts). This is the risky piece the "test the whole shape" rule targets: a preview can
@@ -11,11 +11,11 @@ import { userEvent } from '@vitest/browser/context'
 // Runs in BOTH Chromium and WebKit (vitest.browser.config.ts → two playwright instances).
 //
 // The foundation CSS cascade (ADR-0003) is imported explicitly (the two barrels) so the control geometry is REAL;
-// the site module itself imports the self-defining controls + its own chrome. Mirrors the site-nav.browser.test.ts
-// precedent of importing a site module into a packages-tree browser test (vitest `include` is packages-only).
+// the site module itself imports the self-defining controls + its own chrome. Runs under the `site` vitest project
+// (vitest.browser.config.ts's `test.projects`), co-located with the module it tests.
 import '@agent-ui/components/foundation-styles.css' // foundation tokens + dimensional ramp (FIRST — geometry source)
 import '@agent-ui/components/component-styles.css' // per-control CSS (so the specimen has real geometry, not 0×0)
-import '../../../../site/lib/component-preview.ts' // registers <component-preview> + the self-defining ui-* controls
+import './component-preview.ts' // registers <component-preview> + the self-defining ui-* controls
 
 // ── mount/cleanup ──────────────────────────────────────────────────────────────────────────────────────────────
 let root: HTMLElement

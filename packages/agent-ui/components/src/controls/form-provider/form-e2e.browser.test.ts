@@ -31,7 +31,7 @@
 // then the component sheet (pulls in field.css/form-provider.css, s12), then the self-defining family
 // barrel (registers ui-field/ui-form-provider alongside the four controls under test in one line).
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, userEvent } from '@vitest/browser/context'
+import { server, userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import '@agent-ui/components/components'

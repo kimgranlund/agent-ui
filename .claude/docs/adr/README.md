@@ -18,11 +18,17 @@ When `system-builder` (or anyone) hits a constraint that the design can't satisf
 
 ## Status lifecycle
 
-`proposed` → `accepted` → (`superseded by ADR-NNNN` | `deprecated`)
+`proposed` → `accepted` → (`superseded` | `deprecated`)
+
+The `Status` frontmatter cell is **machine-readable**: it holds EXACTLY ONE of those four bare keywords, nothing
+else — no trailing prose, ratification note, or `by ADR-NNNN` suffix. A lint gate (`site-adr-index.test.ts`)
+enforces this over the whole corpus. Everything else lives in its own field: *when/how/by whom* it was ratified
+goes in `Ratified by`; *which* ADR it supersedes or was superseded by (and why) goes in `Supersedes / Superseded
+by`. `site/lib/adr.ts` reads the `Status` cell literally — there is no leading-word or ALL-CAPS heuristic.
 
 - **proposed** — authored, not yet ratified.
 - **accepted** — ratified by `orchestration-coordinator`; the repair propagates and dependents regenerate.
-- **superseded / deprecated** — a later ADR replaced it (link forward), or the decision no longer applies. ADRs are append-only history; never edit an accepted decision's substance — write a new ADR that supersedes it. The one append-only exception is a **foreseen amendment** (see *[Amendment vs supersession](#amendment-vs-supersession)*): it *adds* a follow-through the decision already anticipated, without editing the original.
+- **superseded / deprecated** — a later ADR replaced it (link forward in `Supersedes / Superseded by`), or the decision no longer applies. ADRs are append-only history; never edit an accepted decision's substance — write a new ADR that supersedes it. The one append-only exception is a **foreseen amendment** (see *[Amendment vs supersession](#amendment-vs-supersession)*): it *adds* a follow-through the decision already anticipated, without editing the original.
 
 ## Amendment vs supersession
 
@@ -37,8 +43,9 @@ original **Decision still stands**:
   `## Amendment — dedicated primary hover/active roles`, **not** opened as a new ADR. The decision did not change;
   its anticipated branch resolved.
 - **Supersession — a new ADR.** The decision **changes** — a reversal, a different choice, or a no-longer-applicable
-  call. Write a **new** ADR that supersedes it (`Status: superseded by ADR-NNNN`, link forward); the old ADR's
-  Decision is left intact as history. This is the existing lifecycle arrow.
+  call. Write a **new** ADR that supersedes it: the *old* ADR's `Status` flips to `superseded` and its
+  `Supersedes / Superseded by` row records `superseded by ADR-NNNN` (link forward); the old ADR's Decision is
+  left intact as history. This is the existing lifecycle arrow.
 
 **The append-only rule holds for both.** A `## Amendment` **adds** the foreseen follow-through; it does **not**
 edit the original Context / Decision / Consequences — so it does not breach *never edit an accepted decision's
@@ -62,7 +69,7 @@ branch of the old one), and unlike a supersession it leaves the earlier decision
 
 1. Copy [`0000-template.md`](./0000-template.md) to `NNNN-<title>.md` with the next number.
 2. Fill Context · Decision · Consequences · Alternatives; set `Repairs:` to the owning-doc IDs.
-3. Leave `Status: proposed` until ratified; on ratify, set `accepted` + the ratifier/date.
+3. Leave `Status: proposed` until ratified; on ratify, flip the cell to the bare `accepted` and record who/when in `Ratified by` + `Date` (never append detail to `Status` itself).
 4. Add a row to the index below.
 
 ## Index

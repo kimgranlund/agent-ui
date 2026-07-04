@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — orchestration-lead/host, on gate)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, establishing the G4 form base |
 > | **Ratified by** | orchestration-lead (host) — 2026-06-27, on gate |

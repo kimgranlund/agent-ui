@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from '@vitest/browser/context'
+import { server, cdp, userEvent } from 'vitest/browser'
 
 // Wave-2 s17 — the CROSS-ENGINE interaction-states + focus-ring + caret smoke (the REALIZE re-score; the
 // adversarial real-engine proof of ADR-0008 states / ADR-0009 focus ring / ADR-0012 + geometry-sizing-spec

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from '@vitest/browser/context'
+import { server, cdp, userEvent } from 'vitest/browser'
 import type { UITextFieldElement } from '@agent-ui/components/components'
 
 // s11 (states leg) — the CROSS-ENGINE behaviour + focus-ring + forced-colors smoke for ui-text-field (decomp

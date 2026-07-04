@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-04 — ratified on Kim's "proceed"; `heal.ts` shipped to this exact contract [the closed, form-only repair list; the no-laundering negative control proven by composing heal→validate]; independently reviewed GO — the healer could not be made to launder invalidity under adversarial testing.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-03 |
 > | **Proposed by** | planner (design seat — the corpus-store intake, NEXT item 1) |
 > | **Ratified by** | orchestration (host), 2026-07-04 — on Kim's "proceed" + the green wave gate |

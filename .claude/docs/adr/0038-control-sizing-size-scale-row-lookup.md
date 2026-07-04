@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted — ratified 2026-06-30 on the green geometry gate (tsc · jsdom 1075 · browser 182; computed px verified vs Kim's table: lg×content-lg→64/20/28, md default→14/28 byte-identical, content-sm≡ui-md / content-md≡ui-lg overlap proven, no multiplier decimals) |
+> | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored + ratified)* |
 > | **Proposed by** | planning-lead — deriving the per-cell geometry + the supersession from **Kim's authoritative `(scale × size) → height` table** (Kim ruled *"let's not use multipliers"* and provided the mapping directly) |
 > | **Ratified by** | orchestration-lead (on the browser gate). **The mapping is Kim's** — the `content-sm≡ui-md` / `content-md≡ui-lg` overlap is **final**, ratified by Kim's *"we proceed"* on the authoritative table (4 distinct registers across 6 tier names, by design). |

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { userEvent } from '@vitest/browser/context'
+import { userEvent } from 'vitest/browser'
 import type { UIFormProviderElement, FormSubmitDetail } from '@agent-ui/components/components'
 
 // s11 — the CROSS-ENGINE browser smoke for ui-form-provider (decomp g7-field-form-provider slice s11,

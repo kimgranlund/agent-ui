@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from '@vitest/browser/context'
+import { server, cdp, userEvent } from 'vitest/browser'
 import type { UIModalElement } from './modal.ts'
 
 // G9 s9 (browser leg) — the CROSS-ENGINE platform-truth smoke for ui-modal (decomp g9-containers node s9).

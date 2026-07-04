@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — unblocks s7/s13)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — reconciling a law-vs-acceptance collision execution-lead surfaced building s6 (the dimensional token ramp, 11ca123) |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |

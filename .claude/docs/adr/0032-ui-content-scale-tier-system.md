@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-30 — orchestration-lead, on the build gate: `check` clean · jsdom 1060 · browser 176/176 across Chromium+WebKit; the two browser-test `[scale]` consumers migrated same-wave)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, on the #25 user-ratified build-out (the #24 design-intent call resolved: `ui-sm…content-lg` is the goal, the shipped 3-step is the placeholder) |
 > | **Ratified by** | orchestration-lead (on the build gate) |

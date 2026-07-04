@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-30 — orchestration-lead, on the round-trip gate: `check` clean · jsdom 1068; AC1-AC6 green — happy-path `functionResponse` (verbatim `functionCallId`), `clientOnly`+unregistered+throwing rejects emit `INVALID_FUNCTION_CALL`+`functionCallId` with `surfaceId` EXCLUDED, `wantResponse` honored, the two surfaces verified distinct; `call-function.ts` read + verified against this design, `functions.ts` untouched)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, on the #23 user-authorized build (v1.0 `callFunction` facts fetched by team-lead) |
 > | **Ratified by** | orchestration-lead (on the round-trip gate) |

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp } from '@vitest/browser/context'
+import { server, cdp } from 'vitest/browser'
 
 // S2 cross-engine browser smoke — ui-switch (indicator-element.lld.md LLD-C4 / ADR-0041).
 // Runs in BOTH Chromium and WebKit (vitest.browser.config.ts → playwright instances). This is the

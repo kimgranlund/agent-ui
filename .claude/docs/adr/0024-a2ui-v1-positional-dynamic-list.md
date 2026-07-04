@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(amended 2026-06-28: (1) write-side itemScope #139, (2) subtree + nested item templates, (3) per-item listener lifetime #140 — see [Amendments](#amendment--write-side-itemscope-two-way-relative-inputs-in-list-items) below)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-29 *(authored)* · 2026-06-28 *(amended ×3: write-side itemScope; subtree + nested; per-item listener lifetime)* |
 > | **Proposed by** | planning-lead — the design seat, on the #137 v1.0-conformance grounding |
 > | **Ratified by** | the **user** chose A2UI v1.0 + vehicle B2; orchestration-lead ratifies on the build gate |

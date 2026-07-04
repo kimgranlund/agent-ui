@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-02 — fork F1 [the submit-gated action] recommendation-defaulted during the build and CONFIRMED by Kim ("proceed"); ratified by the orchestrator on the green wave gate: the zero-drift proof [an unflagged action is byte-for-byte the pre-ADR shape], the gate probes [invalid ⇒ no emit + first-invalid reportValidity; valid ⇒ one action], and the Generative Form page demonstrating the refusal live on the wire log)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-02 |
 > | **Proposed by** | planner (design seat — the NEXT.md item-4 examples intake) |
 > | **Ratified by** | orchestration (the coordinator seat) — 2026-07-02, on the green wave gate; fork confirmed by Kim |

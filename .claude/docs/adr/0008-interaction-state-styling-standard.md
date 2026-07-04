@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — orchestration-lead; ghost-wash + tokens.md role ladders confirmed, verified at the wave-2 cross-engine smoke; dedicated --md-sys-color-{f}-hover/-active roles only if a ladder step collapses)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, closing the booked G4 interactive-state deferral the wave-2 states showcase surfaced |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |

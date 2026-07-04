@@ -15,9 +15,9 @@ export interface AdrRecord {
   readonly filename: string
   /** The H1 text after 'ADR-NNNN — ' (may carry inline `` `code` `` spans). */
   readonly title: string
-  /** The raw Status cell — often a long ratification note, not just the bare word. */
+  /** The raw Status cell — one of the 4 canonical keywords, verbatim (the lint gate enforces this corpus-wide). */
   readonly status: string
-  /** One of the 4 badge keys — see `deriveStatusShort` for how it's resolved (not always the leading word). */
+  /** `status` narrowed to `StatusKey` — see `deriveStatusShort`. Identical to `status` for every real ADR. */
   readonly statusShort: StatusKey
   /** The raw Date cell — may carry more than one date (authored/amended/ratified). */
   readonly date: string
@@ -32,37 +32,23 @@ export interface AdrRecord {
 const FILENAME_RE = /^(\d{4})-/
 const H1_RE = /^#\s*ADR-\d{4}\s*—\s*(.+?)\s*$/m
 const ISO_DATE_RE = /\d{4}-\d{2}-\d{2}/
-const STATUS_WORD_RE = /^([A-Za-z]+)/
 
 /** The 4 lifecycle states the badge (adr-index.css `[data-status=…]`) has a colour for — README.md's ladder. */
 export const STATUS_KEYS = ['accepted', 'proposed', 'superseded', 'deprecated'] as const
 export type StatusKey = (typeof STATUS_KEYS)[number]
 const isStatusKey = (s: string | undefined): s is StatusKey => (STATUS_KEYS as readonly string[]).includes(s ?? '')
 
-// An ALL-CAPS override token, found ANYWHERE in the Status cell, case-SENSITIVE. This is deliberate, not lazy:
-// the corpus uses lowercase "superseded"/"deprecated" routinely to describe a CLAUSE/leg superseded while the
-// ADR ITSELF stays accepted (e.g. 0007/0033: "…font/glyph leg superseded by ADR-0035" — leading word stays
-// "accepted", correctly). Exactly one real record instead overrides its OWN leading word this way: 0037's Status
-// is "proposed — **SUPERSEDED by [ADR-0038]**… Never built." (proposed → superseded, never reaching accepted) —
-// and it's the only ALL-CAPS SUPERSEDED/DEPRECATED in the whole log (verified against the real corpus). A
-// case-INsensitive match would have been simpler but wrong: it flips 0007/0033 to "superseded" too, a false
-// positive this fix must not trade one drift-tell for another. If the corpus later needs a lowercase-clause vs.
-// whole-ADR-override distinction that this heuristic misses, that's a documentation-convention gap to raise,
-// not a wider regex here.
-const OVERRIDE_RE = /\b(SUPERSEDED|DEPRECATED)\b/
-
 /**
- * deriveStatusShort — the badge key for a raw Status cell. An ALL-CAPS `SUPERSEDED`/`DEPRECATED` override
- * anywhere in the cell wins (the ADR's OWN fate flipped); otherwise the leading word, if it's one of the 4 keys;
- * otherwise `'proposed'` — the README lifecycle's own starting state, the one fallback that never over-claims
- * an unparsed cell as `accepted`. GUARANTEES a value in STATUS_KEYS (never an arbitrary/unstyled word).
+ * deriveStatusShort — the badge key for a raw Status cell. The corpus's lint gate (site-adr-index.test.ts)
+ * guarantees every real ADR's Status cell IS one of the 4 keys, verbatim, no trailing prose — so this is a
+ * literal membership check, not a heuristic. `'proposed'` is the fallback for an unparsed/malformed cell (the
+ * README lifecycle's own starting state) — it never over-claims an unstyled cell as `accepted`. GUARANTEES a
+ * value in STATUS_KEYS (never an arbitrary word), so a future non-canonical cell degrades to a safe badge
+ * instead of an unstyled one, while the lint gate is what actually catches the drift.
  */
 export function deriveStatusShort(status: string): StatusKey {
-  const override = OVERRIDE_RE.exec(status)?.[1]
-  if (override === 'SUPERSEDED') return 'superseded'
-  if (override === 'DEPRECATED') return 'deprecated'
-  const leading = STATUS_WORD_RE.exec(status)?.[1]?.toLowerCase()
-  return isStatusKey(leading) ? leading : 'proposed'
+  const trimmed = status.trim()
+  return isStatusKey(trimmed) ? trimmed : 'proposed'
 }
 
 /** adrNumber — the zero-padded number prefix off an ADR filename (`'0076-…md'` → `'0076'`). */

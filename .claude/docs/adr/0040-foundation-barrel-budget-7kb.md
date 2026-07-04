@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted — ratified 2026-06-30 on the green size gate (reactive+dom barrel 6180 B ≤ 7168; family 7707 B ≤ 8192; tree-shake proof green — legitimate ADR-0023 public-API growth, not a leak) |
+> | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored + ratified)* |
 > | **Proposed by** | planning-lead — the design seat, on Kim's ruling "bump the foundation barrel to 7 kB" (#102) |
 > | **Ratified by** | orchestration-lead (on the green gate — `npm run size` within the new 7 kB budget) |

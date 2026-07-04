@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-01 — shipped green: the Wave-3 password type-matrix + the cross-engine `-webkit-text-security` browser smoke)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, on the Wave-3 Input-variants brief (#49): the `type=password` masking approach |
 > | **Ratified by** | orchestration-lead — on the green G6 gate (the password type-matrix proof) |

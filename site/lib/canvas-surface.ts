@@ -1,10 +1,8 @@
 // site/lib/canvas-surface.ts — the SHARED A2UI artboard helper. The live-agent canvas (a2ui-live) proved the
 // translate-centered, checkered stage with a DEFINITE artboard width (the collapse-to-1ch trap its comment
-// records); this module lifts that proven CSS + its two light-DOM elements out so a second consumer — the
-// component-preview element's right column — mounts the identical artboard instead of a hand-copied divergent
-// one. The CSS derived from a2ui-live's rules lives in the sibling `.css`; consolidating a2ui-live ONTO this
-// module is a tracked host follow-up (ADR-0077), deliberately NOT done this wave so the live-agent gates stay
-// untouched.
+// records); this module lifts that proven CSS + its two light-DOM elements out so both consumers — a2ui-live's
+// Canvas tab AND the component-preview element's right column — mount the identical artboard instead of a
+// hand-copied divergent one. The CSS derived from a2ui-live's rules lives in the sibling `.css`.
 import './canvas-surface.css'
 
 /** The artboard pair: the checkered `stage` box and the translate-centered `surface` that renderer roots mount under. */

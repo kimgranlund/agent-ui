@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-01 — ratified by the orchestrator on the green s14 wave gate [the full cross-engine browser sweep 544/544 includes this ADR's 6 z-scope proofs]. Kim's /btw directive was the decision itself; the `[data-box]` carrier choice was surfaced to Kim with the ratify-at-s14 default and drew no objection. The same sheet gained the sibling `[popover]` display re-assertion in the same wave — the s13 e2e finding, recorded in the sheet, distinct from this ADR's isolation leg.)* |
+> | **Status** | accepted |
 > | **Proposed by** | the host session (a worker fork, on Kim's directive, 2026-07-02) |
 > | **Ratified by** | orchestration (the coordinator seat) — 2026-07-01, on the green s14 wave gate; the directive itself was Kim's |
 > | **Date** | 2026-07-02 |

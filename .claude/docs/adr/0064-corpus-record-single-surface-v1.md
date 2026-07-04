@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-04 — ratified on Kim's "proceed"; the rule ships in `validateRecord` exactly as decided [exactly-one surface, `callFunction` excluded from the count, E_SCHEMA at the offending message's path]; the canonicalizer's global fold is confirmed correct-by-precondition, no code change needed there.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-03 |
 > | **Proposed by** | planner (design seat — ruling on the s6 builder's multi-surface trace) |
 > | **Ratified by** | orchestration (host), 2026-07-04 — on Kim's "proceed" + the green wave gate |

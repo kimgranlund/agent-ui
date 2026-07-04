@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted — ratified 2026-06-30 on the green gate (tsc · jsdom 1075 · browser 188; column/list normalized, the change verified a PROVABLE RENDER NO-OP in both Chromium + WebKit — no `*-reverse` mode is reachable so `start`≡`flex-start`/`end`≡`flex-end` in every reachable state; row/grid untouched) |
+> | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored + ratified)* |
 > | **Proposed by** | planning-lead — the design seat, on the team-lead's #102 ruling (item 3: normalize the layout `align`/`justify` keyword dialect; direction = box-alignment) |
 > | **Ratified by** | orchestration-lead (on the green gate; DoD right-sized to the anti-vacuous browser gate — a test-only + provable-no-op change needs no per-element reviewer council, the engines' computed box-alignment values + the no-op proof suffice) |

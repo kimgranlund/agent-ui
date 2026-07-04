@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — orchestration-lead; pin canonical {action,context?,wantResponse?}, keep lenient name/bare-string fallbacks (Postel))* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, pinning the contract the renderer's tolerant reader currently guesses |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |

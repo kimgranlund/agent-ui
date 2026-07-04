@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-01 — the overlay + selection primitives ratified by the green cross-engine Wave-4 smokes; the dismissal-behaviour hardening is recorded in **ADR-0045**)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, on the control-suite foundation (#49 Wave 0); details in `.claude/docs/llds/overlay-controller.lld.md` + `listbox-roving.lld.md` |
 > | **Ratified by** | orchestration-lead — on the green **G7** gate (when select/combo-box/menu prove the primitives) |

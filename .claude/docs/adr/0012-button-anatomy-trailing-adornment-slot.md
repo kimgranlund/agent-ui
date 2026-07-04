@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — orchestration-lead; caret=font (--ui-button-glyph) law-true; data-role vocab icon/caret active + tag/badge reserved; disclosure AX deferred to G7 on the host via internals)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, making the host-refined two-axis anatomy the canonical family standard and closing the one gap the shipped refactor left |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |

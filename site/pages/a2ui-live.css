@@ -242,43 +242,13 @@
   box-sizing: border-box;
 }
 
-/* The Canvas tab's stage — the rendered surface is CENTERED via a CSS translate transform (per spec). */
-.canvas-stage {
-  position: relative;
-  inline-size: 100%;
-  block-size: 100%;
-  overflow: auto;
-  background:
-    repeating-linear-gradient(0deg, transparent 0 15px, var(--md-sys-color-neutral-surface) 15px 16px),
-    repeating-linear-gradient(90deg, transparent 0 15px, var(--md-sys-color-neutral-surface) 15px 16px);
-  background-color: var(--md-sys-color-neutral-surface-low);
-}
-.canvas-surface {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%); /* centre the surface within the stage via translate offsets (per spec) */
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  align-items: center;
-  padding: 1rem;
-  /* A DEFINITE artboard width — NOT just max-inline-size. An absolutely-positioned flex column with only
-   * a max width shrink-fits, and its align-items:center children then resolve to min-content (~1ch): the
-   * whole surface collapses to a one-character-per-line strip. A definite width gives the rendered
-   * surface a real space to lay out in; content wider than the cap scrolls (overflow:auto below). */
-  inline-size: min(32rem, calc(100% - 2rem));
-  /* Cap at the stage box so the translate-centered surface NEVER clips above the top edge: a surface
-   * shorter than the stage centres; one taller than the stage is clamped to the stage height and scrolls
-   * INSIDE this centred box (the stage's own overflow can't reach a negative-offset absolute child). */
-  max-block-size: 100%;
-  overflow: auto;
-}
-.canvas-surface:empty::after {
+/* The Canvas tab's stage — the SHARED artboard (lib/canvas-surface), mounted via createCanvasSurface() in
+ * a2ui-live.ts: the checkered stage, the translate-centered, width-floored surface all live in
+ * canvas-surface.css now. Only this page's empty-state copy differs from the shared generic default (it
+ * prompts a send, which the standalone module doesn't know about); scoped to `.canvas-pane` so it outranks
+ * the shared rule's specificity regardless of CSS import order. */
+.canvas-pane .canvas-surface:empty::after {
   content: 'Send a prompt — the rendered surface appears here.';
-  color: var(--md-sys-color-neutral-on-surface-variant);
-  font-size: 0.85rem;
 }
 
 .reset-bar {

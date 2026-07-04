@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — orchestration-lead; native-parity disabled — removed from tab order + internals.ariaDisabled; accessible-disabled reserved for future toolbar/menu controls)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, closing the booked G4 focus/a11y deferral |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |

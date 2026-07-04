@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted — ratified 2026-07-01 on the green G6 gate: the `controls/_base/` layer + `UIIndicatorElement` (as refined at the review gate — clause 2) are proven by 4 G6-done Indicator controls (checkbox/switch/radio + radio-group; browser 240, jsdom 1333). The Range half (`UIRangeElement` + `value-drag`) is unit-tested and control-proven at Wave 2 / G6.5 (ui-slider); the base architecture stands. |
+> | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored)* · 2026-07-01 *(ratified)* |
 > | **Proposed by** | planning-lead — the design seat, on the control-suite foundation (#49 Wave 0); details in `.claude/docs/llds/indicator-element.lld.md` + `range-element.lld.md` |
 > | **Ratified by** | orchestration-lead — on the green **G6 / G6.5** gates (when checkbox/switch/radio + slider prove the bases) |

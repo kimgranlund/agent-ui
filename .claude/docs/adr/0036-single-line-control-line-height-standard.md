@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted — ratified 2026-06-30 on the green geometry gate (tsc · jsdom 1075 · browser 182; computed line-height = font-size verified at sm≠md on button + text-field editor) |
+> | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored + ratified)* |
 > | **Proposed by** | planning-lead — the design seat, on Kim's directive *"in buttons and single-line controls, the text line-height should always be 1.0"* |
 > | **Ratified by** | orchestration-lead (on the browser gate — computed line-height = font-size, centering preserved) |

@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-26 — build unblocked)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-26 *(authored)* |
 > | **Proposed by** | planning-lead — encoding the host/user-ratified plan-incorporation, forced live by the gold `ui-button` + the `/site` docs consumer (Phase 3) |
 > | **Ratified by** | orchestration-lead — 2026-06-26 |

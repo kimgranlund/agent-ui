@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(proposed → accepted, ratified 2026-06-26)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-26 *(authored + ratified)* |
 > | **Proposed by** | planning-lead — encoding two host-ratified parity rulings; the granularity pin was flagged by execution-lead (false-positive risk) |
 > | **Ratified by** | orchestration-lead |

@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-30 — orchestration-lead, on the browser gate: `check` clean · jsdom 1061 · browser 178/178 Chromium+WebKit; the user's lg×content-lg case verified font 20.6 / icon 27.7, negative-controls confirm the linear 28/35 are gone)* *(font/icon `pow` mechanism superseded by ADR-0035 — exact §1 SET integers replace the pow decimals; the sublinear outcome stands. **Control ramp (incl. the `× --ui-scale` font framing) superseded by ADR-0038** (ADR-0037 folded in) — Kim ruled "no multipliers"; `--ui-{height,font,icon}` become an explicit `(scale × size) → §1-row` lookup, no multiply)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, on Kim's ruling "decouple font from height (sublinear)" (#28) |
 > | **Ratified by** | orchestration-lead (on the browser gate) |

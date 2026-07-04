@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest'
-// site-adr-index.test.ts — the packages-tree unit test for site/lib/adr.ts (vitest's include is packages-only;
-// site/**/*.test.ts never runs — see the site-tests-excluded-from-vitest note). A pure, DOM-free module can be
-// imported by relative path from here exactly as site-nav.browser.test.ts imports pages/_page.ts — one parser,
-// two consumers (this test + pages/adr-index.ts), so the frontmatter-table grammar cannot drift between them.
+// adr.test.ts — the co-located unit test for site/lib/adr.ts, run under the `site` vitest project (jsdom;
+// vitest.config.ts's `test.projects`). One parser, two consumers (this test + pages/adr-index.ts), so the
+// frontmatter-table grammar cannot drift between them.
 import {
   adrNumber,
   deriveStatusShort,
@@ -13,7 +12,7 @@ import {
   sortAdrsDescending,
   STATUS_KEYS,
   stripFrontmatter,
-} from '../../../../site/lib/adr.ts'
+} from './adr.ts'
 // node:fs is untyped here (no @types/node devDep) — the same reverse-coupling fs-read pattern as
 // descriptor/site-canon.test.ts / descriptor/site-coverage.test.ts.
 // @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
@@ -32,7 +31,7 @@ const SAMPLE = `# ADR-0099 — the sample decision title with an \`inline code\`
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted — ratified on the green gate |
+> | **Status** | accepted |
 > | **Date** | 2026-07-04 *(authored)* · 2026-07-05 *(ratified)* |
 > | **Proposed by** | someone |
 > | **Ratified by** | someone else |
@@ -71,8 +70,8 @@ describe('lib/adr.ts — parseAdr (the frontmatter-table extraction)', () => {
     expect(record.title).toBe('the sample decision title with an `inline code` span')
   })
 
-  it('extracts Status — raw cell + the leading-word short form for the badge', () => {
-    expect(record.status).toBe('accepted — ratified on the green gate')
+  it('extracts Status — raw cell + the badge-key short form (identical for a conforming cell)', () => {
+    expect(record.status).toBe('accepted')
     expect(record.statusShort).toBe('accepted')
   })
 
@@ -97,34 +96,17 @@ describe('lib/adr.ts — parseAdr (the frontmatter-table extraction)', () => {
 })
 
 describe('lib/adr.ts — deriveStatusShort (the badge-key derivation)', () => {
-  it('uses the leading word when it is already one of the 4 badge keys', () => {
-    expect(deriveStatusShort('accepted — ratified on the green gate')).toBe('accepted')
-    expect(deriveStatusShort('proposed')).toBe('proposed')
+  it('is a literal membership check — an exact one of the 4 keys maps to itself', () => {
+    for (const key of STATUS_KEYS) expect(deriveStatusShort(key)).toBe(key)
   })
 
-  it('an ALL-CAPS SUPERSEDED override anywhere in the cell wins over a stale leading word', () => {
-    // The real regression: 0037's Status leads with "proposed" (never reached accepted) but was overridden
-    // before build — the ALL-CAPS marker is the authoritative current state, not the leading word.
-    expect(deriveStatusShort('proposed — **SUPERSEDED by [ADR-0038](./x.md)** before build. Never built.')).toBe(
-      'superseded',
-    )
+  it('trims surrounding whitespace before the exact-match check', () => {
+    expect(deriveStatusShort('  accepted  ')).toBe('accepted')
   })
 
-  it('an ALL-CAPS DEPRECATED override wins the same way (no real record needs this yet, but the mechanism is symmetric)', () => {
-    expect(deriveStatusShort('accepted — later **DEPRECATED**, no replacement')).toBe('deprecated')
-  })
-
-  it('does NOT flip on a lowercase "superseded" describing a CLAUSE while the ADR itself stays accepted', () => {
-    // The false-positive a case-INsensitive match would introduce (real 0007/0033 shape): a specific leg/clause
-    // superseded elsewhere, the ADR's own leading word (and badge) must stay 'accepted'.
-    expect(
-      deriveStatusShort(
-        'accepted *(ratified 2026-06-27)* *(font/glyph leg superseded by ADR-0033/0035; the whole control-ramp leg superseded by ADR-0038)*',
-      ),
-    ).toBe('accepted')
-  })
-
-  it('falls back to "proposed" (never over-claims "accepted") when the leading word is not one of the 4 keys', () => {
+  it('falls back to "proposed" (never over-claims "accepted") on ANY trailing prose — the corpus-wide lint gate is what must catch this, not a leading-word guess', () => {
+    expect(deriveStatusShort('accepted — ratified on the green gate')).toBe('proposed')
+    expect(deriveStatusShort('proposed — SUPERSEDED by ADR-0038 before build')).toBe('proposed')
     expect(deriveStatusShort('')).toBe('proposed')
     expect(deriveStatusShort('*(unparseable cell)*')).toBe('proposed')
   })
@@ -136,12 +118,16 @@ describe('lib/adr.ts — deriveStatusShort (the badge-key derivation)', () => {
   })
 })
 
-describe('lib/adr.ts — parseAdr with an embedded literal "|" in the Status cell', () => {
+describe('lib/adr.ts — parseAdr with an embedded literal "|" in a frontmatter cell', () => {
+  // Exercised via Status (the only prose-capable field parseAdr surfaces) even though a REAL Status cell is now
+  // always a bare keyword (the lint gate below enforces it) — this proves frontmatterField's row regex captures
+  // the WHOLE cell on any field, and that a non-canonical cell correctly falls back to 'proposed' rather than
+  // matching on its leading word.
   it('captures the WHOLE cell, not truncated at the first embedded pipe', () => {
     const src = `# ADR-0098 — x\n\n> | **Status** | accepted — the \`a|b\` codec ships |\n> | **Date** | 2026-01-01 |\n\n## Context\n\nx\n`
     const record = parseAdr('0098-x.md', src)
     expect(record.status).toBe('accepted — the `a|b` codec ships')
-    expect(record.statusShort).toBe('accepted')
+    expect(record.statusShort).toBe('proposed') // not an exact keyword match — the lint gate is what must catch this shape
   })
 })
 
@@ -236,18 +222,36 @@ describe('lib/adr.ts — the real .claude/docs/adr log parses cleanly', () => {
     expect(offenders).toEqual([])
   })
 
-  it('0037 (proposed, ALL-CAPS SUPERSEDED before ever being built) resolves to "superseded", not its stale leading word', () => {
+  // The Status LINT GATE — the machine-readable contract this module reads without a heuristic: every real
+  // ADR's Status cell must be EXACTLY one of the 4 canonical keywords, verbatim, no trailing prose/ratification
+  // detail (that detail lives in Ratified-by / Supersedes-Superseded-by instead — see .claude/docs/adr/README.md
+  // and the per-ADR audit that normalized the corpus to this shape). This is the check that actually bites: a
+  // future non-conforming Status cell fails HERE, not just at the (always-safe) statusShort fallback above.
+  it('every real ADR Status cell is EXACTLY one of the 4 canonical keywords — the lint gate', () => {
+    const offenders = records.filter((r) => !(STATUS_KEYS as readonly string[]).includes(r.status)).map((r) => `${r.filename}: "${r.status}"`)
+    expect(offenders).toEqual([])
+  })
+
+  it('BITES: a non-conforming Status cell (trailing ratification prose) fails the exact lint gate above', () => {
+    const offender = parseAdr(
+      '9999-x.md',
+      `# ADR-9999 — x\n\n> | **Status** | accepted — ratified on the green gate |\n> | **Date** | 2026-01-01 |\n\n## Context\n\nx\n`,
+    )
+    expect((STATUS_KEYS as readonly string[]).includes(offender.status)).toBe(false)
+  })
+
+  it('0037 (superseded by ADR-0038 before ever being built) carries the literal keyword "superseded"', () => {
     const r = records.find((r) => r.number === '0037')
-    expect(r?.status).toMatch(/^proposed/)
+    expect(r?.status).toBe('superseded')
     expect(r?.statusShort).toBe('superseded')
   })
 
-  it('0007 and 0033 stay "accepted" — a lowercase clause-level "superseded" elsewhere in their Status cell must NOT flip the badge', () => {
+  it('0007 and 0033 are literally "accepted" — their superseded-CLAUSE detail lives in Supersedes/Superseded-by, not Status', () => {
     const r7 = records.find((r) => r.number === '0007')
     const r33 = records.find((r) => r.number === '0033')
-    expect(r7?.status).toMatch(/superseded/i) // the clause-level mention IS present…
-    expect(r7?.statusShort).toBe('accepted') // …but the badge stays accepted (leading word, no ALL-CAPS override)
-    expect(r33?.status).toMatch(/superseded/i)
+    expect(r7?.status).toBe('accepted')
+    expect(r7?.statusShort).toBe('accepted')
+    expect(r33?.status).toBe('accepted')
     expect(r33?.statusShort).toBe('accepted')
   })
 

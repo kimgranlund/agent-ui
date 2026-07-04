@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — orchestration-lead/host, on gate)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, resolving the G6 first form control |
 > | **Ratified by** | orchestration-lead (host) — 2026-06-27, on gate (token map confirmed by tokens-specialist, folded into clauses 2a/2c/4) |

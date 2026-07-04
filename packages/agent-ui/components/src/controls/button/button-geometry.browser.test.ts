@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp } from '@vitest/browser/context'
+import { server, cdp } from 'vitest/browser'
 
 // Phase-1 s13 — the CROSS-ENGINE geometry + forced-colors smoke (the gold geometry PROOF; goals §G5 DoD).
 // Runs in BOTH Chromium and WebKit (vitest.browser.config.ts → the two playwright instances). Where the

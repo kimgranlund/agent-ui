@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-26)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-26 *(authored)* |
 > | **Proposed by** | planning-lead — resolving a G2 verdict deferral, host/user-ratified, set at the reference control |
 > | **Ratified by** | orchestration-lead — 2026-06-26 |

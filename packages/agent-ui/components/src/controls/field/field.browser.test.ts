@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent, page } from '@vitest/browser/context'
+import { server, cdp, userEvent, page } from 'vitest/browser'
 import { UICheckboxElement } from '@agent-ui/components/components'
 import type { UIFieldElement, UITextFieldElement } from '@agent-ui/components/components'
 

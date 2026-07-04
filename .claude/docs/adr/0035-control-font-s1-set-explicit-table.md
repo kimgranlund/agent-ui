@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-30 — orchestration-lead, on the browser gate: `check` clean · jsdom 1074 · browser 178/178 Chromium+WebKit; lg×content-lg renders font 20 / icon 28 EXACT (toBe + Number.isInteger — pow decimals 20.6/27.7 gone), default 13·14·16 / 16·18·20 byte-identical, the §1-set stepping confirmed; h=42 tie built round-down per ratification, Kim's one-cell taste fork still open)* |
+> | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, on Kim's ruling "control fonts must be the §1 SET values, not pow approximations" (#33) |
 > | **Ratified by** | orchestration-lead (on the browser gate, after Kim's snap-rule + stepped-vs-smooth call) |

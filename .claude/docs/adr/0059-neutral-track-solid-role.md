@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-03 — the solid-track decision confirmed by Kim ("proceed"); the thumb-carried alternative was DISPROVEN by measurement [OFF-state thumb 1.22–1.84:1] before minting --md-sys-color-neutral-track(-hover); checker-verified ≥3:1 on every plane both schemes [worst 3.80/4.41]; the opaque-paint browser probes pin the repoint in both engines; gates check · jsdom 2079 · browser 558/558.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-02 |
 > | **Proposed by** | tokens-specialist (item 4 of the 2026-07-02 color-verify audit; Kim-directed) |
 > | **Ratified by** | orchestration (the coordinator seat) — 2026-07-03, on Kim's confirmation + the green wave gate |

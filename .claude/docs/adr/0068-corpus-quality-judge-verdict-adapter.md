@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-04 — ratified on Kim's "proceed"; the quarantine/standing-gate contradiction [B1] and the dedup-warming erasure path [M1] were both independently verified against the realized code before this ADR shipped, then fixed with a mechanism [includeQuarantined, the name-collision halt, the judged --replace exit] the delta re-check confirmed RESOLVED — not merely reworded; harness_checks lld + adr_check + coverage --strict green at ratification.)* |
+> | **Status** | accepted |
 > | **Date** | 2026-07-03 |
 > | **Proposed by** | planner (design seat — the expert-harness intake, NEXT item 1) |
 > | **Ratified by** | orchestration (host), 2026-07-04 — on Kim's "proceed" + the green gate |
