@@ -87,3 +87,13 @@ official foundation.** A `/intent-extract` narrowed the scope to three load-bear
 - **Leave historical ADRs on the old spelling [REJECTED — surfaced to Kim].** Would leave records citing a dead
   token name (grep-rot). The repo treats ADRs as living context; the decisions are unchanged, only the spelling,
   and this ADR preserves the *when/why*. (Reversible per-file if Kim prefers verbatim history.)
+
+## Amendment — 2026-07-04 (ADR-0078): the namespace split widens to typescale
+
+The Consequences line "Two token namespaces, cleanly split: `--md-sys-color-*` (color) · `--ui-*`
+(dimension/type/geometry)" no longer holds for TYPE: [ADR-0078](./0078-ui-text-three-axis-variant-size-as.md)
+(proposed 2026-07-04) mints **`--md-sys-typescale-{role}-{size}-{property}`** as the fleet type scale and
+retires `--ui-type-*` — exactly the "future decision MAY adopt the kit's other export formats or additional
+MD3 roles" this ADR's first consequence anticipated (a foreseen amendment, not a supersession). The split
+becomes: `--md-sys-color-*` (color) · `--md-sys-typescale-*` (type) · `--ui-*` (dimension/geometry). The
+color decision itself is unchanged. Effective when ADR-0078 is ratified and its build lands.

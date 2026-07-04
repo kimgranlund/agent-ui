@@ -60,7 +60,10 @@ anchors read.
 A **Display**-class control has **no frame**. It is a typographic/structural *leaf* (`geometry.md` §size-classes:
 `divider · icon · spinner · … · text`): no control height, no `padding-block` law, no edge-pad formula, no
 surface/elevation, no `min-inline-size` floor. The worked precedent is **`ui-text`** (ADR-0025) — a light-DOM
-display leaf whose lever is the `--ui-type-*` typographic scale, not `--ui-height-*`. The C6/C7 frame anchors
+display leaf whose lever is the fleet type scale (`--ui-type-*` as shipped; ADR-0078, *proposed*, replaces it
+with `--md-sys-typescale-{role}-{size}-*` and moves heading semantics to the `as`-stamped real element — this
+lens's C6/C7/C10-Display anchors are booked for rewrite in that build wave), not `--ui-height-*`. The C6/C7
+frame anchors
 cannot fairly score it (they assume a frame), and the type-scale + heading-semantics facts the anchors omit are
 exactly what a Display leaf must be judged on. This lens says, per dimension, what is **N/A** (do not score it as
 a fail — record `N/A — Display`), what **still fully applies**, and what is **NEW for Display** and must be scored.
@@ -72,7 +75,9 @@ still gates COMPOSE and REALIZE separately, and every [gate] dimension is still 
 
 - **C2 — the *frame* anatomy.** Host-as-**grid** with the `:has()` optional-icon slot, and the *Control*
   size-class assertion, are Control-specific. A Display leaf is **host-as-content** (ADR-0006: void `render()`,
-  light-DOM children flow through) and the *Display* size-class. Score C2's host/anatomy on the Display facts
+  light-DOM children flow through; under ADR-0078 the `as` semantic stamp — a scope-owned adoption wrapper,
+  still no template — is the ONE sanctioned exception) and the *Display* size-class. Score C2's host/anatomy on
+  the Display facts
   below, not the grid anatomy.
 - **C6 — the geometry law (frame quantities).** `block-size` off the `--ui-height-*` ramp, `padding-block: 0`,
   the slotless inline-pad `= h/2`, the slot edge-pad `= ½(h−icon)`, the `gap = font/2` — **all N/A**. A Display
