@@ -318,7 +318,8 @@
   }
 
   /* stepper container: stacks the two step buttons vertically in the trailing icon-sized cell.
-     Used for type=number and type=currency (no suffix — just ▲▼ stacked in the icon square). */
+     Used for type=number and type=currency (no suffix — just the caret-up/caret-down steppers
+     stacked in the icon square). */
   :scope [data-role='stepper'] {
     display: inline-flex;
     flex-direction: column;
@@ -378,8 +379,8 @@
     color: var(--ui-text-field-placeholder);
   }
 
-  /* leading/trailing adornment text content (magnifier glyph, currency symbol): font-sized, centered.
-     The cell is icon-sized (--ui-text-field-icon from the slot rule above); the glyph text fits within it. */
+  /* leading/trailing adornment content (magnifier icon, currency symbol text): font-sized, centered.
+     The cell is icon-sized (--ui-text-field-icon from the slot rule above); the glyph fits within it. */
   :scope [data-part='leading-adornment'],
   :scope [data-part='trailing-adornment'] {
     display: inline-flex;
@@ -388,6 +389,23 @@
     font-size: var(--ui-text-field-font); /* the glyph is sized = font (§4.6 law) */
     line-height: 1;
     user-select: none;
+  }
+
+  /* Injected Phosphor glyphs (setIcon, @agent-ui/icons): magnifier · x (clear) · eye/eye-slash (reveal) ·
+     calendar-blank · caret-up/caret-down (steppers). 1em tracks each part's own font-size — inherited
+     (--ui-text-field-font) on the buttons, explicit on [data-part='leading-adornment'] above — at every
+     [size] tier, matching the previous inline-text glyphs' rendered size exactly. Overrides the svg's own
+     width/height="100%" presentational attributes (resolve.ts); [data-part='suffix'] carries NO icon (a
+     text label — kg / %), so it is deliberately absent from this selector list. */
+  :scope [data-part='clear-button'] svg,
+  :scope [data-part='reveal-button'] svg,
+  :scope [data-part='step-up'] svg,
+  :scope [data-part='step-down'] svg,
+  :scope [data-part='calendar-button'] svg,
+  :scope [data-part='leading-adornment'] svg {
+    display: block;
+    inline-size: 1em;
+    block-size: 1em;
   }
 
   /* forced-colors — keep the field border + ink + placeholder VISIBLE (they must not vanish). The focus ring

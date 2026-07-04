@@ -61,6 +61,7 @@ import {
   type ValueCodecController,
 } from '../../traits/value-codec.ts'
 import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
+import { setIcon } from '@agent-ui/icons'
 
 // The editor's editable mode (ADR-0014 cl.1) and a per-instance id seed for aria-describedby.
 const EDITABLE = 'plaintext-only'
@@ -245,15 +246,11 @@ export class UITextFieldElement extends UIFormElement {
       // (aborted in the effect cleanup on type change or scope.dispose() on disconnect).
       const typeAc = new AbortController()
 
-      // Leading adornment: magnifier glyph for search, currency symbol for currency.
-      // For currency: reading this.currency makes the effect re-run when currency changes (only while
-      // type=currency — a non-currency field never reads this.currency, so it never becomes a dep).
-      let leadingText = ''
-      if (config.leading === 'magnifier') {
-        leadingText = '⌕'
-      } else if (config.leading === 'currency') {
-        leadingText = currencySymbol(this.currency ?? 'USD')
-      }
+      // Leading adornment: magnifier glyph for search (Phosphor, injected inside #createLeadingAdornment),
+      // currency symbol text for currency. For currency: reading this.currency makes the effect re-run when
+      // currency changes (only while type=currency — a non-currency field never reads this.currency, so it
+      // never becomes a dep).
+      const leadingText = config.leading === 'currency' ? currencySymbol(this.currency ?? 'USD') : ''
       const leadingEl = config.leading ? this.#createLeadingAdornment(config.leading, leadingText) : null
 
       // Trailing adornment: affordance (search/password/calendar) XOR numeric steppers ± suffix.
@@ -690,7 +687,8 @@ export class UITextFieldElement extends UIFormElement {
    * it in the leading cell. Returns the element for the effect cleanup to remove.
    *
    * @param role  The TYPE_CONFIG leading role ('magnifier' or 'currency').
-   * @param text  The glyph text — '⌕' for magnifier, currencySymbol(this.currency) for currency.
+   * @param text  The glyph TEXT — currencySymbol(this.currency) for currency; unused for magnifier
+   *              (that role injects the Phosphor `magnifying-glass` icon instead, via setIcon).
    */
   #createLeadingAdornment(role: LeadingRole, text: string): HTMLElement {
     const el = document.createElement('span')
@@ -698,7 +696,11 @@ export class UITextFieldElement extends UIFormElement {
     el.setAttribute('data-part', 'leading-adornment')
     el.setAttribute('data-role', role)
     el.setAttribute('aria-hidden', 'true') // decorative — the editor carries the accessible name
-    el.textContent = text
+    if (role === 'magnifier') {
+      setIcon(el, 'magnifying-glass') // Phosphor, via @agent-ui/icons
+    } else {
+      el.textContent = text // currency symbol — locale text, not an icon
+    }
     // prepend: appears before the editor in DOM order; slot+order CSS positions it correctly.
     this.prepend(el)
     return el
@@ -722,7 +724,7 @@ export class UITextFieldElement extends UIFormElement {
       btn.type = 'button'
       btn.setAttribute('data-part', 'clear-button')
       btn.setAttribute('aria-label', 'Clear')
-      btn.textContent = '✕'
+      setIcon(btn, 'x') // Phosphor, via @agent-ui/icons
       btn.addEventListener('click', () => {
         if (this.value === '') return // nothing to clear
         this.value = ''
@@ -733,17 +735,19 @@ export class UITextFieldElement extends UIFormElement {
       }, { signal: typeAc })
       container.append(btn)
     } else if (role === 'reveal') {
-      // reveal: toggle password masking via :state(revealed) (ADR-0044)
+      // reveal: toggle password masking via :state(revealed) (ADR-0044). The glyph itself carries the
+      // masked/revealed distinction (Phosphor eye ↔ eye-slash) — the aria-label carries the same in text.
       const btn = document.createElement('button')
       btn.type = 'button'
       btn.setAttribute('data-part', 'reveal-button')
       btn.setAttribute('aria-label', 'Show password')
       btn.setAttribute('aria-pressed', 'false')
-      btn.textContent = '👁'
+      setIcon(btn, 'eye') // masked (click to reveal)
       btn.addEventListener('click', () => {
         this.#revealed = !this.#revealed
         btn.setAttribute('aria-pressed', String(this.#revealed))
         btn.setAttribute('aria-label', this.#revealed ? 'Hide password' : 'Show password')
+        setIcon(btn, this.#revealed ? 'eye-slash' : 'eye')
         if (this.#revealed) {
           this.internals.states?.add('revealed')
         } else {
@@ -761,7 +765,7 @@ export class UITextFieldElement extends UIFormElement {
       btn.setAttribute('data-part', 'calendar-button')
       btn.setAttribute('aria-label', 'Open date picker')
       btn.setAttribute('aria-haspopup', 'dialog')
-      btn.textContent = '📅'
+      setIcon(btn, 'calendar-blank') // Phosphor, via @agent-ui/icons
       container.append(btn)
     }
 
@@ -770,8 +774,8 @@ export class UITextFieldElement extends UIFormElement {
   }
 
   /**
-   * Create and append a control-injected TRAILING numeric adornment: steppers (▲▼) with an optional
-   * suffix span. Used for ALL numeric types (number · currency · unit · percent — ADR-0047: codec ≠ null
+   * Create and append a control-injected TRAILING numeric adornment: steppers (Phosphor caret-up/caret-down)
+   * with an optional suffix span. Used for ALL numeric types (number · currency · unit · percent — ADR-0047: codec ≠ null
    * implies steppers). `suffixText` is non-null for unit (the localized label) and percent ('%').
    * The trailing container's data-role is 'numeric' when a suffix is present, 'stepper' otherwise —
    * the two roles drive different CSS layout (row vs. column; inline-size auto vs. icon-sized).
@@ -795,14 +799,14 @@ export class UITextFieldElement extends UIFormElement {
     up.type = 'button'
     up.setAttribute('data-part', 'step-up')
     up.setAttribute('aria-label', 'Increase')
-    up.textContent = '▲'
+    setIcon(up, 'caret-up') // Phosphor, via @agent-ui/icons
     up.addEventListener('click', () => { this.#step(1) }, { signal: typeAc })
 
     const down = document.createElement('button')
     down.type = 'button'
     down.setAttribute('data-part', 'step-down')
     down.setAttribute('aria-label', 'Decrease')
-    down.textContent = '▼'
+    setIcon(down, 'caret-down') // Phosphor, via @agent-ui/icons
     down.addEventListener('click', () => { this.#step(-1) }, { signal: typeAc })
 
     container.append(up, down)

@@ -430,6 +430,18 @@ describe('ui-calendar — prev/next navigation buttons (both engines)', () => {
     expect(prevR.height, `${server.browser}: prev button collapsed to zero height`).toBeGreaterThan(0)
     expect(nextR.width,  `${server.browser}: next button collapsed to zero width`).toBeGreaterThan(0)
     expect(nextR.height, `${server.browser}: next button collapsed to zero height`).toBeGreaterThan(0)
+
+    // Phosphor-icon sweep: the INJECTED <svg> (setIcon(prev, 'caret-left') / setIcon(next, 'caret-right'))
+    // must itself paint at a real, non-collapsed size — not just its containing button (a container can
+    // pass every bounding-box check while its content renders at 0×0).
+    const prevSvg = prev.querySelector('svg')!
+    const nextSvg = next.querySelector('svg')!
+    const prevSvgR = prevSvg.getBoundingClientRect()
+    const nextSvgR = nextSvg.getBoundingClientRect()
+    expect(prevSvgR.width,  `${server.browser}: injected prev-caret svg collapsed to zero width`).toBeGreaterThan(0)
+    expect(prevSvgR.height, `${server.browser}: injected prev-caret svg collapsed to zero height`).toBeGreaterThan(0)
+    expect(nextSvgR.width,  `${server.browser}: injected next-caret svg collapsed to zero width`).toBeGreaterThan(0)
+    expect(nextSvgR.height, `${server.browser}: injected next-caret svg collapsed to zero height`).toBeGreaterThan(0)
   })
 })
 

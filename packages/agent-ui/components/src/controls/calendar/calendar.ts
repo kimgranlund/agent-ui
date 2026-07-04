@@ -9,9 +9,9 @@
 //   <ui-calendar>
 //     <div data-part="panel" data-box>
 //       <header data-part="nav">
-//         <button data-part="prev" type="button" aria-label="Previous month">‹</button>
+//         <button data-part="prev" type="button" aria-label="Previous month"><svg>…caret-left…</svg></button>
 //         <span   data-part="title" id="uid-N" aria-live="polite">July 2026</span>
-//         <button data-part="next" type="button" aria-label="Next month">›</button>
+//         <button data-part="next" type="button" aria-label="Next month"><svg>…caret-right…</svg></button>
 //       </header>
 //       <div data-part="grid" role="grid" aria-labelledby="uid-N">
 //         <div role="row">  <!-- weekday column-header row -->
@@ -55,6 +55,7 @@ import { UIFormElement } from '../../dom/index.ts'
 import { prop } from '../../dom/index.ts'
 import type { PropsSchema, ReactiveProps } from '../../dom/index.ts'
 import type { FormValue, ValidityResult } from '../../dom/index.ts'
+import { setIcon } from '@agent-ui/icons'
 
 // ── Module-level stable-id counter (one per title/grid pair, never reused) ─────────────────
 
@@ -315,7 +316,7 @@ export class UICalendarElement extends UIFormElement {
     prev.setAttribute('data-part', 'prev')
     prev.setAttribute('type', 'button')
     prev.setAttribute('aria-label', 'Previous month')
-    prev.textContent = '‹'
+    setIcon(prev, 'caret-left') // Phosphor, via @agent-ui/icons
 
     // Stable title id so [data-part=grid] can reference it via aria-labelledby.
     const titleId = `ui-calendar-title-${++_nextCalendarId}`
@@ -329,7 +330,7 @@ export class UICalendarElement extends UIFormElement {
     next.setAttribute('data-part', 'next')
     next.setAttribute('type', 'button')
     next.setAttribute('aria-label', 'Next month')
-    next.textContent = '›'
+    setIcon(next, 'caret-right') // Phosphor, via @agent-ui/icons
 
     nav.appendChild(prev)
     nav.appendChild(title)

@@ -20,6 +20,7 @@ import { server, cdp } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import '@agent-ui/components/components'
+import { iconRegistry, type IconName, type IconPack } from '@agent-ui/icons'
 
 // Minimal CDP session interface for forced-colors emulation (Chromium only — WebKit has no CDP emulation).
 interface CdpSession {
@@ -368,6 +369,73 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
       expect(box.height, `[${markup}] collapsed to zero height in a flex row`).toBeGreaterThan(0)
       expect(box.width, `[${markup}] is narrower than tall (should be wider than tall, like a text input)`).toBeGreaterThan(box.height)
     }
+  })
+
+  it('Phosphor-icon sweep: injected <svg> glyphs (magnifier / clear / steppers) paint at a real, non-collapsed 1em size', () => {
+    // setIcon(...) glyphs must themselves render at a real size — not just their containing button/span
+    // (the ui-slider "collapsed dot" lesson: a container can pass every bounding-box check while its
+    // content renders at 0×0). Each svg is sized to 1em (text-field.css), tracking the part's own
+    // font-size (--ui-text-field-font, inherited on the buttons / explicit on leading-adornment).
+    const { field: searchField } = mount('<ui-text-field type="search" value="x"></ui-text-field>')
+    const magnifier = searchField.querySelector('[data-part="leading-adornment"]') as HTMLElement
+    const clearBtn = searchField.querySelector('[data-part="clear-button"]') as HTMLElement
+    for (const [label, el] of [['magnifier', magnifier], ['clear-button', clearBtn]] as const) {
+      const svg = el.querySelector('svg')!
+      const r = svg.getBoundingClientRect()
+      const em = fontPx(el)
+      expect(r.width, `${server.browser}: ${label} svg collapsed to zero width`).toBeGreaterThan(0)
+      expect(r.height, `${server.browser}: ${label} svg collapsed to zero height`).toBeGreaterThan(0)
+      expect(r.width, `${server.browser}: ${label} svg is not 1em-sized`).toBeCloseTo(em, 0)
+    }
+
+    const { field: numberField } = mount('<ui-text-field type="number"></ui-text-field>')
+    const stepUp = numberField.querySelector('[data-part="step-up"]') as HTMLElement
+    const stepDown = numberField.querySelector('[data-part="step-down"]') as HTMLElement
+    for (const [label, el] of [['step-up', stepUp], ['step-down', stepDown]] as const) {
+      const svg = el.querySelector('svg')!
+      const r = svg.getBoundingClientRect()
+      expect(r.width, `${server.browser}: ${label} svg collapsed to zero width`).toBeGreaterThan(0)
+      expect(r.height, `${server.browser}: ${label} svg collapsed to zero height`).toBeGreaterThan(0)
+    }
+
+    const { field: dateField } = mount('<ui-text-field type="date"></ui-text-field>')
+    const calBtn = dateField.querySelector('[data-part="calendar-button"]') as HTMLElement
+    const calSvg = calBtn.querySelector('svg')!
+    const calR = calSvg.getBoundingClientRect()
+    expect(calR.width, `${server.browser}: calendar-button svg collapsed to zero width`).toBeGreaterThan(0)
+    expect(calR.height, `${server.browser}: calendar-button svg collapsed to zero height`).toBeGreaterThan(0)
+  })
+
+  it('Phosphor-icon sweep: the password reveal button swaps eye ↔ eye-slash on click, both rendering at a real size', () => {
+    // A no-active-pack registry resolves EVERY name to the same empty missingIcon() fallback, which
+    // would make eye and eye-slash indistinguishable by content — register a deterministic test pack
+    // (same convention as icon-geometry.browser.test.ts) so the swap assertion below actually proves
+    // the glyph body changed, not just that a container re-rendered.
+    const REVEAL_TEST_PACK: IconPack = {
+      id: 'reveal-test-pack',
+      viewBox: '0 0 2 2',
+      icons: { eye: '<path d="M0 0h1v1z"/>', 'eye-slash': '<path d="M1 1h1v1z"/>' } as Record<IconName, string>,
+    }
+    iconRegistry.registerPack(REVEAL_TEST_PACK)
+    iconRegistry.setActivePack(REVEAL_TEST_PACK.id)
+
+    const { field } = mount('<ui-text-field type="password" value="secret"></ui-text-field>')
+    const revealBtn = field.querySelector('[data-part="reveal-button"]') as HTMLElement
+
+    const maskedSvg = revealBtn.querySelector('svg')!
+    const maskedR = maskedSvg.getBoundingClientRect()
+    const maskedHtml = maskedSvg.innerHTML
+    expect(maskedR.width, `${server.browser}: masked-state reveal svg collapsed to zero width`).toBeGreaterThan(0)
+    expect(maskedR.height, `${server.browser}: masked-state reveal svg collapsed to zero height`).toBeGreaterThan(0)
+
+    revealBtn.click()
+    const revealedSvg = revealBtn.querySelector('svg')!
+    const revealedR = revealedSvg.getBoundingClientRect()
+    expect(revealedR.width, `${server.browser}: revealed-state svg collapsed to zero width`).toBeGreaterThan(0)
+    expect(revealedR.height, `${server.browser}: revealed-state svg collapsed to zero height`).toBeGreaterThan(0)
+    // Prove the swap actually changed the glyph body, not just re-rendered the same icon
+    // (a regression wiring eye-slash into both states would still pass the size checks above).
+    expect(revealedSvg.innerHTML, `${server.browser}: reveal-button icon body did not change between masked and revealed states`).not.toBe(maskedHtml)
   })
 
   // Forced-colors (Chromium CDP only — WebKit has no CDP forced-colors emulation).

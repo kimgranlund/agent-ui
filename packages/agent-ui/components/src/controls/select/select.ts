@@ -19,7 +19,7 @@
 //     <button data-part="trigger" type="button" aria-haspopup="listbox"
 //             aria-expanded="…" aria-controls="ui-select-listbox-N">
 //       <span data-part="label">…selected label or placeholder…</span>
-//       <span data-part="caret" aria-hidden="true">▾</span>
+//       <span data-part="caret" aria-hidden="true"><svg>…caret-down (@agent-ui/icons)…</svg></span>
 //     </button>
 //     <div data-part="listbox" role="listbox" id="ui-select-listbox-N"
 //          popover="auto" tabindex="-1">
@@ -54,6 +54,7 @@ import type { FormValue, ValidityResult } from '../../dom/index.ts'
 import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
 import { rovingFocus } from '../../traits/roving-focus.ts'
 import { selectionCommit } from '../../traits/selection-commit.ts'
+import { setIcon } from '@agent-ui/icons'
 
 // ── Module-level stable-id counter (one per listbox panel, never reused across instances) ──────
 
@@ -279,7 +280,7 @@ export class UISelectElement extends UIFormElement {
     const caretSpan = document.createElement('span')
     caretSpan.setAttribute('data-part', 'caret')
     caretSpan.setAttribute('aria-hidden', 'true')
-    caretSpan.textContent = '▾'
+    setIcon(caretSpan, 'caret-down') // Phosphor, via @agent-ui/icons — sized = font by the caret span's own CSS (§4.1)
 
     trigger.appendChild(labelSpan)
     trigger.appendChild(caretSpan)

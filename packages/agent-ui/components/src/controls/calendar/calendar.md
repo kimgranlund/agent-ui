@@ -75,11 +75,11 @@ parts:
   - name: nav
     description: The `<header data-part="nav">` sticky navigation bar. Contains the prev button, title span, and next button. container-box.css gives it display:flex + padding + gap; calendar.css adds justify-content:space-between.
   - name: prev
-    description: The `<button data-part="prev" type="button" aria-label="Previous month">‹</button>` nav button. Clicking navigates to the previous month; focus cursor moves to the same day (clamped).
+    description: The `<button data-part="prev" type="button" aria-label="Previous month">` nav button, injected with the Phosphor `caret-left` glyph via `setIcon` (@agent-ui/icons). Clicking navigates to the previous month; focus cursor moves to the same day (clamped).
   - name: title
     description: The `<span data-part="title" aria-live="polite">Month YYYY</span>` month/year label. aria-live=polite announces month changes to AT. ID is stable per instance (used by [data-part=grid]'s aria-labelledby).
   - name: next
-    description: The `<button data-part="next" type="button" aria-label="Next month">›</button>` nav button. Clicking navigates to the next month; focus cursor moves to the same day (clamped).
+    description: The `<button data-part="next" type="button" aria-label="Next month">` nav button, injected with the Phosphor `caret-right` glyph via `setIcon` (@agent-ui/icons). Clicking navigates to the next month; focus cursor moves to the same day (clamped).
   - name: grid
     description: The `<div data-part="grid" role="grid" aria-labelledby="…title-id">` container for the weekday header row and 6 week rows. A 7-column CSS grid; [role=row] children use display:contents. The bespoke 2D keyboard handler (ADR-0048 decision 2) is attached here. Rebuilt on month navigation.
 
@@ -130,7 +130,7 @@ geometry:
   cellSize: --ui-calendar-cell-size     # the square side of each day cell (default 2rem / 32px; [size=sm/lg] repoints)
   gap: --ui-calendar-gap                # inter-cell gap (default 0.125rem / 2px)
   panel: Container/surface              # bg + outline + radius from --ui-calendar-panel-* tokens (NOT a control height)
-  navButtons: inline affordance = font  # ‹ › are font-sized glyphs (§4.6 law; no icon cell)
+  navButtons: inline affordance = font  # caret-left/caret-right (Phosphor) are font-sized glyphs (§4.6 law; no icon cell)
   weekdayHeader: 0.75 × cell-size tall  # slightly shorter than day cells; 85% font size
 
 forcedColors: 'selected-fill (Highlight/HighlightText) + today-ring (ButtonText inset ring) are preserved via forced-color-adjust:none on the relevant cells; panel maps to Canvas/CanvasText; nav buttons to ButtonText; disabled cells to GrayText. Three-state distinctness: focus=Highlight-outside, selected=Highlight-fill, today=ButtonText-inset.'
@@ -145,7 +145,7 @@ A standalone month-grid date picker that is a FACE form control (contributes a s
 ## Anatomy
 
 The control creates a `[data-box]` panel (adopting the shared container box-model from ADR-0046)
-that holds a `<header>` navigation bar (‹ prev · month-year title · next ›) and a 7-column CSS
+that holds a `<header>` navigation bar (prev caret · month-year title · next caret) and a 7-column CSS
 grid of day cells. The grid is rebuilt on month navigation; the shell (panel + header + grid
 container) is created ONCE (idempotent across disconnect/reconnect).
 

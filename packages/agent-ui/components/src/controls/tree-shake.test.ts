@@ -146,9 +146,15 @@ describe('ui-text-field tree-shake — the entry graph is tight (s12)', () => {
     expect(tfLayers('controls/calendar/')).toEqual([])
   })
 
-  it('does NOT drag the descriptor tooling, and pulls ZERO non-relative imports', () => {
+  it('does NOT drag the descriptor tooling, and pulls ONLY @agent-ui/icons as its non-relative import', () => {
     expect(tfLayers('descriptor/')).toEqual([])
-    expect([...tf.external]).toEqual([])
+    // Phosphor-icon sweep: text-field injects setIcon(...) glyphs (magnifier / x / eye / eye-slash /
+    // calendar-blank / caret-up / caret-down) via the swappable icon adapter — the ONE deliberate
+    // external edge, mirroring components → @agent-ui/shared (ADR-0065/0066; layering.test.ts already
+    // allowlists both lower-tier siblings). It imports the root `@agent-ui/icons` barrel only (never the
+    // `/phosphor` subpath), so it drags zero Phosphor bytes itself — just resolve/registry/types, the
+    // same subpath-hygiene ui-icon's own graph relies on.
+    expect([...tf.external]).toEqual(['@agent-ui/icons'])
   })
 })
 

@@ -150,6 +150,17 @@
     justify-content: center;
   }
 
+  /* The injected Phosphor caret-left/caret-right (setIcon, @agent-ui/icons): 1em tracks the
+     button's own font-size (--ui-calendar-nav-font above) at every [size] tier — the same
+     rendered size as the previous ‹ › text glyphs. Overrides the svg's own width/height="100%"
+     presentational attributes (resolve.ts). */
+  :scope [data-part='prev'] svg,
+  :scope [data-part='next'] svg {
+    display: block;
+    inline-size: 1em;
+    block-size: 1em;
+  }
+
   :scope [data-part='prev']:hover,
   :scope [data-part='next']:hover {
     background-color: var(--ui-calendar-cell-hover-bg);

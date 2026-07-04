@@ -70,11 +70,11 @@ slots:
 
 parts:
   - name: trigger
-    description: The control-created `<button data-part="trigger" type="button">`. Control-class height from --ui-select-height. Contains [data-part=label] (the visible label / placeholder) and [data-part=caret] (the ▾ glyph, aria-hidden, sized = font per the §4.1 caret law). Always lays out as [label | caret] (1fr + auto grid). Gets aria-haspopup="listbox", aria-expanded (synced via scope-owned effect), aria-controls pointing to the listbox id.
+    description: The control-created `<button data-part="trigger" type="button">`. Control-class height from --ui-select-height. Contains [data-part=label] (the visible label / placeholder) and [data-part=caret] (the caret-down Phosphor glyph, aria-hidden, sized = font per the §4.1 caret law). Always lays out as [label | caret] (1fr + auto grid). Gets aria-haspopup="listbox", aria-expanded (synced via scope-owned effect), aria-controls pointing to the listbox id.
   - name: label
     description: A `<span data-part="label">` inside the trigger. Shows the text content of the selected [role=option], or the placeholder text when nothing is selected. Updated by a scope-owned reactive effect reading the `value` + `placeholder` signals.
   - name: caret
-    description: A `<span data-part="caret" aria-hidden="true">▾</span>` inside the trigger. An inline affordance glyph sized = font (the §4.1 caret law). CSS centres it in an icon-sized cell by padding = ½(icon−glyph).
+    description: A `<span data-part="caret" aria-hidden="true">` inside the trigger, injected with the Phosphor `caret-down` glyph via `setIcon` (@agent-ui/icons). An inline affordance sized = font (the §4.1 caret law). CSS centres it in an icon-sized cell by padding = ½(icon−glyph).
   - name: listbox
     description: The control-created `<div data-part="listbox" role="listbox">`. Container/surface in the Popover API top layer when open. Author's [role=option] children (and [role=group] containers) are moved here at first connect. The overlay controller sets popover="auto" + position:fixed + inset; CSS adds bg/border/radius/padding. tabindex="-1" allows fallback focus when no option has tabindex=0.
   - name: group-label
@@ -166,7 +166,7 @@ the ⭐ **ADR-0043 select gate**.
 
 The control creates two internal parts on first connect:
 
-- **trigger** — a `<button type="button">` with `aria-haspopup="listbox"` + `aria-expanded` + `aria-controls`. Contains a **label span** (the selected option's text or the placeholder) and a **caret span** (▾, sized = font).
+- **trigger** — a `<button type="button">` with `aria-haspopup="listbox"` + `aria-expanded` + `aria-controls`. Contains a **label span** (the selected option's text or the placeholder) and a **caret span** (a Phosphor `caret-down` glyph, sized = font).
 - **listbox** — a `<div role="listbox">` panel in the Popover API top layer when open. The author's `[role=option]` children are moved into this panel at first connect.
 
 ## Selection

@@ -383,6 +383,18 @@ describe('ui-select — whole-shape assertion (Test-the-whole-shape DoD law)', (
     // Caret should be approximately icon-sized (--ui-icon-md = 18px at default [scale])
     // Allow ± 4px: it must not be gigantic (not icon-proportioned at the wrong size class)
     expect(caretRect.width, `${server.browser}: caret is wider than 36px — not font-sized`).toBeLessThan(36)
+
+    // Phosphor-icon sweep: the INJECTED <svg> (setIcon(caret, 'caret-down')) must itself paint at a
+    // real, non-collapsed size — not just its containing cell (the ui-slider "collapsed dot" lesson:
+    // a container can pass every bounding-box check while its content renders at 0×0). Fits within the
+    // caret cell (never spills past the icon-sized box) and is at least half the cell (never a stray
+    // pixel-sized dot).
+    const svg = caret.querySelector('svg')!
+    const svgRect = svg.getBoundingClientRect()
+    expect(svgRect.width, `${server.browser}: injected caret svg collapsed to zero width`).toBeGreaterThan(0)
+    expect(svgRect.height, `${server.browser}: injected caret svg collapsed to zero height`).toBeGreaterThan(0)
+    expect(svgRect.width, `${server.browser}: injected caret svg overflows its cell`).toBeLessThanOrEqual(caretRect.width)
+    expect(svgRect.width, `${server.browser}: injected caret svg is a stray dot, not glyph-sized`).toBeGreaterThan(caretRect.width / 2)
   })
 })
 

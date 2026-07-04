@@ -16,6 +16,9 @@
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css -> dimensions.css (FIRST)
 import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation
 import '@agent-ui/components/components' // [3] self-defining ui-* controls (registers ui-button on import)
+import '@agent-ui/icons/phosphor' // [3b] activate the Phosphor default pack (ADR-0065/0066): the controls above render their
+// affordances (select caret, text-field clear/reveal/steppers, calendar nav) through the app-owned icon pack — pack-agnostic
+// by design, so the SHELL that self-defines them must activate the default pack, else those glyphs resolve to an empty <svg>.
 import './_page.css' // [4] shared page chrome (shell + nav + header), AFTER the foundation so it reads the --md-sys-color-* roles
 
 // What a page builder gets back from mountPage: the <main> container to append its content into. Kept to a

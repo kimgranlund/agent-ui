@@ -177,6 +177,16 @@
     line-height: 1;
   }
 
+  /* The injected Phosphor caret-down (setIcon, @agent-ui/icons): sized explicitly to the glyph
+     rhythm — not the icon cell — so the §4.1 law holds independent of the padding math above
+     (the padding already insets to the same value; this is belt-and-suspenders, not reliance on
+     it). Overrides the svg's own width/height="100%" presentational attributes (resolve.ts). */
+  :scope > [data-part='trigger'] > [data-part='caret'] svg {
+    display: block;
+    inline-size: var(--ui-select-glyph);
+    block-size: var(--ui-select-glyph);
+  }
+
   /* Trigger hover/focus states (state-PAINT only; geometry is never transitioned). */
   :scope > [data-part='trigger']:hover {
     border-color: var(--ui-select-border-hover);
