@@ -66,15 +66,13 @@ describe('default catalog factories — table parity (catalog LLD-C5, SPEC-R3 AC
   })
 })
 
-describe('default catalog factories — Text (ADR-0025, catalog LLD-C5)', () => {
-  it('Text → ui-text maps text (textContent) + variant (accessor prop); not an input (no value bind)', () => {
+describe('default catalog factories — Text (ADR-0078, catalog LLD-C5)', () => {
+  it('Text → ui-text maps text (textContent); not an input (no value bind)', () => {
     expect(textFactory.tag).toBe('ui-text')
     expect(textFactory.value).toBeUndefined() // Text is a display leaf — no two-way binding
     const el = textFactory.create()
     textFactory.applyProp(el, 'text', 'Hello world')
     expect(el.textContent).toBe('Hello world')
-    textFactory.applyProp(el, 'variant', 'h1')
-    expect((el as { variant?: unknown }).variant).toBe('h1')
   })
 
   it('null/undefined text coerces to empty string (the value == null guard)', () => {
@@ -83,6 +81,34 @@ describe('default catalog factories — Text (ADR-0025, catalog LLD-C5)', () => 
     expect(el.textContent).toBe('')
     textFactory.applyProp(el, 'text', undefined)
     expect(el.textContent).toBe('')
+  })
+
+  // The ADR-0078 cl.5 fan-out table: the wire's ONE `variant` enum (catalog-frozen, unchanged) translates
+  // to the control's three-axis triple (as/variant/size) at apply-time — one row per wire value.
+  it.each([
+    ['h1', { as: 'h1', variant: 'display', size: 'sm' }],
+    ['h2', { as: 'h2', variant: 'headline', size: 'lg' }],
+    ['h3', { as: 'h3', variant: 'headline', size: 'md' }],
+    ['h4', { as: 'h4', variant: 'headline', size: 'sm' }],
+    ['h5', { as: 'h5', variant: 'title', size: 'lg' }],
+    ['body', { as: 'none', variant: 'body', size: 'md' }],
+    ['caption', { as: 'none', variant: 'body', size: 'sm' }],
+  ] as const)('wire variant %s fans out to the ui-text triple', (wire, triple) => {
+    const el = textFactory.create()
+    textFactory.applyProp(el, 'variant', wire)
+    const target = el as unknown as Record<string, unknown>
+    expect(target.as).toBe(triple.as)
+    expect(target.variant).toBe(triple.variant)
+    expect(target.size).toBe(triple.size)
+  })
+
+  it('an unrecognized wire variant value falls back to the body triple', () => {
+    const el = textFactory.create()
+    textFactory.applyProp(el, 'variant', 'nonsense')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.as).toBe('none')
+    expect(target.variant).toBe('body')
+    expect(target.size).toBe('md')
   })
 
   it('Text → ui-text conformance payload yields 0 CATALOG errors', () => {
@@ -176,9 +202,11 @@ describe('default catalog factories — G9 container family (catalog LLD-C5, SPE
     // equal to the property name (the SPEC-R8 1:1 reflection), so `applyProp(el, name, v)` must land `v`
     // on `el[mapsTo]`. Walk the catalog and assert it for every accessor-mapped type — skip the bespoke
     // non-identity-`mapsTo` factories (Button.label, Checkbox/Switch.label, Option.label all → textContent;
-    // Option.value → an attribute, not a prop), each covered by its own dedicated describe block below.
+    // Option.value → an attribute, not a prop; Text.variant → the ADR-0078 cl.5 triple fan-out, not a
+    // straight pass-through), each covered by its own dedicated describe block below.
     for (const [type, def] of Object.entries(defaultCatalog.components)) {
-      if (type === 'Button' || type === 'Checkbox' || type === 'Switch' || type === 'Option') continue
+      if (type === 'Button' || type === 'Checkbox' || type === 'Switch' || type === 'Option' || type === 'Text')
+        continue
       const factory = defaultFactories[type]
       const el = factory.create()
       for (const [name, pd] of Object.entries(def.properties)) {

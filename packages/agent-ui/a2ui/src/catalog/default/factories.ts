@@ -56,11 +56,29 @@ export const buttonFactory: WidgetFactory = {
   },
 }
 
+// The ADR-0078 cl.5 fan-out table — the wire `Text.variant` (catalog-frozen `h1…h5 | caption | body`,
+// UNCHANGED) is not bindable, so it translates once at apply-time to the ui-text three-axis triple
+// (`as`/`variant`/`size`). Nearest-M3-row per wire level (ADR-0078's table); an unrecognized wire value
+// (should not occur — the catalog enum already rejects it, conformance-checked upstream) falls back to
+// the `body` triple rather than left half-applied.
+const TEXT_VARIANT_TABLE: Record<string, { as: string; variant: string; size: string }> = {
+  h1: { as: 'h1', variant: 'display', size: 'sm' },
+  h2: { as: 'h2', variant: 'headline', size: 'lg' },
+  h3: { as: 'h3', variant: 'headline', size: 'md' },
+  h4: { as: 'h4', variant: 'headline', size: 'sm' },
+  h5: { as: 'h5', variant: 'title', size: 'lg' },
+  body: { as: 'none', variant: 'body', size: 'md' },
+  caption: { as: 'none', variant: 'body', size: 'sm' },
+}
+
 /**
- * `Text` → `ui-text` (ADR-0025, catalog LLD-C5). `text` is the display content (maps to `textContent` —
- * a non-identity `mapsTo`, so this is a bespoke factory like `buttonFactory`); `variant` maps to the
- * control's reflecting `variant` accessor prop. Not an input ⇒ no `value`. A display leaf — no children,
- * no action (ADR-0025 cl.5).
+ * `Text` → `ui-text` (ADR-0078, catalog LLD-C5). `text` is the display content (maps to `textContent` —
+ * a non-identity `mapsTo`, so this is a bespoke factory like `buttonFactory`, untouched by the ADR-0078
+ * redesign — the cl.4 heal observer makes every later bound-text write safe). `variant` is the wire's
+ * ONE enum (`h1…h5 | caption | body`, catalog UNCHANGED) fanned out through `TEXT_VARIANT_TABLE` onto the
+ * control's three reflecting accessor props (`as`/`variant`/`size`) — the catalog stays protocol-faithful
+ * while the control gets the real semantic stamp + M3 role/size pair. Not an input ⇒ no `value`. A
+ * display leaf — no children, no action.
  */
 export const textFactory: WidgetFactory = {
   tag: 'ui-text',
@@ -70,9 +88,14 @@ export const textFactory: WidgetFactory = {
       case 'text':
         el.textContent = value == null ? '' : String(value)
         break
-      case 'variant':
-        ;(el as { variant?: unknown }).variant = value
+      case 'variant': {
+        const triple = TEXT_VARIANT_TABLE[value as string] ?? TEXT_VARIANT_TABLE.body
+        const target = el as { as?: unknown; variant?: unknown; size?: unknown }
+        target.as = triple.as
+        target.variant = triple.variant
+        target.size = triple.size
         break
+      }
       default:
         setAttr(el, prop, value)
     }

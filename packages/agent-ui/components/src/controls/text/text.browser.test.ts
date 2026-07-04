@@ -1,177 +1,121 @@
 import { describe, it, expect } from 'vitest'
 import { server, cdp } from 'vitest/browser'
+import type { UITextElement } from './text.ts'
 
-// ADR-0025 — ui-text cross-engine browser smoke. jsdom computes no real font metrics, so the REAL
-// proofs live here: the typographic ramp resolves to distinct computed font-sizes per variant, and the
-// heading role/ariaLevel is set for h1-h5 via ElementInternals. Runs in BOTH Chromium and WebKit via
-// vitest.browser.config.ts → playwright instances.
+// ADR-0078 — ui-text cross-engine browser smoke. jsdom computes no real font metrics and can't prove
+// zero-geometry-delta layout, so the REAL proofs live here: the role×size matrix resolves to distinct
+// computed font-sizes, `[scale]` re-multiplies them, the `as` stamp changes semantics with NO layout
+// delta, and the stamping mechanism (parser streaming / textContent clobber) self-heals in a real engine.
+// Runs in BOTH Chromium and WebKit via vitest.browser.config.ts → playwright instances.
 //
-// CSS wiring is SELF-CONTAINED: foundation-styles (the --md-sys-color-* roles + the --ui-type-* ramp from
-// dimensions.css) then component-styles (text.css), then the self-defining module. Vite resolves the
-// bare specifier + the relative sheets and injects them.
-import '@agent-ui/components/foundation-styles.css' // the --md-sys-color-* roles + the --ui-type-* typographic ramp
+// CSS wiring is SELF-CONTAINED: foundation-styles (the --md-sys-color-* roles + the --md-sys-typescale-*
+// ramp from dimensions.css) then component-styles (text.css), then the self-defining module.
+import '@agent-ui/components/foundation-styles.css' // the --md-sys-color-* roles + the --md-sys-typescale-* type scale
 import '@agent-ui/components/component-styles.css' // includes text.css (added to the barrel)
 import '@agent-ui/components/components' // self-defines ui-text + the whole family
-
-// Probe subclass re-exposing internals for the heading-role assertion.
-import { UITextElement } from './text.ts'
 
 /** A CDP session for Chromium-only emulation probes. */
 type CdpSession = { send(method: string, params?: object): Promise<unknown> }
 
-class BrowserProbeText extends UITextElement {
-  get probeInternals(): ElementInternals {
-    return this.internals
-  }
-}
-// Guard against double-define if this module is re-loaded in the same browser page.
-if (!customElements.get('ui-text-browser-probe')) {
-  customElements.define('ui-text-browser-probe', BrowserProbeText)
-}
+/** Wait one microtask tick — long enough for a MutationObserver callback queued earlier to run (FIFO). */
+const tick = (): Promise<void> => new Promise((resolve) => queueMicrotask(resolve))
 
-describe('ui-text browser-truth harness (ADR-0025)', () => {
-  it('mounts ui-text and a real engine resolves font-size to a computed px (anti-vacuous)', () => {
+describe('ui-text browser-truth harness — the role×size matrix resolves to real px (ADR-0078)', () => {
+  it('body/md (the bare default) resolves to 14px — the fully-M3-canonical size (ADR-0078 knob ①)', () => {
     const el = document.createElement('ui-text')
     el.textContent = 'Body text'
     document.body.append(el)
-
-    // body variant (default) — --ui-text-size → --ui-type-body-size → calc(16px * var(--ui-scale)).
-    // If the foundation/component CSS or the token chain hadn't resolved, blockSize/fontSize would not be px.
-    const cs = getComputedStyle(el)
-    const fontSize = cs.fontSize
+    const fontSize = getComputedStyle(el).fontSize
     expect(fontSize).toMatch(/px$/)
-    expect(Number.parseFloat(fontSize)).toBeGreaterThan(0)
-    // body at scale=1 is 16px (ADR-0025 cl.3 ramp)
-    expect(Number.parseFloat(fontSize)).toBeCloseTo(16, 0)
-
+    expect(Number.parseFloat(fontSize)).toBeCloseTo(14, 0)
     el.remove()
   })
 
-  it('h1 variant resolves to a LARGER font-size than body (the type ramp is live)', () => {
-    const h1 = document.createElement('ui-text')
-    h1.setAttribute('variant', 'h1')
-    h1.textContent = 'Heading'
-    document.body.append(h1)
-
-    const body = document.createElement('ui-text')
-    body.textContent = 'Body'
-    document.body.append(body)
-
-    const h1Size = Number.parseFloat(getComputedStyle(h1).fontSize)
-    const bodySize = Number.parseFloat(getComputedStyle(body).fontSize)
-
-    // h1 is 40px (scale 1), body is 16px — the ramp truly resolved (anti-vacuous: different sizes)
-    expect(h1Size).toBeGreaterThan(bodySize)
-    expect(h1Size).toBeCloseTo(40, 0)
-
-    h1.remove()
-    body.remove()
+  it('display/sm → 36px · title/lg → 22px · body/md → 14px (the ADR-named computed samples)', () => {
+    const cases: Array<[string, string, number]> = [
+      ['display', 'sm', 36],
+      ['title', 'lg', 22],
+      ['body', 'md', 14],
+    ]
+    for (const [variant, size, px] of cases) {
+      const el = document.createElement('ui-text')
+      el.setAttribute('variant', variant)
+      el.setAttribute('size', size)
+      el.textContent = `${variant}/${size}`
+      document.body.append(el)
+      expect(Number.parseFloat(getComputedStyle(el).fontSize), `${variant}/${size}`).toBeCloseTo(px, 0)
+      el.remove()
+    }
   })
 
-  it('each heading variant (h1-h5) produces a distinct, descending font-size', () => {
-    const variants = ['h1', 'h2', 'h3', 'h4', 'h5'] as const
-    const sizes: number[] = []
-
+  it('the 9 variants at size=md produce distinct computed font-sizes (the matrix is genuinely live)', () => {
+    const variants = ['display', 'headline', 'title', 'body', 'label', 'kicker', 'overline', 'quote', 'lead'] as const
+    const sizes = new Set<number>()
     for (const v of variants) {
       const el = document.createElement('ui-text')
       el.setAttribute('variant', v)
       el.textContent = v
       document.body.append(el)
-      sizes.push(Number.parseFloat(getComputedStyle(el).fontSize))
+      sizes.add(Number.parseFloat(getComputedStyle(el).fontSize))
       el.remove()
     }
-
-    // Each level is strictly smaller than the previous (h1 > h2 > h3 > h4 > h5)
-    for (let i = 1; i < sizes.length; i++) {
-      expect(sizes[i], `${variants[i]} is not smaller than ${variants[i - 1]}`).toBeLessThan(sizes[i - 1] as number)
-    }
-    // caption is smaller than body
-    const captionEl = document.createElement('ui-text')
-    captionEl.setAttribute('variant', 'caption')
-    captionEl.textContent = 'caption'
-    document.body.append(captionEl)
-    const captionSize = Number.parseFloat(getComputedStyle(captionEl).fontSize)
-    captionEl.remove()
-
-    const bodyEl = document.createElement('ui-text')
-    bodyEl.textContent = 'body'
-    document.body.append(bodyEl)
-    const bodySize = Number.parseFloat(getComputedStyle(bodyEl).fontSize)
-    bodyEl.remove()
-
-    expect(captionSize).toBeLessThan(bodySize) // caption 13px < body 16px
+    // Two groups collapse by DESIGN (cl.2b): quote ≡ lead (18px, "own tokens, changeable independently")
+    // and label/kicker/overline all borrow the M3 label-medium size (12px — kicker/overline are label
+    // metrics emboldened/tracked, not resized). So 9 variants land on exactly 6 distinct sizes: display
+    // 45 · headline 28 · title 16 · body 14 · {label,kicker,overline} 12 · {quote,lead} 18.
+    expect(sizes.size).toBe(6)
   })
 
-  it('h1-h5: role=heading + ariaLevel 1-5 set via internals in a real engine', async () => {
-    const cases: Array<[string, string]> = [['h1', '1'], ['h2', '2'], ['h3', '3'], ['h4', '4'], ['h5', '5']]
-    for (const [v, expectedLevel] of cases) {
-      const el = document.createElement('ui-text-browser-probe') as BrowserProbeText
-      el.setAttribute('variant', v)
-      el.textContent = v
+  it('size=sm/lg repoint within ONE role produce a strictly ascending triple (sm < md < lg)', () => {
+    const px = (size: string): number => {
+      const el = document.createElement('ui-text')
+      el.setAttribute('variant', 'headline')
+      el.setAttribute('size', size)
+      el.textContent = size
       document.body.append(el)
-      await el.updateComplete
-      expect(el.probeInternals.role, `${v}: role`).toBe('heading')
-      expect(el.probeInternals.ariaLevel, `${v}: ariaLevel`).toBe(expectedLevel)
+      const v = Number.parseFloat(getComputedStyle(el).fontSize)
       el.remove()
+      return v
     }
+    const sm = px('sm')
+    const md = px('md')
+    const lg = px('lg')
+    expect(sm).toBeLessThan(md)
+    expect(md).toBeLessThan(lg)
   })
 
-  it('body/caption: no role and no ariaLevel (generic styled text)', async () => {
-    for (const v of ['body', 'caption']) {
-      const el = document.createElement('ui-text-browser-probe') as BrowserProbeText
-      el.setAttribute('variant', v)
-      el.textContent = v
-      document.body.append(el)
-      await el.updateComplete
-      expect(el.probeInternals.role, `${v}: no role`).toBeNull()
-      expect(el.probeInternals.ariaLevel, `${v}: no ariaLevel`).toBeNull()
-      el.remove()
-    }
-  })
-
-  it('user-select is ENABLED: display text is selectable in a real engine', () => {
+  it("a bare <ui-text size='lg'> (no [variant]) hits the body/large row — the absent-variant law", () => {
     const el = document.createElement('ui-text')
-    el.textContent = 'Selectable'
+    el.setAttribute('size', 'lg')
+    el.textContent = 'no variant'
     document.body.append(el)
-
-    // ui-text is the inverse of ui-button (which disables user-select). The real engine must compute
-    // `text` (or its inherited equivalent) — not `none`.
-    const cs = getComputedStyle(el) as CSSStyleDeclaration & { webkitUserSelect?: string }
-    const val = cs.userSelect || cs.webkitUserSelect || ''
-    expect(val).not.toBe('none')
-
+    // body-large = 16px (vs. body-medium's 14px) — proves the :not([variant]) compound selector is live
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(16, 0)
     el.remove()
   })
 })
 
-// ── C6/C9 subtree-[scale] proof (ADR-0025 cl.3 / the * ramp pre-substitution law) ─────────────────
-// The --ui-type-*-size tokens are declared on `*` (not :root) so each element re-substitutes the
-// --ui-scale it inherits from its subtree ancestor. A [scale=content-lg] wrapper re-multiplies them:
-// h1 at scale=1 is 40px; at scale=1.75 it must become 70px. Proves the dimensions.css `*` law works
-// in a real engine (where the pre-substitution can only be confirmed through computed px).
+// ── [scale] subtree re-multiplication (the `*` ramp pre-substitution law, ADR-0078 cl.2 / dimensions.css) ──
 
-describe('ui-text subtree-[scale] — the --ui-type-* size re-multiplies for a scaled ancestor (C6/C9)', () => {
-  it('h1 under [scale=content-lg] resolves to 70px (40px × 1.75 — the * pre-substitution law)', () => {
+describe('ui-text subtree-[scale] — --md-sys-typescale-*-size re-multiplies for a scaled ancestor', () => {
+  it('display/lg under [scale=content-lg] resolves to 99.75px (57px × 1.75 — the * pre-substitution law)', () => {
     const wrap = document.createElement('div')
     wrap.setAttribute('scale', 'content-lg') // --ui-scale → 1.75
     document.body.append(wrap)
 
     const el = document.createElement('ui-text')
-    el.setAttribute('variant', 'h1')
-    el.textContent = 'Scaled heading'
+    el.setAttribute('variant', 'display')
+    el.setAttribute('size', 'lg')
+    el.textContent = 'Scaled display'
     wrap.append(el)
 
-    // baseline without scale: h1 = 40px at scale 1
-    const scaledSize = Number.parseFloat(getComputedStyle(el).fontSize)
-    // at scale 1.75: 40 × 1.75 = 70px
-    expect(scaledSize).toBeCloseTo(70, 0) // the * ramp re-multiplied (anti-vacuous: not the 40px baseline)
-
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(99.75, 0)
     wrap.remove()
   })
 
   it('the scaled font-size differs from the unscaled baseline (anti-vacuous: the ramp is live)', () => {
     const unscaled = document.createElement('ui-text')
-    unscaled.setAttribute('variant', 'h1')
+    unscaled.setAttribute('variant', 'headline')
     unscaled.textContent = 'baseline'
     document.body.append(unscaled)
     const basePx = Number.parseFloat(getComputedStyle(unscaled).fontSize)
@@ -181,31 +125,155 @@ describe('ui-text subtree-[scale] — the --ui-type-* size re-multiplies for a s
     wrap.setAttribute('scale', 'ui-sm') // --ui-scale → 0.875 (a SMALLER multiplier for clear contrast)
     document.body.append(wrap)
     const scaled = document.createElement('ui-text')
-    scaled.setAttribute('variant', 'h1')
+    scaled.setAttribute('variant', 'headline')
     scaled.textContent = 'ui-sm'
     wrap.append(scaled)
     const compactPx = Number.parseFloat(getComputedStyle(scaled).fontSize)
     wrap.remove()
 
-    // ui-sm (×0.875) is smaller than baseline (×1) — the ramp genuinely re-multiplied in a real engine
     expect(compactPx).toBeLessThan(basePx)
     expect(compactPx).toBeCloseTo(basePx * 0.875, 0)
   })
 })
 
-// ── C8/C9 forced-colors browser leg (ADR-0025 cl.3 / text.css forced-colors block) ─────────────────
-// text.css declares `@media (forced-colors: active) { :scope { color: CanvasText } }`. A bare color
-// token (--md-sys-color-neutral-on-surface) could be replaced by the system; CanvasText is the platform's WHCM
-// text keyword, guaranteed opaque. Chromium emulates via CDP; WebKit has no CDP forced-colors support
-// (the documented engine split — the card/tabs browser harness convention).
+// ── Stamping (`as`) — real-element creation, node identity, unwrap, self-heal (ADR-0078 cl.4) ──────────
 
-describe('ui-text forced-colors — CanvasText mapping keeps display text visible (C8/C9)', () => {
+describe('ui-text stamping — create / re-stamp / unwrap, node identity preserved', () => {
+  it('as="h4" stamps a REAL <h4> in the light DOM (real-heading exposure)', () => {
+    const el = document.createElement('ui-text')
+    el.setAttribute('as', 'h4')
+    el.textContent = 'A real heading'
+    document.body.append(el)
+    const h4 = el.querySelector('h4')
+    expect(h4).not.toBeNull()
+    expect(h4?.tagName).toBe('H4')
+    expect(h4?.textContent).toBe('A real heading')
+    el.remove()
+  })
+
+  it('as change (h4 → span) moves the SAME text node into the new stamp — never a clone', async () => {
+    const el = document.createElement('ui-text')
+    el.setAttribute('as', 'h4')
+    el.textContent = 'Content'
+    document.body.append(el)
+    const textNode = el.querySelector('h4')?.firstChild
+    el.setAttribute('as', 'span')
+    await (el as UITextElement).updateComplete
+    const span = el.querySelector('span')
+    expect(span).not.toBeNull()
+    expect(span?.firstChild).toBe(textNode)
+    el.remove()
+  })
+
+  it('as="none" unwraps — no stamp element remains, content returns to the host', async () => {
+    const el = document.createElement('ui-text')
+    el.setAttribute('as', 'h4')
+    el.textContent = 'Unwrap me'
+    document.body.append(el)
+    el.setAttribute('as', 'none')
+    await (el as UITextElement).updateComplete
+    expect(el.querySelector('h4')).toBeNull()
+    expect(el.childElementCount).toBe(0)
+    expect(el.textContent).toBe('Unwrap me')
+    el.remove()
+  })
+})
+
+describe('ui-text stamping — parser-streamed adoption + textContent-clobber self-heal', () => {
+  it('parser-streamed: children appended to the host AFTER connect are adopted into the stamp', async () => {
+    const el = document.createElement('ui-text')
+    el.setAttribute('as', 'h4') // connects with NO children — mirrors an in-flight HTML-parser upgrade
+    document.body.append(el)
+    expect(el.querySelector('h4')).not.toBeNull() // the stamp already exists, empty
+
+    el.appendChild(document.createTextNode('Streamed content')) // lands on the host, not the stamp
+    await tick()
+    await tick()
+    expect(el.querySelector('h4')?.textContent).toBe('Streamed content')
+    expect(el.childElementCount).toBe(1)
+    el.remove()
+  })
+
+  it('textContent clobber (the A2UI bound-text path): a fresh stamp re-wraps the new text within a microtask', async () => {
+    const el = document.createElement('ui-text')
+    el.setAttribute('as', 'h4')
+    el.textContent = 'Original bound text'
+    document.body.append(el)
+    const before = el.querySelector('h4')
+    expect(before?.textContent).toBe('Original bound text')
+
+    el.textContent = 'Updated bound text' // destroys ALL children, stamp included
+    await tick()
+    await tick()
+    const after = el.querySelector('h4')
+    expect(after).not.toBeNull()
+    expect(after).not.toBe(before) // a fresh stamp — the stale one is never reused
+    expect(after?.textContent).toBe('Updated bound text')
+    expect(el.childElementCount).toBe(1)
+    el.remove()
+  })
+})
+
+// ── Zero geometry delta (cl.4) — the stamp is visually transparent: same rendered box with vs without it ──
+
+describe('ui-text stamping — zero geometry delta (cl.4: as changes semantics, never layout)', () => {
+  it('a stamped <p> renders the SAME bounding box as the unstamped host, for identical content', () => {
+    const container = document.createElement('div')
+    container.style.width = '300px'
+    document.body.append(container)
+
+    const plain = document.createElement('ui-text')
+    plain.textContent = 'Identical content for a geometry comparison'
+    container.append(plain)
+    const plainBox = plain.getBoundingClientRect()
+
+    const stamped = document.createElement('ui-text')
+    stamped.setAttribute('as', 'p')
+    stamped.textContent = 'Identical content for a geometry comparison'
+    container.append(stamped)
+    const stampedBox = stamped.getBoundingClientRect()
+
+    expect(stampedBox.width).toBeCloseTo(plainBox.width, 0)
+    expect(stampedBox.height).toBeCloseTo(plainBox.height, 0)
+    container.remove()
+  })
+})
+
+// ── Editorial treatments (cl.2b) — uppercase / italic + rule + indent ─────────────────────────────────
+
+describe('ui-text editorial treatments — kicker/overline uppercase, quote italic + rule + indent', () => {
+  it('kicker and overline compute text-transform: uppercase', () => {
+    for (const variant of ['kicker', 'overline']) {
+      const el = document.createElement('ui-text')
+      el.setAttribute('variant', variant)
+      el.textContent = 'eyebrow'
+      document.body.append(el)
+      expect(getComputedStyle(el).textTransform, variant).toBe('uppercase')
+      el.remove()
+    }
+  })
+
+  it('quote computes font-style: italic and a non-zero inline-start border + padding', () => {
+    const el = document.createElement('ui-text')
+    el.setAttribute('variant', 'quote')
+    el.textContent = 'A block quotation'
+    document.body.append(el)
+    const cs = getComputedStyle(el)
+    expect(cs.fontStyle).toBe('italic')
+    expect(Number.parseFloat(cs.borderInlineStartWidth || cs.borderLeftWidth)).toBeGreaterThan(0)
+    expect(Number.parseFloat(cs.paddingInlineStart || cs.paddingLeft)).toBeGreaterThan(0)
+    el.remove()
+  })
+})
+
+// ── forced-colors (ADR-0078 cl.3 / text.css forced-colors block) ───────────────────────────────────────
+
+describe('ui-text forced-colors — CanvasText mapping keeps display text visible', () => {
   it('forced-colors @media block keeps display text visible — Chromium emulates (CDP); WebKit asserts baseline', async () => {
     const el = document.createElement('ui-text')
     el.textContent = 'High-contrast visible text'
     document.body.append(el)
 
-    // Baseline (BOTH engines): text colour is painted (has alpha > 0 from --md-sys-color-neutral-on-surface).
     const alphaOf = (color: string): number => {
       const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(color)
       if (m) return m[4] !== undefined ? Number(m[4]) : 1
@@ -214,23 +282,18 @@ describe('ui-text forced-colors — CanvasText mapping keeps display text visibl
     expect(alphaOf(getComputedStyle(el).color), 'baseline text colour is invisible').toBeGreaterThan(0)
 
     if (server.browser !== 'chromium') {
-      // WebKit exposes no CDP forced-colors emulation (the documented cross-engine split — the card
-      // harness convention). Assert we are genuinely NOT in forced-colors (so we are not faking the
-      // Chromium proof) and stop; the forced-colors leg is proven in Chromium.
       expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
       el.remove()
       return
     }
 
-    // Chromium: emulate forced-colors via CDP — text.css's @media (forced-colors: active) overrides
-    // color to CanvasText (a system colour), so the ink survives WHCM (alpha stays > 0).
     const session = cdp() as unknown as CdpSession
     await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
     try {
       expect(window.matchMedia('(forced-colors: active)').matches, 'CDP did not enter forced-colors').toBe(true)
       expect(alphaOf(getComputedStyle(el).color), 'display text colour vanished under forced-colors').toBeGreaterThan(0)
     } finally {
-      await session.send('Emulation.setEmulatedMedia', { features: [] }) // reset for the next test
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
     }
 
     el.remove()

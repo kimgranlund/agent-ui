@@ -16,7 +16,8 @@ control (`button`, `text-field`, `select`, the field family — the full-height 
 `line-height: var(--ui-control-line-height)` (`= 1`): the single line, like a glyph, centers in the fixed frame
 (the host grid's `align-items: center`) with **no extra leading**. The frame height is unchanged — `line-height 1`
 tightens the line box, it never grows the box. **EXCLUDES the Display class** (`ui-text`): multi-line document text
-keeps its per-level type leading `--ui-type-{level}-leading` (ADR-0025). `--ui-control-line-height` is a fleet
+keeps its per-role×size type line-height `--md-sys-typescale-{role}-{size}-line-height` (ADR-0078, supersedes
+ADR-0025's `--ui-type-{level}-leading`). `--ui-control-line-height` is a fleet
 `:root` constant (ADR-0036), named with `line-height` (not `leading`) to stay clear of the leading/trailing **slot**
 vocabulary.
 
@@ -107,7 +108,8 @@ is always to size it `= --ui-{cmp}-glyph` (font).
 `(scale × size)` **selects a §1 row** (Kim's explicit lookup — **no multiplier**; ADR-0038): the cell
 names one §1 row and `--ui-{height,font,icon}-{size}` all come from it (height + glyphs consistent), so a
 control resolves height+font+icon from one row, then obeys the families above. (`--ui-scale` is gone from
-the control path — it survives only as the `--ui-type-*` **display** multiplier.) The §1 ramp it selects
+the control path — it survives only as the `--md-sys-typescale-*` **display** `-size` multiplier, ADR-0078.)
+The §1 ramp it selects
 from is two bands that change gear at the **MD|LG seam**:
 
 - **compact band** (XS·SM·MD = 20·24·28): height `+4` linear; gentle glyph step.
@@ -127,7 +129,7 @@ A component's sizing lever is set by its class:
 | **Indicator** (smaller box) | checkbox · radio · switch · slider · tag | `block/inline-size: var(--ui-{cmp}-size)` off the **widget ramp `--ui-compact-{size}`** (Kim's 8-value `12·14·16·18·20·22·24·28`, ADR-0041 — *not* `--ui-ind`, which never shipped); a thumbed widget (switch/range) insets `--ui-widget-inset: 2px` (`thumb = box − 2×2px`, flat, density-invariant) |
 | **Pattern** (container + control-height rows) | tabs · segmented-control · toolbar · accordion · menu · dialog | interactive rows take the control height; the shell uses the space scale |
 | **Container/layout** | spacer · stack · grid | gaps/margins/padding off `--space-*` × density; no control height |
-| **Display** | divider · icon · spinner · progress · alert · badge · tooltip · **text** | **text-bearing** reads the typographic ramp `--ui-type-{level}-{size,weight,leading}` (`level` = the `variant` h1–h5/body/caption — `ui-text`, ADR-0025 cl.3); non-text display takes the control-band `font-size: var(--ui-font-{size})` where it sizes a glyph label; intrinsic structural sizing otherwise. No control height, no `padding-block` law — the lever is the type scale, not `--ui-height-*`. |
+| **Display** | divider · icon · spinner · progress · alert · badge · tooltip · **text** | **text-bearing** reads the typographic matrix `--md-sys-typescale-{role}-{size}-{size,weight,line-height,tracking}` (`role`×`size` = the orthogonal `variant`×`size` axes — `ui-text`, ADR-0078 cl.2/cl.3; document semantics are the separate `as`-stamp axis, cl.4); non-text display takes the control-band `font-size: var(--ui-font-{size})` where it sizes a glyph label; intrinsic structural sizing otherwise. No control height, no `padding-block` law — the lever is the type scale, not `--ui-height-*`. |
 
 ## The compact realm (a separate size system)
 

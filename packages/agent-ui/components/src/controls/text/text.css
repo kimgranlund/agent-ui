@@ -1,15 +1,21 @@
-/* text.css — ui-text, the Display-class text primitive (ADR-0025). Two clearly-SECTIONED blocks:
+/* text.css — ui-text, the Display-class text primitive (ADR-0078, supersedes ADR-0025 cl.3/cl.3a's
+ * --ui-type-* single-axis ramp). Two clearly-SECTIONED blocks:
  *
- *   [1] TOKEN BLOCK  — `:where(ui-text)` (specificity 0,0,0) DECLARES the `--ui-text-*` component
- *       chain from the fleet typographic scale (`--ui-type-{level}-{size,weight,leading}` from
- *       `@agent-ui/shared/dimensions.css`). Default level = `body`. Each `[variant]` selector REPOINTS
- *       the three component tokens to the matching `--ui-type-{level}-*` triplet — the role-pure seam
- *       (ADR-0025 cl.3a). `--ui-text-color` ties to the AA-gated surface-text ink role.
- *   [2] STYLES BLOCK — `@scope (ui-text)` CONSUMES only `--ui-text-*` for its OWN tokens (font-size,
- *       font-weight, line-height, color). Display class (ADR-0025 cl.1): NO control height, NO
- *       padding-block law, NO min-inline-size frame — the lever is the type scale, not --ui-height-*.
- *       `display: block` (a text primitive is a block, like <p>/<h*>); `user-select: text` (ENABLED —
- *       deliberate contrast with ui-button which disables it). forced-colors keeps the ink visible.
+ *   [1] TOKEN BLOCK  — `:where(ui-text)` (specificity 0,0,0) DECLARES the five `--ui-text-*` component
+ *       tokens from the fleet `--md-sys-typescale-{role}-{size}-*` scale (`@agent-ui/shared/dimensions.css`).
+ *       Base = body-medium (`variant=body size=md`, the defaults). Then the 9×3 repoint matrix (cl.3): 8
+ *       ROLE blocks (`[variant='display']` → display-medium, one per non-body role at its size=md default)
+ *       + 18 SIZE-OVERRIDE blocks (`[variant='display'][size='lg']` → display-large, …; 9 roles × sm/lg).
+ *       Attribute-absence law: `variant`/`size` do NOT auto-reflect their default, so bare `<ui-text
+ *       size='lg'>` (no [variant] attribute) must ALSO hit the body row — the two body size-override
+ *       blocks below cover the `:not([variant])` case. `--ui-text-color` ties to the AA-gated surface-text
+ *       ink role. `:where()` keeps every repoint at specificity 0 — LATER declaration wins a tie, so this
+ *       file's ORDER (base → role → size-override) is load-bearing: do not reorder the blocks below.
+ *   [2] STYLES BLOCK — `@scope (ui-text)` CONSUMES only `--ui-text-*` (font-size/-weight/line-height/
+ *       letter-spacing/color) plus the variant TREATMENTS (structural, not scale, opinions): uppercase for
+ *       kicker/overline, italic + a rule + an indent for quote, and the ADR-0078 cl.4 stamp-transparency
+ *       reset (the light-DOM stamp inherits all typography from the host, so `as` changes semantics with
+ *       zero geometry delta). `display: block`, `user-select: text`, and forced-colors stand unchanged.
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
  * from text.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -18,46 +24,182 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-text) declares --ui-text-* ════════════════ */
 
 :where(ui-text) {
-  /* Typography tokens — default level = body. Each [variant] selector below repoints these three to the
-     matching --ui-type-{level}-* triplet (ADR-0025 cl.3 / cl.3a role-pure seam). The component reads only
-     --ui-text-* (never --ui-type-* directly), so a scale-value change never touches the control logic. */
-  --ui-text-size: var(--ui-type-body-size);
-  --ui-text-weight: var(--ui-type-body-weight);
-  --ui-text-leading: var(--ui-type-body-leading);
-  /* Color — the AA-gated surface-text ink role (the ONLY --md-sys-color-* role ui-text needs; ADR-0025 cl.3). */
+  /* Typography tokens — default = body-medium (variant=body, size=md). The role/size-override blocks
+     below repoint these five to the matching --md-sys-typescale-{role}-{size}-* row (cl.3's role-pure
+     seam). The component reads only --ui-text-* (never --md-sys-typescale-* directly), so a fleet
+     type-scale value change never touches the control logic. */
+  --ui-text-size: var(--md-sys-typescale-body-medium-size);
+  --ui-text-weight: var(--md-sys-typescale-body-medium-weight);
+  --ui-text-line-height: var(--md-sys-typescale-body-medium-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-body-medium-tracking);
+  /* Color — the AA-gated surface-text ink role (the ONLY --md-sys-color-* role ui-text needs). */
   --ui-text-color: var(--md-sys-color-neutral-on-surface);
 }
 
-/* variant → typographic level repoints (ADR-0025 cl.3a). body is the default above — no repoint needed. */
-:where(ui-text[variant='h1']) {
-  --ui-text-size: var(--ui-type-h1-size);
-  --ui-text-weight: var(--ui-type-h1-weight);
-  --ui-text-leading: var(--ui-type-h1-leading);
+/* ── 8 ROLE blocks (cl.3) — [variant] alone, at the size=md default (…-medium). body is the base above,
+   so it has none here; its size overrides (sm/lg) are covered in the size-override group below. ── */
+
+:where(ui-text[variant='display']) {
+  --ui-text-size: var(--md-sys-typescale-display-medium-size);
+  --ui-text-weight: var(--md-sys-typescale-display-medium-weight);
+  --ui-text-line-height: var(--md-sys-typescale-display-medium-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-display-medium-tracking);
 }
-:where(ui-text[variant='h2']) {
-  --ui-text-size: var(--ui-type-h2-size);
-  --ui-text-weight: var(--ui-type-h2-weight);
-  --ui-text-leading: var(--ui-type-h2-leading);
+:where(ui-text[variant='headline']) {
+  --ui-text-size: var(--md-sys-typescale-headline-medium-size);
+  --ui-text-weight: var(--md-sys-typescale-headline-medium-weight);
+  --ui-text-line-height: var(--md-sys-typescale-headline-medium-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-headline-medium-tracking);
 }
-:where(ui-text[variant='h3']) {
-  --ui-text-size: var(--ui-type-h3-size);
-  --ui-text-weight: var(--ui-type-h3-weight);
-  --ui-text-leading: var(--ui-type-h3-leading);
+:where(ui-text[variant='title']) {
+  --ui-text-size: var(--md-sys-typescale-title-medium-size);
+  --ui-text-weight: var(--md-sys-typescale-title-medium-weight);
+  --ui-text-line-height: var(--md-sys-typescale-title-medium-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-title-medium-tracking);
 }
-:where(ui-text[variant='h4']) {
-  --ui-text-size: var(--ui-type-h4-size);
-  --ui-text-weight: var(--ui-type-h4-weight);
-  --ui-text-leading: var(--ui-type-h4-leading);
+:where(ui-text[variant='label']) {
+  --ui-text-size: var(--md-sys-typescale-label-medium-size);
+  --ui-text-weight: var(--md-sys-typescale-label-medium-weight);
+  --ui-text-line-height: var(--md-sys-typescale-label-medium-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-label-medium-tracking);
 }
-:where(ui-text[variant='h5']) {
-  --ui-text-size: var(--ui-type-h5-size);
-  --ui-text-weight: var(--ui-type-h5-weight);
-  --ui-text-leading: var(--ui-type-h5-leading);
+:where(ui-text[variant='kicker']) {
+  --ui-text-size: var(--md-sys-typescale-kicker-medium-size);
+  --ui-text-weight: var(--md-sys-typescale-kicker-medium-weight);
+  --ui-text-line-height: var(--md-sys-typescale-kicker-medium-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-kicker-medium-tracking);
 }
-:where(ui-text[variant='caption']) {
-  --ui-text-size: var(--ui-type-caption-size);
-  --ui-text-weight: var(--ui-type-caption-weight);
-  --ui-text-leading: var(--ui-type-caption-leading);
+:where(ui-text[variant='overline']) {
+  --ui-text-size: var(--md-sys-typescale-overline-medium-size);
+  --ui-text-weight: var(--md-sys-typescale-overline-medium-weight);
+  --ui-text-line-height: var(--md-sys-typescale-overline-medium-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-overline-medium-tracking);
+}
+:where(ui-text[variant='quote']) {
+  --ui-text-size: var(--md-sys-typescale-quote-medium-size);
+  --ui-text-weight: var(--md-sys-typescale-quote-medium-weight);
+  --ui-text-line-height: var(--md-sys-typescale-quote-medium-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-quote-medium-tracking);
+}
+:where(ui-text[variant='lead']) {
+  --ui-text-size: var(--md-sys-typescale-lead-medium-size);
+  --ui-text-weight: var(--md-sys-typescale-lead-medium-weight);
+  --ui-text-line-height: var(--md-sys-typescale-lead-medium-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-lead-medium-tracking);
+}
+
+/* ── 18 SIZE-OVERRIDE blocks (cl.3) — 9 roles × {sm,lg}; declared AFTER the role blocks so a tied
+   specificity (:where() = 0) resolves to the override on declaration order. body's two covers ALSO match
+   the absent-[variant] case (:not([variant])) — the attribute-absence law. ── */
+
+:where(ui-text[variant='display'][size='sm']) {
+  --ui-text-size: var(--md-sys-typescale-display-small-size);
+  --ui-text-weight: var(--md-sys-typescale-display-small-weight);
+  --ui-text-line-height: var(--md-sys-typescale-display-small-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-display-small-tracking);
+}
+:where(ui-text[variant='display'][size='lg']) {
+  --ui-text-size: var(--md-sys-typescale-display-large-size);
+  --ui-text-weight: var(--md-sys-typescale-display-large-weight);
+  --ui-text-line-height: var(--md-sys-typescale-display-large-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-display-large-tracking);
+}
+:where(ui-text[variant='headline'][size='sm']) {
+  --ui-text-size: var(--md-sys-typescale-headline-small-size);
+  --ui-text-weight: var(--md-sys-typescale-headline-small-weight);
+  --ui-text-line-height: var(--md-sys-typescale-headline-small-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-headline-small-tracking);
+}
+:where(ui-text[variant='headline'][size='lg']) {
+  --ui-text-size: var(--md-sys-typescale-headline-large-size);
+  --ui-text-weight: var(--md-sys-typescale-headline-large-weight);
+  --ui-text-line-height: var(--md-sys-typescale-headline-large-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-headline-large-tracking);
+}
+:where(ui-text[variant='title'][size='sm']) {
+  --ui-text-size: var(--md-sys-typescale-title-small-size);
+  --ui-text-weight: var(--md-sys-typescale-title-small-weight);
+  --ui-text-line-height: var(--md-sys-typescale-title-small-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-title-small-tracking);
+}
+:where(ui-text[variant='title'][size='lg']) {
+  --ui-text-size: var(--md-sys-typescale-title-large-size);
+  --ui-text-weight: var(--md-sys-typescale-title-large-weight);
+  --ui-text-line-height: var(--md-sys-typescale-title-large-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-title-large-tracking);
+}
+:where(ui-text[variant='label'][size='sm']) {
+  --ui-text-size: var(--md-sys-typescale-label-small-size);
+  --ui-text-weight: var(--md-sys-typescale-label-small-weight);
+  --ui-text-line-height: var(--md-sys-typescale-label-small-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-label-small-tracking);
+}
+:where(ui-text[variant='label'][size='lg']) {
+  --ui-text-size: var(--md-sys-typescale-label-large-size);
+  --ui-text-weight: var(--md-sys-typescale-label-large-weight);
+  --ui-text-line-height: var(--md-sys-typescale-label-large-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-label-large-tracking);
+}
+:where(ui-text[variant='kicker'][size='sm']) {
+  --ui-text-size: var(--md-sys-typescale-kicker-small-size);
+  --ui-text-weight: var(--md-sys-typescale-kicker-small-weight);
+  --ui-text-line-height: var(--md-sys-typescale-kicker-small-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-kicker-small-tracking);
+}
+:where(ui-text[variant='kicker'][size='lg']) {
+  --ui-text-size: var(--md-sys-typescale-kicker-large-size);
+  --ui-text-weight: var(--md-sys-typescale-kicker-large-weight);
+  --ui-text-line-height: var(--md-sys-typescale-kicker-large-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-kicker-large-tracking);
+}
+:where(ui-text[variant='overline'][size='sm']) {
+  --ui-text-size: var(--md-sys-typescale-overline-small-size);
+  --ui-text-weight: var(--md-sys-typescale-overline-small-weight);
+  --ui-text-line-height: var(--md-sys-typescale-overline-small-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-overline-small-tracking);
+}
+:where(ui-text[variant='overline'][size='lg']) {
+  --ui-text-size: var(--md-sys-typescale-overline-large-size);
+  --ui-text-weight: var(--md-sys-typescale-overline-large-weight);
+  --ui-text-line-height: var(--md-sys-typescale-overline-large-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-overline-large-tracking);
+}
+:where(ui-text[variant='quote'][size='sm']) {
+  --ui-text-size: var(--md-sys-typescale-quote-small-size);
+  --ui-text-weight: var(--md-sys-typescale-quote-small-weight);
+  --ui-text-line-height: var(--md-sys-typescale-quote-small-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-quote-small-tracking);
+}
+:where(ui-text[variant='quote'][size='lg']) {
+  --ui-text-size: var(--md-sys-typescale-quote-large-size);
+  --ui-text-weight: var(--md-sys-typescale-quote-large-weight);
+  --ui-text-line-height: var(--md-sys-typescale-quote-large-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-quote-large-tracking);
+}
+:where(ui-text[variant='lead'][size='sm']) {
+  --ui-text-size: var(--md-sys-typescale-lead-small-size);
+  --ui-text-weight: var(--md-sys-typescale-lead-small-weight);
+  --ui-text-line-height: var(--md-sys-typescale-lead-small-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-lead-small-tracking);
+}
+:where(ui-text[variant='lead'][size='lg']) {
+  --ui-text-size: var(--md-sys-typescale-lead-large-size);
+  --ui-text-weight: var(--md-sys-typescale-lead-large-weight);
+  --ui-text-line-height: var(--md-sys-typescale-lead-large-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-lead-large-tracking);
+}
+/* body's pair ALSO matches a bare <ui-text size='sm'|'lg'> (no [variant] attribute — the absence law). */
+:where(ui-text[size='sm']:not([variant]), ui-text[variant='body'][size='sm']) {
+  --ui-text-size: var(--md-sys-typescale-body-small-size);
+  --ui-text-weight: var(--md-sys-typescale-body-small-weight);
+  --ui-text-line-height: var(--md-sys-typescale-body-small-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-body-small-tracking);
+}
+:where(ui-text[size='lg']:not([variant]), ui-text[variant='body'][size='lg']) {
+  --ui-text-size: var(--md-sys-typescale-body-large-size);
+  --ui-text-weight: var(--md-sys-typescale-body-large-weight);
+  --ui-text-line-height: var(--md-sys-typescale-body-large-line-height);
+  --ui-text-tracking: var(--md-sys-typescale-body-large-tracking);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-text) consumes ONLY --ui-text-* ════════════════ */
@@ -67,11 +209,34 @@
     display: block; /* a text primitive is a block element — lays out like <p>/<h*> */
     font-size: var(--ui-text-size);
     font-weight: var(--ui-text-weight);
-    line-height: var(--ui-text-leading);
+    line-height: var(--ui-text-line-height);
+    letter-spacing: var(--ui-text-tracking);
     color: var(--ui-text-color);
     /* user-select ENABLED — display text is selectable (the deliberate inverse of ui-button, which disables it) */
     user-select: text;
     /* NO block-size / padding-block / min-inline-size — Display class has no frame law (ADR-0025 cl.1) */
+  }
+
+  /* Editorial-extra TREATMENTS (cl.2b) — structural opinions, not scale; the four editorial roles each add
+     one on top of the token-driven size/weight/line-height/tracking above. */
+  :scope[variant='kicker'],
+  :scope[variant='overline'] {
+    text-transform: uppercase;
+  }
+  :scope[variant='quote'] {
+    font-style: italic;
+    border-inline-start: 3px solid var(--md-sys-color-neutral-outline-variant);
+    padding-inline-start: var(--ui-space-md); /* the ≈12px rhythm step — density-responsive, cl.2b */
+  }
+
+  /* The stamp-transparency reset (ADR-0078 cl.4) — the `as` real element inherits ALL typography from the
+     host, so stamping/unstamping changes semantics with ZERO geometry delta (same rendered box either way,
+     asserted in the browser tests). Covers every tag `as` can stamp. */
+  :scope > :is(h1, h2, h3, h4, h5, h6, p, blockquote, span) {
+    margin: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
   }
 
   /* forced-colors — keep the text visible (CanvasText maps to the platform high-contrast text ink) */

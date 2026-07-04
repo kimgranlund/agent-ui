@@ -39,7 +39,7 @@
      font/icon). The ui-md default triples (height 24·28·36, font 13·14·16, icon 16·18·20 — byte-identical to
      today); each [scale] tier re-tables ALL THREE below to its §1 row — height picks the row, font/icon/caret/
      gap/pad all derive from that ONE row (the consistency the multiplier broke). NO multiplier: `× var(--ui-
-     scale)` LEAVES the control path entirely; --ui-scale survives for --ui-type-* DISPLAY only (below). LITERALS,
+     scale)` LEAVES the control path entirely; --ui-scale survives for --md-sys-typescale-*-size DISPLAY only (below). LITERALS,
      so they sit on :root (default) + the [scale] selectors, NEVER `*` (a literal on `*` re-declares per
      descendant and defeats subtree inheritance — the #25 --ui-compact proof). gap = font/2 (on `*`, reads the
      inherited --ui-font) + caret = font follow for free. Kim's band overlap: content-sm ≡ ui-md, content-md ≡
@@ -92,28 +92,115 @@
      --ui-font-{sm,md,lg} SIZE namespace and the :root `--ui-font` guard (dimensions.test.ts). */
   --ui-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Type scale (ADR-0025 cl.3) — the FLEET typographic ramp's scale-free legs. -weight + -leading are
-     CONSTANTS on :root (like the focus-ring / motion constants), NOT the `*` ramp: neither rides
-     [scale]/[density] — a subtree theme rescales the -size leg only (below). weight is a plain
-     font-weight number; leading is a UNITLESS line-height multiplier, so it scales WITH the already-
-     scaled -size. Three weight tiers — 700 display (h1·h2), 600 semibold subhead (h3·h4·h5), 400 regular
-     (body·caption); leading tightens as type grows (h1 1.15 → body 1.5, the standard inverse). A control
-     never reads these — ui-text reads --ui-text-* (text.css), which repoints to --ui-type-*. */
-  --ui-type-h1-weight: 700;
-  --ui-type-h2-weight: 700;
-  --ui-type-h3-weight: 600;
-  --ui-type-h4-weight: 600;
-  --ui-type-h5-weight: 600;
-  --ui-type-body-weight: 400;
-  --ui-type-caption-weight: 400;
+  /* Type scale (ADR-0078 cl.2/cl.2b — retires ADR-0025 cl.3's --ui-type-*) — the fleet typographic ramp,
+     now the M3 typescale namespace: --md-sys-typescale-{role}-{size}-{property}, role ∈ display/headline/
+     title/body/label (M3-verbatim, cl.2) + kicker/overline/quote/lead (editorial extensions, cl.2b), size ∈
+     large/medium/small (M3 spelling, NOT lg/md/sm — the sm/md/lg ↔ large/medium/small mapping is text.css's
+     job). -weight/-line-height/-tracking are CONSTANTS on :root (like the focus-ring / motion constants),
+     NOT the `*` ramp: none rides [scale]/[density] — a subtree theme rescales the -size leg only (below).
+     -line-height is UNITLESS (M3 line-height-px ÷ M3 size-px, 3dp — so it scales WITH the already-scaled
+     -size). -tracking is EM (M3 tracking-px ÷ M3 size-px, 3dp; literal 0 where M3 tracking is 0 — letter-
+     spacing rides font-size naturally under [scale]). A control never reads these — ui-text reads
+     --ui-text-* (text.css), which repoints to this family. The 15 M3-core rows are verbatim against the
+     canonical MD3 default type scale (m3.material.io / material-web tokens v0.192 — verified 2026-07-04);
+     the 12 extension rows are marked, each derived from an M3 anchor (ADR-0078 cl.2b). */
+  --md-sys-typescale-display-large-weight: 400;
+  --md-sys-typescale-display-large-line-height: 1.123;
+  --md-sys-typescale-display-large-tracking: -0.004em;
+  --md-sys-typescale-display-medium-weight: 400;
+  --md-sys-typescale-display-medium-line-height: 1.156;
+  --md-sys-typescale-display-medium-tracking: 0;
+  --md-sys-typescale-display-small-weight: 400;
+  --md-sys-typescale-display-small-line-height: 1.222;
+  --md-sys-typescale-display-small-tracking: 0;
 
-  --ui-type-h1-leading: 1.15;
-  --ui-type-h2-leading: 1.2;
-  --ui-type-h3-leading: 1.25;
-  --ui-type-h4-leading: 1.3;
-  --ui-type-h5-leading: 1.35;
-  --ui-type-body-leading: 1.5;
-  --ui-type-caption-leading: 1.4;
+  --md-sys-typescale-headline-large-weight: 400;
+  --md-sys-typescale-headline-large-line-height: 1.25;
+  --md-sys-typescale-headline-large-tracking: 0;
+  --md-sys-typescale-headline-medium-weight: 400;
+  --md-sys-typescale-headline-medium-line-height: 1.286;
+  --md-sys-typescale-headline-medium-tracking: 0;
+  --md-sys-typescale-headline-small-weight: 400;
+  --md-sys-typescale-headline-small-line-height: 1.333;
+  --md-sys-typescale-headline-small-tracking: 0;
+
+  --md-sys-typescale-title-large-weight: 400;
+  --md-sys-typescale-title-large-line-height: 1.273;
+  --md-sys-typescale-title-large-tracking: 0;
+  --md-sys-typescale-title-medium-weight: 500;
+  --md-sys-typescale-title-medium-line-height: 1.5;
+  --md-sys-typescale-title-medium-tracking: 0.009em;
+  --md-sys-typescale-title-small-weight: 500;
+  --md-sys-typescale-title-small-line-height: 1.429;
+  --md-sys-typescale-title-small-tracking: 0.007em;
+
+  --md-sys-typescale-body-large-weight: 400;
+  --md-sys-typescale-body-large-line-height: 1.5;
+  --md-sys-typescale-body-large-tracking: 0.031em;
+  --md-sys-typescale-body-medium-weight: 400;
+  --md-sys-typescale-body-medium-line-height: 1.429;
+  --md-sys-typescale-body-medium-tracking: 0.018em;
+  --md-sys-typescale-body-small-weight: 400;
+  --md-sys-typescale-body-small-line-height: 1.333;
+  --md-sys-typescale-body-small-tracking: 0.033em;
+
+  --md-sys-typescale-label-large-weight: 500;
+  --md-sys-typescale-label-large-line-height: 1.429;
+  --md-sys-typescale-label-large-tracking: 0.007em;
+  --md-sys-typescale-label-medium-weight: 500;
+  --md-sys-typescale-label-medium-line-height: 1.333;
+  --md-sys-typescale-label-medium-tracking: 0.042em;
+  --md-sys-typescale-label-small-weight: 500;
+  --md-sys-typescale-label-small-line-height: 1.455;
+  --md-sys-typescale-label-small-tracking: 0.045em;
+
+  /* extension — not MD3 (cl.2b): the headline eyebrow — label metrics emboldened + uppercase (text.css).
+     Ink stays the one neutral on-surface role (ADR-0057 — color is not the load-bearing signifier). */
+  --md-sys-typescale-kicker-large-weight: 700;
+  --md-sys-typescale-kicker-large-line-height: 1.429;
+  --md-sys-typescale-kicker-large-tracking: 0.08em;
+  --md-sys-typescale-kicker-medium-weight: 700;
+  --md-sys-typescale-kicker-medium-line-height: 1.333;
+  --md-sys-typescale-kicker-medium-tracking: 0.08em;
+  --md-sys-typescale-kicker-small-weight: 700;
+  --md-sys-typescale-kicker-small-line-height: 1.455;
+  --md-sys-typescale-kicker-small-tracking: 0.08em;
+
+  /* extension — not MD3 (cl.2b): M2's overline heritage (10px/1.5px ≡ 0.15em, which M3 dropped) mapped
+     onto label metrics + uppercase (text.css); distinct from kicker by weight (500 vs 700) + tracking. */
+  --md-sys-typescale-overline-large-weight: 500;
+  --md-sys-typescale-overline-large-line-height: 1.429;
+  --md-sys-typescale-overline-large-tracking: 0.15em;
+  --md-sys-typescale-overline-medium-weight: 500;
+  --md-sys-typescale-overline-medium-line-height: 1.333;
+  --md-sys-typescale-overline-medium-tracking: 0.15em;
+  --md-sys-typescale-overline-small-weight: 500;
+  --md-sys-typescale-overline-small-line-height: 1.455;
+  --md-sys-typescale-overline-small-tracking: 0.15em;
+
+  /* extension — not MD3 (cl.2b): the enlarged opening paragraph — body at title-class sizes with body's
+     weight (lg borrows title-large's 22px at weight 400; sm ≡ body-large; md the midpoint). */
+  --md-sys-typescale-lead-large-weight: 400;
+  --md-sys-typescale-lead-large-line-height: 1.455;
+  --md-sys-typescale-lead-large-tracking: 0;
+  --md-sys-typescale-lead-medium-weight: 400;
+  --md-sys-typescale-lead-medium-line-height: 1.444;
+  --md-sys-typescale-lead-medium-tracking: 0;
+  --md-sys-typescale-lead-small-weight: 400;
+  --md-sys-typescale-lead-small-line-height: 1.5;
+  --md-sys-typescale-lead-small-tracking: 0.031em;
+
+  /* extension — not MD3 (cl.2b): block quotation — ≡ lead rows (own tokens, changeable independently);
+     italic + rule + indent are text.css treatments, not typescale properties. */
+  --md-sys-typescale-quote-large-weight: 400;
+  --md-sys-typescale-quote-large-line-height: 1.455;
+  --md-sys-typescale-quote-large-tracking: 0;
+  --md-sys-typescale-quote-medium-weight: 400;
+  --md-sys-typescale-quote-medium-line-height: 1.444;
+  --md-sys-typescale-quote-medium-tracking: 0;
+  --md-sys-typescale-quote-small-weight: 400;
+  --md-sys-typescale-quote-small-line-height: 1.5;
+  --md-sys-typescale-quote-small-tracking: 0.031em;
 }
 
 /* The DERIVED ramp lives on `*` (universal), NOT `:root` — deliberately. A var() inside a custom-property
@@ -129,7 +216,7 @@
      per-[scale] literals (:root default + the [scale] selectors, the #25 --ui-compact pattern); `× var(--ui-scale)`
      left the control path. What stays on `*` below is genuinely DERIVED (a var() over a subtree-repointable
      multiplier that MUST re-substitute per element): the gap (× --ui-density, reads the inherited --ui-font),
-     --ui-type-*-size (× --ui-scale, the surviving DISPLAY consumer), and --ui-space-* (× --ui-density). */
+     --md-sys-typescale-*-size (× --ui-scale, the surviving DISPLAY consumer), and --ui-space-* (× --ui-density). */
 
   /* Rhythm: the gap = font / 2, and density rides it (× var(--ui-density)). This is the ONE quantity
      density touches — the frame (height/font/inline-pad) is density-invariant. (gap also carries scale,
@@ -138,23 +225,44 @@
   --ui-gap-md: calc(var(--ui-font-md) / 2 * var(--ui-density));
   --ui-gap-lg: calc(var(--ui-font-lg) / 2 * var(--ui-density));
 
-  /* --ui-type-*-size — the FLEET typographic scale (ADR-0025 cl.3), a peer of --ui-font-* but a SEPARATE
-     ledger: --ui-font-* is the control-band glyph (paired to --ui-height-*, the square-centring law);
-     --ui-type-* is free-standing DOCUMENT typography (its own line-height, no control frame). The -size leg
-     rides [scale] (× var(--ui-scale)) — the same pre-substitution reason as --ui-font-*, so a subtree
-     [scale] re-multiplies type — and is declared on `*` (NOT :root) so each element re-substitutes the
-     --ui-scale it inherits. Type is DENSITY-INVARIANT: glyph size is a frame-family quantity, not rhythm,
-     so NO var(--ui-density) here ([density] re-multiplies gaps only — geometry.md's frame/rhythm split).
-     A ratio-1.2 modular scale anchored at body = 16 (16 to the power n, rounded to the nearest integer):
-     caption 13 ties to control-sm font, body 16 to control-lg. The scale-free -weight/-leading legs are
-     :root constants (above). */
-  --ui-type-h1-size: calc(40px * var(--ui-scale));
-  --ui-type-h2-size: calc(33px * var(--ui-scale));
-  --ui-type-h3-size: calc(28px * var(--ui-scale));
-  --ui-type-h4-size: calc(23px * var(--ui-scale));
-  --ui-type-h5-size: calc(19px * var(--ui-scale));
-  --ui-type-body-size: calc(16px * var(--ui-scale));
-  --ui-type-caption-size: calc(13px * var(--ui-scale));
+  /* --md-sys-typescale-*-size (ADR-0078 cl.2 — retires ADR-0025 cl.3's --ui-type-*-size) — the fleet
+     typographic scale's ONE scale-riding leg, a peer of --ui-font-* but a SEPARATE ledger: --ui-font-* is
+     the control-band glyph (paired to --ui-height-*, the square-centring law); the typescale is free-
+     standing DOCUMENT typography (its own line-height, no control frame). Rides [scale] (× var(--ui-scale))
+     — the same pre-substitution reason as --ui-font-*, so a subtree [scale] re-multiplies type — and is
+     declared on `*` (NOT :root) so each element re-substitutes the --ui-scale it inherits. Type is DENSITY-
+     INVARIANT: glyph size is a frame-family quantity, not rhythm, so NO var(--ui-density) here ([density]
+     re-multiplies gaps only — geometry.md's frame/rhythm split). The 27 rows are M3-verbatim (15 core) +
+     editorial extensions (12, cl.2b, marked); the scale-free -weight/-line-height/-tracking legs are :root
+     constants (above). */
+  --md-sys-typescale-display-large-size: calc(57px * var(--ui-scale));
+  --md-sys-typescale-display-medium-size: calc(45px * var(--ui-scale));
+  --md-sys-typescale-display-small-size: calc(36px * var(--ui-scale));
+  --md-sys-typescale-headline-large-size: calc(32px * var(--ui-scale));
+  --md-sys-typescale-headline-medium-size: calc(28px * var(--ui-scale));
+  --md-sys-typescale-headline-small-size: calc(24px * var(--ui-scale));
+  --md-sys-typescale-title-large-size: calc(22px * var(--ui-scale));
+  --md-sys-typescale-title-medium-size: calc(16px * var(--ui-scale));
+  --md-sys-typescale-title-small-size: calc(14px * var(--ui-scale));
+  --md-sys-typescale-body-large-size: calc(16px * var(--ui-scale));
+  --md-sys-typescale-body-medium-size: calc(14px * var(--ui-scale));
+  --md-sys-typescale-body-small-size: calc(12px * var(--ui-scale));
+  --md-sys-typescale-label-large-size: calc(14px * var(--ui-scale));
+  --md-sys-typescale-label-medium-size: calc(12px * var(--ui-scale));
+  --md-sys-typescale-label-small-size: calc(11px * var(--ui-scale));
+  /* extension — not MD3 (cl.2b) */
+  --md-sys-typescale-kicker-large-size: calc(14px * var(--ui-scale));
+  --md-sys-typescale-kicker-medium-size: calc(12px * var(--ui-scale));
+  --md-sys-typescale-kicker-small-size: calc(11px * var(--ui-scale));
+  --md-sys-typescale-overline-large-size: calc(14px * var(--ui-scale));
+  --md-sys-typescale-overline-medium-size: calc(12px * var(--ui-scale));
+  --md-sys-typescale-overline-small-size: calc(11px * var(--ui-scale));
+  --md-sys-typescale-lead-large-size: calc(22px * var(--ui-scale));
+  --md-sys-typescale-lead-medium-size: calc(18px * var(--ui-scale));
+  --md-sys-typescale-lead-small-size: calc(16px * var(--ui-scale));
+  --md-sys-typescale-quote-large-size: calc(22px * var(--ui-scale));
+  --md-sys-typescale-quote-medium-size: calc(18px * var(--ui-scale));
+  --md-sys-typescale-quote-small-size: calc(16px * var(--ui-scale));
 
   /* --ui-space — the LAYOUT-SPACING ladder (ADR-0015 cl.4, geometry.md "--space-* is layout spacing,
      not control geometry"). The gap/padding/margin BETWEEN laid-out children (Row/Column/List/Grid gap,
@@ -185,7 +293,7 @@
    density), content-* generous (reading density) — and content-* is the ui-* band SHIFTED UP ONE §1 row, so
    content-sm ≡ ui-md and content-md ≡ ui-lg (Kim's design: 6 names → 4 distinct registers; only content-lg
    exceeds the ui band). ui-md is the DEFAULT (= :root, byte-identical). Each tier STILL sets --ui-scale to its
-   tier value — but ONLY --ui-type-* (DISPLAY, the ADR-0025/0033 ruled-linear fork) reads it now; --ui-scale
+   tier value — but ONLY --md-sys-typescale-*-size (DISPLAY, the ADR-0025/0033 ruled-linear fork) reads it now; --ui-scale
    has LEFT the control path (controls are the explicit literals above/here). */
 [scale="ui-sm"] {
   --ui-scale: 0.875;

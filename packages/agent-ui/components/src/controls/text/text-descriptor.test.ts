@@ -16,11 +16,12 @@ import type { ParsedAttribute } from '../../descriptor/component-descriptor.ts'
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
-// ADR-0025 / text.md descriptor — three layers per the s8/s10/s11 pattern (button-descriptor precedent):
+// ADR-0078 / text.md descriptor — three layers per the s8/s10/s11 pattern (button-descriptor precedent):
 //   • s8 (structural) — the YAML frontmatter fence parses and carries the ADR-0004 / plan §10 field set.
-//   • s10 (contract↔props) — `attributes[]` is a faithful bijection with UITextElement.props (just `variant`).
+//   • s10 (contract↔props) — `attributes[]` is a faithful bijection with UITextElement.props (variant/size/as,
+//     the ADR-0078 three-axis redesign — supersedes the single-prop ADR-0025 shape).
 //   • s11 (contract↔source) — customStates/slots cross-checked against text.ts internals.states + text.css
-//     :state()/[slot] selectors.
+//     :state()/[slot] selectors (still zero — a Display leaf with no internals usage and no named slots).
 
 const TXT = `${process.cwd()}/packages/agent-ui/components/src/controls/text`
 const md = readFileSync(`${TXT}/text.md`, 'utf8') as string
@@ -52,31 +53,47 @@ describe('text.md descriptor — frontmatter parses (s8)', () => {
   })
 })
 
-describe('text.md descriptor — contract↔props trip-wire (s10)', () => {
-  it('attributes[] is a faithful bijection with UITextElement.props (single prop: variant)', () => {
-    // anti-vacuous: the reader actually parsed variant before the trip-wire is consulted
-    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant'])
+describe('text.md descriptor — contract↔props trip-wire (s10, ADR-0078 three-axis)', () => {
+  it('attributes[] is a faithful bijection with UITextElement.props (variant, size, as — in that order)', () => {
+    // anti-vacuous: the reader actually parsed all three props before the trip-wire is consulted
+    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant', 'size', 'as'])
     expect(compareDescriptorToProps(parsed.attributes, UITextElement.props)).toEqual([])
   })
 
-  it('variant is enum type, reflect=true, default=body', () => {
+  it('variant is enum, reflect=true, default=body, the 9-role vocabulary', () => {
     const v = parsed.attributes.find((a) => a.name === 'variant')
     expect(v?.type).toBe('enum')
     expect(v?.default).toBe('body')
     expect(v?.reflect).toBe(true)
-    expect(v?.values).toEqual(['h1', 'h2', 'h3', 'h4', 'h5', 'caption', 'body'])
+    expect(v?.values).toEqual(['display', 'headline', 'title', 'body', 'label', 'kicker', 'overline', 'quote', 'lead'])
+  })
+
+  it('size is enum, reflect=true, default=md, sm/md/lg', () => {
+    const s = parsed.attributes.find((a) => a.name === 'size')
+    expect(s?.type).toBe('enum')
+    expect(s?.default).toBe('md')
+    expect(s?.reflect).toBe(true)
+    expect(s?.values).toEqual(['sm', 'md', 'lg'])
+  })
+
+  it('as is enum, reflect=true, default=none, the 10-tag stamping vocabulary (incl. h6/blockquote)', () => {
+    const a = parsed.attributes.find((x) => x.name === 'as')
+    expect(a?.type).toBe('enum')
+    expect(a?.default).toBe('none')
+    expect(a?.reflect).toBe(true)
+    expect(a?.values).toEqual(['none', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote'])
   })
 
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default)', () => {
-    const flipReflect: ParsedAttribute[] = parsed.attributes.map((a) =>
-      a.name === 'variant' ? { ...a, reflect: false } : { ...a },
+    const flipReflect: ParsedAttribute[] = parsed.attributes.map((x) =>
+      x.name === 'as' ? { ...x, reflect: false } : { ...x },
     )
     expect(compareDescriptorToProps(flipReflect, UITextElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.variant.reflect' }),
+      expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.as.reflect' }),
     )
 
-    const flipDefault: ParsedAttribute[] = parsed.attributes.map((a) =>
-      a.name === 'variant' ? { ...a, default: 'h1' } : { ...a },
+    const flipDefault: ParsedAttribute[] = parsed.attributes.map((x) =>
+      x.name === 'variant' ? { ...x, default: 'display' } : { ...x },
     )
     expect(compareDescriptorToProps(flipDefault, UITextElement.props)).toContainEqual(
       expect.objectContaining({ code: 'DRIFT_DEFAULT', path: 'attributes.variant.default' }),
@@ -86,18 +103,16 @@ describe('text.md descriptor — contract↔props trip-wire (s10)', () => {
 
 describe('text.md descriptor — contract↔source trip-wire (s11)', () => {
   it('customStates/slots tell the truth about text.ts + text.css (0 source-drift)', () => {
-    // ui-text has NO custom states (no :state(ready) — a Display leaf has nothing to transition)
-    // and NO styled slots (light-DOM, host-as-content — the default children are not a named slot in CSS).
+    // ui-text has NO custom states (no :state(ready) — a Display leaf has nothing to transition) and NO
+    // styled slots (light-DOM, host-as-content — the default children, and the `as` stamp, are not a
+    // named [slot] in CSS).
     expect([...collectUsedStates(ts, css)]).toEqual([]) // no internals.states usage; no :state() in css
-    expect([...collectStyledSlots(css)]).toEqual([]) // no [slot=...] selectors (the host IS the text node)
+    expect([...collectStyledSlots(css)]).toEqual([]) // no [slot=...] selectors
     expect(scalarSeq(parsed, 'customStates')).toEqual([]) // descriptor records none
     expect(compareDescriptorToSource(parsed, { ts, css })).toEqual([])
   })
 
   it('NEGATIVE: a synthetic source using an undocumented state FAILS the source-wire (STATE_UNDOCUMENTED)', () => {
-    // Prove compareDescriptorToSource bites for ui-text (the all-empty compare above is anti-vacuous here):
-    // synthetic .ts text that calls internals.states?.add('ready') — as if ui-text had gained a motion gate.
-    // The descriptor still declares NO customStates, so the source-wire must catch STATE_UNDOCUMENTED.
     const syntheticTs = ts + "\nthis.internals.states?.add('ready') // synthetic — not real ui-text code"
     const result = compareDescriptorToSource(parsed, { ts: syntheticTs, css })
     expect(result).toContainEqual(
@@ -106,8 +121,6 @@ describe('text.md descriptor — contract↔source trip-wire (s11)', () => {
   })
 
   it('NEGATIVE: a synthetic css styling an undocumented slot FAILS the source-wire (SLOT_UNDOCUMENTED)', () => {
-    // Prove the one-directional slot check also bites: synthetic css that uses [slot=leading] — as if a
-    // future revision added an adornment slot to ui-text without updating the descriptor.
     const syntheticCss = css + "\n:scope > [slot='leading'] { display: none; } /* synthetic */"
     const result = compareDescriptorToSource(parsed, { ts, css: syntheticCss })
     expect(result).toContainEqual(

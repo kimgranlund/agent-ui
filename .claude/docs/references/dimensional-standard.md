@@ -11,7 +11,7 @@
 > 3. the **scale-as-discrete-TIER** framing (`ui-{sm,md,lg}` / `content-{sm,md,lg}`) → the **numeric
 >    `--ui-scale` multiplier on `*`** (ADR-0007); the per-component `size` prop (sm/md/lg) is unchanged.
 >
-> **Current authorities:** sizing law + ramp = [`geometry-sizing-spec.md`](./geometry-sizing-spec.md) v4 (resolved law: [`geometry.md`](./geometry.md)) · scale model = ADR-0007 · type scale = `--ui-type-*` (ADR-0025). Retained for wiring history only.
+> **Current authorities:** sizing law + ramp = [`geometry-sizing-spec.md`](./geometry-sizing-spec.md) v4 (resolved law: [`geometry.md`](./geometry.md)) · scale model = ADR-0007 · type scale = `--md-sys-typescale-{role}-{size}-*` (ADR-0078, supersedes ADR-0025's `--ui-type-*`). Retained for wiring history only.
 
 **Goal.** Wire the scale/size/density dimensional system *through* every `ui-*` element so
 heights, font-sizes, and inline-padding actually respond to `scale` / `size` / `density`.

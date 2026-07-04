@@ -59,14 +59,15 @@ anchors read.
 
 A **Display**-class control has **no frame**. It is a typographic/structural *leaf* (`geometry.md` §size-classes:
 `divider · icon · spinner · … · text`): no control height, no `padding-block` law, no edge-pad formula, no
-surface/elevation, no `min-inline-size` floor. The worked precedent is **`ui-text`** (ADR-0025) — a light-DOM
-display leaf whose lever is the fleet type scale (`--ui-type-*` as shipped; ADR-0078, *proposed*, replaces it
-with `--md-sys-typescale-{role}-{size}-*` and moves heading semantics to the `as`-stamped real element — this
-lens's C6/C7/C10-Display anchors are booked for rewrite in that build wave), not `--ui-height-*`. The C6/C7
-frame anchors
-cannot fairly score it (they assume a frame), and the type-scale + heading-semantics facts the anchors omit are
-exactly what a Display leaf must be judged on. This lens says, per dimension, what is **N/A** (do not score it as
-a fail — record `N/A — Display`), what **still fully applies**, and what is **NEW for Display** and must be scored.
+surface/elevation, no `min-inline-size` floor. The worked precedent is **`ui-text`** (ADR-0078, accepted +
+shipped — supersedes ADR-0025's single conflated `variant` prop and its internals-only heading path) — a
+light-DOM display leaf whose lever is the fleet type scale, `--md-sys-typescale-{role}-{size}-*` (the
+M3-derived 9-role × 3-size matrix), not `--ui-height-*`. Document SEMANTICS are now a fully separate axis
+(`as`, stamping a real `<hN>`/`<p>`/`<blockquote>`/`<span>` around the light-DOM children — cl.4). The C6/C7
+frame anchors cannot fairly score either lever (they assume a frame and a click), and the type-scale +
+semantic-stamping facts the anchors omit are exactly what a Display leaf must be judged on. This lens says,
+per dimension, what is **N/A** (do not score it as a fail — record `N/A — Display`), what **still fully
+applies**, and what is **NEW for Display** and must be scored.
 
 The two-axis spine, the independent ≥ 4 gates, and the defect-quadrant rule are **unchanged** — a Display control
 still gates COMPOSE and REALIZE separately, and every [gate] dimension is still hard.
@@ -86,35 +87,41 @@ still gates COMPOSE and REALIZE separately, and every [gate] dimension is still 
 - **C7 — interaction behaviour.** `pressActivation` (Space/Enter→`click`), the disabled-inert path, and
   native-`click` parity are N/A for a non-interactive leaf (`ui-text` has no focus, no keyboard contract, no
   `disabled`; `user-select` stays **enabled** — the deliberate inverse of `button`). C7 is re-pointed for Display
-  onto *semantics* (heading roles), below.
+  onto *semantics* (the `as`-stamped real element), below.
 - **The frame-law / `min-inline-size` floor / surface-elevation criteria** (ADR-0021; the G9 container surface)
   are **N/A** — a leaf bears no frame and no surface. If a future Display-class rubric row names them, mark
   `N/A — Display`.
 
 ### What still fully applies (score exactly as the anchors read)
 
-- **C1 — API surface & minimalism.** Literal-union props (`variant` is `'h1'|…|'body'`, a `@ts-expect-error`
-  rejects a bare string — the `button.size` precedent), the event allowlist (a Display leaf emits **nothing** —
-  `events: []`), and **no boolean explosion**. The content-as-**slot-not-prop** call (ADR-0025 Fork 1: text is
-  light-DOM children, not a `text` prop) is a *strong* C1 fact — it is the minimal surface, not a gap.
+- **C1 — API surface & minimalism.** Three orthogonal literal-union props (`variant` ∈ the 5 M3 roles + 4
+  editorial extras, `size` ∈ `'sm'|'md'|'lg'`, `as` ∈ `'none'|'h1'|…|'h6'|'p'|'span'|'blockquote'` — each a
+  `@ts-expect-error` rejects a non-member, cl.1), the event allowlist (a Display leaf emits **nothing** —
+  `events: []`), and **no boolean explosion**. The content-as-**slot-not-prop** call (ADR-0025 Fork 1, stands
+  under ADR-0078: text is light-DOM children, not a `text` prop) is a *strong* C1 fact — it is the minimal
+  surface, not a gap.
 - **C3 — Contract fidelity** [gate]. The `{name}.md` frontmatter ≡ live `finalize(Class)` trip-wire (ADR-0004)
   applies unchanged; the frontmatter must validate against the schema and record every field — including the
-  Display-specific rows (`tier: display`, `geometry.sizeClass: display`, and the `aria` heading role/level
-  rows, below). A drifting descriptor is a C3 fail for a Display leaf exactly as for a Control.
+  Display-specific rows (`tier: display`, `geometry.sizeClass: display`, and the `aria` `roleSource:
+  stamped-element` row — the native role/name come from whichever element `as` stamps, never `internals`,
+  below). A drifting descriptor is a C3 fail for a Display leaf exactly as for a Control.
 - **C4 — Packaging & tree-shake** [gate]. Single `{name}.css`, the `{name}.{ts,css,md,test.ts}` file-set, the
   three barrels, the marginal-size budget — unchanged.
 - **C5 — Layer & composition coherence.** Import-layering (`controls/` imports only `dom`+`traits`), the naming
   convention, and zero sibling-dialect drift apply unchanged. *Trait-seam note:* a pure Display leaf may carry
-  **no trait** (`ui-text`'s only behaviour is the cl.4 heading effect, a `connected()` leg off the `variant`
-  signal — not a `use()`-registered trait). "Behaviour composes via a trait" is therefore satisfied vacuously
-  when there is no behaviour to compose; do not invent a trait. The heading effect's coherence is scored under
-  C7-Display and its residue under C10.
+  **no trait** (`ui-text`'s only behaviour is the cl.4 restamp effect — a `connected()` leg off the `as`
+  signal — plus its companion heal `MutationObserver`; neither is a `use()`-registered trait). "Behaviour
+  composes via a trait" is therefore satisfied vacuously when there is no behaviour to compose; do not invent a
+  trait. The stamp's coherence is scored under C7-Display and its residue (effect **and** observer) under C10.
 - **C8 — Styling & tokens** [gate]. **Fully applies, and is core for Display.** `@scope (ui-{name})` consuming
   **only** `--ui-{name}-*`; component tokens declared in `:where()` and repointed from roles; survives
-  `forced-colors: active`. For `ui-text` this is the role-pure **two-block** seam (ADR-0025 cl.3a): the
-  `:where(ui-text)` block declares `--ui-text-{size,weight,leading}` from the fleet `--ui-type-body-*` and each
-  `:where(ui-text[variant='h1'])…` repoints them; the `@scope` block consumes **only** `--ui-text-*`, never a
-  `--ui-type-*` or `--md-sys-color-*` literal. A Display leaf reading the fleet scale directly is a C8 fail.
+  `forced-colors: active`. For `ui-text` this is the role-pure **two-block** seam (ADR-0078 cl.3, the ADR-0025
+  cl.3a seam law it inherits): the `:where(ui-text)` block declares the five `--ui-text-{size,weight,
+  line-height,tracking,color}` component tokens, defaulting to `--md-sys-typescale-body-medium-*` (+
+  `--md-sys-color-neutral-on-surface`), and each `:where(ui-text[variant='display'])`/`…[size='lg']` compound
+  repoints them to its `--md-sys-typescale-{role}-{size}-*` cell; the `@scope` block consumes **only**
+  `--ui-text-*`, never a `--md-sys-typescale-*` or `--md-sys-color-*` literal directly. A Display leaf reading
+  the fleet scale directly is a C8 fail.
 - **C9 — Cross-engine fidelity** [gate] and **C10 — Zero residue & budget** [gate] apply unchanged in *form*
   (Chromium AND WebKit; connect→disconnect zero subscribers/listeners; marginal gz recorded) — their *content*
   for Display is named below.
@@ -129,34 +136,45 @@ These re-point the frame gates (C6/C7) and sharpen C2/C9/C10 onto the Display fa
   children untouched, ADR-0006); declared `tier: display` / Display size-class; host owns no margin. *5:* + the
   leaf is genuinely frameless — `block-size` is content-driven, no `--ui-height-*`/floor/surface anywhere, and
   the content model is a slot not a clobbering text-prop effect.
-- **C6-Display — the type-scale binding (re-points the geometry gate)** [gate]. The lever is the `--ui-type-*`
-  ramp (ADR-0025 cl.3), not the frame. *1:* hard-coded sizes/weights, or the leaf reads `--ui-type-*`/raw px
-  directly (no component-token seam). *3:* the static probes prove `font-size: var(--ui-text-size)` resolves
-  from the `[variant]`-repointed `--ui-type-{level}-size`, weight/leading likewise; type is **density-invariant**
-  (size carries `× var(--ui-scale)` but **not** `var(--ui-density)`). *5:* + the cross-engine smoke proves a
+- **C6-Display — the type-scale binding (re-points the geometry gate)** [gate]. The lever is the
+  `--md-sys-typescale-{role}-{size}-*` matrix (cl.2/cl.3, the M3-derived 9-role × 3-size grid), not the frame.
+  *1:* hard-coded sizes/weights, or the leaf reads `--md-sys-typescale-*`/raw px directly (no component-token
+  seam). *3:* the static probes prove `font-size: var(--ui-text-size)` resolves from the
+  `[variant][size]`-repointed `--md-sys-typescale-{role}-{size}-size`, weight/line-height/tracking likewise;
+  type is **density-invariant** (`-size` carries `× var(--ui-scale)` on the `*` ramp but **not**
+  `var(--ui-density)`; the other three legs are `:root` constants). *5:* + the cross-engine smoke proves a
   subtree `[scale]` **re-multiplies** the type px (the `*`-ramp pre-substitution, ADR-0007) while `[density]`
-  leaves type untouched — type is *measured*, not asserted. (This is the Display analogue of C6's "geometry is
-  measured": the *type scale* is the law a Display leaf obeys.)
-- **C7-Display — heading semantics correctness (re-points the behaviour gate)** [gate]. The content model +
-  ARIA hierarchy (ADR-0025 cl.2/cl.4). *1:* a host `role`/`aria-*` attribute, or wrong/absent heading semantics
-  (e.g. a `role="button"` on inert text — the very lie ADR-0025 fixes). *3:* slotted light-DOM text is the
-  accessible name; for `variant ∈ h1…h5` `internals.role = 'heading'` + `internals.ariaLevel = 1…5` via
-  `ElementInternals`; `body`/`caption` clear **both** (generic styled text). *5:* + the level mapping is exact
-  and reactive (`h1→1 … h5→5`, flips live when `variant` changes), set **only** through `internals` (never a host
-  attribute — the FACE pattern), and the leaf is correctly non-focusable with `user-select` enabled.
-- **C9-Display — cross-engine content.** The browser-truth smoke (Chromium AND WebKit) asserts the *type-scale*
-  facts, not the frame law: `[scale]` changes the type px on both engines, `[density]` does **not** touch type,
-  and the `forced-colors` block keeps the text visible (`CanvasText`). Anti-vacuous both ways (the scale moves px;
-  density holds them).
-- **C10-Display — heading-effect residue.** The `connected()` heading effect (the leaf's only behaviour) must
-  leave **zero** residue on disconnect — zero subscribers (`inspect`) off the `variant` signal — and reconnect
-  must re-subscribe clean. A Display leaf with no trait still has this one effect to account for; a leaked
-  `variant` subscriber is a C10 fail.
+  leaves type untouched, and the full 9×3 = 27-cell matrix resolves to genuinely distinct computed px — the
+  Display analogue of C6's "geometry is measured": the *type scale* is the law a Display leaf obeys.
+- **C7-Display — semantic-stamping correctness (re-points the behaviour gate)** [gate]. The content model +
+  the `as` axis (cl.4): a real element is STAMPED around the light-DOM children — never `ElementInternals`.
+  *1:* a host `role`/`aria-*` attribute, or wrong/absent stamping (e.g. `as='h2'` rendering no real `<h2>` —
+  the internals-only lie ADR-0025 shipped and ADR-0078 replaces). *3:* slotted light-DOM text is the
+  accessible name whether or not a stamp exists; `as ≠ 'none'` wraps the children in a real
+  `document.createElement(as)` (node identity preserved — moved, never cloned); `as='none'` installs no
+  wrapper (byte-identical DOM); `variant`/`size` carry **zero** semantic effect. *5:* + the stamp is genuinely
+  reactive (a live `as` change re-stamps, still moving not cloning) and self-healing — a childList
+  `MutationObserver` restores the invariant after parser-streamed children or an external `host.textContent`
+  write (the A2UI bound-text path) within a microtask — and the stamp is visually transparent (a
+  `margin`/`font: inherit` reset gives **zero** geometry delta vs. `as='none'`), so `as` changes semantics with
+  no layout cost.
+- **C9-Display — cross-engine content.** The browser-truth smoke (Chromium AND WebKit) asserts the
+  *type-scale matrix* facts, not the frame law: distinct computed px per `variant`×`size` cell, `[scale]`
+  re-multiplies type on both engines, `[density]` does **not** touch type, a stamped `as` element renders with
+  **zero geometry delta** vs. `as='none'`, and the `forced-colors` block keeps the text visible
+  (`CanvasText`). Anti-vacuous every way (the scale/size moves px; density and stamping hold it).
+- **C10-Display — restamp + heal residue.** `ui-text` carries TWO always-on pieces of machinery (cl.4/B3,
+  Consequences (b)) — the `connected()` restamp effect off the `as` signal, and its companion childList
+  `MutationObserver` (the heal) — both must leave **zero** residue on disconnect: zero subscribers (`inspect`)
+  off `as`, and the observer explicitly `disconnect()`ed in `disconnected()` (a raw platform observer isn't
+  scope-owned, so this is hand-discipline, not automatic). Reconnect must re-subscribe **and** re-observe
+  clean. A leaked `as` subscriber or a live observer surviving disconnect is a C10 fail; the marginal-gz note
+  (`text.md`) must account for both as the leaf's first non-trivial residue surface.
 
 ### Display gate to promote
 
 Unchanged spine: **COMPOSE** = C1–C5 ≥ 4; **REALIZE** = C6–C10 ≥ 4; no cross-axis compensation; every [gate]
 dimension hard (C3, C4, **C6-Display**, **C7-Display**, C8, C9, C10). Score the re-pointed C6/C7 on their
 Display content; record N/A dimensions as `N/A — Display` (not a fail). A Display leaf is shippable when both
-axes clear ≥ 4 with the frame criteria correctly marked N/A and the type-scale + heading-semantics facts scored
-real. Worked precedent: `ui-text` (ADR-0025).
+axes clear ≥ 4 with the frame criteria correctly marked N/A and the type-scale + semantic-stamping facts scored
+real. Worked precedent: `ui-text` (ADR-0078).

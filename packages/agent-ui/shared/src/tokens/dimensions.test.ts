@@ -119,7 +119,7 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
     for (const d of iconDecls) expect(d).not.toMatch(/pow\(|calc\(|var\(/) // pure px — pow(scale,0.58) is gone
   })
 
-  it('CONTROLS have NO multiplier (ADR-0038) — height/font/icon are literal tables OFF `*` (no calc/var(--ui-scale)); --ui-scale survives for --ui-type-* DISPLAY only; no pow()', () => {
+  it('CONTROLS have NO multiplier (ADR-0038) — height/font/icon are literal tables OFF `*` (no calc/var(--ui-scale)); --ui-scale survives for --md-sys-typescale-*-size DISPLAY only (ADR-0078); no pow()', () => {
     // ADR-0038: `× var(--ui-scale)` LEAVES the control path — height/font/icon are explicit Kim's-table literals.
     expect(bare).not.toMatch(/pow\(/) // file-wide (comment-stripped): the pow primitive is long gone (ADR-0035)
     // none of the three control tokens is declared on `*` (literal tables → :root + [scale])
@@ -132,9 +132,9 @@ describe('dimensions.css — the Control-band ramp + scale/density multipliers (
       expect(decls.length, `--ui-${tok}-* decls`).toBeGreaterThanOrEqual(21) // 3 :root + 18 tiers
       for (const d of decls) expect(d).not.toMatch(/calc\(|var\(/) // pure px literal — no --ui-scale multiplier
     }
-    // DISPLAY --ui-type-*-size STILL rides --ui-scale (the ruled-linear fork — the ONLY surviving --ui-scale consumer)
-    const typeSizeDecls = universalBlock.match(/--ui-type-[\w-]+-size:[^;]*;/g) ?? []
-    expect(typeSizeDecls.length).toBe(7) // anti-vacuous: all seven type levels
+    // DISPLAY --md-sys-typescale-*-size STILL rides --ui-scale (ADR-0078 cl.2 — the ONLY surviving --ui-scale consumer)
+    const typeSizeDecls = universalBlock.match(/--md-sys-typescale-[\w-]+-size:[^;]*;/g) ?? []
+    expect(typeSizeDecls.length).toBe(27) // anti-vacuous: all 27 typescale role×size cells (ADR-0078)
     for (const d of typeSizeDecls) expect(d).toMatch(/calc\(\s*\d+px\s*\*\s*var\(--ui-scale\)\s*\)/)
   })
 
@@ -344,63 +344,122 @@ describe('dimensions.css — the shared --ui-mono font-family constant', () => {
   })
 })
 
-// tok-type (ADR-0025 cl.3) — the --ui-type-* FLEET typographic scale (the fleet's FIRST type ramp; the
-// control-band --ui-font-* is a SEPARATE ledger — document typography, not control-frame glyph). Three legs
-// per level: -size on the `*` ramp (× --ui-scale, density-INVARIANT — glyph size is frame-family, not rhythm),
-// and -weight + -leading CONSTANTS on :root (leading UNITLESS — a line-height multiplier). A ratio-1.2 modular
-// scale anchored at body = 16. ui-text reads --ui-text-* (text.css), never --ui-type-* directly — this pins the
-// fleet ramp's shape (each leg's value, where it lives, what multiplier it carries). jsdom can't compute the
-// rendered px (the actual subtree-[scale] rescale is the browser smoke); this is the static structural pin.
-describe('dimensions.css — the --ui-type-* fleet typographic scale (ADR-0025 cl.3)', () => {
-  // level, size-px, weight, leading (unitless). The finalized ramp: 16·1.2^n rounded to nearest integer.
-  const LEVELS: Array<[string, number, number, string]> = [
-    ['h1', 40, 700, '1.15'],
-    ['h2', 33, 700, '1.2'],
-    ['h3', 28, 600, '1.25'],
-    ['h4', 23, 600, '1.3'],
-    ['h5', 19, 600, '1.35'],
-    ['body', 16, 400, '1.5'],
-    ['caption', 13, 400, '1.4'],
+// tok-typescale (ADR-0078 cl.2/cl.2b) — the --md-sys-typescale-* FLEET typographic scale, replacing
+// ADR-0025 cl.3's --ui-type-* (the control-band --ui-font-* stays a SEPARATE ledger — control-frame
+// glyph, not document typography). Four legs per role×size cell: -size on the `*` ramp (× --ui-scale,
+// density-INVARIANT — glyph size is frame-family, not rhythm), -weight/-line-height/-tracking CONSTANTS
+// on :root (-line-height UNITLESS, -tracking em). 15 M3-core rows (verbatim against the canonical MD3
+// default type scale) + 12 editorial-extension rows (cl.2b). ui-text reads --ui-text-* (text.css), never
+// this family directly — this pins the fleet ramp's shape (each leg's value, where it lives, what
+// multiplier it carries, and that --ui-type-* has zero survivors). jsdom can't compute the rendered px
+// (the actual subtree-[scale] rescale is the browser smoke); this is the static structural pin.
+describe('dimensions.css — the --md-sys-typescale-* fleet typographic scale (ADR-0078 cl.2/cl.2b)', () => {
+  // role-size, size-px, weight, line-height (unitless), tracking (em string, exactly as declared —
+  // literal `0` where M3 tracking is zero, `Nem` otherwise). The 15 M3-core rows (cl.2), M3-verbatim.
+  const M3_CORE: Array<[string, number, number, string, string]> = [
+    ['display-large', 57, 400, '1.123', '-0.004em'],
+    ['display-medium', 45, 400, '1.156', '0'],
+    ['display-small', 36, 400, '1.222', '0'],
+    ['headline-large', 32, 400, '1.25', '0'],
+    ['headline-medium', 28, 400, '1.286', '0'],
+    ['headline-small', 24, 400, '1.333', '0'],
+    ['title-large', 22, 400, '1.273', '0'],
+    ['title-medium', 16, 500, '1.5', '0.009em'],
+    ['title-small', 14, 500, '1.429', '0.007em'],
+    ['body-large', 16, 400, '1.5', '0.031em'],
+    ['body-medium', 14, 400, '1.429', '0.018em'],
+    ['body-small', 12, 400, '1.333', '0.033em'],
+    ['label-large', 14, 500, '1.429', '0.007em'],
+    ['label-medium', 12, 500, '1.333', '0.042em'],
+    ['label-small', 11, 500, '1.455', '0.045em'],
   ]
+  // the 12 editorial-extension rows (cl.2b) — kicker/overline/quote/lead, each `/* extension — not
+  // MD3 */`-marked in dimensions.css.
+  const EXTENSIONS: Array<[string, number, number, string, string]> = [
+    ['kicker-large', 14, 700, '1.429', '0.08em'],
+    ['kicker-medium', 12, 700, '1.333', '0.08em'],
+    ['kicker-small', 11, 700, '1.455', '0.08em'],
+    ['overline-large', 14, 500, '1.429', '0.15em'],
+    ['overline-medium', 12, 500, '1.333', '0.15em'],
+    ['overline-small', 11, 500, '1.455', '0.15em'],
+    ['lead-large', 22, 400, '1.455', '0'],
+    ['lead-medium', 18, 400, '1.444', '0'],
+    ['lead-small', 16, 400, '1.5', '0.031em'],
+    ['quote-large', 22, 400, '1.455', '0'],
+    ['quote-medium', 18, 400, '1.444', '0'],
+    ['quote-small', 16, 400, '1.5', '0.031em'],
+  ]
+  const ALL_ROWS = [...M3_CORE, ...EXTENSIONS]
 
-  it('declares each -size as calc(<px> * var(--ui-scale)) on the `*` block (scale-responsive — the LINEAR type leg; the control-band --ui-font-* is now a §1-set TABLE, ADR-0035, not this calc form)', () => {
+  it('declares each -size as calc(<px> * var(--ui-scale)) on the `*` block, for all 15 M3-core + 12 extension rows', () => {
     expect(universalBlock.length).toBeGreaterThan(0) // anti-vacuous: the `*` block was isolated
-    for (const [level, px] of LEVELS) {
-      const re = new RegExp(`--ui-type-${level}-size:\\s*calc\\(\\s*${px}px\\s*\\*\\s*var\\(--ui-scale\\)\\s*\\)`)
+    for (const [role, px] of ALL_ROWS) {
+      const re = new RegExp(`--md-sys-typescale-${role}-size:\\s*calc\\(\\s*${px}px\\s*\\*\\s*var\\(--ui-scale\\)\\s*\\)`)
       expect(universalBlock).toMatch(re)
     }
   })
 
-  it('declares each -weight + -leading as a CONSTANT on :root (scale-free, like the focus-ring/motion constants)', () => {
+  it('declares each -weight/-line-height/-tracking as a CONSTANT on :root, matching the exact cl.2/cl.2b table', () => {
     expect(rootBlock.length).toBeGreaterThan(0) // anti-vacuous: :root was isolated
-    for (const [level, , weight, leading] of LEVELS) {
-      expect(rootBlock).toMatch(new RegExp(`--ui-type-${level}-weight:\\s*${weight}\\s*;`))
-      expect(rootBlock).toMatch(new RegExp(`--ui-type-${level}-leading:\\s*${leading.replace('.', '\\.')}\\s*;`))
+    for (const [role, , weight, lineHeight, tracking] of ALL_ROWS) {
+      expect(rootBlock).toMatch(new RegExp(`--md-sys-typescale-${role}-weight:\\s*${weight}\\s*;`))
+      expect(rootBlock).toMatch(new RegExp(`--md-sys-typescale-${role}-line-height:\\s*${lineHeight.replace('.', '\\.')}\\s*;`))
+      expect(rootBlock).toMatch(new RegExp(`--md-sys-typescale-${role}-tracking:\\s*${tracking.replace('.', '\\.')}\\s*;`))
     }
   })
 
-  it('keeps -leading UNITLESS (a bare line-height multiplier — it scales WITH the already-scaled -size)', () => {
-    const leadingDecls = rootBlock.match(/--ui-type-[\w-]+-leading:[^;]*;/g) ?? []
-    expect(leadingDecls.length).toBe(LEVELS.length) // anti-vacuous: all 7 levels present
-    for (const d of leadingDecls) {
-      expect(d).toMatch(/--ui-type-[\w-]+-leading:\s*[\d.]+\s*;/) // a number only…
+  it('keeps -line-height UNITLESS (a bare line-height multiplier — it scales WITH the already-scaled -size)', () => {
+    const lineHeightDecls = rootBlock.match(/--md-sys-typescale-[\w-]+-line-height:[^;]*;/g) ?? []
+    expect(lineHeightDecls.length).toBe(ALL_ROWS.length) // anti-vacuous: all 27 rows present
+    for (const d of lineHeightDecls) {
+      expect(d).toMatch(/--md-sys-typescale-[\w-]+-line-height:\s*[\d.]+\s*;/) // a number only…
       expect(d).not.toMatch(/px|em|rem|%/) // …no unit (a unit would break the multiplier semantics)
     }
   })
 
-  it('keeps type DENSITY-INVARIANT — no -size references --ui-density, and no [density] selector touches --ui-type', () => {
-    const sizeDecls = universalBlock.match(/--ui-type-[\w-]+-size:[^;]*;/g) ?? []
-    expect(sizeDecls.length).toBe(LEVELS.length) // anti-vacuous: all 7 -size legs present
+  it('keeps -tracking EM (or bare 0), never a bare non-zero number', () => {
+    const trackingDecls = rootBlock.match(/--md-sys-typescale-[\w-]+-tracking:[^;]*;/g) ?? []
+    expect(trackingDecls.length).toBe(ALL_ROWS.length) // anti-vacuous: all 27 rows present
+    for (const d of trackingDecls) {
+      expect(d).toMatch(/--md-sys-typescale-[\w-]+-tracking:\s*(?:0|-?[\d.]+em)\s*;/)
+    }
+  })
+
+  it('keeps type DENSITY-INVARIANT — no -size references --ui-density, and no [density] selector touches --md-sys-typescale', () => {
+    const sizeDecls = universalBlock.match(/--md-sys-typescale-[\w-]+-size:[^;]*;/g) ?? []
+    expect(sizeDecls.length).toBe(ALL_ROWS.length) // anti-vacuous: all 27 -size legs present
     for (const d of sizeDecls) {
       expect(d).not.toMatch(/--ui-density/) // glyph size is frame-family, not rhythm
     }
     const densityBlocks = css.match(/\[density="[^"]+"\]\s*\{[^}]*\}/g) ?? []
     expect(densityBlocks.length).toBeGreaterThan(0)
-    for (const block of densityBlocks) expect(block).not.toMatch(/--ui-type/) // [density] never re-multiplies type
+    for (const block of densityBlocks) expect(block).not.toMatch(/--md-sys-typescale/) // [density] never re-multiplies type
   })
 
-  it('puts each leg in the right place — -size OFF :root (the pre-substitution gotcha), -weight/-leading OFF `*` (constants)', () => {
-    expect(rootBlock).not.toMatch(/--ui-type-[\w-]+-size/) // derived sizes → the `*` ramp only
-    expect(universalBlock).not.toMatch(/--ui-type-[\w-]+-(?:weight|leading)/) // scale-free constants → :root only
+  it('puts each leg in the right place — -size OFF :root (the pre-substitution gotcha), -weight/-line-height/-tracking OFF `*` (constants)', () => {
+    expect(rootBlock).not.toMatch(/--md-sys-typescale-[\w-]+-size/) // derived sizes → the `*` ramp only
+    expect(universalBlock).not.toMatch(/--md-sys-typescale-[\w-]+-(?:weight|line-height|tracking)/) // scale-free constants → :root only
+  })
+
+  it('marks each of the 4 extension families `/* extension — not MD3 */` (kicker/overline/lead/quote) and leaves zero --ui-type- survivors fleet-wide', () => {
+    // each family's FIRST (large) row is preceded by the marker comment on :root — the marker precedes the
+    // group, not every individual row (medium/small share it by proximity, not by re-declaration)
+    for (const family of ['kicker', 'overline', 'lead', 'quote'] as const) {
+      const idx = css.indexOf(`--md-sys-typescale-${family}-large-weight`)
+      expect(idx, `${family} block not found`).toBeGreaterThan(-1)
+      const preceding = css.slice(Math.max(0, idx - 300), idx)
+      expect(preceding, `${family} missing the extension marker`).toMatch(/extension — not MD3/)
+    }
+    // the `*`-ramp -size legs carry the marker too (one comment ahead of the 12 extension -size rows).
+    // Read from `css` (comments intact), NOT `universalBlock` (deliberately comment-stripped, so its
+    // `[^}]*` block-isolation regex can't be tripped by a stray `}` inside an EXISTING comment, e.g. the
+    // gap comment's `--ui-gap-{size}`).
+    const sizeIdx = css.indexOf('--md-sys-typescale-kicker-large-size')
+    expect(sizeIdx).toBeGreaterThan(-1)
+    expect(css.slice(Math.max(0, sizeIdx - 150), sizeIdx)).toMatch(/extension — not MD3/)
+    // the retired family has zero DECLARATION survivors — ADR-0078 cl.6's zero-survivor regression guard,
+    // static half (`bare` is comment-stripped, so the retirement note's own historical mention of
+    // `--ui-type-*` in prose, above, doesn't trip this — a live declaration would)
+    expect(bare).not.toMatch(/--ui-type-[\w-]+:/)
   })
 })
