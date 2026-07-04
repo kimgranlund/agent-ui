@@ -2,7 +2,7 @@
  * Two clearly-SECTIONED blocks:
  *
  *   [1] TOKEN BLOCK  — `:where(ui-slider)` (specificity 0,0,0) DECLARES the `--ui-slider-*` chain from
- *       the colour roles (`--c-{family}-{role}`) and the compact widget ramp (`--ui-compact-{size}`,
+ *       the colour roles (`--md-sys-color-{family}-{role}`) and the compact widget ramp (`--ui-compact-{size}`,
  *       ADR-0041). `[size]` repoints the box token; `[disabled]` mutes to neutral roles. No `color-mix`
  *       — colour opinions live in the token layer (ADR-0008). `--ui-slider-rail-height` is a thin fleet
  *       constant (3px), NOT widget-box derived — the rail height does NOT scale with the thumb box.
@@ -27,18 +27,18 @@
   --ui-slider-box: var(--ui-compact-md);
 
   /* Rail colour — the unselected portion of the track. A state-bearing control part → the SOLID
-     --c-neutral-track (SC 1.4.11 3:1 vs every surface plane), NOT the old translucent
-     --c-neutral-outline-variant which composited to 1.51:1 light / 1.73:1 dark (an SC 1.4.11 fail — at
+     --md-sys-color-neutral-track (SC 1.4.11 3:1 vs every surface plane), NOT the old translucent
+     --md-sys-color-neutral-outline-variant which composited to 1.51:1 light / 1.73:1 dark (an SC 1.4.11 fail — at
      value 0 the whole track went near-invisible). The fill↔rail luminance boundary is intentionally low
      (primary and neutral are L-close) — the VALUE is carried by the high-contrast THUMB, which clears 3:1
      against both the fill (4.79/3.67) and this rail (4.69/3.74). 2026-07-02 color audit item 4 · ADR-0059. */
-  --ui-slider-rail: var(--c-neutral-track);
+  --ui-slider-rail: var(--md-sys-color-neutral-track);
 
   /* Fill colour — the selected portion (min → value), primary family. */
-  --ui-slider-fill: var(--c-primary);
+  --ui-slider-fill: var(--md-sys-color-primary);
 
   /* Thumb colour — the drag handle, brightest neutral surface (≈ white on light; dark on dark). */
-  --ui-slider-thumb: var(--c-neutral-surface-brightest);
+  --ui-slider-thumb: var(--md-sys-color-neutral-surface-brightest);
 
   /* Rail height — thin constant, NOT derived from the widget box (ADR-0041 geometry: the inset law
      governs the THUMB size only; the rail is a separate cosmetic layer). 3px reads cleanly at all
@@ -57,12 +57,12 @@
 
 /* [disabled] → muted neutral roles for rail, fill, and thumb. The state holds at idle: the styles
    block sets `pointer-events: none` so `:hover` never matches, preventing any token lift. The rail
-   deliberately stays the translucent --c-neutral-outline-variant (NOT the solid --c-neutral-track): a
+   deliberately stays the translucent --md-sys-color-neutral-outline-variant (NOT the solid --md-sys-color-neutral-track): a
    disabled/inactive component is SC 1.4.11-EXEMPT, and the muted rail correctly reads as inactive. */
 :where(ui-slider[disabled]) {
-  --ui-slider-rail: var(--c-neutral-outline-variant);
-  --ui-slider-fill: var(--c-neutral-surface-high);
-  --ui-slider-thumb: var(--c-neutral-on-surface-variant);
+  --ui-slider-rail: var(--md-sys-color-neutral-outline-variant);
+  --ui-slider-fill: var(--md-sys-color-neutral-surface-high);
+  --ui-slider-thumb: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-slider) consumes ONLY --ui-slider-* ════════════════ */
@@ -147,7 +147,7 @@
      whole control (host box), the fleet standard. Reads fleet-wide tokens directly — the one deliberate
      exception to "consume only --ui-slider-*", matching the checkbox/switch pattern. */
   :scope:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--ui-focus-ring-offset);
   }
 
@@ -170,7 +170,7 @@
      with a Highlight border so the handle is distinct from the fill.
      `forced-color-adjust: none` preserves our explicit system-colour mappings, preventing the browser
      from re-overriding them (same pattern as switch.css / checkbox.css — ADR-0009 ring is free via
-     --c-focus-ring → Highlight from the token layer). */
+     --md-sys-color-focus-ring → Highlight from the token layer). */
   @media (forced-colors: active) {
     :scope::before {
       background: linear-gradient(

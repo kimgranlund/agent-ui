@@ -5,7 +5,7 @@
  *       (start→start, end→end, between→space-between, … — box-alignment dialect, ADR-0039) or to a `--ui-space` ladder step, via `[attr=value]`
  *       attribute selectors. The `--ui-space-*` layout-spacing ladder (the SHARED, density-responsive gap
  *       vocabulary — dimensions.css / ADR-0015 cl.4) is read ONLY here, on the declaration side — exactly as
- *       button.css reads the `--c-*` colour roles only in its `:where()` token block.
+ *       button.css reads the `--md-sys-color-*` colour roles only in its `:where()` token block.
  *   [2] STYLES BLOCK — `@scope (ui-list)` CONSUMES only `--ui-list-*` for its layout. `ui-list` is a
  *       `ui-column` SPECIALIZATION: `display:flex; flex-direction:column` (the vertical stack — the tag's
  *       identity, A2UI-faithful, ADR-0016 cl.2/3). No control height (geometry.md "Container/layout" class —
@@ -102,7 +102,7 @@
     flex-direction: column; /* the vertical stack — the list's identity (ADR-0016 cl.2/3) */
     box-sizing: border-box;
 
-    /* The flex mapping — every value reads the own `--ui-list-*` chain (role-pure; no raw --ui-space/--c-*
+    /* The flex mapping — every value reads the own `--ui-list-*` chain (role-pure; no raw --ui-space/--md-sys-color-*
        leaks into the consumption, mirroring button.css's @scope hygiene). The surface background + the
        container-type seam ride the shared controls/_surface/container.css. NO control height. */
     align-items: var(--ui-list-align);

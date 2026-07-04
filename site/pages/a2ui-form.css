@@ -1,8 +1,8 @@
 /* a2ui-form.css — PAGE-LOCAL layout chrome for the Generative Form capstone. Styles the 3-region flow
  * (payload → rendered form → messages), the payload/code blocks, the page-IDL panel (submit outcome + provider
  * aggregate), and the client-message log ONLY. The rendered ui-* controls keep their own component CSS — this
- * page NEVER restyles a ui-* control. Reads the `--c-*` colour roles declared by the foundation barrels (imported
- * first via _page.ts), so it tracks light/dark. Tokens-only — every colour is a `--c-*` role, no raw literals. */
+ * page NEVER restyles a ui-* control. Reads the `--md-sys-color-*` colour roles declared by the foundation barrels (imported
+ * first via _page.ts), so it tracks light/dark. Tokens-only — every colour is a `--md-sys-color-*` role, no raw literals. */
 
 /* ── the 3-region flow: three cards with arrow connectors, wrapping to a stack on narrow viewports ──────────── */
 /* Mounted via mountFullBleedPage: the shell hands the page the whole `.app-page` region (edge-to-edge, inner
@@ -23,9 +23,9 @@
   display: flex;
   flex-direction: column;
   padding: 1.1rem 1.2rem 1.3rem;
-  border: 1px solid var(--c-neutral-outline-variant);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 12px;
-  background: var(--c-neutral-surface-low);
+  background: var(--md-sys-color-neutral-surface-low);
 }
 
 .region > h2 {
@@ -43,15 +43,15 @@
   inline-size: 1.6rem;
   block-size: 1.6rem;
   border-radius: 50%;
-  background: var(--c-primary);
-  color: var(--c-primary-on-primary); /* the canonical ink for a --c-primary fill (button.css) */
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-primary-on-primary); /* the canonical ink for a --md-sys-color-primary fill (button.css) */
   font-size: 0.85rem;
   font-weight: 700;
 }
 
 .region-blurb {
   margin: 0 0 0.9rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.85rem;
   line-height: 1.45;
 }
@@ -67,7 +67,7 @@
 /* The arrow between regions — horizontal on a row, rotating to point down once the cards wrap into a stack. */
 .flow-arrow {
   align-self: center;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 1.5rem;
   line-height: 1;
 }
@@ -87,7 +87,7 @@
 
 .payload-line > figcaption {
   margin-block-end: 0.3rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.78rem;
   font-weight: 600;
 }
@@ -115,14 +115,14 @@
 .surface {
   display: grid;
   padding: 1.3rem 1.2rem;
-  border: 1px dashed var(--c-neutral-outline);
+  border: 1px dashed var(--md-sys-color-neutral-outline);
   border-radius: 8px;
-  background: var(--c-neutral-surface);
+  background: var(--md-sys-color-neutral-surface);
 }
 
 .surface:empty::before {
   content: 'No form mounted.';
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.85rem;
 }
 
@@ -132,12 +132,12 @@
   flex-direction: column;
   gap: 0.5rem;
   padding-block-start: 0.8rem;
-  border-block-start: 1px solid var(--c-neutral-outline-variant);
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 .idl-caption {
   margin: 0;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -148,16 +148,16 @@
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.45;
-  color: var(--c-neutral-on-surface);
+  color: var(--md-sys-color-neutral-on-surface);
 }
 
 .form-status[data-kind='blocked'] {
-  color: var(--c-danger);
+  color: var(--md-sys-color-danger);
   font-weight: 600;
 }
 
 .form-status[data-kind='sent'] {
-  color: var(--c-success);
+  color: var(--md-sys-color-success);
   font-weight: 600;
 }
 
@@ -167,7 +167,7 @@
 
 .aggregate > figcaption {
   margin-block-end: 0.3rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.78rem;
   font-weight: 600;
 }
@@ -187,7 +187,7 @@
   content: 'No messages yet. Try Submit while the form is invalid — nothing reaches the server. Fill the required fields, then submit to see one action.';
   display: block;
   padding: 0.6rem 0;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.85rem;
   line-height: 1.5;
 }
@@ -209,13 +209,13 @@
 }
 
 .msg-log > li[data-kind='action'] .msg-head {
-  color: var(--c-primary);
+  color: var(--md-sys-color-primary);
 }
 
 .msg-log > li[data-kind='response'] .msg-head {
-  color: var(--c-success);
+  color: var(--md-sys-color-success);
 }
 
 .msg-log > li[data-kind='error'] .msg-head {
-  color: var(--c-danger);
+  color: var(--md-sys-color-danger);
 }

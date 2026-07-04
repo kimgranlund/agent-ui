@@ -35,7 +35,7 @@ import { prop, type PropsSchema } from './props.ts'
 const SURFACE_STEPS = ['0', '1', '2', '3', '-1', '-2', '-3'] as const
 
 const surfaceProps = {
-  // elevation → the scheme-INVERTING plane (`--c-neutral-surface-{lowest…highest}`); 0 = the neutral surface.
+  // elevation → the scheme-INVERTING plane (`--md-sys-color-neutral-surface-{lowest…highest}`); 0 = the neutral surface.
   elevation: { ...prop.enum(SURFACE_STEPS, '0'), reflect: true },
   // brightness → the scheme-CONSISTENT tonal wash; 0 = no wash (the neutral surface).
   brightness: { ...prop.enum(SURFACE_STEPS, '0'), reflect: true },

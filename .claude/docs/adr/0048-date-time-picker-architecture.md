@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-01 — ratified on the green Wave-5B gate: ui-calendar [component-reviewer NO-GO→cleared, jsdom 70 + browser 44 both engines] + the type=date/time delta [component-reviewer NO-GO→cleared: the B1 double-change boundary guard + real negative control, M2/M3 chrome resets, M4 descriptor, coverage]; full gates check + jsdom 1931 + cross-engine browser 514 green; tree-shake proof holds. The selected-numeral AA contrast required a new `--c-primary-selected` role [light-dark 550/600], recorded in ADR-0049's sibling token work. datetime-local/month remain the documented STRETCH follow-ups.)* |
+> | **Status** | accepted *(2026-07-01 — ratified on the green Wave-5B gate: ui-calendar [component-reviewer NO-GO→cleared, jsdom 70 + browser 44 both engines] + the type=date/time delta [component-reviewer NO-GO→cleared: the B1 double-change boundary guard + real negative control, M2/M3 chrome resets, M4 descriptor, coverage]; full gates check + jsdom 1931 + cross-engine browser 514 green; tree-shake proof holds. The selected-numeral AA contrast required a new `--md-sys-color-primary-selected` role [light-dark 550/600], recorded in ADR-0049's sibling token work. datetime-local/month remain the documented STRETCH follow-ups.)* |
 > | **Date** | 2026-07-01 |
 > | **Proposed by** | planning-lead — the design seat, on the Wave-5 brief (#49 / #99): "calendars, date-pickers" (Kim). |
 > | **Ratified by** | orchestration-lead — on the green G6/G7 gate (the `ui-calendar` grid + the cross-engine `type=date` overlay smoke) |

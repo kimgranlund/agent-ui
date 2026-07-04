@@ -52,12 +52,12 @@ native-`<input>` exception stays **reserved for `ui-password-field` OS masking**
 - **(a) Focus on `:focus-within` (ALL focus), not `:focus-visible` (keyboard-only)** — native text-input parity
   (a text field must visibly signal where typing will land, including on a mouse click). The focus treatment is
   **BOTH** a `border-color` step **AND** the standard shared `outline` ring, **both keyed on `:focus-within`**: on
-  focus the field-frame border steps to `--c-focus-ring` (the **screen enhancement**) **and** the host draws
-  `outline: var(--ui-focus-ring-width) solid var(--c-focus-ring)` at `var(--ui-focus-ring-offset)` (the
+  focus the field-frame border steps to `--md-sys-color-focus-ring` (the **screen enhancement**) **and** the host draws
+  `outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring)` at `var(--ui-focus-ring-offset)` (the
   **forced-colors WHCM indicator**). The outline is load-bearing because `border-color` does **not** survive
-  `forced-colors: active` as `Highlight` — the `outline` does, via `--c-focus-ring → Highlight`; so the
+  `forced-colors: active` as `Highlight` — the `outline` does, via `--md-sys-color-focus-ring → Highlight`; so the
   ALL-focus / `:focus-within` reading applies to the **outline ring too**, not just the border. It reuses the
-  **same** shared `--c-focus-ring` / `--ui-focus-ring-width` / `--ui-focus-ring-offset` tokens and the same
+  **same** shared `--md-sys-color-focus-ring` / `--ui-focus-ring-width` / `--ui-focus-ring-offset` tokens and the same
   layout-neutral recipe — **only the trigger pseudo-class differs** from the button. This **amends ADR-0009** via
   its append-only `## Amendment` (the keyboard-control default stands; this adds the text-entry-control variant).
   `:focus-within` (not `:focus-visible` on the editor) is used because the focusable element is the editor child;
@@ -72,12 +72,12 @@ native-`<input>` exception stays **reserved for `ui-password-field` OS masking**
   the button's background-fill ladder does not apply. The tokens-specialist confirmed the field role map and
   ratified the **SOLID** border ladder over soft-alpha (alpha outlines resolve sub-3:1 against the field surface —
   failing WCAG 1.4.11 for the field boundary). **No token edit — all roles exist.** The pinned field-frame map:
-  - **border** idle = `--c-neutral` (≈3.86 / 4.78 :1) · hover = `--c-neutral-high` (5.60 / 5.64) · focus =
-    `--c-focus-ring` · invalid = `--c-danger` (4.05 / 4.56) · invalid+hover = `--c-danger-high`;
-  - **bg** = `--c-neutral-surface` · **ink** = `--c-neutral-on-surface` · **placeholder** =
-    `--c-neutral-on-surface-variant`;
-  - **disabled** = a role-**repoint** (bg → `--c-neutral-surface-high`, ink → `--c-neutral-on-surface-variant`,
-    keep a faint `--c-neutral-outline-variant` frame), **NOT opacity** (`tokens.md` canon).
+  - **border** idle = `--md-sys-color-neutral` (≈3.86 / 4.78 :1) · hover = `--md-sys-color-neutral-high` (5.60 / 5.64) · focus =
+    `--md-sys-color-focus-ring` · invalid = `--md-sys-color-danger` (4.05 / 4.56) · invalid+hover = `--md-sys-color-danger-high`;
+  - **bg** = `--md-sys-color-neutral-surface` · **ink** = `--md-sys-color-neutral-on-surface` · **placeholder** =
+    `--md-sys-color-neutral-on-surface-variant`;
+  - **disabled** = a role-**repoint** (bg → `--md-sys-color-neutral-surface-high`, ink → `--md-sys-color-neutral-on-surface-variant`,
+    keep a faint `--md-sys-color-neutral-outline-variant` frame), **NOT opacity** (`tokens.md` canon).
 
   **`user-invalid` timing** comes from the new **`trackUserInvalid`** controller (G4, `s2`): `aria-invalid` +
   `:state(user-invalid)` appear **only after the first interaction** (blur/change), gating the danger border. The
@@ -106,7 +106,7 @@ colour-only danger border perceivable without colour).
   text-entry controls (`:focus-within`) — recorded in the ADR-0009 amendment so a future control picks by *control
   kind*, not by drift.
 - **forced-colors:** the field border / ink / placeholder stay visible (`CanvasText`); the focus **outline** (not
-  the focus `border-color`, which `forced-colors` drops) survives free via `--c-focus-ring → Highlight` — which is
+  the focus `border-color`, which `forced-colors` drops) survives free via `--md-sys-color-focus-ring → Highlight` — which is
   *why* deviation #1 keeps both the border step and the outline. Proven in the cross-engine smoke (`s11`).
 - **No new token primitive — tokens-specialist CONFIRMED, no `tokens.css` edit.** The field consumes existing
   neutral / danger / surface roles (the role map is **pinned in clause (2c)**; the SOLID border ladder was ratified
@@ -136,7 +136,7 @@ colour-only danger border perceivable without colour).
 - **A visible label in G6** — rejected (Q1): the visible label / description / error wrapper is `ui-field`'s job
   (G7); G6 keeps the minimal `aria-label` seam so the field is usable standalone.
 
-## Amendment — deviation #1 focus treatment: a TRANSPARENT border, not a `--c-focus-ring` border-color step (2026-06-28)
+## Amendment — deviation #1 focus treatment: a TRANSPARENT border, not a `--md-sys-color-focus-ring` border-color step (2026-06-28)
 
 > Status: ratified 2026-06-28 (orchestration-lead/host, on gate). Append-only; this **narrows** deviation #1's
 > focus treatment after a defect found on the live site. It leaves the Context / Decision / Consequences above
@@ -147,15 +147,15 @@ colour-only danger border perceivable without colour).
 
 **What stands (unchanged).** Everything load-bearing in deviation #1: focus is keyed on **`:focus-within`** (ALL
 focus — native text-input parity, not the button's keyboard-only `:focus-visible`), drawn on the **host** frame off
-the focused editor child, using the **shared** `outline` ring on the identical `--c-focus-ring` /
+the focused editor child, using the **shared** `outline` ring on the identical `--md-sys-color-focus-ring` /
 `--ui-focus-ring-width` / `--ui-focus-ring-offset` fleet tokens. The outline is still the **forced-colors** indicator
-(it survives `forced-colors: active` via `--c-focus-ring → Highlight`, which `border-color` does not). The ADR-0009
+(it survives `forced-colors: active` via `--md-sys-color-focus-ring → Highlight`, which `border-color` does not). The ADR-0009
 `## Amendment` (its ring-only `:focus-within` snippet) already anticipated exactly this shape.
 
-**What changes.** Clause (2a) drew the focus treatment as **BOTH** a `border-color` step to `--c-focus-ring` **AND**
+**What changes.** Clause (2a) drew the focus treatment as **BOTH** a `border-color` step to `--md-sys-color-focus-ring` **AND**
 the `outline` ring. On the live site that **doubled**: the field showed two concentric blue frames (the stepped
 border *plus* the offset ring). The `border-color` step is dropped — on `:focus-within` the field border steps to
-**`transparent`** (the `--ui-text-field-border-focus` ladder token is `transparent`, not `var(--c-focus-ring)`), so
+**`transparent`** (the `--ui-text-field-border-focus` ladder token is `transparent`, not `var(--md-sys-color-focus-ring)`), so
 the **outline ring is the SOLE focus indicator** and there is no second frame. A transparent border preserves the
 box geometry (the 1px frame still occupies its track — no layout shift on focus).
 

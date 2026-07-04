@@ -1,0 +1,182 @@
+/* adr-index.css — PAGE-LOCAL chrome for the Decision Records index: the search box + the newest-first card
+ * list. Each card is a native <details> (the expand/collapse needs no JS beyond the lazy-render-on-first-open
+ * in adr-index.ts) — the same zero-JS disclosure idiom the shared nav rail already uses (_page.css). Every
+ * colour a --md-sys-color-* role, every gutter a --ui-space-* token where the ramp has one (matching the shared
+ * shell's discipline); this page never restyles a ui-* control (it renders none — the list is page content). */
+
+.adr-search {
+  display: block;
+  inline-size: 100%;
+  margin-block: var(--ui-space-lg) var(--ui-space-md);
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 0.6rem;
+  background: var(--md-sys-color-neutral-surface);
+  color: var(--md-sys-color-neutral-on-surface);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.adr-search:focus-visible {
+  outline: 2px solid var(--md-sys-color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* The filter status (adr-index.ts) — an aria-live region (role="status"), visually-hidden by default (a quiet
+ * match-count announcement) and promoted to a visible row when the search leaves zero cards showing. The
+ * visually-hidden clip pattern matches the standard sr-only recipe (offscreen, not display:none — display:none
+ * content is never announced). */
+.adr-status {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.adr-status--empty {
+  position: static;
+  inline-size: auto;
+  block-size: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  margin-block: 0 var(--ui-space-md);
+  padding: var(--ui-space-md);
+  border: 1px dashed var(--md-sys-color-neutral-outline-variant);
+  border-radius: 0.6rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.88rem;
+}
+
+.adr-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-sm);
+  padding-block-end: var(--ui-space-xl);
+}
+
+.adr-card {
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 0.75rem;
+  background: var(--md-sys-color-neutral-surface);
+}
+
+.adr-card[open] {
+  background: var(--md-sys-color-neutral-surface-low);
+}
+
+/* `hidden` (the search filter, adr-index.ts) beats [open] — a filtered-out card contributes nothing, expanded
+ * or not; the UA already applies `display: none` to `[hidden]`, this rule only documents the intent. */
+
+.adr-summary {
+  padding: var(--ui-space-sm) var(--ui-space-md);
+  cursor: pointer;
+  list-style: none; /* drop the native disclosure triangle — the chevron below is the card's own affordance */
+}
+
+.adr-summary::-webkit-details-marker {
+  display: none;
+}
+
+.adr-summary:focus-visible {
+  outline: 2px solid var(--md-sys-color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* A CSS-drawn chevron after the summary row, flipping open like the shared nav trigger's (_page.css). */
+.adr-summary::after {
+  content: '';
+  display: inline-block;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  margin-inline-start: var(--ui-space-sm);
+  border-inline-end: 1.5px solid var(--md-sys-color-neutral-on-surface-variant);
+  border-block-end: 1.5px solid var(--md-sys-color-neutral-on-surface-variant);
+  transform: rotate(45deg);
+  transition: transform 120ms ease;
+}
+
+.adr-card[open] > .adr-summary::after {
+  transform: rotate(-135deg);
+}
+
+.adr-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.adr-number {
+  font-family: var(--ui-mono);
+  font-size: 0.78rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.adr-title {
+  flex: 1 1 auto;
+  min-inline-size: 12rem;
+  font-weight: 600;
+}
+
+.adr-badge {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Status → family colour. accepted=success, proposed=info, superseded=warning, deprecated=danger. The
+ * container/ink pairing follows the fleet's own tonal-ink law (references/tokens.md's mode×state table, the
+ * "tonal ink" row): a `-container` background pairs with the STRONGER `-on-surface` role, not `-on-surface-variant`
+ * — the only precedent the fleet has for a family-container fill, so this badge follows it rather than inventing
+ * a second, weaker pairing. */
+.adr-badge[data-status='accepted'] {
+  background: var(--md-sys-color-success-container);
+  color: var(--md-sys-color-success-on-surface);
+}
+.adr-badge[data-status='proposed'] {
+  background: var(--md-sys-color-info-container);
+  color: var(--md-sys-color-info-on-surface);
+}
+.adr-badge[data-status='superseded'] {
+  background: var(--md-sys-color-warning-container);
+  color: var(--md-sys-color-warning-on-surface);
+}
+.adr-badge[data-status='deprecated'] {
+  background: var(--md-sys-color-danger-container);
+  color: var(--md-sys-color-danger-on-surface);
+}
+
+.adr-meta {
+  margin-block-start: 0.2rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.78rem;
+}
+
+.adr-lead {
+  margin: 0.35rem 0 0;
+  max-inline-size: 72ch;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+/* The expanded full render — the rendered ADR body (renderMarkdownBody), a hairline above it separating it
+ * from the always-visible summary header. */
+.adr-body {
+  padding: 0 var(--ui-space-md) var(--ui-space-md);
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
+  margin-block-start: var(--ui-space-sm);
+  padding-block-start: var(--ui-space-sm);
+}
+
+.adr-body article > :first-child {
+  margin-block-start: 0;
+}

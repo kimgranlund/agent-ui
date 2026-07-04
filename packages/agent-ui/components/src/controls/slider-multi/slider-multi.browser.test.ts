@@ -12,7 +12,7 @@ import { describe, it, expect } from 'vitest'
 //       must produce the exact px from the table, not a CSS calc result.
 //   C10 (zero-residue) — connect→disconnect produces no stacked listeners; reconnect re-arms exactly once.
 
-import '@agent-ui/components/foundation-styles.css' // tokens (--c-*) + dimensions (--ui-compact-*)
+import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--ui-compact-*)
 import './slider-multi.css'                          // the control stylesheet (direct — pre-barrel)
 import './slider-multi.ts'                           // self-define (registers ui-slider-multi)
 import { UISliderMultiElement } from './slider-multi.ts'

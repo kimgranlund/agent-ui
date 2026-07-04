@@ -132,7 +132,7 @@ skills: [component-author]   # standing knowledge of the standard shape, no disc
 ```markdown
 ---
 name: tokens-specialist
-description: Own the agent-ui token layer's coherence — the --c-{family}-{role} roles, the
+description: Own the agent-ui token layer's coherence — the --md-sys-color-{family}-{role} roles, the
   --ui-{name}-* component chains, the dimensional ramps, contrast and forced-colors. Use when
   adding/changing tokens, wiring a component's -tokens.css, or auditing token drift across the fleet.
 tools: Read, Grep, Glob, Bash

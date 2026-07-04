@@ -128,7 +128,7 @@
    1px rule; the surrounding children's margins provide the breathing room. */
 :where([data-box]) > hr {
   border: 0;
-  border-block-start: 1px solid var(--c-neutral-outline-variant);
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
   block-size: 0;
   margin: 0;
 }

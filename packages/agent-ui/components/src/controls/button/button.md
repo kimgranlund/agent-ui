@@ -108,14 +108,14 @@ icon↔label gap. The block-size is the vertical lever — `padding-block` is al
 The control authors its own interaction states — these are **real**, not browser defaults. Each variant takes
 its `:hover`/`:active` shades from a colour-role **ladder step** (never a `color-mix` — components hold zero
 colour opinions; ADR-0008), so the change reads in the real palette and survives `forced-colors` for free
-(every value is a `--c-{family}-{role}` role):
+(every value is a `--md-sys-color-{family}-{role}` role):
 
-- **solid** — `--c-primary` idle → `--c-primary-dim` on `:hover` → `--c-primary-high` on `:active`.
-- **soft** — `--c-primary-container-low` idle → `--c-primary-container` on `:hover` → `--c-primary-container-high` on `:active`.
-- **ghost** — `transparent` idle, gaining a low container wash on `:hover`/`:active` (`--c-primary-container-low` → `--c-primary-container`).
+- **solid** — `--md-sys-color-primary` idle → `--md-sys-color-primary-dim` on `:hover` → `--md-sys-color-primary-high` on `:active`.
+- **soft** — `--md-sys-color-primary-container-low` idle → `--md-sys-color-primary-container` on `:hover` → `--md-sys-color-primary-container-high` on `:active`.
+- **ghost** — `transparent` idle, gaining a low container wash on `:hover`/`:active` (`--md-sys-color-primary-container-low` → `--md-sys-color-primary-container`).
 
 Keyboard focus draws the **shared focus ring** — a `:focus-visible` `outline` from the fleet-wide
-`--c-focus-ring` role (ADR-0009): keyboard-only (no ring on a mouse click), identical across every control, and
+`--md-sys-color-focus-ring` role (ADR-0009): keyboard-only (no ring on a mouse click), identical across every control, and
 layout-neutral (`outline` paints outside the box, so the geometry law is untouched). `disabled` holds at idle —
 `pointer-events: none` means `:hover`/`:active` never match, and a disabled host is out of the tab order, so the
 focus ring never lifts on it either.
@@ -175,7 +175,7 @@ is **layout only** — express any popup/disclosure meaning as ARIA on the host 
   `disabled` prop is set and clears it (`null`) otherwise (ADR-0010). It is an AX state on `internals`, never a
   host `aria-disabled` attribute, and not a native form `disabled` (`ui-button` is not form-associated, so it
   has no platform disabled state).
-- **Keyboard focus shows a ring** — a `:focus-visible` `outline` from the shared `--c-focus-ring` role
+- **Keyboard focus shows a ring** — a `:focus-visible` `outline` from the shared `--md-sys-color-focus-ring` role
   (ADR-0009): identical across the fleet, keyboard-only, and layout-neutral.
 - A `forced-colors` block preserves the ink and border so the label and outline survive high-contrast modes;
-  the focus ring's `--c-focus-ring → Highlight` mapping keeps the ring visible there too.
+  the focus ring's `--md-sys-color-focus-ring → Highlight` mapping keeps the ring visible there too.

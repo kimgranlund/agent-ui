@@ -32,7 +32,7 @@
 - **Import `_page.ts` first, always.** It performs the load-bearing foundation cascade (ADR-0003) and
   stamps the shared chrome. A page that imports a control before the shell breaks the token cascade order.
 - **Own only the page scaffold.** Page CSS styles layout chrome (`permutations.css`, `states.css`) and
-  consumes `--c-{family}-{role}` roles. Geometry, colour, ARIA, and interaction states are the control's.
+  consumes `--md-sys-color-{family}-{role}` roles. Geometry, colour, ARIA, and interaction states are the control's.
 - **Build matrices programmatically.** Loop the enum arrays so completeness is provable from structure
   (`|sizes| × |variants| × |cols|`), and the matrix grows with the descriptor.
 - **Flag the genuinely hand-authored.** When a fact has no parse to derive from (a markup *shape*, a

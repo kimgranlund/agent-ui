@@ -113,11 +113,11 @@ describe('ui-button states — per-variant :hover repaint (ADR-0008, both engine
 //  [2] RISK-1 (RESOLVED) — the per-scheme solid idle→hover→active ladder is three distinct steps
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 //
-// The tok-states amendment (ADR-0008's foreseen path) gave the solid fill DEDICATED --c-primary-hover/
-// -active roles instead of the --c-primary-dim/-high pairing. Source now: solid `-bg-hover`=
-// `--c-primary-hover`, `-bg-active`=`--c-primary-active`. They resolve to a real three-step ladder in BOTH
+// The tok-states amendment (ADR-0008's foreseen path) gave the solid fill DEDICATED --md-sys-color-primary-hover/
+// -active roles instead of the --md-sys-color-primary-dim/-high pairing. Source now: solid `-bg-hover`=
+// `--md-sys-color-primary-hover`, `-bg-active`=`--md-sys-color-primary-active`. They resolve to a real three-step ladder in BOTH
 // schemes — LIGHT 550 → 650 → 750, DARK 450 → 400 → 350 — so idle ≠ hover ≠ active everywhere. The earlier
-// collapse (LIGHT hover==active, both light-dark()-ing onto --c-primary-650) is GONE. This probe resolves the
+// collapse (LIGHT hover==active, both light-dark()-ing onto --md-sys-color-primary-650) is GONE. This probe resolves the
 // chain per scheme and proves the full three-step ladder empirically in BOTH engines (the REALIZE leg of
 // ADR-0008): a pressed solid button now reads distinct from a hovered one in light too.
 //
@@ -145,11 +145,11 @@ describe('ui-button states — RISK-1 solid idle→hover→active ladder per col
     // both states lift off idle (550 → 650 / 750) — the control reacts in light.
     expect(hover, 'light idle did not lift on hover').not.toBe(idle)
     expect(active, 'light idle did not lift on active').not.toBe(idle)
-    // …and hover ≠ active now: the dedicated --c-primary-hover/-active roles (650 vs 750) split the former
-    // --c-primary-650 collapse, so a pressed solid button reads distinct from a hovered one in LIGHT too. This
+    // …and hover ≠ active now: the dedicated --md-sys-color-primary-hover/-active roles (650 vs 750) split the former
+    // --md-sys-color-primary-650 collapse, so a pressed solid button reads distinct from a hovered one in LIGHT too. This
     // is the flipped RISK-1 tripwire (was the KNOWN escalation; the tok-states ladder resolved it) — if a
     // regression re-collapses these onto one step, this assertion fails RED.
-    expect(hover, 'light solid hover==active — the RISK-1 --c-primary-650 collapse has regressed').not.toBe(active)
+    expect(hover, 'light solid hover==active — the RISK-1 --md-sys-color-primary-650 collapse has regressed').not.toBe(active)
   })
 })
 
@@ -163,7 +163,7 @@ const ringDrawn = (el: HTMLElement): boolean => {
 }
 
 describe('ui-button focus ring (ADR-0009, both engines)', () => {
-  it('KEYBOARD focus (Tab) draws the --c-focus-ring outline; the geometry is layout-NEUTRAL', async () => {
+  it('KEYBOARD focus (Tab) draws the --md-sys-color-focus-ring outline; the geometry is layout-NEUTRAL', async () => {
     const { btn } = mount('<ui-button>Label</ui-button>') // tabbable trait → tabindex=0 on connect
     const beforeH = frameHeight(btn)
     const beforeW = btn.getBoundingClientRect().width
@@ -208,7 +208,7 @@ describe('ui-button focus ring (ADR-0009, both engines)', () => {
     await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
     try {
       expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
-      // the ring SURVIVES forced-colors: `--c-focus-ring → Highlight` keeps a visible outline (the WHCM ring is
+      // the ring SURVIVES forced-colors: `--md-sys-color-focus-ring → Highlight` keeps a visible outline (the WHCM ring is
       // free — the outline still paints, resolved to the system focus colour). WebKit's rounded-outline-on-pill
       // caveat is out of scope — a VISIBLE ring is the requirement, not perfect pill rounding.
       expect(ringDrawn(btn), 'the focus ring vanished under forced-colors').toBe(true)

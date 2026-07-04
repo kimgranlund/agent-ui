@@ -27,7 +27,7 @@ const whereBlock = (marker: string): string => {
 // control draws the identical ring / uses the identical timing): the shared focus ring (ADR-0009) + the shared
 // state-transition motion (interaction-states standard). Everything else in @scope must be the own chain.
 const sharedFleet = new Set([
-  '--c-focus-ring',
+  '--md-sys-color-focus-ring',
   '--ui-focus-ring-width',
   '--ui-focus-ring-offset',
   '--ui-motion-fast',
@@ -55,7 +55,7 @@ describe('text-field.css — structure + sectioning (s9)', () => {
     for (const slot of ['border', 'bg', 'ink', 'placeholder', 'height', 'font', 'gap', 'icon']) {
       expect(tokenBlock).toMatch(new RegExp(`--ui-text-field-${slot}:`))
     }
-    expect(tokenBlock).toContain('var(--c-neutral') // the field-frame roles (family = neutral)
+    expect(tokenBlock).toContain('var(--md-sys-color-neutral') // the field-frame roles (family = neutral)
     expect(tokenBlock).toContain('var(--ui-height-md)') // the dimensional ramp
   })
 
@@ -77,23 +77,23 @@ describe('text-field.css — structure + sectioning (s9)', () => {
 describe('text-field.css — the SOLID border-channel ladder (ADR-0014 cl.2c)', () => {
   it('declares the full border ladder from the PINNED roles: idle/hover/focus/invalid/invalid+hover', () => {
     const b = whereBlock(':where(ui-text-field) {')
-    expect(b).toMatch(/--ui-text-field-border:\s*var\(--c-neutral\)/) // idle
-    expect(b).toMatch(/--ui-text-field-border-hover:\s*var\(--c-neutral-high\)/) // hover
+    expect(b).toMatch(/--ui-text-field-border:\s*var\(--md-sys-color-neutral\)/) // idle
+    expect(b).toMatch(/--ui-text-field-border-hover:\s*var\(--md-sys-color-neutral-high\)/) // hover
     expect(b).toMatch(/--ui-text-field-border-focus:\s*transparent/) // focus = transparent (the outline ring is the sole indicator; ADR-0014 dev#1)
-    expect(b).toMatch(/--ui-text-field-border-invalid:\s*var\(--c-danger\)/) // user-invalid
-    expect(b).toMatch(/--ui-text-field-border-invalid-hover:\s*var\(--c-danger-high\)/) // invalid + hover
+    expect(b).toMatch(/--ui-text-field-border-invalid:\s*var\(--md-sys-color-danger\)/) // user-invalid
+    expect(b).toMatch(/--ui-text-field-border-invalid-hover:\s*var\(--md-sys-color-danger-high\)/) // invalid + hover
   })
 
   it('the field surface roles: bg=surface · ink=on-surface · placeholder=on-surface-variant', () => {
     const b = whereBlock(':where(ui-text-field) {')
-    expect(b).toMatch(/--ui-text-field-bg:\s*var\(--c-neutral-surface\)/)
-    expect(b).toMatch(/--ui-text-field-ink:\s*var\(--c-neutral-on-surface\)/)
-    expect(b).toMatch(/--ui-text-field-placeholder:\s*var\(--c-neutral-on-surface-variant\)/)
+    expect(b).toMatch(/--ui-text-field-bg:\s*var\(--md-sys-color-neutral-surface\)/)
+    expect(b).toMatch(/--ui-text-field-ink:\s*var\(--md-sys-color-neutral-on-surface\)/)
+    expect(b).toMatch(/--ui-text-field-placeholder:\s*var\(--md-sys-color-neutral-on-surface-variant\)/)
   })
 
   it('the ladder is SOLID role steps — NEVER a color-mix, NEVER a soft-alpha primitive', () => {
     expect(css).not.toContain('color-mix(') // a mix ratio is a component colour opinion (ADR-0008/0014)
-    // no alpha primitive (`--c-*-500-NNN`) and no scrim role leaks into the border channel — SOLID only.
+    // no alpha primitive (`--md-sys-color-*-500-NNN`) and no scrim role leaks into the border channel — SOLID only.
     const borderDecls = [...tokenBlock.matchAll(/--ui-text-field-border[\w-]*:\s*([^;]+);/g)].map((m) => m[1] as string)
     expect(borderDecls.length).toBeGreaterThan(0) // anti-vacuous: the border tokens were actually found
     for (const decl of borderDecls) {
@@ -116,9 +116,9 @@ describe('text-field.css — disabled is a role REPOINT, not opacity', () => {
   it('repoints bg/ink/border to the muted neutral roles, matching BOTH [disabled] and :state(disabled)', () => {
     const b = whereBlock(":where(ui-text-field:is([disabled], :state(disabled)))")
     expect(b.length).toBeGreaterThan(0) // the disabled repoint block exists
-    expect(b).toMatch(/--ui-text-field-bg:\s*var\(--c-neutral-surface-high\)/)
-    expect(b).toMatch(/--ui-text-field-ink:\s*var\(--c-neutral-on-surface-variant\)/)
-    expect(b).toMatch(/--ui-text-field-border:\s*var\(--c-neutral-outline-variant\)/) // the faint disabled frame
+    expect(b).toMatch(/--ui-text-field-bg:\s*var\(--md-sys-color-neutral-surface-high\)/)
+    expect(b).toMatch(/--ui-text-field-ink:\s*var\(--md-sys-color-neutral-on-surface-variant\)/)
+    expect(b).toMatch(/--ui-text-field-border:\s*var\(--md-sys-color-neutral-outline-variant\)/) // the faint disabled frame
   })
 
   it('NEVER opacity — the muted look is a token repoint (the disabled host is also pointer-inert)', () => {
@@ -135,7 +135,7 @@ describe('text-field.css — disabled is a role REPOINT, not opacity', () => {
 // ── @scope token hygiene — consume ONLY --ui-text-field-* (+ the fleet exception) ────────────────────────
 describe('text-field.css — @scope token hygiene (s9)', () => {
   it('@scope CONSUMES only --ui-text-field-* for its own tokens (+ the shared focus-ring/motion fleet tokens)', () => {
-    // no raw --c-* primitive ref and no role read in @scope (other than the whitelisted fleet focus ring); the
+    // no raw --md-sys-color-* primitive ref and no role read in @scope (other than the whitelisted fleet focus ring); the
     // component otherwise reads only its own --ui-text-field-* chain.
     expect(foreignScopeRefs(stylesBlock)).toEqual([])
     // anti-vacuous: the fleet tokens ARE consumed (the focus ring + the motion timing), so the whitelist is live.
@@ -144,10 +144,10 @@ describe('text-field.css — @scope token hygiene (s9)', () => {
     expect(allRefs.some((v) => /^--ui-text-field-/.test(v))).toBe(true)
   })
 
-  it('NEGATIVE control: a planted raw-primitive --c-* ref in @scope is CAUGHT by the hygiene predicate', () => {
+  it('NEGATIVE control: a planted raw-primitive --md-sys-color-* ref in @scope is CAUGHT by the hygiene predicate', () => {
     // a role read directly in the styles block (instead of through the component chain) MUST be flagged.
-    const planted = '@scope (ui-text-field) { :scope:hover { border-color: var(--c-neutral-high); } }'
-    expect(foreignScopeRefs(planted)).toEqual(['--c-neutral-high'])
+    const planted = '@scope (ui-text-field) { :scope:hover { border-color: var(--md-sys-color-neutral-high); } }'
+    expect(foreignScopeRefs(planted)).toEqual(['--md-sys-color-neutral-high'])
   })
 })
 
@@ -161,7 +161,7 @@ describe('text-field.css — the :focus-within ring-only focus, transparent bord
     // in the token-block ladder test), so the ring is the sole indicator and there is no second blue frame.
     expect(rule).toMatch(/border-color:\s*var\(--ui-text-field-border-focus\)/)
     // the SOLE focus indicator — the shared outline ring, read DIRECTLY from the fleet tokens
-    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--c-focus-ring\)/)
+    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
     expect(rule).toMatch(/outline-offset:\s*var\(--ui-focus-ring-offset\)/)
   })
 
@@ -328,7 +328,7 @@ describe('text-field.css — Wave-5A numeric adornment rules (ADR-0047 CSS struc
 
   it('@scope hygiene still passes with all Wave-5A rules (no foreign refs introduced)', () => {
     // The Wave-5A suffix and numeric rules use only --ui-text-field-* own-chain tokens.
-    // This is the regression guard: if a refactor accidentally introduces a raw --c-* ref in the
+    // This is the regression guard: if a refactor accidentally introduces a raw --md-sys-color-* ref in the
     // suffix or numeric rules, the hygiene predicate catches it immediately.
     expect(foreignScopeRefs(stylesBlock)).toEqual([])
   })
@@ -342,7 +342,7 @@ describe('text-field.css — Wave-5A numeric adornment rules (ADR-0047 CSS struc
 describe('text-field.css — visible message node (ADR-0029 A1, extends ADR-0014)', () => {
   it('declares the --ui-text-field-message-font and --ui-text-field-message-ink tokens in the :where() block', () => {
     expect(tokenBlock).toMatch(/--ui-text-field-message-font:\s*var\(--ui-font-sm\)/)
-    expect(tokenBlock).toMatch(/--ui-text-field-message-ink:\s*var\(--c-danger-on-surface-variant\)/) // AA-gated danger TEXT ink (2026-07-02 audit item 1; bare --c-danger is 4.05:1 light, an AA text fail)
+    expect(tokenBlock).toMatch(/--ui-text-field-message-ink:\s*var\(--md-sys-color-danger-on-surface-variant\)/) // AA-gated danger TEXT ink (2026-07-02 audit item 1; bare --md-sys-color-danger is 4.05:1 light, an AA text fail)
   })
 
   it('the @scope :state(user-invalid) > .ui-text-field-message rule gives it display:block + danger-text treatment', () => {

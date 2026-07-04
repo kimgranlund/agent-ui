@@ -1,7 +1,7 @@
 /* a2ui-patterns.css — PAGE-LOCAL layout chrome for the A2UI patterns page. Styles the stacked pattern
  * demos, the two-pane [payload | live surface] grid, the live-surface frame, the two-line pedagogy block,
  * the round-trip message log, and the P2 destructive-tone note ONLY. The rendered ui-* controls keep their
- * own {name}.css — this page never restyles a ui-* control. Colours are `--c-*` roles declared by the
+ * own {name}.css — this page never restyles a ui-* control. Colours are `--md-sys-color-*` roles declared by the
  * foundation barrels (imported first via _page.ts), so the page tracks light/dark; spacing rides the
  * `--ui-space-*` ramp. Tokens-only — no raw-literal colours (matching a2ui-list.css / _page.css). */
 
@@ -30,15 +30,15 @@
   inline-size: 1.6rem;
   block-size: 1.6rem;
   border-radius: 50%;
-  background: var(--c-primary);
-  color: var(--c-primary-on-primary); /* the canonical ink for a --c-primary fill (button.css) */
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-primary-on-primary); /* the canonical ink for a --md-sys-color-primary fill (button.css) */
   font-size: 0.85rem;
   font-weight: 700;
 }
 
 .demo-blurb {
   margin: 0 0 0.75rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.9rem;
   line-height: 1.55;
 }
@@ -47,8 +47,8 @@
 .demo-teach {
   margin: 0 0 1rem;
   padding-inline-start: 0.75rem;
-  border-inline-start: 2px solid var(--c-primary);
-  color: var(--c-neutral-on-surface-variant);
+  border-inline-start: 2px solid var(--md-sys-color-primary);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.85rem;
   line-height: 1.5;
 }
@@ -62,7 +62,7 @@
 }
 
 .demo-teach b {
-  color: var(--c-neutral-on-surface);
+  color: var(--md-sys-color-neutral-on-surface);
   font-weight: 650;
 }
 
@@ -94,7 +94,7 @@
 
 .code-figure > figcaption {
   margin-block-end: 0.3rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.78rem;
   font-weight: 600;
 }
@@ -109,27 +109,27 @@
 
 .surface {
   padding: 1.25rem;
-  border: 1px dashed var(--c-neutral-outline);
+  border: 1px dashed var(--md-sys-color-neutral-outline);
   border-radius: 8px;
-  background: var(--c-neutral-surface);
+  background: var(--md-sys-color-neutral-surface);
 }
 
 .surface:empty::before {
   content: 'No surface mounted.';
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.85rem;
 }
 
 /* ── the P2 destructive-tone note — an honest callout that the fleet ships NO danger Button tone (solid|soft|
- *    ghost only). Tinted with the `--c-danger-*` role family so the note itself stands in for the missing
+ *    ghost only). Tinted with the `--md-sys-color-danger-*` role family so the note itself stands in for the missing
  *    control tone; it styles a page annotation, never a ui-* control. ───────────────────────────────────── */
 .tone-gap {
   margin: 0;
   padding: 0.6rem 0.8rem;
-  border-inline-start: 3px solid var(--c-danger-outline-variant);
+  border-inline-start: 3px solid var(--md-sys-color-danger-outline-variant);
   border-radius: 6px;
-  background: var(--c-danger-surface);
-  color: var(--c-danger-on-surface);
+  background: var(--md-sys-color-danger-surface);
+  color: var(--md-sys-color-danger-on-surface);
   font-size: 0.82rem;
   line-height: 1.5;
 }
@@ -137,7 +137,7 @@
 /* ── the interactive demo's round-trip log ────────────────────────────────────────────────────────────────── */
 .demo-hint {
   margin: 0;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.82rem;
   line-height: 1.5;
 }
@@ -151,7 +151,7 @@
 .msg-log:empty::before {
   content: 'No messages yet — interact with the surface above.';
   display: block;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.82rem;
   line-height: 1.5;
 }
@@ -173,9 +173,9 @@
 }
 
 .msg-log > li[data-kind='action'] .msg-head {
-  color: var(--c-primary);
+  color: var(--md-sys-color-primary);
 }
 
 .msg-log > li[data-kind='error'] .msg-head {
-  color: var(--c-danger);
+  color: var(--md-sys-color-danger);
 }

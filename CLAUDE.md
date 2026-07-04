@@ -39,7 +39,7 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
 - Vite 8 is Rolldown-based (not esbuild/Rollup) — bundler/plugin behaviour follows Rolldown-Vite.
 - Imports point inward only: layers `reactive` ← `dom` ← `traits`/`controls`; cross-package, only
   `components` → `@agent-ui/shared`. Nothing imports upward. (Enforced by the import-layering trip-wire.)
-- Naming: tags `ui-{name}`, classes `UI{Name}Element`, tokens `--ui-{name}-*` / roles `--c-{family}-{role}`;
+- Naming: tags `ui-{name}`, classes `UI{Name}Element`, tokens `--ui-{name}-*` / roles `--md-sys-color-{family}-{role}`;
   event names ∈ `change · input · select · open · close · toggle`.
 - Components are light-DOM by default; ARIA via `ElementInternals`, never host attributes; no native form elements.
 - Props are typed signals via `static props` + `ReactiveProps<typeof props>` (plan §5).

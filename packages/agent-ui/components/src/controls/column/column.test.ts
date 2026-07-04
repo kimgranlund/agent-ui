@@ -26,18 +26,24 @@ describe('UIColumnElement (s4)', () => {
     // surfaceProps defaults (the neutral base) + flexProps defaults (the A2UI grammar defaults)
     expect([el.elevation, el.brightness]).toEqual(['0', '0'])
     // ADR-0030: align default changed from 'start' to 'stretch' (cross-axis direction-appropriate override)
-    expect([el.align, el.justify, el.gap, el.wrap]).toEqual(['stretch', 'start', 'none', false])
+    // stretch (the column-local sizing opt-in) defaults OFF — a column shrink-wraps to content until asked to fill
+    expect([el.align, el.justify, el.gap, el.wrap, el.stretch]).toEqual(['stretch', 'start', 'none', false, false])
     el.remove()
   })
 
   it('column-props-typed: the flex/surface props are literal unions / boolean (compile-time)', () => {
     const fn = (): void => {
       const el = new UIColumnElement()
-      el.align = 'center'
+      el.align = 'end'
       el.justify = 'between'
       el.gap = '2xl'
       el.elevation = '2'
       el.wrap = true
+      el.stretch = true // the column-local boolean sizing opt-in
+      // @ts-expect-error — stretch is boolean, not string
+      el.stretch = 'yes'
+      // @ts-expect-error — 'center' is NOT allowed on ui-column (Kim's directive narrowed the enum — center removed)
+      el.align = 'center'
       // @ts-expect-error — 'middle' is not an align member: proves the literal union, NOT string
       el.align = 'middle'
       // @ts-expect-error — a bare string is wider than the union
@@ -62,11 +68,11 @@ describe('UIColumnElement (s4)', () => {
   it('column-reflect: align/justify/gap reflect their value; wrap reflects boolean presence (the CSS hooks)', () => {
     const el = new UIColumnElement()
     document.body.append(el)
-    el.align = 'center'
+    el.align = 'end'
     el.justify = 'between'
     el.gap = 'md'
     el.elevation = '2'
-    expect(el.getAttribute('align')).toBe('center') // reflects synchronously → CSS [align=center] matches
+    expect(el.getAttribute('align')).toBe('end') // reflects synchronously → CSS [align=end] matches
     expect(el.getAttribute('justify')).toBe('between')
     expect(el.getAttribute('gap')).toBe('md')
     expect(el.getAttribute('elevation')).toBe('2')
@@ -78,6 +84,21 @@ describe('UIColumnElement (s4)', () => {
     el.remove()
   })
 
+  it('column-stretch-reflect: stretch reflects boolean presence (the CSS [stretch] sizing hook)', () => {
+    const el = new UIColumnElement()
+    document.body.append(el)
+    expect(el.stretch).toBe(false) // default off
+    expect(el.hasAttribute('stretch')).toBe(false)
+    el.stretch = true
+    expect(el.hasAttribute('stretch')).toBe(true) // boolean presence → CSS :scope[stretch] matches (width: stretch)
+    el.stretch = false
+    expect(el.hasAttribute('stretch')).toBe(false) // boolean-false removes the attribute
+    // and the attribute drives the prop (jsdom can't compute the width; the fill is column.browser.test.ts)
+    el.setAttribute('stretch', '')
+    expect(el.stretch).toBe(true)
+    el.remove()
+  })
+
   it('column-snap: an out-of-range surface attribute snaps to the neutral base (enum, not number)', () => {
     const el = new UIColumnElement()
     document.body.append(el)
@@ -85,6 +106,16 @@ describe('UIColumnElement (s4)', () => {
     expect(el.elevation).toBe('3')
     el.setAttribute('elevation', '9') // out of range → enumType.from falls to values[0] = '0'
     expect(el.elevation).toBe('0')
+    el.remove()
+  })
+
+  it('column-no-center: align="center" is REJECTED — the narrowed enum snaps it to the stretch base (Kim directive)', () => {
+    const el = new UIColumnElement()
+    document.body.append(el)
+    el.setAttribute('align', 'center') // center is NOT a ui-column align value (removed from the enum)
+    expect(el.align).toBe('stretch') // enumType.from('center') ∉ values → snaps to values[0] = 'stretch'
+    el.setAttribute('align', 'end') // a valid value still coerces normally
+    expect(el.align).toBe('end')
     el.remove()
   })
 

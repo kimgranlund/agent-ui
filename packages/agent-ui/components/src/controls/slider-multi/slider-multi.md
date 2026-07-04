@@ -132,7 +132,7 @@ geometry:
   thumbSize: calc(--ui-slider-multi-box - 4px)    # box − 2×--ui-widget-inset (ADR-0041 cl.3: 2px-inset law)
   boxRamp: --ui-compact-{size}           # 14/16/18 px at ui-md scale for sm/md/lg (ADR-0041 clause 2)
 
-forcedColors: A `@media (forced-colors: active)` block maps the rail to a Canvas fill + ButtonText border; the fill to Highlight; the thumbs to ButtonFace + ButtonText border. forced-color-adjust:none on all three elements preserves the explicit system-colour assignments so the browser cannot re-override them. The :focus-visible ring resolves to Highlight via --c-focus-ring from the token layer (ADR-0009).
+forcedColors: A `@media (forced-colors: active)` block maps the rail to a Canvas fill + ButtonText border; the fill to Highlight; the thumbs to ButtonFace + ButtonText border. forced-color-adjust:none on all three elements preserves the explicit system-colour assignments so the browser cannot re-override them. The :focus-visible ring resolves to Highlight via --md-sys-color-focus-ring from the token layer (ADR-0009).
 ---
 
 # ui-slider-multi

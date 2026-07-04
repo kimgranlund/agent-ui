@@ -2,7 +2,7 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-field)` (specificity 0,0,0) declares the `--ui-field-*` chain: a single
  *       density-bearing spacing token (`--ui-field-gap`, off `--ui-space-xs` — the label↔control↔description
- *       rhythm) plus the three part inks/fonts (label / description / error), each a ROLE (`--c-{family}-{role}`)
+ *       rhythm) plus the three part inks/fonts (label / description / error), each a ROLE (`--md-sys-color-{family}-{role}`)
  *       or a font-ramp read (`--ui-font-*`) — never a `color-mix` (colour opinions live in the token layer). The
  *       error ink/font MATCH text-field's own message tokens (`--ui-text-field-message-*`) — one visual voice for
  *       the ONE error, whichever control renders it. `:has([disabled])` on the slotted control REPOINTS the
@@ -34,17 +34,17 @@
   --ui-field-gap: var(--ui-space-xs);
 
   /* Label — the field's own name text, above/beside the slotted control. */
-  --ui-field-label-ink: var(--c-neutral-on-surface);
+  --ui-field-label-ink: var(--md-sys-color-neutral-on-surface);
   --ui-field-label-font: var(--ui-font-md);
   --ui-field-label-weight: 500;
 
   /* Description — the muted helper text under the control. */
-  --ui-field-description-ink: var(--c-neutral-on-surface-variant);
+  --ui-field-description-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-field-description-font: var(--ui-font-sm);
 
   /* Error — matches text-field's own message voice (--ui-text-field-message-*): one visual voice for
      the ONE error, whichever control renders it. */
-  --ui-field-error-ink: var(--c-danger-on-surface-variant); /* danger TEXT ink — AA-gated on-surface (8.48:1 light / 8.91:1 dark). Bare --c-danger is 4.05:1 light = an AA text FAIL; only the TEXT ink moves (any danger BORDER channel stays --c-danger, the 3:1 UI bar). 2026-07-02 color audit item 1. */
+  --ui-field-error-ink: var(--md-sys-color-danger-on-surface-variant); /* danger TEXT ink — AA-gated on-surface (8.48:1 light / 8.91:1 dark). Bare --md-sys-color-danger is 4.05:1 light = an AA text FAIL; only the TEXT ink moves (any danger BORDER channel stays --md-sys-color-danger, the 3:1 UI bar). 2026-07-02 color audit item 1. */
   --ui-field-error-font: var(--ui-font-sm);
 }
 
@@ -53,8 +53,8 @@
    :where() holds this at specificity 0 so it wins the cascade by declaration order alone, the same pattern
    as text-field's/checkbox's own [disabled] repoint block. */
 :where(ui-field:has([disabled])) {
-  --ui-field-label-ink: var(--c-neutral-on-surface-variant);
-  --ui-field-description-ink: var(--c-neutral-on-surface-variant);
+  --ui-field-label-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-field-description-ink: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-field) consumes ONLY --ui-field-* ════════════════ */
@@ -119,7 +119,7 @@
 
   /* Forced colors (WHCM) — label/description/error stay CanvasText (real text content, not decorative
      glyphs — no forced-color-adjust:none). The error remains distinguishable by PRESENCE, not colour
-     alone (WCAG 1.4.1 — the text IS the cue; --c-danger already degrades to CanvasText's fleet mapping
+     alone (WCAG 1.4.1 — the text IS the cue; --md-sys-color-danger already degrades to CanvasText's fleet mapping
      via the token layer, this rule documents the intent rather than overriding a colour that survives). */
   @media (forced-colors: active) {
     :scope [data-part='label'],

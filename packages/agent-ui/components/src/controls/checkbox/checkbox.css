@@ -1,7 +1,7 @@
 /* checkbox.css — ui-checkbox, the Indicator-class widget stylesheet (decomp S1 · ADR-0041 · ADR-0042).
  *
  *   [1] TOKEN BLOCK  — `:where(ui-checkbox)` (specificity 0,0,0) declares the --ui-checkbox-* chain from
- *       the colour roles (--c-{family}-{role}) and the widget-box ramp (--ui-compact-{size}, ADR-0041).
+ *       the colour roles (--md-sys-color-{family}-{role}) and the widget-box ramp (--ui-compact-{size}, ADR-0041).
  *       [size] repoints the box to the correct compact tier; [disabled] mutes to neutral roles.
  *   [2] STYLES BLOCK — `@scope (ui-checkbox)` consumes ONLY --ui-checkbox-*. The host is inline-flex
  *       (box + optional label text). ::before paints the square widget box (2px border + background fill).
@@ -9,7 +9,7 @@
  *       column so it centers on the box regardless of label-text height. :state(checked)/:state(indeterminate)
  *       drive the visual states; :focus-visible draws the shared fleet ring (ADR-0009); forced-colors maps to
  *       Highlight/HighlightText so the glyph always survives (CanvasText ink on Highlight fill; ADR-0009 ring
- *       free via --c-focus-ring → Highlight from the token layer).
+ *       free via --md-sys-color-focus-ring → Highlight from the token layer).
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel (decomp s14); NEVER injected
  * from checkbox.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -22,13 +22,13 @@
   --ui-checkbox-box: var(--ui-compact-md);
 
   /* Colour channel: unchecked = neutral border on transparent; checked/indeterminate = primary fill + ink.
-     The border-color and bg-checked ride the same --c-primary ladder step as button.css's solid variant
+     The border-color and bg-checked ride the same --md-sys-color-primary ladder step as button.css's solid variant
      (the design-system's primary fill); the ink is the on-primary pair for readability (WCAG AA). */
   --ui-checkbox-bg: transparent;
-  --ui-checkbox-border: var(--c-neutral-high);
-  --ui-checkbox-bg-checked: var(--c-primary);
-  --ui-checkbox-border-checked: var(--c-primary);
-  --ui-checkbox-ink: var(--c-primary-on-primary); /* checkmark / indeterminate-dash fill */
+  --ui-checkbox-border: var(--md-sys-color-neutral-high);
+  --ui-checkbox-bg-checked: var(--md-sys-color-primary);
+  --ui-checkbox-border-checked: var(--md-sys-color-primary);
+  --ui-checkbox-ink: var(--md-sys-color-primary-on-primary); /* checkmark / indeterminate-dash fill */
 
   /* Label gap — the rhythm between the box and the optional label text (density-bearing, via --ui-gap-md). */
   --ui-checkbox-gap: var(--ui-gap-md);
@@ -47,10 +47,10 @@
 /* [disabled] → mute the border + fill to neutral roles. The state holds at idle: pointer-events:none (below)
    prevents :hover from ever matching, so no path can lift the muted tokens. */
 :where(ui-checkbox[disabled]) {
-  --ui-checkbox-border: var(--c-neutral-surface-high);
-  --ui-checkbox-bg-checked: var(--c-neutral-surface-high);
-  --ui-checkbox-border-checked: var(--c-neutral-surface-high);
-  --ui-checkbox-ink: var(--c-neutral-on-surface-variant);
+  --ui-checkbox-border: var(--md-sys-color-neutral-surface-high);
+  --ui-checkbox-bg-checked: var(--md-sys-color-neutral-surface-high);
+  --ui-checkbox-border-checked: var(--md-sys-color-neutral-surface-high);
+  --ui-checkbox-ink: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-checkbox) consumes ONLY --ui-checkbox-* ════════════════ */
@@ -133,9 +133,9 @@
 
   /* Focus ring (ADR-0009) — the shared fleet ring: :focus-visible (keyboard-only) draws a layout-neutral
      outline on the host. This encircles the whole control (box + label), the fleet standard. The ring
-     reads the fleet-wide --c-focus-ring / --ui-focus-ring-* tokens (never a per-control repoint). */
+     reads the fleet-wide --md-sys-color-focus-ring / --ui-focus-ring-* tokens (never a per-control repoint). */
   :scope:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--ui-focus-ring-offset);
   }
 
@@ -157,7 +157,7 @@
      Unchecked: ButtonText border on ButtonFace. Checked/indeterminate: Highlight fill with HighlightText
      glyph (the system accent + its reading-pair, WCAG AA guaranteed by the OS). forced-color-adjust:none
      preserves our explicit system-colour mappings so the browser does not re-override them. The :focus-visible
-     ring is free: --c-focus-ring carries the token layer's Highlight mapping (ADR-0009) — no per-control rule. */
+     ring is free: --md-sys-color-focus-ring carries the token layer's Highlight mapping (ADR-0009) — no per-control rule. */
   @media (forced-colors: active) {
     :scope::before {
       border-color: ButtonText;

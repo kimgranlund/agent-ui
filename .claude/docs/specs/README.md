@@ -21,11 +21,13 @@ One fact, one home: lower documents reference upper IDs, they never restate them
 | `specs/a2ui-streaming-pipeline.spec.md` | SPEC | streaming pipelines, JSONL, MCP transport | PRD-G1, G7 · D2 | ✅ drafted v0.1 (gate-clean) |
 | `specs/a2ui-expert-harness.spec.md` | SPEC | authoring agents + skills + rubrics + gates | PRD-G3, G4 | ✅ drafted v0.1 (gate-clean) |
 | `specs/a2ui-training-corpus.spec.md` | SPEC | **flagship** corpus: format→eval | PRD-G5 · D1 | ✅ drafted v0.1 (gate-clean) |
+| `specs/a2ui-live-agent.spec.md` | SPEC | the live-agent example: real LLM → validated stream → render → round-trip; the transport seam + deterministic backbone + security posture (VITE_ build-key-safety) + the model-provider seam | PRD-G1, G7 (realizes pipeline R2 + harness R6) | 🟡 proposed v0.1 (gate-clean; ADR-0069–0073 proposed) |
 | `llds/a2ui-renderer.lld.md` | LLD | zero-dep renderer internals (+ shared `validate.ts`) | (a2ui-runtime) | ✅ drafted v0.1 (gate-clean) |
 | `llds/a2ui-catalog.lld.md` | LLD | default-catalog mapping + `catalog.json` schema + registry + validators | (a2ui-catalog) | ✅ drafted v0.1 (gate-clean) |
 | `llds/a2ui-streaming-pipeline.lld.md` | LLD | JSONL codec + transports (stdio/AG-UI/A2A) + MCP serving | (a2ui-streaming-pipeline) | ✅ drafted v0.1 (gate-clean) |
 | `llds/a2ui-corpus-store.lld.md` | LLD | corpus storage, dedup, versioning, repair | (a2ui-training-corpus) | ✅ drafted v0.1 (gate-clean) |
 | `llds/a2ui-harness-wiring.lld.md` | LLD | agent/skill/rubric/gate orchestration | (a2ui-expert-harness) | ✅ drafted v0.1 (gate-clean) |
+| `llds/a2ui-live-agent.lld.md` | LLD | live-agent module map (site/tools, zero package additions) + backbone contract + round-trip state machine; realizes pipeline LLD-C2 `produce()` | (a2ui-live-agent) | 🟡 proposed v0.1 skeleton (gate-clean) |
 
 ## Traceability matrix
 

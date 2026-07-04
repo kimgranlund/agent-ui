@@ -80,7 +80,7 @@ const surfaceSection = document.createElement('section')
 surfaceSection.append(heading(2, 'Surface — elevation (the scheme-inverting plane)'))
 const surfaceProse = document.createElement('p')
 surfaceProse.textContent =
-  'elevation selects the surface plane (the scheme-inverting --c-neutral-surface ladder; 0 = the neutral base). ' +
+  'elevation selects the surface plane (the scheme-inverting --md-sys-color-neutral-surface ladder; 0 = the neutral base). ' +
   'brightness is its scheme-consistent tonal sibling. The plane paints once in the shared container.css seam.'
 surfaceSection.append(surfaceProse)
 const surfaceGrid = document.createElement('div')

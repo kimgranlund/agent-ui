@@ -1,12 +1,12 @@
 /* _page.css — the SHARED app shell for every /site page. Imported by _page.ts, so it loads on every page
- * (after the foundation barrels, so it reads the `--c-*` colour roles and tracks light/dark via their
+ * (after the foundation barrels, so it reads the `--md-sys-color-*` colour roles and tracks light/dark via their
  * light-dark()). It styles ONLY the shared shell: the outer nav-rail / context frame, the per-page sticky
  * header/footer, the nav, and a coherent body base. Per-page CSS (permutations.css / states.css / landing.css)
  * still imports AFTER this and owns the `[data-page-content]` INNER layout — this file never restyles a ui-*
  * control.
  *
  * CSS-ONLY app shell (no `ui-*` components) — see the SHELL NOTE in _page.ts: a deliberate placeholder, to be
- * rebuilt to dogfood an app-shell component family once one ships. Every colour is a `--c-*` role (no raw
+ * rebuilt to dogfood an app-shell component family once one ships. Every colour is a `--md-sys-color-*` role (no raw
  * literals); every gutter a token where the ramp has one. */
 
 body {
@@ -16,8 +16,8 @@ body {
      Multi-line prose (the rendered <article>: paragraphs, lists) reads at 1.5; headings and other contexts that
      want tighter leading set their own and win by specificity. Without this the body inherited the UA ~1.2. */
   line-height: var(--ui-type-body-leading);
-  color: var(--c-neutral-on-surface);
-  background: var(--c-neutral-surface);
+  color: var(--md-sys-color-neutral-on-surface);
+  background: var(--md-sys-color-neutral-surface);
 }
 
 /* ── the outer shell grid ─────────────────────────────────────────────────────────────────────────────────
@@ -39,8 +39,8 @@ body {
   overflow-y: auto;
   scrollbar-width: none; /* hide the scrollbar — scroll stays functional (Firefox/standards) */
   min-block-size: 0; /* allow the rail to scroll inside the 100dvh grid rather than grow it */
-  background: var(--c-neutral-surface-low);
-  border-inline-end: 1px solid var(--c-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface-low);
+  border-inline-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 /* The app top-bar — right column, row 1, fixed (non-scrolling). */
@@ -53,8 +53,8 @@ body {
   gap: var(--ui-space-md);
   padding-inline: var(--ui-space-xl);
   padding-block: var(--ui-space-sm);
-  background: var(--c-neutral-surface);
-  border-block-end: 1px solid var(--c-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface);
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 .app-brand {
@@ -62,7 +62,7 @@ body {
   font-size: 1rem;
   font-weight: 650;
   letter-spacing: -0.01em;
-  color: var(--c-neutral-on-surface);
+  color: var(--md-sys-color-neutral-on-surface);
   text-decoration: none;
 }
 
@@ -76,18 +76,18 @@ body {
 
 .app-context-slot {
   padding: 0.3rem 0.7rem;
-  border: 1px solid var(--c-neutral-outline-variant);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 0.5rem;
   font-size: 0.8rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* The app footer — right column, row 3, fixed. The bar spans the column edge-to-edge (background + top divider). */
 .app-context-footer {
   grid-column: 2;
   grid-row: 3;
-  background: var(--c-neutral-surface-low);
-  border-block-start: 1px solid var(--c-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface-low);
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 /* Inner gutter — the footer's CONTENT is constrained to the SAME reading column as `.page-header-inner`,
@@ -100,7 +100,7 @@ body {
   display: flex;
   align-items: center;
   font-size: 0.78rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ── the page (right column, row 2) — THE scroll region ───────────────────────────────────────────────────
@@ -115,7 +115,7 @@ body {
   min-block-size: 0;
   display: flex;
   flex-direction: column;
-  background: var(--c-neutral-surface);
+  background: var(--md-sys-color-neutral-surface);
 }
 
 /* WebKit/Chromium counterpart to `scrollbar-width: none` on the two scroll containers (the nav rail + the page
@@ -144,8 +144,8 @@ body {
   top: 0;
   z-index: 1;
   flex: 0 0 auto;
-  background: var(--c-neutral-surface);
-  border-block-end: 1px solid var(--c-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface);
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 /* Inner gutter — the header bar spans the column edge-to-edge (background + border), its content constrained to
@@ -170,7 +170,7 @@ body {
   font-family: var(--ui-mono);
   font-size: 0.7rem;
   letter-spacing: 0.02em;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* The heading row carries the <h1> and (optionally) the CTA pushed to the far end. */
@@ -191,7 +191,20 @@ body {
 .page-description {
   margin: 0;
   max-inline-size: 62ch;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  line-height: 1.5;
+}
+
+/* page-lead — the page's descriptive copy relocated INTO the body (first child of the content region), for pages
+ * that keep the sticky header lean (heading only). Reads as a lead paragraph and scrolls with the content instead
+ * of pinning a tall block in the sticky header. Spans its own line so a page whose content region is a grid/flex
+ * does not seat it in a track. */
+.page-lead {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0 0 1.25rem;
+  max-inline-size: 68ch;
+  color: var(--md-sys-color-neutral-on-surface-variant);
   line-height: 1.5;
 }
 
@@ -201,8 +214,8 @@ body {
   flex: none;
   padding: 0.45rem 0.9rem;
   border-radius: 0.6rem;
-  background: var(--c-neutral-inverse-surface);
-  color: var(--c-neutral-inverse-on-surface);
+  background: var(--md-sys-color-neutral-inverse-surface);
+  color: var(--md-sys-color-neutral-inverse-on-surface);
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
@@ -235,18 +248,18 @@ body {
   padding: 0.35rem 0.1rem;
   margin-block-end: -1px; /* straddle the header's 1px divider so the active 2px underline sits ON it */
   border-block-end: 2px solid transparent;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.85rem;
   text-decoration: none;
 }
 
 .page-tabs a:hover {
-  color: var(--c-neutral-on-surface);
+  color: var(--md-sys-color-neutral-on-surface);
 }
 
 .page-tabs a[aria-current='page'] {
-  color: var(--c-neutral-on-surface);
-  border-block-end-color: var(--c-neutral-on-surface);
+  color: var(--md-sys-color-neutral-on-surface);
+  border-block-end-color: var(--md-sys-color-neutral-on-surface);
   font-weight: 600;
 }
 
@@ -257,8 +270,8 @@ body {
   bottom: 0;
   z-index: 1;
   flex: 0 0 auto;
-  background: var(--c-neutral-surface);
-  border-block-start: 1px solid var(--c-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface);
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 .page-footer-inner {
@@ -269,7 +282,7 @@ body {
   align-items: center;
   justify-content: space-between;
   font-size: 0.8rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ── the content column ───────────────────────────────────────────────────────────────────────────────────
@@ -295,10 +308,10 @@ body {
   padding: var(--ui-space-sm) var(--ui-space-md);
   overflow-x: auto;
   scrollbar-width: none; /* hide the bar — horizontal scroll stays functional */
-  border: 1px solid var(--c-neutral-outline-variant);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 0.5rem;
-  background: var(--c-neutral-surface-high);
-  color: var(--c-neutral-on-surface);
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
   font-family: var(--ui-mono);
   font-size: 0.8rem;
   line-height: 1.5;
@@ -323,20 +336,20 @@ body {
 /* ── inline code — the `code` chip ────────────────────────────────────────────────────────────────────────
  * The shared treatment for inline `code` in docs content: markdown backtick spans (renderMarkdownBody →
  * appendInline), API-table code cells (codeCell), and anatomy captions. A monospace CHIP: a stepped surface
- * (--c-neutral-surface-high — the same panel role .code-block uses, a contrast step from the page surface in
+ * (--md-sys-color-neutral-surface-high — the same panel role .code-block uses, a contrast step from the page surface in
  * BOTH schemes) + a hairline outline + a small radius, so a token reads as code without leaving running text.
  * `font-size: 0.85em` rides the surrounding text (mono renders larger than the sans body, so < 1em keeps it
  * from looming). `box-decoration-break: clone` keeps the border/padding/radius whole when an inline span wraps
- * across lines. Scheme (light-dark) + forced-colors safety ride the --c-* role layer, as .code-block does.
+ * across lines. Scheme (light-dark) + forced-colors safety ride the --md-sys-color-* role layer, as .code-block does.
  * The `.code-block code` reset above keeps fenced BLOCK code a plain panel. */
 code {
   font-family: var(--ui-mono);
   font-size: 0.85em;
   padding: 0.1em 0.35em;
-  border: 1px solid var(--c-neutral-outline-variant);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 0.3rem;
-  background: var(--c-neutral-surface-high);
-  color: var(--c-neutral-on-surface);
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
@@ -383,22 +396,22 @@ nav[data-site-nav] a {
   display: block;
   padding: 0.3rem 0.55rem;
   border-radius: 0.5rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.875rem;
   text-decoration: none;
 }
 
 nav[data-site-nav] a:hover {
-  background: var(--c-neutral-surface-high);
-  color: var(--c-neutral-on-surface);
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
 }
 
 /* The active entry — flagged by buildNav with aria-current (so the marker tracks the route, not a class): the
  * exact page (`page` — a site link, or a component on its landing page) OR the active SECTION (`true` — a
  * component while you are on one of its sub-pages). Both spellings light the same. */
 nav[data-site-nav] a[aria-current] {
-  background: var(--c-neutral-surface-high);
-  color: var(--c-neutral-on-surface);
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
   font-weight: 600;
 }
 
@@ -413,10 +426,10 @@ nav[data-site-nav] a[aria-current] {
   justify-content: space-between;
   gap: var(--ui-space-sm);
   padding: 0.4rem 0.7rem;
-  border: 1px solid var(--c-neutral-outline-variant);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 0.5rem;
-  background: var(--c-neutral-surface-high);
-  color: var(--c-neutral-on-surface);
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -445,7 +458,7 @@ nav[data-site-nav] a[aria-current] {
 }
 
 .site-nav-trigger:focus-visible {
-  outline: 2px solid var(--c-neutral-on-surface);
+  outline: 2px solid var(--md-sys-color-neutral-on-surface);
   outline-offset: 2px;
 }
 
@@ -479,7 +492,7 @@ nav[data-site-nav] a[aria-current] {
     grid-column: 1;
     grid-row: 2;
     border-inline-end: none;
-    border-block-end: 1px solid var(--c-neutral-outline-variant);
+    border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
     overflow-y: visible; /* not a scroll container here — the dropdown sizes to its content */
   }
 
@@ -512,10 +525,10 @@ nav[data-site-nav] a[aria-current] {
     z-index: 5;
     gap: 0.1rem;
     padding: var(--ui-space-xs);
-    border: 1px solid var(--c-neutral-outline-variant);
+    border: 1px solid var(--md-sys-color-neutral-outline-variant);
     border-radius: 0.6rem;
-    background: var(--c-neutral-surface);
-    box-shadow: 0 0.5rem 1.5rem var(--c-neutral-scrim); /* scrim role (theme-adaptive) — not a raw literal */
+    background: var(--md-sys-color-neutral-surface);
+    box-shadow: 0 0.5rem 1.5rem var(--md-sys-color-neutral-scrim); /* scrim role (theme-adaptive) — not a raw literal */
   }
 
   .app-page {

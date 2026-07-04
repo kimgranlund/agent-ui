@@ -1,6 +1,6 @@
 /* permutations.css — slice A2 page scaffold. Styles ONLY the page chrome (sections, the matrix grid, the
  * geometry-demo rows) — never ui-button internals, which own their own geometry/colour. Imported AFTER
- * _page.ts (permutations.ts), so the foundation `--c-*` colour roles are already declared and reused here for
+ * _page.ts (permutations.ts), so the foundation `--md-sys-color-*` colour roles are already declared and reused here for
  * a cohesive page surface that tracks light/dark via the roles' light-dark(). */
 
 [data-page-content] {
@@ -9,7 +9,7 @@
   gap: 2.5rem;
   margin-block: 2rem;
   font-family: system-ui, sans-serif;
-  color: var(--c-neutral-on-surface);
+  color: var(--md-sys-color-neutral-on-surface);
 }
 
 .size-group > h2,
@@ -26,21 +26,21 @@
   gap: 0.75rem 1.25rem;
   align-items: center;
   padding: 1.25rem;
-  border: 1px solid var(--c-neutral-outline-variant);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 0.75rem;
-  background: var(--c-neutral-surface-low);
+  background: var(--md-sys-color-neutral-surface-low);
 }
 
 .matrix-head,
 .matrix-rowhead {
   font-size: 0.78rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 .matrix-head {
   font-weight: 500;
   padding-block-end: 0.25rem;
-  border-block-end: 1px solid var(--c-neutral-outline-variant);
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 .matrix-rowhead {
@@ -69,7 +69,7 @@
 .geo-note {
   margin: 0 0 0.9rem;
   font-size: 0.82rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 .geo-row {
@@ -78,14 +78,14 @@
   align-items: center;
   gap: 1rem;
   padding-block: 0.6rem;
-  border-block-start: 1px solid var(--c-neutral-outline-variant);
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 .geo-label {
   margin: 0;
   font-size: 0.8rem;
   font-family: var(--ui-mono);
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* The cluster wrapper carries [scale]/[density]; lay its buttons out in a row so the geometry delta shows. */

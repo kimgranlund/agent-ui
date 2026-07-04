@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — orchestration-lead; ghost-wash + tokens.md role ladders confirmed, verified at the wave-2 cross-engine smoke; dedicated --c-{f}-hover/-active roles only if a ladder step collapses)* |
+> | **Status** | accepted *(ratified 2026-06-27 — orchestration-lead; ghost-wash + tokens.md role ladders confirmed, verified at the wave-2 cross-engine smoke; dedicated --md-sys-color-{f}-hover/-active roles only if a ladder step collapses)* |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, closing the booked G4 interactive-state deferral the wave-2 states showcase surfaced |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |
@@ -23,13 +23,13 @@ The token system already has the answer half-written. `references/tokens.md` §"
 fixes two hard constraints that any state styling **must** obey:
 
 - **No `color-mix`.** A mix ratio is a component-authored colour *opinion*; the rule is that components hold
-  *zero* colour opinions — all colour lives in the token layer as `--c-{family}-{role}` roles. So a hover/active
+  *zero* colour opinions — all colour lives in the token layer as `--md-sys-color-{family}-{role}` roles. So a hover/active
   shade cannot be synthesized in the control; it must be a **different role step**.
 - **`@scope` consumes only `--ui-{cmp}-*`.** The styles block reads the component's own chain, never a role or
   primitive directly (C8 [gate]).
 
 `tokens.md` already vetted the **role ladders** that supply state separation without a mix: the accent ladder
-(`--c-{f}` · `-dim` · `-high`) for the filled channel and the container ladder (`-container-low` · `-container`
+(`--md-sys-color-{f}` · `-dim` · `-high`) for the filled channel and the container ladder (`-container-low` · `-container`
 · `-container-high`) for the tonal channel. What it did **not** resolve is the per-variant binding for the
 shipped `solid`/`soft`/`ghost` surface (its worked example uses a forward-looking `mode`/`family` vocabulary),
 nor the `ghost` variant (transparent at idle, so it has no fill to step).
@@ -46,9 +46,9 @@ idle and adds `--ui-button-bg-hover` / `--ui-button-bg-active` from a ladder ste
 
 | variant | idle (`--ui-button-bg`) | `-hover` | `-active` | ink |
 |---|---|---|---|---|
-| **solid** (filled) | `--c-primary` | `--c-primary-dim` | `--c-primary-high` | `--c-primary-on-primary` |
-| **soft** (tonal) | `--c-primary-container-low` | `--c-primary-container` | `--c-primary-container-high` | `--c-primary-on-surface` |
-| **ghost** (text) | `transparent` | `--c-primary-container-low` | `--c-primary-container` | `--c-primary` |
+| **solid** (filled) | `--md-sys-color-primary` | `--md-sys-color-primary-dim` | `--md-sys-color-primary-high` | `--md-sys-color-primary-on-primary` |
+| **soft** (tonal) | `--md-sys-color-primary-container-low` | `--md-sys-color-primary-container` | `--md-sys-color-primary-container-high` | `--md-sys-color-primary-on-surface` |
+| **ghost** (text) | `transparent` | `--md-sys-color-primary-container-low` | `--md-sys-color-primary-container` | `--md-sys-color-primary` |
 
 **[2] styles block** (`@scope (ui-button)`) — consume the per-state tokens on the pseudo-classes, reading
 only `--ui-button-*`:
@@ -63,7 +63,7 @@ never match a disabled host — the hold is automatic. The disabled token row re
 symmetry, `-bg-hover`/`-bg-active`) to the muted neutral so no path lifts. Keyboard focus cannot land on a
 disabled host (ADR-0010 removes it from the tab order), so no focus lift either.
 
-**Forced-colors is free** — every value resolves through a `--c-{f}-{role}` role, so the token layer's WHCM
+**Forced-colors is free** — every value resolves through a `--md-sys-color-{f}-{role}` role, so the token layer's WHCM
 mapping covers each state cell with zero per-control rules (the existing `forced-colors` block keeps ink +
 border; ADR-0009 keeps the ring).
 
@@ -82,7 +82,7 @@ unchanged by that refactor.
   ladders and consume them identically. Zero dialect drift (C5).
 - **A new constraint on every control's token block:** state shades come from role steps, never a mix. If a
   ladder step is too close to read as a state change (see Open question), the *token layer* — not the control —
-  grows dedicated `--c-{f}-hover`/`-active` roles. The control's consumption seam does not change.
+  grows dedicated `--md-sys-color-{f}-hover`/`-active` roles. The control's consumption seam does not change.
 - **`ghost` gains a hover/active wash** (a low container tint on a text variant). This is a new design choice
   beyond `tokens.md`'s filled/tonal table — flagged for ratification.
 - **No geometry impact.** State styling repoints `background` only; the geometry law (`geometry.md`) and the
@@ -90,10 +90,10 @@ unchanged by that refactor.
 
 ## Resolved on ratification (2026-06-27 — orchestration-lead)
 
-CONFIRMED: reuse `tokens.md`'s vetted role ladders (solid `--c-primary`→`-dim`→`-high`; soft
+CONFIRMED: reuse `tokens.md`'s vetted role ladders (solid `--md-sys-color-primary`→`-dim`→`-high`; soft
 `-container-low`→`-container`→`-container-high`; ghost `transparent`→`-container-low`→`-container`), and the
 **ghost wash is approved**. The ladder separation is **verified at the wave-2 cross-engine smoke** (Risk 1);
-**only** if a step collapses do we add token-layer dedicated `--c-{f}-hover`/`-active` roles (a separate
+**only** if a step collapses do we add token-layer dedicated `--md-sys-color-{f}-hover`/`-active` roles (a separate
 `tok-states` slice + an amendment to this ADR) — **never** a component `color-mix`.
 
 ## Alternatives considered
@@ -114,14 +114,14 @@ CONFIRMED: reuse `tokens.md`'s vetted role ladders (solid `--c-primary`→`-dim`
 ## Amendment — dedicated primary hover/active roles (2026-06-27, the foreseen ladder-collapse remedy)
 
 The wave-2 cross-engine smoke confirmed the resolved-on-ratification note's anticipated risk: the SOLID variant's
-hover (`--c-primary-dim`) and active (`--c-primary-high`) **both resolve to `--c-primary-650` in the light branch
+hover (`--md-sys-color-primary-dim`) and active (`--md-sys-color-primary-high`) **both resolve to `--md-sys-color-primary-650` in the light branch
 of `light-dark()`**, so a pressed solid button was visually indistinguishable from a hovered one in light scheme
 (dark was a genuine three-step ladder). Per this ADR's resolved decision — "only if a step collapses do we add
-token-layer dedicated `--c-{f}-hover/-active` roles, never a component `color-mix`" — the remedy was applied
+token-layer dedicated `--md-sys-color-{f}-hover/-active` roles, never a component `color-mix`" — the remedy was applied
 (`tok-states` slice; host-ratified values):
 
-- **Two new fleet roles** in `tokens.css`: `--c-primary-hover: light-dark(--c-primary-700, --c-primary-600)` and
-  `--c-primary-active: light-dark(--c-primary-750, --c-primary-700)` — a real three-step **monotonic-darkening**
+- **Two new fleet roles** in `tokens.css`: `--md-sys-color-primary-hover: light-dark(--md-sys-color-primary-700, --md-sys-color-primary-600)` and
+  `--md-sys-color-primary-active: light-dark(--md-sys-color-primary-750, --md-sys-color-primary-700)` — a real three-step **monotonic-darkening**
   ladder in BOTH schemes (light 550→700→750, dark 450→600→700). *(Host-tuned 2026-06-27: hover light 650→700 /
   dark 400→600; active dark 350→700 so hover and active darken in the same direction in both schemes.)*
 - The button's SOLID variant repoints `--ui-button-bg-hover`/`-bg-active` to these roles; soft/ghost stay on the
@@ -130,6 +130,6 @@ token-layer dedicated `--c-{f}-hover/-active` roles, never a component `color-mi
   the resolved solid ladder is three distinct oklch steps per scheme.
 
 This is the **family-role pattern** the next solid-filled control reuses: a family that ships a solid fill gets
-its own `--c-{family}-hover/-active` roles when (and only when) its generic `-dim/-high` ladder collapses in a
-scheme. The old `--c-primary-dim`/`-high` roles are unchanged (no other consumer). Token-layer only — no
+its own `--md-sys-color-{family}-hover/-active` roles when (and only when) its generic `-dim/-high` ladder collapses in a
+scheme. The old `--md-sys-color-primary-dim`/`-high` roles are unchanged (no other consumer). Token-layer only — no
 component change. `references/interaction-states.md` documents the pattern.

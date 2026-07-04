@@ -108,7 +108,7 @@ A `ui-row` has **no control height** (the `Container/layout` size-class, geometr
 `ui-row` is a `UIContainerElement`, so it carries the two shared **surface axes** (ADR-0015), both signed
 literal unions `-3…3` defaulting to `0` (the neutral, transparent base — an unset row adds no plane):
 
-- **`elevation`** → the scheme-**inverting** plane (`--c-neutral-surface-{lowest…highest}`).
+- **`elevation`** → the scheme-**inverting** plane (`--md-sys-color-neutral-surface-{lowest…highest}`).
 - **`brightness`** → the scheme-**consistent** tonal shift (a solid ladder step solo; a translucent wash when
   composed with an elevation).
 

@@ -18,9 +18,9 @@ import { describe, it, expect } from 'vitest'
 //
 // These imports are direct (not through the barrel) because the component-styles barrel is the host's
 // integration slice — it gains the slider @import at barrel-wiring time. The foundation CSS (tokens +
-// dimensions) is loaded via the shared package barrel so --c-* / --ui-compact-* tokens are present.
+// dimensions) is loaded via the shared package barrel so --md-sys-color-* / --ui-compact-* tokens are present.
 
-import '@agent-ui/components/foundation-styles.css' // tokens (--c-*) + dimensions (--ui-compact-*)
+import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--ui-compact-*)
 import './slider.css'                               // the control stylesheet (direct — pre-barrel)
 import './slider.ts'                                // self-define (registers ui-slider)
 import type { UISliderElement } from './slider.ts'
@@ -63,10 +63,10 @@ describe('ui-slider AC0 — renders as a horizontal track, not a collapsed dot (
 // ── SC 1.4.11: the rail is a SOLID, opaque neutral (2026-07-02 audit item 4 · ADR-0059) ───────────
 
 describe('ui-slider — solid rail (SC 1.4.11, ADR-0059)', () => {
-  it('--ui-slider-rail resolves to an OPAQUE neutral (--c-neutral-track), not the old translucent outline-variant', () => {
-    // The rail was --c-neutral-outline-variant (neutral-500 @ 40%) — composited to 1.51:1 light / 1.73:1
+  it('--ui-slider-rail resolves to an OPAQUE neutral (--md-sys-color-neutral-track), not the old translucent outline-variant', () => {
+    // The rail was --md-sys-color-neutral-outline-variant (neutral-500 @ 40%) — composited to 1.51:1 light / 1.73:1
     // dark over the surface, an SC 1.4.11 fail (at value 0 the whole track vanished). The fix is the SOLID
-    // --c-neutral-track; the VALUE rides the high-contrast thumb, so the fill↔rail luminance may stay low.
+    // --md-sys-color-neutral-track; the VALUE rides the high-contrast thumb, so the fill↔rail luminance may stay low.
     // The rail lives inside the ::before gradient, so we read it via an INHERITING probe child: the custom
     // property --ui-slider-rail inherits from the host, and `background-color: var(--ui-slider-rail)`
     // resolves it to an OPAQUE colour a real engine paints (alpha 1) — which the old 0.4 role never could.
@@ -78,7 +78,7 @@ describe('ui-slider — solid rail (SC 1.4.11, ADR-0059)', () => {
     const bg = getComputedStyle(probe).backgroundColor
     const m = bg.match(/rgba?\(([^)]+)\)/i)
     const alpha = m ? (m[1].split(/[\s,/]+/).filter(Boolean)[3] ?? '1') : '1'
-    expect(Number(alpha), `slider rail must resolve OPAQUE (solid --c-neutral-track), got "${bg}"`).toBe(1)
+    expect(Number(alpha), `slider rail must resolve OPAQUE (solid --md-sys-color-neutral-track), got "${bg}"`).toBe(1)
     el.remove()
   })
 })
@@ -303,7 +303,7 @@ describe('ui-slider browser smoke (AC3 — real pointer-drag maps position→val
 // and note that the `@media (forced-colors: active)` block in slider.css maps rail/fill to
 // Highlight/ButtonText and the thumb to Canvas + Highlight border, with `forced-color-adjust: none`
 // on both pseudo-elements so the browser preserves our explicit system-colour mappings.
-// The :focus-visible ring is free via --c-focus-ring → Highlight from the token layer (ADR-0009).
+// The :focus-visible ring is free via --md-sys-color-focus-ring → Highlight from the token layer (ADR-0009).
 
 describe('ui-slider browser smoke (AC4 — forced-colors annotation)', () => {
   it('AC4 element connects and computes styles without error (forced-colors declared in slider.css)', () => {

@@ -8,10 +8,10 @@ import { describe, it, expect } from 'vitest'
 //
 // These imports are direct (not through the barrel) because the component-styles barrel is the
 // host's integration slice — it gains the checkbox @import at barrel-wiring time. The foundation CSS
-// (tokens + dimensions) is loaded through the shared package barrel so the --c-* / --ui-compact-*
+// (tokens + dimensions) is loaded through the shared package barrel so the --md-sys-color-* / --ui-compact-*
 // token chain is in place before the control sheet resolves.
 
-import '@agent-ui/components/foundation-styles.css' // tokens (--c-*) + dimensions (--ui-compact-*)
+import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--ui-compact-*)
 import './checkbox.css'                             // the control stylesheet (direct — pre-barrel)
 import './checkbox.ts'                             // self-define (registers ui-checkbox)
 

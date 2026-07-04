@@ -3,8 +3,8 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-tooltip)` (specificity 0,0,0) sets the tooltip's OWN default
  *       surface tokens and DECLARES the `--ui-tooltip-*` chain from the colour roles
- *       (`--c-{family}-{role}`, family = neutral) and the dimensions (`--ui-space-*` /
- *       `--ui-radius-base`). Raw `--c-*` roles enter ONLY here; `@scope` never reads them.
+ *       (`--md-sys-color-{family}-{role}`, family = neutral) and the dimensions (`--ui-space-*` /
+ *       `--ui-radius-base`). Raw `--md-sys-color-*` roles enter ONLY here; `@scope` never reads them.
  *   [2] STYLES BLOCK — `@scope (ui-tooltip)` CONSUMES only the `--ui-tooltip-*` chain. The host
  *       is `display: contents` — a logical wrapper that generates no box. The panel part
  *       (`[data-part="panel"]`) is the Container/surface: `--ui-tooltip-bg`, `--ui-radius-base`,
@@ -22,13 +22,13 @@
 
 :where(ui-tooltip) {
   /* Surface plane — the neutral floating-overlay surface (same opaque role popover uses; the
-     earlier `--c-neutral-surface-variant` was a non-existent role → transparent panel, caught by
-     the cross-engine smoke). @scope consumes --ui-tooltip-bg / --ui-tooltip-ink, never the raw --c-* roles. */
-  --ui-tooltip-bg: var(--c-neutral-surface);
-  --ui-tooltip-ink: var(--c-neutral-on-surface-variant);
+     earlier `--md-sys-color-neutral-surface-variant` was a non-existent role → transparent panel, caught by
+     the cross-engine smoke). @scope consumes --ui-tooltip-bg / --ui-tooltip-ink, never the raw --md-sys-color-* roles. */
+  --ui-tooltip-bg: var(--md-sys-color-neutral-surface);
+  --ui-tooltip-ink: var(--md-sys-color-neutral-on-surface-variant);
 
   /* Frame */
-  --ui-tooltip-outline: var(--c-neutral-outline-variant);
+  --ui-tooltip-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-tooltip-radius: var(--ui-radius-base); /* the shared fleet radius (ADR-0015 cl.5) */
 
   /* Shell spacing — panel-class geometry (Container/surface, NOT a control height) */

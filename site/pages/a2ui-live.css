@@ -1,0 +1,306 @@
+/* a2ui-live.css — PAGE-LOCAL layout chrome for the live-agent demo chat app (LLD-C9). Lays out the two
+ * panes [ chat | a2ui-canvas ], the canvas tabs (Canvas · JSON · HTML), the chat log + composer, and the
+ * dev-only switcher. The rendered A2UI surface keeps its own ui-* control CSS — this page never restyles a
+ * control. Every colour is a `--md-sys-color-*` role (imported first via _page.ts), so it tracks light/dark.
+ * Mounts via mountFullBleedPage: [data-page-content] fills the bounded `.app-page` region; the panes scroll
+ * their OWN inner areas rather than growing the region (min-block-size: 0 throughout). */
+
+/* ── the two-pane shell ─────────────────────────────────────────────────────────────────────────────────── */
+[data-page-content] {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  box-sizing: border-box;
+  min-block-size: 0;
+  overflow: hidden; /* clip — the inner panes scroll, not the region */
+}
+
+.chat-pane,
+.canvas-pane {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  min-inline-size: 0;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  background: var(--md-sys-color-neutral-surface-low);
+  overflow: hidden;
+}
+.chat-pane {
+  flex: 1 1 20rem;
+  max-inline-size: 26rem;
+}
+.canvas-pane {
+  flex: 1.6 1 26rem;
+}
+
+.pane-head {
+  flex: 0 0 auto;
+  padding: 0.85rem 1rem 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+.pane-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.pane-blurb {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* ── chat pane: log · composer · switcher ───────────────────────────────────────────────────────────────── */
+.chat-log {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
+  max-inline-size: 92%;
+}
+.msg[data-role='user'] {
+  align-self: flex-end;
+  background: var(--md-sys-color-primary-container-low);
+}
+.msg[data-role='agent'] {
+  align-self: flex-start;
+  background: var(--md-sys-color-neutral-surface-high);
+}
+.msg[data-role='system'] {
+  align-self: center;
+  max-inline-size: 100%;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.78rem;
+  text-align: center;
+}
+.msg-who {
+  font-size: 0.66rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.msg[data-role='system'] .msg-who {
+  display: none;
+}
+.msg-body {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.msg[data-role='system'] .msg-body {
+  color: inherit;
+  font-size: inherit;
+}
+
+.chat-composer {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 0.5rem;
+  align-items: end;
+  padding: 0.75rem;
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+.chat-composer ui-text-field {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+.chat-composer.is-busy {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* In-flight indicator — appended to the aria-live chat log while a turn is running (setBusy(true)), so the
+ * wait is both visible and announced; removed when the turn settles. */
+.chat-status {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.8rem;
+}
+.chat-status::before {
+  content: '';
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary-high);
+  animation: chat-status-pulse 1s ease-in-out infinite;
+}
+@keyframes chat-status-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-status::before {
+    animation: none;
+  }
+}
+
+.switcher-slot {
+  flex: 0 0 auto;
+}
+.switcher-slot:empty {
+  display: none;
+}
+.switcher {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface);
+}
+.switcher-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+}
+.switcher-label {
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.switcher-select {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+
+/* ── canvas pane: tab strip · panels · the translate-centered stage · reset ─────────────────────────────── */
+.tab-strip {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem 0;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+.tab {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0.4rem 0.85rem;
+  font: inherit;
+  font-size: 0.82rem;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  border-block-end: 2px solid transparent;
+}
+.tab:hover {
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.tab.is-active {
+  color: var(--md-sys-color-primary-high);
+  border-block-end-color: var(--md-sys-color-primary-high);
+  font-weight: 600;
+}
+
+.tab-panels {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  position: relative;
+}
+.tab-panel {
+  display: none;
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+}
+.tab-panel.is-active {
+  display: block;
+}
+.tab-panel > .code-block {
+  margin: 0;
+  min-block-size: 100%;
+  box-sizing: border-box;
+}
+
+/* The Canvas tab's stage — the rendered surface is CENTERED via a CSS translate transform (per spec). */
+.canvas-stage {
+  position: relative;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: auto;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 15px, var(--md-sys-color-neutral-surface) 15px 16px),
+    repeating-linear-gradient(90deg, transparent 0 15px, var(--md-sys-color-neutral-surface) 15px 16px);
+  background-color: var(--md-sys-color-neutral-surface-low);
+}
+.canvas-surface {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* centre the surface within the stage via translate offsets (per spec) */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1rem;
+  /* A DEFINITE artboard width — NOT just max-inline-size. An absolutely-positioned flex column with only
+   * a max width shrink-fits, and its align-items:center children then resolve to min-content (~1ch): the
+   * whole surface collapses to a one-character-per-line strip. A definite width gives the rendered
+   * surface a real space to lay out in; content wider than the cap scrolls (overflow:auto below). */
+  inline-size: min(32rem, calc(100% - 2rem));
+  /* Cap at the stage box so the translate-centered surface NEVER clips above the top edge: a surface
+   * shorter than the stage centres; one taller than the stage is clamped to the stage height and scrolls
+   * INSIDE this centred box (the stage's own overflow can't reach a negative-offset absolute child). */
+  max-block-size: 100%;
+  overflow: auto;
+}
+.canvas-surface:empty::after {
+  content: 'Send a prompt — the rendered surface appears here.';
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.85rem;
+}
+
+.reset-bar {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 0.75rem;
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+
+/* ── narrow viewports: stack the panes, let the region scroll ───────────────────────────────────────────── */
+@media (max-inline-size: 48rem) {
+  [data-page-content] {
+    flex-direction: column;
+    overflow: auto;
+  }
+  .chat-pane {
+    max-inline-size: none;
+  }
+  .chat-pane,
+  .canvas-pane {
+    flex: 1 1 auto;
+    min-block-size: 22rem;
+  }
+}

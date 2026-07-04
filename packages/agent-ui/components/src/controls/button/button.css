@@ -1,7 +1,7 @@
 /* button.css — ui-button, the single-file component stylesheet (ADR-0003). Two clearly-SECTIONED blocks:
  *
  *   [1] TOKEN BLOCK  — `:where(ui-button)` (specificity 0,0,0) DECLARES the `--ui-button-*` chain from the
- *       colour roles (`--c-{family}-{role}`; default family = primary) and the dimensional ramp
+ *       colour roles (`--md-sys-color-{family}-{role}`; default family = primary) and the dimensional ramp
  *       (`--ui-{height,font,gap}-{size}` from `@agent-ui/shared/dimensions.css`). `[variant]` repoints the
  *       colour channels (solid=filled · soft=tonal · ghost=text), declaring per-state `-bg-hover`/`-bg-active`
  *       from a ROLE-LADDER step (never a `color-mix` — colour opinions live in the token layer; ADR-0008);
@@ -12,9 +12,9 @@
  *       adornment slots via presence-driven `:has()` — placement is POSITION-driven (the slot), glyph size is
  *       ROLE-driven (`[data-role]`: icon = frame `--ui-button-icon`, caret = rhythm `--ui-button-glyph` = font).
  *       Interaction states (ADR-0008): `:hover`/`:active` repoint `background` from the per-state tokens;
- *       `:focus-visible` draws the SHARED focus ring (ADR-0009 — the fleet `--c-focus-ring`/`--ui-focus-ring-*`,
+ *       `:focus-visible` draws the SHARED focus ring (ADR-0009 — the fleet `--md-sys-color-focus-ring`/`--ui-focus-ring-*`,
  *       keyboard-only, layout-neutral `outline`). Forced-colors keeps the ink/border (the ring survives via the
- *       token layer's `--c-focus-ring → Highlight` mapping). The reflected `disabled` attribute makes the host inert.
+ *       token layer's `--md-sys-color-focus-ring → Highlight` mapping). The reflected `disabled` attribute makes the host inert.
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected from
  * button.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -24,12 +24,12 @@
 
 :where(ui-button) {
   /* Colour channel (default family = primary). solid = filled (accent bg, on-accent ink). Per-state bg from
-     the DEDICATED interaction roles (--c-primary · -hover · -active) — distinct steps in BOTH schemes, a role
-     step NOT a color-mix (ADR-0008 + its tok-states amendment that split the LIGHT --c-primary-650 collapse). */
-  --ui-button-bg: var(--c-primary);
-  --ui-button-bg-hover: var(--c-primary-hover);
-  --ui-button-bg-active: var(--c-primary-active);
-  --ui-button-ink: var(--c-primary-on-primary);
+     the DEDICATED interaction roles (--md-sys-color-primary · -hover · -active) — distinct steps in BOTH schemes, a role
+     step NOT a color-mix (ADR-0008 + its tok-states amendment that split the LIGHT --md-sys-color-primary-650 collapse). */
+  --ui-button-bg: var(--md-sys-color-primary);
+  --ui-button-bg-hover: var(--md-sys-color-primary-hover);
+  --ui-button-bg-active: var(--md-sys-color-primary-active);
+  --ui-button-ink: var(--md-sys-color-primary-on-primary);
   --ui-button-border: transparent;
 
   /* Geometry — off the s6 dimensional ramp (default size = md). [size] repoints below. */
@@ -44,16 +44,16 @@
    soft = CONTAINER ladder (-container-low · -container · -container-high); ghost = TEXT (transparent idle,
    a low container WASH on hover/active — ADR-0008's ghost wash). No color-mix; every value is a role. */
 :where(ui-button[variant='soft']) {
-  --ui-button-bg: var(--c-primary-container-low);
-  --ui-button-bg-hover: var(--c-primary-container);
-  --ui-button-bg-active: var(--c-primary-container-high);
-  --ui-button-ink: var(--c-primary-high); /* accent label ink — reads as a primary-family action, not neutral text */
+  --ui-button-bg: var(--md-sys-color-primary-container-low);
+  --ui-button-bg-hover: var(--md-sys-color-primary-container);
+  --ui-button-bg-active: var(--md-sys-color-primary-container-high);
+  --ui-button-ink: var(--md-sys-color-primary-high); /* accent label ink — reads as a primary-family action, not neutral text */
 }
 :where(ui-button[variant='ghost']) {
   --ui-button-bg: transparent;
-  --ui-button-bg-hover: var(--c-primary-container-low);
-  --ui-button-bg-active: var(--c-primary-container);
-  --ui-button-ink: var(--c-primary-high); /* accent label ink (same as soft) — the transparent/wash variant still reads as primary */
+  --ui-button-bg-hover: var(--md-sys-color-primary-container-low);
+  --ui-button-bg-active: var(--md-sys-color-primary-container);
+  --ui-button-ink: var(--md-sys-color-primary-high); /* accent label ink (same as soft) — the transparent/wash variant still reads as primary */
 }
 
 /* size → dimensional ramp */
@@ -74,10 +74,10 @@
    same muted neutral so no path lifts (and :hover/:active never match — the styles block makes the host
    pointer-inert; ADR-0008). */
 :where(ui-button[disabled]) {
-  --ui-button-bg: var(--c-neutral-surface-high);
-  --ui-button-bg-hover: var(--c-neutral-surface-high);
-  --ui-button-bg-active: var(--c-neutral-surface-high);
-  --ui-button-ink: var(--c-neutral-on-surface-variant);
+  --ui-button-bg: var(--md-sys-color-neutral-surface-high);
+  --ui-button-bg-hover: var(--md-sys-color-neutral-surface-high);
+  --ui-button-bg-active: var(--md-sys-color-neutral-surface-high);
+  --ui-button-ink: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-button) consumes ONLY --ui-button-* ════════════════ */
@@ -180,7 +180,7 @@
      participate in box geometry — the geometry law stays intact. (Disabled is removed from the tab order by
      the tabbable trait, so a disabled host never draws the ring.) */
   :scope:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--ui-focus-ring-offset);
   }
 
@@ -210,7 +210,7 @@
   }
 
   /* forced-colors — keep the ink + border visible (the label/outline must not vanish). The focus ring
-     survives for free: `--c-focus-ring` carries the token layer's `→ Highlight` WHCM mapping, so the
+     survives for free: `--md-sys-color-focus-ring` carries the token layer's `→ Highlight` WHCM mapping, so the
      `:focus-visible` outline above resolves to the system focus colour with no per-control rule. */
   @media (forced-colors: active) {
     :scope {

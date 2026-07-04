@@ -83,7 +83,7 @@ geometry:
   radius: calc(var(--ui-switch-box) / 2)                       # pill radius = box/2 (the track border-radius)
   thumbSize: calc(var(--ui-switch-box) - 2 * var(--ui-widget-inset))   # ADR-0041 cl.3: thumb = box − 4px
 
-forcedColors: A `@media (forced-colors: active)` block renders the track as Canvas + ButtonText border (unchecked) or Highlight + Highlight border (checked), and the thumb as ButtonText / HighlightText. The `:focus-visible` ring survives via `--c-focus-ring → Highlight` (the token layer's FC mapping) without a per-control rule.
+forcedColors: A `@media (forced-colors: active)` block renders the track as Canvas + ButtonText border (unchecked) or Highlight + Highlight border (checked), and the thumb as ButtonText / HighlightText. The `:focus-visible` ring survives via `--md-sys-color-focus-ring → Highlight` (the token layer's FC mapping) without a per-control rule.
 ---
 
 # ui-switch
@@ -111,10 +111,10 @@ neither the box nor the inset rides `--ui-density`.
 
 ## States + colour
 
-Unchecked: muted `--c-neutral-outline-variant` track, near-white thumb. Checked: `--c-primary` track
-(`--c-primary-on-primary` thumb). Disabled: `--c-neutral-surface-high` track, muted ink thumb — the
+Unchecked: muted `--md-sys-color-neutral-outline-variant` track, near-white thumb. Checked: `--md-sys-color-primary` track
+(`--md-sys-color-primary-on-primary` thumb). Disabled: `--md-sys-color-neutral-surface-high` track, muted ink thumb — the
 host is pointer-inert (`pointer-events: none`), so `:hover` never lifts the state. A `:focus-visible`
-ring (keyboard-only, ADR-0009) uses the fleet `--c-focus-ring` / `--ui-focus-ring-*` tokens.
+ring (keyboard-only, ADR-0009) uses the fleet `--md-sys-color-focus-ring` / `--ui-focus-ring-*` tokens.
 
 ## Form participation
 

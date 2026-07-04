@@ -7,7 +7,7 @@
  *       field-form-provider.lld.md); it has no colour, geometry, or spacing opinion of its own, so there is
  *       no `--ui-form-provider-*` chain to declare. An EMPTY token block is deliberately NOT invented here
  *       (LLD-C8) — this comment stands in for the section, so the token-hygiene probes need no special
- *       case: an absent chain is still zero raw `--c-*` leakage, zero non-`--ui-form-provider-*` consumption.
+ *       case: an absent chain is still zero raw `--md-sys-color-*` leakage, zero non-`--ui-form-provider-*` consumption.
  *   [2] STYLES BLOCK — `@scope (ui-form-provider)` sets exactly one declaration: `display: block`. An
  *       unstyled custom element defaults to `inline`, which would lay its slotted block-level descendants
  *       (fields, buttons) out inline against the host — a first-paint layout defect. No further rule: no

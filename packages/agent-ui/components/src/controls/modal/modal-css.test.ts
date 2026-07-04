@@ -18,7 +18,7 @@ const stylesBlock = css.slice(css.indexOf('@scope (ui-modal) {'))
 
 // A container reads the role-pure `--ui-container-*` surface SEAM (the cross-family seam every container
 // consumes — container.css owns the [elevation]/[brightness] repoints) plus its OWN `--ui-modal-*` chain.
-// Nothing else may appear in @scope (no raw `--c-*` role, no `--ui-space-*`/`--ui-radius-base` — those enter
+// Nothing else may appear in @scope (no raw `--md-sys-color-*` role, no `--ui-space-*`/`--ui-radius-base` — those enter
 // the :where() token block only).
 const surfaceSeam = new Set(['--ui-container-bg', '--ui-container-tint'])
 
@@ -39,12 +39,12 @@ describe('modal.css — structure + sectioning (s9)', () => {
 
   it('the :where() block sets the modal’s OWN default surface + DECLARES the --ui-modal-* chain from roles/dimensions', () => {
     // ui-modal is an OPAQUE plane — it repoints the container base default (transparent) to a surface role.
-    expect(tokenBlock).toMatch(/--ui-container-bg:\s*var\(--c-neutral-surface\)/)
+    expect(tokenBlock).toMatch(/--ui-container-bg:\s*var\(--md-sys-color-neutral-surface\)/)
     // the own chain (consumed role-pure in @scope) declared from roles + dimensions
     for (const slot of ['ink', 'outline', 'radius', 'padding', 'scrim']) {
       expect(tokenBlock).toMatch(new RegExp(`--ui-modal-${slot}:`))
     }
-    expect(tokenBlock).toMatch(/--ui-modal-scrim:\s*var\(--c-neutral-scrim\)/) // the backdrop wash (a scrim role)
+    expect(tokenBlock).toMatch(/--ui-modal-scrim:\s*var\(--md-sys-color-neutral-scrim\)/) // the backdrop wash (a scrim role)
     expect(tokenBlock).toMatch(/--ui-modal-radius:\s*var\(--ui-radius-base\)/) // the shared fleet radius
     expect(tokenBlock).toMatch(/--ui-modal-padding:\s*var\(--ui-space-/) // the density-responsive layout spacing
   })
@@ -80,16 +80,16 @@ describe('modal.css — the @scope dialog surface + ::backdrop (s9)', () => {
 
 describe('modal.css — @scope token hygiene (s9)', () => {
   it('@scope CONSUMES only the own --ui-modal-* chain + the role-pure --ui-container-* surface seam', () => {
-    expect(foreignScopeRefs(stylesBlock)).toEqual([]) // no raw --c-* / no --ui-space-* / no --ui-radius-base in @scope
+    expect(foreignScopeRefs(stylesBlock)).toEqual([]) // no raw --md-sys-color-* / no --ui-space-* / no --ui-radius-base in @scope
     // anti-vacuous: BOTH the seam AND the own chain ARE consumed (the whitelist is live, not dead)
     const allRefs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1] as string)
     expect(allRefs.some((v) => surfaceSeam.has(v))).toBe(true)
     expect(allRefs.some((v) => /^--ui-modal-/.test(v))).toBe(true)
   })
 
-  it('NEGATIVE control: a planted raw-primitive --c-* ref in @scope is CAUGHT by the hygiene predicate', () => {
-    const planted = "@scope (ui-modal) { :scope > [data-part='dialog'] { background: var(--c-neutral-surface); } }"
-    expect(foreignScopeRefs(planted)).toEqual(['--c-neutral-surface'])
+  it('NEGATIVE control: a planted raw-primitive --md-sys-color-* ref in @scope is CAUGHT by the hygiene predicate', () => {
+    const planted = "@scope (ui-modal) { :scope > [data-part='dialog'] { background: var(--md-sys-color-neutral-surface); } }"
+    expect(foreignScopeRefs(planted)).toEqual(['--md-sys-color-neutral-surface'])
   })
 })
 

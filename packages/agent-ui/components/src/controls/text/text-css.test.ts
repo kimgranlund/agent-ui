@@ -31,7 +31,7 @@ describe('text.css — structure + token hygiene (ADR-0025 cl.3a)', () => {
     expect(tokenBlock).toContain('var(--ui-type-body-weight)')
     expect(tokenBlock).toContain('var(--ui-type-body-leading)')
     // color role — the surface-text ink (the AA-gated role)
-    expect(tokenBlock).toContain('var(--c-neutral-on-surface)')
+    expect(tokenBlock).toContain('var(--md-sys-color-neutral-on-surface)')
   })
 
   it('[variant] repoints the three typography tokens to --ui-type-{level}-* (the role-pure seam)', () => {
@@ -46,7 +46,7 @@ describe('text.css — structure + token hygiene (ADR-0025 cl.3a)', () => {
     expect(tokenBlock).not.toMatch(/\[variant='body'\]/)
   })
 
-  it('@scope CONSUMES only --ui-text-* (no --ui-type-* or --c-* leaking into the styles block)', () => {
+  it('@scope CONSUMES only --ui-text-* (no --ui-type-* or --md-sys-color-* leaking into the styles block)', () => {
     const refs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1])
     expect(refs.length).toBeGreaterThan(0)
     for (const v of refs) {

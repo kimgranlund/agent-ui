@@ -1,7 +1,7 @@
 /* foundation-styles.css — the global foundation stylesheet barrel (ADR-0003). Aggregates the cross-package
  * foundation layer from `@agent-ui/shared`: the colour `tokens.css` FIRST, then the dimensional ramp
  * `dimensions.css` (authored to load AFTER tokens). A host page links this BEFORE component-styles.css, so
- * the `--c-*` roles + `--ui-{height,font,gap}-*` ramp exist when a control's `:where()` block resolves them.
+ * the `--md-sys-color-*` roles + `--ui-{height,font,gap}-*` ramp exist when a control's `:where()` block resolves them.
  * Exposed as the package `./foundation-styles.css` export. `@agent-ui/shared` is the one allowed
  * cross-package dependency (ADR-0003 / the import-layering law). Order is load-bearing — do not reorder.
  */

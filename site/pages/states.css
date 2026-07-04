@@ -6,7 +6,7 @@
 .state-section {
   margin-block: 2rem 0;
   padding-block-start: 1.5rem;
-  border-block-start: 1px solid var(--c-neutral-surface-high, #e2e2e2);
+  border-block-start: 1px solid var(--md-sys-color-neutral-surface-high, #e2e2e2);
 }
 
 .state-section > h2 {
@@ -17,7 +17,7 @@
 .state-instruction {
   margin-block: 0 1rem;
   max-inline-size: 60ch;
-  color: var(--c-neutral-on-surface-variant, #555);
+  color: var(--md-sys-color-neutral-on-surface-variant, #555);
   line-height: 1.5;
 }
 
@@ -32,7 +32,7 @@
 
 .state-caption {
   font-size: 0.85rem;
-  color: var(--c-neutral-on-surface-variant, #555);
+  color: var(--md-sys-color-neutral-on-surface-variant, #555);
 }
 
 /* The activation log — a real <click> sink proving pointer AND keyboard (trait) activation reach the host. */
@@ -42,9 +42,9 @@
   min-block-size: 6rem;
   max-block-size: 14rem;
   overflow-y: auto;
-  border: 1px solid var(--c-neutral-surface-high, #e2e2e2);
+  border: 1px solid var(--md-sys-color-neutral-surface-high, #e2e2e2);
   border-radius: 8px;
-  background: var(--c-neutral-surface-low, #fafafa);
+  background: var(--md-sys-color-neutral-surface-low, #fafafa);
   font-family: var(--ui-mono);
   font-size: 0.8rem;
   line-height: 1.6;
@@ -53,7 +53,7 @@
 
 .activation-log:empty::before {
   content: 'No activations yet — focus a button and press Space or Enter, or click it.';
-  color: var(--c-neutral-on-surface-variant, #888);
+  color: var(--md-sys-color-neutral-on-surface-variant, #888);
 }
 
 .activation-log > li {
@@ -61,11 +61,11 @@
 }
 
 .activation-log > li[data-source='keyboard'] {
-  color: var(--c-primary, #1a56db);
+  color: var(--md-sys-color-primary, #1a56db);
 }
 
 /* The ui-text-field activity log tags each line by the honest event KIND (input|change); a `change` (commit)
  * line is tinted to stand out from the per-keystroke `input` lines (the button log uses data-source above). */
 .activation-log > li[data-kind='change'] {
-  color: var(--c-primary, #1a56db);
+  color: var(--md-sys-color-primary, #1a56db);
 }

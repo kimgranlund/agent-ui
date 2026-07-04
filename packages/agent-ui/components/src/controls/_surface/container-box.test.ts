@@ -60,7 +60,7 @@ describe('container-box.css — the shared box-model foundation', () => {
   it('hr is a full-bleed hairline divider off a role token', () => {
     const hr = CODE.match(/:where\(\[data-box\]\)\s*>\s*hr\s*\{([^}]*)\}/)
     expect(hr).toBeTruthy()
-    expect(hr![1]).toMatch(/border-block-start:\s*1px solid var\(--c-neutral-outline-variant\)/)
+    expect(hr![1]).toMatch(/border-block-start:\s*1px solid var\(--md-sys-color-neutral-outline-variant\)/)
   })
 
   it('forced-colors keeps sticky regions opaque (Canvas) so scrolled content cannot show through', () => {

@@ -24,8 +24,8 @@
   --ui-text-size: var(--ui-type-body-size);
   --ui-text-weight: var(--ui-type-body-weight);
   --ui-text-leading: var(--ui-type-body-leading);
-  /* Color — the AA-gated surface-text ink role (the ONLY --c-* role ui-text needs; ADR-0025 cl.3). */
-  --ui-text-color: var(--c-neutral-on-surface);
+  /* Color — the AA-gated surface-text ink role (the ONLY --md-sys-color-* role ui-text needs; ADR-0025 cl.3). */
+  --ui-text-color: var(--md-sys-color-neutral-on-surface);
 }
 
 /* variant → typographic level repoints (ADR-0025 cl.3a). body is the default above — no repoint needed. */

@@ -2,7 +2,7 @@
  * Two clearly-SECTIONED blocks, mirroring button.css / text-field.css / popover.css:
  *
  *   [1] TOKEN BLOCK  — `:where(ui-select)` (specificity 0,0,0) DECLARES the `--ui-select-*`
- *       chain from the colour roles (`--c-{family}-{role}`; family = neutral for the trigger frame)
+ *       chain from the colour roles (`--md-sys-color-{family}-{role}`; family = neutral for the trigger frame)
  *       and the dimensional ramp (`--ui-height-{size}` / `--ui-font-{size}` / `--ui-icon-{size}`).
  *       The trigger is a Control-class surface (border channel, like text-field — the state is the
  *       frame colour, NOT a background fill; a caret = font inline affordance, §4.1). The listbox
@@ -35,12 +35,12 @@
      The idle/hover/focus steps are SOLID role steps (NOT soft-alpha — alpha outlines can fail
      WCAG 1.4.11 against the trigger bg). Focus = transparent: the shared outline ring is the
      SOLE focus indicator (ADR-0014 dev#1; a border-focus step doubles with the ring). */
-  --ui-select-border: var(--c-neutral);
-  --ui-select-border-hover: var(--c-neutral-high);
+  --ui-select-border: var(--md-sys-color-neutral);
+  --ui-select-border-hover: var(--md-sys-color-neutral-high);
   --ui-select-border-focus: transparent;    /* transparent holds the geometry — no layout shift */
-  --ui-select-bg: var(--c-neutral-surface);
-  --ui-select-ink: var(--c-neutral-on-surface);
-  --ui-select-placeholder-ink: var(--c-neutral-on-surface-variant);
+  --ui-select-bg: var(--md-sys-color-neutral-surface);
+  --ui-select-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-select-placeholder-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-select-radius: var(--ui-radius-base); /* fixed rounded-rect radius, like text-field */
 
   /* ── Trigger geometry (Control class, default size = md) — off the §1-row ramp (ADR-0038).
@@ -58,14 +58,14 @@
   --ui-select-min-inline-size: 10ch;
 
   /* ── Disabled state — muted neutral roles (the same pattern as button/text-field disabled) */
-  --ui-select-border-disabled: var(--c-neutral-outline-variant);
-  --ui-select-bg-disabled: var(--c-neutral-surface-high);
-  --ui-select-ink-disabled: var(--c-neutral-on-surface-variant);
+  --ui-select-border-disabled: var(--md-sys-color-neutral-outline-variant);
+  --ui-select-bg-disabled: var(--md-sys-color-neutral-surface-high);
+  --ui-select-ink-disabled: var(--md-sys-color-neutral-on-surface-variant);
 
   /* ── Listbox panel — Container/surface geometry (NOT a control height; like modal/card/popover) */
-  --ui-select-listbox-bg: var(--c-neutral-surface);
-  --ui-select-listbox-ink: var(--c-neutral-on-surface);
-  --ui-select-listbox-outline: var(--c-neutral-outline-variant);
+  --ui-select-listbox-bg: var(--md-sys-color-neutral-surface);
+  --ui-select-listbox-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-select-listbox-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-select-listbox-radius: var(--ui-radius-base);
   --ui-select-listbox-padding: var(--ui-space-xs); /* small shell padding — options provide their own rows */
   --ui-select-listbox-min-inline-size: 12ch;       /* floor: at least as wide as a short option */
@@ -76,15 +76,15 @@
   --ui-select-option-block: 6px;              /* legacy item-pad block */
   --ui-select-option-inline: 12px;            /* legacy item-pad inline */
   --ui-select-option-radius: calc(var(--ui-select-listbox-radius) - 4px);
-  --ui-select-option-bg-hover: var(--c-neutral-surface-high);
-  --ui-select-option-bg-selected: var(--c-primary-container-low);
-  --ui-select-option-ink-selected: var(--c-primary-high);
-  --ui-select-option-bg-focus: var(--c-primary-container-low);
-  --ui-select-option-ink-focus: var(--c-primary-high);
+  --ui-select-option-bg-hover: var(--md-sys-color-neutral-surface-high);
+  --ui-select-option-bg-selected: var(--md-sys-color-primary-container-low);
+  --ui-select-option-ink-selected: var(--md-sys-color-primary-high);
+  --ui-select-option-bg-focus: var(--md-sys-color-primary-container-low);
+  --ui-select-option-ink-focus: var(--md-sys-color-primary-high);
 
   /* ── Group header (optgroup parity) — a non-interactive label above a [role=group]'s options.
      Muted, small, slightly emphasised; the option rows below it keep the standard item-pad. */
-  --ui-select-group-label-ink: var(--c-neutral-on-surface-variant);
+  --ui-select-group-label-ink: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ── size → dimensional ramp repoint ────────────────────────────────────────────────────────── */
@@ -189,7 +189,7 @@
 
   :scope > [data-part='trigger']:focus-visible {
     border-color: var(--ui-select-border-focus);
-    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--ui-focus-ring-offset);
   }
 
@@ -223,7 +223,7 @@
   /* ── Option rows (legacy item-pad — §5.1 / ROV-C5) ──────────────────────────────────────────
      Options are text list items with padding-based row height (not a fixed widget-box height).
      rovingFocus manages tabindex (0 = roving current, -1 = others). The focus ring on :focus-visible
-     is the fleet ring (the direct --c-focus-ring read, the one permitted exception — same as button). */
+     is the fleet ring (the direct --md-sys-color-focus-ring read, the one permitted exception — same as button). */
   :scope > [data-part='listbox'] [role='option'] {
     box-sizing: border-box;
     display: block;
@@ -283,7 +283,7 @@
   :scope > [data-part='listbox'] [role='option']:focus-visible {
     background-color: var(--ui-select-option-bg-focus);
     color: var(--ui-select-option-ink-focus);
-    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--ui-focus-ring-offset);
   }
 
@@ -313,7 +313,7 @@
 
   @media (forced-colors: active) {
     /* Trigger: keep ink and border as system ButtonText/ButtonBorder; background stays as
-       ButtonFace. The focus ring survives via --c-focus-ring → Highlight. */
+       ButtonFace. The focus ring survives via --md-sys-color-focus-ring → Highlight. */
     :scope > [data-part='trigger'] {
       color: ButtonText;
       border-color: ButtonBorder;

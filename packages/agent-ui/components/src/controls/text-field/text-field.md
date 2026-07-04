@@ -169,7 +169,7 @@ geometry:
   radius: var(--ui-radius-base)            # fixed rounded-rect — the container-fleet referent, NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5 (#71 amendment)
   minInlineSize: var(--ui-text-field-min-inline-size) (~20ch — entry-control typing-width floor, native <input size> parity; ADR-0021)   # the host floor so a bare field is hittable; size-invariant (ch is font-relative)
 
-forcedColors: A `@media (forced-colors: active)` block keeps the idle field border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --c-focus-ring → Highlight (ADR-0014). Control-injected adornment glyphs (magnifier/symbol/reveal/steppers/calendar-button) use `forced-color-adjust:none` to keep their inherited ink — they are aria-hidden decorative cues, so bypassing the system palette is intentional (ADR-0044/ADR-0048).
+forcedColors: A `@media (forced-colors: active)` block keeps the idle field border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --md-sys-color-focus-ring → Highlight (ADR-0014). Control-injected adornment glyphs (magnifier/symbol/reveal/steppers/calendar-button) use `forced-color-adjust:none` to keep their inherited ink — they are aria-hidden decorative cues, so bypassing the system palette is intentional (ADR-0044/ADR-0048).
 
 localeParse: The date codec (`type=date`) uses `Intl.DateTimeFormat` to FORMAT the display value (locale-aware) but PARSES via a strict YYYY-MM-DD regex (the ISO 8601 canonical form that `<ui-calendar>` emits). Locale-aware parsing of user-typed dates is a **best-effort** fallback: when the editor blurs with a non-ISO string, the codec attempts a `Date` parse; if it fails, `typeMismatch` is set. The time codec (`type=time`) uses `Intl.DateTimeFormat({ timeStyle:'short' })` for display and parses via `HH:MM` / `HH:MM:SS` regex. Consumers should treat the localized display as decorative — the canonical `value` is always ISO (YYYY-MM-DD or HH:MM).
 ---
@@ -234,10 +234,10 @@ Two deviations from the button-derived standard are explicit (ADR-0014):
 
 - **Focus shows on `:focus-within`** (ALL focus, native text-input parity), not `:focus-visible`
   (keyboard-only). The shared `outline` ring is the **sole** focus indicator; the field border steps to
-  **`transparent`** on `:focus-within` (a `--c-focus-ring` border-color step would double with the ring into a
-  visible double border — corrected per ADR-0014's amendment). The ring reads the fleet-wide `--c-focus-ring` /
+  **`transparent`** on `:focus-within` (a `--md-sys-color-focus-ring` border-color step would double with the ring into a
+  visible double border — corrected per ADR-0014's amendment). The ring reads the fleet-wide `--md-sys-color-focus-ring` /
   `--ui-focus-ring-*` tokens (ADR-0009, as amended), and a transparent border preserves the box geometry (no
-  layout shift). The outline is the forced-colors indicator (`--c-focus-ring → Highlight`).
+  layout shift). The outline is the forced-colors indicator (`--md-sys-color-focus-ring → Highlight`).
 - **`disabled` rides the editor + the platform form-disabled channel** (`effectiveDisabled = own || form`),
   not host `ariaDisabled` — disabled → editor `contenteditable=false` + not focusable + `aria-disabled` +
   host inert + `:state(disabled)`. **`readonly`** → editor `contenteditable=false` **but** focusable

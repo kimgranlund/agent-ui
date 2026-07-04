@@ -6,10 +6,10 @@ import { server, cdp } from '@vitest/browser/context'
 // heading role/ariaLevel is set for h1-h5 via ElementInternals. Runs in BOTH Chromium and WebKit via
 // vitest.browser.config.ts → playwright instances.
 //
-// CSS wiring is SELF-CONTAINED: foundation-styles (the --c-* roles + the --ui-type-* ramp from
+// CSS wiring is SELF-CONTAINED: foundation-styles (the --md-sys-color-* roles + the --ui-type-* ramp from
 // dimensions.css) then component-styles (text.css), then the self-defining module. Vite resolves the
 // bare specifier + the relative sheets and injects them.
-import '@agent-ui/components/foundation-styles.css' // the --c-* roles + the --ui-type-* typographic ramp
+import '@agent-ui/components/foundation-styles.css' // the --md-sys-color-* roles + the --ui-type-* typographic ramp
 import '@agent-ui/components/component-styles.css' // includes text.css (added to the barrel)
 import '@agent-ui/components/components' // self-defines ui-text + the whole family
 
@@ -195,7 +195,7 @@ describe('ui-text subtree-[scale] — the --ui-type-* size re-multiplies for a s
 
 // ── C8/C9 forced-colors browser leg (ADR-0025 cl.3 / text.css forced-colors block) ─────────────────
 // text.css declares `@media (forced-colors: active) { :scope { color: CanvasText } }`. A bare color
-// token (--c-neutral-on-surface) could be replaced by the system; CanvasText is the platform's WHCM
+// token (--md-sys-color-neutral-on-surface) could be replaced by the system; CanvasText is the platform's WHCM
 // text keyword, guaranteed opaque. Chromium emulates via CDP; WebKit has no CDP forced-colors support
 // (the documented engine split — the card/tabs browser harness convention).
 
@@ -205,7 +205,7 @@ describe('ui-text forced-colors — CanvasText mapping keeps display text visibl
     el.textContent = 'High-contrast visible text'
     document.body.append(el)
 
-    // Baseline (BOTH engines): text colour is painted (has alpha > 0 from --c-neutral-on-surface).
+    // Baseline (BOTH engines): text colour is painted (has alpha > 0 from --md-sys-color-neutral-on-surface).
     const alphaOf = (color: string): number => {
       const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(color)
       if (m) return m[4] !== undefined ? Number(m[4]) : 1

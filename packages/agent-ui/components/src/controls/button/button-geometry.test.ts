@@ -16,7 +16,7 @@ declare const process: { cwd(): string }
 // NOT duplicated here (already pinned by button-css.test.ts s7 — referenced, not re-asserted): the two
 // sectioned blocks, `padding-block: 0`, the slotless `padding-inline: h/2`, `column-gap: --ui-button-gap`,
 // the `:has()` host-as-grid, every `--ui-button-*` declared in `:where()`, and the @scope token-hygiene
-// (no raw `--c-*`/ramp ref leaks). This file adds ONLY the geometry-law relations above.
+// (no raw `--md-sys-color-*`/ramp ref leaks). This file adds ONLY the geometry-law relations above.
 
 const buttonCss = readFileSync(
   `${process.cwd()}/packages/agent-ui/components/src/controls/button/button.css`,

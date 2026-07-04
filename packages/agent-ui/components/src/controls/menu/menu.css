@@ -2,8 +2,8 @@
  * Two clearly-SECTIONED blocks, mirroring popover.css / modal.css:
  *
  *   [1] TOKEN BLOCK  — `:where(ui-menu)` (specificity 0,0,0) sets the menu's OWN default surface
- *       tokens and DECLARES the `--ui-menu-*` chain from the colour roles (`--c-{family}-{role}`)
- *       and the dimensions (`--ui-space-*` / `--ui-radius-base`). Raw `--c-*` roles enter ONLY here;
+ *       tokens and DECLARES the `--ui-menu-*` chain from the colour roles (`--md-sys-color-{family}-{role}`)
+ *       and the dimensions (`--ui-space-*` / `--ui-radius-base`). Raw `--md-sys-color-*` roles enter ONLY here;
  *       `@scope` never reads them.
  *   [2] STYLES BLOCK — `@scope (ui-menu)` CONSUMES only the role-pure `--ui-menu-*` chain.
  *       The host is `display: contents` — a logical overlay wrapper that generates no box.
@@ -26,11 +26,11 @@
 
 :where(ui-menu) {
   /* Surface plane — the popup panel is an opaque neutral surface (like popover / card). */
-  --ui-menu-bg: var(--c-neutral-surface);
-  --ui-menu-ink: var(--c-neutral-on-surface);
+  --ui-menu-bg: var(--md-sys-color-neutral-surface);
+  --ui-menu-ink: var(--md-sys-color-neutral-on-surface);
 
   /* Frame */
-  --ui-menu-outline: var(--c-neutral-outline-variant);
+  --ui-menu-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-menu-radius: var(--ui-radius-base);
 
   /* Shell spacing — panel-class geometry (Container/surface; NOT a control height). */
@@ -51,8 +51,8 @@
   --ui-menu-item-radius: calc(var(--ui-radius-base) - var(--ui-space-xs));
 
   /* Item state colours — hover wash + disabled muted ink. */
-  --ui-menu-item-bg-hover: var(--c-neutral-tint-dimmer);   /* 10% neutral alpha wash */
-  --ui-menu-item-ink-disabled: var(--c-neutral-outline);   /* muted, not invisible */
+  --ui-menu-item-bg-hover: var(--md-sys-color-neutral-tint-dimmer);   /* 10% neutral alpha wash */
+  --ui-menu-item-ink-disabled: var(--md-sys-color-neutral-outline);   /* muted, not invisible */
 
 }
 
@@ -108,7 +108,7 @@
   /* Keyboard focus ring (ADR-0009) — reads fleet tokens directly (the documented family exception:
      every control draws the identical ring; see button.css for the precedent). */
   :scope [role='menuitem']:not([disabled]):not([aria-disabled='true']):focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: calc(-1 * var(--ui-focus-ring-offset));
   }
 

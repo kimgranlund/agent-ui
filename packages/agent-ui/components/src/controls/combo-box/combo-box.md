@@ -122,14 +122,14 @@ geometry:
     radius: var(--ui-combo-box-radius)     # = var(--ui-radius-base) — shared fleet radius
     minInlineSize: var(--ui-combo-box-min-inline-size) # 20ch floor — ADR-0021 entry-control law
   panel:
-    surface: var(--ui-combo-box-panel-bg)  # = var(--c-neutral-surface) — opaque neutral surface
+    surface: var(--ui-combo-box-panel-bg)  # = var(--md-sys-color-neutral-surface) — opaque neutral surface
     radius: var(--ui-combo-box-panel-radius)  # = var(--ui-radius-base)
     minInlineSize: var(--ui-combo-box-panel-min-inline-size)  # 12rem panel collapse floor
   options:
     paddingBlock: var(--ui-combo-box-option-padding-block)   # = var(--ui-space-xs) — item-pad row
     paddingInline: var(--ui-combo-box-option-padding-inline)  # = var(--ui-space-sm)
 
-forcedColors: A `@media (forced-colors: active)` block maps the editor to Field/FieldText/FieldText border and the panel to Canvas/CanvasText. The active-descendant highlight paints Highlight/HighlightText (with forced-color-adjust:none to preserve it). The focus ring inherits the Highlight system colour via --c-focus-ring.
+forcedColors: A `@media (forced-colors: active)` block maps the editor to Field/FieldText/FieldText border and the panel to Canvas/CanvasText. The active-descendant highlight paints Highlight/HighlightText (with forced-color-adjust:none to preserve it). The focus ring inherits the Highlight system colour via --md-sys-color-focus-ring.
 ---
 
 # ui-combo-box

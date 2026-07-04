@@ -10,8 +10,8 @@ declare const process: { cwd(): string }
 // region anatomy) consume ONLY the own --ui-card-* chain (+ the role-pure --ui-container-* surface seam). The
 // rendered surface + forced-colors survival is the cross-engine card.browser.test.ts.
 
-// Strip CSS block comments — a `var(--c-…)` mentioned in a banner/comment is DOCUMENTATION, not a live
-// reference, and must not pollute the role-leak / hygiene scans (the banner names --c-neutral-surface in prose).
+// Strip CSS block comments — a `var(--md-sys-color-…)` mentioned in a banner/comment is DOCUMENTATION, not a live
+// reference, and must not pollute the role-leak / hygiene scans (the banner names --md-sys-color-neutral-surface in prose).
 const css = (readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/card/card.css`, 'utf8') as string)
   .replace(/\/\*[\s\S]*?\*\//g, ' ')
 
@@ -38,7 +38,7 @@ const scopeCard = balancedBlock('@scope (ui-card)')
 const scopeContent = balancedBlock('@scope (ui-card-content)')
 
 // A consumption block may read ONLY the own --ui-card-* chain + the role-pure container surface seam
-// (--ui-container-*, ADR-0015 cl.2) — never a raw --c-* role nor a shared ramp (--ui-space-*/--ui-radius-base).
+// (--ui-container-*, ADR-0015 cl.2) — never a raw --md-sys-color-* role nor a shared ramp (--ui-space-*/--ui-radius-base).
 const allowed = (v: string): boolean => /^--ui-card-/.test(v) || /^--ui-container-/.test(v)
 const foreignRefs = (block: string): string[] =>
   [...block.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1] as string).filter((v) => !allowed(v))
@@ -55,19 +55,19 @@ describe('card.css — sectioned, single-sheet family (ADR-0003)', () => {
   })
 })
 
-describe('card.css — role-purity: --c-* roles + ramps live ONLY in the TOKEN blocks', () => {
-  it('the card seeds its OWN default surface --ui-container-bg from --c-neutral-surface', () => {
+describe('card.css — role-purity: --md-sys-color-* roles + ramps live ONLY in the TOKEN blocks', () => {
+  it('the card seeds its OWN default surface --ui-container-bg from --md-sys-color-neutral-surface', () => {
     // ADR-0015: the base seam defaults transparent; an un-elevated card must still read as a surface.
-    expect(cardTokens).toMatch(/--ui-container-bg:\s*var\(--c-neutral-surface\)/)
+    expect(cardTokens).toMatch(/--ui-container-bg:\s*var\(--md-sys-color-neutral-surface\)/)
   })
 
-  it('the border role is --c-neutral-outline-variant (a hairline neutral frame)', () => {
-    expect(cardTokens).toMatch(/--ui-card-border:\s*var\(--c-neutral-outline-variant\)/)
+  it('the border role is --md-sys-color-neutral-outline-variant (a hairline neutral frame)', () => {
+    expect(cardTokens).toMatch(/--ui-card-border:\s*var\(--md-sys-color-neutral-outline-variant\)/)
   })
 
-  it('EVERY --c-* role reference lives inside the :where(ui-card) token block (none leaks to a STYLES rule)', () => {
-    const allRoleRefs = [...css.matchAll(/var\((--c-[\w-]+)/g)].map((m) => m[1] as string).sort()
-    const tokenRoleRefs = [...cardTokens.matchAll(/var\((--c-[\w-]+)/g)].map((m) => m[1] as string).sort()
+  it('EVERY --md-sys-color-* role reference lives inside the :where(ui-card) token block (none leaks to a STYLES rule)', () => {
+    const allRoleRefs = [...css.matchAll(/var\((--md-sys-color-[\w-]+)/g)].map((m) => m[1] as string).sort()
+    const tokenRoleRefs = [...cardTokens.matchAll(/var\((--md-sys-color-[\w-]+)/g)].map((m) => m[1] as string).sort()
     expect(allRoleRefs.length).toBeGreaterThan(0) // anti-vacuous — roles ARE used
     expect(allRoleRefs).toEqual(tokenRoleRefs) // and ALL of them are confined to the token block
   })
@@ -89,9 +89,9 @@ describe('card.css — @scope token hygiene (consume only --ui-card-* / --ui-con
     expect(scopeContent).toMatch(/var\(--ui-card-fade\)/)
   })
 
-  it('NEGATIVE control: a planted raw --c-* ref in a styles block is CAUGHT by the hygiene predicate', () => {
-    const planted = '@scope (ui-card) { :scope { border-color: var(--c-neutral-outline); } }'
-    expect(foreignRefs(planted)).toEqual(['--c-neutral-outline'])
+  it('NEGATIVE control: a planted raw --md-sys-color-* ref in a styles block is CAUGHT by the hygiene predicate', () => {
+    const planted = '@scope (ui-card) { :scope { border-color: var(--md-sys-color-neutral-outline); } }'
+    expect(foreignRefs(planted)).toEqual(['--md-sys-color-neutral-outline'])
   })
 })
 
@@ -110,7 +110,7 @@ describe('card.css — region-less humane default (ADR-0056)', () => {
     expect(fallbackBlock).toMatch(/padding-inline:\s*var\(--ui-card-region-pad-inline\)/)
     expect(fallbackBlock).toMatch(/padding-block:\s*var\(--ui-card-region-pad-block\)/)
     expect(fallbackBlock).toMatch(/gap:\s*var\(--ui-card-content-gap\)/)
-    // hygiene: no foreign (--c-* / bare ramp) reference sneaks into the fallback leg
+    // hygiene: no foreign (--md-sys-color-* / bare ramp) reference sneaks into the fallback leg
     expect(foreignRefs(fallbackBlock)).toEqual([])
   })
 

@@ -1,8 +1,8 @@
 ---
 # column.md frontmatter — the attributes-as-API descriptor for ui-column (ADR-0004). The machine-checkable
 # public surface lives HERE (frontmatter); the prose below the fence is the /site doc. The `attributes[]` block
-# MUST mirror column.ts `static props` (the spread surfaceProps + flexProps) — the contract↔props trip-wire
-# (column-descriptor.test.ts) targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
+# MUST mirror column.ts `static props` (the spread surfaceProps + flexProps, plus the column-local `stretch`) —
+# the contract↔props trip-wire (column-descriptor.test.ts) targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 #
 # NOTE `extends: UIContainerElement` is the new G9 surface base; the descriptor-schema BASE_CLASSES gains it in
 # the s12 packaging slice. Until then the schema flags only `extends` (BAD_EXTENDS); every other rule is clean
@@ -23,9 +23,9 @@ attributes:            # attributes-as-API — mirrors column.ts `static props` 
     values: [0, 1, 2, 3, -1, -2, -3]
     default: 0
     reflect: true
-  - name: align        # cross-axis (inline) alignment → align-items (ADR-0030: default changed start→stretch)
+  - name: align        # cross-axis (inline) alignment → align-items (ADR-0030 default stretch). `center` NOT allowed on ui-column (Kim) — narrowed 4-member enum, stretch-first (default + snap target)
     type: enum
-    values: [start, center, end, stretch, baseline]
+    values: [stretch, start, end, baseline]
     default: stretch
     reflect: true      # reflects so the [align] flex repoint in column.css applies to JS-set values
   - name: justify      # main-axis (block) distribution → justify-content (between/around/evenly → space-*)
@@ -39,6 +39,10 @@ attributes:            # attributes-as-API — mirrors column.ts `static props` 
     default: none
     reflect: true
   - name: wrap         # → flex-wrap (boolean presence: present ⇒ wrap)
+    type: boolean
+    default: false
+    reflect: true
+  - name: stretch      # → width: stretch (boolean presence: present ⇒ the host FILLS its parent's inline size). Column-LOCAL sizing opt-in — NOT part of the shared flexProps grammar
     type: boolean
     default: false
     reflect: true
@@ -88,10 +92,14 @@ the element's **identity** (the tag names the main axis, A2UI-faithfully) — no
 `ui-column` consumes the shared, spreadable `flexProps` — the same one grammar four layout primitives share
 (ADR-0016 cl.1), each reflected attribute mapping 1:1 onto a CSS flex property in column.css:
 
-- **`align`** (cross axis = inline) → `align-items`: `stretch` (default — children fill the column's width; use `start` to shrink-wrap to content width) · `center` · `end` · `start` · `baseline`. (ADR-0030: default changed from `start` to `stretch`.)
+- **`align`** (cross axis = inline) → `align-items`: `stretch` (default — children fill the column's width) · `start` (shrink-wrap to content width) · `end` · `baseline`. **`center` is NOT allowed on `ui-column`** — a column centers its children only by shrink-wrapping them, which defeats the fill-width default and is an anti-pattern for stacked content; an `align="center"` snaps back to `stretch` and has no `[align='center']` CSS rule. Use a `ui-row` (or wrap the content) for horizontal centering. (ADR-0030: default `start`→`stretch`.)
 - **`justify`** (main axis = block) → `justify-content`: `start` (default) · `center` · `end` · `between` · `around` · `evenly` (the `between`/`around`/`evenly` keywords map to `space-*`).
 - **`gap`** → `gap: var(--ui-space-{step})`: `none` (default) · `xs` · `sm` · `md` · `lg` · `xl` · `2xl` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), **never** a control dimension. An ancestor `[density]` (`compact/comfortable/spacious`) re-multiplies the gap; `[scale]` (the `ui-sm…content-lg` tier, ADR-0032) does not touch it (spacing is rhythm, not frame).
 - **`wrap`** → `flex-wrap` (boolean presence): present ⇒ children wrap onto multiple lines.
+
+## Sizing
+
+- **`stretch`** → `width: stretch` (boolean presence, column-**local** — deliberately **not** part of the shared `flexProps` grammar, so `ui-row`/`ui-grid`/`ui-list` are unaffected): present ⇒ the host **fills** its parent's available inline size instead of shrink-wrapping to content. Intended for a **root** layout box — e.g. the A2UI canvas sets it on a root `ui-column` so the surface fills its artboard. The rule uses a fill-available fallback cascade (`-webkit-fill-available` / `-moz-available` / `stretch`) so it fills cross-engine.
 
 ## Surface
 

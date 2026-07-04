@@ -131,11 +131,11 @@ describe('ui-text-field — :focus-within ring on the HOST frame (both engines)'
 
     await userEvent.click(editor) // POINTER modality — the deviation: a text field rings on mouse focus too
     expect(field.matches(':focus-within'), 'the host did not match :focus-within after focusing the editor').toBe(true)
-    // the ADR-0014 dev#1 contract: the ring (the shared --c-focus-ring outline) is on the HOST frame, drawn off
+    // the ADR-0014 dev#1 contract: the ring (the shared --md-sys-color-focus-ring outline) is on the HOST frame, drawn off
     // :focus-within — so unlike the button's :focus-visible ring, a mouse click DOES surface it (text-entry parity).
     expect(ringDrawn(field), `${server.browser}: the :focus-within ring was not drawn on mouse focus`).toBe(true)
 
-    // the ring is the SOLE focus indicator — the field border steps TRANSPARENT on focus (a --c-focus-ring
+    // the ring is the SOLE focus indicator — the field border steps TRANSPARENT on focus (a --md-sys-color-focus-ring
     // border-color step would double with the ring into a visible double border; ADR-0014 dev#1). MOTION-AWARE
     // read: once :state(ready) is armed the border-color FADES to transparent over --ui-motion-fast, so poll
     // until it settles to alpha 0 (rgba(0,0,0,0)) — no second blue frame is painted.
@@ -204,7 +204,7 @@ describe('ui-text-field — forced-colors survival (Chromium emulates via CDP; W
       expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
 
       // the ring SURVIVES (the field is still focused) — the :focus-within outline resolves via
-      // --c-focus-ring → Highlight (the WHCM ring is free). The focus border-color is dropped by forced-colors;
+      // --md-sys-color-focus-ring → Highlight (the WHCM ring is free). The focus border-color is dropped by forced-colors;
       // the outline is WHY dev#1 makes the ring the SOLE focus indicator (the transparent border carries nothing).
       expect(ringDrawn(field), 'the :focus-within ring vanished under forced-colors').toBe(true)
 
@@ -258,7 +258,7 @@ describe('ui-text-field — visible inline-validation message (ADR-0029 A1, exte
     expect(getComputedStyle(message).display, ':state(user-invalid) did not give the message display:block').toBe('block')
     // the message carries the validation message text (set by text-field.ts from formValidity().message)
     expect(message.textContent?.length, 'message node has no text content under user-invalid').toBeGreaterThan(0)
-    // danger ink: the `color` property resolves to a non-transparent colour via --ui-text-field-message-ink → --c-danger-on-surface-variant
+    // danger ink: the `color` property resolves to a non-transparent colour via --ui-text-field-message-ink → --md-sys-color-danger-on-surface-variant
     expect(alphaOf(getComputedStyle(message).color), 'message ink is transparent — danger colour not applied').toBeGreaterThan(0)
 
     // RECOVERY: filling the field should clear user-invalid and hide the message again.

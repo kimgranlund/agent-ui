@@ -4,9 +4,9 @@
 > `git log -- packages/agent-ui/a2ui/` + the realized modules and their co-located probes** — this
 > file only orients; when it disagrees with the tree, the tree wins and this file gets repaired.
 > Build seat: the **`a2ui-builder`** agent (`.claude/agents/a2ui-builder.md`) — one unit per
-> dispatch, spec-faithful, escalates protocol-silence to the host. · updated 2026-07-04
+> dispatch, spec-faithful, escalates protocol-silence to the host. · updated 2026-07-05
 
-## Realized (verified against the tree, 144 files / 2342 tests green repo-wide)
+## Realized (verified against the tree, 2365 jsdom + 564 browser tests green repo-wide)
 
 - **A1 runtime foundation** — the shared validation spine (`renderer/validate.ts` +
   `corpus/validate.ts`, SPEC-N6 parity) + `surface.ts`/`parser.ts` (streamed payload parse) +
@@ -79,14 +79,27 @@
    gap — components backlog; still open) · ~~a check-time demo-payload validity gate~~ — **DONE**,
    see the corpus store's `corpus-data.test.ts` above · defer `<ui-calendar>` element creation to
    first-open (ADR-0048's lazy spirit; the eager element is guarded but still built — still open).
-3. **The live-agent example** — the ladder's last rung (streaming SHIPPED 2026-07-02, harness
-   SHIPPED 2026-07-04): a real LLM emitting A2UI over the wire — prompt → streamed payload →
-   rendered surface → the human interacts → client messages return → the agent continues. Rides
-   the harness's `a2ui-compose`/`a2ui-composer` loop contract (procedural today — this wave owns
-   the FIRST programmatic realization) + `retrieve()` over the now-JUDGED 11-record shard for
-   few-shot conditioning (shown ≡ fed ≡ retrieved ≡ judged). Also shipped along the way: ADR-0056
-   (the region-less card humane default + the container pedagogy) · the validator/dispatch envelope
-   parity closed · `type=date`'s calendar now built on first-open.
+3. ~~The live-agent example~~ — **DONE 2026-07-05** (ADRs 0069–0073, `a2ui-live-agent.spec.md` +
+   `.lld.md` + decomp, all accepted). The ladder's last rung is visible: the `site/a2ui-live` demo
+   chat app — layout `[ chat | a2ui-canvas ]`, the canvas a TABS pane (Canvas translate-centered ·
+   JSON · HTML, each a `<pre><code>`). A real LLM emits A2UI over the wire — prompt → streamed
+   payload → rendered REAL surface → the human interacts → client messages return → the agent
+   continues (multi-turn, stateless proxy; session state client-side). Built behind the
+   **`AgentTransport` seam** (SPEC-R1): the DEFAULT is a deterministic RECORDED backbone (offline,
+   CI-covered, ships in the static build) + a **dev-only** live overlay (Vite-proxy, `import.meta.env.DEV`-
+   guarded dynamic import ⇒ tree-shaken from `vite build` — proven: `dist/` carries no overlay
+   module, proxy path, key name, or endpoint). The runtime is the bounded **retrieve→generate→
+   validate→self-correct** loop (`produce.ts`, maxRounds 3, VALIDATE-THEN-STREAM — nothing invalid
+   ever paints), reusing the SHARED validator + `corpus/heal.ts` + `retrieve()` over the JUDGED
+   11-record shard (no fork). Provider seam is **config-driven** (`providers.json` — Anthropic
+   implemented via plain `fetch`/SSE, OpenAI/Gemini registry stubs `implemented:false`); the proxy
+   is the **trust boundary** — it holds the key server-side + validates the `{provider,model}` PAIR
+   (`resolvePair`) and passes the VALIDATED model AUTHORITATIVELY (a crafted `input.model` cannot
+   escape the allowlist — SPEC-R12, gate-covered). 8 standing test files / 23 tests, zero-dep. Two
+   independent reviews (layout + harness, generator≠critic): GO after one MAJOR (the model-authority
+   bypass, now fixed + gated) and six minors, all applied. Also shipped along the way earlier: ADR-0056
+   (the region-less card humane default + container pedagogy) · validator/dispatch envelope parity ·
+   `type=date`'s calendar built on first-open.
 
 ## Corpus-store follow-ups (from the 2026-07-03 wave, all latent/safe-direction — none blocking)
 
@@ -121,6 +134,58 @@
   this catalog type" — genuinely `a2ui-builder` territory, scores above threshold). Low severity
   per the tool's own tripwire-not-certification policy; worth widening the negative corpus if the
   routing seat is touched again.
+
+## Live-agent follow-ups (from the 2026-07-05 wave, all minor/latent — none blocking)
+
+- OpenAI + Gemini are registry rows (`implemented:false`) with stub adapter modules — the seam is
+  wired (switcher disables them, proxy degrades, dispatch table omits them) but no real adapter
+  exists; landing one is "add the module + one `IMPLEMENTED` entry" (mirrors `anthropic.ts`).
+- The live path is PROVEN end-to-end (2026-07-05): one real Anthropic turn streamed a valid
+  `createSurface`+`Button` back through the proxy. The key is resolved server-side via Vite's
+  `loadEnv` merged over `process.env` (the dev-proxy fix — a bare `process.env[envKey]` read missed
+  the `.env`-only key, the "no live API key found" degrade). Real-model acceptance stays MANUAL by
+  design (needs a key + network; SPEC-R3) — the loop MECHANICS are stub-gated; no STANDING test drives
+  a live model, and the `dist/` key-leak grep is likewise manual (the `npm run size` precedent).
+- `.env` hygiene: the repo-root `.env` carries redundant `VITE_ANTHROPIC_API_KEY` / `VITE_OPENAI_API_KEY`
+  / `VITE_GEMINI_API_KEY` copies (for the DEFERRED browser-direct arm). They are inert today — Vite's
+  `envDir` is `root: 'site'` and there is no `site/.env`, so the repo-root `.env` is never loaded into
+  `import.meta.env`, AND the build-key-safety gate proves no code reads `import.meta.env.VITE_*`. But
+  they are a latent footgun if `envDir` ever moves to the repo root; recommend deleting the three
+  `VITE_*` lines until the browser-direct arm is actually built (user owns `.env` — not edited here).
+- The dev-proxy rejects an over-`MAX_BODY` request via the generic 500 catch, not a 413; it also
+  doesn't `req.destroy()` on the cap, so an oversize body keeps buffering until the socket ends.
+  Dev-only, localhost-bounded — cosmetic/hardening, not a correctness gap.
+
+## Post-ship canvas/agent refinements (2026-07-04, gate-green; ADRs 0075/0076 ACCEPTED 2026-07-04)
+
+Driven by live-agent output against the real canvas — all shipped, all gates green:
+
+- **Claude Haiku 4.5** (`claude-haiku-4-5-20251001`) added to the Anthropic registry row (selectable
+  in the switcher; proven with a real turn). Data-only — the ADR-0073 registry is the SoT.
+- **Dev-proxy re-reads `providers.json` PER REQUEST** (catalog + shard stay loaded once) so a registry
+  edit needs no dev-server restart — the switcher (HMR-reloaded) and the PAIR-allowlist can't drift
+  (the Haiku-4.5 `400 unknown-model` symptom). Recorded as an ADR-0069 realization note.
+- **`ui-column` refinements ([ADR-0075](../adr/0075-ui-column-canvas-root-stretch-no-center.md), accepted):**
+  a column-local `stretch` boolean prop (`width: stretch`, fill cascade) the canvas sets on a ROOT column
+  so the surface fills the artboard (a root column shrink-collapses under `align-items:center` +
+  `container-type:inline-size`); AND `align="center"` PROHIBITED on `ui-column` (enum narrowed +
+  `Column.align` drops center; Row keeps it). The canvas gained a definite-width artboard too.
+- **The renderer honors catalog-declared `enum`s ([ADR-0076](../adr/0076-renderer-honors-catalog-declared-enums.md), accepted):**
+  the widget resolver skips a LITERAL value the PropDef enum doesn't list — the mechanism that makes the
+  `Column.align` narrowing (and every catalog enum) effective in the DOM (the factory's property-set path
+  bypassed the component's own coercion; the wire validator checks type, not enum membership). Pure
+  cleanup — such values were already CSS-inert. Validator-level enum enforcement + self-correct is the
+  named future extension (broader blast radius; deferred until the corpus is known-clean).
+- A reference live-agent payload (the compose loop's round-1 clear) is not yet committed as an
+  `src/examples/` fixture — candidate shelf addition, same as the harness wave's newsletter payload.
+
+## Docs-site Generative-UI playground (2026-07-04, gate-green; ADR-0077 ACCEPTED 2026-07-04)
+
+The a2ui-relevant slice of the docs-site wave ([decomp](../decompositions/site-preview-catalog-adr.decomp.md) · [ADR-0077](../adr/0077-docs-site-genui-playground-preview-catalog-adr-index.md)):
+
+- **New live catalog consumer** — `site/a2ui-catalog` renders EVERY `defaultCatalog` component through the real renderer via a site-local `<component-preview mode="a2ui">` element (metadata ← `catalog.json` props; a live-knobs playground per type; the specimen is authoritative for its own state, read-back-before-rebuild). A second mode previews `ui-*` controls off their `{name}.md` descriptor. Derived, not hand-authored; pinned by `site-preview-catalog.test.ts` (hand-authored sample-tree maps ⊆ catalog names).
+- **`catalog.json` `Button.variant` tightened → `enum:["solid","soft","ghost"]`** (was an un-enumerated string) — brings the catalog into agreement with the control's own declared enum; **realizes [ADR-0076](../adr/0076-renderer-honors-catalog-declared-enums.md) for Button** (the renderer now skips a non-member variant) + gives a2ui-mode Button a chip switcher. Verified safe: every example uses `solid`/`soft`; corpus unaffected.
+- Deferred (a2ui-adjacent): consolidate the `a2ui-live` canvas onto the new shared `site/lib/canvas-surface` module (currently a proven CSS copy).
 
 ## How to start a unit
 

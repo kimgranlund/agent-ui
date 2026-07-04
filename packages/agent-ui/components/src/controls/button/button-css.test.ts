@@ -26,7 +26,7 @@ describe('button.css — structure + token hygiene (s7)', () => {
     for (const slot of ['bg', 'ink', 'border', 'height', 'font', 'gap', 'icon']) {
       expect(tokenBlock).toMatch(new RegExp(`--ui-button-${slot}:`))
     }
-    expect(tokenBlock).toContain('var(--c-primary') // colour roles (default family = primary)
+    expect(tokenBlock).toContain('var(--md-sys-color-primary') // colour roles (default family = primary)
     expect(tokenBlock).toContain('var(--ui-height-md)') // the s6 dimensional ramp
   })
 
@@ -45,7 +45,7 @@ describe('button.css — structure + token hygiene (s7)', () => {
     // identical ring / uses the identical motion timing — fleet tokens, not per-control opinions: the focus
     // ring (ADR-0009) and the state-transition motion (interaction-states standard).
     const sharedFleet = new Set([
-      '--c-focus-ring', '--ui-focus-ring-width', '--ui-focus-ring-offset', // the shared focus ring (ADR-0009)
+      '--md-sys-color-focus-ring', '--ui-focus-ring-width', '--ui-focus-ring-offset', // the shared focus ring (ADR-0009)
       '--ui-motion-fast', '--ui-ease-standard', // the shared state-transition motion (interaction-states standard)
       '--ui-control-line-height', // the single-line Control line-height fleet constant (ADR-0036)
     ])
@@ -88,25 +88,25 @@ const variantBlock = (marker: string): string => {
 }
 
 describe('button.css — interaction states from role ladders (ADR-0008)', () => {
-  it('solid (default) steps the DEDICATED interaction roles: idle --c-primary · hover -hover · active -active', () => {
+  it('solid (default) steps the DEDICATED interaction roles: idle --md-sys-color-primary · hover -hover · active -active', () => {
     const b = variantBlock(':where(ui-button) {')
-    expect(b).toMatch(/--ui-button-bg:\s*var\(--c-primary\)/)
-    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--c-primary-hover\)/) // tok-states (ADR-0008 amendment)
-    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--c-primary-active\)/)
+    expect(b).toMatch(/--ui-button-bg:\s*var\(--md-sys-color-primary\)/)
+    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--md-sys-color-primary-hover\)/) // tok-states (ADR-0008 amendment)
+    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--md-sys-color-primary-active\)/)
   })
 
   it('soft steps the CONTAINER ladder: idle -container-low · hover -container · active -container-high', () => {
     const b = variantBlock(":where(ui-button[variant='soft'])")
-    expect(b).toMatch(/--ui-button-bg:\s*var\(--c-primary-container-low\)/)
-    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--c-primary-container\)/)
-    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--c-primary-container-high\)/)
+    expect(b).toMatch(/--ui-button-bg:\s*var\(--md-sys-color-primary-container-low\)/)
+    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--md-sys-color-primary-container\)/)
+    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--md-sys-color-primary-container-high\)/)
   })
 
   it('ghost is a WASH: transparent idle · hover -container-low · active -container', () => {
     const b = variantBlock(":where(ui-button[variant='ghost'])")
     expect(b).toMatch(/--ui-button-bg:\s*transparent/)
-    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--c-primary-container-low\)/)
-    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--c-primary-container\)/)
+    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--md-sys-color-primary-container-low\)/)
+    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--md-sys-color-primary-container\)/)
   })
 
   it('@scope consumes the per-state tokens on :hover/:active (background only); NO color-mix anywhere', () => {
@@ -117,18 +117,18 @@ describe('button.css — interaction states from role ladders (ADR-0008)', () =>
 
   it('disabled HOLDS at idle: -bg-hover/-bg-active repoint to the muted neutral, and the host is pointer-inert', () => {
     const b = variantBlock(":where(ui-button[disabled])")
-    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--c-neutral-surface-high\)/)
-    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--c-neutral-surface-high\)/)
+    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--md-sys-color-neutral-surface-high\)/)
+    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--md-sys-color-neutral-surface-high\)/)
     expect(stylesBlock).toMatch(/:scope:is\(\[disabled\]\)\s*\{[^}]*pointer-events:\s*none/) // :hover/:active can't match
   })
 })
 
 describe('button.css — the shared focus ring (ADR-0009)', () => {
-  it(':focus-visible draws the fleet ring: a layout-neutral outline from the shared --c-focus-ring/--ui-focus-ring-*', () => {
+  it(':focus-visible draws the fleet ring: a layout-neutral outline from the shared --md-sys-color-focus-ring/--ui-focus-ring-*', () => {
     const m = stylesBlock.match(/:scope:focus-visible\s*\{([^}]*)\}/)
     expect(m, ':scope:focus-visible rule missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
-    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--c-focus-ring\)/)
+    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
     expect(rule).toMatch(/outline-offset:\s*var\(--ui-focus-ring-offset\)/)
   })
 

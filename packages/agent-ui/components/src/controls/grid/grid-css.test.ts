@@ -51,11 +51,11 @@ describe('grid.css — structure + token hygiene (s6)', () => {
     expect(code).not.toMatch(/grid-template-columns:\s*repeat\(\d/) // no explicit integer column count
   })
 
-  it('@scope CONSUMES only --ui-grid-* (token hygiene — no raw --c-* role, no --ui-space-* leak)', () => {
+  it('@scope CONSUMES only --ui-grid-* (token hygiene — no raw --md-sys-color-* role, no --ui-space-* leak)', () => {
     const refs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1])
     expect(refs.length).toBeGreaterThan(0) // anti-vacuous: the styles block really reads tokens
     for (const v of refs) expect(v, `@scope reads a non-grid token: ${v}`).toMatch(/^--ui-grid-/)
-    expect(code).not.toMatch(/var\(--c-/) // colour roles enter only via the SHARED surface sheet, never here
+    expect(code).not.toMatch(/var\(--md-sys-color-/) // colour roles enter only via the SHARED surface sheet, never here
   })
 
   it('carries NO control height — a Container/layout primitive (geometry.md)', () => {

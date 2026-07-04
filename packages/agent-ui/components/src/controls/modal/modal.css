@@ -2,14 +2,14 @@
  * blocks, mirroring button.css / text-field.css:
  *
  *   [1] TOKEN BLOCK  — `:where(ui-modal)` (specificity 0,0,0) sets the modal's OWN default surface and DECLARES
- *       the `--ui-modal-*` chain from the colour roles (`--c-{family}-{role}`, family = neutral) and the
+ *       the `--ui-modal-*` chain from the colour roles (`--md-sys-color-{family}-{role}`, family = neutral) and the
  *       dimensions (`--ui-space-*` / `--ui-radius-base`). This is where roles enter, exactly as button.css's
  *       `:where()` token block does. The container surface base defaults `--ui-container-bg` to TRANSPARENT (an
  *       unset layout primitive is unchanged — ADR-0015 cl.1); a modal is an OPAQUE plane, so it repoints its own
  *       default. The signed `elevation`/`brightness` axes still repoint `--ui-container-bg`/`-tint` on the HOST
  *       via container.css (higher specificity), and the value INHERITS to the dialog part below.
  *   [2] STYLES BLOCK — `@scope (ui-modal)` CONSUMES only the role-pure `--ui-container-*` surface seam + the own
- *       `--ui-modal-*` chain (never a raw `--c-*`). The host is `display: contents` — a logical wrapper that
+ *       `--ui-modal-*` chain (never a raw `--md-sys-color-*`). The host is `display: contents` — a logical wrapper that
  *       generates no box; only the control-owned `<dialog data-part="dialog">` PART renders, in the platform TOP
  *       LAYER when `showModal()` is called (ADR-0017). The native UA dialog frame (1em padding, solid border,
  *       Canvas bg, centring margin) is fully repointed onto the surface seam + the space/radius tokens. The
@@ -27,14 +27,14 @@
   /* The modal's OWN default surface (the container base defaults transparent — ADR-0015 cl.1; a modal is an
      opaque plane). `[elevation]`/`[brightness]` on the host still win (container.css repoints at (0,1,0)), and
      the seam value inherits down to the dialog part. */
-  --ui-container-bg: var(--c-neutral-surface);
+  --ui-container-bg: var(--md-sys-color-neutral-surface);
 
-  /* the own chain — @scope consumes ONLY these (+ the --ui-container-* seam), never a raw --c-* role */
-  --ui-modal-ink: var(--c-neutral-on-surface);
-  --ui-modal-outline: var(--c-neutral-outline-variant); /* the faint dialog frame */
+  /* the own chain — @scope consumes ONLY these (+ the --ui-container-* seam), never a raw --md-sys-color-* role */
+  --ui-modal-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-modal-outline: var(--md-sys-color-neutral-outline-variant); /* the faint dialog frame */
   --ui-modal-radius: var(--ui-radius-base); /* the shared fleet radius (ADR-0015 cl.5) */
   --ui-modal-padding: var(--ui-space-lg); /* the shell pad off the density-responsive ladder (NOT a control height) */
-  --ui-modal-scrim: var(--c-neutral-scrim); /* the ::backdrop blocking wash — a translucent scrim role (ADR-0017) */
+  --ui-modal-scrim: var(--md-sys-color-neutral-scrim); /* the ::backdrop blocking wash — a translucent scrim role (ADR-0017) */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-modal) consumes ONLY --ui-modal-* + the --ui-container-* seam ════════════════ */

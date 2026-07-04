@@ -93,7 +93,7 @@ acceptance.
      etc. (defaulting to `body`), and each `:where(ui-text[variant='h1'])` … repoints the three component
      tokens to the matching `--ui-type-h1-*`; the **`@scope (ui-text)` styles block** consumes **only**
      `--ui-text-*` (`font-size: var(--ui-text-size)`; `font-weight`; `line-height`). The component holds zero
-     scale opinion and reads no `--ui-type-*` (or `--c-*` ink role) directly. Naming: the **fleet** scale is
+     scale opinion and reads no `--ui-type-*` (or `--md-sys-color-*` ink role) directly. Naming: the **fleet** scale is
      `--ui-type-*` (NOT `--ui-text-*`) — deliberately, because `--ui-text-*` is the component prefix and is a
      strict prefix of `--ui-text-field-*`; keeping the fleet family `--ui-type-*` avoids the ambiguity.
 

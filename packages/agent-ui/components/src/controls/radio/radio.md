@@ -93,7 +93,7 @@ geometry:
   dotInset: 22% of box (box-shadow inset = 22% of diameter → dot fills ~44% of circle)
   labelGap: var(--ui-radio-gap)     # gap between circle and label slot (font/2 × density)
 
-forcedColors: A `@media (forced-colors: active)` block keeps the idle border (ButtonText) and the checked dot (forced-color-adjust on ::before preserves the inset box-shadow as ButtonText ink on Canvas). The focus ring survives via --c-focus-ring → Highlight.
+forcedColors: A `@media (forced-colors: active)` block keeps the idle border (ButtonText) and the checked dot (forced-color-adjust on ::before preserves the inset box-shadow as ButtonText ink on Canvas). The focus ring survives via --md-sys-color-focus-ring → Highlight.
 ---
 
 # ui-radio

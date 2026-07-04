@@ -1,0 +1,47 @@
+/* canvas-surface.css — the SHARED A2UI artboard chrome, derived from the proven `.canvas-stage` +
+ * `.canvas-surface` rules the live-agent canvas shipped (site/pages/a2ui-live.css). Extracted here so a second
+ * consumer (the component-preview element's right column) mounts the SAME translate-centered, checkered
+ * artboard rather than a divergent copy. The rendered A2UI surface keeps its own ui-* control CSS — this module
+ * never restyles a control; every colour is a `--md-sys-color-*` role (the page loads the foundation cascade
+ * via _page.ts first), so the artboard tracks light/dark. Adopting this module in a2ui-live is a DEFERRED host
+ * follow-up (ADR-0077) — a2ui-live is left untouched this wave so its freshly-shipped gates stay green. */
+
+/* The artboard box — the rendered surface is CENTERED via a CSS translate transform (per the canvas spec). */
+.canvas-stage {
+  position: relative;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: auto;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 15px, var(--md-sys-color-neutral-surface) 15px 16px),
+    repeating-linear-gradient(90deg, transparent 0 15px, var(--md-sys-color-neutral-surface) 15px 16px);
+  background-color: var(--md-sys-color-neutral-surface-low);
+}
+
+.canvas-surface {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* centre the surface within the stage via translate offsets (per spec) */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1rem;
+  /* A DEFINITE artboard width — NOT just max-inline-size. An absolutely-positioned flex column with only a max
+   * width shrink-fits, and its align-items:center children then resolve to min-content (~1ch): the whole surface
+   * collapses to a one-character-per-line strip. A definite width gives the rendered surface a real space to lay
+   * out in; content wider than the cap scrolls (overflow:auto below). */
+  inline-size: min(32rem, calc(100% - 2rem));
+  /* Cap at the stage box so the translate-centered surface NEVER clips above the top edge: a surface shorter
+   * than the stage centres; one taller than the stage is clamped to the stage height and scrolls INSIDE this
+   * centred box (the stage's own overflow can't reach a negative-offset absolute child). */
+  max-block-size: 100%;
+  overflow: auto;
+}
+.canvas-surface:empty::after {
+  content: 'The rendered surface appears here.';
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.85rem;
+}

@@ -5,18 +5,18 @@
  * query-container establishment.
  *
  * Role-purity (ADR-0008 / tokens.md): the CONSUMPTION (the two `background-*` declarations) reads ONLY the
- * `--ui-container-*` seam — never a raw `--c-*` role. The TOKEN repoints below (`--ui-container-bg:
- * var(--c-neutral-surface-high)`) are where the colour roles enter, exactly as button.css's `:where()`
- * token block does — the `--c-*` is confined to the variable-definition side, so a container holds zero
+ * `--ui-container-*` seam — never a raw `--md-sys-color-*` role. The TOKEN repoints below (`--ui-container-bg:
+ * var(--md-sys-color-neutral-surface-high)`) are where the colour roles enter, exactly as button.css's `:where()`
+ * token block does — the `--md-sys-color-*` is confined to the variable-definition side, so a container holds zero
  * colour opinion and forced-colors is handled in the role/system layer.
  *
  * Two surface axes (ADR-0015 cl.1–3), both signed `-3…3`, realized against the s1 token ladders:
- *   • elevation → the scheme-INVERTING base PLANE: a SOLID `--c-neutral-surface-{lowest…highest}` step.
+ *   • elevation → the scheme-INVERTING base PLANE: a SOLID `--md-sys-color-neutral-surface-{lowest…highest}` step.
  *   • brightness → the scheme-CONSISTENT tonal shift. Two realizations (s1's AA-verified split):
- *       – SOLO (brightness set, elevation 0/unset): the SOLID `--c-neutral-surface-{dimmest…brightest}`
+ *       – SOLO (brightness set, elevation 0/unset): the SOLID `--md-sys-color-neutral-surface-{dimmest…brightest}`
  *         ladder is the base plane (no overlay) — ADR-0015 cl.1.
  *       – COMPOSITION (elevation≠0 AND brightness≠0): the elevation plane is the base, and brightness becomes
- *         a TRANSLUCENT wash (`--c-neutral-tint-{step}`) composited alpha-over it — ADR-0015 cl.3 — so the
+ *         a TRANSLUCENT wash (`--md-sys-color-neutral-tint-{step}`) composited alpha-over it — ADR-0015 cl.3 — so the
  *         `−m` wash sits over the `+n` plane and neither axis overwrites the other. (The tint roles exist
  *         ONLY for this case; s1 budgets their 14% alpha ceiling against the brightest dark elevation plane.)
  *   The single `--ui-container-bg`/`--ui-container-tint` consumption seam is fixed regardless (ADR-0015 cl.2);
@@ -40,49 +40,49 @@
   /* elevation=0 — the explicit neutral base. Placed FIRST so an active axis (a brightness ladder step below,
      or an elevation step) overrides it; an unset container stays transparent (this rule needs the attribute). */
   &[elevation='0'] {
-    --ui-container-bg: var(--c-neutral-surface);
+    --ui-container-bg: var(--md-sys-color-neutral-surface);
   }
 
   /* brightness SOLO → the SOLID scheme-consistent ladder as the base plane (ADR-0015 cl.1). When elevation is
      ALSO set, the elevation block below overrides this base (source order) and brightness moves to the wash. */
   &[brightness='-3'] {
-    --ui-container-bg: var(--c-neutral-surface-dimmest);
+    --ui-container-bg: var(--md-sys-color-neutral-surface-dimmest);
   }
   &[brightness='-2'] {
-    --ui-container-bg: var(--c-neutral-surface-dimmer);
+    --ui-container-bg: var(--md-sys-color-neutral-surface-dimmer);
   }
   &[brightness='-1'] {
-    --ui-container-bg: var(--c-neutral-surface-dim);
+    --ui-container-bg: var(--md-sys-color-neutral-surface-dim);
   }
   &[brightness='1'] {
-    --ui-container-bg: var(--c-neutral-surface-bright);
+    --ui-container-bg: var(--md-sys-color-neutral-surface-bright);
   }
   &[brightness='2'] {
-    --ui-container-bg: var(--c-neutral-surface-brighter);
+    --ui-container-bg: var(--md-sys-color-neutral-surface-brighter);
   }
   &[brightness='3'] {
-    --ui-container-bg: var(--c-neutral-surface-brightest);
+    --ui-container-bg: var(--md-sys-color-neutral-surface-brightest);
   }
 
   /* elevation → the SOLID scheme-inverting base plane (-3..3 → lowest…highest). After the brightness block,
      so elevation WINS the base plane when both axes are set (equal specificity → later source wins). */
   &[elevation='-3'] {
-    --ui-container-bg: var(--c-neutral-surface-lowest);
+    --ui-container-bg: var(--md-sys-color-neutral-surface-lowest);
   }
   &[elevation='-2'] {
-    --ui-container-bg: var(--c-neutral-surface-lower);
+    --ui-container-bg: var(--md-sys-color-neutral-surface-lower);
   }
   &[elevation='-1'] {
-    --ui-container-bg: var(--c-neutral-surface-low);
+    --ui-container-bg: var(--md-sys-color-neutral-surface-low);
   }
   &[elevation='1'] {
-    --ui-container-bg: var(--c-neutral-surface-high);
+    --ui-container-bg: var(--md-sys-color-neutral-surface-high);
   }
   &[elevation='2'] {
-    --ui-container-bg: var(--c-neutral-surface-higher);
+    --ui-container-bg: var(--md-sys-color-neutral-surface-higher);
   }
   &[elevation='3'] {
-    --ui-container-bg: var(--c-neutral-surface-highest);
+    --ui-container-bg: var(--md-sys-color-neutral-surface-highest);
   }
 
   /* COMPOSITION tonal WASH — brightness as a translucent overlay, ONLY when elevation is non-zero (s1: the
@@ -91,22 +91,22 @@
      ladder; the two-attribute selector (0,2,0) outranks the base-plane repoints, but it only sets the tint. */
   &:is([elevation='-3'], [elevation='-2'], [elevation='-1'], [elevation='1'], [elevation='2'], [elevation='3']) {
     &[brightness='-3'] {
-      --ui-container-tint: var(--c-neutral-tint-dimmest);
+      --ui-container-tint: var(--md-sys-color-neutral-tint-dimmest);
     }
     &[brightness='-2'] {
-      --ui-container-tint: var(--c-neutral-tint-dimmer);
+      --ui-container-tint: var(--md-sys-color-neutral-tint-dimmer);
     }
     &[brightness='-1'] {
-      --ui-container-tint: var(--c-neutral-tint-dim);
+      --ui-container-tint: var(--md-sys-color-neutral-tint-dim);
     }
     &[brightness='1'] {
-      --ui-container-tint: var(--c-neutral-tint-bright);
+      --ui-container-tint: var(--md-sys-color-neutral-tint-bright);
     }
     &[brightness='2'] {
-      --ui-container-tint: var(--c-neutral-tint-brighter);
+      --ui-container-tint: var(--md-sys-color-neutral-tint-brighter);
     }
     &[brightness='3'] {
-      --ui-container-tint: var(--c-neutral-tint-brightest);
+      --ui-container-tint: var(--md-sys-color-neutral-tint-brightest);
     }
   }
 

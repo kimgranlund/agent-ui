@@ -2,7 +2,7 @@
  * the card/tabs/modal demos). It styles the page's OWN demo content — the `.demo-box` layout items a container
  * lays out, the figure/caption frames, and the demo section spacing — and NEVER restyles a ui-* control (the
  * containers keep all geometry/colour/surface from their own {name}.css). Imported AFTER _page.ts so it reads
- * the foundation `--c-*` roles. */
+ * the foundation `--md-sys-color-*` roles. */
 
 [data-page-content] {
   display: flex;
@@ -20,7 +20,7 @@
 [data-page-content] > section > p {
   margin: 0 0 1rem;
   max-inline-size: 64ch;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   line-height: 1.5;
 }
 
@@ -32,10 +32,10 @@
   justify-content: center;
   min-block-size: 2.5rem;
   padding: 0.5rem 0.9rem;
-  border: 1px solid var(--c-neutral-outline-variant);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 0.5rem;
-  background: var(--c-neutral-surface-high);
-  color: var(--c-neutral-on-surface);
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
   font-size: 0.85rem;
   white-space: nowrap;
 }
@@ -47,15 +47,15 @@
   gap: 0.5rem;
   margin: 0;
   padding: 1rem;
-  border: 1px solid var(--c-neutral-outline-variant);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 0.6rem;
-  background: var(--c-neutral-surface-low);
+  background: var(--md-sys-color-neutral-surface-low);
 }
 
 .demo-caption {
   font-family: var(--ui-mono);
   font-size: 0.78rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* A wrapping grid of captioned specimens (the axis demos — one figure per enum value). */
@@ -77,9 +77,9 @@
   min-inline-size: 12rem;
   max-inline-size: 100%;
   padding: 1rem;
-  border: 1px dashed var(--c-neutral-outline);
+  border: 1px dashed var(--md-sys-color-neutral-outline);
   border-radius: 0.6rem;
-  background: var(--c-neutral-surface-low);
+  background: var(--md-sys-color-neutral-surface-low);
 }
 
 /* The shared event log for the interactive demos (tabs select · modal close/toggle). */
@@ -89,9 +89,9 @@
   min-block-size: 5rem;
   max-block-size: 13rem;
   overflow-y: auto;
-  border: 1px solid var(--c-neutral-outline-variant);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 0.5rem;
-  background: var(--c-neutral-surface-low);
+  background: var(--md-sys-color-neutral-surface-low);
   font-family: var(--ui-mono);
   font-size: 0.8rem;
   line-height: 1.6;
@@ -100,7 +100,7 @@
 
 .event-log:empty::before {
   content: 'No events yet — interact with the demo above.';
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 .event-log > li {

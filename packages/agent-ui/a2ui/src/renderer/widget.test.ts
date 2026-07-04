@@ -8,6 +8,7 @@ import type { CatalogEntry, CatalogRegistry, WidgetFactory } from '../catalog/ty
 // The REAL default factories (which import + self-define the `@agent-ui/components` control family) — used by
 // the render-integration block to prove the LLD-C8 two-way wiring end-to-end against a live `ui-*` control.
 import { defaultFactories } from '../catalog/default/factories.ts'
+import { defaultCatalog } from '../catalog/default/index.ts'
 
 // ── Synthetic stubs ───────────────────────────────────────────────────────────
 // This slice is decoupled from B-factory / B-registry / binding.ts: it is proven against a stub
@@ -216,5 +217,67 @@ describe('widget resolution — two-way input binding wired (render-integration,
     el.dispatchEvent(new Event('select'))
     el.dispatchEvent(new Event('change'))
     expect(surface.data.peek()).toEqual({ x: 1 }) // data model untouched
+  })
+})
+
+describe('widget resolution — catalog enum enforcement (skips a non-member literal)', () => {
+  // A registry entry carrying a REAL catalog def: `Box.align` is a closed enum [start,end,stretch] (NO
+  // center); `gap` is an unconstrained string (no enum). Proves the resolver honors the catalog's declared
+  // enum — a value the enum forbids is never applied, an unconstrained prop is untouched.
+  function enumRegistry(factories: Record<string, WidgetFactory>): CatalogRegistry {
+    const catalog = {
+      catalogId: 'demo',
+      protocolVersion: 'v1.0',
+      components: {
+        Box: {
+          name: 'Box',
+          properties: {
+            align: { type: { type: 'string', enum: ['start', 'end', 'stretch'] }, mapsTo: 'align' },
+            gap: { type: { type: 'string' }, mapsTo: 'gap' },
+          },
+        },
+      },
+      functions: {},
+    }
+    const entry = { catalog, factories } as unknown as CatalogEntry
+    return {
+      register: () => {},
+      get: (id) => (id === 'demo' ? entry : undefined),
+      supportedCatalogIds: () => ['demo'],
+      submitGateSelector: () => '',
+    }
+  }
+
+  it('skips a literal the PropDef enum does not list; applies a declared member + unconstrained props', () => {
+    const { factory, applied } = stubFactory('ui-column')
+    const createWidget = makeCreateWidget({ registry: enumRegistry({ Box: factory }), emitError: () => {}, resolveValue })
+    const surface = createSurface(init)
+
+    createWidget(comp({ id: 'x', component: 'Box', align: 'center', gap: '2rem' }), surface)
+    expect(applied.some((a) => a.prop === 'align')).toBe(false) // 'center' ∉ enum → dropped at the catalog boundary
+    expect(applied.some((a) => a.prop === 'gap' && a.value === '2rem')).toBe(true) // unconstrained prop → untouched
+
+    applied.length = 0
+    createWidget(comp({ id: 'y', component: 'Box', align: 'end' }), surface)
+    expect(applied.some((a) => a.prop === 'align' && a.value === 'end')).toBe(true) // a declared member → applied
+  })
+
+  it('with the REAL default catalog: a Column align="center" renders NO align attribute; justify="center" stays', () => {
+    // End-to-end for Kim's directive: `center` is not in the (narrowed) Column.align enum, so the resolver
+    // never applies it → the live ui-column carries no stray `align="center"` (it renders at its stretch
+    // default). `justify` still lists `center`, so a valid value on a DIFFERENT prop is applied normally.
+    const registry: CatalogRegistry = {
+      register: () => {},
+      get: (id) => (id === 'agent-ui' ? ({ catalog: defaultCatalog, factories: defaultFactories } as CatalogEntry) : undefined),
+      supportedCatalogIds: () => ['agent-ui'],
+      submitGateSelector: () => '',
+    }
+    const createWidget = makeCreateWidget({ registry, emitError: () => {}, resolveValue })
+    const surface = createSurface({ id: 's', catalogId: 'agent-ui', version: 'v1.0' })
+
+    const el = createWidget(comp({ id: 'root', component: 'Column', align: 'center', justify: 'center' }), surface)
+    expect(el.tagName.toLowerCase()).toBe('ui-column')
+    expect(el.getAttribute('align')).toBeNull() // center ∉ Column.align enum → never applied → no stray attribute
+    expect(el.getAttribute('justify')).toBe('center') // justify DOES list center → applied (gate is selective, not blanket)
   })
 })

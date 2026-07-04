@@ -8,7 +8,7 @@
 // as a presence-driven grid, not a flex line; ADR-0016 governs row/column, not card). The two surface axes
 // repoint the role-pure `--ui-container-bg`/`-tint` seam in controls/_surface/container.css; card.css adds the
 // one card-specific surface decision the base does NOT make — an un-elevated card still reads as a SURFACE
-// (the base default is `transparent`), so card.css seeds its own `--ui-container-bg: var(--c-neutral-surface)`.
+// (the base default is `transparent`), so card.css seeds its own `--ui-container-bg: var(--md-sys-color-neutral-surface)`.
 //
 // Content model — host-as-grid over the region SUB-ELEMENTS (`ui-card-header`/`-content`/`-footer`, the
 // ratified "regions = sub-elements"): the card does NOT `render()` a wrapper, so `render()` stays the

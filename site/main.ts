@@ -439,6 +439,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
         blurb: 'A two-line A2UI payload rendered live into a ui-button — the agent-driven payoff.',
       },
       {
+        href: './a2ui-catalog.html',
+        title: 'A2UI catalog',
+        blurb: 'Every default-catalog component rendered live through the real renderer — a live-knobs playground per component.',
+      },
+      {
         href: './a2ui-list.html',
         title: 'A2UI dynamic list',
         blurb: 'A container whose children is a template over a data array — display, container, interactive, and nested lists, all live (A2UI v1.0).',
@@ -457,6 +462,21 @@ const CARD_GROUPS: readonly CardGroup[] = [
         href: './a2ui-stream.html',
         title: 'A2UI streaming',
         blurb: 'The same payload streamed line-by-line — root-early paints progressively, root-last stays blank until the end, and a malformed line is fault-isolated live (replay + step).',
+      },
+      {
+        href: './a2ui-live.html',
+        title: 'A2UI live agent',
+        blurb: 'The ladder’s last rung: a chat app where an agent emits A2UI over the wire — prompt → rendered surface → you interact → the agent continues. A deterministic recorded backbone by default; a real model under `vite dev` with a key. Canvas / JSON / HTML tabs.',
+      },
+    ],
+  },
+  {
+    // Site-level meta pages (ungrouped — no component label, so not a fleet TOC group per site-toc.test.ts).
+    cards: [
+      {
+        href: './adr-index.html',
+        title: 'Decision Records',
+        blurb: 'Every ADR, newest-first, with live search and full-text expand.',
       },
     ],
   },

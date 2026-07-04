@@ -104,15 +104,15 @@ describe('list.css — @scope layout + hygiene (s5)', () => {
     expect(css).not.toMatch(/block-size:/) // no vertical frame lever
   })
 
-  it('@scope CONSUMES only --ui-list-* (no raw --c-*, no --ui-space-*, no fleet leak)', () => {
+  it('@scope CONSUMES only --ui-list-* (no raw --md-sys-color-*, no --ui-space-*, no fleet leak)', () => {
     expect(foreignScopeRefs(stylesBlock)).toEqual([])
     // anti-vacuous: the own chain IS consumed
     const allRefs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1] as string)
     expect(allRefs.some((v) => /^--ui-list-/.test(v))).toBe(true)
   })
 
-  it('NEGATIVE control: a planted raw --ui-space-* / --c-* ref in @scope is CAUGHT by the hygiene predicate', () => {
-    const planted = "@scope (ui-list) { :scope { gap: var(--ui-space-md); background: var(--c-neutral-surface); } }"
-    expect(foreignScopeRefs(planted)).toEqual(['--ui-space-md', '--c-neutral-surface'])
+  it('NEGATIVE control: a planted raw --ui-space-* / --md-sys-color-* ref in @scope is CAUGHT by the hygiene predicate', () => {
+    const planted = "@scope (ui-list) { :scope { gap: var(--ui-space-md); background: var(--md-sys-color-neutral-surface); } }"
+    expect(foreignScopeRefs(planted)).toEqual(['--ui-space-md', '--md-sys-color-neutral-surface'])
   })
 })

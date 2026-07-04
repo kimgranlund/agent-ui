@@ -1,0 +1,225 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "meta": {
+    "title": "A2UI live-agent example — the ladder's last rung: a real LLM emitting A2UI over the wire (prompt → validated stream → rendered surface → human interaction → client message → the agent continues), layered as a deterministic recorded backbone (always-on, gate-covered) + an opt-in dev-only live overlay (server-proxy path + a provisioned client-direct path, both behind the AgentTransport seam), a CONFIG-DRIVEN multi-provider seam (a committed providers.json registry enumerating Anthropic/OpenAI/Gemini + models — the SoT for the in-chat provider→model switcher AND the proxy allowlist; Anthropic implemented now, OpenAI/Gemini the immediate next adapter slices) · zero package deps · secret-free deterministic CI · the built/deployed static bundle NEVER bakes a key (the VITE_ inlining footgun) · tools land NESTED under packages/agent-ui/a2ui/tools (the tools/corpus precedent), standing tests under src/",
+    "date": "2026-07-04",
+    "author": "planner (design seat — the live-agent intake, NEXT item 3)",
+    "version": 1,
+    "upstream": [
+      ".claude/docs/specs/NEXT.md (open item 3 — this intake; tree-wins rule)",
+      ".claude/docs/specs/a2ui-expert-system.prd.md (PRD-G1 end-to-end generation; PRD-G7 transport; C1 v1.0 conform; C2 zero-dep)",
+      ".claude/docs/specs/specs/a2ui-streaming-pipeline.spec.md (v0.2 — SPEC-R2 generation pipeline REALIZED here; R3 stdio/transport; R8 ordering; N1 progressive; N2 zero-dep core)",
+      ".claude/docs/specs/llds/a2ui-streaming-pipeline.lld.md (v0.2 — LLD-C2 produce() driver REALIZED here; LLD-C1 codec deferred; the re-point ADR-0067 applied)",
+      ".claude/docs/specs/specs/a2ui-expert-harness.spec.md (v0.2 — SPEC-R6 loop CONTRACT this wave realizes PROGRAMMATICALLY; the rubric is authoring-time not runtime)",
+      ".claude/docs/specs/llds/a2ui-harness-wiring.lld.md (v0.2.1 §6 — the bounded-loop contract the driver inherits; the named live-agent trigger)",
+      ".claude/skills/a2ui-compose/SKILL.md + references/ (the node-idiom grammar the derived system prompt is built from)",
+      "packages/agent-ui/a2ui/src/renderer/renderer.ts (createRenderer host — ingest/finalize/mount/onClientMessage/dispose — the client surface the demo rides, NOT redesigned)",
+      "packages/agent-ui/a2ui/src/corpus/retrieve.ts (retrieve(records, query) — few-shot conditioning; pure, over the JUDGED 11-record shard)",
+      "packages/agent-ui/a2ui/src/corpus/heal.ts + src/renderer/validate.ts (the shared heal + validator the runtime loop uses — no fork)",
+      "packages/agent-ui/a2ui/src/catalog/default/catalog.json (the SOLE component/prop/function authority the prompt derives from; 19 components)",
+      "site/pages/a2ui-stream.ts (the transport/render/round-trip precedent one rung down — createRenderer used exactly as a server transport would; the deterministic-seed + standing-gate pattern)",
+      ".claude/docs/adr/0055-a2ui-example-seeds-package-home.md (the seed-shelf home + the examples.test.ts standing gate the backbone rides)",
+      ".claude/docs/adr/0062-corpus-packaging-pure-core-subpath-data-home.md (the pure-core / Node-shell / subpath split the tools harness mirrors)",
+      ".claude/docs/adr/0067-harness-right-sizing-realized-estate.md (the loop is procedural until THIS wave's programmatic driver; streaming LLD-C2 re-pointed here)",
+      ".claude/docs/process.md (rule 1 deterministic→script; generator≠critic — the runtime loop uses gates, the rubric critic stays authoring-time)"
+    ],
+    "seat": "DESIGN slices l1-l6 + l16 (SPEC/LLD/ADRs): THIS intake (planner), ratified by the host+Kim on a green gate. BUILD slices: l7 (the AgentTransport seam) + l8/l11 (recorded backbone + session reducer, PURE) land under packages/agent-ui/a2ui/tools/agent with their STANDING TESTS under packages/agent-ui/a2ui/src/live-agent (vitest+tsc); l13/l15/l19 (live-overlay transports + the site page + the in-chat switcher): site seat under site/ (check:site typecheck; no vitest; MANUAL interaction/live acceptance); l9-l10/l17/l18 (the Node loop driver + catalog-derived prompt + the AgentProvider adapters + providers.json) + l12 (the dev-proxy plugin): a tools/harness seat (a2ui-builder-adjacent, dev-scoped, zero package deps, type-stripped execution; pure parts typechecked+tested transitively via the src tests that import them); l14 (the secret-free standing gates incl. the build-key-safety source-grep): the same test-owning seat under src/, gate-covered by npm test + a manual build-grep. Live-overlay slices (l12/l13/l17-live-HTTP) carry MANUAL run-time acceptance (a real key from .env), NEVER a CI gate. Gates per slice named in each accept.",
+    "deferred": "the formal JSONL codec (streaming LLD-C1 — the demo does line-framing in the transport; the codec lands with the streaming producer wave unless the reviewer pulls it forward) · AG-UI / A2A / MCP transport adapters (streaming LLD-C3..C6 — the demo's stdio-equivalent is the browser↔proxy text stream; other transports stay deferred to the streaming producer wave) · the client-direct browser transport (BrowserDirectTransport) is DESIGNED behind the SAME AgentTransport seam and PROVISIONED (VITE_ANTHROPIC_API_KEY exists in the gitignored .env), CORS now HOST-VERIFIED viable-but-officially-dangerous — so it stays the deferred/dev-only arm gated on the dev-only-tree-shake guarantee; the proxy overlay is the primary live path this wave · the OpenAI + Gemini provider ADAPTERS are the IMMEDIATE NEXT SLICES (Kim-directed): their config entries land NOW in providers.json (l18), their adapter modules (openai.ts/gemini.ts under the same AgentProvider seam, l17) come next — host-verify their streaming contracts BEFORE those slices (Anthropic-first means they are non-blocking now, NOT indefinite YAGNI) · promoting the session reducer to a package ./agent subpath (only if the reviewer finds it a genuine reusable runtime primitive — a follow-up ADR against 0069, not required to prove the wave) · corpus-lift measurement / an eval facet (corpus LLD-C8/C12 keep their triggers; this demo SHOWS retrieval conditioning, it does not MEASURE lift)",
+    "env": "A gitignored repo-root .env (verified untracked, .gitignore:27) provisions SIX keys — server-side + browser-exposed (VITE_) variants for THREE providers: ANTHROPIC_API_KEY/VITE_ANTHROPIC_API_KEY · OPENAI_API_KEY/VITE_OPENAI_API_KEY · GEMINI_API_KEY/VITE_GEMINI_API_KEY. So BOTH live paths are provisioned for LOCAL dev, not hypothetical: the proxy reads the non-prefixed process.env[<envKey>] (envKey per provider from providers.json); a client-direct path would read import.meta.env.VITE_ANTHROPIC_API_KEY. Kim provisioning BOTH signals the layered combo AND the multi-provider intent. CRITICAL FOOTGUN (a hard design invariant, NOT a host-verify): Vite INLINES every VITE_* var into the client bundle at BUILD time (npm run build), so a VITE_ key referenced by built code is BAKED into any deployed static artifact = a real key exposure. The design GUARANTEES the deterministic backbone is what npm run build ships + what the standing gate covers, and every live overlay is dev-only-guarded (import.meta.env.DEV + dynamic import) so vite build tree-shakes it out — no VITE_ key reference survives into dist/. The committed providers.json holds env-var NAMES + public endpoints/model-ids ONLY — never a secret. This tightens Fork F and is an explicit AC (l14) + ADR-0069 consequence; the mechanism generalizes to N providers UNCHANGED.",
+    "hostVerify": "ALL THREE original flags DISCHARGED by the host 2026-07-04 (scratchpad/live-agent-host-verified-facts.md) — folded in as RESOLVED: (1) Anthropic Messages streaming HOST-VERIFIED — POST https://api.anthropic.com/v1/messages, headers x-api-key + anthropic-version:2023-06-01 + content-type, body stream:true; SSE message_start→(content_block_start→content_block_delta*→content_block_stop)+→message_delta→message_stop; text at delta.text where delta.type==='text_delta'; mid-stream errors = event:error (surface, don't drop); (2) client-direct CORS HOST-VERIFIED — supported but Anthropic officially DANGEROUS (dangerouslyAllowBrowser / anthropic-dangerous-direct-browser-access; 'exposes your secret API credentials in client-side code') → CONFIRMS proxy-default + BrowserDirect stays deferred/dev-only-guarded; (3) A2A continuity HOST-VERIFIED — Message carries messageId/contextId/taskId, TASK_STATE_INPUT_REQUIRED is the non-terminal interrupt, resume via a normal SendMessage echoing taskId+contextId (NO bespoke envelope) → ADR-0072 CITES this as the conformance target (design already compatible). NEW per-slice flags (non-blocking now, Anthropic-first): OpenAI + Gemini streaming contracts are host-verify-BEFORE-those-adapter-slices. The upstream-SSE parsing stays isolated PER-PROVIDER module (SPEC-N5), so each provider's contract touches one file.",
+    "notes": "This is the FIRST programmatic realization of the SPEC-R6 compose→validate loop (harness LLD §6 says so by name) and the concrete realization of streaming LLD-C2's produce() driver. The design's spine is the AgentTransport isolation seam: the page/client is transport-SHAPE-INDEPENDENT (l7), so the recorded backbone (l8), the live proxy client (l13), and the provisioned client-direct transport all satisfy one interface — if Kim picks a different live mechanism ONLY that transport (+ the proxy) churn, not the SPEC or the page. The AgentProvider seam (l17) is a SECOND seam under that: stream({model,system,messages,signal})→AsyncIterable<string> the driver injects, ONE isolated module per provider, config-driven (l18 providers.json = the SoT for the l19 in-chat switcher AND the l12 proxy allowlist); Anthropic implemented now, OpenAI/Gemini the immediate next adapter slices (Kim-directed — config entries present now, NOT indefinite YAGNI). PLACEMENT (B2): tools land NESTED under packages/agent-ui/a2ui/tools/agent (the tools/corpus precedent) — NOT the repo root; those modules are type-stripped-execution + typechecked TRANSITIVELY only when imported by an included src file; the STANDING TESTS live under packages/agent-ui/a2ui/src/live-agent/ (the vitest+tsc include) and reach out into ../../tools/agent. Every ADR here is status:proposed; the host ratifies with Kim on a green gate. ADR numbers = 0069-0073."
+  },
+  "nodes": [
+    {
+      "id": "l0",
+      "label": "Live-agent example wave (the A2UI ladder's last rung — NEXT item 3)",
+      "leaf": false,
+      "justify": "grouping"
+    },
+    {
+      "id": "l1",
+      "label": "SPEC .claude/docs/specs/specs/a2ui-live-agent.spec.md (this intake)",
+      "leaf": true,
+      "accept": "the file exists with Purpose · Definitions · Requirements (R#, each with PRD/streaming/harness trace + acceptance criteria) · Non-functionals (N#) · Typed contracts (the AgentTransport + Turn/Session shapes) · Traceability; every acceptance criterion is a CHECKABLE predicate (a command, a standing test name, a grep, or a named manual-run) never 'done when good'; it REFINES the PRD (PRD-G1 end-to-end generation, PRD-G7 transport) and REALIZES streaming SPEC-R2 + harness SPEC-R6 by ID (cross-referenced, not duplicated — the loop CONTRACT stays harness §6, the producer behavior stays streaming R2; this SPEC owns integration + demo-shape + backbone + security posture); harness_checks.py spec exits 0 on the file; all cross-references resolve"
+    },
+    {
+      "id": "l2",
+      "label": "LLD skeleton .claude/docs/specs/llds/a2ui-live-agent.lld.md (this intake)",
+      "leaf": true,
+      "accept": "the file exists with a §1 component map (LLD-C#, each with Implements SPEC-R# + File + Scope[site|tools|package] + State) · a §2 file/module map partitioning every artifact into site/ (page+UI), tools/ (dev proxy + Node driver + prompt derivation + recorded transcript) and package (NONE this wave — the surface stays exactly .`/`./examples`/`./corpus`) · a §3 deterministic-backbone contract (the recorded-transcript shape + the standing-gate wiring) · a §4 round-trip state machine (idle→generating→streaming→awaiting-interaction→next-turn) · a §5 error/edge table; every C# cites a SPEC-R#; the streaming LLD-C2 produce() driver is realized concretely here; harness_checks.py lld exits 0; cross-references resolve"
+    },
+    {
+      "id": "l3",
+      "label": "ADR-0069 — Fork A (headline): the live-demo shape + security posture — layered deterministic recorded backbone (always-on, gate-covered, what build ships) + an OPT-IN, DEV-ONLY live overlay (server-proxy primary + a provisioned client-direct arm), both behind the AgentTransport isolation seam (absorbs Fork C retrieval-placement + Fork F backbone-mechanism + the VITE_ build-key-safety invariant)",
+      "leaf": true,
+      "accept": "adr_check.py exits 0; Status: proposed (never self-ratified); indexed in adr/README.md; Decision states: (a) the AgentTransport interface is the isolation seam — the page consumes ONLY it, so backbone↔proxy↔client-direct swap with no page change; (b) the deterministic recorded transcript is the DEFAULT + the ONLY thing CI exercises + what npm run build ships; (c) the primary live overlay is a dev-server Vite middleware PROXY holding the key from process.env.ANTHROPIC_API_KEY, calling the Anthropic REST API with PLAIN FETCH (no LLM SDK, no package dep), streaming validated A2UI JSONL back; (d) retrieval + the loop live proxy-side (Node — fs-store loads the shard) [Fork C]; (e) the backbone mechanism is a RECORDED TRANSCRIPT not a hand-mocked agent, gate-covered by a packages-tree test [Fork F]; (f) a client-direct BrowserDirectTransport (reads VITE_ANTHROPIC_API_KEY, runs the pure loop client-side) is PROVISIONED behind the same seam; CORS is HOST-VERIFIED viable-but-officially-dangerous, so it stays the deferred/dev-only arm; (g) THE VITE_ INLINING FOOTGUN is an explicit consequence + AC: Vite bakes VITE_* into the build bundle, so EVERY live overlay is dev-only-guarded (import.meta.env.DEV + dynamic import) and vite build tree-shakes it out — the built/deployed static bundle contains NO key and NO VITE_ key reference (proven by l14's build-key-safety source-grep gate); Alternatives weighs (a) proxy vs (b) client-direct vs (c) recorded-only vs (d) layered and picks layered (the .env provisioning of BOTH server + VITE variants signals the layered combo) with the proxy as the safe default; Repairs names the streaming LLD-C2 concrete realization + this decomp"
+    },
+    {
+      "id": "l4",
+      "label": "ADR-0070 — Fork B: the runtime loop scope — generate → heal+validate → self-correct (maxRounds 3) → VALIDATE-THEN-STREAM → render, with NO runtime rubric-critic round (the a2ui-payload rubric + a2ui-reviewer stay authoring/eval-time)",
+      "leaf": true,
+      "accept": "adr_check.py exits 0; Status: proposed; indexed; Decision: the runtime loop is the harness SPEC-R6 contract MINUS the critic round — the deterministic gate (shared heal+validate) is the whole runtime verifier; the rubric applies at authoring time (the recorded transcript's payloads were graded ≥4 before commit; the retrieved corpus is already tier-2 judged); and the loop produces a FULLY-VALIDATED payload per turn BEFORE streaming its lines to the browser (provable validity, PRD-G4, precedes any paint — the alternative 'stream-raw-then-validate-at-finalize' is named + rejected as default for risking an invalid partial surface, offered as a variant); Consequences names the first-paint latency trade the validate-then-stream choice buys; Alternatives weighs runtime-critic (rejected: no Task tool / no seat-dispatch from a web demo, and generator≠critic is an authoring discipline) vs stream-live"
+    },
+    {
+      "id": "l5",
+      "label": "ADR-0071 — Fork D: the machine system prompt is DERIVED from catalog.json + the a2ui-compose grammar, drift-gated — never hand-maintained",
+      "leaf": true,
+      "accept": "adr_check.py exits 0; Status: proposed; indexed; Decision: buildSystemPrompt(catalog, exemplars) composes THREE parts — (1) the stable node-idiom grammar + the three message kinds + the loop, sourced from the a2ui-compose references (cross-referenced, kept DRY), (2) the catalog INVENTORY derived at run time from catalog.json (the sole authority — never a hand-listed component set), (3) the few-shot block from retrieve() over the judged shard; the DRIFT GATE is a standing test asserting the derived prompt's component/prop inventory EQUALS catalog.json's keys (adding a catalog row without regenerating fails) — the strongest anti-drift form (derive-don't-duplicate + a coverage assertion, the corpus-data/examples-gate precedent); Consequences: the prompt can never name a component the catalog lacks by construction; Alternatives weighs a hand-maintained prompt (rejected: drifts silently as the catalog grows — PRD-G6) vs deriving"
+    },
+    {
+      "id": "l6",
+      "label": "ADR-0072 — Fork E: the multi-turn client-round-trip session model — a client message (action | functionResponse | error) becomes the next turn's user input; a stateless proxy; surface continuity via the existing host",
+      "leaf": true,
+      "accept": "adr_check.py exits 0; Status: proposed; indexed; Decision: a Session is an ordered turn list (user=intent or framed-client-message, assistant=emitted A2UI stream) — the standard Messages-API array; a client message from onClientMessage is FRAMED as a structured user turn (action name + context + dataModel when sendDataModel/wantResponse; a functionResponse feeds the awaited value; an error feeds the validation failure so the agent self-corrects on the NEXT turn); turn N+1's payload targets the SAME surfaceId (updateComponents/updateDataModel patch — 'the agent continues in place') OR a new surface, both already handled by the host; the PROXY IS STATELESS per request — the browser holds the turn history and sends it each turn (no server session store); a demo-level max-turns cap guards a runaway agent; Alternatives weighs a stateful proxy session-store (rejected: needless server state for a static-site demo) and a bespoke on-wire session envelope (deferred to the host-verify A2A-continuity flag — kept in the producer layer so conformance never touches the renderer)"
+    },
+    {
+      "id": "l7",
+      "label": "the AgentTransport interface — the transport-shape isolation seam the page consumes (site/lib or tools/agent, pure zero-dep TS)",
+      "leaf": true,
+      "accept": "an AgentTransport interface exists (turn(input) → AsyncIterable<string> of A2UI JSONL lines, plus the Turn/Session/{provider,model} input types) with zero runtime deps, at packages/agent-ui/a2ui/tools/agent/agent-transport.ts (re-exported for the site via a site/lib shim if the site tsconfig needs it in-tree); the page module imports ONLY this interface (a grep proves the page has no direct fetch/proxy/RecordedTransport-internal import); a type-only contract test under packages/agent-ui/a2ui/src/live-agent typechecks under npm run check; the interface is documented as the single swap point (backbone ↔ proxy ↔ client-direct)"
+    },
+    {
+      "id": "l8",
+      "label": "RecordedTransport + the committed recorded transcript (the deterministic backbone: replay a real captured turn sequence; reuse a shelf seed as the turn-1 payload so payload validity is already gate-covered)",
+      "leaf": true,
+      "accept": "packages/agent-ui/a2ui/tools/agent/{recorded-transport.ts,transcript.ts}: a RecordedTransport implements AgentTransport by replaying a committed transcript (turns: prompt → turn-1 A2UI stream [reusing an existing shelf seed, e.g. generativeFormSeed, so examples.test.ts already proves its validity] → the expected client message → turn-2 A2UI stream); the transcript is DATA (no live logic); the l14 round-trip gate under packages/agent-ui/a2ui/src/live-agent imports + drives it through a real createRenderer() (which typechecks+runs it — the transitive-coverage path); npm test green; no network, no key, fully deterministic"
+    },
+    {
+      "id": "l9",
+      "label": "the Node loop driver produce() — streaming LLD-C2 realized: retrieve → generate → heal+validate → self-correct (maxRounds 3) → emit a VALIDATED stream (dev/CI-scoped tools, zero package deps)",
+      "leaf": true,
+      "accept": "packages/agent-ui/a2ui/tools/agent/produce.ts realizes the harness SPEC-R6 loop programmatically over the SHARED heal + validateA2ui + retrieve surfaces (no fork, N3 parity); the STANDING unit test lives under packages/agent-ui/a2ui/src/live-agent/ (vitest+tsc include) and drives produce() with a STUB AgentProvider (yields first-invalid-then-valid fragments, no live model) proving: only a validated stream is emitted, self-correction feeds the validator's failures back, and exhaustion halts-and-reports at maxRounds=3 (deterministic, secret-free); npm run check + npm test green (the pure driver is typechecked+run via the src test that imports it; the module itself also runs standalone via node --experimental-strip-types); the real model call is INJECTED as deps.provider (an l17 AgentProvider) so the driver is provider-agnostic + testable; the same driver is reusable by the proxy (server-side) AND a client-direct overlay (browser-side, pure surfaces)"
+    },
+    {
+      "id": "l10",
+      "label": "buildSystemPrompt — the catalog-derived, few-shot-conditioned machine prompt (grammar from a2ui-compose + inventory from catalog.json + exemplars from retrieve())",
+      "leaf": true,
+      "accept": "packages/agent-ui/a2ui/tools/agent/system-prompt.ts composes buildSystemPrompt(catalog, exemplars): the catalog-inventory section is DERIVED from catalog.json at run time (never hand-listed); it accepts the retrieve() top-k exemplars as the few-shot block; pure, zero-dep, Node-type-stripped; consumed by l9 (the driver); its drift gate (l14b) lives under packages/agent-ui/a2ui/src/live-agent and imports buildSystemPrompt (typecheck+run via that src test)"
+    },
+    {
+      "id": "l11",
+      "label": "the session/round-trip reducer — client message → next-turn user input; the turn-history model (pure zero-dep)",
+      "leaf": true,
+      "accept": "packages/agent-ui/a2ui/tools/agent/session.ts: a pure reducer maps (session, clientMessage) → the next Turn input (framing action/functionResponse/error per ADR-0072) and appends turns; zero deps; a STANDING unit test under packages/agent-ui/a2ui/src/live-agent proves each client-message arm frames correctly and that a functionResponse/error/action each produce a distinct next-turn user content (npm test green); consumed by the page (l15) and asserted by the backbone gate (l14a)"
+    },
+    {
+      "id": "l12",
+      "label": "the dev-server Vite middleware proxy plugin — the key-holder (process.env.ANTHROPIC_API_KEY), hosts the loop driver + retrieval + the l17 model-client, streams validated A2UI JSONL back (tools, dev-only, zero package deps)",
+      "leaf": true,
+      "accept": "a Vite plugin (configureServer middleware, added to the site/dev config WITHOUT touching the zero-dep package, and dev-only so vite build output is untouched) at packages/agent-ui/a2ui/tools/agent/dev-proxy-plugin.ts exposes a dev-only endpoint that: reads the requested {provider,model} from the request, VALIDATES the PAIR against the l18 providers.json ALLOWLIST (the model must be in that provider's models; an unknown pair is REJECTED — never trusts an arbitrary client value) and DEGRADES an allowlisted-but-implemented:false provider to backbone-only (never an unhandled crash — defensive dispatch), reads the matched provider's key from process.env[<config.envKey>] (never a literal — a grep proves no committed key), loads the shard via fs-store + retrieve(), runs the l9 driver with deps.provider = the matched l17 adapter (plain fetch — no LLM SDK anywhere, a grep proves no @anthropic-ai/sdk import), and streams the VALIDATED payload's JSONL lines back; with no key set the endpoint returns a graceful 'no key — backbone only' signal; MANUAL acceptance: a real dev run with the provider key set (from the .env) streams a real validated payload that renders (NOT a CI gate — the live call never gates); the process.env key is server-side so it is NEVER inlined into any client bundle; the allowlist-validation logic (config→env-key routing, reject-unknown) is pure and typechecked+tested transitively via a src test"
+    },
+    {
+      "id": "l13",
+      "label": "the live-overlay transport(s) implementing AgentTransport — LiveProxyTransport (browser→proxy, primary) + the DESIGNED, provisioned client-direct BrowserDirectTransport (build gated on CORS-verify); both dev-only-guarded so build tree-shakes them",
+      "leaf": true,
+      "accept": "a LiveProxyTransport implements AgentTransport by POSTing a turn (with the client-held turn history) to the l12 proxy endpoint and yielding the A2UI JSONL lines it streams back (the browser sees only clean A2UI — the upstream SSE parsing is the l17 model-client's, isolated in ONE place); the page swaps RecordedTransport→LiveProxyTransport with no other change (proves l7's seam); the overlay transport module is reached ONLY via a dev-only dynamic import guarded by import.meta.env.DEV so vite build tree-shakes it (no live transport, and if browser-direct, no VITE_ key reference, survives into dist/ — the l14 build-key-safety gate proves it); MANUAL acceptance rides l12's live run; type-checks under npm run check. The client-direct BrowserDirectTransport (reads import.meta.env.VITE_ANTHROPIC_API_KEY, runs the pure produce() loop + l17 model-client entirely in the browser) is DESIGNED behind the same seam but its build is deferred pending the host-verify CORS flag"
+    },
+    {
+      "id": "l14",
+      "label": "the secret-free standing gates — the deterministic-backbone round-trip test + the prompt-drift test + the BUILD-KEY-SAFETY gate (the built bundle bakes no key)",
+      "leaf": true,
+      "accept": "the standing gates live under packages/agent-ui/a2ui/src/live-agent/ (the vitest+tsc include) and reach out into ../../tools/agent (the site-canon reach-out precedent — a src test importing a tools module, which also transitively typechecks that module); npm test green with (a) a round-trip test driving the committed transcript through a real createRenderer() host + the session reducer, asserting turn-1 renders, a simulated interaction emits the expected client message, and turn-2 ingests + updates the surface — deterministic, no network/key; (b) a prompt-drift test asserting buildSystemPrompt's derived component/prop inventory EQUALS Object.keys(catalog.components)/each row's props (a planted catalog row absent from the prompt fails) — the l5/ADR-0071 gate; (c) the BUILD-KEY-SAFETY source-grep test asserting every import.meta.env.VITE_* reference lives ONLY inside a live-overlay module reached via a dev-only (import.meta.env.DEV) dynamic import — never in the page's static import graph — PLUS a MANUAL 'vite build then grep dist/ for the key patterns → zero hits' acceptance (the npm-run-size manual-gate precedent, ADR-0040 §3); and (d) a providers.json shape test (l18); all deterministic tests run under npm run check + npm test with zero secret; the import-layering tripwire must permit a src TEST → tools import (tests already import ../examples; the tripwire targets src/** NON-test imports) — VERIFY at build, and if it objects, fall back to committing the transcript/config as src fixtures (named in the LLD)"
+    },
+    {
+      "id": "l15",
+      "label": "the site page a2ui-live.ts + a2ui-live.html + the dual-TOC wiring (the visible proof, riding the l14 gates the way a2ui-stream rides examples.test.ts)",
+      "leaf": true,
+      "accept": "site/a2ui-live.html + site/pages/a2ui-live.ts render a live-agent demo: a prompt input, the l19 provider→model switcher, the streamed surface (createRenderer + mount), the client→server log, and a turn history; it defaults to the RecordedTransport backbone (deterministic, works on the built static site) and offers a live overlay ONLY under import.meta.env.DEV via a dynamic import of the l13 transport (so vite build tree-shakes the overlay + any VITE_ reference out); every displayed fact derives from the transport output (shown ≡ produced — the a2ui-stream discipline); it is wired into the dual TOC (site/main.ts); typechecked by check:site (site/** include; NOT vitest — site tests don't run, so its proof rides the l14 src gates); npm run check + check:site green; the page rides the l14 standing gates (it invents no parallel check); the built output (dist/) contains NO key and NO hardcoded live endpoint and NO VITE_ key reference (N2, proven by l14c)"
+    },
+    {
+      "id": "l16",
+      "label": "ADR-0073 — Fork G: the CONFIG-DRIVEN multi-provider seam — an AgentProvider stream() seam + a committed providers.json registry (Anthropic/OpenAI/Gemini + models) as the SoT for the in-chat switcher AND the proxy allowlist; Anthropic implemented NOW, OpenAI/Gemini the immediate NEXT adapter slices (Kim-ratified — REVERSES the prior YAGNI stance)",
+      "leaf": true,
+      "accept": "adr_check.py exits 0; Status: proposed; indexed; RETITLED (no 'Claude-only first cut / YAGNI'); Decision: the driver injects a provider-neutral AgentProvider.stream({model,system,messages,signal}) → AsyncIterable<string> text-fragment seam (the l9 injection point NAMED); a committed providers.json (l18) enumerates ALL THREE providers + their models + an implemented:boolean flag NOW (the menu AND the allowlist; implemented reconciles 'lists all three' with 'Anthropic-first' — the switcher disables + the proxy degrades unimplemented); ONE isolated module PER PROVIDER (l17) owns its endpoint+auth+stream framing — Anthropic implemented NOW, OpenAI/Gemini config-present-now / adapter-next-slice (NOT indefinite deferral); an in-chat provider→model switcher (l19) renders from the config + persists to localStorage; the proxy (l12) VALIDATES the requested {provider,model} against the config allowlist and routes to process.env[envKey]; Consequences: the driver stays provider-agnostic + stub-testable, a new provider is a new module + a config row; Alternatives — 'build a provider abstraction now (config + all three enumerated)' is CHOSEN (forcing context = Kim's /intent-extract directive + the in-chat switcher CONSUMER), and 'Claude-only YAGNI, no config, no 2nd provider' is now the REJECTED alternative (a real consumer + directive exist — the YAGNI premise no longer holds); Repairs names the SPEC-R11/R12 rework + LLD-C10 per-provider + this decomp"
+    },
+    {
+      "id": "l17",
+      "label": "the AgentProvider adapters — a provider-neutral stream() seam + one isolated module PER PROVIDER (Anthropic NOW; openai.ts/gemini.ts the immediate next slices), each owning its endpoint+auth+SSE framing (SPEC-N5 isolation per-module)",
+      "leaf": true,
+      "accept": "packages/agent-ui/a2ui/tools/agent/providers/anthropic.ts implements AgentProvider.stream({model,system,messages,signal}) → AsyncIterable<string> over PLAIN fetch to POST https://api.anthropic.com/v1/messages (headers x-api-key + anthropic-version:2023-06-01 + content-type; body stream:true; yields delta.text where delta.type==='text_delta'; completes on message_stop; surfaces event:error mid-stream — the HOST-VERIFIED 2026-07-04 contract) — no LLM SDK (a grep proves no @anthropic-ai/sdk import); the SSE-chunk→text-fragment parse is SPLIT OUT as a PURE function fixture-tested deterministically (a captured SSE response → expected fragments, no network) — the fetch arm is MANUAL live acceptance; it is the SINGLE place Anthropic's SSE is parsed into text (SPEC-N5 — one file per provider); the key is passed IN (process.env[envKey] server-side / import.meta.env.VITE_ client-side) never read at module scope; a stub AgentProvider drives l9's loop test with no live model; openai.ts + gemini.ts are the IMMEDIATE NEXT SLICES (their config rows land now in l18; host-verify their streaming contracts BEFORE those slices); the pure adapter-dispatch (provider id → module) is typechecked+tested transitively via the src loop test, the live HTTP arm is type-stripped-execution + MANUAL acceptance"
+    },
+    {
+      "id": "l18",
+      "label": "the provider config registry — a committed providers.json (Anthropic/OpenAI/Gemini + models, NO secrets) + a typed loader: the SINGLE source of truth for BOTH the in-chat switcher menu AND the proxy allowlist",
+      "leaf": true,
+      "accept": "packages/agent-ui/a2ui/tools/agent/providers.json is committed with shape { defaultProvider, providers: { <id>: { label, envKey, endpoint, defaultModel, models:[{id,label}], implemented } } }: Anthropic seeded with claude-opus-4-8/claude-sonnet-5/claude-fable-5 (defaultModel claude-sonnet-5, defaultProvider anthropic, implemented:true); OpenAI + Gemini entries STUBBED with their public model-ids + endpoints + envKey NAMES (OPENAI_API_KEY/GEMINI_API_KEY) and implemented:false; it holds env-var NAMES + public endpoints/model-ids ONLY — a grep proves NO secret/key VALUE in the file; providers-config.ts exposes PURE validation/lookup/degrade helpers over an already-parsed config (the Node reader does readFileSync+JSON.parse like catalog.json; the browser switcher reads it via a Vite JSON import); a standing src test asserts the file parses, every provider carries envKey/endpoint/defaultModel/implemented, defaultModel ∈ models, defaultProvider ∈ providers AND is implemented; consumed by l19 (menu) and l12 (allowlist) — one SoT, no second list"
+    },
+    {
+      "id": "l19",
+      "label": "the in-chat provider→model switcher — dropdowns rendered from providers.json, default from defaultProvider/defaultModel, live-overridable, persisted to localStorage, sends {provider,model} per request (site/)",
+      "leaf": true,
+      "accept": "a site/ switcher UI (dogfooded ui-* controls, DEV-ONLY — part of the live-overlay UI, so the static backbone-only build has no switcher; reached via the same import.meta.env.DEV guard as the transports) renders provider→model dropdowns FROM the l18 config via a Vite JSON import (never a hand-listed menu — a config row added surfaces automatically), DISABLES implemented:false providers (a visible 'coming soon' roadmap, NOT selectable, so it never offers what the proxy can't serve), defaults from defaultProvider/defaultModel, is live-overridable, persists the selection to localStorage (restored on reload), and passes {provider,model} into every transport turn; typechecked by check:site; MANUAL interaction acceptance (dropdown → next live turn uses the new model); no key touched (the switcher names providers/models, never keys)"
+    }
+  ],
+  "actions": [
+    { "id": "a1", "label": "state why/what/acceptance for the live-agent example as an execution contract (integration + demo-shape + backbone + security), refining the PRD and realizing the streaming/harness contracts by ID" },
+    { "id": "a2", "label": "add the how: the module map (site/tools/package), the deterministic-backbone contract, and the round-trip state machine" },
+    { "id": "a3", "label": "decide + record the live-demo shape and light-security posture — isolate the transport, layer backbone + overlay, place retrieval + the loop with the key-holder, pick the backbone mechanism" },
+    { "id": "a4", "label": "decide + record the runtime loop scope — deterministic gate only at runtime, validate-then-stream, the rubric stays authoring-time" },
+    { "id": "a5", "label": "decide + record deriving the machine prompt from the catalog + grammar and drift-gating it" },
+    { "id": "a6", "label": "decide + record how a human interaction becomes the agent's next turn and how the session evolves the surface" },
+    { "id": "a7", "label": "give the page ONE transport-shape-independent seam so backbone / proxy / client-direct are interchangeable" },
+    { "id": "a8", "label": "prove the whole wiring (render + round-trip) WITHOUT a live call — a deterministic recorded backbone" },
+    { "id": "a9", "label": "let a real (or stubbed) generator produce ONLY a validated stream via the bounded loop, programmatically" },
+    { "id": "a10", "label": "condition generation on the catalog + the judged corpus without the prompt drifting from the catalog" },
+    { "id": "a11", "label": "turn a rendered surface's interaction into the agent's next input (the agent continues)" },
+    { "id": "a12", "label": "hold the key the browser cannot, call the model, and stream validated A2UI back — dev-only, SDK-free" },
+    { "id": "a13", "label": "let the browser consume the live stream through the same seam the backbone uses" },
+    { "id": "a14", "label": "keep CI deterministic + secret-free while still gate-covering the backbone round-trip and the prompt-catalog coverage" },
+    { "id": "a15", "label": "make the whole loop visible + interactive on the site, riding the standing gates (no parallel check)" },
+    { "id": "a16", "label": "decide + record the config-driven multi-provider seam — a registry of all three, Anthropic now, OpenAI/Gemini next slices, an in-chat switcher + a proxy allowlist" },
+    { "id": "a17", "label": "call a real model behind a provider-neutral seam, one isolated module per provider, upstream-format parsing per-provider" },
+    { "id": "a18", "label": "hold ONE committed source of truth (no secrets) for the provider/model menu AND the proxy allowlist" },
+    { "id": "a19", "label": "let a human pick provider+model in-chat, persisted, and carry it into each turn" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "l1" },
+    { "action": "a2", "node": "l2" },
+    { "action": "a3", "node": "l3" },
+    { "action": "a4", "node": "l4" },
+    { "action": "a5", "node": "l5" },
+    { "action": "a6", "node": "l6" },
+    { "action": "a7", "node": "l7" },
+    { "action": "a8", "node": "l8" },
+    { "action": "a9", "node": "l9" },
+    { "action": "a10", "node": "l10" },
+    { "action": "a11", "node": "l11" },
+    { "action": "a12", "node": "l12" },
+    { "action": "a13", "node": "l13" },
+    { "action": "a14", "node": "l14" },
+    { "action": "a15", "node": "l15" },
+    { "action": "a16", "node": "l16" },
+    { "action": "a17", "node": "l17" },
+    { "action": "a18", "node": "l18" },
+    { "action": "a19", "node": "l19" }
+  ],
+  "edges": [
+    { "from": "l3", "to": "l7", "why": "the AgentTransport isolation seam IS ADR-0069's core decision — its shape/existence encodes the fork (authoring the seam before ratification pre-empts the host, the corpus/harness precedent)" },
+    { "from": "l3", "to": "l8", "why": "the recorded-transcript backbone mechanism (over a hand-mocked agent) is ADR-0069's Fork-F consequence" },
+    { "from": "l3", "to": "l12", "why": "the dev-proxy-as-key-holder overlay shape (plain fetch, retrieval + loop proxy-side) is ADR-0069's decision (incl. Fork C placement)" },
+    { "from": "l4", "to": "l9", "why": "the driver realizes the runtime loop scope ADR-0070 pins (deterministic gate only, validate-then-stream, maxRounds 3)" },
+    { "from": "l5", "to": "l10", "why": "buildSystemPrompt's derive-from-catalog + few-shot shape is ADR-0071's decision" },
+    { "from": "l6", "to": "l11", "why": "the session reducer's client-message-to-next-turn framing is ADR-0072's decision" },
+    { "from": "l7", "to": "l8", "why": "RecordedTransport implements the AgentTransport interface — the type must exist to implement" },
+    { "from": "l7", "to": "l13", "why": "LiveProxyTransport implements the AgentTransport interface — the type must exist to implement" },
+    { "from": "l7", "to": "l15", "why": "the page consumes AgentTransport (and only it) — the seam must exist before the page is written to it" },
+    { "from": "l10", "to": "l9", "why": "the driver imports buildSystemPrompt to condition each generation — a direct build dependency" },
+    { "from": "l9", "to": "l12", "why": "the dev proxy hosts + runs the loop driver (with a plain-fetch generate()) server-side" },
+    { "from": "l16", "to": "l17", "why": "the AgentProvider.stream() seam + the per-provider-module shape + Anthropic-now/OpenAI-Gemini-next scope is ADR-0073's decision" },
+    { "from": "l16", "to": "l18", "why": "the config-registry-as-SoT (menu + allowlist) enumerating all three providers is ADR-0073's decision (reverses the prior YAGNI)" },
+    { "from": "l16", "to": "l19", "why": "the in-chat provider→model switcher is ADR-0073's ratified consumer — the reason the config exists now" },
+    { "from": "l17", "to": "l12", "why": "the proxy dispatches to the matched l17 adapter as the driver's provider dep — the adapter must exist to route to" },
+    { "from": "l18", "to": "l12", "why": "the proxy validates {provider,model} against the l18 registry allowlist and reads process.env[envKey] from it — the config must exist to validate against" },
+    { "from": "l18", "to": "l19", "why": "the switcher renders its provider/model menu FROM the l18 config (one SoT, no hand-listed second menu)" },
+    { "from": "l19", "to": "l15", "why": "the page hosts the in-chat switcher and threads its {provider,model} selection into each transport turn" },
+    { "from": "l12", "to": "l13", "why": "the browser transport targets the proxy's endpoint + streamed-response contract — it needs the proxy's request/response shape defined" },
+    { "from": "l8", "to": "l14", "why": "the deterministic-backbone gate drives the committed recorded transcript through the real host" },
+    { "from": "l11", "to": "l14", "why": "the backbone round-trip gate asserts the session reducer's framing of the transcript's client message" },
+    { "from": "l10", "to": "l14", "why": "the prompt-drift gate asserts over buildSystemPrompt's derived inventory vs catalog.json" },
+    { "from": "l8", "to": "l15", "why": "the page's DEFAULT transport is the recorded backbone (works on the built static site, no proxy)" },
+    { "from": "l11", "to": "l15", "why": "the page uses the session reducer to feed interactions back through the transport" },
+    { "from": "l13", "to": "l15", "why": "the page's live overlay is the LiveProxyTransport, swapped in behind the seam" },
+    { "from": "l14", "to": "l15", "why": "the page rides the standing gates as its visible proof (a2ui-stream↔examples.test.ts precedent) — it invents no parallel check, so the gates precede it" }
+  ]
+}

@@ -2,7 +2,7 @@
  * Two clearly-SECTIONED blocks:
  *
  *   [1] TOKEN BLOCK  — `:where(ui-slider-multi)` (specificity 0,0,0) DECLARES the `--ui-slider-multi-*`
- *       chain from the colour roles (`--c-{family}-{role}`) and the compact widget ramp
+ *       chain from the colour roles (`--md-sys-color-{family}-{role}`) and the compact widget ramp
  *       (`--ui-compact-{size}` / ADR-0041). `[size]` repoints the box token (the widget ramp step);
  *       `[disabled]` mutes the rail/fill/thumb colours to the neutral muted family.
  *       No `color-mix` — colour opinions live in the token layer (ADR-0008).
@@ -28,19 +28,19 @@
   --ui-slider-multi-box: var(--ui-compact-md);
 
   /* Rail colour — the unfilled background track (muted neutral outline, same as switch unchecked track). */
-  --ui-slider-multi-rail: var(--c-neutral-outline-variant);
+  --ui-slider-multi-rail: var(--md-sys-color-neutral-outline-variant);
 
   /* Fill colour — the lo→hi active range (primary, matching the single-slider convention). */
-  --ui-slider-multi-fill: var(--c-primary);
+  --ui-slider-multi-fill: var(--md-sys-color-primary);
 
   /* Thumb colours — surface + border. The thumb is a bright circle outlined in primary. */
-  --ui-slider-multi-thumb:        var(--c-neutral-surface-brightest);
-  --ui-slider-multi-thumb-border: var(--c-primary);
+  --ui-slider-multi-thumb:        var(--md-sys-color-neutral-surface-brightest);
+  --ui-slider-multi-thumb-border: var(--md-sys-color-primary);
 
   /* Focus ring — tunnelled through a component token so the full token chain is local.
-     The fleet ring constant (--c-focus-ring) flows through here; override only this token
-     to remap the focus colour for this component (WHCM: --c-focus-ring → Highlight). */
-  --ui-slider-multi-focus-ring: var(--c-focus-ring);
+     The fleet ring constant (--md-sys-color-focus-ring) flows through here; override only this token
+     to remap the focus colour for this component (WHCM: --md-sys-color-focus-ring → Highlight). */
+  --ui-slider-multi-focus-ring: var(--md-sys-color-focus-ring);
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the LITERAL per-[scale] table in dimensions.css
@@ -51,10 +51,10 @@
 /* [disabled] → muted neutral roles (overrides all states). HOLDS at idle: the disabled host is
    pointer-inert (styles block), so `:hover` never matches it (ADR-0008 disabled pattern). */
 :where(ui-slider-multi[disabled]) {
-  --ui-slider-multi-rail:         var(--c-neutral-surface-high);
-  --ui-slider-multi-fill:         var(--c-neutral-surface-high);
-  --ui-slider-multi-thumb:        var(--c-neutral-on-surface-variant);
-  --ui-slider-multi-thumb-border: var(--c-neutral-outline-variant);
+  --ui-slider-multi-rail:         var(--md-sys-color-neutral-surface-high);
+  --ui-slider-multi-fill:         var(--md-sys-color-neutral-surface-high);
+  --ui-slider-multi-thumb:        var(--md-sys-color-neutral-on-surface-variant);
+  --ui-slider-multi-thumb-border: var(--md-sys-color-neutral-outline-variant);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-slider-multi) consumes ONLY --ui-slider-multi-* ════════════════ */
@@ -153,7 +153,7 @@
   /* Focus ring (ADR-0009) — shared fleet ring on keyboard-focused thumbs. Applied via :focus-visible
      (keyboard-only) directly on the thumb element since the thumbs ARE the focusable nodes.
      Consumes the local --ui-slider-multi-focus-ring (declared in the token block, chained from
-     --c-focus-ring) — the full token chain is now component-local, no direct fleet reference here. */
+     --md-sys-color-focus-ring) — the full token chain is now component-local, no direct fleet reference here. */
   .thumb:focus-visible {
     outline: var(--ui-focus-ring-width) solid var(--ui-slider-multi-focus-ring);
     outline-offset: var(--ui-focus-ring-offset);

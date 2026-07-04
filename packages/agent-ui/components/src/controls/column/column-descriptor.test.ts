@@ -61,9 +61,10 @@ describe('column.md descriptor — frontmatter parses + schema (s4)', () => {
 })
 
 describe('column.md descriptor — contract↔props trip-wire (s4)', () => {
-  it('attributes[] is a faithful bijection with UIColumnElement.props (0 drift) — surfaceProps + flexProps', () => {
-    // anti-vacuous: the reader actually parsed all six attributes before the trip-wire is consulted
-    expect(parsed.attributes.map((a) => a.name)).toEqual(['elevation', 'brightness', 'align', 'justify', 'gap', 'wrap'])
+  it('attributes[] is a faithful bijection with UIColumnElement.props (0 drift) — surfaceProps + flexProps + stretch', () => {
+    // anti-vacuous: the reader actually parsed all seven attributes before the trip-wire is consulted
+    // (surfaceProps ×2 + flexProps ×4 + the column-local `stretch` sizing opt-in)
+    expect(parsed.attributes.map((a) => a.name)).toEqual(['elevation', 'brightness', 'align', 'justify', 'gap', 'wrap', 'stretch'])
     expect(compareDescriptorToProps(parsed.attributes, UIColumnElement.props)).toEqual([])
   })
 

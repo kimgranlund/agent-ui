@@ -8,8 +8,8 @@ declare const process: { cwd(): string }
 // jsdom can NOT compute layout px — the rendered-px CHANGE (align/justify/gap, the @container reflow) is
 // row.browser.test.ts. Here we pin the STRUCTURE: the two sectioned blocks, that `:where()` DECLARES the
 // `--ui-row-*` chain + the attribute repoints, that `@scope` CONSUMES only `--ui-row-*` (role-pure — NO raw
-// `--c-*`, the surface is delegated to the shared container.css), the row-identity flex, the `@container`
-// reflow, and a forced-colors block. NEGATIVE control: a planted `--c-*` ref trips the hygiene checker.
+// `--md-sys-color-*`, the surface is delegated to the shared container.css), the row-identity flex, the `@container`
+// reflow, and a forced-colors block. NEGATIVE control: a planted `--md-sys-color-*` ref trips the hygiene checker.
 
 const css = readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/row/row.css`, 'utf8') as string
 const tokenBlock = css.slice(css.indexOf(':where(ui-row) {'), css.indexOf('@scope (ui-row) {'))
@@ -17,7 +17,7 @@ const stylesBlock = css.slice(css.indexOf('@scope (ui-row) {'))
 
 // The @scope token-hygiene allowlist (decomp s3): a layout primitive's styles block consumes ONLY its own
 // `--ui-row-*` chain, the shared `--ui-container-*` surface seam, and the `--ui-space-*` ladder — never a raw
-// `--c-*` colour role (those enter the chain in the token layer / container.css, ADR-0008 role-purity).
+// `--md-sys-color-*` colour role (those enter the chain in the token layer / container.css, ADR-0008 role-purity).
 const ALLOWED = /^--ui-(?:row|container|space)-/
 const scopeViolations = (block: string): string[] =>
   [...block.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1] as string).filter((ref) => !ALLOWED.test(ref))
@@ -90,23 +90,23 @@ describe('row.css — container-query reflow + forced-colors (ADR-0016 cl.4) (s3
   })
 })
 
-describe('row.css — token hygiene: role-pure, NO raw --c-* (ADR-0008) (s3)', () => {
-  it('@scope CONSUMES only the --ui-{row,container,space}-* chain — no raw --c-* colour role', () => {
+describe('row.css — token hygiene: role-pure, NO raw --md-sys-color-* (ADR-0008) (s3)', () => {
+  it('@scope CONSUMES only the --ui-{row,container,space}-* chain — no raw --md-sys-color-* colour role', () => {
     const refs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1] as string)
     expect(refs.length).toBeGreaterThan(0) // anti-vacuous: the styles block actually reads tokens
     expect(refs.some((r) => r.startsWith('--ui-row-'))).toBe(true) // it reads its OWN chain
     expect(scopeViolations(stylesBlock)).toEqual([]) // and nothing outside the allowlist
   })
 
-  it('the WHOLE sheet reads no raw --c-* — colour is delegated entirely to the shared surface seam', () => {
-    expect(css).not.toContain('var(--c-') // ui-row holds zero colour opinion (container.css owns the plane)
+  it('the WHOLE sheet reads no raw --md-sys-color-* — colour is delegated entirely to the shared surface seam', () => {
+    expect(css).not.toContain('var(--md-sys-color-') // ui-row holds zero colour opinion (container.css owns the plane)
     expect(css).not.toContain('color-mix(') // and never synthesizes a shade (ADR-0008)
   })
 
-  it('NEGATIVE control: a planted raw --c-* ref in the styles block FAILS the hygiene checker', () => {
+  it('NEGATIVE control: a planted raw --md-sys-color-* ref in the styles block FAILS the hygiene checker', () => {
     // a synthetic styles block with a colour-role leak — proves scopeViolations actually BITES (not vacuous).
-    const planted = '@scope (ui-row) { :scope { background: var(--c-neutral-surface); gap: var(--ui-row-gap); } }'
-    expect(scopeViolations(planted)).toContain('--c-neutral-surface')
-    expect(scopeViolations(stylesBlock)).not.toContain('--c-neutral-surface') // the real sheet is clean
+    const planted = '@scope (ui-row) { :scope { background: var(--md-sys-color-neutral-surface); gap: var(--ui-row-gap); } }'
+    expect(scopeViolations(planted)).toContain('--md-sys-color-neutral-surface')
+    expect(scopeViolations(stylesBlock)).not.toContain('--md-sys-color-neutral-surface') // the real sheet is clean
   })
 })

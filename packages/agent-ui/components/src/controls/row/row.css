@@ -9,7 +9,7 @@
  *       the ONE place a literal-union keyword crosses to its CSS value; it is a role-pure repoint, never an
  *       inline style.
  *   [2] STYLES BLOCK — `@scope (ui-row)` CONSUMES only the `--ui-row-*` chain (so the cross-family surface in
- *       controls/_surface/container.css cleanly overrides nothing here, and a planted raw `--c-*` would fail
+ *       controls/_surface/container.css cleanly overrides nothing here, and a planted raw `--md-sys-color-*` would fail
  *       css-hygiene). `display: flex; flex-direction: row` is the row IDENTITY (ADR-0016 cl.2 — direction is
  *       the tag, not a prop). A `@container (inline-size …)` rule reflows the row to a COLUMN under a narrow
  *       OWN-container width (ADR-0016 cl.4 — intrinsic responsiveness, no breakpoint props), and a
@@ -18,7 +18,7 @@
  * The SURFACE (elevation/brightness plane + the `container-type: inline-size` query-container seam) is NOT
  * here — it lives once in the shared controls/_surface/container.css (the UIContainerElement base sheet,
  * `@import`-ed FIRST by component-styles.css at s12). row.css adds ONLY the flex layout + the corner radius;
- * it reads no `--c-*` colour role at all (colour is delegated entirely to the shared surface seam).
+ * it reads no `--md-sys-color-*` colour role at all (colour is delegated entirely to the shared surface seam).
  *
  * NO control height (geometry.md's `Container/layout` size-class): a layout primitive has no frame — spacing
  * is the `--ui-space` ladder × `[density]` (the gap), never `--ui-height-*`. Standalone sheet — linked via

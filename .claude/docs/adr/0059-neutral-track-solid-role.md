@@ -1,10 +1,10 @@
-# ADR-0059 — the solid `--c-neutral-track` role for state-bearing widget tracks
+# ADR-0059 — the solid `--md-sys-color-neutral-track` role for state-bearing widget tracks
 
 > Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-02
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(2026-07-03 — the solid-track decision confirmed by Kim ("proceed"); the thumb-carried alternative was DISPROVEN by measurement [OFF-state thumb 1.22–1.84:1] before minting --c-neutral-track(-hover); checker-verified ≥3:1 on every plane both schemes [worst 3.80/4.41]; the opaque-paint browser probes pin the repoint in both engines; gates check · jsdom 2079 · browser 558/558.)* |
+> | **Status** | accepted *(2026-07-03 — the solid-track decision confirmed by Kim ("proceed"); the thumb-carried alternative was DISPROVEN by measurement [OFF-state thumb 1.22–1.84:1] before minting --md-sys-color-neutral-track(-hover); checker-verified ≥3:1 on every plane both schemes [worst 3.80/4.41]; the opaque-paint browser probes pin the repoint in both engines; gates check · jsdom 2079 · browser 558/558.)* |
 > | **Date** | 2026-07-02 |
 > | **Proposed by** | tokens-specialist (item 4 of the 2026-07-02 color-verify audit; Kim-directed) |
 > | **Ratified by** | orchestration (the coordinator seat) — 2026-07-03, on Kim's confirmation + the green wave gate |
@@ -14,7 +14,7 @@
 ## Context
 
 The 2026-07-02 color-verify audit (item 4) found the switch **off-track** and slider **rail** both bind
-`--c-neutral-outline-variant` (`neutral-500 @ 40%`) — a translucent *decorative* outline role. Composited
+`--md-sys-color-neutral-outline-variant` (`neutral-500 @ 40%`) — a translucent *decorative* outline role. Composited
 over the surface it measures **1.51:1 light / 1.73:1 dark**, below **SC 1.4.11's 3:1** non-text bar for a
 state-bearing control part.
 
@@ -32,18 +32,18 @@ rail to it — a state-bearing part gets its own contrast-gated role, not a deco
 `tokens.css` (documented in [`references/tokens.md`](../references/tokens.md), edited here):
 
 ```css
---c-neutral-track:       light-dark(var(--c-neutral-600), var(--c-neutral-400));  /* idle  */
---c-neutral-track-hover: light-dark(var(--c-neutral-700), var(--c-neutral-300));  /* switch hover */
+--md-sys-color-neutral-track:       light-dark(var(--md-sys-color-neutral-600), var(--md-sys-color-neutral-400));  /* idle  */
+--md-sys-color-neutral-track-hover: light-dark(var(--md-sys-color-neutral-700), var(--md-sys-color-neutral-300));  /* switch hover */
 ```
 
-`switch.css` repoints `--ui-switch-track` → `--c-neutral-track` and `--ui-switch-track-hover` →
-`--c-neutral-track-hover`; `slider.css` repoints `--ui-slider-rail` → `--c-neutral-track`.
+`switch.css` repoints `--ui-switch-track` → `--md-sys-color-neutral-track` and `--ui-switch-track-hover` →
+`--md-sys-color-neutral-track-hover`; `slider.css` repoints `--ui-slider-rail` → `--md-sys-color-neutral-track`.
 
 **Verified** (`color-verify/contrast-check.py`, 2026-07-02):
 
-- `--c-neutral-track` clears **3:1 on EVERY surface plane in BOTH schemes** — worst cases **3.80:1** (light
-  `--c-neutral-surface-highest`) and **4.41:1** (dark `-surface-highest`), up to 6.06:1 (dark background).
-- `--c-neutral-track-hover` is **monotonic + distinct in both schemes** (light `600→700` darkens, dark
+- `--md-sys-color-neutral-track` clears **3:1 on EVERY surface plane in BOTH schemes** — worst cases **3.80:1** (light
+  `--md-sys-color-neutral-surface-highest`) and **4.41:1** (dark `-surface-highest`), up to 6.06:1 (dark background).
+- `--md-sys-color-neutral-track-hover` is **monotonic + distinct in both schemes** (light `600→700` darkens, dark
   `400→300` lightens — no light-mode collapse) and clears **5.56–7.81:1**.
 - The slider **VALUE is carried by the thumb**, which clears 3:1 against **both** the fill (4.79:1 light /
   3.67:1 dark) **and** the new solid rail (4.69:1 / 3.74:1). The fill↔rail *luminance* boundary stays
@@ -53,12 +53,12 @@ rail to it — a state-bearing part gets its own contrast-gated role, not a deco
 ## Consequences
 
 - **Two new additive public roles** — a name is *added*, none renamed and no vocabulary removed, so the
-  consumption seam every existing consumer reads is unchanged (the `--c-primary-hover`/`-active`/`-selected`
+  consumption seam every existing consumer reads is unchanged (the `--md-sys-color-primary-hover`/`-active`/`-selected`
   precedent).
 - The switch off-track and slider rail read **visibly more prominent** — a deliberate accessibility trade:
   the off/empty state is now clearly a control, not a ghost.
 - **Disabled tracks are untouched** — an inactive component is SC 1.4.11-exempt, so `slider[disabled]` keeps
-  the muted `--c-neutral-outline-variant` (which now correctly reads as *inactive* vs the solid enabled rail).
+  the muted `--md-sys-color-neutral-outline-variant` (which now correctly reads as *inactive* vs the solid enabled rail).
 - **Forced-colors unaffected** — switch/slider map their track to system colours in-sheet; the new role is
   not read under WHCM.
 - **Gate:** a headless env evaluates neither scheme-switching nor the composited paint, so the **switch +
@@ -81,10 +81,10 @@ rail to it — a state-bearing part gets its own contrast-gated role, not a deco
 
 - **Accept thumb-carried identification (the audit's option B), no token change** — rejected on measurement:
   the OFF/empty-state thumb is 1.22–1.84:1, so it cannot carry the 3:1 bar; a solid track is *forced*.
-- **Repoint `--c-neutral-outline-variant` itself to a solid value** — rejected: blast radius. It is a shared
+- **Repoint `--md-sys-color-neutral-outline-variant` itself to a solid value** — rejected: blast radius. It is a shared
   *decorative* outline role used elsewhere where the 40% translucency is intentional; solidifying it would
   darken every passive outline consumer.
-- **Reuse the existing `--c-neutral` role for the track** — rejected: it clears, but only at a tight 3.15:1
+- **Reuse the existing `--md-sys-color-neutral` role for the track** — rejected: it clears, but only at a tight 3.15:1
   on the worst light plane (`-surface-highest`), and it overloads a general-purpose role with a
   track-specific 3:1 contract a future unrelated repoint could silently break. A dedicated role pins the
   contract where it can be reasoned about.

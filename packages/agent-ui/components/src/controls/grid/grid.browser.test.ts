@@ -14,7 +14,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 //   • gap rides --ui-space × [density] (layout rhythm, ADR-0015 cl.4) — an ancestor [density] changes the gap px.
 //
 // HOST-AT-BOUNDARY: ui-grid is NOT in the component-styles barrel yet (that is s12), so this injects the
-// load-bearing sheets DIRECTLY in CSS order — foundation (the --c-* roles + --ui-space ramp + [density]) FIRST,
+// load-bearing sheets DIRECTLY in CSS order — foundation (the --md-sys-color-* roles + --ui-space ramp + [density]) FIRST,
 // then the SHARED surface seam (which also establishes `container-type: inline-size`), then grid's own @scope
 // sheet, then the self-defining module (registers ui-grid). Vite injects the CSS imports.
 import '@agent-ui/components/foundation-styles.css'

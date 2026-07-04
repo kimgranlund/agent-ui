@@ -23,7 +23,7 @@
 - **Layout:** A2UI-faithful flexbox (Row/Column with alignment / distribution / gap / wrap); **container-query
   intrinsic responsiveness** (primitives reflow on their OWN container width — no breakpoint props).
 - **Surface:** elevation (**tint-only**) + brightness, **7 steps each**, **reusing the EXISTING
-  `--c-neutral-surface-*` ladders** (already in `tokens.css`: `-lowest…-low / -high…-highest` = the
+  `--md-sys-color-neutral-surface-*` ladders** (already in `tokens.css`: `-lowest…-low / -high…-highest` = the
   scheme-INVERTING elevation axis; `-dimmest…-dim / -bright…-brightest` = the scheme-consistent brightness
   axis). Container repoints `--ui-container-bg` to the role per `[elevation=n]`/`[brightness=n]`. **No new
   surface tokens** — the open detail is only how the two axes COMPOSE when both set (tokens-specialist call).
@@ -136,15 +136,15 @@ If a card itself has `padding: .25rem .75rem`, strict concentricity would reduce
 
 ## 3. Container background — the `elevation` / `brightness` two-axis surface model
 
-Both axes signed, symmetric, base-at-0; `n ∈ [-3..3]` a **literal union**, the attribute **reflects**. `0` in either axis = the neutral base surface (`--c-neutral-surface`) → an unset container is unchanged.
+Both axes signed, symmetric, base-at-0; `n ∈ [-3..3]` a **literal union**, the attribute **reflects**. `0` in either axis = the neutral base surface (`--md-sys-color-neutral-surface`) → an unset container is unchanged.
 
-**`elevation` → `--c-surface-elevation-{step}`** (surface *hierarchy* / layering):
+**`elevation` → `--md-sys-color-surface-elevation-{step}`** (surface *hierarchy* / layering):
 
 ```
 -3 lowest · -2 lower · -1 low · 0 base · 1 high · 2 higher · 3 highest
 ```
 
-**`brightness` → `--c-surface-brightness-{step}`** (tonal shift *within* a layer):
+**`brightness` → `--md-sys-color-surface-brightness-{step}`** (tonal shift *within* a layer):
 
 ```
 -3 dimmest · -2 dimmer · -1 dim · 0 base · 1 bright · 2 brighter · 3 brightest
@@ -153,11 +153,11 @@ Both axes signed, symmetric, base-at-0; `n ∈ [-3..3]` a **literal union**, the
 **Prop / attribute contract:**
 - `elevation: -3|-2|-1|0|1|2|3` and `brightness: -3|-2|-1|0|1|2|3`, both reflected (so `[elevation]`/`[brightness]` selectors work for JS-set values), default `0`.
 - Typed as literal unions (not `number`) — matches `size: 'sm'|'md'|'lg'`; a `@ts-expect-error` proves a bare number is rejected.
-- CSS consumes a **role**, never a literal: the host sets `background: var(--ui-container-bg)`, and each `[elevation=n]`/`[brightness=n]` rule repoints `--ui-container-bg` to the corresponding `--c-surface-*` role. The signed-int→name mapping lives in `@scope`/`:where`; tokens stay role-pure.
+- CSS consumes a **role**, never a literal: the host sets `background: var(--ui-container-bg)`, and each `[elevation=n]`/`[brightness=n]` rule repoints `--ui-container-bg` to the corresponding `--md-sys-color-surface-*` role. The signed-int→name mapping lives in `@scope`/`:where`; tokens stay role-pure.
 
 **Decisions to resolve at intake (`tokens-specialist`):**
-1. **Scheme inversion.** In dark mode "elevation up" conventionally means *lighter* (additive light) — the opposite of light mode. Each `--c-surface-elevation-*` role must be designed deliberately per scheme via `light-dark()`, not a mechanical mirror.
-2. **Composition contrast.** `elevation` and `brightness` compose, so on-surface ink (`--c-neutral-on-surface`) must stay WCAG-AA across the **combined** extremes (`elevation=3,brightness=-3` and `elevation=-3,brightness=3`) — a 7×7 contrast surface, both schemes.
+1. **Scheme inversion.** In dark mode "elevation up" conventionally means *lighter* (additive light) — the opposite of light mode. Each `--md-sys-color-surface-elevation-*` role must be designed deliberately per scheme via `light-dark()`, not a mechanical mirror.
+2. **Composition contrast.** `elevation` and `brightness` compose, so on-surface ink (`--md-sys-color-neutral-on-surface`) must stay WCAG-AA across the **combined** extremes (`elevation=3,brightness=-3` and `elevation=-3,brightness=3`) — a 7×7 contrast surface, both schemes.
 3. **Orthogonality.** Keep the axes visually distinct: recommend `elevation` = surface-role step (optionally + a shadow ramp), `brightness` = pure tonal tint within a layer. Decide whether `elevation` also carries shadow (real elevation usually implies shadow + tint together) or stays background-only.
 
 ## 4. Scroll system (`ui-card-content`)
@@ -165,8 +165,8 @@ Both axes signed, symmetric, base-at-0; `n ∈ [-3..3]` a **literal union**, the
 - **`scroll-fade`** (boolean): a `mask-image` linear-gradient fading the scroll edges. Recommended impl = edge-*aware* fade (top fade only when scrolled down, etc.) via **scroll-driven animations** (`animation-timeline: scroll()` driving the mask stops) — zero JS; degrade to a static both-edges mask where unsupported. A JS scroll listener is the heavier fallback only if a target engine lacks scroll-timelines.
 
 ## 5. Geometry & tokens
-- `--ui-card-radius` (controller-managed, base `--ui-radius-base`), `--ui-card-padding`, `--ui-card-gap`; surface `--c-neutral-surface`, border `--c-neutral-outline-variant`, ink `--c-neutral-on-surface`.
-- **New shared tokens needed (→ `tokens-specialist`):** `--ui-radius-base` (also wanted by `ui-text-field`, see follow-up #71), the `--c-surface-elevation-*` + `--c-surface-brightness-*` ladders.
+- `--ui-card-radius` (controller-managed, base `--ui-radius-base`), `--ui-card-padding`, `--ui-card-gap`; surface `--md-sys-color-neutral-surface`, border `--md-sys-color-neutral-outline-variant`, ink `--md-sys-color-neutral-on-surface`.
+- **New shared tokens needed (→ `tokens-specialist`):** `--ui-radius-base` (also wanted by `ui-text-field`, see follow-up #71), the `--md-sys-color-surface-elevation-*` + `--md-sys-color-surface-brightness-*` ladders.
 - Header/footer geometry follows the existing control ramp (height off `--ui-{height}`, edge insets `h/2` value / `½(h−icon)` slot) so a card header lines up with sibling controls.
 
 ## 6. Semantics

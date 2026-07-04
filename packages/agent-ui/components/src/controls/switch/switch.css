@@ -2,7 +2,7 @@
  * Two clearly-SECTIONED blocks:
  *
  *   [1] TOKEN BLOCK  — `:where(ui-switch)` (specificity 0,0,0) DECLARES the `--ui-switch-*` chain from the
- *       colour roles (`--c-{family}-{role}`) and the compact widget ramp (`--ui-compact-{size}` / ADR-0041).
+ *       colour roles (`--md-sys-color-{family}-{role}`) and the compact widget ramp (`--ui-compact-{size}` / ADR-0041).
  *       `[size]` repoints the box token (the widget ramp step); `:state(checked)` repoints the track + thumb
  *       colour channels to the primary family (ON = filled primary, OFF = muted neutral); `[disabled]` mutes
  *       everything. No `color-mix` — colour opinions live in the token layer (ADR-0008).
@@ -23,15 +23,15 @@
 
 :where(ui-switch) {
   /* Track colour (unchecked default = solid neutral). A per-state ROLE-LADDER step, never a color-mix
-     (ADR-0008). The OFF track is a state-bearing control part → the SOLID --c-neutral-track (SC 1.4.11
-     3:1 vs every surface plane), NOT the old translucent --c-neutral-outline-variant which composited to
+     (ADR-0008). The OFF track is a state-bearing control part → the SOLID --md-sys-color-neutral-track (SC 1.4.11
+     3:1 vs every surface plane), NOT the old translucent --md-sys-color-neutral-outline-variant which composited to
      1.51:1 light / 1.73:1 (an SC 1.4.11 fail — the off switch went near-invisible; the white thumb did
      not carry it either, 1.22–1.84:1). Hover steps one role more prominent (2026-07-02 color audit item 4
      · ADR-0059). The CHECKED track (primary, below) already clears 3.94:1 light / 4.68:1 dark — untouched. */
-  --ui-switch-track: var(--c-neutral-track);
-  --ui-switch-track-hover: var(--c-neutral-track-hover);
+  --ui-switch-track: var(--md-sys-color-neutral-track);
+  --ui-switch-track-hover: var(--md-sys-color-neutral-track-hover);
   /* Thumb colour (unchecked default = brightest neutral surface ≈ white). Constant across schemes. */
-  --ui-switch-thumb: var(--c-neutral-surface-brightest);
+  --ui-switch-thumb: var(--md-sys-color-neutral-surface-brightest);
 
   /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md). `[size]` repoints. */
   --ui-switch-box: var(--ui-compact-md);
@@ -54,17 +54,17 @@
 /* :state(checked) — primary-family track + on-primary thumb: the ON state, solid primary fill.
    Hover steps to a darker primary (same ADR-0008 role-ladder pattern as the button). */
 :where(ui-switch):state(checked) {
-  --ui-switch-track: var(--c-primary);
-  --ui-switch-track-hover: var(--c-primary-hover);
-  --ui-switch-thumb: var(--c-primary-on-primary);
+  --ui-switch-track: var(--md-sys-color-primary);
+  --ui-switch-track-hover: var(--md-sys-color-primary-hover);
+  --ui-switch-thumb: var(--md-sys-color-primary-on-primary);
 }
 
 /* [disabled] → muted neutral roles (overrides all states). HOLDS at idle: the disabled host is
    pointer-inert (styles block), so `:hover` never matches it (ADR-0008 disabled pattern). */
 :where(ui-switch[disabled]) {
-  --ui-switch-track: var(--c-neutral-surface-high);
-  --ui-switch-track-hover: var(--c-neutral-surface-high);
-  --ui-switch-thumb: var(--c-neutral-on-surface-variant);
+  --ui-switch-track: var(--md-sys-color-neutral-surface-high);
+  --ui-switch-track-hover: var(--md-sys-color-neutral-surface-high);
+  --ui-switch-thumb: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-switch) consumes ONLY --ui-switch-* ════════════════ */
@@ -147,7 +147,7 @@
      deliberate exception to "consume only --ui-switch-*": a focus ring is a fleet constant, read directly
      so every control draws the identical ring. `outline` is layout-neutral (no box geometry shift). */
   :scope:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--ui-focus-ring-offset);
   }
 
@@ -171,7 +171,7 @@
   /* forced-colors — keep the track visible as a border + Canvas fill (unchecked) or Highlight (checked);
      the thumb paints as ButtonText (off) / HighlightText (on). forced-color-adjust:none preserves our
      explicit system-colour mappings so the browser does not re-override them (matches checkbox.css pattern).
-     The `:focus-visible` ring survives for free: `--c-focus-ring → Highlight` from the token layer. */
+     The `:focus-visible` ring survives for free: `--md-sys-color-focus-ring → Highlight` from the token layer. */
   @media (forced-colors: active) {
     :scope::before {
       border: 2px solid ButtonText;

@@ -19,7 +19,7 @@ const stylesBlock = css.slice(css.indexOf('@scope (ui-tabs) {'))
 // The fleet tokens a control reads DIRECTLY in @scope (the shared focus ring, ADR-0009; the shared state-
 // transition motion). Everything else in @scope must be the own --ui-tabs-* chain.
 const sharedFleet = new Set([
-  '--c-focus-ring',
+  '--md-sys-color-focus-ring',
   '--ui-focus-ring-width',
   '--ui-focus-ring-offset',
   '--ui-motion-fast',
@@ -42,7 +42,7 @@ describe('tabs.css — structure + sectioning (s8)', () => {
   })
 
   it('the :where(ui-tabs) block sets its OWN default --ui-container-bg from a surface role (the base is transparent)', () => {
-    expect(tokenBlock).toMatch(/--ui-container-bg:\s*var\(--c-neutral-surface\)/) // ADR-0015 — a bare tabs still draws a plane
+    expect(tokenBlock).toMatch(/--ui-container-bg:\s*var\(--md-sys-color-neutral-surface\)/) // ADR-0015 — a bare tabs still draws a plane
   })
 
   it('declares the --ui-tabs-* chain — control-height tab rows + the --ui-space shell + the ink/indicator roles', () => {
@@ -52,10 +52,10 @@ describe('tabs.css — structure + sectioning (s8)', () => {
     expect(tokenBlock).toMatch(/--ui-tabs-strip-gap:\s*var\(--ui-space-xs\)/)
     expect(tokenBlock).toMatch(/--ui-tabs-panel-pad:\s*var\(--ui-space-md\)/)
     // the ink ladder + the indicator (SOLID roles)
-    expect(tokenBlock).toMatch(/--ui-tabs-ink:\s*var\(--c-neutral-on-surface-variant\)/)
-    expect(tokenBlock).toMatch(/--ui-tabs-ink-selected:\s*var\(--c-neutral-on-surface\)/)
-    expect(tokenBlock).toMatch(/--ui-tabs-indicator:\s*var\(--c-primary\)/)
-    expect(tokenBlock).toMatch(/--ui-tabs-strip-line:\s*var\(--c-neutral-outline-variant\)/)
+    expect(tokenBlock).toMatch(/--ui-tabs-ink:\s*var\(--md-sys-color-neutral-on-surface-variant\)/)
+    expect(tokenBlock).toMatch(/--ui-tabs-ink-selected:\s*var\(--md-sys-color-neutral-on-surface\)/)
+    expect(tokenBlock).toMatch(/--ui-tabs-indicator:\s*var\(--md-sys-color-primary\)/)
+    expect(tokenBlock).toMatch(/--ui-tabs-strip-line:\s*var\(--md-sys-color-neutral-outline-variant\)/)
   })
 })
 
@@ -68,9 +68,9 @@ describe('tabs.css — @scope token hygiene (s8)', () => {
     expect(allRefs.some((v) => /^--ui-tabs-/.test(v))).toBe(true)
   })
 
-  it('NEGATIVE control: a planted raw-primitive --c-* ref in @scope is CAUGHT by the hygiene predicate', () => {
-    const planted = '@scope (ui-tabs) { ui-tab:state(selected) { color: var(--c-primary); } }'
-    expect(foreignScopeRefs(planted)).toEqual(['--c-primary'])
+  it('NEGATIVE control: a planted raw-primitive --md-sys-color-* ref in @scope is CAUGHT by the hygiene predicate', () => {
+    const planted = '@scope (ui-tabs) { ui-tab:state(selected) { color: var(--md-sys-color-primary); } }'
+    expect(foreignScopeRefs(planted)).toEqual(['--md-sys-color-primary'])
   })
 
   it('NEVER a color-mix and NEVER opacity (components hold zero colour opinion; ADR-0008)', () => {
@@ -122,7 +122,7 @@ describe('tabs.css — the shared focus ring + motion + forced-colors (s8)', () 
     const m = stylesBlock.match(/ui-tab:focus-visible\s*\{([^}]*)\}/)
     expect(m, 'the ui-tab:focus-visible rule is missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
-    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--c-focus-ring\)/)
+    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
     expect(rule).toMatch(/outline-offset:/)
   })
 

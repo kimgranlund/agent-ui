@@ -1,14 +1,14 @@
-# ADR-0009 — The shared focus-ring standard (`--c-focus-ring` + `:focus-visible` outline)
+# ADR-0009 — The shared focus-ring standard (`--md-sys-color-focus-ring` + `:focus-visible` outline)
 
 > Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-27
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted *(ratified 2026-06-27 — orchestration-lead; dedicated --c-focus-ring, outline 2px width / 2px offset, :focus-visible only, forced-colors→Highlight; exact hue delegated to the token slice)* |
+> | **Status** | accepted *(ratified 2026-06-27 — orchestration-lead; dedicated --md-sys-color-focus-ring, outline 2px width / 2px offset, :focus-visible only, forced-colors→Highlight; exact hue delegated to the token slice)* |
 > | **Date** | 2026-06-27 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, establishing the fleet focus-indicator standard |
 > | **Ratified by** | orchestration-lead — 2026-06-27 |
-> | **Repairs** | **NEW** `@agent-ui/shared/src/tokens/tokens.css` (the `--c-focus-ring` role + its forced-colors mapping) · **NEW** `@agent-ui/shared/src/tokens/dimensions.css` (`--ui-focus-ring-width` / `--ui-focus-ring-offset`) · `references/interaction-states.md` (the focus-ring section) · `controls/button/button.css` (the first `:focus-visible` consumer) · `goals §G5` (the booked G4 focus deferral) |
+> | **Repairs** | **NEW** `@agent-ui/shared/src/tokens/tokens.css` (the `--md-sys-color-focus-ring` role + its forced-colors mapping) · **NEW** `@agent-ui/shared/src/tokens/dimensions.css` (`--ui-focus-ring-width` / `--ui-focus-ring-offset`) · `references/interaction-states.md` (the focus-ring section) · `controls/button/button.css` (the first `:focus-visible` consumer) · `goals §G5` (the booked G4 focus deferral) |
 > | **Supersedes / Superseded by** | Relates: **ADR-0008** (focus is the fourth interaction state) · **ADR-0010** (the `tabbable` trait makes the host focusable so the ring can show) · **ADR-0007** (the dimensions layer this extends) · **Amended by ADR-0014** (the `:focus-within` text-entry-control variant — see the `## Amendment` below) |
 
 ## Context
@@ -20,7 +20,7 @@ mouse click — the `:focus-visible` contract), survive `forced-colors`, and not
 `references/tokens.md`, colour opinions live in the token layer; per `references/geometry.md`, the box geometry
 is sacrosocact — a focus treatment must be **layout-neutral**.
 
-`@agent-ui/shared` already owns the two homes: `tokens.css` (the `--c-{family}-{role}` colour roles, with the
+`@agent-ui/shared` already owns the two homes: `tokens.css` (the `--md-sys-color-{family}-{role}` colour roles, with the
 WHCM/forced-colors mapping baked in) and `dimensions.css` (the dimensional tokens). The only allowed
 cross-package import is `components → @agent-ui/shared`, so a shared focus token is read by every control
 without a layering violation.
@@ -29,9 +29,9 @@ without a layering violation.
 
 We establish a **single shared focus-ring standard** that every `ui-*` control applies identically:
 
-1. **Ring colour — a dedicated role** `--c-focus-ring` in `@agent-ui/shared/src/tokens/tokens.css`, resolved
+1. **Ring colour — a dedicated role** `--md-sys-color-focus-ring` in `@agent-ui/shared/src/tokens/tokens.css`, resolved
    via `light-dark()` and carrying the forced-colors mapping `→ Highlight` (the system focus colour). A
-   *dedicated* role, **not** `--c-primary` reused — so a `ghost`/secondary/neutral control gets the same ring,
+   *dedicated* role, **not** `--md-sys-color-primary` reused — so a `ghost`/secondary/neutral control gets the same ring,
    not one tinted by the primary family.
 2. **Ring geometry — two dimensional tokens** in `@agent-ui/shared/src/tokens/dimensions.css`:
    `--ui-focus-ring-width` (`2px`) and `--ui-focus-ring-offset` (`2px`). These are **constants** (no `var()`
@@ -41,13 +41,13 @@ We establish a **single shared focus-ring standard** that every `ui-*` control a
 
    ```css
    :scope:focus-visible {
-     outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+     outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
      outline-offset: var(--ui-focus-ring-offset);
    }
    ```
 
    `outline` (not `box-shadow`) because it is **painted outside the box without affecting layout** (geometry
-   law intact), the UA preserves it under `forced-colors`, and `--c-focus-ring`'s `→ Highlight` mapping makes
+   law intact), the UA preserves it under `forced-colors`, and `--md-sys-color-focus-ring`'s `→ Highlight` mapping makes
    the WHCM ring **free**. `:focus-visible` (not `:focus`) gives the keyboard-only contract: no ring on a mouse
    click.
 
@@ -69,13 +69,13 @@ draws the ring.
   *visible, keyboard-only, forced-colors-safe* ring; perfect rounding on the pill is nice-to-have. The wave-2
   smoke checks both engines; if a target WebKit squares it, that is acceptable (and the `box-shadow` fallback
   in Alternatives remains available behind a later ADR).
-- **A shared-package values change.** Adding `--c-focus-ring` (with its OKLCH value + forced-colors mapping)
+- **A shared-package values change.** Adding `--md-sys-color-focus-ring` (with its OKLCH value + forced-colors mapping)
   and the two dimension tokens edits `@agent-ui/shared` — owned by the token layer / tokens-specialist. This
   ADR pins the **names + contract**; the exact hue is the token-layer's call (see Open question).
 
 ## Resolved on ratification (2026-06-27 — orchestration-lead)
 
-CONFIRMED: a **dedicated `--c-focus-ring`** role (not `--c-primary`), via **`outline` at `2px` width / `2px`
+CONFIRMED: a **dedicated `--md-sys-color-focus-ring`** role (not `--md-sys-color-primary`), via **`outline` at `2px` width / `2px`
 offset**, **`:focus-visible` only**, and it **MUST** carry the forced-colors `→ Highlight` mapping (Risk 3).
 The **exact hue is delegated to the `tok-focus` token slice** (default to a distinct, high-contrast focus
 accent). The names are pinned, so this blocks nothing structural — `css-button` builds the `:focus-visible`
@@ -92,12 +92,12 @@ The original Decision **stands**: keyboard-operated controls (`ui-button` and it
 click — because a text input must visibly signal where typing will land.
 
 We add a **text-entry-control variant of the SAME ring**: the field's `@scope` block uses **`:focus-within`** (not
-`:focus-visible`), reading the **identical** shared tokens (`--c-focus-ring`, `--ui-focus-ring-width` /
+`:focus-visible`), reading the **identical** shared tokens (`--md-sys-color-focus-ring`, `--ui-focus-ring-width` /
 `--ui-focus-ring-offset`) and the same layout-neutral `outline` recipe — **only the trigger pseudo-class differs**:
 
 ```css
 :scope:focus-within {   /* text-entry control — ring on ALL focus, incl. pointer (native input parity) */
-  outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+  outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
   outline-offset: var(--ui-focus-ring-offset);
 }
 ```
@@ -114,11 +114,11 @@ default and the shared tokens/recipe are unchanged.
 
 ## Alternatives considered
 
-- **`box-shadow` ring** (`0 0 0 Npx var(--c-focus-ring)`) — rejected as the *primary*: it always follows
+- **`box-shadow` ring** (`0 0 0 Npx var(--md-sys-color-focus-ring)`) — rejected as the *primary*: it always follows
   `border-radius` (nice on the pill), but `box-shadow` is **suppressed under `forced-colors`**, so the ring
   vanishes in WHCM unless a fallback `outline` is added — more rules, and it loses the forced-colors-free win.
   Kept on the shelf as a fallback if a target WebKit's squared outline proves unacceptable.
-- **Reuse `--c-primary` as the ring colour** — rejected: couples the ring to the primary family, so a control
+- **Reuse `--md-sys-color-primary` as the ring colour** — rejected: couples the ring to the primary family, so a control
   on another family/variant would get a mismatched ring. A focus indicator should be one consistent colour.
 - **Per-control focus tokens** (`--ui-button-focus-*`) — rejected: a focus ring is a fleet constant, not a
   per-control opinion; centralising it in `@agent-ui/shared` is what prevents drift.

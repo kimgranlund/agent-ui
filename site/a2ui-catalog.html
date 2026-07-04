@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2UI catalog</title>
+  </head>
+  <body>
+    <!-- The A2UI catalog gallery: every default-catalog component rendered live through the real renderer via the
+         <component-preview> docs element (mode="a2ui") — a full live-knobs playground per component. An MPA entry
+         auto-discovered by vite.config.ts's site/**/*.html glob (matches the nav link ./a2ui-catalog.html) — no
+         config edit needed. The page module imports pages/_page.ts FIRST for the foundation CSS cascade + the
+         self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2ui-catalog.ts"></script>
+  </body>
+</html>

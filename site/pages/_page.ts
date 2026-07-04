@@ -2,7 +2,7 @@
 // the single place that performs the load-bearing foundation import cascade (ADR-0003), so a page builder never
 // repeats — or reorders — it.
 //
-// Import order is load-bearing: the colour `--c-*` roles + the `--ui-{height,font,gap}-*` ramp from the
+// Import order is load-bearing: the colour `--md-sys-color-*` roles + the `--ui-{height,font,gap}-*` ramp from the
 // FOUNDATION barrel must be declared BEFORE a control's `:where()` block reads them. So foundation CSS loads
 // tokens-first, then the per-component CSS, then the behaviour that self-defines the ui-* controls. Because a
 // page module imports `_page.ts` as its first statement, ES depth-first evaluation runs these three before any
@@ -16,7 +16,7 @@
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css -> dimensions.css (FIRST)
 import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation
 import '@agent-ui/components/components' // [3] self-defining ui-* controls (registers ui-button on import)
-import './_page.css' // [4] shared page chrome (shell + nav + header), AFTER the foundation so it reads the --c-* roles
+import './_page.css' // [4] shared page chrome (shell + nav + header), AFTER the foundation so it reads the --md-sys-color-* roles
 
 // What a page builder gets back from mountPage: the <main> container to append its content into. Kept to a
 // single field so every page slice shares a stable, minimal contract.
@@ -204,11 +204,17 @@ export const NAV: readonly NavGroup[] = [
   {
     links: [
       { href: './a2ui-canvas.html', label: 'A2UI Canvas' },
+      { href: './a2ui-catalog.html', label: 'A2UI Catalog' },
       { href: './a2ui-list.html', label: 'A2UI Dynamic List' },
       { href: './a2ui-form.html', label: 'A2UI Generative Form' },
       { href: './a2ui-patterns.html', label: 'A2UI Patterns' },
       { href: './a2ui-stream.html', label: 'A2UI Streaming' },
+      { href: './a2ui-live.html', label: 'A2UI Live Agent' },
     ],
+  },
+  {
+    // Site-level meta pages (ungrouped — no component label, so not a fleet TOC group per site-toc.test.ts).
+    links: [{ href: './adr-index.html', label: 'Decision Records' }],
   },
 ]
 
@@ -376,11 +382,25 @@ function buildCta(cta: PageCta): HTMLElement {
   return anchor
 }
 
+/**
+ * pageLead — a lead paragraph for the page BODY (the first child of the content region), NOT the sticky header.
+ * Pages that keep the sticky header lean (heading only) put their descriptive copy here instead, so it scrolls
+ * away with the content rather than permanently pinning a tall block above the scroll region. Plain text
+ * (textContent), matching the header `page-description` it replaces.
+ */
+export function pageLead(text: string): HTMLElement {
+  const p = document.createElement('p')
+  p.className = 'page-lead'
+  p.textContent = text
+  return p
+}
+
 // buildPageHeader — the STICKY page header (top of the row-2 scroll region): the regions context-label ·
 // heading (the <h1>) · description (the lead <p>) · tab strip · CTA. The context-label + tabs AUTO-DERIVE from
 // the active NAV group, so a page that passes only `{ title, intro }` still gets a correct header; `contextLabel`
-// / `tabs` / `cta` override or add. A single-link group (Home, A2UI Canvas) renders no tab strip — a one-tab
-// strip carries no navigation value.
+// / `tabs` / `cta` override or add. Only a LABELED component group renders a tab strip (its page-types); an
+// ungrouped site-level cluster (Home, the A2UI pages, the ADR index) does NOT — those are independent
+// destinations, not views of one subject (the left rail already lists each directly).
 function buildPageHeader(options: PageOptions): HTMLElement {
   const group = activeGroup()
 
@@ -413,7 +433,10 @@ function buildPageHeader(options: PageOptions): HTMLElement {
     inner.append(description)
   }
 
-  const tabs: readonly NavLink[] | undefined = options.tabs ?? group?.links
+  // Tabs are page-TYPES of ONE subject — a LABELED component group (Permutations/States/API of ui-button). An
+  // UNGROUPED site-level cluster (the A2UI pages, the ADR index) is independent destinations, not views of one
+  // thing, so it gets NO default tab strip — the left rail already lists each; an explicit `options.tabs` wins.
+  const tabs: readonly NavLink[] | undefined = options.tabs ?? (group?.label ? group.links : undefined)
   if (tabs && tabs.length >= 2) inner.append(buildTabs(tabs))
 
   header.append(inner)

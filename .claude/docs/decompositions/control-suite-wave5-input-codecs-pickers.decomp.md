@@ -225,11 +225,11 @@ All colour tokens should **alias existing role tokens**, not add palette. `--ui-
 |---|---|---|
 | `--ui-calendar-cell-size` | day-cell square (place on the ramp; size-responsive sm/md/lg) | dimensional — new, ~`2.25rem` default |
 | `--ui-calendar-gap` | inter-cell gap | `= font/2` rhythm or a small fixed rem |
-| `--ui-calendar-selected-fill` | selected-day background | alias `--c-primary-*` |
-| `--ui-calendar-selected-ink` | selected-day text | alias `--c-primary-on-*` |
-| `--ui-calendar-today-ring` | today's ring/outline | alias `--c-focus-ring` / `--c-primary-outline` |
-| `--ui-calendar-disabled-ink` | disabled / out-of-range day ink | alias `--c-neutral-*-variant` |
-| `--ui-calendar-outside-ink` | adjacent-month day ink (muted) | alias `--c-neutral-*` |
+| `--ui-calendar-selected-fill` | selected-day background | alias `--md-sys-color-primary-*` |
+| `--ui-calendar-selected-ink` | selected-day text | alias `--md-sys-color-primary-on-*` |
+| `--ui-calendar-today-ring` | today's ring/outline | alias `--md-sys-color-focus-ring` / `--md-sys-color-primary-outline` |
+| `--ui-calendar-disabled-ink` | disabled / out-of-range day ink | alias `--md-sys-color-neutral-*-variant` |
+| `--ui-calendar-outside-ink` | adjacent-month day ink (muted) | alias `--md-sys-color-neutral-*` |
 | `--ui-calendar-range-fill` · `-range-ink` | **FUTURE** (range selection) — reserved, not built | — |
 
 The nav `‹›` arrows are **inline affordances = font** — already covered by the §4.6 law ("calendar-nav ‹›");

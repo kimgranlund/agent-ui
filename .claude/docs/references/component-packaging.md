@@ -35,7 +35,7 @@ stay visibly sectioned (a comment banner) so the token-hygiene probe can still t
 from the consumption layer in one file:
 
 1. **`:where(ui-{name})` token block** (specificity 0,0,0) — *declares* `--ui-{name}-*` from the colour
-   roles (`--c-{family}-{role}`) and the dimensional ramp (`--ui-{height,font,gap}-{size}`); `[variant]`/
+   roles (`--md-sys-color-{family}-{role}`) and the dimensional ramp (`--ui-{height,font,gap}-{size}`); `[variant]`/
    `[size]`/state selectors repoint those tokens. No `color-mix` — colour opinions stay in the token layer.
 2. **`@scope (ui-{name})` styles block** — *consumes only* `--ui-{name}-*`. Geometry per `geometry.md`,
    colour channels per `tokens.md`.
@@ -68,7 +68,7 @@ The two CSS barrels chain across the one allowed cross-package edge: `foundation
 
 ## The load-bearing CSS order
 
-Order is **not** cosmetic — a control's `:where()` token block reads the `--c-*` roles and the
+Order is **not** cosmetic — a control's `:where()` token block reads the `--md-sys-color-*` roles and the
 `--ui-{height,font,gap}-*` ramp, so those must already be declared when it resolves. The contract:
 
 ```

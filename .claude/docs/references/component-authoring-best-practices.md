@@ -15,13 +15,13 @@
   `aria-disabled`, no form participation) keys off `:disabled` / `formDisabledCallback`; a
   `disabled` / `[mode=disabled]` attribute MUST reflect into the `disabled` property so `:disabled` is
   canonical and forced-colors `GrayText` applies. A styled-but-clickable disabled is the classic a11y trap.
-- Write the **CSS trio**: tokens in `:where(ui-{name})` from `--c-` roles; styles in `@scope (ui-{name})`
+- Write the **CSS trio**: tokens in `:where(ui-{name})` from `--md-sys-color-` roles; styles in `@scope (ui-{name})`
   consuming **only** `--ui-{name}-*`; a barrel `@import`ing both.
 - Wire geometry **off the ramp** (`block-size`, `padding-block: 0`, the slot/slotless inline-pad,
   affordance `= font`) — per `docs/references/geometry.md`.
 - **Intent never travels by color alone** (WCAG SC 1.4.1; ADR-0057). The intent anchors are L-matched,
   so intent is hue-only at the token level and collapses under CVD (danger↔success is indistinguishable
-  under deuteranopia). Wherever an intent role (`--c-danger/-warning/-success/-info` — or any color role
+  under deuteranopia). Wherever an intent role (`--md-sys-color-danger/-warning/-success/-info` — or any color role
   carrying validity/status/kind/selection) styles a state or variant, a **visible non-color signifier
   co-carries the meaning**: text naming the state (text-field's validity message, ADR-0014 cl.4), a
   glyph/shape (checkbox's tick; calendar's ring-vs-fill), position (switch's thumb), or a pattern (a
@@ -32,7 +32,7 @@
 
 - **Boolean explosion** — six booleans that are really one `enum`.
 - A **self-owned outer margin** — a component owns its inside, not its surroundings (composition breaks).
-- **Raw primitive token refs** (`--c-{family}-{stop}`) in component CSS — read **roles** only.
+- **Raw primitive token refs** (`--md-sys-color-{family}-{stop}`) in component CSS — read **roles** only.
 - **Block-padding as the sizing lever** — `block-size` is the lever; `padding-block` is `0`.
 - **A color-only state diff** — if two states/variants of a surface differ only in color values, the
   surface fails CVD and fails review (ADR-0057); a color-only status dot / hue-only badge is unshippable.
@@ -48,7 +48,7 @@
   export class UIButtonElement extends UIFormElement { static props = props }
   ```
 - **CSS trio skeleton:**
-  `{name}-tokens.css` → `:where(ui-{name}) { --ui-{name}-bg: var(--c-primary); --ui-{name}-height: var(--ui-height-md); }`
+  `{name}-tokens.css` → `:where(ui-{name}) { --ui-{name}-bg: var(--md-sys-color-primary); --ui-{name}-height: var(--ui-height-md); }`
   · `{name}-styles.css` → `@scope (ui-{name}) { :scope { block-size: var(--ui-{name}-height); padding-block: 0; background: var(--ui-{name}-bg); } }`
   · `{name}.css` → `@import './{name}-tokens.css'; @import './{name}-styles.css';`
 - **Descriptor:** `{name}.api.json` records tag · tier · extends · attributes (from `static props`) ·

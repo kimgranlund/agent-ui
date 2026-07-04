@@ -21,6 +21,7 @@ import { effect } from '@agent-ui/components'
 import type { Scope } from '@agent-ui/components'
 import type { A2uiComponent, A2uiError, FunctionCall } from '../protocol.ts'
 import type { CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
+import type { ComponentDef } from '../catalog/catalog.ts'
 import type { CreateWidget, ItemScope } from './types.ts'
 import type { Surface } from './surface.ts'
 import { installInputBinding } from './input.ts'
@@ -30,6 +31,32 @@ import { isInterpolated } from './interpolate.ts'
  *  `checks` is a component-level array (ADR-0029), handled by the renderer host like `action` —
  *  it is read off the node and wired into a reactive controller, never `applyProp`'d. */
 const RESERVED = new Set<string>(['id', 'component', 'child', 'children', 'checks'])
+
+/**
+ * The closed string `enum` a catalog `PropDef` declares for a prop, or `undefined` if the prop is
+ * unconstrained (no PropDef, a boolean/number schema, or a string schema with no `enum`). Used to gate
+ * `applyProp` below.
+ */
+function enumOf(def: ComponentDef | undefined, prop: string): readonly string[] | undefined {
+  const schema = def?.properties[prop]?.type
+  if (schema == null || typeof schema !== 'object') return undefined // no PropDef / boolean schema → unconstrained
+  const members = (schema as { enum?: unknown }).enum
+  return Array.isArray(members) ? (members as readonly string[]) : undefined
+}
+
+/**
+ * Should this (already-resolved) LITERAL value be applied for `prop`? An unconstrained prop always
+ * applies; an enum-constrained prop applies ONLY if the value is a declared member. Nothing upstream
+ * enforces catalog enum MEMBERSHIP — the wire validator checks a prop's type/shape, and the control's
+ * property setter stores a value verbatim (only the ATTRIBUTE path runs the enum codec) — so an agent
+ * can emit a value the enum forbids (e.g. `align="center"` on a `ui-column`, whose enum drops `center`).
+ * Such a value is already visually INERT (the control's CSS repoints only on declared members) but, if
+ * applied, lingers as a stray DOM attribute. Skipping it at the catalog boundary keeps the rendered DOM
+ * faithful to the catalog — the single source of truth for what a prop may be.
+ */
+function applies(members: readonly string[] | undefined, value: unknown): boolean {
+  return members === undefined || members.includes(value as string)
+}
 
 /**
  * A dynamic binding value: `{path}` data-model reference, `{call}` function call (ADR-0026), or a
@@ -78,7 +105,8 @@ export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
   const { registry, emitError, resolveValue } = deps
 
   return (node, surface, scope = surface.scope, itemScope, ac = surface.ac) => {
-    const factory = registry.get(surface.catalogId)?.factories[node.component]
+    const entry = registry.get(surface.catalogId)
+    const factory = entry?.factories[node.component]
     if (factory === undefined) {
       // Unknown component type — or, defensively, a catalog that vanished after createSurface's
       // CATALOG_UNKNOWN guard. Non-fatal: report + placeholder so sibling nodes still mount.
@@ -91,11 +119,13 @@ export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
       return placeholder(node)
     }
 
+    const componentDef = entry?.catalog?.components?.[node.component] // the PropDefs — the enum authority for `applies` (absent in a stub catalog ⇒ unconstrained)
     const el = factory.create()
     for (const [prop, value] of Object.entries(node)) {
       if (RESERVED.has(prop)) continue
-      if (isBinding(value)) bindProp(el, factory, prop, value, surface, resolveValue, scope, itemScope)
-      else factory.applyProp(el, prop, value) // static literal → set once
+      const members = enumOf(componentDef, prop) // the prop's declared enum (or undefined = unconstrained)
+      if (isBinding(value)) bindProp(el, factory, prop, value, surface, resolveValue, scope, itemScope, members)
+      else if (applies(members, value)) factory.applyProp(el, prop, value) // static literal → set once, IF a declared enum member
     }
     // Two-way input binding (renderer LLD-C8, ADR-0019). Wired here — right after the data→control props are
     // applied, with `el`/`factory`/`node`/`surface` all in scope — so a control marked `value:{prop,event}`
@@ -127,10 +157,14 @@ function bindProp(
   resolveValue: WidgetDeps['resolveValue'],
   scope: Scope,
   itemScope: ItemScope | undefined,
+  members: readonly string[] | undefined,
 ): void {
   scope.run(() => {
     effect(() => {
-      factory.applyProp(el, prop, resolveValue(value, surface, itemScope))
+      const resolved = resolveValue(value, surface, itemScope)
+      // Same catalog-enum gate as the static path: a binding that resolves to a non-member value is
+      // skipped (it would otherwise linger as a stray attribute — see `applies`). Re-checked each tick.
+      if (applies(members, resolved)) factory.applyProp(el, prop, resolved)
     })
   })
 }

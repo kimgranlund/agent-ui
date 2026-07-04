@@ -1,0 +1,40 @@
+{
+  "defaultProvider": "anthropic",
+  "providers": {
+    "anthropic": {
+      "label": "Anthropic",
+      "envKey": "ANTHROPIC_API_KEY",
+      "endpoint": "https://api.anthropic.com/v1/messages",
+      "defaultModel": "claude-sonnet-5",
+      "models": [
+        { "id": "claude-opus-4-8", "label": "Claude Opus 4.8" },
+        { "id": "claude-sonnet-5", "label": "Claude Sonnet 5" },
+        { "id": "claude-haiku-4-5-20251001", "label": "Claude Haiku 4.5" },
+        { "id": "claude-fable-5", "label": "Claude Fable 5" }
+      ],
+      "implemented": true
+    },
+    "openai": {
+      "label": "OpenAI",
+      "envKey": "OPENAI_API_KEY",
+      "endpoint": "https://api.openai.com/v1/chat/completions",
+      "defaultModel": "gpt-4.1",
+      "models": [
+        { "id": "gpt-4.1", "label": "GPT-4.1" },
+        { "id": "gpt-4.1-mini", "label": "GPT-4.1 mini" }
+      ],
+      "implemented": false
+    },
+    "gemini": {
+      "label": "Gemini",
+      "envKey": "GEMINI_API_KEY",
+      "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:streamGenerateContent",
+      "defaultModel": "gemini-2.5-pro",
+      "models": [
+        { "id": "gemini-2.5-pro", "label": "Gemini 2.5 Pro" },
+        { "id": "gemini-2.5-flash", "label": "Gemini 2.5 Flash" }
+      ],
+      "implemented": false
+    }
+  }
+}

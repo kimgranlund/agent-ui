@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 // CSS wiring is SELF-CONTAINED (host-runs-at-boundary): column.css is not in the component-styles barrel until
 // s12, so this test injects the foundation tokens, the shared surface/container-type seam, and column.css
 // directly, then the self-defining module. Vite resolves the bare specifier + the relative sheets and injects them.
-import '@agent-ui/components/foundation-styles.css' // the --c-* roles + the --ui-{space,density,…} ramp
+import '@agent-ui/components/foundation-styles.css' // the --md-sys-color-* roles + the --ui-{space,density,…} ramp
 import '../_surface/container.css' // the shared surface seam + `container-type: inline-size` on ui-column
 import './column.css' // the column layout sheet (token block + @scope)
 import './column.ts' // self-defines ui-column
@@ -44,10 +44,11 @@ describe('ui-column browser-truth harness (s4)', () => {
     // ADR-0039: justify default is `start` (box-alignment); computed returns 'start', not 'flex-start'
     // — writing-mode-relative and flex-flow-relative are equivalent in LTR/standard orientation (rendered identically)
     expect(getComputedStyle(el).justifyContent).toBe('start')
-    // a non-default keyword repoints the computed value (between → space-between)
-    el.setAttribute('align', 'center')
+    // a non-default keyword repoints the computed value (between → space-between). NB: `center` is NOT a
+    // ui-column align value (Kim's directive — see the dedicated disallowed test below), so `end` is used here.
+    el.setAttribute('align', 'end')
     el.setAttribute('justify', 'between')
-    expect(getComputedStyle(el).alignItems).toBe('center')
+    expect(getComputedStyle(el).alignItems).toBe('end')
     expect(getComputedStyle(el).justifyContent).toBe('space-between')
     // align='start' repoints to box-alignment `start` (ADR-0039); computed returns 'start', not 'flex-start'
     el.setAttribute('align', 'start')
@@ -101,6 +102,51 @@ describe('ui-column browser-truth harness (s4)', () => {
     col.setAttribute('align', 'start')
     const childWShrunk = child.getBoundingClientRect().width
     expect(childWShrunk).toBeLessThan(colW) // shrink-wrapped: narrower than the column
+  })
+
+  it('align="center" is DISALLOWED on ui-column — it does NOT center (Kim directive; no [align=center] rule)', () => {
+    const el = column()
+    host.append(el)
+    // `center` was removed from the column align enum; column.css has NO [align='center'] repoint, so a
+    // stray attribute leaves --ui-column-align at its base ⇒ align-items:stretch (children fill the width).
+    el.setAttribute('align', 'center')
+    expect(getComputedStyle(el).alignItems).not.toBe('center')
+    expect(getComputedStyle(el).alignItems).toBe('stretch')
+    // anti-vacuous: a REAL non-default value (end) DOES repoint, so the not-center check above isn't vacuous.
+    el.setAttribute('align', 'end')
+    expect(getComputedStyle(el).alignItems).toBe('end')
+  })
+
+  it('stretch fills the parent width even under a centering flex parent (the width:stretch opt-in)', () => {
+    // Reproduce the A2UI canvas context: a flex COLUMN parent with align-items:center makes its child
+    // shrink-wrap to content (a column also has container-type:inline-size, so its content contributes ~0
+    // intrinsic width → it collapses). `stretch` (`width: stretch`) overrides that so a ROOT column fills
+    // the artboard. NOT a query container itself (no container-type on the stage) so the column's own
+    // @container row-flip stays inert — flex-direction stays column and only the width changes.
+    const stage = document.createElement('div')
+    stage.style.display = 'flex'
+    stage.style.flexDirection = 'column'
+    stage.style.alignItems = 'center' // the canvas-surface centering that shrink-wraps the child
+    stage.style.inlineSize = '400px'
+    host.append(stage)
+
+    const col = document.createElement('ui-column')
+    const child = document.createElement('div')
+    child.textContent = 'X' // narrow content
+    col.append(child)
+    stage.append(col)
+
+    // WITHOUT stretch: under align-items:center the column does NOT fill the 400px stage
+    const shrunk = col.getBoundingClientRect().width
+    const stageW = stage.getBoundingClientRect().width
+    expect(shrunk).toBeLessThan(stageW) // shrink-wrapped / collapsed — narrower than the stage
+
+    // WITH stretch: width:stretch (fill-available cascade) fills the stage width
+    col.setAttribute('stretch', '')
+    const stretched = col.getBoundingClientRect().width
+    expect(stretched).toBeGreaterThan(shrunk) // anti-vacuous: it actually grew
+    expect(stretched).toBeGreaterThanOrEqual(stageW - 1) // fills the full parent width (cross-engine cascade)
+    expect(getComputedStyle(col).flexDirection).toBe('column') // still a column (no accidental row-flip)
   })
 
   it('ADR-0039 no-op proof — AC1: align=start/end and justify=end render at the expected edge in all reachable states', () => {

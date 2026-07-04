@@ -15,7 +15,7 @@ attributes:            # attributes-as-API — mirrors grid.ts `static props` (t
     type: enum
     values: [0, 1, 2, 3, -1, -2, -3]
     default: 0
-    reflect: true      # the scheme-INVERTING surface plane (--c-neutral-surface-{lowest…highest}); 0 = the neutral base. Reflects so the shared [elevation=n] repoint (controls/_surface/container.css) applies to JS-set values (ADR-0015)
+    reflect: true      # the scheme-INVERTING surface plane (--md-sys-color-neutral-surface-{lowest…highest}); 0 = the neutral base. Reflects so the shared [elevation=n] repoint (controls/_surface/container.css) applies to JS-set values (ADR-0015)
   - name: brightness
     type: enum
     values: [0, 1, 2, 3, -1, -2, -3]

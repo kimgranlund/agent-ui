@@ -246,7 +246,7 @@ Every component is a folder of behaviour-only `.ts` + a **single `{name}.css`** 
 sectioned blocks:
 
 - a `:where(ui-{name})` token block (specificity 0,0,0) declaring `--ui-{name}-*` defaults from
-  family-prefixed color roles (`--c-{family}-{role}`) and the dimensional ramps; `[size]` / `[tone]`
+  family-prefixed color roles (`--md-sys-color-{family}-{role}`) and the dimensional ramps; `[size]` / `[tone]`
   selectors repoint them in pure CSS (no JS, no `observedAttributes`), **then**
 - an `@scope (ui-{name}) { :scope { … } }` styles block, consuming only `--ui-{name}-*`.
 
@@ -274,7 +274,7 @@ This section is itself a deliverable — the foundation's job is to set the patt
 
 **Identifiers**
 - Tags: `ui-{name}` (kebab). Classes: `UI{Name}Element` (Pascal). Files: kebab-case `.ts`, one folder
-  per component. Tokens: `--ui-{name}-{prop}`; color roles `--c-{family}-{role}`; scales `--space-*`,
+  per component. Tokens: `--ui-{name}-{prop}`; color roles `--md-sys-color-{family}-{role}`; scales `--space-*`,
   `--radius-*`, `--ui-{height,font,ind}-{sm,md,lg}`.
 - Events: simple names only — `change`, `input`, `select`, `open`, `close`, `toggle` (no `ui-`-prefixed
   compounds). Typed via a `CustomEvent<Detail>` map and an `HTMLElementEventMap` augmentation.

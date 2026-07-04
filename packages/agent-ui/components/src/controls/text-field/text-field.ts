@@ -457,7 +457,7 @@ export class UITextFieldElement extends UIFormElement {
 
     // ── user-invalid → aria-invalid + the non-colour message cue + :state(user-invalid) (ADR-0014 cl.2c/4) ──
     // ADR-0029 A1 (user-ratified): when carrying a message the message node is VISIBLE — `message.hidden`
-    // toggled false (dangerous treatment: --c-danger ink, small type, gated by :state(user-invalid) in CSS).
+    // toggled false (dangerous treatment: --md-sys-color-danger ink, small type, gated by :state(user-invalid) in CSS).
     // The `aria-describedby` wiring is unchanged; making the node visible is an extension only.
     // ADR-0051 cl.4 yield: under a `ui-field` association the internal message stays empty + hidden and OUT
     // of aria-describedby (that attribute is owned by applyFieldLabelling below) — the field's own error

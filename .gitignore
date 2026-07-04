@@ -23,7 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
-docs/other
+# reference dumps (design-token exports, etc.) — not source of truth, not committed
+.claude/docs/other
+.env
 
 # Vitest browser-mode run artifacts (Playwright screenshots/attachments)
 .vitest-attachments/

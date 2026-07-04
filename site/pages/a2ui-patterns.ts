@@ -19,7 +19,7 @@
 // show an `error ▸ server` line). The whole set is proven 0-error (CATALOG + IDGRAPH) against the default
 // catalog before commit — a validator rejection on our own demo is a contradiction to fix, not to ship.
 
-import { mountPage } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
+import { mountPage, pageLead } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './a2ui-patterns.css' // page-local layout chrome only (the demo grid + the live-surface frame + the log)
 import { codeBlock } from '../lib/code-block.ts' // shared <pre><code> previews (textContent, no injection)
 import { createRenderer } from '@agent-ui/a2ui'
@@ -36,15 +36,16 @@ import {
   patternScheduleSeed,
 } from '@agent-ui/a2ui/examples'
 
-const { content } = mountPage({
-  title: 'A2UI patterns',
-  intro:
+const { content } = mountPage({ title: 'A2UI patterns' })
+content.append(
+  pageLead(
     'Five UIs an agent actually emits — a settings form, a destructive-action confirmation, a wizard, a ' +
-    'dashboard, a schedule picker — each streamed as a valid A2UI v1.0 payload through the same renderer the ' +
-    'canvas and list pages use. Every demo pairs the payload the agent sends with the live surface it renders; ' +
-    'the shown JSON is derived from the very messages fed to the renderer, so they can never drift. Interact ' +
-    'with a surface and its client→server messages appear in the log — the round-trip an agent would receive.',
-})
+      'dashboard, a schedule picker — each streamed as a valid A2UI v1.0 payload through the same renderer the ' +
+      'canvas and list pages use. Every demo pairs the payload the agent sends with the live surface it renders; ' +
+      'the shown JSON is derived from the very messages fed to the renderer, so they can never drift. Interact ' +
+      'with a surface and its client→server messages appear in the log — the round-trip an agent would receive.',
+  ),
+)
 
 // ── payload extractors — read the data model + the component set straight off the fed messages (no drift) ─────
 // The two halves an agent streams: the data MODEL (the initial state the tree binds against) and the

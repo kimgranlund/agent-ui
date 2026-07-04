@@ -1,0 +1,37 @@
+/* a2ui-catalog.css — PAGE-LOCAL layout for the A2UI Catalog gallery: the sticky filter bar + the stacked
+ * per-component sections. The previews own their own two-column chrome (lib/component-preview.css); this file
+ * only spaces the list and styles the filter box. Colours are `--md-sys-color-*` roles (foundation cascade via
+ * _page.ts). */
+
+.catalog-filter {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.5rem 0;
+  margin-block-end: 0.5rem;
+  background: var(--md-sys-color-neutral-surface);
+}
+.catalog-filter-input {
+  inline-size: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+
+.catalog-item {
+  margin-block: 1.5rem;
+}
+.catalog-item[hidden] {
+  display: none;
+}
+.catalog-item-title {
+  margin: 0 0 0.6rem;
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: var(--md-sys-color-neutral-on-surface);
+}

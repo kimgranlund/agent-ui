@@ -16,7 +16,7 @@
 // relative-path mixing in one bindable string; (3) an INTERACTIVE list whose edits round-trip into the data model
 // (proven by an `action` carrying the live `dataModel`); (4) a NESTED list (a template whose items hold their own).
 
-import { mountPage } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
+import { mountPage, pageLead } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './a2ui-list.css' // page-local layout chrome only (the demo grid + the live-surface frame + the log)
 import { codeBlock } from '../lib/code-block.ts' // shared <pre><code> previews (textContent, no injection)
 import { createRenderer } from '@agent-ui/a2ui'
@@ -26,16 +26,17 @@ import type { A2uiServerMessage, A2uiClientMessage, A2uiComponent } from '@agent
 // what `examples.test.ts` validates + render-smokes at check time. The blurbs below stay page-local.
 import { listDisplaySeed, listPeopleSeed, listFormSeed, listNestedSeed } from '@agent-ui/a2ui/examples'
 
-const { content } = mountPage({
-  title: 'A2UI dynamic list',
-  intro:
+const { content } = mountPage({ title: 'A2UI dynamic list' })
+content.append(
+  pageLead(
     'A2UI v1.0 lets a container bind its children to a data array: `children: { path, componentId }` renders one ' +
-    'instance of the template component per element, positionally. Relative bindings inside the template resolve ' +
-    'to that element; container templates render a whole subtree; nested lists compose. Inside any bindable string ' +
-    'a `${…}` DynamicString template composes a label from data — literal runs and relative-or-absolute paths mixed ' +
-    'and concatenated (demo 2). Each demo below feeds a real A2UI payload through the same renderer the canvas ' +
-    'uses — the live surface is the renderer’s output.',
-})
+      'instance of the template component per element, positionally. Relative bindings inside the template resolve ' +
+      'to that element; container templates render a whole subtree; nested lists compose. Inside any bindable string ' +
+      'a `${…}` DynamicString template composes a label from data — literal runs and relative-or-absolute paths mixed ' +
+      'and concatenated (demo 2). Each demo below feeds a real A2UI payload through the same renderer the canvas ' +
+      'uses — the live surface is the renderer’s output.',
+  ),
+)
 
 // ── payload extractors — read the data model + the component set straight off the fed messages (no drift) ─────
 // The two halves an agent streams for a list: the data MODEL (the array the template iterates) and the COMPONENTS

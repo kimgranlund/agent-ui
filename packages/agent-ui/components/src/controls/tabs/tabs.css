@@ -11,13 +11,13 @@
  * is the shared container.css seam — this sheet only repoints ui-tabs' default --ui-container-bg (the base is
  * transparent; ADR-0015), so a bare <ui-tabs> still draws a plane. */
 
-/* ════════════════════════ [1] TOKEN BLOCK — :where() declarations (the --c-* + ramp entry) ════════════════════════ */
+/* ════════════════════════ [1] TOKEN BLOCK — :where() declarations (the --md-sys-color-* + ramp entry) ════════════════════════ */
 
 :where(ui-tabs) {
   /* ui-tabs' OWN default surface — the base container.css default is transparent; this gives a bare tabs a
      plane. :where() keeps it at specificity 0, so an [elevation]/[brightness] axis (container.css, specificity
-     0,1,0) still overrides it. Role-pure: --c-* enters here (the declaration side), never in @scope. */
-  --ui-container-bg: var(--c-neutral-surface);
+     0,1,0) still overrides it. Role-pure: --md-sys-color-* enters here (the declaration side), never in @scope. */
+  --ui-container-bg: var(--md-sys-color-neutral-surface);
 
   /* Tab-row geometry — the CONTROL band (the rows are interactive; geometry.md Pattern class). Fixed at the md
      ramp step (ui-tabs exposes no [size] axis). */
@@ -30,15 +30,15 @@
   --ui-tabs-panel-pad: var(--ui-space-md); /* the panel body padding */
 
   /* The strip divider + the indicator thickness. */
-  --ui-tabs-strip-line: var(--c-neutral-outline-variant);
+  --ui-tabs-strip-line: var(--md-sys-color-neutral-outline-variant);
   --ui-tabs-indicator-size: 2px;
 
   /* The tab ink ladder (SOLID roles, never a color-mix — components hold zero colour opinion; ADR-0008) +
      the selected-tab indicator. */
-  --ui-tabs-ink: var(--c-neutral-on-surface-variant); /* idle tab label */
-  --ui-tabs-ink-hover: var(--c-neutral-on-surface); /* hover */
-  --ui-tabs-ink-selected: var(--c-neutral-on-surface); /* the active tab label */
-  --ui-tabs-indicator: var(--c-primary); /* the active-tab underline */
+  --ui-tabs-ink: var(--md-sys-color-neutral-on-surface-variant); /* idle tab label */
+  --ui-tabs-ink-hover: var(--md-sys-color-neutral-on-surface); /* hover */
+  --ui-tabs-ink-selected: var(--md-sys-color-neutral-on-surface); /* the active tab label */
+  --ui-tabs-indicator: var(--md-sys-color-primary); /* the active-tab underline */
 }
 
 /* ════════════════════════ [2] STYLES BLOCK — @scope (the --ui-tabs-* + fleet consumption) ════════════════════════ */
@@ -101,7 +101,7 @@
   /* The shared focus ring (ADR-0009) — keyboard-only :focus-visible, read DIRECTLY from the fleet tokens (the
      one token-hygiene exception every control shares). Inset offset so the ring sits inside the strip. */
   ui-tab:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: calc(-1 * var(--ui-focus-ring-offset));
   }
 

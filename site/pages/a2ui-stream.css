@@ -1,7 +1,7 @@
 /* a2ui-stream.css — PAGE-LOCAL layout chrome for the A2UI streaming page. Styles the stacked demo sections, the
  * per-demo toolbar, the two-pane [feed log | live surface] grid, the growing feed log, the stream-status/first-
  * paint readout, and the client→server log ONLY. The rendered ui-* controls keep their own {name}.css — this
- * page never restyles a ui-* control. Colours are `--c-*` roles declared by the foundation barrels (imported
+ * page never restyles a ui-* control. Colours are `--md-sys-color-*` roles declared by the foundation barrels (imported
  * first via _page.ts), so the page tracks light/dark; spacing rides literal rem to match a2ui-list.css. Tokens-
  * only — no raw-literal colours (matching a2ui-canvas.css / a2ui-list.css). */
 
@@ -30,15 +30,15 @@
   inline-size: 1.6rem;
   block-size: 1.6rem;
   border-radius: 50%;
-  background: var(--c-primary);
-  color: var(--c-primary-on-primary); /* the canonical ink for a --c-primary fill (button.css) */
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-primary-on-primary); /* the canonical ink for a --md-sys-color-primary fill (button.css) */
   font-size: 0.85rem;
   font-weight: 700;
 }
 
 .demo-blurb {
   margin: 0 0 1rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.9rem;
   line-height: 1.55;
 }
@@ -47,15 +47,15 @@
 .demo-prompt {
   margin: 0 0 1rem;
   padding: 0.7rem 0.9rem;
-  border-inline-start: 3px solid var(--c-neutral-outline);
+  border-inline-start: 3px solid var(--md-sys-color-neutral-outline);
   border-radius: 6px;
-  background: var(--c-neutral-surface-low);
+  background: var(--md-sys-color-neutral-surface-low);
 }
 
 .demo-prompt-label {
   display: block;
   margin-block-end: 0.25rem;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-family: var(--ui-mono);
   font-size: 0.68rem;
   font-weight: 700;
@@ -65,7 +65,7 @@
 
 .demo-prompt > p {
   margin: 0;
-  color: var(--c-neutral-on-surface);
+  color: var(--md-sys-color-neutral-on-surface);
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -102,7 +102,7 @@
 }
 
 .feed-counter {
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-family: var(--ui-mono);
   font-size: 0.78rem;
   font-weight: 600;
@@ -119,7 +119,7 @@
 
 .feed-log:empty::before {
   content: 'No lines fed yet.';
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.82rem;
 }
 
@@ -128,18 +128,18 @@
   font-family: var(--ui-mono);
   font-size: 0.74rem;
   font-weight: 600;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   white-space: pre;
 }
 
 /* The injected malformed line — marked as the out-of-band fault it is (never a payload line). */
 .feed-log > li[data-kind='fault'] .feed-head {
-  color: var(--c-danger);
+  color: var(--md-sys-color-danger);
 }
 
 .feed-log > li[data-kind='fault'] .code-block {
-  border: 1px dashed var(--c-danger-outline-variant);
-  background: var(--c-danger-surface);
+  border: 1px dashed var(--md-sys-color-danger-outline-variant);
+  background: var(--md-sys-color-danger-surface);
 }
 
 /* ── the output pane: the live surface, the status readout, and the client→server log ─────────────────────── */
@@ -152,14 +152,14 @@
 
 .surface {
   padding: 1.25rem;
-  border: 1px dashed var(--c-neutral-outline);
+  border: 1px dashed var(--md-sys-color-neutral-outline);
   border-radius: 8px;
-  background: var(--c-neutral-surface);
+  background: var(--md-sys-color-neutral-surface);
 }
 
 .surface:empty::before {
   content: 'Nothing painted yet — waiting for the root component.';
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.85rem;
 }
 
@@ -173,16 +173,16 @@
 }
 
 .status-phase {
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 .status-phase[data-phase='done'] {
-  color: var(--c-success);
+  color: var(--md-sys-color-success);
   font-weight: 600;
 }
 
 .status-first-paint {
-  color: var(--c-primary);
+  color: var(--md-sys-color-primary);
   font-family: var(--ui-mono);
   font-size: 0.78rem;
   font-weight: 600;
@@ -198,7 +198,7 @@
 .msg-log:empty::before {
   content: 'No client messages yet — the stream is clean. Inject a malformed line, or interact with the form, to see one.';
   display: block;
-  color: var(--c-neutral-on-surface-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.82rem;
   line-height: 1.5;
 }
@@ -220,13 +220,13 @@
 }
 
 .msg-log > li[data-kind='action'] .msg-head {
-  color: var(--c-primary);
+  color: var(--md-sys-color-primary);
 }
 
 .msg-log > li[data-kind='response'] .msg-head {
-  color: var(--c-success);
+  color: var(--md-sys-color-success);
 }
 
 .msg-log > li[data-kind='error'] .msg-head {
-  color: var(--c-danger);
+  color: var(--md-sys-color-danger);
 }

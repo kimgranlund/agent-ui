@@ -2,7 +2,7 @@
  * ui-card + ui-card-header / ui-card-content / ui-card-footer. Sectioned, one TOKEN `:where()` block + one
  * STYLES block per element, mirroring button.css / text-field.css (declaration vs consumption split).
  *
- * Role-purity (ADR-0008 / tokens.md): the `--c-*` colour roles and the shared `--ui-space-*` / `--ui-radius-base`
+ * Role-purity (ADR-0008 / tokens.md): the `--md-sys-color-*` colour roles and the shared `--ui-space-*` / `--ui-radius-base`
  * ramps enter ONLY in the `:where()` TOKEN blocks (the variable-definition side); every STYLES block (`@scope` /
  * the region anatomy) consumes ONLY the element's own `--ui-card-*` chain plus the role-pure container surface
  * seam `--ui-container-bg` (ADR-0015 cl.2 — the cross-family surface seam, not a raw role). A card holds zero
@@ -10,7 +10,7 @@
  *
  * Surface (ADR-0015): ui-card sits on the shared container seam (controls/_surface/container.css paints
  * `background-color: var(--ui-container-bg)` and maps [elevation]/[brightness] for the family). The base default
- * is `transparent`; a card seeds its OWN default `--ui-container-bg: var(--c-neutral-surface)` below so an
+ * is `transparent`; a card seeds its OWN default `--ui-container-bg: var(--md-sys-color-neutral-surface)` below so an
  * UN-elevated card still reads as a surface (card.css is `@import`-ed AFTER container.css in s12 — later source,
  * equal `:where()` specificity, wins).
  *
@@ -47,7 +47,7 @@
 :where(ui-card) {
   /* Surface: the card's OWN default plane (the base seam defaults transparent — ADR-0015 cl.1). [elevation]/
      [brightness] still repoint this via container.css; this is only the un-elevated default. */
-  --ui-container-bg: var(--c-neutral-surface);
+  --ui-container-bg: var(--md-sys-color-neutral-surface);
 
   /* Layout spacing — the container BOX-MODEL (container-box.css): the card holds NO padding + NO grid gap; each
      region (header/content/footer) is full-bleed and carries its OWN region padding (inline 12 · block 4) so
@@ -62,7 +62,7 @@
   /* Frame: the neutral hairline border + the corner radius. The radius reads the inherited
      --ui-card-child-radius a PARENT card published (one-level nesting, ADR-0018), else the shared
      --ui-radius-base (a root card — the channel is unset → the fallback). */
-  --ui-card-border: var(--c-neutral-outline-variant);
+  --ui-card-border: var(--md-sys-color-neutral-outline-variant);
   --ui-card-radius: var(--ui-card-child-radius, var(--ui-radius-base));
 
   /* The card's INNER radius (the concentric-corner law) — the value handed down to a nested card. Under the

@@ -20,20 +20,31 @@
 // packaging slice, so it is imported from its module path directly.
 
 import { UIContainerElement } from '../../dom/container.ts'
+import { prop } from '../../dom/index.ts'
 import type { PropsSchema, ReactiveProps } from '../../dom/index.ts'
 
 // The whole public surface = the two shared spreadable sets, folded into this element's own `static props`
 // (surfaceProps then flexProps — the canonical consumer order; no re-declaration of the grammar, ADR-0016 cl.1).
 //   • surfaceProps — elevation/brightness (the two signed surface axes, ADR-0015)
 //   • flexProps    — align/justify/gap/wrap (the shared A2UI layout grammar, ADR-0016)
-// ADR-0030: the cross-axis `align` default is OVERRIDDEN from `start` to `stretch` here (direction-appropriate
-// — column's cross axis is inline/width; children should fill the width by default). Only the `default` field
-// is replaced; the shared `type` (the 5-member enum) is REUSED via spread so any future grammar change
-// propagates automatically. The shared `flexProps.align` default stays `start` (ui-row is unchanged).
+// ADR-0030: the cross-axis `align` default is `stretch` (direction-appropriate — column's cross axis is
+// inline/width; children should fill the width by default). Kim's directive: `center` is NOT allowed on
+// ui-column — a column can only center children by shrink-wrapping them, which defeats the fill-width
+// default and is an anti-pattern for the stacked-content the tag exists to lay out. So the shared 5-member
+// `flexProps.align` enum is NARROWED here to the 4-member `[stretch, start, end, baseline]` (center dropped)
+// — a COLUMN-LOCAL restriction; ui-row/ui-grid/ui-list keep the full grammar. `stretch` LEADS the array so
+// it is both the default AND the invalid-value snap target (enumType.from falls to values[0]) — an
+// `align="center"` attribute snaps the prop back to `stretch`, and column.css drops its `[align='center']`
+// repoint so even a raw attribute cannot center.
 const props = {
   ...UIContainerElement.surfaceProps,
   ...UIContainerElement.flexProps,
-  align: { ...UIContainerElement.flexProps.align, default: 'stretch' as const }, // ADR-0030: override default ONLY; `as const` preserves the literal-union type (prevents string widening)
+  align: { ...prop.enum(['stretch', 'start', 'end', 'baseline'] as const, 'stretch'), reflect: true }, // narrowed: center removed (Kim); stretch-first = default + snap target
+  // stretch → the host fills its parent's available inline size (`width: stretch`). A column shrink-wraps to
+  // content by default; as a ROOT layout box it should FILL its parent instead. Column-LOCAL sizing opt-in
+  // (deliberately NOT folded into the shared `flexProps` grammar — row/grid/list are unaffected): the A2UI
+  // canvas sets it on a root `ui-column` so the surface fills the artboard. Boolean presence, default off.
+  stretch: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 export interface UIColumnElement extends ReactiveProps<typeof props> {}

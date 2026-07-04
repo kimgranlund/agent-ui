@@ -300,7 +300,7 @@ describe('ui-calendar — today / selected / disabled render (both engines)', ()
 describe('ui-calendar — forced-colors (Chromium via CDP; WebKit asserts the baseline)', () => {
   /**
    * Three-state distinctness proof (the load-bearing invariant):
-   *   focus   = Highlight outline (offset-OUTSIDE, from --c-focus-ring → Highlight)
+   *   focus   = Highlight outline (offset-OUTSIDE, from --md-sys-color-focus-ring → Highlight)
    *   selected = Highlight fill (background-color: Highlight, forced-color-adjust:none)
    *   today   = ButtonText inset ring (box-shadow: inset … ButtonText, forced-color-adjust:none)
    *

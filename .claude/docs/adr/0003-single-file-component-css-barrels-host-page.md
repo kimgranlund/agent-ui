@@ -32,7 +32,7 @@ components later is the expensive path.
 We will package a component as a folder **under its existing layer** — `controls/{name}/` for FACE
 controls (unchanged; the import-layering trip-wire's named layer), `components/{name}/` for the later
 display/pattern catalog — holding a **single `{name}.css`** that carries both blocks in clearly separated
-sections: a `:where(ui-{name})` token block (declaring `--ui-{name}-*` from `--c-{family}-{role}` roles +
+sections: a `:where(ui-{name})` token block (declaring `--ui-{name}-*` from `--md-sys-color-{family}-{role}` roles +
 the dimensional ramps, repointed by `[size]`/`[tone]`) **then** an `@scope (ui-{name})` styles block
 consuming only `--ui-{name}-*`. The trio collapses to one file; **the styling invariants are unchanged**
 (tokens in `:where()`, `@scope` isolation, consume-only-`--ui-{name}-*`, behaviour-only `.ts`, no runtime

@@ -198,7 +198,7 @@ a devDep + config add; absent today, jsdom-only).
      pads) — the law's frame-invariance, asserted on the bare variant. (A slotless button is correctly
      density-invariant; `[density]` is proven on the gap, not the frame.)
 - [x] Styling: behaviour-only `.ts`; single `button.css` with the `@scope (ui-button)` styles block
-      consuming only `--ui-button-*` and the `:where(ui-button)` token block from `--c-{family}-{role}`
+      consuming only `--ui-button-*` and the `:where(ui-button)` token block from `--md-sys-color-{family}-{role}`
       roles; survives `forced-colors: active` (the ink doesn't vanish).
 - [x] `button.md` frontmatter validates against the frontmatter contract schema and matches the live
       `finalize(Class)` table (the contract↔props trip-wire); the COMPOSE/REALIZE rubric scores both axes
@@ -447,7 +447,7 @@ budget). The container box-model (ADR-0046) later re-based card/modal spacing (s
   the typed number). **ADR-0048** NEW **`ui-calendar`** (`UIFormElement`, bespoke 2D grid, ISO `YYYY-MM-DD`
   value, `[data-box]` panel) + `ui-text-field` `type=date`/`time` (date/time codecs; `type=date` lazily
   `import()`s the calendar into the Wave-4 overlay — the tree-shake proof holds; `datetime-local`/`month` are
-  documented STRETCH follow-ups). The fleet's first AA text-on-accent role `--c-primary-selected`; **ADR-0049**
+  documented STRETCH follow-ups). The fleet's first AA text-on-accent role `--md-sys-color-primary-selected`; **ADR-0049**
   family-barrel budget 16 → 22 kB. → the **12-type input family**: `text · email · url · tel · password ·
   search · number · currency · unit · percent · date · time`.
 

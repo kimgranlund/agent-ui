@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
 // tok-focus (ADR-0009) — the shared focus-ring COLOUR role. A STATIC structural check on tokens.css: the
-// DEDICATED --c-focus-ring role resolves via light-dark() like every other role (NOT --c-primary reused,
+// DEDICATED --md-sys-color-focus-ring role resolves via light-dark() like every other role (NOT --md-sys-color-primary reused,
 // which would tint each control's ring by its own family), and carries the forced-colors (WHCM) mapping
 // → Highlight so the keyboard ring survives forced-colors for free. (The RENDERED ring is the wave-2
 // cross-engine smoke; jsdom can't compute a focus outline.)
@@ -23,16 +23,16 @@ const bare = flat.replace(/\/\*.*?\*\//g, '') // comment-free, single-spaced
 const rootBlock = (bare.match(/:root\s*\{[^}]*\}/) ?? [''])[0]
 
 describe('tokens.css — the shared focus-ring role (ADR-0009)', () => {
-  it('declares a DEDICATED --c-focus-ring role resolved via light-dark() (not --c-primary reused)', () => {
+  it('declares a DEDICATED --md-sys-color-focus-ring role resolved via light-dark() (not --md-sys-color-primary reused)', () => {
     expect(css.length).toBeGreaterThan(0) // anti-vacuous: the CSS was actually read
     expect(rootBlock.length).toBeGreaterThan(0) // anti-vacuous: the :root block was isolated
-    expect(rootBlock).toMatch(/--c-focus-ring:\s*light-dark\(/)
+    expect(rootBlock).toMatch(/--md-sys-color-focus-ring:\s*light-dark\(/)
   })
 
-  it('maps --c-focus-ring → Highlight under forced-colors (the WHCM ring survives for free)', () => {
-    // a forced-colors media query repoints --c-focus-ring to the system focus colour `Highlight`. `[^@]*`
+  it('maps --md-sys-color-focus-ring → Highlight under forced-colors (the WHCM ring survives for free)', () => {
+    // a forced-colors media query repoints --md-sys-color-focus-ring to the system focus colour `Highlight`. `[^@]*`
     // keeps the match inside the media block (does not cross into another at-rule).
-    expect(bare).toMatch(/@media\s*\(\s*forced-colors:\s*active\s*\)\s*\{[^@]*--c-focus-ring:\s*Highlight\s*;/)
+    expect(bare).toMatch(/@media\s*\(\s*forced-colors:\s*active\s*\)\s*\{[^@]*--md-sys-color-focus-ring:\s*Highlight\s*;/)
   })
 })
 
@@ -46,25 +46,25 @@ describe('tokens.css — the brightness tonal-wash roles (ADR-0015 cl.3)', () =>
 
   it('declares the wash alpha primitives — translucent white (050) + near-black (950) at 5/10/14%', () => {
     for (const stop of ['050', '950']) {
-      expect(rootBlock).toMatch(new RegExp(`--c-neutral-${stop}-50:\\s*oklch\\([^)]*/\\s*5%\\)`))
-      expect(rootBlock).toMatch(new RegExp(`--c-neutral-${stop}-100:\\s*oklch\\([^)]*/\\s*10%\\)`))
-      expect(rootBlock).toMatch(new RegExp(`--c-neutral-${stop}-140:\\s*oklch\\([^)]*/\\s*14%\\)`))
+      expect(rootBlock).toMatch(new RegExp(`--md-sys-color-neutral-${stop}-50:\\s*oklch\\([^)]*/\\s*5%\\)`))
+      expect(rootBlock).toMatch(new RegExp(`--md-sys-color-neutral-${stop}-100:\\s*oklch\\([^)]*/\\s*10%\\)`))
+      expect(rootBlock).toMatch(new RegExp(`--md-sys-color-neutral-${stop}-140:\\s*oklch\\([^)]*/\\s*14%\\)`))
     }
   })
 
-  it('declares the six --c-neutral-tint-* roles via light-dark() over the alpha primitives (dim→950, bright→050)', () => {
+  it('declares the six --md-sys-color-neutral-tint-* roles via light-dark() over the alpha primitives (dim→950, bright→050)', () => {
     for (const r of DIM) {
-      expect(rootBlock).toMatch(new RegExp(`--c-neutral-tint-${r}:\\s*light-dark\\(\\s*var\\(--c-neutral-950-\\d+\\)`))
+      expect(rootBlock).toMatch(new RegExp(`--md-sys-color-neutral-tint-${r}:\\s*light-dark\\(\\s*var\\(--md-sys-color-neutral-950-\\d+\\)`))
     }
     for (const r of BRIGHT) {
-      expect(rootBlock).toMatch(new RegExp(`--c-neutral-tint-${r}:\\s*light-dark\\(\\s*var\\(--c-neutral-050-\\d+\\)`))
+      expect(rootBlock).toMatch(new RegExp(`--md-sys-color-neutral-tint-${r}:\\s*light-dark\\(\\s*var\\(--md-sys-color-neutral-050-\\d+\\)`))
     }
   })
 
   it('drops every tint role to transparent under forced-colors (the overlay defers to the system Canvas)', () => {
     // inside the one forced-colors @media block ([^@] stays inside it), each tint role → transparent
     for (const r of [...DIM, ...BRIGHT]) {
-      expect(bare).toMatch(new RegExp(`@media\\s*\\(\\s*forced-colors:\\s*active\\s*\\)\\s*\\{[^@]*--c-neutral-tint-${r}:\\s*transparent\\s*;`))
+      expect(bare).toMatch(new RegExp(`@media\\s*\\(\\s*forced-colors:\\s*active\\s*\\)\\s*\\{[^@]*--md-sys-color-neutral-tint-${r}:\\s*transparent\\s*;`))
     }
   })
 })
@@ -72,19 +72,19 @@ describe('tokens.css — the brightness tonal-wash roles (ADR-0015 cl.3)', () =>
 // tok-surface AA (ADR-0015 cl.3, s1 acceptance) — the contrast trip-wire. jsdom paints nothing, so we
 // recompute WCAG contrast from the DECLARED token values: OKLCH→OKLab→linear sRGB→gamma sRGB, the wash
 // composited alpha-over the elevation base-plane in gamma sRGB (CSS source-over), then WCAG luminance.
-// The gate: --c-neutral-on-surface (and the muted -on-surface-variant) stays ≥ AA across the composed
+// The gate: --md-sys-color-neutral-on-surface (and the muted -on-surface-variant) stays ≥ AA across the composed
 // 7×7 extremes in BOTH schemes. The values are PARSED from tokens.css, so any alpha bump re-runs the math.
 describe('tokens.css — the composed surface stays WCAG-AA (ADR-0015 cl.3 — the AA surface)', () => {
   const AA = 4.5
   // --- parse helpers ---
   const oklchOf = (stop: string): [number, number, number] => {
-    const m = bare.match(new RegExp(`--c-neutral-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
-    if (!m) throw new Error(`primitive --c-neutral-${stop} not found`)
+    const m = bare.match(new RegExp(`--md-sys-color-neutral-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
+    if (!m) throw new Error(`primitive --md-sys-color-neutral-${stop} not found`)
     return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])]
   }
   const alphaOf = (stop: string, suffix: number): number => {
-    const m = bare.match(new RegExp(`--c-neutral-${stop}-${suffix}:\\s*oklch\\([^/]*/\\s*([\\d.]+)%\\)`))
-    if (!m) throw new Error(`alpha primitive --c-neutral-${stop}-${suffix} not found`)
+    const m = bare.match(new RegExp(`--md-sys-color-neutral-${stop}-${suffix}:\\s*oklch\\([^/]*/\\s*([\\d.]+)%\\)`))
+    if (!m) throw new Error(`alpha primitive --md-sys-color-neutral-${stop}-${suffix} not found`)
     return parseFloat(m[1]) / 100
   }
   // --- colour math ---
@@ -132,13 +132,13 @@ describe('tokens.css — the composed surface stays WCAG-AA (ADR-0015 cl.3 — t
     return { ratio: w, where }
   }
 
-  it('keeps --c-neutral-on-surface ≥ AA across the composed 7×7 extremes in BOTH schemes', () => {
+  it('keeps --md-sys-color-neutral-on-surface ≥ AA across the composed 7×7 extremes in BOTH schemes', () => {
     expect(washAlphas).toEqual([0.05, 0.1, 0.14]) // anti-vacuous: the declared alphas were actually parsed
     const w = worst('on')
     expect(w.ratio, `worst on-surface cell: ${w.where} = ${w.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
   })
 
-  it('also keeps the muted --c-neutral-on-surface-variant ≥ AA (the standing tokens.md surface-text gate)', () => {
+  it('also keeps the muted --md-sys-color-neutral-on-surface-variant ≥ AA (the standing tokens.md surface-text gate)', () => {
     const w = worst('variant')
     expect(w.ratio, `worst on-surface-variant cell: ${w.where} = ${w.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
   })
@@ -154,18 +154,18 @@ describe('tokens.css — the composed surface stays WCAG-AA (ADR-0015 cl.3 — t
 })
 
 // tok-selected (ADR-0048) — the AA-guaranteed persistent-SELECTED accent fill. The accent ANCHOR pair
-// (--c-primary + --c-primary-on-primary/white) is report-only and drops to 3.32:1 in dark — fine for a GLYPH
+// (--md-sys-color-primary + --md-sys-color-primary-on-primary/white) is report-only and drops to 3.32:1 in dark — fine for a GLYPH
 // at the 3:1 non-text bar (the checkmark/thumb of every prior solid control), but BELOW the 4.5:1 bar for real
-// TEXT. The ui-calendar selected-day NUMERAL is text, so it reads a DEDICATED --c-primary-selected whose BOTH
-// light-dark() legs clear AA against --c-primary-on-primary. This probe re-derives the contrast from the
+// TEXT. The ui-calendar selected-day NUMERAL is text, so it reads a DEDICATED --md-sys-color-primary-selected whose BOTH
+// light-dark() legs clear AA against --md-sys-color-primary-on-primary. This probe re-derives the contrast from the
 // DECLARED role legs (not hardcoded stops), so a future repoint re-runs the math. Same OKLCH→sRGB→WCAG path
 // as the surface-AA block above (jsdom paints nothing — the contrast is recomputed from the token values).
-describe('tokens.css — the AA-guaranteed --c-primary-selected fill (ADR-0048)', () => {
+describe('tokens.css — the AA-guaranteed --md-sys-color-primary-selected fill (ADR-0048)', () => {
   const AA = 4.5
-  // parse a primitive --c-primary-NNN OKLCH triple from the comment-free CSS
+  // parse a primitive --md-sys-color-primary-NNN OKLCH triple from the comment-free CSS
   const oklchOfPrimary = (stop: string): [number, number, number] => {
-    const m = bare.match(new RegExp(`--c-primary-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
-    if (!m) throw new Error(`primitive --c-primary-${stop} not found`)
+    const m = bare.match(new RegExp(`--md-sys-color-primary-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
+    if (!m) throw new Error(`primitive --md-sys-color-primary-${stop} not found`)
     return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])]
   }
   const oklchToLin = ([L, C, H]: [number, number, number]): number[] => {
@@ -187,18 +187,18 @@ describe('tokens.css — the AA-guaranteed --c-primary-selected fill (ADR-0048)'
   const lum = (g: number[]) => { const [r, gg, b] = g.map(toLin); return 0.2126 * r + 0.7152 * gg + 0.0722 * b }
   const contrast = (f: number[], b: number[]) => { const a = lum(f), c = lum(b), hi = Math.max(a, c), lo = Math.min(a, c); return (hi + 0.05) / (lo + 0.05) }
 
-  // the two primitive legs of a --c-{role} declared as light-dark(var(--c-primary-X), var(--c-primary-Y))
+  // the two primitive legs of a --md-sys-color-{role} declared as light-dark(var(--md-sys-color-primary-X), var(--md-sys-color-primary-Y))
   const legsOf = (role: string): [string, string] => {
-    const m = rootBlock.match(new RegExp(`--c-${role}:\\s*light-dark\\(\\s*var\\(--c-primary-(\\d+)\\)\\s*,\\s*var\\(--c-primary-(\\d+)\\)\\s*\\)`))
-    if (!m) throw new Error(`role --c-${role} not found as a two-leg primary light-dark()`)
+    const m = rootBlock.match(new RegExp(`--md-sys-color-${role}:\\s*light-dark\\(\\s*var\\(--md-sys-color-primary-(\\d+)\\)\\s*,\\s*var\\(--md-sys-color-primary-(\\d+)\\)\\s*\\)`))
+    if (!m) throw new Error(`role --md-sys-color-${role} not found as a two-leg primary light-dark()`)
     return [m[1], m[2]]
   }
 
-  it('declares --c-primary-selected as a two-leg primary light-dark() role', () => {
-    expect(rootBlock).toMatch(/--c-primary-selected:\s*light-dark\(\s*var\(--c-primary-\d+\)\s*,\s*var\(--c-primary-\d+\)\s*\)/)
+  it('declares --md-sys-color-primary-selected as a two-leg primary light-dark() role', () => {
+    expect(rootBlock).toMatch(/--md-sys-color-primary-selected:\s*light-dark\(\s*var\(--md-sys-color-primary-\d+\)\s*,\s*var\(--md-sys-color-primary-\d+\)\s*\)/)
   })
 
-  it('clears WCAG-AA (≥4.5:1) against --c-primary-on-primary TEXT in BOTH light and dark', () => {
+  it('clears WCAG-AA (≥4.5:1) against --md-sys-color-primary-on-primary TEXT in BOTH light and dark', () => {
     const [fillL, fillD] = legsOf('primary-selected')
     const [inkL, inkD] = legsOf('primary-on-primary')
     const light = contrast(gammaOf(inkL), gammaOf(fillL))
@@ -207,10 +207,10 @@ describe('tokens.css — the AA-guaranteed --c-primary-selected fill (ADR-0048)'
     expect(dark, `dark: on-primary(${inkD}) on selected(${fillD}) = ${dark.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
   })
 
-  it('NEGATIVE control: the plain --c-primary anchor pair FAILS the 4.5:1 TEXT bar in dark (why the dedicated role exists)', () => {
-    const [, anchorD] = legsOf('primary') // --c-primary dark leg = the report-only 450
+  it('NEGATIVE control: the plain --md-sys-color-primary anchor pair FAILS the 4.5:1 TEXT bar in dark (why the dedicated role exists)', () => {
+    const [, anchorD] = legsOf('primary') // --md-sys-color-primary dark leg = the report-only 450
     const [, inkD] = legsOf('primary-on-primary')
     const dark = contrast(gammaOf(inkD), gammaOf(anchorD))
-    expect(dark, `dark: on-primary(${inkD}) on --c-primary(${anchorD}) = ${dark.toFixed(2)}:1 (report-only)`).toBeLessThan(AA)
+    expect(dark, `dark: on-primary(${inkD}) on --md-sys-color-primary(${anchorD}) = ${dark.toFixed(2)}:1 (report-only)`).toBeLessThan(AA)
   })
 })

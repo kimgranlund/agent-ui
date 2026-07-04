@@ -3,7 +3,7 @@
  * Two clearly-sectioned blocks:
  *
  *   [1] TOKEN BLOCK — `:where(ui-calendar)` (specificity 0,0,0) DECLARES the `--ui-calendar-*`
- *       chain from colour roles (`--c-{family}-{role}`) and the dimensional ramp. Fallback values
+ *       chain from colour roles (`--md-sys-color-{family}-{role}`) and the dimensional ramp. Fallback values
  *       are sensible until the tokens-specialist delivers the canonical token definitions. The
  *       `[size]` repoint triples follow the button/select/text-field precedent; `[disabled]` mutes
  *       the nav buttons. `--ui-calendar-range-*` is RESERVED (future range-selection wave).
@@ -35,21 +35,21 @@
   --ui-calendar-font: var(--ui-font-md, 14px);
 
   /* ── Selected-day fill (the committed value cell).
-     --c-primary-selected is the AA primary-on-accent role (tokens-calendar); fall back to
-     --c-primary so the build stays green if it lands a moment after this component. */
-  --ui-calendar-selected-fill: var(--c-primary-selected, var(--c-primary));
-  --ui-calendar-selected-ink:  var(--c-primary-on-primary); /* white — the on-primary pair */
+     --md-sys-color-primary-selected is the AA primary-on-accent role (tokens-calendar); fall back to
+     --md-sys-color-primary so the build stays green if it lands a moment after this component. */
+  --ui-calendar-selected-fill: var(--md-sys-color-primary-selected, var(--md-sys-color-primary));
+  --ui-calendar-selected-ink:  var(--md-sys-color-primary-on-primary); /* white — the on-primary pair */
 
   /* ── Today's ring (the current date, whether selected or not).
-     Aliases --c-primary-outline; drawn as an INSET box-shadow so it sits inside the cell
+     Aliases --md-sys-color-primary-outline; drawn as an INSET box-shadow so it sits inside the cell
      and stays distinct from the offset-outside focus outline (see forced-colors note below). */
-  --ui-calendar-today-ring: var(--c-primary-outline);
+  --ui-calendar-today-ring: var(--md-sys-color-primary-outline);
 
   /* ── Disabled / out-of-range day ink (muted; WCAG exempts inactive controls). */
-  --ui-calendar-disabled-ink: var(--c-neutral-on-surface-variant);
+  --ui-calendar-disabled-ink: var(--md-sys-color-neutral-on-surface-variant);
 
   /* ── Adjacent-month day ink (prev/next month overflow cells — dimmed to neutral mid). */
-  --ui-calendar-outside-ink: var(--c-neutral);
+  --ui-calendar-outside-ink: var(--md-sys-color-neutral);
 
   /* ── Nav button geometry — the ‹ and › inline affordances are sized = font (§4.6 law).
      They are plain buttons; no fixed icon-cell needed (they're typography glyphs). */
@@ -57,16 +57,16 @@
 
   /* ── Panel surface — inherits the container/surface tokens for bg/border/radius.
      The panel is a Container/surface (NOT a Control-class surface), so it uses bg + outline. */
-  --ui-calendar-panel-bg:      var(--c-neutral-surface, #fff);
-  --ui-calendar-panel-ink:     var(--c-neutral-on-surface, #1c1c1e);
-  --ui-calendar-panel-outline: var(--c-neutral-outline-variant, #c4c4c4);
+  --ui-calendar-panel-bg:      var(--md-sys-color-neutral-surface, #fff);
+  --ui-calendar-panel-ink:     var(--md-sys-color-neutral-on-surface, #1c1c1e);
+  --ui-calendar-panel-outline: var(--md-sys-color-neutral-outline-variant, #c4c4c4);
   --ui-calendar-panel-radius:  var(--ui-radius-base, 0.375rem);
 
   /* ── Weekday column-header ink (muted row above the cells). */
-  --ui-calendar-header-ink: var(--c-neutral-on-surface-variant, #767676);
+  --ui-calendar-header-ink: var(--md-sys-color-neutral-on-surface-variant, #767676);
 
   /* ── Cell hover background (non-selected, non-disabled). */
-  --ui-calendar-cell-hover-bg: var(--c-neutral-surface-high, #f0f0f0);
+  --ui-calendar-cell-hover-bg: var(--md-sys-color-neutral-surface-high, #f0f0f0);
 
   /* RESERVED — future range-selection wave: --ui-calendar-range-fill · --ui-calendar-range-ink. */
 }
@@ -87,7 +87,7 @@
 
 /* Disabled host — mute the nav-button ink (day cells carry their own aria-disabled state). */
 :where(ui-calendar[disabled]) {
-  --ui-calendar-panel-ink: var(--c-neutral-on-surface-variant, #767676);
+  --ui-calendar-panel-ink: var(--md-sys-color-neutral-on-surface-variant, #767676);
 }
 
 /* ══════════════════════ [2] STYLES BLOCK — @scope (ui-calendar) ════════════════════════════ */
@@ -157,7 +157,7 @@
 
   :scope [data-part='prev']:focus-visible,
   :scope [data-part='next']:focus-visible {
-    outline: var(--ui-focus-ring-width, 2px) solid var(--c-focus-ring);
+    outline: var(--ui-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--ui-focus-ring-offset, 2px);
   }
 
@@ -225,7 +225,7 @@
   }
 
   :scope [data-part='grid'] [role='gridcell']:focus-visible {
-    outline: var(--ui-focus-ring-width, 2px) solid var(--c-focus-ring);
+    outline: var(--ui-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--ui-focus-ring-offset, 2px);
   }
 
@@ -260,7 +260,7 @@
 
   /* ── forced-colors (WHCM) ────────────────────────────────────────────────────────────────
      Three visually distinct states must survive system-colour flattening:
-       focus   = Highlight outline (offset-outside) — free via --c-focus-ring → Highlight
+       focus   = Highlight outline (offset-outside) — free via --md-sys-color-focus-ring → Highlight
        selected = Highlight fill + HighlightText numeral — explicit below
        today   = ButtonText INSET ring (offset-inside, inside the cell border)
      today MUST NOT use Highlight here — it would merge with the selected fill AND with the

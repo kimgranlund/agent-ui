@@ -54,7 +54,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
   it('an un-elevated card paints a SURFACE (the own-default --ui-container-bg, not transparent)', () => {
     const card = mount('<ui-card><ui-card-content>Body</ui-card-content></ui-card>')
     // the surface rides container.css `background-color: var(--ui-container-bg)`; card.css seeds the default
-    // --ui-container-bg: var(--c-neutral-surface), so an un-elevated card reads as a plane (ADR-0015).
+    // --ui-container-bg: var(--md-sys-color-neutral-surface), so an un-elevated card reads as a plane (ADR-0015).
     expect(alphaOf(getComputedStyle(card).backgroundColor), 'card surface is transparent').toBeGreaterThan(0)
   })
 
@@ -211,7 +211,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
   it('forced-colors keeps the card border visible — Chromium emulates (CDP); WebKit asserts the baseline', async () => {
     const card = mount('<ui-card><ui-card-content>Body</ui-card-content></ui-card>')
 
-    // Baseline (BOTH engines): the card border is a painted hairline (--c-neutral-outline-variant, opaque).
+    // Baseline (BOTH engines): the card border is a painted hairline (--md-sys-color-neutral-outline-variant, opaque).
     expect(alphaOf(getComputedStyle(card).borderTopColor), 'baseline border is invisible').toBeGreaterThan(0)
 
     if (server.browser !== 'chromium') {

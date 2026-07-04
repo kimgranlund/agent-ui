@@ -91,8 +91,8 @@ function attachLog(button: HTMLElement, label: string): void {
 const hover = makeSection(
   'Hover — per-variant background step',
   'Move your pointer over each enabled button. The control steps its background up one role-ladder step on ' +
-    'hover, per variant: <strong>solid</strong> darkens (<code>--c-primary → --c-primary-dim</code>), ' +
-    '<strong>soft</strong> deepens its container tint (<code>--c-primary-container-low → --c-primary-container' +
+    'hover, per variant: <strong>solid</strong> darkens (<code>--md-sys-color-primary → --md-sys-color-primary-dim</code>), ' +
+    '<strong>soft</strong> deepens its container tint (<code>--md-sys-color-primary-container-low → --md-sys-color-primary-container' +
     '</code>), and <strong>ghost</strong> — transparent at idle — gains a low container wash. The cursor also ' +
     'becomes a pointer. The disabled button holds its muted colour: it is pointer-inert, so <code>:hover</code> ' +
     'never matches it.',
@@ -131,8 +131,8 @@ focus.append(
 const active = makeSection(
   ':active — pressed',
   'Press and <strong>hold</strong> the mouse button down on a control: while held, its background steps to the ' +
-    'deepest ladder step — <strong>solid</strong> → <code>--c-primary-high</code>, <strong>soft</strong> → ' +
-    '<code>--c-primary-container-high</code>, <strong>ghost</strong> → <code>--c-primary-container</code>. ' +
+    'deepest ladder step — <strong>solid</strong> → <code>--md-sys-color-primary-high</code>, <strong>soft</strong> → ' +
+    '<code>--md-sys-color-primary-container-high</code>, <strong>ghost</strong> → <code>--md-sys-color-primary-container</code>. ' +
     'Release to return to the hover/idle fill. With keyboard focus, holding <strong>Space</strong> holds it ' +
     'active until you release.',
 )

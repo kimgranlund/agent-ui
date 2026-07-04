@@ -44,7 +44,7 @@ drift — `.claude/docs/process.md`'s drift disease). The four owners a site pag
   integration proof, made visible (the `a2ui-canvas` precedent), not a screenshot or a mock.
 - **The props enum** — variant/size specimen rows iterate the parsed enum members, so adding a variant
   to the descriptor adds its specimen for free.
-- **The token roles** — page chrome consumes the `--c-{family}-{role}` roles; a page **never restyles a
+- **The token roles** — page chrome consumes the `--md-sys-color-{family}-{role}` roles; a page **never restyles a
   `ui-*` control** (states/appearance belong to the control's own `{name}.css` — the "honest labels"
   discipline below).
 

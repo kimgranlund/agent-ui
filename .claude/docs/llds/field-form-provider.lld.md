@@ -331,11 +331,11 @@ customElements.get('ui-field') ?? customElements.define('ui-field', UIFieldEleme
 
 - `:where(ui-field)` token block (§-sectioned like text-field.css):
   `--ui-field-gap: var(--ui-space-xs)` (label↔control↔description rhythm — layout spacing, density-bearing) ·
-  `--ui-field-label-ink: var(--c-neutral-on-surface)` · `--ui-field-label-font: var(--ui-font-md)` ·
+  `--ui-field-label-ink: var(--md-sys-color-neutral-on-surface)` · `--ui-field-label-font: var(--ui-font-md)` ·
   `--ui-field-label-weight: 500` ·
-  `--ui-field-description-ink: var(--c-neutral-on-surface-variant)` (the muted on-surface variant) ·
+  `--ui-field-description-ink: var(--md-sys-color-neutral-on-surface-variant)` (the muted on-surface variant) ·
   `--ui-field-description-font: var(--ui-font-sm)` ·
-  `--ui-field-error-ink: var(--c-danger)` · `--ui-field-error-font: var(--ui-font-sm)`
+  `--ui-field-error-ink: var(--md-sys-color-danger)` · `--ui-field-error-font: var(--ui-font-sm)`
   (= the text-field message tokens — one visual voice for the ONE error).
 - `@scope (ui-field)` consumes ONLY `--ui-field-*`: host `display: flex; flex-direction: column;
   row-gap: var(--ui-field-gap); min-inline-size: 0` (the slotted control brings its own ADR-0021 floor —

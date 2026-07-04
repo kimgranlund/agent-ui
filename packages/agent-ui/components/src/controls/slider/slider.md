@@ -109,7 +109,7 @@ geometry:
   thumbSize: box − 4px                # circle thumb = --ui-slider-box − 2×--ui-widget-inset (ADR-0041 cl.3)
   railHeight: --ui-slider-rail-height # 3px constant, not derived from the widget box
 
-forcedColors: A `@media (forced-colors: active)` block maps the rail to a Highlight/ButtonText gradient (fill/track) and the thumb to a Canvas circle with a Highlight border. Both pseudo-elements carry `forced-color-adjust: none` to preserve the explicit system-colour mappings. The :focus-visible ring is free via --c-focus-ring → Highlight from the token layer (ADR-0009).
+forcedColors: A `@media (forced-colors: active)` block maps the rail to a Highlight/ButtonText gradient (fill/track) and the thumb to a Canvas circle with a Highlight border. Both pseudo-elements carry `forced-color-adjust: none` to preserve the explicit system-colour mappings. The :focus-visible ring is free via --md-sys-color-focus-ring → Highlight from the token layer (ADR-0009).
 ---
 
 # ui-slider

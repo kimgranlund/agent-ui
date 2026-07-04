@@ -98,6 +98,20 @@ export interface TierMember {
   readonly doc: ComponentDoc
 }
 
+/**
+ * loadDescriptorByTag — the parsed descriptor whose `tag` scalar equals `tag` (e.g. `ui-button`), or undefined.
+ * Reads the SAME build-time `ALL_DESCRIPTORS` glob + canonical parser the tier enumeration uses, so the
+ * component-preview's component mode resolves a control's attributes-as-API from the ONE descriptor source
+ * (never a forked reader) — a target with no `{name}.md` simply returns undefined.
+ */
+export function loadDescriptorByTag(tag: string): ComponentDoc | undefined {
+  for (const raw of Object.values(ALL_DESCRIPTORS)) {
+    const doc = parseDoc(raw)
+    if (doc.descriptor.scalars.get('tag') === tag) return doc
+  }
+  return undefined
+}
+
 /** Every shipped control whose descriptor `tier` matches, sorted by name — the DERIVED member list for a tier page. */
 export function membersOfTier(tier: string): TierMember[] {
   const members: TierMember[] = []

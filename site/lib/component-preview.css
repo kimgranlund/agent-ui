@@ -1,0 +1,183 @@
+/* component-preview.css — layout chrome for the <component-preview> docs element (a two-column playground:
+ * live knobs + variant chips on the LEFT, the shared A2UI artboard on the RIGHT). Page chrome only — it never
+ * restyles a ui-* control (the rendered specimen keeps its own control CSS). Every colour is a
+ * `--md-sys-color-*` role, adopted by the foundation cascade the host page loads first (_page.ts). */
+
+component-preview {
+  display: block;
+}
+
+.preview {
+  display: grid;
+  grid-template-columns: minmax(15rem, 21rem) 1fr;
+  align-items: start; /* each column owns its height — a tall knob column no longer stretches the canvas (H#3) */
+  gap: 1rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--md-sys-color-neutral-surface-low);
+}
+
+/* ── left column: details · knobs · variant chips ─────────────────────────────────────────────────────────── */
+/* A capped, scrolling pane (label + body): a prop-heavy control (text-field's ~14 props) no longer balloons the
+ * card and leaves the canvas adrift in a huge box — the knobs scroll within the cap instead. */
+.preview-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1rem;
+  min-inline-size: 0;
+  max-block-size: 26rem;
+  overflow-y: auto;
+  border-inline-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+
+.preview-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.preview-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.preview-kind {
+  font-size: 0.72rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.preview-section-label {
+  font-size: 0.66rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  margin: 0 0 0.4rem;
+}
+
+.preview-knobs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.knob {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+.knob-label {
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.knob-input,
+.knob-select {
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0.28rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
+  min-inline-size: 0;
+}
+.knob-check {
+  justify-self: start;
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+}
+.knob-note {
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-style: italic;
+}
+
+/* ── variant chips (one row per enum knob) ────────────────────────────────────────────────────────────────── */
+.preview-variants {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.chip-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.chip-row-label {
+  font-size: 0.7rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.chip-set {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.chip {
+  appearance: none;
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  cursor: pointer;
+}
+.chip:hover {
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.chip.is-active {
+  background: var(--md-sys-color-primary-container-low);
+  color: var(--md-sys-color-primary-high);
+  border-color: var(--md-sys-color-primary-high);
+  font-weight: 600;
+}
+
+/* ── right column: the shared artboard (a definite box the stage flex-fills, decoupled from the knob column) ── */
+.preview-canvas {
+  position: relative; /* positioning context for the empty-specimen hint overlay (H#2) */
+  display: flex;
+  block-size: 24rem; /* a definite artboard height, independent of the knob column's height (H#3) */
+  align-self: start;
+  min-inline-size: 0;
+}
+.preview-canvas > .canvas-stage {
+  flex: 1 1 auto;
+}
+/* Empty-specimen affordance: a component that renders nothing visible in its current state (e.g. a closed Modal,
+ * whose `<dialog>` is display:none and IS a surface child, so `.canvas-surface:empty` never fires) would leave a
+ * blank checkered box. The element toggles `.is-empty-specimen` (measured post-frame) and this names the way out. */
+.preview-canvas.is-empty-specimen::after {
+  content: 'Nothing visible in this state — toggle a knob (e.g. open) to reveal this component.';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.preview-error {
+  padding: 1rem;
+  color: var(--md-sys-color-danger-on-surface, var(--md-sys-color-neutral-on-surface));
+  font-size: 0.85rem;
+}
+
+/* ── narrow: stack the columns ────────────────────────────────────────────────────────────────────────────── */
+@media (max-inline-size: 42rem) {
+  .preview {
+    grid-template-columns: 1fr;
+  }
+  .preview-controls {
+    border-inline-end: none;
+    border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  }
+}

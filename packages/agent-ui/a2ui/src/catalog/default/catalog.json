@@ -12,7 +12,7 @@
     "Button": {
       "properties": {
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" },
-        "variant": { "type": { "type": "string" }, "mapsTo": "variant" },
+        "variant": { "type": { "type": "string", "enum": ["solid", "soft", "ghost"] }, "mapsTo": "variant" },
         "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
         "action": {
           "type": {
@@ -118,7 +118,7 @@
       "properties": {
         "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
         "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" },
-        "align": { "type": { "type": "string", "enum": ["start", "center", "end", "stretch", "baseline"] }, "mapsTo": "align" },
+        "align": { "type": { "type": "string", "enum": ["stretch", "start", "end", "baseline"] }, "mapsTo": "align" },
         "justify": { "type": { "type": "string", "enum": ["start", "center", "end", "between", "around", "evenly"] }, "mapsTo": "justify" },
         "gap": { "type": { "type": "string", "enum": ["none", "xs", "sm", "md", "lg", "xl", "2xl"] }, "mapsTo": "gap" },
         "wrap": { "type": { "type": "boolean" }, "mapsTo": "wrap" }

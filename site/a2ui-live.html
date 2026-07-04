@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2UI live agent</title>
+  </head>
+  <body>
+    <!-- The live-agent demo chat app (LLD-C9, NEXT item 3): a real LLM emitting A2UI over the wire — prompt →
+         streamed payload → rendered surface → the human interacts → client messages return → the agent
+         continues. Layout: [ chat | a2ui-canvas ], the canvas a tabbed Canvas/JSON/HTML view. The DEFAULT is a
+         deterministic recorded backbone (works offline, in the built site, and under CI); a real model is
+         swapped in under `vite dev` with an API key (the dev-only proxy overlay). An MPA entry auto-discovered
+         by vite.config.ts's site/**/*.html glob — no config edit. The page module imports pages/_page.ts FIRST
+         for the foundation CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2ui-live.ts"></script>
+  </body>
+</html>

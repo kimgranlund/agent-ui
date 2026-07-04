@@ -7,12 +7,12 @@ declare const process: { cwd(): string }
 // s4 — column.css static structural check (ADR-0003 sectioning + token hygiene; ADR-0016 flex/container-query).
 // jsdom can't compute the rendered flex props (that's column.browser.test.ts); here we pin the STRUCTURE: the
 // two sectioned blocks, that `:where()` DECLARES the `--ui-column-*` flex chain + the [attr] repoints, that
-// `@scope` CONSUMES only it (role-pure — no raw `--c-*`), the `display:flex` + `flex-direction:column` identity,
-// the `@container` reflow rule, and a forced-colors block. NEGATIVE control: a planted raw `--c-*` ref FAILS.
+// `@scope` CONSUMES only it (role-pure — no raw `--md-sys-color-*`), the `display:flex` + `flex-direction:column` identity,
+// the `@container` reflow rule, and a forced-colors block. NEGATIVE control: a planted raw `--md-sys-color-*` ref FAILS.
 
 const css = readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/column/column.css`, 'utf8') as string
 // The sectioned-banner test reads the RAW source (the banners live in comments); every other check reads the
-// comment-STRIPPED code, so a prose mention of `--c-*`/`--ui-height-*` in a comment is not a false positive.
+// comment-STRIPPED code, so a prose mention of `--md-sys-color-*`/`--ui-height-*` in a comment is not a false positive.
 const code = css.replace(/\/\*[\s\S]*?\*\//g, ' ')
 const tokenBlock = code.slice(code.indexOf(':where(ui-column) {'), code.indexOf('@scope (ui-column) {'))
 const stylesBlock = code.slice(code.indexOf('@scope (ui-column) {'))
@@ -42,7 +42,11 @@ describe('column.css — structure + token hygiene (s4)', () => {
     // The [align='stretch'] rule is REMOVED (stretch is the base — no repoint needed).
     expect(tokenBlock).toMatch(/ui-column\[align='start'\]/) // the new non-default repoint (ADR-0030)
     expect(tokenBlock).not.toMatch(/ui-column\[align='stretch'\]/) // stretch = the base; no repoint needed
-    expect(tokenBlock).toMatch(/ui-column\[align='center'\]/)
+    // Kim's directive: `center` is NOT allowed on ui-column → NO [align='center'] repoint exists (a stray
+    // attribute has no effect and the column stays at its stretch base). The remaining non-defaults are end/baseline.
+    expect(tokenBlock).not.toMatch(/ui-column\[align='center'\]/)
+    expect(tokenBlock).toMatch(/ui-column\[align='end'\]/)
+    expect(tokenBlock).toMatch(/ui-column\[align='baseline'\]/)
     expect(tokenBlock).toMatch(/ui-column\[justify='between'\]/) // between → space-between
     expect(tokenBlock).toContain('space-between')
     expect(tokenBlock).toMatch(/ui-column\[gap='md'\]/)
@@ -91,17 +95,17 @@ describe('column.css — structure + token hygiene (s4)', () => {
   })
 })
 
-describe('column.css — role-purity (no raw --c-* colour opinion) + the negative control', () => {
-  it('holds ZERO raw --c-* role reference anywhere — the surface is the shared container.css’ job (ADR-0008)', () => {
-    expect(code).not.toMatch(/--c-/) // column paints no colour; elevation/brightness flow through the shared seam
+describe('column.css — role-purity (no raw --md-sys-color-* colour opinion) + the negative control', () => {
+  it('holds ZERO raw --md-sys-color-* role reference anywhere — the surface is the shared container.css’ job (ADR-0008)', () => {
+    expect(code).not.toMatch(/--md-sys-color-/) // column paints no colour; elevation/brightness flow through the shared seam
     expect(code).not.toContain('color-mix(') // no synthesized colour
   })
 
-  it('the role-purity check BITES — a planted raw --c-* ref would be caught (synthetic negative control)', () => {
+  it('the role-purity check BITES — a planted raw --md-sys-color-* ref would be caught (synthetic negative control)', () => {
     // run the SAME predicate the real sheet passes over a planted snippet, proving the check is non-vacuous.
-    const planted = '@scope (ui-column) { :scope { background: var(--c-neutral-surface); } }'
+    const planted = '@scope (ui-column) { :scope { background: var(--md-sys-color-neutral-surface); } }'
     const refs = varRefs(planted)
-    expect(refs.some((v) => v.startsWith('--c-'))).toBe(true) // the leak is detected
+    expect(refs.some((v) => v.startsWith('--md-sys-color-'))).toBe(true) // the leak is detected
     expect(refs.every((v) => v.startsWith('--ui-column-'))).toBe(false) // and it fails the role-pure rule
   })
 })

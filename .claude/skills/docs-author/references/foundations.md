@@ -40,7 +40,7 @@ consumed, not copied:
    internals. The page *is* the integration proof the renderer/control tests assert, made visible.
 3. **The props enum.** Specimen rows iterate the parsed enum members (`attr.values`), so the rendered set
    tracks the descriptor automatically.
-4. **The token roles.** Page chrome consumes `--c-{family}-{role}` roles (declared by the foundation
+4. **The token roles.** Page chrome consumes `--md-sys-color-{family}-{role}` roles (declared by the foundation
    cascade). A page **never restyles a `ui-*` control** — appearance and interaction states live in the
    control's own `{name}.css`.
 

@@ -23,11 +23,11 @@ height") and names `--space-*` as *spacing between components, not control geome
 Two facts of the existing token layer decide the surface design and forbid a from-scratch palette:
 
 - **`tokens.css` already ships two neutral surface ladders** (confirmed): the **scheme-inverting** elevation ladder
-  `--c-neutral-surface-{lowest…low / high…highest}` (light `050→200`, dark `950→800` — so "up" reads darker in
-  light, lighter in dark) and the **scheme-consistent** brightness ladder `--c-neutral-surface-{dimmest…dim /
+  `--md-sys-color-neutral-surface-{lowest…low / high…highest}` (light `050→200`, dark `950→800` — so "up" reads darker in
+  light, lighter in dark) and the **scheme-consistent** brightness ladder `--md-sys-color-neutral-surface-{dimmest…dim /
   bright…brightest}`. The ratified session reuses these as the two axes — **no new surface roles**.
 - **The discipline is zero component colour opinion / no `color-mix`** (ADR-0008, `tokens.md`): a container must
-  read one role-pure seam, and every state/axis must repoint a `--c-{family}-{role}` token, never synthesize a
+  read one role-pure seam, and every state/axis must repoint a `--md-sys-color-{family}-{role}` token, never synthesize a
   shade.
 
 The single open detail the session flagged: the two axes both want to drive the background, so **how they compose
@@ -41,17 +41,17 @@ token. Five clauses, each a buildable acceptance (decomp slices `s1` tokens / `s
 
 1. **The two axes (semantics + solo mapping — reuse, no new roles).** A container carries two signed,
    reflected, literal-union props, both `n ∈ -3|-2|-1|0|1|2|3`, default `0`:
-   - **`elevation`** → the scheme-**inverting** plane: `-3..3` map onto `--c-neutral-surface-{lowest, lower, low,
-     ⟨base⟩, high, higher, highest}`; `elevation=0` → `--c-neutral-surface` (the neutral base).
-   - **`brightness`** → the scheme-**consistent** tonal shift: `-3..3` map onto `--c-neutral-surface-{dimmest,
-     dimmer, dim, ⟨base⟩, bright, brighter, brightest}`; `brightness=0` → `--c-neutral-surface`.
+   - **`elevation`** → the scheme-**inverting** plane: `-3..3` map onto `--md-sys-color-neutral-surface-{lowest, lower, low,
+     ⟨base⟩, high, higher, highest}`; `elevation=0` → `--md-sys-color-neutral-surface` (the neutral base).
+   - **`brightness`** → the scheme-**consistent** tonal shift: `-3..3` map onto `--md-sys-color-neutral-surface-{dimmest,
+     dimmer, dim, ⟨base⟩, bright, brighter, brightest}`; `brightness=0` → `--md-sys-color-neutral-surface`.
 
    `0` in either axis is the neutral base, so **an unset container is unchanged**. Typed as literal unions (not
    `number`), matching `size: 'sm'|'md'|'lg'` — a `@ts-expect-error` proves a bare number is rejected.
 2. **One role-pure consumption seam.** The container reads exactly `background: var(--ui-container-bg)`; the
    `[elevation=n]` / `[brightness=m]` selectors repoint `--ui-container-bg` (and, for the composition below,
    `--ui-container-tint`) in the token/CSS layer. The component holds **zero** colour opinion and reads no
-   `--c-*` role or primitive directly — forced-colors is free (the roles carry the WHCM mapping, `tokens.md`).
+   `--md-sys-color-*` role or primitive directly — forced-colors is free (the roles carry the WHCM mapping, `tokens.md`).
 3. **The composition rule (the proposed mechanism — both axes set).** The surface is **two stacked paint layers**,
    resolved entirely in the token/CSS layer:
    - **Base plane (elevation)** — `background-color: var(--ui-container-bg)`, the solid surface role of clause 1.
@@ -66,7 +66,7 @@ token. Five clauses, each a buildable acceptance (decomp slices `s1` tokens / `s
    realization.** Routed to **tokens-specialist** (decomp `s1`): the brightness tonal layer's exact values (the
    existing `-dimmest…-brightest` ladder is *solid*, not translucent, so the wash needs a deliberately-designed
    per-scheme alpha role or a reused scrim role); whether `elevation` also engages a `--ui-container-shadow` ramp;
-   and the AA verification of `--c-neutral-on-surface` across the combined **7×7** extremes
+   and the AA verification of `--md-sys-color-neutral-on-surface` across the combined **7×7** extremes
    (`elevation=3,brightness=-3` and `elevation=-3,brightness=3`) in **both** schemes.
 4. **`--ui-space` — the density-responsive layout-spacing ladder.** A new ramp in `@agent-ui/shared`
    `dimensions.css`, declared on the `*` subtree ramp (ADR-0007) so a subtree `[density]` re-multiplies it:
@@ -100,14 +100,14 @@ token. Five clauses, each a buildable acceptance (decomp slices `s1` tokens / `s
 - **Precedence (one axis wins when both set)** — rejected: it silently discards an axis the agent explicitly set,
   and the A2UI catalog binds both `elevation` and `brightness` independently, so a both-set payload is normal, not
   an edge. The layered model loses neither axis.
-- **A 49-cell composed surface ladder** (`--c-neutral-surface-e{n}-b{m}`) — not chosen by planning, but **left open
+- **A 49-cell composed surface ladder** (`--md-sys-color-neutral-surface-e{n}-b{m}`) — not chosen by planning, but **left open
   to tokens-specialist** as a realization of clause 3: it keeps the single seam but adds 49 roles × 2 schemes ×
   the AA surface. The layered-paint mechanism reaches the same single seam with the *existing* roles plus (at most)
   one brightness wash role — lighter — so it is the recommended realization; the composed ladder is the fallback if
   the wash cannot hit AA.
 - **A component `color-mix` to blend the two axes** — rejected outright: a mix ratio is a component colour opinion;
   ADR-0008/`tokens.md` bar it. Composition stays in the token/CSS layer.
-- **A fresh elevation/brightness palette** (the draft's `--c-surface-elevation-*` sketch) — rejected: `tokens.css`
+- **A fresh elevation/brightness palette** (the draft's `--md-sys-color-surface-elevation-*` sketch) — rejected: `tokens.css`
   already ships two purpose-built neutral surface ladders (one inverting, one consistent) that map 1:1 onto the two
   axes. Reuse; do not duplicate.
 - **`--ui-space` on `:root` (not the `*` ramp)** — rejected: a subtree `[density]` must re-multiply layout spacing

@@ -14,12 +14,12 @@ extends: UIContainerElement  # the FACE container surface base (NOT form-associa
 attributes:            # attributes-as-API — mirrors card.ts `static props` (the surfaceProps spread; NO flexProps — a card is a grid surface, not a flex line)
   - name: elevation
     type: enum
-    values: [0, 1, 2, 3, -1, -2, -3]   # the scheme-INVERTING plane (--c-neutral-surface-{lowest…highest}); 0 = the neutral base
+    values: [0, 1, 2, 3, -1, -2, -3]   # the scheme-INVERTING plane (--md-sys-color-neutral-surface-{lowest…highest}); 0 = the neutral base
     default: 0
     reflect: true      # reflects so container.css's [elevation=n] surface repoint applies to JS-set values too
   - name: brightness
     type: enum
-    values: [0, 1, 2, 3, -1, -2, -3]   # the scheme-CONSISTENT tonal shift (--c-neutral-surface-{dimmest…brightest} / the composition wash); 0 = no shift
+    values: [0, 1, 2, 3, -1, -2, -3]   # the scheme-CONSISTENT tonal shift (--md-sys-color-neutral-surface-{dimmest…brightest} / the composition wash); 0 = no shift
     default: 0
     reflect: true      # reflects so container.css's [brightness=m] repoint applies to JS-set values too
 
@@ -147,7 +147,7 @@ signed literal-union props (`'-3'…'3'`, `0` = the neutral base) inherited from
 repoint the role-pure `--ui-container-bg` / `--ui-container-tint` seam in
 `controls/_surface/container.css` (the family surface mapping); a card reads **no** colour role directly.
 The base seam defaults to `transparent`, so a card seeds its **own** default
-`--ui-container-bg: var(--c-neutral-surface)` — an un-elevated card still reads as a surface. `0` in either
+`--ui-container-bg: var(--md-sys-color-neutral-surface)` — an un-elevated card still reads as a surface. `0` in either
 axis leaves the neutral plane unchanged.
 
 ## Nested radius — one level (ADR-0018)

@@ -12,7 +12,7 @@
  *       50%); the default slot content flows after it as the optional label. The dot glyph is an inset
  *       box-shadow on `::before` when checked (no separate element needed). Focus ring: `:focus-visible`
  *       on `:scope` (the whole host), not only on the circle — standard fleet focus treatment (ADR-0009).
- *       Forced-colors: the border + dot survive via `ButtonText`; the focus ring via `--c-focus-ring`.
+ *       Forced-colors: the border + dot survive via `ButtonText`; the focus ring via `--md-sys-color-focus-ring`.
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-radio) declares --ui-radio-* ════════════════ */
@@ -26,10 +26,10 @@
   --ui-radio-dot-inset: calc(var(--ui-radio-box) * 0.22);
 
   /* Border: idle ring colour. */
-  --ui-radio-border: var(--c-neutral-on-surface-variant);
+  --ui-radio-border: var(--md-sys-color-neutral-on-surface-variant);
 
   /* Ink: the checked (selected) dot + ring repoint. */
-  --ui-radio-ink: var(--c-primary);
+  --ui-radio-ink: var(--md-sys-color-primary);
 
   /* Gap: between the circle and the label slot (font/2, the anatomy gap law — density-bearing). */
   --ui-radio-gap: var(--ui-gap-md);
@@ -47,8 +47,8 @@
 
 /* disabled → muted neutral roles. Holds at idle (pointer-inert below). */
 :where(ui-radio[disabled]) {
-  --ui-radio-border: var(--c-neutral-on-surface-variant);
-  --ui-radio-ink: var(--c-neutral-on-surface-variant);
+  --ui-radio-border: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-radio-ink: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-radio) consumes ONLY --ui-radio-* ════════════════ */
@@ -108,7 +108,7 @@
      AND the label text — standard for labelled controls). Not on ::before alone, so screen-reader
      users see a full enclosing ring. layout-neutral (outline outside the box model). */
   :scope:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--ui-focus-ring-offset);
   }
 

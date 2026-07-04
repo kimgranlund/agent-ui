@@ -2,13 +2,13 @@
  * Two clearly-SECTIONED blocks, mirroring popover.css / text-field.css:
  *
  *   [1] TOKEN BLOCK  — `:where(ui-combo-box)` (specificity 0,0,0) declares the `--ui-combo-box-*`
- *       chain from the colour roles (`--c-{family}-{role}`) and the dimensional ramp
- *       (`--ui-height-md` / `--ui-radius-base` / `--ui-space-*`). Raw `--c-*` roles enter ONLY
+ *       chain from the colour roles (`--md-sys-color-{family}-{role}`) and the dimensional ramp
+ *       (`--ui-height-md` / `--ui-radius-base` / `--ui-space-*`). Raw `--md-sys-color-*` roles enter ONLY
  *       here; `@scope` never reads them. This is the "Geometry-by-part" three-class pattern
  *       from the decomp: the editor is Control-class, the panel is Container/surface, and the
  *       option rows are the legacy item-pad (ROV-C5 / §4.6/5.1).
  *   [2] STYLES BLOCK — `@scope (ui-combo-box)` CONSUMES only `--ui-combo-box-*` for its OWN
- *       tokens plus the shared fleet constants (`--c-focus-ring`, `--ui-motion-*`).
+ *       tokens plus the shared fleet constants (`--md-sys-color-focus-ring`, `--ui-motion-*`).
  *       The host is `display: inline-grid` with a `min-inline-size` floor (ADR-0021: entry-
  *       control frame law; the same trap that collapsed ui-text-field + ui-slider). The editor
  *       part is Control-class: `block-size` off `--ui-combo-box-height`. The listbox panel is
@@ -31,12 +31,12 @@
   --ui-combo-box-padding-inline: var(--ui-space-sm);
 
   /* Frame — matches the text-field border channel (solid, not alpha — WCAG 1.4.11 parity). */
-  --ui-combo-box-border: var(--c-neutral);
-  --ui-combo-box-border-hover: var(--c-neutral-high);
+  --ui-combo-box-border: var(--md-sys-color-neutral);
+  --ui-combo-box-border-hover: var(--md-sys-color-neutral-high);
   --ui-combo-box-border-focus: transparent; /* sole focus indicator = shared outline ring */
-  --ui-combo-box-bg: var(--c-neutral-surface);
-  --ui-combo-box-ink: var(--c-neutral-on-surface);
-  --ui-combo-box-placeholder: var(--c-neutral-on-surface-variant);
+  --ui-combo-box-bg: var(--md-sys-color-neutral-surface);
+  --ui-combo-box-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-combo-box-placeholder: var(--md-sys-color-neutral-on-surface-variant);
 
   /* Frame shape */
   --ui-combo-box-radius: var(--ui-radius-base);
@@ -46,19 +46,19 @@
   --ui-combo-box-min-inline-size: 20ch;
 
   /* ── Listbox panel (Container/surface-class) ────────────────────────── */
-  --ui-combo-box-panel-bg: var(--c-neutral-surface);
-  --ui-combo-box-panel-ink: var(--c-neutral-on-surface);
-  --ui-combo-box-panel-outline: var(--c-neutral-outline-variant);
+  --ui-combo-box-panel-bg: var(--md-sys-color-neutral-surface);
+  --ui-combo-box-panel-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-combo-box-panel-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-combo-box-panel-radius: var(--ui-radius-base);
   --ui-combo-box-panel-min-inline-size: 12rem; /* prevent empty-panel collapse (ADR-0021) */
 
   /* ── Option rows (legacy item-pad — ROV-C5 / §4.6/5.1) ─────────────── */
   --ui-combo-box-option-padding-block: var(--ui-space-xs);
   --ui-combo-box-option-padding-inline: var(--ui-space-sm);
-  --ui-combo-box-option-active-bg: var(--c-neutral-tint-5); /* active-descendant highlight */
-  --ui-combo-box-option-active-ink: var(--c-neutral-on-surface);
-  --ui-combo-box-option-selected-bg: var(--c-primary-tint-5);
-  --ui-combo-box-option-selected-ink: var(--c-primary-on-surface);
+  --ui-combo-box-option-active-bg: var(--md-sys-color-neutral-tint-dim); /* active-descendant highlight — 5% neutral overlay (was the undefined -tint-5) */
+  --ui-combo-box-option-active-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-combo-box-option-selected-bg: var(--md-sys-color-primary-container-low); /* selected-value row — matches ui-select's AA-safe pairing (was the undefined -tint-5) */
+  --ui-combo-box-option-selected-ink: var(--md-sys-color-primary-high);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-combo-box) ════════════════ */
@@ -119,7 +119,7 @@
      border-focus approach — a coloured border-focus would double with the ring). */
   :scope > [data-part='editor']:focus {
     border-color: var(--ui-combo-box-border-focus);
-    outline: 2px solid var(--c-focus-ring);
+    outline: 2px solid var(--md-sys-color-focus-ring);
     outline-offset: 2px;
   }
 

@@ -74,7 +74,7 @@ geometry:
   tabPaddingInline: var(--ui-tabs-tab-pad-inline)  # off the --ui-space layout ladder
   stripGap: var(--ui-tabs-strip-gap)        # the inter-tab gap — --ui-space (density-responsive)
   panelPadding: var(--ui-tabs-panel-pad)    # the panel body padding — --ui-space
-  surface: --ui-container-bg                 # the shell plane (ADR-0015 surface seam); default --c-neutral-surface
+  surface: --ui-container-bg                 # the shell plane (ADR-0015 surface seam); default --md-sys-color-neutral-surface
 
 forcedColors: A `@media (forced-colors: active)` block keeps the SELECTED-tab indicator + label visible (Highlight) and the strip divider visible (CanvasText); the shell surface drops to Canvas via the container.css role layer.
 ---

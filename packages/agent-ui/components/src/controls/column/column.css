@@ -7,17 +7,19 @@
  *       the density-responsive `--ui-space-*` ladder (ADR-0015 cl.4), NEVER a control dimension. The defaults
  *       are the `flexProps` defaults (align=start, justify=start, gap=none, wrap=nowrap); each non-default
  *       attribute value repoints its token.
- *   [2] STYLES BLOCK — `@scope (ui-column)` CONSUMES only `--ui-column-*`. `display: flex` with
- *       `flex-direction: column` — the tag's IDENTITY (the main axis is the block axis; not a prop, ADR-0016
- *       cl.2). A `@container inline-size` reflow rule mirrors `ui-row` (which stacks to a column under a NARROW
- *       container) with the axis flipped: under a WIDE container the column spreads its children into a row —
- *       the canonical "switcher", reflowing on the container's width with NO breakpoint props (ADR-0016 cl.4).
+ *   [2] STYLES BLOCK — `@scope (ui-column)` CONSUMES the `--ui-column-*` flex tokens, plus the opt-in
+ *       `:scope[stretch]` sizing escape-hatch (`width: stretch` — a fill-available fallback cascade that
+ *       can't be tokenized). `display: flex` with `flex-direction: column` — the tag's IDENTITY (the main
+ *       axis is the block axis; not a prop, ADR-0016 cl.2). A `@container inline-size` reflow rule mirrors
+ *       `ui-row` (which stacks to a column under a NARROW container) with the axis flipped: under a WIDE
+ *       container the column spreads its children into a row — the canonical "switcher", reflowing on the
+ *       container's width with NO breakpoint props (ADR-0016 cl.4).
  *       NO control height (geometry.md Container/layout class — block-size is content-driven; spacing rides
  *       `--ui-space` × `[density]`, never `--ui-height-*`). A forced-colors block drops any tonal wash.
  *
  * The SURFACE (elevation/brightness → `--ui-container-bg`/`-tint`) is painted by the shared
  * controls/_surface/container.css on `:where(…, ui-column, …)`; this sheet holds ZERO colour opinion (no raw
- * `--c-*` role anywhere — role-purity, ADR-0008). Standalone stylesheet — linked via the component-styles
+ * `--md-sys-color-*` role anywhere — role-purity, ADR-0008). Standalone stylesheet — linked via the component-styles
  * barrel (wired in s12); NEVER injected from column.ts (behaviour-only `.ts` — plan §2).
  */
 
@@ -36,12 +38,12 @@
 }
 
 /* align → align-items (stretch = the new default above; start is now a non-default needing its own repoint).
-   ADR-0030: `start` gains a repoint rule; the now-redundant `stretch` rule is removed (stretch = the base). */
+   ADR-0030: `start` gains a repoint rule; the now-redundant `stretch` rule is removed (stretch = the base).
+   `center` is NOT allowed on ui-column (Kim's directive — it dropped from column.ts's align enum): NO
+   [align='center'] repoint exists, so a stray `align="center"` attribute has no effect and the column stays
+   at its `stretch` base (children fill the width). Only start/end/baseline are the non-default repoints. */
 :where(ui-column[align='start']) {
   --ui-column-align: start; /* start is a non-default: the [align='start'] repoint (box-alignment start — ADR-0039) */
-}
-:where(ui-column[align='center']) {
-  --ui-column-align: center;
 }
 :where(ui-column[align='end']) {
   --ui-column-align: end; /* box-alignment end (ADR-0039) */
@@ -106,6 +108,18 @@
     box-sizing: border-box;
     /* NO control height — a layout primitive (geometry.md Container/layout class): block-size is content-driven,
        spacing rides --ui-space × [density]. It never reads --ui-height-* (that is the control band's lever). */
+  }
+
+  /* stretch → the host FILLS its parent's available inline size (`width: stretch`). Opt-in, default off — a
+     column shrink-wraps to content otherwise. Used on a ROOT layout box (e.g. the A2UI canvas root) so it
+     fills its artboard instead of shrink-wrapping. The three declarations are a fill-available fallback
+     cascade — the LAST valid one wins per engine (unprefixed `stretch` is modern CSS; `-webkit-fill-available`
+     / `-moz-available` cover older WebKit / Firefox), so it fills cross-engine. A single custom-prop token
+     can't hold this cascade, so this is the one sizing rule the styles block owns directly. */
+  :scope[stretch] {
+    width: -webkit-fill-available;
+    width: -moz-available;
+    width: stretch;
   }
 
   /* Container-query intrinsic responsiveness (ADR-0016 cl.4) — mirrors ui-row (which stacks to a column under a

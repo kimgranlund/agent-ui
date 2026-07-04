@@ -97,7 +97,7 @@ geometry:
   boxRamp: --ui-compact-{size}          # 14/16/18 px at ui-md scale for sm/md/lg (ADR-0041 clause 2)
   radius: calc(--ui-checkbox-box / 5)  # proportional slight rounding (~3px at 16px default)
 
-forcedColors: A `@media (forced-colors: active)` block maps unchecked to ButtonText border on ButtonFace; checked/indeterminate to Highlight fill with HighlightText glyph. The :focus-visible ring is free via --c-focus-ring → Highlight from the token layer (ADR-0009).
+forcedColors: A `@media (forced-colors: active)` block maps unchecked to ButtonText border on ButtonFace; checked/indeterminate to Highlight fill with HighlightText glyph. The :focus-visible ring is free via --md-sys-color-focus-ring → Highlight from the token layer (ADR-0009).
 ---
 
 # ui-checkbox

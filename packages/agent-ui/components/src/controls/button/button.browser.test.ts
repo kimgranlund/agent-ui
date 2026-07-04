@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest'
 // inject through Vite, and a real engine resolves the `--ui-button-*` token chain to a computed px frame.
 // It runs in BOTH Chromium and WebKit (vitest.browser.config.ts → playwright instances).
 
-// Side-effect imports. Order is the load-bearing CSS order (ADR-0003): foundation (the `--c-*` colour
+// Side-effect imports. Order is the load-bearing CSS order (ADR-0003): foundation (the `--md-sys-color-*` colour
 // roles + the `--ui-{height,font,gap}-*` ramp) FIRST, then the component sheet (button's `:where()`
 // token block + `@scope` styles), then the self-defining family barrel (registers `ui-button`). Vite
 // resolves the bare specifiers + the barrels' inner `@import '@agent-ui/shared/...'` and injects the CSS.

@@ -13,8 +13,8 @@
 
 ## Context
 
-The 2026-07-02 color-verify audit measured the intent-family anchors (`--c-danger` / `-warning` /
-`-success` / `-info`, alongside `--c-primary` / `-secondary`): they are deliberately **L-matched** — the
+The 2026-07-02 color-verify audit measured the intent-family anchors (`--md-sys-color-danger` / `-warning` /
+`-success` / `-info`, alongside `--md-sys-color-primary` / `-secondary`): they are deliberately **L-matched** — the
 same OKLCH lightness by ladder design, so every intent renders with uniform perceived weight. That is
 legitimate ladder engineering, and it has a structural consequence: **at the token level, intent is
 carried by hue alone.** Hue is exactly the channel color-vision deficiency removes. Under deuteranopia
@@ -41,7 +41,7 @@ We adopt the fleet rule — normative home:
 (one Do bullet + one Don't bullet, edited in this change; that doc now holds the fact, this ADR the why):
 
 **No agent-ui surface may communicate intent by color alone.** Wherever an intent-family role
-(`--c-danger/-warning/-success/-info` — or any color role used to carry *meaning*: validity, status,
+(`--md-sys-color-danger/-warning/-success/-info` — or any color role used to carry *meaning*: validity, status,
 kind, selection) styles a state or variant, a **visible non-color signifier must co-carry the same
 meaning on the same surface**: text that names the state, a glyph/shape (a tick, a ring-vs-fill split,
 a dash pattern), or position. The programmatic ARIA state (`aria-invalid`, `aria-checked`,
@@ -61,13 +61,13 @@ Normative anchor: **WCAG 2.2 SC 1.4.1 (Use of Color), Level A.**
 
   | Surface | Intent/state color | Co-carried non-color signifier | Verdict |
   |---|---|---|---|
-  | `ui-text-field` user-invalid | danger border `text-field.css:50–51` · message ink `:70` (now `--c-danger-on-surface-variant` — the audit's item-1 repoint; the border channel stays `--c-danger`) | the **visible validity-message text** (ADR-0014 cl.4) + `aria-invalid`/`:state(user-invalid)` (`text-field.ts:458–491`) | conforms |
-  | `ui-field` error region | `--ui-field-error-ink: var(--c-danger-on-surface-variant)` (`field.css:47` — item-1 repoint) | the error node **is text** — "the text IS the cue" (`field.css:122`); under association it is the ONE announced error (ADR-0051) | conforms |
-  | `ui-calendar` selected / today | `--c-primary-selected` fill · today-ring color (`calendar.css:46`) | **shape split**: selected = *fill* vs today = *inset ring* (`calendar.css:232–242`) + `aria-selected`; WHCM keeps all three states distinct (focus=Highlight-outside · selected=Highlight-fill · today=ButtonText-inset, `calendar.css:261–288`) | conforms |
+  | `ui-text-field` user-invalid | danger border `text-field.css:50–51` · message ink `:70` (now `--md-sys-color-danger-on-surface-variant` — the audit's item-1 repoint; the border channel stays `--md-sys-color-danger`) | the **visible validity-message text** (ADR-0014 cl.4) + `aria-invalid`/`:state(user-invalid)` (`text-field.ts:458–491`) | conforms |
+  | `ui-field` error region | `--ui-field-error-ink: var(--md-sys-color-danger-on-surface-variant)` (`field.css:47` — item-1 repoint) | the error node **is text** — "the text IS the cue" (`field.css:122`); under association it is the ONE announced error (ADR-0051) | conforms |
+  | `ui-calendar` selected / today | `--md-sys-color-primary-selected` fill · today-ring color (`calendar.css:46`) | **shape split**: selected = *fill* vs today = *inset ring* (`calendar.css:232–242`) + `aria-selected`; WHCM keeps all three states distinct (focus=Highlight-outside · selected=Highlight-fill · today=ButtonText-inset, `calendar.css:261–288`) | conforms |
   | `ui-checkbox` / `ui-radio` / `ui-switch` checked | primary fill vs neutral | checkbox: the clip-path **tick glyph** (`checkbox.css:114–122`) · radio: the **dot** (inset box-shadow, `radio.css:12–13`) · switch: the **thumb position** slide (`switch.css:12–14`) — all + `aria-checked` via internals | conforms |
-  | site demo pages (`a2ui-{form,canvas,stream,list}.css`) | `--c-danger`/`--c-success` ink keyed on `[data-kind]`/`[data-phase]` | the colored node is a **text label that itself names the kind** ("blocked"/"sent"/"error"/"done"); the stream fault block adds a **dashed** border (`a2ui-stream.css:141`) | conforms (color = redundant emphasis) |
+  | site demo pages (`a2ui-{form,canvas,stream,list}.css`) | `--md-sys-color-danger`/`--md-sys-color-success` ink keyed on `[data-kind]`/`[data-phase]` | the colored node is a **text label that itself names the kind** ("blocked"/"sent"/"error"/"done"); the stream fault block adds a **dashed** border (`a2ui-stream.css:141`) | conforms (color = redundant emphasis) |
   | `ui-button` | — | single-family primary; `solid/soft/ghost` are *emphasis*, not intent — no intent-by-color surface exists today | n/a — **in scope the day a `family`/intent attribute lands** |
-  | `--c-warning` / `--c-info` | zero component consumers today | — | n/a — in scope at first consumer |
+  | `--md-sys-color-warning` / `--md-sys-color-info` | zero component consumers today | — | n/a — in scope at first consumer |
 
 - **Enforcement = one rubric line, no new machinery.** Per `process.md`'s placement rules this check is
   *judgment grounded in a referential artifact* (rule 2), not a true/false script (rule 1) — "has a
@@ -86,7 +86,7 @@ Normative anchor: **WCAG 2.2 SC 1.4.1 (Use of Color), Level A.**
   cost per intent-bearing control).
 - **Follow-ups:** none among shipped controls. Named forward triggers where the rule first bites: the
   button `family` attribute (tokens.md's open fleet decision), any badge/alert/toast/tag family, and
-  the first `--c-warning`/`--c-info` component consumer.
+  the first `--md-sys-color-warning`/`--md-sys-color-info` component consumer.
 - **Stale → re-verify:** `references/component-authoring-best-practices.md` (edited here) ·
   `rubrics/component.md` C8 (on ratification).
 

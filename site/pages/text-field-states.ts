@@ -140,7 +140,7 @@ const focus = makeSection(
     'ADR-0014’s amendment), and a transparent border preserves the box geometry (no layout shift). Because ' +
     'it keys on <code>:focus-within</code> — not a button’s keyboard-only <code>:focus-visible</code> — the ' +
     'ring shows on a <strong>mouse click too</strong>: a text field must visibly signal where typing will land. ' +
-    'The ring is also the load-bearing <code>forced-colors</code> indicator (<code>--c-focus-ring → Highlight</code>).',
+    'The ring is also the load-bearing <code>forced-colors</code> indicator (<code>--md-sys-color-focus-ring → Highlight</code>).',
 )
 focus.append(
   makeRow(
@@ -154,7 +154,7 @@ focus.append(
 const hover = makeSection(
   'Hover — the border channel',
   'Move your pointer over an enabled field. The control steps its <strong>border-color</strong> up one role ' +
-    'step (<code>--c-neutral → --c-neutral-high</code>) — a text field styles its states off the BORDER, not a ' +
+    'step (<code>--md-sys-color-neutral → --md-sys-color-neutral-high</code>) — a text field styles its states off the BORDER, not a ' +
     'background fill (it has no pressed/active state; ADR-0014 cl.2c). The disabled field holds its muted frame ' +
     '— it is pointer-inert, so <code>:hover</code> never matches it.',
 )

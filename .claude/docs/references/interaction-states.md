@@ -36,9 +36,9 @@ variant repoints `--ui-{cmp}-bg` (idle) and adds `--ui-{cmp}-bg-hover` / `--ui-{
 
 ```css
 :where(ui-{cmp}) {
-  --ui-{cmp}-bg:        var(--c-{f});        /* idle  */
-  --ui-{cmp}-bg-hover:  var(--c-{f}-dim);    /* hover */
-  --ui-{cmp}-bg-active: var(--c-{f}-high);   /* active */
+  --ui-{cmp}-bg:        var(--md-sys-color-{f});        /* idle  */
+  --ui-{cmp}-bg-hover:  var(--md-sys-color-{f}-dim);    /* hover */
+  --ui-{cmp}-bg-active: var(--md-sys-color-{f}-high);   /* active */
 }
 ```
 
@@ -56,9 +56,9 @@ A variant picks a **channel**; the channel fixes the three steps. Reuse `tokens.
 
 | channel (variant kind) | idle | hover | active | ink |
 |---|---|---|---|---|
-| **filled** (a solid accent fill) | `--c-{f}` | `--c-{f}-dim` | `--c-{f}-high` | `--c-{f}-on-{f}` |
-| **tonal** (a soft container tint) | `--c-{f}-container-low` | `--c-{f}-container` | `--c-{f}-container-high` | `--c-{f}-on-surface` |
-| **text** (transparent at idle) | `transparent` | `--c-{f}-container-low` | `--c-{f}-container` | `--c-{f}` |
+| **filled** (a solid accent fill) | `--md-sys-color-{f}` | `--md-sys-color-{f}-dim` | `--md-sys-color-{f}-high` | `--md-sys-color-{f}-on-{f}` |
+| **tonal** (a soft container tint) | `--md-sys-color-{f}-container-low` | `--md-sys-color-{f}-container` | `--md-sys-color-{f}-container-high` | `--md-sys-color-{f}-on-surface` |
+| **text** (transparent at idle) | `transparent` | `--md-sys-color-{f}-container-low` | `--md-sys-color-{f}-container` | `--md-sys-color-{f}` |
 
 The **text** channel has no idle fill to step, so its hover/active wash borrows the bottom two rungs of the
 container ladder — a low tint appearing on interaction, vanishing at rest. Worked example, `ui-button`'s three
@@ -66,16 +66,16 @@ variants on the `primary` family:
 
 | `ui-button` variant | `--ui-button-bg` | `-bg-hover` | `-bg-active` |
 |---|---|---|---|
-| **solid** (filled) | `--c-primary` | `--c-primary-hover` | `--c-primary-active` |
-| **soft** (tonal) | `--c-primary-container-low` | `--c-primary-container` | `--c-primary-container-high` |
-| **ghost** (text) | `transparent` | `--c-primary-container-low` | `--c-primary-container` |
+| **solid** (filled) | `--md-sys-color-primary` | `--md-sys-color-primary-hover` | `--md-sys-color-primary-active` |
+| **soft** (tonal) | `--md-sys-color-primary-container-low` | `--md-sys-color-primary-container` | `--md-sys-color-primary-container-high` |
+| **ghost** (text) | `transparent` | `--md-sys-color-primary-container-low` | `--md-sys-color-primary-container` |
 
-> **When a generic ladder step collapses — dedicated `--c-{f}-hover/-active` roles (ADR-0008 amendment).** The
-> filled channel's default rungs (`--c-{f}-dim`/`-high`) can resolve to the SAME step in one `light-dark()`
-> branch: `--c-primary-dim` and `--c-primary-high` both land on `--c-primary-650` in light, collapsing solid
+> **When a generic ladder step collapses — dedicated `--md-sys-color-{f}-hover/-active` roles (ADR-0008 amendment).** The
+> filled channel's default rungs (`--md-sys-color-{f}-dim`/`-high`) can resolve to the SAME step in one `light-dark()`
+> branch: `--md-sys-color-primary-dim` and `--md-sys-color-primary-high` both land on `--md-sys-color-primary-650` in light, collapsing solid
 > `hover`==`active` there (distinct in dark — the wave-2 cross-engine smoke caught it). The remedy is token-layer,
-> NEVER a component `color-mix`: dedicated `--c-{f}-hover/-active` roles with a real three-step monotonic-
-> darkening ladder in BOTH schemes — `--c-primary-hover` = `light-dark(700, 600)`, `--c-primary-active` =
+> NEVER a component `color-mix`: dedicated `--md-sys-color-{f}-hover/-active` roles with a real three-step monotonic-
+> darkening ladder in BOTH schemes — `--md-sys-color-primary-hover` = `light-dark(700, 600)`, `--md-sys-color-primary-active` =
 > `light-dark(750, 700)` (light 550→700→750, dark 450→600→700). The solid row above uses them; the next
 > solid-filled control of any family gets its own `-hover/-active` roles the same way.
 
@@ -101,7 +101,7 @@ refactor, so the styles block never moves.
 ### The escalation (do not synthesize a shade)
 
 If a ladder step reads too close to the one below it (idle ≈ hover, or hover ≈ active) in the real palette, the
-fix is **token-layer dedicated state roles** (`--c-{f}-hover` / `-active`) plus an amendment to ADR-0008 — **not**
+fix is **token-layer dedicated state roles** (`--md-sys-color-{f}-hover` / `-active`) plus an amendment to ADR-0008 — **not**
 a component `color-mix`. The control's consumption seam (`--ui-{cmp}-bg-hover/-active`) does not change; only the
 ladder step it points at does. This is a design change: stop and escalate, don't invent the shade in the control.
 
@@ -113,11 +113,11 @@ cross-package import is `components → @agent-ui/shared`, so every control read
 
 | token | home | value | role |
 |---|---|---|---|
-| `--c-focus-ring` | `shared/src/tokens/tokens.css` | a **dedicated** accent-leaning role (`→ Highlight` under forced-colors) | the ring colour |
+| `--md-sys-color-focus-ring` | `shared/src/tokens/tokens.css` | a **dedicated** accent-leaning role (`→ Highlight` under forced-colors) | the ring colour |
 | `--ui-focus-ring-width` | `shared/src/tokens/dimensions.css` | `2px` | the ring width |
 | `--ui-focus-ring-offset` | `shared/src/tokens/dimensions.css` | `2px` | the gap to the box edge |
 
-`--c-focus-ring` is a **dedicated role, not `--c-primary` reused** — so a `ghost`/secondary/neutral control gets
+`--md-sys-color-focus-ring` is a **dedicated role, not `--md-sys-color-primary` reused** — so a `ghost`/secondary/neutral control gets
 the *same* ring, not one tinted by the primary family. The width/offset are **constants** (no `var()` over a
 subtree-repointable multiplier), so they live on `:root`, not on `*` — ADR-0007's universal-selector rule covers
 only *derived* tokens.
@@ -126,7 +126,7 @@ only *derived* tokens.
 
 ```css
 :scope:focus-visible {
-  outline: var(--ui-focus-ring-width) solid var(--c-focus-ring);
+  outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
   outline-offset: var(--ui-focus-ring-offset);
 }
 ```
@@ -135,7 +135,7 @@ Three deliberate choices behind it:
 
 - **`outline`, not `box-shadow`** — `outline` is painted *outside* the box without affecting layout, so the
   geometry law (`geometry.md`) and its smoke assertions stay intact; the UA preserves `outline` under
-  `forced-colors`; and `--c-focus-ring`'s `→ Highlight` mapping makes the WHCM ring **free**. (`box-shadow` is
+  `forced-colors`; and `--md-sys-color-focus-ring`'s `→ Highlight` mapping makes the WHCM ring **free**. (`box-shadow` is
   suppressed under forced-colors — kept on the shelf only as a fallback behind a later ADR.)
 - **`:focus-visible`, not `:focus`** — the keyboard-only contract: no ring on a mouse click.
 - The ring shows **only when keyboard-focused** — the `tabbable` trait (§3) supplies the `tabindex=0` a light-DOM
@@ -261,7 +261,7 @@ and open questions:
 
 - [**ADR-0008**](../adr/0008-interaction-state-styling-standard.md) — per-variant hover/active background steps
   from role ladders (no `color-mix`); the disabled hold.
-- [**ADR-0009**](../adr/0009-focus-ring-token-standard.md) — the shared `--c-focus-ring` role + the
+- [**ADR-0009**](../adr/0009-focus-ring-token-standard.md) — the shared `--md-sys-color-focus-ring` role + the
   `--ui-focus-ring-width/-offset` constants, consumed via a `:focus-visible` `outline`.
 - [**ADR-0010**](../adr/0010-tabbable-trait-aria-disabled.md) — the `tabbable` trait (focusable by default, out of
   the tab order when disabled) + the control-level `ariaDisabled` effect.

@@ -29,7 +29,7 @@ You are **anti-drift by construction**: the standard lives in canonical docs you
   (no registry, no `host.use()`), in `packages/agent-ui/components/src/traits/`.
 - **Anatomy** — parts, slots, content model (host-as-grid vs rendered cell): `.claude/docs/references/anatomy.md`.
 - **Geometry & sizing** — the centering law, the two families, size-classes, the ramp: `.claude/docs/references/geometry.md`.
-- **Color tokens** — the `--c-{family}-{role}` role system + consumption invariants: `.claude/docs/references/tokens.md`.
+- **Color tokens** — the `--md-sys-color-{family}-{role}` role system + consumption invariants: `.claude/docs/references/tokens.md`.
 - **Interaction states & motion** — the custom-state set + the first-paint motion gate (`ready`): `.claude/docs/references/interaction-states.md`.
 - **Packaging** — per-component folder/files, marginal-size budget, tree-shaking: `.claude/docs/references/component-packaging.md`.
 - **Naming / TS / layering** — `CLAUDE.md`. **Descriptor schema** — `packages/agent-ui/components/src/descriptor/component-descriptor.ts`.
@@ -88,7 +88,7 @@ You are **anti-drift by construction**: the standard lives in canonical docs you
 
 - [ ] Right base class + size-class; props typed (literal unions, not `string`).
 - [ ] Light DOM; ARIA via `internals`; no native form elements; events ∈ the allowlist.
-- [ ] Single `{name}.css` with `@scope`; tokens in `:where()` from `--c-` roles; geometry off the ramp.
+- [ ] Single `{name}.css` with `@scope`; tokens in `:where()` from `--md-sys-color-` roles; geometry off the ramp.
 - [ ] `{name}.md` frontmatter validates and matches `static props` **and the source**.
 - [ ] Probes green (jsdom) + browser-truth smoke (G5); `npm run check && npm test` green (run separately).
 - [ ] Marginal size within the tier budget; tree-shake clean.

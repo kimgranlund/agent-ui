@@ -24,23 +24,24 @@
 // The seed's own validity + clean real-host render is the standing examples.test.ts gate (ADR-0055) — this page
 // rides it; it invents no parallel check.
 
-import { mountPage } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
+import { mountPage, pageLead } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './a2ui-stream.css' // page-local layout chrome only (the feed log · the live-surface frame · the client log)
 import { codeBlock } from '../lib/code-block.ts' // shared <pre><code> previews (textContent, no injection)
 import { createRenderer } from '@agent-ui/a2ui'
 import type { RendererHost, A2uiClientMessage, A2uiServerMessage } from '@agent-ui/a2ui'
 import { generativeFormSeed } from '@agent-ui/a2ui/examples' // the shared, fine-grained form seed (ADR-0055, fork F1)
 
-const { content } = mountPage({
-  title: 'A2UI streaming',
-  intro:
+const { content } = mountPage({ title: 'A2UI streaming' })
+content.append(
+  pageLead(
     'An agent does not hand you a finished screen — it *streams* one. Each JSONL line is applied the moment it ' +
-    'arrives, so the surface assembles as you watch. Below, the same generative-form payload the form page renders ' +
-    'in one shot is fed line-by-line through the real renderer. The feed on the left grows exactly as it is fed ' +
-    '(shown ≡ fed); the live surface on the right is the renderer’s output. Demo 1 streams it in order — the root ' +
-    'arrives early, so the surface paints early and fills in field by field. Demo 2 feeds the same objects with the ' +
-    'root LAST, and nothing paints until it lands: root-early is what makes a stream *feel* progressive.',
-})
+      'arrives, so the surface assembles as you watch. Below, the same generative-form payload the form page renders ' +
+      'in one shot is fed line-by-line through the real renderer. The feed on the left grows exactly as it is fed ' +
+      '(shown ≡ fed); the live surface on the right is the renderer’s output. Demo 1 streams it in order — the root ' +
+      'arrives early, so the surface paints early and fills in field by field. Demo 2 feeds the same objects with the ' +
+      'root LAST, and nothing paints until it lands: root-early is what makes a stream *feel* progressive.',
+  ),
+)
 
 const PACE_MS = 300 // one line every ~0.3s — readable, and short enough that the whole 9-line form streams in ~3s.
 
