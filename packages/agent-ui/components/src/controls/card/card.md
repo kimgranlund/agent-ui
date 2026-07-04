@@ -59,7 +59,8 @@ keyboard: []           # a card is not interactive — no keyboard contract (int
 
 geometry:
   sizeClass: container   # Container/layout — spacing off --ui-space × density; a card has NO control height (never reads --ui-height-*)
-  padding: var(--ui-card-padding)        # off the --ui-space ladder (default --ui-space-md); insets the regions, density-responsive
+  padding: var(--ui-card-padding)        # ALWAYS 0 (ADR-0046 box-model) — the card itself holds no padding; each region carries its own fixed regionPadding instead
+  regionPadding: var(--ui-card-region-pad-inline) / var(--ui-card-region-pad-block)   # 6px inline + 6px block, rem-based (density-INVARIANT) — a CARD-ONLY override of the shared container-box.css ADR-0046 default (12px/4px); repointed on :where(ui-card) itself, modal/select/menu/combo-box are unaffected
   radius: var(--ui-card-radius, var(--ui-radius-base))   # root radius = the shared --ui-radius-base; a nested card decrements one level (ADR-0018)
   nestedRadius: r_child = max(0, r_parent − pad_parent)  # the concentric-corner law, published as --ui-card-child-radius (ONE level; deeper nesting is manual)
 
@@ -110,6 +111,22 @@ the grid *structure* is reused, not the control-frame glyph sizing.
   on every engine, WebKit included); a scroll-driven refinement (fading only at the *scrollable* edge via
   `animation-timeline: scroll()`) is a noted follow-up.
 
+## Region padding — a card-only 6px override (diverges from ADR-0046)
+
+The card itself holds **no** padding (the box-model law); each region (`ui-card-header` / `ui-card-content` /
+`ui-card-footer`) carries a fixed, rem-based (density-**invariant**) region padding instead. Where ADR-0046's
+shared model (`container-box.css`, also ridden by `ui-modal` and the `ui-select`/`ui-menu`/`ui-combo-box`
+overlay panels) fixes that region padding at **inline 12px / block 4px**, `ui-card` **repoints** the shared
+`--ui-box-pad-inline` / `--ui-box-pad-block` tokens to a **uniform 6px inline + 6px block** — on its own
+`:where(ui-card)` token block, at specificity 0, so it never leaks into modal/select/menu/combo-box (they
+read `container-box.css`'s own 12/4 straight off `[data-box]`; a card is not itself `[data-box]`). This is a
+deliberate **divergence from the ADR-0046 region-padding default** for `ui-card` specifically (Kim,
+2026-07-04) — the ADR record itself needs an amendment line to note the card exception; this doc + `card.css`
+carry the working note in the meantime. A `ui-card-content` has no nested-padding *stepping* law (unlike the
+shared `[data-region='content']`/`main` model it diverges from) — a card is never marked `[data-region]`, so
+its region padding stays flat at 6px regardless of nesting depth; only the **radius** chain steps one level
+(ADR-0018, below).
+
 ## The region-less humane default (ADR-0056)
 
 A `ui-card` with **no region child** (no `ui-card-header` / `ui-card-content` / `ui-card-footer`) applies
@@ -123,7 +140,7 @@ than the box-model's zero-padding default:
 </ui-card>
 ```
 
-renders with the same inline/block inset a real region would carry (12px/4px) and the same 8px rhythm between
+renders with the same inline/block inset a real region would carry (6px/6px) and the same 8px rhythm between
 its children. This is a **CSS-only fallback**, not a factory rewrite — the payload tree, the component tree,
 and the rendered DOM stay identical; nothing synthetic is inserted. It is `:has()`-driven, so it is
 **streaming-safe by construction**: a region child arriving after the fact (a `ui-card-header` streamed in

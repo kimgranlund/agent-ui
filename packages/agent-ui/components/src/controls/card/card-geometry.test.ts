@@ -58,12 +58,32 @@ describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)
 describe('card.css — padding/gap off the --ui-space ladder (Container/layout class, no control height)', () => {
   it('the box-model: the card holds NO padding/gap; the region padding rides the --ui-box-* tokens (NO --ui-height-*)', () => {
     // Box-model rollout (container-box.css): the card itself has zero padding + zero grid gap — each region is
-    // full-bleed and carries its OWN region padding off the shared --ui-box-* tokens (inline 12 · block 4).
+    // full-bleed and carries its OWN region padding off the shared --ui-box-* tokens (card-only repointed to a
+    // uniform inline 6 · block 6, see the next test).
     expect(cardTokens).toMatch(/--ui-card-padding:\s*0/)
     expect(cardTokens).toMatch(/--ui-card-gap:\s*0/)
     expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--ui-box-pad-inline,/)
     expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--ui-box-pad-block,/)
     expect(css).not.toMatch(/--ui-height-/) // a container has NO control height (geometry.md)
+  })
+
+  it('the card-only 6px override: --ui-box-pad-inline/-block are repointed to 0.375rem on :where(ui-card) itself', () => {
+    // The literal magnitude IS a declared constant (unlike the density-scaled --ui-space ramp), so this is a
+    // static jsdom probe — the container-box.browser.test.ts/card.browser.test.ts suites pin the MEASURED px.
+    // Card overrides the shared 12px/4px ADR-0046 default to a UNIFORM 6px, on its OWN token block — never
+    // touching container-box.css (modal/select/menu/combo-box keep reading the shared 12/4 default).
+    expect(cardTokens).toMatch(/--ui-box-pad-inline:\s*0\.375rem/)
+    expect(cardTokens).toMatch(/--ui-box-pad-block:\s*0\.375rem/)
+    // and the derived region tokens fall back to the SAME 6px if the override channel is ever unset
+    expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--ui-box-pad-inline,\s*0\.375rem\)/)
+    expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--ui-box-pad-block,\s*0\.375rem\)/)
+    // the shared container-box.css defaults themselves are UNTOUCHED (the file this repoint must never edit)
+    const sharedCss = readFileSync(
+      `${process.cwd()}/packages/agent-ui/components/src/controls/_surface/container-box.css`,
+      'utf8',
+    ) as string
+    expect(sharedCss).toMatch(/--ui-box-pad-inline:\s*0\.75rem/)
+    expect(sharedCss).toMatch(/--ui-box-pad-block:\s*0\.25rem/)
   })
 
   it('the adornment column-gap also rides the --ui-space ladder', () => {

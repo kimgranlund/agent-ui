@@ -68,3 +68,31 @@ surface opts in with **`[data-box]`**.
   padding** (it still scales the `--ui-space`-based adornment gaps). This was Kim's explicit fixed-px spec.
 - Browser tests that import a control sheet directly must also import `container-box.css` to exercise the region
   padding (it lives in the shared layer, not the control sheet) — as the modal smoke now does.
+
+## Alternatives
+
+*(Recorded 2026-07-04 from the shipped Decision + `container-box.css` — the real options weighed at design time.)*
+
+- **Flexbox `gap` for the region-child rhythm** — rejected: a region's content wrapper is `display: block` so
+  `overflow: auto` scrolls a block flow; the 8px rhythm is a scroll-safe adjacent-sibling margin, not `gap`.
+- **A self-referencing custom property for the nested inline-padding step (12→8→4)** — rejected: CSS treats a
+  property that reads itself as a cycle (invalid); explicit per-level descendant selectors realize the step.
+- **`--ui-space`-driven, density-scaled region padding** — rejected: Kim's explicit fixed-px (rem) spec makes
+  region padding density-INVARIANT (Consequences); density still scales adornment gaps.
+- **Per-control bespoke padding instead of one shared `--ui-box-*` vocabulary** — rejected: one spacing
+  vocabulary across the whole container family, opted into via `[data-box]` (the Amendment below is the one
+  deliberate, scoped opt-*out*).
+
+## Amendment — 2026-07-04 (`ui-card` region padding: a scoped 6px override)
+
+Per Kim's directive (intent-extracted: "ui-card should have 6px padding by default" + "block-padding for
+card-header/content/footer 4px → 6px"), **`ui-card` overrides the shared region-padding default of inline
+12px / block 4px with a uniform 6px inline + 6px block** — card-only. The shared model above is UNCHANGED for
+every other `[data-box]` surface (modal / select / menu / combo-box / calendar panels keep 12/4). The override
+is realized in `card.css` by repointing `--ui-box-pad-inline` / `--ui-box-pad-block` to `0.375rem` on
+`:where(ui-card)` and consuming them through a card-private `--ui-card-region-pad-*` intermediary (so a nested
+container surface inside a card re-asserts its own 12/4 and cannot inherit the card's 6px). This is a deliberate
+divergence from "one spacing vocabulary across the whole container family" (Consequences above), scoped and
+documented in `card.css` / `card.md`; the shared vocabulary remains the default that a control opts *out* of.
+Independent component-review: GO (cascade robustness confirmed by two mechanisms). Gates green
+(check · jsdom 2408 · browser 588).

@@ -50,14 +50,18 @@
   --ui-container-bg: var(--md-sys-color-neutral-surface);
 
   /* Layout spacing — the container BOX-MODEL (container-box.css): the card holds NO padding + NO grid gap; each
-     region (header/content/footer) is full-bleed and carries its OWN region padding (inline 12 · block 4) so
-     adjacent regions read as an 8px rhythm (4px block-pad each side). The `--ui-box-*` tokens fall back to
-     0.75rem/0.25rem when the card is not under a [data-box] ancestor. */
+     region (header/content/footer) is full-bleed and carries its OWN region padding. CARD-ONLY OVERRIDE (Kim,
+     2026-07-04): a card repoints the shared --ui-box-pad-inline/-block off the ADR-0046 default (12px/4px) to a
+     UNIFORM 6px inline+block, right here at specificity 0 — modal/select/menu/combo-box are untouched and keep
+     reading container-box.css's own 12/4 default straight off `[data-box]`. The repoint lives on `:where(ui-card)`
+     itself (not an ancestor), so it holds regardless of what any [data-box] ancestor of the card declares. */
+  --ui-box-pad-inline: 0.375rem; /* 6px — card-only override of the shared 12px region default */
+  --ui-box-pad-block: 0.375rem; /* 6px — card-only override of the shared 4px region default */
   --ui-card-padding: 0;
   --ui-card-gap: 0;
-  --ui-card-region-pad-inline: var(--ui-box-pad-inline, 0.75rem); /* 12px region inline padding */
-  --ui-card-region-pad-block: var(--ui-box-pad-block, 0.25rem); /* 4px region block padding */
-  --ui-card-content-gap: var(--ui-box-gap, 0.5rem); /* 8px region rhythm between content children */
+  --ui-card-region-pad-inline: var(--ui-box-pad-inline, 0.375rem); /* 6px region inline padding */
+  --ui-card-region-pad-block: var(--ui-box-pad-block, 0.375rem); /* 6px region block padding */
+  --ui-card-content-gap: var(--ui-box-gap, 0.5rem); /* 8px region rhythm between content children (unchanged) */
 
   /* Frame: the neutral hairline border + the corner radius. The radius reads the inherited
      --ui-card-child-radius a PARENT card published (one-level nesting, ADR-0018), else the shared
@@ -112,7 +116,7 @@
   }
 
   /* Region-less humane default (ADR-0056): NO region child present → apply the region-equivalent padding +
-     content rhythm to the card's own box (the same values a region would carry: inline 12 · block 4 · gap 8).
+     content rhythm to the card's own box (the same values a region would carry: inline 6 · block 6 · gap 8).
      Higher selector specificity than the base `:scope` rule above wins outright (an extra :not(:has()) clause,
      the same pattern the row legs already use), so this leg overrides the box-model's zero padding/gap ONLY
      when it applies. The moment any region child exists, `:has()` re-evaluates false and this leg drops —
@@ -139,8 +143,8 @@
   grid-template-columns: 1fr; /* [label] — slotless */
   align-items: center;
   column-gap: var(--ui-card-region-gap);
-  /* Box-model region padding — the header/footer are full-bleed; their inline 12 / block 4 padding insets the
-     ink from the card edge (container-box.css region system). */
+  /* Box-model region padding — the header/footer are full-bleed; their inline 6 / block 6 padding insets the
+     ink from the card edge (a card-only override of the container-box.css 12/4 region system). */
   padding-inline: var(--ui-card-region-pad-inline);
   padding-block: var(--ui-card-region-pad-block);
 }
@@ -176,10 +180,15 @@
 :where(ui-card-content) {
   --ui-card-fade: var(--ui-space-lg); /* the [scroll-fade] mask edge depth (off the --ui-space ladder) */
 
-  /* Box-model content region — full-bleed, with the region inline 12 / block 4 padding. Stays `display: block`
-     (NOT flex): overflow:auto scrolls a block, and a block child keeps its height (a flex-column would shrink
-     it and break [scrollable]). The 8px region rhythm between children comes from an adjacent-sibling margin
-     (gap-without-flex — scroll-safe), applied in the @scope block below. */
+  /* Box-model content region — full-bleed, with the region inline 6 / block 6 padding (card-only override of
+     container-box.css's 12/4). Stays `display: block` (NOT flex): overflow:auto scrolls a block, and a block
+     child keeps its height (a flex-column would shrink it and break [scrollable]). The 8px region rhythm
+     between children comes from an adjacent-sibling margin (gap-without-flex — scroll-safe), applied in the
+     @scope block below. NOTE: unlike the shared container-box.css `[data-region='content']`/`main` model, a
+     ui-card-content has NO nested-content padding-STEPPING law — it is not marked `[data-region]`, so the
+     shared L1/L2/L3 descendant-level rules never match it; this region padding stays FLAT (6px) at every
+     nesting depth (a card-in-card-content-in-card sees 6px inside 6px, not a decrement). Only the RADIUS
+     chain steps one level (ADR-0018, above); padding never has, before or after this change. */
   display: block;
   padding-inline: var(--ui-card-region-pad-inline);
   padding-block: var(--ui-card-region-pad-block);
