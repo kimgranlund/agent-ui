@@ -38,10 +38,10 @@ Two legs, both ratified together:
    nested-radius chain (ADR-0018/0046, re-based off content padding) must be re-verified under the
    fallback for the `card > card` direct-nesting case the sheet already documents.
 2. **The pedagogy is the contract; the fallback is the net.** Real regions remain the taught, capability-
-   bearing idiom (sticky header/footer and `scrollable` content REQUIRE them — the fallback cannot give
+   bearing idiom (overlaid position:absolute header/footer peers and `scrollable` content REQUIRE them — the fallback cannot give
    those): the ADR-0055 seeds model `Card > CardContent` from birth (a bare-children Card in a seed fails
    review); the catalog SPEC §5.2 `Card` row gains the composition note ("children SHOULD be region
-   sub-types; a region-less card renders with the fallback padding; sticky/scroll require regions"); the
+   sub-types; a region-less card renders with the fallback padding; overlaid header/footer peers + scroll require regions"); the
    patterns page gains a short "composing containers" teaching block (Card regions · Field wraps ONE
    control · Select > Option children).
 
@@ -87,7 +87,7 @@ Two legs, both ratified together:
   `childrenTarget` factory seam that must also reroute list-template anchors (list.ts) — a renderer
   contract widening through the riskiest shipped path, to synthesize DOM the CSS fallback gets for free.
   Held in reserve ONLY if evidence shows CSS-insufficient cases (e.g. a wild-payload eval demanding
-  sticky headers by default).
+  overlaid header/footer peers by default).
 - **(b) Teach the idiom, change nothing** — rejected as the ONLY leg: the corpus can condition OUR
   pipeline's agents, but bare-Card payloads are the expected WILD input (Basic's Card has no regions); a
   first-party catalog that renders the expected wild input worst is a product defect, not a pedagogy gap.

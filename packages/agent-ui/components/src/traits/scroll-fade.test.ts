@@ -97,74 +97,29 @@ describe('scrollFade — the edge-aware decision (jsdom, stubbed geometry)', () 
     el.remove()
   })
 
-  it('a `paintTarget` distinct from `viewport` (ui-card: measure the card, paint ui-card-content) receives the flags + bracket offsets, not the viewport', () => {
-    // The ui-card use case: the CARD is the actual overflow:auto element (scrollTop/Height/clientHeight all
-    // live there, and its direct children are the sticky brackets the bracket query targets), but the mask must
-    // paint on a SIBLING region (ui-card-content), which the CARD's own scroll state does not otherwise touch.
-    class SplitHost extends UIElement {
-      viewport = document.createElement('div') // stands in for the card (measured, never painted)
-      paint = document.createElement('div') // stands in for ui-card-content (painted, never measured)
-      protected connected(): void {
-        this.viewport.append(this.paint) // paint is a descendant of viewport, same as content inside the card
-        scrollFade(this, { viewport: this.viewport, paintTarget: this.paint })
-      }
-    }
-    customElements.define('ui-scroll-fade-split-probe', SplitHost)
-
-    const el = new SplitHost()
-    stubScroll(el.viewport, { scrollHeight: 500, clientHeight: 100, scrollTop: 200 }) // mid-scroll: both edges
-    document.body.append(el)
-
-    expect(el.viewport.hasAttribute('data-fade-top'), 'a flag leaked onto the measured viewport').toBe(false)
-    expect(el.viewport.hasAttribute('data-fade-bottom'), 'a flag leaked onto the measured viewport').toBe(false)
-    expect(el.paint.hasAttribute('data-fade-top'), 'the paint target did not get the top flag').toBe(true)
-    expect(el.paint.hasAttribute('data-fade-bottom'), 'the paint target did not get the bottom flag').toBe(true)
-    // the bracket offsets (--ui-box-head/-foot) land on the paint target too, not the measured viewport.
-    expect(el.viewport.style.getPropertyValue('--ui-box-head')).toBe('')
-    expect(el.paint.style.getPropertyValue('--ui-box-head')).toBe('0px') // no bracket in this probe
-
-    // re-measuring off a SCROLL event on the viewport (not the paint target) still updates the paint target —
-    // proof the listener is genuinely wired to `viewport`, not `paint`.
-    Object.defineProperty(el.viewport, 'scrollTop', { value: 0, configurable: true })
-    el.viewport.dispatchEvent(new Event('scroll'))
-    expect(el.paint.hasAttribute('data-fade-top'), 'a scroll event on the viewport did not re-run the decision').toBe(false)
-    expect(el.paint.hasAttribute('data-fade-bottom'), 'at scrollTop 0 there IS still more content below').toBe(true)
-    el.remove()
-  })
-
-  it('a `brackets` root distinct from BOTH `viewport` and `paintTarget` (ui-card wrapper model, 2026-07-06) queries the bracket band off a THIRD element', () => {
-    // The ui-card wrapper model: `viewport` is the author's [scroll-wrapper] (measured — its scrollTop/Height/
-    // clientHeight are real), `paintTarget` is ui-card-content (painted), and `brackets` is the CARD — the
-    // header/footer's actual direct parent, two levels above the wrapper and a sibling's child relative to
-    // content. All three are DIFFERENT elements; none of the flags/offsets should leak onto the wrong one.
-    class WrapperHost extends UIElement {
-      card = document.createElement('div') // stands in for ui-card (the header lives here, brackets root)
-      content = document.createElement('div') // stands in for ui-card-content (paintTarget)
-      wrapper = document.createElement('div') // stands in for [scroll-wrapper] (viewport)
+  it('a `brackets` root distinct from `viewport` (ui-card, REVISED 2026-07-07: ui-card-content is both measured and painted directly — no more paintTarget split — but the header/footer are the CARD, one level up) queries the bracket band off the SEPARATE element', () => {
+    // The current ui-card shape: `viewport` stays the host (ui-card-content measures + is painted directly,
+    // one box) but the header/footer live on a distinct ancestor (the card) — `brackets` points there alone.
+    class BracketHost extends UIElement {
+      card = document.createElement('div') // stands in for ui-card (the header lives here — the brackets root)
       header = document.createElement('header')
       protected connected(): void {
         Object.defineProperty(this.header, 'offsetHeight', { value: 40, configurable: true })
-        this.card.append(this.header, this.content)
-        this.content.append(this.wrapper)
-        scrollFade(this, { viewport: this.wrapper, paintTarget: this.content, brackets: this.card })
+        this.card.append(this.header)
+        scrollFade(this, { brackets: this.card })
       }
     }
-    customElements.define('ui-scroll-fade-wrapper-probe', WrapperHost)
+    customElements.define('ui-scroll-fade-bracket-probe', BracketHost)
 
-    const el = new WrapperHost()
-    stubScroll(el.wrapper, { scrollHeight: 500, clientHeight: 100, scrollTop: 200 }) // mid-scroll: both edges
+    const el = new BracketHost()
+    stubScroll(el, { scrollHeight: 500, clientHeight: 100, scrollTop: 200 }) // mid-scroll: both edges
     document.body.append(el)
 
-    // the flags land on content (paintTarget) alone — neither the wrapper (viewport) nor the card (brackets).
-    expect(el.wrapper.hasAttribute('data-fade-top'), 'a flag leaked onto the measured wrapper').toBe(false)
-    expect(el.card.hasAttribute('data-fade-top'), 'a flag leaked onto the brackets root (the card)').toBe(false)
-    expect(el.content.hasAttribute('data-fade-top'), 'the paint target did not get the top flag').toBe(true)
-    expect(el.content.hasAttribute('data-fade-bottom'), 'the paint target did not get the bottom flag').toBe(true)
-    // the header — a direct child of the CARD, neither the wrapper nor content — was still found + published,
-    // and landed on content alone.
-    expect(el.content.style.getPropertyValue('--ui-box-head')).toBe('40px')
-    expect(el.wrapper.style.getPropertyValue('--ui-box-head')).toBe('')
-    expect(el.card.style.getPropertyValue('--ui-box-head')).toBe('')
+    // the flags + offsets land on `viewport` (the host) — never on `brackets` (the card stand-in).
+    expect(el.hasAttribute('data-fade-top'), 'the viewport did not get the top flag').toBe(true)
+    expect(el.hasAttribute('data-fade-bottom'), 'the viewport did not get the bottom flag').toBe(true)
+    expect(el.style.getPropertyValue('--ui-box-head')).toBe('40px') // the header lives on `card`, found + published
+    expect(el.card.style.getPropertyValue('--ui-box-head'), 'an offset leaked onto the brackets root itself').toBe('')
     el.remove()
   })
 

@@ -25,7 +25,7 @@ attributes:            # attributes-as-API — mirrors card.ts `static props` (t
   - name: scrollable
     type: boolean
     default: false
-    reflect: true      # the scroll-mode hook — <ui-card scrollable> switches the shell to a flex column (header/content/footer); an author-written [scroll-wrapper] child of ui-card-content becomes the real viewport, else the CARD itself is the fallback viewport (a <ui-card-content scrollable> region — the A2UI CardContent.scrollable signal — triggers the same, REVISED 2026-07-06 the wrapper model)
+    reflect: true      # the scroll-mode hook — <ui-card scrollable> switches the CARD to a (sizing-only) flex column and ui-card-content itself becomes the overflow:auto viewport, with header/footer as OVERLAID position:absolute peers (a <ui-card-content scrollable> region — the A2UI CardContent.scrollable signal — triggers the same, REVISED 2026-07-07)
 
 properties:            # IDL beyond attributes-as-API: the two surface accessors (signal-backed) + the scroll signal
   - name: elevation
@@ -33,7 +33,7 @@ properties:            # IDL beyond attributes-as-API: the two surface accessors
   - name: brightness
     description: The surface brightness axis ('-3'…'3'; signed literal union, 0 = neutral). Composites a tonal wash over the elevation plane when both are set (ADR-0015 cl.3).
   - name: scrollable
-    description: The scroll-mode signal (boolean). `<ui-card scrollable>` switches the shell to a flex column (header/content/footer) — the WRAPPER MODEL (REVISED 2026-07-06). An author-written `[scroll-wrapper]` child of ui-card-content becomes the real `overflow-y:auto` viewport; absent one, the CARD itself is the fallback viewport (the prior, 2026-07-05, behaviour). Either way an AUTOMATIC edge-fade mask paints on ui-card-content (never the card or its sticky header/footer). Also triggerable by marking the content region `[scrollable]` (the A2UI CardContent.scrollable mapping) — that content signal is the fully-reactive form; the ergonomic `<ui-card scrollable>` arms the fade mask at connect, so toggle scroll at runtime via the content region. Needs a constrained card block-size to bite.
+    description: The scroll-mode signal (boolean). `<ui-card scrollable>` (REVISED 2026-07-07) makes `ui-card-content` itself the bounded `overflow-y:auto` viewport — the CARD only supplies the flex-column sizing mechanism ("100% of parent height" against a `max-block-size`-only card) and stays bounded. The header/footer become OVERLAID peers (`position:absolute`, no background) rather than sticky/flex siblings. An AUTOMATIC edge-fade mask paints directly on ui-card-content (never the card or the overlaid header/footer), with block-padding + the gradient offset both driven by the SAME measured header/footer band. Also triggerable by marking the content region `[scrollable]` (the A2UI CardContent.scrollable mapping) — that content signal is the fully-reactive form; the ergonomic `<ui-card scrollable>` arms the fade mask at connect, so toggle scroll at runtime via the content region. Needs a constrained card block-size to bite.
 
 events: []             # a card is a static surface container — it raises no events
 
@@ -67,11 +67,11 @@ geometry:
   sizeClass: container   # Container/layout — spacing off --ui-space × density; a card has NO control height (never reads --ui-height-*)
   padding: var(--ui-card-padding)        # ALWAYS 0 (ADR-0046 box-model) — the card itself holds no padding; each region carries its own fixed regionPadding + regionMargin instead
   regionPadding: var(--ui-card-region-pad-inline) / var(--ui-card-region-pad-block)   # 12px inline + 6px block, rem-based (density-INVARIANT) — REVISED 2026-07-04: card now reads container-box.css's shared ADR-0046 defaults straight (the card-only 6px override is rescinded); identical to modal/select/menu/combo-box
-  regionMargin: var(--ui-card-region-margin)   # 6px uniform inset margin around each region (REVISED 2026-07-04: regions are no longer full-bleed). The DEFAULT (non-scroll) shell is BLOCK FLOW (flow-root, not grid/flex, per Kim's "containers should not use grid or flex"), so adjacent region margins COLLAPSE to a clean 6px gutter and the 1px frame border blocks collapse-through at the edges — one uniform margin, no grid gap or first/last split. SCROLL MODE (REVISED 2026-07-06, the wrapper model) is a flex column instead — flex items never margin-collapse, so there the SAME 6px rhythm comes from `gap` + the flex container's own `padding`, not this margin (zeroed in that mode)
+  regionMargin: var(--ui-card-region-margin)   # 6px uniform inset margin around each region (REVISED 2026-07-04: regions are no longer full-bleed). The DEFAULT (non-scroll) shell is BLOCK FLOW (flow-root, not grid/flex, per Kim's "containers should not use grid or flex"), so adjacent region margins COLLAPSE to a clean 6px gutter and the 1px frame border blocks collapse-through at the edges — one uniform margin, no grid gap or first/last split. SCROLL MODE (REVISED 2026-07-07) keeps the shell as a (sizing-only) flex column, but only `ui-card-content` is a flex item now — header/footer are `position:absolute` overlays that KEEP this same margin (unzeroed) as their own inset-from-edge; `ui-card-content` alone gets its margin zeroed so it can fill "100% of parent height"
   radius: var(--ui-card-radius, var(--ui-radius-base))   # root radius = the shared --ui-radius-base; a nested card decrements one level (ADR-0018)
   nestedRadius: r_child = max(0, r_parent − pad_parent)  # the concentric-corner law, published as --ui-card-child-radius (ONE level; deeper nesting is manual). REVISED 2026-07-04: pad_parent is now 12px (was the card-only 6px override) — with the default --ui-radius-base of 12px, an unreseeded root card's inner radius now floors at EXACTLY 0 (a knife-edge, not the old 6px-positive headroom); reseed --ui-card-radius larger than 12px for a visibly rounded nested corner
 
-forcedColors: A `@media (forced-colors: active)` block keeps the card border visible (CanvasText); the shared container-box.css `[data-fade-top]`/`[data-fade-bottom]` rule drops the scroll-fade mask generically (a mask over system text harms legibility) — the surface itself survives via container.css's role-layer Canvas mapping.
+forcedColors: A `@media (forced-colors: active)` block keeps the card border visible (CanvasText); the shared container-box.css `[data-fade-top]`/`[data-fade-bottom]` rule drops the scroll-fade mask generically (a mask over system text harms legibility) — the surface itself survives via container.css's role-layer Canvas mapping. In scroll mode the overlaid (backgroundless) header/footer additionally get an own `background: Canvas` fallback (card.css) — without the mask AND without a bracket fill, scrolled content would otherwise bleed straight through the bracket text under WHCM.
 ---
 
 # ui-card
@@ -113,96 +113,85 @@ the adornment cells size **intrinsically** — the grid *structure* is reused, n
 `ui-card-content` is the body — plain flow content, no anatomy. It also carries the **edge-fade mask** (below),
 in **both** scroll shapes.
 
-### Scroll mode — the WRAPPER MODEL (REVISED 2026-07-06, Kim ratified via `/intent-extract`)
+### Scroll mode — ui-card-content IS the viewport (REVISED 2026-07-07)
 
 **`<ui-card scrollable>`** (or a `[scrollable]` content region — the A2UI-mapped `CardContent.scrollable`
-signal — either triggers it) puts the card into scroll mode: the shell switches to a **flex column** — header
-(auto) / content (`1fr`, fills the space between them) / footer (auto). It **requires a constrained card
-block-size** to bite — give the card a `max-block-size` / `height`, or a bounded flex/grid parent. (Named
-`scrollable`, not `scroll`, to avoid shadowing the native `Element.scroll()` method.) What actually scrolls
-depends on whether the agent wrote a `[scroll-wrapper]` child:
+signal — either triggers it) puts `ui-card-content` **itself** into `overflow-y: auto`, filling **100% of the
+card's height**; the header/footer become **OVERLAID PEERS** (`position: absolute`) rather than in-flow
+siblings. It **requires a constrained card block-size** to bite — give the card a `max-block-size` / `height`,
+or a bounded flex/grid parent. (Named `scrollable`, not `scroll`, to avoid shadowing the native
+`Element.scroll()` method.)
 
 ```html
 <ui-card scrollable style="max-block-size: 20rem">
   <ui-card-header>Title</ui-card-header>
-  <ui-card-content>
-    <span scroll-wrapper>…long body…</span>
-  </ui-card-content>
+  <ui-card-content>…long body…</ui-card-content>
   <ui-card-footer>Footer stays put</ui-card-footer>
 </ui-card>
 ```
 
-- **`[scroll-wrapper]` present (the recommended shape)** — a bare styling-hook **attribute**, element-agnostic
-  (`span`/`div`), **author-written** and **never auto-injected** (an A2UI `CardContent.scrollable` payload stays
-  a straight positional payload≡DOM mapping — the wrapper is an opt-in an agent adds, not something the renderer
-  synthesizes). This wrapper — nested **two levels below** the header/footer — becomes the **real**
-  `overflow-y:auto` scroll viewport. `ui-card-content` itself becomes a **fixed flex frame** around it (never
-  scrolling) that carries the edge-fade mask.
-- **`[scroll-wrapper]` absent — the FALLBACK shape** — degrades gracefully (not an error) to the **prior**
-  (2026-07-05) behaviour: the **card itself** is the scroll viewport (`overflow-y:auto`), with `ui-card-content`
-  flowing inside it exactly as before. Reach for this only when the wrapper isn't worth the extra markup; it
-  carries the fade-only-at-the-scroll-extremes limitation documented below.
+This **supersedes** the short-lived `[scroll-wrapper]` WRAPPER MODEL (2026-07-06) — no author-written child is
+needed any more; `ui-card-content` directly manages its own overflow. The card still needs `display: flex;
+flex-direction: column` — not for the header/footer any more (they left flow entirely), but as the **sizing
+mechanism** that lets `ui-card-content` genuinely fill "100% of parent height": plain block layout's
+`height: 100%` on an auto-height parent bounded only by `max-block-size` computes to `auto`, not 100% (a
+`max-height` alone is never a "specified" height for a child's percentage resolution) — flexbox explicitly
+carves out this case for a flex item's used size, and `ui-card-content` is now the shell's **sole** flex item.
 
-Detection **self-heals**: declarative HTML and A2UI always have the wrapper present (if at all) by connect time,
-but an imperative caller may `append()` it *after* the card has already connected — a childList
-`MutationObserver` on `ui-card-content` (`card-content.ts`, mirrors `ui-text`'s own `#heal`) re-detects the
-wrapper on every mutation and re-wires the fade only on a genuine presence flip, so the late-append path arms
-correctly too.
+The **edge-fade mask is AUTOMATIC** in scroll mode — no opt-in prop. `traits/scroll-fade.ts` (wired from
+`card-content.ts`) measures **and** paints `ui-card-content` directly (no separate viewport/paint-target split
+any more): `data-fade-top`/`data-fade-bottom` toggle from its own live scroll position, and the shared
+`container-box.css` mask rules read the flags there. It is **edge-aware** (only the edge that genuinely hides
+content fades) and **self-gates on real overflow**. The header/footer **never carry the mask at all and stay
+fully crisp at every scroll position** (verified cross-engine) — they are simply outside the masked element.
 
-The **edge-fade mask is AUTOMATIC** in scroll mode, in **either** shape — no opt-in prop. `traits/scroll-fade.ts`
-(wired from `card-content.ts`) always **paints** `data-fade-top`/`data-fade-bottom` on `ui-card-content`, but
-**measures** whichever element actually scrolls (the wrapper, or the card as the fallback) — the shared
-`container-box.css` mask rules read the flags on content. It is **edge-aware** (only the edge that genuinely
-hides content fades) and **self-gates on real overflow**. The trait's presence-aware offsets
-(`--ui-box-head`/`--ui-box-foot`) always measure the **card's** sticky header/footer bands (regardless of which
-shape is in play, since header/footer are always the card's own direct children) and are published on
-`ui-card-content`, so the fade formula ramps past a present bracket. The sticky header/footer **never carry the
-mask at all and stay fully crisp at every scroll position, in either shape** (verified cross-engine).
+**One measured source drives BOTH the block-padding and the gradient offset** (Kim's ask: "adjust block-padding
+and linear gradient coordinates based on presence of the peer footer and header"): `traits/scroll-fade.ts`
+publishes each edge's header/footer band as `--ui-box-head`/`--ui-box-foot` (0px when that edge is absent).
+`ui-card-content` re-declares these under its own `--ui-card-box-head`/`-foot` namespace and reads them for its
+own `padding-block-start`/`-end` — `max(band, plain-6px-pad)`, so a present bracket's band wins (the first/last
+visible line clears it exactly) and an absent one collapses to the plain region padding. The **same** bands
+(via the un-namespaced `--ui-box-head`/`-foot`) already drove the gradient's opaque-end offset
+(`container-box.css`, unchanged formula) — proven together, all four header/footer presence combinations,
+`card.browser.test.ts`.
 
-> **Why the wrapper fixes the flagged consequence (measured cross-engine, Chromium + WebKit, both 2026-07-05 and
-> 2026-07-06):** `mask-image` paints relative to the masked element's *own* border-box (0%–100% of its height).
-> Under the **FALLBACK** shape, `ui-card-content` is both the masked element *and* the thing being scrolled — its
-> "full height" is the entire un-clipped scroll extent, so for content genuinely taller than roughly
-> 2×(bracket band + fade depth), the visible fade only appears within the first/last ~60–90px of the *total*
-> scroll range; through the middle of a long scroll, text is cut hard at the header/footer boundary with no
-> visible fade. Under the **WRAPPER** shape, `ui-card-content` is masked but **never scrolls** — its "full
-> height" *is* the small, fixed, currently-visible frame (the space between header/footer), so the identical
-> 0%–100% gradient is genuinely viewport-registered and stays visible through the **whole** scroll, at any
-> content length (screenshotted + measured cross-engine — `card.browser.test.ts`'s `[MUST-PROVE]` leg). The
-> header/footer crispness holds regardless of which shape is used — only the fade's *visibility through the
-> middle of a long scroll* differs.
+> **Why this keeps the running mid-scroll fade the retired wrapper needed a separate element for (measured
+> cross-engine):** `mask-image` paints relative to the masked element's *own* border-box (0%–100% of its
+> height). Under the *prior* (2026-07-05) card-as-viewport shape, `ui-card-content` was masked while the CARD
+> scrolled — content's own box was a plain block, growing to its full un-clipped height, so the fade was only
+> ever visible within the first/last ~60–90px of the *total* scroll range. Here, `ui-card-content`'s own box is
+> bounded (`flex: 1 1 auto` against the card's `max-block-size`) **and** it is the element that scrolls
+> (`overflow-y: auto`) — so its "full height" *is* the small, fixed, visible frame, and the identical gradient
+> stays visible through the **whole** scroll, at any content length, with no separate wrapper element at all.
 
-The sticky brackets carry **no background** (Kim, 2026-07-05): in the wrapper shape content scrolls inside the
-wrapper and never passes under a bracket, so none is needed; in the no-wrapper fallback shape (where the card
-itself scrolls under them) content will show through — the degraded path accepts the see-through, the wrapper
-shape is the occlusion-clean one. The fade is deliberately JS-driven (not `animation-timeline: scroll()`) — a
-handful of scroll-position comparisons, robust on every engine including WebKit.
+> **The HOLD — the gradient fully occludes THROUGH the bracket band, by design:** the first cut at this (a bare
+> `transparent 0 → opaque at band+fade` ramp) let content ramp continuously *across* the bracket's own band —
+> by the band's own far edge it could already be >50% visible, so a crisp, backgroundless bracket sitting over
+> it still showed a partially-opaque scrolled line layered underneath (measured cross-engine). The root cause
+> was gradient GEOMETRY, not a limit of gradient-only occlusion: the ramp's *start* point was the problem, not
+> its depth (bumping `--ui-box-fade` only stretches the ramp — the opaque point moves further out, but content
+> *within* the band stays just as visible, which is exactly why it barely helped when tried). The fix:
+> `container-box.css`'s shared mask now takes `--ui-box-head-hold`/`--ui-box-foot-hold` (both default `0px`) — an
+> extra same-colour stop immediately after each edge's anchor, holding the ramp flat through the hold depth
+> before it starts ramping. `ui-card-content` sets these to its own measured bracket band (the same
+> `--ui-box-head`/`-foot`), so content is genuinely **fully invisible** behind bracket text throughout the whole
+> band, and the soft running fade lives entirely in the `--ui-box-fade`-deep strip just past it. Every other
+> `--ui-box-fade` consumer (modal/select/menu/combo-box — opaque `background: inherit` brackets) never sets the
+> hold, so two coincident stops at the same position/colour are a geometric no-op there — render-identical (not
+> string-identical: the fallback still serializes two extra coincident stops, only the paint is unchanged),
+> proven by `container-box.test.ts` staying green untouched. Gradient-only, no bracket background — honors Kim's
+> directive; measured cross-engine, both scroll-top and mid-scroll (`card.browser.test.ts`).
 
-> Cosmetic (not chased): in the wrapper shape, the mask sits on `ui-card-content`, one box out from the
-> `[scroll-wrapper]` that actually scrolls — it clips the wrapper's own scrollbar ends too, not just its content.
-> Negligible at the fade depth (a handful of px); flag it if it ever becomes visually material.
+**Sticky-footer-fill, for free:** `ui-card-content` is always `flex: 1 1 auto` in scroll mode (unchanged
+mechanism from the retired flex-column revisions) — a short body no longer strands the footer mid-viewport,
+and (since header/footer no longer occupy flow height at all, being overlaid) a genuinely short scrollable
+card never force-overflows (measured; `card.browser.test.ts`'s `[fixed]` leg).
 
-**Sticky-footer-fill, for free:** `ui-card-content` is always `flex: 1 1 auto` in scroll mode (replacing the
-short-lived `min-block-size: 100%` percentage recipe, which had a flagged side effect — it *always* overflowed
-a short card by the header+footer's own height, since the fill target was the card's *full* height with
-header/footer occupying *additional* flow height on top of that). `flex-grow` gives a **short** content region
-the SAME fill (a short body no longer strands the footer mid-viewport) *without* that side effect — flex-grow
-only adds *leftover* positive space, never forcing height beyond content's own natural size — so a genuinely
-short scrollable card no longer force-overflows at all (measured; `card.browser.test.ts`'s `[fixed]` leg).
-Genuinely **tall** content in the fallback shape hits flex-shrink's default floor at its own natural height, so
-the card's own bound + `overflow-y:auto` still catches the overflow, unchanged from the prior revision.
-
-Flex items never margin-collapse (unlike the default block-flow BFC) — scroll mode therefore zeroes each
-region's own margin and reproduces the identical 6px rhythm with `gap` (between items) + the flex container's
-own `padding` (frame↔first/last-item). The sticky header/footer's `inset-block-*` is `0`, not
-`--ui-card-region-margin` — the frame↔bracket 6px gutter now comes from that same container `padding`, and an
-*additional* 6px inset would double-stack to a rendered 12px once the bracket is actually stuck (a load-bearing
-fix, measured cross-engine).
-
-> The bottom gutter is robust across engines (the fallback shape, where the card itself scrolls): with a
-> footer, the sticky footer holds a 6px gutter through scroll; without one, the last region's OWN
-> `padding-block-end` (inside its border-box → always in the scroll extent) keeps content off the card edge —
-> not a scroll-container last-child *margin*, which WebKit historically dropped from the extent.
+Header/footer **keep** their generic 6px region margin (unlike `ui-card-content`, whose margin is zeroed so it
+can fill "100%"): for an absolutely positioned box, margin still offsets it inward from its resolved inset
+edges, so `inset-inline: 0` + the existing margin nets the same floating 6px-inset look the family's regions
+always carry, just out-of-flow now. Their rect never moves as `ui-card-content` scrolls internally (verified
+cross-engine) — they are genuinely outside the scrolled element, not sticky-within-it.
 
 ## Region padding + margin — the shared model, uniform across the family (ADR-0046, revised 2026-07-04)
 
@@ -260,9 +249,9 @@ block-flow box, in the same reflow, with no double padding.
 author owns the structure; the loose sibling renders at the plain box-model default. This is documented
 behaviour, not a bug to repair.
 
-**The fallback is mercy, not parity.** Scroll mode (sticky header/footer bracketing the scrolling card, with
-its automatic edge fade) is a capability of the real region sub-elements — the fallback
-cannot give a bare card sticky brackets. Reach for `ui-card-header` / `ui-card-content` /
+**The fallback is mercy, not parity.** Scroll mode (the overlaid header/footer bracketing the scrolling
+content, with its automatic edge fade) is a capability of the real region sub-elements — the fallback
+cannot give a bare card those brackets. Reach for `ui-card-header` / `ui-card-content` /
 `ui-card-footer` whenever the card needs those; the fallback exists only to keep the default humane, not to
 replace the taught idiom.
 

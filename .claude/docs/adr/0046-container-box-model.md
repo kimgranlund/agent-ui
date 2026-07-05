@@ -9,7 +9,7 @@
 > | **Proposed by** | orchestration-lead — on Kim's directive that "all containers should have an inset/gap system expressed as children's margins", plus a header/content/footer pattern (sticky headers, dividers) and a fixed region padding (inline 12 · block 4 · gap 8, nested content stepping in one inset per level). Design forks confirmed with Kim (rollout scope; flow-root + margin-collapse). |
 > | **Ratified by** | orchestration-lead — on the green `check` + `test` (jsdom) + `test:browser` (both engines) + `size`, and screenshot review of the card + modal + select panels. |
 > | **Repairs** | **NEW** `controls/_surface/container-box.css` (+ its structure probe) · `component-styles.css` (`@import`, after `container.css`) · the overlay panels `controls/{select,menu,combo-box}/*.{ts,css}` (`[data-box]` + inset margins; select group-headers sticky) · `controls/card/card.{css}` + its geometry/browser tests (rolled onto the model; nested-radius re-based) · `controls/modal/modal.{ts,css}` + tests. |
-> | **Supersedes / Superseded by** | Partially superseded by the **2026-07-04 Amendment 2** below (region margin: full-bleed → inset, across the whole family; the card-only 6px override — Amendment 1 — is rescinded), and the **2026-07-05 Amendment 3** below (the scroll affordance — a presence-aware edge-fade mask + the card's whole-container scroll model). **Extended by ADR-0056** (the region-less card humane default — a CSS fallback leg on the "card holds no padding" law: a Card with NO region children gets region-equivalent padding; the law stands for region-bearing composition). **Relates** ADR-0015 (container surface — the PAINT layer this SPACING layer sits beside), ADR-0016 (layout), ADR-0018 (concentric nested-radius — re-based here off the content inline padding), ADR-0041 (widget geometry). |
+> | **Supersedes / Superseded by** | Partially superseded by the **2026-07-04 Amendment 2** below (region margin: full-bleed → inset, across the whole family; the card-only 6px override — Amendment 1 — is rescinded), and the **2026-07-05 Amendment 3** below (the scroll affordance — a presence-aware edge-fade mask + the card's whole-container scroll model). **2026-07-07 Amendment 5 (proposed, pending Kim's ratification)** further supersedes **Amendment 4** (drops the `[scroll-wrapper]` WRAPPER MODEL — `ui-card-content` itself is now the scroll viewport). **Extended by ADR-0056** (the region-less card humane default — a CSS fallback leg on the "card holds no padding" law: a Card with NO region children gets region-equivalent padding; the law stands for region-bearing composition). **Relates** ADR-0015 (container surface — the PAINT layer this SPACING layer sits beside), ADR-0016 (layout), ADR-0018 (concentric nested-radius — re-based here off the content inline padding), ADR-0041 (widget geometry). |
 
 ## Context
 
@@ -232,3 +232,80 @@ running see-through fade + crisp brackets, GPU-smooth) over the full-height bar 
 Gates green: `check` (tsc + site) · jsdom 2462 · `test:browser` 726 (Chromium + WebKit) · `size` 22899 / 23552.
 Independent component-review: **GO / SHIPPABLE** (all 10 dims ≥4; the childList-heal + a footer-fill assertion were
 applied from its two LOW findings).
+
+## Amendment 5 — 2026-07-05 — the WRAPPER model is dropped: `ui-card-content` itself is the scroll viewport
+
+Kim simplified the model again, verbatim: *"`<ui-card-content>` should have the mask and manage overflow, and
+adjust block-padding and linear gradient coordinates based on presence of the peer footer and header. it
+should be set to use 100% of its parent height when `[scrollable]`."* This **drops the author-written
+`[scroll-wrapper]`** Amendment 4 introduced — `ui-card-content` becomes the ONE box that both scrolls and
+carries the mask, no separate viewport/paint-target split.
+
+- **Content-IS-viewport (the flex carve-out).** `ui-card-content` becomes the scroll shell's **sole** flex
+  item (`flex: 1 1 auto; min-block-size: 0; overflow-y: auto`) — the shell keeps `display: flex;
+  flex-direction: column` (unchanged mechanism from Amendment 4) purely as the SIZING lever: plain block
+  layout's `height: 100%` on an auto-height parent bounded only by `max-block-size` computes to `auto`, never
+  100% (a `max-height` alone is never a "specified" height for a child's percentage resolution), but flexbox
+  explicitly carves out a definite used-size for a flex item against its container's content-box even when the
+  container's own outer size is only max-height-clamped. With header/footer no longer flex items (below),
+  content is the shell's only item, so this carve-out alone is what makes `overflow-y: auto` genuinely
+  **engage** rather than stay inert (verified: `content.scrollHeight` ≫ `clientHeight`; `card.scrollHeight ===
+  card.clientHeight` — the card itself never scrolls; the header/footer rect is byte-identical top vs. mid-scroll,
+  both engines, `card.browser.test.ts`).
+- **Header/footer become OVERLAID PEERS.** `position: absolute; inset-inline: 0` + one block-edge inset each,
+  removed from flow entirely (so content can be the shell's sole item) — no background (Kim: the brackets stay
+  see-through; the gradient alone carries the occlusion). They KEEP their generic 6px region margin, which for
+  an absolutely-positioned box still offsets it inward from its resolved inset edges, netting the same floating
+  6px-inset look the family's regions always carry, just out-of-flow now.
+- **One measured source, two consumers.** `traits/scroll-fade.ts` measures the header/footer band directly off
+  the card (its `brackets` option) and publishes `--ui-box-head`/`--ui-box-foot`; `ui-card-content` re-declares
+  them under its own `--ui-card-box-head`/`-foot` namespace (role-purity) and reads them for BOTH its own
+  `padding-block-start`/`-end` (`max(band, plain-6px-pad)`, so a present bracket's band wins and an absent one
+  collapses to the plain region pad) AND — via the un-namespaced name — `container-box.css`'s gradient offset
+  (unchanged formula). The trait's 3-way split (`viewport`/`paintTarget`/`brackets`) Amendment 4 grew is
+  **retired down to two** (`viewport`, measured AND painted; `brackets`, defaulting to `viewport`) — no
+  consumer needs `viewport ≠ paintTarget` once content stopped splitting them (`traits/scroll-fade.ts`,
+  `scroll-fade.test.ts`).
+- **THE HOLD — gradient-only occlusion through the bracket band.** A first cut (a bare `transparent 0 → opaque
+  at band+fade` ramp) let content ramp continuously ACROSS the bracket's own band — by the band's own far edge
+  it could already be >50% visible, so a crisp, backgroundless bracket sitting over it still showed a
+  partially-opaque scrolled line layered underneath (measured cross-engine). The root cause was gradient
+  GEOMETRY (the ramp's *start* point, not its depth — stretching `--ui-box-fade` only moves the opaque point
+  further out; content *within* the band stays just as visible). The fix: `container-box.css`'s shared mask
+  gained `--ui-box-head-hold`/`--ui-box-foot-hold` (both default `0px`) — an extra same-colour stop immediately
+  after each edge's anchor, holding the ramp flat through the hold depth before it starts ramping. Two
+  coincident stops at the same position/colour are a geometric no-op, so every consumer that never sets these
+  (modal/select/menu/combo-box — opaque `background: inherit` brackets) gets a **render-identical** mask (not
+  string-identical: the `var(…, 0px)` fallback still serializes two extra coincident stops into the computed
+  gradient, only the PAINT is unchanged) — proven by `container-box.test.ts` staying green untouched.
+  `ui-card-content` sets both hold vars to its own measured band, so content is genuinely **fully invisible**
+  behind bracket text throughout the whole band, with the soft running fade living entirely in the
+  `--ui-box-fade`-deep strip just past it.
+- **The WHCM bracket-bleed fix.** The shared `[data-fade-top]`/`[data-fade-bottom]` forced-colors rule
+  (Amendment 3) drops the mask entirely under WHCM — normally safe (an opaque `background: inherit` bracket
+  still occludes on its own), but THIS model's brackets are deliberately backgroundless, so with no mask AND no
+  bracket fill, scrolled content bled straight through the header/footer text (a component-review finding).
+  `card.css` gained a scroll-mode-only `@media (forced-colors: active)` rule giving the overlaid brackets an
+  opaque `background: Canvas` fallback — scoped to both scroll-mode triggers (`[scrollable]` on the card or on
+  the content region), so Kim's no-background normal-mode look is untouched. (A ~6px top/bottom gutter sliver
+  above/below each bracket stays unmasked in WHCM — the same minor, pre-existing exposure every other
+  `[data-box]` consumer has; not chased.)
+- **Retired.** The author-written `[scroll-wrapper]` element, its self-healing `MutationObserver` heal in
+  `card-content.ts` (mirroring `ui-text`'s `#heal`), and `scroll-fade.ts`'s `paintTarget` option are all gone —
+  `ui-card-content` measures and paints itself directly, so none of the three-way split's machinery is needed.
+
+**Sticky-footer-fill still holds for free** — `ui-card-content` is always `flex: 1 1 auto` in scroll mode
+(unchanged mechanism), so a short body never strands the footer mid-viewport nor force-overflows a genuinely
+short scrollable card (since header/footer no longer occupy flow height at all, being overlaid).
+
+**The trade this supersedes:** Amendment 4's content-band scrollbar (between the brackets) is now moot — with
+header/footer entirely out-of-flow overlays, `ui-card-content`'s own scrollbar spans the full card height minus
+its own padding, and there is no separate wrapper element to carry a narrower one.
+
+Repairs: `traits/scroll-fade.ts` + `scroll-fade.test.ts` (the `paintTarget` retirement) · `controls/card/card.{css,ts}` +
+`card-content.ts` (the wrapper-detection/heal removal) · `card-css.test.ts` / `card.browser.test.ts` (re-baselined +
+the new `[structural]`/`[WHCM]` proofs) · `controls/_surface/container-box.css` + `container-box.test.ts` (the HOLD
+knob, proven a no-op for the other four `[data-box]` consumers) · `card.md` · `site/pages/card-demo.ts`.
+
+Gates green: `check` (tsc + site) · jsdom 2462 · `test:browser` 714 (Chromium + WebKit) · `size` 22794 / 23552.
+**Status: accepted** (Kim ratified, 2026-07-05).

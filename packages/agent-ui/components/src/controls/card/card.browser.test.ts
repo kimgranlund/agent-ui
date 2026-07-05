@@ -95,10 +95,6 @@ const scrollTo = (el: HTMLElement, top: number): Promise<void> =>
     el.scrollTop = top
   })
 
-/** Wait one microtask tick — long enough for a MutationObserver callback queued earlier to run (the ui-text
- * `text.test.ts` `tick()` precedent; card-content.ts's own childList heal observer is the same mechanism). */
-const tick = (): Promise<void> => new Promise((resolve) => queueMicrotask(resolve))
-
 describe('ui-card cross-engine smoke (s7, both engines)', () => {
   it('an un-elevated card paints a SURFACE (the own-default --ui-container-bg, not transparent)', () => {
     const card = mount('<ui-card><ui-card-content>Body</ui-card-content></ui-card>')
@@ -153,10 +149,11 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     ).toBeGreaterThan(contentOnly.getBoundingClientRect().height)
   })
 
-  it('[scrollable] makes the CARD the scroll viewport — the WHOLE container scrolls, brackets are position:sticky', () => {
-    // REVISED 2026-07-05 (Kim: "the whole container should scroll"): scroll mode makes the CARD itself the
-    // bounded scroll viewport (overflow-y:auto) with sticky header/footer, so the whole container scrolls as one
-    // — NOT the superseded inner-content flex-column model. Off the content-level [scrollable] signal (A2UI).
+  it('[scrollable] makes ui-card-content the scroll viewport — the CARD stays bounded, header/footer are OVERLAID (position:absolute)', () => {
+    // REVISED 2026-07-07 (Kim: "<ui-card-content> should have the mask and manage overflow ... it should be set
+    // to use 100% of its parent height when [scrollable]"): ui-card-content itself is now the bounded scroll
+    // viewport (overflow-y:auto), NOT the card — the card only supplies the flex-column sizing mechanism. Off
+    // the content-level [scrollable] signal (A2UI).
     const card = mount(
       '<ui-card style="max-block-size: 100px"><ui-card-header>H</ui-card-header>' +
         '<ui-card-content scrollable><div style="block-size: 400px">tall</div></ui-card-content>' +
@@ -165,16 +162,18 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     const content = card.querySelector('ui-card-content') as HTMLElement
     const header = card.querySelector('ui-card-header') as HTMLElement
     const footer = card.querySelector('ui-card-footer') as HTMLElement
-    // the CARD is the scroll viewport and genuinely overflows its bounded height
-    expect(getComputedStyle(card).overflowY, 'the card is not the scroll viewport').toBe('auto')
-    expect(card.scrollHeight, 'the card did not overflow its bounded height').toBeGreaterThan(card.clientHeight)
-    // the content region does NOT self-scroll any more — the whole container does
-    expect(getComputedStyle(content).overflowY, 'the content region is wrongly still a scroll viewport').not.toBe('auto')
+    // ui-card-content IS the scroll viewport and genuinely overflows its own (flex-filled) bounded height
+    expect(getComputedStyle(content).overflowY, 'ui-card-content is not the scroll viewport').toBe('auto')
+    expect(content.scrollHeight, 'ui-card-content did not overflow its bounded height').toBeGreaterThan(content.clientHeight)
+    // the CARD does NOT scroll any more — content does
+    expect(getComputedStyle(card).overflowY, 'the card is wrongly still a scroll viewport').not.toBe('auto')
+    expect(card.scrollHeight, 'the card itself overflowed (the flex column should keep it exactly bounded)').toBeLessThanOrEqual(card.clientHeight + 1)
     // the card stayed bounded — it did NOT grow to fit the 400px child (the max-block-size held)
     expect(card.getBoundingClientRect().height, 'the card grew past its max-block-size').toBeLessThanOrEqual(110)
-    // the brackets ARE sticky — they pin to the card's scroll edges
-    expect(getComputedStyle(header).position, 'the header is not sticky').toBe('sticky')
-    expect(getComputedStyle(footer).position, 'the footer is not sticky').toBe('sticky')
+    // the brackets are OVERLAID PEERS (position:absolute), not sticky and not flex items
+    expect(getComputedStyle(header).position, 'the header is not absolute').toBe('absolute')
+    expect(getComputedStyle(footer).position, 'the footer is not absolute').toBe('absolute')
+    expect(getComputedStyle(card).position, 'the card is not position:relative (the overlay anchor)').toBe('relative')
   })
 
   it('[box-model] region padding is FIXED (inline 12 · block 6) + density-INVARIANT; the frame HOLDS too', () => {
@@ -388,19 +387,17 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
-//  Edge-aware scroll fade — the FALLBACK shape (no [scroll-wrapper] child; Kim, 2026-07-05 — "the mask should
-//  not be placed on the container element — it should be on ui-card-content"). scroll-fade.test.ts proves the
-//  trait's DECISION logic (jsdom, stubbed geometry, incl. the `paintTarget`/`brackets` split); this proves the
-//  whole live wire: card-content.ts's connected() → the CARD stays the SCROLL VIEWPORT (scrollTop/Height/
-//  clientHeight, header/footer sticky) → but the flags + the shared container-box.css mask PAINT on
-//  ui-card-content, never the card or its sticky siblings. This whole describe block is the FALLBACK path —
-//  every markup below omits a `[scroll-wrapper]` child, so it exercises the degrade-gracefully shape (REVISED
-//  2026-07-06) byte-identical to the prior (2026-07-05) behaviour, including its measured fade-only-at-the-
-//  scroll-extremes limitation for long content. The WRAPPER MODEL proper (which FIXES that limitation) is the
-//  separate describe block further below.
+//  Edge-aware scroll fade — ui-card-content IS the viewport (REVISED 2026-07-07, Kim, verbatim:
+//  "<ui-card-content> should have the mask and manage overflow, and adjust block-padding and linear gradient
+//  coordinates based on presence of the peer footer and header. it should be set to use 100% of its parent
+//  height when [scrollable]"). SUPERSEDES both the 2026-07-05 card-as-viewport shape AND the short-lived
+//  2026-07-06 WRAPPER MODEL — there is now only ONE shape: ui-card-content scrolls directly, is masked
+//  directly, and header/footer are OVERLAID peers (position:absolute) rather than sticky/flex siblings. This
+//  keeps the running mid-scroll fade the retired wrapper model fixed (content's own box is bounded via flex,
+//  so its "full height" IS the small visible frame throughout) WITHOUT a separate wrapper element.
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
-describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask lands on ui-card-content (the card stays the measured viewport)', () => {
+describe('ui-card scroll mode — ui-card-content is the viewport; header/footer are overlaid peers', () => {
   it('at the TOP: ui-card-content gets data-fade-bottom (more below) not data-fade-top; the CARD carries neither', async () => {
     const card = mount(
       '<ui-card scrollable style="max-block-size: 100px"><ui-card-header>H</ui-card-header>' +
@@ -408,14 +405,14 @@ describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask la
         '<ui-card-footer>F</ui-card-footer></ui-card>',
     )
     const content = card.querySelector('ui-card-content') as HTMLElement
-    await scrollTo(card, 0)
+    await scrollTo(content, 0)
 
     expect(content.hasAttribute('data-fade-top'), `${server.browser}: fresh scroll wrongly fades the top`).toBe(false)
     expect(content.hasAttribute('data-fade-bottom'), `${server.browser}: content did not fade its bottom (more below)`).toBe(true)
-    // anti-vacuous: the flags live on ui-card-content (REVISED 2026-07-05), NOT the card viewport it measures.
+    // anti-vacuous: the flags live on ui-card-content, NOT the card.
     expect(
       card.hasAttribute('data-fade-top') || card.hasAttribute('data-fade-bottom'),
-      'a fade flag leaked onto the card viewport instead of ui-card-content',
+      'a fade flag leaked onto the card',
     ).toBe(false)
   })
 
@@ -425,7 +422,7 @@ describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask la
         '<div style="block-size: 400px">tall</div></ui-card-content></ui-card>',
     )
     const content = card.querySelector('ui-card-content') as HTMLElement
-    await scrollTo(card, card.scrollHeight - card.clientHeight - 10) // well inside, neither edge
+    await scrollTo(content, (content.scrollHeight - content.clientHeight) / 2) // well inside, neither edge
     expect(content.hasAttribute('data-fade-top'), `${server.browser}`).toBe(true)
     expect(content.hasAttribute('data-fade-bottom'), `${server.browser}`).toBe(true)
   })
@@ -436,19 +433,19 @@ describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask la
         '<div style="block-size: 400px">tall</div></ui-card-content></ui-card>',
     )
     const content = card.querySelector('ui-card-content') as HTMLElement
-    await scrollTo(card, card.scrollHeight) // the browser clamps to the real max
+    await scrollTo(content, content.scrollHeight) // the browser clamps to the real max
     expect(content.hasAttribute('data-fade-top'), `${server.browser}: end-of-scroll did not fade the top`).toBe(true)
     expect(content.hasAttribute('data-fade-bottom'), `${server.browser}: end-of-scroll wrongly kept fading the bottom`).toBe(false)
   })
 
   it('AUTOMATIC — <ui-card scrollable> fades with NO opt-in attribute (the mask is inherent to scroll mode)', async () => {
     const card = mount(
-      '<ui-card scrollable style="max-block-size: 100px"><ui-card-content>' + // no scroll-fade attr — retired
+      '<ui-card scrollable style="max-block-size: 100px"><ui-card-content>' +
         '<div style="block-size: 400px">tall</div></ui-card-content></ui-card>',
     )
     const content = card.querySelector('ui-card-content') as HTMLElement
-    expect(card.scrollHeight, 'the card did not genuinely overflow (test setup is vacuous)').toBeGreaterThan(card.clientHeight)
-    await scrollTo(card, 40)
+    expect(content.scrollHeight, 'ui-card-content did not genuinely overflow (test setup is vacuous)').toBeGreaterThan(content.clientHeight)
+    await scrollTo(content, 40)
     expect(
       content.hasAttribute('data-fade-top') || content.hasAttribute('data-fade-bottom'),
       `${server.browser}: a scrollable card did not automatically fade its content`,
@@ -461,8 +458,8 @@ describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask la
         '<div style="block-size: 400px">tall</div></ui-card-content></ui-card>',
     )
     const content = card.querySelector('ui-card-content') as HTMLElement
-    expect(card.scrollHeight, 'the card did not overflow (test setup is vacuous)').toBeGreaterThan(card.clientHeight)
-    await scrollTo(card, 40)
+    expect(content.scrollHeight, 'ui-card-content did not overflow (test setup is vacuous)').toBeGreaterThan(content.clientHeight)
+    await scrollTo(content, 40)
     expect(
       content.hasAttribute('data-fade-top') || content.hasAttribute('data-fade-bottom'),
       `${server.browser}: the content-level [scrollable] signal did not arm the fade`,
@@ -472,22 +469,22 @@ describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask la
   it('a NON-scrolling card in scroll mode never fades (self-gates on real overflow — never a flat guess)', () => {
     const card = mount('<ui-card scrollable><ui-card-content><p>short</p></ui-card-content></ui-card>')
     const content = card.querySelector('ui-card-content') as HTMLElement
-    expect(card.scrollHeight, 'the card unexpectedly overflows (test setup is vacuous)').toBeLessThanOrEqual(card.clientHeight + 1)
+    expect(content.scrollHeight, 'ui-card-content unexpectedly overflows (test setup is vacuous)').toBeLessThanOrEqual(content.clientHeight + 1)
     expect(content.hasAttribute('data-fade-top')).toBe(false)
     expect(content.hasAttribute('data-fade-bottom')).toBe(false)
   })
 
-  it('the rendered mask PAINTS on ui-card-content from the flags — a gradient when scrolling, none when it fits', async () => {
+  it('the rendered mask PAINTS on ui-card-content from the flags — a gradient when scrolling, none when it fits, NEVER on the card', async () => {
     const card = mount(
       '<ui-card scrollable style="max-block-size: 100px"><ui-card-content>' +
         '<div style="block-size: 400px">tall</div></ui-card-content></ui-card>',
     )
     const content = card.querySelector('ui-card-content') as HTMLElement
-    await scrollTo(card, 0)
+    await scrollTo(content, 0)
     expect(maskOf(content), `${server.browser}: at the top, only-bottom-faded should still paint a gradient`).toMatch(/gradient/)
-    expect(maskOf(card), `${server.browser}: the card viewport itself must never carry the mask`).toBe('none')
+    expect(maskOf(card), `${server.browser}: the card itself must never carry the mask`).toBe('none')
 
-    await scrollTo(card, card.scrollHeight - card.clientHeight - 10)
+    await scrollTo(content, (content.scrollHeight - content.clientHeight) / 2)
     expect(maskOf(content), `${server.browser}: mid-scroll (both edges) should paint a gradient`).toMatch(/gradient/)
 
     // a NON-scrolling card never paints a mask.
@@ -497,19 +494,20 @@ describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask la
     )
   })
 
-  it('[MUST-PASS] the sticky header/footer NEVER carry the mask, at any scroll position (crisp brackets, REVISED 2026-07-05)', async () => {
+  it('[MUST-PASS] the OVERLAID header/footer NEVER carry the mask, at any scroll position (crisp brackets)', async () => {
     // Kim's ask: "the mask should not be placed on the container element — it should be on ui-card-content". The
     // must-pass proof — the brackets never receive a `data-fade-*` flag or a mask-image, at rest, mid-scroll, or
-    // at the end, in either engine.
+    // at the end, in either engine — now proven against ui-card-content's OWN scroll (not the card's).
     const card = mount(
       '<ui-card scrollable style="max-block-size: 100px"><ui-card-header>H</ui-card-header>' +
         '<ui-card-content><div style="block-size: 400px">tall</div></ui-card-content>' +
         '<ui-card-footer>F</ui-card-footer></ui-card>',
     )
+    const content = card.querySelector('ui-card-content') as HTMLElement
     const header = card.querySelector('ui-card-header') as HTMLElement
     const footer = card.querySelector('ui-card-footer') as HTMLElement
-    for (const top of [0, card.scrollHeight / 2, card.scrollHeight]) {
-      await scrollTo(card, top)
+    for (const top of [0, content.scrollHeight / 2, content.scrollHeight]) {
+      await scrollTo(content, top)
       expect(header.hasAttribute('data-fade-top') || header.hasAttribute('data-fade-bottom'), `${server.browser}: header faded at scrollTop=${top}`).toBe(false)
       expect(footer.hasAttribute('data-fade-top') || footer.hasAttribute('data-fade-bottom'), `${server.browser}: footer faded at scrollTop=${top}`).toBe(false)
       expect(maskOf(header), `${server.browser}: header carries a mask at scrollTop=${top}`).toBe('none')
@@ -517,32 +515,97 @@ describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask la
     }
   })
 
-  it('presence-aware: ui-card-content publishes POSITIVE --ui-box-head/foot bands measured off the card\'s sticky brackets', async () => {
-    // The bracket QUERY still runs against the card (its direct sticky children), even though the offsets +
-    // the mask now land on ui-card-content — the fade's opaque end lands past the bracket + fade depth, never
-    // blanking the brackets. (The superseded content-viewport model had 0px offsets — a plain edge fade.)
+  it('[WHCM] scroll-mode brackets get an opaque Canvas fallback — the sole occluder left once the mask drops', async () => {
+    // component-review finding (2026-07-07): the overlaid brackets are deliberately backgroundless in NORMAL
+    // rendering ("the gradient carries the occlusion") — but the shared [data-fade-top]/[data-fade-bottom]
+    // forced-colors rule (container-box.css) drops that gradient entirely under WHCM, leaving nothing to
+    // occlude scrolled content behind the bracket text. card.css's WHCM-only bracket background is the fix.
+    const card = mount(
+      '<ui-card scrollable style="max-block-size: 100px"><ui-card-header>H</ui-card-header>' +
+        '<ui-card-content><div style="block-size: 400px">tall</div></ui-card-content>' +
+        '<ui-card-footer>F</ui-card-footer></ui-card>',
+    )
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    const footer = card.querySelector('ui-card-footer') as HTMLElement
+    await scrollTo(content, 40)
+
+    // Baseline (BOTH engines): normal rendering keeps the brackets see-through, and content genuinely masks.
+    expect(alphaOf(getComputedStyle(header).backgroundColor), 'baseline header unexpectedly painted a background').toBe(0)
+    expect(alphaOf(getComputedStyle(footer).backgroundColor), 'baseline footer unexpectedly painted a background').toBe(0)
+    expect(maskOf(content), 'baseline content did not paint a gradient (test setup is vacuous)').toMatch(/gradient/)
+
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches, 'CDP did not enter forced-colors').toBe(true)
+      // The shared rule drops the sole (gradient) occluder under WHCM…
+      expect(maskOf(content), 'the mask should be dropped under WHCM').toBe('none')
+      // …so the bracket fallback background is now the ONLY thing keeping scrolled content from bleeding
+      // through the bracket text.
+      expect(alphaOf(getComputedStyle(header).backgroundColor), 'WHCM header stayed transparent — scrolled content can bleed through the bracket text').toBeGreaterThan(0)
+      expect(alphaOf(getComputedStyle(footer).backgroundColor), 'WHCM footer stayed transparent — scrolled content can bleed through the bracket text').toBeGreaterThan(0)
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] }) // reset for the next test
+    }
+  })
+
+  it('[structural] header/footer are OVERLAID PEERS (position:absolute) — their rect stays FIXED as content scrolls (they are not part of the scrolled content)', async () => {
     const card = mount(
       '<ui-card scrollable style="max-block-size: 120px"><ui-card-header>H</ui-card-header>' +
         '<ui-card-content><div style="block-size: 400px">tall</div></ui-card-content>' +
         '<ui-card-footer>F</ui-card-footer></ui-card>',
     )
     const content = card.querySelector('ui-card-content') as HTMLElement
-    await scrollTo(card, 40)
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    const footer = card.querySelector('ui-card-footer') as HTMLElement
+    expect(getComputedStyle(header).position, `${server.browser}: header is not absolute`).toBe('absolute')
+    expect(getComputedStyle(footer).position, `${server.browser}: footer is not absolute`).toBe('absolute')
+    const headerTopBefore = header.getBoundingClientRect().top
+    const footerBottomBefore = footer.getBoundingClientRect().bottom
+    await scrollTo(content, content.scrollHeight / 2)
+    // the OVERLAID header/footer stayed put — they did NOT scroll away with the body (unlike the retired
+    // sticky-in-the-scroll-container model, they are entirely outside the scrolled element now).
+    expect(
+      Math.abs(header.getBoundingClientRect().top - headerTopBefore),
+      `${server.browser}: the overlaid header moved when content scrolled`,
+    ).toBeLessThan(1)
+    expect(
+      Math.abs(footer.getBoundingClientRect().bottom - footerBottomBefore),
+      `${server.browser}: the overlaid footer moved when content scrolled`,
+    ).toBeLessThan(1)
+  })
+
+  it('presence-aware: ui-card-content publishes POSITIVE --ui-box-head/foot bands measured off the card\'s header/footer', async () => {
+    // The bracket QUERY runs against the card (its direct children), even though the offsets + the mask land
+    // on ui-card-content — the fade's opaque end lands past the bracket + fade depth, never blanking the brackets.
+    const card = mount(
+      '<ui-card scrollable style="max-block-size: 120px"><ui-card-header>H</ui-card-header>' +
+        '<ui-card-content><div style="block-size: 400px">tall</div></ui-card-content>' +
+        '<ui-card-footer>F</ui-card-footer></ui-card>',
+    )
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    await scrollTo(content, 40)
     const head = content.style.getPropertyValue('--ui-box-head')
     const foot = content.style.getPropertyValue('--ui-box-foot')
     expect(px(head), `${server.browser}: the header band was not published (${head})`).toBeGreaterThan(0)
     expect(px(foot), `${server.browser}: the footer band was not published (${foot})`).toBeGreaterThan(0)
     expect(maskOf(content), `${server.browser}: the presence-aware fade did not paint`).toMatch(/gradient/)
-    // anti-vacuous: the card viewport itself publishes NEITHER — the offsets are content's alone.
+    // anti-vacuous: the card itself publishes NEITHER — the offsets are content's alone.
     expect(card.style.getPropertyValue('--ui-box-head')).toBe('')
     expect(card.style.getPropertyValue('--ui-box-foot')).toBe('')
   })
 
-  // ── Kim's follow-up (2026-07-05): "depending on header and footer presence we can offset the start of the
-  // gradient transition coordinates?" — the RENDERED gradient stop (not just the published custom property)
-  // must actually shift by the bracket's own band when present, and collapse to the plain fade depth when
-  // absent. All FOUR presence combinations, both engines; the brackets themselves stay crisp in every combo. ──
-  describe('presence-aware gradient OFFSET — all four header/footer presence combinations', () => {
+  // ── Kim's ask: "adjust block-padding and linear gradient coordinates based on presence of the peer footer
+  // and header" — ONE measured source (the bracket band), TWO consumers: ui-card-content's own block-padding
+  // (so its first/last visible line clears the overlaid bracket) AND the gradient's opaque-end offset
+  // (container-box.css, unchanged formula). All FOUR presence combinations, both engines. ──
+  describe('presence-aware BLOCK-PADDING + gradient OFFSET — all four header/footer presence combinations', () => {
     const combos = [
       { label: 'both', header: true, footer: true },
       { label: 'header-only', header: true, footer: false },
@@ -551,7 +614,7 @@ describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask la
     ] as const
 
     for (const { label, header: hasHeader, footer: hasFooter } of combos) {
-      it(`[${label}] the content gradient's opaque-end offset == (bracket band + fade depth) when present, plain fade depth when absent`, async () => {
+      it(`[${label}] block-padding clears a present bracket's band (else the plain 6px region pad); the gradient offset == band + fade depth (else the plain fade depth)`, async () => {
         const markup =
           (hasHeader ? '<ui-card-header>H</ui-card-header>' : '') +
           '<ui-card-content><div style="block-size: 400px">tall</div></ui-card-content>' +
@@ -561,26 +624,42 @@ describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask la
         const header = card.querySelector('ui-card-header') as HTMLElement | null
         const footer = card.querySelector('ui-card-footer') as HTMLElement | null
 
-        // Independently measure the plain fade depth (`--ui-box-fade`'s resolved px) off a companion card with
-        // NO brackets at all — ground truth with no hardcoded token value, so the assertions below hold even if
-        // the density-linked fade depth token is retuned later.
-        const baseline = mount('<ui-card scrollable style="max-block-size: 120px">' + '<ui-card-content><div style="block-size: 400px">tall</div></ui-card-content>' + '</ui-card>')
+        // Ground truth for BOTH formulas, off a companion bracket-less card — no hardcoded token value, so
+        // these hold even if the padding/fade-depth tokens are retuned later.
+        const baseline = mount(
+          '<ui-card scrollable style="max-block-size: 120px"><ui-card-content><div style="block-size: 400px">tall</div></ui-card-content></ui-card>',
+        )
         const baselineContent = baseline.querySelector('ui-card-content') as HTMLElement
-        await scrollTo(baseline, baseline.scrollHeight / 2)
+        const plainPad = px(getComputedStyle(baselineContent).paddingTop) // the plain region pad (no bracket)
+        await scrollTo(baselineContent, baselineContent.scrollHeight / 2)
         const fadeDepth = gradientOffsets(baselineContent).top
         expect(fadeDepth, `${server.browser}: could not establish the baseline fade depth`).toBeGreaterThan(0)
 
-        // Mid-scroll: neither edge is at rest, so BOTH `data-fade-top`/`data-fade-bottom` are true regardless of
-        // which brackets exist — isolating bracket PRESENCE as the only variable this test measures.
-        await scrollTo(card, card.scrollHeight / 2)
+        // The BLOCK-PADDING proof — a static box-model property, measured at rest (before any scroll).
+        const padTop = px(getComputedStyle(content).paddingTop)
+        const padBottom = px(getComputedStyle(content).paddingBottom)
+        if (hasHeader) {
+          const band = bracketBand(header as HTMLElement, true)
+          expect(padTop, `${server.browser} [${label}]: top padding did not clear the header band (${band})`).toBeCloseTo(band, 0)
+        } else {
+          expect(padTop, `${server.browser} [${label}]: an ABSENT header did not collapse the top padding to the plain region pad (${plainPad})`).toBeCloseTo(plainPad, 0)
+        }
+        if (hasFooter) {
+          const band = bracketBand(footer as HTMLElement, false)
+          expect(padBottom, `${server.browser} [${label}]: bottom padding did not clear the footer band (${band})`).toBeCloseTo(band, 0)
+        } else {
+          expect(padBottom, `${server.browser} [${label}]: an ABSENT footer did not collapse the bottom padding to the plain region pad (${plainPad})`).toBeCloseTo(plainPad, 0)
+        }
+
+        // The GRADIENT OFFSET proof (unchanged container-box.css formula) — mid-scroll, so BOTH edges fade
+        // regardless of bracket presence, isolating presence as the only variable this measures.
+        await scrollTo(content, content.scrollHeight / 2)
         expect(content.hasAttribute('data-fade-top'), `${server.browser} [${label}]: top did not fade mid-scroll`).toBe(true)
         expect(content.hasAttribute('data-fade-bottom'), `${server.browser} [${label}]: bottom did not fade mid-scroll`).toBe(true)
-
         const { top, bottom } = gradientOffsets(content)
         if (hasHeader) {
           const band = bracketBand(header as HTMLElement, true)
           expect(top, `${server.browser} [${label}]: top offset != header band (${band}) + fade depth (${fadeDepth})`).toBeCloseTo(band + fadeDepth, 0)
-          // MUST-PASS: the header itself never carries the mask.
           expect(maskOf(header as HTMLElement), `${server.browser} [${label}]: header carries a mask`).toBe('none')
         } else {
           expect(top, `${server.browser} [${label}]: an ABSENT header did not collapse the top offset to the plain fade depth`).toBeCloseTo(fadeDepth, 0)
@@ -596,73 +675,75 @@ describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask la
     }
   })
 
-  it('the brackets ARE position:sticky and stay pinned as the CARD scrolls (the whole container scrolls under them)', async () => {
+  it('[MUST-PROVE] mid-scroll: the see-through fade is VISIBLE at both content edges (the running fade, no wrapper needed)', async () => {
+    const longContent = Array.from({ length: 30 }, (_, i) => `<p>Paragraph ${i} — scrollable content filler text.</p>`).join('')
     const card = mount(
-      '<ui-card scrollable style="max-block-size: 100px"><ui-card-header>Header</ui-card-header>' +
-        '<ui-card-content><div style="block-size: 400px">tall body</div></ui-card-content>' +
-        '<ui-card-footer>Footer</ui-card-footer></ui-card>',
+      `<ui-card scrollable style="max-block-size: 220px"><ui-card-header>H</ui-card-header>` +
+        `<ui-card-content>${longContent}</ui-card-content><ui-card-footer>F</ui-card-footer></ui-card>`,
     )
-    const header = card.querySelector('ui-card-header') as HTMLElement
-    const footer = card.querySelector('ui-card-footer') as HTMLElement
-    expect(getComputedStyle(header).position, `${server.browser}: header is not sticky`).toBe('sticky')
-    expect(getComputedStyle(footer).position, `${server.browser}: footer is not sticky`).toBe('sticky')
-    const headerTopBefore = header.getBoundingClientRect().top
-    const footerBottomBefore = footer.getBoundingClientRect().bottom
-    await scrollTo(card, 60)
-    // the sticky header stayed pinned near the card's top edge — it did NOT scroll away with the body.
+    const content = card.querySelector('ui-card-content') as HTMLElement
+
+    await scrollTo(content, (content.scrollHeight - content.clientHeight) / 2)
+    expect(content.hasAttribute('data-fade-top'), `${server.browser}: content did not fade its top mid-scroll`).toBe(true)
+    expect(content.hasAttribute('data-fade-bottom'), `${server.browser}: content did not fade its bottom mid-scroll`).toBe(true)
+
+    // The load-bearing proof of VISIBILITY, not just presence: the gradient's opaque-start offset must fall
+    // WITHIN content's own (small, bounded) rendered height. content is bounded by `flex: 1 1 auto` against the
+    // card's max-block-size (never the full un-clipped scroll extent — proven below), so its "full height" IS
+    // the visible frame throughout the whole scroll — the fix the retired WRAPPER MODEL needed a separate
+    // element for, now achieved by content managing its own overflow directly.
+    const { top, bottom } = gradientOffsets(content)
+    expect(top, `${server.browser}: the top fade offset (${top}) does not fall within content's own height (${content.clientHeight})`).toBeLessThan(
+      content.clientHeight,
+    )
     expect(
-      Math.abs(header.getBoundingClientRect().top - headerTopBefore),
-      `${server.browser}: the sticky header moved when the card scrolled`,
-    ).toBeLessThan(2)
-    // and the sticky footer stayed pinned near the card's bottom edge ("Footer stays put").
-    expect(
-      Math.abs(footer.getBoundingClientRect().bottom - footerBottomBefore),
-      `${server.browser}: the sticky footer moved when the card scrolled`,
-    ).toBeLessThan(2)
+      content.clientHeight - bottom,
+      `${server.browser}: the bottom fade's opaque-end (${bottom} from the bottom) does not fall within content's own height (${content.clientHeight})`,
+    ).toBeGreaterThan(0)
+    expect(content.clientHeight, `${server.browser}: content's own frame is implausibly tall for this proof to be meaningful`).toBeLessThan(300)
+    // anti-vacuous structural proof: content genuinely overflows; the CARD does not (the flex column keeps it
+    // exactly bounded — the mechanism realizing "100% of parent height").
+    expect(content.scrollHeight, `${server.browser}: content did not genuinely overflow (test setup is vacuous)`).toBeGreaterThan(content.clientHeight)
+    expect(card.scrollHeight, `${server.browser}: the CARD itself overflows (the flex column should keep it exactly bounded)`).toBeLessThanOrEqual(
+      card.clientHeight + 1,
+    )
   })
 
-  // ── The two review-required gutter proofs (render-and-measure, both engines) ─────────────────────────
-  it('[review] scroll-mode gutters are REAL px + the sticky footer keeps a ~6px bottom gutter through scroll', async () => {
+  // ── The review-required gutter proofs (render-and-measure, both engines) ─────────────────────────
+  it('[review] scroll-mode gutters are REAL px + the overlaid footer keeps a ~6px bottom gutter through scroll', async () => {
     const card = mount(
       '<ui-card scrollable style="max-block-size: 120px"><ui-card-header>H</ui-card-header>' +
         '<ui-card-content><div style="block-size: 400px">tall</div></ui-card-content>' +
         '<ui-card-footer>F</ui-card-footer></ui-card>',
     )
+    const content = card.querySelector('ui-card-content') as HTMLElement
     const header = card.querySelector('ui-card-header') as HTMLElement
     const footer = card.querySelector('ui-card-footer') as HTMLElement
     // top gutter: the header's border-box top sits ~6px below the card's padding-box top (the region inset margin)
     const topGutter = header.getBoundingClientRect().top - (card.getBoundingClientRect().top + px(getComputedStyle(card).borderTopWidth))
     expect(topGutter, `${server.browser}: the scroll-mode top gutter is not ~6px (${topGutter})`).toBeGreaterThanOrEqual(4)
     expect(topGutter, `${server.browser}: the scroll-mode top gutter is too large (${topGutter})`).toBeLessThanOrEqual(9)
-    // bottom gutter THROUGH scroll: scroll to the end; the sticky footer stays ~6px above the card's bottom edge
-    // (the sticky bracket provides the gutter — no scroll-container padding/margin quirk).
-    await scrollTo(card, card.scrollHeight)
+    // bottom gutter THROUGH content's own scroll — the overlaid footer never moves at all (see [structural] above).
+    await scrollTo(content, content.scrollHeight)
     const viewportBottom = card.getBoundingClientRect().bottom - px(getComputedStyle(card).borderBottomWidth)
     const bottomGutter = viewportBottom - footer.getBoundingClientRect().bottom
-    expect(bottomGutter, `${server.browser}: the sticky footer's ~6px bottom gutter collapsed on scroll (${bottomGutter})`).toBeGreaterThanOrEqual(4)
-    expect(bottomGutter, `${server.browser}: the sticky footer's bottom gutter is too large (${bottomGutter})`).toBeLessThanOrEqual(9)
+    expect(bottomGutter, `${server.browser}: the overlaid footer's ~6px bottom gutter collapsed on scroll (${bottomGutter})`).toBeGreaterThanOrEqual(4)
+    expect(bottomGutter, `${server.browser}: the overlaid footer's bottom gutter is too large (${bottomGutter})`).toBeLessThanOrEqual(9)
   })
 
-  it('[review] NO-footer: the last content stays off the card edge at max scroll (the region PADDING is a robust gutter, not the collapsible margin)', async () => {
-    // The classic cross-engine quirk (WebKit historically dropped a scroll-container last-child MARGIN from the
-    // scroll extent) can't bite here: the visible gutter is the content region's OWN padding-block-end (6px,
-    // INSIDE its border-box → always in the scroll extent), not the inter-region margin. Prove it survives.
+  it('[review] NO-footer: the last content stays off the card edge at max scroll (the region PADDING is a robust gutter, not a collapsible margin)', async () => {
     const card = mount(
       '<ui-card scrollable style="max-block-size: 100px"><ui-card-content>' +
         '<div style="block-size: 400px" id="tail">tall</div></ui-card-content></ui-card>',
     )
+    const content = card.querySelector('ui-card-content') as HTMLElement
     const tail = card.querySelector('#tail') as HTMLElement
-    await scrollTo(card, card.scrollHeight)
-    const viewportBottom = card.getBoundingClientRect().bottom - px(getComputedStyle(card).borderBottomWidth)
-    const gutter = viewportBottom - tail.getBoundingClientRect().bottom
-    expect(gutter, `${server.browser}: the last content sat flush to the card edge at max scroll (${gutter}px)`).toBeGreaterThanOrEqual(4)
+    await scrollTo(content, content.scrollHeight)
+    const gutter = content.getBoundingClientRect().bottom - tail.getBoundingClientRect().bottom
+    expect(gutter, `${server.browser}: the last content sat flush to the viewport edge at max scroll (${gutter}px)`).toBeGreaterThanOrEqual(4)
   })
 
-  it('[fixed] a SHORT card no longer force-overflows by the header+footer height (the retired min-block-size:100% side effect is gone)', () => {
-    // The flagged consequence of the PRIOR revision's min-block-size:100% recipe: it ALWAYS overflowed a short
-    // card by roughly the header+footer's own height (the fill target was the card's FULL height, with
-    // header/footer occupying additional flow height on top of that). flex-grow (REVISED 2026-07-06) fills the
-    // SAME way without that side effect — a genuinely short card no longer overflows at all.
+  it('[fixed] a SHORT card no longer force-overflows (flex fill — header/footer add no flow height, they are overlaid)', () => {
     const card = mount(
       '<ui-card scrollable style="max-block-size: 220px"><ui-card-header>H</ui-card-header>' +
         '<ui-card-content><p>Just one short line.</p></ui-card-content>' +
@@ -673,9 +754,8 @@ describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask la
       card.clientHeight + 1,
     )
     expect(card.hasAttribute('data-fade-top') || card.querySelector('ui-card-content')?.hasAttribute('data-fade-top')).toBeFalsy()
-    // [review] positional proof of the fill, not just the byte count: the sticky footer genuinely sits at the
-    // card's bottom edge (the ~6px region gutter, same as the review's other gutter proofs) — not stranded
-    // mid-viewport under the short content, which `flex: 1 1 auto` on ui-card-content is what prevents.
+    // positional proof of the fill: the overlaid footer genuinely sits at the card's bottom edge — not
+    // stranded mid-viewport under the short content, which `flex: 1 1 auto` on ui-card-content prevents.
     const viewportBottom = card.getBoundingClientRect().bottom - px(getComputedStyle(card).borderBottomWidth)
     const footerGutter = viewportBottom - footer.getBoundingClientRect().bottom
     expect(footerGutter, `${server.browser}: the footer is not at the card's bottom edge — content did not fill (gutter ${footerGutter})`).toBeGreaterThanOrEqual(4)
@@ -683,167 +763,3 @@ describe('ui-card FALLBACK shape (no [scroll-wrapper]) — the edge-fade mask la
   })
 })
 
-// ════════════════════════════════════════════════════════════════════════════════════════════════════
-//  THE WRAPPER MODEL (REVISED 2026-07-06, Kim ratified via /intent-extract) — an author-written
-//  `[scroll-wrapper]` child of ui-card-content becomes the REAL scroll viewport, nested two levels below the
-//  header/footer; ui-card-content becomes a fixed flex frame around it that carries the mask. This is the fix
-//  for the fade-only-at-the-scroll-extremes finding measured against the FALLBACK shape above: because
-//  ui-card-content itself never scrolls here, its own (small, bounded) box IS the visible frame throughout the
-//  WHOLE scroll range, at any content length — unlike the fallback, where ui-card-content's box was the entire
-//  un-clipped scroll extent.
-// ════════════════════════════════════════════════════════════════════════════════════════════════════
-
-describe('ui-card WRAPPER MODEL — [scroll-wrapper] is the real viewport; ui-card-content is a fixed frame', () => {
-  const longContent = () =>
-    '<div scroll-wrapper>' + Array.from({ length: 30 }, (_, i) => `<p>Paragraph ${i} — scrollable content filler text.</p>`).join('') + '</div>'
-
-  it('structural proof: the WRAPPER genuinely overflows; ui-card-content and the CARD do NOT (content is a fixed, bounded frame)', () => {
-    const card = mount(
-      `<ui-card scrollable style="max-block-size: 220px"><ui-card-header>H</ui-card-header>` +
-        `<ui-card-content>${longContent()}</ui-card-content><ui-card-footer>F</ui-card-footer></ui-card>`,
-    )
-    const content = card.querySelector('ui-card-content') as HTMLElement
-    const wrapper = card.querySelector('[scroll-wrapper]') as HTMLElement
-    expect(getComputedStyle(wrapper).overflowY, `${server.browser}: the wrapper is not the overflow:auto viewport`).toBe('auto')
-    expect(wrapper.scrollHeight, `${server.browser}: the wrapper did not genuinely overflow`).toBeGreaterThan(wrapper.clientHeight)
-    // THIS is the structural fix: content's own box is bounded and FIXED — it never scrolls, so it stays the
-    // same small size throughout the whole scroll range (unlike the fallback, where content WAS the full
-    // un-clipped scroll extent).
-    expect(content.scrollHeight, `${server.browser}: ui-card-content itself overflows (it should never scroll)`).toBeLessThanOrEqual(content.clientHeight + 1)
-    expect(card.scrollHeight, `${server.browser}: the CARD itself overflows (the flex column should keep it exactly bounded)`).toBeLessThanOrEqual(
-      card.clientHeight + 1,
-    )
-  })
-
-  it('[heal] an IMPERATIVE late-append of [scroll-wrapper] after connect re-wires the fade onto it (self-healing, mirrors ui-text)', async () => {
-    // The wrapper check in card-content.ts's connected() runs once at connect — fine for declarative HTML / A2UI
-    // (the wrapper, if any, is already a child then), but an IMPERATIVE caller can create the card, let it
-    // connect (arming card.css's reactive `:has(> [scroll-wrapper])` layout switch too), THEN append the
-    // wrapper. Prove the childList heal observer catches this: the fade genuinely re-arms on the LATE wrapper,
-    // not stranded on the stale fallback (the card) it was wired to at connect.
-    const card = mount(
-      '<ui-card scrollable style="max-block-size: 220px"><ui-card-header>H</ui-card-header>' +
-        '<ui-card-content></ui-card-content><ui-card-footer>F</ui-card-footer></ui-card>',
-    )
-    const content = card.querySelector('ui-card-content') as HTMLElement
-
-    // append the wrapper AFTER connect (imperative, not declarative HTML) — the same overflow shape longContent() builds.
-    const wrapper = document.createElement('div')
-    wrapper.setAttribute('scroll-wrapper', '')
-    wrapper.innerHTML = Array.from({ length: 30 }, (_, i) => `<p>Paragraph ${i} — scrollable content filler text.</p>`).join('')
-    content.appendChild(wrapper)
-    await tick() // let the childList MutationObserver's queued callback run
-    await tick() // the re-wire's own scrollFade effect settles within the next microtask (jsdom precedent: 2 ticks)
-
-    expect(getComputedStyle(wrapper).overflowY, `${server.browser}: the late-appended wrapper did not become the overflow viewport`).toBe('auto')
-    expect(wrapper.scrollHeight, `${server.browser}: the late-appended wrapper did not genuinely overflow`).toBeGreaterThan(wrapper.clientHeight)
-    // the fixed-frame invariant holds post-heal too — content itself never overflows once healed onto the wrapper.
-    expect(content.scrollHeight, `${server.browser}: ui-card-content still overflows post-heal (should be the fixed frame again)`).toBeLessThanOrEqual(
-      content.clientHeight + 1,
-    )
-
-    await scrollTo(wrapper, (wrapper.scrollHeight - wrapper.clientHeight) / 2)
-    expect(content.hasAttribute('data-fade-top'), `${server.browser}: the healed fade did not arm off the late wrapper (top)`).toBe(true)
-    expect(content.hasAttribute('data-fade-bottom'), `${server.browser}: the healed fade did not arm off the late wrapper (bottom)`).toBe(true)
-  })
-
-  it('[MUST-PROVE] mid-scroll: the see-through fade is VISIBLE at both content edges (the fix for the fade-only-at-the-extremes finding)', async () => {
-    const card = mount(
-      `<ui-card scrollable style="max-block-size: 220px"><ui-card-header>H</ui-card-header>` +
-        `<ui-card-content>${longContent()}</ui-card-content><ui-card-footer>F</ui-card-footer></ui-card>`,
-    )
-    const content = card.querySelector('ui-card-content') as HTMLElement
-    const wrapper = card.querySelector('[scroll-wrapper]') as HTMLElement
-
-    await scrollTo(wrapper, (wrapper.scrollHeight - wrapper.clientHeight) / 2)
-    expect(content.hasAttribute('data-fade-top'), `${server.browser}: content did not fade its top mid-scroll`).toBe(true)
-    expect(content.hasAttribute('data-fade-bottom'), `${server.browser}: content did not fade its bottom mid-scroll`).toBe(true)
-
-    // The load-bearing proof of VISIBILITY, not just presence: the gradient's opaque-start offset must fall
-    // WITHIN content's own (small, bounded) rendered height — under the retired content-as-scroller shape this
-    // same offset existed in the CSS too, but content's height THERE was the full un-clipped scroll extent, so
-    // the offset (and the transition zone it bounds) fell outside the visible slice for all but the first/last
-    // ~60-90px of a long scroll. Here, content's height is small and CONSTANT throughout the scroll (proven
-    // above), so an offset within it is an offset within what's ACTUALLY ON SCREEN right now.
-    const { top, bottom } = gradientOffsets(content)
-    expect(top, `${server.browser}: the top fade offset (${top}) does not fall within content's own height (${content.clientHeight})`).toBeLessThan(
-      content.clientHeight,
-    )
-    expect(
-      content.clientHeight - bottom,
-      `${server.browser}: the bottom fade's opaque-end (${bottom} from the bottom) does not fall within content's own height (${content.clientHeight})`,
-    ).toBeGreaterThan(0)
-    // anti-vacuous: content's height is genuinely SMALL (comparable to the offsets), not just "larger than
-    // zero" — proving the transition zone occupies a MEANINGFUL fraction of what's visible, not a sliver.
-    expect(content.clientHeight, `${server.browser}: content's own frame is implausibly tall for this proof to be meaningful`).toBeLessThan(300)
-  })
-
-  it('[MUST-PASS] the sticky header/footer NEVER carry the mask, at any scroll position (wrapper model, crisp brackets)', async () => {
-    const card = mount(
-      `<ui-card scrollable style="max-block-size: 220px"><ui-card-header>H</ui-card-header>` +
-        `<ui-card-content>${longContent()}</ui-card-content><ui-card-footer>F</ui-card-footer></ui-card>`,
-    )
-    const header = card.querySelector('ui-card-header') as HTMLElement
-    const footer = card.querySelector('ui-card-footer') as HTMLElement
-    const wrapper = card.querySelector('[scroll-wrapper]') as HTMLElement
-    for (const top of [0, (wrapper.scrollHeight - wrapper.clientHeight) / 2, wrapper.scrollHeight]) {
-      await scrollTo(wrapper, top)
-      expect(header.hasAttribute('data-fade-top') || header.hasAttribute('data-fade-bottom'), `${server.browser}: header faded at scrollTop=${top}`).toBe(false)
-      expect(footer.hasAttribute('data-fade-top') || footer.hasAttribute('data-fade-bottom'), `${server.browser}: footer faded at scrollTop=${top}`).toBe(false)
-      expect(maskOf(header), `${server.browser}: header carries a mask at scrollTop=${top}`).toBe('none')
-      expect(maskOf(footer), `${server.browser}: footer carries a mask at scrollTop=${top}`).toBe('none')
-    }
-  })
-
-  describe('presence-aware gradient OFFSET (wrapper model) — all four header/footer presence combinations', () => {
-    const combos = [
-      { label: 'both', header: true, footer: true },
-      { label: 'header-only', header: true, footer: false },
-      { label: 'footer-only', header: false, footer: true },
-      { label: 'neither', header: false, footer: false },
-    ] as const
-
-    for (const { label, header: hasHeader, footer: hasFooter } of combos) {
-      it(`[${label}] the content gradient's opaque-end offset == (bracket band + fade depth) when present, plain fade depth when absent`, async () => {
-        const markup =
-          (hasHeader ? '<ui-card-header>H</ui-card-header>' : '') +
-          `<ui-card-content>${longContent()}</ui-card-content>` +
-          (hasFooter ? '<ui-card-footer>F</ui-card-footer>' : '')
-        const card = mount(`<ui-card scrollable style="max-block-size: 220px">${markup}</ui-card>`)
-        const content = card.querySelector('ui-card-content') as HTMLElement
-        const wrapper = card.querySelector('[scroll-wrapper]') as HTMLElement
-        const header = card.querySelector('ui-card-header') as HTMLElement | null
-        const footer = card.querySelector('ui-card-footer') as HTMLElement | null
-
-        // Independently measure the plain fade depth off a companion wrapper card with NO brackets — ground
-        // truth, no hardcoded token value.
-        const baseline = mount(`<ui-card scrollable style="max-block-size: 220px"><ui-card-content>${longContent()}</ui-card-content></ui-card>`)
-        const baselineContent = baseline.querySelector('ui-card-content') as HTMLElement
-        const baselineWrapper = baseline.querySelector('[scroll-wrapper]') as HTMLElement
-        await scrollTo(baselineWrapper, (baselineWrapper.scrollHeight - baselineWrapper.clientHeight) / 2)
-        const fadeDepth = gradientOffsets(baselineContent).top
-        expect(fadeDepth, `${server.browser}: could not establish the baseline fade depth`).toBeGreaterThan(0)
-
-        await scrollTo(wrapper, (wrapper.scrollHeight - wrapper.clientHeight) / 2)
-        expect(content.hasAttribute('data-fade-top'), `${server.browser} [${label}]: top did not fade mid-scroll`).toBe(true)
-        expect(content.hasAttribute('data-fade-bottom'), `${server.browser} [${label}]: bottom did not fade mid-scroll`).toBe(true)
-
-        const { top, bottom } = gradientOffsets(content)
-        if (hasHeader) {
-          const band = bracketBand(header as HTMLElement, true)
-          expect(top, `${server.browser} [${label}]: top offset != header band (${band}) + fade depth (${fadeDepth})`).toBeCloseTo(band + fadeDepth, 0)
-          expect(maskOf(header as HTMLElement), `${server.browser} [${label}]: header carries a mask`).toBe('none')
-        } else {
-          expect(top, `${server.browser} [${label}]: an ABSENT header did not collapse the top offset to the plain fade depth`).toBeCloseTo(fadeDepth, 0)
-        }
-        if (hasFooter) {
-          const band = bracketBand(footer as HTMLElement, false)
-          expect(bottom, `${server.browser} [${label}]: bottom offset != footer band (${band}) + fade depth (${fadeDepth})`).toBeCloseTo(band + fadeDepth, 0)
-          expect(maskOf(footer as HTMLElement), `${server.browser} [${label}]: footer carries a mask`).toBe('none')
-        } else {
-          expect(bottom, `${server.browser} [${label}]: an ABSENT footer did not collapse the bottom offset to the plain fade depth`).toBeCloseTo(fadeDepth, 0)
-        }
-      })
-    }
-  })
-})

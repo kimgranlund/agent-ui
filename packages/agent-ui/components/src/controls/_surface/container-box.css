@@ -203,36 +203,79 @@
  * `bracket-band + --ui-box-fade`, so a bracketed edge stays faded until content has fully cleared the bracket,
  * and a bracketless edge (offset 0px) collapses to `--ui-box-fade` — the EXACT pre-offset mask. Absent the
  * trait, the `, 0px` var-fallbacks reduce every stop back to that original recipe, so the rule is
- * self-contained. (The precise how-much-through-the-bracket look is a fine-tune of these two knobs.) */
+ * self-contained. (The precise how-much-through-the-bracket look is a fine-tune of these two knobs.)
+ *
+ * THE HOLD (added for ui-card-content's overlaid, backgroundless brackets — 2026-07-07): a bare
+ * `transparent 0 → opaque at band+fade` ramp lets content RAMP UP continuously across the bracket's own band —
+ * by the time content reaches the band's own far edge it can already be >50% visible, so a crisp bracket TEXT
+ * sitting over it still shows a partially-opaque scrolled line layered underneath (measured, card.browser.test.ts).
+ * `--ui-box-head-hold`/`--ui-box-foot-hold` (both default `0px`) insert an EXTRA same-colour stop immediately
+ * after each edge's `transparent`/`#000` anchor, at the hold depth — two coincident stops (identical position,
+ * identical colour) are a geometric NO-OP (nothing renders between them), so every consumer that never sets
+ * these (modal/select/menu/combo-box — opaque `background: inherit` brackets, unaffected by this at all) gets a
+ * RENDER-IDENTICAL mask — not string-identical: the fallback `var(…, 0px)` still serializes two extra
+ * coincident stops into their computed gradient, it is only the PAINT that is unchanged — proven by this
+ * file's own tests staying green. A consumer that DOES set the hold to its
+ * own bracket band (ui-card-content, card.css) instead holds fully transparent/opaque THROUGH the whole band —
+ * content is genuinely invisible behind bracket text — and the soft running fade lives entirely in the
+ * `--ui-box-fade`-deep strip just past the band, never inside it. */
 :where([data-fade-top][data-fade-bottom]) {
   /* Both edges hidden: transparent at each viewport edge → opaque once content has cleared that edge's bracket
      band + the fade depth. Both offsets 0px ⇒ the original symmetric transparent→#000→#000→transparent mask. */
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0,
+    transparent var(--ui-box-head-hold, 0px),
     #000 calc(var(--ui-box-head, 0px) + var(--ui-box-fade, 1rem)),
     #000 calc(100% - var(--ui-box-foot, 0px) - var(--ui-box-fade, 1rem)),
+    transparent calc(100% - var(--ui-box-foot-hold, 0px)),
     transparent 100%
   );
   mask-image: linear-gradient(
     to bottom,
     transparent 0,
+    transparent var(--ui-box-head-hold, 0px),
     #000 calc(var(--ui-box-head, 0px) + var(--ui-box-fade, 1rem)),
     #000 calc(100% - var(--ui-box-foot, 0px) - var(--ui-box-fade, 1rem)),
+    transparent calc(100% - var(--ui-box-foot-hold, 0px)),
     transparent 100%
   );
 }
 :where([data-fade-top]):not([data-fade-bottom]) {
   /* Only the top hides content: fade past a present header, opaque below. Header offset 0px ⇒ the original
      transparent 0 → #000 --ui-box-fade top fade. */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 calc(var(--ui-box-head, 0px) + var(--ui-box-fade, 1rem)), #000 100%);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 calc(var(--ui-box-head, 0px) + var(--ui-box-fade, 1rem)), #000 100%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent var(--ui-box-head-hold, 0px),
+    #000 calc(var(--ui-box-head, 0px) + var(--ui-box-fade, 1rem)),
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent var(--ui-box-head-hold, 0px),
+    #000 calc(var(--ui-box-head, 0px) + var(--ui-box-fade, 1rem)),
+    #000 100%
+  );
 }
 :where([data-fade-bottom]):not([data-fade-top]) {
   /* Only the bottom hides content: opaque above, fade past a present footer to the bottom edge. Footer offset
      0px ⇒ the original #000 → transparent 100% bottom fade. */
-  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - var(--ui-box-foot, 0px) - var(--ui-box-fade, 1rem)), transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - var(--ui-box-foot, 0px) - var(--ui-box-fade, 1rem)), transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(100% - var(--ui-box-foot, 0px) - var(--ui-box-fade, 1rem)),
+    transparent calc(100% - var(--ui-box-foot-hold, 0px)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(100% - var(--ui-box-foot, 0px) - var(--ui-box-fade, 1rem)),
+    transparent calc(100% - var(--ui-box-foot-hold, 0px)),
+    transparent 100%
+  );
 }
 
 /* forced-colors — a mask over system-rendered text harms legibility; drop it (the sticky-region Canvas

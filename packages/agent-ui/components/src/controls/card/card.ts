@@ -31,10 +31,13 @@ import './card-footer.ts'
 
 // `static props = { ...surfaceProps, scrollable }` — the elevation/brightness axes (no flexProps; a card lays
 // its regions out in block flow, not a flex line) PLUS the ergonomic scroll signal. `<ui-card scrollable>`
-// (Kim, 2026-07-05: "the whole container should scroll") puts the card into scroll mode: card.css makes the
-// CARD ITSELF the scroll viewport (`overflow-y:auto`) with the header/footer `position: sticky`, so the WHOLE
-// container scrolls as one and the brackets pin at its edges (the edge-fade mask paints on the card viewport —
-// wired in card-content.ts). It is the ergonomic convenience over marking the content region itself —
+// (Kim, 2026-07-07: "<ui-card-content> should have the mask and manage overflow ... it should be set to use
+// 100% of its parent height when [scrollable]") puts the card into scroll mode: card.css makes ui-card-content
+// ITSELF the scroll viewport (`overflow-y:auto`, filling 100% of the card via the flex carve-out — the shell's
+// SOLE flex item), while the header/footer become OVERLAID PEERS (`position: absolute`, no background —
+// removed from flow entirely) rather than sticky/flex siblings. The edge-fade mask paints directly on
+// ui-card-content (wired in card-content.ts) — the brackets never carry it and stay crisp. It is the ergonomic
+// convenience over marking the content region itself —
 // `<ui-card-content scrollable>` (the A2UI-mapped signal); card.css triggers scroll mode off EITHER. Note the
 // two are not identical at RUNTIME: the content signal is fully reactive, while this parent `scrollable` is read
 // once at the content region's connect for the fade-mask arming — toggle scroll at runtime via the content

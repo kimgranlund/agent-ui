@@ -135,67 +135,87 @@ describe('card.css — region-less humane default (ADR-0056)', () => {
   })
 })
 
-describe('card.css — scroll mode is a FLEX COLUMN (the WRAPPER MODEL, REVISED 2026-07-06) + forced-colors', () => {
-  it('scroll mode: the shell becomes a flex column off either signal — header/footer flex:0 0 auto + sticky KEPT, content flex:1 1 auto', () => {
-    // REVISED 2026-07-06 (Kim ratified via /intent-extract): the shell switches from block-flow to a FLEX COLUMN
-    // in scroll mode — the structural change the wrapper model needs. `overflow-y:auto` + sticky brackets are
-    // KEPT on the card (the fallback viewport when no [scroll-wrapper] is present — byte-identical to the PRIOR
-    // 2026-07-05 "whole container scrolls" behaviour).
+describe('card.css — scroll mode: ui-card-content IS the viewport, header/footer are OVERLAID peers (REVISED 2026-07-07) + forced-colors', () => {
+  it('scroll mode: the shell stays flex (the sizing mechanism only) — position:relative + isolate, NO gap/padding on the shell any more', () => {
+    // REVISED 2026-07-07: supersedes the WRAPPER MODEL. The shell still needs `display:flex` (the one construct
+    // that hands a flex item a genuinely definite size against a max-block-size-only auto-height parent), but
+    // header/footer no longer participate in it (they're position:absolute) — so there is no `gap`/`padding` on
+    // the shell any more (those existed only to space THREE flex items; content is now the sole item).
     expect(scopeCard).toMatch(/:scope\[scrollable\]/) // the ergonomic <ui-card scrollable> signal is a trigger
     expect(scopeCard).toMatch(/:has\(>\s*ui-card-content\[scrollable\]\)/) // and the A2UI content-level signal
-    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*display:\s*flex/) // the shell IS now flex
-    expect(scopeCard).toMatch(/flex-direction:\s*column/) // header/content/footer stack as a column
-    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*overflow-y:\s*auto/) // the FALLBACK viewport
-    expect(scopeCard).toMatch(/position:\s*sticky/) // header/footer sticky is KEPT (harmless in the wrapper shape)
-    // sticky inset is 0 (NOT --ui-card-region-margin) — the card's own flex-mode `padding` (below) now provides
-    // the 6px frame↔bracket gutter; an ADDITIONAL 6px inset would double-stack once actually stuck (measured
-    // cross-engine — card.browser.test.ts's gutter proof).
-    expect(scopeCard).toMatch(/ui-card-header\)[^}]*\{[^}]*inset-block-start:\s*0/)
-    expect(scopeCard).toMatch(/ui-card-footer\)[^}]*\{[^}]*inset-block-end:\s*0/)
+    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*display:\s*flex/) // the shell is STILL flex
+    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*flex-direction:\s*column/)
+    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*position:\s*relative/) // anchors the overlay brackets
+    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*isolation:\s*isolate/)
+    // the shell itself no longer scrolls or paints a mask — ui-card-content does (below)
+    const shellAt = scopeCard.indexOf(':scope[scrollable]')
+    const shellBlock = scopeCard.slice(shellAt, scopeCard.indexOf('}', shellAt))
+    expect(shellBlock).not.toMatch(/overflow-y:\s*auto/)
+    expect(shellBlock).not.toMatch(/gap:/)
+    expect(shellBlock).not.toMatch(/padding:/)
     expect(scopeContent).not.toMatch(/:scope\[scrollable\]/) // ui-card-content's OWN @scope carries no scroll-mode leg
   })
 
-  it('flex items never margin-collapse: scroll mode zeroes the per-region margin and reproduces the SAME 6px rhythm via gap + container padding', () => {
-    // The load-bearing correctness fix a flex column needs (flex items do NOT margin-collapse, unlike the
-    // block-flow BFC default) — keeping each region's own 6px margin here would DOUBLE the region↔region gutter
-    // to 12px. `gap` (between items, never doubles) + the container's own `padding` (frame↔first/last-item,
-    // where a flex container has no adjacent sibling to collapse against anyway) reproduce the identical 6px.
-    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*gap:\s*var\(--ui-card-region-margin\)/)
-    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*padding:\s*var\(--ui-card-region-margin\)/)
-    // the zeroing leg: higher specificity than the base per-region margin rule, keyed off all three region tags
-    const at = scopeCard.indexOf('margin: 0;')
-    expect(at, 'no margin:0 override found in @scope (ui-card)').toBeGreaterThan(-1)
-    const selectors = scopeCard.slice(0, at)
-    const tail = selectors.slice(selectors.lastIndexOf(';') + 1)
-    expect(tail).toMatch(/:scope\[scrollable\]\s*>\s*:where\(ui-card-header,\s*ui-card-content,\s*ui-card-footer\)/)
+  it('header/footer become OVERLAID PEERS — position:absolute, inset-inline:0, one pinned block edge each, KEEPING their margin (not zeroed)', () => {
+    // REVISED 2026-07-07: no longer sticky/flex items — removed from flow entirely so ui-card-content becomes
+    // the shell's sole flex item. They keep the generic 6px region margin (unaffected here) — for an absolutely
+    // positioned box, margin still offsets it inward from its resolved inset edges, reproducing the same
+    // floating 6px-inset look, just out-of-flow.
+    expect(scopeCard).toMatch(/ui-card-header\)[^}]*\{[^}]*position:\s*absolute/)
+    expect(scopeCard).toMatch(/ui-card-header\)[^}]*\{[^}]*inset-inline:\s*0/)
+    expect(scopeCard).toMatch(/ui-card-header\)[^}]*\{[^}]*inset-block-start:\s*0/)
+    expect(scopeCard).toMatch(/ui-card-footer\)[^}]*\{[^}]*position:\s*absolute/)
+    expect(scopeCard).toMatch(/ui-card-footer\)[^}]*\{[^}]*inset-inline:\s*0/)
+    expect(scopeCard).toMatch(/ui-card-footer\)[^}]*\{[^}]*inset-block-end:\s*0/)
+    // NO background (Kim: the brackets stay see-through — the mask carries the occlusion) — neither in this
+    // @scope block at all, and the header/footer's own token block never sets one either.
+    expect(scopeCard).not.toMatch(/background:\s*inherit/)
+    // NOT in the margin-zeroing leg (that targets ui-card-content alone now, not header/footer)
+    const zeroAt = scopeCard.indexOf('margin: 0;')
+    expect(zeroAt, 'no margin:0 leg found').toBeGreaterThan(-1)
+    const zeroSelectors = scopeCard.slice(0, zeroAt)
+    const zeroTail = zeroSelectors.slice(zeroSelectors.lastIndexOf(';') + 1)
+    expect(zeroTail).toMatch(/:scope\[scrollable\]\s*>\s*:where\(ui-card-content\)/)
+    expect(zeroTail).not.toMatch(/ui-card-header/)
+    expect(zeroTail).not.toMatch(/ui-card-footer/)
   })
 
-  it('header/footer are flex:0 0 auto (never grow/shrink to fill) — content is flex:1 1 auto (fills the space between them)', () => {
-    // REVISED 2026-07-06: replaces the RETIRED min-block-size:100% percentage recipe (which always overflowed a
-    // short card by the header+footer's own height) — flex-grow gives the SAME sticky-footer-fill for free,
-    // without that side effect (flex-grow only adds LEFTOVER space, it never forces height beyond natural size).
-    expect(scopeCard).toMatch(/ui-card-header\)[^}]*\{[^}]*flex:\s*0 0 auto/)
-    expect(scopeCard).toMatch(/ui-card-footer\)[^}]*\{[^}]*flex:\s*0 0 auto/)
+  it('ui-card-content: flex:1 1 auto (fills "100% of parent height") + min-block-size:0 + overflow-y:auto — the ONE scroll viewport, no wrapper', () => {
+    // REVISED 2026-07-07: replaces BOTH the retired min-block-size:100% recipe AND the short-lived [scroll-wrapper]
+    // — ui-card-content itself now scrolls directly.
     const at = scopeCard.indexOf('flex: 1 1 auto;')
     expect(at, 'no content flex:1 1 auto rule found').toBeGreaterThan(-1)
-    const selectors = scopeCard.slice(0, at)
+    const block = scopeCard.slice(scopeCard.lastIndexOf('{', at), scopeCard.indexOf('}', at) + 1)
+    expect(block).toMatch(/min-block-size:\s*0/)
+    expect(block).toMatch(/overflow-y:\s*auto/)
+    const selectors = scopeCard.slice(0, scopeCard.lastIndexOf('{', at))
     const tail = selectors.slice(selectors.lastIndexOf(';') + 1)
     expect(tail).toMatch(/:scope\[scrollable\]\s*>\s*:where\(ui-card-content\)/)
     expect(css).not.toMatch(/min-block-size:\s*100%/) // the retired recipe is genuinely gone, not just unused
+    expect(css).not.toMatch(/\[scroll-wrapper\]/) // the wrapper model is genuinely gone, not just unused
   })
 
-  it('THE WRAPPER MODEL: a [scroll-wrapper] child of ui-card-content becomes the real overflow:auto viewport; content becomes a nested flex column with min-block-size:0', () => {
-    expect(scopeCard).toMatch(/:has\(>\s*\[scroll-wrapper\]\)/) // ui-card-content is matched by its wrapper child
-    const contentNestedAt = scopeCard.indexOf('min-block-size: 0;')
-    expect(contentNestedAt, 'no min-block-size:0 override found on ui-card-content').toBeGreaterThan(-1)
-    // the wrapper itself: flex:1 1 auto + min-block-size:0 + overflow-y:auto — the actual scroll viewport
-    const wrapperAt = scopeCard.indexOf('overflow-y: auto;', contentNestedAt)
-    expect(wrapperAt, 'no [scroll-wrapper] overflow-y:auto rule found').toBeGreaterThan(-1)
-    const wrapperBlock = scopeCard.slice(scopeCard.lastIndexOf('{', wrapperAt), wrapperAt)
-    expect(wrapperBlock).toMatch(/flex:\s*1 1 auto/)
-    expect(wrapperBlock).toMatch(/min-block-size:\s*0/)
-    const wrapperSelectors = scopeCard.slice(0, scopeCard.lastIndexOf('{', wrapperAt))
-    expect(wrapperSelectors.slice(wrapperSelectors.lastIndexOf(';') + 1)).toMatch(/ui-card-content\)\s*>\s*\[scroll-wrapper\]/)
+  it('the SAME bracket bands drive BOTH the block-padding on ui-card-content AND (unchanged) the gradient offset', () => {
+    // Kim's ask: "adjust block-padding and linear gradient coordinates based on presence of the peer footer and
+    // header" — ONE measured source (--ui-box-head/--ui-box-foot, published by traits/scroll-fade.ts), two
+    // consumers. `max(band, plain-pad)` is the formula: a present bracket's band always exceeds the plain 6px
+    // region pad (so it wins — content clears the bracket); an absent bracket publishes 0px (so the plain pad
+    // wins instead).
+    expect(scopeCard).toMatch(/padding-block-start:\s*max\(var\(--ui-card-box-head\),\s*var\(--ui-card-region-pad-block\)\)/)
+    expect(scopeCard).toMatch(/padding-block-end:\s*max\(var\(--ui-card-box-foot\),\s*var\(--ui-card-region-pad-block\)\)/)
+    // and the TOKEN block re-declares the card's own vars FROM the shared --ui-box-head/-foot seam (0px default)
+    const contentTokens = whereBlock(':where(ui-card-content) {')
+    expect(contentTokens).toMatch(/--ui-card-box-head:\s*var\(--ui-box-head,\s*0px\)/)
+    expect(contentTokens).toMatch(/--ui-card-box-foot:\s*var\(--ui-box-foot,\s*0px\)/)
+  })
+
+  it('opts INTO the shared HOLD (container-box.css) so the gradient stays fully transparent/opaque THROUGH the bracket band, not mid-ramp across it', () => {
+    // The backgroundless overlay brackets need the gradient itself to hold through their own band (else a crisp
+    // bracket sits over partially-visible scrolled content, measured cross-engine) — every OTHER --ui-box-fade
+    // consumer never sets these two vars, so they stay a provable no-op there (container-box.test.ts, unchanged).
+    const contentTokens = whereBlock(':where(ui-card-content) {')
+    expect(contentTokens).toMatch(/--ui-box-head-hold:\s*var\(--ui-box-head,\s*0px\)/)
+    expect(contentTokens).toMatch(/--ui-box-foot-hold:\s*var\(--ui-box-foot,\s*0px\)/)
   })
 
   it('a forced-colors block keeps the card border visible (CanvasText)', () => {

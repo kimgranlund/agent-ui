@@ -57,45 +57,26 @@ const nested = el('ui-card', { elevation: '1' }, [
 ])
 applyDemoWidth(nested, '24rem')
 
-// ── [4a] scrollable — the WRAPPER MODEL (recommended): a <span scroll-wrapper> is the real viewport, so the ──
-// edge-fade mask (fixed on ui-card-content, a flex frame around the wrapper) stays visible through the WHOLE
-// scroll, not just its extremes.
+// ── [4] scrollable — ui-card-content IS the viewport (REVISED 2026-07-07): it manages its own overflow and ──
+// carries the edge-fade mask directly; the header/footer are OVERLAID peers (position:absolute, no background),
+// so the fade stays visible through the WHOLE scroll at any content length, with no author-written wrapper.
 const longText = 'Scrollable content. '.repeat(40)
-const wrapperScrollCard = el('ui-card', { scrollable: '' }, [
+const scrollCard = el('ui-card', { scrollable: '' }, [
   el('ui-card-header', {}, [text('Scrollable')]),
-  el('ui-card-content', {}, [el('span', { 'scroll-wrapper': '' }, [text(longText)])]),
-  el('ui-card-footer', {}, [text('Footer stays put')]),
-])
-applyDemoWidth(wrapperScrollCard, '24rem')
-wrapperScrollCard.style.maxBlockSize = '12rem' // constrain the card so scroll mode bites
-const wrapperScrollNote = document.createElement('p')
-wrapperScrollNote.textContent =
-  'The RECOMMENDED shape: a <span scroll-wrapper> inside ui-card-content is the real scroll viewport, nested ' +
-  'two levels below the header/footer. ui-card-content itself becomes a FIXED flex frame around it that carries ' +
-  'the automatic edge-fade mask — because that frame never scrolls, the fade stays visible through the WHOLE ' +
-  'scroll (try it), not just near the extremes. Header/footer stay fully crisp at every scroll position.'
-
-// ── [4b] scrollable — the FALLBACK shape (no [scroll-wrapper]): the CARD itself is the scroll viewport, ──
-// degrading gracefully to the prior behaviour — the fade is only visible near the scroll extremes for content
-// this long.
-const fallbackScrollCard = el('ui-card', { scrollable: '' }, [
-  el('ui-card-header', {}, [text('Scrollable (fallback)')]),
   el('ui-card-content', {}, [text(longText)]),
   el('ui-card-footer', {}, [text('Footer stays put')]),
 ])
-applyDemoWidth(fallbackScrollCard, '24rem')
-fallbackScrollCard.style.maxBlockSize = '12rem'
-const fallbackScrollNote = document.createElement('p')
-fallbackScrollNote.textContent =
-  'The FALLBACK shape: plain ui-card-content children with no [scroll-wrapper] — the CARD itself becomes the ' +
-  'scroll viewport (degrading gracefully, not an error). Header/footer stay just as crisp, but for content this ' +
-  'long the edge-fade mask (still on ui-card-content) is only visible near the very start/end of the scroll ' +
-  "range, not throughout (mask-image paints relative to content's own box, which here IS the full scroll extent)."
+applyDemoWidth(scrollCard, '24rem')
+scrollCard.style.maxBlockSize = '12rem' // constrain the card so scroll mode bites
+const scrollNote = document.createElement('p')
+scrollNote.textContent =
+  'ui-card-content manages its own overflow and carries the automatic edge-fade mask directly — no author-' +
+  'written wrapper needed. The header/footer are overlaid peers (no background of their own); the mask fades ' +
+  'scrolled content as it passes beneath them (try it) so the see-through reads as fading, not a hard cut.'
 
 content.append(
   exampleSection('Composed regions', composed),
   exampleSection('Surface — elevation range', surfaceGrid),
   exampleSection('Nested radius (one level)', nested),
-  exampleSection('Scrollable content — the wrapper model (recommended)', wrapperScrollNote, wrapperScrollCard),
-  exampleSection('Scrollable content — the fallback shape (no wrapper)', fallbackScrollNote, fallbackScrollCard),
+  exampleSection('Scrollable content', scrollNote, scrollCard),
 )
