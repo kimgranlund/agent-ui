@@ -9,7 +9,7 @@
 > | **Proposed by** | orchestration-lead — on Kim's directive that "all containers should have an inset/gap system expressed as children's margins", plus a header/content/footer pattern (sticky headers, dividers) and a fixed region padding (inline 12 · block 4 · gap 8, nested content stepping in one inset per level). Design forks confirmed with Kim (rollout scope; flow-root + margin-collapse). |
 > | **Ratified by** | orchestration-lead — on the green `check` + `test` (jsdom) + `test:browser` (both engines) + `size`, and screenshot review of the card + modal + select panels. |
 > | **Repairs** | **NEW** `controls/_surface/container-box.css` (+ its structure probe) · `component-styles.css` (`@import`, after `container.css`) · the overlay panels `controls/{select,menu,combo-box}/*.{ts,css}` (`[data-box]` + inset margins; select group-headers sticky) · `controls/card/card.{css}` + its geometry/browser tests (rolled onto the model; nested-radius re-based) · `controls/modal/modal.{ts,css}` + tests. |
-> | **Supersedes / Superseded by** | Partially superseded by the **2026-07-04 Amendment 2** below (region margin: full-bleed → inset, across the whole family; the card-only 6px override — Amendment 1 — is rescinded), and the **2026-07-05 Amendment 3** below (the scroll affordance — a presence-aware edge-fade mask + the card's whole-container scroll model). **Amendment 5** (accepted, Kim ratified 2026-07-05) further supersedes **Amendment 4** (drops the `[scroll-wrapper]` WRAPPER MODEL — `ui-card-content` itself is now the scroll viewport). **2026-07-05 Amendment 6 (accepted, Kim ratified 2026-07-05)** refines Amendment 5 (unchanged shape) with the scrollbar-hide + keyboard-operability + focus-ring decision. **Extended by ADR-0056** (the region-less card humane default — a CSS fallback leg on the "card holds no padding" law: a Card with NO region children gets region-equivalent padding; the law stands for region-bearing composition). **Relates** ADR-0015 (container surface — the PAINT layer this SPACING layer sits beside), ADR-0016 (layout), ADR-0018 (concentric nested-radius — re-based here off the content inline padding), ADR-0041 (widget geometry). |
+> | **Supersedes / Superseded by** | Partially superseded by the **2026-07-04 Amendment 2** below (region margin: full-bleed → inset, across the whole family; the card-only 6px override — Amendment 1 — is rescinded), and the **2026-07-05 Amendment 3** below (the scroll affordance — a presence-aware edge-fade mask + the card's whole-container scroll model). **Amendment 5** (accepted, Kim ratified 2026-07-05) further supersedes **Amendment 4** (drops the `[scroll-wrapper]` WRAPPER MODEL — `ui-card-content` itself is now the scroll viewport). **2026-07-05 Amendment 6 (accepted, Kim ratified 2026-07-05)** refines Amendment 5 (unchanged shape) with the scrollbar-hide + keyboard-operability + focus-ring decision. **A 2026-07-08 Amendment 6 refinement (proposed, pending ratification)** restores `ui-card-content`'s INLINE region margin (axis-split from the block-zeroing above) so its text aligns with the header/footer's. **Extended by ADR-0056** (the region-less card humane default — a CSS fallback leg on the "card holds no padding" law: a Card with NO region children gets region-equivalent padding; the law stands for region-bearing composition). **Relates** ADR-0015 (container surface — the PAINT layer this SPACING layer sits beside), ADR-0016 (layout), ADR-0018 (concentric nested-radius — re-based here off the content inline padding), ADR-0041 (widget geometry). |
 
 ## Context
 
@@ -380,3 +380,35 @@ forced-colors — both engines) · `card.md`.
 
 Gates green: `check` (tsc + site) · jsdom 2477 · `test:browser` 734 (Chromium + WebKit) · `size` 22949/23552.
 **Status: accepted** (Kim ratified, 2026-07-05).
+
+### Amendment 6 refinement — 2026-07-08 (proposed, pending Kim's ratification) — content keeps its INLINE margin
+
+Kim, verbatim + screenshot, after Amendment 6 shipped: *"for contents of `<ui-card-content ...>` do not lose the
+default margins."* The image showed content's text sitting ~6px LEFT of the header/footer text — scroll mode's
+`margin: 0` on `ui-card-content` (§ Amendment 3/5 above) zeroed **both** axes, but the overlaid header/footer
+kept their own 6px region margin (unaffected) — the brackets sat 6px further inset than content, so the two
+texts no longer shared a left edge.
+
+**The fix is axis-scoped, not a reversion.** `ui-card-content` now gets `margin-block: 0` (unchanged reasoning:
+the flex item's margin box, not just its border box, fills the column, and the block-padding bracket-clearance
+formula — `max(band, plain-pad)` — already reserves the exact vertical gutter a present header/footer needs;
+`scroll-fade.ts`'s `bandOf()` measures the BRACKET's own rendered size, so a margin restored on content's block
+axis would double-stack, not merely be redundant) + `margin-inline: var(--ui-card-region-margin)` (restored —
+content is the flex column's CROSS axis, so an inline margin only insets its stretched width, never touching
+the block/main-axis sizing at all, and it is what the header/footer's own margin needs matched to align text).
+
+MEASURED, both engines (`card.browser.test.ts`): header/content/footer's own ink (border-box left edge + that
+region's own `padding-inline-start`) all resolve to **19px** from the card's outer edge — genuinely coincident,
+not merely close — on a short (non-scrolling) card, holding through a genuine mid-scroll re-measurement too
+(alignment does not drift once scrolling actually engages). The block gutters the fix must NOT touch (the
+existing ~6px top/bottom, Amendment 6 above) are re-proven unchanged in the same mount. A quick visual
+screenshot (scratch, not shipped) confirms it beyond the numbers: header/content/footer text lines up on one
+left edge.
+
+Repairs: `controls/card/card.css` (the content margin-zeroing leg split into `margin-block: 0` +
+`margin-inline: var(--ui-card-region-margin)`) · `card-css.test.ts` (the CSS-text pin updated for the new
+declaration shape + a new pin for the restored inline margin) · `card.browser.test.ts` (two new rendered
+alignment proofs — short card and mid-scroll).
+
+Gates green: `check` (tsc + site) · jsdom 2478 · `test:browser` 738 (Chromium + WebKit) · `size` 22949/23552
+(unchanged). **Status: proposed** — awaiting Kim's ratification.

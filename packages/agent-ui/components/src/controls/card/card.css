@@ -176,12 +176,25 @@
     flex-direction: column;
   }
 
-  /* Content's own 6px region margin (the block-flow default, above) would shrink it away from "100% of parent"
-     — scroll mode zeroes it. Header/footer, below, deliberately do NOT get this — they KEEP their margin (see
-     their own rule for why). Higher specificity (an extra `[scrollable]`/`:has()` clause) wins outright. */
+  /* Content's own 6px region margin (the block-flow default, above) — split by AXIS in scroll mode (Kim,
+     verbatim: "for contents of <ui-card-content ...> do not lose the default margins" — a screenshot caught
+     content's text sitting ~6px LEFT of the header/footer text once this went to `margin: 0` wholesale).
+     BLOCK (top/bottom) stays zeroed: it would otherwise shrink content away from "100% of parent" (the flex
+     item's margin box, not just its border box, fills the column), AND double-stack against the block-padding
+     bracket-clearance formula below (`max(band, plain-pad)` already reserves the exact vertical gutter a
+     present header/footer needs — `scroll-fade.ts`'s `bandOf()` measures the BRACKET's own rendered size, not
+     content's, so it does not shrink back if content also gained a margin here). INLINE (left/right) is KEPT at
+     the shared region margin — content is the flex item's CROSS-axis (column direction), so a left/right margin
+     only insets its stretched width, it does not touch the block/main-axis sizing at all — and it is what makes
+     content's text align with the header/footer text (which keep their own margin unchanged, below), both
+     reading at the SAME 6px+12px = 18px inset from the card's inner edge, matching the non-scroll shell. Header/
+     footer, below, were never zeroed (see their own rule for why). Higher specificity (an extra
+     `[scrollable]`/`:has()` clause) wins outright over the generic `> :where(ui-card-header, ui-card-content,
+     ui-card-footer) { margin: ... }` rule above. */
   :scope[scrollable] > :where(ui-card-content),
   :scope:has(> ui-card-content[scrollable]) > :where(ui-card-content) {
-    margin: 0;
+    margin-block: 0;
+    margin-inline: var(--ui-card-region-margin);
   }
 
   /* Header/footer become OVERLAID PEERS — `position: absolute`, pinned to the card's inline edges and ONE

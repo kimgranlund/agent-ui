@@ -67,7 +67,7 @@ geometry:
   sizeClass: container   # Container/layout — spacing off --ui-space × density; a card has NO control height (never reads --ui-height-*)
   padding: var(--ui-card-padding)        # ALWAYS 0 (ADR-0046 box-model) — the card itself holds no padding; each region carries its own fixed regionPadding + regionMargin instead
   regionPadding: var(--ui-card-region-pad-inline) / var(--ui-card-region-pad-block)   # 12px inline + 6px block, rem-based (density-INVARIANT) — REVISED 2026-07-04: card now reads container-box.css's shared ADR-0046 defaults straight (the card-only 6px override is rescinded); identical to modal/select/menu/combo-box
-  regionMargin: var(--ui-card-region-margin)   # 6px uniform inset margin around each region (REVISED 2026-07-04: regions are no longer full-bleed). The DEFAULT (non-scroll) shell is BLOCK FLOW (flow-root, not grid/flex, per Kim's "containers should not use grid or flex"), so adjacent region margins COLLAPSE to a clean 6px gutter and the 1px frame border blocks collapse-through at the edges — one uniform margin, no grid gap or first/last split. SCROLL MODE (REVISED 2026-07-07) keeps the shell as a (sizing-only) flex column, but only `ui-card-content` is a flex item now — header/footer are `position:absolute` overlays that KEEP this same margin (unzeroed) as their own inset-from-edge; `ui-card-content` alone gets its margin zeroed so it can fill "100% of parent height"
+  regionMargin: var(--ui-card-region-margin)   # 6px uniform inset margin around each region (REVISED 2026-07-04: regions are no longer full-bleed). The DEFAULT (non-scroll) shell is BLOCK FLOW (flow-root, not grid/flex, per Kim's "containers should not use grid or flex"), so adjacent region margins COLLAPSE to a clean 6px gutter and the 1px frame border blocks collapse-through at the edges — one uniform margin, no grid gap or first/last split. SCROLL MODE (REVISED 2026-07-07) keeps the shell as a (sizing-only) flex column, but only `ui-card-content` is a flex item now — header/footer are `position:absolute` overlays that KEEP this same margin (unzeroed) as their own inset-from-edge; `ui-card-content` gets its margin zeroed on the BLOCK axis only (so it can fill "100% of parent height") — its INLINE margin is KEPT (REVISED 2026-07-08, ADR-0046 Amendment 6 refinement) so its text stays aligned with the header/footer's
   radius: var(--ui-card-radius, var(--ui-radius-base))   # root radius = the shared --ui-radius-base; a nested card decrements one level (ADR-0018)
   nestedRadius: r_child = max(0, r_parent − pad_parent)  # the concentric-corner law, published as --ui-card-child-radius (ONE level; deeper nesting is manual). REVISED 2026-07-04: pad_parent is now 12px (was the card-only 6px override) — with the default --ui-radius-base of 12px, an unreseeded root card's inner radius now floors at EXACTLY 0 (a knife-edge, not the old 6px-positive headroom); reseed --ui-card-radius larger than 12px for a visibly rounded nested corner
 
@@ -187,11 +187,18 @@ mechanism from the retired flex-column revisions) — a short body no longer str
 and (since header/footer no longer occupy flow height at all, being overlaid) a genuinely short scrollable
 card never force-overflows (measured; `card.browser.test.ts`'s `[fixed]` leg).
 
-Header/footer **keep** their generic 6px region margin (unlike `ui-card-content`, whose margin is zeroed so it
-can fill "100%"): for an absolutely positioned box, margin still offsets it inward from its resolved inset
-edges, so `inset-inline: 0` + the existing margin nets the same floating 6px-inset look the family's regions
-always carry, just out-of-flow now. Their rect never moves as `ui-card-content` scrolls internally (verified
-cross-engine) — they are genuinely outside the scrolled element, not sticky-within-it.
+Header/footer **keep** their generic 6px region margin: for an absolutely positioned box, margin still offsets
+it inward from its resolved inset edges, so `inset-inline: 0` + the existing margin nets the same floating
+6px-inset look the family's regions always carry, just out-of-flow now. Their rect never moves as
+`ui-card-content` scrolls internally (verified cross-engine) — they are genuinely outside the scrolled element,
+not sticky-within-it.
+
+`ui-card-content`'s own margin is zeroed **on the BLOCK axis only** (Kim, screenshot: "do not lose the default
+margins" — an earlier `margin: 0` on both axes shrank content's INLINE inset away too, so its text sat ~6px
+LEFT of the header/footer text). Block stays zeroed so the flex item can fill "100%" without double-stacking
+against the block-padding bracket-clearance formula below; inline **keeps** the same `--ui-card-region-margin`
+every other region reads, so content's ink lines up with the overlaid header/footer at the identical x
+(measured both engines: 19px from the card's outer edge, `card.browser.test.ts`).
 
 ### The scrollbar is HIDDEN — the fade is the sole scroll affordance (REVISED 2026-07-08, ADR-0046 Amendment 6)
 

@@ -731,6 +731,63 @@ describe('ui-card scroll mode — ui-card-content is the viewport; header/footer
     expect(bottomGutter, `${server.browser}: the overlaid footer's bottom gutter is too large (${bottomGutter})`).toBeLessThanOrEqual(9)
   })
 
+  it('[review] content INLINE margin matches header/footer — text left edges coincide (Kim, screenshot: "do not lose the default margins")', () => {
+    // A screenshot caught content's text sitting ~6px LEFT of the header/footer text once scroll mode zeroed
+    // ui-card-content's margin on ALL sides — the brackets kept their own inline margin (unaffected), content
+    // did not, so the two texts no longer shared an inset. The fix restores content's INLINE margin only
+    // (card.css); this is the load-bearing rendered proof the three regions' own ink (border-box left edge +
+    // that region's own padding-inline-start) now coincides at the SAME x, short card (no scroll engaged yet).
+    const card = mount(
+      '<ui-card scrollable style="max-block-size: 120px"><ui-card-header>H</ui-card-header>' +
+        '<ui-card-content><p>Body text</p></ui-card-content>' +
+        '<ui-card-footer>F</ui-card-footer></ui-card>',
+    )
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    const footer = card.querySelector('ui-card-footer') as HTMLElement
+    const textLeft = (el: HTMLElement): number => el.getBoundingClientRect().left + px(getComputedStyle(el).paddingLeft)
+    const headerTextLeft = textLeft(header)
+    const contentTextLeft = textLeft(content)
+    const footerTextLeft = textLeft(footer)
+    expect(contentTextLeft, `${server.browser}: content's ink (${contentTextLeft}) does not align with header's (${headerTextLeft})`).toBeCloseTo(
+      headerTextLeft,
+      0,
+    )
+    expect(contentTextLeft, `${server.browser}: content's ink (${contentTextLeft}) does not align with footer's (${footerTextLeft})`).toBeCloseTo(
+      footerTextLeft,
+      0,
+    )
+  })
+
+  it('[review] content INLINE margin holds through a genuine scroll (long card) — alignment does not drift once content is actually scrolled', async () => {
+    const card = mount(
+      '<ui-card scrollable style="max-block-size: 120px"><ui-card-header>H</ui-card-header>' +
+        `<ui-card-content>${Array.from({ length: 20 }, (_, i) => `<p>Paragraph ${i}</p>`).join('')}</ui-card-content>` +
+        '<ui-card-footer>F</ui-card-footer></ui-card>',
+    )
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    const footer = card.querySelector('ui-card-footer') as HTMLElement
+    await scrollTo(content, content.scrollHeight / 2)
+    const textLeft = (el: HTMLElement): number => el.getBoundingClientRect().left + px(getComputedStyle(el).paddingLeft)
+    const headerTextLeft = textLeft(header)
+    const contentTextLeft = textLeft(content)
+    const footerTextLeft = textLeft(footer)
+    expect(contentTextLeft, `${server.browser}: alignment drifted mid-scroll vs header (${contentTextLeft} vs ${headerTextLeft})`).toBeCloseTo(
+      headerTextLeft,
+      0,
+    )
+    expect(contentTextLeft, `${server.browser}: alignment drifted mid-scroll vs footer (${contentTextLeft} vs ${footerTextLeft})`).toBeCloseTo(
+      footerTextLeft,
+      0,
+    )
+    // anti-vacuous: the block gutters this margin-inline change must NOT touch stay ~6px (unaffected — only the
+    // inline axis changed). Re-proves (b) alongside the inline proof, same mount.
+    const topGutter = header.getBoundingClientRect().top - (card.getBoundingClientRect().top + px(getComputedStyle(card).borderTopWidth))
+    expect(topGutter, `${server.browser}: the block-axis top gutter regressed (${topGutter})`).toBeGreaterThanOrEqual(4)
+    expect(topGutter, `${server.browser}: the block-axis top gutter regressed (${topGutter})`).toBeLessThanOrEqual(9)
+  })
+
   it('[review] NO-footer: the last content stays off the card edge at max scroll (the region PADDING is a robust gutter, not a collapsible margin)', async () => {
     const card = mount(
       '<ui-card scrollable style="max-block-size: 100px"><ui-card-content>' +

@@ -175,14 +175,26 @@ describe('card.css — scroll mode: ui-card-content IS the viewport, header/foot
     // NO background (Kim: the brackets stay see-through — the mask carries the occlusion) — neither in this
     // @scope block at all, and the header/footer's own token block never sets one either.
     expect(scopeCard).not.toMatch(/background:\s*inherit/)
-    // NOT in the margin-zeroing leg (that targets ui-card-content alone now, not header/footer)
-    const zeroAt = scopeCard.indexOf('margin: 0;')
-    expect(zeroAt, 'no margin:0 leg found').toBeGreaterThan(-1)
+    // NOT in the block-margin-zeroing leg (that targets ui-card-content alone now, not header/footer)
+    const zeroAt = scopeCard.indexOf('margin-block: 0;')
+    expect(zeroAt, 'no margin-block:0 leg found').toBeGreaterThan(-1)
     const zeroSelectors = scopeCard.slice(0, zeroAt)
     const zeroTail = zeroSelectors.slice(zeroSelectors.lastIndexOf(';') + 1)
     expect(zeroTail).toMatch(/:scope\[scrollable\]\s*>\s*:where\(ui-card-content\)/)
     expect(zeroTail).not.toMatch(/ui-card-header/)
     expect(zeroTail).not.toMatch(/ui-card-footer/)
+  })
+
+  it('ui-card-content keeps its INLINE region margin in scroll mode — only the BLOCK axis is zeroed (Kim: "do not lose the default margins")', () => {
+    // A screenshot caught the earlier `margin: 0` (both axes) misaligning content's text ~6px LEFT of the
+    // header/footer text — the brackets keep their own inline margin (test above), so content must too, or the
+    // two texts no longer share the same inset. BLOCK stays zeroed (the flex "100% of parent height" + the
+    // block-padding bracket-clearance formula, below, would otherwise double-stack); INLINE reads the SAME
+    // `--ui-card-region-margin` the generic (non-scroll) rule and the header/footer both use.
+    const at = scopeCard.indexOf('margin-block: 0;')
+    expect(at, 'no margin-block:0 leg found').toBeGreaterThan(-1)
+    const rule = scopeCard.slice(scopeCard.lastIndexOf('{', at), scopeCard.indexOf('}', at) + 1)
+    expect(rule).toMatch(/margin-inline:\s*var\(--ui-card-region-margin\)/)
   })
 
   it('ui-card-content: flex:1 1 auto (fills "100% of parent height") + min-block-size:0 + overflow-y:auto — the ONE scroll viewport, no wrapper', () => {
