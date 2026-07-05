@@ -164,7 +164,7 @@ Kim's resolution is a **scroll-fade mask**, plus a settled card scroll model —
 - **Consumers.** The overlay **panels** (modal/select/menu/combo-box) wire it at their `[data-box]` panel viewport
   (their sticky group-labels stay masked). **`ui-card`** wires it at the CARD viewport (below). The trait self-gates
   on ACTUAL overflow (a non-scrolling surface never fades) and tears down fully on disconnect / reactive-off.
-- **The card's whole-container scroll model (settled after two iterations).** `<ui-card scrollable>` — or the
+- **The card's whole-container scroll model (settled after two iterations).** **[SUPERSEDED 2026-07-06 by Amendment 4 — the wrapper model; card-as-viewport is now only the no-wrapper fallback.]** `<ui-card scrollable>` — or the
   A2UI-mapped `<ui-card-content scrollable>` signal — makes the **card ITSELF the scroll viewport** (`overflow-y:
   auto` + `isolation: isolate`), with header/footer `position: sticky` (`inset-block: --ui-card-region-margin` =
   6px, `background: inherit`), so the whole container scrolls as one and the brackets pin at its edges ("footer stays
@@ -188,3 +188,47 @@ ships ~5–14 KB, the 22.6 KB family total is the all-controls worst case; per-c
 booked for G8). Independent component-review of the settled card model: **GO / SHIPPABLE** (all three carried
 findings resolved or reclassified LOW). Gates green: `check` (tsc + site) · jsdom · `test:browser` (Chromium +
 WebKit) · `size` (post-rebase, 22770 / 23552).
+
+## Amendment 4 — 2026-07-06 (the card scroll model: whole-container → the WRAPPER model, Kim via /intent-extract)
+
+Amendment 3's card scroll model (card = the scroll viewport, mask on the card) had a flaw Kim caught: a `mask-image`
+on the whole card fades the sticky header/footer too — the gradient's transparent end sits exactly where the
+brackets float (Amendment 3's own "a bit of see-through in the bracket zone"). Two fixes were tried and measured
+in-browser before the resolution:
+
+1. **Mask moved to `ui-card-content` (the scrolled child).** Brackets crisp ✓, but the fade went **invisible
+   mid-scroll for long content** — `mask-image` paints relative to the masked element's OWN box, and a *scrolled*
+   child's box leaves the visible window, so the fade zone scrolls out of view (proven in-browser).
+2. **The WRAPPER model (Kim's original sketch, ratified via /intent-extract) — the resolution.** An author-written
+   **`[scroll-wrapper]` inside `ui-card-content` is the scroll viewport**; `ui-card-content` is a **fixed** frame
+   carrying the mask. Because a box that never scrolls IS the visible window throughout, the fade is **visible across
+   the whole scroll** AND the sticky header/footer (siblings, outside the masked content) stay crisp.
+
+Mechanics:
+- **Scroll mode is a flex column** (header auto / content 1fr / footer auto) — a scoped exception to the card's
+  default block-flow "no grid/flex" (needed to size `ui-card-content` to fill so the wrapper has bounded height).
+  The default non-scroll card is unchanged (block flow). Two empirical flex fixes: flex items don't margin-collapse
+  (6px gutters reproduced via `gap` + the flex container's `padding`); and that padding + the sticky `inset-block`
+  double-stacked to 12px once stuck → sticky inset set to `0`. `flex: 1 1 auto` on content replaces the
+  `min-block-size: 100%` sticky-footer-fill hack (which force-overflowed a short card by ~the header+footer height —
+  now fixed and asserted).
+- **The trait grew a 3-way split** (`scroll-fade.ts`): `viewport` (measured — the wrapper), `paintTarget` (painted —
+  `ui-card-content`), `brackets` (queried for the sticky header/footer — the CARD). The two new options default to
+  `viewport`, so the overlay panels are byte-identical.
+- **The wrapper is author-written, NEVER auto-injected** (auto-injection would disturb A2UI's positional child
+  reconcile). **No-wrapper fallback:** `<ui-card scrollable>` without a `[scroll-wrapper]` degrades to Amendment 3's
+  card-as-viewport behaviour (mask still on content; fade only near the scroll extremes) — documented, not an error.
+  **A2UI:** a scrollable A2UI card emitting the wrapper is a **deferred follow-up** (A2UI renders `CardContent`
+  children directly today).
+- **Wrapper detection self-heals** (`card-content.ts`, mirroring `ui-text`'s childList-heal precedent): a
+  `MutationObserver` re-wires `scrollFade` on a genuine `[scroll-wrapper]`-presence flip (an imperative late-append
+  would otherwise strand the trait on the fallback while the CSS `:has()` layout already flipped). Torn down with the
+  wiring on disconnect.
+
+**The trade Kim ratified:** the scroll now lives in the wrapper, so the scrollbar is **content-band** (between the
+brackets), NOT the full-height "whole container scrolls" bar Amendment 3 described — Kim confirmed this trade (a
+running see-through fade + crisp brackets, GPU-smooth) over the full-height bar via /intent-extract.
+
+Gates green: `check` (tsc + site) · jsdom 2462 · `test:browser` 726 (Chromium + WebKit) · `size` 22899 / 23552.
+Independent component-review: **GO / SHIPPABLE** (all 10 dims ≥4; the childList-heal + a footer-fill assertion were
+applied from its two LOW findings).

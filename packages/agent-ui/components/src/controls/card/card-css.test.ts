@@ -15,10 +15,20 @@ declare const process: { cwd(): string }
 const css = (readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/card/card.css`, 'utf8') as string)
   .replace(/\/\*[\s\S]*?\*\//g, ' ')
 
-/** A flat `:where(...) {` token block — marker to its first closing brace. */
+/** A flat `:where(...) {` token block — marker to its first closing brace. Requires the marker to open its
+ * OWN line (only leading indentation before it, since the file's rule bodies are 2-space indented) — a genuine
+ * selector, never a same-text tail nested inside an unrelated compound selector (e.g. `@scope (ui-card)`'s
+ * `… > :where(ui-card-content) {` scroll-mode leg shares the literal substring `:where(ui-card-content) {` with
+ * the REAL top-level token block declared further down the file). */
 const whereBlock = (marker: string): string => {
-  const start = css.indexOf(marker)
-  return start < 0 ? '' : css.slice(start, css.indexOf('}', start))
+  let from = 0
+  for (;;) {
+    const start = css.indexOf(marker, from)
+    if (start < 0) return ''
+    const lineStart = css.lastIndexOf('\n', start - 1) + 1
+    if (/^\s*$/.test(css.slice(lineStart, start))) return css.slice(start, css.indexOf('}', start))
+    from = start + 1
+  }
 }
 
 /** A brace-balanced block INCLUDING its marker (handles the nested rules inside an @scope). */
@@ -125,19 +135,67 @@ describe('card.css — region-less humane default (ADR-0056)', () => {
   })
 })
 
-describe('card.css — scroll mode (whole-container scroll, sticky brackets, mask on card) + forced-colors', () => {
-  it('scroll mode: the CARD is the scroll viewport off either signal, header/footer are position:sticky, content does NOT self-scroll', () => {
-    // REVISED 2026-07-05 (Kim: "the whole container should scroll"): the card ITSELF becomes the scroll viewport
-    // (overflow-y:auto) with sticky brackets, so the WHOLE container scrolls as one — superseding the short-lived
-    // flex-column / inner-content-viewport model that trapped the scroll in the middle region.
+describe('card.css — scroll mode is a FLEX COLUMN (the WRAPPER MODEL, REVISED 2026-07-06) + forced-colors', () => {
+  it('scroll mode: the shell becomes a flex column off either signal — header/footer flex:0 0 auto + sticky KEPT, content flex:1 1 auto', () => {
+    // REVISED 2026-07-06 (Kim ratified via /intent-extract): the shell switches from block-flow to a FLEX COLUMN
+    // in scroll mode — the structural change the wrapper model needs. `overflow-y:auto` + sticky brackets are
+    // KEPT on the card (the fallback viewport when no [scroll-wrapper] is present — byte-identical to the PRIOR
+    // 2026-07-05 "whole container scrolls" behaviour).
     expect(scopeCard).toMatch(/:scope\[scrollable\]/) // the ergonomic <ui-card scrollable> signal is a trigger
     expect(scopeCard).toMatch(/:has\(>\s*ui-card-content\[scrollable\]\)/) // and the A2UI content-level signal
-    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*overflow-y:\s*auto/) // the CARD is the viewport
-    expect(scopeCard).toMatch(/position:\s*sticky/) // header/footer pin to the card's scroll edges
-    expect(scopeCard).toMatch(/inset-block-start:\s*var\(--ui-card-region-margin\)/) // sticky header offset = 6px
-    expect(scopeCard).toMatch(/inset-block-end:\s*var\(--ui-card-region-margin\)/) // sticky footer offset = 6px
-    expect(scopeCard).not.toMatch(/flex-direction:\s*column/) // NOT a flex column any more (model superseded)
-    expect(scopeContent).not.toMatch(/:scope\[scrollable\]/) // the content region no longer self-scrolls at all
+    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*display:\s*flex/) // the shell IS now flex
+    expect(scopeCard).toMatch(/flex-direction:\s*column/) // header/content/footer stack as a column
+    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*overflow-y:\s*auto/) // the FALLBACK viewport
+    expect(scopeCard).toMatch(/position:\s*sticky/) // header/footer sticky is KEPT (harmless in the wrapper shape)
+    // sticky inset is 0 (NOT --ui-card-region-margin) — the card's own flex-mode `padding` (below) now provides
+    // the 6px frame↔bracket gutter; an ADDITIONAL 6px inset would double-stack once actually stuck (measured
+    // cross-engine — card.browser.test.ts's gutter proof).
+    expect(scopeCard).toMatch(/ui-card-header\)[^}]*\{[^}]*inset-block-start:\s*0/)
+    expect(scopeCard).toMatch(/ui-card-footer\)[^}]*\{[^}]*inset-block-end:\s*0/)
+    expect(scopeContent).not.toMatch(/:scope\[scrollable\]/) // ui-card-content's OWN @scope carries no scroll-mode leg
+  })
+
+  it('flex items never margin-collapse: scroll mode zeroes the per-region margin and reproduces the SAME 6px rhythm via gap + container padding', () => {
+    // The load-bearing correctness fix a flex column needs (flex items do NOT margin-collapse, unlike the
+    // block-flow BFC default) — keeping each region's own 6px margin here would DOUBLE the region↔region gutter
+    // to 12px. `gap` (between items, never doubles) + the container's own `padding` (frame↔first/last-item,
+    // where a flex container has no adjacent sibling to collapse against anyway) reproduce the identical 6px.
+    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*gap:\s*var\(--ui-card-region-margin\)/)
+    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*padding:\s*var\(--ui-card-region-margin\)/)
+    // the zeroing leg: higher specificity than the base per-region margin rule, keyed off all three region tags
+    const at = scopeCard.indexOf('margin: 0;')
+    expect(at, 'no margin:0 override found in @scope (ui-card)').toBeGreaterThan(-1)
+    const selectors = scopeCard.slice(0, at)
+    const tail = selectors.slice(selectors.lastIndexOf(';') + 1)
+    expect(tail).toMatch(/:scope\[scrollable\]\s*>\s*:where\(ui-card-header,\s*ui-card-content,\s*ui-card-footer\)/)
+  })
+
+  it('header/footer are flex:0 0 auto (never grow/shrink to fill) — content is flex:1 1 auto (fills the space between them)', () => {
+    // REVISED 2026-07-06: replaces the RETIRED min-block-size:100% percentage recipe (which always overflowed a
+    // short card by the header+footer's own height) — flex-grow gives the SAME sticky-footer-fill for free,
+    // without that side effect (flex-grow only adds LEFTOVER space, it never forces height beyond natural size).
+    expect(scopeCard).toMatch(/ui-card-header\)[^}]*\{[^}]*flex:\s*0 0 auto/)
+    expect(scopeCard).toMatch(/ui-card-footer\)[^}]*\{[^}]*flex:\s*0 0 auto/)
+    const at = scopeCard.indexOf('flex: 1 1 auto;')
+    expect(at, 'no content flex:1 1 auto rule found').toBeGreaterThan(-1)
+    const selectors = scopeCard.slice(0, at)
+    const tail = selectors.slice(selectors.lastIndexOf(';') + 1)
+    expect(tail).toMatch(/:scope\[scrollable\]\s*>\s*:where\(ui-card-content\)/)
+    expect(css).not.toMatch(/min-block-size:\s*100%/) // the retired recipe is genuinely gone, not just unused
+  })
+
+  it('THE WRAPPER MODEL: a [scroll-wrapper] child of ui-card-content becomes the real overflow:auto viewport; content becomes a nested flex column with min-block-size:0', () => {
+    expect(scopeCard).toMatch(/:has\(>\s*\[scroll-wrapper\]\)/) // ui-card-content is matched by its wrapper child
+    const contentNestedAt = scopeCard.indexOf('min-block-size: 0;')
+    expect(contentNestedAt, 'no min-block-size:0 override found on ui-card-content').toBeGreaterThan(-1)
+    // the wrapper itself: flex:1 1 auto + min-block-size:0 + overflow-y:auto — the actual scroll viewport
+    const wrapperAt = scopeCard.indexOf('overflow-y: auto;', contentNestedAt)
+    expect(wrapperAt, 'no [scroll-wrapper] overflow-y:auto rule found').toBeGreaterThan(-1)
+    const wrapperBlock = scopeCard.slice(scopeCard.lastIndexOf('{', wrapperAt), wrapperAt)
+    expect(wrapperBlock).toMatch(/flex:\s*1 1 auto/)
+    expect(wrapperBlock).toMatch(/min-block-size:\s*0/)
+    const wrapperSelectors = scopeCard.slice(0, scopeCard.lastIndexOf('{', wrapperAt))
+    expect(wrapperSelectors.slice(wrapperSelectors.lastIndexOf(';') + 1)).toMatch(/ui-card-content\)\s*>\s*\[scroll-wrapper\]/)
   })
 
   it('a forced-colors block keeps the card border visible (CanvasText)', () => {
@@ -162,12 +220,13 @@ describe('card.css — REVISED 2026-07-04: the [scroll-fade] mask moved to the s
     expect(scopeContent).not.toMatch(/mask-image/)
   })
 
-  it('the card feeds the shared --ui-box-fade depth (the card is the scroll viewport the trait paints); ui-card-content does NOT', () => {
-    // REVISED 2026-07-05: the mask paints on the CARD (the whole-container scroll viewport), so the CARD feeds
-    // the depth token; ui-card-content no longer does (the trait targets the card, not the content).
-    expect(cardTokens).toMatch(/--ui-box-fade:\s*var\(--ui-space-lg,\s*1rem\)/)
+  it('ui-card-content feeds the shared --ui-box-fade depth (the mask paints THERE); the card token block does NOT', () => {
+    // REVISED 2026-07-05 (Kim: "the mask should not be placed on the container element — it should be on
+    // ui-card-content"): the CARD stays the scroll viewport the trait MEASURES, but the mask now PAINTS on
+    // ui-card-content, so ui-card-content feeds the depth token and the card no longer does.
     const contentTokens = whereBlock(':where(ui-card-content) {')
-    expect(contentTokens).not.toMatch(/--ui-box-fade/) // the content viewport is retired
+    expect(contentTokens).toMatch(/--ui-box-fade:\s*var\(--ui-space-lg,\s*1rem\)/)
+    expect(cardTokens).not.toMatch(/--ui-box-fade/) // the card viewport no longer paints the mask
   })
 
   it('the forced-colors block no longer targets ui-card-content[scroll-fade] directly (the shared rule owns the drop)', () => {
