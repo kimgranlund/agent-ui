@@ -284,3 +284,31 @@ describe('ui-field — the whole-shape assertion (test-the-whole-shape law)', ()
     expect(fieldBox.width).toBeGreaterThanOrEqual(controlBox.width - 1) // sub-px rounding guard
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [5] The required marker is a LABEL decoration, not an error signifier (both engines) — ADR-0057
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+// A `:has([required])` field appends a `' *'` via `[data-part='label']::after`. It is a STATIC requiredness
+// affordance and must read the LABEL ink (--ui-field-required-ink → --ui-field-label-ink), NOT the danger
+// error ink (--ui-field-error-ink). This guards Kim's a2ui-form report — a satisfied required field's mark
+// stayed error-red and read as a persistent validity error. Only a real engine paints ::after, so this is a
+// browser-only pin (jsdom returns '' for pseudo-element getComputedStyle).
+describe('ui-field — the required marker wears the LABEL ink, not the error ink (both engines, ADR-0057)', () => {
+  it('the label::after required mark matches the label colour and differs from the error colour', async () => {
+    const wrap = mount(`<ui-field label="Plan"><ui-text-field required ${SIZED}></ui-text-field></ui-field>`)
+    const field = wrap.querySelector('ui-field') as UIFieldElement
+    const { label, error } = partsOf(field)
+    await field.updateComplete
+
+    const markInk = getComputedStyle(label, '::after').color
+    const labelInk = getComputedStyle(label).color
+    const errorInk = getComputedStyle(error).color // computed even while display:none — colour is unaffected
+
+    // the mark actually rendered (content: ' *' present, not an empty/absent pseudo)
+    expect(getComputedStyle(label, '::after').content, `${server.browser}: no required-mark ::after content`).toContain('*')
+    // it IS the label ink — a static requiredness mark reads as part of the label
+    expect(markInk, `${server.browser}: required mark should match the label ink`).toBe(labelInk)
+    // and it is NOT the danger error ink — requiredness is not the dynamic validity signifier (ADR-0057)
+    expect(markInk, `${server.browser}: required mark must not wear the error ink`).not.toBe(errorInk)
+  })
+})

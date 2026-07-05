@@ -38,6 +38,15 @@
   --ui-field-label-font: var(--ui-font-md);
   --ui-field-label-weight: 500;
 
+  /* Required marker — the STATIC requiredness affordance appended to the label. Reads the LABEL ink, NOT
+     the error ink: requiredness is INVARIANT (it persists through a valid value), so the marker must read
+     as part of the label — never as the DYNAMIC validity/error signifier (which owns --ui-field-error-ink
+     and its own [data-part=error] text). Painting a required marker in the danger colour made a satisfied
+     field still read as "erroring" (the mark stays after a valid pick); that is exactly the intent-by-colour-
+     alone conflation ADR-0057 forbids. Following --ui-field-label-ink also mutes the marker with its label
+     under [disabled] (the repoint below flows through, var() being lazily substituted). */
+  --ui-field-required-ink: var(--ui-field-label-ink);
+
   /* Description — the muted helper text under the control. */
   --ui-field-description-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-field-description-font: var(--ui-font-sm);
@@ -85,7 +94,7 @@
      field-side state duplication. */
   :scope:has([required]) [data-part='label']::after {
     content: ' *';
-    color: var(--ui-field-error-ink);
+    color: var(--ui-field-required-ink); /* label-matched, NOT error ink — a static requiredness mark is not the dynamic error signifier (ADR-0057) */
   }
 
   /* Error visibility — default hidden; field.ts toggles the host's :state(user-invalid) custom state and

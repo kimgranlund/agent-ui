@@ -55,7 +55,7 @@ content):**
 **CSS-drawn decorations (NOT glyph content — stay CSS, OUT of the adapter):** `checkbox.css:114-122`
 (checkmark via `clip-path` polygon — crisp, geometry-scaled, state-transition-animated), `radio.css:75`
 (dot), `switch.css:88/114` (thumb), `slider.css:97/126` (thumb/track), `tabs.css:90` (active underline),
-`field.css:87` (`content: ' *'` required asterisk — typographic, not an icon). The `check` icon IS
+`field.css:96` (`content: ' *'` required asterisk — typographic, not an icon). The `check` icon IS
 vendored (ADR-0066) as the forward companion **only if** a future ADR elects to migrate the checkbox
 checkmark to an icon; the CSS tick is the recommended default and no migration is scoped.
 

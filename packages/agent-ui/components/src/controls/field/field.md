@@ -132,3 +132,11 @@ LLD-C9 follow-ups.
 `ui-field` duplicates no state of its own for these: `field.css` keys a required-marker and a muted
 label/description ink off `:has([required])` / `:has([disabled])` on the slotted control's reflected
 attributes (LLD-C5).
+
+The required marker is a `[data-part='label']::after` `' *'` appended to the **label** — a static
+requiredness affordance, never emitted by the slotted control or the form provider. It reads its own
+`--ui-field-required-ink` (defaulting to the label ink), **not** `--ui-field-error-ink`: requiredness is
+invariant, so the mark must not wear the danger colour and be misread as a persistent validity error after
+a valid value lands (ADR-0057 — intent never by colour alone; the error signifier stays the separate
+`[data-part='error']` text). Because `--ui-field-required-ink` follows `--ui-field-label-ink`, it mutes with
+the label under `[disabled]`.
