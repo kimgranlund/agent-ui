@@ -1,4 +1,4 @@
-# ADR-0049 — Family barrel budget re-based 16 → 22 KB gz (the ui-calendar + date/time picker growth)
+# ADR-0049 — Family barrel budget re-based 16 → 22 KB gz (the ui-calendar + date/time picker growth) · → 23 KB (Amendment 1, the scroll-fade wave)
 
 > Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-01
 >
@@ -53,3 +53,24 @@ Re-base the family-barrel budget **16 → 22 KB gz** (`22528 B`), giving ~13% he
 - **Remove the lazy calendar import to silence `INEFFECTIVE_DYNAMIC_IMPORT`** — rejected: the dynamic import
   is load-bearing for the GRANULAR tree-shake case (import `text-field` alone → no calendar); the warning is
   only about the full-family bundle where calendar is a member anyway. Keeping it is correct.
+
+## Amendment 1 — 2026-07-05 (re-base 22 → 23 KB; the container box-model + scroll-fade wave)
+
+The container box-model + scroll affordance wave (ADR-0046 Amendments 2 & 3) added the cross-family
+`traits/scroll-fade.ts` trait, pushing the all-controls family barrel to **22770 B gz** — 242 B over the 22 KB
+ceiling. Re-base **22 → 23 KB** (`23552 B`), per the same per-wave-checkpoint pattern (ADR-0040/0049). **Kim
+approved** after asking to "review the eventual distributed gzipped version" first.
+
+That review (same Rolldown+gzip, measured per realistic consumer import, 2026-07-05): a **single control ships
+~5 KB gz** (the shared dom+reactive+traits+base foundation, dragged in once); each **additional control ~0.5–2 KB
+marginal** — a realistic app ships **5–14 KB** (a 4-control dashboard = 7.2 KB; a full form stack = 14.1 KB). The
+22.6 KB family total is ONLY the pathological "define every control at once" case — which is exactly what this
+ceiling measures. The scroll-fade trait's real contribution is ~155 B of shared infra, pulled in only when a
+scrolling container is used.
+
+**The finding that reframes the gate:** the package `exports` currently expose only `./components` (the whole
+self-defining family), so a consumer cannot reach those 5–14 KB subsets through the public API — the bundler
+tree-shakes individual control modules fine, but there is no per-control public entry yet. **Booked for
+G8/publish** (goals.md G8 DoD): add per-control `exports` + gate the per-control MARGINAL (the ≤~2 KB "real cap"),
+so `size` measures the eventual DISTRIBUTED footprint, not the all-controls worst case. Until then the
+family-barrel ceiling stays the soft sanity check, re-based to 23 KB. `measure-size.mjs:26` (`22 → 23 * KB`).

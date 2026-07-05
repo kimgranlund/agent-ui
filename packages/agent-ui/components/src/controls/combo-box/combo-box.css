@@ -144,7 +144,8 @@
 
     /* No panel padding — options have their own padding-inline to align the ink edge */
     padding: 0;
-    overflow: hidden; /* clip options to panel radius */
+    max-block-size: 40vh; /* prevent an unbounded option list from occupying the entire viewport (matches ui-select) */
+    overflow-y: auto; /* still clips options to the panel radius (an `auto` axis clips like `hidden`, just scrollably) */
     list-style: none;
   }
 
@@ -152,11 +153,11 @@
 
   :scope [role='option'] {
     display: block;
-    margin: var(--ui-box-inset, 0.25rem); /* the box-model inset — 4px from the panel edge + between rows */
+    margin: var(--ui-box-inset, 0.375rem); /* the box-model inset — 6px from the panel edge + between rows */
     padding-block: var(--ui-combo-box-option-padding-block);
     padding-inline: var(--ui-combo-box-option-padding-inline);
     /* nested-radius (ADR-0018): the highlight corner inset from the panel by the box margin */
-    border-radius: calc(var(--ui-combo-box-panel-radius) - var(--ui-box-inset, 0.25rem));
+    border-radius: calc(var(--ui-combo-box-panel-radius) - var(--ui-box-inset, 0.375rem));
     cursor: pointer;
   }
 

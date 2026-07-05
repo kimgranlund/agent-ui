@@ -11,7 +11,7 @@ tier: container         # geometry size-class (Container/layout band — spacing
 extends: UIContainerElement  # the FACE container surface base (NOT form-associated; ADR-0015 / ADR-0016)
 # marginal: ui-card adds 146 B gz (723 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — the card family: ui-card + ui-card-header/-content/-footer) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
-attributes:            # attributes-as-API — mirrors card.ts `static props` (the surfaceProps spread; NO flexProps — a card is a grid surface, not a flex line)
+attributes:            # attributes-as-API — mirrors card.ts `static props` (the surfaceProps spread + the `scrollable` scroll-mode signal; NO flexProps — a card is a block-flow surface, and the scroll viewport itself in scroll mode)
   - name: elevation
     type: enum
     values: [0, 1, 2, 3, -1, -2, -3]   # the scheme-INVERTING plane (--md-sys-color-neutral-surface-{lowest…highest}); 0 = the neutral base
@@ -22,12 +22,18 @@ attributes:            # attributes-as-API — mirrors card.ts `static props` (t
     values: [0, 1, 2, 3, -1, -2, -3]   # the scheme-CONSISTENT tonal shift (--md-sys-color-neutral-surface-{dimmest…brightest} / the composition wash); 0 = no shift
     default: 0
     reflect: true      # reflects so container.css's [brightness=m] repoint applies to JS-set values too
+  - name: scrollable
+    type: boolean
+    default: false
+    reflect: true      # the scroll-mode hook — <ui-card scrollable> makes the CARD itself the scroll viewport with sticky header/footer (a <ui-card-content scrollable> region — the A2UI CardContent.scrollable signal — triggers the same)
 
-properties:            # IDL beyond attributes-as-API: the two surface accessors (signal-backed, from UIContainerElement.surfaceProps)
+properties:            # IDL beyond attributes-as-API: the two surface accessors (signal-backed) + the scroll signal
   - name: elevation
     description: The surface elevation axis ('-3'…'3'; signed literal union, 0 = neutral). A tracked signal; repoints the role-pure --ui-container-bg plane (ADR-0015).
   - name: brightness
     description: The surface brightness axis ('-3'…'3'; signed literal union, 0 = neutral). Composites a tonal wash over the elevation plane when both are set (ADR-0015 cl.3).
+  - name: scrollable
+    description: The scroll-mode signal (boolean). `<ui-card scrollable>` makes the CARD itself the scroll viewport (overflow-y:auto) with sticky header/footer, so the whole container scrolls as one, with an AUTOMATIC edge-fade mask on the card. Also triggerable by marking the content region `[scrollable]` (the A2UI CardContent.scrollable mapping) — that content signal is the fully-reactive form; the ergonomic `<ui-card scrollable>` arms the fade mask at connect, so toggle scroll at runtime via the content region. Needs a constrained card block-size to bite.
 
 events: []             # a card is a static surface container — it raises no events
 
@@ -59,20 +65,22 @@ keyboard: []           # a card is not interactive — no keyboard contract (int
 
 geometry:
   sizeClass: container   # Container/layout — spacing off --ui-space × density; a card has NO control height (never reads --ui-height-*)
-  padding: var(--ui-card-padding)        # ALWAYS 0 (ADR-0046 box-model) — the card itself holds no padding; each region carries its own fixed regionPadding instead
-  regionPadding: var(--ui-card-region-pad-inline) / var(--ui-card-region-pad-block)   # 6px inline + 6px block, rem-based (density-INVARIANT) — a CARD-ONLY override of the shared container-box.css ADR-0046 default (12px/4px); repointed on :where(ui-card) itself, modal/select/menu/combo-box are unaffected
+  padding: var(--ui-card-padding)        # ALWAYS 0 (ADR-0046 box-model) — the card itself holds no padding; each region carries its own fixed regionPadding + regionMargin instead
+  regionPadding: var(--ui-card-region-pad-inline) / var(--ui-card-region-pad-block)   # 12px inline + 6px block, rem-based (density-INVARIANT) — REVISED 2026-07-04: card now reads container-box.css's shared ADR-0046 defaults straight (the card-only 6px override is rescinded); identical to modal/select/menu/combo-box
+  regionMargin: var(--ui-card-region-margin)   # 6px uniform inset margin around each region (REVISED 2026-07-04: regions are no longer full-bleed). The shell is BLOCK FLOW (flow-root, not grid/flex, per Kim's "containers should not use grid or flex"), so adjacent region margins COLLAPSE to a clean 6px gutter and the 1px frame border blocks collapse-through at the edges — one uniform margin, no grid gap or first/last split
   radius: var(--ui-card-radius, var(--ui-radius-base))   # root radius = the shared --ui-radius-base; a nested card decrements one level (ADR-0018)
-  nestedRadius: r_child = max(0, r_parent − pad_parent)  # the concentric-corner law, published as --ui-card-child-radius (ONE level; deeper nesting is manual)
+  nestedRadius: r_child = max(0, r_parent − pad_parent)  # the concentric-corner law, published as --ui-card-child-radius (ONE level; deeper nesting is manual). REVISED 2026-07-04: pad_parent is now 12px (was the card-only 6px override) — with the default --ui-radius-base of 12px, an unreseeded root card's inner radius now floors at EXACTLY 0 (a knife-edge, not the old 6px-positive headroom); reseed --ui-card-radius larger than 12px for a visibly rounded nested corner
 
-forcedColors: A `@media (forced-colors: active)` block keeps the card border visible (CanvasText) and drops the [scroll-fade] mask (a mask over system text harms legibility); the surface itself survives via container.css's role-layer Canvas mapping.
+forcedColors: A `@media (forced-colors: active)` block keeps the card border visible (CanvasText); the shared container-box.css `[data-fade-top]`/`[data-fade-bottom]` rule drops the scroll-fade mask generically (a mask over system text harms legibility) — the surface itself survives via container.css's role-layer Canvas mapping.
 ---
 
 # ui-card
 
 `ui-card` is the surface container of the G9 layout family — the **first non-form container with a default
 plane**. It `extends UIContainerElement` (the FACE surface base; **not** form-associated), folds the
-`elevation` / `brightness` **surface axes** (ADR-0015) into its props, and lays its three region
-sub-elements out as a **presence-driven grid**. It carries no native element and renders no wrapper — the
+`elevation` / `brightness` **surface axes** (ADR-0015) into its props, and stacks its three region
+sub-elements in **plain block flow** (a `flow-root` BFC — *not* grid/flex, per Kim's "containers should not
+use grid or flex; let contents space themselves"). It carries no native element and renders no wrapper — the
 agent's light-DOM regions are the content.
 
 ```html
@@ -89,43 +97,82 @@ agent's light-DOM regions are the content.
 ## The region sub-elements (regions = sub-elements)
 
 A card composes three **region sub-elements** as a `ChildList` (the ratified "regions = sub-elements",
-not slots): **`ui-card-header`**, **`ui-card-content`**, **`ui-card-footer`**. The card is a grid: the
-header takes a top `auto` row, the footer a bottom `auto` row, the content the `1fr` slack. The grid is
-**presence-driven** (`:has()`) — an absent region leaves **no phantom row**. All three (and the card) are
-`UIContainerElement` subclasses that self-define on import.
+not slots): **`ui-card-header`**, **`ui-card-content`**, **`ui-card-footer`**. The shell is **block flow**:
+the three regions stack in normal document order, each floating inside the frame on a uniform 6px inset
+margin (the margins *collapse* in the BFC to a clean 6px gutter). Presence is handled **for free** — an
+absent region simply contributes **no box** (no grid track to null out, no `:has()` row template). All three
+(and the card) are `UIContainerElement` subclasses that self-define on import.
 
 `ui-card-header` and `ui-card-footer` reuse the family **leading / label / trailing** host-as-grid anatomy
-(`anatomy.md`): a `slot="leading"` adornment in the start cell, the default children as the accessible
-label in the `1fr` centre, an optional `slot="trailing"` adornment (a footer's action row, a header's
-overflow glyph). Because a card region has no control height, the adornment cells size **intrinsically** —
-the grid *structure* is reused, not the control-frame glyph sizing.
+(`anatomy.md`) — this is the one place grid remains, *inside* a region, because end-alignment of the
+trailing cell genuinely needs it (the rule stops at the shell): a `slot="leading"` adornment in the start
+cell, the default children as the accessible label in the `1fr` centre, an optional `slot="trailing"`
+adornment (a footer's action row, a header's overflow glyph). Because a card region has no control height,
+the adornment cells size **intrinsically** — the grid *structure* is reused, not the control-frame glyph sizing.
 
-`ui-card-content` is the body — plain flow content, no anatomy — and carries two pure-CSS hooks:
+`ui-card-content` is the body — plain flow content, no anatomy. In scroll mode it flows inside the scrolling
+card (the **card**, not the content, is the scroll viewport).
 
-- **`scrollable`** → a scrolling viewport (`overflow:auto`; the body's `min-block-size:0` lets the `1fr`
-  track shrink below its content). It **requires a constrained card block-size** to bite — give the card a
-  `max-block-size` / `height`, or place it in a sized flex/grid parent — otherwise the card just grows.
-  (Named `scrollable`, not `scroll`, to avoid shadowing the native `Element.scroll()` method.)
-- **`scroll-fade`** → a `mask-image` edge fade (the top/bottom band fades to transparent so scrolled
-  content reads as continuing past the edge). The shipped behaviour is a **static symmetric fade** (robust
-  on every engine, WebKit included); a scroll-driven refinement (fading only at the *scrollable* edge via
-  `animation-timeline: scroll()`) is a noted follow-up.
+### Scroll mode (REVISED 2026-07-05, Kim: "the whole container should scroll")
 
-## Region padding — a card-only 6px override (diverges from ADR-0046)
+**`<ui-card scrollable>`** (or a `[scrollable]` content region — the A2UI-mapped `CardContent.scrollable`
+signal — either triggers it) puts the card into scroll mode. The **card itself becomes the scroll viewport**
+(`overflow-y:auto`), so the **whole container scrolls as one**, and the **header/footer are `position: sticky`**,
+pinned at the card's scroll edges ("Footer stays put") while the body scrolls under them. This is the SAME model
+the overlay panels (modal/select/menu/combo-box) use via the shared `container-box.css`; the card is not a
+`[data-box]`, so `card.css` wires the equivalent. It **supersedes** the short-lived inner-content-viewport
+(flex-column) model, which trapped the scroll in the middle region instead of the container. Block flow is
+unchanged — scroll mode only adds `overflow-y:auto` + the sticky brackets; the 6px region gutters still come
+from the BFC margin-collapse. It **requires a constrained card block-size** to bite — give the card a
+`max-block-size` / `height`, or a bounded flex/grid parent — otherwise nothing overflows. (Named `scrollable`,
+not `scroll`, to avoid shadowing the native `Element.scroll()` method.)
 
-The card itself holds **no** padding (the box-model law); each region (`ui-card-header` / `ui-card-content` /
-`ui-card-footer`) carries a fixed, rem-based (density-**invariant**) region padding instead. Where ADR-0046's
-shared model (`container-box.css`, also ridden by `ui-modal` and the `ui-select`/`ui-menu`/`ui-combo-box`
-overlay panels) fixes that region padding at **inline 12px / block 4px**, `ui-card` **repoints** the shared
-`--ui-box-pad-inline` / `--ui-box-pad-block` tokens to a **uniform 6px inline + 6px block** — on its own
-`:where(ui-card)` token block, at specificity 0, so it never leaks into modal/select/menu/combo-box (they
-read `container-box.css`'s own 12/4 straight off `[data-box]`; a card is not itself `[data-box]`). This is a
-deliberate **divergence from the ADR-0046 region-padding default** for `ui-card` specifically (Kim,
-2026-07-04) — the ADR record itself needs an amendment line to note the card exception; this doc + `card.css`
-carry the working note in the meantime. A `ui-card-content` has no nested-padding *stepping* law (unlike the
-shared `[data-region='content']`/`main` model it diverges from) — a card is never marked `[data-region]`, so
-its region padding stays flat at 6px regardless of nesting depth; only the **radius** chain steps one level
-(ADR-0018, below).
+The **edge-fade mask is AUTOMATIC** in scroll mode — no opt-in prop. `traits/scroll-fade.ts` (wired from
+`card-content.ts`, targeting the **parent card** as the viewport) observes the card's live scroll position and
+toggles `data-fade-top`/`data-fade-bottom` on **the card**; the shared `container-box.css` mask rules paint from
+those flags (the same recipe every `[data-box]` panel — modal/select/menu/combo-box — shares). It is
+**edge-aware** (only the edge that genuinely hides content fades — top never fades at the very top, bottom stays
+opaque at the end) and **self-gates on real overflow** (a card that does not overflow never fades). The trait's
+presence-aware offsets (`--ui-box-head`/`--ui-box-foot`) measure the card's sticky header/footer, so the fade
+**ramps PAST the brackets** — content fades as it clears them, but the brackets themselves are never blanked (a
+bit of gradient see-through in the thin inset gutter is intended, Kim). The sticky brackets take
+`background: inherit` (the card surface) so content scrolled directly beneath them is occluded. Deliberately
+JS-driven (not `animation-timeline: scroll()`) — a handful of scroll-position comparisons, robust on every
+engine including WebKit.
+
+> The bottom gutter is robust across engines: with a footer, the sticky footer holds a 6px gutter through
+> scroll; without one, the last region's OWN `padding-block-end` (inside its border-box → always in the scroll
+> extent) keeps content off the card edge — not a scroll-container last-child *margin*, which WebKit historically
+> dropped from the extent.
+
+## Region padding + margin — the shared model, uniform across the family (ADR-0046, revised 2026-07-04)
+
+The card itself holds **no** padding (the box-model law). Each region (`ui-card-header` / `ui-card-content` /
+`ui-card-footer`) now reads the **shared** `container-box.css` region model straight — **inline 12px / block
+6px** padding, plus a **6px inset margin** — identical to `ui-modal` and the `ui-select`/`ui-menu`/`ui-combo-box`
+overlay panels. (An earlier card-only 6px-inline override, and a full-bleed-region default, are both **rescinded**
+by this revision — one spacing vocabulary across the whole container family, restoring ADR-0046's original intent.)
+
+A region is **inset**, not full-bleed: it floats inside the card frame with a uniform 6px gutter (frame↔region
+and region↔region alike). `ui-card` is now `display: flow-root` (plain block flow, matching
+`container-box.css`'s flow-root BFC) — so **one uniform `margin` on every region** is all it takes: adjacent
+region margins *collapse* against each other (6px + 6px → a single 6px gutter), and the card's 1px frame border
+blocks collapse-through at the outer edges so the frame↔region gutter is exactly 6px too. No grid row-gap, no
+first/last-child edge-margin split — an absent region simply contributes no box (presence-driven for free), and
+every gutter reconciles to 6px, never 12 (proven in `card.browser.test.ts`).
+
+A region that paints a fill now rounds **all four** of its own corners to the card's decremented
+`--ui-card-inner-radius` (the same concentric value a nested card reads) — it no longer meets the card's outer
+edge, so clipping to the outer radius (the old full-bleed behaviour) would look oversized/mismatched.
+
+A `ui-card-content` has no nested-padding *stepping* law (unlike the shared `[data-region='content']`/`main`
+model) — a card is never marked `[data-region]`, so its region padding stays flat at 12px/6px regardless of
+nesting depth; only the **radius** chain steps one level (ADR-0018, below).
+
+**A flagged consequence:** removing the card-only 6px-inline override means the nested-radius chain now
+decrements against 12px (was 6px). With the default `--ui-radius-base` of 12px, an **unreseeded root card's**
+inner radius now floors at **exactly 0** (12 − 12), not the old 6px-positive headroom — an author who wants a
+visibly rounded nested corner needs to reseed `--ui-card-radius` larger than 12px.
 
 ## The region-less humane default (ADR-0056)
 
@@ -140,22 +187,25 @@ than the box-model's zero-padding default:
 </ui-card>
 ```
 
-renders with the same inline/block inset a real region would carry (6px/6px) and the same 8px rhythm between
-its children. This is a **CSS-only fallback**, not a factory rewrite — the payload tree, the component tree,
+renders with the same OWN-ink padding a real region's padding would carry (12px/6px, was 6px/6px under the
+rescinded card-only override) and the same 8px rhythm between its children. (It mirrors a region's padding
+only, not its separate 6px positional margin, which a bare card's single flattened box has no equivalent layer
+for.) This is a **CSS-only fallback**, not a factory rewrite — the payload tree, the component tree,
 and the rendered DOM stay identical; nothing synthetic is inserted. It is `:has()`-driven, so it is
 **streaming-safe by construction**: a region child arriving after the fact (a `ui-card-header` streamed in
-once the bare body already rendered) flips the fallback off and the presence-driven region grid on, in the
-same reflow, with no double padding.
+once the bare body already rendered) flips the fallback off and lets the region take its place as a normal
+block-flow box, in the same reflow, with no double padding.
 
 **Mixed composition gets no fallback.** A card that already has a region child PLUS loose siblings (`<ui-card>
 <ui-card-content>…</ui-card-content><div>…</div></ui-card>`) is not touched — a region present means the
 author owns the structure; the loose sibling renders at the plain box-model default. This is documented
 behaviour, not a bug to repair.
 
-**The fallback is mercy, not parity.** Sticky header/footer and `scrollable`/`scroll-fade` content are
-capabilities of the real region sub-elements — the fallback cannot give a bare card sticky edges or a scroll
-viewport. Reach for `ui-card-header` / `ui-card-content` / `ui-card-footer` whenever the card needs those; the
-fallback exists only to keep the default humane, not to replace the taught idiom.
+**The fallback is mercy, not parity.** Scroll mode (sticky header/footer bracketing the scrolling card, with
+its automatic edge fade) is a capability of the real region sub-elements — the fallback
+cannot give a bare card sticky brackets. Reach for `ui-card-header` / `ui-card-content` /
+`ui-card-footer` whenever the card needs those; the fallback exists only to keep the default humane, not to
+replace the taught idiom.
 
 ## Surface — elevation × brightness
 

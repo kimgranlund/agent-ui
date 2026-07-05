@@ -9,7 +9,7 @@
 > | **Proposed by** | orchestration-lead — on Kim's directive that "all containers should have an inset/gap system expressed as children's margins", plus a header/content/footer pattern (sticky headers, dividers) and a fixed region padding (inline 12 · block 4 · gap 8, nested content stepping in one inset per level). Design forks confirmed with Kim (rollout scope; flow-root + margin-collapse). |
 > | **Ratified by** | orchestration-lead — on the green `check` + `test` (jsdom) + `test:browser` (both engines) + `size`, and screenshot review of the card + modal + select panels. |
 > | **Repairs** | **NEW** `controls/_surface/container-box.css` (+ its structure probe) · `component-styles.css` (`@import`, after `container.css`) · the overlay panels `controls/{select,menu,combo-box}/*.{ts,css}` (`[data-box]` + inset margins; select group-headers sticky) · `controls/card/card.{css}` + its geometry/browser tests (rolled onto the model; nested-radius re-based) · `controls/modal/modal.{ts,css}` + tests. |
-> | **Supersedes / Superseded by** | None. **Extended by ADR-0056** (the region-less card humane default — a CSS fallback leg on the "card holds no padding" law: a Card with NO region children gets region-equivalent padding; the law stands for region-bearing composition). **Relates** ADR-0015 (container surface — the PAINT layer this SPACING layer sits beside), ADR-0016 (layout), ADR-0018 (concentric nested-radius — re-based here off the content inline padding), ADR-0041 (widget geometry). |
+> | **Supersedes / Superseded by** | Partially superseded by the **2026-07-04 Amendment 2** below (region margin: full-bleed → inset, across the whole family; the card-only 6px override — Amendment 1 — is rescinded), and the **2026-07-05 Amendment 3** below (the scroll affordance — a presence-aware edge-fade mask + the card's whole-container scroll model). **Extended by ADR-0056** (the region-less card humane default — a CSS fallback leg on the "card holds no padding" law: a Card with NO region children gets region-equivalent padding; the law stands for region-bearing composition). **Relates** ADR-0015 (container surface — the PAINT layer this SPACING layer sits beside), ADR-0016 (layout), ADR-0018 (concentric nested-radius — re-based here off the content inline padding), ADR-0041 (widget geometry). |
 
 ## Context
 
@@ -83,7 +83,7 @@ surface opts in with **`[data-box]`**.
   vocabulary across the whole container family, opted into via `[data-box]` (the Amendment below is the one
   deliberate, scoped opt-*out*).
 
-## Amendment — 2026-07-04 (`ui-card` region padding: a scoped 6px override)
+## Amendment 1 — 2026-07-04 (`ui-card` region padding: a scoped 6px override) — RESCINDED by Amendment 2, below
 
 Per Kim's directive (intent-extracted: "ui-card should have 6px padding by default" + "block-padding for
 card-header/content/footer 4px → 6px"), **`ui-card` overrides the shared region-padding default of inline
@@ -96,3 +96,95 @@ divergence from "one spacing vocabulary across the whole container family" (Cons
 documented in `card.css` / `card.md`; the shared vocabulary remains the default that a control opts *out* of.
 Independent component-review: GO (cascade robustness confirmed by two mechanisms). Gates green
 (check · jsdom 2408 · browser 588).
+
+## Amendment 2 — 2026-07-04 (region margin: full-bleed → INSET, across the whole family; Amendment 1 rescinded)
+
+Per Kim's follow-up directive (same day): **every region (header/content/footer, across ALL SIX `[data-box]`
+consumers) becomes inset, not full-bleed** — the model's original "children's margins provide the inset" law (Decision
+cl.1 above) now applies to the region wrappers too, not just loose non-region children. This changes both the
+shared tokens and the per-family realizations:
+
+- **Tokens (`container-box.css`):** `--ui-box-inset` `0.25rem`(4px) → **`0.375rem`(6px)**; `--ui-box-pad-block`
+  `0.25rem`(4px) → **`0.375rem`(6px)**; `--ui-box-pad-inline` **unchanged** at `0.75rem`(12px); `--ui-box-gap`
+  unchanged at `0.5rem`(8px, the region's own child rhythm — unrelated to the inter-region gutter).
+- **`header`/`footer`/`main`/`[data-region]` are REMOVED from the full-bleed (`margin: 0`) override list** —
+  they now fall through to the generic `[data-box] > *` rule (`margin: var(--ui-box-inset)`, 6px) like any
+  other child. Only `hr` and an explicit `[data-full-bleed]` opt-out remain full-bleed. The flow-root BFC's
+  margin-collapse (Decision cl.1) is what keeps every gutter — frame↔region AND region↔region — at a uniform
+  6px rather than doubling; this was already the mechanism for loose children, now extended to regions.
+- **The nested-content padding-step (cl.3) re-derives automatically**: L1 stays 12px; L2 (`pad-inline − inset`)
+  becomes 12−6=**6px** (was 8px); L3+ floor (`pad-block`) becomes **6px** (was 4px) — L2 and the floor now
+  coincide (a harmless consequence of inset and pad-block both landing on 6px), not an inversion.
+- **`ui-card` (Amendment 1's override) is RESCINDED.** Card no longer repoints `--ui-box-pad-inline`/`-block`;
+  it reads the shared 12px/6px region defaults straight, matching modal/select/menu/combo-box exactly — "one
+  spacing vocabulary across the whole container family" (the original Consequences line) is restored without
+  exception. Because `ui-card` is `display: grid` (not the shared flow-root BFC), its own margin-collapse
+  doesn't exist for free — `card.css` reconciles the same 6px-everywhere outcome via a grid row-`gap` (6px) +
+  a first/last-child margin split (every region gets a 6px inline margin unconditionally; only the first
+  region gets a block-start edge margin and only the last a block-end edge margin — the grid `gap` covers the
+  space between middle regions). A region fill's corner-rounding also changes: since a region no longer meets
+  the card's outer edge, it now rounds **all four** of its own corners to the concentric `--ui-card-inner-radius`
+  (was: only the card-edge corners, clipped to the OUTER `--ui-card-radius`).
+- **A flagged consequence, not silently patched around:** `ui-card`'s nested-radius law (ADR-0018,
+  `r_child = max(0, r_parent − pad_parent)`) now decrements against the 12px shared pad-inline (was the
+  rescinded 6px override). With the default `--ui-radius-base` of 12px, an **unreseeded root card's** inner
+  radius now floors at **exactly 0** (12−12), not the old 6px-positive headroom — a real visual change (a
+  nested card/region fill needs `--ui-card-radius` reseeded larger than 12px to show a rounded corner by
+  default). Recorded for Kim; no compensating mechanism was invented to hide it.
+- **ADR-0056's region-less card fallback re-derives too:** its padding now mirrors a region's OWN ink-padding
+  (12px inline / 6px block, was 6/6) — deliberately the simpler of two readings (it does NOT also add the
+  region's separate 6px positional margin, which a bare card's single flattened box has no equivalent layer
+  for); flagged in `card.css`/`card.md` in case full margin+padding parity is wanted instead.
+- **`ui-calendar` — the SIXTH `[data-box]` consumer, previously unlisted.** Amendment 1 named the calendar; this
+  amendment's first pass (and the "five families" count) dropped it. Its `[data-part=panel][data-box]` +
+  `<header data-part=nav>` genuinely takes the inset change (nav full-bleed → inset 6px, block padding 4→6px, grid
+  child margin 4→6px). The `calendar.css` comments were repaired to the 6px reality and — a latent gap surfaced in
+  the fix — its browser test was **not importing `container-box.css` at all**, so its box-model assertions were
+  vacuous (unlike every sibling's browser test). The import + a nav-inset assertion (margin/sticky `inset-block-start`
+  = 6px, both engines) were added. See `calendar.css` / `calendar.browser.test.ts`.
+
+Every affected test (`container-box.test.ts`/`.browser.test.ts`, `card-geometry.test.ts`/`card.browser.test.ts`,
+`modal.browser.test.ts`, plus the `select`/`menu`/`combo-box` option-row margin fallback literals) was
+re-baselined against the new values. Gates green: `check` · jsdom · `test:browser` (both engines) · `size`.
+
+## Amendment 3 — 2026-07-05 (the scroll affordance: a presence-aware edge-fade mask + the card's whole-container scroll)
+
+The inset-region change (Amendment 2) created a scroll problem: as a container scrolls, content passing a sticky
+header/footer shows in the 6px inset gutter beside the bracket (the bracket no longer full-bleeds to the frame).
+Kim's resolution is a **scroll-fade mask**, plus a settled card scroll model — both landed this day.
+
+- **The presence-aware edge-fade mask (`traits/scroll-fade.ts`, NEW — a cross-family trait).** A JS scroll +
+  `ResizeObserver` listener toggles `data-fade-top`/`data-fade-bottom` on the scroll viewport and publishes the
+  sticky bracket's measured band as `--ui-box-head`/`--ui-box-foot` (or `0px` when that edge has no bracket).
+  `container-box.css` ramps a `mask-image` linear-gradient that fades content **past** the bracket offset — so
+  content is masked until it clears a present header/footer, and a bracketless edge collapses (`var(…, 0px)`) to a
+  plain viewport-edge fade, byte-identical to no-bracket. Chosen over `animation-timeline: scroll()` for testability
+  + cross-engine safety. Kim's steer: the brackets need **no edge-reaching background** — the gradient carries the
+  occlusion; a bit of see-through in the inset gutter is intended.
+- **Consumers.** The overlay **panels** (modal/select/menu/combo-box) wire it at their `[data-box]` panel viewport
+  (their sticky group-labels stay masked). **`ui-card`** wires it at the CARD viewport (below). The trait self-gates
+  on ACTUAL overflow (a non-scrolling surface never fades) and tears down fully on disconnect / reactive-off.
+- **The card's whole-container scroll model (settled after two iterations).** `<ui-card scrollable>` — or the
+  A2UI-mapped `<ui-card-content scrollable>` signal — makes the **card ITSELF the scroll viewport** (`overflow-y:
+  auto` + `isolation: isolate`), with header/footer `position: sticky` (`inset-block: --ui-card-region-margin` =
+  6px, `background: inherit`), so the whole container scrolls as one and the brackets pin at its edges ("footer stays
+  put"). The card is **not** `[data-box]`, so it wires the equivalent sticky-region + generic `[data-fade-*]` mask
+  locally in `card.css`; block flow is unchanged (scroll mode only adds `overflow` + sticky — no flex). A short-lived
+  inner-content-viewport (flex-column) model was tried and **superseded** — it trapped the scroll in the middle
+  region (Kim: "the whole container should scroll") and never committed.
+- **The cross-engine bottom-gutter.** With a footer, the sticky footer holds the ~6px bottom gutter through scroll;
+  without one, the last region's own `padding-block-end` (inside its border-box → always in the scroll extent) keeps
+  content off the card edge — sidestepping the WebKit scroll-container last-child *margin* quirk. Both are
+  render-and-measured, both engines (`card.browser.test.ts`).
+- **A documented LOW limitation (not patched around):** `card-content.ts` arms the fade off the content region's
+  own `scrollable` (fully reactive) OR the parent `<ui-card scrollable>` read once at connect. A RUNTIME toggle of
+  the parent attribute engages CSS scroll but re-arms the JS fade only on reconnect; the content-region signal
+  (A2UI's path) is the fully-reactive form. Narrowed in `card.ts`/`card.md` rather than adding a parent-attribute
+  observer (bytes + an upgrade-safety regression for the standalone-content case).
+
+**Budget.** The `scroll-fade` trait pushes the `components` family barrel past the 22 KB gz cap → re-based
+**22 → 23 KB** (ADR-0049 Amendment 1; Kim-approved after reviewing the eventual distributed size — a real consumer
+ships ~5–14 KB, the 22.6 KB family total is the all-controls worst case; per-control `exports` + a marginal gate
+booked for G8). Independent component-review of the settled card model: **GO / SHIPPABLE** (all three carried
+findings resolved or reclassified LOW). Gates green: `check` (tsc + site) · jsdom · `test:browser` (Chromium +
+WebKit) · `size` (post-rebase, 22770 / 23552).

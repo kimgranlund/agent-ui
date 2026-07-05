@@ -27,8 +27,9 @@ const md = readFileSync(`${DIR}/card.md`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-// The settled attribute surface (the surfaceProps spread), in declaration order on the fence.
-const ATTR_NAMES = ['elevation', 'brightness']
+// The settled attribute surface (the surfaceProps spread + the `scrollable` scroll-mode signal), in
+// declaration order on the fence.
+const ATTR_NAMES = ['elevation', 'brightness', 'scrollable']
 
 describe('card.md descriptor — frontmatter parses + schema-valid (part a)', () => {
   it('has a leading frontmatter fence and a /site prose body', () => {

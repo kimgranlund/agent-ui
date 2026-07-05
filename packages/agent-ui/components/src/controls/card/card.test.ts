@@ -10,8 +10,9 @@ import { UICardFooterElement } from './card-footer.ts'
 // nested radius). jsdom reality: it cannot evaluate @scope, the grid, `:has()` or computed geometry — those
 // are the cross-engine card.browser.test.ts. Here we pin the FOUR-element contract that IS observable in jsdom:
 // each element self-defines + extends the container base (NOT form-associated) · ui-card folds the surface
-// axes (elevation/brightness) and ui-card-content the scroll/scroll-fade hooks, both reflecting · render()
-// stays void so the agent's region children are never clobbered · the opt-in ARIA role rides internals, never
+// axes (elevation/brightness) + the `scrollable` signal and ui-card-content the `scrollable` scroll-mode signal,
+// both reflecting · render() stays void so the agent's region children are never clobbered · the opt-in ARIA
+// role rides internals, never
 // a host attribute · connect→disconnect is residue-free and re-arms on reconnect.
 
 // A probe re-exposing the protected `internals` so the opt-in role (set in connected()) is readable.
@@ -52,11 +53,21 @@ describe('ui-card family — four elements, all UIContainerElement, none form-as
   })
 })
 
-// ── props: ui-card = surfaceProps only (NO flexProps); ui-card-content = scroll/scroll-fade ────
+// ── props: ui-card = surfaceProps + scrollable (NO flexProps); ui-card-content = scrollable (mask automatic) ────
 
 describe('ui-card — surface axes only (NO flexProps)', () => {
-  it('static props is exactly { elevation, brightness } — the surfaceProps spread, no align/justify/gap/wrap', () => {
-    expect(Object.keys(UICardElement.props)).toEqual(['elevation', 'brightness'])
+  it('static props is { elevation, brightness, scrollable } — the surfaceProps spread + the scroll signal, no flexProps', () => {
+    expect(Object.keys(UICardElement.props)).toEqual(['elevation', 'brightness', 'scrollable'])
+  })
+
+  it('scrollable is a boolean prop defaulting false, reflecting to a bare `scrollable` attribute (the scroll-mode CSS hook)', () => {
+    const el = new UICardElement()
+    expect(el.scrollable).toBe(false)
+    expect(el.hasAttribute('scrollable')).toBe(false)
+    el.scrollable = true
+    expect(el.getAttribute('scrollable')).toBe('') // boolean-true → bare attribute present
+    el.scrollable = false
+    expect(el.hasAttribute('scrollable')).toBe(false) // boolean-false removes it
   })
 
   it('elevation/brightness default to the neutral base 0 and carry no attribute when unset', () => {
@@ -85,22 +96,20 @@ describe('ui-card — surface axes only (NO flexProps)', () => {
   })
 })
 
-describe('ui-card-content — the scrollable / scroll-fade hooks reflect', () => {
-  it('static props is { scrollable, scrollFade }, both boolean, defaulting false', () => {
-    expect(Object.keys(UICardContentElement.props)).toEqual(['scrollable', 'scrollFade'])
+describe('ui-card-content — the scroll-mode signal reflects (puts the CARD into scroll mode; the mask is automatic)', () => {
+  it('static props is { scrollable } — one boolean, defaulting false (the scroll-fade opt-in prop is retired)', () => {
+    // REVISED 2026-07-04 (Kim): the edge-fade mask is now AUTOMATIC in scroll mode — no `scroll-fade` prop.
+    expect(Object.keys(UICardContentElement.props)).toEqual(['scrollable'])
     const el = new UICardContentElement()
     // `scrollable` (NOT `scroll`) — `scroll` would shadow the native Element.scroll() method (TS 2320/2416);
     // `scrollable` has no native collision, so it is a fully-typed reflecting prop (no cast needed).
     expect(el.scrollable).toBe(false)
-    expect(el.scrollFade).toBe(false)
   })
 
-  it('scrollable reflects to a `scrollable` attribute; scrollFade reflects to the kebab `scroll-fade` attribute', () => {
+  it('scrollable reflects to a `scrollable` attribute (the A2UI-mapped / direct scroll-mode signal)', () => {
     const el = new UICardContentElement()
     el.scrollable = true
-    el.scrollFade = true
     expect(el.hasAttribute('scrollable')).toBe(true)
-    expect(el.hasAttribute('scroll-fade')).toBe(true) // camelCase prop → hyphenated DOM attribute (the CSS hook)
     el.scrollable = false
     expect(el.hasAttribute('scrollable')).toBe(false) // boolean-false removes the attribute
   })

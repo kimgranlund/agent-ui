@@ -24,10 +24,16 @@
 //
 // The HOST carries no role/aria-* attribute (the family `internals`-only ARIA discipline) — `aria-modal` is set
 // by `showModal()`, and an author accessible name (`aria-label`/`aria-labelledby`) is FORWARDED onto the dialog
-// PART (ADR-0017 cl.5), keeping the host attribute-clean. `controls → dom` is the allowed import direction.
+// PART (ADR-0017 cl.5), keeping the host attribute-clean.
+//
+// The dialog also wires `traits/scroll-fade.ts` (default-on, no separate opt-in prop) — the gutter-exposure
+// fix, 2026-07-04: once a [data-box] header/footer became INSET rather than full-bleed, its own background no
+// longer reaches the frame edge, so scrolled content can peek through the thin gutter around it. `controls →
+// dom + traits` is the allowed import direction.
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIContainerElement } from '../../dom/container.ts'
+import { scrollFade } from '../../traits/scroll-fade.ts'
 
 const props = {
   // The two surface axes (elevation/brightness) — SPREAD from the container base, not inherited (props.ts has
@@ -90,6 +96,14 @@ export class UIModalElement extends UIContainerElement {
       if (this.open) this.#openDialog(dialog)
       else this.#closeDialog(dialog)
     })
+
+    // ── edge-aware scroll fade (the gutter-exposure fix, 2026-07-04) — always on ──
+    // The dialog IS the scroll viewport (modal.css: `overflow: auto` + `max-block-size: 85svh`) and a
+    // [data-box] region author may give it a sticky header/footer, whose inset background no longer reaches
+    // the frame edge. Unlike ui-card-content's `scroll-fade`, there is no separate opt-in prop here — a
+    // modal has no equivalent author-facing switch, so the fade is unconditionally wired (a no-op on a
+    // dialog that never overflows — scrollFade's own decision logic gates the flags, not this call site).
+    scrollFade(this, { viewport: dialog })
   }
 
   /** Open the dialog (idempotent) — record the opener FIRST (showModal moves focus in), then enter the top layer. */
@@ -124,7 +138,7 @@ export class UIModalElement extends UIContainerElement {
 
     const dialog = document.createElement('dialog')
     dialog.setAttribute('data-part', 'dialog')
-    dialog.setAttribute('data-box', '') // adopt the shared container box-model (region padding / inset margins)
+    dialog.setAttribute('data-box', '') // adopt the shared container box-model (region padding + inset margins, ADR-0046 revised 2026-07-04)
 
     // Forward the accessible name onto the dialog part, then strip it from the host (host carries no aria-*).
     const labelledby = this.getAttribute('aria-labelledby')

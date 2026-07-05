@@ -102,9 +102,9 @@
 
   /* ── Panel ([data-part=panel][data-box]) ────────────────────────────────────────────────
      The [data-box] attribute opts this element into container-box.css's box-model:
-       • display: flow-root (BFC; child margins provide inset)
-       • <header> children: full-bleed, sticky, flex-row, padding inline=12/block=4, gap=8
-       • other direct children: margin: 4px (the uniform inset)
+       • display: flow-root (BFC; child margins collapse to one inset)
+       • <header> children: INSET (not full-bleed), sticky, flex-row, padding inline=12/block=6, gap=8
+       • other direct children: margin: 6px (the uniform inset)
      We add paint: background + border + radius. No position/size overrides needed — the
      grid sizes the panel naturally to 7×cell-size + gaps. */
   :scope [data-part='panel'] {
@@ -118,8 +118,10 @@
 
   /* ── Nav header (<header data-part="nav">) ──────────────────────────────────────────────
      container-box.css already gives the <header>: display:flex; align-items:center; gap=8px;
-     padding-inline=12px; padding-block=4px; position:sticky; inset-block-start:0; z-index:1.
-     We add: space-between so ‹ title › spreads, and the title grows to fill. */
+     padding-inline=12px; padding-block=6px; margin=6px (INSET, not full-bleed); position:sticky;
+     inset-block-start=6px (the box's own inset — matches the at-rest margin, so nothing snaps
+     to 0 if the panel ever scrolls); z-index:1. We add: space-between so ‹ title › spreads,
+     and the title grows to fill. */
   :scope [data-part='nav'] {
     justify-content: space-between;
   }
@@ -182,8 +184,8 @@
     display: grid;
     grid-template-columns: repeat(7, var(--ui-calendar-cell-size, 2rem));
     gap: var(--ui-calendar-gap, 0.125rem);
-    /* The direct-child margin from [data-box] applies here (4px all around).
-       We keep the default inset margin — the grid sits slightly inside the panel. */
+    /* The direct-child margin from [data-box] applies here (6px all around, the box's uniform
+       inset). We keep the default inset margin — the grid sits slightly inside the panel. */
   }
 
   /* [role=row] is transparent to the parent CSS grid — cells participate directly.

@@ -17,9 +17,9 @@ const CSS = read('packages/agent-ui/components/src/controls/_surface/container-b
 const CODE = CSS.replace(/\/\*[\s\S]*?\*\//g, '')
 
 describe('container-box.css — the shared box-model foundation', () => {
-  it('opt-in [data-box] establishes a BFC + declares the 0.25rem inset token', () => {
+  it('opt-in [data-box] establishes a BFC + declares the 0.375rem inset token', () => {
     expect(CODE).toMatch(/:where\(\[data-box\]\)\s*\{[^}]*display:\s*flow-root/)
-    expect(CODE).toMatch(/--ui-box-inset:\s*0\.25rem/)
+    expect(CODE).toMatch(/--ui-box-inset:\s*0\.375rem/)
   })
 
   it('every direct child gets the inset margin; the token drives it', () => {
@@ -37,8 +37,18 @@ describe('container-box.css — the shared box-model foundation', () => {
     expect(CODE).not.toMatch(/z-index:\s*(?:[2-9]\d|\d{3,})/)
   })
 
-  it('full-bleed children (the region wrappers + hr/[data-full-bleed]) override the inset to margin:0', () => {
-    expect(CODE).toMatch(/:where\(\[data-box\]\)\s*>\s*:where\(header,\s*footer,\s*main,\s*hr,\s*\[data-full-bleed\],\s*\[data-region\]\)\s*\{[^}]*margin:\s*0/)
+  it('full-bleed children (hr/[data-full-bleed] ONLY) override the inset to margin:0', () => {
+    expect(CODE).toMatch(/:where\(\[data-box\]\)\s*>\s*:where\(hr,\s*\[data-full-bleed\]\)\s*\{[^}]*margin:\s*0/)
+  })
+
+  it('REVISED 2026-07-04: header/footer/main/[data-region] are NO LONGER in the full-bleed override list', () => {
+    // Negative control — the region wrappers used to override to margin:0; now they keep the generic inset
+    // margin (the next test) instead, so this selector must NOT mention them.
+    const fullBleed = CODE.match(/:where\(\[data-box\]\)\s*>\s*:where\(([^)]*)\)\s*\{[^}]*margin:\s*0/)
+    expect(fullBleed).toBeTruthy()
+    for (const tag of ['header', 'footer', 'main', '[data-region]']) {
+      expect(fullBleed![1], `${tag} still full-bleed — regions should now be inset`).not.toMatch(new RegExp(tag.replace(/[[\]]/g, '\\$&')))
+    }
   })
 
   it('[padded] = full-bleed box with inset padding (margin:0 + padding:inset)', () => {
@@ -52,9 +62,12 @@ describe('container-box.css — the shared box-model foundation', () => {
     const header = CODE.match(/:where\(\[data-box\]\)\s*>\s*:where\(header,\s*\[data-region='header'\]\)\s*\{([^}]*)\}/)
     expect(header).toBeTruthy()
     expect(header![1]).toMatch(/position:\s*sticky/)
-    expect(header![1]).toMatch(/inset-block-start:\s*0/)
+    // REVISED 2026-07-04: the inset offset is --ui-box-inset (6px), NOT 0 — a cross-engine finding that a
+    // stuck sticky box does not honor its own margin as extra offset (container-box.browser.test.ts), so the
+    // offset itself must carry the 6px gutter to avoid a flush-snap once the region actually sticks.
+    expect(header![1]).toMatch(/inset-block-start:\s*var\(--ui-box-inset\)/)
     expect(header![1]).toMatch(/background:\s*inherit/)
-    expect(CODE).toMatch(/:where\(\[data-box\]\)\s*>\s*:where\(footer,\s*\[data-region='footer'\]\)\s*\{[^}]*inset-block-end:\s*0/)
+    expect(CODE).toMatch(/:where\(\[data-box\]\)\s*>\s*:where\(footer,\s*\[data-region='footer'\]\)\s*\{[^}]*inset-block-end:\s*var\(--ui-box-inset\)/)
   })
 
   it('hr is a full-bleed hairline divider off a role token', () => {
@@ -70,10 +83,10 @@ describe('container-box.css — the shared box-model foundation', () => {
   })
 })
 
-describe('container-box.css — region padding system (header/footer/content: inline 12 · block 4 · gap 8)', () => {
-  it('declares the region padding tokens: inline 0.75rem (12px), block 0.25rem (4px), gap 0.5rem (8px)', () => {
+describe('container-box.css — region padding system (header/footer/content: inline 12 · block 6 · gap 8)', () => {
+  it('declares the region padding tokens: inline 0.75rem (12px), block 0.375rem (6px), gap 0.5rem (8px)', () => {
     expect(CODE).toMatch(/--ui-box-pad-inline:\s*0\.75rem/)
-    expect(CODE).toMatch(/--ui-box-pad-block:\s*0\.25rem/)
+    expect(CODE).toMatch(/--ui-box-pad-block:\s*0\.375rem/)
     expect(CODE).toMatch(/--ui-box-gap:\s*0\.5rem/)
   })
 
@@ -85,7 +98,7 @@ describe('container-box.css — region padding system (header/footer/content: in
     expect(m![1]).toMatch(/gap:\s*var\(--ui-box-gap\)/)
   })
 
-  it('content L1 = pad-inline (12px), and nested content STEPS IN one inset per level (L2 = 12−4, L3 = 4 floor)', () => {
+  it('content L1 = pad-inline (12px), and nested content STEPS IN one inset per level (L2 = 12−6, L3 = 6 floor)', () => {
     // L1
     expect(CODE).toMatch(/:where\(\[data-region='content'\],\s*main\)\s*\{[^}]*padding-inline:\s*var\(--ui-box-pad-inline\)/)
     // L2 = one inset in (concentric with the parent ink) — expressed as an explicit descendant level, NOT a
@@ -95,7 +108,59 @@ describe('container-box.css — region padding system (header/footer/content: in
     expect(CODE).toMatch(/:where\(\[data-region='content'\],\s*main\)\s*:where\(\[data-region='content'\],\s*main\)\s*:where\(\[data-region='content'\],\s*main\)\s*\{[^}]*padding-inline:\s*var\(--ui-box-pad-block\)/)
   })
 
-  it('the region wrappers (header/footer/content/main + [data-region]) are full-bleed (their padding insets the ink)', () => {
-    expect(CODE).toMatch(/:where\(\[data-box\]\)\s*>\s*:where\(header,\s*footer,\s*main,\s*hr,\s*\[data-full-bleed\],\s*\[data-region\]\)\s*\{[^}]*margin:\s*0/)
+  it('REVISED 2026-07-04: the region wrappers (header/footer/content/main + [data-region]) are now INSET, not full-bleed', () => {
+    // Their padding still insets their OWN ink (the test above); their MARGIN now comes from the generic
+    // `[data-box] > *` rule (6px) instead of an override to 0 — the combined structural + rendered proof that
+    // regions float inside the frame is container-box.browser.test.ts.
+    expect(CODE).not.toMatch(/:where\(\[data-box\]\)\s*>\s*:where\([^)]*header[^)]*\)\s*\{[^}]*margin:\s*0/)
+  })
+})
+
+describe('container-box.css — edge-aware scroll fade (the gutter-exposure fix, data-fade-top/bottom)', () => {
+  it('declares --ui-box-fade off the density-linked --ui-space-lg (a self-contained literal fallback too)', () => {
+    expect(CODE).toMatch(/--ui-box-fade:\s*var\(--ui-space-lg,\s*1rem\)/)
+  })
+
+  it('BOTH flags present → the offset-aware symmetric mask (ramps PAST a present bracket; the original recipe at 0px)', () => {
+    const m = CODE.match(/:where\(\[data-fade-top\]\[data-fade-bottom\]\)\s*\{([^}]*)\}/)
+    expect(m).toBeTruthy()
+    expect(m![1]).toMatch(/-webkit-mask-image:\s*linear-gradient\(/) // WebKit still needs the prefix
+    expect(m![1]).toMatch(/\n\s*mask-image:\s*linear-gradient\(/)
+    expect(m![1]).toMatch(/transparent 0,/) // top: transparent at the true viewport edge
+    // the ramp's OPAQUE end lands past the header band (--ui-box-head); the 0px fallback collapses to --ui-box-fade
+    expect(m![1]).toMatch(/#000 calc\(var\(--ui-box-head,\s*0px\)\s*\+\s*var\(--ui-box-fade,\s*1rem\)\)/)
+    expect(m![1]).toMatch(/#000 calc\(100% - var\(--ui-box-foot,\s*0px\)\s*-\s*var\(--ui-box-fade,\s*1rem\)\)/)
+    expect(m![1]).toMatch(/transparent 100%/) // bottom: transparent at the true viewport edge
+  })
+
+  it('top ONLY (no more below) → fade ramps past a present header; the bottom stays fully opaque (#000 100%)', () => {
+    const m = CODE.match(/:where\(\[data-fade-top\]\):not\(\[data-fade-bottom\]\)\s*\{([^}]*)\}/)
+    expect(m).toBeTruthy()
+    expect(m![1]).toMatch(/transparent 0,/) // the top fades
+    expect(m![1]).toMatch(/#000 calc\(var\(--ui-box-head,\s*0px\)\s*\+\s*var\(--ui-box-fade,\s*1rem\)\)/) // ramps past the header band
+    expect(m![1]).toMatch(/#000 100%/) // the bottom does not
+    expect(m![1]).not.toMatch(/transparent 100%/)
+  })
+
+  it('bottom ONLY (nothing hidden above) → the top stays fully opaque (#000 0); fade ramps past a present footer', () => {
+    const m = CODE.match(/:where\(\[data-fade-bottom\]\):not\(\[data-fade-top\]\)\s*\{([^}]*)\}/)
+    expect(m).toBeTruthy()
+    expect(m![1]).toMatch(/#000 0,/) // the top does not fade
+    expect(m![1]).toMatch(/#000 calc\(100% - var\(--ui-box-foot,\s*0px\)\s*-\s*var\(--ui-box-fade,\s*1rem\)\)/) // ramps past the footer band
+    expect(m![1]).toMatch(/transparent 100%/) // the bottom does
+    expect(m![1]).not.toMatch(/transparent 0,/)
+  })
+
+  it('forced-colors drops the mask on either flag (a mask over system text harms legibility)', () => {
+    const fc = CODE.slice(CODE.lastIndexOf('@media (forced-colors: active)'))
+    expect(fc).toMatch(/:where\(\[data-fade-top\],\s*\[data-fade-bottom\]\)\s*\{[^}]*mask-image:\s*none/)
+  })
+
+  it('anti-vacuous: with NEITHER flag, no rule in this file matches at all (never faded by default)', () => {
+    // A crude but sufficient proxy for "no selector requiring [data-fade-top] or [data-fade-bottom] can ever
+    // match an element carrying neither" — every fade rule's selector mentions one of the two attributes.
+    const fadeRules = [...CODE.matchAll(/:where\(\[data-fade-[a-z-]+\][^{]*\)\s*\{[^}]*\}/g)]
+    expect(fadeRules.length).toBeGreaterThan(0) // anti-vacuous: the rules DO exist
+    for (const rule of fadeRules) expect(rule[0]).toMatch(/\[data-fade-(top|bottom)\]/)
   })
 })

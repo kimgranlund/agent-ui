@@ -20,10 +20,13 @@ const KB = 1024
 const targets = [
   // [label, entry (relative to this script), budget in gz bytes]
   ['@agent-ui/components . (reactive+dom barrel)', '../packages/agent-ui/components/src/index.ts', 7 * KB],
-  // family-total re-based for the control suite; the per-control marginal ≤~2KB is the real cap,
-  // real consumers tree-shake. 22 KB re-based at Wave 5B (ADR-0049): the suite now holds the full
-  // control family incl. ui-calendar + the date/time picker paths (19889 B gz actual; ~13% headroom).
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 22 * KB],
+  // family-total = the WORST-CASE ceiling (every control defined at once), NOT the eventual distributed size:
+  // a real consumer imports a subset and ships ~5–14 KB (single control ~5 KB incl. the shared dom+reactive+
+  // traits+base foundation dragged in once; each extra control ~0.5–2 KB marginal — measured 2026-07-05).
+  // 23 KB re-based at the container box-model + scroll-fade wave (ADR-0049 Amendment 1): the scroll-fade trait
+  // pushed the all-controls bundle past 22 KB (~155 B of SHARED scroll infra). The per-control marginal ≤~2 KB
+  // stays the REAL cap; per-control `exports` + a marginal gate (the eventual DISTRIBUTED footprint) are booked for G8.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 23 * KB],
 ]
 
 let over = false

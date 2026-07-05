@@ -321,6 +321,9 @@ symmetry.
       `forced-colors`.
 - [ ] Coherence audit clean (no API/token/lifecycle drift across the family); budgets held; tree-shake
       proof passes (importing one control drags only it + real deps).
+- [ ] Per-control `exports` are exposed + the `size` gate measures the per-control MARGINAL (the eventual
+      DISTRIBUTED footprint, ≤~2 KB/control), not only the all-controls family-barrel worst case (ADR-0049
+      Amendment 1; measured 2026-07-05 — a real consumer ships ~5–14 KB; the 22.6 KB family total is worst-case).
 - [ ] `plan.md` open decisions (§12) are all resolved or explicitly deferred with a reason.
 - [ ] A short `CHANGELOG`/status note records the foundation milestone; next tier (layout/display
       primitives, or the agent-app surfaces) is a scope-dial decision left to you.
@@ -441,7 +444,9 @@ budget). The container box-model (ADR-0046) later re-based card/modal spacing (s
   overshoots it with the full family.*
 - **Container box-model — ADR-0046.** The shared `_surface/container-box.css` (`[data-box]` margin inset ·
   sticky header/content/footer · region padding inline 12/block 4/gap 8) rolled onto the overlay panels +
-  `ui-card` + `ui-modal`.
+  `ui-card` + `ui-modal`. **Revised 2026-07-04 (ADR-0046 Amendment 2):** regions (header/content/footer) are
+  now INSET, not full-bleed — inset margin 4→6px, region block padding 4→6px (inline stays 12); `ui-card`'s
+  6px-inline override is rescinded (card now matches the shared model exactly, across all five families).
 - **Wave 5 — Input codecs + date/time pickers.** **ADR-0047** numeric-codec expansion (multi-currency ISO-4217
   · NEW `unit`/`percent` types · generalized `step`/`min`/`max` steppers + range validity · percent canonical =
   the typed number). **ADR-0048** NEW **`ui-calendar`** (`UIFormElement`, bespoke 2D grid, ISO `YYYY-MM-DD`

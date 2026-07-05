@@ -43,6 +43,28 @@ afterEach(async () => {
 
 const px = (v: string): number => Number.parseFloat(v)
 
+/** The resolved mask — WebKit ships mask-image unprefixed too, but read both to be engine-agnostic. */
+const maskOf = (el: HTMLElement): string => {
+  const cs = getComputedStyle(el) as CSSStyleDeclaration & { webkitMaskImage?: string }
+  return cs.maskImage || cs.webkitMaskImage || 'none'
+}
+
+/**
+ * Scroll `el` to `top` and wait for the real (async, browser-native) `scroll` event before resolving — a
+ * plain `el.scrollTop = top` updates layout synchronously, but the `scroll` EVENT the scrollFade trait
+ * listens for is dispatched asynchronously by the engine. A no-op scroll (already at `top`) resolves
+ * immediately (no event would ever fire).
+ */
+const scrollTo = (el: HTMLElement, top: number): Promise<void> =>
+  new Promise((resolve) => {
+    if (el.scrollTop === top) {
+      resolve()
+      return
+    }
+    el.addEventListener('scroll', () => resolve(), { once: true })
+    el.scrollTop = top
+  })
+
 /** Alpha of a computed colour — 0 ⇒ the paint has VANISHED (a bare system keyword with no rgb() is opaque). */
 const alphaOf = (color: string): number => {
   if (color === 'transparent') return 0
@@ -182,10 +204,11 @@ describe('ui-modal — Escape dismissal + focus restore (both engines)', () => {
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-modal — [box-model] the dialog is a padding-less box; region padding + frame are density-invariant (both engines)', () => {
-  it('the dialog shell has NO padding (box-model); a content region carries the FIXED 12/4 padding; the frame HOLDS', async () => {
-    // Box-model rollout (container-box.css): the dialog is a [data-box] with ZERO shell padding — a content
-    // region inside carries the FIXED region padding (inline 0.75rem=12px · block 0.25rem=4px, rem-based → NOT
-    // --ui-space × --ui-density, so density-INVARIANT). The frame (border 1px · radius) is invariant too.
+  it('the dialog shell has NO padding (box-model); a content region carries the FIXED 12/6 padding; the frame HOLDS', async () => {
+    // Box-model rollout (container-box.css) — REVISED 2026-07-04: the dialog is a [data-box] with ZERO shell
+    // padding — a content region inside carries the FIXED region padding (inline 0.75rem=12px · block
+    // 0.375rem=6px, rem-based → NOT --ui-space × --ui-density, so density-INVARIANT). The frame (border 1px ·
+    // radius) is invariant too.
     const { modal, dialog } = mount('<ui-modal><div data-region="content"><p>Body</p></div></ui-modal>')
     modal.open = true
     await modal.updateComplete
@@ -194,13 +217,13 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
     // the dialog shell holds no padding — the region provides the inset
     expect(px(getComputedStyle(dialog).paddingTop), 'the dialog shell has padding (box-model expects 0)').toBe(0)
 
-    // the content region's FIXED 12/4 region padding
+    // the content region's FIXED 12/6 region padding
     const padInlineBase = px(getComputedStyle(content).paddingLeft)
     const padBlockBase = px(getComputedStyle(content).paddingTop)
     const borderBase = px(getComputedStyle(dialog).borderTopWidth)
     const radiusBase = px(getComputedStyle(dialog).borderTopLeftRadius)
     expect(padInlineBase, 'content inline padding is not ~12px').toBeCloseTo(12, 0)
-    expect(padBlockBase, 'content block padding is not ~4px').toBeCloseTo(4, 0)
+    expect(padBlockBase, 'content block padding is not ~6px').toBeCloseTo(6, 0)
     expect(borderBase, 'border is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
     expect(radiusBase, 'radius is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
 
@@ -212,6 +235,126 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
       expect(px(getComputedStyle(dialog).borderTopWidth), `border width changed at ${d}`).toBe(borderBase)
       expect(px(getComputedStyle(dialog).borderTopLeftRadius), `radius changed at ${d}`).toBe(radiusBase)
     }
+  })
+
+  it('REVISED 2026-07-04: header/content/footer are now INSET — uniform 6px gutters, never doubled between regions', async () => {
+    // The dialog is a [data-box] flow-root BFC (container-box.css) — adjacent children's margins COLLAPSE to
+    // one inset, so a naive-margin doubling bug is NOT reachable here the way it is for ui-card's CSS Grid; this
+    // is the rendered proof that modal genuinely gets the shared model's collapsing behaviour for free.
+    const { modal, dialog } = mount(
+      '<ui-modal><header>H</header><div data-region="content"><p>Body</p></div><footer>F</footer></ui-modal>',
+    )
+    modal.open = true
+    await modal.updateComplete
+    const dialogRect = dialog.getBoundingClientRect()
+    const borderTop = px(getComputedStyle(dialog).borderTopWidth)
+    const header = dialog.querySelector('header') as HTMLElement
+    const content = dialog.querySelector('[data-region="content"]') as HTMLElement
+    const footer = dialog.querySelector('footer') as HTMLElement
+    const headerRect = header.getBoundingClientRect()
+    const contentRect = content.getBoundingClientRect()
+    const footerRect = footer.getBoundingClientRect()
+
+    const frameToHeader = headerRect.top - dialogRect.top - borderTop
+    const headerToContent = contentRect.top - headerRect.bottom
+    const contentToFooter = footerRect.top - contentRect.bottom
+    const footerToFrame = dialogRect.bottom - footerRect.bottom - borderTop
+
+    for (const [label, gap] of [
+      ['frame→header', frameToHeader],
+      ['header→content', headerToContent],
+      ['content→footer', contentToFooter],
+      ['footer→frame', footerToFrame],
+    ] as const) {
+      expect(gap, `${server.browser}: ${label} gap is not ~6px (got ${gap})`).toBeCloseTo(6, 0)
+    }
+  })
+
+  it('REVISED 2026-07-04: the sticky header keeps its own 6px inset margin once scrolled (margin survives sticky)', async () => {
+    // modal.css gives the dialog PART itself `overflow: auto` + `max-block-size: 85svh` — the header (a direct
+    // child of the dialog, per container-box.css's [data-box] region pattern) sticks within THAT scrollport, so
+    // a very tall content region (well beyond any reasonable viewport) forces the dialog itself to scroll.
+    const { modal, dialog } = mount(
+      '<ui-modal><header>H</header><div data-region="content"><div style="block-size: 3000px">tall</div></div></ui-modal>',
+    )
+    modal.open = true
+    await modal.updateComplete
+    const header = dialog.querySelector('header') as HTMLElement
+    dialog.scrollTop = 200
+    const dialogRect = dialog.getBoundingClientRect()
+    const borderTop = px(getComputedStyle(dialog).borderTopWidth)
+    const headerRect = header.getBoundingClientRect()
+    const restingGap = headerRect.top - dialogRect.top - borderTop
+    expect(
+      restingGap,
+      `${server.browser}: the sticky header's own 6px margin did not survive scrolling (measured ${restingGap})`,
+    ).toBeCloseTo(6, 0)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  Edge-aware scroll fade (the gutter-exposure fix, 2026-07-04) — DEFAULT-ON, no opt-in prop (unlike
+//  ui-card-content's `scroll-fade`). scroll-fade.test.ts proves the trait's decision logic (jsdom, stubbed
+//  geometry); this proves the whole live wire on the real scroll viewport (the dialog part).
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-modal — the dialog scroll viewport gets an edge-aware fade by default (both engines)', () => {
+  it('at the TOP: data-fade-bottom (more below), not data-fade-top (nothing above)', async () => {
+    const { modal, dialog } = mount(
+      '<ui-modal><header>H</header><div data-region="content"><div style="block-size: 3000px">tall</div></div><footer>F</footer></ui-modal>',
+    )
+    modal.open = true
+    await modal.updateComplete
+    await scrollTo(dialog, 0)
+    expect(dialog.hasAttribute('data-fade-top'), `${server.browser}: fresh dialog wrongly fades the top`).toBe(false)
+    expect(dialog.hasAttribute('data-fade-bottom'), `${server.browser}: the dialog did not fade its bottom`).toBe(true)
+  })
+
+  it('scrolled to the BOTTOM: data-fade-top, not data-fade-bottom (nothing left below)', async () => {
+    const { modal, dialog } = mount(
+      '<ui-modal><div data-region="content"><div style="block-size: 3000px">tall</div></div></ui-modal>',
+    )
+    modal.open = true
+    await modal.updateComplete
+    await scrollTo(dialog, dialog.scrollHeight) // the engine clamps to the real max
+    expect(dialog.hasAttribute('data-fade-top'), `${server.browser}: end-of-scroll did not fade the top`).toBe(true)
+    expect(dialog.hasAttribute('data-fade-bottom'), `${server.browser}: end-of-scroll wrongly kept the bottom faded`).toBe(false)
+  })
+
+  it('a SHORT modal (content fits, no scrollable overflow) never fades either edge', async () => {
+    const { modal, dialog } = mount('<ui-modal><p>short body</p></ui-modal>')
+    modal.open = true
+    await modal.updateComplete
+    expect(dialog.scrollHeight, 'the dialog unexpectedly overflows (test setup is vacuous)').toBeLessThanOrEqual(dialog.clientHeight)
+    expect(dialog.hasAttribute('data-fade-top')).toBe(false)
+    expect(dialog.hasAttribute('data-fade-bottom')).toBe(false)
+    expect(maskOf(dialog), `${server.browser}: a short dialog painted a mask`).toBe('none')
+  })
+
+  it('the rendered mask PAINTS a gradient exactly when a flag is present', async () => {
+    const { modal, dialog } = mount(
+      '<ui-modal><div data-region="content"><div style="block-size: 3000px">tall</div></div></ui-modal>',
+    )
+    modal.open = true
+    await modal.updateComplete
+    await scrollTo(dialog, 0)
+    expect(maskOf(dialog), `${server.browser}: the dialog's fade flag did not paint a mask`).toMatch(/gradient/)
+  })
+
+  it('the sticky header still occludes content scrolled directly beneath it (z-index, unaffected by the fade)', async () => {
+    const { modal, dialog } = mount(
+      '<ui-modal><header>Header</header><div data-region="content"><div style="block-size: 3000px; position: relative;">tall</div></div></ui-modal>',
+    )
+    modal.open = true
+    await modal.updateComplete
+    const header = dialog.querySelector('header') as HTMLElement
+    await scrollTo(dialog, 60)
+    const r = header.getBoundingClientRect()
+    const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+    expect(
+      header.contains(top) || top === header,
+      `${server.browser}: scrolled content showed through the sticky header`,
+    ).toBe(true)
   })
 })
 

@@ -56,34 +56,44 @@ describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)
 })
 
 describe('card.css — padding/gap off the --ui-space ladder (Container/layout class, no control height)', () => {
-  it('the box-model: the card holds NO padding/gap; the region padding rides the --ui-box-* tokens (NO --ui-height-*)', () => {
-    // Box-model rollout (container-box.css): the card itself has zero padding + zero grid gap — each region is
-    // full-bleed and carries its OWN region padding off the shared --ui-box-* tokens (card-only repointed to a
-    // uniform inline 6 · block 6, see the next test).
+  it('the box-model: the card itself holds NO padding; the region padding rides the shared --ui-box-* tokens (NO --ui-height-*)', () => {
+    // Box-model rollout (container-box.css): the card itself has zero padding — each region carries its OWN
+    // padding off the shared --ui-box-* tokens (REVISED 2026-07-04: the card-only override is gone; see the
+    // next test). The shell is plain block flow now — no grid, no --ui-card-gap row-gap (two tests down).
     expect(cardTokens).toMatch(/--ui-card-padding:\s*0/)
-    expect(cardTokens).toMatch(/--ui-card-gap:\s*0/)
     expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--ui-box-pad-inline,/)
     expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--ui-box-pad-block,/)
     expect(css).not.toMatch(/--ui-height-/) // a container has NO control height (geometry.md)
   })
 
-  it('the card-only 6px override: --ui-box-pad-inline/-block are repointed to 0.375rem on :where(ui-card) itself', () => {
-    // The literal magnitude IS a declared constant (unlike the density-scaled --ui-space ramp), so this is a
-    // static jsdom probe — the container-box.browser.test.ts/card.browser.test.ts suites pin the MEASURED px.
-    // Card overrides the shared 12px/4px ADR-0046 default to a UNIFORM 6px, on its OWN token block — never
-    // touching container-box.css (modal/select/menu/combo-box keep reading the shared 12/4 default).
-    expect(cardTokens).toMatch(/--ui-box-pad-inline:\s*0\.375rem/)
-    expect(cardTokens).toMatch(/--ui-box-pad-block:\s*0\.375rem/)
-    // and the derived region tokens fall back to the SAME 6px if the override channel is ever unset
-    expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--ui-box-pad-inline,\s*0\.375rem\)/)
+  it('REVISED 2026-07-04: the card-only override is RESCINDED — card reads the SHARED 12px/6px region defaults', () => {
+    // Negative control: card.css must NOT declare its own --ui-box-pad-inline/-block anymore (that was the
+    // rescinded override) — the derived region tokens read container-box.css's shared values straight, via the
+    // SAME fallback-literal pattern (defensive if a [data-box] ancestor never set the channel).
+    expect(cardTokens).not.toMatch(/--ui-box-pad-inline:/)
+    expect(cardTokens).not.toMatch(/--ui-box-pad-block:/)
+    expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--ui-box-pad-inline,\s*0\.75rem\)/)
     expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--ui-box-pad-block,\s*0\.375rem\)/)
-    // the shared container-box.css defaults themselves are UNTOUCHED (the file this repoint must never edit)
+    // the shared container-box.css defaults are untouched (12px inline / 6px block, since the 2026-07-04 revision)
     const sharedCss = readFileSync(
       `${process.cwd()}/packages/agent-ui/components/src/controls/_surface/container-box.css`,
       'utf8',
     ) as string
     expect(sharedCss).toMatch(/--ui-box-pad-inline:\s*0\.75rem/)
-    expect(sharedCss).toMatch(/--ui-box-pad-block:\s*0\.25rem/)
+    expect(sharedCss).toMatch(/--ui-box-pad-block:\s*0\.375rem/)
+  })
+
+  it('REVISED 2026-07-04: a region is now INSET — the block-flow shell gives every region a uniform 6px margin', () => {
+    // A region (header/content/footer) is no longer full-bleed (margin:0); it carries the same 6px inset
+    // margin every other [data-box] child gets. ui-card is now plain BLOCK FLOW (flow-root BFC, NOT grid) —
+    // so ONE uniform `margin` gives clean 6px gutters (adjacent region margins collapse; the 1px frame border
+    // blocks collapse-through at the edges), with no grid gap and no first/last-child split.
+    expect(cardTokens).toMatch(/--ui-card-region-margin:\s*var\(--ui-box-inset,\s*0\.375rem\)/)
+    expect(css).toMatch(/:scope\s*\{[^}]*display:\s*flow-root/) // block flow, not grid
+    expect(cardTokens).not.toMatch(/--ui-card-gap:/) // the grid row-gap is gone
+    // one uniform margin on all three region tags — no first/last split, no margin-inline-only
+    expect(css).toMatch(/:scope\s*>\s*:where\(ui-card-header,\s*ui-card-content,\s*ui-card-footer\)\s*\{[^}]*margin:\s*var\(--ui-card-region-margin\)/)
+    expect(css).not.toMatch(/:where\(ui-card-header,\s*ui-card-content,\s*ui-card-footer\):first-child/)
   })
 
   it('the adornment column-gap also rides the --ui-space ladder', () => {
@@ -91,19 +101,15 @@ describe('card.css — padding/gap off the --ui-space ladder (Container/layout c
   })
 })
 
-describe('card.css — presence-driven region ROWS (no phantom row for an absent region)', () => {
-  it('the four :has() row structures: content-only · +header · +footer · +both', () => {
-    expect(css).toMatch(/:scope\s*\{[^}]*grid-template-rows:\s*1fr/) // content-only default
-    expect(css).toMatch(/:scope:has\(>\s*ui-card-header\):not\(:has\(>\s*ui-card-footer\)\)\s*\{\s*grid-template-rows:\s*auto 1fr/)
-    expect(css).toMatch(/:scope:has\(>\s*ui-card-footer\):not\(:has\(>\s*ui-card-header\)\)\s*\{\s*grid-template-rows:\s*1fr auto/)
-    expect(css).toMatch(/:scope:has\(>\s*ui-card-header\):has\(>\s*ui-card-footer\)\s*\{\s*grid-template-rows:\s*auto 1fr auto/)
-  })
-
-  it('the content row is the 1fr slack (the body grows, the header/footer take auto rows)', () => {
-    // every present-region template carries exactly one `1fr` row — the content slack.
-    for (const tmpl of ['1fr', 'auto 1fr', '1fr auto', 'auto 1fr auto']) {
-      expect(css.includes(`grid-template-rows: ${tmpl}`), `missing row template: ${tmpl}`).toBe(true)
-    }
+describe('card.css — presence-driven regions via BLOCK FLOW (no grid rows, no phantom box for an absent region)', () => {
+  it('the shell is block flow (flow-root), not a grid with :has() row templates', () => {
+    // REVISED 2026-07-04: ui-card no longer uses a grid with :has() row templates. In block flow an absent
+    // region simply contributes no box → no space (presence-driven for free), and the region margins collapse
+    // to clean 6px gutters. So there are NO grid-template-rows and NO :scope:has() ROW-template rules.
+    expect(css).toMatch(/:scope\s*\{[^}]*display:\s*flow-root/)
+    expect(css).not.toMatch(/grid-template-rows/)
+    expect(css).not.toMatch(/:scope:has\(>\s*ui-card-header\)/) // no presence-driven ROW templates
+    expect(css).not.toMatch(/:scope:has\(>\s*ui-card-footer\)/)
   })
 })
 
@@ -115,10 +121,13 @@ describe('card.css — header/footer host-as-grid anatomy (anatomy.md leading/la
     expect(css).toMatch(/:has\(>\s*\[slot='leading'\]\):has\(>\s*\[slot='trailing'\]\)\s*\{\s*grid-template-columns:\s*auto 1fr auto/)
   })
 
-  it('a full-bleed region fill clips its CARD-EDGE corners to the OUTER radius (header top · footer bottom)', () => {
-    // Box-model: regions are full-bleed (no card padding), so a painted header/footer meets the card's rounded
-    // border and rounds its card-edge corners to the OUTER --ui-card-radius (not the inner/decremented radius).
-    expect(css).toMatch(/:where\(ui-card-header\)\s*\{[^}]*border-start-start-radius:\s*var\(--ui-card-radius\)/)
-    expect(css).toMatch(/:where\(ui-card-footer\)\s*\{[^}]*border-end-start-radius:\s*var\(--ui-card-radius\)/)
+  it('REVISED 2026-07-04: a region fill rounds ALL FOUR of its own corners to the DECREMENTED inner radius', () => {
+    // A region is now inset (container-box.css's model, adopted here), not full-bleed — it no longer meets the
+    // card's outer edge, so rounding it to the outer --ui-card-radius would look oversized/mismatched. It now
+    // reads the SAME concentric --ui-card-inner-radius a nested card would (uniformly, not per-side).
+    expect(regionTokens).toMatch(/border-radius:\s*var\(--ui-card-inner-radius\)/)
+    // negative control: the old per-side outer-radius corner rules are gone
+    expect(css).not.toMatch(/border-start-start-radius/)
+    expect(css).not.toMatch(/border-end-start-radius/)
   })
 })

@@ -84,9 +84,11 @@ describe('card.css — @scope token hygiene (consume only --ui-card-* / --ui-con
     expect(scopeCard).toMatch(/var\(--ui-card-/)
   })
 
-  it('@scope (ui-card-content) consumes ONLY the own --ui-card-* chain (the fade depth)', () => {
+  it('@scope (ui-card-content) consumes ONLY the own --ui-card-* chain (the content rhythm gap)', () => {
     expect(foreignRefs(scopeContent)).toEqual([])
-    expect(scopeContent).toMatch(/var\(--ui-card-fade\)/)
+    // anti-vacuous: the own chain IS consumed (the 8px content rhythm). REVISED 2026-07-04: the fade mask
+    // itself no longer lives here at all — --ui-card-fade is gone (see the scroll-fade describe below).
+    expect(scopeContent).toMatch(/var\(--ui-card-content-gap\)/)
   })
 
   it('NEGATIVE control: a planted raw --md-sys-color-* ref in a styles block is CAUGHT by the hygiene predicate', () => {
@@ -109,7 +111,11 @@ describe('card.css — region-less humane default (ADR-0056)', () => {
   it('the fallback consumes ONLY the region-equivalent --ui-card-* tokens (the ones a real region carries)', () => {
     expect(fallbackBlock).toMatch(/padding-inline:\s*var\(--ui-card-region-pad-inline\)/)
     expect(fallbackBlock).toMatch(/padding-block:\s*var\(--ui-card-region-pad-block\)/)
-    expect(fallbackBlock).toMatch(/gap:\s*var\(--ui-card-content-gap\)/)
+    // REVISED 2026-07-04: the loose-child rhythm is an adjacent-sibling margin now (the shell is block flow,
+    // not grid/flex — a `gap` would be inert), so the fallback block carries NO `gap`; the 8px rhythm rides a
+    // separate `> * + *` margin-block-start rule keyed off the same fallback marker.
+    expect(fallbackBlock).not.toMatch(/gap:/)
+    expect(scopeCard).toMatch(/margin-block-start:\s*var\(--ui-card-content-gap\)/)
     // hygiene: no foreign (--md-sys-color-* / bare ramp) reference sneaks into the fallback leg
     expect(foreignRefs(fallbackBlock)).toEqual([])
   })
@@ -119,21 +125,52 @@ describe('card.css — region-less humane default (ADR-0056)', () => {
   })
 })
 
-describe('card.css — scrollable + scroll-fade hooks + forced-colors', () => {
-  it('[scrollable] is an overflow viewport; [scroll-fade] is a mask-image edge fade (with the -webkit- prefix)', () => {
-    expect(scopeContent).toMatch(/:scope\[scrollable\]\s*\{[^}]*overflow:\s*auto/)
-    expect(scopeContent).toMatch(/:scope\[scroll-fade\]\s*\{[^}]*mask-image:\s*linear-gradient/)
-    expect(scopeContent).toMatch(/-webkit-mask-image:\s*linear-gradient/) // WebKit still needs the prefix
+describe('card.css — scroll mode (whole-container scroll, sticky brackets, mask on card) + forced-colors', () => {
+  it('scroll mode: the CARD is the scroll viewport off either signal, header/footer are position:sticky, content does NOT self-scroll', () => {
+    // REVISED 2026-07-05 (Kim: "the whole container should scroll"): the card ITSELF becomes the scroll viewport
+    // (overflow-y:auto) with sticky brackets, so the WHOLE container scrolls as one — superseding the short-lived
+    // flex-column / inner-content-viewport model that trapped the scroll in the middle region.
+    expect(scopeCard).toMatch(/:scope\[scrollable\]/) // the ergonomic <ui-card scrollable> signal is a trigger
+    expect(scopeCard).toMatch(/:has\(>\s*ui-card-content\[scrollable\]\)/) // and the A2UI content-level signal
+    expect(scopeCard).toMatch(/:scope\[scrollable\][^}]*\{[^}]*overflow-y:\s*auto/) // the CARD is the viewport
+    expect(scopeCard).toMatch(/position:\s*sticky/) // header/footer pin to the card's scroll edges
+    expect(scopeCard).toMatch(/inset-block-start:\s*var\(--ui-card-region-margin\)/) // sticky header offset = 6px
+    expect(scopeCard).toMatch(/inset-block-end:\s*var\(--ui-card-region-margin\)/) // sticky footer offset = 6px
+    expect(scopeCard).not.toMatch(/flex-direction:\s*column/) // NOT a flex column any more (model superseded)
+    expect(scopeContent).not.toMatch(/:scope\[scrollable\]/) // the content region no longer self-scrolls at all
   })
 
-  it('a forced-colors block keeps the card border visible (CanvasText) and drops the fade mask', () => {
+  it('a forced-colors block keeps the card border visible (CanvasText)', () => {
     expect(css).toMatch(/@media \(forced-colors: active\)/)
     const fc = css.slice(css.indexOf('@media (forced-colors: active)'))
     expect(fc).toMatch(/border-color:\s*CanvasText/) // the frame survives as a system colour
-    expect(fc).toMatch(/mask-image:\s*none/) // the edge fade is dropped (a mask over system text harms legibility)
   })
 
   it('no opacity fade anywhere (the surface is a role plane, not an opacity wash — tokens.md canon)', () => {
     expect(css).not.toMatch(/opacity\s*:/)
+  })
+})
+
+describe('card.css — REVISED 2026-07-04: the [scroll-fade] mask moved to the shared container-box.css seam', () => {
+  // The gutter-exposure fix: the mask-image PAINT no longer lives in card.css at all — it is the generic
+  // `[data-fade-top]`/`[data-fade-bottom]` rule (container-box.css), driven by traits/scroll-fade.ts from
+  // card-content.ts's `connected()`. card.css only feeds the shared `--ui-box-fade` depth token.
+
+  it('neither @scope block declares a mask-image rule any more (no --ui-card-fade, no inline gradient)', () => {
+    expect(css).not.toMatch(/--ui-card-fade/)
+    expect(scopeCard).not.toMatch(/mask-image/)
+    expect(scopeContent).not.toMatch(/mask-image/)
+  })
+
+  it('the card feeds the shared --ui-box-fade depth (the card is the scroll viewport the trait paints); ui-card-content does NOT', () => {
+    // REVISED 2026-07-05: the mask paints on the CARD (the whole-container scroll viewport), so the CARD feeds
+    // the depth token; ui-card-content no longer does (the trait targets the card, not the content).
+    expect(cardTokens).toMatch(/--ui-box-fade:\s*var\(--ui-space-lg,\s*1rem\)/)
+    const contentTokens = whereBlock(':where(ui-card-content) {')
+    expect(contentTokens).not.toMatch(/--ui-box-fade/) // the content viewport is retired
+  })
+
+  it('the forced-colors block no longer targets ui-card-content[scroll-fade] directly (the shared rule owns the drop)', () => {
+    expect(css).not.toMatch(/ui-card-content\[scroll-fade\]/)
   })
 })

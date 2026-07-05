@@ -3,31 +3,38 @@
  * owns the SPACING + region rhythm every container/panel adopts by marking itself `[data-box]`. Imported by
  * component-styles.css right after container.css, before any element sheet.
  *
- * THE MODEL (ruled with Kim, flow-root + margin-collapse):
+ * THE MODEL (ruled with Kim, flow-root + margin-collapse — REVISED 2026-07-04, inset regions):
  *   • L1 `[data-box]` establishes a BFC (`display: flow-root`) and holds NO inner padding — the children's
  *     margins provide the inset. A BFC means adjacent children's block margins COLLAPSE to one inset (a
- *     uniform 4px between siblings) AND the edge margins are preserved (4px from the box edge) — not doubled.
- *   • L2 direct children get `margin: var(--ui-box-inset)` (4px) by default. A child OVERRIDES its own margin
- *     to go full-bleed (`margin: 0`).
+ *     uniform 6px between siblings) AND the edge margins are preserved (6px from the box edge) — not doubled.
+ *   • L2 direct children get `margin: var(--ui-box-inset)` (6px) by default. A child OVERRIDES its own margin
+ *     to go full-bleed (`margin: 0`) — `hr` and an explicit `[data-full-bleed]` opt-out still do.
  *   • `[padded]` = a full-bleed child (margin 0) whose CONTENT is inset (`padding: var(--ui-box-inset)`) — e.g.
  *     a header/row that spans the box edge-to-edge but keeps its text off the edge.
- *   • Region pattern: `header`/`footer` (or `[data-region=header|footer]`) are full-bleed + `position: sticky`
- *     and take `background: inherit` (the box surface) so scrolled content never shows through — trivially
- *     overridden (a child that sets its own background wins). `hr` is a full-bleed divider. `main`/content is
- *     the scroll region between them (it may itself be another container, or a list).
+ *   • Region pattern (REVISED 2026-07-04): `header`/`footer`/content (`main`/`[data-region]`) are now INSET,
+ *     not full-bleed — they carry the SAME `--ui-box-inset` margin as every other child (the BFC collapsing
+ *     above keeps the gutter uniform at 6px, frame↔region and region↔region alike). `header`/`footer` stay
+ *     `position: sticky` + `background: inherit` (the box surface) so scrolled content never shows through —
+ *     trivially overridden (a child that sets its own background wins). `hr` is still a full-bleed divider.
+ *     `main`/content is the scroll region between them (it may itself be another container, or a list).
  *   • Z-DEPTH SCOPE (ADR-0052): `[data-box]` is also its own stacking context (`isolation: isolate` — the one
  *     purpose-built property: no containing block, no paint side effects). Every descendant z-index (the sticky
  *     brackets' `z-index: 1` below, a panel's internal chrome) resolves INSIDE the box and can never fight a
  *     sibling container or the page — no global z ladder can exist. Overlays are unaffected: popover/dialog
  *     surfaces ride the native TOP LAYER (ADR-0043/0045), which is immune to stacking contexts by spec.
+ *   • EDGE-AWARE SCROLL FADE (the gutter-exposure fix, same revision): an inset sticky bracket's background no
+ *     longer reaches the frame edge, so scrolled content can peek through the thin gutter around it. The fix
+ *     lives on the CONTENT, not the bracket — `traits/scroll-fade.ts` toggles `data-fade-top`/`data-fade-bottom`
+ *     on the scroll viewport from its live scroll position, and the `[data-fade-top]`/`[data-fade-bottom]`
+ *     rules near the foot of this file mask only the edge that genuinely hides content (never a flat guess).
  *
  * Everything is specificity-0 (`:where()`), so an element's own `@scope` block cleanly overrides any of it.
  * Opt-in only: an element is unaffected until it (or its control) marks the surface `[data-box]`.
  *
- * `--ui-box-inset` defaults to 0.25rem (4px at the 16px root) and is themeable per box. */
+ * `--ui-box-inset` defaults to 0.375rem (6px at the 16px root) and is themeable per box. */
 
 :where([data-box]) {
-  --ui-box-inset: 0.25rem; /* 4px — the uniform inset/gap unit; a box may repoint it */
+  --ui-box-inset: 0.375rem; /* 6px — the uniform inset/gap unit; a box may repoint it */
   display: flow-root; /* BFC: child margins collapse to ONE inset between siblings + hold the edge inset */
   isolation: isolate; /* the box is its own Z-DEPTH SCOPE (ADR-0052): descendant z-indexes (the sticky
                          brackets below, panel-internal chrome) resolve inside THIS stacking context and
@@ -35,13 +42,20 @@
 
   /* ── Region padding system (header / footer / content wrappers) — ruled with Kim ──
    * The named regions carry their OWN internal padding + gap, distinct from the inset margin above:
-   *   inline 12px · block 4px · gap 8px.
-   * A NESTED content steps its INLINE padding IN by one inset (4px) per level (12 → 8 → 4…, floored), so a
-   * content-inside-content stays concentric with its parent's ink: parent inline-pad 12 = child inset margin 4
-   * + child inline-pad 8. Block padding + gap stay constant at every level. */
+   *   inline 12px · block 6px · gap 8px.
+   * A NESTED content steps its INLINE padding IN by one inset (6px) per level (12 → 6 → 6…, floored), so a
+   * content-inside-content stays concentric with its parent's ink: parent inline-pad 12 = child inset margin 6
+   * + child inline-pad 6. Block padding + gap stay constant at every level. */
   --ui-box-pad-inline: 0.75rem; /* 12px — region inline padding */
-  --ui-box-pad-block: 0.25rem; /* 4px — region block padding */
+  --ui-box-pad-block: 0.375rem; /* 6px — region block padding */
   --ui-box-gap: 0.5rem; /* 8px — gap between a region's own children */
+
+  /* Edge-aware scroll fade (below) — the depth of the mask band at a faded edge. Density-linked (like the
+     old per-component --ui-card-fade it replaces), NOT the rem-based region padding above (a decorative
+     affordance depth, not a layout spacing law). Any consumer may repoint it locally. The literal 1rem
+     fallback keeps this self-contained even where only this sheet is loaded (e.g. container-box.browser.test.ts,
+     which never imports the dimensional --ui-space-* ramp). */
+  --ui-box-fade: var(--ui-space-lg, 1rem);
 }
 
 /* Popover-carrier re-assertion (the s13 e2e finding, 2026-07-01): the unconditional `display: flow-root`
@@ -56,9 +70,11 @@
   display: none;
 }
 
-/* header / footer — the region padding + gap (they are also the full-bleed sticky brackets, set below). A row
-   of controls sits comfortably: inline 12 / block 4 with an 8px gap. `display: flex` makes the gap apply; the
-   element's own @scope may override the direction/alignment. */
+/* header / footer — the region padding + gap. A row of controls sits comfortably: inline 12 / block 6 with an
+   8px gap. `display: flex` makes the gap apply; the element's own @scope may override the direction/alignment.
+   REVISED 2026-07-04: header/footer are no longer full-bleed — they carry the SAME `--ui-box-inset` margin as
+   every other `[data-box]` child (the generic `> *` rule below), so a header/footer divider or background no
+   longer reaches the box edge; it floats inside the frame with a uniform 6px gutter, same as any other region. */
 :where([data-box]) > :where(header, footer, [data-region='header'], [data-region='footer']) {
   display: flex;
   align-items: center;
@@ -69,9 +85,10 @@
 
 /* content — the region between the brackets: a column of stacked children with the 8px region gap. The INLINE
    padding steps IN one inset per NESTING level so a content-inside-content stays concentric with its parent's
-   ink (parent 12 = child inset-margin 4 + child pad 8). Expressed as explicit descendant levels rather than a
-   self-referencing custom property (which CSS treats as a cycle → invalid): L1 12 · L2 8 · L3+ 4 (the block-pad
-   floor). Three levels covers real nesting; deeper content stays at the 4px floor. */
+   ink (parent 12 = child inset-margin 6 + child pad 6). Expressed as explicit descendant levels rather than a
+   self-referencing custom property (which CSS treats as a cycle → invalid): L1 12 · L2 6 · L3+ 6 (the block-pad
+   floor — L2 and the floor now coincide, since the inset and the block-pad token are both 6px). Three levels
+   covers real nesting; deeper content stays at the 6px floor. */
 :where([data-region='content'], main) {
   display: block; /* NOT flex — overflow:auto scrolls a block, and a block child keeps its height (flex would
                      shrink it and break a scroll viewport). The region gap comes from an adjacent-sibling margin. */
@@ -84,21 +101,25 @@
   margin-block-start: var(--ui-box-gap);
 }
 :where([data-region='content'], main) :where([data-region='content'], main) {
-  padding-inline: calc(var(--ui-box-pad-inline) - var(--ui-box-inset)); /* L2 = 8px (12 − 4) */
+  padding-inline: calc(var(--ui-box-pad-inline) - var(--ui-box-inset)); /* L2 = 6px (12 − 6) */
 }
 :where([data-region='content'], main) :where([data-region='content'], main) :where([data-region='content'], main) {
-  padding-inline: var(--ui-box-pad-block); /* L3+ floor = 4px */
+  padding-inline: var(--ui-box-pad-block); /* L3+ floor = 6px */
 }
 
-/* Every direct child carries the uniform inset margin (→ 4px from the edges, 4px between siblings). */
+/* Every direct child carries the uniform inset margin (→ 6px from the edges, 6px between siblings) — INCLUDING
+   the region wrappers below (REVISED 2026-07-04: they are no longer full-bleed). The BFC established on
+   `[data-box]` above collapses adjacent children's margins to ONE inset, so this single rule is what gives
+   every gutter (frame↔region, region↔region) the same uniform 6px, never doubled. */
 :where([data-box]) > * {
   margin: var(--ui-box-inset);
 }
 
-/* Full-bleed children — span the box edge-to-edge (the region wrappers header/content/footer, a divider, or an
-   explicit opt-out). The region wrappers carry their OWN internal padding (below), so they span the box and
-   inset their ink; loose non-region children keep the inset margin above. */
-:where([data-box]) > :where(header, footer, main, hr, [data-full-bleed], [data-region]) {
+/* Full-bleed children — span the box edge-to-edge. Only a genuine divider (`hr`) or an explicit opt-out
+   (`[data-full-bleed]`) still overrides to full-bleed; the region wrappers (header/content/footer/main/
+   [data-region]) NO LONGER appear here (REVISED 2026-07-04) — they keep the generic inset margin above, so a
+   region floats inside the frame instead of spanning it edge-to-edge. */
+:where([data-box]) > :where(hr, [data-full-bleed]) {
   margin: 0;
 }
 
@@ -110,16 +131,23 @@
 
 /* Sticky regions — pinned to the box's scroll edges, inheriting the box surface so scrolled content does not
    bleed through. `background: inherit` copies the parent's resolved background value (a header itself easily
-   overrides by declaring its own background). */
+   overrides by declaring its own background).
+   REVISED 2026-07-04 (a cross-engine finding, both Chromium + WebKit): once a sticky box is actually STUCK, its
+   own margin is NOT honored as extra offset — the resting position is governed purely by the inset value, the
+   margin collapses to nothing (verified in container-box.browser.test.ts; this is NOT a bug in that test, it
+   is real platform behaviour). Since a region now carries a 6px margin at REST (the generic `> *` rule above),
+   an `inset-block-start: 0` would show the correct 6px gutter before scrolling and then SNAP flush (0px) the
+   moment it sticks — a jarring visual jump. The fix: the inset offset itself is `--ui-box-inset` (6px), not 0,
+   so the STUCK resting gap matches the AT-REST margin gap exactly, in both states. */
 :where([data-box]) > :where(header, [data-region='header']) {
   position: sticky;
-  inset-block-start: 0;
+  inset-block-start: var(--ui-box-inset);
   background: inherit;
   z-index: 1;
 }
 :where([data-box]) > :where(footer, [data-region='footer']) {
   position: sticky;
-  inset-block-end: 0;
+  inset-block-end: var(--ui-box-inset);
   background: inherit;
   z-index: 1;
 }
@@ -141,5 +169,77 @@
   }
   :where([data-box]) > hr {
     border-block-start-color: CanvasText;
+  }
+}
+
+/* ── Edge-aware scroll fade ───────────────────────────────────────────────────────────────────────────────
+ * The gutter-exposure fix (the 2026-07-04 z-index + mask revision): once header/footer regions became INSET
+ * (above) rather than full-bleed, a sticky bracket's own `background: inherit` no longer reaches the frame
+ * edge — the thin gutter AROUND the bracket can show scrolled content peeking through. The z-index:1 the
+ * sticky regions already carry (isolated per-box via ADR-0052) fully masks content DIRECTLY under a bracket;
+ * this closes the remaining gap by having the SCROLLING CONTENT fade its own edges before they ever reach
+ * that gutter, so nothing hard shows there regardless.
+ *
+ * `traits/scroll-fade.ts` toggles `data-fade-top`/`data-fade-bottom` on the actual scroll VIEWPORT from its
+ * live scroll position — a flag is present ONLY when content is genuinely hidden past that edge, so a short /
+ * non-scrolling viewport (neither flag) is never faded and an at-an-edge viewport fades only the OTHER edge.
+ * The three combinations below are the whole matrix; no flags at all ⇒ no rule matches ⇒ mask-image stays
+ * `none` (the element's un-masked default). This is a GENERIC, cross-family rule (not scoped to `[data-box]`
+ * — ui-card is the scroll viewport in the box-model but is not itself a `[data-box]`) consumed identically by
+ * ui-card, the modal dialog, and the select/menu/combo-box panels; each opts in by wiring the trait, nothing
+ * more. The gradient recipe itself is the one card.css shipped first (alpha-based — `mask-mode` defaults to
+ * `alpha` for an image source, so ANY opaque colour reads as "visible"; `#000`/`transparent` here are mask
+ * channel values, not a theme paint). The -webkit- prefix is still required (no unprefixed mask-image on
+ * WebKit/Safari).
+ *
+ * PRESENCE-AWARE OFFSET (2026-07-04): the fade must adapt to a sticky header/footer. These sticky brackets DO
+ * keep `background: inherit` (+ `z-index: 1`, above) to occlude content directly beneath them — but the fade
+ * itself is carried by the GRADIENT, not by demanding an opaque bracket edge-to-edge: per Kim (2026-07-04) it
+ * is fine for a bit of the gradient to show THROUGH the bracket zone. So the fade RAMP simply reaches PAST a
+ * present bracket: content emerging under it fades out, while the ramp's transparent end still sits at the true
+ * viewport edge (where the bracket floats). `traits/scroll-fade.ts` publishes each edge's
+ * bracket band as `--ui-box-head` / `--ui-box-foot` — its rendered block-size + inset gutter, measured live
+ * (ResizeObserver), or 0px when that edge has NO bracket. Each ramp's OPAQUE end lands at
+ * `bracket-band + --ui-box-fade`, so a bracketed edge stays faded until content has fully cleared the bracket,
+ * and a bracketless edge (offset 0px) collapses to `--ui-box-fade` — the EXACT pre-offset mask. Absent the
+ * trait, the `, 0px` var-fallbacks reduce every stop back to that original recipe, so the rule is
+ * self-contained. (The precise how-much-through-the-bracket look is a fine-tune of these two knobs.) */
+:where([data-fade-top][data-fade-bottom]) {
+  /* Both edges hidden: transparent at each viewport edge → opaque once content has cleared that edge's bracket
+     band + the fade depth. Both offsets 0px ⇒ the original symmetric transparent→#000→#000→transparent mask. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 calc(var(--ui-box-head, 0px) + var(--ui-box-fade, 1rem)),
+    #000 calc(100% - var(--ui-box-foot, 0px) - var(--ui-box-fade, 1rem)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 calc(var(--ui-box-head, 0px) + var(--ui-box-fade, 1rem)),
+    #000 calc(100% - var(--ui-box-foot, 0px) - var(--ui-box-fade, 1rem)),
+    transparent 100%
+  );
+}
+:where([data-fade-top]):not([data-fade-bottom]) {
+  /* Only the top hides content: fade past a present header, opaque below. Header offset 0px ⇒ the original
+     transparent 0 → #000 --ui-box-fade top fade. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 calc(var(--ui-box-head, 0px) + var(--ui-box-fade, 1rem)), #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 calc(var(--ui-box-head, 0px) + var(--ui-box-fade, 1rem)), #000 100%);
+}
+:where([data-fade-bottom]):not([data-fade-top]) {
+  /* Only the bottom hides content: opaque above, fade past a present footer to the bottom edge. Footer offset
+     0px ⇒ the original #000 → transparent 100% bottom fade. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - var(--ui-box-foot, 0px) - var(--ui-box-fade, 1rem)), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - var(--ui-box-foot, 0px) - var(--ui-box-fade, 1rem)), transparent 100%);
+}
+
+/* forced-colors — a mask over system-rendered text harms legibility; drop it (the sticky-region Canvas
+   background above still keeps the bracket itself opaque). */
+@media (forced-colors: active) {
+  :where([data-fade-top], [data-fade-bottom]) {
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 }

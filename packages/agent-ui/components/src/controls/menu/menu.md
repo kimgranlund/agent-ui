@@ -80,6 +80,7 @@ geometry:
   panelPadding: var(--ui-menu-padding)             # = var(--ui-space-xs) — shell spacing
   panelRadius: var(--ui-menu-radius)               # = var(--ui-radius-base), the shared fleet radius
   panelMinInlineSize: var(--ui-menu-min-inline-size)  # 10rem floor (ADR-0021 lesson)
+  panelMaxBlockSize: 40vh (scrolls) # bounds an unbounded item list (matches ui-select); gets the shared edge-aware scroll-fade by default (traits/scroll-fade.ts, container-box.css)
   panelSurface: var(--ui-menu-bg)                  # opaque neutral-surface plane
   itemPadBlock: var(--ui-menu-item-pad-block)      # = var(--ui-space-xs) — legacy item-pad block axis
   itemPadInline: var(--ui-menu-item-pad-inline)    # = var(--ui-space-md) — legacy item-pad inline axis

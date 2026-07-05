@@ -233,14 +233,18 @@ describe('ui-card tree-shake — a compound drags its OWN regions but no sibling
     expect(card.reached.has('dom/container.ts')).toBe(true)
   })
 
-  it('drags ONLY {controls/card, dom, reactive} — its own regions, and NOT a sibling container family', () => {
-    const ALLOWED = ['controls/card/', 'dom/', 'reactive/']
+  it('drags ONLY {controls/card, dom, reactive, traits/scroll-fade} — its own regions, and NOT a sibling container family', () => {
+    // REVISED 2026-07-04 (the gutter-exposure fix): ui-card-content now wires traits/scroll-fade.ts for its
+    // `scroll-fade` opt-in (previously a pure-CSS hook, zero traits) — a real, deliberate graph addition, not
+    // a leak. Pinned to the ONE trait file, not traits/ wholesale, so a future unrelated trait import here
+    // would still be caught.
+    const ALLOWED = ['controls/card/', 'dom/', 'reactive/', 'traits/scroll-fade.ts']
     for (const p of card.reached) {
       expect(ALLOWED.some((a) => p.startsWith(a)), `unexpected module in card graph: ${p}`).toBe(true)
     }
     // only the card family — no row/column/list/grid/tabs/modal sibling is pulled in.
     expect(new Set(cardLayers('controls/').map((p) => p.split('/')[1]))).toEqual(new Set(['card']))
-    expect(cardLayers('traits/')).toEqual([])
+    expect(cardLayers('traits/')).toEqual(['traits/scroll-fade.ts']) // anti-vacuous: exactly the one trait, not the whole layer
     expect(cardLayers('descriptor/')).toEqual([])
     expect([...card.external]).toEqual([])
   })

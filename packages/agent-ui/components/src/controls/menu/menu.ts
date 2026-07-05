@@ -37,6 +37,7 @@ import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIElement } from '../../dom/index.ts'
 import { overlay, type OverlayHandle, type OverlayPlacement } from '../../traits/overlay.ts'
 import { rovingFocus } from '../../traits/roving-focus.ts'
+import { scrollFade } from '../../traits/scroll-fade.ts'
 
 // ── Placement enum values (mirrors the OverlayPlacement union from overlay.ts) ─────────────────
 
@@ -159,6 +160,10 @@ export class UIMenuElement extends UIElement {
       loop: true,
       typeAhead: true,
     })
+
+    // Edge-aware scroll fade (the gutter-exposure fix, 2026-07-04) — always on, no opt-in prop. The panel
+    // is now a bounded scroll viewport (menu.css: max-block-size: 40vh + overflow-y: auto, matching ui-select).
+    scrollFade(this, { viewport: panel })
   }
 
   /**

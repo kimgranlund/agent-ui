@@ -21,6 +21,7 @@ import type { UISelectElement } from './select.ts'
 // then the select sheet, then the self-defining module. Imported DIRECTLY (relative), NOT via the
 // component-styles barrel (the s12 barrel wiring lands at the integration slice).
 import '@agent-ui/components/foundation-styles.css'
+import '../_surface/container-box.css' // the box-model layer — provides the shared [data-fade-top]/[data-fade-bottom] mask
 import './select.css'
 import './select.ts'
 
@@ -462,6 +463,108 @@ describe('ui-select — forced-colors (Chromium via CDP; WebKit asserts the base
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  Edge-aware scroll fade (the gutter-exposure fix, 2026-07-04) — DEFAULT-ON, no opt-in prop.
+//  scroll-fade.test.ts proves the trait's decision logic (jsdom, stubbed geometry); this proves the
+//  whole live wire on the real scroll viewport (the listbox panel).
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+/** The resolved mask — WebKit ships mask-image unprefixed too, but read both to be engine-agnostic. */
+const maskOf = (el: HTMLElement): string => {
+  const cs = getComputedStyle(el) as CSSStyleDeclaration & { webkitMaskImage?: string }
+  return cs.maskImage || cs.webkitMaskImage || 'none'
+}
+
+/**
+ * Scroll `el` to `top` and wait for the real (async, browser-native) `scroll` event before resolving — a
+ * plain `el.scrollTop = top` updates layout synchronously, but the `scroll` EVENT the scrollFade trait
+ * listens for is dispatched asynchronously by the engine.
+ */
+const scrollTo = (el: HTMLElement, top: number): Promise<void> =>
+  new Promise((resolve) => {
+    if (el.scrollTop === top) {
+      resolve()
+      return
+    }
+    el.addEventListener('scroll', () => resolve(), { once: true })
+    el.scrollTop = top
+  })
+
+/**
+ * Wait a couple of animation frames — the listbox panel is `display: none` (UA popover rule) until
+ * `showPopover()`, so scrollFade's ResizeObserver only learns the real (non-zero) size AFTER the popover
+ * paints, which is NOT synchronous with `el.open = true` / `updateComplete` (a reactive-signal flush, not a
+ * layout/RO tick). Two rAFs comfortably clears the RO's own per-spec "after rendering updates" timing.
+ */
+const nextFrames = (n = 2): Promise<void> =>
+  Array.from({ length: n }).reduce<Promise<void>>(
+    (p) => p.then(() => new Promise((r) => requestAnimationFrame(() => r()))),
+    Promise.resolve(),
+  )
+
+describe('ui-select — the listbox panel gets an edge-aware fade by default (both engines)', () => {
+  it('at the TOP of a long option list: data-fade-bottom (more below), not data-fade-top', async () => {
+    const { el } = mount(`
+      <ui-select placeholder="Choose…">
+        <div role="option" value="a" style="block-size: 2000px">Option A</div>
+        <div role="option" value="b">Option B</div>
+      </ui-select>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames() // let the ResizeObserver learn the panel's real (post-showPopover) size
+    await scrollTo(listbox, 0)
+    expect(listbox.hasAttribute('data-fade-top'), `${server.browser}: fresh panel wrongly fades the top`).toBe(false)
+    expect(listbox.hasAttribute('data-fade-bottom'), `${server.browser}: the panel did not fade its bottom`).toBe(true)
+  })
+
+  it('scrolled to the BOTTOM: data-fade-top, not data-fade-bottom', async () => {
+    const { el } = mount(`
+      <ui-select placeholder="Choose…">
+        <div role="option" value="a" style="block-size: 2000px">Option A</div>
+      </ui-select>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    await scrollTo(listbox, listbox.scrollHeight)
+    expect(listbox.hasAttribute('data-fade-top'), `${server.browser}: end-of-scroll did not fade the top`).toBe(true)
+    expect(listbox.hasAttribute('data-fade-bottom'), `${server.browser}: end-of-scroll wrongly kept the bottom faded`).toBe(false)
+  })
+
+  it('a SHORT option list (fits, no scrollable overflow) never fades either edge', async () => {
+    const { el } = mount(`
+      <ui-select placeholder="Choose…">
+        <div role="option" value="a">Option A</div>
+      </ui-select>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    expect(listbox.scrollHeight, 'the panel unexpectedly overflows (test setup is vacuous)').toBeLessThanOrEqual(listbox.clientHeight)
+    expect(listbox.hasAttribute('data-fade-top')).toBe(false)
+    expect(listbox.hasAttribute('data-fade-bottom')).toBe(false)
+    expect(maskOf(listbox), `${server.browser}: a short panel painted a mask`).toBe('none')
+  })
+
+  it('the rendered mask PAINTS a gradient exactly when a flag is present', async () => {
+    const { el } = mount(`
+      <ui-select placeholder="Choose…">
+        <div role="option" value="a" style="block-size: 2000px">Option A</div>
+      </ui-select>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    await scrollTo(listbox, 0)
+    expect(maskOf(listbox), `${server.browser}: the panel's fade flag did not paint a mask`).toMatch(/gradient/)
   })
 })
 

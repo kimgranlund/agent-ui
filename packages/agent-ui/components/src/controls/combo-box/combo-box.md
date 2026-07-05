@@ -125,6 +125,7 @@ geometry:
     surface: var(--ui-combo-box-panel-bg)  # = var(--md-sys-color-neutral-surface) — opaque neutral surface
     radius: var(--ui-combo-box-panel-radius)  # = var(--ui-radius-base)
     minInlineSize: var(--ui-combo-box-panel-min-inline-size)  # 12rem panel collapse floor
+    maxBlockSize: 40vh (scrolls) # REVISED 2026-07-04: was `overflow: hidden` (unbounded, unscrollable) — now bounded + overflow-y:auto, matching ui-select/ui-menu; gets the shared edge-aware scroll-fade by default (traits/scroll-fade.ts, container-box.css)
   options:
     paddingBlock: var(--ui-combo-box-option-padding-block)   # = var(--ui-space-xs) — item-pad row
     paddingInline: var(--ui-combo-box-option-padding-inline)  # = var(--ui-space-sm)

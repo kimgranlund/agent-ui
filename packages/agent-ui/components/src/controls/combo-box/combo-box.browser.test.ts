@@ -23,6 +23,7 @@ import type { UIComboBoxElement } from './combo-box.ts'
 // then the combo-box sheet, then the self-defining module. Imported DIRECTLY (relative), NOT
 // via the component-styles barrel (the s12 barrel wiring lands at the integration slice).
 import '@agent-ui/components/foundation-styles.css'
+import '../_surface/container-box.css' // the box-model layer — provides the shared [data-fade-top]/[data-fade-bottom] mask
 import './combo-box.css'
 import './combo-box.ts'
 
@@ -577,6 +578,112 @@ describe('ui-combo-box — forced-colors (Chromium via CDP; WebKit asserts the b
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  Edge-aware scroll fade (the gutter-exposure fix, 2026-07-04) — DEFAULT-ON, no opt-in prop. Also
+//  proves the NEW max-block-size:40vh + overflow-y:auto bound (was `overflow: hidden`, unscrollable).
+//  scroll-fade.test.ts proves the trait's decision logic (jsdom, stubbed geometry); this proves the
+//  whole live wire on the real scroll viewport (the listbox panel).
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+/** The resolved mask — WebKit ships mask-image unprefixed too, but read both to be engine-agnostic. */
+const maskOf = (el: HTMLElement): string => {
+  const cs = getComputedStyle(el) as CSSStyleDeclaration & { webkitMaskImage?: string }
+  return cs.maskImage || cs.webkitMaskImage || 'none'
+}
+
+const scrollTo = (el: HTMLElement, top: number): Promise<void> =>
+  new Promise((resolve) => {
+    if (el.scrollTop === top) {
+      resolve()
+      return
+    }
+    el.addEventListener('scroll', () => resolve(), { once: true })
+    el.scrollTop = top
+  })
+
+/** See select.browser.test.ts's nextFrames — the panel's real size only lands after showPopover() paints. */
+const nextFrames = (n = 2): Promise<void> =>
+  Array.from({ length: n }).reduce<Promise<void>>(
+    (p) => p.then(() => new Promise((r) => requestAnimationFrame(() => r()))),
+    Promise.resolve(),
+  )
+
+describe('ui-combo-box — the panel is now BOUNDED (max-block-size:40vh) and gets an edge-aware fade by default (both engines)', () => {
+  it('a long option list genuinely overflows the new 40vh cap (the bound is real, not vacuous — it used to be overflow:hidden)', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="a" style="block-size: 2000px">Apple</div>
+        <div role="option" value="b">Banana</div>
+      </ui-combo-box>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    expect(listbox.scrollHeight, `${server.browser}: the panel did not overflow its new max-block-size cap`).toBeGreaterThan(listbox.clientHeight)
+  })
+
+  it('at the TOP: data-fade-bottom (more below), not data-fade-top', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="a" style="block-size: 2000px">Apple</div>
+      </ui-combo-box>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    await scrollTo(listbox, 0)
+    expect(listbox.hasAttribute('data-fade-top'), `${server.browser}: fresh panel wrongly fades the top`).toBe(false)
+    expect(listbox.hasAttribute('data-fade-bottom'), `${server.browser}: the panel did not fade its bottom`).toBe(true)
+  })
+
+  it('scrolled to the BOTTOM: data-fade-top, not data-fade-bottom', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="a" style="block-size: 2000px">Apple</div>
+      </ui-combo-box>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    await scrollTo(listbox, listbox.scrollHeight)
+    expect(listbox.hasAttribute('data-fade-top'), `${server.browser}: end-of-scroll did not fade the top`).toBe(true)
+    expect(listbox.hasAttribute('data-fade-bottom'), `${server.browser}: end-of-scroll wrongly kept the bottom faded`).toBe(false)
+  })
+
+  it('a SHORT option list (fits, no scrollable overflow) never fades either edge', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="a">Apple</div>
+      </ui-combo-box>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    expect(listbox.scrollHeight, 'the panel unexpectedly overflows (test setup is vacuous)').toBeLessThanOrEqual(listbox.clientHeight)
+    expect(listbox.hasAttribute('data-fade-top')).toBe(false)
+    expect(listbox.hasAttribute('data-fade-bottom')).toBe(false)
+    expect(maskOf(listbox), `${server.browser}: a short panel painted a mask`).toBe('none')
+  })
+
+  it('the rendered mask PAINTS a gradient exactly when a flag is present', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="a" style="block-size: 2000px">Apple</div>
+      </ui-combo-box>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    await scrollTo(listbox, 0)
+    expect(maskOf(listbox), `${server.browser}: the panel's fade flag did not paint a mask`).toMatch(/gradient/)
   })
 })
 

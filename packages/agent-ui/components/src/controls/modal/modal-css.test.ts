@@ -69,7 +69,8 @@ describe('modal.css — the @scope dialog surface + ::backdrop (s9)', () => {
     expect(rule).toMatch(/color:\s*var\(--ui-modal-ink\)/)
     expect(rule).toMatch(/border-radius:\s*var\(--ui-modal-radius\)/)
     // Box-model (container-box.css): the dialog is a [data-box] with NO shell padding — its children carry the
-    // inset (author regions get the 12/4 region padding; loose content the 4px box inset).
+    // inset (author regions get the 12/6 region padding PLUS a 6px inset margin, REVISED 2026-07-04; loose
+    // content gets the 6px box inset margin only).
     expect(rule).toMatch(/padding:\s*0/)
   })
 

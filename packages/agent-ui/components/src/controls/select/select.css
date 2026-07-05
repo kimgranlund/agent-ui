@@ -237,7 +237,7 @@
   :scope > [data-part='listbox'] [role='option'] {
     box-sizing: border-box;
     display: block;
-    margin: var(--ui-box-inset, 0.25rem); /* the box-model inset — 4px from the panel edge + between rows */
+    margin: var(--ui-box-inset, 0.375rem); /* the box-model inset — 6px from the panel edge + between rows */
     padding-block: var(--ui-select-option-block);
     padding-inline: var(--ui-select-option-inline);
     border-radius: var(--ui-select-option-radius);

@@ -62,8 +62,9 @@
     color: var(--ui-modal-ink);
     border: 1px solid var(--ui-modal-outline);
     border-radius: var(--ui-modal-radius);
-    /* Box-model (container-box.css): the dialog is a [data-box] — no shell padding; its children carry the
-       inset (author header/content/footer regions get the 12/4 region padding; loose content the 4px inset). */
+    /* Box-model (container-box.css, REVISED 2026-07-04): the dialog is a [data-box] — no shell padding; its
+       children carry the inset (author header/content/footer regions get the 12/6 region padding PLUS a 6px
+       positional margin — regions are inset, not full-bleed; loose content gets the 6px box inset margin). */
     padding: 0;
   }
 

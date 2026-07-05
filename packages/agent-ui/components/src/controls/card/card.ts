@@ -19,7 +19,7 @@
 // name (`aria-label`/`aria-labelledby`) reads as a `group` THROUGH `internals` (never a host `role` attribute);
 // an unnamed card stays a generic container with no role. `controls → dom` is the allowed import direction.
 
-import type { PropsSchema, ReactiveProps } from '../../dom/index.ts'
+import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIContainerElement } from '../../dom/container.ts'
 // Self-define the region sub-elements as a side effect of importing the family entry, so `ui-card` is a
 // self-contained compound (the `ui-tabs` → `ui-tab`/`ui-tab-panel` precedent): importing `card.ts` — directly
@@ -29,10 +29,21 @@ import './card-header.ts'
 import './card-content.ts'
 import './card-footer.ts'
 
-// `static props = { ...surfaceProps }` — the elevation/brightness axes only (no flexProps; a card is a grid
-// surface, not a flex line). Spread, not inherited (props.ts has no static-props prototype merge — the
-// ADR-0013 pattern the container base exposes `surfaceProps`/`flexProps` for).
-const props = { ...UIContainerElement.surfaceProps } satisfies PropsSchema
+// `static props = { ...surfaceProps, scrollable }` — the elevation/brightness axes (no flexProps; a card lays
+// its regions out in block flow, not a flex line) PLUS the ergonomic scroll signal. `<ui-card scrollable>`
+// (Kim, 2026-07-05: "the whole container should scroll") puts the card into scroll mode: card.css makes the
+// CARD ITSELF the scroll viewport (`overflow-y:auto`) with the header/footer `position: sticky`, so the WHOLE
+// container scrolls as one and the brackets pin at its edges (the edge-fade mask paints on the card viewport —
+// wired in card-content.ts). It is the ergonomic convenience over marking the content region itself —
+// `<ui-card-content scrollable>` (the A2UI-mapped signal); card.css triggers scroll mode off EITHER. Note the
+// two are not identical at RUNTIME: the content signal is fully reactive, while this parent `scrollable` is read
+// once at the content region's connect for the fade-mask arming — toggle scroll at runtime via the content
+// region's `[scrollable]` (CSS scroll engages either way; only the JS fade differs). Spread, not inherited (props.ts has no static-props prototype merge — the ADR-0013 pattern the
+// container base exposes `surfaceProps` for).
+const props = {
+  ...UIContainerElement.surfaceProps,
+  scrollable: { ...prop.boolean(false), reflect: true },
+} satisfies PropsSchema
 
 export interface UICardElement extends ReactiveProps<typeof props> {}
 export class UICardElement extends UIContainerElement {

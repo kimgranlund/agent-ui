@@ -28,6 +28,7 @@
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIFormElement, type FormValue, type ValidityResult } from '../../dom/form.ts'
 import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
+import { scrollFade } from '../../traits/scroll-fade.ts'
 
 // ── Module-level stable-id counters ─────────────────────────────────────────────────────────────
 
@@ -242,6 +243,11 @@ export class UIComboBoxElement extends UIFormElement {
         // contenteditable is intrinsically focusable; no explicit tabindex needed.
       }
     })
+
+    // Edge-aware scroll fade (the gutter-exposure fix, 2026-07-04) — always on, no opt-in prop. The panel
+    // is now a bounded scroll viewport (combo-box.css: max-block-size: 40vh + overflow-y: auto, matching
+    // ui-select/ui-menu; it used to be overflow: hidden, unbounded and unscrollable).
+    scrollFade(this, { viewport: listbox })
   }
 
   // ── Parts creation (idempotent) ───────────────────────────────────────────────────────────────

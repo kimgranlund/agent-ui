@@ -1,7 +1,7 @@
 // site/pages/card-demo.ts — the ui-card composition demo (the ratified container `demo`). Shows the card doing
 // its job with the REAL region sub-elements: the three regions composed, the elevation × brightness surface
-// range (the ladder iterated from the parsed card enum), the one-level nested radius, and the scrollable +
-// scroll-fade content hooks. All surface/radius/scroll behaviour is the card's own CSS — this page only
+// range (the ladder iterated from the parsed card enum), the one-level nested radius, and the whole-container
+// scroll mode with its automatic edge fade. All surface/radius/scroll behaviour is the card's own CSS — this page only
 // composes regions + demo content and supplies display widths/heights (layout context, not a restyle).
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo-content chrome (.demo-grid / captions)
@@ -15,8 +15,8 @@ const elevations = findAttr(descriptor, 'elevation')?.values ?? [] // the parsed
 const { content } = mountPage({
   title: 'ui-card — demo',
   intro: 'The card doing its job: the three region sub-elements composed, the elevation × brightness surface ' +
-    'range, the one-level nested radius, and the scrollable / scroll-fade content hooks. The API table is on ' +
-    'the ui-card API page.',
+    'range, the one-level nested radius, and whole-container scroll mode with its automatic edge fade. The API ' +
+    'table is on the ui-card API page.',
 })
 
 const text = (s: string): Text => document.createTextNode(s)
@@ -57,18 +57,21 @@ const nested = el('ui-card', { elevation: '1' }, [
 ])
 applyDemoWidth(nested, '24rem')
 
-// ── [4] scrollable + scroll-fade — a constrained card whose content scrolls with an edge fade ───────────────
+// ── [4] scrollable — a bounded card that scrolls as a WHOLE with sticky header/footer + an AUTOMATIC edge fade ──
 const longText = 'Scrollable content. '.repeat(40)
-const scrollCard = el('ui-card', {}, [
+const scrollCard = el('ui-card', { scrollable: '' }, [
   el('ui-card-header', {}, [text('Scrollable')]),
-  el('ui-card-content', { scrollable: '', 'scroll-fade': '' }, [text(longText)]),
+  el('ui-card-content', {}, [text(longText)]),
+  el('ui-card-footer', {}, [text('Footer stays put')]),
 ])
 applyDemoWidth(scrollCard, '24rem')
-scrollCard.style.maxBlockSize = '12rem' // constrain the card so `scrollable` bites (the body's 1fr can shrink)
+scrollCard.style.maxBlockSize = '12rem' // constrain the card so scroll mode bites (the whole card scrolls)
 const scrollNote = document.createElement('p')
 scrollNote.textContent =
-  'ui-card-content carries two pure-CSS hooks: scrollable (a scrolling viewport — it needs a constrained card ' +
-  'block-size to bite, supplied here) and scroll-fade (a mask edge fade). The shipped fade is a static symmetric mask.'
+  'A <ui-card scrollable> makes the CARD itself the scroll viewport: the whole container scrolls as one and the ' +
+  'header/footer are position:sticky, pinned at its edges while the body scrolls under them (it needs a ' +
+  'constrained card block-size to bite, supplied here). The edge-fade mask is AUTOMATIC on the card — the top ' +
+  'fades once scrolled down, the bottom while more remains below.'
 
 content.append(
   exampleSection('Composed regions', composed),

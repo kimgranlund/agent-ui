@@ -54,6 +54,7 @@ import type { FormValue, ValidityResult } from '../../dom/index.ts'
 import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
 import { rovingFocus } from '../../traits/roving-focus.ts'
 import { selectionCommit } from '../../traits/selection-commit.ts'
+import { scrollFade } from '../../traits/scroll-fade.ts'
 import { setIcon } from '@agent-ui/icons'
 
 // ── Module-level stable-id counter (one per listbox panel, never reused across instances) ──────
@@ -246,6 +247,12 @@ export class UISelectElement extends UIFormElement {
         this.open = false
       },
     })
+
+    // Edge-aware scroll fade (the gutter-exposure fix, 2026-07-04) — always on, no opt-in prop. The listbox
+    // panel is the scroll viewport (`overflow-y: auto` in select.css); a sticky [data-part="group-label"] is
+    // already full-bleed (not affected by the inset-region gutter bug), but a long OPTION LIST still benefits
+    // from the same edge affordance the rest of the family gets.
+    scrollFade(this, { viewport: listbox })
   }
 
   // ── Part creation (idempotent across disconnect/reconnect) ─────────────────────────────────────
