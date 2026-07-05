@@ -31,6 +31,19 @@
 //
 // The prop REFLECTS so the attribute selectors apply to JS-set values too. `render()` stays the inherited void.
 // `controls → dom + traits` is the allowed direction.
+//
+// REVISED 2026-07-08 (Kim's third option, resolving the "the mask fades the scrollbar" tension — ADR-0046
+// Amendment 6): card.css HIDES ui-card-content's native scrollbar in scroll mode (`scrollbar-width: none` +
+// `::-webkit-scrollbar { display: none }`) — native `overflow-y: auto` scrolling is UNCHANGED, so with no
+// visible bar left for the mask to fade, the running fade becomes the sole (and only) scroll affordance. This
+// makes THIS region a keyboard dead-end unless it can itself take focus — connected() below gives it
+// `tabindex="0"` (+ `role=group`, + a best-effort `ariaLabelledByElements` name off the header) whenever
+// `inScrollMode()` is true, reactively, mirroring the fade's own gate. A focused, tabindex=0, overflow:auto DIV
+// is NOT reliably keyboard-scrollable by the platform's own default action across engines — MEASURED
+// (card.browser.test.ts): Chromium scrolls it once genuinely (trusted-click-)focused, WebKit does not move it
+// AT ALL (ArrowDown/PageDown/End all no-op), confirming the exact "WebKit lags" gap flagged at design time. So
+// connected() wires an EXPLICIT keydown handler (below) rather than depend on an inconsistent default action —
+// deterministic scrolling on every engine, not a per-platform gamble.
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIContainerElement } from '../../dom/container.ts'
@@ -55,6 +68,70 @@ export class UICardContentElement extends UIContainerElement {
     const brackets = onCard ? (card as HTMLElement) : this
     const inScrollMode = (): boolean => this.scrollable || (onCard && (card as HTMLElement).hasAttribute('scrollable'))
     scrollFade(this, { brackets, enabled: inScrollMode })
+
+    // Keyboard operability (WCAG 2.1.1 Keyboard — component-review, 2026-07-08): card.css HIDES the native
+    // scrollbar in scroll mode (Kim's "keep native, but hide it" resolution, ADR-0046 Amendment 6) — the fade
+    // is now the ONLY visible scroll affordance. `tabindex="0"` makes THIS region a genuine tab stop.
+    // Reactive: tracks the SAME `inScrollMode()` the fade above gates on, so toggling the content-level
+    // `scrollable` signal live also toggles focusability (the parent-level `<ui-card scrollable>` stays the
+    // documented read-once-at-connect case — same asymmetry as the fade arming).
+    this.effect(() => {
+      if (!inScrollMode()) {
+        this.removeAttribute('tabindex')
+        this.internals.role = null
+        if ('ariaLabelledByElements' in this.internals) this.internals.ariaLabelledByElements = null
+        return
+      }
+      this.setAttribute('tabindex', '0')
+      this.internals.role = 'group'
+      // An accessible name for the now-focusable region, borrowed from the header — a card's header IS its
+      // content's caption. `ariaLabelledByElements` is a newer ElementInternals reflection API (unsupported in
+      // jsdom; real-engine support is flagged for Kim's on-device check, not asserted here) — feature-detected
+      // so its absence never throws. A headerless card gets no name: a documented gap (card.md), matching the
+      // family's "unnamed stays generic" ARIA posture (ADR-0014).
+      if ('ariaLabelledByElements' in this.internals) {
+        const header = onCard ? (card as HTMLElement).querySelector(':scope > ui-card-header') : null
+        this.internals.ariaLabelledByElements = header ? [header] : null
+      }
+    })
+
+    // The EXPLICIT scroll — the platform's own default action for arrow/Page/Home/End on a focused,
+    // tabindex=0, overflow:auto DIV is NOT reliable across engines (measured: Chromium moves it once
+    // trusted-focused; WebKit does not move it at all) — so this region scrolls itself deterministically
+    // rather than gamble on that default. `event.target === this` guards against hijacking arrow keys a
+    // focused DESCENDANT owns for its own purpose (e.g. a roving-tabindex control inside the content); only
+    // when THIS region itself is the direct key target does it act. `preventDefault()` on a handled key
+    // suppresses whatever native default action might ALSO fire (Chromium), so the increment is the same
+    // everywhere, not a double-scroll.
+    this.listen(this, 'keydown', (event: Event) => {
+      if (event.target !== this || !inScrollMode()) return
+      const key = (event as KeyboardEvent).key
+      const line = 40 // px per arrow press — an ordinary reading-line increment, density-invariant on purpose
+      const page = this.clientHeight * 0.9 // near-full-page, a small overlap (the standard page-scroll convention)
+      switch (key) {
+        case 'ArrowDown':
+          this.scrollTop += line
+          break
+        case 'ArrowUp':
+          this.scrollTop -= line
+          break
+        case 'PageDown':
+          this.scrollTop += page
+          break
+        case 'PageUp':
+          this.scrollTop -= page
+          break
+        case 'Home':
+          this.scrollTop = 0
+          break
+        case 'End':
+          this.scrollTop = this.scrollHeight
+          break
+        default:
+          return
+      }
+      event.preventDefault()
+    })
   }
 }
 

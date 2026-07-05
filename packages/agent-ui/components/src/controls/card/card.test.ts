@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { whenFlushed } from '@agent-ui/components'
 import { UIElement, UIFormElement } from '../../dom/index.ts'
 import { UIContainerElement } from '../../dom/container.ts'
 import { UICardElement } from './card.ts'
@@ -119,6 +120,182 @@ describe('ui-card-content — the scroll-mode signal reflects (puts the CARD int
     expect('props' in UICardFooterElement).toBe(false)
     expect(UICardHeaderElement.observedAttributes).toEqual([])
     expect(UICardFooterElement.observedAttributes).toEqual([])
+  })
+})
+
+// ── keyboard operability (WCAG 2.1.1 — ADR-0046 Amendment 6) ─────────────────────────────────────
+// card.css hides ui-card-content's native scrollbar in scroll mode; the fade becomes the sole scroll
+// affordance. connected() compensates with a REACTIVE tabindex="0" + role=group whenever inScrollMode() is
+// true (mirroring scrollFade's own gate) — pinned here in jsdom; the actual keyboard-scroll BEHAVIOUR (arrow/
+// Page keys) is a real-engine concern, proven in card.browser.test.ts.
+
+// A probe re-exposing the protected `internals`, mirroring ProbeCard above.
+class ProbeCardContent extends UICardContentElement {
+  get internalsProbe(): ElementInternals {
+    return this.internals
+  }
+}
+customElements.define('ui-card-content-probe', ProbeCardContent)
+
+describe('ui-card-content — scroll-mode keyboard operability (tabindex=0 + role=group, reactive)', () => {
+  it('NOT in scroll mode: no tabindex attribute, no role', () => {
+    const el = new ProbeCardContent()
+    document.body.append(el)
+    expect(el.hasAttribute('tabindex')).toBe(false)
+    expect(el.internalsProbe.role == null || el.internalsProbe.role === '').toBe(true)
+    el.remove()
+  })
+
+  it('the OWN scrollable=true (standalone, no ui-card parent) arms tabindex=0 + role=group', () => {
+    const el = new ProbeCardContent()
+    el.scrollable = true
+    document.body.append(el)
+    expect(el.getAttribute('tabindex')).toBe('0')
+    expect(el.internalsProbe.role).toBe('group')
+    el.remove()
+  })
+
+  it('the PARENT <ui-card scrollable> (read once at connect, mirrors the fade arming) also arms tabindex/role', () => {
+    const card = document.createElement('ui-card')
+    card.setAttribute('scrollable', '')
+    const content = new ProbeCardContent()
+    card.append(content)
+    document.body.append(card)
+    expect(content.getAttribute('tabindex')).toBe('0')
+    expect(content.internalsProbe.role).toBe('group')
+    card.remove()
+  })
+
+  it('toggling the OWN scrollable signal LIVE reactively toggles tabindex/role (unlike the parent attribute)', async () => {
+    const el = new ProbeCardContent()
+    document.body.append(el)
+    expect(el.hasAttribute('tabindex')).toBe(false)
+    el.scrollable = true
+    await whenFlushed() // the effect's re-run on a dependency CHANGE is microtask-batched (only its FIRST
+    // run, at connect, is synchronous) — the scheduler.ts convention every other reactive-toggle probe uses.
+    expect(el.getAttribute('tabindex')).toBe('0')
+    expect(el.internalsProbe.role).toBe('group')
+    el.scrollable = false
+    await whenFlushed()
+    expect(el.hasAttribute('tabindex')).toBe(false)
+    expect(el.internalsProbe.role == null || el.internalsProbe.role === '').toBe(true)
+    el.remove()
+  })
+
+  it('a HEADERLESS scrollable region never throws (ariaLabelledByElements is feature-detected — unsupported in jsdom)', () => {
+    const card = document.createElement('ui-card')
+    card.setAttribute('scrollable', '')
+    const content = new ProbeCardContent()
+    card.append(content)
+    expect(() => document.body.append(card)).not.toThrow()
+    expect(content.getAttribute('tabindex')).toBe('0')
+    card.remove()
+  })
+
+  it('a scrollable region WITH a ui-card-header sibling never throws (the labelling branch is exercised, not just skipped)', () => {
+    const card = document.createElement('ui-card')
+    card.setAttribute('scrollable', '')
+    card.innerHTML = '<ui-card-header>Title</ui-card-header>'
+    const content = new ProbeCardContent()
+    card.append(content)
+    expect(() => document.body.append(card)).not.toThrow()
+    expect(content.getAttribute('tabindex')).toBe('0')
+    card.remove()
+  })
+})
+
+// ── the EXPLICIT keydown handler — arithmetic + target-guard (the actual rendered scrolling is a real-engine
+// concern, card.browser.test.ts; this pins the decision logic jsdom CAN evaluate) ────────────────────────────
+
+describe('ui-card-content — the EXPLICIT scroll-mode keydown handler (deterministic, not a platform-default gamble)', () => {
+  it('ArrowDown/ArrowUp move scrollTop by exactly 40px each, and call preventDefault', () => {
+    const el = new ProbeCardContent()
+    el.scrollable = true
+    document.body.append(el)
+    el.scrollTop = 100
+    const down = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true })
+    el.dispatchEvent(down)
+    expect(el.scrollTop).toBe(140)
+    expect(down.defaultPrevented).toBe(true)
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }))
+    expect(el.scrollTop).toBe(100)
+    el.remove()
+  })
+
+  it('Home jumps to 0; End jumps to scrollHeight', () => {
+    const el = new ProbeCardContent()
+    el.scrollable = true
+    document.body.append(el)
+    el.scrollTop = 100
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true, cancelable: true }))
+    expect(el.scrollTop).toBe(0)
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true }))
+    expect(el.scrollTop).toBe(el.scrollHeight)
+    el.remove()
+  })
+
+  it('an UNRELATED key is left alone — not prevented, scrollTop untouched', () => {
+    const el = new ProbeCardContent()
+    el.scrollable = true
+    document.body.append(el)
+    el.scrollTop = 40
+    const ev = new KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true })
+    el.dispatchEvent(ev)
+    expect(ev.defaultPrevented).toBe(false)
+    expect(el.scrollTop).toBe(40)
+    el.remove()
+  })
+
+  it('a key event from a DESCENDANT is ignored — never hijacks a child control\'s own arrow-key use (target-guarded)', () => {
+    const el = new ProbeCardContent()
+    el.scrollable = true
+    el.innerHTML = '<button id="btn">go</button>'
+    document.body.append(el)
+    el.scrollTop = 100
+    const btn = el.querySelector('#btn') as HTMLElement
+    const ev = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true })
+    btn.dispatchEvent(ev)
+    expect(el.scrollTop, 'scrolled from a key event whose target was a descendant, not this region').toBe(100)
+    expect(ev.defaultPrevented).toBe(false)
+    el.remove()
+  })
+
+  it('NOT in scroll mode: the handler no-ops (attached, but inScrollMode() gates it)', () => {
+    const el = new ProbeCardContent()
+    document.body.append(el)
+    el.scrollTop = 40
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }))
+    expect(el.scrollTop).toBe(40)
+    el.remove()
+  })
+
+  it('DISCONNECT tears down BOTH the keydown listener and the reactive tabindex/role effect — no leak (mirrors scroll-fade.test.ts\'s own residue proof)', async () => {
+    const el = new ProbeCardContent()
+    el.scrollable = true
+    document.body.append(el)
+    expect(el.getAttribute('tabindex'), 'setup: tabindex was not armed').toBe('0')
+    expect(el.internalsProbe.role, 'setup: role was not armed').toBe('group')
+
+    el.scrollTop = 100
+    el.remove() // disconnect → this.listen's auto-remove + this.effect's cleanup should both fire
+
+    // The keydown listener is gone — dispatching directly on the (now-detached) element is a no-op.
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }))
+    expect(el.scrollTop, 'a keydown fired after disconnect — the listener leaked').toBe(100)
+
+    // The reactive effect is gone — toggling `scrollable` on the detached element no longer reacts. A LIVE
+    // (leaked) effect would immediately strip tabindex/role the instant `scrollable` goes false; a properly
+    // disposed one leaves the (now-irrelevant, stale) attribute exactly as it was at disconnect.
+    el.scrollable = false
+    expect(el.getAttribute('tabindex'), 'tabindex changed after disconnect — the effect leaked').toBe('0')
+    expect(el.internalsProbe.role, 'role changed after disconnect — the effect leaked').toBe('group')
+
+    // Reconnecting re-arms both, same as the rest of the family (ProbeCard's own reconnect precedent).
+    document.body.append(el)
+    el.scrollable = true
+    await whenFlushed() // the fresh effect's re-run on this CHANGE (not its initial connect-time run) is microtask-batched
+    expect(el.getAttribute('tabindex'), 'tabindex did not re-arm on reconnect').toBe('0')
+    el.remove()
   })
 })
 

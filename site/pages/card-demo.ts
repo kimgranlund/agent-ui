@@ -60,6 +60,9 @@ applyDemoWidth(nested, '24rem')
 // ── [4] scrollable — ui-card-content IS the viewport (REVISED 2026-07-07): it manages its own overflow and ──
 // carries the edge-fade mask directly; the header/footer are OVERLAID peers (position:absolute, no background),
 // so the fade stays visible through the WHOLE scroll at any content length, with no author-written wrapper.
+// REVISED 2026-07-08 (ADR-0046 Amendment 6): the native scrollbar is HIDDEN (native scrolling is unaffected) —
+// the fade is now the sole scroll affordance. ui-card-content becomes a real Tab stop (tabindex=0) with its
+// own Arrow/Page/Home/End keyboard handling to compensate (WCAG 2.1.1).
 const longText = 'Scrollable content. '.repeat(40)
 const scrollCard = el('ui-card', { scrollable: '' }, [
   el('ui-card-header', {}, [text('Scrollable')]),
@@ -72,7 +75,9 @@ const scrollNote = document.createElement('p')
 scrollNote.textContent =
   'ui-card-content manages its own overflow and carries the automatic edge-fade mask directly — no author-' +
   'written wrapper needed. The header/footer are overlaid peers (no background of their own); the mask fades ' +
-  'scrolled content as it passes beneath them (try it) so the see-through reads as fading, not a hard cut.'
+  'scrolled content as it passes beneath them (try it) so the see-through reads as fading, not a hard cut. ' +
+  'The native scrollbar is hidden — try Tab, then Arrow/Page/Home/End (try it): the fade is the only visible ' +
+  'scroll affordance, and the region itself is keyboard-scrollable.'
 
 content.append(
   exampleSection('Composed regions', composed),

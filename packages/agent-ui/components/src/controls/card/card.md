@@ -33,7 +33,7 @@ properties:            # IDL beyond attributes-as-API: the two surface accessors
   - name: brightness
     description: The surface brightness axis ('-3'…'3'; signed literal union, 0 = neutral). Composites a tonal wash over the elevation plane when both are set (ADR-0015 cl.3).
   - name: scrollable
-    description: The scroll-mode signal (boolean). `<ui-card scrollable>` (REVISED 2026-07-07) makes `ui-card-content` itself the bounded `overflow-y:auto` viewport — the CARD only supplies the flex-column sizing mechanism ("100% of parent height" against a `max-block-size`-only card) and stays bounded. The header/footer become OVERLAID peers (`position:absolute`, no background) rather than sticky/flex siblings. An AUTOMATIC edge-fade mask paints directly on ui-card-content (never the card or the overlaid header/footer), with block-padding + the gradient offset both driven by the SAME measured header/footer band. Also triggerable by marking the content region `[scrollable]` (the A2UI CardContent.scrollable mapping) — that content signal is the fully-reactive form; the ergonomic `<ui-card scrollable>` arms the fade mask at connect, so toggle scroll at runtime via the content region. Needs a constrained card block-size to bite.
+    description: The scroll-mode signal (boolean). `<ui-card scrollable>` (REVISED 2026-07-07) makes `ui-card-content` itself the bounded `overflow-y:auto` viewport — the CARD only supplies the flex-column sizing mechanism ("100% of parent height" against a `max-block-size`-only card) and stays bounded. The header/footer become OVERLAID peers (`position:absolute`, no background) rather than sticky/flex siblings. An AUTOMATIC edge-fade mask paints directly on ui-card-content (never the card or the overlaid header/footer), with block-padding + the gradient offset both driven by the SAME measured header/footer band. Also triggerable by marking the content region `[scrollable]` (the A2UI CardContent.scrollable mapping) — that content signal is the fully-reactive form; the ergonomic `<ui-card scrollable>` arms the fade mask at connect, so toggle scroll at runtime via the content region. Needs a constrained card block-size to bite. REVISED 2026-07-08 (ADR-0046 Amendment 6): `ui-card-content`'s native scrollbar CHROME is hidden in scroll mode (native scrolling itself is unchanged) — see Keyboard below for the compensating tabindex=0 + explicit keyboard handler this requires.
 
 events: []             # a card is a static surface container — it raises no events
 
@@ -61,7 +61,7 @@ aria:
   labelSource: aria-label / aria-labelledby   # author-supplied accessible name; its presence opts the card into role=group
   childModel: ChildList — ui-card-header / ui-card-content / ui-card-footer sub-elements (regions = sub-elements; SPEC-R3/R4)
 
-keyboard: []           # a card is not interactive — no keyboard contract (interactive content is the agent's own controls inside it)
+keyboard: []           # ui-card itself is not interactive — no keyboard contract. Its ui-card-content SUB-ELEMENT DOES carry one in scroll mode (ADR-0046 Amendment 6): tabindex=0 + ArrowUp/Down (40px) · PageUp/Down (~90% viewport) · Home/End (start/end) — see the Keyboard section in the prose below
 
 geometry:
   sizeClass: container   # Container/layout — spacing off --ui-space × density; a card has NO control height (never reads --ui-height-*)
@@ -193,6 +193,51 @@ edges, so `inset-inline: 0` + the existing margin nets the same floating 6px-ins
 always carry, just out-of-flow now. Their rect never moves as `ui-card-content` scrolls internally (verified
 cross-engine) — they are genuinely outside the scrolled element, not sticky-within-it.
 
+### The scrollbar is HIDDEN — the fade is the sole scroll affordance (REVISED 2026-07-08, ADR-0046 Amendment 6)
+
+Kim resolved a further tension the mask-on-content shape surfaced — a macOS **overlay** scrollbar's own ends
+fade along with the content it paints over, since it is not a separate compositing layer the mask can exempt
+— with a third option: **"keep native, but hide it."** `ui-card-content` HIDES its native scrollbar entirely
+in scroll mode (`scrollbar-width: none` + `::-webkit-scrollbar { display: none }`, scoped to both scroll-mode
+triggers) — native `overflow-y: auto` scrolling itself is completely unaffected; only the visible CHROME goes
+away. With no bar left to fade, the running fade becomes the region's **sole** scroll affordance — its
+intended job all along. Two candidates that would have kept a visible bar were prototyped and rejected first:
+`mask-clip` doesn't exempt the scrollbar from the fade, it hard-clips it out of existence entirely (the
+scrollbar chrome paints outside `content-box`); `::-webkit-scrollbar-track` inset trades away the native
+overlay LOOK fleet-wide for an always-visible custom bar. Hiding it keeps Kim's native look everywhere.
+
+**Keyboard operability (WCAG 2.1.1) — the load-bearing consequence.** A hidden scrollbar removes a keyboard
+user's normal entry point, so `ui-card-content` gets `tabindex="0"` (a real tab stop) plus `role="group"`
+through `internals` whenever it is the scroll viewport — REACTIVE, tracking the same `scrollable` signal the
+fade gates on (the parent `<ui-card scrollable>` stays the documented read-once-at-connect case). Where a
+sibling `ui-card-header` exists, `internals.ariaLabelledByElements` best-effort-labels the region by it (a
+card's header IS its content's caption) — a newer `ElementInternals` reflection API, feature-detected so its
+absence (jsdom; older engines) never throws; a headerless scrollable card gets no name, a documented gap.
+
+Once focused, `ArrowUp`/`ArrowDown` (40px/press) · `PageUp`/`PageDown` (~90% of the viewport) · `Home`/`End`
+(start/end) scroll the region — via an **explicit `keydown` handler**, not the platform's own default action.
+This was a MEASURED call, not a stylistic one: a focused, `tabindex=0`, `overflow:auto` DIV is **not**
+reliably keyboard-scrollable by the browser's own default action across engines — Chromium scrolled it (once
+genuinely, trusted-focused, e.g. via a real click — a bare `.focus()` call was measured insufficient there);
+WebKit did not move it **at all**, on any of Arrow/Page/Home/End (`card.browser.test.ts`). The explicit
+handler sidesteps the gap entirely — identical px amounts on every engine, `event.target === this` guarded
+(so it never hijacks arrow keys a focused interactive descendant owns for its own purpose, e.g. a
+roving-tabindex control placed inside the content) and `preventDefault()`-ed on every key it handles.
+**Flagged for Kim's on-device check:** the underlying WebKit default-action gap is real and measured
+(Playwright's WebKit build) but not independently confirmed on Safari proper.
+
+**The focus ring (ADR-0009).** The new tab stop draws the identical shared ring every fleet control does —
+`--md-sys-color-focus-ring` / `--ui-focus-ring-width`, `:focus-visible` only (keyboard, never a mouse click)
+— but it paints on the **parent `ui-card`**, not on `ui-card-content` itself (Kim, superseding an earlier
+inset/negative-offset draft): `:scope[scrollable]:has(> ui-card-content:focus-visible)` (and the content-
+signal variant) lets the card react to its content region's focus state and draw the ring around the whole
+card instead. This was the measured fix, not a stylistic one — a ring drawn ON `ui-card-content` gets
+silently clipped by that element's own `overflow-y: auto` (a positive-offset ring there resolved correctly
+in computed style but painted **nothing visible**); `ui-card` itself carries no overflow, so moving the ring
+one level up sidesteps the clipping problem entirely rather than working around it, and the ring uses the
+fleet's **standard positive (outward) offset** — no sign flip, no divergence from every other `:focus-visible`
+consumer.
+
 ## Region padding + margin — the shared model, uniform across the family (ADR-0046, revised 2026-07-04)
 
 The card itself holds **no** padding (the box-model law). Each region (`ui-card-header` / `ui-card-content` /
@@ -287,3 +332,8 @@ accessible name (`aria-label` / `aria-labelledby`) reads as an ARIA **`group`** 
 (**never** a host `role` attribute); an unnamed card is a generic container with no role. A region's
 adornment glyphs are decorative — mark them `aria-hidden` so the region's label stays the accessible name.
 A card itself is not interactive; interactive content is the agent's own controls placed inside it.
+
+**`ui-card-content` in scroll mode is the one exception** (ADR-0046 Amendment 6, above): it becomes a genuine
+tab stop (`tabindex="0"`) with `role="group"` through `internals`, best-effort-labelled by a sibling
+`ui-card-header` when one exists, and keyboard-operable via an explicit `Arrow`/`Page`/`Home`/`End` handler —
+see "The scrollbar is HIDDEN" above for the full contract and the WebKit finding it responds to.

@@ -73,7 +73,12 @@
      [scrollable]" — SUPERSEDES the short-lived WRAPPER MODEL, 2026-07-06): `ui-card-content` itself becomes the
      scroll viewport (no author-written wrapper child any more), and the header/footer become OVERLAID PEERS
      (`position: absolute`) rather than in-flow items — see the @scope STYLES block below for the full mechanism
-     and why the shell still needs `display: flex` even though header/footer no longer participate in it. */
+     and why the shell still needs `display: flex` even though header/footer no longer participate in it.
+     THE SCROLLBAR IS HIDDEN (Kim, 2026-07-08, resolving the mask-fades-the-scrollbar tension with a third
+     option: "keep native, but hide it" — ADR-0046 Amendment 6): no visible bar means nothing for the mask to
+     fade in the first place; native wheel/trackpad/keyboard scrolling is unaffected. Losing the visible bar
+     as a scroll affordance/keyboard entry point is why card-content.ts gives the region an explicit
+     tabindex=0 in scroll mode (WCAG 2.1.1) — see that file and the STYLES block below. */
   --ui-card-padding: 0;
   --ui-card-region-margin: var(--ui-box-inset, 0.375rem); /* 6px — the uniform inset margin around each region */
   --ui-card-region-pad-inline: var(--ui-box-pad-inline, 0.75rem); /* 12px — shared region inline padding */
@@ -224,6 +229,38 @@
     overflow-y: auto;
     padding-block-start: max(var(--ui-card-box-head), var(--ui-card-region-pad-block));
     padding-block-end: max(var(--ui-card-box-foot), var(--ui-card-region-pad-block));
+    scrollbar-width: none; /* Firefox / the standard property — HIDE the native scrollbar (Kim's third
+                              option, 2026-07-08: "keep native, but hide it" — no visible bar for the mask to
+                              fade at all; native wheel/trackpad/keyboard scrolling is UNCHANGED, `overflow-y:
+                              auto` above still does the scrolling. The fade becomes the sole scroll
+                              affordance — its intended job all along. Keyboard operability moves to
+                              card-content.ts's own tabindex=0 wiring (a hidden-scrollbar region needs an
+                              explicit tab stop — see that file). */
+  }
+  /* Chromium/WebKit's own scrollbar-hiding hook — a separate rule (pseudo-elements cannot join a normal
+     declaration block). Scoped identically to the rule above (both scroll-mode triggers). */
+  :scope[scrollable] > :where(ui-card-content)::-webkit-scrollbar,
+  :scope:has(> ui-card-content[scrollable]) > :where(ui-card-content)::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Focus ring (ADR-0009, component-review, 2026-07-08 — the GO-blocker on the scrollbar-hide pass): hiding
+     the scrollbar made ui-card-content a genuine keyboard tab stop (card-content.ts's tabindex=0), and every
+     fleet control that can take keyboard focus draws the SAME shared ring — this region is no exception. The
+     colour/width read the identical fleet constants every sibling reads (checkbox.css is the fleet
+     reference) — `--md-sys-color-focus-ring` / `--ui-focus-ring-width`, never a per-control repoint.
+     THE RING PAINTS ON THE PARENT CARD, not on ui-card-content itself (Kim, 2026-07-08, superseding an
+     earlier inset/negative-offset draft): `:has(> ui-card-content:focus-visible)` lets the card react to its
+     content region's focus state and draw the ring around the WHOLE card instead. This sidesteps the clipping
+     problem entirely rather than working around it — ui-card-content is an `overflow-y: auto` scroll
+     container, so a ring on IT gets clipped by its own overflow (measured: a positive-offset ring there
+     painted nothing); ui-card itself has no such overflow, so its ring uses the STANDARD fleet-positive
+     (outward) offset like every other consumer — no sign flip, no divergence. `:focus-visible` (not `:focus`)
+     keeps it keyboard-only, matching the rest of the fleet. */
+  :scope[scrollable]:has(> ui-card-content:focus-visible),
+  :scope:has(> ui-card-content[scrollable]:focus-visible) {
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
   }
 }
 

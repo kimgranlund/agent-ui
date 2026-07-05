@@ -49,7 +49,11 @@ const scopeContent = balancedBlock('@scope (ui-card-content)')
 
 // A consumption block may read ONLY the own --ui-card-* chain + the role-pure container surface seam
 // (--ui-container-*, ADR-0015 cl.2) — never a raw --md-sys-color-* role nor a shared ramp (--ui-space-*/--ui-radius-base).
-const allowed = (v: string): boolean => /^--ui-card-/.test(v) || /^--ui-container-/.test(v)
+// The ONE deliberate exception (matching button.css's precedent): the shared focus-ring FLEET constants
+// (ADR-0009) are read DIRECTLY, never repointed through a --ui-card-* alias, so every control draws the
+// identical ring — a fleet constant, not a per-control opinion.
+const sharedFleet = new Set(['--md-sys-color-focus-ring', '--ui-focus-ring-width', '--ui-focus-ring-offset'])
+const allowed = (v: string): boolean => /^--ui-card-/.test(v) || /^--ui-container-/.test(v) || sharedFleet.has(v)
 const foreignRefs = (block: string): string[] =>
   [...block.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1] as string).filter((v) => !allowed(v))
 
@@ -75,11 +79,12 @@ describe('card.css — role-purity: --md-sys-color-* roles + ramps live ONLY in 
     expect(cardTokens).toMatch(/--ui-card-border:\s*var\(--md-sys-color-neutral-outline-variant\)/)
   })
 
-  it('EVERY --md-sys-color-* role reference lives inside the :where(ui-card) token block (none leaks to a STYLES rule)', () => {
+  it('EVERY --md-sys-color-* role reference lives inside the :where(ui-card) token block, except the ONE deliberate shared focus-ring fleet constant (ADR-0009 — read directly in @scope, same exception button.css takes)', () => {
     const allRoleRefs = [...css.matchAll(/var\((--md-sys-color-[\w-]+)/g)].map((m) => m[1] as string).sort()
     const tokenRoleRefs = [...cardTokens.matchAll(/var\((--md-sys-color-[\w-]+)/g)].map((m) => m[1] as string).sort()
     expect(allRoleRefs.length).toBeGreaterThan(0) // anti-vacuous — roles ARE used
-    expect(allRoleRefs).toEqual(tokenRoleRefs) // and ALL of them are confined to the token block
+    const leaked = allRoleRefs.filter((v) => !tokenRoleRefs.includes(v))
+    expect(leaked).toEqual(['--md-sys-color-focus-ring']) // the ONE sanctioned exception — every other role stays confined
   })
 
   it('NEVER a color-mix (a mix ratio is a component colour opinion — ADR-0008)', () => {
@@ -222,6 +227,63 @@ describe('card.css — scroll mode: ui-card-content IS the viewport, header/foot
     expect(css).toMatch(/@media \(forced-colors: active\)/)
     const fc = css.slice(css.indexOf('@media (forced-colors: active)'))
     expect(fc).toMatch(/border-color:\s*CanvasText/) // the frame survives as a system colour
+  })
+
+  it('a forced-colors block also gives the scroll-mode brackets an opaque Canvas fallback (both triggers)', () => {
+    // The shared [data-fade-top]/[data-fade-bottom] forced-colors block (container-box.css) drops the mask
+    // entirely — and these brackets are deliberately backgroundless in normal rendering, so without a
+    // WHCM-only fallback, scrolled content would bleed straight through the header/footer text.
+    const fc = css.slice(css.indexOf('@media (forced-colors: active)'))
+    expect(fc).toMatch(/:scope\[scrollable\][^{]*ui-card-header[^{]*\{[^}]*background:\s*Canvas/)
+    expect(fc).toMatch(/:has\(>\s*ui-card-content\[scrollable\]\)[^{]*ui-card-header[^{]*\{[^}]*background:\s*Canvas/)
+  })
+
+  it(':has(> ui-card-content:focus-visible) draws the fleet ring (ADR-0009) on the PARENT ui-card — both triggers, keyboard-only, STANDARD (outward) offset', () => {
+    // component-review, 2026-07-08: the GO-blocker on the scrollbar-hide pass — hiding the native scrollbar
+    // made ui-card-content a genuine tab stop, so keyboard-focusing it must draw the SAME shared ring every
+    // other fleet control does. Kim, 2026-07-08 (superseding an earlier inset/negative-offset draft on
+    // ui-card-content itself): the ring paints on the PARENT card instead, via `:has(> ui-card-content:focus-
+    // visible)` — the card has no overflow of its own to clip it, so this uses the fleet's STANDARD positive
+    // (outward) offset like every other consumer, no sign flip (card.browser.test.ts proves it renders and is
+    // not clipped, in-browser).
+    const at = scopeCard.indexOf(':focus-visible')
+    expect(at, 'no :focus-visible rule found').toBeGreaterThan(-1)
+    const rule = scopeCard.slice(scopeCard.indexOf('{', at), scopeCard.indexOf('}', at) + 1)
+    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
+    expect(rule).toMatch(/outline-offset:\s*var\(--ui-focus-ring-offset\)/)
+    expect(rule).not.toMatch(/calc\(-1/) // the standard offset, NOT the earlier negated one
+    // both scroll-mode triggers get the ring — the selector list spans from the PRIOR rule's closing brace
+    // up through this rule's opening brace. It's the CARD's own selector (:scope[scrollable] / :scope:has(…)),
+    // gated by a NESTED :has(> ui-card-content …:focus-visible) — never a direct rule ON ui-card-content.
+    const priorClose = scopeCard.lastIndexOf('}', at)
+    const selectors = scopeCard.slice(priorClose + 1, scopeCard.indexOf('{', at))
+    expect(selectors).toMatch(/:scope\[scrollable\]:has\(>\s*ui-card-content:focus-visible\)/)
+    expect(selectors).toMatch(/:scope:has\(>\s*ui-card-content\[scrollable\]:focus-visible\)/)
+    expect(selectors.match(/:focus-visible/g)?.length, 'both triggers should each carry :focus-visible').toBe(2)
+    // NOT a direct rule on the content region itself — the ring belongs to the card, not the scroll container.
+    const contentTokens = whereBlock(':where(ui-card-content) {')
+    expect(contentTokens).not.toMatch(/focus-visible/)
+  })
+
+  it('the scroll-mode content viewport HIDES its native scrollbar (Kim: "keep native, but hide it" — ADR-0046 Amendment 6)', () => {
+    // Kim's third option, resolving the mask-fades-the-scrollbar tension: no visible bar → nothing for the
+    // mask to fade → the fade becomes the sole scroll affordance. Native overflow-y:auto scrolling (already
+    // pinned above) is UNCHANGED — this only hides the CHROME.
+    const at = scopeCard.indexOf('scrollbar-width: none;')
+    expect(at, 'no scrollbar-width:none rule found').toBeGreaterThan(-1)
+    const selectors = scopeCard.slice(0, scopeCard.lastIndexOf('{', at))
+    const tail = selectors.slice(selectors.lastIndexOf(';') + 1)
+    expect(tail).toMatch(/:scope\[scrollable\]\s*>\s*:where\(ui-card-content\)/)
+    expect(tail).toMatch(/:has\(>\s*ui-card-content\[scrollable\]\)\s*>\s*:where\(ui-card-content\)/)
+    // Chromium/WebKit's own hook — a separate rule (pseudo-elements can't join the declaration block above),
+    // scoped identically (both scroll-mode triggers).
+    expect(scopeCard).toMatch(/:scope\[scrollable\]\s*>\s*:where\(ui-card-content\)::-webkit-scrollbar[^{]*\{[^}]*display:\s*none/)
+    expect(scopeCard).toMatch(
+      /:has\(>\s*ui-card-content\[scrollable\]\)\s*>\s*:where\(ui-card-content\)::-webkit-scrollbar[^{]*\{[^}]*display:\s*none/,
+    )
+    // the NON-scroll (default) content region keeps its native scrollbar — the hide is scroll-mode-only.
+    const contentTokens = whereBlock(':where(ui-card-content) {')
+    expect(contentTokens).not.toMatch(/scrollbar-width/)
   })
 
   it('no opacity fade anywhere (the surface is a role plane, not an opacity wash — tokens.md canon)', () => {

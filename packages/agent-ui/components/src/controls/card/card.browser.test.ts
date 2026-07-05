@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp } from 'vitest/browser'
+import { server, cdp, userEvent } from 'vitest/browser'
 
 // G9 s7 — the CROSS-ENGINE card smoke (decomp g9-containers s7 browser gate). Runs in BOTH Chromium and WebKit
 // (vitest.browser.config.ts). Where card-geometry.test.ts / card-css.test.ts pin the DECLARED formulas, this
@@ -18,7 +18,7 @@ import '../_surface/container-box.css' // the box-model layer — provides the s
 import './card.css'
 import './card.ts'
 import './card-header.ts'
-import './card-content.ts'
+import { UICardContentElement } from './card-content.ts'
 import './card-footer.ts'
 
 const mounted: HTMLElement[] = []
@@ -763,3 +763,206 @@ describe('ui-card scroll mode — ui-card-content is the viewport; header/footer
   })
 })
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+// SCROLL MODE — the scrollbar is HIDDEN, keyboard operability (WCAG 2.1.1 — ADR-0046 Amendment 6, both engines)
+// Kim's third option resolving "the mask fades the scrollbar": hide the native scrollbar CHROME entirely
+// (native scrolling is unaffected) — the fade becomes the sole scroll affordance, and card-content.ts
+// compensates with a reactive tabindex=0 + role=group so a keyboard-only user is never stranded.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+// Probe re-exposing the protected internals — vitest-browser locators are BLIND to internals-only ARIA
+// (role/ariaLabelledByElements), the same gap tabs.browser.test.ts's probe precedent works around.
+class ProbeCardContent extends UICardContentElement {
+  get ii(): ElementInternals {
+    return this.internals
+  }
+}
+customElements.define('ui-card-content-axprobe', ProbeCardContent)
+
+describe('ui-card-content — scroll mode: the scrollbar is HIDDEN, keyboard operability compensates (both engines)', () => {
+  it('the native scrollbar is genuinely HIDDEN — scrollbar-width:none computed, no reserved layout gutter', () => {
+    const card = mount(
+      '<ui-card scrollable style="max-block-size: 100px"><ui-card-content>' +
+        '<div style="block-size: 400px">tall</div></ui-card-content></ui-card>',
+    )
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    expect(content.scrollHeight, 'vacuous test setup — content did not overflow').toBeGreaterThan(content.clientHeight)
+    const cs = getComputedStyle(content) as CSSStyleDeclaration & { scrollbarWidth?: string }
+    expect(cs.scrollbarWidth, `${server.browser}: scrollbar-width did not compute to none`).toBe('none')
+    // No reserved scrollbar gutter — a plain block with no border/own padding-box quirks, so offsetWidth
+    // should equal clientWidth exactly UNLESS a scrollbar is still reserving space.
+    expect(content.offsetWidth - content.clientWidth, `${server.browser}: a scrollbar gutter is still reserved`).toBe(0)
+  })
+
+  it('the DEFAULT (non-scroll) content region keeps its native scrollbar — the hide is scroll-mode-only', () => {
+    const card = mount('<ui-card><ui-card-content>Body</ui-card-content></ui-card>')
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    const cs = getComputedStyle(content) as CSSStyleDeclaration & { scrollbarWidth?: string }
+    expect(cs.scrollbarWidth, `${server.browser}: a non-scroll card content wrongly hid its scrollbar`).not.toBe('none')
+  })
+
+  it('tabindex=0 + role=group are LIVE on a real engine (internals-only ARIA, read via the probe)', () => {
+    const card = mount('<ui-card scrollable style="max-block-size: 100px"><ui-card-header>Title</ui-card-header></ui-card>')
+    const content = new ProbeCardContent()
+    content.innerHTML = '<div style="block-size: 400px">tall</div>'
+    card.append(content)
+    expect(content.getAttribute('tabindex'), `${server.browser}: not a real tab stop`).toBe('0')
+    expect(content.ii.role, `${server.browser}: role did not land on internals`).toBe('group')
+    expect(content.getAttribute('role'), `${server.browser}: role leaked onto the host attribute`).toBeNull()
+  })
+
+  it('[MUST-PROVE] KEYBOARD scroll — deterministic EXPLICIT handler, not the cross-engine-inconsistent platform default', async () => {
+    // MEASURED finding this test setup exposed: a focused, tabindex=0, overflow:auto DIV is NOT reliably
+    // keyboard-scrollable by the platform's own default action across engines — Chromium moved it (once
+    // genuinely, trusted-click-focused); WebKit did not move it AT ALL, confirming the "WebKit lags" gap
+    // flagged at design time. card-content.ts therefore wires an EXPLICIT keydown handler (40px/arrow press,
+    // 90%-of-viewport/Page, 0/Home, scrollHeight/End) and calls preventDefault() — deterministic, identical
+    // px amounts on BOTH engines, not a per-platform default it merely hopes fires.
+    const card = mount(
+      '<ui-card scrollable style="max-block-size: 120px"><ui-card-header>H</ui-card-header>' +
+        `<ui-card-content>${Array.from({ length: 20 }, (_, i) => `<p>Paragraph ${i}</p>`).join('')}</ui-card-content>` +
+        '<ui-card-footer>F</ui-card-footer></ui-card>',
+    )
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    expect(content.scrollHeight, 'vacuous test setup — content did not overflow').toBeGreaterThan(content.clientHeight)
+    expect(content.getAttribute('tabindex'), `${server.browser}: not a real tab stop`).toBe('0')
+
+    // A genuine, trusted click establishes focus (Chromium's own default action needs exactly this — a bare
+    // `.focus()` call was measured NOT to suffice there; a real click is also the representative real-world
+    // path a mouse-then-keyboard user actually takes).
+    await userEvent.click(content)
+    expect(document.activeElement, `${server.browser}: content did not actually take focus`).toBe(content)
+
+    await userEvent.keyboard('{ArrowDown}')
+    expect(content.scrollTop, `${server.browser}: ArrowDown did not move exactly one line (40px)`).toBeCloseTo(40, 0)
+    await userEvent.keyboard('{ArrowDown}')
+    expect(content.scrollTop, `${server.browser}: a second ArrowDown did not add another line`).toBeCloseTo(80, 0)
+    await userEvent.keyboard('{ArrowUp}')
+    expect(content.scrollTop, `${server.browser}: ArrowUp did not move back exactly one line`).toBeCloseTo(40, 0)
+
+    await userEvent.keyboard('{PageDown}')
+    expect(content.scrollTop, `${server.browser}: PageDown did not move ~90% of the viewport`).toBeCloseTo(40 + content.clientHeight * 0.9, 0)
+
+    await userEvent.keyboard('{End}')
+    // the browser clamps scrollTop to the real max (scrollHeight − clientHeight) — setting it to the raw
+    // scrollHeight (the handler's own literal) is the correct "go to the very end" idiom, not a bug.
+    expect(content.scrollTop, `${server.browser}: End did not reach the bottom`).toBeCloseTo(content.scrollHeight - content.clientHeight, 0)
+    await userEvent.keyboard('{Home}')
+    expect(content.scrollTop, `${server.browser}: Home did not return to the top`).toBe(0)
+  })
+
+  it('the welded see-through fade is UNCHANGED by hiding the scrollbar — still ramps mid-scroll, mask logic untouched', async () => {
+    const card = mount(
+      '<ui-card scrollable style="max-block-size: 120px"><ui-card-header>H</ui-card-header>' +
+        '<ui-card-content><div style="block-size: 400px">tall</div></ui-card-content>' +
+        '<ui-card-footer>F</ui-card-footer></ui-card>',
+    )
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    await scrollTo(content, content.scrollHeight / 2)
+    expect(maskOf(content), `${server.browser}: mid-scroll fade should still paint — hiding the scrollbar must not touch the mask`).toMatch(/gradient/)
+  })
+
+  it('WHCM: scroll-mode brackets keep their Canvas fallback — unrelated to (and unaffected by) hiding the scrollbar', async () => {
+    const card = mount(
+      '<ui-card scrollable style="max-block-size: 100px"><ui-card-header>H</ui-card-header>' +
+        '<ui-card-content><div style="block-size: 400px">tall</div></ui-card-content>' +
+        '<ui-card-footer>F</ui-card-footer></ui-card>',
+    )
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches, 'CDP did not enter forced-colors').toBe(true)
+      expect(alphaOf(getComputedStyle(header).backgroundColor), `${server.browser}: WHCM header lost its Canvas fallback`).toBeGreaterThan(0)
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+
+  /** A resolved, visible outline on `el` — the button-states.browser.test.ts precedent's own helper. */
+  const ringDrawn = (el: HTMLElement): boolean => {
+    const cs = getComputedStyle(el)
+    return cs.outlineStyle !== 'none' && px(cs.outlineWidth) > 0 && alphaOf(cs.outlineColor) > 0
+  }
+
+  const tallCard = (): HTMLElement =>
+    mount(
+      '<ui-card scrollable style="max-block-size: 120px; max-inline-size: 220px"><ui-card-header>Title</ui-card-header>' +
+        `<ui-card-content>${Array.from({ length: 20 }, (_, i) => `<p>Paragraph ${i}</p>`).join('')}</ui-card-content>` +
+        '<ui-card-footer>Footer</ui-card-footer></ui-card>',
+    )
+
+  it('[ADR-0009] KEYBOARD focus (Tab) into ui-card-content draws the fleet ring on the PARENT card', async () => {
+    // component-review, 2026-07-08 → Kim, superseding an earlier inset/negative-offset draft: ui-card-content's
+    // tabindex=0 is the tab stop, but the RING paints on the parent ui-card, via `:has(> ui-card-content:focus-
+    // visible)` — the card reacts to its content region's focus state rather than drawing its own ring on a
+    // scroll container that would clip it.
+    const card = tallCard()
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    await userEvent.tab() // real Tab → keyboard modality → :focus-visible matches (content is the only tab stop mounted)
+    expect(document.activeElement, `${server.browser}: Tab did not land on ui-card-content`).toBe(content)
+
+    const cs = getComputedStyle(card)
+    expect(cs.outlineStyle, `${server.browser}: no focus outline style on the card when its content is keyboard-focused`).toBe('solid')
+    expect(px(cs.outlineWidth), `${server.browser}: focus outline width is not the 2px ring`).toBeCloseTo(2, 0)
+    expect(alphaOf(cs.outlineColor), `${server.browser}: focus ring colour vanished`).toBeGreaterThan(0)
+  })
+
+  it('[ADR-0009] the card\'s ring is NOT clipped (own overflow:visible) and uses the STANDARD outward offset', async () => {
+    // Screenshot-verified during development (Chromium + WebKit): moving the ring to the card side-steps the
+    // clipping problem entirely rather than working around it — ui-card itself carries no `overflow` (default
+    // `visible`), so the fleet's usual POSITIVE (outward) offset just works, no sign flip. The ring reads
+    // cleanly around the card's full edge, including where it passes beneath the overlaid, backgroundless
+    // header/footer (same see-through trade-off the mask itself already makes there).
+    const card = tallCard()
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    await userEvent.tab()
+    expect(document.activeElement, `${server.browser}: Tab did not land on ui-card-content`).toBe(content)
+
+    const cs = getComputedStyle(card)
+    expect(cs.outlineStyle, `${server.browser}`).toBe('solid')
+    expect(alphaOf(cs.outlineColor), `${server.browser}: the ring resolved invisible`).toBeGreaterThan(0)
+    expect(getComputedStyle(card).overflow, `${server.browser}: the card has no overflow of its own to clip the ring`).toBe('visible')
+    // MEASURED: no divergence from the fleet norm any more — the STANDARD positive (outward) offset, same
+    // constant every other :focus-visible consumer reads (checkbox.css is the fleet reference).
+    expect(px(cs.outlineOffset), `${server.browser}: the offset should be the fleet's STANDARD positive (outward) value`).toBeGreaterThan(0)
+  })
+
+  it('[ADR-0009] MOUSE click into content does NOT draw the ring (:focus-visible keyboard-only contract)', async () => {
+    const card = tallCard()
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    await userEvent.click(content) // pointer modality → :focus-visible must NOT match
+    expect(document.activeElement, `${server.browser}: click did not focus ui-card-content`).toBe(content)
+    expect(ringDrawn(card), `${server.browser}: a mouse click into content drew the focus ring on the card (:focus-visible matched on pointer)`).toBe(false)
+  })
+
+  it('[ADR-0009] forced-colors keeps the keyboard ring on the card — Chromium emulates (CDP); WebKit asserts the baseline', async () => {
+    const card = tallCard()
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    await userEvent.tab()
+    expect(document.activeElement, `${server.browser}: Tab did not land on ui-card-content`).toBe(content)
+    expect(ringDrawn(card), 'no keyboard ring on the card in normal mode').toBe(true)
+
+    if (server.browser !== 'chromium') {
+      // WebKit exposes no CDP / forced-colors emulation (the documented split, see button-states.browser.test.ts) —
+      // assert we are genuinely NOT in forced-colors (so the Chromium proof below is not silently faked) and stop.
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
+      // the ring SURVIVES forced-colors on the CARD now (it moved off the scroll container): `--md-sys-color-
+      // focus-ring → Highlight` keeps a visible outline.
+      expect(ringDrawn(card), 'the focus ring on the card vanished under forced-colors').toBe(true)
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+})

@@ -9,7 +9,7 @@
 > | **Proposed by** | orchestration-lead — on Kim's directive that "all containers should have an inset/gap system expressed as children's margins", plus a header/content/footer pattern (sticky headers, dividers) and a fixed region padding (inline 12 · block 4 · gap 8, nested content stepping in one inset per level). Design forks confirmed with Kim (rollout scope; flow-root + margin-collapse). |
 > | **Ratified by** | orchestration-lead — on the green `check` + `test` (jsdom) + `test:browser` (both engines) + `size`, and screenshot review of the card + modal + select panels. |
 > | **Repairs** | **NEW** `controls/_surface/container-box.css` (+ its structure probe) · `component-styles.css` (`@import`, after `container.css`) · the overlay panels `controls/{select,menu,combo-box}/*.{ts,css}` (`[data-box]` + inset margins; select group-headers sticky) · `controls/card/card.{css}` + its geometry/browser tests (rolled onto the model; nested-radius re-based) · `controls/modal/modal.{ts,css}` + tests. |
-> | **Supersedes / Superseded by** | Partially superseded by the **2026-07-04 Amendment 2** below (region margin: full-bleed → inset, across the whole family; the card-only 6px override — Amendment 1 — is rescinded), and the **2026-07-05 Amendment 3** below (the scroll affordance — a presence-aware edge-fade mask + the card's whole-container scroll model). **2026-07-07 Amendment 5 (proposed, pending Kim's ratification)** further supersedes **Amendment 4** (drops the `[scroll-wrapper]` WRAPPER MODEL — `ui-card-content` itself is now the scroll viewport). **Extended by ADR-0056** (the region-less card humane default — a CSS fallback leg on the "card holds no padding" law: a Card with NO region children gets region-equivalent padding; the law stands for region-bearing composition). **Relates** ADR-0015 (container surface — the PAINT layer this SPACING layer sits beside), ADR-0016 (layout), ADR-0018 (concentric nested-radius — re-based here off the content inline padding), ADR-0041 (widget geometry). |
+> | **Supersedes / Superseded by** | Partially superseded by the **2026-07-04 Amendment 2** below (region margin: full-bleed → inset, across the whole family; the card-only 6px override — Amendment 1 — is rescinded), and the **2026-07-05 Amendment 3** below (the scroll affordance — a presence-aware edge-fade mask + the card's whole-container scroll model). **Amendment 5** (accepted, Kim ratified 2026-07-05) further supersedes **Amendment 4** (drops the `[scroll-wrapper]` WRAPPER MODEL — `ui-card-content` itself is now the scroll viewport). **2026-07-05 Amendment 6 (accepted, Kim ratified 2026-07-05)** refines Amendment 5 (unchanged shape) with the scrollbar-hide + keyboard-operability + focus-ring decision. **Extended by ADR-0056** (the region-less card humane default — a CSS fallback leg on the "card holds no padding" law: a Card with NO region children gets region-equivalent padding; the law stands for region-bearing composition). **Relates** ADR-0015 (container surface — the PAINT layer this SPACING layer sits beside), ADR-0016 (layout), ADR-0018 (concentric nested-radius — re-based here off the content inline padding), ADR-0041 (widget geometry). |
 
 ## Context
 
@@ -308,4 +308,75 @@ the new `[structural]`/`[WHCM]` proofs) · `controls/_surface/container-box.css`
 knob, proven a no-op for the other four `[data-box]` consumers) · `card.md` · `site/pages/card-demo.ts`.
 
 Gates green: `check` (tsc + site) · jsdom 2462 · `test:browser` 714 (Chromium + WebKit) · `size` 22794 / 23552.
+**Status: accepted** (Kim ratified, 2026-07-05).
+
+## Amendment 6 — 2026-07-05 (accepted, Kim ratified 2026-07-05) — the scrollbar is HIDDEN; keyboard operability compensates
+
+Amendment 5 (content-is-viewport, gradient-only occlusion via the HOLD) left one tension unresolved: a macOS
+**overlay** scrollbar is not a separate compositing layer the mask can exempt — its own ends fade along with
+the content it rides over. Kim resolved the either/or (a visible-but-inset bar vs. the running fade) with a
+**third option**, verbatim: *"keep native, but hide it."*
+
+- **The scrollbar is HIDDEN, not inset.** `ui-card-content` gets `scrollbar-width: none` (standard/Firefox) +
+  `::-webkit-scrollbar { display: none }` (Chromium/WebKit) in scroll mode, both triggers. Native
+  `overflow-y: auto` scrolling is **completely unaffected** — only the visible chrome disappears. With no bar
+  left to fade, the running see-through fade becomes the region's **sole** scroll affordance — its intended
+  job all along, per Kim's original directive.
+- **Two prototyped alternatives were rejected first** (a component-review-directed exploration, both engines,
+  both real-render pixel-sampled): **`mask-clip`** does not exempt the scrollbar from the mask — it hard-clips
+  everything outside its box, so `content-box` deleted the scrollbar entirely rather than keeping it crisp
+  (the scrollbar chrome paints outside `content-box`, confirmed by pixel sampling); `padding-box` left it
+  fading exactly as before. **`::-webkit-scrollbar-track` inset** (`margin-block`) DID work (WebKit,
+  pixel-confirmed: a crisp, genuinely-inset thumb) but trades away the native overlay LOOK fleet-wide for an
+  always-visible custom-painted bar — a bigger visual-identity change than Kim asked for. Hiding the bar
+  entirely avoids both costs.
+- **Keyboard operability (WCAG 2.1.1) is the load-bearing consequence.** A hidden scrollbar removes a
+  keyboard user's normal entry point into the region. `card-content.ts` gives `ui-card-content`
+  `tabindex="0"` (a real tab stop) + `role="group"` through `internals` whenever it is the scroll viewport —
+  REACTIVE, gated on the same `scrollable` signal the fade already tracks (the parent `<ui-card scrollable>`
+  keeps its documented read-once-at-connect asymmetry). Where a sibling `ui-card-header` exists,
+  `internals.ariaLabelledByElements` best-effort-labels the region by it (a card's header IS its content's
+  caption) — feature-detected (`'ariaLabelledByElements' in internals`), since it is a newer `ElementInternals`
+  reflection API unsupported in jsdom; a headerless scrollable card gets no name, a documented gap (card.md),
+  consistent with the family's existing "unnamed stays generic" ARIA posture (ADR-0014).
+- **An EXPLICIT `keydown` handler, not the platform default — a measured call, not a stylistic one.** A
+  focused, `tabindex=0`, `overflow:auto` DIV is **not** reliably keyboard-scrollable by the browser's own
+  default action across engines: MEASURED (`card.browser.test.ts`) — Chromium scrolled it once genuinely
+  trusted-focused (a bare `.focus()` call was insufficient there; a real click was required), but WebKit did
+  not move it **at all**, on ArrowDown, PageDown, or End, confirming the exact "Chromium's
+  keyboard-focusable-scrollers default is not universal; WebKit lags" risk flagged at design time. Rather than
+  gamble on an inconsistent default, `ui-card-content` wires its own handler: `ArrowUp`/`ArrowDown` move 40px,
+  `PageUp`/`PageDown` move ~90% of the viewport, `Home`/`End` jump to the extremes — identical px amounts on
+  every engine. `event.target === this` guards it from hijacking arrow keys a focused interactive descendant
+  owns for its own purpose (e.g. a roving-tabindex control placed inside the content); `preventDefault()` on
+  every handled key suppresses whatever the native default action might also attempt, so the increment is
+  never doubled.
+- **Flagged for Kim's on-device check:** the WebKit default-action gap is measured against Playwright's WebKit
+  build, not independently confirmed on Safari proper.
+- **The focus ring (ADR-0009) — a delta-review GO-blocker.** The new `tabindex=0` tab stop drew no
+  `:focus-visible` ring at all (fleet drift — all 24 other keyboard-focusable controls draw one; WCAG 2.4.7).
+  **First draft** (superseded, below) drew the ring directly on `ui-card-content` with the offset **negated**
+  (`calc(-1 * var(--ui-focus-ring-offset))`, drawing it INSIDE the border-box) — a positive-offset ring there
+  resolved correctly in computed style but painted **nothing visible**, silently clipped by that element's own
+  `overflow-y: auto`. **Kim, superseding that draft:** the ring belongs on the **parent `ui-card`** instead —
+  `:scope[scrollable]:has(> ui-card-content:focus-visible)` (and the content-signal variant) lets the card
+  react to its content region's keyboard-focus state and draw the ring around the whole card. This sidesteps
+  the clipping problem entirely rather than working around it: `ui-card` carries no `overflow` of its own, so
+  its ring uses the fleet's **standard positive (outward) offset**, identical to every other `:focus-visible`
+  consumer (checkbox.css is the fleet reference) — **the negated-offset divergence is REMOVED**, not merely
+  documented as a one-off. Verified in-browser, both engines: the `:has()` + `:focus-visible` combination
+  resolves correctly on keyboard Tab, the ring paints uncut around the card (including where it crosses beneath
+  the overlaid, backgroundless header/footer band), survives `forced-colors` (Chromium CDP-emulated; WebKit
+  asserts the non-forced-colors baseline, the documented split), and a mouse click into content draws no ring
+  (`:focus-visible` stays keyboard-only).
+
+Repairs: `controls/card/card.css` (the hide rule + the focus-ring rule, now on the card via `:has()`, both
+triggers) · `controls/card/card-content.ts` (the reactive tabindex/role/labelling effect + the explicit
+keydown handler) · `card.test.ts` (the keyboard-a11y + keydown-arithmetic + disconnect/no-leak jsdom probes) ·
+`card-css.test.ts` (the focus-ring CSS-text pin, now asserting the rule on `:scope` via `:has()` with the
+STANDARD offset) · `card.browser.test.ts` (the hidden-scrollbar + `[MUST-PROVE]` keyboard + `[ADR-0009]`
+focus-ring proofs — keyboard-draws-ring-on-card, not-clipped/standard-offset, mouse-click-no-ring,
+forced-colors — both engines) · `card.md`.
+
+Gates green: `check` (tsc + site) · jsdom 2477 · `test:browser` 734 (Chromium + WebKit) · `size` 22949/23552.
 **Status: accepted** (Kim ratified, 2026-07-05).
