@@ -172,10 +172,11 @@ mask at all and stay fully crisp at every scroll position, in either shape** (ve
 > header/footer crispness holds regardless of which shape is used — only the fade's *visibility through the
 > middle of a long scroll* differs.
 
-The sticky brackets take `background: inherit` (the card surface) so content scrolled directly beneath them is
-occluded (in the fallback shape, where the card genuinely scrolls under them). Deliberately JS-driven (not
-`animation-timeline: scroll()`) — a handful of scroll-position comparisons, robust on every engine including
-WebKit.
+The sticky brackets carry **no background** (Kim, 2026-07-05): in the wrapper shape content scrolls inside the
+wrapper and never passes under a bracket, so none is needed; in the no-wrapper fallback shape (where the card
+itself scrolls under them) content will show through — the degraded path accepts the see-through, the wrapper
+shape is the occlusion-clean one. The fade is deliberately JS-driven (not `animation-timeline: scroll()`) — a
+handful of scroll-position comparisons, robust on every engine including WebKit.
 
 > Cosmetic (not chased): in the wrapper shape, the mask sits on `ui-card-content`, one box out from the
 > `[scroll-wrapper]` that actually scrolls — it clips the wrapper's own scrollbar ends too, not just its content.

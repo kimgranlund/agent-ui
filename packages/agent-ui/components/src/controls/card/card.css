@@ -190,15 +190,17 @@
      offsets from the border — an inset of 6px ON TOP of that 6px padding double-stacks to a rendered 12px once
      the bracket is actually stuck (caught by card.browser.test.ts's gutter proof); `0` lets the bracket stick
      exactly where the padding already puts it at rest, so the gutter reads a consistent 6px whether stuck or not.
-     `background: inherit` takes the card surface so content scrolled directly beneath the BRACKET ITSELF is
-     occluded in that fallback shape. The brackets are NEVER masked (the mask lives on ui-card-content, below —
-     `data-fade-*` never lands on a header/footer sibling, in EITHER shape). */
+     The brackets carry NO background (Kim, 2026-07-05: "remove the bg from header and footer"): in the WRAPPER
+     shape content scrolls INSIDE the wrapper, never under a bracket, so there is nothing to occlude; in the
+     no-wrapper FALLBACK shape the card itself scrolls and content DOES pass under the sticky brackets — with no
+     background it shows through there (the degraded path accepts the see-through; the wrapper shape is the
+     occlusion-clean one). The brackets are NEVER masked either way (the mask lives on ui-card-content, below —
+     `data-fade-*` never lands on a header/footer sibling). */
   :scope[scrollable] > :where(ui-card-header),
   :scope:has(> ui-card-content[scrollable]) > :where(ui-card-header) {
     flex: 0 0 auto;
     position: sticky;
     inset-block-start: 0;
-    background: inherit;
     z-index: 1;
   }
   :scope[scrollable] > :where(ui-card-footer),
@@ -206,7 +208,6 @@
     flex: 0 0 auto;
     position: sticky;
     inset-block-end: 0;
-    background: inherit;
     z-index: 1;
   }
 
