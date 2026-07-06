@@ -99,78 +99,46 @@ const clearField = (): void => {
 
 chatPane.append(switcherSlot, composer) // switcher (dev-only, populated on probe) sits ABOVE the composer
 
-// ── canvas pane: tabs (Canvas · JSON · HTML) ────────────────────────────────────────────────────────────
+// ── canvas pane: ui-tabs (Canvas · JSON · HTML) — the shipped compound, DOGFOODED in place of the former
+// hand-rolled `role=tablist` strip + roving/selectTab (Batch C). ui-tabs owns the tablist part, the tab↔panel
+// ARIA wiring (roles/aria-selected/aria-controls/aria-labelledby all via ElementInternals), the roving
+// keyboard, and selection — only the active panel shows (the rest keep `hidden` and stay in the DOM). This
+// page authors only the tabs/panels and reads the ONE `select` commit event. ───────────────────────────────
 canvasPane.append(paneTitle('A2UI canvas', 'The rendered surface, its JSONL payload, and its HTML.'))
 
-const tabStrip = el('div', 'tab-strip')
-tabStrip.setAttribute('role', 'tablist')
-const tabPanels = el('div', 'tab-panels')
-canvasPane.append(tabStrip, tabPanels)
-
-interface TabDef {
-  id: string
-  label: string
+const tabs = document.createElement('ui-tabs')
+tabs.className = 'canvas-tabs'
+tabs.setAttribute('selected', 'canvas') // the active tab's `value` (a plain reflected prop; '' would pick the first)
+function makeTab(value: string, label: string): HTMLElement {
+  const tab = document.createElement('ui-tab')
+  tab.setAttribute('value', value)
+  tab.textContent = label
+  return tab
 }
-const TABS: TabDef[] = [
-  { id: 'canvas', label: 'Canvas' },
-  { id: 'json', label: 'JSON' },
-  { id: 'html', label: 'HTML' },
-]
-const registered: { id: string; btn: HTMLButtonElement; panel: HTMLElement }[] = []
-let activeTabId = TABS[0]!.id
-for (const t of TABS) {
-  const btn = document.createElement('button')
-  btn.type = 'button'
-  btn.className = 'tab'
-  btn.textContent = t.label
-  btn.id = `a2ui-tab-${t.id}`
-  btn.setAttribute('role', 'tab')
-  btn.setAttribute('aria-controls', `a2ui-panel-${t.id}`)
-  btn.setAttribute('tabindex', '-1') // roving tabindex — selectTab promotes the active tab to 0
-  btn.addEventListener('click', () => selectTab(t.id))
-  tabStrip.append(btn)
-  const panel = el('div', 'tab-panel')
-  panel.id = `a2ui-panel-${t.id}`
-  panel.setAttribute('role', 'tabpanel')
-  panel.setAttribute('aria-labelledby', `a2ui-tab-${t.id}`)
-  panel.setAttribute('tabindex', '0')
-  tabPanels.append(panel)
-  registered.push({ id: t.id, btn, panel })
-}
-function selectTab(id: string): void {
-  activeTabId = id
-  for (const r of registered) {
-    const active = r.id === id
-    r.btn.classList.toggle('is-active', active)
-    r.btn.setAttribute('aria-selected', String(active))
-    r.btn.setAttribute('tabindex', active ? '0' : '-1') // only the active tab is in the tab order
-    r.panel.classList.toggle('is-active', active)
-  }
-}
-// Arrow-key navigation (WAI-ARIA tabs pattern): Left/Right cycle, Home/End jump; focus follows selection.
-tabStrip.addEventListener('keydown', (e) => {
-  const key = (e as KeyboardEvent).key
-  const cur = registered.findIndex((r) => r.id === activeTabId)
-  let next = -1
-  if (key === 'ArrowRight' || key === 'ArrowDown') next = (cur + 1) % registered.length
-  else if (key === 'ArrowLeft' || key === 'ArrowUp') next = (cur - 1 + registered.length) % registered.length
-  else if (key === 'Home') next = 0
-  else if (key === 'End') next = registered.length - 1
-  else return
-  e.preventDefault()
-  const target = registered[next]!
-  selectTab(target.id)
-  target.btn.focus()
-})
+// The three panels — paired to the tabs by DOM order (tab i ↔ panel i, tabs.md "Anatomy"). Canvas holds the
+// shared artboard; JSON/HTML hold scrollable code blocks kept current EAGERLY each turn (refreshJson/refreshHtml).
+const canvasPanel = document.createElement('ui-tab-panel')
+const jsonPanel = document.createElement('ui-tab-panel')
+const htmlPanel = document.createElement('ui-tab-panel')
+tabs.append(
+  makeTab('canvas', 'Canvas'),
+  makeTab('json', 'JSON'),
+  makeTab('html', 'HTML'),
+  canvasPanel,
+  jsonPanel,
+  htmlPanel,
+)
+canvasPane.append(tabs)
 
 // Canvas tab → the shared artboard (translate-centered stage/surface pair — lib/canvas-surface).
-const canvasPanel = registered[0]!.panel
 const { stage, surface: surfaceEl } = createCanvasSurface()
 canvasPanel.append(stage)
-// JSON + HTML tabs → scrollable <pre><code> blocks (rebuilt each turn).
-const jsonPanel = registered[1]!.panel
-const htmlPanel = registered[2]!.panel
-selectTab('canvas')
+
+// Switch to the Canvas tab programmatically — a plain reflected `selected` write applies SILENTLY (no `select`
+// event echoed, so it never loops back through a listener; binding hygiene, tabs.md). Replaces the old selectTab().
+function showCanvas(): void {
+  tabs.setAttribute('selected', 'canvas')
+}
 
 function refreshJson(lines: string[]): void {
   const pretty = lines.map((l) => JSON.stringify(JSON.parse(l), null, 2)).join('\n')
@@ -245,7 +213,7 @@ async function runTurn(input: TurnInput): Promise<void> {
     addMessage('agent', summarize(turnLines))
     refreshJson(allLines)
     refreshHtml()
-    selectTab('canvas')
+    showCanvas()
   } catch (e) {
     addMessage('system', `⚠ ${(e as Error).message}`)
   } finally {

@@ -23,6 +23,8 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/app/app-shell.css'
 import '@agent-ui/app/app-shell'
 import { UIAppShellRegionElement } from '@agent-ui/app/app-shell'
+import '@agent-ui/components/component-styles.css' // the [hidden] panel rule + tab chrome (Batch C tabs legs)
+import '@agent-ui/components/components' // self-defines ui-tabs / ui-tab / ui-tab-panel
 import './a2ui-live.css'
 
 const mounted: HTMLElement[] = []
@@ -211,5 +213,74 @@ describe('a2ui-live chrome re-host (ADR-0084) — the chat composer stays REACHA
     const chatRect = chat.getBoundingClientRect()
     const shellRect = shellEl.getBoundingClientRect()
     expect(chatRect.width, 'the composer did not span the full narrow column').toBeCloseTo(shellRect.width, 0)
+  })
+})
+
+// ── Batch C dogfood: the canvas tabs now consume the shipped `ui-tabs` compound (was a hand-rolled role=tablist
+// strip + roving/selectTab). These mirror a2ui-live.ts's REAL tab authoring — as mountChrome mirrors the panes —
+// and prove this page's CONSUMPTION: the tablist is a real PART, the host carries no role, selection toggles the
+// panel `hidden`, and only a USER gesture emits the ONE `select` event. (The component's own ARIA/roving/motion
+// is proven by tabs.test.ts; this slice does not re-prove it.) ─────────────────────────────────────────────────
+function mountCanvasTabs(selected = 'canvas'): HTMLElement {
+  const tabs = document.createElement('ui-tabs')
+  tabs.className = 'canvas-tabs'
+  tabs.setAttribute('selected', selected)
+  const mk = (value: string, label: string): HTMLElement => {
+    const t = document.createElement('ui-tab')
+    t.setAttribute('value', value)
+    t.textContent = label
+    return t
+  }
+  const canvasPanel = document.createElement('ui-tab-panel')
+  const jsonPanel = document.createElement('ui-tab-panel')
+  const htmlPanel = document.createElement('ui-tab-panel')
+  canvasPanel.textContent = 'canvas'
+  jsonPanel.textContent = 'json'
+  htmlPanel.textContent = 'html'
+  tabs.append(mk('canvas', 'Canvas'), mk('json', 'JSON'), mk('html', 'HTML'), canvasPanel, jsonPanel, htmlPanel)
+  document.body.append(tabs)
+  mounted.push(tabs)
+  return tabs
+}
+
+describe('a2ui-live canvas tabs (Batch C) — the shipped ui-tabs compound replaces the hand-rolled tablist', () => {
+  it('authors as ui-tabs/ui-tab/ui-tab-panel: a real tablist PART, NO host role, and selected="canvas" shows only the Canvas panel', () => {
+    const tabs = mountCanvasTabs()
+    const strip = tabs.querySelector('[data-part="tablist"]')
+    expect(strip, 'ui-tabs did not create its tablist strip part').not.toBeNull()
+    expect(strip!.getAttribute('role')).toBe('tablist')
+    expect(tabs.getAttribute('role'), 'the host must carry NO role attribute — ARIA rides internals (tabs.md)').toBeNull()
+    expect(strip!.querySelectorAll('ui-tab')).toHaveLength(3) // the three tabs reparented into the strip
+    const panels = tabs.querySelectorAll('ui-tab-panel')
+    expect(panels).toHaveLength(3)
+    expect(panels[0]!.hasAttribute('hidden'), 'the Canvas panel should be visible').toBe(false)
+    expect(panels[1]!.hasAttribute('hidden'), 'the JSON panel should be hidden').toBe(true)
+    expect(panels[2]!.hasAttribute('hidden'), 'the HTML panel should be hidden').toBe(true)
+  })
+
+  it('a USER click on the JSON tab commits: JSON shows, Canvas hides, `selected` reflects, and the ONE select event fires { value:"json", index:1 }', async () => {
+    const tabs = mountCanvasTabs()
+    const events: Array<{ value: string; index: number }> = []
+    tabs.addEventListener('select', (e) => events.push((e as CustomEvent<{ value: string; index: number }>).detail))
+    const jsonTab = tabs.querySelectorAll('ui-tab')[1] as HTMLElement
+    jsonTab.click()
+    await (tabs as unknown as { updateComplete: Promise<unknown> }).updateComplete // the selection effect is microtask-batched
+    const panels = tabs.querySelectorAll('ui-tab-panel')
+    expect(panels[0]!.hasAttribute('hidden'), 'Canvas should now be hidden').toBe(true)
+    expect(panels[1]!.hasAttribute('hidden'), 'JSON should now be visible').toBe(false)
+    expect(tabs.getAttribute('selected')).toBe('json') // reflected
+    expect(events).toHaveLength(1)
+    expect(events[0]).toEqual({ value: 'json', index: 1 })
+  })
+
+  it('negative control: a PROGRAMMATIC selected write (the showCanvas() path) applies but is SILENT — no select echoed; the click test above proves a real user commit, not the reflect', async () => {
+    const tabs = mountCanvasTabs()
+    const events: unknown[] = []
+    tabs.addEventListener('select', (e) => events.push(e))
+    ;(tabs as unknown as { selected: string }).selected = 'html'
+    await (tabs as unknown as { updateComplete: Promise<unknown> }).updateComplete
+    const panels = tabs.querySelectorAll('ui-tab-panel')
+    expect(panels[2]!.hasAttribute('hidden'), 'the programmatic write should still apply (HTML shown)').toBe(false)
+    expect(events, 'a programmatic selected write must NOT echo a select event (binding hygiene)').toHaveLength(0)
   })
 })
