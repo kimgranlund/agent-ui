@@ -17,7 +17,15 @@ import { createRenderer, defaultCatalog } from '@agent-ui/a2ui'
 import type { RendererHost, ComponentDef, PropDef, JsonSchema } from '@agent-ui/a2ui'
 import { loadDescriptorByTag } from './frontmatter.ts'
 import type { ParsedAttribute } from '@agent-ui/components/descriptor'
+import type { UISelectElement, UICheckboxElement, UITextFieldElement } from '@agent-ui/components/components'
 import { createCanvasSurface, applyRootStretch } from './canvas-surface.ts'
+
+// The `value` of the enum-knob "unset" option. ui-select's selectionCommit treats value="" as "no key"
+// and SKIPS it (selection-commit.ts:98/147 — never commits, never emits `select`, panel stays open), so a
+// literal empty-value option would be inert. A non-empty sentinel makes "reset to the control's own default"
+// a real, committable choice; the `select` handler maps it back to '' (the knob's unset state). Cannot
+// collide with a real enum member (all lowercase identifiers).
+const KNOB_UNSET = '__cp-unset__'
 
 // ── the unified knob model (one shape, both modes) ───────────────────────────────────────────────────────────
 type KnobKind = 'enum' | 'boolean' | 'number' | 'string' | 'text' | 'skip'
@@ -200,8 +208,11 @@ function sampleFor(name: string, def: ComponentDef): Sample {
 // NEVER appends children (a knob only ever sets an attribute or the default-slot text) — this is the one,
 // narrow exception, keyed by TAG (component mode has no catalog def to key by name, unlike SAMPLE_TREES).
 const sampleTrigger = (): HTMLElement => {
-  const btn = document.createElement('button')
-  btn.type = 'button'
+  // Dogfoods ui-button as the overlay trigger/anchor for the tooltip/menu/popover specimens (Kim's
+  // directive). Each of those controls adopts its FIRST element child as the trigger/anchor and sets
+  // data-part + the disclosure ARIA (aria-expanded/-controls/-describedby) on it — a ui-button is a valid
+  // element child, is focusable, and is semantically a button, so it composes cleanly as the trigger.
+  const btn = document.createElement('ui-button')
   btn.textContent = 'Trigger'
   return btn
 }
@@ -423,13 +434,35 @@ class ComponentPreview extends HTMLElement {
     }
 
     if (knob.kind === 'enum') {
-      const select = document.createElement('select')
-      select.className = 'knob-select'
+      // Dogfoods ui-select in place of a native <select> (Kim's directive). Options are [role=option]
+      // light-DOM children appended BEFORE connection — ui-select moves them into its listbox at first
+      // connect (select.md `slots`). The `label` prop names the trigger (ADR-0085); the visible <label for>
+      // above adds click-to-focus. The `select` event (NOT `change`) is the commit signal; `.value` is the
+      // read/write property (the gallery themeSelect() precedent).
+      const select = document.createElement('ui-select') as UISelectElement
       select.id = id
-      select.append(new Option('—', '')) // the unset choice → the control's own default
-      for (const member of knob.values ?? []) select.append(new Option(member, member))
+      select.className = 'knob-select'
+      select.setAttribute('size', 'sm')
+      select.setAttribute('label', knob.name)
+      select.setAttribute('placeholder', '—') // the unset display → the control's own default
+      // The unset choice — a non-empty sentinel value (an empty-value option is inert; see KNOB_UNSET).
+      const unset = document.createElement('div')
+      unset.setAttribute('role', 'option')
+      unset.setAttribute('value', KNOB_UNSET)
+      unset.textContent = '—'
+      select.append(unset)
+      for (const member of knob.values ?? []) {
+        const option = document.createElement('div')
+        option.setAttribute('role', 'option')
+        option.setAttribute('value', member)
+        option.textContent = member
+        select.append(option)
+      }
       select.value = this.#state.get(knob.name) ?? ''
-      select.addEventListener('change', () => this.#setKnob(knob.name, select.value))
+      select.addEventListener('select', () => {
+        const v = select.value
+        this.#setKnob(knob.name, v === KNOB_UNSET ? '' : v)
+      })
       this.#refreshers.push(() => {
         select.value = this.#state.get(knob.name) ?? ''
       })
@@ -438,10 +471,14 @@ class ComponentPreview extends HTMLElement {
     }
 
     if (knob.kind === 'boolean') {
-      const check = document.createElement('input')
-      check.type = 'checkbox'
-      check.className = 'knob-check'
+      // Dogfoods ui-checkbox in place of a native <input type=checkbox> (Kim's directive). `checked` + the
+      // `change` event are the wire; `aria-label` names the bare box (checkbox.md labelSource) and the
+      // visible <label for> above adds click-to-focus.
+      const check = document.createElement('ui-checkbox') as UICheckboxElement
       check.id = id
+      check.className = 'knob-check'
+      check.setAttribute('size', 'sm')
+      check.setAttribute('aria-label', knob.name)
       check.checked = this.#state.get(knob.name) === 'true'
       check.addEventListener('change', () => this.#setKnob(knob.name, check.checked ? 'true' : 'false'))
       this.#refreshers.push(() => {
@@ -451,16 +488,22 @@ class ComponentPreview extends HTMLElement {
       return row
     }
 
-    const input = document.createElement('input')
-    input.type = knob.kind === 'number' ? 'number' : 'text'
-    input.className = 'knob-input'
-    input.id = id
-    input.value = this.#state.get(knob.name) ?? ''
-    input.addEventListener('input', () => this.#setKnob(knob.name, input.value))
+    // Number/text knob → ui-text-field (Kim's directive): type=number for a numeric prop, type=text
+    // otherwise. `value` + the `input` event are the wire; the input-time value is the RAW typed string
+    // (the numeric codec only reformats on blur/change — which the knob never listens to). `label` gives the
+    // editor its aria-label; the visible <label for> above adds click-to-focus.
+    const field = document.createElement('ui-text-field') as UITextFieldElement
+    field.id = id
+    field.className = 'knob-input'
+    field.setAttribute('size', 'sm')
+    field.setAttribute('type', knob.kind === 'number' ? 'number' : 'text')
+    field.setAttribute('label', knob.name === SLOT_TEXT ? 'text' : knob.name)
+    field.value = this.#state.get(knob.name) ?? ''
+    field.addEventListener('input', () => this.#setKnob(knob.name, field.value))
     this.#refreshers.push(() => {
-      input.value = this.#state.get(knob.name) ?? ''
+      field.value = this.#state.get(knob.name) ?? ''
     })
-    row.append(input)
+    row.append(field)
     return row
   }
 
@@ -479,6 +522,11 @@ class ComponentPreview extends HTMLElement {
     return [section]
   }
 
+  // Deliberately NOT migrated to ui-button (the dogfooding wave left this native + flagged): a chip-row is a
+  // single-select segmented toggle (one `aria-pressed` chip active at a time), and ui-button models no
+  // pressed/selected state — expressing it would force a host `aria-pressed` attribute plus variant-swapping
+  // for the active look, changing the control's semantics. ui-radio-group is the apt primitive, but that is a
+  // larger reshape than this consumption pass. Left as a native toggle-button set.
   #buildChipRow(knob: Knob): HTMLElement {
     const row = document.createElement('div')
     row.className = 'chip-row'

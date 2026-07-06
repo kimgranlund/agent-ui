@@ -75,21 +75,18 @@ component-preview {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.knob-input,
+/* The knob controls are now dogfooded ui-* controls (ui-select · ui-checkbox · ui-text-field) — each carries
+ * its OWN control CSS, so the chrome here is layout-only. Keep each within the narrow knob column by lowering
+ * its documented min-inline-size floor (a per-field theme override the control EXPOSES — text-field.css:64 /
+ * select.css:58 — not a restyle of internals). The 1fr grid track supplies the width. */
 .knob-select {
-  font: inherit;
-  font-size: 0.8rem;
-  padding: 0.28rem 0.4rem;
-  border-radius: 6px;
-  border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  background: var(--md-sys-color-neutral-surface-high);
-  color: var(--md-sys-color-neutral-on-surface);
-  min-inline-size: 0;
+  --ui-select-min-inline-size: 6ch;
+}
+.knob-input {
+  --ui-text-field-min-inline-size: 8ch;
 }
 .knob-check {
   justify-self: start;
-  inline-size: 1.05rem;
-  block-size: 1.05rem;
 }
 .knob-note {
   color: var(--md-sys-color-neutral-on-surface-variant);

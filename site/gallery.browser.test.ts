@@ -49,8 +49,11 @@ const cardFor = (gallery: HTMLElement, tag: string): HTMLElement | null =>
   gallery.querySelector(`.gallery-card[data-tag="${tag}"]`) as HTMLElement | null
 
 /** The live ui-* specimen `<component-preview mode="component">` renders for one card (light DOM, so a plain
- *  descendant-tag query finds it — no shadow root to pierce). */
-const liveFor = (card: HTMLElement, tag: string): HTMLElement | null => card.querySelector(tag) as HTMLElement | null
+ *  descendant query finds it — no shadow root to pierce). Scoped to `.canvas-surface`: the preview's knob
+ *  column now dogfoods ui-* controls (ui-select/ui-checkbox/ui-text-field), so a bare tag query would match a
+ *  same-tag KNOB (e.g. the ui-select card's own `size` knob) ahead of the specimen. */
+const liveFor = (card: HTMLElement, tag: string): HTMLElement | null =>
+  card.querySelector(`.canvas-surface ${tag}`) as HTMLElement | null
 
 /** The one toolbar `ui-select` labelled `label` (scheme/scale/density/theme) — see themeSelect() in
  *  component-gallery.ts. Dogfooded off the fleet's own control (Kim's directive), not a native `<select>`. */

@@ -8,6 +8,7 @@ import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cas
 import './a2ui-catalog.css' // page-local: the filter bar + section spacing (after the shared shell)
 import '../lib/component-preview.ts' // registers <component-preview> (side-effect import)
 import { defaultCatalog } from '@agent-ui/a2ui'
+import type { UITextFieldElement } from '@agent-ui/components/components'
 
 // The sub-part types that only make sense INSIDE their owner (each is a container region / list item). They still
 // render standalone, but as top-level gallery entries they carry no context — so the gallery folds them into the
@@ -30,11 +31,14 @@ content.append(
 // ── name filter (live, case-insensitive) — hides non-matching sections ────────────────────────────────────────
 const filterWrap = document.createElement('div')
 filterWrap.className = 'catalog-filter'
-const filter = document.createElement('input')
-filter.type = 'search'
+// Dogfoods ui-text-field (type=search) in place of a native <input type=search> (Kim's directive) — the
+// gallery filter precedent. `label` is the bare-usage naming seam (text-field.md labelSource → the editor's
+// aria-label), matching the old input's `aria-label`; `.value` + the `input` event drive the live filter.
+const filter = document.createElement('ui-text-field') as UITextFieldElement
+filter.setAttribute('type', 'search')
 filter.className = 'catalog-filter-input'
-filter.placeholder = `Filter ${names.length} components…`
-filter.setAttribute('aria-label', 'Filter catalog components by name')
+filter.setAttribute('placeholder', `Filter ${names.length} components…`)
+filter.setAttribute('label', 'Filter catalog components by name')
 filterWrap.append(filter)
 content.append(filterWrap)
 
