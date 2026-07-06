@@ -701,6 +701,145 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [B5] Panel geometry carries [size] — the size-carrying model (2026-07-06 fix), both engines
+//
+//  Proves the gap this pass closed: the listbox panel inset + option padding used to be FIXED
+//  px (6px/12px), identical at every [size]. They are now DERIVED off --ui-select-height/-font, so:
+//    • listbox-padding + option-inline == h/2 (option text aligns under the trigger's h/2 label edge)
+//    • option row height == trigger height ((h−font)/2 block-pad, the same centering law)
+//    • both scale with [size] (sm/md/lg must differ — anti-vacuous, not just "greater than zero")
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-select — panel/option geometry carries [size] (B5, the size-carrying model, both engines)', () => {
+  const HEIGHT: Record<string, number> = { sm: 24, md: 28, lg: 36 }
+
+  function mkSizedSelect(size: string): UISelectElement {
+    const el = document.createElement('ui-select') as UISelectElement
+    el.setAttribute('size', size)
+    el.setAttribute('placeholder', size)
+    for (const v of ['a', 'b']) {
+      const opt = document.createElement('div')
+      opt.setAttribute('role', 'option')
+      opt.setAttribute('value', v)
+      opt.textContent = `${size}-${v}`
+      el.append(opt)
+    }
+    return el
+  }
+
+  it('panel inset (margin) + option inline-pad sum to h/2 at sm/md/lg — the alignment law, browser-measured', async () => {
+    const sums: Record<string, number> = {}
+    for (const size of ['sm', 'md', 'lg']) {
+      const wrap = document.createElement('div')
+      const el = mkSizedSelect(size)
+      wrap.append(el)
+      document.body.append(wrap)
+      mounted.push(wrap)
+
+      el.open = true
+      await el.updateComplete
+
+      const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+      const option = listbox.querySelector<HTMLElement>('[role="option"]')!
+      const cs = getComputedStyle(option)
+      const sum = px(cs.marginInlineStart) + px(cs.paddingInlineStart)
+      sums[size] = sum
+
+      expect(
+        sum,
+        `${server.browser}: [size=${size}] panel-inset+option-inline (${sum}px) should equal h/2 (${HEIGHT[size]! / 2}px)`,
+      ).toBeCloseTo(HEIGHT[size]! / 2, 1)
+    }
+
+    // Anti-vacuous: the three sizes must NOT collapse to the same inset (browser-measured, not
+    // just "greater than zero") — proves the panel/option geometry actually RESPONDS to [size].
+    expect(sums.sm, `${server.browser}: sm inset must differ from md (anti-vacuous)`).not.toBeCloseTo(sums.md!, 1)
+    expect(sums.md, `${server.browser}: md inset must differ from lg (anti-vacuous)`).not.toBeCloseTo(sums.lg!, 1)
+  })
+
+  it('option row rendered height == trigger height at sm/md/lg — the row-height law, browser-measured', async () => {
+    const rowHeights: Record<string, number> = {}
+    for (const size of ['sm', 'md', 'lg']) {
+      const wrap = document.createElement('div')
+      const el = mkSizedSelect(size)
+      wrap.append(el)
+      document.body.append(wrap)
+      mounted.push(wrap)
+
+      const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+      const triggerH = trigger.getBoundingClientRect().height
+
+      el.open = true
+      await el.updateComplete
+
+      const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+      const option = listbox.querySelector<HTMLElement>('[role="option"]')!
+      const rowH = option.getBoundingClientRect().height
+      rowHeights[size] = rowH
+
+      expect(
+        rowH,
+        `${server.browser}: [size=${size}] option row height (${rowH}px) should match trigger height (${triggerH}px)`,
+      ).toBeCloseTo(triggerH, 0)
+      expect(
+        Math.round(triggerH),
+        `${server.browser}: [size=${size}] trigger height sanity`,
+      ).toBe(HEIGHT[size])
+    }
+
+    // Anti-vacuous: row height must scale with [size], not collapse to one register.
+    expect(rowHeights.sm, `${server.browser}: sm row height must differ from md (anti-vacuous)`).not.toBeCloseTo(rowHeights.md!, 0)
+    expect(rowHeights.md, `${server.browser}: md row height must differ from lg (anti-vacuous)`).not.toBeCloseTo(rowHeights.lg!, 0)
+  })
+
+  it('option font-size resolves to --ui-select-font at each size (options were size-blind on font — bug fix)', async () => {
+    const { el } = mount(`
+      <ui-select size="lg" placeholder="lg">
+        <div role="option" value="a">A</div>
+      </ui-select>
+    `)
+    const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+    el.open = true
+    await el.updateComplete
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const option = listbox.querySelector<HTMLElement>('[role="option"]')!
+
+    const triggerFont = px(getComputedStyle(trigger).fontSize)
+    const optionFont = px(getComputedStyle(option).fontSize)
+    expect(
+      optionFont,
+      `${server.browser}: option font-size (${optionFont}px) should match the [size=lg] trigger font (${triggerFont}px), not an inherited ambient value`,
+    ).toBeCloseTo(triggerFont, 1)
+    // Sanity: lg font is 16px, not the browser default 16px-by-coincidence — cross-check against md.
+    expect(optionFont, `${server.browser}: [size=lg] option font should be the lg register (16px)`).toBeCloseTo(16, 1)
+  })
+
+  it('nested option-radius == listbox-radius − listbox-padding at sm/md/lg (ADR-0018, browser-measured)', async () => {
+    for (const size of ['sm', 'md', 'lg']) {
+      const wrap = document.createElement('div')
+      const el = mkSizedSelect(size)
+      wrap.append(el)
+      document.body.append(wrap)
+      mounted.push(wrap)
+
+      el.open = true
+      await el.updateComplete
+
+      const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+      const option = listbox.querySelector<HTMLElement>('[role="option"]')!
+      const panelRadius = px(getComputedStyle(listbox).borderTopLeftRadius)
+      const optionRadius = px(getComputedStyle(option).borderTopLeftRadius)
+      const inset = px(getComputedStyle(option).marginInlineStart)
+
+      expect(
+        optionRadius,
+        `${server.browser}: [size=${size}] option radius (${optionRadius}px) should equal panel radius (${panelRadius}px) − inset (${inset}px)`,
+      ).toBeCloseTo(panelRadius - inset, 1)
+    }
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
 //  [7] C10 zero-residue — disconnect releases all listeners (both engines)
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 

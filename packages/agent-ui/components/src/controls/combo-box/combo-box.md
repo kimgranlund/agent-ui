@@ -132,9 +132,13 @@ geometry:
     radius: var(--ui-combo-box-panel-radius)  # = var(--ui-radius-base)
     minInlineSize: var(--ui-combo-box-panel-min-inline-size)  # 12rem panel collapse floor
     maxBlockSize: 40vh (scrolls) # REVISED 2026-07-04: was `overflow: hidden` (unbounded, unscrollable) — now bounded + overflow-y:auto, matching ui-select/ui-menu; gets the shared edge-aware scroll-fade by default (traits/scroll-fade.ts, container-box.css)
+    padding: var(--ui-combo-box-listbox-padding)  # = editor-padding-inline/2 — DERIVED off the editor ramp (2026-07-06), same mechanism as ui-select
   options:
-    paddingBlock: var(--ui-combo-box-option-padding-block)   # = var(--ui-space-xs) — item-pad row
-    paddingInline: var(--ui-combo-box-option-padding-inline)  # = var(--ui-space-sm)
+    sizeClass: legacy item-pad (ROV-C5 / §4.6/5.1) — numbers DERIVED off the editor ramp (2026-07-06), superseding the fixed --ui-space-xs/sm px
+    paddingBlock: var(--ui-combo-box-option-padding-block)    # = (editor height − option font)/2 — row height == editor height
+    paddingInline: var(--ui-combo-box-option-padding-inline)  # = editor-padding-inline/2 — pairs with panel padding to total the editor's own inline pad (alignment law)
+    font: var(--ui-combo-box-option-font)  # = --ui-combo-box-font (was size-blind; bug fix)
+    note: ui-combo-box has NO `[size]` attribute today (structural divergence from ui-select, flagged not forced) — these tokens are ramp-DERIVED so a future `[size]` addition (its own ADR/decomp) would repoint them for free
 
 forcedColors: A `@media (forced-colors: active)` block maps the editor to Field/FieldText/FieldText border and the panel to Canvas/CanvasText. The active-descendant highlight paints Highlight/HighlightText (with forced-color-adjust:none to preserve it). The focus ring inherits the Highlight system colour via --md-sys-color-focus-ring.
 ---

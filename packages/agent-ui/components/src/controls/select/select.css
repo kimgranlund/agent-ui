@@ -7,8 +7,14 @@
  *       The trigger is a Control-class surface (border channel, like text-field — the state is the
  *       frame colour, NOT a background fill; a caret = font inline affordance, §4.1). The listbox
  *       panel is a Container/surface (bg + outline + radius + padding — NOT a control height). The
- *       option rows use the legacy item-pad (§5.1 / ROV-C5: fixed padding, NOT --ui-compact widget
- *       box — option rows are text items, not stand-alone widgets). `[size]` repoints the geometry.
+ *       option rows use the legacy item-pad model (§5.1 / ROV-C5: padding-based row height, NOT
+ *       the --ui-compact widget box — option rows are text items, not stand-alone widgets) — but
+ *       (2026-07-06) the item-pad's own NUMBERS are now DERIVED off the trigger ramp
+ *       (`--ui-select-height`/`--ui-select-font`), superseding the earlier fixed-px item-pad
+ *       (6px/12px): panel inset + option padding now scale with `[size]` the same as the trigger,
+ *       and option text aligns under the trigger label (listbox-padding + option-inline == h/2).
+ *       `[size]` repoints the geometry (trigger AND, transitively via the shared height/font
+ *       tokens, the panel/options — no separate [size] block needed for the panel).
  *   [2] STYLES BLOCK — `@scope (ui-select)` CONSUMES only `--ui-select-*` for its OWN tokens.
  *       The host is `display: inline-block` with a min-inline-size floor (the ADR-0021 lesson:
  *       a control that can be empty needs a floor; the trigger inherits full width from the host).
@@ -67,15 +73,30 @@
   --ui-select-listbox-ink: var(--md-sys-color-neutral-on-surface);
   --ui-select-listbox-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-select-listbox-radius: var(--ui-radius-base);
-  --ui-select-listbox-padding: var(--ui-space-xs); /* small shell padding — options provide their own rows */
+  /* ── The size-carrying derivation (supersedes the fixed "legacy item-pad" px, 2026-07-06) ──────
+     ROV-C5/ADR-0043 cl.5 keep options OUT of the h/2 "comfortable control" model and the
+     `--ui-compact` widget box — that boundary is unchanged. What changes: the item-pad's OWN
+     numbers are now DERIVED off the trigger's `--ui-select-height`/`--ui-select-font` (the same
+     ramp the trigger already repoints at `[size=sm|lg]`) instead of hand-picked fixed px, so the
+     panel inset + option row scale WITH the trigger — no new sm/lg blocks needed; the calc()s
+     below repoint for free.
+       • Alignment law: listbox-padding + option-inline == h/2, so option text starts at the same
+         inline offset from the panel's outer edge as the trigger label does from the trigger's
+         edge (h/2) — text lines up under text. Split evenly (h/4 + h/4).
+       • Row-height law: option-block == (h − font)/2 — the SAME (height−glyph)/2 centering law
+         (geometry.md), applied on the block axis to the option's own text (glyph = font here) —
+         so the option row's rendered content-box height == the trigger height exactly, and both
+         grow together under [size]. */
+  --ui-select-listbox-padding: calc(var(--ui-select-height) / 4); /* panel-edge inset + inter-row gap (feeds --ui-box-inset below) */
   --ui-select-listbox-min-inline-size: 12ch;       /* floor: at least as wide as a short option */
 
   /* ── Option rows — legacy item-pad (§5.1 / ROV-C5): padding-based row height, NOT a fixed
      --ui-compact widget box. Options are text list items, not stand-alone widgets. The row
      radius is inset from the listbox shell radius (nested-radius: shell − padding, ADR-0018). */
-  --ui-select-option-block: 6px;              /* legacy item-pad block */
-  --ui-select-option-inline: 12px;            /* legacy item-pad inline */
-  --ui-select-option-radius: calc(var(--ui-select-listbox-radius) - 4px);
+  --ui-select-option-block: calc((var(--ui-select-height) - var(--ui-select-font)) / 2); /* (h−font)/2 — row height == trigger height */
+  --ui-select-option-inline: calc(var(--ui-select-height) / 4);            /* h/4 — pairs with listbox-padding to total h/2 */
+  --ui-select-option-font: var(--ui-select-font);   /* options were size-blind on FONT too (bug fix) — now the ramp */
+  --ui-select-option-radius: calc(var(--ui-select-listbox-radius) - var(--ui-select-listbox-padding)); /* nested-radius off the REAL inset (was a hardcoded 4px, ADR-0018) */
   --ui-select-option-bg-hover: var(--md-sys-color-neutral-surface-high);
   --ui-select-option-bg-selected: var(--md-sys-color-primary-container-low);
   --ui-select-option-ink-selected: var(--md-sys-color-primary-high);
@@ -245,6 +266,13 @@
     border: 1px solid var(--ui-select-listbox-outline);
     border-radius: var(--ui-select-listbox-radius);
     padding: 0; /* the box-model child margins provide the inset (container-box.css); no shell padding */
+    /* Repoint the shared container-box.css inset LOCALLY to the size-derived value (the panel
+       carries [data-box], see select.ts — that rule declares --ui-box-inset: 0.375rem at
+       specificity 0; this higher-specificity declaration on the same element overrides it so
+       the size-carrying model owns the value fed to the rows' margin + the nested-radius calc
+       below, instead of the shared fleet-wide 6px fallback every [data-box] otherwise gets). */
+    --ui-box-inset: var(--ui-select-listbox-padding);
+    font-size: var(--ui-select-option-font); /* was unset (inherited ambient) — options + the group label now read the ramp */
   }
 
   /* ── Option rows (legacy item-pad — §5.1 / ROV-C5) ──────────────────────────────────────────
@@ -254,9 +282,14 @@
   :scope > [data-part='listbox'] [role='option'] {
     box-sizing: border-box;
     display: block;
-    margin: var(--ui-box-inset, 0.375rem); /* the box-model inset — 6px from the panel edge + between rows */
+    margin: var(--ui-box-inset, 0.375rem); /* the box-model inset — repointed above to the size-derived value */
     padding-block: var(--ui-select-option-block);
     padding-inline: var(--ui-select-option-inline);
+    /* line-height: 1 makes the (h−font)/2 block-pad math exact — font + 2×pad == the trigger
+       height, so the row's rendered content-box is literally the SAME height as the control that
+       opened it (the row-height law above), not the DoD's Control-class line-height rule (that
+       one is scoped to Control-class elements; this is a local derivation choice for item rows). */
+    line-height: 1;
     border-radius: var(--ui-select-option-radius);
     cursor: pointer;
     -webkit-user-select: none;

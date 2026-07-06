@@ -457,6 +457,28 @@ describe('ui-menu — whole-shape assertion (the Test-the-whole-shape DoD law)',
       ).toBeGreaterThan(0)
     }
   })
+
+  // 2026-07-06 fix: --ui-menu-item-radius used to subtract --ui-space-xs (4px), a DIFFERENT value
+  // than the --ui-box-inset (6px) the item's own margin actually reads — an ADR-0018 nested-radius
+  // inconsistency. Now both read the SAME --ui-box-inset. (ui-menu has no `[size]` attribute — this
+  // is a single-register consistency proof, not a [size] sweep; see menu.css's structural-divergence
+  // note — flagged, not forced, per the family-consistency pass.)
+  it('nested item-radius == panel-radius − the SAME inset the item margin reads (ADR-0018)', async () => {
+    const { el } = mount(THREE_ITEMS)
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    el.open = true
+    await el.updateComplete
+
+    const item = panel.querySelector<HTMLElement>('[role="menuitem"]')!
+    const panelRadius = px(getComputedStyle(panel).borderTopLeftRadius)
+    const itemRadius = px(getComputedStyle(item).borderTopLeftRadius)
+    const inset = px(getComputedStyle(item).marginInlineStart)
+
+    expect(
+      itemRadius,
+      `${server.browser}: item radius (${itemRadius}px) should equal panel radius (${panelRadius}px) − its own inset (${inset}px)`,
+    ).toBeCloseTo(panelRadius - inset, 1)
+  })
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
