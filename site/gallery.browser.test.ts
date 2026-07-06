@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp } from 'vitest/browser'
+import { server, cdp, page } from 'vitest/browser'
 
 // gallery.browser.test.ts — the CROSS-ENGINE smoke for <component-gallery> (LLD-C6, component-gallery.lld.md §8
 // item 4). Where gallery.test.ts (jsdom) proves the reactive MECHANICS, this proves the RENDERED shape a real
@@ -18,6 +18,7 @@ import '@agent-ui/icons/phosphor'
 import './lib/component-gallery.ts'
 import { galleryMembers } from './lib/component-gallery.ts'
 import { whenFlushed } from '@agent-ui/components'
+import type { UISelectElement } from '@agent-ui/components/components'
 
 // A custom element's connectedCallback builds synchronously, but the reactive grid loop + each specimen's own
 // first render settle across a frame — double-rAF before asserting (component-preview.browser.test.ts precedent).
@@ -51,15 +52,21 @@ const cardFor = (gallery: HTMLElement, tag: string): HTMLElement | null =>
  *  descendant-tag query finds it — no shadow root to pierce). */
 const liveFor = (card: HTMLElement, tag: string): HTMLElement | null => card.querySelector(tag) as HTMLElement | null
 
-/** The one toolbar `<select>` labelled `label` (scheme/scale/density/theme) — see themeSelect() in component-gallery.ts. */
-function selectFor(gallery: HTMLElement, label: string): HTMLSelectElement {
+/** The one toolbar `ui-select` labelled `label` (scheme/scale/density/theme) — see themeSelect() in
+ *  component-gallery.ts. Dogfooded off the fleet's own control (Kim's directive), not a native `<select>`. */
+function selectFor(gallery: HTMLElement, label: string): UISelectElement {
   const wrap = [...gallery.querySelectorAll<HTMLElement>('.gallery-select')].find((s) => s.textContent?.startsWith(label))
-  return wrap?.querySelector('select') as HTMLSelectElement
+  return wrap?.querySelector('ui-select') as UISelectElement
 }
 
-async function chooseOption(select: HTMLSelectElement, value: string): Promise<void> {
-  select.value = value
-  select.dispatchEvent(new Event('change', { bubbles: true }))
+/** The REAL commit path, not a synthetic model write: open the panel (ADR-0019 two-way `open`, the same
+ *  idiom the overlay-class test below uses), click the matching `[role=option]` — selectionCommit's own
+ *  delegated host click-listener (select.ts) drives `value` + emits `select` + auto-closes the panel. */
+async function chooseOption(select: UISelectElement, value: string): Promise<void> {
+  select.setAttribute('open', '')
+  await raf()
+  const option = select.querySelector(`[role="option"][value="${value}"]`) as HTMLElement
+  option.click()
   await whenFlushed() // the theme-provider effect's re-run is microtask-batched (scheduler.ts) — settle it
   await raf() // …then let the engine actually paint the resulting style before reading computed values
 }
@@ -200,9 +207,50 @@ describe('<component-gallery> — the ONE <theme-provider> drives every specimen
   it('the theme select renders exactly one option ("default") and the attribute lands on the provider subtree', async () => {
     const gallery = await mountGallery()
     const select = selectFor(gallery, 'Theme')
-    expect([...select.options].map((o) => o.value)).toEqual(['default'])
+    const optionValues = [...select.querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value'))
+    expect(optionValues).toEqual(['default'])
     const provider = gallery.querySelector('theme-provider') as HTMLElement
     expect(provider.getAttribute('theme')).toBe('default')
+  })
+})
+
+// ── the toolbar's axis selects are properly named (ADR-0085, both engines) ────────────────────────────────
+// Was a documented GAP (the host `aria-label` stopgap was inert — the trigger named itself from its
+// selected-value content alone); now a positive regression gate. `page.getByRole` is vitest-browser's own
+// accessible-name query (select.browser.test.ts's own ADR-0085 precedent) — it resolves the REAL computed
+// name in both engines, which jsdom cannot do at all (gallery.test.ts only pins the declared `label` wire).
+
+describe('<component-gallery> — the toolbar axis selects compute a real accessible name (ADR-0085)', () => {
+  it('each axis select\'s trigger is named "<axis> <value>", live on first paint', async () => {
+    const gallery = await mountGallery()
+    const expectations: ReadonlyArray<[string, string]> = [
+      ['Scheme', 'Scheme light'],
+      ['Scale', 'Scale ui-md'],
+      ['Density', 'Density comfortable'],
+      ['Theme', 'Theme default'],
+    ]
+    for (const [axis, name] of expectations) {
+      const select = selectFor(gallery, axis)
+      expect(select, `no ui-select found for the "${axis}" axis`).not.toBeNull()
+      const named = page.getByRole('button', { name, exact: true }).query()
+      expect(named, `${server.browser}: no button named "${name}" — the "${axis}" axis select's aria-labelledby did not land`).not.toBeNull()
+    }
+  })
+
+  it('the accessible name recomputes live when the selection changes (Scheme: light → dark)', async () => {
+    const gallery = await mountGallery()
+    const scheme = selectFor(gallery, 'Scheme')
+
+    expect(page.getByRole('button', { name: 'Scheme light', exact: true }).query()).not.toBeNull()
+
+    await chooseOption(scheme, 'dark')
+    expect(
+      page.getByRole('button', { name: 'Scheme dark', exact: true }).query(),
+      `${server.browser}: the accessible name did not recompute after choosing "dark"`,
+    ).not.toBeNull()
+    expect(page.getByRole('button', { name: 'Scheme light', exact: true }).query()).toBeNull() // the stale name is gone
+
+    await chooseOption(scheme, 'light') // back to the default, courtesy reset
   })
 })
 

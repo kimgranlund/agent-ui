@@ -29,6 +29,10 @@ attributes:             # attributes-as-API — mirrors UISelectElement.props (f
     type: string
     default: ''
     reflect: true       # reflects + BINDABLE — value:{prop:'value',event:'select'} two-way bind; '' = nothing selected
+  - name: label
+    type: string
+    default: ''
+    reflect: false      # NOT reflected — an accessibility hint (ADR-0085), not a styling hook (the text-field `label` precedent); a host aria-label attribute stays inert (role-less host) — this prop is the seam
   - name: open
     type: boolean
     default: false
@@ -52,6 +56,8 @@ properties:             # IDL beyond attributes-as-API
     description: Whether a selection is required (boolean). Reflects `required`. Drives formValidity() → valueMissing when nothing selected.
   - name: value
     description: The selected option key (the `value` attribute of the committed [role=option] child). '' = nothing selected. Reflected + bindable (two-way via `select` event). Setting it programmatically updates the trigger label via a scope-owned effect.
+  - name: label
+    description: The bare-usage accessible-name source (ADR-0085). '' = no label → the trigger's accessible name is content-only (the value text, back-compat). When set (and the control is NOT inside a `ui-field`), the trigger's `aria-labelledby` concatenates a control-created, visually-hidden `[data-part=aria-label]` span (holding this text) with the value span, e.g. "Scheme light". Inside a `ui-field`, the field's own visible label is merged in instead (`applyFieldLabelling`) and this prop is not consumed for naming.
   - name: open
     description: Whether the listbox panel is shown (boolean). Setting true calls showPopover() on the panel (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected + bindable (two-way `open`, ADR-0019). Light-dismiss emits `close` + `toggle` on the host.
   - name: placeholder
@@ -79,9 +85,11 @@ parts:
   - name: trigger
     description: The control-created `<button data-part="trigger" type="button">`. Control-class height from --ui-select-height. Contains [data-part=label] (the visible label / placeholder) and [data-part=caret] (the caret-down Phosphor glyph, aria-hidden, sized = font per the §4.1 caret law). Always lays out as [label | caret] (1fr + auto grid). Gets aria-haspopup="listbox", aria-expanded (synced via scope-owned effect), aria-controls pointing to the listbox id.
   - name: label
-    description: A `<span data-part="label">` inside the trigger. Shows the text content of the selected [role=option], or the placeholder text when nothing is selected. Updated by a scope-owned reactive effect reading the `value` + `placeholder` signals.
+    description: A `<span data-part="label">` inside the trigger, with a stable id. Shows the text content of the selected [role=option], or the placeholder text when nothing is selected. Updated by a scope-owned reactive effect reading the `value` + `placeholder` signals. Also the SECOND id in the trigger's `aria-labelledby` concatenation (ADR-0085) — the value stays in the accessible name and recomputes live as the selection changes.
   - name: caret
     description: A `<span data-part="caret" aria-hidden="true">` inside the trigger, injected with the Phosphor `caret-down` glyph via `setIcon` (@agent-ui/icons). An inline affordance sized = font (the §4.1 caret law). CSS centres it in an icon-sized cell by padding = ½(icon−glyph).
+  - name: aria-label
+    description: A control-created, visually-hidden `<span data-part="aria-label">` (ADR-0085), a host-level sibling of the trigger — always present (idempotent-parts), CSS-clipped (not `hidden`/`display:none`). Holds the `label` prop's text and is the FIRST id in the trigger's bare-usage `aria-labelledby` concatenation. Inert (unreferenced) when `label` is empty or the control is inside a `ui-field` (the field's own visible label is used instead).
   - name: listbox
     description: The control-created `<div data-part="listbox" role="listbox">`. Container/surface in the Popover API top layer when open. Author's [role=option] children (and [role=group] containers) are moved here at first connect. The overlay controller sets popover="auto" + position:fixed + inset; CSS adds bg/border/radius/padding. tabindex="-1" allows fallback focus when no option has tabindex=0.
   - name: group-label
@@ -98,7 +106,7 @@ face:
 aria:
   role: none                # the host has no explicit ARIA role (a logical select wrapper)
   roleSource: none          # role is on the trigger (aria-haspopup) and the panel (role=listbox attribute)
-  labelSource: The trigger's visible [data-part=label] text provides the accessible name via its text content.
+  labelSource: The trigger's aria-labelledby CONCATENATES a name source with the visible [data-part=label] value span (never aria-label, which would erase the value on a button) — bare usage = the `label` prop via a hidden [data-part=aria-label] span + the value span; fielded usage (inside ui-field) = the field's visible label + the value span (merge, not clobber); no label and no field = content-only (back-compat, today's default).
 
 keyboard:
   - keys: Enter / Space

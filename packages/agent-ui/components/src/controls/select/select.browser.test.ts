@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from 'vitest/browser'
+import { server, cdp, userEvent, page } from 'vitest/browser'
 import type { UISelectElement } from './select.ts'
 
 // Wave-4 S4 browser smoke — ui-select (decomp S4 · overlay-controller.lld.md LLD-C1..C4 · ADR-0043).
@@ -16,6 +16,8 @@ import type { UISelectElement } from './select.ts'
 //   [5] WHOLE-SHAPE — trigger's Control-class height off the ramp; panel's real bounding box (both engines)
 //   [6] forced-colors — trigger frame + panel surface survive WHCM (Chromium via CDP; WebKit baseline)
 //   [7] C10 zero-residue — disconnect releases all overlay + roving + selection listeners
+//   [9] ADR-0085 — the trigger's accessible-name computes to "label value", live + back-compat + the
+//       value-erasure guard (jsdom cannot compute an accessible name at all)
 //
 // Side-effect imports — CSS load order (ADR-0003): foundation roles + dimensional ramp FIRST,
 // then the select sheet, then the self-defining module. Imported DIRECTLY (relative), NOT via the
@@ -781,5 +783,82 @@ describe('ui-select — option groups render + navigate (both engines)', () => {
 
     expect(el.value, `${server.browser}: committing a grouped option did not set the value`).toBe('team')
     expect(listbox.matches(':popover-open'), `${server.browser}: grouped commit did not close`).toBe(false)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [9] ADR-0085 — the trigger's accessible-name seam (jsdom cannot compute an accessible name at all)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// select.test.ts pins the DECLARED wiring (the id list, the aria-label absence guard, the merge shape
+// via a direct setFieldLabelling call — the exact seam a real `ui-field` drives, ADR-0051). This is
+// the read-back that resolution ACTUALLY happens: `page.getByRole` (vitest-browser's own
+// accessible-name query) resolves a plain `aria-labelledby` CONTENT ATTRIBUTE correctly in both
+// engines (the text-field / field.browser.test.ts precedent — select's seam is the SAME shape, a
+// content attribute, not an ElementInternals IDL reflection, so this is the correct tool here).
+
+describe('ui-select — the trigger accessible-name seam (ADR-0085, both engines)', () => {
+  it('a labelled bare select computes "label value" as its accessible name, live on selection change', async () => {
+    const { el } = mount(`
+      <ui-select label="Scheme" value="light">
+        <div role="option" value="light">light</div>
+        <div role="option" value="dark">dark</div>
+      </ui-select>
+    `)
+    await el.updateComplete
+
+    const named = page.getByRole('button', { name: 'Scheme light', exact: true }).query()
+    expect(named, `${server.browser}: no button named "Scheme light" — the aria-labelledby concatenation did not land`).not.toBeNull()
+
+    el.value = 'dark'
+    await el.updateComplete
+    const namedAfter = page.getByRole('button', { name: 'Scheme dark', exact: true }).query()
+    expect(namedAfter, `${server.browser}: the accessible name did not recompute live after the selection changed`).not.toBeNull()
+  })
+
+  it('an unlabelled bare select keeps a content-only accessible name; the trigger never carries aria-label (back-compat + the value-erasure guard)', async () => {
+    const { el } = mount(`
+      <ui-select placeholder="Choose fruit">
+        <div role="option" value="apple">Apple</div>
+      </ui-select>
+    `)
+    const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+    await el.updateComplete
+
+    expect(trigger.hasAttribute('aria-labelledby'), `${server.browser}: an unlabelled trigger should carry no aria-labelledby`).toBe(false)
+    expect(trigger.hasAttribute('aria-label'), `${server.browser}: the value-erasure guard — the trigger must never carry aria-label`).toBe(false)
+
+    const named = page.getByRole('button', { name: 'Choose fruit', exact: true }).query()
+    expect(named, `${server.browser}: the unlabelled trigger should still name from its content (the placeholder text)`).not.toBeNull()
+  })
+
+  it('a fielded select MERGES the field label + value into the trigger name (merge, not clobber) — the same seam a real ui-field drives', async () => {
+    const { el } = mount(`
+      <ui-select label="Scheme" value="light">
+        <div role="option" value="light">light</div>
+        <div role="option" value="dark">dark</div>
+      </ui-select>
+    `)
+    // A stand-in field label part — setFieldLabelling is the PUBLIC seam a real ui-field calls
+    // (ADR-0051); this proves the same code path without pulling a sibling control into this
+    // control's own isolated browser test file (the per-control CSS/JS import discipline above).
+    const fieldLabel = document.createElement('div')
+    fieldLabel.id = 'ext-field-label-1'
+    fieldLabel.textContent = 'Account scheme'
+    document.body.append(fieldLabel)
+    mounted.push(fieldLabel)
+
+    el.setFieldLabelling({ label: fieldLabel, description: null, error: null })
+    await el.updateComplete
+
+    // The bare `label` prop ("Scheme") is NOT what names it now — the field's label ("Account scheme")
+    // wins, proving the merge swaps the name source and does not fall back to the bare span.
+    const named = page.getByRole('button', { name: 'Account scheme light', exact: true }).query()
+    expect(named, `${server.browser}: the merged (fielded) accessible name did not compute to "Account scheme light"`).not.toBeNull()
+
+    el.setFieldLabelling(null)
+    await el.updateComplete
+    const revertedName = page.getByRole('button', { name: 'Scheme light', exact: true }).query()
+    expect(revertedName, `${server.browser}: dissociation did not revert to the bare "Scheme light" name`).not.toBeNull()
   })
 })

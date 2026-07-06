@@ -162,6 +162,23 @@
     white-space: nowrap;
   }
 
+  /* The aria-label span (ADR-0085): visually-hidden, always present (idempotent-parts precedent) —
+     referenced by the trigger's aria-labelledby only when `label` is set and the control is unfielded.
+     The standard CLIP technique, not `hidden`/`display:none` — some AT/engine combinations do not
+     reliably fold a display:none-referenced node's text into the accessible-name computation for an
+     aria-labelledby reference, while the clip approach is the robust cross-engine convention. */
+  :scope > [data-part='aria-label'] {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   /* The caret span: an icon-sized CELL (box-sizing border-box). The glyph inside is font-sized
      and centred by padding = ½(icon − glyph), the §4.1 caret law (same as button.css [data-role='caret']).
      aria-hidden is set in select.ts; the glyph is decorative. */

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mount, watch, whenFlushed } from '@agent-ui/components'
+import type { UITextFieldElement } from '@agent-ui/components/components'
 import { galleryMembers, node, ComponentGallery } from './lib/component-gallery.ts'
 import { parseDoc } from './lib/frontmatter.ts'
 // node:fs is untyped here (no @types/node devDep) — the same reverse-coupling fs-read pattern the site drift
@@ -121,17 +122,20 @@ describe('<component-gallery> — the reactive filter/theme/grid loop', () => {
     gallery.remove()
   })
 
-  const filterInput = (): HTMLInputElement => gallery.querySelector('.gallery-filter') as HTMLInputElement
+  const filterInput = (): UITextFieldElement => gallery.querySelector('.gallery-filter') as UITextFieldElement
   const readout = (): HTMLElement => gallery.querySelector('.gallery-readout') as HTMLElement
   const cardTags = (): string[] => [...gallery.querySelectorAll('.gallery-card')].map((c) => (c as HTMLElement).dataset.tag ?? '')
 
   // A signal write's dependent re-run is MICROTASK-BATCHED (scheduler.ts), not synchronous — only an effect's
   // very FIRST (eager) run happens inline. So a filter edit must settle through `whenFlushed()` before its
-  // effect is read back; `UIElement.updateComplete` (the SAME promise) is the public name for this.
+  // effect is read back; `UIElement.updateComplete` (the SAME promise) is the public name for this. The
+  // filter is now ui-text-field (type=search), dogfooded in place of a native `<input>` (Kim's directive) —
+  // typing into its CONTROL-OWNED editor part (text-field.test.ts's own idiom) is what's real here: the
+  // editor's `input` re-emits on the host (text-field.ts:189), which the gallery's OWN listener reads back.
   async function typeFilter(query: string): Promise<void> {
-    const input = filterInput()
-    input.value = query
-    input.dispatchEvent(new Event('input', { bubbles: true }))
+    const editor = filterInput().querySelector('[data-part="editor"]') as HTMLElement
+    editor.textContent = query
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
     await whenFlushed()
   }
 
@@ -194,10 +198,30 @@ describe('<component-gallery> — the reactive filter/theme/grid loop', () => {
 
   it('the theme select renders exactly one option ("default") and the attribute lands on the provider (wired seam)', () => {
     const themeLabel = [...gallery.querySelectorAll('.gallery-select')].find((s) => s.textContent?.startsWith('Theme'))
-    const select = themeLabel?.querySelector('select') as HTMLSelectElement
-    expect([...select.options].map((o) => o.value)).toEqual(['default'])
+    const select = themeLabel?.querySelector('ui-select') as HTMLElement
+    const optionValues = [...select.querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value'))
+    expect(optionValues).toEqual(['default'])
     const provider = gallery.querySelector('theme-provider') as HTMLElement
     expect(provider.getAttribute('theme')).toBe('default')
+  })
+
+  // jsdom cannot compute an accessible name at all (select.browser.test.ts's own ADR-0085 section header) —
+  // this pins the DECLARED wiring only (the `label` attribute reaching each axis select); the REAL
+  // accessible-name computation is proven in gallery.browser.test.ts via page.getByRole (both engines).
+  it('each axis select carries its own `label` attribute (ADR-0085 — the trigger-naming seam wire)', () => {
+    const axes = [
+      ['Scheme', 'Scheme'],
+      ['Scale', 'Scale'],
+      ['Density', 'Density'],
+      ['Theme', 'Theme'],
+    ] as const
+    for (const [prefix, expected] of axes) {
+      const wrap = [...gallery.querySelectorAll('.gallery-select')].find((s) => s.textContent?.startsWith(prefix))
+      const select = wrap?.querySelector('ui-select') as HTMLElement
+      expect(select, `no ui-select found for the "${prefix}" axis`).not.toBeNull()
+      expect(select.getAttribute('label'), `"${prefix}" axis select`).toBe(expected)
+      expect(select.hasAttribute('aria-label'), `"${prefix}" axis select should not carry the old inert aria-label stopgap`).toBe(false)
+    }
   })
 
   it('disconnect disposes the reactive wiring — zero residue (§6 E8)', async () => {

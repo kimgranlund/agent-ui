@@ -21,11 +21,20 @@
 //       <span data-part="label">…selected label or placeholder…</span>
 //       <span data-part="caret" aria-hidden="true"><svg>…caret-down (@agent-ui/icons)…</svg></span>
 //     </button>
+//     <span data-part="aria-label">…visually-hidden `label` prop text…</span>
 //     <div data-part="listbox" role="listbox" id="ui-select-listbox-N"
 //          popover="auto" tabindex="-1">
 //       <!-- author's [role=option] children, moved here at first connect -->
 //     </div>
 //   </ui-select>
+//
+// ADR-0085 — the labelling seam: the trigger is a <button> (name-from-content = the value span), so a
+// bare aria-label would ERASE the value (accname precedence). Instead the trigger's aria-labelledby
+// CONCATENATES a name source with the [data-part=label] value span, which recomputes live as the
+// selection changes: bare usage (unfielded) points at the control-created, visually-hidden
+// [data-part=aria-label] span holding the `label` prop text; fielded usage (inside a ui-field) points
+// at the field's own visible label part instead (applyFieldLabelling override, merge-not-clobber). No
+// label + no field ⇒ no aria-labelledby ⇒ content-only name (today's default, zero drift).
 //
 // Closed-trigger keyboard (platform parity): ArrowDown/ArrowUp on the CLOSED trigger
 // opens the panel; focus lands on the current selection via the overlay controller's
@@ -50,7 +59,7 @@
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIFormElement } from '../../dom/index.ts'
-import type { FormValue, ValidityResult } from '../../dom/index.ts'
+import type { FormValue, ValidityResult, FieldLabelling } from '../../dom/index.ts'
 import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
 import { rovingFocus } from '../../traits/roving-focus.ts'
 import { selectionCommit } from '../../traits/selection-commit.ts'
@@ -72,6 +81,12 @@ const props = {
   // '' = nothing selected. Reflected so `<ui-select value="apple">` works declaratively AND the
   // renderer two-way-binds it (value:{prop:'value',event:'select'} — the catalog's binding pair).
   value: { ...prop.string(''), reflect: true },
+
+  // `label` — the bare-usage accessible-name source (ADR-0085; the text-field `label` precedent).
+  // NOT reflected — an accessibility hint, not a styling hook. '' = no label → the trigger keeps its
+  // content-only accessible name (back-compat). A host `aria-label` attribute stays inert (the host is
+  // role-less) — this prop, not an attribute passthrough, is the seam.
+  label: prop.string(),
 
   // `open` — whether the listbox panel is currently shown. Reflected + BINDABLE (ADR-0019).
   // Drives the overlay handle via a scope-owned effect (model→overlay). Overlay→model sync via
@@ -99,6 +114,7 @@ export class UISelectElement extends UIFormElement {
   #listbox: HTMLElement | null = null
   #trigger: HTMLElement | null = null
   #labelSpan: HTMLElement | null = null
+  #ariaLabelSpan: HTMLElement | null = null
 
   /**
    * Protected overlay handle — accessible to test probes (C10 idempotent-cleanup DoD).
@@ -126,10 +142,52 @@ export class UISelectElement extends UIFormElement {
     this.value = ''
   }
 
+  // ── ADR-0085 — the field-labelling seam wire (the button-vs-editor MERGE override) ──────────────
+
+  /**
+   * The part-role override (ADR-0085 cl.4) — the trigger carries no `internals.role` (a logical select
+   * wrapper), so the base's guarded internals-reflection default (dom/form.ts) never fires; wire the
+   * trigger's `aria-labelledby`/`aria-describedby` content attributes directly instead (the text-field
+   * `applyFieldLabelling` precedent, ADR-0051 cl.2/LLD-C2).
+   *
+   * `aria-labelledby` is the BARE-mode effect's (connected(), below) exclusive concern whenever
+   * `fieldLabelling === null` — this override never touches it on dissociation (`refs === null`), so the
+   * two effects can never race to write the SAME attribute in the same flush wave (the F3 dual-writer
+   * discipline text-field's own override documents). While fielded (`refs !== null`), THIS method is the
+   * exclusive writer: MERGE, never clobber — `<refs.label.id> <value-span-id>` (field label + value),
+   * the same two-id shape as the bare path, only the name source swaps.
+   *
+   * `aria-describedby` has NO other owner for this control (the trigger carries no internal
+   * validity-message node, unlike text-field's editor) — so unlike text-field's override, THIS one is the
+   * describedby's exclusive owner in BOTH directions: written from `[refs.description, refs.error]` when
+   * fielded, cleared on dissociation.
+   *
+   * Guards a not-yet-created trigger (the LLD-C2 override contract) — cannot happen in practice
+   * (`#ensureParts()` runs synchronously at the top of `connected()`, before the base's forwarding effect
+   * installs), but the guard costs nothing and documents the contract.
+   */
+  protected override applyFieldLabelling(refs: FieldLabelling | null): void {
+    const trigger = this.#trigger
+    const labelSpan = this.#labelSpan
+    if (!trigger || !labelSpan) return
+    if (refs === null) {
+      // aria-labelledby is NOT this branch's concern — the bare-mode effect below recomputes the full
+      // unfielded state in the SAME flush wave. aria-describedby IS this method's exclusive concern in
+      // both directions (no bare-mode owner exists for it), so it clears here.
+      trigger.removeAttribute('aria-describedby')
+      return
+    }
+    if (refs.label) trigger.setAttribute('aria-labelledby', `${refs.label.id} ${labelSpan.id}`)
+    else trigger.removeAttribute('aria-labelledby')
+    const described = [refs.description, refs.error].filter((el): el is HTMLElement => el !== null)
+    if (described.length > 0) trigger.setAttribute('aria-describedby', described.map((el) => el.id).join(' '))
+    else trigger.removeAttribute('aria-describedby')
+  }
+
   // ── Connection lifecycle ───────────────────────────────────────────────────────────────────────
 
   protected override connected(): void {
-    const { trigger, listbox, labelSpan } = this.#ensureParts()
+    const { trigger, listbox, labelSpan, ariaLabelSpan } = this.#ensureParts()
 
     // Wire the overlay controller (LLD-C1..C4) — proves overlay + listbox together (ADR-0043 S4).
     // placement='bottom-start' matches a standard select dropdown. auto=true → light-dismiss.
@@ -185,6 +243,23 @@ export class UISelectElement extends UIFormElement {
         labelSpan.textContent = found ? (found.textContent?.trim() ?? val) : val
       } else {
         labelSpan.textContent = ph
+      }
+    })
+
+    // ADR-0085 — the trigger's accessible-name seam (bare/unfielded path). Split ownership of
+    // `aria-labelledby` with applyFieldLabelling above (the F3 dual-writer discipline): this effect owns
+    // it EXCLUSIVELY while unfielded and never touches it while fielded (the early return below) — the
+    // override is the exclusive writer in that state, so the two can never race in the same flush wave.
+    // `label` set → the hidden aria-label span + the value span (axis + value, e.g. "Scheme light");
+    // `label` empty → no aria-labelledby → content-only accessible name (today's default, zero drift).
+    this.effect(() => {
+      if (this.fieldLabelling !== null) return // fielded — applyFieldLabelling owns aria-labelledby exclusively
+      const lbl = this.label
+      if (lbl) {
+        ariaLabelSpan.textContent = lbl
+        trigger.setAttribute('aria-labelledby', `${ariaLabelSpan.id} ${labelSpan.id}`)
+      } else {
+        trigger.removeAttribute('aria-labelledby')
       }
     })
 
@@ -264,17 +339,23 @@ export class UISelectElement extends UIFormElement {
   // ── Part creation (idempotent across disconnect/reconnect) ─────────────────────────────────────
 
   /**
-   * Create the control's two light-DOM parts ONCE (idempotent across disconnect/reconnect):
+   * Create the control's THREE light-DOM parts ONCE (idempotent across disconnect/reconnect):
    *   - trigger: a `<button data-part="trigger">` with the label span + caret span.
+   *   - ariaLabelSpan: a visually-hidden `<span data-part="aria-label">` (ADR-0085) — the bare-usage
+   *     name source the trigger's `aria-labelledby` references alongside the value span.
    *   - listbox: a `<div data-part="listbox" role="listbox">` panel; author's [role=option]
    *     children are moved here at first connect.
    * The overlay controller sets `popover="auto"` on the listbox. `render()` stays the inherited VOID.
    */
-  #ensureParts(): { trigger: HTMLElement; listbox: HTMLElement; labelSpan: HTMLElement } {
-    if (this.#listbox && this.#trigger && this.#labelSpan) {
+  #ensureParts(): { trigger: HTMLElement; listbox: HTMLElement; labelSpan: HTMLElement; ariaLabelSpan: HTMLElement } {
+    if (this.#listbox && this.#trigger && this.#labelSpan && this.#ariaLabelSpan) {
       // Parts persist through disconnect/reconnect — return the existing ones.
-      return { trigger: this.#trigger, listbox: this.#listbox, labelSpan: this.#labelSpan }
+      return { trigger: this.#trigger, listbox: this.#listbox, labelSpan: this.#labelSpan, ariaLabelSpan: this.#ariaLabelSpan }
     }
+
+    // One shared per-instance sequence number for every part id minted below (the ui-field precedent —
+    // `ui-select-value-N` / `-aria-label-N` / `-listbox-N` read as a set at a glance).
+    const seq = ++_nextListboxId
 
     // ── Build the trigger button ──
 
@@ -283,11 +364,14 @@ export class UISelectElement extends UIFormElement {
     trigger.setAttribute('type', 'button') // prevent unintentional form submission
     trigger.setAttribute('aria-haspopup', 'listbox')
 
-    // The label span shows the selected option's text (or placeholder). The caret span is an
-    // inline affordance glyph sized = font (the §4.1 caret law; CSS handles centering in the icon
-    // cell via `padding: calc((icon - glyph) / 2)` — the `--ui-select-glyph = font` chain).
+    // The label span shows the selected option's text (or placeholder). It also doubles as the
+    // SECOND id in the trigger's aria-labelledby concatenation (ADR-0085) — it needs a stable id even
+    // when unlabelled, since a later `label` write can arm the seam without recreating parts. The
+    // caret span is an inline affordance glyph sized = font (the §4.1 caret law; CSS handles centering
+    // in the icon cell via `padding: calc((icon - glyph) / 2)` — the `--ui-select-glyph = font` chain).
     const labelSpan = document.createElement('span')
     labelSpan.setAttribute('data-part', 'label')
+    labelSpan.id = `ui-select-value-${seq}`
     labelSpan.textContent = this.placeholder || ''
 
     const caretSpan = document.createElement('span')
@@ -297,6 +381,15 @@ export class UISelectElement extends UIFormElement {
 
     trigger.appendChild(labelSpan)
     trigger.appendChild(caretSpan)
+
+    // ── Build the visually-hidden aria-label span (ADR-0085 — the bare-usage name source) ──
+    // Always created (idempotent-parts precedent, text-field's `message` node) so the connected()
+    // effect never has to conditionally mint DOM; inert (unreferenced) when `label` is empty or the
+    // control is fielded. select.css clips it — NOT `hidden`/`display:none`, which some AT/engine
+    // combinations can fail to fold into the accessible-name computation for a labelledby reference.
+    const ariaLabelSpan = document.createElement('span')
+    ariaLabelSpan.setAttribute('data-part', 'aria-label')
+    ariaLabelSpan.id = `ui-select-aria-label-${seq}`
 
     // ── Build the listbox panel ──
 
@@ -311,7 +404,7 @@ export class UISelectElement extends UIFormElement {
     // sets the selected/first option to tabindex=0.
     listbox.setAttribute('tabindex', '-1')
     // Stable id for the trigger's aria-controls (created once, never reused across instances).
-    listbox.id = `ui-select-listbox-${++_nextListboxId}`
+    listbox.id = `ui-select-listbox-${seq}`
 
     // Wire the trigger's ARIA affordances (aria-expanded is set reactively by the scope-owned
     // effect in connected(); aria-controls is stable and set here once at part creation).
@@ -349,13 +442,15 @@ export class UISelectElement extends UIFormElement {
     }
 
     this.appendChild(trigger)
+    this.appendChild(ariaLabelSpan)
     this.appendChild(listbox)
 
     this.#trigger = trigger
     this.#listbox = listbox
     this.#labelSpan = labelSpan
+    this.#ariaLabelSpan = ariaLabelSpan
 
-    return { trigger, listbox, labelSpan }
+    return { trigger, listbox, labelSpan, ariaLabelSpan }
   }
 }
 

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import { UISelectElement } from './select.ts'
 import type { OverlayHandle } from '../../traits/overlay.ts'
-import type { FormValue, ValidityResult } from '../../dom/index.ts'
+import type { FormValue, ValidityResult, FieldLabelling } from '../../dom/index.ts'
 import {
   splitFrontmatter,
   parseDescriptor,
@@ -34,7 +34,9 @@ declare const process: { cwd(): string }
 //   select-closed-arrow · select-disabled (B3: keyboard-inert + trigger-disabled) ·
 //   select-form-value · select-form-validity · select-form-reset · select-c10-residue ·
 //   select-c10-stacking · select-c10-cleanup · select-descriptor-schema ·
-//   select-descriptor-bijection · select-descriptor-negative
+//   select-descriptor-bijection · select-descriptor-negative ·
+//   select-aria-label-seam (ADR-0085: bare aria-labelledby concatenation · no aria-label ever ·
+//   merge-not-clobber via setFieldLabelling · dissociation revert · aria-describedby wiring)
 
 // ── Popover API stub (jsdom lacks it entirely — mirrors popover.test.ts setup) ─────────────────
 
@@ -159,6 +161,7 @@ describe('ui-select — upgrade + typed prop surface (select-upgrade)', () => {
     const el = document.createElement('ui-select') as UISelectElement
     expect(el).toBeInstanceOf(UISelectElement)
     expect(el.value).toBe('')
+    expect(el.label).toBe('')
     expect(el.open).toBe(false)
     expect(el.placeholder).toBe('')
     expect(el.size).toBe('md')
@@ -171,6 +174,7 @@ describe('ui-select — upgrade + typed prop surface (select-upgrade)', () => {
     const fn = (): void => {
       const el = new UISelectElement()
       el.value = 'apple'
+      el.label = 'Scheme'
       el.open = true
       el.placeholder = 'Choose…'
       el.size = 'sm'
@@ -563,6 +567,126 @@ describe('ui-select — trigger label (select-label-reflects · select-placehold
   })
 })
 
+// ── ADR-0085 — the trigger's accessible-name seam ────────────────────────────────────────────
+//
+// jsdom cannot compute an accessible name (no accname algorithm) — the read-back that the trigger's
+// name really resolves to "label value" lives in select.browser.test.ts (both engines). These probes
+// pin the DECLARED WIRING the browser proof depends on: the aria-labelledby id list, the aria-label
+// absence guard (the value-erasure guard this ADR exists to prevent), the merge-not-clobber shape via
+// a direct `setFieldLabelling` call (mirroring text-field's own jsdom-probe pattern — no live ui-field
+// needed to exercise the seam), and the aria-describedby wiring.
+
+describe('ui-select — the trigger accessible-name seam (select-aria-label-seam)', () => {
+  it('select-aria-label-seam: no `label` set → no aria-labelledby on the trigger (back-compat, zero drift)', async () => {
+    const { el, trigger } = makeSelect()
+    await whenFlushed()
+    expect(trigger.hasAttribute('aria-labelledby')).toBe(false)
+    el.remove()
+  })
+
+  it('select-aria-label-seam: `label` set (bare, unfielded) → aria-labelledby = "<aria-label-span-id> <value-span-id>"', async () => {
+    const { el, trigger } = makeSelect()
+    el.label = 'Scheme'
+    await whenFlushed()
+
+    const ariaLabelSpan = el.querySelector<HTMLElement>('[data-part="aria-label"]')!
+    const valueSpan = el.querySelector<HTMLElement>('[data-part="label"]')!
+    expect(ariaLabelSpan.id).toBeTruthy()
+    expect(valueSpan.id).toBeTruthy()
+    expect(ariaLabelSpan.textContent).toBe('Scheme')
+    expect(trigger.getAttribute('aria-labelledby')).toBe(`${ariaLabelSpan.id} ${valueSpan.id}`)
+    el.remove()
+  })
+
+  it('select-aria-label-seam: clearing `label` back to \'\' removes aria-labelledby again', async () => {
+    const { el, trigger } = makeSelect()
+    el.label = 'Scheme'
+    await whenFlushed()
+    expect(trigger.hasAttribute('aria-labelledby')).toBe(true)
+
+    el.label = ''
+    await whenFlushed()
+    expect(trigger.hasAttribute('aria-labelledby')).toBe(false)
+    el.remove()
+  })
+
+  it('select-aria-label-seam: the value stays live in the id chain — selecting an option keeps the SAME aria-labelledby ids while the referenced text updates', async () => {
+    const { el, trigger, listbox } = makeSelect()
+    el.label = 'Scheme'
+    await whenFlushed()
+    const before = trigger.getAttribute('aria-labelledby')
+
+    const apple = listbox.querySelector<HTMLElement>('[value="apple"]')!
+    apple.click()
+    await whenFlushed()
+
+    expect(trigger.getAttribute('aria-labelledby')).toBe(before) // same two ids — no re-wiring needed
+    expect(el.querySelector<HTMLElement>('[data-part="label"]')!.textContent?.trim()).toBe('Apple') // the referenced text moved
+    el.remove()
+  })
+
+  it('select-aria-label-seam: the trigger NEVER carries aria-label (the value-erasure guard — a button has no distinct value AX property)', async () => {
+    const { el, trigger } = makeSelect()
+    el.label = 'Scheme'
+    await whenFlushed()
+    expect(trigger.hasAttribute('aria-label')).toBe(false)
+    el.remove()
+  })
+
+  it('select-aria-label-seam: setFieldLabelling MERGES — aria-labelledby = "<field-label-id> <value-span-id>", never clobbering the value span', async () => {
+    const { el, trigger } = makeSelect()
+    el.label = 'Scheme' // a consumer-set bare label — must NOT survive into the merged (fielded) shape
+    await whenFlushed()
+
+    const fieldLabel = document.createElement('div')
+    fieldLabel.id = 'field-label-42'
+    const refs: FieldLabelling = { label: fieldLabel, description: null, error: null }
+    el.setFieldLabelling(refs)
+    await whenFlushed()
+
+    const valueSpan = el.querySelector<HTMLElement>('[data-part="label"]')!
+    expect(trigger.getAttribute('aria-labelledby')).toBe(`${fieldLabel.id} ${valueSpan.id}`)
+    el.remove()
+  })
+
+  it('select-aria-label-seam: dissociation (setFieldLabelling(null)) reverts to the bare-mode state', async () => {
+    const { el, trigger } = makeSelect()
+    el.label = 'Scheme'
+    await whenFlushed()
+    const bareBefore = trigger.getAttribute('aria-labelledby')
+
+    const fieldLabel = document.createElement('div')
+    fieldLabel.id = 'field-label-43'
+    el.setFieldLabelling({ label: fieldLabel, description: null, error: null })
+    await whenFlushed()
+    expect(trigger.getAttribute('aria-labelledby')).not.toBe(bareBefore) // merged shape while associated
+
+    el.setFieldLabelling(null)
+    await whenFlushed()
+    expect(trigger.getAttribute('aria-labelledby')).toBe(bareBefore) // reverted to the SAME bare state
+    el.remove()
+  })
+
+  it('select-aria-label-seam: aria-describedby wires from [description, error] refs while fielded, and clears on dissociation', async () => {
+    const { el, trigger } = makeSelect()
+    await whenFlushed()
+    expect(trigger.hasAttribute('aria-describedby')).toBe(false) // no owner in bare mode (no internal message node)
+
+    const description = document.createElement('div')
+    description.id = 'field-desc-1'
+    const error = document.createElement('div')
+    error.id = 'field-error-1'
+    el.setFieldLabelling({ label: null, description, error })
+    await whenFlushed()
+    expect(trigger.getAttribute('aria-describedby')).toBe(`${description.id} ${error.id}`)
+
+    el.setFieldLabelling(null)
+    await whenFlushed()
+    expect(trigger.hasAttribute('aria-describedby')).toBe(false) // cleared — this control's exclusive owner in both directions
+    el.remove()
+  })
+})
+
 // ── Trigger geometry structure (B2: C6 geometry-law probes) ─────────────────────────────────────
 //
 // These probes assert the STRUCTURAL invariants of the Control-class trigger anatomy — things that
@@ -865,7 +989,7 @@ const parsed = parseDescriptor(fence)
 // `extends: UIFormElement` is not yet in BASE_CLASSES (the integration slice s12 adds it). Tolerate
 // exactly that ONE pending structural failure (same tolerance as modal/popover descriptor probes).
 
-const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'open', 'placeholder', 'size']
+const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'label', 'open', 'placeholder', 'size']
 
 describe('select.md descriptor — frontmatter parses + schema-valid (select-descriptor-schema)', () => {
   it('select-descriptor-schema: has a leading frontmatter fence and a prose body', () => {

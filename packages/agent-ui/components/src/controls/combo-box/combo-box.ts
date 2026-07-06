@@ -22,11 +22,15 @@
 //     leaves the editor. Two-way `open` (ADR-0019): scope-owned effect drives model→overlay;
 //     the overlay's `close` event drives overlay→model.
 //   - form: formValue() = value || null; formValidity() enforces required + strict.
+//   - Labelling (ADR-0085, text-field ADR-0014 parity): a `label` prop → the editor's `aria-label`
+//     (bare usage — the editor has a DISTINCT accessible value, so aria-label does not erase it, unlike
+//     ui-select's button trigger); yields to `applyFieldLabelling`'s aria-labelledby the moment the
+//     control associates with a `ui-field`.
 //
 // Layer: controls → dom + traits (inward-only ✓).
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
-import { UIFormElement, type FormValue, type ValidityResult } from '../../dom/form.ts'
+import { UIFormElement, type FormValue, type ValidityResult, type FieldLabelling } from '../../dom/form.ts'
 import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
 import { scrollFade } from '../../traits/scroll-fade.ts'
 
@@ -46,6 +50,11 @@ const props = {
   // free-text string (on free-text commit when strict=false), or '' (nothing committed yet).
   // NOT reflected — the live value is the editor surface; the attribute seeds the reset baseline.
   value: prop.string(),
+
+  // `label` — the bare-usage accessible-name source (ADR-0085; text-field ADR-0014 parity — the
+  // editor has a DISTINCT accessible value, so aria-label does not erase it, unlike ui-select's
+  // button trigger). NOT reflected — an accessibility hint, not a styling hook.
+  label: prop.string(),
 
   // `open` — whether the listbox panel is shown. Reflected (bindable two-way, ADR-0019).
   // Drives the overlay handle via a scope-owned effect; synced back on light-dismiss.
@@ -226,10 +235,20 @@ export class UIComboBoxElement extends UIFormElement {
       editor.toggleAttribute('data-empty', editor.textContent === '')
     })
 
-    // ── Placeholder text + disabled channel ──────────────────────────────────────────────────
+    // ── Placeholder text + the label seam + disabled channel ─────────────────────────────────
 
     this.effect(() => {
       editor.setAttribute('data-placeholder', this.placeholder)
+    })
+
+    // ADR-0085 — the label seam (bare usage): `label` prop → editor aria-label (text-field ADR-0014
+    // parity — the editor's text content IS a distinct accessible value, so aria-label does not erase
+    // it, unlike ui-select's button trigger). Yields to the fielded aria-labelledby the moment the
+    // combo-box associates with a ui-field (applyFieldLabelling below) — accname precedence, the
+    // ADR-0051 pattern (text-field.ts:425 is the identical guard).
+    this.effect(() => {
+      if (this.label && this.fieldLabelling === null) editor.setAttribute('aria-label', this.label)
+      else editor.removeAttribute('aria-label')
     })
 
     this.effect(() => {
@@ -535,6 +554,41 @@ export class UIComboBoxElement extends UIFormElement {
       this.value = state
       // model→surface effect will fire on the next flush and update the editor.
     }
+  }
+
+  // ── ADR-0085 — the field-labelling seam wire (text-field parity) ────────────────────────────
+
+  /**
+   * The part-role override (ADR-0085 cl.3 · text-field.ts:662 precedent) — the combobox role rides the
+   * light-DOM editor PART, not `internals.role`, so the base's guarded internals-reflection default
+   * (dom/form.ts) never fires; id-reference the editor directly instead.
+   *
+   * `aria-labelledby` is this method's own, exclusive concern in both directions: set from `refs.label`
+   * when present, removed when `null` (matching text-field exactly).
+   *
+   * `aria-describedby` is ALSO this method's exclusive concern in both directions here — UNLIKE
+   * text-field, this control has no internal validity-message node/effect competing for the attribute
+   * (combo-box carries no `trackUserInvalid` composition today), so there is no dual-writer race to
+   * avoid by leaving it untouched on dissociation; it is written from `[refs.description, refs.error]`
+   * when fielded and cleared when not, in both branches below.
+   *
+   * Guards a not-yet-created editor (the LLD-C2 override contract) — cannot happen in practice
+   * (`#ensureParts()` runs synchronously at the top of `connected()`, before the base's forwarding effect
+   * installs), but the guard costs nothing and documents the contract.
+   */
+  protected override applyFieldLabelling(refs: FieldLabelling | null): void {
+    const editor = this.#editor
+    if (!editor) return
+    if (refs === null) {
+      editor.removeAttribute('aria-labelledby')
+      editor.removeAttribute('aria-describedby')
+      return
+    }
+    if (refs.label) editor.setAttribute('aria-labelledby', refs.label.id)
+    else editor.removeAttribute('aria-labelledby')
+    const described = [refs.description, refs.error].filter((el): el is HTMLElement => el !== null)
+    if (described.length > 0) editor.setAttribute('aria-describedby', described.map((el) => el.id).join(' '))
+    else editor.removeAttribute('aria-describedby')
   }
 }
 
