@@ -137,6 +137,7 @@ body {
   margin-inline: 0;
   flex: 1 1 auto; /* fill the region under the context-header */
   min-block-size: 0; /* let the page's inner regions scroll instead of growing the region */
+  padding-block: 0; /* no sticky brackets here — the page owns the region edge-to-edge (drop the reading-column block padding) */
 }
 
 /* ── the per-page sticky header ───────────────────────────────────────────────────────────────────────────
@@ -298,6 +299,10 @@ body {
   flex: 1 0 auto;
   inline-size: min(64rem, 100% - 3rem);
   margin-inline: auto;
+  /* Block breathing room so content clears the sticky page-header (top) and page-footer (bottom) instead of
+   * butting against them — padding on the scroll-body region, not a margin on the first child the header would
+   * overlap. Reset to 0 on the full-bleed variant below (it owns its region edge-to-edge). */
+  padding-block: var(--ui-space-xl);
 }
 
 /* ── code previews (the shared codeBlock helper — site/lib/code-block.ts) ──────────────────────────────────
