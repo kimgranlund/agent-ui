@@ -1,0 +1,84 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "_meta": {
+    "title": "M1 — the app-shell anchor (@agent-ui/app + ui-app-shell + isolation + a2ui-live re-host)",
+    "traces": "agent-app-surfaces PRD §6 (M1) · PRD-G2/G6, PRD-D1/D3/D4/D5",
+    "version": "v1",
+    "dated": "2026-07-05",
+    "notes": "PLAN mode (feeds the M1 build fan-out). Sliced by OWNING FILE: n1a=serial PREP (package base), n4a=serial INTEGRATION (shared measure-size.mjs). Each new gate (n1b layering, n2b/n2c browser, n4a size) ships a negative control anchored on a unique token. The behavior contract these tasks satisfy is the M1 SPEC (SPEC-R#); the implementation is the M1 LLD (LLD-C#)."
+  },
+  "nodes": [
+    { "id": "n0", "label": "M1 — the app-shell anchor: a new @agent-ui/app apex package + ui-app-shell layout primitive + opt-in isolation + the a2ui-live re-host", "leaf": false, "justify": "grouping — the milestone root; its four subsystems are the child groups" },
+
+    { "id": "n1", "label": "package scaffold + layering boundary (SERIAL PREP — the fixed base every later slice builds against)", "leaf": false, "justify": "grouping — subsystem: the new apex package and its no-cycle guarantee" },
+    { "id": "n1a", "label": "@agent-ui/app package scaffold — packages/agent-ui/app/{package.json,tsconfig.json,src/index.ts}, workspace-wired, deps = {components, a2ui, shared}", "leaf": true,
+      "accept": "`npm run check` exit 0 with packages/agent-ui/app/ resolving in the npm workspace; app/package.json `dependencies` == exactly {@agent-ui/components, @agent-ui/a2ui, @agent-ui/shared}; src/index.ts barrel present, tsc noEmit clean; no OTHER package's package.json is modified (git diff scoped to app/ + root workspace list)" },
+    { "id": "n1b", "label": "import-layering trip-wire for the apex — app/src/layering.test.ts (app imports only {components, a2ui, shared, ./local}; nothing under components/ or a2ui/ imports @agent-ui/app)", "leaf": true,
+      "accept": "`npm test` exit 0 incl. app/src/layering.test.ts; a negative control anchored on a UNIQUE token (a planted upward/self import `@agent-ui/app` inside a2ui OR a components→a2ui edge) is grep-confirmed applied and proven to turn the test RED; a static grep proves no source under packages/agent-ui/components/src or /a2ui/src imports @agent-ui/app" },
+
+    { "id": "n2", "label": "the ui-app-shell layout primitive (the element)", "leaf": false, "justify": "grouping — subsystem: the composed region/docking control + its gates + its isolation mode" },
+    { "id": "n2a", "label": "ui-app-shell element build — controls/app-shell/{app-shell.ts,app-shell.css,app-shell.md}: region/docking model composing the shipped G9 layout family, typed literal-union props, single-file @scope CSS, descriptor", "leaf": true,
+      "accept": "`npm run check` exit 0; app-shell.ts extends UIElement (light-DOM default), region/docking props are typed literal unions via `static props`/ReactiveProps, and it composes ONLY the public @agent-ui/components barrel (grep: no `packages/**/src` deep import); app-shell.css declares only --ui-app-shell-* in a :where() block + consumes own+allowlisted shared tokens, lays the regions out, reflows on its OWN container width, and handles forced-colors; app-shell.md validates against the frontmatter schema and the contract↔props trip-wire is GREEN. NORMATIVE (ADR-0083/0084, ratified Kim 2026-07-06): ui-app-shell-region gains `landmark` (optional ARIA override, internals.role = landmark || REGION_ROLE[region] — `||` NOT `??`, the unset value is '' which nullish-coalescing misses) + `collapse:'hide'|'stack'` (default hide); the collapse=stack @container rule lands in BOTH the base app-shell.css AND the isolated :host mirror (n2c, keep-in-sync)" },
+    { "id": "n2b", "label": "ui-app-shell gates — jsdom behaviour probes + cross-engine whole-shape/reflow browser smoke", "leaf": true,
+      "accept": "`npm test` exit 0 incl. app-shell.test.ts (jsdom: region/docking prop → DOM/attribute mapping; presence-driven region layout; empty-region + missing-region cases) AND `npm run test:browser` exit 0 incl. app-shell.browser.test.ts (Chromium AND WebKit: the whole region layout renders with non-zero bounding boxes; resizing the WRAPPER — not the viewport — reflows the regions; the forced-colors leg green); each assertion carries an anti-vacuous/biting check. NORMATIVE (ADR-0083/0084, ratified Kim 2026-07-06): jsdom asserts `landmark` override → internals.role = landmark || REGION_ROLE[region] (incl. out-of-set coercion); browser asserts a `collapse=stack` side region stays VISIBLE narrow while `collapse=hide` hides — biting NC = drop the stack rule, the region hides" },
+    { "id": "n2c", "label": "ui-app-shell opt-in isolation (ADR-0082 mechanism: attachShadow + fleet-CSS-injected-in-shadow + the F1b :host grid variant) + browser validation, escalation-on-fail", "leaf": true,
+      "accept": "`npm run test:browser` exit 0 incl. the isolation legs (Chromium AND WebKit): with isolation ON, (a) a control composed inside the shell renders correct geometry+colour [tokens reach it via foundation-styles injected in-shadow; @scope-in-shadow + *-ramp re-derivation], (b) that control's own styles apply, (c) a host-page rule targeting the control does NOT change its computed style [no leak], AND (d) F1b — the region grid-area placement (R3) + narrow reflow (R5) hold under isolation via the injected :host grid variant, with a biting NC = regions land un-placed when the :host variant is omitted; default (isolation OFF) stays light-DOM byte-identical to n2a. The :host grid variant lives in THIS slice (app-shell-isolation.css / injected string), NOT the base app-shell.css (n2a UNCHANGED). IF any leg fails, an escalation note to Kim WITH the browser-truth evidence is filed and the decision (PRD-D3/ADR-0082) is NOT silently worked around" },
+
+    { "id": "n3", "label": "the reference app — a2ui-live re-hosted on the primitive (PRD-D5)", "leaf": false, "justify": "grouping — subsystem: the flagship proof that the primitive replaces bespoke chrome" },
+    { "id": "n3a", "label": "re-express site/pages/a2ui-live on <ui-app-shell> — remove a2ui-live.css's OWN bespoke shell/layout CSS (shared _page.css untouched, deferred), prove net-negative chrome LOC", "leaf": true,
+      "accept": "`npm run check` (+ check:site) exit 0 AND `npm run build` exit 0 AND `npm test`+`npm run test:browser` green for the a2ui-live page; the bespoke shell/layout CSS in site/pages/a2ui-live.css is REMOVED; site/pages/_page.css is UNMODIFIED (`git diff` shows no change — the SHARED shell migration is deferred, not M1); `git diff --stat` shows net-negative bespoke-chrome LOC on a2ui-live's own chrome; the browser smoke shows the [chat | canvas] layout renders unchanged vs the pre-re-host snapshot AND no other site page regresses. NORMATIVE rework (ADR-0083/0084, ratified Kim 2026-07-06 — sequence AFTER n2a/n2b land the props): the composer region authors region=navigation landmark=complementary collapse=stack — its AX landmark reads complementary (not navigation) and it stays visible+interactive at a narrow container width (cross-engine)" },
+
+    { "id": "n4", "label": "integration + verification (SERIAL INTEGRATION + the reviewer gate)", "leaf": false, "justify": "grouping — subsystem: shared-file wiring done once + the independent judgment gate" },
+    { "id": "n4a", "label": "public barrel + size line-item — app/src/index.ts exports the shell; scripts/measure-size.mjs gains an @agent-ui/app line-item + budget; tree-shake proof", "leaf": true,
+      "accept": "app/src/index.ts exports the shell as the public entry; `npm run size` exit 0 carrying a NEW @agent-ui/app line-item measured vs the budget baseline recorded at M1 kickoff (provisional ceiling ≤ ~3 KB gz marginal); a tree-shake probe proves importing the shell drags only it + the composed real deps (no unrelated fleet control); the measure-size.mjs edit is the ONLY writer of that shared file this milestone (single-writer integration slice); a planted over-budget number proves the gate bites" },
+    { "id": "n4b", "label": "independent component-reviewer pass on ui-app-shell (pre-commit NO-GO gate)", "leaf": true,
+      "accept": "component-reviewer verdict recorded GO on <ui-app-shell> (zero blockers; COMPOSE ≥4 AND REALIZE ≥4) BEFORE the M1 commit; any NO-GO finding is closed and delta-re-reviewed to GO" }
+  ],
+  "actions": [
+    { "id": "a1", "label": "create a new package that depends on exactly {components, a2ui, shared} — the apex of the DAG" },
+    { "id": "a2", "label": "guarantee no dependency cycle exists and nothing inward imports the apex" },
+    { "id": "a3", "label": "lay out the persistent application regions from one composed primitive" },
+    { "id": "a4", "label": "dock a surface into a named region" },
+    { "id": "a5", "label": "reflow the layout responsively to its own container width (intrinsic, no breakpoint props)" },
+    { "id": "a6", "label": "optionally isolate the shell's styles from a host page (opt-in)" },
+    { "id": "a7", "label": "keep theme tokens reaching controls composed inside an isolated shell" },
+    { "id": "a8", "label": "keep host-page CSS from leaking into an isolated shell" },
+    { "id": "a9", "label": "survive forced-colors: active (shell chrome + composed controls)" },
+    { "id": "a10", "label": "assemble the a2ui-live chrome from the primitive with zero bespoke shell/layout CSS" },
+    { "id": "a11", "label": "expose the shell through the package's public barrel (consumable, tree-shakeable)" },
+    { "id": "a12", "label": "measure + budget the package's marginal size as a size-gate line-item" },
+    { "id": "a13", "label": "describe the shell's public surface in a {name}.md descriptor + pass the contract↔props trip-wire" },
+    { "id": "a14", "label": "judge the shell against COMPOSE/REALIZE ≥4 before commit (the reviewer gate)" },
+    { "id": "a15", "label": "escalate to Kim with evidence if the isolation validation fails any leg" },
+    { "id": "a16", "label": "prove the region layout + container reflow cross-engine, whole-shape (not per-part)" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n1a" },
+    { "action": "a2", "node": "n1b" },
+    { "action": "a3", "node": "n2a" },
+    { "action": "a4", "node": "n2a" },
+    { "action": "a5", "node": "n2a" },
+    { "action": "a9", "node": "n2a" },
+    { "action": "a13", "node": "n2a" },
+    { "action": "a16", "node": "n2b" },
+    { "action": "a6", "node": "n2c" },
+    { "action": "a7", "node": "n2c" },
+    { "action": "a8", "node": "n2c" },
+    { "action": "a15", "node": "n2c" },
+    { "action": "a10", "node": "n3a" },
+    { "action": "a11", "node": "n4a" },
+    { "action": "a12", "node": "n4a" },
+    { "action": "a14", "node": "n4b" }
+  ],
+  "edges": [
+    { "from": "n1a", "to": "n2a", "why": "the shell element lives in the package n1a scaffolds" },
+    { "from": "n1a", "to": "n1b", "why": "the layering test asserts the import graph of the package n1a creates" },
+    { "from": "n2a", "to": "n2b", "why": "the gates exercise the element n2a builds" },
+    { "from": "n2a", "to": "n2c", "why": "the isolation mode extends the element n2a builds" },
+    { "from": "n2a", "to": "n3a", "why": "the a2ui-live re-host composes the ui-app-shell element n2a builds" },
+    { "from": "n2c", "to": "n4a", "why": "the size line-item measures the element's final byte cost including n2c's isolation code, and the barrel exports the finished element" },
+    { "from": "n2b", "to": "n4b", "why": "the reviewer judges the element only after its behaviour gates are green" },
+    { "from": "n2c", "to": "n4b", "why": "the reviewer judges the element only after its isolation mode is resolved" }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@agent-ui/app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./app-shell": "./src/controls/app-shell/app-shell.ts",
+    "./app-shell.css": "./src/controls/app-shell/app-shell.css"
+  },
+  "dependencies": {
+    "@agent-ui/components": "*",
+    "@agent-ui/a2ui": "*",
+    "@agent-ui/shared": "*"
+  }
+}

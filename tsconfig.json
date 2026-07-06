@@ -23,7 +23,9 @@
       "@agent-ui/a2ui": ["./packages/agent-ui/a2ui/src/index.ts"],
       "@agent-ui/a2ui/*": ["./packages/agent-ui/a2ui/src/*"],
       "@agent-ui/icons": ["./packages/agent-ui/icons/src/index.ts"],
-      "@agent-ui/icons/*": ["./packages/agent-ui/icons/src/*"]
+      "@agent-ui/icons/*": ["./packages/agent-ui/icons/src/*"],
+      "@agent-ui/app": ["./packages/agent-ui/app/src/index.ts"],
+      "@agent-ui/app/*": ["./packages/agent-ui/app/src/*"]
     },
 
     /* Linting */

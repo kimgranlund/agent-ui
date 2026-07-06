@@ -42,6 +42,19 @@ export default defineConfig({
       // real control (e.g. the default catalog's ui-button factory).
       '@agent-ui/components/components': r('./packages/agent-ui/components/src/controls/index.ts'),
       '@agent-ui/components/descriptor': r('./packages/agent-ui/components/src/descriptor/index.ts'),
+      // EXACT (not prefix) matches, `?url`-suffixed: `@agent-ui/app`'s isolated-shell connect-flow
+      // (app-shell.ts, LLD-C5/ADR-0082) resolves these two package CSS assets to a real runtime URL via
+      // Vite's `?url` suffix, to inject as `<link>` hrefs INSIDE a shadow root. Vite's aliasing is FIRST-
+      // MATCH-WINS in array order, and a plain-string alias matches on a whole path segment (`importee ===
+      // find || importee.startsWith(find + '/')`) — `@agent-ui/components/foundation-styles.css?url` DOES
+      // start with the broad `@agent-ui/components` alias below, so without these two exact entries placed
+      // BEFORE it, that broad alias would intercept the specifier first and mangle the `?url` suffix into its
+      // replacement path. Placing the exact, query-suffixed entries earlier in this object is what makes them
+      // win instead (the replacement carries the SAME `?url` suffix through, so Vite's own asset-URL
+      // transform still recognizes it) — the same ordering discipline the `@agent-ui/components/components`
+      // and `/descriptor` subpath entries above already rely on.
+      '@agent-ui/components/foundation-styles.css?url': `${r('./packages/agent-ui/components/src/foundation-styles.css')}?url`,
+      '@agent-ui/components/component-styles.css?url': `${r('./packages/agent-ui/components/src/component-styles.css')}?url`,
       '@agent-ui/components': r('./packages/agent-ui/components/src/index.ts'),
       '@agent-ui/shared': r('./packages/agent-ui/shared/src/index.ts'),
       '@agent-ui/a2ui': r('./packages/agent-ui/a2ui/src/index.ts'),

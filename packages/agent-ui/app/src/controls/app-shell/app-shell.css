@@ -1,0 +1,152 @@
+/* app-shell.css — ui-app-shell + ui-app-shell-region, the M1 app-shell BASE grid (LLD-C4; SPEC-R2/R3/R5/R7;
+ * ADR-0084 narrow-reflow collapse).
+ * Single file, two sectioned blocks (ADR-0003): a `:where(ui-app-shell)` TOKEN block declaring only
+ * `--ui-app-shell-*` custom properties, then an `@scope (ui-app-shell)` STYLES block that consumes ONLY that
+ * chain (role-purity — the shared `--md-sys-color-*` roles enter ONLY in the token block, the card.css/row.css
+ * discipline). This sheet is the LIGHT-mode (non-isolated) region-placement grid ONLY — the `:host`-shaped
+ * mirror for isolated mode (LLD-C5/ADR-0082) is injected by the C5 slice, NOT authored here; per LLD-C4's own
+ * note, this base grid is UNCHANGED by isolation and a non-isolation builder needs no change from it.
+ *
+ * The grid is PRESENCE-DRIVEN with NO `:has()` at all (unlike ui-card's block-flow shell, which needed it):
+ * every named area's track (`auto`/`1fr`) sizes off its OWN content, so an area with no `ui-app-shell-region`
+ * placed in it collapses to zero — CSS Grid's ordinary auto-track sizing gives SPEC-R3's "an absent region
+ * reserves no space" for free.
+ *
+ * Standalone sheet — linked via the package `./app-shell.css` export; NEVER injected from app-shell.ts
+ * (behaviour-only `.ts`, no runtime style; plan §2).
+ */
+
+/* ════════════════ [ui-app-shell] TOKEN BLOCK — :where(ui-app-shell) declares --ui-app-shell-* ════════════════ */
+
+:where(ui-app-shell) {
+  /* The region-divider ink (SPEC-R7 — chrome must survive forced-colors, below). A hairline border, the SAME
+     role-pure referent the container family reads (card.css's `--ui-card-border`). */
+  --ui-app-shell-divider: var(--md-sys-color-neutral-outline-variant, currentColor);
+}
+
+/* ════════════════ [ui-app-shell] STYLES — @scope (ui-app-shell) consumes ONLY --ui-app-shell-* ════════════════ */
+
+@scope (ui-app-shell) {
+  :scope {
+    display: grid;
+    grid-template:
+      'banner banner banner' auto
+      'nav    main   aside ' 1fr
+      'footer footer footer' auto / auto 1fr auto;
+    box-sizing: border-box;
+    container-type: inline-size; /* SPEC-R5: reflow on the shell's OWN width, never the viewport */
+  }
+
+  /* Region → grid-area (SPEC-R3/R4 — docking is composition: a child names its target region via the
+     sub-element's OWN `region` prop). `main` is an EXCLUSIONARY catch-all — "not one of the other four" —
+     rather than an inclusion rule keyed on the literal string 'main'. This is load-bearing, not a style
+     choice: props.ts' directional lock (coerceAttribute's inbound guard) fixes an out-of-set value on the
+     JS PROPERTY but deliberately does NOT reflect the coercion back onto the DOM ATTRIBUTE (that would be
+     the inbound→outbound bounce the lock exists to prevent) — so `<ui-app-shell-region region="bogus">`
+     keeps the literal `region="bogus"` attribute forever, even though `.region` reads back `'main'` in JS.
+     An inclusion rule (`[region='main']`) would never match that element at all, and SPEC-R4 AC2 ("an
+     unknown region appears in main") would silently break. The catch-all also covers the untouched-default
+     case for free (a never-assigned `<ui-app-shell-region>` carries NO `region` attribute at all — the
+     container.css `[elevation='0']` "this rule needs the attribute" precedent — which likewise fails every
+     `[region='…']` inclusion test and falls through here). */
+  :scope > ui-app-shell-region:not([region='banner']):not([region='navigation']):not([region='complementary']):not([region='contentinfo']) {
+    grid-area: main;
+  }
+  :scope > ui-app-shell-region[region='banner'] {
+    grid-area: banner;
+  }
+  :scope > ui-app-shell-region[region='navigation'] {
+    grid-area: nav;
+  }
+  :scope > ui-app-shell-region[region='complementary'] {
+    grid-area: aside;
+  }
+  :scope > ui-app-shell-region[region='contentinfo'] {
+    grid-area: footer;
+  }
+
+  /* Dividers between the shell chrome and `main` — a hairline on the edge each side region FACES (kept
+     legible under forced-colors, below). An absent region contributes no box, so an absent divider is simply
+     never painted — nothing to collapse, no :has() needed. */
+  :scope > ui-app-shell-region[region='banner'] {
+    border-block-end: 1px solid var(--ui-app-shell-divider);
+  }
+  :scope > ui-app-shell-region[region='navigation'] {
+    border-inline-end: 1px solid var(--ui-app-shell-divider);
+  }
+  :scope > ui-app-shell-region[region='complementary'] {
+    border-inline-start: 1px solid var(--ui-app-shell-divider);
+  }
+  :scope > ui-app-shell-region[region='contentinfo'] {
+    border-block-start: 1px solid var(--ui-app-shell-divider);
+  }
+
+  /* Narrow reflow (SPEC-R5) — the shell's OWN container width, never the viewport. Side regions yield to
+     `main` UNLESS the region opts out via `collapse="stack"` (ADR-0084, below). `40rem` is LLD-C4's starting
+     threshold (tunable, C7-reviewed) — a bare literal here, matching the row.css precedent (custom properties
+     cannot drive an `@container` query condition). `grid-auto-flow: row` is the initial value already (a
+     no-op today) — stated explicitly because the `collapse="stack"` rule below relies on row-sparse
+     auto-placement to slot an extra (non-named-area) item into this template without overlap. */
+  @container (inline-size < 40rem) {
+    :scope {
+      grid-template: 'banner' auto 'main' 1fr 'footer' auto / 1fr;
+      grid-auto-flow: row;
+    }
+    /* default collapse="hide" (today's behaviour, unchanged): side regions disappear when narrow. */
+    :scope > ui-app-shell-region[region='navigation'],
+    :scope > ui-app-shell-region[region='complementary'] {
+      display: none;
+    }
+    /* ADR-0084 collapse="stack": the region stays visible + spans the full column (DOM order) instead of
+       hiding — a side region carrying essential, interactive content (e.g. a chat composer) stays reachable.
+       ⚠️ MUST stay AFTER the hide rules above: equal specificity (both are single `:scope > [attr]` selectors
+       on the SAME element when a region carries both `region="navigation"` and `collapse="stack"`), so CSS
+       SOURCE ORDER is what makes this win over `display:none` — reordering silently inverts the fix. Applies
+       regardless of `region` (even a already-visible banner/main/footer matching this is a harmless no-op).
+       `inline-size`/`margin-inline` are HARDENED here (review fix, off the a2ui-live dogfood): a consumer's
+       OWN fixed-width opinion on a docked region (e.g. a wide-layout sidebar sized off its `region`, unrelated
+       to `collapse`) would otherwise fight the span — `:scope > […]` out-specifies any bare class rule a
+       consumer is likely to author, so neutralizing both HERE (not in the consumer's page CSS) is what makes
+       the guarantee hold everywhere a collapse="stack" region is composed, including under isolation (this
+       rule's `:host >` mirror, app-shell-isolation.css) where a page's own stylesheet cannot reach at all. */
+    :scope > ui-app-shell-region[collapse='stack'] {
+      display: block;
+      grid-column: 1 / -1;
+      grid-row: auto;
+      inline-size: auto;
+      margin-inline: 0;
+    }
+  }
+}
+
+/* ════════════════ [ui-app-shell-region] base — the standalone/degrade-gracefully case ════════════════ */
+
+/* An UNDEFINED/unstyled autonomous custom element defaults to `display: inline` (the UA stylesheet — the
+   same reason every OTHER control in this fleet sets its own display explicitly; button/row/card-content all
+   do). Set it here, UNCONDITIONALLY (not inside the `@scope (ui-app-shell)` child-combinator rules above), so
+   a `ui-app-shell-region` used OUTSIDE a shell (no `ui-app-shell` parent, so none of the `:scope > …` rules
+   above ever match it) still renders as a plain block — the SPEC-R3 degrade-gracefully edge (LLD §4). Inside
+   a shell, this element is ALSO a grid ITEM (the parent's `grid-area` rules above place it) — its own
+   `display: block` governs only how ITS children lay out, same as any ordinary grid item; no conflict, and
+   `:where()`'s zero specificity means the narrow-reflow `display: none` (inside `@container` above) still
+   overrides it outright when a side region hides. */
+:where(ui-app-shell-region) {
+  display: block;
+}
+
+/* ════════════════ forced-colors (WHCM) ════════════════ */
+
+/* Nested in its OWN @scope block (not a bare :where() override) so the selector — and therefore the
+   specificity — is IDENTICAL to the light-mode divider rules above; equal specificity + this block's LATER
+   source position is what makes the override deterministic (no reliance on :where()/:scope specificity
+   subtleties). */
+@media (forced-colors: active) {
+  @scope (ui-app-shell) {
+    :scope > ui-app-shell-region[region='banner'],
+    :scope > ui-app-shell-region[region='navigation'],
+    :scope > ui-app-shell-region[region='complementary'],
+    :scope > ui-app-shell-region[region='contentinfo'] {
+      border-color: CanvasText;
+    }
+  }
+}

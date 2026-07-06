@@ -151,7 +151,8 @@ Maps the four platform callbacks onto the graph's two lifetimes:
   platform listener dies). "Zero subscribers after removal" is provable, not aspirational.
 - Helpers: `this.effect(fn)` (scope-owned), `this.listen(target, type, fn)` (rides `{ signal }`),
   `this.emit(type, detail)` (composed/bubbling/cancelable `CustomEvent`), `updateComplete`.
-- **Light DOM by default**; `static shadow` opts a single shadow root (only the app shell needs it).
+- **Light DOM by default**; `static shadow` opts a single shadow root (a class-level, all-instances seam).
+  *(The app-shell's isolation does NOT use this seam — it isolates **per instance** at connect, [ADR-0082](adr/0082-app-shell-per-instance-isolation.md); `static shadow` stays unused, available for a genuine all-instances-shadow class.)*
 - ARIA via `attachInternals()`, never host attributes.
 - The lazy-property upgrade dance (`upgradeProps` at connect; `upgradeProperty(...)` for manual
   array/object accessors) — a `.prop=` binding set before upgrade otherwise shadows the accessor.
@@ -381,10 +382,12 @@ quality bar, including the global token wiring) before G6–G7 fan out.
   shipped on the contenteditable surface with masking (ADR-0044); the rce allow-listed
   `<input type=password>` exception was never needed. Accepted residual (documented in ADR-0044):
   OS/password-manager autofill does not engage.
-- **Shadow vs light boundary for the eventual app shell**: **RESOLVED — light DOM held everywhere.** The
-  site shell is deliberately CSS-only light-DOM (`site/pages/_page.ts` SHELL NOTE); `static shadow`
-  remains the unused opt-in seam. Revisit only if an app-shell control family is scheduled (part of the
-  NEXT-tier scope dial — Kim's, unchosen).
+- **Shadow vs light boundary for the eventual app shell**: **RESOLVED — light DOM the default; the app-shell
+  gets an opt-in PER-INSTANCE isolation ([ADR-0082](adr/0082-app-shell-per-instance-isolation.md), 2026-07-05).**
+  The site shell is deliberately CSS-only light-DOM (`site/pages/_page.ts` SHELL NOTE); the reserved class-level
+  `static shadow` seam stays UNUSED — the app-shell family (agent-app-surfaces M1) instead isolates per instance
+  via an `isolated` opt-in that `attachShadow`s at connect and injects the fleet CSS inside the boundary. The
+  NEXT-tier scope dial that would revisit this is now chosen (agent-app-surfaces, `prd/agent-app-surfaces.prd.md`).
 - **Risk — the `declare`-merge prop pattern**: **RESOLVED / CLOSED at G2.** Validated against the strict
   tsconfig (`props-typing.test.ts`, negative-control-proven) and load-bearing fleet-wide since.
 ```

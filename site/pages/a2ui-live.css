@@ -1,20 +1,38 @@
 /* a2ui-live.css — PAGE-LOCAL layout chrome for the live-agent demo chat app (LLD-C9). Lays out the two
- * panes [ chat | a2ui-canvas ], the canvas tabs (Canvas · JSON · HTML), the chat log + composer, and the
- * dev-only switcher. The rendered A2UI surface keeps its own ui-* control CSS — this page never restyles a
- * control. Every colour is a `--md-sys-color-*` role (imported first via _page.ts), so it tracks light/dark.
- * Mounts via mountFullBleedPage: [data-page-content] fills the bounded `.app-page` region; the panes scroll
- * their OWN inner areas rather than growing the region (min-block-size: 0 throughout). */
+ * panes [ chat | a2ui-canvas ] as `<ui-app-shell>` regions (SPEC-R8 re-host — the shell owns the grid, this
+ * sheet owns only each region's card treatment + this page's pane sizing), the canvas tabs (Canvas · JSON ·
+ * HTML), the chat log + composer, and the dev-only switcher. The rendered A2UI surface keeps its own ui-*
+ * control CSS — this page never restyles a control. Every colour is a `--md-sys-color-*` role (imported
+ * first via _page.ts), so it tracks light/dark. Mounts via mountFullBleedPage: [data-page-content] fills the
+ * bounded `.app-page` region; the panes scroll their OWN inner areas (min-block-size: 0 throughout).
+ *
+ * RESOLVED GAPS (ADR-0083/0084, built off THIS page's own dogfood): the chat pane's `region="navigation"`
+ * used to fuse the LEFT-column placement to a wrong `navigation` ARIA landmark and to the shell's default
+ * narrow-reflow `display:none` (vanishing the composer < 40rem). `ui-app-shell-region` now decouples both —
+ * a2ui-live.ts sets `landmark="complementary"` (the correct role, independent of the column) and
+ * `collapse="stack"` (stays visible + full-width narrow instead of hiding) — no CSS override needed HERE for
+ * either; both are the shell's own attribute-selector rules (app-shell.css).
+ *
+ * EQUIVALENCE SCOPE (review fix — not "unchanged at every width"): the old `.chat-pane` shrank (`flex:1 1
+ * 20rem; max-inline-size:26rem`); this one is FIXED at `inline-size:26rem` — byte-identical to the old page
+ * only ≳1050px wide (its old cap point). The ~640–1050px mid-band intentionally diverges (old chat shrank
+ * there; this one holds 26rem) — captured by a2ui-live.browser.test.ts's "mid-band" leg. */
 
-/* ── the two-pane shell ─────────────────────────────────────────────────────────────────────────────────── */
+/* ── the shell fills the page's content region ──────────────────────────────────────────────────────────── */
 [data-page-content] {
   display: flex;
-  gap: 1rem;
   padding: 1.25rem 1.5rem;
   box-sizing: border-box;
   min-block-size: 0;
   overflow: hidden; /* clip — the inner panes scroll, not the region */
 }
+[data-page-content] > ui-app-shell {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
 
+/* ── the two pane CARDS — ui-app-shell-region[region=navigation|main], each still its own bordered card ──── */
 .chat-pane,
 .canvas-pane {
   display: flex;
@@ -27,12 +45,16 @@
   overflow: hidden;
 }
 .chat-pane {
-  flex: 1 1 20rem;
-  max-inline-size: 26rem;
+  inline-size: 26rem;
+  margin-inline-end: 1rem; /* the shell owns no gap opinion (LLD-C4) — this page supplies its own pane spacing */
+  border-inline-end: none; /* single owner (review fix): app-shell.css's navigation-region divider owns this edge */
 }
-.canvas-pane {
-  flex: 1.6 1 26rem;
-}
+/* .canvas-pane needs no rule of its own — it docks to `main`, the shell's 1fr track, and fills it.
+ *
+ * NO narrow-width override lives here for `collapse="stack"` (review fix — HARDENED into the shell instead,
+ * app-shell.css/app-shell-isolation.css): the shell's own `[collapse='stack']` rule now neutralizes a
+ * consumer's fixed width itself (out-specifying this page's `.chat-pane`) — a page-local reset would have
+ * duplicated the shell's 40rem threshold AND could never reach a region relocated under isolation anyway. */
 
 .pane-head {
   flex: 0 0 auto;
@@ -257,20 +279,4 @@
   justify-content: flex-end;
   padding: 0.5rem 0.75rem;
   border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
-}
-
-/* ── narrow viewports: stack the panes, let the region scroll ───────────────────────────────────────────── */
-@media (max-inline-size: 48rem) {
-  [data-page-content] {
-    flex-direction: column;
-    overflow: auto;
-  }
-  .chat-pane {
-    max-inline-size: none;
-  }
-  .chat-pane,
-  .canvas-pane {
-    flex: 1 1 auto;
-    min-block-size: 22rem;
-  }
 }
