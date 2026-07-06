@@ -50,10 +50,13 @@ const surfaceControl = (preview: HTMLElement, tag: string): HTMLElement | null =
 const chip = (preview: HTMLElement, text: string): HTMLElement | undefined =>
   Array.from(preview.querySelectorAll<HTMLElement>('.chip')).find((c) => c.textContent === text)
 
-const knobInput = (preview: HTMLElement, name: string): HTMLInputElement | undefined =>
+// The knob controls are now dogfooded ui-* controls (ui-select / ui-checkbox / ui-text-field), not native
+// <input>/<select> — so a knob is read/written through its control's own property (`.value` / `.checked`),
+// not a native input node. This resolves the ui-* control hosting the named knob's editable value.
+const knobControl = <T extends HTMLElement>(preview: HTMLElement, name: string): T | undefined =>
   Array.from(preview.querySelectorAll<HTMLElement>('.knob')).find(
     (row) => row.querySelector('.knob-label')?.textContent === name,
-  )?.querySelector('input') as HTMLInputElement | undefined
+  )?.querySelector('ui-select, ui-checkbox, ui-text-field') as T | undefined
 
 // ── a2ui mode (both engines) ───────────────────────────────────────────────────────────────────────────────────
 
@@ -70,10 +73,10 @@ describe('component-preview — a2ui mode renders a live control through the rea
 
   it('a knob change re-renders the canvas through a fresh renderer (edit label → the new button reflects it)', async () => {
     const preview = await mountPreview('a2ui', 'Button')
-    const input = knobInput(preview, 'label')
-    expect(input, 'no label knob input found').toBeTruthy()
-    ;(input as HTMLInputElement).value = 'Re-rendered'
-    ;(input as HTMLInputElement).dispatchEvent(new Event('input', { bubbles: true }))
+    const field = knobControl<HTMLElement & { value: string }>(preview, 'label')
+    expect(field, 'no label knob control found (dogfooded ui-text-field)').toBeTruthy()
+    field!.value = 'Re-rendered' // the ui-text-field `value` property (the preview's `input` listener reads it back)
+    field!.dispatchEvent(new Event('input', { bubbles: true }))
     await raf()
     expect(surfaceButton(preview)?.textContent, 'the canvas did not re-render on the knob change').toContain('Re-rendered')
   })
@@ -130,7 +133,10 @@ describe('component-preview — direct canvas interaction survives a knob edit (
     await userEvent.click(box as HTMLElement) // toggle the live control (canvas → knob read-back)
     await raf()
     expect((box as unknown as { checked: boolean }).checked, 'the click did not check the live control').toBe(true)
-    expect(knobInput(preview, 'checked')?.checked, 'the `checked` knob did not reflect the live toggle').toBe(true)
+    expect(
+      knobControl<HTMLElement & { checked: boolean }>(preview, 'checked')?.checked,
+      'the `checked` knob did not reflect the live toggle (dogfooded ui-checkbox)',
+    ).toBe(true)
 
     const lg = chip(preview, 'lg') // edit an UNRELATED knob (size)
     expect(lg, 'no `lg` size chip').toBeTruthy()

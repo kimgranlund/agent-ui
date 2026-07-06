@@ -23,7 +23,10 @@ async function mountPreview(target: string): Promise<HTMLElement> {
   preview.setAttribute('target', target)
   root.append(preview)
   await raf()
-  return preview.querySelector(target) as HTMLElement
+  // Scope to the canvas SPECIMEN: the knob column now dogfoods ui-* controls (ui-select/ui-checkbox/
+  // ui-text-field), so a bare `querySelector(target)` would match a same-tag KNOB in the left column ahead
+  // of the specimen. The live specimen is the one under `.canvas-surface`.
+  return preview.querySelector(`.canvas-surface ${target}`) as HTMLElement
 }
 afterEach(() => {
   root?.remove()
@@ -92,13 +95,15 @@ describe('component-preview — the two flagged edge cases (named regression gua
     let live = preview.querySelector('ui-text') as HTMLElement
     expect(live.querySelector('h1'), 'ui-text did not stamp an <h1> for as=h1').not.toBeNull()
 
-    // Now edit the "text" knob (SLOT_TEXT) — the stamp must survive/re-adopt, not vanish.
-    const textInput = [...preview.querySelectorAll<HTMLElement>('.knob')]
+    // Now edit the "text" knob (SLOT_TEXT) — the stamp must survive/re-adopt, not vanish. The knob is now a
+    // dogfooded ui-text-field (not a native <input>); its `.value` property is the edit surface and the
+    // preview's own `input` listener reads it back.
+    const textField = [...preview.querySelectorAll<HTMLElement>('.knob')]
       .find((row) => row.querySelector('.knob-label')?.textContent === 'text')
-      ?.querySelector('input') as HTMLInputElement | undefined
-    expect(textInput, 'no text knob input found').toBeTruthy()
-    textInput!.value = 'Re-heal me'
-    textInput!.dispatchEvent(new Event('input', { bubbles: true }))
+      ?.querySelector('ui-text-field') as (HTMLElement & { value: string }) | undefined
+    expect(textField, 'no text knob control found (dogfooded ui-text-field)').toBeTruthy()
+    textField!.value = 'Re-heal me'
+    textField!.dispatchEvent(new Event('input', { bubbles: true }))
     await raf()
 
     live = preview.querySelector('ui-text') as HTMLElement

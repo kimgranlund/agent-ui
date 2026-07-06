@@ -2,24 +2,15 @@
  * list. Each card is a native <details> (the expand/collapse needs no JS beyond the lazy-render-on-first-open
  * in adr-index.ts) — the same zero-JS disclosure idiom the shared nav rail already uses (_page.css). Every
  * colour a --md-sys-color-* role, every gutter a --ui-space-* token where the ramp has one (matching the shared
- * shell's discipline); this page never restyles a ui-* control (it renders none — the list is page content). */
+ * shell's discipline). The search box is now a dogfooded ui-text-field (type=search); the card list is page
+ * content (native <details>), so this file restyles no control internals — only layout around them. */
 
+/* Now a dogfooded ui-text-field (type=search) — it carries its own control CSS (border/bg/height/radius and
+ * the shared :focus-visible ring), so this only stretches it to the content width and keeps the block rhythm. */
 .adr-search {
   display: block;
   inline-size: 100%;
   margin-block: var(--ui-space-lg) var(--ui-space-md);
-  padding: 0.55rem 0.9rem;
-  border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 0.6rem;
-  background: var(--md-sys-color-neutral-surface);
-  color: var(--md-sys-color-neutral-on-surface);
-  font: inherit;
-  font-size: 0.9rem;
-}
-
-.adr-search:focus-visible {
-  outline: 2px solid var(--md-sys-color-focus-ring);
-  outline-offset: 2px;
 }
 
 /* The filter status (adr-index.ts) — an aria-live region (role="status"), visually-hidden by default (a quiet

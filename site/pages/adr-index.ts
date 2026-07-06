@@ -7,6 +7,7 @@ import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cas
 import './adr-index.css'
 import { appendInline, renderMarkdownBody } from '../lib/doc-page.ts'
 import { type AdrRecord, isDecisionRecord, matchesQuery, parseAdr, sortAdrsDescending } from '../lib/adr.ts'
+import type { UITextFieldElement } from '@agent-ui/components/components'
 
 // Build-time glob of the ADR log — eager RAW text (the whole log is a few hundred KB, small enough to ship as
 // static text like any other doc source on this site). `exhaustive: true` is LOAD-BEARING: Vite's import.meta.glob
@@ -38,11 +39,14 @@ content.append(
 )
 
 // ── the search box ────────────────────────────────────────────────────────────────────────────────────────
-const search = document.createElement('input')
-search.type = 'search'
+// Dogfoods ui-text-field (type=search) in place of a native <input type=search> (Kim's directive) — the
+// gallery filter precedent. `label` is the bare-usage naming seam (text-field.md labelSource → the editor's
+// aria-label), matching the old input's `aria-label`; `.value` + the `input` event drive the live filter.
+const search = document.createElement('ui-text-field') as UITextFieldElement
+search.setAttribute('type', 'search')
 search.className = 'adr-search'
-search.placeholder = 'Search decision records…'
-search.setAttribute('aria-label', 'Search decision records')
+search.setAttribute('placeholder', 'Search decision records…')
+search.setAttribute('label', 'Search decision records')
 content.append(search)
 
 // ── one card per record — number · title · status badge · date · summary, expanding to the full render ─────
