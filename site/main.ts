@@ -423,6 +423,18 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // The application-frame primitive (@agent-ui/app) — an ungrouped site-level card (no `label:`, so not a
+    // fleet TOC group per site-toc.test.ts), mirroring its ungrouped nav link in _page.ts.
+    cards: [
+      {
+        href: './app-shell.html',
+        title: 'Composing a ui-app-shell',
+        blurb:
+          'The application frame: how the region, role (landmark), narrow-reflow (collapse), and content-composition systems work — each on a live ui-app-shell (ADR-0082/0083/0084).',
+      },
+    ],
+  },
+  {
     cards: [
       {
         href: './a2ui-canvas.html',

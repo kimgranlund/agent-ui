@@ -205,6 +205,13 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // The application-frame primitive (@agent-ui/app, ADR-0082/0083/0084). A GUIDE page, not a fleet component
+    // in components/src — so it is an ungrouped site-level link (no `label:`, hence no site-toc GROUP), exactly
+    // like the A2UI pages below; site-coverage/site-toc derive their fleet from components/src and never expect
+    // an `app-shell-{type}.html` set for it.
+    links: [{ href: './app-shell.html', label: 'App Shell' }],
+  },
+  {
     links: [
       { href: './a2ui-canvas.html', label: 'A2UI Canvas' },
       { href: './a2ui-catalog.html', label: 'A2UI Catalog' },

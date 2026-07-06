@@ -1,0 +1,111 @@
+/* app-shell.css — PAGE-LOCAL demo chrome for the ui-app-shell composition guide. It styles the DEMO CELLS'
+ * content (labels, notes) + the resizable frame + the prose scaffold — it never restyles a ui-* control's
+ * internals. Every colour is a --md-sys-color-* role (imported first via _page.ts), so the demos track
+ * light/dark. The one deliberate teaching point: none of these rules reach INSIDE the section-5 isolated shell
+ * (a document sheet cannot cross a shadow boundary) — that plainer demo proves the encapsulation. */
+
+/* ── prose scaffold ─────────────────────────────────────────────────────────────────────────────────────── */
+.as-prose {
+  max-inline-size: 60rem;
+  line-height: 1.6;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.as-code,
+.as-api-tag code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  padding: 0.05em 0.35em;
+  border-radius: 5px;
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.as-api-tag {
+  margin-block: 2rem 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--md-sys-color-primary-high);
+}
+.as-caption {
+  margin-block: 0.35rem 1.5rem;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.as-snippet {
+  margin-block: 0.5rem 1.5rem;
+  padding: 0.9rem 1.1rem;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface-low);
+  color: var(--md-sys-color-neutral-on-surface);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* ── the framed live shell ──────────────────────────────────────────────────────────────────────────────── */
+/* A definite block-size makes the grid's 1fr center track visible; the frame + radius give the demo an edge.
+ * ui-app-shell is already display:grid + container-type:inline-size from app-shell.css — we only frame it. */
+ui-app-shell.as-demo {
+  block-size: 300px;
+  margin-block: 1rem 1.75rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--md-sys-color-neutral-surface-lowest);
+}
+
+/* Region CELLS — visible content boxes so the grid shape reads. Tinted per area to distinguish the bands.
+ * (These are ordinary attribute selectors — not slot/data-role, which the site-canon guard scans.) */
+.as-region {
+  padding: 0.7rem 0.95rem;
+  min-block-size: 0;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  box-sizing: border-box;
+}
+.as-region[region='banner'],
+.as-region[region='contentinfo'] {
+  background: var(--md-sys-color-neutral-surface);
+}
+.as-region[region='navigation'],
+.as-region[region='complementary'] {
+  background: var(--md-sys-color-neutral-surface-high);
+  min-inline-size: 9rem;
+}
+.as-region[region='main'] {
+  background: var(--md-sys-color-primary-container-low);
+}
+.as-region-label {
+  font-size: 0.66rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.as-region-note {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+
+/* ── the drag-to-narrow frame (section 4) ───────────────────────────────────────────────────────────────── */
+/* A resizable box the reader drags below 40rem; the shell fills it, so its OWN container query fires. The
+ * shorter shell here keeps the reflow visible without scrolling. */
+.as-resize {
+  inline-size: min(48rem, 100%);
+  min-inline-size: 18rem;
+  max-inline-size: 100%;
+  resize: horizontal;
+  overflow: hidden;
+  padding: 0.5rem;
+  border: 1px dashed var(--md-sys-color-neutral-outline);
+  border-radius: 14px;
+}
+.as-resize > ui-app-shell.as-demo {
+  inline-size: 100%;
+  block-size: 260px;
+  margin: 0;
+}
