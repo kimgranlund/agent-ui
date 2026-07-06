@@ -1,7 +1,7 @@
-/* component-preview.css — layout chrome for the <component-preview> docs element (a two-column playground:
- * live knobs + variant chips on the LEFT, the shared A2UI artboard on the RIGHT). Page chrome only — it never
- * restyles a ui-* control (the rendered specimen keeps its own control CSS). Every colour is a
- * `--md-sys-color-*` role, adopted by the foundation cascade the host page loads first (_page.ts). */
+/* component-preview.css — layout chrome for the <component-preview> docs element (a two-column playground: live
+ * knobs on the LEFT, the shared A2UI artboard on the RIGHT). Page chrome only — it never restyles a ui-*
+ * control (the rendered specimen keeps its own control CSS). Every colour is a `--md-sys-color-*` role, adopted
+ * by the foundation cascade the host page loads first (_page.ts). */
 
 component-preview {
   display: block;
@@ -85,53 +85,23 @@ component-preview {
 .knob-input {
   --ui-text-field-min-inline-size: 8ch;
 }
-.knob-check {
+.knob-switch {
   justify-self: start;
+}
+/* A small closed enum's ui-radio-group knob (batch A) — the group itself is layout-neutral by contract
+ * (radio-group.md geometry note: "Layout ... is the page author's responsibility"), so this page-level rule is
+ * exactly that authoring, not a control restyle. `ui-radio-group.knob-radio-group` (specificity 0,1,1) reliably
+ * outweighs the control's own `@scope (ui-radio-group) :scope { display: block }` (0,1,0) regardless of import
+ * order. Wraps to a second line rather than overflowing the narrow knob column. */
+ui-radio-group.knob-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
 }
 .knob-note {
   color: var(--md-sys-color-neutral-on-surface-variant);
   font-style: italic;
-}
-
-/* ── variant chips (one row per enum knob) ────────────────────────────────────────────────────────────────── */
-.preview-variants {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-.chip-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-.chip-row-label {
-  font-size: 0.7rem;
-  color: var(--md-sys-color-neutral-on-surface-variant);
-}
-.chip-set {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-.chip {
-  appearance: none;
-  font: inherit;
-  font-size: 0.75rem;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  background: var(--md-sys-color-neutral-surface-high);
-  color: var(--md-sys-color-neutral-on-surface-variant);
-  cursor: pointer;
-}
-.chip:hover {
-  color: var(--md-sys-color-neutral-on-surface);
-}
-.chip.is-active {
-  background: var(--md-sys-color-primary-container-low);
-  color: var(--md-sys-color-primary-high);
-  border-color: var(--md-sys-color-primary-high);
-  font-weight: 600;
 }
 
 /* ── right column: the shared artboard (a definite box the stage flex-fills, decoupled from the knob column) ── */
@@ -166,6 +136,23 @@ component-preview {
   padding: 1rem;
   color: var(--md-sys-color-danger-on-surface, var(--md-sys-color-neutral-on-surface));
   font-size: 0.85rem;
+}
+
+/* ── batch B: component-mode sample content for a STRUCTURAL container (ui-grid/-row/-column/-list cells/items) —
+ * page-authored demo content, NOT a ui-* control being restyled (the *-doc.ts `.demo-box` precedent, kept local
+ * so this file carries no dependency on the docs-page demo-content stylesheet). */
+.cp-sample-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 2.5rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 0.5rem;
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.8rem;
+  text-align: center;
 }
 
 /* ── narrow: stack the columns ────────────────────────────────────────────────────────────────────────────── */
