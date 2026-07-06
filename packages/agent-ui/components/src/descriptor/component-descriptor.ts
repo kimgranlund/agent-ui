@@ -93,7 +93,13 @@ function toBlocks(fence: string): RawBlock[] {
 }
 
 /** Parse a `key: value` field line into a sequence item (inline `[a, b]` → string[]); a bare scalar with no
- *  `key:` of its own (e.g. customStates `- ready`) is kept under BARE_SCALAR_KEY (was DROPPED before this fix). */
+ *  `key:` of its own (e.g. customStates `- ready`) is kept under BARE_SCALAR_KEY (was DROPPED before this fix).
+ *  An inline array element ELEMENT is `.filter`ed for blank/trailing-comma ARTIFACTS (an empty split segment,
+ *  e.g. `[a, b, ]`'s trailing slot) BEFORE it is `unquote()`d — in that order, so a genuinely-quoted empty
+ *  string (`''`/`""`, 2 characters pre-unquote, needed for ADR-0083's `landmark` enum whose first member IS
+ *  the empty string) survives the artifact filter and only THEN unquotes to a real `''`, rather than being
+ *  indistinguishable from a blank artifact and dropped. Every existing bare (unquoted) token is unaffected —
+ *  `unquote` is a no-op unless the WHOLE element is wrapped in one matching quote pair. */
 function addField(item: SequenceItem, text: string): void {
   const m = /^\s*([A-Za-z][\w]*):\s*([\s\S]*)$/.exec(text)
   if (!m) {
@@ -103,7 +109,10 @@ function addField(item: SequenceItem, text: string): void {
   }
   const value = scalarValue(m[2])
   if (/^\[.*\]$/.test(value)) {
-    item.set(m[1], value.replace(/^\[|\]$/g, '').split(',').map((s) => s.trim()).filter((s) => s !== ''))
+    item.set(
+      m[1],
+      value.replace(/^\[|\]$/g, '').split(',').map((s) => s.trim()).filter((s) => s !== '').map((s) => unquote(s)),
+    )
   } else {
     item.set(m[1], value)
   }
@@ -348,10 +357,16 @@ function probe(fn: () => unknown): Probe {
 
 /**
  * Recover a live codec's KIND by behaviour (the codecs carry no kind tag — props.ts). Each branch keys off
- * `config.type.from` on a few probe inputs: boolean maps absence→false / presence→true; string maps
- * absence→''; number and json both map absence→null but split on `from('5')` vs `from('"x"')` (json parses,
- * number does not); an enum snaps a non-member to its fixed first member, so `from(NON_MEMBER)` equals the
- * non-empty string `from(null)`. Returns 'unknown' when no branch matches (the natural DRIFT_TYPE signal).
+ * `config.type.from` on a few probe inputs: boolean maps absence→false / presence→true; number and json both
+ * map absence→null but split on `from('5')` vs `from('"x"')` (json parses, number does not); a STRING/ENUM
+ * codec both map absence→a string, so the two are told apart by a SECOND probe: `from(NON_MEMBER)` (a garbage
+ * sentinel no real enum contains) — a plain string codec is a passthrough (`attr ?? ''`), so it returns
+ * NON_MEMBER UNCHANGED; an enum SNAPS a non-member back to its fixed `values[0]`, so it returns something
+ * OTHER than NON_MEMBER (even when that fixed member is itself `''` — ADR-0083's `landmark`, whose enum
+ * `values[0]` is the empty string, would otherwise be indistinguishable from a plain string prop: both read
+ * `from(null) === ''`. Only the NON_MEMBER probe's OUTCOME, never its literal value, tells them apart — a bare
+ * `nul.value === ''` shortcut checked BEFORE this probe was the pre-ADR-0083 bug). Returns 'unknown' when no
+ * branch matches (the natural DRIFT_TYPE signal).
  */
 function kindOf(config: LivePropConfig): DriftKind {
   const from = (a: string | null): Probe => probe(() => config.type.from(a))
@@ -361,17 +376,17 @@ function kindOf(config: LivePropConfig): DriftKind {
     const empty = from('')
     return empty.ok && empty.value === true ? 'boolean' : 'unknown'
   }
-  if (nul.value === '') return 'string'
+  if (typeof nul.value === 'string') {
+    const fallback = from(NON_MEMBER)
+    if (fallback.ok && fallback.value !== NON_MEMBER) return 'enum'
+    if (nul.value === '') return 'string'
+  }
   if (nul.value === null) {
     const empty = from('')
     const five = from('5')
     if (empty.ok && empty.value === null && five.ok && five.value === 5) return 'number'
     const quoted = from('"x"')
     return quoted.ok && quoted.value === 'x' ? 'json' : 'unknown'
-  }
-  if (typeof nul.value === 'string') {
-    const fallback = from(NON_MEMBER)
-    if (fallback.ok && fallback.value === nul.value) return 'enum'
   }
   return 'unknown'
 }

@@ -12,6 +12,8 @@
 // the construction site alone (SPEC-R1 AC1).
 
 import { mountFullBleedPage } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
+import '@agent-ui/app/app-shell.css' // ui-app-shell region-grid CSS (LLD-C9 re-host), after foundation
+import '@agent-ui/app/app-shell' // self-defines ui-app-shell / ui-app-shell-region
 import './a2ui-live.css'
 import { codeBlock } from '../lib/code-block.ts'
 import { createCanvasSurface, applyRootStretch } from '../lib/canvas-surface.ts'
@@ -45,10 +47,20 @@ function paneTitle(title: string, blurb: string): HTMLElement {
   return head
 }
 
-// ════════════════ the two panes ════════════════
-const chatPane = el('section', 'chat-pane')
-const canvasPane = el('section', 'canvas-pane')
-content.append(chatPane, canvasPane)
+// ════════════════ the two panes — ui-app-shell regions (LLD-C9/SPEC-R8: the shell replaces this page's own
+// hand-rolled two-pane flex chrome; `main` is the mandatory region — SPEC-R3 — so the canvas, the surface
+// this page exists to show, takes it, and the chat composer docks into `navigation` alongside it) ════════════════
+const shell = document.createElement('ui-app-shell')
+const chatPane = document.createElement('ui-app-shell-region')
+chatPane.setAttribute('region', 'navigation') // the LEFT column (grid placement only, ADR-0083 decouples the landmark below)
+chatPane.setAttribute('landmark', 'complementary') // ADR-0083: the correct ARIA landmark for a chat composer, not "navigation"
+chatPane.setAttribute('collapse', 'stack') // ADR-0084: stays visible + full-width when narrow — the composer is primary input, not disposable chrome
+chatPane.className = 'chat-pane'
+const canvasPane = document.createElement('ui-app-shell-region')
+canvasPane.setAttribute('region', 'main')
+canvasPane.className = 'canvas-pane'
+shell.append(chatPane, canvasPane)
+content.append(shell)
 
 // ── chat pane: log · composer · (dev) switcher · reset ──────────────────────────────────────────────────
 chatPane.append(paneTitle('Chat', 'Prompt the agent, then interact with the surface it renders.'))

@@ -21,11 +21,17 @@
 // clause 3, rejecting the pairwise-delta alternative). Each entry's SOLO absolute (foundation-inclusive, the
 // ~5 KB figure) is also reported, informationally only (clause 3 — regressions in a control's own code would
 // hide inside the dominant foundation figure if solo were gated).
+//
+// A fourth leg — `@agent-ui/app` (LLD-C8, SPEC-R7 AC4): a package ABOVE components on the DAG, so its cost
+// to a consumer is what `ui-app-shell` adds ON TOP OF the components foundation a consumer already pays for
+// (the first target above), not its solo absolute (which necessarily also carries that foundation). Same
+// marginal semantics as T5, one level up: `marginal = gz(bundle(app .)) − gz(bundle(components .))`.
 
 import { rolldown } from 'rolldown'
 import { gzipSync } from 'node:zlib'
 import { fileURLToPath } from 'node:url'
 import { readFileSync } from 'node:fs'
+import { dirname, resolve as resolvePath } from 'node:path'
 
 const KB = 1024
 const targets = [
@@ -41,6 +47,7 @@ const targets = [
 ]
 
 let over = false
+const gzByLabel = new Map() // captured so the @agent-ui/app section below can compute its marginal against the foundation figure without re-bundling it
 for (const [label, rel, budget] of targets) {
   const input = fileURLToPath(new URL(rel, import.meta.url))
   const bundle = await rolldown({ input })
@@ -54,6 +61,7 @@ for (const [label, rel, budget] of targets) {
   const gz = gzipSync(code, { level: 9 }).length
   const status = gz <= budget ? 'within' : 'OVER'
   if (gz > budget) over = true
+  gzByLabel.set(label, gz)
   console.log(`${label}: ${gz} B gz (${min} B min) — ${status} budget (${budget} B gz)`)
 }
 
@@ -123,8 +131,67 @@ for (const [name, path] of CONTROL_ENTRIES) {
   )
 }
 
-if (over || marginalOver) {
+// ── @agent-ui/app (LLD-C8, SPEC-R7 AC4) — the ui-app-shell primitive, one package UP the DAG from
+// components. `app-shell.ts` is the fleet's first `?url`/`?raw` consumer (the isolation-mode fleet-CSS
+// injection, LLD-C5): a bare `rolldown()` call can't load those Vite query-suffixed specifiers (Vite's own
+// asset pipeline resolves them; raw Rolldown has no such plugin), so this section carries a small stub
+// plugin — `?raw` inlines the real file's text (a real byte cost: this IS the CSS the shell injects at
+// runtime); `?url` returns a short placeholder path (the real Vite build emits a hashed asset URL of similar
+// length — this approximates the byte contribution, not the runtime value, which the script has no need of).
+const APP_QUERY_RE = /^(.*)\?(url|raw)$/
+const appCssQuerySuffixPlugin = {
+  name: 'app-css-query-suffix-stub',
+  resolveId(source, importer) {
+    const m = source.match(APP_QUERY_RE)
+    if (!m) return null
+    const [, bare, kind] = m
+    let target
+    if (bare.startsWith('.')) {
+      target = resolvePath(dirname(importer), bare)
+    } else if (bare.startsWith('@agent-ui/')) {
+      const [, pkgName, ...rest] = bare.split('/')
+      const pkgDir = fileURLToPath(new URL(`../packages/agent-ui/${pkgName}`, import.meta.url))
+      const pkgExports = JSON.parse(readFileSync(`${pkgDir}/package.json`, 'utf8')).exports
+      const subpath = `./${rest.join('/')}`
+      const mapped = pkgExports[subpath]
+      if (!mapped) throw new Error(`app-css-query-suffix-stub: no "${subpath}" export in @agent-ui/${pkgName}`)
+      target = `${pkgDir}/${mapped.slice(2)}`
+    } else {
+      throw new Error(`app-css-query-suffix-stub: cannot resolve "${bare}"`)
+    }
+    return { id: `${target}?${kind}`, moduleSideEffects: false }
+  },
+  load(id) {
+    const m = id.match(APP_QUERY_RE)
+    if (!m) return null
+    const [, filePath, kind] = m
+    if (kind === 'raw') return `export default ${JSON.stringify(readFileSync(filePath, 'utf8'))}`
+    return `export default ${JSON.stringify(`/${filePath.split('/').pop()}`)}`
+  },
+}
+
+const APP_MARGINAL_BUDGET = 3 * KB // provisional, recorded at M1 kickoff (LLD-C8) — pending confirmation the real number lands inside it
+const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
+const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
+const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
+await appBundle.close()
+const appCode = appOutput
+  .filter((c) => c.type === 'chunk')
+  .map((c) => c.code)
+  .join('')
+const appMin = Buffer.byteLength(appCode)
+const appGz = gzipSync(appCode, { level: 9 }).length
+const foundationGz = gzByLabel.get('@agent-ui/components . (reactive+dom barrel)')
+const appMarginal = appGz - foundationGz
+const appStatus = appMarginal <= APP_MARGINAL_BUDGET ? 'within' : 'OVER'
+const appOver = appMarginal > APP_MARGINAL_BUDGET
+console.log(
+  `\n@agent-ui/app . (ui-app-shell): marginal ${appMarginal} B gz — ${appStatus} budget (${APP_MARGINAL_BUDGET} B gz)   solo ${appGz} B gz (${appMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
+)
+
+if (over || marginalOver || appOver) {
   if (over) console.error('size: a barrel exceeds its budget')
   if (marginalOver) console.error('size: a control exceeds its per-control marginal budget')
+  if (appOver) console.error('size: @agent-ui/app exceeds its marginal budget')
   process.exit(1)
 }

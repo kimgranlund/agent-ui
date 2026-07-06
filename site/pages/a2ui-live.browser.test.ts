@@ -1,0 +1,215 @@
+// a2ui-live.browser.test.ts — LLD-C9/SPEC-R8 cross-engine equivalence proof for the [chat | canvas] chrome,
+// built on `<ui-app-shell>` in place of the bespoke two-pane flex CSS it replaces. Real-number regression
+// gates (SPEC-R8 AC3), not eyeballing — isolating the ONE thing this slice changes (the pane ASSEMBLY
+// mechanism) from the surrounding site chrome (`_page.css`'s nav rail / context header, untouched and out of
+// C9's scope): both legs mount inside an identically-sized `[data-page-content]`-shaped wrapper rather than
+// the whole site shell.
+//
+// SCOPE OF THE CLAIM (review fix — this is NOT "unchanged at every width"): the OLD `.chat-pane` was a
+// SHRINKABLE flex item (`flex: 1 1 20rem; max-inline-size: 26rem`); the NEW one is a FIXED `inline-size:
+// 26rem` sidebar (a2ui-live.css's own banner has the full rationale). The two are byte-IDENTICAL only at the
+// old layout's WIDE resting shape (content width ≳ 1050px, where the old flex math had already saturated at
+// its 26rem cap) — the "wide" leg below. In the ~640–1050px MID-BAND (above the shell's 40rem/640px reflow,
+// i.e. ordinary laptop widths) the two INTENTIONALLY diverge — the "mid-band" leg below captures the NEW
+// shape there (still pinned to 26rem) rather than masking the divergence with an overstated claim.
+//
+// ADR-0083/0084 rework: the chat region now carries `landmark="complementary"` (the correct ARIA role,
+// decoupled from `region="navigation"`'s column duty) and `collapse="stack"` (stays visible + full-width
+// narrow instead of vanishing) — `mountChrome` below mirrors a2ui-live.ts's real attributes exactly, so the
+// wide/mid-band legs keep testing the ACTUAL composition; neither attribute touches wide-layout CSS, so
+// those two legs' expected numbers are UNCHANGED from before this rework.
+import { describe, it, expect, afterEach } from 'vitest'
+import '@agent-ui/components/foundation-styles.css'
+import '@agent-ui/app/app-shell.css'
+import '@agent-ui/app/app-shell'
+import { UIAppShellRegionElement } from '@agent-ui/app/app-shell'
+import './a2ui-live.css'
+
+const mounted: HTMLElement[] = []
+afterEach(() => {
+  while (mounted.length) mounted.pop()?.remove()
+})
+
+function mountChrome(width: number): { chat: HTMLElement; canvas: HTMLElement } {
+  const content = document.createElement('main')
+  content.setAttribute('data-page-content', '')
+  content.style.width = `${width}px`
+  content.style.height = '600px'
+  const shell = document.createElement('ui-app-shell')
+  const chat = document.createElement('ui-app-shell-region')
+  chat.setAttribute('region', 'navigation')
+  chat.setAttribute('landmark', 'complementary')
+  chat.setAttribute('collapse', 'stack')
+  chat.className = 'chat-pane'
+  const canvas = document.createElement('ui-app-shell-region')
+  canvas.setAttribute('region', 'main')
+  canvas.className = 'canvas-pane'
+  shell.append(chat, canvas)
+  content.append(shell)
+  document.body.append(content)
+  mounted.push(content)
+  return { chat, canvas }
+}
+
+// Probe subclass re-exposing the protected `internals` (the app package's own app-shell.test.ts precedent) —
+// a NEW tag, since the real class already claimed `ui-app-shell-region` at import time above.
+class ProbeRegion extends UIAppShellRegionElement {
+  get ii(): ElementInternals {
+    return this.internals
+  }
+}
+if (!customElements.get('a2ui-live-region-probe')) customElements.define('a2ui-live-region-probe', ProbeRegion)
+
+describe('a2ui-live chrome re-host (LLD-C9/SPEC-R8) — wide resting shape: byte-identical to the old page', () => {
+  const WIDTH = 1200 // px — comfortably past the OLD layout's cap threshold (~1050px), see the file banner
+
+  // Measured against the PRE-migration bespoke <section> markup/CSS at WIDTH=1200, box-sizing border-box,
+  // padding 1.25rem/1.5rem: chat pinned to its 26rem cap (+ its 1px border each side = 418px), canvas
+  // filling the remainder. Re-capture these (same method — a plain two-<section> flex harness against the
+  // PRE-edit a2ui-live.css) if this test ever needs to be re-baselined; do not hand-tune them to pass.
+  const EXPECTED_CHAT = { x: 24, y: 20, width: 418, height: 560, right: 442 }
+  const EXPECTED_CANVAS = { x: 458, y: 20, width: 718, height: 560, right: 1176 }
+
+  it('the ui-app-shell composition renders the SAME rects the pre-migration bespoke flex CSS did', () => {
+    const { chat, canvas } = mountChrome(WIDTH)
+    const chatRect = chat.getBoundingClientRect()
+    const canvasRect = canvas.getBoundingClientRect()
+
+    // anti-vacuous — genuinely two side-by-side, non-zero panes, not a collapsed stack
+    expect(chatRect.width).toBeGreaterThan(0)
+    expect(canvasRect.width).toBeGreaterThan(0)
+    expect(chatRect.right).toBeLessThanOrEqual(canvasRect.left)
+
+    expect(chatRect.x).toBeCloseTo(EXPECTED_CHAT.x, 0)
+    expect(chatRect.y).toBeCloseTo(EXPECTED_CHAT.y, 0)
+    expect(chatRect.width).toBeCloseTo(EXPECTED_CHAT.width, 0)
+    expect(chatRect.height).toBeCloseTo(EXPECTED_CHAT.height, 0)
+    expect(chatRect.right).toBeCloseTo(EXPECTED_CHAT.right, 0)
+
+    expect(canvasRect.x).toBeCloseTo(EXPECTED_CANVAS.x, 0)
+    expect(canvasRect.y).toBeCloseTo(EXPECTED_CANVAS.y, 0)
+    expect(canvasRect.width).toBeCloseTo(EXPECTED_CANVAS.width, 0)
+    expect(canvasRect.height).toBeCloseTo(EXPECTED_CANVAS.height, 0)
+    expect(canvasRect.right).toBeCloseTo(EXPECTED_CANVAS.right, 0)
+  })
+
+  it('negative control: an un-sized chat pane (no inline-size rule) would NOT match — the assertion above bites', () => {
+    const { chat } = mountChrome(WIDTH)
+    chat.style.setProperty('inline-size', '10rem') // clobber the page rule the assertion depends on
+    const rect = chat.getBoundingClientRect()
+    expect(rect.width).not.toBeCloseTo(EXPECTED_CHAT.width, 0)
+  })
+})
+
+describe('a2ui-live chrome re-host (LLD-C9/SPEC-R8) — mid-band (~900px): the INTENTIONAL divergence, captured', () => {
+  const WIDTH = 900 // px — inside the ~640–1050px band where the OLD shrinkable flex and the NEW fixed
+  // sidebar diverge (old chat would have shrunk to ~360px here; see the describe-block + file banner)
+
+  // Measured against the CURRENT (post-migration) ui-app-shell markup/CSS at WIDTH=900 — the chat pane holds
+  // its fixed 26rem (unaffected by content width, unlike the old shrinkable flex), canvas fills what's left
+  // of the shell's `main` track. Re-capture the same way (mount at WIDTH, read getBoundingClientRect()) if
+  // this ever needs re-baselining; do not hand-tune to pass.
+  const EXPECTED_CHAT = { x: 24, y: 20, width: 418, height: 560, right: 442 }
+  const EXPECTED_CANVAS = { x: 458, y: 20, width: 418, height: 560, right: 876 }
+
+  it('the chat pane stays pinned at its fixed 26rem width — it does NOT shrink the way the old flex pane did', () => {
+    const { chat, canvas } = mountChrome(WIDTH)
+    const chatRect = chat.getBoundingClientRect()
+    const canvasRect = canvas.getBoundingClientRect()
+
+    expect(chatRect.width).toBeGreaterThan(0)
+    expect(canvasRect.width).toBeGreaterThan(0)
+    expect(chatRect.right).toBeLessThanOrEqual(canvasRect.left)
+
+    expect(chatRect.x).toBeCloseTo(EXPECTED_CHAT.x, 0)
+    expect(chatRect.width).toBeCloseTo(EXPECTED_CHAT.width, 0)
+    expect(chatRect.right).toBeCloseTo(EXPECTED_CHAT.right, 0)
+
+    expect(canvasRect.x).toBeCloseTo(EXPECTED_CANVAS.x, 0)
+    expect(canvasRect.width).toBeCloseTo(EXPECTED_CANVAS.width, 0)
+    expect(canvasRect.right).toBeCloseTo(EXPECTED_CANVAS.right, 0)
+
+    // anti-vacuous, the OTHER direction: the OLD shrinkable-flex width at this same content width (~360px,
+    // hand-derived from `flex: 1 1 20rem` shrinking against a 736px basis sum over an ~836px row) is
+    // GENUINELY different from the new fixed width — this leg would catch a regression back to the old
+    // shrink behaviour, not just a totally-broken layout.
+    expect(chatRect.width).not.toBeCloseTo(360, 0)
+  })
+
+  it('negative control: an un-sized chat pane (no inline-size rule) would NOT match — the assertion above bites', () => {
+    const { chat } = mountChrome(WIDTH)
+    chat.style.setProperty('inline-size', '10rem')
+    const rect = chat.getBoundingClientRect()
+    expect(rect.width).not.toBeCloseTo(EXPECTED_CHAT.width, 0)
+  })
+})
+
+describe('a2ui-live chrome re-host (LLD-C9/SPEC-R8) — the divider border is single-owned, not duplicated', () => {
+  it("the chat pane's inline-end edge is painted by the shell's navigation divider, not a second local rule", () => {
+    const { chat, canvas } = mountChrome(1200)
+    const chatBorder = getComputedStyle(chat)
+    const canvasBorder = getComputedStyle(canvas)
+    // Both resolve to the SAME 1px divider token — the review fix removed `.chat-pane`'s own duplicate
+    // border-inline-end declaration (a2ui-live.css), so this is now the shell's `[region=navigation]` divider
+    // rule alone; `.canvas-pane` still owns its own end edge (no shell divider covers `main`). Same width/
+    // colour either way (no visual change) — this asserts the resolved value stays a real, painted edge.
+    expect(chatBorder.borderRightWidth).toBe('1px')
+    expect(chatBorder.borderRightColor).toBe(canvasBorder.borderRightColor)
+  })
+})
+
+describe('a2ui-live chrome re-host (ADR-0083) — the chat composer lands on the CORRECT ARIA landmark', () => {
+  it('resolves role="complementary" via internals, decoupled from its "navigation" column — never a host attribute', () => {
+    const el = new ProbeRegion()
+    el.region = 'navigation' // the LEFT column (a2ui-live.ts's real value)
+    el.landmark = 'complementary' // the override a2ui-live.ts's real chat pane carries
+    document.body.append(el)
+    mounted.push(el)
+    expect(el.ii.role).toBe('complementary')
+    expect(el.getAttribute('role')).toBeNull()
+  })
+
+  it('negative control: the SAME column WITHOUT the landmark override resolves to "navigation" — the assertion above bites', () => {
+    const el = new ProbeRegion()
+    el.region = 'navigation'
+    document.body.append(el)
+    mounted.push(el)
+    expect(el.ii.role).toBe('navigation')
+    expect(el.ii.role).not.toBe('complementary')
+  })
+})
+
+describe('a2ui-live chrome re-host (ADR-0084) — the chat composer stays REACHABLE when narrow', () => {
+  const NARROW_WIDTH = 300 // px — well below the shell's 40rem/640px narrow-reflow threshold
+
+  it('collapse="stack" keeps the composer visible + full-width; a plain side region (collapse="hide", default) still vanishes — the biting NC', () => {
+    const content = document.createElement('main')
+    content.setAttribute('data-page-content', '')
+    content.style.width = `${NARROW_WIDTH}px`
+    content.style.height = '600px'
+    const shellEl = document.createElement('ui-app-shell')
+    const chat = document.createElement('ui-app-shell-region')
+    chat.setAttribute('region', 'navigation')
+    chat.setAttribute('landmark', 'complementary')
+    chat.setAttribute('collapse', 'stack') // a2ui-live.ts's real attribute — the fix under test
+    chat.className = 'chat-pane'
+    const main = document.createElement('ui-app-shell-region')
+    main.setAttribute('region', 'main')
+    // The negative-control SIBLING: a genuine side region left at the DEFAULT collapse ("hide") — proves the
+    // shell's narrow reflow still hides a region that does NOT opt into collapse="stack" (the fix is real,
+    // targeted, not a blanket "side regions never hide anymore").
+    const aside = document.createElement('ui-app-shell-region')
+    aside.setAttribute('region', 'complementary')
+    shellEl.append(chat, main, aside) // chat-then-main mirrors a2ui-live.ts's real DOM order
+    content.append(shellEl)
+    document.body.append(content)
+    mounted.push(content)
+
+    expect(getComputedStyle(chat).display, 'the composer vanished narrow — collapse="stack" did not hold').not.toBe('none')
+    expect(getComputedStyle(aside).display, 'the NC sibling stayed visible — collapse="hide" default did not fire').toBe('none')
+
+    const chatRect = chat.getBoundingClientRect()
+    const shellRect = shellEl.getBoundingClientRect()
+    expect(chatRect.width, 'the composer did not span the full narrow column').toBeCloseTo(shellRect.width, 0)
+  })
+})
