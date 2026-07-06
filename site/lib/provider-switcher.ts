@@ -5,7 +5,15 @@
 // ONLY under `import.meta.env.DEV`, so it — and the bundled providers.json — leave the production build
 // with the rest of the overlay (SPEC-R12/N2). The committed providers.json holds env-var NAMES only (no
 // secret), so bundling it in dev is safe. Vite bundles JSON natively (LLD §2 data-access decision).
-
+//
+// Dogfoods the fleet's own `ui-select` in place of native `<select>` (Kim's directive: no native `<select>`
+// where a ui-* control exists) — same proven pattern as component-gallery.ts's themeSelect(): options are
+// `[role=option]` light-DOM children appended BEFORE connect (ui-select's `slots` contract — select.md),
+// selection is read/written via the `value` property, and commit fires the `select` event (NOT `change`).
+// The `label` attribute is the trigger's accessible-name seam (ADR-0085) — it names the control without a
+// wrapping ui-field, matching the old `<label>`+native-select association.
+import '@agent-ui/components/components' // self-defining ui-* controls (registers ui-select; the aliased barrel — component-preview.ts's convention, and the only control specifier wired into the vitest resolve alias)
+import type { UISelectElement } from '@agent-ui/components/components'
 import providers from '../../packages/agent-ui/a2ui/tools/agent/providers.json'
 
 interface ProviderModel {
@@ -32,6 +40,19 @@ export interface SelectionRef {
   get(): { provider: string; model: string }
 }
 
+/** A `[role=option]` light-DOM child — ui-select's option element (select.md `slots`). `disabled` marks a
+ *  non-committable option (roving-focus + selection-commit both skip the `disabled` attribute). */
+function option(value: string, text: string, disabled = false): HTMLElement {
+  const opt = document.createElement('div')
+  opt.setAttribute('role', 'option')
+  opt.setAttribute('value', value)
+  opt.textContent = text
+  if (disabled) opt.setAttribute('disabled', '') // SPEC-R12: unimplemented providers render disabled, never selectable
+  return opt
+}
+
+/** Wrap a control under a visible uppercase caption (layout only — the accessible name comes from the
+ *  ui-select `label` attribute, ADR-0085, not this <label> association). */
 function labelled(text: string, control: HTMLElement): HTMLElement {
   const wrap = document.createElement('label')
   wrap.className = 'switcher-field'
@@ -59,32 +80,6 @@ export function mountSwitcher(slot: HTMLElement): SelectionRef {
     /* corrupt storage — fall back to the defaults */
   }
 
-  const provSel = document.createElement('select')
-  provSel.className = 'switcher-select'
-  for (const id of Object.keys(CONFIG.providers)) {
-    const e = CONFIG.providers[id]!
-    const opt = document.createElement('option')
-    opt.value = id
-    opt.textContent = e.implemented ? e.label : `${e.label} — coming soon`
-    opt.disabled = !e.implemented // SPEC-R12: unimplemented providers render disabled, never selectable
-    provSel.append(opt)
-  }
-  provSel.value = provider
-
-  const modelSel = document.createElement('select')
-  modelSel.className = 'switcher-select'
-  function fillModels(): void {
-    modelSel.replaceChildren()
-    for (const m of CONFIG.providers[provider]!.models) {
-      const opt = document.createElement('option')
-      opt.value = m.id
-      opt.textContent = m.label
-      modelSel.append(opt)
-    }
-    modelSel.value = model
-  }
-  fillModels()
-
   function persist(): void {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify({ provider, model }))
@@ -93,20 +88,54 @@ export function mountSwitcher(slot: HTMLElement): SelectionRef {
     }
   }
 
-  provSel.addEventListener('change', () => {
+  // ── The provider select — static options, unimplemented providers disabled ──
+  const provSel = document.createElement('ui-select') as UISelectElement
+  provSel.setAttribute('label', 'Provider')
+  for (const id of Object.keys(CONFIG.providers)) {
+    const e = CONFIG.providers[id]!
+    provSel.append(option(id, e.implemented ? e.label : `${e.label} — coming soon`, !e.implemented))
+  }
+  provSel.value = provider
+
+  // ── The model select — options depend on the chosen provider ──
+  // ui-select moves its [role=option] children into the internal listbox ONCE at first connect (select.md
+  // `slots`; select.ts #ensureParts) and does NOT observe post-connect child mutations — so a provider
+  // change cannot be served by replaceChildren() on the live host (that would clobber the control's own
+  // parts). Instead we BUILD A FRESH ui-select each time and swap it into place: its options are appended
+  // before it connects, honouring the documented pre-connect contract. (Model dropdown = never disabled.)
+  const modelField = document.createElement('label')
+  modelField.className = 'switcher-field'
+  const modelCaption = document.createElement('span')
+  modelCaption.className = 'switcher-label'
+  modelCaption.textContent = 'Model'
+
+  function buildModelSelect(): UISelectElement {
+    const sel = document.createElement('ui-select') as UISelectElement
+    sel.setAttribute('label', 'Model')
+    for (const m of CONFIG.providers[provider]!.models) sel.append(option(m.id, m.label))
+    sel.value = model
+    sel.addEventListener('select', () => {
+      model = sel.value
+      persist()
+    })
+    return sel
+  }
+
+  let modelSel = buildModelSelect()
+  modelField.append(modelCaption, modelSel)
+
+  provSel.addEventListener('select', () => {
     provider = provSel.value
     model = CONFIG.providers[provider]!.defaultModel
-    fillModels()
-    persist()
-  })
-  modelSel.addEventListener('change', () => {
-    model = modelSel.value
+    const fresh = buildModelSelect() // rebuild: fresh options move in at connect (see buildModelSelect note)
+    modelSel.replaceWith(fresh)
+    modelSel = fresh
     persist()
   })
 
   const wrap = document.createElement('div')
   wrap.className = 'switcher'
-  wrap.append(labelled('Provider', provSel), labelled('Model', modelSel))
+  wrap.append(labelled('Provider', provSel), modelField)
   slot.replaceChildren(wrap)
 
   return { get: () => ({ provider, model }) }
