@@ -16,10 +16,14 @@ import { codeBlock } from './code-block.ts' // shared `<pre><code>` previews —
 /**
  * renderApiTable — one table row per `attributes[]` entry (name · type · default · reflect), read straight from
  * the parse so the published surface IS the contract, not a hand-transcribed copy. Wrapped in a titled section.
+ *
+ * `level` is the section-title heading level (DEFAULT 2), so the standard control doc page (composeDocPage) is
+ * byte-identical, while a bespoke page that nests these tables under its own sub-headings (the app-shell guide's
+ * per-element `h3` labels) can push the title down a level to keep the document outline monotonic (WCAG 1.3.1).
  */
-export function renderApiTable(attributes: readonly ParsedAttribute[]): HTMLElement {
+export function renderApiTable(attributes: readonly ParsedAttribute[], level = 2): HTMLElement {
   const section = document.createElement('section')
-  section.append(heading(2, 'Attributes'))
+  section.append(heading(level, 'Attributes'))
 
   const table = document.createElement('table')
   table.append(tableHead('Name', 'Type', 'Default', 'Reflect'))
@@ -79,10 +83,10 @@ function cellText(item: SequenceItem, field: string): string {
  * item, derived straight from the parse. Returns undefined when the sequence is empty/absent, so the caller ships
  * no empty table.
  */
-function renderSequenceTable(title: string, items: SequenceItem[] | undefined, columns: readonly SeqColumn[]): HTMLElement | undefined {
+function renderSequenceTable(title: string, items: SequenceItem[] | undefined, columns: readonly SeqColumn[], level = 2): HTMLElement | undefined {
   if (!items || items.length === 0) return undefined
   const section = document.createElement('section')
-  section.append(heading(2, title))
+  section.append(heading(level, title))
   const table = document.createElement('table')
   table.append(tableHead(...columns.map((c) => c.header)))
   const tbody = document.createElement('tbody')
@@ -94,12 +98,12 @@ function renderSequenceTable(title: string, items: SequenceItem[] | undefined, c
   return section
 }
 
-/** renderPropertiesTable — the descriptor `properties[]` (IDL beyond attributes-as-API): name · description. */
-export function renderPropertiesTable(d: ParsedDescriptor): HTMLElement | undefined {
+/** renderPropertiesTable — the descriptor `properties[]` (IDL beyond attributes-as-API): name · description. `level` (default 2) sets the section-title heading level (see renderApiTable). */
+export function renderPropertiesTable(d: ParsedDescriptor, level = 2): HTMLElement | undefined {
   return renderSequenceTable('Properties', d.sequences.get('properties'), [
     { header: 'Name', field: 'name', code: true },
     { header: 'Description', field: 'description' },
-  ])
+  ], level)
 }
 
 /** renderEventsTable — the descriptor `events[]` vocabulary: name · detail · description (e.g. tabs `select` → { value, index }). */
