@@ -47,16 +47,22 @@ const surfaceButton = (preview: HTMLElement): HTMLElement | null =>
 const surfaceControl = (preview: HTMLElement, tag: string): HTMLElement | null =>
   preview.querySelector(`.canvas-surface ${tag}`) as HTMLElement | null
 
-const chip = (preview: HTMLElement, text: string): HTMLElement | undefined =>
-  Array.from(preview.querySelectorAll<HTMLElement>('.chip')).find((c) => c.textContent === text)
-
-// The knob controls are now dogfooded ui-* controls (ui-select / ui-checkbox / ui-text-field), not native
-// <input>/<select> — so a knob is read/written through its control's own property (`.value` / `.checked`),
-// not a native input node. This resolves the ui-* control hosting the named knob's editable value.
+// The knob controls are dogfooded ui-* controls (ui-radio-group / ui-select / ui-switch / ui-text-field), not
+// native <input>/<select>/<button> — so a knob is read/written through its control's own property (`.value` /
+// `.checked`), not a native input node. This resolves the ui-* control hosting the named knob's editable value.
 const knobControl = <T extends HTMLElement>(preview: HTMLElement, name: string): T | undefined =>
   Array.from(preview.querySelectorAll<HTMLElement>('.knob')).find(
     (row) => row.querySelector('.knob-label')?.textContent === name,
-  )?.querySelector('ui-select, ui-checkbox, ui-text-field') as T | undefined
+  )?.querySelector('ui-select, ui-switch, ui-text-field, ui-radio-group') as T | undefined
+
+// The ONE `ui-radio` member (by its visible label) inside a small-enum knob's `ui-radio-group` (batch A: a
+// ≤5-member enum prop routes to ui-radio-group, not ui-select — the segmented "every option visible" control).
+const knobRadio = (preview: HTMLElement, name: string, member: string): HTMLElement | undefined =>
+  Array.from(
+    Array.from(preview.querySelectorAll<HTMLElement>('.knob'))
+      .find((row) => row.querySelector('.knob-label')?.textContent === name)
+      ?.querySelectorAll<HTMLElement>('ui-radio') ?? [],
+  ).find((r) => r.textContent === member)
 
 // ── a2ui mode (both engines) ───────────────────────────────────────────────────────────────────────────────────
 
@@ -81,16 +87,21 @@ describe('component-preview — a2ui mode renders a live control through the rea
     expect(surfaceButton(preview)?.textContent, 'the canvas did not re-render on the knob change').toContain('Re-rendered')
   })
 
-  // The variant-chip switcher is DERIVED from a catalog enum — any enum prop grows a chip-row for free (Button.variant
-  // is now a catalog enum too, tightened alongside this wave). `TextField.size` (sm·md·lg) exercises the derived
-  // chip-row on a non-root-value prop: clicking a chip re-renders through a fresh renderer with the chosen member.
-  it('an enum chip click re-renders with the chosen member (TextField.size, a real catalog enum)', async () => {
+  // The enum knob is DERIVED from a catalog enum — any enum prop grows a knob for free (Button.variant is now a
+  // catalog enum too, tightened alongside this wave). `TextField.size` (sm·md·lg, 3 members) routes to the
+  // ui-radio-group knob (batch A's ≤5-member branch): clicking a radio re-renders through a fresh renderer.
+  // TextField carries no A2UI_INITIAL seed for `size`, so the radio-group knob's own fallback pre-selects +
+  // pre-seeds `members[0]` = 'sm' (component-preview.ts). Clicking the ALREADY-checked 'sm' radio is a
+  // documented no-op (radio-group.md: a checked radio can only be REPLACED, never toggled off — no `change`
+  // fires), so this test targets 'lg' instead — a genuinely UNCHECKED member — to prove the click really drives
+  // a commit, not merely re-observe the seed.
+  it('a radio-group knob click re-renders with the chosen member (TextField.size, a real catalog enum)', async () => {
     const preview = await mountPreview('a2ui', 'TextField')
-    const sm = chip(preview, 'sm')
-    expect(sm, 'no `sm` size chip derived from the TextField.size catalog enum').toBeTruthy()
-    await userEvent.click(sm as HTMLElement)
+    const lg = knobRadio(preview, 'size', 'lg')
+    expect(lg, 'no `lg` radio found in the size knob (dogfooded ui-radio-group)').toBeTruthy()
+    await userEvent.click(lg as HTMLElement)
     await raf()
-    expect(surfaceControl(preview, 'ui-text-field')?.getAttribute('size')).toBe('sm')
+    expect(surfaceControl(preview, 'ui-text-field')?.getAttribute('size')).toBe('lg')
   })
 })
 
@@ -109,8 +120,8 @@ describe('component-preview — component mode renders the ui-* control directly
   it('a knob change mutates the SAME element in place (component mode does not tear down)', async () => {
     const preview = await mountPreview('component', 'ui-button')
     const before = surfaceButton(preview)
-    const ghost = chip(preview, 'ghost')
-    expect(ghost, 'no `ghost` variant chip derived from the descriptor enum').toBeTruthy()
+    const ghost = knobRadio(preview, 'variant', 'ghost')
+    expect(ghost, 'no `ghost` radio found in the variant knob (dogfooded ui-radio-group)').toBeTruthy()
     await userEvent.click(ghost as HTMLElement)
     await raf()
     const after = surfaceButton(preview)
@@ -135,11 +146,11 @@ describe('component-preview — direct canvas interaction survives a knob edit (
     expect((box as unknown as { checked: boolean }).checked, 'the click did not check the live control').toBe(true)
     expect(
       knobControl<HTMLElement & { checked: boolean }>(preview, 'checked')?.checked,
-      'the `checked` knob did not reflect the live toggle (dogfooded ui-checkbox)',
+      'the `checked` knob did not reflect the live toggle (dogfooded ui-switch)',
     ).toBe(true)
 
-    const lg = chip(preview, 'lg') // edit an UNRELATED knob (size)
-    expect(lg, 'no `lg` size chip').toBeTruthy()
+    const lg = knobRadio(preview, 'size', 'lg') // edit an UNRELATED knob (size)
+    expect(lg, 'no `lg` radio found in the size knob').toBeTruthy()
     await userEvent.click(lg as HTMLElement)
     await raf()
     const after = surfaceControl(preview, 'ui-checkbox')
@@ -154,10 +165,14 @@ describe('component-preview — direct canvas interaction survives a knob edit (
     expect(field, 'no ui-text-field rendered').not.toBeNull()
     ;(field as unknown as { value: string }).value = 'typed by user' // the live value the rebuild must preserve
 
-    await userEvent.click(chip(preview, 'sm') as HTMLElement) // change an unrelated knob → a2ui dispose+rebuild
+    // 'sm' is the radio-group knob's own pre-seeded default (no A2UI_INITIAL seed for TextField.size — see the
+    // fallback note above) — clicking the ALREADY-checked radio is a documented no-op (no `change`, no
+    // rebuild), which would make this test pass VACUOUSLY (the value "survives" only because nothing re-rendered
+    // at all). 'lg' is a genuinely unchecked member, so the click drives a real commit → dispose+rebuild.
+    await userEvent.click(knobRadio(preview, 'size', 'lg') as HTMLElement) // change an unrelated knob → a2ui dispose+rebuild
     await raf()
     const after = surfaceControl(preview, 'ui-text-field')
     expect((after as unknown as { value: string }).value, 'typed text vanished on the size re-render').toBe('typed by user')
-    expect(after?.getAttribute('size')).toBe('sm')
+    expect(after?.getAttribute('size'), 'the click did not commit — the a2ui payload never re-rendered with `lg`').toBe('lg')
   })
 })

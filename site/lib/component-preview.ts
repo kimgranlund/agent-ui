@@ -1,13 +1,14 @@
 // site/lib/component-preview.ts — the <component-preview> docs element: a two-column live playground. LEFT is a
-// details block + one live-knob control per editable prop + a derived variant chip-row per enum; RIGHT is the
-// shared A2UI artboard (lib/canvas-surface) carrying the live specimen. It renders EITHER a plain ui-* web
-// component (mode="component", target = a tag like `ui-button`) OR an A2UI catalog item (mode="a2ui", target = a
-// catalog NAME like `Button`).
+// details block + exactly ONE live-knob control per editable prop (routed by type — ui-radio-group/ui-select for
+// an enum, ui-switch for a boolean, ui-text-field for a number/string; batch A removed the redundant derived
+// variant chip-row that used to double every enum); RIGHT is the shared A2UI artboard (lib/canvas-surface)
+// carrying the live specimen. It renders EITHER a plain ui-* web component (mode="component", target = a tag
+// like `ui-button`) OR an A2UI catalog item (mode="a2ui", target = a catalog NAME like `Button`).
 //
-// DERIVE-DON'T-DUPLICATE: neither the knobs nor the chips carry a hand-maintained prop list. Component mode reads
-// the canonical `{name}.md` descriptor (via lib/frontmatter → the ONE parser the contract trip-wire enforces);
-// a2ui mode reads the shipped default catalog's component def. A new attribute/prop grows a knob for free; a new
-// enum member grows a chip for free — the same single-source discipline the doc pages already follow.
+// DERIVE-DON'T-DUPLICATE: the knobs carry no hand-maintained prop list. Component mode reads the canonical
+// `{name}.md` descriptor (via lib/frontmatter → the ONE parser the contract trip-wire enforces); a2ui mode reads
+// the shipped default catalog's component def. A new attribute/prop grows a knob for free — the same
+// single-source discipline the doc pages already follow.
 //
 // It is a PLAIN custom element (a docs meta-component), NOT a ui-* control (light DOM, no ElementInternals/ARIA
 // contract, no descriptor) — it composes controls for documentation, it is not itself part of the fleet.
@@ -17,7 +18,13 @@ import { createRenderer, defaultCatalog } from '@agent-ui/a2ui'
 import type { RendererHost, ComponentDef, PropDef, JsonSchema } from '@agent-ui/a2ui'
 import { loadDescriptorByTag } from './frontmatter.ts'
 import type { ParsedAttribute } from '@agent-ui/components/descriptor'
-import type { UISelectElement, UICheckboxElement, UITextFieldElement } from '@agent-ui/components/components'
+import type {
+  UISelectElement,
+  UISwitchElement,
+  UITextFieldElement,
+  UIRadioGroupElement,
+  UIRadioElement,
+} from '@agent-ui/components/components'
 import { createCanvasSurface, applyRootStretch } from './canvas-surface.ts'
 
 // The `value` of the enum-knob "unset" option. ui-select's selectionCommit treats value="" as "no key"
@@ -26,6 +33,14 @@ import { createCanvasSurface, applyRootStretch } from './canvas-surface.ts'
 // a real, committable choice; the `select` handler maps it back to '' (the knob's unset state). Cannot
 // collide with a real enum member (all lowercase identifiers).
 const KNOB_UNSET = '__cp-unset__'
+
+// ── BATCH A — one control per enum knob, routed by member count (no doubled PROPS knob + VARIANTS chip-row) ───
+// A small closed enum reads best fully exposed (every option visible, one click to pick) — `ui-radio-group`.
+// A larger enum would make a segmented group unwieldy — the existing `ui-select` dropdown stays. The boundary
+// (≤5) is Kim's call: button/checkbox/radio/switch/slider/select `size` (3), button `variant` (3), row/list
+// `align` (5) land on radio-group; row/list `justify` (6), grid/card/tabs/modal `elevation`/`brightness`/`gap`
+// (7), text `variant`/`as` (9/10), text-field `type` (12), and the 8-member overlay `placement` land on select.
+const RADIO_GROUP_MAX = 5
 
 // ── the unified knob model (one shape, both modes) ───────────────────────────────────────────────────────────
 type KnobKind = 'enum' | 'boolean' | 'number' | 'string' | 'text' | 'skip'
@@ -59,7 +74,7 @@ function liveToState(state: Map<string, string>, name: string, live: unknown): v
 // ── knob derivation — a2ui mode (from the default catalog's component def) ───────────────────────────────────
 const asRecord = (schema: JsonSchema): Record<string, unknown> => (typeof schema === 'object' ? schema : {})
 
-/** Map one catalog `PropDef.type` JSON-Schema fragment to a knob (enum → chips/select · scalar → input · object → skip). */
+/** Map one catalog `PropDef.type` JSON-Schema fragment to a knob (enum → radio-group/select · scalar → input · object → skip). */
 function knobFromSchema(name: string, def: PropDef): Knob {
   const schema = asRecord(def.type)
   const members = Array.isArray(schema.enum) ? schema.enum.filter((v): v is string => typeof v === 'string') : []
@@ -95,10 +110,11 @@ function knobFromAttribute(attr: ParsedAttribute): Knob {
 }
 
 /** Every editable knob for a component-mode control: one per named attribute, plus the default-slot text knob
- *  — SKIPPED for a NO_SLOT_TEXT target (below): it has no text slot to edit, so no dead knob is grown for it. */
+ *  — grown ONLY for a SLOT_TEXT_OK target (below, a genuine text/label slot); a NO_SLOT_TEXT or STRUCTURAL
+ *  target gets no text knob at all (nothing safe/meaningful for it to edit). */
 function componentKnobs(attrs: readonly ParsedAttribute[], tag: string): Knob[] {
   const knobs = attrs.filter((a) => typeof a.name === 'string' && a.name !== '').map(knobFromAttribute)
-  if (!NO_SLOT_TEXT.has(tag)) knobs.push({ name: SLOT_TEXT, kind: 'text' })
+  if (SLOT_TEXT_OK.has(tag)) knobs.push({ name: SLOT_TEXT, kind: 'text' })
   return knobs
 }
 
@@ -141,7 +157,8 @@ const layoutSample = (): Sample => ({
 })
 
 // Per-container sample trees (mirrors the shapes the example seeds use — Field wraps one control, Select owns its
-// Options, Card nests a CardContent, Tabs pairs Tab/TabPanel, a FormProvider coordinates a field + submit).
+// Options, Card composes header/content/footer regions (batch D), Tabs pairs Tab/TabPanel, a FormProvider
+// coordinates a field + submit).
 const SAMPLE_TREES: Record<string, () => Sample> = {
   Field: () => ({ rootRef: { child: 's_in' }, extras: [{ id: 's_in', component: 'TextField', placeholder: 'Sample input' }] }),
   FormProvider: () => ({
@@ -163,11 +180,22 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   }),
   Row: layoutSample,
   Column: layoutSample,
+  // BATCH D — the region model reads: header (a real heading) · content (body) · footer (an action), mirroring
+  // the card-doc.ts reference specimen (header/content/footer, a save action in the footer). Text.variant's
+  // catalog wire enum is `h1…h5 | caption | body` (catalog.json) — 'title' is NOT a member (it's the ui-text
+  // TRIPLE h5 fans out to internally, TEXT_VARIANT_TABLE in factories.ts — not itself a selectable wire value);
+  // an invalid member silently falls back to 'body' (factories.ts's documented unrecognized-value fallback),
+  // which is exactly how this shipped broken — the header rendered as body text, losing the header/content
+  // distinction. 'h5' is the real wire member that resolves to that title-weight triple.
   Card: () => ({
-    rootRef: { children: ['s_content'] },
+    rootRef: { children: ['s_header', 's_content', 's_footer'] },
     extras: [
+      { id: 's_header', component: 'CardHeader', children: ['s_htext'] },
+      { id: 's_htext', component: 'Text', variant: 'h5', text: 'Account' },
       { id: 's_content', component: 'CardContent', children: ['s_ctext'] },
-      { id: 's_ctext', component: 'Text', variant: 'body', text: 'Sample content' },
+      { id: 's_ctext', component: 'Text', variant: 'body', text: 'A card composes three region sub-elements as a presence-driven grid.' },
+      { id: 's_footer', component: 'CardFooter', children: ['s_save'] },
+      { id: 's_save', component: 'Button', variant: 'solid', label: 'Save' },
     ],
   }),
   Tabs: () => ({
@@ -200,13 +228,15 @@ function sampleFor(name: string, def: ComponentDef): Sample {
     : { rootRef: { children: ['s_child'] }, extras: [text] }
 }
 
-// ── sample children — component mode ────────────────────────────────────────────────────────────────────────
+// ── sample children — component mode (BATCH B: representative content for structural containers) ─────────────
 // The component-mode counterpart to a2ui-mode's SAMPLE_TREES/A2UI_INITIAL above: a bare `document.createElement
-// (tag)` isn't enough for a control whose OWN `connected()` requires real light-DOM structure to construct at
-// all (not just a knob-driven attribute) — ui-tooltip/ui-menu/ui-popover each throw without a trigger/anchor as
-// their first element child (`#ensureParts()`, tooltip.ts / menu.ts / popover.ts). Component mode otherwise
-// NEVER appends children (a knob only ever sets an attribute or the default-slot text) — this is the one,
-// narrow exception, keyed by TAG (component mode has no catalog def to key by name, unlike SAMPLE_TREES).
+// (tag)` isn't enough for (a) a control whose OWN `connected()` requires real light-DOM structure to construct
+// at all (ui-tooltip/ui-menu/ui-popover each throw without a trigger/anchor as their first element child,
+// `#ensureParts()` in tooltip.ts / menu.ts / popover.ts), or (b) a STRUCTURAL container (below) whose default
+// slot IS its real content model — a bare grid/row/list/card/radio-group/form-provider would render a single
+// stub or an empty box, which the representative-specimen law treats as a defect. Component mode otherwise
+// NEVER appends children (a knob only ever sets an attribute or the default-slot text) — this map is the one,
+// narrow, per-TAG exception (component mode has no catalog def to key by name, unlike SAMPLE_TREES).
 const sampleTrigger = (): HTMLElement => {
   // Dogfoods ui-button as the overlay trigger/anchor for the tooltip/menu/popover specimens (Kim's
   // directive). Each of those controls adopts its FIRST element child as the trigger/anchor and sets
@@ -216,45 +246,187 @@ const sampleTrigger = (): HTMLElement => {
   btn.textContent = 'Trigger'
   return btn
 }
+
+/** A plain labelled block — page-authored demo content (NOT a ui-* control), the component-mode analogue of the
+ *  *-doc.ts pages' own `demoBox()` (site/lib/specimens.ts) — reimplemented locally so component-preview.ts
+ *  carries no dependency on the docs-page demo-content stylesheet. Fills a layout primitive's default slot so
+ *  its axis/gap/track flow is actually visible (a single stub cell teaches nothing — the representative-
+ *  specimen law); styled minimally by `.cp-sample-item` in component-preview.css. */
+function sampleItem(label: string): HTMLElement {
+  const item = document.createElement('div')
+  item.className = 'cp-sample-item'
+  item.textContent = label
+  return item
+}
+
+/** A `[role=option]` child — the same shape #buildKnob's own ui-select enum knob uses (select.md / combo-box.md
+ *  `slots`): appended BEFORE connection, the control moves it into its own listbox at first connect. */
+function sampleOption(value: string, label: string): HTMLElement {
+  const option = document.createElement('div')
+  option.setAttribute('role', 'option')
+  option.setAttribute('value', value)
+  option.textContent = label
+  return option
+}
+
 const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
-  'ui-tooltip': () => [sampleTrigger()],
-  'ui-menu': () => [sampleTrigger()],
-  'ui-popover': () => [sampleTrigger()],
+  // ── STRUCTURAL containers (below) — the default slot IS the content model, mirrors the *-doc.ts shapes ────
+  'ui-grid': () => ['Cell 1', 'Cell 2', 'Cell 3', 'Cell 4', 'Cell 5', 'Cell 6'].map(sampleItem), // 6 cells (grid-doc.ts): multiple auto-fit tracks form — COMPONENT_INITIAL below seeds gap/min so they're visible
+  'ui-row': () => ['Item one', 'Item two', 'Item three'].map(sampleItem),
+  'ui-column': () => ['Item one', 'Item two', 'Item three'].map(sampleItem),
+  'ui-list': () => ['First item', 'Second item', 'Third item'].map(sampleItem),
+  'ui-card': () => {
+    const header = document.createElement('ui-card-header')
+    header.textContent = 'Account'
+    const content = document.createElement('ui-card-content')
+    content.textContent = 'A card composes three region sub-elements as a presence-driven grid.'
+    const footer = document.createElement('ui-card-footer')
+    const save = document.createElement('ui-button')
+    save.setAttribute('variant', 'solid')
+    save.textContent = 'Save'
+    footer.append(save)
+    return [header, content, footer]
+  },
+  'ui-radio-group': () =>
+    (
+      [
+        ['sm', 'Small'],
+        ['md', 'Medium'],
+        ['lg', 'Large'],
+      ] as const
+    ).map(([value, label]) => {
+      const radio = document.createElement('ui-radio') as UIRadioElement
+      radio.value = value
+      radio.textContent = label
+      return radio
+    }),
+  'ui-form-provider': () => {
+    const field = document.createElement('ui-field')
+    field.setAttribute('label', 'Full name')
+    const input = document.createElement('ui-text-field')
+    input.setAttribute('name', 'name')
+    field.append(input)
+    const submit = document.createElement('ui-button')
+    submit.setAttribute('variant', 'solid')
+    submit.textContent = 'Submit'
+    return [field, submit]
+  },
+
+  // ── other NO_SLOT_TEXT targets — self-constructing controls that had NO representative content before ─────
+  'ui-field': () => {
+    const field = document.createElement('ui-text-field')
+    field.setAttribute('type', 'email')
+    return [field]
+  },
+  'ui-tabs': () => {
+    const tab1 = document.createElement('ui-tab')
+    tab1.setAttribute('value', 'overview')
+    tab1.textContent = 'Overview'
+    const tab2 = document.createElement('ui-tab')
+    tab2.setAttribute('value', 'pricing')
+    tab2.textContent = 'Pricing'
+    const panel1 = document.createElement('ui-tab-panel')
+    panel1.textContent = 'The overview panel content.'
+    const panel2 = document.createElement('ui-tab-panel')
+    panel2.textContent = 'The pricing panel content.'
+    return [tab1, tab2, panel1, panel2]
+  },
+  'ui-select': () => [sampleOption('a', 'Option A'), sampleOption('b', 'Option B'), sampleOption('c', 'Option C')],
+  'ui-combo-box': () => [
+    sampleOption('apple', 'Apple'),
+    sampleOption('banana', 'Banana'),
+    sampleOption('cherry', 'Cherry'),
+  ],
+  'ui-menu': () => {
+    const items = ['New file', 'Open file', 'Save', 'Exit'].map((label) => {
+      const item = document.createElement('div')
+      item.dataset['value'] = label.toLowerCase().replace(/\s+/g, '-')
+      item.textContent = label
+      return item
+    })
+    return [sampleTrigger(), ...items]
+  },
+  'ui-popover': () => {
+    const section = document.createElement('section')
+    const heading = document.createElement('h3')
+    heading.textContent = 'Settings'
+    const body = document.createElement('p')
+    body.textContent = 'Panel content in the top layer.'
+    section.append(heading, body)
+    return [sampleTrigger(), section]
+  },
+  'ui-tooltip': () => {
+    const text = document.createElement('span')
+    text.textContent = 'Save your changes (Ctrl+S)'
+    return [sampleTrigger(), text]
+  },
+  'ui-modal': () => {
+    // do NOT auto-open (the `open` knob stays the reveal mechanism) — content is ready the moment it is.
+    const heading = document.createElement('h2')
+    heading.textContent = 'Example dialog'
+    const body = document.createElement('p')
+    body.textContent = 'A representative modal body.'
+    const actions = document.createElement('ui-row')
+    actions.setAttribute('gap', 'sm')
+    actions.setAttribute('justify', 'end')
+    const close = document.createElement('ui-button')
+    close.setAttribute('variant', 'soft')
+    close.textContent = 'Close'
+    actions.append(close)
+    return [heading, body, actions]
+  },
 }
 
 // The component-mode counterpart to a2ui-mode's A2UI_INITIAL: a per-tag knob-value seed for a control whose
 // OWN descriptor default is not demonstrable (not a design fix — icon.md's `name: ''` default is CORRECT, an
 // unset icon legitimately renders nothing; this only supplies a DEMO value, same discipline as A2UI_INITIAL
-// never touching the catalog). ui-icon is the one fleet member today: `name` defaults to '' (renders nothing,
-// icon.ts:38-41), so a bare specimen would be an invisible 0×0 box — seeded here with a real, shipped Phosphor
-// name so the gallery's whole-shape law (box > 0) has something to measure.
+// never touching the catalog). ui-icon is one fleet member: `name` defaults to '' (renders nothing, icon.ts:
+// 38-41), so a bare specimen would be an invisible 0×0 box — seeded with a real, shipped Phosphor name so the
+// gallery's whole-shape law (box > 0) has something to measure. ui-grid/ui-field (batch B) seed a legible
+// starting prop value to go with their new sample children (grid-doc.ts's own gap/min; field.md's own default
+// label is '').
 const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   'ui-icon': { name: 'check' },
+  'ui-grid': { gap: 'md', min: '8rem' },
+  'ui-field': { label: 'Email' },
+}
+
+// A per-tag static HOST ATTRIBUTE seed (batch C) — distinct from COMPONENT_INITIAL (which seeds a KNOB's
+// value): this is for an attribute the descriptor does NOT expose as an editable prop at all, so no knob could
+// ever supply it. ui-slider is the one fleet member: its track is ::before/::after (no text slot — NO_SLOT_TEXT
+// below), so without an explicit seed a bare specimen carries no accessible name at all.
+const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
+  'ui-slider': { 'aria-label': 'Volume' },
 }
 
 // ── SLOT_TEXT gating — component mode (the fleet-wide hardening) ──────────────────────────────────────────────
-// `componentKnobs()` unconditionally grows a SLOT_TEXT knob for every component-mode target (a plain
-// `el.textContent = raw` write). That is correct for a control whose default/unnamed slot genuinely IS text —
-// but SEVERAL controls build/own real structural children in `connected()` (a self-created editor, listbox,
-// dialog, panel, grid, tablist strip, rail/thumbs, or label/description/error chrome) that `textContent =`
-// would silently destroy (a `.textContent` write clears EVERY child, not just a hypothetical text node).
+// `componentKnobs()` grows a SLOT_TEXT knob ONLY for a SLOT_TEXT_OK target (below) — a plain
+// `el.textContent = raw` write. That is correct for a control whose default/unnamed slot genuinely IS a
+// text/label slot — but it is WRONG for two other shapes: a control that builds/owns real structural children
+// in `connected()` (a self-created editor, listbox, dialog, panel, tablist strip, rail/thumbs, or
+// label/description/error chrome) that `textContent =` would silently destroy (NO_SLOT_TEXT); and a STRUCTURAL
+// container (batch B) whose default slot IS its real content model — children, not a string (grid/row/column/
+// list/card/radio-group/form-provider). Both get real sample CHILDREN instead (COMPONENT_SAMPLE_CHILDREN
+// above) and NO text knob at all.
 //
 // MECHANISM (per Kim's ruling): the descriptor model does NOT carry this distinction structurally today —
 // `slots[]` is free-text prose (a schema change is real ADR-0004 surgery, out of this file's scope) — so this
-// is an EXPLICIT PER-TAG partition, mirroring the COMPONENT_SAMPLE_CHILDREN / a2ui-mode A2UI_INITIAL precedent
-// (an allowlist + a denylist, not a runtime heuristic). A runtime check (e.g. "skip if el.children.length > 0
+// is an EXPLICIT PER-TAG THREE-WAY PARTITION, mirroring the COMPONENT_SAMPLE_CHILDREN / a2ui-mode A2UI_INITIAL
+// precedent (three allowlists, not a runtime heuristic). A runtime check (e.g. "skip if el.children.length > 0
 // at apply time") was considered and REJECTED: ui-text legitimately builds a heading STAMP element when
 // `as ≠ 'none'` (ADR-0025/0078) and runs a self-healing childList observer that re-adopts its text after a
 // `textContent` clobber — so a live children-count would misclassify a genuinely SAFE, self-healing control as
 // unsafe. The partition below was verified per-control (component-preview-slot-text.test.ts pins it — see
 // there for the fleet-wide diagnosis) — NOT by observing runtime state.
 //
-// NO_SLOT_TEXT — connected() builds/owns real structural children SLOT_TEXT would destroy. 3 of these (the
-// COMPONENT_SAMPLE_CHILDREN keys) additionally need a sample trigger just to CONSTRUCT; ui-icon builds a
-// name-driven <svg> (setIcon(), icon.ts:38-41) whenever its `name` knob is non-empty — NOT the "builds zero
-// children" case SLOT_TEXT_OK requires, and a `textContent =` write there would clobber that SVG the moment
-// `name` is set (the exact defect class this partition exists to prevent); the rest self-build unaided (their
-// `connected()` needs no author-supplied children at all).
+// NO_SLOT_TEXT — connected() builds/owns real structural children a SLOT_TEXT write would destroy, OR (ui-
+// slider, batch C) has NO text slot at all (its track is ::before/::after — `textContent=` would inject stray
+// text into the track, not a label). 3 of these (the COMPONENT_SAMPLE_CHILDREN keys ui-menu/ui-popover/
+// ui-tooltip) additionally need a sample trigger just to CONSTRUCT; ui-icon builds a name-driven <svg>
+// (setIcon(), icon.ts:38-41) whenever its `name` knob is non-empty — NOT the "builds zero children" case
+// SLOT_TEXT_OK requires, and a `textContent =` write there would clobber that SVG the moment `name` is set (the
+// exact defect class this partition exists to prevent); most of the rest now ALSO get real sample content
+// (COMPONENT_SAMPLE_CHILDREN, batch B) so their specimen is representative, not merely non-throwing.
 export const NO_SLOT_TEXT = new Set([
   'ui-calendar', // #ensureShell() builds the whole nav+grid panel unconditionally
   'ui-combo-box', // #ensureParts(): a control-created editor + listbox
@@ -264,34 +436,28 @@ export const NO_SLOT_TEXT = new Set([
   'ui-modal', // #ensureDialog(): the control-owned <dialog> part
   'ui-popover', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel
   'ui-select', // #ensureParts(): a control-created trigger button + listbox
+  'ui-slider', // ::before/::after track only — no text slot at all (batch C); seeded an aria-label via COMPONENT_SAMPLE_ATTRS instead
   'ui-slider-multi', // JS-managed light-DOM rail/fill/thumb children (NOT ::before/::after, unlike ui-slider)
   'ui-tabs', // the control-created tablist strip PART
   'ui-text-field', // the contenteditable editor PART (×2 parts: editor + measurer)
   'ui-tooltip', // #ensureParts(): anchor (COMPONENT_SAMPLE_CHILDREN) + panel
 ])
 
-// SLOT_TEXT_OK — SLOT_TEXT is a real, safe knob: either a genuine text/label default slot (button/checkbox/
-// radio/switch/text — the accessible label content), or a childless leaf/container with no structural content
-// of its own to lose (card/column/form-provider/grid/list/radio-group/row/slider — each verified to build
-// ZERO light-DOM children in connected(); their slots are entirely author-supplied, so a bare specimen has
-// nothing SLOT_TEXT could destroy). Paired with NO_SLOT_TEXT: the two sets PARTITION the whole fleet — the
-// coverage test asserts this, so a new control lands in neither by default and fails loud instead of silently
-// inheriting a guess.
-export const SLOT_TEXT_OK = new Set([
-  'ui-button',
-  'ui-card',
-  'ui-checkbox',
-  'ui-column',
-  'ui-form-provider',
-  'ui-grid',
-  'ui-list',
-  'ui-radio',
-  'ui-radio-group',
-  'ui-row',
-  'ui-slider',
-  'ui-switch',
-  'ui-text',
-])
+// STRUCTURAL (batch B) — the default slot IS the real content model (children ARE the grid cells / flex items /
+// list rows / card regions / radio options / coordinated form fields), never a text/label string. Each builds
+// ZERO light-DOM children of its OWN in connected() (verified per-control, same discipline as SLOT_TEXT_OK
+// below) — so growing a SLOT_TEXT knob here would either overwrite the representative sample children with a
+// bare string (`.textContent =` clears every child) or, before batch B, be the ONLY content a bare specimen
+// ever got. These get real sample children instead (COMPONENT_SAMPLE_CHILDREN above) and no text knob.
+export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row'])
+
+// SLOT_TEXT_OK — SLOT_TEXT is a real, safe, MEANINGFUL knob: a genuine text/label default slot, the accessible
+// label content a viewer edits to see the control's OWN typography/sizing respond (button/checkbox/radio/
+// switch/text — narrowed from the wider pre-batch-B set now that card/column/form-provider/grid/list/
+// radio-group moved to STRUCTURAL and slider moved to NO_SLOT_TEXT). Paired with NO_SLOT_TEXT + STRUCTURAL: the
+// three sets PARTITION the whole fleet — the coverage test asserts this, so a new control lands in none of them
+// by default and fails loud instead of silently inheriting a guess.
+export const SLOT_TEXT_OK = new Set(['ui-button', 'ui-checkbox', 'ui-radio', 'ui-switch', 'ui-text'])
 
 // ── the element ──────────────────────────────────────────────────────────────────────────────────────────────
 type Mode = 'component' | 'a2ui'
@@ -302,7 +468,7 @@ class ComponentPreview extends HTMLElement {
   #target = ''
   #knobs: Knob[] = []
   #state = new Map<string, string>() // knob name → raw string value ('' / 'true' / a member / free text)
-  #refreshers: Array<() => void> = [] // per-knob DOM sync closures (keep chips + inputs in step with #state)
+  #refreshers: Array<() => void> = [] // per-knob DOM sync closures (keep each knob control in step with #state)
   #surface: HTMLElement | undefined
   #canvasCol: HTMLElement | undefined // the right column (holds the artboard) — toggles the empty-specimen hint
   #host: RendererHost | undefined // a2ui mode: the CURRENT renderer (disposed + rebuilt each change, N3)
@@ -339,7 +505,7 @@ class ComponentPreview extends HTMLElement {
     root.className = 'preview'
     const controls = document.createElement('div')
     controls.className = 'preview-controls'
-    controls.append(this.#buildDetails(meta.kindLabel), this.#buildKnobs(), ...this.#buildVariants())
+    controls.append(this.#buildDetails(meta.kindLabel), this.#buildKnobs())
 
     const canvasCol = document.createElement('div')
     canvasCol.className = 'preview-canvas'
@@ -385,7 +551,7 @@ class ComponentPreview extends HTMLElement {
       if (typeof d === 'string' && d !== '' && d !== 'null') this.#state.set(attr.name, d)
     }
     for (const [name, value] of Object.entries(COMPONENT_INITIAL[this.#target] ?? {})) this.#state.set(name, value)
-    if (!NO_SLOT_TEXT.has(this.#target)) this.#state.set(SLOT_TEXT, slotTextDefault(this.#target))
+    if (SLOT_TEXT_OK.has(this.#target)) this.#state.set(SLOT_TEXT, slotTextDefault(this.#target))
   }
 
   // ── left column builders ───────────────────────────────────────────────────────────────────────────────────
@@ -434,11 +600,59 @@ class ComponentPreview extends HTMLElement {
     }
 
     if (knob.kind === 'enum') {
-      // Dogfoods ui-select in place of a native <select> (Kim's directive). Options are [role=option]
-      // light-DOM children appended BEFORE connection — ui-select moves them into its listbox at first
-      // connect (select.md `slots`). The `label` prop names the trigger (ADR-0085); the visible <label for>
-      // above adds click-to-focus. The `select` event (NOT `change`) is the commit signal; `.value` is the
-      // read/write property (the gallery themeSelect() precedent).
+      const members = knob.values ?? []
+      if (members.length > 0 && members.length <= RADIO_GROUP_MAX) {
+        // Dogfoods ui-radio-group (Kim's routing rule — small closed enum, every option visible at once).
+        // Real API (radio-group.md / radio.md): a `ui-radio` child per member (`.value` + its label text), the
+        // GROUP's own `change` event is the commit signal (NOT the individual radio's — that one bubbles
+        // through the group and is consumed/re-emitted; see the target filter below), `.checked` is the
+        // read/write property. UNLIKE ui-select's KNOB_UNSET "—", a radio-group always has a selection (its
+        // own contract has no "none" state) — pre-select the seeded/current value, falling back to the FIRST
+        // member when nothing is seeded yet (a2ui mode's catalog carries no per-prop defaults).
+        const group = document.createElement('ui-radio-group') as UIRadioGroupElement
+        group.id = id
+        group.className = 'knob-radio-group'
+        group.setAttribute('aria-label', knob.name)
+        // The fallback pre-selection must be a REAL #state seed, not merely a visual default: #rootProps() /
+        // #applyKnob() read #state, not "whatever the radio-group widget happens to show" — an unseeded knob
+        // would render 'sm' checked in the UI while the specimen itself carried no `size` at all (and a click
+        // on the ALREADY-checked 'sm' radio is then a no-op — radios can only be REPLACED, never toggled off —
+        // so the desync would never self-correct). Seeding here, once, keeps the widget and the specimen in sync.
+        if (!this.#state.has(knob.name)) this.#state.set(knob.name, members[0])
+        const radios: UIRadioElement[] = []
+        for (const member of members) {
+          const radio = document.createElement('ui-radio') as UIRadioElement
+          radio.value = member
+          radio.textContent = member
+          radios.push(radio)
+          group.append(radio)
+        }
+        const syncChecked = (): void => {
+          const current = this.#state.get(knob.name) || members[0]
+          for (const radio of radios) radio.checked = radio.value === current
+        }
+        syncChecked()
+        group.addEventListener('change', (event) => {
+          // Only the group's OWN re-emitted commit event (target === group) carries the SETTLED selection —
+          // the individual radio's raw bubbled `change` (target === the radio) fires on this same node too
+          // (event listeners on an ancestor see the bubble phase), but at that instant the group has not yet
+          // enforced exclusivity (#commit runs inside the group's own listener, registered separately), so
+          // reading `.checked` there can still see the PREVIOUS selection. Filtering to the target skips that
+          // transient read and reacts to the one authoritative event radio-group.md documents.
+          if (event.target !== group) return
+          const checked = radios.find((r) => r.checked)
+          if (checked) this.#setKnob(knob.name, checked.value)
+        })
+        this.#refreshers.push(syncChecked)
+        row.append(group)
+        return row
+      }
+
+      // Dogfoods ui-select in place of a native <select> (Kim's directive) for a larger enum. Options are
+      // [role=option] light-DOM children appended BEFORE connection — ui-select moves them into its listbox at
+      // first connect (select.md `slots`). The `label` prop names the trigger (ADR-0085); the visible <label
+      // for> above adds click-to-focus. The `select` event (NOT `change`) is the commit signal; `.value` is
+      // the read/write property (the gallery themeSelect() precedent).
       const select = document.createElement('ui-select') as UISelectElement
       select.id = id
       select.className = 'knob-select'
@@ -471,20 +685,21 @@ class ComponentPreview extends HTMLElement {
     }
 
     if (knob.kind === 'boolean') {
-      // Dogfoods ui-checkbox in place of a native <input type=checkbox> (Kim's directive). `checked` + the
-      // `change` event are the wire; `aria-label` names the bare box (checkbox.md labelSource) and the
-      // visible <label for> above adds click-to-focus.
-      const check = document.createElement('ui-checkbox') as UICheckboxElement
-      check.id = id
-      check.className = 'knob-check'
-      check.setAttribute('size', 'sm')
-      check.setAttribute('aria-label', knob.name)
-      check.checked = this.#state.get(knob.name) === 'true'
-      check.addEventListener('change', () => this.#setKnob(knob.name, check.checked ? 'true' : 'false'))
+      // Dogfoods ui-switch in place of a native <input type=checkbox> (Kim's directive — an instant on/off
+      // toggle reads better as a switch than a checkbox for a live knob; same UIIndicatorElement API as
+      // ui-checkbox, so this is a drop-in swap). `checked` + the `change` event are the wire; `aria-label`
+      // names the bare box (switch.md labelSource) and the visible <label for> above adds click-to-focus.
+      const toggle = document.createElement('ui-switch') as UISwitchElement
+      toggle.id = id
+      toggle.className = 'knob-switch'
+      toggle.setAttribute('size', 'sm')
+      toggle.setAttribute('aria-label', knob.name)
+      toggle.checked = this.#state.get(knob.name) === 'true'
+      toggle.addEventListener('change', () => this.#setKnob(knob.name, toggle.checked ? 'true' : 'false'))
       this.#refreshers.push(() => {
-        check.checked = this.#state.get(knob.name) === 'true'
+        toggle.checked = this.#state.get(knob.name) === 'true'
       })
-      row.append(check)
+      row.append(toggle)
       return row
     }
 
@@ -504,57 +719,6 @@ class ComponentPreview extends HTMLElement {
       field.value = this.#state.get(knob.name) ?? ''
     })
     row.append(field)
-    return row
-  }
-
-  /** A derived variant switcher: one chip-row per enum knob (zero hand-maintained variant data). */
-  #buildVariants(): HTMLElement[] {
-    const enums = this.#knobs.filter((k) => k.kind === 'enum')
-    if (enums.length === 0) return []
-    const section = document.createElement('div')
-    const label = document.createElement('p')
-    label.className = 'preview-section-label'
-    label.textContent = 'Variants'
-    const rows = document.createElement('div')
-    rows.className = 'preview-variants'
-    for (const knob of enums) rows.append(this.#buildChipRow(knob))
-    section.append(label, rows)
-    return [section]
-  }
-
-  // Deliberately NOT migrated to ui-button (the dogfooding wave left this native + flagged): a chip-row is a
-  // single-select segmented toggle (one `aria-pressed` chip active at a time), and ui-button models no
-  // pressed/selected state — expressing it would force a host `aria-pressed` attribute plus variant-swapping
-  // for the active look, changing the control's semantics. ui-radio-group is the apt primitive, but that is a
-  // larger reshape than this consumption pass. Left as a native toggle-button set.
-  #buildChipRow(knob: Knob): HTMLElement {
-    const row = document.createElement('div')
-    row.className = 'chip-row'
-    const label = document.createElement('span')
-    label.className = 'chip-row-label'
-    label.textContent = knob.name
-    const set = document.createElement('div')
-    set.className = 'chip-set'
-    const chips: Array<{ value: string; el: HTMLButtonElement }> = []
-    for (const member of knob.values ?? []) {
-      const chip = document.createElement('button')
-      chip.type = 'button'
-      chip.className = 'chip'
-      chip.textContent = member
-      chip.setAttribute('aria-pressed', 'false') // a toggle button — its pressed state is exposed to AT, not CSS-only
-      chip.addEventListener('click', () => this.#setKnob(knob.name, member))
-      chips.push({ value: member, el: chip })
-      set.append(chip)
-    }
-    this.#refreshers.push(() => {
-      const current = this.#state.get(knob.name) ?? ''
-      for (const c of chips) {
-        const active = c.value === current
-        c.el.classList.toggle('is-active', active)
-        c.el.setAttribute('aria-pressed', String(active))
-      }
-    })
-    row.append(label, set)
     return row
   }
 
@@ -655,9 +819,10 @@ class ComponentPreview extends HTMLElement {
     const el = document.createElement(this.#target)
     const sample = COMPONENT_SAMPLE_CHILDREN[this.#target]
     if (sample) el.append(...sample())
+    for (const [attr, value] of Object.entries(COMPONENT_SAMPLE_ATTRS[this.#target] ?? {})) el.setAttribute(attr, value)
     this.#liveEl = el
     surface.replaceChildren(el)
-    for (const knob of this.#knobs) this.#applyKnob(el, knob) // no SLOT_TEXT knob at all for a NO_SLOT_TEXT target (above)
+    for (const knob of this.#knobs) this.#applyKnob(el, knob) // no SLOT_TEXT knob at all for a NO_SLOT_TEXT/STRUCTURAL target (above)
     for (const evt of ['change', 'input', 'toggle', 'select']) el.addEventListener(evt, () => this.#readBackComponent())
     applyRootStretch(surface)
     this.#updateEmptyHint()
@@ -676,10 +841,11 @@ class ComponentPreview extends HTMLElement {
   #applyKnob(el: HTMLElement, knob: Knob): void {
     const raw = this.#state.get(knob.name)
     if (knob.name === SLOT_TEXT) {
-      // componentKnobs() no longer GROWS a SLOT_TEXT knob for a NO_SLOT_TEXT target at all, so this branch is
-      // unreachable for one in normal operation — kept as defense-in-depth (a stale #knobs entry from a future
-      // caching bug would still no-op here rather than wipe the control's own structural children).
-      if (NO_SLOT_TEXT.has(this.#target)) return
+      // componentKnobs() no longer GROWS a SLOT_TEXT knob at all for a NO_SLOT_TEXT or STRUCTURAL target, so
+      // this branch is unreachable for either in normal operation — kept as defense-in-depth (a stale #knobs
+      // entry from a future caching bug would still no-op here rather than wipe the control's own structural
+      // children / STRUCTURAL sample content).
+      if (NO_SLOT_TEXT.has(this.#target) || STRUCTURAL.has(this.#target)) return
       el.textContent = raw ?? ''
       return
     }
