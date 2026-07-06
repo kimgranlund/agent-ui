@@ -205,63 +205,28 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.switcher-select {
-  font: inherit;
-  font-size: 0.82rem;
-  padding: 0.3rem 0.4rem;
-  border-radius: 6px;
-  border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  background: var(--md-sys-color-neutral-surface-high);
-  color: var(--md-sys-color-neutral-on-surface);
-}
 
-/* ── canvas pane: tab strip · panels · the translate-centered stage · reset ─────────────────────────────── */
-.tab-strip {
-  flex: 0 0 auto;
-  display: flex;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem 0;
-  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
-}
-.tab {
-  appearance: none;
-  border: none;
-  background: transparent;
-  padding: 0.4rem 0.85rem;
-  font: inherit;
-  font-size: 0.82rem;
-  border-radius: 8px 8px 0 0;
-  cursor: pointer;
-  color: var(--md-sys-color-neutral-on-surface-variant);
-  border-block-end: 2px solid transparent;
-}
-.tab:hover {
-  color: var(--md-sys-color-neutral-on-surface);
-}
-.tab.is-active {
-  color: var(--md-sys-color-primary-high);
-  border-block-end-color: var(--md-sys-color-primary-high);
-  font-weight: 600;
-}
-
-.tab-panels {
+/* ── canvas pane: the ui-tabs compound (Batch C dogfood — was a hand-rolled `role=tablist` strip + roving JS) ──
+ * ui-tabs owns the tablist strip, the tab ink/indicator, selection, ARIA, and the roving keyboard (tabs.css) —
+ * NEVER restyled here. This page owns only the OUTER layout that fits the compound into the pane column and
+ * lets the ACTIVE panel fill the pane and scroll its own area. The component keeps all panels mounted, showing
+ * only the selected one via `hidden` (ui-tab-panel[hidden]{display:none}); this sheet sets NO `display` on the
+ * panels, so that show/hide rule is never clobbered. */
+.canvas-tabs {
+  /* fill the pane column, then lay the compound out as the SAME [ tablist · active panel ] stack it already is
+   * (:scope is display:block) — enabling the fill so the active panel, not the whole pane, scrolls. This is
+   * consumer layout (sizing the control into the page), not a restyle of its visual treatment. */
   flex: 1 1 auto;
   min-block-size: 0;
-  position: relative;
+  display: flex;
+  flex-direction: column;
 }
-.tab-panel {
-  display: none;
-  position: absolute;
-  inset: 0;
+/* the active panel grows + scrolls; hidden panels are display:none (component), so they drop out of the flex
+ * flow. No `display` is set here (that would out-specify ui-tab-panel[hidden] and un-hide the inactive panels). */
+.canvas-tabs > ui-tab-panel {
+  flex: 1 1 auto;
+  min-block-size: 0;
   overflow: auto;
-}
-.tab-panel.is-active {
-  display: block;
-}
-.tab-panel > .code-block {
-  margin: 0;
-  min-block-size: 100%;
-  box-sizing: border-box;
 }
 
 /* The Canvas tab's stage — the SHARED artboard (lib/canvas-surface), mounted via createCanvasSurface() in
