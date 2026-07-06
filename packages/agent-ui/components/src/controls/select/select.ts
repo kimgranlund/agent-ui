@@ -80,6 +80,12 @@ const props = {
 
   // `placeholder` — the label shown on the trigger when nothing is selected. Not submitted.
   placeholder: { ...prop.string('') },
+
+  // `size` — the dimensional-ramp step (text-field.ts:130 precedent). Reflects so the [size]
+  // attribute-selector repoint in select.css (trigger height/font/icon/gap, sm/lg blocks) applies
+  // to JS-set values too, not only author-set attributes — the T7 coherence fix (ADR-0081 doc-tail:
+  // select shipped the [size] CSS ramp with no declaring prop/attribute, an API-drift blind spot).
+  size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
 } satisfies PropsSchema
 
 // ── Element ──────────────────────────────────────────────────────────────────────────────────────

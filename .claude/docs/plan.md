@@ -277,7 +277,11 @@ This section is itself a deliverable — the foundation's job is to set the patt
   per component. Tokens: `--ui-{name}-{prop}`; color roles `--md-sys-color-{family}-{role}`; scales `--space-*`,
   `--radius-*`, `--ui-{height,font,ind}-{sm,md,lg}`.
 - Events: simple names only — `change`, `input`, `select`, `open`, `close`, `toggle` (no `ui-`-prefixed
-  compounds). Typed via a `CustomEvent<Detail>` map and an `HTMLElementEventMap` augmentation.
+  compounds). **Carve-out (ADR-0081 Amendment 2, Kim):** native `click` is additionally sanctioned for a
+  **pure activation control** — `extends: UIElement` (not form-associated) whose descriptor declares no
+  event other than `click` (`pressActivation` fires the platform `host.click()`, never a synthetic
+  compound; `ui-button` is the instance, per the `rubrics/component.md` C1 precedent). Typed via a
+  `CustomEvent<Detail>` map and an `HTMLElementEventMap` augmentation.
 - Register tags in `HTMLElementTagNameMap` so `document.querySelector('ui-button')` is typed.
 
 **Type-system patterns (modern/advanced, decorator-free)**
@@ -359,18 +363,28 @@ quality bar, including the global token wiring) before G6–G7 fan out.
 
 ## 12. Open decisions & risks
 
+> **Dispositioned at G8** (2026-07-05, the release-readiness pass — decomp `g8-gallery-release-readiness`):
+> every item is RESOLVED or explicitly DEFERRED with its reason and revisit trigger. The section stays as
+> the ledger of record; a future open decision appends here.
+
 - **Test runner** (§10): **RESOLVED → Vitest** (jsdom inner loop; `@vitest/browser` + Playwright for the
   browser-truth layer at G5). `tsc` (`npm run check`) stays the type gate.
-- **App build/dev entry**: the demo `index.html` was removed, so `vite build` / `dev` have no entry until
-  the gallery (G8). `npm run check` + `npm test` are the standing gates meanwhile; revisit a library-emit
-  build (the "Library emit" item above) when agent-ui is first consumed.
-- **Library emit**: agent-ui currently builds as an app (`noEmit`). Shipping it as a consumable package
-  later needs a `tsc` emit + `.d.ts` path (rce uses a separate `tsconfig.build.json`); out of scope
-  until the first family ships.
-- **Password exception**: adopt rce's allow-listed `<input type=password>` exception, or hold a strict
-  zero-native line and accept the masking gap. Decide when `ui-password-field` is scheduled (post-family).
-- **Shadow vs light boundary for the eventual app shell** — only the shell needs a shadow root; controls
-  stay light DOM.
-- **Risk**: the `declare`-merge prop pattern is ergonomic but unusual; validate it against the strict
-  tsconfig early in G2 before every control depends on it.
+- **App build/dev entry**: **RESOLVED — the docs site IS the app entry.** `site/index.html` + the per-page
+  shells landed with the docs-site waves; `vite build` has been green since the ADR-0077 wave, and the G8
+  gallery (`gallery.html`, ADR-0079) joined an already-live build. (The earlier "no entry until the
+  gallery" reading is retired — the entry arrived before the gallery did.)
+- **Library emit**: **DEFERRED with reason (Kim confirmed, 2026-07-05 — G8 fork F2a).** No external
+  consumer or publish target exists yet. The G8 per-control `exports` (ADR-0080) are authored emit-ready
+  on the TS source; at first publish the targets flip to `dist/` + `.d.ts` via a `tsconfig.build.json` —
+  mechanical, no API redesign. Revisit trigger: the first out-of-repo consumer, or a publish decision.
+- **Password exception**: **RESOLVED — the strict zero-native line HELD.** `ui-text-field type=password`
+  shipped on the contenteditable surface with masking (ADR-0044); the rce allow-listed
+  `<input type=password>` exception was never needed. Accepted residual (documented in ADR-0044):
+  OS/password-manager autofill does not engage.
+- **Shadow vs light boundary for the eventual app shell**: **RESOLVED — light DOM held everywhere.** The
+  site shell is deliberately CSS-only light-DOM (`site/pages/_page.ts` SHELL NOTE); `static shadow`
+  remains the unused opt-in seam. Revisit only if an app-shell control family is scheduled (part of the
+  NEXT-tier scope dial — Kim's, unchosen).
+- **Risk — the `declare`-merge prop pattern**: **RESOLVED / CLOSED at G2.** Validated against the strict
+  tsconfig (`props-typing.test.ts`, negative-control-proven) and load-bearing fleet-wide since.
 ```

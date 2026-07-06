@@ -283,6 +283,42 @@ describe('ui-button BTN-CARET — caret = font, icon = icon (ADR-0012 §6, both 
 
 const transDurMs = (el: HTMLElement): number => px(getComputedStyle(el).transitionDuration) * 1000
 
+/**
+ * Await every `transitionrun` event fired on `el` from ONE style recalc — a DETERMINISTIC proof that a CSS
+ * transition actually started, unlike sampling `getAnimations()`/`getComputedStyle` synchronously right
+ * after a mutation: the CSS Transitions spec does not guarantee the UA has begun the transition by the time
+ * script resumes (starting a transition is a queued "update the rendering" step, not a synchronous side
+ * effect of the style write) — under parallel full-suite load that step can lag past the synchronous read,
+ * which is exactly the ~40% flake this replaces. Collects EVERY property that starts transitioning from the
+ * same recalc (a colour change can transition several paint props at once) by resetting a short settle-timer
+ * on each event and resolving once no further event arrives within it; rejects with a legible message if
+ * nothing fires within `timeoutMs` (well under the suite's default per-test timeout).
+ */
+function awaitTransitionRuns(el: HTMLElement, timeoutMs = 2000): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    const props: string[] = []
+    let settle: ReturnType<typeof setTimeout> | undefined
+    const cleanup = (): void => {
+      clearTimeout(bail)
+      if (settle) clearTimeout(settle)
+      el.removeEventListener('transitionrun', onRun)
+    }
+    const onRun = (e: Event): void => {
+      props.push((e as TransitionEvent).propertyName)
+      if (settle) clearTimeout(settle)
+      settle = setTimeout(() => {
+        cleanup()
+        resolve(props)
+      }, 50) // batches near-simultaneous transitionrun events from the same recalc
+    }
+    const bail = setTimeout(() => {
+      cleanup()
+      reject(new Error(`no transitionrun fired on ${el.tagName} within ${timeoutMs}ms`))
+    }, timeoutMs)
+    el.addEventListener('transitionrun', onRun)
+  })
+}
+
 describe('ui-button motion — gated :state(ready) paint transition (both engines)', () => {
   it('first paint SNAPS (no transition pre-ready), then :state(ready) ARMS the transition', async () => {
     const { btn } = mount('<ui-button variant="solid">Label</ui-button>')
@@ -310,12 +346,14 @@ describe('ui-button motion — gated :state(ready) paint transition (both engine
     await nextFrames(2)
     expect(transDurMs(btn), 'transition not armed after :state(ready)').toBeGreaterThan(0)
 
-    // AFTER ready: the same colour change now spawns a running CSS transition on a PAINT property.
+    // AFTER ready: the same colour change now spawns a running CSS transition on a PAINT property — proven by
+    // the `transitionrun` EVENT (fires deterministically once the UA starts the transition), not a
+    // getAnimations()/getComputedStyle sample taken at an arbitrary instant right after the mutation (the
+    // race that flaked ~40% under parallel-suite load — see awaitTransitionRuns above).
+    const runs = awaitTransitionRuns(btn)
     btn.setAttribute('variant', 'soft')
-    void getComputedStyle(btn).backgroundColor
-    const anims = btn.getAnimations()
-    expect(anims.length, 'a colour change did NOT animate after :state(ready)').toBeGreaterThan(0)
-    const animatedProps = anims.map((a) => (a as CSSTransition).transitionProperty)
+    const animatedProps = await runs
+    expect(animatedProps.length, 'a colour change did NOT animate after :state(ready)').toBeGreaterThan(0)
     expect(
       animatedProps.some((p) => p === 'background-color' || p === 'color' || p === 'border-color'),
       'the running transition is not a state-paint property',

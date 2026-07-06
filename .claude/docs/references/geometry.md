@@ -36,7 +36,10 @@ glyph and breaks the square.
 
 Two frame quantities are **not** uniformly `∝ height` — they split by what the control *is*: an
 **action / keyboard control** (the button family — a press affordance) vs. an **entry / surface control**
-(`ui-text-field` and the field family — a typing surface, kin to a container).
+(`ui-text-field` and the field family — a typing surface, kin to a container). *G8 membership note:
+`ui-select` joined the **sized entry family** — a `size` attribute (`sm/md/lg`) riding the same per-`[size]`
+lookup as `ui-text-field`; its descriptor + `select.css` are the contract (no new ADR — it completes
+text-field's ratified geometry pattern).*
 
 ### Corner radius
 

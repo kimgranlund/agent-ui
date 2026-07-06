@@ -1,0 +1,115 @@
+/* component-gallery.css — grid + toolbar chrome for <component-gallery> (ADR-0079, component-gallery.lld.md
+ * LLD-C3/C4). Page meta-infra only — it never restyles a ui-* control (every rendered specimen keeps its own
+ * control CSS, exactly like component-preview.css). Every colour a --md-sys-color-* role, so forced-colors
+ * (§6 E7) is inherited for free from the token layer (tokens.css) — no per-rule WHCM overrides needed here. */
+
+component-gallery {
+  display: block;
+}
+
+.gallery-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-block-end: 1.5rem;
+}
+
+.gallery-filter {
+  flex: 1 1 16rem;
+  min-inline-size: 12rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 0.6rem;
+  background: var(--md-sys-color-neutral-surface);
+  color: var(--md-sys-color-neutral-on-surface);
+  font: inherit;
+  font-size: 0.9rem;
+}
+.gallery-filter:focus-visible {
+  outline: 2px solid var(--md-sys-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.gallery-select {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.gallery-select select {
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.gallery-select select:focus-visible {
+  outline: 2px solid var(--md-sys-color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* The shown-count watch readout (LLD §4) — pushed to the toolbar's trailing edge. */
+.gallery-readout {
+  margin-inline-start: auto;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  white-space: nowrap;
+}
+
+/* The ONE theme subtree (LLD-C4) — a plain block wrapper; its `scheme`/`scale`/`density`/`theme` attributes
+ * are set by ComponentGallery's scope-owned effect and read by the token system's own selectors. */
+theme-provider {
+  display: block;
+}
+
+.gallery-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.gallery-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gallery-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.gallery-card-heading {
+  margin: 0;
+  font-family: var(--ui-mono);
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+
+.gallery-card-tier {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* The empty-filter-result row (§6 E4) — the adr-index `role="status"` precedent, promoted to a visible,
+ * dashed-border row (never `display:none`-only, so it reads as a state, not a blank page). */
+.gallery-empty {
+  padding: 1.5rem;
+  border: 1px dashed var(--md-sys-color-neutral-outline-variant);
+  border-radius: 0.6rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.88rem;
+  text-align: center;
+}

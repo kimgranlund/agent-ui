@@ -217,7 +217,12 @@ export const NAV: readonly NavGroup[] = [
   },
   {
     // Site-level meta pages (ungrouped — no component label, so not a fleet TOC group per site-toc.test.ts).
-    links: [{ href: './adr-index.html', label: 'Decision Records' }],
+    // The gallery (ADR-0079) joins here too: it is docs meta-infra composing every control, not itself a
+    // fleet component, so it carries no per-component label/tab-strip group.
+    links: [
+      { href: './adr-index.html', label: 'Decision Records' },
+      { href: './gallery.html', label: 'Gallery' },
+    ],
   },
 ]
 

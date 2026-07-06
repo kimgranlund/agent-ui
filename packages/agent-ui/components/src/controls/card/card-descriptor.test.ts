@@ -13,11 +13,7 @@ declare const process: { cwd(): string }
 
 // G9 s7 — card.md descriptor (ADR-0004), two layers targeting the fence (mirrors text-field s10):
 //   (a) STRUCTURAL — the YAML frontmatter parses + is schema-valid: validateComponentDescriptor reports zero
-//       failures EXCEPT the one pending BAD_EXTENDS (extends:UIContainerElement). The descriptor schema's
-//       BASE_CLASSES gains UIContainerElement in the INTEGRATION slice s12 (a shared descriptor-schema edit,
-//       out of this fan-out folder's scope); until that lands the schema flags the new base. We tolerate ONLY
-//       that one known-pending failure here — every other structural defect still fails — so the slice is green
-//       in isolation and flips to a fully-clean check once s12 lands (the filter becomes a no-op).
+//       failures (extends:UIContainerElement — BASE_CLASSES already sanctions it; no carve-out needed).
 //   (b) CONTRACT↔PROPS — the descriptor's attributes[] is a faithful BIJECTION with the live
 //       UICardElement.props (the ...surfaceProps spread: elevation/brightness), via compareDescriptorToProps —
 //       0 drift, and a drifted/added/removed attribute FAILS (the negative controls).
@@ -51,13 +47,10 @@ describe('card.md descriptor — frontmatter parses + schema-valid (part a)', ()
     expect(/formAssociated:\s*false/.test(fence)).toBe(true)
   })
 
-  it('is schema-valid except the s12-pending BAD_EXTENDS (UIContainerElement not yet in BASE_CLASSES)', () => {
-    // anti-vacuous: the two attributes parsed (in order) before the schema is consulted
+  it('is schema-valid with zero structural failures (extends UIContainerElement, a sanctioned base)', () => {
+    // anti-vacuous: the three attributes parsed (in order) before the schema is consulted
     expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES)
-    // BASE_CLASSES gains UIContainerElement in s12 (the integration slice). Tolerate ONLY that one failure;
-    // every other structural defect still fails. Post-s12 the filter is a no-op (the list is already empty).
-    const blocking = validateComponentDescriptor(parsed).filter((f) => f.code !== 'BAD_EXTENDS')
-    expect(blocking).toEqual([])
+    expect(validateComponentDescriptor(parsed)).toEqual([])
   })
 })
 

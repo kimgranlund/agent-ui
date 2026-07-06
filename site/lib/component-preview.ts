@@ -86,10 +86,11 @@ function knobFromAttribute(attr: ParsedAttribute): Knob {
   }
 }
 
-/** Every editable knob for a component-mode control: one per named attribute, plus the default-slot text knob. */
-function componentKnobs(attrs: readonly ParsedAttribute[]): Knob[] {
+/** Every editable knob for a component-mode control: one per named attribute, plus the default-slot text knob
+ *  — SKIPPED for a NO_SLOT_TEXT target (below): it has no text slot to edit, so no dead knob is grown for it. */
+function componentKnobs(attrs: readonly ParsedAttribute[], tag: string): Knob[] {
   const knobs = attrs.filter((a) => typeof a.name === 'string' && a.name !== '').map(knobFromAttribute)
-  knobs.push({ name: SLOT_TEXT, kind: 'text' })
+  if (!NO_SLOT_TEXT.has(tag)) knobs.push({ name: SLOT_TEXT, kind: 'text' })
   return knobs
 }
 
@@ -191,6 +192,96 @@ function sampleFor(name: string, def: ComponentDef): Sample {
     : { rootRef: { children: ['s_child'] }, extras: [text] }
 }
 
+// ── sample children — component mode ────────────────────────────────────────────────────────────────────────
+// The component-mode counterpart to a2ui-mode's SAMPLE_TREES/A2UI_INITIAL above: a bare `document.createElement
+// (tag)` isn't enough for a control whose OWN `connected()` requires real light-DOM structure to construct at
+// all (not just a knob-driven attribute) — ui-tooltip/ui-menu/ui-popover each throw without a trigger/anchor as
+// their first element child (`#ensureParts()`, tooltip.ts / menu.ts / popover.ts). Component mode otherwise
+// NEVER appends children (a knob only ever sets an attribute or the default-slot text) — this is the one,
+// narrow exception, keyed by TAG (component mode has no catalog def to key by name, unlike SAMPLE_TREES).
+const sampleTrigger = (): HTMLElement => {
+  const btn = document.createElement('button')
+  btn.type = 'button'
+  btn.textContent = 'Trigger'
+  return btn
+}
+const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
+  'ui-tooltip': () => [sampleTrigger()],
+  'ui-menu': () => [sampleTrigger()],
+  'ui-popover': () => [sampleTrigger()],
+}
+
+// The component-mode counterpart to a2ui-mode's A2UI_INITIAL: a per-tag knob-value seed for a control whose
+// OWN descriptor default is not demonstrable (not a design fix — icon.md's `name: ''` default is CORRECT, an
+// unset icon legitimately renders nothing; this only supplies a DEMO value, same discipline as A2UI_INITIAL
+// never touching the catalog). ui-icon is the one fleet member today: `name` defaults to '' (renders nothing,
+// icon.ts:38-41), so a bare specimen would be an invisible 0×0 box — seeded here with a real, shipped Phosphor
+// name so the gallery's whole-shape law (box > 0) has something to measure.
+const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
+  'ui-icon': { name: 'check' },
+}
+
+// ── SLOT_TEXT gating — component mode (the fleet-wide hardening) ──────────────────────────────────────────────
+// `componentKnobs()` unconditionally grows a SLOT_TEXT knob for every component-mode target (a plain
+// `el.textContent = raw` write). That is correct for a control whose default/unnamed slot genuinely IS text —
+// but SEVERAL controls build/own real structural children in `connected()` (a self-created editor, listbox,
+// dialog, panel, grid, tablist strip, rail/thumbs, or label/description/error chrome) that `textContent =`
+// would silently destroy (a `.textContent` write clears EVERY child, not just a hypothetical text node).
+//
+// MECHANISM (per Kim's ruling): the descriptor model does NOT carry this distinction structurally today —
+// `slots[]` is free-text prose (a schema change is real ADR-0004 surgery, out of this file's scope) — so this
+// is an EXPLICIT PER-TAG partition, mirroring the COMPONENT_SAMPLE_CHILDREN / a2ui-mode A2UI_INITIAL precedent
+// (an allowlist + a denylist, not a runtime heuristic). A runtime check (e.g. "skip if el.children.length > 0
+// at apply time") was considered and REJECTED: ui-text legitimately builds a heading STAMP element when
+// `as ≠ 'none'` (ADR-0025/0078) and runs a self-healing childList observer that re-adopts its text after a
+// `textContent` clobber — so a live children-count would misclassify a genuinely SAFE, self-healing control as
+// unsafe. The partition below was verified per-control (component-preview-slot-text.test.ts pins it — see
+// there for the fleet-wide diagnosis) — NOT by observing runtime state.
+//
+// NO_SLOT_TEXT — connected() builds/owns real structural children SLOT_TEXT would destroy. 3 of these (the
+// COMPONENT_SAMPLE_CHILDREN keys) additionally need a sample trigger just to CONSTRUCT; ui-icon builds a
+// name-driven <svg> (setIcon(), icon.ts:38-41) whenever its `name` knob is non-empty — NOT the "builds zero
+// children" case SLOT_TEXT_OK requires, and a `textContent =` write there would clobber that SVG the moment
+// `name` is set (the exact defect class this partition exists to prevent); the rest self-build unaided (their
+// `connected()` needs no author-supplied children at all).
+export const NO_SLOT_TEXT = new Set([
+  'ui-calendar', // #ensureShell() builds the whole nav+grid panel unconditionally
+  'ui-combo-box', // #ensureParts(): a control-created editor + listbox
+  'ui-field', // #ensureParts(): the label/description/error chrome (3 parts)
+  'ui-icon', // setIcon() injects a real <svg> child whenever `name` is non-empty (icon.ts:38-41) — a name-driven slot, not authored text
+  'ui-menu', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel
+  'ui-modal', // #ensureDialog(): the control-owned <dialog> part
+  'ui-popover', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel
+  'ui-select', // #ensureParts(): a control-created trigger button + listbox
+  'ui-slider-multi', // JS-managed light-DOM rail/fill/thumb children (NOT ::before/::after, unlike ui-slider)
+  'ui-tabs', // the control-created tablist strip PART
+  'ui-text-field', // the contenteditable editor PART (×2 parts: editor + measurer)
+  'ui-tooltip', // #ensureParts(): anchor (COMPONENT_SAMPLE_CHILDREN) + panel
+])
+
+// SLOT_TEXT_OK — SLOT_TEXT is a real, safe knob: either a genuine text/label default slot (button/checkbox/
+// radio/switch/text — the accessible label content), or a childless leaf/container with no structural content
+// of its own to lose (card/column/form-provider/grid/list/radio-group/row/slider — each verified to build
+// ZERO light-DOM children in connected(); their slots are entirely author-supplied, so a bare specimen has
+// nothing SLOT_TEXT could destroy). Paired with NO_SLOT_TEXT: the two sets PARTITION the whole fleet — the
+// coverage test asserts this, so a new control lands in neither by default and fails loud instead of silently
+// inheriting a guess.
+export const SLOT_TEXT_OK = new Set([
+  'ui-button',
+  'ui-card',
+  'ui-checkbox',
+  'ui-column',
+  'ui-form-provider',
+  'ui-grid',
+  'ui-list',
+  'ui-radio',
+  'ui-radio-group',
+  'ui-row',
+  'ui-slider',
+  'ui-switch',
+  'ui-text',
+])
+
 // ── the element ──────────────────────────────────────────────────────────────────────────────────────────────
 type Mode = 'component' | 'a2ui'
 
@@ -264,7 +355,10 @@ class ComponentPreview extends HTMLElement {
     const doc = loadDescriptorByTag(this.#target)
     if (!doc) return undefined
     const tier = doc.descriptor.scalars.get('tier')
-    return { knobs: componentKnobs(doc.descriptor.attributes), kindLabel: `ui-* control${tier ? ` · tier: ${tier}` : ''}` }
+    return {
+      knobs: componentKnobs(doc.descriptor.attributes, this.#target),
+      kindLabel: `ui-* control${tier ? ` · tier: ${tier}` : ''}`,
+    }
   }
 
   /** Seed #state with each knob's starting value: descriptor defaults (component) or the A2UI_INITIAL seed (a2ui). */
@@ -279,7 +373,8 @@ class ComponentPreview extends HTMLElement {
       const d = attr.default
       if (typeof d === 'string' && d !== '' && d !== 'null') this.#state.set(attr.name, d)
     }
-    this.#state.set(SLOT_TEXT, slotTextDefault(this.#target))
+    for (const [name, value] of Object.entries(COMPONENT_INITIAL[this.#target] ?? {})) this.#state.set(name, value)
+    if (!NO_SLOT_TEXT.has(this.#target)) this.#state.set(SLOT_TEXT, slotTextDefault(this.#target))
   }
 
   // ── left column builders ───────────────────────────────────────────────────────────────────────────────────
@@ -510,9 +605,11 @@ class ComponentPreview extends HTMLElement {
   #buildComponent(): void {
     const surface = this.#surface as HTMLElement
     const el = document.createElement(this.#target)
+    const sample = COMPONENT_SAMPLE_CHILDREN[this.#target]
+    if (sample) el.append(...sample())
     this.#liveEl = el
     surface.replaceChildren(el)
-    for (const knob of this.#knobs) this.#applyKnob(el, knob)
+    for (const knob of this.#knobs) this.#applyKnob(el, knob) // no SLOT_TEXT knob at all for a NO_SLOT_TEXT target (above)
     for (const evt of ['change', 'input', 'toggle', 'select']) el.addEventListener(evt, () => this.#readBackComponent())
     applyRootStretch(surface)
     this.#updateEmptyHint()
@@ -531,6 +628,10 @@ class ComponentPreview extends HTMLElement {
   #applyKnob(el: HTMLElement, knob: Knob): void {
     const raw = this.#state.get(knob.name)
     if (knob.name === SLOT_TEXT) {
+      // componentKnobs() no longer GROWS a SLOT_TEXT knob for a NO_SLOT_TEXT target at all, so this branch is
+      // unreachable for one in normal operation — kept as defense-in-depth (a stale #knobs entry from a future
+      // caching bug would still no-op here rather than wipe the control's own structural children).
+      if (NO_SLOT_TEXT.has(this.#target)) return
       el.textContent = raw ?? ''
       return
     }

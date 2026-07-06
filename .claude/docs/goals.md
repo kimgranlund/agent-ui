@@ -6,14 +6,18 @@
 > The form-control family landed as the **Control Suite** track (Waves 0–5, at the foot of this file) — the full
 > Indicator/Range/Input/Overlay families + `ui-calendar` + the 12-type input field — and the **G7-completion
 > wave** (2026-07-01, ADR-0050/0051/0052) closed `ui-field` + `ui-form-provider` + the keyboard-only end-to-end
-> proof. **State (2026-07-01):** G0–G7 + G9 + the Control Suite DONE; G8 pending.
+> proof. **State (2026-07-05): G0–G9 + the Control Suite + the icon adapter (`@agent-ui/icons` + `ui-icon`,
+> ADR-0065/0066) + G8 ALL DONE — the components foundation is COMPLETE** (see the G8 verdict + root
+> `CHANGELOG.md`). The next tier — layout/display primitives vs agent-app surfaces, plus the deferred
+> multi-theme `theme` package system — is Kim's scope-dial decision, unchosen.
 > Layout: npm-workspaces monorepo — `src/core/*` in milestone text now lives under `packages/agent-ui/components/src/*`.
 > Consumed by the A2UI effort (`.claude/docs/specs/`, `@agent-ui/a2ui`), which tracks these milestones (its
 > Assumption A-2 ≈ G7) and is coordinated by the planning/execution team (`.claude/agents/`).
 
 ## Standing definition of done (applies to every milestone)
 
-- [ ] `npm run check` (tsc) and `npm test` (Vitest) are green. (`vite build` is dormant until the gallery — G8.)
+- [ ] `npm run check` (tsc) and `npm test` (Vitest) are green. (`vite build` is LIVE — the docs site is the
+      app entry since the ADR-0077 wave; the G8 gallery joined it. plan §12 "App build/dev entry".)
 - [ ] No unused locals/parameters; type-only imports use `import type`; local imports keep `.ts`.
 - [ ] New behaviour is covered by probes; the whole suite stays green (monotonic — nothing regresses).
 - [ ] Public surface changes are reflected in the relevant `{name}.md` frontmatter (ADR-0004) and in `plan.md` if a decision moved.
@@ -316,17 +320,39 @@ component family is shippable, keyboard-proven end-to-end in both engines.
 grid, `watch` readouts) — dogfooding the kernel. A read-only coherence audit across API/token/lifecycle
 symmetry.
 
-**Definition of done.**
-- [ ] The gallery renders every control, themed through one provider (scale/density/tone), and survives
-      `forced-colors`.
-- [ ] Coherence audit clean (no API/token/lifecycle drift across the family); budgets held; tree-shake
-      proof passes (importing one control drags only it + real deps).
-- [ ] Per-control `exports` are exposed + the `size` gate measures the per-control MARGINAL (the eventual
+**Definition of done.** **G8 = DONE** (2026-07-05 — all amendments ratified; T3 reviewer GO, T7 audit CLEAN):
+- [x] The gallery renders every control, themed through one provider (scheme/scale/density; `theme` a reserved seam, one `default` package), and survives
+      `forced-colors`. — **DONE** (ADR-0079: `<component-gallery>` composing `<component-preview mode="component">` per
+      descriptor-derived member + ONE `<theme-provider>`; browser-proven whole-shape per member incl. opened
+      overlays; the Chromium forced-colors leg green; the preview hardened for fleet-wide construction —
+      ADR-0077 Amendment 1's SLOT_TEXT partition + sample children + demo seeds).
+- [x] Coherence audit clean (no API/token/lifecycle drift across the family); budgets held; tree-shake
+      proof passes (importing one control drags only it + real deps). — **DONE** (ADR-0081: the standing
+      `family-coherence.test.ts` gate green — 3 groups / 9 invariants incl. the Am1 inverse-`[size]` rule and
+      the Am2 pure-activation `click` carve-out — PLUS the judged read-only audit at zero MAJOR; the one MAJOR
+      found — select's missing size axis — closed: `ui-select` joined the sized entry family, descriptor+CSS
+      the contract, no new ADR. Budgets + tree-shake evidenced through the public entries.)
+- [x] Per-control `exports` are exposed + the `size` gate measures the per-control MARGINAL (the eventual
       DISTRIBUTED footprint, ≤~2 KB/control), not only the all-controls family-barrel worst case (ADR-0049
       Amendment 1; measured 2026-07-05 — a real consumer ships ~5–14 KB; the 22.6 KB family total is worst-case).
-- [ ] `plan.md` open decisions (§12) are all resolved or explicitly deferred with a reason.
-- [ ] A short `CHANGELOG`/status note records the foundation milestone; next tier (layout/display
-      primitives, or the agent-app surfaces) is a scope-dial decision left to you.
+      — **DONE** (ADR-0080: `./controls/{name}` entries + the three-way drift gate + the leave-one-out marginal
+      leg in `npm run size`; all marginals within budget — one cited override, text-field 4021/4352 B gz, the
+      12-type family).
+- [x] `plan.md` open decisions (§12) are all resolved or explicitly deferred with a reason. — **DONE**
+      (plan §12 dispositioned 2026-07-05; the one deferral = library emit, Kim-confirmed F2a — exports
+      emit-ready on TS source, the `dist/`+`.d.ts` flip lands at first publish).
+- [x] A short `CHANGELOG`/status note records the foundation milestone; next tier (layout/display
+      primitives, or the agent-app surfaces) is a scope-dial decision left to you. — **DONE** (root
+      `CHANGELOG.md`, 2026-07-05; the NEXT-tier dial — layout/display primitives vs agent-app surfaces, plus
+      the deferred multi-theme `theme` package system — is FLAGGED as Kim's, deliberately unchosen).
+
+**Verdict.** **G8 DONE — the components foundation is COMPLETE.** Final gates (2026-07-05): `npm run check`
+(tsc + check:site) green · jsdom **2684** (0 expected-fail markers) · browser **806** (Chromium AND WebKit) ·
+`npm run size` foundation **6542/7168 B gz**, family **22935/23552 B gz**, per-control marginals within
+budget. ADRs **0079/0080/0081** accepted + amendments **0077 Am1 · 0081 Am1/Am2** ratified (ADR-0049 Am1's
+G8 booking realized). Open follow-ups (recorded, not this milestone): combo-box `size` axis (the second
+picker's sized-entry completion) · `formUserInvalid` per-control error legs (the G7 follow-up) ·
+button-motion browser-test flake hardening · the multi-theme package-swapping system (seam wired, next-tier).
 
 ---
 

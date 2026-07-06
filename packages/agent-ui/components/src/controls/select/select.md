@@ -37,6 +37,11 @@ attributes:             # attributes-as-API — mirrors UISelectElement.props (f
     type: string
     default: ''
     reflect: false      # not reflected — placeholder is a runtime display hint, not a structural attribute
+  - name: size
+    type: enum
+    values: [sm, md, lg]
+    default: md
+    reflect: true       # reflects so the [size] attribute-selector repoint in select.css (trigger height/font/icon/gap) applies to JS-set values (T7 coherence fix, ADR-0081 doc-tail)
 
 properties:             # IDL beyond attributes-as-API
   - name: name
@@ -51,6 +56,8 @@ properties:             # IDL beyond attributes-as-API
     description: Whether the listbox panel is shown (boolean). Setting true calls showPopover() on the panel (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected + bindable (two-way `open`, ADR-0019). Light-dismiss emits `close` + `toggle` on the host.
   - name: placeholder
     description: The text shown on the trigger when nothing is selected (no option key committed). Not reflected. Updated reactively by a scope-owned effect reading `value` + `placeholder` signals.
+  - name: size
+    description: The trigger's dimensional-ramp step ('sm' | 'md' | 'lg', default 'md'). Reflects `size`. Repoints the trigger's height/font/icon/gap via the [size] attribute-selector block in select.css (the same axis as ui-text-field).
 
 events:
   - name: select

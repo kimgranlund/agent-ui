@@ -13,7 +13,7 @@ import { UIModalElement } from './modal/modal.ts'
 // Read package.json + the CSS barrels as text (vite strips `.css?raw`; no `@types/node` devDep — same
 // approach as the s6/s7 probes).
 // @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
 declare const process: { cwd(): string }
 
 // Phase-1 s17 — the three barrels (ADR-0003) exist and are wired into the package exports:
@@ -123,5 +123,102 @@ describe('CSS barrels — wired into exports + the load-bearing order (s17)', ()
     for (const target of Object.values(pkg.exports)) {
       expect(existsSync(`${PKG}/${target}`), `missing export target: ${target}`).toBe(true)
     }
+  })
+})
+
+// ── T4 (ADR-0080) — the three-way exports-map ↔ controls/ folders ↔ family-barrel drift gate ──
+// Per-control public entries (`./controls/{name}`) let a consumer reach ONE control through the package's
+// public API instead of only the whole-family `./components` barrel (ADR-0080 clause 1). Three independent
+// sources must agree on the SAME set of shipped control modules:
+//   (a) the package.json exports map's `./controls/{name}` entries
+//   (b) the actual folders under controls/ (excluding the shared `_base`/`_surface` bases — file-set.test.ts's
+//       controlDirs exclusion, reused here)
+//   (c) the family barrel's (controls/index.ts) `export * from './{folder}/{file}.ts'` lines
+// A control added to the barrel without an exports-map entry (or vice versa), or a folder wired into
+// neither, is the drift this gate catches (clause 2) — proven below with three synthetic (string/object-
+// level fixtures, no real file mutated) negative controls, one per failure mode.
+
+const barrelSrc = read('src/controls/index.ts')
+const CONTROLS_DIR = `${PKG}/src/controls`
+const folderNames: string[] = readdirSync(CONTROLS_DIR).filter(
+  (e: string) => !e.startsWith('_') && statSync(`${CONTROLS_DIR}/${e}`).isDirectory(),
+)
+
+/** Every REAL `export * from './{folder}/{file}.ts'` line in the barrel (line-comments excluded — the
+ * barrel's own header comment quotes the pattern generically as `'./{family}/{family}.ts'`, not a real
+ * target), as a Set of folder/file.ts targets. */
+const parseBarrelTargets = (src: string): Set<string> => {
+  const out = new Set<string>()
+  const re = /export \* from '\.\/([^']+)'/
+  for (const line of src.split('\n')) {
+    if (line.trim().startsWith('//')) continue
+    const m = re.exec(line)
+    if (m) out.add(m[1])
+  }
+  return out
+}
+
+/** Every `./controls/{name}` exports-map entry, as a Map<name, folder/file.ts target> (prefix stripped). */
+const CONTROLS_TARGET_PREFIX = './src/controls/'
+const parseControlsExportsMap = (exportsMap: Record<string, string>): Map<string, string> => {
+  const out = new Map<string, string>()
+  for (const [key, target] of Object.entries(exportsMap)) {
+    if (!key.startsWith('./controls/')) continue
+    if (!target.startsWith(CONTROLS_TARGET_PREFIX)) continue // malformed target — the file-existence test flags this, not here
+    out.set(key.slice('./controls/'.length), target.slice(CONTROLS_TARGET_PREFIX.length))
+  }
+  return out
+}
+
+type ThreeWayReport = {
+  barrelOnly: string[] // barrel export lines with no matching exports-map entry
+  exportsOnly: string[] // exports-map entries whose target has no matching barrel export line
+  uncoveredFolders: string[] // controls/ folders with zero exports-map entry pointing into them
+}
+
+const threeWayCheck = (src: string, exportsMap: Record<string, string>, folders: string[]): ThreeWayReport => {
+  const barrelTargets = parseBarrelTargets(src)
+  const mapTargets = new Set(parseControlsExportsMap(exportsMap).values())
+  const coveredFolders = new Set([...mapTargets].map((t) => t.split('/')[0]))
+  return {
+    barrelOnly: [...barrelTargets].filter((t) => !mapTargets.has(t)),
+    exportsOnly: [...mapTargets].filter((t) => !barrelTargets.has(t)),
+    uncoveredFolders: folders.filter((f) => !coveredFolders.has(f)),
+  }
+}
+
+describe('exports map ↔ controls/ folders ↔ family barrel — the T4 three-way drift gate (ADR-0080)', () => {
+  it('finds a real, non-trivial set on every side (anti-vacuous)', () => {
+    expect(folderNames.length).toBeGreaterThan(10)
+    expect(parseBarrelTargets(barrelSrc).size).toBeGreaterThan(10)
+    expect(parseControlsExportsMap(pkg.exports).size).toBeGreaterThan(10)
+  })
+
+  it('is a clean bijection today — zero orphans on any side', () => {
+    expect(threeWayCheck(barrelSrc, pkg.exports, folderNames)).toEqual({
+      barrelOnly: [],
+      exportsOnly: [],
+      uncoveredFolders: [],
+    })
+  })
+
+  it('pins the ADR-0080 radio-group special case: one folder (radio/), two exports-map entries', () => {
+    const map = parseControlsExportsMap(pkg.exports)
+    expect(map.get('radio')).toBe('radio/radio.ts')
+    expect(map.get('radio-group')).toBe('radio/radio-group.ts')
+  })
+
+  it('a planted unpaired exports-map entry fails the bijection (negative control — exportsOnly)', () => {
+    const planted = { ...pkg.exports, './controls/phantom': './src/controls/phantom/phantom.ts' }
+    expect(threeWayCheck(barrelSrc, planted, folderNames).exportsOnly).toEqual(['phantom/phantom.ts'])
+  })
+
+  it('a planted unpaired barrel export fails the bijection (negative control — barrelOnly)', () => {
+    const planted = `${barrelSrc}\nexport * from './phantom/phantom.ts'\n`
+    expect(threeWayCheck(planted, pkg.exports, folderNames).barrelOnly).toEqual(['phantom/phantom.ts'])
+  })
+
+  it('a folder wired into neither side fails the bijection (negative control — uncoveredFolders)', () => {
+    expect(threeWayCheck(barrelSrc, pkg.exports, [...folderNames, 'phantom']).uncoveredFolders).toEqual(['phantom'])
   })
 })

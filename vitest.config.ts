@@ -41,6 +41,7 @@ export default defineConfig({
       // ui-* family). Without it, the broad alias below mangles the subpath and a2ui tests can't load a
       // real control (e.g. the default catalog's ui-button factory).
       '@agent-ui/components/components': r('./packages/agent-ui/components/src/controls/index.ts'),
+      '@agent-ui/components/descriptor': r('./packages/agent-ui/components/src/descriptor/index.ts'),
       '@agent-ui/components': r('./packages/agent-ui/components/src/index.ts'),
       '@agent-ui/shared': r('./packages/agent-ui/shared/src/index.ts'),
       '@agent-ui/a2ui': r('./packages/agent-ui/a2ui/src/index.ts'),

@@ -9,7 +9,7 @@
 > | **Proposed by** | host-orchestrated docs-site wave (component-preview + catalog: `preview-catalog` seat · ADR index: `adr-index` seat · `Button.variant` catalog fix: host, root-caused by two independent reviewers) |
 > | **Ratified by** | Kim (2026-07-04) |
 > | **Repairs** | `site/` (new `lib/component-preview.*`, `lib/canvas-surface.*`, `a2ui-catalog.*`, `adr-index.*`, `pages/adr-index.*`, `lib/adr.ts`; `frontmatter.ts` `loadDescriptorByTag`) · `catalog.json` `Button.variant` · new gates `component-preview.browser.test.ts` · `site-preview-catalog.test.ts` · `site-adr-index.test.ts` · decomposition [`site-preview-catalog-adr.decomp.md`](../decompositions/site-preview-catalog-adr.decomp.md) |
-> | **Supersedes / Superseded by** | Realizes [ADR-0076](./0076-renderer-honors-catalog-declared-enums.md) for `Button.variant`. Reuses the canvas surface of [ADR-0069](./0069-a2ui-live-agent-demo-shape.md) and the example-seed shape of ADR-0055. Consumes the default catalog (ADR-0016) through the renderer's public host (ADR-0023 `mount`). No prior decision reversed. |
+> | **Supersedes / Superseded by** | Realizes [ADR-0076](./0076-renderer-honors-catalog-declared-enums.md) for `Button.variant`. Reuses the canvas surface of [ADR-0069](./0069-a2ui-live-agent-demo-shape.md) and the example-seed shape of ADR-0055. Consumes the default catalog (ADR-0016) through the renderer's public host (ADR-0023 `mount`). Extended by [ADR-0079](./0079-component-gallery-kernel-dogfood-architecture.md) (the G8 `<component-gallery>` composes `<component-preview mode="component">`). No prior decision reversed. |
 
 ## Context
 
@@ -60,3 +60,47 @@ The site already had the pieces to derive from — the canonical `{name}.md` des
 - ✅ RESOLVED (de-hack / standardization wave — [`de-hack-standardization.decomp.md`](../decompositions/de-hack-standardization.decomp.md)): ADR status is now a machine-readable canonical keyword + a biting lint gate (T2 — the ALL-CAPS heuristic is gone); the shared `canvas-surface` is the single source, a2ui-live consumes it (T3); the repo is off the deprecated `@vitest/browser/context` (T4); and `site/` has its own vitest project so its tests no longer smuggle into the packages tree (T1).
 - Open (optional): refine or formally accept the a2ui preview residual (caret/focus reset on rebuild; container non-knob children reset on a root edit).
 - Open (optional): a rendered-page browser smoke for the ADR index (unit-floor only today; a smoke would have caught the 0037 mis-badge directly).
+
+## Amendment 1 — 2026-07-05 (accepted — Kim, 2026-07-05) — component mode gains the SLOT_TEXT partition + sample children + demo seeds
+
+**Context (what G8 found).** Component mode's original knob model grew a SLOT_TEXT knob for EVERY target and
+applied it as a blind `el.textContent = raw` write — correct for a control whose default slot genuinely is
+text (button/checkbox), but a `.textContent` write clears **every** child, and several controls build/own real
+structural children in `connected()` (a self-created editor, listbox, dialog, panel, grid, tablist,
+rail/thumbs, or label chrome) that the write **silently destroyed**. Three overlay controls additionally
+could not even CONSTRUCT bare — `ui-tooltip`/`ui-menu`/`ui-popover` require an anchor/trigger child before
+`open` is ever touched. Component mode had **no gating of any kind** for either failure; a2ui mode already
+had its counterpart model (`SAMPLE_TREES` + `A2UI_INITIAL`, Decision cl. 5).
+
+**Decision (as built, G8 gallery wave).** Component mode gains the exact counterpart of the a2ui-mode model —
+three explicit, hand-maintained, gate-pinned per-tag sets in `site/lib/component-preview.ts`:
+
+1. **The SLOT_TEXT partition** — `NO_SLOT_TEXT` (12: calendar · combo-box · field · icon · menu · modal ·
+   popover · select · slider-multi · tabs · text-field · tooltip — `connected()` builds/owns structural
+   children the write would destroy; ui-icon's `name`-driven `<svg>` counts) and `SLOT_TEXT_OK` (13: button ·
+   card · checkbox · column · form-provider · grid · list · radio · radio-group · row · slider · switch ·
+   text — a genuine text slot, or a childless leaf with nothing to lose). A `NO_SLOT_TEXT` target grows **no**
+   SLOT_TEXT knob at all (no dead knob). The two sets must **partition the live fleet exactly** — pinned by
+   `site/lib/component-preview-slot-text.test.ts` (`partitionDiff` ⇒ `{missing: [], overlap: []}`, with
+   bite-tested negative controls), so a new control landing in neither — or both — fails the build loudly.
+2. **`COMPONENT_SAMPLE_CHILDREN`** (tooltip/menu/popover → one sample trigger `<button>`) — the anchor a bare
+   construction needs; the specimen stays knob-editable, children are never appended by knobs.
+3. **`COMPONENT_INITIAL`** (ui-icon → `{name: 'check'}`) — a per-tag demo seed for a control whose own
+   descriptor default is CORRECT but not demonstrable (`icon.md`'s `name: ''` legitimately renders nothing);
+   the same never-touch-the-canonical-source discipline as `A2UI_INITIAL`.
+
+**The maintenance rule (normative).** Every NEW control's SLOT_TEXT classification MUST land in exactly one of
+`NO_SLOT_TEXT` / `SLOT_TEXT_OK` — the partition gate enforces this at build time; there is no default. If the
+control needs a construction-time child or a demo seed, `COMPONENT_SAMPLE_CHILDREN` / `COMPONENT_INITIAL` take
+the entry (the a2ui-mode orphan check pattern, Acceptance above, applies to those maps too).
+
+**Consequences.** Component mode can now safely preview the WHOLE fleet (the G8 gallery's per-member
+whole-shape law depends on it); the cost is three more hand-maintained maps — accepted because each is
+gate-pinned (drift fails the build, the cl. 5 discipline) and the descriptor model carries no structural-slot
+distinction today (typing `slots[]` is real ADR-0004 schema surgery — deferred, per Kim's mechanism ruling
+recorded at `component-preview.ts` §SLOT_TEXT).
+
+**Alternatives considered.** A runtime children-count heuristic ("skip SLOT_TEXT if the element has children
+at apply time") — REJECTED: `ui-text` legitimately builds a heading stamp when `as ≠ 'none'` and self-heals
+after a `textContent` clobber, so live children-count misclassifies a genuinely safe control. Descriptor-level
+slot typing — DEFERRED (ADR-0004 surgery; the named trigger is the next descriptor-schema wave).

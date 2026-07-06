@@ -161,6 +161,7 @@ describe('ui-select — upgrade + typed prop surface (select-upgrade)', () => {
     expect(el.value).toBe('')
     expect(el.open).toBe(false)
     expect(el.placeholder).toBe('')
+    expect(el.size).toBe('md')
     expect(el.name).toBe('')
     expect(el.disabled).toBe(false)
     expect(el.required).toBe(false)
@@ -172,6 +173,8 @@ describe('ui-select — upgrade + typed prop surface (select-upgrade)', () => {
       el.value = 'apple'
       el.open = true
       el.placeholder = 'Choose…'
+      el.size = 'sm'
+      el.size = 'lg'
       el.name = 'fruit'
       el.disabled = false
       el.required = true
@@ -179,6 +182,8 @@ describe('ui-select — upgrade + typed prop surface (select-upgrade)', () => {
       el.open = 'yes'
       // @ts-expect-error — disabled is boolean, not number
       el.disabled = 1
+      // @ts-expect-error — size is a literal union (sm/md/lg), not a bare string
+      el.size = 'xl'
     }
     expect(typeof fn).toBe('function') // never invoked — the @ts-expect-error lines are the assertion
   })
@@ -594,17 +599,18 @@ describe('ui-select — trigger geometry structure (select-geometry)', () => {
     el.remove()
   })
 
-  it('select-geometry: [size=sm] and [size=lg] attributes are preserved on the host (CSS hook)', () => {
-    // The select has no reactive `size` prop (the CSS uses [size='sm'/'lg'] attribute selectors).
-    // In jsdom (no CSS resolution), we verify the attribute is set and persists — the resolved-px
-    // geometry is proven in the browser smoke (B4).
+  it('select-geometry: size reflects JS-set values to the [size] host attribute (CSS hook) — T7 fix', () => {
+    // size is a reactive, reflected prop (ADR-0081 T7 fix) driving the [size='sm'/'lg'] CSS
+    // attribute selectors in select.css. In jsdom (no CSS resolution) we verify the reflect wire;
+    // the resolved-px geometry (height/font/icon repoint) is proven in the browser smoke (B4).
     const { el } = makeSelect()
-    el.setAttribute('size', 'sm')
+    expect(el.size).toBe('md')
+    el.size = 'sm'
     expect(el.getAttribute('size')).toBe('sm')
-    el.setAttribute('size', 'lg')
+    el.size = 'lg'
     expect(el.getAttribute('size')).toBe('lg')
-    el.removeAttribute('size') // back to default (md via CSS token block)
-    expect(el.getAttribute('size')).toBeNull()
+    el.size = 'md'
+    expect(el.getAttribute('size')).toBe('md')
     el.remove()
   })
 
@@ -859,7 +865,7 @@ const parsed = parseDescriptor(fence)
 // `extends: UIFormElement` is not yet in BASE_CLASSES (the integration slice s12 adds it). Tolerate
 // exactly that ONE pending structural failure (same tolerance as modal/popover descriptor probes).
 
-const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'open', 'placeholder']
+const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'open', 'placeholder', 'size']
 
 describe('select.md descriptor — frontmatter parses + schema-valid (select-descriptor-schema)', () => {
   it('select-descriptor-schema: has a leading frontmatter fence and a prose body', () => {

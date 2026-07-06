@@ -10,7 +10,8 @@
   children (roving/selection). Reaching higher than needed is bloat.
 - Model closed sets as `prop.enum([...])` (literal unions) — never `enum` (banned), never a free `string`.
 - Keep the host **light DOM**; set ARIA **only** through `internals`; emit only
-  `change · input · select · open · close · toggle`.
+  `change · input · select · open · close · toggle` (plus the pure-activation `click` carve-out —
+  *Family-coherence laws* below).
 - **Disabled is `:disabled`, not just an attribute.** Inertness (no activation, non-focusable,
   `aria-disabled`, no form participation) keys off `:disabled` / `formDisabledCallback`; a
   `disabled` / `[mode=disabled]` attribute MUST reflect into the `disabled` property so `:disabled` is
@@ -26,7 +27,8 @@
   co-carries the meaning**: text naming the state (text-field's validity message, ADR-0014 cl.4), a
   glyph/shape (checkbox's tick; calendar's ring-vs-fill), position (switch's thumb), or a pattern (a
   dashed border). The ARIA state is required alongside but is never the visible cue.
-- Make `{name}.api.json` mirror `static props` exactly (the contract↔props trip-wire enforces it).
+- Make the `{name}.md` frontmatter descriptor mirror `static props` exactly (ADR-0004 — replaced the old
+  `.api.json`; the contract↔props trip-wire enforces it).
 
 ## Don't
 
@@ -39,6 +41,19 @@
 - **Re-specify** the props API or restate the geometry/token law — point to the canonical docs. Copying
   them is the drift the rubric's coherence dimension penalizes.
 
+## Family-coherence laws (ADR-0081 — gate-enforced by `controls/family-coherence.test.ts`)
+
+- **The inverse-`[size]` rule (A2b, ADR-0081 Amendment 1).** If your `{name}.css` contains a `[size`
+  attribute selector, the descriptor MUST declare a `size` attribute (and its enum ≡ `sm/md/lg`, A2) — a
+  `[size]` ramp with no size API is dead CSS and fails the gate. Comments are stripped before the check
+  (`stripCssComments`), so documenting "no `[size]` ramp" in a CSS comment is safe; a selector is not.
+- **The `click` carve-out (ADR-0081 Amendment 2, Kim option A).** Native `click` is sanctioned ONLY for a
+  **pure activation control**: `extends: UIElement` (not form-associated) AND the descriptor declares no
+  event other than `click` (activation rides the platform `host.click()` via `pressActivation` — never a
+  synthetic compound). `ui-button` is the instance. A control with any custom event models its semantics
+  in the six names and may NOT also declare `click`; a form-associated control never declares `click`
+  (its semantics ride `change`/`input`).
+
 ## Worked patterns
 
 - **Typed props + declare-merge:**
@@ -47,9 +62,10 @@
   export interface UIButtonElement extends ReactiveProps<typeof props> {} // typed accessors, no decorators
   export class UIButtonElement extends UIFormElement { static props = props }
   ```
-- **CSS trio skeleton:**
-  `{name}-tokens.css` → `:where(ui-{name}) { --ui-{name}-bg: var(--md-sys-color-primary); --ui-{name}-height: var(--ui-height-md); }`
-  · `{name}-styles.css` → `@scope (ui-{name}) { :scope { block-size: var(--ui-{name}-height); padding-block: 0; background: var(--ui-{name}-bg); } }`
-  · `{name}.css` → `@import './{name}-tokens.css'; @import './{name}-styles.css';`
-- **Descriptor:** `{name}.api.json` records tag · tier · extends · attributes (from `static props`) ·
-  properties · events · slots · parts · customStates · face · aria · keyboard · geometry · forcedColors.
+- **Single-file CSS skeleton (ADR-0003 — the two sectioned blocks in ONE `{name}.css`):**
+  the token block `:where(ui-{name}) { --ui-{name}-bg: var(--md-sys-color-primary); --ui-{name}-height: var(--ui-height-md); }`
+  followed by the styles block `@scope (ui-{name}) { :scope { block-size: var(--ui-{name}-height); padding-block: 0; background: var(--ui-{name}-bg); } }` —
+  clearly sectioned so the tokens-in-`:where()` probe can tell declaration from consumption.
+- **Descriptor:** the `{name}.md` YAML frontmatter (ADR-0004) records tag · tier · extends · attributes
+  (from `static props`) · properties · events · slots · parts · customStates · face · aria · keyboard ·
+  geometry · forcedColors; the prose doc lives in the body.

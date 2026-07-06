@@ -12,7 +12,8 @@ Plan `.claude/docs/plan.md` · Goals + per-milestone DoD `.claude/docs/goals.md`
 
 - `npm run check` — `tsc` type-check of the packages AND the site (`&& check:site`; the standing type gate; `noEmit`)
 - `npm test` — Vitest (jsdom), once · `npm run test:watch` — watch mode
-- `npm run dev` / `npm run build` — need an app entry (`index.html`); dormant until the gallery (G8)
+- `npm run dev` / `npm run build` — the docs site (`site/`) is the app entry; build live since the
+  ADR-0077 wave, incl. the G8 `<component-gallery>` (`gallery.html`)
 
 `tsc` only type-checks (no emit); `check` + `test` are the gates that must stay green.
 
