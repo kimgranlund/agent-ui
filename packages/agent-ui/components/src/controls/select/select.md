@@ -137,12 +137,13 @@ geometry:
     sizeClass: Container/surface
     bg: var(--ui-select-listbox-bg)
     radius: var(--ui-select-listbox-radius)
-    padding: var(--ui-select-listbox-padding)
+    padding: var(--ui-select-listbox-padding)  # = h/4 (h = --ui-select-height) — DERIVED off the trigger ramp (2026-07-06), scales with [size]
     minInlineSize: var(--ui-select-listbox-min-inline-size)
   options:
-    sizeClass: legacy item-pad (ROV-C5 / §5.1)
-    paddingBlock: var(--ui-select-option-block)
-    paddingInline: var(--ui-select-option-inline)
+    sizeClass: legacy item-pad (ROV-C5 / §5.1) — numbers DERIVED off the trigger ramp (2026-07-06), not the fixed px this superseded
+    paddingBlock: var(--ui-select-option-block)    # = (h − font)/2 — row height == trigger height
+    paddingInline: var(--ui-select-option-inline)  # = h/4 — pairs with listbox padding to total h/2 (option text aligns under the trigger label)
+    font: var(--ui-select-option-font)             # = --ui-select-font (was size-blind; bug fix)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the trigger (ButtonText/ButtonBorder/ButtonFace), the listbox panel (Canvas/CanvasText), and the option hover/selected/focus states (Highlight/HighlightText) visible in Windows High Contrast Mode.
 ---

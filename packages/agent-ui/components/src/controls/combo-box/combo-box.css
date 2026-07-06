@@ -15,6 +15,11 @@
  *       Container/surface: `--ui-container-bg` equivalent, `--ui-radius-base` rounding, `--ui-
  *       space-sm` item padding. Options use the item-pad row model. `[data-active]` highlights
  *       the active-descendant option without moving DOM focus.
+ *       (2026-07-06) The item-pad's numbers are now DERIVED off the editor's own height/font
+ *       (`--ui-combo-box-height`/`-font`/`-padding-inline`) instead of fixed `--ui-space-*` px, so
+ *       option text aligns under the editor's text and the option row height matches the editor's
+ *       — the same size-carrying model as ui-select's listbox, applied to combo-box's single
+ *       (currently size-less) register; see the token-block comment for the exact derivation.
  *
  * Standalone stylesheet — NOT injected from combo-box.ts (behaviour-only `.ts`, plan §2).
  * Linked via the component-styles barrel (wave-4 integration slice). The panel's `[popover]`
@@ -51,10 +56,24 @@
   --ui-combo-box-panel-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-combo-box-panel-radius: var(--ui-radius-base);
   --ui-combo-box-panel-min-inline-size: 12rem; /* prevent empty-panel collapse (ADR-0021) */
+  /* Panel-edge inset (feeds --ui-box-inset below, same mechanism as ui-select, 2026-07-06):
+     DERIVED off the editor's OWN inline text-pad (--ui-combo-box-padding-inline) rather than a
+     fixed px, so panel-inset + option-inline (below) sum to the editor's real inline pad — option
+     text aligns under the editor's text at the SAME inline offset (no h/2 assumption: unlike
+     ui-select's trigger, the combo-box editor does not use h/2 today; this anchors to whatever
+     the editor actually uses, which is the honest form of the alignment law here). NOTE: ui-combo-box
+     has no `[size]` attribute yet (a structural divergence from ui-select — flagged, not forced);
+     this is still worth deriving off the ramp now so a future `[size]` addition (its own ADR/decomp,
+     a new-attribute contract change) would make this repoint for free, same as ui-select. */
+  --ui-combo-box-listbox-padding: calc(var(--ui-combo-box-padding-inline) / 2);
 
-  /* ── Option rows (legacy item-pad — ROV-C5 / §4.6/5.1) ─────────────── */
-  --ui-combo-box-option-padding-block: var(--ui-space-xs);
-  --ui-combo-box-option-padding-inline: var(--ui-space-sm);
+  /* ── Option rows (legacy item-pad — ROV-C5 / §4.6/5.1) — DERIVED (2026-07-06), same model as
+     ui-select: block-pad = (editor height − option font)/2 (the row's rendered height == the
+     editor's own height); inline-pad pairs with --ui-combo-box-listbox-padding above to total the
+     editor's own inline pad (the alignment law). Supersedes the earlier fixed --ui-space-xs/sm px. */
+  --ui-combo-box-option-padding-block: calc((var(--ui-combo-box-height) - var(--ui-combo-box-font)) / 2);
+  --ui-combo-box-option-padding-inline: calc(var(--ui-combo-box-padding-inline) / 2);
+  --ui-combo-box-option-font: var(--ui-combo-box-font); /* options were size-blind on FONT too (bug fix) */
   --ui-combo-box-option-active-bg: var(--md-sys-color-neutral-tint-dim); /* active-descendant highlight — 5% neutral overlay (was the undefined -tint-5) */
   --ui-combo-box-option-active-ink: var(--md-sys-color-neutral-on-surface);
   --ui-combo-box-option-selected-bg: var(--md-sys-color-primary-container-low); /* selected-value row — matches ui-select's AA-safe pairing (was the undefined -tint-5) */
@@ -88,7 +107,12 @@
     display: flex;
     align-items: center;
 
-    font: var(--ui-combo-box-font);
+    /* FIXED (2026-07-06, found by the option-font trip-wire): `font: var(--ui-combo-box-font)` was
+       an INVALID `font` shorthand (a single value — the shorthand requires font-size AND
+       font-family at minimum), so the whole declaration was dropped and the editor silently fell
+       back to the UA default (16px) instead of the --ui-font-md ramp (14px). `font-size` is the
+       correct longhand — this is the same class of bug the option font-size fix below closes. */
+    font-size: var(--ui-combo-box-font);
     background-color: var(--ui-combo-box-bg);
     color: var(--ui-combo-box-ink);
     border: 1px solid var(--ui-combo-box-border);
@@ -147,15 +171,21 @@
     max-block-size: 40vh; /* prevent an unbounded option list from occupying the entire viewport (matches ui-select) */
     overflow-y: auto; /* still clips options to the panel radius (an `auto` axis clips like `hidden`, just scrollably) */
     list-style: none;
+    /* Repoint the shared container-box.css inset LOCALLY to the size-derived value (the panel
+       carries [data-box], combo-box.ts — same mechanism as ui-select, 2026-07-06). */
+    --ui-box-inset: var(--ui-combo-box-listbox-padding);
+    font-size: var(--ui-combo-box-option-font); /* was unset (inherited ambient) — options now read the ramp */
   }
 
   /* ── Option rows (legacy item-pad) ───────────────────────────────────── */
 
   :scope [role='option'] {
     display: block;
-    margin: var(--ui-box-inset, 0.375rem); /* the box-model inset — 6px from the panel edge + between rows */
+    margin: var(--ui-box-inset, 0.375rem); /* the box-model inset — repointed above to the size-derived value */
     padding-block: var(--ui-combo-box-option-padding-block);
     padding-inline: var(--ui-combo-box-option-padding-inline);
+    /* line-height: 1 makes the (height−font)/2 block-pad math exact (matches ui-select's row-height law) */
+    line-height: 1;
     /* nested-radius (ADR-0018): the highlight corner inset from the panel by the box margin */
     border-radius: calc(var(--ui-combo-box-panel-radius) - var(--ui-box-inset, 0.375rem));
     cursor: pointer;

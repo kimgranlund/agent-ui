@@ -510,6 +510,77 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
     const minWidth = px(getComputedStyle(listbox).minInlineSize)
     expect(minWidth, `${server.browser}: panel min-inline-size is not a positive px — collapse risk`).toBeGreaterThan(0)
   })
+
+  // ────────────────────────────────────────────────────────────────────────────────────────────
+  //  The size-carrying model (2026-07-06 fix, ui-select's family): panel inset + option pad were
+  //  fixed px (--ui-space-xs/sm), identical regardless of the editor's own geometry. They are now
+  //  DERIVED off --ui-combo-box-height/-font/-padding-inline, so option text aligns under the
+  //  editor's own text edge and the option row height matches the editor height. ui-combo-box has
+  //  no `[size]` attribute yet (only one register renders today), so this is a single-register
+  //  proof — not a [size] anti-vacuous sweep (that needs its own future ADR/decomp, see combo-box.md).
+  // ────────────────────────────────────────────────────────────────────────────────────────────
+  it('panel inset + option inline-pad sum to the editor inline pad — the alignment law, browser-measured', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    el.open = true
+    await el.updateComplete
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const option = listbox.querySelector<HTMLElement>('[role="option"]')!
+
+    const editorPad = px(getComputedStyle(editor).paddingInlineStart)
+    const optionCs = getComputedStyle(option)
+    const sum = px(optionCs.marginInlineStart) + px(optionCs.paddingInlineStart)
+
+    expect(
+      sum,
+      `${server.browser}: panel-inset+option-inline (${sum}px) should equal the editor's own inline pad (${editorPad}px)`,
+    ).toBeCloseTo(editorPad, 1)
+  })
+
+  it('option row rendered height == editor height — the row-height law, browser-measured', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    const editorH = editor.getBoundingClientRect().height
+
+    el.open = true
+    await el.updateComplete
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const option = listbox.querySelector<HTMLElement>('[role="option"]')!
+    const rowH = option.getBoundingClientRect().height
+
+    expect(
+      rowH,
+      `${server.browser}: option row height (${rowH}px) should match editor height (${editorH}px)`,
+    ).toBeCloseTo(editorH, 0)
+  })
+
+  it('option font-size resolves to --ui-combo-box-font (was inherited ambient — bug fix)', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    el.open = true
+    await el.updateComplete
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const option = listbox.querySelector<HTMLElement>('[role="option"]')!
+
+    const editorFont = px(getComputedStyle(editor).fontSize)
+    const optionFont = px(getComputedStyle(option).fontSize)
+    expect(
+      optionFont,
+      `${server.browser}: option font-size (${optionFont}px) should match the editor font (${editorFont}px), not an inherited ambient value`,
+    ).toBeCloseTo(editorFont, 1)
+  })
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
