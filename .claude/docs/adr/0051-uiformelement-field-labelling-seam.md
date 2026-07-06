@@ -9,7 +9,7 @@
 > | **Proposed by** | g7-planner (the design seat, decomp `g7-field-form-provider` slice s0) |
 > | **Ratified by** | orchestration (the coordinator seat) — 2026-07-01, on the green s14 gate; the A/B/C fork choice itself was ruled by Kim |
 > | **Repairs** | goals §G7 (the `ui-field` DoD box) · `dom/form.ts` (gains the seam + the `ui-form-reset` protocol dispatch) · `controls/text-field/{text-field.ts,text-field.md}` (the editor forwarding wire; the `labelSource`/"ui-field at G7" notes) · **NEW** `controls/field/*` · decomp `g7-field-form-provider.decomp.json` s1/s2/s8/s11 — all edited at build time, gated on this ADR. |
-> | **Supersedes / Superseded by** | None. **Relates ADR-0050** (reuses its `ui-`-prefixed protocol-event namespace for `ui-form-reset`) · **ADR-0014** (text-field's `label`→aria-label seam + the control-managed message node this generalizes) · **ADR-0013** (UIFormElement, the base that grows the seam) · **ADR-0029** (the visible message node the stitching rule governs). |
+> | **Supersedes / Superseded by** | Extended by **ADR-0085** (lands this seam's anticipated select/combo-box labelling wiring — the "combo-box and select are flagged follow-ups" note in Consequences, now closed). **Relates ADR-0050** (reuses its `ui-`-prefixed protocol-event namespace for `ui-form-reset`) · **ADR-0014** (text-field's `label`→aria-label seam + the control-managed message node this generalizes) · **ADR-0013** (UIFormElement, the base that grows the seam) · **ADR-0029** (the visible message node the stitching rule governs). |
 
 ## Context
 

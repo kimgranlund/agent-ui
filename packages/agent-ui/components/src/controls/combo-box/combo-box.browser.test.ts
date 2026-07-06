@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from 'vitest/browser'
+import { server, cdp, userEvent, page } from 'vitest/browser'
 import type { UIComboBoxElement } from './combo-box.ts'
 
 // Wave-4 S5 browser smoke — ui-combo-box (decomp S5 · overlay-controller.lld.md · ADR-0043).
@@ -18,6 +18,8 @@ import type { UIComboBoxElement } from './combo-box.ts'
 //       editor is wider than tall (a field, not a square/dot) in a flex row (both engines)
 //   [7] forced-colors — editor frame + panel surface survive WHCM (Chromium via CDP; WebKit baseline)
 //   [8] C10 zero-residue — disconnect releases all overlay + input + keyboard listeners (both engines)
+//   [9] ADR-0085 — the editor's accessible name = "label", the committed text stays a DISTINCT value
+//       (jsdom cannot compute an accessible name at all)
 //
 // Side-effect imports — CSS load order (ADR-0003): foundation roles + dimensional ramp FIRST,
 // then the combo-box sheet, then the self-defining module. Imported DIRECTLY (relative), NOT
@@ -751,5 +753,75 @@ describe('ui-combo-box — C10 zero-residue (both engines)', () => {
     expect(changeCount, 'reconnected combo-box should fire change exactly once (no stacked listeners)').toBe(1)
     mounted.pop() // clean up the re-appended el (not in mounted[] from mount())
     el.remove()
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [9] ADR-0085 — the editor's accessible-name seam (jsdom cannot compute an accessible name at all)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// combo-box.test.ts pins the DECLARED wiring (aria-label presence/absence, the yield to
+// aria-labelledby via a direct setFieldLabelling call — the exact seam a real `ui-field` drives,
+// ADR-0051). This is the read-back that resolution ACTUALLY happens: `page.getByRole` resolves a
+// plain content-attribute name (`aria-label` bare, `aria-labelledby` fielded) correctly in both
+// engines for a role="combobox" part (the text-field precedent, field.browser.test.ts).
+
+describe('ui-combo-box — the editor accessible-name seam (ADR-0085, both engines)', () => {
+  it('a labelled bare combo-box names the editor "label"; the committed text stays a DISTINCT accessible value', async () => {
+    const { el } = mount(`
+      <ui-combo-box label="Fruit" value="apple">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    await el.updateComplete
+
+    const named = page.getByRole('combobox', { name: 'Fruit', exact: true }).query()
+    expect(named, `${server.browser}: no combobox named "Fruit" — the aria-label wire did not land`).not.toBeNull()
+    expect(named).toBe(editor)
+    // The value stays DISTINCT — nothing about the name erased the committed text.
+    expect(editor.textContent, `${server.browser}: the editor's value should still read "Apple"`).toBe('Apple')
+  })
+
+  it('an unlabelled bare combo-box carries no aria-label (back-compat, ADR-0014-style unchanged)', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    await el.updateComplete
+    expect(editor.hasAttribute('aria-label'), `${server.browser}: an unlabelled editor should carry no aria-label`).toBe(false)
+  })
+
+  it('a fielded combo-box names the editor from the field label (aria-labelledby); the bare aria-label yields', async () => {
+    const { el } = mount(`
+      <ui-combo-box label="Fruit" value="apple">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+
+    // A stand-in field label part — setFieldLabelling is the PUBLIC seam a real ui-field calls
+    // (ADR-0051); proves the same code path without pulling a sibling control into this control's
+    // own isolated browser test file (the per-control CSS/JS import discipline above).
+    const fieldLabel = document.createElement('div')
+    fieldLabel.id = 'ext-field-label-1'
+    fieldLabel.textContent = 'Favourite fruit'
+    document.body.append(fieldLabel)
+    mounted.push(fieldLabel)
+
+    el.setFieldLabelling({ label: fieldLabel, description: null, error: null })
+    await el.updateComplete
+
+    expect(editor.hasAttribute('aria-label'), `${server.browser}: the bare aria-label should yield while fielded`).toBe(false)
+    const named = page.getByRole('combobox', { name: 'Favourite fruit', exact: true }).query()
+    expect(named, `${server.browser}: the fielded accessible name did not compute to "Favourite fruit"`).not.toBeNull()
+    expect(editor.textContent, `${server.browser}: the committed value should still read "Apple"`).toBe('Apple')
+
+    el.setFieldLabelling(null)
+    await el.updateComplete
+    const revertedName = page.getByRole('combobox', { name: 'Fruit', exact: true }).query()
+    expect(revertedName, `${server.browser}: dissociation did not revert to the bare "Fruit" name`).not.toBeNull()
   })
 })

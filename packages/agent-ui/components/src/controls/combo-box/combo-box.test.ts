@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import { UIComboBoxElement } from './combo-box.ts'
 import type { OverlayHandle } from '../../traits/overlay.ts'
-import type { FormValue, ValidityResult } from '../../dom/form.ts'
+import type { FormValue, ValidityResult, FieldLabelling } from '../../dom/form.ts'
 import {
   splitFrontmatter,
   parseDescriptor,
@@ -31,7 +31,9 @@ declare const process: { cwd(): string }
 //   combo-open-two-way · combo-open-light-dismiss · combo-form-value · combo-form-required ·
 //   combo-form-strict · combo-form-reset · combo-c10-residue · combo-c10-cleanup ·
 //   combo-shape-editor · combo-shape-panel ·
-//   combo-descriptor-schema · combo-descriptor-bijection · combo-descriptor-negative
+//   combo-descriptor-schema · combo-descriptor-bijection · combo-descriptor-negative ·
+//   combo-aria-label-seam (ADR-0085: bare aria-label · fielded aria-labelledby yield ·
+//   dissociation revert · aria-describedby wiring)
 
 // ── Popover API stub ──────────────────────────────────────────────────────────────────────────
 // mirrors popover.test.ts setup exactly
@@ -188,6 +190,7 @@ describe('ui-combo-box — upgrade + typed prop surface (combo-upgrade)', () => 
     const el = document.createElement('ui-combo-box') as UIComboBoxElement
     expect(el).toBeInstanceOf(UIComboBoxElement)
     expect(el.value).toBe('')
+    expect(el.label).toBe('')
     expect(el.open).toBe(false)
     expect(el.strict).toBe(false)
     expect(el.placeholder).toBe('')
@@ -197,6 +200,7 @@ describe('ui-combo-box — upgrade + typed prop surface (combo-upgrade)', () => 
     const fn = (): void => {
       const el = new UIComboBoxElement()
       el.value = 'hello'
+      el.label = 'City'
       el.open = true
       el.strict = false
       el.placeholder = 'Search…'
@@ -1100,6 +1104,103 @@ describe('ui-combo-box — disabled option guard (combo-disabled-nav · combo-di
   })
 })
 
+// ── ADR-0085 — the editor's accessible-name seam (text-field ADR-0014 parity) ────────────────
+//
+// jsdom cannot compute an accessible name — the read-back that the editor really names as "City"
+// (with its own text still the distinct value) lives in combo-box.browser.test.ts (both engines).
+// These probes pin the DECLARED WIRING: bare `label` → editor aria-label; the yield the moment
+// `setFieldLabelling` associates (mirroring text-field's own jsdom-probe pattern — no live ui-field
+// needed); the merge/dissociation shape; aria-describedby.
+
+describe('ui-combo-box — the editor accessible-name seam (combo-aria-label-seam)', () => {
+  it('combo-aria-label-seam: no `label` set → no aria-label on the editor (back-compat, zero drift)', () => {
+    const { el, editor } = makeCombo()
+    expect(editor.hasAttribute('aria-label')).toBe(false)
+    el.remove()
+  })
+
+  it('combo-aria-label-seam: `label` set (bare, unfielded) → editor aria-label = the label text', async () => {
+    const { el, editor } = makeCombo()
+    el.label = 'City'
+    await whenFlushed()
+    expect(editor.getAttribute('aria-label')).toBe('City')
+    el.remove()
+  })
+
+  it('combo-aria-label-seam: clearing `label` back to \'\' removes aria-label again', async () => {
+    const { el, editor } = makeCombo()
+    el.label = 'City'
+    await whenFlushed()
+    expect(editor.hasAttribute('aria-label')).toBe(true)
+
+    el.label = ''
+    await whenFlushed()
+    expect(editor.hasAttribute('aria-label')).toBe(false)
+    el.remove()
+  })
+
+  it('combo-aria-label-seam: the editor keeps its distinct value while labelled — aria-label does not touch the committed text', async () => {
+    const { el, editor } = makeCombo({ value: 'apple' })
+    el.label = 'Fruit'
+    await whenFlushed()
+    expect(editor.getAttribute('aria-label')).toBe('Fruit')
+    expect(editor.textContent).toBe('Apple') // the value stays the editor's own accessible value
+    el.remove()
+  })
+
+  it('combo-aria-label-seam: setFieldLabelling ASSOCIATES → editor aria-labelledby ← refs.label.id, and the bare aria-label yields', async () => {
+    const { el, editor } = makeCombo()
+    el.label = 'City' // a consumer-set bare label — must yield the moment the seam associates
+
+    const fieldLabel = document.createElement('div')
+    fieldLabel.id = 'field-label-1'
+    const refs: FieldLabelling = { label: fieldLabel, description: null, error: null }
+    el.setFieldLabelling(refs)
+    await whenFlushed()
+
+    expect(editor.getAttribute('aria-labelledby')).toBe(fieldLabel.id)
+    expect(editor.hasAttribute('aria-label')).toBe(false) // yielded — accname precedence, ADR-0051 pattern
+    el.remove()
+  })
+
+  it('combo-aria-label-seam: dissociation (setFieldLabelling(null)) removes aria-labelledby and restores the bare aria-label', async () => {
+    const { el, editor } = makeCombo()
+    el.label = 'City'
+    await whenFlushed()
+    expect(editor.getAttribute('aria-label')).toBe('City')
+
+    const fieldLabel = document.createElement('div')
+    fieldLabel.id = 'field-label-2'
+    el.setFieldLabelling({ label: fieldLabel, description: null, error: null })
+    await whenFlushed()
+    expect(editor.hasAttribute('aria-label')).toBe(false)
+
+    el.setFieldLabelling(null)
+    await whenFlushed()
+    expect(editor.hasAttribute('aria-labelledby')).toBe(false)
+    expect(editor.getAttribute('aria-label')).toBe('City') // reverted to the bare state
+    el.remove()
+  })
+
+  it('combo-aria-label-seam: aria-describedby wires from [description, error] refs while fielded, and clears on dissociation', async () => {
+    const { el, editor } = makeCombo()
+    expect(editor.hasAttribute('aria-describedby')).toBe(false) // no owner in bare mode (no internal message node)
+
+    const description = document.createElement('div')
+    description.id = 'field-desc-1'
+    const error = document.createElement('div')
+    error.id = 'field-error-1'
+    el.setFieldLabelling({ label: null, description, error })
+    await whenFlushed()
+    expect(editor.getAttribute('aria-describedby')).toBe(`${description.id} ${error.id}`)
+
+    el.setFieldLabelling(null)
+    await whenFlushed()
+    expect(editor.hasAttribute('aria-describedby')).toBe(false) // cleared — this control's exclusive owner in both directions
+    el.remove()
+  })
+})
+
 // ── Descriptor trip-wire ─────────────────────────────────────────────────────────────────────
 
 const COMBO_DIR = `${process.cwd()}/packages/agent-ui/components/src/controls/combo-box`
@@ -1107,7 +1208,7 @@ const md = readFileSync(`${COMBO_DIR}/combo-box.md`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['value', 'open', 'strict', 'placeholder', 'name', 'disabled', 'required']
+const ATTR_NAMES = ['value', 'label', 'open', 'strict', 'placeholder', 'name', 'disabled', 'required']
 
 describe('combo-box.md descriptor — frontmatter parses + schema-valid (combo-descriptor-schema)', () => {
   it('combo-descriptor-schema: has a leading frontmatter fence and a prose body', () => {

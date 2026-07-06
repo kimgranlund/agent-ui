@@ -17,6 +17,7 @@ import './theme-provider.ts' // self-defining <theme-provider> (LLD-C4)
 import './component-gallery.css'
 import { UIElement, computed, mount, repeat, signal, watch, Directive, directive, NO_COMMIT } from '@agent-ui/components'
 import type { DirectiveResult, Signal } from '@agent-ui/components'
+import type { UISelectElement, UITextFieldElement } from '@agent-ui/components/components'
 import { parseDoc } from './frontmatter.ts'
 
 // ── LLD-C1 — the derived member list ───────────────────────────────────────────────────────────────────────
@@ -108,17 +109,35 @@ const SCALES: readonly Scale[] = ['ui-sm', 'ui-md', 'ui-lg', 'content-sm', 'cont
 const DENSITIES: readonly Density[] = ['compact', 'comfortable', 'spacious']
 const THEMES = ['default'] as const // the reserved seam — exactly one package ships in G8
 
-/** One labelled `<select>` bound to a signal — the toolbar's theme-axis knobs (scheme/scale/density/theme). */
+/**
+ * One labelled `ui-select` bound to a signal — the toolbar's theme-axis knobs (scheme/scale/density/theme).
+ * Dogfoods the fleet's OWN select control in the gallery's own chrome (Kim's directive: no native `<select>`
+ * where a ui-* control exists) rather than a native `<select>`. Options are appended as `[role=option]`
+ * light-DOM children BEFORE the element connects — ui-select's own contract (select.md's `slots` clause) —
+ * the SAME ordering discipline component-preview.ts's sample children use for tooltip/menu/popover.
+ *
+ * The formerly-inert `aria-label` stopgap is GONE: `ui-select` now carries a real `label` prop (ADR-0085,
+ * the text-field `label` precedent) that names the trigger properly via `aria-labelledby` — a visually-
+ * hidden `[data-part=aria-label]` span (holding this text) concatenated with the live value span, so the
+ * accessible name recomputes on every selection change (e.g. "Scheme light" → "Scheme dark"). The visible
+ * `<label>` wrapper text still serves sighted users; the two mechanisms now agree.
+ */
 function themeSelect<T extends string>(label: string, values: readonly T[], target: Signal<T>): HTMLElement {
   const wrap = document.createElement('label')
   wrap.className = 'gallery-select'
   const text = document.createElement('span')
   text.textContent = label
-  const select = document.createElement('select')
-  select.setAttribute('aria-label', label)
-  for (const v of values) select.append(new Option(v, v))
+  const select = document.createElement('ui-select') as UISelectElement
+  select.setAttribute('label', label) // ADR-0085 — the trigger's real accessible-name seam
+  for (const v of values) {
+    const option = document.createElement('div')
+    option.setAttribute('role', 'option')
+    option.setAttribute('value', v)
+    option.textContent = v
+    select.append(option)
+  }
   select.value = target.value
-  select.addEventListener('change', () => {
+  select.addEventListener('select', () => {
     target.value = select.value as T
   })
   wrap.append(text, select)
@@ -204,11 +223,14 @@ export class ComponentGallery extends UIElement {
     const toolbar = document.createElement('div')
     toolbar.className = 'gallery-toolbar'
 
-    const filterInput = document.createElement('input')
-    filterInput.type = 'search'
+    // Dogfoods ui-text-field (type=search) in place of a native `<input>` (Kim's directive). `label` is the
+    // documented bare-usage naming seam (text-field.md labelSource) — it becomes the editor's aria-label
+    // without needing a wrapping <ui-field>, matching the native input's old `aria-label` call exactly.
+    const filterInput = document.createElement('ui-text-field') as UITextFieldElement
+    filterInput.setAttribute('type', 'search')
     filterInput.className = 'gallery-filter'
-    filterInput.placeholder = 'Filter components…'
-    filterInput.setAttribute('aria-label', 'Filter components')
+    filterInput.setAttribute('placeholder', 'Filter components…')
+    filterInput.setAttribute('label', 'Filter components')
     filterInput.addEventListener('input', () => {
       this.#filter.value = filterInput.value
     })

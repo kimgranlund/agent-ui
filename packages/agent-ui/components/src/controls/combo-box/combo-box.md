@@ -15,6 +15,10 @@ attributes:            # attributes-as-API — mirrors UIComboBoxElement.props (
     type: string
     default: ''
     reflect: false     # NOT reflected — the live committed value is not a host attribute; the attribute seeds the reset baseline (native parity for value-carrying form controls)
+  - name: label
+    type: string
+    default: ''
+    reflect: false     # NOT reflected — an accessibility hint (ADR-0085; text-field ADR-0014 parity), not a styling hook
   - name: open
     type: boolean
     default: false
@@ -41,6 +45,8 @@ attributes:            # attributes-as-API — mirrors UIComboBoxElement.props (
     reflect: true      # reflects; required && value==='' → valueMissing validity flag
 
 properties:            # IDL beyond attributes-as-API
+  - name: label
+    description: The bare-usage accessible-name source (ADR-0085). '' = no label → the editor keeps its ADR-0014-style unnamed behaviour (unchanged). When set (and the control is NOT inside a `ui-field`), the editor's `aria-label` is set to this text — the editor's text content stays the DISTINCT accessible value, so nothing is erased. Inside a `ui-field`, the field's own visible label names the editor instead (`applyFieldLabelling`) and the bare `aria-label` yields.
   - name: open
     description: Whether the listbox panel is shown (boolean). Setting true calls showPopover() on the listbox panel (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected + bindable (two-way `open` via `toggle` event, ADR-0019). The overlay controller emits `close` + `toggle` on the host when the platform light-dismisses.
   - name: strict
@@ -96,7 +102,7 @@ face:
 aria:
   role: none             # the host has no explicit role; the editor child carries role="combobox" (FACE pattern — ARIA via the part, not the host)
   roleSource: editor-part  # role="combobox" is set on [data-part=editor] via TS, never on the host
-  labelSource: aria-label on the editor part (set by the author via the `label` slot or an explicit aria-label), or an associated <label for=…>
+  labelSource: ADR-0085 drift correction (this clause previously described a `label` slot / `<label for>` path the code never had) — bare usage = the `label` prop → the editor aria-label (text-field ADR-0014 parity, editor text stays the distinct value); fielded usage (inside ui-field) = the field's visible label → the editor aria-labelledby (applyFieldLabelling), the bare aria-label yields.
   activedescendant: the editor's aria-activedescendant attribute points to the id of the [data-active] option (the highlighted option); never moves DOM focus
 
 keyboard:
