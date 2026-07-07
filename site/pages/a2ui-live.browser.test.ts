@@ -283,4 +283,31 @@ describe('a2ui-live canvas tabs (Batch C) — the shipped ui-tabs compound repla
     expect(panels[2]!.hasAttribute('hidden'), 'the programmatic write should still apply (HTML shown)').toBe(false)
     expect(events, 'a programmatic selected write must NOT echo a select event (binding hygiene)').toHaveLength(0)
   })
+
+  // Strengthening 1 (computed-display): the prior legs assert the `hidden` ATTRIBUTE toggles; this proves the
+  // attribute actually RESOLVES to `display:none` — i.e. the component's `ui-tab-panel[hidden]{display:none}`
+  // rule bites and a2ui-live.css (which deliberately sets NO `display` on the panels, so as not to clobber it)
+  // does not defeat it. Guards the exact hazard the a2ui-live.css banner calls out.
+  it('the `hidden` attribute resolves to computed display:none — the component hide rule bites, unclobbered by a2ui-live.css', () => {
+    const tabs = mountCanvasTabs('canvas')
+    const panels = tabs.querySelectorAll('ui-tab-panel')
+    expect(getComputedStyle(panels[0]!).display, 'the selected Canvas panel must render (not display:none)').not.toBe('none')
+    expect(getComputedStyle(panels[1]!).display, 'a hidden panel must COMPUTE display:none, not merely carry [hidden]').toBe('none')
+    expect(getComputedStyle(panels[2]!).display).toBe('none')
+  })
+
+  // Strengthening 2 (stage-fill wiring): a2ui-live.css re-lays `.canvas-tabs` as a flex column and marks
+  // `.canvas-tabs > ui-tab-panel { flex:1 1 auto }`, so the ACTIVE panel — not the whole pane — fills the stage
+  // below the tablist and owns the scroll. Assert those two declarations actually reach the compound (the panel's
+  // `flex-grow:1` has no competing component rule, so it's a robust, cascade-order-independent proof the fill is
+  // wired), plus that a hidden panel takes no box (display:none). (A full pixel-fill measurement is cascade-order
+  // fragile in the isolated harness — the component's adopted sheet can out-order the imported page CSS — so this
+  // pins the WIRING the page relies on, which the live page's own layout then realizes.)
+  it('the stage-fill is wired: .canvas-tabs is a flex column, the active panel is flex:1 1 auto, and a hidden panel takes no box', () => {
+    const tabs = mountCanvasTabs('canvas')
+    const panels = tabs.querySelectorAll('ui-tab-panel')
+    expect(getComputedStyle(tabs).flexDirection, '.canvas-tabs must be the flex column a2ui-live.css establishes').toBe('column')
+    expect(getComputedStyle(panels[0]!).flexGrow, 'the active panel must be flex-grow:1 so it fills the stage, not the pane').toBe('1')
+    expect((panels[1] as HTMLElement).getBoundingClientRect().height, 'a hidden panel must take zero box (display:none)').toBe(0)
+  })
 })
