@@ -562,6 +562,58 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
     ).toBeCloseTo(editorH, 0)
   })
 
+  // ────────────────────────────────────────────────────────────────────────────────────────────
+  //  h/2 STANDARDIZATION (2026-07-06 follow-up): the editor's inline text inset was the fleet's
+  //  lone entry-control outlier still anchored to a fixed --ui-space-sm token instead of the
+  //  Control-class h/2 value-edge law (text-field.css:119, select.css trigger). It is now
+  //  calc(--ui-combo-box-height / 2) — byte-identical in model to ui-select's trigger/listbox
+  //  pairing. These two probes pin the browser-measured consequence: the editor's OWN computed
+  //  padding-inline is really h/2 (not just internally self-consistent), and the option text still
+  //  lines up under the editor text at the new, wider offset.
+  // ────────────────────────────────────────────────────────────────────────────────────────────
+  it('editor computed padding-inline == --ui-combo-box-height / 2 (the fleet h/2 value-edge standard)', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    const editorH = editor.getBoundingClientRect().height
+    const editorPad = px(getComputedStyle(editor).paddingInlineStart)
+
+    expect(
+      editorPad,
+      `${server.browser}: editor padding-inline (${editorPad}px) should equal height/2 (${editorH / 2}px) — the h/2 standard`,
+    ).toBeCloseTo(editorH / 2, 0)
+  })
+
+  it("an open option's text inline offset (from the panel edge) equals the editor's text inline offset (from the editor edge) — alignment law holds under h/2", async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    el.open = true
+    await el.updateComplete
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const option = listbox.querySelector<HTMLElement>('[role="option"]')!
+
+    // The editor's own text edge, relative to the editor's box: padding-inline-start (h/2 now).
+    const editorTextInset = px(getComputedStyle(editor).paddingInlineStart)
+
+    // The option's text edge, relative to the PANEL's box: the option's own margin-inline-start
+    // (the box-model inset, h/4) PLUS its padding-inline-start (h/4) — h/4 + h/4 == h/2, so this
+    // must equal the editor's own inset exactly (both engines, browser-measured).
+    const optionCs = getComputedStyle(option)
+    const optionTextInset = px(optionCs.marginInlineStart) + px(optionCs.paddingInlineStart)
+
+    expect(
+      optionTextInset,
+      `${server.browser}: option text inline offset (${optionTextInset}px) should equal the editor's text inline offset (${editorTextInset}px)`,
+    ).toBeCloseTo(editorTextInset, 0)
+  })
+
   it('option font-size resolves to --ui-combo-box-font (was inherited ambient — bug fix)', async () => {
     const { el } = mount(`
       <ui-combo-box placeholder="Search…">
