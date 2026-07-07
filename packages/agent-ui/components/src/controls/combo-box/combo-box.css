@@ -3,7 +3,7 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-combo-box)` (specificity 0,0,0) declares the `--ui-combo-box-*`
  *       chain from the colour roles (`--md-sys-color-{family}-{role}`) and the dimensional ramp
- *       (`--ui-height-md` / `--ui-radius-base` / `--ui-space-*`). Raw `--md-sys-color-*` roles enter ONLY
+ *       (`--ui-height-md` / `--ui-radius-base`). Raw `--md-sys-color-*` roles enter ONLY
  *       here; `@scope` never reads them. This is the "Geometry-by-part" three-class pattern
  *       from the decomp: the editor is Control-class, the panel is Container/surface, and the
  *       option rows are the legacy item-pad (ROV-C5 / §4.6/5.1).
@@ -11,15 +11,20 @@
  *       tokens plus the shared fleet constants (`--md-sys-color-focus-ring`, `--ui-motion-*`).
  *       The host is `display: inline-grid` with a `min-inline-size` floor (ADR-0021: entry-
  *       control frame law; the same trap that collapsed ui-text-field + ui-slider). The editor
- *       part is Control-class: `block-size` off `--ui-combo-box-height`. The listbox panel is
- *       Container/surface: `--ui-container-bg` equivalent, `--ui-radius-base` rounding, `--ui-
- *       space-sm` item padding. Options use the item-pad row model. `[data-active]` highlights
- *       the active-descendant option without moving DOM focus.
- *       (2026-07-06) The item-pad's numbers are now DERIVED off the editor's own height/font
+ *       part is Control-class: `block-size` off `--ui-combo-box-height`; inline text inset = h/2
+ *       (the fleet Control-class value-edge standard, matching text-field/select). The listbox
+ *       panel is Container/surface: `--ui-container-bg` equivalent, `--ui-radius-base` rounding.
+ *       Options use the item-pad row model. `[data-active]` highlights the active-descendant
+ *       option without moving DOM focus.
+ *       (2026-07-06) The item-pad's numbers are DERIVED off the editor's own height/font
  *       (`--ui-combo-box-height`/`-font`/`-padding-inline`) instead of fixed `--ui-space-*` px, so
  *       option text aligns under the editor's text and the option row height matches the editor's
  *       — the same size-carrying model as ui-select's listbox, applied to combo-box's single
  *       (currently size-less) register; see the token-block comment for the exact derivation.
+ *       (2026-07-06, follow-up) `--ui-combo-box-padding-inline` itself is now h/2 (was the fixed
+ *       `--ui-space-sm`) — the editor was the lone entry-control outlier off the fleet h/2 value-
+ *       edge law; the item-pad derivation above already read this token, so options auto-followed
+ *       (h/4 + h/4 = h/2), now byte-identical in model to ui-select's trigger/listbox pairing.
  *
  * Standalone stylesheet — NOT injected from combo-box.ts (behaviour-only `.ts`, plan §2).
  * Linked via the component-styles barrel (wave-4 integration slice). The panel's `[popover]`
@@ -33,7 +38,11 @@
   /* Geometry: control height off the md-scale ramp (the combo-box trigger is the editor). */
   --ui-combo-box-height: var(--ui-height-md);
   --ui-combo-box-font: var(--ui-font-md);
-  --ui-combo-box-padding-inline: var(--ui-space-sm);
+  /* (2026-07-06) h/2 — the fleet Control-class value-edge standard (text-field.css:119,
+     select.css trigger padding-inline-start), replacing the earlier fixed --ui-space-sm.
+     The editor was the lone entry-control outlier still anchored to a space token instead
+     of the frame-law h/2 inset; this brings it into line. */
+  --ui-combo-box-padding-inline: calc(var(--ui-combo-box-height) / 2);
 
   /* Frame — matches the text-field border channel (solid, not alpha — WCAG 1.4.11 parity). */
   --ui-combo-box-border: var(--md-sys-color-neutral);
@@ -57,11 +66,11 @@
   --ui-combo-box-panel-radius: var(--ui-radius-base);
   --ui-combo-box-panel-min-inline-size: 12rem; /* prevent empty-panel collapse (ADR-0021) */
   /* Panel-edge inset (feeds --ui-box-inset below, same mechanism as ui-select, 2026-07-06):
-     DERIVED off the editor's OWN inline text-pad (--ui-combo-box-padding-inline) rather than a
-     fixed px, so panel-inset + option-inline (below) sum to the editor's real inline pad — option
-     text aligns under the editor's text at the SAME inline offset (no h/2 assumption: unlike
-     ui-select's trigger, the combo-box editor does not use h/2 today; this anchors to whatever
-     the editor actually uses, which is the honest form of the alignment law here). NOTE: ui-combo-box
+     DERIVED off the editor's OWN inline text-pad (--ui-combo-box-padding-inline), which is now
+     itself the fleet h/2 standard (2026-07-06 follow-up — see the token comment above), so
+     panel-inset + option-inline (below) sum to h/2 exactly — the SAME alignment law as ui-select's
+     trigger (listbox-padding + option-inline == h/2): option text lines up under the editor's text
+     at the identical inline offset. Split evenly (h/4 + h/4), same as ui-select. NOTE: ui-combo-box
      has no `[size]` attribute yet (a structural divergence from ui-select — flagged, not forced);
      this is still worth deriving off the ramp now so a future `[size]` addition (its own ADR/decomp,
      a new-attribute contract change) would make this repoint for free, same as ui-select. */
