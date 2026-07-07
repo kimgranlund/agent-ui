@@ -42,6 +42,33 @@ const KNOB_UNSET = '__cp-unset__'
 // (7), text `variant`/`as` (9/10), text-field `type` (12), and the 8-member overlay `placement` land on select.
 const RADIO_GROUP_MAX = 5
 
+// ── de-doubling closing step (ADR-0086) — the batch-A radio-group knobs render SEGMENTED ─────────────────────
+// `ui-radio-group[variant="segmented"]` shipped (reviewed GO) as a real M3-style segmented control (a joined
+// track + one shared sliding indicator, Control-height, ADR-0086). Every batch-A knob (above) is EXACTLY the
+// shape it targets — a small mutually-exclusive option set — so every one of them flips to it; none stay
+// plain. Orientation is the one per-knob judgment call: horizontal (segmented's own default) reads best when
+// the whole row fits the narrow knob column (component-preview.css's `.knob` control track, ≈150–190px in the
+// two-column layout); a wider set — either MORE members (row/list `align`, 5) or just LONGER labels at a small
+// member count (radio-group's own `variant`/`orientation` knobs, 2 members but "segmented"/"horizontal") —
+// goes vertical (a segmented STACK) instead, so the column never squeezes label text or clips a cell. Decided
+// generically from the member set itself (member count × longest label), not a per-tag list — same
+// derive-don't-duplicate discipline as `RADIO_GROUP_MAX` above; measured against the rendered knob panel in
+// component-preview.browser.test.ts (component-preview-radio-segmented.browser.test.ts pins the whole shape).
+const RADIO_GROUP_HORIZONTAL_MAX_MEMBERS = 3
+// 5, not 6: a 3-member/5-char set (button `variant` solid/soft/ghost) fills the 21rem knob column to EXACTLY 0px
+// slack (measured both engines — cells 63px, group right edge flush with the row). 5 is the empirical max that
+// fits; a 6-char 3-member set would overflow, so it must stack vertical instead. Guarded by the button-`variant`
+// no-overflow probe in component-preview-radio-segmented.browser.test.ts.
+const RADIO_GROUP_HORIZONTAL_MAX_LABEL = 5
+
+/** Segmented orientation for a knob's member set (see the note above): horizontal only for a short (≤3-member),
+ *  short-label (≤5-char) set; everything wider or longer-labelled stacks vertical instead. */
+function radioGroupOrientation(members: readonly string[]): 'horizontal' | 'vertical' {
+  if (members.length > RADIO_GROUP_HORIZONTAL_MAX_MEMBERS) return 'vertical'
+  const maxLabelLength = members.reduce((max, m) => Math.max(max, m.length), 0)
+  return maxLabelLength <= RADIO_GROUP_HORIZONTAL_MAX_LABEL ? 'horizontal' : 'vertical'
+}
+
 // ── the unified knob model (one shape, both modes) ───────────────────────────────────────────────────────────
 type KnobKind = 'enum' | 'boolean' | 'number' | 'string' | 'text' | 'skip'
 
@@ -613,6 +640,12 @@ class ComponentPreview extends HTMLElement {
         group.id = id
         group.className = 'knob-radio-group'
         group.setAttribute('aria-label', knob.name)
+        // ADR-0086 de-doubling closing step: every batch-A radio-group knob renders as a real segmented
+        // control (the sliding indicator + roving come from the control itself — nothing here reimplements
+        // it). Horizontal is segmented's own default (no attribute needed); a wider/longer-labelled set gets
+        // an explicit vertical stack instead (radioGroupOrientation, above) so it fits the knob column.
+        group.setAttribute('variant', 'segmented')
+        if (radioGroupOrientation(members) === 'vertical') group.setAttribute('orientation', 'vertical')
         // The fallback pre-selection must be a REAL #state seed, not merely a visual default: #rootProps() /
         // #applyKnob() read #state, not "whatever the radio-group widget happens to show" — an unseeded knob
         // would render 'sm' checked in the UI while the specimen itself carried no `size` at all (and a click
