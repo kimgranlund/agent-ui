@@ -152,12 +152,12 @@
 }
 
 .form-status[data-kind='blocked'] {
-  color: var(--md-sys-color-danger);
+  color: var(--md-sys-color-danger-high);
   font-weight: 600;
 }
 
 .form-status[data-kind='sent'] {
-  color: var(--md-sys-color-success);
+  color: var(--md-sys-color-success-high);
   font-weight: 600;
 }
 
@@ -209,13 +209,13 @@
 }
 
 .msg-log > li[data-kind='action'] .msg-head {
-  color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-primary-high);
 }
 
 .msg-log > li[data-kind='response'] .msg-head {
-  color: var(--md-sys-color-success);
+  color: var(--md-sys-color-success-high);
 }
 
 .msg-log > li[data-kind='error'] .msg-head {
-  color: var(--md-sys-color-danger);
+  color: var(--md-sys-color-danger-high);
 }
