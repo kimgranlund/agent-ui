@@ -1,15 +1,16 @@
 ---
 # radio-group.md frontmatter — the attributes-as-API descriptor for ui-radio-group (ADR-0004). The
 # machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the /site doc.
-# The `attributes[]` block MUST mirror radio-group.ts `static props` (the groupProps = UIFormElement.formProps
-# spread: name/disabled/required) — the contract↔props trip-wire and the frontmatter schema both target
-# this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
+# The `attributes[]` block MUST mirror radio-group.ts `static props` (groupProps = UIFormElement.formProps
+# spread [name/disabled/required] PLUS the ADR-0086 segmented-variant pair [variant/orientation]) — the
+# contract↔props trip-wire and the frontmatter schema both target this fence. Field set per
+# .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-radio-group
 tier: container        # geometry size-class (not a sized control — a container that holds ui-radio children)
 extends: UIFormElement  # FACE form-associated container (value/validity participation via ElementInternals; ADR-0013)
 # marginal: ui-radio-group adds 255 B gz (1098 B min) to the self-defining ui-* family above the other three Wave-1 Indicator controls (UIRadioGroupElement owns rovingFocus group wiring, single-selection exclusivity, and the group form value — the largest Wave-1 leaf) — within the per-control ≤ ~2 kB tier budget (plan §10)
 
-attributes:            # attributes-as-API — mirrors radio-group.ts static props (UIFormElement.formProps spread)
+attributes:            # attributes-as-API — mirrors radio-group.ts static props (UIFormElement.formProps spread + ADR-0086)
   - name: name
     type: string
     default: ''
@@ -22,6 +23,16 @@ attributes:            # attributes-as-API — mirrors radio-group.ts static pro
     type: boolean
     default: 'false'
     reflect: true      # reflects; required + no selection → valueMissing validity verdict
+  - name: variant
+    type: enum
+    values: [default, segmented]
+    default: default
+    reflect: true      # ADR-0086 — 'segmented' restyles the ui-radio children as joined segments with one shared moving indicator (radio-group.css); 'default' stays today's layout-neutral dots-in-a-row
+  - name: orientation
+    type: enum
+    values: [horizontal, vertical]
+    default: vertical
+    reflect: true      # ADR-0086 — the roving-focus axis (Arrow keys) AND, for variant=segmented, the grid main axis. RESOLVED ONCE at connect: an author-set attribute wins; otherwise variant supplies the default (segmented ⇒ horizontal, default ⇒ vertical), reflected back so CSS and the roving trait read one source
 
 properties:            # IDL beyond attributes-as-API (FACE form IDL, delegates to ElementInternals)
   - name: form
@@ -62,23 +73,25 @@ aria:
   labelSource: aria-label / aria-labelledby  # the group's accessible name is provided by the page author
   disabledState: effectiveDisabled (own disabled || form-disabled channel; ADR-0013)
 
-keyboard:
-  - keys: ArrowDown / ArrowRight
-    action: Move focus + selection to the next ui-radio in the group (wraps; selection-follows-focus). The rovingFocus trait handles the tabindex management; the onMove callback commits the selection.
-  - keys: ArrowUp / ArrowLeft
-    action: Move focus + selection to the previous ui-radio (wraps).
+keyboard:              # ADR-0086 — the roving axis is PER-ORIENTATION (the resolved `orientation`, clause 1); the
+                       # pre-ADR-0086 table falsely claimed ArrowLeft/Right navigated under the shipped vertical
+                       # roving, which they do not — this is the drift correction (ADR-0086 §Repairs)
+  - keys: ArrowDown / ArrowUp
+    action: (orientation=vertical, the default) Move focus + selection to the next/previous ui-radio (wraps; selection-follows-focus). The rovingFocus trait handles the tabindex management; the onMove callback commits the selection.
+  - keys: ArrowRight / ArrowLeft
+    action: (orientation=horizontal) Move focus + selection to the next/previous ui-radio (wraps; selection-follows-focus). variant=segmented resolves to horizontal by default (ADR-0086 clause 1) when no explicit orientation is set.
   - keys: Home
-    action: Move focus + selection to the first ui-radio.
+    action: Move focus + selection to the first ui-radio (either orientation).
   - keys: End
-    action: Move focus + selection to the last ui-radio.
+    action: Move focus + selection to the last ui-radio (either orientation).
   - keys: Space
     action: Selects the currently focused (tabindex=0) radio if not already selected. Handled by the individual ui-radio's pressActivation → click → base toggle → group change delegation.
   - note: Tab moves focus into the group (lands on the tabindex=0 radio — the checked one, or the first if none). Tab again moves OUT of the group (rovingFocus ensures exactly one radio is tabindex=0). This is the standard ARIA APG radio-group roving-tabindex keyboard contract.
 
 geometry:
-  sizeClass: container   # no fixed block-size; the group sizes to its content (ui-radio children)
-  display: block         # the group is a block container; radios stack in block flow by default
-  note: Layout (stack direction, gap, wrapping) is the page author's responsibility; the group provides no layout-opinionated CSS of its own.
+  sizeClass: container   # no fixed block-size for the DEFAULT variant; the group sizes to its content (ui-radio children). variant=segmented is a geometry.md Pattern (geometry.md:133) — see note.
+  display: block         # the DEFAULT variant is a block container; radios stack in block flow. variant=segmented repoints display:grid (radio-group.css, ADR-0086)
+  note: For the DEFAULT variant, layout (stack direction, gap, wrapping) is the page author's responsibility — no layout-opinionated CSS. variant=segmented (ADR-0086) is the one exception — the group itself owns a real layout (display:grid, equal 1fr cells, an outer --ui-radius-base track, and one shared moving ::before indicator), a Pattern-class control-height ramp (--ui-height-md), not the page author's concern.
 
 forcedColors: No per-group forced-colors rules needed; the ui-radio children carry their own WHCM treatment. The group's internals.role='radiogroup' is AX-only (no visual surface).
 ---
@@ -120,15 +133,36 @@ individual radios — is the form participant the `<form>` sees.
 
 ## Keyboard
 
-The group uses `rovingFocus` (vertical orientation, looping): exactly **one** radio holds `tabindex=0` (the
-checked one, or the first if none), all others hold `tabindex=-1`. A Tab moves INTO the group landing on the
-roving radio, and Tab OUT skips the rest of the group.
+The group uses `rovingFocus` (looping): exactly **one** radio holds `tabindex=0` (the checked one, or the
+first if none), all others hold `tabindex=-1`. A Tab moves INTO the group landing on the roving radio, and Tab
+OUT skips the rest of the group. **Per orientation** (ADR-0086): a `vertical` group (the default) roves with
+ArrowUp/Down; a `horizontal` group roves with ArrowLeft/Right. Home/End jump to the first/last radio in either
+orientation. `orientation` is resolved once at connect — an explicit `orientation` attribute wins; otherwise
+`variant="segmented"` defaults to `horizontal` and the default variant stays `vertical`.
 
 ## ARIA
 
 `role="radiogroup"` is set via `internals.role` (FACE — never a host attribute). The accessible name must
 be provided by the page author via `aria-label` or `aria-labelledby` on the group element. Each child
 `ui-radio` carries `role="radio"` and `ariaChecked` via its own internals (managed by `UIIndicatorElement`).
+
+## Segmented variant (ADR-0086)
+
+`variant="segmented"` restyles the `ui-radio` children as a joined-button toggle — one shared, animated
+highlight slides between segments instead of a per-radio dot:
+
+```html
+<ui-radio-group variant="segmented" name="density">
+  <ui-radio value="compact">Compact</ui-radio>
+  <ui-radio value="comfortable">Comfortable</ui-radio>
+  <ui-radio value="spacious">Spacious</ui-radio>
+</ui-radio-group>
+```
+
+Defaults to a **horizontal** row (`orientation="horizontal"` is resolved automatically); add
+`orientation="vertical"` for a stacked segmented control. Single-selection exclusivity, roving focus, the
+group form value, and required→valueMissing validity are **all unchanged** — the variant is presentation +
+the orientation/selection wiring it needs (radio-group.css), not a new behavior.
 
 ## Required + validity
 
