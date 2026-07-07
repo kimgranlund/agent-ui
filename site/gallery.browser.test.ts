@@ -289,3 +289,57 @@ describe('<component-gallery> — forced-colors keeps chrome + a specimen sample
     }
   })
 })
+
+// ── the scheme-boundary ink re-root (the light-card-in-dark-root bug, both engines) ─────────────────────────
+// Regression for the reported "white text on a light card" defect. A <theme-provider scheme=light> nested in a
+// DARK root re-roots `color-scheme`, but that alone does NOT re-resolve a scheme-dependent INHERITED `color`:
+// `light-dark()` only re-resolves where a property CONTAINING it is declared. A bare-`textContent` specimen (the
+// a2ui Card's `ui-card-header`, and the ui-row/list/grid items) declares no `color`, so WITHOUT the boundary
+// re-root it inherits the ink computed ONCE at the dark root (WHITE) → invisible on the now-light card surface.
+// component-gallery.css re-declares `color` on `theme-provider` to fix it. A plain `color-scheme:dark` on the root
+// forces the dark-root case in BOTH engines (color-scheme is inherited; light-dark resolves against the local one).
+
+describe('<component-gallery> — the theme-provider re-roots inherited ink at the scheme boundary (both engines)', () => {
+  it('a light provider under a dark root gives its bare-text specimens DARK ink, not the root\'s frozen white', async () => {
+    // Reproduce the site's real root: a DARK color-scheme + a scheme-dependent body ink (_page.css sets body
+    // `color: --md-sys-color-neutral-on-surface`, WHITE under the dark root — the frozen value the bug inherits).
+    const rootEl = document.documentElement
+    const priorScheme = rootEl.style.colorScheme
+    const priorBodyColor = document.body.style.color
+    try {
+      rootEl.style.colorScheme = 'dark'
+      document.body.style.color = 'var(--md-sys-color-neutral-on-surface)'
+      const gallery = await mountGallery() // default scheme = LIGHT — the provider forces light under the dark root
+      const provider = gallery.querySelector('theme-provider') as HTMLElement
+      expect(provider.getAttribute('scheme')).toBe('light') // anti-vacuous: genuinely the light-in-dark case
+
+      const bodyInk = getComputedStyle(document.body).color // frozen WHITE (light-dark → dark branch at the root)
+      const providerInk = getComputedStyle(provider).color // re-rooted DARK (light branch at the provider) — the fix
+      // The boundary MOVED the inherited ink off the root's frozen white; without the re-root these would MATCH
+      // (the provider would inherit body white) and the light-in-dark card would render white-on-light.
+      expect(
+        colorsMatch(providerInk, bodyInk),
+        'the provider did NOT re-root the inherited ink — a light-in-dark card would show white text',
+      ).toBe(false)
+
+      // The reported symptom: the a2ui Card's bare-`textContent` header inherits the boundary-re-rooted ink.
+      const cardEl = liveFor(cardFor(gallery, 'ui-card')!, 'ui-card') as HTMLElement
+      expect(cardEl, 'no live ui-card specimen rendered').not.toBeNull()
+      const heading = cardEl.querySelector('ui-card-header') as HTMLElement
+      expect(heading?.textContent, 'the ui-card header is not the expected bare-text specimen').toContain('Account')
+      const headingInk = getComputedStyle(heading).color
+      expect(
+        colorsMatch(headingInk, providerInk),
+        'the card heading did not inherit the boundary-re-rooted ink',
+      ).toBe(true)
+
+      // …and that ink is genuinely DARK (readable on the light card), not merely "different from white".
+      const [r, g, b] = normalizeColor(headingInk)
+      const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+      expect(luminance, 'the card heading ink is not dark — it would be unreadable on the light surface').toBeLessThan(0.4)
+    } finally {
+      rootEl.style.colorScheme = priorScheme
+      document.body.style.color = priorBodyColor
+    }
+  })
+})
