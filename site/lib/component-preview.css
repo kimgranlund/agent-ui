@@ -88,12 +88,17 @@ component-preview {
 .knob-switch {
   justify-self: start;
 }
-/* A small closed enum's ui-radio-group knob (batch A) — the group itself is layout-neutral by contract
- * (radio-group.md geometry note: "Layout ... is the page author's responsibility"), so this page-level rule is
- * exactly that authoring, not a control restyle. `ui-radio-group.knob-radio-group` (specificity 0,1,1) reliably
- * outweighs the control's own `@scope (ui-radio-group) :scope { display: block }` (0,1,0) regardless of import
- * order. Wraps to a second line rather than overflowing the narrow knob column. */
-ui-radio-group.knob-radio-group {
+/* A small closed enum's ui-radio-group knob (batch A) now ALWAYS renders `variant="segmented"` (the ADR-0086
+ * de-doubling closing step, component-preview.ts) — the control owns its own real layout (display:grid, a
+ * horizontal row or vertical stack per `orientation`) and MUST be left alone: `:not([variant='segmented'])`
+ * scopes this page-level flex/wrap authoring to the plain (unsegmented) fallback only. This matters for
+ * cascade correctness, not just tidiness — `ui-radio-group.knob-radio-group` and the control's own
+ * `ui-radio-group[variant='segmented']` rule (radio-group.css) are EQUAL specificity (0,1,1); component-
+ * preview.css loads AFTER component-styles.css in the site bundle (pages/_page.ts's import-order contract), so
+ * an unscoped page rule here would win the cascade tie by SOURCE ORDER and silently stomp the control's own
+ * grid layout. No batch-A knob today is unsegmented, so this rule is currently dormant — kept as the
+ * documented fallback shape, not dead code (a future non-segmented radio-group knob would need it). */
+ui-radio-group.knob-radio-group:not([variant='segmented']) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
