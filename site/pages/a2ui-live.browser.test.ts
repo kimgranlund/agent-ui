@@ -300,14 +300,45 @@ describe('a2ui-live canvas tabs (Batch C) — the shipped ui-tabs compound repla
   // `.canvas-tabs > ui-tab-panel { flex:1 1 auto }`, so the ACTIVE panel — not the whole pane — fills the stage
   // below the tablist and owns the scroll. Assert those two declarations actually reach the compound (the panel's
   // `flex-grow:1` has no competing component rule, so it's a robust, cascade-order-independent proof the fill is
-  // wired), plus that a hidden panel takes no box (display:none). (A full pixel-fill measurement is cascade-order
-  // fragile in the isolated harness — the component's adopted sheet can out-order the imported page CSS — so this
-  // pins the WIRING the page relies on, which the live page's own layout then realizes.)
-  it('the stage-fill is wired: .canvas-tabs is a flex column, the active panel is flex:1 1 auto, and a hidden panel takes no box', () => {
+  // wired), plus that a hidden panel takes no box (display:none).
+  //
+  // The `display: flex` assertion is the LOAD-BEARING one, added after a real bug: `flex-direction`/`flex-grow`
+  // report their SPECIFIED value via getComputedStyle regardless of whether `display` is actually `flex` — so a
+  // version of this test that checked only those two properties stayed GREEN while `.canvas-tabs` silently
+  // rendered `display: block` in production (a bare `.canvas-tabs { display: flex }` LOSES to tabs.css's
+  // `@scope (ui-tabs) { :scope { display: block } }`, whose EFFECTIVE specificity is (0,1,1) — `:scope` matching
+  // the @scope prelude's own scoping-root element adds that root selector's specificity to `:scope`'s own
+  // pseudo-class specificity, per the CSS Cascading and Scoping spec — a bare class is only (0,1,0) and loses
+  // regardless of import order). The fix tag-qualifies the selector (`ui-tabs.canvas-tabs`, ties at (0,1,1),
+  // wins on later source order). Without checking `display` itself, this whole block was vacuous against
+  // exactly the defect it was written to catch — the real symptom was a fully-rendered, fully-invisible A2UI
+  // surface on the live page (a2ui-live.css's own banner now documents the mechanic).
+  it('the stage-fill is wired: .canvas-tabs is ACTUALLY display:flex (not just flex-direction/-grow declared), and a hidden panel takes no box', () => {
     const tabs = mountCanvasTabs('canvas')
     const panels = tabs.querySelectorAll('ui-tab-panel')
+    expect(getComputedStyle(tabs).display, '.canvas-tabs must ACTUALLY be display:flex — a bare class selector loses to @scope(ui-tabs){:scope{display:block}}\'s (0,1,1) specificity floor').toBe('flex')
     expect(getComputedStyle(tabs).flexDirection, '.canvas-tabs must be the flex column a2ui-live.css establishes').toBe('column')
     expect(getComputedStyle(panels[0]!).flexGrow, 'the active panel must be flex-grow:1 so it fills the stage, not the pane').toBe('1')
     expect((panels[1] as HTMLElement).getBoundingClientRect().height, 'a hidden panel must take zero box (display:none)').toBe(0)
+  })
+
+  // Strengthening 3 (real pixel fill, the whole-shape proof) — mounts the tabs compound inside a DEFINITE-height
+  // container (mirroring the real page's app-shell → pane → tabs chain) and asserts the active panel's rendered
+  // height actually reaches that container, not just that the CSS properties are declared. This is the assertion
+  // that would have failed outright under the pre-fix `display:block` bug (the panel would have shrunk to its
+  // own content's block-flow height, nowhere near the container).
+  it('the active panel genuinely FILLS a real sized container (not just declares flex:1 1 auto)', () => {
+    const wrap = document.createElement('div')
+    wrap.style.display = 'flex'
+    wrap.style.flexDirection = 'column'
+    wrap.style.height = '400px'
+    wrap.style.width = '300px'
+    const tabs = mountCanvasTabs('canvas')
+    mounted.pop() // mountCanvasTabs already queued `tabs` for its own cleanup; re-home it under `wrap` instead
+    wrap.append(tabs)
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const panel = tabs.querySelector('ui-tab-panel:not([hidden])') as HTMLElement
+    expect(panel.getBoundingClientRect().height, 'the active panel must fill the 400px container, not shrink to its own content').toBeGreaterThan(300)
   })
 })

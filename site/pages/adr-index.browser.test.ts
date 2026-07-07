@@ -16,6 +16,15 @@ describe('adr-index — the dogfooded ui-text-field search filters the card list
     const search = document.querySelector('.adr-search') as (HTMLElement & { value: string }) | null
     expect(search, 'no ADR search field found').not.toBeNull()
     expect(search!.tagName.toLowerCase(), 'the search should be the dogfooded ui-text-field').toBe('ui-text-field')
+    // Load-bearing, not cosmetic: `ui-text-field.adr-search` is TAG-QUALIFIED (not a bare `.adr-search`) because
+    // a bare class selector (0,1,0) loses to text-field.css's `@scope (ui-text-field) { :scope { display:
+    // inline-grid } }`, whose EFFECTIVE specificity is (0,1,1) (`:scope` matching the @scope prelude's own
+    // scoping-root element adds that root selector's specificity to `:scope`'s own pseudo-class specificity,
+    // per the CSS Cascading and Scoping spec) — regardless of import order. Querying `.adr-search` BY CLASS (as
+    // every other assertion in this file does) can't catch a reverted tag qualifier; only a computed-style
+    // check can (the a2ui-live `.canvas-tabs` sibling footgun had a fully-invisible-surface symptom — this one
+    // is subtler, an inline-level box instead of block, but the identical defect).
+    expect(getComputedStyle(search!).display, 'the tag-qualified selector must win over @scope(ui-text-field){:scope{display:inline-grid}}').toBe('block')
 
     const cards = [...document.querySelectorAll<HTMLElement>('.adr-card')]
     expect(cards.length, 'expected ADR cards').toBeGreaterThan(0)
