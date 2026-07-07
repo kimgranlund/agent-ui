@@ -61,11 +61,11 @@
 }
 
 .activation-log > li[data-source='keyboard'] {
-  color: var(--md-sys-color-primary, #1a56db);
+  color: var(--md-sys-color-primary-high, #1a56db);
 }
 
 /* The ui-text-field activity log tags each line by the honest event KIND (input|change); a `change` (commit)
  * line is tinted to stand out from the per-keystroke `input` lines (the button log uses data-source above). */
 .activation-log > li[data-kind='change'] {
-  color: var(--md-sys-color-primary, #1a56db);
+  color: var(--md-sys-color-primary-high, #1a56db);
 }

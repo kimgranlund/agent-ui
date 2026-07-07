@@ -134,7 +134,7 @@
 
 /* The injected malformed line — marked as the out-of-band fault it is (never a payload line). */
 .feed-log > li[data-kind='fault'] .feed-head {
-  color: var(--md-sys-color-danger);
+  color: var(--md-sys-color-danger-high);
 }
 
 .feed-log > li[data-kind='fault'] .code-block {
@@ -177,12 +177,12 @@
 }
 
 .status-phase[data-phase='done'] {
-  color: var(--md-sys-color-success);
+  color: var(--md-sys-color-success-high);
   font-weight: 600;
 }
 
 .status-first-paint {
-  color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-primary-high);
   font-family: var(--ui-mono);
   font-size: 0.78rem;
   font-weight: 600;
@@ -220,13 +220,13 @@
 }
 
 .msg-log > li[data-kind='action'] .msg-head {
-  color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-primary-high);
 }
 
 .msg-log > li[data-kind='response'] .msg-head {
-  color: var(--md-sys-color-success);
+  color: var(--md-sys-color-success-high);
 }
 
 .msg-log > li[data-kind='error'] .msg-head {
-  color: var(--md-sys-color-danger);
+  color: var(--md-sys-color-danger-high);
 }
