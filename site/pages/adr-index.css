@@ -6,8 +6,15 @@
  * content (native <details>), so this file restyles no control internals — only layout around them. */
 
 /* Now a dogfooded ui-text-field (type=search) — it carries its own control CSS (border/bg/height/radius and
- * the shared :focus-visible ring), so this only stretches it to the content width and keeps the block rhythm. */
-.adr-search {
+ * the shared :focus-visible ring), so this only stretches it to the content width and keeps the block rhythm.
+ * Tag-qualified (`ui-text-field.adr-search`, not a bare `.adr-search`) — load-bearing: `@scope (ui-text-field)
+ * { :scope { display: inline-grid } }` (text-field.css) carries an EFFECTIVE specificity of (0,1,1) (`:scope`
+ * matching the @scope prelude's own scoping-root element adds that root selector's specificity to `:scope`'s
+ * own pseudo-class specificity, per the CSS Cascading and Scoping spec) — a bare class is only (0,1,0) and
+ * silently loses regardless of import order, leaving the field `inline-grid` instead of `block` (the a2ui-live
+ * `.canvas-tabs` case is the same footgun with a visible symptom — a fully invisible rendered surface; here the
+ * effect is more subtle, an inline-level box instead of block, but it's the identical defect). */
+ui-text-field.adr-search {
   display: block;
   inline-size: 100%;
   margin-block: var(--ui-space-lg) var(--ui-space-md);

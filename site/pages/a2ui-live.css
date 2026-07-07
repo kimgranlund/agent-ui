@@ -212,10 +212,21 @@
  * lets the ACTIVE panel fill the pane and scroll its own area. The component keeps all panels mounted, showing
  * only the selected one via `hidden` (ui-tab-panel[hidden]{display:none}); this sheet sets NO `display` on the
  * panels, so that show/hide rule is never clobbered. */
-.canvas-tabs {
+/* Tag-qualified (`ui-tabs.canvas-tabs`, NOT a bare `.canvas-tabs`) — load-bearing, not style: `@scope (ui-tabs)
+ * { :scope { display: block } }` (tabs.css) carries an EFFECTIVE specificity of (0,1,1) — `:scope` matching the
+ * @scope prelude's own scoping-root element adds that root selector's specificity (`ui-tabs`, a type selector,
+ * (0,0,1)) to `:scope`'s own pseudo-class specificity (0,1,0) — per the CSS Cascading and Scoping spec. A bare
+ * class selector is only (0,1,0) and LOSES to that floor regardless of import/source order: `display: flex`
+ * would be declared but silently never applied, and every child's `flex:` property below would be a no-op
+ * (flex properties only affect flex ITEMS, i.e. children of an actually-flex parent) — collapsing the whole
+ * `.canvas-stage`/`.canvas-surface` chain to zero height (verified: this was live, not hypothetical — a real
+ * rendered A2UI surface sat correctly in the DOM, invisible, because `ui-tabs` stayed `display: block`).
+ * Qualifying with the tag name ties the specificity at (0,1,1); the later source position (this sheet imports
+ * after component-styles.css) wins the tie. See also `adr-index.css`'s `.adr-search` — the same footgun. */
+ui-tabs.canvas-tabs {
   /* fill the pane column, then lay the compound out as the SAME [ tablist · active panel ] stack it already is
-   * (:scope is display:block) — enabling the fill so the active panel, not the whole pane, scrolls. This is
-   * consumer layout (sizing the control into the page), not a restyle of its visual treatment. */
+   * — enabling the fill so the active panel, not the whole pane, scrolls. This is consumer layout (sizing the
+   * control into the page), not a restyle of its visual treatment. */
   flex: 1 1 auto;
   min-block-size: 0;
   display: flex;
