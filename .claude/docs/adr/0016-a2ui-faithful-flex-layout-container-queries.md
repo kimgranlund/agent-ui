@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-06-28 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, ratified G9 container-family session |
-> | **Ratified by** | orchestration-lead (on gate) |
+> | **Ratified by** | Kim (host) · 2026-07-08 — Status flipped by Kim's own edit, closing the long-standing shipped-but-proposed flag (the build landed in the G9 wave, 2026-06-28; the old "orchestration-lead (on gate)" cell never became a real flip) |
 > | **Repairs** | `goals §G9` (NEW — the layout-primitive DoD) · `a2ui-catalog SPEC §5.2` (`Row`/`Column` `experimental → shipped`) · `references/geometry.md` (the *Container/layout* size-class — the flex layout law) · **NEW** `controls/{row,column,list,grid}/*` · the shared `flexProps` (decomp `s2`) |
 > | **Supersedes / Superseded by** | Relates: **ADR-0015** (the `--ui-space` gap ladder these consume) · the `formProps`-spread precedent (ADR-0013 — `flexProps` is the same spreadable-base pattern) · **Extended by ADR-0030** (ui-column/ui-list override the `flexProps.align` *default* to `stretch` — a per-consumer default; the grammar stands) · **Extended by ADR-0096** (the cl.4 direction switch becomes prop-gated `reflow` with per-tag defaults — column flips to locked; cl.1/2/4 stand) · **Superseded by: ADR-0087** (list/grid exclusion, Fork A — Kim resolved INCLUDE 2026-07-06) — ONLY this ADR's clause 3 parenthetical + its §5.2 "List/Grid are non-catalog primitives" note flip to catalog-shipped `List`/`Grid` types; the Row/Column faithful-flex decision (clauses 1/2/4, the shared `flexProps`, container-query responsiveness) STANDS untouched · **Superseded by ADR-0100** (partial) — ONLY cl.4's establishment sub-clause ("each layout primitive establishes a query container … the shared seam") + Amendment A1's "the whole family establishes `container-type`" reading: inline-size containment zeroes a primitive's intrinsic sizing (measured 0px Row-in-Row collapse + non-local card-tile crush), so establishment re-homes to externally-sized boundaries (the canvas/mount surfaces, app-shell, author frames); the `@container` responsiveness contract, no-breakpoint-props law, and cl.1/2 grammar STAND |
 
