@@ -16,6 +16,11 @@
  *       kicker/overline, italic + a rule + an indent for quote, and the ADR-0078 cl.4 stamp-transparency
  *       reset (the light-DOM stamp inherits all typography from the host, so `as` changes semantics with
  *       zero geometry delta). `display: block`, `user-select: text`, and forced-colors stand unchanged.
+ *       ADR-0106 adds a fourth axis, `[truncate]` — two legs mirroring the stamp-reset's own two-legged
+ *       shape: the host leg (the 80% unstamped case) and a stamp leg (declared AFTER the stamp-
+ *       transparency reset so its overflow/text-overflow win the cascade on the shared selector surface)
+ *       — text-overflow/overflow must sit on whichever box holds the text; white-space: nowrap on the
+ *       host is enough on its own, it inherits into the stamp for free.
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
  * from text.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -237,6 +242,24 @@
     font: inherit;
     letter-spacing: inherit;
     color: inherit;
+  }
+
+  /* ADR-0106 — `[truncate]`, the fourth orthogonal axis: single-line + ellipsis, CSS-only (no
+     ResizeObserver, no clipped-state measurement — text.ts's unconditional `title` mirror is the reveal).
+     Two legs, the SAME two-legged shape as the stamp-transparency reset above: the host leg covers the 80%
+     unstamped case (`as="none"`); `white-space: nowrap` there is enough on its own — it inherits into the
+     stamp for free. The stamp leg re-applies `overflow`/`text-overflow` on whichever real element (h1…span)
+     is currently holding the text, since THAT box is what actually clips; it is declared after the
+     stamp-transparency reset above so it wins the shared-selector cascade. Toggling `as` under truncation
+     keeps the rendered box identical (the ADR-0078 cl.4 invariant extends to the clipped box). */
+  :scope[truncate] {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  :scope[truncate] > :is(h1, h2, h3, h4, h5, h6, p, blockquote, span) {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* forced-colors — keep the text visible (CanvasText maps to the platform high-contrast text ink) */

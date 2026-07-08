@@ -298,14 +298,27 @@ describe('a2ui-live canvas tabs (Batch C) — the shipped ui-tabs compound repla
 
   // Strengthening 2 (stage-fill wiring): a2ui-live.css re-lays `.canvas-tabs` as a flex column and marks
   // `.canvas-tabs > ui-tab-panel { flex:1 1 auto }`, so the ACTIVE panel — not the whole pane — fills the stage
-  // below the tablist and owns the scroll. Assert those two declarations actually reach the compound (the panel's
-  // `flex-grow:1` has no competing component rule, so it's a robust, cascade-order-independent proof the fill is
-  // wired), plus that a hidden panel takes no box (display:none). (A full pixel-fill measurement is cascade-order
-  // fragile in the isolated harness — the component's adopted sheet can out-order the imported page CSS — so this
-  // pins the WIRING the page relies on, which the live page's own layout then realizes.)
-  it('the stage-fill is wired: .canvas-tabs is a flex column, the active panel is flex:1 1 auto, and a hidden panel takes no box', () => {
+  // below the tablist and owns the scroll.
+  //
+  // CORRECTED (live-repro finding): a prior version of this test asserted only `flexDirection`/`flexGrow` and
+  // explicitly declined to assert `display`, reasoning that a full fill-measurement was "cascade-order fragile
+  // in the isolated harness" and that "the live page's own layout then realizes" the fill regardless. That
+  // reasoning was WRONG, not just imprecise — a live Playwright repro against the running page found
+  // `.canvas-tabs` computing `display: block`, not `flex`, REGARDLESS of source order: tabs.css declares
+  // `:scope { display: block }` inside `@scope (ui-tabs) { … }`, and per the CSS cascade, scoping PROXIMITY is
+  // the tiebreaker checked BEFORE source order when two rules tie on specificity — an unscoped selector (the
+  // old plain `.canvas-tabs`) is treated as having the worst (infinite) proximity, so it can NEVER win against
+  // an equal-specificity `@scope`-scoped rule, no matter which stylesheet loads last. The result in production:
+  // `flex-direction`/`flex-grow` were set but INERT (block layout ignores them), `.canvas-stage`'s
+  // `block-size: 100%` collapsed to 0, and its `overflow: auto` clipped every rendered A2UI surface out of
+  // view — a real, correctly-built DOM tree that was silently invisible. The fix (a2ui-live.css) raises
+  // `.canvas-tabs`'s selector to `ui-tabs.canvas-tabs` (specificity 0,1,1 — checked BEFORE proximity, so it
+  // beats `:scope`'s 0,1,0 outright). This leg now asserts `display` directly so a future regression back to a
+  // tied-specificity selector fails HERE, not silently in the browser.
+  it('the stage-fill is wired: .canvas-tabs computes display:flex (beats @scope proximity), the active panel is flex:1 1 auto, and a hidden panel takes no box', () => {
     const tabs = mountCanvasTabs('canvas')
     const panels = tabs.querySelectorAll('ui-tab-panel')
+    expect(getComputedStyle(tabs).display, '.canvas-tabs must actually COMPUTE display:flex — not just declare it — to beat tabs.css\'s @scope :scope{display:block}').toBe('flex')
     expect(getComputedStyle(tabs).flexDirection, '.canvas-tabs must be the flex column a2ui-live.css establishes').toBe('column')
     expect(getComputedStyle(panels[0]!).flexGrow, 'the active panel must be flex-grow:1 so it fills the stage, not the pane').toBe('1')
     expect((panels[1] as HTMLElement).getBoundingClientRect().height, 'a hidden panel must take zero box (display:none)').toBe(0)

@@ -143,3 +143,36 @@ describe('text.css — structure + token hygiene (ADR-0078 cl.3)', () => {
     expect(stylesBlock).toContain('CanvasText')
   })
 })
+
+describe('text.css — [truncate] (ADR-0106, CSS-only single-line ellipsis)', () => {
+  it('the host leg sets white-space:nowrap + overflow:hidden + text-overflow:ellipsis', () => {
+    const hostRule = (stylesBlock.match(/:scope\[truncate\]\s*\{[^}]*\}/) ?? [''])[0]
+    expect(hostRule.length).toBeGreaterThan(0)
+    expect(hostRule).toMatch(/white-space:\s*nowrap/)
+    expect(hostRule).toMatch(/overflow:\s*hidden/)
+    expect(hostRule).toMatch(/text-overflow:\s*ellipsis/)
+  })
+
+  it('the stamp leg re-applies overflow/text-overflow (NOT white-space — it inherits) for every stampable tag', () => {
+    const stampRule = (stylesBlock.match(/:scope\[truncate\] > :is\([^)]*\)\s*\{[^}]*\}/) ?? [''])[0]
+    expect(stampRule.length).toBeGreaterThan(0)
+    for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'blockquote', 'span']) {
+      expect(stampRule, `[truncate] stamp leg missing ${tag}`).toContain(tag)
+    }
+    expect(stampRule).toMatch(/overflow:\s*hidden/)
+    expect(stampRule).toMatch(/text-overflow:\s*ellipsis/)
+    expect(stampRule).not.toMatch(/white-space/) // inherits from the host leg — not re-declared
+  })
+
+  it('the stamp leg is declared AFTER the stamp-transparency reset, so it wins the shared-selector cascade', () => {
+    const resetIdx = stylesBlock.indexOf(':scope > :is(h1, h2, h3, h4, h5, h6, p, blockquote, span) {')
+    const truncStampIdx = stylesBlock.indexOf(':scope[truncate] > :is(')
+    expect(resetIdx).toBeGreaterThan(-1)
+    expect(truncStampIdx).toBeGreaterThan(resetIdx)
+  })
+
+  it('[truncate] introduces no new --ui-text-* token — pure literal CSS properties (ADR-0106 CSS-only)', () => {
+    const truncBlock = stylesBlock.slice(stylesBlock.indexOf(':scope[truncate]'))
+    expect(truncBlock).not.toMatch(/var\(--ui-text-truncate/)
+  })
+})

@@ -102,6 +102,19 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover): the standalone
+    // segmented control + its child leaf — tag-labelled, same as every other per-component group.
+    label: 'ui-segment',
+    links: [{ href: './segment-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-segmented-control',
+    links: [
+      { href: './segmented-control-demo.html', label: 'Demo' },
+      { href: './segmented-control-doc.html', label: 'API' },
+    ],
+  },
+  {
     // The Range-class controls (Wave 2, ADR-0042) — per-component indicator-tier groups, tag-labelled.
     label: 'ui-slider',
     links: [{ href: './slider-doc.html', label: 'API' }],
@@ -218,8 +231,20 @@ export const NAV: readonly NavGroup[] = [
       { href: './a2ui-list.html', label: 'A2UI Dynamic List' },
       { href: './a2ui-form.html', label: 'A2UI Generative Form' },
       { href: './a2ui-patterns.html', label: 'A2UI Patterns' },
+      { href: './a2ui-gallery.html', label: 'A2UI Gallery' },
       { href: './a2ui-stream.html', label: 'A2UI Streaming' },
       { href: './a2ui-live.html', label: 'A2UI Live Agent' },
+    ],
+  },
+  {
+    // The A2A cluster — ungrouped site-level links, same posture as the A2UI cluster above (independent
+    // destinations, not a fleet component's page-type set). The arena (LLD-C11, a2a-tic-tac-toe.lld.md), the
+    // corpus-derived concepts/demos section (corpus LLD-C12, a2a-corpus-docs.lld.md), and the A2UI-over-A2A
+    // artifact feed (LLD-C7, a2a-a2ui-bridge.lld.md, B6) sit together.
+    links: [
+      { href: './a2a-tic-tac-toe.html', label: 'A2A Tic-Tac-Toe Arena' },
+      { href: './a2a-concepts.html', label: 'A2A Concepts & Demos' },
+      { href: './a2a-artifact-feed.html', label: 'A2A Artifact Feed' },
     ],
   },
   {

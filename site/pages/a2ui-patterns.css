@@ -92,6 +92,15 @@
   margin: 0;
 }
 
+/* Cap the payload JSON's height so a multi-hundred-line payload scrolls INSIDE its figure instead of
+ * stretching the demo section to thousands of pixels and burying the live surface (the point of the page)
+ * below the fold. Measured pre-fix: sections ran 2700-4200px with the surface as little as 7% of the
+ * section. The cap keeps payload and rendered result visible side by side at all times. */
+.code-figure > pre {
+  max-block-size: 28rem;
+  overflow: auto;
+}
+
 .code-figure > figcaption {
   margin-block-end: 0.3rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
@@ -112,6 +121,11 @@
   border: 1px dashed var(--md-sys-color-neutral-outline);
   border-radius: 8px;
   background: var(--md-sys-color-neutral-surface);
+  /* ADR-0100 cl.2 — the A2UI mount boundary: a `host.mount()` surface (a2ui-patterns.ts) must establish the
+   * query container the rendered fleet's layout primitives resolve `@container` reflow against (they never
+   * establish one themselves). Qualifies under the law because `.output-pane` (its parent) is a flex column
+   * with the default `align-items: stretch`, so this box's inline-size is STRETCHED, not content-derived. */
+  container-type: inline-size;
 }
 
 .surface:empty::before {

@@ -9,7 +9,7 @@
 > | **Proposed by** | orchestration-lead — driving the Wave-4 overlay family to the cross-engine browser gate; the reconciliation the smokes forced (jsdom-green controls failed 18 cross-engine assertions) |
 > | **Ratified by** | orchestration-lead — on the green `test:browser` (Chromium **and** WebKit), the ADR-0043 overlay-half ratification |
 > | **Repairs** | `traits/overlay.ts` (restoreFocus target · resilient close · gap-aware positioning) · `traits/selection-commit.ts` (the committing-Enter `preventDefault`) · `controls/combo-box/combo-box.ts` (drop the control Escape handler) · the five overlay controls' browser smokes (dismiss-timing + the jsdom `simulateLightDismiss` convention). |
-> | **Supersedes / Superseded by** | None. **Relates** ADR-0043 (the overlay/selection primitives this hardens) + ADR-0019 (the two-way `open` contract). |
+> | **Supersedes / Superseded by** | **Superseded by ADR-0101 in part** *(proposed, pending ratification — the event-discipline leg only: clause 1's suppression sentence + the "fire only on platform-driven dismissal" consequence; clauses 2/3/4 and platform-owned light-dismiss **STAND** — this ADR stays accepted, the ADR-0025/0078 precedent)*. **Relates** ADR-0043 (the overlay/selection primitives this hardens) + ADR-0019 (the two-way `open` contract). |
 
 ## Context
 

@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":1,"method":"message/send","params":{"message":{"kind":"message","role":"user","parts":[{"kind":"text","text":"e5"}],"messageId":"msg-10","taskId":"task-1","contextId":"ctx-1"}}}

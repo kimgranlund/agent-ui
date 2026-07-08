@@ -1,8 +1,11 @@
-import { describe, it, expect } from 'vitest'
-import { inspect, whenFlushed } from '@agent-ui/components'
+import { describe, it, expect, beforeAll } from 'vitest'
+import { effect, inspect, whenFlushed } from '@agent-ui/components'
 import { makeCreateWidget } from './widget.ts'
 import type { WidgetDeps } from './widget.ts'
 import { createSurface, disposeSurface } from './surface.ts'
+import { resolve } from './binding.ts'
+import type { Surface } from './surface.ts'
+import type { CreateWidget } from './types.ts'
 import type { A2uiComponent, A2uiError } from '../protocol.ts'
 import type { CatalogEntry, CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
 // The REAL default factories (which import + self-define the `@agent-ui/components` control family) — used by
@@ -220,10 +223,199 @@ describe('widget resolution — two-way input binding wired (render-integration,
   })
 })
 
+// ── ADR-0101 — the ticket #28 fix, proven end-to-end against a REAL `ui-menu` + a REAL A2UI open-bind ──
+//
+// jsdom has no native Popover API (showPopover/hidePopover, ToggleEvent) — stub it on
+// HTMLElement.prototype exactly like the component-layer suites do (overlay.test.ts / menu.test.ts),
+// scoped to this file's beforeAll. Guarded so a real-engine run (browser mode) leaves the platform alone.
+const popoverOpen = new WeakMap<HTMLElement, boolean>()
+function fireToggle(el: HTMLElement, newState: 'open' | 'closed'): void {
+  const ev = new Event('toggle')
+  Object.defineProperty(ev, 'newState', { value: newState })
+  el.dispatchEvent(ev)
+}
+beforeAll(() => {
+  const proto = HTMLElement.prototype as unknown as { showPopover?: () => void; hidePopover?: () => void }
+  if (typeof proto.showPopover === 'function') return // real engine — leave the platform alone
+  proto.showPopover = function (this: HTMLElement): void {
+    if (popoverOpen.get(this)) return
+    popoverOpen.set(this, true)
+    fireToggle(this, 'open')
+  }
+  proto.hidePopover = function (this: HTMLElement): void {
+    if (!popoverOpen.get(this)) return
+    popoverOpen.set(this, false)
+    fireToggle(this, 'closed')
+  }
+})
+
+/** Mirrors input.test.ts's `bindCounting` — a scope-owned counting effect on ONE path, via the REAL
+ *  `resolve()` (binding.ts), so a wake here proves the underlying `surface.data` value actually changed
+ *  (not merely that some other effect ran). */
+function bindCounting(surface: Surface, path: string): { count: number; value: unknown } {
+  const c = { count: 0, value: undefined as unknown }
+  surface.scope.run(() => {
+    effect(() => {
+      c.value = resolve({ path }, surface)
+      c.count++
+    })
+  })
+  return c
+}
+
+/** Build a REAL `<ui-menu>` (via `createWidget`) with a trigger + one committable item attached
+ *  BEFORE connecting it — mirrors menu.ts's positional-child contract (`#ensureParts`). Returns the
+ *  element un-connected; the caller appends it to `document.body` to fire `connectedCallback`. */
+function buildMenuWithItem(createWidget: CreateWidget, surface: Surface): { el: HTMLElement; item: HTMLElement } {
+  const el = createWidget(
+    comp({ id: 'menu1', component: 'Menu', open: { path: '/menuOpen' } }),
+    surface,
+  )
+  const trigger = document.createElement('button')
+  trigger.textContent = 'Open menu'
+  const item = document.createElement('div')
+  item.setAttribute('data-value', 'a')
+  item.textContent = 'Item A'
+  el.append(trigger, item)
+  return { el, item }
+}
+
+describe('widget resolution — Menu open-bind converges after commit (ADR-0101, ticket #28 fix, end-to-end)', () => {
+  it('committing a MenuItem writes open:false into surface.data — the panel stays closed, not a phantom reopen', async () => {
+    const registry: CatalogRegistry = {
+      register: () => {},
+      get: (id) => (id === 'agent-ui' ? ({ catalog: defaultCatalog, factories: defaultFactories } as CatalogEntry) : undefined),
+      supportedCatalogIds: () => ['agent-ui'],
+      submitGateSelector: () => '',
+    }
+    const createWidget = makeCreateWidget({ registry, emitError: () => {}, resolveValue })
+    const surface = createSurface({ id: 's', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { menuOpen: true }
+
+    const { el, item } = buildMenuWithItem(createWidget, surface)
+    expect(el.tagName.toLowerCase()).toBe('ui-menu') // the REAL upgraded control, not a placeholder
+
+    document.body.append(el) // connect — #ensureParts runs, the overlay handle wires up
+    await whenFlushed()
+    expect((el as { open?: boolean }).open).toBe(true) // the bound-prop effect applied the initial model value
+
+    item.click() // the REAL control's #commit: emits `select`, then `open = false`
+    await whenFlushed()
+
+    expect((el as { open?: boolean }).open).toBe(false) // the panel closed (pre-ADR-0101 behaviour, unchanged)
+    // The ticket #28 fix: the trait's close() now announces `toggle` after `open` settles, so the
+    // generic input binding (installInputBinding, LLD-C8) writes the closed state BACK into surface.data —
+    // "the data model converges to open:false" with no agent round-trip involved.
+    expect((surface.data.peek() as { menuOpen: boolean }).menuOpen).toBe(false)
+
+    // The re-assert probe (ADR-0101 Consequences / clause 4): a subsequent UNRELATED, FULL data-model
+    // reassignment (not a per-path setPointer — the shape `updateDataModel` without a `path` produces,
+    // renderer.ts) re-applies EVERY top-level bound prop from `surface.data`. Pre-fix, the model still
+    // held the stale `true` (the write-back never happened), so this re-application visibly reopened the
+    // panel — the exact ticket #28 symptom. Post-fix the model itself holds `false`, so it stays closed.
+    surface.data.value = { ...(surface.data.peek() as Record<string, unknown>), unrelated: 1 }
+    await whenFlushed()
+    expect((el as { open?: boolean }).open).toBe(false) // stayed closed — the model was NOT lying
+    expect(document.body.contains(el)).toBe(true)
+
+    el.remove()
+    disposeSurface(surface)
+  })
+
+  it('the loop probe: one commit-close transition wakes the bound path exactly once — no re-entrant write-back (ADR-0101 cl.4)', async () => {
+    const registry: CatalogRegistry = {
+      register: () => {},
+      get: (id) => (id === 'agent-ui' ? ({ catalog: defaultCatalog, factories: defaultFactories } as CatalogEntry) : undefined),
+      supportedCatalogIds: () => ['agent-ui'],
+      submitGateSelector: () => '',
+    }
+    const createWidget = makeCreateWidget({ registry, emitError: () => {}, resolveValue })
+    const surface = createSurface({ id: 's', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { menuOpen: true }
+
+    const openTrack = bindCounting(surface, '/menuOpen')
+    expect(openTrack.count).toBe(1) // the mount-time synchronous first run
+
+    const { el, item } = buildMenuWithItem(createWidget, surface)
+    document.body.append(el)
+    await whenFlushed()
+    expect((el as { open?: boolean }).open).toBe(true)
+
+    let toggles = 0
+    el.addEventListener('toggle', () => toggles++)
+
+    item.click() // the ONE user transition
+    await whenFlushed()
+
+    // Exactly one announce for the one real transition (ADR-0101) — a re-entrant loop (the bound-prop
+    // effect re-running close() a second time) would show up here as toggles > 1.
+    expect(toggles).toBe(1)
+    expect((surface.data.peek() as { menuOpen: boolean }).menuOpen).toBe(false)
+    // Exactly one wake of the bound path (1 mount + 1 real change) — the widget's OWN bound-prop effect
+    // re-running (from the write-back) does NOT cause a second close()/toggle cycle: `el.open` is already
+    // `false` when that effect re-applies it, so the props-signal Object.is cutoff stops the control's
+    // internal effect from re-running `handle.close()` (ADR-0101 clause 4 — the loop-termination proof).
+    expect(openTrack.count).toBe(2)
+    expect((el as { open?: boolean }).open).toBe(false)
+
+    el.remove()
+    disposeSurface(surface)
+  })
+
+  it('the MOUSE-driven leg (ADR-0101 erratum): clicking the REAL trigger opens it, then a commit converges the model to open:false — the exact path the audit reproduced', async () => {
+    // Every leg above drives OPEN via the bound-prop effect (a model write, `surface.data.value =
+    // { menuOpen: true }`) — it never exercises the trigger's own click handler. Before the erratum
+    // fix, a mouse-click open called `handle.toggle()` directly and never wrote `this.open`, so the
+    // panel was really open while the prop (and therefore the model, via the two-way input binding)
+    // stayed `false` — and the LATER commit-close's `this.open = false` was a same-value no-op: the
+    // trait's `close()` never ran, no `toggle` announced, no write-back, and the model kept lying
+    // `open: false` while the panel stayed visibly open. This leg starts the model at `false` (no
+    // agent-driven open at all) and drives the open itself through a real mouse click on the real
+    // trigger button, exactly reproducing the ticket #28 residual the live re-audit found.
+    const registry: CatalogRegistry = {
+      register: () => {},
+      get: (id) => (id === 'agent-ui' ? ({ catalog: defaultCatalog, factories: defaultFactories } as CatalogEntry) : undefined),
+      supportedCatalogIds: () => ['agent-ui'],
+      submitGateSelector: () => '',
+    }
+    const createWidget = makeCreateWidget({ registry, emitError: () => {}, resolveValue })
+    const surface = createSurface({ id: 's', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { menuOpen: false } // NOT model-driven open — the mouse gesture drives it
+
+    const { el, item } = buildMenuWithItem(createWidget, surface)
+    document.body.append(el) // connect — #ensureParts runs, the overlay handle wires up
+    await whenFlushed()
+    expect((el as { open?: boolean }).open).toBe(false) // starts closed, matching the model
+
+    const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+    trigger.click() // the REAL mouse gesture the audit reproduced — NOT `el.open = true`
+    await whenFlushed()
+
+    expect((el as { open?: boolean }).open, 'a mouse-click open must set the reflected open prop').toBe(true)
+    expect((surface.data.peek() as { menuOpen: boolean }).menuOpen, 'the mouse-open itself round-trips into the model via the toggle bind').toBe(true)
+
+    item.click() // commit a selection (menu's #commit sets this.open = false)
+    await whenFlushed()
+
+    expect((el as { open?: boolean }).open, 'the panel must report closed after a post-mouse-open commit').toBe(false)
+    expect((surface.data.peek() as { menuOpen: boolean }).menuOpen, 'the data model must converge to open:false — not keep lying true').toBe(false)
+    expect(document.body.contains(el)).toBe(true) // the panel is gone from the top layer, the host stays mounted
+
+    el.remove()
+    disposeSurface(surface)
+  })
+})
+
 describe('widget resolution — catalog enum enforcement (skips a non-member literal)', () => {
   // A registry entry carrying a REAL catalog def: `Box.align` is a closed enum [start,end,stretch] (NO
   // center); `gap` is an unconstrained string (no enum). Proves the resolver honors the catalog's declared
   // enum — a value the enum forbids is never applied, an unconstrained prop is untouched.
+  //
+  // LAYERING (ADR-0098): the shared validator (`catalog/conformance.ts`) now ALSO rejects a non-member
+  // ENUM LITERAL with a `CATALOG` failure at validate-then-stream time — the FIRST line of defense; an
+  // invalid payload never reaches widget resolution at all. This describe block covers the SECOND line
+  // of defense: a bound value resolving to a non-member at render (never seen by the static validator,
+  // which only judges literals) and any payload that bypasses validation. Both suites stay load-bearing.
   function enumRegistry(factories: Record<string, WidgetFactory>): CatalogRegistry {
     const catalog = {
       catalogId: 'demo',

@@ -5,11 +5,13 @@
 // here at import. Factory-free by contract — the catalog↔factory binding (`./factories.ts`,
 // LLD-C5) is wired by the host at `registry.register`, not in this module.
 //
-// Coverage tracks the shipped control family (SPEC-N2, Assumption A-2): `Button` (G5), `TextField` (G6),
-// and the G9 container family — `Row`/`Column`/`Card` (+ region sub-types) / `Tabs` (+ tab/panel) /
-// `Modal`. Types whose control has not shipped are omitted (no silent dead types): `Image`/`Video` stay
-// absent until media primitives land; `ui-list`/`ui-grid` are direct `ui-*` primitives, NOT catalog
-// types (the ratified G9 scope). Each declared type binds to a `ui-*` factory in `./factories.ts`.
+// Coverage policy is whole-fleet (ADR-0087, superseding the prior G9-scoped list): every shipped `ui-*`
+// control descriptor earns a catalog row, tracked by the fleet-derived coverage gate in `index.test.ts`
+// (SPEC-N2) rather than a hand-frozen name list — a shipped-but-uncatalogued control fails CI instead of
+// passing silently. All 25 fleet descriptors now resolve to a catalog row (Waves A/B/C landed the 12
+// ADR-0087 types + composites); that test's `EXCLUSION_ALLOWLIST` is EMPTY (Wave D, confirmed 2026-07-06).
+// `Image`/`Video` stay absent because no `ui-image`/`ui-video` descriptor exists yet — they never enter
+// the derived set. Each declared type binds to a `ui-*` factory in `./factories.ts`.
 
 import { loadCatalog, type Catalog } from '../catalog.ts'
 import catalogDoc from './catalog.json'

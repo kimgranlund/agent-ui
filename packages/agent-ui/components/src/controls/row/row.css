@@ -11,14 +11,20 @@
  *   [2] STYLES BLOCK — `@scope (ui-row)` CONSUMES only the `--ui-row-*` chain (so the cross-family surface in
  *       controls/_surface/container.css cleanly overrides nothing here, and a planted raw `--md-sys-color-*` would fail
  *       css-hygiene). `display: flex; flex-direction: row` is the row IDENTITY (ADR-0016 cl.2 — direction is
- *       the tag, not a prop). A `@container (inline-size …)` rule reflows the row to a COLUMN under a narrow
- *       OWN-container width (ADR-0016 cl.4 — intrinsic responsiveness, no breakpoint props), and a
- *       forced-colors block keeps the layout neutral.
+ *       the tag, not a prop). A `@container (inline-size …)` rule, GATED on `:scope:not([reflow='locked'])`
+ *       (ADR-0096), reflows the row to a COLUMN under a narrow ANCESTOR container width (ADR-0016 cl.4 —
+ *       intrinsic responsiveness, no breakpoint props; `reflow` defaults to `auto` so this stays the unchanged
+ *       default behavior — `reflow="locked"` pins the row horizontal), and a forced-colors block keeps the
+ *       layout neutral. The row does NOT establish that container itself (ADR-0100 — a row is intrinsically
+ *       sized, so it can never safely be a query container; see the shared container.css banner) — the
+ *       `@container` rule resolves against the nearest EXTERNALLY-SIZED ancestor boundary instead.
  *
- * The SURFACE (elevation/brightness plane + the `container-type: inline-size` query-container seam) is NOT
- * here — it lives once in the shared controls/_surface/container.css (the UIContainerElement base sheet,
- * `@import`-ed FIRST by component-styles.css at s12). row.css adds ONLY the flex layout + the corner radius;
- * it reads no `--md-sys-color-*` colour role at all (colour is delegated entirely to the shared surface seam).
+ * The SURFACE (elevation/brightness plane) is NOT here — it lives once in the shared
+ * controls/_surface/container.css (the UIContainerElement base sheet, `@import`-ed FIRST by
+ * component-styles.css at s12), which also does NOT establish `container-type` on this element (ADR-0100)
+ * — that responsibility belongs to an externally-sized ancestor boundary, never the row itself. row.css adds
+ * ONLY the flex layout + the corner radius; it reads no `--md-sys-color-*` colour role at all (colour is
+ * delegated entirely to the shared surface seam).
  *
  * NO control height (geometry.md's `Container/layout` size-class): a layout primitive has no frame — spacing
  * is the `--ui-space` ladder × `[density]` (the gap), never `--ui-height-*`. Standalone sheet — linked via
@@ -115,14 +121,20 @@
        Height is content-driven; the gap is the only spacing lever. */
   }
 
-  /* Container-query reflow (ADR-0016 cl.4) — intrinsic responsiveness with NO breakpoint props. The row
-     establishes a query container via the shared container.css (`container-type: inline-size`), so this
-     `@container` rule resolves against the row's nearest ANCESTOR query container (the wrapper it is dropped
-     into): under a narrow container the row WRAPS to a column, the ADR's named example. The cross-engine
-     smoke proves this changes the computed flex-direction + the child layout px by resizing the WRAPPER (not
-     the viewport) — the context-free responsiveness proof. */
+  /* Container-query reflow (ADR-0016 cl.4) — intrinsic responsiveness with NO breakpoint props, PROP-GATED by
+     `reflow` (ADR-0096). The row establishes NO query container of its own (ADR-0100 — an intrinsically-sized
+     primitive can never safely be one; see container.css's banner), so this `@container` rule resolves against
+     the row's nearest EXTERNALLY-SIZED ancestor boundary (the composition it is dropped into — a mount
+     surface, app-shell, or any author frame that establishes `container-type: inline-size`): under a narrow
+     boundary the row WRAPS to a column, the ADR's named example.
+     The selector is `:scope:not([reflow='locked'])`, NOT bare `:scope`: absent/default `reflow` (ui-row
+     defaults `auto`, row.ts) KEEPS the existing narrow→stack behavior unchanged, while an explicit
+     `reflow="locked"` attribute PINS `flex-direction: row` even in a cramped container (ADR-0096 cl.2/3 — the
+     row leg is protective and stays default-on, unlike ui-column's default-off flip). The cross-engine smoke
+     proves this changes the computed flex-direction + the child layout px by resizing the WRAPPER (not the
+     viewport) — the context-free responsiveness proof. */
   @container (inline-size < 24rem) {
-    :scope {
+    :scope:not([reflow='locked']) {
       flex-direction: column;
     }
   }

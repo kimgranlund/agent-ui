@@ -28,7 +28,9 @@ declare const process: { cwd(): string }
 //   select-upgrade · select-typed · select-define-guard · select-part-idempotent ·
 //   select-trigger-attrs · select-open-effect · select-close-effect · select-open-noop ·
 //   select-light-dismiss-sync · select-light-dismiss-events · select-programmatic-no-emit ·
-//   select-aria-expanded · select-selection-click · select-selection-enter ·
+//   select-aria-expanded · select-trigger-click (ADR-0101 erratum: mouse-click open must set the
+//   `open` prop, not bypass it via a raw `handle.toggle()`; includes the ticket #28 click-open→
+//   selection regression) · select-selection-click · select-selection-enter ·
 //   select-value-two-way · select-label-reflects · select-placeholder ·
 //   select-geometry (B2: anatomy structure + [size] attr + caret aria-hidden) ·
 //   select-closed-arrow · select-disabled (B3: keyboard-inert + trigger-disabled) ·
@@ -387,7 +389,7 @@ describe('ui-select — overlay→model sync + events (select-light-dismiss-sync
     el.remove()
   })
 
-  it('select-programmatic-no-emit: a programmatic close (open=false) does NOT emit close/toggle', async () => {
+  it('select-programmatic-no-emit: a programmatic close (open=false) DOES emit exactly one close+toggle pair (ADR-0101)', async () => {
     const { el, listbox } = makeSelect()
     el.open = true
     await whenFlushed()
@@ -400,8 +402,8 @@ describe('ui-select — overlay→model sync + events (select-light-dismiss-sync
     el.open = false
     await whenFlushed()
     expect(callsOf(listbox).hide).toBe(1)
-    expect(closes).toBe(0)
-    expect(toggles).toBe(0)
+    expect(closes).toBe(1) // the trait announces every real hide now, component-/model-driven included
+    expect(toggles).toBe(1)
     el.remove()
   })
 })
@@ -475,6 +477,72 @@ describe('ui-select — selection via click (select-selection-click · select-va
 
     el.value = 'banana'
     expect(el.value).toBe('banana')
+    el.remove()
+  })
+})
+
+// ── Mouse-driven trigger open (the ADR-0101 erratum regression — the residual #28 defeat) ────────
+//
+// Every probe above opens via the PROGRAMMATIC prop (`el.open = true`), which never exercised the
+// trigger's own click handler — the exact gap that let the mouse-click-open→handle.toggle() bypass
+// ship undetected (3533 green tests, zero coverage of the primary mouse gesture).
+
+describe('ui-select — mouse-click trigger open/close (select-trigger-click)', () => {
+  it('select-trigger-click: clicking the trigger opens the panel and sets open===true', async () => {
+    const { el, trigger, listbox } = makeSelect()
+    expect(el.open).toBe(false)
+
+    trigger.click()
+    await whenFlushed()
+    expect(el.open, 'a mouse-click open must set the reflected open prop').toBe(true)
+    expect(callsOf(listbox).show).toBe(1)
+    el.remove()
+  })
+
+  it('select-trigger-click: clicking the trigger again closes the panel — open===false, one close+toggle pair', async () => {
+    const { el, trigger, listbox } = makeSelect()
+    trigger.click()
+    await whenFlushed()
+    expect(el.open).toBe(true)
+
+    let closes = 0
+    let toggles = 0
+    el.addEventListener('close', () => closes++)
+    el.addEventListener('toggle', () => toggles++)
+
+    trigger.click()
+    await whenFlushed()
+    expect(el.open, 'the second click must set open===false').toBe(false)
+    expect(callsOf(listbox).hide).toBe(1)
+    expect(closes).toBe(1)
+    expect(toggles).toBe(1)
+    el.remove()
+  })
+
+  it('select-trigger-click REGRESSION (ticket #28): click-open the trigger, then commit a selection — the panel must actually close', async () => {
+    const { el, trigger, listbox } = makeSelect()
+
+    // The exact reproduction: a MOUSE click opens the trigger (not the programmatic `el.open = true`
+    // every other probe above uses) — before the fix, this left `el.open` stuck at `false` while the
+    // panel was really open, so selectionCommit's later `this.open = false` was a same-value no-op.
+    trigger.click()
+    await whenFlushed()
+    expect(el.open, 'precondition: mouse-open must set open===true').toBe(true)
+
+    let closes = 0
+    let toggles = 0
+    el.addEventListener('close', () => closes++)
+    el.addEventListener('toggle', () => toggles++)
+
+    const apple = listbox.querySelector<HTMLElement>('[value="apple"]')!
+    apple.click() // commit a selection (selectionCommit.onSelect sets this.open = false)
+    await whenFlushed()
+
+    expect(el.value).toBe('apple')
+    expect(el.open, 'the panel must report closed after a post-mouse-open commit').toBe(false)
+    expect(callsOf(listbox).hide, 'hidePopover() must actually fire — the bug: it never did').toBe(1)
+    expect(closes, 'exactly one close event').toBe(1)
+    expect(toggles, 'exactly one toggle event').toBe(1)
     el.remove()
   })
 })

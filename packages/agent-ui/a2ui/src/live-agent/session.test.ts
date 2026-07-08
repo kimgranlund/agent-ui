@@ -1,5 +1,8 @@
 // session.test.ts — LLD-C8 / SPEC-R8 AC1: the reducer frames each client-message arm into a DISTINCT
 // next-turn user content, and the turn-history helpers are pure appends. Deterministic, no model.
+//
+// ADR-0088 §3 adds `shouldRunTurn` — the routing predicate the page (`a2ui-live.ts`) calls BEFORE
+// `nextTurn`, deciding whether a client message warrants a full conversational turn at all.
 
 import { describe, it, expect } from 'vitest'
 import {
@@ -7,6 +10,7 @@ import {
   nextTurn,
   appendAssistantTurn,
   appendUserTurn,
+  shouldRunTurn,
 } from '../../tools/agent/session.ts'
 import type {
   A2uiActionMessage,
@@ -66,5 +70,43 @@ describe('session reducer (LLD-C5 / SPEC-R8)', () => {
       { role: 'user', content: 'hello' },
       { role: 'assistant', content: '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}' },
     ])
+  })
+})
+
+describe('shouldRunTurn (ADR-0088 §3 — the page-routing predicate)', () => {
+  const action = (wantResponse?: boolean): A2uiActionMessage => ({
+    version: 'v1.0',
+    action: {
+      surfaceId: 'canvas',
+      actionId: 'a1',
+      name: 'submit',
+      sourceComponentId: 'root',
+      timestamp: '2026-07-07T00:00:00Z',
+      context: {},
+      ...(wantResponse === undefined ? {} : { wantResponse }),
+    },
+  })
+
+  it('an EXPLICIT action.wantResponse === false suppresses the turn (the opt-out)', () => {
+    expect(shouldRunTurn(action(false))).toBe(false)
+  })
+
+  it('an ABSENT wantResponse still turns — the back-compat default (the committed seed sets none)', () => {
+    expect(shouldRunTurn(action(undefined))).toBe(true)
+  })
+
+  it('an EXPLICIT wantResponse:true still turns — the agent opting IN is unaffected', () => {
+    expect(shouldRunTurn(action(true))).toBe(true)
+  })
+
+  it('functionResponse and error arms ALWAYS turn — they carry no wantResponse and are agent-directed', () => {
+    expect(shouldRunTurn(fnRespMsg)).toBe(true)
+    expect(shouldRunTurn(errMsg)).toBe(true)
+  })
+
+  // Negative control: proves the predicate genuinely INSPECTS the flag rather than always answering `true` —
+  // without it, every assertion above suppressing nothing would pass vacuously.
+  it('negative control: the SAME action shape with wantResponse:true is NOT suppressed — the false-case above bites', () => {
+    expect(shouldRunTurn(action(false))).not.toBe(shouldRunTurn(action(true)))
   })
 })

@@ -15,6 +15,21 @@ import {
   cardContentFactory,
   tabsFactory,
   modalFactory,
+  iconFactory,
+  menuFactory,
+  menuItemFactory,
+  popoverFactory,
+  tooltipFactory,
+  radioGroupFactory,
+  radioFactory,
+  segmentedControlFactory,
+  segmentFactory,
+  sliderFactory,
+  sliderMultiFactory,
+  calendarFactory,
+  comboBoxFactory,
+  listFactory,
+  gridFactory,
   defaultFactories,
 } from './factories.ts'
 import { defaultCatalog } from './index.ts'
@@ -34,12 +49,16 @@ describe('default catalog factories — table parity (catalog LLD-C5, SPEC-R3 AC
     expect(Object.keys(defaultFactories).sort()).toEqual(Object.keys(defaultCatalog.components).sort())
   })
 
-  it('every declared component resolves to a ui-* factory (Option is the sanctioned-primitive exception, SPEC-R3 AC1)', () => {
+  it('every declared component resolves to a ui-* factory (Option/MenuItem are the sanctioned-primitive exceptions, SPEC-R3 AC1)', () => {
     for (const type of Object.keys(defaultCatalog.components)) {
       const factory = defaultFactories[type]
       expect(factory, `factory for ${type}`).toBeDefined()
       if (type === 'Option') {
         expect(factory.tag).toBe('div[role=option]') // the pre-ui-text Text precedent — not a custom element
+        continue
+      }
+      if (type === 'MenuItem') {
+        expect(factory.tag).toBe('div[role=menuitem]') // ADR-0087 Wave A — the same sanctioned-primitive shape
         continue
       }
       expect(factory.tag).toMatch(/^ui-/)
@@ -120,6 +139,22 @@ describe('default catalog factories — Text (ADR-0078, catalog LLD-C5)', () => 
     const bound: A2uiComponent = { id: 'txt2', component: 'Text', text: { path: '/name' }, variant: 'body' }
     expect(validateCatalogConformance(bound, defaultCatalog)).toEqual([])
   })
+
+  // ADR-0106 — `truncate` is not `text`/`variant`, so it falls to the `default:` arm's `setAttr`, the SAME
+  // generic path every other catalog boolean (Modal.persistent, TextField.readonly, …) already rides —
+  // confirms the ADR-0106 clause 5 claim ("already setAttrs unknown props — verified boolean handling").
+  it('Text.truncate (boolean, non-bindable) passes through the default setAttr arm onto [truncate]', () => {
+    const el = textFactory.create()
+    textFactory.applyProp(el, 'truncate', true)
+    expect(el.hasAttribute('truncate')).toBe(true)
+    textFactory.applyProp(el, 'truncate', false)
+    expect(el.hasAttribute('truncate')).toBe(false)
+  })
+
+  it('Text.truncate conformance payload yields 0 CATALOG errors', () => {
+    const truncated: A2uiComponent = { id: 'txt3', component: 'Text', text: 'A long clipped title', truncate: true }
+    expect(validateCatalogConformance(truncated, defaultCatalog)).toEqual([])
+  })
 })
 
 describe('default catalog factories — Button + TextField (catalog LLD-C5, SPEC-R4)', () => {
@@ -167,6 +202,19 @@ describe('default catalog factories — G9 container family (catalog LLD-C5, SPE
     expect((el as unknown as Record<string, unknown>).justify).toBe('between')
   })
 
+  it('ADR-0096: `reflow` flows through the SAME plain accessorFactory pass-through, zero factory change (cl.4)', () => {
+    // verifies the ADR-0096 cl.4 claim directly: rowFactory/columnFactory are bare accessorFactory('ui-row'/
+    // 'ui-column') calls with no bespoke property list, so a reflecting accessor prop added to the ELEMENT
+    // flows 1:1 through the SAME generic setProp — no factories.ts edit was needed to reach it.
+    const row = rowFactory.create()
+    rowFactory.applyProp(row, 'reflow', 'locked')
+    expect((row as unknown as Record<string, unknown>).reflow).toBe('locked')
+
+    const col = columnFactory.create()
+    columnFactory.applyProp(col, 'reflow', 'auto')
+    expect((col as unknown as Record<string, unknown>).reflow).toBe('auto')
+  })
+
   it('Card → ui-card maps the surface axes; CardContent → ui-card-content maps scrollable', () => {
     expect(cardFactory.tag).toBe('ui-card')
     const card = cardFactory.create()
@@ -203,9 +251,27 @@ describe('default catalog factories — G9 container family (catalog LLD-C5, SPE
     // on `el[mapsTo]`. Walk the catalog and assert it for every accessor-mapped type — skip the bespoke
     // non-identity-`mapsTo` factories (Button.label, Checkbox/Switch.label, Option.label all → textContent;
     // Option.value → an attribute, not a prop; Text.variant → the ADR-0078 cl.5 triple fan-out, not a
-    // straight pass-through), each covered by its own dedicated describe block below.
+    // straight pass-through; MenuItem.value → the `data-value` attribute, MenuItem.label → textContent,
+    // the ADR-0087 Wave A Option-shape twin), each covered by its own dedicated describe block below.
     for (const [type, def] of Object.entries(defaultCatalog.components)) {
-      if (type === 'Button' || type === 'Checkbox' || type === 'Switch' || type === 'Option' || type === 'Text')
+      if (
+        type === 'Button' ||
+        type === 'Checkbox' ||
+        type === 'Switch' ||
+        type === 'Option' ||
+        type === 'Text' ||
+        type === 'MenuItem' ||
+        type === 'Radio' || // bespoke non-identity mapsTo (label → textContent), the Checkbox/Switch precedent
+        type === 'Segment' || // the SAME bespoke non-identity mapsTo as Radio (ADR-0095 clause 3 — no new prop of its own)
+        // RadioGroup.value / SegmentedControl.value: `mapsTo` names the property, but the accessor is NOT
+        // a raw reflecting prop (no `static props` entry) — it's DERIVED from child Radio/Segment state
+        // (radio-group.ts's `get value()`/`set value()`, inherited unchanged by SegmentedControl), so a
+        // sentinel string with no matching child clears to `null` by design (the `HTMLSelectElement.value`-
+        // no-match precedent). Covered by its own dedicated round trip in index.test.ts (a real committed
+        // value against real Radio/Segment children), not this walker.
+        type === 'RadioGroup' ||
+        type === 'SegmentedControl'
+      )
         continue
       const factory = defaultFactories[type]
       const el = factory.create()
@@ -298,5 +364,312 @@ describe('default catalog factories — Select / Option (ADR-0053, ChoicePicker 
     optionFactory.applyProp(el, 'label', 'Starter')
     expect(el.getAttribute('value')).toBe('starter')
     expect(el.textContent).toBe('Starter')
+  })
+})
+
+describe('default catalog factories — Icon (ADR-0087 Wave A, ADR-0065/0066)', () => {
+  it('Icon → ui-icon: name/label are BOTH 1:1 reflecting accessors; not an input (no value bind)', () => {
+    expect(iconFactory.tag).toBe('ui-icon')
+    expect(iconFactory.value).toBeUndefined() // a display leaf — no two-way binding
+    const el = iconFactory.create()
+    iconFactory.applyProp(el, 'name', 'caret-down')
+    iconFactory.applyProp(el, 'label', 'Expand')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.name).toBe('caret-down')
+    expect(target.label).toBe('Expand')
+  })
+})
+
+describe('default catalog factories — Menu / MenuItem (ADR-0087 Wave A, overlay-controller.lld)', () => {
+  it('Menu → ui-menu is two-way bound on open via the toggle event (ADR-0019); placement is a 1:1 accessor', () => {
+    expect(menuFactory.tag).toBe('ui-menu')
+    expect(menuFactory.value).toEqual({ prop: 'open', event: 'toggle' })
+    const el = menuFactory.create()
+    menuFactory.applyProp(el, 'open', true)
+    menuFactory.applyProp(el, 'placement', 'top-end')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.open).toBe(true)
+    expect(target.placement).toBe('top-end')
+  })
+
+  it('MenuItem → div[role=menuitem] (the Option-shape sanctioned-primitive twin): value→data-value attribute, label→textContent', () => {
+    expect(menuItemFactory.tag).toBe('div[role=menuitem]')
+    expect(menuItemFactory.value).toBeUndefined() // a passive list item, not a bindable component
+    const el = menuItemFactory.create()
+    expect(el.tagName.toLowerCase()).toBe('div')
+    expect(el.getAttribute('role')).toBe('menuitem')
+    menuItemFactory.applyProp(el, 'value', 'a')
+    menuItemFactory.applyProp(el, 'label', 'Option A')
+    // verified against menu.ts #commit: `item.dataset['value'] ?? item.textContent?.trim()` — the
+    // committed value reads the `data-value` ATTRIBUTE, not a plain `value` attribute (Option's shape).
+    expect(el.getAttribute('data-value')).toBe('a')
+    expect(el.getAttribute('value')).toBeNull()
+    expect(el.textContent).toBe('Option A')
+  })
+
+  it('null/undefined label coerces to empty string (the value == null guard, the Option precedent)', () => {
+    const el = menuItemFactory.create()
+    menuItemFactory.applyProp(el, 'label', null)
+    expect(el.textContent).toBe('')
+  })
+})
+
+describe('default catalog factories — Popover (ADR-0087 Wave A, overlay-controller.lld)', () => {
+  it('Popover → ui-popover is two-way bound on open via the toggle event (ADR-0019); placement is a 1:1 accessor', () => {
+    expect(popoverFactory.tag).toBe('ui-popover')
+    expect(popoverFactory.value).toEqual({ prop: 'open', event: 'toggle' })
+    const el = popoverFactory.create()
+    popoverFactory.applyProp(el, 'open', true)
+    popoverFactory.applyProp(el, 'placement', 'left-start')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.open).toBe(true)
+    expect(target.placement).toBe('left-start')
+  })
+})
+
+describe('default catalog factories — Tooltip (ADR-0087 Wave A, overlay-controller.lld)', () => {
+  it('Tooltip → ui-tooltip is two-way bound on open via the toggle event (ADR-0019); placement/delay are 1:1 accessors', () => {
+    expect(tooltipFactory.tag).toBe('ui-tooltip')
+    expect(tooltipFactory.value).toEqual({ prop: 'open', event: 'toggle' })
+    const el = tooltipFactory.create()
+    tooltipFactory.applyProp(el, 'open', true)
+    tooltipFactory.applyProp(el, 'placement', 'right-end')
+    tooltipFactory.applyProp(el, 'delay', 300)
+    const target = el as unknown as Record<string, unknown>
+    expect(target.open).toBe(true)
+    expect(target.placement).toBe('right-end')
+    expect(target.delay).toBe(300)
+  })
+})
+
+describe('default catalog factories — RadioGroup / Radio (ADR-0087 Wave B, closes the ADR-0053 deferral / Fork B)', () => {
+  it('RadioGroup → ui-radio-group: name/disabled/required/orientation are 1:1 accessors (variant RETIRED, ADR-0095); value is a REAL two-way bind (the closed component-side gap)', () => {
+    expect(radioGroupFactory.tag).toBe('ui-radio-group')
+    // VERIFIED against radio-group.ts: `UIRadioGroupElement` gained a public `value` getter/setter
+    // (delegating to its private `#selectedValue` signal — the `UICheckboxElement.checked` precedent) —
+    // this closes the formerly-verified gap where a `value:{prop:'value',event:'change'}` mark would
+    // have read `el.value` as `undefined` on every commit. `change` is the real commit event
+    // (`this.emit('change')` in `#commit()`).
+    expect(radioGroupFactory.value).toEqual({ prop: 'value', event: 'change' })
+    const el = radioGroupFactory.create()
+    radioGroupFactory.applyProp(el, 'name', 'theme')
+    radioGroupFactory.applyProp(el, 'disabled', true)
+    radioGroupFactory.applyProp(el, 'required', true)
+    radioGroupFactory.applyProp(el, 'orientation', 'horizontal')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.name).toBe('theme')
+    expect(target.disabled).toBe(true)
+    expect(target.required).toBe(true)
+    expect(target.orientation).toBe('horizontal')
+    expect(defaultCatalog.components.RadioGroup.properties.variant, 'variant retired by ADR-0095').toBeUndefined()
+    expect(defaultCatalog.components.RadioGroup.properties.value).toEqual({
+      type: { type: 'string' },
+      bindable: true,
+      mapsTo: 'value',
+    })
+  })
+
+  it('Radio → ui-radio (the Wave A reviewer correction — a REAL row, not a gate-exempt sub-type): value/checked are 1:1 accessors; label is bespoke textContent; no value mark of its own', () => {
+    expect(radioFactory.tag).toBe('ui-radio') // a real ui-* control, unlike Option/MenuItem
+    expect(radioFactory.value).toBeUndefined() // the GROUP owns the selection commit, not the individual radio
+    const el = radioFactory.create()
+    radioFactory.applyProp(el, 'value', 'dark')
+    radioFactory.applyProp(el, 'checked', true)
+    radioFactory.applyProp(el, 'label', 'Dark')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.value).toBe('dark')
+    expect(target.checked).toBe(true)
+    expect(el.textContent).toBe('Dark')
+  })
+
+  it('null/undefined Radio label coerces to empty string (the value == null guard, the Checkbox/Option precedent)', () => {
+    const el = radioFactory.create()
+    radioFactory.applyProp(el, 'label', null)
+    expect(el.textContent).toBe('')
+  })
+})
+
+describe('default catalog factories — SegmentedControl / Segment (ADR-0095, supersedes ADR-0086)', () => {
+  it('SegmentedControl → ui-segmented-control: name/disabled/required/orientation are 1:1 accessors (inherited from UIRadioGroupElement, unchanged); value is a REAL two-way bind', () => {
+    expect(segmentedControlFactory.tag).toBe('ui-segmented-control')
+    expect(segmentedControlFactory.value).toEqual({ prop: 'value', event: 'change' })
+    const el = segmentedControlFactory.create()
+    segmentedControlFactory.applyProp(el, 'name', 'density')
+    segmentedControlFactory.applyProp(el, 'disabled', true)
+    segmentedControlFactory.applyProp(el, 'required', true)
+    segmentedControlFactory.applyProp(el, 'orientation', 'vertical')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.name).toBe('density')
+    expect(target.disabled).toBe(true)
+    expect(target.required).toBe(true)
+    expect(target.orientation).toBe('vertical')
+    expect(defaultCatalog.components.SegmentedControl.properties.variant, 'SegmentedControl never had a variant prop').toBeUndefined()
+    expect(defaultCatalog.components.SegmentedControl.properties.value).toEqual({
+      type: { type: 'string' },
+      bindable: true,
+      mapsTo: 'value',
+    })
+  })
+
+  it('Segment → ui-segment (ADR-0095 clause 3 — the SAME shape as Radio): value/checked are 1:1 accessors; label is bespoke textContent; no value mark of its own', () => {
+    expect(segmentFactory.tag).toBe('ui-segment') // a real ui-* control, unlike Option/MenuItem
+    expect(segmentFactory.value).toBeUndefined() // the HOST owns the selection commit, not the individual segment
+    const el = segmentFactory.create()
+    segmentFactory.applyProp(el, 'value', 'spacious')
+    segmentFactory.applyProp(el, 'checked', true)
+    segmentFactory.applyProp(el, 'label', 'Spacious')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.value).toBe('spacious')
+    expect(target.checked).toBe(true)
+    expect(el.textContent).toBe('Spacious')
+  })
+
+  it('null/undefined Segment label coerces to empty string (the value == null guard, the Radio/Checkbox/Option precedent)', () => {
+    const el = segmentFactory.create()
+    segmentFactory.applyProp(el, 'label', null)
+    expect(el.textContent).toBe('')
+  })
+})
+
+describe('default catalog factories — Slider (ADR-0087 Wave B, closes the ADR-0053 deferral / Fork C)', () => {
+  it('Slider → ui-slider is two-way bound on value via the VERIFIED change event (not input — the committed, not the live, event); min/max/step/name/disabled/required are 1:1 accessors', () => {
+    expect(sliderFactory.tag).toBe('ui-slider')
+    // Verified against slider.ts + range-element.ts: `input` fires on every live drag/keyboard step,
+    // `change` fires only on blur when the value moved since focus — the commit event, bound here.
+    expect(sliderFactory.value).toEqual({ prop: 'value', event: 'change' })
+    const el = sliderFactory.create()
+    sliderFactory.applyProp(el, 'value', 42)
+    sliderFactory.applyProp(el, 'min', 0)
+    sliderFactory.applyProp(el, 'max', 100)
+    sliderFactory.applyProp(el, 'step', 5)
+    sliderFactory.applyProp(el, 'name', 'volume')
+    sliderFactory.applyProp(el, 'disabled', true)
+    sliderFactory.applyProp(el, 'required', true)
+    const target = el as unknown as Record<string, unknown>
+    expect(target.value).toBe(42)
+    expect(target.min).toBe(0)
+    expect(target.max).toBe(100)
+    expect(target.step).toBe(5)
+    expect(target.name).toBe('volume')
+    expect(target.disabled).toBe(true)
+    expect(target.required).toBe(true)
+  })
+})
+
+describe('default catalog factories — SliderMulti (ADR-0087 Wave B, Fork C RESOLVED two-types)', () => {
+  it('SliderMulti → ui-slider-multi: valueLo/valueHi/min/max/step/name/disabled are 1:1 accessors; NO value mark (one two-way slot per component, ADR-0019 — the documented seam limitation)', () => {
+    expect(sliderMultiFactory.tag).toBe('ui-slider-multi')
+    expect(sliderMultiFactory.value).toBeUndefined()
+    const el = sliderMultiFactory.create()
+    sliderMultiFactory.applyProp(el, 'valueLo', 20)
+    sliderMultiFactory.applyProp(el, 'valueHi', 80)
+    sliderMultiFactory.applyProp(el, 'min', 0)
+    sliderMultiFactory.applyProp(el, 'max', 100)
+    sliderMultiFactory.applyProp(el, 'step', 10)
+    sliderMultiFactory.applyProp(el, 'name', 'range')
+    sliderMultiFactory.applyProp(el, 'disabled', true)
+    const target = el as unknown as Record<string, unknown>
+    expect(target.valueLo).toBe(20)
+    expect(target.valueHi).toBe(80)
+    expect(target.min).toBe(0)
+    expect(target.max).toBe(100)
+    expect(target.step).toBe(10)
+    expect(target.name).toBe('range')
+    expect(target.disabled).toBe(true)
+    expect(defaultCatalog.components.SliderMulti.value).toBeUndefined()
+  })
+})
+
+describe('default catalog factories — Calendar (ADR-0087 Wave B, closes the ADR-0053 deferral)', () => {
+  it('Calendar → ui-calendar is two-way bound on value via the change event (calendar.md\'s own declared bind, confirmed against calendar.ts #commit); min/max/name/required/disabled are 1:1 accessors', () => {
+    expect(calendarFactory.tag).toBe('ui-calendar')
+    expect(calendarFactory.value).toEqual({ prop: 'value', event: 'change' })
+    const el = calendarFactory.create()
+    calendarFactory.applyProp(el, 'value', '2026-07-06')
+    calendarFactory.applyProp(el, 'min', '2026-01-01')
+    calendarFactory.applyProp(el, 'max', '2026-12-31')
+    calendarFactory.applyProp(el, 'name', 'appt-date')
+    calendarFactory.applyProp(el, 'required', true)
+    calendarFactory.applyProp(el, 'disabled', true)
+    const target = el as unknown as Record<string, unknown>
+    expect(target.value).toBe('2026-07-06')
+    expect(target.min).toBe('2026-01-01')
+    expect(target.max).toBe('2026-12-31')
+    expect(target.name).toBe('appt-date')
+    expect(target.required).toBe(true)
+    expect(target.disabled).toBe(true)
+  })
+
+  it('Calendar → ui-calendar range mode (ADR-0093 clause 7 follow-up): mode/valueStart/valueEnd apply 1:1 through the SAME generic accessorFactory — no bespoke factory code needed', () => {
+    expect(calendarFactory.value).toEqual({ prop: 'value', event: 'change' }) // unchanged — inert-but-harmless in mode=range
+    const el = calendarFactory.create()
+    calendarFactory.applyProp(el, 'mode', 'range')
+    calendarFactory.applyProp(el, 'valueStart', '2026-07-05')
+    calendarFactory.applyProp(el, 'valueEnd', '2026-07-20')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.mode).toBe('range')
+    expect(target.valueStart).toBe('2026-07-05')
+    expect(target.valueEnd).toBe('2026-07-20')
+  })
+})
+
+describe('default catalog factories — ComboBox (ADR-0087 Wave B, Fork D/combobox — resolves the two-way slot)', () => {
+  it('ComboBox → ui-combo-box is two-way bound on the FORM value via change — NOT open/toggle (corrects the stale combo-box.md comment); label/placeholder/strict/name/disabled are 1:1 accessors', () => {
+    expect(comboBoxFactory.tag).toBe('ui-combo-box')
+    // Verified against combo-box.ts: `value` is the committed option key / free-text string
+    // (formValue() source); `change` fires on commit with `this.value` already updated. `open` remains
+    // a real, independently settable prop (drives the overlay) but carries no catalog value mark here.
+    expect(comboBoxFactory.value).toEqual({ prop: 'value', event: 'change' })
+    const el = comboBoxFactory.create()
+    comboBoxFactory.applyProp(el, 'value', 'pro')
+    comboBoxFactory.applyProp(el, 'label', 'Plan')
+    comboBoxFactory.applyProp(el, 'placeholder', 'Choose…')
+    comboBoxFactory.applyProp(el, 'strict', true)
+    comboBoxFactory.applyProp(el, 'name', 'plan')
+    comboBoxFactory.applyProp(el, 'disabled', true)
+    const target = el as unknown as Record<string, unknown>
+    expect(target.value).toBe('pro')
+    expect(target.label).toBe('Plan')
+    expect(target.placeholder).toBe('Choose…')
+    expect(target.strict).toBe(true)
+    expect(target.name).toBe('plan')
+    expect(target.disabled).toBe(true)
+    expect(defaultCatalog.components.ComboBox.properties.open).toBeUndefined() // one value mark per component
+  })
+})
+
+describe('default catalog factories — List / Grid (ADR-0087 Wave C, Fork A RESOLVED INCLUDE)', () => {
+  it('List → ui-list maps the surface + flex grammar onto accessors (the Row/Column idiom); not an input', () => {
+    expect(listFactory.tag).toBe('ui-list')
+    expect(listFactory.value).toBeUndefined() // a structural container, not a bindable component
+    const el = listFactory.create()
+    expect(el.tagName.toLowerCase()).toBe('ui-list')
+    listFactory.applyProp(el, 'elevation', '1')
+    listFactory.applyProp(el, 'align', 'center')
+    listFactory.applyProp(el, 'justify', 'between')
+    listFactory.applyProp(el, 'gap', 'sm')
+    listFactory.applyProp(el, 'wrap', true)
+    const target = el as unknown as Record<string, unknown>
+    expect(target.elevation).toBe('1')
+    expect(target.align).toBe('center')
+    expect(target.justify).toBe('between')
+    expect(target.gap).toBe('sm')
+    expect(target.wrap).toBe(true)
+  })
+
+  it('Grid → ui-grid maps the surface axes + gap + the minmax() min floor onto accessors; not an input', () => {
+    expect(gridFactory.tag).toBe('ui-grid')
+    expect(gridFactory.value).toBeUndefined() // a structural container, not a bindable component
+    const el = gridFactory.create()
+    expect(el.tagName.toLowerCase()).toBe('ui-grid')
+    gridFactory.applyProp(el, 'elevation', '2')
+    gridFactory.applyProp(el, 'brightness', '-1')
+    gridFactory.applyProp(el, 'gap', 'lg')
+    gridFactory.applyProp(el, 'min', '12rem')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.elevation).toBe('2')
+    expect(target.brightness).toBe('-1')
+    expect(target.gap).toBe('lg')
+    expect(target.min).toBe('12rem')
   })
 })

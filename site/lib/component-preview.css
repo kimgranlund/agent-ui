@@ -88,22 +88,19 @@ component-preview {
 .knob-switch {
   justify-self: start;
 }
-/* A small closed enum's ui-radio-group knob (batch A) now ALWAYS renders `variant="segmented"` (the ADR-0086
- * de-doubling closing step, component-preview.ts) — the control owns its own real layout (display:grid, a
- * horizontal row or vertical stack per `orientation`) and MUST be left alone: `:not([variant='segmented'])`
- * scopes this page-level flex/wrap authoring to the plain (unsegmented) fallback only. This matters for
- * cascade correctness, not just tidiness — `ui-radio-group.knob-radio-group` and the control's own
- * `ui-radio-group[variant='segmented']` rule (radio-group.css) are EQUAL specificity (0,1,1); component-
- * preview.css loads AFTER component-styles.css in the site bundle (pages/_page.ts's import-order contract), so
- * an unscoped page rule here would win the cascade tie by SOURCE ORDER and silently stomp the control's own
- * grid layout. No batch-A knob today is unsegmented, so this rule is currently dormant — kept as the
- * documented fallback shape, not dead code (a future non-segmented radio-group knob would need it). */
-ui-radio-group.knob-radio-group:not([variant='segmented']) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-}
+/* ADR-0095: every batch-A enum knob now dogfoods `ui-segmented-control` (superseding the retired
+ * `ui-radio-group[variant="segmented"]`, ADR-0086) — the control ALWAYS owns its own real grid layout
+ * unconditionally (segmented is its whole identity now, not a gated variant), so there is no more
+ * "unsegmented knob" fallback shape to author page-level flex/wrap CSS for at all — `.knob-radio-group`'s
+ * old dormant rule (targeting `ui-radio-group.knob-radio-group:not([variant='segmented'])`) retired with it;
+ * `ui-segmented-control` needs zero page-authored layout CSS for the knob case.
+ *
+ * ADR-0103 RETIRES the specimen-root leg that used to live here (`.canvas-surface > ui-radio-group` +
+ * its `[orientation='horizontal']` override): `ui-radio-group` now owns this exact flex structure itself
+ * (radio-group.css's `@scope` block — column by default, gap off the `--ui-space` ladder, a wrapping row
+ * under `[orientation='horizontal']`), so the bare specimen mounted by `#buildComponent` renders
+ * stacked-with-gap FROM THE COMPONENT with zero page-authored CSS. `ui-segmented-control` needs no
+ * specimen-root leg either — it too always owns its own grid layout. */
 .knob-note {
   color: var(--md-sys-color-neutral-on-surface-variant);
   font-style: italic;

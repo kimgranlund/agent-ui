@@ -19,7 +19,8 @@ declare const process: { cwd(): string }
 // ADR-0078 / text.md descriptor — three layers per the s8/s10/s11 pattern (button-descriptor precedent):
 //   • s8 (structural) — the YAML frontmatter fence parses and carries the ADR-0004 / plan §10 field set.
 //   • s10 (contract↔props) — `attributes[]` is a faithful bijection with UITextElement.props (variant/size/as,
-//     the ADR-0078 three-axis redesign — supersedes the single-prop ADR-0025 shape).
+//     the ADR-0078 three-axis redesign — supersedes the single-prop ADR-0025 shape) + `truncate`, the
+//     ADR-0106 fourth axis.
 //   • s11 (contract↔source) — customStates/slots cross-checked against text.ts internals.states + text.css
 //     :state()/[slot] selectors (still zero — a Display leaf with no internals usage and no named slots).
 
@@ -53,10 +54,10 @@ describe('text.md descriptor — frontmatter parses (s8)', () => {
   })
 })
 
-describe('text.md descriptor — contract↔props trip-wire (s10, ADR-0078 three-axis)', () => {
-  it('attributes[] is a faithful bijection with UITextElement.props (variant, size, as — in that order)', () => {
-    // anti-vacuous: the reader actually parsed all three props before the trip-wire is consulted
-    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant', 'size', 'as'])
+describe('text.md descriptor — contract↔props trip-wire (s10, ADR-0078 three-axis + ADR-0106 truncate)', () => {
+  it('attributes[] is a faithful bijection with UITextElement.props (variant, size, as, truncate — in that order)', () => {
+    // anti-vacuous: the reader actually parsed all four props before the trip-wire is consulted
+    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant', 'size', 'as', 'truncate'])
     expect(compareDescriptorToProps(parsed.attributes, UITextElement.props)).toEqual([])
   })
 
@@ -82,6 +83,13 @@ describe('text.md descriptor — contract↔props trip-wire (s10, ADR-0078 three
     expect(a?.default).toBe('none')
     expect(a?.reflect).toBe(true)
     expect(a?.values).toEqual(['none', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote'])
+  })
+
+  it('truncate is boolean, reflect=true, default=false (ADR-0106)', () => {
+    const t = parsed.attributes.find((x) => x.name === 'truncate')
+    expect(t?.type).toBe('boolean')
+    expect(t?.default).toBe('false') // default OFF — the trip-wire compares String(config.default)
+    expect(t?.reflect).toBe(true)
   })
 
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default)', () => {

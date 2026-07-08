@@ -9,8 +9,10 @@ import { describe, it, expect } from 'vitest'
 // CSS wiring: the component-styles barrel does not @import container.css / row.css until the integration slice
 // (decomp s12), so this smoke injects them DIRECTLY (Vite resolves the relative .css + the foundation export,
 // and injects each as a <style>). Order is load-bearing: the foundation (--md-sys-color-* roles + the --ui-space ladder +
-// [density]) FIRST, then the shared surface seam (container-type: inline-size), then row.css, then the
-// self-defining element module.
+// [density]) FIRST, then the shared surface seam (elevation/brightness — NOT a container-type establishment,
+// ADR-0100: the row is never a query container itself), then row.css, then the self-defining element module.
+// The query container each `@container` rule resolves against is the test's OWN wrapper (below), not row/
+// container.css — the ADR-0100 boundary law realized in miniature.
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container.css'
 import './row.css'
@@ -65,11 +67,13 @@ describe('ui-row cross-engine smoke — flex grammar maps to computed props (s3)
   })
 })
 
-describe('ui-row cross-engine smoke — container-query reflow (ADR-0016 cl.4) (s3)', () => {
-  it('the row reflows to a COLUMN under a narrow CONTAINER width — resize the wrapper, not the viewport', () => {
+describe('ui-row cross-engine smoke — container-query reflow (ADR-0016 cl.4, gated by reflow — ADR-0096) (s3)', () => {
+  it('the DEFAULT row (reflow="auto") reflows to a COLUMN under a narrow CONTAINER width — resize the wrapper, not the viewport', () => {
     // 24rem threshold (= 384px @ 16px root): 600px ≥ → row, 300px < → column. Resizing only the WRAPPER proves
-    // the responsiveness is container-driven (intrinsic), with no viewport/breakpoint prop in play.
+    // the responsiveness is container-driven (intrinsic), with no viewport/breakpoint prop in play. reflow
+    // defaults to 'auto' (row.ts) so this is the UNCHANGED preserved behavior (ADR-0096 cl.2).
     const { wrapper, row } = mount('600px')
+    expect(row.getAttribute('reflow')).toBeNull() // default not reflected as an attribute (ADR-0005)
     expect(getComputedStyle(row).flexDirection).toBe('row') // wide container → row identity holds
     const wideSecondTop = (row.children[1] as HTMLElement).getBoundingClientRect().top
 
@@ -80,6 +84,18 @@ describe('ui-row cross-engine smoke — container-query reflow (ADR-0016 cl.4) (
     // anti-vacuous: the px LAYOUT actually changed — the second child dropped BELOW the first (stacked), not
     // beside it. A vacuous (computed-only) pass would miss a reflow that did not relayout the children.
     expect(narrowSecondTop).toBeGreaterThan(wideSecondTop)
+
+    wrapper.remove()
+  })
+
+  it('reflow="locked" PINS the row horizontal even under a narrow container (ADR-0096 cl.2/3 — the residual-risk leg)', () => {
+    const { wrapper, row } = mount('300px') // narrow — below the 24rem threshold
+    row.setAttribute('reflow', 'locked')
+    expect(getComputedStyle(row).flexDirection).toBe('row') // pinned — the @container rule no longer matches
+    const a = row.children[0] as HTMLElement
+    const b = row.children[1] as HTMLElement
+    expect(b.getBoundingClientRect().top).toBe(a.getBoundingClientRect().top) // same row, not stacked
+    expect(b.getBoundingClientRect().left).toBeGreaterThan(a.getBoundingClientRect().left) // side by side
 
     wrapper.remove()
   })

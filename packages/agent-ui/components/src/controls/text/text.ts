@@ -1,11 +1,21 @@
 // text.ts — UITextElement, the Display-class text primitive (ADR-0078, supersedes ADR-0025's prop schema
 // + heading path). BEHAVIOUR + props + stamping + self-define ONLY.
 //
-// Three orthogonal axes (ADR-0078 cl.1): `variant` (the visual type ROLE — which --md-sys-typescale-*
-// block text.css repoints to), `size` (sm/md/lg — the row within the role), and `as` (document SEMANTICS —
-// the real element STAMPED around the light-DOM children). `variant`/`size` carry zero semantics now;
-// `as` alone does — the honest split ADR-0025's conflated `variant="h4"` (visual ROLE + heading level in
-// one knob) could not make.
+// Four orthogonal axes (ADR-0078 cl.1 + ADR-0106): `variant` (the visual type ROLE — which
+// --md-sys-typescale-* block text.css repoints to), `size` (sm/md/lg — the row within the role), `as`
+// (document SEMANTICS — the real element STAMPED around the light-DOM children), and `truncate`
+// (ADR-0106 — overflow INTENT: single-line + ellipsis, CSS-only). `variant`/`size` carry zero semantics
+// now; `as` alone does — the honest split ADR-0025's conflated `variant="h4"` (visual ROLE + heading level
+// in one knob) could not make.
+//
+// `truncate` (ADR-0106) is CSS-only by Kim's explicit ratification ruling — no box-size measurement, no
+// dimension-watching observer of any kind installed anywhere in this file (a grep-able absence is the
+// ADR's own Acceptance leg — this file must never name the platform API that watches element box size).
+// While `truncate` is set, the element mirrors its own trimmed `textContent` onto `title` UNCONDITIONALLY
+// (present even when the text isn't actually clipped — the accepted CSS-only cost), riding the EXISTING
+// render/childList observer below rather than a bespoke measurement path; an author-set `title` is never
+// overwritten (presence-checked before the mirror's first write — the mirror only ever owns a title it
+// minted itself).
 //
 // Content model — host-as-content STANDS (ADR-0006 + ADR-0025 cl.2): the user's light-DOM children remain
 // the displayed text and the accessible name; there is still no `text` prop and no `html``` template, so
@@ -52,6 +62,10 @@ const props = {
     ...prop.enum(['none', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote'] as const, 'none'),
     reflect: true,
   },
+  // Overflow INTENT (ADR-0106) — the fourth orthogonal axis: single-line + ellipsis, CSS-only (text.css's
+  // `[truncate]` legs do the clipping). Reflects so the `[truncate]` CSS hook applies to JS-set values too
+  // (the variant/size/as precedent). Default `false` keeps today's wrapping — no shipped rendering change.
+  truncate: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 export interface UITextElement extends ReactiveProps<typeof props> {}
@@ -61,18 +75,36 @@ export class UITextElement extends UIElement {
   // The stamp — the one real element wrapping the light-DOM content while `as ≠ none`; null otherwise
   // (cl.4's invariant). `#`-private: nothing outside the host can observe or hold it.
   #stamp: HTMLElement | null = null
-  // The childList observer that heals the invariant (parser streaming / textContent clobber — #heal).
+  // The childList observer that heals the invariant (parser streaming / textContent clobber — #heal), and
+  // — the SAME observer, no second one (ADR-0106) — the content-change trigger for the `title` mirror.
   // Disconnected in `disconnected()` — the same "zero residue after removal" discipline `this.effect` /
   // `this.listen` give for free, applied by hand since a raw platform observer isn't scope-owned.
   #observer: MutationObserver | null = null
+  // Whether the CURRENT `title` attribute is one this instance minted (ADR-0106 cl.3). Gates both halves
+  // of the "never overwrite an author-set title" rule: unset while `false` (nothing to remove on
+  // `truncate` unset, nothing owned to overwrite on the next mint check).
+  #titleMinted = false
+  /** The exact string the mirror last minted — ownership is checked by VALUE, not just a flag, so an
+   *  author who sets `title` AFTER a mint is never clobbered on the next sync (review-hardened: the
+   *  ADR's "the mirror owns only titles it minted" implemented literally). */
+  #mintedValue: string | null = null
 
   protected connected(): void {
     // (1) The restamp effect — runs now (the initial `as`) and again on every `as` change (scope-owned,
     // so it dies with the connection — the button.ts ariaDisabled-effect precedent).
     this.effect(() => this.#restamp(this.as))
-    // (2) The heal observer — installed AFTER the initial restamp above, so it never observes its own
-    // synchronous setup; it only fires for LATER host mutations (parser streaming, an external write).
-    this.#observer = new MutationObserver(() => this.#heal())
+    // (2) The title-mirror effect (ADR-0106) — runs now (the initial `truncate`) and again on every
+    // `truncate` change: mints/removes the mirror. Content-change updates (the text itself changing while
+    // `truncate` stays set) ride the heal observer below, not this effect.
+    this.effect(() => this.#syncTitle(this.truncate))
+    // (3) The heal observer — installed AFTER the initial restamp/title-sync above, so it never observes
+    // its own synchronous setup; it only fires for LATER host mutations (parser streaming, an external
+    // write, or a bound-text `textContent` clobber) — the ONE existing render/childList path both #heal
+    // and the title mirror ride (ADR-0106 cl.3 — no second observer).
+    this.#observer = new MutationObserver(() => {
+      this.#heal()
+      this.#syncTitle(this.truncate)
+    })
     this.#observer.observe(this, { childList: true })
   }
 
@@ -125,6 +157,35 @@ export class UITextElement extends UIElement {
     for (const node of Array.from(this.childNodes)) {
       if (node !== stamp) stamp.appendChild(node)
     }
+  }
+
+  /**
+   * The unconditional `title` mirror (ADR-0106 cl.3, Kim's CSS-only ratification ruling — "truncate should
+   * be CSS-only solution. no resize-observer overkill"). While `truncate` is set, `title` tracks this
+   * element's own trimmed `textContent` — UNCONDITIONALLY, whether or not the text is actually clipped
+   * (no measurement, no dimension-watching observer: the accepted cost of staying measurement-free on a
+   * Display leaf).
+   * An author-set `title` is never overwritten: presence-checked before the mirror's first write, so once
+   * a real author title is found the mirror steps back permanently (until that attribute is removed,
+   * freeing the mirror to mint one). The mirror only ever REMOVES a title IT minted (`#titleMinted`).
+   */
+  #syncTitle(truncate: boolean): void {
+    const current = this.getAttribute('title')
+    // Ownership by VALUE: the mirror owns the title only while it still holds the exact string it
+    // minted. An author write at ANY time (before the first mint or after one) diverges the value and
+    // the mirror steps back permanently (until the author removes the attribute).
+    const mirrorOwns = this.#titleMinted && current === this.#mintedValue
+    if (!truncate) {
+      if (mirrorOwns) this.removeAttribute('title')
+      this.#titleMinted = false
+      this.#mintedValue = null
+      return
+    }
+    if (current !== null && !mirrorOwns) return // author-owned — never overwritten
+    const next = (this.textContent ?? '').trim()
+    this.setAttribute('title', next)
+    this.#titleMinted = true
+    this.#mintedValue = next
   }
 }
 

@@ -15,10 +15,12 @@
 // WebKit-safe), so it is threaded into the role-pure `--ui-grid-min` token via the values-API (the effect
 // below) — the same token-repoint the CSS does, but with a runtime value. Unset ⇒ the grid.css default floor.
 //
-// `ui-grid` is NOT an A2UI catalog type (the §5.2 reserved set is Row/Column/Image/Video/Card/Tabs/Modal) — it
-// ships as a direct `ui-*` primitive usable on its own (ADR-0016 cl.3; flagged, the catalog writer s11 does not
-// declare it). Imports the dom layer only (`controls → dom`); `UIContainerElement` is pulled from container.ts
-// directly (the dom barrel re-exports it at s12, the integration slice).
+// `ui-grid` IS an A2UI catalog type — `Grid` (ADR-0087 Fork A, Wave C; supersedes ADR-0016's earlier
+// non-catalog exclusion) renders to `ui-grid`. Reach for `Grid` when the layout should reflow its column count
+// responsively with available width; prefer `Row`/`Column` (with an explicit `wrap`) for an author-controlled
+// arrangement, and `List` when the children are an itemized collection needing list semantics (a2ui-catalog.
+// spec.md §5.2). Imports the dom layer only (`controls → dom`); `UIContainerElement` is pulled from
+// container.ts directly (the dom barrel re-exports it at s12, the integration slice).
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIContainerElement } from '../../dom/container.ts'

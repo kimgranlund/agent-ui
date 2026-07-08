@@ -28,6 +28,8 @@ describe('UIColumnElement (s4)', () => {
     // ADR-0030: align default changed from 'start' to 'stretch' (cross-axis direction-appropriate override)
     // stretch (the column-local sizing opt-in) defaults OFF — a column shrink-wraps to content until asked to fill
     expect([el.align, el.justify, el.gap, el.wrap, el.stretch]).toEqual(['stretch', 'start', 'none', false, false])
+    // ADR-0096: reflow defaults to 'locked' (the deliberate default flip) — the wide→row switch is now opt-in
+    expect(el.reflow).toBe('locked')
     el.remove()
   })
 
@@ -40,8 +42,11 @@ describe('UIColumnElement (s4)', () => {
       el.elevation = '2'
       el.wrap = true
       el.stretch = true // the column-local boolean sizing opt-in
+      el.reflow = 'auto' // the ADR-0096 reflow gate
       // @ts-expect-error — stretch is boolean, not string
       el.stretch = 'yes'
+      // @ts-expect-error — reflow is the 2-member enum 'locked'|'auto', not an arbitrary string
+      el.reflow = 'sometimes'
       // @ts-expect-error — 'center' is NOT allowed on ui-column (Kim's directive narrowed the enum — center removed)
       el.align = 'center'
       // @ts-expect-error — 'middle' is not an align member: proves the literal union, NOT string
@@ -96,6 +101,18 @@ describe('UIColumnElement (s4)', () => {
     // and the attribute drives the prop (jsdom can't compute the width; the fill is column.browser.test.ts)
     el.setAttribute('stretch', '')
     expect(el.stretch).toBe(true)
+    el.remove()
+  })
+
+  it('column-reflow-reflect: reflow is a reflected 2-member enum (locked default + snap target), settable to auto', () => {
+    const el = new UIColumnElement()
+    document.body.append(el)
+    expect(el.reflow).toBe('locked') // ADR-0096 default flip
+    expect(el.hasAttribute('reflow')).toBe(false) // default is NOT reflected (ADR-0005)
+    el.reflow = 'auto'
+    expect(el.getAttribute('reflow')).toBe('auto') // reflects — drives the CSS [reflow='auto'] repoint
+    el.setAttribute('reflow', 'bogus') // out of range → snaps to values[0] = 'locked'
+    expect(el.reflow).toBe('locked')
     el.remove()
   })
 

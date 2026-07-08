@@ -7,10 +7,11 @@ import { describe, it, expect } from 'vitest'
 //
 // Host-at-boundary: the component-styles barrel does NOT yet @import container.css / list.css (that wiring is
 // s12), so this test injects the needed sheets DIRECTLY — the foundation tokens (the --md-sys-color-* roles + the
-// --ui-space ladder + the [density] selectors), the SHARED surface/container-type seam, then list.css — and
-// imports ./list.ts to self-define `ui-list`.
+// --ui-space ladder + the [density] selectors), the SHARED surface seam, then list.css — and imports ./list.ts
+// to self-define `ui-list`. No `container-type` here (ADR-0100 — ui-list never establishes one; it has no
+// `@container` rule of its own anyway, its direction is fixed).
 import '@agent-ui/components/foundation-styles.css' // --md-sys-color-* roles + the --ui-{height,font,gap,space}-* ramp + [scale]/[density]
-import '../_surface/container.css' // the shared surface seam + container-type (s2)
+import '../_surface/container.css' // the shared surface seam (s2)
 import './list.css' // the element's flex layout
 import { UIListElement } from './list.ts' // self-defines ui-list
 

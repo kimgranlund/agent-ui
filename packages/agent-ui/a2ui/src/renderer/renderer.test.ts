@@ -273,7 +273,14 @@ describe('renderer host — action-prop reading (ADR-0011 canonical {action,cont
     const action = emitFor('refresh')
     expect(action.name).toBe('refresh') // a bare string is taken as the action name
     expect(action.context).toEqual({}) // …carrying no context
-    expect(action.wantResponse).toBe(false) // …nor a wantResponse
+    // ADR-0088 §3: no `wantResponse` was authored, so it must stay ABSENT on the wire — never coerced to
+    // an explicit `false` (which the page's wantResponse-routing would read as an opt-out).
+    expect('wantResponse' in action).toBe(false)
+  })
+
+  it('an explicit `wantResponse:false` on the canonical shape is preserved, distinct from absent (ADR-0088 §3)', () => {
+    const action = emitFor({ action: 'submit', wantResponse: false })
+    expect(action.wantResponse).toBe(false)
   })
 })
 
@@ -935,6 +942,94 @@ describe('renderer host — the ADR-0054 submit-gated action (#wireAction, FormP
     expect(actions).toHaveLength(1)
     expect(actions[0]!.action).toMatchObject({ name: 'go', sourceComponentId: 'btn' })
     expect('submit' in actions[0]!.action).toBe(false) // the client-consumed flag never reaches the wire
+
+    cleanup()
+  })
+})
+
+// Live-agent investigation (a2ui-live "empty hand" report, 2026-07-07): a card-game turn from a real
+// Anthropic model reproduced a templated Row rendering with ZERO instances on an otherwise-live surface.
+// Captured verbatim from the dev-proxy transcript: the model emitted
+// `updateDataModel{path:"/", value:{...,hand:[5 items]}}` — the protocol's own documented default for an
+// omitted `path` (upstream v1.0 §updateDataModel / v0.9, character-verified by live fetch: "If `path` is
+// omitted (or is `/`), the entire data model for the surface is replaced"). Root-caused to a RENDERER
+// defect (ADR-0099): we read `"/"` per strict RFC-6901 — the child key named `""` — so `setPointer`
+// (LLD-C5) nested the payload under a spurious `{"":...}` key and every binding, including the `/hand`
+// list template, silently resolved `undefined` (a legal render-time placeholder, SPEC-R4 AC2 — hence no
+// error). Fixed by treating `"/"` as the root alias at the `#onUpdateDataModel` whole-model branch (and
+// mirrored at the corpus's two fold sites, `canonical.ts`/`admit.ts`, for renderer/corpus parity). These
+// two tests now pin the POST-fix contract: `path:"/"` and omitted-`path` are equivalent whole-model
+// writes — the SAME payload renders identically either way. Omit-path stays the taught corpus idiom
+// (`tools/agent/system-prompt.ts` OUTPUT_RULES GRAMMAR — fewest tokens, version-proof); `"/"` is simply no
+// longer a silent trap for a spec-conformant producer.
+describe('renderer host — updateDataModel path:"/" vs. path-omitted (live-agent "empty hand" root cause)', () => {
+  it('path:"/" is the protocol root alias — whole-model replace, the /hand list template resolves both items (ADR-0099)', async () => {
+    const { r, mount, sent, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'card-game', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateDataModel: {
+          surfaceId: 'card-game',
+          path: '/', // <-- the model's actual emission, captured verbatim off the dev-proxy transcript
+          value: { hand: [{ id: 'c1', label: 'A♠' }, { id: 'c2', label: 'K♥' }] },
+        },
+      }),
+    )
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'card-game',
+          components: [
+            { id: 'root', component: 'Row', gap: 'md', children: { path: '/hand', componentId: 'card' } },
+            { id: 'card', component: 'Text', text: { path: 'label' } },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+
+    const cards = mount.querySelectorAll('ui-row > *')
+    expect(cards).toHaveLength(2) // whole-model replace — no more silent nesting
+    expect([...cards].map((el) => el.textContent)).toEqual(['A♠', 'K♥']) // byte-equivalent to the omitted-path control below
+    expect(sent).toHaveLength(0) // still no error/diagnostic emitted — this was never a wire-error case
+
+    cleanup()
+  })
+
+  it('control: the IDENTICAL payload with `path` omitted (the corpus idiom) renders both items — the list/binding machinery is sound', async () => {
+    const { r, mount, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'card-game', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateDataModel: {
+          surfaceId: 'card-game',
+          // `path` omitted — SPEC-R5 AC2's whole-model-replace form, the one every corpus exemplar uses.
+          value: { hand: [{ id: 'c1', label: 'A♠' }, { id: 'c2', label: 'K♥' }] },
+        },
+      }),
+    )
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'card-game',
+          components: [
+            { id: 'root', component: 'Row', gap: 'md', children: { path: '/hand', componentId: 'card' } },
+            { id: 'card', component: 'Text', text: { path: 'label' } },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+
+    const cards = mount.querySelectorAll('ui-row > *')
+    expect(cards).toHaveLength(2)
+    expect([...cards].map((el) => el.textContent)).toEqual(['A♠', 'K♥']) // the byte-equivalence target above
 
     cleanup()
   })

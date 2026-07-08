@@ -15,8 +15,10 @@
 // `flexProps` (align/justify/gap/wrap, the A2UI-faithful layout grammar). The literal-union → CSS-keyword
 // mapping is a role-pure repoint in list.css's `@scope` block; the base owns no flex/surface CSS.
 //
-// NOT an A2UI catalog type — List/Grid ship as direct `ui-*` primitives usable directly (the §5.2 reserved
-// set is Row/Column/Image/Video/Card/Tabs/Modal); the catalog slice (s11) does not declare `ui-list`. Flagged.
+// IS an A2UI catalog type — `List` (ADR-0087 Fork A, Wave C; supersedes ADR-0016's earlier non-catalog
+// exclusion) renders to `ui-list`. Reach for `List` over `Column` for a homogeneous, itemized collection where
+// list semantics matter to assistive tech; reach for `Row`/`Column` for a heterogeneous arrangement, and
+// `Grid` when the layout should reflow its column count responsively (a2ui-catalog.spec.md §5.2).
 //
 // Imports the surface base from the same-layer dom `../../dom/container.ts` (not re-exported from the dom
 // barrel until s12) + the typed-prop authoring types from the dom barrel. `controls → dom` is the allowed

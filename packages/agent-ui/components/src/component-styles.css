@@ -11,10 +11,13 @@
  * controls APPEND after the last import.
  *
  * THE ONE SHARED SEAM (decomp s12): `_surface/container.css` is NOT a control sheet — it is the cross-family
- * surface mapping (the `--ui-container-bg`/`-tint` consumption seam + `container-type`, ADR-0015/0016) that the
- * whole G9 container/layout family sits on. It is imported FIRST, before any element sheet, so its `:where()`
- * surface tokens are declared when a container element's own `@scope` block consumes them. The container
- * element sheets follow it in a stable, annotated order (also do-not-reorder).
+ * surface mapping (the `--ui-container-bg`/`-tint` consumption seam, ADR-0015) that the whole G9
+ * container/layout family sits on. It is imported FIRST, before any element sheet, so its `:where()` surface
+ * tokens are declared when a container element's own `@scope` block consumes them. It does NOT establish
+ * `container-type` on any element (ADR-0100 deleted that blanket rule — a layout primitive is never a size
+ * query container by default; establishment now belongs to externally-sized composition boundaries, e.g. an
+ * A2UI mount surface or app-shell). The container element sheets follow it in a stable, annotated order (also
+ * do-not-reorder).
  */
 @import './controls/_surface/container.css';
 /* The shared container BOX-MODEL (margin inset + sticky-region pattern) — a surface opts in with [data-box].
@@ -40,6 +43,12 @@
 /* Range controls — Wave 2 (ADR-0042 Range half): single + dual-thumb slider. */
 @import './controls/slider/slider.css';
 @import './controls/slider-multi/slider-multi.css';
+
+/* Pattern controls — ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover):
+ * the standalone segmented control. segment.css FIRST (the leaf, no dot to suppress — its own base layout +
+ * focus ring), segmented-control.css SECOND (the host's compound selectors consume ui-segment by tag). */
+@import './controls/segment/segment.css';
+@import './controls/segmented-control/segmented-control.css';
 
 /* G9 container / layout family — each sheet consumes the shared `_surface/container.css` seam above. */
 @import './controls/row/row.css';

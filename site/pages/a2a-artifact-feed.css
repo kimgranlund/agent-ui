@@ -1,0 +1,120 @@
+/* a2a-artifact-feed.css — PAGE-LOCAL layout chrome for the A2A artifact-feed demo (LLD-C7). Styles the
+ * verdict/error panels, the message timeline (prose/artifact bubbles), the handshake/wire disclosures, and
+ * the step controls ONLY — the rendered ui-card/ui-button/ui-grid/ui-list controls inside an artifact
+ * mount keep their OWN component CSS; this page never restyles a control (no `ui-*` selector below).
+ * Colours are `--md-sys-color-*` roles (declared by the foundation barrels, imported first via _page.ts);
+ * spacing rides the `--ui-space-*` ramp — tokens-only, matching a2a-tic-tac-toe.css / a2ui-live.css. */
+
+.feed-verdict {
+  margin: 0 0 0.5rem;
+  font-weight: 650;
+}
+.feed-verdict[data-verdict='clean'] {
+  color: var(--md-sys-color-primary);
+}
+.feed-verdict[data-verdict='failed'] {
+  color: var(--md-sys-color-error);
+}
+
+.feed-error {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+}
+.feed-error[hidden] {
+  display: none;
+}
+
+/* ── the timeline ────────────────────────────────────────────────────────────────────────────────────────── */
+.feed-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-block-end: 1rem;
+}
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  max-inline-size: min(46rem, 92%);
+}
+.msg[hidden] {
+  display: none;
+}
+.msg[data-role='user'] {
+  align-self: flex-end;
+  background: var(--md-sys-color-primary-container-low);
+}
+.msg[data-role='agent'] {
+  align-self: flex-start;
+  background: var(--md-sys-color-neutral-surface-high);
+}
+.msg-who {
+  font-size: 0.66rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.msg-body {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.msg-annotation {
+  margin: 0;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* ── artifact stage — the live per-message renderer host mount (a reduced canvas-surface, capped) ────────
+ * `.canvas-stage` (canvas-surface.css) sets `block-size: 100%` — fine inside a2ui-live's full-bleed region
+ * grid (a definite-height ancestor), but a `.msg` bubble here is auto-height, so 100% would collapse to 0
+ * (the canvas-surface.css comment's own "DEFINITE artboard width" trap, the block-axis twin of it). A
+ * DEFINITE block-size fixes it — this rule must load AFTER canvas-surface.css (see the .ts import order
+ * comment) so it wins the cascade at equal specificity. */
+.feed-artifact-stage {
+  block-size: 26rem;
+  overflow: auto;
+}
+
+/* ── disclosures — the "capabilities ▸" handshake chip + the "wire ▸" inspector ──────────────────────────
+ * Every code/JSON pane is CAPPED (a session lesson: an uncapped fenced block can grow past any container) —
+ * `.feed-disclosure .code-block` gets its own scroll region independent of `.code-block`'s shared
+ * horizontal-only overflow (_page.css). */
+.feed-disclosure {
+  font-size: 0.78rem;
+}
+.feed-disclosure > summary {
+  cursor: pointer;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-weight: 600;
+}
+.feed-disclosure .code-block {
+  margin-block-start: 0.4rem;
+  max-block-size: 18rem;
+  overflow-y: auto;
+}
+
+/* ── step controls ───────────────────────────────────────────────────────────────────────────────────────── */
+.feed-step-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-block-start: 0.5rem;
+}
+.feed-step-label {
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  min-inline-size: 8rem;
+  text-align: center;
+}

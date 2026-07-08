@@ -30,6 +30,8 @@ describe('UIRowElement — upgrade + defaults (s3)', () => {
     // surfaceProps defaults (ADR-0015 — 0 = the neutral, transparent base) + flexProps defaults (ADR-0016)
     expect([el.elevation, el.brightness]).toEqual(['0', '0'])
     expect([el.align, el.justify, el.gap, el.wrap]).toEqual(['start', 'start', 'none', false])
+    // reflow defaults to 'auto' (ADR-0096 — UNCHANGED behavior, the narrow→stack leg stays protective)
+    expect(el.reflow).toBe('auto')
     el.remove()
   })
 
@@ -40,9 +42,10 @@ describe('UIRowElement — upgrade + defaults (s3)', () => {
     expect('validity' in el).toBe(false)
   })
 
-  it('row-props-shape: static props is exactly the surfaceProps + flexProps spread, in order', () => {
-    // the canonical layout-primitive shape — no own prop, just the shared grammar (DRY: one grammar, N consumers)
-    expect(Object.keys(UIRowElement.props)).toEqual(['elevation', 'brightness', 'align', 'justify', 'gap', 'wrap'])
+  it('row-props-shape: static props is the surfaceProps + flexProps spread, plus the element-local reflow gate, in order', () => {
+    // the canonical layout-primitive shape — the shared grammar plus ONE element-local prop, `reflow`
+    // (ADR-0096, the ADR-0075 `stretch` precedent — not folded into the shared flexProps)
+    expect(Object.keys(UIRowElement.props)).toEqual(['elevation', 'brightness', 'align', 'justify', 'gap', 'wrap', 'reflow'])
   })
 })
 
@@ -68,11 +71,21 @@ describe('UIRowElement — props reflect (the CSS attribute-selector hook) (s3)'
     el.remove()
   })
 
-  it('row-default-unset: a fresh row carries NO surface/flex attribute (an unset row adds no plane / no opinion)', () => {
+  it('row-default-unset: a fresh row carries NO surface/flex/reflow attribute (an unset row adds no plane / no opinion)', () => {
     const el = new UIRowElement()
-    for (const a of ['elevation', 'brightness', 'align', 'justify', 'gap', 'wrap']) {
+    for (const a of ['elevation', 'brightness', 'align', 'justify', 'gap', 'wrap', 'reflow']) {
       expect(el.hasAttribute(a), `default ${a} must not reflect`).toBe(false)
     }
+  })
+
+  it('row-reflow: reflow is a reflected 2-member enum (auto default + snap target), settable to locked', () => {
+    const el = new UIRowElement()
+    document.body.append(el)
+    el.reflow = 'locked'
+    expect(el.getAttribute('reflow')).toBe('locked') // reflects (ADR-0096) — drives the CSS :not([reflow='locked']) guard
+    el.setAttribute('reflow', 'bogus') // out of range → snaps to values[0] = 'auto'
+    expect(el.reflow).toBe('auto')
+    el.remove()
   })
 
   it('row-attr-coerce: an inbound out-of-range surface step snaps to the neutral base (enumType.from → values[0])', () => {
@@ -95,6 +108,7 @@ describe('UIRowElement — typed literal unions (compile-time) (s3)', () => {
       el.justify = 'between'
       el.gap = '2xl'
       el.wrap = true
+      el.reflow = 'locked'
       // @ts-expect-error — elevation is the literal union '-3'…'3' (typed strings), NOT a bare number
       el.elevation = 2
       // @ts-expect-error — align is a fixed keyword union; an arbitrary string is rejected
@@ -105,6 +119,8 @@ describe('UIRowElement — typed literal unions (compile-time) (s3)', () => {
       el.gap = 'huge'
       // @ts-expect-error — wrap is boolean, not string
       el.wrap = 'yes'
+      // @ts-expect-error — reflow is the 2-member enum 'auto'|'locked', not an arbitrary string
+      el.reflow = 'sometimes'
     }
     expect(typeof fn).toBe('function') // never invoked; the type errors above are the assertion
   })

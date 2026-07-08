@@ -1,4 +1,5 @@
-/* calendar.css — ui-calendar, the standalone month-grid date picker control (ADR-0048 / Wave-5B-1).
+/* calendar.css — ui-calendar, the standalone month-grid date picker control (ADR-0048 / Wave-5B-1;
+ * range mode ADR-0093; fluid tracks + two-layer cell ADR-0105).
  *
  * Two clearly-sectioned blocks:
  *
@@ -6,16 +7,35 @@
  *       chain from colour roles (`--md-sys-color-{family}-{role}`) and the dimensional ramp. Fallback values
  *       are sensible until the tokens-specialist delivers the canonical token definitions. The
  *       `[size]` repoint triples follow the button/select/text-field precedent; `[disabled]` mutes
- *       the nav buttons. `--ui-calendar-range-*` is RESERVED (future range-selection wave).
+ *       the nav buttons. `--ui-calendar-range-fill`/`-range-ink` (ADR-0093 clause 4, ERRATUM
+ *       2026-07-07) alias `--md-sys-color-primary-surface-highest` / `-primary-on-surface` —
+ *       0.0655/0.0722 OKLCH-L separation from the panel bg in light/dark (was ~0.001, effectively
+ *       invisible — see the erratum on ADR-0093) and 12.70:1 / 12.16:1 ink-vs-fill contrast, well
+ *       past the AA 4.5:1 floor (verified against tokens.css's OKLCH primitives).
  *
  *   [2] STYLES BLOCK — `@scope (ui-calendar)` CONSUMES only `--ui-calendar-*` for its OWN selectors.
  *       The panel (`[data-part=panel][data-box]`) adopts the shared container box-model (inset margins
  *       + sticky header) from `_surface/container-box.css` at zero specificity. The grid is a CSS
- *       grid of 7 columns; `[role=row]` divs use `display:contents` so cells participate directly in
- *       the parent grid (a clean flat-grid layout; `[role=row]`'s ARIA role is set via attribute, not
- *       CSS, so `display:contents` does not affect the accessibility tree). Day cells are square
- *       buttons whose side = `--ui-calendar-cell-size`. The [data-today] ring and [aria-selected] fill
- *       are load-bearing colour values protected under forced-colors via `forced-color-adjust:none`.
+ *       grid of 7 FLUID columns (ADR-0105: `minmax(--ui-calendar-cell-size, 1fr)` — the cell-size ramp
+ *       is the track FLOOR, not a fixed track; shrink-wrapped it resolves to the floor exactly, given
+ *       surplus width the grid fills it); `[role=row]` divs use `display:contents` so cells participate
+ *       directly in the parent grid (a clean flat-grid layout; `[role=row]`'s ARIA role is set via
+ *       attribute, not CSS, so `display:contents` does not affect the accessibility tree). Day cells are
+ *       a TWO-LAYER cell (ADR-0105, CSS-only — the single `<button role=gridcell>` of calendar.ts is
+ *       unchanged): the BAND layer is the button box itself (stretches to its fluid track — the square
+ *       `[data-in-range]` wash, ink/disabled/outside colours, the enlarged hit target) and the POINT
+ *       layer is a fixed `--ui-calendar-cell-size` circle (`::before`, absolutely centred, negative
+ *       `z-index` under an `isolation:isolate` stacking context on the button so it paints ABOVE the
+ *       band wash and BELOW the numeral) carrying the aria-selected/hover/today-ring/focus-ring — the
+ *       things that are legitimately circular, at every track width. A second pseudo (`::after`) on
+ *       `[data-range-start]`/`[data-range-end]` (mutually exclusive with the OTHER endpoint attribute
+ *       via `:not()`, so a same-day range paints neither) bridges a half-track wash from the circle's
+ *       edge to the band interior — `calc(50% + cell-size/2)` to the far inline edge, which is exactly
+ *       0-width at the track floor (today's rendering, byte-for-byte) and only opens up under surplus
+ *       width. The [data-today] ring, [aria-selected]/[data-in-range] fills, and the half-wash are
+ *       load-bearing colour values protected under forced-colors via `forced-color-adjust:none`
+ *       (inherited by the pseudos from the button rules that already set it — it's an inherited
+ *       property).
  *
  * Standalone — NOT injected from calendar.ts (behaviour-only `.ts`, no runtime style injection
  * per plan §2). Linked via component-styles.css; foundation roles FIRST in the load order.
@@ -24,7 +44,10 @@
 /* ══════════════════════ [1] TOKEN BLOCK — :where(ui-calendar) ══════════════════════════════ */
 
 :where(ui-calendar) {
-  /* ── Cell geometry — the day cell is a square; side = --ui-calendar-cell-size.
+  /* ── Cell geometry (ADR-0105: re-stated as the track FLOOR + the point-layer diameter — the
+     value is unchanged, only its meaning widens). The day cell's block-size is always this; the
+     inline-size is this at the track floor (shrink-wrapped) and grows with surplus width (fluid
+     `minmax()` track) — the fixed circular POINT layer (::before) stays this diameter regardless.
      Aliases --ui-height-md so the cell rides the explicit per-[scale] height ramp (ADR-0038),
      tracking scale automatically without a multiplier. [size] repoints below.
      --ui-calendar-gap is the inter-cell gap; aliases --ui-space-xs (4px × density). */
@@ -68,7 +91,20 @@
   /* ── Cell hover background (non-selected, non-disabled). */
   --ui-calendar-cell-hover-bg: var(--md-sys-color-neutral-surface-high, #f0f0f0);
 
-  /* RESERVED — future range-selection wave: --ui-calendar-range-fill · --ui-calendar-range-ink. */
+  /* ── Range interior wash (ADR-0093 clause 4, ERRATUM 2026-07-07) — the SQUARE fill for
+     [data-in-range] cells (endpoints reuse --ui-calendar-selected-fill/-ink above, unchanged).
+     ADR-0093 clause 4 originally aliased --md-sys-color-primary-surface / -primary-on-surface —
+     measured (gallery audit) to differ from the panel's --md-sys-color-neutral-surface by only
+     ~0.001 OKLCH L in BOTH schemes (light 0.9336 vs 0.9347; dark 0.2598 vs 0.2592): the band was
+     load-bearing colour with no real lightness separation, i.e. effectively invisible. Repointed
+     to --md-sys-color-primary-surface-highest, whose OKLCH L differs from the panel by 0.0655
+     (light) / 0.0722 (dark) — ~65×/~72× the old gap, a clearly-visible-but-soft wash (chroma
+     stays far below the solid endpoint fill's --md-sys-color-primary-550/600). Ink stays
+     --md-sys-color-primary-on-surface: ink-vs-fill contrast is 12.70:1 (light) / 12.16:1 (dark),
+     comfortably past the AA 4.5:1 floor a text/numeral pairing needs (see the erratum on
+     .claude/docs/adr/0093-calendar-range-selection.md for the full measurement). */
+  --ui-calendar-range-fill: var(--md-sys-color-primary-surface-highest, #dde6f4);
+  --ui-calendar-range-ink:  var(--md-sys-color-primary-on-surface, #1c1c1e);
 }
 
 /* [size] repoints cell size onto the §1-ramp height entries (ADR-0038: explicit per-[scale] table,
@@ -93,8 +129,13 @@
 /* ══════════════════════ [2] STYLES BLOCK — @scope (ui-calendar) ════════════════════════════ */
 
 @scope (ui-calendar) {
-  /* Host: inline-block so ui-calendar shrink-wraps its panel (like a compact form widget).
-     Callers set width or place the element in a flex/grid cell to control sizing. */
+  /* Host: inline-block so ui-calendar shrink-wraps its panel by default (like a compact form
+     widget) when NOTHING gives it width. ADR-0105 — the grid's tracks are fluid (`minmax()`
+     below), so a caller that DOES grant width (a stretched flex/grid cell — blockification
+     turns this inline-block into the flex/grid item the cross-axis `stretch` default sizes,
+     ADR-0030) gets a grid that fills it, not a fixed-width grid stranded in a wide, half-empty
+     panel. The escape for a caller that wants the OLD always-compact behaviour even when
+     stretched: `max-inline-size: max-content` (one line, page-author override — ADR-0102). */
   :scope {
     display: inline-block;
     vertical-align: top;
@@ -175,14 +216,19 @@
   }
 
   /* ── Grid container ([data-part="grid"]) ────────────────────────────────────────────────
-     A CSS grid of 7 equal columns (one per day of the week). The [role=row] divs use
-     display:contents so their children (columnheaders and gridcells) participate directly
+     A CSS grid of 7 FLUID columns (ADR-0105), one per day of the week. `minmax(cell-size, 1fr)`:
+     the cell-size ramp is the track FLOOR (shrink-wrapped/intrinsic sizing resolves `1fr` to its
+     base size when the grid's own inline-size is undetermined by an ancestor — today's exact
+     compact rendering, byte-identical); given a DEFINITE width from an ancestor (a stretched
+     flex/grid cell), the seven tracks share the surplus equally and the grid fills it. Row
+     heights are untouched — width adapts, the month never inflates vertically. The [role=row]
+     divs use display:contents so their children (columnheaders and gridcells) participate directly
      in the flat 7-column grid — each week flows into the next row automatically. The
      weekday header row and the 6 week rows are all part of the same flat grid, avoiding
      a nested-flex layout that would need explicit sizing on every row. */
   :scope [data-part='grid'] {
     display: grid;
-    grid-template-columns: repeat(7, var(--ui-calendar-cell-size, 2rem));
+    grid-template-columns: repeat(7, minmax(var(--ui-calendar-cell-size, 2rem), 1fr));
     gap: var(--ui-calendar-gap, 0.125rem);
     /* The direct-child margin from [data-box] applies here (6px all around, the box's uniform
        inset). We keep the default inset margin — the grid sits slightly inside the panel. */
@@ -209,19 +255,27 @@
     user-select: none;
   }
 
-  /* ── Day cells ([role=gridcell]) ─────────────────────────────────────────────────────────
-     Square buttons sized to --ui-calendar-cell-size. The click / keyboard commit path is in
-     calendar.ts; CSS handles visual states only (ADR-0003 behaviour-only .ts principle).
-     line-height:1 (ADR-0036: single-line control glyph centred by the frame). */
+  /* ── Day cells ([role=gridcell]) — the TWO-LAYER cell (ADR-0105) ─────────────────────────
+     The single button IS the BAND layer: it stretches to its (fluid) track, carrying the square
+     [data-in-range] wash, ink/disabled/outside colours, and the enlarged hit target (a strict
+     a11y win — the click-delegation commit path already resolves through
+     closest('[role="gridcell"]'), so a wider button changes nothing behaviourally). `position:
+     relative` gives its two pseudo layers a containing block; `isolation: isolate` establishes a
+     stacking context so a NEGATIVE z-index on the pseudos still paints ABOVE the button's own
+     background (paint-order step 1) and BELOW the day-number text (an in-flow inline descendant,
+     which paints ahead of z-index:auto/0 descendants but AFTER negative-z ones — negative z-index
+     is the only way under it, CSS2.1 Appendix E). line-height:1 (ADR-0036: single-line control
+     glyph centred by the frame). */
   :scope [data-part='grid'] [role='gridcell'] {
     display: flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    inline-size: var(--ui-calendar-cell-size, 2rem);
-    block-size: var(--ui-calendar-cell-size, 2rem);
+    position: relative;
+    isolation: isolate;
+    block-size: var(--ui-calendar-cell-size, 2rem); /* rows never inflate — only inline-size is fluid */
     border: none;
-    border-radius: 50%;                /* circular cells — standard calendar look */
+    border-radius: 0;                  /* the BAND is square; circularity lives on the POINT layer below */
     background: transparent;
     color: inherit;
     font-size: var(--ui-calendar-font, 14px);
@@ -230,32 +284,110 @@
     padding: 0;
     -webkit-user-select: none;
     user-select: none;
-    outline: none;                     /* :focus-visible provides the ring below */
+    outline: none;                     /* the POINT layer's ::before carries the focus ring below — a
+                                           ring on the (now possibly wide) band itself would draw a
+                                           rectangle, not the circle ADR-0105 requires */
   }
 
-  :scope [data-part='grid'] [role='gridcell']:hover {
+  /* ── The POINT layer (::before) — a FIXED --ui-calendar-cell-size circle, always centred in the
+     button regardless of its (fluid) width. Carries: the aria-selected/single/endpoint fill, the
+     hover wash, the [data-today] inset ring, and the :focus-visible ring — the things that are
+     legitimately circular at every track width (ADR-0105 decision 3). `inset:0; margin:auto` +
+     a fixed inline/block-size is the "centre a fixed box inside an auto-sized positioned parent"
+     technique — it re-centres itself as the button's track grows, no JS/ResizeObserver needed. */
+  :scope [data-part='grid'] [role='gridcell']::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    inline-size: var(--ui-calendar-cell-size, 2rem);
+    block-size: var(--ui-calendar-cell-size, 2rem);
+    border-radius: 50%;
+    z-index: -1;                        /* under the numeral, above the band background */
+    pointer-events: none;               /* decorative — the button itself owns hit-testing */
+  }
+
+  :scope [data-part='grid'] [role='gridcell']:hover::before {
     background-color: var(--ui-calendar-cell-hover-bg);
   }
 
-  :scope [data-part='grid'] [role='gridcell']:focus-visible {
+  :scope [data-part='grid'] [role='gridcell']:focus-visible::before {
     outline: var(--ui-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--ui-focus-ring-offset, 2px);
   }
 
-  /* ── Today ring — an outline that marks the current date (whether selected or not).
-     Uses box-shadow so it stacks on top of the selected fill when the selected day = today.
-     `forced-color-adjust: none` ensures the ring survives WHCM (load-bearing colour). */
-  :scope [data-part='grid'] [role='gridcell'][data-today] {
+  /* ── Today ring — an inset ring marking the current date (whether selected or not), on the
+     fixed-diameter POINT layer so it stays a true ring, never stretched into an oval. Uses
+     box-shadow so it stacks on top of the selected fill when the selected day = today (two
+     independent paint channels on the same pseudo — background-color + box-shadow never
+     conflict). `forced-color-adjust: none` ensures the ring survives WHCM (load-bearing colour). */
+  :scope [data-part='grid'] [role='gridcell'][data-today]::before {
     box-shadow: inset 0 0 0 1.5px var(--ui-calendar-today-ring, currentcolor);
     forced-color-adjust: none;
   }
 
-  /* ── Selected fill — the committed value cell.
-     Overrides hover; `forced-color-adjust:none` keeps the fill in WHCM. */
-  :scope [data-part='grid'] [role='gridcell'][aria-selected='true'] {
-    background-color: var(--ui-calendar-selected-fill, #0057d8);
+  /* ── Selected fill — the committed value cell (single mode) OR a range endpoint (range mode:
+     [data-range-start]/[data-range-end] cells carry aria-selected="true" too — ADR-0093 clause 4
+     "endpoints reuse the existing circular fill"), painted on the fixed-diameter POINT layer so it
+     stays a circle at every width, never an ellipse (ADR-0105). `:not([data-in-range])` excludes
+     range mode's interior cells — they ALSO carry aria-selected="true" (clause 4's "the whole band
+     is selected") but must show the SQUARE band wash below, not an accent circle; endpoints never
+     carry [data-in-range] (rangeSelectionFor() computes them as mutually exclusive), so this
+     selector is a no-op narrowing for single mode and the real endpoint/interior split for range
+     mode. `color` stays on the BUTTON (inherited by the real day-number text, centred over the
+     circle) — `forced-color-adjust:none` keeps the fill in WHCM. */
+  :scope [data-part='grid'] [role='gridcell'][aria-selected='true']:not([data-in-range]) {
     color: var(--ui-calendar-selected-ink, #fff);
     forced-color-adjust: none;
+  }
+  :scope [data-part='grid'] [role='gridcell'][aria-selected='true']:not([data-in-range])::before {
+    background-color: var(--ui-calendar-selected-fill, #0057d8);
+    forced-color-adjust: none;
+  }
+
+  /* ── Range interior wash ([data-in-range], ADR-0093 clause 4) — SQUARE (radius:0), painted on
+     the BAND layer (the button itself) so it spans the FULL fluid track at any width — the wash
+     never opens holes between abutting interior cells (ADR-0105 decision 2). Never co-occurs with
+     [data-range-start]/[data-range-end] (rangeSelectionFor() computes them as mutually exclusive),
+     so this rule only ever touches true interior cells; under forced-colors the explicit override
+     below lands the SAME Highlight/HighlightText pair as the endpoints — the whole band is one
+     self-delimiting run (ADR-0093 clause 4) — with the circle-vs-square shape (POINT vs BAND
+     layer, untouched by forced-colors) left as the sole endpoint-vs-interior signifier (ADR-0057
+     non-colour-signifier rule). */
+  :scope [data-part='grid'] [role='gridcell'][data-in-range] {
+    background-color: var(--ui-calendar-range-fill, #dde6f4);
+    color: var(--ui-calendar-range-ink, #1c1c1e);
+    forced-color-adjust: none;
+  }
+
+  /* ── Range endpoint half-wash (::after, ADR-0105 decision 3) — bridges the fixed POINT circle to
+     the band interior on a [data-range-start]/[data-range-end] cell, so a wide track never opens a
+     gap between the endpoint circle and the neighbouring interior wash. Logical `inset-inline-*`
+     (no directional gradient) — RTL-safe by construction, the mirrored side follows for free. Spans
+     from the circle's OWN edge (`50% + cell-size/2` from centre) to the button's far inline edge —
+     at the track floor (button inline-size == cell-size) that span is exactly 0 (today's rendering,
+     byte-for-byte); it only opens under surplus width. `z-index:-2` (below the ::before circle,
+     which paints over its near portion, CSS2.1 Appendix E step 2 — most-negative-first) — only the
+     interior-facing half is ever visible. `:not([data-range-end])` / `:not([data-range-start])` on
+     the OTHER endpoint attribute excludes a same-day range (a cell that is BOTH start and end) —
+     with no interior cell on either side, no half-wash is drawn (nothing to bridge to). */
+  :scope [data-part='grid'] [role='gridcell'][data-range-start]:not([data-range-end])::after,
+  :scope [data-part='grid'] [role='gridcell'][data-range-end]:not([data-range-start])::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    background-color: var(--ui-calendar-range-fill, #dde6f4);
+    z-index: -2;
+    pointer-events: none;
+    forced-color-adjust: none;
+  }
+  :scope [data-part='grid'] [role='gridcell'][data-range-start]:not([data-range-end])::after {
+    inset-inline-start: calc(50% + var(--ui-calendar-cell-size, 2rem) / 2);
+    inset-inline-end: 0;
+  }
+  :scope [data-part='grid'] [role='gridcell'][data-range-end]:not([data-range-start])::after {
+    inset-inline-start: 0;
+    inset-inline-end: calc(50% + var(--ui-calendar-cell-size, 2rem) / 2);
   }
 
   /* ── Adjacent-month cells (data-outside) — muted ink; still clickable (navigates month). */
@@ -263,7 +395,9 @@
     color: var(--ui-calendar-outside-ink, #767676);
   }
 
-  /* ── Disabled / out-of-range cells (aria-disabled=true) — pointer-inert; muted. */
+  /* ── Disabled / out-of-range cells (aria-disabled=true) — pointer-inert; muted. opacity applies
+     to the whole stacking context (button + both pseudo layers together), so a disabled endpoint's
+     circle/wash mute along with its numeral — no separate pseudo overrides needed. */
   :scope [data-part='grid'] [role='gridcell'][aria-disabled='true'] {
     color: var(--ui-calendar-disabled-ink, #767676);
     cursor: default;
@@ -272,14 +406,27 @@
   }
 
   /* ── forced-colors (WHCM) ────────────────────────────────────────────────────────────────
-     Three visually distinct states must survive system-colour flattening:
-       focus   = Highlight outline (offset-outside) — free via --md-sys-color-focus-ring → Highlight
-       selected = Highlight fill + HighlightText numeral — explicit below
-       today   = ButtonText INSET ring (offset-inside, inside the cell border)
-     today MUST NOT use Highlight here — it would merge with the selected fill AND with the
-     focus ring, collapsing all three states into one indistinguishable Highlight blob.
-     Both cells already carry `forced-color-adjust:none` in the rules above, so the
-     explicit system-colour overrides below take effect under the OS forced-colour wash. */
+     Four visually distinct states must survive system-colour flattening (ADR-0093 clause 4 —
+     the ADR-0048 three-state discipline, now four; ADR-0105 re-homes the paint per layer, the
+     mapping is unchanged):
+       focus    = Highlight ring on the POINT layer (::before) — free via --md-sys-color-focus-ring
+                  → Highlight; stays circular at every width because the ring lives on the fixed-
+                  diameter pseudo, never the (possibly wide) band
+       selected = Highlight fill + HighlightText numeral — explicit below; in range mode this is
+                  the WHOLE band (endpoints AND interior both carry aria-selected="true" — clause 4
+                  "the band is self-delimiting, so endpoint-vs-interior needs no third colour"); the
+                  half-wash (::after) carries the SAME Highlight so a bridged band reads as one
+                  contiguous run under WHCM too
+       today    = ButtonText INSET ring on the POINT layer (offset-inside, inside the circle)
+       (interior vs endpoint shape — circle (POINT layer) vs square (BAND layer) — survives
+        forced-colors unaided: border-radius is not a colour property, so it is never flattened)
+     today MUST NOT use Highlight here — it would merge with the selected/band fill AND with the
+     focus ring, collapsing every state into one indistinguishable Highlight blob.
+     The button rules above already carry `forced-color-adjust:none` per state, unconditionally
+     (not gated by this media query); it is an INHERITED property, so ::before/::after pick it up
+     from their originating button automatically — no separate declaration needed on the pseudos
+     (only the explicit system-colour paint below needs restating on the pseudo selectors, since
+     background-color/box-shadow are NOT inherited). */
   @media (forced-colors: active) {
     /* Panel surface: Canvas / CanvasText (standard surface mapping). */
     :scope [data-part='panel'] {
@@ -288,18 +435,37 @@
       border-color: CanvasText;
     }
 
-    /* Selected fill: Highlight / HighlightText (system selection pair — WCAG AA guaranteed by OS). */
-    :scope [data-part='grid'] [role='gridcell'][aria-selected='true'] {
-      background-color: Highlight;
+    /* Selected fill: Highlight / HighlightText (system selection pair — WCAG AA guaranteed by OS).
+       Matches range-mode endpoints too (they carry aria-selected="true"); the circle (::before) —
+       NOT the band — carries the fill, so the shape signifier survives forced-colors. */
+    :scope [data-part='grid'] [role='gridcell'][aria-selected='true']:not([data-in-range]) {
       color: HighlightText;
-      forced-color-adjust: none;
+    }
+    :scope [data-part='grid'] [role='gridcell'][aria-selected='true']:not([data-in-range])::before {
+      background-color: Highlight;
     }
 
-    /* Today ring: ButtonText INSET border — deliberately NOT Highlight so focus/selected/today
-       remain visually distinct: focus=Highlight-outside, selected=Highlight-fill, today=ButtonText-inset. */
-    :scope [data-part='grid'] [role='gridcell'][data-today] {
+    /* Range interior (data-in-range): the SAME Highlight/HighlightText pair as the endpoints —
+       one self-delimiting band (ADR-0093 clause 4), painted on the BAND (button) so interior stays
+       square while endpoints (painted on the POINT layer above) stay circular. Written explicitly
+       (rather than relying on the [aria-selected='true'] rule above alone) so the four-state
+       contract stays true independent of any future reordering of this stylesheet. */
+    :scope [data-part='grid'] [role='gridcell'][data-in-range] {
+      background-color: Highlight;
+      color: HighlightText;
+    }
+
+    /* Half-wash bridge: the same Highlight as the band — one contiguous run under WHCM too. */
+    :scope [data-part='grid'] [role='gridcell'][data-range-start]:not([data-range-end])::after,
+    :scope [data-part='grid'] [role='gridcell'][data-range-end]:not([data-range-start])::after {
+      background-color: Highlight;
+    }
+
+    /* Today ring: ButtonText INSET border on the fixed-diameter POINT layer — deliberately NOT
+       Highlight so focus/selected/today remain visually distinct: focus=Highlight-outside,
+       selected=Highlight-fill, today=ButtonText-inset. */
+    :scope [data-part='grid'] [role='gridcell'][data-today]::before {
       box-shadow: inset 0 0 0 2px ButtonText;
-      forced-color-adjust: none;
     }
 
     /* Disabled cells: GrayText (the system muted role). */

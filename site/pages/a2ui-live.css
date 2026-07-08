@@ -128,6 +128,36 @@
   font-size: inherit;
 }
 
+/* ── feed-embedded asks (ADR-0097 §2) — an ask's own `.msg[data-role='agent']` bubble, holding a live
+ * rendered surface (`.ask-surface`) instead of static text. `pending` gets no extra treatment (it reads as
+ * an ordinary agent message, fully interactive); `[data-state]` (set the instant it freezes) dims the whole
+ * bubble as VISIBLE, non-interactive history — `inert` (JS-set) already kills interaction/tab-order; this
+ * sheet only supplies the visual cue so a frozen ask doesn't look identically live.
+ *
+ * ADR-0100 sweep, VERIFIED NOT ESTABLISHED (deliberate): `.ask-surface` is ALSO a `host.mount()` target
+ * (ask-registry.ts). It does NOT get `container-type: inline-size` — its inline-size is CONTENT-DERIVED, not
+ * externally sized: `.msg` (its ancestor bubble) shrink-wraps to its own content up to a `max-inline-size: 92%`
+ * cap (align-self: flex-start/flex-end in the message list, no stretch). Establishing containment on a
+ * content-derived box is exactly the anti-pattern ADR-0100 cl.1 removed from the layout primitives themselves
+ * — doing it here would reintroduce the same zero-width collapse one level up. An ask's rendered content
+ * renders its un-reflowed tag identity (ADR-0100 cl.2's graceful degradation), same as any A2UI surface with
+ * no established boundary. */
+.msg[data-ask] .ask-surface {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-block-start: 0.35rem;
+}
+.msg[data-ask][data-state] {
+  opacity: 0.6;
+}
+.ask-annotation {
+  margin: 0.4rem 0 0;
+  font-size: 0.72rem;
+  font-style: italic;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
 .chat-composer {
   flex: 0 0 auto;
   display: flex;
@@ -212,7 +242,17 @@
  * lets the ACTIVE panel fill the pane and scroll its own area. The component keeps all panels mounted, showing
  * only the selected one via `hidden` (ui-tab-panel[hidden]{display:none}); this sheet sets NO `display` on the
  * panels, so that show/hide rule is never clobbered. */
-.canvas-tabs {
+/* `ui-tabs.canvas-tabs` (element+class, specificity 0,1,1) — NOT plain `.canvas-tabs` (0,1,0). tabs.css sets
+ * `:scope { display: block }` inside an `@scope (ui-tabs) { … }` block; per the CSS cascade, when two rules
+ * tie on specificity, SCOPING PROXIMITY is the tiebreaker BEFORE source order, and an unscoped selector is
+ * treated as having the worst (infinite) proximity — so a plain `.canvas-tabs { display: flex }` of equal
+ * (0,1,0) specificity NEVER wins against `:scope`'s @scope-scoped rule, no matter how late this sheet loads.
+ * The symptom: `.canvas-tabs` silently computed `display: block`, `flex-direction`/`flex-grow` below went
+ * inert (block layout ignores them), `.canvas-stage`'s `block-size: 100%` collapsed to 0, and its
+ * `overflow: auto` clipped every rendered A2UI surface out of view — the canvas looked visually empty even
+ * though the DOM/JSON/HTML tabs held real, correctly rendered content. Bumping specificity (not just source
+ * order) is required to beat a component's own `@scope` declaration. */
+ui-tabs.canvas-tabs {
   /* fill the pane column, then lay the compound out as the SAME [ tablist · active panel ] stack it already is
    * (:scope is display:block) — enabling the fill so the active panel, not the whole pane, scrolls. This is
    * consumer layout (sizing the control into the page), not a restyle of its visual treatment. */

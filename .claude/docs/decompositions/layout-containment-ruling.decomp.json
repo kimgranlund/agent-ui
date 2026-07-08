@@ -1,0 +1,43 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "nodes": [
+    { "id": "n1", "label": "design ruling: audited layout defects (containment vs intrinsic sizing + card floor)", "leaf": false, "justify": "grouping", "accept": null },
+    { "id": "n2", "label": "mechanism analysis — containment vs intrinsic sizing, four candidate fixes measured", "leaf": true, "justify": null, "accept": "defect-probe.{html,mjs} in scratchpad; Chromium+WebKit outputs identical across all probe ids; shipped/conditional/counter-rule/boundary candidates each measured on toolbar+tiles+reflow compositions" },
+    { "id": "n3", "label": "defect-B re-attribution — card crush root cause + floor ruling evidence", "leaf": true, "justify": null, "accept": "measured equalities c6=c7 (floor not binding under containment) and c22=c23 (floor irrelevant in wrap rows post-fix); c12 vs c13/c28 grid blowout 484.2 vs 200 (floor harmful in grids)" },
+    { "id": "n4", "label": "ADR-0100 record (Context/Decision/Consequences/Alternatives/Acceptance)", "leaf": true, "justify": null, "accept": "python adr_check.py 0100-*.md exits 0; Status proposed; one decision with clauses incl. the card-floor disposition" },
+    { "id": "n5", "label": "owning-doc repairs shippable now (ADR-0016 reciprocal header line + README index row)", "leaf": true, "justify": null, "accept": "adr_check C6 (indexed) + C8 (links resolve, supersession reciprocal) green on 0100 and 0016" },
+    { "id": "n6", "label": "regression-test + build-wave charter (in-record Acceptance section)", "leaf": true, "justify": null, "accept": "Acceptance enumerates whole-shape browser legs w/ negative controls, both engines, named shipped pages/seeds, the host-surface sweep, and the grid-guard leg" },
+    { "id": "n7", "label": "handback to coordinator", "leaf": true, "justify": null, "accept": "handoff block with the eight fields in order; doc-reviewer named as next; gates listed by command with verdicts" }
+  ],
+  "actions": [
+    { "id": "a1", "label": "explain the 0px collapse mechanically (size containment zeroes intrinsic sizes)" },
+    { "id": "a2", "label": "prove each fix candidate against realistic compositions in both engines" },
+    { "id": "a3", "label": "re-attribute the 38px tile crush to its root cause with measured equalities" },
+    { "id": "a4", "label": "rule on the card min floor with the grid-guard evidence" },
+    { "id": "a5", "label": "record the establishment re-home as one ratifiable decision with honest costs" },
+    { "id": "a6", "label": "keep ADR-0016/0096 contracts consistent (partial supersession + extends links)" },
+    { "id": "a7", "label": "define buildable acceptance: tests, site sweep, doc re-keys — without building" },
+    { "id": "a8", "label": "route the result for independent review (generator≠critic)" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n2" },
+    { "action": "a2", "node": "n2" },
+    { "action": "a3", "node": "n3" },
+    { "action": "a4", "node": "n3" },
+    { "action": "a5", "node": "n4" },
+    { "action": "a6", "node": "n5" },
+    { "action": "a7", "node": "n6" },
+    { "action": "a8", "node": "n7" }
+  ],
+  "edges": [
+    { "from": "n2", "to": "n3", "why": "the re-attribution equalities are probe outputs — n3 reads n2's measurements" },
+    { "from": "n2", "to": "n4", "why": "the Decision's mechanism claims cite n2's computed-style proofs" },
+    { "from": "n3", "to": "n4", "why": "the card-floor clause cites n3's equalities and blowout measurement" },
+    { "from": "n2", "to": "n6", "why": "the regression legs are derived from the exact compositions n2 measured" },
+    { "from": "n4", "to": "n5", "why": "the reciprocal 0016 line and index row cite the 0100 number and title n4 fixes" },
+    { "from": "n4", "to": "n7", "why": "the handback reports the record's gate verdicts" },
+    { "from": "n5", "to": "n7", "why": "the handback lists the repaired files" },
+    { "from": "n6", "to": "n7", "why": "the handback names the build-wave owner for the charter" }
+  ]
+}

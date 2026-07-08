@@ -213,14 +213,16 @@ describe('ui-select — keyboard: open + navigate + commit (both engines)', () =
     const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
     const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
 
+    el.open = true
+    await el.updateComplete
+    expect(listbox.matches(':popover-open')).toBe(true)
+
+    // Counters attached AFTER the open (which itself now announces one `toggle` — ADR-0101: every
+    // real show/hide announces) so they measure ONLY the Escape-driven close+toggle pair.
     let closes = 0
     let toggles = 0
     el.addEventListener('close', () => closes++)
     el.addEventListener('toggle', () => toggles++)
-
-    el.open = true
-    await el.updateComplete
-    expect(listbox.matches(':popover-open')).toBe(true)
 
     await userEvent.keyboard('{Escape}')
     // The overlay's restoreFocus() runs inside the async Popover toggle listener (spec: "queue a task").
@@ -844,7 +846,7 @@ describe('ui-select — panel/option geometry carries [size] (B5, the size-carry
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-select — C10 zero-residue (both engines)', () => {
-  it('after disconnect, Escape does NOT fire close on the detached host (listeners removed)', async () => {
+  it('after disconnect, a stale platform toggle event does NOT fire close (overlay listener removed)', async () => {
     const { el } = mount(`
       <ui-select placeholder="Choose…">
         <div role="option" value="x">X</div>
@@ -856,15 +858,21 @@ describe('ui-select — C10 zero-residue (both engines)', () => {
     await el.updateComplete
     expect(listbox.matches(':popover-open')).toBe(true)
 
+    // Disconnect WHILE OPEN — scope.dispose() → cleanup() force-hides the popup (no emit, by design;
+    // see overlay.ts's cleanup()) and aborts the connection AbortSignal, tearing down the overlay's own
+    // `toggle` listener with it. (Under ADR-0101, closing FIRST via `el.open = false` would itself
+    // announce a real close+toggle pair while still connected — not what this residue probe targets.)
+    el.remove()
+
     let closes = 0
     el.addEventListener('close', () => closes++)
 
-    // Close + disconnect
-    el.open = false
-    await el.updateComplete
-    el.remove()
+    // A stale platform ToggleEvent arriving on the now-detached listbox must not propagate — the
+    // listener rode the connection AbortSignal, already aborted at disconnect.
+    const ev = new Event('toggle')
+    Object.defineProperty(ev, 'newState', { value: 'closed' })
+    listbox.dispatchEvent(ev)
 
-    // After disconnect, any stale toggle listener must be dead — no close fires
     expect(closes).toBe(0)
   })
 })

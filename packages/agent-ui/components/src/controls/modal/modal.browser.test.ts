@@ -43,6 +43,16 @@ afterEach(async () => {
 
 const px = (v: string): number => Number.parseFloat(v)
 
+/** Two rAFs — ResizeObserver callbacks fire before-paint, on their own schedule (NOT a plain microtask), so
+ *  `await el.updateComplete` alone does not guarantee scroll-fade's RO-driven remeasure() has run yet after a
+ *  dialog transitions closed→open (display:none → flow-root IS a resize). The `container-box.css` fix
+ *  (2026-07-07, closed dialog = genuine display:none) exposed this: scroll-fade's own INITIAL remeasure() now
+ *  runs at connect while the dialog is still closed/zero-sized (correctly measuring "no overflow"), so the
+ *  first REAL measurement only happens once the RO fires after `showModal()`. `scrollTo()` below skips waiting
+ *  for a scroll event when already at the target scrollTop (0) — the fade tests that immediately assert at
+ *  scrollTop 0 need this explicit frame instead. */
+const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+
 /** The resolved mask — WebKit ships mask-image unprefixed too, but read both to be engine-agnostic. */
 const maskOf = (el: HTMLElement): string => {
   const cs = getComputedStyle(el) as CSSStyleDeclaration & { webkitMaskImage?: string }
@@ -96,6 +106,39 @@ describe('ui-modal — open round-trip via the native <dialog> (both engines)', 
     modal.open = false
     await modal.updateComplete
     expect(dialog.open, 'close() did not close the dialog').toBe(false)
+  })
+
+  // Regression: a `<ui-modal>` with NO `open` attribute must be genuinely INVISIBLE, not merely
+  // `dialog.open === false` — the reported bug (container-box.css §dialog fix, 2026-07-07) was a dialog that
+  // stayed `dialog.open === false` (jsdom-checkable) yet still COMPUTED `display: flow-root` and rendered
+  // centred on the page (only a browser-measured `getComputedStyle` catches this).
+  it('a fresh, un-opened modal computes display:none and contributes no rendered box (jsdom-green ≠ done)', async () => {
+    const { dialog } = mount('<ui-modal><p>Body</p></ui-modal>')
+    expect(dialog.open).toBe(false)
+    expect(getComputedStyle(dialog).display, `${server.browser}: a closed dialog is not display:none — it renders as if open`).toBe('none')
+    expect(dialog.getBoundingClientRect().width, 'a closed dialog contributed a non-empty rendered box').toBe(0)
+  })
+
+  // The EXACT reported bug: two sibling `<ui-modal>`s, neither opened — they must not appear "stacked on top of
+  // each other" (both centred, both visible) before any user interaction, and a trigger must open ONLY its own.
+  it('TWO sibling modals stay invisible until their own trigger opens them (no cross-modal bleed)', async () => {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = '<ui-modal id="a"><p>A</p></ui-modal><ui-modal id="b"><p>B</p></ui-modal>'
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const a = wrap.querySelector('#a') as UIModalElement
+    const b = wrap.querySelector('#b') as UIModalElement
+    const dialogA = a.querySelector('[data-part="dialog"]') as HTMLDialogElement
+    const dialogB = b.querySelector('[data-part="dialog"]') as HTMLDialogElement
+
+    expect(getComputedStyle(dialogA).display, `${server.browser}: modal A rendered before any trigger`).toBe('none')
+    expect(getComputedStyle(dialogB).display, `${server.browser}: modal B rendered before any trigger`).toBe('none')
+
+    a.open = true
+    await a.updateComplete
+    expect(dialogA.open, 'opening A did not open A').toBe(true)
+    expect(dialogB.open, 'opening A also opened B (cross-modal bleed)').toBe(false)
+    expect(getComputedStyle(dialogB).display, `${server.browser}: B rendered while only A was opened`).toBe('none')
   })
 })
 
@@ -305,6 +348,7 @@ describe('ui-modal — the dialog scroll viewport gets an edge-aware fade by def
     )
     modal.open = true
     await modal.updateComplete
+    await raf() // let scroll-fade's RO-driven remeasure() catch up to the real (now correctly closed→open) geometry
     await scrollTo(dialog, 0)
     expect(dialog.hasAttribute('data-fade-top'), `${server.browser}: fresh dialog wrongly fades the top`).toBe(false)
     expect(dialog.hasAttribute('data-fade-bottom'), `${server.browser}: the dialog did not fade its bottom`).toBe(true)
@@ -316,6 +360,7 @@ describe('ui-modal — the dialog scroll viewport gets an edge-aware fade by def
     )
     modal.open = true
     await modal.updateComplete
+    await raf() // let scroll-fade's RO-driven remeasure() catch up to the real (now correctly closed→open) geometry
     await scrollTo(dialog, dialog.scrollHeight) // the engine clamps to the real max
     expect(dialog.hasAttribute('data-fade-top'), `${server.browser}: end-of-scroll did not fade the top`).toBe(true)
     expect(dialog.hasAttribute('data-fade-bottom'), `${server.browser}: end-of-scroll wrongly kept the bottom faded`).toBe(false)
@@ -325,6 +370,7 @@ describe('ui-modal — the dialog scroll viewport gets an edge-aware fade by def
     const { modal, dialog } = mount('<ui-modal><p>short body</p></ui-modal>')
     modal.open = true
     await modal.updateComplete
+    await raf() // let scroll-fade's RO-driven remeasure() catch up to the real (now correctly closed→open) geometry
     expect(dialog.scrollHeight, 'the dialog unexpectedly overflows (test setup is vacuous)').toBeLessThanOrEqual(dialog.clientHeight)
     expect(dialog.hasAttribute('data-fade-top')).toBe(false)
     expect(dialog.hasAttribute('data-fade-bottom')).toBe(false)
@@ -337,6 +383,7 @@ describe('ui-modal — the dialog scroll viewport gets an edge-aware fade by def
     )
     modal.open = true
     await modal.updateComplete
+    await raf() // let scroll-fade's RO-driven remeasure() catch up to the real (now correctly closed→open) geometry
     await scrollTo(dialog, 0)
     expect(maskOf(dialog), `${server.browser}: the dialog's fade flag did not paint a mask`).toMatch(/gradient/)
   })
@@ -347,6 +394,7 @@ describe('ui-modal — the dialog scroll viewport gets an edge-aware fade by def
     )
     modal.open = true
     await modal.updateComplete
+    await raf() // let scroll-fade's RO-driven remeasure() catch up to the real (now correctly closed→open) geometry
     const header = dialog.querySelector('header') as HTMLElement
     await scrollTo(dialog, 60)
     const r = header.getBoundingClientRect()

@@ -5,6 +5,9 @@ import { defineConfig } from 'vite'
 // The live-agent dev proxy (LLD-C6): a DEV-ONLY (`apply: 'serve'`) middleware holding the provider key
 // server-side. `vite build` never runs it (SPEC-R3/N2) — the static site ships the recorded backbone alone.
 import { a2uiDevProxyPlugin } from './packages/agent-ui/a2ui/tools/agent/dev-proxy-plugin.ts'
+// The A2A arena dev proxy (LLD-C10, a2a-tic-tac-toe.lld.md): same DEV-ONLY posture, a separate mount
+// (`/__a2a/arena`) — runs a real tic-tac-toe match server-side instead of the A2UI produce() loop.
+import { a2aDevProxyPlugin } from './packages/agent-ui/a2a/tools/arena/dev-proxy-plugin.ts'
 
 // The /site app dev/build entry (slice A1) — Vite 8 is Rolldown-based, so bundler behaviour follows
 // Rolldown-Vite. `root: 'site'` makes site/*.html the served/built HTML shells; the build emits to the
@@ -35,7 +38,7 @@ const input = Object.fromEntries(
 
 export default defineConfig({
   root: 'site',
-  plugins: [a2uiDevProxyPlugin()],
+  plugins: [a2uiDevProxyPlugin(), a2aDevProxyPlugin()],
   build: {
     outDir: '../dist',
     emptyOutDir: true,

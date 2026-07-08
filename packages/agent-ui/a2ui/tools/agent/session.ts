@@ -5,6 +5,12 @@
 // pure framing that turns each arm into a distinct natural-language user turn (the `produce()` loop feeds
 // it as the user message; ADR-0072). The proxy is STATELESS — the browser holds the `Session`, so these
 // helpers are pure and return new sessions (no mutation, no store). Zero-dep; no I/O.
+//
+// ADR-0088 §3 adds ONE more pure reducer-adjacent decision here: `shouldRunTurn` — whether a client
+// message should become a conversational turn at all, or apply silently. It is deliberately NOT folded
+// into `nextTurn` (which always frames a turn): the page calls `shouldRunTurn` FIRST and only calls
+// `nextTurn` when it answers `true`, so a caller can never construct a `TurnInput` for a message that
+// should have stayed silent.
 
 import type { A2uiClientMessage } from '../../src/renderer/index.ts'
 import type { Session, TurnInput } from './agent-transport.ts'
@@ -42,6 +48,26 @@ export function frameClientMessage(message: A2uiClientMessage): string {
  */
 export function nextTurn(session: Session, message: A2uiClientMessage): TurnInput {
   return { kind: 'client', message, session }
+}
+
+/**
+ * The routing decision (ADR-0088 §3): does this client message warrant a full conversational turn (a
+ * visible chat entry + a `nextTurn`/`produce()` round-trip), or should it apply SILENTLY (the surface's
+ * own reactive data model already updated by the binding layer either way — silence only means "the
+ * agent does not need to hear about this")?
+ *
+ * Only the `action` arm carries `wantResponse` (`A2uiAction.wantResponse`, `protocol.ts`) — the agent's
+ * per-action authoring choice (ADR-0011), read here for routing, distinct from the renderer's OWN
+ * `actionResponse`-RPC-correlation reading of the same flag (`action.ts`; the two are non-colliding
+ * layer-local meanings, ADR-0088 Consequences). The default is the back-compat OPT-OUT Kim ratified:
+ * absent or `true` ⇒ today's full-turn behavior (so the committed seed, `canvas-button.ts:27`, which sets
+ * no `wantResponse`, keeps turning); only an EXPLICIT `false` opts out. `functionResponse`/`error` arms
+ * always turn — they are inherently agent-directed (the agent asked for the result; an error needs
+ * cross-turn recovery), so this predicate answers `true` for both without inspecting them further.
+ */
+export function shouldRunTurn(message: A2uiClientMessage): boolean {
+  if ('action' in message) return message.action.wantResponse !== false
+  return true
 }
 
 /** Append the agent's emitted A2UI JSONL as an `assistant` turn — pure (returns a new Session). */

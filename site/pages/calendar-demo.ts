@@ -117,6 +117,64 @@ section3.append(
 )
 content.append(section3)
 
+// ── demo 4: mode="range" — date-range selection (ADR-0093) ──────────────────────────────────────
+
+const section4 = exampleSection('Date range (mode="range")')
+
+const form4 = document.createElement('form')
+form4.addEventListener('submit', (e) => e.preventDefault())
+
+const cal4 = document.createElement('ui-calendar') as HTMLElement & { valueStart: string; valueEnd: string }
+cal4.setAttribute('mode', 'range')
+cal4.setAttribute('name', 'stay')
+
+const readout4 = document.createElement('p')
+readout4.className = 'readout'
+readout4.append(
+  text('Range: '),
+  code('(none)'),
+  text(' → '),
+  code('(none)'),
+  text(' · '),
+  text('FormData: '),
+  code('(none)'),
+)
+
+function refreshRangeReadout(): void {
+  const start = cal4.valueStart
+  const end   = cal4.valueEnd
+  const fd    = new FormData(form4)
+  const entries = fd.getAll('stay')
+  const codes = readout4.querySelectorAll('code')
+  if (codes[0]) codes[0].textContent = start || '(none)'
+  if (codes[1]) codes[1].textContent = end || '(none)'
+  if (codes[2]) codes[2].textContent = entries.length === 2 ? `[${entries.join(', ')}]` : '(none)'
+}
+
+cal4.addEventListener('select', (e) => {
+  logEvent(`select  (range)  detail="${(e as CustomEvent<string>).detail}"`)
+  refreshRangeReadout()
+})
+cal4.addEventListener('change', () => {
+  logEvent(`change  (range)  valueStart="${cal4.valueStart}"  valueEnd="${cal4.valueEnd}"`)
+  refreshRangeReadout()
+})
+
+form4.append(cal4, readout4)
+section4.append(
+  el('p', {}, [
+    text('First click/Enter sets the start date; hover or move keyboard focus to preview the band; '),
+    text('the second pick always completes as '),
+    code('[min, max]'),
+    text(' of the two picks — a pick '),
+    el('em', {}, [text('earlier')]),
+    text(' than the pending start reorders the pair instead of restarting ('), code('swap-complete'), text(', ADR-0093). '),
+    text('A pick on an already-complete range starts a new one.'),
+  ]),
+  form4,
+)
+content.append(section4)
+
 // ── event log section ─────────────────────────────────────────────────────────────────────────
 
 const logSection = exampleSection('Event log')

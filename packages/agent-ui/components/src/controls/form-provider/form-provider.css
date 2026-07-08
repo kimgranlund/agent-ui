@@ -16,6 +16,12 @@
  *
  * Standalone stylesheet — linked via the component-styles barrel (wired in s12); NEVER injected from
  * form-provider.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ *
+ * ADR-0103 re-confirms this contract UNCHANGED: unlike `ui-radio-group` (a value-owning group whose direct-
+ * children discovery makes a layout default the only fix, Lane A), the provider's descendants are discovered
+ * by event bubbling — arbitrary composition (grids, rows, cards) the provider must not fight — so vertical
+ * rhythm stays the page author's taught idiom (a `ui-column[gap]` wrap around the fields, Lane C), not a
+ * `display:flex` default here.
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-form-provider) declares NOTHING ════════════════ */

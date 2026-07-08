@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2A Concepts &amp; Demos</title>
+  </head>
+  <body>
+    <!-- The A2A CONCEPTS/DEMOS section (corpus LLD-C9/C10, SPEC-R15): one card per admitted record on the
+         committed A2A corpus shards, DERIVED never hand-listed — a record added via the single-writer
+         import tool appears here with zero page edits. Every inline wire artifact carries a REAL, in-page
+         `validateA2a` verdict (never a precomputed badge); demo records' transcript artifacts link to the
+         arena page (./a2a-tic-tac-toe.html), which runs the full replay + isolation check. An MPA entry
+         auto-discovered by vite.config.ts's site/**/*.html glob — no config edit. The page module imports
+         pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls (ADR-0003). -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2a-concepts.ts"></script>
+  </body>
+</html>

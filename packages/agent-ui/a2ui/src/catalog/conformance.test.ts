@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { validateCatalogConformance } from './conformance.ts'
 import { demoCatalog } from '../fixtures.ts'
+import { loadCatalog } from './catalog.ts'
 import type { A2uiComponent } from '../protocol.ts'
 
 const comp = (c: Record<string, unknown>): A2uiComponent => c as A2uiComponent
@@ -78,5 +79,56 @@ describe('validateCatalogConformance (catalog LLD-C6, SPEC-R7/R9/N3)', () => {
     // but only bindable props accept binding objects).
     const f = validateCatalogConformance(comp({ id: 't', component: 'Text', variant: { path: '/v' } }), demoCatalog)
     expect(f).toEqual([{ code: 'CATALOG', path: 't.variant' }])
+  })
+})
+
+describe('validateCatalogConformance — enum membership (ADR-0098)', () => {
+  // A stub catalog with a closed string enum (`size`), a BINDABLE closed string enum (`mode` —
+  // mirrors the Calendar.mode shape ADR-0098 names), an enum-less string (`note`), and a boolean
+  // (`flag`) — proving the new clause is scoped to schemas that actually declare `enum`.
+  const enumCatalog = loadCatalog({
+    catalogId: 'enum-demo',
+    protocolVersion: 'v1.0',
+    components: {
+      Widget: {
+        properties: {
+          size: { type: { type: 'string', enum: ['sm', 'md', 'lg'] }, mapsTo: 'size' },
+          mode: { type: { type: 'string', enum: ['single', 'range'] }, bindable: true, mapsTo: 'mode' },
+          note: { type: { type: 'string' }, mapsTo: 'note' },
+          flag: { type: { type: 'boolean' }, mapsTo: 'flag' },
+        },
+      },
+    },
+    functions: {},
+  })
+
+  it('rejects a non-member literal with CATALOG at <id>.<prop>', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', size: 'xl' }), enumCatalog)
+    expect(f).toEqual([{ code: 'CATALOG', path: 'w.size' }])
+  })
+
+  it('accepts a declared member — clean', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', size: 'md' }), enumCatalog)
+    expect(f).toEqual([])
+  })
+
+  it('is case-sensitive — no coercion (JSON-Schema §6.1.2): "MD" ∉ {sm,md,lg}', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', size: 'MD' }), enumCatalog)
+    expect(f).toEqual([{ code: 'CATALOG', path: 'w.size' }])
+  })
+
+  it('does NOT statically judge a {path} binding on a bindable enum prop — stays ADR-0076\'s render-gate charter', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', mode: { path: '/mode' } }), enumCatalog)
+    expect(f).toEqual([])
+  })
+
+  it('leaves an enum-less string prop unconstrained (negative control — the clause does not over-reject)', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', note: 'anything at all' }), enumCatalog)
+    expect(f).toEqual([])
+  })
+
+  it('leaves a boolean (enum-less, non-string) schema unaffected', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', flag: true }), enumCatalog)
+    expect(f).toEqual([])
   })
 })

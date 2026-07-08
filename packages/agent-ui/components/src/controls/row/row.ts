@@ -12,8 +12,9 @@
 // Props — the two SPREADABLE prop sets the container family shares (ADR-0013 no-prototype-merge precedent):
 // `UIContainerElement.surfaceProps` (elevation/brightness, ADR-0015) + `UIContainerElement.flexProps`
 // (align/justify/gap/wrap, ADR-0016). All six reflect, so the `[elevation]`/`[align]`/… attribute selectors
-// in the CSS apply to JS-set values too. No new prop is declared here — a layout primitive is exactly the
-// shared grammar (DRY: one grammar, four consumers).
+// in the CSS apply to JS-set values too. Plus one element-local prop, `reflow` (ADR-0096, the ADR-0075
+// `stretch` precedent) — gates whether the ADR-0016 cl.4 container-query direction switch may fire; ui-row
+// defaults `auto` (unchanged behavior — its narrow→stack leg is protective).
 //
 // ARIA — NONE. ui-row is a pure layout container (a generic wrapper, like a `<div>`): it carries NO role
 // and no host aria-* attribute. Semantics ride the children; the row contributes none. (Contrast ui-list,
@@ -24,6 +25,7 @@
 // container base is the integration slice's job (decomp s12), so this slice does not depend on it.
 
 import { UIContainerElement } from '../../dom/container.ts'
+import { prop } from '../../dom/index.ts'
 import type { PropsSchema, ReactiveProps } from '../../dom/index.ts'
 
 // The layout primitive IS the shared grammar — surface axes + flex grammar, nothing more. Spread (not
@@ -32,6 +34,12 @@ import type { PropsSchema, ReactiveProps } from '../../dom/index.ts'
 const props = {
   ...UIContainerElement.surfaceProps,
   ...UIContainerElement.flexProps,
+  // reflow → gates the ADR-0016 cl.4 container-query direction switch (ADR-0096). Element-local, deliberately
+  // NOT folded into the shared `flexProps` (the ADR-0075 `stretch` precedent — `ui-list` has no `@container`
+  // rule and `ui-grid`'s auto-fit IS its own responsiveness, so both stay untouched). `auto` LEADS the array so
+  // it is both ui-row's default AND the invalid-value snap target — UNCHANGED behavior (the narrow→stack leg
+  // is protective, ADR-0096 cl.2). `locked` pins `flex-direction: row` regardless of a narrow container.
+  reflow: { ...prop.enum(['auto', 'locked'] as const, 'auto'), reflect: true },
 } satisfies PropsSchema
 
 export interface UIRowElement extends ReactiveProps<typeof props> {}

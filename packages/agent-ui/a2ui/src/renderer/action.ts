@@ -81,10 +81,19 @@ export class ActionDispatcher {
    * injected `timestamp`, the resolved `context`, `wantResponse`, and — when `surface.sendDataModel`
    * is set — the full data model (peeked untracked). When `wantResponse` is set, registers the
    * correlation slot *before* emitting and returns its promise; otherwise returns `undefined`.
+   *
+   * `action.wantResponse` preserves `opts.wantResponse`'s OWN tri-state on the wire — `true`/`false` are
+   * both real, distinct signals; an un-set `opts.wantResponse` (the author never wrote the flag) stays
+   * ABSENT on the emitted `A2uiAction`, never coerced to a definite `false` (ADR-0088 §3: the page's
+   * `wantResponse`-routing reads this SAME field to decide "does this click warrant a turn", and
+   * absent-vs-explicit-false is the whole distinction it routes on — collapsing "never asked" into
+   * "explicitly declined" would make every un-flagged action button, e.g. the committed backbone seed
+   * `canvas-button.ts`, look like an opt-out). `wantResponse?: boolean` (`protocol.ts`) is declared
+   * optional for exactly this reason. The RPC-correlation gate below is UNCHANGED (ADR-0034): only an
+   * explicit `true` ever registers a pending slot.
    */
   emitAction(node: A2uiComponent, surface: Surface, opts: EmitActionOptions): Promise<unknown> | undefined {
     const actionId = this.#newId()
-    const wantResponse = opts.wantResponse === true
     const action: A2uiAction = {
       surfaceId: surface.id,
       actionId,
@@ -92,13 +101,13 @@ export class ActionDispatcher {
       sourceComponentId: node.id,
       timestamp: this.#now(),
       context: opts.context ?? {},
-      wantResponse,
     }
+    if (opts.wantResponse !== undefined) action.wantResponse = opts.wantResponse
     // sendDataModel (SPEC-R8 AC2): peek (untracked) so building the message never subscribes to data.
     if (surface.sendDataModel) action.dataModel = surface.data.peek()
 
     let promise: Promise<unknown> | undefined
-    if (wantResponse) {
+    if (opts.wantResponse === true) {
       const slot = deferred<unknown>()
       this.#pending.set(actionId, slot) // register before emit: a synchronous response still correlates
       promise = slot.promise

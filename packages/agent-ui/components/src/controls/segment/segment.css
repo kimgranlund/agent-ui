@@ -1,0 +1,66 @@
+/* segment.css — ui-segment, the child leaf of ui-segmented-control (ADR-0095 clause 3).
+ *
+ * `ui-segment` extends `UIRadioElement`, but `radio.css`'s `@scope (ui-radio)` rules do NOT match this new
+ * tag — a feature, not a gap: a segment shows no dot glyph to suppress at all. This stylesheet is
+ * deliberately SMALL: only the layout primitives + interaction affordance a segment owns REGARDLESS of
+ * which control hosts it (a centered full-cell flex box, cursor/selection hygiene, its own ADR-0009
+ * `:focus-visible` fleet ring). The Control-height SIZING (block-size/padding/font/line-height), the ink
+ * colours, the dividers, the hover/active washes, the moving selected-fill indicator, and the forced-colors
+ * inversion are all GROUP-owned concerns — they live in `segmented-control.css`'s compound selectors
+ * (`ui-segmented-control ui-segment`), the same "group restyles its children via a descendant compound
+ * selector, the child stays ignorant" split ADR-0086 established for the (now-retired) radio-group variant.
+ *
+ * Two sectioned blocks (ADR-0003):
+ *   [1] TOKEN BLOCK  — `:where(ui-segment)` — a genuine RESERVE (no design tokens needed yet: the segment's
+ *       own layout primitives below are geometry-agnostic; every SIZED value is the group's token chain).
+ *   [2] STYLES BLOCK — `@scope (ui-segment)` consumes only `--ui-segment-*` (empty today) ∪ the shared
+ *       focus-ring allowlist (`--ui-focus-ring-*`, `--md-sys-color-focus-ring` — ADR-0009).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-segment) ════════════════ */
+
+:where(ui-segment) {
+  /* No design tokens: every sized value a segment renders (height/padding/font/ink/dividers/fill) is the
+     HOST segmented-control's own token chain, consumed via a descendant compound selector
+     (segmented-control.css). Reserved here for fleet discipline (the ADR-0003 two-block convention) and any
+     future segment-owned-only token. */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-segment) ════════════════ */
+
+@scope (ui-segment) {
+  /* Host: a centered, full-cell flex box — the segment's OWN base layout, independent of which control
+     hosts it. `position:relative` is the containing block a future segment-owned pseudo-element could use
+     (none today — the moving indicator is the HOST's own `::before`, painted behind via z-index in
+     segmented-control.css). */
+  :scope {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+
+    cursor: pointer;
+    -webkit-user-select: none; /* WebKit/Safari: prefix needed */
+    user-select: none;
+  }
+
+  /* The dot glyph a plain `ui-radio` would paint (`::before`, radio.css) never renders here — `ui-segment`
+     is a different tag; `@scope (ui-radio)` does not match it. Nothing to suppress. */
+
+  /* Focus ring (ADR-0009): the fleet-wide shared `:focus-visible` outline, reused as-is — the SAME tokens
+     `ui-radio`'s own ring reads (radio.css), so a segment and a plain radio look identically focused. Not
+     clipped: `ui-segmented-control` sets no `overflow:hidden` (would clip the ring). */
+  :scope:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* Forced colors (WHCM) — nothing segment-owned to invert here; the GROUP's compound selectors
+     (segmented-control.css) own the ink/fill inversion. Present for fleet discipline (every FACE control's
+     scope includes a forced-colors rule). */
+  @media (forced-colors: active) {
+    :scope {
+      forced-color-adjust: none;
+    }
+  }
+}

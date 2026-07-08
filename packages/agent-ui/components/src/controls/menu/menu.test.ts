@@ -27,7 +27,9 @@ declare const process: { cwd(): string }
 //   menu-close-effect · menu-open-noop · menu-light-dismiss-sync · menu-light-dismiss-events ·
 //   menu-programmatic-no-emit · menu-aria-expanded · menu-open-event · menu-roving-focus ·
 //   menu-roving-wrap · menu-roving-disabled · menu-type-ahead · menu-commit-select ·
-//   menu-commit-closes · menu-commit-disabled · menu-click-commit · menu-c10-residue ·
+//   menu-commit-closes · menu-trigger-click (ADR-0101 erratum: mouse-click open must set the
+//   `open` prop, not bypass it via a raw `handle.toggle()`; includes the ticket #28 click-open→
+//   commit regression) · menu-commit-disabled · menu-click-commit · menu-c10-residue ·
 //   menu-c10-stacking · menu-c10-cleanup · menu-descriptor-schema · menu-descriptor-bijection ·
 //   menu-descriptor-negative
 
@@ -297,7 +299,7 @@ describe('ui-menu — overlay→model sync + events (menu-light-dismiss-sync · 
     el.remove()
   })
 
-  it('menu-programmatic-no-emit: a programmatic close (open=false) does NOT emit close/toggle', async () => {
+  it('menu-programmatic-no-emit: a programmatic close (open=false) DOES emit exactly one close+toggle pair (ADR-0101)', async () => {
     const { el, panel } = makeMenu()
     el.open = true
     await whenFlushed()
@@ -310,8 +312,8 @@ describe('ui-menu — overlay→model sync + events (menu-light-dismiss-sync · 
     el.open = false
     await whenFlushed()
     expect(callsOf(panel).hide).toBe(1)
-    expect(closes).toBe(0)
-    expect(toggles).toBe(0)
+    expect(closes).toBe(1) // the trait announces every real hide now, component-driven included
+    expect(toggles).toBe(1)
     el.remove()
   })
 })
@@ -353,35 +355,42 @@ describe('ui-menu — aria-expanded stays in sync with open (menu-aria-expanded)
   })
 })
 
-// ── `toggle` overlay-family contract — platform-dismiss only ─────────────────────────────────
+// ── `toggle` overlay-family contract — every actual transition (ADR-0101) ────────────────────
 //
-// The overlay family contract: `toggle` fires ONLY on platform dismissal (Escape / outside-click),
-// never on the open transition and never on a programmatic close (commit or open=false). The close
-// direction is proven by menu-light-dismiss-events. These probes guard the two silent paths so
-// no regression re-introduces an open-direction or programmatic-close emit.
+// The overlay family contract (ADR-0101): `toggle` fires on EVERY actual open-state transition —
+// platform-, component-, or model-driven — with `close` alongside every real hide (never on a real
+// show). These probes guard the open transition and the programmatic-close transition each announce
+// EXACTLY once — no more (a regression re-introducing a double-announce or a loop) and no less (a
+// regression re-suppressing a transition, the ticket #28 class this ADR fixes).
 
-describe('ui-menu — `toggle` is silent on the open transition and on programmatic close (menu-toggle-open)', () => {
-  it('menu-toggle-open: open=true does NOT emit `toggle` — only platform light-dismiss does', async () => {
+describe('ui-menu — `toggle` announces on every real transition, open and programmatic close alike (menu-toggle-open)', () => {
+  it('menu-toggle-open: open=true emits exactly one `toggle` (no `close` — this is a show, not a hide)', async () => {
     const { el } = makeMenu()
     let toggles = 0
+    let closes = 0
     el.addEventListener('toggle', () => toggles++)
+    el.addEventListener('close', () => closes++)
 
     el.open = true
     await whenFlushed()
-    expect(toggles).toBe(0) // the open transition never emits toggle (overlay family contract)
+    expect(toggles).toBe(1) // the open transition announces (ADR-0101 — every real show)
+    expect(closes).toBe(0)
     el.remove()
   })
 
-  it('menu-toggle-open: open=false (programmatic close) does NOT emit `toggle` — discriminator suppresses it', async () => {
+  it('menu-toggle-open: open=false (programmatic close) emits exactly one close+toggle pair', async () => {
     const { el } = makeMenu()
     el.open = true
     await whenFlushed()
 
     let toggles = 0
+    let closes = 0
     el.addEventListener('toggle', () => toggles++)
-    el.open = false // programmatic close — overlay discriminator suppresses toggle
+    el.addEventListener('close', () => closes++)
+    el.open = false // programmatic close — the trait announces this transition too, now
     await whenFlushed()
-    expect(toggles).toBe(0)
+    expect(toggles).toBe(1)
+    expect(closes).toBe(1)
     el.remove()
   })
 })
@@ -566,21 +575,88 @@ describe('ui-menu — commit → select event + close (menu-commit-select · men
     el.remove()
   })
 
-  it('menu-commit-closes: after commit, close does NOT emit close/toggle (programmatic close path)', async () => {
+  it('menu-commit-closes: after commit, close emits exactly one close+toggle pair with el.open===false (ADR-0101)', async () => {
     const { el, panel, items } = makeMenu()
     el.open = true
     await whenFlushed()
+
+    const order: string[] = []
+    el.addEventListener('close', () => order.push('close'))
+    el.addEventListener('toggle', () => {
+      // The biting assertion: el.open must already be false when toggle fires, so a two-way bind
+      // reading el.open inside its handler writes the CORRECT closed value (the ticket #28 fix).
+      expect(el.open, 'el.open must be false at toggle-handler time').toBe(false)
+      order.push('toggle')
+    })
+
+    items[0].focus()
+    panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    await whenFlushed()
+    expect(order).toEqual(['close', 'toggle']) // exactly one pair, close before toggle
+    el.remove()
+  })
+})
+
+// ── Mouse-driven trigger open (the ADR-0101 erratum regression — the residual #28 defeat) ────────
+//
+// Prior probes above all open via the PROGRAMMATIC prop (`el.open = true`), which never exercised
+// the trigger's own click handler — the exact gap that let the mouse-click-open→handle.toggle()
+// bypass ship undetected (3533 green tests, zero coverage of the primary mouse gesture).
+
+describe('ui-menu — mouse-click trigger open/close (menu-trigger-click)', () => {
+  it('menu-trigger-click: clicking the trigger opens the panel and sets open===true', async () => {
+    const { el, trigger, panel } = makeMenu()
+    expect(el.open).toBe(false)
+
+    trigger.click()
+    await whenFlushed()
+    expect(el.open, 'a mouse-click open must set the reflected open prop').toBe(true)
+    expect(callsOf(panel).show).toBe(1)
+    el.remove()
+  })
+
+  it('menu-trigger-click: clicking the trigger again closes the panel — open===false, one close+toggle pair', async () => {
+    const { el, trigger, panel } = makeMenu()
+    trigger.click()
+    await whenFlushed()
+    expect(el.open).toBe(true)
 
     let closes = 0
     let toggles = 0
     el.addEventListener('close', () => closes++)
     el.addEventListener('toggle', () => toggles++)
 
-    items[0].focus()
-    panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    trigger.click()
     await whenFlushed()
-    expect(closes).toBe(0)   // programmatic close — no `close` event
-    expect(toggles).toBe(0)  // no `toggle` event
+    expect(el.open, 'the second click must set open===false').toBe(false)
+    expect(callsOf(panel).hide).toBe(1)
+    expect(closes).toBe(1)
+    expect(toggles).toBe(1)
+    el.remove()
+  })
+
+  it('menu-trigger-click REGRESSION (ticket #28): click-open the trigger, then commit a selection — the panel must actually close', async () => {
+    const { el, trigger, panel, items } = makeMenu()
+
+    // The exact reproduction: a MOUSE click opens the trigger (not the programmatic `el.open = true`
+    // every other probe above uses) — before the fix, this left `el.open` stuck at `false` while the
+    // panel was really open, so the later commit's `this.open = false` was a same-value no-op.
+    trigger.click()
+    await whenFlushed()
+    expect(el.open, 'precondition: mouse-open must set open===true').toBe(true)
+
+    let closes = 0
+    let toggles = 0
+    el.addEventListener('close', () => closes++)
+    el.addEventListener('toggle', () => toggles++)
+
+    items[0].click() // commit a selection (menu's #commit sets this.open = false)
+    await whenFlushed()
+
+    expect(el.open, 'the panel must report closed after a post-mouse-open commit').toBe(false)
+    expect(callsOf(panel).hide, 'hidePopover() must actually fire — the bug: it never did').toBe(1)
+    expect(closes, 'exactly one close event').toBe(1)
+    expect(toggles, 'exactly one toggle event').toBe(1)
     el.remove()
   })
 })

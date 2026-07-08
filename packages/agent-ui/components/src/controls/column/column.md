@@ -10,7 +10,7 @@
 tag: ui-column
 tier: layout           # geometry size-class (Container/layout band — NO control height; geometry.md "size-classes")
 extends: UIContainerElement  # the surface base (ADR-0015/0016) — a structural container, NOT form-associated (face below)
-# marginal: ui-column adds 31 B gz (223 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
+# marginal: ui-column adds 66 B gz to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken; re-measured after the ADR-0096 `reflow` prop) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors column.ts `static props` (surfaceProps then flexProps)
   - name: elevation    # surface axis (ADR-0015) — the scheme-inverting plane; 0 = the neutral base
@@ -46,6 +46,11 @@ attributes:            # attributes-as-API — mirrors column.ts `static props` 
     type: boolean
     default: false
     reflect: true
+  - name: reflow       # gates the ADR-0016 cl.4 @container direction switch (ADR-0096). Element-local (ADR-0075 stretch precedent), NOT part of flexProps. `locked` LEADS (default + snap target) — column FLIPS to locked-by-default; `auto` opts back into the wide→row switch
+    type: enum
+    values: [locked, auto]
+    default: locked
+    reflect: true
 
 properties: []         # no manual accessors beyond the attributes-as-API
 events: []             # a layout primitive emits no events
@@ -66,7 +71,7 @@ geometry:
   sizeClass: layout
   blockSize: content   # NO control height (geometry.md Container/layout) — the block-size is content-driven
   gap: var(--ui-column-gap)   # the child gap off --ui-space × [density] — the one density-bearing quantity
-  containerQuery: 'inline-size: spreads children to a row under a wide container (ADR-0016 cl.4)'
+  containerQuery: 'inline-size: reflow="auto" spreads children to a row under a wide ANCESTOR container (ADR-0016 cl.4, gated by ADR-0096); default reflow="locked" never fires it. ui-column establishes NO container of its own (ADR-0100) — resolves against the nearest externally-sized boundary'
 
 forcedColors: A `@media (forced-colors: active)` block drops the tonal wash; the surface survives as a system colour via the shared container.css role layer.
 ---
@@ -101,6 +106,10 @@ the element's **identity** (the tag names the main axis, A2UI-faithfully) — no
 
 - **`stretch`** → `width: stretch` (boolean presence, column-**local** — deliberately **not** part of the shared `flexProps` grammar, so `ui-row`/`ui-grid`/`ui-list` are unaffected): present ⇒ the host **fills** its parent's available inline size instead of shrink-wrapping to content. Intended for a **root** layout box — e.g. the A2UI canvas sets it on a root `ui-column` so the surface fills its artboard. The rule uses a fill-available fallback cascade (`-webkit-fill-available` / `-moz-available` / `stretch`) so it fills cross-engine.
 
+## Reflow gate
+
+- **`reflow`** (`locked` default · `auto`) gates whether `ui-column` may adapt its own `flex-direction` under a wide **externally-sized ancestor boundary** (ADR-0096). It is element-local — deliberately **not** part of the shared `flexProps` grammar (the `stretch` precedent above), so `ui-row`/`ui-grid`/`ui-list` are unaffected. `locked` (the **default**, a deliberate flip from the prior unconditional switch) pins the column vertical regardless of container width — the tag's own identity (`flex-direction: column`) always holds. `auto` opts back into the ADR-0016 cl.4 "switcher": under a ≥30rem-wide **established** ancestor container, the column spreads its children into a row. The default flipped because the catalog's primary consumer (a live model composing a validated, prop-only node tree) has no CSS-authoring verb to lock the prior unconditional switch — an unset `reflow` now renders exactly the tag's own identity. `ui-column` never establishes that container itself (ADR-0100 — see "Responsiveness" below).
+
 ## Surface
 
 `ui-column` carries the two signed surface axes from the shared base (ADR-0015): **`elevation`** (the
@@ -111,10 +120,21 @@ colour opinion.
 
 ## Responsiveness
 
-`ui-column` is **intrinsically responsive** with **no breakpoint props** (ADR-0016 cl.4). It mirrors `ui-row`
-(which stacks to a column under a narrow container) with the axis flipped: under a **wide** query container it
-spreads its children into a row — the canonical "switcher" — reflowing on the container's width rather than the
-viewport. There is no `ResizeObserver` fallback; `@container inline-size` is the mechanism.
+`ui-column`'s container-query switcher is **opt-in** behind `reflow` (ADR-0096; see "Reflow gate" above). With
+`reflow="auto"` it is intrinsically responsive with no breakpoint props (ADR-0016 cl.4): it mirrors `ui-row`
+(which stacks to a column under a narrow container) with the axis flipped — under a **wide** query container it
+spreads its children into a row, reflowing on the container's width rather than the viewport. With the **default**
+`reflow="locked"` the column never adapts; it stays a column at any container width, matching the tag's own
+identity. There is no `ResizeObserver` fallback; `@container inline-size` is the mechanism.
+
+**`ui-column` establishes NO query container of its own** (ADR-0100): an intrinsically-sized primitive
+(geometry.md Container/layout class — shrink-wrap, no frame) cannot also be a query container without zeroing
+its own content-driven size (`container-type: inline-size` is inline-axis size containment — the box's
+intrinsic sizes compute as if empty). The `@container` rule above resolves against the nearest
+**externally-sized ancestor boundary** — a definite, stretched, or track-sized box (an A2UI mount surface,
+app-shell, or any author frame) that declares `container-type: inline-size`. With no boundary established, the
+rule never matches and `reflow="auto"` renders no differently from `locked` — graceful degradation, not
+corruption (ADR-0100 cl.2).
 
 ## Geometry
 

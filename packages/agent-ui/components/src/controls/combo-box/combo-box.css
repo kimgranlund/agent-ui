@@ -133,6 +133,21 @@
        but the editor cell can collapse its OWN inline-size if content is absent.
        min-inline-size: 0 here (the floor is on the HOST, not the editor cell). */
     min-inline-size: 0;
+
+    /* SINGLE-LINE (2026-07-07 fix — the initial-caret visual bug root cause): a `contenteditable`'s
+       OWN UA default is `white-space: pre-wrap` (it wraps by default — unlike a plain block/inline
+       element). Every other single-line Control-class entry field in the fleet overrides this
+       explicitly (text-field.css's editor sets the identical pair), but it was missing here. Without
+       it, the placeholder (`::before` `content: attr(data-placeholder)`) — or any typed text — wraps
+       onto a second line the moment it exceeds the field's width, growing the box past its fixed
+       `--ui-combo-box-height` (min-block-size is a floor, not a cap) and visually displacing the caret
+       relative to a now multi-line, oddly-centered placeholder block: the "caret sits oddly relative
+       to the placeholder" defect (browser-confirmed: an unconstrained-width editor with a long
+       placeholder/value silently grows taller and wraps instead of staying single-line). `overflow:
+       hidden` clips the (now guaranteed single-line) content that exceeds the box; the editor
+       self-scrolls horizontally to keep the caret in view on overflow, matching text-field. */
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   /* Placeholder via ::before + attr(data-placeholder) (text-field pattern):
@@ -212,6 +227,26 @@
   :scope [role='option'][aria-selected='true'] {
     background-color: var(--ui-combo-box-option-selected-bg);
     color: var(--ui-combo-box-option-selected-ink);
+  }
+
+  /* ── "No matches" row (2026-07-07 fix) ────────────────────────────────
+     Shares the option rows' EXACT geometry (margin/padding-block/line-height/radius) so the panel's
+     row-height law still holds when this is the panel's ONLY visible child — this is what gives the
+     empty panel a real, deliberate height instead of collapsing to its own border (the "stray line"
+     bug). Muted ink (the same token text-field/combo-box use for placeholder text — a neutral,
+     informational read, not an actionable row): non-interactive (`cursor: default`, no hover/active/
+     selected states — it never carries `[role=option]`, so the click/keyboard commit paths already
+     skip it structurally; `pointer-events: none` here is a defensive belt-and-suspenders). */
+  :scope [data-part='empty']:not([hidden]) {
+    display: block;
+    margin: var(--ui-box-inset, 0.375rem);
+    padding-block: var(--ui-combo-box-option-padding-block);
+    padding-inline: var(--ui-combo-box-option-padding-inline);
+    line-height: 1;
+    border-radius: calc(var(--ui-combo-box-panel-radius) - var(--ui-box-inset, 0.375rem));
+    color: var(--ui-combo-box-placeholder);
+    cursor: default;
+    pointer-events: none;
   }
 
   /* Hidden options (filtered out): the `hidden` HTML attribute already gives display:none

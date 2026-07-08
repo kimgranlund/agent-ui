@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2A Tic-Tac-Toe Arena</title>
+  </head>
+  <body>
+    <!-- The A2A tic-tac-toe arena demo (LLD-C11): two agents play through a deterministic referee that is
+         the ONLY thing either seat ever talks to. Replays a committed real match with zero network/model
+         calls by default, runs the isolation gate IN-PAGE over the loaded transcript (never a hardcoded
+         verdict), and shows both seats' full recorded contexts side by side with the wire/board timeline.
+         A dev-only "run a live match" control appears once the arena proxy reports a key is configured. An
+         MPA entry auto-discovered by vite.config.ts's site/**/*.html glob — no config edit. The page module
+         imports pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2a-tic-tac-toe.ts"></script>
+  </body>
+</html>

@@ -9,10 +9,22 @@
  *       both selectors appear for coverage).
  *   [2] STYLES BLOCK — `@scope (ui-radio)` consumes only `--ui-radio-*`.
  *       Anatomy: the host is an inline-flex row; `::before` is the circular indicator box (border-radius
- *       50%); the default slot content flows after it as the optional label. The dot glyph is an inset
- *       box-shadow on `::before` when checked (no separate element needed). Focus ring: `:focus-visible`
- *       on `:scope` (the whole host), not only on the circle — standard fleet focus treatment (ADR-0009).
- *       Forced-colors: the border + dot survive via `ButtonText`; the focus ring via `--md-sys-color-focus-ring`.
+ *       50%); `::after` is the checked DOT, a separate absolutely-positioned circle centred on `::before`
+ *       (switch/slider precedent: ring/track = `::before`, glyph/thumb = `::after`); the default slot
+ *       content flows after both as the optional label. Focus ring: `:focus-visible` on `:scope` (the
+ *       whole host), not only on the circle — standard fleet focus treatment (ADR-0009).
+ *       Forced-colors: the ring + dot survive via `ButtonText`/`Highlight`; the focus ring via
+ *       `--md-sys-color-focus-ring`.
+ *
+ * 2026-07-07 fix (Kim-filed visual bug): the checked ring AND dot both read `--ui-radio-ink` (the SAME
+ * primary blue) — the box-shadow-inset dot rendered as a solid blue disc indistinguishable from its own
+ * ring, unlike ui-switch's checked thumb (`--md-sys-color-primary-on-primary`, bright on a primary track).
+ * Fix: the checked ring FILLS solid primary (`background: var(--ui-radio-ink)`, matching the switch's
+ * filled-track pattern) and the NEW `::after` dot reads the bright `--md-sys-color-primary-on-primary` role —
+ * the switch's own high-contrast pair, verified 4.79:1 light / 3.32:1 dark against the primary fill
+ * (`tokens.test.ts`'s AA-selected block independently reproduces the light leg; both clear the SC 1.4.11
+ * 3:1 non-text bar). Radio's geometry (a single filled disc, no rail/page-surface straddle) has none of
+ * ui-slider's competing-backdrop constraint, so the switch's flat on-primary pair ports directly.
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-radio) declares --ui-radio-* ════════════════ */
@@ -21,15 +33,21 @@
   /* Box size from the widget ramp (ADR-0041). Default = md. */
   --ui-radio-box: var(--ui-compact-md);
 
-  /* Dot inset: inset box-shadow that fills ~44% of the diameter.
-     22% of diameter = half the dot diameter → dot fills 44% of the circle area. */
+  /* Dot geometry: the SAME 22%-inset law as before (unchanged diameter maths), now sizing a real
+     `::after` circle instead of an inset box-shadow annulus — the fix touches COLOUR, not proportion. */
   --ui-radio-dot-inset: calc(var(--ui-radio-box) * 0.22);
+  --ui-radio-dot-size: calc(var(--ui-radio-box) - 2 * var(--ui-radio-dot-inset));
 
   /* Border: idle ring colour. */
   --ui-radio-border: var(--md-sys-color-neutral-on-surface-variant);
 
-  /* Ink: the checked (selected) dot + ring repoint. */
+  /* Ink: the checked ring + FILL repoint (matches ui-switch's filled-track pattern). */
   --ui-radio-ink: var(--md-sys-color-primary);
+
+  /* Dot: the checked glyph — BRIGHT on-primary, the ui-switch checked-thumb role (2026-07-07 fix). Was
+     `--ui-radio-ink` reused (same blue as the ring/fill it sits on) — a same-hue dot never reads as a
+     distinct indicator. Clears SC 1.4.11 (3:1) against the primary fill: 4.79:1 light / 3.32:1 dark. */
+  --ui-radio-dot: var(--md-sys-color-primary-on-primary);
 
   /* Gap: between the circle and the label slot (font/2, the anatomy gap law — density-bearing). */
   --ui-radio-gap: var(--ui-gap-md);
@@ -45,20 +63,26 @@
   --ui-radio-gap: var(--ui-gap-lg);
 }
 
-/* disabled → muted neutral roles. Holds at idle (pointer-inert below). */
+/* disabled → muted neutral roles. Holds at idle (pointer-inert below). Disabled is SC 1.4.11-EXEMPT
+   (ADR-0059 precedent: an inactive component doesn't need the checked ring/dot to stay distinguishable),
+   so ring, fill, AND dot collapse onto the SAME muted neutral — a flat disabled disc. */
 :where(ui-radio[disabled]) {
   --ui-radio-border: var(--md-sys-color-neutral-on-surface-variant);
   --ui-radio-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-radio-dot: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-radio) consumes ONLY --ui-radio-* ════════════════ */
 
 @scope (ui-radio) {
-  /* Host: inline-flex row — circle (::before) + optional label slot side by side. */
+  /* Host: inline-flex row — circle (::before) + optional label slot side by side.
+     position: relative is the containing block for the absolutely-positioned ::after dot (switch/slider
+     precedent — the thumb/dot is centred on the ring via calc + translate, not flow layout). */
   :scope {
     display: inline-flex;
     align-items: center;
     gap: var(--ui-radio-gap);
+    position: relative;
 
     /* Control-standard single-line line-height (ADR-0036): 1 keeps the text box = the font box. */
     line-height: var(--ui-control-line-height);
@@ -70,7 +94,8 @@
 
   /* ── Circular indicator box ──────────────────────────────────────────────────────────────────── */
 
-  /* ::before = the circle. Sized to --ui-radio-box; circular via border-radius 50%; ring via border. */
+  /* ::before = the circle. Sized to --ui-radio-box; circular via border-radius 50%; ring via border.
+     background: transparent at idle (the interior stays empty — just the 2px ring). */
   :scope::before {
     content: '';
     display: block;
@@ -83,17 +108,49 @@
     /* 2px border (same weight as the focus ring and --ui-widget-inset's 2px law; ADR-0041). */
     border: 2px solid var(--ui-radio-border);
     box-sizing: border-box;
-
+    background: transparent;
   }
 
-  /* ── Checked: dot glyph via inset box-shadow ────────────────────────────────────────────────── */
+  /* ── Checked: ring FILLS solid primary; the dot (::after) carries the bright glyph ─────────────── */
 
   /* [checked] is the reflected attribute (boolean prop, reflect=true). :state(checked) is the
-     custom-state equivalent (absent in jsdom; browser-only). Both selectors ensure coverage. */
+     custom-state equivalent (absent in jsdom; browser-only). Both selectors ensure coverage.
+     The circle fills solid primary (ring border + interior both --ui-radio-ink) — the same "filled
+     track" treatment ui-switch gives its checked track; the ::after dot below is what reads as the
+     distinct indicator, not a same-hue box-shadow annulus (the 2026-07-07 fix). */
   :scope:is([checked])::before,
   :scope:state(checked)::before {
     border-color: var(--ui-radio-ink);
-    box-shadow: inset 0 0 0 var(--ui-radio-dot-inset) var(--ui-radio-ink);
+    background: var(--ui-radio-ink);
+  }
+
+  /* ── Dot (::after) — the bright checked glyph, centred on the ::before circle ────────────────────
+   * ::before is the FIRST flex item at the host's inline-start (align-items: center vertically centres
+   * it); its horizontal centre is therefore `--ui-radio-box / 2` from the host's inline-start. The dot
+   * is absolutely positioned at that point (inset-inline-start + inset-block-start: 50%) and pulled back
+   * by half its own size (translate(-50%, -50%)) so its CENTRE — not its corner — lands there. Sized to
+   * --ui-radio-dot-size (the same 22%-inset diameter maths the old box-shadow used). Transparent at idle
+   * (no dot); the bright --ui-radio-dot fill is repointed in on checked. */
+  :scope::after {
+    content: '';
+    position: absolute;
+    box-sizing: border-box;
+
+    inline-size: var(--ui-radio-dot-size);
+    block-size: var(--ui-radio-dot-size);
+    border-radius: 50%;
+
+    inset-block-start: 50%;
+    inset-inline-start: calc(var(--ui-radio-box) / 2);
+    transform: translate(-50%, -50%);
+
+    background: transparent;
+    transition: background-color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+
+  :scope:is([checked])::after,
+  :scope:state(checked)::after {
+    background: var(--ui-radio-dot);
   }
 
   /* ── Interaction states ──────────────────────────────────────────────────────────────────────── */
@@ -112,16 +169,17 @@
     outline-offset: var(--ui-focus-ring-offset);
   }
 
-  /* Motion (interaction-states standard) — transition state-PAINT properties on ::before (the circle).
-     border-color and box-shadow (the dot) are the only things that change visually; geometry (box size)
-     is never transitioned. Unconditional — no :state(ready) gate (the base sets no such state). */
+  /* Motion (interaction-states standard) — transition state-PAINT properties on ::before (the ring/fill)
+     and ::after (the dot, transition declared alongside its rule above). Geometry (box size) is never
+     transitioned. Unconditional — no :state(ready) gate (the base sets no such state). */
   :scope::before {
     transition:
       border-color var(--ui-motion-fast) var(--ui-ease-standard),
-      box-shadow var(--ui-motion-fast) var(--ui-ease-standard);
+      background-color var(--ui-motion-fast) var(--ui-ease-standard);
   }
   @media (prefers-reduced-motion: reduce) {
-    :scope::before {
+    :scope::before,
+    :scope::after {
       transition: none;
     }
   }
@@ -140,14 +198,19 @@
     :scope::before {
       border-color: ButtonText;
     }
-    /* Checked: preserve the inset box-shadow dot by opting out of forced-color replacement on ::before.
-       forced-color-adjust: none keeps our border-color + box-shadow values intact so the dot shows
-       as ButtonText ink on a Canvas background — the highest-contrast option in WHCM. */
+    /* Checked: ring + fill map to Highlight (matches the switch/slider checked-fill forced-colors
+       pattern); the dot (::after) maps to HighlightText — the system's own paired "on-fill" colour,
+       guaranteed distinct from Highlight by the platform (same pairing as the switch's checked thumb). */
     :scope:is([checked])::before,
     :scope:state(checked)::before {
       forced-color-adjust: none;
-      border-color: ButtonText;
-      box-shadow: inset 0 0 0 var(--ui-radio-dot-inset) ButtonText;
+      border-color: Highlight;
+      background: Highlight;
+    }
+    :scope:is([checked])::after,
+    :scope:state(checked)::after {
+      forced-color-adjust: none;
+      background: HighlightText;
     }
   }
 }

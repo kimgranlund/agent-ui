@@ -1,7 +1,7 @@
 // site/lib/component-preview.ts — the <component-preview> docs element: a two-column live playground. LEFT is a
-// details block + exactly ONE live-knob control per editable prop (routed by type — ui-radio-group/ui-select for
-// an enum, ui-switch for a boolean, ui-text-field for a number/string; batch A removed the redundant derived
-// variant chip-row that used to double every enum); RIGHT is the shared A2UI artboard (lib/canvas-surface)
+// details block + exactly ONE live-knob control per editable prop (routed by type — ui-segmented-control/
+// ui-select for an enum, ui-switch for a boolean, ui-text-field for a number/string; batch A removed the
+// redundant derived variant chip-row that used to double every enum); RIGHT is the shared A2UI artboard (lib/canvas-surface)
 // carrying the live specimen. It renders EITHER a plain ui-* web component (mode="component", target = a tag
 // like `ui-button`) OR an A2UI catalog item (mode="a2ui", target = a catalog NAME like `Button`).
 //
@@ -22,8 +22,8 @@ import type {
   UISelectElement,
   UISwitchElement,
   UITextFieldElement,
-  UIRadioGroupElement,
-  UIRadioElement,
+  UISegmentedControlElement,
+  UISegmentElement,
 } from '@agent-ui/components/components'
 import { createCanvasSurface, applyRootStretch } from './canvas-surface.ts'
 
@@ -35,38 +35,39 @@ import { createCanvasSurface, applyRootStretch } from './canvas-surface.ts'
 const KNOB_UNSET = '__cp-unset__'
 
 // ── BATCH A — one control per enum knob, routed by member count (no doubled PROPS knob + VARIANTS chip-row) ───
-// A small closed enum reads best fully exposed (every option visible, one click to pick) — `ui-radio-group`.
-// A larger enum would make a segmented group unwieldy — the existing `ui-select` dropdown stays. The boundary
-// (≤5) is Kim's call: button/checkbox/radio/switch/slider/select `size` (3), button `variant` (3), row/list
-// `align` (5) land on radio-group; row/list `justify` (6), grid/card/tabs/modal `elevation`/`brightness`/`gap`
-// (7), text `variant`/`as` (9/10), text-field `type` (12), and the 8-member overlay `placement` land on select.
-const RADIO_GROUP_MAX = 5
+// A small closed enum reads best fully exposed (every option visible, one click to pick) — `ui-segmented-control`
+// (ADR-0095; was `ui-radio-group[variant="segmented"]` under the retired ADR-0086). A larger enum would make a
+// segmented control unwieldy — the existing `ui-select` dropdown stays. The boundary (≤5) is Kim's call:
+// button/checkbox/radio/switch/slider/select `size` (3), button `variant` (3), row/list `align` (5) land on the
+// segmented control; row/list `justify` (6), grid/card/tabs/modal `elevation`/`brightness`/`gap` (7), text
+// `variant`/`as` (9/10), text-field `type` (12), and the 8-member overlay `placement` land on select.
+const SEGMENTED_MAX = 5
 
-// ── de-doubling closing step (ADR-0086) — the batch-A radio-group knobs render SEGMENTED ─────────────────────
-// `ui-radio-group[variant="segmented"]` shipped (reviewed GO) as a real M3-style segmented control (a joined
-// track + one shared sliding indicator, Control-height, ADR-0086). Every batch-A knob (above) is EXACTLY the
-// shape it targets — a small mutually-exclusive option set — so every one of them flips to it; none stay
-// plain. Orientation is the one per-knob judgment call: horizontal (segmented's own default) reads best when
-// the whole row fits the narrow knob column (component-preview.css's `.knob` control track, ≈150–190px in the
-// two-column layout); a wider set — either MORE members (row/list `align`, 5) or just LONGER labels at a small
-// member count (radio-group's own `variant`/`orientation` knobs, 2 members but "segmented"/"horizontal") —
-// goes vertical (a segmented STACK) instead, so the column never squeezes label text or clips a cell. Decided
-// generically from the member set itself (member count × longest label), not a per-tag list — same
-// derive-don't-duplicate discipline as `RADIO_GROUP_MAX` above; measured against the rendered knob panel in
-// component-preview.browser.test.ts (component-preview-radio-segmented.browser.test.ts pins the whole shape).
-const RADIO_GROUP_HORIZONTAL_MAX_MEMBERS = 3
+// ── de-doubling closing step — the batch-A knobs render as a REAL ui-segmented-control ────────────────────────
+// `ui-segmented-control` (ADR-0095, superseding the retired `ui-radio-group[variant="segmented"]`) is a real
+// M3-style segmented control (a joined track + one shared sliding indicator, Control-height). Every batch-A
+// knob (above) is EXACTLY the shape it targets — a small mutually-exclusive option set — so every one of them
+// uses it; none stay plain. Orientation is the one per-knob judgment call: horizontal (the control's own
+// default) reads best when the whole row fits the narrow knob column (component-preview.css's `.knob` control
+// track, ≈150–190px in the two-column layout); a wider set — either MORE members (row/list `align`, 5) or just
+// LONGER labels at a small member count (ui-radio-group's own `orientation` knob, 2 members but
+// "horizontal"/"vertical") — goes vertical (a segmented STACK) instead, so the column never squeezes label text
+// or clips a cell. Decided generically from the member set itself (member count × longest label), not a
+// per-tag list — same derive-don't-duplicate discipline as `SEGMENTED_MAX` above; measured against the rendered
+// knob panel in component-preview.browser.test.ts (component-preview-segmented.browser.test.ts pins the whole shape).
+const SEGMENTED_HORIZONTAL_MAX_MEMBERS = 3
 // 5, not 6: a 3-member/5-char set (button `variant` solid/soft/ghost) fills the 21rem knob column to EXACTLY 0px
-// slack (measured both engines — cells 63px, group right edge flush with the row). 5 is the empirical max that
-// fits; a 6-char 3-member set would overflow, so it must stack vertical instead. Guarded by the button-`variant`
-// no-overflow probe in component-preview-radio-segmented.browser.test.ts.
-const RADIO_GROUP_HORIZONTAL_MAX_LABEL = 5
+// slack (measured both engines — cells 63px, control right edge flush with the row). 5 is the empirical max
+// that fits; a 6-char 3-member set would overflow, so it must stack vertical instead. Guarded by the
+// button-`variant` no-overflow probe in component-preview-segmented.browser.test.ts.
+const SEGMENTED_HORIZONTAL_MAX_LABEL = 5
 
 /** Segmented orientation for a knob's member set (see the note above): horizontal only for a short (≤3-member),
  *  short-label (≤5-char) set; everything wider or longer-labelled stacks vertical instead. */
-function radioGroupOrientation(members: readonly string[]): 'horizontal' | 'vertical' {
-  if (members.length > RADIO_GROUP_HORIZONTAL_MAX_MEMBERS) return 'vertical'
+function segmentedOrientation(members: readonly string[]): 'horizontal' | 'vertical' {
+  if (members.length > SEGMENTED_HORIZONTAL_MAX_MEMBERS) return 'vertical'
   const maxLabelLength = members.reduce((max, m) => Math.max(max, m.length), 0)
-  return maxLabelLength <= RADIO_GROUP_HORIZONTAL_MAX_LABEL ? 'horizontal' : 'vertical'
+  return maxLabelLength <= SEGMENTED_HORIZONTAL_MAX_LABEL ? 'horizontal' : 'vertical'
 }
 
 // ── the unified knob model (one shape, both modes) ───────────────────────────────────────────────────────────
@@ -322,10 +323,24 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
         ['lg', 'Large'],
       ] as const
     ).map(([value, label]) => {
-      const radio = document.createElement('ui-radio') as UIRadioElement
-      radio.value = value
+      const radio = document.createElement('ui-radio')
+      radio.setAttribute('value', value)
       radio.textContent = label
       return radio
+    }),
+  // ADR-0095 — the standalone segmented control's own gallery specimen (ui-segment children, not ui-radio).
+  'ui-segmented-control': () =>
+    (
+      [
+        ['sm', 'Small'],
+        ['md', 'Medium'],
+        ['lg', 'Large'],
+      ] as const
+    ).map(([value, label]) => {
+      const segment = document.createElement('ui-segment')
+      segment.setAttribute('value', value)
+      segment.textContent = label
+      return segment
     }),
   'ui-form-provider': () => {
     const field = document.createElement('ui-field')
@@ -476,7 +491,7 @@ export const NO_SLOT_TEXT = new Set([
 // below) — so growing a SLOT_TEXT knob here would either overwrite the representative sample children with a
 // bare string (`.textContent =` clears every child) or, before batch B, be the ONLY content a bare specimen
 // ever got. These get real sample children instead (COMPONENT_SAMPLE_CHILDREN above) and no text knob.
-export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row'])
+export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control'])
 
 // SLOT_TEXT_OK — SLOT_TEXT is a real, safe, MEANINGFUL knob: a genuine text/label default slot, the accessible
 // label content a viewer edits to see the control's OWN typography/sizing respond (button/checkbox/radio/
@@ -484,7 +499,7 @@ export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', '
 // radio-group moved to STRUCTURAL and slider moved to NO_SLOT_TEXT). Paired with NO_SLOT_TEXT + STRUCTURAL: the
 // three sets PARTITION the whole fleet — the coverage test asserts this, so a new control lands in none of them
 // by default and fails loud instead of silently inheriting a guess.
-export const SLOT_TEXT_OK = new Set(['ui-button', 'ui-checkbox', 'ui-radio', 'ui-switch', 'ui-text'])
+export const SLOT_TEXT_OK = new Set(['ui-button', 'ui-checkbox', 'ui-radio', 'ui-segment', 'ui-switch', 'ui-text'])
 
 // ── the element ──────────────────────────────────────────────────────────────────────────────────────────────
 type Mode = 'component' | 'a2ui'
@@ -628,52 +643,55 @@ class ComponentPreview extends HTMLElement {
 
     if (knob.kind === 'enum') {
       const members = knob.values ?? []
-      if (members.length > 0 && members.length <= RADIO_GROUP_MAX) {
-        // Dogfoods ui-radio-group (Kim's routing rule — small closed enum, every option visible at once).
-        // Real API (radio-group.md / radio.md): a `ui-radio` child per member (`.value` + its label text), the
-        // GROUP's own `change` event is the commit signal (NOT the individual radio's — that one bubbles
-        // through the group and is consumed/re-emitted; see the target filter below), `.checked` is the
-        // read/write property. UNLIKE ui-select's KNOB_UNSET "—", a radio-group always has a selection (its
-        // own contract has no "none" state) — pre-select the seeded/current value, falling back to the FIRST
-        // member when nothing is seeded yet (a2ui mode's catalog carries no per-prop defaults).
-        const group = document.createElement('ui-radio-group') as UIRadioGroupElement
+      if (members.length > 0 && members.length <= SEGMENTED_MAX) {
+        // Dogfoods ui-segmented-control (Kim's routing rule — small closed enum, every option visible at
+        // once; ADR-0095's standalone tag, superseding the retired ui-radio-group[variant="segmented"]).
+        // Real API (segmented-control.md / segment.md): a `ui-segment` child per member (`.value` + its
+        // label text), the CONTROL's own `change` event is the commit signal (NOT the individual segment's
+        // — that one bubbles through the control and is consumed/re-emitted; see the target filter below),
+        // `.checked` is the read/write property. UNLIKE ui-select's KNOB_UNSET "—", a segmented control
+        // always has a selection (its own contract has no "none" state) — pre-select the seeded/current
+        // value, falling back to the FIRST member when nothing is seeded yet (a2ui mode's catalog carries
+        // no per-prop defaults).
+        const group = document.createElement('ui-segmented-control') as UISegmentedControlElement
         group.id = id
-        group.className = 'knob-radio-group'
+        group.className = 'knob-segmented-control'
         group.setAttribute('aria-label', knob.name)
-        // ADR-0086 de-doubling closing step: every batch-A radio-group knob renders as a real segmented
-        // control (the sliding indicator + roving come from the control itself — nothing here reimplements
-        // it). Horizontal is segmented's own default (no attribute needed); a wider/longer-labelled set gets
-        // an explicit vertical stack instead (radioGroupOrientation, above) so it fits the knob column.
-        group.setAttribute('variant', 'segmented')
-        if (radioGroupOrientation(members) === 'vertical') group.setAttribute('orientation', 'vertical')
+        // de-doubling closing step: every batch-A enum knob renders as a real segmented control (the
+        // sliding indicator + roving come from the control itself — nothing here reimplements it).
+        // Horizontal is the control's own default (no attribute needed); a wider/longer-labelled set gets
+        // an explicit vertical stack instead (segmentedOrientation, above) so it fits the knob column.
+        if (segmentedOrientation(members) === 'vertical') group.setAttribute('orientation', 'vertical')
         // The fallback pre-selection must be a REAL #state seed, not merely a visual default: #rootProps() /
-        // #applyKnob() read #state, not "whatever the radio-group widget happens to show" — an unseeded knob
-        // would render 'sm' checked in the UI while the specimen itself carried no `size` at all (and a click
-        // on the ALREADY-checked 'sm' radio is then a no-op — radios can only be REPLACED, never toggled off —
-        // so the desync would never self-correct). Seeding here, once, keeps the widget and the specimen in sync.
+        // #applyKnob() read #state, not "whatever the segmented control widget happens to show" — an
+        // unseeded knob would render 'sm' checked in the UI while the specimen itself carried no `size` at
+        // all (and a click on the ALREADY-checked 'sm' segment is then a no-op — segments can only be
+        // REPLACED, never toggled off — so the desync would never self-correct). Seeding here, once, keeps
+        // the widget and the specimen in sync.
         if (!this.#state.has(knob.name)) this.#state.set(knob.name, members[0])
-        const radios: UIRadioElement[] = []
+        const segments: UISegmentElement[] = []
         for (const member of members) {
-          const radio = document.createElement('ui-radio') as UIRadioElement
-          radio.value = member
-          radio.textContent = member
-          radios.push(radio)
-          group.append(radio)
+          const segment = document.createElement('ui-segment') as UISegmentElement
+          segment.value = member
+          segment.textContent = member
+          segments.push(segment)
+          group.append(segment)
         }
         const syncChecked = (): void => {
           const current = this.#state.get(knob.name) || members[0]
-          for (const radio of radios) radio.checked = radio.value === current
+          for (const segment of segments) segment.checked = segment.value === current
         }
         syncChecked()
         group.addEventListener('change', (event) => {
-          // Only the group's OWN re-emitted commit event (target === group) carries the SETTLED selection —
-          // the individual radio's raw bubbled `change` (target === the radio) fires on this same node too
-          // (event listeners on an ancestor see the bubble phase), but at that instant the group has not yet
-          // enforced exclusivity (#commit runs inside the group's own listener, registered separately), so
-          // reading `.checked` there can still see the PREVIOUS selection. Filtering to the target skips that
-          // transient read and reacts to the one authoritative event radio-group.md documents.
+          // Only the control's OWN re-emitted commit event (target === group) carries the SETTLED
+          // selection — the individual segment's raw bubbled `change` (target === the segment) fires on
+          // this same node too (event listeners on an ancestor see the bubble phase), but at that instant
+          // the control has not yet enforced exclusivity (#commit runs inside its own listener, registered
+          // separately), so reading `.checked` there can still see the PREVIOUS selection. Filtering to the
+          // target skips that transient read and reacts to the one authoritative event
+          // segmented-control.md documents.
           if (event.target !== group) return
-          const checked = radios.find((r) => r.checked)
+          const checked = segments.find((s) => s.checked)
           if (checked) this.#setKnob(knob.name, checked.value)
         })
         this.#refreshers.push(syncChecked)

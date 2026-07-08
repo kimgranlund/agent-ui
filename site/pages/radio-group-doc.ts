@@ -30,6 +30,12 @@ function renderExample(): HTMLElement {
   const group = document.createElement('ui-radio-group')
   group.setAttribute('name', 'plan')
   group.setAttribute('value', 'pro')
+  // ADR-0103: ui-radio-group now owns its own interior layout (flex column by default, a wrapping row + gap
+  // under `orientation="horizontal"`). The inline `style` below just matches the demo page's identical
+  // plan-picker shape (radio-group-demo.ts, `--ui-space-md` — this page's own gap choice, not the component's
+  // `--ui-space-sm` default) so the two pages read consistently; the roving-focus axis matches the row either way.
+  group.setAttribute('orientation', 'horizontal')
+  group.setAttribute('style', 'display:flex; flex-wrap:wrap; align-items:center; gap:var(--ui-space-md);')
   for (const [value, label] of [
     ['free', 'Free'],
     ['pro', 'Pro'],

@@ -36,6 +36,78 @@ function stubCapture(el: UISliderElement): void {
 const ptr = (type: string, x: number, id = 1): PointerEvent =>
   new PointerEvent(type, { clientX: x, pointerId: id, bubbles: true, cancelable: true })
 
+// ── per-scheme token resolver (the button-states.browser.test.ts RISK-1 pattern) ────────────────────
+// A throwaway probe child inherits the host's `--ui-slider-*` chain; setting `color-scheme` on the PROBE
+// (not the host) makes `light-dark()` inside the inherited token resolve to that branch — the cross-engine
+// way to read BOTH scheme legs without touching the page's own color-scheme.
+const resolveToken = (host: HTMLElement, tokenVar: string, scheme: 'light' | 'dark'): string => {
+  const probe = document.createElement('span')
+  probe.style.colorScheme = scheme
+  probe.style.backgroundColor = `var(${tokenVar})`
+  host.append(probe)
+  const c = getComputedStyle(probe).backgroundColor
+  probe.remove()
+  return c
+}
+
+// ── WCAG contrast helper — reads REAL rendered colours, not re-derived token math ───────────────────
+// getComputedStyle in a REAL browser resolves light-dark()/var() to a concrete serialized colour — WebKit
+// (and Chromium, for some values) serialize our OKLCH-declared tokens as `oklch(L C H)` rather than
+// converting to `rgb()`, so this reads BOTH formats (the OKLCH→linear-sRGB path mirrors the jsdom-side
+// tokens.test.ts's own helper) and applies the same WCAG relative-luminance formula either way.
+const toLin = (c: number): number => {
+  const s = c <= 0 ? 0 : c >= 1 ? 1 : c
+  return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+}
+const relativeLuminanceRgb = ([r, g, b]: [number, number, number]): number =>
+  0.2126 * toLin(r / 255) + 0.7152 * toLin(g / 255) + 0.0722 * toLin(b / 255)
+/** OKLCH → linear sRGB (Björn Ottosson's oklab matrices — same constants tokens.test.ts uses). */
+const oklchToLinearSrgb = (L: number, C: number, hDeg: number): [number, number, number] => {
+  const h = (hDeg * Math.PI) / 180
+  const a = C * Math.cos(h)
+  const b = C * Math.sin(h)
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b
+  const s_ = L - 0.0894841775 * a - 1.291485548 * b
+  const l = l_ ** 3
+  const m = m_ ** 3
+  const s = s_ ** 3
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ]
+}
+const clamp01 = (x: number): number => Math.max(0, Math.min(1, x))
+const relativeLuminanceOklch = (L: number, C: number, hDeg: number): number => {
+  // oklchToLinearSrgb already returns LINEAR sRGB (no gamma encoding involved) — unlike the rgb() branch,
+  // this must NOT go through toLin() (that would gamma-DECODE an already-linear value, a double conversion).
+  // Verified against real rendered pixels (canvas getImageData sampling of these exact oklch() strings,
+  // then WCAG-decoded from the 0-255 gamma-encoded pixel output): 3.67:1, matching this direct-clamp path.
+  const [r, g, b] = oklchToLinearSrgb(L, C, hDeg)
+  return 0.2126 * clamp01(r) + 0.7152 * clamp01(g) + 0.0722 * clamp01(b)
+}
+const relativeLuminance = (color: string): number => {
+  const rgb = color.match(/rgba?\(([^)]+)\)/i)
+  if (rgb) {
+    const [r, g, b] = rgb[1].split(/[\s,/]+/).filter(Boolean).map(Number)
+    return relativeLuminanceRgb([r, g, b])
+  }
+  const ok = color.match(/oklch\(([^)]+)\)/i)
+  if (ok) {
+    const [L, C, h] = ok[1].split(/[\s/]+/).filter(Boolean).map(Number)
+    return relativeLuminanceOklch(L, C, h)
+  }
+  throw new Error(`unrecognized colour format (expected rgb()/rgba()/oklch()): "${color}"`)
+}
+const contrastOf = (a: string, b: string): number => {
+  const la = relativeLuminance(a)
+  const lb = relativeLuminance(b)
+  const hi = Math.max(la, lb)
+  const lo = Math.min(la, lb)
+  return (hi + 0.05) / (lo + 0.05)
+}
+
 // ── AC0: RENDERED SHAPE — a slider must LOOK like a slider ───────────────────────────────────────
 // A slider that collapses to its thumb (a dot) passes every per-PART px assertion (box=--ui-compact,
 // thumb=box−4) yet is visually broken. The prior suite measured only HEIGHT + thumb width — never the
@@ -79,6 +151,80 @@ describe('ui-slider — solid rail (SC 1.4.11, ADR-0059)', () => {
     const m = bg.match(/rgba?\(([^)]+)\)/i)
     const alpha = m ? (m[1].split(/[\s,/]+/).filter(Boolean)[3] ?? '1') : '1'
     expect(Number(alpha), `slider rail must resolve OPAQUE (solid --md-sys-color-neutral-track), got "${bg}"`).toBe(1)
+    el.remove()
+  })
+})
+
+// ── 2026-07-07 fix: the thumb "pops" in BOTH schemes without regressing ADR-0059 (SC 1.4.11) ────────
+//
+// Regression pin for the Kim-filed visual bug ("the slider thumb blends into its surroundings, unlike
+// the switch"). Ground truth (measured via this exact real-engine path, not just token math):
+//   • the interior fill (--ui-slider-thumb) already clears 3:1 against BOTH the fill and rail, in BOTH
+//     schemes (ADR-0059) — UNCHANGED by this fix, pinned below as a regression guard.
+//   • Kim's literal ask ("use onPrimary like the switch") was REJECTED: a flat `primary-on-primary` thumb
+//     is proven below to fail 3:1 against the dark-mode rail — the negative control that grounds why.
+//   • the actual fix is an independent ring layer (--ui-slider-thumb-ring, a border) that flips bright
+//     in dark mode / dark in light mode — proven below via BOTH scheme legs, cross-engine.
+
+describe('ui-slider — thumb ring "pops" in both schemes without regressing the ADR-0059 fill/rail bar', () => {
+  it('REGRESSION GUARD: the interior thumb fill still clears 3:1 against BOTH fill and rail, in BOTH schemes (ADR-0059, unchanged)', () => {
+    const el = document.createElement('ui-slider') as UISliderElement
+    document.body.append(el)
+    for (const scheme of ['light', 'dark'] as const) {
+      const thumb = resolveToken(el, '--ui-slider-thumb', scheme)
+      const fill = resolveToken(el, '--ui-slider-fill', scheme)
+      const rail = resolveToken(el, '--ui-slider-rail', scheme)
+      const vsFill = contrastOf(thumb, fill)
+      const vsRail = contrastOf(thumb, rail)
+      expect(vsFill, `[${scheme}] thumb(${thumb}) vs fill(${fill}) = ${vsFill.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
+      expect(vsRail, `[${scheme}] thumb(${thumb}) vs rail(${rail}) = ${vsRail.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
+    }
+    el.remove()
+  })
+
+  it('NEGATIVE CONTROL: Kim\'s literal "use onPrimary like the switch" would FAIL 3:1 against the dark-mode rail — why it was rejected', () => {
+    const el = document.createElement('ui-slider') as UISliderElement
+    document.body.append(el)
+    // --md-sys-color-primary-on-primary is the switch's checked-thumb role — a FLAT white in both schemes
+    // (unlike --ui-slider-thumb, which adapts per scheme). Reading it directly (not through the slider's
+    // own token) simulates the literal swap Kim asked for, and proves it regresses the rail case dark.
+    const onPrimary = resolveToken(el, '--md-sys-color-primary-on-primary', 'dark')
+    const rail = resolveToken(el, '--ui-slider-rail', 'dark')
+    const ratio = contrastOf(onPrimary, rail)
+    expect(ratio, `flat on-primary(${onPrimary}) vs dark rail(${rail}) = ${ratio.toFixed(2)}:1 — below the 3:1 SC 1.4.11 bar`).toBeLessThan(3)
+  })
+
+  it('the thumb RING resolves BRIGHT in dark mode and DARK in light mode (the switch-like "pop" signature)', () => {
+    const el = document.createElement('ui-slider') as UISliderElement
+    document.body.append(el)
+    const ringLight = resolveToken(el, '--ui-slider-thumb-ring', 'light')
+    const ringDark = resolveToken(el, '--ui-slider-thumb-ring', 'dark')
+    // Anti-vacuous: the two legs must actually differ (light-dark() genuinely resolved, not a flat value).
+    expect(ringLight).not.toBe(ringDark)
+    const lumLight = relativeLuminance(ringLight)
+    const lumDark = relativeLuminance(ringDark)
+    expect(lumDark, `dark-mode ring luminance (${lumDark.toFixed(3)}) must be BRIGHT (high)`).toBeGreaterThan(0.7)
+    expect(lumLight, `light-mode ring luminance (${lumLight.toFixed(3)}) must be DARK (low)`).toBeLessThan(0.1)
+    el.remove()
+  })
+
+  it('the ring clears 3:1 against the thumb\'s own interior fill in dark mode — the visible "pop" boundary', () => {
+    const el = document.createElement('ui-slider') as UISliderElement
+    document.body.append(el)
+    const ring = resolveToken(el, '--ui-slider-thumb-ring', 'dark')
+    const fill = resolveToken(el, '--ui-slider-thumb', 'dark')
+    const ratio = contrastOf(ring, fill)
+    expect(ratio, `dark-mode ring(${ring}) vs thumb fill(${fill}) = ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
+    el.remove()
+  })
+
+  it('the outer diameter of the ringed thumb is UNCHANGED — box − 4px still holds (border-box, ADR-0041 cl.3)', () => {
+    const el = document.createElement('ui-slider') as UISliderElement
+    document.body.append(el)
+    const cs = getComputedStyle(el, '::after')
+    // default ui-md size=md: box=16px → thumb=12px, border-box means the 2px ring border does NOT grow it.
+    expect(Number.parseFloat(cs.width)).toBe(12)
+    expect(Number.parseFloat(cs.height)).toBe(12)
     el.remove()
   })
 })

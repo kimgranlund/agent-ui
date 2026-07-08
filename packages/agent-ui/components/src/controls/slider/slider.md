@@ -136,7 +136,23 @@ submission value is `String(normalised_value)`. `required` + `value=0` may raise
 The host is a `block` container with `block-size = --ui-compact-{size}` (the widget-box ramp). The **rail**
 (`::before`) is a thin horizontal bar; its `linear-gradient` background paints the fill (primary) from the
 left up to `--value-pct%` and the neutral track beyond. The **thumb** (`::after`) is a circle `box − 4px`
-(the 2px-inset law, ADR-0041 cl.3) centred on the `--value-pct%` position along the host.
+(the 2px-inset law, ADR-0041 cl.3) centred on the `--value-pct%` position along the host, painted in **two
+layers**: a 2px **ring** border (`--ui-slider-thumb-ring`, `box-sizing: border-box` — the ring eats into
+the interior fill, so the outer diameter stays `box − 4px`) around the interior **fill**
+(`--ui-slider-thumb`). The ring covers the thumb-vs-page-surface contrast dimension the fill alone can't
+(ADR-0094, extending ADR-0059).
+
+## Colour
+
+Four slider-scoped colour custom properties theme the paint (declared in `slider.css`'s token block,
+overridable per subtree): `--ui-slider-rail` (→ `--md-sys-color-neutral-track`, the solid state-bearing
+track role, ADR-0059) · `--ui-slider-fill` (→ `--md-sys-color-primary`) · `--ui-slider-thumb` (the thumb's
+interior fill, → `--md-sys-color-neutral-surface-brightest`) · `--ui-slider-thumb-ring` (the thumb's 2px
+ring border, → `--md-sys-color-neutral-on-surface`, the page-ink role covering the thumb-vs-page-surface
+SC 1.4.11 dimension; ADR-0094). `[disabled]` mutes all four to inactive neutral roles (SC 1.4.11-exempt).
+The thumb's contrast contract is three-dimensional — fill, rail, and page surface, in both schemes
+(ADR-0094): a repoint of any of these tokens must clear all three; the slider browser legs are the
+standing gate.
 
 ## Interaction
 

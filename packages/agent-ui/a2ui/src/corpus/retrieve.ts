@@ -17,9 +17,12 @@
 // the caller passes in, so an eval-facet or quarantined record can never surface in a retrieval result.
 // Flagged to the team lead in case the LLD should be amended to state this explicitly.
 //
-// Zero-dep, platform-neutral (SPEC-N5/ADR-0062): no imports beyond the local `record.ts` types.
+// Zero-dep, platform-neutral (SPEC-N5/ADR-0062): no imports beyond the local `record.ts` types and the
+// shared `text-similarity.ts` tokenizer/cosine primitives (ADR-0091 §2 — extracted so there is exactly
+// ONE implementation of the math; `selectMiniSkills` is the other caller).
 
 import type { CorpusRecord } from './record.ts'
+import { topKByCosine } from './text-similarity.ts'
 
 export interface RetrieveQuery {
   intent: string
@@ -28,21 +31,9 @@ export interface RetrieveQuery {
   protocolVersion: string
 }
 
-const TOKEN_RE = /[a-z0-9]+/g
-
-function tokenize(text: string): string[] {
-  return text.toLowerCase().match(TOKEN_RE) ?? []
-}
-
 function documentText(rec: CorpusRecord): string {
   const components = rec.meta.componentsUsed ?? []
   return `${rec.promptText} ${components.join(' ')}`
-}
-
-function termCounts(tokens: string[]): Map<string, number> {
-  const counts = new Map<string, number>()
-  for (const t of tokens) counts.set(t, (counts.get(t) ?? 0) + 1)
-  return counts
 }
 
 /**
@@ -68,51 +59,7 @@ export function retrieve(records: readonly CorpusRecord[], query: RetrieveQuery)
   )
   if (scope.length === 0) return []
 
-  const docCounts = scope.map((r) => termCounts(tokenize(documentText(r))))
-
-  const df = new Map<string, number>()
-  for (const counts of docCounts) {
-    for (const term of counts.keys()) df.set(term, (df.get(term) ?? 0) + 1)
-  }
-  const n = scope.length
-  const idf = (term: string): number => {
-    const d = df.get(term)
-    return d === undefined ? 0 : Math.log((n + 1) / (d + 1)) + 1
-  }
-
-  const docNorms = docCounts.map((counts) => {
-    let sumSq = 0
-    for (const [term, tf] of counts) {
-      const w = tf * idf(term)
-      sumSq += w * w
-    }
-    return Math.sqrt(sumSq)
-  })
-
-  const queryCounts = termCounts(tokenize(query.intent))
-  let queryNormSq = 0
-  for (const [term, tf] of queryCounts) {
-    const w = tf * idf(term)
-    queryNormSq += w * w
-  }
-  const queryNorm = Math.sqrt(queryNormSq)
-  if (queryNorm === 0) return []
-
-  const scored = scope.map((record, i) => {
-    let dot = 0
-    for (const [term, qtf] of queryCounts) {
-      const dtf = docCounts[i].get(term)
-      if (dtf === undefined) continue
-      dot += qtf * idf(term) * dtf * idf(term)
-    }
-    const denom = queryNorm * docNorms[i]
-    return { record, score: denom === 0 ? 0 : dot / denom }
-  })
-
-  scored.sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score
-    return a.record.name < b.record.name ? -1 : a.record.name > b.record.name ? 1 : 0
-  })
-
-  return scored.slice(0, query.k).map((s) => s.record)
+  return topKByCosine(scope, documentText, query.intent, query.k, (a, b) =>
+    a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
+  )
 }

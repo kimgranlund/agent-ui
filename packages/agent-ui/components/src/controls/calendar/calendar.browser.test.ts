@@ -61,6 +61,69 @@ const alphaOf = (color: string): number => {
   return parts.length >= 4 ? Number(parts[3]) : 1
 }
 
+// ── ADR-0093 range mode: per-scheme token resolver + WCAG contrast (slider.browser.test.ts pattern) ──
+// A throwaway probe child inherits the host's `--ui-calendar-*` chain; setting `color-scheme` on the
+// PROBE (not the host/page) makes `light-dark()` inside the inherited token resolve to that branch —
+// the cross-engine way to read BOTH scheme legs without touching the page's own color-scheme.
+const resolveToken = (host: HTMLElement, tokenVar: string, scheme: 'light' | 'dark'): string => {
+  const probe = document.createElement('span')
+  probe.style.colorScheme = scheme
+  probe.style.backgroundColor = `var(${tokenVar})`
+  host.append(probe)
+  const c = getComputedStyle(probe).backgroundColor
+  probe.remove()
+  return c
+}
+
+const toLin = (c: number): number => {
+  const s = c <= 0 ? 0 : c >= 1 ? 1 : c
+  return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+}
+const relativeLuminanceRgb = ([r, g, b]: [number, number, number]): number =>
+  0.2126 * toLin(r / 255) + 0.7152 * toLin(g / 255) + 0.0722 * toLin(b / 255)
+/** OKLCH → linear sRGB (Björn Ottosson's oklab matrices — same constants tokens.test.ts uses). */
+const oklchToLinearSrgb = (L: number, C: number, hDeg: number): [number, number, number] => {
+  const h = (hDeg * Math.PI) / 180
+  const a = C * Math.cos(h)
+  const b = C * Math.sin(h)
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b
+  const s_ = L - 0.0894841775 * a - 1.291485548 * b
+  const l = l_ ** 3
+  const m = m_ ** 3
+  const s = s_ ** 3
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ]
+}
+const clamp01 = (x: number): number => Math.max(0, Math.min(1, x))
+const relativeLuminanceOklch = (L: number, C: number, hDeg: number): number => {
+  const [r, g, b] = oklchToLinearSrgb(L, C, hDeg)
+  return 0.2126 * clamp01(r) + 0.7152 * clamp01(g) + 0.0722 * clamp01(b)
+}
+const relativeLuminance = (color: string): number => {
+  const rgb = color.match(/rgba?\(([^)]+)\)/i)
+  if (rgb) {
+    const [r, g, b] = rgb[1].split(/[\s,/]+/).filter(Boolean).map(Number)
+    return relativeLuminanceRgb([r, g, b])
+  }
+  const ok = color.match(/oklch\(([^)]+)\)/i)
+  if (ok) {
+    const [L, C, h] = ok[1].split(/[\s/]+/).filter(Boolean).map(Number)
+    return relativeLuminanceOklch(L, C, h)
+  }
+  throw new Error(`unrecognized colour format (expected rgb()/rgba()/oklch()): "${color}"`)
+}
+const contrastOf = (a: string, b: string): number => {
+  const la = relativeLuminance(a)
+  const lb = relativeLuminance(b)
+  const hi = Math.max(la, lb)
+  const lo = Math.min(la, lb)
+  return (hi + 0.05) / (lo + 0.05)
+}
+
 /**
  * Extract the colour component from a computed box-shadow string.
  * Browsers put the colour first: "rgba(r,g,b,a) Xpx Ypx ...".
@@ -223,10 +286,12 @@ describe('ui-calendar — today / selected / disabled render (both engines)', ()
     await el.updateComplete
 
     const cell = el.querySelector<HTMLElement>('[data-date="2026-07-15"]')!
-    const bg   = getComputedStyle(cell).backgroundColor
+    // ADR-0105 — the selected fill paints on the POINT layer (::before, a fixed circle), not the
+    // button (BAND layer) itself.
+    const bg   = getComputedStyle(cell, '::before').backgroundColor
     expect(
       alphaOf(bg),
-      `${server.browser}: selected cell has no background (fill token not applied — CSS scope may be missing)`,
+      `${server.browser}: selected cell's point-layer has no background (fill token not applied — CSS scope may be missing)`,
     ).toBeGreaterThan(0)
   })
 
@@ -253,11 +318,13 @@ describe('ui-calendar — today / selected / disabled render (both engines)', ()
     await el.updateComplete
 
     const todayCell = el.querySelector<HTMLElement>('[data-today]')!
-    const shadow    = getComputedStyle(todayCell).boxShadow
+    // ADR-0105 — the today ring paints on the POINT layer (::before, the fixed circle), so it
+    // stays a true ring rather than stretching with the (possibly fluid) band.
+    const shadow    = getComputedStyle(todayCell, '::before').boxShadow
     // The today ring is inset box-shadow: "none" means the token wasn't applied
     expect(
       shadow,
-      `${server.browser}: today cell has no box-shadow (today-ring token not applied)`,
+      `${server.browser}: today cell's point-layer has no box-shadow (today-ring token not applied)`,
     ).not.toBe('none')
     expect(
       shadow.length,
@@ -319,14 +386,15 @@ describe('ui-calendar — forced-colors (Chromium via CDP; WebKit asserts the ba
     const selectedCell = el.querySelector<HTMLElement>('[data-date="2026-07-01"]')!
     const todayCell    = el.querySelector<HTMLElement>('[data-today]')! // same cell in this case
 
-    // Baseline (BOTH engines, normal mode): selected cell has an opaque background fill
+    // Baseline (BOTH engines, normal mode): selected cell has an opaque background fill.
+    // ADR-0105 — both the selected fill and the today ring paint on the POINT layer (::before).
     expect(
-      alphaOf(getComputedStyle(selectedCell).backgroundColor),
-      `${server.browser}: selected cell has no background in normal mode (forced-colors check would be vacuous)`,
+      alphaOf(getComputedStyle(selectedCell, '::before').backgroundColor),
+      `${server.browser}: selected cell's point-layer has no background in normal mode (forced-colors check would be vacuous)`,
     ).toBeGreaterThan(0)
 
     // Baseline: today cell has a box-shadow ring
-    const normalShadow = getComputedStyle(todayCell).boxShadow
+    const normalShadow = getComputedStyle(todayCell, '::before').boxShadow
     expect(
       normalShadow !== 'none' && normalShadow.length > 0,
       `${server.browser}: today ring is absent in normal mode`,
@@ -345,15 +413,16 @@ describe('ui-calendar — forced-colors (Chromium via CDP; WebKit asserts the ba
     try {
       expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
 
-      // Selected fill: forced-color-adjust:none keeps the explicit Highlight background.
-      const fcSelectedBg = getComputedStyle(selectedCell).backgroundColor
+      // Selected fill: forced-color-adjust:none keeps the explicit Highlight background (the
+      // POINT layer, ADR-0105 — inherited from the button, which sets forced-color-adjust:none).
+      const fcSelectedBg = getComputedStyle(selectedCell, '::before').backgroundColor
       expect(
         alphaOf(fcSelectedBg),
         'selected fill vanished under forced-colors (forced-color-adjust:none not applied to selected cell)',
       ).toBeGreaterThan(0)
 
-      // Today ring: forced-color-adjust:none keeps the explicit ButtonText box-shadow.
-      const fcShadow = getComputedStyle(todayCell).boxShadow
+      // Today ring: forced-color-adjust:none keeps the explicit ButtonText box-shadow (POINT layer).
+      const fcShadow = getComputedStyle(todayCell, '::before').boxShadow
       expect(
         fcShadow !== 'none' && fcShadow.length > 0,
         'today ring vanished under forced-colors (forced-color-adjust:none not applied to [data-today] cell)',
@@ -667,5 +736,497 @@ describe('ui-calendar — container box-model inset (ADR-0046 Amendment 2, both 
 
     const grid = el.querySelector<HTMLElement>('[data-part="grid"]')!
     expect(getComputedStyle(grid).marginTop, `${server.browser}: grid margin is not the 6px box inset`).toBe('6px')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [11] ADR-0093 range mode — the fill PAINTS: endpoint vs interior backgrounds differ, and the
+//       --ui-calendar-range-fill/-range-ink pair clears WCAG AA (≥4.5:1) in BOTH colour schemes.
+//       jsdom cannot prove any of this (it never resolves CSS cascade/paint) — this is the required
+//       browser-level proof the CSS in calendar.css actually renders (ADR-0093 acceptance).
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-calendar — range mode: fill PAINT (both engines)', () => {
+  it('a committed range paints: endpoints are CIRCULAR (selected-fill), interior is SQUARE (range-fill) — computed backgrounds differ', async () => {
+    const { el } = mount('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-15"></ui-calendar>')
+    await el.updateComplete
+
+    const startCell = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    const endCell   = el.querySelector<HTMLElement>('[data-date="2026-07-15"]')!
+    const midCell   = el.querySelector<HTMLElement>('[data-date="2026-07-12"]')!
+
+    // ADR-0105 — the endpoint fill lives on the POINT layer (::before, a fixed circle), NOT the
+    // button itself (the BAND layer, which endpoints leave transparent); the interior wash stays
+    // on the BAND (the button) so it spans the full — possibly fluid — track.
+    const startBg = getComputedStyle(startCell, '::before').backgroundColor
+    const endBg   = getComputedStyle(endCell, '::before').backgroundColor
+    const midBg   = getComputedStyle(midCell).backgroundColor
+
+    // Every band cell has SOME opaque fill (not transparent) — the baseline the diff check needs.
+    expect(alphaOf(startBg), `${server.browser}: range-start point-layer has no background fill`).toBeGreaterThan(0)
+    expect(alphaOf(endBg),   `${server.browser}: range-end point-layer has no background fill`).toBeGreaterThan(0)
+    expect(alphaOf(midBg),   `${server.browser}: interior in-range cell has no background fill`).toBeGreaterThan(0)
+
+    // Endpoint vs interior computed backgrounds must DIFFER (ADR-0093 acceptance: "endpoint vs
+    // interior computed backgrounds differ") — selected-fill (accent) vs range-fill (surface wash).
+    expect(midBg, `${server.browser}: interior fill (${midBg}) must differ from the endpoint fill (${startBg})`).not.toBe(startBg)
+    expect(startBg, `${server.browser}: both endpoints must share the SAME selected-fill`).toBe(endBg)
+
+    // Shape signifier (ADR-0057 non-colour): endpoints stay circular (radius:50% on the POINT
+    // layer, ADR-0105), interior is square (radius:0 on the BAND/button) — survives independent
+    // of colour, proven directly here. The band (button) itself stays radius:0 for BOTH — that is
+    // the two-layer split, not a regression.
+    expect(getComputedStyle(startCell, '::before').borderRadius, `${server.browser}: range-start point-layer must stay circular`).toBe('50%')
+    expect(getComputedStyle(startCell).borderRadius, `${server.browser}: range-start BAND (button) must be square — circularity lives on the point layer`).toBe('0px')
+    expect(getComputedStyle(midCell).borderRadius, `${server.browser}: interior must be square (radius:0)`).toBe('0px')
+  })
+
+  it('--ui-calendar-range-fill/-range-ink clear WCAG AA (≥4.5:1) in BOTH colour schemes', async () => {
+    const el = document.createElement('ui-calendar') as UICalendarElement
+    document.body.append(el)
+    mounted.push(el)
+
+    for (const scheme of ['light', 'dark'] as const) {
+      const fill = resolveToken(el, '--ui-calendar-range-fill', scheme)
+      const ink  = resolveToken(el, '--ui-calendar-range-ink', scheme)
+      const ratio = contrastOf(fill, ink)
+      expect(
+        ratio,
+        `${server.browser} [${scheme}]: range-fill(${fill}) vs range-ink(${ink}) = ${ratio.toFixed(2)}:1 — below the AA 4.5:1 floor`,
+      ).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+
+  // ────────────────────────────────────────────────────────────────────────────────────────────
+  //  Erratum guard (2026-07-07 — gallery audit): AA ink-vs-fill contrast alone did NOT catch the
+  //  fill being near-identical to the panel it sits on (measured ~0.001 OKLCH L, ~1.00:1 relative-
+  //  luminance ratio — the band was load-bearing colour that was effectively invisible). This test
+  //  asserts the interior wash has REAL luminance separation from the panel background, in BOTH
+  //  colour schemes, so a future token repoint can't silently regress back to near-zero contrast.
+  // ────────────────────────────────────────────────────────────────────────────────────────────
+  it('--ui-calendar-range-fill has a REAL luminance separation from the panel background in BOTH colour schemes (erratum guard)', async () => {
+    const el = document.createElement('ui-calendar') as UICalendarElement
+    document.body.append(el)
+    mounted.push(el)
+
+    for (const scheme of ['light', 'dark'] as const) {
+      const panelBg = resolveToken(el, '--ui-calendar-panel-bg', scheme)
+      const fill = resolveToken(el, '--ui-calendar-range-fill', scheme)
+      const ratio = contrastOf(panelBg, fill)
+      // The OLD (buggy) pairing measured ~1.00:1 (imperceptible). The floor below is well under
+      // the NEW pairing's measured ~1.23:1 (light) / ~1.28:1 (dark), but comfortably above the
+      // "basically the same colour" regime a silent regression would reintroduce.
+      expect(
+        ratio,
+        `${server.browser} [${scheme}]: panel-bg(${panelBg}) vs range-fill(${fill}) = ${ratio.toFixed(3)}:1 — ` +
+          `the in-range wash is not visibly distinct from the panel it sits on`,
+      ).toBeGreaterThanOrEqual(1.15)
+    }
+  })
+
+  it('an in-progress hover preview paints the SAME interior fill as a committed band (swap-preview, both directions)', async () => {
+    const { el } = mount('<ui-calendar mode="range" value-start="2026-07-15"></ui-calendar>')
+    await el.updateComplete
+
+    // Hover a candidate EARLIER than the anchor — the normalized (swapped) preview band.
+    const c10 = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    await userEvent.hover(c10)
+    await el.updateComplete
+
+    const c12 = el.querySelector<HTMLElement>('[data-date="2026-07-12"]')! // interior of the normalized [10,15] band
+    const previewBg = getComputedStyle(c12).backgroundColor
+    expect(alphaOf(previewBg), `${server.browser}: preview interior has no fill while selecting-end`).toBeGreaterThan(0)
+    expect(c12.hasAttribute('data-in-range'), `${server.browser}: July 12 must preview as in-range (backward-normalized band)`).toBe(true)
+
+    // Outside the previewed band (before the earlier candidate) must NOT be painted.
+    const c05 = el.querySelector<HTMLElement>('[data-date="2026-07-05"]')!
+    expect(c05.hasAttribute('data-in-range'), `${server.browser}: July 5 is outside the previewed band`).toBe(false)
+
+    // Committing now must render EXACTLY the previewed band ("commit never surprises" — ADR-0093 clause 3):
+    // the interior cell's painted background must be IDENTICAL before and after commit.
+    await userEvent.click(c10)
+    await el.updateComplete
+
+    expect(el.valueStart, `${server.browser}: swap-complete must set start = the earlier date`).toBe('2026-07-10')
+    expect(el.valueEnd,   `${server.browser}: swap-complete must set end = the later (original anchor) date`).toBe('2026-07-15')
+    const committedBg = getComputedStyle(c12).backgroundColor
+    expect(committedBg, `${server.browser}: the committed interior fill must match the previewed fill exactly`).toBe(previewBg)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [12] ADR-0093 range mode — forced-colors: the WHOLE band (endpoints + interior) maps to
+//       Highlight/HighlightText as ONE self-delimiting run, while focus/today/disabled stay distinct
+//       (Chromium via CDP; WebKit asserts the baseline, mirroring the single-mode suite above).
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-calendar — range mode: forced-colors (Chromium via CDP; WebKit baseline)', () => {
+  it('the band (endpoints + interior) renders as ONE Highlight/HighlightText run; today + focus stay distinct', async () => {
+    const { el } = mount('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-15"></ui-calendar>')
+    await el.updateComplete
+
+    const startCell = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    const midCell   = el.querySelector<HTMLElement>('[data-date="2026-07-12"]')!
+    const endCell   = el.querySelector<HTMLElement>('[data-date="2026-07-15"]')!
+
+    // Baseline (both engines, normal mode): all three cells carry an opaque fill (regression
+    // guard). ADR-0105 — endpoints paint on the POINT layer (::before), interior stays on the BAND
+    // (the button itself).
+    expect(alphaOf(getComputedStyle(startCell, '::before').backgroundColor)).toBeGreaterThan(0)
+    expect(alphaOf(getComputedStyle(midCell).backgroundColor)).toBeGreaterThan(0)
+    expect(alphaOf(getComputedStyle(endCell, '::before').backgroundColor)).toBeGreaterThan(0)
+
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'forced-colors', value: 'active' }],
+    })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
+
+      const startBg = getComputedStyle(startCell, '::before').backgroundColor
+      const midBg   = getComputedStyle(midCell).backgroundColor
+      const endBg   = getComputedStyle(endCell, '::before').backgroundColor
+
+      // The WHOLE band — endpoints AND interior — must resolve to the SAME Highlight fill: one
+      // self-delimiting run (ADR-0093 clause 4), not a third colour distinguishing interior. The
+      // system `Highlight` colour resolves identically regardless of which layer/element carries
+      // it, so comparing the point-layer's fill to the band's fill is still the right proof.
+      expect(alphaOf(startBg), 'range-start point-layer fill vanished under forced-colors').toBeGreaterThan(0)
+      expect(alphaOf(midBg),   'interior fill vanished under forced-colors').toBeGreaterThan(0)
+      expect(alphaOf(endBg),   'range-end point-layer fill vanished under forced-colors').toBeGreaterThan(0)
+      expect(midBg, 'interior forced-colors fill must match the endpoint fill (one Highlight run)').toBe(startBg)
+      expect(endBg, 'both endpoints must share the same forced-colors fill').toBe(startBg)
+
+      // Shape stays the ONLY endpoint-vs-interior signifier under forced-colors (border-radius is
+      // never flattened by the OS wash) — this is what keeps the band self-delimiting without a
+      // third system colour. Circularity lives on the POINT layer (ADR-0105); the BAND (button)
+      // itself stays square for both endpoint and interior cells.
+      expect(getComputedStyle(startCell, '::before').borderRadius, 'endpoint point-layer must stay circular under forced-colors').toBe('50%')
+      expect(getComputedStyle(startCell).borderRadius, 'endpoint BAND (button) must stay square under forced-colors').toBe('0px')
+      expect(getComputedStyle(midCell).borderRadius, 'interior must stay square under forced-colors').toBe('0px')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [13] ADR-0105 — fluid tracks + two-layer cell. The floor is byte-identical to the pre-ADR-0105
+//       fixed-track rendering; a caller that GRANTS width (the fleet's real stretch chain — a flex
+//       column's default `align-items: stretch`, ADR-0030, blockifying the host's `inline-block`
+//       into a stretched flex item) gets a grid that fills it; circles (the POINT layer, ::before)
+//       stay circles at every width; the endpoint half-wash (::after) opens only under surplus
+//       width; a same-day range paints neither half-wash; a negative control proves the circularity
+//       assertion actually discriminates against the REJECTED naive-stretch alternative.
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Mount a ui-calendar as the sole child of a flex COLUMN with an explicit width and the (default)
+ * `align-items: stretch` cross-axis behaviour — the SAME stretch chain the real fleet composes
+ * through (`ui-column`/`ui-field` default to `align-items: stretch`, ADR-0030): the host's
+ * `display: inline-block` is *blockified* into a genuine flex item when it is a direct flex child
+ * (CSS Display §2.7), so it is handed the column's full width, exactly as booking-reservation's
+ * `Column > Field > Calendar` chain hands the calendar its field's width.
+ */
+function mountStretched(markup: string, widthPx = 600): { wrap: HTMLElement; el: UICalendarElement } {
+  const wrap = document.createElement('div')
+  wrap.style.display = 'flex'
+  wrap.style.flexDirection = 'column'
+  wrap.style.width = `${widthPx}px`
+  wrap.innerHTML = markup
+  document.body.append(wrap)
+  mounted.push(wrap)
+  const el = wrap.querySelector('ui-calendar') as UICalendarElement
+  return { wrap, el }
+}
+
+/** Real-Tab into the grid until a [role=gridcell] holds focus (the roving tabindex=0 cell) — the
+ *  fleet's established idiom for triggering keyboard-modality `:focus-visible` (button-states.
+ *  browser.test.ts), made robust to however many nav buttons precede the grid in tab order. */
+async function tabToGridCell(): Promise<HTMLElement> {
+  for (let i = 0; i < 8; i++) {
+    await userEvent.tab()
+    const active = document.activeElement as HTMLElement | null
+    if (active?.getAttribute('role') === 'gridcell') return active
+  }
+  throw new Error('did not reach a [role=gridcell] via Tab within 8 tabs')
+}
+
+const ringDrawn = (cs: CSSStyleDeclaration): boolean =>
+  cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0
+
+describe('ui-calendar — ADR-0105 (a) floor: byte-identical to the pre-ADR-0105 fixed track (both engines)', () => {
+  it('shrink-wrapped grid inline-size equals exactly 7 tracks-at-the-floor + 6 gaps', async () => {
+    const { el } = mount('<ui-calendar value="2026-07-15"></ui-calendar>')
+    await el.updateComplete
+
+    const grid  = el.querySelector<HTMLElement>('[data-part="grid"]')!
+    const cells = [...grid.querySelectorAll<HTMLElement>('[role="gridcell"]')].slice(0, 7) // first (header-following) week row's 7 columns
+    const rects = cells.map((c) => c.getBoundingClientRect())
+    const cellW = rects[0]!.width
+    const gapPx = rects[1]!.left - rects[0]!.right
+    const expected = cellW * 7 + gapPx * 6
+
+    expect(
+      Math.abs(grid.getBoundingClientRect().width - expected),
+      `${server.browser}: floor grid width ${grid.getBoundingClientRect().width} != 7×cell(${cellW}) + 6×gap(${gapPx}) = ${expected}`,
+    ).toBeLessThanOrEqual(1)
+  })
+
+  it('at the track floor, the endpoint half-wash (::after) is 0px wide — no new rendering', async () => {
+    const { el } = mount('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-15"></ui-calendar>')
+    await el.updateComplete
+
+    const startCell = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    const endCell   = el.querySelector<HTMLElement>('[data-date="2026-07-15"]')!
+    const afterStartW = parseFloat(getComputedStyle(startCell, '::after').width || '0')
+    const afterEndW   = parseFloat(getComputedStyle(endCell, '::after').width || '0')
+
+    expect(afterStartW, `${server.browser}: half-wash must be 0px at the track floor, got ${afterStartW}`).toBeLessThanOrEqual(0.5)
+    expect(afterEndW,   `${server.browser}: half-wash must be 0px at the track floor, got ${afterEndW}`).toBeLessThanOrEqual(0.5)
+  })
+
+  it('a same-day range (start === end) paints no half-wash on either side — nothing to bridge to', async () => {
+    const { el } = mount('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-10"></ui-calendar>')
+    await el.updateComplete
+
+    const cell = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    expect(cell.hasAttribute('data-range-start'), 'a same-day range must still carry data-range-start').toBe(true)
+    expect(cell.hasAttribute('data-range-end'),   'a same-day range must still carry data-range-end').toBe(true)
+    // Neither `[data-range-start]:not([data-range-end])` nor the mirror selector matches a same-day
+    // cell (it carries BOTH attributes) — no `content` is declared, so NO ::after box generates at
+    // all; its computed `width` resolves to the keyword `'auto'` (not a length), hence NaN here.
+    const afterWRaw = getComputedStyle(cell, '::after').width
+    const afterW = parseFloat(afterWRaw)
+    expect(
+      Number.isNaN(afterW) || afterW <= 0.5,
+      `${server.browser}: a same-day range cell must not paint a half-wash (computed ::after width: "${afterWRaw}")`,
+    ).toBe(true)
+  })
+})
+
+describe('ui-calendar — ADR-0105 (b) wide: a stretched calendar fills the width it is given (both engines)', () => {
+  it('the grid fills the column width when the host is stretched (600px flex column, ADR-0030 chain)', async () => {
+    const { wrap, el } = mountStretched('<ui-calendar value="2026-07-15"></ui-calendar>')
+    await el.updateComplete
+
+    const grid     = el.querySelector<HTMLElement>('[data-part="grid"]')!
+    const gridRect = grid.getBoundingClientRect()
+    const wrapRect = wrap.getBoundingClientRect()
+
+    // Well past the compact floor (7 × ~32px + gaps ≈ 230px @ default md) — proves the grid actually
+    // spent the given width rather than sitting at its old fixed size in a wide, wasted panel.
+    expect(gridRect.width, `${server.browser}: grid did not grow past the compact floor in a 600px stretched column (${gridRect.width}px)`).toBeGreaterThan(300)
+    // Close to the column's own width (panel/box insets account for the small remainder).
+    expect(wrapRect.width - gridRect.width, `${server.browser}: grid (${gridRect.width}) is not close to the stretched column width (${wrapRect.width})`).toBeLessThan(40)
+  })
+
+  it('all seven tracks in a stretched grid are equal width', async () => {
+    const { el } = mountStretched('<ui-calendar value="2026-07-15"></ui-calendar>')
+    await el.updateComplete
+
+    const cells  = [...el.querySelectorAll<HTMLElement>('[role="gridcell"]')].slice(0, 7)
+    const widths = cells.map((c) => c.getBoundingClientRect().width)
+    for (const w of widths.slice(1)) {
+      expect(Math.abs(w - widths[0]!), `${server.browser}: tracks are not equal width (${widths.join(', ')})`).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('row block-size is UNCHANGED between the floor and a wide stretch — only inline-size adapts', async () => {
+    const { el: floorEl } = mount('<ui-calendar value="2026-07-15"></ui-calendar>')
+    await floorEl.updateComplete
+    const { el: wideEl } = mountStretched('<ui-calendar value="2026-07-15"></ui-calendar>')
+    await wideEl.updateComplete
+
+    const floorCell = floorEl.querySelector<HTMLElement>('[data-date="2026-07-15"]')!
+    const wideCell  = wideEl.querySelector<HTMLElement>('[data-date="2026-07-15"]')!
+    expect(
+      Math.abs(floorCell.getBoundingClientRect().height - wideCell.getBoundingClientRect().height),
+      `${server.browser}: cell block-size changed between the floor and a wide stretch — the month must never inflate vertically`,
+    ).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('ui-calendar — ADR-0105 (b) wide: two-layer paint — circles stay circles, the half-wash bridges (both engines)', () => {
+  it('an endpoint POINT-layer (::before) is a fixed circle (aspect-ratio 1) at the cell-size diameter, not the stretched band width', async () => {
+    const { el } = mountStretched('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-20"></ui-calendar>')
+    await el.updateComplete
+
+    const startCell = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    const bandRect  = startCell.getBoundingClientRect()
+    const beforeCs  = getComputedStyle(startCell, '::before')
+    const beforeW   = parseFloat(beforeCs.width)
+    const beforeH   = parseFloat(beforeCs.height)
+
+    expect(beforeW, `${server.browser}: point-layer collapsed to 0`).toBeGreaterThan(0)
+    expect(Math.abs(beforeW - beforeH), `${server.browser}: point layer is not a circle (${beforeW}×${beforeH}) — an ellipse regression`).toBeLessThanOrEqual(1)
+    // Proves it did NOT stretch with the band — it stayed at the fixed floor diameter.
+    expect(beforeW, `${server.browser}: point layer stretched with the band (${beforeW} vs band ${bandRect.width}) — should stay fixed`).toBeLessThan(bandRect.width - 5)
+    expect(beforeCs.borderRadius, `${server.browser}: point layer must stay circular (50%)`).toBe('50%')
+  })
+
+  it('the endpoint half-wash (::after) opens to exactly (track − circle) / 2 in a wide track — bridges circle to interior', async () => {
+    const { el } = mountStretched('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-20"></ui-calendar>')
+    await el.updateComplete
+
+    const startCell = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    const bandRect  = startCell.getBoundingClientRect()
+    const beforeW   = parseFloat(getComputedStyle(startCell, '::before').width)
+    const afterW    = parseFloat(getComputedStyle(startCell, '::after').width)
+    const expected  = (bandRect.width - beforeW) / 2
+
+    expect(afterW, `${server.browser}: half-wash absent in a wide track (expected ~${expected}px)`).toBeGreaterThan(1)
+    expect(Math.abs(afterW - expected), `${server.browser}: half-wash width ${afterW} != (track − circle)/2 = ${expected}`).toBeLessThanOrEqual(1)
+  })
+
+  it('an interior [data-in-range] cell paints a full-track wash (no holes) in a wide track, staying square', async () => {
+    const { el } = mountStretched('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-20"></ui-calendar>')
+    await el.updateComplete
+
+    const midCell = el.querySelector<HTMLElement>('[data-date="2026-07-15"]')!
+    expect(alphaOf(getComputedStyle(midCell).backgroundColor), `${server.browser}: interior wash absent in a wide track`).toBeGreaterThan(0)
+    expect(getComputedStyle(midCell).borderRadius, `${server.browser}: interior must stay square in a wide track`).toBe('0px')
+  })
+
+  it('a KEYBOARD focus ring stays circular in a wide track — the band draws none, the point layer draws the ring', async () => {
+    const { el } = mountStretched('<ui-calendar value="2026-07-15"></ui-calendar>')
+    await el.updateComplete
+
+    const cell = await tabToGridCell()
+    expect(cell.closest('ui-calendar'), 'Tab landed outside this calendar').toBe(el)
+
+    // The band (the real, now-wide button) must draw NO outline — a ring here would be a rectangle.
+    expect(ringDrawn(getComputedStyle(cell)), `${server.browser}: the wide BAND drew its own outline — would render as a rectangle, not a circle`).toBe(false)
+    // The point layer (::before, fixed diameter) carries the ring instead.
+    expect(ringDrawn(getComputedStyle(cell, '::before')), `${server.browser}: point-layer focus ring absent`).toBe(true)
+  })
+})
+
+describe('ui-calendar — ADR-0105 negative control: the circularity assertion actually discriminates (both engines)', () => {
+  it('the REJECTED naive alternative (radius:50% on a track-stretched box) renders an ELLIPSE — the same assertion FAILS on it', async () => {
+    // Builds the ADR's rejected alternative in isolation (Alternatives considered: "naive fluid
+    // tracks on the existing single-box cells" — border-radius:50% applied directly to a box that
+    // is allowed to stretch to a wide track). No calendar.css/ts involved — this proves the
+    // circularity check used throughout this suite is discriminating, not vacuously true.
+    const wrap = document.createElement('div')
+    wrap.style.display = 'grid'
+    wrap.style.gridTemplateColumns = 'minmax(2rem, 1fr)'
+    wrap.style.width = '300px'
+    document.body.append(wrap)
+    mounted.push(wrap)
+
+    const naive = document.createElement('button')
+    naive.style.blockSize = '2rem' // the fixed row height ADR-0105 also keeps
+    naive.style.borderRadius = '50%' // the rejected approach: circularity on the STRETCHED box itself
+    naive.style.boxSizing = 'border-box'
+    wrap.append(naive)
+
+    const rect = naive.getBoundingClientRect()
+    expect(rect.width, `${server.browser}: naive control collapsed`).toBeGreaterThan(0)
+    // The naive box stretched to the (wide) track — width and height now differ substantially: an
+    // ellipse, not a circle. This is exactly what ADR-0105's two-layer split was built to prevent.
+    expect(
+      Math.abs(rect.width - rect.height),
+      `${server.browser}: negative control did not reproduce an ellipse (${rect.width}×${rect.height}) — the meta-proof is vacuous`,
+    ).toBeGreaterThan(10)
+  })
+})
+
+describe('ui-calendar — ADR-0105 RTL leg: the half-wash mirrors via logical properties (both engines)', () => {
+  it('the range-start half-wash sits on the OPPOSITE physical side in RTL vs LTR', async () => {
+    const { el: ltrEl } = mountStretched('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-20"></ui-calendar>')
+    await ltrEl.updateComplete
+
+    const rtlWrap = document.createElement('div')
+    rtlWrap.dir = 'rtl'
+    rtlWrap.style.display = 'flex'
+    rtlWrap.style.flexDirection = 'column'
+    rtlWrap.style.width = '600px'
+    rtlWrap.innerHTML = '<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-20"></ui-calendar>'
+    document.body.append(rtlWrap)
+    mounted.push(rtlWrap)
+    const rtlEl = rtlWrap.querySelector('ui-calendar') as UICalendarElement
+    await rtlEl.updateComplete
+
+    const ltrStart = ltrEl.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    const rtlStart = rtlEl.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+
+    const ltrCellRect  = ltrStart.getBoundingClientRect()
+    const rtlCellRect  = rtlStart.getBoundingClientRect()
+    expect(getComputedStyle(rtlStart).direction, 'the RTL mount did not actually resolve direction:rtl').toBe('rtl')
+    expect(getComputedStyle(ltrStart).direction, 'the LTR mount did not resolve direction:ltr').toBe('ltr')
+
+    // Magnitude is direction-invariant (the SAME `calc(50% + r)` formula on the SAME track/circle
+    // geometry) — only which physical side it lands on should flip.
+    const ltrAfterW = parseFloat(getComputedStyle(ltrStart, '::after').width)
+    const rtlAfterW = parseFloat(getComputedStyle(rtlStart, '::after').width)
+    expect(rtlAfterW, `${server.browser}: RTL half-wash width collapsed (${rtlAfterW}) vs LTR (${ltrAfterW})`).toBeGreaterThan(1)
+    expect(Math.abs(rtlAfterW - ltrAfterW), `${server.browser}: RTL/LTR half-wash magnitude should match (mirrored, not resized)`).toBeLessThanOrEqual(1)
+    expect(Math.abs(ltrCellRect.width - rtlCellRect.width), 'LTR/RTL cell widths should match (same stretch width)').toBeLessThanOrEqual(1)
+
+    // The MIRROR proof itself: `[data-range-start]::after` is declared with `inset-inline-start:
+    // calc(50%+r); inset-inline-end: 0` — a real, physical mirror. In LTR (inline-start = physical
+    // left), the box hugs the physical RIGHT edge (physical `right` ≈ 0, `left` is the large offset).
+    // In RTL (inline-start = physical right), the SAME declaration hugs the physical LEFT edge
+    // instead (physical `left` ≈ 0, `right` is the large offset) — the mirror ADR-0105 requires
+    // "for free" from logical properties, with zero directional-gradient authoring.
+    const ltrAfter = getComputedStyle(ltrStart, '::after')
+    const rtlAfter = getComputedStyle(rtlStart, '::after')
+    const ltrLeft  = parseFloat(ltrAfter.left)
+    const ltrRight = parseFloat(ltrAfter.right)
+    const rtlLeft  = parseFloat(rtlAfter.left)
+    const rtlRight = parseFloat(rtlAfter.right)
+
+    expect(ltrRight, `${server.browser}: LTR range-start half-wash should hug the physical right edge (right≈0), got ${ltrRight}`).toBeLessThanOrEqual(1)
+    expect(ltrLeft, `${server.browser}: LTR range-start half-wash should be offset from the physical left edge, got ${ltrLeft}`).toBeGreaterThan(10)
+    expect(rtlLeft, `${server.browser}: RTL range-start half-wash should hug the physical LEFT edge (mirrored, left≈0), got ${rtlLeft}`).toBeLessThanOrEqual(1)
+    expect(rtlRight, `${server.browser}: RTL range-start half-wash should be offset from the physical right edge (mirrored), got ${rtlRight}`).toBeGreaterThan(10)
+  })
+})
+
+describe('ui-calendar — ADR-0105 forced-colors (wide track, Chromium via CDP; WebKit baseline)', () => {
+  it('the band (endpoints + interior) still renders as ONE Highlight run in a wide/stretched track', async () => {
+    const { el } = mountStretched('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-20"></ui-calendar>')
+    await el.updateComplete
+
+    const startCell = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    const midCell   = el.querySelector<HTMLElement>('[data-date="2026-07-15"]')!
+
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'forced-colors', value: 'active' }],
+    })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
+
+      const startBg = getComputedStyle(startCell, '::before').backgroundColor
+      const midBg   = getComputedStyle(midCell).backgroundColor
+      expect(alphaOf(startBg), 'range-start point-layer fill vanished under forced-colors in a wide track').toBeGreaterThan(0)
+      expect(alphaOf(midBg),   'interior fill vanished under forced-colors in a wide track').toBeGreaterThan(0)
+      expect(midBg, 'interior and endpoint must share the same Highlight fill in a wide track too').toBe(startBg)
+
+      // The half-wash bridging the endpoint to the interior must ALSO carry Highlight in a wide
+      // track — the whole band reads as one contiguous run under WHCM even when stretched.
+      const afterBg = getComputedStyle(startCell, '::after').backgroundColor
+      expect(alphaOf(afterBg), 'half-wash fill vanished under forced-colors in a wide track').toBeGreaterThan(0)
+      expect(afterBg, 'half-wash must share the same Highlight fill as the band in a wide track').toBe(startBg)
+
+      // Shape signifier survives at width: circle (point layer) vs square (band), forced-colors
+      // never touches border-radius.
+      expect(getComputedStyle(startCell, '::before').borderRadius, 'endpoint point-layer must stay circular under forced-colors in a wide track').toBe('50%')
+      expect(getComputedStyle(midCell).borderRadius, 'interior must stay square under forced-colors in a wide track').toBe('0px')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
   })
 })

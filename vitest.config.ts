@@ -55,9 +55,29 @@ export default defineConfig({
       // and `/descriptor` subpath entries above already rely on.
       '@agent-ui/components/foundation-styles.css?url': `${r('./packages/agent-ui/components/src/foundation-styles.css')}?url`,
       '@agent-ui/components/component-styles.css?url': `${r('./packages/agent-ui/components/src/component-styles.css')}?url`,
+      // Plain (non-`?url`) exact twins of the two entries above: `site/pages/_page.ts` — the shared page
+      // shell EVERY site page imports first — side-effect-imports these two CSS assets directly (no `?url`
+      // suffix, just "apply this stylesheet"), which a jsdom PAGE-level test (e.g.
+      // `a2ui-live.ask-lifecycle.test.ts`, driving the real `a2ui-live.ts` module rather than a hand-built
+      // fixture) now transitively imports. Without these exact entries, the broad `@agent-ui/components`
+      // alias below intercepts the plain specifier first (same prefix-match hazard as the `?url` pair's own
+      // comment describes) and mangles it into `.../src/index.ts/foundation-styles.css` — an unresolvable
+      // path. Every prior jsdom test avoided this because none imported a full page module; only the
+      // browser config (no aliasing at all — real package `exports`) exercised this import before now.
+      '@agent-ui/components/foundation-styles.css': r('./packages/agent-ui/components/src/foundation-styles.css'),
+      '@agent-ui/components/component-styles.css': r('./packages/agent-ui/components/src/component-styles.css'),
       '@agent-ui/components': r('./packages/agent-ui/components/src/index.ts'),
       '@agent-ui/shared': r('./packages/agent-ui/shared/src/index.ts'),
+      // The a2ui `./examples` subpath (the seed shelf, ADR-0055) — mirrors the package's exports map. Placed
+      // BEFORE the broad `@agent-ui/a2ui` entry: a plain-string alias prefix-matches, so without this the
+      // broad alias would rewrite `@agent-ui/a2ui/examples` to `.../src/index.ts/examples` (the same
+      // subpath-ordering discipline `@agent-ui/components/components` above relies on). Used by the site's
+      // A2UI gallery + its drift gate (site/lib/a2ui-gallery.ts / .test.ts).
+      '@agent-ui/a2ui/examples': r('./packages/agent-ui/a2ui/src/examples/index.ts'),
       '@agent-ui/a2ui': r('./packages/agent-ui/a2ui/src/index.ts'),
+      // The A2A arena's zero-dep surface (board/referee/transcript/isolation, LLD-C11) — mirrors the
+      // `@agent-ui/a2ui` broad alias above; the site demo page is its first consumer.
+      '@agent-ui/a2a': r('./packages/agent-ui/a2a/src/index.ts'),
     },
   },
 })

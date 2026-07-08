@@ -15,13 +15,33 @@
 //     the ARIA APG radio-group contract; ADR-0022 roving tier).
 //   · Click / Space: check the targeted radio → base toggle fires `change` → group's delegated change
 //     listener calls #commit() for exclusivity + form-value update.
-//   · #commit(index): the ONE commit path — checks radios[index], clears all others, updates #selectedValue,
-//     emits `change` on the group when the selection is new.
+//   · #commit(index): the ONE user-driven commit path — checks radios[index], clears all others, updates
+//     #selectedValue, emits `change` on the group when the selection is new. Built on #applySelection,
+//     the shared (silent, non-emitting) selection-transition primitive it shares with the public `value`
+//     accessor below (a programmatic value write selects/clears without emitting `change` — the
+//     `UICheckboxElement.checked` / `UISelectElement.value` fleet convention for programmatic sets).
 //
 // Form value: #selectedValue (a signal) drives the UIFormElement effects for setFormValue + setValidity.
-// The signal is updated inside #commit, which both paths (Arrow key via onMove, click via change delegation)
-// converge on. Reading this.#selectedValue.value inside formValue() + formValidity() keeps the effects
-// reactive — they re-publish to internals automatically when the signal changes.
+// The signal is updated inside #applySelection, which every path (Arrow key via onMove, click via change
+// delegation, AND the public `value` setter) converges on. Reading this.#selectedValue.value inside
+// formValue() + formValidity() keeps the effects reactive — they re-publish to internals automatically
+// when the signal changes. The public `value` GETTER is the same signal read, exposed for external
+// callers (e.g. the A2UI catalog's two-way `value:{prop:'value',event:'change'}` bind).
+//
+// ADR-0095 (supersedes ADR-0086's `variant="segmented"`): the segmented presentation is now the standalone
+// `UISegmentedControlElement` (controls/segmented-control/), NOT a variant of this class. `variant` does not
+// exist here — the group is back to its dot-only presentation surface. ADR-0103: the group OWNS its interior
+// layout (radio-group.css's `@scope` flex column/row + `--ui-radio-group-gap`) — direct-children discovery
+// (`#radios()` below) means the layout cannot be left to page-author composition, unlike a coordination
+// wrapper. Two PROTECTED seams exist purely so that subclass can reuse this class's exclusivity/roving/value/
+// validity machinery without forking it:
+//   · `defaultOrientation()` — the class-derived roving-axis default (this base returns 'vertical'; the
+//     resolve-once-and-reflect-at-connect mechanism below calls it only when no explicit `orientation`
+//     attribute is authored). ADR-0095 clause 1.
+//   · `selectionChanged(radios, index)` — a no-op hook fired on every selection-defining event (connect
+//     seed, every `#applySelection`, and `formReset()`) — the SAME three call sites ADR-0086 wired its
+//     (now-retired) `#writeIndexCount` state seam to. `UISegmentedControlElement` overrides it to write its
+//     own `--ui-segmented-control-index`/`-count` moving-indicator state. ADR-0095 clause 2.
 //
 // Layer: controls/ — imports reactive + dom + traits + controls/radio (inward-only ✓).
 
@@ -36,13 +56,9 @@ const groupProps = {
   // Universal form attributes (name / disabled / required) — spread so the group participates
   // in forms as the single form value owner for the radio family (ADR-0013 formProps spread pattern).
   ...UIFormElement.formProps,
-  // ADR-0086 clause 1 — the presentation variant. Default 'default' (dots-in-a-row, layout-neutral,
-  // unchanged); 'segmented' restyles the ui-radio children as joined segments (radio-group.css). The
-  // children carry no per-radio attribute — the group owns the presentation via a descendant selector.
-  variant: { ...prop.enum(['default', 'segmented'] as const, 'default'), reflect: true },
-  // ADR-0086 clause 1 — the roving axis + (for 'segmented') the grid main axis. Default 'vertical'
-  // (today's shipped roving). Newly minted: no orientation attribute existed before this ADR. The
-  // EFFECTIVE orientation (author-set vs the variant-derived default) is resolved once at connect —
+  // ADR-0086 clause 1 (orientation SURVIVES the ADR-0095 supersession — clause 1 there: "orientation stays
+  // on the group"). The roving axis. Default 'vertical' (today's shipped roving). The EFFECTIVE orientation
+  // (author-set vs the class-derived default, `defaultOrientation()` below) is resolved once at connect —
   // see `connected()` below — and reflected back here so CSS and the roving trait read ONE source.
   orientation: { ...prop.enum(['horizontal', 'vertical'] as const, 'vertical'), reflect: true },
 } satisfies PropsSchema
@@ -70,23 +86,23 @@ export class UIRadioGroupElement extends UIFormElement {
     const initial = radios.find((r) => r.checked)
     if (initial) this.#selectedValue.value = initial.value
 
-    // ADR-0086 clause 1 — resolve the EFFECTIVE orientation ONCE, here, BEFORE the rovingFocus call
-    // below. `rovingFocus` captures `orientation` as a static value at call time (roving-focus.ts:148
-    // reads the closed-over param directly, not a callback like `items`/`syncIndex`), so resolving
-    // this AFTER the call would silently keep the trait on `'vertical'`. Precedence: an author-set
-    // `orientation` attribute wins; otherwise the variant supplies the default — `segmented` ⇒
-    // `'horizontal'`, `default` ⇒ `'vertical'` (today's shipped roving, unchanged). Reflecting the
-    // resolved value back to the host attribute gives CSS (`[orientation]`) and the roving trait one
-    // single source of truth.
+    // ADR-0095 clause 1 (was ADR-0086 clause 1, variant-derived) — resolve the EFFECTIVE orientation
+    // ONCE, here, BEFORE the rovingFocus call below. `rovingFocus` captures `orientation` as a static
+    // value at call time (roving-focus.ts:148 reads the closed-over param directly, not a callback like
+    // `items`/`syncIndex`), so resolving this AFTER the call would silently keep the trait on the
+    // default. Precedence: an author-set `orientation` attribute wins; otherwise `defaultOrientation()`
+    // supplies the CLASS-derived default (this base: `'vertical'`, today's shipped roving, unchanged;
+    // `UISegmentedControlElement` overrides it to `'horizontal'`). Reflecting the resolved value back to
+    // the host attribute gives CSS (`[orientation]`) and the roving trait one single source of truth.
     const resolvedOrientation: RovingOrientation = this.hasAttribute('orientation')
       ? this.orientation
-      : this.variant === 'segmented' ? 'horizontal' : 'vertical'
+      : this.defaultOrientation()
     this.orientation = resolvedOrientation
 
-    // ADR-0086 clauses 2/3 — seed the segmented variant's state seam (the `--value-pct`-style pattern,
-    // range-element.ts:111): the selected index + segment count, read by the moving `::before` in
-    // radio-group.css. Harmless when variant='default' (the tokens are simply unconsumed).
-    this.#writeIndexCount(radios, this.#checkedIndex())
+    // ADR-0095 clause 2 (was ADR-0086 clauses 2/3, `#writeIndexCount`) — the protected post-selection
+    // hook, seeded here at connect. A no-op in this base; `UISegmentedControlElement` overrides it to
+    // write its own moving-indicator state.
+    this.selectionChanged(radios, this.#checkedIndex())
 
     // ── roving-focus (Arrow/Home/End: selection-follows-focus) ──────────────────────────────────
     // The ARIA APG radio-group keyboard contract: Arrow keys move focus AND selection simultaneously.
@@ -134,6 +150,41 @@ export class UIRadioGroupElement extends UIFormElement {
     })
   }
 
+  // ── public value accessor ───────────────────────────────────────────────────────────────────────
+
+  /**
+   * The group's selected value — the checked `ui-radio` child's `value`, or `null` when none is
+   * selected. A public getter/setter pair delegating to the private `#selectedValue` signal (the
+   * `UICheckboxElement.indeterminate` precedent, checkbox.ts:39 — a plain accessor over a private
+   * signal, not a `prop.*`-declared attribute: the value is DERIVED from child radio state, so it
+   * has nothing of its own to reflect).
+   *
+   * The getter reads the signal directly — a reactive caller (e.g. inside `this.effect`) tracks it
+   * exactly like any other signal read.
+   *
+   * The setter is the PROGRAMMATIC path (e.g. a two-way data-bind write): it selects the child
+   * `ui-radio` whose `value` matches (unchecking all others) via `#applySelection` — the SAME state
+   * transition `#commit` drives for a user click/keyboard commit — but it does NOT emit `change`.
+   * This matches the fleet convention for a programmatic prop write on a value-bearing control
+   * (`UICheckboxElement.checked` / `UISelectElement.value` are directly settable and never
+   * self-emit on assignment; only the interaction-driven commit path — `#commit` here — emits).
+   *
+   * `null` clears the selection (unchecks every radio). A value matching NO child radio also CLEARS
+   * the selection, rather than a silent no-op — the native `HTMLSelectElement.value` precedent:
+   * assigning a `<select>`'s `.value` to a string with no matching `<option>` resolves
+   * `selectedIndex` to `-1` (the value reads back as `''`) instead of leaving the prior selection
+   * in place.
+   */
+  get value(): string | null {
+    return this.#selectedValue.value
+  }
+
+  set value(v: string | null) {
+    const radios = this.#radios()
+    const index = v === null ? -1 : radios.findIndex((r) => r.value === v)
+    this.#applySelection(radios, index)
+  }
+
   // ── private helpers ─────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -151,47 +202,65 @@ export class UIRadioGroupElement extends UIFormElement {
   }
 
   /**
-   * ADR-0086 clauses 2/3/4 — the segmented variant's shared-moving-indicator state seam: write the
-   * selected index + segment count as host CUSTOM PROPERTIES (the `--value-pct` precedent,
-   * range-element.ts:111 / slider-multi.ts:196–197 — reactive STATE, never a stylesheet injection).
-   * `radio-group.css`'s `::before` reads `--ui-radio-group-index`/`-count` to size + translate the
-   * shared fill. A no-op cost when `variant='default'` (the tokens are simply unconsumed). `index < 0`
-   * (nothing selected) writes `0` — the indicator itself is hidden by `:not(:has(ui-radio[checked]))`
-   * in CSS, so the fallback position is irrelevant while hidden.
+   * ADR-0095 clause 1 — the CLASS-derived default roving-axis orientation, consulted by `connected()`'s
+   * resolve-once-and-reflect ONLY when no explicit `orientation` attribute is authored. This base returns
+   * `'vertical'` (today's shipped roving, unchanged). `UISegmentedControlElement` overrides this to
+   * `'horizontal'` — the ADR-0086 "variant=segmented ⇒ horizontal" default, now class-derived instead of
+   * variant-derived.
    */
-  #writeIndexCount(radios: UIRadioElement[], index: number): void {
-    this.style.setProperty('--ui-radio-group-index', String(Math.max(0, index)))
-    this.style.setProperty('--ui-radio-group-count', String(radios.length))
+  protected defaultOrientation(): RovingOrientation {
+    return 'vertical'
   }
 
   /**
-   * The ONE commit path — invoked from both the rovingFocus `onMove` callback (Arrow keys) and the
-   * delegated change listener (click/Space). Enforces exclusivity and updates the group's form value:
-   *   · Checks `radios[index]`, unchecks all others (direct prop writes — no click events, no change
-   *     events on siblings, avoids re-entrancy into this handler via the UIRadioElement guard).
-   *   · Updates `#selectedValue` and emits `change` on the group when the selection is new.
+   * ADR-0095 clause 2 — a protected, no-op-in-the-base post-selection hook, fired from every
+   * selection-DEFINING event: the connect-time seed, every `#applySelection` (both `#commit`'s user-driven
+   * path AND the public `value` setter's programmatic path), and `formReset()`. This is the SAME seam
+   * ADR-0086's (now-retired) private `#writeIndexCount` fired from — moved here, as a protected hook,
+   * so `UISegmentedControlElement` can write its own `--ui-segmented-control-index`/`-count` moving-
+   * indicator state WITHOUT this base class knowing anything about segments or indicators. A no-op here
+   * costs nothing for the plain dot-group presentation.
    */
-  #commit(index: number): void {
-    const radios = this.#radios()
-    const radio = radios[index]
-    if (!radio) return
+  protected selectionChanged(_radios: UIRadioElement[], _index: number): void {}
 
-    const newValue = radio.value
+  /**
+   * The shared selection-transition path: checks `radios[index]`, unchecks all others (direct prop
+   * writes — no click events, no change events on siblings, avoids re-entrancy into the group's own
+   * change listener via the UIRadioElement guard), updates `#selectedValue`, and fires the
+   * `selectionChanged` hook. `index === -1` clears the selection (no radio checked, `#selectedValue` →
+   * `null`) — the public `value` setter's "no match" path. Does NOT emit `change`; that is exclusively
+   * `#commit`'s concern (the user-driven path) — this is the silent primitive both `#commit` and the
+   * public `value` setter build on. Returns whether the selection actually changed.
+   */
+  #applySelection(radios: UIRadioElement[], index: number): boolean {
+    const radio = index >= 0 ? radios[index] : undefined
+    const newValue = radio ? radio.value : null
     const changed = newValue !== this.#selectedValue.value
 
-    // Exclusivity: check the target, uncheck all others (direct writes — no click, no re-entrancy).
+    // Exclusivity: check the target (if any), uncheck all others (direct writes — no click, no re-entrancy).
     radios.forEach((r, i) => {
       r.checked = i === index
     })
 
-    // ADR-0086 clauses 2/3 — refresh the state seam on every commit (both the Arrow-key and click/Space
-    // paths converge here), so the segmented indicator's transform stays in lockstep with the selection.
-    this.#writeIndexCount(radios, index)
+    // ADR-0095 clause 2 — fire the post-selection hook on every transition (both the Arrow-key/click/Space
+    // commit paths AND the public value setter converge here); a no-op in this base.
+    this.selectionChanged(radios, index)
 
-    if (changed) {
-      this.#selectedValue.value = newValue
-      this.emit('change')
-    }
+    if (changed) this.#selectedValue.value = newValue
+    return changed
+  }
+
+  /**
+   * The ONE user-driven commit path — invoked from both the rovingFocus `onMove` callback (Arrow keys)
+   * and the delegated change listener (click/Space). Applies the transition via `#applySelection` and
+   * emits `change` on the group when the selection is new. An out-of-range `index` (no radio at that
+   * position) is a no-op — unlike the public `value` setter's "no match" path, this never clears an
+   * existing selection (there is no user gesture that should silently blank the group).
+   */
+  #commit(index: number): void {
+    const radios = this.#radios()
+    if (!radios[index]) return
+    if (this.#applySelection(radios, index)) this.emit('change')
   }
 
   // ── form hooks ──────────────────────────────────────────────────────────────────────────────────
@@ -234,23 +303,25 @@ export class UIRadioGroupElement extends UIFormElement {
    * first connect, unaffected by reset order on either side. Silent — no `change` emitted (a reset is not
    * a user commit; matches `#commit`'s own emit-on-user-action-only discipline).
    *
-   * Bug fix (component-reviewer B4, blocking): a reset must ALSO refresh the ADR-0086 state seam
-   * (`--ui-radio-group-index`/`-count`). The seam was previously written only at connect and in
-   * `#commit` — but a radio's own reset (`indicator-element.ts`) restores its `checked` OUTSIDE
-   * `#commit`, so without this the seam desyncs: the CSS `:not(:has(ui-radio[checked]))` gate correctly
-   * re-shows the indicator (the DOM `[checked]` is genuinely restored), but the STALE
-   * `--ui-radio-group-index` still parks the moving `::before` on the pre-reset selection — a visible
-   * indicator/ink mismatch. Recomputed from `defaultChecked` for the same reset-order-independence
-   * reason as `#selectedValue` above (not live `checked`, which may not have reset yet on this radio's
-   * siblings). `findIndex` returns `-1` when no radio was ever default-checked; `#writeIndexCount`
-   * clamps that to `0` — harmless, since the CSS hides the indicator whenever nothing is `[checked]`.
+   * Bug fix (component-reviewer B4, blocking; ADR-0086, preserved verbatim by ADR-0095 clause 2): a reset
+   * must ALSO fire the post-selection hook (`selectionChanged`). The hook was previously (ADR-0086) a
+   * private `#writeIndexCount` written only at connect and in `#commit` — but a radio's own reset
+   * (`indicator-element.ts`) restores its `checked` OUTSIDE `#commit`, so without this the seam desyncs
+   * in a subclass that consumes it (e.g. `UISegmentedControlElement`'s moving indicator): the CSS
+   * `:not(:has(ui-radio[checked]))`-style gate correctly re-shows the indicator (the DOM `[checked]` is
+   * genuinely restored), but a STALE index would still park the moving fill on the pre-reset selection —
+   * a visible indicator/ink mismatch. Recomputed from `defaultChecked` for the same reset-order-
+   * independence reason as `#selectedValue` above (not live `checked`, which may not have reset yet on
+   * this radio's siblings). `findIndex` returns `-1` when no radio was ever default-checked; a consuming
+   * subclass's hook is expected to clamp that to `0` the same way ADR-0086's seam did — harmless, since a
+   * segmented indicator hides itself whenever nothing is `[checked]`.
    */
   protected override formReset(): void {
     const radios = this.#radios()
     const defaultIndex = radios.findIndex((r) => r.defaultChecked)
     const defaultRadio = defaultIndex >= 0 ? radios[defaultIndex] : undefined
     this.#selectedValue.value = defaultRadio ? defaultRadio.value : null
-    this.#writeIndexCount(radios, defaultIndex)
+    this.selectionChanged(radios, defaultIndex)
   }
 }
 

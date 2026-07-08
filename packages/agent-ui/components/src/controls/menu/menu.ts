@@ -20,11 +20,12 @@
 //
 // Two-way `open` (ADR-0019): a scope-owned effect drives model→overlay; the overlay controller's
 // `close` event listener drives overlay→model (light-dismiss syncs the prop back). The overlay
-// controller emits `close` + `toggle` on platform dismiss (Escape / outside-click only — the
-// discriminator suppresses both on programmatic close, matching the overlay family contract).
+// trait emits `close` + `toggle` on EVERY real open-state transition — platform dismiss (Escape /
+// outside-click), a commit's programmatic close, or a model-driven `open=false` alike (ADR-0101 —
+// native ToggleEvent timing fidelity; the trait is the sole, uniform announcer for the family).
 //
-// Events: `select` ({value, index}) on commit; `toggle` + `close` on platform light-dismiss only
-// (overlay controller; NOT emitted after a commit or on a programmatic open=false).
+// Events: `select` ({value, index}) on commit; `toggle` + `close` on every real close, including a
+// commit's programmatic close (ADR-0101 — see traits/overlay.ts).
 //
 // ARIA: host has no explicit role (logical wrapper); panel has `role=menu` set on the div part
 // directly (a created part, not the host — the FACE rule "internals.role, never host attributes"
@@ -101,7 +102,16 @@ export class UIMenuElement extends UIElement {
     this._overlayHandle = handle
 
     // Trigger click → toggle the panel.
-    this.listen(trigger, 'click', () => handle.toggle())
+    //
+    // ADR-0101 erratum fix: flip the PROP (`this.open`), not `handle.toggle()` directly — see
+    // select.ts's click handler for the full race trace (identical mechanics here: a raw
+    // `handle.toggle()` never writes `this.open`, so `#commit`'s later `this.open = false` was a
+    // same-value no-op and the panel stuck open after picking a menu item — ticket #28's residual).
+    // The prop is the single source of truth; the model→overlay effect below drives
+    // `handle.open()`/`handle.close()` and the trait announces (ADR-0101) — the combo-box pattern.
+    this.listen(trigger, 'click', () => {
+      this.open = !this.open
+    })
 
     // overlay→model: when the Popover API light-dismisses (Escape / outside-click), the overlay
     // controller emits `close` on the host. Sync the prop back so the two-way bind stays
@@ -243,8 +253,9 @@ export class UIMenuElement extends UIElement {
   /**
    * Commit a user-driven item selection: emit `select` with {value, index}, then close the panel.
    * The value is the item's `data-value` attribute, falling back to trimmed text content.
-   * Close is driven programmatically (open=false → effect → handle.close()) — the overlay
-   * controller's discriminator ensures no redundant close/toggle event is emitted on this path.
+   * Close is driven programmatically (open=false → effect → handle.close()); the overlay trait
+   * announces exactly one close+toggle pair for this transition too (ADR-0101), with `el.open`
+   * already `false` by the time a listener observes either event (the ordering invariant).
    */
   #commit(index: number, item: HTMLElement): void {
     const value = item.dataset['value'] ?? item.textContent?.trim() ?? String(index)

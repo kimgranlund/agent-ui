@@ -61,11 +61,18 @@ describe('column.md descriptor — frontmatter parses + schema (s4)', () => {
 })
 
 describe('column.md descriptor — contract↔props trip-wire (s4)', () => {
-  it('attributes[] is a faithful bijection with UIColumnElement.props (0 drift) — surfaceProps + flexProps + stretch', () => {
-    // anti-vacuous: the reader actually parsed all seven attributes before the trip-wire is consulted
-    // (surfaceProps ×2 + flexProps ×4 + the column-local `stretch` sizing opt-in)
-    expect(parsed.attributes.map((a) => a.name)).toEqual(['elevation', 'brightness', 'align', 'justify', 'gap', 'wrap', 'stretch'])
+  it('attributes[] is a faithful bijection with UIColumnElement.props (0 drift) — surfaceProps + flexProps + stretch + reflow', () => {
+    // anti-vacuous: the reader actually parsed all eight attributes before the trip-wire is consulted
+    // (surfaceProps ×2 + flexProps ×4 + the column-local `stretch` sizing opt-in + the ADR-0096 `reflow` gate)
+    expect(parsed.attributes.map((a) => a.name)).toEqual(['elevation', 'brightness', 'align', 'justify', 'gap', 'wrap', 'stretch', 'reflow'])
     expect(compareDescriptorToProps(parsed.attributes, UIColumnElement.props)).toEqual([])
+  })
+
+  it('reflow defaults to `locked` (ADR-0096 cl.2 — the deliberate default flip) with `auto` as the opt-in', () => {
+    const reflow = parsed.attributes.find((a) => a.name === 'reflow')
+    expect(reflow?.default).toBe('locked')
+    expect(reflow?.values).toEqual(['locked', 'auto']) // locked LEADS — default + invalid-value snap target
+    expect(reflow?.reflect).toBe(true)
   })
 
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default + enum values)', () => {

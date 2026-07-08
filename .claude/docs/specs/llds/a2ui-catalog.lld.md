@@ -81,8 +81,9 @@ with `mapsTo` EQUAL to the control prop name (the SPEC-R8 1:1 reflection — sur
 directly (`el[prop] = value`) — no per-prop switch, unlike `Button.label`→`textContent`. **Two-way (SPEC-R4 / ADR-0019):**
 `Tabs` declares `value:{prop:'selected',event:'select'}`, `Modal` declares `value:{prop:'open',event:'toggle'}`, and
 the back-filled `TextField` declares `value:{prop:'value',event:'change'}` — all consumed by the renderer's generic
-input controller (LLD-C8 / renderer `input.ts`, decomp `s10`). `ui-list`/`ui-grid` are NOT catalog types (direct
-`ui-*` primitives — the ratified G9 scope, ADR-0016).
+input controller (LLD-C8 / renderer `input.ts`, decomp `s10`). `ui-list`/`ui-grid` joined the catalog in ADR-0087
+Wave C (below) — superseding this note's original G9-era exclusion (ADR-0016 cl.3's "non-catalog primitive"
+stance, superseded by ADR-0087 Fork A, Kim 2026-07-06).
 
 **Coverage discipline (SPEC-N2):** a component type whose control has not shipped is either omitted from `catalog.json` or carries `"x-status":"experimental"`; `loadCatalog` warns on an experimental type so there are no silent dead types. **Edge:** `Image`/`Video` stay absent until media primitives land (Assumption A-2).
 
@@ -94,6 +95,59 @@ rather than routed through `accessorFactory`: on `'variant'` it looks the wire v
 `{as,variant,size}` table (nearest-M3-row per wire level; an unrecognized value falls back to the `body`
 triple) and sets all three control accessors. The catalog stays protocol-faithful; the translation lives
 entirely at the factory seam — zero payload/corpus/prompt churn (catalog spec §5.2 `Text` row, SPEC-R3 AC1).
+
+**ADR-0087 Wave A (whole-fleet, closing the live SPEC-N2 violation) — `Icon`/`Menu`+`MenuItem`/`Popover`/`Tooltip`.**
+`Icon`→`ui-icon` rides the plain `accessorFactory` (name/label are BOTH 1:1 reflecting accessors — no
+bespoke mapping, unlike `Text`). `Menu`/`Popover`/`Tooltip`→`ui-menu`/`ui-popover`/`ui-tooltip` all ride
+`accessorFactory(tag, {prop:'open',event:'toggle'})` (the `Modal` two-way precedent). **Child model
+(Fork D/d2, builder-resolved, catalog spec §5.2):** all three overlay controls turned out to be PURELY
+POSITIONAL at the DOM level (verified against `menu.ts`/`popover.ts`/`tooltip.ts` — the first light-DOM
+child becomes the trigger/anchor, remaining children move into the control-created panel; there is no
+named-`<slot>` mechanism despite the `.md` descriptors' "slots" section documenting the convention by
+name). So all three declare a plain `ChildList`, NOT a `*Trigger`/`*Content` sub-type pair — wrapping the
+trigger in a synthetic region node would move `aria-expanded`/`aria-controls`/`aria-describedby` onto an
+inert wrapper instead of the real interactive element the agent supplies. `MenuItem`→`div[role=menuitem]`
+is the `Option`-shape sanctioned primitive twin: `value` maps to the `data-value` ATTRIBUTE (verified
+against `menu.ts` `#commit`), not a plain `value` attribute.
+
+**ADR-0087 Wave B (the deferred form/range/date family, closing the ADR-0053 §5.2 deferral) —
+`RadioGroup`+`Radio`/`Slider`/`SliderMulti`/`Calendar`/`ComboBox`.** All ride `accessorFactory` except
+`Radio` (bespoke — `label`→textContent, the `Checkbox.label` non-identity-`mapsTo` shape). Per-type,
+**verified against the control source, not the decomp draft** (the build's explicit instruction):
+`Slider`/`Calendar`/`ComboBox` two-way bind on their real commit event — `change` in all three cases
+(slider.ts/range-element.ts; calendar.ts; combo-box.ts) — NOT `input` for `Slider` (the live-drag event)
+and NOT `open`/`toggle` for `ComboBox` (a stale `combo-box.md` comment, corrected in the same commit, had
+claimed the catalog bound `open`; the actual bind is the FORM value). `SliderMulti` carries NO `value`
+mark: `valueLo`/`valueHi` are REAL 1:1 reflecting accessor props (verified against `slider-multi.ts`),
+just lacking a two-way slot — the ADR-0019 seam is ONE `value:{prop,event}` mark per component and this
+control commits two values (Fork C, resolved as two types). **`RadioGroup` carries NO `value` mark for a
+DIFFERENT, more fundamental reason:** verified against `radio-group.ts`, `UIRadioGroupElement` exposes NO
+public `value` accessor at all — only a private `#selectedValue` signal feeding `formValue()` /
+`ElementInternals`. The renderer's input controller (LLD-C8) reads `el[spec.prop]` directly off the DOM
+node on commit (`renderer/input.ts`), so the draft's `value:{prop:'value',event:'change'}` mark would
+silently read `undefined` on every commit — a broken, lying two-way contract, not a working one. This is
+a genuine component-side gap (not a seam-design limitation like SliderMulti's): closing it needs a new
+public `value` getter/setter added to `UIRadioGroupElement` (delegating to `#selectedValue`, the
+`UICheckboxElement` precedent) — escalated as component-builder territory, not patched here. `Radio` (the
+Wave A reviewer correction: `ui-radio` ships its own descriptor and is NOT a gate-exempt composite
+sub-type like `Option`/`MenuItem` — it enters the fleet-derived gate's expected set directly, so it needs
+a real row) carries `value`/`checked` as 1:1 reflecting accessors (inherited from `UIIndicatorElement`)
+and `label`→textContent (bespoke); it deliberately carries no top-level `value` mark of its own — the
+GROUP owns the selection commit, and an individually-bound `Radio` would desync on exclusivity
+(`#commit` unchecks sibling radios via direct property writes with no `change` event on them).
+
+**ADR-0087 Wave C (Fork A RESOLVED INCLUDE, Kim 2026-07-06) — `List`/`Grid`, superseding ADR-0016's original
+non-catalog exclusion.** `List`→`ui-list` (a `Column` specialization carrying `role=list`) rides the plain
+`accessorFactory('ui-list')` — verified against `list.ts` `static props`: the `surfaceProps` + `flexProps`
+spreads are ALL 1:1 reflecting accessors (the exact `Row`/`Column` idiom), so no bespoke mapping is needed.
+`Grid`→`ui-grid` rides `accessorFactory('ui-grid')` — `elevation`/`brightness`/`gap`/`min` are likewise ALL
+1:1 reflecting accessors (verified against `grid.ts`), `min` being the `minmax()` track floor (an arbitrary
+CSS `<length>` string, not an enum). Neither declares a `value` mark (structural containers, not bindable
+components). **The catalog itself now teaches the choice (Kim's build condition, carried in catalog spec
+§5.2's row Notes, not only the ADR):** `Row`/`Column` for a deliberate, heterogeneous arrangement; `List`
+for a homogeneous, itemized collection needing list semantics (`role=list` for free); `Grid` for an
+intrinsically-reflowing, auto-fit tile layout — `Row`/`Column` with `wrap` stays the author-controlled
+alternative to `Grid`.
 
 ## 6. Conformance validator — LLD-C6 (SPEC-R7, R9, N3)
 
@@ -112,6 +166,13 @@ function validateCatalogConformance(component: A2uiComponent, catalog: Catalog):
   }
   return out;
 }
+
+// matchesSchemaType, before the `type` dispatch (ADR-0098):
+//   if (Array.isArray(schema.enum) && !schema.enum.some((m) => m === value)) return false;
+// JSON-Schema §6.1.2 semantics: strict equality (`===`), case-sensitive, no coercion. Static
+// literals only — a `{path}`/`{call}` binding on a `bindable` enum prop short-circuits in
+// `matchesType` BEFORE this clause runs (ADR-0026), so a bound value is never statically judged;
+// it remains ADR-0076's render-gate charter, re-checked each tick.
 ```
 
 **`matchesType`** accepts a literal matching `pd.type`, or — when `pd.bindable` — a `{path}` binding object (deferred resolution at render). **Security (SPEC-R9):** unknown component or property ⇒ `CATALOG` ⇒ not rendered (renderer placeholder); text props are passed to the control as text/attribute, never to an unsafe sink (no `innerHTML` from agent strings — the renderer's `unsafeHTML` directive is never wired to catalog text).
@@ -129,7 +190,7 @@ function validateCatalogConformance(component: A2uiComponent, catalog: Catalog):
 | `CATALOG_NAME_INVALID` | LLD-C2 | non-UAX-31 / leading `@` in a declared name → reject at load/register |
 | `CATALOG_FACTORY_MISSING` | LLD-C3 | component without a registered factory → `register` throws (SPEC-R7 AC1) |
 | `CATALOG_UNKNOWN` | renderer (registry miss) | `createSurface.catalogId` not registered → renderer error, no surface |
-| `CATALOG` | LLD-C6 | unknown component type or property, or type mismatch → not rendered |
+| `CATALOG` | LLD-C6 | unknown component type or property, or type **or enum-membership** mismatch → not rendered |
 | duplicate `catalogId` | LLD-C3 | last-wins replace + log (intentional override path for projects) |
 | experimental type used | LLD-C4 | renders if a factory exists; load-time warn; absent type → `CATALOG` |
 | `bindable` prop given `{path}` | LLD-C6 | accepted; resolution deferred to renderer binding (renderer LLD-C5) |

@@ -162,6 +162,45 @@ describe('container-box — a [popover] carrier stays UA-hidden while closed (th
   })
 })
 
+// The SAME class of bug, hit by ui-modal's `<dialog data-part="dialog" data-box>` part (2026-07-07): the
+// unconditional `display: flow-root` defeated the UA's own `dialog:not([open]) { display: none }` rule, and
+// the UA's default `dialog { position: absolute; inset: 0; margin: auto; … }` then CENTRED the still-visible,
+// still-closed box on the page — indistinguishable from an open, backdrop-less modal. Two such dialogs on one
+// page rendered stacked directly on top of each other (the reported bug). Mirrors the [popover] block above.
+describe('container-box — a <dialog> carrier stays UA-hidden while closed (the flow-root fix)', () => {
+  it('closed: a dialog[data-box] computes display:none (both engines)', () => {
+    const el = mount(`<dialog data-box>panel content</dialog>`) as HTMLDialogElement
+    expect(el.open, 'the dialog should start closed').toBe(false)
+    expect(getComputedStyle(el).display, `${server.browser}: a closed dialog[data-box] is not display:none — it rendered centred on the page as if open`).toBe('none')
+  })
+
+  it('open: the same dialog[data-box] resolves to flow-root once shown via showModal() (both engines)', () => {
+    const el = mount(`<dialog data-box>panel content</dialog>`) as HTMLDialogElement
+    el.showModal()
+    expect(el.open, 'showModal() should open it').toBe(true)
+    expect(getComputedStyle(el).display, `${server.browser}: an OPEN dialog[data-box] lost its flow-root BFC — the fix over-scoped`).toBe('flow-root')
+    el.close()
+  })
+
+  it('NEGATIVE CONTROL — a non-dialog [data-box] keeps flow-root regardless (the fix is dialog-scoped only)', () => {
+    const el = mount(`<div data-box>plain box</div>`)
+    expect(getComputedStyle(el).display, 'a non-dialog box lost its flow-root BFC').toBe('flow-root')
+  })
+
+  it('TWO closed dialog[data-box] siblings never occupy the same rendered box (the exact reported bug)', () => {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = `<dialog data-box>first</dialog><dialog data-box>second</dialog>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const [first, second] = [...wrap.querySelectorAll('dialog')] as HTMLDialogElement[]
+    expect(getComputedStyle(first).display).toBe('none')
+    expect(getComputedStyle(second).display).toBe('none')
+    // display:none boxes contribute an empty rect at (0,0) — neither is centred/visible/overlapping the page.
+    expect(first.getBoundingClientRect().width).toBe(0)
+    expect(second.getBoundingClientRect().width).toBe(0)
+  })
+})
+
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  Edge-aware scroll fade — the PAINT mechanism (the gutter-exposure fix). `traits/scroll-fade.ts` is
 //  proven in isolation (jsdom, scroll-fade.test.ts) — the decision logic. Each component's own

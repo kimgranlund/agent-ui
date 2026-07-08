@@ -15,9 +15,12 @@
  *
  * SURFACE + FORCED-COLORS are the shared sheet's job, NOT duplicated here: the `--ui-container-bg`/`-tint`
  * elevation×brightness seam AND the `@media (forced-colors: active)` survival both cover `ui-grid` from
- * controls/_surface/container.css (the `@import`-FIRST sheet in the component-styles barrel, s12) — which also
- * establishes `container-type: inline-size`. A bare ui-grid is transparent (an unset container is unchanged);
- * `[elevation]`/`[brightness]` repoint the shared seam. This sheet owns LAYOUT only.
+ * controls/_surface/container.css (the `@import`-FIRST sheet in the component-styles barrel, s12). A bare
+ * ui-grid is transparent (an unset container is unchanged); `[elevation]`/`[brightness]` repoint the shared
+ * seam. `ui-grid` establishes NO `container-type` of its own (ADR-0100 — an intrinsically-sized primitive can
+ * never safely be a query container) — moot for its own responsiveness anyway, since the auto-fit/`minmax`
+ * track model below is TRACK SIZING, not a container query, so removing the establishment leaves it byte-for-
+ * byte unaffected. This sheet owns LAYOUT only.
  *
  * Standalone stylesheet — linked via the component-styles barrel (s12); NEVER injected from grid.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2; the `min` token thread is the values-API, not a

@@ -9,8 +9,10 @@
 //
 // Two-way `open` (ADR-0019): a scope-owned effect drives model→overlay (open/close the handle);
 // a `close` event listener on the host drives overlay→model (light-dismiss syncs the prop back).
-// The overlay controller emits `close` + `toggle` on the host when the platform dismisses; this
-// control listens for `close` and sets `this.open = false` so the prop stays consistent.
+// The overlay trait emits `close` + `toggle` on the host for EVERY real transition — platform
+// dismiss, a trigger-click close, or a model-driven `open=false` alike (ADR-0101); this control
+// listens for `close` and sets `this.open = false` so the prop stays consistent on the light-dismiss
+// path (the commit/model paths already set the prop first).
 //
 // Anatomy (light-DOM, created once — idempotent across reconnect):
 //   <ui-popover>
@@ -97,7 +99,16 @@ export class UIPopoverElement extends UIElement {
     this._overlayHandle = handle
 
     // Trigger click → toggle the panel (the disclosure interaction).
-    this.listen(trigger, 'click', () => handle.toggle())
+    //
+    // ADR-0101 erratum fix: flip the PROP (`this.open`), not `handle.toggle()` directly — see
+    // select.ts's click handler for the full race trace (identical mechanics here: a raw
+    // `handle.toggle()` never writes `this.open`, so any later programmatic close via the prop was
+    // a same-value no-op, the model→overlay effect never re-ran, and the panel could stick open).
+    // The prop is the single source of truth; the model→overlay effect below drives
+    // `handle.open()`/`handle.close()` and the trait announces (ADR-0101) — the combo-box pattern.
+    this.listen(trigger, 'click', () => {
+      this.open = !this.open
+    })
 
     // overlay→model: when the Popover API light-dismisses (Escape / outside-click), the overlay
     // controller emits `close` on the host. Sync the prop back so the two-way bind stays consistent

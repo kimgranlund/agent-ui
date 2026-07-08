@@ -1,0 +1,265 @@
+{
+  "domain": "goals",
+  "plan": true,
+  "_meta": {
+    "title": "CSS-less-consumer contract family \u2014 the gallery-defect design rulings (tickets #29 #30 #31 #32 #33, glance #27)",
+    "date": "2026-07-08",
+    "renumber_note": "pre-handoff repair 2026-07-08: the family shifted +1 (law=0102, spacing=0103, tabs=0104, calendar=0105, text=0106) after 0101 was taken concurrently by the overlay-toggle ruling (ticket #28); no structural change",
+    "author": "system-planner",
+    "context": "ADR-0096 ratified the forcing argument (an A2UI/Gen-UI consumer composes from catalog props only and has NO CSS-authoring verb). Five gallery defects share that root tension: component contracts that delegate layout/spacing/surface/overflow to 'the page author' deterministically fail on A2UI surfaces. This manifest plans the ruling family: one principle ADR + four mechanism ADRs, plus the #27 disposition.",
+    "outside_in_derivation": "context (the family ruling) -> outcomes (the principle answered once; each defect cluster ruled) -> tasks (one ADR per independent mechanism + log bookkeeping). Structure follows REVERSIBILITY seams: reverting the calendar geometry must not touch the tabs surface, so they are separate records; the radio-group and form-provider legs share ONE fork (who owns spacing) and one decision rule, so they are one record.",
+    "inside_out_derivation": "needs enumerated from the five tickets + the ADR-0093/0048/0015/0030/0057 invariants each fix must preserve, independent of the record structure."
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "label": "CSS-less-consumer contract family ruling (the whole intake)",
+      "leaf": false,
+      "justify": null,
+      "accept": null
+    },
+    {
+      "id": "n1",
+      "label": "ADR-0102 \u2014 the fleet principle: catalog-reachable correctness law + the safe-default/taught-idiom/catalog-prop decision rule",
+      "leaf": true,
+      "justify": null,
+      "accept": "adr_check.py 0102-*.md exits 0; the decision rule names the three lanes and when each applies; README index row present; Status: proposed"
+    },
+    {
+      "id": "n2",
+      "label": "ADR-0103 \u2014 the spacing pair ruling (#31 radio-group + #33 form-provider, ruled together as the two poles of one fork)",
+      "leaf": false,
+      "justify": null,
+      "accept": null
+    },
+    {
+      "id": "n2a",
+      "label": "radio-group leg: component-owned layout (flex axis from [orientation] + gap token), wrap-idiom structurally impossible (direct-children discovery radio-group.ts:194)",
+      "leaf": true,
+      "justify": null,
+      "accept": "adr_check.py 0103-*.md exits 0; the clause cites radio-group.ts:194 as the wrap-impossibility proof; blast radius names the two site inline-style overrides + radio-group.md:94 repair + test re-keys"
+    },
+    {
+      "id": "n2b",
+      "label": "form-provider leg: contract stands (pure coordination), spacing = the taught Column-gap wrap (68d2a8d evidence), residual model-uptake risk accepted with severity argument",
+      "leaf": true,
+      "justify": null,
+      "accept": "adr_check.py 0103-*.md exits 0; the clause cites the committed seed fix + the corpus/exemplar teaching lane (ADR-0091) and names the accepted residual risk in Consequences"
+    },
+    {
+      "id": "n3",
+      "label": "ADR-0104 \u2014 tabs surface ruling (#29): bare ui-tabs drops its own neutral-surface plane (tabs.css:20), transparent-by-default per ADR-0015 cl.1",
+      "leaf": true,
+      "justify": null,
+      "accept": "adr_check.py 0104-*.md exits 0; names who relied on the plane (tabs-css.test.ts:45, tabs-doc/demo canvas-surface look) and the per-consumer repair (explicit elevation attr); rejects composition-aware CSS with a stated reason"
+    },
+    {
+      "id": "n4",
+      "label": "ADR-0105 \u2014 calendar grid geometry ruling (#30): fluid tracks minmax(cell,1fr) + two-layer cell anatomy (full-track band layer, fixed circular point layer)",
+      "leaf": true,
+      "justify": null,
+      "accept": "adr_check.py 0105-*.md exits 0; every ADR-0093 cl.4 invariant (circle endpoints, square wash, self-delimiting band, 4 WHCM states, ADR-0057 shape signifier) is named with how it survives; the ADR-0048 cell-size floor is preserved as the minmax minimum"
+    },
+    {
+      "id": "n5",
+      "label": "ADR-0106 \u2014 ui-text overflow ruling (#32): a truncate prop + measured auto-title reveal + ui-tooltip pairing guidance, catalog Text row gains the prop",
+      "leaf": true,
+      "justify": null,
+      "accept": "adr_check.py 0106-*.md exits 0; the API is catalog-reachable (Text row named in Repairs); the stamp (as!=none) leg is covered; auto-minting a tooltip is a rejected alternative with the layering reason; the button label-wrapper anatomy is named as a deferred extension"
+    },
+    {
+      "id": "n6",
+      "label": "#27 disposition \u2014 ui-text as=h* stamp gap: needs-live-diagnosis (no property identifiable from the ticket without the screenshot), routed to the post-ADR-0100 re-audit; the Text-catalog no-bold-emphasis gap named as follow-up intake",
+      "leaf": true,
+      "justify": null,
+      "accept": "the handback names #27 as needs-live-diagnosis with the candidate property list (text-transform, text-align, text-wrap, font-variant sublonghands) and the re-audit owner; no ADR minted"
+    },
+    {
+      "id": "n7",
+      "label": "log bookkeeping: README index rows for 0102-0106, all Status: proposed, doc-reviewer flagged as ratifier gate",
+      "leaf": true,
+      "justify": null,
+      "accept": "grep finds one index row per new ADR in README.md; no ADR self-ratified (Status: proposed in all five); the handback names doc-reviewer"
+    }
+  ],
+  "actions": [
+    {
+      "id": "a1",
+      "label": "answer the page-author-delegation principle ONCE, fleet-wide (when is a no-CSS default unsafe; which lane fixes it: safe component default / catalog prop / taught idiom)"
+    },
+    {
+      "id": "a2",
+      "label": "radios render with usable rhythm on A2UI surfaces deterministically (no model uptake required)"
+    },
+    {
+      "id": "a3",
+      "label": "radio-group's visual axis matches its shipped orientation semantics (today orientation moves only the roving axis; radios flow inline regardless)"
+    },
+    {
+      "id": "a4",
+      "label": "form fields render with vertical rhythm on A2UI surfaces via a lane the consumer's grammar CAN express"
+    },
+    {
+      "id": "a5",
+      "label": "tabs nested in any surface (Card elevation=1, the pattern-wizard seed) read as ONE surface \u2014 no second box"
+    },
+    {
+      "id": "a6",
+      "label": "a consumer who wants a tabs plane can still ask for one from the catalog and from the page (elevation/brightness already catalog-reachable)"
+    },
+    {
+      "id": "a7",
+      "label": "ui-calendar fills its given width (the booking-reservation stretched Column case)"
+    },
+    {
+      "id": "a8",
+      "label": "range-band state visuals survive the width change (ADR-0093 cl.4: circular endpoints, square interior wash, self-delimiting band, four WHCM states, ADR-0057 shape signifier)"
+    },
+    {
+      "id": "a9",
+      "label": "calendar shrink-wrapped minimum geometry is unchanged (ADR-0048 cell ramp stays the floor)"
+    },
+    {
+      "id": "a10",
+      "label": "long display text can truncate to one line with an ellipsis, reachable from the catalog Text row"
+    },
+    {
+      "id": "a11",
+      "label": "the truncated full text stays reachable (AT reads it for free; sighted-pointer reveal via measured auto-title; rich reveal via the Tooltip pairing idiom)"
+    },
+    {
+      "id": "a12",
+      "label": "the #27 stamp gap is dispositioned honestly (needs-live-diagnosis, owner named) instead of guessed"
+    },
+    {
+      "id": "a13",
+      "label": "every ruling is a checkable record: adr_check green, index row, Status proposed, generator!=ratifier preserved, doc-review flagged"
+    },
+    {
+      "id": "a14",
+      "label": "every default change names who relies on the old default (measured blast radius) and repairs the lying docs in the same change"
+    }
+  ],
+  "hosts": [
+    {
+      "action": "a1",
+      "node": "n1"
+    },
+    {
+      "action": "a2",
+      "node": "n2a"
+    },
+    {
+      "action": "a3",
+      "node": "n2a"
+    },
+    {
+      "action": "a4",
+      "node": "n2b"
+    },
+    {
+      "action": "a5",
+      "node": "n3"
+    },
+    {
+      "action": "a6",
+      "node": "n3"
+    },
+    {
+      "action": "a7",
+      "node": "n4"
+    },
+    {
+      "action": "a8",
+      "node": "n4"
+    },
+    {
+      "action": "a9",
+      "node": "n4"
+    },
+    {
+      "action": "a10",
+      "node": "n5"
+    },
+    {
+      "action": "a11",
+      "node": "n5"
+    },
+    {
+      "action": "a12",
+      "node": "n6"
+    },
+    {
+      "action": "a13",
+      "node": "n7"
+    },
+    {
+      "action": "a14",
+      "node": "n2a"
+    },
+    {
+      "action": "a14",
+      "node": "n3"
+    },
+    {
+      "action": "a14",
+      "node": "n4"
+    },
+    {
+      "action": "a14",
+      "node": "n5"
+    }
+  ],
+  "edges": [
+    {
+      "from": "n1",
+      "to": "n2a",
+      "why": "the spacing ruling applies 0102's decision rule (wrap-impossible -> component-owned lane); the rule must exist to be cited"
+    },
+    {
+      "from": "n1",
+      "to": "n2b",
+      "why": "the form-provider leg applies 0102's taught-idiom lane and its severity test for accepting residual model-uptake risk"
+    },
+    {
+      "from": "n1",
+      "to": "n3",
+      "why": "the tabs ruling applies 0102's law (a surface default that lies inside another surface is a no-CSS-verb defect; the catalog prop lane already exists)"
+    },
+    {
+      "from": "n1",
+      "to": "n4",
+      "why": "the calendar ruling applies 0102's law (width adaptation must not require page CSS) while preserving named upstream invariants"
+    },
+    {
+      "from": "n1",
+      "to": "n5",
+      "why": "the text ruling applies 0102's catalog-prop lane (a new prop reachable from the Text row)"
+    },
+    {
+      "from": "n2a",
+      "to": "n7",
+      "why": "index rows and status bookkeeping can only be written for records that exist; 0103 covers both legs"
+    },
+    {
+      "from": "n2b",
+      "to": "n7",
+      "why": "same record as n2a \u2014 the bookkeeping row lands once the pair ruling is authored"
+    },
+    {
+      "from": "n3",
+      "to": "n7",
+      "why": "0104's index row needs the authored record"
+    },
+    {
+      "from": "n4",
+      "to": "n7",
+      "why": "0105's index row needs the authored record"
+    },
+    {
+      "from": "n5",
+      "to": "n7",
+      "why": "0106's index row needs the authored record"
+    }
+  ]
+}

@@ -96,6 +96,11 @@
 
     font-size: var(--ui-button-font);
     line-height: var(--ui-control-line-height); /* single-line control standard — ADR-0036; tight line box centered in the fixed frame */
+    white-space: nowrap; /* a control label NEVER wraps (Kim, 2026-07-08 — the gallery toolbar's two-line
+                            "More actions"); the ADR-0036 single-line frame assumes one line, so wrapping
+                            was always an overflow of the control's own contract. Ellipsis-on-constraint
+                            needs a label wrapper (anonymous grid text can't carry text-overflow) — that
+                            anatomy follow-up is ticketed with the ui-text overflow-ellipsis pattern. */
     background: var(--ui-button-bg);
     color: var(--ui-button-ink);
     border: 1px solid var(--ui-button-border);

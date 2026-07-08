@@ -64,6 +64,7 @@ describe('component-preview — STRUCTURAL targets mount a representative specim
     { tag: 'ui-list', minChildren: 3 },
     { tag: 'ui-card', minChildren: 3 }, // header + content + footer
     { tag: 'ui-radio-group', minChildren: 3 }, // sm/md/lg radios
+    { tag: 'ui-segmented-control', minChildren: 3 }, // sm/md/lg segments (ADR-0095)
     { tag: 'ui-form-provider', minChildren: 2 }, // a field + a submit button
   ]
   it('CASES covers every STRUCTURAL tag (anti-vacuous)', () => {

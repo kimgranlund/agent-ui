@@ -2,8 +2,9 @@
 //
 // The catalog-aware half of the shared validator: the renderer's `validate.ts` (LLD-C11) composes
 // this, and so does corpus admission — one implementation, identical verdict (parity, N6). Pure:
-// `(component, catalog) → Failure[]`. An unknown component type, an unknown property, or a
-// type-incorrect value each yields a `CATALOG` failure (the security allowlist, SPEC-R9).
+// `(component, catalog) → Failure[]`. An unknown component type, an unknown property, a
+// type-incorrect value, or a literal outside a declared `enum` (ADR-0098) each yields a `CATALOG`
+// failure (the security allowlist, SPEC-R9).
 
 import type { A2uiComponent, Failure } from '../protocol.ts'
 import type { Catalog, JsonSchema, PropDef } from './catalog.ts'
@@ -54,6 +55,14 @@ function matchesType(value: unknown, pd: PropDef): boolean {
 /** Minimal JSON-Schema primitive-type check: the `type` keyword vs the JS runtime type. */
 function matchesSchemaType(value: unknown, schema: JsonSchema): boolean {
   if (typeof schema === 'boolean') return schema // `true` accepts all, `false` rejects all
+
+  // JSON-Schema `enum` membership (§6.1.2, ADR-0098): a schema declaring `enum` rejects any value
+  // that is not STRICTLY EQUAL (`===`, case-sensitive, no coercion) to a listed member. Checked
+  // before the `type` dispatch — enum is a narrower constraint layered on top of `type`, not a
+  // replacement for it. Only primitive-member equality is evaluated; deep-equality object members
+  // are outside the validator's declared minimal-subset scope (no shipped catalog uses them).
+  if (Array.isArray(schema.enum) && !schema.enum.some((member) => member === value)) return false
+
   const t = schema.type
   if (t === undefined) return true // unconstrained schema
   const types = Array.isArray(t) ? t : [t]

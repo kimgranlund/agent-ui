@@ -18,6 +18,31 @@
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from
  * slider.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ *
+ * 2026-07-07 fix (Kim-filed visual bug): the dark-mode thumb "blends into its surroundings." Measured
+ * root cause — NOT the fill/rail pair ADR-0059 already verified (those still clear 3:1: 4.79:1 light /
+ * 3.67:1 dark vs fill, 5.66:1 / 4.41:1 vs rail; unchanged below). The thumb is TALLER than the 3px rail,
+ * so most of its perimeter borders the general PAGE SURFACE, not the rail/fill — a dimension ADR-0059
+ * never measured (switch's thumb never has this problem: its track fills the FULL switch height, so no
+ * "outside the track" area exists). Measured: dark-mode `--md-sys-color-neutral-surface-brightest`
+ * (neutral-800, the SAME stop as `--md-sys-color-neutral-surface-highest`) vs the dark surface ladder it
+ * actually sits on (neutral-800…950) is only **1.09–1.46:1** — it nearly matches the page's own darkest
+ * surface tones by construction. Kim's literal ask ("use onPrimary like the switch") does NOT fix this and
+ * REGRESSES the already-solved rail case: `--md-sys-color-primary-on-primary` is a FLAT white in both
+ * schemes (unlike this scheme-adaptive thumb), and against the dark-mode rail (neutral-400, itself
+ * deliberately brightened by ADR-0059) a flat white thumb measures only **2.76:1** — an SC 1.4.11
+ * regression below the rail's own contrast floor. Rejected for the same reason: no single flat thumb fill
+ * can simultaneously clear 3:1 against the dark rail (needs thumb luminance ≤ ~0.077) AND against the
+ * dark surface ladder (needs thumb luminance ≥ ~0.21 to clear the brightest dark surface plane) — those
+ * two floors don't overlap with the current rail/surface tokens (verified via the OKLCH→linear-sRGB→WCAG
+ * path `tokens.test.ts` already uses). Fix: leave the interior fill (`--ui-slider-thumb`) UNTOUCHED — it
+ * already carries the ADR-0059-verified fill/rail contrast — and add a second, independent ring layer
+ * (`--ui-slider-thumb-ring`, a `border` on `::after`) using `--md-sys-color-neutral-on-surface` (the fleet's
+ * own page-ink role, AA-verified against every surface plane by `tokens.test.ts`). The ring is BRIGHT in
+ * dark mode (near-white) and dark in light mode — giving the thumb the switch's "bright accent" signature
+ * in the register (surface-adjacent) where it was actually failing, without touching the fill's proven-safe
+ * contrast against the rail/fill it was tuned for. Recorded in ADR-0094 (2026-07-07, extends ADR-0059) —
+ * the thumb-vs-PAGE-SURFACE dimension is part of its three-backdrop thumb contrast contract.
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-slider) declares --ui-slider-* ════════════════ */
@@ -37,8 +62,16 @@
   /* Fill colour — the selected portion (min → value), primary family. */
   --ui-slider-fill: var(--md-sys-color-primary);
 
-  /* Thumb colour — the drag handle, brightest neutral surface (≈ white on light; dark on dark). */
+  /* Thumb colour — the drag handle, brightest neutral surface (≈ white on light; dark on dark).
+     Verified vs fill/rail (ADR-0059) — untouched by the 2026-07-07 ring fix below. */
   --ui-slider-thumb: var(--md-sys-color-neutral-surface-brightest);
+
+  /* Thumb RING (2026-07-07 fix) — a border layer independent of the fill, using the fleet's page-ink
+     role (`--md-sys-color-neutral-on-surface`: dark in light mode, bright/white in dark mode — AA-verified
+     against every surface plane by tokens.test.ts). Covers the thumb-vs-PAGE-SURFACE contrast dimension
+     the fill alone can't (see the file-header note): most of the thumb's perimeter borders the general
+     surface, not the thin rail, and in dark mode the fill alone measured only 1.09–1.46:1 there. */
+  --ui-slider-thumb-ring: var(--md-sys-color-neutral-on-surface);
 
   /* Rail height — thin constant, NOT derived from the widget box (ADR-0041 geometry: the inset law
      governs the THUMB size only; the rail is a separate cosmetic layer). 3px reads cleanly at all
@@ -63,6 +96,7 @@
   --ui-slider-rail: var(--md-sys-color-neutral-outline-variant);
   --ui-slider-fill: var(--md-sys-color-neutral-surface-high);
   --ui-slider-thumb: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-slider-thumb-ring: var(--md-sys-color-neutral-on-surface-variant); /* SC 1.4.11-exempt; matches fill, no separate ring emphasis */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-slider) consumes ONLY --ui-slider-* ════════════════ */
@@ -121,7 +155,12 @@
    *           behaviour, no overflow clipping needed for the interaction — the hit area is the full host).
    *
    * Motion: NO position transition (drag lag). Background-color transitions for disabled/enabled state.
-   *         Transition is zeroed under prefers-reduced-motion (accessibility non-negotiable). */
+   *         Transition is zeroed under prefers-reduced-motion (accessibility non-negotiable).
+   *
+   * Ring: a 2px border in `--ui-slider-thumb-ring` (2026-07-07 fix, see file header) — box-sizing:
+   * border-box keeps the OUTER diameter at the ADR-0041 cl.3 box−4px law (the border eats into the fill,
+   * it never grows the box), so the size proof above is unaffected; the border simply repaints the outer
+   * rim in the ink role, giving the thumb a contrast layer independent of its own interior fill. */
   :scope::after {
     content: '';
     position: absolute;
@@ -134,13 +173,16 @@
     border-radius: 50%; /* circle */
 
     background: var(--ui-slider-thumb);
+    border: 2px solid var(--ui-slider-thumb-ring);
 
     /* Centre the thumb circle on the point (--value-pct% of host width, 50% of host height). */
     inset-block-start: 50%;
     inset-inline-start: calc(var(--value-pct, 0) * 1%);
     transform: translate(-50%, -50%);
 
-    transition: background-color var(--ui-motion-fast) var(--ui-ease-standard);
+    transition:
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      border-color var(--ui-motion-fast) var(--ui-ease-standard);
   }
 
   /* Focus ring (ADR-0009) — the shared fleet ring: `:focus-visible` (keyboard-only). Surrounds the

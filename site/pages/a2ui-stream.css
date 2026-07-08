@@ -155,6 +155,11 @@
   border: 1px dashed var(--md-sys-color-neutral-outline);
   border-radius: 8px;
   background: var(--md-sys-color-neutral-surface);
+  /* ADR-0100 cl.2 — the A2UI mount boundary (a2ui-stream.ts's `host.mount()` target): establishes the query
+   * container the fleet's layout primitives resolve `@container` reflow against. Qualifies under the law
+   * because `.output-pane` (its flex-column parent, default `align-items: stretch`) STRETCHES this box's
+   * inline-size — never content-derived. */
+  container-type: inline-size;
 }
 
 .surface:empty::before {

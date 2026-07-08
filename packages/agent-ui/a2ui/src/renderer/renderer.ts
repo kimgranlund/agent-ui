@@ -267,10 +267,13 @@ class Renderer implements RendererHost {
   #onUpdateDataModel(body: A2uiUpdateDataModel): void {
     const surface = this.#store.get(body.surfaceId)
     if (surface === undefined) return
-    // Whole-document replace when no path; else an immutable, structural-sharing RFC-6901 set via the
-    // binding module (LLD-C5). Sharing untouched sibling subtrees by reference is what lets the per-path
-    // computeds' `Object.is` cutoff keep unrelated bindings asleep (SPEC-N2) — see binding.ts.
-    if (body.path === undefined || body.path === '') {
+    // Whole-document replace when no path, "" or "/" (the upstream protocol's root alias for
+    // updateDataModel — ADR-0099; SPEC-R5 AC2). Else an immutable, structural-sharing RFC-6901 set via
+    // the binding module (LLD-C5). Sharing untouched sibling subtrees by reference is what lets the
+    // per-path computeds' `Object.is` cutoff keep unrelated bindings asleep (SPEC-N2) — see binding.ts.
+    // NOTE: the alias lives here, at the protocol-message layer — setPointer stays RFC-6901-pure for
+    // every other pointer (deeper `""` keys, e.g. "/a/", still resolve as the empty-string child key).
+    if (body.path === undefined || body.path === '' || body.path === '/') {
       surface.data.value = body.value
       return
     }
@@ -472,7 +475,10 @@ function readActionSpec(
     const name = typeof spec.action === 'string' ? spec.action : typeof spec.name === 'string' ? spec.name : ''
     const out: { name: string; wantResponse?: boolean; context?: Record<string, unknown>; submit?: boolean } = { name }
     // `context`/`wantResponse`/`submit` surface from the canonical object (also honored on the `name`-synonym shape).
-    if (spec.wantResponse === true) out.wantResponse = true
+    // `wantResponse` is captured whenever the author wrote it as a real boolean — `true` OR `false` — never
+    // just `=== true`: ADR-0088 §3 routes on the DISTINCTION between "explicitly false" (opt-out) and "never
+    // authored" (stays `undefined` here, through `emitAction`'s own preserving assignment, to the wire).
+    if (typeof spec.wantResponse === 'boolean') out.wantResponse = spec.wantResponse
     if (isObject(spec.context)) out.context = spec.context
     if (spec.submit === true) out.submit = true
     return out

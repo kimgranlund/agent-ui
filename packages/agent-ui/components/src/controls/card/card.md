@@ -317,6 +317,30 @@ The base seam defaults to `transparent`, so a card seeds its **own** default
 `--ui-container-bg: var(--md-sys-color-neutral-surface)` — an un-elevated card still reads as a surface. `0` in either
 axis leaves the neutral plane unchanged.
 
+## Sizing — `min-inline-size: 0` is retained (ADR-0100 cl.3)
+
+`ui-card`'s host declares `min-inline-size: 0`, overriding the UA's default `min-content` floor on a flex/grid
+item. This is a **deliberate Container-class permission**, not an oversight: `geometry.md`'s floor law gives
+Action/Entry controls a min-size floor, but the **Container class keeps the shrink permission** — a card is
+free to shrink below its content's natural width when its parent's layout demands it.
+
+A 2026-07 visual audit initially suspected this declaration as the cause of a dashboard-tiles crush (cards
+collapsing to ~36px, chrome-only, in a wrap row). **Measured, it was not the cause** (ADR-0100): the crush was
+actually the layout primitives' own former `container-type: inline-size` establishment corrupting the card's
+inner column's intrinsic size end-to-end. With that establishment removed, the card renders at its real content
+size (~176–180px) with **or without** this floor — the floor is provably inert in that scenario, not binding.
+
+What the floor **does** do, measured, is protective in exactly one shape: a `ui-card` inside a `ui-grid` track.
+Give the card a `min-content` floor instead and a card with unbreakable content (a long unbroken string) blows
+the track out (measured 484px against a 200px track) rather than holding it (0 held the track exactly) — the
+"a card composes under any parent, including a grid cell" behavior ADR-0030 already leans on. So `0` stays.
+
+**Named, accepted cost:** a `reflow="locked"` (nowrap) row narrower than the sum of its cards' min-contents
+still crushes them below their natural size — the one case this floor doesn't protect against. This is
+accepted, not fixed: the *default* row stacks to a column before that narrow a width is reached (ADR-0016
+cl.4), so the exotic case only opens for an author who both locks the row horizontal *and* under-sizes its
+container; an author in that position owns the fix in plain CSS.
+
 ## Nested radius — one level (ADR-0018)
 
 Concentric rounded rectangles need the inner radius to shrink with nesting: the **concentric-corner law**

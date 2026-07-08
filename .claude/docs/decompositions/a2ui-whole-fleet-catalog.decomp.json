@@ -1,0 +1,188 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "_note": "system-decompose manifest for the whole-fleet catalog scope change (ADR-0087, a2ui-catalog.spec.md §5.2/N2/R3). OUTSIDE-IN: the catalog subsystem divides into the fleet-derived coverage gate (PREP) + one executable row-unit per uncatalogued shipped control + the final drain. INSIDE-OUT: the capabilities are 'derive/subtract/assert/bite' (the gate) and per-type 'expose as agent-emittable type / resolve composite adjacency / wire the value seam / prove conformance / drain the allowlist'. Every leaf is one a2ui-builder dispatch. Edges: the gate lands FIRST (seeded allowlist keeps it green), the drain lands LAST (reconciles the residue).",
+  "nodes": [
+    { "id": "n_gate", "label": "PREP: fleet-derived coverage gate + seeded exclusion allowlist (rewrite default/index.test.ts)", "leaf": true, "justify": null,
+      "accept": "`npm test -- catalog/default/index.test.ts` green: the derive(descriptor-glob→PascalCase) / subtract(allowlist) / assert(expected ⊆ catalog ∧ factory-present) blocks pass with the allowlist seeded to every not-yet-catalogued fleet type; the synthetic negative control (`typesMissingCatalog(['ZzFake'], catalogKeys, allowlist)` non-empty) proves the gate BITES." },
+
+    { "id": "n_icon", "label": "Wave A: Icon → ui-icon (display leaf: name + label)", "leaf": true, "justify": null,
+      "accept": "`npm run check && npm test` green; `validateA2ui({component:'Icon', name:'star', label:'Favourite'})` = {valid:true,failures:[]}; an unknown-prop Icon returns CATALOG; `Icon` removed from the allowlist; SPEC §5.2 gains the Icon row." },
+    { "id": "n_menu", "label": "Wave A: Menu → ui-menu (open two-way + placement) + MenuItem sanctioned primitive", "leaf": true, "justify": null,
+      "accept": "`npm run check && npm test` green; a Menu(open,placement)+MenuItem-children payload validates 0-CATALOG; a bad MenuItem prop returns CATALOG; `Menu` (+ `MenuItem` if adopted) drained from the allowlist; SPEC §5.2 rows added." },
+    { "id": "n_popover", "label": "Wave A: Popover → ui-popover (open two-way + placement) + trigger/content model", "leaf": true, "justify": null,
+      "accept": "`npm run check && npm test` green; a Popover payload with the ratified trigger/content child model validates 0-CATALOG; a negative control fails CATALOG; `Popover` drained; SPEC §5.2 row + the slot-model note added." },
+    { "id": "n_tooltip", "label": "Wave A: Tooltip → ui-tooltip (open two-way + placement + delay) + trigger/content model", "leaf": true, "justify": null,
+      "accept": "`npm run check && npm test` green; a Tooltip payload validates 0-CATALOG; a negative control fails CATALOG; `Tooltip` drained; SPEC §5.2 row added." },
+
+    { "id": "n_radio", "label": "Wave B: RadioGroup → ui-radio-group + Radio child sub-type (Select/Option mirror)", "leaf": true, "justify": null,
+      "accept": "`npm run check && npm test` green; a RadioGroup(value,name,required)+Radio-children payload round-trips the selected value via the group's commit event (verified against radio-group.ts) 0-CATALOG; a bad Radio prop fails CATALOG; `RadioGroup`+`Radio` drained; SPEC §5.2 rows added." },
+    { "id": "n_slider", "label": "Wave B: Slider → ui-slider (value/min/max/step two-way on change)", "leaf": true, "justify": null,
+      "accept": "`npm run check && npm test` green; a Slider(value,min,max,step) payload validates 0-CATALOG and round-trips a numeric value via `change`; a negative control fails; `Slider` drained; SPEC §5.2 row added." },
+    { "id": "n_slidermulti", "label": "Wave B: SliderMulti → ui-slider-multi (valueLo/valueHi; dual-value seam limitation surfaced)", "leaf": true, "justify": null,
+      "accept": "Fork C RESOLVED (Kim, 2026-07-06): two types. `npm run check && npm test` green; a SliderMulti(min,max,step,valueLo,valueHi) payload validates 0-CATALOG; the dual-value one-way binding is proven and the absent single `value:{prop,event}` two-way mark is documented (the seam limitation); `SliderMulti` drained from the allowlist." },
+    { "id": "n_calendar", "label": "Wave B: Calendar → ui-calendar (ISO value two-way on change + min/max/name/required/disabled)", "leaf": true, "justify": null,
+      "accept": "`npm run check && npm test` green; a Calendar(value,min,max) payload validates 0-CATALOG and round-trips the ISO value via `change`; a negative control fails; `Calendar` drained; SPEC §5.2 row added." },
+    { "id": "n_combobox", "label": "Wave B: ComboBox → ui-combo-box (value two-way on change + Option children + strict/label/placeholder)", "leaf": true, "justify": null,
+      "accept": "`npm run check && npm test` green; a ComboBox(value,strict,placeholder)+Option-children payload validates 0-CATALOG and round-trips the committed value via the ratified two-way slot (value-vs-open fork resolved); a negative control fails; `ComboBox` drained; SPEC §5.2 row added." },
+
+    { "id": "n_list", "label": "Wave C: List → ui-list (surface + flex grammar, list semantics) — Fork A RESOLVED INCLUDE", "leaf": true, "justify": null,
+      "accept": "Fork A RESOLVED (Kim, 2026-07-06): INCLUDE, conditional on usage guidance. `npm run check && npm test` green; a List(elevation,align,gap)+ChildList payload validates 0-CATALOG; `List` drained + SPEC §5.2 row added WITH the Row/Column-vs-List-vs-Grid usage guidance in the Notes column (non-negotiable per Kim's condition) + ADR-0016 List/Grid exclusion superseded." },
+    { "id": "n_grid", "label": "Wave C: Grid → ui-grid (surface + gap + min, auto-fit track) — Fork A RESOLVED INCLUDE", "leaf": true, "justify": null,
+      "accept": "Fork A RESOLVED (Kim, 2026-07-06): INCLUDE, conditional on usage guidance. `npm run check && npm test` green; a Grid(elevation,gap,min)+ChildList payload validates 0-CATALOG; `Grid` drained + SPEC §5.2 row added WITH the same required usage guidance." },
+
+    { "id": "n_drain", "label": "Wave D: reconcile the allowlist to the (now-empty) fork-deferred residue + flip the gate to full bite", "leaf": true, "justify": null,
+      "accept": "`npm test -- catalog/default/index.test.ts` green with the exclusion allowlist reduced to EXACTLY Kim's fork-deferred residue — confirmed EMPTY (all four forks resolved INCLUDE, 2026-07-06) except the documentary-only Image/Video rows (no shipped control, never code-derived); the fleet-gate now fails if any non-residue shipped control lacks a catalog type; the index.test.ts frozen key-list is deleted (superseded by the derived assertion)." }
+  ],
+  "actions": [
+    { "id": "a_derive", "label": "derive the expected catalog type-set from the descriptor glob (controls/*/*.md tag → PascalCase)" },
+    { "id": "a_subtract", "label": "subtract the explicit, reasoned exclusion allowlist from the expected set" },
+    { "id": "a_assert", "label": "assert every expected type is present in catalog.json AND has a registered factory" },
+    { "id": "a_bite", "label": "prove the gate bites — a synthetic uncatalogued shipped control fails the assertion" },
+    { "id": "a_seed", "label": "seed the allowlist with every not-yet-catalogued fleet type so the PREP gate lands green" },
+
+    { "id": "a_icon_type", "label": "expose Icon as an agent-emittable catalog type (name + label, display leaf, no value/children)" },
+    { "id": "a_icon_conform", "label": "prove an Icon payload validates 0-CATALOG and a negative control fails" },
+    { "id": "a_icon_drain", "label": "drain Icon from the exclusion allowlist + add its SPEC §5.2 row" },
+
+    { "id": "a_menu_type", "label": "expose Menu as a catalog type (open two-way toggle + placement enum)" },
+    { "id": "a_menu_item", "label": "resolve the MenuItem composite adjacency as a sanctioned primitive (the Option precedent)" },
+    { "id": "a_menu_conform", "label": "prove a Menu+MenuItem payload validates 0-CATALOG and a negative control fails" },
+    { "id": "a_menu_drain", "label": "drain Menu/MenuItem from the allowlist + add SPEC §5.2 rows" },
+
+    { "id": "a_popover_type", "label": "expose Popover as a catalog type (open two-way toggle + placement)" },
+    { "id": "a_popover_slot", "label": "resolve the trigger/content child model for the anchored overlay (named-region vs positional)" },
+    { "id": "a_popover_conform", "label": "prove a Popover payload validates 0-CATALOG and a negative control fails" },
+    { "id": "a_popover_drain", "label": "drain Popover from the allowlist + add SPEC §5.2 row" },
+
+    { "id": "a_tooltip_type", "label": "expose Tooltip as a catalog type (open two-way + placement + delay)" },
+    { "id": "a_tooltip_slot", "label": "resolve the Tooltip trigger/content child model" },
+    { "id": "a_tooltip_conform", "label": "prove a Tooltip payload validates 0-CATALOG and a negative control fails" },
+    { "id": "a_tooltip_drain", "label": "drain Tooltip from the allowlist + add SPEC §5.2 row" },
+
+    { "id": "a_radio_group_type", "label": "expose RadioGroup as a catalog type (name/disabled/required/variant/orientation + bindable value)" },
+    { "id": "a_radio_child", "label": "resolve the Radio child sub-type adjacency (value key + label + checked) mirroring Select/Option" },
+    { "id": "a_radio_seam", "label": "verify and wire the RadioGroup value two-way seam against radio-group.ts (accessor + commit event)" },
+    { "id": "a_radio_conform", "label": "prove a RadioGroup+Radio payload round-trips the selected value 0-CATALOG and a negative control fails" },
+    { "id": "a_radio_drain", "label": "drain RadioGroup/Radio from the allowlist + add SPEC §5.2 rows" },
+
+    { "id": "a_slider_type", "label": "expose Slider as a catalog type (value/min/max/step, two-way on change)" },
+    { "id": "a_slider_conform", "label": "prove a Slider payload validates 0-CATALOG, round-trips a numeric value, and a negative control fails" },
+    { "id": "a_slider_drain", "label": "drain Slider from the allowlist + add SPEC §5.2 row" },
+
+    { "id": "a_slidermulti_type", "label": "expose SliderMulti as a catalog type (min/max/step + valueLo/valueHi)" },
+    { "id": "a_slidermulti_seam", "label": "surface the dual-value seam limitation — no single value:{prop,event} two-way mark (fork residue if folded into Slider)" },
+    { "id": "a_slidermulti_conform", "label": "prove a SliderMulti payload validates 0-CATALOG and a negative control fails" },
+    { "id": "a_slidermulti_drain", "label": "drain SliderMulti from the allowlist OR retain with a recorded fold reason" },
+
+    { "id": "a_calendar_type", "label": "expose Calendar as a catalog type (ISO value two-way on change + min/max/name/required/disabled)" },
+    { "id": "a_calendar_conform", "label": "prove a Calendar payload round-trips the ISO value 0-CATALOG and a negative control fails" },
+    { "id": "a_calendar_drain", "label": "drain Calendar from the allowlist + add SPEC §5.2 row" },
+
+    { "id": "a_combobox_type", "label": "expose ComboBox as a catalog type (value/label/placeholder/strict/name/disabled + Option children)" },
+    { "id": "a_combobox_seam", "label": "resolve the two-way slot fork (value vs open) — recommend value (the form value)" },
+    { "id": "a_combobox_conform", "label": "prove a ComboBox+Option payload round-trips the committed value 0-CATALOG and a negative control fails" },
+    { "id": "a_combobox_drain", "label": "drain ComboBox from the allowlist + add SPEC §5.2 row" },
+
+    { "id": "a_list_type", "label": "expose List as a catalog type (surface axes + flex grammar + list semantics) if the fork includes" },
+    { "id": "a_list_relate", "label": "relate List to the Row/Column faithful-flex model and supersede the ADR-0016 List/Grid non-catalog exclusion" },
+    { "id": "a_list_conform", "label": "prove a List payload validates 0-CATALOG and a negative control fails" },
+    { "id": "a_list_drain", "label": "drain List from the allowlist + add SPEC §5.2 row, or keep it listed with the ADR-0016 reason" },
+
+    { "id": "a_grid_type", "label": "expose Grid as a catalog type (surface + gap + min, auto-fit track) if the fork includes" },
+    { "id": "a_grid_conform", "label": "prove a Grid payload validates 0-CATALOG and a negative control fails" },
+    { "id": "a_grid_drain", "label": "drain Grid from the allowlist + add SPEC §5.2 row, or keep it listed with the ADR-0016 reason" },
+
+    { "id": "a_flip_gate", "label": "flip the fleet-gate to full bite (delete the frozen key-list; assert against the derived set minus the residue)" },
+    { "id": "a_reconcile", "label": "reconcile the allowlist to exactly the fork-deferred residue, each entry carrying a reason + citation" },
+    { "id": "a_docs_final", "label": "final SPEC §5.2 / LLD-C4/C5 coherence pass — no stale frozen list, no orphan row" }
+  ],
+  "hosts": [
+    { "action": "a_derive", "node": "n_gate" },
+    { "action": "a_subtract", "node": "n_gate" },
+    { "action": "a_assert", "node": "n_gate" },
+    { "action": "a_bite", "node": "n_gate" },
+    { "action": "a_seed", "node": "n_gate" },
+
+    { "action": "a_icon_type", "node": "n_icon" },
+    { "action": "a_icon_conform", "node": "n_icon" },
+    { "action": "a_icon_drain", "node": "n_icon" },
+
+    { "action": "a_menu_type", "node": "n_menu" },
+    { "action": "a_menu_item", "node": "n_menu" },
+    { "action": "a_menu_conform", "node": "n_menu" },
+    { "action": "a_menu_drain", "node": "n_menu" },
+
+    { "action": "a_popover_type", "node": "n_popover" },
+    { "action": "a_popover_slot", "node": "n_popover" },
+    { "action": "a_popover_conform", "node": "n_popover" },
+    { "action": "a_popover_drain", "node": "n_popover" },
+
+    { "action": "a_tooltip_type", "node": "n_tooltip" },
+    { "action": "a_tooltip_slot", "node": "n_tooltip" },
+    { "action": "a_tooltip_conform", "node": "n_tooltip" },
+    { "action": "a_tooltip_drain", "node": "n_tooltip" },
+
+    { "action": "a_radio_group_type", "node": "n_radio" },
+    { "action": "a_radio_child", "node": "n_radio" },
+    { "action": "a_radio_seam", "node": "n_radio" },
+    { "action": "a_radio_conform", "node": "n_radio" },
+    { "action": "a_radio_drain", "node": "n_radio" },
+
+    { "action": "a_slider_type", "node": "n_slider" },
+    { "action": "a_slider_conform", "node": "n_slider" },
+    { "action": "a_slider_drain", "node": "n_slider" },
+
+    { "action": "a_slidermulti_type", "node": "n_slidermulti" },
+    { "action": "a_slidermulti_seam", "node": "n_slidermulti" },
+    { "action": "a_slidermulti_conform", "node": "n_slidermulti" },
+    { "action": "a_slidermulti_drain", "node": "n_slidermulti" },
+
+    { "action": "a_calendar_type", "node": "n_calendar" },
+    { "action": "a_calendar_conform", "node": "n_calendar" },
+    { "action": "a_calendar_drain", "node": "n_calendar" },
+
+    { "action": "a_combobox_type", "node": "n_combobox" },
+    { "action": "a_combobox_seam", "node": "n_combobox" },
+    { "action": "a_combobox_conform", "node": "n_combobox" },
+    { "action": "a_combobox_drain", "node": "n_combobox" },
+
+    { "action": "a_list_type", "node": "n_list" },
+    { "action": "a_list_relate", "node": "n_list" },
+    { "action": "a_list_conform", "node": "n_list" },
+    { "action": "a_list_drain", "node": "n_list" },
+
+    { "action": "a_grid_type", "node": "n_grid" },
+    { "action": "a_grid_conform", "node": "n_grid" },
+    { "action": "a_grid_drain", "node": "n_grid" },
+
+    { "action": "a_flip_gate", "node": "n_drain" },
+    { "action": "a_reconcile", "node": "n_drain" },
+    { "action": "a_docs_final", "node": "n_drain" }
+  ],
+  "edges": [
+    { "from": "n_gate", "to": "n_icon", "why": "the exclusion allowlist Icon drains from is created by the PREP gate (shared default/index.test.ts)" },
+    { "from": "n_gate", "to": "n_menu", "why": "Menu drains from the allowlist the PREP gate seeds" },
+    { "from": "n_gate", "to": "n_popover", "why": "Popover drains from the allowlist the PREP gate seeds" },
+    { "from": "n_gate", "to": "n_tooltip", "why": "Tooltip drains from the allowlist the PREP gate seeds" },
+    { "from": "n_gate", "to": "n_radio", "why": "RadioGroup/Radio drain from the allowlist the PREP gate seeds" },
+    { "from": "n_gate", "to": "n_slider", "why": "Slider drains from the allowlist the PREP gate seeds" },
+    { "from": "n_gate", "to": "n_slidermulti", "why": "SliderMulti drains from the allowlist the PREP gate seeds" },
+    { "from": "n_gate", "to": "n_calendar", "why": "Calendar drains from the allowlist the PREP gate seeds" },
+    { "from": "n_gate", "to": "n_combobox", "why": "ComboBox drains from the allowlist the PREP gate seeds" },
+    { "from": "n_gate", "to": "n_list", "why": "List drains from the allowlist the PREP gate seeds (if the fork includes)" },
+    { "from": "n_gate", "to": "n_grid", "why": "Grid drains from the allowlist the PREP gate seeds (if the fork includes)" },
+
+    { "from": "n_icon", "to": "n_drain", "why": "the final reconciliation asserts the residue only after Icon has drained" },
+    { "from": "n_menu", "to": "n_drain", "why": "reconciliation runs only after Menu/MenuItem drain" },
+    { "from": "n_popover", "to": "n_drain", "why": "reconciliation runs only after Popover drains" },
+    { "from": "n_tooltip", "to": "n_drain", "why": "reconciliation runs only after Tooltip drains" },
+    { "from": "n_radio", "to": "n_drain", "why": "reconciliation runs only after RadioGroup/Radio drain" },
+    { "from": "n_slider", "to": "n_drain", "why": "reconciliation runs only after Slider drains" },
+    { "from": "n_slidermulti", "to": "n_drain", "why": "reconciliation runs only after SliderMulti drains or is recorded as fork residue" },
+    { "from": "n_calendar", "to": "n_drain", "why": "reconciliation runs only after Calendar drains" },
+    { "from": "n_combobox", "to": "n_drain", "why": "reconciliation runs only after ComboBox drains" },
+    { "from": "n_list", "to": "n_drain", "why": "reconciliation runs only after List drains or is recorded as fork residue" },
+    { "from": "n_grid", "to": "n_drain", "why": "reconciliation runs only after Grid drains or is recorded as fork residue" }
+  ]
+}

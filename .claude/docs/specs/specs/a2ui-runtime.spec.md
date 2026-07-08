@@ -52,9 +52,9 @@ Normative per RFC 2119. Each carries a stable ID, a PRD trace, and acceptance cr
 
 ### 3.4 Data model & binding
 
-**SPEC-R5 — Data model upsert + binding resolution.** `updateDataModel` MUST apply upsert semantics at the given JSON-Pointer `path` (whole-model when `path` omitted), per surface. Bindings (`{path}`) MUST resolve against the surface data model and MUST re-resolve (update the widget) when the bound data changes. *(→ PRD-G1)*
+**SPEC-R5 — Data model upsert + binding resolution.** `updateDataModel` MUST apply upsert semantics at the given JSON-Pointer `path` (whole-model when `path` is omitted, `""`, or `"/"` — the protocol defines `/` as the root-equivalent default, both v0.9/v1.0 §updateDataModel; ADR-0099), per surface. Bindings (`{path}`) MUST resolve against the surface data model and MUST re-resolve (update the widget) when the bound data changes. *(→ PRD-G1)*
 - **AC1** *Given* `updateDataModel{path:"/user/name",value:"Ada"}` then a `Text` bound to `/user/name`, *when* applied, *then* the text renders "Ada"; *when* the path is later updated, *then* the text updates without a message re-send.
-- **AC2** *Given* `updateDataModel` with no `path`, *when* applied, *then* it replaces/merges the whole surface data model per upsert semantics.
+- **AC2** *Given* `updateDataModel` with no `path` — or the equivalent spellings `path:""` / `path:"/"` (ADR-0099) — *when* applied, *then* it replaces/merges the whole surface data model per upsert semantics, identically for all three.
 
 **SPEC-R6 — Dynamic lists (template iteration).** A container MAY bind `children` to an array `path` with an item template; the renderer MUST render one instance per array element, resolving relative (child-scope) paths within each item, and MUST add/remove instances reactively as the array changes. *(→ PRD-G1)*
 - **AC1** *Given* a list bound to `/items` (length 3) with a template, *when* rendered, *then* 3 instances exist; *when* an element is appended via `updateDataModel`, *then* a 4th appears without re-rendering the first 3.

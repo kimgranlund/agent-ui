@@ -6,6 +6,7 @@ import { createDedupIndex, minHashSignature } from './dedup.ts'
 import { canonicalize } from './canonical.ts'
 import { validateA2ui } from './validate.ts'
 import { demoCatalog } from '../fixtures.ts'
+import { loadCatalog } from '../catalog/catalog.ts'
 import type { A2uiOutput } from '../protocol.ts'
 
 // admit.test.ts — the admission pipeline (corpus LLD-C5, SPEC-R5-R9, ADR-0060/0061/0063). The LLD §8
@@ -399,6 +400,33 @@ describe('admit — the admission pipeline (LLD-C5)', () => {
       expect(result.code).toBe('E_POINTER')
       expect(result.paths).toContain('chip-tpl.text')
     })
+
+    it('updateDataModel path:"/" folds as whole-model (ADR-0099 root alias) — admits identically to the omitted-path form', async () => {
+      const treeFor = (): unknown[] => [
+        { version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'demo' } },
+        {
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId: 's1',
+            components: [
+              { id: 'root', component: 'Column', children: { path: '/items', componentId: 'item-tpl' } },
+              { id: 'item-tpl', component: 'Text', text: { path: 'name' } },
+            ],
+          },
+        },
+      ]
+      const omitted = mkCandidate({
+        a2uiOutput: [...treeFor(), { version: 'v1.0', updateDataModel: { surfaceId: 's1', value: { items: [{ name: 'Alice' }] } } }],
+      })
+      const slashRoot = mkCandidate({
+        a2uiOutput: [...treeFor(), { version: 'v1.0', updateDataModel: { surfaceId: 's1', path: '/', value: { items: [{ name: 'Alice' }] } } }],
+      })
+
+      const a = await admit(omitted, mkDeps())
+      const b = await admit(slashRoot, mkDeps())
+      expect(a.ok).toBe(true)
+      expect(b.ok).toBe(true) // NOT nested under a spurious {"":...} key — the /items binding still resolves
+    })
   })
 
   describe('E_DUP (LLD-C4)', () => {
@@ -519,6 +547,36 @@ describe('admit — the admission pipeline (LLD-C5)', () => {
       expect(verdict.valid).toBe(true)
       const result = await admit(mkCandidate(), mkDeps())
       expect(result.ok).toBe(true)
+    })
+
+    it('ADR-0098: a non-member enum literal is rejected AT THE CORPUS GATE with the identical verdict (the "known-clean by construction" acceptance leg)', async () => {
+      // The demo catalog carries no enum props, so this leg pins the seam on a local catalog declaring
+      // one — the same loadCatalog + validateA2ui + admit() chain the real shelf rides (validate.ts re-exports
+      // renderer/validate.ts, so validator-level enum enforcement reaches admission by construction).
+      const enumCatalog = loadCatalog({
+        catalogId: 'demo',
+        protocolVersion: 'v1.0',
+        components: {
+          Calendar: {
+            properties: {
+              mode: { type: { type: 'string', enum: ['single', 'range'] }, mapsTo: 'mode' },
+            },
+          },
+        },
+      })
+      const badOutput: A2uiOutput = [
+        { version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'demo' } },
+        { version: 'v1.0', updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Calendar', mode: 'weekly' }] } },
+      ]
+      const directVerdict = validateA2ui(badOutput, enumCatalog)
+      expect(directVerdict.valid).toBe(false)
+      expect(directVerdict.failures[0]!.code).toBe('CATALOG')
+      expect(directVerdict.failures[0]!.path).toBe('root.mode')
+
+      const result = await admit(mkCandidate({ a2uiOutput: badOutput }), { ...mkDeps(), catalog: enumCatalog })
+      expect(result.ok).toBe(false)
+      if (result.ok) return
+      expect(result.code).toBe('E_CATALOG')
     })
   })
 })

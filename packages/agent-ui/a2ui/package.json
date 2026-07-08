@@ -10,5 +10,9 @@
   },
   "dependencies": {
     "@agent-ui/components": "*"
+  },
+  "devDependencies": {
+    "@agent-ui/icons": "*",
+    "@agent-ui/a2a": "*"
   }
 }

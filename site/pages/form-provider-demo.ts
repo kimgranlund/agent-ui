@@ -30,7 +30,13 @@ const provider = el('ui-form-provider', {}, [
   el('ui-checkbox', { name: 'subscribe' }, [text('Subscribe to the newsletter')]),
   el('ui-switch', { name: 'notify' }, [text('Enable notifications')]),
 ]) as UIFormProviderElement
-provider.style.maxInlineSize = '26rem'
+// ui-form-provider is deliberately layout-neutral (form-provider.css: "the coordination host paints nothing,
+// the slotted subtree owns every box" — the same "page author controls layout" precedent as ui-radio-group's
+// default variant). Its host is `display:block` with no gap, and two of its children (ui-checkbox/ui-switch)
+// are themselves `display:inline-flex` — with zero page CSS they lay out inline, running the two fields'
+// validation text straight into the next label and crowding the checkbox+switch rows onto one line (the
+// reported bug). The page supplies the vertical rhythm, same as radio-group-demo's inline gap.
+provider.style.cssText = 'display:flex; flex-direction:column; gap:var(--ui-space-md); max-inline-size:26rem;'
 
 // ── the live readout — provider.values() + provider.valid(), refreshed on any member input/change ────────────
 const valuesOut = code('{}')

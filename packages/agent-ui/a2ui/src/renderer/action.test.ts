@@ -48,13 +48,23 @@ describe('emitAction — message shape (renderer LLD-C9, SPEC-R8)', () => {
     expect(sent.map((m) => m.action.actionId)).toEqual(['act-1', 'act-2'])
   })
 
-  it('defaults context to {} and wantResponse to false; returns undefined when no reply is expected', () => {
+  it('defaults context to {}; leaves wantResponse ABSENT (never coerced to false) — returns undefined when no reply is expected', () => {
     const { dispatcher, surface, last } = harness()
     const result = dispatcher.emitAction(node, surface, { name: 'noop' })
     expect(result).toBeUndefined()
     expect(last().context).toEqual({})
-    expect(last().wantResponse).toBe(false)
+    // ADR-0088 §3: an un-set `wantResponse` must stay ABSENT on the wire, not become an explicit `false` —
+    // the page-layer routing decision distinguishes "never asked" (absent) from "explicitly opted out"
+    // (`false`), and both would otherwise look identical to a `wantResponse`-routing reader.
+    expect('wantResponse' in last()).toBe(false)
     expect(dispatcher.pendingCount).toBe(0) // no reply expected ⇒ no correlation slot
+  })
+
+  it('an EXPLICIT wantResponse:false is preserved on the wire, distinct from absent (ADR-0088 §3)', () => {
+    const { dispatcher, surface, last } = harness()
+    dispatcher.emitAction(node, surface, { name: 'noop', wantResponse: false })
+    expect(last().wantResponse).toBe(false)
+    expect(dispatcher.pendingCount).toBe(0) // still no correlation slot — unchanged ADR-0034 gate
   })
 
   it('omits dataModel unless the surface set sendDataModel', () => {

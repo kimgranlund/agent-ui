@@ -1,24 +1,20 @@
 /* tabs.css — the SINGLE sheet for the tabs compound: ui-tabs (the surface shell + the tablist strip), ui-tab
  * (the interactive rows), ui-tab-panel (the content regions). Two sectioned blocks (ADR-0003): a :where() TOKEN
- * block (specificity 0 — declares the --ui-tabs-* chain from the colour roles + the dimensional ramp, and seeds
- * ui-tabs' OWN default surface) then an @scope STYLES block (consumes ONLY --ui-tabs-* + the shared fleet
- * focus-ring/motion tokens — token hygiene). Linked via the component-styles barrel (wired in decomp s12), NEVER
- * injected from a .ts (behaviour holds no runtime style; plan §2).
+ * block (specificity 0 — declares the --ui-tabs-* chain from the colour roles + the dimensional ramp) then an
+ * @scope STYLES block (consumes ONLY --ui-tabs-* + the shared fleet focus-ring/motion tokens — token hygiene).
+ * Linked via the component-styles barrel (wired in decomp s12), NEVER injected from a .ts (behaviour holds no
+ * runtime style; plan §2).
  *
  * Geometry (geometry.md "Pattern" size-class — tabs is the named example): the interactive TAB ROWS take the
  * CONTROL height (--ui-height-*), while the SHELL (strip gap, panel padding) uses the --ui-space layout ladder.
  * Two distinct ledgers, never interchanged. The surface (the shell background + the elevation/brightness axes)
- * is the shared container.css seam — this sheet only repoints ui-tabs' default --ui-container-bg (the base is
- * transparent; ADR-0015), so a bare <ui-tabs> still draws a plane. */
+ * is the shared container.css seam — this sheet does not repoint --ui-container-bg (ADR-0104): a bare <ui-tabs>
+ * is transparent by default like the rest of the container family (ADR-0015 cl.1); a plane is an asked-for
+ * intent via the already-shipped `elevation`/`brightness` axes (e.g. `<ui-tabs elevation="0">`). */
 
 /* ════════════════════════ [1] TOKEN BLOCK — :where() declarations (the --md-sys-color-* + ramp entry) ════════════════════════ */
 
 :where(ui-tabs) {
-  /* ui-tabs' OWN default surface — the base container.css default is transparent; this gives a bare tabs a
-     plane. :where() keeps it at specificity 0, so an [elevation]/[brightness] axis (container.css, specificity
-     0,1,0) still overrides it. Role-pure: --md-sys-color-* enters here (the declaration side), never in @scope. */
-  --ui-container-bg: var(--md-sys-color-neutral-surface);
-
   /* Tab-row geometry — the CONTROL band (the rows are interactive; geometry.md Pattern class). Fixed at the md
      ramp step (ui-tabs exposes no [size] axis). */
   --ui-tabs-tab-height: var(--ui-height-md);

@@ -1,0 +1,49 @@
+{
+  "_meta": {
+    "title": "Prop-gated container reflow for ui-row/ui-column — the Gen-UI no-CSS-consumer lock (feeds ADR-0096)",
+    "date": "2026-07-07",
+    "author": "system-planner",
+    "note": "DECOMPOSE mode (design intake for one ADR; not a build plan — leaves carry no accept predicates). OUTSIDE-IN = the design surface the ADR must cover; INSIDE-OUT = the needs the reproduced card-game bug + the four dispatch questions name, derived from the bug report and the source reads, independent of the structure."
+  },
+  "domain": "technical-architecture",
+  "plan": false,
+  "nodes": [
+    { "id": "n1", "label": "ADR-0096 record (Context/Decision/Consequences/Alternatives/Acceptance)", "leaf": true, "justify": null },
+    { "id": "n2", "label": "component-layer lock mechanism (row/column reflow prop + attribute-guarded @container rules + per-tag defaults)", "leaf": true, "justify": null },
+    { "id": "n3", "label": "catalog surface (catalog.json Row/Column reflow rows; accessorFactory 1:1 pass-through)", "leaf": true, "justify": null },
+    { "id": "n4", "label": "model reachability (ADR-0071 derived inventory + optional ADR-0091 mini-skill idiom module)", "leaf": true, "justify": null },
+    { "id": "n5", "label": "blast-radius disposition (site pages enumerated; test re-keys named; app-shell/list/grid excluded)", "leaf": true, "justify": null },
+    { "id": "n6", "label": "corpus/exemplar disposition (11 shipped records; 8 emit Column)", "leaf": true, "justify": null },
+    { "id": "n7", "label": "lifecycle wiring (Extends ADR-0016 two-way link + README index row, proposed status)", "leaf": true, "justify": null }
+  ],
+  "actions": [
+    { "id": "a1", "label": "pin a Column's vertical stacking regardless of ancestor container width, reachable with props alone (the forcing need — the reproduced card-game flip)" },
+    { "id": "a2", "label": "pin a Row's horizontal direction with props alone (the toolbar/segmented-cluster case under a cramped container)" },
+    { "id": "a3", "label": "preserve the ADR-0016 cl.4 container-query switching capability as an explicit, reachable option (capability kept, not deleted)" },
+    { "id": "a4", "label": "make a prop-only composer safe BY DEFAULT — correctness must not depend on the model knowing to set a prop" },
+    { "id": "a5", "label": "surface the new prop + its idiom to the live model (inventory advertisement; idiom-level guidance where needed)" },
+    { "id": "a6", "label": "keep every currently-shipped site page rendering as designed (verify nothing relies on the changed default)" },
+    { "id": "a7", "label": "keep the shipped corpus exemplars rendering as authored (they are prop-only consumers too)" },
+    { "id": "a8", "label": "record the decision per the log lifecycle: an extension of still-standing ADR-0016, proposed not self-ratified, indexed, back-linked" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n2" },
+    { "action": "a2", "node": "n2" },
+    { "action": "a3", "node": "n2" },
+    { "action": "a4", "node": "n2" },
+    { "action": "a1", "node": "n3" },
+    { "action": "a2", "node": "n3" },
+    { "action": "a5", "node": "n4" },
+    { "action": "a6", "node": "n5" },
+    { "action": "a7", "node": "n6" },
+    { "action": "a8", "node": "n1" },
+    { "action": "a8", "node": "n7" }
+  ],
+  "edges": [
+    { "from": "n2", "to": "n3", "why": "the catalog rows mirror the component's reflected prop schema (enum members + per-tag default-first order) — the component layer pins what the catalog may declare (ADR-0076 enum honoring keys off it)" },
+    { "from": "n3", "to": "n4", "why": "the ADR-0071 system prompt derives its component/prop inventory from catalog.json at run time — the prop must exist in the catalog before the inventory can advertise it" },
+    { "from": "n2", "to": "n5", "why": "the blast-radius disposition enumerates consumers of the SPECIFIC default being changed — it can only be assessed against the chosen mechanism + defaults" },
+    { "from": "n2", "to": "n6", "why": "whether exemplars need edits depends on the default: a default-locked column renders the shipped records as authored with zero corpus churn; an opt-in lock would force record edits" },
+    { "from": "n1", "to": "n7", "why": "the index row and the ADR-0016 Extended-by back-link cite the numbered record — it must exist with its final number/title first" }
+  ]
+}

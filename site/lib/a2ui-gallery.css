@@ -1,0 +1,158 @@
+/* a2ui-gallery.css — PAGE-LOCAL layout chrome for the A2UI composition gallery. Styles the responsive
+ * card grid, the seed card (head · description · prompt · payload disclosure · defect note), and the
+ * live-surface frame ONLY.
+ * The rendered ui-* controls keep their own {name}.css — this page never restyles a ui-* control, and it
+ * declares NO selector that would tie with a ui-* component's own @scope-scoped display (the segmented-
+ * control cascade-tie lesson), so no element-qualified override is needed here. Colours are
+ * `--md-sys-color-*` roles declared by the foundation barrels (imported first via _page.ts / the lib's
+ * side-effect import), so the page tracks light/dark; the mono facet rides `--ui-mono`. Tokens-only — no
+ * raw-literal colours (matching a2ui-patterns.css / _page.css). */
+
+/* ── the responsive gallery grid — auto-fill so a new seed's card flows in with zero layout edits ──────── */
+.seed-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: 1.25rem;
+  margin-block-start: 1rem;
+}
+
+/* ── one seed card: head + description + prompt + the live surface ─────────────────────────────────────── */
+.seed-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 10px;
+  background: var(--md-sys-color-neutral-surface);
+}
+
+.seed-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.seed-card-heading {
+  margin: 0;
+  font-family: var(--ui-mono);
+  font-size: 0.95rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+/* The derived message-count facet — a muted chip, right-aligned in the head row. */
+.seed-card-count {
+  flex: none;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.seed-card-desc {
+  margin: 0;
+  color: var(--md-sys-color-neutral-on-surface);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* The prompt an agent would have received — a muted, quoted caption below the description. */
+.seed-card-prompt {
+  margin: 0;
+  padding-inline-start: 0.6rem;
+  border-inline-start: 2px solid var(--md-sys-color-neutral-outline-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.78rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* ── the live rendered surface — a framed canvas so the renderer output reads as the "result". Height-
+ *    capped + scrollable (the a2ui-patterns lesson): a tall composition scrolls INSIDE its card instead of
+ *    stretching one card to thousands of pixels and breaking the grid rhythm. `flex: 1 1 auto` lets the
+ *    frame ABSORB the grid-row stretch (rows stretch every card to the row's tallest — without this the
+ *    surplus falls below a short frame as dead whitespace); the 30rem cap still bounds it. ────────────── */
+.seed-surface {
+  flex: 1 1 auto;
+  margin-block-start: 0.2rem;
+  padding: 1rem;
+  border: 1px dashed var(--md-sys-color-neutral-outline);
+  border-radius: 8px;
+  max-block-size: 30rem;
+  overflow: auto;
+  /* ADR-0100 cl.2 — the A2UI mount boundary: this is a `host.mount()` surface (a2ui-gallery.ts), so it must
+   * establish the query container the rendered fleet's layout primitives resolve `@container` reflow against
+   * (they never establish one themselves — ADR-0016 cl.4's establishment sub-clause was deleted). It qualifies
+   * under the law because its inline-size is STRETCHED, not content-derived: `.seed-card` is a flex column
+   * (default `align-items: stretch`), so `.seed-surface` (a flex item with no explicit inline-size) fills the
+   * card's full content width. */
+  container-type: inline-size;
+  /* A persistently VISIBLE bar even under macOS overlay scrollbars — the floor-breaker fix: a tall seed
+     (the booking form's calendar) used to clip at the cap with zero affordance, content just ending
+     mid-view. `thin` opts out of overlay scrollbars; `stable` reserves the gutter so the cue never shifts
+     layout on/off. */
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+  /* Plus a CSS-only scroll-edge cue (background-attachment: local/scroll — the classic scroll-shadow, NOT
+     a JS trait dragged into page chrome, NOT `animation-timeline: scroll()` the fleet deliberately avoids
+     for its engine gaps). The two `local` cover gradients (painted in the surface colour) hide the scrim
+     shadow while an edge is AT rest; the two `scroll`-attached scrim radials are revealed as content
+     scrolls under a cover — so a soft shadow appears at an edge ONLY while content is clipped past it and
+     scrolls away as that edge is reached. Cross-engine (Chromium + WebKit), tokens-only. */
+  background-color: var(--md-sys-color-neutral-surface-low);
+  background-image:
+    linear-gradient(var(--md-sys-color-neutral-surface-low), transparent),
+    linear-gradient(transparent, var(--md-sys-color-neutral-surface-low)),
+    radial-gradient(farthest-side at 50% 0, var(--md-sys-color-neutral-scrim), transparent),
+    radial-gradient(farthest-side at 50% 100%, var(--md-sys-color-neutral-scrim), transparent);
+  background-position:
+    center top,
+    center bottom,
+    center top,
+    center bottom;
+  background-size:
+    100% 1.6rem,
+    100% 1.6rem,
+    100% 0.7rem,
+    100% 0.7rem;
+  background-repeat: no-repeat;
+  background-attachment: local, local, scroll, scroll;
+}
+
+.seed-surface:empty::before {
+  content: 'No surface mounted.';
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.85rem;
+}
+
+/* ── the collapsed per-card payload disclosure — the JSON the agent sends, so the pageLead promise
+ *    ("the payload the agent sends and the surface it produces") is TRUE, not aspirational. Collapsed by
+ *    default (the surface stays the star); the code block is height-capped + scrollable per the a2ui-
+ *    patterns lesson so a long payload never blows the card's rhythm. ──────────────────────────────── */
+.seed-card-payload {
+  font-size: 0.78rem;
+}
+.seed-card-payload > summary {
+  cursor: pointer;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  user-select: none;
+}
+.seed-card-payload > .code-block {
+  margin-block-start: 0.4rem;
+  max-block-size: 12rem;
+  overflow: auto;
+}
+
+/* ── the seed-defect note — an honest callout when a seed fails to render (the page never hides a defect;
+ *    the drift gate fails on the same condition). Tinted with the danger role family. ─────────────────── */
+.seed-card-defect {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-inline-start: 3px solid var(--md-sys-color-danger-outline-variant);
+  border-radius: 6px;
+  background: var(--md-sys-color-danger-surface);
+  color: var(--md-sys-color-danger-on-surface);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}

@@ -17,7 +17,9 @@ const strong = (s: string): HTMLElement => el('strong', {}, [text(s)]) // inline
 const code = (s: string): HTMLElement => el('code', {}, [text(s)])
 
 // ── the live tabs (real compound — three tabs + three panels, the first selected by default) ────────────────
-const tabs = el('ui-tabs', { selected: 'overview' }, [
+// `ui-tabs` is transparent by default (ADR-0104) — this specimen asks for its plane explicitly, dogfooding the
+// elevation/brightness intent lane rather than relying on the removed self-seeded surface.
+const tabs = el('ui-tabs', { selected: 'overview', elevation: '0' }, [
   el('ui-tab', { value: 'overview' }, [text('Overview')]),
   el('ui-tab', { value: 'pricing' }, [text('Pricing')]),
   el('ui-tab', { value: 'support' }, [text('Support')]),

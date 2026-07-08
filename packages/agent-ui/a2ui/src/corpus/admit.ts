@@ -283,7 +283,9 @@ function foldForResolution(out: A2uiOutput): { byId: Map<string, A2uiComponent>;
       for (const comp of msg.updateComponents.components) byId.set(comp.id, comp)
     } else if ('updateDataModel' in msg) {
       const { path, value } = msg.updateDataModel
-      dataModel = path === undefined || path === '' ? value : setAtPointer(dataModel, path, value)
+      // Whole-document replace when no path, "" or "/" (the upstream protocol's root alias — ADR-0099).
+      dataModel =
+        path === undefined || path === '' || path === '/' ? value : setAtPointer(dataModel, path, value)
     }
   }
   return { byId, dataModel }

@@ -293,7 +293,10 @@ describe('ui-tooltip — hide on mouseleave (tooltip-hide-mouseleave)', () => {
     el.addEventListener('toggle', () => toggles++)
 
     anchor.dispatchEvent(new MouseEvent('mouseleave'))
-    expect(el.open).toBe(false)
+    expect(el.open).toBe(false) // the prop setter is synchronous
+    // ADR-0101 — the trait (not this control) is now the sole announcer, so close/toggle fire from
+    // the scope-owned effect's next tick (handle.close()), not synchronously inside the listener.
+    await whenFlushed()
     expect(closes).toBe(1)
     expect(toggles).toBe(1)
     el.remove()
@@ -324,7 +327,8 @@ describe('ui-tooltip — hide on focusout (tooltip-hide-focusout)', () => {
     el.addEventListener('toggle', () => toggles++)
 
     anchor.dispatchEvent(new Event('focusout', { bubbles: true }))
-    expect(el.open).toBe(false)
+    expect(el.open).toBe(false) // the prop setter is synchronous
+    await whenFlushed() // close/toggle now fire from the effect-driven transition (ADR-0101)
     expect(closes).toBe(1)
     expect(toggles).toBe(1)
     el.remove()
@@ -345,7 +349,8 @@ describe('ui-tooltip — hide on Escape (tooltip-hide-escape)', () => {
     el.addEventListener('toggle', () => toggles++)
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
-    expect(el.open).toBe(false)
+    expect(el.open).toBe(false) // the prop setter is synchronous
+    await whenFlushed() // close/toggle now fire from the effect-driven transition (ADR-0101)
     expect(closes).toBe(1)
     expect(toggles).toBe(1)
     el.remove()
@@ -447,7 +452,7 @@ describe('ui-tooltip — two-way open prop (tooltip-open-two-way)', () => {
     el.remove()
   })
 
-  it('tooltip-programmatic-no-emit: programmatic close (open=false) does NOT emit close or toggle', async () => {
+  it('tooltip-programmatic-no-emit: programmatic close (open=false) DOES emit exactly one close+toggle pair (ADR-0101)', async () => {
     const { el, anchor } = makeTooltip()
     anchor.dispatchEvent(new Event('focusin', { bubbles: true }))
     await whenFlushed()
@@ -457,10 +462,10 @@ describe('ui-tooltip — two-way open prop (tooltip-open-two-way)', () => {
     el.addEventListener('close', () => closes++)
     el.addEventListener('toggle', () => toggles++)
 
-    el.open = false // programmatic — no user interaction involved
+    el.open = false // programmatic — no user interaction involved; the trait announces this too now
     await whenFlushed()
-    expect(closes).toBe(0) // no event on programmatic close (ADR-0019 discriminator)
-    expect(toggles).toBe(0)
+    expect(closes).toBe(1) // the trait is the sole, uniform announcer (ADR-0101) — no discriminator left
+    expect(toggles).toBe(1)
     el.remove()
   })
 
@@ -479,7 +484,10 @@ describe('ui-tooltip — two-way open prop (tooltip-open-two-way)', () => {
     })
 
     anchor.dispatchEvent(new Event('focusout', { bubbles: true })) // user-driven
-    expect(order).toEqual(['close', 'toggle']) // close BEFORE toggle (the discriminator order)
+    // ADR-0101 — the trait announces from the scope-owned effect's next tick, not synchronously
+    // inside the focusout listener (userClose only sets the prop); await the flush to observe it.
+    await whenFlushed()
+    expect(order).toEqual(['close', 'toggle']) // close BEFORE toggle (the ordering invariant)
     el.remove()
   })
 })
@@ -526,6 +534,7 @@ describe('ui-tooltip — C10 zero-residue (tooltip-c10-residue · tooltip-c10-st
     el.addEventListener('close', () => closes++)
 
     anchor.dispatchEvent(new Event('focusout', { bubbles: true })) // first dismiss
+    await whenFlushed() // ADR-0101 — close/toggle fire from the effect-driven transition
     expect(closes).toBe(1)
 
     // Reconnect cycle — new listeners wired, old ones already aborted
@@ -539,6 +548,7 @@ describe('ui-tooltip — C10 zero-residue (tooltip-c10-residue · tooltip-c10-st
     anchor2.dispatchEvent(new Event('focusin', { bubbles: true }))
     await whenFlushed()
     anchor2.dispatchEvent(new Event('focusout', { bubbles: true }))
+    await whenFlushed()
     expect(closes).toBe(2) // exactly ONE new listener — not doubled
 
     el.remove()

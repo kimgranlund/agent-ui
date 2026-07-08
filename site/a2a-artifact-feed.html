@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2A Artifact Feed</title>
+  </head>
+  <body>
+    <!-- The A2UI-over-A2A bridge demo (LLD-C7, a2a-a2ui-bridge.lld.md): a message feed where some agent
+         turns carry LIVE A2UI artifacts (a metric-tile report, a region breakdown table) rendered by a real
+         per-message renderer host, alongside plain prose bubbles — proving the feed is MIXED, not
+         artifact-only. Every user bubble shows its "capabilities" handshake chip (the HV-8 teaching
+         surface) and every bubble's raw wire JSON is one disclosure away. Replays a committed fixture with
+         zero network by default; the verdict line is computed IN-PAGE from the SAME checks the standing
+         fixture gate runs, never a hardcoded badge. An MPA entry auto-discovered by vite.config.ts's
+         site/**/*.html glob — no config edit. The page module imports pages/_page.ts FIRST for the
+         foundation CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2a-artifact-feed.ts"></script>
+  </body>
+</html>

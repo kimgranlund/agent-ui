@@ -119,7 +119,19 @@
     padding: var(--ui-card-padding);
     border: 1px solid var(--ui-card-border);
     border-radius: var(--ui-card-radius);
-    min-inline-size: 0; /* a card inside a flex/grid parent may shrink (so [scrollable] content can too) */
+    /* min-inline-size: 0 — RETAINED, ADR-0100 cl.3 (the audited "Defect B" is DISPOSITIONED, not patched): the
+     * tile-crush the visual audit attributed to this floor is actually ADR-0100 cl.1's containment defect
+     * end-to-end (measured: a `min-content` floor renders the IDENTICAL crushed width under containment, and
+     * is equally irrelevant once containment is fixed — the wrap-row tiles land at their real content size,
+     * ~176–180px, with or without this floor). The declaration's own scenario IS real and measured: in a
+     * `ui-grid` track, a card with unbreakable content held the exact 200px track at `0` and BLEW OUT to
+     * 484.2px with a `min-content` floor — the "composes under any parent (a grid cell)" behavior ADR-0030
+     * already leans on. So `0` stays: it is NOT binding in the crush (nothing to fix) and IS protective in
+     * grid tracks (a floor would break them). Residual, accepted: a `reflow="locked"` nowrap row narrower than
+     * the sum of its cards' min-contents still crushes them below min-content — the tiles regression leg
+     * (card.browser.test.ts) watches for the crush class returning, it does not chase this named exotic case
+     * (the default row stacks below 24rem before that window opens). */
+    min-inline-size: 0;
   }
 
   /* Region INSET (REVISED 2026-07-04, block-flow): every region floats inside the frame with a uniform 6px

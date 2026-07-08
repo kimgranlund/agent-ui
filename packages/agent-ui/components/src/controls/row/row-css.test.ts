@@ -75,11 +75,22 @@ describe('row.css — the flex grammar repoints (ADR-0016 cl.1) (s3)', () => {
   })
 })
 
-describe('row.css — container-query reflow + forced-colors (ADR-0016 cl.4) (s3)', () => {
-  it('a @container (inline-size …) rule reflows the row to a COLUMN under a narrow OWN-container width', () => {
+describe('row.css — container-query reflow + forced-colors (ADR-0016 cl.4, gated by reflow — ADR-0096) (s3)', () => {
+  it('a @container (inline-size …) rule, GATED on :not([reflow=\'locked\']), reflows the row to a COLUMN under a narrow OWN-container width', () => {
     expect(stylesBlock).toMatch(/@container \(inline-size/) // queries the row's own query container (no breakpoint prop)
     const cq = stylesBlock.slice(stylesBlock.indexOf('@container'))
-    expect(cq).toMatch(/:scope\s*\{\s*flex-direction:\s*column/) // wraps to a column (the ADR's named example)
+    // gated — absent/default reflow still matches :not([reflow='locked']), so the default stays unchanged;
+    // an explicit reflow="locked" is the only value excluded from the reflow.
+    expect(cq).toMatch(/:scope:not\(\[reflow='locked'\]\)\s*\{\s*flex-direction:\s*column/)
+  })
+
+  it('NEGATIVE control: an UNGUARDED @container direction rule would strand reflow="locked" with no pin (ADR-0096)', () => {
+    // the exact residual-risk leg ADR-0096 accepts/guards against: a bare `:scope { flex-direction: column }`
+    // (no :not([reflow='locked']) guard) would ALSO stack a row explicitly locked horizontal — proving the guard bites.
+    const unguarded = `@container (inline-size < 24rem) {\n  :scope {\n    flex-direction: column;\n  }\n}`
+    expect(unguarded).not.toMatch(/:scope:not\(\[reflow='locked'\]\)/) // the synthetic sheet lacks the guard
+    const cq = stylesBlock.slice(stylesBlock.indexOf('@container'))
+    expect(cq).not.toMatch(/:scope\s*\{\s*flex-direction:\s*column/) // no bare, unguarded :scope rule in the REAL sheet
   })
 
   it('a forced-colors block keeps a surfaced row neutral (surface survives WHCM)', () => {

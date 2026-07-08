@@ -1,0 +1,1 @@
+{"kind":"message","role":"agent","parts":[{"kind":"file","file":{"uri":"https://example.com/report.pdf","mimeType":"application/pdf"}}],"messageId":"msg-4"}

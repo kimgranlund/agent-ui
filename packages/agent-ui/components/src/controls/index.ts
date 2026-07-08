@@ -35,6 +35,16 @@ export * from './radio/radio-group.ts'  // self-defines ui-radio-group
 export * from './slider/slider.ts'
 export * from './slider-multi/slider-multi.ts'
 
+// Pattern controls — ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover):
+// the standalone segmented control. segmented-control.ts imports segment.ts as a side effect (both tags
+// self-define together), but each still gets its own `export *` line here — the barrel↔exports-map
+// three-way bijection (barrels.test.ts T4) requires one per public `./controls/{name}` entry, and
+// `segment`/`segmented-control` live in SEPARATE folders (the family-coherence naming trip-wire's
+// `name === folder || name.startsWith(folder + '-')` rule has no prefix relationship between them, unlike
+// the radio/radio-group one-folder precedent — see segmented-control.ts's own note).
+export * from './segment/segment.ts'
+export * from './segmented-control/segmented-control.ts'
+
 // G9 container / layout family — surface axes + the shared flex grammar (ADR-0015/0016).
 export * from './row/row.ts'
 export * from './column/column.ts'
