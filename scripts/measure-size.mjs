@@ -41,9 +41,14 @@ const targets = [
   // a real consumer imports a subset and ships ~5–14 KB (single control ~5 KB incl. the shared dom+reactive+
   // traits+base foundation dragged in once; each extra control ~0.5–2 KB marginal — measured 2026-07-05).
   // 23 KB re-based at the container box-model + scroll-fade wave (ADR-0049 Amendment 1): the scroll-fade trait
-  // pushed the all-controls bundle past 22 KB (~155 B of SHARED scroll infra). The per-control marginal ≤~2 KB
-  // stays the REAL cap; the per-control leg below (T5, ADR-0080) measures it directly through the public API.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 23 * KB],
+  // pushed the all-controls bundle past 22 KB (~155 B of SHARED scroll infra). 25 KB re-based at the ADR-0095
+  // wave (ui-segmented-control + ui-segment supersede ui-radio-group[variant=segmented]): two NEW tags (each
+  // with its own descriptor/CSS text baked into the bundle) land alongside radio-group.css's segmented-block
+  // removal — net +~950 B gz to the worst-case ceiling (measured 24499 B gz 2026-07-07). The per-control
+  // marginal ≤~2 KB stays the REAL cap; the per-control leg below (T5, ADR-0080) measures it directly through
+  // the public API (both new controls land at 0–62 B gz marginal — trivial, since almost all their shared cost
+  // rides the radio/radio-group foundation every other Indicator/Pattern control already pays).
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 25 * KB],
 ]
 
 let over = false
