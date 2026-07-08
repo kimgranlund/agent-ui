@@ -1,0 +1,93 @@
+{
+  "domain": "technical-architecture",
+  "plan": true,
+  "nodes": [
+    { "id": "n0", "label": "visual-regression (pixel-diff) harness", "leaf": false, "justify": "grouping" },
+
+    { "id": "n1", "label": "capture/compare seam (vitest-native toMatchScreenshot)", "leaf": false, "justify": "grouping" },
+    { "id": "n1a", "label": "visual vitest project (third project in vitest.browser.config.ts; include glob **/*.visual.browser.test.ts)", "leaf": true,
+      "accept": "`npm run test:browser` runs a `visual` project; `*.visual.browser.test.ts` files run ONLY there (packages/site project globs unchanged, proven by a negative-control file-name)" },
+    { "id": "n1b", "label": "matcher defaults (browser.expect.toMatchScreenshot: pixelmatch comparatorOptions, screenshotOptions, resolveDiffPath)", "leaf": true,
+      "accept": "vitest.browser.config.ts sets comparator defaults (includeAA false, threshold 0.1, allowedMismatchedPixelRatio 0.01) and `npm run check` stays green (config typechecks against installed @vitest/browser 4.1.9 types)" },
+
+    { "id": "n2", "label": "baseline store", "leaf": false, "justify": "grouping" },
+    { "id": "n2a", "label": "baseline path policy (custom resolveScreenshotPath -> co-located __baselines__/<test-file>/<name>-<browser>-<platform>.png)", "leaf": true,
+      "accept": "a visual test run writes its reference under `**/__baselines__/<test-file>/<name>-chromium-darwin.png`, NOT under `__screenshots__/`" },
+    { "id": "n2b", "label": "gitignore split (track __baselines__/, keep __screenshots__/ + diff attachments ignored)", "leaf": true,
+      "accept": "`git check-ignore` rejects a path under `__baselines__/` (trackable) and still matches paths under `__screenshots__/` and the vitest attachments dir" },
+
+    { "id": "n3", "label": "engine + platform policy", "leaf": false, "justify": "grouping" },
+    { "id": "n3a", "label": "chromium-only pixel truth (visual project pinned to the chromium instance; WebKit keeps computed-style legs)", "leaf": true,
+      "accept": "a full `npm run test:browser` executes visual legs exactly once (chromium); WebKit executes zero visual legs (project instances pin, or skipIf(server.browser !== 'chromium') fallback — either mechanism, proven by run output)" },
+    { "id": "n3b", "label": "darwin platform encoding (keep vitest's default -<platform> filename suffix; macOS-only baselines named honestly)", "leaf": true,
+      "accept": "committed baseline filenames carry `-darwin`; the ADR states the non-darwin behavior (missing-baseline failure, never a cross-platform garbage diff)" },
+
+    { "id": "n4", "label": "workflow commands", "leaf": false, "justify": "grouping" },
+    { "id": "n4a", "label": "npm run test:visual (vitest run --config vitest.browser.config.ts --project visual)", "leaf": true,
+      "accept": "`npm run test:visual` runs only the visual project and exits 0 on a clean tree" },
+    { "id": "n4b", "label": "npm run test:visual:update (same + --update; the ONLY path that rewrites an existing baseline)", "leaf": true,
+      "accept": "after a deliberate pixel change: plain `npm run test:visual` FAILS without touching the committed baseline; `npm run test:visual:update` rewrites it; the re-run is green" },
+
+    { "id": "n5", "label": "v1 pilot scope (the two forcing ADRs; NOT a fleet sweep)", "leaf": false, "justify": "grouping" },
+    { "id": "n5a", "label": "ADR-0105 calendar pixel legs (the (a)-floor + wide-range gestalt as toMatchScreenshot legs)", "leaf": true,
+      "accept": "calendar `*.visual.browser.test.ts` legs realize ADR-0105 Acceptance (a)/(b) as pixel assertions; green on chromium with committed baselines" },
+    { "id": "n5b", "label": "ADR-0106 truncate pixel legs (the clipped-single-line + as-toggle invariant as toMatchScreenshot legs)", "leaf": true,
+      "accept": "text-truncate `*.visual.browser.test.ts` legs realize the ADR-0106 rendered-box assertions as pixel assertions; green on chromium with committed baselines" },
+
+    { "id": "n6", "label": "decision record", "leaf": false, "justify": "grouping" },
+    { "id": "n6a", "label": "ADR-0110 (intake: adopt vitest-native pixel-diff harness, scoped v1)", "leaf": true,
+      "accept": "`python adr_check.py 0110-*.md` exits 0; Status stays `proposed` for coordinator ratification" },
+    { "id": "n6b", "label": "ADR README index row for 0110", "leaf": true,
+      "accept": "index row present; the site-adr-index lint gate (`npm test`) stays green" }
+  ],
+  "actions": [
+    { "id": "a1", "label": "capture a single element's pixels stably across runs (animations disabled, caret hidden, device scale)" },
+    { "id": "a2", "label": "compare a capture against a committed baseline within a bounded tolerance (AA ignored, YIQ threshold, mismatch ratio cap)" },
+    { "id": "a3", "label": "fail with an inspectable diff artifact on mismatch" },
+    { "id": "a4", "label": "create a baseline deliberately and never overwrite one silently (first run = create + fail-for-review; overwrite only under --update)" },
+    { "id": "a5", "label": "keep baselines committable and reviewable in git" },
+    { "id": "a6", "label": "keep failure debris (diffs, on-failure captures) out of git" },
+    { "id": "a7", "label": "restrict pixel truth to one engine while the other keeps computed-style coverage" },
+    { "id": "a8", "label": "encode the macOS-only baseline constraint honestly so a foreign machine fails loud, not wrong" },
+    { "id": "a9", "label": "make pixel cost opt-in per suite via a deliberate filename convention" },
+    { "id": "a10", "label": "run inside the standing browser gate AND standalone" },
+    { "id": "a11", "label": "re-baseline through one deliberate command" },
+    { "id": "a12", "label": "prove the harness on the two ADR legs that forced the intake" },
+    { "id": "a13", "label": "record the decision and route future geometry-ADR acceptance language to the harness" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n1b" },
+    { "action": "a2", "node": "n1b" },
+    { "action": "a3", "node": "n1b" },
+    { "action": "a4", "node": "n4b" },
+    { "action": "a5", "node": "n2a" },
+    { "action": "a5", "node": "n2b" },
+    { "action": "a6", "node": "n2b" },
+    { "action": "a7", "node": "n3a" },
+    { "action": "a8", "node": "n3b" },
+    { "action": "a9", "node": "n1a" },
+    { "action": "a10", "node": "n4a" },
+    { "action": "a10", "node": "n1a" },
+    { "action": "a11", "node": "n4b" },
+    { "action": "a12", "node": "n5a" },
+    { "action": "a12", "node": "n5b" },
+    { "action": "a13", "node": "n6a" },
+    { "action": "a13", "node": "n6b" }
+  ],
+  "edges": [
+    { "from": "n6a", "to": "n1a", "why": "the build starts only after the intake ADR is ratified — the ADR is the spec the config seam implements" },
+    { "from": "n6a", "to": "n6b", "why": "the index row cites the record it indexes" },
+    { "from": "n1a", "to": "n4a", "why": "the --project visual filter the script uses requires the project to exist" },
+    { "from": "n1a", "to": "n4b", "why": "the update script filters to the same project" },
+    { "from": "n1a", "to": "n5a", "why": "the pilot file's *.visual glob is routed by the project's include" },
+    { "from": "n1a", "to": "n5b", "why": "the pilot file's *.visual glob is routed by the project's include" },
+    { "from": "n1b", "to": "n5a", "why": "the pilot asserts through the configured comparator/screenshot defaults" },
+    { "from": "n1b", "to": "n5b", "why": "the pilot asserts through the configured comparator/screenshot defaults" },
+    { "from": "n2a", "to": "n5a", "why": "the pilot's first run writes references at the tracked path the resolver pins" },
+    { "from": "n2a", "to": "n5b", "why": "the pilot's first run writes references at the tracked path the resolver pins" },
+    { "from": "n2b", "to": "n5a", "why": "committing the pilot's baselines requires the ignore split to land first" },
+    { "from": "n2b", "to": "n5b", "why": "committing the pilot's baselines requires the ignore split to land first" },
+    { "from": "n3a", "to": "n5a", "why": "the pilot legs run under the single-engine policy (no WebKit baselines may be generated)" },
+    { "from": "n3a", "to": "n5b", "why": "the pilot legs run under the single-engine policy (no WebKit baselines may be generated)" }
+  ]
+}
