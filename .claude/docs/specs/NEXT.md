@@ -4,9 +4,9 @@
 > `git log -- packages/agent-ui/a2ui/` + the realized modules and their co-located probes** — this
 > file only orients; when it disagrees with the tree, the tree wins and this file gets repaired.
 > Build seat: the **`a2ui-builder`** agent (`.claude/agents/a2ui-builder.md`) — one unit per
-> dispatch, spec-faithful, escalates protocol-silence to the host. · updated 2026-07-05
+> dispatch, spec-faithful, escalates protocol-silence to the host. · updated 2026-07-08
 
-## Realized (verified against the tree, 2365 jsdom + 564 browser tests green repo-wide)
+## Realized (verified against the tree, 3543 jsdom + 1178 browser tests green repo-wide)
 
 - **A1 runtime foundation** — the shared validation spine (`renderer/validate.ts` +
   `corpus/validate.ts`, SPEC-N6 parity) + `surface.ts`/`parser.ts` (streamed payload parse) +
@@ -60,12 +60,28 @@
   above), two minors booked as follow-ups below. Corpus LLD-C12 SPLIT: the judge half is now done;
   the Inspect-AI scoring/lift half stays deferred with corpus LLD-C8 (the first eval record).
 
+- **The A2UI-close + A2A wave — DONE 2026-07-07** (merged to `main`, ADRs 0087–0106). The a2ui-relevant
+  slices: **ADR-0099** (`path:"/"` root alias honored at all three apply-sites — `renderer.ts` ·
+  `corpus/canonical.ts` · `corpus/admit.ts`; `setPointer` stays RFC-6901-pure) · **ADR-0102** (the
+  CSS-less-consumer law: no rendered-correctness concern may live only in page-author CSS — three lanes:
+  component-owned default / catalog prop / taught idiom, with a chooser; ADR-0103..0106 are its first
+  applications) · the **`form-rhythm` mini-skill** (ADR-0103's Lane C recommendation, the ADR-0091
+  registry's 6th module, 2026-07-08) · the six-ADR gallery-defect wave (0101–0106: overlay
+  always-announce + the mouse-open prop-flip pattern, radio-group layout, calendar fluid tracks, Text
+  `truncate`). **The A2A section** shipped as its own sibling package `@agent-ui/a2a` (wire types +
+  validation pinned v0.3.0, the isolation-proven tic-tac-toe arena + a real recorded flagship match,
+  the concept/demo corpus + `site/a2a-concepts` · `a2a-tic-tac-toe` · `a2a-artifact-feed` pages) —
+  and the **B6 bridge** (`tools/pipeline/transports/a2a.ts`: one A2UI envelope per
+  `application/a2ui+json` DataPart, `a2uiClientCapabilities` on every client message) is the
+  pipeline-tail's FIRST realized transport (see Open 1).
+
 ## Open (the real next intakes, in likely order)
 
 1. **The streaming pipeline tail** — RECONCILED at v0.2 (2026-07-02): every CONSUMER-side streaming
    behavior is realized in the renderer (parse/fault-isolation/arrival-order/render-on-root); the
-   pipeline's OWN scope (codec · driver · transports · MCP — LLD-C1..C7) is entirely unbuilt and
-   stays deliberately unscoped until a producer need arrives. Healing belongs to the corpus store's
+   pipeline's OWN scope (codec · driver · transports · MCP — LLD-C1..C7) stays deliberately unscoped
+   until a producer need arrives — EXCEPT the first transport, the A2UI-over-A2A bridge
+   (`tools/pipeline/transports/a2a.ts`, 2026-07-07 — see the wave bullet above). Healing belongs to the corpus store's
    ONE shared healer (`corpus/heal.ts`, ADR-0061 — now realized, text-first signature designed for
    per-line codec reuse). The programmatic generate→verify loop driver (harness SPEC-R6, procedural
    only today) is this wave's named trigger too — the first real programmatic generator. The

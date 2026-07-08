@@ -29,6 +29,9 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
 - `packages/agent-ui/shared/` — `@agent-ui/shared`, cross-cutting tokens/styles/utility types. Color
   `tokens.css` adopted (`src/tokens/`, exported as `@agent-ui/shared/tokens.css`); dimensional/runtime tokens land G5
 - `packages/agent-ui/a2ui/` — `@agent-ui/a2ui`, the A2UI layer (team-led, `.claude/docs/specs/`); depends on `@agent-ui/components`
+- `packages/agent-ui/a2a/` — `@agent-ui/a2a`, the A2A (Agent2Agent) protocol layer: wire types + validation pinned to spec v0.3.0, the tic-tac-toe arena (isolation-proven agent-vs-agent matches), and its own concept/demo corpus shards; zero deps
+- `packages/agent-ui/icons/` — `@agent-ui/icons`, swappable icon-pack adapter (pure core + `./phosphor` subpath; ADR-0065/0066); zero deps
+- `packages/agent-ui/app/` — `@agent-ui/app`, app-surface compositions (`agent-app-shell`, ADR-0082..0084); depends on components + a2ui + shared
 - `.claude/docs/` — plan, goals, process, references, adr, specs, llds, decompositions, rubrics (agent-scoped project docs) · `*.test.ts` co-located with source
 
 ## Conventions (non-obvious only)
@@ -38,8 +41,9 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   `verbatimModuleSyntax` ⇒ `import type` for type-only imports; `allowImportingTsExtensions` ⇒ keep
   the explicit `.ts` on local imports.
 - Vite 8 is Rolldown-based (not esbuild/Rollup) — bundler/plugin behaviour follows Rolldown-Vite.
-- Imports point inward only: layers `reactive` ← `dom` ← `traits`/`controls`; cross-package, only
-  `components` → `@agent-ui/shared`. Nothing imports upward. (Enforced by the import-layering trip-wire.)
+- Imports point inward only: layers `reactive` ← `dom` ← `traits`/`controls`; cross-package the DAG is
+  `shared` ← `components` ← `a2ui` ← `app` (`icons`/`a2a` import nothing). Nothing imports upward.
+  (Enforced by the per-package `layering.test.ts` trip-wires.)
 - Naming: tags `ui-{name}`, classes `UI{Name}Element`, tokens `--ui-{name}-*` / color roles
   `--md-sys-color-{family}-{role}` / type scale `--md-sys-typescale-{role}-{size}-*` (ADR-0078);
   event names ∈ `change · input · select · open · close · toggle`.
