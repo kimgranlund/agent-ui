@@ -8,7 +8,7 @@
 > | **Date** | 2026-07-08 |
 > | **Proposed by** | system-planner — root-caused from Kim's gallery ticket #28 ("ui-select and ui-menu: when a selection is made, the menu should close"); the fork investigation's diagnosis re-verified against source before design |
 > | **Ratified by** | *(pending — orchestration-coordinator, on the doc-review + green gate)* |
-> | **Repairs** | On ratification+build (the builder lands these with the code): `traits/overlay.ts` (the announce moves to the trait's actual-transition points) · `controls/tooltip/tooltip.ts` (`userClose`'s manual `close`/`toggle` emits retired — the trait becomes the sole announcer) · the descriptor event contracts `{menu,select,popover,tooltip,combo-box}.md` (`toggle`/`close` "when" rows re-derived; also corrects `tooltip.md:40`'s stale claim that `toggle` fires BEFORE `open` flips — `tooltip.ts:117-122` sets the prop first) · `overlay-controller.lld.md` (the LLD-C2 event clause) · the suppression pins inverted: `traits/overlay.test.ts:272`, `controls/menu/menu.test.ts:300/364/375/569`, `controls/popover/popover.test.ts:275` (+ browser legs). Docs-only this pass: this record · the index row · ADR-0045's reciprocal link. |
+> | **Repairs** | On ratification+build (the builder lands these with the code): `traits/overlay.ts` (the announce moves to the trait's actual-transition points) · `controls/tooltip/tooltip.ts` (`userClose`'s manual `close`/`toggle` emits retired — the trait becomes the sole announcer) · the descriptor event contracts `{menu,select,popover,tooltip,combo-box}.md` (`toggle`/`close` "when" rows re-derived; also corrects `tooltip.md:40`'s stale claim that `toggle` fires BEFORE `open` flips — `tooltip.ts:117-122` sets the prop first) · `overlay-controller.lld.md` (the LLD-C2 event clause) · the suppression pins inverted: `traits/overlay.test.ts:272`, `controls/menu/menu.test.ts:300/364/375/569`, `controls/popover/popover.test.ts:275`, `controls/select/select.test.ts:390`, `controls/tooltip/tooltip.test.ts:450` (+ browser legs) · the stale `site/pages/popover-demo.ts:46` comment. Docs-only this pass: this record · the index row · ADR-0045's reciprocal link. |
 > | **Supersedes / Superseded by** | **Supersedes ADR-0045 in part — the event-discipline leg only**: clause 1's suppression sentence ("`this.open = false` there is a *programmatic* close, which the discriminator deliberately suppresses (no event)") and the Consequence "`toggle`/`close` fire **only** on platform-driven dismissal". Clauses 2 (anchor focus-restore), 3 (DOM-state-resilient `close()`), 4 (committing-Enter `preventDefault`) and the platform-owns-light-dismiss half of clause 1 **STAND** — ADR-0045 stays `accepted` (the ADR-0025/0078 partial-supersession precedent). ADR-0045's own "Known deferred MINOR" (the `close`/`open` listener-order race, with its foreshadowed "future controller change" settling it family-wide) lands here. Relates: **ADR-0019** (the `value:{prop,event}` two-way machinery this makes able to hear every transition) · **ADR-0043** (the primitives stand; its "Two-way `open` via the `toggle` event" clause becomes true on every transition, not only light-dismiss) · **ADR-0053** (its "a one-way `open` would desync on light-dismiss" rationale dissolves; the one-value-mark-per-component schema constraint stands, so `Select.open` stays unbound for that reason alone). |
 
 ## Context
@@ -80,9 +80,12 @@ Mechanics — one home, the trait; all five consumers inherit (menu, select, com
 - **−** Model-driven transitions now also announce (native-faithful): consumers receive an event for a
   change the model itself made; the bind's write-back is an idempotent no-op by the `Object.is` cutoff.
 - **−** The build owes test inversions: the suppression pins flip to exactly-one-pair assertions —
-  `overlay.test.ts:272-289`, `menu.test.ts:300-314, 363-384, 569-583`, `popover.test.ts:275-289`, plus
-  browser legs — **and** a new negative control: one transition ⇒ exactly one write-back, no effect
-  re-entry (the loop probe).
+  `overlay.test.ts:272-289`, `menu.test.ts:300-314, 363-384, 569-583`, `popover.test.ts:275-289`,
+  `select.test.ts:390` (`select-programmatic-no-emit`) and `tooltip.test.ts:450`
+  (`tooltip-programmatic-no-emit`) — the last two are review-found omissions pinning the exact
+  inverted behavior — plus browser legs — **and** a new negative control: one transition ⇒ exactly
+  one write-back, no effect re-entry (the loop probe). Also re-word the now-false demo comment
+  `site/pages/popover-demo.ts:46` in the same pass.
 - **−** Descriptor re-derivations owed: the five overlay `.md` event rows + `overlay-controller.lld.md`;
   `tooltip.md:40`'s before/after ordering claim is corrected in the same pass.
 - **−** Tooltip consumers see a small timing shift: `close`/`toggle` now fire from the effect-driven
