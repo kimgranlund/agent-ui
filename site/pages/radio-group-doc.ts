@@ -30,10 +30,10 @@ function renderExample(): HTMLElement {
   const group = document.createElement('ui-radio-group')
   group.setAttribute('name', 'plan')
   group.setAttribute('value', 'pro')
-  // The default variant is layout-neutral by design (radio-group.css: "the page author controls layout"); a
-  // ui-radio's own host is inline-flex, so with no page CSS at all its children butt against each other with
-  // zero gap. `orientation="horizontal"` + the inline flex/gap match the demo page's identical plan-picker
-  // shape (radio-group-demo.ts) so the two pages read consistently and the roving-focus axis matches the row.
+  // ADR-0103: ui-radio-group now owns its own interior layout (flex column by default, a wrapping row + gap
+  // under `orientation="horizontal"`). The inline `style` below just matches the demo page's identical
+  // plan-picker shape (radio-group-demo.ts, `--ui-space-md` — this page's own gap choice, not the component's
+  // `--ui-space-sm` default) so the two pages read consistently; the roving-focus axis matches the row either way.
   group.setAttribute('orientation', 'horizontal')
   group.setAttribute('style', 'display:flex; flex-wrap:wrap; align-items:center; gap:var(--ui-space-md);')
   for (const [value, label] of [

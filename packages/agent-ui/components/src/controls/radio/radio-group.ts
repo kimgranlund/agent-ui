@@ -30,9 +30,11 @@
 //
 // ADR-0095 (supersedes ADR-0086's `variant="segmented"`): the segmented presentation is now the standalone
 // `UISegmentedControlElement` (controls/segmented-control/), NOT a variant of this class. `variant` does not
-// exist here — the group is back to its dot-only, layout-neutral presentation surface. Two PROTECTED seams
-// exist purely so that subclass can reuse this class's exclusivity/roving/value/validity machinery without
-// forking it:
+// exist here — the group is back to its dot-only presentation surface. ADR-0103: the group OWNS its interior
+// layout (radio-group.css's `@scope` flex column/row + `--ui-radio-group-gap`) — direct-children discovery
+// (`#radios()` below) means the layout cannot be left to page-author composition, unlike a coordination
+// wrapper. Two PROTECTED seams exist purely so that subclass can reuse this class's exclusivity/roving/value/
+// validity machinery without forking it:
 //   · `defaultOrientation()` — the class-derived roving-axis default (this base returns 'vertical'; the
 //     resolve-once-and-reflect-at-connect mechanism below calls it only when no explicit `orientation`
 //     attribute is authored). ADR-0095 clause 1.

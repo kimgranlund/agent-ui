@@ -95,26 +95,12 @@ component-preview {
  * old dormant rule (targeting `ui-radio-group.knob-radio-group:not([variant='segmented'])`) retired with it;
  * `ui-segmented-control` needs zero page-authored layout CSS for the knob case.
  *
- * The SPECIMEN ROOT case is the one page-author leg that survives: when the component under browse IS
- * ui-radio-group itself, `#buildComponent` mounts a bare `<ui-radio-group>` (no class) straight into
- * `.canvas-surface` (canvas-surface.ts) with its STRUCTURAL sample children (component-preview.ts's
- * COMPONENT_SAMPLE_CHILDREN). `ui-radio-group` is deliberately layout-neutral by design (radio-group.css:
- * "the page author controls layout") — this IS that page-author leg, scoped to the specimen root only
- * (`.canvas-surface >`) so it never reaches an application's own unrelated `ui-radio-group` usage. The base
- * declaration mirrors the DEFAULT orientation (`vertical` — a stacked column); the `[orientation='horizontal']`
- * override switches to a wrapping row when the live `orientation` knob is flipped, so the visual axis never
- * desyncs from the roving-focus keyboard axis the control itself resolves (radio-group.ts `connected()`).
- * `ui-segmented-control` needs NO specimen-root leg here either — it too always owns its own grid layout. */
-.canvas-surface > ui-radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.canvas-surface > ui-radio-group[orientation='horizontal'] {
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-}
+ * ADR-0103 RETIRES the specimen-root leg that used to live here (`.canvas-surface > ui-radio-group` +
+ * its `[orientation='horizontal']` override): `ui-radio-group` now owns this exact flex structure itself
+ * (radio-group.css's `@scope` block — column by default, gap off the `--ui-space` ladder, a wrapping row
+ * under `[orientation='horizontal']`), so the bare specimen mounted by `#buildComponent` renders
+ * stacked-with-gap FROM THE COMPONENT with zero page-authored CSS. `ui-segmented-control` needs no
+ * specimen-root leg either — it too always owns its own grid layout. */
 .knob-note {
   color: var(--md-sys-color-neutral-on-surface-variant);
   font-style: italic;

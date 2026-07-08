@@ -12,7 +12,7 @@
 tag: ui-radio-group
 tier: container        # geometry size-class (not a sized control — a container that holds ui-radio children)
 extends: UIFormElement  # FACE form-associated container (value/validity participation via ElementInternals; ADR-0013)
-# marginal: ui-radio-group adds -2 B gz (re-measured via `npm run size`, ADR-0080, 2026-07-07, after ADR-0095 retired the segmented-variant CSS/props — effectively zero marginal now that ui-segmented-control absorbs that cost instead) to the self-defining ui-* family above the other three Wave-1 Indicator controls (UIRadioGroupElement owns rovingFocus group wiring, single-selection exclusivity, and the group form value — the largest Wave-1 leaf) — within the per-control ≤ ~2 kB tier budget (plan §10)
+# marginal: ui-radio-group adds 1 B gz (re-measured via `npm run size`, ADR-0080, 2026-07-08, after ADR-0103 gave the group its own owned-layout CSS — the --ui-radio-group-gap token + the @scope flex/orientation rules cost is negligible, still effectively zero marginal) to the self-defining ui-* family above the other three Wave-1 Indicator controls (UIRadioGroupElement owns rovingFocus group wiring, single-selection exclusivity, and the group form value — the largest Wave-1 leaf) — within the per-control ≤ ~2 kB tier budget (plan §10)
 
 attributes:            # attributes-as-API — mirrors radio-group.ts static props (UIFormElement.formProps spread + orientation)
   - name: name
@@ -57,7 +57,7 @@ events:
 slots:
   - name: default
     optional: false
-    description: The ui-radio children (and any other light-DOM content). The group selects direct children via `[...this.children].filter(el => el instanceof UIRadioElement)` for roving-focus and selection management; non-radio children are ignored for selection but lay out normally in the container's block flow.
+    description: The ui-radio children (and any other light-DOM content). The group selects direct children via `[...this.children].filter(el => el instanceof UIRadioElement)` for roving-focus and selection management; non-radio children are ignored for selection but lay out as flex items in the group's own column/row stack (ADR-0103 — the group owns its interior layout, not block flow).
 
 parts: []              # light-DOM container — no shadow parts
 
@@ -91,8 +91,10 @@ keyboard:              # the roving axis is PER-ORIENTATION (the resolved `orien
 
 geometry:
   sizeClass: container   # no fixed block-size — the group sizes to its content (ui-radio children).
-  display: block         # a block container; radios stack in block flow.
-  note: Layout (stack direction, gap, wrapping) is the page author's responsibility — no layout-opinionated CSS. The joined-button segmented presentation (a real display:grid layout, one shared moving indicator) is the standalone ui-segmented-control (ADR-0095), not this group.
+  display: flex          # ADR-0103: the group owns its interior layout — flex-direction:column by default (a ui-radio host is inline-flex, so unstyled children would butt together with zero gap)
+  gap: var(--ui-radio-group-gap)   # = var(--ui-space-sm) — density-responsive; page authors retune per-instance with one custom property
+  orientationEffect: '[orientation=horizontal] switches flex-direction:row + flex-wrap:wrap + align-items:center — the roving-focus axis (radio-group.ts) and the visual axis are now one source of truth (ADR-0103)'
+  note: The joined-button segmented presentation (a real display:grid layout, one shared moving indicator) is the standalone ui-segmented-control (ADR-0095), not this group.
 
 forcedColors: No per-group forced-colors rules needed; the ui-radio children carry their own WHCM treatment. The group's internals.role='radiogroup' is AX-only (no visual surface).
 ---
@@ -155,13 +157,29 @@ the class-derived default applies (`vertical` on this base class).
 be provided by the page author via `aria-label` or `aria-labelledby` on the group element. Each child
 `ui-radio` carries `role="radio"` and `ariaChecked` via its own internals (managed by `UIIndicatorElement`).
 
+## Layout
+
+`ui-radio-group` **owns its interior layout** (ADR-0103): a `column` flex stack by default, with the gap
+re-based to the layout ladder's `--ui-space-sm` (density-responsive for free) — `[orientation="horizontal"]`
+switches to a wrapping row (`flex-wrap: wrap; align-items: center`), so the visual axis never desyncs from the
+roving-focus keyboard axis the group itself resolves. This is the same structure the group cannot leave to
+composition: its child discovery is direct children only (`[...this.children].filter(el => el instanceof
+UIRadioElement)`), so a page author cannot fix a missing gap by wrapping the radios in a `ui-column` — doing
+so would sever selection/roving. Retune the gap per instance with the `--ui-radio-group-gap` custom property
+(the override freedom every component keeps).
+
+`orientation` is resolved **once at connect** — there is no post-connect dynamic re-resolution contract
+(the ui-select dynamic-options precedent): an imperative `group.orientation = …` after connect flips the
+visual axis via the reflected attribute but the roving-focus key axis stays at its connect-time value.
+Set orientation declaratively (markup or catalog prop) before connection.
+
 ## The joined-button "segmented control" presentation lives elsewhere
 
-A `ui-radio-group` renders as dots-in-a-row only — it is layout-neutral, and the page author owns stack
-direction, gap, and wrapping. The joined-button single-select toggle (one shared, animated highlight sliding
-between adjoining segments) used to be a `variant="segmented"` on this group (ADR-0086); ADR-0095 promoted it
-to its own standalone tag, **`ui-segmented-control`** (with `ui-segment` children, not `ui-radio`) — see that
-control's own doc page. This group carries no `variant` attribute at all.
+A `ui-radio-group` renders as dots-in-a-row (or dots-in-a-column) only — the joined-button single-select
+toggle (one shared, animated highlight sliding between adjoining segments) used to be a `variant="segmented"`
+on this group (ADR-0086); ADR-0095 promoted it to its own standalone tag, **`ui-segmented-control`** (with
+`ui-segment` children, not `ui-radio`, and its own `display:grid` layout) — see that control's own doc page.
+This group carries no `variant` attribute at all.
 
 ## Required + validity
 

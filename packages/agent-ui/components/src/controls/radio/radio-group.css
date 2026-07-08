@@ -1,16 +1,23 @@
 /* radio-group.css — ui-radio-group, the radio-button container stylesheet (Wave 1 S3, ADR-0003).
  *
- * The container convention requires a .css even when layout-neutral (process.md §4, container-family rule):
- * every FACE component ships a stylesheet that at minimum carries the `:where(ui-{name})` token block and
- * the `@scope (ui-{name})` block (so future per-group tokens have a stable registration point and the barrel
- * import order is permanent). The group is a layout-neutral block container — it has no visual surface of
- * its own; its `ui-radio` children carry all visible affordances; its forced-colors block stays minimal.
+ * The container convention requires a .css even for a small layout footprint (process.md §4,
+ * container-family rule): every FACE component ships a stylesheet that at minimum carries the
+ * `:where(ui-{name})` token block and the `@scope (ui-{name})` block. The group has no visual surface of
+ * its own — its `ui-radio` children carry all visible affordances — but it DOES own its interior layout
+ * (ADR-0103); its forced-colors block stays minimal.
  *
  * ADR-0086 previously grew a "segmented" presentation variant here (a joined-button track + one shared
  * moving highlight, keyed off `[variant='segmented']`). ADR-0095 supersedes that architecture: the segmented
  * presentation is now the standalone `ui-segmented-control` (controls/segmented-control/segmented-control.css)
- * — a hard cutover, no alias. This file is restored to its pre-ADR-0086 truth: the token block below is a
- * genuine RESERVE (no design tokens needed yet), not a stand-in for a variant that used to live here.
+ * — a hard cutover, no alias. This file is restored to its pre-ADR-0086 truth for presentation; ADR-0103
+ * then fills the token block's long-reserved seat with the group's OWN layout token (not a variant).
+ *
+ * ADR-0103 (the spacing pair): a value-owning group whose children must be its DIRECT children
+ * (radio-group.ts:194's `[...this.children].filter(...)`) cannot be fixed by composition — wrapping the
+ * radios in a `ui-column` would sever discovery. So the group owns the SAME flex structure the site used to
+ * hand-author per-page (component-preview.css, now deleted): a vertical stack by default,
+ * `[orientation='horizontal']` a wrapping row — with the gap re-based to the `--ui-space` ladder (`sm`) so it
+ * rides `[density]` for free, rather than the site's hard-coded `0.4rem`/`--ui-space-md` duplicates.
  *
  * Standalone stylesheet — linked via the component-styles barrel (s12, after radio.css); NEVER injected
  * from radio-group.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -19,18 +26,32 @@
 /* ════════════ [1] TOKEN BLOCK — :where(ui-radio-group) (specificity 0,0,0) ════════════ */
 
 :where(ui-radio-group) {
-  /* No design tokens: the group is layout-neutral — spacing and alignment are the page author's
-     responsibility. Token registrations reserved here for future density/gap props without a cascade-order
-     change (the barrel import is append-only). */
+  /* ADR-0103: the group's own interior gap, off the layout ladder (density-responsive for free) — the seat
+     this block's comment reserved ("future density/gap props without a cascade-order change"). Page authors
+     retune per-instance with one custom property (the ADR-0102 override freedom); no catalog `gap` enum yet
+     (a foreseen Lane B extension only if live evidence shows models need magnitude control). */
+  --ui-radio-group-gap: var(--ui-space-sm);
 }
 
 /* ════════════ [2] STYLES BLOCK — @scope (ui-radio-group) ════════════ */
 
 @scope (ui-radio-group) {
-  /* A block container: radios stack in block flow. No explicit height or inline-size — the group sizes to
-     its content. No padding/gap: the page author controls layout. */
+  /* ADR-0103: a vertical stack by default — the roving-focus axis (Arrow Up/Down, radio-group.ts's
+     `defaultOrientation()`) and the visual axis are now the SAME source of truth. No explicit block-size or
+     inline-size — the group sizes to its content; only the gap is opinionated. */
   :scope {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-radio-group-gap);
+  }
+
+  /* `[orientation='horizontal']` (reflected once at connect, radio-group.ts's connected()) switches to a
+     wrapping row — `flex-wrap: wrap` is graceful degradation in a cramped container (the ADR-0016 row-side
+     philosophy), and `align-items: center` keeps radios of differing label height on one visual baseline. */
+  :scope[orientation='horizontal'] {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   /* Forced colors (WHCM) — no visual surface of its own: the ui-radio children carry their own

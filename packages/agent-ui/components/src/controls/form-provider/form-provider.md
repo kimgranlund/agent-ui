@@ -56,7 +56,7 @@ keyboard: []               # no keyboard contract of its own — the coordinated
 geometry:
   sizeClass: container      # Container/layout band — no control height, no --ui-space opinion of its own
   display: block            # the host's only CSS rule (an unstyled custom element defaults to inline, which would lay slotted block-level descendants out inline against it)
-  note: form-provider.css declares NO --ui-form-provider-* token chain (LLD-C8 — a pure coordination element has no colour/geometry/spacing voice of its own); the deliberate absence is documented in the sheet, not invented as an empty block.
+  note: form-provider.css declares NO --ui-form-provider-* token chain (LLD-C8 — a pure coordination element has no colour/geometry/spacing voice of its own); the deliberate absence is documented in the sheet, not invented as an empty block. ADR-0103 re-confirms this stays layout-free (unlike ui-radio-group's Lane A default): vertical rhythm between fields is the taught `ui-column[gap]` wrap idiom (Lane C), not a provider default — the provider's descendants are event-discovered, arbitrary composition it must not fight.
 
 forcedColors: No forced-colors rules needed — the provider paints nothing; its coordinated descendants carry their own WHCM treatment.
 ---

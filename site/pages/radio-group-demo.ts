@@ -15,11 +15,11 @@ const { content } = mountPage({
 const text = (s: string): Text => document.createTextNode(s)
 
 // ── the live group (real container — three radios, the second selected by default) ──────────────────────────
-// The default variant is deliberately layout-neutral (radio-group.css: "the page author controls layout") — a
-// plan-picker row needs the page to both (a) supply the visual gap (ui-radio's own host is inline-flex, so with
-// no CSS at all its children butt against each other with zero space — the reported bug) and (b) declare
-// `orientation="horizontal"` so the roving-focus keyboard axis (Left/Right) matches the row it visually reads as
-// (radio-group.ts resolves orientation once at connect; it does not infer it from page CSS).
+// ADR-0103: ui-radio-group now owns its own interior layout (flex column by default, a wrapping row under
+// `orientation="horizontal"`, gap off the --ui-space ladder) — the inline `style` below is this page's OWN
+// choice of a slightly larger gap (`--ui-space-md`, not the component's `--ui-space-sm` default) for this
+// worked plan-picker shape; it is an override, not a fix for an otherwise-unstyled group. `orientation` still
+// must be declared explicitly (radio-group.ts resolves it once at connect; it does not infer it from CSS).
 const group = el(
   'ui-radio-group',
   {
