@@ -6,10 +6,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 // CONTAINER width (resize the wrapper, not the viewport) — anti-vacuous (the computed property actually changes).
 //
 // CSS wiring is SELF-CONTAINED (host-runs-at-boundary): column.css is not in the component-styles barrel until
-// s12, so this test injects the foundation tokens, the shared surface/container-type seam, and column.css
-// directly, then the self-defining module. Vite resolves the bare specifier + the relative sheets and injects them.
+// s12, so this test injects the foundation tokens, the shared surface seam, and column.css directly, then the
+// self-defining module. Vite resolves the bare specifier + the relative sheets and injects them. Per-test
+// wrappers establish their own `container-type: inline-size` where a query needs one (ADR-0100 — column.css
+// does NOT establish it on ui-column itself).
 import '@agent-ui/components/foundation-styles.css' // the --md-sys-color-* roles + the --ui-{space,density,…} ramp
-import '../_surface/container.css' // the shared surface seam + `container-type: inline-size` on ui-column
+import '../_surface/container.css' // the shared surface seam (elevation/brightness) — no container-type here
 import './column.css' // the column layout sheet (token block + @scope)
 import './column.ts' // self-defines ui-column
 
@@ -119,10 +121,13 @@ describe('ui-column browser-truth harness (s4)', () => {
 
   it('stretch fills the parent width even under a centering flex parent (the width:stretch opt-in)', () => {
     // Reproduce the A2UI canvas context: a flex COLUMN parent with align-items:center makes its child
-    // shrink-wrap to content (a column also has container-type:inline-size, so its content contributes ~0
-    // intrinsic width → it collapses). `stretch` (`width: stretch`) overrides that so a ROOT column fills
-    // the artboard. NOT a query container itself (no container-type on the stage) so the column's own
-    // @container row-flip stays inert — flex-direction stays column and only the width changes.
+    // shrink-wrap to content. RE-KEYED for ADR-0100: `ui-column` no longer establishes `container-type:
+    // inline-size` on itself, so this is a REAL shrink-wrap to the child's genuine intrinsic width, NOT a
+    // containment collapse to ~0 — the previous comment here documented the near-zero collapse as EXPECTED,
+    // which was the bug ADR-0100 fixes, not the contract. `stretch` (`width: stretch`) overrides the
+    // shrink-wrap so a ROOT column fills the artboard. The stage establishes no query container either, so
+    // the column's own @container row-flip stays inert — flex-direction stays column and only the width
+    // changes.
     const stage = document.createElement('div')
     stage.style.display = 'flex'
     stage.style.flexDirection = 'column'
@@ -136,10 +141,14 @@ describe('ui-column browser-truth harness (s4)', () => {
     col.append(child)
     stage.append(col)
 
-    // WITHOUT stretch: under align-items:center the column does NOT fill the 400px stage
+    // WITHOUT stretch: under align-items:center the column shrink-wraps to the child's REAL rendered width —
+    // not corrupted to (near-)zero by containment (ADR-0100 removed container-type from ui-column).
     const shrunk = col.getBoundingClientRect().width
+    const childRealWidth = child.getBoundingClientRect().width
     const stageW = stage.getBoundingClientRect().width
-    expect(shrunk).toBeLessThan(stageW) // shrink-wrapped / collapsed — narrower than the stage
+    expect(shrunk).toBeLessThan(stageW) // shrink-wrapped — narrower than the stage
+    expect(shrunk).toBeCloseTo(childRealWidth, 0) // REAL shrink-wrap: matches the child's own rendered width
+    expect(childRealWidth).toBeGreaterThan(2) // anti-vacuous: the child has genuine, measurable width (not ~0)
 
     // WITH stretch: width:stretch (fill-available cascade) fills the stage width
     col.setAttribute('stretch', '')

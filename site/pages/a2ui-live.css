@@ -132,7 +132,16 @@
  * rendered surface (`.ask-surface`) instead of static text. `pending` gets no extra treatment (it reads as
  * an ordinary agent message, fully interactive); `[data-state]` (set the instant it freezes) dims the whole
  * bubble as VISIBLE, non-interactive history — `inert` (JS-set) already kills interaction/tab-order; this
- * sheet only supplies the visual cue so a frozen ask doesn't look identically live. */
+ * sheet only supplies the visual cue so a frozen ask doesn't look identically live.
+ *
+ * ADR-0100 sweep, VERIFIED NOT ESTABLISHED (deliberate): `.ask-surface` is ALSO a `host.mount()` target
+ * (ask-registry.ts). It does NOT get `container-type: inline-size` — its inline-size is CONTENT-DERIVED, not
+ * externally sized: `.msg` (its ancestor bubble) shrink-wraps to its own content up to a `max-inline-size: 92%`
+ * cap (align-self: flex-start/flex-end in the message list, no stretch). Establishing containment on a
+ * content-derived box is exactly the anti-pattern ADR-0100 cl.1 removed from the layout primitives themselves
+ * — doing it here would reintroduce the same zero-width collapse one level up. An ask's rendered content
+ * renders its un-reflowed tag identity (ADR-0100 cl.2's graceful degradation), same as any A2UI surface with
+ * no established boundary. */
 .msg[data-ask] .ask-surface {
   display: flex;
   flex-direction: column;

@@ -71,7 +71,7 @@ geometry:
   sizeClass: layout
   blockSize: content   # NO control height (geometry.md Container/layout) — the block-size is content-driven
   gap: var(--ui-column-gap)   # the child gap off --ui-space × [density] — the one density-bearing quantity
-  containerQuery: 'inline-size: reflow="auto" spreads children to a row under a wide container (ADR-0016 cl.4, gated by ADR-0096); default reflow="locked" never fires it'
+  containerQuery: 'inline-size: reflow="auto" spreads children to a row under a wide ANCESTOR container (ADR-0016 cl.4, gated by ADR-0096); default reflow="locked" never fires it. ui-column establishes NO container of its own (ADR-0100) — resolves against the nearest externally-sized boundary'
 
 forcedColors: A `@media (forced-colors: active)` block drops the tonal wash; the surface survives as a system colour via the shared container.css role layer.
 ---
@@ -108,7 +108,7 @@ the element's **identity** (the tag names the main axis, A2UI-faithfully) — no
 
 ## Reflow gate
 
-- **`reflow`** (`locked` default · `auto`) gates whether `ui-column` may adapt its own `flex-direction` under a wide ancestor query container (ADR-0096). It is element-local — deliberately **not** part of the shared `flexProps` grammar (the `stretch` precedent above), so `ui-row`/`ui-grid`/`ui-list` are unaffected. `locked` (the **default**, a deliberate flip from the prior unconditional switch) pins the column vertical regardless of container width — the tag's own identity (`flex-direction: column`) always holds. `auto` opts back into the ADR-0016 cl.4 "switcher": under a ≥30rem-wide ancestor query container, the column spreads its children into a row. The default flipped because the catalog's primary consumer (a live model composing a validated, prop-only node tree) has no CSS-authoring verb to lock the prior unconditional switch — an unset `reflow` now renders exactly the tag's own identity.
+- **`reflow`** (`locked` default · `auto`) gates whether `ui-column` may adapt its own `flex-direction` under a wide **externally-sized ancestor boundary** (ADR-0096). It is element-local — deliberately **not** part of the shared `flexProps` grammar (the `stretch` precedent above), so `ui-row`/`ui-grid`/`ui-list` are unaffected. `locked` (the **default**, a deliberate flip from the prior unconditional switch) pins the column vertical regardless of container width — the tag's own identity (`flex-direction: column`) always holds. `auto` opts back into the ADR-0016 cl.4 "switcher": under a ≥30rem-wide **established** ancestor container, the column spreads its children into a row. The default flipped because the catalog's primary consumer (a live model composing a validated, prop-only node tree) has no CSS-authoring verb to lock the prior unconditional switch — an unset `reflow` now renders exactly the tag's own identity. `ui-column` never establishes that container itself (ADR-0100 — see "Responsiveness" below).
 
 ## Surface
 
@@ -126,6 +126,15 @@ colour opinion.
 spreads its children into a row, reflowing on the container's width rather than the viewport. With the **default**
 `reflow="locked"` the column never adapts; it stays a column at any container width, matching the tag's own
 identity. There is no `ResizeObserver` fallback; `@container inline-size` is the mechanism.
+
+**`ui-column` establishes NO query container of its own** (ADR-0100): an intrinsically-sized primitive
+(geometry.md Container/layout class — shrink-wrap, no frame) cannot also be a query container without zeroing
+its own content-driven size (`container-type: inline-size` is inline-axis size containment — the box's
+intrinsic sizes compute as if empty). The `@container` rule above resolves against the nearest
+**externally-sized ancestor boundary** — a definite, stretched, or track-sized box (an A2UI mount surface,
+app-shell, or any author frame) that declares `container-type: inline-size`. With no boundary established, the
+rule never matches and `reflow="auto"` renders no differently from `locked` — graceful degradation, not
+corruption (ADR-0100 cl.2).
 
 ## Geometry
 

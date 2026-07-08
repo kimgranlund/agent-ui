@@ -81,6 +81,13 @@
   border-radius: 8px;
   max-block-size: 30rem;
   overflow: auto;
+  /* ADR-0100 cl.2 — the A2UI mount boundary: this is a `host.mount()` surface (a2ui-gallery.ts), so it must
+   * establish the query container the rendered fleet's layout primitives resolve `@container` reflow against
+   * (they never establish one themselves — ADR-0016 cl.4's establishment sub-clause was deleted). It qualifies
+   * under the law because its inline-size is STRETCHED, not content-derived: `.seed-card` is a flex column
+   * (default `align-items: stretch`), so `.seed-surface` (a flex item with no explicit inline-size) fills the
+   * card's full content width. */
+  container-type: inline-size;
   /* A persistently VISIBLE bar even under macOS overlay scrollbars — the floor-breaker fix: a tall seed
      (the booking form's calendar) used to clip at the cap with zero affordance, content just ending
      mid-view. `thin` opts out of overlay scrollbars; `stable` reserves the gutter so the cue never shifts

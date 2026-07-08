@@ -34,6 +34,15 @@
    * collapses to a one-character-per-line strip. A definite width gives the rendered surface a real space to lay
    * out in; content wider than the cap scrolls (overflow:auto below). */
   inline-size: min(32rem, calc(100% - 2rem));
+  /* ADR-0100 cl.2 — the A2UI mount boundary: THIS box (not any rendered ui-row/ui-column/ui-list/ui-grid) is
+   * the query container the fleet's layout primitives resolve their `@container` reflow rules against. It
+   * qualifies under the law (`container-type: inline-size` only on an EXTERNALLY-sized box) because its
+   * inline-size is DEFINITE (the line above), not content-derived — the primitives themselves are never
+   * query containers (ADR-0016 cl.4's establishment sub-clause was deleted; an intrinsically-sized box can't
+   * safely be one). Without this, a mounted `ui-row`/`ui-column` renders its un-reflowed identity — graceful,
+   * per ADR-0100 cl.2 — but the canvas's own narrow-stack behaviour (a mounted toolbar wrapping under a
+   * narrow artboard) depends on it. */
+  container-type: inline-size;
   /* Cap at the stage box so the translate-centered surface NEVER clips above the top edge: a surface shorter
    * than the stage centres; one taller than the stage is clamped to the stage height and scrolls INSIDE this
    * centred box (the stage's own overflow can't reach a negative-offset absolute child). */

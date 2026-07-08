@@ -11,11 +11,15 @@
  *       identity, A2UI-faithful, ADR-0016 cl.2/3). No control height (geometry.md "Container/layout" class —
  *       spacing rides `--ui-space` × `[density]`, never `--ui-height-*`).
  *
- * Surface + container-query — NOT here. The role-pure surface seam (`--ui-container-bg`/`-tint` consumption,
- * the `[elevation]`/`[brightness]` mapping) AND the `container-type: inline-size` establishment + the
- * forced-colors surface survival are owned by the SHARED `controls/_surface/container.css` (ADR-0015 /
- * ADR-0016 cl.4), which lists `ui-list` among the surface-bearing tags. list.css therefore carries NO colour
- * opinion and needs no forced-colors block — there is nothing of its own to protect (it owns layout only).
+ * Surface — NOT here. The role-pure surface seam (`--ui-container-bg`/`-tint` consumption, the
+ * `[elevation]`/`[brightness]` mapping) + the forced-colors surface survival are owned by the SHARED
+ * `controls/_surface/container.css` (ADR-0015), which lists `ui-list` among the surface-bearing tags.
+ * list.css therefore carries NO colour opinion and needs no forced-colors block — there is nothing of its own
+ * to protect (it owns layout only). `ui-list` establishes NO query container of its own (ADR-0100 — it is
+ * intrinsically sized, like every layout primitive, so it can never safely be one); a `ui-list` has no
+ * `@container` rule of its own anyway (its direction is fixed — always a column), so this only matters for
+ * children that might want to query — an externally-sized ancestor boundary provides that context, not the
+ * list.
  *
  * Standalone stylesheet — linked via the component-styles barrel (wired in s12, AFTER container.css); NEVER
  * injected from list.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -103,8 +107,9 @@
     box-sizing: border-box;
 
     /* The flex mapping — every value reads the own `--ui-list-*` chain (role-pure; no raw --ui-space/--md-sys-color-*
-       leaks into the consumption, mirroring button.css's @scope hygiene). The surface background + the
-       container-type seam ride the shared controls/_surface/container.css. NO control height. */
+       leaks into the consumption, mirroring button.css's @scope hygiene). The surface background rides the
+       shared controls/_surface/container.css; NO `container-type` (ADR-0100 — ui-list is never a query
+       container). NO control height. */
     align-items: var(--ui-list-align);
     justify-content: var(--ui-list-justify);
     gap: var(--ui-list-gap); /* the density-bearing quantity — rides --ui-space × [density] */

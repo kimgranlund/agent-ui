@@ -119,8 +119,10 @@ pick a row by component type (`ui-row`) instead.
 `ui-list` also consumes the shared **`surfaceProps`** (ADR-0015) — `elevation` (`-3`…`3`, the scheme-inverting
 base plane) and `brightness` (`-3`…`3`, the scheme-consistent tonal shift), `0` being the neutral base (an
 unset list adds no plane and passes its parent's surface through). The surface seam, the `[elevation]`/
-`[brightness]` mapping, the `container-type` establishment, and forced-colors survival all live in the shared
-`controls/_surface/container.css`; list.css owns only the flex layout.
+`[brightness]` mapping, and forced-colors survival all live in the shared `controls/_surface/container.css`;
+list.css owns only the flex layout. **`ui-list` establishes NO `container-type` of its own** (ADR-0100 — a
+layout primitive is intrinsically sized, and an intrinsically-sized box can never safely be a query container);
+an externally-sized ancestor boundary provides query context for any descendant that needs one.
 
 ## Accessibility
 

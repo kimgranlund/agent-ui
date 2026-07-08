@@ -7,7 +7,7 @@
 > | **Status** | accepted |
 > | **Date** | 2026-07-07 *(authored)* |
 > | **Proposed by** | system-planner — the design seat, from the live visual audit (computed-style proofs, Chromium + WebKit identical) |
-> | **Ratified by** | *(pending — doc-reviewer pass first; orchestration-coordinator / Kim, on gate)* |
+> | **Ratified by** | Kim (host) · 2026-07-08 — ratified knowingly on the review's stated trade (reflow granularity coarsens to boundary level); Status flipped by Kim's own edit |
 > | **Repairs** | on ratification+build: `controls/_surface/container.css` (DELETE the blanket `container-type` rule + banner rewrite) · `controls/{row,column,list,grid}/*.css` banners + `row.md`/`column.md`/`list.md`/`grid.md` responsiveness sections (they cite the shared establishment seam) · `column.browser.test.ts:122-124` re-key (it encodes the shrink-to-~0 as expected) · site mount surfaces gain establishment: `site/lib/canvas-surface.css` (`.canvas-surface`) · `site/lib/a2ui-gallery.css` (`.seed-surface`) · `site/pages/a2ui-patterns.css` surface + a `host.mount()` grep sweep for any further mounts · the A2UI embedding contract (`a2ui-catalog.spec.md` §5.2 Row/Column responsiveness note) · `card.css:122` comment sharpened (retention rationale — see Decision cl.3) + `card.md` sizing note · the named Acceptance test legs. This change (docs-only): ADR-0016 header reciprocal line · README index row · decomp [`layout-containment-ruling.decomp.json`](../decompositions/layout-containment-ruling.decomp.json) |
 > | **Supersedes / Superseded by** | **Partially supersedes ADR-0016** — ONLY clause 4's establishment sub-clause ("each layout primitive establishes a query container (`container-type: inline-size`) — the shared seam") and Amendment A1's "the whole family establishes `container-type`" reading; the `@container` responsiveness contract, the no-breakpoint-props law, the flex grammar (cl.1/2), and A1's ancestor-query mechanics all STAND · **extends ADR-0096** (the `reflow` prop gate and its per-tag defaults ride unchanged on the surviving rules) · relates **ADR-0030** (the column `align:stretch` default that *masked* this collapse; its "card composes under any parent" claim is now measured — see cl.3) · **ADR-0084** (app-shell's own `container-type` is externally sized — untouched, the model case for cl.2's law) |
 
@@ -175,3 +175,14 @@ with a negative control:
 - **Keep establishment on grid-item primitives only** (preserve cell-local stacking, since grid items
   are track-stretched) — rejected: it keeps the non-local landmine (a grid inside a wrap-row tile
   re-guts the tile's intrinsic size) — trading a clean safety law for an edge granularity.
+
+## Erratum (2026-07-08 — post-build review; append-only, per the ADR log's own rule)
+
+The Acceptance sweep line above ("every `host.mount()` surface establishes a container") is corrected
+to **"every EXTERNALLY-SIZED `host.mount()` surface establishes a container"** — the build's mount
+sweep correctly found one surface that must NOT establish: **`.ask-surface`** (`site/pages/a2ui-live.css`,
+the ADR-0097 feed-ask bubbles). Its ancestor bubble is `align-self: flex-start` + `max-inline-size: 92%`
+— a content-derived box — so establishing there would compute its inline size as-if-empty and crush the
+bubble one level up: the exact clause-1 anti-pattern. `.ask-surface` is hereby the worked example of
+clause 2's "content-derived boxes never qualify"; the reviewer verified the exclusion against the real
+CSS and ruled it correct. A future maintainer "completing the sweep" must not establish there.

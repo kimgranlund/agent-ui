@@ -73,7 +73,7 @@ geometry:
   paddingBlock: 0                  # layout primitives add no padding; the gap is the spacing lever
   gap: var(--ui-row-gap)           # → var(--ui-space-{step}) — the one density-bearing quantity (rides [density], never [scale])
   radius: var(--ui-row-radius)     # → var(--ui-radius-base) — the shared fleet corner radius (rounds a surfaced row)
-  containerQuery: 'inline-size: reflow="auto" (the default) stacks children to a column under a narrow container (ADR-0016 cl.4); reflow="locked" pins flex-direction:row (ADR-0096)'
+  containerQuery: 'inline-size: reflow="auto" (the default) stacks children to a column under a narrow ANCESTOR container (ADR-0016 cl.4); reflow="locked" pins flex-direction:row (ADR-0096). ui-row establishes NO container of its own (ADR-0100) — resolves against the nearest externally-sized boundary'
 
 forcedColors: A `@media (forced-colors: active)` block keeps a surfaced row's plane a system colour (Canvas) and drops the tonal wash, so an elevation/brightness row survives high-contrast mode (belt-and-braces with the shared container.css surface block).
 ---
@@ -125,14 +125,20 @@ opinion. A surfaced row takes the shared `--ui-radius-base` corner radius.
 ## Responsiveness
 
 `ui-row` is **intrinsically responsive** with no breakpoint props (ADR-0016 cl.4), gated by the **`reflow`**
-prop (`auto` default · `locked`, ADR-0096). Each layout primitive establishes a query container
-(`container-type: inline-size`, in the shared base sheet); with the default `reflow="auto"`, `ui-row` reflows
-on its **own** container width — under a narrow container it **wraps to a column** (a `@container` rule flips
-`flex-direction`). Because the trigger is the container — not the viewport — a `ui-row` reflows wherever it is
-dropped, with no app-level media-query context. Setting **`reflow="locked"`** pins `flex-direction: row` even
-in a cramped container, for a toolbar/action row that must never stack. `reflow` is element-local — deliberately
-**not** part of the shared `flexProps` grammar, so `ui-column`/`ui-grid`/`ui-list` are unaffected (`ui-column`'s
-mirror gate defaults the opposite way, `locked`; see its own descriptor). There are no `sm`/`md`/`lg` props.
+prop (`auto` default · `locked`, ADR-0096). **`ui-row` establishes NO query container of its own** (ADR-0100):
+`container-type: inline-size` applies inline-axis size containment — an intrinsically-sized box (which every
+layout primitive is, geometry.md Container/layout class) cannot also be a query container without zeroing its
+own content-driven size. Establishment belongs to the nearest **externally-sized ancestor boundary** instead —
+a box with a definite, stretched, or track-sized inline size (an A2UI mount surface, app-shell, or any author
+frame) declares `container-type: inline-size`; with the default `reflow="auto"`, `ui-row` reflows on **that
+boundary's** width — under a narrow boundary it **wraps to a column** (a `@container` rule flips
+`flex-direction`). Because the trigger is a container, not the viewport, a `ui-row` reflows wherever it is
+dropped **under an established boundary**; with none established, the rule never matches and the row simply
+renders its own row identity — graceful degradation, not corruption (ADR-0100 cl.2). Setting
+**`reflow="locked"`** pins `flex-direction: row` even in a cramped container, for a toolbar/action row that
+must never stack. `reflow` is element-local — deliberately **not** part of the shared `flexProps` grammar, so
+`ui-column`/`ui-grid`/`ui-list` are unaffected (`ui-column`'s mirror gate defaults the opposite way, `locked`;
+see its own descriptor). There are no `sm`/`md`/`lg` props.
 
 ## Accessibility
 

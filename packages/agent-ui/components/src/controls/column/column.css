@@ -15,7 +15,9 @@
  *       with the axis flipped: under a WIDE container a column opted into `reflow="auto"` spreads its children
  *       into a row — the canonical "switcher". `reflow` defaults to `locked` (column.ts), so a bare `ui-column`
  *       never matches the rule (ADR-0005: a default is never reflected as an attribute) — reflowing on the
- *       container's width with NO breakpoint props (ADR-0016 cl.4) is now opt-in, not unconditional.
+ *       container's width with NO breakpoint props (ADR-0016 cl.4) is now opt-in, not unconditional. The column
+ *       establishes NO query container of its own (ADR-0100 — it is intrinsically sized, so it can never
+ *       safely be one); the rule resolves against the nearest EXTERNALLY-SIZED ancestor boundary instead.
  *       NO control height (geometry.md Container/layout class — block-size is content-driven; spacing rides
  *       `--ui-space` × `[density]`, never `--ui-height-*`). A forced-colors block drops any tonal wash.
  *
@@ -125,9 +127,10 @@
   }
 
   /* Container-query intrinsic responsiveness (ADR-0016 cl.4), PROP-GATED by `reflow` (ADR-0096) — mirrors ui-row
-     (which stacks to a column under a NARROW container) with the axis flipped: when the nearest query container
-     (each layout primitive establishes one via controls/_surface/container.css `container-type: inline-size`) is
-     WIDE, a column with `reflow="auto"` spreads its children into a row — the canonical "switcher". The selector
+     (which stacks to a column under a NARROW container) with the axis flipped: when the nearest EXTERNALLY-SIZED
+     ancestor boundary (ADR-0100 — NOT the column itself; an intrinsically-sized primitive can never safely
+     establish `container-type: inline-size`, see container.css's banner) is WIDE, a column with `reflow="auto"`
+     spreads its children into a row — the canonical "switcher". The selector
      is `:scope[reflow='auto']`, NOT bare `:scope`: a default value is never reflected as an attribute (ADR-0005),
      so an unadorned `ui-column` can never match this rule — locked by construction. `reflow` defaults to `locked`
      (column.ts) so the switch is OPT-IN, reachable from the catalog alone (ADR-0096 cl.1/2/4). Reflows on the

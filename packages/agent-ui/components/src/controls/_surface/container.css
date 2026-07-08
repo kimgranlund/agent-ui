@@ -1,8 +1,9 @@
-/* container.css — the SHARED `UIContainerElement` surface seam (ADR-0015) + the container-query seam
- * (ADR-0016 cl.4). The one stylesheet every container/layout `ui-*` element sits on; it is `@import`-ed
- * FIRST (before any element sheet) by component-styles.css (wired in decomp s12). It owns NO per-element
- * layout (display/flex/grid is each element's own `@scope` block) — only the cross-family surface + the
- * query-container establishment.
+/* container.css — the SHARED `UIContainerElement` surface seam (ADR-0015). The one stylesheet every
+ * container/layout `ui-*` element sits on; it is `@import`-ed FIRST (before any element sheet) by
+ * component-styles.css (wired in decomp s12). It owns NO per-element layout (display/flex/grid is each
+ * element's own `@scope` block) — only the cross-family surface. It does NOT establish query containers
+ * (ADR-0100 deleted the blanket `container-type: inline-size` this file used to set on the four layout
+ * primitives — see the seam's own banner below for why and where establishment moved).
  *
  * Role-purity (ADR-0008 / tokens.md): the CONSUMPTION (the two `background-*` declarations) reads ONLY the
  * `--ui-container-*` seam — never a raw `--md-sys-color-*` role. The TOKEN repoints below (`--ui-container-bg:
@@ -118,15 +119,26 @@
   background-image: linear-gradient(var(--ui-container-tint), var(--ui-container-tint));
 }
 
-/* ════════════════ container-query seam — the layout primitives (ADR-0016 cl.4) ════════════════ */
+/* ════════════════ container-query seam — RE-HOMED to externally-sized boundaries (ADR-0100) ═════════════ */
 
-/* `container-type: inline-size` establishes each layout primitive as a QUERY CONTAINER, so it reflows on its
-   OWN rendered width via the `@container` rules in each element's `@scope` block (no breakpoint props — the
-   primitive is intrinsically responsive). Scoped to the four layout primitives (per ADR-0016 cl.4 "each
-   layout primitive establishes a query container"); card/tabs/modal opt in via their own sheet if needed. */
-:where(ui-row, ui-column, ui-list, ui-grid) {
-  container-type: inline-size;
-}
+/* NO blanket `container-type: inline-size` here — ADR-0100 DELETED it (it superseded ADR-0016 cl.4's
+   establishment sub-clause). `container-type: inline-size` applies inline-axis SIZE CONTAINMENT: the box's
+   intrinsic inline sizes compute AS IF IT HAD NO CONTENTS — the same anti-cycle rule that forbids an element
+   from size-querying itself. A layout primitive's sizing model is content-driven (shrink-wrap, no frame,
+   geometry.md Container/layout class), so an intrinsically-sized primitive CANNOT also be a query container:
+   making it one deterministically zeroes its own intrinsic size (a Row nested on a Row's main axis measured
+   0px; a contained primitive also contributes 0 intrinsic size through every content-sized ANCESTOR — the
+   pattern-dashboard-tiles cards crushed to ~36px chrome-only via their inner contained column). No selector
+   can repair this in place (the harm is non-local — safety is a whole-ancestor-chain property, invisible to
+   CSS), so establishment moves OFF the primitives entirely.
+   THE LAW (ADR-0100 cl.2): `container-type: inline-size` may be declared only on a box whose inline size is
+   EXTERNALLY determined — definite, stretched, or track-sized — never content-derived. The `@container` rules
+   in row.css/column.css keep their ADR-0096-gated selectors unchanged and now resolve, as they always
+   mechanically did, against the nearest ANCESTOR query container — one an externally-sized composition
+   boundary establishes (the A2UI mount surfaces: `site/lib/canvas-surface.css`'s `.canvas-surface`,
+   `site/lib/a2ui-gallery.css`'s `.seed-surface`, the various page `.surface` mounts, app-shell — ADR-0084 is
+   the shipped model case). `ui-grid`'s auto-fit/`minmax` responsiveness is track sizing, not a query, so it is
+   unaffected either way. */
 
 /* ════════════════ forced-colors (WHCM) ════════════════ */
 

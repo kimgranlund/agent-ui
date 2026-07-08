@@ -7,8 +7,10 @@ declare const process: { cwd(): string }
 // G9 s5 — list.css static structural check (ADR-0003 sectioning + token hygiene; ADR-0016 the flex mapping;
 // geometry.md "Container/layout" class — no control height). jsdom can't compute the rendered flex/px —
 // these pin the STRUCTURE + the CSS text; the rendered gap-by-[density] + role-by-internals is list.browser
-// .test.ts's cross-engine smoke. The surface seam + container-type + forced-colors live in the SHARED
-// controls/_surface/container.css (covered by s2), not here — list.css owns layout only.
+// .test.ts's cross-engine smoke. The surface seam + forced-colors live in the SHARED
+// controls/_surface/container.css (covered by s2), not here — list.css owns layout only. Per ADR-0100,
+// NEITHER list.css nor container.css declares `container-type` on `ui-list` — see container.test.ts for the
+// fleet-wide trip-wire.
 
 const css = readFileSync(
   `${process.cwd()}/packages/agent-ui/components/src/controls/list/list.css`,

@@ -9,8 +9,10 @@ import { describe, it, expect } from 'vitest'
 // CSS wiring: the component-styles barrel does not @import container.css / row.css until the integration slice
 // (decomp s12), so this smoke injects them DIRECTLY (Vite resolves the relative .css + the foundation export,
 // and injects each as a <style>). Order is load-bearing: the foundation (--md-sys-color-* roles + the --ui-space ladder +
-// [density]) FIRST, then the shared surface seam (container-type: inline-size), then row.css, then the
-// self-defining element module.
+// [density]) FIRST, then the shared surface seam (elevation/brightness — NOT a container-type establishment,
+// ADR-0100: the row is never a query container itself), then row.css, then the self-defining element module.
+// The query container each `@container` rule resolves against is the test's OWN wrapper (below), not row/
+// container.css — the ADR-0100 boundary law realized in miniature.
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container.css'
 import './row.css'

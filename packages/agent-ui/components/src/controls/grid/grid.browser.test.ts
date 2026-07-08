@@ -15,8 +15,10 @@ import { describe, it, expect, afterEach } from 'vitest'
 //
 // HOST-AT-BOUNDARY: ui-grid is NOT in the component-styles barrel yet (that is s12), so this injects the
 // load-bearing sheets DIRECTLY in CSS order — foundation (the --md-sys-color-* roles + --ui-space ramp + [density]) FIRST,
-// then the SHARED surface seam (which also establishes `container-type: inline-size`), then grid's own @scope
-// sheet, then the self-defining module (registers ui-grid). Vite injects the CSS imports.
+// then the SHARED surface seam (elevation/brightness only — ADR-0100: ui-grid never establishes
+// `container-type`, and never needed to: auto-fit/minmax reflows off the grid's OWN rendered width, a track
+// sizing law, not a container query), then grid's own @scope sheet, then the self-defining module (registers
+// ui-grid). Vite injects the CSS imports.
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container.css'
 import './grid.css'
