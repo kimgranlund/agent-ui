@@ -74,6 +74,13 @@
   and the **B6 bridge** (`tools/pipeline/transports/a2a.ts`: one A2UI envelope per
   `application/a2ui+json` DataPart, `a2uiClientCapabilities` on every client message) is the
   pipeline-tail's FIRST realized transport (see Open 1).
+- **The chart family — DONE end-to-end 2026-07-08** (ADR-0107 accepted + 2 amendments; PRD/SPEC/LLD in the
+  charter `docs/{prd,spec,lld}/` homes): `ui-sparkline` + `ui-bar-chart` (both SHIPPABLE 5/5), the catalog's
+  FIRST array-typed bindable props (`values`/`data`), `Sparkline`/`BarChart` rows + factories + the §5.2
+  four-way usage guidance, the two `-doc` site pages, the feed dispositions (23 IN / 13 OUT — ADR-0097
+  Amendment), and the `report-card-dashboard` exemplar seed (payload rubric all-5s) teaching
+  tile/Sparkline/BarChart composition. Kim's original "report as a chart or graph" ask is now expressible
+  in catalog vocabulary — the B6 §10 fork-2 gap is CLOSED. Family size ceiling 26 KB (ADR-0107 Amendment 1).
 
 ## Open (the real next intakes, in likely order)
 
