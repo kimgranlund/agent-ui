@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-08 |
 > | **Proposed by** | system-planner — root-caused from Kim's gallery ticket #28 ("ui-select and ui-menu: when a selection is made, the menu should close"); the fork investigation's diagnosis re-verified against source before design |
 > | **Ratified by** | *(pending — orchestration-coordinator, on the doc-review + green gate)* |

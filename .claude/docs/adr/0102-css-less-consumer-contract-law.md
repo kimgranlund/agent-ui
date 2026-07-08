@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-08 *(authored)* |
 > | **Proposed by** | system-planner — the design seat, from the 2026-07-08 gallery-defect family (tickets #29 #30 #31 #32 #33; fork-diagnosed, screenshot-grounded) |
 > | **Ratified by** | *(pending — Kim / orchestration-coordinator on gate; doc-reviewer pass first)* |

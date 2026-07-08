@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-08 *(authored)* |
 > | **Proposed by** | system-planner — the design seat; tickets #31 (rental-filter-panel radios crash together) + #33 (form-provider spacing), ruled together as the two poles of one fork |
 > | **Ratified by** | *(pending — Kim / orchestration-coordinator on gate; doc-reviewer pass first)* |

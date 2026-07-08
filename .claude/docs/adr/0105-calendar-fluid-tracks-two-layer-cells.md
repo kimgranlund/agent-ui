@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-08 *(authored)* |
 > | **Proposed by** | system-planner — the design seat; ticket #30 (booking-reservation: half-empty wide panel), with the fork's geometry falsification of naive track-widening |
 > | **Ratified by** | *(pending — Kim / orchestration-coordinator on gate; doc-reviewer pass first)* |

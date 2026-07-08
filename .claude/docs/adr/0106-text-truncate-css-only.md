@@ -1,14 +1,14 @@
-# ADR-0106 — `ui-text` gains a `truncate` prop: single-line ellipsis on the host AND the stamp, a measured auto-`title` reveal, and the Tooltip pairing idiom for rich reveal
+# ADR-0106 — `ui-text` gains a `truncate` prop: CSS-only single-line ellipsis on the host AND the stamp, an unconditional `title` mirror, and the Tooltip pairing idiom for rich reveal
 
 > Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-08
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-08 *(authored)* |
 > | **Proposed by** | system-planner — the design seat; ticket #32 (document-row-toolbar), the remaining intake after the `ui-button` nowrap fix (`442802d`); Kim's sketch: `<ui-text overflow-ellipsis>` + tooltip for the full text |
 > | **Ratified by** | *(pending — Kim / orchestration-coordinator on gate; doc-reviewer pass first)* **RATIFICATION FLAG (review-required): the prop name `truncate` RENAMES Kim's sketched `overflow-ellipsis` — substance kept, name changed; Kim confirms or restores the original name at ratification (the family's one user-facing taste fork).** |
-> | **Repairs** | on ratification+build: `controls/text/text.ts` (the `truncate` prop + the measured-title effect) · `controls/text/text.css` (the `[truncate]` rules, host + stamp legs) · `controls/text/text.md` (prop row + the reveal/pairing guidance) · `catalog.json` `Text` row gains `truncate` (boolean) + `factories.ts` textFactory case · `prompt-drift.test.ts` + catalog `index.test.ts` rows · `a2ui-catalog.spec.md` §5.2 Text row. Decomp: [`css-less-consumer-family.decomp.json`](../decompositions/css-less-consumer-family.decomp.json) · **on accept: the reciprocal `Extended by ADR-0106` back-link on ADR-0078** (scheduled per convention) |
+> | **Repairs** | on ratification+build: `controls/text/text.ts` (the `truncate` prop + the unconditional `title` mirror riding the existing render path — NO new observer) · `controls/text/text.css` (the `[truncate]` rules, host + stamp legs) · `controls/text/text.md` (prop row + the reveal/pairing guidance) · `catalog.json` `Text` row gains `truncate` (boolean) + `factories.ts` textFactory case · `prompt-drift.test.ts` + catalog `index.test.ts` rows · `a2ui-catalog.spec.md` §5.2 Text row. Decomp: [`css-less-consumer-family.decomp.json`](../decompositions/css-less-consumer-family.decomp.json) · **on accept: the reciprocal `Extended by ADR-0106` back-link on ADR-0078** (scheduled per convention) |
 > | **Supersedes / Superseded by** | Applies **ADR-0102** (Lane B — overflow intent as a catalog-reachable prop; the safe default is today's wrapping behavior, so the prop is pure intent, never repair). Extends **ADR-0078** (the stamp model: the reset at `text.css:235-240` gains a truncation-aware sibling; the three-axis prop schema gains a fourth orthogonal axis) · relates ADR-0045 (tooltip dismissal platform, the pairing idiom's other half) · the `ui-button` label-wrapper anatomy (`button.css:99-103`) stays a NAMED DEFERRAL, not this record |
 
 ## Context
@@ -44,12 +44,15 @@ Two facts shape the API:
    span)` → `overflow: hidden; text-overflow: ellipsis;` (`white-space` inherits into the stamp; the clip
    must sit on whichever box holds the text). Stamping/unstamping keeps zero geometry delta under
    truncation — the ADR-0078 cl.4 invariant extends to the clipped box.
-3. **The measured auto-`title` reveal:** while `truncate` is set, the element maintains `title` = its own
-   trimmed `textContent` **only when actually clipped** (`scrollWidth > clientWidth` on the clipping box),
-   re-measured via a `ResizeObserver` plus the existing childList observer (`text.ts:75`), and removed when
-   it fits or `truncate` unsets. No tooltip is minted when nothing is hidden — `title` appears exactly when
-   an ellipsis does. An author-set `title` attribute is never overwritten (presence-checked before the
-   first write; the effect owns only titles it minted).
+3. **The unconditional `title` mirror (Kim's CSS-only ruling, 2026-07-08 — "no resize-observer
+   overkill"):** while `truncate` is set, the element maintains `title` = its own trimmed `textContent`,
+   UNCONDITIONALLY — a static mirror riding the EXISTING render/childList path (`text.ts:75`), written on
+   content change and removed when `truncate` unsets. **No ResizeObserver, no clipped-state measurement**:
+   the clipping is pure CSS (clause 2), and the reveal does not attempt to know whether the ellipsis is
+   currently visible — a `title` on an unclipped truncate-text is the accepted, ruled cost (harmless
+   native tooltip noise) in exchange for zero measurement machinery on the Display class. An author-set
+   `title` attribute is never overwritten (presence-checked before the first write; the mirror owns only
+   titles it minted).
 4. **Rich reveal = the Tooltip pairing idiom, taught not minted:** `Tooltip > [Text truncate, Text …]` —
    the catalog already expresses it (first-child anchor). `text.md` carries the pairing guidance; one
    ADR-0091 mini-skill line rides the existing idiom module budget if the registry lands. `ui-text` never
@@ -67,12 +70,13 @@ Two facts shape the API:
 
 - Cross-engine browser legs: a `truncate` `ui-text` in a 12rem box with long content shows a clipped
   single line (`clientWidth < scrollWidth` + computed `text-overflow: ellipsis` on the clipping box) and
-  carries `title` = its full text; the same element in a wide box carries **no** `title`; toggling `as`
-  between `none` and `h4` under truncation keeps the rendered box identical (the cl.4 invariant leg);
-  an author-set `title` survives the effect. Negative control: the stamp leg removed → the `as="h4"`
-  truncation leg FAILS (proves the second leg is load-bearing).
-- jsdom legs: prop/attr reflection, title minted/removed on synthetic measurement, observer cleanup on
-  disconnect (zero residue).
+  carries `title` = its full text (the unconditional mirror — present in wide boxes too, per the CSS-only
+  ruling); toggling `as` between `none` and `h4` under truncation keeps the rendered box identical (the
+  cl.4 invariant leg); an author-set `title` survives the mirror. Negative control: the stamp leg
+  removed → the `as="h4"` truncation leg FAILS (proves the second leg is load-bearing).
+- jsdom legs: prop/attr reflection, title mirrored on content change + removed on `truncate` unset,
+  zero-residue disconnect (the EXISTING observer discipline only — a grep leg asserts `ResizeObserver`
+  does not appear in `text.ts`).
 - `prompt-drift.test.ts` green with the new Text row; a live-loop probe lists `truncate` under `Text`.
 - The document-row-toolbar seed's title cell renders one line with ellipsis + hover reveal on an
   unmodified A2UI mount — screenshot-verified.
@@ -80,9 +84,10 @@ Two facts shape the API:
 
 ## Consequences
 
-- **`ui-text` gains its first measurement machinery** (a ResizeObserver) — the Display class was
-  observer-light by design; cost bounded: installed only while `truncate` is set, disconnected with the
-  element (the `#observer` discipline, `text.ts:79-82`). Elements that never truncate pay nothing.
+- **The `title` mirror is unconditional** (Kim's CSS-only ruling): a truncate-text that happens to fit
+  still carries a native `title` tooltip — accepted noise, in exchange for the Display class staying
+  measurement-free (NO ResizeObserver ever installed; the rejected measured variant is recorded under
+  Alternatives). Elements without `truncate` pay nothing.
 - **Keyboard-only sighted users get no reveal from `title`** — a real gap, accepted: the full text is in
   the accessible name (AT unaffected), and the rich-reveal idiom (clause 4) is the sanctioned answer where
   the pattern matters; auto-minting overlay machinery into a text primitive costs more than it serves
@@ -98,6 +103,13 @@ Two facts shape the API:
   catalog `variant` fan-out table, `ui-tooltip` itself.
 
 ## Alternatives considered
+
+- **The measured auto-`title` reveal (this record's own first draft)** — maintain `title` only when
+  actually clipped (`scrollWidth > clientWidth`), re-measured via a ResizeObserver. Rejected by Kim's
+  ratification-round ruling (2026-07-08): "truncate should be CSS-only solution. no resize-observer
+  overkill." The precision (`title` appears exactly when an ellipsis does) does not buy enough to put
+  measurement machinery on the Display class; the unconditional mirror keeps the reveal at zero
+  observers.
 
 - **Kim's sketch name `overflow-ellipsis` as the prop.** Adopted in substance, renamed: the fleet's boolean
   props are single-word intents (`disabled`, `required`, `wrap`, `persistent`); `truncate` says the intent,

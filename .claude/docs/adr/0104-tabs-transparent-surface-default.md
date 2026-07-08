@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-08 *(authored)* |
 > | **Proposed by** | system-planner — the design seat; ticket #29 (pattern-wizard: tabs-in-card double surface), fork-diagnosed to `tabs.css:20` |
 > | **Ratified by** | *(pending — Kim / orchestration-coordinator on gate; doc-reviewer pass first)* |
