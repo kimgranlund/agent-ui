@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { validateCatalogConformance } from './conformance.ts'
 import { demoCatalog } from '../fixtures.ts'
 import { loadCatalog } from './catalog.ts'
+import { defaultCatalog } from './default/index.ts'
 import type { A2uiComponent } from '../protocol.ts'
 
 const comp = (c: Record<string, unknown>): A2uiComponent => c as A2uiComponent
@@ -79,6 +80,16 @@ describe('validateCatalogConformance (catalog LLD-C6, SPEC-R7/R9/N3)', () => {
     // but only bindable props accept binding objects).
     const f = validateCatalogConformance(comp({ id: 't', component: 'Text', variant: { path: '/v' } }), demoCatalog)
     expect(f).toEqual([{ code: 'CATALOG', path: 't.variant' }])
+  })
+
+  it('rejects a comma-joined STRING on an array-typed prop — the untested `case \'array\'` branch (conformance.ts matchesPrimitive, M1-d review follow-up)', () => {
+    // A model can plausibly emit "3,5,4" (a stringified series) where the row declares `values: number[]`
+    // (the real Sparkline row, ADR-0107). `Array.isArray('3,5,4')` is false, so this must fail CATALOG
+    // rather than being silently coerced or accepted — proving the array leg of `matchesPrimitive`
+    // (conformance.ts:84-85) actually REJECTS, not just that its accept path (already covered by the
+    // Sparkline/BarChart suite in default/index.test.ts) works.
+    const f = validateCatalogConformance(comp({ id: 'sp', component: 'Sparkline', values: '3,5,4' }), defaultCatalog)
+    expect(f).toEqual([{ code: 'CATALOG', path: 'sp.values' }])
   })
 })
 

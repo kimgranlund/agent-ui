@@ -155,6 +155,14 @@ function typesMissingCatalog(
   return expected.filter((t) => !catalogKeys.has(t) && !allowlist.has(t))
 }
 
+/** The allowlist keys that ALSO appear in `catalogKeys` — a drained-but-not-removed seed (chart-family.lld.md
+ *  §4 M1-b footprint). Same predicate-extraction shape as `typesMissingCatalog` (the M1-d review follow-up:
+ *  the standing residue-guard test only ever iterates the REAL, currently-empty `EXCLUSION_ALLOWLIST`, which
+ *  is vacuously true — extracted here so a synthetic, non-empty allowlist can drive it with a real bite). */
+function allowlistResidue(catalogKeys: ReadonlySet<string>, allowlist: ReadonlyMap<string, string>): string[] {
+  return [...allowlist.keys()].filter((type) => catalogKeys.has(type))
+}
+
 describe('default catalog — the fleet-derived coverage gate (SPEC-N2, ADR-0087 Wave 0)', () => {
   const FLEET_TYPES = fleetPrimaryTypes()
   const CATALOG_KEYS = new Set(Object.keys(defaultCatalog.components))
@@ -177,10 +185,18 @@ describe('default catalog — the fleet-derived coverage gate (SPEC-N2, ADR-0087
   it('the allowlist carries NO residue — every seeded key is ABSENT from the catalog (a drained entry can never stay silently green, chart-family.lld.md §4 M1-b footprint)', () => {
     // A future wave that seeds an allowlist entry and then lands the row WITHOUT draining the seed would
     // otherwise pass the two checks above (the type is now catalog-covered) while the stale allowlist
-    // entry sits there inert forever — this assertion makes that residue a hard failure instead.
-    for (const type of EXCLUSION_ALLOWLIST.keys()) {
-      expect(CATALOG_KEYS.has(type), `allowlisted "${type}" must NOT also be catalogued (drain the seed)`).toBe(false)
-    }
+    // entry sits there inert forever — this assertion makes that residue a hard failure instead. The
+    // standing gate calls the SAME predicate the negative control below proves (the typesMissingCatalog
+    // shape — one assertion form, review-mandated: two parallel forms drift).
+    expect(allowlistResidue(CATALOG_KEYS, EXCLUSION_ALLOWLIST)).toEqual([])
+  })
+
+  it('NEGATIVE: the residue-guard assertion form actually BITES (synthetic control — M1-d review follow-up)', () => {
+    // The real `EXCLUSION_ALLOWLIST` is (by design, today) empty, so the standing gate above passes
+    // vacuously. This drives the same predicate with a SYNTHETIC, non-empty allowlist that collides with
+    // a real catalog key, proving the check catches residue when residue actually exists.
+    expect(allowlistResidue(CATALOG_KEYS, new Map([['Button', 'planted residue']]))).toEqual(['Button']) // bites
+    expect(allowlistResidue(CATALOG_KEYS, new Map([['ZzNeverCatalogued', 'still deferred']]))).toEqual([]) // stays clean
   })
 
   it('NEGATIVE: the gate predicate actually BITES (synthetic negative controls, not a vacuous pass)', () => {
@@ -752,6 +768,76 @@ describe('default catalog — Sparkline/BarChart via the shared validator (ADR-0
     const line2 = el.querySelector('svg polyline[data-part="line"]')
     expect(line2).toBeTruthy()
     expect(line2!.getAttribute('points')).not.toBe(line1!.getAttribute('points')) // a genuinely different mark, not a stale re-paint
+
+    r.dispose()
+    mount.remove()
+  })
+
+  it('a {path}-bound BarChart.data renders the rows (real ui-bar-chart, no mocks) and re-renders on updateDataModel (SPEC-R13 AC2, M1-d review follow-up: the BarChart sibling of the Sparkline live leg above)', async () => {
+    const r = createRenderer({ newId: () => 'act-1', now: () => '2026-07-08T00:00:00.000Z' })
+    const mount = document.createElement('div')
+    document.body.appendChild(mount)
+    r.mount(mount)
+
+    const line = (message: unknown): string => JSON.stringify(message)
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'bc', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'bc',
+          components: [{ id: 'root', component: 'BarChart', data: { path: '/regions' }, label: 'Revenue by region' }],
+        },
+      }),
+    )
+
+    const el = mount.querySelector('ui-bar-chart') as HTMLElement & { data?: unknown }
+    expect(el).toBeTruthy() // the REAL upgraded control, not a placeholder
+
+    // No data yet — the bound-prop effect started on an unresolved path (no throw); zero rows painted.
+    expect(el.querySelectorAll('[role="listitem"]')).toHaveLength(0)
+
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateDataModel: {
+          surfaceId: 'bc',
+          path: '/regions',
+          value: [
+            { label: 'EMEA', value: 42 },
+            { label: 'APAC', value: 31 },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+    expect(el.data).toEqual([
+      { label: 'EMEA', value: 42 },
+      { label: 'APAC', value: 31 },
+    ]) // the data→control bound prop applied
+    const rows1 = [...el.querySelectorAll('[role="listitem"]')]
+    expect(rows1).toHaveLength(2) // one row per datum — the mark rendered from the bound path
+    expect(rows1.map((row) => row.querySelector('[data-part="label"]')?.textContent)).toEqual(['EMEA', 'APAC'])
+
+    // A second updateDataModel re-renders the rows (whole-array swap semantics, SPEC-R7).
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateDataModel: {
+          surfaceId: 'bc',
+          path: '/regions',
+          value: [
+            { label: 'EMEA', value: 42 },
+            { label: 'APAC', value: 31 },
+            { label: 'Americas', value: 12 },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+    const rows2 = [...el.querySelectorAll('[role="listitem"]')]
+    expect(rows2).toHaveLength(3) // a genuinely different row set, not a stale re-paint
+    expect(rows2.map((row) => row.querySelector('[data-part="label"]')?.textContent)).toEqual(['EMEA', 'APAC', 'Americas'])
 
     r.dispose()
     mount.remove()

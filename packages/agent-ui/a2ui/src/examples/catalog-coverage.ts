@@ -23,6 +23,16 @@
 //     Covers: Icon, Tooltip, Popover, Menu, MenuItem.
 // (4) STATS GRID DASHBOARD — a `Grid`-templated metric-tile dashboard (the `patternDashboardSeed` idiom,
 //     swapping the wrapping Row for a track `Grid` with a `min` floor). Covers: Grid.
+//
+// (5) REPORT CARD DASHBOARD — chart-family.lld.md LLD-C12 (SPEC-R14 AC1, ADR-0107): a `stats-grid-
+//     dashboard` SIBLING, not a Grid-of-tiles but one composed report: a metric tile (the "tiles are for
+//     latest values" idiom, `patternDashboardSeed`'s `tile_value` precedent) sits beside a `Sparkline`
+//     trend, then a `BarChart` breaks the total down by region — the seed itself teaches the catalog SPEC
+//     §5.2 Notes guidance (metric tile for a latest value · Sparkline for the shape of a series · BarChart
+//     for comparing magnitudes). `trend`/`regions` are `{path}`-bound (the live-data idiom the array-typed
+//     chart props exist to demonstrate); `title`/`latest` are ALSO `{path}`-bound scalars (Text.text is
+//     bindable too, catalog.json) — every data-model field this seed declares is reachable through a
+//     binding, none of it hand-baked into the component tree. Covers: Sparkline, BarChart.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -269,6 +279,61 @@ export const statsGridDashboardSeed: ExampleSeed = {
   ],
 }
 
+const REPORT_CARD_ID = 'report-card-dashboard'
+export const reportCardDashboardSeed: ExampleSeed = {
+  name: 'report-card-dashboard',
+  description: 'A revenue report card — a latest-value tile, a Sparkline trend, and a BarChart regional breakdown, all bound to the data model (chart-family.lld.md LLD-C12).',
+  promptText: 'Show a revenue report card: the latest total, a trend sparkline, and a bar chart breaking revenue down by region.',
+  surfaceId: REPORT_CARD_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: REPORT_CARD_ID, catalogId: 'agent-ui' } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: REPORT_CARD_ID,
+        value: {
+          title: 'Q3 revenue report',
+          latest: '€54,200',
+          trend: [42000, 48000, 45000, 53000, 50000, 58000],
+          regions: [
+            { label: 'EMEA', value: 21400 },
+            { label: 'APAC', value: 15800 },
+            { label: 'Americas', value: 12300 },
+            { label: 'Other', value: 4700 },
+          ],
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: REPORT_CARD_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
+          { id: 'root_content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'revenue_row', 'regions_caption', 'bars'] },
+          { id: 'title', component: 'Text', variant: 'h3', text: { path: '/title' } },
+          { id: 'revenue_row', component: 'Row', gap: 'lg', align: 'center', children: ['tile_col', 'spark'] },
+          // The tile: latest-value idiom (patternDashboardSeed's `tile_value` precedent) — a caption label
+          // + an h3 value, the composition's answer to "what is it now."
+          { id: 'tile_col', component: 'Column', gap: 'xs', children: ['tile_label', 'tile_value'] },
+          { id: 'tile_label', component: 'Text', variant: 'caption', text: 'Revenue' },
+          { id: 'tile_value', component: 'Text', variant: 'h3', text: { path: '/latest' } },
+          // The sparkline: the SHAPE of the series over time (catalog SPEC §5.2 Notes guidance) — bound to
+          // the same data the tile summarizes, so the reader sees "what it is" and "how it got there."
+          { id: 'spark', component: 'Sparkline', values: { path: '/trend' }, label: 'Revenue trend' },
+          { id: 'regions_caption', component: 'Text', variant: 'caption', text: 'By region' },
+          // The bar chart: comparing MAGNITUDES across a small discrete set (catalog SPEC §5.2 Notes
+          // guidance) — the same total's breakdown, the composition's third and final answer.
+          { id: 'bars', component: 'BarChart', data: { path: '/regions' }, label: 'Revenue by region' },
+        ],
+      },
+    },
+  ],
+}
+
 /** Every seed this module defines — the barrel's family-array precedent (index.ts derives `allSeeds`
  *  length from these, never a hand-counted literal). */
 export const catalogCoverageSeeds: readonly ExampleSeed[] = [
@@ -276,4 +341,5 @@ export const catalogCoverageSeeds: readonly ExampleSeed[] = [
   rentalFilterPanelSeed,
   documentRowToolbarSeed,
   statsGridDashboardSeed,
+  reportCardDashboardSeed,
 ]

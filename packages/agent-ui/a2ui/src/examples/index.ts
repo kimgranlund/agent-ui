@@ -3,11 +3,12 @@
 // hygiene: demo payload JSON must never enter a renderer consumer's bundle, the
 // `@agent-ui/components/components` subpath precedent).
 //
-// 15 seeds: 1 canvas + 4 dynamic-list + 1 generative-form + 5 patterns + 4 catalog-coverage (the
+// 16 seeds: 1 canvas + 4 dynamic-list + 1 generative-form + 5 patterns + 5 catalog-coverage (the
 // ADR-0087/ADR-0093/ADR-0095 wave — booking-reservation, rental-filter-panel, document-row-toolbar,
-// stats-grid-dashboard). `allSeeds` is the gate's (`examples.test.ts`) iteration surface, composed from
-// each module's own family array (never a hand-counted literal — the drift-gate doctrine); each named
-// export is what a `/site` page imports directly.
+// stats-grid-dashboard — PLUS report-card-dashboard, the ADR-0107 chart-family exemplar, chart-family.lld.md
+// LLD-C12). `allSeeds` is the gate's (`examples.test.ts`) iteration surface, composed from each module's
+// own family array (never a hand-counted literal — the drift-gate doctrine); each named export is what a
+// `/site` page imports directly.
 
 export type { ExampleSeed } from './types.ts'
 
@@ -27,6 +28,7 @@ export {
   rentalFilterPanelSeed,
   documentRowToolbarSeed,
   statsGridDashboardSeed,
+  reportCardDashboardSeed,
   catalogCoverageSeeds,
 } from './catalog-coverage.ts'
 
