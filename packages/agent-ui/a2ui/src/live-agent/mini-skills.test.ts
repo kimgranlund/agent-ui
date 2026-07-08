@@ -34,7 +34,12 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
     expect(ids).toEqual(
       expect.arrayContaining(['card-game-sheet', 'settings-screen', 'dashboard-kpi-grid', 'login-form', 'master-detail-split']),
     )
-    expect(MINI_SKILLS).toHaveLength(5)
+  })
+
+  it('seeds the ADR-0103 sixth module — `form-rhythm`, the Lane C form-provider teaching lane', () => {
+    const ids = MINI_SKILLS.map((m) => m.id)
+    expect(ids).toContain('form-rhythm')
+    expect(MINI_SKILLS).toHaveLength(6)
   })
 
   it('no registry body embeds A2UI JSONL (a pure-prose module needs only doc-review, ADR-0091 §4)', () => {
@@ -82,5 +87,30 @@ describe('selectMiniSkills — TF-IDF top-cap selection over the registry (ADR-0
     const first = selectMiniSkills('a dashboard with kpi stats', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP).map((m) => m.id)
     const second = selectMiniSkills('a dashboard with kpi stats', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP).map((m) => m.id)
     expect(second).toEqual(first)
+  })
+})
+
+describe('form-rhythm — the ADR-0103 Lane C form-provider teaching module', () => {
+  it('fires on a form-shaped USER intent (checkout)', () => {
+    const result = selectMiniSkills('build a checkout form with billing fields', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP)
+    expect(result.map((m) => m.id)).toContain('form-rhythm')
+  })
+
+  it('fires on another form-shaped USER intent (survey)', () => {
+    const result = selectMiniSkills('a short survey with a few input fields', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP)
+    expect(result.map((m) => m.id)).toContain('form-rhythm')
+  })
+
+  it('does NOT fire on an unrelated intent sharing no idiom vocabulary', () => {
+    const result = selectMiniSkills('show me the weather forecast for tomorrow', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP)
+    expect(result.map((m) => m.id)).not.toContain('form-rhythm')
+  })
+
+  it('teaches the Column-gap wrap idiom — FormProvider stays layout-free (ADR-0103 §Decision cl.4)', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'form-rhythm')!
+    expect(skill.body).toMatch(/FormProvider declares zero layout/)
+    expect(skill.body).toMatch(/Column gap='md'/)
+    expect(skill.body).toMatch(/one Field per control/)
+    expect(skill.body).toMatch(/submit Button\s+rides inside the FormProvider/)
   })
 })

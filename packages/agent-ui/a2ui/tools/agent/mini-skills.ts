@@ -18,6 +18,12 @@
 // `'specific'`/`'default'` carry none of this prose inline, so the registry selection still injects these
 // three normally there. `login-form`/`master-detail-split` were never duplicated and are unaffected.
 //
+// ADR-0103 §Decision cl.4 (Lane C, "one ADR-0091 mini-skill module recommended at build"): a SIXTH entry,
+// `form-rhythm`, teaches the `FormProvider > Column gap > fields` idiom the fork settled on — FormProvider
+// stays layout-free (the coordination-wrapper pole), so the wrap is taught here rather than defaulted in
+// CSS, reinforcing the fix already landed in every shipped seed (generative-form `68d2a8d`,
+// pattern-settings-form `patterns.ts:36-37`).
+//
 // Selection reuses `retrieve.ts`'s tokenizer/cosine primitives (ADR-0091 §2), extracted to
 // `../../src/corpus/text-similarity.ts` (slice 1) — NOT the `CorpusRecord` schema or `admit.ts`'s
 // pipeline (§1's scoping line: instruction prose doesn't fit the exemplar-required schema).
@@ -46,7 +52,8 @@ export const PER_MODULE_TOKEN_BUDGET = 200
 export const DEFAULT_MINI_SKILL_CAP = 3
 
 /**
- * The seed registry — ADR-0090's five calibration examples, at their general (not mode-scaled) maturity.
+ * The seed registry — ADR-0090's five calibration examples, at their general (not mode-scaled) maturity,
+ * plus the ADR-0103 `form-rhythm` module (the Lane C teaching lane for `ui-form-provider`'s spacing fork).
  * Order is registry-declaration order; selection ranks by relevance, not this order.
  */
 export const MINI_SKILLS: MiniSkill[] = [
@@ -92,6 +99,18 @@ export const MINI_SKILLS: MiniSkill[] = [
       'A master-detail / list-and-inspector split. Parts: scannable list + selection-bound detail. Map: ' +
       'Row split — left List of selectable rows; right Card detail bound via an updateDataModel path. ' +
       'Wall: true two-way selection sync is a live action→updateComponents round-trip — worth naming.',
+  },
+  {
+    // ADR-0103 §Decision cl.4: FormProvider is a pure coordination wrapper with no layout opinion (Lane
+    // C) — the Column-gap wrap is the taught idiom, not a component default. Distinct from `login-form`
+    // (one concrete worked form): this module is the general rhythm rule for ANY FormProvider surface.
+    id: 'form-rhythm',
+    triggers: 'form signup sign-up register fields survey checkout questionnaire fieldset validation labels',
+    body:
+      "Any FormProvider form's vertical rhythm. FormProvider declares zero layout (page-author-owns-layout) " +
+      "— its fields render crashed together unless wrapped. Map: FormProvider › Column gap='md' (the house " +
+      'rhythm) › one Field per control, each wrapping a TextField/Select/Switch/Checkbox; the submit Button ' +
+      "rides inside the FormProvider, after the fields, gated by the form's validity. Wall: none — fully hosted.",
   },
 ]
 
