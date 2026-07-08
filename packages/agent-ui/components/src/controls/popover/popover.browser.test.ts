@@ -238,6 +238,57 @@ describe('ui-popover — outside-click light-dismiss (both engines)', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [4b] Trigger-RECLICK-to-close under native light-dismiss — the mouse-desync fix's residual leg
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// jsdom cannot cover this (no Popover API) — this is the ONE cross-engine leg the mouse-desync fix
+// review flagged as untested. The trigger carries no `popovertarget`, so it is NOT a native Popover
+// "invoker": the platform's own light-dismiss algorithm treats a click on it as an OUTSIDE click on
+// `pointerdown` and hides the popup natively — in the SAME gesture as this control's own `click`
+// listener flipping `this.open` (popover.ts ~L109-111). The hazard: the platform's `close`-sync (this
+// control's `this.listen(this, 'close', () => { this.open = false })`, popover.ts ~L119-121) rides the
+// platform ToggleEvent, which is spec-QUEUED AS A TASK (proven by the Escape/outside-click legs above,
+// which need a `setTimeout(0)` to observe it landing) — so IF that queued close-sync raced ahead of
+// this control's synchronous click handler, `this.open = !this.open` would read an already-false prop
+// and REOPEN (false → true). The fix (flip the prop, not `handle.toggle()`) only holds if the click
+// listener always runs — and reads `this.open` — before that queued task lands.
+describe('ui-popover — trigger reclick closes under native light-dismiss (both engines)', () => {
+  it('click(trigger) opens; click(trigger) again closes — no flicker-reopen from the light-dismiss/prop-flip race', async () => {
+    const { el } = mount(
+      '<ui-popover><button>Toggle</button><p>Content</p></ui-popover>',
+    )
+    const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+
+    await userEvent.click(trigger)
+    await el.updateComplete
+    expect(panel.matches(':popover-open'), `${server.browser}: first click did not open the panel`).toBe(true)
+    expect(el.open, 'open prop did not sync true after the first click').toBe(true)
+
+    await userEvent.click(trigger)
+    await el.updateComplete
+    // Let any queued platform toggle task (native light-dismiss's OWN close, racing this control's
+    // click-driven close) drain before asserting — a reopen would surface here.
+    await new Promise((r) => setTimeout(r, 0))
+    await el.updateComplete
+
+    expect(
+      panel.matches(':popover-open'),
+      `${server.browser}: second click left the panel open (expected trigger-reclick to close it)`,
+    ).toBe(false)
+    expect(
+      el.open,
+      `${server.browser}: open prop did not settle false after the second click (flicker-reopen?)`,
+    ).toBe(false)
+
+    // Settle again after a further tick to rule out a DELAYED reopen (a second queued task racing back).
+    await new Promise((r) => setTimeout(r, 0))
+    expect(panel.matches(':popover-open'), `${server.browser}: panel reopened after settling — the race is real`).toBe(false)
+    expect(el.open, `${server.browser}: open prop reopened after settling — the race is real`).toBe(false)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
 //  [5] Positioning — panel appears at bottom-start; flip/shift at viewport edge (both engines)
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
