@@ -137,6 +137,30 @@ describe('ui-bar-chart — RTL mirroring (SPEC-R11 AC1)', () => {
   })
 })
 
+describe('ui-bar-chart — RTL mixed-sign divergence (SPEC-R11 AC1, mixed sign)', () => {
+  it('[-20, 10, 30] under dir="rtl": the shared zero point mirrors — the neg bar extends toward the physical right of it, positives toward the physical left', () => {
+    const chart = mount(
+      '<ui-bar-chart dir="rtl" style="inline-size: 400px" data=\'[{"label":"neg","value":-20},{"label":"small","value":10},{"label":"big","value":30}]\'></ui-bar-chart>',
+    ) as HTMLElement
+    const fills = [...chart.querySelectorAll('[data-part="fill"]')] as HTMLElement[]
+    const rects = fills.map((f) => f.getBoundingClientRect())
+    // the shared zero point, mirrored from the LTR leg above: neg's LEFT edge lands at the SAME physical
+    // x as small's/big's RIGHT edge (inline-start now resolves to the physical right, so positives grow
+    // leftward from the zero point and the negative bar occupies the mirrored region).
+    const negLeft = Math.round(rects[0].left)
+    const smallRight = Math.round(rects[1].left + rects[1].width)
+    const bigRight = Math.round(rects[2].left + rects[2].width)
+    expect(negLeft).toBeCloseTo(smallRight, -1)
+    expect(smallRight).toBe(bigRight)
+    // the negative bar's far edge sits to the physical RIGHT of the shared zero point (mirrored from the
+    // LTR leg's "rects[0].left < smallLeft").
+    expect(rects[0].left + rects[0].width).toBeGreaterThan(smallRight)
+    // proportion: |−20| : 10 : 30 == 40:20:60 lengths relative to the 50-wide span (unchanged by mirroring).
+    expect(rects[0].width / rects[1].width).toBeCloseTo(2, 0) // 20/10
+    expect(rects[2].width / rects[1].width).toBeCloseTo(3, 0) // 30/10
+  })
+})
+
 describe('ui-bar-chart — forced colors (SPEC-R10 AC1)', () => {
   it('forced-colors keeps the fill + track visible in system inks; fill != track — Chromium emulates (CDP); WebKit asserts the baseline', async () => {
     const chart = mount(
