@@ -155,6 +155,23 @@ describe('default catalog factories — Text (ADR-0078, catalog LLD-C5)', () => 
     const truncated: A2uiComponent = { id: 'txt3', component: 'Text', text: 'A long clipped title', truncate: true }
     expect(validateCatalogConformance(truncated, defaultCatalog)).toEqual([])
   })
+
+  // ADR-0109 — `emphasis` is not `text`/`variant` either, so it rides the SAME `default:` arm's `setAttr`
+  // as `truncate` (factories.ts:126-127 → :56-60) — no bespoke factory code, the ADR's own claim, verified.
+  it('Text.emphasis (boolean, non-bindable) passes through the default setAttr arm onto [emphasis]', () => {
+    const el = textFactory.create()
+    textFactory.applyProp(el, 'emphasis', true)
+    expect(el.hasAttribute('emphasis')).toBe(true)
+    // The full chain in one place: the barrel-upgraded control's reflecting prop reads the attribute back.
+    expect((el as HTMLElement & { emphasis?: boolean }).emphasis).toBe(true)
+    textFactory.applyProp(el, 'emphasis', false)
+    expect(el.hasAttribute('emphasis')).toBe(false)
+  })
+
+  it('Text.emphasis conformance payload yields 0 CATALOG errors', () => {
+    const emphasized: A2uiComponent = { id: 'txt4', component: 'Text', text: 'A key value', emphasis: true }
+    expect(validateCatalogConformance(emphasized, defaultCatalog)).toEqual([])
+  })
 })
 
 describe('default catalog factories — Button + TextField (catalog LLD-C5, SPEC-R4)', () => {

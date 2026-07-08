@@ -374,6 +374,100 @@ describe('ui-text truncate — clipped single line + ellipsis (ADR-0106)', () =>
   })
 })
 
+// ── emphasis (ADR-0109) — CSS-only weight intent, one token-block repoint declared last ─────────────────
+
+describe('ui-text emphasis — computes font-weight: 700, the platform bold register (ADR-0109)', () => {
+  it('an [emphasis] host computes font-weight: 700', () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.emphasis = true
+    el.textContent = 'Bolded'
+    document.body.append(el)
+    expect(getComputedStyle(el).fontWeight).toBe('700')
+    el.remove()
+  })
+
+  it('without emphasis, computes its variant weight — pinning the reset against UA bold (the inheritance leg, negative half)', () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.textContent = 'Not bolded'
+    document.body.append(el)
+    expect(getComputedStyle(el).fontWeight).toBe('400') // body-medium's weight, not UA-bold 700
+    el.remove()
+  })
+
+  it('the inheritance leg: as="h4" + emphasis → the stamped <h4> computes 700 (font-weight inherits through the stamp)', async () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.setAttribute('as', 'h4')
+    el.emphasis = true
+    el.textContent = 'Emphasized heading'
+    document.body.append(el)
+    await el.updateComplete
+    const h4 = el.querySelector('h4')!
+    expect(getComputedStyle(h4).fontWeight).toBe('700')
+    el.remove()
+  })
+
+  it('the inheritance leg, negative half: as="h4" WITHOUT emphasis computes its variant weight, not UA-bold 700', async () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.setAttribute('as', 'h4')
+    el.textContent = 'Plain heading'
+    document.body.append(el)
+    await el.updateComplete
+    const h4 = el.querySelector('h4')!
+    // The stamp-transparency reset (`font: inherit`) normalizes the UA's own <h4> bold — this pins that
+    // reset still holds now that emphasis exists as a sibling axis.
+    expect(getComputedStyle(h4).fontWeight).toBe('400')
+    el.remove()
+  })
+
+  it('the cascade-order leg: variant="label" size="lg" + emphasis computes 700, not label-large\'s own 500', () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.setAttribute('variant', 'label')
+    el.setAttribute('size', 'lg')
+    el.textContent = 'Emphasized label'
+    document.body.append(el)
+    const baselineWeight = getComputedStyle(el).fontWeight
+    expect(baselineWeight).toBe('500') // label-large's own weight, unemphasized — anti-vacuous baseline
+
+    el.emphasis = true
+    expect(getComputedStyle(el).fontWeight).toBe('700') // emphasis beats the [variant][size] override block
+    el.remove()
+  })
+
+  it('the no-op leg: kicker + emphasis stays 700 (kicker is already the bold register)', () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.setAttribute('variant', 'kicker')
+    el.textContent = 'KICKER'
+    document.body.append(el)
+    expect(getComputedStyle(el).fontWeight).toBe('700') // kicker's own weight, unemphasized
+
+    el.emphasis = true
+    expect(getComputedStyle(el).fontWeight).toBe('700') // unchanged — an honest no-op
+    el.remove()
+  })
+
+  it('specificity precedence: a page-author ID + !important override beats the :where() [emphasis] repoint', () => {
+    // Review-relabelled (was "NEGATIVE ... proves the one line is load-bearing" — a false claim: this leg
+    // passes identically with the [emphasis] line deleted, since the un-repointed host also computes 400).
+    // What it DOES prove: the repoint rides specificity-0 `:where()`, so any real page selector can
+    // override it — the ADR-0102 escape-hatch posture. The genuine load-bearing differential for the
+    // [emphasis] line is the positive 700 leg + the without-emphasis 400 baseline above: delete the line
+    // and THAT pair flips.
+    const style = document.createElement('style')
+    style.textContent = '#emphasis-negative { --ui-text-weight: 400 !important; }'
+    document.head.append(style)
+
+    const el = document.createElement('ui-text') as UITextElement
+    el.id = 'emphasis-negative'
+    el.emphasis = true
+    el.textContent = 'Neutralized'
+    document.body.append(el)
+    expect(getComputedStyle(el).fontWeight, 'the page-author override lost — [emphasis] must stay specificity-0 overridable').toBe('400')
+
+    style.remove()
+    el.remove()
+  })
+})
+
 describe('ui-text forced-colors — CanvasText mapping keeps display text visible', () => {
   it('forced-colors @media block keeps display text visible — Chromium emulates (CDP); WebKit asserts baseline', async () => {
     const el = document.createElement('ui-text')

@@ -259,6 +259,13 @@ describe('default catalog — conformance (SPEC-R7/R9)', () => {
     expect(validateCatalogConformance(node, defaultCatalog)).toEqual([])
   })
 
+  it('Text.emphasis (ADR-0109) is declared boolean + non-bindable, and an emphasized Text conforms', () => {
+    expect(defaultCatalog.components.Text.properties.emphasis?.mapsTo).toBe('emphasis')
+    expect(defaultCatalog.components.Text.properties.emphasis?.bindable).toBeFalsy()
+    const node: A2uiComponent = { id: 'txt', component: 'Text', text: 'A key value', emphasis: true }
+    expect(validateCatalogConformance(node, defaultCatalog)).toEqual([])
+  })
+
   it('accepts a {path} binding for a bindable prop (selected / open / value)', () => {
     const tabs: A2uiComponent = { id: 'tb', component: 'Tabs', selected: { path: '/active' } }
     const modal: A2uiComponent = { id: 'md', component: 'Modal', open: { path: '/shown' } }

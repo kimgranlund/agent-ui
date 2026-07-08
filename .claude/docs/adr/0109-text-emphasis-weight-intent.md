@@ -149,3 +149,14 @@ Two facts shape the API (the ADR-0106 method):
   no present evidence, and flipping bindability later is additive.
 - **New variant values instead** (`body-strong`, …). Rejected: doubles the role vocabulary and breaks
   orthogonality — emphasis composes with every role; a variant fork composes with none.
+
+## Realization note (2026-07-08, build wave)
+
+Clause 4's "the prompt line should hint (names, labels, key values — not whole paragraphs)" has no
+per-prop vehicle: the derived inventory renderer (`system-prompt.ts` `catalogInventory()`) is mechanical
+`- Id (props: …)` with no annotation lane — for `emphasis` exactly as for `truncate`. The accepted
+carriers of the idiom are (a) the reference exemplar (`examples/catalog-coverage.ts` — the document-row
+NAME carries `emphasis`+`truncate` composed, the "names, labels, key values" teaching in situ) and
+(b) the `a2ui-catalog.spec.md` §5.2 usage note. A per-prop hint lane in the prompt grammar remains a
+possible future extension; it is NOT owed by this record. (Surfaced by the catalog-row review's D6/minor-2
+findings; the exemplar was the review's one promotion blocker, landed same wave.)

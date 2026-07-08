@@ -186,7 +186,10 @@ export const documentRowToolbarSeed: ExampleSeed = {
           // ADR-0106 — the document row's title cell is the reference use of `truncate`: a document name
           // must hold one line, ellipsis-clip under a narrow row, and stay reachable via the unconditional
           // `title` mirror (native hover reveal, zero dependency cost).
-          { id: 'doc_name', component: 'Text', variant: 'body', text: 'Q3 roadmap.pdf', truncate: true },
+          // ADR-0109 — and the reference use of `emphasis`: a document NAME is exactly the "names, labels,
+          // key values" idiom (cl.4), and the two booleans composing on one node is itself the teaching
+          // (orthogonal axes — weight intent + overflow intent, independently settable).
+          { id: 'doc_name', component: 'Text', variant: 'body', text: 'Q3 roadmap.pdf', truncate: true, emphasis: true },
           { id: 'doc_actions', component: 'Row', gap: 'sm', align: 'center', children: ['tip_wrap', 'pop_wrap', 'menu_overflow'] },
 
           // Tooltip: FIRST child is the anchor, remaining children move into the tooltip panel

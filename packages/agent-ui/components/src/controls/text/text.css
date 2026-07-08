@@ -10,7 +10,9 @@
  *       size='lg'>` (no [variant] attribute) must ALSO hit the body row — the two body size-override
  *       blocks below cover the `:not([variant])` case. `--ui-text-color` ties to the AA-gated surface-text
  *       ink role. `:where()` keeps every repoint at specificity 0 — LATER declaration wins a tie, so this
- *       file's ORDER (base → role → size-override) is load-bearing: do not reorder the blocks below.
+ *       file's ORDER (base → role → size-override → [emphasis]) is load-bearing: do not reorder the blocks
+ *       below. `[emphasis]` (ADR-0109, the fifth axis) is declared LAST — one line, `--ui-text-weight: 700`
+ *       (the platform bold register), beating every role/size-override row on the tie.
  *   [2] STYLES BLOCK — `@scope (ui-text)` CONSUMES only `--ui-text-*` (font-size/-weight/line-height/
  *       letter-spacing/color) plus the variant TREATMENTS (structural, not scale, opinions): uppercase for
  *       kicker/overline, italic + a rule + an indent for quote, and the ADR-0078 cl.4 stamp-transparency
@@ -20,7 +22,10 @@
  *       shape: the host leg (the 80% unstamped case) and a stamp leg (declared AFTER the stamp-
  *       transparency reset so its overflow/text-overflow win the cascade on the shared selector surface)
  *       — text-overflow/overflow must sit on whichever box holds the text; white-space: nowrap on the
- *       host is enough on its own, it inherits into the stamp for free.
+ *       host is enough on its own, it inherits into the stamp for free. ADR-0109's `emphasis` (the fifth
+ *       axis) needs ZERO styles-block change and no stamp leg — `font-weight` inherits, so the existing
+ *       `font-weight: var(--ui-text-weight)` declaration + the cl.4 stamp-transparency reset already carry
+ *       the [1]-block repoint into any stamped element for free.
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
  * from text.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -205,6 +210,14 @@
   --ui-text-weight: var(--md-sys-typescale-body-large-weight);
   --ui-text-line-height: var(--md-sys-typescale-body-large-line-height);
   --ui-text-tracking: var(--md-sys-typescale-body-large-tracking);
+}
+
+/* ── [emphasis] (ADR-0109, the fifth orthogonal axis) — declared LAST: :where() keeps every repoint at
+   specificity 0, so source order is what lets this one beat every role/size-override block above on a tie.
+   700 is the platform's bold register (the CSS `bold` keyword) — a platform constant, not a new fleet
+   token and not a typescale-row edit; no-ops honestly on kicker (already 700). ── */
+:where(ui-text[emphasis]) {
+  --ui-text-weight: 700;
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-text) consumes ONLY --ui-text-* ════════════════ */

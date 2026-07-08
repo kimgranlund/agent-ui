@@ -143,6 +143,35 @@ describe('text.css — structure + token hygiene (ADR-0078 cl.3)', () => {
   })
 })
 
+describe('text.css — [emphasis] (ADR-0109, the fifth orthogonal axis, weight INTENT)', () => {
+  it('the :where(ui-text[emphasis]) token block repoints --ui-text-weight to 700 (the platform bold register)', () => {
+    const rule = (tokenBlock.match(/:where\(ui-text\[emphasis\]\)\s*\{[^}]*\}/) ?? [''])[0]
+    expect(rule.length).toBeGreaterThan(0)
+    expect(rule).toMatch(/--ui-text-weight:\s*700\s*;/)
+  })
+
+  it('is declared LAST in the token block — after every role AND size-override row (order-is-load-bearing law)', () => {
+    const emphasisIdx = tokenBlock.indexOf(":where(ui-text[emphasis])")
+    expect(emphasisIdx).toBeGreaterThan(-1)
+    // every other :where(ui-text[...]) declaration in the token block must come BEFORE it
+    const allRuleStarts = [...tokenBlock.matchAll(/:where\(ui-text(?:\[[^\]]*\])+\)\s*\{/g)].map((m) => m.index ?? -1)
+    const others = allRuleStarts.filter((i) => i !== emphasisIdx)
+    expect(others.length).toBeGreaterThan(0) // anti-vacuous — there really are other rows to beat
+    for (const i of others) expect(i, `a :where(ui-text[...]) block at ${i} follows [emphasis] at ${emphasisIdx}`).toBeLessThan(emphasisIdx)
+  })
+
+  it('the [emphasis] block declares ONLY --ui-text-weight — no other --ui-text-* token repointed', () => {
+    const rule = (tokenBlock.match(/:where\(ui-text\[emphasis\]\)\s*\{([^}]*)\}/) ?? ['', ''])[1]
+    const decls = [...rule.matchAll(/(--ui-text-[\w-]+):/g)].map((m) => m[1])
+    expect(decls).toEqual(['--ui-text-weight'])
+  })
+
+  it('introduces NO styles-block change and no stamp leg — font-weight already consumes --ui-text-weight, weight inherits', () => {
+    // no `emphasis` selector anywhere in the @scope styles block (no second CSS leg, unlike truncate)
+    expect(stylesBlock).not.toMatch(/emphasis/)
+  })
+})
+
 describe('text.css — [truncate] (ADR-0106, CSS-only single-line ellipsis)', () => {
   it('the host leg sets white-space:nowrap + overflow:hidden + text-overflow:ellipsis', () => {
     const hostRule = (stylesBlock.match(/:scope\[truncate\]\s*\{[^}]*\}/) ?? [''])[0]

@@ -1,12 +1,13 @@
 // text.ts — UITextElement, the Display-class text primitive (ADR-0078, supersedes ADR-0025's prop schema
 // + heading path). BEHAVIOUR + props + stamping + self-define ONLY.
 //
-// Four orthogonal axes (ADR-0078 cl.1 + ADR-0106): `variant` (the visual type ROLE — which
+// Five orthogonal axes (ADR-0078 cl.1 + ADR-0106 + ADR-0109): `variant` (the visual type ROLE — which
 // --md-sys-typescale-* block text.css repoints to), `size` (sm/md/lg — the row within the role), `as`
-// (document SEMANTICS — the real element STAMPED around the light-DOM children), and `truncate`
-// (ADR-0106 — overflow INTENT: single-line + ellipsis, CSS-only). `variant`/`size` carry zero semantics
-// now; `as` alone does — the honest split ADR-0025's conflated `variant="h4"` (visual ROLE + heading level
-// in one knob) could not make.
+// (document SEMANTICS — the real element STAMPED around the light-DOM children), `truncate` (ADR-0106 —
+// overflow INTENT: single-line + ellipsis, CSS-only), and `emphasis` (ADR-0109 — weight INTENT: the
+// platform bold register, CSS-only). `variant`/`size` carry zero semantics now; `as` alone does — the
+// honest split ADR-0025's conflated `variant="h4"` (visual ROLE + heading level in one knob) could not
+// make.
 //
 // `truncate` (ADR-0106) is CSS-only by Kim's explicit ratification ruling — no box-size measurement, no
 // dimension-watching observer of any kind installed anywhere in this file (a grep-able absence is the
@@ -16,6 +17,12 @@
 // render/childList observer below rather than a bespoke measurement path; an author-set `title` is never
 // overwritten (presence-checked before the mirror's first write — the mirror only ever owns a title it
 // minted itself).
+//
+// `emphasis` (ADR-0109) is schema-only — a reflected boolean, zero behavior code in this file. The
+// `[emphasis]` CSS hook (text.css) repoints `--ui-text-weight` to 700 (the platform bold register);
+// `font-weight` inherits, so the ADR-0078 cl.4 stamp-transparency reset already carries it into any
+// stamped element for free — no second stamp leg, no observer, no effect (contrast `truncate`, whose
+// non-inheriting overflow properties needed one).
 //
 // Content model — host-as-content STANDS (ADR-0006 + ADR-0025 cl.2): the user's light-DOM children remain
 // the displayed text and the accessible name; there is still no `text` prop and no `html``` template, so
@@ -66,6 +73,11 @@ const props = {
   // `[truncate]` legs do the clipping). Reflects so the `[truncate]` CSS hook applies to JS-set values too
   // (the variant/size/as precedent). Default `false` keeps today's wrapping — no shipped rendering change.
   truncate: { ...prop.boolean(false), reflect: true },
+  // Weight INTENT (ADR-0109) — the fifth orthogonal axis: bold, CSS-only (text.css's `[emphasis]`
+  // token-block repoint does the work; no styles-block change, no stamp leg — weight inherits). Reflects
+  // so the `[emphasis]` CSS hook applies to JS-set values too (the variant/size/as/truncate precedent).
+  // Default `false` keeps today's rendering — no shipped visual change.
+  emphasis: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 export interface UITextElement extends ReactiveProps<typeof props> {}

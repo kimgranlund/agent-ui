@@ -255,6 +255,53 @@ describe('UITextElement — the grep-able ResizeObserver absence (ADR-0106 Accep
   })
 })
 
+// ── ADR-0109 — `emphasis`: schema-only, the fifth orthogonal axis (weight INTENT, CSS-only) ────────────
+describe('UITextElement — emphasis prop (ADR-0109)', () => {
+  it('defaults to false, not pre-reflected; a JS-set value reflects to [emphasis]', () => {
+    const el = new UITextElement()
+    document.body.append(el)
+    expect(el.emphasis).toBe(false)
+    expect(el.getAttribute('emphasis')).toBeNull()
+    el.emphasis = true
+    expect(el.getAttribute('emphasis')).toBe('')
+    el.remove()
+  })
+
+  it('rejects a non-boolean at compile time (typed prop, not a bare value)', () => {
+    const fn = (): void => {
+      const el = new UITextElement()
+      el.emphasis = true
+      el.emphasis = false
+      // @ts-expect-error — emphasis is boolean, not a string
+      el.emphasis = 'x'
+    }
+    expect(typeof fn).toBe('function') // never invoked; the type errors above are the assertion
+  })
+
+  it('un-reflects [emphasis] when set back to false', () => {
+    const el = new UITextElement()
+    document.body.append(el)
+    el.emphasis = true
+    expect(el.getAttribute('emphasis')).toBe('')
+    el.emphasis = false
+    expect(el.getAttribute('emphasis')).toBeNull()
+    el.remove()
+  })
+})
+
+describe('UITextElement — emphasis is schema-only, zero new runtime machinery (ADR-0109 Acceptance leg)', () => {
+  it('text.ts installs no new effect/observer for emphasis — the SAME two effects + one observer as before', () => {
+    const source = readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/text/text.ts`, 'utf8') as string
+    // Exactly two `this.effect(` installs (the restamp effect + the title-mirror effect) — emphasis adds none.
+    expect((source.match(/this\.effect\(/g) ?? []).length).toBe(2)
+    // Exactly one MutationObserver installation (the existing heal/title-sync observer) — emphasis adds none.
+    expect((source.match(/new MutationObserver/g) ?? []).length).toBe(1)
+    // `emphasis` never appears inside connected()'s body — it is a schema entry only, wired to nothing.
+    const connectedBody = source.slice(source.indexOf('protected connected()'), source.indexOf('protected disconnected()'))
+    expect(connectedBody).not.toMatch(/emphasis/)
+  })
+})
+
 describe('UITextElement — the unconditional `title` mirror (ADR-0106 cl.3)', () => {
   it('mints title = trimmed textContent as soon as truncate is set', async () => {
     const el = new UITextElement()

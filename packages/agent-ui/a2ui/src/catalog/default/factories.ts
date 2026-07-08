@@ -105,7 +105,9 @@ const TEXT_VARIANT_TABLE: Record<string, { as: string; variant: string; size: st
  * ONE enum (`h1…h5 | caption | body`, catalog UNCHANGED) fanned out through `TEXT_VARIANT_TABLE` onto the
  * control's three reflecting accessor props (`as`/`variant`/`size`) — the catalog stays protocol-faithful
  * while the control gets the real semantic stamp + M3 role/size pair. Not an input ⇒ no `value`. A
- * display leaf — no children, no action.
+ * display leaf — no children, no action. The boolean presentation intents — `truncate` (ADR-0106) and
+ * `emphasis` (ADR-0109) — deliberately have NO case here: they ride the `default:` arm's `setAttr`
+ * boolean-attribute form, which IS the CSS hook (`[truncate]`/`[emphasis]`).
  */
 export const textFactory: WidgetFactory = {
   tag: 'ui-text',
