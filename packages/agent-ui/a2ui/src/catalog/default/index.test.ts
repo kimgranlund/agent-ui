@@ -138,7 +138,14 @@ function fleetPrimaryTypes(): string[] {
  *  are deliberately NOT here — no `ui-image`/`ui-video` descriptor exists, so they never enter the
  *  derived set to begin with (they stay a documentary-only note in SPEC §5.2.1, never code-derived). A
  *  future undispositioned control re-seeds this map with a reason + citation, same as Wave 0's seed. */
-const EXCLUSION_ALLOWLIST = new Map<string, string>([])
+const EXCLUSION_ALLOWLIST = new Map<string, string>([
+  // Wave M1 chart family (ADR-0107, chart-family.lld.md): ui-sparkline/ui-bar-chart shipped their
+  // machine-checkable descriptor contract at wave M1-b (LLD-C7/C8). Their catalog rows + factories are
+  // LLD-C10 (wave M1-d, a separate writer) — seeded here so this gate does not silently break ahead of that
+  // wave. Drain both entries the moment LLD-C10 lands (chart-family.lld.md §5/§9).
+  ['BarChart', 'catalog row is LLD-C10 (wave M1-d, chart-family.lld.md §5) — not yet landed'],
+  ['Sparkline', 'catalog row is LLD-C10 (wave M1-d, chart-family.lld.md §5) — not yet landed'],
+])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists
  *  to catch. A pure predicate so the negative controls can drive it with synthetic inputs (site-coverage's

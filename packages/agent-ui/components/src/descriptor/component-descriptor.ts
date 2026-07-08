@@ -372,6 +372,11 @@ function kindOf(config: LivePropConfig): DriftKind {
   const from = (a: string | null): Probe => probe(() => config.type.from(a))
   const nul = from(null)
   if (!nul.ok) return 'unknown'
+  // A HARDENED array codec (SPEC-R3/R7, the chart family's safe values/data codecs) maps a removed/absent
+  // attribute to `[]`, never `null` — the generic `jsonType<T>()` shape below never produces this. An array
+  // result is unambiguous (never `false`/string/`null`), so it is classified "json" directly, ahead of the
+  // null-keyed branches that would otherwise miss it and fall through to 'unknown'.
+  if (Array.isArray(nul.value)) return 'json'
   if (nul.value === false) {
     const empty = from('')
     return empty.ok && empty.value === true ? 'boolean' : 'unknown'

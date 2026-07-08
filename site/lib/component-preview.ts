@@ -437,8 +437,16 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
 // value): this is for an attribute the descriptor does NOT expose as an editable prop at all, so no knob could
 // ever supply it. ui-slider is the one fleet member: its track is ::before/::after (no text slot — NO_SLOT_TEXT
 // below), so without an explicit seed a bare specimen carries no accessible name at all.
+//
+// Wave M1 (ADR-0107): ui-sparkline/ui-bar-chart's `values`/`data` are JSON-string attributes — a codec
+// `knobFromAttribute` maps to `kind: 'skip'` (no editable knob, same as any complex-typed attr), so their
+// LIVE descriptor default (an empty array) would mount zero rendered children (an honest empty state per
+// SPEC-R3/R7, but an uninstructive bare specimen — the same gap ui-icon's `name: ''` default closes via
+// COMPONENT_INITIAL). Seeded here with the SAME JSON-string shape the descriptors' own `.md` examples use.
 const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
   'ui-slider': { 'aria-label': 'Volume' },
+  'ui-sparkline': { values: '[3,5,4,8,7]' },
+  'ui-bar-chart': { data: '[{"label":"EMEA","value":42},{"label":"APAC","value":31}]' },
 }
 
 // ── SLOT_TEXT gating — component mode (the fleet-wide hardening) ──────────────────────────────────────────────
@@ -470,6 +478,7 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
 // exact defect class this partition exists to prevent); most of the rest now ALSO get real sample content
 // (COMPONENT_SAMPLE_CHILDREN, batch B) so their specimen is representative, not merely non-throwing.
 export const NO_SLOT_TEXT = new Set([
+  'ui-bar-chart', // component-built rows (replaceChildren) — one role=listitem row per datum, never author-slotted (slots: [] — bar-chart.md)
   'ui-calendar', // #ensureShell() builds the whole nav+grid panel unconditionally
   'ui-combo-box', // #ensureParts(): a control-created editor + listbox
   'ui-field', // #ensureParts(): the label/description/error chrome (3 parts)
@@ -480,6 +489,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-select', // #ensureParts(): a control-created trigger button + listbox
   'ui-slider', // ::before/::after track only — no text slot at all (batch C); seeded an aria-label via COMPONENT_SAMPLE_ATTRS instead
   'ui-slider-multi', // JS-managed light-DOM rail/fill/thumb children (NOT ::before/::after, unlike ui-slider)
+  'ui-sparkline', // component-built inline <svg> (createElementNS + replaceChildren) — the ui-icon precedent, a name/values-driven mark, not authored text (slots: [] — sparkline.md)
   'ui-tabs', // the control-created tablist strip PART
   'ui-text-field', // the contenteditable editor PART (×2 parts: editor + measurer)
   'ui-tooltip', // #ensureParts(): anchor (COMPONENT_SAMPLE_CHILDREN) + panel

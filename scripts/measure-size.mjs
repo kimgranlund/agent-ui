@@ -48,7 +48,11 @@ const targets = [
   // marginal ≤~2 KB stays the REAL cap; the per-control leg below (T5, ADR-0080) measures it directly through
   // the public API (both new controls land at 0–62 B gz marginal — trivial, since almost all their shared cost
   // rides the radio/radio-group foundation every other Indicator/Pattern control already pays).
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 25 * KB],
+  // 26 KB re-based at the chart wave (ADR-0107 ## Amendment, the Consequences-anticipated re-base): TWO new
+  // Display controls with hand-rolled mark code (ui-sparkline's SVG path-building + ui-bar-chart's diverging
+  // bar math) — measured 25847 B gz 2026-07-08; per-control marginals stay trivial vs the ~2 KB cap
+  // (bar-chart 447 B gz · sparkline 715 B gz through the T5 public-API leg).
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 26 * KB],
 ]
 
 let over = false

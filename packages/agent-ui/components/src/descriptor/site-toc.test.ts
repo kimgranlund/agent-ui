@@ -134,9 +134,16 @@ function deadHrefs(refs: readonly string[], htmlSet: ReadonlySet<string>): strin
   return [...new Set(refs)].filter((f) => !htmlSet.has(f)).sort()
 }
 
+// ── the deliberate, shrinking TOC gap (mirrors site-coverage.test.ts's KNOWN_UNDOCUMENTED) ────────────────────
+// LLD-C9 (chart-family.lld.md §4) explicitly assigns "the toc/nav rows the site drift gates walk" to wave M1-c,
+// AFTER this wave's (M1-b, LLD-C8) descriptor-only integration. ui-sparkline/ui-bar-chart shipped their
+// machine-checkable contract here; their nav/landing TOC rows land with their site pages next wave. Remove an
+// entry the moment its TOC rows land — do NOT let this stopgap outlive that wave.
+const PENDING_TOC_GROUPS = new Set<string>(['ui-bar-chart', 'ui-sparkline'])
+
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
-const EXPECTED = expectedGroupLabels(COMPONENTS)
+const EXPECTED = new Set([...expectedGroupLabels(COMPONENTS)].filter((l) => !PENDING_TOC_GROUPS.has(l)))
 const NAV_BLOCK = constBlock(read(`${SITE}/pages/_page.ts`), 'NAV')
 const CARD_BLOCK = constBlock(read(`${SITE}/main.ts`), 'CARD_GROUPS')
 const NAV_LABELS = groupLabels(NAV_BLOCK, 'links')

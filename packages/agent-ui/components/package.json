@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./components": "./src/controls/index.ts",
+    "./controls/bar-chart": "./src/controls/bar-chart/bar-chart.ts",
     "./controls/button": "./src/controls/button/button.ts",
     "./controls/calendar": "./src/controls/calendar/calendar.ts",
     "./controls/card": "./src/controls/card/card.ts",
@@ -28,6 +29,7 @@
     "./controls/select": "./src/controls/select/select.ts",
     "./controls/slider": "./src/controls/slider/slider.ts",
     "./controls/slider-multi": "./src/controls/slider-multi/slider-multi.ts",
+    "./controls/sparkline": "./src/controls/sparkline/sparkline.ts",
     "./controls/switch": "./src/controls/switch/switch.ts",
     "./controls/tabs": "./src/controls/tabs/tabs.ts",
     "./controls/text": "./src/controls/text/text.ts",

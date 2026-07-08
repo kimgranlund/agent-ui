@@ -1,0 +1,61 @@
+/* sparkline.css — ui-sparkline, the Display-class series-shape mark (LLD-C3, chart-family.lld.md §2;
+ * SPEC-R2/R9/R10/R11; ADR-0107). Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-sparkline)` declares the mark geometry as `--ui-sparkline-*`:
+ *       density-invariant px/em quantities (ADR-0107 cl.5) — no [size]/[scale] lookup (Display class,
+ *       geometry.md; SPEC-R12: no control height, no h/2 law).
+ *   [2] STYLES BLOCK — `@scope (ui-sparkline)` consumes ONLY `--ui-sparkline-*`.
+ *
+ * The sizing ruling (SPEC-R9 AC1): the host takes an EXPLICIT `inline-size` token default, not an
+ * `auto + min-floor` pair — `auto` is non-deterministic here (a percentage-sized SVG inside a shrink-to-fit
+ * flex item falls back to the replaced-element intrinsic, 300px). `8em x 1lh` paints identically everywhere
+ * (whole-shape law, test-the-whole-shape) and rides the ambient type context (the `ui-icon` `1em` posture,
+ * widened to a mark box) — the two tokens are the page-author override freedom (ADR-0102 Lane A).
+ *
+ * `overflow: visible` on the svg: with `vector-effect: non-scaling-stroke` the stroke is px-sized, so at
+ * y=0/100 half the stroke falls outside the viewBox; visible overflow shows it instead of clipping the
+ * series extremes flat.
+ *
+ * Forced colors: NO dedicated block (SPEC-R10) — the mark is `currentColor` stroke/fill, which resolves to
+ * the consuming context's forced ink (the `ui-icon` precedent); the area wash is that same ink at token
+ * opacity (opacity is not a color property — WHCM never flattens it).
+ *
+ * RTL: NO mirroring rule (SPEC-R11) — SVG viewBox coordinates are physical by design; the series reads
+ * left-to-right in both directions (chronology is data order, not a bidi concern). Documented in sparkline.md.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-sparkline) declares --ui-sparkline-* ════════════════ */
+
+:where(ui-sparkline) {
+  --ui-sparkline-inline-size: 8em; /* the deterministic default box (see the sizing ruling above) */
+  --ui-sparkline-block-size: 1lh; /* rides the ambient line box — inline-in-text fits by construction */
+  --ui-sparkline-stroke-width: 1.5px; /* density-invariant px (ADR-0107 cl.5) */
+  --ui-sparkline-area-opacity: 0.15;
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-sparkline) consumes ONLY --ui-sparkline-* ════════════════ */
+
+@scope (ui-sparkline) {
+  :scope {
+    display: inline-block;
+    inline-size: var(--ui-sparkline-inline-size);
+    block-size: var(--ui-sparkline-block-size);
+    vertical-align: text-bottom;
+    color: inherit;
+  }
+
+  :scope svg {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: visible;
+  }
+
+  :scope svg [data-part='line'] {
+    stroke-width: var(--ui-sparkline-stroke-width);
+  }
+
+  :scope svg [data-part='area'] {
+    opacity: var(--ui-sparkline-area-opacity);
+  }
+}

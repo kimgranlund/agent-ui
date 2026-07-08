@@ -119,7 +119,12 @@ const LAYOUT_SHOWCASE = ['layout-overview.html', 'layout-permutations.html'] as 
 // Empty = the whole fleet is documented. The Wave-1 Indicator pages (checkbox/switch/radio doc + radio-group
 // doc & demo) landed, so their stopgap entries were removed — a missing required page on ANY shipped component
 // now fails the build again (not silently parked here).
-const KNOWN_UNDOCUMENTED = new Set<string>()
+//
+// The Wave M1 chart family (ADR-0107, chart-family.lld.md) parks HERE deliberately: `ui-sparkline` +
+// `ui-bar-chart` shipped their descriptors in wave M1-b (LLD-C7/C8), but their site pages
+// (`sparkline-doc.html` / `bar-chart-doc.html`) are wave M1-c (LLD-C9), not yet built. Remove both entries
+// the moment those pages land — do NOT let this stopgap outlive that wave.
+const KNOWN_UNDOCUMENTED = new Set<string>(['bar-chart', 'sparkline'])
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
@@ -151,16 +156,26 @@ describe('site coverage — the descriptor fleet is enumerable (anti-vacuous)', 
 describe('site coverage — every shipped component has its required per-tier page set', () => {
   // The live bite: every descriptor (control + container) must have all its tier-required `{name}-{type}.html`
   // pages. Drop or rename one and this fails — the gate that keeps the docs in lock-step with the fleet.
+  // A component listed in KNOWN_UNDOCUMENTED (the explicit, deliberate parking gap above) is exempted HERE too
+  // — `it.skip` keeps the test node visible (not silently dropped) while it is legitimately pending its wave.
   for (const c of COMPONENTS) {
-    it(`${c.tag} (tier=${c.tier}) has all of {${requiredPages(c.tier).join(', ')}} pages`, () => {
+    const title = `${c.tag} (tier=${c.tier}) has all of {${requiredPages(c.tier).join(', ')}} pages`
+    if (KNOWN_UNDOCUMENTED.has(c.name)) {
+      it.skip(`${title} — SKIPPED (KNOWN_UNDOCUMENTED, not yet built)`, () => {})
+      continue
+    }
+    it(title, () => {
       expect(missingPages(c.name, c.tier, HTML)).toEqual([])
     })
   }
 
   it('sourced the controls, the display leaf, the Wave 1 indicators, the Wave 2 Range controls, and the G9 containers/patterns/layout', () => {
     expect(COMPONENTS.filter((c) => c.tier === 'control').map((c) => c.name).sort()).toEqual(['button', 'text-field'])
-    // Display tier: ui-text (ADR-0025) + ui-icon (ADR-0065/0066, the icon-adapter's declarative consumer).
-    expect(COMPONENTS.filter((c) => c.tier === 'display').map((c) => c.name).sort()).toEqual(['icon', 'text'])
+    // Display tier: ui-text (ADR-0025) + ui-icon (ADR-0065/0066, the icon-adapter's declarative consumer) +
+    // the Wave M1 chart family (ADR-0107): ui-sparkline + ui-bar-chart.
+    expect(COMPONENTS.filter((c) => c.tier === 'display').map((c) => c.name).sort()).toEqual(
+      ['bar-chart', 'icon', 'sparkline', 'text'],
+    )
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
     // the SAME real ancestor, UIIndicatorElement, as ui-radio): tier=indicator/container (not control/display)
     expect(COMPONENTS.filter((c) => c.tier === 'indicator').map((c) => c.name).sort()).toEqual(
@@ -200,19 +215,20 @@ describe('site coverage — the shared layout-tier showcase exists (T7 overview 
   }
 })
 
-describe('site coverage — every descriptor is documented (the gap is empty)', () => {
+describe('site coverage — every descriptor is documented XOR a known, deliberate gap', () => {
   for (const c of COMPONENTS) {
     it(`${c.tag} — documented(${isDocumented(c)}) === not-in-known-gap`, () => {
       // documented IFF not listed: a documented component must NOT be in KNOWN_UNDOCUMENTED, an undocumented one
-      // MUST be. The gap is empty, so every shipped component must be fully documented.
+      // MUST be. Today the gap is exactly {bar-chart, sparkline} (wave M1-b, pages land at M1-c) — every OTHER
+      // shipped component must be fully documented.
       expect(isDocumented(c)).toBe(!KNOWN_UNDOCUMENTED.has(c.name))
     })
   }
 
-  it('KNOWN_UNDOCUMENTED is empty and lists only real undocumented descriptors (no stale name lingers)', () => {
+  it('KNOWN_UNDOCUMENTED lists exactly the real undocumented descriptors (no stale name lingers, no surprise gap)', () => {
     const undocumentedNames = COMPONENTS.filter((c) => !isDocumented(c)).map((c) => c.name).sort()
     expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(undocumentedNames)
-    expect(KNOWN_UNDOCUMENTED.size).toBe(0)
+    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(['bar-chart', 'sparkline'])
   })
 })
 

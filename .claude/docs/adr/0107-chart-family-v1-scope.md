@@ -171,3 +171,13 @@ This is an **intake** ADR — realized in two stages:
 - **Vertical column chart as the v1 bar model.** Rejected as default (fork F2): owes a baseline and an
   under-column label strategy, and collapses in narrow feed bubbles — the primary v1 host. Recorded as the
   foreseen `orientation` extension.
+
+## Amendment — family size budget re-base 25 → 26 KB (2026-07-08, foreseen)
+
+The Consequences-anticipated re-base ("the family size budget … likely re-bases — two new controls plus
+SVG-building code") resolved at wave M1-b: the worst-case all-controls barrel measured **25 847 B gz**
+against the 25 600 B gz (25 KB) ceiling — over by 247 B. Both controls are individually cheap
+(`bar-chart` 447 B gz · `sparkline` 715 B gz marginal through the ADR-0080 T5 leg, well under the ~2 KB
+per-control cap); the overage is the legitimate cost of the family's first hand-rolled mark code.
+`scripts/measure-size.mjs` ceiling → **26 KB** (26 624 B gz, ~777 B headroom), recorded in its own
+re-base comment chain per convention. The per-control ≤~2 KB marginal cap stays the real gate, unchanged.

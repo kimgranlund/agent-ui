@@ -18,6 +18,9 @@
 //   • Coordination controls — G7 (ADR-0050/ADR-0051): ui-field (the label/description/error wrapper around
 //     ONE slotted form control) and ui-form-provider (the discovery/aggregation layer over UIFormElement
 //     descendants). Neither carries a form value of its own — both extend UIElement directly.
+//   • Chart family — Wave M1 (ADR-0107, chart-family.lld.md): ui-sparkline (series-shape mark) and
+//     ui-bar-chart (magnitude-comparison bar list). Both Display-class, axis-free, non-interactive,
+//     non-form-associated leaves — extend UIElement directly, tier=display, no [size]/[scale] geometry row.
 // A compound's main `.ts` imports its sub-element modules so `export * from './{family}/{family}.ts'` here
 // registers the WHOLE family — importing the barrel self-defines all ~20+ tags.
 export * from './button/button.ts'
@@ -70,3 +73,8 @@ export * from './calendar/calendar.ts'   // form-associated date picker (bespoke
 // Coordination controls — G7 (ADR-0050/ADR-0051): the labelling wrapper + the aggregation/discovery provider.
 export * from './field/field.ts'               // the label/description/error wrapper (LLD-C4)
 export * from './form-provider/form-provider.ts' // also surfaces FormSubmitDetail (LLD-C7)
+
+// Chart family — Wave M1 (ADR-0107, chart-family.lld.md): Display-class, axis-free chart marks. Neither is
+// form-associated or interactive (extends UIElement directly, tier=display, no [size]/[scale] geometry row).
+export * from './sparkline/sparkline.ts'   // series-shape mark (LLD-C1/C2/C3)
+export * from './bar-chart/bar-chart.ts'   // magnitude-comparison bar list (LLD-C4/C5/C6)

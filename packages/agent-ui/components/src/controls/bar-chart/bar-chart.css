@@ -1,0 +1,110 @@
+/* bar-chart.css — ui-bar-chart, the Display-class magnitude-comparison bar list (LLD-C6,
+ * chart-family.lld.md §3; SPEC-R6/R9/R10/R11/R12). Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-bar-chart)` (specificity 0,0,0) declares the `--ui-bar-chart-*` chain:
+ *       the whole-shape floor (SPEC-R9 AC1 — a bare, unstyled chart in a flex row must still paint a
+ *       visible, non-collapsed, proportionally-correct box), density-INVARIANT mark geometry (bar
+ *       thickness/radius — SPEC-R12: mark geometry never rides `[scale]`), the data-bearing fill ink (a
+ *       ≥3:1-vs-surface fleet colour role, WCAG 1.4.11 — the fill is the graphic, the track is
+ *       decorative) and the density-RESPONSIVE row/column rhythm (rides `--ui-space` × `[density]` for
+ *       free — the ADR-0103 radio-group precedent, mirroring `ui-list`'s gap).
+ *   [2] STYLES BLOCK — `@scope (ui-bar-chart)` consumes ONLY `--ui-bar-chart-*` (∪ the shared
+ *       `--md-sys-color-*`/`--md-sys-typescale-*` namespaces the token block itself reads to build that
+ *       chain). `ui-bar-chart` is Display-class, TEXT-BEARING (SPEC-R12): labels/values read the
+ *       `--md-sys-typescale-body-medium-*` row directly (no `[size]`/`[scale]` lever — a chart takes
+ *       neither, SPEC-R12 AC2); no control height, no `padding-block` law.
+ *
+ * Row model: `fit-content(40%) 1fr auto` — labels cap at 40% and WRAP (`overflow-wrap: anywhere`, SPEC-R6
+ * AC3 — never starve the track); the track takes the remainder; values right-align with tabular numerals
+ * so magnitudes scan vertically. Each `[role='listitem']` row is a REAL `subgrid` child sharing the three
+ * columns (not `display: contents`, whose role-semantics engine-bug history the fleet doesn't need — LLD
+ * §3 note). The fill's inset/length ride two row-scoped custom properties SET IMPERATIVELY by bar-chart.ts
+ * (`--_bar-start`/`--_bar-length` — a non-`--ui-*` namespace, the slider/slider-multi `--value-pct`
+ * precedent the family-coherence token gate already exempts) — this sheet owns every paint decision, the
+ * behaviour file never writes a `width`.
+ *
+ * RTL is free (SPEC-R11 AC1): `inset-inline-start` + logical grid flow mirror under `dir="rtl"` — no
+ * physical property anywhere in this file. WHCM (SPEC-R10 AC1): the fill MUST render in a system ink (a
+ * background-drawn fill is otherwise forced to `Canvas` and vanishes) — an explicit `forced-colors` block
+ * paints it `CanvasText`, with the track kept visible + distinguishable via a `Canvas` fill + `CanvasText`
+ * border. Non-color signifier (SPEC-R8, ADR-0057): magnitude travels by length + the printed number; no
+ * intent-role is consumed anywhere in this sheet — nothing to co-carry.
+ *
+ * Standalone stylesheet — linked via the component-styles barrel (wave M1-b); NEVER injected from
+ * bar-chart.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-bar-chart) declares --ui-bar-chart-* ════════════════ */
+
+:where(ui-bar-chart) {
+  --ui-bar-chart-min-inline-size: 16em; /* the whole-shape floor (SPEC-R9 AC1) — never a collapsed sliver */
+  --ui-bar-chart-bar-size: 0.5rem; /* bar/track thickness — density-invariant (SPEC-R12) */
+  --ui-bar-chart-bar-radius: 2px;
+  --ui-bar-chart-bar-ink: var(--md-sys-color-primary); /* the data-bearing fill — >=3:1 vs surface (WCAG 1.4.11) */
+  --ui-bar-chart-track-ink: var(--md-sys-color-neutral-container); /* the decorative rail */
+  --ui-bar-chart-text-ink: var(--md-sys-color-neutral-on-surface); /* label/value ink — the ONE role reference (role-pure) */
+  --ui-bar-chart-row-gap: var(--ui-space-sm); /* row rhythm — rides [density] for free (ADR-0103) */
+  --ui-bar-chart-col-gap: var(--ui-space-sm);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-bar-chart) consumes ONLY --ui-bar-chart-* ════════════════ */
+
+@scope (ui-bar-chart) {
+  :scope {
+    display: grid;
+    grid-template-columns: fit-content(40%) 1fr auto;
+    column-gap: var(--ui-bar-chart-col-gap);
+    row-gap: var(--ui-bar-chart-row-gap);
+    align-items: center;
+    min-inline-size: var(--ui-bar-chart-min-inline-size);
+    box-sizing: border-box;
+    /* text-bearing Display (SPEC-R12) — the type matrix is the lever, not [size]/[scale]/--ui-height-* */
+    font-size: var(--md-sys-typescale-body-medium-size);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+    color: var(--ui-bar-chart-text-ink);
+  }
+
+  :scope [role='listitem'] {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+    align-items: center;
+  }
+
+  :scope [data-part='label'] {
+    overflow-wrap: anywhere; /* long labels wrap at the 40% cap (SPEC-R6 AC3) instead of starving the track */
+  }
+
+  :scope [data-part='track'] {
+    position: relative;
+    display: block;
+    block-size: var(--ui-bar-chart-bar-size);
+    border-radius: var(--ui-bar-chart-bar-radius);
+    background: var(--ui-bar-chart-track-ink);
+  }
+
+  :scope [data-part='fill'] {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--_bar-start) * 1%); /* row-scoped, imperatively set (bar-chart.ts) */
+    inline-size: calc(var(--_bar-length) * 1%);
+    display: block;
+    background: var(--ui-bar-chart-bar-ink);
+    border-radius: inherit;
+  }
+
+  :scope [data-part='value'] {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (forced-colors: active) {
+    :scope [data-part='fill'] {
+      background: CanvasText; /* a background-drawn fill is otherwise forced to Canvas and vanishes */
+    }
+    :scope [data-part='track'] {
+      background: Canvas;
+      border: 1px solid CanvasText; /* keeps the track distinguishable from the fill under WHCM */
+    }
+  }
+}

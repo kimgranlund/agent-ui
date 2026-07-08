@@ -200,8 +200,10 @@ paint decision and the TS never writes a width. AT reading (SPEC-R8 AC1): the li
   :scope { display: grid; grid-template-columns: fit-content(40%) 1fr auto;
            column-gap: var(--ui-bar-chart-col-gap); row-gap: var(--ui-bar-chart-row-gap);
            align-items: center; min-inline-size: var(--ui-bar-chart-min-inline-size);
-           font-size: var(--md-sys-typescale-body-md-size);
-           line-height: var(--md-sys-typescale-body-md-line-height); }   /* text-bearing Display: the type matrix is the lever (ADR-0078) */
+           font-size: var(--md-sys-typescale-body-medium-size);
+           line-height: var(--md-sys-typescale-body-medium-line-height); }   /* text-bearing Display: the type matrix is the lever (ADR-0078) */
+           /* token names corrected at build (M1-a): the fleet's typescale rows are -small/-medium/-large
+              (dimensions.css), never -sm/-md/-lg — the first draft's names would not have compiled */
   :scope [role='listitem'] { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: center; }
   :scope [data-part='label'] { overflow-wrap: anywhere; }     /* long labels wrap at the 40% cap (SPEC-R6 AC3) */
   :scope [data-part='track'] { position: relative; block-size: var(--ui-bar-chart-bar-size);
@@ -251,8 +253,20 @@ the `marginal:` size note. Each folder ships `{name}-descriptor.test.ts` (the co
 - `descriptor/site-coverage.test.ts` — the display-tier membership assertion (line ~163) becomes
   `['bar-chart', 'icon', 'sparkline', 'text']` (sorted). This is a **gate edit** — its negative control is
   that reverting it fails `npm test` (the gate must bite on the new descriptors).
-- `npm run size` by hand (ADR-0040 discipline); if the ADR-0049 22 KB family budget is exceeded, the
-  re-base is its own recorded note in the wave (SPEC-N4) — expected, per ADR-0107 Consequences.
+- `npm run size` by hand (ADR-0040 discipline); if the family budget is exceeded, the re-base is its own
+  recorded note in the wave (SPEC-N4) — expected, per ADR-0107 Consequences. **Realized 2026-07-08 as the
+  ADR-0107 `## Amendment`**: 25847 B gz measured → ceiling re-based 25 → 26 KB (the Consequences named the
+  stale 22 KB figure; the live ceiling was ADR-0095's 25 KB).
+- **As-built additions the first draft did not enumerate** (M1-b's true footprint, recorded per the review's
+  context-is-memory finding): the components `package.json` per-control `exports` entries (the ADR-0080
+  T4 three-way gate demands them) · `descriptor/component-descriptor.ts` — the `kindOf` prober gained an
+  `Array.isArray(from(null)) → 'json'` branch (shared infra, fleet blast radius verified empty: no prior
+  codec maps a removed attribute to an array; properly LLD-C7 territory) · `descriptor/site-toc.test.ts`
+  `PENDING_TOC_GROUPS` + `site-coverage.test.ts` `KNOWN_UNDOCUMENTED` seeds (drained by M1-c/LLD-C9) · the
+  a2ui catalog `index.test.ts` `EXCLUSION_ALLOWLIST` seed (drained by M1-d/LLD-C10, which also owes the
+  residue-guard assertion: every allowlist key absent from the catalog, so a forgotten entry cannot stay
+  silently green) · `site/lib/component-preview.ts` `NO_SLOT_TEXT` + `COMPONENT_SAMPLE_ATTRS` seeds (the
+  fleet-preview browser gates need real specimen content).
 
 **LLD-C9 — site pages.** `site/sparkline-doc.html` + `site/bar-chart-doc.html` (tier=display ⇒ `doc`
 page only, `site-coverage.test.ts` PAGES_BY_TIER) + the toc/nav rows the site drift gates walk. Pages
