@@ -46,7 +46,11 @@ export const generativeFormSeed: ExampleSeed = {
         components: [
           { id: 'root', component: 'Card', children: ['root_content'] },
           { id: 'root_content', component: 'CardContent', children: ['form'] },
-          { id: 'form', component: 'FormProvider', children: ['f_name', 'f_email', 'f_budget', 'f_plan', 'row_toggles', 'actions'] },
+          // FormProvider declares zero layout props (the fleet's "page author owns layout" contract) —
+          // the vertical rhythm rides an explicit Column gap, the pattern-settings-form idiom
+          // (patterns.ts:36-37). Without it the fields render crashed together (gallery bug, 2026-07-08).
+          { id: 'form', component: 'FormProvider', children: ['form_col'] },
+          { id: 'form_col', component: 'Column', gap: 'md', children: ['f_name', 'f_email', 'f_budget', 'f_plan', 'row_toggles', 'actions'] },
         ],
       },
     },
