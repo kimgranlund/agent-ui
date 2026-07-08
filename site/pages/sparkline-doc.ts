@@ -1,8 +1,8 @@
 // site/pages/sparkline-doc.ts — the ui-sparkline API doc page (tier=display ⇒ {doc} only, ADR-0107 /
 // chart-family.lld.md LLD-C9). DERIVED from `sparkline.md` via the shared doc-page.ts renderer: the attribute
-// table is built from the parsed `attributes[]` and the prose from the body (the parts[] surface is documented in
-// the body's Rendering/Accessibility prose, not a table — composeDocPage renders no parts table) — so neither the
-// table nor the body can drift from the descriptor the contract trip-wire enforces (ADR-0004, one parser / two
+// table is built from the parsed `attributes[]`, the parts[] surface renders as the descriptor-derived Parts table
+// (composeDocPage's renderPartsTable — the two data-part nodes line/area), and the prose from the body — so neither
+// the tables nor the body can drift from the descriptor the contract trip-wire enforces (ADR-0004, one parser / two
 // consumers). This control declares no properties/events/slots, so those tables are omitted. One page-local block
 // is DERIVED: the variant strip iterates the PARSED
 // `variant` enum (line · area), so a new variant added to sparkline.md renders its specimen here for free. The
@@ -31,7 +31,7 @@ const { content } = mountPage({
   intro:
     'The Display-class series-shape mark (ADR-0107, chart-family v1) — an inline, axis-free chart answering ' +
     '“what is the shape of this series?”. Non-interactive, non-form-associated: no ticks, no legend, no events. ' +
-    'Generated from sparkline.md: the attribute table is descriptor-derived (it cannot drift; parts are documented in the prose), and ' +
+    'Generated from sparkline.md: the attribute and parts tables are descriptor-derived (they cannot drift), and ' +
     'the variant strip below iterates the parsed `variant` enum against a live revenue-trend series.',
 })
 

@@ -1,9 +1,9 @@
 // site/pages/bar-chart-doc.ts — the ui-bar-chart API doc page (tier=display ⇒ {doc} only, ADR-0107 /
 // chart-family.lld.md LLD-C9). DERIVED from `bar-chart.md` via the shared doc-page.ts renderer: the attribute
-// table is built from the parsed `attributes[]` and the prose from the body (the parts[] surface is documented in
-// the body's Rendering/Accessibility prose, not a table — composeDocPage renders no parts table) — so neither the
-// table nor the body can drift from the descriptor the contract trip-wire enforces (ADR-0004, one parser / two
-// consumers). This control declares no properties/events/slots, so those tables are omitted. The specimen DATA are
+// table is built from the parsed `attributes[]`, the parts[] surface renders as the descriptor-derived Parts table
+// (composeDocPage's renderPartsTable — the label/track/fill/value data-part nodes), and the prose from the body — so
+// neither the tables nor the body can drift from the descriptor the contract trip-wire enforces (ADR-0004, one parser
+// / two consumers). This control declares no properties/events/slots, so those tables are omitted. The specimen DATA are
 // hand-authored (a doc page has no source to derive
 // representative data from) — a real region breakdown + a real mixed-sign change series, not lorem stubs, so the
 // chart demonstrates its actual "how do these magnitudes compare?" job incl. the diverging zero-baseline model
@@ -45,7 +45,7 @@ const { content } = mountPage({
     'The Display-class magnitude-comparison bar list (ADR-0107, chart-family v1) — an axis-free chart answering ' +
     '“how do these magnitudes compare?” with a length-proportional bar list, the printed value as the datum. ' +
     'Non-interactive, non-form-associated: no ticks, no legend, no events. Generated from bar-chart.md: the ' +
-    'attribute table is descriptor-derived (it cannot drift; parts are documented in the prose); the live charts below show the ' +
+    'attribute and parts tables are descriptor-derived (they cannot drift); the live charts below show the ' +
     'all-positive and the mixed-sign diverging models against real data.',
 })
 

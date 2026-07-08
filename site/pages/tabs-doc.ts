@@ -13,7 +13,7 @@ const { descriptor, body } = loadTabsDoc()
 const { content } = mountPage({
   title: 'ui-tabs — API',
   intro: 'The tabs compound — ui-tabs coordinating ui-tab rows and ui-tab-panel regions, with a bindable ' +
-    'selected prop. Generated from tabs.md (descriptor-derived table). See the Tabs demo for selection + roving keyboard.',
+    'selected prop. Generated from tabs.md (descriptor-derived tables). See the Tabs demo for selection + roving keyboard.',
 })
 
 const text = (s: string): Text => document.createTextNode(s)

@@ -124,19 +124,27 @@ export function renderSlotsTable(d: ParsedDescriptor): HTMLElement | undefined {
   ])
 }
 
+/** renderPartsTable — the descriptor `parts[]` (control-created interior anatomy nodes, addressed as `[data-part='X']`): name · description. Like every sequence table, renders ONLY when the descriptor declares parts (a part-less control ships no empty Parts section). */
+export function renderPartsTable(d: ParsedDescriptor): HTMLElement | undefined {
+  return renderSequenceTable('Parts', d.sequences.get('parts'), [
+    { header: 'Name', field: 'name', code: true },
+    { header: 'Description', field: 'description' },
+  ])
+}
+
 /**
  * composeDocPage — the standard T4 page body, in one order every control doc page shares: the descriptor-derived
- * API tables (attributes, then properties · events · slots — each only when the descriptor declares them), an
- * optional live-specimens section, then the rendered markdown body. Keeps the container docs (and the control
+ * API tables (attributes, then properties · events · slots · parts — each only when the descriptor declares them),
+ * an optional live-specimens section, then the rendered markdown body. Keeps the container docs (and the control
  * docs that opt in) on ONE render path, so the page shape can't drift between them and every documented surface
  * is read straight from `{name}.md`.
  */
 export function composeDocPage(content: HTMLElement, descriptor: ParsedDescriptor, body: string, specimens?: HTMLElement): void {
   // The Attributes table renders only when the descriptor declares attributes: an attribute-less control
   // (ui-form-provider — `attributes: []`, a pure coordination element) ships NO vacuous "Attributes" header +
-  // empty table, the same "no empty table" discipline the properties/events/slots sequences already follow.
+  // empty table, the same "no empty table" discipline the properties/events/slots/parts sequences already follow.
   if (descriptor.attributes.length > 0) content.append(renderApiTable(descriptor.attributes))
-  for (const table of [renderPropertiesTable(descriptor), renderEventsTable(descriptor), renderSlotsTable(descriptor)]) {
+  for (const table of [renderPropertiesTable(descriptor), renderEventsTable(descriptor), renderSlotsTable(descriptor), renderPartsTable(descriptor)]) {
     if (table) content.append(table)
   }
   if (specimens) content.append(specimens)
