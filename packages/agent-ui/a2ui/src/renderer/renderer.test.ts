@@ -949,19 +949,21 @@ describe('renderer host — the ADR-0054 submit-gated action (#wireAction, FormP
 
 // Live-agent investigation (a2ui-live "empty hand" report, 2026-07-07): a card-game turn from a real
 // Anthropic model reproduced a templated Row rendering with ZERO instances on an otherwise-live surface.
-// Root-caused to a wire payload — NOT a renderer defect. Captured verbatim from the dev-proxy transcript:
-// the model emitted `updateDataModel{path:"/", value:{...,hand:[5 items]}}` instead of the corpus-idiomatic
-// whole-model replace (`path` OMITTED, SPEC-R5 AC2). `path` is a JSON-Pointer (RFC-6901): `""`/omitted
-// addresses the document root, but `"/"` addresses the child key named `""` — so `setPointer` (LLD-C5)
-// correctly nests the entire payload under a spurious `{"":...}` key, and every path binding on the
-// surface (including the `/hand` list template) resolves to `undefined` — a legal render-time placeholder
-// (SPEC-R4 AC2), not an error, so the failure is silent. These two tests pin that contract: the renderer's
-// list/binding machinery (LLD-C5/C6) is proven sound with the IDENTICAL payload once `path` is omitted —
-// the defect is a system-prompt/exemplar gap (routed to `tools/agent/system-prompt.ts`'s OUTPUT_RULES
-// GRAMMAR, which currently shows only the single-key `updateDataModel` form and never documents the
-// whole-model-replace idiom), not a build unit here.
+// Captured verbatim from the dev-proxy transcript: the model emitted
+// `updateDataModel{path:"/", value:{...,hand:[5 items]}}` — the protocol's own documented default for an
+// omitted `path` (upstream v1.0 §updateDataModel / v0.9, character-verified by live fetch: "If `path` is
+// omitted (or is `/`), the entire data model for the surface is replaced"). Root-caused to a RENDERER
+// defect (ADR-0099): we read `"/"` per strict RFC-6901 — the child key named `""` — so `setPointer`
+// (LLD-C5) nested the payload under a spurious `{"":...}` key and every binding, including the `/hand`
+// list template, silently resolved `undefined` (a legal render-time placeholder, SPEC-R4 AC2 — hence no
+// error). Fixed by treating `"/"` as the root alias at the `#onUpdateDataModel` whole-model branch (and
+// mirrored at the corpus's two fold sites, `canonical.ts`/`admit.ts`, for renderer/corpus parity). These
+// two tests now pin the POST-fix contract: `path:"/"` and omitted-`path` are equivalent whole-model
+// writes — the SAME payload renders identically either way. Omit-path stays the taught corpus idiom
+// (`tools/agent/system-prompt.ts` OUTPUT_RULES GRAMMAR — fewest tokens, version-proof); `"/"` is simply no
+// longer a silent trap for a spec-conformant producer.
 describe('renderer host — updateDataModel path:"/" vs. path-omitted (live-agent "empty hand" root cause)', () => {
-  it('path:"/" nests the whole payload under key "" — the /hand list template never resolves, silently (0 items, 0 errors)', async () => {
+  it('path:"/" is the protocol root alias — whole-model replace, the /hand list template resolves both items (ADR-0099)', async () => {
     const { r, mount, sent, cleanup } = harness()
 
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'card-game', catalogId: 'agent-ui' } }))
@@ -989,8 +991,10 @@ describe('renderer host — updateDataModel path:"/" vs. path-omitted (live-agen
     )
     await whenFlushed()
 
-    expect(mount.querySelectorAll('ui-row > *')).toHaveLength(0) // the reported symptom, reproduced
-    expect(sent).toHaveLength(0) // and it is COMPLETELY SILENT — no error, no diagnostic (SPEC-R4 AC2)
+    const cards = mount.querySelectorAll('ui-row > *')
+    expect(cards).toHaveLength(2) // whole-model replace — no more silent nesting
+    expect([...cards].map((el) => el.textContent)).toEqual(['A♠', 'K♥']) // byte-equivalent to the omitted-path control below
+    expect(sent).toHaveLength(0) // still no error/diagnostic emitted — this was never a wire-error case
 
     cleanup()
   })
@@ -1023,7 +1027,9 @@ describe('renderer host — updateDataModel path:"/" vs. path-omitted (live-agen
     )
     await whenFlushed()
 
-    expect(mount.querySelectorAll('ui-row > *')).toHaveLength(2)
+    const cards = mount.querySelectorAll('ui-row > *')
+    expect(cards).toHaveLength(2)
+    expect([...cards].map((el) => el.textContent)).toEqual(['A♠', 'K♥']) // the byte-equivalence target above
 
     cleanup()
   })

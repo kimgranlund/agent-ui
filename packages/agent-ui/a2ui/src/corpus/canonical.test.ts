@@ -148,6 +148,27 @@ describe('canonicalize — structural / content changes change the hash (SPEC-R6
   })
 })
 
+describe('canonicalize — updateDataModel path:"/" is the root alias, same as path omitted (ADR-0099)', () => {
+  it('folds path:"/" and omitted-path to the identical whole-model dataModel — same hash (renderer/corpus parity)', async () => {
+    const omitted: A2uiOutput = [
+      createSurfaceMsg(),
+      updateComponentsMsg(basicTree()),
+      updateDataModelMsg({ cta: 'Go' }), // path omitted — the corpus idiom
+    ]
+    const slashRoot: A2uiOutput = [
+      createSurfaceMsg(),
+      updateComponentsMsg(basicTree()),
+      updateDataModelMsg({ cta: 'Go' }, '/'), // the spec's documented root-alias spelling
+    ]
+
+    const a = await canonicalize(omitted)
+    const b = await canonicalize(slashRoot)
+    expect(b.form.dataModel).toEqual({ cta: 'Go' }) // NOT nested under a spurious {"":...} key
+    expect(a.serialized).toBe(b.serialized)
+    expect(a.hash).toBe(b.hash)
+  })
+})
+
 describe('canonicalize — children-template componentId rewrite (v1.0 dynamic list, LLD §4 step 4)', () => {
   it('rewrites the template componentId to its canonical id and keeps it reachable', async () => {
     const out: A2uiOutput = [

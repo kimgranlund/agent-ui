@@ -267,10 +267,13 @@ class Renderer implements RendererHost {
   #onUpdateDataModel(body: A2uiUpdateDataModel): void {
     const surface = this.#store.get(body.surfaceId)
     if (surface === undefined) return
-    // Whole-document replace when no path; else an immutable, structural-sharing RFC-6901 set via the
-    // binding module (LLD-C5). Sharing untouched sibling subtrees by reference is what lets the per-path
-    // computeds' `Object.is` cutoff keep unrelated bindings asleep (SPEC-N2) — see binding.ts.
-    if (body.path === undefined || body.path === '') {
+    // Whole-document replace when no path, "" or "/" (the upstream protocol's root alias for
+    // updateDataModel — ADR-0099; SPEC-R5 AC2). Else an immutable, structural-sharing RFC-6901 set via
+    // the binding module (LLD-C5). Sharing untouched sibling subtrees by reference is what lets the
+    // per-path computeds' `Object.is` cutoff keep unrelated bindings asleep (SPEC-N2) — see binding.ts.
+    // NOTE: the alias lives here, at the protocol-message layer — setPointer stays RFC-6901-pure for
+    // every other pointer (deeper `""` keys, e.g. "/a/", still resolve as the empty-string child key).
+    if (body.path === undefined || body.path === '' || body.path === '/') {
       surface.data.value = body.value
       return
     }

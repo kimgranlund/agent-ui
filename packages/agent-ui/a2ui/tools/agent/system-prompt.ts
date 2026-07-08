@@ -121,9 +121,9 @@ Output rules for the A2UI JSONL that follows the note line (omit entirely if the
 - Supply or update data:
   {"version":"v1.0","updateDataModel":{"surfaceId":"main","path":"/some/path","value": <json>}}
   - Bind any prop to data by giving it {"path":"/some/path"} instead of a literal.
-  - To replace the WHOLE data model, OMIT "path" entirely (or use "path":"") — never "path":"/".
-    "path" is an RFC-6901 JSON Pointer: "/" is NOT the root, it addresses a child key literally
-    named "" and will silently nest your data there, breaking every binding on the surface.
+  - To replace the WHOLE data model, OMIT "path" entirely (or use "path":"") — the fewest-token,
+    version-proof idiom. "path":"/" also works (the spec defines "/" as the root default), but
+    prefer omitting "path".
 - Make a control report back to you by giving it an "action", e.g. a Button:
   {"id":"go","component":"Button","label":"Submit","action":{"action":"submit"}}
 - Use ONLY the component types and props listed in the catalog below. NEVER invent a component or a prop.

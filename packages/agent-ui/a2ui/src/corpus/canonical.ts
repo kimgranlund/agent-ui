@@ -99,9 +99,11 @@ function foldStream(out: A2uiOutput): { byId: Map<string, A2uiComponent>; dataMo
       for (const comp of msg.updateComponents.components) byId.set(comp.id, comp) // upsert by id
     } else if ('updateDataModel' in msg) {
       const { path, value } = msg.updateDataModel
-      // Whole-document replace when no path (mirrors the renderer's `#onUpdateDataModel`); else an
-      // absolute RFC-6901 write, applied in stream order.
-      dataModel = path === undefined || path === '' ? value : setAtPointer(dataModel, path, value)
+      // Whole-document replace when no path, "" or "/" (the upstream protocol's root alias — ADR-0099;
+      // mirrors the renderer's `#onUpdateDataModel`); else an absolute RFC-6901 write, applied in stream
+      // order.
+      dataModel =
+        path === undefined || path === '' || path === '/' ? value : setAtPointer(dataModel, path, value)
     }
     // createSurface / deleteSurface / actionResponse / callFunction carry no component/data-model
     // content — they do not participate in the canonical tree.

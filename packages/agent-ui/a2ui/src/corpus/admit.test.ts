@@ -400,6 +400,33 @@ describe('admit — the admission pipeline (LLD-C5)', () => {
       expect(result.code).toBe('E_POINTER')
       expect(result.paths).toContain('chip-tpl.text')
     })
+
+    it('updateDataModel path:"/" folds as whole-model (ADR-0099 root alias) — admits identically to the omitted-path form', async () => {
+      const treeFor = (): unknown[] => [
+        { version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'demo' } },
+        {
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId: 's1',
+            components: [
+              { id: 'root', component: 'Column', children: { path: '/items', componentId: 'item-tpl' } },
+              { id: 'item-tpl', component: 'Text', text: { path: 'name' } },
+            ],
+          },
+        },
+      ]
+      const omitted = mkCandidate({
+        a2uiOutput: [...treeFor(), { version: 'v1.0', updateDataModel: { surfaceId: 's1', value: { items: [{ name: 'Alice' }] } } }],
+      })
+      const slashRoot = mkCandidate({
+        a2uiOutput: [...treeFor(), { version: 'v1.0', updateDataModel: { surfaceId: 's1', path: '/', value: { items: [{ name: 'Alice' }] } } }],
+      })
+
+      const a = await admit(omitted, mkDeps())
+      const b = await admit(slashRoot, mkDeps())
+      expect(a.ok).toBe(true)
+      expect(b.ok).toBe(true) // NOT nested under a spurious {"":...} key — the /items binding still resolves
+    })
   })
 
   describe('E_DUP (LLD-C4)', () => {
