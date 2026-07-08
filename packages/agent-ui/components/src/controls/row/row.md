@@ -11,7 +11,7 @@
 tag: ui-row
 tier: layout           # geometry size-class (Container/layout band — NO control height; spacing off --ui-space × density; geometry.md §"five size-classes")
 extends: UIContainerElement   # structural surface container, NOT form-associated (face below)
-# marginal: ui-row adds 30 B gz (167 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
+# marginal: ui-row adds 47 B gz to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken; re-measured after the ADR-0096 `reflow` prop) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors row.ts `static props` (the surfaceProps + flexProps spread)
   - name: elevation
@@ -43,6 +43,11 @@ attributes:            # attributes-as-API — mirrors row.ts `static props` (th
     type: boolean
     default: false
     reflect: true      # → flex-wrap (boolean presence: present ⇒ wrap)
+  - name: reflow       # gates the ADR-0016 cl.4 @container direction switch (ADR-0096). Element-local (ADR-0075 stretch precedent), NOT part of flexProps. `auto` LEADS (default + snap target) — UNCHANGED behavior; `locked` pins flex-direction:row even under a narrow container
+    type: enum
+    values: [auto, locked]
+    default: auto
+    reflect: true
 
 properties: []         # no manual accessors beyond the attributes-as-API
 
@@ -68,6 +73,7 @@ geometry:
   paddingBlock: 0                  # layout primitives add no padding; the gap is the spacing lever
   gap: var(--ui-row-gap)           # → var(--ui-space-{step}) — the one density-bearing quantity (rides [density], never [scale])
   radius: var(--ui-row-radius)     # → var(--ui-radius-base) — the shared fleet corner radius (rounds a surfaced row)
+  containerQuery: 'inline-size: reflow="auto" (the default) stacks children to a column under a narrow container (ADR-0016 cl.4); reflow="locked" pins flex-direction:row (ADR-0096)'
 
 forcedColors: A `@media (forced-colors: active)` block keeps a surfaced row's plane a system colour (Canvas) and drops the tonal wash, so an elevation/brightness row survives high-contrast mode (belt-and-braces with the shared container.css surface block).
 ---
@@ -118,11 +124,15 @@ opinion. A surfaced row takes the shared `--ui-radius-base` corner radius.
 
 ## Responsiveness
 
-`ui-row` is **intrinsically responsive** with no breakpoint props (ADR-0016 cl.4). Each layout primitive
-establishes a query container (`container-type: inline-size`, in the shared base sheet), and `ui-row` reflows
-on its **own** container width: under a narrow container it **wraps to a column** (a `@container` rule flips
+`ui-row` is **intrinsically responsive** with no breakpoint props (ADR-0016 cl.4), gated by the **`reflow`**
+prop (`auto` default · `locked`, ADR-0096). Each layout primitive establishes a query container
+(`container-type: inline-size`, in the shared base sheet); with the default `reflow="auto"`, `ui-row` reflows
+on its **own** container width — under a narrow container it **wraps to a column** (a `@container` rule flips
 `flex-direction`). Because the trigger is the container — not the viewport — a `ui-row` reflows wherever it is
-dropped, with no app-level media-query context. There are no `sm`/`md`/`lg` props.
+dropped, with no app-level media-query context. Setting **`reflow="locked"`** pins `flex-direction: row` even
+in a cramped container, for a toolbar/action row that must never stack. `reflow` is element-local — deliberately
+**not** part of the shared `flexProps` grammar, so `ui-column`/`ui-grid`/`ui-list` are unaffected (`ui-column`'s
+mirror gate defaults the opposite way, `locked`; see its own descriptor). There are no `sm`/`md`/`lg` props.
 
 ## Accessibility
 

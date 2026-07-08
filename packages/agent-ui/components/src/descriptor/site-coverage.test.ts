@@ -162,9 +162,10 @@ describe('site coverage — every shipped component has its required per-tier pa
     expect(COMPONENTS.filter((c) => c.tier === 'control').map((c) => c.name).sort()).toEqual(['button', 'text-field'])
     // Display tier: ui-text (ADR-0025) + ui-icon (ADR-0065/0066, the icon-adapter's declarative consumer).
     expect(COMPONENTS.filter((c) => c.tier === 'display').map((c) => c.name).sort()).toEqual(['icon', 'text'])
-    // Wave 1 Indicator family (checkbox, switch, radio, radio-group): tier=indicator/container (not control/display)
+    // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
+    // the SAME real ancestor, UIIndicatorElement, as ui-radio): tier=indicator/container (not control/display)
     expect(COMPONENTS.filter((c) => c.tier === 'indicator').map((c) => c.name).sort()).toEqual(
-      ['checkbox', 'radio', 'slider', 'switch'],
+      ['checkbox', 'radio', 'segment', 'slider', 'switch'],
     )
     // Wave 2 Range family (slider, slider-multi — ADR-0042): tier=range
     expect(COMPONENTS.filter((c) => c.tier === 'range').map((c) => c.name).sort()).toEqual(['slider-multi'])
@@ -178,9 +179,10 @@ describe('site coverage — every shipped component has its required per-tier pa
     )
     // Pattern tier = the G9 patterns (modal, tabs) + the Wave 4 Overlay family (popover, tooltip, menu, select,
     // combo-box — all tier=pattern on the overlay controller, ADR-0043) + the Wave 5B date picker (calendar,
-    // ADR-0048). Each requires its {doc, demo} pages.
+    // ADR-0048) + ui-segmented-control (ADR-0095 — geometry.md's own named Pattern example). Each requires
+    // its {doc, demo} pages.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
-      ['calendar', 'combo-box', 'menu', 'modal', 'popover', 'select', 'tabs', 'tooltip'],
+      ['calendar', 'combo-box', 'menu', 'modal', 'popover', 'segmented-control', 'select', 'tabs', 'tooltip'],
     )
   })
 })

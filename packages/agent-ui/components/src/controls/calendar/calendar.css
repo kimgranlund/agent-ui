@@ -1,4 +1,5 @@
-/* calendar.css — ui-calendar, the standalone month-grid date picker control (ADR-0048 / Wave-5B-1).
+/* calendar.css — ui-calendar, the standalone month-grid date picker control (ADR-0048 / Wave-5B-1;
+ * range mode ADR-0093).
  *
  * Two clearly-sectioned blocks:
  *
@@ -6,7 +7,11 @@
  *       chain from colour roles (`--md-sys-color-{family}-{role}`) and the dimensional ramp. Fallback values
  *       are sensible until the tokens-specialist delivers the canonical token definitions. The
  *       `[size]` repoint triples follow the button/select/text-field precedent; `[disabled]` mutes
- *       the nav buttons. `--ui-calendar-range-*` is RESERVED (future range-selection wave).
+ *       the nav buttons. `--ui-calendar-range-fill`/`-range-ink` (ADR-0093 clause 4, ERRATUM
+ *       2026-07-07) alias `--md-sys-color-primary-surface-highest` / `-primary-on-surface` —
+ *       0.0655/0.0722 OKLCH-L separation from the panel bg in light/dark (was ~0.001, effectively
+ *       invisible — see the erratum on ADR-0093) and 12.70:1 / 12.16:1 ink-vs-fill contrast, well
+ *       past the AA 4.5:1 floor (verified against tokens.css's OKLCH primitives).
  *
  *   [2] STYLES BLOCK — `@scope (ui-calendar)` CONSUMES only `--ui-calendar-*` for its OWN selectors.
  *       The panel (`[data-part=panel][data-box]`) adopts the shared container box-model (inset margins
@@ -14,8 +19,9 @@
  *       grid of 7 columns; `[role=row]` divs use `display:contents` so cells participate directly in
  *       the parent grid (a clean flat-grid layout; `[role=row]`'s ARIA role is set via attribute, not
  *       CSS, so `display:contents` does not affect the accessibility tree). Day cells are square
- *       buttons whose side = `--ui-calendar-cell-size`. The [data-today] ring and [aria-selected] fill
- *       are load-bearing colour values protected under forced-colors via `forced-color-adjust:none`.
+ *       buttons whose side = `--ui-calendar-cell-size`. The [data-today] ring, [aria-selected] fill,
+ *       and range-mode [data-in-range] wash are load-bearing colour values protected under
+ *       forced-colors via `forced-color-adjust:none`.
  *
  * Standalone — NOT injected from calendar.ts (behaviour-only `.ts`, no runtime style injection
  * per plan §2). Linked via component-styles.css; foundation roles FIRST in the load order.
@@ -68,7 +74,20 @@
   /* ── Cell hover background (non-selected, non-disabled). */
   --ui-calendar-cell-hover-bg: var(--md-sys-color-neutral-surface-high, #f0f0f0);
 
-  /* RESERVED — future range-selection wave: --ui-calendar-range-fill · --ui-calendar-range-ink. */
+  /* ── Range interior wash (ADR-0093 clause 4, ERRATUM 2026-07-07) — the SQUARE fill for
+     [data-in-range] cells (endpoints reuse --ui-calendar-selected-fill/-ink above, unchanged).
+     ADR-0093 clause 4 originally aliased --md-sys-color-primary-surface / -primary-on-surface —
+     measured (gallery audit) to differ from the panel's --md-sys-color-neutral-surface by only
+     ~0.001 OKLCH L in BOTH schemes (light 0.9336 vs 0.9347; dark 0.2598 vs 0.2592): the band was
+     load-bearing colour with no real lightness separation, i.e. effectively invisible. Repointed
+     to --md-sys-color-primary-surface-highest, whose OKLCH L differs from the panel by 0.0655
+     (light) / 0.0722 (dark) — ~65×/~72× the old gap, a clearly-visible-but-soft wash (chroma
+     stays far below the solid endpoint fill's --md-sys-color-primary-550/600). Ink stays
+     --md-sys-color-primary-on-surface: ink-vs-fill contrast is 12.70:1 (light) / 12.16:1 (dark),
+     comfortably past the AA 4.5:1 floor a text/numeral pairing needs (see the erratum on
+     .claude/docs/adr/0093-calendar-range-selection.md for the full measurement). */
+  --ui-calendar-range-fill: var(--md-sys-color-primary-surface-highest, #dde6f4);
+  --ui-calendar-range-ink:  var(--md-sys-color-primary-on-surface, #1c1c1e);
 }
 
 /* [size] repoints cell size onto the §1-ramp height entries (ADR-0038: explicit per-[scale] table,
@@ -250,11 +269,29 @@
     forced-color-adjust: none;
   }
 
-  /* ── Selected fill — the committed value cell.
-     Overrides hover; `forced-color-adjust:none` keeps the fill in WHCM. */
+  /* ── Selected fill — the committed value cell (single mode) OR a range endpoint (range mode:
+     [data-range-start]/[data-range-end] cells carry aria-selected="true" too — ADR-0093 clause 4
+     "endpoints reuse the existing circular fill"). Overrides hover; `forced-color-adjust:none`
+     keeps the fill in WHCM. */
   :scope [data-part='grid'] [role='gridcell'][aria-selected='true'] {
     background-color: var(--ui-calendar-selected-fill, #0057d8);
     color: var(--ui-calendar-selected-ink, #fff);
+    forced-color-adjust: none;
+  }
+
+  /* ── Range interior wash ([data-in-range], ADR-0093 clause 4) — SQUARE (radius:0), overriding
+     the circular selected-fill above for the cells strictly between the two endpoints.
+     [data-in-range] never co-occurs with [data-range-start]/[data-range-end] (rangeSelectionFor()
+     computes them as mutually exclusive), so this rule only ever touches true interior cells.
+     Source order AFTER [aria-selected='true'] (equal specificity) so the square wash wins here in
+     normal-colour mode; under forced-colors the explicit override below still lands the SAME
+     Highlight/HighlightText pair as the endpoints — the whole band is one self-delimiting run
+     (ADR-0093 clause 4) — with border-radius:0 (untouched by forced-colors) left as the sole
+     endpoint-vs-interior signifier (ADR-0057 non-colour-signifier rule). */
+  :scope [data-part='grid'] [role='gridcell'][data-in-range] {
+    background-color: var(--ui-calendar-range-fill, #dde6f4);
+    color: var(--ui-calendar-range-ink, #1c1c1e);
+    border-radius: 0;
     forced-color-adjust: none;
   }
 
@@ -272,13 +309,18 @@
   }
 
   /* ── forced-colors (WHCM) ────────────────────────────────────────────────────────────────
-     Three visually distinct states must survive system-colour flattening:
-       focus   = Highlight outline (offset-outside) — free via --md-sys-color-focus-ring → Highlight
-       selected = Highlight fill + HighlightText numeral — explicit below
-       today   = ButtonText INSET ring (offset-inside, inside the cell border)
-     today MUST NOT use Highlight here — it would merge with the selected fill AND with the
-     focus ring, collapsing all three states into one indistinguishable Highlight blob.
-     Both cells already carry `forced-color-adjust:none` in the rules above, so the
+     Four visually distinct states must survive system-colour flattening (ADR-0093 clause 4 —
+     the ADR-0048 three-state discipline, now four):
+       focus    = Highlight outline (offset-outside) — free via --md-sys-color-focus-ring → Highlight
+       selected = Highlight fill + HighlightText numeral — explicit below; in range mode this is
+                  the WHOLE band (endpoints AND interior both carry aria-selected="true" — clause 4
+                  "the band is self-delimiting, so endpoint-vs-interior needs no third colour")
+       today    = ButtonText INSET ring (offset-inside, inside the cell border)
+       (interior vs endpoint shape — circle vs square — survives forced-colors unaided: border-radius
+        is not a colour property, so it is never flattened)
+     today MUST NOT use Highlight here — it would merge with the selected/band fill AND with the
+     focus ring, collapsing every state into one indistinguishable Highlight blob.
+     All cells already carry `forced-color-adjust:none` in the rules above, so the
      explicit system-colour overrides below take effect under the OS forced-colour wash. */
   @media (forced-colors: active) {
     /* Panel surface: Canvas / CanvasText (standard surface mapping). */
@@ -288,8 +330,21 @@
       border-color: CanvasText;
     }
 
-    /* Selected fill: Highlight / HighlightText (system selection pair — WCAG AA guaranteed by OS). */
+    /* Selected fill: Highlight / HighlightText (system selection pair — WCAG AA guaranteed by OS).
+       Matches range-mode endpoints too (they carry aria-selected="true"). */
     :scope [data-part='grid'] [role='gridcell'][aria-selected='true'] {
+      background-color: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+
+    /* Range interior (data-in-range): the SAME Highlight/HighlightText pair as the endpoints —
+       one self-delimiting band (ADR-0093 clause 4). Written explicitly (rather than relying on
+       the [aria-selected='true'] rule above alone) so the four-state contract stays true
+       independent of any future reordering of this stylesheet; border-radius:0 from the
+       normal-mode rule persists unmodified (forced-colors never touches non-colour properties),
+       so interior stays square while endpoints stay circular. */
+    :scope [data-part='grid'] [role='gridcell'][data-in-range] {
       background-color: Highlight;
       color: HighlightText;
       forced-color-adjust: none;

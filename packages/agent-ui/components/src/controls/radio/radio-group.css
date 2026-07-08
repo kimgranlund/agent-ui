@@ -1,224 +1,45 @@
-/* radio-group.css — ui-radio-group, the radio-button container stylesheet (Wave 1 S3, ADR-0003;
- * the segmented variant added by ADR-0086).
+/* radio-group.css — ui-radio-group, the radio-button container stylesheet (Wave 1 S3, ADR-0003).
  *
  * The container convention requires a .css even when layout-neutral (process.md §4, container-family rule):
  * every FACE component ships a stylesheet that at minimum carries the `:where(ui-{name})` token block and
  * the `@scope (ui-{name})` block (so future per-group tokens have a stable registration point and the barrel
- * import order is permanent). The DEFAULT variant has no visual surface — it is a layout-neutral block
- * container whose children (ui-radio) carry all visible affordances; its forced-colors block stays minimal.
+ * import order is permanent). The group is a layout-neutral block container — it has no visual surface of
+ * its own; its `ui-radio` children carry all visible affordances; its forced-colors block stays minimal.
  *
- * The SEGMENTED variant ([3]/[4] below, ADR-0086) is a separate concern: the group itself grows a real
- * surface (a joined-button track + one shared moving highlight). Per the ADR's clause 2, its tokens are
- * declared in their OWN `:where(ui-radio-group[variant='segmented'])` block (still 0-specificity) and
- * CONSUMED on plain (non-`:where`) compound selectors — `ui-radio-group[variant='segmented']` /
- * `ui-radio-group[variant='segmented'] ui-radio` — deliberately OUTSIDE `@scope`, so their specificity
- * ((0,1,1) / (0,1,2) / (0,1,3) for the `::before` pseudo-element forms) cleanly clears `ui-radio`'s own
- * `@scope (ui-radio) { :scope … }` rules ((0,1,0) / (0,1,1)) without `!important` (ADR-0086 clause 2).
+ * ADR-0086 previously grew a "segmented" presentation variant here (a joined-button track + one shared
+ * moving highlight, keyed off `[variant='segmented']`). ADR-0095 supersedes that architecture: the segmented
+ * presentation is now the standalone `ui-segmented-control` (controls/segmented-control/segmented-control.css)
+ * — a hard cutover, no alias. This file is restored to its pre-ADR-0086 truth: the token block below is a
+ * genuine RESERVE (no design tokens needed yet), not a stand-in for a variant that used to live here.
  *
  * Standalone stylesheet — linked via the component-styles barrel (s12, after radio.css); NEVER injected
- * from radio-group.ts (behaviour-only `.ts`, no runtime style injection — plan §2). The `--ui-radio-group-
- * index`/`-count` custom properties consumed below are the ONE exception: reactive STATE written by
- * radio-group.ts (the `--value-pct` seam, range-element.ts:111), not injected style RULES.
+ * from radio-group.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
 
 /* ════════════ [1] TOKEN BLOCK — :where(ui-radio-group) (specificity 0,0,0) ════════════ */
 
 :where(ui-radio-group) {
-  /* No DEFAULT-variant design tokens: that variant is layout-neutral — spacing and alignment are the
-     page author's responsibility. Token registrations reserved here for future density/gap props
-     without a cascade-order change (the barrel import is append-only). The segmented variant's tokens
-     live in their own scoped block below ([3]), keyed off `[variant='segmented']`. */
+  /* No design tokens: the group is layout-neutral — spacing and alignment are the page author's
+     responsibility. Token registrations reserved here for future density/gap props without a cascade-order
+     change (the barrel import is append-only). */
 }
 
 /* ════════════ [2] STYLES BLOCK — @scope (ui-radio-group) ════════════ */
 
 @scope (ui-radio-group) {
-  /* The DEFAULT variant is a block container: radios stack in block flow. No explicit height or
-     inline-size — the group sizes to its content. No padding/gap: the page author controls layout.
-     The segmented variant repoints `display` on the plain (non-:scope) selector below ([4]) — a
-     higher-specificity compound selector cleanly overrides this default. */
+  /* A block container: radios stack in block flow. No explicit height or inline-size — the group sizes to
+     its content. No padding/gap: the page author controls layout. */
   :scope {
     display: block;
   }
 
-  /* Forced colors (WHCM) — the DEFAULT variant has no visual surface: the ui-radio children carry
-     their own forced-color treatments. This block is present for fleet discipline (every FACE
-     control's scope includes a forced-colors rule); the segmented variant's own WHCM block is [4]. */
+  /* Forced colors (WHCM) — no visual surface of its own: the ui-radio children carry their own
+     forced-color treatments. This block is present for fleet discipline (every FACE control's scope
+     includes a forced-colors rule). */
   @media (forced-colors: active) {
     :scope {
       /* no group-level WHCM adjustments; the children carry their own forced-color rules */
       forced-color-adjust: none;
     }
-  }
-}
-
-/* ═══════════ [3] SEGMENTED TOKEN BLOCK — :where(ui-radio-group[variant='segmented']) ═══════════
- * Specificity (0,0,0) — the sole declarer of the `--ui-radio-group-*` segmented chain (ADR-0086 clause 2).
- */
-
-:where(ui-radio-group[variant='segmented']) {
-  /* Geometry — the Pattern-class CONTROL-height ramp (ADR-0086 clause 6; geometry.md's `segmented-control`
-     example, geometry.md:133), NOT the Indicator's compact/widget ramp (ADR-0041, unused in this mode).
-     v1 ships the single `md` register; an ancestor [scale] re-tables the row for free (ADR-0038). */
-  --ui-radio-group-segment-height: var(--ui-height-md);
-  --ui-radio-group-segment-font: var(--ui-font-md);
-
-  /* The outer rounded track + collapsed inter-segment dividers (clause 3). */
-  --ui-radio-group-track: var(--md-sys-color-neutral-outline);
-  --ui-radio-group-radius: var(--ui-radius-base);
-
-  /* The shared moving indicator's fill (clause 4) — the AA-safe accent role minted for the calendar
-     (ADR-0048/0058), reused here as the strongest fill-presence non-color signal (ADR-0057). */
-  --ui-radio-group-fill: var(--md-sys-color-primary-selected);
-
-  /* Ink — selected (on the moving fill) vs unselected (text-channel neutral), clause 4. */
-  --ui-radio-group-ink-selected: var(--md-sys-color-primary-on-primary);
-  --ui-radio-group-ink: var(--md-sys-color-neutral-on-surface-variant);
-
-  /* Unselected interaction washes (clause 7) — the text-channel hover/active ladder; the selected segment
-     never reads these (its fill is the stable moving indicator, not a hover affordance). */
-  --ui-radio-group-bg-hover: var(--md-sys-color-primary-container-low);
-  --ui-radio-group-bg-active: var(--md-sys-color-primary-container);
-}
-
-/* ═══ [4] SEGMENTED STYLES — plain compound selectors (deliberately NOT :where/@scope, ADR-0086 cl.2) ═══ */
-
-/* The track — display:grid, equal cells, orientation-driven main axis (clause 3). `position:relative`
-   hosts the shared `::before` indicator (clause 4); NO `overflow:hidden` (would clip the focus ring). */
-ui-radio-group[variant='segmented'] {
-  display: grid;
-  position: relative;
-  box-sizing: border-box;
-  border: 1px solid var(--ui-radio-group-track);
-  border-radius: var(--ui-radio-group-radius);
-}
-
-/* Orientation-driven main axis. `repeat(var(--count), 1fr)` is NOT usable — repeat()'s count must be a
-   literal integer — so the count-agnostic auto-flow / auto-track mechanism is the grounded path (clause 3). */
-ui-radio-group[variant='segmented'][orientation='horizontal'] {
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-}
-ui-radio-group[variant='segmented'][orientation='vertical'] {
-  grid-auto-rows: 1fr;
-}
-
-/* The shared moving indicator — ONE artifact (the group's own `::before`), never a per-segment background
-   (clause 4). Sized to one cell via `--ui-radio-group-count`; POSITIONED via `transform` (never grid-track
-   placement — grid-column/row snap, transform animates). Hidden until a selection exists. */
-ui-radio-group[variant='segmented']::before {
-  content: '';
-  position: absolute;
-  z-index: 0; /* behind the segment text + focus ring (z-index:1 below) */
-  inset-block-start: 0;
-  inset-inline-start: 0;
-  background: var(--ui-radio-group-fill);
-  border-radius: calc(var(--ui-radio-group-radius) - 1px); /* the inner radius; ends align to the track */
-  transition: transform var(--ui-motion-fast) var(--ui-ease-standard); /* consumed, not hardcoded — clause 5 */
-}
-@media (prefers-reduced-motion: reduce) {
-  ui-radio-group[variant='segmented']::before {
-    transition: none; /* the indicator jumps instead of sliding (clause 5) */
-  }
-}
-ui-radio-group[variant='segmented'][orientation='horizontal']::before {
-  inline-size: calc(100% / var(--ui-radio-group-count, 1));
-  block-size: 100%;
-  transform: translateX(calc(var(--ui-radio-group-index, 0) * 100%));
-}
-ui-radio-group[variant='segmented'][orientation='vertical']::before {
-  inline-size: 100%;
-  block-size: calc(100% / var(--ui-radio-group-count, 1));
-  transform: translateY(calc(var(--ui-radio-group-index, 0) * 100%));
-}
-/* No radio checked → hide the indicator entirely (it appears instantly on the first selection and only
-   slides between subsequent ones, clause 4). */
-ui-radio-group[variant='segmented']:not(:has(ui-radio[checked]))::before {
-  opacity: 0;
-}
-
-/* Each `ui-radio` becomes a centered, full-cell segment button (clause 3). `z-index:1` (+ the group's own
-   `position:relative` stacking context) keeps the label + focus ring painting ABOVE the moving indicator. */
-ui-radio-group[variant='segmented'] ui-radio {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
-
-  block-size: var(--ui-radio-group-segment-height); /* Control-height ramp, clause 6 */
-  padding-block: 0; /* block-size is the vertical lever */
-  padding-inline: calc(var(--ui-radio-group-segment-height) / 2); /* slotless-edge pad, geometry.md */
-  font-size: var(--ui-radio-group-segment-font);
-  line-height: var(--ui-control-line-height); /* single-line control standard, ADR-0036 */
-  color: var(--ui-radio-group-ink);
-}
-
-/* The dot glyph → suppressed; a segment shows only its centered label (clause 3). */
-ui-radio-group[variant='segmented'] ui-radio::before {
-  display: none;
-}
-
-/* Collapsed inter-segment dividers — one shared border line, not two (clause 3). The leading segment
-   suppresses its own divider so the outer track supplies that edge instead. */
-ui-radio-group[variant='segmented'][orientation='horizontal'] ui-radio {
-  border-inline-start: 1px solid var(--ui-radio-group-track);
-}
-ui-radio-group[variant='segmented'][orientation='horizontal'] ui-radio:first-of-type {
-  border-inline-start: none;
-}
-ui-radio-group[variant='segmented'][orientation='vertical'] ui-radio {
-  border-block-start: 1px solid var(--ui-radio-group-track);
-}
-ui-radio-group[variant='segmented'][orientation='vertical'] ui-radio:first-of-type {
-  border-block-start: none;
-}
-
-/* Selected ink — the checked segment's label sits on the moving fill (clause 4). The plain `[checked]`
-   attribute selector alone is sufficient (no paired `:state(checked)`, unlike radio.css's own dot rule):
-   `checked` reflects via its own reflected prop (indicator-element.ts:24, `reflect:true`) in lockstep with
-   the `:state(checked)` custom state a sibling reactive effect publishes off the same `checked` write
-   (indicator-element.ts:125–135) — both track one source, so `[checked]` is always current, AND (unlike
-   `:state()`) it also works under jsdom, where CustomStateSet is absent. */
-ui-radio-group[variant='segmented'] ui-radio:is([checked]) {
-  color: var(--ui-radio-group-ink-selected);
-}
-
-/* Interaction states (clause 7) — the TEXT-channel wash on UNSELECTED segments only; a checked radio
-   cannot toggle off, so the selected segment's fill holds (it never reads the hover/active tokens). */
-ui-radio-group[variant='segmented'] ui-radio:not([checked]):hover {
-  background: var(--ui-radio-group-bg-hover);
-}
-ui-radio-group[variant='segmented'] ui-radio:not([checked]):active {
-  background: var(--ui-radio-group-bg-active);
-}
-
-/* Disabled — holds at idle (matches radio.css's own disabled pointer-inertness + the group's disabled
-   change-swallow, radio-group.ts): the hover/active washes are suppressed entirely. */
-ui-radio-group[variant='segmented'][disabled] ui-radio:hover,
-ui-radio-group[variant='segmented'][disabled] ui-radio:active {
-  background: transparent;
-}
-
-/* Forced colors (WHCM, clause 7) — the indicator inverts to Highlight/HighlightText; the frame, dividers,
-   and unselected ink hold at ButtonText. `transform` still applies under forced-colors (the indicator still
-   POSITIONS on the right segment; only its fill/ink invert). */
-@media (forced-colors: active) {
-  ui-radio-group[variant='segmented'] {
-    border-color: ButtonText;
-  }
-  ui-radio-group[variant='segmented']::before {
-    forced-color-adjust: none;
-    background: Highlight;
-  }
-  ui-radio-group[variant='segmented'] ui-radio {
-    forced-color-adjust: none;
-    color: ButtonText;
-    border-inline-start-color: ButtonText;
-    border-block-start-color: ButtonText;
-  }
-  ui-radio-group[variant='segmented'] ui-radio:is([checked]) {
-    color: HighlightText;
   }
 }

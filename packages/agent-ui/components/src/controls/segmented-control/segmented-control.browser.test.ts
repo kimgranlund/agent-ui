@@ -1,13 +1,15 @@
-// radio-group-segmented.browser.test.ts — cross-engine browser smoke for ui-radio-group[variant=segmented]
-// (ADR-0086). Runs in Chromium + WebKit (vitest.browser.config.ts). Where the jsdom probes in
-// radio-group.test.ts pin the reflected props / resolved-orientation / roving-axis / state-seam writes, this
-// file pins what a real engine PAINTS + LAYS OUT: the grid track, the ONE shared moving `::before` indicator's
-// geometry + transform slide, the motion gate, the fill-presence non-color signal, the interaction-state
-// washes, and the forced-colors inversion — all structurally unavailable to jsdom (no @scope grid layout, no
-// `::before` geometry, no `transform`, no `:has()`-driven visibility proof, no forced-colors emulation).
+// segmented-control.browser.test.ts — cross-engine browser smoke for ui-segmented-control (ADR-0095;
+// re-keyed VERBATIM from the retired radio-group-segmented.browser.test.ts, ADR-0086's own acceptance list
+// re-targeted onto the new tag/tokens per ADR-0095's Acceptance clause). Runs in Chromium + WebKit
+// (vitest.browser.config.ts). Where the jsdom probes in segmented-control.test.ts pin the reflected props /
+// resolved-orientation / roving-axis / state-seam writes, this file pins what a real engine PAINTS + LAYS
+// OUT: the grid track, the ONE shared moving `::before` indicator's geometry + transform slide, the motion
+// gate, the fill-presence non-color signal, the interaction-state washes, and the forced-colors inversion —
+// all structurally unavailable to jsdom (no @scope grid layout, no `::before` geometry, no `transform`, no
+// `:has()`-driven visibility proof, no forced-colors emulation).
 //
 // "Test the whole shape" (the fleet law): every assertion below reads the REAL rendered bounding box/transform
-// of the group and its segments, not just a per-part declared px.
+// of the control and its segments, not just a per-part declared px.
 
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
@@ -16,14 +18,14 @@ import '@agent-ui/components/component-styles.css'
 import '@agent-ui/components/components'
 
 const mounted: HTMLElement[] = []
-const mount = (markup: string): { wrap: HTMLElement; group: HTMLElement; radios: HTMLElement[] } => {
+const mount = (markup: string): { wrap: HTMLElement; group: HTMLElement; segments: HTMLElement[] } => {
   const wrap = document.createElement('div')
   wrap.innerHTML = markup
   document.body.append(wrap)
   mounted.push(wrap)
-  const group = wrap.querySelector('ui-radio-group') as HTMLElement
-  const radios = [...wrap.querySelectorAll('ui-radio')] as HTMLElement[]
-  return { wrap, group, radios }
+  const group = wrap.querySelector('ui-segmented-control') as HTMLElement
+  const segments = [...wrap.querySelectorAll('ui-segment')] as HTMLElement[]
+  return { wrap, group, segments }
 }
 afterEach(async () => {
   await userEvent.unhover(document.body)
@@ -36,7 +38,7 @@ const bg = (el: Element): string => getComputedStyle(el).backgroundColor
 const beforeBg = (el: Element): string => before(el).backgroundColor
 const ink = (el: Element): string => getComputedStyle(el).color
 
-/** Resolve a `--ui-radio-group-*`/`--md-sys-color-*` token to its serialized colour on a throwaway probe. */
+/** Resolve a `--ui-segmented-control-*`/`--md-sys-color-*` token to its serialized colour on a throwaway probe. */
 const resolveToken = (host: HTMLElement, tokenVar: string): string => {
   const probe = document.createElement('span')
   probe.style.background = `var(${tokenVar})`
@@ -59,32 +61,32 @@ interface CdpSession {
 }
 
 const HORIZONTAL = `
-  <ui-radio-group variant="segmented">
-    <ui-radio value="a">One</ui-radio>
-    <ui-radio value="b">Two</ui-radio>
-    <ui-radio value="c">Three</ui-radio>
-  </ui-radio-group>
+  <ui-segmented-control>
+    <ui-segment value="a">One</ui-segment>
+    <ui-segment value="b">Two</ui-segment>
+    <ui-segment value="c">Three</ui-segment>
+  </ui-segmented-control>
 `
 const VERTICAL = `
-  <ui-radio-group variant="segmented" orientation="vertical">
-    <ui-radio value="a">One</ui-radio>
-    <ui-radio value="b">Two</ui-radio>
-    <ui-radio value="c">Three</ui-radio>
-  </ui-radio-group>
+  <ui-segmented-control orientation="vertical">
+    <ui-segment value="a">One</ui-segment>
+    <ui-segment value="b">Two</ui-segment>
+    <ui-segment value="c">Three</ui-segment>
+  </ui-segmented-control>
 `
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 //  [1] Grid track + segment geometry — a REAL row/stack (equal cells), not a collapsed sliver
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-describe('ui-radio-group[segmented] — grid track + segment geometry (both engines)', () => {
-  it('horizontal: display:grid, equal-width cells, one outer rounded track, collapsed dividers', () => {
-    const { group, radios } = mount(HORIZONTAL)
+describe('ui-segmented-control — grid track + segment geometry (both engines)', () => {
+  it('horizontal (the class default, NO explicit orientation): display:grid, equal-width cells, one outer rounded track, collapsed dividers', () => {
+    const { group, segments } = mount(HORIZONTAL)
     expect(getComputedStyle(group).display).toBe('grid')
-    expect(group.getAttribute('orientation'), 'segmented defaults to horizontal with no explicit orientation').toBe('horizontal')
+    expect(group.getAttribute('orientation'), 'a bare ui-segmented-control defaults to horizontal').toBe('horizontal')
 
-    const rects = radios.map((r) => r.getBoundingClientRect())
-    // real bounding box — the group has non-zero width/height (not a collapsed sliver).
+    const rects = segments.map((r) => r.getBoundingClientRect())
+    // real bounding box — the control has non-zero width/height (not a collapsed sliver).
     const groupRect = group.getBoundingClientRect()
     expect(groupRect.width).toBeGreaterThan(0)
     expect(groupRect.height).toBeGreaterThan(0)
@@ -99,24 +101,24 @@ describe('ui-radio-group[segmented] — grid track + segment geometry (both engi
     expect(px(gcs.borderTopLeftRadius)).toBeGreaterThan(0)
 
     // collapsed dividers: first segment suppresses its own leading border; the rest carry one.
-    expect(px(getComputedStyle(radios[0]!).borderInlineStartWidth)).toBe(0)
-    expect(px(getComputedStyle(radios[1]!).borderInlineStartWidth)).toBeCloseTo(1, 0)
-    expect(px(getComputedStyle(radios[2]!).borderInlineStartWidth)).toBeCloseTo(1, 0)
+    expect(px(getComputedStyle(segments[0]!).borderInlineStartWidth)).toBe(0)
+    expect(px(getComputedStyle(segments[1]!).borderInlineStartWidth)).toBeCloseTo(1, 0)
+    expect(px(getComputedStyle(segments[2]!).borderInlineStartWidth)).toBeCloseTo(1, 0)
   })
 
   it('vertical: a real stack — equal-height cells, block-start dividers collapsed', () => {
-    const { group, radios } = mount(VERTICAL)
+    const { group, segments } = mount(VERTICAL)
     expect(group.getAttribute('orientation')).toBe('vertical')
-    const rects = radios.map((r) => r.getBoundingClientRect())
+    const rects = segments.map((r) => r.getBoundingClientRect())
     for (const r of rects) expect(r.height).toBeCloseTo(rects[0]!.height, 0)
     for (let i = 1; i < rects.length; i++) expect(rects[i]!.top).toBeCloseTo(rects[i - 1]!.bottom, 0)
-    expect(px(getComputedStyle(radios[0]!).borderBlockStartWidth)).toBe(0)
-    expect(px(getComputedStyle(radios[1]!).borderBlockStartWidth)).toBeCloseTo(1, 0)
+    expect(px(getComputedStyle(segments[0]!).borderBlockStartWidth)).toBe(0)
+    expect(px(getComputedStyle(segments[1]!).borderBlockStartWidth)).toBeCloseTo(1, 0)
   })
 
   it('segment geometry: block-size = --ui-height-md, padding-inline = height/2, padding-block = 0', () => {
-    const { radios } = mount(HORIZONTAL)
-    const seg = radios[0]!
+    const { segments } = mount(HORIZONTAL)
+    const seg = segments[0]!
     const cs = getComputedStyle(seg)
     const height = px(cs.blockSize)
     expect(height).toBeCloseTo(28, 0) // --ui-height-md default
@@ -130,9 +132,14 @@ describe('ui-radio-group[segmented] — grid track + segment geometry (both engi
     expect(px(cs.lineHeight)).toBeCloseTo(px(cs.fontSize) * 1, 0)
   })
 
-  it('the dot glyph is suppressed in segmented mode (display:none)', () => {
-    const { radios } = mount(HORIZONTAL)
-    expect(before(radios[0]!).display).toBe('none')
+  it('a segment renders no dot glyph — NO CSS rule authors ::before content on ui-segment at all (unlike ' +
+    'a plain ui-radio, there is nothing to suppress: radio.css\'s @scope(ui-radio) simply does not match)', () => {
+    const { segments } = mount(HORIZONTAL)
+    // `content` computes to 'none' (both engines, verified) whenever no author rule sets it — the
+    // pseudo-element generates no box at all. This is the ABSENCE proof; segmented-control.css's own
+    // `::before` (the shared moving indicator) is authored on the HOST `ui-segmented-control`, never on
+    // `ui-segment`.
+    expect(before(segments[0]!).content).toBe('none')
   })
 })
 
@@ -140,18 +147,18 @@ describe('ui-radio-group[segmented] — grid track + segment geometry (both engi
 //  [2] The shared moving indicator — one artifact, sized to a cell, translated (never grid-placed)
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-describe('ui-radio-group[segmented] — the shared moving indicator (both engines)', () => {
+describe('ui-segmented-control — the shared moving indicator (both engines)', () => {
   it('no selection → the indicator is hidden (opacity 0)', () => {
     const { group } = mount(HORIZONTAL)
     expect(px(before(group).opacity)).toBe(0)
   })
 
   it('horizontal: indicator sizes to one cell, translateX == selectedIndex × cellWidth, and slides on reselect', async () => {
-    const { group, radios } = mount(HORIZONTAL)
-    await userEvent.click(radios[1]!)
+    const { group, segments } = mount(HORIZONTAL)
+    await userEvent.click(segments[1]!)
     expect(px(before(group).opacity)).toBe(1) // appears instantly on first selection
 
-    const cellWidth = radios[1]!.getBoundingClientRect().width
+    const cellWidth = segments[1]!.getBoundingClientRect().width
     const indicatorWidth = px(before(group).width)
     expect(indicatorWidth).toBeCloseTo(cellWidth, 0)
 
@@ -166,14 +173,14 @@ describe('ui-radio-group[segmented] — the shared moving indicator (both engine
     expect(before(group).gridRowStart).toBe('auto')
 
     // slide on reselect
-    await userEvent.click(radios[2]!)
+    await userEvent.click(segments[2]!)
     await expect.poll(() => translateOf(before(group).transform).tx, { timeout: 1500 }).toBeCloseTo(2 * cellWidth, 0)
   })
 
   it('vertical: indicator sizes to one cell, translateY == selectedIndex × cellHeight', async () => {
-    const { group, radios } = mount(VERTICAL)
-    await userEvent.click(radios[2]!)
-    const cellHeight = radios[2]!.getBoundingClientRect().height
+    const { group, segments } = mount(VERTICAL)
+    await userEvent.click(segments[2]!)
+    const cellHeight = segments[2]!.getBoundingClientRect().height
     const indicatorHeight = px(before(group).height)
     expect(indicatorHeight).toBeCloseTo(cellHeight, 0)
     await expect.poll(() => translateOf(before(group).transform).ty, { timeout: 1500 }).toBeCloseTo(2 * cellHeight, 0)
@@ -181,11 +188,11 @@ describe('ui-radio-group[segmented] — the shared moving indicator (both engine
   })
 
   it('fill == --md-sys-color-primary-selected; selected ink == -on-primary; unselected ink == neutral-on-surface-variant', async () => {
-    const { group, radios } = mount(HORIZONTAL)
-    await userEvent.click(radios[0]!)
+    const { group, segments } = mount(HORIZONTAL)
+    await userEvent.click(segments[0]!)
     expect(beforeBg(group)).toBe(resolveToken(group, '--md-sys-color-primary-selected'))
-    expect(ink(radios[0]!)).toBe(resolveToken(group, '--md-sys-color-primary-on-primary'))
-    expect(ink(radios[1]!)).toBe(resolveToken(group, '--md-sys-color-neutral-on-surface-variant'))
+    expect(ink(segments[0]!)).toBe(resolveToken(group, '--md-sys-color-primary-on-primary'))
+    expect(ink(segments[1]!)).toBe(resolveToken(group, '--md-sys-color-neutral-on-surface-variant'))
   })
 })
 
@@ -193,7 +200,7 @@ describe('ui-radio-group[segmented] — the shared moving indicator (both engine
 //  [3] Motion — transition:transform over --ui-motion-fast; reduced-motion jumps
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-describe('ui-radio-group[segmented] — motion (both engines)', () => {
+describe('ui-segmented-control — motion (both engines)', () => {
   it('the ::before transitions transform over --ui-motion-fast', () => {
     const { group } = mount(HORIZONTAL)
     const cs = before(group)
@@ -224,31 +231,31 @@ describe('ui-radio-group[segmented] — motion (both engines)', () => {
 //  [4] Interaction states — unselected hover/active wash; selected holds; disabled holds at idle
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-describe('ui-radio-group[segmented] — interaction states (both engines)', () => {
-  it('unselected hover repaints to --ui-radio-group-bg-hover (resolved via the group host)', async () => {
-    const { radios } = mount(HORIZONTAL)
-    const idle = bg(radios[0]!)
-    await userEvent.hover(radios[0]!)
-    await expect.poll(() => bg(radios[0]!)).not.toBe(idle)
-    await userEvent.unhover(radios[0]!)
+describe('ui-segmented-control — interaction states (both engines)', () => {
+  it('unselected hover repaints to --ui-segmented-control-bg-hover (resolved via the host)', async () => {
+    const { segments } = mount(HORIZONTAL)
+    const idle = bg(segments[0]!)
+    await userEvent.hover(segments[0]!)
+    await expect.poll(() => bg(segments[0]!)).not.toBe(idle)
+    await userEvent.unhover(segments[0]!)
   })
 
-  it('the SELECTED segment does not wash on hover (holds — a checked radio cannot toggle off)', async () => {
-    const { radios } = mount(HORIZONTAL)
-    await userEvent.click(radios[0]!)
-    const selectedBg = bg(radios[0]!)
-    await userEvent.hover(radios[0]!)
-    expect(bg(radios[0]!)).toBe(selectedBg) // unchanged — no hover wash on the selected cell
-    await userEvent.unhover(radios[0]!)
+  it('the SELECTED segment does not wash on hover (holds — a checked segment cannot toggle off)', async () => {
+    const { segments } = mount(HORIZONTAL)
+    await userEvent.click(segments[0]!)
+    const selectedBg = bg(segments[0]!)
+    await userEvent.hover(segments[0]!)
+    expect(bg(segments[0]!)).toBe(selectedBg) // unchanged — no hover wash on the selected cell
+    await userEvent.unhover(segments[0]!)
   })
 
-  it('a disabled group holds at idle — no hover wash', async () => {
-    const { group, radios } = mount(HORIZONTAL)
+  it('a disabled control holds at idle — no hover wash', async () => {
+    const { group, segments } = mount(HORIZONTAL)
     group.setAttribute('disabled', '')
-    const idle = bg(radios[1]!)
-    await userEvent.hover(radios[1]!)
-    expect(bg(radios[1]!)).toBe(idle)
-    await userEvent.unhover(radios[1]!)
+    const idle = bg(segments[1]!)
+    await userEvent.hover(segments[1]!)
+    expect(bg(segments[1]!)).toBe(idle)
+    await userEvent.unhover(segments[1]!)
   })
 })
 
@@ -261,12 +268,12 @@ const ringDrawn = (el: HTMLElement): boolean => {
   return cs.outlineStyle !== 'none' && px(cs.outlineWidth) > 0
 }
 
-describe('ui-radio-group[segmented] — focus ring (both engines)', () => {
+describe('ui-segmented-control — focus ring (both engines)', () => {
   it('Tab lands on a segment and draws the shared fleet focus ring (not clipped)', async () => {
-    const { radios } = mount(HORIZONTAL)
+    const { segments } = mount(HORIZONTAL)
     await userEvent.tab()
-    expect(document.activeElement).toBe(radios[0]!)
-    expect(ringDrawn(radios[0]! as HTMLElement)).toBe(true)
+    expect(document.activeElement).toBe(segments[0]!)
+    expect(ringDrawn(segments[0]! as HTMLElement)).toBe(true)
   })
 })
 
@@ -286,10 +293,10 @@ const resolveKeyword = (host: HTMLElement, keyword: string, channel: 'color' | '
   return c
 }
 
-describe('ui-radio-group[segmented] — forced-colors (Chromium emulates; WebKit baseline)', () => {
+describe('ui-segmented-control — forced-colors (Chromium emulates; WebKit baseline)', () => {
   it('under forced-colors: indicator → Highlight, selected ink → HighlightText, unselected ink → ButtonText, focus ring survives', async () => {
-    const { group, radios } = mount(HORIZONTAL)
-    await userEvent.click(radios[0]!)
+    const { group, segments } = mount(HORIZONTAL)
+    await userEvent.click(segments[0]!)
     await userEvent.tab() // real Tab lands somewhere in the roving set
 
     if (server.browser !== 'chromium') {
@@ -305,13 +312,13 @@ describe('ui-radio-group[segmented] — forced-colors (Chromium emulates; WebKit
       expect(Number.isFinite(t.tx)).toBe(true)
       expect(px(before(group).opacity)).toBe(1)
 
-      // the actual inversion (decomp n19): indicator fill → Highlight; selected ink → HighlightText;
+      // the actual inversion: indicator fill → Highlight; selected ink → HighlightText;
       // unselected ink → ButtonText — not just "still visible", the SPECIFIC WHCM system colours.
       expect(beforeBg(group)).toBe(resolveKeyword(group, 'Highlight', 'background'))
-      expect(ink(radios[0]!)).toBe(resolveKeyword(group, 'HighlightText', 'color')) // selected (radios[0] was clicked)
-      expect(ink(radios[1]!)).toBe(resolveKeyword(group, 'ButtonText', 'color')) // unselected
+      expect(ink(segments[0]!)).toBe(resolveKeyword(group, 'HighlightText', 'color')) // selected (segments[0] was clicked)
+      expect(ink(segments[1]!)).toBe(resolveKeyword(group, 'ButtonText', 'color')) // unselected
       // anti-vacuous: Highlight/HighlightText genuinely differ from the idle ButtonText/Canvas pairing.
-      expect(ink(radios[0]!)).not.toBe(ink(radios[1]!))
+      expect(ink(segments[0]!)).not.toBe(ink(segments[1]!))
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }
@@ -322,20 +329,20 @@ describe('ui-radio-group[segmented] — forced-colors (Chromium emulates; WebKit
 //  [7] Per-orientation roving — real focus + real Arrow keys (both engines)
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
-describe('ui-radio-group[segmented] — real roving per orientation (both engines)', () => {
-  it('horizontal: ArrowRight moves REAL focus + selection to the next segment', async () => {
-    const { group, radios } = mount(HORIZONTAL)
-    ;(radios[0] as HTMLElement).focus()
+describe('ui-segmented-control — real roving per orientation (both engines)', () => {
+  it('horizontal (the class default): ArrowRight moves REAL focus + selection to the next segment', async () => {
+    const { group, segments } = mount(HORIZONTAL)
+    ;(segments[0] as HTMLElement).focus()
     group.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
-    expect(document.activeElement).toBe(radios[1]!)
-    expect((radios[1] as unknown as { checked: boolean }).checked).toBe(true)
+    expect(document.activeElement).toBe(segments[1]!)
+    expect((segments[1] as unknown as { checked: boolean }).checked).toBe(true)
   })
 
   it('vertical: ArrowDown moves REAL focus + selection to the next segment', async () => {
-    const { group, radios } = mount(VERTICAL)
-    ;(radios[0] as HTMLElement).focus()
+    const { group, segments } = mount(VERTICAL)
+    ;(segments[0] as HTMLElement).focus()
     group.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }))
-    expect(document.activeElement).toBe(radios[1]!)
-    expect((radios[1] as unknown as { checked: boolean }).checked).toBe(true)
+    expect(document.activeElement).toBe(segments[1]!)
+    expect((segments[1] as unknown as { checked: boolean }).checked).toBe(true)
   })
 })

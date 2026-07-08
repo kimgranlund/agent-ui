@@ -87,7 +87,7 @@ geometry:
   itemRadius: var(--ui-menu-item-radius)           # nested-radius from panel corner = panelRadius − --ui-box-inset (FIXED 2026-07-06: was subtracting the unrelated --ui-space-xs, an ADR-0018 inset-inconsistency)
   note: ui-menu has NO `[size]` attribute and renders no trigger geometry (the trigger is fully author-owned) — the select/combo-box family's size-carrying derivation (panel inset + option pad off the trigger's own height/font) does not apply here; flagged as a structural divergence, not forced (2026-07-06 pass)
 
-forcedColors: A `@media (forced-colors: active)` block keeps the panel surface (Canvas/CanvasText), frame (CanvasText border), and hovered/focused items (Highlight/HighlightText) visible. `forced-color-adjust: none` on hover/focus items commits to the system Highlight pair rather than letting the alpha wash be discarded.
+forcedColors: A `@media (forced-colors: active)` block keeps the panel surface (Canvas/CanvasText), frame (CanvasText border), and hovered/focused items (Highlight/HighlightText) visible. `forced-color-adjust: none` on hover/focus items commits to the system Highlight pair rather than letting the solid fill be discarded.
 ---
 
 # ui-menu
@@ -176,4 +176,4 @@ placement. Placement is captured at connection time.
 
 A `@media (forced-colors: active)` block keeps the panel surface and frame visible as system
 `Canvas`/`CanvasText`. Hovered and focused items use `Highlight`/`HighlightText` with
-`forced-color-adjust: none` (the alpha wash would be discarded by the forced-colors engine).
+`forced-color-adjust: none` (the solid fill would otherwise be discarded by the forced-colors engine).

@@ -90,10 +90,10 @@ geometry:
   sizeClass: indicator
   blockSize: var(--ui-compact-md)   # the indicator box height = --ui-compact-{size} (widget ramp, ADR-0041)
   inlineSize: var(--ui-compact-md)  # the indicator box width = same (square circle)
-  dotInset: 22% of box (box-shadow inset = 22% of diameter → dot fills ~44% of circle)
+  dotInset: 22% of box (::after dot diameter = box − 2×22%-of-box, same maths as the prior box-shadow annulus)
   labelGap: var(--ui-radio-gap)     # gap between circle and label slot (font/2 × density)
 
-forcedColors: A `@media (forced-colors: active)` block keeps the idle border (ButtonText) and the checked dot (forced-color-adjust on ::before preserves the inset box-shadow as ButtonText ink on Canvas). The focus ring survives via --md-sys-color-focus-ring → Highlight.
+forcedColors: A `@media (forced-colors: active)` block keeps the idle ring visible (ButtonText border) and, when checked, maps the ring+fill to Highlight and the dot (::after) to HighlightText — the platform's own paired "on-fill" colour (forced-color-adjust: none preserves both). The focus ring survives via --md-sys-color-focus-ring → Highlight.
 ---
 
 # ui-radio
@@ -113,10 +113,13 @@ the group's form value.
 
 ## Anatomy
 
-The host is an **inline-flex row**: a circular `::before` pseudo-element (the indicator box, sized to
-`--ui-compact-{size}`) followed by any default-slot content (the optional label text). The **dot** appears as
-an **inset `box-shadow`** on `::before` when checked — no extra element needed, and the glyph tracks the box
-size automatically via the 22%-inset law (`dot = 44% of the diameter`).
+The host is an **inline-flex row**: a circular `::before` pseudo-element (the ring, sized to
+`--ui-compact-{size}`), a circular `::after` pseudo-element (the checked **dot**, absolutely positioned and
+centred on `::before`), then any default-slot content (the optional label text). When checked, the ring
+**fills solid primary** (`::before` border + background both `--ui-radio-ink`) and the dot reads the bright
+`--md-sys-color-primary-on-primary` role — the same ring-fills / bright-glyph pairing `ui-switch` uses for its
+checked track + thumb, so the dot reads as a distinct indicator instead of disappearing into a same-hue ring.
+The dot's diameter tracks the box size automatically via the 22%-inset law (`dot size = box − 2×22%-of-box`).
 
 ## Group coordination
 

@@ -2,15 +2,19 @@
 # radio-group.md frontmatter — the attributes-as-API descriptor for ui-radio-group (ADR-0004). The
 # machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the /site doc.
 # The `attributes[]` block MUST mirror radio-group.ts `static props` (groupProps = UIFormElement.formProps
-# spread [name/disabled/required] PLUS the ADR-0086 segmented-variant pair [variant/orientation]) — the
-# contract↔props trip-wire and the frontmatter schema both target this fence. Field set per
-# .claude/docs/plan.md §10 / ADR-0004.
+# spread [name/disabled/required] PLUS `orientation`) — the contract↔props trip-wire and the frontmatter
+# schema both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
+#
+# ADR-0095 (supersedes ADR-0086): `variant` RETIRED — the segmented presentation is now the standalone
+# `ui-segmented-control` (see segmented-control.md), not a variant of this group. `orientation` STAYS (ADR-0095
+# clause 1: "orientation stays on the group") — the roving-focus axis is a group-level concern regardless of
+# presentation.
 tag: ui-radio-group
 tier: container        # geometry size-class (not a sized control — a container that holds ui-radio children)
 extends: UIFormElement  # FACE form-associated container (value/validity participation via ElementInternals; ADR-0013)
-# marginal: ui-radio-group adds 255 B gz (1098 B min) to the self-defining ui-* family above the other three Wave-1 Indicator controls (UIRadioGroupElement owns rovingFocus group wiring, single-selection exclusivity, and the group form value — the largest Wave-1 leaf) — within the per-control ≤ ~2 kB tier budget (plan §10)
+# marginal: ui-radio-group adds -2 B gz (re-measured via `npm run size`, ADR-0080, 2026-07-07, after ADR-0095 retired the segmented-variant CSS/props — effectively zero marginal now that ui-segmented-control absorbs that cost instead) to the self-defining ui-* family above the other three Wave-1 Indicator controls (UIRadioGroupElement owns rovingFocus group wiring, single-selection exclusivity, and the group form value — the largest Wave-1 leaf) — within the per-control ≤ ~2 kB tier budget (plan §10)
 
-attributes:            # attributes-as-API — mirrors radio-group.ts static props (UIFormElement.formProps spread + ADR-0086)
+attributes:            # attributes-as-API — mirrors radio-group.ts static props (UIFormElement.formProps spread + orientation)
   - name: name
     type: string
     default: ''
@@ -23,18 +27,15 @@ attributes:            # attributes-as-API — mirrors radio-group.ts static pro
     type: boolean
     default: 'false'
     reflect: true      # reflects; required + no selection → valueMissing validity verdict
-  - name: variant
-    type: enum
-    values: [default, segmented]
-    default: default
-    reflect: true      # ADR-0086 — 'segmented' restyles the ui-radio children as joined segments with one shared moving indicator (radio-group.css); 'default' stays today's layout-neutral dots-in-a-row
   - name: orientation
     type: enum
     values: [horizontal, vertical]
     default: vertical
-    reflect: true      # ADR-0086 — the roving-focus axis (Arrow keys) AND, for variant=segmented, the grid main axis. RESOLVED ONCE at connect: an author-set attribute wins; otherwise variant supplies the default (segmented ⇒ horizontal, default ⇒ vertical), reflected back so CSS and the roving trait read one source
+    reflect: true      # the roving-focus axis (Arrow keys). RESOLVED ONCE at connect: an author-set attribute wins; otherwise the class-derived default applies (this base: vertical; ui-segmented-control overrides its own default to horizontal), reflected back so CSS and the roving trait read one source
 
 properties:            # IDL beyond attributes-as-API (FACE form IDL, delegates to ElementInternals)
+  - name: value
+    description: The checked ui-radio child's `value`, or null when none is selected. Property-only (NOT a reflected attribute — the value is derived from child radio state, not an independent attribute; the UICheckboxElement `indeterminate` precedent). Getter reads the private #selectedValue signal. Setter selects the matching child ui-radio by its `value` (unchecking all others) WITHOUT emitting change — a silent programmatic write, matching UICheckboxElement.checked / UISelectElement.value. Setting null, or a value matching no child radio, CLEARS the selection (the HTMLSelectElement.value precedent: no match resolves to unselected, not a no-op).
   - name: form
     description: The owning <form>, or null (delegates to ElementInternals.form).
   - name: validity
@@ -73,13 +74,13 @@ aria:
   labelSource: aria-label / aria-labelledby  # the group's accessible name is provided by the page author
   disabledState: effectiveDisabled (own disabled || form-disabled channel; ADR-0013)
 
-keyboard:              # ADR-0086 — the roving axis is PER-ORIENTATION (the resolved `orientation`, clause 1); the
-                       # pre-ADR-0086 table falsely claimed ArrowLeft/Right navigated under the shipped vertical
-                       # roving, which they do not — this is the drift correction (ADR-0086 §Repairs)
+keyboard:              # the roving axis is PER-ORIENTATION (the resolved `orientation`); a pre-ADR-0086 table
+                       # once falsely claimed ArrowLeft/Right navigated under the shipped vertical roving,
+                       # which they do not — the per-orientation split below is the (still-standing) fix
   - keys: ArrowDown / ArrowUp
     action: (orientation=vertical, the default) Move focus + selection to the next/previous ui-radio (wraps; selection-follows-focus). The rovingFocus trait handles the tabindex management; the onMove callback commits the selection.
   - keys: ArrowRight / ArrowLeft
-    action: (orientation=horizontal) Move focus + selection to the next/previous ui-radio (wraps; selection-follows-focus). variant=segmented resolves to horizontal by default (ADR-0086 clause 1) when no explicit orientation is set.
+    action: (orientation=horizontal) Move focus + selection to the next/previous ui-radio (wraps; selection-follows-focus).
   - keys: Home
     action: Move focus + selection to the first ui-radio (either orientation).
   - keys: End
@@ -89,9 +90,9 @@ keyboard:              # ADR-0086 — the roving axis is PER-ORIENTATION (the re
   - note: Tab moves focus into the group (lands on the tabindex=0 radio — the checked one, or the first if none). Tab again moves OUT of the group (rovingFocus ensures exactly one radio is tabindex=0). This is the standard ARIA APG radio-group roving-tabindex keyboard contract.
 
 geometry:
-  sizeClass: container   # no fixed block-size for the DEFAULT variant; the group sizes to its content (ui-radio children). variant=segmented is a geometry.md Pattern (geometry.md:133) — see note.
-  display: block         # the DEFAULT variant is a block container; radios stack in block flow. variant=segmented repoints display:grid (radio-group.css, ADR-0086)
-  note: For the DEFAULT variant, layout (stack direction, gap, wrapping) is the page author's responsibility — no layout-opinionated CSS. variant=segmented (ADR-0086) is the one exception — the group itself owns a real layout (display:grid, equal 1fr cells, an outer --ui-radius-base track, and one shared moving ::before indicator), a Pattern-class control-height ramp (--ui-height-md), not the page author's concern.
+  sizeClass: container   # no fixed block-size — the group sizes to its content (ui-radio children).
+  display: block         # a block container; radios stack in block flow.
+  note: Layout (stack direction, gap, wrapping) is the page author's responsibility — no layout-opinionated CSS. The joined-button segmented presentation (a real display:grid layout, one shared moving indicator) is the standalone ui-segmented-control (ADR-0095), not this group.
 
 forcedColors: No per-group forced-colors rules needed; the ui-radio children carry their own WHCM treatment. The group's internals.role='radiogroup' is AX-only (no visual surface).
 ---
@@ -131,14 +132,22 @@ tracked in a private signal (`#selectedValue`), which the `UIFormElement` base's
 `internals.setFormValue` / `internals.setValidity` automatically on every change. The group — not the
 individual radios — is the form participant the `<form>` sees.
 
+The same selection is also exposed as a public `value` property (getter/setter, not a reflected attribute —
+mirrors `UICheckboxElement.indeterminate`). Reading it returns the checked radio's `value` (or `null`).
+Setting it programmatically selects the matching `ui-radio` child (unchecking the rest) **without** emitting
+`change` — a silent write, the same convention `UICheckboxElement.checked` / `UISelectElement.value` follow
+for programmatic sets; only a real click/keyboard commit emits `change`. Setting `null`, or a value that
+matches no child radio, clears the selection (the `HTMLSelectElement.value` precedent for an unmatched
+value).
+
 ## Keyboard
 
 The group uses `rovingFocus` (looping): exactly **one** radio holds `tabindex=0` (the checked one, or the
 first if none), all others hold `tabindex=-1`. A Tab moves INTO the group landing on the roving radio, and Tab
-OUT skips the rest of the group. **Per orientation** (ADR-0086): a `vertical` group (the default) roves with
+OUT skips the rest of the group. **Per orientation**: a `vertical` group (the default) roves with
 ArrowUp/Down; a `horizontal` group roves with ArrowLeft/Right. Home/End jump to the first/last radio in either
 orientation. `orientation` is resolved once at connect — an explicit `orientation` attribute wins; otherwise
-`variant="segmented"` defaults to `horizontal` and the default variant stays `vertical`.
+the class-derived default applies (`vertical` on this base class).
 
 ## ARIA
 
@@ -146,23 +155,13 @@ orientation. `orientation` is resolved once at connect — an explicit `orientat
 be provided by the page author via `aria-label` or `aria-labelledby` on the group element. Each child
 `ui-radio` carries `role="radio"` and `ariaChecked` via its own internals (managed by `UIIndicatorElement`).
 
-## Segmented variant (ADR-0086)
+## The joined-button "segmented control" presentation lives elsewhere
 
-`variant="segmented"` restyles the `ui-radio` children as a joined-button toggle — one shared, animated
-highlight slides between segments instead of a per-radio dot:
-
-```html
-<ui-radio-group variant="segmented" name="density">
-  <ui-radio value="compact">Compact</ui-radio>
-  <ui-radio value="comfortable">Comfortable</ui-radio>
-  <ui-radio value="spacious">Spacious</ui-radio>
-</ui-radio-group>
-```
-
-Defaults to a **horizontal** row (`orientation="horizontal"` is resolved automatically); add
-`orientation="vertical"` for a stacked segmented control. Single-selection exclusivity, roving focus, the
-group form value, and required→valueMissing validity are **all unchanged** — the variant is presentation +
-the orientation/selection wiring it needs (radio-group.css), not a new behavior.
+A `ui-radio-group` renders as dots-in-a-row only — it is layout-neutral, and the page author owns stack
+direction, gap, and wrapping. The joined-button single-select toggle (one shared, animated highlight sliding
+between adjoining segments) used to be a `variant="segmented"` on this group (ADR-0086); ADR-0095 promoted it
+to its own standalone tag, **`ui-segmented-control`** (with `ui-segment` children, not `ui-radio`) — see that
+control's own doc page. This group carries no `variant` attribute at all.
 
 ## Required + validity
 

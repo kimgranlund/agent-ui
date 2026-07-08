@@ -54,7 +54,7 @@ class ProbeCalendar extends UICalendarElement {
   formResetProbe(): void {
     ;(this as unknown as { formReset(): void }).formReset.call(this)
   }
-  formStateRestoreProbe(state: string): void {
+  formStateRestoreProbe(state: string | FormData): void {
     ;(this as unknown as { formStateRestore(s: unknown): void }).formStateRestore.call(this, state)
   }
 }
@@ -68,14 +68,20 @@ customElements.define('ui-calendar-probe', ProbeCalendar)
  * seeds the displayed month and focus cursor.
  */
 function makeCalendar(
-  init: { value?: string; min?: string; max?: string; disabled?: boolean; required?: boolean } = {},
+  init: {
+    value?: string; min?: string; max?: string; disabled?: boolean; required?: boolean
+    mode?: 'single' | 'range'; valueStart?: string; valueEnd?: string
+  } = {},
 ): ProbeCalendar {
   const el = new ProbeCalendar()
-  if (init.value    !== undefined) el.value    = init.value
-  if (init.min      !== undefined) el.min      = init.min
-  if (init.max      !== undefined) el.max      = init.max
-  if (init.disabled !== undefined) el.disabled = init.disabled
-  if (init.required !== undefined) el.required = init.required
+  if (init.mode       !== undefined) el.mode       = init.mode
+  if (init.value      !== undefined) el.value      = init.value
+  if (init.valueStart !== undefined) el.valueStart = init.valueStart
+  if (init.valueEnd   !== undefined) el.valueEnd   = init.valueEnd
+  if (init.min        !== undefined) el.min        = init.min
+  if (init.max        !== undefined) el.max        = init.max
+  if (init.disabled   !== undefined) el.disabled   = init.disabled
+  if (init.required   !== undefined) el.required   = init.required
   stubFormAssoc(el.probeInternals) // stub BEFORE connect — form effects run synchronously on connectedCallback
   document.body.append(el)        // connect fires here; shell + grid built synchronously
   return el
@@ -102,6 +108,26 @@ function cellFor(el: ProbeCalendar, iso: string): HTMLElement | null {
 function focusedIso(el: ProbeCalendar): string | null {
   const cell = el.querySelector<HTMLElement>('[role="gridcell"][tabindex="0"]')
   return cell?.dataset['date'] ?? null
+}
+
+/** ADR-0093 range-mode cell facts (data-range-start / data-range-end / data-in-range / aria-selected). */
+function rangeAttrs(
+  el: ProbeCalendar,
+  iso: string,
+): { start: boolean; end: boolean; inRange: boolean; selected: boolean } {
+  const cell = cellFor(el, iso)
+  return {
+    start: !!cell?.hasAttribute('data-range-start'),
+    end: !!cell?.hasAttribute('data-range-end'),
+    inRange: !!cell?.hasAttribute('data-in-range'),
+    selected: cell?.getAttribute('aria-selected') === 'true',
+  }
+}
+
+/** Dispatch a bubbling `pointerover`/`pointerleave` on `target` (jsdom lacks PointerEvent; the
+ *  handler only reads event.target via closest(), so a plain Event with the right `type` suffices). */
+function pointerEvt(target: Element, type: 'pointerover' | 'pointerleave'): void {
+  target.dispatchEvent(new Event(type, { bubbles: true }))
 }
 
 // ── Upgrade + typed prop surface ──────────────────────────────────────────────────────────────
@@ -647,6 +673,468 @@ describe('ui-calendar — disabled cells (cal-disabled-enter-noop · cal-min-max
   })
 })
 
+// ── ADR-0093 range mode: swap-complete state machine ─────────────────────────────────────────
+
+describe('ui-calendar — range mode: swap-complete state machine (cal-range-forward · cal-range-swap · cal-range-sameday · cal-range-newrange)', () => {
+  it('cal-range-forward: first pick sets valueStart + selecting-end; only `select` fires (no `change`)', () => {
+    const el = makeCalendar({ mode: 'range' })
+    let changes = 0, selects = 0
+    el.addEventListener('change', () => changes++)
+    el.addEventListener('select', () => selects++)
+
+    cellFor(el, '2026-07-10')!.click()
+
+    expect(el.valueStart).toBe('2026-07-10')
+    expect(el.valueEnd).toBe('')
+    expect(changes).toBe(0)
+    expect(selects).toBe(1)
+    el.remove()
+  })
+
+  it('cal-range-forward: second pick AFTER the anchor completes forward (start stays, end = later pick)', () => {
+    const el = makeCalendar({ mode: 'range' })
+    cellFor(el, '2026-07-10')!.click()
+    cellFor(el, '2026-07-15')!.click()
+
+    expect(el.valueStart).toBe('2026-07-10')
+    expect(el.valueEnd).toBe('2026-07-15')
+    el.remove()
+  })
+
+  it('cal-range-swap: second pick BEFORE the anchor swap-completes ([min,max] of the two picks)', () => {
+    const el = makeCalendar({ mode: 'range' })
+    cellFor(el, '2026-07-15')!.click() // anchor = July 15
+    cellFor(el, '2026-07-10')!.click() // earlier pick → swap
+
+    expect(el.valueStart).toBe('2026-07-10')
+    expect(el.valueEnd).toBe('2026-07-15')
+    el.remove()
+  })
+
+  it('cal-range-sameday: an identical second pick completes a valid single-day range', () => {
+    const el = makeCalendar({ mode: 'range' })
+    cellFor(el, '2026-07-12')!.click()
+    cellFor(el, '2026-07-12')!.click()
+
+    expect(el.valueStart).toBe('2026-07-12')
+    expect(el.valueEnd).toBe('2026-07-12')
+    expect(el.formValidityProbe().valid).toBe(true)
+    el.remove()
+  })
+
+  it('cal-range-newrange: a pick on an already-complete range discards it and starts a fresh anchor', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-10', valueEnd: '2026-07-15' })
+    cellFor(el, '2026-07-20')!.click()
+
+    expect(el.valueStart).toBe('2026-07-20')
+    expect(el.valueEnd).toBe('')
+    el.remove()
+  })
+})
+
+// ── ADR-0093 clause 3 — the aria-live status announcement (the swap-audibility affordance) ───
+// The visually-hidden [data-part='status'] region (aria-live=polite) narrates the two-pick arc:
+// anchor pick → the selecting-end prompt; completion → BOTH dates long-form in NORMALIZED order,
+// so a swap-complete is audible as the resulting range, not the pick order. Single mode never
+// writes it (the part exists — idempotent-parts precedent — but its text stays empty).
+
+describe('ui-calendar — range mode: aria-live status announcements (cal-range-announce-*)', () => {
+  const statusOf = (el: HTMLElement) => el.querySelector<HTMLElement>("[data-part='status']")!
+
+  it('cal-range-announce-anchor: the first pick announces the selecting-end prompt', () => {
+    const el = makeCalendar({ mode: 'range' })
+    const status = statusOf(el)
+    expect(status.getAttribute('aria-live')).toBe('polite')
+    expect(status.textContent).toBe('')
+
+    cellFor(el, '2026-07-15')!.click()
+    expect(status.textContent).toBe('Start date set — choose an end date.')
+    el.remove()
+  })
+
+  it('cal-range-announce-complete: completion names BOTH dates long-form (forward pick order)', () => {
+    const el = makeCalendar({ mode: 'range' })
+    cellFor(el, '2026-07-10')!.click()
+    cellFor(el, '2026-07-15')!.click()
+
+    expect(statusOf(el).textContent).toBe('July 10, 2026 to July 15, 2026 selected.')
+    el.remove()
+  })
+
+  it('cal-range-announce-swap: a swap-complete announces the NORMALIZED range (the swap is audible)', () => {
+    const el = makeCalendar({ mode: 'range' })
+    cellFor(el, '2026-07-15')!.click() // anchor = July 15
+    cellFor(el, '2026-07-10')!.click() // earlier pick → swap-completes
+
+    // lo first regardless of pick order (ADR-0093 clause 3: completion audible as the range).
+    expect(statusOf(el).textContent).toBe('July 10, 2026 to July 15, 2026 selected.')
+    el.remove()
+  })
+
+  it('cal-range-announce-single-silent: single mode never writes the status region', () => {
+    const el = makeCalendar()
+    const status = statusOf(el)
+    cellFor(el, '2026-07-15')!.click()
+
+    expect(el.value).toBe('2026-07-15')
+    expect(status.textContent).toBe('')
+    el.remove()
+  })
+})
+
+// ── ADR-0093 range mode: click / Enter / Space commit parity ─────────────────────────────────
+
+describe('ui-calendar — range mode: click / keyboard commit parity (cal-range-click-enter-parity)', () => {
+  it('cal-range-click-enter-parity: Enter/Space two-step picks yield the SAME swap-complete result as click', () => {
+    const viaClick = makeCalendar({ mode: 'range' })
+    cellFor(viaClick, '2026-07-15')!.click()
+    cellFor(viaClick, '2026-07-10')!.click()
+
+    const viaKeyboard = makeCalendar({ mode: 'range' })
+    const c15 = cellFor(viaKeyboard, '2026-07-15')!
+    c15.focus()
+    key(c15, 'Enter')
+    const c10 = cellFor(viaKeyboard, '2026-07-10')!
+    c10.focus()
+    key(c10, ' ') // Space parity
+
+    expect(viaKeyboard.valueStart).toBe(viaClick.valueStart)
+    expect(viaKeyboard.valueEnd).toBe(viaClick.valueEnd)
+    expect(viaKeyboard.valueStart).toBe('2026-07-10')
+    expect(viaKeyboard.valueEnd).toBe('2026-07-15')
+
+    viaClick.remove()
+    viaKeyboard.remove()
+  })
+})
+
+// ── ADR-0093 range mode: normalized preview (hover + keyboard focus), both directions ────────
+
+describe('ui-calendar — range mode: normalized preview (cal-range-preview-forward · cal-range-preview-backward)', () => {
+  it('cal-range-preview-forward: hovering a LATER candidate previews the forward band (anchor keeps its start mark)', () => {
+    const el = makeCalendar({ mode: 'range' })
+    cellFor(el, '2026-07-10')!.click() // anchor = July 10, selecting-end
+
+    pointerEvt(cellFor(el, '2026-07-14')!, 'pointerover')
+
+    expect(rangeAttrs(el, '2026-07-10')).toMatchObject({ start: true, end: false })
+    expect(rangeAttrs(el, '2026-07-14')).toMatchObject({ start: false, end: true })
+    expect(rangeAttrs(el, '2026-07-12').inRange).toBe(true) // interior
+    expect(rangeAttrs(el, '2026-07-16').inRange).toBe(false) // outside the previewed band
+    el.remove()
+  })
+
+  it('cal-range-preview-backward: hovering an EARLIER candidate previews the normalized (swapped) band', () => {
+    const el = makeCalendar({ mode: 'range' })
+    cellFor(el, '2026-07-15')!.click() // anchor = July 15, selecting-end
+
+    pointerEvt(cellFor(el, '2026-07-10')!, 'pointerover')
+
+    // The anchor keeps ITS OWN endpoint mark regardless of chronological order (ADR-0093 clause 3).
+    expect(rangeAttrs(el, '2026-07-15')).toMatchObject({ start: true, end: false, selected: true })
+    expect(rangeAttrs(el, '2026-07-10')).toMatchObject({ start: false, end: true, selected: true })
+    // Interior is the NORMALIZED [10,15] span, not a literal-order [15,10] misread.
+    expect(rangeAttrs(el, '2026-07-12').inRange).toBe(true)
+    expect(rangeAttrs(el, '2026-07-05').inRange).toBe(false)
+
+    // Committing now must match exactly what was previewed (clause 3: "commit never surprises").
+    cellFor(el, '2026-07-10')!.click()
+    expect(el.valueStart).toBe('2026-07-10')
+    expect(el.valueEnd).toBe('2026-07-15')
+    el.remove()
+  })
+
+  it('cal-range-preview: keyboard focus ALSO previews the band while selecting-end (Arrow navigation)', () => {
+    const el = makeCalendar({ mode: 'range' })
+    const c15 = cellFor(el, '2026-07-15')!
+    c15.focus()
+    key(c15, 'Enter') // anchor = July 15
+
+    key(cellFor(el, '2026-07-15')!, 'ArrowLeft') // focus → July 14 (earlier), previews backward
+
+    expect(rangeAttrs(el, '2026-07-14')).toMatchObject({ end: true })
+    expect(rangeAttrs(el, '2026-07-15')).toMatchObject({ start: true })
+    el.remove()
+  })
+
+  it('cal-range-preview: pointerleave on the grid clears the preview candidate', () => {
+    const el = makeCalendar({ mode: 'range' })
+    cellFor(el, '2026-07-10')!.click()
+    pointerEvt(cellFor(el, '2026-07-14')!, 'pointerover')
+    expect(rangeAttrs(el, '2026-07-14').end).toBe(true)
+
+    const grid = el.querySelector<HTMLElement>('[data-part="grid"]')!
+    pointerEvt(grid, 'pointerleave')
+
+    expect(rangeAttrs(el, '2026-07-14').end).toBe(false)
+    el.remove()
+  })
+})
+
+// ── ADR-0093 range mode: cell stamping + bands crossing month boundaries ─────────────────────
+
+describe('ui-calendar — range mode: cell stamping + cross-month bands (cal-range-stamp · cal-range-band-boundary · cal-range-band-neither-endpoint)', () => {
+  it('cal-range-stamp: a committed pair stamps rangeStart/rangeEnd/inRange correctly; no bleed outside the band', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-10', valueEnd: '2026-07-15' })
+
+    expect(rangeAttrs(el, '2026-07-10')).toMatchObject({ start: true, end: false, inRange: false, selected: true })
+    expect(rangeAttrs(el, '2026-07-15')).toMatchObject({ start: false, end: true, inRange: false, selected: true })
+    for (const d of [11, 12, 13, 14]) {
+      expect(rangeAttrs(el, `2026-07-${d}`)).toMatchObject({ inRange: true, selected: true })
+    }
+    expect(rangeAttrs(el, '2026-07-09')).toMatchObject({ start: false, end: false, inRange: false, selected: false })
+    expect(rangeAttrs(el, '2026-07-16')).toMatchObject({ start: false, end: false, inRange: false, selected: false })
+    el.remove()
+  })
+
+  it('cal-range-band-boundary: a band spanning July→August renders correctly on the July grid, including [data-outside] Aug cells', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-28', valueEnd: '2026-08-03' })
+    const title = el.querySelector('[data-part="title"]')!
+    expect(title.textContent).toBe('July 2026') // seeded from valueStart
+
+    expect(rangeAttrs(el, '2026-07-28')).toMatchObject({ start: true })
+    // Aug 3 (valueEnd) appears as a [data-outside] overflow cell in July's 42-cell grid and still
+    // carries the rangeEnd mark (ADR-0093 clause 5 — interior/endpoint marking applies to outside cells).
+    const aug3 = cellFor(el, '2026-08-03')
+    expect(aug3, 'Aug 3 must be present as a trailing overflow cell in the July grid').not.toBeNull()
+    expect(aug3?.hasAttribute('data-outside')).toBe(true)
+    expect(aug3?.hasAttribute('data-range-end')).toBe(true)
+    // Interior spans the boundary too — July 30 (in-month) AND Aug 1 (outside) are both interior.
+    expect(rangeAttrs(el, '2026-07-30').inRange).toBe(true)
+    expect(cellFor(el, '2026-08-01')?.hasAttribute('data-in-range')).toBe(true)
+    el.remove()
+  })
+
+  it('cal-range-band-neither-endpoint: a band spanning June→August marks EVERY in-month July cell as in-range on July\'s own grid (neither endpoint is in July)', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-06-01', valueEnd: '2026-08-31' })
+    const next = el.querySelector<HTMLElement>('[data-part="next"]')!
+    next.click() // June → July (neither endpoint lands in this grid)
+
+    const title = el.querySelector('[data-part="title"]')!
+    expect(title.textContent).toBe('July 2026')
+
+    const inMonth = gridCells(el).filter((c) => !c.hasAttribute('data-outside'))
+    expect(inMonth.length).toBeGreaterThan(0) // anti-vacuous
+    expect(inMonth.every((c) => c.hasAttribute('data-in-range')), 'every in-month July cell must be in-range').toBe(true)
+    expect(
+      inMonth.some((c) => c.hasAttribute('data-range-start') || c.hasAttribute('data-range-end')),
+      'neither endpoint is in July — no in-month cell should carry a start/end mark',
+    ).toBe(false)
+    el.remove()
+  })
+
+  it('cal-range-stamp: single mode NEVER stamps data-range-start/data-range-end/data-in-range, even with a value set', () => {
+    const el = makeCalendar({ value: '2026-07-15' }) // default mode = single
+    const stamped = el.querySelectorAll('[data-range-start], [data-range-end], [data-in-range]')
+    expect(stamped.length).toBe(0)
+    el.remove()
+  })
+})
+
+// ── ADR-0093 range mode: in-range predicate is pure string comparison (grep-provable) ────────
+
+describe('ui-calendar — range predicate purity (cal-range-no-date-ctor)', () => {
+  it('cal-range-no-date-ctor: normalizeRange + rangeSelectionFor construct zero `new Date(` (ADR-0093 clause 5)', () => {
+    const src = readFileSync(
+      `${process.cwd()}/packages/agent-ui/components/src/controls/calendar/calendar.ts`,
+      'utf8',
+    ) as string
+
+    const grabFunctionBody = (fnName: string): string => {
+      const start = src.indexOf(`function ${fnName}(`)
+      expect(start, `${fnName} not found in calendar.ts`).toBeGreaterThan(-1)
+      const braceStart = src.indexOf('{', start)
+      let depth = 0
+      let i = braceStart
+      for (; i < src.length; i++) {
+        if (src[i] === '{') depth++
+        else if (src[i] === '}') {
+          depth--
+          if (depth === 0) { i++; break }
+        }
+      }
+      return src.slice(start, i)
+    }
+
+    expect(grabFunctionBody('normalizeRange')).not.toMatch(/new Date\(/)
+    expect(grabFunctionBody('rangeSelectionFor')).not.toMatch(/new Date\(/)
+  })
+})
+
+// ── ADR-0093 one-live-value-surface: inertness probes ─────────────────────────────────────────
+
+describe('ui-calendar — one-live-value-surface inertness (cal-inert-value-in-range · cal-inert-pair-in-single · cal-inert-mode-switch)', () => {
+  it('cal-inert-value-in-range: `value` set in mode=range contributes nothing to render/formValue/formValidity', () => {
+    const el = makeCalendar({ mode: 'range', required: true })
+    el.value = '2026-07-15'
+
+    // Rendering: aria-selected is NOT driven by `value` in range mode.
+    expect(cellFor(el, '2026-07-15')?.getAttribute('aria-selected')).toBe('false')
+    // formValue(): still null — valueStart/valueEnd are both unset.
+    expect(el.formValueProbe()).toBeNull()
+    // formValidity(): still valueMissing (required + empty PAIR) — `value` is not consulted.
+    const result = el.formValidityProbe()
+    expect(result.valid).toBe(false)
+    if (!result.valid) expect(result.flags.valueMissing).toBe(true)
+    el.remove()
+  })
+
+  it('cal-inert-pair-in-single: valueStart/valueEnd set in mode=single contribute nothing (no data-range-* stamped)', () => {
+    const el = makeCalendar({ value: '2026-07-15' }) // default mode = single
+    el.valueStart = '2026-07-05'
+    el.valueEnd = '2026-07-20'
+
+    // formValue()/formValidity() stay driven by `value` alone.
+    expect(el.formValueProbe()).toBe('2026-07-15')
+    expect(el.formValidityProbe().valid).toBe(true)
+    // Zero cells anywhere carry range data-attributes (grep-provable single-mode guarantee).
+    expect(el.querySelectorAll('[data-range-start], [data-range-end], [data-in-range]').length).toBe(0)
+    el.remove()
+  })
+
+  it('cal-inert-mode-switch: flipping `mode` writes ZERO value props (reconfiguration, not migration)', () => {
+    const el = makeCalendar({ mode: 'single', value: '2026-07-10' })
+    expect(el.valueStart).toBe('')
+    expect(el.valueEnd).toBe('')
+
+    el.mode = 'range'
+    expect(el.value).toBe('2026-07-10') // unchanged — never cleared
+    expect(el.valueStart).toBe('') // never migrated from `value`
+    expect(el.valueEnd).toBe('')
+
+    el.valueStart = '2026-08-01'
+    el.mode = 'single'
+    expect(el.value).toBe('2026-07-10') // still unchanged
+    expect(el.valueStart).toBe('2026-08-01') // still held, just inert again
+    el.remove()
+  })
+})
+
+// ── ADR-0093 range mode: form seams ───────────────────────────────────────────────────────────
+
+describe('ui-calendar — range mode: form seams (cal-range-form-value · cal-range-form-validity · cal-range-form-reset · cal-range-form-state-restore)', () => {
+  it('cal-range-form-value: a complete pair submits as FormData — TWO entries under `name`, start first', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-10', valueEnd: '2026-07-15' })
+    el.name = 'stay'
+    const fv = el.formValueProbe()
+    expect(fv).toBeInstanceOf(FormData)
+    expect((fv as FormData).getAll('stay')).toEqual(['2026-07-10', '2026-07-15'])
+    el.remove()
+  })
+
+  it('cal-range-form-value: a half-open pair (only start set) → formValue() is null', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-10' })
+    expect(el.formValueProbe()).toBeNull()
+    el.remove()
+  })
+
+  it('cal-range-form-value: a programmatically inverted pair → formValue() is null (a range is atomic)', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-20', valueEnd: '2026-07-10' })
+    expect(el.valueStart).toBe('2026-07-20') // NOT auto-swapped — stays exactly as set
+    expect(el.valueEnd).toBe('2026-07-10')
+    expect(el.formValueProbe()).toBeNull()
+    el.remove()
+  })
+
+  it('cal-range-form-validity: empty pair → valid when not required, valueMissing when required', () => {
+    const notRequired = makeCalendar({ mode: 'range' })
+    expect(notRequired.formValidityProbe().valid).toBe(true)
+    notRequired.remove()
+
+    const required = makeCalendar({ mode: 'range', required: true })
+    const result = required.formValidityProbe()
+    expect(result.valid).toBe(false)
+    if (!result.valid) expect(result.flags.valueMissing).toBe(true)
+    required.remove()
+  })
+
+  it('cal-range-form-validity: half-open pair → valueMissing regardless of `required`', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-10', required: false })
+    const result = el.formValidityProbe()
+    expect(result.valid).toBe(false)
+    if (!result.valid) expect(result.flags.valueMissing).toBe(true)
+    el.remove()
+  })
+
+  it('cal-range-form-validity: an inverted pair → rangeUnderflow (the closest structural flag; message names the order)', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-20', valueEnd: '2026-07-10' })
+    const result = el.formValidityProbe()
+    expect(result.valid).toBe(false)
+    if (!result.valid) {
+      expect(result.flags.rangeUnderflow).toBe(true)
+      expect(result.message).toMatch(/on or before/i)
+    }
+    el.remove()
+  })
+
+  it('cal-range-form-validity: start < min → rangeUnderflow', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-05', valueEnd: '2026-07-15', min: '2026-07-10' })
+    const result = el.formValidityProbe()
+    expect(result.valid).toBe(false)
+    if (!result.valid) expect(result.flags.rangeUnderflow).toBe(true)
+    el.remove()
+  })
+
+  it('cal-range-form-validity: end > max → rangeOverflow', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-05', valueEnd: '2026-07-25', max: '2026-07-20' })
+    const result = el.formValidityProbe()
+    expect(result.valid).toBe(false)
+    if (!result.valid) expect(result.flags.rangeOverflow).toBe(true)
+    el.remove()
+  })
+
+  it('cal-range-form-validity: a complete, ordered, in-bounds pair → valid', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-10', valueEnd: '2026-07-15', min: '2026-07-01', max: '2026-07-31' })
+    expect(el.formValidityProbe().valid).toBe(true)
+    el.remove()
+  })
+
+  it('cal-range-form-reset: restores valueStart/valueEnd to the HTML-authored initial pair; never touches `value`', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-10', valueEnd: '2026-07-15' })
+    el.valueStart = '2026-08-01'
+    el.valueEnd   = '2026-08-05'
+
+    el.formResetProbe()
+
+    expect(el.valueStart).toBe('2026-07-10')
+    expect(el.valueEnd).toBe('2026-07-15')
+    expect(el.value).toBe('')
+    el.remove()
+  })
+
+  it('cal-range-form-state-restore: a two-entry FormData sets the pair and navigates to its month', () => {
+    const el = makeCalendar({ mode: 'range' })
+    el.name = 'x'
+    const fd = new FormData()
+    fd.append('x', '2026-08-10')
+    fd.append('x', '2026-08-20')
+
+    el.formStateRestoreProbe(fd)
+
+    expect(el.valueStart).toBe('2026-08-10')
+    expect(el.valueEnd).toBe('2026-08-20')
+    const title = el.querySelector('[data-part="title"]')
+    expect(title?.textContent).toBe('August 2026')
+    el.remove()
+  })
+
+  it('cal-range-form-state-restore: malformed shapes (wrong count / non-FormData) are no-ops', () => {
+    const el = makeCalendar({ mode: 'range', valueStart: '2026-07-10', valueEnd: '2026-07-15' })
+    el.name = 'x'
+
+    const short = new FormData()
+    short.append('x', '2026-08-10')
+    el.formStateRestoreProbe(short)
+    expect(el.valueStart).toBe('2026-07-10')
+    expect(el.valueEnd).toBe('2026-07-15')
+
+    el.formStateRestoreProbe('2026-09-01') // the single-mode shape — wrong type for range mode
+    expect(el.valueStart).toBe('2026-07-10')
+    expect(el.valueEnd).toBe('2026-07-15')
+    el.remove()
+  })
+})
+
 // ── Form seams ────────────────────────────────────────────────────────────────────────────────
 
 describe('ui-calendar — form seams (cal-form-value · cal-form-validity · cal-form-reset · cal-form-state-restore)', () => {
@@ -821,7 +1309,7 @@ const md = readFileSync(`${CALENDAR_DIR}/calendar.md`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['name', 'disabled', 'required', 'value', 'min', 'max', 'size']
+const ATTR_NAMES = ['name', 'disabled', 'required', 'mode', 'value', 'valueStart', 'valueEnd', 'min', 'max', 'size']
 
 describe('calendar.md descriptor — frontmatter parses + schema-valid (cal-descriptor-schema)', () => {
   it('cal-descriptor-schema: has a leading frontmatter fence and a prose body', () => {

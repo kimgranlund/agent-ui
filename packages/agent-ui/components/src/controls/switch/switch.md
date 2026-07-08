@@ -111,7 +111,7 @@ neither the box nor the inset rides `--ui-density`.
 
 ## States + colour
 
-Unchecked: muted `--md-sys-color-neutral-outline-variant` track, near-white thumb. Checked: `--md-sys-color-primary` track
+Unchecked: solid `--md-sys-color-neutral-track` track (the state-bearing track role, ADR-0059 — SC 1.4.11 3:1 on every plane; `-track-hover` on hover), near-white thumb. Checked: `--md-sys-color-primary` track
 (`--md-sys-color-primary-on-primary` thumb). Disabled: `--md-sys-color-neutral-surface-high` track, muted ink thumb — the
 host is pointer-inert (`pointer-events: none`), so `:hover` never lifts the state. A `:focus-visible`
 ring (keyboard-only, ADR-0009) uses the fleet `--md-sys-color-focus-ring` / `--ui-focus-ring-*` tokens.

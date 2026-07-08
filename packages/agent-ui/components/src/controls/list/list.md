@@ -91,8 +91,13 @@ children (`render()` stays void).
 <ui-list gap="md" align="stretch" elevation="1"> … </ui-list>
 ```
 
-> **Not an A2UI catalog type.** The reserved §5.2 set is Row/Column/Image/Video/Card/Tabs/Modal; `ui-list`
-> (like `ui-grid`) ships as a direct `ui-*` primitive usable on its own — the default catalog does not declare it.
+> **An A2UI catalog type.** `ui-list` renders the catalog's `List` type (ADR-0087 Fork A — supersedes ADR-0016's
+> earlier non-catalog exclusion). Reach for `List` (not `Column`) for a **homogeneous, itemized collection**
+> where list semantics matter to assistive tech (search results, a feed, a to-do list) — `List` carries
+> `role=list` for free; plain `Column` does not and should not fake it. Reach for `Row`/`Column` instead when
+> the children are a deliberate, heterogeneous arrangement (a toolbar, a form's field stack) where no single
+> semantic role unifies them; reach for `Grid` instead when the arrangement should reflow its column count
+> responsively with available width.
 
 ## Layout
 

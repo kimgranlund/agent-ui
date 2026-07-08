@@ -2,7 +2,8 @@
 //
 // Runs in Chromium + WebKit via vitest.browser.config.ts (the *.browser.test.ts glob). Excluded from the
 // jsdom run by the root vitest.config.ts. Goals: the dot box = --ui-compact (real px), real focus roves
-// the group, checked paint (::before box-shadow dot), forced-colors (CanvasText ink), C10 zero-residue.
+// the group, checked paint (::before ring-fill + ::after dot, the 2026-07-07 fix), forced-colors
+// (CanvasText ink), C10 zero-residue.
 //
 // Imports the self-defining family barrel + the foundation/component CSS so tokens resolve in the real engine.
 
@@ -21,6 +22,64 @@ function mount<T extends Element>(el: T): T {
   document.body.append(el)
   mounted.push(el)
   return el
+}
+
+// ── WCAG contrast helper — real-engine computed colours, not re-derived token math ─────────────────────
+// getComputedStyle in a REAL browser resolves light-dark()/var() to a concrete serialized colour — WebKit
+// (and Chromium, for some values) serialize our OKLCH-declared tokens as `oklch(L C H)` rather than
+// converting to `rgb()`, so this reads BOTH formats (the OKLCH→linear-sRGB path mirrors the jsdom-side
+// tokens.test.ts's own helper) and applies the same WCAG relative-luminance formula either way.
+const toLin = (c: number): number => {
+  const s = c <= 0 ? 0 : c >= 1 ? 1 : c
+  return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+}
+const relativeLuminanceRgb = ([r, g, b]: [number, number, number]): number =>
+  0.2126 * toLin(r / 255) + 0.7152 * toLin(g / 255) + 0.0722 * toLin(b / 255)
+/** OKLCH → linear sRGB (Björn Ottosson's oklab matrices — same constants tokens.test.ts uses). */
+const oklchToLinearSrgb = (L: number, C: number, hDeg: number): [number, number, number] => {
+  const h = (hDeg * Math.PI) / 180
+  const a = C * Math.cos(h)
+  const b = C * Math.sin(h)
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b
+  const s_ = L - 0.0894841775 * a - 1.291485548 * b
+  const l = l_ ** 3
+  const m = m_ ** 3
+  const s = s_ ** 3
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ]
+}
+const clamp01 = (x: number): number => Math.max(0, Math.min(1, x))
+const relativeLuminanceOklch = (L: number, C: number, hDeg: number): number => {
+  // oklchToLinearSrgb already returns LINEAR sRGB (no gamma encoding involved) — unlike the rgb() branch,
+  // this must NOT go through toLin() (that would gamma-DECODE an already-linear value, a double conversion).
+  // Verified against real rendered pixels (canvas getImageData sampling of these exact oklch() strings,
+  // then WCAG-decoded from the 0-255 gamma-encoded pixel output): 3.67:1, matching this direct-clamp path.
+  const [r, g, b] = oklchToLinearSrgb(L, C, hDeg)
+  return 0.2126 * clamp01(r) + 0.7152 * clamp01(g) + 0.0722 * clamp01(b)
+}
+const relativeLuminance = (color: string): number => {
+  const rgb = color.match(/rgba?\(([^)]+)\)/i)
+  if (rgb) {
+    const [r, g, b] = rgb[1].split(/[\s,/]+/).filter(Boolean).map(Number)
+    return relativeLuminanceRgb([r, g, b])
+  }
+  const ok = color.match(/oklch\(([^)]+)\)/i)
+  if (ok) {
+    const [L, C, h] = ok[1].split(/[\s/]+/).filter(Boolean).map(Number)
+    return relativeLuminanceOklch(L, C, h)
+  }
+  throw new Error(`unrecognized colour format (expected rgb()/rgba()/oklch()): "${color}"`)
+}
+const contrastOf = (a: string, b: string): number => {
+  const la = relativeLuminance(a)
+  const lb = relativeLuminance(b)
+  const hi = Math.max(la, lb)
+  const lo = Math.min(la, lb)
+  return (hi + 0.05) / (lo + 0.05)
 }
 
 // ── S3 browser smoke: dot box = --ui-compact (exact-px per [size] + [scale]×[size]) ─────────────
@@ -110,6 +169,44 @@ describe('ui-radio browser smoke — checked paint', () => {
     const el = mount(document.createElement('ui-radio') as UIRadioElement)
     el.textContent = 'Radio'
     expect(getComputedStyle(el).display).toBe('inline-flex')
+  })
+})
+
+// ── 2026-07-07 fix: the checked DOT reads as a genuinely distinct indicator (SC 1.4.11) ────────────
+//
+// Regression pin for the Kim-filed visual bug: the checked ring (::before) and dot (::after) used to
+// share the SAME `--ui-radio-ink` colour — a same-hue dot painted over a same-hue ring is ~1:1 contrast,
+// i.e. invisible. The fix fills the ring solid primary and repoints the dot to the bright
+// `--md-sys-color-primary-on-primary` role (the switch's own checked-thumb pair). This asserts the REAL
+// rendered colours (not the declared tokens) clear the SC 1.4.11 3:1 non-text bar, in both engines.
+
+describe('ui-radio browser smoke — checked dot contrast (2026-07-07 fix, SC 1.4.11)', () => {
+  it('checked: the dot (::after) clears 3:1 against the ring/fill (::before) it sits on', () => {
+    const el = mount(document.createElement('ui-radio') as UIRadioElement)
+    el.checked = true
+    el.textContent = 'Selected'
+
+    const ringBg = getComputedStyle(el, '::before').backgroundColor
+    const dotBg = getComputedStyle(el, '::after').backgroundColor
+    const ratio = contrastOf(ringBg, dotBg)
+    expect(ratio, `checked dot(${dotBg}) vs ring/fill(${ringBg}) = ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
+  })
+
+  it('NEGATIVE control: an equal-hue dot (the pre-fix bug) would fail the same probe', () => {
+    // Proves the probe has teeth: the SAME colour read twice is ~1:1, well under the 3:1 bar — exactly
+    // what the old `--ui-radio-ink`-for-both bug rendered (ring and dot were the identical primary blue).
+    const el = mount(document.createElement('ui-radio') as UIRadioElement)
+    el.checked = true
+    const ringBg = getComputedStyle(el, '::before').backgroundColor
+    const ratio = contrastOf(ringBg, ringBg)
+    expect(ratio, 'a same-colour probe must read ~1:1 (the bug this fix corrects)').toBeLessThan(3)
+  })
+
+  it('unchecked: the dot (::after) is transparent — no glyph shows when not selected', () => {
+    const el = mount(document.createElement('ui-radio') as UIRadioElement)
+    el.textContent = 'Unselected'
+    const dotBg = getComputedStyle(el, '::after').backgroundColor
+    expect(dotBg === 'transparent' || dotBg === 'rgba(0, 0, 0, 0)').toBe(true)
   })
 })
 

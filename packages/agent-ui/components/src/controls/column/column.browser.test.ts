@@ -221,13 +221,14 @@ describe('ui-column browser-truth harness (s4)', () => {
     expect(getComputedStyle(el).flexWrap, 'removing [wrap] should restore nowrap').not.toBe('wrap')
   })
 
-  it('REFLOWS by CONTAINER width: a wide query container spreads the column into a row (ADR-0016 cl.4)', () => {
+  it('REFLOWS by CONTAINER width ONLY when reflow="auto": a wide query container spreads the column into a row (ADR-0016 cl.4, gated by ADR-0096)', () => {
     // the intrinsic-responsiveness proof: resize the WRAPPER (a query container), not the viewport. The column's
-    // @container rule flips flex-direction column→row above 30rem — mirroring ui-row's narrow→column, axis flipped.
+    // @container rule flips flex-direction column→row above 30rem — mirroring ui-row's narrow→column, axis flipped
+    // — but ONLY when reflow="auto" is set; the default (locked) never fires it (ADR-0096).
     const wrap = document.createElement('div')
     wrap.style.containerType = 'inline-size'
     host.append(wrap)
-    const el = column({ gap: 'md' })
+    const el = column({ gap: 'md', reflow: 'auto' })
     wrap.append(el)
 
     // narrow (20rem < 30rem) — stays a column: the second child sits BELOW the first
@@ -242,5 +243,27 @@ describe('ui-column browser-truth harness (s4)', () => {
     expect(getComputedStyle(el).flexDirection).toBe('row') // the computed property ACTUALLY changed (anti-vacuous)
     expect(b1.offsetLeft).toBeGreaterThan(a1.offsetLeft) // now laid out horizontally
     expect(b1.offsetTop).toBe(a1.offsetTop) // on the same row
+  })
+
+  it('ADR-0096 regression gate: a DEFAULT ui-column (no reflow attribute) stays a COLUMN under a wide container', () => {
+    // the reproduced card-game bug: an unset reflow must NEVER match the [reflow='auto'] repoint (ADR-0005 — a
+    // default is never reflected as an attribute), so a default column is locked by construction at any width.
+    const wrap = document.createElement('div')
+    wrap.style.containerType = 'inline-size'
+    wrap.style.inlineSize = '40rem' // WIDE — well above the 30rem threshold the old unconditional switcher used
+    host.append(wrap)
+    const el = column({ gap: 'md' }) // NO reflow attribute — the default
+    wrap.append(el)
+
+    expect(el.getAttribute('reflow')).toBeNull() // default is not reflected as an attribute (ADR-0005)
+    expect(getComputedStyle(el).flexDirection).toBe('column') // the regression this ADR fixes
+    const a1 = el.querySelector('.a') as HTMLElement
+    const b1 = el.querySelector('.b') as HTMLElement
+    expect(b1.offsetTop).toBeGreaterThan(a1.offsetTop) // children stay STACKED, not side by side
+    expect(b1.offsetLeft).toBe(a1.offsetLeft) // same inline position — not laid out as a row
+
+    // explicit reflow="locked" is the same as the default — belt-and-braces
+    el.setAttribute('reflow', 'locked')
+    expect(getComputedStyle(el).flexDirection).toBe('column')
   })
 })

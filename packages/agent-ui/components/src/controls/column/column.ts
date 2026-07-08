@@ -45,6 +45,13 @@ const props = {
   // (deliberately NOT folded into the shared `flexProps` grammar — row/grid/list are unaffected): the A2UI
   // canvas sets it on a root `ui-column` so the surface fills the artboard. Boolean presence, default off.
   stretch: { ...prop.boolean(false), reflect: true },
+  // reflow → gates the ADR-0016 cl.4 container-query direction switch (ADR-0096). Element-local, deliberately
+  // NOT folded into the shared `flexProps` (the ADR-0075 `stretch` precedent — `ui-list` has no `@container`
+  // rule and `ui-grid`'s auto-fit IS its own responsiveness, so both stay untouched). `locked` LEADS the array
+  // so it is both ui-column's default AND the invalid-value snap target — the column default FLIPS to `locked`
+  // (ADR-0096 cl.2): the wide→row switch fired unconditionally and unpreventably for the catalog's prop-only
+  // consumer, contradicting the tag's own cl.2 identity. `auto` opts back into the ADR-0016 cl.4 switch.
+  reflow: { ...prop.enum(['locked', 'auto'] as const, 'locked'), reflect: true },
 } satisfies PropsSchema
 
 export interface UIColumnElement extends ReactiveProps<typeof props> {}

@@ -22,7 +22,7 @@ attributes:            # attributes-as-API — mirrors UIComboBoxElement.props (
   - name: open
     type: boolean
     default: false
-    reflect: true      # reflects + BINDABLE — the catalog declares value:{prop:'open',event:'toggle'} so the renderer two-way-binds it (ADR-0019); drives the overlay handle via a scope-owned effect
+    reflect: true      # reflects; drives the overlay handle via a scope-owned effect. NOT the A2UI catalog's two-way mark (corrected 2026-07-06, ADR-0087 Wave B) — the default catalog's ONE value:{prop,event} slot on ComboBox binds the FORM value (value:{prop:'value',event:'change'}, see catalog.json), not `open`; this comment previously claimed value:{prop:'open',event:'toggle'} (copied from the overlay family) before ComboBox's own form value was catalogued
   - name: strict
     type: boolean
     default: false
@@ -91,6 +91,8 @@ parts:
     description: The control-created `<div data-part="editor" contenteditable="plaintext-only" role="combobox">`. Carries the combobox ARIA role (never on the host — FACE pattern), aria-haspopup="listbox", aria-autocomplete="list", aria-expanded (synced via the scope-owned effect), aria-controls (pointing to the listbox's id), and aria-activedescendant (updated on Arrow navigation). DOM focus lives HERE throughout keyboard navigation — it never moves to the listbox or options (the active-descendant pattern, OVL/ROV-C1).
   - name: listbox
     description: The control-created `<div data-part="listbox" role="listbox" popover="auto" id="...">` that enters the Popover API top layer when open. Author-provided [role=option] children are moved into this part at connect time. Created ONCE (idempotent guard — the same node persists across disconnect/reconnect). The overlay controller sets position:fixed + inset on open.
+  - name: empty
+    description: The control-created `<div data-part="empty" role="presentation">No matches</div>`, appended LAST inside the listbox (2026-07-07 fix). Hidden by default; `#syncEmptyState()` reveals it exactly when zero `[role=option]` children are visible (the filter matched nothing, or no options were provided at all). Not an option — never navigable, never commit-able. Root-cause fix for a filtered-to-zero panel collapsing to a stray border-only line (no min-block-size, no content): this row gives the panel real, deliberate height and an explicit "no matches" affordance instead.
 
 customStates: []       # no :state() hooks — open/closed state lives on the panel's popover top-layer presence; the active-descendant highlight is [data-active] (a CSS attribute selector, not a custom state)
 
@@ -193,15 +195,20 @@ highlight. Screen readers announce the active option without moving focus.
 
 Typing in the editor filters the visible options (options whose label does not match the typed
 text get `hidden=true`). The panel opens automatically on the first keystroke. The filter clears
-on commit.
+on commit. When the filter matches zero options, the panel shows a "No matches" row (the `empty`
+part) instead of collapsing to an empty, contentless panel.
 
 ## Strict mode
 
 `strict=false` (default): Enter with no active option commits the typed text as a free-text value.
 `strict=true`: only option-commits are valid; a non-matching committed value raises `typeMismatch`.
 
-## Two-way `open` + form value
+## `open` state + form value
 
-`open` is reflected and bindable (the renderer two-way-binds it via `value:{prop:'open',event:'toggle'}`).
-`value` holds the **last committed** value — unchanged while the user is typing. `formValue()` returns
-`null` when `value` is empty (no form entry submitted, matching native `<select>` convention).
+`open` is reflected and directly settable (drives the overlay panel via a scope-owned effect), but it is
+NOT the A2UI catalog's two-way mark — the default catalog's ONE `value:{prop,event}` slot on `ComboBox`
+binds the FORM value (`value:{prop:'value',event:'change'}`, ADR-0087 Wave B), not `open` (correcting an
+earlier stale comment here that named `open`/`toggle`, copied from the overlay family before ComboBox's
+own form value was catalogued). `value` holds the **last committed** value — unchanged while the user is
+typing. `formValue()` returns `null` when `value` is empty (no form entry submitted, matching native
+`<select>` convention).

@@ -41,6 +41,12 @@
 @import './controls/slider/slider.css';
 @import './controls/slider-multi/slider-multi.css';
 
+/* Pattern controls — ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover):
+ * the standalone segmented control. segment.css FIRST (the leaf, no dot to suppress — its own base layout +
+ * focus ring), segmented-control.css SECOND (the host's compound selectors consume ui-segment by tag). */
+@import './controls/segment/segment.css';
+@import './controls/segmented-control/segmented-control.css';
+
 /* G9 container / layout family — each sheet consumes the shared `_surface/container.css` seam above. */
 @import './controls/row/row.css';
 @import './controls/column/column.css';

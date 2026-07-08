@@ -63,8 +63,15 @@
      subtracts the same --ui-box-inset the row margin reads. */
   --ui-menu-item-radius: calc(var(--ui-radius-base) - var(--ui-box-inset, 0.375rem));
 
-  /* Item state colours — hover wash + disabled muted ink. */
-  --ui-menu-item-bg-hover: var(--md-sys-color-neutral-tint-dimmer);   /* 10% neutral alpha wash */
+  /* Item state colours — hover fill + disabled muted ink.
+     FIXED (2026-07-07, overlay-list family-consistency pass): was --md-sys-color-neutral-tint-dimmer
+     (a translucent 10% alpha wash) — the ONLY row-hover in the fleet using the tint ladder; every
+     other interactive-row/control hover (ui-select's option, ui-button, ui-text-field, ui-checkbox,
+     ui-switch, ui-calendar's cell) reads the solid, scheme-inverting --md-sys-color-neutral-surface-high
+     role. ui-menu's translucent wash read as a visibly weaker/different hover than ui-select's listbox
+     right next to it (the reported inconsistency) — converged onto the existing fleet-wide role,
+     no new token minted. */
+  --ui-menu-item-bg-hover: var(--md-sys-color-neutral-surface-high);
   --ui-menu-item-ink-disabled: var(--md-sys-color-neutral-outline);   /* muted, not invisible */
 
 }
@@ -115,16 +122,22 @@
     -webkit-user-select: none; /* WebKit honours selection-none only via the prefix */
   }
 
-  /* Hover state — a subtle alpha wash over the surface (no border — like native menus). */
+  /* Hover state — the fleet-wide solid elevated-surface fill (no border — like native menus). */
   :scope [role='menuitem']:not([disabled]):not([aria-disabled='true']):hover {
     background-color: var(--ui-menu-item-bg-hover);
   }
 
   /* Keyboard focus ring (ADR-0009) — reads fleet tokens directly (the documented family exception:
-     every control draws the identical ring; see button.css for the precedent). */
+     every control draws the identical ring; see button.css for the precedent). Outset (positive
+     offset), matching ui-select's option ring and the fleet-wide convention (button/checkbox/
+     text-field/select/etc. all use the positive offset; only ui-tabs' inline tab-strip is inset,
+     for a different reason — adjacent siblings with no margin). FIXED (2026-07-07,
+     family-consistency pass): was the inset (negative-offset) treatment — the item's own
+     --ui-box-inset margin (≥6px) comfortably clears an outset ring (width+offset = 4px) without
+     touching the panel edge or a neighbouring row. */
   :scope [role='menuitem']:not([disabled]):not([aria-disabled='true']):focus-visible {
     outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: calc(-1 * var(--ui-focus-ring-offset));
+    outline-offset: var(--ui-focus-ring-offset);
   }
 
   /* Disabled items — muted ink, no pointer, inert to hover/focus. */
@@ -137,8 +150,8 @@
 
   /* Forced-colors (WHCM) — the surface, frame, and ink survive as system Canvas/CanvasText.
      Hover + focus items use system Highlight/HighlightText so they remain visible.
-     `forced-color-adjust: none` on the item hover/focus block keeps the alpha wash from being
-     overridden (the platform would discard the color-mix / alpha; we commit to Highlight instead). */
+     `forced-color-adjust: none` on the item hover/focus block keeps the fill from being
+     overridden (the platform would discard the solid surface-high fill; we commit to Highlight instead). */
   @media (forced-colors: active) {
     :scope > [data-part='panel'] {
       background-color: Canvas;

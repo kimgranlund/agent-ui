@@ -372,35 +372,27 @@ describe('UIRadioGroupElement — roving (Arrow/Home/End)', () => {
   })
 })
 
-// ── ADR-0086 — variant + orientation reflected props ─────────────────────────────────────────────
+// ── orientation reflected prop (ADR-0086; `variant` retired by ADR-0095) ──────────────────────────
 
-describe('UIRadioGroupElement — ADR-0086 variant/orientation reflected props', () => {
+describe('UIRadioGroupElement — orientation reflected prop', () => {
   let group: ProbeGroup
   afterEach(() => group?.remove())
 
-  it('adr86-variant-default: variant defaults to "default" (no attribute written until explicitly set)', () => {
+  it('carries no `variant` prop at all (ADR-0095 clause 1 — retired, not a live accessor)', () => {
     group = makeGroup()
     document.body.append(group)
-    expect(group.variant).toBe('default')
-    expect(group.getAttribute('variant')).toBeNull() // unlike orientation, variant is not reflected-back at connect
+    expect((group as unknown as Record<string, unknown>)['variant']).toBeUndefined()
+    expect('variant' in UIRadioGroupElement.props).toBe(false)
   })
 
-  it('adr86-variant-reflects: setting variant="segmented" reflects the attribute', () => {
-    group = makeGroup()
-    document.body.append(group)
-    group.variant = 'segmented'
-    expect(group.hasAttribute('variant')).toBe(true)
-    expect(group.getAttribute('variant')).toBe('segmented')
-  })
-
-  it('adr86-orientation-default: orientation defaults to "vertical" on a default-variant group', () => {
+  it('orientation-default: orientation defaults to "vertical"', () => {
     group = makeGroup()
     document.body.append(group)
     expect(group.orientation).toBe('vertical')
     expect(group.getAttribute('orientation')).toBe('vertical')
   })
 
-  it('adr86-orientation-reflects: setting orientation="horizontal" reflects the attribute', () => {
+  it('orientation-reflects: setting orientation="horizontal" reflects the attribute', () => {
     group = makeGroup()
     document.body.append(group)
     group.orientation = 'horizontal'
@@ -408,54 +400,98 @@ describe('UIRadioGroupElement — ADR-0086 variant/orientation reflected props',
   })
 })
 
-// ── ADR-0086 — the variant-derived orientation default, resolved ONCE at connect ──────────────────
+// ── the class-derived orientation default, resolved ONCE at connect (ADR-0095 clause 1) ───────────
 
-describe('UIRadioGroupElement — ADR-0086 resolved-orientation-at-connect', () => {
+describe('UIRadioGroupElement — resolved-orientation-at-connect (class-derived default)', () => {
   afterEach(() => document.body.querySelectorAll('ui-radio-group-test').forEach((el) => el.remove()))
 
-  it('adr86-resolve-segmented-default: variant="segmented" with NO explicit orientation resolves to horizontal at connect', () => {
-    const group = new ProbeGroup()
-    group.variant = 'segmented' // set BEFORE connect — no orientation attribute/property ever touched
-    stubFormAssoc(group.testInternals)
-    expect(group.hasAttribute('orientation')).toBe(false) // anti-vacuous: nothing resolved yet
-    document.body.append(group) // connectedCallback → connected() resolves + reflects
-    expect(group.orientation).toBe('horizontal')
-    expect(group.getAttribute('orientation')).toBe('horizontal')
-    group.remove()
-  })
-
-  it('adr86-resolve-default-variant: variant="default" (unset) with no explicit orientation resolves to vertical', () => {
+  it('resolve-base-default: with no explicit orientation, resolves to this base class\'s default (vertical)', () => {
     const group = makeGroup()
     document.body.append(group)
     expect(group.orientation).toBe('vertical')
     group.remove()
   })
 
-  it('adr86-resolve-author-wins: an explicit orientation="vertical" on a segmented group is NOT overridden', () => {
+  it('resolve-author-wins: an explicit orientation="horizontal" set before connect is NOT overridden', () => {
     const group = new ProbeGroup()
-    group.variant = 'segmented'
-    group.orientation = 'vertical' // author-set BEFORE connect — must win over the variant-derived default
+    group.orientation = 'horizontal' // author-set BEFORE connect — must win over the class-derived default
     stubFormAssoc(group.testInternals)
     expect(group.hasAttribute('orientation')).toBe(true) // anti-vacuous: the author's explicit set already reflected
     document.body.append(group)
-    expect(group.orientation).toBe('vertical') // NOT flipped to horizontal
+    expect(group.orientation).toBe('horizontal') // NOT reset to the base default
     group.remove()
   })
 
-  it('adr86-resolve-html-authored: markup `<ui-radio-group variant="segmented" orientation="vertical">` honours the explicit attribute', () => {
+  it('resolve-html-authored: markup `<ui-radio-group orientation="horizontal">` honours the explicit attribute', () => {
     const group = document.createElement('ui-radio-group-test') as ProbeGroup
-    group.setAttribute('variant', 'segmented')
-    group.setAttribute('orientation', 'vertical')
+    group.setAttribute('orientation', 'horizontal')
     stubFormAssoc(group.testInternals)
     document.body.append(group)
-    expect(group.orientation).toBe('vertical')
+    expect(group.orientation).toBe('horizontal')
+    group.remove()
+  })
+
+  it('defaultOrientation() is a protected, overridable seam (the ADR-0095 clause 1 subclass mechanism)', () => {
+    class HorizontalByDefaultGroup extends ProbeGroup {
+      protected override defaultOrientation(): 'horizontal' | 'vertical' {
+        return 'horizontal'
+      }
+    }
+    if (!customElements.get('ui-radio-group-horizontal-test')) {
+      customElements.define('ui-radio-group-horizontal-test', HorizontalByDefaultGroup)
+    }
+    const group = new HorizontalByDefaultGroup()
+    stubFormAssoc(group.testInternals)
+    document.body.append(group) // no explicit orientation attribute/property ever touched
+    expect(group.orientation).toBe('horizontal') // the OVERRIDDEN default, not the base class's 'vertical'
     group.remove()
   })
 })
 
-// ── ADR-0086 — the roving axis follows the resolved orientation (horizontal Left/Right) ───────────
+// ── selectionChanged() — the protected post-selection hook (ADR-0095 clause 2) ─────────────────────
 
-describe('UIRadioGroupElement — ADR-0086 horizontal roving (Arrow Left/Right)', () => {
+describe('UIRadioGroupElement — selectionChanged() protected hook', () => {
+  it('is a no-op in the base (costs nothing for the plain dot-group presentation)', () => {
+    const [group] = buildGroup(3)
+    // A no-op hook writes no host style at all — the base class never touches `this.style`.
+    expect(group.style.length).toBe(0)
+    group.remove()
+  })
+
+  it('fires on connect (seed), every selection-apply (#commit + the public value setter), and formReset()', () => {
+    const seen: Array<{ count: number; index: number }> = []
+    class RecordingGroup extends ProbeGroup {
+      protected override selectionChanged(radios: UIRadioElement[], index: number): void {
+        seen.push({ count: radios.length, index })
+      }
+    }
+    if (!customElements.get('ui-radio-group-recording-test')) {
+      customElements.define('ui-radio-group-recording-test', RecordingGroup)
+    }
+    const group = new RecordingGroup()
+    stubFormAssoc(group.testInternals)
+    const r1 = makeRadio('r1')
+    const r2 = makeRadio('r2')
+    group.append(r1, r2)
+    document.body.append(group) // fires #1: the connect-time seed
+    expect(seen.at(-1)).toEqual({ count: 2, index: -1 })
+
+    click(r2) // #commit → #applySelection → fires #2
+    expect(seen.at(-1)).toEqual({ count: 2, index: 1 })
+
+    group.value = 'r1' // the public setter → #applySelection → fires #3
+    expect(seen.at(-1)).toEqual({ count: 2, index: 0 })
+
+    group.formResetCallback() // fires #4
+    expect(seen.at(-1)).toEqual({ count: 2, index: -1 }) // neither radio was default-checked
+
+    group.remove()
+  })
+})
+
+// ── the roving axis follows the resolved orientation (horizontal Left/Right) ───────────────────────
+
+describe('UIRadioGroupElement — horizontal roving (Arrow Left/Right)', () => {
   let group: ProbeGroup
   let radios: ProbeRadio[]
   afterEach(() => group?.remove())
@@ -493,49 +529,6 @@ describe('UIRadioGroupElement — ADR-0086 horizontal roving (Arrow Left/Right)'
   })
 })
 
-// ── ADR-0086 — the state seam: --ui-radio-group-index / --ui-radio-group-count ────────────────────
-
-describe('UIRadioGroupElement — ADR-0086 state seam (--ui-radio-group-index/-count)', () => {
-  let group: ProbeGroup
-  let radios: ProbeRadio[]
-  afterEach(() => group?.remove())
-
-  beforeEach(() => {
-    const result = buildGroup(3)
-    group = result[0]
-    radios = result.slice(1) as ProbeRadio[]
-  })
-
-  it('adr86-seam-seeded: connect seeds --ui-radio-group-count (and index=0 when nothing selected)', () => {
-    expect(group.style.getPropertyValue('--ui-radio-group-count')).toBe('3')
-    expect(group.style.getPropertyValue('--ui-radio-group-index')).toBe('0')
-  })
-
-  it('adr86-seam-click-commit: clicking radio[2] writes index=2', () => {
-    click(radios[2]!)
-    expect(group.style.getPropertyValue('--ui-radio-group-index')).toBe('2')
-    expect(group.style.getPropertyValue('--ui-radio-group-count')).toBe('3')
-  })
-
-  it('adr86-seam-arrow-commit: ArrowDown navigation refreshes the index on every commit', () => {
-    key(group, 'ArrowDown') // 0 → 1
-    expect(group.style.getPropertyValue('--ui-radio-group-index')).toBe('1')
-    key(group, 'ArrowDown') // 1 → 2
-    expect(group.style.getPropertyValue('--ui-radio-group-index')).toBe('2')
-  })
-
-  it('adr86-seam-seeded-preselected: a markup-preselected radio seeds the index at connect (not 0)', () => {
-    const g = makeGroup()
-    const r1 = makeRadio('r1')
-    const r2 = makeRadio('r2')
-    r2.setAttribute('checked', '')
-    g.append(r1, r2)
-    document.body.append(g)
-    expect(g.style.getPropertyValue('--ui-radio-group-index')).toBe('1')
-    expect(g.style.getPropertyValue('--ui-radio-group-count')).toBe('2')
-    g.remove()
-  })
-})
 
 // ── reconnect zero-residue ────────────────────────────────────────────────────────────────────────
 
@@ -668,19 +661,28 @@ describe('UIRadioGroupElement — formReset (bug-A fix: group-level coordination
     group.remove()
   })
 
-  it('adr86-reset-refreshes-state-seam (B4 fix): reset recomputes --ui-radio-group-index from defaultChecked, not the stale pre-reset selection', () => {
-    const group = makeGroup()
+  it('reset-refires-selectionChanged (B4 fix, ADR-0095 clause 2): formReset() fires the hook with the RECOMPUTED defaultChecked index, not the stale pre-reset one', () => {
+    const seen: Array<{ index: number }> = []
+    class RecordingGroup extends ProbeGroup {
+      protected override selectionChanged(_radios: UIRadioElement[], index: number): void {
+        seen.push({ index })
+      }
+    }
+    if (!customElements.get('ui-radio-group-reset-recording-test')) {
+      customElements.define('ui-radio-group-reset-recording-test', RecordingGroup)
+    }
+    const group = new RecordingGroup()
+    stubFormAssoc(group.testInternals)
     const r1 = makeRadio('r1') // defaultChecked, index 0
     r1.setAttribute('checked', '')
     const r2 = makeRadio('r2')
     const r3 = makeRadio('r3')
     group.append(r1, r2, r3)
     document.body.append(group)
+    expect(seen.at(-1)).toEqual({ index: 0 }) // seeded from r1 at connect
 
-    expect(group.style.getPropertyValue('--ui-radio-group-index')).toBe('0') // seeded from r1 at connect
-
-    click(r3) // user selects r3 (index 2) — the seam follows the click via #commit
-    expect(group.style.getPropertyValue('--ui-radio-group-index')).toBe('2')
+    click(r3) // user selects r3 (index 2) — the hook follows the click via #commit
+    expect(seen.at(-1)).toEqual({ index: 2 })
 
     // Reset every FACE member (order unspecified — the platform resets independently).
     group.formResetCallback()
@@ -688,31 +690,46 @@ describe('UIRadioGroupElement — formReset (bug-A fix: group-level coordination
     r2.formResetCallback()
     r3.formResetCallback()
 
-    // Without the fix, formReset() restored #selectedValue/checked but left the seam at '2' — a stale
-    // index that (in the segmented variant) parks the moving ::before on the WRONG segment while the
-    // CSS's `:has(ui-radio[checked])` gate correctly re-shows it. The fix recomputes the index from
-    // defaultChecked, same as #selectedValue, so it snaps back to r1's index (0), not '2'.
-    expect(group.style.getPropertyValue('--ui-radio-group-index')).toBe('0')
-    expect(group.style.getPropertyValue('--ui-radio-group-count')).toBe('3')
+    // Without the B4 fix, formReset() restored #selectedValue/checked but never fired the hook again —
+    // a segmented-indicator subclass would park its moving fill on the STALE index '2'. The fix fires
+    // selectionChanged with the RECOMPUTED defaultChecked index (0), same as #selectedValue.
+    expect(seen.at(-1)).toEqual({ index: 0 })
     expect(r1.checked).toBe(true)
     expect(group.testFormValue).toBe('r1')
 
     group.remove()
   })
 
-  it('adr86-reset-refreshes-state-seam-no-default: reset with NO default-checked radio parks the (hidden) index at 0, not NaN/negative', () => {
-    const [group, r1, r2, r3] = buildGroup(3) // none default-checked
+  it('reset-refires-selectionChanged-no-default: reset with NO default-checked radio fires the hook with index -1, not NaN', () => {
+    const seen: Array<{ index: number }> = []
+    class RecordingGroup extends ProbeGroup {
+      protected override selectionChanged(_radios: UIRadioElement[], index: number): void {
+        seen.push({ index })
+      }
+    }
+    if (!customElements.get('ui-radio-group-reset-recording-no-default-test')) {
+      customElements.define('ui-radio-group-reset-recording-no-default-test', RecordingGroup)
+    }
+    const group = new RecordingGroup()
+    stubFormAssoc(group.testInternals)
+    const r1 = makeRadio('r1')
+    const r2 = makeRadio('r2')
+    const r3 = makeRadio('r3')
+    group.append(r1, r2, r3) // none default-checked
+    document.body.append(group)
+
     click(r2)
-    expect(group.style.getPropertyValue('--ui-radio-group-index')).toBe('1')
+    expect(seen.at(-1)).toEqual({ index: 1 })
 
     group.formResetCallback()
     r1.formResetCallback()
     r2.formResetCallback()
     r3.formResetCallback()
 
-    // findIndex → -1 (no defaultChecked); #writeIndexCount clamps to 0 — harmless, since the CSS hides
-    // the indicator whenever no radio is [checked] (which is also the post-reset state here).
-    expect(group.style.getPropertyValue('--ui-radio-group-index')).toBe('0')
+    // findIndex → -1 (no defaultChecked); a consuming subclass (ui-segmented-control) is responsible for
+    // clamping that to 0 the way ADR-0086's seam did — harmless there, since its CSS hides the indicator
+    // whenever no radio is [checked] (which is also the post-reset state here).
+    expect(seen.at(-1)).toEqual({ index: -1 })
     expect(group.testFormValue).toBeNull()
     group.remove()
   })
@@ -747,6 +764,101 @@ describe('UIRadioGroupElement — formReset (bug-A fix: group-level coordination
   })
 })
 
+// ── public `value` accessor ───────────────────────────────────────────────────────────────────────
+//
+// The public getter/setter pair delegating to #selectedValue (the UICheckboxElement.indeterminate
+// precedent — checkbox.ts:39). Getter reflects the current selection; setter selects the matching
+// child ui-radio (unchecking others), mirrors the SAME state transition #commit produces, but stays
+// silent (no `change` — the UICheckboxElement.checked / UISelectElement.value programmatic-set
+// convention). A no-match value clears the selection (the HTMLSelectElement.value precedent).
+
+describe('UIRadioGroupElement — public value accessor', () => {
+  let group: ProbeGroup
+  let radios: ProbeRadio[]
+  afterEach(() => group?.remove())
+
+  beforeEach(() => {
+    const result = buildGroup(3)
+    group = result[0]
+    radios = result.slice(1) as ProbeRadio[]
+  })
+
+  it('value-getter-reflects-user-selection: getter returns the checked radio\'s value after a click', () => {
+    expect(group.value).toBeNull()
+    click(radios[1]!)
+    expect(group.value).toBe('r2')
+  })
+
+  it('value-setter-selects-matching-radio: setting value checks the matching radio, unchecks others', () => {
+    group.value = 'r2'
+    expect(radios[0]!.checked).toBe(false)
+    expect(radios[1]!.checked).toBe(true)
+    expect(radios[2]!.checked).toBe(false)
+  })
+
+  it('value-setter-switches-selection: setting a new value moves the checked radio (exclusivity holds)', () => {
+    group.value = 'r1'
+    expect(radios[0]!.checked).toBe(true)
+    group.value = 'r3'
+    expect(radios[0]!.checked).toBe(false)
+    expect(radios[2]!.checked).toBe(true)
+  })
+
+  it('value-round-trip: set then get returns exactly what was set', () => {
+    group.value = 'r2'
+    expect(group.value).toBe('r2')
+  })
+
+  it('value-setter-updates-form-value: setting value updates formValue() (the group form participant)', () => {
+    group.value = 'r3'
+    expect(group.testFormValue).toBe('r3')
+  })
+
+  it('value-setter-silent: setting value does NOT emit change (programmatic-set convention)', () => {
+    let changes = 0
+    group.addEventListener('change', () => changes++)
+    group.value = 'r2'
+    expect(changes).toBe(0)
+    expect(group.value).toBe('r2') // the write still landed — just silently
+  })
+
+  it('value-setter-null-clears: setting value=null clears the selection', () => {
+    click(radios[1]!) // user-selects r2
+    expect(group.value).toBe('r2')
+    group.value = null
+    expect(group.value).toBeNull()
+    expect(radios[1]!.checked).toBe(false)
+  })
+
+  it('value-setter-no-match-clears: setting a value matching no child radio clears the selection (HTMLSelectElement.value precedent)', () => {
+    click(radios[1]!) // user-selects r2
+    expect(group.value).toBe('r2')
+    group.value = 'no-such-value'
+    expect(group.value).toBeNull()
+    expect(radios[0]!.checked).toBe(false)
+    expect(radios[1]!.checked).toBe(false)
+    expect(radios[2]!.checked).toBe(false)
+  })
+
+  it('value-setter-idempotent-same-value: re-setting the currently-selected value is a no-op (no spurious change)', () => {
+    group.value = 'r1'
+    let changes = 0
+    group.addEventListener('change', () => changes++)
+    group.value = 'r1'
+    expect(changes).toBe(0)
+    expect(radios[0]!.checked).toBe(true)
+  })
+
+  it('value-then-user-commit-still-emits: a subsequent real click still emits change after a silent programmatic set', () => {
+    group.value = 'r1' // silent
+    let changes = 0
+    group.addEventListener('change', () => changes++)
+    click(radios[2]!) // real user commit
+    expect(changes).toBe(1)
+    expect(group.value).toBe('r3')
+  })
+})
+
 // ── descriptor trip-wire (contract↔props) ────────────────────────────────────────────────────────
 //
 // Two layers: (a) STRUCTURAL — validateComponentDescriptor reports ZERO failures.
@@ -757,7 +869,7 @@ const groupMd = readFileSync(`${GROUP_DIR}/radio-group.md`, 'utf8') as string
 const { fence: groupFence } = splitFrontmatter(groupMd)
 const groupParsed = parseDescriptor(groupFence)
 // Attribute names in the order declared in radio-group.md frontmatter (anti-vacuous anchor).
-const GROUP_ATTR_NAMES = ['name', 'disabled', 'required', 'variant', 'orientation']
+const GROUP_ATTR_NAMES = ['name', 'disabled', 'required', 'orientation']
 
 describe('radio-group.md descriptor — structural validity (s10 part a)', () => {
   it('carries the ADR-0004 / plan §10 descriptor field set as top-level keys', () => {
@@ -776,7 +888,7 @@ describe('radio-group.md descriptor — structural validity (s10 part a)', () =>
   })
 
   it('validateComponentDescriptor reports ZERO structural failures (schema-valid)', () => {
-    // anti-vacuous: all 5 attributes parse before the schema is consulted
+    // anti-vacuous: all 4 attributes parse before the schema is consulted
     expect(groupParsed.attributes.map((a) => a.name)).toEqual(GROUP_ATTR_NAMES)
     expect(validateComponentDescriptor(groupParsed)).toEqual([])
   })
@@ -784,7 +896,7 @@ describe('radio-group.md descriptor — structural validity (s10 part a)', () =>
 
 describe('radio-group.md descriptor — contract↔props trip-wire (s10 part b)', () => {
   it('attributes[] is a faithful bijection with UIRadioGroupElement.props (0 drift)', () => {
-    // anti-vacuous: all 3 attribute names parse before the trip-wire is consulted
+    // anti-vacuous: all 4 attribute names parse before the trip-wire is consulted
     expect(groupParsed.attributes.map((a) => a.name)).toEqual(GROUP_ATTR_NAMES)
     expect(compareDescriptorToProps(groupParsed.attributes, UIRadioGroupElement.props)).toEqual([])
   })

@@ -248,6 +248,85 @@ describe('ui-combo-box — type-to-filter + commit (both engines)', () => {
     expect(opts[0]!.hidden, 'Apple should be visible (matches "app")').toBe(false)
     expect(opts[1]!.hidden, 'Banana should be hidden (does not match "app")').toBe(true)
     expect(opts[2]!.hidden, 'Cherry should be hidden (does not match "app")').toBe(true)
+
+    // Regression guard (2026-07-07): when real matches exist, the "No matches" placeholder must
+    // NOT paint alongside them. `hidden` is set by JS, but author-origin `display:block` on
+    // `[data-part='empty']` used to beat the UA `[hidden]{display:none}` rule — check the
+    // COMPUTED style, not just the IDL `hidden` flag, so a CSS-origin regression is caught even
+    // if the attribute itself is set correctly.
+    const emptyRow = listbox.querySelector<HTMLElement>('[data-part="empty"]')!
+    expect(emptyRow.hidden, 'the "no matches" row should be hidden when real matches exist').toBe(true)
+    expect(
+      getComputedStyle(emptyRow).display,
+      `${server.browser}: [data-part='empty'][hidden] must compute display:none — it must not paint alongside real matches`,
+    ).toBe('none')
+  })
+
+  // ──────────────────────────────────────────────────────────────────────────────────────────────
+  //  Bug fix (2026-07-07): typing text that matches ZERO options used to leave the listbox panel
+  //  open with every [role=option] hidden — no content, no min-block-size — so the panel collapsed
+  //  to its own 1px top+bottom border (a ~2px-tall rectangle painting as a stray horizontal line
+  //  below the editor). The fix: a control-created "no matches" row (`[data-part="empty"]`) is
+  //  revealed exactly when zero options are visible, giving the panel real, deliberate content +
+  //  height instead of collapsing to a border-only sliver.
+  // ──────────────────────────────────────────────────────────────────────────────────────────────
+  it('typing text matching ZERO options shows the "No matches" row + the panel has a real bounding box (not a collapsed border-only line)', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="apple">Apple</div>
+        <div role="option" value="banana">Banana</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+
+    editor.focus()
+    await userEvent.type(editor, 'asdfadf')
+    await el.updateComplete
+
+    const opts = [...listbox.querySelectorAll<HTMLElement>('[role=option]')]
+    expect(opts.every((o) => o.hidden), 'every option should be filtered out').toBe(true)
+
+    const emptyRow = listbox.querySelector<HTMLElement>('[data-part="empty"]')
+    expect(emptyRow, `${server.browser}: no [data-part="empty"] row found`).not.toBeNull()
+    expect(emptyRow!.hidden, `${server.browser}: the "no matches" row should be visible when zero options match`).toBe(false)
+    expect(
+      getComputedStyle(emptyRow!).display,
+      `${server.browser}: the "no matches" row should compute display:block when zero options match`,
+    ).toBe('block')
+    expect(emptyRow!.textContent, 'the row should read "No matches"').toBe('No matches')
+    // it must not be mistaken for a navigable/commit-able option by either path
+    expect(emptyRow!.getAttribute('role'), 'the row is role=presentation, never role=option').toBe('presentation')
+
+    // THE REGRESSION GUARD: the panel must render a REAL box, not collapse to a ~2px border sliver.
+    const rect = listbox.getBoundingClientRect()
+    expect(
+      rect.height,
+      `${server.browser}: the empty-results panel collapsed to ${rect.height}px — the stray-line regression`,
+    ).toBeGreaterThan(20)
+  })
+
+  it('committing (Enter free-text) after a zero-match filter re-hides the "No matches" row (filter clears on commit)', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+
+    editor.focus()
+    await userEvent.type(editor, 'zzz')
+    await el.updateComplete
+    expect(listbox.querySelector<HTMLElement>('[data-part="empty"]')!.hidden).toBe(false)
+
+    await userEvent.keyboard('{Enter}') // strict=false free-text commit
+    await el.updateComplete
+
+    expect(
+      listbox.querySelector<HTMLElement>('[data-part="empty"]')!.hidden,
+      `${server.browser}: commit should clear the filter, re-hiding the "no matches" row`,
+    ).toBe(true)
   })
 
   it('Enter with active option commits: value = option key, editor = option label, panel closes', async () => {
@@ -469,6 +548,51 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
       editorRect.width,
       `${server.browser}: editor is NOT wider than tall (collapsed or squeezed — ADR-0021 regression)`,
     ).toBeGreaterThan(editorRect.height)
+  })
+
+  // ──────────────────────────────────────────────────────────────────────────────────────────────
+  //  Bug fix (2026-07-07): a `contenteditable`'s OWN UA default is `white-space: pre-wrap` — every
+  //  other single-line Control-class entry field in the fleet overrides this (text-field.css), but
+  //  ui-combo-box's editor never did. A placeholder or typed value that exceeded the field's width
+  //  WRAPPED onto a second line, growing the box past its fixed `--ui-combo-box-height` (min-block-
+  //  size is a floor, not a cap) — the box's height became inconsistent with a single-line control,
+  //  visually displacing the caret relative to a now multi-line placeholder block (the "caret sits
+  //  oddly" defect Kim filed). The fix pins `white-space: nowrap` + `overflow: hidden`, matching
+  //  text-field exactly: long content clips + the editor self-scrolls horizontally instead.
+  // ──────────────────────────────────────────────────────────────────────────────────────────────
+  it('the editor is single-line: white-space:nowrap + overflow:hidden (matches text-field; was missing)', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    const cs = getComputedStyle(editor)
+
+    expect(cs.whiteSpace, `${server.browser}: editor must not wrap (single-line Control-class entry field)`).not.toBe('pre-wrap')
+    expect(cs.whiteSpace, `${server.browser}: editor white-space should be nowrap (or the nowrap-equivalent "pre")`).toMatch(/^(nowrap|pre)$/)
+    expect(cs.overflow, `${server.browser}: overflowing content should clip, not grow the box`).toBe('hidden')
+  })
+
+  it('a long placeholder in a width-constrained host stays SINGLE-LINE (clips) instead of wrapping and growing the box height', async () => {
+    const { el } = mount(`
+      <ui-combo-box
+        placeholder="Type or pick a fruit from the long long long list…"
+        style="width: 220px"
+      >
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    const rect = editor.getBoundingClientRect()
+
+    // Before the fix this measured ~30px+ (2 wrapped lines); the fixed single-line height is the
+    // --ui-combo-box-height token (--ui-height-md ≈ 28px at default scale). Assert it stays at the
+    // sm-height floor (24px) rather than growing for a second line.
+    expect(
+      rect.height,
+      `${server.browser}: editor grew to ${rect.height}px — the placeholder wrapped onto a 2nd line (the fixed regression)`,
+    ).toBeLessThan(29)
   })
 
   it('editor has real Control-class height (≥ 24px = --ui-height-sm floor)', async () => {

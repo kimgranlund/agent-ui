@@ -61,6 +61,69 @@ const alphaOf = (color: string): number => {
   return parts.length >= 4 ? Number(parts[3]) : 1
 }
 
+// ── ADR-0093 range mode: per-scheme token resolver + WCAG contrast (slider.browser.test.ts pattern) ──
+// A throwaway probe child inherits the host's `--ui-calendar-*` chain; setting `color-scheme` on the
+// PROBE (not the host/page) makes `light-dark()` inside the inherited token resolve to that branch —
+// the cross-engine way to read BOTH scheme legs without touching the page's own color-scheme.
+const resolveToken = (host: HTMLElement, tokenVar: string, scheme: 'light' | 'dark'): string => {
+  const probe = document.createElement('span')
+  probe.style.colorScheme = scheme
+  probe.style.backgroundColor = `var(${tokenVar})`
+  host.append(probe)
+  const c = getComputedStyle(probe).backgroundColor
+  probe.remove()
+  return c
+}
+
+const toLin = (c: number): number => {
+  const s = c <= 0 ? 0 : c >= 1 ? 1 : c
+  return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+}
+const relativeLuminanceRgb = ([r, g, b]: [number, number, number]): number =>
+  0.2126 * toLin(r / 255) + 0.7152 * toLin(g / 255) + 0.0722 * toLin(b / 255)
+/** OKLCH → linear sRGB (Björn Ottosson's oklab matrices — same constants tokens.test.ts uses). */
+const oklchToLinearSrgb = (L: number, C: number, hDeg: number): [number, number, number] => {
+  const h = (hDeg * Math.PI) / 180
+  const a = C * Math.cos(h)
+  const b = C * Math.sin(h)
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b
+  const s_ = L - 0.0894841775 * a - 1.291485548 * b
+  const l = l_ ** 3
+  const m = m_ ** 3
+  const s = s_ ** 3
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ]
+}
+const clamp01 = (x: number): number => Math.max(0, Math.min(1, x))
+const relativeLuminanceOklch = (L: number, C: number, hDeg: number): number => {
+  const [r, g, b] = oklchToLinearSrgb(L, C, hDeg)
+  return 0.2126 * clamp01(r) + 0.7152 * clamp01(g) + 0.0722 * clamp01(b)
+}
+const relativeLuminance = (color: string): number => {
+  const rgb = color.match(/rgba?\(([^)]+)\)/i)
+  if (rgb) {
+    const [r, g, b] = rgb[1].split(/[\s,/]+/).filter(Boolean).map(Number)
+    return relativeLuminanceRgb([r, g, b])
+  }
+  const ok = color.match(/oklch\(([^)]+)\)/i)
+  if (ok) {
+    const [L, C, h] = ok[1].split(/[\s/]+/).filter(Boolean).map(Number)
+    return relativeLuminanceOklch(L, C, h)
+  }
+  throw new Error(`unrecognized colour format (expected rgb()/rgba()/oklch()): "${color}"`)
+}
+const contrastOf = (a: string, b: string): number => {
+  const la = relativeLuminance(a)
+  const lb = relativeLuminance(b)
+  const hi = Math.max(la, lb)
+  const lo = Math.min(la, lb)
+  return (hi + 0.05) / (lo + 0.05)
+}
+
 /**
  * Extract the colour component from a computed box-shadow string.
  * Browsers put the colour first: "rgba(r,g,b,a) Xpx Ypx ...".
@@ -667,5 +730,169 @@ describe('ui-calendar — container box-model inset (ADR-0046 Amendment 2, both 
 
     const grid = el.querySelector<HTMLElement>('[data-part="grid"]')!
     expect(getComputedStyle(grid).marginTop, `${server.browser}: grid margin is not the 6px box inset`).toBe('6px')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [11] ADR-0093 range mode — the fill PAINTS: endpoint vs interior backgrounds differ, and the
+//       --ui-calendar-range-fill/-range-ink pair clears WCAG AA (≥4.5:1) in BOTH colour schemes.
+//       jsdom cannot prove any of this (it never resolves CSS cascade/paint) — this is the required
+//       browser-level proof the CSS in calendar.css actually renders (ADR-0093 acceptance).
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-calendar — range mode: fill PAINT (both engines)', () => {
+  it('a committed range paints: endpoints are CIRCULAR (selected-fill), interior is SQUARE (range-fill) — computed backgrounds differ', async () => {
+    const { el } = mount('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-15"></ui-calendar>')
+    await el.updateComplete
+
+    const startCell = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    const endCell   = el.querySelector<HTMLElement>('[data-date="2026-07-15"]')!
+    const midCell   = el.querySelector<HTMLElement>('[data-date="2026-07-12"]')!
+
+    const startBg = getComputedStyle(startCell).backgroundColor
+    const endBg   = getComputedStyle(endCell).backgroundColor
+    const midBg   = getComputedStyle(midCell).backgroundColor
+
+    // Every band cell has SOME opaque fill (not transparent) — the baseline the diff check needs.
+    expect(alphaOf(startBg), `${server.browser}: range-start has no background fill`).toBeGreaterThan(0)
+    expect(alphaOf(endBg),   `${server.browser}: range-end has no background fill`).toBeGreaterThan(0)
+    expect(alphaOf(midBg),   `${server.browser}: interior in-range cell has no background fill`).toBeGreaterThan(0)
+
+    // Endpoint vs interior computed backgrounds must DIFFER (ADR-0093 acceptance: "endpoint vs
+    // interior computed backgrounds differ") — selected-fill (accent) vs range-fill (surface wash).
+    expect(midBg, `${server.browser}: interior fill (${midBg}) must differ from the endpoint fill (${startBg})`).not.toBe(startBg)
+    expect(startBg, `${server.browser}: both endpoints must share the SAME selected-fill`).toBe(endBg)
+
+    // Shape signifier (ADR-0057 non-colour): endpoints stay circular (radius:50%), interior is
+    // square (radius:0) — survives independent of colour, proven directly here.
+    expect(getComputedStyle(startCell).borderRadius, `${server.browser}: range-start must stay circular`).toBe('50%')
+    expect(getComputedStyle(midCell).borderRadius, `${server.browser}: interior must be square (radius:0)`).toBe('0px')
+  })
+
+  it('--ui-calendar-range-fill/-range-ink clear WCAG AA (≥4.5:1) in BOTH colour schemes', async () => {
+    const el = document.createElement('ui-calendar') as UICalendarElement
+    document.body.append(el)
+    mounted.push(el)
+
+    for (const scheme of ['light', 'dark'] as const) {
+      const fill = resolveToken(el, '--ui-calendar-range-fill', scheme)
+      const ink  = resolveToken(el, '--ui-calendar-range-ink', scheme)
+      const ratio = contrastOf(fill, ink)
+      expect(
+        ratio,
+        `${server.browser} [${scheme}]: range-fill(${fill}) vs range-ink(${ink}) = ${ratio.toFixed(2)}:1 — below the AA 4.5:1 floor`,
+      ).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+
+  // ────────────────────────────────────────────────────────────────────────────────────────────
+  //  Erratum guard (2026-07-07 — gallery audit): AA ink-vs-fill contrast alone did NOT catch the
+  //  fill being near-identical to the panel it sits on (measured ~0.001 OKLCH L, ~1.00:1 relative-
+  //  luminance ratio — the band was load-bearing colour that was effectively invisible). This test
+  //  asserts the interior wash has REAL luminance separation from the panel background, in BOTH
+  //  colour schemes, so a future token repoint can't silently regress back to near-zero contrast.
+  // ────────────────────────────────────────────────────────────────────────────────────────────
+  it('--ui-calendar-range-fill has a REAL luminance separation from the panel background in BOTH colour schemes (erratum guard)', async () => {
+    const el = document.createElement('ui-calendar') as UICalendarElement
+    document.body.append(el)
+    mounted.push(el)
+
+    for (const scheme of ['light', 'dark'] as const) {
+      const panelBg = resolveToken(el, '--ui-calendar-panel-bg', scheme)
+      const fill = resolveToken(el, '--ui-calendar-range-fill', scheme)
+      const ratio = contrastOf(panelBg, fill)
+      // The OLD (buggy) pairing measured ~1.00:1 (imperceptible). The floor below is well under
+      // the NEW pairing's measured ~1.23:1 (light) / ~1.28:1 (dark), but comfortably above the
+      // "basically the same colour" regime a silent regression would reintroduce.
+      expect(
+        ratio,
+        `${server.browser} [${scheme}]: panel-bg(${panelBg}) vs range-fill(${fill}) = ${ratio.toFixed(3)}:1 — ` +
+          `the in-range wash is not visibly distinct from the panel it sits on`,
+      ).toBeGreaterThanOrEqual(1.15)
+    }
+  })
+
+  it('an in-progress hover preview paints the SAME interior fill as a committed band (swap-preview, both directions)', async () => {
+    const { el } = mount('<ui-calendar mode="range" value-start="2026-07-15"></ui-calendar>')
+    await el.updateComplete
+
+    // Hover a candidate EARLIER than the anchor — the normalized (swapped) preview band.
+    const c10 = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    await userEvent.hover(c10)
+    await el.updateComplete
+
+    const c12 = el.querySelector<HTMLElement>('[data-date="2026-07-12"]')! // interior of the normalized [10,15] band
+    const previewBg = getComputedStyle(c12).backgroundColor
+    expect(alphaOf(previewBg), `${server.browser}: preview interior has no fill while selecting-end`).toBeGreaterThan(0)
+    expect(c12.hasAttribute('data-in-range'), `${server.browser}: July 12 must preview as in-range (backward-normalized band)`).toBe(true)
+
+    // Outside the previewed band (before the earlier candidate) must NOT be painted.
+    const c05 = el.querySelector<HTMLElement>('[data-date="2026-07-05"]')!
+    expect(c05.hasAttribute('data-in-range'), `${server.browser}: July 5 is outside the previewed band`).toBe(false)
+
+    // Committing now must render EXACTLY the previewed band ("commit never surprises" — ADR-0093 clause 3):
+    // the interior cell's painted background must be IDENTICAL before and after commit.
+    await userEvent.click(c10)
+    await el.updateComplete
+
+    expect(el.valueStart, `${server.browser}: swap-complete must set start = the earlier date`).toBe('2026-07-10')
+    expect(el.valueEnd,   `${server.browser}: swap-complete must set end = the later (original anchor) date`).toBe('2026-07-15')
+    const committedBg = getComputedStyle(c12).backgroundColor
+    expect(committedBg, `${server.browser}: the committed interior fill must match the previewed fill exactly`).toBe(previewBg)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [12] ADR-0093 range mode — forced-colors: the WHOLE band (endpoints + interior) maps to
+//       Highlight/HighlightText as ONE self-delimiting run, while focus/today/disabled stay distinct
+//       (Chromium via CDP; WebKit asserts the baseline, mirroring the single-mode suite above).
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-calendar — range mode: forced-colors (Chromium via CDP; WebKit baseline)', () => {
+  it('the band (endpoints + interior) renders as ONE Highlight/HighlightText run; today + focus stay distinct', async () => {
+    const { el } = mount('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-15"></ui-calendar>')
+    await el.updateComplete
+
+    const startCell = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    const midCell   = el.querySelector<HTMLElement>('[data-date="2026-07-12"]')!
+    const endCell   = el.querySelector<HTMLElement>('[data-date="2026-07-15"]')!
+
+    // Baseline (both engines, normal mode): all three cells carry an opaque fill (regression guard).
+    expect(alphaOf(getComputedStyle(startCell).backgroundColor)).toBeGreaterThan(0)
+    expect(alphaOf(getComputedStyle(midCell).backgroundColor)).toBeGreaterThan(0)
+    expect(alphaOf(getComputedStyle(endCell).backgroundColor)).toBeGreaterThan(0)
+
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'forced-colors', value: 'active' }],
+    })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
+
+      const startBg = getComputedStyle(startCell).backgroundColor
+      const midBg   = getComputedStyle(midCell).backgroundColor
+      const endBg   = getComputedStyle(endCell).backgroundColor
+
+      // The WHOLE band — endpoints AND interior — must resolve to the SAME Highlight fill: one
+      // self-delimiting run (ADR-0093 clause 4), not a third colour distinguishing interior.
+      expect(alphaOf(startBg), 'range-start fill vanished under forced-colors').toBeGreaterThan(0)
+      expect(alphaOf(midBg),   'interior fill vanished under forced-colors').toBeGreaterThan(0)
+      expect(alphaOf(endBg),   'range-end fill vanished under forced-colors').toBeGreaterThan(0)
+      expect(midBg, 'interior forced-colors fill must match the endpoint fill (one Highlight run)').toBe(startBg)
+      expect(endBg, 'both endpoints must share the same forced-colors fill').toBe(startBg)
+
+      // Shape stays the ONLY endpoint-vs-interior signifier under forced-colors (border-radius is
+      // never flattened by the OS wash) — this is what keeps the band self-delimiting without a
+      // third system colour.
+      expect(getComputedStyle(startCell).borderRadius, 'endpoint must stay circular under forced-colors').toBe('50%')
+      expect(getComputedStyle(midCell).borderRadius, 'interior must stay square under forced-colors').toBe('0px')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
   })
 })

@@ -70,6 +70,19 @@
   display: none;
 }
 
+/* Dialog-carrier re-assertion (the SAME class of bug as the `[popover]` rule above, hit by ui-modal's
+ * `<dialog data-part="dialog" data-box>` part, 2026-07-07): the unconditional `display: flow-root` is
+ * author-origin CSS and defeats the UA's own `dialog:not([open]) { display: none }` rule (author always beats
+ * UA, at ANY specificity) — so a CLOSED dialog kept rendering. Worse than the popover case: the UA's default
+ * `dialog { position: absolute; inset: 0; margin: auto; … }` then CENTRED the still-visible box on the page,
+ * exactly as if `showModal()` had been called (no backdrop, no top layer, no focus trap — just an inert box
+ * sitting on top of the page content). Two such closed dialogs on one page render stacked directly on top of
+ * each other, dead centre. Re-assert the UA semantics at specificity 0; an OPEN dialog (native `[open]`
+ * reflects `showModal()`/`show()`) keeps flow-root from the block above untouched. */
+:where(dialog[data-box]:not([open])) {
+  display: none;
+}
+
 /* header / footer — the region padding + gap. A row of controls sits comfortably: inline 12 / block 6 with an
    8px gap. `display: flex` makes the gap apply; the element's own @scope may override the direction/alignment.
    REVISED 2026-07-04: header/footer are no longer full-bleed — they carry the SAME `--ui-box-inset` margin as

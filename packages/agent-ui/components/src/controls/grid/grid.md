@@ -105,8 +105,11 @@ scheme-inverting plane) and `brightness` (the scheme-consistent tonal shift) —
 which also keeps the surface visible under forced-colors. The host carries **no** `role`/`aria-*` attribute —
 a grid is presentational; compose ARIA-bearing children (e.g. `ui-list`) when the layout needs meaning.
 
-## Not an A2UI catalog type
+## An A2UI catalog type
 
-`ui-grid` ships as a direct `ui-*` primitive usable on its own. It is **not** part of the A2UI catalog's
-reserved §5.2 set (Row/Column/Image/Video/Card/Tabs/Modal), so the default catalog does not declare a `Grid`
-type — an agent reaches for `ui-row` / `ui-column` (the catalog layout types) or composes `ui-grid` directly.
+`ui-grid` renders the catalog's `Grid` type (ADR-0087 Fork A — supersedes ADR-0016's earlier non-catalog
+exclusion). Reach for `Grid` when the children should **reflow their column count responsively** with
+available width (an image/card gallery, a dashboard of tiles) — i.e. the layout wants intrinsic wrapping, not
+an author-picked fixed arrangement. Prefer `Row`/`Column` (with an explicit `wrap`) when the arrangement
+should stay author-controlled rather than auto-fit; reach for `List` instead of `Grid` when the children are an
+itemized collection needing list semantics, not a reflowing tile layout.

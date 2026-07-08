@@ -368,6 +368,55 @@ describe('ui-combo-box — filter on type (combo-filter · combo-filter-open-on-
     expect(el.open).toBe(false)
     el.remove()
   })
+
+  // ────────────────────────────────────────────────────────────────────────────────────────────
+  //  Bug fix (2026-07-07): a filter matching zero options used to leave the listbox with every
+  //  [role=option] hidden and nothing else — the panel then collapsed to a stray border-only line
+  //  in the browser (combo-box.browser.test.ts pins the rendered-height regression guard; this is
+  //  the jsdom-level behavioural half — the `[data-part="empty"]` row's hidden state).
+  // ────────────────────────────────────────────────────────────────────────────────────────────
+  it('combo-filter-no-matches: filtering to zero options reveals the [data-part="empty"] "No matches" row', () => {
+    const { el, editor, listbox } = makeCombo()
+    const emptyRow = listbox.querySelector<HTMLElement>('[data-part="empty"]')!
+    expect(emptyRow, 'the empty row should exist from connect').toBeTruthy()
+    expect(emptyRow.hidden, 'hidden by default (options are all visible pre-filter)').toBe(true)
+
+    editor.textContent = 'zzz-no-such-fruit'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+
+    expect(emptyRow.hidden, 'zero matches should reveal the "no matches" row').toBe(false)
+    expect(emptyRow.textContent).toBe('No matches')
+    expect(emptyRow.getAttribute('role')).toBe('presentation')
+    el.remove()
+  })
+
+  it('combo-filter-no-matches: a later filter that matches again re-hides the "no matches" row', () => {
+    const { el, editor, listbox } = makeCombo()
+    const emptyRow = listbox.querySelector<HTMLElement>('[data-part="empty"]')!
+
+    editor.textContent = 'zzz-no-such-fruit'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(emptyRow.hidden).toBe(false)
+
+    editor.textContent = 'app'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(emptyRow.hidden, 'a subsequent matching filter should re-hide the row').toBe(true)
+    el.remove()
+  })
+
+  it('combo-filter-no-matches: clearing the filter (empty text) re-hides the "no matches" row', () => {
+    const { el, editor, listbox } = makeCombo()
+    const emptyRow = listbox.querySelector<HTMLElement>('[data-part="empty"]')!
+
+    editor.textContent = 'zzz-no-such-fruit'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(emptyRow.hidden).toBe(false)
+
+    editor.textContent = ''
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(emptyRow.hidden, 'clearing the filter reveals all options again, hiding the row').toBe(true)
+    el.remove()
+  })
 })
 
 // ── Active-descendant navigation ─────────────────────────────────────────────────────────────

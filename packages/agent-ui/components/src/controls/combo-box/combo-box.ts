@@ -84,6 +84,13 @@ export class UIComboBoxElement extends UIFormElement {
   // moved into it at connect time and stay there. The overlay controller sets popover="auto".
   #listbox: HTMLElement | null = null
 
+  // The control-created "no matches" row — created ONCE, appended AFTER the moved-in options so it
+  // always renders last. Toggled `hidden` by `#syncEmptyState()` (2026-07-07 fix): without it, a
+  // filter that hides every option leaves the listbox panel open with ZERO visible children — the
+  // panel then collapses to its own 1px border top+bottom (no content, no min-block-size), painting
+  // as a stray ~2px horizontal line below the editor instead of a real panel or nothing at all.
+  #emptyRow: HTMLElement | null = null
+
   /** Protected overlay handle — used for the C10 cleanup probe. */
   protected _overlayHandle: OverlayHandle | null = null
 
@@ -339,6 +346,20 @@ export class UIComboBoxElement extends UIFormElement {
       if (!opt.id) opt.id = `ui-cb${panelId}-opt-${++optSeq}`
     }
 
+    // ── "No matches" row (2026-07-07 fix) — appended LAST so it always renders below any real
+    // options. `role="presentation"` (not an option — never navigable, never commit-able; the
+    // click/keyboard/active-descendant paths all key off `[role=option]` and skip it for free).
+    // Starts hidden; `#syncEmptyState()` reveals it exactly when zero options are visible (see the
+    // `#emptyRow` field comment for why this exists — the empty-panel collapse-to-a-line bug).
+    const emptyRow = document.createElement('div')
+    emptyRow.setAttribute('data-part', 'empty')
+    emptyRow.setAttribute('role', 'presentation')
+    emptyRow.textContent = 'No matches'
+    emptyRow.hidden = true
+    listbox.append(emptyRow)
+    this.#emptyRow = emptyRow
+    this.#syncEmptyState()
+
     this.append(editor, listbox)
     return { editor, listbox }
   }
@@ -421,6 +442,7 @@ export class UIComboBoxElement extends UIFormElement {
     }
     // Reset active since visible set changed (any stale index is now meaningless).
     this.#setActive(-1)
+    this.#syncEmptyState()
   }
 
   /** Reveal all options (clear the filter). Called after commit so the next open shows all. */
@@ -428,6 +450,22 @@ export class UIComboBoxElement extends UIFormElement {
     for (const opt of this.#getOptions()) {
       opt.hidden = false
     }
+    this.#syncEmptyState()
+  }
+
+  /**
+   * Toggle the "no matches" row (2026-07-07 fix) so it is visible exactly when ZERO options are
+   * visible (either the filter matched nothing, or the author provided no options at all) — the
+   * root-cause fix for the empty-panel collapsing to a stray border-only line: an always-present,
+   * real content row gives the panel genuine height instead of nothing. Deliberately keys off
+   * "not hidden" rather than `#getVisibleOptions()` (which ALSO excludes disabled options) — a
+   * disabled-but-matching option should still suppress the "no matches" row; only the FILTER
+   * (hidden) outcome should.
+   */
+  #syncEmptyState(): void {
+    if (!this.#emptyRow) return
+    const anyVisible = this.#getOptions().some((opt) => !opt.hidden)
+    this.#emptyRow.hidden = anyVisible
   }
 
   // ── Value / label helpers ─────────────────────────────────────────────────────────────────

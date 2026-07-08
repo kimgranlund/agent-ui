@@ -36,7 +36,7 @@ const parsed = parseDescriptor(fence)
 
 // The settled attribute surface, in declaration order (the surfaceProps + flexProps spread) — the anti-vacuous
 // anchor for both the schema and the trip-wire layers.
-const ATTR_NAMES = ['elevation', 'brightness', 'align', 'justify', 'gap', 'wrap']
+const ATTR_NAMES = ['elevation', 'brightness', 'align', 'justify', 'gap', 'wrap', 'reflow']
 
 describe('row.md descriptor — frontmatter parses + schema-valid (s3 part a)', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -74,9 +74,16 @@ describe('row.md descriptor — frontmatter parses + schema-valid (s3 part a)', 
 
 describe('row.md descriptor — contract↔props trip-wire (s3 part b)', () => {
   it('attributes[] is a faithful bijection with finalize(UIRowElement).props (0 drift)', () => {
-    // anti-vacuous: the six attribute names parsed before the trip-wire is consulted
+    // anti-vacuous: the seven attribute names parsed before the trip-wire is consulted
     expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES)
     expect(compareDescriptorToProps(parsed.attributes, UIRowElement.props)).toEqual([])
+  })
+
+  it('reflow defaults to `auto` (ADR-0096 cl.2 — UNCHANGED behavior) with `locked` as the pin opt-in', () => {
+    const reflow = parsed.attributes.find((a) => a.name === 'reflow')
+    expect(reflow?.default).toBe('auto')
+    expect(reflow?.values).toEqual(['auto', 'locked']) // auto LEADS — default + invalid-value snap target
+    expect(reflow?.reflect).toBe(true)
   })
 
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default + enum values)', () => {

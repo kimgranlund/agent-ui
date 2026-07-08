@@ -82,10 +82,20 @@ describe('column.css — structure + token hygiene (s4)', () => {
     expect(code).not.toMatch(/--ui-height-/)
   })
 
-  it('a @container inline-size reflow rule flips to a row under a wide container (ADR-0016 cl.4)', () => {
+  it('a @container inline-size reflow rule, GATED on [reflow=\'auto\'], flips to a row under a wide container (ADR-0016 cl.4 / ADR-0096)', () => {
     expect(stylesBlock).toMatch(/@container\s*\(min-width:\s*[\d.]+rem\)/)
     const cq = stylesBlock.slice(stylesBlock.indexOf('@container'))
-    expect(cq).toMatch(/flex-direction:\s*row/) // the axis flips under the wide container (the "switcher")
+    expect(cq).toMatch(/:scope\[reflow='auto'\]\s*\{\s*flex-direction:\s*row/) // gated — not a bare :scope
+  })
+
+  it('NEGATIVE control: an UNGUARDED @container direction rule would FAIL this pinning (ADR-0096 regression gate)', () => {
+    // the exact defect this ADR fixes: a bare `:scope { flex-direction: row }` inside the @container block
+    // (no [reflow='auto'] guard) would match a DEFAULT (unset-reflow) column too — proving the guard is load-bearing.
+    const unguarded = `@container (min-width: 30rem) {\n  :scope {\n    flex-direction: row;\n  }\n}`
+    expect(unguarded).not.toMatch(/:scope\[reflow='auto'\]/) // the synthetic sheet lacks the guard
+    // and the REAL sheet is never in that shape:
+    const cq = stylesBlock.slice(stylesBlock.indexOf('@container'))
+    expect(cq).not.toMatch(/:scope\s*\{\s*flex-direction:\s*row/) // no bare, unguarded :scope rule
   })
 
   it('a forced-colors block drops the tonal wash', () => {
