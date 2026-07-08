@@ -27,6 +27,8 @@ dist-ssr
 .claude/docs/other
 .env
 
-# Vitest browser-mode run artifacts (Playwright screenshots/attachments)
+# Vitest browser-mode run artifacts (Playwright screenshots/attachments) — on-failure debris only.
+# ADR-0110: `__baselines__/` (committed visual-regression reference PNGs) is DELIBERATELY NOT listed
+# here and must stay tracked — do not add a blanket `__baselines__` ignore.
 .vitest-attachments/
 **/__screenshots__/

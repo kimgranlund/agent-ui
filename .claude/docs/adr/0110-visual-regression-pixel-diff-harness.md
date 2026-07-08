@@ -130,3 +130,17 @@ Realized when the decomp's leaf accepts hold
   the committed baseline; `test:visual:update` rewrites it; the re-run is green.
 - Negative control: a mis-named `*.browser.test.ts` file using `toMatchScreenshot` does not silently join
   the visual project.
+
+## Realization notes (2026-07-08, build wave)
+
+- **Chromium-only pin realized via the sanctioned fallback** (`it.skipIf(server.browser !== 'chromium')`,
+  Decision 2's named mechanism): vitest 4.1.9's `extends: true` array-concatenates `browser.instances`,
+  and a project-level re-pin collides on the duplicated `"visual (chromium)"` instance name — verified
+  against the installed merge source at review. Cost: 4 WebKit skips reported per run.
+- **`timeout: 20_000` on the visual project** — beyond Decision 5's comparator-default list. The 5s
+  default failed reproducibly under full `test:browser` concurrent load ("Could not capture a stable
+  screenshot within 5000ms" — scheduling latency, not pixel instability); reproduced green twice at 20s.
+  This knob governs the retry-until-stable CAPTURE window and is orthogonal to the demotion trigger
+  (which fires on pixel MISMATCH despite tolerance): a never-stabilizing capture still times out, so it
+  cannot convert real instability into a false green. Recorded so near-timeout creep stays legible; the
+  review adjudicated it DEFENSIBLE.
