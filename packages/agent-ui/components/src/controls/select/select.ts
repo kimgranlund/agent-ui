@@ -275,8 +275,28 @@ export class UISelectElement extends UIFormElement {
 
     // Trigger click → toggle the panel (the disclosure interaction).
     // B3 fix: guard with effectiveDisabled() — a disabled select must not open via click.
+    //
+    // ADR-0101 erratum fix: flip the PROP, not `handle.toggle()` directly. A raw `handle.toggle()`
+    // mutates the trait's internal `isOpen` without ever writing `this.open`, so a later
+    // programmatic close (`selectionCommit.onSelect` → `this.open = false`, below) is a
+    // same-value `Object.is` no-op under the reactive cutoff — the model→overlay effect never
+    // re-runs, `handle.close()` never fires, and the panel visibly sticks open after a commit
+    // (the mouse-open path this control shipped with). Routing through the prop makes it the
+    // single source of truth: click → `this.open` flips → the model→overlay effect (below) drives
+    // `handle.open()`/`handle.close()` and the trait announces (ADR-0101) — the exact combo-box
+    // pattern (combo-box.ts's editor never calls `handle.toggle()` either).
+    //
+    // Race check (traced against traits/overlay.ts): a prop write only *schedules* the effect
+    // (reactive/scheduler.ts: `schedule()` queues a microtask; it does not run synchronously), so
+    // `this.open` has already settled to its new value by the time the effect body reads it on the
+    // next microtask — the same ordering `selectionCommit`'s `onSelect` already relies on below.
+    // Toggle-while-open (click the trigger of an open panel): `this.open` flips true→false → the
+    // effect runs once → `handle.close()` → one `close`+`toggle` pair, `el.open` already `false` at
+    // listener time (ADR-0101 mechanic 3). No new re-entrancy: this is the identical write→schedule→
+    // effect→announce chain the keyboard-open (`this.open = true`, closed-trigger Arrow handler) and
+    // commit-close paths already exercise; only the previously-bypassed mouse gesture now uses it.
     this.listen(trigger, 'click', () => {
-      if (!this.effectiveDisabled()) handle.toggle()
+      if (!this.effectiveDisabled()) this.open = !this.open
     })
 
     // Closed-trigger keyboard (platform parity): ArrowDown/ArrowUp on the CLOSED trigger opens

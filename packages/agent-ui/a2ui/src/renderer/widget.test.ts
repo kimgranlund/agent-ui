@@ -361,6 +361,49 @@ describe('widget resolution — Menu open-bind converges after commit (ADR-0101,
     el.remove()
     disposeSurface(surface)
   })
+
+  it('the MOUSE-driven leg (ADR-0101 erratum): clicking the REAL trigger opens it, then a commit converges the model to open:false — the exact path the audit reproduced', async () => {
+    // Every leg above drives OPEN via the bound-prop effect (a model write, `surface.data.value =
+    // { menuOpen: true }`) — it never exercises the trigger's own click handler. Before the erratum
+    // fix, a mouse-click open called `handle.toggle()` directly and never wrote `this.open`, so the
+    // panel was really open while the prop (and therefore the model, via the two-way input binding)
+    // stayed `false` — and the LATER commit-close's `this.open = false` was a same-value no-op: the
+    // trait's `close()` never ran, no `toggle` announced, no write-back, and the model kept lying
+    // `open: false` while the panel stayed visibly open. This leg starts the model at `false` (no
+    // agent-driven open at all) and drives the open itself through a real mouse click on the real
+    // trigger button, exactly reproducing the ticket #28 residual the live re-audit found.
+    const registry: CatalogRegistry = {
+      register: () => {},
+      get: (id) => (id === 'agent-ui' ? ({ catalog: defaultCatalog, factories: defaultFactories } as CatalogEntry) : undefined),
+      supportedCatalogIds: () => ['agent-ui'],
+      submitGateSelector: () => '',
+    }
+    const createWidget = makeCreateWidget({ registry, emitError: () => {}, resolveValue })
+    const surface = createSurface({ id: 's', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { menuOpen: false } // NOT model-driven open — the mouse gesture drives it
+
+    const { el, item } = buildMenuWithItem(createWidget, surface)
+    document.body.append(el) // connect — #ensureParts runs, the overlay handle wires up
+    await whenFlushed()
+    expect((el as { open?: boolean }).open).toBe(false) // starts closed, matching the model
+
+    const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+    trigger.click() // the REAL mouse gesture the audit reproduced — NOT `el.open = true`
+    await whenFlushed()
+
+    expect((el as { open?: boolean }).open, 'a mouse-click open must set the reflected open prop').toBe(true)
+    expect((surface.data.peek() as { menuOpen: boolean }).menuOpen, 'the mouse-open itself round-trips into the model via the toggle bind').toBe(true)
+
+    item.click() // commit a selection (menu's #commit sets this.open = false)
+    await whenFlushed()
+
+    expect((el as { open?: boolean }).open, 'the panel must report closed after a post-mouse-open commit').toBe(false)
+    expect((surface.data.peek() as { menuOpen: boolean }).menuOpen, 'the data model must converge to open:false — not keep lying true').toBe(false)
+    expect(document.body.contains(el)).toBe(true) // the panel is gone from the top layer, the host stays mounted
+
+    el.remove()
+    disposeSurface(surface)
+  })
 })
 
 describe('widget resolution — catalog enum enforcement (skips a non-member literal)', () => {

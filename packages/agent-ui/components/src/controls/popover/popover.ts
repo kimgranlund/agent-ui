@@ -99,7 +99,16 @@ export class UIPopoverElement extends UIElement {
     this._overlayHandle = handle
 
     // Trigger click → toggle the panel (the disclosure interaction).
-    this.listen(trigger, 'click', () => handle.toggle())
+    //
+    // ADR-0101 erratum fix: flip the PROP (`this.open`), not `handle.toggle()` directly — see
+    // select.ts's click handler for the full race trace (identical mechanics here: a raw
+    // `handle.toggle()` never writes `this.open`, so any later programmatic close via the prop was
+    // a same-value no-op, the model→overlay effect never re-ran, and the panel could stick open).
+    // The prop is the single source of truth; the model→overlay effect below drives
+    // `handle.open()`/`handle.close()` and the trait announces (ADR-0101) — the combo-box pattern.
+    this.listen(trigger, 'click', () => {
+      this.open = !this.open
+    })
 
     // overlay→model: when the Popover API light-dismisses (Escape / outside-click), the overlay
     // controller emits `close` on the host. Sync the prop back so the two-way bind stays consistent

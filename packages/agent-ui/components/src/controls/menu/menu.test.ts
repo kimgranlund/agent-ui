@@ -27,7 +27,9 @@ declare const process: { cwd(): string }
 //   menu-close-effect · menu-open-noop · menu-light-dismiss-sync · menu-light-dismiss-events ·
 //   menu-programmatic-no-emit · menu-aria-expanded · menu-open-event · menu-roving-focus ·
 //   menu-roving-wrap · menu-roving-disabled · menu-type-ahead · menu-commit-select ·
-//   menu-commit-closes · menu-commit-disabled · menu-click-commit · menu-c10-residue ·
+//   menu-commit-closes · menu-trigger-click (ADR-0101 erratum: mouse-click open must set the
+//   `open` prop, not bypass it via a raw `handle.toggle()`; includes the ticket #28 click-open→
+//   commit regression) · menu-commit-disabled · menu-click-commit · menu-c10-residue ·
 //   menu-c10-stacking · menu-c10-cleanup · menu-descriptor-schema · menu-descriptor-bijection ·
 //   menu-descriptor-negative
 
@@ -591,6 +593,70 @@ describe('ui-menu — commit → select event + close (menu-commit-select · men
     panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
     await whenFlushed()
     expect(order).toEqual(['close', 'toggle']) // exactly one pair, close before toggle
+    el.remove()
+  })
+})
+
+// ── Mouse-driven trigger open (the ADR-0101 erratum regression — the residual #28 defeat) ────────
+//
+// Prior probes above all open via the PROGRAMMATIC prop (`el.open = true`), which never exercised
+// the trigger's own click handler — the exact gap that let the mouse-click-open→handle.toggle()
+// bypass ship undetected (3533 green tests, zero coverage of the primary mouse gesture).
+
+describe('ui-menu — mouse-click trigger open/close (menu-trigger-click)', () => {
+  it('menu-trigger-click: clicking the trigger opens the panel and sets open===true', async () => {
+    const { el, trigger, panel } = makeMenu()
+    expect(el.open).toBe(false)
+
+    trigger.click()
+    await whenFlushed()
+    expect(el.open, 'a mouse-click open must set the reflected open prop').toBe(true)
+    expect(callsOf(panel).show).toBe(1)
+    el.remove()
+  })
+
+  it('menu-trigger-click: clicking the trigger again closes the panel — open===false, one close+toggle pair', async () => {
+    const { el, trigger, panel } = makeMenu()
+    trigger.click()
+    await whenFlushed()
+    expect(el.open).toBe(true)
+
+    let closes = 0
+    let toggles = 0
+    el.addEventListener('close', () => closes++)
+    el.addEventListener('toggle', () => toggles++)
+
+    trigger.click()
+    await whenFlushed()
+    expect(el.open, 'the second click must set open===false').toBe(false)
+    expect(callsOf(panel).hide).toBe(1)
+    expect(closes).toBe(1)
+    expect(toggles).toBe(1)
+    el.remove()
+  })
+
+  it('menu-trigger-click REGRESSION (ticket #28): click-open the trigger, then commit a selection — the panel must actually close', async () => {
+    const { el, trigger, panel, items } = makeMenu()
+
+    // The exact reproduction: a MOUSE click opens the trigger (not the programmatic `el.open = true`
+    // every other probe above uses) — before the fix, this left `el.open` stuck at `false` while the
+    // panel was really open, so the later commit's `this.open = false` was a same-value no-op.
+    trigger.click()
+    await whenFlushed()
+    expect(el.open, 'precondition: mouse-open must set open===true').toBe(true)
+
+    let closes = 0
+    let toggles = 0
+    el.addEventListener('close', () => closes++)
+    el.addEventListener('toggle', () => toggles++)
+
+    items[0].click() // commit a selection (menu's #commit sets this.open = false)
+    await whenFlushed()
+
+    expect(el.open, 'the panel must report closed after a post-mouse-open commit').toBe(false)
+    expect(callsOf(panel).hide, 'hidePopover() must actually fire — the bug: it never did').toBe(1)
+    expect(closes, 'exactly one close event').toBe(1)
+    expect(toggles, 'exactly one toggle event').toBe(1)
     el.remove()
   })
 })

@@ -123,3 +123,63 @@ Mechanics — one home, the trait; all five consumers inherit (menu, select, com
 - Loop negative control: with the input binding installed, one transition produces exactly one
   write-back and no effect re-entry.
 - The ADR-0045 light-dismiss suites stay green unchanged; `npm run check && npm test` green.
+
+## Erratum (2026-07-08 — residual found by a live re-audit, cross-engine reproduced)
+
+**Status untouched (`accepted`)** — this is a repair of an implementation gap this ADR's own
+acceptance criteria did not cover, not a reopening of the decision.
+
+**The residual.** This ADR made the trait announce every actual transition, but three of its five
+consumers' *trigger click* handlers never fed the trait through the host's `open` prop in the first
+place: `select.ts:279`, `menu.ts:105`, `popover.ts:102` wired the trigger's `click` straight to
+`handle.toggle()` — the trait's own internal open/close, bypassing `this.open` entirely. A mouse-click
+open therefore left the panel *really* open while the reflected `open` prop stayed at its old value
+(`false`, never written). The later commit-close's `this.open = false` (`select.ts` via
+`selectionCommit.onSelect`, `menu.ts`'s `#commit`) was then a **same-value `Object.is` no-op**: the
+model→overlay effect this ADR's mechanics depend on never re-ran, `handle.close()` never fired, and
+none of this ADR's announce machinery ever engaged — the panel visibly stuck open after a selection.
+Combo-box was unaffected: its editor never calls `handle.toggle()`; its open-driving sites (`input`,
+`ArrowDown`/`ArrowUp`) already write `this.open` directly. Tooltip was also unaffected (`tooltip.ts`'s
+`userClose` already routes through the prop). This ADR's own acceptance criteria and the e2e proof
+(`widget.test.ts`) both drove OPEN via the *model* (`surface.data.value = { menuOpen: true }` /
+`el.open = true`) — never via a real mouse click on the real trigger — so 3533 green tests carried no
+coverage of the primary gesture ticket #28 was filed against.
+
+**The resolution.** Align the three trigger click handlers with combo-box's shipped pattern: the click
+handler flips the PROP (`this.open = !this.open`), never calls `handle.toggle()` directly. The prop
+becomes the single source of truth for every open-driver (mouse, keyboard, model); the existing
+model→overlay scope-owned effect in each control drives `handle.open()`/`handle.close()` off the prop
+and the trait announces exactly as this ADR already specifies. No trait change — the fix is entirely
+in the three controls' click wiring (plus the stale `select.md:113` prose that named the old mechanism).
+
+**The race trace (the one design question: does routing the click through the prop reintroduce the
+registration-order race this ADR settled?).** No — traced explicitly against `traits/overlay.ts` +
+`reactive/scheduler.ts`:
+- A prop write only **schedules** the consuming effect (`scheduler.ts: schedule()` queues a
+  microtask; `flush()` does not run synchronously inside the write). By the time the effect body runs
+  on the next microtask and calls `handle.open()`/`handle.close()`, `this.open` has already settled to
+  its new value — the identical write→schedule→effect→announce order the keyboard-open path
+  (`select.ts`'s closed-trigger ArrowDown, `this.open = true`) and every commit-close path already
+  exercise successfully today. The click fix reuses that exact, already-proven chain; it introduces no
+  new ordering.
+- **Toggle-while-open** (click the trigger of an already-open panel): `this.open` flips `true → false`
+  → the effect runs once → `handle.close()` (the trait's own idempotent guard, `overlay.ts` `close()`,
+  sees `isOpen` genuinely `true` so it is a real transition) → exactly one `close`+`toggle` pair,
+  `el.open` already `false` at listener time (mechanic 3, unchanged). No double-close: nothing else
+  writes `this.open` between the click and the effect's microtask run.
+- **Native light-dismiss vs. the trigger click**: the controls call `showPopover()`/`hidePopover()`
+  imperatively (no declarative `popovertarget` attribute), so the platform's own light-dismiss
+  algorithm cannot special-case the trigger as an "invoker" — this is pre-existing behaviour, identical
+  before and after this fix (the trigger element and its native click semantics are untouched; only
+  which internal call the click handler makes has changed). No new platform interaction is introduced.
+- Net: the mouse-click path now shares the exact mechanics (write → schedule → settle → announce) this
+  ADR already verified for the model- and keyboard-driven paths — it was never a distinct code path
+  needing separate proof, only a bypass that skipped the shared one.
+
+**Coverage repair.** Per-control jsdom legs (`select-trigger-click`, `menu-trigger-click`,
+`popover-trigger-click`) now drive a REAL `trigger.click()`, including the exact regression shape
+(click-open → commit → assert `open === false` + exactly one `close`/`toggle` pair). The
+`widget.test.ts` ADR-0101 describe block gained a MOUSE-driven leg alongside the existing model-driven
+one, clicking the real `<ui-menu>` trigger and asserting `surface.data` converges to `open: false`.
+Browser legs (Chromium + WebKit) added on the gallery's document-row-toolbar Menu and settings-form
+Select: click open, select, panel visibly closed (`:popover-open` false).

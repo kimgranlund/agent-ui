@@ -110,7 +110,7 @@ aria:
 
 keyboard:
   - keys: Enter / Space
-    action: Activates the trigger button (native button behaviour handles Space/Enter — the button's click fires and handle.toggle() opens the panel).
+    action: Activates the trigger button (native button behaviour handles Space/Enter — the button's click fires, flipping the `open` prop, which the model→overlay effect drives to `handle.open()`).
   - keys: ArrowDown / ArrowUp (on closed trigger)
     action: Opens the listbox panel. Focus moves to the current selection (or first option) via the overlay controller's moveFocusIn, which targets the tabindex=0 option maintained by rovingFocus.
   - keys: ArrowDown / ArrowUp (in open panel)

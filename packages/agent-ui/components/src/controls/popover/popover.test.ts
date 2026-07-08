@@ -25,7 +25,9 @@ declare const process: { cwd(): string }
 //   popover-upgrade · popover-typed · popover-define-guard · popover-part-idempotent ·
 //   popover-trigger-attrs · popover-open-effect · popover-close-effect · popover-open-noop ·
 //   popover-light-dismiss-sync · popover-light-dismiss-events · popover-programmatic-no-emit ·
-//   popover-aria-expanded · popover-c10-residue · popover-c10-stacking · popover-c10-cleanup ·
+//   popover-aria-expanded · popover-trigger-click (ADR-0101 erratum: mouse-click open must set the
+//   `open` prop, not bypass it via a raw `handle.toggle()` — the ticket #28 residual) ·
+//   popover-c10-residue · popover-c10-stacking · popover-c10-cleanup ·
 //   popover-descriptor-schema · popover-descriptor-bijection · popover-descriptor-negative
 
 // ── Popover API stub (jsdom lacks it entirely — mirrors overlay.test.ts setup) ─────────────────
@@ -324,6 +326,71 @@ describe('ui-popover — aria-expanded stays in sync with open (popover-aria-exp
     simulateLightDismiss(panel) // this.open → false → schedules effect
     await whenFlushed() // effect runs: aria-expanded → 'false'
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    el.remove()
+  })
+})
+
+// ── Mouse-driven trigger open (the ADR-0101 erratum regression — the residual #28 defeat) ────────
+//
+// Every probe above opens via the PROGRAMMATIC prop (`el.open = true`), which never exercised the
+// trigger's own click handler — the exact gap that let the mouse-click-open→handle.toggle() bypass
+// ship undetected (3533 green tests, zero coverage of the primary mouse gesture).
+
+describe('ui-popover — mouse-click trigger open/close (popover-trigger-click)', () => {
+  it('popover-trigger-click: clicking the trigger opens the panel and sets open===true', async () => {
+    const { el, trigger, panel } = makePopover()
+    expect(el.open).toBe(false)
+
+    trigger.click()
+    await whenFlushed()
+    expect(el.open, 'a mouse-click open must set the reflected open prop').toBe(true)
+    expect(callsOf(panel).show).toBe(1)
+    el.remove()
+  })
+
+  it('popover-trigger-click: clicking the trigger again closes the panel — open===false, one close+toggle pair', async () => {
+    const { el, trigger, panel } = makePopover()
+    trigger.click()
+    await whenFlushed()
+    expect(el.open).toBe(true)
+
+    let closes = 0
+    let toggles = 0
+    el.addEventListener('close', () => closes++)
+    el.addEventListener('toggle', () => toggles++)
+
+    trigger.click()
+    await whenFlushed()
+    expect(el.open, 'the second click must set open===false').toBe(false)
+    expect(callsOf(panel).hide).toBe(1)
+    expect(closes).toBe(1)
+    expect(toggles).toBe(1)
+    el.remove()
+  })
+
+  it('popover-trigger-click REGRESSION (ticket #28): click-open the trigger, then a model-driven close — the panel must actually close', async () => {
+    const { el, trigger, panel } = makePopover()
+
+    // The exact reproduction: a MOUSE click opens the trigger (not the programmatic `el.open = true`
+    // every other probe above uses) — before the fix, this left `el.open` stuck at `false` while the
+    // panel was really open, so a subsequent programmatic `open = false` (the agent/model-driven close
+    // path ADR-0101 targets) was a same-value no-op under the reactive cutoff.
+    trigger.click()
+    await whenFlushed()
+    expect(el.open, 'precondition: mouse-open must set open===true').toBe(true)
+
+    let closes = 0
+    let toggles = 0
+    el.addEventListener('close', () => closes++)
+    el.addEventListener('toggle', () => toggles++)
+
+    el.open = false // model-driven close after a mouse-driven open
+    await whenFlushed()
+
+    expect(el.open, 'the panel must report closed after a post-mouse-open model-driven close').toBe(false)
+    expect(callsOf(panel).hide, 'hidePopover() must actually fire — the bug: it never did').toBe(1)
+    expect(closes, 'exactly one close event').toBe(1)
+    expect(toggles, 'exactly one toggle event').toBe(1)
     el.remove()
   })
 })

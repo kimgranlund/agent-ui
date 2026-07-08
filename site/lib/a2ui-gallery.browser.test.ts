@@ -29,7 +29,7 @@ import '@agent-ui/components/component-styles.css' // per-control CSS (so a surf
 import '@agent-ui/components/components' // self-defining ui-* controls (the renderer mounts these by tag)
 import '@agent-ui/icons/phosphor' // the Phosphor default pack (document-row-toolbar renders an Icon)
 import { buildSeedGallery, buildSeedCard } from './a2ui-gallery.ts'
-import { documentRowToolbarSeed, bookingReservationSeed } from '@agent-ui/a2ui/examples'
+import { documentRowToolbarSeed, bookingReservationSeed, patternSettingsSeed } from '@agent-ui/a2ui/examples'
 
 // The renderer's mount + each ui-* control's first render settle across frames — await a few rAFs so
 // computed geometry (and any lazily-imported control, e.g. the Calendar) is available before asserting.
@@ -131,6 +131,63 @@ describe('a2ui-gallery — the layout contract the drift gate cannot see (both e
     // The unconditional mirror (Kim's CSS-only ruling): `title` = the full text, present on the real
     // assembled mount regardless of whether this particular row is currently narrow enough to clip.
     expect(titleCell!.getAttribute('title')).toBe('Q3 roadmap.pdf')
+  })
+})
+
+// ── ADR-0101 erratum — the mouse-click-open never sets `open`, so a commit's close was a no-op ───────────
+// (ticket #28's residual, live re-audit, cross-engine reproduced). Both legs below drive a REAL mouse
+// click on the REAL trigger (not a programmatic `el.open = true` — the gap that let this ship) on the
+// unmodified gallery seeds the audit named: the document-row-toolbar's overflow Menu and the
+// settings-form's plan Select. Runs in both Chromium and WebKit (vitest.browser.config.ts).
+describe('a2ui-gallery — ADR-0101 erratum: click-open then commit actually closes the panel (both engines)', () => {
+  it('document-row-toolbar Menu: click the overflow trigger, pick an item, the panel is visibly closed (:popover-open false)', async () => {
+    const { card } = buildSeedCard(documentRowToolbarSeed)
+    mount.append(card)
+    await settle()
+
+    const menu = card.querySelector('ui-menu')!
+    const trigger = menu.querySelector<HTMLElement>('[data-part="trigger"]')
+    expect(trigger, 'no ui-menu trigger rendered in the document-row-toolbar surface').not.toBeNull()
+
+    await userEvent.click(trigger!)
+    await settle()
+
+    const panel = menu.querySelector<HTMLElement>('[data-part="panel"]')
+    expect(panel, 'no ui-menu panel found').not.toBeNull()
+    expect(panel!.matches(':popover-open'), 'the menu did not visibly open on a mouse-click trigger').toBe(true)
+    expect((menu as unknown as { open: boolean }).open, 'a mouse-click open must set the reflected open prop').toBe(true)
+
+    const item = panel!.querySelector<HTMLElement>('[role="menuitem"]')!
+    await userEvent.click(item)
+    await settle()
+
+    expect(panel!.matches(':popover-open'), 'the panel stuck open after a post-mouse-open commit — the ticket #28 residual').toBe(false)
+    expect((menu as unknown as { open: boolean }).open, 'open must settle to false after commit').toBe(false)
+  })
+
+  it('settings-form Select: click the trigger, pick a plan option, the panel is visibly closed (:popover-open false)', async () => {
+    const { card } = buildSeedCard(patternSettingsSeed)
+    mount.append(card)
+    await settle()
+
+    const select = card.querySelector('ui-select')!
+    const trigger = select.querySelector<HTMLElement>('[data-part="trigger"]')
+    expect(trigger, 'no ui-select trigger rendered in the settings-form surface').not.toBeNull()
+
+    await userEvent.click(trigger!)
+    await settle()
+
+    const listbox = select.querySelector<HTMLElement>('[data-part="listbox"]')
+    expect(listbox, 'no ui-select listbox found').not.toBeNull()
+    expect(listbox!.matches(':popover-open'), 'the select did not visibly open on a mouse-click trigger').toBe(true)
+    expect((select as unknown as { open: boolean }).open, 'a mouse-click open must set the reflected open prop').toBe(true)
+
+    const option = listbox!.querySelector<HTMLElement>('[role="option"]')!
+    await userEvent.click(option)
+    await settle()
+
+    expect(listbox!.matches(':popover-open'), 'the panel stuck open after a post-mouse-open commit — the ticket #28 residual').toBe(false)
+    expect((select as unknown as { open: boolean }).open, 'open must settle to false after commit').toBe(false)
   })
 })
 
