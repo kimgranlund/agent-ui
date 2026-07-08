@@ -1,14 +1,14 @@
 ---
-# text.md frontmatter — the attributes-as-API descriptor for ui-text (ADR-0004 / ADR-0078). The machine-checkable
-# public surface lives HERE (frontmatter); the prose below the fence is the /site doc. The `attributes[]` block
-# MUST mirror text.ts `static props` (variant/size/as, in that order) — the contract↔props trip-wire
-# (text-descriptor.test.ts) targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
+# text.md frontmatter — the attributes-as-API descriptor for ui-text (ADR-0004 / ADR-0078 / ADR-0106). The
+# machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the /site doc. The
+# `attributes[]` block MUST mirror text.ts `static props` (variant/size/as/truncate, in that order) — the
+# contract↔props trip-wire (text-descriptor.test.ts) targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-text
 tier: display          # geometry size-class (Display band — NO control frame/height; geometry.md "size-classes" + ADR-0025 cl.1: the typographic ramp is the lever, not --ui-height-*)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (face below), NOT a UIContainerElement surface
-# marginal: ui-text adds 273 B gz to the self-defining ui-* family (22348 B gz WITH it vs 22075 B gz without — the
-# `npm run size` delta, tree-shaken; up from 118 B pre-wave — the restamp effect + heal MutationObserver are new
-# always-on machinery, ADR-0078 Consequences (b)). Family total 22348 B gz, within the 22528 B gz budget (180 B headroom)
+# marginal: ui-text is 372 B gz in the self-defining ui-* family (`npm run size`, tree-shaken; up from 273 B —
+# the ADR-0106 `truncate` prop + the title-mirror effect/observer hookup are new always-on machinery). Family
+# total 24606 B gz, within the 25600 B gz budget
 
 attributes:            # attributes-as-API — mirrors text.ts `static props`, THREE orthogonal axes (ADR-0078 cl.1)
   - name: variant
@@ -26,6 +26,14 @@ attributes:            # attributes-as-API — mirrors text.ts `static props`, T
     values: [none, h1, h2, h3, h4, h5, h6, p, span, blockquote]   # document SEMANTICS — the real element STAMPED around the light-DOM children
     default: none      # no wrapper — the host itself is the styled node (today's DOM shape, byte-identical)
     reflect: true      # reflects for consistency with variant/size — a JS-set `as` is inspectable/stylable too
+  - name: truncate
+    type: boolean
+    default: false     # keeps today's wrapping — no shipped rendering change
+    reflect: true      # the `[truncate]` CSS hook (ADR-0106) — two legs, host + stamp
+    # Overflow INTENT (ADR-0106, the fourth orthogonal axis): CSS-only single-line + ellipsis (no
+    # ResizeObserver, no clipped-state measurement). While set, `title` UNCONDITIONALLY mirrors the
+    # element's own trimmed textContent (present even in boxes wide enough that nothing is actually
+    # clipped — the accepted CSS-only cost); an author-set `title` is never overwritten.
 
 properties: []         # no manual accessors — the displayed text is light-DOM children (textContent), NOT a prop (ADR-0025 cl.2 / Fork 1, the Button.label precedent)
 
@@ -78,10 +86,11 @@ ADR-0006). It is the A2UI v1.0 `Text` component's live control (via a factory fa
 <ui-text variant="label" size="sm">Secondary / meta text</ui-text>
 ```
 
-## Three orthogonal axes
+## Four orthogonal axes
 
-`ui-text` carries **three** independent props (ADR-0078 cl.1) — pick any combination; the fleet defines all
-9 × 3 = 27 `variant`×`size` cells, and any `as` is legal with any visual pair:
+`ui-text` carries **four** independent props (ADR-0078 cl.1, ADR-0106) — pick any combination; the fleet
+defines all 9 × 3 = 27 `variant`×`size` cells, any `as` is legal with any visual pair, and `truncate` is
+orthogonal to all three:
 
 - **`variant`** — the visual type ROLE: `display` · `headline` · `title` · `body` (default) · `label` (the
   five M3 roles), plus four editorial extras — `kicker` · `overline` · `quote` · `lead`. Selects *which*
@@ -90,6 +99,8 @@ ADR-0006). It is the A2UI v1.0 `Text` component's live control (via a factory fa
   to `variant` — `md` is the universal default for every role, not a per-role recommendation.
 - **`as`** — document SEMANTICS: `none` (default, no wrapper) · `h1`…`h6` · `p` · `span` · `blockquote`. The
   ONLY prop with any accessibility effect — see Stamping, below.
+- **`truncate`** (default `false`) — overflow INTENT: single-line, ellipsis-clipped, CSS-only. See
+  Truncation, below.
 
 `as="h2" variant="body"` (a semantically-major, visually-modest heading) and `as="none" variant="display"
 size="lg"` (huge text that is *not* a heading) are both first-class; that independence is the point of the
@@ -114,6 +125,42 @@ The displayed text is the element's **light-DOM children**, not a property — `
 `button` label precedent). The text is the element's accessible name whether or not a stamp exists. From the
 A2UI catalog, the `Text.text` property (a string literal or a `{path}` binding) maps to the host's
 `textContent` — safe even after a stamp exists, because the heal observer re-stamps around it.
+
+## Truncation (`truncate`)
+
+`<ui-text truncate>` clips its content to one line with an ellipsis — pure CSS (`white-space: nowrap;
+overflow: hidden; text-overflow: ellipsis;`), applied on the host and, when a stamp exists (`as ≠ none`),
+mirrored onto the stamped element too (whichever box holds the text is the one that clips). Toggling `as`
+under `truncate` keeps the rendered box identical — the ADR-0078 cl.4 stamp-transparency invariant extends
+to the clipped box.
+
+By Kim's CSS-only ratification ruling (ADR-0106) there is **no** `ResizeObserver` and no clipped-state
+measurement anywhere in this control. Instead, while `truncate` is set, `ui-text` UNCONDITIONALLY mirrors
+its own trimmed `textContent` onto its `title` attribute — present even in a box wide enough that nothing
+is actually clipped (the accepted cost of staying measurement-free). An author-set `title` is never
+overwritten. `title` gives sighted pointer users a native-tooltip reveal at zero dependency cost; it does
+**not** help keyboard-only sighted users (a named, accepted gap) or reach assistive tech (which already
+gets the full, untruncated text — clipping is visual-only).
+
+**Rich reveal — the Tooltip pairing idiom (taught, not minted):** when `title`'s plain-text native tooltip
+isn't enough (styled content, keyboard reachability, richer formatting), compose the catalog's `Tooltip`
+around a truncated `Text` — its first child is the anchor:
+
+```html
+<ui-tooltip>
+  <ui-text truncate>A title long enough to clip in its column</ui-text>
+  <ui-text slot="content">A title long enough to clip in its column</ui-text>
+</ui-tooltip>
+```
+
+`ui-text` never auto-creates a `ui-tooltip` for itself — self-wrapping would break the first-child-anchor
+composition model and double-reveal beside any tooltip the author already composed. Reach for the pairing
+when the plain `title` reveal is insufficient; reach for `truncate` alone otherwise.
+
+Truncation hides content by design — reserve it for titles/labels a full value is reachable for elsewhere
+(via `title`, the Tooltip pairing, or the underlying data), never for body copy whose only copy is the
+clipped one. Multi-line clamping is **not** this prop — `truncate` is strictly single-line; a future
+`-webkit-line-clamp` need is a separate, unbuilt extension.
 
 ## Typography & geometry
 

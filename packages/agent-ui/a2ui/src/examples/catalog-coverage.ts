@@ -183,7 +183,10 @@ export const documentRowToolbarSeed: ExampleSeed = {
           // rendered no glyph at all (a real, gallery-caught defect: 2026-07-07 visual audit). Flag to the
           // icons-package owner if a document/file glyph is wanted in a future vendor wave.
           { id: 'icon_doc', component: 'Icon', name: 'calendar-blank', label: 'Document' },
-          { id: 'doc_name', component: 'Text', variant: 'body', text: 'Q3 roadmap.pdf' },
+          // ADR-0106 — the document row's title cell is the reference use of `truncate`: a document name
+          // must hold one line, ellipsis-clip under a narrow row, and stay reachable via the unconditional
+          // `title` mirror (native hover reveal, zero dependency cost).
+          { id: 'doc_name', component: 'Text', variant: 'body', text: 'Q3 roadmap.pdf', truncate: true },
           { id: 'doc_actions', component: 'Row', gap: 'sm', align: 'center', children: ['tip_wrap', 'pop_wrap', 'menu_overflow'] },
 
           // Tooltip: FIRST child is the anchor, remaining children move into the tooltip panel

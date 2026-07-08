@@ -4,7 +4,7 @@ import { userEvent } from 'vitest/browser'
 // a2ui-gallery.browser.test.ts — the SCOPED cross-engine layout smoke for the A2UI composition gallery
 // (site/lib/a2ui-gallery.ts). The jsdom drift gate (a2ui-gallery.test.ts) proves the cards are DERIVED
 // from the shelf and every surface renders clean; it cannot prove LAYOUT — jsdom resolves no @scope, no
-// dimensional ramp, no computed geometry, no top-layer. This file pins exactly the four things the layout
+// dimensional ramp, no computed geometry, no top-layer. This file pins exactly the five things the layout
 // review flagged as unprovable in jsdom, and NOTHING the seeds' own gates already own (this is not a
 // per-seed interaction suite):
 //   (a) every `.seed-surface` has a non-zero box AND is bounded by the 30rem cap (the a2ui-patterns
@@ -13,7 +13,11 @@ import { userEvent } from 'vitest/browser'
 //   (c) at least one known-tall seed scrolls INSIDE its frame (scrollHeight > clientHeight) — proving the
 //       cap+overflow engaged rather than the frame silently growing;
 //   (d) an overlay seed's panel, once opened, ESCAPES its frame rect — pinning the top-layer no-clip
-//       ruling (an `overflow: auto` frame must NOT clip a promoted popover/menu panel).
+//       ruling (an `overflow: auto` frame must NOT clip a promoted popover/menu panel);
+//   (e) the document-row-toolbar title cell (`Text truncate`, ADR-0106) computes the single-line-ellipsis
+//       contract AND carries the unconditional `title` mirror, on the real assembled A2UI mount (an
+//       unmodified seed — no synthetic narrowing needed: the mirror is present whether or not the box is
+//       narrow enough to actually clip, by the CSS-only ruling).
 // Runs in BOTH Chromium and WebKit (vitest.browser.config.ts → the `site` project's two playwright
 // instances), co-located with the module it tests, following component-preview.browser.test.ts.
 //
@@ -25,7 +29,7 @@ import '@agent-ui/components/component-styles.css' // per-control CSS (so a surf
 import '@agent-ui/components/components' // self-defining ui-* controls (the renderer mounts these by tag)
 import '@agent-ui/icons/phosphor' // the Phosphor default pack (document-row-toolbar renders an Icon)
 import { buildSeedGallery, buildSeedCard } from './a2ui-gallery.ts'
-import { documentRowToolbarSeed } from '@agent-ui/a2ui/examples'
+import { documentRowToolbarSeed, bookingReservationSeed } from '@agent-ui/a2ui/examples'
 
 // The renderer's mount + each ui-* control's first render settle across frames — await a few rAFs so
 // computed geometry (and any lazily-imported control, e.g. the Calendar) is available before asserting.
@@ -109,4 +113,126 @@ describe('a2ui-gallery — the layout contract the drift gate cannot see (both e
       `the opened panel is confined to the frame (panel.bottom ${panelRect.bottom} ≤ frame.bottom ${frameRect.bottom}) — top-layer no-clip failed`,
     ).toBeGreaterThan(frameRect.bottom)
   })
+
+  it('(e) the document-row title cell is single-line-ellipsis + carries the unconditional title mirror (ADR-0106)', async () => {
+    const { card } = buildSeedCard(documentRowToolbarSeed)
+    mount.append(card)
+    await settle()
+
+    const titleCell = [...card.querySelectorAll<HTMLElement>('ui-text')].find((t) => t.textContent === 'Q3 roadmap.pdf')
+    expect(titleCell, 'no ui-text rendered the document title cell text').not.toBeUndefined()
+
+    expect(titleCell!.hasAttribute('truncate'), 'the title cell did not reflect [truncate]').toBe(true)
+    const cs = getComputedStyle(titleCell!)
+    expect(cs.whiteSpace).toBe('nowrap')
+    expect(cs.overflow).toBe('hidden')
+    expect(cs.textOverflow).toBe('ellipsis')
+
+    // The unconditional mirror (Kim's CSS-only ruling): `title` = the full text, present on the real
+    // assembled mount regardless of whether this particular row is currently narrow enough to clip.
+    expect(titleCell!.getAttribute('title')).toBe('Q3 roadmap.pdf')
+  })
+})
+
+// ── ADR-0103 — the rental-filter-panel crash site, on the REAL (unmodified) A2UI mount ──────────────────
+// ticket #31: the rental-filter-panel seed's `RadioGroup` (`orientation="horizontal"`, catalog-coverage.ts)
+// used to mash its three property-type radios together (zero gap, either orientation — ui-radio's own host
+// is inline-flex). `ui-radio-group` now owns its interior layout (radio-group.css's `@scope` block); this
+// proves it on the SAME unmodified seed the ticket reported, through the real renderer, in BOTH colour
+// schemes (layout is scheme-invariant — the point is that the fix survives the exact page a user sees it on,
+// under either scheme, not that colour affects geometry).
+describe('a2ui-gallery — rental-filter-panel RadioGroup renders with visible gaps (ADR-0103, both schemes)', () => {
+  for (const scheme of ['light', 'dark'] as const) {
+    it(`[color-scheme=${scheme}] the property-type RadioGroup's radios are visibly separated, not mashed`, async () => {
+      const { root } = buildSeedGallery()
+      mount.style.colorScheme = scheme
+      mount.append(root)
+      await settle()
+
+      const card = root.querySelector<HTMLElement>('.seed-card[data-seed="rental-filter-panel"]')
+      expect(card, 'no rental-filter-panel card rendered').not.toBeNull()
+      expect(card!.dataset.rendered, 'the seed did not render clean (a validator rejection or empty surface)').toBe('true')
+
+      const group = card!.querySelector('ui-radio-group') as HTMLElement | null
+      expect(group, 'no ui-radio-group rendered in the rental-filter-panel surface').not.toBeNull()
+      expect(group!.getAttribute('orientation'), 'the seed drives orientation="horizontal" — the reported crash axis').toBe('horizontal')
+
+      const radios = [...group!.children] as HTMLElement[]
+      expect(radios.length, 'the property-type group needs ≥ 2 radios to prove a gap').toBeGreaterThanOrEqual(2)
+
+      const cs = getComputedStyle(group!)
+      const gap = Number.parseFloat(cs.columnGap)
+      expect(gap, `[color-scheme=${scheme}] the group computed a zero/absent gap — the pre-ADR-0103 mash`).toBeGreaterThan(0)
+
+      // Anti-vacuous: the actual rendered rects are separated by at least the computed gap, not just the
+      // token value in the abstract (the ticket's bug was rects touching despite `orientation` being set).
+      for (let i = 0; i < radios.length - 1; i++) {
+        const a = radios[i]!.getBoundingClientRect()
+        const b = radios[i + 1]!.getBoundingClientRect()
+        expect(
+          b.left - a.right,
+          `[color-scheme=${scheme}] radio #${i} and #${i + 1} are touching/overlapping (mashed) despite the shipped gap`,
+        ).toBeGreaterThanOrEqual(gap - 1)
+      }
+    })
+  }
+})
+
+// ── ADR-0105 — the booking-reservation Calendar fills its given width, on the REAL (unmodified)
+// A2UI mount — ticket #30: the range Calendar (`cal_dates`, catalog-coverage.ts) sat fixed-width in
+// the inline-start corner of its Field/Column-stretched panel, half the bordered panel empty. The
+// grid's tracks are now fluid (`minmax(cell-size, 1fr)`, calendar.css); this proves the fix through
+// the REAL renderer + REAL catalog factory + the REAL `Column(stretch) > Field(flex column) >
+// Calendar` composition chain, at both a wide and a narrow card width, in both colour schemes
+// (layout is scheme-invariant; proving both matches the ADR's acceptance line item).
+describe('a2ui-gallery — booking-reservation Calendar fills its field width (ADR-0105, wide + narrow, both schemes)', () => {
+  for (const scheme of ['light', 'dark'] as const) {
+    for (const { label, widthPx } of [
+      { label: 'wide', widthPx: 700 },
+      { label: 'narrow', widthPx: 320 },
+    ]) {
+      it(`[color-scheme=${scheme}, ${label}] the Calendar grid fills its Field's content width, not just its old fixed track`, async () => {
+        const { card, surface } = buildSeedCard(bookingReservationSeed)
+        mount.style.colorScheme = scheme
+        mount.style.width = `${widthPx}px`
+        mount.append(card)
+        await settle()
+
+        expect(card.dataset.rendered, 'the booking-reservation seed did not render clean').toBe('true')
+
+        const calendar = surface.querySelector('ui-calendar') as HTMLElement | null
+        expect(calendar, 'no ui-calendar rendered in the booking-reservation surface').not.toBeNull()
+        const field = calendar!.closest('ui-field') as HTMLElement | null
+        expect(field, 'the Calendar is not wrapped in its ui-field (f_dates)').not.toBeNull()
+
+        const grid = calendar!.querySelector<HTMLElement>('[data-part="grid"]')!
+        const gridRect  = grid.getBoundingClientRect()
+        const fieldRect = field!.getBoundingClientRect()
+
+        // The compact (pre-ADR-0105) floor is ~230px (7 × ~32px + gaps at the default md size) — a
+        // wide card must grow well past it; a narrow card may sit AT the floor (nothing to spend),
+        // which is itself the correct degrade (ADR-0105 §Consequences: fluid, not force-grown).
+        if (label === 'wide') {
+          expect(
+            gridRect.width,
+            `[${scheme}, ${label}] grid (${gridRect.width}px) did not grow past the compact floor — the fill regression`,
+          ).toBeGreaterThan(280)
+        }
+
+        // Whichever width it lands at, the grid must never OVER-claim the field's own content box
+        // (the fill contract is "fill what you're given," not "escape your container").
+        expect(
+          gridRect.width - fieldRect.width,
+          `[${scheme}, ${label}] grid (${gridRect.width}px) overflowed its field (${fieldRect.width}px)`,
+        ).toBeLessThanOrEqual(2)
+
+        // And it should be CLOSE to the field's width (small remainder = the panel's own box-model
+        // insets), not stranded at a small fraction of it — the "half-empty panel" ticket #30 shape.
+        expect(
+          fieldRect.width - gridRect.width,
+          `[${scheme}, ${label}] grid (${gridRect.width}px) is far narrower than its field (${fieldRect.width}px) — panel still half-empty`,
+        ).toBeLessThan(40)
+      })
+    }
+  }
 })

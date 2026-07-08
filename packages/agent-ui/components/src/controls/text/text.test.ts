@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
+// node:fs is untyped here (no @types/node devDep) — same reverse-coupling fs-read pattern the descriptor/
+// css probes in this folder use.
+// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+import { readFileSync } from 'node:fs'
 import { UITextElement } from './text.ts'
+declare const process: { cwd(): string }
 
 // ADR-0078 / text.md — UITextElement (Display-class leaf; three orthogonal props — variant/size/as — the
 // stamping mechanism; void render (as='none'); self-define). Named probes: text-upgrades ·
@@ -216,6 +221,132 @@ describe('UITextElement — stamping create/replace/unwrap (node identity preser
     expect(el.querySelector('h4')).toBeNull()
     expect(el.childElementCount).toBe(0) // no stamp element left behind
     expect(el.textContent).toBe('Section') // content preserved
+    el.remove()
+  })
+})
+
+// ── ADR-0106 — `truncate` + the unconditional `title` mirror (CSS-only, Kim's ratification ruling) ──────
+describe('UITextElement — truncate prop (ADR-0106)', () => {
+  it('defaults to false, not pre-reflected; a JS-set value reflects to [truncate]', () => {
+    const el = new UITextElement()
+    document.body.append(el)
+    expect(el.truncate).toBe(false)
+    expect(el.getAttribute('truncate')).toBeNull()
+    el.truncate = true
+    expect(el.getAttribute('truncate')).toBe('')
+    el.remove()
+  })
+
+  it('rejects a non-boolean at compile time (typed prop, not a bare value)', () => {
+    const fn = (): void => {
+      const el = new UITextElement()
+      el.truncate = true
+      el.truncate = false
+      // @ts-expect-error — truncate is boolean, not a string
+      el.truncate = 'x'
+    }
+    expect(typeof fn).toBe('function') // never invoked; the type errors above are the assertion
+  })
+})
+
+describe('UITextElement — the grep-able ResizeObserver absence (ADR-0106 Acceptance leg)', () => {
+  it('text.ts never references ResizeObserver — the CSS-only ruling, mechanically enforced', () => {
+    const source = readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/text/text.ts`, 'utf8') as string
+    expect(source).not.toMatch(/ResizeObserver/)
+  })
+})
+
+describe('UITextElement — the unconditional `title` mirror (ADR-0106 cl.3)', () => {
+  it('mints title = trimmed textContent as soon as truncate is set', async () => {
+    const el = new UITextElement()
+    el.textContent = '  Padded title text  '
+    document.body.append(el)
+    await el.updateComplete
+    expect(el.hasAttribute('title')).toBe(false) // truncate off by default — no mirror yet
+
+    el.truncate = true
+    await el.updateComplete
+    expect(el.getAttribute('title')).toBe('Padded title text') // trimmed
+    el.remove()
+  })
+
+  it('removes the mirrored title when truncate unsets', async () => {
+    const el = new UITextElement()
+    el.textContent = 'Section title'
+    el.truncate = true
+    document.body.append(el)
+    await el.updateComplete
+    expect(el.getAttribute('title')).toBe('Section title')
+
+    el.truncate = false
+    await el.updateComplete
+    expect(el.hasAttribute('title')).toBe(false)
+    el.remove()
+  })
+
+  it('refreshes the mirrored title on content change (the existing render/childList path)', async () => {
+    const el = new UITextElement()
+    el.textContent = 'Original title'
+    el.truncate = true
+    document.body.append(el)
+    await el.updateComplete
+    expect(el.getAttribute('title')).toBe('Original title')
+
+    el.textContent = 'Updated title' // the A2UI bound-text path — a childList mutation on the host
+    await tick()
+    await tick()
+    expect(el.getAttribute('title')).toBe('Updated title')
+    el.remove()
+  })
+
+  it('never overwrites an author-set title — presence-checked before the mirror ever writes', async () => {
+    const el = new UITextElement()
+    el.textContent = 'Section title'
+    el.setAttribute('title', 'A curated tooltip') // author-owned, set BEFORE truncate
+    document.body.append(el)
+    await el.updateComplete
+    el.truncate = true
+    await el.updateComplete
+    expect(el.getAttribute('title')).toBe('A curated tooltip') // untouched
+
+    // Not owned by the mirror ⇒ unsetting truncate must NOT remove the author's title either.
+    el.truncate = false
+    await el.updateComplete
+    expect(el.getAttribute('title')).toBe('A curated tooltip')
+    el.remove()
+  })
+
+  it('an author title set AFTER the mirror minted one is never clobbered — ownership is by VALUE (review-hardened)', async () => {
+    const el = new UITextElement()
+    el.textContent = 'Quarterly report'
+    document.body.append(el)
+    await el.updateComplete
+    el.truncate = true
+    await el.updateComplete
+    expect(el.getAttribute('title')).toBe('Quarterly report') // mirror-minted
+
+    el.setAttribute('title', 'The author takes over') // author write AFTER the mint
+    el.textContent = 'Quarterly report (renamed)' // a content change fires the next sync
+    await el.updateComplete
+    await new Promise((r) => setTimeout(r, 0)) // let the childList observer flush
+    expect(el.getAttribute('title')).toBe('The author takes over') // NOT clobbered
+
+    // And the mirror must not remove the author's title on truncate-unset either.
+    el.truncate = false
+    await el.updateComplete
+    expect(el.getAttribute('title')).toBe('The author takes over')
+    el.remove()
+  })
+
+  it('the mirror still mints title on a stamped element (as ≠ none) — textContent aggregates through the stamp', async () => {
+    const el = new UITextElement()
+    el.as = 'h4'
+    el.textContent = 'Heading text'
+    el.truncate = true
+    document.body.append(el)
+    await el.updateComplete
+    expect(el.querySelector('h4')?.textContent).toBe('Heading text')
+    expect(el.getAttribute('title')).toBe('Heading text') // title lives on the HOST, not the stamp
     el.remove()
   })
 })

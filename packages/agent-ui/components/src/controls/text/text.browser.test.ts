@@ -268,6 +268,112 @@ describe('ui-text editorial treatments — kicker/overline uppercase, quote ital
 
 // ── forced-colors (ADR-0078 cl.3 / text.css forced-colors block) ───────────────────────────────────────
 
+// ── truncate (ADR-0106) — CSS-only single-line ellipsis + the unconditional title mirror ─────────────────
+
+describe('ui-text truncate — clipped single line + ellipsis (ADR-0106)', () => {
+  it('a 12rem box with long content clips to one line — clientWidth < scrollWidth, computed text-overflow: ellipsis', () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.truncate = true
+    el.style.display = 'block' // ui-text already computes display:block; explicit for the inline style write below
+    el.style.width = '12rem'
+    el.textContent = 'A title long enough that it will not fit in twelve rem of width at all'
+    document.body.append(el)
+
+    const cs = getComputedStyle(el)
+    expect(cs.whiteSpace).toBe('nowrap')
+    expect(cs.overflow).toBe('hidden')
+    expect(cs.textOverflow).toBe('ellipsis')
+    expect(el.scrollWidth, 'content did not actually overflow the box — the fixture is not long enough').toBeGreaterThan(el.clientWidth)
+    el.remove()
+  })
+
+  it('title mirrors the full untruncated text — present even in a box wide enough that nothing clips', () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.truncate = true
+    el.style.width = '40rem' // comfortably wider than the content — nothing is actually clipped
+    el.textContent = 'Short title'
+    document.body.append(el)
+
+    expect(el.scrollWidth).toBeLessThanOrEqual(el.clientWidth + 1) // anti-vacuous: genuinely NOT clipped
+    expect(el.getAttribute('title')).toBe('Short title') // the unconditional mirror — present regardless
+    el.remove()
+  })
+
+  it('toggling `as` (none ↔ h4) under truncation keeps the rendered box identical (cl.4 invariant extends)', async () => {
+    const container = document.createElement('div')
+    container.style.width = '12rem'
+    document.body.append(container)
+
+    const plain = document.createElement('ui-text') as UITextElement
+    plain.truncate = true
+    plain.textContent = 'A title long enough to clip under twelve rem'
+    container.append(plain)
+    const plainBox = plain.getBoundingClientRect()
+
+    const stamped = document.createElement('ui-text') as UITextElement
+    stamped.truncate = true
+    stamped.setAttribute('as', 'h4')
+    stamped.textContent = 'A title long enough to clip under twelve rem'
+    container.append(stamped)
+    await stamped.updateComplete
+    const stampedBox = stamped.getBoundingClientRect()
+
+    expect(stampedBox.width).toBeCloseTo(plainBox.width, 0)
+    expect(stampedBox.height).toBeCloseTo(plainBox.height, 0)
+    container.remove()
+  })
+
+  it('an author-set title attribute survives truncation (never overwritten by the mirror)', () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.setAttribute('title', 'A curated tooltip')
+    el.textContent = 'A title long enough to clip under a narrow box'
+    document.body.append(el)
+    el.truncate = true
+    expect(el.getAttribute('title')).toBe('A curated tooltip')
+    el.remove()
+  })
+
+  it('POSITIVE control: a stamped as="h4" under truncate computes ellipsis/hidden on the h4 ITSELF (the stamp leg is live)', async () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.truncate = true
+    el.setAttribute('as', 'h4')
+    el.textContent = 'Section'
+    document.body.append(el)
+    await el.updateComplete
+    const h4 = el.querySelector('h4')!
+    expect(getComputedStyle(h4).overflow).toBe('hidden')
+    expect(getComputedStyle(h4).textOverflow).toBe('ellipsis')
+    el.remove()
+  })
+
+  it('NEGATIVE: neutralizing the stamp leg (`:scope[truncate] > :is(...)`) FAILS the as="h4" truncation leg — proves it is load-bearing', async () => {
+    // Force the SAME specificity fight the ADR's negative control describes without editing the shipped
+    // stylesheet: an ID-scoped override on the STAMPED h4 itself that cancels exactly what the stamp leg
+    // supplies (overflow/text-overflow). `white-space: nowrap` (the host leg, inherited) is untouched — if
+    // the second leg carried no unique information, this override would be redundant and change nothing;
+    // it does, because overflow/text-overflow are NOT inherited properties — only the stamp leg supplies
+    // them on the h4 itself.
+    const style = document.createElement('style')
+    style.textContent = '#truncate-negative-h4 { overflow: visible !important; text-overflow: clip !important; }'
+    document.head.append(style)
+
+    const el = document.createElement('ui-text') as UITextElement
+    el.truncate = true
+    el.setAttribute('as', 'h4')
+    el.textContent = 'Section'
+    document.body.append(el)
+    await el.updateComplete
+    el.querySelector('h4')!.id = 'truncate-negative-h4' // target the STAMP element itself, not the host
+
+    const h4 = el.querySelector('h4')!
+    expect(getComputedStyle(h4).textOverflow, 'ellipsis still won — the stamp leg is not the sole source (negative control is vacuous)').toBe('clip')
+    expect(getComputedStyle(h4).overflow).toBe('visible')
+
+    style.remove()
+    el.remove()
+  })
+})
+
 describe('ui-text forced-colors — CanvasText mapping keeps display text visible', () => {
   it('forced-colors @media block keeps display text visible — Chromium emulates (CDP); WebKit asserts baseline', async () => {
     const el = document.createElement('ui-text')

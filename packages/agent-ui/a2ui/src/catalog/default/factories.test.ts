@@ -139,6 +139,22 @@ describe('default catalog factories — Text (ADR-0078, catalog LLD-C5)', () => 
     const bound: A2uiComponent = { id: 'txt2', component: 'Text', text: { path: '/name' }, variant: 'body' }
     expect(validateCatalogConformance(bound, defaultCatalog)).toEqual([])
   })
+
+  // ADR-0106 — `truncate` is not `text`/`variant`, so it falls to the `default:` arm's `setAttr`, the SAME
+  // generic path every other catalog boolean (Modal.persistent, TextField.readonly, …) already rides —
+  // confirms the ADR-0106 clause 5 claim ("already setAttrs unknown props — verified boolean handling").
+  it('Text.truncate (boolean, non-bindable) passes through the default setAttr arm onto [truncate]', () => {
+    const el = textFactory.create()
+    textFactory.applyProp(el, 'truncate', true)
+    expect(el.hasAttribute('truncate')).toBe(true)
+    textFactory.applyProp(el, 'truncate', false)
+    expect(el.hasAttribute('truncate')).toBe(false)
+  })
+
+  it('Text.truncate conformance payload yields 0 CATALOG errors', () => {
+    const truncated: A2uiComponent = { id: 'txt3', component: 'Text', text: 'A long clipped title', truncate: true }
+    expect(validateCatalogConformance(truncated, defaultCatalog)).toEqual([])
+  })
 })
 
 describe('default catalog factories — Button + TextField (catalog LLD-C5, SPEC-R4)', () => {

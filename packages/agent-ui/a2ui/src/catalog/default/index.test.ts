@@ -253,6 +253,13 @@ describe('default catalog — conformance (SPEC-R7/R9)', () => {
     }
   })
 
+  it('Text.truncate (ADR-0106) is declared boolean + non-bindable, and a truncated Text conforms', () => {
+    expect(defaultCatalog.components.Text.properties.truncate?.mapsTo).toBe('truncate')
+    expect(defaultCatalog.components.Text.properties.truncate?.bindable).toBeFalsy()
+    const node: A2uiComponent = { id: 'txt', component: 'Text', text: 'A clipped title', truncate: true }
+    expect(validateCatalogConformance(node, defaultCatalog)).toEqual([])
+  })
+
   it('accepts a {path} binding for a bindable prop (selected / open / value)', () => {
     const tabs: A2uiComponent = { id: 'tb', component: 'Tabs', selected: { path: '/active' } }
     const modal: A2uiComponent = { id: 'md', component: 'Modal', open: { path: '/shown' } }
