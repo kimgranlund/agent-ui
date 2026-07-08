@@ -7,7 +7,7 @@
 > | **Status** | accepted |
 > | **Date** | 2026-07-08 *(authored)* |
 > | **Proposed by** | system-planner — the design seat; ticket #29 (pattern-wizard: tabs-in-card double surface), fork-diagnosed to `tabs.css:20` |
-> | **Ratified by** | *(pending — Kim / orchestration-coordinator on gate; doc-reviewer pass first)* |
+> | **Ratified by** | Kim (host) · 2026-07-08 — Status flipped in Kim's own 0101–0106 ratification round (his approved→accepted sed, landed `e30ac3e`); cell was stale-pending until the 2026-07-08 housekeeping pass |
 > | **Repairs** | on ratification+build: `controls/tabs/tabs.css:16-20` (delete the `--ui-container-bg: var(--md-sys-color-neutral-surface)` seeding + rewrite the two banner comments claiming "a bare tabs still draws a plane", `:4` and `:11-12`) · `controls/tabs/tabs.md` surface paragraph · `tabs-css.test.ts:45` (the seeding assertion inverts into a negative control) · `site/pages/tabs-doc.ts` + `site/pages/tabs-demo.ts` specimens gain explicit `elevation="0"` (repair, see §Consequences) · `site/pages/a2ui-live.ts:138` chrome tabs: verify-at-build (its pane sits on the app shell) · `a2ui-catalog.spec.md` §5.2 Tabs row note. Decomp: [`css-less-consumer-family.decomp.json`](../decompositions/css-less-consumer-family.decomp.json) |
 > | **Supersedes / Superseded by** | Applies **ADR-0102** (the law; lane = restore the safe default, intent stays Lane B via the *already-shipped* `elevation`/`brightness` catalog props). Amends the tabs-specific seeding decision recorded in `tabs.css`'s ADR-0015-era banner — ADR-0015's own clauses (transparent base, the `--ui-container-*` seam, the two axes) stand unchanged; relates ADR-0100 (the same session's mount-surface work the acceptance rides) |
 

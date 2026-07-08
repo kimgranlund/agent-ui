@@ -176,7 +176,7 @@ One writer per file; shared files (`main.ts`, `_page.ts`, `package.json`) deferr
 | # | Fork | Recommendation | Why |
 |---|---|---|---|
 | 1 | Separate `a2a-artifact-feed` page vs a section on the arena page | **Separate page** | One proof per page (arena = isolation, feed = bridge); the A2A nav cluster takes a third card; the arena page's fixture discipline (match transcripts) and this one's (A2A message feed) don't share a loader. |
-| 2 | The Chart gap | **Ship with existing vocabulary now; open a `Chart`/`Sparkline` follow-up intake** (components fleet + catalog + corpus + feed-policy disposition — its own PRD-level intake, not a rider on B6) | The catalog has no Chart type; metric-tile Grid reports + List tables honestly cover "report" today; designing a chart component inside a bridge wave would be scope theft from a real component-family effort. |
+| 2 | The Chart gap | **Ship with existing vocabulary now; open a `Chart`/`Sparkline` follow-up intake** (components fleet + catalog + corpus + feed-policy disposition — its own PRD-level intake, not a rider on B6) — **answered by [ADR-0107](../adr/0107-chart-family-v1-scope.md)** + [`chart-family.prd.md`](../prd/chart-family.prd.md) (accepted 2026-07-08) | The catalog has no Chart type; metric-tile Grid reports + List tables honestly cover "report" today; designing a chart component inside a bridge wave would be scope theft from a real component-family effort. |
 | 3 | Artifact-bubble vocabulary: full catalog (renderer allowlist) vs the ADR-0097 ask-feed subset | **Full catalog** | The ask partition's exclusions (Grid/List = "dashboards out of the feed") are ask-specific; this feed's artifacts ARE the dashboards. Asks stay governed by ADR-0097 unchanged. |
 
 ## 11. Verification summary

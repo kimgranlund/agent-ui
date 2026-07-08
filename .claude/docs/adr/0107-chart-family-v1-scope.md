@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-08 |
 > | **Proposed by** | planner (design seat — the chart-family intake, Kim-authorized from the artifact-feed ask; B6 bridge LLD §10 fork 2 is the deferral this intake answers) |
-> | **Ratified by** | Kim (forks F1–F3 below) + orchestration-coordinator (record ratification on the green intake gates) — pending |
+> | **Ratified by** | Kim (host) · 2026-07-08 — Status flipped by Kim's own edit ("proceed") after the intake doc-review (PASS, minor-only, no blocking fix); forks F1–F3 stand as recommended (the stated no-objection default) |
 > | **Repairs** | NEW [`../prd/chart-family.prd.md`](../prd/chart-family.prd.md) (authored in this same change — the owning doc whose scope §3 + goals this ADR pins) · the B6 bridge LLD §10 fork-2 row gains its "answered-by" pointer **at ratification** (coordinator housekeeping — that LLD is under doc-review; not edited mid-review per the serialize-maker-and-reviewer rule) |
 > | **Supersedes / Superseded by** | (none) — relates [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) (the whole-fleet catalog gate clause 6 obeys) · [ADR-0097](./0097-a2ui-feed-embedded-asks.md) (the ask-feed partition clause 8 leaves untouched) · [ADR-0065](./0065-icon-adapter-swappable-pack-architecture.md) (the pure-core+subpath precedent clause 7 weighs and declines) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (any chart default must survive the CSS-less consumer) · [ADR-0078](./0078-ui-text-three-axis-variant-size-as.md) (the type tokens bar-chart labels read) |
 

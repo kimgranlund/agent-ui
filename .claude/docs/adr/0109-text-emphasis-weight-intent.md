@@ -4,10 +4,10 @@
 
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-08 *(authored)* |
 > | **Proposed by** | system-planner — the design seat; the Lane B intake ADR-0102's Consequences named and deliberately deferred ("the catalog `Text` row cannot express **emphasis**", `0102:104-107`); forcing evidence = the 2026-07-08 gallery report ("a name/heading can simply be emphasized or bolded"), fork-diagnosed this session as an EXPRESSIVE gap, not a rendering defect (computed styles pass through the stamp correctly) |
-> | **Ratified by** | *(pending — Kim / orchestration-coordinator on gate; doc-reviewer pass first)* |
+> | **Ratified by** | Kim (host) · 2026-07-08 — Status flipped by Kim's own edit ("proceed") after the doc-review (PROMOTABLE, all gate dims green; the A5 `factories.ts` citation polish applied pre-flip) |
 > | **Repairs** | on ratification+build: `controls/text/text.ts` (the `emphasis` prop — one schema entry, zero behavior code) · `controls/text/text.css` (ONE `[emphasis]` token-block repoint, declared last — no styles-block change, no stamp leg) · `controls/text/text.md` (attributes row + the sole-signifier guidance) · `catalog.json` `Text` row gains `emphasis` (boolean, non-bindable; the factory's existing `default:` `setAttr` arm passes it through — `factories.ts:126-127` (textFactory's `default:` arm, the `truncate` lane) routes to `factories.ts:56-60` (the shared `setAttr` boolean-attribute form), so NO `factories.ts` code change) · `factories.test.ts` + `prompt-drift.test.ts` + catalog `index.test.ts` rows · `a2ui-catalog.spec.md` §5.2 `Text` row · **on accept: the reciprocal `Extended by ADR-0109` back-link on ADR-0078** (per the back-links-land-at-accept convention). Decomp: none — single-decision/one-prop intake cloning ADR-0106's repair pattern; both planes collapse to one node hosting one action |
 > | **Supersedes / Superseded by** | Applies **ADR-0102** (Lane B — per-instance weight intent as a catalog-reachable prop over a safe default; chooser walked in Context). Extends **ADR-0078** (the prop schema gains a FIFTH orthogonal axis; cl.2's M3-verbatim token table is explicitly NOT touched — clause 5) · relates **ADR-0106** (the fourth-axis precedent whose boolean-intent shape, non-bindable ruling, and catalog/descriptor repair pattern this record clones) · ADR-0071/0098 (advertising + validation lanes) · ADR-0057 (the non-color-signifier rule, whose sole-carrier logic clause 3 extends to weight) |
 

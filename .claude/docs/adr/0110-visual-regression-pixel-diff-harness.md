@@ -2,10 +2,10 @@
 
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-08 |
 > | **Proposed by** | system-planner (design intake — Kim authorized the parked tooling intake) |
-> | **Ratified by** | — |
+> | **Ratified by** | Kim (host) · 2026-07-08 — Status flipped by Kim's own edit ("proceed") after the doc-review (promote-gate green; the A5 re-realization links + the 0105 `__screenshots__` supersession + the A4/A3 fixes applied pre-flip). Gate-placement open question resolved WITH the record: rides `test:browser` from day one, demotion trigger named |
 > | **Repairs** | Re-realizes the acceptance evidence of [ADR-0105](0105-calendar-fluid-tracks-two-layer-cells.md) (calendar) and [ADR-0106](0106-text-truncate-css-only.md) (truncate) — the two pixel-worded acceptance legs the fleet could only prove by computed-style substitution (v1 pilot, Decision 7). **Supersedes ADR-0105's `__screenshots__` re-baseline instruction**: that path is gitignored debris (Context trap 1); baselines live at the tracked `__baselines__/` path from this record on. On accept: reciprocal forward-links on the 0105/0106 records (the back-links-land-at-accept convention). The plan is decomp [`visual-regression-harness.decomp.json`](../decompositions/visual-regression-harness.decomp.json), coverage-clean, plan-mode |
 > | **Supersedes / Superseded by** | — (supersedes one *instruction* inside ADR-0105's Repairs, not the record) |
 
