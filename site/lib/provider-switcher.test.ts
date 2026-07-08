@@ -34,10 +34,10 @@ describe('mountSwitcher — the ui-select dogfooding migration (Batch D)', () =>
     localStorage.clear()
   })
 
-  it('renders two ui-select controls (no native <select> remains)', async () => {
+  it('renders three ui-select controls (no native <select> remains)', async () => {
     mountSwitcher(slot)
     await whenFlushed()
-    expect(slot.querySelectorAll('ui-select')).toHaveLength(2)
+    expect(slot.querySelectorAll('ui-select')).toHaveLength(3)
     expect(slot.querySelector('select')).toBeNull()
   })
 
@@ -62,7 +62,7 @@ describe('mountSwitcher — the ui-select dogfooding migration (Batch D)', () =>
   it('exposes the live {provider, model} and rebuilds the model select when the provider changes', async () => {
     const ref = mountSwitcher(slot)
     await whenFlushed()
-    expect(ref.get()).toEqual({ provider: IMPLEMENTED, model: DEFAULT_MODEL })
+    expect(ref.get()).toEqual({ provider: IMPLEMENTED, model: DEFAULT_MODEL, mode: 'default' })
 
     // Drive the provider `select` seam directly (only anthropic ships implemented today, so a real roving
     // commit could not reach openai — this exercises the rebuild wiring the fillModels() replaceChildren used
@@ -72,7 +72,7 @@ describe('mountSwitcher — the ui-select dogfooding migration (Batch D)', () =>
     provSel.dispatchEvent(new Event('select'))
     await whenFlushed()
 
-    expect(ref.get()).toEqual({ provider: 'openai', model: 'gpt-4.1' }) // openai.defaultModel
+    expect(ref.get()).toEqual({ provider: 'openai', model: 'gpt-4.1', mode: 'default' }) // openai.defaultModel
     const modelSel = slot.querySelectorAll('ui-select')[1]! // the swapped-in fresh element
     expect(modelSel.querySelectorAll('[role=option]')).toHaveLength(2) // openai ships 2 models
     const modelValues = [...modelSel.querySelectorAll('[role=option]')].map((o) => o.getAttribute('value'))
@@ -90,6 +90,58 @@ describe('mountSwitcher — the ui-select dogfooding migration (Batch D)', () =>
     expect(JSON.parse(localStorage.getItem('a2ui-live-provider-selection') ?? 'null')).toEqual({
       provider: IMPLEMENTED,
       model: 'claude-opus-4-8',
+      mode: 'default',
+    })
+  })
+
+  // ADR-0090 §4/LLD-C12 — the Gen-UI mode selector: renders, defaults, persists, and updates the ref.
+  describe('mode selector (ADR-0090)', () => {
+    it('renders a third ui-select for mode with the 3 GenUiMode options, defaulting to "default"', async () => {
+      const ref = mountSwitcher(slot)
+      await whenFlushed()
+      const modeSel = slot.querySelectorAll('ui-select')[2]!
+      const values = [...modeSel.querySelectorAll('[role=option]')].map((o) => o.getAttribute('value'))
+      expect(values).toEqual(['default', 'specific', 'blue-sky'])
+      expect((modeSel as unknown as { value: string }).value).toBe('default')
+      expect(ref.get().mode).toBe('default')
+    })
+
+    it('updates the selection ref and persists to localStorage when mode is committed', async () => {
+      const ref = mountSwitcher(slot)
+      await whenFlushed()
+      const modeSel = slot.querySelectorAll('ui-select')[2]!
+      ;(modeSel as unknown as { value: string }).value = 'blue-sky'
+      modeSel.dispatchEvent(new Event('select'))
+      await whenFlushed()
+
+      expect(ref.get().mode).toBe('blue-sky')
+      expect(JSON.parse(localStorage.getItem('a2ui-live-provider-selection') ?? 'null')).toEqual({
+        provider: IMPLEMENTED,
+        model: DEFAULT_MODEL,
+        mode: 'blue-sky',
+      })
+    })
+
+    it('restores a persisted mode on the next mount, and falls back to "default" for a stale/unknown value', async () => {
+      localStorage.setItem(
+        'a2ui-live-provider-selection',
+        JSON.stringify({ provider: IMPLEMENTED, model: DEFAULT_MODEL, mode: 'specific' }),
+      )
+      const ref = mountSwitcher(slot)
+      await whenFlushed()
+      expect(ref.get().mode).toBe('specific')
+      expect((slot.querySelectorAll('ui-select')[2] as unknown as { value: string }).value).toBe('specific')
+
+      slot.remove()
+      slot = document.createElement('div')
+      document.body.append(slot)
+      localStorage.setItem(
+        'a2ui-live-provider-selection',
+        JSON.stringify({ provider: IMPLEMENTED, model: DEFAULT_MODEL, mode: 'not-a-real-mode' }),
+      )
+      const ref2 = mountSwitcher(slot)
+      await whenFlushed()
+      expect(ref2.get().mode).toBe('default') // an unrecognized persisted value defaults silently, never throws
     })
   })
 })

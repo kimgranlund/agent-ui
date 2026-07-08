@@ -6,6 +6,10 @@
 // with the rest of the overlay (SPEC-R12/N2). The committed providers.json holds env-var NAMES only (no
 // secret), so bundling it in dev is safe. Vite bundles JSON natively (LLD §2 data-access decision).
 //
+// ADR-0090 §4/LLD-C12: a third `ui-select` — the same dogfooded pattern — offers the Gen-UI `mode` axis
+// (`GenUiMode`: `default`/`specific`/`blue-sky`), persisted + exposed on the SAME `SelectionRef` alongside
+// `{provider,model}`, so the live demo can showcase all three dispositions off one catalog.
+//
 // Dogfoods the fleet's own `ui-select` in place of native `<select>` (Kim's directive: no native `<select>`
 // where a ui-* control exists) — same proven pattern as component-gallery.ts's themeSelect(): options are
 // `[role=option]` light-DOM children appended BEFORE connect (ui-select's `slots` contract — select.md),
@@ -15,6 +19,8 @@
 import '@agent-ui/components/components' // self-defining ui-* controls (registers ui-select; the aliased barrel — component-preview.ts's convention, and the only control specifier wired into the vitest resolve alias)
 import type { UISelectElement } from '@agent-ui/components/components'
 import providers from '../../packages/agent-ui/a2ui/tools/agent/providers.json'
+import type { GenUiMode } from '../../packages/agent-ui/a2ui/tools/agent/gen-ui-mode.ts'
+import { DEFAULT_GEN_UI_MODE, GEN_UI_MODES } from '../../packages/agent-ui/a2ui/tools/agent/gen-ui-mode.ts'
 
 interface ProviderModel {
   id: string
@@ -36,8 +42,21 @@ interface ProvidersConfig {
 const CONFIG = providers as ProvidersConfig
 const LS_KEY = 'a2ui-live-provider-selection'
 
+// ADR-0090 §4/LLD-C12 — the mode selector's demo-facing labels. The VALUE list itself is derived from
+// `GEN_UI_MODES` (`gen-ui-mode.ts`, the single source of truth) below — only the label text (not just the
+// bare mode name) lives here, since this is the one place that needs a friendlier demo-facing spelling.
+const MODE_LABELS: Record<GenUiMode, string> = {
+  default: 'Default — balanced',
+  specific: 'Specific — directive',
+  'blue-sky': 'Blue-sky — exploratory',
+}
+const MODE_OPTIONS: readonly { value: GenUiMode; label: string }[] = GEN_UI_MODES.map((value) => ({
+  value,
+  label: MODE_LABELS[value],
+}))
+
 export interface SelectionRef {
-  get(): { provider: string; model: string }
+  get(): { provider: string; model: string; mode: GenUiMode }
 }
 
 /** A `[role=option]` light-DOM child — ui-select's option element (select.md `slots`). `disabled` marks a
@@ -67,22 +86,26 @@ function labelled(text: string, control: HTMLElement): HTMLElement {
 export function mountSwitcher(slot: HTMLElement): SelectionRef {
   let provider = CONFIG.defaultProvider
   let model = CONFIG.providers[provider]?.defaultModel ?? ''
+  let mode: GenUiMode = DEFAULT_GEN_UI_MODE
 
-  // Restore a persisted selection, but only if it is still a valid, IMPLEMENTED pair.
+  // Restore a persisted selection, but only if it is still a valid, IMPLEMENTED pair (+ a recognized mode).
   try {
-    const saved = JSON.parse(localStorage.getItem(LS_KEY) ?? 'null') as { provider?: string; model?: string } | null
+    const saved = JSON.parse(localStorage.getItem(LS_KEY) ?? 'null') as
+      | { provider?: string; model?: string; mode?: string }
+      | null
     const entry = saved?.provider ? CONFIG.providers[saved.provider] : undefined
     if (entry && entry.implemented) {
       provider = saved!.provider!
       model = saved?.model && entry.models.some((m) => m.id === saved.model) ? saved.model : entry.defaultModel
     }
+    if (saved?.mode && MODE_OPTIONS.some((m) => m.value === saved.mode)) mode = saved.mode as GenUiMode
   } catch {
     /* corrupt storage — fall back to the defaults */
   }
 
   function persist(): void {
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify({ provider, model }))
+      localStorage.setItem(LS_KEY, JSON.stringify({ provider, model, mode }))
     } catch {
       /* storage unavailable — the in-memory selection still works this session */
     }
@@ -133,10 +156,20 @@ export function mountSwitcher(slot: HTMLElement): SelectionRef {
     persist()
   })
 
+  // ── The mode select — static options, the same directive/exploratory axis for every provider ──
+  const modeSel = document.createElement('ui-select') as UISelectElement
+  modeSel.setAttribute('label', 'Mode')
+  for (const m of MODE_OPTIONS) modeSel.append(option(m.value, m.label))
+  modeSel.value = mode
+  modeSel.addEventListener('select', () => {
+    mode = modeSel.value as GenUiMode
+    persist()
+  })
+
   const wrap = document.createElement('div')
   wrap.className = 'switcher'
-  wrap.append(labelled('Provider', provSel), modelField)
+  wrap.append(labelled('Provider', provSel), modelField, labelled('Mode', modeSel))
   slot.replaceChildren(wrap)
 
-  return { get: () => ({ provider, model }) }
+  return { get: () => ({ provider, model, mode }) }
 }

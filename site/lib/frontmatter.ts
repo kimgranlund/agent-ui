@@ -29,6 +29,9 @@ import checkboxMd from '../../packages/agent-ui/components/src/controls/checkbox
 import switchMd from '../../packages/agent-ui/components/src/controls/switch/switch.md?raw'
 import radioMd from '../../packages/agent-ui/components/src/controls/radio/radio.md?raw'
 import radioGroupMd from '../../packages/agent-ui/components/src/controls/radio/radio-group.md?raw'
+// ADR-0095 (supersedes ADR-0086): the standalone segmented control + its child leaf.
+import segmentMd from '../../packages/agent-ui/components/src/controls/segment/segment.md?raw'
+import segmentedControlMd from '../../packages/agent-ui/components/src/controls/segmented-control/segmented-control.md?raw'
 import sliderMd from '../../packages/agent-ui/components/src/controls/slider/slider.md?raw'
 import sliderMultiMd from '../../packages/agent-ui/components/src/controls/slider-multi/slider-multi.md?raw'
 import popoverMd from '../../packages/agent-ui/components/src/controls/popover/popover.md?raw'
@@ -69,6 +72,9 @@ export const loadCheckboxDoc = (): ComponentDoc => parseDoc(checkboxMd)
 export const loadSwitchDoc = (): ComponentDoc => parseDoc(switchMd)
 export const loadRadioDoc = (): ComponentDoc => parseDoc(radioMd)
 export const loadRadioGroupDoc = (): ComponentDoc => parseDoc(radioGroupMd)
+// ADR-0095 (supersedes ADR-0086): the standalone segmented control + its child leaf.
+export const loadSegmentDoc = (): ComponentDoc => parseDoc(segmentMd)
+export const loadSegmentedControlDoc = (): ComponentDoc => parseDoc(segmentedControlMd)
 export const loadSliderDoc = (): ComponentDoc => parseDoc(sliderMd)
 export const loadSliderMultiDoc = (): ComponentDoc => parseDoc(sliderMultiMd)
 // The Wave 4 Overlay family (popover, tooltip, menu, select, combo-box — tier=pattern, ADR-0043).

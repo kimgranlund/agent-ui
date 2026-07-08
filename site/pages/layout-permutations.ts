@@ -91,17 +91,20 @@ for (const value of elevations) {
 surfaceSection.append(surfaceGrid)
 
 // ── [6] container reflow (LIVE) — a ui-row in a user-resizable query container; drag it narrow to watch it stack
-// The flex primitives reflow on their nearest ANCESTOR query container's width (row.css `@container (inline-size <
-// 24rem)`), NOT a viewport breakpoint (ADR-0016). The `.reflow-frame` wrapper IS that query container and is
-// `resize: horizontal`, so dragging it below 24rem stacks the row to a column live — the same intrinsic
-// responsiveness ui-column / ui-list share, and the flex sibling of the grid auto-fit below.
+// ui-row reflows on its nearest ANCESTOR query container's width (row.css `@container (inline-size < 24rem)`),
+// NOT a viewport breakpoint (ADR-0016), while `reflow` stays at its default `auto` (ADR-0096 — unchanged
+// behavior for ui-row). The `.reflow-frame` wrapper IS that query container and is `resize: horizontal`, so
+// dragging it below 24rem stacks the row to a column live. ui-column's mirror switch (wide→row) is now GATED
+// behind `reflow="auto"` and defaults to `locked` (ADR-0096) — it does NOT share this always-on behavior, and
+// ui-list never had an @container rule at all (it is a plain `UIContainerElement`, not a `ui-column` subclass).
 const reflowSection = document.createElement('section')
 reflowSection.append(heading(2, 'Container reflow (live) — drag the frame narrow'))
 const reflowProse = document.createElement('p')
 reflowProse.textContent =
-  'ui-row reflows on its nearest ancestor query container, not the viewport (no breakpoint prop). Drag the ' +
-  'frame\'s bottom-right handle to narrow it — under 24rem the row stacks to a column, then springs back when ' +
-  'widened. The same @container intrinsic responsiveness ui-column and ui-list share.'
+  'ui-row reflows on its nearest ancestor query container, not the viewport (no breakpoint prop) — its reflow ' +
+  'prop defaults to "auto". Drag the frame\'s bottom-right handle to narrow it — under 24rem the row stacks to ' +
+  'a column, then springs back when widened. ui-column\'s mirror switch is opt-in (reflow="auto"; it defaults ' +
+  'to "locked") and ui-list has no @container rule at all — this live @container responsiveness is ui-row-only.'
 reflowSection.append(reflowProse)
 const reflowFrame = document.createElement('div')
 reflowFrame.className = 'reflow-frame'

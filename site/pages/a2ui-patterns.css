@@ -92,6 +92,15 @@
   margin: 0;
 }
 
+/* Cap the payload JSON's height so a multi-hundred-line payload scrolls INSIDE its figure instead of
+ * stretching the demo section to thousands of pixels and burying the live surface (the point of the page)
+ * below the fold. Measured pre-fix: sections ran 2700-4200px with the surface as little as 7% of the
+ * section. The cap keeps payload and rendered result visible side by side at all times. */
+.code-figure > pre {
+  max-block-size: 28rem;
+  overflow: auto;
+}
+
 .code-figure > figcaption {
   margin-block-end: 0.3rem;
   color: var(--md-sys-color-neutral-on-surface-variant);

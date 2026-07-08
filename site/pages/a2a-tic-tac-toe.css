@@ -1,0 +1,196 @@
+/* a2a-tic-tac-toe.css — PAGE-LOCAL layout chrome for the A2A tic-tac-toe arena demo (LLD-C11). Styles the
+ * fixture picker, the replay board + scrubber, the isolation verdict panel, and the three-column context
+ * inspector ONLY — the rendered ui-card/ui-button controls keep their own component CSS; this page never
+ * restyles a control. Colours are `--md-sys-color-*` roles (declared by the foundation barrels, imported
+ * first via _page.ts) so the page tracks light/dark; spacing rides the `--ui-space-*` ramp — tokens-only,
+ * matching a2ui-patterns.css / a2ui-list.css. */
+
+.fixture-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-end: 1rem;
+}
+
+.arena-error {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+}
+.arena-error[hidden] {
+  display: none;
+}
+
+/* ── replay: board grid + scrubber ──────────────────────────────────────────────────────────────────────── */
+.replay-card {
+  display: block;
+  margin-block-end: 1.5rem;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 0.35rem;
+  inline-size: min(18rem, 100%);
+  aspect-ratio: 1 / 1;
+  margin-inline: auto;
+}
+.board-cell {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  background: var(--md-sys-color-neutral-surface-high);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.board-cell[data-mark='X'] {
+  color: var(--md-sys-color-primary);
+}
+.board-cell[data-mark='O'] {
+  color: var(--md-sys-color-tertiary, var(--md-sys-color-secondary));
+}
+
+.narration {
+  margin: 0.9rem 0 0;
+  text-align: center;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  min-block-size: 1.4em; /* stable height across steps — narration length varies */
+}
+
+.step-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-block-start: 0.75rem;
+}
+.step-label {
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  min-inline-size: 8rem;
+  text-align: center;
+}
+
+/* ── isolation verdict panel (the centerpiece) ──────────────────────────────────────────────────────────── */
+.isolation-card {
+  display: block;
+  margin-block-end: 1.5rem;
+}
+
+.isolation-verdict {
+  margin: 0 0 0.75rem;
+  font-weight: 650;
+}
+.isolation-verdict[data-verdict='clean'] {
+  color: var(--md-sys-color-tertiary, var(--md-sys-color-primary));
+}
+.isolation-verdict[data-verdict='failed'] {
+  color: var(--md-sys-color-error);
+}
+
+.isolation-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.isolation-check {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: var(--md-sys-color-neutral-surface-high);
+}
+.isolation-check[data-check-status='fail'] {
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+}
+.isolation-check-head {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.isolation-check-detail {
+  margin: 0.35rem 0 0;
+  padding-inline-start: 1.25rem;
+  font-size: 0.85rem;
+}
+
+/* ── context inspector: [ seat X | wire+board timeline | seat O ] ──────────────────────────────────────── */
+.context-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+@media (max-width: 56rem) {
+  .context-columns {
+    grid-template-columns: 1fr;
+  }
+}
+.context-col {
+  min-inline-size: 0;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 10px;
+  background: var(--md-sys-color-neutral-surface-low);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.context-col > h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.context-lines {
+  max-block-size: 24rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.context-line {
+  margin: 0;
+  padding: 0.4rem 0.55rem;
+  border-radius: 6px;
+  background: var(--md-sys-color-neutral-surface);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.context-line[data-role='system'] {
+  border-inline-start: 3px solid var(--md-sys-color-primary);
+}
+.context-line[data-role='assistant'] {
+  border-inline-start: 3px solid var(--md-sys-color-tertiary, var(--md-sys-color-secondary));
+}
+.context-line.timeline-step[data-kind='end'] {
+  font-weight: 650;
+}
+
+/* ── the dev-only live section ──────────────────────────────────────────────────────────────────────────── */
+.live-section {
+  margin-block-start: 1.5rem;
+  padding: 1rem;
+  border: 1px dashed var(--md-sys-color-neutral-outline-variant);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+.live-section[hidden] {
+  display: none;
+}
+.live-status {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}

@@ -22,14 +22,14 @@ const { content } = mountPage({
 const FIELD_HERO_WIDTH = '18rem'
 
 // ── hero — live ui-button specimens (the headline artefact) ──────────────────────────────────────────────
-// A decorative leading icon for the slot demo — the REAL Phosphor `arrow-right` resolved through the
+// A decorative trailing icon for the slot demo — the REAL Phosphor `arrow-right` resolved through the
 // @agent-ui/icons adapter (ADR-0065/0066) instead of a hand-drawn path. Canonical anatomy markup (ADR-0012):
-// `slot="leading"` is the POSITION (start cell) and `data-role="icon"` is the CONTENT role that sizes the glyph
+// `slot="trailing"` is the POSITION (end cell) and `data-role="icon"` is the CONTENT role that sizes the glyph
 // to the icon cell (var(--ui-button-icon)). resolveIcon emits `fill="currentColor"` (inherits the button ink),
 // `aria-hidden` (the label stays the accessible name), and `width/height=100%` so it fills the icon cell.
 function makeIcon(): SVGElement {
   const svg = resolveIcon('arrow-right') // authentic Phosphor from the active pack (registered on import)
-  svg.setAttribute('slot', 'leading') // POSITION — the start cell
+  svg.setAttribute('slot', 'trailing') // POSITION — the end cell (an arrow reads as "go" trailing the label)
   svg.setAttribute('data-role', 'icon') // CONTENT role — sized to the icon cell by button.css
   return svg
 }
@@ -43,8 +43,12 @@ interface Specimen {
 function makeButton(spec: Specimen): HTMLElement {
   const button = document.createElement('ui-button')
   button.setAttribute('variant', spec.variant)
-  if (spec.icon) button.append(makeIcon())
+  // button.css places adornments by plain CSS grid AUTO-PLACEMENT (DOM order), not by the `slot`
+  // attribute alone (`slot` only selects for sizing/styling, per button.css:121-126) — so a
+  // trailing icon must be appended AFTER the label text, or grid auto-placement puts it in the
+  // wrong track regardless of the attribute value.
   button.append(document.createTextNode(spec.label))
+  if (spec.icon) button.append(makeIcon())
   return button
 }
 
@@ -208,6 +212,32 @@ const CARD_GROUPS: readonly CardGroup[] = [
         href: './radio-group-doc.html',
         title: 'API reference',
         blurb: 'The FACE radio-group container — owns exclusivity, roving, the group value, and required → valueMissing. From radio-group.md.',
+      },
+    ],
+  },
+  {
+    // ADR-0095 (supersedes ADR-0086's ui-radio-group[variant='segmented'], hard cutover): the child leaf.
+    label: 'ui-segment',
+    cards: [
+      {
+        href: './segment-doc.html',
+        title: 'API reference',
+        blurb: 'The child leaf of ui-segmented-control — a FACE radio re-tagged, adding no new prop or behavior of its own. From segment.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-segmented-control',
+    cards: [
+      {
+        href: './segmented-control-demo.html',
+        title: 'Demo',
+        blurb: 'The live joined-button single-select: click or Arrow-rove between segments, with the shared moving indicator + an event log proving the value round-trips.',
+      },
+      {
+        href: './segmented-control-doc.html',
+        title: 'API reference',
+        blurb: 'The standalone segmented control (ADR-0095) — extends ui-radio-group directly for 100% of the exclusivity/roving/value machinery. From segmented-control.md.',
       },
     ],
   },
@@ -462,6 +492,12 @@ const CARD_GROUPS: readonly CardGroup[] = [
         blurb: 'Five agent-emittable UI constructs, each payload beside its live surface — settings form, confirmation, wizard, dashboard tiles, and a schedule picker.',
       },
       {
+        href: './a2ui-gallery.html',
+        title: 'A2UI gallery',
+        blurb:
+          'Every composition on the example-seed shelf, one live card per seed — the scalable gallery whose members are derived from the shelf, so a new seed appears with zero edits. The hand-annotated tour lives on A2UI patterns.',
+      },
+      {
         href: './a2ui-stream.html',
         title: 'A2UI streaming',
         blurb: 'The same payload streamed line-by-line — root-early paints progressively, root-last stays blank until the end, and a malformed line is fault-isolated live (replay + step).',
@@ -470,6 +506,25 @@ const CARD_GROUPS: readonly CardGroup[] = [
         href: './a2ui-live.html',
         title: 'A2UI live agent',
         blurb: 'The ladder’s last rung: a chat app where an agent emits A2UI over the wire — prompt → rendered surface → you interact → the agent continues. A deterministic recorded backbone by default; a real model under `vite dev` with a key. Canvas / JSON / HTML tabs.',
+      },
+    ],
+  },
+  {
+    // The A2A cluster — ungrouped site-level cards, mirroring the ungrouped nav links in _page.ts (same
+    // posture as the A2UI cluster above: independent destinations, not a fleet component). The arena
+    // (LLD-C11) and the corpus-derived concepts/demos section (corpus LLD-C12) sit together.
+    cards: [
+      {
+        href: './a2a-tic-tac-toe.html',
+        title: 'A2A tic-tac-toe arena',
+        blurb:
+          'Two agents play through a deterministic referee that is the ONLY thing either seat ever talks to. Replay a real recorded Sonnet-5-vs-Haiku-4.5 match, then read the isolation panel: it runs the SAME checker the build gate runs, live, over the loaded transcript — flip to a contaminated fixture to watch it fail loudly.',
+      },
+      {
+        href: './a2a-concepts.html',
+        title: 'A2A concepts & demos',
+        blurb:
+          'The A2A corpus, made readable: one card per admitted record — the wire shape it teaches, its grounding citations, and the exact JSON artifact, verified LIVE through the same validator the corpus’s standing gate runs. Demo records link to the arena for the full recorded replay.',
       },
     ],
   },

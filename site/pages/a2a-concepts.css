@@ -1,0 +1,31 @@
+/* a2a-concepts.css — PAGE-LOCAL layout chrome for the A2A concepts/demos page (corpus LLD-C10). Styles the
+ * two section grids (Concepts / Demos) + their headings + the parse-failure error panel — the wrapper
+ * elements THIS page module creates. One concept card's own internal chrome lives in
+ * ../lib/a2a-concepts.css (the module that builds the card). Tokens-only (`--md-sys-color-*`), matching
+ * a2a-tic-tac-toe.css / a2ui-patterns.css / _page.css. */
+
+/* ── the responsive per-section grid — auto-fill so a new admitted record's card flows in with zero page
+ * edits (the concept/demo grid is filled by a2a-concepts.ts from the lib's derived card list). ─────────── */
+.concepts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: 1.25rem;
+  margin-block-start: 1rem;
+}
+
+.concepts-section-heading {
+  margin-block: 2rem 0.25rem;
+  font-size: 1.1rem;
+  font-weight: 650;
+}
+
+/* ── the parse-failure panel (LLD §7 — a broken/unreadable shard never renders a broken page; the arena
+ * page's "Match unavailable" posture applied here) ─────────────────────────────────────────────────────── */
+.concepts-error {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--md-sys-color-danger-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-danger-surface);
+  color: var(--md-sys-color-danger-on-surface);
+  font-size: 0.85rem;
+}

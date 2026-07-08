@@ -1,0 +1,134 @@
+/* site/lib/a2a-concepts.css — CARD-INTERNAL chrome for the A2A concepts/demos section (corpus LLD-C9). The
+ * PAGE shell owns the section grid/headings/error-panel (site/pages/a2a-concepts.css — the module that
+ * creates those wrapper elements); this file styles ONE concept card (head · description · body prose ·
+ * citations · wire-artifact entries · defect note) ONLY. No `ui-*` control is rendered inside a card (plain
+ * elements throughout), so there is no element-qualified `@scope`-display collision to guard against here
+ * (the segmented-control cascade-tie lesson does not apply — nothing here ties with a ui-* component's own
+ * scoped display). Tokens-only (`--md-sys-color-*` / `--ui-mono`) — no raw-literal colours, matching
+ * a2ui-gallery.css / a2ui-patterns.css / _page.css. */
+
+/* ── one concept/demo card ───────────────────────────────────────────────────────────────────────────────── */
+.concept-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 10px;
+  background: var(--md-sys-color-neutral-surface);
+}
+
+.concept-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.concept-card-heading {
+  margin: 0;
+  font-family: var(--ui-mono);
+  font-size: 0.95rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+/* The facet badge (concept/demo) — a small stepped chip, matching the inline-code chip treatment. */
+.concept-card-facet {
+  flex: none;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* The derived artifact-count facet — muted, pushed to the row's end. */
+.concept-card-count {
+  flex: 1 1 auto;
+  text-align: end;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.concept-card-desc {
+  margin: 0;
+  color: var(--md-sys-color-neutral-on-surface);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* The teaching body prose — height-capped + scrollable (the a2ui-patterns lesson): a longer future body
+ * never stretches the card past its neighbours in the grid row. */
+.concept-card-body {
+  max-block-size: 16rem;
+  overflow: auto;
+}
+.concept-card-body > p {
+  margin: 0 0 0.6rem;
+  color: var(--md-sys-color-neutral-on-surface);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+.concept-card-body > p:last-child {
+  margin-block-end: 0;
+}
+
+/* ── citations (provenance) ──────────────────────────────────────────────────────────────────────────────── */
+.concept-card-citations {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.concept-card-citation {
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.76rem;
+}
+
+/* ── wire artifacts ──────────────────────────────────────────────────────────────────────────────────────── */
+.concept-card-wire {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.concept-card-artifact {
+  font-size: 0.78rem;
+}
+
+.concept-card-artifact-json > summary {
+  cursor: pointer;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  user-select: none;
+}
+/* The JSON payload disclosure — height-capped + scrollable (the a2ui-patterns lesson), same as the
+ * gallery's per-seed payload pane, so a large task/card fixture never blows the card's rhythm. */
+.concept-card-artifact-json > .code-block {
+  margin-block-start: 0.4rem;
+  max-block-size: 12rem;
+  overflow: auto;
+}
+
+.concept-card-transcript-link {
+  color: var(--md-sys-color-primary);
+}
+
+/* ── the defect note — an honest callout when the in-page verdict finds a problem (never hidden; the drift
+ * gate fails on the same condition). Tinted with the danger role family, matching the gallery's seed-defect
+ * note. ─────────────────────────────────────────────────────────────────────────────────────────────────── */
+.concept-card-defect {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-inline-start: 3px solid var(--md-sys-color-danger-outline-variant);
+  border-radius: 6px;
+  background: var(--md-sys-color-danger-surface);
+  color: var(--md-sys-color-danger-on-surface);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}

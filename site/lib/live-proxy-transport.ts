@@ -1,11 +1,16 @@
 // live-proxy-transport.ts — LLD-C7 / SPEC-R9: the DEV-ONLY live overlay transport. Browser → the dev
 // proxy (LLD-C6, a Vite middleware that holds the key SERVER-side, process.env). It POSTs the framed turn
-// + the {provider,model} selection and streams the proxy's VALIDATED A2UI JSONL back as AgentTransport
+// + the {provider,model,mode} selection and streams the proxy's VALIDATED A2UI JSONL back as AgentTransport
 // lines. This module is reached ONLY via a dev-only dynamic import (`import.meta.env.DEV`) so `vite build`
 // tree-shakes it out and no live-call path is ever baked into the static build (SPEC-N2). Plain fetch; NO
 // key lives here (the proxy holds it) — this file has no `import.meta.env.VITE_*` reference at all.
+//
+// ADR-0090 §4/LLD-C7: `mode` (a `GenUiMode`) rides the SAME body + `SelectionRef` seam `{provider,model}`
+// already prove — the switcher (LLD-C12) is the only producer of a live `mode` value; the proxy (LLD-C6)
+// re-validates it independently (never trusts this body verbatim).
 
 import type { AgentTransport, TurnInput } from './agent-runtime.ts'
+import type { GenUiMode } from '../../packages/agent-ui/a2ui/tools/agent/gen-ui-mode.ts'
 
 const ENDPOINT = '/__a2ui/agent'
 
@@ -28,10 +33,10 @@ export async function probeLive(): Promise<LiveStatus> {
 }
 
 /** The live transport reads the CURRENT switcher selection per turn (SPEC-R12: `{provider,model}` sent
- * with each turn). A ref indirection so the page can swap the selection without re-constructing the
- * transport. */
+ * with each turn; ADR-0090 §4 extends this to `mode`). A ref indirection so the page can swap the
+ * selection without re-constructing the transport. */
 export interface SelectionRef {
-  get(): { provider: string; model: string }
+  get(): { provider: string; model: string; mode: GenUiMode }
 }
 
 export function createLiveProxyTransport(selection: SelectionRef): AgentTransport {
@@ -41,7 +46,7 @@ export function createLiveProxyTransport(selection: SelectionRef): AgentTranspor
       const res = await fetch(ENDPOINT, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ input, provider: sel.provider, model: sel.model }),
+        body: JSON.stringify({ input, provider: sel.provider, model: sel.model, mode: sel.mode }),
       })
       if (!res.ok || res.body === null) {
         throw new Error(`Live agent proxy error (${res.status} ${res.statusText}).`)

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2UI gallery</title>
+  </head>
+  <body>
+    <!-- The A2UI COMPOSITION GALLERY: one card per example-seed on the shelf (allSeeds, ADR-0055), each
+         rendering a LIVE mini-surface through the REAL @agent-ui/a2ui renderer (createRenderer). Members are
+         DERIVED from the shelf, never hand-listed — a new seed appears with zero page edits (pinned by
+         lib/a2ui-gallery.test.ts). Companion to a2ui-patterns.html (the hand-annotated 5-pattern tour). An
+         MPA entry auto-discovered by vite.config.ts's site/**/*.html glob (matches the nav link
+         ./a2ui-gallery.html) — no config edit needed. The page module imports pages/_page.ts FIRST for the
+         foundation CSS cascade + self-defining ui-* controls (ADR-0003). -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2ui-gallery.ts"></script>
+  </body>
+</html>

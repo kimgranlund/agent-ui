@@ -88,21 +88,32 @@ component-preview {
 .knob-switch {
   justify-self: start;
 }
-/* A small closed enum's ui-radio-group knob (batch A) now ALWAYS renders `variant="segmented"` (the ADR-0086
- * de-doubling closing step, component-preview.ts) — the control owns its own real layout (display:grid, a
- * horizontal row or vertical stack per `orientation`) and MUST be left alone: `:not([variant='segmented'])`
- * scopes this page-level flex/wrap authoring to the plain (unsegmented) fallback only. This matters for
- * cascade correctness, not just tidiness — `ui-radio-group.knob-radio-group` and the control's own
- * `ui-radio-group[variant='segmented']` rule (radio-group.css) are EQUAL specificity (0,1,1); component-
- * preview.css loads AFTER component-styles.css in the site bundle (pages/_page.ts's import-order contract), so
- * an unscoped page rule here would win the cascade tie by SOURCE ORDER and silently stomp the control's own
- * grid layout. No batch-A knob today is unsegmented, so this rule is currently dormant — kept as the
- * documented fallback shape, not dead code (a future non-segmented radio-group knob would need it). */
-ui-radio-group.knob-radio-group:not([variant='segmented']) {
+/* ADR-0095: every batch-A enum knob now dogfoods `ui-segmented-control` (superseding the retired
+ * `ui-radio-group[variant="segmented"]`, ADR-0086) — the control ALWAYS owns its own real grid layout
+ * unconditionally (segmented is its whole identity now, not a gated variant), so there is no more
+ * "unsegmented knob" fallback shape to author page-level flex/wrap CSS for at all — `.knob-radio-group`'s
+ * old dormant rule (targeting `ui-radio-group.knob-radio-group:not([variant='segmented'])`) retired with it;
+ * `ui-segmented-control` needs zero page-authored layout CSS for the knob case.
+ *
+ * The SPECIMEN ROOT case is the one page-author leg that survives: when the component under browse IS
+ * ui-radio-group itself, `#buildComponent` mounts a bare `<ui-radio-group>` (no class) straight into
+ * `.canvas-surface` (canvas-surface.ts) with its STRUCTURAL sample children (component-preview.ts's
+ * COMPONENT_SAMPLE_CHILDREN). `ui-radio-group` is deliberately layout-neutral by design (radio-group.css:
+ * "the page author controls layout") — this IS that page-author leg, scoped to the specimen root only
+ * (`.canvas-surface >`) so it never reaches an application's own unrelated `ui-radio-group` usage. The base
+ * declaration mirrors the DEFAULT orientation (`vertical` — a stacked column); the `[orientation='horizontal']`
+ * override switches to a wrapping row when the live `orientation` knob is flipped, so the visual axis never
+ * desyncs from the roving-focus keyboard axis the control itself resolves (radio-group.ts `connected()`).
+ * `ui-segmented-control` needs NO specimen-root leg here either — it too always owns its own grid layout. */
+.canvas-surface > ui-radio-group {
   display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.canvas-surface > ui-radio-group[orientation='horizontal'] {
+  flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
 }
 .knob-note {
   color: var(--md-sys-color-neutral-on-surface-variant);
