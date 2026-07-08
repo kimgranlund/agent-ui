@@ -238,11 +238,13 @@ export const NAV: readonly NavGroup[] = [
   },
   {
     // The A2A cluster — ungrouped site-level links, same posture as the A2UI cluster above (independent
-    // destinations, not a fleet component's page-type set). The arena (LLD-C11, a2a-tic-tac-toe.lld.md) and
-    // the corpus-derived concepts/demos section (corpus LLD-C12, a2a-corpus-docs.lld.md) sit together.
+    // destinations, not a fleet component's page-type set). The arena (LLD-C11, a2a-tic-tac-toe.lld.md), the
+    // corpus-derived concepts/demos section (corpus LLD-C12, a2a-corpus-docs.lld.md), and the A2UI-over-A2A
+    // artifact feed (LLD-C7, a2a-a2ui-bridge.lld.md, B6) sit together.
     links: [
       { href: './a2a-tic-tac-toe.html', label: 'A2A Tic-Tac-Toe Arena' },
       { href: './a2a-concepts.html', label: 'A2A Concepts & Demos' },
+      { href: './a2a-artifact-feed.html', label: 'A2A Artifact Feed' },
     ],
   },
   {

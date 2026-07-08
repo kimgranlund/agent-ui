@@ -512,7 +512,8 @@ const CARD_GROUPS: readonly CardGroup[] = [
   {
     // The A2A cluster — ungrouped site-level cards, mirroring the ungrouped nav links in _page.ts (same
     // posture as the A2UI cluster above: independent destinations, not a fleet component). The arena
-    // (LLD-C11) and the corpus-derived concepts/demos section (corpus LLD-C12) sit together.
+    // (LLD-C11), the corpus-derived concepts/demos section (corpus LLD-C12), and the A2UI-over-A2A
+    // artifact feed (LLD-C7, B6) sit together.
     cards: [
       {
         href: './a2a-tic-tac-toe.html',
@@ -525,6 +526,12 @@ const CARD_GROUPS: readonly CardGroup[] = [
         title: 'A2A concepts & demos',
         blurb:
           'The A2A corpus, made readable: one card per admitted record — the wire shape it teaches, its grounding citations, and the exact JSON artifact, verified LIVE through the same validator the corpus’s standing gate runs. Demo records link to the arena for the full recorded replay.',
+      },
+      {
+        href: './a2a-artifact-feed.html',
+        title: 'A2A artifact feed',
+        blurb:
+          'A conversation carried over A2A where some agent turns bear LIVE A2UI artifacts — a metric-tile report, a region-breakdown table — alongside plain prose, each hosted by its own renderer. Every client turn shows its capabilities handshake (HV-8); the verdict line runs the same checks the standing fixture gate runs, live, in this page.',
       },
     ],
   },
