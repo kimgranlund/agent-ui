@@ -251,11 +251,14 @@
  * inert (block layout ignores them), `.canvas-stage`'s `block-size: 100%` collapsed to 0, and its
  * `overflow: auto` clipped every rendered A2UI surface out of view — the canvas looked visually empty even
  * though the DOM/JSON/HTML tabs held real, correctly rendered content. Bumping specificity (not just source
- * order) is required to beat a component's own `@scope` declaration. */
+ * order) is required to beat a component's own `@scope` declaration.
+ * (Same footgun elsewhere: `adr-index.css`'s `.adr-search`. Kim's independent fix of this same bug
+ * [origin e99f090] modeled it as `:scope` carrying the scope-root's specificity — either reading, the
+ * rule stands: a page override of a component's own `@scope`d display MUST be element-qualified.) */
 ui-tabs.canvas-tabs {
   /* fill the pane column, then lay the compound out as the SAME [ tablist · active panel ] stack it already is
-   * (:scope is display:block) — enabling the fill so the active panel, not the whole pane, scrolls. This is
-   * consumer layout (sizing the control into the page), not a restyle of its visual treatment. */
+   * — enabling the fill so the active panel, not the whole pane, scrolls. This is consumer layout (sizing the
+   * control into the page), not a restyle of its visual treatment. */
   flex: 1 1 auto;
   min-block-size: 0;
   display: flex;

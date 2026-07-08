@@ -315,6 +315,9 @@ describe('a2ui-live canvas tabs (Batch C) — the shipped ui-tabs compound repla
   // `.canvas-tabs`'s selector to `ui-tabs.canvas-tabs` (specificity 0,1,1 — checked BEFORE proximity, so it
   // beats `:scope`'s 0,1,0 outright). This leg now asserts `display` directly so a future regression back to a
   // tied-specificity selector fails HERE, not silently in the browser.
+  // (Diagnostic detail from the independent origin fix e99f090: flex-direction/flex-grow report their
+  // SPECIFIED values via getComputedStyle regardless of whether display is actually flex — which is
+  // exactly why the display assertion is the load-bearing one and the old two-property check was vacuous.)
   it('the stage-fill is wired: .canvas-tabs computes display:flex (beats @scope proximity), the active panel is flex:1 1 auto, and a hidden panel takes no box', () => {
     const tabs = mountCanvasTabs('canvas')
     const panels = tabs.querySelectorAll('ui-tab-panel')
@@ -322,5 +325,25 @@ describe('a2ui-live canvas tabs (Batch C) — the shipped ui-tabs compound repla
     expect(getComputedStyle(tabs).flexDirection, '.canvas-tabs must be the flex column a2ui-live.css establishes').toBe('column')
     expect(getComputedStyle(panels[0]!).flexGrow, 'the active panel must be flex-grow:1 so it fills the stage, not the pane').toBe('1')
     expect((panels[1] as HTMLElement).getBoundingClientRect().height, 'a hidden panel must take zero box (display:none)').toBe(0)
+  })
+
+  // Strengthening 3 (real pixel fill, the whole-shape proof) — mounts the tabs compound inside a DEFINITE-height
+  // container (mirroring the real page's app-shell → pane → tabs chain) and asserts the active panel's rendered
+  // height actually reaches that container, not just that the CSS properties are declared. This is the assertion
+  // that would have failed outright under the pre-fix `display:block` bug (the panel would have shrunk to its
+  // own content's block-flow height, nowhere near the container).
+  it('the active panel genuinely FILLS a real sized container (not just declares flex:1 1 auto)', () => {
+    const wrap = document.createElement('div')
+    wrap.style.display = 'flex'
+    wrap.style.flexDirection = 'column'
+    wrap.style.height = '400px'
+    wrap.style.width = '300px'
+    const tabs = mountCanvasTabs('canvas')
+    mounted.pop() // mountCanvasTabs already queued `tabs` for its own cleanup; re-home it under `wrap` instead
+    wrap.append(tabs)
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const panel = tabs.querySelector('ui-tab-panel:not([hidden])') as HTMLElement
+    expect(panel.getBoundingClientRect().height, 'the active panel must fill the 400px container, not shrink to its own content').toBeGreaterThan(300)
   })
 })
