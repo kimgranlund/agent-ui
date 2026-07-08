@@ -9,7 +9,10 @@
 
 ## 1. Component map (traceability · realized-state 2026-07-02)
 
-**Every LLD-C\* module below is UNBUILT** (no `src/stream/`, no `tools/pipeline/` exist). The consumer-side
+**Every LLD-C\* module below is UNBUILT as a `src/stream/`/`tools/pipeline/` module — with two
+pointer-recorded exceptions (2026-07-08): LLD-C2's driver is REALIZED off-family by
+`a2ui/tools/agent/produce.ts` (see its row), and LLD-C5's design landed in the a2a family's bridge LLD
+(see its row).** The consumer-side
 streaming *behaviors* are already REALIZED — but they live in the RENDERER under the runtime SPEC's
 ownership, not here: JSONL line decode + fault isolation (`renderer/parser.ts`, runtime SPEC-R1/N4), the
 `ingest(line)` public host + arrival-order dispatch (`renderer/renderer.ts`), progressive render-on-root +
@@ -19,10 +22,10 @@ out-of-order tolerance (`renderer/tree.ts`, runtime SPEC-R3/R4/N1), validate-at-
 | ID | Component | Implements | File (under `packages/agent-ui/a2ui/`) | Scope | State |
 |---|---|---|---|---|---|
 | **LLD-C1** | JSONL codec | SPEC-R1 | `src/stream/codec.ts` | runtime | unbuilt |
-| **LLD-C2** | Generation pipeline driver | SPEC-R2 | `tools/pipeline/produce.ts` | dev/CI | unbuilt · blocked by corpus retriever (corpus LLD-C9, REALIZED) + the SPEC-R6 loop's first PROGRAMMATIC driver — the LIVE-AGENT wave's (NEXT item 4; the harness realizes the loop procedurally only — harness LLD v0.2 §6 / ADR-0067) |
+| **LLD-C2** | Generation pipeline driver | SPEC-R2 | `tools/pipeline/produce.ts` | dev/CI | **REALIZED (2026-07-08 re-sync)** — by the live-agent wave's `tools/agent/produce.ts` (its header: "streaming LLD-C2 realized"): generate→validate→self-correct, bounded, validate-then-stream. The planned `tools/pipeline/produce.ts` module is superseded by that realization; no second driver gets built |
 | **LLD-C3** | Transport abstraction + stdio | SPEC-R3, R8 | `src/stream/transport.ts` + `tools/pipeline/stdio.ts` | runtime (iface) / dev (stdio) | unbuilt |
 | **LLD-C4** | AG-UI adapter | SPEC-R4 | `tools/pipeline/transports/ag-ui.ts` | dev/server | unbuilt |
-| **LLD-C5** | A2A adapter | SPEC-R5 | `tools/pipeline/transports/a2a.ts` | dev/server | unbuilt |
+| **LLD-C5** | A2A adapter | SPEC-R5 | `tools/pipeline/transports/a2a.ts` | dev/server | unbuilt · **design landed (2026-07-08):** the A2A family's B6 bridge LLD ([`../../lld/a2a-a2ui-bridge.lld.md`](../../lld/a2a-a2ui-bridge.lld.md), its LLD-C1/C2) plans this exact module on the `@agent-ui/a2a` substrate; SPEC-R5 stays this family's contract — realization builds at B6 |
 | **LLD-C6** | MCP server | SPEC-R6 | `tools/pipeline/mcp-server.ts` | dev/CLI | unbuilt · blocked by corpus store (retrieve/admit) |
 | **LLD-C7** | Conformance/negotiation | SPEC-R7, N3 | `src/stream/conformance.ts` | runtime | unbuilt |
 
