@@ -155,14 +155,16 @@ keyboard:
 
 geometry:
   tier: pattern                         # composite control; panel is Container/surface, cells are square targets
-  cellSize: --ui-calendar-cell-size     # the square side of each day cell (default 2rem / 32px; [size=sm/lg] repoints)
+  cellSize: --ui-calendar-cell-size     # ADR-0105: the track FLOOR + the point-layer circle diameter (default 2rem / 32px; [size=sm/lg] repoints) — no longer a fixed track width
   gap: --ui-calendar-gap                # inter-cell gap (default 0.125rem / 2px)
   panel: Container/surface              # bg + outline + radius from --ui-calendar-panel-* tokens (NOT a control height)
   navButtons: inline affordance = font  # caret-left/caret-right (Phosphor) are font-sized glyphs (§4.6 law; no icon cell)
   weekdayHeader: 0.75 × cell-size tall  # slightly shorter than day cells; 85% font size
-  rangeInterior: square (radius:0)      # ADR-0093 — [data-in-range] cells are square-cornered (vs. the circular endpoint fill), a non-color signifier distinguishing interior from endpoint (ADR-0057)
+  gridTracks: fluid — minmax(cellSize, 1fr)  # ADR-0105 — shrink-wrapped resolves to the floor exactly (byte-identical to pre-ADR-0105); given a definite width from an ancestor (a stretched flex/grid cell) the grid fills it, tracks sharing the surplus equally. Row block-size never changes — only inline-size adapts. Escape: `max-inline-size: max-content` on the host pins the old always-compact rendering (ADR-0102 override).
+  cellLayers: two — BAND (button box, fluid, square) + POINT (::before, fixed cellSize circle, centred)  # ADR-0105 — the BAND carries the square [data-in-range] wash + ink/disabled/outside colours + the (now enlarged) hit target; the POINT carries aria-selected/hover/today-ring/focus-ring, so circles stay circles at any track width. A third paint (::after, endpoint half-wash) bridges the point circle to the band interior — 0-width at the floor, opens only under surplus width.
+  rangeInterior: square (radius:0)      # ADR-0093 — [data-in-range] cells are square-cornered (vs. the circular endpoint fill on the POINT layer), a non-color signifier distinguishing interior from endpoint (ADR-0057); unaffected by ADR-0105's layer split
 
-forcedColors: 'selected-fill (Highlight/HighlightText) + today-ring (ButtonText inset ring) are preserved via forced-color-adjust:none on the relevant cells; panel maps to Canvas/CanvasText; nav buttons to ButtonText; disabled cells to GrayText. Three-state distinctness: focus=Highlight-outside, selected=Highlight-fill, today=ButtonText-inset. Range mode (ADR-0093): the whole band (endpoints + interior) carries aria-selected=true and so maps to the SAME Highlight/HighlightText pair — self-delimiting (a contiguous Highlight run), with the circle-vs-square shape (unaffected by forced-colors) keeping endpoint and interior visually distinct without a third system color.'
+forcedColors: 'selected-fill (Highlight/HighlightText) + today-ring (ButtonText inset ring) are preserved via forced-color-adjust:none on the relevant cells; panel maps to Canvas/CanvasText; nav buttons to ButtonText; disabled cells to GrayText. Three-state distinctness: focus=Highlight-outside, selected=Highlight-fill, today=ButtonText-inset. Range mode (ADR-0093): the whole band (endpoints + interior) carries aria-selected=true and so maps to the SAME Highlight/HighlightText pair — self-delimiting (a contiguous Highlight run), with the circle-vs-square shape (unaffected by forced-colors) keeping endpoint and interior visually distinct without a third system color. ADR-0105 re-homes the SAME mapping per paint layer (no new states): selected-fill/focus-ring/today-ring paint on the fixed-diameter POINT layer (::before, forced-color-adjust:none inherited from the button), so they stay circular under WHCM at any track width; the range interior wash and the endpoint half-wash (::after) paint Highlight on/around the BAND (the fluid button box), so the whole band still reads as one contiguous Highlight run even when stretched wide.'
 ---
 
 # ui-calendar
@@ -178,6 +180,39 @@ The control creates a `[data-box]` panel (adopting the shared container box-mode
 that holds a `<header>` navigation bar (prev caret · month-year title · next caret) and a 7-column CSS
 grid of day cells. The grid is rebuilt on month navigation; the shell (panel + header + grid
 container) is created ONCE (idempotent across disconnect/reconnect).
+
+## Sizing — fluid tracks, a floor not a fixed width (ADR-0105)
+
+The host is `inline-block` and shrink-wraps by default — nothing about that changed. What changed is
+the grid's own tracks: `grid-template-columns: repeat(7, minmax(--ui-calendar-cell-size, 1fr))`.
+`--ui-calendar-cell-size` is now read as a **floor**, not a fixed width. With nothing granting the
+host a definite size (the common case — a bare `<ui-calendar>` in flowing text, or shrink-to-fit
+content), `minmax` resolves each track to exactly the floor — pixel-identical to the pre-ADR-0105
+fixed-track rendering. When an ancestor DOES grant the host a definite width (most commonly: a
+`Column`/`ui-field` with the fleet's default `align-items: stretch`, ADR-0030 — the calendar,
+itself `inline-block`, is *blockified* into a stretched flex/grid item), the seven tracks share the
+surplus equally and the grid fills the width it was given, instead of sitting fixed-width in the
+inline-start corner of a panel that visibly claims — then wastes — the rest. Row `block-size` never
+changes; only inline-size adapts, so a wide calendar is wider, never a taller month. A page author
+who wants the OLD always-compact rendering even inside a stretched context keeps that one CSS line:
+`max-inline-size: max-content` on the host (ADR-0102's override escape).
+
+## Cell paint — two layers, so circles stay circles at any width (ADR-0105)
+
+Each day cell is still the single `<button role="gridcell">` `calendar.ts` has always created — CSS
+paints it as two layers, not two elements. The **BAND** layer is the button box itself: it stretches
+to its (now possibly wide) fluid track, and carries whatever is legitimately track-shaped — the
+square `[data-in-range]` interior wash, the outside/disabled ink, and (for free) an enlarged hit
+target. The **POINT** layer is a fixed `--ui-calendar-cell-size` circle (a `::before`, always
+centred in the button regardless of its width) that carries whatever is legitimately circular — the
+`aria-selected` endpoint/single fill, the hover wash, the `[data-today]` inset ring, and the
+`:focus-visible` ring — so none of those ever stretches into an ellipse in a wide track. A third,
+endpoint-only pseudo (`::after`, `[data-range-start]`/`[data-range-end]`) paints a half-track wash
+bridging the point circle's own edge to the band interior, so a wide track never opens a visible gap
+between an endpoint's circle and its neighbouring interior cell; at the track floor that bridge is
+exactly 0px wide (today's rendering, unchanged) and only opens under surplus width. A same-day range
+(a cell that is both `[data-range-start]` and `[data-range-end]`) paints neither half-wash — there is
+no interior cell on either side to bridge to.
 
 ## Selection
 
@@ -222,10 +257,15 @@ single-day range; a pick on an already-complete range starts a new one. `select`
 pick (detail = the raw picked ISO); `change` fires only when the pair completes. Escape is **not**
 intercepted (ADR-0045) — an abandoned pending start is simply superseded by the next pick.
 
-Endpoints (`[data-range-start]`/`[data-range-end]`) reuse the circular selected-fill; interior
-cells (`[data-in-range]`) get a square wash from `--ui-calendar-range-fill`/`-range-ink`. A
-visually-hidden `aria-live="polite"` status region (the `status` part) announces each transition,
-naming both dates on completion — so a swap is audible as the resulting range.
+Endpoints (`[data-range-start]`/`[data-range-end]`) reuse the circular selected-fill (the POINT
+layer, ADR-0105 — a fixed-diameter circle, never an ellipse); interior cells (`[data-in-range]`)
+get a square wash from `--ui-calendar-range-fill`/`-range-ink` (the BAND layer, spanning the full,
+possibly fluid, track). In a wide track an endpoint also paints a half-track bridging wash (also
+`--ui-calendar-range-fill`) from its circle's own edge to the interior — 0px at the compact floor,
+visible only once the track has surplus width — so the band never shows a gap between an endpoint's
+circle and its neighbouring interior cell. A visually-hidden `aria-live="polite"` status region (the
+`status` part) announces each transition, naming both dates on completion — so a swap is audible as
+the resulting range.
 
 A `valueStart`/`valueEnd` pair set **programmatically** out of order is never auto-swapped: it
 stays inverted and `formValidity()` reports it invalid (swap is a pick-gesture semantic, not a

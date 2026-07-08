@@ -9,7 +9,7 @@
 > | **Proposed by** | planning-lead — the design seat, on the Wave-5 brief (#49 / #99): "calendars, date-pickers" (Kim). |
 > | **Ratified by** | orchestration-lead — on the green G6/G7 gate (the `ui-calendar` grid + the cross-engine `type=date` overlay smoke) |
 > | **Repairs** | **NEW** `controls/calendar/calendar.{ts,css,md}` (`UICalendarElement`) · `traits/value-codec.ts` (`dateCodecOptions`/`timeCodecOptions` + stretch compound) · `controls/text-field/text-field.{ts,css,md}` (`type=date`/`time` rows + the lazy-calendar overlay) · `.claude/docs/decompositions/control-suite-wave5-input-codecs-pickers.decomp.md` (Wave 5B) · goals §G6/§G7 · **composes ADR-0043/0045** (overlay + dismissal) + **ADR-0046** (`[data-box]` panel) + **ADR-0042** (`UIFormElement` base) + **extends ADR-0044/0047** (the `type`-resolver + codec seam) · relates ADR-0023 (the tree-shake proof the lazy import protects). |
-> | **Supersedes / Superseded by** | None. **Extends ADR-0047** (the numeric family) into the date/time family; composes the Wave-4 overlay. |
+> | **Supersedes / Superseded by** | None. **Extends ADR-0047** (the numeric family) into the date/time family; composes the Wave-4 overlay. **Extended by ADR-0105** (the day-cell ramp here survives as the fluid track FLOOR and the point-layer circle diameter — its square-cell/circular-state anatomy is re-expressed in two paint layers, not replaced; this record's grid/keyboard/form Decision stands unchanged). |
 
 ## Context
 
