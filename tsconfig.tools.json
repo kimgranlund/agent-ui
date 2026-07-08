@@ -1,0 +1,11 @@
+{
+  // The tools/ type gate — the per-package `tools/` trees (Node-side CLIs, harnesses, dev plugins)
+  // live OUTSIDE root tsconfig's `include` (`packages/agent-ui/*/src`), so `tsc` alone never checked
+  // them. This config closes that gap: same strictness, plus the Node ambient types the CLIs need.
+  // Runs as `npm run check:tools`, folded into the standing `check` gate.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["vite/client", "node"]
+  },
+  "include": ["packages/agent-ui/*/tools"]
+}

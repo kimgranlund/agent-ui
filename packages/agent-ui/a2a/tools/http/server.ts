@@ -1,9 +1,7 @@
 // server.ts — the thin `node:http` shell (LLD-C8, ~20 lines): POST `/a2a` -> `handleRpc`; GET the
 // well-known path -> the served card. This is the ONLY file in the package that touches a real socket
 // (exercised by the manual dev smoke, `smoke.ts` — never by a standing test, SPEC-N2/N3).
-// @ts-expect-error - node:http is untyped without @types/node (the a2ui dev-proxy-plugin.ts precedent)
 import { createServer } from 'node:http'
-// @ts-expect-error - same precedent
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { RpcCore } from './core.ts'
 import { serveAgentCard, wellKnownAgentCardPath } from '../wellknown.ts'
@@ -41,8 +39,14 @@ export function serveA2a(core: RpcCore, card: A2aAgentCard): ServeA2a {
   })
   return {
     listen: (port = 0) =>
-      new Promise((resolve) => {
-        server.listen(port, () => resolve(server.address().port))
+      new Promise((resolve, reject) => {
+        server.listen(port, () => {
+          const addr = server.address()
+          // address() is string|AddressInfo|null; a TCP listen always yields AddressInfo — anything
+          // else means the socket never bound (fail loud, this shell is fail-fast by contract).
+          if (addr === null || typeof addr === 'string') reject(new Error('a2a http shell: no TCP address after listen'))
+          else resolve(addr.port)
+        })
       }),
     close: () => new Promise((resolve) => server.close(() => resolve())),
   }

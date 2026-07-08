@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
-// node:fs is untyped here (no @types/node devDep) — same reverse-coupling fs-read pattern as the other
+// Raw-text fs read — same reverse-coupling fs-read pattern as the other
 // css-structure probes (button-descriptor.test.ts et al.); vitest/node resolves it at runtime.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { defaultCatalog } from '@agent-ui/a2ui'
-// node:fs is untyped here (no @types/node devDep) — the same reverse-coupling fs-read pattern the site drift
+// Raw-text fs read — the same reverse-coupling fs-read pattern the site drift
 // gates use (descriptor/site-coverage.test.ts), resolved by vitest/node at runtime.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+// @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

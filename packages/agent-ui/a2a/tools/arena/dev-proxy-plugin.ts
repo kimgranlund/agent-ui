@@ -19,11 +19,9 @@
 // render yet), so this change is purely a server-side latency/honesty fix: first bytes now leave the
 // proxy as soon as the header is known, not after the entire game finishes. Paths resolve from
 // `process.cwd()` (the repo root `vite` runs from) — the a2ui dev-proxy-plugin.ts precedent.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime (fleet precedent)
 import { readFileSync } from 'node:fs'
 import { loadEnv } from 'vite'
 import type { Plugin } from 'vite'
-// @ts-expect-error - node:http is untyped without @types/node; same precedent as node:fs above
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { resolvePair, validateProvidersConfig } from '../../../a2ui/tools/agent/providers-config.ts'
 import type { ProvidersConfig } from '../../../a2ui/tools/agent/providers-config.ts'

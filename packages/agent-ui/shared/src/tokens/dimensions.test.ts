@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest'
 // We read the CSS as text. vite strips `.css?raw` to empty (its CSS pipeline intercepts), so the
-// trip-wire's `?raw` glob can't be used for stylesheets; and there is no `@types/node` devDep, so the
-// node builtin is untyped here. Suppress the untyped-import + declare the one global we touch.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+// trip-wire's `?raw` glob can't be used for stylesheets. Node GLOBALS stay out of the root graph
+// (`types` lists only vite/client), so declare the one global we touch.
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

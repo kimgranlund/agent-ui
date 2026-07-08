@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { splitFrontmatter, parseDescriptor } from './component-descriptor.ts'
-// node:fs is untyped here (no @types/node devDep) — same reverse-coupling fs-read pattern as site-coverage.test.ts.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+// Raw-text fs read — same reverse-coupling fs-read pattern as site-coverage.test.ts.
 import { readFileSync, readdirSync } from 'node:fs'
 declare const process: { cwd(): string }
 
@@ -29,13 +28,13 @@ const COMPONENTS_SRC = `${ROOT}/packages/agent-ui/components/src`
 const SITE = `${ROOT}/site`
 const read = (p: string): string => readFileSync(p, 'utf8') as string
 
-type Dirent = { name: string; isDirectory(): boolean; isFile(): boolean }
+import type { Dirent } from 'node:fs'
 
 /** Recursively list every file under `dir` (absolute paths); a missing dir yields []. */
 function walk(dir: string): string[] {
   let entries: Dirent[]
   try {
-    entries = readdirSync(dir, { withFileTypes: true }) as Dirent[]
+    entries = readdirSync(dir, { withFileTypes: true })
   } catch {
     return []
   }
@@ -143,9 +142,9 @@ const CARD_BLOCK = constBlock(read(`${SITE}/main.ts`), 'CARD_GROUPS')
 const NAV_LABELS = groupLabels(NAV_BLOCK, 'links')
 const CARD_LABELS = groupLabels(CARD_BLOCK, 'cards')
 const HTML = new Set<string>(
-  readdirSync(SITE, { withFileTypes: true } as never)
-    .filter((e: Dirent) => e.isFile() && e.name.endsWith('.html'))
-    .map((e: Dirent) => e.name),
+  readdirSync(SITE, { withFileTypes: true })
+    .filter((e) => e.isFile() && e.name.endsWith('.html'))
+    .map((e) => e.name),
 )
 
 // ── the guard ─────────────────────────────────────────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
 // against the actual committed fixture — the same bytes `a2ui/src/bridge/feed-fixture.test.ts` gates on.
 // Reading via `fs` here is a faithful proxy for what the page loads via a Vite `?raw` static import.
 import { describe, it, expect } from 'vitest'
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime (fleet precedent)
+// @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (fleet precedent)
 import { readFileSync } from 'node:fs'
 import { loadFeed } from './artifact-feed.ts'
 

@@ -9,7 +9,6 @@ import {
   compareDescriptorToProps,
   type ParsedAttribute,
 } from '../../descriptor/component-descriptor.ts'
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

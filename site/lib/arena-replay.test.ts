@@ -5,7 +5,7 @@
 // site page itself uses a Vite `?raw` import for the SAME files under jsdom/the browser; both resolve to
 // the identical bytes, so reading via fs here is a faithful proxy for what the page loads.
 import { describe, it, expect } from 'vitest'
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime (fleet precedent)
+// @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (fleet precedent)
 import { readFileSync } from 'node:fs'
 import { buildIsolationReport, buildReplaySteps, ISOLATION_CHECKS, loadTranscript } from './arena-replay.ts'
 

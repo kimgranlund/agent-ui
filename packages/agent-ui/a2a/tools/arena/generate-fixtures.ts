@@ -6,11 +6,8 @@
 // canary copied into a referee->O message). The out-of-transcript control
 // (`contaminated-provider-control.match.jsonl`) is generated separately by its own standing test
 // (model-seat.test.ts) since it exercises the model-seat/provider-stub path, not the scripted one.
-// @ts-expect-error - node:fs/node:path untyped without @types/node (the fleet-wide precedent)
 import { writeFileSync } from 'node:fs'
-// @ts-expect-error - see above
 import { dirname, join } from 'node:path'
-// @ts-expect-error - import.meta.url typing needs node types; runtime-only script, not part of the tsc graph
 import { fileURLToPath } from 'node:url'
 import { runMatch } from './match.ts'
 import { createScriptedSeat } from './seats/scripted.ts'

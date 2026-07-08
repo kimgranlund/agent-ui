@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
-// node:fs is untyped here (no @types/node devDep) — same reverse-coupling fs-read pattern the descriptor/
+// Raw-text fs read — same reverse-coupling fs-read pattern the descriptor/
 // css probes in this folder use.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 import { UITextElement } from './text.ts'
 declare const process: { cwd(): string }

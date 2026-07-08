@@ -9,8 +9,7 @@ import {
   scalarSeq,
   type ParsedAttribute,
 } from '../../descriptor/component-descriptor.ts'
-// Read the tabs sources as text (no @types/node devDep — the button/text-field readFileSync precedent).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+// Read the tabs sources as text (the button/text-field readFileSync precedent).
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

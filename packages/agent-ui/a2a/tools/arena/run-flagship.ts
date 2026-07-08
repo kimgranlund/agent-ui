@@ -5,11 +5,8 @@
 // Reads `ANTHROPIC_API_KEY` from the repo-root `.env` (gitignored) or `process.env`. On success, writes
 // `matches/flagship.match.jsonl` ONLY if the transcript validates AND the isolation gate is clean
 // (LLD §5: "fixtures land only gate-green" — no partial/failed fixture is ever committed).
-// @ts-expect-error - node:fs untyped without @types/node (fleet-wide precedent)
 import { readFileSync, writeFileSync } from 'node:fs'
-// @ts-expect-error - see above
 import { dirname, join } from 'node:path'
-// @ts-expect-error - import.meta.url typing needs node types; runtime-only script
 import { fileURLToPath } from 'node:url'
 import { anthropicProvider } from '../../../a2ui/tools/agent/providers/anthropic.ts'
 import { runMatch } from './match.ts'

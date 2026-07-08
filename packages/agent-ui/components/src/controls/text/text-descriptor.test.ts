@@ -12,7 +12,6 @@ import {
 import type { ParsedAttribute } from '../../descriptor/component-descriptor.ts'
 // Read text.md/text.ts/text.css as text (vite strips `.md?raw`; no `@types/node` devDep — same approach
 // as the s6/s7 probes).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

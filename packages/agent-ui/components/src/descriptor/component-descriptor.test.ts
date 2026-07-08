@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { splitFrontmatter, parseDescriptor, validateComponentDescriptor } from './component-descriptor.ts'
-// Read button.md as text via node:fs (no @types/node devDep — same approach as the s6/s7/s8 probes).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+// Read button.md as text via node:fs (same approach as the s6/s7/s8 probes).
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

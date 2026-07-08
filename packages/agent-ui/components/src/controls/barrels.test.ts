@@ -12,7 +12,6 @@ import { UITabsElement } from './tabs/tabs.ts'
 import { UIModalElement } from './modal/modal.ts'
 // Read package.json + the CSS barrels as text (vite strips `.css?raw`; no `@types/node` devDep — same
 // approach as the s6/s7 probes).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
 declare const process: { cwd(): string }
 

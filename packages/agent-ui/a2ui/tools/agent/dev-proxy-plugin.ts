@@ -13,14 +13,9 @@
 // 3-value set, not a registry lookup) and defaulted, never forwarded raw, exactly as `model` is validated by
 // `resolvePair` above — but a bad `mode` degrades the DISPOSITION, never the request (no 400).
 
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
-// (the fleet-wide precedent, e.g. providers-config.test.ts) — this file was never previously imported
-// into the strict tsc graph (only Vite/esbuild-transpiled at dev-server start) until validateMode's own
-// dedicated unit test (ADR-0090 §4 fast-follow) pulled it in for the first time.
 import { readFileSync } from 'node:fs'
 import { loadEnv } from 'vite'
 import type { Plugin } from 'vite'
-// @ts-expect-error - node:http is untyped without @types/node; same precedent as node:fs above
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { produce } from './produce.ts'
 import type { ProduceDeps } from './produce.ts'

@@ -3,7 +3,6 @@ import { describe, it, expect } from 'vitest'
 // same approach as the button s11 geometry probe). jsdom can NOT compute layout px, so these are STATIC
 // structural/relation checks on the DECLARED CSS; the rendered-px CHANGE (gap responds to [density], the
 // @container reflow) is row.browser.test.ts.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

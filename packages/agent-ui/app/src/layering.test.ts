@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
-// node:fs is untyped here (no @types/node devDep) — the same reverse-coupling fs-read pattern as
+// Raw-text fs read — the same reverse-coupling fs-read pattern as
 // components/src/descriptor/site-coverage.test.ts / site/lib/adr.test.ts.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync, readdirSync } from 'node:fs'
 declare const process: { cwd(): string }
 

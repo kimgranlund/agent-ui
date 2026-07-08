@@ -7,9 +7,8 @@ import { createSurface, disposeSurface } from '../../renderer/surface.ts'
 import { installInputBinding } from '../../renderer/input.ts'
 import type { A2uiComponent } from '../../protocol.ts'
 import { splitFrontmatter, parseDescriptor } from '@agent-ui/components/descriptor'
-// node:fs is untyped here (no @types/node devDep) — same reverse-coupling fs-read pattern
+// Raw-text fs read — same reverse-coupling fs-read pattern
 // components/src/descriptor/site-coverage.test.ts uses.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync, readdirSync } from 'node:fs'
 declare const process: { cwd(): string }
 

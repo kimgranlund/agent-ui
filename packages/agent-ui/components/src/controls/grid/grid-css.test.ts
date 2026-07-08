@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 // Read grid.css / container.css as text (vite strips `.css?raw`; no `@types/node` devDep — same readFileSync
 // approach as the button/text-field css probes).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

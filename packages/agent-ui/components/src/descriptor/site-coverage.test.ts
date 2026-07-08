@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { splitFrontmatter, parseDescriptor } from './component-descriptor.ts'
-// node:fs is untyped here (no @types/node devDep) — same reverse-coupling fs-read pattern as site-canon.test.ts.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+// Raw-text fs read — same reverse-coupling fs-read pattern as site-canon.test.ts.
 import { readFileSync, readdirSync } from 'node:fs'
 declare const process: { cwd(): string }
 
@@ -33,13 +32,13 @@ const SITE = `${ROOT}/site`
 
 const read = (p: string): string => readFileSync(p, 'utf8') as string
 
-type Dirent = { name: string; isDirectory(): boolean; isFile(): boolean }
+import type { Dirent } from 'node:fs'
 
 /** Recursively list every file under `dir` (absolute paths); a missing dir yields []. */
 function walk(dir: string): string[] {
   let entries: Dirent[]
   try {
-    entries = readdirSync(dir, { withFileTypes: true }) as Dirent[]
+    entries = readdirSync(dir, { withFileTypes: true })
   } catch {
     return []
   }
@@ -125,9 +124,9 @@ const KNOWN_UNDOCUMENTED = new Set<string>()
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
 const HTML = new Set<string>(
-  readdirSync(SITE, { withFileTypes: true } as never)
-    .filter((e: Dirent) => e.isFile() && e.name.endsWith('.html'))
-    .map((e: Dirent) => e.name),
+  readdirSync(SITE, { withFileTypes: true })
+    .filter((e) => e.isFile() && e.name.endsWith('.html'))
+    .map((e) => e.name),
 )
 const isDocumented = (c: ShippedComponent): boolean => missingPages(c.name, c.tier, HTML).length === 0
 

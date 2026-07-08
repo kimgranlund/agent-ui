@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest'
-// Read text-field.css + the shared dimensions ramp as TEXT (no @types/node devDep — same approach as the
+// Read text-field.css + the shared dimensions ramp as TEXT (same approach as the
 // button s11 geometry probe). jsdom can NOT compute layout px, so these are STATIC structural/formula checks on
 // the DECLARED calc()s; the rendered-px CHANGE (sm→md→lg, [scale]) is s11's cross-engine browser smoke, NOT here.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

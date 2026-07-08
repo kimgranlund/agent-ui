@@ -9,7 +9,6 @@ import {
   type ParsedAttribute,
 } from '../../descriptor/component-descriptor.ts'
 // Read modal.md as text (no `@types/node` devDep — same readFileSync approach as the text-field s10 probe).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

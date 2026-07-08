@@ -1,9 +1,9 @@
 // seeds.ts — the corpus seed set (corpus LLD-C4, SPEC-R14; content per PRD-G3). 15 concept + 2 demo
-// records, authored TS (typed against `../../src/protocol/types.ts`/`../../src/rpc/frame.ts` — but note
-// the STANDING type gate does NOT cover this file: root tsconfig's `include` is `packages/agent-ui/*/src`
-// only, so `tools/` type-checks only via an out-of-band scoped `tsc` [LLD §8.6]; the STANDING drift
-// check for these literals is `admitRecord`'s replay arm, re-run over the committed shards by
-// `corpus-data.test.ts` on every `npm test`).
+// records, authored TS (typed against `../../src/protocol/types.ts`/`../../src/rpc/frame.ts`; the
+// STANDING type gate covers this file via `check:tools` [tsconfig.tools.json — folded into `npm run
+// check` 2026-07-08, closing the LLD §8.6 gap]; the STANDING drift check for these literals is
+// `admitRecord`'s replay arm, re-run over the committed shards by `corpus-data.test.ts` on every
+// `npm test`).
 // Line/array order below IS authoring order — it becomes the committed shard's line order (LLD §4) and
 // therefore the concepts page's teaching order (B5, LLD-C9).
 //

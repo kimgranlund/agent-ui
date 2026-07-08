@@ -7,7 +7,6 @@
 // (the `npm run size` precedent) — run after touching the overlay wiring; NOT in CI (no build gate).
 
 import { describe, it, expect } from 'vitest'
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 
 declare const process: { cwd(): string }

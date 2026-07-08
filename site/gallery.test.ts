@@ -3,9 +3,9 @@ import { mount, watch, whenFlushed } from '@agent-ui/components'
 import type { UITextFieldElement } from '@agent-ui/components/components'
 import { galleryMembers, node, ComponentGallery } from './lib/component-gallery.ts'
 import { parseDoc } from './lib/frontmatter.ts'
-// node:fs is untyped here (no @types/node devDep) — the same reverse-coupling fs-read pattern the site drift
+// Raw-text fs read — the same reverse-coupling fs-read pattern the site drift
 // gates use (packages/agent-ui/components/src/descriptor/site-toc.test.ts).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+// @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime
 import { readFileSync, readdirSync } from 'node:fs'
 declare const process: { cwd(): string }
 

@@ -9,11 +9,8 @@
 // a Refresh Button (the stats-grid-dashboard seed idiom); (2) a List-templated report table over
 // updateDataModel rows (the dynamic-lists seed idiom); (3) one prose-only exchange (no DataPart), proving
 // the feed renders MIXED messages, not artifact-only.
-// @ts-expect-error - node:fs/node:path untyped without @types/node (the fleet-wide precedent)
 import { writeFileSync } from 'node:fs'
-// @ts-expect-error - see above
 import { dirname, join } from 'node:path'
-// @ts-expect-error - import.meta.url typing needs node types; runtime-only script, not part of the tsc graph
 import { fileURLToPath } from 'node:url'
 import type { A2uiServerMessage } from '../../src/protocol.ts'
 import { wrapClientTurn, wrapServerTurn } from './transports/a2a.ts'

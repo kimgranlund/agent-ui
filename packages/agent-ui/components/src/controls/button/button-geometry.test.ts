@@ -3,7 +3,6 @@ import { describe, it, expect } from 'vitest'
 // same approach as the s6/s7 probes). jsdom can NOT compute layout px, so these are STATIC structural/
 // formula checks on the DECLARED calc()s; the rendered-px CHANGE (sm→md→lg, [scale]/[density]) is s13's
 // cross-engine browser smoke, NOT here.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

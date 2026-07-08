@@ -17,7 +17,6 @@
 // under `src/corpus/` stays node-free, SPEC-N5/ADR-0062).
 
 import { describe, it, expect } from 'vitest'
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 import { validateRecord } from './record.ts'
 import type { CorpusRecord } from './record.ts'

@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-// Read card.css as TEXT (no @types/node devDep — same readFileSync approach as the button/text-field probes).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+// Read card.css as TEXT (same readFileSync approach as the button/text-field probes).
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

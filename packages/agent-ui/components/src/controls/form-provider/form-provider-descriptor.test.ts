@@ -3,7 +3,6 @@ import { UIFormProviderElement } from './form-provider.ts'
 import { splitFrontmatter, parseDescriptor, validateComponentDescriptor, compareDescriptorToProps } from '../../descriptor/component-descriptor.ts'
 import type { ParsedAttribute } from '../../descriptor/component-descriptor.ts'
 // Read form-provider.md as text (no `@types/node` devDep — same readFileSync approach as the button s10 probe).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

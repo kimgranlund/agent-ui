@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-// Read text-field.css as TEXT (no @types/node devDep — same approach as the button s7 css probe).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+// Read text-field.css as TEXT (same approach as the button s7 css probe).
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

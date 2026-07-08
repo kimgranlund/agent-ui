@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest'
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readdirSync, statSync } from 'node:fs'
 declare const process: { cwd(): string }
 

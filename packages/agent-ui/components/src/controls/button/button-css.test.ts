@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 // Read button.css as text (vite strips `.css?raw`; no `@types/node` devDep — same approach as the s6 ramp probe).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

@@ -7,8 +7,7 @@ import {
   collectStyledSlots,
   compareDescriptorToSource,
 } from './component-descriptor.ts'
-// Read the real button source as TEXT (no @types/node — the proven button-descriptor.test.ts fs pattern).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+// Read the real button source as TEXT (the proven button-descriptor.test.ts fs pattern).
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

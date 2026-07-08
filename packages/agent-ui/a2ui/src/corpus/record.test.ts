@@ -3,7 +3,6 @@ import { validateRecord } from './record.ts'
 import type { CorpusRecord } from './record.ts'
 // Test-only use of `node:fs` for the ADR-0063 grep-clean proof below (never ships — same pattern as
 // `store.test.ts`'s own source-text trip-wire).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync, readdirSync } from 'node:fs'
 
 declare const process: { cwd(): string }

@@ -13,7 +13,6 @@
 //   7. negative controls (in-memory mutations of a parsed line — NEVER planted into the committed file):
 //      untagged DataPart · invalid a2ui payload (unknown component) · caps-less user message · wrong pin
 import { describe, expect, it } from 'vitest'
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 import { validateA2a } from '@agent-ui/a2a'
 import type { A2aMessage } from '@agent-ui/a2a'

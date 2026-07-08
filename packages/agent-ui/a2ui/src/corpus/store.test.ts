@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 // Read our OWN source text as a zero-dep trip-wire (SPEC-N5 / ADR-0062 acceptance: "no module under
 // src/corpus/ imports node:*"). Test-only use of `node:fs` is fine — it never ships (same pattern as
 // `controls/barrels.test.ts`'s package.json/CSS-barrel text probes).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 import { createStore } from './store.ts'
 import type { ShardText } from './store.ts'

@@ -3,7 +3,6 @@ import { splitFrontmatter, parseDescriptor } from '../descriptor/component-descr
 import type { ParsedDescriptor } from '../descriptor/component-descriptor.ts'
 // Read every fence/source as TEXT (vite strips `.md?raw`/`.css?raw`; no `@types/node` devDep — same approach
 // as the s6/s7/s8 probes + file-set.test.ts/barrels.test.ts).
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 declare const process: { cwd(): string }
 

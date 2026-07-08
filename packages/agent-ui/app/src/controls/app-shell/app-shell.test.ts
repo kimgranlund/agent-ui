@@ -9,7 +9,6 @@ import {
   compareDescriptorToSource,
 } from '@agent-ui/components/descriptor'
 import type { ParsedAttribute } from '@agent-ui/components/descriptor'
-// @ts-expect-error - node:fs is untyped here without @types/node; vitest/node resolves it at runtime — the
 // same reverse-coupling fs-read idiom as card-descriptor.test.ts / layering.test.ts.
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }

@@ -13,7 +13,6 @@
 import { describe, it, expect } from 'vitest'
 import * as corpus from './index.ts'
 import { demoCatalog } from '../fixtures.ts'
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 
 declare const process: { cwd(): string }

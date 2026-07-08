@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 // Read column.css + the shared dimensions ramp as text (vite strips `.css?raw`; no `@types/node` devDep —
 // same approach as the button geometry probe). jsdom can NOT compute layout px, so these are STATIC structural/
 // cross-file checks on the DECLARED tokens; the rendered gap change (sm→lg, [density]) is column.browser.test.ts.
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 

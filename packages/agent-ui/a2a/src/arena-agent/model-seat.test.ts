@@ -5,7 +5,6 @@
 // Lives under `src/` (not `tools/`) for the same vitest-glob reason as `match.test.ts` (a2ui
 // `src/live-agent/*.test.ts` precedent).
 import { describe, expect, it } from 'vitest'
-// @ts-expect-error - node:fs untyped without @types/node (fleet-wide precedent, e.g. build-key-safety.test.ts)
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createModelSeat, parseMoveReply, buildSeatPrompt } from '../../tools/arena/seats/model.ts'
 import { runMatch } from '../../tools/arena/match.ts'

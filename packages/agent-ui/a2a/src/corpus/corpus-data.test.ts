@@ -19,7 +19,6 @@
 // under `src/corpus/` stays node-free, SPEC-N1).
 
 import { describe, expect, it } from 'vitest'
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { existsSync, readFileSync } from 'node:fs'
 import { admitRecord } from './admit.ts'
 import type { AdmitDeps } from './admit.ts'

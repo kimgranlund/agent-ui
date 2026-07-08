@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest'
-// Read radio-group.css as TEXT (no @types/node devDep — the same readFileSync approach as the button/tabs
+// Read radio-group.css as TEXT (the same readFileSync approach as the button/tabs
 // probes). jsdom can't compute rendered px — this pins the STRUCTURE + token hygiene of the DECLARED CSS; the
 // rendered px (gap/wrap/[density]) + the negative control live in radio-group.browser.test.ts.
 
-// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
