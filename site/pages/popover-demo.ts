@@ -1,17 +1,20 @@
 // site/pages/popover-demo.ts — the ui-popover interaction demo (the ratified pattern `demo`). Mounts the REAL
 // overlay-controller popover and proves its behaviour honestly: click the trigger to reveal a top-layer panel,
-// then light-dismiss it (Escape / outside-click) — the live close/toggle event log shows the platform dismissal
-// round-tripping the bindable `open`. The control owns the Popover API top layer + light-dismiss + focus move/
-// restore (popover.ts + the overlay controller); this page only stages it and logs the host events.
+// then dismiss it — with Escape/outside-click (platform) OR the in-panel "Done" button (programmatic) — the
+// live close/toggle event log shows EVERY real transition round-tripping the bindable `open` (ADR-0101: the
+// trait announces platform-, component-, and model-driven closes alike, not only platform light-dismiss). The
+// control owns the Popover API top layer + light-dismiss + focus move/restore (popover.ts + the overlay
+// controller); this page only stages it and logs the host events.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
 import { el, exampleSection, uiButton } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-popover — demo',
-  intro: 'The disclosure popover, live. Click the trigger to open the panel; dismiss it with Escape or an ' +
-    'outside click. The event log proves the platform light-dismiss fires close + toggle (the two-way open ' +
-    'signal) — a programmatic open never echoes. The API table is on the ui-popover API page.',
+  intro: 'The disclosure popover, live. Click the trigger to open the panel; dismiss it with Escape, an ' +
+    'outside click, or the in-panel "Done" button. The event log proves EVERY real close fires close + ' +
+    'toggle (the two-way open signal, ADR-0101) — platform light-dismiss and a programmatic close alike. ' +
+    'The API table is on the ui-popover API page.',
 })
 
 const text = (s: string): Text => document.createTextNode(s)
@@ -32,8 +35,9 @@ function logEvent(name: string, openState: boolean): void {
 }
 
 // ── the live popover — first child = trigger (positional child-move), the rest is the top-layer panel ─────────
-// The in-panel "Done" button closes programmatically (open=false) — no close/toggle echo (only a user dismissal
-// emits); held as a named const so the listener binds the panel button, not the trigger.
+// The in-panel "Done" button closes programmatically (open=false) — this ALSO logs a close+toggle pair now
+// (ADR-0101: the trait announces every real hide, not only a platform dismissal); held as a named const so
+// the listener binds the panel button, not the trigger.
 const doneBtn = uiButton('Done', 'soft')
 const popover = el('ui-popover', {}, [
   uiButton('Open settings', 'solid'),
@@ -43,7 +47,8 @@ const popover = el('ui-popover', {}, [
     el('ui-row', { gap: 'sm', justify: 'end' }, [doneBtn]),
   ]),
 ])
-// close/toggle fire only on a platform light-dismiss (Escape / outside-click), not on a programmatic open.
+// close/toggle fire on every real close — a platform light-dismiss (Escape / outside-click) or the "Done"
+// button's programmatic open=false alike (ADR-0101).
 popover.addEventListener('close', () => logEvent('close', (popover as unknown as { open: boolean }).open))
 popover.addEventListener('toggle', () => logEvent('toggle', (popover as unknown as { open: boolean }).open))
 doneBtn.addEventListener('click', () => popover.removeAttribute('open'))

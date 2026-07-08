@@ -202,58 +202,82 @@ describe('overlay — popover attribute (overlay-popover-attr)', () => {
 })
 
 describe('overlay — open/close/toggle drive showPopover/hidePopover (overlay-open · overlay-close · overlay-toggle)', () => {
-  it('overlay-open: open() calls showPopover() and sets the popup state', () => {
+  it('overlay-open: open() calls showPopover(), sets the popup state, and announces exactly one `toggle` (ADR-0101)', () => {
     const { el, popup, unmount } = makeHost()
     expect(callsOf(popup).show).toBe(0)
+
+    let toggles = 0
+    el.addEventListener('toggle', () => toggles++)
 
     el.handle!.open()
     expect(callsOf(popup).show).toBe(1)
     expect(popoverOpen.get(popup)).toBe(true)
+    expect(toggles).toBe(1) // a real show announces `toggle` (no `close` — this is not a hide)
     unmount()
   })
 
-  it('overlay-close: close() calls hidePopover() and clears the popup state', () => {
+  it('overlay-close: close() calls hidePopover(), clears the popup state, and announces exactly one close+toggle pair (ADR-0101)', () => {
     const { el, popup, unmount } = makeHost()
     el.handle!.open()
     expect(popoverOpen.get(popup)).toBe(true)
 
+    let closes = 0
+    let toggles = 0
+    el.addEventListener('close', () => closes++)
+    el.addEventListener('toggle', () => toggles++)
+
     el.handle!.close()
     expect(callsOf(popup).hide).toBe(1)
     expect(popoverOpen.get(popup)).toBe(false)
+    expect(closes).toBe(1) // a real hide announces close+toggle regardless of what drove it
+    expect(toggles).toBe(1)
     unmount()
   })
 
-  it('overlay-toggle: toggle() opens when closed and closes when open', () => {
+  it('overlay-toggle: toggle() opens when closed and closes when open, announcing once per real transition', () => {
     const { el, popup, unmount } = makeHost()
+    let toggles = 0
+    el.addEventListener('toggle', () => toggles++)
+
     el.handle!.toggle()
     expect(popoverOpen.get(popup)).toBe(true)
+    expect(toggles).toBe(1)
 
     el.handle!.toggle()
     expect(popoverOpen.get(popup)).toBe(false)
+    expect(toggles).toBe(2)
     unmount()
   })
 })
 
 describe('overlay — idempotency (overlay-double-open)', () => {
-  it('overlay-double-open: calling open() twice only shows the popup once (idempotent)', () => {
+  it('overlay-double-open: calling open() twice only shows the popup once (idempotent) and announces once', () => {
     const { el, popup, unmount } = makeHost()
+    let toggles = 0
+    el.addEventListener('toggle', () => toggles++)
+
     el.handle!.open()
-    el.handle!.open() // second call is a no-op
+    el.handle!.open() // second call is a no-op — no transition, no event (ADR-0101 mechanic 2)
     expect(callsOf(popup).show).toBe(1)
+    expect(toggles).toBe(1)
     unmount()
   })
 
-  it('double close() is also idempotent — hidePopover() called only once', () => {
+  it('double close() is also idempotent — hidePopover() called only once, announced only once', () => {
     const { el, popup, unmount } = makeHost()
+    let closes = 0
+    el.addEventListener('close', () => closes++)
+
     el.handle!.open()
     el.handle!.close()
-    el.handle!.close() // already closed — no-op
+    el.handle!.close() // already closed — no transition, no event
     expect(callsOf(popup).hide).toBe(1)
+    expect(closes).toBe(1)
     unmount()
   })
 })
 
-describe('overlay — light-dismiss (overlay-light-dismiss)', () => {
+describe('overlay — light-dismiss + programmatic close both announce (ADR-0101 — every real transition)', () => {
   it('overlay-light-dismiss: toggle event with newState=closed → emits close + toggle from the host', () => {
     const { el, popup, unmount } = makeHost()
     el.handle!.open()
@@ -269,31 +293,29 @@ describe('overlay — light-dismiss (overlay-light-dismiss)', () => {
     unmount()
   })
 
-  it('a programmatic close() does NOT emit close/toggle (the agent already knows)', () => {
+  it('a programmatic close() DOES emit exactly one close+toggle pair, with `close` firing before `toggle` (ADR-0101)', () => {
     const { el, popup, unmount } = makeHost()
     el.handle!.open()
 
-    let closes = 0
-    let toggles = 0
-    el.addEventListener('close', () => closes++)
-    el.addEventListener('toggle', () => toggles++)
+    const order: string[] = []
+    el.addEventListener('close', () => order.push('close'))
+    el.addEventListener('toggle', () => order.push('toggle'))
 
-    el.handle!.close() // programmatic — not a platform-initiated dismiss
+    el.handle!.close() // component-/model-driven — the trait announces this transition too, now
     expect(callsOf(popup).hide).toBe(1) // popup WAS hidden
-    expect(closes).toBe(0) // no redundant emit
-    expect(toggles).toBe(0)
+    expect(order).toEqual(['close', 'toggle']) // exactly one pair, close before toggle (mechanic 3)
     unmount()
   })
 
-  it('light-dismiss after close() is a no-op — the toggle handler sees isOpen=false and skips', () => {
+  it('light-dismiss after close() is a no-op — the toggle handler sees isOpen=false and skips (no double-announce)', () => {
     const { el, popup, unmount } = makeHost()
     el.handle!.open()
-    el.handle!.close() // sets isOpen=false
+    el.handle!.close() // sets isOpen=false, announces its own close+toggle pair
 
     let closes = 0
     el.addEventListener('close', () => closes++)
 
-    simulateLightDismiss(popup) // arrives after we already closed — should be silent
+    simulateLightDismiss(popup) // arrives after we already closed — should be silent (no re-announce)
     expect(closes).toBe(0)
     unmount()
   })

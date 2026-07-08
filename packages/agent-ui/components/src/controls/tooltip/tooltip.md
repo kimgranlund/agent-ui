@@ -28,7 +28,7 @@ attributes:             # attributes-as-API — mirrors UITooltipElement.props (
 
 properties:             # IDL beyond attributes-as-API
   - name: open
-    description: Whether the tooltip panel is shown (boolean). Setting true calls showPopover() on the panel (manual popover — no Popover API light-dismiss; the tooltip controls its own dismissal). Setting false calls hidePopover(). Reflected + bindable (two-way open, ADR-0019). User-driven closes (mouseleave/focusout/Escape) emit close+toggle before setting this false.
+    description: Whether the tooltip panel is shown (boolean). Setting true calls showPopover() on the panel (manual popover — no Popover API light-dismiss; the tooltip controls its own dismissal). Setting false calls hidePopover(). Reflected + bindable (two-way open, ADR-0019). Every real transition — a user-driven close (mouseleave/focusout/Escape) or a programmatic `open` write alike — emits close+toggle from the overlay trait once the transition completes and this prop has settled (ADR-0101).
   - name: placement
     description: Preferred panel placement relative to the anchor (OverlayPlacement enum, default 'bottom-start'). The JS positioning controller (LLD-C3) flips to the opposite side when the preferred side lacks space and shifts within the viewport. Captured at connection time; a reconnect picks up a new value.
   - name: delay
@@ -37,10 +37,10 @@ properties:             # IDL beyond attributes-as-API
 events:
   - name: toggle
     detail: 'null'
-    description: Fired when the tooltip is dismissed by a user interaction (mouseleave/focusout/Escape) — the value:{event:'toggle'} two-way signal the renderer binds to write `open` back into the data model (ADR-0019). Emitted BEFORE open is set to false (so the renderer sees the event mid-transition). NOT fired on programmatic close (open=false set externally).
+    description: Fired on EVERY actual open-state transition — a user-driven dismiss (mouseleave/focusout/Escape) or a programmatic `open` write alike (ADR-0101) — the value:{event:'toggle'} two-way signal the renderer binds to write `open` back into the data model (ADR-0019). Emitted AFTER `open` has settled to its new value (corrected 2026-07-08 — the prop is already `false` at listener time, not "before", ADR-0101).
   - name: close
     detail: 'null'
-    description: Fired alongside `toggle` on a user-driven dismiss — the family close event. NOT fired when the agent programmatically sets open=false. Emitted before `toggle` (the close-before-toggle discriminator, same as popover). The overlay controller does NOT emit this for tooltip (no platform light-dismiss with popover=manual) — the control emits it directly.
+    description: Fired alongside `toggle` on every actual hide (never on a show) — the family close event, whatever drove the hide. Fires BEFORE `toggle` (ADR-0101 mechanic 3, same ordering as the rest of the overlay family). The overlay TRAIT is the sole announcer (tooltip's own `userClose` helper only sets the `open` prop; it no longer emits directly — ADR-0101 repair).
 
 slots:
   - name: anchor
@@ -126,10 +126,10 @@ default 600 ms) is applied on **mouseenter**. **Keyboard focus** (`focusin`) sho
 — no delay — so keyboard users always see the tooltip. Dismiss triggers: **mouseleave**,
 **focusout**, or **Escape** (a document-level listener).
 
-User-driven closes emit **`close`** then **`toggle`** (the ADR-0019 two-way bind signal)
-BEFORE setting `open = false`, so a bound renderer writes the model before the next render.
-Programmatic closes (setting `open = false` externally) do NOT emit — the overlay controller's
-discriminator (isOpen false before `hidePopover` fires its echo toggle) prevents re-emission.
+Every real close — user-driven (mouseleave/focusout/Escape) or programmatic (`open = false` set
+externally) — emits **`close`** then **`toggle`** (the ADR-0019 two-way bind signal) from the overlay
+trait, AFTER `open` has already settled to `false` (ADR-0101): a bound renderer reading `el.open`
+inside either listener sees the correct, settled value on every path, not only a user dismiss.
 
 ## Placement
 

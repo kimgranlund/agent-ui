@@ -9,6 +9,10 @@
 // Boundary: a true MODAL (focus-trapped) stays on `ui-modal`'s `<dialog>` `showModal()` (ADR-0017).
 // This controller is the NON-MODAL path (select popup, menu, tooltip, popover).
 //
+// Announce contract (ADR-0101): the trait announces every ACTUAL open-state transition — platform-,
+// component-, or model-driven — `toggle` on a real show/hide, `close` alongside every real hide, fired
+// after the host's own `open` prop has settled. Native ToggleEvent timing fidelity; see `open()`/`close()`.
+//
 // `traits → dom` is the one allowed cross-layer direction; the host type only.
 
 import type { UIElement } from '../dom/index.ts'
@@ -47,9 +51,9 @@ export interface OverlayOptions {
 
 /** The object returned by `overlay()` — imperative control + cleanup. */
 export interface OverlayHandle {
-  /** Show the popup (`showPopover()` + position). */
+  /** Show the popup (`showPopover()` + position); emits `toggle` on a real show (ADR-0101). No-op (no event) if already open. */
   open: () => void
-  /** Hide the popup (`hidePopover()` + restore focus). */
+  /** Hide the popup (`hidePopover()` + restore focus); emits `close`+`toggle` on a real hide (ADR-0101). No-op (no event) if already closed. */
   close: () => void
   /** Toggle the popup. */
   toggle: () => void
@@ -239,37 +243,68 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
     if (target && target.isConnected && typeof target.focus === 'function') target.focus()
   }
 
+  // ── The shared "real hide has happened" tail (ADR-0101) ─────────────────────────────────────
+  //
+  // Stops positioning, restores focus, and announces `close`+`toggle` — the settle + announce work
+  // common to EVERY real hide, however it was driven. Pulled out of `close()` so the platform
+  // light-dismiss path (below) can share it WITHOUT re-invoking `hidePopover()` on a popup the
+  // platform already hid: calling `hidePopover()` a second time from inside its own native 'toggle'
+  // handler is a genuine cross-engine race (observed on both Chromium + WebKit) — some engines still
+  // consider the popup "showing" at that exact synchronous point, so the redundant call re-runs the
+  // platform's OWN hide algorithm and fires a SECOND real ToggleEvent, double-announcing. `close`
+  // fires first: any host-side listener that syncs its own `open` prop off `close` (the family
+  // pattern — menu.ts / select.ts / popover.ts / combo-box.ts all
+  // `this.listen(this, 'close', () => { this.open = false })`) runs synchronously inside this emit,
+  // so the prop is ALREADY false by the time `toggle` fires next (the ordering invariant, ADR-0101
+  // mechanic 3 — a renderer's two-way bind reads `el.open` at `toggle` listener time and gets the
+  // settled value on every path, commit or light-dismiss alike).
+  function announceHide(): void {
+    stopPositioning()
+    if (focusOnOpen) restoreFocus()
+    host.emit('close')
+    host.emit('toggle') // value:{prop:'open',event:'toggle'} two-way signal (ADR-0019)
+  }
+
   // ── Platform → model: the Popover toggle listener (LLD-C2: light-dismiss) ──────────────────
   //
   // Rides the host's connection AbortSignal via `host.listen` — auto-removed on host disconnect.
-  // Discriminates a platform/light-dismiss close (isOpen is still true) from a close WE drove
-  // (isOpen was set to false before we called `hidePopover()`).
-
+  // Discriminates a platform/light-dismiss close (isOpen is still true — WE never called close())
+  // from the platform's OWN ECHO of a close WE drove (isOpen was already set false before we called
+  // `hidePopover()`, so the platform's resulting toggle event is a no-op here — ADR-0101: we announce
+  // ourselves at the trait's transition points; the echo must not double-fire it).
   host.listen(popup, 'toggle', (event) => {
     if (cleaned) return
     // ToggleEvent.newState is 'open' | 'closed'; cast safely for cross-engine compatibility.
     const newState = (event as Event & { newState?: string }).newState
     if (newState === 'closed' && isOpen) {
-      // The platform closed the popup (Escape / outside-click) while we thought it was open —
-      // sync state, stop positioning, restore focus, and announce via the two-way bind (ADR-0019).
+      // The platform closed the popup itself (Escape / outside-click) — WE never called close(), and
+      // the platform already hid it, so this path shares ONLY the settle+announce tail (ADR-0101
+      // mechanic 1: "the light-dismiss path flows through the same [announce] points") — NOT a
+      // redundant hidePopover() call (see announceHide()'s doc comment for why that would race).
       isOpen = false
-      stopPositioning()
-      if (focusOnOpen) restoreFocus()
-      host.emit('close')
-      host.emit('toggle') // value:{prop:'open',event:'toggle'} two-way signal (ADR-0019)
+      announceHide()
     }
   })
 
   // ── The imperative surface (OverlayHandle) ───────────────────────────────────────────────────
+  //
+  // ADR-0101 — the overlay trait announces EVERY actual open-state transition (platform-,
+  // component-, or model-driven): `open()` emits `toggle` on a real show; `close()` emits
+  // `close`+`toggle` on a real hide. Native ToggleEvent timing fidelity — ToggleEvents fire on
+  // programmatic showPopover()/hidePopover() too, not only platform light-dismiss. The no-transition
+  // early-returns below are the loop-breakers (mechanic 2: no transition ⇒ no event) — they also
+  // guard the echo-toggle from double-announcing what open()/close() already announced themselves.
 
   function open(): void {
-    if (cleaned || isOpen) return // double-open is a no-op (idempotent)
+    if (cleaned || isOpen) return // double-open is a no-op (idempotent) — the loop-breaker
     if (focusOnOpen) opener = document.activeElement as HTMLElement | null
-    // Set isOpen BEFORE showPopover() so the echo-toggle (newState:'open') is seen as already open.
+    // Set isOpen BEFORE showPopover() so the echo-toggle (newState:'open') is seen as already open
+    // (no re-entry from the toggle listener above, which only acts on newState:'closed').
     isOpen = true
     popup.showPopover()
     startPositioning()
     if (focusOnOpen) moveFocusIn()
+    host.emit('toggle') // the real show, announced AFTER the host's own open-prop write has settled
   }
 
   function close(): void {
@@ -279,17 +314,16 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
     // panel stays open — observed on the commit→close path). Basing the guard on `:popover-open`
     // (with `isOpen` as the fallback for engines pre-`:popover-open`) makes model-driven close reliable.
     const actuallyOpen = isOpen || matchesPopoverOpen(popup)
-    if (!actuallyOpen) return // double-close is a no-op
+    if (!actuallyOpen) return // no transition — the loop-breaker (ADR-0101 mechanic 2)
     // Set isOpen BEFORE hidePopover() so the echo-toggle (newState:'closed') sees isOpen=false and
-    // does NOT re-emit close/toggle — only a platform-driven close emits (the discriminator pattern).
+    // skips re-entry (the toggle listener above only acts when isOpen is still true).
     isOpen = false
     try {
       popup.hidePopover() // throws InvalidStateError only if not currently showing — a harmless no-op then
     } catch (_) {
-      // intentional: the popup was not in the top layer (already hidden) — nothing to do
+      // intentional: the popup was not in the top layer (already hidden) — nothing more to do
     }
-    stopPositioning()
-    if (focusOnOpen) restoreFocus()
+    announceHide()
   }
 
   function toggle(): void {

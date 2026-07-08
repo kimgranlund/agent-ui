@@ -18,10 +18,11 @@
 // parts are created once and never re-created (re-creating drops top-layer / popover state).
 //
 // Two-way `open` (ADR-0019): a scope-owned effect drives model→overlay (open/close the
-// handle). User-driven closes (mouseleave/focusout/Escape) emit close+toggle BEFORE setting
-// open=false so the renderer's bind sees the events while the prop transitions. External
-// programmatic close (open=false) does NOT emit — the overlay handle's discriminator (isOpen
-// set false before hidePopover fires the echo toggle) suppresses the re-emit from overlay.ts.
+// handle). ADR-0101 — the overlay TRAIT is the sole announcer for every control in the family,
+// tooltip included: `userClose` only sets `open = false`; the scope-owned effect (below) then
+// drives `handle.close()`, which emits `close`+`toggle` itself once the real hide completes (the
+// prop is already false by then, since `userClose` set it first). Programmatic close (`open =
+// false` set externally) takes the identical path — announced too, native-timing-faithful.
 //
 // Changing `placement` after connect takes effect on the next reconnect (captured once per
 // connection — same limitation as popover).
@@ -105,21 +106,16 @@ export class UITooltipElement extends UIElement {
 
     // ── User-driven close helper ──────────────────────────────────────────────────────────
     //
-    // Sets open=false FIRST so el.open is already false when close/toggle listeners run.
-    // A renderer that reads el.open inside its toggle handler will see false — the correct
-    // committed state. The two-way bind signal (toggle) is emitted after setting the prop
-    // so the model write lands on the correct value, not the stale open=true.
-    //
-    // The overlay handle's discriminator (isOpen already true at this point → effect has not
-    // yet run → handle.close() fires later via the scheduled effect, at which point the
-    // discriminator sees isOpen=false before hidePopover echoes → no re-emit) guarantees
-    // exactly ONE close+toggle pair per user dismiss.
+    // Sets open=false only — the trait is the SOLE announcer (ADR-0101; retired this control's
+    // own manual close/toggle emits). The scope-owned effect below reads `this.open` (already
+    // false) and calls `handle.close()`, which performs the real hide and emits `close` then
+    // `toggle` itself, once positioning/focus have settled. A small timing shift from before:
+    // the events now fire on the effect-driven tick after this setter runs, not synchronously
+    // inside this function — jsdom probes await a flush to observe them (tooltip.test.ts).
     const userClose = (): void => {
       this.#clearDelay()
       if (!this.open) return // idempotent — nothing to close
-      this.open = false      // SET FIRST — el.open is false at event-handler time
-      this.emit('close')
-      this.emit('toggle') // value:{prop:'open',event:'toggle'} two-way signal (ADR-0019)
+      this.open = false
     }
 
     // ── Hover trigger (show after delay) ─────────────────────────────────────────────────

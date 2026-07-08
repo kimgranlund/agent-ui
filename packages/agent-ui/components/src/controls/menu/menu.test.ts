@@ -297,7 +297,7 @@ describe('ui-menu — overlay→model sync + events (menu-light-dismiss-sync · 
     el.remove()
   })
 
-  it('menu-programmatic-no-emit: a programmatic close (open=false) does NOT emit close/toggle', async () => {
+  it('menu-programmatic-no-emit: a programmatic close (open=false) DOES emit exactly one close+toggle pair (ADR-0101)', async () => {
     const { el, panel } = makeMenu()
     el.open = true
     await whenFlushed()
@@ -310,8 +310,8 @@ describe('ui-menu — overlay→model sync + events (menu-light-dismiss-sync · 
     el.open = false
     await whenFlushed()
     expect(callsOf(panel).hide).toBe(1)
-    expect(closes).toBe(0)
-    expect(toggles).toBe(0)
+    expect(closes).toBe(1) // the trait announces every real hide now, component-driven included
+    expect(toggles).toBe(1)
     el.remove()
   })
 })
@@ -353,35 +353,42 @@ describe('ui-menu — aria-expanded stays in sync with open (menu-aria-expanded)
   })
 })
 
-// ── `toggle` overlay-family contract — platform-dismiss only ─────────────────────────────────
+// ── `toggle` overlay-family contract — every actual transition (ADR-0101) ────────────────────
 //
-// The overlay family contract: `toggle` fires ONLY on platform dismissal (Escape / outside-click),
-// never on the open transition and never on a programmatic close (commit or open=false). The close
-// direction is proven by menu-light-dismiss-events. These probes guard the two silent paths so
-// no regression re-introduces an open-direction or programmatic-close emit.
+// The overlay family contract (ADR-0101): `toggle` fires on EVERY actual open-state transition —
+// platform-, component-, or model-driven — with `close` alongside every real hide (never on a real
+// show). These probes guard the open transition and the programmatic-close transition each announce
+// EXACTLY once — no more (a regression re-introducing a double-announce or a loop) and no less (a
+// regression re-suppressing a transition, the ticket #28 class this ADR fixes).
 
-describe('ui-menu — `toggle` is silent on the open transition and on programmatic close (menu-toggle-open)', () => {
-  it('menu-toggle-open: open=true does NOT emit `toggle` — only platform light-dismiss does', async () => {
+describe('ui-menu — `toggle` announces on every real transition, open and programmatic close alike (menu-toggle-open)', () => {
+  it('menu-toggle-open: open=true emits exactly one `toggle` (no `close` — this is a show, not a hide)', async () => {
     const { el } = makeMenu()
     let toggles = 0
+    let closes = 0
     el.addEventListener('toggle', () => toggles++)
+    el.addEventListener('close', () => closes++)
 
     el.open = true
     await whenFlushed()
-    expect(toggles).toBe(0) // the open transition never emits toggle (overlay family contract)
+    expect(toggles).toBe(1) // the open transition announces (ADR-0101 — every real show)
+    expect(closes).toBe(0)
     el.remove()
   })
 
-  it('menu-toggle-open: open=false (programmatic close) does NOT emit `toggle` — discriminator suppresses it', async () => {
+  it('menu-toggle-open: open=false (programmatic close) emits exactly one close+toggle pair', async () => {
     const { el } = makeMenu()
     el.open = true
     await whenFlushed()
 
     let toggles = 0
+    let closes = 0
     el.addEventListener('toggle', () => toggles++)
-    el.open = false // programmatic close — overlay discriminator suppresses toggle
+    el.addEventListener('close', () => closes++)
+    el.open = false // programmatic close — the trait announces this transition too, now
     await whenFlushed()
-    expect(toggles).toBe(0)
+    expect(toggles).toBe(1)
+    expect(closes).toBe(1)
     el.remove()
   })
 })
@@ -566,21 +573,24 @@ describe('ui-menu — commit → select event + close (menu-commit-select · men
     el.remove()
   })
 
-  it('menu-commit-closes: after commit, close does NOT emit close/toggle (programmatic close path)', async () => {
+  it('menu-commit-closes: after commit, close emits exactly one close+toggle pair with el.open===false (ADR-0101)', async () => {
     const { el, panel, items } = makeMenu()
     el.open = true
     await whenFlushed()
 
-    let closes = 0
-    let toggles = 0
-    el.addEventListener('close', () => closes++)
-    el.addEventListener('toggle', () => toggles++)
+    const order: string[] = []
+    el.addEventListener('close', () => order.push('close'))
+    el.addEventListener('toggle', () => {
+      // The biting assertion: el.open must already be false when toggle fires, so a two-way bind
+      // reading el.open inside its handler writes the CORRECT closed value (the ticket #28 fix).
+      expect(el.open, 'el.open must be false at toggle-handler time').toBe(false)
+      order.push('toggle')
+    })
 
     items[0].focus()
     panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
     await whenFlushed()
-    expect(closes).toBe(0)   // programmatic close — no `close` event
-    expect(toggles).toBe(0)  // no `toggle` event
+    expect(order).toEqual(['close', 'toggle']) // exactly one pair, close before toggle
     el.remove()
   })
 })

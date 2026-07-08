@@ -24,7 +24,7 @@ attributes:             # attributes-as-API — mirrors UIMenuElement.props (ope
 
 properties:             # IDL beyond attributes-as-API
   - name: open
-    description: Whether the menu panel is shown (boolean). Setting true calls showPopover() (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected + bindable (two-way `open`, ADR-0019). The overlay controller emits `close` + `toggle` on the host only on platform dismissal (Escape / outside-click); the open transition and programmatic close do NOT emit any event (the overlay family contract — discriminator suppresses both).
+    description: Whether the menu panel is shown (boolean). Setting true calls showPopover() (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected + bindable (two-way `open`, ADR-0019). The overlay trait emits `close` + `toggle` on the host for every ACTUAL open-state transition — platform dismissal (Escape / outside-click), a commit's programmatic close, or a model-driven write alike (ADR-0101) — after `open` has settled to its new value.
   - name: placement
     description: Preferred panel placement relative to the trigger (OverlayPlacement enum, default 'bottom-start'). The JS positioning controller (LLD-C3) flips to the opposite side when the preferred side lacks space and shifts within the viewport. Captured at connection time; a reconnect picks up a new value.
 
@@ -34,10 +34,10 @@ events:
     description: Fired when the user commits a menu item selection — via Enter/Space keydown (on non-button items) or click. `value` is the item's `data-value` attribute, or its trimmed textContent as a fallback. `index` is the item's 0-based position in the [role=menuitem] list. The menu closes immediately after this event fires (open is set to false programmatically). NOT fired when the menu closes without a selection (Escape / outside-click).
   - name: toggle
     detail: 'null'
-    description: Fired on platform dismissal only (Escape / outside-click) — the two-way bind signal (ADR-0019, value:{prop:'open',event:'toggle'}). Emitted by the overlay controller when the platform closes the panel; `el.open` is already `false`. NOT emitted on the open transition, after a commit (programmatic close), or when open=false is set programmatically. The overlay family contract: only platform-dismiss fires toggle+close.
+    description: Fired on EVERY actual open-state transition — platform-driven (Escape / outside-click), component-driven (a commit or trigger action), or model-driven (a programmatic `open` write) — the two-way bind signal (ADR-0019, value:{prop:'open',event:'toggle'}). Emitted after `el.open` has settled to its new value (ADR-0101), so a two-way bind reads the correct value at listener time on every path.
   - name: close
     detail: 'null'
-    description: Fired alongside `toggle` on a platform light-dismiss — the family close event. NOT fired when the menu closes after an item commit (programmatic close) or when the agent programmatically sets open=false.
+    description: Fired alongside `toggle` on every actual hide (never on a show) — the family close event, whatever drove the hide (platform light-dismiss, an item commit, or a programmatic `open=false`). Fires BEFORE `toggle` (ADR-0101 mechanic 3 — the ordering invariant).
 
 slots:
   - name: trigger
@@ -136,20 +136,20 @@ auto-receive `role=menuitem` and `tabindex=-1` if they don't already carry a rol
 ## Open / close
 
 `open` is a reflected boolean driven by a scope-owned effect. Setting it **true** calls
-`panel.showPopover()` (top layer + light-dismiss); **false** calls `panel.hidePopover()`. When the
-**platform** dismisses the panel (Escape, outside-click), the overlay controller emits `close` +
-`toggle` on the host; the control's `close` listener sets `open = false`. The open transition and
-programmatic close do **not** emit any event (the overlay family contract — discriminator
-suppresses both). `toggle` is the two-way bind signal
-(`value: { prop: 'open', event: 'toggle' }`, ADR-0019).
+`panel.showPopover()` (top layer + light-dismiss); **false** calls `panel.hidePopover()`. The overlay
+trait announces every ACTUAL open-state transition (ADR-0101): `toggle` on a real show, `close` +
+`toggle` on a real hide — whether **platform**-driven (Escape, outside-click), **component**-driven
+(a commit), or **model**-driven (a programmatic `open` write). When the platform dismisses the panel,
+the control's own `close` listener also sets `open = false` so the prop stays consistent. `toggle` is
+the two-way bind signal (`value: { prop: 'open', event: 'toggle' }`, ADR-0019).
 
 ## Commit → select
 
 When the user activates a menuitem (Enter/Space on a non-button item, or click), the control emits
 `select` with `{ value, index }` — where `value` is the item's `data-value` attribute (or
 `textContent` fallback) and `index` is its 0-based position — then closes the menu programmatically.
-The programmatic close does NOT emit `close`/`toggle` (the overlay controller's discriminator
-distinguishes platform vs. programmatic close).
+This programmatic close emits `close` + `toggle` like every other real hide (ADR-0101), with `open`
+already `false` at listener time.
 
 ## Keyboard navigation
 

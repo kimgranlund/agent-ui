@@ -207,9 +207,10 @@ export class UIComboBoxElement extends UIFormElement {
 
       // Escape is NOT handled here — it is a PLATFORM light-dismiss (the Popover API `popover=auto`
       // close-signal is document-level, so it fires even though focus stays on the editor). Letting
-      // the platform close it means the overlay controller emits `close`+`toggle` per the family
-      // contract; a control-owned `this.open=false` here would be a programmatic close the
-      // discriminator SUPPRESSES (no event) — the cross-engine bug the combo-box Escape smoke caught.
+      // the platform close it (rather than a control-owned `this.open=false` here, which would race
+      // the platform's own dismiss) keeps a single close path per Escape press — the cross-engine bug
+      // the combo-box Escape smoke caught. The overlay trait announces `close`+`toggle` from that one
+      // path either way (ADR-0101 — every real hide announces, platform- or component-driven alike).
     })
 
     // ── Option click (listbox is in the top layer — listen on the panel itself) ──────────────

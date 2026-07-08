@@ -9,8 +9,10 @@
 //
 // Two-way `open` (ADR-0019): a scope-owned effect drives model→overlay (open/close the handle);
 // a `close` event listener on the host drives overlay→model (light-dismiss syncs the prop back).
-// The overlay controller emits `close` + `toggle` on the host when the platform dismisses; this
-// control listens for `close` and sets `this.open = false` so the prop stays consistent.
+// The overlay trait emits `close` + `toggle` on the host for EVERY real transition — platform
+// dismiss, a trigger-click close, or a model-driven `open=false` alike (ADR-0101); this control
+// listens for `close` and sets `this.open = false` so the prop stays consistent on the light-dismiss
+// path (the commit/model paths already set the prop first).
 //
 // Anatomy (light-DOM, created once — idempotent across reconnect):
 //   <ui-popover>

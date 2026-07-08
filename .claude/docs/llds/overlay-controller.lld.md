@@ -35,8 +35,12 @@ overlay is composable behavior. A true **modal** (focus-trapped) stays on `ui-mo
   `{ open, close, toggle, cleanup }`. `popup` = the control-owned popover part; `anchor` = the trigger element.
   Wires `popup.showPopover()/hidePopover()` + the `toggle` event → `open` two-way (ADR-0019: `value:{prop:'open',
   event:'toggle'}`).
-- **LLD-C2 — light-dismiss.** `popover=auto` gives Escape + outside-click dismiss free; the controller maps
-  those to `open=false` + emits `close`/`toggle`. (`popover=manual` for tooltips that dismiss on blur/leave.)
+- **LLD-C2 — light-dismiss + the announce contract (ADR-0101).** `popover=auto` gives Escape + outside-click
+  dismiss free; the controller maps those to `open=false`. The trait announces `toggle` on EVERY actual
+  open-state transition it drives — platform-, component-, or model-driven alike — with `close` alongside
+  every real hide, emitted after `open` has settled to its new value (native ToggleEvent timing fidelity;
+  supersedes the platform-dismiss-only discriminator ADR-0045 shipped — see ADR-0101). `popover=manual` is
+  used for tooltips that dismiss on blur/leave instead of Escape/outside-click, but announce identically.
 - **LLD-C3 — positioning.** On open + on scroll/resize (throttled), the controller measures anchor+popup and
   sets the inset for `placement` with **flip** (insufficient space → opposite side) + **shift** (clamp to
   viewport). The `@supports` anchor-positioning branch sets `position-anchor`/`inset-area` instead where

@@ -158,14 +158,16 @@ describe('ui-menu — Escape light-dismiss (both engines)', () => {
     const { el } = mount(THREE_ITEMS)
     const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
 
+    el.open = true
+    await el.updateComplete
+    expect(panel.matches(':popover-open'), 'panel should be open before Escape').toBe(true)
+
+    // Counters attached AFTER the open (which itself now announces one `toggle` — ADR-0101: every
+    // real show/hide announces) so they measure ONLY the Escape-driven close+toggle pair.
     let closes = 0
     let toggles = 0
     el.addEventListener('close', () => closes++)
     el.addEventListener('toggle', () => toggles++)
-
-    el.open = true
-    await el.updateComplete
-    expect(panel.matches(':popover-open'), 'panel should be open before Escape').toBe(true)
 
     // Focus is in the panel (focusOnOpen=true); Escape reaches the focused element.
     await userEvent.keyboard('{Escape}')

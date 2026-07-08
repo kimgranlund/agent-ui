@@ -59,7 +59,7 @@ properties:             # IDL beyond attributes-as-API
   - name: label
     description: The bare-usage accessible-name source (ADR-0085). '' = no label → the trigger's accessible name is content-only (the value text, back-compat). When set (and the control is NOT inside a `ui-field`), the trigger's `aria-labelledby` concatenates a control-created, visually-hidden `[data-part=aria-label]` span (holding this text) with the value span, e.g. "Scheme light". Inside a `ui-field`, the field's own visible label is merged in instead (`applyFieldLabelling`) and this prop is not consumed for naming.
   - name: open
-    description: Whether the listbox panel is shown (boolean). Setting true calls showPopover() on the panel (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected + bindable (two-way `open`, ADR-0019). Light-dismiss emits `close` + `toggle` on the host.
+    description: Whether the listbox panel is shown (boolean). Setting true calls showPopover() on the panel (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected + bindable (two-way `open`, ADR-0019). The overlay trait emits `close` + `toggle` on every ACTUAL open-state transition (ADR-0101) — light-dismiss, a selection commit's programmatic close, or a model-driven write alike.
   - name: placeholder
     description: The text shown on the trigger when nothing is selected (no option key committed). Not reflected. Updated reactively by a scope-owned effect reading `value` + `placeholder` signals.
   - name: size
@@ -71,10 +71,10 @@ events:
     description: Fired when the user commits a selection (click or Enter on an option). Detail is the committed option key string. Also drives the value two-way bind (value:{prop:'value',event:'select'}).
   - name: toggle
     detail: 'null'
-    description: Fired when the panel is light-dismissed by the platform (Escape / outside-click) — the value:{event:'toggle'} two-way signal for the `open` bind (ADR-0019). Emitted by the overlay controller only on platform-driven state changes.
+    description: Fired on EVERY actual open-state transition — platform-driven (Escape / outside-click), component-driven (a selection commit), or model-driven (a programmatic `open` write) — the value:{event:'toggle'} two-way signal for the `open` bind (ADR-0019). Emitted after `el.open` has settled to its new value (ADR-0101). NOTE: the default A2UI catalog does not bind Select's `open` today (ADR-0053) — this event is fired for any consumer (e.g. the docs-site gallery read-back) that listens directly.
   - name: close
     detail: 'null'
-    description: Fired alongside `toggle` on a platform light-dismiss — the family close event. NOT fired when the agent programmatically sets open=false.
+    description: Fired alongside `toggle` on every actual hide (never on a show) — the family close event, whatever drove the hide. Fires BEFORE `toggle` (ADR-0101 mechanic 3).
 
 slots:
   - name: options

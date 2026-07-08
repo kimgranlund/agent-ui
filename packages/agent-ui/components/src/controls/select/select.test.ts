@@ -387,7 +387,7 @@ describe('ui-select — overlay→model sync + events (select-light-dismiss-sync
     el.remove()
   })
 
-  it('select-programmatic-no-emit: a programmatic close (open=false) does NOT emit close/toggle', async () => {
+  it('select-programmatic-no-emit: a programmatic close (open=false) DOES emit exactly one close+toggle pair (ADR-0101)', async () => {
     const { el, listbox } = makeSelect()
     el.open = true
     await whenFlushed()
@@ -400,8 +400,8 @@ describe('ui-select — overlay→model sync + events (select-light-dismiss-sync
     el.open = false
     await whenFlushed()
     expect(callsOf(listbox).hide).toBe(1)
-    expect(closes).toBe(0)
-    expect(toggles).toBe(0)
+    expect(closes).toBe(1) // the trait announces every real hide now, component-/model-driven included
+    expect(toggles).toBe(1)
     el.remove()
   })
 })

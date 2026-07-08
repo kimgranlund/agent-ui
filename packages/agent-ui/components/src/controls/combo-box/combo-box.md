@@ -48,7 +48,7 @@ properties:            # IDL beyond attributes-as-API
   - name: label
     description: The bare-usage accessible-name source (ADR-0085). '' = no label → the editor keeps its ADR-0014-style unnamed behaviour (unchanged). When set (and the control is NOT inside a `ui-field`), the editor's `aria-label` is set to this text — the editor's text content stays the DISTINCT accessible value, so nothing is erased. Inside a `ui-field`, the field's own visible label names the editor instead (`applyFieldLabelling`) and the bare `aria-label` yields.
   - name: open
-    description: Whether the listbox panel is shown (boolean). Setting true calls showPopover() on the listbox panel (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected + bindable (two-way `open` via `toggle` event, ADR-0019). The overlay controller emits `close` + `toggle` on the host when the platform light-dismisses.
+    description: Whether the listbox panel is shown (boolean). Setting true calls showPopover() on the listbox panel (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected (NOT the catalog's two-way mark for this control — see the `open` attribute row / the `open` state + form value section below). The overlay trait emits `close` + `toggle` on the host for every ACTUAL open-state transition (ADR-0101) — platform light-dismiss, a commit's/free-text commit's programmatic close, or a model-driven write alike.
   - name: strict
     description: When true, the committed value must match the `value` attribute of a [role=option] child. A non-matching value produces a typeMismatch validity flag. Default false — free text is allowed.
   - name: form
@@ -76,10 +76,10 @@ events:
     description: NOT currently emitted (the editor's raw input events are suppressed; the filter runs internally). Reserved for future use when a live-value API is added.
   - name: toggle
     detail: 'null'
-    description: Fired when the listbox panel is light-dismissed by the platform (Escape / outside-click) — the value:{event:'toggle'} two-way signal the renderer binds to write `open` back into the data model (ADR-0019). Emitted by the overlay controller on the host only on platform-driven state changes.
+    description: Fired on EVERY actual open-state transition — platform-driven (Escape / outside-click), component-driven (an option/free-text commit), or model-driven (a programmatic `open` write) — the two-way signal a direct listener (e.g. the docs-site gallery read-back) uses to track `open`; ComboBox's own A2UI catalog two-way slot binds `value`/`change` instead, not `open` (ADR-0087 Wave B). Emitted after `el.open` has settled to its new value (ADR-0101).
   - name: close
     detail: 'null'
-    description: Fired alongside `toggle` on a platform light-dismiss — the family close event. NOT fired when the agent programmatically sets open=false.
+    description: Fired alongside `toggle` on every actual hide (never on a show) — the family close event, whatever drove the hide. Fires BEFORE `toggle` (ADR-0101 mechanic 3).
 
 slots:
   - name: options

@@ -394,14 +394,16 @@ describe('ui-combo-box — type-to-filter + commit (both engines)', () => {
     const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
     const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
 
+    el.open = true
+    await el.updateComplete
+    expect(listbox.matches(':popover-open')).toBe(true)
+
+    // Counters attached AFTER the open (which itself now announces one `toggle` — ADR-0101: every
+    // real show/hide announces) so they measure ONLY the Escape-driven close+toggle pair.
     let closes = 0
     let toggles = 0
     el.addEventListener('close', () => closes++)
     el.addEventListener('toggle', () => toggles++)
-
-    el.open = true
-    await el.updateComplete
-    expect(listbox.matches(':popover-open')).toBe(true)
 
     editor.focus()
     await userEvent.keyboard('{Escape}')

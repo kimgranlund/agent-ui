@@ -24,17 +24,17 @@ attributes:             # attributes-as-API — mirrors UIPopoverElement.props (
 
 properties:             # IDL beyond attributes-as-API
   - name: open
-    description: Whether the popover panel is shown (boolean). Setting true calls showPopover() on the panel (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected + bindable (two-way `open`, ADR-0019). The overlay controller emits `close` + `toggle` on the host when the platform dismisses.
+    description: Whether the popover panel is shown (boolean). Setting true calls showPopover() on the panel (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected + bindable (two-way `open`, ADR-0019). The overlay trait emits `close` + `toggle` on the host for every ACTUAL open-state transition (ADR-0101) — platform dismissal, a trigger-click close, or a model-driven write alike.
   - name: placement
     description: Preferred panel placement relative to the trigger (OverlayPlacement enum, default 'bottom-start'). The JS positioning controller (LLD-C3) flips to the opposite side when the preferred side lacks space and shifts within the viewport. Captured at connection time; a reconnect picks up a new value.
 
 events:
   - name: toggle
     detail: 'null'
-    description: Fired when the popover is light-dismissed by the platform (Escape / outside-click) — the value:{event:'toggle'} two-way signal the renderer binds to write `open` back into the data model (ADR-0019). Emitted by the overlay controller on the host only on platform-driven state changes, not on programmatic open/close.
+    description: Fired on EVERY actual open-state transition — platform-driven (Escape / outside-click), component-driven (a trigger-click close), or model-driven (a programmatic `open` write) — the value:{event:'toggle'} two-way signal the renderer binds to write `open` back into the data model (ADR-0019). Emitted after `el.open` has settled to its new value (ADR-0101).
   - name: close
     detail: 'null'
-    description: Fired alongside `toggle` on a platform light-dismiss — the family close event. NOT fired when the agent programmatically sets open=false. By the time `toggle` reaches a renderer, `open` is already false (the control syncs the prop in its `close` listener before `toggle` fires).
+    description: Fired alongside `toggle` on every actual hide (never on a show) — the family close event, whatever drove the hide. Fires BEFORE `toggle` (ADR-0101 mechanic 3): by the time `toggle` reaches a renderer, `open` is already false on every path, not only platform light-dismiss.
 
 slots:
   - name: trigger
@@ -123,10 +123,11 @@ at connect time. The panel enters the Popover API **top layer** via `showPopover
 
 `open` is a reflected boolean driven by a scope-owned effect: setting it **true** calls
 `panel.showPopover()` (Popover API top layer + light-dismiss); **false** calls `panel.hidePopover()`.
-When the **platform** dismisses the panel (Escape, outside-click), the overlay controller emits
-`close` + `toggle` on the host. The control's `close` listener sets `open = false` (syncing the
-prop), and `toggle` is the two-way bind signal the renderer writes back into the data model
-(`value: { prop: 'open', event: 'toggle' }`, ADR-0019).
+The overlay trait announces every ACTUAL open-state transition (ADR-0101): `toggle` on a real show,
+`close` + `toggle` on a real hide — platform-driven (Escape, outside-click), component-driven (a
+trigger click), or model-driven alike. When the platform dismisses the panel, the control's own
+`close` listener also sets `open = false` (syncing the prop); `toggle` is the two-way bind signal the
+renderer writes back into the data model (`value: { prop: 'open', event: 'toggle' }`, ADR-0019).
 
 ## Placement
 

@@ -174,14 +174,16 @@ describe('ui-popover — Escape light-dismiss (both engines)', () => {
     )
     const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
 
+    el.open = true
+    await el.updateComplete
+    expect(panel.matches(':popover-open'), 'panel should be open before Escape').toBe(true)
+
+    // Counters attached AFTER the open (which itself now announces one `toggle` — ADR-0101: every
+    // real show/hide announces) so they measure ONLY the Escape-driven close+toggle pair.
     let closes = 0
     let toggles = 0
     el.addEventListener('close', () => closes++)
     el.addEventListener('toggle', () => toggles++)
-
-    el.open = true
-    await el.updateComplete
-    expect(panel.matches(':popover-open'), 'panel should be open before Escape').toBe(true)
 
     // Focus is in the panel (focusOnOpen=true moves it); Escape reaches the focused element.
     await userEvent.keyboard('{Escape}')
@@ -210,8 +212,9 @@ describe('ui-popover — outside-click light-dismiss (both engines)', () => {
 
     // A DEDICATED outside target, pinned to a clear corner. Clicking a bare body point is unsafe:
     // the mount wrapper sits at the body's top-left, so {x:1,y:1} lands on the TRIGGER — a trigger
-    // click is a programmatic toggle-close (isOpen set false before hidePopover), which by design
-    // does NOT emit/sync (the discriminator). A real outside-click must miss both trigger and panel.
+    // click is a component-driven toggle-close (isOpen set false before hidePopover), which now
+    // ALSO announces (ADR-0101 — every real transition emits), but it is still not the PLATFORM
+    // light-dismiss path this test targets. A real outside-click must miss both trigger and panel.
     const outside = document.createElement('button')
     outside.textContent = 'outside'
     outside.style.cssText = 'position:fixed;bottom:8px;right:8px'

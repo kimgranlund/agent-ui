@@ -759,8 +759,9 @@ describe('ui-combo-box — light-dismiss sync (combo-open-light-dismiss)', () =>
   })
 
   it('combo-open-light-dismiss: a platform light-dismiss (Escape / outside-click) closes the panel', async () => {
-    // Escape is a PLATFORM light-dismiss (Popover API close-signal) — the control no longer owns an
-    // Escape handler (that would be a programmatic close the discriminator suppresses; see combo-box.ts).
+    // Escape is a PLATFORM light-dismiss (Popover API close-signal) — the control does not own an
+    // Escape handler itself; see combo-box.ts's keydown listener comment (both platform and
+    // component/model-driven closes now announce alike, ADR-0101 — the trait is the sole announcer).
     // jsdom has no Popover light-dismiss, so simulate the platform toggle the overlay listens for.
     const { el } = makeCombo()
     const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!

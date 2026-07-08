@@ -272,7 +272,7 @@ describe('ui-popover — overlay→model sync + events (popover-light-dismiss-sy
     el.remove()
   })
 
-  it('popover-programmatic-no-emit: a programmatic close (open=false) does NOT emit close/toggle', async () => {
+  it('popover-programmatic-no-emit: a programmatic close (open=false) DOES emit exactly one close+toggle pair (ADR-0101)', async () => {
     const { el, panel } = makePopover()
     el.open = true
     await whenFlushed()
@@ -282,11 +282,11 @@ describe('ui-popover — overlay→model sync + events (popover-light-dismiss-sy
     el.addEventListener('close', () => closes++)
     el.addEventListener('toggle', () => toggles++)
 
-    el.open = false // the agent drives the close — the overlay controller should NOT emit
+    el.open = false // the agent drives the close — the trait announces every real hide now
     await whenFlushed()
     expect(callsOf(panel).hide).toBe(1) // the panel WAS hidden
-    expect(closes).toBe(0) // no redundant emit — the prop was already false when close could fire
-    expect(toggles).toBe(0)
+    expect(closes).toBe(1) // announced — component-/model-driven closes are no longer silent
+    expect(toggles).toBe(1)
     el.remove()
   })
 })
