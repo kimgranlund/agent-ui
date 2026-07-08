@@ -354,3 +354,14 @@ dispatch"/"freeze-on-dispatch" to "when/once the dispatched turn COMPLETES", the
 guarantee kept explicit at each). This section amends the READING of Decision §2 above; the original clause
 text is left untouched (append-only) and no `Repairs:`/Status cell above is edited — the build, the LLD, and
 now the SPEC all agree: **completion-freeze**, never dispatch-freeze.
+
+## Amendment — the chart-family dispositions (2026-07-08, foreseen by the partition mechanism)
+
+The §3 partition was designed TOTAL precisely so future catalog types would owe a disposition ("the gate
+turns CI red until someone writes its disposition — IN, or OUT + a reason," the artifact's own header).
+The first such types arrived with ADR-0107 (chart family): **`Sparkline` + `BarChart` join
+`FEED_EXCLUDED`** — report content with no ask affordance (display-only rows, no `value:{prop,event}`
+mark; the List/Grid dashboard-content reasoning applied to the chart family; see ADR-0107 Amendment 2
+for the cl.8 wording tension this resolved). The partition is now **23 IN / 13 OUT**; the §3 membership
+list above stays the ratified 2026-07-07 snapshot, with this amendment as the delta record. Ask-policy
+semantics unchanged.

@@ -181,3 +181,17 @@ against the 25 600 B gz (25 KB) ceiling — over by 247 B. Both controls are ind
 per-control cap); the overage is the legitimate cost of the family's first hand-rolled mark code.
 `scripts/measure-size.mjs` ceiling → **26 KB** (26 624 B gz, ~777 B headroom), recorded in its own
 re-base comment chain per convention. The per-control ≤~2 KB marginal cap stays the real gate, unchanged.
+
+## Amendment 2 — the cl.8 feed disposition, mechanically owed (2026-07-08, build wave M1-d)
+
+Clause 8's intent stands unchanged: charts are report content with no ask affordance (neither type
+carries a `value:{prop,event}` mark), the ADR-0097 ask policy is not widened, and they reach the
+artifact feed via its full-catalog rendering. But cl.8's "no ADR-0097 `FEED_SURFACE_TYPES` edit is owed
+or permitted" over-reached one mechanical fact: the ADR-0097 partition gate (`feed-catalog.test.ts`,
+LLD-C14) is deliberately TOTAL — its own header says a new catalog type "turns CI red until someone
+writes its disposition (IN, or OUT + a reason)." Landing the cl.6 catalog rows therefore OWES the
+bookkeeping entry cl.8's wording seemed to forbid. Resolution: `Sparkline` + `BarChart` join
+`FEED_EXCLUDED` (OUT + the List/Grid dashboard-content reasoning — the M1-d builder's escalated
+recommendation, applied by the coordinator). No ask-policy semantics changed; the alternative
+(exempting report-only types from the total partition) would have weakened the gate for every future
+type and was rejected.

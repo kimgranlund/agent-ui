@@ -43,6 +43,9 @@ import calendarMd from '../../packages/agent-ui/components/src/controls/calendar
 // The G7 form-composition family (ADR-0050/0051): the label/description/error wrapper + the coordination provider.
 import fieldMd from '../../packages/agent-ui/components/src/controls/field/field.md?raw'
 import formProviderMd from '../../packages/agent-ui/components/src/controls/form-provider/form-provider.md?raw'
+// The Wave M1 chart family (ADR-0107, chart-family.lld.md): the two Display-class axis-free charts.
+import sparklineMd from '../../packages/agent-ui/components/src/controls/sparkline/sparkline.md?raw'
+import barChartMd from '../../packages/agent-ui/components/src/controls/bar-chart/bar-chart.md?raw'
 
 /** A parsed control descriptor: the structured frontmatter (its attributes-as-API drive the table) + the prose body. */
 export interface ComponentDoc {
@@ -87,6 +90,9 @@ export const loadCalendarDoc  = (): ComponentDoc => parseDoc(calendarMd)
 // The G7 form-composition family (ADR-0050/0051 — both tier=container ⇒ {doc, demo}).
 export const loadFieldDoc        = (): ComponentDoc => parseDoc(fieldMd)
 export const loadFormProviderDoc = (): ComponentDoc => parseDoc(formProviderMd)
+// The Wave M1 chart family (ADR-0107 — both tier=display ⇒ {doc} only).
+export const loadSparklineDoc = (): ComponentDoc => parseDoc(sparklineMd)
+export const loadBarChartDoc  = (): ComponentDoc => parseDoc(barChartMd)
 
 // ── tier enumeration (for the family overview + tier showcase — a DERIVED member list) ───────────────────────
 // The whole `{name}.md` descriptor set, globbed at build time (Vite resolves `import.meta.glob` statically). The

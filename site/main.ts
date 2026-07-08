@@ -170,6 +170,28 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // The Wave M1 chart family (ADR-0107): two Display-class axis-free charts, each a descriptor-derived API doc
+  // (tier=display ⇒ {doc} only, the ui-text/ui-icon precedent).
+  {
+    label: 'ui-sparkline',
+    cards: [
+      {
+        href: './sparkline-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class series-shape mark — the line/area variants over a live revenue trend, the degenerate cases, and the generated accessible summary, generated from sparkline.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-bar-chart',
+    cards: [
+      {
+        href: './bar-chart-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class magnitude-comparison bar list — the all-positive and mixed-sign diverging (zero-baseline) models over real data, generated from bar-chart.md.',
+      },
+    ],
+  },
   {
     label: 'ui-checkbox',
     cards: [

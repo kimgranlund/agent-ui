@@ -46,6 +46,11 @@
 // against radio-group.ts, `UIRadioGroupElement` exposes NO public `value` accessor at all (only a
 // private signal feeding `formValue()`), so unlike SliderMulti this is a genuine component-side gap,
 // escalated rather than patched (see the `radioGroupFactory` doc comment below).
+//
+// ADR-0107 (the chart family, chart-family.lld.md LLD-C10) adds `Sparkline`/`BarChart` — the same wave
+// as their descriptors (SPEC-N2's fleet-derived gate, ADR-0087 cl.6). Both are display-only leaves
+// riding plain `accessorFactory` (no bespoke mapping, no `value` mark, no children, no submitGate) —
+// see the two factory doc comments below.
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
@@ -450,6 +455,24 @@ export const listFactory: WidgetFactory = accessorFactory('ui-list')
 // `static props`. Not an input (no `value` mark).
 export const gridFactory: WidgetFactory = accessorFactory('ui-grid')
 
+// ── the ADR-0107 chart family (Sparkline / BarChart, catalog LLD-C10, chart-family.lld.md §5) ──────
+//
+// Sparkline → ui-sparkline (SPEC-R1..R4). `values` (number[]), `label` (string), `variant`
+// (`'line'|'area'`) are ALL 1:1 reflecting accessor props — verified against sparkline.ts `static
+// props`. A plain `accessorFactory` suffices: `setProp` (`el[prop] = value`) writes the JS property
+// directly, and `cleanSeries` hardening runs again inside the control's OWN mark effect (sparkline.ts
+// LLD-C2), not only inside the attribute codec — so a literal array or a `{path}` bind's resolved
+// array both reach a hardened render regardless of which path delivered them. Display-only leaf: no
+// `value` mark (no ADR-0019 seam slot), no children, no submitGate.
+export const sparklineFactory: WidgetFactory = accessorFactory('ui-sparkline')
+
+// BarChart → ui-bar-chart (SPEC-R5..R8, ADR-0107 fork F2 — the name stays `BarChart` though v1 renders
+// the bar-LIST model). `data` (`{label,value}[]`), `label` (string) are 1:1 reflecting accessor props
+// — verified against bar-chart.ts `static props`; same plain-`accessorFactory` reasoning as Sparkline
+// above (`cleanData` re-hardens at the control's own rows effect). Display-only leaf: no `value` mark,
+// no children, no submitGate.
+export const barChartFactory: WidgetFactory = accessorFactory('ui-bar-chart')
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -488,4 +511,6 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   ComboBox: comboBoxFactory,
   List: listFactory,
   Grid: gridFactory,
+  Sparkline: sparklineFactory,
+  BarChart: barChartFactory,
 }

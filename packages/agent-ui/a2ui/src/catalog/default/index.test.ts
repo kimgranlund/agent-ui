@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { whenFlushed } from '@agent-ui/components'
 import { defaultCatalog } from './index.ts'
 import { defaultFactories } from './factories.ts'
 import { validateCatalogConformance } from '../conformance.ts'
 import { validateA2ui } from '../../renderer/validate.ts'
 import { createSurface, disposeSurface } from '../../renderer/surface.ts'
 import { installInputBinding } from '../../renderer/input.ts'
+import { createRenderer } from '../../renderer/renderer.ts'
 import type { A2uiComponent } from '../../protocol.ts'
 import { splitFrontmatter, parseDescriptor } from '@agent-ui/components/descriptor'
 // Raw-text fs read — same reverse-coupling fs-read pattern
@@ -134,18 +136,13 @@ function fleetPrimaryTypes(): string[] {
 
 /** The exclusion allowlist — type → reason. Landed EMPTY: all four ADR-0087 forks resolved INCLUDE (Kim,
  *  2026-07-06) and every fork-deferred type drained across Waves A/B/C (a2ui-whole-fleet-catalog.decomp.md
- *  §1/§2); Wave D confirms the residue is exactly empty — no fork-deferred row remains. `Image`/`Video`
- *  are deliberately NOT here — no `ui-image`/`ui-video` descriptor exists, so they never enter the
- *  derived set to begin with (they stay a documentary-only note in SPEC §5.2.1, never code-derived). A
- *  future undispositioned control re-seeds this map with a reason + citation, same as Wave 0's seed. */
-const EXCLUSION_ALLOWLIST = new Map<string, string>([
-  // Wave M1 chart family (ADR-0107, chart-family.lld.md): ui-sparkline/ui-bar-chart shipped their
-  // machine-checkable descriptor contract at wave M1-b (LLD-C7/C8). Their catalog rows + factories are
-  // LLD-C10 (wave M1-d, a separate writer) — seeded here so this gate does not silently break ahead of that
-  // wave. Drain both entries the moment LLD-C10 lands (chart-family.lld.md §5/§9).
-  ['BarChart', 'catalog row is LLD-C10 (wave M1-d, chart-family.lld.md §5) — not yet landed'],
-  ['Sparkline', 'catalog row is LLD-C10 (wave M1-d, chart-family.lld.md §5) — not yet landed'],
-])
+ *  §1/§2); Wave D confirms the residue is exactly empty — no fork-deferred row remains. The wave M1
+ *  chart-family seed (`BarChart`/`Sparkline`, ADR-0107) drained at LLD-C10 (chart-family.lld.md §5): their
+ *  catalog rows + factories are now live, so the allowlist is EMPTY again. `Image`/`Video` are
+ *  deliberately NOT here — no `ui-image`/`ui-video` descriptor exists, so they never enter the derived set
+ *  to begin with (they stay a documentary-only note in SPEC §5.2.1, never code-derived). A future
+ *  undispositioned control re-seeds this map with a reason + citation, same as Wave 0's seed. */
+const EXCLUSION_ALLOWLIST = new Map<string, string>([])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists
  *  to catch. A pure predicate so the negative controls can drive it with synthetic inputs (site-coverage's
@@ -175,6 +172,15 @@ describe('default catalog — the fleet-derived coverage gate (SPEC-N2, ADR-0087
 
   it('every fleet type minus the seeded allowlist is covered by the factory table too (SPEC-R4/LLD-C5 parity)', () => {
     expect(typesMissingCatalog(FLEET_TYPES, FACTORY_KEYS, EXCLUSION_ALLOWLIST)).toEqual([])
+  })
+
+  it('the allowlist carries NO residue — every seeded key is ABSENT from the catalog (a drained entry can never stay silently green, chart-family.lld.md §4 M1-b footprint)', () => {
+    // A future wave that seeds an allowlist entry and then lands the row WITHOUT draining the seed would
+    // otherwise pass the two checks above (the type is now catalog-covered) while the stale allowlist
+    // entry sits there inert forever — this assertion makes that residue a hard failure instead.
+    for (const type of EXCLUSION_ALLOWLIST.keys()) {
+      expect(CATALOG_KEYS.has(type), `allowlisted "${type}" must NOT also be catalogued (drain the seed)`).toBe(false)
+    }
   })
 
   it('NEGATIVE: the gate predicate actually BITES (synthetic negative controls, not a vacuous pass)', () => {
@@ -646,5 +652,108 @@ describe('default catalog — List/Grid via the shared validator (ADR-0087 Wave 
   it('List/Grid declare no value mark (structural containers, not bindable components)', () => {
     expect(defaultCatalog.components.List.value).toBeUndefined()
     expect(defaultCatalog.components.Grid.value).toBeUndefined()
+  })
+})
+
+// ── the ADR-0107 chart family (Sparkline / BarChart), catalog LLD-C10, chart-family.lld.md §5 ─────────
+//
+// SPEC-R13 AC1 (fleet-derived coverage, zero allowlist residue) is proven by the two describe blocks
+// above (the drained `EXCLUSION_ALLOWLIST` + the residue guard). This block proves SPEC-R13 AC2: the
+// ADR-0107 clause-2 example payloads (verbatim) validate 0-`CATALOG` via `validateA2ui`, AND a `values`
+// bound as `{ "path": "/trend" }` renders the series and re-renders on `updateDataModel` — the live,
+// end-to-end proof (not just a static conformance check), mirroring renderer.test.ts's bound-prop
+// integration pattern (the `{path}`-bound Button.label / updateDataModel round trip).
+describe('default catalog — Sparkline/BarChart via the shared validator (ADR-0107, chart-family.spec.md SPEC-R13)', () => {
+  it('the ADR-0107 clause-2 example payloads (verbatim) validate 0 failures via validateA2ui', () => {
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'Row', children: ['spark', 'bars'] },
+          { id: 'spark', component: 'Sparkline', values: [3, 5, 4, 8, 7] },
+          {
+            id: 'bars', component: 'BarChart',
+            data: [
+              { label: 'EMEA', value: 42 },
+              { label: 'APAC', value: 31 },
+            ],
+          },
+        ],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('Sparkline/BarChart declare display-only rows: no value mark, no children (SPEC-R13, ADR-0107 cl.6)', () => {
+    expect(defaultCatalog.components.Sparkline.value).toBeUndefined()
+    expect(defaultCatalog.components.Sparkline.children).toBeUndefined()
+    expect(defaultCatalog.components.BarChart.value).toBeUndefined()
+    expect(defaultCatalog.components.BarChart.children).toBeUndefined()
+  })
+
+  it('Sparkline.values/label and BarChart.data/label are bindable; Sparkline.variant is a non-bindable structural enum', () => {
+    expect(defaultCatalog.components.Sparkline.properties.values?.bindable).toBe(true)
+    expect(defaultCatalog.components.Sparkline.properties.label?.bindable).toBe(true)
+    expect(defaultCatalog.components.Sparkline.properties.variant?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.BarChart.properties.data?.bindable).toBe(true)
+    expect(defaultCatalog.components.BarChart.properties.label?.bindable).toBe(true)
+  })
+
+  it('accepts a {path} binding for values/data (bindable array props)', () => {
+    const spark: A2uiComponent = { id: 'sp1', component: 'Sparkline', values: { path: '/trend' } }
+    const bars: A2uiComponent = { id: 'bc1', component: 'BarChart', data: { path: '/regions' } }
+    expect(validateCatalogConformance(spark, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(bars, defaultCatalog)).toEqual([])
+  })
+
+  it('NEGATIVE: an unknown prop fails CATALOG for both Sparkline and BarChart', () => {
+    const spark: A2uiComponent = { id: 'sp2', component: 'Sparkline', values: [1, 2], bogus: 1 }
+    expect(validateCatalogConformance(spark, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'sp2.bogus' })
+
+    const bars: A2uiComponent = { id: 'bc2', component: 'BarChart', data: [], bogus: 1 }
+    expect(validateCatalogConformance(bars, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'bc2.bogus' })
+  })
+
+  it('a {path}-bound Sparkline.values renders the series (real ui-sparkline, no mocks) and re-renders on updateDataModel (SPEC-R13 AC2, the live round trip)', async () => {
+    const r = createRenderer({ newId: () => 'act-1', now: () => '2026-07-08T00:00:00.000Z' })
+    const mount = document.createElement('div')
+    document.body.appendChild(mount)
+    r.mount(mount)
+
+    const line = (message: unknown): string => JSON.stringify(message)
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sc', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sc',
+          components: [{ id: 'root', component: 'Sparkline', values: { path: '/trend' }, label: 'Revenue trend' }],
+        },
+      }),
+    )
+
+    const el = mount.querySelector('ui-sparkline') as HTMLElement & { values?: unknown }
+    expect(el).toBeTruthy() // the REAL upgraded control, not a placeholder
+
+    // No data yet — the bound-prop effect started on an unresolved path (SPEC-R4 AC2: still no throw).
+    expect(el.querySelector('svg')).toBeNull() // an empty rendered set clears the host (LLD-C2 mark effect)
+
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sc', path: '/trend', value: [3, 5, 4, 8, 7] } }))
+    await whenFlushed()
+    expect(el.values).toEqual([3, 5, 4, 8, 7]) // the data→control bound prop applied
+    const line1 = el.querySelector('svg polyline[data-part="line"]')
+    expect(line1).toBeTruthy() // the mark rendered from the bound path
+
+    // A second updateDataModel re-renders the mark (whole-array swap semantics, SPEC-R2).
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sc', path: '/trend', value: [1, 2] } }))
+    await whenFlushed()
+    expect(el.values).toEqual([1, 2])
+    const line2 = el.querySelector('svg polyline[data-part="line"]')
+    expect(line2).toBeTruthy()
+    expect(line2!.getAttribute('points')).not.toBe(line1!.getAttribute('points')) // a genuinely different mark, not a stale re-paint
+
+    r.dispose()
+    mount.remove()
   })
 })

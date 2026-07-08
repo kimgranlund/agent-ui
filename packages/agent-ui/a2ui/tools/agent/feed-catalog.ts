@@ -91,6 +91,16 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
     reason: 'homogeneous-collection semantics signal canvas-scale content; Column hosts stacked ask options instead.',
   },
   {
+    type: 'Sparkline',
+    reason:
+      'report content, not an ask affordance (ADR-0107 cl.8 + Amendment 2): display-only, no value mark — it reaches the artifact feed via full-catalog rendering; the ask subset stays interaction-shaped.',
+  },
+  {
+    type: 'BarChart',
+    reason:
+      'report content, not an ask affordance (ADR-0107 cl.8 + Amendment 2): the List/Grid dashboard-content reasoning applied to the chart family — display-only, no value mark.',
+  },
+  {
     type: 'Grid',
     reason: 'the auto-fit dashboard track model — the exact "elaborate dashboard" this policy exists to keep out of the feed.',
   },

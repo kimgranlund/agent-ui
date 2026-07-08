@@ -81,6 +81,16 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './icon-doc.html', label: 'API' }],
   },
   {
+    // The Wave M1 chart family (ADR-0107) — two Display-class axis-free charts, each a single descriptor-derived
+    // API doc (tier=display ⇒ {doc} only, the ui-text/ui-icon precedent; display leaves are per-component groups).
+    label: 'ui-sparkline',
+    links: [{ href: './sparkline-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-bar-chart',
+    links: [{ href: './bar-chart-doc.html', label: 'API' }],
+  },
+  {
     // The Indicator-class form controls (Wave 1, ADR-0041/0042) — per-component groups, tag-labelled (the
     // site-toc rule: control/container/pattern tiers each get ONE ui-{tag} group; only layout bundles).
     label: 'ui-checkbox',

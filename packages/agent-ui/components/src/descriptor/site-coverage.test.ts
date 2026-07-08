@@ -120,11 +120,12 @@ const LAYOUT_SHOWCASE = ['layout-overview.html', 'layout-permutations.html'] as 
 // doc & demo) landed, so their stopgap entries were removed — a missing required page on ANY shipped component
 // now fails the build again (not silently parked here).
 //
-// The Wave M1 chart family (ADR-0107, chart-family.lld.md) parks HERE deliberately: `ui-sparkline` +
-// `ui-bar-chart` shipped their descriptors in wave M1-b (LLD-C7/C8), but their site pages
-// (`sparkline-doc.html` / `bar-chart-doc.html`) are wave M1-c (LLD-C9), not yet built. Remove both entries
-// the moment those pages land — do NOT let this stopgap outlive that wave.
-const KNOWN_UNDOCUMENTED = new Set<string>(['bar-chart', 'sparkline'])
+// The Wave M1 chart family (ADR-0107, chart-family.lld.md) parked HERE through wave M1-b: `ui-sparkline` +
+// `ui-bar-chart` shipped their descriptors in M1-b (LLD-C7/C8) before their site pages existed. Wave M1-c
+// (LLD-C9) shipped `sparkline-doc.html` / `bar-chart-doc.html`, so BOTH entries were drained — the whole fleet
+// is documented again, and a missing required page on ANY shipped component (chart family included) now fails
+// the build rather than sitting silently parked here.
+const KNOWN_UNDOCUMENTED = new Set<string>()
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
@@ -219,8 +220,8 @@ describe('site coverage — every descriptor is documented XOR a known, delibera
   for (const c of COMPONENTS) {
     it(`${c.tag} — documented(${isDocumented(c)}) === not-in-known-gap`, () => {
       // documented IFF not listed: a documented component must NOT be in KNOWN_UNDOCUMENTED, an undocumented one
-      // MUST be. Today the gap is exactly {bar-chart, sparkline} (wave M1-b, pages land at M1-c) — every OTHER
-      // shipped component must be fully documented.
+      // MUST be. The gap is empty now (the chart family's M1-c pages landed) — EVERY shipped component must be
+      // fully documented.
       expect(isDocumented(c)).toBe(!KNOWN_UNDOCUMENTED.has(c.name))
     })
   }
@@ -228,7 +229,7 @@ describe('site coverage — every descriptor is documented XOR a known, delibera
   it('KNOWN_UNDOCUMENTED lists exactly the real undocumented descriptors (no stale name lingers, no surprise gap)', () => {
     const undocumentedNames = COMPONENTS.filter((c) => !isDocumented(c)).map((c) => c.name).sort()
     expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(undocumentedNames)
-    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(['bar-chart', 'sparkline'])
+    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual([]) // the whole fleet is documented — no deliberate gap remains
   })
 })
 

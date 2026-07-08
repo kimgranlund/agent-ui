@@ -30,6 +30,8 @@ import {
   comboBoxFactory,
   listFactory,
   gridFactory,
+  sparklineFactory,
+  barChartFactory,
   defaultFactories,
 } from './factories.ts'
 import { defaultCatalog } from './index.ts'
@@ -688,5 +690,39 @@ describe('default catalog factories — List / Grid (ADR-0087 Wave C, Fork A RES
     expect(target.brightness).toBe('-1')
     expect(target.gap).toBe('lg')
     expect(target.min).toBe('12rem')
+  })
+})
+
+describe('default catalog factories — Sparkline / BarChart (ADR-0107, chart-family.lld.md LLD-C10)', () => {
+  it('Sparkline → ui-sparkline maps values/label/variant onto accessors; not an input, no children', () => {
+    expect(sparklineFactory.tag).toBe('ui-sparkline')
+    expect(sparklineFactory.value).toBeUndefined() // a display leaf — no two-way binding
+    expect(sparklineFactory.submitGate).toBeUndefined()
+    const el = sparklineFactory.create()
+    expect(el.tagName.toLowerCase()).toBe('ui-sparkline')
+    sparklineFactory.applyProp(el, 'values', [3, 5, 4, 8, 7])
+    sparklineFactory.applyProp(el, 'label', 'Revenue trend')
+    sparklineFactory.applyProp(el, 'variant', 'area')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.values).toEqual([3, 5, 4, 8, 7])
+    expect(target.label).toBe('Revenue trend')
+    expect(target.variant).toBe('area')
+  })
+
+  it('BarChart → ui-bar-chart maps data/label onto accessors; not an input, no children', () => {
+    expect(barChartFactory.tag).toBe('ui-bar-chart')
+    expect(barChartFactory.value).toBeUndefined() // a display leaf — no two-way binding
+    expect(barChartFactory.submitGate).toBeUndefined()
+    const el = barChartFactory.create()
+    expect(el.tagName.toLowerCase()).toBe('ui-bar-chart')
+    const data = [
+      { label: 'EMEA', value: 42 },
+      { label: 'APAC', value: 31 },
+    ]
+    barChartFactory.applyProp(el, 'data', data)
+    barChartFactory.applyProp(el, 'label', 'Revenue by region')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.data).toEqual(data)
+    expect(target.label).toBe('Revenue by region')
   })
 })
