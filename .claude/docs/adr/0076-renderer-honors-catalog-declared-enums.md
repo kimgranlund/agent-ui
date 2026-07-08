@@ -9,7 +9,7 @@
 > | **Proposed by** | a2ui-builder territory (root-causing Kim's "remove align=center" — the mechanism choice is the build session's, implementing Kim's intent) |
 > | **Ratified by** | Kim (2026-07-04) |
 > | **Repairs** | `src/renderer/widget.ts` (LLD-C7 widget resolver — `enumOf` + `applies` gate on both the static-literal and bound-value `applyProp` paths; `entry.catalog` captured for the PropDef) · `src/renderer/widget.test.ts` (2 new tests: stub non-member drop + real-default-catalog end-to-end) |
-> | **Supersedes / Superseded by** | Realizes the enforcement half of [ADR-0075](./0075-ui-column-canvas-root-stretch-no-center.md) (the `Column.align` narrowing). Relates ADR-0016/0030 (the enums it now honors). Does not reverse any prior decision — it makes the catalog's declared enums LOAD-BEARING at render, where they were previously advisory. |
+> | **Supersedes / Superseded by** | Realizes the enforcement half of [ADR-0075](./0075-ui-column-canvas-root-stretch-no-center.md) (the `Column.align` narrowing). Relates ADR-0016/0030 (the enums it now honors). Does not reverse any prior decision — it makes the catalog's declared enums LOAD-BEARING at render, where they were previously advisory. **Extended by [ADR-0098](./0098-validator-enum-membership-enforcement.md)** — promotes enum-membership enforcement into the shared validator for static literals (this ADR's render-time gate stands, re-scoped to the second line of defense for literals and the sole line for bound values). |
 
 ## Context
 

@@ -5,11 +5,11 @@
 > | Field | Value |
 > |---|---|
 > | **Status** | accepted |
-> | **Date** | 2026-07-02 |
+> | **Date** | 2026-07-02 *(authored)* |
 > | **Proposed by** | tokens-specialist (item 4 of the 2026-07-02 color-verify audit; Kim-directed) |
 > | **Ratified by** | orchestration (the coordinator seat) — 2026-07-03, on Kim's confirmation + the green wave gate |
 > | **Repairs** | `references/tokens.md` (NEW neutral `-track`/`-track-hover` role, edited in this change) · shared `tokens.css` (the roles) · `controls/switch/switch.css` · `controls/slider/slider.css` (the repoints) |
-> | **Supersedes / Superseded by** | None. Relates `ADR-0041`/`ADR-0042` (the widget geometry the track lives in) · `ADR-0008` (role-ladder, no `color-mix`) · `ADR-0009` (the focus ring — a separate fleet ring, untouched) · `ADR-0057` (the switch thumb-position co-signifier — orthogonal SC 1.4.1) |
+> | **Supersedes / Superseded by** | **Extended by ADR-0094** (the thumb-vs-page-surface third contrast dimension — the `--ui-slider-thumb-ring` layer; this record's Decision and floors stand). Relates `ADR-0041`/`ADR-0042` (the widget geometry the track lives in) · `ADR-0008` (role-ladder, no `color-mix`) · `ADR-0009` (the focus ring — a separate fleet ring, untouched) · `ADR-0057` (the switch thumb-position co-signifier — orthogonal SC 1.4.1) |
 
 ## Context
 
@@ -90,3 +90,7 @@ rail to it — a state-bearing part gets its own contrast-gated role, not a deco
   contract where it can be reasoned about.
 - **A darker idle (e.g. `light-dark(650, 350)`)** — rejected as unnecessarily heavy: `600/400` already
   clears every plane with ≥ 3.80:1 headroom while staying the more restrained off-track a toggle wants.
+
+## Extended by ADR-0094 — the third contrast dimension (thumb vs page surface)
+
+See [ADR-0094](./0094-slider-thumb-page-surface-ring.md), which extends this record's contrast analysis with a third backdrop dimension — the thumb's dominant page-surface border, covered by the independent `--ui-slider-thumb-ring` paint layer; this record's Decision and every floor measured above stand unchanged (and are re-pinned by ADR-0094's regression guard).

@@ -166,7 +166,7 @@ the named widening work IF multi-surface records are ever legalized (an s2-seat 
 ADR), not speculative machinery now.
 
 **Algorithm `canonicalize(out: A2uiOutput): Promise<{ form: CanonicalForm; hash: string; componentsUsed: string[] }>`** (async — the hash rides `crypto.subtle.digest`):
-1. Fold the stream: apply `updateComponents` (upsert by id) into a component map and `updateDataModel` (in order) into ONE data-model object; note the `createSurface` pins (`catalogId`).
+1. Fold the stream: apply `updateComponents` (upsert by id) into a component map and `updateDataModel` (in order) into ONE data-model object (whole-model when `path` is omitted/`""`/`"/"` — the ADR-0099 root alias, mirroring the renderer's `#onUpdateDataModel`; both this fold and `admit.ts`'s carry the alias); note the `createSurface` pins (`catalogId`).
 2. Assert exactly one `root` (else surface to caller as `E_IDGRAPH` — admission handles, §8; in the §6 order tier-1 has already rejected this, so here it is a defensive guard).
 3. DFS from `root`, visiting `child`/`children` in declared order; assign canonical IDs `c0=root, c1, c2…` in visit order; record `componentsUsed` (set of `component` type names).
 4. Rewrite all ID references to canonical IDs: `child`, static `children: string[]`, **and a children-template's `componentId`** (`protocol.ts:101` `A2uiChildTemplate` — v1.0's dynamic-list form, which v0.1 predated; the template's target is reachable structure and joins the DFS). JSON-Pointer paths are **never** rewritten — pointers address the data model, not component IDs (the v0.1 step-4 clause claiming otherwise was wrong).

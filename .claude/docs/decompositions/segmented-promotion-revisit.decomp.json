@@ -1,0 +1,77 @@
+{
+  "domain": "goals",
+  "plan": true,
+  "nodes": [
+    { "id": "n0", "label": "segmented-control promotion revisit — design-only evaluation + proposed ADR (Kim's 2026-07-07 ask vs the Kim-ratified ADR-0086)", "leaf": false, "justify": "grouping" },
+
+    { "id": "n1", "label": "evidence base — the ratified record, the shipped mechanism, the consumer inventory", "leaf": false, "justify": "grouping" },
+    { "id": "n1a", "label": "ADR-0086 ground truth (Context / Decision / Alternatives / ratification history read in full)", "leaf": true,
+      "accept": "the analysis quotes ADR-0086's own 'new ui-segmented component' rejection (0086 Alternatives, first bullet) and its ratification row (Kim, 2026-07-06, ratify & build) — verifiable by citation" },
+    { "id": "n1b", "label": "shipped mechanism facts (radio-group.ts state seam + orientation resolution; radio-group.css tag-keyed selectors + --ui-radio-group-* token chain)", "leaf": true,
+      "accept": "every mechanism claim in the report carries a file:line citation (radio-group.ts #writeIndexCount:202-205, connected():86-89; radio-group.css [3]/[4] blocks:55-224)" },
+    { "id": "n1c", "label": "consumer inventory of ui-radio-group[variant=segmented] (site knob UI, a2ui catalog schema, tests, docs, dimensions.css doctrine comment; corpus/transcripts negative)", "leaf": true,
+      "accept": "the report enumerates every consumer with a path, and states the corpus/transcript NEGATIVE with the grep that proved it" },
+
+    { "id": "n2", "label": "the for/against analysis (both directions argued from the evidence, neither rubber-stamped)", "leaf": false, "justify": "grouping" },
+    { "id": "n2a", "label": "steelman of ADR-0086 (does the behavioral-identity + reuse reasoning still hold against the shipped code?)", "leaf": true,
+      "accept": "the steelman is grounded in cited shipped behavior (exclusivity/roving/commit/form-value/reset all live in radio-group.ts) and states plainly whether anything since ratification falsifies it" },
+    { "id": "n2b", "label": "case for promotion (discoverability/naming evidence, semantic leaks of the radio model, children-tag readability, future-divergence pressure)", "leaf": true,
+      "accept": "each promotion argument is either grounded in a cited fact or explicitly marked as a taste/API-surface judgment reserved for Kim; no bare assertions" },
+    { "id": "n2c", "label": "middle-path feasibility costing — a thin ui-segmented-control over the SAME machinery, costed against THIS fleet's real component surface (descriptor/gallery/exports/size-gate/browser suites/a2ui wire/CSS keying/private-seam names)", "leaf": true,
+      "accept": "the costing names the concrete blockers by file:line (#writeIndexCount is private; --ui-radio-group-* names baked into CSS; gallery derives 1:1 from descriptor tags) and lands a day-sized estimate" },
+
+    { "id": "n3", "label": "recommendation + the fork for Kim (one call, named re-open triggers, decision-shaped fork)", "leaf": true,
+      "accept": "the report names exactly ONE recommendation, >=2 named re-open triggers, and the fork stated as two ratify-able branches with their costs" },
+
+    { "id": "n4", "label": "proposed ADR-0092 (the correct vehicle per .claude/docs/adr/README.md's three-way test; Status: proposed, never accepted; index row)", "leaf": true,
+      "accept": "python ~/.claude/skills/adr-author/scripts/adr_check.py .claude/docs/adr/0092-*.md exits 0; Status is 'proposed'; the README index gains the 0092 row; ADR-0086 itself is NOT edited" },
+
+    { "id": "n5", "label": "build-sequencing note (both branches sized honestly — the keep-and-position slice AND the full promotion/migration wave)", "leaf": true,
+      "accept": "both branches carry an estimate with the touched surface enumerated (files/seats/gates), including the promotion branch's consumer-migration story (knob UI, a2ui catalog, tests, docs)" },
+
+    { "id": "n6", "label": "handoff block (handoff-compose contract back to the coordinator; doc-reviewer named as ratifier's critic)", "leaf": true,
+      "accept": "the final report carries all eight handoff fields in order, Status on line 1, gates named by command with verdicts, unrun gates stated UNMEASURED" }
+  ],
+  "actions": [
+    { "id": "a1", "label": "verify ADR-0086's behavioral-identity claim against the shipped code" },
+    { "id": "a2", "label": "enumerate every current consumer of variant=segmented (and prove the negatives)" },
+    { "id": "a3", "label": "ground the revisit in the ratified record (cite the 0086 Alternatives rejection + ratification history honestly)" },
+    { "id": "a4", "label": "steelman the ratified variant decision" },
+    { "id": "a5", "label": "articulate the promotion case at full strength" },
+    { "id": "a6", "label": "cost the thin-wrapper/composition path against the fleet's real per-component surface" },
+    { "id": "a7", "label": "make one concrete recommendation with named re-open triggers" },
+    { "id": "a8", "label": "apply the amendment-vs-supersession-vs-extension test correctly and pick the ADR vehicle" },
+    { "id": "a9", "label": "author the proposed ADR (never self-ratified) + index row" },
+    { "id": "a10", "label": "size the build sequencing for BOTH branches, including consumer migration" },
+    { "id": "a11", "label": "surface the fork for Kim's ruling, decision-shaped" },
+    { "id": "a12", "label": "compose the handoff per the handoff-compose contract" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n1b" },
+    { "action": "a2", "node": "n1c" },
+    { "action": "a3", "node": "n1a" },
+    { "action": "a4", "node": "n2a" },
+    { "action": "a5", "node": "n2b" },
+    { "action": "a6", "node": "n2c" },
+    { "action": "a7", "node": "n3" },
+    { "action": "a8", "node": "n4" },
+    { "action": "a9", "node": "n4" },
+    { "action": "a10", "node": "n5" },
+    { "action": "a11", "node": "n3" },
+    { "action": "a12", "node": "n6" }
+  ],
+  "edges": [
+    { "from": "n1a", "to": "n2a", "why": "the steelman argues FROM 0086's own recorded Context/Alternatives — it cannot be written before the record is read in full" },
+    { "from": "n1b", "to": "n2a", "why": "whether the reuse claim still holds is checked against the shipped radio-group.ts/.css, not the ADR's self-description" },
+    { "from": "n1b", "to": "n2c", "why": "the middle-path cost turns on mechanism facts (private #writeIndexCount, tag-keyed CSS, baked token names) only the code read supplies" },
+    { "from": "n1c", "to": "n2b", "why": "the promotion case's semantic-leak and discoverability arguments are weighed against WHERE segmented is actually consumed today" },
+    { "from": "n1c", "to": "n5", "why": "the migration story enumerates exactly the consumer inventory — it cannot be sized before the inventory exists" },
+    { "from": "n2a", "to": "n3", "why": "the recommendation must answer the steelman, not bypass it" },
+    { "from": "n2b", "to": "n3", "why": "the recommendation must answer the promotion case at full strength, not a strawman" },
+    { "from": "n2c", "to": "n3", "why": "the recommendation picks among costed options; the middle-path costing is an input, not a footnote" },
+    { "from": "n3", "to": "n4", "why": "the ADR records the recommendation's position; the vehicle choice (extension vs supersession) follows from WHICH recommendation stands" },
+    { "from": "n3", "to": "n5", "why": "the sequencing note sizes the recommended branch first and the fork's other branch against it" },
+    { "from": "n4", "to": "n6", "why": "the handoff routes on the authored ADR's path + gate verdicts" },
+    { "from": "n5", "to": "n6", "why": "the handoff carries the sequencing estimate the coordinator routes on" }
+  ]
+}
