@@ -224,6 +224,12 @@ describe('widget resolution — catalog enum enforcement (skips a non-member lit
   // A registry entry carrying a REAL catalog def: `Box.align` is a closed enum [start,end,stretch] (NO
   // center); `gap` is an unconstrained string (no enum). Proves the resolver honors the catalog's declared
   // enum — a value the enum forbids is never applied, an unconstrained prop is untouched.
+  //
+  // LAYERING (ADR-0098): the shared validator (`catalog/conformance.ts`) now ALSO rejects a non-member
+  // ENUM LITERAL with a `CATALOG` failure at validate-then-stream time — the FIRST line of defense; an
+  // invalid payload never reaches widget resolution at all. This describe block covers the SECOND line
+  // of defense: a bound value resolving to a non-member at render (never seen by the static validator,
+  // which only judges literals) and any payload that bypasses validation. Both suites stay load-bearing.
   function enumRegistry(factories: Record<string, WidgetFactory>): CatalogRegistry {
     const catalog = {
       catalogId: 'demo',

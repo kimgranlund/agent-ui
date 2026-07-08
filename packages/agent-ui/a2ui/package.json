@@ -10,5 +10,8 @@
   },
   "dependencies": {
     "@agent-ui/components": "*"
+  },
+  "devDependencies": {
+    "@agent-ui/icons": "*"
   }
 }

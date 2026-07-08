@@ -8,10 +8,19 @@
 //
 // Paths resolve from `process.cwd()` (the repo root `vite` runs from), NOT `import.meta.url` — Vite bundles
 // this config-graph module with esbuild into a temp file, so `import.meta.url` would point at the temp dir.
+//
+// ADR-0090 §4/LLD-C6: the body also carries `mode` (a `GenUiMode`) — validated by enum MEMBERSHIP (a closed
+// 3-value set, not a registry lookup) and defaulted, never forwarded raw, exactly as `model` is validated by
+// `resolvePair` above — but a bad `mode` degrades the DISPOSITION, never the request (no 400).
 
+// @ts-expect-error - node:fs is untyped without @types/node; vitest/node resolves it at runtime
+// (the fleet-wide precedent, e.g. providers-config.test.ts) — this file was never previously imported
+// into the strict tsc graph (only Vite/esbuild-transpiled at dev-server start) until validateMode's own
+// dedicated unit test (ADR-0090 §4 fast-follow) pulled it in for the first time.
 import { readFileSync } from 'node:fs'
 import { loadEnv } from 'vite'
 import type { Plugin } from 'vite'
+// @ts-expect-error - node:http is untyped without @types/node; same precedent as node:fs above
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { produce } from './produce.ts'
 import type { ProduceDeps } from './produce.ts'
@@ -22,6 +31,8 @@ import { retrieve } from '../../src/corpus/retrieve.ts'
 import type { CorpusRecord } from '../../src/corpus/record.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { TurnInput } from './agent-transport.ts'
+import { GEN_UI_MODES } from './gen-ui-mode.ts'
+import type { GenUiMode } from './gen-ui-mode.ts'
 
 declare const process: { cwd(): string; env: Record<string, string | undefined> }
 
@@ -32,6 +43,16 @@ const SHARD_PATH = `${ROOT}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui
 
 const MOUNT = '/__a2ui/agent'
 const MAX_BODY = 1 << 20 // 1 MiB — a dev-only intent/turn body is tiny; cap it so a runaway request can't grow unbounded
+
+// ADR-0090 §4 — `mode` is trusted input at a security-adjacent boundary (Consequences): a crafted/stale
+// `mode` string must NEVER reach `buildSystemPrompt` raw. Unlike `{provider,model}` (a registry lookup via
+// `resolvePair`), `mode` is a closed 3-member enum, so validation is a plain membership check — an unknown
+// value is defaulted silently (return `undefined`, which `produce()`/`buildSystemPrompt` already treat as
+// the zero-regression default, ADR-0090 §1), never a 400. The request itself must never fail on a bad mode.
+// The membership set is `GEN_UI_MODES` (`gen-ui-mode.ts`) — the single source of truth, not a local copy.
+export function validateMode(mode: unknown): GenUiMode | undefined {
+  return typeof mode === 'string' && (GEN_UI_MODES as readonly string[]).includes(mode) ? (mode as GenUiMode) : undefined
+}
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -72,7 +93,7 @@ export function a2uiDevProxyPlugin(): Plugin {
       // The catalog + judged shard are STATIC build inputs — load once at server start (readFileSync — the
       // tools/harness precedent; Node's ESM loader rejects an attribute-less JSON import).
       const catalog = loadCatalog(JSON.parse(readFileSync(CATALOG_PATH, 'utf8')))
-      const shard: CorpusRecord[] = readFileSync(SHARD_PATH, 'utf8')
+      const shard: CorpusRecord[] = (readFileSync(SHARD_PATH, 'utf8') as string)
         .split('\n')
         .filter((l) => l.trim().length > 0)
         .map((l) => JSON.parse(l) as CorpusRecord)
@@ -105,10 +126,11 @@ export function a2uiDevProxyPlugin(): Plugin {
 
             // POST — run one turn and stream validated A2UI JSONL back.
             if (req.method === 'POST') {
-              const { input, provider, model } = JSON.parse(await readBody(req)) as {
+              const { input, provider, model, mode } = JSON.parse(await readBody(req)) as {
                 input: TurnInput
                 provider: string
                 model: string
+                mode?: unknown
               }
               const pair = resolvePair(config, provider, model) // SPEC-R12 PAIR-allowlist — the trust boundary
               if (!pair.ok) {
@@ -137,7 +159,9 @@ export function a2uiDevProxyPlugin(): Plugin {
               // produce() yields ONLY a fully validated payload's lines (SPEC-R5) — stream them line by line.
               // `model` is the allowlist-VALIDATED value (resolvePair) passed as the AUTHORITATIVE opts.model:
               // it overrides any client-supplied input.model, so a crafted body cannot escape the PAIR check (SPEC-R12).
-              for await (const line of produce(input, deps, { maxRounds: 3, model })) {
+              // `mode` is the membership-VALIDATED GenUiMode (ADR-0090 §4) — an unrecognized/absent value comes
+              // back `undefined`, which `produce()`/`buildSystemPrompt` already treat as the default disposition.
+              for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode) })) {
                 res.write(line + '\n')
               }
               res.end()

@@ -151,3 +151,7 @@ export const generativeFormSeed: ExampleSeed = {
     },
   ],
 }
+
+/** Every seed this module defines — the barrel's family-array precedent (index.ts derives `allSeeds`
+ *  length from these, never a hand-counted literal). */
+export const generativeFormSeeds: readonly ExampleSeed[] = [generativeFormSeed]

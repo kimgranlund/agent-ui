@@ -11,14 +11,41 @@
 // Coverage tracks the shipped control family (SPEC-N2, Assumption A-2): G5 `Button`, G6 `TextField`, the
 // G9 container family — `Row`/`Column` (catalog-shipped, SPEC §5.2), `Card` + its region sub-elements
 // (`CardHeader`/`CardContent`/`CardFooter`), `Tabs` + `Tab`/`TabPanel`, and `Modal` — plus the ADR-0025
-// `Text` display type (the first Display-class catalog entry). `ui-list`/`ui-grid` are NOT catalog types
-// (they ship as direct `ui-*` primitives — the ratified G9 scope, ADR-0016).
+// `Text` display type (the first Display-class catalog entry). `List`/`Grid` joined the catalog in
+// ADR-0087 Wave C (below) — superseding ADR-0016's original "non-catalog primitive" exclusion.
 //
 // ADR-0053 (form-family rows) adds `Field`/`FormProvider`/`Checkbox`/`Switch`/`Select`/`Option` — the
 // first two ride `accessorFactory` (1:1 reflecting props, `FormProvider` carrying the ADR-0054
 // `submitGate` mark), `Checkbox`/`Switch` are bespoke (the `buttonFactory` non-identity-`label` shape),
 // `Select` rides `accessorFactory`, and `Option` is a sanctioned NON-`ui-*` primitive (`div[role=option]`
 // — the pre-`ui-text` `Text` precedent, catalog SPEC-R3 AC1).
+//
+// ADR-0087 Wave A (the whole-fleet catalog, closing the live SPEC-N2 violation) adds `Icon`/`Menu`+
+// `MenuItem`/`Popover`/`Tooltip`. `Icon` rides `accessorFactory` (name/label are BOTH 1:1 reflecting
+// accessors on `UIIconElement` — no non-identity mapping needed, despite the decomp's bespoke-factory
+// hedge). `Menu`/`Popover`/`Tooltip` all ride `accessorFactory` two-way-bound on `open`/`toggle`
+// (ADR-0019) — verified against `menu.ts`/`popover.ts`/`tooltip.ts`: none of the three has a real
+// named-slot DOM mechanism for "trigger"; each is PURELY POSITIONAL (the first light-DOM child becomes
+// the trigger/anchor, remaining children move into the control-created panel at connect). So — Fork
+// D/d2, builder-resolved — these three declare a plain `ChildList` (the Menu precedent, which the decomp
+// itself already modeled this way), NOT a `*Trigger`/`*Content` sub-type pair: wrapping the trigger in a
+// synthetic region node would move `aria-expanded`/`aria-controls`/`aria-describedby` onto an inert
+// wrapper instead of the real interactive element the agent supplies (a regression for
+// keyboard/AT users, worst on `ui-tooltip` since `focusin`/`focusout` drive its show/hide off the
+// anchor itself). `MenuItem` is the `Option` precedent — a sanctioned NON-`ui-*` primitive
+// (`div[role=menuitem]`) whose `value` maps to the `data-value` ATTRIBUTE (verified against `menu.ts`'s
+// `#commit`: `item.dataset['value'] ?? item.textContent?.trim()`), not a plain `value` attribute.
+//
+// ADR-0087 Wave B (the deferred form/range/date family, ADR-0053's original deferral) adds
+// `RadioGroup`+`Radio`/`Slider`/`SliderMulti`/`Calendar`/`ComboBox`. All ride `accessorFactory` except
+// `Radio` (bespoke, the `Checkbox.label`/`Option.label` non-identity-`mapsTo` shape). **Verified, not
+// guessed, per-type:** `Slider`/`Calendar`/`ComboBox` two-way bind on their real commit event (`change`
+// in all three cases — slider.ts/calendar.ts/combo-box.ts); `SliderMulti` deliberately carries NO
+// `value` mark (Fork C: two REAL accessor props, `valueLo`/`valueHi`, but only one two-way slot per
+// component); `RadioGroup` deliberately carries NO `value` mark for a DIFFERENT reason — verified
+// against radio-group.ts, `UIRadioGroupElement` exposes NO public `value` accessor at all (only a
+// private signal feeding `formValue()`), so unlike SliderMulti this is a genuine component-side gap,
+// escalated rather than patched (see the `radioGroupFactory` doc comment below).
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
@@ -236,6 +263,191 @@ export const optionFactory: WidgetFactory = {
   },
 }
 
+// ── the ADR-0087 Wave A rows (Icon / Menu+MenuItem / Popover / Tooltip) ─────────────
+
+// Icon → ui-icon (ADR-0065/0066). `name`/`label` are BOTH 1:1 reflecting accessors on `UIIconElement`
+// (verified against icon.ts `static props`) — a plain `accessorFactory`, no bespoke mapping needed.
+export const iconFactory: WidgetFactory = accessorFactory('ui-icon')
+
+// Menu → ui-menu (ADR-0043/overlay-controller.lld). Two-way bindable on `open` via the `toggle` event
+// (ADR-0019) — the family contract shared with Popover/Modal/Tabs. `children` is a plain ChildList: the
+// FIRST child is the trigger (any renderable node, typically Button), remaining children are MenuItem
+// rows moved into the panel by the control itself (menu.ts `#ensureParts`) — verified positional, no
+// named-slot mechanism to bind a sub-type pair to.
+export const menuFactory: WidgetFactory = accessorFactory('ui-menu', { prop: 'open', event: 'toggle' })
+
+/**
+ * MenuItem → `div[role=menuitem]` (the `Option` precedent, a sanctioned NON-`ui-*` primitive):
+ * `ui-menu` auto-assigns `role=menuitem` + `tabindex=-1` to non-trigger children lacking a role
+ * (menu.ts `#ensureParts`), and its `#commit` reads the clicked/committed item's value as
+ * `item.dataset['value'] ?? item.textContent?.trim()` — so `value` maps to the `data-value` ATTRIBUTE
+ * (verified against menu.ts), NOT a plain `value` attribute (Option's shape) and NOT a JS prop.
+ * `label` → textContent (bespoke, the non-identity-`mapsTo` invariant, like Option.label).
+ */
+export const menuItemFactory: WidgetFactory = {
+  tag: 'div[role=menuitem]',
+  create: () => {
+    const el = document.createElement('div')
+    el.setAttribute('role', 'menuitem')
+    return el
+  },
+  applyProp: (el, prop, value) => {
+    switch (prop) {
+      case 'value':
+        setAttr(el, 'data-value', value)
+        break
+      case 'label':
+        el.textContent = value == null ? '' : String(value)
+        break
+      default:
+        setAttr(el, prop, value)
+    }
+  },
+}
+
+// Popover → ui-popover (ADR-0043/overlay-controller.lld). Two-way bindable on `open` via `toggle`
+// (ADR-0019). `children` is a plain ChildList (Fork D/d2, builder-resolved): the FIRST child is the
+// disclosure trigger, remaining children move into the control-created panel — verified against
+// popover.ts `#ensureParts`, which is purely positional (no named-slot DOM feature; the .md's "slots"
+// section documents the CONVENTION, not a literal `<slot>`).
+export const popoverFactory: WidgetFactory = accessorFactory('ui-popover', { prop: 'open', event: 'toggle' })
+
+// Tooltip → ui-tooltip (ADR-0043/overlay-controller.lld). As Popover, plus `delay` (ms before showing on
+// hover; keyboard focus shows immediately, verified against tooltip.ts). Same positional trigger/content
+// resolution as Popover — the FIRST child is the anchor the tooltip describes (`aria-describedby`/
+// `focusin`/`focusout` all wire to it directly), remaining children move into the tooltip panel.
+export const tooltipFactory: WidgetFactory = accessorFactory('ui-tooltip', { prop: 'open', event: 'toggle' })
+
+// ── the ADR-0087 Wave B rows (RadioGroup+Radio / Slider / SliderMulti / Calendar / ComboBox) ───────
+//
+// RadioGroup → ui-radio-group (ADR-0053 deferral, closed; Fork B — CLOSED, follow-up to Wave B). ADR-0095
+// (2026-07-07) retired the `variant` prop entirely (the segmented presentation is now the standalone
+// SegmentedControl/Segment pair, below) — this catalog row no longer carries it.
+// VERIFIED against radio-group.ts: `name`/`disabled`/`required`/`orientation` are ALL 1:1
+// reflecting accessor props (the `groupProps` spread); `value` is now ALSO a real public accessor —
+// `UIRadioGroupElement` gained a `get value()`/`set value()` pair delegating to its private
+// `#selectedValue` signal (the `UICheckboxElement.checked` precedent), so the renderer's input
+// controller (LLD-C8, `el[spec.prop]` read off the DOM node after the commit event, renderer/input.ts)
+// reads a real committed value rather than `undefined`. `change` IS the correct commit event (verified:
+// `this.emit('change')` in `#commit()`, the ONE user-driven commit path — a programmatic `value` write
+// never self-emits, matching the checkbox/select convention). Known limitation (component-reviewer,
+// tracked in a2ui-catalog.spec.md §5.2's RadioGroup row): the setter's "value matches no child radio"
+// path silently CLEARS the selection with no `change` — a data-model write that races an unmatched
+// value ahead of its `Radio` children would blank a valid prior selection with nothing to reconcile.
+export const radioGroupFactory: WidgetFactory = accessorFactory('ui-radio-group', { prop: 'value', event: 'change' })
+
+/**
+ * Radio → `ui-radio` (ADR-0053 deferral, closed; Fork B — the Wave A reviewer correction: `Radio` is
+ * NOT a gate-exempt composite sub-type like `Option`/`MenuItem` — `ui-radio` ships its own descriptor
+ * (`radio.md`) and enters the fleet-derived gate's expected set directly, so it needs a real row).
+ * `value`/`checked` are 1:1 reflecting accessor props inherited from `UIIndicatorElement` (verified
+ * against radio.ts + indicator-element.ts, the `UICheckboxElement` precedent — static props inherit
+ * through the prototype chain when a subclass adds nothing of its own); `label` is bespoke light-DOM
+ * text (the default slot, non-identity `mapsTo`, the `Checkbox.label`/`Option.label` invariant). No
+ * top-level `value` mark — deliberately NOT two-way (the GROUP owns the selection commit; an
+ * individually-bound Radio would desync on exclusivity, since `#commit` unchecks siblings via direct
+ * property writes with no `change` event on them, verified against radio-group.ts `#commit`).
+ */
+export const radioFactory: WidgetFactory = {
+  tag: 'ui-radio',
+  create: () => document.createElement('ui-radio'),
+  applyProp: (el, prop, value) => {
+    if (prop === 'label') el.textContent = value == null ? '' : String(value)
+    else setProp(el, prop, value)
+  },
+}
+
+// ── ADR-0095 (supersedes ADR-0086; hard cutover, no alias) — SegmentedControl+Segment ──────────────
+//
+// SegmentedControl → ui-segmented-control. VERIFIED against segmented-control.ts: `UISegmentedControlElement
+// extends UIRadioGroupElement` directly and adds NO new prop of its own — `name`/`disabled`/`required`/
+// `orientation`/`value` are the SAME inherited accessors RadioGroup's own factory targets (the `variant`
+// enum member RETIRES — ADR-0095 clause 1 removed the prop entirely, so there is nothing to map). Two-way
+// bindable on `value` via `change`, identical mechanism to RadioGroup (`#commit()`'s `this.emit('change')`,
+// the ONE user-driven commit path, inherited unchanged).
+export const segmentedControlFactory: WidgetFactory = accessorFactory('ui-segmented-control', { prop: 'value', event: 'change' })
+
+/**
+ * Segment → `ui-segment` (ADR-0095 clause 3). VERIFIED against segment.ts: `UISegmentElement extends
+ * UIRadioElement` directly, adding NO new prop of its own — `value`/`checked` are the SAME inherited
+ * accessor props Radio's own factory targets; `label` is the SAME bespoke non-identity `mapsTo` (→
+ * textContent, the Checkbox/Switch/Radio precedent). No top-level `value` mark — deliberately NOT two-way,
+ * for the identical reason Radio isn't: the HOST `ui-segmented-control` owns the selection commit.
+ */
+export const segmentFactory: WidgetFactory = {
+  tag: 'ui-segment',
+  create: () => document.createElement('ui-segment'),
+  applyProp: (el, prop, value) => {
+    if (prop === 'label') el.textContent = value == null ? '' : String(value)
+    else setProp(el, prop, value)
+  },
+}
+
+// Slider → ui-slider (ADR-0053 deferral, closed; Fork C — single value). `value`/`min`/`max`/`step`/
+// `name`/`disabled`/`required` are ALL 1:1 reflecting accessor props inherited from `UIRangeElement`
+// (verified against slider.ts + range-element.ts). Two-way bindable on `value` via the VERIFIED
+// commit event `change` — sliders emit `input` on every live drag/keyboard step and `change` only on
+// blur when the value has moved since focus (range-element.ts's commit-on-blur contract, slider.md
+// events table) — the committed event, not the live one, per the task's explicit instruction.
+export const sliderFactory: WidgetFactory = accessorFactory('ui-slider', { prop: 'value', event: 'change' })
+
+// SliderMulti → ui-slider-multi (ADR-0053 deferral, closed; Fork C — dual value, RESOLVED two types).
+// `min`/`max`/`step`/`name`/`disabled` are 1:1 reflecting accessors; `valueLo`/`valueHi` are ALSO real
+// 1:1 reflecting accessor props (verified against slider-multi.ts's `sliderMultiProps` — NOT a missing
+// accessor like RadioGroup, just a missing TWO-WAY MARK) — but the ADR-0019 seam permits only ONE
+// `value:{prop,event}` mark per component, and this control commits TWO values. So: **no `value` mark**
+// — `valueLo`/`valueHi` are bindable ONE-WAY only (agent-set literals or `{path}` reads; the control's
+// own drag/keyboard commits do not write back through the current seam). The documented Fork C seam
+// limitation, not a bug.
+export const sliderMultiFactory: WidgetFactory = accessorFactory('ui-slider-multi')
+
+// Calendar → ui-calendar (ADR-0053 deferral, closed). `value`/`min`/`max`/`name`/`required`/`disabled`
+// are 1:1 reflecting accessor props (verified against calendar.ts). Two-way bindable on `value` via
+// `change` — calendar.md's OWN descriptor already declares this exact bind
+// (`value:{prop:'value',event:'change'}`, confirmed at calendar.ts's `#commit`: `this.emit('change')`
+// alongside `this.emit('select', iso)`). `value` is an ISO `YYYY-MM-DD` string; `''` = no date selected.
+//
+// ADR-0093 (range mode, catalog follow-up per its clause 7) adds `mode` (`'single'|'range'`, NOT
+// bindable — a structural enum, the `orientation`/`placement` precedent) + `valueStart`/`valueEnd`
+// (bindable ONE-WAY only, 1:1 reflecting accessor props — the `SliderMulti` `valueLo`/`valueHi`
+// shape). The row's one two-way slot stays `value:{prop:'value',event:'change'}` — inert-but-harmless
+// in `mode="range"` (calendar.ts holds it live but contributing nothing) — because the catalog schema
+// supports only one two-way bind per component; a second two-way slot for the pair is future work.
+// No factory code change: `accessorFactory`/`setProp` already applies any catalog `mapsTo` 1:1.
+export const calendarFactory: WidgetFactory = accessorFactory('ui-calendar', { prop: 'value', event: 'change' })
+
+/**
+ * ComboBox → `ui-combo-box` (ADR-0053 deferral, closed; Fork D/combobox). `value`/`label`/`placeholder`/
+ * `strict`/`name`/`disabled` are 1:1 reflecting accessor props (verified against combo-box.ts).
+ * Two-way bindable on the FORM value — `value` via `change` — NOT `open`/`toggle` (the overlay-family
+ * shape). **Corrected descriptor discrepancy:** `combo-box.md` carried a stale comment (copied from the
+ * overlay family before ComboBox's own form value was catalogued) claiming "the catalog declares
+ * `value:{prop:'open',event:'toggle'}`" — verified against combo-box.ts: `value` is the committed
+ * option key / free-text string (`prop.string()`, `formValue()` source), and `change` fires on commit
+ * with `this.value` already updated (combo-box.md events table) — `value`/`change` is the correct,
+ * and now sole, two-way mark. `open` remains a real, independently settable reflecting prop on the
+ * control (drives the overlay panel) but carries NO catalog `value` mark (one mark per component,
+ * ADR-0019) — fixed in the same commit, see combo-box.md. `children` reuses the existing `Option`
+ * primitive (the `Select` precedent).
+ */
+export const comboBoxFactory: WidgetFactory = accessorFactory('ui-combo-box', { prop: 'value', event: 'change' })
+
+// ── the ADR-0087 Wave C rows (List / Grid — Fork A RESOLVED INCLUDE, Kim 2026-07-06) ───────────────
+//
+// List → ui-list (a `ui-column` specialization carrying `role=list`, ADR-0016 cl.3). `elevation`/
+// `brightness` (surface, ADR-0015) + `align`/`justify`/`gap`/`wrap` (the shared flex grammar, ADR-0016)
+// are ALL 1:1 reflecting accessor props — verified against list.ts `static props` (the
+// `UIContainerElement.surfaceProps` + `.flexProps` spreads, `align` defaulting to `stretch` per
+// ADR-0030) — the exact Row/Column idiom, so a plain `accessorFactory('ui-list')` suffices. Not an
+// input (no `value` mark — a structural container, not a bindable component).
+export const listFactory: WidgetFactory = accessorFactory('ui-list')
+
+// Grid → ui-grid (the auto-fit/minmax track model, ADR-0016 cl.3). `elevation`/`brightness` (surface)
+// + `gap` (the one flexProps entry a track grid consumes) + `min` (the minmax() track floor, an
+// arbitrary CSS <length> string) are ALL 1:1 reflecting accessor props — verified against grid.ts
+// `static props`. Not an input (no `value` mark).
+export const gridFactory: WidgetFactory = accessorFactory('ui-grid')
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -259,4 +471,19 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Tab: tabFactory,
   TabPanel: tabPanelFactory,
   Modal: modalFactory,
+  Icon: iconFactory,
+  Menu: menuFactory,
+  MenuItem: menuItemFactory,
+  Popover: popoverFactory,
+  Tooltip: tooltipFactory,
+  RadioGroup: radioGroupFactory,
+  Radio: radioFactory,
+  SegmentedControl: segmentedControlFactory,
+  Segment: segmentFactory,
+  Slider: sliderFactory,
+  SliderMulti: sliderMultiFactory,
+  Calendar: calendarFactory,
+  ComboBox: comboBoxFactory,
+  List: listFactory,
+  Grid: gridFactory,
 }

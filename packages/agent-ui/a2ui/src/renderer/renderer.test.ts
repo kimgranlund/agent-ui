@@ -273,7 +273,14 @@ describe('renderer host — action-prop reading (ADR-0011 canonical {action,cont
     const action = emitFor('refresh')
     expect(action.name).toBe('refresh') // a bare string is taken as the action name
     expect(action.context).toEqual({}) // …carrying no context
-    expect(action.wantResponse).toBe(false) // …nor a wantResponse
+    // ADR-0088 §3: no `wantResponse` was authored, so it must stay ABSENT on the wire — never coerced to
+    // an explicit `false` (which the page's wantResponse-routing would read as an opt-out).
+    expect('wantResponse' in action).toBe(false)
+  })
+
+  it('an explicit `wantResponse:false` on the canonical shape is preserved, distinct from absent (ADR-0088 §3)', () => {
+    const action = emitFor({ action: 'submit', wantResponse: false })
+    expect(action.wantResponse).toBe(false)
   })
 })
 
@@ -935,6 +942,88 @@ describe('renderer host — the ADR-0054 submit-gated action (#wireAction, FormP
     expect(actions).toHaveLength(1)
     expect(actions[0]!.action).toMatchObject({ name: 'go', sourceComponentId: 'btn' })
     expect('submit' in actions[0]!.action).toBe(false) // the client-consumed flag never reaches the wire
+
+    cleanup()
+  })
+})
+
+// Live-agent investigation (a2ui-live "empty hand" report, 2026-07-07): a card-game turn from a real
+// Anthropic model reproduced a templated Row rendering with ZERO instances on an otherwise-live surface.
+// Root-caused to a wire payload — NOT a renderer defect. Captured verbatim from the dev-proxy transcript:
+// the model emitted `updateDataModel{path:"/", value:{...,hand:[5 items]}}` instead of the corpus-idiomatic
+// whole-model replace (`path` OMITTED, SPEC-R5 AC2). `path` is a JSON-Pointer (RFC-6901): `""`/omitted
+// addresses the document root, but `"/"` addresses the child key named `""` — so `setPointer` (LLD-C5)
+// correctly nests the entire payload under a spurious `{"":...}` key, and every path binding on the
+// surface (including the `/hand` list template) resolves to `undefined` — a legal render-time placeholder
+// (SPEC-R4 AC2), not an error, so the failure is silent. These two tests pin that contract: the renderer's
+// list/binding machinery (LLD-C5/C6) is proven sound with the IDENTICAL payload once `path` is omitted —
+// the defect is a system-prompt/exemplar gap (routed to `tools/agent/system-prompt.ts`'s OUTPUT_RULES
+// GRAMMAR, which currently shows only the single-key `updateDataModel` form and never documents the
+// whole-model-replace idiom), not a build unit here.
+describe('renderer host — updateDataModel path:"/" vs. path-omitted (live-agent "empty hand" root cause)', () => {
+  it('path:"/" nests the whole payload under key "" — the /hand list template never resolves, silently (0 items, 0 errors)', async () => {
+    const { r, mount, sent, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'card-game', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateDataModel: {
+          surfaceId: 'card-game',
+          path: '/', // <-- the model's actual emission, captured verbatim off the dev-proxy transcript
+          value: { hand: [{ id: 'c1', label: 'A♠' }, { id: 'c2', label: 'K♥' }] },
+        },
+      }),
+    )
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'card-game',
+          components: [
+            { id: 'root', component: 'Row', gap: 'md', children: { path: '/hand', componentId: 'card' } },
+            { id: 'card', component: 'Text', text: { path: 'label' } },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+
+    expect(mount.querySelectorAll('ui-row > *')).toHaveLength(0) // the reported symptom, reproduced
+    expect(sent).toHaveLength(0) // and it is COMPLETELY SILENT — no error, no diagnostic (SPEC-R4 AC2)
+
+    cleanup()
+  })
+
+  it('control: the IDENTICAL payload with `path` omitted (the corpus idiom) renders both items — the list/binding machinery is sound', async () => {
+    const { r, mount, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'card-game', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateDataModel: {
+          surfaceId: 'card-game',
+          // `path` omitted — SPEC-R5 AC2's whole-model-replace form, the one every corpus exemplar uses.
+          value: { hand: [{ id: 'c1', label: 'A♠' }, { id: 'c2', label: 'K♥' }] },
+        },
+      }),
+    )
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'card-game',
+          components: [
+            { id: 'root', component: 'Row', gap: 'md', children: { path: '/hand', componentId: 'card' } },
+            { id: 'card', component: 'Text', text: { path: 'label' } },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+
+    expect(mount.querySelectorAll('ui-row > *')).toHaveLength(2)
 
     cleanup()
   })

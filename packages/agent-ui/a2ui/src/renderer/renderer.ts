@@ -472,7 +472,10 @@ function readActionSpec(
     const name = typeof spec.action === 'string' ? spec.action : typeof spec.name === 'string' ? spec.name : ''
     const out: { name: string; wantResponse?: boolean; context?: Record<string, unknown>; submit?: boolean } = { name }
     // `context`/`wantResponse`/`submit` surface from the canonical object (also honored on the `name`-synonym shape).
-    if (spec.wantResponse === true) out.wantResponse = true
+    // `wantResponse` is captured whenever the author wrote it as a real boolean — `true` OR `false` — never
+    // just `=== true`: ADR-0088 §3 routes on the DISTINCTION between "explicitly false" (opt-out) and "never
+    // authored" (stays `undefined` here, through `emitAction`'s own preserving assignment, to the wire).
+    if (typeof spec.wantResponse === 'boolean') out.wantResponse = spec.wantResponse
     if (isObject(spec.context)) out.context = spec.context
     if (spec.submit === true) out.submit = true
     return out

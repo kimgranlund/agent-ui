@@ -3,45 +3,46 @@
 // hygiene: demo payload JSON must never enter a renderer consumer's bundle, the
 // `@agent-ui/components/components` subpath precedent).
 //
-// 11 seeds: 1 canvas + 4 dynamic-list + 1 generative-form + 5 patterns. `allSeeds` is the gate's
-// (`examples.test.ts`) iteration surface; each named export is what a `/site` page imports directly.
+// 15 seeds: 1 canvas + 4 dynamic-list + 1 generative-form + 5 patterns + 4 catalog-coverage (the
+// ADR-0087/ADR-0093/ADR-0095 wave — booking-reservation, rental-filter-panel, document-row-toolbar,
+// stats-grid-dashboard). `allSeeds` is the gate's (`examples.test.ts`) iteration surface, composed from
+// each module's own family array (never a hand-counted literal — the drift-gate doctrine); each named
+// export is what a `/site` page imports directly.
 
 export type { ExampleSeed } from './types.ts'
 
-export { canvasButtonSeed } from './canvas-button.ts'
-export { listDisplaySeed, listPeopleSeed, listFormSeed, listNestedSeed } from './dynamic-lists.ts'
-export { generativeFormSeed } from './generative-form.ts'
+export { canvasButtonSeed, canvasSeeds } from './canvas-button.ts'
+export { listDisplaySeed, listPeopleSeed, listFormSeed, listNestedSeed, dynamicListSeeds } from './dynamic-lists.ts'
+export { generativeFormSeed, generativeFormSeeds } from './generative-form.ts'
 export {
   patternSettingsSeed,
   patternConfirmSeed,
   patternWizardSeed,
   patternDashboardSeed,
   patternScheduleSeed,
+  patternSeeds,
 } from './patterns.ts'
+export {
+  bookingReservationSeed,
+  rentalFilterPanelSeed,
+  documentRowToolbarSeed,
+  statsGridDashboardSeed,
+  catalogCoverageSeeds,
+} from './catalog-coverage.ts'
 
 import type { ExampleSeed } from './types.ts'
-import { canvasButtonSeed } from './canvas-button.ts'
-import { listDisplaySeed, listPeopleSeed, listFormSeed, listNestedSeed } from './dynamic-lists.ts'
-import { generativeFormSeed } from './generative-form.ts'
-import {
-  patternSettingsSeed,
-  patternConfirmSeed,
-  patternWizardSeed,
-  patternDashboardSeed,
-  patternScheduleSeed,
-} from './patterns.ts'
+import { canvasSeeds } from './canvas-button.ts'
+import { dynamicListSeeds } from './dynamic-lists.ts'
+import { generativeFormSeeds } from './generative-form.ts'
+import { patternSeeds } from './patterns.ts'
+import { catalogCoverageSeeds } from './catalog-coverage.ts'
 
-/** Every seed on the shelf — the standing gate's (`examples.test.ts`) iteration surface. */
+/** Every seed on the shelf — the standing gate's (`examples.test.ts`) iteration surface. Composed from
+ *  each module's own family array, so the total is always derived, never a separately-maintained count. */
 export const allSeeds: readonly ExampleSeed[] = [
-  canvasButtonSeed,
-  listDisplaySeed,
-  listPeopleSeed,
-  listFormSeed,
-  listNestedSeed,
-  generativeFormSeed,
-  patternSettingsSeed,
-  patternConfirmSeed,
-  patternWizardSeed,
-  patternDashboardSeed,
-  patternScheduleSeed,
+  ...canvasSeeds,
+  ...dynamicListSeeds,
+  ...generativeFormSeeds,
+  ...patternSeeds,
+  ...catalogCoverageSeeds,
 ]

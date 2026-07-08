@@ -109,7 +109,8 @@
         "align": { "type": { "type": "string", "enum": ["start", "center", "end", "stretch", "baseline"] }, "mapsTo": "align" },
         "justify": { "type": { "type": "string", "enum": ["start", "center", "end", "between", "around", "evenly"] }, "mapsTo": "justify" },
         "gap": { "type": { "type": "string", "enum": ["none", "xs", "sm", "md", "lg", "xl", "2xl"] }, "mapsTo": "gap" },
-        "wrap": { "type": { "type": "boolean" }, "mapsTo": "wrap" }
+        "wrap": { "type": { "type": "boolean" }, "mapsTo": "wrap" },
+        "reflow": { "type": { "type": "string", "enum": ["auto", "locked"] }, "mapsTo": "reflow" }
       },
       "children": "ChildList"
     },
@@ -121,7 +122,8 @@
         "align": { "type": { "type": "string", "enum": ["stretch", "start", "end", "baseline"] }, "mapsTo": "align" },
         "justify": { "type": { "type": "string", "enum": ["start", "center", "end", "between", "around", "evenly"] }, "mapsTo": "justify" },
         "gap": { "type": { "type": "string", "enum": ["none", "xs", "sm", "md", "lg", "xl", "2xl"] }, "mapsTo": "gap" },
-        "wrap": { "type": { "type": "boolean" }, "mapsTo": "wrap" }
+        "wrap": { "type": { "type": "boolean" }, "mapsTo": "wrap" },
+        "reflow": { "type": { "type": "string", "enum": ["locked", "auto"] }, "mapsTo": "reflow" }
       },
       "children": "ChildList"
     },
@@ -179,6 +181,163 @@
         "persistent": { "type": { "type": "boolean" }, "mapsTo": "persistent" }
       },
       "value": { "prop": "open", "event": "toggle" },
+      "children": "ChildList"
+    },
+
+    "Icon": {
+      "properties": {
+        "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "name" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
+      }
+    },
+
+    "Menu": {
+      "properties": {
+        "open": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "open" },
+        "placement": { "type": { "type": "string", "enum": ["bottom-start", "bottom-end", "top-start", "top-end", "left-start", "left-end", "right-start", "right-end"] }, "mapsTo": "placement" }
+      },
+      "value": { "prop": "open", "event": "toggle" },
+      "children": "ChildList"
+    },
+
+    "MenuItem": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "mapsTo": "value" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" }
+      }
+    },
+
+    "Popover": {
+      "properties": {
+        "open": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "open" },
+        "placement": { "type": { "type": "string", "enum": ["bottom-start", "bottom-end", "top-start", "top-end", "left-start", "left-end", "right-start", "right-end"] }, "mapsTo": "placement" }
+      },
+      "value": { "prop": "open", "event": "toggle" },
+      "children": "ChildList"
+    },
+
+    "Tooltip": {
+      "properties": {
+        "open": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "open" },
+        "placement": { "type": { "type": "string", "enum": ["bottom-start", "bottom-end", "top-start", "top-end", "left-start", "left-end", "right-start", "right-end"] }, "mapsTo": "placement" },
+        "delay": { "type": { "type": "number" }, "mapsTo": "delay" }
+      },
+      "value": { "prop": "open", "event": "toggle" },
+      "children": "ChildList"
+    },
+
+    "RadioGroup": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "required": { "type": { "type": "boolean" }, "mapsTo": "required" },
+        "orientation": { "type": { "type": "string", "enum": ["horizontal", "vertical"] }, "mapsTo": "orientation" }
+      },
+      "value": { "prop": "value", "event": "change" },
+      "children": "ChildList"
+    },
+
+    "Radio": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "mapsTo": "value" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" },
+        "checked": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "checked" }
+      }
+    },
+
+    "SegmentedControl": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "required": { "type": { "type": "boolean" }, "mapsTo": "required" },
+        "orientation": { "type": { "type": "string", "enum": ["horizontal", "vertical"] }, "mapsTo": "orientation" }
+      },
+      "value": { "prop": "value", "event": "change" },
+      "children": "ChildList"
+    },
+
+    "Segment": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "mapsTo": "value" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" },
+        "checked": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "checked" }
+      }
+    },
+
+    "Slider": {
+      "properties": {
+        "value": { "type": { "type": "number" }, "bindable": true, "mapsTo": "value" },
+        "min": { "type": { "type": "number" }, "mapsTo": "min" },
+        "max": { "type": { "type": "number" }, "mapsTo": "max" },
+        "step": { "type": { "type": "number" }, "mapsTo": "step" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "required": { "type": { "type": "boolean" }, "mapsTo": "required" }
+      },
+      "value": { "prop": "value", "event": "change" }
+    },
+
+    "SliderMulti": {
+      "properties": {
+        "min": { "type": { "type": "number" }, "mapsTo": "min" },
+        "max": { "type": { "type": "number" }, "mapsTo": "max" },
+        "step": { "type": { "type": "number" }, "mapsTo": "step" },
+        "valueLo": { "type": { "type": "number" }, "bindable": true, "mapsTo": "valueLo" },
+        "valueHi": { "type": { "type": "number" }, "bindable": true, "mapsTo": "valueHi" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" }
+      }
+    },
+
+    "Calendar": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "min": { "type": { "type": "string" }, "mapsTo": "min" },
+        "max": { "type": { "type": "string" }, "mapsTo": "max" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "required": { "type": { "type": "boolean" }, "mapsTo": "required" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "mode": { "type": { "type": "string", "enum": ["single", "range"] }, "mapsTo": "mode" },
+        "valueStart": { "type": { "type": "string" }, "bindable": true, "mapsTo": "valueStart" },
+        "valueEnd": { "type": { "type": "string" }, "bindable": true, "mapsTo": "valueEnd" }
+      },
+      "value": { "prop": "value", "event": "change" }
+    },
+
+    "ComboBox": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "placeholder": { "type": { "type": "string" }, "mapsTo": "placeholder" },
+        "strict": { "type": { "type": "boolean" }, "mapsTo": "strict" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" }
+      },
+      "value": { "prop": "value", "event": "change" },
+      "children": "ChildList"
+    },
+
+    "List": {
+      "properties": {
+        "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
+        "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" },
+        "align": { "type": { "type": "string", "enum": ["start", "center", "end", "stretch", "baseline"] }, "mapsTo": "align" },
+        "justify": { "type": { "type": "string", "enum": ["start", "center", "end", "between", "around", "evenly"] }, "mapsTo": "justify" },
+        "gap": { "type": { "type": "string", "enum": ["none", "xs", "sm", "md", "lg", "xl", "2xl"] }, "mapsTo": "gap" },
+        "wrap": { "type": { "type": "boolean" }, "mapsTo": "wrap" }
+      },
+      "children": "ChildList"
+    },
+
+    "Grid": {
+      "properties": {
+        "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
+        "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" },
+        "gap": { "type": { "type": "string", "enum": ["none", "xs", "sm", "md", "lg", "xl", "2xl"] }, "mapsTo": "gap" },
+        "min": { "type": { "type": "string" }, "mapsTo": "min" }
+      },
       "children": "ChildList"
     }
   },
