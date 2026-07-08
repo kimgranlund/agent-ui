@@ -26,7 +26,9 @@
  *
  * Default (no axis set) = transparent: an UNSET container is unchanged (it passes its parent's surface
  * through), so a bare layout primitive adds no plane. Container elements that want a default surface
- * (card/modal/tabs) set `--ui-container-bg` in their OWN sheet (specificity wins over this `:where()`).
+ * (card/modal) set `--ui-container-bg` in their OWN sheet (specificity wins over this `:where()`); tabs
+ * left this trio in ADR-0104 — a bare `<ui-tabs>` is transparent like every other container, and a plane
+ * is an asked-for intent via the shipped `elevation`/`brightness` axes.
  *
  * Standalone sheet — linked via the component-styles barrel, NEVER injected from container.ts (behaviour
  * `.ts` holds no runtime style; plan §2). */

@@ -19,8 +19,9 @@ const { content } = mountPage({
 const text = (s: string): Text => document.createTextNode(s)
 
 // A representative live ui-tabs: two tabs + two panels, the second selected. Real compound — clicking / arrow
-// keys switch tabs (the rich interaction + the select log are on the Tabs demo).
-const tabs = el('ui-tabs', { selected: 'pricing' }, [
+// keys switch tabs (the rich interaction + the select log are on the Tabs demo). `ui-tabs` is transparent by
+// default (ADR-0104) — this specimen sits on the .canvas-surface grid stage, so it asks for its plane explicitly.
+const tabs = el('ui-tabs', { selected: 'pricing', elevation: '0' }, [
   el('ui-tab', { value: 'overview' }, [text('Overview')]),
   el('ui-tab', { value: 'pricing' }, [text('Pricing')]),
   el('ui-tab-panel', {}, [text('The overview panel content.')]),

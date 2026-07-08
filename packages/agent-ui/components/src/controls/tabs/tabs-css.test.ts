@@ -4,10 +4,10 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
-// G9 s8 — tabs.css static structural check (ADR-0003 sectioning + token hygiene; ADR-0015 the own default
-// surface; geometry.md Pattern class — control-height rows / --ui-space shell). jsdom can't compute the rendered
-// px/colours — these pin the STRUCTURE + the CSS text; the rendered paint + forced-colors survival is
-// tabs.browser.test.ts.
+// G9 s8 — tabs.css static structural check (ADR-0003 sectioning + token hygiene; ADR-0104 transparent-by-
+// default — no own surface seeding; geometry.md Pattern class — control-height rows / --ui-space shell). jsdom
+// can't compute the rendered px/colours — these pin the STRUCTURE + the CSS text; the rendered paint + forced-
+// colors survival is tabs.browser.test.ts.
 
 const css = readFileSync(
   `${process.cwd()}/packages/agent-ui/components/src/controls/tabs/tabs.css`,
@@ -41,8 +41,8 @@ describe('tabs.css — structure + sectioning (s8)', () => {
     expect(stylesBlock).toMatch(/@scope \(ui-tabs\)/)
   })
 
-  it('the :where(ui-tabs) block sets its OWN default --ui-container-bg from a surface role (the base is transparent)', () => {
-    expect(tokenBlock).toMatch(/--ui-container-bg:\s*var\(--md-sys-color-neutral-surface\)/) // ADR-0015 — a bare tabs still draws a plane
+  it('the :where(ui-tabs) block does NOT seed --ui-container-bg — a bare tabs is transparent by default (ADR-0104)', () => {
+    expect(tokenBlock).not.toMatch(/--ui-container-bg\s*:/) // negative control — the seeding regressed the pattern-wizard double-surface (#29)
   })
 
   it('declares the --ui-tabs-* chain — control-height tab rows + the --ui-space shell + the ink/indicator roles', () => {
