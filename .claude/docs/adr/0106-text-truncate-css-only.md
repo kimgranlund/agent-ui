@@ -129,3 +129,15 @@ Two facts shape the API:
 - **A generic fleet `truncate` on every control.** Rejected: controls own their own overflow contracts
   (`ui-button` chose nowrap-clip at the control level; inputs scroll). The Display primitive is where
   free text lives; per-control adoption stays per-control evidence.
+
+## Erratum (2026-07-08)
+
+The Alternatives bullet "**`title` always (unmeasured), skip the observer.** Rejected: …" is first-draft
+residue and contradicts accepted clause 3. Kim's ratification-round ruling ("truncate should be CSS-only
+solution. no resize-observer overkill") flipped exactly that alternative INTO the decision — the
+unconditional mirror IS title-always-unmeasured, plus the ownership-by-value guard. The bullet's stated
+costs (hover noise while the text fits, AT double-speak risk on some stacks) were re-weighed at
+ratification and accepted as the CSS-only price; the Consequences section carries them honestly ("present
+even when the text isn't actually clipped"). Read that bullet as the FIRST DRAFT's reasoning against its
+own eventual decision, kept for the record — not as the accepted position. (Surfaced by the ADR-0109
+intake, 2026-07-08.)
