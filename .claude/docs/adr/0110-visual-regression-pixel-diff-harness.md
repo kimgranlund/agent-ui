@@ -144,3 +144,18 @@ Realized when the decomp's leaf accepts hold
   (which fires on pixel MISMATCH despite tolerance): a never-stabilizing capture still times out, so it
   cannot convert real instability into a false green. Recorded so near-timeout creep stays legible; the
   review adjudicated it DEFENSIBLE.
+- **The skipIf fallback retired for the real pin (2026-07-08, measured investigation).** The visual
+  project moved to `extends: false` with a standalone chromium-only `browser` block — the instances-concat
+  collision only bites under `extends: true`, so full duplication sidesteps it. The documented "4 WebKit
+  skips per run" cost is ELIMINATED (0 skips; the per-test `skipIf` guards remain as belt-and-braces).
+  The ~10s teardown hang on standalone `test:visual` was measured to be ORTHOGONAL to WebKit (persisted
+  chromium-only — the builder's shell hypothesis falsified): it is vitest's generic dangling-handle
+  teardown force-killed at the default 10s `teardownTimeout`; now 2s (1s measured clean), taking
+  `test:visual` from ~15s to ~5s wall. Cost recorded in the config: root browser-block edits no longer
+  propagate to the visual project.
+- **The full-suite timeout flake is EXTERNAL, accepted + documented (2026-07-08).** Ten instrumented
+  full `test:browser` baselines: failures cluster in transient machine-load bursts (load 43 on 10 cores,
+  62 browser processes — actions starve past the 15s testTimeout); every failing file passes in
+  isolation; capping workers measurably BACKFIRES (maxWorkers 8 → 14 failures + 3.7× wall; 4 → worse).
+  Disposition: re-run on failure; do NOT cap concurrency. A `testTimeout: 30000` on the non-visual
+  projects is the zero-cost candidate mitigation, deliberately NOT landed — unverified under real load.

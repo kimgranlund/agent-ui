@@ -17,6 +17,12 @@ import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
+    // Teardown force-kill window. The default 10s manifested as a ~10s "close timed out after 10000ms /
+    // something prevents the main process from exiting" hang on every standalone `test:visual` run — a
+    // generic dangling node handle AFTER the browsers close, NOT the WebKit shell (measured 2026-07-08:
+    // the hang persisted chromium-only; 1s teardown was clean; full `test:browser` never hangs). 2s
+    // leaves headroom over the measured-fine 1s.
+    teardownTimeout: 2000,
     browser: {
       enabled: true,
       provider: playwright(),
@@ -43,11 +49,24 @@ export default defineConfig({
         },
       },
       {
-        extends: true,
+        // `extends: false` — the ONE project that does NOT inherit the root browser block. Under
+        // `extends: true` the parent's `instances` array CONCATENATES (re-pinning chromium collides:
+        // "Cannot define a nested project for a chromium browser … already defined", verified against
+        // the installed vitest 4.1.9 merge), so the first realization carried BOTH engines and skipIf'd
+        // WebKit — 4 phantom skips per run. Standalone duplication of the browser block with a
+        // chromium-only instance eliminates the WebKit shell and the skips outright (measured
+        // 2026-07-08); `it.skipIf(server.browser !== 'chromium')` in the visual legs stays as a cheap
+        // belt-and-braces guard. COST: edits to the ROOT browser block do not propagate here — keep the
+        // enabled/provider/headless trio in sync by hand.
+        extends: false,
         test: {
           name: 'visual',
           include: ['**/*.visual.browser.test.ts'],
           browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: [{ browser: 'chromium' }],
             // The fleet's default viewport (414×896, a mobile-sized default meant for the interaction
             // suites) clips a wide/stretched fixture's screenshot before the layout does — a real capture
             // constraint, not a CSS bug (verified: the SAME 600px `mountStretched` helper's
@@ -55,14 +74,9 @@ export default defineConfig({
             // calendar.browser.test.ts; only the PIXEL CAPTURE was truncated to ~483px). Visual legs get
             // a wider viewport so a wide-panel gestalt captures whole.
             viewport: { width: 900, height: 900 },
-            // Chromium-only pixel truth (Decision 2). NOT a project-level `instances` pin — `extends:
-            // true` CONCATENATES the parent's `instances` array rather than replacing it, so redeclaring
-            // `[{ browser: 'chromium' }]` here collides with the inherited chromium instance ("Cannot
-            // define a nested project for a chromium browser … already defined", verified against the
-            // installed vitest 4.1.9 merge behavior). The ADR's named fallback mechanism carries the
-            // whole policy instead: each visual test uses `it.skipIf(server.browser !== 'chromium')` —
-            // WebKit still launches the project but executes ZERO visual legs (reported skipped, not
-            // run); WebKit keeps the computed-style/whole-shape legs as its sanctioned proof.
+            // Chromium-only pixel truth (Decision 2) — realized as the `extends: false` chromium-only
+            // instance above (see the project-level comment for the instances-concat history). WebKit
+            // keeps the computed-style/whole-shape legs as its sanctioned proof.
             expect: {
               toMatchScreenshot: {
                 comparatorName: 'pixelmatch',
