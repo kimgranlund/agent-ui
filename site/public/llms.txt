@@ -1,0 +1,106 @@
+# agent-ui
+
+> A zero-dependency, signals-based web-component library in strict modern TypeScript — FACE custom
+> elements (light DOM, ARIA via ElementInternals only, no native form elements), a tagged-template
+> renderer, and typed-signal props — plus an A2UI Generative-UI runtime (`@agent-ui/a2ui`), an A2A
+> (Agent2Agent) protocol layer (`@agent-ui/a2a`), a memory-first SPA router (`@agent-ui/router`),
+> and an app-shell package. This site is the library's living documentation: component API pages
+> derive from each control's own machine-checked descriptor, token/changelog pages derive from
+> their source files, and drift gates keep every page honest.
+
+## Guides
+
+- [Getting started](./getting-started.html): the 7 workspace packages, install and the load-bearing CSS import order (foundation tokens → component styles → self-defining controls), a first control, and per-control subpath imports for tree-shaking.
+- [Theming](./theming.html): the `<theme-provider>` subtree axes (scheme light/dark · scale · density), the `--md-sys-color-{family}-{role}` role system, and subtree token overrides, with live demos.
+- [Token reference](./tokens.html): every color role (light/dark swatches) and dimensional ramp (heights, fonts, icons, compact boxes, spacing), derived live from tokens.css and dimensions.css.
+- [Sizing & density](./sizing.html): the five component size classes, the explicit `[scale]`×`[size]` lookup (no multipliers), the compact realm's pad law, and density-rides-rhythm — with a live measured matrix.
+- [Forms](./forms.html): one working end-to-end form — `ui-form-provider` + `ui-field` registration, labelling, validation display, submit gating, and reset.
+- [Choosing a component](./choosing.html): which component for which job — the report four-way (Stat/Sparkline/BarChart/Table), content (Text/Code/Disclosure/links), feed (Avatar/Progress/Attachment), forms, overlays, and layout.
+- [A2UI authoring guide](./a2ui-authoring.html): how to author A2UI catalogs and training data against this fleet, derived from the real catalog and examples.
+- [App shell](./app-shell.html): composing the `agent-app-shell` application frame — regions, landmarks, narrow-reflow strategies, and per-instance style isolation.
+- [Router](./router-doc.html): the memory-first SPA router — route state as one signal, opt-in URL reflection (hash default, history opt-in), `ui-router-outlet`, and `ui-router-link`, with a live memory-mode demo.
+- [Changelog](./changelog.html): the shipping history, newest-first, rendered from the repo's CHANGELOG.md.
+
+## Components — actions & entry
+
+- [ui-button](./button-doc.html): the action control — solid/soft/ghost variants, six sizes, adornment slots with role-driven glyph sizing, and an `icon-only` square structure; see also its [permutation matrix](./button-permutations.html) and [interaction states](./button-states.html).
+- [ui-text-field](./text-field-doc.html): the 12-type entry control (text · email · url · tel · password · search · number · currency · unit · percent · date · time) with typed value codecs, steppers, and affordances; see also its [permutations](./text-field-permutations.html) and [states](./text-field-states.html).
+- [ui-calendar](./calendar-doc.html): the date grid — ISO values, range selection, fluid tracks; [demo](./calendar-demo.html).
+
+## Components — indicators & ranges
+
+- [ui-checkbox](./checkbox-doc.html): the form-associated checkbox with a component-drawn tick glyph.
+- [ui-switch](./switch-doc.html): the on/off toggle — a thumbed compact-realm widget.
+- [ui-radio](./radio-doc.html): a single radio dot; exclusivity lives on the group.
+- [ui-radio-group](./radio-group-doc.html): exclusivity, roving focus, and group validity for radios; [demo](./radio-group-demo.html).
+- [ui-segment](./segment-doc.html): one joined-button segment; selection lives on the control.
+- [ui-segmented-control](./segmented-control-doc.html): joined-button single-select with one shared animated indicator; [demo](./segmented-control-demo.html).
+- [ui-slider](./slider-doc.html): the single-value range control on the compact-realm rail.
+- [ui-slider-multi](./slider-multi-doc.html): the two-thumb range (valueLo/valueHi) on the shared rail.
+
+## Components — overlays & selection
+
+- [ui-select](./select-doc.html): the closed single-select — trigger + listbox with option groups; [demo](./select-demo.html).
+- [ui-combo-box](./combo-box-doc.html): the filtering single-select — an entry editor over a listbox; [demo](./combo-box-demo.html).
+- [ui-menu](./menu-doc.html): the action menu — trigger + menuitem panel with platform dismissal; [demo](./menu-demo.html).
+- [ui-popover](./popover-doc.html): the anchored light-dismiss panel; [demo](./popover-demo.html).
+- [ui-tooltip](./tooltip-doc.html): the hover/focus hint panel; [demo](./tooltip-demo.html).
+- [ui-modal](./modal-doc.html): the top-layer dialog — persistent or dismissable; [demo](./modal-demo.html).
+
+## Components — forms plumbing
+
+- [ui-field](./field-doc.html): the label/description/error chrome around any form control, wired via the connect-time registry; [demo](./field-demo.html).
+- [ui-form-provider](./form-provider-doc.html): the form-context provider — registration, submit gating, and reset across a subtree; [demo](./form-provider-demo.html).
+
+## Components — content & prose
+
+- [ui-text](./text-doc.html): the typographic leaf — M3 role `variant` × `size` × real-element `as` stamp (headings, paragraphs, links via a security-gated `href`), plus `truncate` and `emphasis`.
+- [ui-icon](./icon-doc.html): the declarative icon consumer over the swappable pack adapter (Phosphor vendored as default).
+- [ui-code](./code-doc.html): verbatim code display — host-as-content, monospace, self-scrolling, no highlighter by design.
+- [ui-disclosure](./disclosure-doc.html): the native details/summary content fold — toggle-only, two-way `open`; [demo](./disclosure-demo.html).
+
+## Components — report
+
+- [ui-table](./table-doc.html): the static data table — a real native `<table>` from `columns` + record `rows`, number columns end-aligned and Intl-formatted, scroll-preserving updates.
+- [ui-stat](./stat-doc.html): the label/value/delta/caption metric tile — delta direction carried as glyph + sign + text, never color alone.
+- [ui-badge](./badge-doc.html): the compact status/tag pill — bindable `intent` enum with a component-drawn per-intent glyph.
+- [ui-sparkline](./sparkline-doc.html): the inline trend line over a bound numeric series.
+- [ui-bar-chart](./bar-chart-doc.html): magnitude comparison bars, including diverging negative values.
+
+## Components — feed & activity
+
+- [ui-progress](./progress-doc.html): the determinate/indeterminate progress bar — thin-rail geometry, reduced-motion aware.
+- [ui-avatar](./avatar-doc.html): identity — image → initials → glyph fallback chain, decorative by default.
+- [ui-attachment](./attachment-doc.html): the FilePart-aligned file card — mime-derived glyph, name, formatted `sizeBytes`.
+- [ui-toast](./toast-doc.html): the transient notification — status/alert roles, hover/focus-paused auto-dismiss; [demo](./toast-demo.html).
+- [ui-toast-region](./toast-region-doc.html): the top-layer toast stack — page-owned, driven by `show()`.
+
+## Components — containers & layout
+
+- [ui-card](./card-doc.html): the header/content/footer surface container with the shared box model; [demo](./card-demo.html).
+- [ui-tabs](./tabs-doc.html): the tablist pattern — roving focus, panel switching; [demo](./tabs-demo.html).
+- [Layout primitives overview](./layout-overview.html): row, column, list, grid — gap-driven, no control heights; individual pages: [row](./row-doc.html), [column](./column-doc.html), [list](./list-doc.html), [grid](./grid-doc.html).
+- [Surface × layout matrix](./layout-permutations.html): every container surface crossed with every layout primitive.
+
+## A2UI — Generative UI
+
+- [Live catalog](./a2ui-catalog.html): every catalog component type rendered through the real renderer, with live prop knobs — derived from catalog.json.
+- [Composition gallery](./a2ui-gallery.html): one live mini-surface per example seed, rendered through the real renderer — the derived companion to Patterns.
+- [Live agent demo](./a2ui-live.html): a real LLM emitting A2UI over the wire — prompt → validated stream → rendered surface → round-trip interaction (recorded backbone by default, dev-only live overlay).
+- [Streaming](./a2ui-stream.html): root-early vs root-last streaming order on the same payload, with a live first-paint metric and mid-stream fault isolation.
+- [Patterns](./a2ui-patterns.html): idiomatic A2UI payload compositions against this catalog.
+- [Generative form](./a2ui-form.html): a full A2UI-rendered form with two-way bindings and validity checks.
+- [Dynamic list](./a2ui-list.html): the positional list reconciler over a bound array.
+- [Canvas](./a2ui-canvas.html): the A2UI render surface — translate-centered artboard with JSON/HTML inspection tabs.
+
+## A2A — Agent2Agent
+
+- [Concepts](./a2a-concepts.html): the A2A protocol's core concepts (tasks, messages, parts, the nine-state lifecycle), derived from the corpus records.
+- [Tic-tac-toe arena](./a2a-tic-tac-toe.html): an isolation-proven agent-vs-agent match over real A2A — replayable recorded flagship match plus a live dev mode.
+- [Artifact feed](./a2a-artifact-feed.html): A2UI surfaces carried over A2A as artifact parts — the bridge demo.
+
+## Meta
+
+- [Component gallery](./gallery.html): the whole ui-* fleet in one filterable grid, descriptor-derived — the fleet index.
+- [Decision records](./adr-index.html): every ADR, newest-first, full-text searchable, expanding to the complete rendered record.
+- [Full markdown corpus](./llms-full.txt): the fetch-readable corpus in one file — every component's canonical descriptor documentation plus the changelog, generated from the same source files the site pages derive from. Note: the HTML pages above are client-rendered; an agent fetching raw bytes should read this file for content and use the pages for live demos only.
