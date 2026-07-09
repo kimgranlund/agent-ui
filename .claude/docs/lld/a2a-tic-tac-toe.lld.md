@@ -19,7 +19,7 @@
 | **LLD-C5** | Seat seam + scripted seats | SPEC-R12 | `tools/arena/seat.ts` + `tools/arena/seats/scripted.ts` | dev/CI |
 | **LLD-C6** | Model seat (bounded move loop) | SPEC-R10, R11 | `tools/arena/seats/model.ts` | dev (Node) |
 | **LLD-C7** | Match runner (disjoint-context composer) | SPEC-R10, R12 | `tools/arena/match.ts` | dev/CI |
-| **LLD-C8** | Recorder (runner events → transcript JSONL) | SPEC-R12 | `tools/arena/record.ts` | dev/CI |
+| **LLD-C8** | Recorder (runner events → transcript JSONL) | SPEC-R12 | `tools/arena/recording-tap.ts` *(as-built name; the draft said `record.ts`)* | dev/CI |
 | **LLD-C9** | Match fixtures (scripted · flagship · 2 contaminated controls) | SPEC-R12, R10 | `matches/{scripted,flagship,contaminated-control,contaminated-provider-control}.match.jsonl` | committed data |
 | **LLD-C10** | Arena dev proxy (live match, keys server-side) | SPEC-R13 | `tools/arena/dev-proxy-plugin.ts` (mount `/__a2a/arena`) | dev-only (`apply:'serve'`) |
 | **LLD-C11** | Demo page (replay · side-by-side inspector · verdict · dev live) | SPEC-R13 | `site/a2a-tic-tac-toe.html` + `site/pages/a2a-tic-tac-toe.{ts,css}` | site |
