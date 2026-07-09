@@ -7,7 +7,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-06 *(authored)* |
 > | **Proposed by** | planner (design seat — the robust-App-usage catalog-scope intake, Kim's directive) |
 > | **Ratified by** | orchestration-coordinator (on the green wave gates; the per-control INCLUDE forks and the ui-list/ui-grid fork **now confirmed by Kim, 2026-07-06** — ratification itself still lands at the wave-gate close, not on this ADR directly) |
