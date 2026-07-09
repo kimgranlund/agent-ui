@@ -32,18 +32,30 @@ Three placement rules follow, and they decide every governance artifact below:
 | Artifact | Axis | Mode | Unit | Prevents | Authored via | Lands |
 |---|---|---|---|---|---|---|
 | **Trip-wire suite** (probes + scripts + hook) | behavioral | contract | scripts/hook | drift + bloat | hand + `update-config` (hook) | G0→G1 |
-| `component-author` | behavioral | procedure | **skill** | drift (by construction) | `skill-author` | by G5 |
-| `auditing-components` | behavioral | procedure | **skill** | drift (detection) | `skill-author` | ~G6 |
-| `component-reviewer` | behavioral | — | **subagent** | drift + bloat (judgment) | `agent-author` | G5 |
-| `tokens-specialist` | behavioral | — | **subagent** | drift (tokens) | `agent-author` | G6 |
+| `component-builder` (realized as an agent, not a skill — see note) | behavioral | procedure | **subagent** | drift (by construction) | hand-authored | G5 |
+| `family-coherence.test.ts` (realized as a trip-wire, not a skill — see note) | behavioral | contract | test suite | drift (detection) | hand-authored | G8 |
+| `component-reviewer` (global `ui:` plugin agent, not project-local — see note) | behavioral | — | **subagent** | drift + bloat (judgment) | plugin-authored | G5 |
+| `token-builder` (global `color:` plugin agent, not project-local — see note) | behavioral | — | **subagent** | drift (tokens) | plugin-authored | ~G6 |
 | contract schema (`{name}.md` frontmatter) | referential | rubric/check | json-schema | drift | hand (draft-2020-12) | G5 |
 | component rubric (COMPOSE/REALIZE) | referential | rubric | doc | drift + bloat | `rubric-author` | G5 |
 | kernel rubric | referential | rubric | doc | bloat | `rubric-author` | G1 |
-| coherence/health rubric | referential | rubric | doc | drift | `rubric-author` | ~G6 |
+| ~~coherence/health rubric~~ — see note | — | — | — | drift | — | — |
 | `CLAUDE.md` (thin index) | behavioral | instruction | doc | context | `claude-md-author` | G0 |
 
 Most teams build only the behavioral axis and neglect the referential one — and a loop with nothing
 to check against can't repair anything. We treat the rubrics + contract as first-class, not afterthoughts.
+
+**Note (updated 2026-07-09) — four rows landed differently than planned.** `component-author` was never
+authored as a discoverable skill; the procedure lives directly in the `component-builder` agent
+(`.claude/agents/component-builder.md`), which cites the canonical docs rather than a skill preloading
+them. `auditing-components` was never built either — the mechanical `family-coherence.test.ts` standing
+gate (ADR-0081, landed G8) does the library-wide drift detection instead, arguably a *better* fit for
+placement rule 1 above (a true/false answer belongs in code, not agent judgment). `component-reviewer`
+and `tokens-specialist` were realized as the global plugin agents `ui:component-reviewer` and
+`color:token-builder` rather than repo-local subagents authored via `agent-author`. The planned
+standalone **coherence/health rubric** doc was never written — `family-coherence.test.ts`'s 9 invariants
+absorbed that role as a mechanical gate. The current build-team roster (`.claude/agents/`) is
+`component-builder`, `a2ui-builder`, `a2ui-composer`, `a2ui-reviewer`, `example-builder`.
 
 ## 1. Trip-wires — the loud contracts (determinism → code)
 
@@ -90,6 +102,10 @@ invisible to a grep for the HTML `slot="icon"` form alone — and shipped a user
 
 ## 2. Skills — procedures (recurring methods)
 
+*(Neither skill below was ultimately built this way — see the artifact-map note above. This section is
+kept as the original design rationale; the realized shape is `component-builder`, a project-local agent,
+plus the `family-coherence.test.ts` mechanical gate.)*
+
 A skill is the right unit only for a *recurring multi-step method*. Two qualify:
 
 **`component-author`** — the canonical procedure for adding/upgrading a `ui-*` component. It is the
@@ -111,6 +127,10 @@ Valuable only once 3+ components exist.
 (Authored as **our own** skill via `skill-author` — not a generic root audit skill.)
 
 ## 3. Subagents — result-only delegation (isolated judgment)
+
+*(`component-reviewer` and `tokens-specialist` below were realized as the global plugin agents
+`ui:component-reviewer` and `color:token-builder`, not repo-local subagents — see the artifact-map note
+above. This section is kept as the original design rationale.)*
 
 A subagent is the right unit for scoped, isolatable work where only the summary returns — which keeps
 file-reading out of the main thread (context economy). Neither needs a team: there is no debate, just a
@@ -155,7 +175,8 @@ These are read to check, never obeyed. They are the single source of truth revie
   no self-owned margin, tier discipline).
 - **kernel rubric** — the kernel's *different* concerns (invariants preserved, surface minimal+typed,
   zero leaks, budget); G1–G4 grade against this, not the component rubric.
-- **coherence/health rubric** — the scoring backbone of `auditing-components`.
+- **coherence/health rubric** — never authored as a standalone doc; `family-coherence.test.ts` (ADR-0081,
+  G8) absorbed this role as a mechanical gate instead (see the artifact-map note above).
 
 ## 5. Discovery vs. continuation (how it's wired)
 
@@ -164,7 +185,9 @@ These are read to check, never obeyed. They are the single source of truth revie
 - **Continuation (when the next turn fires):** **human-driven for now.** The only automation is the
   Stop/pre-commit **hook** running the fast gate suite (enforcement, not selection). A per-component DoD
   as a `/goal` condition (authored via `loop-design`) is a *later* option, considered only
-  if the buildout fans out to the full catalog — not for ~7 controls. We never expect `/goal` to *select*
+  if the buildout fans out to the full catalog — not for the ~7 controls of the original control-family
+  scope (the fleet has since grown to 37+ components across multiple families, as of 2026-07-09; the
+  `/goal` question hasn't been revisited). We never expect `/goal` to *select*
   the reviewer or the author skill; discovery does that underneath, goal or no goal.
 
 ## How this maps to the three risks
@@ -185,15 +208,20 @@ These are read to check, never obeyed. They are the single source of truth revie
 ```
 G0  thin CLAUDE.md · fast-gate hook · naming/layering/contract-drift probes · size script
 G1  kernel rubric
-G5  component-author skill · frontmatter contract schema · component rubric · component-reviewer agent   (land WITH ui-button)
-G6  auditing-components skill · coherence rubric · tokens-specialist agent
+G5  component-builder agent · frontmatter contract schema · component rubric · component-reviewer agent (global `ui:`)   (land WITH ui-button)
+G8  family-coherence.test.ts gate (ADR-0081, realized in place of a coherence rubric) · token-builder agent (global `color:`) — landed later than the original G6 target
 per-tier  council bloat red-team (occasional, justified fan-out)
 ```
 
 ## What we do NOT build (anti-ceremony)
 
-- No autonomous harness-forge lattice yet — human-driven was chosen, and ~7 controls won't amortize it.
-- No bespoke per-component agents — one reviewer + one tokens specialist; everything else is mechanical.
+- No autonomous harness-forge lattice yet — human-driven was chosen; that call hasn't been revisited even
+  as the fleet grew from ~7 to 37+ components across multiple families (as of 2026-07-09).
+- No bespoke *per-component* agents — reviewer + tokens work route to the global `ui:component-reviewer` /
+  `color:token-builder` plugins, not a new agent per control. *(The roster did grow bespoke agents per
+  concern instead, as the surface area diversified: `component-builder` (ui-* build seat), `a2ui-builder`/
+  `a2ui-composer`/`a2ui-reviewer` (the A2UI layer), `example-builder` (docs-site preview content) —
+  `.claude/agents/`, updated 2026-07-09. Still mechanical for anything a probe can own.)*
 - No rubric/agent for a check a probe already owns.
 
 ---

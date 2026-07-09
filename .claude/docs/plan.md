@@ -29,7 +29,10 @@ Four pillars, adopted deliberately:
 **First component family: FACE form controls.** The first real surface is `ui-button`
 (the reference control), then `ui-text-field` / `ui-checkbox` / `ui-switch`, then
 `ui-select` / `ui-listbox` and the `ui-field` wrapper. Layout/display primitives come after the
-control family is proven end-to-end.
+control family is proven end-to-end. *(Realized: the FACE control family shipped G0–G9 + the Control
+Suite tracks; layout/display primitives followed as the G9 container family, then the
+report/content/feed/chart component families and the `@agent-ui/router` package — see `goals.md` and
+root `CHANGELOG.md`.)*
 
 ## 2. Why these choices
 
@@ -47,9 +50,11 @@ control family is proven end-to-end.
 
 ## 3. Architecture & directory layout
 
-The kernel is small (rce's is ~2.3k lines across 8 modules). agent-ui is an **npm-workspaces monorepo**:
-the framework is one package, with `shared` for cross-cutting tokens/styles/utils and `a2ui` (the A2UI
-layer, now team-led under `.claude/docs/specs/`).
+The kernel is small (rce's is ~2.3k lines across 8 modules). agent-ui is an **npm-workspaces monorepo**,
+now **seven packages**: the framework (`components`), `shared` for cross-cutting tokens/styles/utils,
+`a2ui` (the A2UI layer, team-led under `.claude/docs/specs/`), `a2a` (the A2A/Agent2Agent protocol layer
++ the tic-tac-toe arena + its concepts corpus), `icons` (the swappable icon-pack adapter), `app`
+(app-surface compositions, the agent-app-shell) and `router` (the SPA router, ADR-0115).
 
 ```
 packages/agent-ui/
@@ -69,7 +74,8 @@ packages/agent-ui/
       traits/
         press-activation.ts, tabbable.ts, roving-tabindex.ts, track-user-invalid.ts, …
       controls/
-        button/  text-field/  checkbox/  switch/  listbox/  select/  field/
+        button/  text-field/  checkbox/  switch/  listbox/  select/  field/  … (37+ folders — the full
+        FACE Control Suite plus the G9 container family and the report/content/feed/chart families)
           <name>.ts  <name>.css  <name>.md  <name>.test.ts    # single-file CSS + md-frontmatter descriptor (ADR-0003/0004)
       index.ts          # the package barrel (@agent-ui/components)
   shared/                      # @agent-ui/shared — tokens, styles, utility types
@@ -77,7 +83,13 @@ packages/agent-ui/
       tokens/  raw-color-tokens.css  semantic-color-tokens.css  runtime-tokens.css  tokens.css (barrel)
       index.ts
   a2ui/                        # @agent-ui/a2ui — A2UI layer, team-led (.claude/docs/specs/); depends on @agent-ui/components
-docs/  plan.md  goals.md  process.md  references/    # repo root
+  a2a/                         # @agent-ui/a2a — A2A protocol layer (wire types + validation, spec v0.3.0),
+                                #   the tic-tac-toe isolation-proof arena, its own concepts-corpus shards; zero deps
+  icons/                       # @agent-ui/icons — swappable icon-pack adapter (pure core + ./phosphor subpath); zero deps
+  app/                         # @agent-ui/app — app-surface compositions (agent-app-shell, ADR-0082..0084);
+                                #   depends on components + a2ui + shared
+  router/                      # @agent-ui/router — SPA router (ADR-0115); depends on components
+.claude/docs/  plan.md  goals.md  process.md  references/  adr/  specs/  prd/  spec/  lld/  rubrics/    # agent-scoped project docs
 ```
 
 Layering is strict and inward-only: `reactive` imports nothing; `dom` imports `reactive`; `controls`
@@ -357,6 +369,8 @@ G5  ui-button — the reference control (end-to-end: CSS trio, dimensional token
 G6  ui-text-field / ui-checkbox / ui-switch
 G7  ui-listbox / ui-select / ui-field (+ form-provider) — first family complete
 G8  Gallery demo + release-readiness pass
+G9  Container/layout family              (row/column/list/grid/card/tabs/modal + the A2UI catalog flip,
+                                           LLD-C8 two-way input binding)
 ```
 
 G1–G4 are the prerequisite kernel slice; G5 is the proving vertical (one control taken fully to the

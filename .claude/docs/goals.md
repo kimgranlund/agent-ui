@@ -8,8 +8,16 @@
 > wave** (2026-07-01, ADR-0050/0051/0052) closed `ui-field` + `ui-form-provider` + the keyboard-only end-to-end
 > proof. **State (2026-07-05): G0–G9 + the Control Suite + the icon adapter (`@agent-ui/icons` + `ui-icon`,
 > ADR-0065/0066) + G8 ALL DONE — the components foundation is COMPLETE** (see the G8 verdict + root
-> `CHANGELOG.md`). The next tier — layout/display primitives vs agent-app surfaces, plus the deferred
-> multi-theme `theme` package system — is Kim's scope-dial decision, unchosen.
+> `CHANGELOG.md`). The next-tier scope dial was chosen shortly after — see below.
+> The next tier was subsequently chosen and shipped (as of 2026-07-09): the **G9 container/layout family**
+> (below) landed first, then **`@agent-ui/app`** (the agent-app-shell, ADR-0082–0084), **`@agent-ui/a2a`**
+> (the A2A/Agent2Agent protocol layer + the tic-tac-toe arena + concepts corpus), the
+> **report/content/feed/chart** component families (ADR-0107/0111–0114 — `ui-table`/`ui-stat`/`ui-badge`,
+> `ui-code`/`ui-disclosure`/`ui-text-hyperlink`, `ui-progress`/`ui-avatar`/`ui-attachment`/`ui-toast`(-region),
+> `ui-sparkline`/`ui-bar-chart`), and **`@agent-ui/router`** (ADR-0115). Each has its own PRD/SPEC/LLD under
+> `.claude/docs/{prd,spec,lld}/` (or `specs/` for A2UI) — this file's scope stays the FACE control
+> foundation (G0–G9) + Control Suite + icon adapter. The one still-deferred item is the multi-theme
+> `theme` package-swapping system (the seam is wired; one `default` package ships).
 > Layout: npm-workspaces monorepo — `src/core/*` in milestone text now lives under `packages/agent-ui/components/src/*`.
 > Consumed by the A2UI effort (`.claude/docs/specs/`, `@agent-ui/a2ui`), which tracks these milestones (its
 > Assumption A-2 ≈ G7) and is coordinated by the planning/execution team (`.claude/agents/`).
