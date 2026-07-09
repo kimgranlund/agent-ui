@@ -33,7 +33,7 @@
   --ui-segmented-control-segment-height: var(--ui-height-md);
   --ui-segmented-control-segment-font: var(--ui-font-md);
 
-  /* The outer rounded track + collapsed inter-segment dividers. */
+  /* The outer rounded track (segments carry NO divider borders — Kim's ruling, see the styles block). */
   --ui-segmented-control-track: var(--md-sys-color-neutral-outline);
   --ui-segmented-control-radius: var(--ui-radius-base);
 
@@ -124,20 +124,11 @@ ui-segmented-control ui-segment {
   color: var(--ui-segmented-control-ink);
 }
 
-/* Collapsed inter-segment dividers — one shared border line, not two. The leading segment suppresses its
-   own divider so the outer track supplies that edge instead. */
-ui-segmented-control[orientation='horizontal'] ui-segment {
-  border-inline-start: 1px solid var(--ui-segmented-control-track);
-}
-ui-segmented-control[orientation='horizontal'] ui-segment:first-of-type {
-  border-inline-start: none;
-}
-ui-segmented-control[orientation='vertical'] ui-segment {
-  border-block-start: 1px solid var(--ui-segmented-control-track);
-}
-ui-segmented-control[orientation='vertical'] ui-segment:first-of-type {
-  border-block-start: none;
-}
+/* NO inter-segment dividers — Kim's ruling (2026-07-09): the outer track + the moving fill + the hover
+   washes already carry the segmentation; vertical divider lines between segments are visual noise. The
+   original collapsed-divider rules (a shared 1px border-inline/block-start per non-first segment) were
+   removed here; segments carry NO borders of their own, and a regression guard in
+   segmented-control.browser.test.ts pins the zero-divider rendering in both orientations. */
 
 /* Selected ink — the checked segment's label sits on the moving fill. The plain `[checked]` attribute
    selector alone is sufficient (no paired `:state(checked)`, unlike radio.css's own dot rule): `checked`
@@ -179,8 +170,6 @@ ui-segmented-control[disabled] ui-segment:active {
   ui-segmented-control ui-segment {
     forced-color-adjust: none;
     color: ButtonText;
-    border-inline-start-color: ButtonText;
-    border-block-start-color: ButtonText;
   }
   ui-segmented-control ui-segment:is([checked]) {
     color: HighlightText;

@@ -80,7 +80,7 @@ const VERTICAL = `
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-segmented-control — grid track + segment geometry (both engines)', () => {
-  it('horizontal (the class default, NO explicit orientation): display:grid, equal-width cells, one outer rounded track, collapsed dividers', () => {
+  it('horizontal (the class default, NO explicit orientation): display:grid, equal-width cells, one outer rounded track, ZERO inter-segment dividers', () => {
     const { group, segments } = mount(HORIZONTAL)
     expect(getComputedStyle(group).display).toBe('grid')
     expect(group.getAttribute('orientation'), 'a bare ui-segmented-control defaults to horizontal').toBe('horizontal')
@@ -100,20 +100,28 @@ describe('ui-segmented-control — grid track + segment geometry (both engines)'
     expect(px(gcs.borderTopWidth)).toBeCloseTo(1, 0)
     expect(px(gcs.borderTopLeftRadius)).toBeGreaterThan(0)
 
-    // collapsed dividers: first segment suppresses its own leading border; the rest carry one.
-    expect(px(getComputedStyle(segments[0]!).borderInlineStartWidth)).toBe(0)
-    expect(px(getComputedStyle(segments[1]!).borderInlineStartWidth)).toBeCloseTo(1, 0)
-    expect(px(getComputedStyle(segments[2]!).borderInlineStartWidth)).toBeCloseTo(1, 0)
+    // ZERO inter-segment dividers (Kim's ruling, 2026-07-09 — the outer track + the moving fill + the
+    // hover washes carry the segmentation; the original collapsed-divider borders were removed): EVERY
+    // segment, first included, renders with no border of its own on any edge.
+    for (const seg of segments) {
+      const cs = getComputedStyle(seg)
+      expect(px(cs.borderInlineStartWidth), 'a segment regrew an inter-segment divider').toBe(0)
+      expect(px(cs.borderInlineEndWidth)).toBe(0)
+    }
   })
 
-  it('vertical: a real stack — equal-height cells, block-start dividers collapsed', () => {
+  it('vertical: a real stack — equal-height cells, ZERO inter-segment dividers', () => {
     const { group, segments } = mount(VERTICAL)
     expect(group.getAttribute('orientation')).toBe('vertical')
     const rects = segments.map((r) => r.getBoundingClientRect())
     for (const r of rects) expect(r.height).toBeCloseTo(rects[0]!.height, 0)
     for (let i = 1; i < rects.length; i++) expect(rects[i]!.top).toBeCloseTo(rects[i - 1]!.bottom, 0)
-    expect(px(getComputedStyle(segments[0]!).borderBlockStartWidth)).toBe(0)
-    expect(px(getComputedStyle(segments[1]!).borderBlockStartWidth)).toBeCloseTo(1, 0)
+    // Same zero-divider ruling as horizontal, on the block axis.
+    for (const seg of segments) {
+      const cs = getComputedStyle(seg)
+      expect(px(cs.borderBlockStartWidth), 'a segment regrew an inter-segment divider').toBe(0)
+      expect(px(cs.borderBlockEndWidth)).toBe(0)
+    }
   })
 
   it('segment geometry: block-size = --ui-height-md, padding-inline = height/2, padding-block = 0', () => {

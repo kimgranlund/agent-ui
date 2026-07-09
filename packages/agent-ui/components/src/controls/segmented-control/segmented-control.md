@@ -93,7 +93,7 @@ geometry:
   display: grid          # display:grid, equal 1fr cells, orientation-driven main axis (segmented-control.css)
   note: The control owns a real layout — display:grid, equal 1fr cells, an outer --ui-radius-base track, and one shared moving ::before indicator sized to `100% / segment-count` and positioned via `transform` (never grid-track placement). Each ui-segment reads the Pattern-class CONTROL-height ramp (--ui-height-md), not the Indicator compact/widget ramp — block-size off the ramp, padding-block:0, padding-inline = height/2 (the slotless-edge pad, geometry.md), line-height:1 (ADR-0036). v1 ships the single md register; an ancestor [scale] re-tables the row for free (ADR-0038).
 
-forcedColors: Under forced-colors, the moving indicator inverts to Highlight (fill) with the selected segment's ink → HighlightText; unselected ink + the frame/dividers hold at ButtonText. The indicator's `transform` still applies (only its fill/ink invert) — the fill PRESENCE (exactly one segment backed) is the ADR-0057 non-color signifier, alongside the already-exposed aria-checked on each ui-segment.
+forcedColors: Under forced-colors, the moving indicator inverts to Highlight (fill) with the selected segment's ink → HighlightText; unselected ink + the outer frame hold at ButtonText (segments carry no divider borders — removed by ruling, 2026-07-09). The indicator's `transform` still applies (only its fill/ink invert) — the fill PRESENCE (exactly one segment backed) is the ADR-0057 non-color signifier, alongside the already-exposed aria-checked on each ui-segment.
 ---
 
 # ui-segmented-control
