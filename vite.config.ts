@@ -2,6 +2,7 @@ import { globSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
+import { Features } from 'lightningcss'
 // The live-agent dev proxy (LLD-C6): a DEV-ONLY (`apply: 'serve'`) middleware holding the provider key
 // server-side. `vite build` never runs it (SPEC-R3/N2) — the static site ships the recorded backbone alone.
 import { a2uiDevProxyPlugin } from './packages/agent-ui/a2ui/tools/agent/dev-proxy-plugin.ts'
@@ -43,5 +44,21 @@ export default defineConfig({
     outDir: '../dist',
     emptyOutDir: true,
     rollupOptions: { input },
+  },
+  // TKT-0002: the production CSS minifier (LightningCSS, `build.cssMinify`'s default) downlevels every
+  // `light-dark()` call into a `var(--lightningcss-light,…) var(--lightningcss-dark,…)` polyfill pair
+  // whenever its resolved browser targets predate native support. Vite's own default `build.cssTarget`
+  // (Baseline Widely Available, ~chrome111/safari16.4) predates `light-dark()` (chrome123+/safari17.5+/
+  // firefox120+), so this fires unconditionally today and is invisible to `build.cssTarget` tuning — the
+  // polyfill pair resolves off `prefers-color-scheme` ONLY, silently discarding `<theme-provider
+  // scheme>`'s per-subtree `color-scheme` override in every production build. `Features.LightDark` (the
+  // bit lightningcss's own `Colors` feature-group ORs in) told via `exclude` means "never compile this
+  // feature, even when targets don't support it" (lightningcss's own doc comment) — narrower than raising
+  // `build.cssTarget`, which would also silently change every OTHER feature's downlevel threshold for the
+  // whole site. Verified against the installed lightningcss 1.32.0's `TransformOptions.exclude`.
+  css: {
+    lightningcss: {
+      exclude: Features.LightDark,
+    },
   },
 })
