@@ -11,11 +11,17 @@
  * { :scope { display: inline-grid } }` (text-field.css) carries an EFFECTIVE specificity of (0,1,1) (`:scope`
  * matching the @scope prelude's own scoping-root element adds that root selector's specificity to `:scope`'s
  * own pseudo-class specificity, per the CSS Cascading and Scoping spec) — a bare class is only (0,1,0) and
- * silently loses regardless of import order, leaving the field `inline-grid` instead of `block` (the a2ui-live
+ * silently loses regardless of import order, leaving the field `inline-grid` instead of `grid` (the a2ui-live
  * `.canvas-tabs` case is the same footgun with a visible symptom — a fully invisible rendered surface; here the
- * effect is more subtle, an inline-level box instead of block, but it's the identical defect). */
+ * effect is more subtle, an inline-level box instead of a block-level one, but it's the identical defect). */
 ui-text-field.adr-search {
-  display: block;
+  display: grid; /* block-level outer box (full-width, per below), grid INNER box preserved — plain `display:
+  block` is a single-keyword value that resets the inner display to `flow`, discarding the grid formatting
+  context text-field.css's own `:scope` anatomy depends on (`grid-template-columns: auto 1fr auto` for the
+  leading+trailing case this field has); that silently stacked the leading icon / editor / trailing button as
+  block boxes instead of grid columns, overflowing the fixed block-size frame — the editor's real hit-box drifted
+  below the visible border, so a real user's click landed on nothing (focus stayed on <body>) and typing was
+  silently dropped (TKT-0001). */
   inline-size: 100%;
   margin-block: var(--ui-space-lg) var(--ui-space-md);
 }

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { userEvent } from 'vitest/browser'
 // Side-effect import: the page module globs the ADR log and builds the Decision Records index into document.body
 // (mountPage appends to `#app ?? document.body`), self-importing the foundation cascade + ui-* controls (_page.ts).
 import './adr-index.ts'
@@ -23,8 +24,12 @@ describe('adr-index — the dogfooded ui-text-field search filters the card list
     // per the CSS Cascading and Scoping spec) — regardless of import order. Querying `.adr-search` BY CLASS (as
     // every other assertion in this file does) can't catch a reverted tag qualifier; only a computed-style
     // check can (the a2ui-live `.canvas-tabs` sibling footgun had a fully-invisible-surface symptom — this one
-    // is subtler, an inline-level box instead of block, but the identical defect).
-    expect(getComputedStyle(search!).display, 'the tag-qualified selector must win over @scope(ui-text-field){:scope{display:inline-grid}}').toBe('block')
+    // is subtler, an inline-level box instead of a block-level one, but the identical defect).
+    // `grid`, NOT `block` (TKT-0001): a single-keyword `display: block` resets the INNER display to `flow`,
+    // discarding the grid formatting context the field's own leading/editor/trailing anatomy depends on
+    // (`grid-template-columns: auto 1fr auto`) — that silently stacked the adornments as block boxes, overflowing
+    // the fixed-height frame so the editor's real hit-box drifted below the visible border and swallowed clicks.
+    expect(getComputedStyle(search!).display, 'the tag-qualified selector must win over @scope(ui-text-field){:scope{display:inline-grid}}, and must preserve the inner GRID formatting context (grid, not block)').toBe('grid')
 
     const cards = [...document.querySelectorAll<HTMLElement>('.adr-card')]
     expect(cards.length, 'expected ADR cards').toBeGreaterThan(0)
@@ -42,5 +47,32 @@ describe('adr-index — the dogfooded ui-text-field search filters the card list
     expect(cards.every((c) => c.hidden), 'a non-matching query should hide every card').toBe(true)
     const status = document.querySelector('.adr-status') as HTMLElement
     expect(status.classList.contains('adr-status--empty'), 'the empty-state status row should show').toBe(true)
+  })
+
+  // TKT-0001 regression: the prior test drives the editor PART directly (textContent + a dispatched `input`),
+  // which stayed green even while `display: block` (adr-index.css) silently discarded the field's inner GRID
+  // formatting context — the leading icon / editor / trailing button stacked as block boxes and overflowed the
+  // fixed-height frame, so the editor's real hit-box drifted below the visible border. A real user clicking
+  // inside the visible box hit nothing (focus stayed on <body>) and every keystroke was silently dropped. This
+  // test drives the field the way a real user does — a real pointer click at the HOST's own bounding box (the
+  // visible bordered rect), then real keystrokes — so a repeat of that drift fails HERE, not just by inspection.
+  it('a real click on the visible field box focuses the editor, and real keystrokes filter the card list', async () => {
+    await raf()
+    const search = document.querySelector('.adr-search') as HTMLElement & { value: string }
+    const editor = search.querySelector('[data-part="editor"]') as HTMLElement
+    const cards = [...document.querySelectorAll<HTMLElement>('.adr-card')]
+
+    await userEvent.click(search) // clicks the CENTER of the host's own bounding box — what a real user sees
+    expect(document.activeElement, 'a real click on the visible field box should focus the editor part').toBe(editor)
+
+    await userEvent.clear(editor) // the prior test left 'zzz-no-such-adr-query' behind (same page module, shared state)
+    await userEvent.type(editor, 'layering')
+    await raf()
+
+    expect(search.value, 'real keystrokes did not reach the editor').toBe('layering')
+    expect(
+      cards.some((c) => !c.hidden) && cards.some((c) => c.hidden),
+      'a real, matching query should narrow (not zero-out, not no-op) the visible card list',
+    ).toBe(true)
   })
 })
