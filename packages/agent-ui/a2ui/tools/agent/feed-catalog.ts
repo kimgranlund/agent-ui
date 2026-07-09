@@ -63,7 +63,8 @@ export interface FeedExclusion {
 }
 
 /**
- * The 11 catalog types a feed ask MAY NEVER host (ADR-0097 §3). Composite-closure note: a composite's
+ * The 13 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
+ * the ADR-0097 Amendment / ADR-0107 Amendment 2). Composite-closure note: a composite's
  * children are excluded ALONGSIDE their parent for the SAME reason (Tab/TabPanel with Tabs; MenuItem with
  * Menu) — `feed-catalog.test.ts` asserts this closure holds, both here and for the IN composites
  * (RadioGroup/Radio, SegmentedControl/Segment, Card/its three sub-types, Select+ComboBox/Option).
