@@ -220,10 +220,25 @@ documentary-only `Image`/`Video` entry, which never enters the derived set to be
 > code `EXCLUSION_ALLOWLIST` now holds only the two PERMANENT `Toast`/`ToastRegion` entries (never drained,
 > never catalogued) plus the documentary-only `Image`/`Video` table row above (never code-encoded at all).
 >
-> **Chart-vs-tile-vs-table usage guidance (ADR-0107 cl.6, chart-family.spec.md SPEC-R14 — the four-way rule,
-> landed in the `Sparkline`/`BarChart` §5.2 row Notes above, prompt-facing, not only here):** a metric tile
-> for a latest value · `Sparkline` for the shape of a series · `BarChart` for comparing magnitudes · a
-> `List` table when exact values must be scanned row-by-row.
+> **Chart-vs-stat-vs-table usage guidance (ADR-0107 cl.6 + ADR-0111 cl.6, chart-family.spec.md SPEC-R14 /
+> report-family.spec.md SPEC-R20 — the four-way rule, re-based M2, landed in the `Sparkline`/`BarChart`/
+> `Table`/`Stat` §5.2 row Notes above, prompt-facing, not only here):** `Stat` for a latest value ·
+> `Sparkline` for the shape of a series · `BarChart` for comparing magnitudes · `Table` when exact values
+> must be scanned row-by-row.
+>
+> **Text-vs-Code-vs-Disclosure-vs-link usage guidance (ADR-0113 cl.5, content-family.spec.md SPEC-R23,
+> ADR-0087 Fork-A style — prompt-facing, not only here):** `Text` for prose · `Code` for verbatim/
+> preformatted output (never for emphasis) · `Disclosure` for progressive detail (never hide the primary
+> answer or a required control) · links (`Text.href`) for sources and references (`https`; never bare
+> navigation-as-action — actions are `Button`s).
+>
+> **Avatar-vs-Progress-vs-Attachment usage guidance (ADR-0112 cl.6, feed-family.spec.md SPEC-R22 — prompt-
+> facing, not only here):** `Avatar` for who acted — beside a name, decorative · `Progress` for how far
+> along — indeterminate unless a real fraction exists · `Attachment` for what was produced — never a
+> hand-built `Icon`+`Text` card. **TaskState pairing** (guidance prose only — no `@agent-ui/a2a` import
+> anywhere in this family, SPEC-N6): `submitted`/`working` → indeterminate, or determinate when the agent
+> reports a fraction; `input-required` → an ask, never a progress bar; terminal states → no bar —
+> completion announcements are toast/app-chrome territory.
 
 ### 5.3 Error codes (catalog-scoped; payload codes shared with renderer §5.2)
 

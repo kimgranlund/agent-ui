@@ -1,4 +1,6 @@
-// catalog-coverage.ts — the ADR-0087/ADR-0093/ADR-0095 catalog-coverage wave (4 seeds).
+// catalog-coverage.ts — the ADR-0087/ADR-0093/ADR-0095 catalog-coverage wave (4 seeds), PLUS the
+// report/content/feed teaching-wave exemplars (report-family.lld.md LLD-C15, content-family.lld.md
+// LLD-C15, feed-family.lld.md LLD-C15 — ADR-0111/0113/0112).
 //
 // Closes a measured a2ui-catalog rubric gap (D6, the example leg): none of the ADR-0087 whole-fleet
 // catalog wave's 14 rows (Icon, Menu, MenuItem, Popover, Tooltip, RadioGroup, Radio, SegmentedControl,
@@ -17,22 +19,41 @@
 //     `Option` primitive with Select, a `RadioGroup`/`Radio` property-type picker, a `SliderMulti`
 //     price-range control, and a `List` of result cards templated over `/results`. Covers: ComboBox,
 //     RadioGroup, Radio, SliderMulti, List.
-// (3) DOCUMENT ROW TOOLBAR — a document row's action cluster: an `Icon` file glyph, a `Tooltip` revealing
-//     last-edited metadata, a `Popover` with sharing tips, and an overflow `Menu`/`MenuItem` trio
-//     (Rename/Duplicate/Delete) — the whole overlay family sharing the `open`/`toggle` two-way contract.
-//     Covers: Icon, Tooltip, Popover, Menu, MenuItem.
+// (3) DOCUMENT ROW TOOLBAR — a document row's action cluster: a `Tooltip` revealing last-edited metadata,
+//     a `Popover` with sharing tips, and an overflow `Menu`/`MenuItem` trio (Rename/Duplicate/Delete) —
+//     the whole overlay family sharing the `open`/`toggle` two-way contract. Covers: Tooltip, Popover,
+//     Menu, MenuItem. **Icon no longer appears here** (feed-family.lld.md LLD-C15, M2): its hand-composed
+//     Row[Icon,Text] file card upgraded to a real `Attachment`, per SPEC-R22's "never a hand-built
+//     Icon+Text card" guidance — Icon now has zero exemplar coverage on this shelf, a knowingly-traded
+//     regression against this module's own D6 rubric goal, accepted because the SPEC-R22 AC is explicit
+//     and Icon's own descriptor/jsdom/browser suites remain the coverage of record for the control itself.
 // (4) STATS GRID DASHBOARD — a `Grid`-templated metric-tile dashboard (the `patternDashboardSeed` idiom,
 //     swapping the wrapping Row for a track `Grid` with a `min` floor). Covers: Grid.
 //
-// (5) REPORT CARD DASHBOARD — chart-family.lld.md LLD-C12 (SPEC-R14 AC1, ADR-0107): a `stats-grid-
-//     dashboard` SIBLING, not a Grid-of-tiles but one composed report: a metric tile (the "tiles are for
-//     latest values" idiom, `patternDashboardSeed`'s `tile_value` precedent) sits beside a `Sparkline`
-//     trend, then a `BarChart` breaks the total down by region — the seed itself teaches the catalog SPEC
-//     §5.2 Notes guidance (metric tile for a latest value · Sparkline for the shape of a series · BarChart
-//     for comparing magnitudes). `trend`/`regions` are `{path}`-bound (the live-data idiom the array-typed
-//     chart props exist to demonstrate); `title`/`latest` are ALSO `{path}`-bound scalars (Text.text is
-//     bindable too, catalog.json) — every data-model field this seed declares is reachable through a
-//     binding, none of it hand-baked into the component tree. Covers: Sparkline, BarChart.
+// (5) REPORT CARD DASHBOARD — chart-family.lld.md LLD-C12 (SPEC-R14 AC1, ADR-0107), upgraded in place by
+//     report-family.lld.md LLD-C15 (M2, ADR-0111 cl.6): a `stats-grid-dashboard` SIBLING, not a
+//     Grid-of-tiles but one composed report — a `Stat` (the guidance re-base retired the hand-composed
+//     caption-Text + h3-Text tile) sits beside a `Sparkline` trend, then a `BarChart` breaks the total
+//     down by region — the seed itself teaches the catalog SPEC §5.2 Notes guidance (`Stat` for a latest
+//     value · `Sparkline` for the shape of a series · `BarChart` for comparing magnitudes · `Table` when
+//     exact values must be scanned row-by-row). `trend`/`regions` are `{path}`-bound (the live-data idiom
+//     the array-typed chart props exist to demonstrate); `title`/`latest` are ALSO `{path}`-bound scalars
+//     (Text.text is bindable too, catalog.json) — every data-model field this seed declares is reachable
+//     through a binding, none of it hand-baked into the component tree. Covers: Sparkline, BarChart, Stat.
+//
+// (6) OPS REPORT — report-family.lld.md LLD-C15 (M2, SPEC-R20 AC2): ONE seed exercising all three
+//     report-family types together — two `Stat`s (uptime with a `delta`, deployment count), a pass/fail
+//     `Badge` pair, and a `Table` of the failing checks (a number column exercising Intl + alignment).
+//     Covers: Stat, Badge, Table.
+//
+// (7) DEPLOYMENT REPORT — content-family.lld.md LLD-C15 (M2, SPEC-R23 AC1), the report-card-dashboard
+//     SIBLING: a prose summary, a verbatim `Code` command, a `Text.href` source link, and a
+//     `Disclosure`-folded full log — the seed itself teaches "fold the detail, never the answer."
+//     Covers: Code, Disclosure, Text.href.
+//
+// (8) AGENT TASK STATUS — feed-family.lld.md LLD-C15 (M2, SPEC-R22): identity + how-far + what-it-
+//     produced in one card — an `Avatar` beside the agent name, a `Progress` bar for the task fraction,
+//     and an `Attachment` for the artifact it has produced so far. Covers: Avatar, Progress, Attachment.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -165,7 +186,7 @@ export const rentalFilterPanelSeed: ExampleSeed = {
 const TOOLBAR_ID = 'document-row-toolbar'
 export const documentRowToolbarSeed: ExampleSeed = {
   name: 'document-row-toolbar',
-  description: 'A document row action cluster — an Icon glyph, a Tooltip, a sharing Popover, and an overflow Menu, sharing the overlay family open/toggle contract.',
+  description: 'A document row action cluster — an Attachment file card, a Tooltip, a sharing Popover, and an overflow Menu, sharing the overlay family open/toggle contract.',
   promptText: 'Show a document row with its name, an info tooltip, a share popover, and an overflow menu with rename, duplicate, and delete.',
   surfaceId: TOOLBAR_ID,
   protocolVersion: 'v1.0',
@@ -184,22 +205,12 @@ export const documentRowToolbarSeed: ExampleSeed = {
           { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
           { id: 'root_content', component: 'CardContent', children: ['toolbar'] },
           { id: 'toolbar', component: 'Row', justify: 'between', align: 'center', gap: 'md', children: ['doc_info', 'doc_actions'] },
-          { id: 'doc_info', component: 'Row', gap: 'sm', align: 'center', children: ['icon_doc', 'doc_name'] },
-          // 'calendar-blank' (NOT a literal document glyph — the vendored @agent-ui/icons pack is an
-          // 11-name MVP set, ADR-0065/0066, with no file/document icon; this is the closest available
-          // "page" shape). The original 'file-text' name is NOT a member of `ICON_NAMES`
-          // (icons/src/types.ts) — an unknown name resolves through resolveIcon() to a non-throwing
-          // EMPTY <svg data-icon-missing="file-text"> (icons/src/resolve.ts:10-14), so the card silently
-          // rendered no glyph at all (a real, gallery-caught defect: 2026-07-07 visual audit). Flag to the
-          // icons-package owner if a document/file glyph is wanted in a future vendor wave.
-          { id: 'icon_doc', component: 'Icon', name: 'calendar-blank', label: 'Document' },
-          // ADR-0106 — the document row's title cell is the reference use of `truncate`: a document name
-          // must hold one line, ellipsis-clip under a narrow row, and stay reachable via the unconditional
-          // `title` mirror (native hover reveal, zero dependency cost).
-          // ADR-0109 — and the reference use of `emphasis`: a document NAME is exactly the "names, labels,
-          // key values" idiom (cl.4), and the two booleans composing on one node is itself the teaching
-          // (orthogonal axes — weight intent + overflow intent, independently settable).
-          { id: 'doc_name', component: 'Text', variant: 'body', text: 'Q3 roadmap.pdf', truncate: true, emphasis: true },
+          // feed-family.lld.md LLD-C15 (M2, SPEC-R22): the hand-composed Row[Icon,Text] file card upgrades
+          // to the real `Attachment` type — its glyph derives from `mimeType` via `fileCategory`, a total
+          // function that always resolves a real glyph (feed-family.spec.md SPEC-R9), so the vendored-pack
+          // "closest available icon" defect this block used to document (the 2026-07-07 visual audit) is
+          // now structurally unreachable rather than merely worked around.
+          { id: 'doc_info', component: 'Attachment', name: 'Q3 roadmap.pdf', mimeType: 'application/pdf', sizeBytes: 428000 },
           { id: 'doc_actions', component: 'Row', gap: 'sm', align: 'center', children: ['tip_wrap', 'pop_wrap', 'menu_overflow'] },
 
           // Tooltip: FIRST child is the anchor, remaining children move into the tooltip panel
@@ -315,12 +326,10 @@ export const reportCardDashboardSeed: ExampleSeed = {
           { id: 'root_content', component: 'CardContent', children: ['col'] },
           { id: 'col', component: 'Column', gap: 'md', children: ['title', 'revenue_row', 'regions_caption', 'bars'] },
           { id: 'title', component: 'Text', variant: 'h3', text: { path: '/title' } },
-          { id: 'revenue_row', component: 'Row', gap: 'lg', align: 'center', children: ['tile_col', 'spark'] },
-          // The tile: latest-value idiom (patternDashboardSeed's `tile_value` precedent) — a caption label
-          // + an h3 value, the composition's answer to "what is it now."
-          { id: 'tile_col', component: 'Column', gap: 'xs', children: ['tile_label', 'tile_value'] },
-          { id: 'tile_label', component: 'Text', variant: 'caption', text: 'Revenue' },
-          { id: 'tile_value', component: 'Text', variant: 'h3', text: { path: '/latest' } },
+          { id: 'revenue_row', component: 'Row', gap: 'lg', align: 'center', children: ['stat', 'spark'] },
+          // The stat: the latest-value idiom, now the real catalog type (report-family.lld.md LLD-C15 —
+          // the guidance re-base retires the hand-composed caption-Text + h3-Text tile it replaces).
+          { id: 'stat', component: 'Stat', label: 'Revenue', value: { path: '/latest' }, caption: 'Total across all regions' },
           // The sparkline: the SHAPE of the series over time (catalog SPEC §5.2 Notes guidance) — bound to
           // the same data the tile summarizes, so the reader sees "what it is" and "how it got there."
           { id: 'spark', component: 'Sparkline', values: { path: '/trend' }, label: 'Revenue trend' },
@@ -328,6 +337,166 @@ export const reportCardDashboardSeed: ExampleSeed = {
           // The bar chart: comparing MAGNITUDES across a small discrete set (catalog SPEC §5.2 Notes
           // guidance) — the same total's breakdown, the composition's third and final answer.
           { id: 'bars', component: 'BarChart', data: { path: '/regions' }, label: 'Revenue by region' },
+        ],
+      },
+    },
+  ],
+}
+
+const OPS_REPORT_ID = 'ops-report'
+export const opsReportSeed: ExampleSeed = {
+  name: 'ops-report',
+  description: 'An ops report — uptime and deployment Stats, a pass/fail Badge pair, and a Table of the failing checks (report-family.lld.md LLD-C15).',
+  promptText: 'Show an ops report: uptime and deployment stats, pass/fail check badges, and a table of the checks that are failing.',
+  surfaceId: OPS_REPORT_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: OPS_REPORT_ID, catalogId: 'agent-ui' } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: OPS_REPORT_ID,
+        value: {
+          uptime: '99.95%',
+          uptimeDelta: 0.12,
+          deployments: 8,
+          checks: [
+            { name: 'api-gateway', env: 'prod', latency: 812 },
+            { name: 'auth-service', env: 'prod', latency: 640 },
+          ],
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: OPS_REPORT_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
+          { id: 'root_content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'stats_row', 'badges_row', 'checks_table'] },
+          { id: 'title', component: 'Text', variant: 'h3', text: 'Ops report — last 24h' },
+          { id: 'stats_row', component: 'Row', gap: 'lg', children: ['stat_uptime', 'stat_deployments'] },
+          // Stat #1: a latest value WITH a delta (catalog SPEC §5.2 Notes guidance — Stat for a latest value).
+          {
+            id: 'stat_uptime', component: 'Stat', label: 'Uptime',
+            value: { path: '/uptime' }, delta: { path: '/uptimeDelta' }, caption: 'vs last week',
+          },
+          // Stat #2: a latest value with no delta — the row demonstrates delta is optional, not paired.
+          { id: 'stat_deployments', component: 'Stat', label: 'Deployments', value: { path: '/deployments' } },
+          { id: 'badges_row', component: 'Row', gap: 'sm', children: ['badge_failing', 'badge_passing'] },
+          { id: 'badge_failing', component: 'Badge', label: '2 failing', intent: 'danger' },
+          { id: 'badge_passing', component: 'Badge', label: '11 passing', intent: 'success' },
+          // The table: exact values scanned row-by-row (catalog SPEC §5.2 Notes guidance) — the two checks
+          // the badge above counts as failing, `latency` a number column exercising Intl + alignment.
+          {
+            id: 'checks_table', component: 'Table', label: 'Failing checks',
+            columns: [
+              { key: 'name', label: 'Check', type: 'string' },
+              { key: 'env', label: 'Environment', type: 'string' },
+              { key: 'latency', label: 'Latency (ms)', type: 'number' },
+            ],
+            rows: { path: '/checks' },
+          },
+        ],
+      },
+    },
+  ],
+}
+
+const DEPLOYMENT_REPORT_ID = 'deployment-report'
+export const deploymentReportSeed: ExampleSeed = {
+  name: 'deployment-report',
+  description: 'A deployment report — a prose summary, a verbatim Code command, a Text.href source link, and a Disclosure-folded full log (content-family.lld.md LLD-C15).',
+  promptText: 'Show a deployment report: what happened, the command that ran, a link to the runbook, and the full log folded behind a disclosure.',
+  surfaceId: DEPLOYMENT_REPORT_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: DEPLOYMENT_REPORT_ID, catalogId: 'agent-ui' } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: DEPLOYMENT_REPORT_ID,
+        value: {
+          command: 'kubectl rollout restart deployment/api-gateway',
+          logOpen: false,
+          fullLog: 'Waiting for rollout to finish: 1 old replicas pending termination...\ndeployment "api-gateway" successfully rolled out',
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: DEPLOYMENT_REPORT_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
+          { id: 'root_content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'summary', 'cmd_code', 'source_link', 'log_disclosure'] },
+          { id: 'title', component: 'Text', variant: 'h3', text: 'Deployment: api-gateway restart' },
+          // Text: prose (catalog SPEC §5.2 Notes guidance — Text for prose).
+          { id: 'summary', component: 'Text', variant: 'body', text: 'The rolling restart completed successfully across all 3 replicas with zero downtime.' },
+          // Code: verbatim/preformatted output, never emphasis (catalog SPEC §5.2 Notes guidance).
+          { id: 'cmd_code', component: 'Code', code: { path: '/command' }, language: 'sh' },
+          // A link: sources and references, never bare navigation-as-action (catalog SPEC §5.2 Notes
+          // guidance) — an https source citation, not a Button-shaped action.
+          { id: 'source_link', component: 'Text', href: 'https://docs.example.com/runbooks/deploy-api-gateway', text: 'Source: deployment runbook' },
+          // Disclosure: progressive detail, never the primary answer (catalog SPEC §5.2 Notes guidance) —
+          // "fold the detail, never the answer": the summary above already answers "what happened"; the
+          // full log is optional depth, folded behind a Disclosure > Code, the long-code idiom.
+          {
+            id: 'log_disclosure', component: 'Disclosure', summary: 'Full log',
+            open: { path: '/logOpen' }, children: ['log_code'],
+          },
+          { id: 'log_code', component: 'Code', code: { path: '/fullLog' }, language: 'text' },
+        ],
+      },
+    },
+  ],
+}
+
+const AGENT_TASK_STATUS_ID = 'agent-task-status'
+export const agentTaskStatusSeed: ExampleSeed = {
+  name: 'agent-task-status',
+  description: 'An agent task status card — who is working on it (Avatar), how far along (Progress), and what it has produced so far (Attachment) (feed-family.lld.md LLD-C15).',
+  promptText: 'Show an agent task status card: who is working on it, how far along, and the artifact it has produced so far.',
+  surfaceId: AGENT_TASK_STATUS_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: AGENT_TASK_STATUS_ID, catalogId: 'agent-ui' } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: AGENT_TASK_STATUS_ID,
+        value: {
+          agent: { name: 'Ada' },
+          task: { title: 'Refactoring auth middleware', pct: 62 },
+          artifact: { name: 'auth-middleware.patch', mimeType: 'text/x-diff', sizeBytes: 8420 },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: AGENT_TASK_STATUS_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['header_row', 'task_progress', 'artifact'] },
+          { id: 'header_row', component: 'Row', gap: 'sm', align: 'center', children: ['avatar', 'task_title'] },
+          // Avatar: who acted — beside a name, decorative (catalog SPEC §5.2 Notes guidance).
+          { id: 'avatar', component: 'Avatar', name: { path: '/agent/name' } },
+          { id: 'task_title', component: 'Text', variant: 'h4', text: { path: '/task/title' } },
+          // Progress: how far along — a real fraction, so determinate (catalog SPEC §5.2 Notes guidance;
+          // the TaskState pairing: "working" with a reported fraction, not indeterminate).
+          { id: 'task_progress', component: 'Progress', value: { path: '/task/pct' }, label: 'Task progress' },
+          // Attachment: what was produced — never a hand-built Icon+Text card (catalog SPEC §5.2 Notes
+          // guidance, the document-row-toolbar upgrade's same rule).
+          {
+            id: 'artifact', component: 'Attachment',
+            name: { path: '/artifact/name' }, mimeType: { path: '/artifact/mimeType' }, sizeBytes: { path: '/artifact/sizeBytes' },
+          },
         ],
       },
     },
@@ -342,4 +511,7 @@ export const catalogCoverageSeeds: readonly ExampleSeed[] = [
   documentRowToolbarSeed,
   statsGridDashboardSeed,
   reportCardDashboardSeed,
+  opsReportSeed,
+  deploymentReportSeed,
+  agentTaskStatusSeed,
 ]

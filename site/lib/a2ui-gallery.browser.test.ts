@@ -13,11 +13,15 @@ import { userEvent } from 'vitest/browser'
 //   (c) at least one known-tall seed scrolls INSIDE its frame (scrollHeight > clientHeight) — proving the
 //       cap+overflow engaged rather than the frame silently growing;
 //   (d) an overlay seed's panel, once opened, ESCAPES its frame rect — pinning the top-layer no-clip
-//       ruling (an `overflow: auto` frame must NOT clip a promoted popover/menu panel);
-//   (e) the document-row-toolbar title cell (`Text truncate`, ADR-0106) computes the single-line-ellipsis
-//       contract AND carries the unconditional `title` mirror, on the real assembled A2UI mount (an
-//       unmodified seed — no synthetic narrowing needed: the mirror is present whether or not the box is
-//       narrow enough to actually clip, by the CSS-only ruling).
+//       ruling (an `overflow: auto` frame must NOT clip a promoted popover/menu panel).
+//
+// (e) RETIRED (feed-family.lld.md LLD-C15, M2, SPEC-R22): the document-row-toolbar title cell this leg
+// pinned (`Text truncate`/`emphasis`, ADR-0106/ADR-0109) was the seed's hand-composed Row[Icon,Text] file
+// card, upgraded to a real `Attachment` — the seed no longer carries an unmodified `Text[truncate]` node
+// to assert against. `Text`'s own `truncate`/`emphasis` contract stays fully covered at the component
+// level (text.test.ts/text-css.test.ts/text.browser.test.ts/text.visual.browser.test.ts); only the
+// "real-seed reference use" angle retires with the assembly it was pinned to, the same trade the seed
+// shelf's own former Icon pin made (examples.test.ts).
 // Runs in BOTH Chromium and WebKit (vitest.browser.config.ts → the `site` project's two playwright
 // instances), co-located with the module it tests, following component-preview.browser.test.ts.
 //
@@ -27,7 +31,6 @@ import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css' // foundation tokens + dimensional ramp (FIRST — geometry source)
 import '@agent-ui/components/component-styles.css' // per-control CSS (so a surface has real geometry, not 0×0)
 import '@agent-ui/components/components' // self-defining ui-* controls (the renderer mounts these by tag)
-import '@agent-ui/icons/phosphor' // the Phosphor default pack (document-row-toolbar renders an Icon)
 import { buildSeedGallery, buildSeedCard } from './a2ui-gallery.ts'
 import { documentRowToolbarSeed, bookingReservationSeed, patternSettingsSeed } from '@agent-ui/a2ui/examples'
 
@@ -112,25 +115,6 @@ describe('a2ui-gallery — the layout contract the drift gate cannot see (both e
       panelRect.bottom,
       `the opened panel is confined to the frame (panel.bottom ${panelRect.bottom} ≤ frame.bottom ${frameRect.bottom}) — top-layer no-clip failed`,
     ).toBeGreaterThan(frameRect.bottom)
-  })
-
-  it('(e) the document-row title cell is single-line-ellipsis + carries the unconditional title mirror (ADR-0106)', async () => {
-    const { card } = buildSeedCard(documentRowToolbarSeed)
-    mount.append(card)
-    await settle()
-
-    const titleCell = [...card.querySelectorAll<HTMLElement>('ui-text')].find((t) => t.textContent === 'Q3 roadmap.pdf')
-    expect(titleCell, 'no ui-text rendered the document title cell text').not.toBeUndefined()
-
-    expect(titleCell!.hasAttribute('truncate'), 'the title cell did not reflect [truncate]').toBe(true)
-    const cs = getComputedStyle(titleCell!)
-    expect(cs.whiteSpace).toBe('nowrap')
-    expect(cs.overflow).toBe('hidden')
-    expect(cs.textOverflow).toBe('ellipsis')
-
-    // The unconditional mirror (Kim's CSS-only ruling): `title` = the full text, present on the real
-    // assembled mount regardless of whether this particular row is currently narrow enough to clip.
-    expect(titleCell!.getAttribute('title')).toBe('Q3 roadmap.pdf')
   })
 })
 

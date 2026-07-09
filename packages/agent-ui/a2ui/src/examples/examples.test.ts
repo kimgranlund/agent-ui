@@ -25,8 +25,7 @@ import { canvasSeeds } from './canvas-button.ts'
 import { dynamicListSeeds } from './dynamic-lists.ts'
 import { generativeFormSeeds } from './generative-form.ts'
 import { patternSeeds } from './patterns.ts'
-import { catalogCoverageSeeds, documentRowToolbarSeed } from './catalog-coverage.ts'
-import { ICON_NAMES } from '@agent-ui/icons'
+import { catalogCoverageSeeds } from './catalog-coverage.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { createRenderer } from '../renderer/renderer.ts'
@@ -149,30 +148,13 @@ describe('the generative-form seed — shape pins (protects the a2ui-stream Demo
 // it: an unknown component type is a `CATALOG` failure in the shared validator AND a live `CATALOG`
 // client-message from the real host's widget resolution (the placeholder path, SPEC-R9 AC2) — proving
 // the gate bites on both checks, not just one.
-// ── the document-row-toolbar seed's Icon pin (2026-07-07 gallery visual audit) ──────────────────────────
+// ── the document-row-toolbar seed's former Icon pin (2026-07-07 gallery visual audit) ────────────────────
 //
-// Neither standing gate leg above catches an Icon `name` that resolves against NO pack member: the
-// validator's `Icon.name` PropDef is an open `string` (ADR-0065/0066 — `ui-icon`'s deliberate swappable-
-// pack surface, components/src/controls/icon/icon.ts:16-18), and an unresolved name degrades to a
-// non-throwing EMPTY `<svg data-icon-missing="…">` (icons/src/resolve.ts) rather than a client error — so
-// `renderSmoke`'s empty-error-channel assertion stays green while the glyph silently renders nothing (a
-// no active pack is even registered in THIS jsdom process — pack registration is an explicit side-effect
-// import, `@agent-ui/icons/phosphor`, done by the site shell, not by this package — so a DOM-level
-// render-smoke check can't tell "unregistered name" apart from "no pack loaded here" anyway). A live
-// Playwright audit of /a2ui-gallery.html (where the site shell HAS registered the default Phosphor pack)
-// caught exactly this: the seed's original `name: 'file-text'` is not a member of the vendored default
-// pack (`ICON_NAMES`, icons/src/types.ts — 11 UI-chrome names, no document/file glyph), so the document
-// row's icon painted blank. Pinned as a direct DATA check against the canonical vocabulary — the
-// dependency-free, environment-independent form of the same assertion.
-describe('the document-row-toolbar seed — Icon pin (visual-audit regression)', () => {
-  it('icon_doc.name is a member of the vendored default pack (ICON_NAMES)', () => {
-    const iconComponent = documentRowToolbarSeed.messages
-      .flatMap((m) => ('updateComponents' in m ? m.updateComponents.components : []))
-      .find((c) => c.id === 'icon_doc')
-    expect(iconComponent).toBeDefined()
-    expect(ICON_NAMES).toContain((iconComponent as { name?: unknown }).name)
-  })
-})
+// RETIRED (feed-family.lld.md LLD-C15, M2, SPEC-R22): the seed's hand-composed Row[Icon,Text] file card —
+// the thing this regression pin protected — upgraded to a real `Attachment`, whose glyph derives from
+// `mimeType` via `fileCategory`, a total function that always resolves a real glyph (feed-family.spec.md
+// SPEC-R9). `icon_doc` no longer exists on this seed, so the missing-glyph failure mode this pin caught is
+// now structurally unreachable here, not merely re-proven; the pin retires with the code it protected.
 
 describe('the gate bites — a deliberately-broken fixture (negative control, NOT exported)', () => {
   const brokenSeed: ExampleSeed = {
