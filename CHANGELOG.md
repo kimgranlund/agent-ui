@@ -315,8 +315,8 @@ ADR-**0111, 0112, 0113, 0114, 0115** accepted — ratified 2026-07-09 by Kim's e
 self-flip guard hook (`.claude/hooks/adr-status-guard.py`) was deliberately deregistered to permit the flip;
 every fork in all five records stands as recommended (no objection raised). **ADR-0091** (the Gen-UI
 mini-skill registry, authored 2026-07-07) was ratified in the same pass, closing a long-standing
-shipped-but-proposed flag. ADR-0087 (whole-fleet catalog scope policy) remains the one **proposed**, not yet
-ratified, ADR left open from the 2026-07-08 morning wave.
+shipped-but-proposed flag. **ADR-0087** (whole-fleet catalog scope policy, open since the 2026-07-08 morning
+wave) was ratified by Kim the same day as this wave, closing the last standing `proposed` record.
 
 ### Deferred follow-ups (recorded, owned)
 
@@ -328,7 +328,6 @@ ratified, ADR left open from the 2026-07-08 morning wave.
 - `ui-disclosure`: no fold animation, no rich `summary` slot, no v1 `name`-based accordion grouping.
 - `@agent-ui/router`: nested routes, route ranking, guards, loaders, and keep-alive are all named and fenced,
   not built.
-- ADR-0087's whole-fleet catalog scope policy — still open, carried from the prior wave.
 - `npm run test:browser` needs a real isolated re-run to get a current pass count (see Final gates above).
 
 ### Next tier
