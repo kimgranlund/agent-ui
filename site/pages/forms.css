@@ -1,0 +1,21 @@
+/* forms.css — page-local chrome for the forms guide: the action row + the live values()/valid() readout.
+ * Never restyles a ui-* control (the provider/field/text-field/checkbox/switch below keep their own CSS).
+ * Imported after _page.ts, so it reads the foundation roles; containers.css supplies .event-log + section rhythm. */
+
+.forms-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-block-start: 1rem;
+}
+
+.forms-readout {
+  font-family: var(--ui-mono);
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.forms-sources {
+  margin-block-start: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}

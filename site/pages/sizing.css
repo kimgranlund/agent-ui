@@ -1,0 +1,116 @@
+/* sizing.css — page-local chrome for the sizing & density guide: the size-class table, the [scale] x [size]
+ * measured matrix, and the compact-realm / density demo rows. Never restyles a ui-* control's own geometry —
+ * every button/checkbox/badge below keeps its real height, font, and pad from its own {name}.css; this file
+ * only lays out the page's OWN scaffold around them. Imported after _page.ts, so it reads the foundation roles. */
+
+[data-page-content] {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  margin-block: 2rem;
+}
+
+[data-page-content] > h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+[data-page-content] > p {
+  max-inline-size: 68ch;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  line-height: 1.55;
+}
+
+.sizing-class-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-block: 0.5rem;
+}
+
+.sizing-class-table th {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-weight: 500;
+}
+
+.sizing-class-table td {
+  padding: 0.45rem 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  vertical-align: top;
+}
+
+/* The measured [scale] x [size] matrix — a CSS grid so the row-head + 3 size columns align across rows. */
+.sizing-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 0.75rem;
+  background: var(--md-sys-color-neutral-surface-low);
+}
+
+.sizing-matrix-header,
+.sizing-matrix-row {
+  display: grid;
+  grid-template-columns: 10rem repeat(3, 1fr);
+  align-items: center;
+  gap: 1rem;
+}
+
+.sizing-matrix-header {
+  padding-block-end: 0.4rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+
+.sizing-matrix-headcell,
+.sizing-matrix-rowhead {
+  font-family: var(--ui-mono);
+  font-size: 0.78rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.sizing-matrix-row {
+  padding-block: 0.5rem;
+  border-block-end: 1px dashed var(--md-sys-color-neutral-outline-variant);
+}
+
+.sizing-matrix-cell {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.sizing-matrix-caption {
+  font-family: var(--ui-mono);
+  font-size: 0.72rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.sizing-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sizing-density-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.sizing-density-cluster {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sizing-density-label {
+  font-family: var(--ui-mono);
+  font-size: 0.78rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}

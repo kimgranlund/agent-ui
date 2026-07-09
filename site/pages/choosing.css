@@ -1,0 +1,48 @@
+/* choosing.css — page-local chrome for the "which component when" chooser: the per-group table + the small
+ * inline specimen cell. Never restyles a ui-* control's internals — the specimens keep their own real geometry
+ * and colour; this file only bounds the specimen cell so a chart/table doesn't blow out the row. */
+
+[data-page-content] {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-block: 2rem;
+}
+
+[data-page-content] > h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.choosing-source {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.choosing-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-block-end: 0.5rem;
+}
+
+.choosing-table th {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-weight: 500;
+}
+
+.choosing-table td {
+  padding: 0.5rem 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  vertical-align: middle;
+}
+
+.choosing-specimen-cell {
+  max-inline-size: 12rem;
+  overflow: hidden;
+}

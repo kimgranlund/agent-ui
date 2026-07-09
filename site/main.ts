@@ -111,6 +111,49 @@ interface CardGroup {
 }
 const CARD_GROUPS: readonly CardGroup[] = [
   {
+    // The conceptual GUIDE cluster — ungrouped site-level cards (no `label:`), mirroring the ungrouped NAV
+    // cluster in _page.ts (same posture as the A2UI/A2A/meta clusters below). Seven pages for a cold-start
+    // human consumer: how to consume the library, the theming contract, the derived token reference, the
+    // sizing/density law, an end-to-end forms walkthrough, a component chooser, and the on-site changelog.
+    cards: [
+      {
+        href: './getting-started.html',
+        title: 'Getting started',
+        blurb: 'The workspace packages, the load-bearing CSS import order (ADR-0003), a minimal runnable example, and the per-control subpath imports.',
+      },
+      {
+        href: './theming.html',
+        title: 'Theming',
+        blurb: 'theme-provider’s three live axes (scheme/scale/density), the --md-sys-color-{family}-{role} role system, a live subtree token override, and the reserved multi-theme seam.',
+      },
+      {
+        href: './tokens.html',
+        title: 'Tokens',
+        blurb: 'Every colour role as a live swatch, parsed straight from tokens.css — plus the five dimensional ramps from dimensions.css. Cannot drift: it is the sheets, rendered.',
+      },
+      {
+        href: './sizing.html',
+        title: 'Sizing & density',
+        blurb: 'The five size-classes, a live MEASURED [scale] × [size] matrix (real getBoundingClientRect reads), the compact realm’s pad law, and density-rides-rhythm-never-the-box.',
+      },
+      {
+        href: './forms.html',
+        title: 'Forms',
+        blurb: 'ui-form-provider + ui-field + controls, walked as one working example — registration, labelling, validation display, submit gating, and reset.',
+      },
+      {
+        href: './choosing.html',
+        title: 'Which component when',
+        blurb: 'A quick chooser between components that overlap in purpose, condensed from the A2UI catalog’s own §5.2 usage-guidance rows, with live specimens.',
+      },
+      {
+        href: './changelog.html',
+        title: 'Changelog',
+        blurb: 'The on-site changelog, derived straight from the repo root CHANGELOG.md — the same derive-don’t-copy discipline as the Decision Records index.',
+      },
+    ],
+  },
+  {
     label: 'ui-button',
     cards: [
       {

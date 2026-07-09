@@ -1,0 +1,64 @@
+/* tokens.css — page-local chrome for the derived token reference. Styles the SWATCH the page builds (a plain
+ * div reading a real custom property) and the table layout around it — never a ui-* control (this page ships
+ * none). Imported after _page.ts, so it reads the foundation --md-sys-color and --ui- roles for its own chrome. */
+
+[data-page-content] {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  margin-block: 2rem;
+}
+
+.token-ramp-lead {
+  max-inline-size: 64ch;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  line-height: 1.5;
+}
+
+[data-page-content] section > h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.98rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+[data-page-content] section > p {
+  margin: 0 0 0.75rem;
+  max-inline-size: 64ch;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.token-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.token-table th {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-weight: 500;
+}
+
+.token-table td {
+  padding: 0.3rem 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  vertical-align: middle;
+}
+
+/* The dark-swatch cell carries its own inverse surface so a near-white role stays legible against the
+ * PAGE's own (possibly light) surface — the swatch itself is the honest signal, this is just a backdrop. */
+.token-cell-dark {
+  background: var(--md-sys-color-neutral-900);
+}
+
+.token-swatch {
+  inline-size: 2.5rem;
+  block-size: 1.4rem;
+  border-radius: 0.3rem;
+  border: 1px solid var(--md-sys-color-neutral-500-300);
+}

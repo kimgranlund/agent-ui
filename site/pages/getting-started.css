@@ -1,0 +1,55 @@
+/* getting-started.css — page-local chrome for the getting-started guide: prose rhythm + the package table +
+ * the live click-count readout. Never restyles a ui-* control (the button below keeps its own button.css). */
+
+[data-page-content] {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  margin-block: 2rem;
+}
+
+[data-page-content] > h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+[data-page-content] > p {
+  max-inline-size: 68ch;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  line-height: 1.55;
+}
+
+.gs-note {
+  font-size: 0.85rem;
+  max-inline-size: 68ch;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-block: 0.5rem 0.25rem;
+}
+
+th {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-weight: 500;
+}
+
+td {
+  padding: 0.4rem 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  vertical-align: top;
+}
+
+.gs-click-status {
+  margin: 0.6rem 0 0;
+  font-family: var(--ui-mono);
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}

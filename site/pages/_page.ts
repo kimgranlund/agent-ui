@@ -55,6 +55,20 @@ interface NavGroup {
 export const NAV: readonly NavGroup[] = [
   { links: [{ href: './index.html', label: 'Home' }] },
   {
+    // The conceptual GUIDE cluster — ungrouped site-level links (no `label:`, hence no site-toc GROUP), the same
+    // posture as the A2UI/A2A/meta clusters below: seven independent destinations for a cold-start human
+    // consumer, not a fleet component's page-type set. Placed right after Home so a newcomer meets them first.
+    links: [
+      { href: './getting-started.html', label: 'Getting started' },
+      { href: './theming.html', label: 'Theming' },
+      { href: './tokens.html', label: 'Tokens' },
+      { href: './sizing.html', label: 'Sizing & density' },
+      { href: './forms.html', label: 'Forms' },
+      { href: './choosing.html', label: 'Which component when' },
+      { href: './changelog.html', label: 'Changelog' },
+    ],
+  },
+  {
     label: 'ui-button',
     links: [
       { href: './button-permutations.html', label: 'Permutations' },

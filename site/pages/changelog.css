@@ -1,0 +1,44 @@
+/* changelog.css — page-local chrome for the derived changelog: one section per milestone, separated by a
+ * hairline, matching adr-index.css's card rhythm without the disclosure mechanism (only 5 entries — no need
+ * to collapse them). Styles page content only, never a ui-* control (this page mounts none). */
+
+[data-page-content] {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-block: 2rem;
+}
+
+.changelog-entry {
+  padding-block: 1.75rem;
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+
+.changelog-entry:first-of-type {
+  border-block-start: none;
+  padding-block-start: 0;
+}
+
+.changelog-entry > h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.changelog-entry article h3 {
+  margin: 1.1rem 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.changelog-entry article p,
+.changelog-entry article li {
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.changelog-entry article ul {
+  margin: 0.4rem 0;
+  padding-inline-start: 1.25rem;
+}

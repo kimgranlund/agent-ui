@@ -1,0 +1,90 @@
+/* theming.css — page-local chrome for the theming guide: the side-by-side scheme panels, the scale/density
+ * axis clusters, and the override demo. Never restyles a ui-* control's internals — only lays out around the
+ * real controls each demo mounts. Imported after _page.ts, so it reads the foundation roles. */
+
+[data-page-content] {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  margin-block: 2rem;
+}
+
+[data-page-content] > h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+[data-page-content] > p {
+  max-inline-size: 68ch;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  line-height: 1.55;
+}
+
+.theming-note {
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* Each scheme card is its own theme-provider — display:block from the consumer's CSS (theme-provider.ts stays
+ * presentation-free by design), padded + bordered here so the two panels read as distinct surfaces. */
+.theming-scheme-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.theming-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1 1 16rem;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+
+.theming-panel-label {
+  margin: 0;
+  font-family: var(--ui-mono);
+  font-size: 0.8rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.theming-panel-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.theming-axis-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding-block: 0.5rem;
+}
+
+.theming-axis-cluster {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.theming-axis-label {
+  font-family: var(--ui-mono);
+  font-size: 0.78rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.theming-override-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding-block: 0.5rem;
+}
+
+.theming-override {
+  display: inline-flex;
+}
