@@ -417,6 +417,35 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     actions.append(close)
     return [heading, body, actions]
   },
+  // ui-disclosure (ADR-0113): the host's light-DOM children seed the fold's body content at connect time —
+  // the "children = body" anatomy invariant (disclosure.md). NOT the STRUCTURAL bucket below: #ensureParts()
+  // ADOPTS these children into a nested `<div data-part="body">` part rather than leaving them as direct
+  // host children, so it lives in NO_SLOT_TEXT (see that Set's own comment).
+  'ui-disclosure': () => {
+    const body = document.createElement('p')
+    body.textContent = 'Folded content, revealed on toggle.'
+    return [body]
+  },
+  // ui-toast (ADR-0112): the message text MUST be a light-DOM child present before connect — #ensureParts()
+  // adopts it into the message part at that instant (SPEC-R15 AC2, the toast.md example markup precedent).
+  'ui-toast': () => {
+    const message = document.createElement('span')
+    message.textContent = 'File uploaded.'
+    return [message]
+  },
+  // ui-toast-region (ADR-0112, LLD-C8): a STRUCTURAL target — its real content model is `ui-toast` children,
+  // stacked in append order (the toast.md example markup: one plain toast + one actionable urgent toast).
+  // Present before connect so the region's own `#syncVisibility()` opens its popover on first paint.
+  'ui-toast-region': () => {
+    const plain = document.createElement('ui-toast')
+    plain.textContent = 'File uploaded.'
+    const actionable = document.createElement('ui-toast')
+    actionable.setAttribute('urgent', '')
+    actionable.setAttribute('duration', '0')
+    actionable.setAttribute('action', 'Retry')
+    actionable.textContent = 'Upload failed.'
+    return [plain, actionable]
+  },
 }
 
 // The component-mode counterpart to a2ui-mode's A2UI_INITIAL: a per-tag knob-value seed for a control whose
@@ -427,10 +456,17 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
 // gallery's whole-shape law (box > 0) has something to measure. ui-grid/ui-field (batch B) seed a legible
 // starting prop value to go with their new sample children (grid-doc.ts's own gap/min; field.md's own default
 // label is '').
+// Wave M1 (ADR-0111/ADR-0113): ui-stat's `label`/`value` and ui-badge's `label` are real string knobs (not
+// a codec skip), but their descriptor default is '' (blank) — same demonstrability gap as ui-icon's `name`
+// — so a bare specimen would render an empty tile / an unlabeled dot. ui-disclosure's `summary` is likewise
+// a real string knob defaulting to '' — an unlabeled fold reads as a bare chevron with no affordance text.
 const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   'ui-icon': { name: 'check' },
   'ui-grid': { gap: 'md', min: '8rem' },
   'ui-field': { label: 'Email' },
+  'ui-stat': { label: 'Revenue', value: '48200', delta: '12' },
+  'ui-badge': { label: '3 failing', intent: 'danger' },
+  'ui-disclosure': { summary: 'Full log' },
 }
 
 // A per-tag static HOST ATTRIBUTE seed (batch C) — distinct from COMPONENT_INITIAL (which seeds a KNOB's
@@ -443,10 +479,19 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
 // LIVE descriptor default (an empty array) would mount zero rendered children (an honest empty state per
 // SPEC-R3/R7, but an uninstructive bare specimen — the same gap ui-icon's `name: ''` default closes via
 // COMPONENT_INITIAL). Seeded here with the SAME JSON-string shape the descriptors' own `.md` examples use.
+// Wave M1 (ADR-0111, report-family.lld.md): ui-table's `columns`/`rows` are JSON-string attributes — the
+// same `kind: 'skip'` codec gap as ui-sparkline/ui-bar-chart's `values`/`data` above (no editable knob), so
+// its LIVE descriptor default (an empty array) would stamp no table at all (an honest empty state per
+// SPEC-R3, but an uninstructive bare specimen). Seeded with the same JSON-string shape table.md's own
+// example uses.
 const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
   'ui-slider': { 'aria-label': 'Volume' },
   'ui-sparkline': { values: '[3,5,4,8,7]' },
   'ui-bar-chart': { data: '[{"label":"EMEA","value":42},{"label":"APAC","value":31}]' },
+  'ui-table': {
+    columns: '[{"key":"region","label":"Region"},{"key":"revenue","label":"Revenue","type":"number"}]',
+    rows: '[{"region":"EMEA","revenue":42000},{"region":"APAC","revenue":31000}]',
+  },
 }
 
 // ── SLOT_TEXT gating — component mode (the fleet-wide hardening) ──────────────────────────────────────────────
@@ -478,6 +523,7 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
 // exact defect class this partition exists to prevent); most of the rest now ALSO get real sample content
 // (COMPONENT_SAMPLE_CHILDREN, batch B) so their specimen is representative, not merely non-throwing.
 export const NO_SLOT_TEXT = new Set([
+  'ui-badge', // connected() builds the glyph+label spans once (replaceChildren) — `label` is a PROP, not a slot at all (slots: [] — badge.md)
   'ui-bar-chart', // component-built rows (replaceChildren) — one role=listitem row per datum, never author-slotted (slots: [] — bar-chart.md)
   'ui-calendar', // #ensureShell() builds the whole nav+grid panel unconditionally
   'ui-combo-box', // #ensureParts(): a control-created editor + listbox
@@ -490,26 +536,40 @@ export const NO_SLOT_TEXT = new Set([
   'ui-slider', // ::before/::after track only — no text slot at all (batch C); seeded an aria-label via COMPONENT_SAMPLE_ATTRS instead
   'ui-slider-multi', // JS-managed light-DOM rail/fill/thumb children (NOT ::before/::after, unlike ui-slider)
   'ui-sparkline', // component-built inline <svg> (createElementNS + replaceChildren) — the ui-icon precedent, a name/values-driven mark, not authored text (slots: [] — sparkline.md)
+  'ui-disclosure', // #ensureParts(): the details/summary/chevron chrome — host children are ADOPTED into a nested body PART, never left as direct host children (unlike a STRUCTURAL container), so a host-level SLOT_TEXT write would destroy the whole part tree
+  'ui-stat', // connected() builds four spans once (replaceChildren) from label/value/delta/caption PROPS — no light-DOM content model at all (slots: [] — stat.md)
+  'ui-table', // connected() builds the scroll/table/thead/tbody skeleton — fully columns/rows-prop-driven, no light-DOM content model at all (slots: [] — table.md)
   'ui-tabs', // the control-created tablist strip PART
   'ui-text-field', // the contenteditable editor PART (×2 parts: editor + measurer)
   'ui-tooltip', // #ensureParts(): anchor (COMPONENT_SAMPLE_CHILDREN) + panel
+  // Feed family (ADR-0112): ui-progress/ui-avatar/ui-attachment build their own display parts once
+  // (replaceChildren/append) from PROPS alone — no light-DOM content model at all (slots: [] on all three).
+  // ui-toast #ensureParts() ADOPTS any host children present at connect into a nested message PART — the
+  // ui-disclosure precedent exactly (a host-level SLOT_TEXT write would land in the wrong place and skip
+  // the affordance cluster it also builds there).
+  'ui-progress',
+  'ui-avatar',
+  'ui-attachment',
+  'ui-toast', // COMPONENT_SAMPLE_CHILDREN below seeds its message text — must be present BEFORE connect (SPEC-R15 AC2)
 ])
 
 // STRUCTURAL (batch B) — the default slot IS the real content model (children ARE the grid cells / flex items /
-// list rows / card regions / radio options / coordinated form fields), never a text/label string. Each builds
-// ZERO light-DOM children of its OWN in connected() (verified per-control, same discipline as SLOT_TEXT_OK
-// below) — so growing a SLOT_TEXT knob here would either overwrite the representative sample children with a
-// bare string (`.textContent =` clears every child) or, before batch B, be the ONLY content a bare specimen
-// ever got. These get real sample children instead (COMPONENT_SAMPLE_CHILDREN above) and no text knob.
-export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control'])
+// list rows / card regions / radio options / coordinated form fields), left as direct host children, never a
+// text/label string. Growing a SLOT_TEXT knob here would overwrite the representative sample children with a
+// bare string (`.textContent =` clears every child). These get real sample children instead
+// (COMPONENT_SAMPLE_CHILDREN above) and no text knob.
+// ui-toast-region (ADR-0112, LLD-C8) joins this set too: its `slots` is a real default slot ("zero or more
+// ui-toast children, stacked in append order") — parts: [] on the host, nothing adopts/moves them — the
+// exact STRUCTURAL shape, not ui-toast's own adopted-into-a-part one.
+export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-toast-region'])
 
 // SLOT_TEXT_OK — SLOT_TEXT is a real, safe, MEANINGFUL knob: a genuine text/label default slot, the accessible
 // label content a viewer edits to see the control's OWN typography/sizing respond (button/checkbox/radio/
-// switch/text — narrowed from the wider pre-batch-B set now that card/column/form-provider/grid/list/
-// radio-group moved to STRUCTURAL and slider moved to NO_SLOT_TEXT). Paired with NO_SLOT_TEXT + STRUCTURAL: the
-// three sets PARTITION the whole fleet — the coverage test asserts this, so a new control lands in none of them
-// by default and fails loud instead of silently inheriting a guess.
-export const SLOT_TEXT_OK = new Set(['ui-button', 'ui-checkbox', 'ui-radio', 'ui-segment', 'ui-switch', 'ui-text'])
+// switch/text/code — ui-code's light-DOM children ARE its verbatim text content, textContent-only, host-as-
+// content, the ui-text precedent exactly — code.md). Paired with NO_SLOT_TEXT + STRUCTURAL: the three sets
+// PARTITION the whole fleet — the coverage test asserts this, so a new control lands in none of them by
+// default and fails loud instead of silently inheriting a guess.
+export const SLOT_TEXT_OK = new Set(['ui-button', 'ui-checkbox', 'ui-code', 'ui-radio', 'ui-segment', 'ui-switch', 'ui-text'])
 
 // ── the element ──────────────────────────────────────────────────────────────────────────────────────────────
 type Mode = 'component' | 'a2ui'

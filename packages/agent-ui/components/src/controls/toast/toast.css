@@ -1,0 +1,76 @@
+/* toast.css — ui-toast, the single-file component stylesheet (ADR-0003; feed-family.lld.md LLD-C7 ·
+ * SPEC-R14/R15/R19). Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-toast)` (specificity 0,0,0) declares the `--ui-toast-*` chain: a
+ *       FIXED `--ui-toast-inline-size` (20em — a notification card is not a control on the height
+ *       ramp; `max-inline-size: 100%` floors small viewports) + the surface roles (neutral
+ *       surface-brightest / outline / an inline elevation shadow). No `[variant]`/`[size]` repoint —
+ *       toast carries neither axis (SPEC-R19; a `[size]` selector would need a declared `size`
+ *       attribute — family-coherence A2b).
+ *   [2] STYLES BLOCK — `@scope (ui-toast)` consumes ONLY `--ui-toast-*` (∪ the shared `--ui-space-*`/
+ *       `--ui-radius-base` shell-spacing tokens, the ui-menu panel precedent). A three-column grid
+ *       (`1fr auto auto` — message | action | close) laid out by the control-built parts in toast.ts;
+ *       `[data-part='message']` gets `min-inline-size: 0` (the flex/grid text-overflow floor — an
+ *       unbounded message must not blow out the fixed card width) + `overflow-wrap: anywhere` (an
+ *       unbroken token, e.g. a URL, must wrap inside the fixed inline-size rather than overflow it).
+ *       Forced-colors keeps the border in CanvasText once the box-shadow (a `rgb()` literal — WHCM
+ *       flattens arbitrary alpha colours) vanishes under high-contrast — the bar-chart fill lesson:
+ *       the border alone must carry the card's edge.
+ *
+ * No custom-state motion gate, no transitions — the LLD ships no entrance/exit animation in v1 (a
+ * fade/slide-in is a named foreseen extension, not this wave's contract). Standalone stylesheet —
+ * linked via the host page / component-styles barrel; NEVER injected from toast.ts (behaviour-only
+ * `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-toast) declares --ui-toast-* ════════════════ */
+
+:where(ui-toast) {
+  /* A notification card is a FIXED-width surface, not a control on the height ramp (geometry.md's
+     Pattern band — the ui-menu panel precedent, not a Control-band `--ui-height-*` lookup). */
+  --ui-toast-inline-size: 20em;
+
+  /* Surface — neutral roles (a toast carries no [intent]/[variant] colour channel in v1). */
+  --ui-toast-surface: var(--md-sys-color-neutral-surface-brightest);
+  --ui-toast-border: var(--md-sys-color-neutral-outline);
+  --ui-toast-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-toast) consumes ONLY --ui-toast-* ════════════════ */
+
+@scope (ui-toast) {
+  :scope {
+    display: grid;
+    grid-template-columns: 1fr auto auto; /* message | action | close — the control-built parts (toast.ts) */
+    align-items: center;
+    gap: var(--ui-space-sm); /* shared shell-spacing token — the ui-menu panel precedent */
+    box-sizing: border-box; /* the fixed inline-size below INCLUDES padding + border (button.css precedent) */
+
+    inline-size: var(--ui-toast-inline-size);
+    max-inline-size: 100%; /* floors small viewports — the card never overflows a narrow region */
+
+    padding-inline: var(--ui-space-md);
+    padding-block: var(--ui-space-sm);
+
+    background: var(--ui-toast-surface);
+    color: var(--md-sys-color-neutral-on-surface);
+    border: 1px solid var(--ui-toast-border);
+    border-radius: var(--ui-radius-base); /* the shared fleet radius (ui-menu/ui-card precedent) */
+    box-shadow: var(--ui-toast-shadow);
+  }
+
+  /* The message part — the fixed-width floor (an unbounded message must not blow out the card) + a
+     wrap escape for an unbroken token (e.g. a URL) that would otherwise overflow the fixed width. */
+  :scope [data-part='message'] {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* forced-colors — the box-shadow (an arbitrary-alpha rgb() literal) is flattened away under WHCM;
+     the border alone must carry the card's edge (the bar-chart fill lesson). */
+  @media (forced-colors: active) {
+    :scope {
+      border-color: CanvasText;
+    }
+  }
+}

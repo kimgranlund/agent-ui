@@ -1,0 +1,167 @@
+/* badge.css — ui-badge, the compact realm's first shipped non-interactive widget (report-family.lld.md
+ * LLD-C8 · SPEC-R12/R13/R14/R15/R16/R17 · ADR-0041 · ADR-0057 · ADR-0111 cl.5).
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-badge)` (specificity 0,0,0) declares the --ui-badge-* chain from the
+ *       colour roles (--md-sys-color-{family}-{role}) and the compact-realm widget-box ramp
+ *       (--ui-compact-lg, ADR-0041 — box = compact-realm law, NOT h/2; SPEC-R13). `[intent]` repoints the
+ *       colour channel (fill/ink/outline) here — the SAME technique checkbox.css uses for `[size]`/
+ *       `[disabled]`: every attribute-conditional token repoint stays inside `:where()`, never inside
+ *       `@scope` (component-packaging.md/tokens.md — "@scope consumes ONLY --ui-{name}-*"). No `[size]`
+ *       attribute in v1 (SPEC-R13 AC3) — the box is fixed to `--ui-compact-lg` regardless of content.
+ *   [2] STYLES BLOCK — `@scope (ui-badge)` consumes ONLY --ui-badge-*. The host is an inline-flex pill:
+ *       fixed square block-size (the compact-realm box), the compact pad law `2px + box·ratio·density`
+ *       (never `h/2` — geometry.md's compact-realm exception), radius = box/2 (the realm's "count pill"
+ *       case). The glyph is a real, constant `[data-part=glyph]` node; its SHAPE differs per `[intent]`
+ *       via `clip-path` (the checkbox tick precedent, ADR-0057's non-color signifier — shape is the
+ *       meaning channel, colour is the redundant one) — `neutral` shows no glyph at all (absence IS its
+ *       signifier). Forced-colors maps the host to Canvas/CanvasText and the glyph to CanvasText so both
+ *       survive WHCM (the bar-chart fill lesson: a background-drawn clip-path glyph is otherwise flattened
+ *       to `Canvas` and vanishes).
+ *
+ * No interaction states at all (SPEC-R11 — non-interactive, no focus/hover/active, no post-connect motion
+ * gate: there is nothing to transition). Standalone stylesheet — linked via the host page / component-
+ * styles barrel; NEVER injected from badge.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-badge) declares --ui-badge-* ════════════════ */
+
+:where(ui-badge) {
+  /* Compact-realm widget-box (ADR-0041; SPEC-R13) — fixed regardless of content/label length; [scale] on
+     an ancestor re-tables --ui-compact-lg for its subtree for free (no badge-local [scale] rule needed). */
+  --ui-badge-box: var(--ui-compact-lg); /* 18px @ default ui-md scale */
+
+  /* The compact pad law (dimensional-standard.md §2.4; geometry.md "the compact realm") — 2px + box ×
+     0.375 × density. Density rides the PAD only; the box above stays density-invariant (geometry.md). */
+  --ui-badge-pad: calc(2px + var(--ui-badge-box) * 0.375 * var(--ui-density, 1));
+
+  /* Text rides the fleet font ramp (NOT the compact box) — ADR-0111 cl.5's dual-listing resolution: box =
+     compact-realm law, text = --ui-font-*. line-height:1 in the styles block centers it like a glyph. */
+  --ui-badge-font: var(--ui-font-sm);
+
+  /* Rhythm — the glyph↔label gap (density-responsive for free, geometry.md "rhythm ∝ font"). */
+  --ui-badge-gap: var(--ui-gap-sm);
+
+  /* The glyph fills half the box — a content-mark, not an inline affordance (anatomy.md's frame family). */
+  --ui-badge-glyph: calc(var(--ui-badge-box) * 0.5);
+
+  /* Colour channel — neutral default (the "tag" reading of the one component, ADR-0111 fork F3). */
+  --ui-badge-fill: var(--md-sys-color-neutral-container);
+  --ui-badge-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-badge-outline: var(--md-sys-color-neutral-outline-variant);
+}
+
+/* [intent] → the colour channel repoint (SPEC-R14 AC3 defaults, build-time AA-probe-gated per intent ×
+   light/dark — the -on-surface-variant / -container pairing was flagged as a likely AA casualty at design
+   time). MEASURED (badge.browser.test.ts, both engines): 7.10–7.62:1 across all four intents × both
+   colour schemes — clears 4.5:1 comfortably; the predicted casualty did not materialize, no repoint owed.
+   A failing pairing would be a token-default repoint here, never a mechanism change (SPEC-R14/LLD-C8
+   failure-mode #13). */
+:where(ui-badge[intent='info']) {
+  --ui-badge-fill: var(--md-sys-color-info-container);
+  --ui-badge-ink: var(--md-sys-color-info-on-surface-variant);
+  --ui-badge-outline: var(--md-sys-color-info-outline-variant);
+}
+:where(ui-badge[intent='success']) {
+  --ui-badge-fill: var(--md-sys-color-success-container);
+  --ui-badge-ink: var(--md-sys-color-success-on-surface-variant);
+  --ui-badge-outline: var(--md-sys-color-success-outline-variant);
+}
+:where(ui-badge[intent='warning']) {
+  --ui-badge-fill: var(--md-sys-color-warning-container);
+  --ui-badge-ink: var(--md-sys-color-warning-on-surface-variant);
+  --ui-badge-outline: var(--md-sys-color-warning-outline-variant);
+}
+:where(ui-badge[intent='danger']) {
+  --ui-badge-fill: var(--md-sys-color-danger-container);
+  --ui-badge-ink: var(--md-sys-color-danger-on-surface-variant);
+  --ui-badge-outline: var(--md-sys-color-danger-outline-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-badge) consumes ONLY --ui-badge-* ════════════════ */
+
+@scope (ui-badge) {
+  :scope {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-badge-gap);
+    box-sizing: border-box;
+    block-size: var(--ui-badge-box);
+    min-inline-size: var(--ui-badge-box); /* empty-label floor → a filled pill/dot (SPEC-R13 AC2) */
+    padding-inline: var(--ui-badge-pad);
+    padding-block: 0; /* the frame law — block-size is the vertical lever, never block-padding */
+    border-radius: calc(var(--ui-badge-box) / 2); /* the pill = box/2, the realm's "count pill" case */
+    border: 1px solid var(--ui-badge-outline);
+    background: var(--ui-badge-fill);
+    color: var(--ui-badge-ink);
+    font-size: var(--ui-badge-font);
+    line-height: 1; /* single-line token centers like a glyph (geometry.md's control line-height law) */
+    white-space: nowrap;
+  }
+
+  /* Glyph visibility is DEFAULT-OFF, opted in per the four known intents below — never default-on with a
+     neutral/unknown opt-out. This is deliberately robust to an out-of-enum [intent] attribute value that
+     the property-level hardening effect (badge.ts) cannot reach: the effect snaps the PROPERTY back to
+     'neutral', but a raw/reflected attribute mismatch (e.g. a plain-author typo, or a window where the
+     attribute briefly differs from the hardened property) must still degrade to "no glyph," never a
+     shapeless solid square (component-review finding — verified reachable on a literal out-of-enum
+     attribute in both engines before this fix). */
+  :scope [data-part='glyph'] {
+    display: none;
+    flex: none;
+    background-color: currentColor;
+    inline-size: var(--ui-badge-glyph);
+    block-size: var(--ui-badge-glyph);
+  }
+
+  /* Per-intent glyph SHAPES — pairwise-distinct clip-paths (SPEC-R12 AC1/AC2; the checkbox tick
+     precedent). Shape is the meaning channel; the [intent] colour repoints above are the REDUNDANT hue
+     channel (ADR-0057) — removing colour (e.g. grayscale) must never collapse two intents together.
+     `neutral` (and any unrecognized [intent]) inherits the base rule's `display: none` — absence IS
+     neutral's signifier, and it is also the safe fallback for anything not in this closed set. */
+  :scope[intent='success'] [data-part='glyph'] {
+    /* tick — the checkbox ✓ clip-path polygon, reused verbatim as the shared fleet "affirmative" mark */
+    display: inline-block;
+    clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  }
+  :scope[intent='danger'] [data-part='glyph'] {
+    /* cross — an X polygon, distinct from the tick and the triangle at every corner */
+    display: inline-block;
+    clip-path: polygon(
+      20% 8%,
+      8% 20%,
+      38% 50%,
+      8% 80%,
+      20% 92%,
+      50% 62%,
+      80% 92%,
+      92% 80%,
+      62% 50%,
+      92% 20%,
+      80% 8%,
+      50% 38%
+    );
+  }
+  :scope[intent='warning'] [data-part='glyph'] {
+    display: inline-block;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%); /* triangle */
+  }
+  :scope[intent='info'] [data-part='glyph'] {
+    display: inline-block;
+    clip-path: circle(50%); /* disc */
+  }
+
+  /* Forced-colors (SPEC-R15) — the badge keeps its boxed identity via a system-ink border, and the glyph
+     paints in CanvasText: a background-drawn clip-path glyph is otherwise forced to `Canvas` and vanishes
+     (the bar-chart fill lesson). forced-color-adjust:none preserves these explicit system-colour mappings. */
+  @media (forced-colors: active) {
+    :scope {
+      background-color: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
+      forced-color-adjust: none;
+    }
+    :scope [data-part='glyph'] {
+      background-color: CanvasText;
+    }
+  }
+}

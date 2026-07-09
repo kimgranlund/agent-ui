@@ -1,0 +1,106 @@
+/* progress.css — ui-progress, the Display-class thin-rail progress bar (LLD-C1, feed-family.lld.md §2;
+ * SPEC-R2/R18/R19/R20; ADR-0112 cl.2). Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-progress)` declares `--ui-progress-*`: a DENSITY-INVARIANT thin rail
+ *       thickness (the slider-rail precedent verbatim, slider.css:76-79 — a bar is a rail, NOT a
+ *       `--ui-compact-*` widget box) + the whole-shape floor (SPEC-R18 AC1, the slider-dot collapse
+ *       lesson) + track/fill color roles (track = `--md-sys-color-neutral-track`, the ADR-0059 solid-track
+ *       role; fill = the primary role).
+ *   [2] STYLES BLOCK — `@scope (ui-progress)` consumes ONLY `--ui-progress-*`.
+ *
+ * Display class (SPEC-R20): no [size]/[scale] control-band lookup, no `--ui-height-*`, no `h/2` centering
+ * law — the rail is a fixed px constant regardless of [density]/[scale] (SPEC-R18 AC3).
+ *
+ * RTL (SPEC-R2 AC3): the fill's `inset-inline-start` is a LOGICAL property — the determinate fill and the
+ * indeterminate sweep both mirror for free under `dir="rtl"`; no dedicated per-direction rule is needed.
+ *
+ * Motion (SPEC-R2 AC2): indeterminate animates `inset-inline-start` (a translating sweep). Under
+ * `prefers-reduced-motion: reduce` the sweep is replaced by a STATIONARY partial fill with a slow
+ * opacity pulse — no translation, no scaling — that stays visually distinct from any determinate state.
+ * The keyframes live at stylesheet TOP LEVEL (outside `@scope`) — scoped `@keyframes` name resolution is
+ * exactly the kind of engine variance the fleet doesn't need (LLD-C1); names are `ui-progress-*`-prefixed.
+ *
+ * Forced colors (SPEC-R19): a background-drawn fill vanishes under WHCM (the bar-chart lesson,
+ * bar-chart.css:101-107) — an explicit `forced-colors` block repoints the fill to `CanvasText` and keeps
+ * the track distinguishable (`Canvas` + a `CanvasText` border).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-progress) declares --ui-progress-* ════════════════ */
+
+:where(ui-progress) {
+  --ui-progress-track-size: 4px; /* thin rail — density-invariant constant (slider.css:76-79 kin) */
+  --ui-progress-min-inline-size: 8em; /* the whole-shape floor (SPEC-R18 AC1; the slider-dot lesson) */
+  --ui-progress-track-ink: var(--md-sys-color-neutral-track); /* the ADR-0059 solid-track role */
+  --ui-progress-fill-ink: var(--md-sys-color-primary);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-progress) consumes ONLY --ui-progress-* ════════════════ */
+
+@scope (ui-progress) {
+  :scope {
+    display: block;
+    min-inline-size: var(--ui-progress-min-inline-size);
+  }
+
+  :scope [data-part='track'] {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    block-size: var(--ui-progress-track-size);
+    border-radius: calc(var(--ui-progress-track-size) / 2);
+    background: var(--ui-progress-track-ink);
+  }
+
+  :scope [data-part='fill'] {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: calc(var(--_pct, 0) * 1%);
+    background: var(--ui-progress-fill-ink);
+    border-radius: inherit;
+  }
+
+  :scope [data-part='fill'][data-indeterminate] {
+    /* the sweep (SPEC-R2 AC2) — a partial-width fill translating along the track */
+    inline-size: 40%;
+    animation: ui-progress-sweep 1.5s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :scope [data-part='fill'][data-indeterminate] {
+      /* stationary; opacity-only — no translation, no scaling (SPEC-R2 AC2) */
+      inset-inline-start: 30%;
+      animation: ui-progress-pulse 2s ease-in-out infinite;
+    }
+  }
+
+  @media (forced-colors: active) {
+    /* the bar-chart lesson (SPEC-R19) — a background-drawn fill otherwise vanishes */
+    :scope [data-part='fill'] {
+      background: CanvasText;
+    }
+    :scope [data-part='track'] {
+      background: Canvas;
+      border: 1px solid CanvasText;
+    }
+  }
+}
+
+@keyframes ui-progress-sweep {
+  from {
+    inset-inline-start: -40%;
+  }
+  to {
+    inset-inline-start: 100%;
+  }
+}
+
+@keyframes ui-progress-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}

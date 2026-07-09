@@ -30,6 +30,11 @@ export interface PropDef {
   type: JsonSchema
   bindable?: boolean
   mapsTo: string
+  /** A default-catalog PropDef extension (our schema, not A2UI wire vocabulary) — currently only
+   *  `'safe-href'` (ADR-0114 cl.3, content-family LLD-C13): the shared validator's first line runs the
+   *  ADR-0114 scheme allowlist over an ABSOLUTE static string literal; a relative/unparseable-without-base
+   *  literal defers to the component gate (`safeHref`, `controls/text/href.ts`), which resolves at render. */
+  format?: string
 }
 
 /**
@@ -160,9 +165,11 @@ function validatePropDef(key: string, prop: string, raw: unknown): PropDef {
   if (raw.type === undefined) bad(`property "${key}.${prop}" must declare a type schema`)
   if (typeof raw.mapsTo !== 'string') bad(`property "${key}.${prop}".mapsTo must be a string`)
   if (raw.bindable !== undefined && typeof raw.bindable !== 'boolean') bad(`property "${key}.${prop}".bindable must be a boolean`)
+  if (raw.format !== undefined && typeof raw.format !== 'string') bad(`property "${key}.${prop}".format must be a string`)
 
   const pd: PropDef = { type: raw.type as JsonSchema, mapsTo: raw.mapsTo }
   if (raw.bindable !== undefined) pd.bindable = raw.bindable
+  if (raw.format !== undefined) pd.format = raw.format
   return pd
 }
 

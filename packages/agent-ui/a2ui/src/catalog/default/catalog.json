@@ -7,7 +7,8 @@
         "text": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" },
         "variant": { "type": { "type": "string", "enum": ["h1", "h2", "h3", "h4", "h5", "caption", "body"] }, "mapsTo": "variant" },
         "truncate": { "type": { "type": "boolean" }, "mapsTo": "truncate" },
-        "emphasis": { "type": { "type": "boolean" }, "mapsTo": "emphasis" }
+        "emphasis": { "type": { "type": "boolean" }, "mapsTo": "emphasis" },
+        "href": { "type": { "type": "string" }, "bindable": true, "mapsTo": "href", "format": "safe-href" }
       }
     },
 
@@ -366,6 +367,75 @@
           "mapsTo": "data"
         },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
+      }
+    },
+
+    "Table": {
+      "properties": {
+        "columns": { "type": { "type": "array", "items": { "type": "object",
+                     "properties": { "key": { "type": "string" }, "label": { "type": "string" },
+                                     "type": { "type": "string", "enum": ["string", "number"] } },
+                     "required": ["key", "label"] } }, "bindable": true, "mapsTo": "columns" },
+        "rows": { "type": { "type": "array", "items": { "type": "object" } }, "bindable": true, "mapsTo": "rows" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
+      }
+    },
+
+    "Stat": {
+      "properties": {
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "value": { "type": { "type": ["string", "number"] }, "bindable": true, "mapsTo": "value" },
+        "delta": { "type": { "type": "number" }, "bindable": true, "mapsTo": "delta" },
+        "caption": { "type": { "type": "string" }, "bindable": true, "mapsTo": "caption" }
+      }
+    },
+
+    "Badge": {
+      "properties": {
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "intent": { "type": { "type": "string", "enum": ["neutral", "info", "success", "warning", "danger"] }, "bindable": true, "mapsTo": "intent" }
+      }
+    },
+
+    "Code": {
+      "properties": {
+        "code": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" },
+        "language": { "type": { "type": "string" }, "mapsTo": "language" }
+      }
+    },
+
+    "Disclosure": {
+      "properties": {
+        "summary": { "type": { "type": "string" }, "bindable": true, "mapsTo": "summary" },
+        "open": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "open" }
+      },
+      "value": { "prop": "open", "event": "toggle" },
+      "children": "ChildList"
+    },
+
+    "Progress": {
+      "properties": {
+        "value": { "type": { "type": "number" }, "bindable": true, "mapsTo": "value" },
+        "max": { "type": { "type": "number" }, "bindable": true, "mapsTo": "max" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
+      }
+    },
+
+    "Avatar": {
+      "properties": {
+        "src": { "type": { "type": "string" }, "bindable": true, "mapsTo": "src" },
+        "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "name" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "mapsTo": "size" }
+      }
+    },
+
+    "Attachment": {
+      "properties": {
+        "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "name" },
+        "mimeType": { "type": { "type": "string" }, "bindable": true, "mapsTo": "mimeType" },
+        "sizeBytes": { "type": { "type": "number" }, "bindable": true, "mapsTo": "sizeBytes" },
+        "href": { "type": { "type": "string" }, "bindable": true, "mapsTo": "href", "format": "safe-href" }
       }
     }
   },

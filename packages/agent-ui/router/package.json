@@ -1,0 +1,16 @@
+{
+  "name": "@agent-ui/router",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./router-outlet": "./src/controls/router-outlet/router-outlet.ts",
+    "./router-link": "./src/controls/router-link/router-link.ts",
+    "./router-link.css": "./src/controls/router-link/router-link.css"
+  },
+  "dependencies": {
+    "@agent-ui/components": "*",
+    "@agent-ui/shared": "*"
+  }
+}

@@ -66,6 +66,7 @@ describe('component-preview — STRUCTURAL targets mount a representative specim
     { tag: 'ui-radio-group', minChildren: 3 }, // sm/md/lg radios
     { tag: 'ui-segmented-control', minChildren: 3 }, // sm/md/lg segments (ADR-0095)
     { tag: 'ui-form-provider', minChildren: 2 }, // a field + a submit button
+    { tag: 'ui-toast-region', minChildren: 2 }, // a plain toast + an actionable urgent toast (ADR-0112)
   ]
   it('CASES covers every STRUCTURAL tag (anti-vacuous)', () => {
     expect(new Set(CASES.map((c) => c.tag))).toEqual(STRUCTURAL)

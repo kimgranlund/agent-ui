@@ -134,15 +134,25 @@ function fleetPrimaryTypes(): string[] {
   return types
 }
 
-/** The exclusion allowlist — type → reason. Landed EMPTY: all four ADR-0087 forks resolved INCLUDE (Kim,
- *  2026-07-06) and every fork-deferred type drained across Waves A/B/C (a2ui-whole-fleet-catalog.decomp.md
- *  §1/§2); Wave D confirms the residue is exactly empty — no fork-deferred row remains. The wave M1
- *  chart-family seed (`BarChart`/`Sparkline`, ADR-0107) drained at LLD-C10 (chart-family.lld.md §5): their
- *  catalog rows + factories are now live, so the allowlist is EMPTY again. `Image`/`Video` are
- *  deliberately NOT here — no `ui-image`/`ui-video` descriptor exists, so they never enter the derived set
- *  to begin with (they stay a documentary-only note in SPEC §5.2.1, never code-derived). A future
- *  undispositioned control re-seeds this map with a reason + citation, same as Wave 0's seed. */
-const EXCLUSION_ALLOWLIST = new Map<string, string>([])
+/** The exclusion allowlist — type → reason. Landed EMPTY after Wave D (all ADR-0087 forks resolved INCLUDE,
+ *  Kim 2026-07-06) and stayed empty through the M1 chart-family drain (`BarChart`/`Sparkline`, ADR-0107,
+ *  LLD-C10). The Wave M1 report/content/feed catalog pass (ADR-0111/0113/0112) DRAINED all eight temporary
+ *  "shipped ahead of its catalog row" seeds it had accumulated (`Table`/`Stat`/`Badge`,
+ *  report-family.lld.md LLD-C12; `Code`/`Disclosure`, content-family.lld.md LLD-C13;
+ *  `Progress`/`Avatar`/`Attachment`, feed-family.lld.md LLD-C13) — their catalog rows now exist, so their
+ *  seeds are REMOVED, not left as residue (the residue-guard test below would fail if they weren't).
+ *  `Image`/`Video` are deliberately NOT here — no `ui-image`/`ui-video` descriptor exists, so they never
+ *  enter the derived set to begin with (they stay a documentary-only note in SPEC §5.2.1, never
+ *  code-derived). A future undispositioned control re-seeds this map with a reason + citation, same as
+ *  Wave 0's seed. */
+// `Toast`/`ToastRegion` carry a DIFFERENT kind of entry, seeded in the feed-family M1 wave rather than
+// deferred: they are not catalogue-bound AT ALL (ADR-0112 cl.6 — app-surface chrome, driven by `show()`,
+// never agent-emittable) — a PERMANENT exclusion, not a "shipped ahead of its row" placeholder that a
+// later wave drains. They are the ONLY two entries remaining after the catalog wave above.
+const EXCLUSION_ALLOWLIST = new Map<string, string>([
+  ['Toast', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: app-surface chrome driven by show(), not agent-emittable (rejected explicitly: history-must-not-lie · payload↔DOM traceability · teaching a forbidden type).'],
+  ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, same reasoning as Toast: app-surface chrome, never a catalog row.'],
+])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists
  *  to catch. A pure predicate so the negative controls can drive it with synthetic inputs (site-coverage's
@@ -157,8 +167,10 @@ function typesMissingCatalog(
 
 /** The allowlist keys that ALSO appear in `catalogKeys` — a drained-but-not-removed seed (chart-family.lld.md
  *  §4 M1-b footprint). Same predicate-extraction shape as `typesMissingCatalog` (the M1-d review follow-up:
- *  the standing residue-guard test only ever iterates the REAL, currently-empty `EXCLUSION_ALLOWLIST`, which
- *  is vacuously true — extracted here so a synthetic, non-empty allowlist can drive it with a real bite). */
+ *  the standing residue-guard test below iterates the REAL `EXCLUSION_ALLOWLIST`, which as of the feed-family
+ *  wave permanently holds Toast/ToastRegion (ADR-0112 cl.6) — the standing gate passes NON-vacuously, since
+ *  neither is ever catalogued. Extracted here so a synthetic, non-empty allowlist can ALSO drive it directly
+ *  with a real bite, independent of whatever the real map happens to hold at any given time). */
 function allowlistResidue(catalogKeys: ReadonlySet<string>, allowlist: ReadonlyMap<string, string>): string[] {
   return [...allowlist.keys()].filter((type) => catalogKeys.has(type))
 }
@@ -192,9 +204,10 @@ describe('default catalog — the fleet-derived coverage gate (SPEC-N2, ADR-0087
   })
 
   it('NEGATIVE: the residue-guard assertion form actually BITES (synthetic control — M1-d review follow-up)', () => {
-    // The real `EXCLUSION_ALLOWLIST` is (by design, today) empty, so the standing gate above passes
-    // vacuously. This drives the same predicate with a SYNTHETIC, non-empty allowlist that collides with
-    // a real catalog key, proving the check catches residue when residue actually exists.
+    // The real `EXCLUSION_ALLOWLIST` now permanently holds Toast/ToastRegion (ADR-0112 cl.6), so the
+    // standing gate above already exercises the predicate non-vacuously. This test drives the SAME
+    // predicate with a SYNTHETIC allowlist that deliberately collides with a real catalog key — independent
+    // proof the check catches residue when residue actually exists, not dependent on the real map's shape.
     expect(allowlistResidue(CATALOG_KEYS, new Map([['Button', 'planted residue']]))).toEqual(['Button']) // bites
     expect(allowlistResidue(CATALOG_KEYS, new Map([['ZzNeverCatalogued', 'still deferred']]))).toEqual([]) // stays clean
   })

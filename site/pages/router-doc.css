@@ -1,0 +1,32 @@
+/* router-doc.css — local demo chrome for the live router example (LLD-C10b). Styles ONLY this page's own
+ * demo scaffold (the link row, the back/forward controls, the outlet frame, the status line) — the router
+ * elements themselves are unstyled by this page (ui-router-link ships its own router-link.css;
+ * ui-router-outlet is a transparent container, geometry.md tier=layout). Imported after _page.ts so it
+ * reads the foundation --md-sys-color-* roles. */
+
+.router-demo-nav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.router-demo-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.router-demo-frame {
+  padding: 1.25rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 0.6rem;
+  background: var(--md-sys-color-neutral-surface-low);
+  min-block-size: 6rem;
+}
+
+.router-demo-status {
+  margin: 0;
+  font-family: var(--ui-mono);
+  font-size: 0.8rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}

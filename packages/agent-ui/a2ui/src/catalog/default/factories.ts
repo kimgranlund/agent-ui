@@ -51,6 +51,11 @@
 // as their descriptors (SPEC-N2's fleet-derived gate, ADR-0087 cl.6). Both are display-only leaves
 // riding plain `accessorFactory` (no bespoke mapping, no `value` mark, no children, no submitGate) —
 // see the two factory doc comments below.
+//
+// The catalog wave for the report/content/feed families (ADR-0111/0113/0112, report-family.lld.md
+// LLD-C12 · content-family.lld.md LLD-C13 · feed-family.lld.md LLD-C13) adds `Table`/`Stat`/`Badge`,
+// `Code`/`Disclosure` (+ the `Text.href` fan-out, ADR-0114 cl.5), and `Progress`/`Avatar`/`Attachment` —
+// see each factory's own doc comment below for its verified mapping.
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
@@ -113,6 +118,12 @@ const TEXT_VARIANT_TABLE: Record<string, { as: string; variant: string; size: st
  * display leaf — no children, no action. The boolean presentation intents — `truncate` (ADR-0106) and
  * `emphasis` (ADR-0109) — deliberately have NO case here: they ride the `default:` arm's `setAttr`
  * boolean-attribute form, which IS the CSS hook (`[truncate]`/`[emphasis]`).
+ *
+ * `href` (ADR-0114 cl.5, content-family LLD-C13) fans out ALONGSIDE `variant`, ORDER-INDEPENDENTLY: a
+ * non-empty `href` wins `as` over whatever the variant triple would otherwise pick (a heading VISUAL is
+ * kept, its semantics lost — the stated SPEC-R21 consequence). Both arms read the control's OWN current
+ * `href` accessor (never a closed-over local), so whichever of `href`/`variant` applies second still
+ * converges on `as='a'` when `href` is non-empty at that time — verified against both apply orders.
  */
 export const textFactory: WidgetFactory = {
   tag: 'ui-text',
@@ -122,10 +133,16 @@ export const textFactory: WidgetFactory = {
       case 'text':
         el.textContent = value == null ? '' : String(value)
         break
+      case 'href': {
+        const target = el as { href?: unknown; as?: unknown }
+        target.href = value == null ? '' : String(value)
+        if (target.href) target.as = 'a' // href wins `as` — SPEC-R21 AC3
+        break
+      }
       case 'variant': {
         const triple = TEXT_VARIANT_TABLE[value as string] ?? TEXT_VARIANT_TABLE.body
-        const target = el as { as?: unknown; variant?: unknown; size?: unknown }
-        target.as = triple.as
+        const target = el as { as?: unknown; variant?: unknown; size?: unknown; href?: unknown }
+        target.as = target.href ? 'a' : triple.as // an href already applied wins over the variant triple
         target.variant = triple.variant
         target.size = triple.size
         break
@@ -473,6 +490,75 @@ export const sparklineFactory: WidgetFactory = accessorFactory('ui-sparkline')
 // no children, no submitGate.
 export const barChartFactory: WidgetFactory = accessorFactory('ui-bar-chart')
 
+// ── the ADR-0111 report family (Table / Stat / Badge, catalog LLD-C12, report-family.lld.md §6) ───────
+//
+// Table → ui-table (SPEC-R1..R6). `columns`/`rows` (safe-JSON-codec array props) + `label` are ALL 1:1
+// reflecting accessor props — verified against table.ts `static props`; the control's OWN `cleanColumns`/
+// `cleanRows` hardening runs again inside its render effects (LLD-C2), not only inside the attribute
+// codec, so a literal array or a `{path}` bind's resolved array both reach a hardened render. Display-only
+// leaf: no `value` mark, no children, no submitGate.
+export const tableFactory: WidgetFactory = accessorFactory('ui-table')
+
+// Stat → ui-stat (SPEC-R7..R10). `label`/`value`/`delta`/`caption` are ALL 1:1 reflecting accessor props
+// — verified against stat.ts `static props` (`value`'s string|number union + `delta`'s null-defaulting
+// numeric codec are both real accessors, `setProp` writes either straight through). Display-only leaf.
+export const statFactory: WidgetFactory = accessorFactory('ui-stat')
+
+// Badge → ui-badge (SPEC-R11..R13). `label`/`intent` are 1:1 reflecting accessor props — verified against
+// badge.ts `static props`; the control's OWN effect snaps an out-of-range `intent` (bound-garbage) back to
+// 'neutral' (SPEC-R11 AC2), so `setProp`'s plain property write is safe even for a `{path}`-bound value the
+// static validator's `enum` check never sees. Display-only leaf: no `value` mark, no children.
+export const badgeFactory: WidgetFactory = accessorFactory('ui-badge')
+
+// ── the ADR-0113 content family (Code / Disclosure / Text.href, catalog LLD-C13, content-family.lld.md §5) ──
+//
+/**
+ * Code → `ui-code` (SPEC-R1/R3/R5). Bespoke: `code`'s `mapsTo` is `textContent` (a non-identity mapping,
+ * the `Button.label`/`Text.text` invariant — host-as-content, code.ts has no `code` prop of its own), so
+ * it must NOT route through `accessorFactory`. `language` is a 1:1 reflecting accessor (`setAttr`'s
+ * `default:` arm suffices — verified against code.ts's reflected `language` prop).
+ */
+export const codeFactory: WidgetFactory = {
+  tag: 'ui-code',
+  create: () => document.createElement('ui-code'),
+  applyProp: (el, prop, value) => {
+    if (prop === 'code') el.textContent = value == null ? '' : String(value)
+    else setAttr(el, prop, value)
+  },
+}
+
+// Disclosure → ui-disclosure (SPEC-R14..R18). `summary`/`open` are 1:1 reflecting accessor props —
+// verified against disclosure.ts `static props`; two-way bindable on `open` via the `toggle` event (the
+// Modal/Menu precedent — `this.emit('toggle')` is the control's SOLE announcer, ADR-0101). `ChildList`
+// children (the catalog row) are the body content, generically walked — never `applyProp`'d.
+export const disclosureFactory: WidgetFactory = accessorFactory('ui-disclosure', { prop: 'open', event: 'toggle' })
+
+// ── the ADR-0112 feed family (Progress / Avatar / Attachment, catalog LLD-C13, feed-family.lld.md §7) ──
+//
+// Progress → ui-progress (SPEC-R1..R3). `value`/`max`/`label` are ALL 1:1 reflecting accessor props —
+// verified against progress.ts `static props` (`value`'s null-as-indeterminate codec is a real accessor,
+// `setProp` writes it straight through; the control's own `effectiveMax`/`effectiveValue` clamps re-run
+// inside its render effect regardless of which path delivered the value). Display-only leaf: no `value`
+// mark (ADR-0019 sense — a progress bar is not an input), no children.
+export const progressFactory: WidgetFactory = accessorFactory('ui-progress')
+
+// Avatar → ui-avatar (SPEC-R4..R7). `src`/`name`/`label`/`size` are ALL 1:1 reflecting accessor props —
+// verified against avatar.ts `static props`. Not an input (no `value` mark) — a non-interactive identity
+// mark, the Icon precedent.
+export const avatarFactory: WidgetFactory = accessorFactory('ui-avatar')
+
+// Attachment → ui-attachment (SPEC-R8..R11). `name`/`mimeType`/`sizeBytes`/`href` are ALL 1:1 reflecting
+// accessor props — verified against attachment.ts `static props` (the catalog property key `sizeBytes`
+// deliberately matches the control's OWN accessor name, not the earlier LLD sketch's `size`: ADR-0112
+// Amendment 1 renamed the control prop away from `size` specifically to avoid colliding with the fleet's
+// reserved widget-tier `[sm,md,lg]` geometry enum, and `accessorFactory`'s generic `setProp` writes
+// `el[prop]` directly off the catalog property KEY — a `size`→`sizeBytes` mismatch would silently no-op).
+// `href` rides the same `format: 'safe-href'` validator arm as `Text.href`; ITS OWN rendering leg
+// (LLD-C6, the name cell becoming a native `<a>`) is a separately-tracked component-side follow-up — the
+// catalog/factory wiring here is correct today and simply inert until that leg lands (attachment.ts's own
+// header note). Display-only leaf: no `value` mark, no children.
+export const attachmentFactory: WidgetFactory = accessorFactory('ui-attachment')
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -513,4 +599,12 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Grid: gridFactory,
   Sparkline: sparklineFactory,
   BarChart: barChartFactory,
+  Table: tableFactory,
+  Stat: statFactory,
+  Badge: badgeFactory,
+  Code: codeFactory,
+  Disclosure: disclosureFactory,
+  Progress: progressFactory,
+  Avatar: avatarFactory,
+  Attachment: attachmentFactory,
 }

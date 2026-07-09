@@ -65,9 +65,11 @@ active pack's SVG body and injects it as its only child.
 `setIcon(this, name)` on every change; an empty `name` clears the host. An unregistered name resolves to
 a non-throwing empty `<svg data-icon-missing>` rather than breaking the render (`resolveIcon`,
 `@agent-ui/icons`). The shipped default is the Phosphor pack (`@agent-ui/icons/phosphor`), covering the
-canonical nine: `caret-down · caret-up · caret-left · caret-right · x · eye · eye-slash ·
-calendar-blank · check`. A consuming app can register its own pack, or override individual icons, with
-zero changes to `ui-icon` itself (`registerPack`/`overrideIcon`, ADR-0065 clause 5).
+current `ICON_NAMES` set (`@agent-ui/icons/src/types.ts` — the source of truth; twenty names as of the
+feed-family wave's LLD-C9 icons PREP, spanning caret/chevron · dismissal/visibility · calendar/check ·
+search · and the file-type glyphs `user`/`file`/`file-image`/`file-audio`/`file-video`/`file-pdf`/
+`file-text`/`file-zip`/`file-code`). A consuming app can register its own pack, or override individual
+icons, with zero changes to `ui-icon` itself (`registerPack`/`overrideIcon`, ADR-0065 clause 5).
 
 **Live pack-swap reactivity is deferred** (ADR-0065 clause 4): an already-rendered `<ui-icon>` does not
 auto-update if a pack is swapped *after* it renders — re-setting `name` (or an app restart) reflects the

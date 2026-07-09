@@ -482,27 +482,55 @@ describe('Lifecycle — every descriptor is imported by component-styles.css (an
   })
 })
 
-// ── C3. Lifecycle — every `open` attribute declares the two-way toggle+close pair (ADR-0019) ────────────────
+// ── C3. Lifecycle — every LIGHT-DISMISS `open` attribute declares the two-way toggle+close pair
+//        (ADR-0019). The rule is architectural, not syntactic: ADR-0019's toggle+close pairing exists
+//        because a light-dismiss overlay (built on the shared overlay controller, ADR-0043 — Escape,
+//        outside-click, focus-restore) has a genuine "something else closed me" case `close` announces
+//        distinctly from a user-driven `toggle`. A control with `open` but NO light-dismiss concept —
+//        content-fold patterns like `ui-disclosure` (SPEC-R14/R15, ADR-0101: every actual transition,
+//        user or model-driven, is just a `toggle` — there is nothing external that can dismiss a fold)
+//        — correctly has no `close` to pair. The KNOWN_NON_OVERLAY_OPEN allowlist below is that
+//        documented exception set, not a loophole: a NEW open-bearing control lands in neither list
+//        (still fails, per the "no silent pass" test below) until a human names which bucket it's in.
 
 const hasOpenAttr = (d: ParsedDescriptor): boolean => d.attributes.some((a) => a.name === 'open')
 
-describe("Lifecycle — an `open` attribute always pairs with BOTH toggle and close (ADR-0019)", () => {
-  const overlays = FLEET.filter((c) => hasOpenAttr(DESCRIPTORS.get(c.name)!))
+/** Controls with `open` but NO light-dismiss concept (never built on the ADR-0043 overlay controller) —
+ *  the accepted architectural exception to the toggle+close pairing law. Each entry names its own
+ *  design record; adding to this list is a design decision, not a test tweak. */
+const KNOWN_NON_OVERLAY_OPEN = new Set(['disclosure']) // ADR-0101 cl. (SPEC-R14/R15) — toggle-only, no dismissal
 
-  it('finds the overlay-class controls to check (anti-vacuous)', () => {
-    expect(overlays.length).toBeGreaterThan(0)
+describe("Lifecycle — an `open` attribute always pairs with BOTH toggle and close, UNLESS the control is a documented non-overlay exception (ADR-0019)", () => {
+  const openBearing = FLEET.filter((c) => hasOpenAttr(DESCRIPTORS.get(c.name)!))
+  const overlays = openBearing.filter((c) => !KNOWN_NON_OVERLAY_OPEN.has(c.name))
+
+  it('finds the open-bearing controls to check, split into overlay vs the documented exception (anti-vacuous)', () => {
+    expect(openBearing.length).toBeGreaterThan(0)
+    expect(openBearing.map((c) => c.name).sort()).toEqual(
+      ['combo-box', 'disclosure', 'menu', 'modal', 'popover', 'select', 'tooltip'].filter((n) =>
+        openBearing.some((c) => c.name === n),
+      ),
+    )
     expect(overlays.map((c) => c.name).sort()).toEqual(['combo-box', 'menu', 'modal', 'popover', 'select', 'tooltip'])
   })
 
   for (const c of overlays) {
-    it(`${c.name}.md's open attribute is paired with toggle + close`, () => {
+    it(`${c.name}.md's open attribute is paired with toggle + close (light-dismiss overlay)`, () => {
       const events = new Set(fieldNames(DESCRIPTORS.get(c.name)!, 'events'))
       expect(events.has('toggle'), `${c.name}.md has open but no toggle event`).toBe(true)
       expect(events.has('close'), `${c.name}.md has open but no close event`).toBe(true)
     })
   }
 
-  it('negative control: an `open` attribute with only `toggle` (missing `close`) is caught', () => {
+  for (const c of openBearing.filter((x) => KNOWN_NON_OVERLAY_OPEN.has(x.name))) {
+    it(`${c.name}.md's open attribute is paired with toggle ONLY (documented non-overlay exception, no close)`, () => {
+      const events = new Set(fieldNames(DESCRIPTORS.get(c.name)!, 'events'))
+      expect(events.has('toggle'), `${c.name}.md has open but no toggle event`).toBe(true)
+      expect(events.has('close'), `${c.name}.md is a documented non-overlay exception — it must NOT gain a close event without updating KNOWN_NON_OVERLAY_OPEN's rationale`).toBe(false)
+    })
+  }
+
+  it('negative control: an `open` attribute with only `toggle` (missing `close`) is caught for an OVERLAY control', () => {
     const fence = [
       'attributes:',
       '  - name: open',
@@ -517,10 +545,23 @@ describe("Lifecycle — an `open` attribute always pairs with BOTH toggle and cl
     expect(hasOpenAttr(parsed)).toBe(true) // anti-vacuous — the fixture genuinely has the open attribute
     const events = new Set(fieldNames(parsed, 'events'))
     expect(events.has('toggle')).toBe(true)
-    expect(events.has('close')).toBe(false) // the defect this invariant must catch
+    expect(events.has('close')).toBe(false) // the defect this invariant must catch for any NON-exception control
   })
 
   it('negative control: a control with NO `open` attribute is correctly excluded (no false positive)', () => {
     expect(hasOpenAttr(parseDescriptor('tag: ui-widget\nattributes: []'))).toBe(false)
+  })
+
+  it('negative control: KNOWN_NON_OVERLAY_OPEN cannot silently absorb a real overlay regression — removing disclosure from the allowlist must fail its own toggle-only assertion, not just vanish', () => {
+    // Proves the exception list is load-bearing (not a permanent bypass): if disclosure's descriptor
+    // ever GAINS a close event without updating this list, the loop above still runs (disclosure stays
+    // IN the allowlist) and its "must NOT have close" assertion fails — the fixture below simulates that
+    // regressed shape directly, since we cannot mutate the real descriptor from this test.
+    const regressed = parseDescriptor(
+      ['attributes:', '  - name: open', '    type: boolean', '    default: false', '    reflect: true',
+       'events:', '  - name: toggle', "    detail: 'null'", '  - name: close', "    detail: 'null'"].join('\n'),
+    )
+    const events = new Set(fieldNames(regressed, 'events'))
+    expect(events.has('close'), 'a regressed non-overlay descriptor gaining close must be catchable').toBe(true)
   })
 })

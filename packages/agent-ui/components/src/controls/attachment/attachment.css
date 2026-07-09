@@ -1,0 +1,90 @@
+/* attachment.css — ui-attachment, the Display-class FilePart-aligned file card (LLD-C5,
+ * feed-family.lld.md §4; SPEC-R9/R18/R19/R20; ADR-0112 cl.4, fork F4). Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-attachment)` declares --ui-attachment-* from the colour roles
+ *       (--md-sys-color-{family}-{role}) + the content-icon register (--ui-icon-md, geometry.md's
+ *       "Affordance vs content-icon" taxonomy — the glyph is a CONTENT icon, not an inline affordance,
+ *       so it rides the icon ramp, never `= font`). Display class (SPEC-R20 AC2): no [size]/[scale]
+ *       control-band lookup, no --ui-height-* consumption — the border/radius/floor are frame constants,
+ *       the glyph is the fixed default icon-ramp tier (no ancestor [scale] repoint needed at v1).
+ *   [2] STYLES BLOCK — `@scope (ui-attachment)` consumes ONLY --ui-attachment-*.
+ *
+ * Posture (fork F4): a compact card with its OWN bordered surface (--ui-radius-base, the entry/container
+ * radius kin) — one-row anatomy glyph | name+meta, inline-grid + max-inline-size:100% so N-up in a
+ * Row(wrap) or as ui-list children both hold with zero extra code (composability, SPEC-R9).
+ *
+ * Whole-shape floor (SPEC-R18 AC1) — --ui-attachment-min-inline-size guards the slider-dot collapse shape
+ * in an unstyled flex row. Rhythm (gap/padding) rides the space ladder — density-responsive for free
+ * (SPEC-R18 AC3); the border/radius/floor stay frame constants, unaffected by [density].
+ *
+ * Truncation (SPEC-R9 AC3): the name cell is single-line ellipsis (the ADR-0106 CSS-only mechanism,
+ * cited — its home use here) — `min-inline-size: 0` on the body cell is what lets the name actually
+ * shrink to trigger it inside a grid track, not just the property alone.
+ *
+ * Forced colors (SPEC-R19): the card's border repoints to CanvasText (the boxed identity survives); the
+ * glyph is `<ui-icon>` (an inline SVG using currentColor by the icon adapter's own contract) and the name/
+ * meta are real text — both survive WHCM with no dedicated rule here.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-attachment) declares --ui-attachment-* ════════════════ */
+
+:where(ui-attachment) {
+  --ui-attachment-min-inline-size: 12em; /* the whole-shape floor (SPEC-R18 AC1) */
+  --ui-attachment-gap: var(--ui-space-sm);
+  --ui-attachment-pad-inline: var(--ui-space-sm);
+  --ui-attachment-pad-block: var(--ui-space-xs);
+  --ui-attachment-border: var(--md-sys-color-neutral-outline);
+  --ui-attachment-surface: transparent; /* rides the ambient plane; a page may lift it */
+  --ui-attachment-glyph: var(--ui-icon-md); /* content-icon register (geometry.md taxonomy), fixed tier — Display class, no [scale] row */
+  --ui-attachment-name-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-attachment-meta-ink: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-attachment) consumes ONLY --ui-attachment-* ════════════════ */
+
+@scope (ui-attachment) {
+  :scope {
+    display: inline-grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: var(--ui-attachment-gap);
+    padding-inline: var(--ui-attachment-pad-inline);
+    padding-block: var(--ui-attachment-pad-block);
+    border: 1px solid var(--ui-attachment-border);
+    border-radius: var(--ui-radius-base); /* the entry/container radius kin (F4) */
+    background: var(--ui-attachment-surface);
+    min-inline-size: var(--ui-attachment-min-inline-size);
+    max-inline-size: 100%; /* composability — never grows past its container (SPEC-R9 AC3) */
+  }
+
+  :scope [data-part='glyph'] {
+    font-size: var(--ui-attachment-glyph); /* <ui-icon> is a 1em box — this IS its size lever */
+    color: var(--ui-attachment-meta-ink);
+  }
+
+  :scope [data-part='body'] {
+    display: grid;
+    min-inline-size: 0; /* lets the name cell actually shrink to trigger the ellipsis truncation */
+  }
+
+  :scope [data-part='name'] {
+    color: var(--ui-attachment-name-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* ADR-0106 mechanism, cited — its home use */
+    font-size: var(--md-sys-typescale-body-medium-size);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+  }
+
+  :scope [data-part='meta'] {
+    color: var(--ui-attachment-meta-ink);
+    font-size: var(--md-sys-typescale-body-small-size);
+    line-height: var(--md-sys-typescale-body-small-line-height);
+  }
+
+  @media (forced-colors: active) {
+    :scope {
+      border-color: CanvasText; /* the boxed identity survives; name/meta are real text, glyph is currentColor-based */
+    }
+  }
+}

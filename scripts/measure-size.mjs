@@ -52,7 +52,18 @@ const targets = [
   // Display controls with hand-rolled mark code (ui-sparkline's SVG path-building + ui-bar-chart's diverging
   // bar math) — measured 25847 B gz 2026-07-08; per-control marginals stay trivial vs the ~2 KB cap
   // (bar-chart 447 B gz · sparkline 715 B gz through the T5 public-API leg).
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 26 * KB],
+  // 28 KB re-based at the report+content-family wave (ADR-0111/ADR-0113 Amendment, SPEC-N4, the same
+  // Consequences-anticipated re-base precedent): FIVE new controls (ui-table/ui-stat/ui-badge/ui-code/
+  // ui-disclosure) landed in one integration slice — measured 27533 B gz 2026-07-09; per-control marginals
+  // stay trivial vs the ~2 KB cap (table 659 B gz · stat 484 B gz · badge 117 B gz · code 51 B gz ·
+  // disclosure 384 B gz — the worst-case ceiling moves, the real per-control gate does not).
+  // 30 KB re-based at the feed-family wave (ADR-0112 cl.8, the same Consequences-anticipated re-base
+  // precedent — the ADR named this re-base as EXPECTED, never guessed): FIVE new tags
+  // (ui-progress/ui-avatar/ui-attachment/ui-toast/ui-toast-region) landed in one integration slice —
+  // measured 29463 B gz 2026-07-09; per-control marginals stay trivial vs the ~2 KB cap (progress 301 B gz ·
+  // avatar 307 B gz · attachment 544 B gz · toast 0 B gz · toast-region 235 B gz — the worst-case ceiling
+  // moves, the real per-control gate does not).
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 30 * KB],
 ]
 
 let over = false
@@ -198,9 +209,56 @@ console.log(
   `\n@agent-ui/app . (ui-app-shell): marginal ${appMarginal} B gz — ${appStatus} budget (${APP_MARGINAL_BUDGET} B gz)   solo ${appGz} B gz (${appMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
 )
 
-if (over || marginalOver || appOver) {
+// ── @agent-ui/router (LLD-C9, SPEC-R7 AC4) — the SPA router family, ANOTHER package above components on
+// the DAG (`shared ← components ← {a2ui, router} ← app`). Same marginal semantics as the @agent-ui/app
+// section above, one row: what does a consumer who ALREADY has the components foundation pay to add the
+// WHOLE router surface — the headless core barrel (`.`) PLUS both elements (`./router-outlet`,
+// `./router-link`), the realistic "a consumer using the family" shape, not the core-alone figure (which
+// would understate what most consumers actually ship, since the elements are the reason to reach for
+// this package). A synthetic virtual entry (the same no-temp-file plugin pattern as the T5 per-control
+// section) imports all three public subpaths; router-link.css is a stylesheet asset, not JS, so it is
+// intentionally excluded (no bundler-measurable byte cost through this JS pipeline).
+const ROUTER_MARGINAL_BUDGET = 4 * KB // provisional, recorded at LLD-C9 kickoff (SPEC-R7 AC4) — first measurement, no re-base expected
+const routerPkgDir = fileURLToPath(new URL('../packages/agent-ui/router', import.meta.url))
+const routerVirtualSrc = [
+  `import ${JSON.stringify(`${routerPkgDir}/src/index.ts`)}`,
+  `import ${JSON.stringify(`${routerPkgDir}/src/controls/router-outlet/router-outlet.ts`)}`,
+  `import ${JSON.stringify(`${routerPkgDir}/src/controls/router-link/router-link.ts`)}`,
+].join('\n') + '\n'
+const routerVirtualId = '\0virtual:measure-size-router-entry'
+const routerBundle = await rolldown({
+  input: 'virtual:measure-size-router-entry',
+  plugins: [
+    {
+      name: 'measure-size-router-virtual-entry',
+      resolveId(id) {
+        if (id === 'virtual:measure-size-router-entry') return routerVirtualId
+      },
+      load(id) {
+        if (id === routerVirtualId) return routerVirtualSrc
+      },
+    },
+  ],
+})
+const { output: routerOutput } = await routerBundle.generate({ format: 'esm', minify: true })
+await routerBundle.close()
+const routerCode = routerOutput
+  .filter((c) => c.type === 'chunk')
+  .map((c) => c.code)
+  .join('')
+const routerMin = Buffer.byteLength(routerCode)
+const routerGz = gzipSync(routerCode, { level: 9 }).length
+const routerMarginal = routerGz - foundationGz
+const routerStatus = routerMarginal <= ROUTER_MARGINAL_BUDGET ? 'within' : 'OVER'
+const routerOver = routerMarginal > ROUTER_MARGINAL_BUDGET
+console.log(
+  `\n@agent-ui/router (core + ui-router-outlet + ui-router-link): marginal ${routerMarginal} B gz — ${routerStatus} budget (${ROUTER_MARGINAL_BUDGET} B gz)   solo ${routerGz} B gz (${routerMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
+)
+
+if (over || marginalOver || appOver || routerOver) {
   if (over) console.error('size: a barrel exceeds its budget')
   if (marginalOver) console.error('size: a control exceeds its per-control marginal budget')
   if (appOver) console.error('size: @agent-ui/app exceeds its marginal budget')
+  if (routerOver) console.error('size: @agent-ui/router exceeds its marginal budget')
   process.exit(1)
 }

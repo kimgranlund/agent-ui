@@ -302,6 +302,11 @@ const CARD_GROUPS: readonly CardGroup[] = [
         title: 'API references',
         blurb: 'Descriptor-derived API docs for ui-row, ui-column, ui-list, and ui-grid (linked from the overview).',
       },
+      {
+        href: './toast-region-doc.html',
+        title: 'ui-toast-region',
+        blurb: 'The Wave M1 feed family (ADR-0112) top-layer host — a pure inset/gap layout element (tier=layout), folded into this bundle rather than growing its own group.',
+      },
     ],
   },
   {
@@ -471,6 +476,111 @@ const CARD_GROUPS: readonly CardGroup[] = [
         href: './form-provider-doc.html',
         title: 'API reference',
         blurb: 'The ui-form-provider surface (controls/entries/values/invalid/valid/submit/reset), the change submit event, and the ui-form-connect protocol, from form-provider.md.',
+      },
+    ],
+  },
+  // The Wave M1 report family (ADR-0111): three Display-class descriptor-derived API docs (tier=display ⇒
+  // {doc} only, the ui-text/ui-icon/chart precedent).
+  {
+    label: 'ui-table',
+    cards: [
+      {
+        href: './table-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class static data table — typed columns + record rows as a real native <table>, the SPEC-R3 cell-resolution matrix as a live fixture, generated from table.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-stat',
+    cards: [
+      {
+        href: './stat-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class metric tile — label/value/delta/caption as real DOM text, the up/down/flat direction glyph over real data, generated from stat.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-badge',
+    cards: [
+      {
+        href: './badge-doc.html',
+        title: 'API reference',
+        blurb: 'The compact-realm status token — a five-intent live strip, each with a pairwise-distinct non-colour glyph (ADR-0057), generated from badge.md.',
+      },
+    ],
+  },
+  // The Wave M1 content family (ADR-0113): the zero-machinery code leaf + the native-<details> disclosure.
+  {
+    label: 'ui-code',
+    cards: [
+      {
+        href: './code-doc.html',
+        title: 'API reference',
+        blurb: 'The zero-machinery verbatim code leaf — mono, whitespace-preserved, self-scrolling overflow fixtures, generated from code.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-disclosure',
+    cards: [
+      {
+        href: './disclosure-demo.html',
+        title: 'Demo',
+        blurb: 'The live fold: click (native summary activation) and a model-driven open toggle, with a toggle event log proving exactly-once settlement.',
+      },
+      {
+        href: './disclosure-doc.html',
+        title: 'API reference',
+        blurb: 'The native-<details>-backed fold — open/summary, the toggle event, the body adoption anatomy, generated from disclosure.md.',
+      },
+    ],
+  },
+  // The Wave M1 feed family (ADR-0112): progress/attachment (display) + avatar (indicator) get {doc} only;
+  // toast (pattern) gets {doc, demo}; toast-region (layout) folds into the Layout primitives bundle above.
+  {
+    label: 'ui-progress',
+    cards: [
+      {
+        href: './progress-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class thin-rail progress bar — determinate/indeterminate models + SPEC-R1 clamping as live fixtures, generated from progress.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-avatar',
+    cards: [
+      {
+        href: './avatar-doc.html',
+        title: 'API reference',
+        blurb: 'The Indicator-class identity mark — the full image → initials → glyph fallback chain + every [size] tier, generated from avatar.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-attachment',
+    cards: [
+      {
+        href: './attachment-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class FilePart-aligned file card — one specimen per file category + SPEC-R8/R9 degenerate cases, generated from attachment.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-toast',
+    cards: [
+      {
+        href: './toast-demo.html',
+        title: 'Demo',
+        blurb: 'The live app-surface consumption story — a region + show() buttons (plain/urgent/actionable), pause-on-hover, and a select/close event log.',
+      },
+      {
+        href: './toast-doc.html',
+        title: 'API reference',
+        blurb: 'The transient notification card — urgent/duration/action, the select/close events, deliberately not catalogued (ADR-0112 cl.6), generated from toast.md.',
       },
     ],
   },

@@ -1,0 +1,63 @@
+/* router-link.css — ui-router-link, the in-app navigation stamp (LLD-C8, SPEC-R6/R7, ADR-0115 cl.6).
+ * Two sectioned blocks (component-packaging.md, ADR-0003):
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-router-link)` (specificity 0,0,0) declares the two `--ui-router-link-*`
+ *       component tokens from the fleet `--md-sys-color-{family}-{role}` roles — the SAME `primary` /
+ *       `primary-high` pair `ui-button`'s solid variant ladders through on `:hover`/`:active`.
+ *   [2] STYLES BLOCK — `@scope (ui-router-link)` consumes ONLY `--ui-router-link-*`. The stamped `<a>`
+ *       carries native anchor semantics (role, keyboard, copy, AT announcement free — the ADR-0114 stamp
+ *       doctrine); underline is ALWAYS present, never hue-only (ADR-0057 — the ui-text link-leg
+ *       precedent). The active leg (`[aria-current='page']`) adds a THICKNESS + WEIGHT cue on top of the
+ *       ink change — a non-color signal that survives forced-colors and CVD alike (SPEC-R7 AC2).
+ *
+ * Standalone stylesheet — linked via the host page; NEVER injected from router-link.ts (behaviour-only
+ * `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-router-link) declares --ui-router-link-* ════════════════ */
+
+:where(ui-router-link) {
+  --ui-router-link-ink: var(--md-sys-color-primary);
+  --ui-router-link-active-ink: var(--md-sys-color-primary-high);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-router-link) consumes ONLY --ui-router-link-* ════════════════ */
+
+@scope (ui-router-link) {
+  :scope {
+    display: inline; /* a nav-link primitive — participates inline like a plain <a> (nav lists, prose) */
+  }
+
+  :scope > a {
+    color: var(--ui-router-link-ink);
+    text-decoration-line: underline;
+    text-underline-offset: 0.15em;
+    text-decoration-thickness: from-font;
+  }
+  :scope > a:hover {
+    text-decoration-thickness: 2px;
+  }
+  /* the fleet's shared focus treatment (ADR-0009) — the SAME ring every control draws. */
+  :scope > a:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* The active-link treatment (SPEC-R6 AC4, SPEC-R7 AC2) — never hue-only: a bolder underline + weight
+     carries the state so forced-colors and CVD readers still see it change. */
+  :scope > a[aria-current='page'] {
+    color: var(--ui-router-link-active-ink);
+    text-decoration-thickness: 2px;
+    font-weight: 700;
+  }
+
+  @media (forced-colors: active) {
+    :scope > a {
+      color: LinkText; /* the platform's own link ink — underline survives above */
+    }
+    :scope > a[aria-current='page'] {
+      color: LinkText;
+      font-weight: 700; /* the non-color cue survives under forced-colors too — weight, not hue */
+    }
+  }
+}

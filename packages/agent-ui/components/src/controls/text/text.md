@@ -1,18 +1,16 @@
 ---
 # text.md frontmatter — the attributes-as-API descriptor for ui-text (ADR-0004 / ADR-0078 / ADR-0106 /
-# ADR-0109). The machine-checkable public surface lives HERE (frontmatter); the prose below the fence is
-# the /site doc. The `attributes[]` block MUST mirror text.ts `static props` (variant/size/as/truncate/
-# emphasis, in that order) — the contract↔props trip-wire (text-descriptor.test.ts) targets this fence.
-# Field set per .claude/docs/plan.md §10 / ADR-0004.
+# ADR-0109 / ADR-0114). The machine-checkable public surface lives HERE (frontmatter); the prose below the
+# fence is the /site doc. The `attributes[]` block MUST mirror text.ts `static props` (variant/size/as/
+# href/truncate/emphasis, in that order) — the contract↔props trip-wire (text-descriptor.test.ts) targets
+# this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-text
 tier: display          # geometry size-class (Display band — NO control frame/height; geometry.md "size-classes" + ADR-0025 cl.1: the typographic ramp is the lever, not --ui-height-*)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (face below), NOT a UIContainerElement surface
-# marginal: ui-text is 395 B gz in the self-defining ui-* family (`npm run size`, re-measured 2026-07-08 with
-# ADR-0109's `emphasis` in; the jump from 273 B came with ADR-0106's `truncate` + title-mirror machinery —
-# `emphasis` itself is schema-only: one boolean prop + one CSS declaration, zero new runtime machinery).
-# Family total 24662 B gz, within the 25600 B gz budget.
+# marginal: re-measure at the build wave (`npm run size`) — ADR-0114 adds one string prop + one private
+# method (#syncLink) + one effect; no new observer. Family total re-based against the 25600 B gz budget.
 
-attributes:            # attributes-as-API — mirrors text.ts `static props`, FIVE orthogonal axes (ADR-0078 cl.1 / ADR-0106 / ADR-0109)
+attributes:            # attributes-as-API — mirrors text.ts `static props`, SIX orthogonal axes (ADR-0078 cl.1 / ADR-0106 / ADR-0109 / ADR-0114)
   - name: variant
     type: enum
     values: [display, headline, title, body, label, kicker, overline, quote, lead]   # the M3 type roles + four editorial extras (cl.2b); zero semantic effect
@@ -25,9 +23,21 @@ attributes:            # attributes-as-API — mirrors text.ts `static props`, F
     reflect: true      # reflects so the [size] repoint in text.css applies to JS-set values
   - name: as
     type: enum
-    values: [none, h1, h2, h3, h4, h5, h6, p, span, blockquote]   # document SEMANTICS — the real element STAMPED around the light-DOM children
+    values: [none, h1, h2, h3, h4, h5, h6, p, span, blockquote, a]   # document SEMANTICS — the real element STAMPED around the light-DOM children; `a` is the ADR-0114 hyperlink addition
     default: none      # no wrapper — the host itself is the styled node (today's DOM shape, byte-identical)
     reflect: true      # reflects for consistency with variant/size — a JS-set `as` is inspectable/stylable too
+  - name: href
+    type: string
+    default: ''        # "no destination" — the default never resolves to a self-link (the gate's own rule)
+    reflect: true      # the HOST attribute is INERT (SPEC-R9): a custom element is not in the :any-link grammar
+    # The hyperlink destination (ADR-0114, the fleet's first security-sensitive component contract). Every
+    # value passes the component's fail-closed SCHEME GATE (`controls/text/href.ts`) before the stamped `<a>`
+    # ever carries it: allowed schemes are `https:` / `http:` / `mailto:` (resolved against `document.baseURI`,
+    # so relatives are legal); anything else — `javascript:`, `data:`, `blob:`, `file:`, `vbscript:`, a custom
+    # scheme, or an unparseable value — is DENIED, and the stamp gets no `href`/`rel`/`target` at all (an inert
+    # placeholder, never an announced-broken link — see ADR-0114). `href` acts only through `as="a"`; with any
+    # other `as` it is inert (documented, not an error). On allow, the stamp ALSO carries the fixed policy
+    # constants `rel="noopener noreferrer"` + `target="_blank"` (component-set, never props — ADR-0114 fork F3).
   - name: truncate
     type: boolean
     default: false     # keeps today's wrapping — no shipped rendering change
@@ -65,11 +75,18 @@ aria:
   # Semantics now live on the platform (ADR-0078 cl.4) — variant/size carry NONE. When `as` stamps a real
   # h1-h6/p/span/blockquote, that element supplies its own native role and name for free; ElementInternals
   # is never touched for role/level (the ADR-0025 internals-heading path is deleted outright).
-  role: native role of the stamped element when as is set (h1-h6 heading char, p/span/blockquote generic); as=none gives no implicit role
+  role: native role of the stamped element when as is set (h1-h6 heading char, p/span/blockquote generic; a[href] is a link); as=none gives no implicit role
   roleSource: stamped-element  # a REAL light-DOM element supplies the role natively — never internals, never a host role/aria-* attribute
   labelSource: textContent  # the light-DOM text is the accessible name (cl.2 gives this for free, stamped or not)
+  # ADR-0114 (SPEC-R10) — as="a" with an ALLOWED href stamps a real <a href> (link role, native AT
+  # announcement, for free). as="a" with a DENIED or no-destination href stamps <a> WITHOUT href — per
+  # HTML-AAM an anchor without href maps to `generic`, i.e. plain text: NEVER an announced-broken link. The
+  # component never touches role/aria-* to force this mapping — attribute-absence is the whole mechanism.
 
-keyboard: []           # NOT interactive and NOT focusable — no tabindex, no `tabbable` trait, no keyboard contract. user-select stays ENABLED (display text is selectable — the deliberate inverse of ui-button, which disables it)
+keyboard:              # NOT interactive/focusable for every `as` EXCEPT the gated link (ADR-0114)
+  - note: as="a" with an ALLOWED href — the stamped <a> is a native tab stop; Enter activates it like any link (platform, not re-implemented)
+  - note: as="a" with a DENIED or no-destination href — NOT a tab stop (no href attribute — the same non-interactive posture as every other `as`)
+  - note: every other `as` (including as=none) — no tabindex, no `tabbable` trait, no keyboard contract. user-select stays ENABLED throughout (display text is selectable — the deliberate inverse of ui-button, which disables it)
 
 geometry:
   sizeClass: display
@@ -79,36 +96,39 @@ geometry:
   lineHeight: var(--ui-text-line-height)  # from --md-sys-typescale-{role}-{size}-line-height (a :root unitless constant)
   tracking: var(--ui-text-tracking)     # from --md-sys-typescale-{role}-{size}-tracking (a :root em constant); NEW — ADR-0025's ramp had no tracking leg
 
-forcedColors: A `@media (forced-colors: active)` block keeps the text visible (CanvasText) so display text never vanishes in high-contrast.
+forcedColors: A `@media (forced-colors: active)` block keeps the text visible (CanvasText) so display text never vanishes in high-contrast; an allowed link additionally paints the system `LinkText` ink, underline intact (ADR-0114, SPEC-R13 AC2).
 ---
 
 # ui-text
 
 `ui-text` is the **Display**-class text primitive — a light-DOM custom element rendering text on the fleet's
-M3-derived type scale. It is **not** interactive and **not** form-associated: it carries no value, no focus,
-and no keyboard contract; it styles its host and lets the user's light-DOM text flow through (host-as-content,
-ADR-0006). It is the A2UI v1.0 `Text` component's live control (via a factory fan-out, ADR-0078 cl.5).
+M3-derived type scale. It is **not** form-associated, carries no value, and is **not interactive** with one
+named exception: `as="a"` with an allowed `href` stamps a real, focusable hyperlink (see Hyperlink, below).
+Otherwise it styles its host and lets the user's light-DOM text flow through (host-as-content, ADR-0006). It
+is the A2UI v1.0 `Text` component's live control (via a factory fan-out, ADR-0078 cl.5).
 
 ```html
 <ui-text variant="display" size="lg" as="h1">Page title</ui-text>
 <ui-text variant="headline" as="h3">Section</ui-text>
 <ui-text>Body copy is the default — body/md, no wrapper.</ui-text>
 <ui-text variant="label" size="sm">Secondary / meta text</ui-text>
+<ui-text as="a" href="https://example.com">Source: the referenced document</ui-text>
 ```
 
-## Five orthogonal axes
+## Six orthogonal axes
 
-`ui-text` carries **five** independent props (ADR-0078 cl.1, ADR-0106, ADR-0109) — pick any combination; the
-fleet defines all 9 × 3 = 27 `variant`×`size` cells, any `as` is legal with any visual pair, and
-`truncate`/`emphasis` are each orthogonal to all the rest:
+`ui-text` carries **six** independent props (ADR-0078 cl.1, ADR-0106, ADR-0109, ADR-0114) — pick any
+combination; the fleet defines all 9 × 3 = 27 `variant`×`size` cells, any `as` is legal with any visual
+pair, and `href`/`truncate`/`emphasis` are each orthogonal to all the rest:
 
 - **`variant`** — the visual type ROLE: `display` · `headline` · `title` · `body` (default) · `label` (the
   five M3 roles), plus four editorial extras — `kicker` · `overline` · `quote` · `lead`. Selects *which*
   `--md-sys-typescale-*` block text.css repoints to.
 - **`size`** — `sm` · `md` (default) · `lg`, the row *within* the role (M3's Small/Medium/Large). Orthogonal
   to `variant` — `md` is the universal default for every role, not a per-role recommendation.
-- **`as`** — document SEMANTICS: `none` (default, no wrapper) · `h1`…`h6` · `p` · `span` · `blockquote`. The
-  ONLY prop with any accessibility effect — see Stamping, below.
+- **`as`** — document SEMANTICS: `none` (default, no wrapper) · `h1`…`h6` · `p` · `span` · `blockquote` ·
+  `a`. The ONLY prop with any accessibility effect — see Stamping, below.
+- **`href`** (default `''`) — the hyperlink destination, active only when `as="a"`. See Hyperlink, below.
 - **`truncate`** (default `false`) — overflow INTENT: single-line, ellipsis-clipped, CSS-only. See
   Truncation, below.
 - **`emphasis`** (default `false`) — weight INTENT: bold, CSS-only. See Emphasis, below.
@@ -129,6 +149,41 @@ inside the stamp — a parser-streamed element whose children arrive after conne
 self-repair within a microtask; `as="none"` never installs a stamp (byte-identical DOM to a plain
 `<ui-text>`). The stamp is visually transparent — it inherits all typography from the host (`font: inherit`
 + a `margin: 0` reset), so changing `as` changes semantics with **zero** layout delta.
+
+## Hyperlink (`as="a"` + `href`)
+
+`<ui-text as="a" href="https://example.com">Source</ui-text>` stamps a real `<a>` — native link role,
+keyboard operability, focus, copy-paste, and AT announcement, all supplied by the platform for free (the
+same stamp doctrine every other `as` value uses). `href` is inert without `as="a"` — set together, not
+separately (documented, not an error: a `p`/`span`/… stamp never carries link attributes even if `href` is
+set).
+
+**The security gate (ADR-0114 — the fleet's first security-sensitive component contract).** Every `href`
+value — however it arrives (attribute, property, the A2UI factory, or a bound `{path}`) — passes a
+fail-closed scheme allowlist before the stamp ever carries it: the value is resolved as
+`new URL(href, document.baseURI)` (so relative URLs are legal — they resolve against the page) and the
+scheme must be **`https:`**, **`http:`**, or **`mailto:`**. Anything else — `javascript:`, `data:`,
+`blob:`, `file:`, `vbscript:`, a custom scheme, or a value that fails to parse at all — is **denied**: the
+stamped `<a>` receives **no** `href`/`rel`/`target` attribute. This is not an error state — the text stays
+visible, exactly as authored; an anchor without `href` maps to `generic` per HTML-AAM, so assistive tech
+reads it as **plain text**, never as an announced-broken link. The gate never rewrites an allowed value —
+it lands byte-identical. Denied links, empty/whitespace `href` (the default — "no destination", not a
+violation), and content-clobber re-stamps (a bound `text` write replacing all children) are all covered by
+the same one gate; it cannot be bypassed by any write path or content change.
+
+Whenever `href` is allowed, the stamp ALSO carries the fixed policy `rel="noopener noreferrer"` and
+`target="_blank"` — component-set constants, never props (a link inside an agent surface that navigated
+the current tab away would destroy the session; new-tab is the safe default). The catalog scheme gate
+holds the *mechanism* line only (no script-scheme execution, ever) — it does not and cannot judge
+*destinations*: a model can still emit a well-schemed link to a wrong or untrustworthy URL. That residue is
+live-model output quality, not a mechanism gap.
+
+**Usage guidance:** reach for `href` for **sources and references** — citing where a value or claim came
+from — never for bare navigation-as-action; an *action* (submit, navigate, confirm) is a `Button`, not a
+link. And apply the same **sole-signifier** discipline `emphasis` already carries (ADR-0057's spirit,
+extended to navigation): the underline + link-ink treatment (see Typography & geometry) is never optional
+paint — it is the *only* non-color-dependent signal that a run of text is a link, so never suppress it or
+lean on color alone to carry the distinction.
 
 ## Content
 
@@ -201,8 +256,11 @@ law, and no frame — its lever is the type scale, not `--ui-height-*`. It consu
 (`--ui-text-size`/`-weight`/`-line-height`/`-tracking`), which the `[variant][size]` matrix repoints from the
 fleet `--md-sys-typescale-{role}-{size}-*` scale (ADR-0078 cl.2/cl.3) — the role-pure two-block pattern every
 control uses; `ui-text` holds zero scale opinion. `kicker`/`overline` add `text-transform: uppercase`;
-`quote` adds italic + an inline-start rule + an indent. Text is **selectable** (`user-select` is enabled —
-the deliberate inverse of `ui-button`). A `forced-colors` block keeps the text visible (`CanvasText`).
+`quote` adds italic + an inline-start rule + an indent. An allowed link (`--ui-text-link-ink`, defaulting to
+`--md-sys-color-primary`) always pairs an underline with its ink — never a color-only signifier (ADR-0057)
+— and keeps the fleet's shared `:focus-visible` ring. Text is **selectable** (`user-select` is enabled —
+the deliberate inverse of `ui-button`). A `forced-colors` block keeps the text visible (`CanvasText`); the
+link additionally paints in the system `LinkText` ink, underline intact.
 
 ## Accessibility
 
@@ -215,5 +273,11 @@ host is generic styled text, like today.
   attribute (the ADR-0025 internals-heading path is deleted: keeping an internals role beside a real heading
   child would double-announce).
 - The accessible name comes from the light-DOM text, stamped or not.
-- `ui-text` is **not focusable** and has no keyboard contract (it is not interactive).
-- A `forced-colors` block preserves the text colour so display text survives high-contrast modes.
+- `ui-text` is **not focusable** and has no keyboard contract, with one exception: `as="a"` plus an
+  ALLOWED `href` stamps a real, focusable `<a href>` (ADR-0114) — a native link, tab-reachable, Enter/click
+  activatable, platform-announced. A DENIED or no-destination `href` stamps `<a>` with **no** `href`
+  attribute at all: per HTML-AAM that maps to `generic`, i.e. plain, non-focusable text — never an
+  announced-broken link. No `role`/`aria-*`/`tabindex` is ever added by hand to force either mapping;
+  attribute-absence is the whole mechanism.
+- A `forced-colors` block preserves the text colour so display text survives high-contrast modes; the link
+  leg additionally maps to the system `LinkText` ink.

@@ -24,6 +24,20 @@
 // stamped element for free — no second stamp leg, no observer, no effect (contrast `truncate`, whose
 // non-inheriting overflow properties needed one).
 //
+// The hyperlink capability (ADR-0114, SPEC-R7…R13; LLD-C1/C2) — `as` gains `'a'`, a NEW reflected `href`
+// string prop. `#syncLink()` is the SOLE writer of the stamp's `href`/`rel`/`target` (a grep-able
+// invariant, pinned by a test: the ONE call that stamps a live href attribute lives inside `#syncLink`,
+// nowhere else in this file). Every href value passes `safeHref` (`./href.ts`) — the fleet's fail-closed
+// scheme allowlist — before the stamp ever carries it; denied or no-destination strips all three
+// attributes (an inert placeholder, never an announced-broken link). Two call sites reach `#syncLink`,
+// covering all four external write paths
+// (attribute/property/factory/bound, which all converge on the reactive prop signal) PLUS the content-
+// clobber re-stamp path: (1) a dedicated `connected()` effect on `href`/`as`, declared AFTER the restamp
+// effect so its initial run finds the initial stamp; (2) the TAIL of `#restamp()`'s fall-through branch
+// only — the `none`-branch return and the same-tag no-op never call it (see `#restamp` below). No second
+// gate, no cached verdict — the gate is per-value, not per-render; `URL` parsing on a prop write is
+// negligible, and ui-text gains no new observer for this feature.
+//
 // Content model — host-as-content STANDS (ADR-0006 + ADR-0025 cl.2): the user's light-DOM children remain
 // the displayed text and the accessible name; there is still no `text` prop and no `html``` template, so
 // `render()` stays the inherited void. The DEPARTURE (ADR-0078 cl.4): when `as ≠ none`, those children are
@@ -48,6 +62,12 @@
 // Imports inward only (controls → dom): UIElement + prop + the typed-schema helpers from the dom barrel.
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+import { safeHref, LINK_REL, LINK_TARGET } from './href.ts'
+// Re-exported through the control's OWN public exports-map entry (`./controls/text`, the ADR-0080 T4
+// bijection — `href.ts` has no control of its own to mint a second entry for) so `@agent-ui/a2ui`'s static
+// validator (content-family LLD-C13, ADR-0114 cl.3) can reach `SAFE_HREF_SCHEMES` off that SAME subpath,
+// with no package-boundary violation and no second exports-map entry.
+export { SAFE_HREF_SCHEMES, safeHref, LINK_REL, LINK_TARGET } from './href.ts'
 
 const props = {
   // The visual type ROLE (which --md-sys-typescale-* block text.css repoints to) — the five M3 roles +
@@ -66,9 +86,15 @@ const props = {
   // Document SEMANTICS — the real element STAMPED around the light-DOM children (cl.4). `none` = no
   // wrapper: the host itself is the styled node, the 80% display case, byte-identical to today's DOM.
   as: {
-    ...prop.enum(['none', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote'] as const, 'none'),
+    ...prop.enum(['none', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote', 'a'] as const, 'none'),
     reflect: true,
   },
+  // The hyperlink destination (ADR-0114, SPEC-R7) — reflected so a JS-set value is inspectable/stylable
+  // (the variant/size/as precedent). The HOST attribute is INERT by construction (SPEC-R9): a custom
+  // element is not in the `:any-link` grammar, so even a raw, unsanitized value reflected here can never
+  // navigate — only the gated STAMP `<a>` (`#syncLink`, below) ever carries a live `href`. Default `''` is
+  // "no destination", never a self-link (the gate's own no-destination rule, `href.ts`).
+  href: { ...prop.string(''), reflect: true },
   // Overflow INTENT (ADR-0106) — the fourth orthogonal axis: single-line + ellipsis, CSS-only (text.css's
   // `[truncate]` legs do the clipping). Reflects so the `[truncate]` CSS hook applies to JS-set values too
   // (the variant/size/as precedent). Default `false` keeps today's wrapping — no shipped rendering change.
@@ -105,6 +131,15 @@ export class UITextElement extends UIElement {
     // (1) The restamp effect — runs now (the initial `as`) and again on every `as` change (scope-owned,
     // so it dies with the connection — the button.ts ariaDisabled-effect precedent).
     this.effect(() => this.#restamp(this.as))
+    // (1b) The link-sync effect (ADR-0114, SPEC-R8) — declared AFTER the restamp effect so its initial run
+    // finds the initial stamp already in place; wakes on any `href` OR `as` change. This ONE effect covers
+    // all four external write paths (P1 attribute / P2 property / P3 factory / P4 bound) — every write path
+    // converges on the reactive prop signal, which is exactly what an effect subscribes to.
+    this.effect(() => {
+      this.href
+      this.as
+      this.#syncLink()
+    })
     // (2) The title-mirror effect (ADR-0106) — runs now (the initial `truncate`) and again on every
     // `truncate` change: mints/removes the mirror. Content-change updates (the text itself changing while
     // `truncate` stays set) ride the heal observer below, not this effect.
@@ -148,6 +183,44 @@ export class UITextElement extends UIElement {
     if (prev) prev.replaceWith(next)
     else this.appendChild(next)
     this.#stamp = next
+    // The fall-through tail ONLY (ADR-0114, SPEC-R8 AC8) — re-syncs the gated href onto the FRESH stamp.
+    // This is the path that covers the `textContent`-clobber re-stamp (`#heal`'s detached branch nulls the
+    // stamp and calls `#restamp`, which falls through here): the gated href survives every bound-text
+    // write. The other two exits above never call this — `none` unwraps to plain text (nothing left to
+    // gate) and same-tag is a no-op the (1b) href/as effect already covers.
+    this.#syncLink()
+  }
+
+  /**
+   * Applies the gated link state to the CURRENT stamp — the SOLE writer of the stamp's `href`/`rel`/
+   * `target` (ADR-0114, SPEC-R8/R11; a grep-able invariant: the one call in this file that stamps a live
+   * href attribute lives right here, nowhere else). A non-anchor stamp (or no stamp at all) never carries
+   * link attributes — `href` with `as ≠ 'a'` is inert, documented not erroring (SPEC-R7 AC2). Otherwise the
+   * value passes `safeHref` (`./href.ts`): denied or no-destination strips all three attributes (the
+   * stamped `<a>` degrades to a plain `generic` for assistive tech, per HTML-AAM — SPEC-R10); allowed
+   * applies the value BYTE-IDENTICAL (the gate never rewrites) plus the fixed `rel`/`target` policy
+   * constants (SPEC-R11 — never props).
+   */
+  #syncLink(): void {
+    const stamp = this.#stamp
+    if (!stamp) return
+    if (stamp.localName !== 'a') {
+      // a non-anchor stamp never carries link attributes (SPEC-R7 AC2 — href without as="a" is inert)
+      stamp.removeAttribute('href')
+      stamp.removeAttribute('rel')
+      stamp.removeAttribute('target')
+      return
+    }
+    const gated = safeHref(this.href, document.baseURI)
+    if (gated === null) {
+      stamp.removeAttribute('href')
+      stamp.removeAttribute('rel')
+      stamp.removeAttribute('target')
+    } else {
+      stamp.setAttribute('href', gated) // byte-identical — the gate never rewrites
+      stamp.setAttribute('rel', LINK_REL)
+      stamp.setAttribute('target', LINK_TARGET)
+    }
   }
 
   /**

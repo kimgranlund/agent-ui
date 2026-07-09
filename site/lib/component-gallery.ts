@@ -30,10 +30,17 @@ const DESCRIPTOR_SOURCES = import.meta.glob(
   { query: '?raw', import: 'default', eager: true },
 ) as Record<string, string>
 
+// The overlay controller's own surface PART names (modal: dialog; popover/tooltip/menu: panel; select/
+// combo-box: listbox) — the structural discriminator between a true overlay-class `open` control (which
+// paints a `<dialog>`/`[popover]` surface) and a plain open-having control with no such surface (ui-
+// disclosure's native `<details>` fold ALSO declares an `open` attribute, but its parts are
+// details/summary/chevron/summary-text/body — none of these — so it is correctly excluded, Wave M1 ADR-0113).
+const OVERLAY_PART_NAMES = new Set(['dialog', 'panel', 'listbox'])
+
 export interface GalleryMember {
   readonly tag: string // 'ui-button'
   readonly tier: string // descriptor `tier` scalar ('' when absent) — the group chip
-  readonly hasOpen: boolean // descriptor declares an `open` attribute (the overlay-class marker, §6 E3)
+  readonly hasOpen: boolean // descriptor declares an `open` attribute AND an overlay-class surface part (dialog/panel/listbox) — the overlay-class marker (§6 E3)
 }
 
 /**
@@ -51,10 +58,14 @@ export function galleryMembers(): readonly GalleryMember[] {
     if (typeof tag !== 'string' || !tag.startsWith('ui-')) continue
     if (seen.has(tag)) throw new Error(`galleryMembers: duplicate tag "${tag}" across descriptors`)
     seen.add(tag)
+    const hasOverlayPart = (descriptor.sequences.get('parts') ?? []).some((p) => {
+      const name = p.get('name')
+      return typeof name === 'string' && OVERLAY_PART_NAMES.has(name)
+    })
     members.push({
       tag,
       tier: descriptor.scalars.get('tier') ?? '',
-      hasOpen: descriptor.attributes.some((a) => a.name === 'open'),
+      hasOpen: descriptor.attributes.some((a) => a.name === 'open') && hasOverlayPart,
     })
   }
   return members.sort((a, b) => a.tag.localeCompare(b.tag))

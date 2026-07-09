@@ -1,0 +1,139 @@
+/* disclosure.css — ui-disclosure, the single-file component stylesheet (ADR-0003; content-family.lld.md
+ * LLD-C9 · SPEC-R18). Two clearly-SECTIONED blocks, mirroring button.css / select.css / modal.css:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-disclosure)` (specificity 0,0,0) DECLARES the `--ui-disclosure-*` chain
+ *       from the colour roles (`--md-sys-color-neutral-*` — a disclosure carries no accent/family axis)
+ *       and the dimensional ramp. Pattern-class split (geometry.md "accordion" row): the summary row is
+ *       the interactive CONTROL-height row (`--ui-height-md`/`--ui-font-md`, density-INVARIANT frame); the
+ *       body rhythm rides the `--ui-space-*` layout ladder (density-RESPONSIVE). The chevron is an INLINE
+ *       AFFORDANCE (geometry.md §"Affordance vs content-icon") — sized `= font`, never the icon ramp.
+ *   [2] STYLES BLOCK — `@scope (ui-disclosure)` CONSUMES only `--ui-disclosure-*` (+ the two shared fleet
+ *       constants every control reads directly: the focus-ring pair, ADR-0009). The native `::marker`/
+ *       `::-webkit-details-marker` is replaced by the chevron; its ORIENTATION (not colour, not size)
+ *       carries the open/closed state — a non-color, non-motion signifier. NO fold animation and NO
+ *       transition on the chevron rotation (ADR-0113 cl.4 / SPEC-R18 — `::details-content` interpolation
+ *       is too cross-engine-fresh; a grep-able absence, pinned by disclosure-css.test.ts).
+ *
+ * Standalone stylesheet — NOT injected from disclosure.ts (behaviour-only `.ts`, no runtime injection per
+ * plan §2). Linked via the component-styles barrel at the integration wave (LLD-C11) — this folder ships
+ * standalone for the M1-a checkpoint (content-family.lld.md §9).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-disclosure) declares --ui-disclosure-* ════════════════ */
+
+:where(ui-disclosure) {
+  /* Summary row — Pattern-class interactive row (geometry.md: "interactive rows take the control
+     height"). Fixed at the md ramp step (ui-disclosure exposes no [size] axis — a fold header is not a
+     sized entry/action control). Density-INVARIANT (frame family, ∝ height). */
+  --ui-disclosure-height: var(--ui-height-md);
+  --ui-disclosure-font: var(--ui-font-md);
+  --ui-disclosure-ink: var(--md-sys-color-neutral-on-surface);
+
+  /* The chevron — an INLINE AFFORDANCE (geometry.md §"Affordance vs content-icon"): `= font`, never the
+     icon ramp (`--ui-ind`) — the named oversize-caret bug class this law fixes. */
+  --ui-disclosure-glyph: var(--ui-disclosure-font);
+
+  /* Summary row inline layout — the icon↔label gap (rhythm family, ∝ font × density; geometry.md). */
+  --ui-disclosure-gap: var(--ui-gap-md);
+
+  /* Body rhythm — the `--ui-space-*` LAYOUT ladder (density-RESPONSIVE; the Pattern-class split,
+     geometry.md: "the shell uses the space scale"), never the control-height frame. */
+  --ui-disclosure-body-pad-block: var(--ui-space-sm);
+  --ui-disclosure-body-pad-inline: var(--ui-space-md);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-disclosure) consumes ONLY --ui-disclosure-* ════════════════ */
+
+@scope (ui-disclosure) {
+  :scope {
+    display: block;
+    color: var(--ui-disclosure-ink); /* the ambient ink a bare instance paints (ADR-0102 Lane A) — body content may override */
+  }
+
+  /* The summary row — a Pattern-class interactive CONTROL-height row: [chevron | label], flex (not the
+     host-as-grid anatomy — ui-disclosure is a rendered content cell, ADR-0113 cl.4, not host-as-grid).
+     `padding-block: 0` — the geometry law: block-size, never block-padding, is the vertical lever. */
+  :scope [data-part='summary'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-disclosure-gap);
+    box-sizing: border-box;
+    block-size: var(--ui-disclosure-height);
+    padding-block: 0;
+    padding-inline-start: calc(var(--ui-disclosure-height) / 2); /* slotless-edge law, h/2 (geometry.md) */
+    padding-inline-end: calc(var(--ui-disclosure-height) / 2);
+    font-size: var(--ui-disclosure-font);
+    line-height: var(--ui-control-line-height); /* single-line control standard (ADR-0036) */
+    color: var(--ui-disclosure-ink);
+    cursor: pointer;
+    list-style: none; /* hide the native ::marker (Chromium) */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Firefox/older-WebKit render a `::-webkit-details-marker` / native triangle instead of `list-style` —
+     hide it explicitly (both engines, SPEC-R18 AC1). */
+  :scope [data-part='summary']::-webkit-details-marker {
+    display: none;
+  }
+  :scope [data-part='summary']::marker {
+    content: '';
+  }
+
+  /* The chevron — the inline affordance, sized = font (never the icon ramp). Orientation carries the
+     open/closed state (a shape/position signifier, not colour-only — ADR-0057); NO transition on the
+     rotation (SPEC-R18 — cross-engine + reduced-motion honesty; grep-able absence). */
+  :scope [data-part='chevron'] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: var(--ui-disclosure-glyph);
+    block-size: var(--ui-disclosure-glyph);
+    color: currentColor;
+    rotate: 0deg;
+  }
+  :scope [data-part='chevron'] svg {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+  :scope > [data-part='details'][open] [data-part='chevron'] {
+    rotate: 90deg; /* caret-right → visually caret-down; orientation IS the state, no colour/size change */
+  }
+
+  /* The summary label — the fold's one-line text (the `summary` prop, textContent-only). */
+  :scope [data-part='summary-text'] {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+
+  /* The body — rides the `--ui-space` layout ladder (density-responsive; the Pattern-class split). No
+     control-height law applies here (it is a content shell, not an interactive row). */
+  :scope [data-part='body'] {
+    padding-block: var(--ui-disclosure-body-pad-block);
+    padding-inline: var(--ui-disclosure-body-pad-inline);
+  }
+
+  /* Keyboard focus — the ONE shared fleet ring (ADR-0009), read directly (the button.css/select.css
+     exception to "consume only --ui-disclosure-*"): identical across every control, keyboard-only,
+     layout-neutral. The summary is natively focusable — no tabbable trait needed. */
+  :scope [data-part='summary']:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* forced-colors (WHCM) — summary/body text + the chevron all paint in system inks (SPEC-R18 AC3). Every
+     value here already resolves through a role that carries the WHCM mapping at the token layer
+     (tokens.md: neutral inks → CanvasText), so this block is belt-and-suspenders, explicit for the
+     computed-style probe — not load-bearing new colour. The chevron is `currentColor`, so it inherits the
+     summary's CanvasText for free; the focus ring survives via `--md-sys-color-focus-ring → Highlight`. */
+  @media (forced-colors: active) {
+    :scope {
+      color: CanvasText;
+    }
+    :scope [data-part='summary'] {
+      color: CanvasText;
+    }
+  }
+}

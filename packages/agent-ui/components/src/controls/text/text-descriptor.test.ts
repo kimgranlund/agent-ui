@@ -18,10 +18,11 @@ declare const process: { cwd(): string }
 // ADR-0078 / text.md descriptor — three layers per the s8/s10/s11 pattern (button-descriptor precedent):
 //   • s8 (structural) — the YAML frontmatter fence parses and carries the ADR-0004 / plan §10 field set.
 //   • s10 (contract↔props) — `attributes[]` is a faithful bijection with UITextElement.props (variant/size/as,
-//     the ADR-0078 three-axis redesign — supersedes the single-prop ADR-0025 shape) + `truncate` (ADR-0106,
-//     the fourth axis) + `emphasis` (ADR-0109, the fifth axis).
+//     the ADR-0078 three-axis redesign — supersedes the single-prop ADR-0025 shape) + `href` (ADR-0114, the
+//     hyperlink capability) + `truncate` (ADR-0106, the fourth axis) + `emphasis` (ADR-0109, the fifth axis).
 //   • s11 (contract↔source) — customStates/slots cross-checked against text.ts internals.states + text.css
-//     :state()/[slot] selectors (still zero — a Display leaf with no internals usage and no named slots).
+//     :state()/[slot] selectors (still zero — a Display leaf with no internals usage and no named slots;
+//     ADR-0114's `a[href]` selector is an attribute selector, not a named [slot], so this stays zero too).
 
 const TXT = `${process.cwd()}/packages/agent-ui/components/src/controls/text`
 const md = readFileSync(`${TXT}/text.md`, 'utf8') as string
@@ -53,10 +54,10 @@ describe('text.md descriptor — frontmatter parses (s8)', () => {
   })
 })
 
-describe('text.md descriptor — contract↔props trip-wire (s10, ADR-0078 three-axis + ADR-0106 truncate + ADR-0109 emphasis)', () => {
-  it('attributes[] is a faithful bijection with UITextElement.props (variant, size, as, truncate, emphasis — in that order)', () => {
-    // anti-vacuous: the reader actually parsed all five props before the trip-wire is consulted
-    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant', 'size', 'as', 'truncate', 'emphasis'])
+describe('text.md descriptor — contract↔props trip-wire (s10, ADR-0078 three-axis + ADR-0114 href + ADR-0106 truncate + ADR-0109 emphasis)', () => {
+  it('attributes[] is a faithful bijection with UITextElement.props (variant, size, as, href, truncate, emphasis — in that order)', () => {
+    // anti-vacuous: the reader actually parsed all six props before the trip-wire is consulted
+    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant', 'size', 'as', 'href', 'truncate', 'emphasis'])
     expect(compareDescriptorToProps(parsed.attributes, UITextElement.props)).toEqual([])
   })
 
@@ -76,12 +77,19 @@ describe('text.md descriptor — contract↔props trip-wire (s10, ADR-0078 three
     expect(s?.values).toEqual(['sm', 'md', 'lg'])
   })
 
-  it('as is enum, reflect=true, default=none, the 10-tag stamping vocabulary (incl. h6/blockquote)', () => {
+  it('as is enum, reflect=true, default=none, the 11-tag stamping vocabulary (incl. h6/blockquote/a — ADR-0114)', () => {
     const a = parsed.attributes.find((x) => x.name === 'as')
     expect(a?.type).toBe('enum')
     expect(a?.default).toBe('none')
     expect(a?.reflect).toBe(true)
-    expect(a?.values).toEqual(['none', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote'])
+    expect(a?.values).toEqual(['none', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote', 'a'])
+  })
+
+  it('href is string, reflect=true, default=\'\' (ADR-0114 — the HOST reflection is inert, SPEC-R9)', () => {
+    const h = parsed.attributes.find((x) => x.name === 'href')
+    expect(h?.type).toBe('string')
+    expect(h?.default).toBe('')
+    expect(h?.reflect).toBe(true)
   })
 
   it('truncate is boolean, reflect=true, default=false (ADR-0106)', () => {

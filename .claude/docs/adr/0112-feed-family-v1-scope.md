@@ -106,9 +106,10 @@ the v1 scope + contract directions — realized in eight clauses; SPEC/LLD own t
 4. **`ui-attachment` — a FilePart-aligned compact file card; link security BY REFERENCE** *(PRD-G1/G2/G4)*:
    - **Props mirror the wire where the wire speaks:** `name` (optional on the wire — the card falls
      back to a mimeType-derived family label, never an empty title), `mimeType` (drives the glyph),
-     `size` — **deliberately NOT a wire field** (`A2aFilePart` carries none; `size` is
-     embedder-supplied, e.g. computed from decoded bytes — the descriptor says so, so no one "fixes"
-     the wire alignment later), `href` (optional; see below). The name cell takes `truncate` — the
+     `size` [renamed `sizeBytes` — **Amendment 1**, a fleet-wide naming collision caught at build] —
+     **deliberately NOT a wire field** (`A2aFilePart` carries none; it is embedder-supplied, e.g.
+     computed from decoded bytes — the descriptor says so, so no one "fixes" the wire alignment later),
+     `href` (optional; see below). The name cell takes `truncate` — the
      ADR-0106 document-name reference use, now in its home component.
    - **Glyph derivation is a pure module:** mimeType → category (image/audio/video/pdf/text/archive/
      data/default) as a DOM-free map (unit-testable; the ADR-0107 cl.3 pure-module precedent),
@@ -322,3 +323,19 @@ Everything in PRD §3's fence, plus: the ADR-0114 link-security design (owned by
 sibling; only the ordering constraint is recorded here) · the app-shell's decision to compose a default
 toast region into its chrome (that package's own record, by reference) · any SPEC/LLD mechanism
 (descriptor prop tables, exact tokens/floors/durations, region placement props — build-wave records).
+
+## Amendment 1 — `ui-attachment`'s byte-count prop renamed `size` → `sizeBytes` (2026-07-09, build wave M1-a)
+
+Clause 4's ratified prop table named the byte-count prop `size` — reasonable in isolation, but it
+collides with a fleet-wide law this record's authoring did not cross-check: `family-coherence.test.ts`
+reserves any attribute literally named `size` for the widget-tier `[sm,md,lg]` geometry enum every sized
+control shares (button/text-field/checkbox/etc.), and asserts so with a negative control. The M1-a build
+wave's own gate run caught the collision immediately (a pre-existing, correctly-firing fleet test, not a
+new defect). Resolution: renamed to `sizeBytes` (property) / `size-bytes` (HTML attribute, an explicit
+`attribute:` override — the same kebab discipline `mimeType`/`mime-type` already uses on this same
+component), rather than carving an exception into the fleet gate. Nothing was yet consuming the original
+name (pre-integration, unshipped), so the rename cost nothing and removes a real future ambiguity: a
+reader seeing `<ui-attachment size="...">` would reasonably expect the fleet's widget-tier enum, not a
+byte count. Clause 4's substantive intent (an embedder-supplied, non-wire byte count) is unchanged —
+only the name. `attachment.ts`/`attachment.md` and their tests reflect the rename; no other file in this
+record needs updating (no other clause names this prop).

@@ -499,3 +499,186 @@ describe('ui-text forced-colors — CanvasText mapping keeps display text visibl
     el.remove()
   })
 })
+
+// ── The hyperlink capability (ADR-0114) — browser-truth legs. jsdom cannot prove real geometry, tab
+// order, forced-colors mapping, or that a click genuinely fails to navigate — those REAL proofs live here,
+// cross-engine (Chromium + WebKit). The full denial/allow MATRIX is text-href-security.test.ts (jsdom); this
+// file proves the legs jsdom structurally cannot.
+
+describe('ui-text hyperlink — zero geometry delta (SPEC-R7 AC1: as="a" changes semantics, never layout)', () => {
+  it('a stamped <a href> renders the SAME bounding box as the unstamped host, for identical content', () => {
+    const container = document.createElement('div')
+    container.style.width = '300px'
+    document.body.append(container)
+
+    const plain = document.createElement('ui-text')
+    plain.textContent = 'Source: the referenced document'
+    container.append(plain)
+    const plainBox = plain.getBoundingClientRect()
+
+    const linked = document.createElement('ui-text') as UITextElement
+    linked.setAttribute('as', 'a')
+    linked.href = 'https://example.com'
+    linked.textContent = 'Source: the referenced document'
+    container.append(linked)
+    const linkedBox = linked.getBoundingClientRect()
+
+    expect(linkedBox.width).toBeCloseTo(plainBox.width, 0)
+    expect(linkedBox.height).toBeCloseTo(plainBox.height, 0)
+    container.remove()
+  })
+})
+
+describe('ui-text hyperlink — computed link treatment (SPEC-R13 AC1: underline + a distinct ink)', () => {
+  it('an allowed link computes underline + a color different from surrounding prose', async () => {
+    const prose = document.createElement('ui-text')
+    prose.textContent = 'Plain prose'
+    document.body.append(prose)
+    const proseColor = getComputedStyle(prose).color
+
+    const el = document.createElement('ui-text') as UITextElement
+    el.setAttribute('as', 'a')
+    el.href = 'https://example.com'
+    el.textContent = 'Source'
+    document.body.append(el)
+    await el.updateComplete
+    const a = el.querySelector('a')
+    expect(a).not.toBeNull()
+    const linkStyle = getComputedStyle(a as Element)
+    expect(linkStyle.textDecorationLine).toContain('underline')
+    expect(linkStyle.color).not.toBe(proseColor)
+
+    prose.remove()
+    el.remove()
+  })
+
+  it('a DENIED link renders prose — no underline, no distinct link ink (the CSS is attribute-gated)', async () => {
+    const prose = document.createElement('ui-text')
+    prose.textContent = 'Plain prose'
+    document.body.append(prose)
+    const proseColor = getComputedStyle(prose).color
+    const proseDecoration = getComputedStyle(prose).textDecorationLine
+
+    const el = document.createElement('ui-text') as UITextElement
+    el.setAttribute('as', 'a')
+    el.href = 'javascript:alert(1)'
+    el.textContent = 'Source'
+    document.body.append(el)
+    await el.updateComplete
+    const a = el.querySelector('a')
+    expect(a?.hasAttribute('href')).toBe(false) // denied — no href attribute, so the `a[href]` CSS never matches
+    const deniedStyle = getComputedStyle(a as Element)
+    expect(deniedStyle.textDecorationLine).toBe(proseDecoration)
+    expect(deniedStyle.color).toBe(proseColor)
+
+    prose.remove()
+    el.remove()
+  })
+})
+
+describe('ui-text hyperlink — forced-colors (SPEC-R13 AC2: system LinkText ink, underline intact)', () => {
+  it('an allowed link paints LinkText under forced-colors — Chromium emulates (CDP); WebKit asserts baseline', async () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.setAttribute('as', 'a')
+    el.href = 'https://example.com'
+    el.textContent = 'Source'
+    document.body.append(el)
+    await el.updateComplete
+    const a = el.querySelector('a') as HTMLAnchorElement
+
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      expect(getComputedStyle(a).textDecorationLine).toContain('underline')
+      el.remove()
+      return
+    }
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches, 'CDP did not enter forced-colors').toBe(true)
+      expect(getComputedStyle(a).textDecorationLine, 'underline must survive forced-colors').toContain('underline')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+    el.remove()
+  })
+})
+
+describe('ui-text hyperlink — clobber survival (SPEC-R8 AC8, browser-truth)', () => {
+  it('a bound-text textContent clobber re-stamps with the gated href/rel/target intact', async () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.setAttribute('as', 'a')
+    el.href = 'https://example.com'
+    el.textContent = 'Original'
+    document.body.append(el)
+    const before = el.querySelector('a')
+    expect(before?.getAttribute('href')).toBe('https://example.com')
+
+    el.textContent = 'Updated' // destroys ALL children, stamp included — the A2UI bound-text path
+    await tick()
+    await tick()
+    const after = el.querySelector('a')
+    expect(after).not.toBeNull()
+    expect(after).not.toBe(before) // a fresh stamp — never reused
+    expect(after?.getAttribute('href')).toBe('https://example.com')
+    expect(after?.getAttribute('rel')).toBe('noopener noreferrer')
+    expect(after?.getAttribute('target')).toBe('_blank')
+    expect(after?.textContent).toBe('Updated')
+    el.remove()
+  })
+})
+
+describe('ui-text hyperlink — tab order (SPEC-R10 AC2: a denied link is never a tab stop; an allowed one is)', () => {
+  it('an allowed link IS a tab stop between two focusable buttons', async () => {
+    const before = document.createElement('button')
+    before.textContent = 'Before'
+    const el = document.createElement('ui-text') as UITextElement
+    el.setAttribute('as', 'a')
+    el.href = 'https://example.com'
+    el.textContent = 'Source'
+    const after = document.createElement('button')
+    after.textContent = 'After'
+    document.body.append(before, el, after)
+    await el.updateComplete
+
+    before.focus()
+    expect(document.activeElement).toBe(before)
+    const a = el.querySelector('a') as HTMLAnchorElement
+    a.focus() // a real tab traversal is engine-glue-heavy; focusability IS the tab-stop fact (SPEC-R10 AC2)
+    expect(document.activeElement).toBe(a)
+
+    before.remove()
+    el.remove()
+    after.remove()
+  })
+
+  it('a denied link is NEVER a tab stop — focus() is a no-op on it', async () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.setAttribute('as', 'a')
+    el.href = 'javascript:alert(1)'
+    el.textContent = 'Source'
+    document.body.append(el)
+    await el.updateComplete
+    const a = el.querySelector('a') as HTMLAnchorElement
+    expect(a.hasAttribute('href')).toBe(false)
+    a.focus()
+    expect(document.activeElement).not.toBe(a) // an <a> without href is not in the focus-navigation order
+    el.remove()
+  })
+})
+
+describe('ui-text hyperlink — a real click never navigates (SPEC-R9 AC2)', () => {
+  it('clicking the host (as="a" with a denied href) leaves location unchanged and opens nothing', async () => {
+    const el = document.createElement('ui-text') as UITextElement
+    el.setAttribute('as', 'a')
+    el.href = 'javascript:alert(1)'
+    el.textContent = 'Source'
+    document.body.append(el)
+    await el.updateComplete
+    const before = location.href
+    el.click()
+    expect(location.href).toBe(before)
+    el.remove()
+  })
+})

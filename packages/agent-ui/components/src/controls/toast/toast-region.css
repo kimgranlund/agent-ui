@@ -1,0 +1,56 @@
+/* toast-region.css — ui-toast-region, the single-file component stylesheet (ADR-0003; feed-family.
+ * lld.md LLD-C8 · SPEC-R12). Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-toast-region)` declares the `--ui-toast-region-*` chain: `inset`
+ *       (block-end/inline-end fixed inset off `--ui-space-lg`) + `gap` (the inter-toast stacking gap
+ *       off `--ui-space-sm`). No surface/radius/colour tokens AT ALL — the region paints NOTHING of
+ *       its own (LLD-C8; the ui-form-provider "layout, no colour voice" precedent) — each `ui-toast`
+ *       child supplies its own surface.
+ *   [2] STYLES BLOCK — `@scope (ui-toast-region)` consumes ONLY `--ui-toast-region-*`. The host IS
+ *       its own Popover-API top-layer element (`popover="manual"`, set in toast-region.ts) — the
+ *       `:popover-open` state selector overrides the UA's default popover centering with a
+ *       block-end/inline-end anchored FIXED position, then lays its `ui-toast` children out as a
+ *       normal-flow flex column (oldest→newest, top→bottom — newest nearest the block-end inset edge,
+ *       zero JS positioning; logical properties mirror RTL for free). `pointer-events: none` on the
+ *       empty region area means it never intercepts page clicks (SPEC-R12) — re-enabled per-toast so
+ *       each card (and its affordances) stays fully interactive.
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from
+ * toast-region.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ══════════ [1] TOKEN BLOCK — :where(ui-toast-region) declares --ui-toast-region-* ══════════ */
+
+:where(ui-toast-region) {
+  --ui-toast-region-inset: var(--ui-space-lg); /* block-end/inline-end fixed inset off the shell ramp */
+  --ui-toast-region-gap: var(--ui-space-sm); /* the inter-toast stacking gap */
+}
+
+/* ══════════ [2] STYLES BLOCK — @scope (ui-toast-region) consumes ONLY --ui-toast-region-* ══════════ */
+
+@scope (ui-toast-region) {
+  /* The host IS the popover (not a separate part) — override the UA's default popover centering with
+     a block-end/inline-end anchored fixed position once it enters the top layer. */
+  :scope:popover-open {
+    position: fixed;
+    inset: auto; /* clear the UA popover default before setting the two edges below */
+    inset-block-end: var(--ui-toast-region-inset);
+    inset-inline-end: var(--ui-toast-region-inset);
+
+    display: flex;
+    flex-direction: column; /* normal-flow stacking: oldest→newest, top→bottom (SPEC-R12 AC3) */
+    gap: var(--ui-toast-region-gap);
+
+    margin: 0;
+    border: 0;
+    padding: 0;
+    background: transparent; /* the region paints nothing of its own — each ui-toast is its own surface */
+    overflow: visible;
+
+    pointer-events: none; /* the empty region area never intercepts page clicks (SPEC-R12) */
+  }
+
+  :scope:popover-open > ui-toast {
+    pointer-events: auto; /* re-enabled per-toast — each card stays fully interactive */
+  }
+}

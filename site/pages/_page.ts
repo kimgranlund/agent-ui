@@ -143,6 +143,9 @@ export const NAV: readonly NavGroup[] = [
       { href: './column-doc.html', label: 'column' },
       { href: './list-doc.html', label: 'list' },
       { href: './grid-doc.html', label: 'grid' },
+      // ui-toast-region (ADR-0112, tier=layout) folds into this bundle rather than growing its own group —
+      // the site-toc editorial rule (a new layout primitive joins the existing showcase, never a 5th group).
+      { href: './toast-region-doc.html', label: 'toast-region' },
     ],
   },
   {
@@ -227,12 +230,67 @@ export const NAV: readonly NavGroup[] = [
       { href: './form-provider-doc.html', label: 'API' },
     ],
   },
+  // The Wave M1 report family (ADR-0111) — three Display-class descriptor-derived API docs (tier=display ⇒
+  // {doc} only, the ui-text/ui-icon/chart precedent).
+  {
+    label: 'ui-table',
+    links: [{ href: './table-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-stat',
+    links: [{ href: './stat-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-badge',
+    links: [{ href: './badge-doc.html', label: 'API' }],
+  },
+  // The Wave M1 content family (ADR-0113) — ui-code (tier=display ⇒ {doc} only) + ui-disclosure (tier=pattern
+  // ⇒ {doc, demo}, the tooltip/popover precedent).
+  {
+    label: 'ui-code',
+    links: [{ href: './code-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-disclosure',
+    links: [
+      { href: './disclosure-demo.html', label: 'Demo' },
+      { href: './disclosure-doc.html', label: 'API' },
+    ],
+  },
+  // The Wave M1 feed family (ADR-0112) — progress/attachment (display) + avatar (indicator) are {doc} only;
+  // toast (pattern) gets {doc, demo}; toast-region (layout) folds into the Layout primitives bundle below.
+  {
+    label: 'ui-progress',
+    links: [{ href: './progress-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-avatar',
+    links: [{ href: './avatar-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-attachment',
+    links: [{ href: './attachment-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-toast',
+    links: [
+      { href: './toast-demo.html', label: 'Demo' },
+      { href: './toast-doc.html', label: 'API' },
+    ],
+  },
   {
     // The application-frame primitive (@agent-ui/app, ADR-0082/0083/0084). A GUIDE page, not a fleet component
     // in components/src — so it is an ungrouped site-level link (no `label:`, hence no site-toc GROUP), exactly
     // like the A2UI pages below; site-coverage/site-toc derive their fleet from components/src and never expect
     // an `app-shell-{type}.html` set for it.
     links: [{ href: './app-shell.html', label: 'App Shell' }],
+  },
+  {
+    // @agent-ui/router (LLD-C10b, SPEC-R8) — another package above components on the DAG, same posture as
+    // App Shell just above: a GUIDE page for a package, not a fleet component in components/src, so it is an
+    // ungrouped site-level link — site-coverage/site-toc/site-canon (all components/src-scoped) never expect a
+    // `router-{type}.html` per-component set for it.
+    links: [{ href: './router-doc.html', label: 'Router' }],
   },
   {
     links: [

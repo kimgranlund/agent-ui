@@ -27,6 +27,12 @@
  *       `font-weight: var(--ui-text-weight)` declaration + the cl.4 stamp-transparency reset already carry
  *       the [1]-block repoint into any stamped element for free.
  *
+ *   The hyperlink capability (ADR-0114, SPEC-R13; LLD-C3) — the stamp-transparency reset's `:is()` gains
+ *   `a` (so an anchor stamp inherits typography/geometry, zero geometry delta — SPEC-R7 AC1); the link leg
+ *   is declared AFTER it, attribute-gated on `:scope > a[href]` — a DENIED stamp (no `href`) keeps prose
+ *   rendering, underline-free, by construction; the CSS needs no knowledge of the gate's verdict. Underline
+ *   is ALWAYS present, never hue-only (ADR-0057) — `--ui-text-link-ink` is the one new component token.
+ *
  * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
  * from text.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
  */
@@ -220,6 +226,13 @@
   --ui-text-weight: 700;
 }
 
+/* ── The hyperlink capability (ADR-0114, LLD-C3) — the link ink role. Declared after [emphasis] (order
+   is not load-bearing here — this token is consumed only by the `a[href]` selector below, never by the
+   base :scope rule, so it cannot lose a specificity-0 tie against anything above). ── */
+:where(ui-text) {
+  --ui-text-link-ink: var(--md-sys-color-primary);
+}
+
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-text) consumes ONLY --ui-text-* ════════════════ */
 
 @scope (ui-text) {
@@ -250,12 +263,33 @@
   /* The stamp-transparency reset (ADR-0078 cl.4) — the `as` real element inherits ALL typography from the
      host, so stamping/unstamping changes semantics with ZERO geometry delta (same rendered box either way,
      asserted in the browser tests). Covers every tag `as` can stamp. */
-  :scope > :is(h1, h2, h3, h4, h5, h6, p, blockquote, span) {
+  :scope > :is(h1, h2, h3, h4, h5, h6, p, blockquote, span, a) {
     margin: 0;
     font: inherit;
     letter-spacing: inherit;
     color: inherit;
   }
+
+  /* The hyperlink capability (ADR-0114, SPEC-R13; LLD-C3) — declared AFTER the stamp-transparency reset so
+     its `color`/`text-decoration` win the cascade on the shared `a` selector. Attribute-gated on `[href]`:
+     a DENIED stamp (no `href` — `#syncLink` never set one) keeps plain prose rendering; the CSS needs no
+     knowledge of the gate's verdict. Underline is ALWAYS present, never hue-only (ADR-0057). */
+  :scope > a[href] {
+    color: var(--ui-text-link-ink);
+    text-decoration-line: underline;
+    text-underline-offset: 0.15em;
+    text-decoration-thickness: from-font;
+  }
+  :scope > a[href]:hover {
+    text-decoration-thickness: 2px;
+  }
+  /* the fleet's shared focus treatment (ADR-0009) — the SAME ring every control draws, read directly from
+     the fleet tokens rather than repointed through the component chain (the button.css precedent). */
+  :scope > a[href]:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+  /* :visited shares the link ink at v1 — no visited role minted (SPEC-R13, stated not hidden). */
 
   /* ADR-0106 — `[truncate]`, the fourth orthogonal axis: single-line + ellipsis, CSS-only (no
      ResizeObserver, no clipped-state measurement — text.ts's unconditional `title` mirror is the reveal).
@@ -279,6 +313,12 @@
   @media (forced-colors: active) {
     :scope {
       color: CanvasText;
+    }
+    /* the link keeps the platform's own link ink under forced-colors — underline survives above (SPEC-R13
+       AC2); LinkText is the system role every UA maps real anchors to, so this reads correctly even though
+       the stamp is a custom-element child, not a native navigation context. */
+    :scope > a[href] {
+      color: LinkText;
     }
   }
 }

@@ -98,13 +98,13 @@ A glyph's size is decided by **what KIND it is**, not where it sits:
 - **Inline affordance** (caret · dropdown-chevron · disclosure-marker · stepper-arrow · clear `×` ·
   calendar-nav `‹›`) → **`= font`** (`--ui-{cmp}-glyph = font × 1`). Mask glyph or slotted
   `<ui-icon name=caret>` — same size, `½(h − font)` inset.
-- **Content icon** (a field's leading icon · status icon · avatar · search magnifier) → **`= --ui-ind`**
-  (the indicator/icon ramp).
+- **Content icon** (a field's leading icon · status icon · avatar · search magnifier) → **`= --ui-icon-{sm,md,lg}`**
+  (the fixed content-icon register, `dimensions.css` — `--ui-ind` never shipped; ADR-0112 cl.8 Repairs).
 - **Nav icon in a standalone button** (carousel prev/next; pagination chevron by the numbers) → sized to
   match its context — a deliberate per-case exception, not the font rule.
 
-The bug class: an inline affordance sized to `--ui-ind` renders ≈1.2–1.5× the text (oversized). The fix
-is always to size it `= --ui-{cmp}-glyph` (font).
+The bug class: an inline affordance sized to the content-icon register renders ≈1.2–1.5× the text
+(oversized). The fix is always to size it `= --ui-{cmp}-glyph` (font).
 
 ## The size ramp (two bands)
 
@@ -132,12 +132,12 @@ A component's sizing lever is set by its class:
 | **Indicator** (smaller box) | checkbox · radio · switch · slider · tag | `block/inline-size: var(--ui-{cmp}-size)` off the **widget ramp `--ui-compact-{size}`** (Kim's 8-value `12·14·16·18·20·22·24·28`, ADR-0041 — *not* `--ui-ind`, which never shipped); a thumbed widget (switch/range) insets `--ui-widget-inset: 2px` (`thumb = box − 2×2px`, flat, density-invariant) |
 | **Pattern** (container + control-height rows) | tabs · segmented-control · toolbar · accordion · menu · dialog | interactive rows take the control height; the shell uses the space scale |
 | **Container/layout** | spacer · stack · grid | gaps/margins/padding off `--space-*` × density; no control height |
-| **Display** | divider · icon · spinner · progress · alert · badge · tooltip · **text** | **text-bearing** reads the typographic matrix `--md-sys-typescale-{role}-{size}-{size,weight,line-height,tracking}` (`role`×`size` = the orthogonal `variant`×`size` axes — `ui-text`, ADR-0078 cl.2/cl.3; document semantics are the separate `as`-stamp axis, cl.4); non-text display takes the control-band `font-size: var(--ui-font-{size})` where it sizes a glyph label; intrinsic structural sizing otherwise. No control height, no `padding-block` law — the lever is the type scale, not `--ui-height-*`. |
+| **Display** | divider · icon · spinner · progress · alert · tooltip · **text** | **text-bearing** reads the typographic matrix `--md-sys-typescale-{role}-{size}-{size,weight,line-height,tracking}` (`role`×`size` = the orthogonal `variant`×`size` axes — `ui-text`, ADR-0078 cl.2/cl.3; document semantics are the separate `as`-stamp axis, cl.4); non-text display takes the control-band `font-size: var(--ui-font-{size})` where it sizes a glyph label; intrinsic structural sizing otherwise. No control height, no `padding-block` law — the lever is the type scale, not `--ui-height-*`. |
 
 ## The compact realm (a separate size system)
 
 Always-compact widgets (kbd · slider · slider-multi · radio · switch · tag · badge · chip · checkbox) do
-**not** use `h/2`:
+**not** use `h/2` (badge — first shipped consumer; box = compact law, text = the fleet font ramp):
 
 - keep the **compact pad** `= 2px + box·ratio·density` (`h/2` would over-pad a keycap / count pill / thumb).
 - size the box on the dedicated **compact ramp** `--ui-compact-{sm,md,lg}` — a two-band ladder: the `ui-*`

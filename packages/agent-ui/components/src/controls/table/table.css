@@ -1,0 +1,90 @@
+/* table.css — ui-table, the Display-class static data table (LLD-C3, report-family.lld.md §2;
+ * report-family.spec.md SPEC-R2/R3/R5/R14/R15/R16/R17). Two clearly-SECTIONED blocks (ADR-0003):
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-table)` (specificity 0,0,0) DECLARES every `--ui-table-*` component
+ *       token from the fleet `--md-sys-color-*` roles + the `--ui-space-*` rhythm ladder. No `[size]`/
+ *       `[scale]` repoint matrix — `ui-table` is Display-class (SPEC-R17): no control height, no
+ *       `--ui-height-*` lever, the type matrix + the space ladder are the whole lever.
+ *   [2] STYLES BLOCK — `@scope (ui-table)` CONSUMES only `--ui-table-*` (∪ the shared `--md-sys-*`/
+ *       `--ui-space-*` namespaces). Owns the UA-default + page-cascade reset a stamped native `<table>`
+ *       needs (border-collapse, cell padding, caption alignment — SPEC-R2 AC2, the ADR-0078 cl.4
+ *       `font: inherit`-reset precedent scaled up) and the overflow-in-own-container law (SPEC-R5): the
+ *       component's OWN `[data-part='scroll']` container scrolls, never the page.
+ *
+ * RTL (SPEC-R16): logical properties throughout (`text-align: start/end`, `border-block-end`, block/inline
+ * padding pairs); the native `<table>` handles column order under `dir="rtl"` for free; `text-align: end`
+ * flips number-column alignment — the browser leg (table.browser.test.ts) measures it.
+ *
+ * WHCM (SPEC-R15): NO dedicated `forced-colors` block — every row/header separator is a REAL `border`
+ * (system-ink-repainted, never removed under `forced-colors: active`, unlike a background); all content is
+ * real text. The bar-chart/badge fill lesson (a background-drawn mark vanishing under WHCM) does not apply
+ * here — nothing in this file draws a background-only mark.
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
+ * from table.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-table) declares --ui-table-* ════════════════ */
+
+:where(ui-table) {
+  --ui-table-min-inline-size: 16em; /* the whole-shape floor (SPEC-R14/R17 AC1) */
+  --ui-table-cell-pad-inline: var(--ui-space-sm); /* rhythm — rides [density] free (ADR-0103) */
+  --ui-table-cell-pad-block: var(--ui-space-xs);
+  --ui-table-rule-ink: var(--md-sys-color-neutral-outline-variant); /* row-separator hairline */
+  --ui-table-header-rule-ink: var(--md-sys-color-neutral-outline); /* thead underline, stronger */
+  --ui-table-caption-ink: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-table) consumes ONLY --ui-table-* ════════════════ */
+
+@scope (ui-table) {
+  :scope {
+    display: block;
+    min-inline-size: var(--ui-table-min-inline-size); /* the whole-shape floor — a bare instance never collapses */
+  }
+
+  /* the component's OWN overflow container (SPEC-R5) — a wide table scrolls HERE, never the page */
+  :scope [data-part='scroll'] {
+    overflow-x: auto;
+  }
+
+  /* the UA-default + page-cascade reset (SPEC-R2 AC2) — a stamped native <table> owns its OWN geometry */
+  :scope table {
+    border-collapse: collapse;
+    inline-size: 100%; /* a narrow table fills the host — no orphaned gutter (SPEC-R5) */
+    font: inherit;
+    text-align: start;
+    font-size: var(--md-sys-typescale-body-medium-size);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+  }
+
+  :scope caption {
+    text-align: start;
+    color: var(--ui-table-caption-ink);
+    padding-block-end: var(--ui-table-cell-pad-block);
+  }
+
+  :scope th,
+  :scope td {
+    padding: var(--ui-table-cell-pad-block) var(--ui-table-cell-pad-inline);
+    text-align: start;
+    overflow-wrap: anywhere; /* a huge unbroken string wraps within its cell (SPEC-R3 row 14) */
+  }
+
+  :scope th {
+    font-weight: var(--md-sys-typescale-label-large-weight);
+    border-block-end: 1px solid var(--ui-table-header-rule-ink);
+  }
+
+  :scope tbody tr {
+    border-block-end: 1px solid var(--ui-table-rule-ink);
+  }
+
+  /* alignment is COLUMN-driven (SPEC-R3 row 9): every cell in a type:"number" column end-aligns and never
+     wraps — a huge mismatched string here forces the [data-part='scroll'] container instead (SPEC-R5). */
+  :scope [data-type='number'] {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+}

@@ -19,6 +19,19 @@ if (typeof ElementInternals.prototype.setFormValue !== 'function') {
   ;(ElementInternals.prototype as unknown as Record<string, unknown>).setValidity = function (): void {}
 }
 
+// jsdom reality (the overlay.test.ts / toast-region.test.ts precedent): the native Popover API
+// (showPopover/hidePopover, `:popover-open`) is absent in jsdom 29. Every other overlay-consuming fleet
+// member (tooltip/popover/menu/select/combo-box) stays CLOSED on a bare specimen, so the gallery never
+// exercised this gap before — ui-toast-region (ADR-0112) is the first member that opens its own popover
+// unconditionally the instant it has ≥1 child, which its own component-preview.ts sample children (feed
+// family, LLD-C11) now seed for every connected specimen. Same additive, guarded, prototype-level stub as
+// the setFormValue one above — a no-op if a future jsdom ships the real method.
+if (typeof (HTMLElement.prototype as unknown as { showPopover?: () => void }).showPopover !== 'function') {
+  const proto = HTMLElement.prototype as unknown as { showPopover?: () => void; hidePopover?: () => void }
+  proto.showPopover = function (): void {}
+  proto.hidePopover = function (): void {}
+}
+
 // gallery.test.ts — the jsdom gates for <component-gallery> (LLD-C6, component-gallery.lld.md §8 item 3).
 // Companion to gallery.browser.test.ts (the cross-engine whole-shape + theme-axis smoke). Covers: the derived
 // member list ≡ the fleet (+ a negative control), filter = order-preserving subsequence, card identity

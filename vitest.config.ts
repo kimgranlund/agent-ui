@@ -42,6 +42,12 @@ export default defineConfig({
       // real control (e.g. the default catalog's ui-button factory).
       '@agent-ui/components/components': r('./packages/agent-ui/components/src/controls/index.ts'),
       '@agent-ui/components/descriptor': r('./packages/agent-ui/components/src/descriptor/index.ts'),
+      // The catalog's static validator (content-family LLD-C13, ADR-0114 cl.3) is the first consumer of a
+      // single-control `./controls/{name}` exports-map subpath from OUTSIDE the components package (every
+      // prior cross-package import went through the whole `/components` barrel above) — mirrors the
+      // package's `exports['./controls/text']` (SAFE_HREF_SCHEMES, re-exported through text.ts). Same
+      // more-specific-first ordering discipline as the `/components`/`/descriptor` entries above.
+      '@agent-ui/components/controls/text': r('./packages/agent-ui/components/src/controls/text/text.ts'),
       // EXACT (not prefix) matches, `?url`-suffixed: `@agent-ui/app`'s isolated-shell connect-flow
       // (app-shell.ts, LLD-C5/ADR-0082) resolves these two package CSS assets to a real runtime URL via
       // Vite's `?url` suffix, to inject as `<link>` hrefs INSIDE a shadow root. Vite's aliasing is FIRST-

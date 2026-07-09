@@ -78,3 +78,23 @@
 /* Chart family — Wave M1 (ADR-0107, chart-family.lld.md LLD-C8): Display-class, axis-free chart marks. */
 @import './controls/sparkline/sparkline.css';
 @import './controls/bar-chart/bar-chart.css';
+
+/* Report family — Wave M1 (ADR-0111, report-family.lld.md LLD-C10): the native table, the metric tile,
+ * and the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves. */
+@import './controls/table/table.css';
+@import './controls/stat/stat.css';
+@import './controls/badge/badge.css';
+
+/* Content family — Wave M1 (ADR-0113, content-family.lld.md LLD-C11): the zero-machinery code leaf and
+ * the native details/summary disclosure. (The ui-text hyperlink extension lives in text/text.css, above.) */
+@import './controls/code/code.css';
+@import './controls/disclosure/disclosure.css';
+
+/* Feed family — Wave M1 (ADR-0112, feed-family.lld.md LLD-C11): agent-activity primitives — the thin-rail
+ * progress bar, the compact identity mark, the FilePart-aligned file card, and the toast pair (a fixed
+ * notification card + its top-layer stacking host). */
+@import './controls/progress/progress.css';
+@import './controls/avatar/avatar.css';
+@import './controls/attachment/attachment.css';
+@import './controls/toast/toast.css';
+@import './controls/toast/toast-region.css';

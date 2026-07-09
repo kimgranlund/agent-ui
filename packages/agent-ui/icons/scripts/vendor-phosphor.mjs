@@ -21,6 +21,15 @@ const NAME_MAP = {
   check: 'check',
   'arrow-right': 'arrow-right',
   'magnifying-glass': 'magnifying-glass',
+  user: 'user',
+  file: 'file',
+  'file-image': 'file-image',
+  'file-audio': 'file-audio',
+  'file-video': 'file-video',
+  'file-pdf': 'file-pdf',
+  'file-text': 'file-text',
+  'file-zip': 'file-zip',
+  'file-code': 'file-code',
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'

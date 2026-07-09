@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { validateCatalogConformance } from './conformance.ts'
+import { validateCatalogConformance, SAFE_HREF_SCHEMES } from './conformance.ts'
 import { demoCatalog } from '../fixtures.ts'
 import { loadCatalog } from './catalog.ts'
 import { defaultCatalog } from './default/index.ts'
 import type { A2uiComponent } from '../protocol.ts'
+import { SAFE_HREF_SCHEMES as COMPONENTS_SAFE_HREF_SCHEMES } from '@agent-ui/components/controls/text'
 
 const comp = (c: Record<string, unknown>): A2uiComponent => c as A2uiComponent
 
@@ -141,5 +142,20 @@ describe('validateCatalogConformance — enum membership (ADR-0098)', () => {
   it('leaves a boolean (enum-less, non-string) schema unaffected', () => {
     const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', flag: true }), enumCatalog)
     expect(f).toEqual([])
+  })
+})
+
+// ── SAFE_HREF_SCHEMES sync — the two-literal duplication stays honest ────────────────────────────────────
+//
+// conformance.ts keeps a LOCAL copy of this constant rather than importing `@agent-ui/components`'s real
+// one, because this module is reachable from vite.config.ts's own Node-native-loaded plugin graph
+// (dev-proxy-plugin.ts → catalog.ts's loadCatalog → here), where a bare `@agent-ui/components/*` import
+// resolves to raw TypeScript source Node cannot load without a type-stripping flag this repo doesn't set
+// (confirmed: it broke `npm run build`/`npm run dev` with ERR_UNKNOWN_FILE_EXTENSION). This test is the
+// only thing keeping the two literals honest — vitest's transform pipeline CAN resolve the real
+// cross-package import, so drift is caught here even though the two runtime arrays never share a reference.
+describe('conformance.ts\'s SAFE_HREF_SCHEMES stays in sync with the canonical text/href.ts source', () => {
+  it('the local copy is value-identical to @agent-ui/components/controls/text\'s real export', () => {
+    expect([...SAFE_HREF_SCHEMES]).toEqual([...COMPONENTS_SAFE_HREF_SCHEMES])
   })
 })

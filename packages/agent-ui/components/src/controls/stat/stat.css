@@ -1,0 +1,101 @@
+/* stat.css — ui-stat, the Display-class metric tile (LLD-C6, report-family.lld.md §3; SPEC-R8/R9/R10/
+ * R14/R15/R16/R17; ADR-0111). Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-stat)` declares the tile's rhythm/typography as `--ui-stat-*`: interior
+ *       gap + label/caption ink ride the space ladder + a supporting-text role (density-responsive for
+ *       free, ADR-0103); the delta glyph's mark geometry is density-invariant px/em (badge/sparkline
+ *       precedent). Display class (SPEC-R17): no [size]/[scale] control-band lookup, no `--ui-height-*`,
+ *       no `h/2` law — the lever is the type matrix (`--md-sys-typescale-*`) + the space ladder.
+ *   [2] STYLES BLOCK — `@scope (ui-stat)` consumes ONLY `--ui-stat-*`.
+ *
+ * The value register is the tile the fake-`h3` idiom faked: `--md-sys-typescale-headline-small-*` gives
+ * it real heading-scale typography WITHOUT a heading element (ADR-0078's semantics/style split honored —
+ * stat.ts never stamps h1-h6).
+ *
+ * SPEC-R9 AC2 — no valence channel exists to remove: the delta inherits `color: inherit`; no `[data-dir]`
+ * rule in this file touches ink. Direction lives ONLY in the glyph's clip-path orientation + the signed
+ * number + the hidden word (stat.ts). `neutral` isn't a concept here — up/down/flat share one ink.
+ *
+ * Forced colors (SPEC-R15): the delta glyph is `background: currentColor` (a mask shape, not text) — an
+ * explicit `forced-colors` block repoints it to `CanvasText` (the bar-chart/badge fill lesson: a
+ * background-drawn shape is otherwise forced to `Canvas` and vanishes). Every other part is real text and
+ * survives untouched — no dedicated block needed for label/value/caption.
+ *
+ * RTL: no dedicated mirroring rule needed — the tile is a single-column block stack (`display:
+ * inline-grid`, one column), so there is no inline-axis slot order to flip; the delta's glyph→word→number
+ * sequence is DOM order (stat.ts), which logical inline layout already reads correctly in both directions.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-stat) declares --ui-stat-* ════════════════ */
+
+:where(ui-stat) {
+  --ui-stat-min-inline-size: 8em; /* the whole-shape floor (SPEC-R10) */
+  --ui-stat-gap: var(--ui-space-xs); /* interior rhythm — rides [density] free (ADR-0103) */
+  --ui-stat-label-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-stat-caption-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-stat-delta-glyph-size: 0.6em; /* density-invariant mark geometry */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-stat) consumes ONLY --ui-stat-* ════════════════ */
+
+@scope (ui-stat) {
+  :scope {
+    display: inline-grid;
+    gap: var(--ui-stat-gap);
+    min-inline-size: var(--ui-stat-min-inline-size);
+  }
+
+  :scope [data-part='label'] {
+    color: var(--ui-stat-label-ink);
+    font-size: var(--md-sys-typescale-label-medium-size);
+    line-height: var(--md-sys-typescale-label-medium-line-height);
+  }
+
+  :scope [data-part='value'] {
+    /* the tile register the fake-h3 idiom faked — real heading-scale STYLE without heading SEMANTICS
+       (ADR-0078's split honored; row names verified against dimensions.css at build) */
+    font-size: var(--md-sys-typescale-headline-small-size);
+    line-height: var(--md-sys-typescale-headline-small-line-height);
+    font-weight: var(--md-sys-typescale-headline-small-weight);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :scope [data-part='delta'] {
+    font-size: var(--md-sys-typescale-body-medium-size);
+  }
+
+  :scope [data-part='caption'] {
+    color: var(--ui-stat-caption-ink);
+    font-size: var(--md-sys-typescale-body-small-size);
+  }
+
+  :scope [data-part='delta-glyph'] {
+    display: inline-block;
+    background: currentColor;
+    inline-size: var(--ui-stat-delta-glyph-size);
+    block-size: var(--ui-stat-delta-glyph-size);
+  }
+
+  :scope [data-dir='up'] [data-part='delta-glyph'] {
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+  :scope [data-dir='down'] [data-part='delta-glyph'] {
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+
+  :scope [data-part='delta-word'] {
+    /* visually hidden, announced (SPEC-R9) — the direction word carries the meaning as REAL text */
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  @media (forced-colors: active) {
+    :scope [data-part='delta-glyph'] {
+      background: CanvasText; /* SPEC-R15 — the bar-fill/badge lesson: a masked shape needs a system ink */
+    }
+  }
+}

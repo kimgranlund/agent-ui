@@ -46,6 +46,26 @@ import formProviderMd from '../../packages/agent-ui/components/src/controls/form
 // The Wave M1 chart family (ADR-0107, chart-family.lld.md): the two Display-class axis-free charts.
 import sparklineMd from '../../packages/agent-ui/components/src/controls/sparkline/sparkline.md?raw'
 import barChartMd from '../../packages/agent-ui/components/src/controls/bar-chart/bar-chart.md?raw'
+// The Wave M1 report family (ADR-0111, report-family.lld.md): table/stat/badge — all tier=display.
+import tableMd from '../../packages/agent-ui/components/src/controls/table/table.md?raw'
+import statMd from '../../packages/agent-ui/components/src/controls/stat/stat.md?raw'
+import badgeMd from '../../packages/agent-ui/components/src/controls/badge/badge.md?raw'
+// The Wave M1 content family (ADR-0113, content-family.lld.md): the code leaf + the disclosure fold.
+import codeMd from '../../packages/agent-ui/components/src/controls/code/code.md?raw'
+import disclosureMd from '../../packages/agent-ui/components/src/controls/disclosure/disclosure.md?raw'
+// The Wave M1 feed family (ADR-0112, feed-family.lld.md): progress/avatar/attachment/toast/toast-region.
+import progressMd from '../../packages/agent-ui/components/src/controls/progress/progress.md?raw'
+import avatarMd from '../../packages/agent-ui/components/src/controls/avatar/avatar.md?raw'
+import attachmentMd from '../../packages/agent-ui/components/src/controls/attachment/attachment.md?raw'
+import toastMd from '../../packages/agent-ui/components/src/controls/toast/toast.md?raw'
+import toastRegionMd from '../../packages/agent-ui/components/src/controls/toast/toast-region.md?raw'
+// @agent-ui/router (LLD-C10b) — a DIFFERENT PACKAGE, structurally fenced off the components fleet (SPEC-R1
+// AC2: nothing in components/a2ui/shared may import router). Its two elements' `{name}.md` descriptors still
+// carry the same ADR-0004 frontmatter shape, so they still go through the ONE canonical parser here — but they
+// are NOT part of the `ALL_DESCRIPTORS` glob below (that glob is components/src-scoped, the tier/TOC/coverage
+// gates' source of truth) and router-doc.html is an ungrouped site-level page, exactly like app-shell.html.
+import routerOutletMd from '../../packages/agent-ui/router/src/controls/router-outlet/router-outlet.md?raw'
+import routerLinkMd from '../../packages/agent-ui/router/src/controls/router-link/router-link.md?raw'
 
 /** A parsed control descriptor: the structured frontmatter (its attributes-as-API drive the table) + the prose body. */
 export interface ComponentDoc {
@@ -93,6 +113,24 @@ export const loadFormProviderDoc = (): ComponentDoc => parseDoc(formProviderMd)
 // The Wave M1 chart family (ADR-0107 — both tier=display ⇒ {doc} only).
 export const loadSparklineDoc = (): ComponentDoc => parseDoc(sparklineMd)
 export const loadBarChartDoc  = (): ComponentDoc => parseDoc(barChartMd)
+// The Wave M1 report family (ADR-0111 — all three tier=display ⇒ {doc} only).
+export const loadTableDoc = (): ComponentDoc => parseDoc(tableMd)
+export const loadStatDoc  = (): ComponentDoc => parseDoc(statMd)
+export const loadBadgeDoc = (): ComponentDoc => parseDoc(badgeMd)
+// The Wave M1 content family (ADR-0113 — code tier=display ⇒ {doc}; disclosure tier=pattern ⇒ {doc, demo}).
+export const loadCodeDoc       = (): ComponentDoc => parseDoc(codeMd)
+export const loadDisclosureDoc = (): ComponentDoc => parseDoc(disclosureMd)
+// The Wave M1 feed family (ADR-0112 — progress/attachment tier=display, avatar tier=indicator,
+// toast-region tier=layout, toast tier=pattern ⇒ {doc, demo}).
+export const loadProgressDoc     = (): ComponentDoc => parseDoc(progressMd)
+export const loadAvatarDoc       = (): ComponentDoc => parseDoc(avatarMd)
+export const loadAttachmentDoc   = (): ComponentDoc => parseDoc(attachmentMd)
+export const loadToastDoc        = (): ComponentDoc => parseDoc(toastMd)
+export const loadToastRegionDoc  = (): ComponentDoc => parseDoc(toastRegionMd)
+// @agent-ui/router (LLD-C10b) — see the import-site comment above for why these two sit outside the
+// components-scoped ALL_DESCRIPTORS glob below.
+export const loadRouterOutletDoc = (): ComponentDoc => parseDoc(routerOutletMd)
+export const loadRouterLinkDoc   = (): ComponentDoc => parseDoc(routerLinkMd)
 
 // ── tier enumeration (for the family overview + tier showcase — a DERIVED member list) ───────────────────────
 // The whole `{name}.md` descriptor set, globbed at build time (Vite resolves `import.meta.glob` statically). The

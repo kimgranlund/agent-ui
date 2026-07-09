@@ -136,12 +136,20 @@ function deadHrefs(refs: readonly string[], htmlSet: ReadonlySet<string>): strin
 
 // NOTE: through wave M1-b a `PENDING_TOC_GROUPS` stopgap parked `ui-sparkline`/`ui-bar-chart` here (their
 // descriptors shipped in M1-b, LLD-C8, before their site pages). Wave M1-c (LLD-C9) added both nav/landing TOC
-// rows alongside their `*-doc.html` pages, so the stopgap was drained entirely — EXPECTED is now the raw
-// fleet-derived set again, and shipping a control without wiring both TOCs fails the build with no exemption.
+// rows alongside their `*-doc.html` pages, so the stopgap was drained entirely — EXPECTED was the raw
+// fleet-derived set again.
+//
+// The Wave M1 report family (ADR-0111, report-family.lld.md LLD-C11) + content family (ADR-0113,
+// content-family.lld.md LLD-C12) + feed family (ADR-0112, feed-family.lld.md LLD-C12) all landed their TOC
+// rows (both NAV in _page.ts and CARD_GROUPS in main.ts) alongside their site pages — the stopgap DRAINED
+// entirely, the same way the M1-b chart-family stopgap drained at M1-c. `ui-toast-region` never needed an
+// entry here — its tier is `layout`, which `expectedGroupLabels` bundles into the single, already-shipped
+// 'Layout primitives' group (the editorial rule above), so it never grows a group of its own.
+const PENDING_TOC_GROUPS = new Set<string>([])
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
-const EXPECTED = expectedGroupLabels(COMPONENTS)
+const EXPECTED = new Set([...expectedGroupLabels(COMPONENTS)].filter((l) => !PENDING_TOC_GROUPS.has(l)))
 const NAV_BLOCK = constBlock(read(`${SITE}/pages/_page.ts`), 'NAV')
 const CARD_BLOCK = constBlock(read(`${SITE}/main.ts`), 'CARD_GROUPS')
 const NAV_LABELS = groupLabels(NAV_BLOCK, 'links')

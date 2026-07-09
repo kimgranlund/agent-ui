@@ -1,0 +1,72 @@
+/* code.css — ui-code, the Display-class zero-machinery verbatim code leaf (LLD-C6,
+ * content-family.lld.md §3; content-family.spec.md SPEC-R2/R19/R20; ADR-0113 cl.2). Two clearly-SECTIONED
+ * blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-code)` (specificity 0,0,0) DECLARES the seven `--ui-code-*` component
+ *       tokens: `--ui-code-font` (the minted `--ui-mono` constant), `--ui-code-size`/`-line-height` (the
+ *       `--md-sys-typescale-body-medium-*` row — ADR-0113 cl.2, body-class metrics), `--ui-code-ink`
+ *       (the AA-gated on-surface role), `--ui-code-surface` (the cross-family `--ui-container-bg` seam —
+ *       ADR-0015 cl.2, the SAME seam ui-card's own default rides, card.css:59 — NOT a raw
+ *       `-surface-container` role, which does not exist in tokens.css), `--ui-code-radius` (the fleet
+ *       `--ui-radius-base` referent), and `--ui-code-pad-inline`/`-pad-block` (density-INVARIANT frame
+ *       quantities — ADR-0113 cl.2, not the `--ui-space-*` rhythm ladder).
+ *   [2] STYLES BLOCK — `@scope (ui-code)` CONSUMES only `--ui-code-*`. The host itself IS the scroll box
+ *       (host-as-content — no inner wrapper): `white-space: pre` preserves verbatim text,
+ *       `overflow-x: auto` OWNS the component's own horizontal overflow (ADR-0102 Lane A — the component,
+ *       never the page, absorbs a wide unbroken line), `max-inline-size: 100%` keeps the host from
+ *       blowing out a flex/feed container. No `[size]`/`[scale]` rows (Display class, SPEC-R20) and no
+ *       `[density]` legs (every quantity above is frame-class, density-invariant — ADR-0113 cl.2).
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
+ * from code.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-code) declares --ui-code-* ════════════════ */
+
+:where(ui-code) {
+  --ui-code-font: var(--ui-mono); /* the minted mono constant — "for code blocks" */
+  --ui-code-size: var(--md-sys-typescale-body-medium-size); /* body-class metrics (ADR-0113 cl.2) */
+  --ui-code-line-height: var(--md-sys-typescale-body-medium-line-height);
+  --ui-code-ink: var(--md-sys-color-neutral-on-surface);
+  /* the cross-family surface seam (ADR-0015 cl.2) — NOT a raw `-surface-container` role (does not exist
+     in tokens.css). component-reviewer finding (2026-07-09): `--ui-container-bg` is a SEAM, never
+     self-seeded by the seam's own declaration — ui-card SEEDS its own default
+     (`--ui-container-bg: var(--md-sys-color-neutral-surface)`, card.css:59) and a bare `ui-code` with no
+     seeding ancestor was computing `transparent`, violating SPEC-R2's "component-owned surface" +
+     ADR-0102's CSS-less-consumer law. Fallback form: consume an ancestor's seeded value if present
+     (e.g. nested inside a `ui-card`, matching its plane), else seed the SAME default ui-card uses, so a
+     bare `ui-code` never renders transparent. */
+  --ui-code-surface: var(--ui-container-bg, var(--md-sys-color-neutral-surface));
+  --ui-code-radius: var(--ui-radius-base); /* the fleet referent (entry/container class) */
+  --ui-code-pad-inline: 12px; /* density-INVARIANT frame quantities (ADR-0113 cl.2 — not rhythm) */
+  --ui-code-pad-block: 8px;
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-code) consumes ONLY --ui-code-* ════════════════ */
+
+@scope (ui-code) {
+  :scope {
+    display: block;
+    font-family: var(--ui-code-font);
+    font-size: var(--ui-code-size);
+    line-height: var(--ui-code-line-height);
+    color: var(--ui-code-ink);
+    background: var(--ui-code-surface);
+    border-radius: var(--ui-code-radius);
+    padding: var(--ui-code-pad-block) var(--ui-code-pad-inline);
+    white-space: pre; /* verbatim — newlines/indentation live in the text nodes (SPEC-R2) */
+    overflow-x: auto; /* the component OWNS overflow (ADR-0102 Lane A) */
+    max-inline-size: 100%; /* never blows out a flex/feed container; the scroll box absorbs excess */
+    user-select: text;
+    tab-size: 4;
+  }
+
+  /* forced-colors — the surface keeps shape via the border when fills are forced away (SPEC-R19) */
+  @media (forced-colors: active) {
+    :scope {
+      color: CanvasText;
+      background: Canvas;
+      border: 1px solid CanvasText;
+    }
+  }
+}

@@ -125,7 +125,14 @@ const LAYOUT_SHOWCASE = ['layout-overview.html', 'layout-permutations.html'] as 
 // (LLD-C9) shipped `sparkline-doc.html` / `bar-chart-doc.html`, so BOTH entries were drained — the whole fleet
 // is documented again, and a missing required page on ANY shipped component (chart family included) now fails
 // the build rather than sitting silently parked here.
-const KNOWN_UNDOCUMENTED = new Set<string>()
+//
+// The Wave M1 report family (ADR-0111, report-family.lld.md LLD-C11) + content family (ADR-0113,
+// content-family.lld.md LLD-C12) + feed family (ADR-0112, feed-family.lld.md LLD-C12) all landed their
+// required site pages (table-doc/stat-doc/badge-doc, code-doc/disclosure-doc+demo,
+// progress-doc/avatar-doc/attachment-doc/toast-region-doc/toast-doc+demo) — the stopgap DRAINED entirely, the
+// same way the M1-b chart-family stopgap drained at M1-c. Empty again = the whole fleet is documented; a
+// missing required page on ANY shipped component now fails the build.
+const KNOWN_UNDOCUMENTED = new Set<string>([])
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
@@ -173,14 +180,17 @@ describe('site coverage — every shipped component has its required per-tier pa
   it('sourced the controls, the display leaf, the Wave 1 indicators, the Wave 2 Range controls, and the G9 containers/patterns/layout', () => {
     expect(COMPONENTS.filter((c) => c.tier === 'control').map((c) => c.name).sort()).toEqual(['button', 'text-field'])
     // Display tier: ui-text (ADR-0025) + ui-icon (ADR-0065/0066, the icon-adapter's declarative consumer) +
-    // the Wave M1 chart family (ADR-0107): ui-sparkline + ui-bar-chart.
+    // the Wave M1 chart family (ADR-0107): ui-sparkline + ui-bar-chart + the Wave M1 report family (ADR-0111):
+    // ui-table + ui-stat + ui-badge + the Wave M1 content family (ADR-0113): ui-code + the Wave M1 feed
+    // family (ADR-0112): ui-progress (a rail, not a widget box) + ui-attachment (a compact file card).
     expect(COMPONENTS.filter((c) => c.tier === 'display').map((c) => c.name).sort()).toEqual(
-      ['bar-chart', 'icon', 'sparkline', 'text'],
+      ['attachment', 'badge', 'bar-chart', 'code', 'icon', 'progress', 'sparkline', 'stat', 'table', 'text'],
     )
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
-    // the SAME real ancestor, UIIndicatorElement, as ui-radio): tier=indicator/container (not control/display)
+    // the SAME real ancestor, UIIndicatorElement, as ui-radio) + the Wave M1 feed family (ADR-0112): ui-avatar
+    // (fork F3 — the same widget-box class as checkbox/switch/tag): tier=indicator/container (not control/display)
     expect(COMPONENTS.filter((c) => c.tier === 'indicator').map((c) => c.name).sort()).toEqual(
-      ['checkbox', 'radio', 'segment', 'slider', 'switch'],
+      ['avatar', 'checkbox', 'radio', 'segment', 'slider', 'switch'],
     )
     // Wave 2 Range family (slider, slider-multi — ADR-0042): tier=range
     expect(COMPONENTS.filter((c) => c.tier === 'range').map((c) => c.name).sort()).toEqual(['slider-multi'])
@@ -189,15 +199,19 @@ describe('site coverage — every shipped component has its required per-tier pa
     expect(COMPONENTS.filter((c) => c.tier === 'container').map((c) => c.name).sort()).toEqual(
       ['card', 'field', 'form-provider', 'radio-group'],
     )
+    // Layout tier + the Wave M1 feed family's ui-toast-region (ADR-0112, LLD-C8 — a pure inset/gap host,
+    // no surface paint of its own).
     expect(COMPONENTS.filter((c) => c.tier === 'layout').map((c) => c.name).sort()).toEqual(
-      ['column', 'grid', 'list', 'row'],
+      ['column', 'grid', 'list', 'row', 'toast-region'],
     )
     // Pattern tier = the G9 patterns (modal, tabs) + the Wave 4 Overlay family (popover, tooltip, menu, select,
     // combo-box — all tier=pattern on the overlay controller, ADR-0043) + the Wave 5B date picker (calendar,
-    // ADR-0048) + ui-segmented-control (ADR-0095 — geometry.md's own named Pattern example). Each requires
-    // its {doc, demo} pages.
+    // ADR-0048) + ui-segmented-control (ADR-0095 — geometry.md's own named Pattern example) + the Wave M1
+    // content family (ADR-0113): ui-disclosure (native details/summary fold) + the Wave M1 feed family
+    // (ADR-0112): ui-toast (a fixed-width notification card — Container/surface geometry, not a control
+    // height). Each requires its {doc, demo} pages.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
-      ['calendar', 'combo-box', 'menu', 'modal', 'popover', 'segmented-control', 'select', 'tabs', 'tooltip'],
+      ['calendar', 'combo-box', 'disclosure', 'menu', 'modal', 'popover', 'segmented-control', 'select', 'tabs', 'toast', 'tooltip'],
     )
   })
 })
@@ -220,8 +234,8 @@ describe('site coverage — every descriptor is documented XOR a known, delibera
   for (const c of COMPONENTS) {
     it(`${c.tag} — documented(${isDocumented(c)}) === not-in-known-gap`, () => {
       // documented IFF not listed: a documented component must NOT be in KNOWN_UNDOCUMENTED, an undocumented one
-      // MUST be. The gap is empty now (the chart family's M1-c pages landed) — EVERY shipped component must be
-      // fully documented.
+      // MUST be. The gap is non-empty again (the report/content family's M1-a/b shared-file slice shipped
+      // descriptors before their site pages — report-family LLD-C11 / content-family LLD-C12 drains it).
       expect(isDocumented(c)).toBe(!KNOWN_UNDOCUMENTED.has(c.name))
     })
   }
@@ -229,7 +243,9 @@ describe('site coverage — every descriptor is documented XOR a known, delibera
   it('KNOWN_UNDOCUMENTED lists exactly the real undocumented descriptors (no stale name lingers, no surprise gap)', () => {
     const undocumentedNames = COMPONENTS.filter((c) => !isDocumented(c)).map((c) => c.name).sort()
     expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(undocumentedNames)
-    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual([]) // the whole fleet is documented — no deliberate gap remains
+    // empty again — the report-family LLD-C11 / content-family LLD-C12 / feed-family LLD-C12 site pages all
+    // landed, draining the gap the same way the M1-b chart-family stopgap drained at M1-c.
+    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual([])
   })
 })
 

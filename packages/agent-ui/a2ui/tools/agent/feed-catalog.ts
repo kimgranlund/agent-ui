@@ -23,8 +23,11 @@
 // browser-side page, with no catalog-loading machinery riding along).
 
 /**
- * The 23 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
- * affordance, and light structure — nothing that overlays, paginates, or dashboards.
+ * The 26 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
+ * affordance, and light structure — nothing that overlays, paginates, or dashboards. Widened by the
+ * report/content/feed catalog wave (ADR-0111/0113/0112): `Badge` (light ask furniture, the `Text`/`Icon`
+ * class), `Code` (verbatim inline content, no overlay/dashboard shape), `Avatar` (a non-interactive
+ * identity mark, the `Icon` parity argument).
  */
 export const FEED_SURFACE_TYPES = [
   'Text',
@@ -50,6 +53,9 @@ export const FEED_SURFACE_TYPES = [
   'Calendar',
   'Slider',
   'SliderMulti',
+  'Badge',
+  'Code',
+  'Avatar',
 ] as const
 
 /** The closed union of every IN type — the runtime-checkable companion to the `as const` array above. */
@@ -63,11 +69,12 @@ export interface FeedExclusion {
 }
 
 /**
- * The 13 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
- * the ADR-0097 Amendment / ADR-0107 Amendment 2). Composite-closure note: a composite's
- * children are excluded ALONGSIDE their parent for the SAME reason (Tab/TabPanel with Tabs; MenuItem with
- * Menu) — `feed-catalog.test.ts` asserts this closure holds, both here and for the IN composites
- * (RadioGroup/Radio, SegmentedControl/Segment, Card/its three sub-types, Select+ComboBox/Option).
+ * The 18 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
+ * the ADR-0097 Amendment / ADR-0107 Amendment 2 — + the report/content/feed catalog wave's five:
+ * `Stat`/`Table` [ADR-0111], `Disclosure` [ADR-0113], `Progress`/`Attachment` [ADR-0112]). Composite-closure
+ * note: a composite's children are excluded ALONGSIDE their parent for the SAME reason (Tab/TabPanel with
+ * Tabs; MenuItem with Menu) — `feed-catalog.test.ts` asserts this closure holds, both here and for the IN
+ * composites (RadioGroup/Radio, SegmentedControl/Segment, Card/its three sub-types, Select+ComboBox/Option).
  */
 export const FEED_EXCLUDED: readonly FeedExclusion[] = [
   {
@@ -109,6 +116,31 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
     type: 'Switch',
     reason:
       'an immediate-effect idiom; asks are commit-gated, so Checkbox is the honest boolean — a Switch implies an effect that has not happened yet.',
+  },
+  {
+    type: 'Stat',
+    reason:
+      'report content with no ask affordance (ADR-0111 LLD-C13) — the atomic unit of the dashboard idiom the partition exists to keep out of ask bubbles; an ask that needs a number in prose has Text.',
+  },
+  {
+    type: 'Table',
+    reason:
+      'dashboard/canvas-scale content (ADR-0111 LLD-C13) — the recorded List/Grid exclusion reasoning applies a fortiori to a data table.',
+  },
+  {
+    type: 'Disclosure',
+    reason:
+      'folding hides ask content (ADR-0113 LLD-C13) — the Tabs "hides half the ask" reasoning verbatim: an ask must be fully visible and operable inline.',
+  },
+  {
+    type: 'Progress',
+    reason:
+      'a live indicator inside a frozen-able ask is a lying record (ADR-0112 LLD-C13) — an ask bubble may be answered long after a progress value has moved on.',
+  },
+  {
+    type: 'Attachment',
+    reason:
+      'artifact content, not an ask affordance (ADR-0112 LLD-C13) — revisit trigger: a real file-pick ask.',
   },
 ] as const
 

@@ -196,7 +196,7 @@ accessible datum). Host takes **no role** — internals untouched by default.
     border: 1px solid var(--ui-attachment-border); border-radius: var(--ui-radius-base);  /* F4: entry/container radius kin */
     background: var(--ui-attachment-surface);
     min-inline-size: var(--ui-attachment-min-inline-size); max-inline-size: 100%; }
-  :scope [data-part='glyph'] { font-size: var(--ui-icon); }           /* content-icon register (geometry.md taxonomy) */
+  :scope [data-part='glyph'] { font-size: var(--ui-icon-md); }        /* content-icon register (geometry.md taxonomy) — bare --ui-icon was never a real token; the fleet only defines --ui-icon-{sm,md,lg} (dimensions.css) */
   :scope [data-part='body'] { display: grid; min-inline-size: 0; }    /* min 0 ⇒ the name cell can shrink to truncate */
   :scope [data-part='name'] { white-space: nowrap; overflow: hidden; text-overflow: ellipsis;  /* ADR-0106 mechanism, cited */
     font-size: var(--md-sys-typescale-body-medium-size); line-height: var(--md-sys-typescale-body-medium-line-height); }
@@ -282,6 +282,8 @@ const props = {
 }
 @scope (ui-toast) {
   :scope { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--ui-space-sm);
+    box-sizing: border-box; /* required so the fixed inline-size below is the RENDERED width, not content-box
+      plus padding/border on top (build-verify: 20em measured 346px without this, 320px with it) */
     inline-size: var(--ui-toast-inline-size); max-inline-size: 100%;
     padding-inline: var(--ui-space-md); padding-block: var(--ui-space-sm);
     background: var(--ui-toast-surface); color: var(--md-sys-color-neutral-on-surface);
@@ -367,8 +369,9 @@ semantics; avatar decorative-default + `label` escape hatch **including the "lab
 name announces nothing" author-error note** — SPEC-R6; toast `role: status/alert`, `roleSource: internals`),
 `forcedColors:` lines, geometry blocks (avatar names the compact-ramp lookup; progress/attachment declare NO
 `size`), and the toast pair's **app-surface consumption story** (region-hosted, `show()`, not catalogued —
-the ADR-0112 cl.6 pointer). The attachment descriptor states `size` is **embedder-supplied, not a wire
-field** (SPEC-R8). Each folder ships its `{name}-descriptor.test.ts` trip-wire.
+the ADR-0112 cl.6 pointer). The attachment descriptor states `sizeBytes` (renamed from `size`, ADR-0112
+Amendment 1) is **embedder-supplied, not a wire field** (SPEC-R8). Each folder ships its
+`{name}-descriptor.test.ts` trip-wire.
 
 **LLD-C11 — the serial integration slice** (ONE writer, after all four folders land):
 - `controls/index.ts` — export all five elements (family-coherence C1).

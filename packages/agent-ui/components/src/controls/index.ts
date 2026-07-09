@@ -21,6 +21,12 @@
 //   • Chart family — Wave M1 (ADR-0107, chart-family.lld.md): ui-sparkline (series-shape mark) and
 //     ui-bar-chart (magnitude-comparison bar list). Both Display-class, axis-free, non-interactive,
 //     non-form-associated leaves — extend UIElement directly, tier=display, no [size]/[scale] geometry row.
+//   • Report family — Wave M1 (ADR-0111, report-family.lld.md): ui-table (native <table>, scroll-preserving
+//     re-render), ui-stat (metric tile, direction-as-text delta), ui-badge (compact-realm intent badge). All
+//     Display-class, non-interactive, non-form-associated leaves — extend UIElement directly.
+//   • Content family — Wave M1 (ADR-0113, content-family.lld.md): ui-code (zero-machinery verbatim code
+//     leaf, host-as-content) and ui-disclosure (native <details>/<summary> fold, Pattern-class). The
+//     hyperlink capability (`as='a'`/`href`) is an in-place extension of ui-text (exported above).
 // A compound's main `.ts` imports its sub-element modules so `export * from './{family}/{family}.ts'` here
 // registers the WHOLE family — importing the barrel self-defines all ~20+ tags.
 export * from './button/button.ts'
@@ -78,3 +84,22 @@ export * from './form-provider/form-provider.ts' // also surfaces FormSubmitDeta
 // form-associated or interactive (extends UIElement directly, tier=display, no [size]/[scale] geometry row).
 export * from './sparkline/sparkline.ts'   // series-shape mark (LLD-C1/C2/C3)
 export * from './bar-chart/bar-chart.ts'   // magnitude-comparison bar list (LLD-C4/C5/C6)
+
+// Report family — Wave M1 (ADR-0111, report-family.lld.md): the real native <table>, the metric tile, and
+// the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves.
+export * from './table/table.ts'   // scroll-preserving static data table (LLD-C1/C2/C3)
+export * from './stat/stat.ts'     // metric tile, direction-as-text delta (LLD-C4/C5/C6)
+export * from './badge/badge.ts'   // compact-realm intent badge (LLD-C7/C8)
+
+// Content family — Wave M1 (ADR-0113, content-family.lld.md): the zero-machinery code leaf and the native
+// <details>/<summary> disclosure. (The ui-text hyperlink extension lives in ./text/text.ts, exported above.)
+export * from './code/code.ts'             // verbatim code leaf, host-as-content (LLD-C5/C6/C7)
+export * from './disclosure/disclosure.ts' // native details/summary fold (LLD-C8/C9/C10)
+
+// Feed family — Wave M1 (ADR-0112, feed-family.lld.md): agent-activity primitives. All Display/Indicator-
+// class, non-form-associated leaves except the toast pair (pattern/layout, no catalog row — ADR-0112 cl.6).
+export * from './progress/progress.ts'     // thin-rail progress bar (LLD-C1)
+export * from './avatar/avatar.ts'         // compact identity mark (LLD-C2/C3)
+export * from './attachment/attachment.ts' // FilePart-aligned file card, metadata surface only (LLD-C4/C5)
+export * from './toast/toast.ts'           // transient notification card (LLD-C7)
+export * from './toast/toast-region.ts'    // toast's top-layer host, same-folder sibling (LLD-C8)

@@ -25,18 +25,20 @@ customElements.define('ui-text-probe', ProbeText)
 const tick = (): Promise<void> => new Promise((resolve) => queueMicrotask(resolve))
 
 describe('UITextElement — define/upgrade + props (text-upgrades)', () => {
-  it('text-upgrades: <ui-text> upgrades to UITextElement; variant/size/as default to body/md/none', () => {
+  it('text-upgrades: <ui-text> upgrades to UITextElement; variant/size/as default to body/md/none, href to \'\'', () => {
     const el = document.createElement('ui-text') as UITextElement
     document.body.append(el)
     expect(el).toBeInstanceOf(UITextElement)
     expect(el.variant).toBe('body')
     expect(el.size).toBe('md')
     expect(el.as).toBe('none')
+    expect(el.href).toBe('')
     // Defaults are NOT pre-reflected (same as ui-button's variant default) — no repoint block is needed
     // for the base row, and `as='none'` never installs a stamp.
     expect(el.getAttribute('variant')).toBeNull()
     expect(el.getAttribute('size')).toBeNull()
     expect(el.getAttribute('as')).toBeNull()
+    expect(el.getAttribute('href')).toBeNull()
     el.remove()
   })
 
@@ -68,32 +70,41 @@ describe('UITextElement — props are typed literal unions, not bare strings (te
 
       el.as = 'h4'
       el.as = 'blockquote'
+      el.as = 'a' // ADR-0114 — the hyperlink addition to the stampable-tag union
       // @ts-expect-error — 'div' is not a stampable tag
       el.as = 'div'
       // @ts-expect-error — a bare string is wider than the union
       el.as = 'x' as string
+
+      el.href = 'https://example.com'
+      el.href = '' // the no-destination default
+      // @ts-expect-error — href is a string prop, not a number
+      el.href = 42
     }
     expect(typeof fn).toBe('function') // never invoked; the type errors above are the assertion
   })
 
-  it('a JS-set variant/size/as reflects to its attribute (the CSS [variant][size] hook)', () => {
+  it('a JS-set variant/size/as/href reflects to its attribute (the CSS [variant][size] hook + SPEC-R7 AC3)', () => {
     const el = new UITextElement()
     document.body.append(el)
     el.variant = 'headline'
     el.size = 'lg'
     el.as = 'h2'
+    el.href = 'https://example.com'
     expect(el.getAttribute('variant')).toBe('headline')
     expect(el.getAttribute('size')).toBe('lg')
     expect(el.getAttribute('as')).toBe('h2')
+    expect(el.getAttribute('href')).toBe('https://example.com')
     el.remove()
   })
 })
 
 describe('UITextElement — ElementInternals is NEVER touched (text-internals-never-set, ADR-0078 cl.4)', () => {
-  it('role/ariaLevel stay null for every heading `as`, and no host role/aria-* attribute appears', async () => {
-    for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote'] as const) {
+  it('role/ariaLevel stay null for every heading `as` (incl. the ADR-0114 `a`), and no host role/aria-* attribute appears', async () => {
+    for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote', 'a'] as const) {
       const el = new ProbeText()
       el.as = tag
+      if (tag === 'a') el.href = 'https://example.com' // an allowed link — still no internals usage
       document.body.append(el)
       await el.updateComplete
       expect(el.probeInternals.role, `${tag}: internals.role`).toBeNull()
@@ -290,15 +301,73 @@ describe('UITextElement — emphasis prop (ADR-0109)', () => {
 })
 
 describe('UITextElement — emphasis is schema-only, zero new runtime machinery (ADR-0109 Acceptance leg)', () => {
-  it('text.ts installs no new effect/observer for emphasis — the SAME two effects + one observer as before', () => {
+  it('text.ts installs no new effect/observer for emphasis — the SAME three effects + one observer ADR-0114 already established', () => {
     const source = readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/text/text.ts`, 'utf8') as string
-    // Exactly two `this.effect(` installs (the restamp effect + the title-mirror effect) — emphasis adds none.
-    expect((source.match(/this\.effect\(/g) ?? []).length).toBe(2)
+    // Exactly three `this.effect(` installs (the restamp effect + the ADR-0114 link-sync effect + the
+    // title-mirror effect) — emphasis adds none.
+    expect((source.match(/this\.effect\(/g) ?? []).length).toBe(3)
     // Exactly one MutationObserver installation (the existing heal/title-sync observer) — emphasis adds none.
     expect((source.match(/new MutationObserver/g) ?? []).length).toBe(1)
     // `emphasis` never appears inside connected()'s body — it is a schema entry only, wired to nothing.
     const connectedBody = source.slice(source.indexOf('protected connected()'), source.indexOf('protected disconnected()'))
     expect(connectedBody).not.toMatch(/emphasis/)
+  })
+})
+
+// ── ADR-0114 — the hyperlink capability's stamping legs (jsdom logic; the security matrix lives in the
+// dedicated text-href-security.test.ts) ──────────────────────────────────────────────────────────────────
+describe('UITextElement — as="a" stamping (ADR-0114, SPEC-R7)', () => {
+  it('as="a" wraps existing children in a real <a>, moving the SAME node (not a clone)', async () => {
+    const el = new UITextElement()
+    el.textContent = 'Source'
+    document.body.append(el)
+    const textNode = el.firstChild
+    el.as = 'a'
+    await el.updateComplete
+    const a = el.querySelector('a')
+    expect(a).not.toBeNull()
+    expect(a?.firstChild).toBe(textNode)
+    expect(el.childElementCount).toBe(1)
+    el.remove()
+  })
+
+  it('href with as≠"a" is inert — no href/rel/target lands on a non-anchor stamp (SPEC-R7 AC2)', async () => {
+    const el = new UITextElement()
+    el.as = 'p'
+    el.href = 'https://example.com'
+    el.textContent = 'Not a link'
+    document.body.append(el)
+    await el.updateComplete
+    const p = el.querySelector('p')
+    expect(p).not.toBeNull()
+    expect(p?.hasAttribute('href')).toBe(false)
+    expect(p?.hasAttribute('rel')).toBe(false)
+    expect(p?.hasAttribute('target')).toBe(false)
+    el.remove()
+  })
+
+  it('as="a" with an allowed href stamps href + the fixed rel/target policy (SPEC-R11)', async () => {
+    const el = new UITextElement()
+    el.as = 'a'
+    el.href = 'https://example.com'
+    el.textContent = 'Source'
+    document.body.append(el)
+    await el.updateComplete
+    const a = el.querySelector('a')
+    expect(a?.getAttribute('href')).toBe('https://example.com')
+    expect(a?.getAttribute('rel')).toBe('noopener noreferrer')
+    expect(a?.getAttribute('target')).toBe('_blank')
+    el.remove()
+  })
+
+  it('the HOST href attribute reflects honestly even though it never navigates (SPEC-R9)', async () => {
+    const el = new UITextElement()
+    el.as = 'a'
+    el.href = 'https://example.com'
+    document.body.append(el)
+    await el.updateComplete
+    expect(el.getAttribute('href')).toBe('https://example.com')
+    el.remove()
   })
 })
 

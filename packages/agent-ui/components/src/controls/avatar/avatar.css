@@ -1,0 +1,87 @@
+/* avatar.css — ui-avatar, the Indicator-class compact identity mark (LLD-C3, feed-family.lld.md §3;
+ * SPEC-R4/R5/R6/R7/R19/R20; ADR-0112 cl.3, fork F3). Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-avatar)` declares `--ui-avatar-*`: the widget box off the widget-box
+ *       ramp `--ui-compact-{sm,md,lg}` (ADR-0041 — fork F3, no new register minted; `[size]` repoints the
+ *       tier, `[scale]` on an ancestor re-tables the ramp for free, no avatar-local [scale] rule needed)
+ *       and ONE neutral plane + on-surface ink pair (SPEC-R7 — no per-identity hue).
+ *   [2] STYLES BLOCK — `@scope (ui-avatar)` consumes ONLY `--ui-avatar-*`. The host is a circle-masked
+ *       widget box (`inline-grid`, `place-items: center`, `border-radius: 50%`); exactly one child paints
+ *       at a time (avatar.ts) — an `<img>` (object-fit: cover), the `[data-part=initials]` text, or a
+ *       `<ui-icon>` glyph, each sized off the box.
+ *
+ * No hue anywhere (SPEC-R7 AC1): the fallback plane/ink pair is identical for every `name` — a
+ * computed-style equality probe, not a visual comparison. Identity is carried by the initials/name text,
+ * never by color (ADR-0057).
+ *
+ * Forced colors (SPEC-R19): a background-drawn circle plane can visually merge with the page under WHCM
+ * — an explicit `forced-colors` block adds a system-ink border so the circle boundary stays visible (the
+ * badge/checkbox box-boundary precedent); initials are real text and survive untouched.
+ *
+ * No interaction states (SPEC-R4 — non-interactive, no focus/hover/active, no post-connect motion gate:
+ * there is nothing to transition). Standalone stylesheet — linked via the host page / component-styles
+ * barrel; NEVER injected from avatar.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-avatar) declares --ui-avatar-* ════════════════ */
+
+:where(ui-avatar) {
+  /* Widget-box size (ADR-0041 fork F3) — defaults to the compact-realm `md` tier; a page override for
+     larger chrome (a profile header) is the token's job, not a new fleet register (F3's named trigger). */
+  --ui-avatar-size: var(--ui-compact-md);
+
+  /* ONE neutral pair (SPEC-R7) — AA-verifiable once; every `name` computes the identical plane/ink. */
+  --ui-avatar-plane: var(--md-sys-color-neutral-surface-high);
+  --ui-avatar-ink: var(--md-sys-color-neutral-on-surface);
+}
+
+/* [size] → widget-box tier (the checkbox/badge precedent: sm/lg repoint, md is the base default above). */
+:where(ui-avatar[size='sm']) {
+  --ui-avatar-size: var(--ui-compact-sm);
+}
+:where(ui-avatar[size='lg']) {
+  --ui-avatar-size: var(--ui-compact-lg);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-avatar) consumes ONLY --ui-avatar-* ════════════════ */
+
+@scope (ui-avatar) {
+  :scope {
+    display: inline-grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 50%; /* the circle mask (SPEC-R7) */
+    inline-size: var(--ui-avatar-size);
+    block-size: var(--ui-avatar-size);
+    background: var(--ui-avatar-plane);
+    color: var(--ui-avatar-ink);
+    vertical-align: middle; /* an inline-grid box sitting beside text (SPEC-R6's "beside a name" case) */
+  }
+
+  :scope img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  :scope [data-part='initials'] {
+    font-size: calc(var(--ui-avatar-size) * 0.42);
+    font-weight: var(--md-sys-typescale-label-medium-weight);
+    line-height: 1; /* single-line, centers like a glyph (geometry.md's control line-height law) */
+    user-select: none;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  :scope ui-icon {
+    /* the content-icon register (geometry.md taxonomy) — the glyph derives from the box, not the font */
+    font-size: calc(var(--ui-avatar-size) * 0.6);
+  }
+
+  @media (forced-colors: active) {
+    :scope {
+      border: 1px solid CanvasText; /* the circle boundary stays visible under WHCM (SPEC-R19) */
+    }
+  }
+}

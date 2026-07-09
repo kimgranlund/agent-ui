@@ -301,7 +301,11 @@ events, no form participation (SPEC-R11).
   :scope[intent='info']    [data-part='glyph'] { clip-path: circle(50%); }                        /* disc */
   /* Per-intent roles — DEFAULTS, gated by the SPEC-R14 AC3 AA probe at build (fallback = a token
      repoint, never a mechanism change — the chart LLD §7 row-9 pattern). First live consumers of
-     --md-sys-color-warning/-info (ADR-0057 "in scope at first consumer"). */
+     --md-sys-color-warning/-info (ADR-0057 "in scope at first consumer"). PREDICTED PROBE CASUALTY
+     (doc-review F4): the -on-surface-variant ink is a supporting-text role, not a text-grade role,
+     paired here against the -container fill — this pairing is the one most likely to miss 4.5:1 on
+     some intent × light/dark. Expect the probe to fail it and repoint toward an -on-container /
+     text-grade role; this is not a surprise, it's the reason the AC exists. */
   :scope[intent='info']    { --ui-badge-fill: var(--md-sys-color-info-container);
                              --ui-badge-ink: var(--md-sys-color-info-on-surface-variant);
                              --ui-badge-outline: var(--md-sys-color-info-outline-variant); }

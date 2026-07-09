@@ -125,10 +125,10 @@ describe('text.css — structure + token hygiene (ADR-0078 cl.3)', () => {
     expect(quoteRule).toMatch(/padding-inline-start:\s*var\(--ui-space-md\)/)
   })
 
-  it('the stamp-transparency reset (cl.4) resets margin/font/letter-spacing/color to inherit for every stampable tag', () => {
+  it('the stamp-transparency reset (cl.4) resets margin/font/letter-spacing/color to inherit for every stampable tag, INCL. a (ADR-0114)', () => {
     const resetRule = (stylesBlock.match(/:scope > :is\([^)]*\)\s*\{[^}]*\}/) ?? [''])[0]
     expect(resetRule.length).toBeGreaterThan(0)
-    for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'blockquote', 'span']) {
+    for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'blockquote', 'span', 'a']) {
       expect(resetRule, `stamp reset selector missing ${tag}`).toContain(tag)
     }
     expect(resetRule).toMatch(/margin:\s*0/)
@@ -193,7 +193,7 @@ describe('text.css — [truncate] (ADR-0106, CSS-only single-line ellipsis)', ()
   })
 
   it('the stamp leg is declared AFTER the stamp-transparency reset, so it wins the shared-selector cascade', () => {
-    const resetIdx = stylesBlock.indexOf(':scope > :is(h1, h2, h3, h4, h5, h6, p, blockquote, span) {')
+    const resetIdx = stylesBlock.indexOf(':scope > :is(h1, h2, h3, h4, h5, h6, p, blockquote, span, a) {')
     const truncStampIdx = stylesBlock.indexOf(':scope[truncate] > :is(')
     expect(resetIdx).toBeGreaterThan(-1)
     expect(truncStampIdx).toBeGreaterThan(resetIdx)
@@ -202,5 +202,50 @@ describe('text.css — [truncate] (ADR-0106, CSS-only single-line ellipsis)', ()
   it('[truncate] introduces no new --ui-text-* token — pure literal CSS properties (ADR-0106 CSS-only)', () => {
     const truncBlock = stylesBlock.slice(stylesBlock.indexOf(':scope[truncate]'))
     expect(truncBlock).not.toMatch(/var\(--ui-text-truncate/)
+  })
+})
+
+describe('text.css — the hyperlink capability (ADR-0114, SPEC-R13; LLD-C3)', () => {
+  it('the token block declares --ui-text-link-ink from --md-sys-color-primary', () => {
+    const rule = (tokenBlock.match(/:where\(ui-text\)\s*\{[^}]*--ui-text-link-ink:[^}]*\}/) ?? [''])[0]
+    expect(rule.length).toBeGreaterThan(0)
+    expect(rule).toMatch(/--ui-text-link-ink:\s*var\(--md-sys-color-primary\)/)
+  })
+
+  it('the link leg is attribute-gated on :scope > a[href] — a denied stamp (no href) gets no link paint', () => {
+    const linkRule = (stylesBlock.match(/:scope > a\[href\]\s*\{[^}]*\}/) ?? [''])[0]
+    expect(linkRule.length).toBeGreaterThan(0)
+    expect(linkRule).toMatch(/color:\s*var\(--ui-text-link-ink\)/)
+    expect(linkRule).toMatch(/text-decoration-line:\s*underline/) // underline ALWAYS — never hue-only (ADR-0057)
+    expect(linkRule).toMatch(/text-underline-offset:/)
+    expect(linkRule).toMatch(/text-decoration-thickness:\s*from-font/)
+  })
+
+  it('is declared AFTER the stamp-transparency reset so it wins the shared `a` selector cascade', () => {
+    const resetIdx = stylesBlock.indexOf(':scope > :is(h1, h2, h3, h4, h5, h6, p, blockquote, span, a) {')
+    const linkIdx = stylesBlock.indexOf(':scope > a[href] {')
+    expect(resetIdx).toBeGreaterThan(-1)
+    expect(linkIdx).toBeGreaterThan(resetIdx)
+  })
+
+  it('hover thickens the underline; focus-visible draws the SHARED fleet ring (ADR-0009)', () => {
+    const hoverRule = (stylesBlock.match(/:scope > a\[href\]:hover\s*\{[^}]*\}/) ?? [''])[0]
+    expect(hoverRule).toMatch(/text-decoration-thickness:\s*2px/)
+    const focusRule = (stylesBlock.match(/:scope > a\[href\]:focus-visible\s*\{[^}]*\}/) ?? [''])[0]
+    expect(focusRule).toMatch(/outline:\s*var\(--ui-focus-ring-width\) solid var\(--md-sys-color-focus-ring\)/)
+    expect(focusRule).toMatch(/outline-offset:\s*var\(--ui-focus-ring-offset\)/)
+  })
+
+  it('forced-colors paints the link in the system LinkText ink, underline surviving by inheritance (SPEC-R13 AC2)', () => {
+    const forcedIdx = stylesBlock.indexOf('@media (forced-colors: active)')
+    expect(forcedIdx).toBeGreaterThan(-1)
+    const forcedOnward = stylesBlock.slice(forcedIdx)
+    expect(forcedOnward).toMatch(/:scope > a\[href\]\s*\{\s*color:\s*LinkText;\s*\}/)
+  })
+
+  it('no :visited rule is declared — v1 shares the link ink, stated not hidden (SPEC-R13)', () => {
+    // a comment MENTIONING :visited (documenting the stated non-decision) is fine; a real selector using
+    // it (`:visited {` or `a:visited,`) is not — the regex targets the latter shape only.
+    expect(stylesBlock).not.toMatch(/:visited\s*[,{]/)
   })
 })

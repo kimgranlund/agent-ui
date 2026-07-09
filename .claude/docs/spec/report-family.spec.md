@@ -105,7 +105,7 @@ handling, per case — none may throw, and every non-empty rendered set still pa
 | 11 | foreign-typed cell value (boolean, object, array) | empty cell (the value is dropped, the row survives — dropping the whole record for one bad cell would silently lose data) |
 | 12 | duplicate column keys | both columns render, both read the same field (the column list is positional, not keyed — the chart duplicate-labels precedent) |
 | 13 | ragged records (extra keys no column names) | ignored — columns select; rows never widen the table |
-| 14 | huge unbroken cell string | wraps within its cell (`overflow-wrap`) rather than forcing unbounded column width; the SPEC-R5 container scrolls if the table is still wide |
+| 14 | huge unbroken cell string | in a non-number column: wraps within its cell (`overflow-wrap`) rather than forcing unbounded column width. **In a `type:"number"` column** (doc-review F3): the column's `nowrap` rule takes precedence — numbers never wrap (LLD-C3) — so the string forces the SPEC-R5 scroll container instead. Either way the container scrolls if the table is still wide. |
 
 *(→ PRD-G2; ADR-0111 cl.2 + Consequences "degenerate data … all hand-gated")*
 - **AC1** *Given* each row above (DOM-free unit + jsdom), *then* the stated rendering, no exception
@@ -149,6 +149,14 @@ ADR-0102)*
   engines), *then* the component's scroll container overflows (`scrollWidth > clientWidth`) and is
   scrollable, the page's `scrollingElement` does not gain horizontal scroll, and no cell content is
   clipped invisible.
+- **AC2** (doc-review F1) *Given* the rendered component, *then* the scroll container itself is a
+  keyboard-focusable, named region — `role=region tabindex=0`, `aria-labelledby` the caption when
+  `label` is present — the WAI-ARIA APG-sanctioned accessible-overflow pattern for a scroll surface
+  that would otherwise be unreachable by keyboard-only users. This is PLATFORM SCROLL AFFORDANCE, not
+  a component key contract: it adds zero component-defined key bindings (no roving tabindex, no
+  arrow-key navigation, no activation/selection) — SPEC-R1's "no keyboard contract" describes what the
+  component itself defines, and stays true. An unlabeled table (`label` absent) yields an unnamed
+  region — an accepted residual, not a violation.
 
 **SPEC-R6 — A11y contract: native semantics carry it.** The stamped table IS the table: header
 association, `th` scope, and SR table navigation come from the platform. The component MUST NOT mint
