@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2UI authoring guide</title>
+  </head>
+  <body>
+    <!-- The A2UI AUTHORING guide: exactly how to author a catalog row (the row contract, the factory
+         side, the ADR-0102 intake chooser, the coverage gate) and how to author training data (the
+         examples shelf vs the corpus shard, seed anatomy, the quality bar, the admission pipeline).
+         The worked row/seed examples are DERIVED live from the imported defaultCatalog + allSeeds —
+         shown ≡ shipped, they cannot drift; the pedagogy prose is hand-authored. An MPA entry auto-
+         discovered by vite.config.ts's site/**/*.html glob (matches the nav link ./a2ui-authoring.html)
+         — no config edit needed. The page module imports pages/_page.ts FIRST for the foundation CSS
+         cascade + self-defining ui-* controls (ADR-0003). -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2ui-authoring.ts"></script>
+  </body>
+</html>

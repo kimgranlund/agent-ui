@@ -529,6 +529,12 @@ const CARD_GROUPS: readonly CardGroup[] = [
         title: 'A2UI live agent',
         blurb: 'The ladder’s last rung: a chat app where an agent emits A2UI over the wire — prompt → rendered surface → you interact → the agent continues. A deterministic recorded backbone by default; a real model under `vite dev` with a key. Canvas / JSON / HTML tabs.',
       },
+      {
+        href: './a2ui-authoring.html',
+        title: 'A2UI authoring guide',
+        blurb:
+          'Exactly how to author a catalog row (the row contract, the factory side, the ADR-0102 intake chooser, the coverage gate) and training data (shelf vs shard, seed anatomy, the quality bar, judged admission) — the worked examples derive live from the shipped catalog and seed shelf.',
+      },
     ],
   },
   {

@@ -244,6 +244,7 @@ export const NAV: readonly NavGroup[] = [
       { href: './a2ui-gallery.html', label: 'A2UI Gallery' },
       { href: './a2ui-stream.html', label: 'A2UI Streaming' },
       { href: './a2ui-live.html', label: 'A2UI Live Agent' },
+      { href: './a2ui-authoring.html', label: 'A2UI Authoring Guide' },
     ],
   },
   {
