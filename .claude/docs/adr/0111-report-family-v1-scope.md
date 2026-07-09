@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-08 *(authored)* |
 > | **Proposed by** | planner (design seat — the report-family intake, coordinator-dispatched on the §5.2 idiom evidence; the number 0111 is coordinator-RESERVED against the concurrent-intake numbering race that left the 0108 hole — sibling intakes hold 0112/0113–0114) |
 > | **Ratified by** | — *(pending Kim; a hook enforces proposed→accepted is Kim's, never the author's. The `ui-table` native-`<table>` direction in cl.3 records reasoning Kim pre-ratified in conversation this session; the scope bundle as a whole still awaits his ratification)* |

@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-08 *(authored)* |
 > | **Proposed by** | system-planner (design seat — the content-family intake; coordinator-reserved number 0113, siblings hold 0111/0112) |
-> | **Ratified by** | — *(pending Kim; a hook enforces proposed→accepted is Kim's flip, never the author's)* |
+> | **Ratified by** | Kim (host) · 2026-07-09 — ratified by explicit instruction; the self-flip guard hook (`.claude/hooks/adr-status-guard.py`) was deliberately deregistered by Kim's own edit to `settings.json` to permit this flip. Forks F1–F4 stand as recommended (no objection raised) |
 > | **Repairs** | NEW [`../prd/content-family.prd.md`](../prd/content-family.prd.md) (authored in this same change — the owning doc whose scope §3 + goals this ADR pins). On ratification+build: `a2ui-catalog.spec.md` §5.2 (NEW `Code` + `Disclosure` rows + Notes guidance; the `Text` row's `href` cell is ADR-0114's) · `catalog/default/{catalog.json,factories.ts}` + `index.test.ts` (same-wave rows, SPEC-N2 path) · `tools/agent/feed-catalog.ts` + `feed-catalog.test.ts` (the two owed dispositions — clause 6) · NEW `controls/{code,disclosure}/*` · `references/geometry.md` needs NO edit (its Pattern row already lists "accordion"; Display absorbs `ui-code`). Intake decomp: [`../decompositions/content-family-intake.decomp.json`](../decompositions/content-family-intake.decomp.json) (coverage-clean, PLAN) |
 > | **Supersedes / Superseded by** | (none) — relates [ADR-0114](./0114-text-hyperlink-href.md) (the hyperlink member's own record — clause 3 admits it, 0114 designs it) · [ADR-0107](./0107-chart-family-v1-scope.md) (the intake shape + the vendored-runtime-code rejection clause 2 reuses) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (the overflow law clause 2 applies; every default here survives the CSS-less consumer) · [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) (the whole-fleet gate clause 5 obeys) · [ADR-0097](./0097-a2ui-feed-embedded-asks.md) (the total feed partition clause 6 pays) · [ADR-0101](./0101-overlay-transitions-always-announce.md) (the always-announce law `ui-disclosure`'s `open` joins) · [ADR-0017](./0017-native-dialog-modal.md) (the wrap-a-native-structural-element precedent clause 4 stands on) · [ADR-0078](./0078-ui-text-three-axis-variant-size-as.md) (the stamp doctrine both members lean on) |
 
