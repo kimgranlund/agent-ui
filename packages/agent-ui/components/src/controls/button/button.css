@@ -112,10 +112,12 @@
 
   /* Anatomy (ADR-0006, extended by ADR-0012): host-as-grid with three POSITION regions — an OPTIONAL leading
      [slot=leading] adornment, the LABEL (the default/unnamed children — the accessible name), and an OPTIONAL
-     trailing [slot=trailing] adornment — each presence-driven via :has(). Four structures:
-     [label] · [leading | label] · [label | trailing] · [leading | label | trailing]. Each adornment gets a
-     square, icon-sized CELL with edge-pad ½(h−icon); a bare (slotless) edge stays h/2; the column-gap is the
-     one density-bearing quantity (gap = font/2 × density).
+     trailing [slot=trailing] adornment — each presence-driven via :has(). Five structures:
+     [label] · [leading | label] · [label | trailing] · [leading | label | trailing] · [icon-only, no label]
+     (the last is an explicit author opt-in, `[icon-only]` — CSS cannot detect an empty/text-node label on its
+     own; see the `:scope[icon-only]` rule below, geometry.md "icon-only (no label) → square"). Each adornment
+     gets a square, icon-sized CELL with edge-pad ½(h−icon); a bare (slotless) edge stays h/2; the column-gap is
+     the one density-bearing quantity (gap = font/2 × density).
      POSITION (the slot) PLACES; ROLE (`data-role` on the node — icon · caret now, tag · badge later) SIZES the
      glyph (ADR-0012 / geometry-sizing-spec §1.4, §4.6 — frame ∝ height vs rhythm ∝ font). Adornments are
      decorative (aria-hidden); popup/disclosure meaning belongs on the host via ARIA (ElementInternals). */
@@ -144,28 +146,52 @@
     padding: calc((var(--ui-button-icon) - var(--ui-button-glyph)) / 2); /* inset the font glyph, centered in the icon cell */
   }
 
-  /* [leading | label] (no trailing): auto 1fr — leading slot edge ½(h−icon), trailing label edge h/2 */
-  :scope:has(> [slot='leading']):not(:has(> [slot='trailing'])) {
+  /* [leading | label] (no trailing): auto 1fr — leading slot edge ½(h−icon), trailing label edge h/2.
+     :not([icon-only]) — the icon-only structure below is the mutually-exclusive fifth anatomy. */
+  :scope:has(> [slot='leading']):not(:has(> [slot='trailing'])):not([icon-only]) {
     grid-template-columns: auto 1fr;
     column-gap: var(--ui-button-gap);
     padding-inline-start: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
     padding-inline-end: calc(var(--ui-button-height) / 2);
   }
 
-  /* [label | trailing] (no leading): 1fr auto — leading label edge h/2, trailing slot edge ½(h−icon) */
-  :scope:has(> [slot='trailing']):not(:has(> [slot='leading'])) {
+  /* [label | trailing] (no leading): 1fr auto — leading label edge h/2, trailing slot edge ½(h−icon).
+     :not([icon-only]) — same exclusion. */
+  :scope:has(> [slot='trailing']):not(:has(> [slot='leading'])):not([icon-only]) {
     grid-template-columns: 1fr auto;
     column-gap: var(--ui-button-gap);
     padding-inline-start: calc(var(--ui-button-height) / 2);
     padding-inline-end: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
   }
 
-  /* [leading | label | trailing]: auto 1fr auto — both adornment edges ½(h−icon), one gap rhythm on each side */
-  :scope:has(> [slot='leading']):has(> [slot='trailing']) {
+  /* [leading | label | trailing]: auto 1fr auto — both adornment edges ½(h−icon), one gap rhythm on each
+     side. :not([icon-only]) — same exclusion. */
+  :scope:has(> [slot='leading']):has(> [slot='trailing']):not([icon-only]) {
     grid-template-columns: auto 1fr auto;
     column-gap: var(--ui-button-gap);
     padding-inline-start: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
     padding-inline-end: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
+  }
+
+  /* [icon-only] (no label): the geometry law's FIFTH structure (geometry.md "icon-only (no label) →
+     square") — a real slotted adornment with no label content at all. CSS cannot detect an empty/
+     text-node label on its own (`:has()` only matches elements, so a bare text-node label is invisible
+     to it), so this is an explicit author opt-in (the reflected `icon-only` attribute, button.ts).
+     `inline-size` is set EXPLICITLY (mirroring `block-size` exactly) rather than left intrinsic: under
+     `box-sizing: border-box` an EXPLICIT size makes border eat into the content box on BOTH axes
+     identically, giving a byte-exact square regardless of border width. A literal ½(h−icon) PADDING
+     would instead let intrinsic sizing add the border ON TOP of content+padding (no reinterpretation
+     without an explicit size to reinterpret), overshooting the square by the border width — the bug
+     this structure closes. `justify-content: center` centers the single icon-sized column the SAME way
+     the pre-existing `align-items: center` (base :scope rule) already centers it on the block axis — no
+     literal padding needed; the border cancels out of the maths, so the rendered inset still lands at
+     the law's ½(h−icon), measured from the outer edge. No column-gap (no label track to gap against).
+     Assumes a single adornment (leading OR trailing, not both) — the documented icon-only pattern. */
+  :scope[icon-only] {
+    grid-template-columns: auto;
+    inline-size: var(--ui-button-height);
+    padding-inline: 0;
+    justify-content: center;
   }
 
   /* Interaction states (ADR-0008) — repoint ONLY `background`, from the per-state ladder tokens (the geometry

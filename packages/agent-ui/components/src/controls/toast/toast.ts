@@ -181,10 +181,13 @@ export class UIToastElement extends UIElement {
     }
 
     // Always present, icon-only — a real accessible name via aria-label (button.md's textContent
-    // source has nothing to read here), the fleet's icon-only-button idiom.
+    // source has nothing to read here), the fleet's icon-only-button idiom. `icon-only` opts into
+    // button.css's fifth (square) structure — without it, the slotted icon + empty label still
+    // reserves the 1fr label track, rendering wider than tall (the ui-button icon-only-via-slot gap).
     const closeBtn = document.createElement('ui-button') as UIButtonElement
     closeBtn.setAttribute('data-part', 'close')
     closeBtn.setAttribute('variant', 'ghost') // a subtle dismiss — never competes with an actionable CTA
+    closeBtn.setAttribute('icon-only', '')
     closeBtn.setAttribute('aria-label', 'Dismiss')
     const icon = document.createElement('ui-icon')
     icon.setAttribute('slot', 'leading')

@@ -1,7 +1,7 @@
 ---
 # button.md frontmatter — the attributes-as-API descriptor for ui-button (ADR-0004). The machine-checkable
 # public surface lives HERE (frontmatter); the prose below the fence is the /site doc (Phase 3). The
-# `attributes[]` block MUST mirror button.ts `static props` (variant/size/disabled) — the contract↔props
+# `attributes[]` block MUST mirror button.ts `static props` (variant/size/disabled/iconOnly) — the contract↔props
 # trip-wire (s10) and the frontmatter schema (s9) target this fence; s8 ships a minimal "parses + matches
 # static props" probe. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-button
@@ -24,6 +24,16 @@ attributes:            # attributes-as-API — mirrors button.ts `static props`
     type: boolean
     default: false
     reflect: true      # reflects to a `disabled` attribute → CSS pointer-inert hook + the trait's inert guard
+  - name: iconOnly
+    type: boolean
+    default: false
+    reflect: true      # reflects to icon-only → the CSS fifth structure (geometry.md "icon-only (no label) → square")
+                         # HTML attribute is `icon-only` (an explicit `attribute:` override in button.ts — same
+                         # load-bearing reason as attachment.md's mimeType: a literal camelCase observed-attribute
+                         # name never matches the always-lowercase real DOM attribute in an HTML document).
+                         # Explicit author opt-in — CSS alone cannot detect an empty/text-node label (:has() only
+                         # matches elements). Set it when composing a real slotted adornment with NO label text;
+                         # the accessible name must then come from `aria-label` (there is nothing in textContent).
 
 properties: []         # no manual accessors beyond the attributes-as-API (no value-taking property)
 
@@ -37,8 +47,8 @@ slots:                 # slots name a POSITION; a slotted adornment's CONTENT ro
     optional: true
     description: Optional leading adornment — a light-DOM `[slot="leading"]` child placed in the start cell by the presence-driven host-as-grid (ADR-0006; renamed from `icon` — the slot names a POSITION, not its content). Absent ⇒ the slotless bare-label layout.
   - name: label
-    optional: false
-    description: The label — the default/unnamed children (an explicit `[slot="label"]` is equivalent); the accessible name, filling the 1fr centre cell.
+    optional: true
+    description: The label — the default/unnamed children (an explicit `[slot="label"]` is equivalent); the accessible name, filling the 1fr centre cell. May be omitted entirely for an icon-only button (set `icon-only` and supply `aria-label` for the accessible name — see Slots & roles).
   - name: trailing
     optional: true
     description: Optional trailing adornment — a light-DOM `[slot="trailing"]` child (commonly a caret/chevron/arrow with `data-role="caret"`) placed in the end cell. Layout only; carry any popup/disclosure meaning via ARIA on the host and mark the glyph aria-hidden.
@@ -53,7 +63,7 @@ face:
 aria:
   role: button         # set via ElementInternals — never a host role/aria-* attribute
   roleSource: internals
-  labelSource: textContent  # the light-DOM label text is the accessible name
+  labelSource: textContent  # the light-DOM label text is the accessible name; when `icon-only` omits the label, the caller must supply `aria-label` instead (there is no textContent to read)
   disabledState: internals.ariaDisabled  # disabled AX state — a reactive effect sets ariaDisabled 'true' when disabled / null otherwise off the `disabled` prop (ADR-0010); never a host aria-disabled attr, and not a native form `disabled` (ui-button is not form-associated)
 
 keyboard:
@@ -68,7 +78,7 @@ geometry:
   sizeClass: control
   blockSize: var(--ui-button-height)   # the vertical lever off the s6 dimensional ramp; padding-block is 0
   paddingBlock: 0
-  inlinePad: h/2 (slotless bare label) · ½(h−icon) (leading icon / trailing adornment slot edge)   # the centering law, geometry.md
+  inlinePad: h/2 (slotless bare label) · ½(h−icon) (leading icon / trailing adornment slot edge) · ½(h−icon) BOTH edges via justify-content, no literal padding (icon-only, no label)   # the centering law, geometry.md
   gap: var(--ui-button-gap)            # icon↔label column-gap — the one density-bearing quantity (gap = font/2 × density)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the ink + border visible (ButtonText) so the label/outline never vanishes.
@@ -147,6 +157,7 @@ host-as-grid of ADR-0006 and is the family adornment standard (ADR-0012).
 <ui-button><svg slot="leading" data-role="icon">…</svg>Download</ui-button>          <!-- [ leading | label ] -->
 <ui-button>Options<svg slot="trailing" data-role="caret">…</svg></ui-button>         <!-- [ label | trailing ] -->
 <ui-button><svg slot="leading" data-role="icon">…</svg>Account<svg slot="trailing" data-role="caret">…</svg></ui-button> <!-- [ leading | label | trailing ] -->
+<ui-button icon-only aria-label="Dismiss"><svg slot="leading" data-role="icon">…</svg></ui-button> <!-- [ icon-only, no label ] -->
 ```
 
 The host grid picks the column template by presence — `1fr` · `auto 1fr` · `1fr auto` · `auto 1fr auto` —
@@ -154,6 +165,22 @@ giving each adornment a square, `½(h − icon)`-edged cell with the density-bea
 cells (the one quantity that rides `--ui-density`; the frame stays density-invariant). The trailing glyph
 is **layout only** — express any popup/disclosure meaning as ARIA on the host (`aria-haspopup` /
 `aria-expanded` via `ElementInternals`), never on the glyph.
+
+### Icon-only (no label)
+
+A real slotted adornment with **no label content at all** needs the `icon-only` attribute. CSS alone
+cannot tell an empty label apart from a real one — `:has()` only matches *elements*, so the common
+`<svg slot="leading">…</svg>Download` pattern's `Download` label is a bare *text node*, invisible to a
+selector. Without `icon-only`, that structure still reserves the `1fr` label track and its `h/2` trailing
+pad, rendering wider than tall with dead space on the end. Setting `icon-only` swaps in the fifth,
+mutually-exclusive structure: **one** column with its `inline-size` set explicitly equal to the control
+height (mirroring `block-size`, so a true square holds regardless of border width), content-centered via
+`justify-content` — which lands the rendered inset at the same `½(h − icon)` the other structures pad to.
+Because there is no label text, the accessible name must come from `aria-label` on the host (the
+`ui-toast` close button is the reference usage). `icon-only` assumes a **single** adornment (leading OR
+trailing) — the fifth structure is one column, so both slots present together is undefined layout (the
+second silently wraps/overflows rather than erroring); no current consumer needs two icons on an
+icon-only button, so this is documented rather than fenced.
 
 ## Keyboard & focus
 

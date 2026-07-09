@@ -25,6 +25,13 @@ const props = {
   // `disabled` reflects to a `disabled` attribute so CSS can render the host pointer-inert (s7); the
   // trait already guards keyboard activation off `() => this.disabled`.
   disabled: { ...prop.boolean(false), reflect: true },
+  // icon-only ⇒ the geometry law's fifth structure (references/geometry.md "icon-only (no label) →
+  // square"): a real slotted adornment (leading/trailing) with NO label content at all. CSS alone
+  // cannot detect an empty/text-node label — `:has()` only matches ELEMENTS, so a bare text-node label
+  // (the common `<svg slot=leading>…Download</ui-button>` pattern) is invisible to it — so this is an
+  // explicit author opt-in (button.css's `:scope[icon-only]` structure). The accessible name must then
+  // come from `aria-label` (there is no label text to read), the toast.ts close-button precedent.
+  iconOnly: { ...prop.boolean(false), reflect: true, attribute: 'icon-only' },
 } satisfies PropsSchema
 
 export interface UIButtonElement extends ReactiveProps<typeof props> {}

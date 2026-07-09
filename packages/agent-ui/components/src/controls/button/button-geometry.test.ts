@@ -120,4 +120,24 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     const both = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='leading']):has(> [slot='trailing'])"))
     expect(both).toMatch(/grid-template-columns:\s*auto\s+1fr\s+auto/)
   })
+
+  it('[icon-only] is the FIFTH structure — one EXPLICITLY square column (inline-size mirrors block-size), content-centered — and is MUTUALLY EXCLUSIVE with the three slot-bearing structures via :not([icon-only])', () => {
+    // the three slot-bearing structures above all exclude [icon-only] (the mutually-exclusive anatomy).
+    expect(stylesBlock).toMatch(/:scope:has\(> \[slot='leading'\]\):not\(:has\(> \[slot='trailing'\]\)\):not\(\[icon-only\]\)/)
+    expect(stylesBlock).toMatch(/:scope:has\(> \[slot='trailing'\]\):not\(:has\(> \[slot='leading'\]\)\):not\(\[icon-only\]\)/)
+    expect(stylesBlock).toMatch(/:scope:has\(> \[slot='leading'\]\):has\(> \[slot='trailing'\]\):not\(\[icon-only\]\)/)
+
+    // the icon-only structure itself: one column, an EXPLICIT square inline-size (mirrors block-size —
+    // not a min-inline-size floor, which would let intrinsic sizing add the border on top and overshoot
+    // the square), centered via justify-content (no literal padding-inline).
+    const m = stylesBlock.match(/:scope\[icon-only\]\s*\{([^}]*)\}/)
+    expect(m, ':scope[icon-only] rule missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/grid-template-columns:\s*auto\s*;/) // ONE column — no label track, no gap
+    expect(rule).toMatch(/inline-size:\s*var\(--ui-button-height\)/) // EXPLICIT — mirrors block-size, byte-exact square
+    expect(rule).not.toMatch(/min-inline-size/) // NOT a floor — a floor lets border overshoot the square (the bug)
+    expect(rule).toMatch(/padding-inline:\s*0/) // no literal padding — centering rides justify-content instead
+    expect(rule).toMatch(/justify-content:\s*center/) // centers the icon-sized column, mirroring align-items on the block axis
+    expect(rule).not.toContain('column-gap') // no label track to gap against
+  })
 })

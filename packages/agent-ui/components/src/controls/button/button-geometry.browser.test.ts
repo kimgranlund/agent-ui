@@ -21,6 +21,8 @@ import '@agent-ui/components/components'
 // ── markup: the two variants the smoke proves in parallel ───────────────────────────────────────────
 const BARE = '<ui-button>Label</ui-button>' //                          slotless — density-INVARIANT frame
 const ICON = '<ui-button><span slot="leading" data-role="icon">●</span>Label</ui-button>' // host-as-grid — density-BEARING gap
+// icon-only via a REAL slotted adornment, NO label content at all — the fifth structure this suite regression-guards.
+const ICON_ONLY = '<ui-button icon-only aria-label="Dismiss"><span slot="leading" data-role="icon">●</span></ui-button>'
 
 // ── mount/cleanup: each button rides a wrapper that carries the [scale]/[density] ancestor attributes
 // (dimensions.css keys off bare `[scale="…"]`/`[density="…"]`; custom props inherit down to the host). ──
@@ -39,6 +41,7 @@ afterEach(() => {
 // ── computed-px reads (a real engine resolves the --ui-button-* token chain to used lengths) ─────────
 const px = (v: string): number => Number.parseFloat(v)
 const frameHeight = (btn: HTMLElement): number => px(getComputedStyle(btn).blockSize) // the vertical lever
+const frameWidth = (btn: HTMLElement): number => btn.getBoundingClientRect().width // the WHOLE rendered box, not a per-part px
 const fontPx = (btn: HTMLElement): number => px(getComputedStyle(btn).fontSize)
 const gapPx = (btn: HTMLElement): number => px(getComputedStyle(btn).columnGap) // the icon↔label rhythm
 const padStartPx = (btn: HTMLElement): number => px(getComputedStyle(btn).paddingInlineStart)
@@ -287,5 +290,51 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] }) // reset the emulation
     }
+  })
+})
+
+// ── [icon-only]: the fifth structure — a real slotted adornment with NO label at all ──────────────────
+// The gap this closes: `:has()` only matches ELEMENTS, so a bare TEXT-NODE label (the common
+// `<svg slot=leading>…</svg>Download` pattern) is invisible to CSS — a slotted icon with an EMPTY label
+// still fell into the `[leading | label]` structure (auto 1fr), reserving a dead 1fr track + its h/2
+// trailing pad, rendering wider than tall. `icon-only` is the explicit author opt-in that swaps in a
+// genuine square. This asserts the WHOLE rendered bounding box (not a per-part px) at every [size], AND
+// that the pre-existing `[leading | label]`-with-real-text structure is completely unaffected.
+describe('ui-button [icon-only]: a slotted adornment with NO label renders a genuine SQUARE (s14)', () => {
+  it('block-size == inline-size (the WHOLE rendered box) at every [size] — the regression this closes', () => {
+    for (const size of ['sm', 'md', 'lg'] as const) {
+      const { btn } = mount(ICON_ONLY)
+      btn.setAttribute('size', size)
+      const h = frameHeight(btn)
+      const w = frameWidth(btn)
+      expect(h, `[icon-only size=${size}] height did not resolve to a real px`).toBeGreaterThan(0)
+      expect(w, `[icon-only size=${size}] is NOT square: width ${w} != height ${h}`).toBeCloseTo(h, 0)
+    }
+  })
+
+  it('the rendered inset is SYMMETRIC ½(h−icon) on both sides — no h/2 label pad, no column-gap dead space', () => {
+    // Centering rides `justify-content` (no literal padding-inline — computed paddingInlineStart/End read
+    // 0), so the inset is measured GEOMETRICALLY off the rendered bounding boxes, not the CSS padding
+    // property — the "test the whole shape" precedent.
+    const { btn } = mount(ICON_ONLY) // md size
+    const h = frameHeight(btn)
+    const btnRect = btn.getBoundingClientRect()
+    const iconRect = (btn.querySelector('[data-role="icon"]') as HTMLElement).getBoundingClientRect()
+    const insetStart = iconRect.left - btnRect.left
+    const insetEnd = btnRect.right - iconRect.right
+    expect(insetStart, 'leading inset is not ½(h−icon)').toBeCloseTo((h - iconRect.width) / 2, 0)
+    expect(insetEnd, 'trailing inset is not ½(h−icon)').toBeCloseTo((h - iconRect.width) / 2, 0)
+    expect(insetStart, 'icon-only insets are not symmetric').toBeCloseTo(insetEnd, 0)
+  })
+
+  it('REGRESSION GUARD — the pre-existing [leading | label]-with-real-text structure is UNCHANGED: still asymmetric, still wider than tall', () => {
+    const { btn } = mount(ICON) // real text label, no icon-only attribute
+    const h = frameHeight(btn)
+    const w = frameWidth(btn)
+    const start = padStartPx(btn)
+    const end = padEndPx(btn)
+    expect(w, 'the real-label case must stay WIDER than the square frame (it carries a label)').toBeGreaterThan(h)
+    expect(start, 'the real-label leading pad must stay the ½(h−icon) slot edge').not.toBeCloseTo(end, 1)
+    expect(end, 'the real-label trailing (label) edge must stay h/2').toBeCloseTo(h / 2, 1)
   })
 })

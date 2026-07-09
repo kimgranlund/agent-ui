@@ -111,6 +111,7 @@ describe('ui-toast — anatomy: message adoption + the affordance cluster (toast
     const closeBtn = closeBtnOf(el)
     expect(closeBtn.tagName.toLowerCase()).toBe('ui-button')
     expect(closeBtn.getAttribute('aria-label')).toBe('Dismiss')
+    expect(closeBtn.hasAttribute('icon-only')).toBe(true) // opts into button.css's square fifth structure
     const icon = closeBtn.querySelector('ui-icon')
     expect(icon?.getAttribute('name')).toBe('x')
     el.remove()

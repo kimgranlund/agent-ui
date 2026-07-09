@@ -50,7 +50,7 @@ describe('component-descriptor schema — conforms (s9)', () => {
     const { fence } = splitFrontmatter(buttonMd)
     const parsed = parseDescriptor(fence)
     // anti-vacuous: the reader actually populated the descriptor before the validator is consulted
-    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant', 'size', 'disabled'])
+    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant', 'size', 'disabled', 'iconOnly'])
     expect(parsed.maps.get('face')?.get('formAssociated')).toBe('false')
     expect(validateComponentDescriptor(parsed)).toEqual([])
   })

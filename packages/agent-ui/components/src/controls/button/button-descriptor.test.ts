@@ -57,8 +57,8 @@ describe('button.md descriptor — frontmatter parses (s8)', () => {
 
 describe('button.md descriptor — contract↔props trip-wire (s10)', () => {
   it('attributes[] is a faithful bijection with finalize(UIButtonElement).props (0 drift)', () => {
-    // anti-vacuous: the reader actually parsed variant/size/disabled before the trip-wire is consulted
-    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant', 'size', 'disabled'])
+    // anti-vacuous: the reader actually parsed variant/size/disabled/iconOnly before the trip-wire is consulted
+    expect(parsed.attributes.map((a) => a.name)).toEqual(['variant', 'size', 'disabled', 'iconOnly'])
     expect(compareDescriptorToProps(parsed.attributes, UIButtonElement.props)).toEqual([])
   })
 
