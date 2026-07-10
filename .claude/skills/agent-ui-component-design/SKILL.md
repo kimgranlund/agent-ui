@@ -32,9 +32,14 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
    one sentence — everything downstream keys off it.
 
 2. **Dedup + precedent sweep.** Is it a variant/prop of an existing control rather than a new
-   one? (Grep `controls/`, read the nearest descriptor.) Then sweep the
-   [[agent-ui-component-patterns]] table — every mechanism the design needs that a row
-   already owns is REUSED, not redesigned. Record which rows apply.
+   one? (Grep `controls/`.) Then: read the nearest **2–3 descriptors** end-to-end AND the
+   **SOURCE of every trait/mechanism you plan to reuse** — a trait's real signature (value vs
+   accessor, bare call vs anything else) is exactly what a summary gets wrong, and a frozen
+   interface built on a summary ships a type error (the toolbar shakedown's two blockers).
+   Prose summaries (CLAUDE.md, this skill, the maps) DRIFT from code — verify every API that
+   enters a frozen LLD interface against a REAL SHIPPED CONSUMER, never a doc line. Then
+   sweep the [[agent-ui-component-patterns]] table — every mechanism the design needs that a
+   row already owns is REUSED, not redesigned. Record which rows apply.
 
 3. **Classify — three axes**, each recorded in the vocabulary the descriptor validator
    enforces (`component-descriptor.ts` owns both enums; classify OUTSIDE them and the
@@ -90,9 +95,13 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
    depends on production CSS behavior (the TKT-0002 class). The build sequence must be
    dispatchable: one writer per file.
 
-8. **Independent doc review gates the build.** Hand the record set to a fresh-context doc
-   reviewer (`scribe:doc-reviewer` / the house review seat). Findings route back to the
-   designer; delta re-reviews until PASS; **the build dispatches only on the PASS**. If the
+8. **Independent doc review gates the build — non-optional, before freeze.** Hand the record
+   set to a fresh-context doc reviewer (`scribe:doc-reviewer` / the house review seat). The
+   LLD review must include the **frozen-interface-vs-real-code check**: every API the §
+   interface names exists with that exact signature in the shipped source (the two recurring
+   blocker shapes: an INVENTED API a doc summary suggested, and a value-vs-accessor
+   signature mismatch). Findings route back to the designer; delta re-reviews until PASS;
+   **the build dispatches only on the PASS**. If the
    builder later hits a wall the frozen design caused, the design REOPENS via escalation —
    a local deviation without escalation is a process breach even when the deviation is right
    (it has happened; the docs must be amended in the same wave).

@@ -67,3 +67,38 @@ argument (agents already want to emit toolbar-shaped UI).
 - **Sequencing:** design intake first; no build from this ticket directly.
 
 ## Findings
+
+**Design intake complete (2026-07-10, `agent-ui-component-design` first live-fire run).** Record set:
+[ADR-0121](../adr/0121-ui-toolbar-pattern-control.md) (proposed, forks F1–F7 recommended, never
+self-ratified) · [SPEC](../spec/toolbar.spec.md) (SPEC-R1…R12) · [LLD](../lld/toolbar.lld.md) (LLD-C1…C13) ·
+[decomp](../decompositions/toolbar-ship.decomp.json) (coverage-clean, `--strict` exit 0). ADR gate green
+(`site/lib/adr.test.ts` 33/33).
+
+**Fork resolutions (all firm):** F1 dual-posture = the existing `elevation`/`brightness` surface axis +
+`[data-box]` z-scope, NOT a posture enum, NOT the overlay/dismissal machinery, NOT a positioning machine
+(placement is the layout's job) · F2 host-as-flex, light-DOM children ARE the items (the `ui-row` precedent);
+`ui-toolbar-group` is a fenced additive v2 · F3 REUSE `roving-focus` decoupled from selection (`loop:false`,
+`typeAhead:false`, focus-only, no `select` event; name via `label`→`internals.ariaLabel`) · F4 CSS-only
+`overflow: wrap`(default)/`scroll`; the overflow-menu is a fenced additive v2 · F5 `tier: pattern`
+(geometry.md already names toolbar this — no novelty leg), no `size`/`density`/`posture` prop · F6 no events
+· F7 catalog EMITTABLE (a `Toolbar` row + the `document-row-toolbar` corpus seed upgraded).
+
+**exe.xyz research input FAILED** — `https://ui-kit.exe.xyz/site/components/toolbar` returned only a
+client-side "Loading changelog…" SPA shell (both the bare and trailing-slash forms); zero component content.
+The design draws nothing from it; grounded entirely in the adia prior art (read in full) + fleet law.
+
+**Independent doc-review PASSED (fix-then-ship), fixes applied.** Three fresh-context `scribe:doc-reviewer`
+passes (ADR/SPEC/LLD). The LLD review caught two real BLOCKERS in the frozen §3 interface — `this.use()`
+doesn't exist (traits are bare `rovingFocus(this, {…})` calls; the CLAUDE.md "host.use()" phrasing is stale)
+and the roving `orientation` accessor was a type error (the trait reads it once as a value; fixed to the
+`radio-group.ts:120-144` connect-resolve-once precedent). Both fixed, plus the MAJOR (added a `## Examples`
+section), a vacuous non-color-signifier MUST demoted, stale `catalog-coverage.ts:184-235` line-ranges made
+symbolic, an `ADR-0112 cl.6` relates-edge + F7 post-0112 seed-structure clause added, and the SPEC-R1 trace
+hole closed. **Remaining routed item (NOT a per-doc fix):** the fleet's ADR/SPEC/LLD use a blockquote status
+line, not YAML frontmatter, so `doc_lint.py` returns "not a functional document" on all of them (identical to
+the `theme-provider` precedent) — a corpus-wide convention question for the doc-standard owner, deliberately
+not patched on this file alone.
+
+**Build gate:** the design is frozen; no build dispatches from this ticket (sequencing: intake first). The
+build wave, when authorized, dispatches `component-builder` on LLD-C1…C9, then `a2ui-builder` on LLD-C10/C11
+(the `Toolbar` catalog row + corpus upgrade) once the component is green.
