@@ -87,7 +87,7 @@ re-expressed on the shipped primitives, its bespoke swatch/table code deleted �
 "re-host the existing instance" discipline: the promotion is proven against the known-good baseline.
 - *Metric*: bespoke display LOC in `tokens.ts`; the parse helpers (`token-parse.ts`) STAY site-local
   (they read the repo's own sheets at build time — a docs-site concern, not a component's).
-- *Baseline*: 159 LOC of deletable display code in `tokens.ts` (the 96-LOC `token-parse.ts` is
+- *Baseline*: ~85 LOC of deletable display FUNCTIONS in `tokens.ts` (swatch/roleRow/family-loop/dim-loop — the metric correction the M1 doc-review prescribed: 159 was the whole file incl. setup/prose that stays; the 96-LOC `token-parse.ts` is
   parse logic, not display, and stays).
 - *Target*: the page composes the primitives; net-negative display LOC; the tokens-doc drift gate
   stays green unchanged.
