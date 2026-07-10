@@ -1,6 +1,6 @@
 # PRD — Agent-App Surfaces
 
-> Status: **accepted · v1.1 · Owner: agent-ui** — direction RATIFIED by Kim 2026-07-05 (all six forks PRD-D1–D6 accepted as recommended; §5). Began life as a scope INTAKE (v0.1 proposed, 2026-07-05). (v1.1, 2026-07-10: **§2 gains PRD-G7 (panes) + PRD-G8 (settings surface), §7 gains milestone M4** at the design-system-surfaces intake ([TKT-0007](../tickets/tkt-0007-design-system-surfaces.md)) — Kim's intake ruling *"panes and a settings shell are chrome — extend agent-app-surfaces (M4)"*; scope + tier split in [ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md); the amendment is additive — PRD-D1–D6 and the M1–M3 targets are untouched — and pending doc-review.)
+> Status: **accepted · v1.1 · Owner: agent-ui** — direction RATIFIED by Kim 2026-07-05 (all six forks PRD-D1–D6 accepted as recommended; §5). Began life as a scope INTAKE (v0.1 proposed, 2026-07-05). (v1.1, 2026-07-10: **§2 gains PRD-G7 (panes) + PRD-G8 (settings surface), §7 gains milestone M4** at the design-system-surfaces intake ([TKT-0007](../tickets/tkt-0007-design-system-surfaces.md)) — Kim's intake ruling *"panes and a settings shell are chrome — extend agent-app-surfaces (M4)"*; scope + tier split in [ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md); the amendment is additive — PRD-D1–D6 and the M1–M3 targets are untouched — and doc-reviewed 2026-07-10. v1.2, 2026-07-10: Kim's ratification fork pass amended M4's scope — `ui-split` is MULTI-PANE in v1 (ADR-0120 F1, recommendation overruled) and the settings surface gains the schema-driven preferences FRAMEWORK (ADR-0120 F3, shell-only fence rejected); PRD-G7/G8 + §3 updated to match, D1–D6/M1–M3 still untouched.)
 > Altitude: this document owns **why + what-should-exist** for the next tier. Behaviour contracts (SPEC) and implementation (LLD) are downstream. This is the ceiling-setting Plan artifact — no ADRs live here.
 > Grounding: [`../plan.md`](../plan.md) §5 (`static shadow` seam) · §12 (isolation boundary resolved light-DOM-for-now, with an app-shell family named as the revisit trigger) · [`../goals.md`](../goals.md) (foundation COMPLETE, G0–G9 + Control Suite + icon adapter + G8) · [`../specs/NEXT.md`](../specs/NEXT.md) (the A2UI layer + the `a2ui-live` demo) · [`../specs/specs/a2ui-runtime.spec.md`](../specs/specs/a2ui-runtime.spec.md) §5.3 (the renderer `mount` seam) · [`../../../CLAUDE.md`](../../../CLAUDE.md) (import-layering law, package structure).
 > Location note: filed under `.claude/docs/prd/` per the current authoring charter (ratified, PRD-D6); the legacy A2UI family sits under `.claude/docs/specs/` (singular `spec/`·`lld/` for this new family, per the charter).
@@ -80,9 +80,10 @@ Stable IDs; priority tiers; metrics baselined at **0 / not-possible-today** (not
 **PRD-G7 — Arrange panes without hand-building split mechanics (M4, v1.1).** A developer arranges
 the master-detail agent-app layout (sessions list | conversation) and user-collapsible regions by
 composing primitives — no bespoke drag/resize/collapse code. *(How — the components-tier `ui-split`
-primitive, the master-detail composition, the realized ADR-0084 `collapse: "toggle"` — is
-[ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md)'s direction layer, **proposed, awaiting
-Kim's ratification** — unlike §4/§5's ratified v1.0 decisions; the M4 SPEC/LLD own the mechanism.)*
+primitive (**multi-pane/N-slot in v1** — Kim's F1 fork answer, 2026-07-10), the master-detail
+composition, the realized ADR-0084 `collapse: "toggle"` — is
+[ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md)'s direction layer, fork-answered
+2026-07-10; the M4 SPEC/LLD own the mechanism.)*
 - *Metric*: a master-detail arrangement + a user-collapsible region are assembled from primitives with
   0 bespoke split/collapse code; keyboard resize + announcement proven cross-engine.
 - *Baseline*: no split/resize primitive exists anywhere in the fleet (intake grep, 2026-07-10);
@@ -91,10 +92,13 @@ Kim's ratification** — unlike §4/§5's ratified v1.0 decisions; the M4 SPEC/L
   `toggle` realized with ADR-0084's wide-layout invariant held.
 - *Timeframe*: **M4**.
 
-**PRD-G8 — Stand up a settings surface (M4, v1.1).** A developer presents app preferences — a
-sections rail, per-section panels, drill-in when narrow — from a primitive; the consumer brings the
-content (`ui-field`/`ui-form-provider`) and the state (no persistence/schema framework — the §3
-store rule; navigation binding stays consumer wiring, `app` never imports `router`).
+**PRD-G8 — Stand up a settings surface (M4, v1.1; widened v1.2).** A developer presents app
+preferences — a sections rail, per-section panels, drill-in when narrow — AND (v1.2, Kim's F3 fork
+answer 2026-07-10: the shell-only fence rejected) generates the panels from a **schema-driven
+preferences framework**: config-in → form-out over the fleet's own `ui-field`/`ui-form-provider`,
+validation wiring from the schema, persistence via a store-adapter SEAM (the app may still bring its
+own store; contracts are M4-SPEC business). Navigation binding stays consumer wiring — `app` never
+imports `router`.
 - *Metric*: a settings surface is assembled with 0 bespoke shell CSS; narrow drill-in proven
   cross-engine.
 - *Baseline*: none exists (the site theming page is a guide, not a shell).
@@ -120,10 +124,10 @@ store rule; navigation binding stays consumer wiring, `app` never imports `route
 - **Agent-EMITTABLE shell surfaces.** The trusted frame is never agent-authored (see **PRD-D2**). — *letting the agent emit its own container is a security inversion.*
 - **Re-specifying the control fleet or the A2UI renderer.** Owned by `plan.md`/`goals.md` and the A2UI spec family; this tier composes them. — *one fact, one home.*
 - **The multi-theme package-swapping system.** A separately-parked next-tier item (`theme-provider` seam exists); not this tier. — *distinct scope dial.*
-- **(v1.1) A schema-driven preferences framework.** The M4 settings surface is a *shell* (sections
-  nav + panels + drill-in); config-in/form-out generation, validation schemas, and persistence are a
-  different intake ([ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md) F3) — demand routes
-  there, never a rider. — *the consumer brings content and store.*
+- **(v1.2 — the v1.1 row MOVED IN-SCOPE by Kim's F3 fork answer, 2026-07-10.)** The schema-driven
+  preferences framework now belongs to M4 ([ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md)
+  F3/clause 4). What STAYS out: remote sync, account/identity, and policy/permission layers — those
+  route to new intakes, never riders. — *the fence moved, it did not vanish.*
 - **Non-web / mobile-native targets.** — *out of the library's remit.*
 
 ## 4. Direction forks — the ratified architecture
@@ -186,10 +190,11 @@ All six decisions are **ratified as recommended**. This table is now the decisio
 - **M1 — App-shell anchor.** The `@agent-ui/app` package + the app-shell layout primitive + the resolved isolation boundary (PRD-D3), proven by re-hosting `a2ui-live`. Sets the architecture. *(PRD-G2, PRD-G6; establishes the PRD-G1 baseline.)*
 - **M2 — The agent-native pair.** The conversation surface + the canvas/surface-host (the A2UI mount seam), docked into the M1 shell; the demo's bespoke chat + canvas wiring deleted in favour of them. *(PRD-G3, PRD-G4.)*
 - **M3 — Completion.** The tool-call/result surface; the reference agent app carries ~0 bespoke chrome; the tier's coherence + budgets hold. *(PRD-G5, PRD-G1 flagship met.)*
-- **M4 — Panes + settings (v1.1, [ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md)).** The
-  `ui-split` primitive (components tier) · master-detail · the realized `collapse: "toggle"` · the
-  settings surface. Additive: the PRD-G1 flagship metric stays measured at M3; M4 extends the tier,
-  it does not move v1.0's goalposts. *(PRD-G7, PRD-G8.)*
+- **M4 — Panes + settings (v1.1 + the v1.2 fork-pass widenings, [ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md)).** The
+  `ui-split` primitive (components tier, **multi-pane in v1**) · master-detail · the realized
+  `collapse: "toggle"` · the settings surface **incl. the schema-driven preferences framework**
+  (the SPEC may phase shell → framework within the wave). Additive: the PRD-G1 flagship metric stays
+  measured at M3; M4 extends the tier, it does not move v1.0's goalposts. *(PRD-G7, PRD-G8.)*
 
 ## 8. Constraints & assumptions (as of 2026-07-05)
 

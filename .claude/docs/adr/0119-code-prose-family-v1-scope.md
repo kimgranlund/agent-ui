@@ -7,7 +7,7 @@
 > | **Status** | proposed |
 > | **Date** | 2026-07-10 |
 > | **Proposed by** | planner (design seat — the design-system-surfaces intake, [TKT-0007](../tickets/tkt-0007-design-system-surfaces.md); Kim pre-answered the packaging fork at intake, Q4 2026-07-10: pack adapter on the icons model, `@agent-ui/code` → core + `./highlight` + `./markdown`) |
-> | **Ratified by** | *(awaiting Kim — F1 records his intake answer + a naming caveat; F2–F4 carry firm recommendations; the recommendation is the default absent an objection)* |
+> | **Ratified by** | *(fork passes COMPLETE 2026-07-10: F1–F4 answered by Kim at the ratification fork pass — ALL as recommended, incl. the F1 naming sliver resolved KEEP `@agent-ui/code`, see §Forks. Status flip awaits Kim's explicit word.)* |
 > | **Repairs** | NEW [`../prd/code-prose-family.prd.md`](../prd/code-prose-family.prd.md) (authored in this same change — the owning doc) · realizes [ADR-0113](./0113-content-family-v1-scope.md) cl.2's named escape hatch (b) — that ADR's fence is unchanged; this is the intake it foresaw |
 > | **Supersedes / Superseded by** | (none) — relates [ADR-0113](./0113-content-family-v1-scope.md) (the fence + `language` inert + host-as-content, all preserved) · [ADR-0065](./0065-icon-adapter-swappable-pack-architecture.md)/[ADR-0066](./0066-icons-phosphor-default-pack.md) (the pure-core + subpath architecture; note the inert-data vs runtime-code distinction below) · [ADR-0107](./0107-chart-family-v1-scope.md) (the "runtime dependency in costume" law this satisfies rather than dodges) · [ADR-0114](./0114-text-hyperlink-href.md) (the link policy markdown links obey) · [ADR-0115](./0115-spa-router-v1-scope.md) (the sibling-branch DAG precedent) |
 
@@ -105,19 +105,27 @@ mechanisms at build (PRD-G1…G4 trace).
   `@agent-ui/code` — **recorded as decided** on geometry. The one open sliver is the *name* (clause 1
   caveat): `code` will export prose surfaces too. *Recommend: keep `@agent-ui/code`* (his named
   choice; "code" reads as the developer-content domain, and renaming buys nothing structural).
+  **ANSWERED by Kim, 2026-07-10 (ratification fork pass): keep `@agent-ui/code`** — the naming sliver closes; geometry stood decided since intake.
+
 - **F2 — the v1 subset sizes.** *Recommend: the clause-3 language set and the clause-4 markdown
   subset, GFM tables IN.* Live alternatives: languages-minimal (ts/json/shell only — cheaper, but
   python/html/css are agent-daily and each grammar is small); tables OUT (defensible — tables are the
   subset's biggest grammar — but agent reports emit them constantly and `ui-table` exists; excluding
   them re-creates the literal-syntax problem this family exists to end).
+  **ANSWERED by Kim, 2026-07-10 (ratification fork pass): as recommended** — the clause-3 language set + the clause-4 markdown subset, GFM tables IN.
+
 - **F3 — the diff input contract.** *Recommend: pre-computed hunks primary, two-text compute as
   sugar* (clause 5). The alternative — two-text-only — is a cleaner API but forces every consumer
   through this repo's diff algorithm; agents/tools usually *have* the hunks, and honoring them keeps
   the algorithm small and non-load-bearing.
+  **ANSWERED by Kim, 2026-07-10 (ratification fork pass): as recommended** — pre-computed hunks primary, two-text line-LCS as sugar.
+
 - **F4 — where `ui-markdown` is defined.** *Recommend: in the `./markdown` pack* (clause 4): the
   element IS the grammar — a core-defined shell with no parser would render nothing and fake the
   zero-dep story. The alternative (core element + registered renderer, mirroring the highlighter
   seam) doubles the seam machinery for no consumer.
+
+  **ANSWERED by Kim, 2026-07-10 (ratification fork pass): as recommended** — defined in the `./markdown` pack; the element IS the grammar.
 
 ## Consequences
 

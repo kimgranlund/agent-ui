@@ -7,7 +7,7 @@
 > | **Status** | proposed |
 > | **Date** | 2026-07-10 |
 > | **Proposed by** | planner (design seat — the design-system-surfaces intake, [TKT-0007](../tickets/tkt-0007-design-system-surfaces.md); Kim selected the family at intake, fork Q2 2026-07-10) |
-> | **Ratified by** | *(awaiting Kim — F1 ANSWERED 2026-07-10: flat names, ramp=color/ladder=dims + the site-retitle rider, see §Forks; F2–F4 carry firm recommendations; the recommendation is the default absent an objection)* |
+> | **Ratified by** | *(fork passes COMPLETE 2026-07-10: F1 answered at the naming interrogation; F2–F4 answered by Kim at the ratification fork pass — ALL as recommended, see §Forks. Status flip awaits Kim's explicit word.)* |
 > | **Repairs** | NEW [`../prd/token-surfaces.prd.md`](../prd/token-surfaces.prd.md) (authored in this same change — the owning doc whose scope §3 + goals this ADR pins) |
 > | **Supersedes / Superseded by** | (none) — relates [ADR-0107](./0107-chart-family-v1-scope.md) (the display-family intake pattern + the same-wave catalog and no-new-package clauses this reuses) · [ADR-0117](./0117-theme-provider-shipped-component.md) (the site-local → shipped-control promotion precedent) · [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) (the whole-fleet catalog gate clause 6 obeys) · [ADR-0078](./0078-ui-text-three-axis-variant-size-as.md) (the type tokens label text reads) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (every default must survive the CSS-less consumer) |
 
@@ -108,14 +108,18 @@ at build (PRD-G1…G4 trace).
   contract) — optimizes for the docs-site consumer but fails the emitting model (an agent presenting
   a *proposed* palette has literal values, no vars) and couples the control to a resolution context it
   can't guarantee. Value-first serves both; the var lane is sugar over the same rendering.
+  **ANSWERED by Kim, 2026-07-10 (ratification fork pass): as recommended** — value-first with the `--var` lane riding the same prop.
 - **F3 — forced-colors + a11y shape.** *Recommend: clause 4 as stated* (role=img + composed name for
   swatch; list semantics for ramp/ladder; border-only degradation under WHCM). The alternative — a
   table-based semantic (real `<table>` rows) — reads better for large ramps but forks the fleet's
   internals-only ARIA law and drags table layout into a strip-shaped component.
+  **ANSWERED by Kim, 2026-07-10 (ratification fork pass): as recommended** — role=img + composed name for swatch; list semantics for ramp/ladder; border-only WHCM degradation.
 - **F4 — catalog/feed disposition.** *Recommend: M2 rows + FEED_EXCLUDED* (clause 6). The alternative
   — same-wave (M1) catalog rows — matches ADR-0107 cl.6 more literally but forces the exemplar +
   guidance work into the control wave; splitting M1 (controls + site proof) from M2 (agent teaching)
   keeps each wave one-context-sized. The allowlist seed is intra-family and drains to zero at M2.
+
+  **ANSWERED by Kim, 2026-07-10 (ratification fork pass): as recommended** — M2 rows + FEED_EXCLUDED; M1 seeds, M2 drains to zero residue.
 
 ## Consequences
 

@@ -116,6 +116,24 @@ settings surface) land app-tier as M4.
 - **Still owed:** Kim's fork passes — 0118 F2–F4 · 0119 F1–F4 (incl. the `@agent-ui/code` naming
   sliver) · 0120 F1–F3. No build authorized until ratification.
 
+### 2026-07-10 — the ratification fork passes: all ten open forks answered (three batched rounds)
+
+- **ADR-0118 F2–F4: all as recommended** (value-first + var lane · img/list semantics + WHCM
+  border degradation · M2 rows + FEED_EXCLUDED).
+- **ADR-0119 F1–F4: all as recommended** — incl. the F1 naming sliver closed: **`@agent-ui/code`
+  stays** (Kim's named choice; prose surfaces ride it).
+- **ADR-0120: F2 as recommended (shipped master-detail composition); F1 and F3 DIVERGED:**
+  - **F1 — multi-pane NOW**: `ui-split` ships N-slot in v1 (two-slot-only overruled; the IDE case
+    in scope; constraint/announcement contracts at the M4 SPEC). Clause 2 amended.
+  - **F3 — schema framework IN**: the settings surface gains the schema-driven preferences
+    framework (config-in → form-out over ui-field/form-provider, validation wiring, a persistence
+    store-adapter seam); the shell-only fence rejected. Clause 4 + Consequences amended;
+    `agent-app-surfaces.prd.md` → **v1.2** (PRD-G8 widened, the §3 out-of-scope row moved
+    in-scope with the residual fence named: remote sync / identity / policy stay out).
+- Recording discipline held: answers APPENDED to fork rows (recommendation text preserved);
+  divergences amended into the clauses pre-ratification so no record contradicts its answers.
+  ADR gate 33/33 green post-amendment. Status flips still await Kim's explicit word.
+
 ### 2026-07-10 — 0118 F1 answered (the naming interrogation)
 
 Kim weighed a `ui-tokens-*` namespace and ruled: **flat names stand** (`ui-swatch`/`ui-ramp`/

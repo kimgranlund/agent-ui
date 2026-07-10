@@ -7,7 +7,7 @@
 > | **Status** | proposed |
 > | **Date** | 2026-07-10 |
 > | **Proposed by** | planner (design seat — the design-system-surfaces intake, [TKT-0007](../tickets/tkt-0007-design-system-surfaces.md); Kim ruled the tier at intake, fork Q3 2026-07-10: *"Extend agent-app-surfaces (M4)"*) |
-> | **Ratified by** | *(awaiting Kim — clause 1 records his intake ruling; clause 2's tier split resolves the intake's Q1↔Q3 tension with the DAG argument; F1–F3 carry firm recommendations)* |
+> | **Ratified by** | *(fork passes COMPLETE 2026-07-10: F1–F3 answered by Kim at the ratification fork pass — F2 as recommended; **F1 and F3 DIVERGE from the recommendations** (multi-pane now; schema framework IN — see §Forks; clauses 2/4 amended pre-ratification to match, the original recommendation text preserved in the fork rows). Status flip awaits Kim's explicit word.)* |
 > | **Repairs** | [`../prd/agent-app-surfaces.prd.md`](../prd/agent-app-surfaces.prd.md) → v1.1 (adds PRD-G7/PRD-G8 + milestone M4 + scope rows — the amendment is flagged for doc-review; the ratified v1.0 decisions PRD-D1–D6 are untouched) |
 > | **Supersedes / Superseded by** | (none) — relates [ADR-0084](./0084-app-shell-narrow-reflow-collapse.md) (whose RESERVED `collapse: "toggle"` value M4 realizes) · [ADR-0082](./0082-app-shell-per-instance-isolation.md)/[ADR-0083](./0083-app-shell-region-role-decouple.md) (the shell contract M4 composes) · [ADR-0115](./0115-spa-router-v1-scope.md) (router stays catalog- and app-invisible — settings navigation wiring is consumer business) · [ADR-0040](./0040-foundation-barrel-budget-rebase.md)/[ADR-0049](./0049-family-budget-rebase-22kb.md) (the budget re-base discipline the `ui-split` addition will follow) |
 
@@ -50,9 +50,12 @@ Realized in six clauses; the M4 SPEC/LLD own mechanisms at build.
 1. **Ownership (Kim's intake ruling, recorded):** the chrome tier's PRD owns panes + settings —
    scope, goals, and milestone live in `agent-app-surfaces.prd.md` v1.1. The intake's sketched
    `pane-family.prd.md` sibling is **not minted**; TKT-0007 records the reconciliation.
-2. **The tier split:** `ui-split` — a two-slot, user-resizable split container (draggable divider +
-   keyboard resize per the ARIA `separator`-with-`aria-valuenow` pattern) — is a **components-tier
-   layout control** (sibling to `ui-row`/`ui-column`/`ui-grid`), because the PRD-D3 cycle argument
+2. **The tier split:** `ui-split` — a **multi-pane (N-slot)**, user-resizable split container
+   (draggable dividers + keyboard resize per the ARIA `separator`-with-`aria-valuenow` pattern, one
+   separator per adjacent pair; the N-pane constraint distribution + announcement contract is SPEC
+   business) — is a **components-tier layout control** *(amended at the 2026-07-10 fork pass: Kim
+   ruled multi-pane NOW — the two-slot-only v1 recommendation is overruled; two panes remain the
+   degenerate case)* (sibling to `ui-row`/`ui-column`/`ui-grid`), because the PRD-D3 cycle argument
    does not reach it and apex placement would strand it (Context). The app tier **composes** it; the
    family budget re-base this forces is measured at the build wave (the ADR-0040/0049 discipline).
 3. **M4 chrome scope — panes:** (a) the **master-detail pattern** — a docked list/detail arrangement
@@ -60,9 +63,13 @@ Realized in six clauses; the M4 SPEC/LLD own mechanisms at build.
    time; (b) **`collapse: "toggle"` realized** — the ADR-0084 reserved value becomes a real,
    user-collapsible region affordance (the reservation named this exact future).
 4. **M4 chrome scope — settings surface:** a **nav + sections** composition (`@agent-ui/app`): a
-   sections rail, per-section panels, narrow-width drill-in — the app's preferences *shell*, not a
-   preferences *framework* (no persistence, no schema, no form generation — the consumer brings
-   `ui-field`/`ui-form-provider` content). **Navigation wiring stays consumer business:** `app` never
+   sections rail, per-section panels, narrow-width drill-in — **plus the schema-driven preferences
+   FRAMEWORK** *(amended at the 2026-07-10 fork pass: Kim ruled the framework IN — the shell-only
+   fence is rejected)*: schema-in → form-out generation composing the fleet's own
+   `ui-field`/`ui-form-provider` primitives, validation wiring from the schema, and a persistence
+   SEAM (a store-adapter contract — the app may still bring its own store; the exact
+   schema/persistence contracts are M4-SPEC business, and the SPEC may phase shell → framework
+   within the wave). **Navigation wiring stays consumer business:** `app` never
    imports `router` (ADR-0115's catalog-invisible law); the surface exposes selection
    state/events, and router binding is the consumer's three lines.
 5. **Catalog disposition:** `ui-split` enters the SPEC-N2 gate's scope when its descriptor lands —
@@ -80,15 +87,21 @@ Realized in six clauses; the M4 SPEC/LLD own mechanisms at build.
   N-pane resize (the IDE case) multiplies the keyboard/announcement contract and the constraint
   solver; two-slot nests for the honest majority of layouts, and a group is the foreseen extension
   if nesting proves insufficient.
+  **ANSWERED by Kim, 2026-07-10 (ratification fork pass): MULTI-PANE NOW — the recommendation is OVERRULED.** `ui-split` ships N-pane in v1 (the IDE case in scope); two-slot is the degenerate case, not the contract. Clause 2 amended to match; the constraint solver + per-separator keyboard/announcement contract land at the M4 SPEC.
+
 - **F2 — master-detail: shipped composition vs taught pattern.** *Recommend: shipped composition*
   (an `@agent-ui/app` surface with the drill-in behavior built and gated) — the tier's whole thesis
   is that proving a pattern possible (docs) is not the same as making it reusable (PRD §1); a
   pattern-only answer re-creates the bespoke-chrome gap for the most common agent-app layout
   (sessions list | conversation).
+  **ANSWERED by Kim, 2026-07-10 (ratification fork pass): as recommended** — shipped composition, built and gated in `@agent-ui/app`.
+
 - **F3 — the settings fence.** *Recommend: shell-only* (clause 4). The alternative — a
   schema-driven preferences framework (config in, form out) — is a real product but a different
   intake: it owns data modeling, validation, and persistence questions this tier deliberately
   excludes (PRD §Out-of-scope: "the app brings its own store").
+
+  **ANSWERED by Kim, 2026-07-10 (ratification fork pass): SHELL + SCHEMA FRAMEWORK — the shell-only fence is REJECTED.** The schema-driven preferences framework (config-in → form-out over `ui-field`/`ui-form-provider`, validation wiring, a persistence store-adapter seam) joins this family's scope. Clause 4 + PRD-G8/§3 amended to match; contracts at the M4 SPEC.
 
 ## Consequences
 
@@ -102,8 +115,10 @@ Realized in six clauses; the M4 SPEC/LLD own mechanisms at build.
   honest).
 - **The reserved `collapse: "toggle"` debt is scheduled** — ADR-0084's reservation gains its
   realization milestone; SPEC-R5's parenthetical updates at the M4 SPEC, not before.
-- **Settings-shell demand will pressure the fence** — persistence and schema asks route to a new
-  intake (F3), never a rider.
+- **The settings scope now owns framework questions** *(F3 answered: framework IN)* — schema
+  modeling, form generation, and the persistence-seam contract are M4-SPEC obligations; what still
+  routes to NEW intakes: remote sync, account/identity, and policy/permissions layers (the fence
+  moved, it did not vanish).
 - **Stale → re-verify at the M4 build wave:** `agent-app-shell.spec.md` SPEC-R5 wording ·
   the a2ui catalog gate scope for `Split` (clause 5) · `measure-size.mjs` line items ·
   CLAUDE.md Layout rows if `ui-split` earns a mention · the site's layout-overview guide.
