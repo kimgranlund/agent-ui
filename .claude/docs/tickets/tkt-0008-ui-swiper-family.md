@@ -66,3 +66,69 @@ slideshow exists anywhere in the fleet, tickets, or ADR log, and nothing uses sc
   ticket directly.
 
 ## Findings
+
+### 2026-07-10 — F1 design intake complete (frozen, review-passed, awaiting Kim's ratification)
+
+Ran the full `agent-ui-component-design` intake. Record set authored, doc-reviewed (three fresh-context
+seats), findings applied, gates green. **No code written.** The build dispatches only on ADR ratification.
+
+**Artifacts (all NEW):**
+- ADR: [`../adr/0124-swiper-family-scroll-snap-loop.md`](../adr/0124-swiper-family-scroll-snap-loop.md)
+  (`proposed`; README row added; `npx vitest run adr` green, 33 tests) — **ADR-0124**, eight forks F1–F8, all
+  firm recommendations, none self-ratified.
+- SPEC: [`../spec/swiper-family.spec.md`](../spec/swiper-family.spec.md) (SPEC-R1…R16).
+- LLD: [`../lld/swiper-family.lld.md`](../lld/swiper-family.lld.md) (LLD-C1…C12; the frozen-interface-vs-real-
+  code check in §12 PASSED — every named API verified against shipped source, no invented API).
+- Decomp: [`../decompositions/swiper-family.decomp.json`](../decompositions/swiper-family.decomp.json)
+  (`coverage_check.py --strict` exit 0 — 29 nodes · 19 actions · 19 hosts · 13 edges, plan mode).
+
+**Classification:** family of five tags — `ui-swiper` (`UIContainerElement`, `tier: pattern`,
+catalog-emittable) · `ui-swiper-item` (`UIElement`, `tier: layout`, emittable) · `ui-swiper-pagination` /
+`ui-swiper-paddles` (`UIElement`, `tier: pattern`, allowlisted) · `ui-swiper-label` (`UIElement`, `tier:
+display`, allowlisted). **The novelty leg fired on the MECHANISM, not geometry** — `geometry.md` already covers
+the shell (`pattern` tier) and names the carousel paddle nav-icon exception, so NO new geometry row; the
+greenfield is the scroll-snap viewport (the fleet's first scroll-snap surface).
+
+**Fork resolutions (the hard centers):**
+- **F1 mechanism = scroll-snap grid track (CSS-native)**, not transform.
+- **F2 infinite loop = clone-based scroll-teleport** (clone `k=ceil(slides-in-view)+1` real slides each side,
+  `aria-hidden`+`inert`+id-stripped+uncounted; teleport on the clone-band snap-settle with `scroll-behavior:
+  auto`; position = real-index/real-count, paddles never disable). **Key finding: the adia prior art's `loop`
+  is really a REWIND** (`swiper.class.js:170` jumps `goTo(0)` at the boundary) — a visible snap-back the
+  ticket's "no visible jump at the wrap seam" forbids; the fleet must go beyond the prior art here.
+- **F3 composition = author-placed anchor tags the coordinator drives + a `[pagination]`/`[paddles]` boolean
+  stamp-if-absent fallback** (present anchor wins) — honors the ask's separate-tags + placement control AND
+  one-node agent emission.
+- **F4 selection = bindable `active` prop committed by `select`** (the `ui-tabs` `selected`/`select` pattern,
+  ADR-0019/LLD-C8), not `change`.
+- **F5 catalog = `Swiper`+`SwiperItem` emittable; the three chrome tags `EXCLUSION_ALLOWLIST`** (author
+  refinements — the Toast/ThemeProvider precedent).
+- **F6 autoplay = NON-GOAL v1** (unasked; WCAG 2.2.2 liability). **F7 pointer-drag-beyond-native = deferred**
+  (native gestures only). **F8 wheel = native only, no axis translation** (one-owned-scroll-region law).
+
+**Sharpest build-time risk (flagged, not blocking):** `internals.ariaRoleDescription` is used NOWHERE in the
+fleet today (verified) — the region's `aria-roledescription="carousel"` is the family's fleet-first use; it is
+browser-verified + jsdom-guarded in the test plan (n14/n28/n29). The prior art set it as a host attribute,
+forbidden here (ARIA-via-internals law).
+
+**Doc review:** three `scribe:doc-reviewer` seats, pre-armed for the blockquote-header house style (generic
+`doc_lint` abstains by design). Verdicts: ADR light-REVISE, SPEC REVISE, LLD REVISE — **no CRITICAL**; the
+frozen-interface audit PASSED. All findings applied: added the ADR native-smooth-scroll timing consequence
+(custom `duration`/`easing` shape programmatic advances only — native gesture snaps use UA timing, so `goTo`
+runs a JS scroll animation, not `scroll-behavior: smooth`); minted **SPEC-R15** (carousel-region identity) +
+**SPEC-R16** (descriptor fidelity) + an Acceptance section; minted the **LLD-C1…C12** component-id table and
+fixed the C7/C8 active-binding contradiction; corrected the §13 build-sequence node-ids (swiper.css = n15,
+restored n14/n15); clarified the double-`select` primary guard (changed-index test, not the `#teleporting`
+flag) + the `#resizeObserver`→rebuild path; re-anchored the three browser-only decomp accepts (n7/n8/n10) off
+jsdom. Delta re-validation green (coverage `--strict` exit 0, adr gate 33/33).
+
+**Skill feedback (for the estate):** (1) the intake procedure held well — the "verify every frozen API against
+a real shipped consumer" discipline caught that `reflectAriaElements` is a private per-folder peer copy (not a
+shared export) BEFORE the LLD froze it as an import. (2) One gap worth a skill note: the F1 scroll-snap choice
+has a non-obvious downstream consequence (native smooth-scroll ignores custom timing props) that only surfaced
+in doc review — the intake could prompt "does the chosen CSS-native mechanism honor the configured attribute
+surface?" as a standing fork-sheet check when a mechanism is greenfield.
+
+**Status:** design FROZEN pending ratification. Next action: Kim/orchestration-lead flips ADR-0124
+`proposed → accepted`, then the `component-builder` builds M1 (core) → M2 (chrome) → M3 (catalog+site) against
+the LLD as contract, with the `component-reviewer` GO gate before each wave commit.

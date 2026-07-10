@@ -82,7 +82,12 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
 5. **The novelty leg** — when NO precedent row/class fits (a genuinely new geometry shape,
    control class, or interaction family): derive from the mechanics in
    `geometry-sizing-spec.md` + the control-class frame laws, and **propose the new
-   row/class/mechanism as an explicit ADR fork with a firm recommendation** — the ADR-0048
+   row/class/mechanism as an explicit ADR fork with a firm recommendation**. When the
+   novelty is a GREENFIELD platform mechanism (the fleet's first scroll-snap, first popover,
+   first view-transition…), add the fork-sheet check: **does the chosen mechanism honor
+   every attribute the design configures?** (scroll-snap ignores custom timing props — a
+   configured `easing`/`duration` silently no-ops on native snaps; the swiper intake's
+   lesson: the mechanism's real capability surface bounds the prop surface, verify per prop) — the ADR-0048
    date/time-picker intake (a bespoke 2D grid control no ramp row covered) is the worked
    precedent. Never silently invent geometry or a new event; the law grows by ratified
    amendment only.
