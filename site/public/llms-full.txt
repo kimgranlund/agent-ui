@@ -2119,7 +2119,7 @@ control's own vocabulary, never leaking "radio" into consumer markup.
 
 The host is a **centered, full-cell flex box** (segment.css) — no dot glyph, no leading affordance, just
 the default-slot label text centered in the cell. The Control-height sizing (block-size, padding, font,
-line-height), the ink colour (selected vs. unselected), the inter-segment dividers, the hover/active washes,
+line-height), the ink colour (selected vs. unselected), the hover/active washes,
 and the shared moving selected-fill indicator are all applied by the **host** `ui-segmented-control` through
 a descendant compound selector — `ui-segment` itself stays ignorant of any of that, exactly as `ui-radio`
 stayed ignorant of `ui-radio-group[variant='segmented']`'s presentation under the now-superseded ADR-0086.
