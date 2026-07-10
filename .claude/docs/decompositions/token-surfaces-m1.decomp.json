@@ -1,0 +1,67 @@
+{
+  "domain": "goals",
+  "plan": true,
+  "_meta": {
+    "title": "Token-surface family M1 BUILD (three controls -> serial integration + catalog allowlist seed -> site pages + tokens.ts re-host) — the execution plan the token-surfaces SPEC/LLD are authored against; M2 catalog/exemplar is a SEPARATE wave, deliberately out of this manifest",
+    "date": "2026-07-10",
+    "author": "system-planner",
+    "grounding": "PRD token-surfaces.prd.md (PRD-G1/G2/G3; PRD-G4 is M2, excluded) · ADR-0118 (accepted; clauses 1-7 + forks F1-F4 as answered) · SPEC token-surfaces.spec.md (SPEC-R1..R18, SPEC-N1..N5) · the chart-family-build.decomp.json precedent (same wave/slice shape) · fleet gates verified against the tree: file-set.test.ts, family-coherence.test.ts, descriptor/site-coverage.test.ts (per-tier page law + the display-tier membership list at ~line 187: ['attachment','badge','bar-chart','code','icon','progress','sparkline','stat','table','text']), catalog/default/index.test.ts (SPEC-N2 fleet-derived gate, EXCLUSION_ALLOWLIST seam), site/pages/tokens-doc.test.ts (the parse-layer drift gate that STAYS unchanged), site/lib/token-parse.ts (STAYS site-local)",
+    "note": "Both planes derived independently. OUTSIDE-IN from the wave/slice structure the fleet's build discipline imposes: a SHARED value-lane helper frozen first (the three controls all bind its signatures — unlike the chart family's distinct per-control math, this family shares ONE value contract, ADR-0118 cl.2), then one writer per control folder, then the ONE serial integration slice (barrel/styles/gate edit/catalog allowlist seed), then site pages + the tokens.ts re-host. INSIDE-OUT from what the surfaces must DO: route a value string into a live-resolved background with no color math, harden JSON inputs + gate ladder values to real lengths, paint a bordered box that never collapses/vanishes and degrades honestly under WHCM, pin light/dark scheme, render an ordered strip and literal-length magnitude bars, announce every surface as data (role=img composed name / list rows), join the fleet lifecycle, satisfy the SPEC-N2 catalog gate at M1 via an allowlist seed (rows are M2), and dogfood the primitives by re-hosting the site token reference net-negative with the 'Dimensional ladders' retitle. Enumerated from ADR-0118's clauses + the standing laws (ADR-0102 CSS-less consumer, ADR-0078 type tokens, geometry.md Display class, test-the-whole-shape, forced-colors honesty), not read off the node tree."
+  },
+  "nodes": [
+    { "id": "n0", "label": "token-surface family M1 build", "leaf": false, "justify": "grouping" },
+    { "id": "nW1", "label": "M1 component + integration + site wave (PRD-G1/G2/G3)", "leaf": false, "justify": "grouping" },
+    { "id": "n1a", "label": "shared value-lane helper (controls/_token-surface/token-surface.ts, DOM-free): cleanEntries + tokenEntriesProp JSON codec + cssValue (value-neutral --var lane, used by BOTH swatch background AND ladder --_mag) + isRenderableLength (a length ROUTER, not a drop gate)", "leaf": true,
+      "accept": "token-surface.test.ts (jsdom-free unit) covers: cleanEntries (non-array -> [], drop non-string label/value, order preserved); cssValue ('' -> '', '--x' -> 'var(--x)', literal verbatim); isRenderableLength ('24px'/'0'/'1.5rem'/'--x' true, 'red'/'abc'/'' false); codec round-trip incl. malformed JSON -> []; `npm test` green on the file. NO color math and NO getComputedStyle in the module (ADR-0118 cl.2)." },
+    { "id": "n1b", "label": "ui-swatch control folder (swatch.ts/.css/.md + jsdom & browser tests)", "leaf": true,
+      "accept": "file-set gate passes for controls/swatch/ ({swatch.ts,.css,.md} + >=1 test); a11y probe asserts internals.role=img + the composed name (label+', '+value; value or label alone; 'swatch' when neither) with no silent state; whole-shape browser leg (Chromium+WebKit) asserts a bare <ui-swatch value=...> paints a non-collapsed bordered box >= the token floor and never vanishes into its background; a real-color browser leg asserts getComputedStyle(box).backgroundColor resolves the token AND scheme='light' vs 'dark' on a genuinely light-dark()-divergent role compute different colors (SPEC-N5); forced-colors leg asserts the box degrades to a CanvasText border with no fill (SPEC-R14)" },
+    { "id": "n1c", "label": "ui-ramp control folder (ramp.ts/.css/.md + jsdom & browser tests)", "leaf": true,
+      "accept": "file-set gate passes for controls/ramp/; a11y probe asserts internals.role=list + one role=listitem per valid step announcing label+value with the color box aria-hidden; browser legs (both engines) assert the strip renders cells in steps order (physical order preserved), wraps rather than overflowing, and each box degrades honestly under forced-colors; hardening probe drops invalid steps and keeps order" },
+    { "id": "n1d", "label": "ui-ladder control folder (ladder.ts/.css/.md + jsdom & browser tests)", "leaf": true,
+      "accept": "file-set gate passes for controls/ladder/; a11y probe asserts internals.role=list + one role=listitem per well-formed tier announcing label+value with the magnitude bar aria-hidden; a non-length tier ('red') is ROUTED to a zero bar while KEEPING the row + printed value (SPEC-R11 unified no-silent-state, matching swatch), NOT dropped; an undefined --var tier zero-bars via the min(100%, var(--_mag,0px)) fallback with the printed value kept; browser legs (both engines) assert bar inline-sizes measure the LITERAL px within epsilon (24/28/36 -> 24/28/36, NOT a normalized proportion), cap at the track via min(100%,...), mirror rows under RTL, and paint CanvasText bars under forced-colors" },
+    { "id": "n1e", "label": "serial integration slice (controls/index.ts barrel + component-styles.css imports + site-coverage display-tier membership edit + package.json exports + size report) AND the SPEC-N2 catalog allowlist seed (EXCLUSION_ALLOWLIST Swatch/Ramp/Ladder + residue-guard)", "leaf": true,
+      "accept": "`npm run check && npm test` green repo-wide (family-coherence C1/C3 prove barrel export + styles import; site-coverage.test.ts display-tier list updated to the sorted set incl. ladder+ramp+swatch); the SPEC-N2 fleet-derived catalog gate is GREEN via an EXCLUSION_ALLOWLIST seed carrying Swatch/Ramp/Ladder WITH a residue-guard assertion (every allowlist key absent from the catalog); `npm run size` run by hand and reported, any family-budget re-base recorded as its own note; NEGATIVE CONTROLS: reverting the display-tier edit fails npm test, reverting the allowlist residue-guard fails the catalog gate" },
+    { "id": "n1f", "label": "site doc pages (site/swatch-doc.html + ramp-doc.html + ladder-doc.html + nav/toc rows)", "leaf": true,
+      "accept": "site-coverage per-tier page gate green for all three new display-tier descriptors ({name}-doc.html present); site toc/nav drift gates green; all three pages render the live controls (degenerate-input strips as visual fixtures) in the built site" },
+    { "id": "n1g", "label": "site tokens.ts re-host onto the primitives (roles->ui-swatch · numbered tonal primitives->ui-ramp · dimensions->ui-ladder) + the 'Dimensional ladders' retitle (PRD-G3; Kim's ramp-dogfood ruling)", "leaf": true,
+      "accept": "tokens.ts composes ui-swatch (color roles STAY swatch tables — roles-as-ramp rejected), ui-ramp (a NEW tonal-primitives section rendering the numbered --md-sys-color-{family}-100..900 steps as the ordered series), and ui-ladder (dimensions); no hand-built swatch divs or magnitude tables remain; deletable display LOC net-negative against the enumerated ~85-LOC deletable subset (the new ramp section adds ~12-15 display LOC, honestly counted, still swamped by the ~85 deleted); the dimensional section heading + DIMENSION_LADDERS const read 'Dimensional ladders' (the F1 rider, ADR-0118 cl.1); token-parse.ts existing functions UNCHANGED + ONE additive parseColorPrimitives helper (derives the numbered steps from the same sheet, not a hand-typed literal); tokens-doc.test.ts existing assertions pass UNCHANGED + ONE additive non-vacuous parseColorPrimitives assertion; the page renders both schemes in the built site" }
+  ],
+  "actions": [
+    { "id": "a1", "label": "route a value string into a live-resolved background via the --var lane, with zero color math (the browser is the resolver)" },
+    { "id": "a2", "label": "harden JSON/array inputs deterministically — non-array -> [], drop non-string label/value, and gate ladder values to resolvable CSS lengths — never throw" },
+    { "id": "a3", "label": "paint a bordered color box that never collapses and never disappears into its background, pin light/dark scheme so a light-dark() token shows its real per-scheme color, and degrade honestly under forced-colors (border only, never a fake color)" },
+    { "id": "a4", "label": "announce a swatch as data — role=img with the composed label+value name, no silent state" },
+    { "id": "a5", "label": "render an ordered color series as a wrapping strip whose order is the content" },
+    { "id": "a6", "label": "announce a ramp as a list — one item per step, label+value the datum, the color box aria-hidden" },
+    { "id": "a7", "label": "render dimensional tiers as literal-length, track-capped magnitude bars with NO normalization math, WHCM-honest" },
+    { "id": "a8", "label": "announce a ladder as a list — one item per tier, the printed value the accessible datum" },
+    { "id": "a9", "label": "join the fleet lifecycle: barrel export, styles import, descriptor trip-wires, per-tier membership, size budget" },
+    { "id": "a10", "label": "satisfy the SPEC-N2 fleet-derived catalog gate at M1 via an allowlist seed + residue-guard (catalog rows are the M2 wave)" },
+    { "id": "a11", "label": "document the three controls under the site per-tier page law" },
+    { "id": "a12", "label": "dogfood ALL THREE primitives — re-host the site token reference net-negative (roles->swatch, numbered tonal primitives->ramp, dimensions->ladder) with the 'Dimensional ladders' retitle, keeping token-parse.ts's existing functions + drift assertions unchanged while deriving the primitive series via one additive parse helper (not a hand-typed literal)" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n1a" },
+    { "action": "a2", "node": "n1a" },
+    { "action": "a3", "node": "n1b" },
+    { "action": "a4", "node": "n1b" },
+    { "action": "a5", "node": "n1c" },
+    { "action": "a6", "node": "n1c" },
+    { "action": "a7", "node": "n1d" },
+    { "action": "a8", "node": "n1d" },
+    { "action": "a9", "node": "n1e" },
+    { "action": "a10", "node": "n1e" },
+    { "action": "a11", "node": "n1f" },
+    { "action": "a12", "node": "n1g" }
+  ],
+  "edges": [
+    { "from": "n1a", "to": "n1b", "why": "ui-swatch binds the frozen cssValue signature — the box background is the helper's output, it cannot be coded against a guess" },
+    { "from": "n1a", "to": "n1c", "why": "ui-ramp binds the tokenEntriesProp codec + cleanEntries + cssValue — the strip renders exactly the hardened entries the helper yields" },
+    { "from": "n1a", "to": "n1d", "why": "ui-ladder binds cleanEntries + isRenderableLength — the helper is the per-tier length ROUTER (renderable → cssValue, else the 0px zero-bar — the datum always survives), the bar size its passthrough" },
+    { "from": "n1b", "to": "n1e", "why": "the serial integration slice edits the shared barrel/styles/coverage files to export what the swatch folder ships — the folder must exist first (one-writer-per-file fan-out law)" },
+    { "from": "n1c", "to": "n1e", "why": "same shared-file dependency for the ramp folder — all three folders land before the ONE serial writer touches controls/index.ts, component-styles.css, and site-coverage" },
+    { "from": "n1d", "to": "n1e", "why": "same shared-file dependency for the ladder folder; the display-tier membership edit lists all three at once" },
+    { "from": "n1e", "to": "n1f", "why": "the doc pages mount the barrel-exported, style-imported controls; before the integration slice the site build cannot resolve them, and the per-tier page gate keys off the integrated descriptors" },
+    { "from": "n1e", "to": "n1g", "why": "the tokens.ts re-host composes the barrel-exported controls and depends on the display-tier gate + catalog allowlist being green first — the dogfood proof runs against the integrated, gate-clean family" }
+  ]
+}
