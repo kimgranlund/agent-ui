@@ -73,3 +73,27 @@ flagship demo hand-builds this shape today.
   third behind TKT-0008 (swiper) and TKT-0009 (toolbar), Kim's call on order.
 
 ## Findings
+
+- **2026-07-10 — combined design intake COMPLETE (docs only, no code).** Run jointly with TKT-0013
+  (`ui-status-stream`) as ONE intake, because the posture fork resolves to a shared family. Records:
+  [ADR-0122](../adr/0122-timeline-family-and-live-status-stream.md) (proposed, forks F1–F6 recommended) ·
+  [`../spec/timeline-family.spec.md`](../spec/timeline-family.spec.md) ·
+  [`../lld/timeline-family.lld.md`](../lld/timeline-family.lld.md) ·
+  [`../decompositions/timeline-family-ship.decomp.json`](../decompositions/timeline-family-ship.decomp.json)
+  (coverage_check `--strict` clean, exit 0). ADR README row added.
+- **The posture fork (F1) — RESOLVED: a THREE-tag family, not one control, not two.** `ui-timeline`
+  (durable, `role=list`, authored children) + `ui-status-stream` (live, `role=log`, imperative-fed) share ONE
+  inert atom `ui-timeline-item` (marker + connector + content + `status` signifiers + the collapsible detail)
+  but diverge on five mechanical axes (data ingress · completion · scroll · ARIA role · motion). The
+  `role=list`↔`role=log` split is a contract a `live` boolean cannot honestly carry; the `ui-toast`/
+  `ui-toast-region` dumb-item+liveness-host pair is the exact precedent. So this ticket owns `ui-timeline` +
+  `ui-timeline-item`; TKT-0013 owns `ui-status-stream` (reusing the item). ONE record set, both tickets.
+- **This ticket's forks settled:** geometry (F2) — the marker/connector/gutter join a NEW explicit
+  per-`(scale × size)` `--ui-timeline-*` table with a FIRST-CLASS `size` prop (Kim's directive; the novelty leg
+  fired, ADR-0048 precedent, NO multiplier per ADR-0038); marker states (F3) — `status`=`''/pending/active/
+  done/error`, each a distinct non-color SHAPE (ADR-0057), reconciling the adia code↔yaml drift; orientation
+  (F6) — vertical only v1 (horizontal fenced); catalog (F5) — `Timeline`+`TimelineItem` EMITTABLE; events —
+  `events:[]` + the item's `ui-disclosure`-reused detail emits `toggle` (the adia `timeline-toggle` custom name
+  dropped); timestamp is the consumer's string (no codec); items are authored children (no `data` array prop).
+- **Follow-up recorded (NOT scope):** repoint the `a2a-artifact-feed` page's hand-rolled `.feed-timeline`
+  chrome onto the shipped `ui-status-stream` (the ADR-0117/0121 dogfood-promotion pattern).

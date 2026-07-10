@@ -29,7 +29,11 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
 
 1. **Extract intent** (intent-extract where installed; its discipline inline otherwise).
    Root goal vs literal ask; ONE batched clarifying round max. Name the component's *job* in
-   one sentence — everything downstream keys off it.
+   one sentence — everything downstream keys off it. **Combined intakes are a valid shape**
+   (two tickets whose components may be one family — the timeline/status-stream precedent):
+   resolve the one-family-vs-two fork FIRST with mechanics (count the divergent axes; a
+   boolean that must flip role/data-contract/scroll/completion at once is two controls), then
+   produce ONE record set; both tickets' Findings get the entry.
 
 2. **Dedup + precedent sweep.** Is it a variant/prop of an existing control rather than a new
    one? (Grep `controls/`.) Then: read the nearest **2–3 descriptors** end-to-end AND the
@@ -96,7 +100,11 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
    dispatchable: one writer per file.
 
 8. **Independent doc review gates the build — non-optional, before freeze.** Hand the record
-   set to a fresh-context doc reviewer (`scribe:doc-reviewer` / the house review seat). The
+   set to a fresh-context doc reviewer (`scribe:doc-reviewer` / the house review seat) —
+   and PRE-ARM the reviewer: this repo's ADR/SPEC/LLD corpus uses a blockquote-header house
+   style gated by its own tests (`adr.test.ts`, coverage_check), NOT scribe frontmatter;
+   generic `doc_lint` abstains by design (every reviewer re-discovers this as a MAJOR
+   otherwise — spend the review budget on substance). The
    LLD review must include the **frozen-interface-vs-real-code check**: every API the §
    interface names exists with that exact signature in the shipped source (the two recurring
    blocker shapes: an INVENTED API a doc summary suggested, and a value-vs-accessor

@@ -98,3 +98,39 @@ amends feed-family or earns a sibling record).
   candidates for a SINGLE combined intake — flag to Kim when ordering the queue.
 
 ## Findings
+
+- **2026-07-10 — combined design intake COMPLETE (docs only, no code).** Run jointly with TKT-0010
+  (`ui-timeline`) as ONE intake. Records:
+  [ADR-0122](../adr/0122-timeline-family-and-live-status-stream.md) (proposed, forks F1–F6 recommended) ·
+  [`../spec/timeline-family.spec.md`](../spec/timeline-family.spec.md) ·
+  [`../lld/timeline-family.lld.md`](../lld/timeline-family.lld.md) ·
+  [`../decompositions/timeline-family-ship.decomp.json`](../decompositions/timeline-family-ship.decomp.json)
+  (coverage_check `--strict` clean, exit 0). ADR README row added.
+- **The timeline fork (the big one) — RESOLVED: `ui-status-stream` is its OWN control, NOT `ui-timeline`'s
+  live posture; but the two are ONE family sharing the `ui-timeline-item` atom (F1).** Decomposed to mechanics,
+  the durable timeline and the live stream diverge on FIVE axes — (1) data ingress: authored children vs
+  **imperative append + keyed update-in-place** (a status entry TRANSITIONS running→done/error; identity
+  persists — the A2A `TaskState` table is literally that); (2) the **completion invariant** (a torn stream's
+  entry must be showable as truncated — B7 tracked-completion applied to display); (3) scroll: page-scrolled vs
+  **tail-follow** with a stick-to-bottom guard (the TKT-0004 `revealScroll` discipline as component behavior);
+  (4) ARIA: `role=list` vs **`role=log`** (polite live region); (5) motion: static vs streaming. A single
+  control with a `live` boolean would flip its ARIA role, scroll ownership, data contract, and completion
+  semantics on one attribute — two controls in a trench coat. So `ui-status-stream` is its own host, hosting the
+  SAME `ui-timeline-item` (the `ui-toast`/`ui-toast-region` dumb-item+liveness-host precedent). This ticket owns
+  `ui-status-stream`; TKT-0010 owns `ui-timeline` + the shared item.
+- **This ticket's forks settled:** data contract (F4) — imperative `append(entry)` + keyed `update(key,patch)`
+  + `finalize()` (NOT a bound reactive list; the toast-region `show()` precedent), keyed string identity;
+  completion invariant = unresolved-at-end renders truncated, fail-closed; streamed chain-of-thought text is an
+  `update({text})` patch, **never parsed/tokenized**, and the host holds **no transport** (verified against
+  `feed-live-transport.ts`/`ndjson-lines.ts` — those stay where they are). A11y — `role=log` **polite** (announce
+  state transitions, never token spam). Live UX — tail-follow + collapse via `ui-disclosure` reuse (`toggle`);
+  reduced-motion collapses streaming animations. Catalog (F5) — `StatusStream` is **NOT emittable**, an
+  `EXCLUSION_ALLOWLIST` entry (the `Toast`/`ToastRegion` cl.6 precedent — a consumer-owned imperative streaming
+  host, not one-shot markup). This EXTENDS the feed-family PRD's activity vocabulary (link, not duplicate);
+  no new PRD authored. Fenced: nesting > 1 level, a "cancel this action" affordance, persistence hand-off.
+- **The live browser proof is REAL + runnable (SPEC-R19):** the in-repo arena NDJSON stream feeds
+  `ui-status-stream` via `readNdjsonLines` as an INSTRUMENT-BRIDGE (recorded lines through the same
+  `append`/`update`/`finalize` path), proving append + keyed transition + tail-follow + truncation cross-engine,
+  with no live key.
+- **Follow-up recorded (NOT scope):** the a2a pages narrating their own live matches through it (dogfood); the
+  eventual `a2ui-chat` surface consuming it.
