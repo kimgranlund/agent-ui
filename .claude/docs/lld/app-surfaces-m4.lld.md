@@ -116,7 +116,7 @@ Single `split.css`, sectioned (ADR-0003): a `:where(ui-split)` block declaring o
 
 When `split.md` lands, the a2ui whole-fleet coverage gate (`a2ui/src/catalog/default/index.test.ts`, SPEC-N2, ADR-0087) demands `ui-split` resolve. **Recommend: add a `Split` container row** to `catalog.json` (+ a `ui-split` factory in `factories.ts`) — parity with the already-bound `Row`/`Column`/`Grid`/`Slider`/`SliderMulti`/`List` (verified in `catalog.json`, 44 components). The row exposes `axis` + initial `sizes` + a `ChildList` of panes; the resize is a host-owned affordance (as `Slider`'s drag is). **Fallback:** if the build finds the resize can't be safely agent-parameterized, add a cited `EXCLUSION_ALLOWLIST` entry (the ADR-0117 `ThemeProvider`/app-owner-chrome precedent) — no residue either way (the gate is red on an unresolved control).
 
-**Failure/edge handling.** `ui-split-pane` is a structural child of `Split` (a `ChildList` template item), likely NOT its own catalog row (like `CardHeader`/`-Content`/`-Footer` are structural under `Card`) — confirm at build against how the card sub-elements are cataloged.
+**Failure/edge handling.** `ui-split-pane` is a structural child of `Split` (a `ChildList` template item) — *CONFIRMED AT BUILD (2026-07-10): the guess here was backwards — `CardHeader`/`-Content`/`-Footer` each carry their OWN catalog row (structural = own row + ChildList, no `value` mark), and the fleet-derived coverage gate requires the same of `SplitPane`; landed accordingly.*
 
 ---
 

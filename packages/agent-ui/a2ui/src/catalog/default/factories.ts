@@ -479,6 +479,28 @@ export const listFactory: WidgetFactory = accessorFactory('ui-list')
 // `static props`. Not an input (no `value` mark).
 export const gridFactory: WidgetFactory = accessorFactory('ui-grid')
 
+// ── app-surfaces-m4.lld.md LLD-C8 (SPEC-R6, ADR-0120 cl.5) — Split (+ SplitPane sub-type) ───────────
+//
+// Split → ui-split (SPEC-R1..R5). `axis` (structural enum, NOT bindable — the Row/Column align/gap
+// precedent) + bindable `sizes` (number[], the live ratio vector — the Sparkline.values/BarChart.data
+// array-prop precedent) are 1:1 reflecting accessor props — verified against split.ts `static props`.
+// `value:{prop:'sizes',event:'change'}`: the renderer's generic input controller (input.ts LLD-C8) reads/
+// writes `el.sizes` verbatim on drag-end/keyboard-step commit — the array-valued round-trip needs no
+// bespoke factory, `setProp`/`installInputBinding` are already generic over the property's shape (the
+// resize gesture is a host-owned affordance exactly as Slider's drag is, the F-catalog resolution). Not a
+// submitGate. `ChildList` children (the panes).
+export const splitFactory: WidgetFactory = accessorFactory('ui-split', { prop: 'sizes', event: 'change' })
+
+// SplitPane → ui-split-pane (SPEC-R1/R2). A structural pane region — the CardHeader/-Content/-Footer
+// precedent (regions = sub-elements, OWN catalog row, ChildList children — confirmed against how the card
+// regions actually land, not folded into Split's own row). `initial` (a one-time ratio seed consulted only
+// at connect/pane-count-change — the Slider.min/max/step structural-config precedent, NOT bindable),
+// `min`/`max` (CSS length strings, structural), and `collapsible` (a structural capability gate, NOT the
+// fleet's `disabled` dynamic-enablement idiom — so also NOT bindable) are ALL 1:1 reflecting accessor props
+// — verified against split-pane.ts `static props`. Not an input of its own (no `value` mark — the PARENT
+// Split owns the two-way commit, the Radio/RadioGroup precedent).
+export const splitPaneFactory: WidgetFactory = accessorFactory('ui-split-pane')
+
 // ── the ADR-0107 chart family (Sparkline / BarChart, catalog LLD-C10, chart-family.lld.md §5) ──────
 //
 // Sparkline → ui-sparkline (SPEC-R1..R4). `values` (number[]), `label` (string), `variant`
@@ -625,6 +647,8 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   ComboBox: comboBoxFactory,
   List: listFactory,
   Grid: gridFactory,
+  Split: splitFactory,
+  SplitPane: splitPaneFactory,
   Sparkline: sparklineFactory,
   BarChart: barChartFactory,
   Table: tableFactory,

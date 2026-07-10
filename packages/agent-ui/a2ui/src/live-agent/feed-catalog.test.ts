@@ -18,9 +18,9 @@ const inSet = new Set<string>(FEED_SURFACE_TYPES)
 const outSet = new Set<string>(FEED_EXCLUDED.map((e) => e.type))
 
 describe('feed sub-catalog partition gate (ADR-0097 §3 / SPEC-R15 / LLD-C14)', () => {
-  it('has the exact ADR-0097 §3 counts — 26 IN, 21 OUT (11 at ratification + the chart-family pair, ADR-0097 Amendment / ADR-0107 Amendment 2 + the report/content/feed catalog wave\'s 3 IN / 5 OUT, ADR-0111/0113/0112 + the token-surface family\'s 0 IN / 3 OUT, ADR-0118 cl.6)', () => {
+  it('has the exact ADR-0097 §3 counts — 26 IN, 23 OUT (11 at ratification + the chart-family pair, ADR-0097 Amendment / ADR-0107 Amendment 2 + the report/content/feed catalog wave\'s 3 IN / 5 OUT, ADR-0111/0113/0112 + the token-surface family\'s 0 IN / 3 OUT, ADR-0118 cl.6 + the M4 app-surfaces panes wave\'s 0 IN / 2 OUT, ADR-0120 cl.5)', () => {
     expect(FEED_SURFACE_TYPES.length).toBe(26)
-    expect(FEED_EXCLUDED.length).toBe(21)
+    expect(FEED_EXCLUDED.length).toBe(23)
   })
 
   it('IN and OUT are disjoint — no type carries two dispositions', () => {
@@ -50,6 +50,7 @@ describe('feed sub-catalog partition gate (ADR-0097 §3 / SPEC-R15 / LLD-C14)', 
       ['Card', ['CardHeader', 'CardContent', 'CardFooter']],
       ['Tabs', ['Tab', 'TabPanel']],
       ['Menu', ['MenuItem']],
+      ['Split', ['SplitPane']],
     ]
     for (const [parent, children] of families) {
       const parentIn = inSet.has(parent)

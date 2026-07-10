@@ -344,6 +344,25 @@
       "children": "ChildList"
     },
 
+    "Split": {
+      "properties": {
+        "axis": { "type": { "type": "string", "enum": ["horizontal", "vertical"] }, "mapsTo": "axis" },
+        "sizes": { "type": { "type": "array", "items": { "type": "number" } }, "bindable": true, "mapsTo": "sizes" }
+      },
+      "value": { "prop": "sizes", "event": "change" },
+      "children": "ChildList"
+    },
+
+    "SplitPane": {
+      "properties": {
+        "initial": { "type": { "type": "number" }, "mapsTo": "initial" },
+        "min": { "type": { "type": "string" }, "mapsTo": "min" },
+        "max": { "type": { "type": "string" }, "mapsTo": "max" },
+        "collapsible": { "type": { "type": "boolean" }, "mapsTo": "collapsible" }
+      },
+      "children": "ChildList"
+    },
+
     "Sparkline": {
       "properties": {
         "values": { "type": { "type": "array", "items": { "type": "number" } }, "bindable": true, "mapsTo": "values" },
