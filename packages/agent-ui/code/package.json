@@ -1,0 +1,17 @@
+{
+  "name": "@agent-ui/code",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./highlight": "./src/highlight/index.ts",
+    "./highlight.css": "./src/highlight/highlight.css",
+    "./markdown": "./src/markdown/index.ts",
+    "./markdown.css": "./src/markdown/markdown.css"
+  },
+  "dependencies": {
+    "@agent-ui/components": "*",
+    "@agent-ui/shared": "*"
+  }
+}

@@ -29,7 +29,9 @@
       "@agent-ui/app": ["./packages/agent-ui/app/src/index.ts"],
       "@agent-ui/app/*": ["./packages/agent-ui/app/src/*"],
       "@agent-ui/router": ["./packages/agent-ui/router/src/index.ts"],
-      "@agent-ui/router/*": ["./packages/agent-ui/router/src/*"]
+      "@agent-ui/router/*": ["./packages/agent-ui/router/src/*"],
+      "@agent-ui/code": ["./packages/agent-ui/code/src/index.ts"],
+      "@agent-ui/code/*": ["./packages/agent-ui/code/src/*"]
     },
 
     /* Linting */

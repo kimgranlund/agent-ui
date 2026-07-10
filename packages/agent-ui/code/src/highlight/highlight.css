@@ -1,0 +1,49 @@
+/* highlight.css — the `./highlight` pack's token stylesheet (LLD-C7, SPEC-C5). Mirrors code.css's
+ * two-block shape: a `:where(ui-code)` token block declares the five `--ui-code-token-*` roles from
+ * `--md-sys-color-*` ROLES (not numbered steps — the sheet is mid-migration by another seat; SPEC-C5
+ * pins role-family only), consumed by a `@scope (ui-code)` block via `[data-token="{tier}"]` selectors —
+ * the seam's projected spans (core/project.ts). Token color is a non-essential enhancement (SPEC-C5): the
+ * code is complete and legible as plain ink with or without this stylesheet, so no information rides hue
+ * alone and no non-color signifier is owed (the ADR-0057 rule binds intent; highlighting conveys none).
+ *
+ * Standalone stylesheet, exported as the `./highlight.css` subpath — an app links it (or a bundler
+ * `import`s it as CSS) only when it also wants token color; NEVER injected from any .ts (behaviour-only
+ * modules, no runtime style injection).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-code) declares --ui-code-token-* ════════════════ */
+
+:where(ui-code) {
+  --ui-code-token-comment: var(--md-sys-color-neutral-on-surface-variant); /* muted */
+  --ui-code-token-keyword: var(--md-sys-color-primary-on-surface); /* accent */
+  --ui-code-token-string: var(--md-sys-color-success-on-surface); /* distinct accent */
+  --ui-code-token-number: var(--md-sys-color-tertiary-on-surface); /* further accent */
+  --ui-code-token-punctuation: var(--md-sys-color-neutral-on-surface); /* default ink */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-code) consumes [data-token] ════════════════ */
+
+@scope (ui-code) {
+  [data-token='comment'] {
+    color: var(--ui-code-token-comment);
+  }
+  [data-token='keyword'] {
+    color: var(--ui-code-token-keyword);
+  }
+  [data-token='string'] {
+    color: var(--ui-code-token-string);
+  }
+  [data-token='number'] {
+    color: var(--ui-code-token-number);
+  }
+  [data-token='punctuation'] {
+    color: var(--ui-code-token-punctuation);
+  }
+
+  /* forced-colors — a token is NEVER invisible; every tier degrades to plain ink (SPEC-C5 AC2) */
+  @media (forced-colors: active) {
+    [data-token] {
+      color: CanvasText;
+    }
+  }
+}

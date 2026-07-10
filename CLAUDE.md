@@ -36,6 +36,12 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   (ADR-0115): `createRouter`/`connectUrl` core (zero DOM dependency) + `ui-router-outlet`/`ui-router-link`;
   depends only on `@agent-ui/components` + `@agent-ui/shared`; catalog-invisible by construction (never
   imported by `a2ui`)
+- `packages/agent-ui/code/` — `@agent-ui/code`, the code+prose family (ADR-0119): a zero-dep core (token
+  types + a swappable highlighter registry + a light-DOM projection seam, `.`) plus two opt-in subpath
+  packs — `./highlight` (seven hand-rolled tokenizers, self-registering) and `./markdown` (`ui-markdown`,
+  rendering the agent-common markdown subset into real fleet DOM, sanitized by construction); depends only
+  on `@agent-ui/components` + `@agent-ui/shared`; a sibling branch off `components` alongside `router`,
+  catalog-invisible by construction (never imported by `a2ui`)
 - `.claude/docs/` — plan, goals, process, references, adr, specs, llds, decompositions, rubrics (agent-scoped project docs) · `*.test.ts` co-located with source
 
 ## Conventions (non-obvious only)
@@ -46,10 +52,10 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   the explicit `.ts` on local imports.
 - Vite 8 is Rolldown-based (not esbuild/Rollup) — bundler/plugin behaviour follows Rolldown-Vite.
 - Imports point inward only: layers `reactive` ← `dom` ← `traits`/`controls`; cross-package the DAG is
-  `shared` ← `components` ← `a2ui` ← `app`, with `router` a sibling branch off `components` (`shared` ←
-  `components` ← `router`) — `router` never imports `a2ui`, and `a2ui`/`app` never import `router`
-  (catalog-invisible by construction, ADR-0115) (`icons`/`a2a` import nothing). Nothing imports upward.
-  (Enforced by the per-package `layering.test.ts` trip-wires.)
+  `shared` ← `components` ← `a2ui` ← `app`, with `router` AND `code` as sibling branches off `components`
+  (`shared` ← `components` ← {`router`, `code`}) — neither `router` nor `code` imports `a2ui`, and `a2ui`/
+  `app` never import either (catalog-invisible by construction, ADR-0115/ADR-0119) (`icons`/`a2a` import
+  nothing). Nothing imports upward. (Enforced by the per-package `layering.test.ts` trip-wires.)
 - Naming: tags `ui-{name}`, classes `UI{Name}Element`, tokens `--ui-{name}-*` / color roles
   `--md-sys-color-{family}-{role}` / type scale `--md-sys-typescale-{role}-{size}-*` (ADR-0078);
   event names ∈ `change · input · select · open · close · toggle`.

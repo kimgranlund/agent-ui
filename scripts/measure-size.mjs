@@ -63,7 +63,12 @@ const targets = [
   // measured 29463 B gz 2026-07-09; per-control marginals stay trivial vs the ~2 KB cap (progress 301 B gz ·
   // avatar 307 B gz · attachment 544 B gz · toast 0 B gz · toast-region 235 B gz — the worst-case ceiling
   // moves, the real per-control gate does not).
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 30 * KB],
+  // 32 KB re-based at the M4 Phase 1 wave (ADR-0120 cl.2, app-surfaces-m4.lld.md LLD-C9, the SAME
+  // Consequences-anticipated re-base precedent — SPEC-R14 named this re-base EXPECTED, not guessed): the
+  // split primitive (ui-split's drag/keyboard/ARIA machinery + ui-split-pane) — measured 32689 B gz
+  // 2026-07-10; the per-control marginal stays the real gate (split 1966 B gz — within the ≤2048 B cap;
+  // split-pane 0 B gz, trivial — the worst-case ceiling moves, the real per-control gate does not).
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 32 * KB],
 ]
 
 let over = false
@@ -255,10 +260,65 @@ console.log(
   `\n@agent-ui/router (core + ui-router-outlet + ui-router-link): marginal ${routerMarginal} B gz — ${routerStatus} budget (${ROUTER_MARGINAL_BUDGET} B gz)   solo ${routerGz} B gz (${routerMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
 )
 
-if (over || marginalOver || appOver || routerOver) {
+// ── @agent-ui/code (LLD-C10, SPEC-C9 AC2) — the code+prose family: a THIRD sibling branch off components
+// (`shared ← components ← {a2ui, router, code} ← app`). Three per-pack line-items, not one combined figure
+// (SPEC-C9's per-pack budget discipline):
+//   • the core `.` barrel and `./highlight` neither import @agent-ui/components at ALL (the no-kernel gate,
+//     core/no-kernel.test.ts) — their ABSOLUTE bundled size carries zero foundation cost, so it IS the
+//     tree-shake byte proof directly (SPEC-C1 AC3/SPEC-C9: "the core row proves no pack mass" — an absolute
+//     near-zero figure demonstrates this more directly than a marginal-over-foundation frame would).
+//   • `./markdown` DOES pull real fleet controls (ui-text/ui-code/ui-table via
+//     @agent-ui/components/controls/*), so it is measured the SAME marginal-over-foundation way as
+//     @agent-ui/app/@agent-ui/router above: what a consumer who already pays for the components foundation
+//     pays ON TOP to add ui-markdown.
+const codePkgDir = fileURLToPath(new URL('../packages/agent-ui/code', import.meta.url))
+
+/** Bundle a single real entry file (no synthetic virtual wrapper needed — one target each) and return its
+ *  gz byte size. Mirrors the T5/router/app sections' minify+gzip pipeline. */
+const gzOfEntry = async (entryPath) => {
+  const bundle = await rolldown({ input: entryPath })
+  const { output } = await bundle.generate({ format: 'esm', minify: true })
+  await bundle.close()
+  const code = output
+    .filter((c) => c.type === 'chunk')
+    .map((c) => c.code)
+    .join('')
+  return { gz: gzipSync(code, { level: 9 }).length, min: Buffer.byteLength(code) }
+}
+
+// core `.` — the ABSOLUTE tree-shake proof (no components import exists to make "marginal" meaningful).
+const CODE_CORE_BUDGET = 1.5 * KB // measured 534 B gz at M1 kickoff (LLD-C10, ADR-0080 discipline) — pinned with headroom
+const codeCore = await gzOfEntry(`${codePkgDir}/src/index.ts`)
+const codeCoreOver = codeCore.gz > CODE_CORE_BUDGET
+console.log(
+  `\n@agent-ui/code . (core — token types + registry + projection seam): ${codeCore.gz} B gz (${codeCore.min} B min) — ${codeCoreOver ? 'OVER' : 'within'} budget (${CODE_CORE_BUDGET} B gz); zero @agent-ui/components import exists (the no-kernel gate) — this figure IS the tree-shake proof, not a marginal`,
+)
+
+// ./highlight — ABSOLUTE (same no-components-import reasoning; seven hand-rolled tokenizers + the shared
+// scan.ts lexer core, self-registering on import).
+const CODE_HIGHLIGHT_BUDGET = 6 * KB // measured 2454 B gz at M1 kickoff (LLD-C10, ADR-0080 discipline) — pinned with headroom
+const codeHighlight = await gzOfEntry(`${codePkgDir}/src/highlight/index.ts`)
+const codeHighlightOver = codeHighlight.gz > CODE_HIGHLIGHT_BUDGET
+console.log(
+  `@agent-ui/code/highlight (seven tokenizers, self-registering): ${codeHighlight.gz} B gz (${codeHighlight.min} B min) — ${codeHighlightOver ? 'OVER' : 'within'} budget (${CODE_HIGHLIGHT_BUDGET} B gz)`,
+)
+
+// ./markdown — MARGINAL over the components foundation (it pulls real ui-text/ui-code/ui-table).
+const CODE_MARKDOWN_BUDGET = 5 * KB // measured marginal 1033 B gz at M1 kickoff (LLD-C10, ADR-0080 discipline) — pinned with headroom
+const codeMarkdown = await gzOfEntry(`${codePkgDir}/src/markdown/index.ts`)
+const codeMarkdownMarginal = codeMarkdown.gz - foundationGz
+const codeMarkdownOver = codeMarkdownMarginal > CODE_MARKDOWN_BUDGET
+console.log(
+  `@agent-ui/code/markdown (ui-markdown; pulls ui-text/ui-code/ui-table): marginal ${codeMarkdownMarginal} B gz — ${codeMarkdownOver ? 'OVER' : 'within'} budget (${CODE_MARKDOWN_BUDGET} B gz)   solo ${codeMarkdown.gz} B gz (${codeMarkdown.min} B min, informational — includes the ${foundationGz} B gz components foundation)`,
+)
+
+if (over || marginalOver || appOver || routerOver || codeCoreOver || codeHighlightOver || codeMarkdownOver) {
   if (over) console.error('size: a barrel exceeds its budget')
   if (marginalOver) console.error('size: a control exceeds its per-control marginal budget')
   if (appOver) console.error('size: @agent-ui/app exceeds its marginal budget')
   if (routerOver) console.error('size: @agent-ui/router exceeds its marginal budget')
+  if (codeCoreOver) console.error('size: @agent-ui/code . (core) exceeds its budget')
+  if (codeHighlightOver) console.error('size: @agent-ui/code/highlight exceeds its budget')
+  if (codeMarkdownOver) console.error('size: @agent-ui/code/markdown exceeds its marginal budget')
   process.exit(1)
 }

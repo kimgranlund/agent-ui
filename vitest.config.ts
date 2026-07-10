@@ -54,6 +54,12 @@ export default defineConfig({
       // subpath and mangles it into a path segment appended after `index.ts` unless a more-specific exact
       // entry wins first).
       '@agent-ui/components/controls/theme-provider': r('./packages/agent-ui/components/src/controls/theme-provider/theme-provider.ts'),
+      // @agent-ui/code/src/markdown/render.ts (LLD-C9) is the third direct `./controls/{name}` subpath
+      // consumer from OUTSIDE the components package — the fenced-code and GFM-table construct legs need
+      // `ui-code`/`ui-table` self-defined without dragging the whole `/components` barrel. Same
+      // alias-ordering necessity as `controls/text`/`controls/theme-provider` above.
+      '@agent-ui/components/controls/code': r('./packages/agent-ui/components/src/controls/code/code.ts'),
+      '@agent-ui/components/controls/table': r('./packages/agent-ui/components/src/controls/table/table.ts'),
       // EXACT (not prefix) matches, `?url`-suffixed: `@agent-ui/app`'s isolated-shell connect-flow
       // (app-shell.ts, LLD-C5/ADR-0082) resolves these two package CSS assets to a real runtime URL via
       // Vite's `?url` suffix, to inject as `<link>` hrefs INSIDE a shadow root. Vite's aliasing is FIRST-

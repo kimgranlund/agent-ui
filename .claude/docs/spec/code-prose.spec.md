@@ -85,8 +85,11 @@ can hold an isolated registry. **Every** highlighter's output MUST be a *contigu
 the identity guarantee). With **no** highlighter registered, `tokenize(code, language)` MUST return
 `[{ kind: 'plain', text: code }]` (a single plain token = verbatim). **`tokenize` MUST enforce the
 invariant at the boundary**: if the active highlighter's output does NOT round-trip (drops, reorders, or
-mutates text), `tokenize` MUST discard it and return `[{ kind: 'plain', text: code }]` — the code the user
-sees is never corrupted (the ADR-0113 plain-wins spirit). The downgrade MUST NOT be silent: it MUST emit
+mutates text) **or the highlighter throws**, `tokenize` MUST discard it and return
+`[{ kind: 'plain', text: code }]` — the code the user sees is never corrupted, and the render never goes
+blank, either (the ADR-0113 plain-wins spirit; the throw case named review-driven, 2026-07-10 — a faithful
+completion of this same fidelity floor: a throw is just another shape of "the active highlighter did not
+produce trustworthy output," not a new case). The downgrade MUST NOT be silent: it MUST emit
 a single dev-facing `console.warn` naming the offending highlighter (the `@agent-ui/icons` registry's
 last-wins `console.warn` posture — a broken highlighter must surface, not hide). *(→ PRD-G2; ADR-0119 cl.2/3)*
 - **AC1** *Given* an empty registry, *then* `tokenize('const x = 1', 'ts')` is
@@ -101,7 +104,10 @@ last-wins `console.warn` posture — a broken highlighter must surface, not hide
   input — e.g. it silently drops a comment), *when* `tokenize(code, language)` runs, *then* the result is
   `[{ kind: 'plain', text: code }]` (the boundary downgrade, code intact) **and** exactly one
   `console.warn` fires naming the highlighter; a well-behaved highlighter fires no warn (negative control —
-  the downgrade path bites only on a real invariant breach).
+  the downgrade path bites only on a real invariant breach). *Given* instead a **throwing** highlighter
+  (review-driven, 2026-07-10), *then* the SAME downgrade fires — `[{ kind: 'plain', text: code }]` and
+  exactly one `console.warn` — including for `code === ''`, where an empty array would otherwise round-trip
+  trivially and must NOT let the throw slip through uncaught.
 
 **SPEC-C3 — The projection seam renders tokens into a `ui-code` host through light DOM; `ui-code` itself
 is unchanged; the empty path is byte-identical.** The core MUST export a projection function that, given a

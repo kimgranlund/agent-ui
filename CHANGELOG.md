@@ -556,3 +556,21 @@ chrome exclusions remain), the feed partition re-proven TOTAL at 26 IN / 21 OUT 
 47-type catalog, the §5.2 usage-guidance blockquote (tile vs Swatch vs Ramp vs Ladder vs
 Table — a role SET is not a Ramp), and the brand-palette exemplar (authored-clean: validator
 exit 0, repairs none; roles as swatches, the tonal series as the Ramp, radii as the Ladder).
+
+## 2026-07-10 (@agent-ui/code M1) — the code+prose family ships: highlight · markdown, hand-rolled and gated
+
+ADR-0119's package lands (double-reviewed: the ui-markdown element GO 5/5; the package-level
+review GO with the throwing-highlighter path hardened): a zero-dep core (Token types + the
+last-wins highlighter registry with the round-trip fidelity floor — bad output OR a throw
+downgrades to verbatim plain with exactly one named console.warn — + the projectHighlight
+light-DOM seam onto a byte-untouched ui-code) and two opt-in subpath packs. ./highlight:
+seven hand-rolled line-oriented tokenizers (ts/js · json · html · css · python · shell ·
+md-fences) with a single-level BlockMode carry for multi-line constructs. ./markdown:
+ui-markdown rendering the agent-common subset (GFM tables included) into real fleet DOM —
+sanitized BY CONSTRUCTION (no raw-HTML node kind exists; createElement/textContent only,
+grep-gated; links through ui-text's fail-closed safeHref — the review's nine adversarial
+cases all inert, proven by a live window.__pwned execution probe both engines). Standing
+gates: identity (empty registry ⇒ byte-identical), tree-shake (core 534 B gz; ./markdown
+alone drags zero tokenizer bytes), injection corpus, per-package layering + descriptor
+trip-wires. Agent prose stops rendering as literal **bold** wherever consumers adopt it;
+the default catalog stays untouched (consumer-tier extension per ADR-0119 cl.7).
