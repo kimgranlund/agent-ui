@@ -7,7 +7,7 @@
 > | **Status** | proposed |
 > | **Date** | 2026-07-10 |
 > | **Proposed by** | planner (design seat — the design-system-surfaces intake, [TKT-0007](../tickets/tkt-0007-design-system-surfaces.md); Kim selected the family at intake, fork Q2 2026-07-10) |
-> | **Ratified by** | *(awaiting Kim — forks F1–F4 carry firm recommendations; the recommendation is the default absent an objection)* |
+> | **Ratified by** | *(awaiting Kim — F1 ANSWERED 2026-07-10: flat names, ramp=color/ladder=dims + the site-retitle rider, see §Forks; F2–F4 carry firm recommendations; the recommendation is the default absent an objection)* |
 > | **Repairs** | NEW [`../prd/token-surfaces.prd.md`](../prd/token-surfaces.prd.md) (authored in this same change — the owning doc whose scope §3 + goals this ADR pins) |
 > | **Supersedes / Superseded by** | (none) — relates [ADR-0107](./0107-chart-family-v1-scope.md) (the display-family intake pattern + the same-wave catalog and no-new-package clauses this reuses) · [ADR-0117](./0117-theme-provider-shipped-component.md) (the site-local → shipped-control promotion precedent) · [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) (the whole-fleet catalog gate clause 6 obeys) · [ADR-0078](./0078-ui-text-three-axis-variant-size-as.md) (the type tokens label text reads) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (every default must survive the CSS-less consumer) |
 
@@ -95,6 +95,14 @@ at build (PRD-G1…G4 trace).
   unordered set + selection affordance; "ramp" names the ordered-progression content honestly);
   folding ladder into ramp with a `kind` prop (rejected: color cells and magnitude bars share no
   rendering, only the row shape — one component wearing two bodies).
+  **ANSWERED by Kim, 2026-07-10 (the F1 naming interrogation):** flat names stand as recommended —
+  a `ui-token(s)-*` namespace was weighed and rejected (it would be the fleet's first family prefix,
+  against the flat convention every shipped family holds, and "token" misnames the value-first
+  contract: a proposed palette is literal values, not tokens). Ramp=color / ladder=dimensions
+  confirmed, **with a vocabulary-convergence rider:** the site token page currently titles its
+  dimensional section "Dimensional ramps" (`DIMENSION_RAMPS`/`parseDimensionRamp`) — at the M1
+  re-host (clause 7 / PRD-G3) that section retitles to **"Dimensional ladders"** so repo vocabulary
+  converges on this assignment ("tonal ramp" stays the color term, per color-industry canon).
 - **F2 — the data contract.** *Recommend: value-first with the `--var` lane riding the same prop*
   (clause 2). The alternative — token-name-first (`token="--md-sys-color-primary"` as the primary
   contract) — optimizes for the docs-site consumer but fails the emitting model (an agent presenting
@@ -139,7 +147,8 @@ This is an **intake** ADR — realized in two stages:
 - **Build waves (M1/M2, separately dispatched):** M1 — three controls + descriptors, a11y probes
   (composed name / per-row list announcement via internals), whole-shape browser legs both engines,
   forced-colors probes, the site token page re-hosted with net-negative display LOC and its drift
-  gate green. M2 — catalog rows land with SPEC-N2 green and **no allowlist residue**; the exemplar
+  gate green — including the F1 vocabulary rider: the page's "Dimensional ramps" section retitles
+  to "Dimensional ladders". M2 — catalog rows land with SPEC-N2 green and **no allowlist residue**; the exemplar
   validates 0-`CATALOG`-error; §5.2 guidance prose ships; FEED_EXCLUDED bookkeeping entries land.
 
 ## Alternatives considered

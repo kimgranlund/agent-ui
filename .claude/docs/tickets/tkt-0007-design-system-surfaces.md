@@ -113,5 +113,13 @@ settings surface) land app-tier as M4.
   blockquote-table PRD/ADR frontmatter — it silently no-ops on the whole family (precedents
   included). The operative gates here are `adr.test.ts` + judgment review; a linter fix belongs in
   the scribe plugin.
-- **Still owed:** Kim's fork passes — 0118 F1–F4 · 0119 F1–F4 (incl. the `@agent-ui/code` naming
+- **Still owed:** Kim's fork passes — 0118 F2–F4 · 0119 F1–F4 (incl. the `@agent-ui/code` naming
   sliver) · 0120 F1–F3. No build authorized until ratification.
+
+### 2026-07-10 — 0118 F1 answered (the naming interrogation)
+
+Kim weighed a `ui-tokens-*` namespace and ruled: **flat names stand** (`ui-swatch`/`ui-ramp`/
+`ui-ladder`) — the fleet's flat family convention holds, and "token" would misname the value-first
+contract. Ramp=color / ladder=dimensions confirmed with the **vocabulary rider**: the site token
+page's "Dimensional ramps" section retitles to "Dimensional ladders" at the M1 re-host. Recorded in
+ADR-0118 §Forks F1 + Acceptance; F2–F4 remain open.
