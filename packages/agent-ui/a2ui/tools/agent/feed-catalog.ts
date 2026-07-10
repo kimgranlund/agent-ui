@@ -23,11 +23,14 @@
 // browser-side page, with no catalog-loading machinery riding along).
 
 /**
- * The 26 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
+ * The 27 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
  * affordance, and light structure — nothing that overlays, paginates, or dashboards. Widened by the
  * report/content/feed catalog wave (ADR-0111/0113/0112): `Badge` (light ask furniture, the `Text`/`Icon`
  * class), `Code` (verbatim inline content, no overlay/dashboard shape), `Avatar` (a non-interactive
- * identity mark, the `Icon` parity argument).
+ * identity mark, the `Icon` parity argument). Widened again by the toolbar wave (ADR-0121 F7): `Toolbar`
+ * is an arrangement of the SAME action `Button`s a `Row` already hosts in a feed ask — it adds
+ * `role="toolbar"` + arrow-key roving focus, but no overlay, no pagination, no dashboard/canvas-scale
+ * shape — the `Row` parity argument, not the `Split`/`Grid` exclusion reasoning.
  */
 export const FEED_SURFACE_TYPES = [
   'Text',
@@ -56,6 +59,7 @@ export const FEED_SURFACE_TYPES = [
   'Badge',
   'Code',
   'Avatar',
+  'Toolbar',
 ] as const
 
 /** The closed union of every IN type — the runtime-checkable companion to the `as const` array above. */

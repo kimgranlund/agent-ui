@@ -501,6 +501,20 @@
         },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
       }
+    },
+
+    "Toolbar": {
+      "properties": {
+        "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
+        "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" },
+        "orientation": { "type": { "type": "string", "enum": ["horizontal", "vertical"] }, "mapsTo": "orientation" },
+        "align": { "type": { "type": "string", "enum": ["start", "center", "end", "stretch", "baseline"] }, "mapsTo": "align" },
+        "justify": { "type": { "type": "string", "enum": ["start", "center", "end", "between", "around", "evenly"] }, "mapsTo": "justify" },
+        "gap": { "type": { "type": "string", "enum": ["none", "xs", "sm", "md", "lg", "xl", "2xl"] }, "mapsTo": "gap" },
+        "overflow": { "type": { "type": "string", "enum": ["wrap", "scroll"] }, "mapsTo": "overflow" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
+      },
+      "children": "ChildList"
     }
   },
 

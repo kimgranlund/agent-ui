@@ -222,7 +222,12 @@ export const documentRowToolbarSeed: ExampleSeed = {
           // "closest available icon" defect this block used to document (the 2026-07-07 visual audit) is
           // now structurally unreachable rather than merely worked around.
           { id: 'doc_info', component: 'Attachment', name: 'Q3 roadmap.pdf', mimeType: 'application/pdf', sizeBytes: 428000 },
-          { id: 'doc_actions', component: 'Row', gap: 'sm', align: 'center', children: ['tip_wrap', 'pop_wrap', 'menu_overflow'] },
+          // toolbar.lld.md LLD-C11 (ADR-0121 F7): the action cluster upgrades from a hand-composed
+          // `Row[Icon,Text]`-style wrapper to the real `Toolbar` type — the SAME "hand-built shape → real
+          // type" upgrade this seed's own `doc_info` comment records for Attachment. `label` names the
+          // bar for assistive tech (the toolbar's own accessible name, ADR-0121 §3); the three overlay
+          // triggers below become real roving-focus items (ITEM_SELECTOR matches `ui-button`).
+          { id: 'doc_actions', component: 'Toolbar', label: 'Document actions', gap: 'sm', align: 'center', children: ['tip_wrap', 'pop_wrap', 'menu_overflow'] },
 
           // Tooltip: FIRST child is the anchor, remaining children move into the tooltip panel
           // (factories.ts:315-319).

@@ -63,6 +63,12 @@
 // `EXCLUSION_ALLOWLIST` (catalog/default/index.test.ts) until this wave lands the rows below and drains
 // it to zero residue. All three ride plain `accessorFactory` (no bespoke mapping, no `value` mark, no
 // children, no submitGate) — see the three factory doc comments below.
+//
+// ADR-0121 F7 (toolbar.lld.md LLD-C10/C11, the toolbar-ship.decomp wave) adds `Toolbar` — a content-region
+// arrangement (SPEC-N2's fleet-derived gate demanding a row for the freshly-shipped `ui-toolbar`, exactly
+// the ADR-0087 cl.6 same-wave precedent, no allowlist seed needed since the component and its row land
+// together). Plain `accessorFactory` — no bespoke mapping, no children key beyond `ChildList`, no
+// submitGate — see its own factory doc comment below.
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
@@ -609,6 +615,20 @@ export const rampFactory: WidgetFactory = accessorFactory('ui-ramp')
 // scheme-invariant, SPEC-R9). Display-only leaf: no `value` mark, no children.
 export const ladderFactory: WidgetFactory = accessorFactory('ui-ladder')
 
+// ── ADR-0121 F7 (toolbar.lld.md LLD-C10) — Toolbar, a content-region arrangement, not ambient chrome ──
+//
+// Toolbar → ui-toolbar (SPEC-R1..R12). `elevation`/`brightness` (surface, ADR-0015) + `orientation`/
+// `align`/`justify`/`gap`/`overflow` (the arrangement axes) are ALL 1:1 reflecting accessor props —
+// verified against toolbar.ts `static props`. `label` is ALSO a real 1:1 reflecting accessor (the
+// author-supplied accessible name written to `internals.ariaLabel`, NOT light-DOM text) — bindable,
+// the `Icon.label`/`Avatar.label` accessible-name precedent (both already bindable), not the
+// `Button.label`/`Checkbox.label` non-identity-`mapsTo` shape (there is no light-DOM label content
+// here to diverge from). A plain `accessorFactory` suffices for the whole row. Not an input of its own
+// (no `value` mark — SPEC-R5: the toolbar arranges + roves focus, it emits no events; its item
+// children carry their own commits). `ChildList` children — host-as-flex, the `Row` precedent: the
+// light-DOM children ARE the roving item set, walked generically, never `applyProp`'d.
+export const toolbarFactory: WidgetFactory = accessorFactory('ui-toolbar')
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -662,4 +682,5 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Swatch: swatchFactory,
   Ramp: rampFactory,
   Ladder: ladderFactory,
+  Toolbar: toolbarFactory,
 }
