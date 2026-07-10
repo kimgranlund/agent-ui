@@ -24,7 +24,7 @@
 
 :where(ui-ramp) {
   --ui-ramp-cell-size: 2rem; /* the swatch-cell box (whole-shape) */
-  --ui-ramp-border: 1px solid var(--md-sys-color-outline-variant);
+  --ui-ramp-border: 1px solid var(--md-sys-color-neutral-outline-variant);
   --ui-ramp-radius: var(--ui-radius-base);
   --ui-ramp-gap: var(--ui-space-xs); /* rides [density] for free (ADR-0103) */
   --ui-ramp-min-inline-size: 8em; /* the whole-shape floor (SPEC-R13 AC1) — a strip never collapses */

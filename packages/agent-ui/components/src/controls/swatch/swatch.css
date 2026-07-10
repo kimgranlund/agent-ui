@@ -26,7 +26,7 @@
 
 :where(ui-swatch) {
   --ui-swatch-box-size: 2rem; /* the deterministic default box (whole-shape, SPEC-R13 AC1) — NOT auto */
-  --ui-swatch-border: 1px solid var(--md-sys-color-outline-variant); /* the hairline so a surface color never vanishes (SPEC-R2 AC3) */
+  --ui-swatch-border: 1px solid var(--md-sys-color-neutral-outline-variant); /* the hairline so a surface color never vanishes (SPEC-R2 AC3) */
   --ui-swatch-radius: var(--ui-radius-base);
   --ui-swatch-gap: var(--ui-space-xs); /* box↔text gap — rides [density] for free (ADR-0103) */
 }
