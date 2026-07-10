@@ -66,6 +66,19 @@
     overflow-wrap: anywhere;
   }
 
+  /* The close part is PINNED to the grid's third (last) column, always — the `action` part is only
+     appended when non-empty (toast.ts), so a non-actionable toast (the common case) has only TWO real
+     children (message, close) landing in auto-placement's columns 1 and 2, leaving the third (intended
+     close) column empty. Left unpinned, the close button rendered in the MIDDLE (action) track and the
+     genuinely-empty trailing track still consumed a `gap` between it and the padding edge — an extra
+     `--ui-space-sm` of phantom inset past the close button's own edge, reading as an off-standard
+     double-inset against the message's own left inset (TKT-0014). Explicit placement fixes both the
+     actionable AND non-actionable cases uniformly (a 3-child toast already lands here by auto-placement,
+     so this is a no-op for it). */
+  :scope [data-part='close'] {
+    grid-column: 3;
+  }
+
   /* forced-colors — the box-shadow (an arbitrary-alpha rgb() literal) is flattened away under WHCM;
      the border alone must carry the card's edge (the bar-chart fill lesson). */
   @media (forced-colors: active) {

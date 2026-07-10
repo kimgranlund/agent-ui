@@ -74,6 +74,50 @@ describe('ui-toast — whole-shape: a populated card paints a real, non-collapse
   })
 })
 
+// ── close-button placement (TKT-0014) ───────────────────────────────────────────────────────────────
+//
+// Root cause: `action` is only appended when non-empty (toast.ts), so a NON-actionable toast (the
+// common case — no `action` attribute) has only TWO real children (message, close) against the
+// three-column `1fr auto auto` grid. Auto-placement filled columns 1 and 2 in document order, landing
+// the close button in the MIDDLE (action) track and leaving the THIRD (its intended) track genuinely
+// empty — but still consuming a `gap` between it and the padding-inline-end edge, an extra
+// `--ui-space-sm` (8px) of phantom inset past the close button's own edge. The close button's OWN
+// squareness (button.css's icon-only fifth structure) was already correct; the card-level GRID
+// placement was the bug. Fixed by pinning `[data-part='close']` to `grid-column: 3` explicitly
+// (toast.css) — a no-op for the actionable (3-child) case, which already auto-placed correctly.
+describe('ui-toast — the close button optically aligns with the card edge (TKT-0014)', () => {
+  it('NON-actionable toast (no action — the common case): close button inset from the card edge MATCHES the message inset on the opposite edge', () => {
+    const { el } = mount('<ui-toast duration="0">File uploaded.</ui-toast>')
+    const toastRect = el.getBoundingClientRect()
+    const closeRect = (el.querySelector('[data-part="close"]') as HTMLElement).getBoundingClientRect()
+    const messageRect = (el.querySelector('[data-part="message"]') as HTMLElement).getBoundingClientRect()
+
+    const closeInsetFromRight = toastRect.right - closeRect.right
+    const messageInsetFromLeft = messageRect.left - toastRect.left
+    expect(
+      closeInsetFromRight,
+      `close button sits ${closeInsetFromRight}px from the card's right edge but the message sits ${messageInsetFromLeft}px from the left — the regression this closes (a phantom empty-grid-track gap)`,
+    ).toBeCloseTo(messageInsetFromLeft, 0)
+  })
+
+  it('NON-actionable toast: the close button is still a genuine SQUARE (button.css icon-only structure survives the grid pin)', () => {
+    const { el } = mount('<ui-toast duration="0">File uploaded.</ui-toast>')
+    const closeRect = (el.querySelector('[data-part="close"]') as HTMLElement).getBoundingClientRect()
+    expect(closeRect.width, 'close button is not square').toBeCloseTo(closeRect.height, 0)
+  })
+
+  it('ACTIONABLE toast (action present — 3 real children): close inset is UNCHANGED (the grid pin is a no-op here)', () => {
+    const { el } = mount('<ui-toast duration="0" action="Undo">Something happened.</ui-toast>')
+    const toastRect = el.getBoundingClientRect()
+    const closeRect = (el.querySelector('[data-part="close"]') as HTMLElement).getBoundingClientRect()
+    const messageRect = (el.querySelector('[data-part="message"]') as HTMLElement).getBoundingClientRect()
+
+    const closeInsetFromRight = toastRect.right - closeRect.right
+    const messageInsetFromLeft = messageRect.left - toastRect.left
+    expect(closeInsetFromRight, 'the actionable case must stay symmetric too').toBeCloseTo(messageInsetFromLeft, 0)
+  })
+})
+
 // ── [2] focus neutrality + [3] tab-order reachability ───────────────────────────────────────────
 
 describe('ui-toast — never takes focus on show; affordances are reachable via normal Tab order', () => {

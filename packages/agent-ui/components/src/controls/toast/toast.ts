@@ -182,8 +182,11 @@ export class UIToastElement extends UIElement {
 
     // Always present, icon-only — a real accessible name via aria-label (button.md's textContent
     // source has nothing to read here), the fleet's icon-only-button idiom. `icon-only` opts into
-    // button.css's fifth (square) structure — without it, the slotted icon + empty label still
-    // reserves the 1fr label track, rendering wider than tall (the ui-button icon-only-via-slot gap).
+    // button.css's fifth (square) structure — WITHOUT this attribute the button itself would render
+    // non-square (the slotted icon + empty label reserving a dead 1fr label track); WITH it (as
+    // shipped here) the button is a genuine square, proven by button-geometry.browser.test.ts's s14
+    // suite. The card-level grid placement of this part is a SEPARATE concern — see toast.css's
+    // `[data-part='close']` grid-column pin (TKT-0014).
     const closeBtn = document.createElement('ui-button') as UIButtonElement
     closeBtn.setAttribute('data-part', 'close')
     closeBtn.setAttribute('variant', 'ghost') // a subtle dismiss — never competes with an actionable CTA
