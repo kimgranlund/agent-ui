@@ -235,6 +235,38 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // The token-surface family (ADR-0118): three Display-class show-never-edit primitives, each a
+  // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
+  {
+    label: 'ui-swatch',
+    cards: [
+      {
+        href: './swatch-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class color-identity leaf — a bordered color box resolved live, the --var lane, the scheme pin, and the degenerate cases, generated from swatch.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-ramp',
+    cards: [
+      {
+        href: './ramp-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class ordered-color-series leaf — a wrapping strip of swatch cells over a real tonal progression, generated from ramp.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-ladder',
+    cards: [
+      {
+        href: './ladder-doc.html',
+        title: 'API reference',
+        blurb: 'The Display-class labeled-dimensional-tiers leaf — literal-length magnitude bars over a real dimensional set, no cross-tier normalization, generated from ladder.md.',
+      },
+    ],
+  },
   {
     label: 'ui-checkbox',
     cards: [

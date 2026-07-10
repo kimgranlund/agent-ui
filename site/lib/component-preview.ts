@@ -468,6 +468,9 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
 // a codec skip), but their descriptor default is '' (blank) — same demonstrability gap as ui-icon's `name`
 // — so a bare specimen would render an empty tile / an unlabeled dot. ui-disclosure's `summary` is likewise
 // a real string knob defaulting to '' — an unlabeled fold reads as a bare chevron with no affordance text.
+// Wave M1 (ADR-0118): ui-swatch's `value`/`label` are real string knobs (not a codec skip) but default to
+// '' (blank) — the same demonstrability gap as ui-icon's `name` — so a bare specimen would render an empty
+// transparent box with no name to read.
 const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   'ui-icon': { name: 'check' },
   'ui-grid': { gap: 'md', min: '8rem' },
@@ -475,6 +478,7 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   'ui-stat': { label: 'Revenue', value: '48200', delta: '12' },
   'ui-badge': { label: '3 failing', intent: 'danger' },
   'ui-disclosure': { summary: 'Full log' },
+  'ui-swatch': { value: '--md-sys-color-primary', label: 'primary' },
 }
 
 // A per-tag static HOST ATTRIBUTE seed (batch C) — distinct from COMPONENT_INITIAL (which seeds a KNOB's
@@ -492,6 +496,11 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
 // its LIVE descriptor default (an empty array) would stamp no table at all (an honest empty state per
 // SPEC-R3, but an uninstructive bare specimen). Seeded with the same JSON-string shape table.md's own
 // example uses.
+// Wave M1 (ADR-0118, token-surfaces.lld.md LLD-C9): ui-ramp's `steps`/ui-ladder's `tiers` are JSON-string
+// attributes — the same `kind: 'skip'` codec gap as ui-sparkline/ui-bar-chart's `values`/`data` above (no
+// editable knob), so their LIVE descriptor default (an empty array) would render an empty strip/list (an
+// honest empty state per SPEC-R7/R11, but an uninstructive bare specimen). Seeded with a real color/
+// dimension series so the gallery's whole-shape law (a non-collapsed strip/list) has something to measure.
 const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
   'ui-slider': { 'aria-label': 'Volume' },
   'ui-sparkline': { values: '[3,5,4,8,7]' },
@@ -499,6 +508,15 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
   'ui-table': {
     columns: '[{"key":"region","label":"Region"},{"key":"revenue","label":"Revenue","type":"number"}]',
     rows: '[{"region":"EMEA","revenue":42000},{"region":"APAC","revenue":31000}]',
+  },
+  'ui-ramp': {
+    steps:
+      '[{"label":"100","value":"--md-sys-color-primary-100"},{"label":"300","value":"--md-sys-color-primary-300"},' +
+      '{"label":"500","value":"--md-sys-color-primary-500"},{"label":"700","value":"--md-sys-color-primary-700"},' +
+      '{"label":"900","value":"--md-sys-color-primary-900"}]',
+  },
+  'ui-ladder': {
+    tiers: '[{"label":"sm","value":"24px"},{"label":"md","value":"28px"},{"label":"lg","value":"36px"}]',
   },
 }
 
@@ -559,6 +577,12 @@ export const NO_SLOT_TEXT = new Set([
   'ui-avatar',
   'ui-attachment',
   'ui-toast', // COMPONENT_SAMPLE_CHILDREN below seeds its message text — must be present BEFORE connect (SPEC-R15 AC2)
+  // Token-surface family (ADR-0118, token-surfaces.lld.md LLD-C9): all three build their entire visible
+  // content imperatively from PROPS alone (swatch's box+value pair; ramp/ladder's replaceChildren cell/row
+  // lists) — no light-DOM content model at all (slots: [] on all three, the ui-stat/ui-bar-chart precedent).
+  'ui-swatch',
+  'ui-ramp',
+  'ui-ladder',
 ])
 
 // STRUCTURAL (batch B) — the default slot IS the real content model (children ARE the grid cells / flex items /

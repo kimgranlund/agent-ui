@@ -82,6 +82,45 @@ export function parseDimensionRamp(dimensionsCss: string, prefix: string): Dimen
   return tiers
 }
 
+/** One numbered tonal-primitive step (`--md-sys-color-{family}-{step}`), e.g. `{ family: 'primary', step:
+ *  '500', varName: '--md-sys-color-primary-500', value: 'oklch(...)' }` — the genuinely ORDERED series
+ *  `parseColorRoles` deliberately excludes (SPEC-R17 clause 2, token-surfaces.spec.md). */
+export interface ColorPrimitive {
+  readonly family: string
+  readonly step: string
+  readonly varName: string
+  readonly value: string
+}
+
+// A bare numbered step's suffix is ALL digits (100, 125, …, 950) — this excludes the alpha `-{N}-{aa}`
+// variants (e.g. `500-050`, which embeds a hyphen) that share the NUMERIC_SUFFIX exclusion above but are a
+// DIFFERENT thing (opacity ramps of one step, not the ordered tonal series itself).
+const PRIMITIVE_STEP = /^\d+$/
+
+/**
+ * parseColorPrimitives — every numbered `--md-sys-color-{family}-{step}` BASE tonal step declared in
+ * tokens.css's one `:root` block (additive, token-surfaces.spec.md SPEC-R17 clause 2 — `parseColorRoles`
+ * and every other function in this module are UNCHANGED): excludes the alpha `-{N}-{aa}` variants and the
+ * semantic roles (`parseColorRoles`'s own domain), groups by family, sorts NUMERICALLY (declaration order
+ * in the sheet is not tonal order — primary-100…950 interleaves with the -050/-075 outliers as authored).
+ * Feeds the tonal-primitives `ui-ramp` dogfood section (token-surfaces.lld.md §5, LLD-C12) — one ordered
+ * step series per family, derived from the same sheet `parseColorRoles` reads (`derive-don't-hand-type`).
+ */
+export function parseColorPrimitives(tokensCss: string): Record<string, ColorPrimitive[]> {
+  const block = firstTopLevelBlock(tokensCss, ':root')
+  const re = /--md-sys-color-([a-z]+)-([a-z0-9-]+):\s*([^;]+);/g
+  const byFamily = new Map<string, ColorPrimitive[]>()
+  for (const m of block.matchAll(re)) {
+    const [, family, step, value] = m
+    if (!PRIMITIVE_STEP.test(step)) continue // not a bare numbered step (an alpha variant or a semantic role)
+    const list = byFamily.get(family) ?? []
+    list.push({ family, step, varName: `--md-sys-color-${family}-${step}`, value: value.trim() })
+    byFamily.set(family, list)
+  }
+  for (const list of byFamily.values()) list.sort((a, b) => Number(a.step) - Number(b.step))
+  return Object.fromEntries(byFamily)
+}
+
 /** Every distinct `family` present in `roles`, insertion-order — the section grouping tokens.html renders by. */
 export function familiesOf(roles: readonly ColorRole[]): string[] {
   const out: string[] = []

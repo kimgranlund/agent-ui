@@ -144,11 +144,14 @@ function fleetPrimaryTypes(): string[] {
  *  `Image`/`Video` are deliberately NOT here — no `ui-image`/`ui-video` descriptor exists, so they never
  *  enter the derived set to begin with (they stay a documentary-only note in SPEC §5.2.1, never
  *  code-derived). A future undispositioned control re-seeds this map with a reason + citation, same as
- *  Wave 0's seed. */
-// `Toast`/`ToastRegion` carry a DIFFERENT kind of entry, seeded in the feed-family M1 wave rather than
-// deferred: they are not catalogue-bound AT ALL (ADR-0112 cl.6 — app-surface chrome, driven by `show()`,
-// never agent-emittable) — a PERMANENT exclusion, not a "shipped ahead of its row" placeholder that a
-// later wave drains. They are the ONLY two entries remaining after the catalog wave above.
+ *  Wave 0's seed. The token-surface family (ADR-0118, `Swatch`/`Ramp`/`Ladder`) re-seeds this pattern below:
+ *  the SAME "shipped ahead of its catalog row" shape, deliberately split M1 (controls + allowlist seed) /
+ *  M2 (rows + exemplar + guidance) per ADR-0118 fork F4 — drained the same way the report/content/feed
+ *  seeds above were. */
+// `Toast`/`ToastRegion`/`ThemeProvider` carry a DIFFERENT kind of entry: they are not catalogue-bound AT ALL
+// (app-surface/theming chrome, never agent-emittable) — a PERMANENT exclusion, never drained. `Swatch`/
+// `Ramp`/`Ladder` below are the temporary M1 seed (drained at M2, LLD-C13) — the two kinds coexist here the
+// same way the report/content/feed temporary seeds once sat alongside the permanent Toast/ToastRegion pair.
 const EXCLUSION_ALLOWLIST = new Map<string, string>([
   ['Toast', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: app-surface chrome driven by show(), not agent-emittable (rejected explicitly: history-must-not-lie · payload↔DOM traceability · teaching a forbidden type).'],
   ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, same reasoning as Toast: app-surface chrome, never a catalog row.'],
@@ -156,6 +159,13 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'ADR-0117 / theme-provider.spec.md SPEC-R8 — PERMANENT exclusion, never catalogue-bound: ' +
     'page/app-owner theming chrome establishing a color-scheme subtree, not agent-emittable content ' +
     '(the ADR-0112 cl.6 Toast/ToastRegion reasoning applied verbatim).'],
+  // Token-surface family (ADR-0118 cl.6, fork F4; token-surfaces.lld.md LLD-C10; SPEC-R18 AC1) — a
+  // TEMPORARY M1 seed, NOT permanent: the three descriptors land at M1 with no catalog rows (the
+  // exemplar/guidance/FEED_EXCLUDED work is a separate M2 wave, per ADR-0118's split-wave adaptation of
+  // the ADR-0107 cl.6 same-wave precedent). Drained to zero residue when M2 lands the rows (LLD-C13).
+  ['Swatch', 'ADR-0118 cl.6 / token-surfaces.lld.md LLD-C10 — M1 seed (temporary): ui-swatch ships at M1 with no catalog row; the display-only row + accessorFactory land at M2 (LLD-C13), draining this entry.'],
+  ['Ramp', 'ADR-0118 cl.6 / token-surfaces.lld.md LLD-C10 — M1 seed (temporary): ui-ramp ships at M1 with no catalog row; the display-only row + accessorFactory land at M2 (LLD-C13), draining this entry.'],
+  ['Ladder', 'ADR-0118 cl.6 / token-surfaces.lld.md LLD-C10 — M1 seed (temporary): ui-ladder ships at M1 with no catalog row; the display-only row + accessorFactory land at M2 (LLD-C13), draining this entry.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

@@ -172,9 +172,12 @@ reaches the DOM — SPEC-R7).
 }
 ```
 
-- **RTL** (SPEC-R15): the strip keeps physical `flex-direction: row` (LTR series direction — a tonal ramp reads
-  light→dark left-to-right in both locales, the `ui-sparkline` precedent); labels/values inside each cell are
-  logical text. Documented in `ramp.md`.
+- **RTL** (SPEC-R15): the strip pins physical LTR series direction via **`direction: ltr` on `:scope`** —
+  a tonal ramp reads light→dark left-to-right in both locales (the `ui-sparkline` precedent). *(Amended at
+  build review 2026-07-10: the original snippet said `flex-direction: row`, which does NOT pin physical
+  order — flexbox `row` is the INLINE axis and mirrors under `dir=rtl`; the builder proved it empirically
+  and the reviewer ratified `direction: ltr` as the mechanism. Side-effect documented in `ramp.md`: cell
+  text inherits LTR base direction — harmless for numeric/hex values.)* Documented in `ramp.md`.
 - WHCM: same border-degradation honesty as swatch.
 
 ### 3.3 `ui-ladder` (SPEC-R9…R12)

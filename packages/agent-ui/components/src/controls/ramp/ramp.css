@@ -1,0 +1,75 @@
+/* ramp.css — ui-ramp, the Display-class ordered-color-series leaf (LLD-C5, token-surfaces.lld.md §3.2;
+ * SPEC-R6/R13/R14/R15/R16). Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-ramp)` (specificity 0,0,0) declares the `--ui-ramp-*` chain: the
+ *       whole-shape floor (SPEC-R13 AC1 — an `8em` `min-inline-size` so a bare strip never collapses), the
+ *       per-cell box size (the swatch-cell precedent), the hairline border, and the density-RESPONSIVE gap.
+ *   [2] STYLES BLOCK — `@scope (ui-ramp)` consumes ONLY `--ui-ramp-*` (∪ the shared `--md-sys-color-*`/
+ *       `--md-sys-typescale-*` namespaces). Display-class (SPEC-R16): no `[size]`/`[scale]` row.
+ *
+ * The strip WRAPS rather than overflowing its container (SPEC-R6 AC2, `flex-wrap: wrap`).
+ *
+ * RTL (SPEC-R15): the strip keeps PHYSICAL `flex-direction: row` — a tonal ramp reads light→dark
+ * left-to-right regardless of locale (the `ui-sparkline` series-direction precedent); labels/values inside
+ * each cell stay logical text (documented in ramp.md).
+ *
+ * WHCM (SPEC-R14): same border-degradation honesty as swatch — a color box cannot paint under
+ * `forced-colors: active`; it degrades to a `CanvasText` hairline, never a fake system color.
+ *
+ * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from ramp.ts
+ * (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-ramp) declares --ui-ramp-* ════════════════ */
+
+:where(ui-ramp) {
+  --ui-ramp-cell-size: 2rem; /* the swatch-cell box (whole-shape) */
+  --ui-ramp-border: 1px solid var(--md-sys-color-outline-variant);
+  --ui-ramp-radius: var(--ui-radius-base);
+  --ui-ramp-gap: var(--ui-space-xs); /* rides [density] for free (ADR-0103) */
+  --ui-ramp-min-inline-size: 8em; /* the whole-shape floor (SPEC-R13 AC1) — a strip never collapses */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-ramp) consumes ONLY --ui-ramp-* ════════════════ */
+
+@scope (ui-ramp) {
+  :scope {
+    display: flex;
+    /* `flex-direction: row` alone is NOT physical — CSS Flexbox's "row" is the INLINE axis, which itself
+     * mirrors under `dir="rtl"`. `direction: ltr` is what actually pins the main axis to the physical
+     * left-to-right series order regardless of locale (SPEC-R15 AC1) — a tonal ramp reads light→dark
+     * left-to-right in both locales, the `ui-sparkline` SVG-coordinate precedent, generalized to flex. */
+    direction: ltr;
+    flex-wrap: wrap; /* a strip WRAPS, never overflows (SPEC-R6 AC2) */
+    gap: var(--ui-ramp-gap);
+    min-inline-size: var(--ui-ramp-min-inline-size);
+  }
+
+  :scope [data-part='cell'] {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+  }
+
+  :scope [data-part='box'] {
+    inline-size: var(--ui-ramp-cell-size);
+    block-size: var(--ui-ramp-cell-size);
+    border: var(--ui-ramp-border);
+    border-radius: var(--ui-ramp-radius);
+    box-sizing: border-box;
+  }
+
+  :scope [data-part='step-label'],
+  :scope [data-part='value'] {
+    font-size: var(--md-sys-typescale-body-small-size);
+    line-height: var(--md-sys-typescale-body-small-line-height);
+    text-align: center;
+  }
+
+  @media (forced-colors: active) {
+    :scope [data-part='box'] {
+      background: transparent !important;
+      border-color: CanvasText;
+    }
+  }
+}

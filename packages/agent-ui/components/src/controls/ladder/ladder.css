@@ -1,0 +1,89 @@
+/* ladder.css — ui-ladder, the Display-class labeled-dimensional-tiers leaf (LLD-C7, token-surfaces.lld.md
+ * §3.3; SPEC-R10/R13/R14/R15/R16). Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-ladder)` (specificity 0,0,0) declares the `--ui-ladder-*` chain: the
+ *       whole-shape floor (SPEC-R13 AC1), bar THICKNESS (density-invariant mark geometry), the fill ink
+ *       (>=3:1 vs surface — WCAG 1.4.11), and the density-RESPONSIVE row/column rhythm (rides `--ui-space`
+ *       × `[density]` for free, the `ui-bar-chart` precedent).
+ *   [2] STYLES BLOCK — `@scope (ui-ladder)` consumes ONLY `--ui-ladder-*` (∪ the shared `--md-sys-color-*`/
+ *       `--md-sys-typescale-*` namespaces). Display-class (SPEC-R16): no `[size]`/`[scale]` row.
+ *
+ * The literal-length ruling (SPEC-R10): `inline-size: min(100%, var(--_mag, 0px))` renders each tier at its
+ * REAL length, capped to the track — a deliberate departure from `ui-bar-chart`'s normalized proportion math
+ * (ADR-0118 cl.2/3: a ladder has no math module, a dimensional value already IS a renderable length). The
+ * `var(--_mag, 0px)` fallback is the zero-bar floor for BOTH the LLD-C6 non-length route (`--_mag` set to
+ * `0px` directly) AND an undefined `--var` (whose `var(--…)` substitution is guaranteed-invalid, so
+ * `var(--_mag, 0px)` genuinely falls to `0px`) — SPEC-R11's unified no-silent-state rule.
+ *
+ * Rows are real `role="listitem"` SUBGRID children (NOT `display: contents`, whose role-semantics engine-bug
+ * history the fleet avoids — the `ui-bar-chart` precedent).
+ *
+ * RTL is free (SPEC-R15): logical grid + `inline-size` mirror under `dir="rtl"` — no physical property
+ * anywhere in this file. WHCM (SPEC-R14): the bar paints `CanvasText` (a system ink is never forced away) —
+ * magnitude still travels by length + the printed value.
+ *
+ * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from ladder.ts
+ * (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-ladder) declares --ui-ladder-* ════════════════ */
+
+:where(ui-ladder) {
+  --ui-ladder-min-inline-size: 16em; /* the whole-shape floor */
+  --ui-ladder-bar-size: 0.75rem; /* bar THICKNESS — density-invariant */
+  --ui-ladder-bar-radius: 2px;
+  --ui-ladder-bar-ink: var(--md-sys-color-primary); /* the magnitude fill — >=3:1 vs surface (WCAG 1.4.11) */
+  --ui-ladder-row-gap: var(--ui-space-sm); /* rides [density] for free (ADR-0103) */
+  --ui-ladder-col-gap: var(--ui-space-sm);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-ladder) consumes ONLY --ui-ladder-* ════════════════ */
+
+@scope (ui-ladder) {
+  :scope {
+    display: grid;
+    grid-template-columns: fit-content(30%) 1fr auto;
+    column-gap: var(--ui-ladder-col-gap);
+    row-gap: var(--ui-ladder-row-gap);
+    align-items: center;
+    min-inline-size: var(--ui-ladder-min-inline-size);
+    box-sizing: border-box;
+    font-size: var(--md-sys-typescale-body-medium-size);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+  }
+
+  :scope [role='listitem'] {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+    align-items: center;
+  }
+
+  :scope [data-part='label'] {
+    overflow-wrap: anywhere;
+  }
+
+  :scope [data-part='track'] {
+    display: block;
+    block-size: var(--ui-ladder-bar-size);
+  }
+
+  :scope [data-part='bar'] {
+    display: block;
+    block-size: 100%;
+    inline-size: min(100%, var(--_mag, 0px)); /* LITERAL length, track-capped — NO normalization (SPEC-R10) */
+    background: var(--ui-ladder-bar-ink);
+    border-radius: var(--ui-ladder-bar-radius);
+  }
+
+  :scope [data-part='value'] {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (forced-colors: active) {
+    :scope [data-part='bar'] {
+      background: CanvasText; /* a system ink is never forced away — magnitude still carries by length */
+    }
+  }
+}

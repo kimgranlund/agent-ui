@@ -67,6 +67,9 @@
 - [ui-badge](./badge-doc.html): the compact status/tag pill — bindable `intent` enum with a component-drawn per-intent glyph.
 - [ui-sparkline](./sparkline-doc.html): the inline trend line over a bound numeric series.
 - [ui-bar-chart](./bar-chart-doc.html): magnitude comparison bars, including diverging negative values.
+- [ui-swatch](./swatch-doc.html): one color value rendered AS color — bounded bordered box + label + printed value; the browser is the only color engine; a `--var` value resolves live in place.
+- [ui-ramp](./ramp-doc.html): an ordered color series as a strip of swatch cells — tonal progressions, physically LTR in every locale; order is the content.
+- [ui-ladder](./ladder-doc.html): labeled dimensional tiers, each magnitude drawn as a literal-length bar beside its printed value — degrade the mark, never drop the datum.
 
 ## Components — feed & activity
 

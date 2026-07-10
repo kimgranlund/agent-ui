@@ -1,0 +1,66 @@
+/* swatch.css — ui-swatch, the Display-class color-identity leaf (LLD-C3, token-surfaces.lld.md §3.1;
+ * SPEC-R2/R13/R14/R16). Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-swatch)` (specificity 0,0,0) declares the `--ui-swatch-*` chain: the
+ *       whole-shape floor (SPEC-R13 AC1 — an EXPLICIT `2rem` box, never `auto`: a swatch has no intrinsic
+ *       content, so `auto` would collapse to 0 in a shrink-to-fit flex item), the hairline border (SPEC-R2
+ *       AC3 — so a surface-colored swatch never disappears into the page), and the density-RESPONSIVE
+ *       box↔text gap (rides `--ui-space` × `[density]` for free).
+ *   [2] STYLES BLOCK — `@scope (ui-swatch)` consumes ONLY `--ui-swatch-*` (∪ the shared `--md-sys-color-*`/
+ *       `--md-sys-typescale-*` namespaces). Display-class (SPEC-R16): no `[size]`/`[scale]` row, no control
+ *       height — the box is a fixed token size, the value text reads the body-medium type row directly.
+ *
+ * WHCM (SPEC-R14): a color box cannot paint under `forced-colors: active` — the box degrades to a
+ * `CanvasText` hairline (never a fake system color); the value/label text is real text and survives
+ * untouched. `!important` because a color the author set INLINE (`box.style.background`, swatch.ts) would
+ * otherwise win over the media block (inline styles beat an author-origin stylesheet rule).
+ *
+ * RTL is free: `column-gap` + logical inline-grid flow mirror under `dir="rtl"` — no physical property
+ * anywhere in this file.
+ *
+ * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from swatch.ts
+ * (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-swatch) declares --ui-swatch-* ════════════════ */
+
+:where(ui-swatch) {
+  --ui-swatch-box-size: 2rem; /* the deterministic default box (whole-shape, SPEC-R13 AC1) — NOT auto */
+  --ui-swatch-border: 1px solid var(--md-sys-color-outline-variant); /* the hairline so a surface color never vanishes (SPEC-R2 AC3) */
+  --ui-swatch-radius: var(--ui-radius-base);
+  --ui-swatch-gap: var(--ui-space-xs); /* box↔text gap — rides [density] for free (ADR-0103) */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-swatch) consumes ONLY --ui-swatch-* ════════════════ */
+
+@scope (ui-swatch) {
+  :scope {
+    display: inline-grid;
+    grid-auto-flow: column;
+    align-items: center;
+    column-gap: var(--ui-swatch-gap);
+    color: inherit;
+  }
+
+  :scope [data-part='box'] {
+    inline-size: var(--ui-swatch-box-size);
+    block-size: var(--ui-swatch-box-size);
+    border: var(--ui-swatch-border);
+    border-radius: var(--ui-swatch-radius);
+    flex: none;
+    box-sizing: border-box;
+  }
+
+  :scope [data-part='value'] {
+    font-size: var(--md-sys-typescale-body-medium-size);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+    overflow-wrap: anywhere;
+  }
+
+  @media (forced-colors: active) {
+    :scope [data-part='box'] {
+      background: transparent !important; /* an inline author-set background otherwise wins over this rule */
+      border-color: CanvasText;
+    }
+  }
+}

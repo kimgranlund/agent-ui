@@ -105,6 +105,20 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './bar-chart-doc.html', label: 'API' }],
   },
   {
+    // The token-surface family (ADR-0118) — three Display-class show-never-edit primitives, each a single
+    // descriptor-derived API doc (tier=display ⇒ {doc} only, the ui-sparkline/ui-bar-chart precedent).
+    label: 'ui-swatch',
+    links: [{ href: './swatch-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-ramp',
+    links: [{ href: './ramp-doc.html', label: 'API' }],
+  },
+  {
+    label: 'ui-ladder',
+    links: [{ href: './ladder-doc.html', label: 'API' }],
+  },
+  {
     // The Indicator-class form controls (Wave 1, ADR-0041/0042) — per-component groups, tag-labelled (the
     // site-toc rule: control/container/pattern tiers each get ONE ui-{tag} group; only layout bundles).
     label: 'ui-checkbox',

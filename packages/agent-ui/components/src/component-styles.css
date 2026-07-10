@@ -94,6 +94,12 @@
 @import './controls/code/code.css';
 @import './controls/disclosure/disclosure.css';
 
+/* Token-surface family — M1 (ADR-0118, token-surfaces.lld.md LLD-C9): show-never-edit color/dimension
+ * primitives (swatch/ramp/ladder). All Display-class, non-interactive, non-form-associated leaves. */
+@import './controls/swatch/swatch.css';
+@import './controls/ramp/ramp.css';
+@import './controls/ladder/ladder.css';
+
 /* Feed family — Wave M1 (ADR-0112, feed-family.lld.md LLD-C11): agent-activity primitives — the thin-rail
  * progress bar, the compact identity mark, the FilePart-aligned file card, and the toast pair (a fixed
  * notification card + its top-layer stacking host). */

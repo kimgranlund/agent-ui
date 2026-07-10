@@ -516,3 +516,20 @@ recommended; the ADR's own Status marker is untouched by this wave.
   accepted v1.0.
 - Sequencing (Kim): **token surfaces M1 first** — its build-intake (decomp → SPEC → LLD)
   dispatched; no build without a separate order.
+
+## 2026-07-10 (token surfaces M1) — ui-swatch · ui-ramp · ui-ladder ship; the token page dogfoods them
+
+The fleet's third display family (ADR-0118, PRD accepted): the browser is the only color
+engine — value-first contracts (`value="oklch(…)"` with the `--var` lane wrapped `var(--…)`,
+the load-bearing guaranteed-invalid chain making the zero-bar fallback real), degrade-the-
+mark-never-drop-the-datum across all three, role=img composed names + per-row list semantics
+via internals, forced-colors border-degradation, Display-class (no control heights). Shared
+`controls/_token-surface/` value-lane helper. The site token page re-hosts onto the shipped
+controls per Kim's rulings: roles stay swatch tables (roles-as-ramp rejected), the NEW tonal-
+primitives section is ui-ramp's dogfood (additive `parseColorPrimitives`, numerically sorted
+— sheet declaration order is not tonal order), "Dimensional ramps" → "Dimensional ladders",
+display LOC net-negative. One reviewed build deviation: ramp pins physical LTR via
+`direction: ltr` (the LLD's `flex-direction: row` provably mirrors under rtl — amended).
+164 new tests; marginals 118/148/282 B gz; family 30593/30720 (127 B headroom — next control
+forces the ADR-0040 re-base). M2 (catalog rows + exemplar + FEED_EXCLUDED) is the queued
+next wave; Swatch/Ramp/Ladder sit as reasoned M1 allowlist seeds until it drains them.

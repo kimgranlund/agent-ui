@@ -61,6 +61,11 @@ import avatarMd from '../../packages/agent-ui/components/src/controls/avatar/ava
 import attachmentMd from '../../packages/agent-ui/components/src/controls/attachment/attachment.md?raw'
 import toastMd from '../../packages/agent-ui/components/src/controls/toast/toast.md?raw'
 import toastRegionMd from '../../packages/agent-ui/components/src/controls/toast/toast-region.md?raw'
+// The token-surface family (ADR-0118, token-surfaces.lld.md): show-never-edit color/dimension primitives —
+// all three tier=display ⇒ {doc} only.
+import swatchMd from '../../packages/agent-ui/components/src/controls/swatch/swatch.md?raw'
+import rampMd from '../../packages/agent-ui/components/src/controls/ramp/ramp.md?raw'
+import ladderMd from '../../packages/agent-ui/components/src/controls/ladder/ladder.md?raw'
 // @agent-ui/router (LLD-C10b) — a DIFFERENT PACKAGE, structurally fenced off the components fleet (SPEC-R1
 // AC2: nothing in components/a2ui/shared may import router). Its two elements' `{name}.md` descriptors still
 // carry the same ADR-0004 frontmatter shape, so they still go through the ONE canonical parser here — but they
@@ -131,6 +136,10 @@ export const loadAvatarDoc       = (): ComponentDoc => parseDoc(avatarMd)
 export const loadAttachmentDoc   = (): ComponentDoc => parseDoc(attachmentMd)
 export const loadToastDoc        = (): ComponentDoc => parseDoc(toastMd)
 export const loadToastRegionDoc  = (): ComponentDoc => parseDoc(toastRegionMd)
+// The token-surface family (ADR-0118 — all three tier=display ⇒ {doc} only).
+export const loadSwatchDoc = (): ComponentDoc => parseDoc(swatchMd)
+export const loadRampDoc   = (): ComponentDoc => parseDoc(rampMd)
+export const loadLadderDoc = (): ComponentDoc => parseDoc(ladderMd)
 // @agent-ui/router (LLD-C10b) — see the import-site comment above for why these two sit outside the
 // components-scoped ALL_DESCRIPTORS glob below.
 export const loadRouterOutletDoc = (): ComponentDoc => parseDoc(routerOutletMd)

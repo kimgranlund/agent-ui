@@ -18,7 +18,7 @@
 import { describe, expect, it } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (site/lib/adr.test.ts precedent)
 import { readFileSync } from 'node:fs'
-import { familiesOf, parseColorRoles, parseDimensionRamp } from '../lib/token-parse.ts'
+import { familiesOf, parseColorPrimitives, parseColorRoles, parseDimensionRamp } from '../lib/token-parse.ts'
 
 declare const process: { cwd(): string }
 const ROOT = process.cwd()
@@ -51,6 +51,43 @@ describe('tokens.html source — color roles', () => {
 
   it('every role value is a real declared expression (light-dark(...) or a literal), never empty', () => {
     expect(roles.every((r) => r.value.length > 0)).toBe(true)
+  })
+})
+
+// The ADDITIVE assertion (token-surfaces.spec.md SPEC-R17 AC2): parseColorPrimitives is a NEW parse helper
+// (LLD-C12, the tonal-primitives ui-ramp dogfood section) — parseColorRoles/parseDimensionRamp/familiesOf
+// above are UNCHANGED, this only proves the new function resolves a non-empty ordered step set per family
+// (so the new section is gate-backed, the same drift discipline as the rest of the page).
+describe('tokens.html source — tonal primitives (SPEC-R17 AC2, additive)', () => {
+  const primitives = parseColorPrimitives(tokensCss)
+
+  it('resolves a non-vacuous, non-empty family map (anti-vacuous: a broken block-scan must fail loudly)', () => {
+    expect(Object.keys(primitives).length).toBeGreaterThan(0)
+  })
+
+  it('resolves a non-empty, numerically-ordered step series for a known family (primary)', () => {
+    expect(primitives.primary?.length).toBeGreaterThan(0)
+    const steps = primitives.primary.map((s) => Number(s.step))
+    const sorted = [...steps].sort((a, b) => a - b)
+    expect(steps).toEqual(sorted) // numerically ordered, not declaration order
+  })
+
+  it('excludes the alpha `-{N}-{aa}` variants (a step is a BARE number, never e.g. "500-050")', () => {
+    expect(primitives.primary?.some((s) => s.step === '500-050')).toBe(false)
+    expect(primitives.primary?.some((s) => s.step === '500')).toBe(true)
+  })
+
+  it('every resolved step carries a real varName + declared value, never empty', () => {
+    for (const steps of Object.values(primitives)) {
+      for (const step of steps) {
+        expect(step.varName).toBe(`--md-sys-color-${step.family}-${step.step}`)
+        expect(step.value.length).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('a family with no numbered primitives (focus — a bare utility token) resolves to no entry, not a crash', () => {
+    expect(primitives.focus).toBeUndefined()
   })
 })
 

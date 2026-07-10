@@ -100,6 +100,13 @@ export * from './badge/badge.ts'   // compact-realm intent badge (LLD-C7/C8)
 export * from './code/code.ts'             // verbatim code leaf, host-as-content (LLD-C5/C6/C7)
 export * from './disclosure/disclosure.ts' // native details/summary fold (LLD-C8/C9/C10)
 
+// Token-surface family — M1 (ADR-0118, token-surfaces.lld.md): show-never-edit color/dimension primitives.
+// All three Display-class, non-interactive, non-form-associated leaves — extend UIElement directly, tier=
+// display, no [size]/[scale] geometry row. Share the DOM-free value-lane helper `_token-surface/token-surface.ts`.
+export * from './swatch/swatch.ts' // color-identity leaf, role=img + composed name (LLD-C2/C3)
+export * from './ramp/ramp.ts'     // ordered color series, role=list (LLD-C4/C5)
+export * from './ladder/ladder.ts' // labeled dimensional tiers, literal-length bars, role=list (LLD-C6/C7)
+
 // Feed family — Wave M1 (ADR-0112, feed-family.lld.md): agent-activity primitives. All Display/Indicator-
 // class, non-form-associated leaves except the toast pair (pattern/layout, no catalog row — ADR-0112 cl.6).
 export * from './progress/progress.ts'     // thin-rail progress bar (LLD-C1)
