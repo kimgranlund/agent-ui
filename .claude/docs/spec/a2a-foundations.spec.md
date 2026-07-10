@@ -1,8 +1,8 @@
 # SPEC — A2A Foundations (protocol core · arena · corpus · bridge)
 
-> Status: accepted · v0.5 · 2026-07-08 (v0.5, B6 LLD intake: SPEC-R16's stale "blocked by a2ui LLD-C1/C3" rider removed — PRD §4 A-3 re-judged at intake (the bridge LLD §2 carries the evidence); AC1 sharpened to HV-8's resolved v1.0 shape; **AC2 added (the artifact-feed demo surface) — a WIDENING, flagged for independent doc-review before its ratification, the R14/v0.4 precedent**; §7 staging note re-synced. v0.4, B4/B5 LLD intake: SPEC-R14's wire-artifact enumeration widened to the SPEC-R6 validator's own artifact vocabulary + expectation-carrying transcript references, and the grounding arm `E_CITE` joins the admission codes — the seed set (task/rpc artifacts, must-fail transcript refs) was not expressible under the old parenthetical. v0.3: §6 `A2aChannel.close()` drain-and-end semantics adopted as SPEC-owned behavior) · Layer: SPEC (execution contract)
+> Status: accepted · v0.6 · 2026-07-09 (v0.6, B7 intake — [ADR-0116](../adr/0116-a2a-live-realtime-examples.md), proposed: **§4.6 added (SPEC-R17/R18, the live real-time demo arms) — a WIDENING, flagged for independent doc-review before its ratification, the R14/R16-AC2 precedent**; §7 trace re-synced. v0.5, B6 LLD intake: SPEC-R16's stale "blocked by a2ui LLD-C1/C3" rider removed — PRD §4 A-3 re-judged at intake (the bridge LLD §2 carries the evidence); AC1 sharpened to HV-8's resolved v1.0 shape; **AC2 added (the artifact-feed demo surface) — a WIDENING, flagged for independent doc-review before its ratification, the R14/v0.4 precedent**; §7 staging note re-synced. v0.4, B4/B5 LLD intake: SPEC-R14's wire-artifact enumeration widened to the SPEC-R6 validator's own artifact vocabulary + expectation-carrying transcript references, and the grounding arm `E_CITE` joins the admission codes — the seed set (task/rpc artifacts, must-fail transcript refs) was not expressible under the old parenthetical. v0.3: §6 `A2aChannel.close()` drain-and-end semantics adopted as SPEC-owned behavior) · Layer: SPEC (execution contract)
 > Refines: [`../prd/a2a-section.prd.md`](../prd/a2a-section.prd.md) — PRD-G1…G6; resolves nothing upstream (the PRD's forks PRD-D1–D5 await ratification; where a requirement depends on a fork it says so).
-> Refined by: [`../lld/a2a-tic-tac-toe.lld.md`](../lld/a2a-tic-tac-toe.lld.md) (arena, SPEC-R9…R13) · [`../lld/a2a-protocol-core.lld.md`](../lld/a2a-protocol-core.lld.md) (protocol core, SPEC-R2…R8 — B1) · [`../lld/a2a-corpus-docs.lld.md`](../lld/a2a-corpus-docs.lld.md) (corpus + docs section, SPEC-R14/R15 — B4/B5, one LLD for both waves by that doc's scoping ruling) · [`../lld/a2a-a2ui-bridge.lld.md`](../lld/a2a-a2ui-bridge.lld.md) (bridge + artifact-feed demo, SPEC-R16 — B6).
+> Refined by: [`../lld/a2a-tic-tac-toe.lld.md`](../lld/a2a-tic-tac-toe.lld.md) (arena, SPEC-R9…R13) · [`../lld/a2a-protocol-core.lld.md`](../lld/a2a-protocol-core.lld.md) (protocol core, SPEC-R2…R8 — B1) · [`../lld/a2a-corpus-docs.lld.md`](../lld/a2a-corpus-docs.lld.md) (corpus + docs section, SPEC-R14/R15 — B4/B5, one LLD for both waves by that doc's scoping ruling) · [`../lld/a2a-a2ui-bridge.lld.md`](../lld/a2a-a2ui-bridge.lld.md) (bridge + artifact-feed demo, SPEC-R16 — B6) · [`../lld/a2a-live-realtime.lld.md`](../lld/a2a-live-realtime.lld.md) (live real-time demo arms, SPEC-R17/R18 — B7, one LLD for both slices by the corpus-docs precedent).
 > Altitude: owns **behavior + acceptance** for the whole section's first wave-set. Implementation is the LLDs'. Requirement IDs are file-scoped (`SPEC-R1…`).
 > ⚠ **Grounding discipline:** every external-protocol fact below is tagged with an **HV-#** row from §2. A tagged fact is a *normative placeholder*: the behavior around it is contractual now; the exact upstream shape is filled in by the host at **B0** and the row's resolution is recorded in §2 (citation + date). **No build unit may be dispatched against an unresolved HV row (SPEC-R1).** This keeps TBDs out of the normative text while refusing to fabricate upstream facts.
 
@@ -109,6 +109,72 @@ Normative per RFC 2119; each carries a PRD trace and acceptance criteria.
 - **AC1** *Given* the bridge smoke, *when* an A2UI stream is carried over A2A, *then* a2ui SPEC-R5 AC1 holds (capabilities present, per the HV-8 shape above) and the decoded sequence is identical, in order, to the loopback baseline.
 - **AC2** *(WIDENING at B6 intake — pending independent doc-review, the R14/v0.4 precedent)* *Given* the static build, *when* the artifact-feed page loads, *then* the committed feed fixture replays with zero network/keys, text parts render as prose and each a2ui-bearing message renders as a live inline surface, and the page's validation verdict is computed in-page by the same shared validators the standing fixture gate runs — never hardcoded; *given* the standing gate's negative controls (untagged part, invalid payload, caps-less client message, wrong pin), *then* each fails the gate. *(also → PRD-G4 posture)*
 
+### 4.6 Live real-time demo arms (B7 — WIDENING at intake, [ADR-0116](../adr/0116-a2a-live-realtime-examples.md); pending independent doc-review, the R14/R16-AC2 precedent)
+
+**SPEC-R17 — Real-time live match (dev-only).** The arena's dev-only live mode MUST deliver the match
+incrementally — one transcript event at a time, in transcript order, in the SAME line shape the committed
+fixtures use, such that the concatenation of a completed live stream is itself a schema-valid transcript.
+The page MUST render arriving events as appended replay steps with the scrubber usable during and after
+the match (a user who has scrubbed back MUST NOT be yanked forward by new events). The isolation verdict
+MUST derive from the COMPLETED transcript by the same checker (SPEC-R13's discipline — never a
+provisional or hardcoded badge; the panel states truthfully that the verdict awaits completion).
+**Completion MUST be an explicitly tracked fact — the presence of the referee's terminal `game end`
+event — never inferred from stream end or from validation success:** the shipped transcript validator
+deliberately has no terminal-event requirement (a cleanly truncated valid prefix validates ok), so the
+live arm MUST gate its done state on its own end-event tracking. A user-initiated cancel MUST abort the
+server-side match run; a cancelled or transport-faulted stream (any stream ending without the terminal
+event) MUST be discarded — it MUST NOT enter the replay or verdict path (fail-closed; the recorded
+default stays untouched). A
+provider fault mid-match is NOT a transport fault: the referee's existing abort→forfeit arm completes the
+transcript, which streams and verifies normally. The whole live arm remains dev-only behind the
+server-side-key proxy (constraint C4 / ADR-0073); the static build carries none of it (SPEC-N2).
+*(→ PRD-G2, G4)*
+- **AC1** *(chunk-equivalence)* *Given* each committed match fixture, *when* its lines are fed one at a
+  time through the incremental derivation (including adversarial chunk boundaries through the shared
+  stream reader), *then* the derived steps and per-seat context lines deep-equal the batch derivation's.
+- **AC2** *(same checker + completion gate)* *Given* a completed streamed live run's accumulated text,
+  *when* loaded, *then* it passes the SAME transcript validation and isolation gate the committed fixtures
+  pass — code-identical call sites, no fork; *given* a stream whose trailing `game end` event is missing
+  (truncation/cancel/fault), *then* the completion gate reports incomplete and nothing partial reaches the
+  replay or verdict path — asserted by a firing negative control that ALSO shows the truncated prefix
+  still VALIDATES (proving the gate, not the validator, is what bites).
+- **AC3** *(cancel)* *Given* a cancel mid-match, *when* the signal fires, *then* the runner stops emitting
+  events and tears down its channels, the scripted no-signal CI path is byte-identical to before the seam
+  existed, and the page returns to the previously selected recorded fixture.
+
+**SPEC-R18 — Live conversational feed (dev-only).** The artifact-feed's live arm MUST realize a real
+user-initiated turn loop over A2A: every client→server turn MUST be a schema-valid A2A `Message` built
+through the bridge's `wrapClientTurn` (HV-8 capabilities in `metadata`, extension URI declared), and the
+proxy MUST verify this server-side — a log whose last message is not a capabilities-bearing user message
+MUST be rejected with a coded failure, never processed. Each agent turn MUST be ONE `wrapServerTurn`-built
+A2A message (prose as the leading TextPart, one tagged DataPart per validated A2UI envelope — the
+committed fixture's exact shape), streamed to the browser as part-frames derived from that single
+construction and reassembled by the same module (one emitter, one reassembler — never two hand-maintained
+shapes), **with the part count declared up front as the completion invariant** — reassembly completeness
+MUST be decidable from the frames themselves, never inferred from stream end alone. Conversation state
+MUST be client-held: the ordered A2A message log is the session substrate, and
+the proxy MUST derive the generation session from it deterministically (stateless proxy — the a2ui-live
+posture at the A2A level). Completed turns MUST join the log such that the accumulated log replays clean
+through the SAME feed checks the standing fixture gate runs (recomputed in-page per turn — never a
+hardcoded verdict); a faulted turn (generation halt, proxy error, transport drop) MUST be annotated and
+MUST NOT join the log. The recorded fixture stays the static build's only feed (C4/SPEC-N2); the live arm
+is probe-gated, DEV-guarded dynamic import only — the bridge LLD §7 seam's own posture. *(→ PRD-G5, G4;
+carriage contract unchanged — SPEC-R16/HV-8 own the wire shapes, this requirement adds no second contract)*
+- **AC1** *(frame round-trip)* *Given* prose-only, artifact-only, mixed, and zero-part server turns,
+  *when* framed and reassembled, *then* the result deep-equals the original `wrapServerTurn` message;
+  *given* the negative controls (part frame before header · a stream delivering fewer parts than the
+  header declares — the truncation case the count invariant makes decidable · foreign frame kind), *then*
+  each yields a typed fault, never a throw.
+- **AC2** *(same checker, offline)* *Given* a stub-provider live conversation, *when* its accumulated log
+  (synthesized header + every completed turn) is run through the standing feed checks, *then* it passes
+  identically to the committed fixture; *given* a faulted turn forced into the log (its raw frame lines
+  appended in place of a completed message — frames are not valid A2A messages), *then* the checks fail
+  (the fail-closed control bites).
+- **AC3** *(trust boundary)* *Given* a caps-less last message, a schema-invalid line, or an
+  unregistered `{provider,model}` pair, *when* posted, *then* the proxy rejects with a coded error and no
+  provider call occurs; no key value ever appears in any response; *given* a grep of `dist/` for the feed
+  mount and key names, *then* it is clean.
+
 ---
 
 ## 5. Non-functional requirements
@@ -158,5 +224,7 @@ interface Seat { card: AgentCard; takeTurn(input: BoardMessage): Promise<MoveMes
 | SPEC-R9–R13, N2, N3 | PRD-G2 (flagship arena) · R13 also PRD-G4 |
 | SPEC-R14, R15 | PRD-G3 (corpus) · R15 also PRD-G4 |
 | SPEC-R16 | PRD-G5 (bridge; contract owned by a2ui SPEC-R5) |
+| SPEC-R17 | PRD-G2 (arena demo, live arm) · PRD-G4 (site-section posture) |
+| SPEC-R18 | PRD-G5 (bridge, live realization) · PRD-G4 (site-section posture) |
 
-_All six PRD goals are served (G1: R3–R8 · G2: R9–R13 · G3: R14–R15 · G4: R13/R15 · G5: R16 · G6: R1–R2). LLD coverage at v0.5 (2026-07-08): the tic-tac-toe LLD implements R9–R13 (and cites R1/R2/R4/R6/R8 as consumed contracts); the protocol-core LLD ([`../lld/a2a-protocol-core.lld.md`](../lld/a2a-protocol-core.lld.md)) implements R2–R8 under the R1 discipline; the corpus/docs LLD ([`../lld/a2a-corpus-docs.lld.md`](../lld/a2a-corpus-docs.lld.md)) implements R14–R15 (B4/B5); the bridge LLD ([`../lld/a2a-a2ui-bridge.lld.md`](../lld/a2a-a2ui-bridge.lld.md)) implements R16 (B6 — the former "blocked per PRD §4 A-3" staging dissolved at intake, that LLD's §2). **The trace gap list is now closed:** `trace_check` over the full family reports zero UNIMPLEMENTED rows. Remaining staging is BUILD-side only — R16's modules are designed, not yet built; its AC2 widening awaits independent doc-review before ratification._
+_All six PRD goals are served (G1: R3–R8 · G2: R9–R13/R17 · G3: R14–R15 · G4: R13/R15/R17/R18 · G5: R16/R18 · G6: R1–R2). LLD coverage at v0.6 (2026-07-09): the tic-tac-toe LLD implements R9–R13 (and cites R1/R2/R4/R6/R8 as consumed contracts); the protocol-core LLD ([`../lld/a2a-protocol-core.lld.md`](../lld/a2a-protocol-core.lld.md)) implements R2–R8 under the R1 discipline; the corpus/docs LLD ([`../lld/a2a-corpus-docs.lld.md`](../lld/a2a-corpus-docs.lld.md)) implements R14–R15 (B4/B5); the bridge LLD ([`../lld/a2a-a2ui-bridge.lld.md`](../lld/a2a-a2ui-bridge.lld.md)) implements R16 (B6, SHIPPED — the former "blocked per PRD §4 A-3" staging dissolved at intake, that LLD's §2); the live-realtime LLD ([`../lld/a2a-live-realtime.lld.md`](../lld/a2a-live-realtime.lld.md)) implements R17–R18 (B7). Remaining staging is BUILD-side only — R17/R18's modules are designed, not yet built; the §4.6 widening (this v0.6) awaits independent doc-review before its ratification, and its forks await Kim via ADR-0116._
