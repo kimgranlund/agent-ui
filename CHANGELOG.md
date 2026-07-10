@@ -395,3 +395,67 @@ passed independent doc-review, one HIGH corrected at design). TKT-0001/0002/0004
 
 Ratification of ADR-0116's forks and TKT-0003's theme-provider promotion are **Kim's calls — deliberately
 left unchosen here**.
+
+## 2026-07-09 (ui-theme-provider) — the docs-site theming wrapper ships as a real control (ADR-0117)
+
+### What shipped
+
+- **`ui-theme-provider`** — TKT-0003's promotion of `site/lib/theme-provider.ts`'s CONTRACT (not its file)
+  to a real, importable `@agent-ui/components` control (`controls/theme-provider/`), extending `UIElement`
+  directly — the fleet's SECOND pure coordination/carrier primitive after `ui-form-provider`. Four reflected
+  `static props` (`scheme`/`scale`/`density`/`theme`), all `''`-default: `scheme` drives the one JS-side
+  effect (maps to `this.style.colorScheme`); `scale`/`density`/`theme` are pure attribute carriers with zero
+  effect, read only by `dimensions.css`'s ambient `[scale]`/`[density]` selectors and (later) a reserved
+  `[theme='<name>']` package layer.
+- **The load-bearing fix (SPEC-R3):** an unset `scheme` now CLEARS any inline `color-scheme` override rather
+  than defaulting to `'light'` — a bare/unset provider imposes no override and its subtree inherits the
+  ambient scheme (the page's own, or an ancestor provider's if nested), correcting the site-local
+  predecessor's silent "unset forces light" bug. Proven cross-engine, including the nested-unset-inside-a-
+  scheme'd-ancestor case (SPEC-R3 AC4).
+- **The catalog stays permanently closed:** `ThemeProvider` enters the a2ui default catalog's
+  `EXCLUSION_ALLOWLIST` as a PERMANENT entry (the ADR-0112 cl.6 Toast/ToastRegion precedent) — page/app-owner
+  theming chrome, never agent-emittable.
+- **A built-output regression guard (LLD-C11, the TKT-0002 regression class, scoped to this component):** a
+  NODE-context test builds the real production bundle and asserts its joined CSS is byte-identical to a
+  committed fixture (`site/lib/__fixtures__/theme-provider-built.css`); a companion `.browser.test.ts`
+  imports that SAME fixture via `?raw`, injects it into a real document, and asserts a real
+  `ui-theme-provider`-wrapped `ui-button`'s `getComputedStyle` ink genuinely differs — and matches an
+  independently-resolved expectation — between a `scheme="dark"` and a `scheme="light"` sibling.
+- **Site migration — clean cutover, zero site-local survivor:** `site/lib/theme-provider.ts` deleted;
+  `theming.ts` and `component-gallery.ts` repointed at the shipped import; the scheme-boundary ink-re-root
+  bugfix (`component-gallery.css`) re-keyed to `:where(ui-theme-provider)`, its `display:block` half moved
+  into the shipped `theme-provider.css`; two new pages (`theme-provider-doc.html`/`-demo.html`) join the nav
+  + landing TOCs and `llms.txt`.
+
+### Final gates (2026-07-09, ui-theme-provider)
+
+- `npm run check` (tsc + check:site + check:tools) — green.
+- `npm test` — green (theme-provider's own 7 test files incl. the shared-build-cache regression probe,
+  `family-coherence.test.ts`, the a2ui catalog coverage gate, `site-coverage.test.ts`, `site/gallery.test.ts`,
+  `site/lib/llms.test.ts`) modulo the two named pre-existing exclusions (Kim's in-flight `tokens.css` edit and
+  its `tokens.test.ts`; the `0116-a2a-live-realtime-examples.md` uncommitted edit and `adr.test.ts`'s
+  resulting flag), neither caused by this wave. FOUND, ROOT-CAUSED, AND CLOSED in the same wave: `npm test`'s
+  FULL unscoped run shelling out to a SECOND concurrent real production `vite build` (this component's own
+  LLD-C11 freshness gate, alongside the pre-existing TKT-0002 gate) intermittently starved an unrelated
+  macrotask-timing test (`site/pages/a2a-tic-tac-toe.live.test.ts`) under this environment's CPU budget —
+  reproduced via A/B testing against the pre-wave baseline, then eliminated with a single-flight shared-build
+  cache (`buildSiteCssShared`, `site/lib/build-css.ts`) both node-side build gates now consume, so the two
+  gates share ONE real build per `npm test` invocation instead of racing two. Independent review then caught
+  and closed a soundness hole in that cache (HIGH-1): a TIME-WINDOW-ONLY freshness check could serve a stale
+  cached build across the exact edit→rerun loop the LLD-C11 gate exists to catch — replaced with
+  real-source-mtime invalidation (the cache is stale the instant ANY file under `site/`, `packages/`, or the
+  root `vite.config.ts` is newer than it, independent of any time window), with a cheap, real-filesystem
+  regression test (`build-css.test.ts`) reproducing the reviewer's exact repro without a second real build,
+  plus two lock-edge-case hardenings (a guarded lock-cleanup race, an atomic cache write).
+- `npm run size` — measured by hand (ADR-0040 §3); the family barrel stays within its ADR-0049 budget.
+
+### Decision ledger
+
+ADR-0117 stays `proposed` pending Kim's ratification — this build realizes every fork (F1–F4) as
+recommended; the ADR's own Status marker is untouched by this wave.
+
+### Deferred follow-ups (recorded, owned)
+
+- The scheme-boundary ink-re-root fix (`component-gallery.css`) stays gallery-local this wave, named (not
+  solved) as a candidate for folding into `theme-provider.css` itself if a second consumer hits the same
+  bare-text-under-a-scheme-override defect (ADR-0102 Lane A).

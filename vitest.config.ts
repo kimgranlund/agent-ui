@@ -48,6 +48,12 @@ export default defineConfig({
       // package's `exports['./controls/text']` (SAFE_HREF_SCHEMES, re-exported through text.ts). Same
       // more-specific-first ordering discipline as the `/components`/`/descriptor` entries above.
       '@agent-ui/components/controls/text': r('./packages/agent-ui/components/src/controls/text/text.ts'),
+      // ADR-0117 — site/lib/component-gallery.ts (a jsdom-tested module, site/gallery.test.ts) is the second
+      // direct `./controls/{name}` subpath consumer from OUTSIDE the components package; same alias-ordering
+      // necessity as `controls/text` above (the broad `@agent-ui/components` entry below prefix-matches ANY
+      // subpath and mangles it into a path segment appended after `index.ts` unless a more-specific exact
+      // entry wins first).
+      '@agent-ui/components/controls/theme-provider': r('./packages/agent-ui/components/src/controls/theme-provider/theme-provider.ts'),
       // EXACT (not prefix) matches, `?url`-suffixed: `@agent-ui/app`'s isolated-shell connect-flow
       // (app-shell.ts, LLD-C5/ADR-0082) resolves these two package CSS assets to a real runtime URL via
       // Vite's `?url` suffix, to inject as `<link>` hrefs INSIDE a shadow root. Vite's aliasing is FIRST-

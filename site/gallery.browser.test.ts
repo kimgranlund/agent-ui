@@ -11,7 +11,7 @@ import { server, cdp, page } from 'vitest/browser'
 //
 // Side-effect imports — the load-bearing CSS cascade (ADR-0003): foundation roles + dimensional ramp FIRST, the
 // per-control sheet, the icon pack (controls render caret/clear/nav glyphs through it), then the gallery itself
-// (which self-defines <component-preview>/<theme-provider> in turn).
+// (which self-defines <component-preview>/<ui-theme-provider> in turn).
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import '@agent-ui/icons/phosphor'
@@ -70,7 +70,7 @@ async function chooseOption(select: UISelectElement, value: string): Promise<voi
   await raf()
   const option = select.querySelector(`[role="option"][value="${value}"]`) as HTMLElement
   option.click()
-  await whenFlushed() // the theme-provider effect's re-run is microtask-batched (scheduler.ts) — settle it
+  await whenFlushed() // the ui-theme-provider effect's re-run is microtask-batched (scheduler.ts) — settle it
   await raf() // …then let the engine actually paint the resulting style before reading computed values
 }
 
@@ -156,7 +156,7 @@ describe('<component-gallery> — overlay-class specimens open then paint (§6 E
 
 // ── the ONE theme provider — scale/density/scheme (anti-vacuous both directions) ───────────────────────────
 
-describe('<component-gallery> — the ONE <theme-provider> drives every specimen (both engines)', () => {
+describe('<component-gallery> — the ONE <ui-theme-provider> drives every specimen (both engines)', () => {
   it('scale change resizes a specimen, density change re-spaces it, and BOTH revert to their default', async () => {
     const gallery = await mountGallery()
     const card = cardFor(gallery, 'ui-button')
@@ -212,7 +212,7 @@ describe('<component-gallery> — the ONE <theme-provider> drives every specimen
     const select = selectFor(gallery, 'Theme')
     const optionValues = [...select.querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value'))
     expect(optionValues).toEqual(['default'])
-    const provider = gallery.querySelector('theme-provider') as HTMLElement
+    const provider = gallery.querySelector('ui-theme-provider') as HTMLElement
     expect(provider.getAttribute('theme')).toBe('default')
   })
 })
@@ -291,15 +291,15 @@ describe('<component-gallery> — forced-colors keeps chrome + a specimen sample
 })
 
 // ── the scheme-boundary ink re-root (the light-card-in-dark-root bug, both engines) ─────────────────────────
-// Regression for the reported "white text on a light card" defect. A <theme-provider scheme=light> nested in a
+// Regression for the reported "white text on a light card" defect. A <ui-theme-provider scheme=light> nested in a
 // DARK root re-roots `color-scheme`, but that alone does NOT re-resolve a scheme-dependent INHERITED `color`:
 // `light-dark()` only re-resolves where a property CONTAINING it is declared. A bare-`textContent` specimen (the
 // a2ui Card's `ui-card-header`, and the ui-row/list/grid items) declares no `color`, so WITHOUT the boundary
 // re-root it inherits the ink computed ONCE at the dark root (WHITE) → invisible on the now-light card surface.
-// component-gallery.css re-declares `color` on `theme-provider` to fix it. A plain `color-scheme:dark` on the root
+// component-gallery.css re-declares `color` on `ui-theme-provider` to fix it. A plain `color-scheme:dark` on the root
 // forces the dark-root case in BOTH engines (color-scheme is inherited; light-dark resolves against the local one).
 
-describe('<component-gallery> — the theme-provider re-roots inherited ink at the scheme boundary (both engines)', () => {
+describe('<component-gallery> — the ui-theme-provider re-roots inherited ink at the scheme boundary (both engines)', () => {
   it('a light provider under a dark root gives its bare-text specimens DARK ink, not the root\'s frozen white', async () => {
     // Reproduce the site's real root: a DARK color-scheme + a scheme-dependent body ink (_page.css sets body
     // `color: --md-sys-color-neutral-on-surface`, WHITE under the dark root — the frozen value the bug inherits).
@@ -310,7 +310,7 @@ describe('<component-gallery> — the theme-provider re-roots inherited ink at t
       rootEl.style.colorScheme = 'dark'
       document.body.style.color = 'var(--md-sys-color-neutral-on-surface)'
       const gallery = await mountGallery() // default scheme = LIGHT — the provider forces light under the dark root
-      const provider = gallery.querySelector('theme-provider') as HTMLElement
+      const provider = gallery.querySelector('ui-theme-provider') as HTMLElement
       expect(provider.getAttribute('scheme')).toBe('light') // anti-vacuous: genuinely the light-in-dark case
 
       const bodyInk = getComputedStyle(document.body).color // frozen WHITE (light-dark → dark branch at the root)

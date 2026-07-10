@@ -39,24 +39,29 @@ component-gallery {
   white-space: nowrap;
 }
 
-/* The ONE theme subtree (LLD-C4) — a plain block wrapper; its `scheme`/`scale`/`density`/`theme` attributes
- * are set by ComponentGallery's scope-owned effect and read by the token system's own selectors.
+/* The ONE theme subtree (LLD-C4) — its `scheme`/`scale`/`density`/`theme` attributes are set by
+ * ComponentGallery's scope-owned effect and read by the token system's own selectors. `display: block` is
+ * now the SHIPPED ui-theme-provider's own concern (controls/theme-provider/theme-provider.css, ADR-0117
+ * LLD §5) — only the ink re-root below stays gallery-local this wave.
  *
- * SCHEME-BOUNDARY INK RE-ROOT (bugfix): theme-provider re-roots `color-scheme` for its subtree, but that alone
- * does NOT re-resolve a scheme-dependent INHERITED `color`. `light-dark()` only re-resolves where a property
- * *containing* it is declared: a specimen's own explicit `background`/`color` (ui-card surface, ui-text ink)
- * re-resolves against the local scheme — but a BARE-textContent specimen (the a2ui Card header/content, the
- * ui-row/list/grid/column items) declares no `color`, so it inherits the value computed ONCE at the page root
- * (`_page.css` sets body `color: --md-sys-color-neutral-on-surface`). Under a dark root with the provider forced
- * to `light`, that inherited ink stays WHITE on the now-light surface → invisible. Re-declaring `color` HERE, at
- * the scheme boundary, makes the inherited ink re-resolve against the provider's own (forced) color-scheme. When
- * the provider matches the root this is a no-op (same branch); it only diverges in the light-in-dark / dark-in-
- * light case — exactly the bug. Load-bearing invariant: this re-roots INK only, so it stays sound because every
- * background reachable under the provider (the .canvas-surface plane, each ui-card surface) is ITSELF scheme-
- * declared and re-resolves in step; a bare-text node placed directly on the provider's own transparent ground
- * (which shows the non-re-rooted page body) would invert the defect (dark-on-dark) — don't add one. */
-theme-provider {
-  display: block;
+ * SCHEME-BOUNDARY INK RE-ROOT (bugfix): ui-theme-provider re-roots `color-scheme` for its subtree, but that
+ * alone does NOT re-resolve a scheme-dependent INHERITED `color`. `light-dark()` only re-resolves where a
+ * property *containing* it is declared: a specimen's own explicit `background`/`color` (ui-card surface,
+ * ui-text ink) re-resolves against the local scheme — but a BARE-textContent specimen (the a2ui Card header/
+ * content, the ui-row/list/grid/column items) declares no `color`, so it inherits the value computed ONCE at
+ * the page root (`_page.css` sets body `color: --md-sys-color-neutral-on-surface`). Under a dark root with
+ * the provider forced to `light`, that inherited ink stays WHITE on the now-light surface → invisible.
+ * Re-declaring `color` HERE, at the scheme boundary, makes the inherited ink re-resolve against the
+ * provider's own (forced) color-scheme. When the provider matches the root this is a no-op (same branch);
+ * it only diverges in the light-in-dark / dark-in-light case — exactly the bug. Load-bearing invariant: this
+ * re-roots INK only, so it stays sound because every background reachable under the provider (the
+ * .canvas-surface plane, each ui-card surface) is ITSELF scheme-declared and re-resolves in step; a
+ * bare-text node placed directly on the provider's own transparent ground (which shows the non-re-rooted
+ * page body) would invert the defect (dark-on-dark) — don't add one. **Named, not solved** (ADR-0117 LLD
+ * §5.3/§7): this ink-inheritance hazard is arguably the COMPONENT's own identity concern (ADR-0102 Lane A)
+ * for any consumer wrapping bare text, not just this gallery — a second consumer hitting it is the trigger
+ * to fold this fix into the component's own controls/theme-provider/theme-provider.css itself. */
+:where(ui-theme-provider) {
   color: var(--md-sys-color-neutral-on-surface);
 }
 

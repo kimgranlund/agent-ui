@@ -13,7 +13,7 @@
 // this file never imports it — every element here is built with plain `document.createElement`, exactly like
 // component-preview.ts.
 import './component-preview.ts' // self-defining <component-preview> (side-effect; ADR-0077)
-import './theme-provider.ts' // self-defining <theme-provider> (LLD-C4)
+import '@agent-ui/components/controls/theme-provider' // self-defining <ui-theme-provider> (ADR-0117)
 import './component-gallery.css'
 import { UIElement, computed, mount, repeat, signal, watch, Directive, directive, NO_COMMIT } from '@agent-ui/components'
 import type { DirectiveResult, Signal } from '@agent-ui/components'
@@ -181,7 +181,7 @@ export class ComponentGallery extends UIElement {
 
   protected connected(): void {
     if (!this.#provider) {
-      const provider = document.createElement('theme-provider')
+      const provider = document.createElement('ui-theme-provider')
       const grid = document.createElement('div')
       grid.className = 'gallery-grid'
       provider.append(grid)
@@ -193,7 +193,7 @@ export class ComponentGallery extends UIElement {
     const grid = this.#grid!
     const readoutHole = this.#readoutHole!
 
-    // The ONE theme subtree (LLD §4): every axis lands on the single <theme-provider>, nothing per-card.
+    // The ONE theme subtree (LLD §4): every axis lands on the single <ui-theme-provider>, nothing per-card.
     this.effect(() => {
       provider.setAttribute('scheme', this.#scheme.value)
       provider.setAttribute('scale', this.#scale.value)

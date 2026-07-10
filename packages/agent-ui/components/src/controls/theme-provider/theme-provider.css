@@ -1,0 +1,34 @@
+/* theme-provider.css — ui-theme-provider, the single-file component stylesheet (ADR-0003). The degenerate
+ * minimal case of the fleet's two-block shape (text-field.css / column.css), the SAME shape
+ * form-provider.css already establishes for a pure coordination/carrier element —
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-theme-provider)` declares NOTHING. The provider maps `scheme` to its own
+ *       `color-scheme` and reflects `scale`/`density`/`theme` as pure attribute carriers (LLD-C1/C2); it
+ *       paints no surface of its own, so there is no `--ui-theme-provider-*` chain to declare (SPEC-R6).
+ *       An EMPTY token block is deliberately NOT invented here (the form-provider.css LLD-C8 precedent) —
+ *       this comment stands in for the section, so the token-hygiene probes need no special case: an
+ *       absent chain is still zero raw `--md-sys-color-*` leakage, zero non-`--ui-theme-provider-*` consumption.
+ *   [2] STYLES BLOCK — `@scope (ui-theme-provider)` sets exactly one declaration: `display: block`. An
+ *       unstyled custom element defaults to `inline`, which would lay its slotted block-level descendants
+ *       out inline against the host — a first-paint layout defect. No further rule: no colour, no spacing,
+ *       no geometry — the coordination host paints nothing, the slotted subtree owns every box.
+ *
+ * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from theme-provider.ts
+ * (behaviour-only `.ts`, no runtime style injection — plan §2). No forced-colors block: the component
+ * paints no surface of its own (SPEC-R6).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-theme-provider) declares NOTHING ════════════════ */
+/* Deliberate absence (SPEC-R6): a pure coordination/carrier element has no visual voice of its own — there
+   is no --ui-theme-provider-* token chain to declare. `scale`/`density` ride the ambient [scale]/[density]
+   selectors in dimensions.css, unmodified by this sheet (SPEC-R4); `theme` is wired but inert (SPEC-R5). */
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-theme-provider) consumes NOTHING ════════════════ */
+
+@scope (ui-theme-provider) {
+  :scope {
+    display: block; /* the host's only rule: an unstyled custom element defaults to `inline`, which would
+       lay its slotted block-level descendants out inline against it — `block` is the coordination host's
+       structural default, not a styling opinion. */
+  }
+}

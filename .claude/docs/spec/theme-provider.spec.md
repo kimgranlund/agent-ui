@@ -206,11 +206,20 @@ output as a plain asset import, never by shelling out itself.
   browser-test project, per `app-shell-isolation.browser.test.ts`; jsdom's empty resolution of the same
   query is the documented, unrelated caveat, avoided here because this is a `.browser.test.ts`); (3) the
   browser test injects the fixture text into its own document via a `<style>` element, mounts real
-  `<ui-theme-provider scheme="dark"><ui-button variant="solid">…</ui-button></ui-theme-provider>` beside a
-  `scheme="light"` sibling, and asserts `getComputedStyle` on each button's resolved background color
-  genuinely differs and matches the expected dark/light token value — *then* the assertions hold, proving
-  the mechanism through a real browser parsing genuinely-production-built bytes, with the freshness of
-  those bytes independently gated by (1).
+  `<ui-theme-provider scheme="dark"><ui-button variant="soft">…</ui-button></ui-theme-provider>` beside a
+  `scheme="light"` sibling, and asserts `getComputedStyle` on each button's resolved INK (`color`, not
+  `backgroundColor`) genuinely differs and matches an independently-resolved expected dark/light token
+  value — *then* the assertions hold, proving the mechanism through a real browser parsing
+  genuinely-production-built bytes, with the freshness of those bytes independently gated by (1).
+  **Deviation record (MEDIUM-2, post-build doc repair):** the vehicle above is corrected from a frozen
+  earlier draft that named `variant="solid"` asserting `backgroundColor`. That vehicle was
+  vacuous-by-construction: `--md-sys-color-primary` (the `solid` variant's bg/ink) is
+  `light-dark(primary-500, primary-500)` in `tokens.css` — deliberately scheme-INVARIANT — so it could
+  never diverge regardless of whether the mapping mechanism worked. `soft`'s ink reads
+  `--md-sys-color-primary-high` (`light-dark(primary-650, primary-400)`), which genuinely differs per
+  scheme. Both the builder and an independent reviewer verified this substitution against the shipped test
+  before this record caught up; per the freeze discipline, the conflict should have escalated before
+  building around it — recorded honestly rather than treated as silently pre-approved.
 
 ## 4. Non-goals (explicit fences)
 

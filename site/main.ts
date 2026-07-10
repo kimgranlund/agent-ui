@@ -124,7 +124,7 @@ const CARD_GROUPS: readonly CardGroup[] = [
       {
         href: './theming.html',
         title: 'Theming',
-        blurb: 'theme-provider’s three live axes (scheme/scale/density), the --md-sys-color-{family}-{role} role system, a live subtree token override, and the reserved multi-theme seam.',
+        blurb: 'ui-theme-provider’s three live axes (scheme/scale/density), the --md-sys-color-{family}-{role} role system, a live subtree token override, and the reserved multi-theme seam.',
       },
       {
         href: './tokens.html',
@@ -519,6 +519,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
         href: './form-provider-doc.html',
         title: 'API reference',
         blurb: 'The ui-form-provider surface (controls/entries/values/invalid/valid/submit/reset), the change submit event, and the ui-form-connect protocol, from form-provider.md.',
+      },
+    ],
+  },
+  // ADR-0117 — the promoted theming subtree provider (tier=container ⇒ {doc, demo}, the ui-form-provider precedent).
+  {
+    label: 'ui-theme-provider',
+    cards: [
+      {
+        href: './theme-provider-demo.html',
+        title: 'Demo',
+        blurb: 'Two nested providers proving subtree independence, plus an unset provider nested inside a dark ancestor — the ancestor-inherit fix, live.',
+      },
+      {
+        href: './theme-provider-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-theme-provider surface (scheme/scale/density/theme), the unset-inherits scheme mapping, and the reserved theme package seam, from its own descriptor.',
       },
     ],
   },

@@ -214,7 +214,7 @@ describe('<component-gallery> — the reactive filter/theme/grid loop', () => {
     const select = themeLabel?.querySelector('ui-select') as HTMLElement
     const optionValues = [...select.querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value'))
     expect(optionValues).toEqual(['default'])
-    const provider = gallery.querySelector('theme-provider') as HTMLElement
+    const provider = gallery.querySelector('ui-theme-provider') as HTMLElement
     expect(provider.getAttribute('theme')).toBe('default')
   })
 

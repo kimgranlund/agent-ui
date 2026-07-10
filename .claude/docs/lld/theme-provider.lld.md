@@ -250,16 +250,30 @@ import builtCss from './__fixtures__/theme-provider-built.css?raw'
 //   1. injects builtCss into ITS OWN live document via a <style> element (document.head.appendChild) —
 //      genuinely production-built bytes, freshness independently gated by the node-side test above
 //   2. mounts <ui-theme-provider scheme="dark"> and <ui-theme-provider scheme="light"> siblings, each
-//      wrapping a real <ui-button variant="solid"> (a self-coloring control — the LOW-3 vehicle choice,
+//      wrapping a real <ui-button variant="soft"> (a self-coloring control — the LOW-3 vehicle choice,
 //      §5's demo-page rationale applies here too: a bare-text probe would conflate this proof with the
 //      separate ink-re-root defect class)
-//   3. asserts getComputedStyle(darkButton).backgroundColor !== getComputedStyle(lightButton).backgroundColor
-//      AND each matches its expected token-resolved value (not just "differs from the other" — a
-//      degenerate "both unstyled" false-pass is ruled out by asserting the ACTUAL expected colors)
+//   3. asserts getComputedStyle(darkButton).color !== getComputedStyle(lightButton).color (soft/ghost ink
+//      reads --md-sys-color-primary-high, ADR-0117 build-verified: light-dark(primary-650, primary-400) —
+//      a genuine per-scheme divergence) AND each matches an INDEPENDENTLY-resolved expected value for that
+//      scheme (a separate probe with its own explicit color-scheme, not a hardcoded literal that could
+//      silently drift from the palette) — not just "differs from the other" (a degenerate "both unstyled"
+//      false-pass is ruled out this way too)
 // Proves the production CSS, parsed by a real engine, resolves per-subtree through THIS component's
 // scheme mapping — the TKT-0002 regression class, scoped through a real consumer's real DOM, complementing
 // (not duplicating) light-dark-minify.test.ts's general-purpose "the bytes survive minification" proof.
 ```
+
+**Deviation record (MEDIUM-2, post-build doc repair).** The build could not satisfy the frozen vehicle
+above verbatim: `--md-sys-color-primary` (the `solid` variant's bg/ink) is `light-dark(primary-500,
+primary-500)` in `tokens.css` — DELIBERATELY scheme-INVARIANT (a stable brand accent) — so a `solid`
+`background-color` assertion would have been vacuous-by-construction, never able to diverge regardless of
+whether the mapping mechanism worked or not. The build switched to `variant="soft"` asserting `color` (ink)
+against `--md-sys-color-primary-high` (`light-dark(primary-650, primary-400)` — genuinely scheme-dependent),
+verified independently by BOTH the builder and a second reviewer against the shipped test
+(`site/lib/theme-provider-build.browser.test.ts`) before this record caught up. Per the freeze discipline
+(§ intro), a frozen-interface conflict should escalate BEFORE building around it — that didn't happen here;
+recording the honest process gap rather than silently treating the deviation as pre-approved.
 
 **Why not `globalSetup`/`provide`/`inject`** (the alternative the review offered): grepped for precedent —
 zero hits anywhere in this repo, and it would mean editing the SHARED root `vitest.browser.config.ts` (every

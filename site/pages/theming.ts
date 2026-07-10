@@ -1,14 +1,14 @@
-// site/pages/theming.ts — the theming guide: <theme-provider>'s three live axes (scheme/scale/density), how the
+// site/pages/theming.ts — the theming guide: ui-theme-provider's three live axes (scheme/scale/density), how the
 // --md-sys-color-{family}-{role} role system is shaped, how a consumer overrides a token at a subtree, and the
 // reserved multi-theme package seam. Live demos throughout — the scheme demo puts a real light and a real dark
-// subtree side by side (each its own <theme-provider>), the override demo repoints a real token on a real
-// wrapper around a real ui-button. Source of truth for the CONTRACT: site/lib/theme-provider.ts (imported here
-// as the site's own live consumer already does, via component-gallery.ts) — this page cites it rather than
-// re-implementing it. The role-system SHAPE is illustrated here; the full derived table of every role lives on
-// the token reference page (tokens.html), linked below rather than restated.
+// subtree side by side (each its own <ui-theme-provider>), the override demo repoints a real token on a real
+// wrapper around a real ui-button. Source of truth for the CONTRACT: the shipped `ui-theme-provider` control
+// (`@agent-ui/components/controls/theme-provider`, ADR-0117) — this page cites it rather than re-implementing it.
+// The role-system SHAPE is illustrated here; the full derived table of every role lives on the token reference
+// page (tokens.html), linked below rather than restated.
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './theming.css'
-import '../lib/theme-provider.ts' // registers <theme-provider> (site/lib/theme-provider.ts)
+import '@agent-ui/components/controls/theme-provider' // self-defining <ui-theme-provider> (ADR-0117)
 import { heading } from '../lib/doc-page.ts'
 import { codeBlock } from '../lib/code-block.ts'
 import { el } from '../lib/specimens.ts'
@@ -22,10 +22,12 @@ const { content } = mountPage({
 
 content.append(
   pageLead(
-    '<theme-provider> is a plain, passive wrapper (site/lib/theme-provider.ts) — it owns no reactive state of ' +
-      'its own. scheme is the one attribute it actively observes (it maps to the element’s own color-scheme, ' +
-      'which every light-dark() token resolves against per subtree via inheritance). scale and density are ' +
-      'pure attribute carriers: dimensions.css’s [scale]/[density] selectors key off them in CSS alone.',
+    'ui-theme-provider is a real, shipped control (@agent-ui/components/controls/theme-provider) — a pure ' +
+      'coordination/carrier element with no visual voice of its own. scheme is the one axis with a JS-side ' +
+      'effect (it maps to the element’s own color-scheme, which every light-dark() token resolves against per ' +
+      'subtree via inheritance — an unset scheme imposes no override and inherits the ambient scheme). scale ' +
+      'and density are pure attribute carriers: dimensions.css’s [scale]/[density] selectors key off them in ' +
+      'CSS alone.',
   ),
 )
 
@@ -40,7 +42,7 @@ content.append(heading(2, '1 · scheme — light and dark, side by side'))
 content.append(
   el('p', {}, [
     document.createTextNode('Each panel below is its own '),
-    code("<theme-provider scheme=\"…\">"),
+    code("<ui-theme-provider scheme=\"…\">"),
     document.createTextNode(
       ', independent of your OS or browser preference — the same live specimens, rendered under both schemes ' +
         'at once so you can compare them directly.',
@@ -49,7 +51,7 @@ content.append(
 )
 
 function schemeCard(scheme: 'light' | 'dark'): HTMLElement {
-  const provider = document.createElement('theme-provider')
+  const provider = document.createElement('ui-theme-provider')
   provider.setAttribute('scheme', scheme)
   provider.className = 'theming-panel'
 
@@ -78,7 +80,7 @@ content.append(
     document.createTextNode(
       'scale re-tables a control’s frame (height + font + icon) to a different §1 row; density multiplies only ' +
         'the icon-to-label rhythm gap, never the frame. Both are plain attributes on any ancestor — ' +
-        'theme-provider carries them for free, but any wrapper element works identically.',
+        'ui-theme-provider carries them for free, but any wrapper element works identically.',
     ),
   ]),
 )
@@ -175,7 +177,7 @@ content.append(heading(2, '5 · the reserved theme package seam'))
 content.append(
   el('p', {}, [
     document.createTextNode(
-      'theme-provider also carries a theme attribute — a reserved, not-yet-implemented seam for swapping whole ' +
+      'ui-theme-provider also carries a theme attribute — a reserved, not-yet-implemented seam for swapping whole ' +
         'token PACKAGES (a distinct palette, not just a subtree override). Today exactly one default package ' +
         'ships; an unregistered theme name degrades silently to it (no CSS layer matches it yet, so nothing ' +
         'breaks). The multi-theme package-swapping system is deliberately next-tier scope — see the decision ' +

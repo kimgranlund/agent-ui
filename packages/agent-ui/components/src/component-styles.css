@@ -75,6 +75,10 @@
 @import './controls/field/field.css';
 @import './controls/form-provider/form-provider.css';
 
+/* Coordination/carrier controls — ADR-0117: the fleet's second pure UIElement coordination primitive.
+ * theme-provider.css declares no --ui-theme-provider-* tokens (SPEC-R6 — pure coordination, no paint). */
+@import './controls/theme-provider/theme-provider.css';
+
 /* Chart family — Wave M1 (ADR-0107, chart-family.lld.md LLD-C8): Display-class, axis-free chart marks. */
 @import './controls/sparkline/sparkline.css';
 @import './controls/bar-chart/bar-chart.css';

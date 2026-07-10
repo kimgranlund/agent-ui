@@ -195,9 +195,11 @@ describe('site coverage — every shipped component has its required per-tier pa
     // Wave 2 Range family (slider, slider-multi — ADR-0042): tier=range
     expect(COMPONENTS.filter((c) => c.tier === 'range').map((c) => c.name).sort()).toEqual(['slider-multi'])
     // Container tier = the G9 surface/form containers (card, radio-group) + the G7 form-composition family
-    // (field, form-provider — both tier=container, ADR-0050/0051). Each requires its {doc, demo} pages.
+    // (field, form-provider — both tier=container, ADR-0050/0051) + the promoted theming subtree provider
+    // (theme-provider — ADR-0117, the same pure-coordination/carrier posture as form-provider). Each
+    // requires its {doc, demo} pages.
     expect(COMPONENTS.filter((c) => c.tier === 'container').map((c) => c.name).sort()).toEqual(
-      ['card', 'field', 'form-provider', 'radio-group'],
+      ['card', 'field', 'form-provider', 'radio-group', 'theme-provider'],
     )
     // Layout tier + the Wave M1 feed family's ui-toast-region (ADR-0112, LLD-C8 — a pure inset/gap host,
     // no surface paint of its own).

@@ -152,6 +152,10 @@ function fleetPrimaryTypes(): string[] {
 const EXCLUSION_ALLOWLIST = new Map<string, string>([
   ['Toast', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: app-surface chrome driven by show(), not agent-emittable (rejected explicitly: history-must-not-lie · payload↔DOM traceability · teaching a forbidden type).'],
   ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, same reasoning as Toast: app-surface chrome, never a catalog row.'],
+  ['ThemeProvider',
+    'ADR-0117 / theme-provider.spec.md SPEC-R8 — PERMANENT exclusion, never catalogue-bound: ' +
+    'page/app-owner theming chrome establishing a color-scheme subtree, not agent-emittable content ' +
+    '(the ADR-0112 cl.6 Toast/ToastRegion reasoning applied verbatim).'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

@@ -80,6 +80,10 @@ export * from './calendar/calendar.ts'   // form-associated date picker (bespoke
 export * from './field/field.ts'               // the label/description/error wrapper (LLD-C4)
 export * from './form-provider/form-provider.ts' // also surfaces FormSubmitDetail (LLD-C7)
 
+// Coordination/carrier controls — ADR-0117: the fleet's SECOND pure UIElement coordination primitive (after
+// ui-form-provider). Establishes a color-scheme subtree + reflects scale/density/theme as pure carriers.
+export * from './theme-provider/theme-provider.ts'
+
 // Chart family — Wave M1 (ADR-0107, chart-family.lld.md): Display-class, axis-free chart marks. Neither is
 // form-associated or interactive (extends UIElement directly, tier=display, no [size]/[scale] geometry row).
 export * from './sparkline/sparkline.ts'   // series-shape mark (LLD-C1/C2/C3)

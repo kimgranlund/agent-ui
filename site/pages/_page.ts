@@ -244,6 +244,15 @@ export const NAV: readonly NavGroup[] = [
       { href: './form-provider-doc.html', label: 'API' },
     ],
   },
+  // ADR-0117 — the promoted theming subtree provider, a pure coordination/carrier primitive (tier=container,
+  // the same {doc, demo} shape as ui-form-provider above).
+  {
+    label: 'ui-theme-provider',
+    links: [
+      { href: './theme-provider-demo.html', label: 'Demo' },
+      { href: './theme-provider-doc.html', label: 'API' },
+    ],
+  },
   // The Wave M1 report family (ADR-0111) — three Display-class descriptor-derived API docs (tier=display ⇒
   // {doc} only, the ui-text/ui-icon/chart precedent).
   {

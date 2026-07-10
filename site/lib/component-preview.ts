@@ -353,6 +353,14 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     submit.textContent = 'Submit'
     return [field, submit]
   },
+  // ADR-0117 — a real button so the gallery specimen paints a non-zero box (the provider itself has no
+  // geometry of its own; the "test the whole shape" law needs REAL content under a STRUCTURAL target).
+  'ui-theme-provider': () => {
+    const button = document.createElement('ui-button')
+    button.setAttribute('variant', 'solid')
+    button.textContent = 'Themed'
+    return [button]
+  },
 
   // ── other NO_SLOT_TEXT targets — self-constructing controls that had NO representative content before ─────
   'ui-field': () => {
@@ -561,7 +569,9 @@ export const NO_SLOT_TEXT = new Set([
 // ui-toast-region (ADR-0112, LLD-C8) joins this set too: its `slots` is a real default slot ("zero or more
 // ui-toast children, stacked in append order") — parts: [] on the host, nothing adopts/moves them — the
 // exact STRUCTURAL shape, not ui-toast's own adopted-into-a-part one.
-export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-toast-region'])
+// ui-theme-provider (ADR-0117) joins this set too: its default slot IS "the themed subtree" (field.md/
+// form-provider.md's own coordination-primitive posture) — real content, never a text/label string.
+export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-theme-provider', 'ui-toast-region'])
 
 // SLOT_TEXT_OK — SLOT_TEXT is a real, safe, MEANINGFUL knob: a genuine text/label default slot, the accessible
 // label content a viewer edits to see the control's OWN typography/sizing respond (button/checkbox/radio/

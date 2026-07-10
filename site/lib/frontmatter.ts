@@ -43,6 +43,8 @@ import calendarMd from '../../packages/agent-ui/components/src/controls/calendar
 // The G7 form-composition family (ADR-0050/0051): the label/description/error wrapper + the coordination provider.
 import fieldMd from '../../packages/agent-ui/components/src/controls/field/field.md?raw'
 import formProviderMd from '../../packages/agent-ui/components/src/controls/form-provider/form-provider.md?raw'
+// ADR-0117 — the promoted theming subtree provider (tier=container, the ui-form-provider precedent).
+import themeProviderMd from '../../packages/agent-ui/components/src/controls/theme-provider/theme-provider.md?raw'
 // The Wave M1 chart family (ADR-0107, chart-family.lld.md): the two Display-class axis-free charts.
 import sparklineMd from '../../packages/agent-ui/components/src/controls/sparkline/sparkline.md?raw'
 import barChartMd from '../../packages/agent-ui/components/src/controls/bar-chart/bar-chart.md?raw'
@@ -110,6 +112,8 @@ export const loadCalendarDoc  = (): ComponentDoc => parseDoc(calendarMd)
 // The G7 form-composition family (ADR-0050/0051 — both tier=container ⇒ {doc, demo}).
 export const loadFieldDoc        = (): ComponentDoc => parseDoc(fieldMd)
 export const loadFormProviderDoc = (): ComponentDoc => parseDoc(formProviderMd)
+// ADR-0117 (tier=container ⇒ {doc, demo}, the ui-form-provider precedent).
+export const loadThemeProviderDoc = (): ComponentDoc => parseDoc(themeProviderMd)
 // The Wave M1 chart family (ADR-0107 — both tier=display ⇒ {doc} only).
 export const loadSparklineDoc = (): ComponentDoc => parseDoc(sparklineMd)
 export const loadBarChartDoc  = (): ComponentDoc => parseDoc(barChartMd)

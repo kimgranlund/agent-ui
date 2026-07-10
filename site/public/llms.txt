@@ -11,7 +11,7 @@
 ## Guides
 
 - [Getting started](./getting-started.html): the 7 workspace packages, install and the load-bearing CSS import order (foundation tokens → component styles → self-defining controls), a first control, and per-control subpath imports for tree-shaking.
-- [Theming](./theming.html): the `<theme-provider>` subtree axes (scheme light/dark · scale · density), the `--md-sys-color-{family}-{role}` role system, and subtree token overrides, with live demos.
+- [Theming](./theming.html): the `<ui-theme-provider>` subtree axes (scheme light/dark · scale · density), the `--md-sys-color-{family}-{role}` role system, and subtree token overrides, with live demos.
 - [Token reference](./tokens.html): every color role (light/dark swatches) and dimensional ramp (heights, fonts, icons, compact boxes, spacing), derived live from tokens.css and dimensions.css.
 - [Sizing & density](./sizing.html): the five component size classes, the explicit `[scale]`×`[size]` lookup (no multipliers), the compact realm's pad law, and density-rides-rhythm — with a live measured matrix.
 - [Forms](./forms.html): one working end-to-end form — `ui-form-provider` + `ui-field` registration, labelling, validation display, submit gating, and reset.
@@ -51,6 +51,7 @@
 
 - [ui-field](./field-doc.html): the label/description/error chrome around any form control, wired via the connect-time registry; [demo](./field-demo.html).
 - [ui-form-provider](./form-provider-doc.html): the form-context provider — registration, submit gating, and reset across a subtree; [demo](./form-provider-demo.html).
+- [ui-theme-provider](./theme-provider-doc.html): the theming subtree provider — scheme (light/dark, unset inherits), scale, density, and the reserved theme package seam; [demo](./theme-provider-demo.html).
 
 ## Components — content & prose
 
