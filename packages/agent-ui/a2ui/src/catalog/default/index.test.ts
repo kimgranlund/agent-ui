@@ -140,18 +140,17 @@ function fleetPrimaryTypes(): string[] {
  *  "shipped ahead of its catalog row" seeds it had accumulated (`Table`/`Stat`/`Badge`,
  *  report-family.lld.md LLD-C12; `Code`/`Disclosure`, content-family.lld.md LLD-C13;
  *  `Progress`/`Avatar`/`Attachment`, feed-family.lld.md LLD-C13) — their catalog rows now exist, so their
- *  seeds are REMOVED, not left as residue (the residue-guard test below would fail if they weren't).
- *  `Image`/`Video` are deliberately NOT here — no `ui-image`/`ui-video` descriptor exists, so they never
- *  enter the derived set to begin with (they stay a documentary-only note in SPEC §5.2.1, never
- *  code-derived). A future undispositioned control re-seeds this map with a reason + citation, same as
- *  Wave 0's seed. The token-surface family (ADR-0118, `Swatch`/`Ramp`/`Ladder`) re-seeds this pattern below:
- *  the SAME "shipped ahead of its catalog row" shape, deliberately split M1 (controls + allowlist seed) /
- *  M2 (rows + exemplar + guidance) per ADR-0118 fork F4 — drained the same way the report/content/feed
- *  seeds above were. */
-// `Toast`/`ToastRegion`/`ThemeProvider` carry a DIFFERENT kind of entry: they are not catalogue-bound AT ALL
-// (app-surface/theming chrome, never agent-emittable) — a PERMANENT exclusion, never drained. `Swatch`/
-// `Ramp`/`Ladder` below are the temporary M1 seed (drained at M2, LLD-C13) — the two kinds coexist here the
-// same way the report/content/feed temporary seeds once sat alongside the permanent Toast/ToastRegion pair.
+ *  seeds are REMOVED, not left as residue (the residue-guard test below would fail if they weren't). The
+ *  token-surface family (ADR-0118, `Swatch`/`Ramp`/`Ladder`) re-seeded this SAME "shipped ahead of its
+ *  catalog row" shape at M1 (token-surfaces.lld.md LLD-C10) — deliberately split from M1 (controls +
+ *  allowlist seed) into a separate M2 wave (rows + exemplar + guidance, LLD-C13/C14/C15, ADR-0118 fork
+ *  F4); the M2 wave lands the three rows below and DRAINS that seed too, the same way the report/content/
+ *  feed seeds above were drained. `Image`/`Video` are deliberately NOT here — no `ui-image`/`ui-video`
+ *  descriptor exists, so they never enter the derived set to begin with (they stay a documentary-only note
+ *  in SPEC §5.2.1, never code-derived). A future undispositioned control re-seeds this map with a reason +
+ *  citation, same as Wave 0's seed. */
+// `Toast`/`ToastRegion`/`ThemeProvider` are the only entries left — NOT catalogue-bound AT ALL (app-surface/
+// theming chrome, never agent-emittable) — a PERMANENT exclusion, never drained.
 const EXCLUSION_ALLOWLIST = new Map<string, string>([
   ['Toast', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: app-surface chrome driven by show(), not agent-emittable (rejected explicitly: history-must-not-lie · payload↔DOM traceability · teaching a forbidden type).'],
   ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, same reasoning as Toast: app-surface chrome, never a catalog row.'],
@@ -159,13 +158,6 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'ADR-0117 / theme-provider.spec.md SPEC-R8 — PERMANENT exclusion, never catalogue-bound: ' +
     'page/app-owner theming chrome establishing a color-scheme subtree, not agent-emittable content ' +
     '(the ADR-0112 cl.6 Toast/ToastRegion reasoning applied verbatim).'],
-  // Token-surface family (ADR-0118 cl.6, fork F4; token-surfaces.lld.md LLD-C10; SPEC-R18 AC1) — a
-  // TEMPORARY M1 seed, NOT permanent: the three descriptors land at M1 with no catalog rows (the
-  // exemplar/guidance/FEED_EXCLUDED work is a separate M2 wave, per ADR-0118's split-wave adaptation of
-  // the ADR-0107 cl.6 same-wave precedent). Drained to zero residue when M2 lands the rows (LLD-C13).
-  ['Swatch', 'ADR-0118 cl.6 / token-surfaces.lld.md LLD-C10 — M1 seed (temporary): ui-swatch ships at M1 with no catalog row; the display-only row + accessorFactory land at M2 (LLD-C13), draining this entry.'],
-  ['Ramp', 'ADR-0118 cl.6 / token-surfaces.lld.md LLD-C10 — M1 seed (temporary): ui-ramp ships at M1 with no catalog row; the display-only row + accessorFactory land at M2 (LLD-C13), draining this entry.'],
-  ['Ladder', 'ADR-0118 cl.6 / token-surfaces.lld.md LLD-C10 — M1 seed (temporary): ui-ladder ships at M1 with no catalog row; the display-only row + accessorFactory land at M2 (LLD-C13), draining this entry.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists
@@ -865,6 +857,143 @@ describe('default catalog — Sparkline/BarChart via the shared validator (ADR-0
     const rows2 = [...el.querySelectorAll('[role="listitem"]')]
     expect(rows2).toHaveLength(3) // a genuinely different row set, not a stale re-paint
     expect(rows2.map((row) => row.querySelector('[data-part="label"]')?.textContent)).toEqual(['EMEA', 'APAC', 'Americas'])
+
+    r.dispose()
+    mount.remove()
+  })
+})
+
+// ── the ADR-0118 token-surface family (Swatch / Ramp / Ladder), catalog LLD-C13, token-surfaces.lld.md §6 ──
+//
+// SPEC-R18 AC1 (fleet-derived coverage, zero allowlist residue) is proven by the two describe blocks near
+// the top of this file (the drained `EXCLUSION_ALLOWLIST` + the residue guard — `Swatch`/`Ramp`/`Ladder`
+// no longer appear there). This block proves the rows themselves: a representative payload validates
+// 0-`CATALOG` via `validateA2ui`, each row is display-only (no `value` mark, no children), the bindable/
+// non-bindable split matches the shipped controls (`value`/`label`/`steps`/`tiers` bindable — the
+// Sparkline.values/BarChart.data array-prop precedent; `scheme` a non-bindable structural enum — the
+// Sparkline.variant/Avatar.size precedent), and an unknown property still fails CATALOG for all three.
+describe('default catalog — Swatch/Ramp/Ladder via the shared validator (ADR-0118, token-surfaces.spec.md SPEC-R18)', () => {
+  it('a representative Swatch/Ramp/Ladder payload validates 0 failures via validateA2ui', () => {
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'Column', children: ['sw', 'rp', 'ld'] },
+          { id: 'sw', component: 'Swatch', value: 'oklch(0.6 0.03 225)', label: 'primary-500', scheme: 'dark' },
+          {
+            id: 'rp', component: 'Ramp', label: 'Primary tonal range',
+            steps: [
+              { label: '100', value: '--md-sys-color-primary-100' },
+              { label: '900', value: '--md-sys-color-primary-900' },
+            ],
+          },
+          {
+            id: 'ld', component: 'Ladder', label: 'Control heights',
+            tiers: [
+              { label: 'sm', value: '24px' },
+              { label: 'lg', value: '36px' },
+            ],
+          },
+        ],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('Swatch/Ramp/Ladder declare display-only rows: no value mark, no children (ADR-0118 cl.6)', () => {
+    expect(defaultCatalog.components.Swatch.value).toBeUndefined()
+    expect(defaultCatalog.components.Swatch.children).toBeUndefined()
+    expect(defaultCatalog.components.Ramp.value).toBeUndefined()
+    expect(defaultCatalog.components.Ramp.children).toBeUndefined()
+    expect(defaultCatalog.components.Ladder.value).toBeUndefined()
+    expect(defaultCatalog.components.Ladder.children).toBeUndefined()
+  })
+
+  it('value/label/steps/tiers are bindable; scheme is a non-bindable structural enum (the Sparkline.variant precedent)', () => {
+    expect(defaultCatalog.components.Swatch.properties.value?.bindable).toBe(true)
+    expect(defaultCatalog.components.Swatch.properties.label?.bindable).toBe(true)
+    expect(defaultCatalog.components.Swatch.properties.scheme?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.Ramp.properties.steps?.bindable).toBe(true)
+    expect(defaultCatalog.components.Ramp.properties.label?.bindable).toBe(true)
+    expect(defaultCatalog.components.Ramp.properties.scheme?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.Ladder.properties.tiers?.bindable).toBe(true)
+    expect(defaultCatalog.components.Ladder.properties.label?.bindable).toBe(true)
+  })
+
+  it('accepts a {path} binding for value/steps/tiers (bindable props)', () => {
+    const sw: A2uiComponent = { id: 'sw1', component: 'Swatch', value: { path: '/brand/primary' } }
+    const rp: A2uiComponent = { id: 'rp1', component: 'Ramp', steps: { path: '/brand/steps' } }
+    const ld: A2uiComponent = { id: 'ld1', component: 'Ladder', tiers: { path: '/dims/tiers' } }
+    expect(validateCatalogConformance(sw, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(rp, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(ld, defaultCatalog)).toEqual([])
+  })
+
+  it('NEGATIVE: an unknown prop fails CATALOG for Swatch, Ramp, and Ladder', () => {
+    const sw: A2uiComponent = { id: 'sw2', component: 'Swatch', value: '#fff', bogus: 1 }
+    expect(validateCatalogConformance(sw, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'sw2.bogus' })
+
+    const rp: A2uiComponent = { id: 'rp2', component: 'Ramp', steps: [], bogus: 1 }
+    expect(validateCatalogConformance(rp, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'rp2.bogus' })
+
+    const ld: A2uiComponent = { id: 'ld2', component: 'Ladder', tiers: [], bogus: 1 }
+    expect(validateCatalogConformance(ld, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'ld2.bogus' })
+  })
+
+  it('NEGATIVE: a wrong-primitive literal fails CATALOG for this family (the reviewer F1 plant)', () => {
+    // Swatch.value is a string prop — a number literal must fail the type check, not coerce.
+    const sw: A2uiComponent = { id: 'sw3', component: 'Swatch', value: 1 }
+    expect(validateCatalogConformance(sw, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'sw3.value' }))
+
+    // Ramp.steps is an array-of-{label,value} prop — a bare string must fail, never iterate.
+    const rp: A2uiComponent = { id: 'rp3', component: 'Ramp', steps: 'nope' }
+    expect(validateCatalogConformance(rp, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'rp3.steps' }))
+  })
+
+  it('a {path}-bound Ramp.steps renders the strip (real ui-ramp, no mocks) and re-renders on updateDataModel', async () => {
+    const r = createRenderer({ newId: () => 'act-1', now: () => '2026-07-10T00:00:00.000Z' })
+    const mount = document.createElement('div')
+    document.body.appendChild(mount)
+    r.mount(mount)
+
+    const line = (message: unknown): string => JSON.stringify(message)
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'ts', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'ts',
+          components: [{ id: 'root', component: 'Ramp', steps: { path: '/palette' }, label: 'Primary' }],
+        },
+      }),
+    )
+
+    const el = mount.querySelector('ui-ramp') as HTMLElement & { steps?: unknown }
+    expect(el).toBeTruthy() // the REAL upgraded control, not a placeholder
+    expect(el.querySelectorAll('[data-part="cell"]')).toHaveLength(0) // no data yet — no throw
+
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateDataModel: {
+          surfaceId: 'ts',
+          path: '/palette',
+          value: [
+            { label: '100', value: '#eef' },
+            { label: '900', value: '#003' },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+    expect(el.steps).toEqual([
+      { label: '100', value: '#eef' },
+      { label: '900', value: '#003' },
+    ])
+    const cells = [...el.querySelectorAll('[data-part="cell"]')]
+    expect(cells).toHaveLength(2) // the mark rendered from the bound path
+    expect(cells.map((c) => c.querySelector('[data-part="step-label"]')?.textContent)).toEqual(['100', '900'])
 
     r.dispose()
     mount.remove()

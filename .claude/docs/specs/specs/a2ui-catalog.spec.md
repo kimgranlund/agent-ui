@@ -132,7 +132,7 @@ interface CatalogRegistry {                                // the two-tier exten
 
 ### 5.2 Default catalog mapping (normative coverage)
 
-Coverage spans the whole shipped `ui-*` fleet (SPEC-N2, ADR-0087): every shipped control resolves to a catalog type or sits on the §5.2.1 exclusion allowlist. The table below is the **shipped-and-catalogued** set — the 27 fleet descriptors landed through the ADR-0107 chart-family wave (13 primary Wave 0-baseline types + the 12 ADR-0087 types landed across Waves A/B/C + the 2 chart-family types, plus their composite sub-types), PLUS the 8 types landed by the report/content/feed catalog wave (ADR-0111/0113/0112, LLD-C12/C13 across the three families) — `Table`/`Stat`/`Badge`, `Code`/`Disclosure`, `Progress`/`Avatar`/`Attachment` — now all resolve to a row here; the §5.2.1 allowlist holds only the documentary-only `Image`/`Video` residue plus the two PERMANENT non-catalogue entries `Toast`/`ToastRegion` (ADR-0112 cl.6 — app-surface chrome, never agent-emittable). No silent dead types, no silent uncatalogued controls.
+Coverage spans the whole shipped `ui-*` fleet (SPEC-N2, ADR-0087): every shipped control resolves to a catalog type or sits on the §5.2.1 exclusion allowlist. The table below is the **shipped-and-catalogued** set — the 27 fleet descriptors landed through the ADR-0107 chart-family wave (13 primary Wave 0-baseline types + the 12 ADR-0087 types landed across Waves A/B/C + the 2 chart-family types, plus their composite sub-types), PLUS the 8 types landed by the report/content/feed catalog wave (ADR-0111/0113/0112, LLD-C12/C13 across the three families) — `Table`/`Stat`/`Badge`, `Code`/`Disclosure`, `Progress`/`Avatar`/`Attachment` — PLUS the 3 types landed by the token-surface catalog wave (ADR-0118, token-surfaces.lld.md LLD-C13, M2) — `Swatch`/`Ramp`/`Ladder` — now all resolve to a row here; the §5.2.1 allowlist holds only the documentary-only `Image`/`Video` residue plus the three PERMANENT non-catalogue entries `Toast`/`ToastRegion`/`ThemeProvider` (ADR-0112 cl.6 / ADR-0117 — app-surface/theming chrome, never agent-emittable). No silent dead types, no silent uncatalogued controls.
 
 | A2UI type | `ui-*` widget | Notes |
 |---|---|---|
@@ -173,6 +173,9 @@ Coverage spans the whole shipped `ui-*` fleet (SPEC-N2, ADR-0087): every shipped
 | `Progress` | `ui-progress` | **shipped** (ADR-0112, feed-family v1, feed-family.spec.md SPEC-R1..R3). A thin-rail progress bar — bindable `value` (number\|null; `null`/non-finite ⇒ INDETERMINATE, the native `<progress>` semantic, no separate boolean to desync), `max`, `label`. Display-only leaf: no `value:{prop,event}` mark (not an input), no children |
 | `Avatar` | `ui-avatar` | **shipped** (ADR-0112, feed-family v1, SPEC-R4..R7). A non-interactive identity mark with a three-step fallback chain (image → initials → person glyph) that never renders broken or empty — bindable `src`/`name`/`label` (the a11y escape hatch: decorative by default, `label` opts into `role=img`); `size` (`sm`\|`md`\|`lg`, NOT bindable — the widget-box compact-ramp geometry class, the `TextField.size` precedent). No `value` mark |
 | `Attachment` | `ui-attachment` | **shipped** (ADR-0112, feed-family v1, SPEC-R8..R11). A `FilePart`-aligned compact file card — bindable `name` (falls back to the file category's label when empty, never blank), `mimeType` (drives the category glyph), `sizeBytes` (bytes; the catalog property KEY matches the control's own accessor name — ADR-0112 Amendment 1 renamed it away from `size` specifically to avoid the fleet's reserved widget-tier `[sm,md,lg]` geometry enum name; **deliberately not a wire field** — `A2aFilePart` carries none, so this is conventionally embedder-supplied via a data-model bind rather than an agent-authored literal), `href` (`format: 'safe-href'`, the same two-gate contract as `Text.href`, ADR-0114) — its RENDERING leg (the name cell becoming a native `<a>`) is a separately-tracked component-side follow-up (feed-family LLD-C6); the catalog/factory wiring is correct today and inert until that leg lands. Display-only leaf: no `value` mark, no children |
+| `Swatch` | `ui-swatch` | **shipped** (ADR-0118, token-surfaces v1, token-surfaces.spec.md SPEC-R1..R4, M2 catalog wave LLD-C13). A Display-class color-identity leaf — bindable `value` (a literal CSS color or a `--var` name, the shared `--var` lane resolves it live) and `label` (the token name/caption); `scheme` (`auto`\|`light`\|`dark`, NOT bindable — a structural rendering axis, the `Sparkline.variant`/`Avatar.size` precedent). Display-only leaf: no `value:{prop,event}` mark, no children. `role=img` + a composed accessible name (`label`, `', '`, `value`) ride the control itself (SPEC-R4), not the catalog. **Usage:** one color's identity — see the when-to-use guidance below |
+| `Ramp` | `ui-ramp` | **shipped** (ADR-0118, token-surfaces v1, SPEC-R5..R8, M2 catalog wave LLD-C13). A Display-class ordered-color-series leaf — bindable `steps` (array of `{label: string, value: string}` objects, `mapsTo: steps` — the JSON-emittable series a model produces, e.g. `[{"label":"100","value":"#eef"},{"label":"900","value":"#003"}]`; order IS the content) and `label` (the strip's accessible name); `scheme` (`auto`\|`light`\|`dark`, NOT bindable, pins the whole strip). Display-only row: no `value:{prop,event}` mark, no children (every cell is component-built from `steps`). **Usage:** an ordered color progression / palette range — see the when-to-use guidance below |
+| `Ladder` | `ui-ladder` | **shipped** (ADR-0118, token-surfaces v1, SPEC-R9..R12, M2 catalog wave LLD-C13). A Display-class labeled-dimensional-tiers leaf — bindable `tiers` (array of `{label: string, value: string}` objects, `mapsTo: tiers` — a literal CSS length per tier, e.g. `[{"label":"sm","value":"24px"},{"label":"lg","value":"36px"}]`, rendered at its real length, capped to the track) and `label` (the list's accessible name); no `scheme` (dimensions are scheme-invariant). Display-only row: no `value:{prop,event}` mark, no children. **Usage:** dimensional rhythm — see the when-to-use guidance below |
 | `Image` / `Video` | — | on the §5.2.1 exclusion allowlist until media primitives land (no shipped `ui-image`/`ui-video` control) |
 
 #### 5.2.1 Exclusion allowlist (the ONLY sanctioned "absent" — SPEC-N2, ADR-0087)
@@ -182,15 +185,18 @@ this allowlist with a recorded reason. The allowlist is **code-encoded** in `cat
 gate reads it); this table is its documentary mirror. All four ADR-0087 forks are now RESOLVED INCLUDE (Kim,
 2026-07-06) and every fork-deferred type has landed (Waves A/B/C). The report/content/feed catalog wave
 (ADR-0111/0113/0112) drained the eight temporary "shipped ahead of its catalog row" seeds it had accumulated
-(`Table`/`Stat`/`Badge`/`Code`/`Disclosure`/`Progress`/`Avatar`/`Attachment`) — the code `EXCLUSION_ALLOWLIST`
-now holds exactly **two PERMANENT entries**, `Toast`/`ToastRegion` (ADR-0112 cl.6 — app-surface chrome driven
-by `show()`, never agent-emittable, never catalogue-bound at all); the only OTHER row left is the
-documentary-only `Image`/`Video` entry, which never enters the derived set to begin with.
+(`Table`/`Stat`/`Badge`/`Code`/`Disclosure`/`Progress`/`Avatar`/`Attachment`), and the token-surface M2 wave
+(ADR-0118) drained the three it had seeded at M1 (`Swatch`/`Ramp`/`Ladder`, token-surfaces.lld.md LLD-C10) —
+the code `EXCLUSION_ALLOWLIST` now holds exactly **three PERMANENT entries**, `Toast`/`ToastRegion`/
+`ThemeProvider` (ADR-0112 cl.6 / ADR-0117 — app-surface/theming chrome, never agent-emittable, never
+catalogue-bound at all); the only OTHER row left is the documentary-only `Image`/`Video` entry, which never
+enters the derived set to begin with.
 
 | Control (fleet tag) | Planned catalog type | State | Reason / fork |
 |---|---|---|---|
 | `ui-toast` | `Toast` | **PERMANENT exclusion — code-encoded** | ADR-0112 cl.6: app-surface chrome driven by `show()`, not agent-emittable (a self-expiring record breaks history-must-not-lie; agent-raised chrome breaks payload↔DOM traceability; the ADR-0097 partition bans overlays in asks) — never catalogued, no LLD wave ever adds a row for it. |
 | `ui-toast-region` | `ToastRegion` | **PERMANENT exclusion — code-encoded** | ADR-0112 cl.6 — the Toast host surface; same three reasons; consumed by page code only, never a catalog row. |
+| `ui-theme-provider` | `ThemeProvider` | **PERMANENT exclusion — code-encoded** | ADR-0117 / theme-provider.spec.md SPEC-R8: page/app-owner theming chrome establishing a color-scheme subtree, not agent-emittable content (the ADR-0112 cl.6 Toast/ToastRegion reasoning applied verbatim) — never catalogued. |
 | *(no control)* `Image`/`Video` | `Image`/`Video` | **documentary-only — NOT in the code set** | no shipped `ui-image`/`ui-video` descriptor, so the fleet-derived gate never derives these rows and the code `EXCLUSION_ALLOWLIST` carries no entry for them; this row exists only so a reader isn't left wondering where media types went. Catalogued (and this row deleted) when the media primitives land. |
 
 > The `TextField` `type` enum keeps `datetime-local`/`month` OUT (unshipped STRETCH, ADR-0048) — a value-enum
@@ -216,9 +222,11 @@ documentary-only `Image`/`Video` entry, which never enters the derived set to be
 > have landed their rows; no fork-deferred residue remains. The wave M1 chart family (`BarChart`/`Sparkline`,
 > ADR-0107) seeded, then drained, its own temporary allowlist entries at LLD-C10 (chart-family.lld.md §5/§9).
 > The report/content/feed catalog wave (ADR-0111/0113/0112) seeded, then drained, EIGHT temporary entries the
-> same way (report-family.lld.md LLD-C12, content-family.lld.md LLD-C13, feed-family.lld.md LLD-C13) — the
-> code `EXCLUSION_ALLOWLIST` now holds only the two PERMANENT `Toast`/`ToastRegion` entries (never drained,
-> never catalogued) plus the documentary-only `Image`/`Video` table row above (never code-encoded at all).
+> same way (report-family.lld.md LLD-C12, content-family.lld.md LLD-C13, feed-family.lld.md LLD-C13). The
+> token-surface family (ADR-0118) seeded THREE temporary entries at M1 and drained them at this M2 wave
+> (token-surfaces.lld.md LLD-C10/LLD-C13) — the code `EXCLUSION_ALLOWLIST` now holds only the three PERMANENT
+> `Toast`/`ToastRegion`/`ThemeProvider` entries (never drained, never catalogued) plus the documentary-only
+> `Image`/`Video` table row above (never code-encoded at all).
 >
 > **Chart-vs-stat-vs-table usage guidance (ADR-0107 cl.6 + ADR-0111 cl.6, chart-family.spec.md SPEC-R14 /
 > report-family.spec.md SPEC-R20 — the four-way rule, re-based M2, landed in the `Sparkline`/`BarChart`/
@@ -239,6 +247,16 @@ documentary-only `Image`/`Video` entry, which never enters the derived set to be
 > anywhere in this family, SPEC-N6): `submitted`/`working` → indeterminate, or determinate when the agent
 > reports a fraction; `input-required` → an ask, never a progress bar; terminal states → no bar —
 > completion announcements are toast/app-chrome territory.
+>
+> **Tile-vs-Swatch/Ramp-vs-Ladder-vs-Table usage guidance (ADR-0118 cl.6, token-surfaces.spec.md SPEC-R18 —
+> prompt-facing, not only here):** `Stat` for a single metric tile (a number, not a token) · `Swatch`/`Ramp`
+> for color identity/relationships — one named color (`Swatch`) or an ordered progression / palette range
+> (`Ramp`; a semantic role SET is not an ordered progression — reach for individual `Swatch`es instead, never
+> fake a `Ramp` out of unordered roles) · `Ladder` for dimensional rhythm — labeled tiers rendered at their
+> real, literal length (never cross-tier normalized) · a `Table` when exact strings must be scanned
+> row-by-row instead of read as shape/magnitude/rhythm. All three token-surface types are **report/reference
+> content, never an ask affordance** — they carry no `value` mark and are excluded from the feed sub-catalog
+> (`FEED_EXCLUDED`, ADR-0097 §3) the same way `Sparkline`/`BarChart`/`Stat`/`Table` are.
 
 ### 5.3 Error codes (catalog-scoped; payload codes shared with renderer §5.2)
 

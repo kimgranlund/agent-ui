@@ -375,7 +375,7 @@ a mixed-validity ladder).
 ## 6 · M2 seams (sketch only — a separate wave, its own SPEC/LLD/decomp)
 
 Not built in M1. Recorded so the M1 build does not foreclose them:
-- **LLD-C13 (M2) — catalog rows + factories** (`a2ui/src/catalog/default/`): `Swatch`/`Ramp`/`Ladder`
+- **LLD-C13 (M2) — catalog rows + factories** (`a2ui/src/catalog/default/`) — *REALIZED 2026-07-10; the bindability resolution pinned at review: bindable = the content props (`value`/`label`/`steps`/`tiers`, the chart-family Sparkline.values/BarChart.data precedent); `scheme` = a non-bindable structural enum (the Sparkline.variant/Avatar.size precedent); Ladder deliberately scheme-less*: `Swatch`/`Ramp`/`Ladder`
   display-only rows (one-way props, no `value:{prop,event}` mark), `accessorFactory('ui-swatch'|…)`; drain the
   LLD-C10 allowlist to zero residue.
 - **LLD-C14 (M2) — catalog SPEC §5.2 + guidance + FEED_EXCLUDED**: the three rows + the when-to-use prose

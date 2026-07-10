@@ -4027,3 +4027,13 @@ recorded). ONE visual shift, AA-forced and reviewer-recomputed: primary-selected
 550→600 (3.85:1 → 4.73:1 vs on-primary) — calendar selected-day + segmented selected fills are
 one step darker in light mode. The theme-provider built-CSS fixture regenerated; every standing
 known-red (tokens.test.ts, switch/slider legs, the fixture gate) is now green.
+
+## 2026-07-10 (token surfaces M2) — Swatch · Ramp · Ladder join the catalog; the allowlist seeds drain
+
+The teaching wave (ADR-0118 cl.6, a2ui-reviewed SHIP, all rubric dimensions at gate): three
+display-only catalog rows (content props bindable per the chart-family dialect; scheme a
+structural enum), the M1 allowlist seeds drained to ZERO residue (only the three permanent
+chrome exclusions remain), the feed partition re-proven TOTAL at 26 IN / 21 OUT over the
+47-type catalog, the §5.2 usage-guidance blockquote (tile vs Swatch vs Ramp vs Ladder vs
+Table — a role SET is not a Ramp), and the brand-palette exemplar (authored-clean: validator
+exit 0, repairs none; roles as swatches, the tonal series as the Ramp, radii as the Ladder).

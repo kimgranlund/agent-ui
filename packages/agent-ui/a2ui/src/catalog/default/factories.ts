@@ -56,6 +56,13 @@
 // LLD-C12 · content-family.lld.md LLD-C13 · feed-family.lld.md LLD-C13) adds `Table`/`Stat`/`Badge`,
 // `Code`/`Disclosure` (+ the `Text.href` fan-out, ADR-0114 cl.5), and `Progress`/`Avatar`/`Attachment` —
 // see each factory's own doc comment below for its verified mapping.
+//
+// ADR-0118 (the token-surface family, token-surfaces.lld.md LLD-C13) adds `Swatch`/`Ramp`/`Ladder` — a
+// SEPARATE M2 wave from their descriptors (the split-wave adaptation of the ADR-0107 cl.6 same-wave
+// precedent, ADR-0118 fork F4): the three controls shipped at M1 with no catalog row, seeding the
+// `EXCLUSION_ALLOWLIST` (catalog/default/index.test.ts) until this wave lands the rows below and drains
+// it to zero residue. All three ride plain `accessorFactory` (no bespoke mapping, no `value` mark, no
+// children, no submitGate) — see the three factory doc comments below.
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
@@ -559,6 +566,27 @@ export const avatarFactory: WidgetFactory = accessorFactory('ui-avatar')
 // header note). Display-only leaf: no `value` mark, no children.
 export const attachmentFactory: WidgetFactory = accessorFactory('ui-attachment')
 
+// ── the ADR-0118 token-surface family (Swatch / Ramp / Ladder, catalog LLD-C13, token-surfaces.lld.md §6) ──
+//
+// Swatch → ui-swatch (SPEC-R1..R4). `value`/`label` are bindable (a model may drive the color/caption from
+// the data model, the Sparkline.values/label precedent); `scheme` is a NON-bindable structural enum (the
+// Sparkline.variant/Avatar.size precedent — an author-set rendering axis, not runtime data) — all three are
+// 1:1 reflecting accessor props, verified against swatch.ts `static props`. Display-only leaf: no `value`
+// mark (no ADR-0019 seam slot — ADR-0118 cl.6, "one-way props"), no children.
+export const swatchFactory: WidgetFactory = accessorFactory('ui-swatch')
+
+// Ramp → ui-ramp (SPEC-R5..R8). `steps` (`{label,value}[]`, bindable — the BarChart.data array-prop
+// precedent) + `label` (bindable) + `scheme` (non-bindable structural enum, as Swatch above) are ALL 1:1
+// reflecting accessor props — verified against ramp.ts `static props`; `cleanEntries` re-hardens at the
+// control's own steps effect regardless of which path (literal or `{path}` bind) delivered the array.
+// Display-only leaf: no `value` mark, no children (every cell is component-built from `steps`).
+export const rampFactory: WidgetFactory = accessorFactory('ui-ramp')
+
+// Ladder → ui-ladder (SPEC-R9..R12). `tiers` (`{label,value}[]`, bindable) + `label` (bindable) are 1:1
+// reflecting accessor props — verified against ladder.ts `static props` (no `scheme`: dimensions are
+// scheme-invariant, SPEC-R9). Display-only leaf: no `value` mark, no children.
+export const ladderFactory: WidgetFactory = accessorFactory('ui-ladder')
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -607,4 +635,7 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Progress: progressFactory,
   Avatar: avatarFactory,
   Attachment: attachmentFactory,
+  Swatch: swatchFactory,
+  Ramp: rampFactory,
+  Ladder: ladderFactory,
 }

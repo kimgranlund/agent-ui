@@ -54,6 +54,17 @@
 // (8) AGENT TASK STATUS — feed-family.lld.md LLD-C15 (M2, SPEC-R22): identity + how-far + what-it-
 //     produced in one card — an `Avatar` beside the agent name, a `Progress` bar for the task fraction,
 //     and an `Attachment` for the artifact it has produced so far. Covers: Avatar, Progress, Attachment.
+//
+// (9) BRAND PALETTE — token-surfaces.lld.md LLD-C15 (M2, ADR-0118 fork F4): the token-surface family's
+//     own teaching exemplar — three named color roles as individual `Swatch` cells (SPEC-R17's "roles
+//     stay swatch tables" ruling: a semantic role set is not an ordered progression, so each role is its
+//     own scalar-bound Swatch, never a Ramp), a `Ramp` of the primary tonal range (the genuinely ordered
+//     series a Ramp exists for), and a `Ladder` of corner radii (labeled dimensional tiers, their real
+//     length rendered literally). `primary`/`secondary`/`accent` are `{path}`-bound scalar objects
+//     (Swatch.value/label read the SAME idiom Stat.value/Text.text already demonstrate); `tonal`/`radii`
+//     are `{path}`-bound arrays (the Sparkline.values/BarChart.data array-prop precedent) — every data
+//     field this seed declares is reachable through a binding, none hand-baked into the component tree.
+//     Covers: Swatch, Ramp, Ladder.
 
 import type { ExampleSeed } from './types.ts'
 
@@ -503,6 +514,69 @@ export const agentTaskStatusSeed: ExampleSeed = {
   ],
 }
 
+const BRAND_PALETTE_ID = 'brand-palette'
+export const brandPaletteSeed: ExampleSeed = {
+  name: 'brand-palette',
+  description: 'A brand palette card — three named color-role Swatches, a primary tonal Ramp, and a corner-radii Ladder (token-surfaces.lld.md LLD-C15).',
+  promptText: 'Show our brand palette: the primary, secondary, and accent colors, the primary tonal range, and our corner radii.',
+  surfaceId: BRAND_PALETTE_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: BRAND_PALETTE_ID, catalogId: 'agent-ui' } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: BRAND_PALETTE_ID,
+        value: {
+          title: 'Acme brand palette',
+          primary: { label: 'Primary', value: 'oklch(0.55 0.15 250)' },
+          secondary: { label: 'Secondary', value: 'oklch(0.65 0.12 200)' },
+          accent: { label: 'Accent', value: 'oklch(0.7 0.18 30)' },
+          tonal: [
+            { label: '100', value: 'oklch(0.95 0.02 250)' },
+            { label: '300', value: 'oklch(0.8 0.08 250)' },
+            { label: '500', value: 'oklch(0.55 0.15 250)' },
+            { label: '700', value: 'oklch(0.4 0.12 250)' },
+            { label: '900', value: 'oklch(0.2 0.06 250)' },
+          ],
+          radii: [
+            { label: 'sm', value: '4px' },
+            { label: 'md', value: '8px' },
+            { label: 'lg', value: '16px' },
+          ],
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: BRAND_PALETTE_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
+          { id: 'root_content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'roles_row', 'tonal_caption', 'tonal_ramp', 'radii_caption', 'radii_ladder'] },
+          { id: 'title', component: 'Text', variant: 'h3', text: { path: '/title' } },
+          // Three named color ROLES — individual scalar-bound Swatches, never a Ramp (SPEC-R17's "roles
+          // stay swatch tables" ruling — a semantic role set is not an ordered progression).
+          { id: 'roles_row', component: 'Row', gap: 'lg', wrap: true, children: ['sw_primary', 'sw_secondary', 'sw_accent'] },
+          { id: 'sw_primary', component: 'Swatch', value: { path: '/primary/value' }, label: { path: '/primary/label' } },
+          { id: 'sw_secondary', component: 'Swatch', value: { path: '/secondary/value' }, label: { path: '/secondary/label' } },
+          { id: 'sw_accent', component: 'Swatch', value: { path: '/accent/value' }, label: { path: '/accent/label' } },
+          { id: 'tonal_caption', component: 'Text', variant: 'caption', text: 'Primary tonal range' },
+          // The ramp: the genuinely ORDERED series a Ramp exists for (catalog SPEC §5.2 Notes guidance —
+          // Swatch/Ramp for color identity/relationships).
+          { id: 'tonal_ramp', component: 'Ramp', steps: { path: '/tonal' }, label: 'Primary tonal range' },
+          { id: 'radii_caption', component: 'Text', variant: 'caption', text: 'Corner radii' },
+          // The ladder: labeled dimensional tiers at their real length (catalog SPEC §5.2 Notes guidance —
+          // Ladder for dimensional rhythm).
+          { id: 'radii_ladder', component: 'Ladder', tiers: { path: '/radii' }, label: 'Corner radii' },
+        ],
+      },
+    },
+  ],
+}
+
 /** Every seed this module defines — the barrel's family-array precedent (index.ts derives `allSeeds`
  *  length from these, never a hand-counted literal). */
 export const catalogCoverageSeeds: readonly ExampleSeed[] = [
@@ -514,4 +588,5 @@ export const catalogCoverageSeeds: readonly ExampleSeed[] = [
   opsReportSeed,
   deploymentReportSeed,
   agentTaskStatusSeed,
+  brandPaletteSeed,
 ]

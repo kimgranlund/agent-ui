@@ -3,11 +3,12 @@
 // hygiene: demo payload JSON must never enter a renderer consumer's bundle, the
 // `@agent-ui/components/components` subpath precedent).
 //
-// 19 seeds: 1 canvas + 4 dynamic-list + 1 generative-form + 5 patterns + 8 catalog-coverage (the
+// 20 seeds: 1 canvas + 4 dynamic-list + 1 generative-form + 5 patterns + 9 catalog-coverage (the
 // ADR-0087/ADR-0093/ADR-0095 wave — booking-reservation, rental-filter-panel, document-row-toolbar,
 // stats-grid-dashboard — PLUS report-card-dashboard [ADR-0107 chart-family, chart-family.lld.md LLD-C12],
 // PLUS the report/content/feed M2 teaching-wave exemplars — ops-report, deployment-report,
-// agent-task-status [ADR-0111/0113/0112, LLD-C15 each]). `allSeeds` is the gate's (`examples.test.ts`)
+// agent-task-status [ADR-0111/0113/0112, LLD-C15 each] — PLUS the token-surface M2 teaching exemplar —
+// brand-palette [ADR-0118, token-surfaces.lld.md LLD-C15]). `allSeeds` is the gate's (`examples.test.ts`)
 // iteration surface, composed from each module's own family array (never a hand-counted literal — the
 // drift-gate doctrine); each named export is what a `/site` page imports directly.
 
@@ -33,6 +34,7 @@ export {
   opsReportSeed,
   deploymentReportSeed,
   agentTaskStatusSeed,
+  brandPaletteSeed,
   catalogCoverageSeeds,
 } from './catalog-coverage.ts'
 

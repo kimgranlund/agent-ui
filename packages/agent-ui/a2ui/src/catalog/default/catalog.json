@@ -437,6 +437,51 @@
         "sizeBytes": { "type": { "type": "number" }, "bindable": true, "mapsTo": "sizeBytes" },
         "href": { "type": { "type": "string" }, "bindable": true, "mapsTo": "href", "format": "safe-href" }
       }
+    },
+
+    "Swatch": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "scheme": { "type": { "type": "string", "enum": ["auto", "light", "dark"] }, "mapsTo": "scheme" }
+      }
+    },
+
+    "Ramp": {
+      "properties": {
+        "steps": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": { "label": { "type": "string" }, "value": { "type": "string" } },
+              "required": ["label", "value"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "steps"
+        },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "scheme": { "type": { "type": "string", "enum": ["auto", "light", "dark"] }, "mapsTo": "scheme" }
+      }
+    },
+
+    "Ladder": {
+      "properties": {
+        "tiers": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": { "label": { "type": "string" }, "value": { "type": "string" } },
+              "required": ["label", "value"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "tiers"
+        },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
+      }
     }
   },
 
