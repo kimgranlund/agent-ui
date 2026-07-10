@@ -149,8 +149,8 @@ function fleetPrimaryTypes(): string[] {
  *  descriptor exists, so they never enter the derived set to begin with (they stay a documentary-only note
  *  in SPEC §5.2.1, never code-derived). A future undispositioned control re-seeds this map with a reason +
  *  citation, same as Wave 0's seed. */
-// `Toast`/`ToastRegion`/`ThemeProvider` are the only entries left — NOT catalogue-bound AT ALL (app-surface/
-// theming chrome, never agent-emittable) — a PERMANENT exclusion, never drained.
+// `Toast`/`ToastRegion`/`ThemeProvider`/`StatusStream` are the only entries left — NOT catalogue-bound AT
+// ALL (app-surface/theming/live-streaming chrome, never agent-emittable) — a PERMANENT exclusion, never drained.
 const EXCLUSION_ALLOWLIST = new Map<string, string>([
   ['Toast', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: app-surface chrome driven by show(), not agent-emittable (rejected explicitly: history-must-not-lie · payload↔DOM traceability · teaching a forbidden type).'],
   ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, same reasoning as Toast: app-surface chrome, never a catalog row.'],
@@ -158,6 +158,11 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'ADR-0117 / theme-provider.spec.md SPEC-R8 — PERMANENT exclusion, never catalogue-bound: ' +
     'page/app-owner theming chrome establishing a color-scheme subtree, not agent-emittable content ' +
     '(the ADR-0112 cl.6 Toast/ToastRegion reasoning applied verbatim).'],
+  ['StatusStream',
+    'ADR-0122 F5 / timeline-family.lld.md §4 — PERMANENT exclusion, never catalogue-bound: a live "what the ' +
+    'system is doing now" strip driven entirely by a consumer-owned imperative API (appendEntry/update/' +
+    'finalize) over a stream the consumer holds — not a one-shot serializable component tree (the ADR-0112 ' +
+    'cl.6 Toast/ToastRegion reasoning applied verbatim: an agent emits a durable Timeline snapshot instead).'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

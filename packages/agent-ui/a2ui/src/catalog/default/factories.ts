@@ -69,6 +69,12 @@
 // the ADR-0087 cl.6 same-wave precedent, no allowlist seed needed since the component and its row land
 // together). Plain `accessorFactory` — no bespoke mapping, no children key beyond `ChildList`, no
 // submitGate — see its own factory doc comment below.
+//
+// ADR-0122 F5 (timeline-family.lld.md, the timeline-family-ship wave) adds `Timeline`/`TimelineItem` — the
+// durable event-rail family (the live `ui-status-stream` sibling stays an `EXCLUSION_ALLOWLIST` entry, cl.6
+// same as Toast: a consumer-owned imperative streaming host is app chrome, never a one-shot serializable
+// tree). Both ride plain `accessorFactory` (no bespoke mapping, no submitGate) — see their own factory doc
+// comments below.
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
@@ -629,6 +635,36 @@ export const ladderFactory: WidgetFactory = accessorFactory('ui-ladder')
 // light-DOM children ARE the roving item set, walked generically, never `applyProp`'d.
 export const toolbarFactory: WidgetFactory = accessorFactory('ui-toolbar')
 
+// ── ADR-0122 F5 (timeline-family.lld.md §2/§3) — Timeline + TimelineItem, the durable event-rail pair ──
+//
+// Timeline → ui-timeline (SPEC-R6/R7). `size` (structural enum, NOT bindable — the `Avatar.size`/
+// `Toolbar` arrangement-axis precedent: first-class geometry, author-set, not a live-updated value) +
+// bindable `label` (the accessible name written to `internals.ariaLabel`, the `Toolbar.label` precedent) —
+// both 1:1 reflecting accessors, verified against timeline.ts `static props`. `ChildList` children — the
+// authored `ui-timeline-item` chronology, read back in DOM order (timeline.ts's own `:scope > ui-timeline-
+// item` query is generic over ANY light-DOM child, the `Card`/`CardHeader` precedent — no data-role
+// tagging needed, unlike the item's own detail slot below). Not an input of its own (no `value` mark — a
+// static, display-first host, SPEC-R7 AC2).
+export const timelineFactory: WidgetFactory = accessorFactory('ui-timeline')
+
+// TimelineItem → ui-timeline-item (SPEC-R1..R5). `status` (bindable — a reflected enum, but CONTENT state
+// an agent transitions over a chronology's life, not fixed presentation; the `Badge.intent` precedent, not
+// the `Avatar.size`/`Split.axis` structural-enum shape), `label`/`description`/`timestamp` (bindable
+// strings — literal stamped content, the `Badge.label` precedent), `icon` (bindable — a free marker-glyph
+// NAME, the `Icon.name` precedent), `size` (structural enum, NOT bindable — the marker-system geometry
+// axis, the `Avatar.size` precedent) — all 1:1 reflecting accessors, verified against timeline-item.ts
+// `static props`. Deliberately NO `children` key: the item's `marker`/`trailing`/`detail` light-DOM slots
+// are adopted via a `:scope > [data-role="X"]` query at connect (timeline-item.ts `#ensureAnatomy`) — a
+// generic `ChildList` append has no mechanism to stamp that `data-role` onto emitted children, so wiring
+// one here would silently misroute content outside the composed `ui-disclosure` rather than into it (the
+// wrapper-trap shape, one layer up); those three slots stay outside the attributes-as-API contract this
+// catalog binds to (native-authoring-only), same as `Field`'s single-`child` model does NOT generalize
+// here. No `value` mark either — no bindable `open`/detail-visibility prop exists on the component
+// (`toggleDetail` is an imperative method, not a `static props` field); the composed disclosure's `toggle`
+// bubbles through the item but has nothing to pair it with on THIS type (unlike `Disclosure`'s own
+// `value:{prop:'open',event:'toggle'}`, which binds its OWN `open` prop).
+export const timelineItemFactory: WidgetFactory = accessorFactory('ui-timeline-item')
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -683,4 +719,6 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Ramp: rampFactory,
   Ladder: ladderFactory,
   Toolbar: toolbarFactory,
+  Timeline: timelineFactory,
+  TimelineItem: timelineItemFactory,
 }

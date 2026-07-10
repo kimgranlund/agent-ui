@@ -515,6 +515,25 @@
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
       },
       "children": "ChildList"
+    },
+
+    "Timeline": {
+      "properties": {
+        "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "mapsTo": "size" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
+      },
+      "children": "ChildList"
+    },
+
+    "TimelineItem": {
+      "properties": {
+        "status": { "type": { "type": "string", "enum": ["", "pending", "active", "done", "error"] }, "bindable": true, "mapsTo": "status" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "description": { "type": { "type": "string" }, "bindable": true, "mapsTo": "description" },
+        "timestamp": { "type": { "type": "string" }, "bindable": true, "mapsTo": "timestamp" },
+        "icon": { "type": { "type": "string" }, "bindable": true, "mapsTo": "icon" },
+        "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "mapsTo": "size" }
+      }
     }
   },
 
