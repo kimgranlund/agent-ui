@@ -67,6 +67,10 @@ describe('component-preview — STRUCTURAL targets mount a representative specim
     { tag: 'ui-segmented-control', minChildren: 3 }, // sm/md/lg segments (ADR-0095)
     { tag: 'ui-form-provider', minChildren: 2 }, // a field + a submit button
     { tag: 'ui-toast-region', minChildren: 2 }, // a plain toast + an actionable urgent toast (ADR-0112)
+    { tag: 'ui-toolbar', minChildren: 4 }, // 2 ui-row clusters (bold/italic/underline · left/center/right) + undo + redo (ADR-0121)
+    { tag: 'ui-theme-provider', minChildren: 1 }, // a themed ui-button — the scheme boundary needs a real subject (ADR-0117)
+    { tag: 'ui-split', minChildren: 3 }, // three ui-split-panes (M4 Phase 1)
+    { tag: 'ui-split-pane', minChildren: 1 }, // pane content
   ]
   it('CASES covers every STRUCTURAL tag (anti-vacuous)', () => {
     expect(new Set(CASES.map((c) => c.tag))).toEqual(STRUCTURAL)
