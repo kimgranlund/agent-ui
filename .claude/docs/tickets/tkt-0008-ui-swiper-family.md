@@ -1,13 +1,13 @@
 ---
 doc-type: ticket
-id: tkt-0007
+id: tkt-0008
 status: open
 date: 2026-07-10
 owner:
 kind: feature
 size: big
 ---
-# TKT-0007 — `ui-swiper`: a CSS-native slideshow/carousel family
+# TKT-0008 — `ui-swiper`: a CSS-native slideshow/carousel family
 
 ## Summary
 Kim's ask (2026-07-10): a CSS-native swiper for slideshows of almost any content — `ui-swiper`
