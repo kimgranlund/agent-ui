@@ -86,3 +86,32 @@ settings surface) land app-tier as M4.
   law).
 
 ## Findings
+### 2026-07-10 — intake doc-review round: 3 seats, all PASS-with-minors, all findings closed
+
+- **Three parallel doc-reviews** (one per family, PRD+ADR as the unit — the chart-intake precedent),
+  every cited authority opened and verified against source; verdicts: token-surfaces
+  PASS-with-minors · code+prose PASS-with-minors · M4 amendment PASS-with-minors. No blocker.
+- **The real catches, all repaired same-day:**
+  - *code+prose MAJOR:* both records named `ui-link` — a **rejected alternative** (ADR-0114:147,
+    ADR-0113:66); the real markdown link vehicle is `ui-text` `as="a"`+`href`. Fixed in ADR-0119
+    cl.4 + the PRD header, stated explicitly so a build-wave author can't hunt a nonexistent element.
+  - *token-surfaces MEDIUM:* ADR-0118's H1 said "same-wave catalog rows" — stale ADR-0107 template
+    language contradicting its own F4 (M2 rows). Retitled; "intra-wave" seed-and-drain rephrased to
+    M1-seed/M2-drain in both records; PRD-G3 re-baselined to the 159 deletable display LOC (the
+    96-LOC parse helpers stay).
+  - *M4 amendment LOWs:* PRD-G7's how-note overstated ADR-0120 as "ratified-direction" (softened to
+    proposed-awaiting-Kim); G6/G7/G8 detail order matched to the §2 table; an explicit §3
+    Out-of-scope row added fencing the schema-driven preferences framework (ADR-0120 F3's predicted
+    pressure point).
+  - *citation hardening:* the two-tier catalog model now cites its owner
+    (ADR-0034/`registry.ts`) in both code+prose records; the ADR-0107 quote restored verbatim
+    ("a **runtime** dependency in costume").
+- **Verified-and-confirmed by the reviewers** (no action): the amendment's additivity (append-only
+  diff; PRD-D1–D6/M1–M3 untouched), the Q1↔Q3 tension resolution's soundness, the 42-descriptor
+  count, the FEED_EXCLUDED total-partition application, and every fence item genuinely unshipped.
+- **Systemic note (upstream, not this repo):** scribe's `doc_lint.py` doesn't recognize this repo's
+  blockquote-table PRD/ADR frontmatter — it silently no-ops on the whole family (precedents
+  included). The operative gates here are `adr.test.ts` + judgment review; a linter fix belongs in
+  the scribe plugin.
+- **Still owed:** Kim's fork passes — 0118 F1–F4 · 0119 F1–F4 (incl. the `@agent-ui/code` naming
+  sliver) · 0120 F1–F3. No build authorized until ratification.

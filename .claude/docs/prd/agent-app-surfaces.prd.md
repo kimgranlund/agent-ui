@@ -71,12 +71,18 @@ Stable IDs; priority tiers; metrics baselined at **0 / not-possible-today** (not
 - *Target*: primitive shipped, cross-engine.
 - *Timeframe*: **M3**.
 
+**PRD-G6 — Fleet DoD + layering coherence (cross-cutting).** Every app surface meets the standing component bar and the tier preserves the import-layering law.
+- *Metric*: per surface — `{name}.md` descriptor + contract↔props trip-wire + `component-reviewer` ≥ 4 both axes + cross-engine browser-truth + a stated `size` budget line-item; the import-layering trip-wire is extended to the new package and stays green (no dependency cycle; nothing imports the apex).
+- *Baseline*: n/a (the discipline exists; the tier must not regress it).
+- *Target*: all gates green from **M1**; the layering trip-wire proves the apex boundary.
+- *Timeframe*: continuous from **M1**.
+
 **PRD-G7 — Arrange panes without hand-building split mechanics (M4, v1.1).** A developer arranges
 the master-detail agent-app layout (sessions list | conversation) and user-collapsible regions by
 composing primitives — no bespoke drag/resize/collapse code. *(How — the components-tier `ui-split`
 primitive, the master-detail composition, the realized ADR-0084 `collapse: "toggle"` — is
-[ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md)'s ratified-direction layer; the M4 SPEC/LLD
-own the mechanism.)*
+[ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md)'s direction layer, **proposed, awaiting
+Kim's ratification** — unlike §4/§5's ratified v1.0 decisions; the M4 SPEC/LLD own the mechanism.)*
 - *Metric*: a master-detail arrangement + a user-collapsible region are assembled from primitives with
   0 bespoke split/collapse code; keyboard resize + announcement proven cross-engine.
 - *Baseline*: no split/resize primitive exists anywhere in the fleet (intake grep, 2026-07-10);
@@ -94,12 +100,6 @@ store rule; navigation binding stays consumer wiring, `app` never imports `route
 - *Baseline*: none exists (the site theming page is a guide, not a shell).
 - *Target*: the surface shipped in `@agent-ui/app`, composing the M1 shell + `ui-split` where apt.
 - *Timeframe*: **M4**.
-
-**PRD-G6 — Fleet DoD + layering coherence (cross-cutting).** Every app surface meets the standing component bar and the tier preserves the import-layering law.
-- *Metric*: per surface — `{name}.md` descriptor + contract↔props trip-wire + `component-reviewer` ≥ 4 both axes + cross-engine browser-truth + a stated `size` budget line-item; the import-layering trip-wire is extended to the new package and stays green (no dependency cycle; nothing imports the apex).
-- *Baseline*: n/a (the discipline exists; the tier must not regress it).
-- *Target*: all gates green from **M1**; the layering trip-wire proves the apex boundary.
-- *Timeframe*: continuous from **M1**.
 
 ## 3. Scope
 
@@ -120,6 +120,10 @@ store rule; navigation binding stays consumer wiring, `app` never imports `route
 - **Agent-EMITTABLE shell surfaces.** The trusted frame is never agent-authored (see **PRD-D2**). — *letting the agent emit its own container is a security inversion.*
 - **Re-specifying the control fleet or the A2UI renderer.** Owned by `plan.md`/`goals.md` and the A2UI spec family; this tier composes them. — *one fact, one home.*
 - **The multi-theme package-swapping system.** A separately-parked next-tier item (`theme-provider` seam exists); not this tier. — *distinct scope dial.*
+- **(v1.1) A schema-driven preferences framework.** The M4 settings surface is a *shell* (sections
+  nav + panels + drill-in); config-in/form-out generation, validation schemas, and persistence are a
+  different intake ([ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md) F3) — demand routes
+  there, never a rider. — *the consumer brings content and store.*
 - **Non-web / mobile-native targets.** — *out of the library's remit.*
 
 ## 4. Direction forks — the ratified architecture

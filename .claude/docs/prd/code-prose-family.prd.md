@@ -13,8 +13,8 @@
 > content-family PRD fenced highlighting out with *"any highlighter is a **new intake**"* (its §3), and
 > [ADR-0113](../adr/0113-content-family-v1-scope.md) cl.2 named the exact escape hatch this family
 > realizes — *"(b) a future opt-in adapter package outside the zero-dep core — its own intake."*
-> `content-family.prd.md` keeps owning the zero-dep leaves (`ui-code` verbatim rendering, `ui-link`,
-> disclosure); this family owns everything past that fence.
+> `content-family.prd.md` keeps owning the zero-dep leaves (`ui-code` verbatim rendering, the
+> `ui-text` hyperlink capability, disclosure); this family owns everything past that fence.
 > Grounding: Kim's seed (TKT-0007: *"code viewers"*) + his Q4 pack-adapter answer ·
 > [ADR-0113](../adr/0113-content-family-v1-scope.md) (the fence + escape hatches, `language` shipped
 > inert, host-as-content) · [ADR-0065](../adr/0065-icon-adapter-swappable-pack-architecture.md)/
@@ -98,7 +98,8 @@ non-color-signifier posture) from either a pre-computed structure or two texts.
 **PRD-G4 — Pillars + DAG (cross-cutting).** `@agent-ui/code` enters the DAG as a **sibling branch off
 `components`** (`shared ← components ← code`, the router precedent) — never imported by `a2ui` or
 `app` (the default catalog stays zero-dep; catalog reachability for `Markdown` is a consumer-tier
-catalog extension, the two-tier model). Strict TS, fleet DoD per control, per-pack size budgets, the
+catalog extension — the two-tier "stricter overrides" model,
+[ADR-0034](../adr/0034-a2ui-server-initiated-function-invocation.md)/`registry.ts`). Strict TS, fleet DoD per control, per-pack size budgets, the
 layering trip-wire extended.
 - *Metric*: layering trip-wire green with the new node; default catalog unchanged; fleet DoD per
   shipped control.
@@ -122,7 +123,7 @@ layering trip-wire extended.
 - **Raw HTML pass-through in markdown** — an injection surface with no agent-honest need; markdown
   that needs arbitrary HTML is an app, not a message. Fenced entirely (not sanitized-in — *absent*).
 - **Third-party parser/highlighter adoption, including vendoring** (highlight.js, Shiki, marked,
-  remark) — vendored runtime code is "a dependency in costume" (ADR-0107) even inside a pack; the
+  remark) — vendored runtime code is "a runtime dependency in costume" (ADR-0107) even inside a pack; the
   packs are hand-rolled and small or they do not ship. The core **seam** accepts a consumer-supplied
   highlighter, so apps that want Shiki can adapt it themselves — outside this repo's mass.
 - **Full CommonMark/GFM conformance** — the long tail (reference links, HTML blocks, autolink

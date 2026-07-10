@@ -9,7 +9,7 @@
 > | **Proposed by** | planner (design seat — the design-system-surfaces intake, [TKT-0007](../tickets/tkt-0007-design-system-surfaces.md); Kim pre-answered the packaging fork at intake, Q4 2026-07-10: pack adapter on the icons model, `@agent-ui/code` → core + `./highlight` + `./markdown`) |
 > | **Ratified by** | *(awaiting Kim — F1 records his intake answer + a naming caveat; F2–F4 carry firm recommendations; the recommendation is the default absent an objection)* |
 > | **Repairs** | NEW [`../prd/code-prose-family.prd.md`](../prd/code-prose-family.prd.md) (authored in this same change — the owning doc) · realizes [ADR-0113](./0113-content-family-v1-scope.md) cl.2's named escape hatch (b) — that ADR's fence is unchanged; this is the intake it foresaw |
-> | **Supersedes / Superseded by** | (none) — relates [ADR-0113](./0113-content-family-v1-scope.md) (the fence + `language` inert + host-as-content, all preserved) · [ADR-0065](./0065-icon-adapter-swappable-pack-architecture.md)/[ADR-0066](./0066-icons-phosphor-default-pack.md) (the pure-core + subpath architecture; note the inert-data vs runtime-code distinction below) · [ADR-0107](./0107-chart-family-v1-scope.md) (the "dependency in costume" law this satisfies rather than dodges) · [ADR-0114](./0114-text-hyperlink-href.md) (the link policy markdown links obey) · [ADR-0115](./0115-spa-router-v1-scope.md) (the sibling-branch DAG precedent) |
+> | **Supersedes / Superseded by** | (none) — relates [ADR-0113](./0113-content-family-v1-scope.md) (the fence + `language` inert + host-as-content, all preserved) · [ADR-0065](./0065-icon-adapter-swappable-pack-architecture.md)/[ADR-0066](./0066-icons-phosphor-default-pack.md) (the pure-core + subpath architecture; note the inert-data vs runtime-code distinction below) · [ADR-0107](./0107-chart-family-v1-scope.md) (the "runtime dependency in costume" law this satisfies rather than dodges) · [ADR-0114](./0114-text-hyperlink-href.md) (the link policy markdown links obey) · [ADR-0115](./0115-spa-router-v1-scope.md) (the sibling-branch DAG precedent) |
 
 ## Context
 
@@ -21,8 +21,8 @@ adapter package outside the zero-dep core — its own intake."* Kim's design-sys
 intake fork round Kim chose the shape directly: **the swappable pack adapter, like `@agent-ui/icons`**
 — `@agent-ui/code` (new) → core + `./highlight` + `./markdown`.
 
-One law shapes everything: ADR-0107's rejection of vendored *runtime code* as "a dependency in
-costume." The icons precedent does NOT license vendoring a highlighter — Phosphor vendoring works
+One law shapes everything: ADR-0107's rejection of vendored *runtime code* as "a runtime dependency
+in costume." The icons precedent does NOT license vendoring a highlighter — Phosphor vendoring works
 because icon packs are **inert data**; a tokenizer, a markdown grammar, and a diff algorithm are
 **code**. What the icons architecture DOES license is the *packaging geometry*: a zero-dep core seam,
 opt-in subpaths carrying the mass, tree-shake gates proving non-adopters pay nothing. So the packs
@@ -67,8 +67,10 @@ mechanisms at build (PRD-G1…G4 trace).
 4. **`./markdown` — the agent-common subset, sanitized by construction** *(PRD-G1; forks F2/F4)*: a
    `ui-markdown` element (defined in the pack — F4) rendering **headings · paragraphs · lists
    (ordered/unordered, nested) · emphasis/strong · inline code · fenced code → `ui-code` (with
-   `language` forwarded — the packs compose) · links → `ui-link` under the ADR-0114 policy ·
-   blockquotes · GFM tables (recommended IN — agent-real, and `ui-table` exists to receive them)**.
+   `language` forwarded — the packs compose) · links → the `ui-text` `as="a"`+`href` capability
+   under the ADR-0114 policy (a dedicated `ui-link` element was REJECTED by ADR-0114/ADR-0113 —
+   ui-text IS the vehicle) · blockquotes · GFM tables (recommended IN — agent-real, and `ui-table`
+   exists to receive them)**.
    **No raw-HTML lane exists**: HTML in input renders as inert text — sanitization by *absence of the
    lane*, not by filter (an injection corpus is an acceptance gate, not a hope). Content model:
    `markdown` string prop (bindable — the `Text.text` clobber lane shape), rendered into real fleet
@@ -84,8 +86,10 @@ mechanisms at build (PRD-G1…G4 trace).
    owns its overflow (the ADR-0102 law — a wide diff scrolls inside itself).
 7. **Catalog disposition: default catalog UNTOUCHED** *(PRD-G4)*: no default rows — the default
    catalog is zero-dep and `a2ui` cannot import this package (clause 1). `Markdown`/`Diff`
-   reachability for agent emission is a documented **consumer catalog extension** (the two-tier
-   model); the extension recipe ships as docs at M2. The SPEC-N2 fleet gate governs
+   reachability for agent emission is a documented **consumer catalog extension** — the two-tier
+   "stricter overrides" model is established in [ADR-0034](./0034-a2ui-server-initiated-function-invocation.md)
+   (project catalogs shadow/tighten the default; `registry.ts`); the extension recipe ships as docs
+   at M2. The SPEC-N2 fleet gate governs
    `@agent-ui/components` descriptors — these elements live outside that package, so no allowlist
    entry is owed (verify at build: the gate's scope is package-bound, not repo-bound).
 8. **Gates that make the opt-in honest** *(PRD-G2/G4)*: the `ui-code` **identity gate** (no

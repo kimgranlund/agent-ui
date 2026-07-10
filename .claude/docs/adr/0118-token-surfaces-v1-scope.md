@@ -1,4 +1,4 @@
-# ADR-0118 — Token-surface family v1 scope: `ui-swatch` + `ui-ramp` + `ui-ladder`, display-class, CSS/DOM-rendered, value-first contracts, same-wave catalog rows
+# ADR-0118 — Token-surface family v1 scope: `ui-swatch` + `ui-ramp` + `ui-ladder`, display-class, CSS/DOM-rendered, value-first contracts, M2 (next-wave) catalog rows
 
 > Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-10
 >
@@ -74,7 +74,7 @@ at build (PRD-G1…G4 trace).
 6. **Catalog + teaching, the M2 wave** *(PRD-G4)*: `Swatch` · `Ramp` · `Ladder` catalog rows —
    display-only, one-way props, no `value:{prop,event}` mark (no ADR-0019 seam slot consumed). The
    SPEC-N2 fleet-derived gate forces catalog-or-allowlist when descriptors land at M1: the M1 wave
-   seeds the intra-wave allowlist, M2 drains it to **no residue** with the rows + a validator-clean
+   seeds the allowlist, M2 drains it to **no residue** with the rows + a validator-clean
    exemplar ("brand palette" / "theme audit") + §5.2 usage-guidance prose (tile for a metric ·
    Swatch/Ramp for color identity/relationships · Ladder for dimensional rhythm · a table when exact
    strings must be scanned). Corpus + derived prompt re-validate (the ADR-0087 consequence pattern).

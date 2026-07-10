@@ -31,8 +31,9 @@ The gap is already paid for, once, as site code — the exact shape ADR-0117 jus
 wrapper. `site/pages/tokens.ts` hand-builds live swatch rows (each swatch carries its own
 `color-scheme` and reads the real custom property back via `getComputedStyle` — resolved truth, not
 prose) and hand-builds dimensional-ramp tables for the five `--ui-*` ladders. That page proves the
-rendering is *possible* and *valuable*; it does not make it *reusable* — 255 LOC of display logic that
-the next token page, theme diff, or brand-kit view re-derives from scratch.
+rendering is *possible* and *valuable*; it does not make it *reusable* — 159 LOC of display logic
+(plus 96 of parse helpers that stay site-local) that the next token page, theme diff, or brand-kit
+view re-derives from scratch.
 
 **Who has the problem.** (1) *The docs site* — the grounded internal instance: `tokens.ts` is
 untested-as-a-primitive display code. (2) *Models emitting A2UI payloads* — asked to present a palette,
@@ -86,7 +87,8 @@ re-expressed on the shipped primitives, its bespoke swatch/table code deleted �
 "re-host the existing instance" discipline: the promotion is proven against the known-good baseline.
 - *Metric*: bespoke display LOC in `tokens.ts`; the parse helpers (`token-parse.ts`) STAY site-local
   (they read the repo's own sheets at build time — a docs-site concern, not a component's).
-- *Baseline*: 255 LOC hand-built display (159 + 96; the 96 stays).
+- *Baseline*: 159 LOC of deletable display code in `tokens.ts` (the 96-LOC `token-parse.ts` is
+  parse logic, not display, and stays).
 - *Target*: the page composes the primitives; net-negative display LOC; the tokens-doc drift gate
   stays green unchanged.
 - *Timeframe*: **M1** (same wave — the reference consumer IS the acceptance proof).
@@ -110,9 +112,9 @@ re-expressed on the shipped primitives, its bespoke swatch/table code deleted �
   with per-step labels; the *order* is the content.
 - `ui-ladder` — labeled dimensional tiers (heights, spaces, radii, font sizes) where each row renders
   its magnitude visibly (a sized bar/box next to the label+value text).
-- Same-wave default-catalog rows + the exemplar seed (PRD-G4) at M2 — forced by the SPEC-N2
-  whole-fleet gate the moment descriptors land (intra-wave allowlist seed-and-drain, per ADR-0107 cl.6
-  precedent).
+- Default-catalog rows + the exemplar seed (PRD-G4) at **M2** — the SPEC-N2 whole-fleet gate fires
+  the moment descriptors land, so the M1 wave seeds the allowlist and M2 drains it to no residue
+  (the ADR-0107 cl.6 discipline, adapted to this family's split waves).
 - The site token-reference re-host (PRD-G3).
 
 **Out of scope (v1) — the fence, each with its reason:**
