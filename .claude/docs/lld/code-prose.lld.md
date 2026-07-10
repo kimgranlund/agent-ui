@@ -19,7 +19,7 @@
 | **LLD-C8** | markdown parser | `code/src/markdown/parse.ts` (+ `parse.test.ts`, `injection.test.ts`) | SPEC-C6, C7 | n4a |
 | **LLD-C9** | markdown renderer + `ui-markdown` | `code/src/markdown/{render.ts,markdown.ts,markdown.css,markdown.md}` (+ `markdown.test.ts`, `markdown-descriptor.test.ts`) | SPEC-C6, C7, C8, C9 | n4b |
 | **LLD-C10** | gates + browser legs + size + reviewer | `code/src/{identity.test.ts,barrels.test.ts,markdown.browser.test.ts}` · `scripts/measure-size.mjs` rows · reviewer record | SPEC-C7, C8, C9 | n5a, n5b, n5c |
-| **LLD-C11** | barrels/subpaths + CLAUDE.md DAG rows | `code/src/index.ts` · `package.json` exports · `CLAUDE.md` | SPEC-C1, C10, C11 | n6, n7 |
+| **LLD-C11** | barrels/subpaths + CLAUDE.md DAG rows | `code/src/index.ts` · `CLAUDE.md` | SPEC-C1, C10, C11 | n6, n7 |
 
 No orphan components (each traces to a SPEC-C); no SPEC-C without a component.
 
