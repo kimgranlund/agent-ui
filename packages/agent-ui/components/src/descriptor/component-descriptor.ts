@@ -342,7 +342,7 @@ export interface DriftFailure {
 export type DriftKind = 'enum' | 'boolean' | 'number' | 'string' | 'json' | 'unknown'
 
 /** A sentinel attribute string that is never a valid enum member nor valid JSON (probes the codec fallback). */
-const NON_MEMBER = ' __agent-ui-non-member__'
+const NON_MEMBER = '\u0000__agent-ui-non-member__'
 
 type Probe = { ok: true; value: unknown } | { ok: false }
 

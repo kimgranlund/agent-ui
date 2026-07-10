@@ -24,7 +24,7 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
 - `packages/agent-ui/components/` — `@agent-ui/components`, the whole framework. `src/` layers (downward-only):
   - `reactive/` — signals kernel; imports nothing (bottom layer)
   - `dom/` — `UIElement`/`UIFormElement`, props, template, directives; imports only `../reactive`
-  - `traits/` — `(host, opts) => cleanup` traits + controllers, registered via `host.use()`
+  - `traits/` — `(host, opts) => cleanup` traits + controllers, invoked directly from `connected()` (no `host.use()`)
   - `controls/` — `ui-*` FACE controls; one folder per component; self-define on import
 - `packages/agent-ui/shared/` — `@agent-ui/shared`, cross-cutting tokens/styles/utility types. Color
   `tokens.css` adopted (`src/tokens/`, exported as `@agent-ui/shared/tokens.css`); dimensional/runtime tokens land G5

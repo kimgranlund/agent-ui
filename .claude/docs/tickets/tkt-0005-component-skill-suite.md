@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0005
-status: open
+status: done
 date: 2026-07-09
 owner:
 kind: feature
@@ -86,9 +86,10 @@ stays the method spine (Compose × Realize) that F1/F2 cite, not duplicate.
 - TKT-0003 — the live example of a component intake re-derived by hand (what F1 obsoletes).
 
 ## Scope / Open
-- **Granularity fork (open):** K1–K4 as four skills vs one `component-standards` skill with a
-  references/ index — resolve at authoring time against routing precision (four descriptions
-  route better; one skill sprawls less). Leaning four; the authoring wave decides.
+- **Granularity fork — RESOLVED (Kim, 2026-07-09):** four knowledge-skills, per the routing-
+  precision argument; Kim additionally ruled the whole suite is **namespaced `agent-ui-*`**
+  (`agent-ui-component-{standards,packaging,testing,patterns,design,create}`) and directed the
+  full buildout to proceed.
 - **Home fork (resolved by default, correctable):** repo-local `.claude/skills/`, NOT the ui
   plugin — the content is agent-ui-specific law; the plugin stays generic.
 - **Non-goal:** no new reference corpus — the knowledge exists; this is a routing/procedure layer.
@@ -98,3 +99,29 @@ stays the method spine (Compose × Realize) that F1/F2 cite, not duplicate.
   component-builder re-wire, then the review pass.
 
 ## Findings
+### 2026-07-09 — shipped: six skills authored, 7-seat independent audit, all findings closed
+
+- **Built (Kim's rulings applied: `agent-ui-*` namespace, four knowledge-skills, full
+  buildout):** `.claude/skills/agent-ui-component-{standards,packaging,testing,patterns}`
+  (knowledge — model-only routing over the `references/` corpus, both invocation dials
+  explicit per the repo skill-lint hook) + `agent-ui-component-{design,create}` (forge —
+  the intake and build procedures, user-invocable). `component-builder` re-wired to preload
+  `agent-ui-component-create` as its method (the `a2ui-composer` precedent); its def shrank
+  to the seat contract.
+- **Audit wave (6× `forge:skill-auditor` + 1× `forge:agent-reviewer`, parallel):** all seven
+  verdicts PASS/GO after fixes. Real catches: F1/F2 classified against a PHANTOM base class
+  (`UIComponent` — planned in plan §5, realized nowhere) and a nonexistent scaffold dir
+  (`components/{name}/` — reserved, unwired); the "Tier" axis was the size-class wearing a
+  wrong 3-value enum (the schema's `SIZE_CLASSES` is the seven-value authority, `tier:` IS
+  the recording); K2/F2 carried an already-drifted 12-of-14 descriptor field enumeration
+  (now cite `FIELD_SHAPE`); K4 routed traits to ADR-0042 (which argues AGAINST traits for
+  its problem — row split) and over-claimed proposed ADR-0117 as ratified (now marked);
+  citation hygiene fixes throughout. Delta re-audit on the F1 step-3 rewrite: PASS.
+- **Collateral repairs the audit surfaced (same wave, keep-context-live):** CLAUDE.md's
+  stale "traits registered via `host.use()`" line fixed (source says there is no
+  `host.use()`); a literal NUL byte in `component-descriptor.ts`'s `NON_MEMBER` sentinel
+  (made grep treat the schema source as binary — silently blinding any routed agent)
+  replaced with the backslash-u0000 escape, 150/150 descriptor tests green.
+- **Still owed:** F1's shakedown against the next real component intake (the acceptance's
+  live-fire criterion — by design it can only run when the next intake arrives).
+  ADR-0117's ratification remains with Kim.
