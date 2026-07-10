@@ -37,7 +37,7 @@ No orphan components (each traces to a SPEC-R); no SPEC-R without a component.
 
 Two elements under `controls/split/` (one folder, the packaging law):
 - **`ui-split`** — the container. `axis` (reflected `'horizontal'|'vertical'`, default `horizontal`), `sizes` (a **property**, `number[] | undefined` — a JS array, NOT an attribute; too structured to reflect). Light-DOM; host-as-grid over its `ui-split-pane` children + the injected separators. **Base class = fork F1** (`UIContainerElement` if it earns surface/box-model participation, else `UIElement`; recommend `UIContainerElement` for parity with `ui-row`/`-column`/`-grid`, all `UIContainerElement`). `formAssociated: false`.
-- **`ui-split-pane`** — the generic pane. `size` (`number | undefined`, initial ratio seed), `min`/`max` (CSS length strings), `collapsible` (boolean). Reflected where an attribute selector needs them (`min`/`max` drive CSS clamp via custom props; `collapsible` gates the Enter keybind). Host-as-block over its own light children.
+- **`ui-split-pane`** — the generic pane. `initial` (`number | undefined`, the ratio seed — renamed from `size` at build: the family-coherence A2 gate reserves that name for the widget enum; review-ratified), `min`/`max` (CSS length strings), `collapsible` (boolean). Reflected where an attribute selector needs them (`min`/`max` drive CSS clamp via custom props; `collapsible` gates the Enter keybind). Host-as-block over its own light children.
 
 ```ts
 const splitProps = {
@@ -47,19 +47,19 @@ const splitProps = {
   sizes: prop.array<number>(),        // undefined ⇒ UNCONTROLLED (internal ratios); present ⇒ CONTROLLED
 } satisfies PropsSchema
 const paneProps = {
-  size: prop.number(),                // undefined ⇒ equal-share seed
+  initial: prop.number(),                // undefined ⇒ equal-share seed
   min:  { ...prop.string(''), reflect: true },   // CSS length; '' ⇒ the --ui-split-pane-min floor
   max:  { ...prop.string(''), reflect: true },
   collapsible: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 ```
 
-**Sizing realization.** The container is a CSS grid/flex along `axis`; each pane's extent is a CSS custom property `--pane-ratio-{i}` (or a `grid-template` string) the element writes from the resolved ratios; the separators sit between tracks. Uncontrolled: the element holds a `signal<number[]>` of ratios, seeded in `connected()` from panes' `size` (equal-fill the rest, normalize to sum 1). Controlled (`sizes` present): the element **renders** `sizes` and, on user resize, **emits** the proposal but does NOT mutate `sizes` (prop-as-source-of-truth, ADR-0102) — the consumer writes it back or it does not move (SPEC-R2 AC3).
+**Sizing realization.** The container is a CSS grid/flex along `axis`; each pane's extent is a CSS custom property `--pane-ratio-{i}` (or a `grid-template` string) the element writes from the resolved ratios; the separators sit between tracks. Uncontrolled: the element holds a `signal<number[]>` of ratios, seeded in `connected()` from panes' `initial` (equal-fill the rest, normalize to sum 1). Controlled (`sizes` present): the element **renders** `sizes` and, on user resize, **emits** the proposal but does NOT mutate `sizes` (prop-as-source-of-truth, ADR-0102) — the consumer writes it back or it does not move (SPEC-R2 AC3).
 
 **Failure/edge handling.**
 - *0/1 pane* — no separators; the single pane fills. No throw.
 - *`sizes` length ≠ pane count* — reconcile to pane count (truncate extra, equal-fill missing), `console.warn` once. No throw (SPEC-R2 AC4).
-- *Dynamic panes (add/remove after connect) — NOW REQUIRED (SPEC-R2, M1 repair), realized by fork F3's `MutationObserver`.* A `MutationObserver` on the light child list re-derives the separator set (N−1) and re-normalizes the ratio vector on every pane add/remove: a removed pane's ratio is redistributed to the survivors (normalize to sum 1); an added pane is seeded from its `size` or an equal share taken proportionally from the others — never an orphaned/missing separator, never a throw. **Mid-drag mutation (SPEC-R2 M2):** the observer callback calls `paneResize`'s `abortDrag()` (C2) FIRST when the count changed during an in-flight drag, settling at the pre-mutation ratios before re-deriving. Static-at-connect is no longer an acceptable fallback (SPEC-R2 mandates dynamism — the app-tier consumers depend on it); the observer is in scope for `ui-split`.
+- *Dynamic panes (add/remove after connect) — NOW REQUIRED (SPEC-R2, M1 repair), realized by fork F3's `MutationObserver`.* A `MutationObserver` on the light child list re-derives the separator set (N−1) and re-normalizes the ratio vector on every pane add/remove: a removed pane's ratio is redistributed to the survivors (normalize to sum 1); an added pane is seeded from its `initial` or an equal share taken proportionally from the others — never an orphaned/missing separator, never a throw. **Mid-drag mutation (SPEC-R2 M2):** the observer callback calls `paneResize`'s `abortDrag()` (C2) FIRST when the count changed during an in-flight drag, settling at the pre-mutation ratios before re-deriving. Static-at-connect is no longer an acceptable fallback (SPEC-R2 mandates dynamism — the app-tier consumers depend on it); the observer is in scope for `ui-split`.
 - *Deep-import guard* — `split.ts` imports only `../../dom` + `../../traits` (inward); the components `layering.test.ts` (SPEC-R13) guards it.
 
 ### 2.2 LLD-C2 — the pane-resize gesture controller (→ SPEC-R3, R4)

@@ -1,0 +1,96 @@
+/* split.css — ui-split, the single-file component stylesheet (ADR-0003). Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-split)` declares ONLY `--ui-split-*`: the divider thickness, the
+ *       invisible hit-slop width, the keyboard step ratio, and the divider ink role. Geometry is
+ *       Container/layout size-class (geometry.md "the five size-classes"): NO control height, no
+ *       `--ui-height-*` — the divider + hit-slop are layout dimensions off the space/dimension scale.
+ *   [2] STYLES BLOCK — `@scope (ui-split)` consumes ONLY `--ui-split-*` for the host + the
+ *       control-rendered `[data-separator]` divider (a light-DOM `<div>`, not its own custom element —
+ *       styled here via a descendant selector, the `bar-chart.css` `[data-part]` precedent). The pane
+ *       CHILDREN's own geometry (flex-grow ratio, min/max clamp) lives in split-pane.css, consuming the
+ *       `--_pane-*` seam this control's `.ts` writes onto each pane (JS geometry seam, never a raw layout
+ *       style property — the slider-multi precedent).
+ *
+ * RTL: the axis mapping is PHYSICAL (`flex-direction: row`/`column`, [axis=vertical] repoints it) — under
+ * `direction: rtl`, `flex-direction: row` visually reverses item order NATIVELY (no bespoke RTL layout rule
+ * needed here); only the JS DRAG SENSE inverts (traits/pane-resize.ts, SPEC-R3 AC3).
+ *
+ * Motion: NO transitions are declared anywhere in this sheet — a resize (pointer or keyboard) is always
+ * instant (the geometry-law "a [scale]/[size]/[density] change must be instant" + the slider "no position
+ * transition" precedent), so `prefers-reduced-motion` has nothing to gate here (vacuously satisfied).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-split) declares --ui-split-* ════════════════ */
+
+:where(ui-split) {
+  --ui-split-divider: 1px; /* the visible divider thickness */
+  --ui-split-hit-slop: 24px; /* the invisible pointer hit target (WCAG 2.5.8, SPEC-R5 AC1) */
+  --ui-split-key-step: 5%; /* the keyboard Arrow step, as a PERCENTAGE of the two-neighbor pair (SPEC-R4) */
+  /* A state-bearing widget part (like a slider rail/switch track) — the SOLID --md-sys-color-neutral-track
+     (SC 1.4.11 3:1 vs every surface plane), NOT the translucent -outline-variant (the ADR-0059 lesson). */
+  --ui-split-divider-ink: var(--md-sys-color-neutral-track);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-split) consumes ONLY --ui-split-* ════════════════ */
+
+@scope (ui-split) {
+  :scope {
+    display: flex;
+    flex-direction: row; /* the horizontal identity — [axis=vertical] repoints it below */
+    align-items: stretch;
+    box-sizing: border-box;
+  }
+
+  :scope[axis='vertical'] {
+    flex-direction: column;
+  }
+
+  /* The separator — a control-rendered `<div data-separator role="separator" tabindex="0">` between each
+     adjacent pane pair (never authored — the slider-thumb precedent). Fixed-size flex item (never grows/
+     shrinks): its OWN box is the thin `--ui-split-divider`; the `::before` below expands the INVISIBLE
+     pointer hit area without displacing the pane tracks (absolutely positioned, zero layout contribution). */
+  [data-separator] {
+    position: relative;
+    flex: 0 0 var(--ui-split-divider);
+    background: var(--ui-split-divider-ink);
+    cursor: col-resize;
+    touch-action: none; /* give pointer events exclusively to the drag gesture, no scroll-conflict */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  :scope[axis='vertical'] [data-separator] {
+    cursor: row-resize;
+  }
+
+  /* The hit-slop — an invisible `::before`, centred on the divider, expanding the pointer-interactive area
+     to `--ui-split-hit-slop` on the CROSS axis (SPEC-R5 AC1: ≥24px even when the visible divider is 1-2px).
+     `position: absolute` means it contributes NOTHING to flex sizing — the pane tracks are never displaced. */
+  [data-separator]::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline: calc((var(--ui-split-divider) - var(--ui-split-hit-slop)) / 2);
+  }
+
+  :scope[axis='vertical'] [data-separator]::before {
+    inset-inline: 0;
+    inset-block: calc((var(--ui-split-divider) - var(--ui-split-hit-slop)) / 2);
+  }
+
+  /* Focus ring (ADR-0009) — the shared fleet ring on the focused separator (keyboard-only). */
+  [data-separator]:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* Forced-colors — the divider stays a real, visible system colour under `forced-colors: active` (SPEC-R5
+     AC2; the slider.css `forced-color-adjust: none` + explicit system-colour precedent). The focus ring is
+     already free via `--md-sys-color-focus-ring`'s own `→ Highlight` token-layer mapping (ADR-0009). */
+  @media (forced-colors: active) {
+    [data-separator] {
+      background: ButtonText;
+      forced-color-adjust: none;
+    }
+  }
+}

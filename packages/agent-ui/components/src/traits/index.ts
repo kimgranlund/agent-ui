@@ -18,6 +18,11 @@ export { selectionCommit } from './selection-commit.ts'
 export type { SelectionCommitOptions, SelectionMode } from './selection-commit.ts'
 export { valueDrag } from './value-drag.ts'
 export type { ValueDragOptions } from './value-drag.ts'
+// ui-split's N-separator drag gesture (app-surfaces-m4.lld.md LLD-C2) — a NEW sibling to `value-drag`,
+// deliberately not a generalization of it (axis+RTL+multi-separator+delta vs value-drag's 1-D/LTR/absolute
+// value contract; widening value-drag risks the shipped ui-slider/ui-slider-multi).
+export { paneResize } from './pane-resize.ts'
+export type { PaneResizeOptions, PaneResizeHandle } from './pane-resize.ts'
 export { valueCodec, numberCodecOptions, currencyCodecOptions } from './value-codec.ts'
 export type { ValueCodecOptions, ValueCodecController } from './value-codec.ts'
 export { scrollFade } from './scroll-fade.ts'

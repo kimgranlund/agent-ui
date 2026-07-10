@@ -78,6 +78,8 @@
 - [ui-attachment](./attachment-doc.html): the FilePart-aligned file card — mime-derived glyph, name, formatted `sizeBytes`.
 - [ui-toast](./toast-doc.html): the transient notification — status/alert roles, hover/focus-paused auto-dismiss; [demo](./toast-demo.html).
 - [ui-toast-region](./toast-region-doc.html): the top-layer toast stack — page-owned, driven by `show()`.
+- [ui-split](./split-doc.html): the multi-pane resizable split container — draggable + keyboard-resizable ARIA separators, controlled/uncontrolled `sizes`.
+- [ui-split-pane](./split-pane-doc.html): the generic pane child of ui-split — a structural content region.
 
 ## Components — containers & layout
 

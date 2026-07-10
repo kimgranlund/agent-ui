@@ -1,0 +1,55 @@
+/* split-pane.css — ui-split-pane, the generic pane child of ui-split (ADR-0003 single-file convention).
+ * Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-split-pane)` declares ONLY `--ui-split-pane-*`: the bare-pane floor
+ *       (`--ui-split-pane-min`, the LLD's "min unset ⇒ this floor" default, SPEC-R2 §2). Owned HERE (not
+ *       on `ui-split`) because it textually IS this control's own token (`--ui-split-pane-{...}`) even
+ *       though it's consumed via the PARENT-written geometry seam below — the same token-ownership law any
+ *       `--ui-{name}-*` prefix earns regardless of which element's CSS ends up reading it.
+ *   [2] STYLES BLOCK — `@scope (ui-split-pane)` is AXIS-OBLIQUE by construction: `ui-split` (the parent)
+ *       writes three imperative custom properties per pane — `--_pane-flex` (a unitless flex-grow ratio),
+ *       `--_pane-min` / `--_pane-max` (the resolved CSS-length floor/ceiling) — PLUS a `[data-axis-vertical]`
+ *       presence marker mirroring its own `axis` prop (the slider-multi `--value-pct-lo/-hi` JS-geometry-seam
+ *       precedent: the parent computes, the child's CSS purely consumes). Physical `width`/`height`
+ *       properties (never logical `inline-size`) are used deliberately — `axis` selects a PHYSICAL
+ *       dimension (which the flex row/column lays out), NOT a writing-mode-relative one; RTL only inverts
+ *       the DRAG SENSE within the horizontal axis (SPEC-R3 AC3), it never changes which physical dimension
+ *       is constrained.
+ *
+ * NO control height (geometry.md's Container/layout-adjacent size-class): a pane has no frame of its own —
+ * `overflow: auto` lets whatever CONTENT the author places (a `ui-card`, a nav tree, prose) manage its own
+ * scrolling; the pane itself is a pure flex-distribution box.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-split-pane) declares --ui-split-pane-* ════════════════ */
+
+:where(ui-split-pane) {
+  /* The bare-pane floor (SPEC-R2 §2 "default min = a floor"). A small, sane minimum so an unset-`min`
+     pane never collapses to zero-width during a hard drag/clamp — the entry-control `min-inline-size`
+     floor's spirit (geometry.md), sized for a generic content region rather than a typing surface. */
+  --ui-split-pane-min: 4rem;
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-split-pane) consumes the parent-written seam ═══════ */
+
+@scope (ui-split-pane) {
+  :scope {
+    display: block;
+    box-sizing: border-box;
+    overflow: auto; /* the pane's own content manages its scroll; the pane itself never clips silently */
+
+    /* horizontal axis (default) — width is the constrained dimension */
+    flex: var(--_pane-flex, 1) 0 0%;
+    min-width: var(--_pane-min, var(--ui-split-pane-min));
+    max-width: var(--_pane-max, none);
+  }
+
+  /* vertical axis — the parent mirrors `axis="vertical"` onto each pane via [data-axis-vertical]; height
+     becomes the constrained dimension instead (the min-width floor above is released to auto). */
+  :scope[data-axis-vertical] {
+    min-width: auto;
+    max-width: none;
+    min-height: var(--_pane-min, var(--ui-split-pane-min));
+    max-height: var(--_pane-max, none);
+  }
+}

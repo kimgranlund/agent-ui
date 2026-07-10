@@ -61,6 +61,10 @@ import avatarMd from '../../packages/agent-ui/components/src/controls/avatar/ava
 import attachmentMd from '../../packages/agent-ui/components/src/controls/attachment/attachment.md?raw'
 import toastMd from '../../packages/agent-ui/components/src/controls/toast/toast.md?raw'
 import toastRegionMd from '../../packages/agent-ui/components/src/controls/toast/toast-region.md?raw'
+// M4 Phase 1 (ADR-0120 cl.2, app-surfaces-m4.lld.md LLD-C1): the split primitive, one folder, two
+// components — both tier=layout ⇒ {doc} only.
+import splitMd from '../../packages/agent-ui/components/src/controls/split/split.md?raw'
+import splitPaneMd from '../../packages/agent-ui/components/src/controls/split/split-pane.md?raw'
 // The token-surface family (ADR-0118, token-surfaces.lld.md): show-never-edit color/dimension primitives —
 // all three tier=display ⇒ {doc} only.
 import swatchMd from '../../packages/agent-ui/components/src/controls/swatch/swatch.md?raw'
@@ -136,6 +140,9 @@ export const loadAvatarDoc       = (): ComponentDoc => parseDoc(avatarMd)
 export const loadAttachmentDoc   = (): ComponentDoc => parseDoc(attachmentMd)
 export const loadToastDoc        = (): ComponentDoc => parseDoc(toastMd)
 export const loadToastRegionDoc  = (): ComponentDoc => parseDoc(toastRegionMd)
+// M4 Phase 1 (ADR-0120 cl.2 — both tier=layout ⇒ {doc} only, folded into the shared Layout primitives showcase).
+export const loadSplitDoc     = (): ComponentDoc => parseDoc(splitMd)
+export const loadSplitPaneDoc = (): ComponentDoc => parseDoc(splitPaneMd)
 // The token-surface family (ADR-0118 — all three tier=display ⇒ {doc} only).
 export const loadSwatchDoc = (): ComponentDoc => parseDoc(swatchMd)
 export const loadRampDoc   = (): ComponentDoc => parseDoc(rampMd)

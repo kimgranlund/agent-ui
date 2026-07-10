@@ -108,3 +108,8 @@
 @import './controls/attachment/attachment.css';
 @import './controls/toast/toast.css';
 @import './controls/toast/toast-region.css';
+
+/* M4 Phase 1 — the split primitive (ADR-0120 cl.2, app-surfaces-m4.lld.md LLD-C5): ui-split (the
+ * separator/divider geometry) + ui-split-pane (the axis-oblique pane geometry it drives via a JS seam). */
+@import './controls/split/split.css';
+@import './controls/split/split-pane.css';

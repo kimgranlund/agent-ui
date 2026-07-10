@@ -202,9 +202,10 @@ describe('site coverage — every shipped component has its required per-tier pa
       ['card', 'field', 'form-provider', 'radio-group', 'theme-provider'],
     )
     // Layout tier + the Wave M1 feed family's ui-toast-region (ADR-0112, LLD-C8 — a pure inset/gap host,
-    // no surface paint of its own).
+    // no surface paint of its own) + M4 Phase 1's ui-split/ui-split-pane (ADR-0120 cl.2, app-surfaces-m4
+    // .lld.md LLD-C1 — the split primitive + its generic pane child, both folded into the same bundle).
     expect(COMPONENTS.filter((c) => c.tier === 'layout').map((c) => c.name).sort()).toEqual(
-      ['column', 'grid', 'list', 'row', 'toast-region'],
+      ['column', 'grid', 'list', 'row', 'split', 'split-pane', 'toast-region'],
     )
     // Pattern tier = the G9 patterns (modal, tabs) + the Wave 4 Overlay family (popover, tooltip, menu, select,
     // combo-box — all tier=pattern on the overlay controller, ADR-0043) + the Wave 5B date picker (calendar,

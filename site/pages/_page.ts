@@ -174,6 +174,9 @@ export const NAV: readonly NavGroup[] = [
       // ui-toast-region (ADR-0112, tier=layout) folds into this bundle rather than growing its own group —
       // the site-toc editorial rule (a new layout primitive joins the existing showcase, never a 5th group).
       { href: './toast-region-doc.html', label: 'toast-region' },
+      // ui-split / ui-split-pane (ADR-0120 cl.2, app-surfaces-m4.lld.md LLD-C1) — same fold, tier=layout.
+      { href: './split-doc.html', label: 'split' },
+      { href: './split-pane-doc.html', label: 'split-pane' },
     ],
   },
   {

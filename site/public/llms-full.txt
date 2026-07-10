@@ -2593,8 +2593,8 @@ control: it carries no value and does not participate in form validation.
 `ui-split` supports both **controlled** and **uncontrolled** sizing:
 
 - **Uncontrolled** (the default — `sizes` unset): the control holds its own internal ratio vector, seeded
-  from each `ui-split-pane`'s `size` prop (or equally split when none declare one), and mutates it directly
-  on every resize.
+  from each `ui-split-pane`'s `initial` prop (or equally split when none declare one), and mutates it
+  directly on every resize.
 - **Controlled** (`sizes` set to a `number[]`, one ratio per pane, summing to 1): the control **renders**
   `sizes` and **emits** the proposed ratios (as the `input`/`change` event's `detail`) on user resize, but
   **never self-mutates it** — the consumer writes `el.sizes` back to move the rendered layout (the
@@ -2615,7 +2615,7 @@ strings (default `min` = a small floor, default `max` = unbounded).
 
 `ui-split-pane` children MAY be added or removed after connect — the separator set and ratio vector
 re-derive automatically (a removed pane's share is redistributed to the survivors; an added pane seeds from
-its own `size` or an equal share taken proportionally from the others). A pane-count change **during** an
+its own `initial` or an equal share taken proportionally from the others). A pane-count change **during** an
 in-flight drag aborts that drag and settles at the pre-mutation ratios before re-deriving.
 
 ## Accessibility
@@ -4142,3 +4142,19 @@ gates: identity (empty registry ⇒ byte-identical), tree-shake (core 534 B gz; 
 alone drags zero tokenizer bytes), injection corpus, per-package layering + descriptor
 trip-wires. Agent prose stops rendering as literal **bold** wherever consumers adopt it;
 the default catalog stays untouched (consumer-tier extension per ADR-0119 cl.7).
+
+## 2026-07-10 (ui-split, M4 Phase 1) — the multi-pane split primitive ships
+
+ADR-0120 Phase 1 (review SHIP after one fix pass): `ui-split` + `ui-split-pane` — N-pane,
+two-neighbor local redistribution (residual dropped), a pure `constrain.ts` solver, the NEW
+`pane-resize` trait (axis+RTL-aware, distinct `abortDrag`; `value-drag` deliberately left
+untouched under the shipped sliders), ARIA separator-per-pair with pair-relative
+`aria-valuenow` AND pair-relative keyboard steps (~5 points per press — the review-ratified
+read of SPEC-R4), dynamic panes re-derive + renormalize with mid-drag mutation ABORTING
+(the review's reproduced controlled-mode MEDIUM fixed via an unconditional version poke —
+controlled + dynamic was the untested intersection), INSTRUMENT-BRIDGE drag tests (synthetic
+dispatch + stubbed capture per the slider precedent). The pane's ratio-seed prop is
+`initial` — the fleet gate reserves `size` for the widget enum (SPEC/LLD amended). Family
+budget re-based 30→32 KB gz (79 B headroom — the next control re-bases again). Catalog
+disposition (a `Split` row by parity) deferred to the follow-up wave; the whole-bundle
+fixture regenerated.

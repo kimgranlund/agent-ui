@@ -574,3 +574,19 @@ gates: identity (empty registry ⇒ byte-identical), tree-shake (core 534 B gz; 
 alone drags zero tokenizer bytes), injection corpus, per-package layering + descriptor
 trip-wires. Agent prose stops rendering as literal **bold** wherever consumers adopt it;
 the default catalog stays untouched (consumer-tier extension per ADR-0119 cl.7).
+
+## 2026-07-10 (ui-split, M4 Phase 1) — the multi-pane split primitive ships
+
+ADR-0120 Phase 1 (review SHIP after one fix pass): `ui-split` + `ui-split-pane` — N-pane,
+two-neighbor local redistribution (residual dropped), a pure `constrain.ts` solver, the NEW
+`pane-resize` trait (axis+RTL-aware, distinct `abortDrag`; `value-drag` deliberately left
+untouched under the shipped sliders), ARIA separator-per-pair with pair-relative
+`aria-valuenow` AND pair-relative keyboard steps (~5 points per press — the review-ratified
+read of SPEC-R4), dynamic panes re-derive + renormalize with mid-drag mutation ABORTING
+(the review's reproduced controlled-mode MEDIUM fixed via an unconditional version poke —
+controlled + dynamic was the untested intersection), INSTRUMENT-BRIDGE drag tests (synthetic
+dispatch + stubbed capture per the slider precedent). The pane's ratio-seed prop is
+`initial` — the fleet gate reserves `size` for the widget enum (SPEC/LLD amended). Family
+budget re-based 30→32 KB gz (79 B headroom — the next control re-bases again). Catalog
+disposition (a `Split` row by parity) deferred to the follow-up wave; the whole-bundle
+fixture regenerated.

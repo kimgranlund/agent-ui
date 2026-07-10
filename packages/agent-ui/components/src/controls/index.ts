@@ -114,3 +114,10 @@ export * from './avatar/avatar.ts'         // compact identity mark (LLD-C2/C3)
 export * from './attachment/attachment.ts' // FilePart-aligned file card, metadata surface only (LLD-C4/C5)
 export * from './toast/toast.ts'           // transient notification card (LLD-C7)
 export * from './toast/toast-region.ts'    // toast's top-layer host, same-folder sibling (LLD-C8)
+
+// M4 Phase 1 — the split primitive (ADR-0120 cl.2, app-surfaces-m4.lld.md LLD-C1): a Container/layout
+// control (tier: layout, sibling to ui-row/-column/-grid) — one folder, TWO real components (the
+// radio/radio-group precedent): ui-split (the N-pane resizable container) + ui-split-pane (the generic
+// pane child, own descriptor/contract per ADR-0080's radio-group special case).
+export * from './split/split.ts'
+export * from './split/split-pane.ts'

@@ -315,6 +315,13 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     footer.append(save)
     return [header, content, footer]
   },
+  'ui-split': () =>
+    ['Pane 1', 'Pane 2', 'Pane 3'].map((label) => {
+      const pane = document.createElement('ui-split-pane')
+      pane.append(sampleItem(label))
+      return pane
+    }),
+  'ui-split-pane': () => [sampleItem('Pane content')],
   'ui-radio-group': () =>
     (
       [
@@ -595,7 +602,10 @@ export const NO_SLOT_TEXT = new Set([
 // exact STRUCTURAL shape, not ui-toast's own adopted-into-a-part one.
 // ui-theme-provider (ADR-0117) joins this set too: its default slot IS "the themed subtree" (field.md/
 // form-provider.md's own coordination-primitive posture) — real content, never a text/label string.
-export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-theme-provider', 'ui-toast-region'])
+// ui-split / ui-split-pane (ADR-0120 cl.2, app-surfaces-m4.lld.md LLD-C1) join this set too: ui-split's
+// default slot IS its N panes (real ui-split-pane children the control lays out via draggable separators);
+// ui-split-pane's default slot IS the author's own arbitrary content — both the exact STRUCTURAL shape.
+export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-theme-provider', 'ui-toast-region'])
 
 // SLOT_TEXT_OK — SLOT_TEXT is a real, safe, MEANINGFUL knob: a genuine text/label default slot, the accessible
 // label content a viewer edits to see the control's OWN typography/sizing respond (button/checkbox/radio/

@@ -382,6 +382,16 @@ const CARD_GROUPS: readonly CardGroup[] = [
         title: 'ui-toast-region',
         blurb: 'The Wave M1 feed family (ADR-0112) top-layer host — a pure inset/gap layout element (tier=layout), folded into this bundle rather than growing its own group.',
       },
+      {
+        href: './split-doc.html',
+        title: 'ui-split',
+        blurb: 'The M4 multi-pane resizable split container (ADR-0120 cl.2) — draggable + keyboard-resizable ARIA separators, folded into this bundle (tier=layout) rather than growing its own group.',
+      },
+      {
+        href: './split-pane-doc.html',
+        title: 'ui-split-pane',
+        blurb: 'The generic pane child of ui-split — a structural content region, same fold as ui-split.',
+      },
     ],
   },
   {

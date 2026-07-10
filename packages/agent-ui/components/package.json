@@ -38,6 +38,8 @@
     "./controls/slider": "./src/controls/slider/slider.ts",
     "./controls/slider-multi": "./src/controls/slider-multi/slider-multi.ts",
     "./controls/sparkline": "./src/controls/sparkline/sparkline.ts",
+    "./controls/split": "./src/controls/split/split.ts",
+    "./controls/split-pane": "./src/controls/split/split-pane.ts",
     "./controls/stat": "./src/controls/stat/stat.ts",
     "./controls/swatch": "./src/controls/swatch/swatch.ts",
     "./controls/switch": "./src/controls/switch/switch.ts",
