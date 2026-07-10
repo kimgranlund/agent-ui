@@ -39,7 +39,8 @@ parts:                   # NOT shadow-DOM ::part() (agent-ui is light-DOM only) 
   - name: separator
     description: One control-rendered `<div data-separator role="separator" tabindex="0">` per adjacent pane pair (N panes ⇒ N−1). Never authored — the slider-thumb precedent.
 
-customStates: []         # no internals.states / :state() usage — no transitions are declared (resize is always instant), so there is nothing to gate behind a "ready"/motion state
+customStates:            # TKT-0015 — an internal, non-authorable interaction-state marker (the button `:state(ready)`/combo-box `:state(user-invalid)` precedent)
+  - dragging             # set on the host at a drag's first live pointermove, cleared on commit/abort (SPEC-R2 AC6); split.css suspends `user-select` on `:scope` while it holds
 
 face:
   formAssociated: false  # NOT a FACE form control — extends UIContainerElement (a plain UIElement), no value/validity participation
@@ -128,3 +129,9 @@ collapse-to-last when the leading pane is `collapsible`.
 
 The separator's pointer-interactive hit area is always **≥ 24×24 CSS px** (an invisible `::before` centred
 on the visible 1px divider, WCAG 2.5.8), and the divider stays visible under `forced-colors: active`.
+
+## Drag behavior
+
+A pointer drag tracks the cursor **1:1** (no easing/lag) and never selects pane content underneath the
+sweep: while a drag is active, the host carries the internal `:state(dragging)` state, which suspends
+`user-select` across the whole split (restored on release or an aborted mid-drag pane mutation).

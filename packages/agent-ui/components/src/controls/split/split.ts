@@ -60,6 +60,14 @@ export class UISplitElement extends UIContainerElement {
   #lastPaneCount: number | null = null // null = never synced (connect-time seed path)
   #warnedSizesMismatch = false
   readonly #collapseMemory = new Map<number, number>()
+  // TKT-0015: the ORIGINAL effective ratios at a drag's first live move, held fixed for every subsequent
+  // onResize call in the SAME drag. `pane-resize.ts`'s `deltaRatio` is measured SINCE THE PRESS POINT — an
+  // absolute offset from drag start, re-derived fresh on every pointermove, NOT an increment since the last
+  // move (see its own doc comment). Applying that press-relative delta against the LIVE, already-mutated
+  // ratio vector (as the pre-fix code did) double-counts every prior move's contribution each time — a
+  // resize that compounds every pointermove instead of tracking the pointer 1:1 (the perceived "animation").
+  // `null` ⟺ no drag currently in flight — doubles as the drag-active flag for `:state(dragging)` below.
+  #dragBaseline: number[] | null = null
 
   protected connected(): void {
     this.#lastPaneCount = null
@@ -88,8 +96,10 @@ export class UISplitElement extends UIContainerElement {
   protected override disconnected(): void {
     this.#observer?.disconnect()
     this.#observer = null
-    this.#resizeHandle?.release()
+    this.#resizeHandle?.release() // ends any in-flight drag WITHOUT a commit — clear the baseline/state to match
     this.#resizeHandle = null
+    this.#dragBaseline = null
+    this.internals.states?.delete('dragging')
     for (const sep of this.#separatorEls) sep.remove()
     this.#separatorEls = []
   }
@@ -119,7 +129,13 @@ export class UISplitElement extends UIContainerElement {
     }
 
     // Mid-drag mutation (SPEC-R2 M2): abort BEFORE re-deriving — the captured separator index is stale.
-    if (countChanged) this.#resizeHandle?.abortDrag()
+    // `abortDrag()` is silent (no `onResize` call, SPEC-R2 M2), so the commit branch in `#applyPointerDelta`
+    // never runs to clear `#dragBaseline`/`:state(dragging)` — clear both here instead.
+    if (countChanged) {
+      this.#resizeHandle?.abortDrag()
+      this.#dragBaseline = null
+      this.internals.states?.delete('dragging')
+    }
 
     for (const sep of this.#separatorEls) sep.remove()
     this.#separatorEls = []
@@ -183,9 +199,12 @@ export class UISplitElement extends UIContainerElement {
     })
   }
 
-  // ── resize application (shared by pointer + keyboard paths) ────────────────────────────────────────
+  // ── resize application (keyboard path — see #applyPointerDelta below for the pointer path) ────────────
 
-  #resolveDelta(sepIndex: number, deltaRatio: number): number[] {
+  /** The keyboard path's delta resolver: a discrete key press is an INCREMENT against the CURRENT/live
+   *  ratios (correct — unlike the pointer path's since-press delta, TKT-0015), so it reads `#effectiveRatios`
+   *  fresh on every call rather than a drag-start baseline. */
+  #resolveKeyDelta(sepIndex: number, deltaRatio: number): number[] {
     const panes = this.#panes()
     return redistribute(this.#effectiveRatios(panes), sepIndex, deltaRatio, this.#boundsFor(panes))
   }
@@ -196,17 +215,34 @@ export class UISplitElement extends UIContainerElement {
 
   /** The pane-resize trait's onResize callback (pointer path) — `input` per live move, `change` on commit
    *  (SPEC-R3 AC1). Controlled mode never self-mutates `sizes`; the proposed ratios ride the event detail
-   *  (SPEC-R2 AC3 — the consumer reads `event.detail` and writes `sizes` back to move the rendered layout). */
+   *  (SPEC-R2 AC3 — the consumer reads `event.detail` and writes `sizes` back to move the rendered layout).
+   *
+   *  TKT-0015 (1:1 pointer tracking): `deltaRatio` is measured SINCE THE PRESS POINT (pane-resize.ts), so it
+   *  MUST be applied against the ratios captured at the drag's FIRST live move (`#dragBaseline`) — NOT the
+   *  live/current `#effectiveRatios()` vector (the keyboard path's `#resolveKeyDelta` correctly uses THAT,
+   *  since a key press is a fresh increment), which already reflects every prior move's application and
+   *  would double-count it on each subsequent move (the compounding bug: N moves overshoot far past the pointer).
+   *  The baseline is snapshotted lazily on the first call of a drag and cleared on commit (drag end) — its
+   *  nullness also gates `:state(dragging)` (TKT-0015 pt.2 — split.css suspends selection while it holds). */
   #applyPointerDelta(sepIndex: number, deltaRatio: number, commit: boolean): void {
-    const next = this.#resolveDelta(sepIndex, deltaRatio)
+    const panes = this.#panes()
+    if (this.#dragBaseline === null) {
+      this.#dragBaseline = this.#effectiveRatios(panes)
+      this.internals.states?.add('dragging')
+    }
+    const next = redistribute(this.#dragBaseline, sepIndex, deltaRatio, this.#boundsFor(panes))
     this.#commitRatios(next)
     this.emit<number[]>(commit ? 'change' : 'input', next)
+    if (commit) {
+      this.#dragBaseline = null
+      this.internals.states?.delete('dragging')
+    }
   }
 
   /** The keyboard path — a discrete key press is both the live update AND the commit in one atomic action,
    *  so it emits BOTH `input` and `change` (the native `<input type=range>` per-keystep parity). */
   #applyKeyDelta(sepIndex: number, deltaRatio: number): void {
-    const next = this.#resolveDelta(sepIndex, deltaRatio)
+    const next = this.#resolveKeyDelta(sepIndex, deltaRatio)
     this.#commitRatios(next)
     this.emit<number[]>('input', next)
     this.emit<number[]>('change', next)

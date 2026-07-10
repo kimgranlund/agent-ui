@@ -17,7 +17,17 @@
  *
  * Motion: NO transitions are declared anywhere in this sheet — a resize (pointer or keyboard) is always
  * instant (the geometry-law "a [scale]/[size]/[density] change must be instant" + the slider "no position
- * transition" precedent), so `prefers-reduced-motion` has nothing to gate here (vacuously satisfied).
+ * transition" precedent), so `prefers-reduced-motion` has nothing to gate here (vacuously satisfied). TKT-0015
+ * traced the reported "animation" to split.ts's drag MATH (a since-press delta double-applied against the
+ * live ratio vector, compounding every pointermove) — never a CSS transition; this claim needed no repair.
+ *
+ * Selection (TKT-0015 pt.2): the `dragging` custom state suspends `user-select` across the WHOLE host (not
+ * just the separator, which already carries its own `user-select: none` below) while a drag is active, so a
+ * fast sweep never selects pane content underneath the pointer. The state is set/cleared ENTIRELY in split.ts
+ * around the drag's live-move↔commit span — never an authored attribute (button.css/combo-box.css's own
+ * internal, non-authorable custom-state motion/validity gates are the same shape). Host-level scope is
+ * sufficient — `setPointerCapture` on the separator keeps every `pointermove` routed to it regardless of
+ * where the cursor sweeps (SPEC-R3 AC2 capture-continuity), so a `document`-level rule buys nothing extra.
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-split) declares --ui-split-* ════════════════ */
@@ -43,6 +53,12 @@
 
   :scope[axis='vertical'] {
     flex-direction: column;
+  }
+
+  /* Selection suspension during an active drag (TKT-0015 pt.2) — see the file header for the full rationale. */
+  :scope:state(dragging) {
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   /* The separator — a control-rendered `<div data-separator role="separator" tabindex="0">` between each

@@ -16,7 +16,8 @@ declare const process: { cwd(): string }
 
 // LLD-C6 — split.md + split-pane.md descriptors (ADR-0004). Both fences, all three layers each: (a)
 // STRUCTURAL schema-validity, (b) CONTRACT↔PROPS bijection against the live `static props`, (c)
-// CONTRACT↔SOURCE (customStates/slots — both declare none, and neither source uses any).
+// CONTRACT↔SOURCE (customStates/slots — split-pane declares/uses none; split.md declares `dragging`
+// [TKT-0015] against split.ts/.css's real `:state(dragging)` usage — neither declares/uses a named slot).
 
 const DIR = `${process.cwd()}/packages/agent-ui/components/src/controls/split`
 const splitMd = readFileSync(`${DIR}/split.md`, 'utf8') as string
@@ -97,8 +98,8 @@ describe('split.md — contract↔props trip-wire', () => {
 })
 
 describe('split.md — contract↔source trip-wire', () => {
-  it('declares no customStates and no named slots — source uses none (0 drift)', () => {
-    expect([...collectUsedStates(splitTs, splitCss)]).toEqual([])
+  it('declares customStates=[dragging] (TKT-0015) and no named slots — 0 drift against source', () => {
+    expect([...collectUsedStates(splitTs, splitCss)]).toEqual(['dragging'])
     expect([...collectStyledSlots(splitCss)]).toEqual([])
     expect(compareDescriptorToSource(split, { ts: splitTs, css: splitCss })).toEqual([])
   })

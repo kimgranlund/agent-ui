@@ -154,6 +154,142 @@ describe('ui-split browser smoke (AC2/AC3 — synthetic drag, SPEC-R3 AC1)', () 
   })
 })
 
+// ── TKT-0015 pt.1: 1:1 pointer tracking — no compounding across sequential live moves ────────────────
+//
+// Regression pin for the Kim-filed "the split-pane ANIMATES during drag" bug. Root cause (pinned via a
+// pure-math repro against constrain.ts's `redistribute`, then fixed in split.ts): `pane-resize.ts`'s
+// `deltaRatio` is measured SINCE THE PRESS POINT (an absolute offset from drag start, re-derived fresh on
+// every pointermove — NOT an increment since the last move). The pre-fix `#applyPointerDelta` applied that
+// press-relative delta against the LIVE, already-mutated ratio vector on every move, double-counting every
+// prior move's contribution — e.g. press at x=0 on a 200px track, move to x=40 (correct: ratio 0.5→0.7),
+// then move to x=60 (delta since press = 0.3): the BUGGY result was ratio 0.7+0.3=1.0 (a 0.2 overshoot,
+// exactly the double-counted move-1 delta) instead of the correct baseline 0.5+0.3=0.8. The fix snapshots
+// the ratios ONCE at the drag's first live move (`#dragBaseline`) and applies every subsequent since-press
+// delta against THAT fixed baseline — this test would fail against the pre-fix compounding math.
+
+describe('ui-split browser smoke (TKT-0015 pt.1 — 1:1 tracking, no compounding across N moves)', () => {
+  it('three sequential pointermoves each resolve against the DRAG-START ratios, not the live/cumulative ones', async () => {
+    const { el, panes } = mount(2, { size: 200 }) // 200px track (199px of pane extent — 1px divider), ratio 0.5/0.5
+    // Zero out the default pane-min floor (--ui-split-pane-min: 4rem) so the bounds clamp never interferes —
+    // this test is about the DELTA MATH, not the clamp (SPEC-R2 AC2 clamp already has its own coverage above).
+    panes[0].min = '0px'
+    panes[1].min = '0px'
+    await el.updateComplete
+    const trackExtent = 199 // 200px host − the 1px divider (the ONLY space `flex: ratio 0 0%` distributes)
+    const expectedWidth = (ratio: number): number => ratio * trackExtent
+
+    const sep = el.querySelector('[data-separator]') as HTMLElement
+    stubCapture(sep)
+
+    sep.dispatchEvent(ptr('pointerdown', 0))
+
+    sep.dispatchEvent(ptr('pointermove', 40)) // delta since press = 40/200 = 0.2 → ratio 0.5+0.2 = 0.7
+    await el.updateComplete
+    expect(panes[0].getBoundingClientRect().width, 'move 1 (x=40): expected ratio 0.7').toBeCloseTo(expectedWidth(0.7), 0)
+
+    sep.dispatchEvent(ptr('pointermove', 60)) // delta since press = 60/200 = 0.3 → ratio 0.5+0.3 = 0.8
+    await el.updateComplete
+    // The assertion that bites under the pre-fix compounding math: it would resolve to ratio 1.0 (the full
+    // track) — move-1's 0.2 double-counted on top of move-2's own 0.3 fully consumes the track.
+    expect(panes[0].getBoundingClientRect().width, 'move 2 (x=60): expected ratio 0.8 — NOT ratio 1.0 (the compounding overshoot)').toBeCloseTo(expectedWidth(0.8), 0)
+
+    sep.dispatchEvent(ptr('pointermove', 90)) // delta since press = 90/200 = 0.45 → ratio 0.5+0.45 = 0.95
+    await el.updateComplete
+    expect(panes[0].getBoundingClientRect().width, 'move 3 (x=90): expected ratio 0.95').toBeCloseTo(expectedWidth(0.95), 0)
+
+    sep.dispatchEvent(ptr('pointerup', 90))
+    el.remove()
+  })
+
+  it('a single large move and N small moves covering the same net distance land at the SAME final ratio', async () => {
+    const { el: elA, panes: panesA } = mount(2, { size: 200 })
+    const sepA = elA.querySelector('[data-separator]') as HTMLElement
+    stubCapture(sepA)
+    sepA.dispatchEvent(ptr('pointerdown', 0))
+    sepA.dispatchEvent(ptr('pointermove', 80)) // one big move straight to +40%
+    await elA.updateComplete
+    const wA = panesA[0].getBoundingClientRect().width
+    sepA.dispatchEvent(ptr('pointerup', 80))
+    elA.remove()
+
+    const { el: elB, panes: panesB } = mount(2, { size: 200 })
+    const sepB = elB.querySelector('[data-separator]') as HTMLElement
+    stubCapture(sepB)
+    sepB.dispatchEvent(ptr('pointerdown', 0))
+    for (const x of [10, 20, 30, 40, 50, 60, 70, 80]) sepB.dispatchEvent(ptr('pointermove', x)) // 8 small steps, same net distance
+    await elB.updateComplete
+    const wB = panesB[0].getBoundingClientRect().width
+    sepB.dispatchEvent(ptr('pointerup', 80))
+    elB.remove()
+
+    // The assertion that bites under the compounding bug: many small steps would overshoot far past wA.
+    expect(wB, `8-step drag (${wB}px) must match the single-move result (${wA}px) — no compounding from move count`).toBeCloseTo(wA, 0)
+  })
+})
+
+// ── TKT-0015 pt.2: selection suspended during an active drag (:state(dragging)) ───────────────────────
+
+describe('ui-split browser smoke (TKT-0015 pt.2 — selection suspended during an active drag)', () => {
+  it('user-select is suspended host-wide (incl. pane content) only WHILE a drag is active', async () => {
+    const { el, panes } = mount(2, { size: 200 })
+    const sep = el.querySelector('[data-separator]') as HTMLElement
+    stubCapture(sep)
+
+    // WebKit exposes the computed value only under the prefixed CSSOM name (button.browser.test.ts precedent
+    // — unprefixed `userSelect` reads empty there); read both and prefer whichever is populated.
+    const userSelectOf = (target: Element): string => {
+      const cs = getComputedStyle(target)
+      return cs.userSelect || cs.webkitUserSelect
+    }
+
+    expect(el.matches(':state(dragging)'), 'dragging must not be armed before any interaction').toBe(false)
+    expect(userSelectOf(panes[0]), 'selection must be enabled at idle').not.toBe('none')
+
+    sep.dispatchEvent(ptr('pointerdown', 0))
+    sep.dispatchEvent(ptr('pointermove', 40))
+    await el.updateComplete
+
+    expect(el.matches(':state(dragging)'), ':state(dragging) was not armed on the first live move').toBe(true)
+    expect(userSelectOf(el), 'the HOST must suspend selection while dragging').toBe('none')
+    expect(userSelectOf(panes[0]), 'PANE CONTENT (not just the separator) must suspend selection while dragging').toBe('none')
+
+    sep.dispatchEvent(ptr('pointerup', 40))
+    await el.updateComplete
+
+    expect(el.matches(':state(dragging)'), 'dragging must clear on release').toBe(false)
+    expect(userSelectOf(panes[0]), 'selection must be restored after release').not.toBe('none')
+
+    el.remove()
+  })
+
+  it('a mid-drag pane-count mutation (abortDrag, SPEC-R2 AC6) also clears :state(dragging) — the silent-abort path', async () => {
+    const { el, panes } = mount(2, { size: 200 })
+    const sep = el.querySelector('[data-separator]') as HTMLElement
+    stubCapture(sep)
+    // WebKit exposes the computed value only under the prefixed CSSOM name (button.browser.test.ts precedent
+    // — unprefixed `userSelect` reads empty there); read both and prefer whichever is populated.
+    const userSelectOf = (target: Element): string => {
+      const cs = getComputedStyle(target)
+      return cs.userSelect || cs.webkitUserSelect
+    }
+
+    sep.dispatchEvent(ptr('pointerdown', 0))
+    sep.dispatchEvent(ptr('pointermove', 40))
+    await el.updateComplete
+    expect(el.matches(':state(dragging)')).toBe(true)
+
+    const { UISplitPaneElement } = await import('./split-pane.ts')
+    el.append(new UISplitPaneElement()) // mid-drag mutation — abortDrag() fires, silently (no commit event)
+    await el.updateComplete
+
+    // The assertion that bites if abortDrag's silent path leaves the state stuck armed indefinitely.
+    expect(el.matches(':state(dragging)'), 'abortDrag must clear :state(dragging) even though it emits no commit').toBe(false)
+    expect(userSelectOf(panes[0]), 'selection must be restored after an aborted drag').not.toBe('none')
+
+    el.remove()
+  })
+})
+
 // ── capture-continuity: STRUCTURAL (SPEC-R3 AC2) ──────────────────────────────────────────────────
 
 describe('ui-split browser smoke (capture-continuity, SPEC-R3 AC2)', () => {
