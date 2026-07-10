@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-09 |
 > | **Proposed by** | a2a-live-designer (design seat — Kim's verbatim ask, 2026-07-09: *"can we make the A2A examples live so they occur in real time user initiated?"*; number 0116 verified free — README tail = 0115; 0108 is a known hole, never reused) |
-> | **Ratified by** | — awaiting Kim |
+> | **Ratified by** | Kim, 2026-07-09 (hand-flipped in-tree; verbal "ratified" same day) |
 > | **Repairs** | [`../spec/a2a-foundations.spec.md`](../spec/a2a-foundations.spec.md) v0.6 (SPEC-R17/R18 widening — flagged for independent doc-review, the R14/R16-AC2 precedent) · NEW [`../lld/a2a-live-realtime.lld.md`](../lld/a2a-live-realtime.lld.md) · [`../prd/a2a-section.prd.md`](../prd/a2a-section.prd.md) §6 B7 milestone row · [`../decompositions/a2a-live-realtime.decomp.json`](../decompositions/a2a-live-realtime.decomp.json) (coverage-clean, STRICT + PLAN, exit 0) · on ratification+build: `site/lib/{ndjson-lines,arena-live-transport,feed-live-transport,artifact-feed,arena-replay}.ts` · `site/pages/{a2a-tic-tac-toe,a2a-artifact-feed}.ts` · `packages/agent-ui/a2a/tools/arena/{match,dev-proxy-plugin}.ts` · NEW `packages/agent-ui/a2a/tools/feed/**` · the bridge LLD §7 live-arm seam row flips to realized-by |
 > | **Supersedes / Superseded by** | relates **ADR-0073** (the server-side-key dev-proxy trust boundary — both live arms ride it unchanged) · relates the bridge LLD ([`../lld/a2a-a2ui-bridge.lld.md`](../lld/a2a-a2ui-bridge.lld.md)) §7 (the reserved live-arm seam this wave fills) · relates **ADR-0097** (feed-embedded asks — its ask policy governs a2ui-live, NOT this feed; the bridge LLD fork 3 full-catalog ruling stands) · relates **ADR-0088/0090/0091** (the produce() meta-line/mode/mini-skill machinery the feed arm reuses server-side, unmodified) |
 

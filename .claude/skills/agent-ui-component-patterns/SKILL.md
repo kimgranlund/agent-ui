@@ -34,8 +34,8 @@ fork, not a local choice.
 | Reordering children without losing focus | **`ChildPart.moveBefore`** over native `Node.prototype.moveBefore` — only the native call preserves focus; the seam upgrade is gated | ADR-0022 · `dom/` (repeat) |
 | Imperative composition into a template-rendered tree | the public **`mount()` directive-host seam** | ADR-0023 · `dom/` |
 | A swappable asset/provider family (icon packs) | **pure core + subpath adapters** in a zero-dep leaf package (default pack vendored at build time as inert TS) | ADR-0065 + ADR-0066 · `packages/agent-ui/icons/` |
-| A component that must NEVER be agent-emittable (page/app-owner chrome) | the a2ui **`EXCLUSION_ALLOWLIST`** — a permanent, tested catalog exclusion | ADR-0112 cl.6 (Toast/ToastRegion reasoning), applied by ADR-0117 (**proposed** — awaiting ratification) · `packages/agent-ui/a2ui/src/catalog/default/index.test.ts` |
-| Ambient theming context (scheme/scale/density) over a subtree | **`ui-theme-provider`** — reflected props re-rooting `color-scheme`; unset means inherit-ambient, never a forced default | ADR-0117 (**proposed** — awaiting ratification; the control is shipped) · `controls/theme-provider/` |
+| A component that must NEVER be agent-emittable (page/app-owner chrome) | the a2ui **`EXCLUSION_ALLOWLIST`** — a permanent, tested catalog exclusion | ADR-0112 cl.6 (Toast/ToastRegion reasoning), applied by ADR-0117 (ThemeProvider) · `packages/agent-ui/a2ui/src/catalog/default/index.test.ts` |
+| Ambient theming context (scheme/scale/density) over a subtree | **`ui-theme-provider`** — reflected props re-rooting `color-scheme`; unset means inherit-ambient, never a forced default | ADR-0117 · `controls/theme-provider/` |
 
 ## How to use a row
 

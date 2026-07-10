@@ -459,3 +459,25 @@ recommended; the ADR's own Status marker is untouched by this wave.
 - The scheme-boundary ink-re-root fix (`component-gallery.css`) stays gallery-local this wave, named (not
   solved) as a candidate for folding into `theme-provider.css` itself if a second consumer hits the same
   bare-text-under-a-scheme-override defect (ADR-0102 Lane A).
+
+## 2026-07-09 (ratifications + the component skill suite) — ADR-0116/0117 accepted · `agent-ui-component-*` (TKT-0005)
+
+- **ADR-0116 (A2A live real-time examples) and ADR-0117 (`ui-theme-provider`) RATIFIED by Kim**
+  (hand-flipped in-tree + verbal, 2026-07-09). Both builds had already shipped review-gated;
+  ratification housekeeping applied: `Ratified by` lines, the ADR index rows, and ADR-0079's
+  reciprocal `Extended by ADR-0117` backlink (cl.3's site-local `<theme-provider>` → the shipped
+  control — the two-way link discipline).
+- **The `agent-ui-component-*` skill suite (TKT-0005, Kim's namespace ruling).** Six repo-local
+  skills: four knowledge maps (`…-standards` · `…-packaging` · `…-testing` · `…-patterns` —
+  model-only, cite-don't-copy routing over `.claude/docs/references/` and the ADR log) and two
+  procedures (`…-design`, the component intake with the schema-vocabulary classify + novelty leg;
+  `…-create`, the build procedure extracted from `component-builder`'s prompt — the agent now
+  preloads it as its method). Seven-seat independent audit (6× skill-auditor + agent-reviewer);
+  real catches fixed: a phantom `UIComponent` base + the unrealized `components/{name}/` scaffold
+  dir, the tier-vs-size-class conflation (the schema's `SIZE_CLASSES`/`BASE_CLASSES` are the
+  authority), drifted field enumerations. Collateral repairs: CLAUDE.md's stale `host.use()`
+  traits line; a literal NUL byte in `component-descriptor.ts`'s sentinel that made text tools
+  read the schema source as binary.
+- **TKT-0006 planned** (the consumer-side sibling): the composition suite — `agent-ui-catalog` +
+  `agent-ui-composition-patterns` knowledge maps and `agent-ui-compose-{ui,layout,app}`
+  procedures over the shipped fleet + app-shell + router + theming.

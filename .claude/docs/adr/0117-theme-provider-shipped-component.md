@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-09 |
 > | **Proposed by** | design intake (TKT-0003, Kim's directive 2026-07-09: *"add building a real, shipped theme-provider to the plan"* — an installing consumer gets no theming element at all today and must hand-roll the wrapper the theming guide describes) |
-> | **Ratified by** | — awaiting Kim |
+> | **Ratified by** | Kim, 2026-07-09 (hand-flipped in-tree; verbal "ratified" same day) |
 > | **Repairs** | NEW `packages/agent-ui/components/src/controls/theme-provider/*` (on ratification+build) · NEW [`../spec/theme-provider.spec.md`](../spec/theme-provider.spec.md) · NEW [`../lld/theme-provider.lld.md`](../lld/theme-provider.lld.md) · [`../decompositions/theme-provider-ship.decomp.json`](../decompositions/theme-provider-ship.decomp.json) (coverage-clean, plan mode, exit 0). On ratification+build: `packages/agent-ui/a2ui/src/catalog/default/index.test.ts` `EXCLUSION_ALLOWLIST` (+`ThemeProvider`) · `site/pages/theming.ts` + `site/lib/component-gallery.ts` repointed at the shipped element · `site/lib/theme-provider.ts` DELETED · NEW `site/pages/theme-provider-{doc,demo}.ts` · `site/gallery.html`'s ADR-0079 LLD-C4 interface note corrected |
 > | **Supersedes / Superseded by** | Extends ADR-0079 cl.3 (the site-local `<theme-provider>` design this promotes — reciprocal `Extended by` backlink lands on accept) · relates ADR-0050 (`ui-form-provider`, the sibling provider-primitive precedent this follows for the tag law + `UIElement` base) · relates ADR-0112 cl.6 (the permanent-catalog-exclusion allowlist pattern this reuses for the same reasoning class) |
 

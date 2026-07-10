@@ -9,7 +9,7 @@
 > | **Proposed by** | planner — the G8 planning intake (decomp `g8-gallery-release-readiness`) |
 > | **Ratified by** | Kim — 2026-07-05 |
 > | **Repairs** | `goals.md` §G8 DoD line 1 (realization recorded on ship; its "tone" wording → `scheme` + the reserved `theme` seam) · new `site/lib/component-gallery.{ts,css}` + `site/lib/theme-provider.ts` + `site/pages/gallery.ts` + `site/gallery.html` + `_page.ts` NAV (build-time, gated on ratification) · ADR-0077 `Supersedes/Superseded by` gains the `Extended by ADR-0079` backlink (applied on ratification — the two-way link discipline) · design: [`component-gallery.lld.md`](../llds/component-gallery.lld.md) |
-> | **Supersedes / Superseded by** | Extends ADR-0077 (composes `<component-preview mode="component">`; site-local-element precedent) · consumes ADR-0023 (the public `mount`/directive seam — its first out-of-renderer consumer) · relates ADR-0022 (#69 — the reorder constraint below) |
+> | **Supersedes / Superseded by** | Extends ADR-0077 (composes `<component-preview mode="component">`; site-local-element precedent) · **Extended by [ADR-0117](./0117-theme-provider-shipped-component.md)** (cl.3's site-local `<theme-provider>` promoted to the shipped `ui-theme-provider`; reciprocal backlink applied on 0117's ratification, 2026-07-09) · consumes ADR-0023 (the public `mount`/directive seam — its first out-of-renderer consumer) · relates ADR-0022 (#69 — the reorder constraint below) |
 
 ## Context
 
