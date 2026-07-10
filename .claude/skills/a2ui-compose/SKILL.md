@@ -6,8 +6,12 @@ description: >-
   extending, or debugging an A2UI payload against a catalog: idiomatic node shapes per
   catalog type, adjacency-list component trees, ChildList list templates, data bindings,
   actions, and validity checks, plus the bounded compose→validate→self-correct loop.
-  NOT for ui-* control source (component-author), a2ui package/renderer/catalog code
-  (a2ui-builder), corpus curation (a2ui-corpus-curate), or docs-site pages (docs-author).
+  NOT for ui-* control source (agent-ui-component-create), a2ui package/renderer/catalog
+  code (a2ui-builder), corpus curation (a2ui-corpus-curate), docs-site pages (docs-author),
+  or direct-DOM feature composition with shipped controls — no wire protocol involved
+  (agent-ui-compose-ui).
+user-invocable: true
+disable-model-invocation: false
 ---
 
 # Compose A2UI payloads
@@ -17,9 +21,11 @@ the payload — node shapes per catalog type, the adjacency-list tree, `ChildLis
 bindings, actions and checks — and the bounded loop that proves it valid before it ships.
 
 **This skill composes payloads; it does not write code.** NOT for `ui-*` control source (that is the
-`component-author` skill / `component-builder` agent), NOT for `@agent-ui/a2ui` package, renderer, validator,
-or catalog source (that is the `a2ui-builder` agent), NOT for corpus curation — importing/judging/rescoring
-seeds (that is `a2ui-corpus-curate`), NOT for docs-site pages (that is `docs-author`).
+`agent-ui-component-create` skill / `component-builder` agent), NOT for `@agent-ui/a2ui` package, renderer,
+validator, or catalog source (that is the `a2ui-builder` agent), NOT for corpus curation —
+importing/judging/rescoring seeds (that is `a2ui-corpus-curate`), NOT for docs-site pages (that is
+`docs-author`), NOT for direct-DOM composition with shipped controls (that is `agent-ui-compose-ui` — this
+skill exists for the WIRE: an agent emitting messages a renderer paints).
 
 ## Mental model
 

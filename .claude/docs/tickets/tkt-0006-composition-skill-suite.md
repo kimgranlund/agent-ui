@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0006
-status: open
+status: done
 date: 2026-07-09
 owner:
 kind: feature
@@ -93,3 +93,31 @@ those handoffs (generator ≠ critic).
 - **Non-goal:** no site content changes — the guides are sources here, not deliverables.
 
 ## Findings
+### 2026-07-09 — shipped: five skills authored, 5-seat independent audit, all findings closed
+
+- **Forks resolved as ticketed:** three compose skills (disjoint sources/reviewers);
+  corpus-gap = route as-is to site guides + ADRs (no K-skill needed a new reference doc —
+  the thin-but-honest posture held).
+- **Built:** `.claude/skills/agent-ui-{catalog,composition-patterns}` (knowledge,
+  model-only) + `agent-ui-compose-{ui,layout,app}` (procedures, user-invocable), each
+  naming its worked exemplar (forms.ts · layout-overview/_page · the docs site itself as
+  the realized app).
+- **Audit wave (5× `forge:skill-auditor`, parallel) — all PASS/GO after fixes.** The real
+  catches: K5's family-member rosters were STALE AT BIRTH (six shipped components unlisted
+  — the auditor diffed against all 40 descriptors; rosters cut to one e.g. per family,
+  "enumerate, never recall"); K6's ADR-0102 attributions failed verify-cited-authorities
+  in three places (prop-as-source-of-truth is ADR-0101's + 0045's; the restyling
+  prohibition softened to ADR-0102's actual posture — zero-consumer-CSS correctness with
+  override freedom kept; "computed-style is THE sanctioned proof" was stale against the
+  LIVE ADR-0110 screenshot harness); F3/F4 boundary polish (a2ui-compose gained its
+  return-fence + lost a dangling `component-author` name + both invocation dials;
+  modal's screen-vs-feature straddle settled; the fleet-gap failure branch added).
+- **Collateral repairs:** the stale "EXCLUSION_ALLOWLIST is EMPTY" comment in
+  `a2ui/src/catalog/default/index.ts` (it holds 3 permanent entries) fixed, 52/52 green;
+  the MEMORY.md index hook that mis-bundled the 0101/0110 facts under 0102 (the root
+  cause of K6's majors) corrected.
+- **Rejected finding, recorded:** F5's advice to drop the explicit
+  `disable-model-invocation: false` dial conflicts with the repo's skill-postwrite lint
+  hook (both dials, always) — the hook is the local law; dials stay.
+- **Still owed:** each compose skill's live-fire shakedown (first real composition task),
+  same posture as F1's.

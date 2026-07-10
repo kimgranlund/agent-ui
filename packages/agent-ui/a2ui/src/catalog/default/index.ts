@@ -8,8 +8,9 @@
 // Coverage policy is whole-fleet (ADR-0087, superseding the prior G9-scoped list): every shipped `ui-*`
 // control descriptor earns a catalog row, tracked by the fleet-derived coverage gate in `index.test.ts`
 // (SPEC-N2) rather than a hand-frozen name list — a shipped-but-uncatalogued control fails CI instead of
-// passing silently. All 25 fleet descriptors now resolve to a catalog row (Waves A/B/C landed the 12
-// ADR-0087 types + composites); that test's `EXCLUSION_ALLOWLIST` is EMPTY (Wave D, confirmed 2026-07-06).
+// passing silently. Every fleet descriptor resolves to a catalog row OR a deliberate `EXCLUSION_ALLOWLIST`
+// entry (ADR-0087's two arms); the allowlist holds the PERMANENT page/app-owner-chrome exclusions —
+// Toast/ToastRegion (ADR-0112 cl.6) and ThemeProvider (ADR-0117) as of 2026-07-09.
 // `Image`/`Video` stay absent because no `ui-image`/`ui-video` descriptor exists yet — they never enter
 // the derived set. Each declared type binds to a `ui-*` factory in `./factories.ts`.
 
