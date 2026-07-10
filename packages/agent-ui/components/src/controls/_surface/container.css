@@ -33,9 +33,9 @@
  * Standalone sheet — linked via the component-styles barrel, NEVER injected from container.ts (behaviour
  * `.ts` holds no runtime style; plan §2). */
 
-/* ════════════════ surface seam — the 7 surface-bearing container tags ════════════════ */
+/* ════════════════ surface seam — the 8 surface-bearing container tags ════════════════ */
 
-:where(ui-row, ui-column, ui-list, ui-grid, ui-card, ui-tabs, ui-modal) {
+:where(ui-row, ui-column, ui-list, ui-grid, ui-card, ui-tabs, ui-modal, ui-toolbar) {
   /* The role-pure seam, default = transparent (an unset container is unchanged — ADR-0015 cl.1). */
   --ui-container-bg: transparent; /* the base plane */
   --ui-container-tint: transparent; /* the tonal wash (composition only); 0 ⇒ no-op */
@@ -149,7 +149,7 @@
    mostly belt-and-braces: it guarantees a container's surface survives as `Canvas` and the wash never paints
    over system text. */
 @media (forced-colors: active) {
-  :where(ui-row, ui-column, ui-list, ui-grid, ui-card, ui-tabs, ui-modal) {
+  :where(ui-row, ui-column, ui-list, ui-grid, ui-card, ui-tabs, ui-modal, ui-toolbar) {
     background-color: Canvas;
     background-image: none;
   }

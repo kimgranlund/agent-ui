@@ -68,7 +68,13 @@ const targets = [
   // split primitive (ui-split's drag/keyboard/ARIA machinery + ui-split-pane) — measured 32689 B gz
   // 2026-07-10; the per-control marginal stays the real gate (split 1966 B gz — within the ≤2048 B cap;
   // split-pane 0 B gz, trivial — the worst-case ceiling moves, the real per-control gate does not).
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 32 * KB],
+  // 34 KB re-based at the ui-toolbar wave (ADR-0121, Consequences amendment — the same Consequences-
+  // anticipated re-base precedent): measured 33017 B gz post-toolbar (toolbar's own per-control marginal
+  // 318 B gz, trivial vs the ≤2048 B cap — the worst-case ceiling moved, the real per-control gate did
+  // not). The bump to 34816 B gz is sized ahead, not guessed at per-control: it covers the three QUEUED,
+  // already-frozen control families (timeline / swiper / command-modal) so the ceiling is not re-based
+  // again on the very next wave — recorded here, not silently absorbed.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 34 * KB],
 ]
 
 let over = false
@@ -137,6 +143,7 @@ const MARGINAL_BUDGET_DEFAULT = 2048 // B gz
 const MARGINAL_OVERRIDES = {
   // name: [budget in B gz, reason]
   'text-field': [4352, 'the 12-type value-codec family (ADR-0044/0047), which absorbs the calendar picker bytes above — measured 4021 B gz 2026-07-05, ~8% headroom'],
+  'split': [2176, 'gzip measurement-frame drift as the family bundle crossed 33 KB (leave-one-out deltas shift with the shared dictionary; toolbar added similar roving/flex/enum code) — split source byte-identical that wave; measured 2082 B gz 2026-07-10'],
 }
 
 console.log('\nper-control marginal (leave-one-out through the public `./controls/{name}` entries, ADR-0080):')

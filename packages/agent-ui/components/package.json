@@ -50,6 +50,7 @@
     "./controls/theme-provider": "./src/controls/theme-provider/theme-provider.ts",
     "./controls/toast": "./src/controls/toast/toast.ts",
     "./controls/toast-region": "./src/controls/toast/toast-region.ts",
+    "./controls/toolbar": "./src/controls/toolbar/toolbar.ts",
     "./controls/tooltip": "./src/controls/tooltip/tooltip.ts",
     "./descriptor": "./src/descriptor/index.ts",
     "./component-styles.css": "./src/component-styles.css",

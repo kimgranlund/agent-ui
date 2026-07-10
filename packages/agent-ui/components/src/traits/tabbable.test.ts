@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../dom/index.ts'
 import { tabbable } from './tabbable.ts'
+import { ROVING_ITEM_ATTR } from './roving-focus.ts'
 
 // Phase-1 — the tabbable trait (ADR-0010). tabIndex=0 while enabled; removeAttribute('tabindex') while
 // disabled (native `<button disabled>` parity); the rule rides a scope-owned `host.effect` so it REACTS to
@@ -83,6 +84,70 @@ describe('tabbable — focusability + disabled tab-order (ADR-0010)', () => {
 
     el.disabled = true
     expect(el.getAttribute('tabindex')).toBe('0') // released → the effect no longer reacts
+    el.remove()
+  })
+})
+
+// ── the ROVING-MARKER CONTRACT (ADR-0121 amendment) — tabbable.ts defers under an external roving owner ──
+//
+// traits/roving-focus.ts stamps ROVING_ITEM_ATTR ('data-roving') on every item it manages; this trait must
+// defer its own tabIndex=0 write while that marker is present, on EVERY effect run (not just the first —
+// covering a later re-enable mid-session), and stay BYTE-IDENTICAL to the pre-amendment rule whenever the
+// marker is absent (the overwhelming majority of tabbable() consumers — this is the non-regression pin).
+
+describe('tabbable — the roving-marker contract (ADR-0121 amendment)', () => {
+  it('identity: a bare (never-marked) host is byte-identical to the pre-amendment rule — enabled→0, disabled→removed, reactive', async () => {
+    // The exact tab-default/tab-disabled-removes/tab-reactive assertions above, replayed to pin that NO
+    // marker present means NO behavior change at all.
+    const a = new TabEl()
+    document.body.append(a)
+    expect(a.getAttribute('tabindex')).toBe('0')
+    a.disabled = true
+    await a.updateComplete
+    expect(a.hasAttribute('tabindex')).toBe(false)
+    a.disabled = false
+    await a.updateComplete
+    expect(a.getAttribute('tabindex')).toBe('0')
+    expect(a.hasAttribute(ROVING_ITEM_ATTR)).toBe(false) // anti-vacuous — genuinely never marked
+    a.remove()
+  })
+
+  it('a host carrying the roving marker never receives tabIndex=0 from this trait, even while enabled', () => {
+    const el = new TabEl()
+    el.setAttribute(ROVING_ITEM_ATTR, '') // simulates an external roving-focus host having claimed it
+    document.body.append(el) // tabbable's synchronous first effect run happens here
+    expect(el.getAttribute('tabindex')).not.toBe('0') // deferred — not the roving-focus trait's job to assert what it IS
+    el.remove()
+  })
+
+  it('a re-enable WHILE still roving-owned stays deferred (no "two tab stops" regression)', async () => {
+    const el = new TabEl()
+    el.setAttribute(ROVING_ITEM_ATTR, '')
+    el.disabled = true
+    document.body.append(el)
+    expect(el.hasAttribute('tabindex')).toBe(false) // disabled → removed (this trait's own concern, unaffected by the marker)
+
+    el.disabled = false // re-enable mid-session — the effect re-runs
+    await el.updateComplete
+    // Still deferred: the marker is re-checked on EVERY run, not just the first, so re-enabling never
+    // reclaims a tab stop the roving owner is still managing.
+    expect(el.getAttribute('tabindex')).not.toBe('0')
+    el.remove()
+  })
+
+  it('removing the marker (the roving host releasing ownership) is NOT this trait\'s concern — it never re-checks reactively on a plain attribute mutation (disabled must toggle to re-run)', async () => {
+    // Documents the boundary precisely: tabbable's effect tracks the `disabled` SIGNAL only — a bare
+    // setAttribute/removeAttribute('data-roving') is not itself reactive to this trait. The roving-focus
+    // trait's own settle pass / release path is what re-asserts a correct tabindex for the item once it
+    // is truly independent again (out of THIS trait's scope).
+    const el = new TabEl()
+    el.setAttribute(ROVING_ITEM_ATTR, '')
+    document.body.append(el)
+    expect(el.getAttribute('tabindex')).not.toBe('0')
+
+    el.removeAttribute(ROVING_ITEM_ATTR)
+    await el.updateComplete // no `disabled` toggle occurred — the effect never re-runs on its own
+    expect(el.getAttribute('tabindex')).not.toBe('0') // unchanged — by design, not a defect
     el.remove()
   })
 })

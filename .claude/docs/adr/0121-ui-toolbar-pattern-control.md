@@ -206,6 +206,27 @@ deliverable, not the mechanism.
   header + floating raised bar) per TKT-0009.
 - A `Toolbar` catalog row enters the generative-UI vocabulary (F7) — the coverage gate is satisfied by a real
   row, not an allowlist entry; the a2ui-builder seat owns that slice.
+- **Amendment (post-build, pre-ratification) — the roving-marker contract.** Building the control surfaced a
+  latent cross-trait conflict: custom-element connection is preorder (a parent's `connectedCallback` fires
+  before its children's), so `ui-toolbar`'s `roving-focus` init and a real `ui-button` item's own `tabbable`
+  trait (traits/tabbable.ts) raced — the item's later-connecting `connected()` unconditionally re-asserted
+  `tabIndex = 0`, silently breaking the "exactly one tabindex=0" contract (SPEC-R4 AC1) the moment more than
+  one `ui-button` item was used, exactly the composition this ADR's own Examples section illustrates.
+  `ui-radio-group` → `ui-radio` (both built on `UIIndicatorElement`, which also runs `tabbable`) carried the
+  identical latent bug — masked until now by jsdom's opposite child-then-parent connection order, which real
+  Chromium/WebKit do not share; it was untested in a real engine. Fixed with a two-sided marker contract
+  (traits/roving-focus.ts ↔ traits/tabbable.ts, both files' own headers carry the full mechanism): `roving-
+  focus.ts` stamps every item it manages with a `data-roving` attribute (on init, on every move, re-applied
+  once more via a settle-pass `requestAnimationFrame` tick to close the connect-time race) and strips it on
+  release — release now wired to the connection scope's disposal (disconnect), not only a manual call.
+  `traits/tabbable.ts` DEFERS its `tabIndex = 0` write whenever the host carries that marker, re-checked on
+  EVERY effect run (not just install), so a later re-enable mid-session does not reclaim a second tab stop.
+  **ADR-0010's tabbable semantics are EXTENDED, not changed, for a standalone host** — absent the marker
+  (the overwhelming majority of `tabbable()` consumers), behavior is byte-identical to the pre-amendment rule
+  (pinned by an identity-style test in tabbable.test.ts). No descriptor prose needed correction — none of the
+  tabbable-consumer descriptors (`button.md`/`checkbox.md`/`switch.md`/`radio.md`/`slider.md`) claimed
+  unconditional tabbability; `radio.md`'s existing "managed by rovingFocus on the group" prose was already the
+  intended contract, now genuinely true in every engine rather than only in jsdom.
 
 ## Acceptance
 

@@ -214,7 +214,7 @@ describe('site coverage — every shipped component has its required per-tier pa
     // (ADR-0112): ui-toast (a fixed-width notification card — Container/surface geometry, not a control
     // height). Each requires its {doc, demo} pages.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
-      ['calendar', 'combo-box', 'disclosure', 'menu', 'modal', 'popover', 'segmented-control', 'select', 'tabs', 'toast', 'tooltip'],
+      ['calendar', 'combo-box', 'disclosure', 'menu', 'modal', 'popover', 'segmented-control', 'select', 'tabs', 'toast', 'toolbar', 'tooltip'],
     )
   })
 })

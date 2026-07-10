@@ -440,6 +440,21 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    label: 'ui-toolbar',
+    cards: [
+      {
+        href: './toolbar-demo.html',
+        title: 'Demo',
+        blurb: 'A Pattern-class action bar, both postures — an embedded document-header bar and a floating raised formatting palette — with real ui-buttons and the one-Tab-stop roving keyboard.',
+      },
+      {
+        href: './toolbar-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-toolbar attributes (surface + orientation/align/justify/gap/overflow/label), generated from its toolbar.md descriptor.',
+      },
+    ],
+  },
+  {
     // The Overlay family (Wave 4, ADR-0043): tier=pattern controls on the overlay controller — a live interaction
     // Demo + a descriptor-derived API doc each, mirroring the nav (one table of contents, two renderings).
     label: 'ui-popover',

@@ -201,6 +201,13 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    label: 'ui-toolbar',
+    links: [
+      { href: './toolbar-demo.html', label: 'Demo' },
+      { href: './toolbar-doc.html', label: 'API' },
+    ],
+  },
+  {
     // The Overlay family (Wave 4, ADR-0043) — tier=pattern controls on the overlay controller, each a per-component
     // ui-{tag} group with a live interaction Demo + a descriptor-derived API doc (the site-toc pattern-tier rule).
     label: 'ui-popover',

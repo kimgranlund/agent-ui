@@ -113,3 +113,7 @@
  * separator/divider geometry) + ui-split-pane (the axis-oblique pane geometry it drives via a JS seam). */
 @import './controls/split/split.css';
 @import './controls/split/split-pane.css';
+
+/* ADR-0121 — ui-toolbar, a Pattern-class action bar (host-as-flex + role=toolbar + roving focus, decoupled
+ * from selection; posture via the existing elevation/brightness surface axis, no positioning machine). */
+@import './controls/toolbar/toolbar.css';

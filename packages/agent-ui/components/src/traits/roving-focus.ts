@@ -1,16 +1,42 @@
 // roving-focus.ts — the keyboard + tabindex roving-focus trait (listbox-roving LLD-C1). Extracted
 // from ui-tabs' prior art (tabs.ts:130-168) to serve any "set of items with a moving focus" host:
-// ui-listbox, ui-menu, ui-select, ui-radio-group. Role-agnostic: `items` is a live accessor; the
-// host declares the item role in its own CSS/internals.
+// ui-listbox, ui-menu, ui-select, ui-radio-group, ui-toolbar. Role-agnostic: `items` is a live
+// accessor; the host declares the item role in its own CSS/internals.
 //
 // Exactly ONE item holds `tabindex=0`; the rest `-1`. Arrow keys (Up/Down for vertical; Left/Right
 // for horizontal) + Home/End move the roving index AND transfer focus. `loop` wraps at the ends;
 // `typeAhead` searches by the typed buffer (200ms reset). `onMove(index)` notifies the host: couple
 // selection-follows-focus (listbox/tabs) or decouple (menu: focus moves, selection commits on Enter).
 //
-// `traits → dom` is the one allowed cross-layer direction; the host type only.
+// THE ROVING-MARKER CONTRACT (ADR-0121 amendment, post-toolbar): custom-element connection is preorder
+// (a parent's `connectedCallback` fires before its children's, for a subtree connected all at once) — so
+// a host that roves over ITEMS WHICH OWN THEIR OWN TAB-STOP (e.g. `ui-button`'s `tabbable` trait,
+// traits/tabbable.ts) can lose the race: this trait's synchronous init runs first and sets the correct
+// tabindexes, but each item's OWN later-running `connected()` effect unconditionally re-asserts
+// `tabIndex = 0`, silently breaking the "exactly one tabindex=0" contract. `ui-radio-group` → `ui-radio`
+// carries this same latent bug (masked by jsdom's opposite child-then-parent connection order, which real
+// Chromium/WebKit do not share) — `ui-toolbar` → `ui-button` is what surfaced it. The fix is two-sided,
+// and BOTH traits document it:
+//   1. HERE — `applyTabindexes` stamps every item it manages with `ROVING_ITEM_ATTR` (`data-roving`), on
+//      init and on every move, so the marker is always current for whatever the live `items()` set is;
+//      `release()` strips it from the last-known set. A settle pass — one `requestAnimationFrame` tick past
+//      connect (the tabs.ts `ready`-gate precedent) — re-reads `items()` and re-applies once more, closing
+//      the race for any item whose OWN trait installs after this one's synchronous init.
+//   2. `traits/tabbable.ts` — its effect DEFERS the `tabIndex = 0` write while the host carries
+//      `ROVING_ITEM_ATTR` (checked on EVERY effect run, not just once), so a later re-enable mid-session
+//      still yields to the roving owner instead of reclaiming a second tab stop. `disabled`/`aria-disabled`
+//      semantics are untouched — only tab-stop OWNERSHIP yields. Absent the marker, tabbable is unchanged.
+//
+// `traits → dom` is the one allowed cross-layer direction; the host type only. `ROVING_ITEM_ATTR` is the
+// one same-layer (traits → traits) export this module carries — tabbable.ts imports it (layering.test.ts
+// permits same-layer imports; only an UPWARD import is a violation).
 
 import type { UIElement } from '../dom/index.ts'
+
+/** The tab-stop-ownership marker this trait stamps on every item it manages (`applyTabindexes`) and strips
+ *  on release. `traits/tabbable.ts` checks for its presence to defer its own `tabIndex = 0` write — see the
+ *  ROVING-MARKER CONTRACT banner above. */
+export const ROVING_ITEM_ATTR = 'data-roving'
 
 export type RovingOrientation = 'vertical' | 'horizontal'
 
@@ -59,10 +85,13 @@ function isDisabled(item: HTMLElement): boolean {
 }
 
 // Apply roving tabindexes: the item at `index` gets 0; all others -1. When `index` is -1 (all
-// disabled) every item gets -1.
+// disabled) every item gets -1. Stamps ROVING_ITEM_ATTR on every item in `list` (the ownership marker
+// traits/tabbable.ts defers to — the ROVING-MARKER CONTRACT banner above); idempotent, cheap to re-apply
+// on every call (init + every move).
 function applyTabindexes(list: HTMLElement[], index: number): void {
   for (let i = 0; i < list.length; i++) {
     list[i].tabIndex = i === index ? 0 : -1
+    list[i].setAttribute(ROVING_ITEM_ATTR, '')
   }
 }
 
@@ -127,6 +156,21 @@ export function rovingFocus(host: UIElement, opts: RovingFocusOptions): () => vo
     rovingIndex = findFirst(init)
   }
   applyTabindexes(init, rovingIndex)
+
+  // Settle pass — one requestAnimationFrame tick past connect (the tabs.ts `ready`-gate precedent):
+  // re-reads the live item set and re-applies tabindexes once more, closing the preorder-connection race
+  // for any item whose OWN focus-owning trait (traits/tabbable.ts) installs AFTER this synchronous init
+  // and would otherwise win the tabIndex write (the ROVING-MARKER CONTRACT banner above). Cancelled on
+  // early release.
+  const settleHandle = requestAnimationFrame(() => {
+    if (released) return
+    const list = items()
+    if (list.length === 0) return
+    let idx = rovingIndex
+    if (idx < 0 || idx >= list.length || isDisabled(list[idx])) idx = findFirst(list)
+    rovingIndex = idx
+    applyTabindexes(list, idx)
+  })
 
   // Keydown handler — attached to `container` (default: host) so it can be scoped to a sub-region
   // (e.g. a tablist strip) without intercepting arrow keys inside focusable panel content.
@@ -196,7 +240,23 @@ export function rovingFocus(host: UIElement, opts: RovingFocusOptions): () => vo
     moveTo(list, next)
   })
 
-  return () => {
+  // Strip the ownership marker (+ cancel a still-pending settle pass) — idempotent, so both the manual
+  // early-teardown call below AND the automatic disconnect path (next) can invoke it safely.
+  function cleanup(): void {
+    if (released) return
     released = true
+    cancelAnimationFrame(settleHandle)
+    // Best-effort — an item that has since left the DOM entirely needs no cleanup. A reconnect's fresh
+    // `rovingFocus()` call re-stamps it.
+    for (const item of items()) item.removeAttribute(ROVING_ITEM_ATTR)
   }
+
+  // Auto-release on disconnect: the keydown LISTENER already dies via `host.listen`'s connection
+  // AbortSignal, but the marker is real DOM state with a real consumer (traits/tabbable.ts) — it must not
+  // outlive the roving host. A no-op-dependency `host.effect` is the scope-owned "run cleanup on dispose"
+  // idiom: it runs once (no signal reads to re-trigger it) and its RETURNED cleanup fires when the
+  // connection scope disposes at disconnect, exactly like every other scope-owned effect in this fleet.
+  host.effect(() => cleanup)
+
+  return cleanup
 }

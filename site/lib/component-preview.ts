@@ -322,6 +322,24 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
       return pane
     }),
   'ui-split-pane': () => [sampleItem('Pane content')],
+  // ui-toolbar (ADR-0121) — the real job, not a one-child stub: a formatting cluster + an alignment cluster +
+  // undo/redo, real ui-buttons throughout (the whole-shape/representative-specimen law, LLD §5). Mirrors the
+  // ui-modal sample function's own ui-row + ui-button construction, above.
+  'ui-toolbar': () => {
+    const ghostButton = (label: string): HTMLElement => {
+      const b = document.createElement('ui-button')
+      b.setAttribute('variant', 'ghost')
+      b.textContent = label
+      return b
+    }
+    const cluster = (labels: readonly string[]): HTMLElement => {
+      const row = document.createElement('ui-row')
+      row.setAttribute('gap', 'xs')
+      row.append(...labels.map(ghostButton))
+      return row
+    }
+    return [cluster(['Bold', 'Italic', 'Underline']), cluster(['Left', 'Center', 'Right']), ghostButton('Undo'), ghostButton('Redo')]
+  },
   'ui-radio-group': () =>
     (
       [
@@ -605,7 +623,9 @@ export const NO_SLOT_TEXT = new Set([
 // ui-split / ui-split-pane (ADR-0120 cl.2, app-surfaces-m4.lld.md LLD-C1) join this set too: ui-split's
 // default slot IS its N panes (real ui-split-pane children the control lays out via draggable separators);
 // ui-split-pane's default slot IS the author's own arbitrary content — both the exact STRUCTURAL shape.
-export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-theme-provider', 'ui-toast-region'])
+// ui-toolbar (ADR-0121) joins this set too: host-as-flex, light-DOM children ARE the roving items — the exact
+// ui-row STRUCTURAL shape, not a text/label slot.
+export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-theme-provider', 'ui-toast-region', 'ui-toolbar'])
 
 // SLOT_TEXT_OK — SLOT_TEXT is a real, safe, MEANINGFUL knob: a genuine text/label default slot, the accessible
 // label content a viewer edits to see the control's OWN typography/sizing respond (button/checkbox/radio/

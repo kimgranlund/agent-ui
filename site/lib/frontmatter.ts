@@ -25,6 +25,8 @@ import gridMd from '../../packages/agent-ui/components/src/controls/grid/grid.md
 import cardMd from '../../packages/agent-ui/components/src/controls/card/card.md?raw'
 import tabsMd from '../../packages/agent-ui/components/src/controls/tabs/tabs.md?raw'
 import modalMd from '../../packages/agent-ui/components/src/controls/modal/modal.md?raw'
+// ADR-0121 — ui-toolbar, a Pattern-class action bar (role=toolbar + roving focus, posture via elevation/brightness).
+import toolbarMd from '../../packages/agent-ui/components/src/controls/toolbar/toolbar.md?raw'
 import checkboxMd from '../../packages/agent-ui/components/src/controls/checkbox/checkbox.md?raw'
 import switchMd from '../../packages/agent-ui/components/src/controls/switch/switch.md?raw'
 import radioMd from '../../packages/agent-ui/components/src/controls/radio/radio.md?raw'
@@ -102,6 +104,7 @@ export const loadGridDoc = (): ComponentDoc => parseDoc(gridMd)
 export const loadCardDoc = (): ComponentDoc => parseDoc(cardMd)
 export const loadTabsDoc = (): ComponentDoc => parseDoc(tabsMd)
 export const loadModalDoc = (): ComponentDoc => parseDoc(modalMd)
+export const loadToolbarDoc = (): ComponentDoc => parseDoc(toolbarMd)
 export const loadCheckboxDoc = (): ComponentDoc => parseDoc(checkboxMd)
 export const loadSwitchDoc = (): ComponentDoc => parseDoc(switchMd)
 export const loadRadioDoc = (): ComponentDoc => parseDoc(radioMd)

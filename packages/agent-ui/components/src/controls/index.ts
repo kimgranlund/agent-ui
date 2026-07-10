@@ -62,6 +62,7 @@ export * from './grid/grid.ts'
 export * from './card/card.ts' // transitively self-defines ui-card-header / -content / -footer
 export * from './tabs/tabs.ts' // transitively self-defines ui-tab / -tab-panel
 export * from './modal/modal.ts'
+export * from './toolbar/toolbar.ts' // Pattern-class action bar (ADR-0121) — role=toolbar + roving focus, posture via elevation/brightness
 
 // Overlay controls — Wave 4 (ADR-0043 / overlay-controller.lld): the `overlay` controller composed into five
 // controls. Non-form disclosure/hover/action overlays (UIElement hosts) + the two form-associated pickers

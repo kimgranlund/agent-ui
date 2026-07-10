@@ -85,6 +85,7 @@
 
 - [ui-card](./card-doc.html): the header/content/footer surface container with the shared box model; [demo](./card-demo.html).
 - [ui-tabs](./tabs-doc.html): the tablist pattern — roving focus, panel switching; [demo](./tabs-demo.html).
+- [ui-toolbar](./toolbar-doc.html): the Pattern-class action bar — role=toolbar + roving focus decoupled from selection, posture via elevation/brightness (no posture prop); [demo](./toolbar-demo.html).
 - [Layout primitives overview](./layout-overview.html): row, column, list, grid — gap-driven, no control heights; individual pages: [row](./row-doc.html), [column](./column-doc.html), [list](./list-doc.html), [grid](./grid-doc.html).
 - [Surface × layout matrix](./layout-permutations.html): every container surface crossed with every layout primitive.
 

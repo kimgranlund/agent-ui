@@ -95,6 +95,25 @@ describe('ui-radio-group browser smoke — component-owned layout (ADR-0103)', (
     expect(gapPx()).toBeCloseTo(base * 1.5, 1)
   })
 
+  it('one Tab stop, real focus (ADR-0121 amendment regression guard): exactly one ui-radio is Tab-reachable, not three', async () => {
+    // Previously UNTESTED in a real engine (jsdom's opposite child-before-parent connectedCallback order
+    // masked this) — ui-radio extends UIIndicatorElement, which runs the SAME `tabbable` trait ui-button
+    // does; the group's own rovingFocus() call and each radio's own tabbable effect raced exactly the way
+    // toolbar.ts's did, silently breaking "one Tab stop" for a radio group in every real browser. The
+    // roving-marker contract (traits/roving-focus.ts ↔ traits/tabbable.ts) fixes both call sites at once —
+    // this pins the group side of that fix stays correct.
+    const el = mount(group())
+    const [r1, r2, r3] = [...el.children] as HTMLElement[]
+    expect(r1.tabIndex, 'the first radio is not the roving item').toBe(0)
+    expect(r2.tabIndex, 'a second radio unexpectedly holds a tab stop too').toBe(-1)
+    expect(r3.tabIndex, 'a third radio unexpectedly holds a tab stop too').toBe(-1)
+
+    r1.focus()
+    await userEvent.tab()
+    expect(document.activeElement, 'Tab did not leave the group as one stop').not.toBe(r2)
+    expect(document.activeElement, 'Tab did not leave the group as one stop').not.toBe(r3)
+  })
+
   it('NEGATIVE control: forcing the gap to 0 collapses the very delta the positive legs measure', () => {
     // Proves the anti-vacuous position assertions have teeth: an element-level override that zeroes the
     // group's OWN gap token reproduces the pre-ADR-0103 mash (radios touching, zero visible separation) —

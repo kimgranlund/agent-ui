@@ -25,8 +25,8 @@ describe('container.css — ADR-0100 blanket establishment is GONE', () => {
 
   it('the four layout primitives are still the declared surface-bearing tags (surface untouched)', () => {
     // Anti-vacuous companion: prove the file wasn't simply emptied — the surface :where() selector listing
-    // all seven surface-bearing tags (the four primitives + card/tabs/modal) must still be intact.
-    expect(CODE).toMatch(/:where\(ui-row,\s*ui-column,\s*ui-list,\s*ui-grid,\s*ui-card,\s*ui-tabs,\s*ui-modal\)/)
+    // all eight surface-bearing tags (the four primitives + card/tabs/modal/toolbar, ADR-0121) must still be intact.
+    expect(CODE).toMatch(/:where\(ui-row,\s*ui-column,\s*ui-list,\s*ui-grid,\s*ui-card,\s*ui-tabs,\s*ui-modal,\s*ui-toolbar\)/)
     expect(CODE).toMatch(/--ui-container-bg:\s*transparent/)
   })
 

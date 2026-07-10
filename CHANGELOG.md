@@ -590,3 +590,19 @@ dispatch + stubbed capture per the slider precedent). The pane's ratio-seed prop
 budget re-based 30→32 KB gz (79 B headroom — the next control re-bases again). Catalog
 disposition (a `Split` row by parity) deferred to the follow-up wave; the whole-bundle
 fixture regenerated.
+
+## 2026-07-10 (ui-toolbar) — the toolbar ships, and the fleet's roving/tabbable contract is repaired
+
+ADR-0121's control (review GO): dual-posture via the surface axis (no posture enum, no overlay
+machinery), host-as-flex with light-DOM children AS the roving items, roving-focus reused
+decoupled from selection, CSS-only wrap/scroll overflow, no events. The build surfaced a
+LATENT FLEET DEFECT: ui-button's tabbable trait unconditionally re-took tabIndex=0 under any
+EXTERNAL roving host (the preorder-connection race + the ongoing effect) — and radio-group
+carried the identical bug, masked by jsdom's opposite connection order and untested in real
+engines. Fixed by the two-sided ROVING-MARKER contract (roving-focus stamps data-roving +
+re-applies after connect settle + releases on disconnect; tabbable defers tab-stop ownership
+while marked, byte-identical otherwise — ADR-0010 extended, recorded in ADR-0121's
+consequences), with cross-trait regression tests incl. the re-enable-mid-session case and
+radio-group's first real-engine one-Tab-stop proof. Family ceiling re-based to 34 KB gz
+(sized for the three queued families); split's marginal line pinned 2176 (gzip
+measurement-frame drift, its source byte-identical). Toolbar marginal: 318 B gz.

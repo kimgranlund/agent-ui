@@ -1,0 +1,125 @@
+/* toolbar.css — the SINGLE sheet for ui-toolbar (ADR-0121; toolbar.lld.md LLD-C5). Two sectioned blocks
+ * (ADR-0003): a :where() TOKEN block (declares the --ui-toolbar-* chain off the --ui-space layout ladder + the
+ * control-height register) then an @scope STYLES block (consumes ONLY --ui-toolbar-*). Host-as-flex — light-DOM
+ * children ARE the flex items (the ui-row precedent); no named slots, no [slot=…] selector anywhere in this sheet.
+ *
+ * Geometry (geometry.md "Pattern" size-class — toolbar is a NAMED example): the toolbar owns NO control-height
+ * `size` prop of its own — its ITEMS take their own control height. The toolbar's own contribution is padding +
+ * gap off the --ui-space layout ladder, plus a min-block-size FLOOR tied to the control-height register (the
+ * ui-md row height) so an empty or short bar still reads as a bar (SPEC-R7 AC2, the whole-shape law).
+ *
+ * Surface (ADR-0015): the floating/embedded posture is entirely the shared controls/_surface/container.css seam
+ * this element is added to (--ui-container-bg/-tint) — this sheet paints NO surface colour of its own (the
+ * ui-tabs precedent, ADR-0104). elevation=0/unset is transparent/flush (embedded); elevation ≥ 1 is a raised
+ * plane (floating), which also establishes the ADR-0052 [data-box] isolation z-scope when the consumer opts a
+ * raised toolbar into the shared container-box seam. */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-toolbar) declares --ui-toolbar-* ════════════════ */
+
+:where(ui-toolbar) {
+  --ui-toolbar-align: center; /* align (cross-axis) → align-items; center is the toolbar's OWN default (the bar look — differs from ui-row's start) */
+  --ui-toolbar-justify: start; /* justify (main-axis distribution) → justify-content */
+  --ui-toolbar-gap: var(--ui-space-sm); /* gap default 'sm' — toolbars are tight (differs from ui-row's 'none') */
+  --ui-toolbar-pad-inline: var(--ui-space-sm);
+  --ui-toolbar-pad-block: var(--ui-space-xs);
+  --ui-toolbar-min-block-size: var(--ui-height-md); /* the whole-shape bar floor (SPEC-R7 AC2) — the control-height register, NOT a --ui-space quantity */
+
+  box-sizing: border-box;
+}
+
+/* align → align-items. start/end/stretch/baseline are valid align-items keywords (the box-alignment logical
+   values, the ui-row precedent), so the mapping is 1:1 — only the non-default members need a repoint (center is
+   the default declared above). */
+:where(ui-toolbar[align='start']) {
+  --ui-toolbar-align: start;
+}
+:where(ui-toolbar[align='end']) {
+  --ui-toolbar-align: end;
+}
+:where(ui-toolbar[align='stretch']) {
+  --ui-toolbar-align: stretch;
+}
+:where(ui-toolbar[align='baseline']) {
+  --ui-toolbar-align: baseline;
+}
+
+/* justify → justify-content. start/center/end map 1:1; between/around/evenly cross to the `space-*` forms
+   (the one keyword translation in the grammar, the ui-row precedent). */
+:where(ui-toolbar[justify='center']) {
+  --ui-toolbar-justify: center;
+}
+:where(ui-toolbar[justify='end']) {
+  --ui-toolbar-justify: end;
+}
+:where(ui-toolbar[justify='between']) {
+  --ui-toolbar-justify: space-between;
+}
+:where(ui-toolbar[justify='around']) {
+  --ui-toolbar-justify: space-around;
+}
+:where(ui-toolbar[justify='evenly']) {
+  --ui-toolbar-justify: space-evenly;
+}
+
+/* gap → a step on the --ui-space ladder (density-responsive — rides [density], NOT [scale]; ADR-0015 cl.4).
+   'sm' is the default declared above; every OTHER step needs a repoint. */
+:where(ui-toolbar[gap='none']) {
+  --ui-toolbar-gap: var(--ui-space-none);
+}
+:where(ui-toolbar[gap='xs']) {
+  --ui-toolbar-gap: var(--ui-space-xs);
+}
+:where(ui-toolbar[gap='md']) {
+  --ui-toolbar-gap: var(--ui-space-md);
+}
+:where(ui-toolbar[gap='lg']) {
+  --ui-toolbar-gap: var(--ui-space-lg);
+}
+:where(ui-toolbar[gap='xl']) {
+  --ui-toolbar-gap: var(--ui-space-xl);
+}
+:where(ui-toolbar[gap='2xl']) {
+  --ui-toolbar-gap: var(--ui-space-2xl);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-toolbar) consumes ONLY --ui-toolbar-* ════════════════ */
+
+@scope (ui-toolbar) {
+  :scope {
+    display: flex;
+    flex-direction: row; /* [orientation=vertical] flips to column below */
+    flex-wrap: wrap; /* overflow='wrap' is the default (F4 — never hides an action); [overflow=scroll] overrides */
+    align-items: var(--ui-toolbar-align);
+    justify-content: var(--ui-toolbar-justify);
+    gap: var(--ui-toolbar-gap);
+    min-block-size: var(--ui-toolbar-min-block-size);
+    padding: var(--ui-toolbar-pad-block) var(--ui-toolbar-pad-inline);
+    min-inline-size: 0; /* allow shrink within a flex/grid parent — a bar never forces its parent wider */
+    /* NO background/border here — the surface plane is the shared controls/_surface/container.css seam this
+       element sits on (--ui-container-bg/-tint); elevation=0/unset stays transparent (embedded), elevation ≥ 1
+       paints a raised plane (floating) — this sheet holds zero colour opinion (the ui-tabs/ADR-0104 precedent). */
+  }
+
+  /* orientation=vertical — flips the flex axis (the roving key-axis is resolved once at connect in toolbar.ts);
+     pair with overflow=scroll rather than wrap (documented as odd, not an error — LLD §6). */
+  :scope[orientation='vertical'] {
+    flex-direction: column;
+  }
+
+  /* overflow=scroll — a single line; the toolbar owns its own scroll region (F4). */
+  :scope[overflow='scroll'] {
+    flex-wrap: nowrap;
+    overflow-inline: auto;
+  }
+
+  /* forced-colors (WHCM) — belt-and-braces with the shared container.css surface block (the ui-row precedent):
+     a surfaced toolbar keeps a system colour and drops the tonal wash. The bar paints no intent surface of its
+     own in v1 (SPEC-R9 note), so there is no selected/active cue of its own to additionally protect (unlike
+     ui-tabs' indicator). */
+  @media (forced-colors: active) {
+    :scope {
+      background-color: Canvas;
+      background-image: none;
+    }
+  }
+}

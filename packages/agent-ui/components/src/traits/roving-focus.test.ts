@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { UIElement } from '../dom/index.ts'
-import { rovingFocus } from './roving-focus.ts'
+import { rovingFocus, ROVING_ITEM_ATTR } from './roving-focus.ts'
 import type { RovingOrientation } from './roving-focus.ts'
 
 // Probe host — wraps rovingFocus over its [role=option] descendants. `orientation`, `loop`, and
@@ -238,5 +238,45 @@ describe('rovingFocus — roving tabindex + keyboard nav (listbox-roving LLD-C1)
     host.remove() // disconnect → AbortController aborts → listener dead
     kd(host, 'ArrowDown') // dispatched on disconnected host; listener is gone
     expect(items[0].tabIndex).toBe(0) // unchanged
+  })
+})
+
+// ── the ROVING-MARKER CONTRACT (ADR-0121 amendment) — the ownership stamp traits/tabbable.ts defers to ──
+//
+// A pure, synchronous DOM-mutation contract (stamp on init/move, strip on release) — the rAF settle pass
+// itself is deliberately NOT probed here (the fleet convention: rAF-gated behavior is browser-only, the
+// ui-tabs `:state(ready)` gate precedent — no jsdom test anywhere in this tree awaits a real animation
+// frame). The cross-engine proof that the marker actually defeats a real tabbable() consumer's own connect-
+// time write lives in toolbar.browser.test.ts.
+
+describe('rovingFocus — the ROVING_ITEM_ATTR ownership marker (ADR-0121 amendment)', () => {
+  it('rov-marker-init: every item in the roving set is stamped with ROVING_ITEM_ATTR on init, not only the tabindex=0 one', () => {
+    const [, items] = makeHost(3)
+    for (const item of items) expect(item.hasAttribute(ROVING_ITEM_ATTR), `${item.textContent} not marked`).toBe(true)
+  })
+
+  it('rov-marker-move: the marker stays present on every item across an ArrowDown move', () => {
+    const [host, items] = makeHost(3)
+    kd(host, 'ArrowDown')
+    for (const item of items) expect(item.hasAttribute(ROVING_ITEM_ATTR)).toBe(true)
+  })
+
+  it('rov-marker-release: release() strips the marker from every item (early teardown)', () => {
+    const [host, items] = makeHost(3)
+    host.releaseFn?.()
+    for (const item of items) expect(item.hasAttribute(ROVING_ITEM_ATTR), `${item.textContent} still marked after release`).toBe(false)
+  })
+
+  it('rov-marker-disconnect: disconnect strips the marker (the trait releases on the connection AbortSignal)', () => {
+    const [host, items] = makeHost(3)
+    host.remove()
+    for (const item of items) expect(item.hasAttribute(ROVING_ITEM_ATTR)).toBe(false)
+  })
+
+  it('rov-marker-reconnect: a fresh connect re-stamps the marker (no permanent loss across reconnect)', () => {
+    const [host, items] = makeHost(3)
+    host.remove()
+    document.body.append(host) // reconnect → connected() re-runs → a fresh rovingFocus() call
+    for (const item of items) expect(item.hasAttribute(ROVING_ITEM_ATTR)).toBe(true)
   })
 })
