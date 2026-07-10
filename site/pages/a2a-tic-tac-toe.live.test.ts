@@ -66,8 +66,13 @@ beforeAll(async () => {
   document.body.append(appRoot)
   await import('./a2a-tic-tac-toe.ts')
   root = appRoot
-  // wireLiveOverlay()'s probe + dynamic import are fire-and-forget on module import — give them a turn.
-  await new Promise((r) => setTimeout(r, 50))
+  // wireLiveOverlay()'s probe + dynamic import (`import('../lib/arena-live-transport.ts')`) are
+  // fire-and-forget on module import. Wait on the OBSERVABLE they produce — the Run control existing —
+  // not a fixed wall-clock budget: under a full parallel suite the vite transform server is saturated and
+  // that dynamic import routinely takes longer than any fixed setTimeout, leaving the live section hidden
+  // and every test cascading off a null Run button. Polling settles exactly when ready and no sooner; the
+  // generous tick bound still fails loudly on a genuine hang (a real regression), never on machine load.
+  await waitUntil(() => appRoot.querySelector('[data-live-action="run"]') !== null, 1000)
 })
 
 const q = (sel: string): HTMLElement => root.querySelector(sel) as HTMLElement
