@@ -75,3 +75,53 @@ mechanisms are reused vs what is genuinely new), not invention.
   tkt-0008 swiper · 0009 toolbar · 0010 timeline · 0011 color-picker · 0012 this.
 
 ## Findings
+
+**2026-07-10 — design intake COMPLETE (docs-only; no code, no commits).** Ran `agent-ui-component-design`. The
+palette is resolved as **composition, not invention**: no new base class, trait, event, or geometry row.
+
+**Artifacts (all NEW):**
+- [ADR-0125](../adr/0125-ui-command-modal-composition-and-catalog-exclusion.md) (`proposed`; README row added;
+  `adr.test.ts` house-style gate green, 33/33) — 8 forks, each recommended, none self-ratified.
+- [SPEC](../spec/command-modal.spec.md) (SPEC-R1…R14) · [LLD](../lld/command-modal.lld.md) (LLD-C1…C18, frozen
+  §3 interface) · [decomp](../decompositions/command-modal-ship.decomp.json) (`coverage_check.py --strict`:
+  27 nodes · 24 actions · 40 edges · **clean**).
+
+**Classification:** `ui-command-modal` · `UICommandModalElement` · **base `UIElement`** (coordinator — the
+theme/form-provider precedent; not form-associated, paints no surface) · **tier `pattern`** (the combo-box
+precedent) · **catalog: permanently EXCLUDED** (`CommandModal` `EXCLUSION_ALLOWLIST`).
+
+**Fork resolutions (the ticket's open questions):**
+- **Composition vs bespoke (F1):** NEST the shipped `ui-modal` for the whole surface+dismissal contract
+  (ADR-0017/0019/0020; the `avatar→icon` sibling-import precedent); RE-DERIVE (not extract, not nest) combo-box's
+  active-descendant filter (its methods are private + its shape diverges — form-associated/anchored/free-text).
+  REJECTED: bespoke `<dialog>`, nesting combo-box, extracting a trait now, `roving-focus`/`UIListboxElement`
+  (both move real focus + listbox is form-associated), the `overlay` trait (no anchored popover — the list is
+  the dialog body).
+- **Global hotkey (F2, the taste fork — Kim's ruling wanted):** consumer-wired `open` is the FLOOR; an opt-in
+  per-instance `hotkey` attribute is the convenience (NO unconditional document listener — ADR-0082;
+  multi-instance collision is the author's concern). Lean: include `hotkey` opt-in. Left `proposed`.
+- **Item/action model (F3):** role-attributed `[role=option]`/`[role=group]` children with rich inner content
+  (icon + label + decorative `[data-role=shortcut]`). REJECTED native `<option>` (text-only) and bespoke
+  sub-tags (commands are stateless).
+- **Selection (F4):** `select {value,label,group}` + close; NEVER a command bus; NEVER imports `@agent-ui/router`.
+- **A11y (F5):** combobox/listbox inside a dialog + a NEW `aria-live` result-count region; Escape is the modal's
+  single path (ADR-0045).
+- **Catalog (F8):** permanent exclusion, argued (app-owner launcher chrome) — not defaulted.
+- **Fenced v1 non-goals:** recents (F6, consumer-fed), async/provider results + match highlighting (F7),
+  drill-down sub-palettes, fuzzy matching, a `ui-command-group` sub-tag, a non-dismissable `persistent` palette.
+
+**Independent doc review:** three fresh-context `doc-reviewer` seats (ADR / SPEC / LLD), pre-armed on the
+blockquote house style. All THREE returned **FIX-THEN-SHIP, zero blockers**. The LLD **frozen-interface check
+PASSED** — every named fleet API (`emit`/`listen`/`effect`-teardown/`prop.*`/`UIModalElement`+child-move/
+`scrollFade`/combo-box active-descendant methods/`avatar.ts:25`) verified EXACT against shipped source; no
+invented API, no value-vs-accessor mismatch. **Findings applied:** ADR (F8 citation re-homed to ADR-0125 with
+cl.6 as class analogy · "third→fourth" member count · dangling `persistent` cross-ref · drill-down non-goal);
+SPEC (M1 label/filter excludes the decorative shortcut · M2 "reflected" scoped to `open` only · M3
+`[data-role=group-label]` made normative · M4 list `role=listbox` made normative + AC · M5 select-close emits
+only `select` · N1 wrap-boundary AC · N2 R10 contingency-on-F2 note · R12 `open`-event erratum removed); LLD
+(MAJOR author empty-slot visibility gap fixed in `#filter` + `[data-role=empty]` detector · `#labelText` helper
+added for M1 · `#setActive` lazy-id guard · teardown note re-homed to the reactive kernel).
+
+**Ready to build on ADR-0125 ratification.** Build seat = `component-builder` (LLD-C1…C15/C17/C18) + an
+`a2ui-builder` slice for LLD-C16 (the `EXCLUSION_ALLOWLIST` entry) after the descriptor ships. Constraints held:
+no tokens.css / no `site/lib/__fixtures__/` touched; ROLE-level colors only; docs-only, no code, no commits.

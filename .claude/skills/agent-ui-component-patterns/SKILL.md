@@ -35,6 +35,7 @@ fork, not a local choice.
 | Imperative composition into a template-rendered tree | the public **`mount()` directive-host seam** | ADR-0023 · `dom/` |
 | A swappable asset/provider family (icon packs) | **pure core + subpath adapters** in a zero-dep leaf package (default pack vendored at build time as inert TS) | ADR-0065 + ADR-0066 · `packages/agent-ui/icons/` |
 | A component that must NEVER be agent-emittable (page/app-owner chrome) | the a2ui **`EXCLUSION_ALLOWLIST`** — a permanent, tested catalog exclusion | ADR-0112 cl.6 (Toast/ToastRegion reasoning), applied by ADR-0117 (ThemeProvider) · `packages/agent-ui/a2ui/src/catalog/default/index.test.ts` |
+| Nesting a SHIPPED control whose connect-time child-move relocates your parts (modal, select, combo-box panels) | the ORDERING constraint: the nested control moves light-DOM children at ITS connect — compose parts before/after that move deliberately, never assume your DOM order survives (the same shape as lazy-import-into-overlay) | ADR-0017 (the child-move pattern) + ADR-0048 (lazy calendar into the overlay) · `controls/modal/`, `controls/combo-box/` — the command-modal intake's recorded footgun |
 | Ambient theming context (scheme/scale/density) over a subtree | **`ui-theme-provider`** — reflected props re-rooting `color-scheme`; unset means inherit-ambient, never a forced default | ADR-0117 · `controls/theme-provider/` |
 
 ## How to use a row
