@@ -213,3 +213,54 @@ describe('tokens.css — the AA-guaranteed --md-sys-color-primary-selected fill 
     expect(dark, `dark: on-primary(${inkD}) on --md-sys-color-primary(${anchorD}) = ${dark.toFixed(2)}:1 (report-only)`).toBeLessThan(AA)
   })
 })
+
+// tok-system — the SYSTEMATIC per-family role grammar of Kim's ultimate-tokens generator. The migration
+// replaced ad-hoc, per-need roles with a uniform grammar: eight intent families (neutral + the accent set
+// + the status set) each carry the IDENTICAL semantic-role ladder, every role resolved via light-dark(),
+// plus a `-500-NNN` alpha series. This block DERIVES the family × role matrix and asserts completeness +
+// light-dark() pairing, so a regenerated sheet that drops a rung or de-pairs a role (emits a flat value
+// where a light-dark() belongs) fails HERE — the state-ladder-completeness gate the new system earns. It
+// does NOT re-check the hand-authored wash/track/selected roles above (those have their own blocks); it
+// verifies the generator's own promise across every family at once.
+describe('tokens.css — the systematic per-family role grammar (ultimate-tokens generator)', () => {
+  const FAMILIES = ['neutral', 'primary', 'secondary', 'tertiary', 'info', 'success', 'warning', 'danger'] as const
+  // every semantic role a family MUST carry, each a light-dark() pair. `{f}` = the family's own name
+  // (the self-referential on-{family} rungs). '' = the base --md-sys-color-{family} role.
+  const LD_ROLES = [
+    '', '-dim', '-bright', '-low', '-high', '-hover', '-active', '-disabled',
+    '-on-{f}', '-on-{f}-variant', '-on-{f}-hover', '-on-{f}-active', '-on-{f}-disabled',
+    '-on-surface', '-on-surface-variant', '-on-surface-hover', '-on-surface-active', '-on-surface-disabled',
+    '-placeholder',
+    '-outline', '-outline-variant', '-outline-hover', '-outline-active', '-outline-disabled',
+    '-container', '-container-low', '-container-high', '-container-hover', '-container-active', '-container-disabled',
+    '-inverse-surface', '-inverse-on-surface', '-background', '-surface',
+    '-surface-dimmest', '-surface-dimmer', '-surface-dim', '-surface-bright', '-surface-brighter', '-surface-brightest',
+    '-surface-lowest', '-surface-lower', '-surface-low', '-surface-high', '-surface-higher', '-surface-highest',
+    '-scrim-weakest', '-scrim-weaker', '-scrim-weak', '-scrim', '-scrim-strong', '-scrim-stronger', '-scrim-strongest',
+  ]
+  const ALPHAS = ['050', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950']
+
+  it('every family declares every semantic role, each resolved via light-dark()', () => {
+    expect(FAMILIES.length).toBe(8) // anti-vacuous
+    expect(LD_ROLES.length).toBeGreaterThan(50) // anti-vacuous: the full ladder, not an empty loop
+    const missing: string[] = []
+    for (const f of FAMILIES) {
+      for (const r of LD_ROLES) {
+        const name = `--md-sys-color-${f}${r.replace('{f}', f)}`
+        if (!new RegExp(`${name}:\\s*light-dark\\(`).test(rootBlock)) missing.push(name)
+      }
+    }
+    expect(missing, `roles missing a light-dark() declaration: ${missing.join(', ')}`).toEqual([])
+  })
+
+  it('every family declares the 500-step alpha series (5%…95%) as flat oklch primitives', () => {
+    const missing: string[] = []
+    for (const f of FAMILIES) {
+      for (const a of ALPHAS) {
+        const name = `--md-sys-color-${f}-500-${a}`
+        if (!new RegExp(`${name}:\\s*oklch\\([^/]*/\\s*[\\d.]+%\\)`).test(rootBlock)) missing.push(name)
+      }
+    }
+    expect(missing, `500-step alpha primitives missing: ${missing.join(', ')}`).toEqual([])
+  })
+})

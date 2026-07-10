@@ -533,3 +533,16 @@ display LOC net-negative. One reviewed build deviation: ramp pins physical LTR v
 164 new tests; marginals 118/148/282 B gz; family 30593/30720 (127 B headroom — next control
 forces the ADR-0040 re-base). M2 (catalog rows + exemplar + FEED_EXCLUDED) is the queued
 next wave; Swatch/Ramp/Ladder sit as reasoned M1 allowlist seeds until it drains them.
+
+## 2026-07-10 (the token system lands) — Kim's generated palette rework + the 15-role restore
+
+Kim's ultimate-tokens rework is IN (reviewed, zero-red): 126 new roles — systematic per-family
+interaction-state ladders (hover/active/disabled, on-role, container, outline, placeholder) for
+all 8 families, now gated by a +51-line structural block in tokens.test.ts (424 light-dark
+declarations proven). A flagged hand-authored block restores the 15 roles the generator drops
+but the fleet consumes (the tint washes + their alpha primitives, the track pair, the selected
+rung — the sheet's own forced-colors block still references them: a generator gap, wishlist
+recorded). ONE visual shift, AA-forced and reviewer-recomputed: primary-selected's light leg
+550→600 (3.85:1 → 4.73:1 vs on-primary) — calendar selected-day + segmented selected fills are
+one step darker in light mode. The theme-provider built-CSS fixture regenerated; every standing
+known-red (tokens.test.ts, switch/slider legs, the fixture gate) is now green.
