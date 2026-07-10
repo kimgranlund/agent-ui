@@ -92,6 +92,38 @@ describe('the artifact feed — the whole rendered shape (both engines)', () => 
     expect(last.textContent).toMatch(/composed locally/i)
   })
 
+  it('TKT-0004: revealing the next entry ANIMATES the page to the new content (its end lands in view)', async () => {
+    // Step to the last entry (click Next until it disables) — by then the timeline genuinely exceeds the
+    // viewport, so the scroll is load-bearing, not vacuous (asserted below before the scroll assertion).
+    const nextBtn = document.querySelector('.feed-step-controls ui-button:nth-of-type(2)') as HTMLElement
+    for (let guard = 0; guard < 10 && !nextBtn.hasAttribute('disabled'); guard++) {
+      nextBtn.click()
+      await raf()
+    }
+    const last = msgAt(5)
+    expect(last.hidden).toBe(false)
+
+    // The site shell's ONE scroll region is `.app-page` (_page.css — the document itself never
+    // overflows), so every assertion targets it; scrollIntoView resolves the same container natively.
+    const scroller = document.querySelector('.app-page') as HTMLElement
+    // Anti-vacuous: the timeline genuinely overflows the scroll region — without a scroll, the last
+    // entry's end could not be in view.
+    expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight)
+
+    // The reveal scroll is deferred (double-rAF) and smooth (animates over time) — poll until the last
+    // bubble's end settles inside the scroller's box, both engines, no reduced-motion emulation needed.
+    const edge = (): number => scroller.getBoundingClientRect().bottom
+    const deadline = Date.now() + 3000
+    let bottom = Number.POSITIVE_INFINITY
+    while (Date.now() < deadline) {
+      bottom = last.getBoundingClientRect().bottom
+      if (bottom <= edge() + 2) break
+      await new Promise((r) => setTimeout(r, 50))
+    }
+    expect(bottom, 'the newly revealed entry never scrolled into view').toBeLessThanOrEqual(edge() + 2)
+    expect(scroller.scrollTop, 'no scroll actually occurred in the app-page region').toBeGreaterThan(0)
+  })
+
   it('negative control: a min-content COLLAPSED probe (the historical ui-slider bug shape) fails the width-floor assertion above', () => {
     // The exact trap canvas-surface.css's own comment documents: an absolutely/flex-centered box with only a
     // MAX width (never a definite one) shrink-fits its content to min-content — a single character collapses

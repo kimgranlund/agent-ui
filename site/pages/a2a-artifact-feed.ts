@@ -176,6 +176,7 @@ function appendComposedBubble(message: A2uiClientMessage): void {
   const wirePretty = codeBlock(JSON.stringify(wire, null, 2), 'json')
   root.append(disclosure('wire', wirePretty))
   timeline.append(root)
+  revealScroll(root) // a composed reply is new content at the timeline's end — same animate-to-bottom (TKT-0004)
 }
 
 function hostArtifact(entry: FeedEntry, mount: HTMLElement): void {
@@ -191,6 +192,21 @@ function hostArtifact(entry: FeedEntry, mount: HTMLElement): void {
 
 let bubbles: { entry: FeedEntry; bubble: Bubble }[] = []
 let cursor = 0
+
+/** Animate the page to a newly arrived/revealed bubble (TKT-0004): its END lands in view ("animate to
+ *  bottom"). Deferred one frame past a second rAF so the bubble's lazily-mounted A2UI artifact has laid
+ *  out first (the renderer's kernel flushes effects on microtasks; two frames is the settled-layout
+ *  point — the sizing-page live-matrix precedent). Smooth by default; `prefers-reduced-motion` collapses
+ *  to an instant jump (the house motion discipline). Forward reveals + composed appends ONLY — Prev/Reset
+ *  are backward navigation, not new content, and never call this. */
+function revealScroll(target: HTMLElement): void {
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'end' })
+    }),
+  )
+}
 
 function renderStep(): void {
   if (bubbles.length === 0) return
@@ -235,6 +251,7 @@ nextBtn.addEventListener('click', () => {
   if (cursor < bubbles.length - 1) {
     cursor += 1
     renderStep()
+    revealScroll(bubbles[cursor]!.bubble.root) // the newly revealed entry animates into view (TKT-0004)
   }
 })
 resetBtn.addEventListener('click', () => {
