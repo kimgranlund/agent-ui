@@ -5,6 +5,13 @@
 // required → valueMissing validity verdict. Extends UIFormElement DIRECTLY — NOT UIIndicatorElement; the
 // group itself is not an indicator, it is a form-value-owning container whose children are the indicators.
 //
+// ADR-0051 growth: the group wires its own `trackUserInvalid` controller + `formUserInvalid()` override
+// (the text-field precedent) — the group, not any individual radio, is the constraint owner, so the
+// user-invalid TIMING and the :state(user-invalid)/aria-invalid reflection live here. The group has no
+// visual surface of its own (radio-group.css); the CSS danger leg reaches into each `ui-radio` child's
+// own `::before` border. `UISegmentedControlElement` inherits this unchanged — it never overrides
+// `connected()`/`formReset()`, so the wiring applies to its own internals directly.
+//
 // ARIA: `role='radiogroup'` via internals (FACE — never a host attribute). Each `ui-radio` child carries
 // `role='radio'` via its own internals. The group provides no `tabindex` of its own; the rovingFocus trait
 // manages tabindexes on the radio children (exactly one is tabindex=0; others are -1), matching the ARIA
@@ -50,6 +57,7 @@ import { UIFormElement } from '../../dom/form.ts'
 import type { FormValue, ValidityResult } from '../../dom/form.ts'
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/props.ts'
 import { rovingFocus, type RovingOrientation } from '../../traits/roving-focus.ts'
+import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
 import { UIRadioElement } from './radio.ts'
 
 const groupProps = {
@@ -72,9 +80,32 @@ export class UIRadioGroupElement extends UIFormElement {
   // null = no radio selected; a string = the selected radio's `value` prop.
   #selectedValue = signal<string | null>(null)
 
+  // The user-invalid TIMING controller (ADR-0051), created per connection (re-arms on reconnect;
+  // released on disconnect) — the text-field/select precedent.
+  #userInvalid: TrackUserInvalidController | null = null
+
   protected connected(): void {
     // ARIA: radiogroup role via internals, never a host role/aria-* attribute (FACE).
     this.internals.role = 'radiogroup'
+
+    // ADR-0051 — the user-invalid TIMING controller. `blur` never bubbles, but the capture phase
+    // reaches this ancestor before whichever `ui-radio` child held focus (the track-user-invalid.ts
+    // precedent); `change` is the group's OWN re-emitted event (#commit(), below) — not the child
+    // radio's original (that one is stopImmediatePropagation'd) — so this listener always sees the
+    // group's real commits regardless of listener registration order. Reflects :state(user-invalid)
+    // + internals.ariaInvalid — the group carries no visual surface of its own (radio-group.css); the
+    // CSS leg reaches into each ui-radio child's own ::before border.
+    const invalidController = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    this.#userInvalid = invalidController
+    this.effect(() => {
+      if (invalidController.userInvalid()) {
+        this.internals.states?.add('user-invalid')
+        this.internals.ariaInvalid = 'true'
+      } else {
+        this.internals.states?.delete('user-invalid')
+        this.internals.ariaInvalid = null
+      }
+    })
 
     // Well-known data attribute marker: lets UIRadioElement.grouped() detect any UIRadioGroupElement
     // subclass (e.g. probe subclasses in tests) via a CSS attribute selector without a circular import.
@@ -322,6 +353,22 @@ export class UIRadioGroupElement extends UIFormElement {
     const defaultRadio = defaultIndex >= 0 ? radios[defaultIndex] : undefined
     this.#selectedValue.value = defaultRadio ? defaultRadio.value : null
     this.selectionChanged(radios, defaultIndex)
+    // ADR-0051 — a reset must not leave a required-empty group showing :state(user-invalid) until
+    // the user re-interacts (the text-field formReset() precedent).
+    this.#userInvalid?.reset()
+  }
+
+  protected override disconnected(): void {
+    this.#userInvalid?.release() // idempotent — the listeners already die with the connection scope
+    this.#userInvalid = null
+  }
+
+  /** Feeds `FormConnectDetail.userInvalid` (ADR-0050) — the `trackUserInvalid` tracker IS the one
+   *  timing source; this override just exposes its gate. Inherited by `UISegmentedControlElement`
+   *  unchanged (it never overrides connected()/formReset(), so this base's wiring applies to its
+   *  own internals directly). */
+  protected override formUserInvalid(): boolean {
+    return this.#userInvalid?.userInvalid() ?? false
   }
 }
 

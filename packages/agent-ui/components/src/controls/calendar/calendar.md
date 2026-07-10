@@ -105,7 +105,8 @@ parts:
   - name: status
     description: "ADR-0093 clause 3 — a visually-hidden `<div data-part=\"status\" aria-live=\"polite\">` (clip technique, position:absolute — out of flow). Always created (idempotent-parts precedent); text is written ONLY by the range-mode commit path ('Start date set — choose an end date.' / '{start} to {end} selected.') — stays empty and silent in mode=single."
 
-customStates: []        # no :state() internals — selection/range state rides aria-selected + data-range-*/data-in-range attributes (gridcell), not the host
+customStates:           # selection/range VISUAL state rides aria-selected + data-range-*/data-in-range attributes
+  - user-invalid        # ADR-0051 — set only AFTER the first interaction (blur/change) via the trackUserInvalid controller, gating the panel's danger border
 
 face:
   formAssociated: true  # UIFormElement: formValue/formValidity/formReset/formStateRestore seams active
@@ -113,7 +114,7 @@ face:
 
 aria:
   role: none            # host carries NO explicit role (ARIA rides the parts: grid, row, columnheader, gridcell)
-  grid: role=grid on [data-part=grid], aria-labelledby → title id
+  grid: role=grid on [data-part=grid], aria-labelledby → title id (MERGED with a `ui-field`'s label ref when associated — ADR-0051 cl.Consequences "calendar is a follow-up too"; the grid always keeps its own month/year name alongside the field's, never clobbered); aria-describedby ← the field's description/error refs when associated; aria-invalid mirrors :state(user-invalid)
   rows: role=row on each [div] row wrapper inside the grid
   columnheader: role=columnheader on each weekday-header <span> (+ aria-label=full name + abbr)
   gridcell: role=gridcell on each day <button> (overrides implicit button role)

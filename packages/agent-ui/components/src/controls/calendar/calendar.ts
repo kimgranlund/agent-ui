@@ -77,7 +77,8 @@
 import { UIFormElement } from '../../dom/index.ts'
 import { prop } from '../../dom/index.ts'
 import type { PropsSchema, ReactiveProps } from '../../dom/index.ts'
-import type { FormValue, ValidityResult } from '../../dom/index.ts'
+import type { FormValue, ValidityResult, FieldLabelling } from '../../dom/index.ts'
+import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
 import { setIcon } from '@agent-ui/icons'
 
 // ── Module-level stable-id counter (one per title/grid pair, never reused) ─────────────────
@@ -273,6 +274,10 @@ export class UICalendarElement extends UIFormElement {
   // '' = unset; on first connect it is computed from value/today/first (see #computeFocusTarget).
   #focusIso = ''
 
+  // The user-invalid TIMING controller (ADR-0051), created per connection (re-arms on reconnect;
+  // released on disconnect) — the text-field/select precedent.
+  #userInvalid: TrackUserInvalidController | null = null
+
   // ── Form seams (UIFormElement hooks) ─────────────────────────────────────────────────────
 
   protected override formValue(): FormValue {
@@ -358,6 +363,9 @@ export class UICalendarElement extends UIFormElement {
     } else {
       this.value = this.#initialValue
     }
+    // ADR-0051 — a reset must not leave a required-empty calendar showing :state(user-invalid)
+    // until the user re-interacts (the text-field formReset() precedent).
+    this.#userInvalid?.reset()
   }
 
   protected override formStateRestore(state: File | string | FormData | null): void {
@@ -445,6 +453,24 @@ export class UICalendarElement extends UIFormElement {
     // Build the initial grid.
     this.#rebuildGrid()
 
+    // ── ADR-0051 — the user-invalid TIMING controller ─────────────────────────────────────
+    // `blur` is captured at the host (never bubbles; the capture phase reaches this ancestor
+    // before whichever gridcell button held focus — the track-user-invalid.ts precedent);
+    // `change` is emitted directly on `this` by #commitDate/#commitRangeDate, so it lands here
+    // regardless of which commit path fired. Reflects :state(user-invalid) + aria-invalid on the
+    // grid part (the role-carrying part — role='grid' rides the part, not internals.role).
+    const invalidController = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    this.#userInvalid = invalidController
+    this.effect(() => {
+      if (invalidController.userInvalid()) {
+        this.internals.states?.add('user-invalid')
+        grid.setAttribute('aria-invalid', 'true')
+      } else {
+        this.internals.states?.delete('user-invalid')
+        grid.removeAttribute('aria-invalid')
+      }
+    })
+
     // Reactive effect: when value/valueStart/valueEnd/mode/min/max/disabled change, update
     // existing cells' ARIA + range data attributes without rebuilding the DOM. Reading these
     // signals here registers them as dependencies — the effect re-runs whenever any changes.
@@ -513,6 +539,51 @@ export class UICalendarElement extends UIFormElement {
       this.#previewIso = ''
       this.#refreshCellVisuals()
     })
+  }
+
+  protected override disconnected(): void {
+    this.#userInvalid?.release() // idempotent — the listeners already die with the connection scope
+    this.#userInvalid = null
+  }
+
+  /** Feeds `FormConnectDetail.userInvalid` (ADR-0050) — the `trackUserInvalid` tracker IS the one
+   *  timing source; this override just exposes its gate (the text-field/select precedent). */
+  protected override formUserInvalid(): boolean {
+    return this.#userInvalid?.userInvalid() ?? false
+  }
+
+  // ── ADR-0051 — the field-labelling seam wire (the calendar-merge override) ───────────────────
+
+  /**
+   * The part-role override (ADR-0051 cl.2/cl.Consequences "calendar is a follow-up too") — the
+   * grid's `role='grid'` rides a light-DOM PART attribute, not `internals.role`, so the base's
+   * guarded internals-reflection default (dom/form.ts) never fires for this control. UNLIKE
+   * text-field/select, the grid ALREADY self-labels to its own month title
+   * (`aria-labelledby=titleId`, set once at `#ensureShell()`) — this override must MERGE the
+   * field's label ref into that existing relationship, never clobber it (the calendar always
+   * needs its own month/year context alongside whatever name the field supplies).
+   *
+   * `aria-describedby` has no other owner (the grid carries no internal validity-message node,
+   * unlike text-field's editor) — written from `[refs.description, refs.error]` when fielded,
+   * cleared on dissociation, in both branches below (the combo-box precedent, which has the same
+   * no-competing-owner shape).
+   *
+   * Guards a not-yet-created grid/title (the LLD-C2 override contract) — cannot happen in practice
+   * (`#ensureShell()` runs synchronously at the top of `connected()`, before the base's forwarding
+   * effect installs), but the guard costs nothing and documents the contract.
+   */
+  protected override applyFieldLabelling(refs: FieldLabelling | null): void {
+    const grid = this.#gridEl
+    const title = this.#titleEl
+    if (!grid || !title) return
+    grid.setAttribute('aria-labelledby', refs?.label ? `${refs.label.id} ${title.id}` : title.id)
+    if (refs === null) {
+      grid.removeAttribute('aria-describedby')
+      return
+    }
+    const described = [refs.description, refs.error].filter((el): el is HTMLElement => el !== null)
+    if (described.length > 0) grid.setAttribute('aria-describedby', described.map((el) => el.id).join(' '))
+    else grid.removeAttribute('aria-describedby')
   }
 
   // ── Shell creation (idempotent) ───────────────────────────────────────────────────────────

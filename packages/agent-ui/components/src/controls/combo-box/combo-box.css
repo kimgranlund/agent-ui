@@ -48,6 +48,10 @@
   --ui-combo-box-border: var(--md-sys-color-neutral);
   --ui-combo-box-border-hover: var(--md-sys-color-neutral-high);
   --ui-combo-box-border-focus: transparent; /* sole focus indicator = shared outline ring */
+  /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction (the
+     trackUserInvalid controller owns that timing; combo-box.ts toggles :state(user-invalid)). */
+  --ui-combo-box-border-invalid: var(--md-sys-color-danger);
+  --ui-combo-box-border-invalid-hover: var(--md-sys-color-danger-high);
   --ui-combo-box-bg: var(--md-sys-color-neutral-surface);
   --ui-combo-box-ink: var(--md-sys-color-neutral-on-surface);
   --ui-combo-box-placeholder: var(--md-sys-color-neutral-on-surface-variant);
@@ -169,6 +173,14 @@
     border-color: var(--ui-combo-box-border-focus);
     outline: 2px solid var(--md-sys-color-focus-ring);
     outline-offset: 2px;
+  }
+
+  /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. */
+  :scope:state(user-invalid) > [data-part='editor'] {
+    border-color: var(--ui-combo-box-border-invalid);
+  }
+  :scope:state(user-invalid) > [data-part='editor']:hover {
+    border-color: var(--ui-combo-box-border-invalid-hover);
   }
 
   /* Disabled */

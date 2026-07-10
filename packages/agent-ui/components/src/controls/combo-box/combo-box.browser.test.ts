@@ -1074,3 +1074,34 @@ describe('ui-combo-box — the editor accessible-name seam (ADR-0085, both engin
     expect(revertedName, `${server.browser}: dissociation did not revert to the bare "Fruit" name`).not.toBeNull()
   })
 })
+
+// ── user-invalid leg (ADR-0051) — jsdom has no CustomStateSet, so :state(user-invalid) matching + the real
+// editor border repaint can only be proven here (the text-field-states.browser.test.ts precedent).
+describe('ui-combo-box — user-invalid leg (ADR-0051)', () => {
+  it('a required, empty combo-box arms :state(user-invalid) + repaints the editor border, only AFTER focus+blur', async () => {
+    const { el } = mount(`
+      <ui-combo-box required>
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+
+    expect(el.matches(':state(user-invalid)'), 'user-invalid must not flash before any interaction').toBe(false)
+    const idleBorder = getComputedStyle(editor).borderColor
+
+    editor.focus()
+    editor.blur()
+    await el.updateComplete
+
+    expect(el.matches(':state(user-invalid)'), ':state(user-invalid) was not armed on editor blur').toBe(true)
+    const invalidBorder = getComputedStyle(editor).borderColor
+    expect(invalidBorder, "the editor's border-color did not repaint under :state(user-invalid)").not.toBe(idleBorder)
+
+    // RECOVERY: a real commit (typed text + Enter, emitting `change`) clears the constraint.
+    await userEvent.click(editor)
+    await userEvent.keyboard('Apple')
+    await userEvent.keyboard('{Enter}')
+    await el.updateComplete
+    expect(el.matches(':state(user-invalid)'), 'user-invalid persists after a value is committed').toBe(false)
+  })
+})

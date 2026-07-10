@@ -49,6 +49,12 @@
      these (its fill is the stable moving indicator, not a hover affordance). */
   --ui-segmented-control-bg-hover: var(--md-sys-color-primary-container-low);
   --ui-segmented-control-bg-active: var(--md-sys-color-primary-container);
+
+  /* user-invalid (ADR-0051, inherited unchanged from UIRadioGroupElement — see segmented-control.ts's
+     header) — the danger track-border repoint. Appears only AFTER the first interaction (the
+     trackUserInvalid controller owns that timing; radio-group.ts's connected() toggles
+     :state(user-invalid) on this control's own internals). */
+  --ui-segmented-control-border-invalid: var(--md-sys-color-danger);
 }
 
 /* ═══════════ [2] STYLES — plain compound selectors (deliberately NOT :where/@scope) ═══════════ */
@@ -61,6 +67,12 @@ ui-segmented-control {
   box-sizing: border-box;
   border: 1px solid var(--ui-segmented-control-track);
   border-radius: var(--ui-segmented-control-radius);
+}
+
+/* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. Unlike
+   ui-radio-group (no visual surface of its own), this control owns its own track border directly. */
+ui-segmented-control:state(user-invalid) {
+  border-color: var(--ui-segmented-control-border-invalid);
 }
 
 /* Orientation-driven main axis. `repeat(var(--count), 1fr)` is NOT usable — repeat()'s count must be a

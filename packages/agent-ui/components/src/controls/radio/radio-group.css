@@ -31,6 +31,12 @@
      retune per-instance with one custom property (the ADR-0102 override freedom); no catalog `gap` enum yet
      (a foreseen Lane B extension only if live evidence shows models need magnitude control). */
   --ui-radio-group-gap: var(--ui-space-sm);
+
+  /* user-invalid (ADR-0051) — the danger border repoint reaching into each ui-radio child's own
+     ::before ring (the group has no visual surface of its own, see the file header). Appears only
+     AFTER the first interaction (the trackUserInvalid controller owns that timing; radio-group.ts
+     toggles :state(user-invalid) on the group host). */
+  --ui-radio-group-border-invalid: var(--md-sys-color-danger);
 }
 
 /* ════════════ [2] STYLES BLOCK — @scope (ui-radio-group) ════════════ */
@@ -63,4 +69,16 @@
       forced-color-adjust: none;
     }
   }
+}
+
+/* ════════════ user-invalid (ADR-0051) — a cross-boundary reach into ui-radio's own paint ════════════
+ * The group carries no visual surface of its own (the [2] block above); the danger repoint must reach
+ * INTO each `ui-radio` child's own `::before` ring instead. A plain top-level compound selector,
+ * deliberately OUTSIDE `@scope` — the SAME technique segmented-control.css uses to reach `ui-segment`
+ * (its own file header explains why: this clears `ui-radio`'s own `@scope (ui-radio) { :scope::before }`
+ * rule ((0,1,1)) without `!important`, since `ui-radio-group:state(user-invalid) ui-radio::before` is
+ * (0,1,3)). Never co-occurs with `:state(checked)::before` in practice — `formValidity()` only reports
+ * `valueMissing` when NO radio is checked, so no specificity race with the checked-fill rule. */
+ui-radio-group:state(user-invalid) ui-radio::before {
+  border-color: var(--ui-radio-group-border-invalid);
 }

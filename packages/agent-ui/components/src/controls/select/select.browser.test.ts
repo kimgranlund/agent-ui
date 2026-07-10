@@ -1009,3 +1009,33 @@ describe('ui-select — the trigger accessible-name seam (ADR-0085, both engines
     expect(revertedName, `${server.browser}: dissociation did not revert to the bare "Scheme light" name`).not.toBeNull()
   })
 })
+
+// ── user-invalid leg (ADR-0051) — jsdom has no CustomStateSet, so :state(user-invalid) matching + the real
+// trigger border repaint can only be proven here (the text-field-states.browser.test.ts precedent).
+describe('ui-select — user-invalid leg (ADR-0051)', () => {
+  it('a required, unselected select arms :state(user-invalid) + repaints the trigger border, only AFTER blur (select never emits a native change event)', async () => {
+    const { el } = mount(`
+      <ui-select required>
+        <div role="option" value="light">light</div>
+        <div role="option" value="dark">dark</div>
+      </ui-select>
+    `)
+    const trigger = el.querySelector('[data-part="trigger"]') as HTMLElement
+
+    expect(el.matches(':state(user-invalid)'), 'user-invalid must not flash before any interaction').toBe(false)
+    const idleBorder = getComputedStyle(trigger).borderColor
+
+    trigger.focus()
+    trigger.blur()
+    await el.updateComplete
+
+    expect(el.matches(':state(user-invalid)'), ':state(user-invalid) was not armed on trigger blur').toBe(true)
+    const invalidBorder = getComputedStyle(trigger).borderColor
+    expect(invalidBorder, "the trigger's border-color did not repaint under :state(user-invalid)").not.toBe(idleBorder)
+
+    // RECOVERY: picking a value clears the constraint.
+    el.value = 'light'
+    await el.updateComplete
+    expect(el.matches(':state(user-invalid)'), 'user-invalid persists after a value is picked').toBe(false)
+  })
+})

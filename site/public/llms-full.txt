@@ -2275,7 +2275,9 @@ in form submission through `ElementInternals`, and paints its rail and thumb ent
 ## Value + form participation
 
 `value` is a reflected numeric prop, clamped to `[min, max]` and snapped to `step` on every set. The form
-submission value is `String(normalised_value)`. `required` + `value=0` may raise a `valueMissing` constraint.
+submission value is `String(normalised_value)`. `required` is inherited but raises no validity constraint —
+a range's value is always a number (never "missing"), matching native `<input type="range">`, which the
+HTML spec exempts from `required` entirely.
 
 ## Anatomy
 
@@ -3764,3 +3766,23 @@ recommended; the ADR's own Status marker is untouched by this wave.
 - **TKT-0006 planned** (the consumer-side sibling): the composition suite — `agent-ui-catalog` +
   `agent-ui-composition-patterns` knowledge maps and `agent-ui-compose-{ui,layout,app}`
   procedures over the shipped fleet + app-shell + router + theming.
+
+## 2026-07-10 — the debt sweep: G7 labelling/error-leg completion · parts drift gate · the live-test flake retired
+
+- **The G7 follow-ups close** (recorded open since 2026-07-01): `ui-calendar` gains the
+  ADR-0051 labelling merge (a field's label merges into the grid's `aria-labelledby` beside
+  the month title — proven by a real cross-engine accessible-name read-back), and the
+  `formUserInvalid` user-invalid leg is now FLEET-WIDE: checkbox (whose descriptor had
+  promised `valueMissing` its code never computed — drift repaired), radio-group (+
+  segmented-control, with the cross-boundary child-repaint CSS), select (blur-only by its own
+  no-`change` semantics, documented) and combo-box wired; switch and the sliders recorded as
+  HONEST exclusions (no constraint surface; WHATWG exempts range from `required` — slider.md's
+  phantom "required+value=0" claim corrected, the ADR-0085 precedent).
+- **Descriptor parts[] can no longer silently drop**: hand-built `text-field-doc.ts` was
+  eating its 10 parts — fixed, and `site-coverage.test.ts` gains the enumeration gate
+  (every descriptor with parts must have a page that renders them; bite-verified
+  red-on-revert in review).
+- **The a2a live-test load flake is retired**: the fixed 50ms setup budget raced the
+  saturated vite transform server in full suites (33% failure reproduced under load); the
+  test now polls the observable it needs (0/15 failures under higher load; assertions
+  unchanged).

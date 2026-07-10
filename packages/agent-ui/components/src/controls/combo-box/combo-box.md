@@ -94,7 +94,8 @@ parts:
   - name: empty
     description: The control-created `<div data-part="empty" role="presentation">No matches</div>`, appended LAST inside the listbox (2026-07-07 fix). Hidden by default; `#syncEmptyState()` reveals it exactly when zero `[role=option]` children are visible (the filter matched nothing, or no options were provided at all). Not an option — never navigable, never commit-able. Root-cause fix for a filtered-to-zero panel collapsing to a stray border-only line (no min-block-size, no content): this row gives the panel real, deliberate height and an explicit "no matches" affordance instead.
 
-customStates: []       # no :state() hooks — open/closed state lives on the panel's popover top-layer presence; the active-descendant highlight is [data-active] (a CSS attribute selector, not a custom state)
+customStates:           # open/closed state lives on the panel's popover top-layer presence; the active-descendant highlight is [data-active] (a CSS attribute selector, not a custom state)
+  - user-invalid        # ADR-0051 — set only AFTER the first interaction (blur/change) via the trackUserInvalid controller, gating the editor's danger border
 
 face:
   formAssociated: true   # FACE form-associated control — value + validity participate via ElementInternals (ADR-0013)
@@ -104,6 +105,7 @@ face:
 aria:
   role: none             # the host has no explicit role; the editor child carries role="combobox" (FACE pattern — ARIA via the part, not the host)
   roleSource: editor-part  # role="combobox" is set on [data-part=editor] via TS, never on the host
+  invalidState: aria-invalid on the editor (the role-carrying part), mirrors :state(user-invalid) (ADR-0051)
   labelSource: ADR-0085 drift correction (this clause previously described a `label` slot / `<label for>` path the code never had) — bare usage = the `label` prop → the editor aria-label (text-field ADR-0014 parity, editor text stays the distinct value); fielded usage (inside ui-field) = the field's visible label → the editor aria-labelledby (applyFieldLabelling), the bare aria-label yields.
   activedescendant: the editor's aria-activedescendant attribute points to the id of the [data-active] option (the highlighted option); never moves DOM focus
 

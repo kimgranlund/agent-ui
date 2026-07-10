@@ -43,8 +43,8 @@ attributes:            # attributes-as-API — mirrors UISliderElement.props (ra
     reflect: true      # reflects; effectiveDisabled = own || fieldset/form-disabled channel
   - name: required
     type: boolean
-    default: false     # String(false) = 'false'; reflects; a required slider value of 0 may raise valueMissing
-    reflect: true      # reflects; constraint validation participation via ElementInternals
+    default: false     # String(false) = 'false'; reflects (inherited from UIFormElement.formProps)
+    reflect: true      # reflects; INFORMATIONAL ONLY — raises no constraint (see face.validity below; matches native <input type=range>, which the HTML spec exempts from `required`)
 
 properties:            # IDL beyond attributes-as-API (no static-props row)
   - name: form
@@ -77,7 +77,7 @@ customStates: []       # ui-slider does not arm any :state() hooks (no binary ch
 face:
   formAssociated: true   # FACE form-associated control — value participates via ElementInternals (ADR-0013)
   value: value           # submitted as String(normalised value) (formValue() in UIRangeElement)
-  validity: valueMissing # required slider with value=0 may raise valueMissing (UIFormElement constraint)
+  validity: '' # UIRangeElement raises no constraint (formValidity() is the UIFormElement default, always-valid); a range's value is never "missing" — it is always a number in [min,max] (native <input type=range> parity, whose spec explicitly exempts `required`). DRIFT CORRECTION 2026-07-10: a prior revision of this fence claimed "required slider with value=0 may raise valueMissing", a contract that was never implemented and does not match native range-input semantics — corrected, not implemented (see the CHANGELOG/ADR trail for the G7 labelling/error-leg sweep this was caught in).
 
 aria:
   role: slider         # set via ElementInternals.role = 'slider' in UIRangeElement.connected(); never a host attribute
@@ -129,7 +129,9 @@ in form submission through `ElementInternals`, and paints its rail and thumb ent
 ## Value + form participation
 
 `value` is a reflected numeric prop, clamped to `[min, max]` and snapped to `step` on every set. The form
-submission value is `String(normalised_value)`. `required` + `value=0` may raise a `valueMissing` constraint.
+submission value is `String(normalised_value)`. `required` is inherited but raises no validity constraint —
+a range's value is always a number (never "missing"), matching native `<input type="range">`, which the
+HTML spec exempts from `required` entirely.
 
 ## Anatomy
 

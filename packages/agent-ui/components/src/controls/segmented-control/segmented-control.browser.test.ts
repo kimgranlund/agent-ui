@@ -354,3 +354,37 @@ describe('ui-segmented-control — real roving per orientation (both engines)', 
     expect((segments[1] as unknown as { checked: boolean }).checked).toBe(true)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [8] user-invalid leg (ADR-0051) — inherited unchanged from UIRadioGroupElement
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+const REQUIRED_HORIZONTAL = `
+  <ui-segmented-control required>
+    <ui-segment value="a">One</ui-segment>
+    <ui-segment value="b">Two</ui-segment>
+    <ui-segment value="c">Three</ui-segment>
+  </ui-segmented-control>
+`
+
+describe('ui-segmented-control — user-invalid leg (ADR-0051, inherited)', () => {
+  it('a required, unselected control arms :state(user-invalid) + repaints its OWN track border, only AFTER focus+blur', async () => {
+    const { group, segments } = mount(REQUIRED_HORIZONTAL)
+
+    expect(group.matches(':state(user-invalid)'), 'user-invalid must not flash before any interaction').toBe(false)
+    const idleBorder = getComputedStyle(group).borderColor
+
+    ;(segments[0] as HTMLElement).focus()
+    ;(segments[0] as HTMLElement).blur()
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    expect(group.matches(':state(user-invalid)'), ':state(user-invalid) was not armed on the control after a segment blur').toBe(true)
+    const invalidBorder = getComputedStyle(group).borderColor
+    expect(invalidBorder, "the control's OWN track border-color did not repaint under :state(user-invalid)").not.toBe(idleBorder)
+
+    // RECOVERY: selecting a segment clears the constraint.
+    await userEvent.click(segments[0]!)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    expect(group.matches(':state(user-invalid)'), 'user-invalid persists after a segment is selected').toBe(false)
+  })
+})

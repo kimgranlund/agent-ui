@@ -15,7 +15,9 @@
 
 import { signal } from '../../reactive/index.ts'
 import { type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+import type { ValidityResult } from '../../dom/index.ts'
 import { UIIndicatorElement } from '../_base/indicator-element.ts'
+import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
 
 // `size` is inherited from UIIndicatorElement.props — the spread brings checked/value/size/name/disabled/
 // required. No local additions. Each control owns its own `static props` (the UIFormElement.formProps
@@ -43,9 +45,42 @@ export class UICheckboxElement extends UIIndicatorElement {
     this.#indeterminate.value = v
   }
 
+  // The user-invalid TIMING controller (ADR-0051), created per connection (re-arms on reconnect;
+  // released on disconnect) — the text-field/select precedent.
+  #userInvalid: TrackUserInvalidController | null = null
+
+  /**
+   * LLD-C1 extension: `required && !checked` → `valueMissing` (native `<input type=checkbox required>`
+   * parity — unlike ui-switch, whose required-ON semantics the fleet deliberately declined as an
+   * edge case, checkbox.md has always documented this constraint; this is the code catching up to
+   * that contract). `indeterminate` does not affect validity — a required checkbox is satisfied
+   * only by `checked=true`, matching the platform.
+   */
+  protected override formValidity(): ValidityResult {
+    if (this.required && !this.checked) {
+      return { valid: false, flags: { valueMissing: true }, message: 'Please check this box if you want to proceed.' }
+    }
+    return { valid: true }
+  }
+
   protected override connected(): void {
     super.connected() // base wires: role · tabbable · Enter-guard · pressActivation · click-toggle ·
     //                             checked effect (ariaChecked="true"/"false", :state(checked)) · ariaDisabled
+
+    // ADR-0051 — the user-invalid TIMING controller: gates the danger treatment until the first
+    // blur/change (host itself is the focusable element — the tabbable trait's tabindex rides the
+    // host directly, no internal part). Reflects :state(user-invalid) + internals.ariaInvalid.
+    const invalidController = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    this.#userInvalid = invalidController
+    this.effect(() => {
+      if (invalidController.userInvalid()) {
+        this.internals.states?.add('user-invalid')
+        this.internals.ariaInvalid = 'true'
+      } else {
+        this.internals.states?.delete('user-invalid')
+        this.internals.ariaInvalid = null
+      }
+    })
 
     // Supplemental indeterminate effect — runs AFTER the base's checked effect (registered second).
     // Reads BOTH #indeterminate AND checked so it tracks both signals and wins on any change to either.
@@ -81,6 +116,27 @@ export class UICheckboxElement extends UIIndicatorElement {
    */
   protected override beforeToggle(): void {
     if (this.#indeterminate.value) this.#indeterminate.value = false
+  }
+
+  /**
+   * A reset must not leave a required-unchecked checkbox showing `:state(user-invalid)` until the
+   * user re-interacts (the text-field `formReset()` precedent) — `super.formReset()` restores
+   * `checked` ← `defaultChecked` (the base's own reset leg) first.
+   */
+  protected override formReset(): void {
+    super.formReset()
+    this.#userInvalid?.reset()
+  }
+
+  protected override disconnected(): void {
+    this.#userInvalid?.release() // idempotent — the listeners already die with the connection scope
+    this.#userInvalid = null
+  }
+
+  /** Feeds `FormConnectDetail.userInvalid` (ADR-0050) — the `trackUserInvalid` tracker IS the one
+   *  timing source; this override just exposes its gate. */
+  protected override formUserInvalid(): boolean {
+    return this.#userInvalid?.userInvalid() ?? false
   }
 }
 

@@ -71,6 +71,7 @@ parts: []              # light-DOM host-as-flex; no parts created from TS (box a
 customStates:          # :state() hooks the checkbox.css keyed off — set via internals.states in UIIndicatorElement
   - checked            # armed when checked=true (and the control is NOT indeterminate)
   - indeterminate      # armed when indeterminate=true (overrides checked for ariaChecked="mixed")
+  - user-invalid       # ADR-0051 — set only AFTER the first interaction (blur/change) via the trackUserInvalid controller, gating the danger border
 
 face:
   formAssociated: true   # FACE form-associated control — value + validity participate via ElementInternals (ADR-0013)
@@ -82,6 +83,7 @@ aria:
   roleSource: internals
   labelSource: slotted textContent / aria-label  # the label slot is the accessible name; bare-box usage needs aria-label
   checkedState: internals.ariaChecked — true / false / mixed  # 'mixed' when indeterminate, overrides checked
+  invalidState: internals.ariaInvalid — 'true' / null, mirrors :state(user-invalid) (ADR-0051)
 
 keyboard:
   - keys: Space

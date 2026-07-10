@@ -62,7 +62,8 @@ slots:
 
 parts: []              # light-DOM container — no shadow parts
 
-customStates: []       # no custom states on the control; state is on the ui-segment children (checked / ready)
+customStates:           # checked/ready live on the ui-segment children; user-invalid is the control's OWN (inherited from UIRadioGroupElement, ADR-0051)
+  - user-invalid        # ADR-0051 — set only AFTER the first interaction (blur/change), via the trackUserInvalid controller UIRadioGroupElement.connected() wires; this control owns its own track border directly (unlike ui-radio-group, which has no visual surface of its own)
 
 face:
   formAssociated: true   # a FACE form-associated container — the control owns the form value + validity (ADR-0013, inherited from UIRadioGroupElement)
@@ -74,6 +75,7 @@ aria:
   roleSource: internals
   labelSource: aria-label / aria-labelledby  # the control's accessible name is provided by the page author
   disabledState: effectiveDisabled (own disabled || form-disabled channel; ADR-0013)
+  invalidState: internals.ariaInvalid — 'true' / null, mirrors :state(user-invalid) (ADR-0051, inherited)
 
 keyboard:              # the roving axis is PER-ORIENTATION (the resolved `orientation`) — identical mechanism to ui-radio-group, defaulting horizontal here instead of vertical
   - keys: ArrowRight / ArrowLeft

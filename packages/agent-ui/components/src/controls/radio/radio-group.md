@@ -61,7 +61,8 @@ slots:
 
 parts: []              # light-DOM container — no shadow parts
 
-customStates: []       # no custom states on the group; state is on the ui-radio children (checked / ready)
+customStates:           # checked/ready live on the ui-radio children; user-invalid is the group's OWN — it is the constraint owner
+  - user-invalid        # ADR-0051 — set only AFTER the first interaction (blur/change) via the trackUserInvalid controller; the group has no visual surface of its own, so the CSS leg reaches into each ui-radio child's ::before border
 
 face:
   formAssociated: true   # a FACE form-associated container — the GROUP owns the form value + validity (ADR-0013)
@@ -73,6 +74,7 @@ aria:
   roleSource: internals
   labelSource: aria-label / aria-labelledby  # the group's accessible name is provided by the page author
   disabledState: effectiveDisabled (own disabled || form-disabled channel; ADR-0013)
+  invalidState: internals.ariaInvalid — 'true' / null, mirrors :state(user-invalid) (ADR-0051)
 
 keyboard:              # the roving axis is PER-ORIENTATION (the resolved `orientation`); a pre-ADR-0086 table
                        # once falsely claimed ArrowLeft/Right navigated under the shipped vertical roving,

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { userEvent } from 'vitest/browser'
 
 // S1 browser smoke — ui-checkbox (decomp S1 · ADR-0041 · ADR-0042).
 // Probes (AC1–AC4 from ADR-0041): the box = --ui-compact-{size} per [size]×[scale]; the checkmark
@@ -98,6 +99,38 @@ describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
     el.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(el.getAttribute('checked')).toBeNull() // one toggle: true → false
     expect(cb.checked).toBe(false)
+    el.remove()
+  })
+})
+
+// ADR-0051 — the user-invalid leg: jsdom has no CustomStateSet, so :state(user-invalid) matching and the
+// real border-color repaint can only be proven here (the text-field-states.browser.test.ts precedent).
+describe('ui-checkbox — user-invalid leg (ADR-0051)', () => {
+  it('a required, unchecked checkbox arms :state(user-invalid) + repaints the ::before border only AFTER focus+blur', async () => {
+    const el = document.createElement('ui-checkbox')
+    el.setAttribute('required', '')
+    document.body.append(el)
+
+    // BEFORE interaction: no first paint flash (the trackUserInvalid timing suppression).
+    expect(el.matches(':state(user-invalid)'), 'user-invalid must not flash before any interaction').toBe(false)
+    const idleBorder = getComputedStyle(el, '::before').borderColor
+
+    // Focus + blur WITHOUT a click (a click would toggle checked, curing the valueMissing state
+    // this probe needs to stay armed) — real DOM focus()/blur() dispatch real focus/blur events in a
+    // real engine (unlike jsdom), so this exercises the same capture-phase 'blur' listener a real user
+    // tabbing past the checkbox would.
+    el.focus()
+    el.blur()
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))) // let the effect flush
+
+    expect(el.matches(':state(user-invalid)'), ':state(user-invalid) was not armed on blur').toBe(true)
+    const invalidBorder = getComputedStyle(el, '::before').borderColor
+    expect(invalidBorder, 'the ::before border-color did not repaint under :state(user-invalid)').not.toBe(idleBorder)
+
+    // RECOVERY: checking the box clears the constraint; the danger border is gated off again.
+    await userEvent.click(el)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    expect(el.matches(':state(user-invalid)'), 'user-invalid persists after the box is checked').toBe(false)
     el.remove()
   })
 })

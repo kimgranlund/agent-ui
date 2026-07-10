@@ -26,6 +26,8 @@
 //     (bare usage — the editor has a DISTINCT accessible value, so aria-label does not erase it, unlike
 //     ui-select's button trigger); yields to `applyFieldLabelling`'s aria-labelledby the moment the
 //     control associates with a `ui-field`.
+//   - User-invalid (ADR-0051, text-field precedent): a `trackUserInvalid` controller gates the danger
+//     treatment until the first blur/change, reflecting :state(user-invalid) + aria-invalid on the editor.
 //
 // Layer: controls → dom + traits (inward-only ✓).
 
@@ -33,6 +35,7 @@ import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIFormElement, type FormValue, type ValidityResult, type FieldLabelling } from '../../dom/form.ts'
 import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
 import { scrollFade } from '../../traits/scroll-fade.ts'
+import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
 
 // ── Module-level stable-id counters ─────────────────────────────────────────────────────────────
 
@@ -106,6 +109,10 @@ export class UIComboBoxElement extends UIFormElement {
   #defaultValue = ''
   #defaultCaptured = false
 
+  // The user-invalid TIMING controller (ADR-0051), created per connection (re-arms on reconnect;
+  // released on disconnect) — the text-field precedent.
+  #userInvalid: TrackUserInvalidController | null = null
+
   // ── Override `focus()` to forward to the editor part ────────────────────────────────────────
 
   override focus(options?: FocusOptions): void {
@@ -123,6 +130,23 @@ export class UIComboBoxElement extends UIFormElement {
     }
 
     const { editor, listbox } = this.#ensureParts()
+
+    // ── ADR-0051 — the user-invalid TIMING controller ────────────────────────────────────────
+    // `blur` (capture) + `change` (emitted by #commitOption/#commitFreeText) — the text-field
+    // precedent. Reflects :state(user-invalid) + aria-invalid on the editor (the role-carrying
+    // part — role='combobox' rides the part, not internals.role, so the base's guarded default
+    // never fires).
+    const invalidController = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    this.#userInvalid = invalidController
+    this.effect(() => {
+      if (invalidController.userInvalid()) {
+        this.internals.states?.add('user-invalid')
+        editor.setAttribute('aria-invalid', 'true')
+      } else {
+        this.internals.states?.delete('user-invalid')
+        editor.removeAttribute('aria-invalid')
+      }
+    })
 
     // ── Wire the overlay controller ──────────────────────────────────────────────────────────
     // focusOnOpen: false is the CRITICAL combo-box difference: focus stays on the editor.
@@ -585,6 +609,20 @@ export class UIComboBoxElement extends UIFormElement {
     this.value = v
     this.open = false
     this.#setActive(-1)
+    // ADR-0051 — a reset must not leave a required-empty combo-box showing :state(user-invalid)
+    // until the user re-interacts (the text-field formReset() precedent).
+    this.#userInvalid?.reset()
+  }
+
+  protected override disconnected(): void {
+    this.#userInvalid?.release() // idempotent — the listeners already die with the connection scope
+    this.#userInvalid = null
+  }
+
+  /** Feeds `FormConnectDetail.userInvalid` (ADR-0050) — the `trackUserInvalid` tracker IS the one
+   *  timing source; this override just exposes its gate. */
+  protected override formUserInvalid(): boolean {
+    return this.#userInvalid?.userInvalid() ?? false
   }
 
   /** Restore value after navigation / autofill. */
@@ -606,10 +644,11 @@ export class UIComboBoxElement extends UIFormElement {
    * when present, removed when `null` (matching text-field exactly).
    *
    * `aria-describedby` is ALSO this method's exclusive concern in both directions here — UNLIKE
-   * text-field, this control has no internal validity-message node/effect competing for the attribute
-   * (combo-box carries no `trackUserInvalid` composition today), so there is no dual-writer race to
-   * avoid by leaving it untouched on dissociation; it is written from `[refs.description, refs.error]`
-   * when fielded and cleared when not, in both branches below.
+   * text-field, this control has no internal validity-MESSAGE node/effect competing for the
+   * attribute (the ADR-0051 user-invalid leg below writes only `:state(user-invalid)` +
+   * `aria-invalid`, never `aria-describedby`), so there is no dual-writer race to avoid by leaving
+   * it untouched on dissociation; it is written from `[refs.description, refs.error]` when fielded
+   * and cleared when not, in both branches below.
    *
    * Guards a not-yet-created editor (the LLD-C2 override contract) — cannot happen in practice
    * (`#ensureParts()` runs synchronously at the top of `connected()`, before the base's forwarding effect

@@ -95,7 +95,8 @@ parts:
   - name: group-label
     description: A control-created `<div data-part="group-label">` prepended inside each author `<div role="group" label="…">` (optgroup parity). Renders the group's `label` (or `aria-label`) as a non-interactive, muted header; the group's aria-labelledby points to it. NOT a [role=option] — rovingFocus + selectionCommit skip it, so it never receives focus or commits.
 
-customStates: []        # no :state() hooks — open/closed is the panel's popover top-layer presence, not a custom state
+customStates:           # open/closed is the panel's popover top-layer presence, not a custom state
+  - user-invalid        # ADR-0051 — set only AFTER the trigger has been focused and blurred (selectionCommit never emits a native `change` event, so blur is the sole interaction signal here), via the trackUserInvalid controller, gating the trigger's danger border
 
 face:
   formAssociated: true  # form-associated FACE control — submits the selected option key under `name`
@@ -106,6 +107,7 @@ face:
 aria:
   role: none                # the host has no explicit ARIA role (a logical select wrapper)
   roleSource: none          # role is on the trigger (aria-haspopup) and the panel (role=listbox attribute)
+  invalidState: aria-invalid on the trigger (the role-carrying part), mirrors :state(user-invalid) (ADR-0051)
   labelSource: The trigger's aria-labelledby CONCATENATES a name source with the visible [data-part=label] value span (never aria-label, which would erase the value on a button) — bare usage = the `label` prop via a hidden [data-part=aria-label] span + the value span; fielded usage (inside ui-field) = the field's visible label + the value span (merge, not clobber); no label and no field = content-only (back-compat, today's default).
 
 keyboard:

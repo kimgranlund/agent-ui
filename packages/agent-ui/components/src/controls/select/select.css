@@ -44,6 +44,11 @@
   --ui-select-border: var(--md-sys-color-neutral);
   --ui-select-border-hover: var(--md-sys-color-neutral-high);
   --ui-select-border-focus: transparent;    /* transparent holds the geometry — no layout shift */
+  /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction (the
+     trackUserInvalid controller owns that timing; select.ts toggles :state(user-invalid)). The
+     text-field precedent, on the trigger's border channel. */
+  --ui-select-border-invalid: var(--md-sys-color-danger);
+  --ui-select-border-invalid-hover: var(--md-sys-color-danger-high);
   --ui-select-bg: var(--md-sys-color-neutral-surface);
   --ui-select-ink: var(--md-sys-color-neutral-on-surface);
   --ui-select-placeholder-ink: var(--md-sys-color-neutral-on-surface-variant);
@@ -239,6 +244,14 @@
     border-color: var(--ui-select-border-focus);
     outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. */
+  :scope:state(user-invalid) > [data-part='trigger'] {
+    border-color: var(--ui-select-border-invalid);
+  }
+  :scope:state(user-invalid) > [data-part='trigger']:hover {
+    border-color: var(--ui-select-border-invalid-hover);
   }
 
   /* Disabled trigger: pointer-inert; :hover/:active become inert (host attribute reflects). */

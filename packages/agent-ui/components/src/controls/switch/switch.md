@@ -37,7 +37,7 @@ attributes:              # attributes-as-API — mirrors indicator-element.ts `i
   - name: required
     type: boolean
     default: false
-    reflect: true        # reflects to a `required` attribute; drives valueMissing validity verdict
+    reflect: true        # reflects to a `required` attribute; INFORMATIONAL only — the switch raises no constraint (see face.validity: '' below; required-ON semantics deliberately declined, checkbox.ts's LLD-C1 note)
 
 properties: []           # no manual accessors beyond the attributes-as-API
 

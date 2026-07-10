@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from 'vitest/browser'
+import { server, cdp, userEvent, page } from 'vitest/browser'
 import type { UICalendarElement } from './calendar.ts'
 
 // Wave-5B browser smoke — ui-calendar (decomp 5B-1 · ADR-0048).
@@ -1228,5 +1228,69 @@ describe('ui-calendar — ADR-0105 forced-colors (wide track, Chromium via CDP; 
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }
+  })
+})
+
+// ── ADR-0051 — the field-labelling MERGE (both engines) ──────────────────────────────────────────
+// jsdom cannot compute an accessible name at all — the read-back that the grid's aria-labelledby
+// merges the field's label WITH the month title (never clobbers it) is only provable here.
+describe('ui-calendar — field-labelling seam MERGES the field label with the month title (ADR-0051, both engines)', () => {
+  it('bare usage: the grid names itself from the month title alone; a setFieldLabelling association MERGES a field label in front of it, never clobbering', async () => {
+    const { el } = mount('<ui-calendar value="2026-07-10"></ui-calendar>')
+    await el.updateComplete
+    const grid = el.querySelector<HTMLElement>('[data-part="grid"]')!
+
+    // Bare: content-only name = the month/year title.
+    const bareNamed = page.getByRole('grid', { name: 'July 2026', exact: true }).query()
+    expect(bareNamed, `${server.browser}: the bare grid's accessible name did not compute to "July 2026"`).not.toBeNull()
+
+    // Associate — the ADR-0051 public seam a real ui-field calls.
+    const fieldLabel = document.createElement('div')
+    fieldLabel.id = 'ext-field-label-cal-1'
+    fieldLabel.textContent = 'Start date'
+    document.body.append(fieldLabel)
+    mounted.push(fieldLabel)
+
+    el.setFieldLabelling({ label: fieldLabel, description: null, error: null })
+    await el.updateComplete
+
+    // MERGED, not clobbered: the grid's name is "Start date July 2026" — the field label AND the
+    // grid's own month/year context, in that order (aria-labelledby = "<field-label-id> <title-id>").
+    const mergedNamed = page.getByRole('grid', { name: 'Start date July 2026', exact: true }).query()
+    expect(mergedNamed, `${server.browser}: the merged (fielded) accessible name did not compute to "Start date July 2026"`).not.toBeNull()
+    expect(grid.getAttribute('aria-labelledby')?.split(' ').length, 'aria-labelledby must reference exactly two ids (field label + title)').toBe(2)
+
+    // Dissociation reverts to the bare, content-only name.
+    el.setFieldLabelling(null)
+    await el.updateComplete
+    const revertedNamed = page.getByRole('grid', { name: 'July 2026', exact: true }).query()
+    expect(revertedNamed, `${server.browser}: dissociation did not revert to the bare "July 2026" name`).not.toBeNull()
+  })
+})
+
+// ── user-invalid leg (ADR-0051) — jsdom has no CustomStateSet, so :state(user-invalid) matching + the
+// real panel border repaint can only be proven here (the text-field-states.browser.test.ts precedent).
+describe('ui-calendar — user-invalid leg (ADR-0051)', () => {
+  it('a required, empty calendar arms :state(user-invalid) + repaints the panel border, only AFTER focus+blur', async () => {
+    const { el } = mount('<ui-calendar required></ui-calendar>')
+    await el.updateComplete
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    const focusCell = el.querySelector<HTMLElement>('[tabindex="0"]')!
+
+    expect(el.matches(':state(user-invalid)'), 'user-invalid must not flash before any interaction').toBe(false)
+    const idleBorder = getComputedStyle(panel).borderColor
+
+    focusCell.focus()
+    focusCell.blur()
+    await el.updateComplete
+
+    expect(el.matches(':state(user-invalid)'), ':state(user-invalid) was not armed on a gridcell blur (capture-phase ancestor listener)').toBe(true)
+    const invalidBorder = getComputedStyle(panel).borderColor
+    expect(invalidBorder, "the panel's border-color did not repaint under :state(user-invalid)").not.toBe(idleBorder)
+
+    // RECOVERY: committing a date clears the constraint.
+    el.value = '2026-07-10'
+    await el.updateComplete
+    expect(el.matches(':state(user-invalid)'), 'user-invalid persists after a date is committed').toBe(false)
   })
 })

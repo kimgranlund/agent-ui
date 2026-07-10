@@ -9,6 +9,7 @@
 // Imports the self-defining family barrel + the foundation/component CSS so tokens resolve in the real engine.
 
 import { describe, it, expect, afterEach } from 'vitest'
+import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import type { UIRadioGroupElement } from '@agent-ui/components/components'
@@ -105,5 +106,32 @@ describe('ui-radio-group browser smoke — component-owned layout (ADR-0103)', (
     const rect2 = r2.getBoundingClientRect()
     expect(px(getComputedStyle(el).rowGap)).toBe(0)
     expect(rect2.top - rect1.bottom, 'a zeroed gap must collapse the visible separation to ~0').toBeLessThan(1)
+  })
+})
+
+// ADR-0051 — the user-invalid leg. The group carries no visual surface of its own (the file header) —
+// the danger repaint reaches into each ui-radio CHILD's own ::before ring, so this proof focuses/blurs a
+// RADIO (the group's blur listener is capture-phase, catching a descendant's blur) and reads the CHILD's
+// computed ::before border. jsdom has no CustomStateSet, so :state(user-invalid) matching is browser-only.
+describe('ui-radio-group — user-invalid leg (ADR-0051)', () => {
+  it('a required, unselected group arms :state(user-invalid) on the GROUP + repaints each ui-radio child\'s ::before border, only AFTER focus+blur', async () => {
+    const el = mount(group({ required: '' }))
+    const [r1] = [...el.children] as HTMLElement[]
+
+    expect(el.matches(':state(user-invalid)'), 'user-invalid must not flash before any interaction').toBe(false)
+    const idleBorder = getComputedStyle(r1!, '::before').borderColor
+
+    r1!.focus()
+    r1!.blur()
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    expect(el.matches(':state(user-invalid)'), ':state(user-invalid) was not armed on the group after a child blur').toBe(true)
+    const invalidBorder = getComputedStyle(r1!, '::before').borderColor
+    expect(invalidBorder, "a ui-radio child's ::before border-color did not repaint under the group's :state(user-invalid)").not.toBe(idleBorder)
+
+    // RECOVERY: selecting a radio clears the constraint.
+    await userEvent.click(r1!)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    expect(el.matches(':state(user-invalid)'), 'user-invalid persists after a radio is selected').toBe(false)
   })
 })

@@ -64,6 +64,7 @@ import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
 import { rovingFocus } from '../../traits/roving-focus.ts'
 import { selectionCommit } from '../../traits/selection-commit.ts'
 import { scrollFade } from '../../traits/scroll-fade.ts'
+import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
 import { setIcon } from '@agent-ui/icons'
 
 // ── Module-level stable-id counter (one per listbox panel, never reused across instances) ──────
@@ -116,6 +117,10 @@ export class UISelectElement extends UIFormElement {
   #labelSpan: HTMLElement | null = null
   #ariaLabelSpan: HTMLElement | null = null
 
+  // The user-invalid TIMING controller (ADR-0051), created per connection (re-arms on reconnect;
+  // released on disconnect) — the text-field precedent.
+  #userInvalid: TrackUserInvalidController | null = null
+
   /**
    * Protected overlay handle — accessible to test probes (C10 idempotent-cleanup DoD).
    * Replaced on each reconnect (connected() re-runs); the old handle's cleanup fires via the
@@ -140,6 +145,20 @@ export class UISelectElement extends UIFormElement {
   protected override formReset(): void {
     // Restore to the default (nothing selected) on form reset.
     this.value = ''
+    // ADR-0051 — a reset must not leave a required-empty select showing :state(user-invalid) until
+    // the user re-interacts (the text-field formReset() precedent).
+    this.#userInvalid?.reset()
+  }
+
+  protected override disconnected(): void {
+    this.#userInvalid?.release() // idempotent — the listeners already die with the connection scope
+    this.#userInvalid = null
+  }
+
+  /** Feeds `FormConnectDetail.userInvalid` (ADR-0050) — the `trackUserInvalid` tracker IS the one
+   *  timing source; this override just exposes its gate. */
+  protected override formUserInvalid(): boolean {
+    return this.#userInvalid?.userInvalid() ?? false
   }
 
   // ── ADR-0085 — the field-labelling seam wire (the button-vs-editor MERGE override) ──────────────
@@ -188,6 +207,24 @@ export class UISelectElement extends UIFormElement {
 
   protected override connected(): void {
     const { trigger, listbox, labelSpan, ariaLabelSpan } = this.#ensureParts()
+
+    // ADR-0051 — the user-invalid TIMING controller. `select` never emits a native `change` event
+    // (selectionCommit only emits `select` — grep-provable), so BLUR is the sole interaction signal
+    // here: the danger treatment arms once the trigger has been visited and left, the same
+    // "first blur or change" contract every other control honours (this one just has one of the two
+    // triggers). Reflects :state(user-invalid) + aria-invalid on the trigger (the role-carrying part
+    // — the host carries no internals.role, so the base's guarded default never fires).
+    const invalidController = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    this.#userInvalid = invalidController
+    this.effect(() => {
+      if (invalidController.userInvalid()) {
+        this.internals.states?.add('user-invalid')
+        trigger.setAttribute('aria-invalid', 'true')
+      } else {
+        this.internals.states?.delete('user-invalid')
+        trigger.removeAttribute('aria-invalid')
+      }
+    })
 
     // Wire the overlay controller (LLD-C1..C4) — proves overlay + listbox together (ADR-0043 S4).
     // placement='bottom-start' matches a standard select dropdown. auto=true → light-dismiss.

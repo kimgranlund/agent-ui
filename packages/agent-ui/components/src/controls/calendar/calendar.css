@@ -105,6 +105,11 @@
      .claude/docs/adr/0093-calendar-range-selection.md for the full measurement). */
   --ui-calendar-range-fill: var(--md-sys-color-primary-surface-highest, #dde6f4);
   --ui-calendar-range-ink:  var(--md-sys-color-primary-on-surface, #1c1c1e);
+
+  /* ── user-invalid (ADR-0051) — the danger border repoint, the text-field precedent. Appears only
+     AFTER the first interaction (the trackUserInvalid controller owns that timing; calendar.ts
+     toggles :state(user-invalid)). */
+  --ui-calendar-border-invalid: var(--md-sys-color-danger);
 }
 
 /* [size] repoints cell size onto the §1-ramp height entries (ADR-0038: explicit per-[scale] table,
@@ -155,6 +160,14 @@
     border: 1px solid var(--ui-calendar-panel-outline);
     border-radius: var(--ui-calendar-panel-radius);
     box-sizing: border-box;
+  }
+
+  /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction (the
+     trackUserInvalid controller owns that timing; calendar.ts toggles :state(user-invalid) on the
+     host). The panel is the calendar's one bordered surface — the text-field precedent applied to
+     the Container/surface-class part instead of a Control-class frame. */
+  :scope:state(user-invalid) [data-part='panel'] {
+    border-color: var(--ui-calendar-border-invalid);
   }
 
   /* ── Nav header (<header data-part="nav">) ──────────────────────────────────────────────

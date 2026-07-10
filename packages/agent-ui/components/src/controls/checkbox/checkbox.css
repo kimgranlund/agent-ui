@@ -32,6 +32,11 @@
 
   /* Label gap — the rhythm between the box and the optional label text (density-bearing, via --ui-gap-md). */
   --ui-checkbox-gap: var(--ui-gap-md);
+
+  /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction (the
+     trackUserInvalid controller owns that timing; checkbox.ts toggles :state(user-invalid)). The
+     text-field precedent, applied to the box's border channel. */
+  --ui-checkbox-border-invalid: var(--md-sys-color-danger);
 }
 
 /* [size] → widget-box tier (ADR-0041 clause 2: sm/md/lg at the default ui-md scale = 14/16/18 px). */
@@ -94,6 +99,15 @@
   :scope:state(indeterminate)::before {
     background-color: var(--ui-checkbox-bg-checked);
     border-color: var(--ui-checkbox-border-checked);
+  }
+
+  /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. Cannot
+     co-occur with :state(checked) (valueMissing only fires when unchecked) — but it CAN co-occur with
+     :state(indeterminate) (required + indeterminate + unchecked IS valueMissing). Equal specificity
+     (0,2,1) with the indeterminate rule above: SOURCE ORDER is load-bearing — this rule must stay
+     authored after it so the danger border wins on the co-occurring state. */
+  :scope:state(user-invalid)::before {
+    border-color: var(--ui-checkbox-border-invalid);
   }
 
   /* Glyph base — absolutely positioned at the inline-start of the host, centered in the block direction.
