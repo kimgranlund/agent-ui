@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-10 |
 > | **Proposed by** | planner (design seat — the design-system-surfaces intake, [TKT-0007](../tickets/tkt-0007-design-system-surfaces.md); Kim ruled the tier at intake, fork Q3 2026-07-10: *"Extend agent-app-surfaces (M4)"*) |
-> | **Ratified by** | *(fork passes COMPLETE 2026-07-10: F1–F3 answered by Kim at the ratification fork pass — F2 as recommended; **F1 and F3 DIVERGE from the recommendations** (multi-pane now; schema framework IN — see §Forks; clauses 2/4 amended pre-ratification to match, the original recommendation text preserved in the fork rows). Status flip awaits Kim's explicit word.)* |
+> | **Ratified by** | Kim, 2026-07-10 — the ratification fork passes (F2 as recommended; F1 multi-pane-now and F3 schema-framework-IN diverge, clauses amended to match) + his explicit "ratify all three" |
 > | **Repairs** | [`../prd/agent-app-surfaces.prd.md`](../prd/agent-app-surfaces.prd.md) → v1.1 (adds PRD-G7/PRD-G8 + milestone M4 + scope rows — the amendment is flagged for doc-review; the ratified v1.0 decisions PRD-D1–D6 are untouched) |
 > | **Supersedes / Superseded by** | (none) — relates [ADR-0084](./0084-app-shell-narrow-reflow-collapse.md) (whose RESERVED `collapse: "toggle"` value M4 realizes) · [ADR-0082](./0082-app-shell-per-instance-isolation.md)/[ADR-0083](./0083-app-shell-region-role-decouple.md) (the shell contract M4 composes) · [ADR-0115](./0115-spa-router-v1-scope.md) (router stays catalog- and app-invisible — settings navigation wiring is consumer business) · [ADR-0040](./0040-foundation-barrel-budget-rebase.md)/[ADR-0049](./0049-family-budget-rebase-22kb.md) (the budget re-base discipline the `ui-split` addition will follow) |
 

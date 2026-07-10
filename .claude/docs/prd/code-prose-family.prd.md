@@ -1,6 +1,6 @@
 # PRD — Code + Prose Component Family (`@agent-ui/code`: highlight · markdown · diff)
 
-> Status: **proposed · v0.1 (scope intake) · Owner: agent-ui** — authored 2026-07-10 by the design seat
+> Status: **accepted · v1.0 · Owner: agent-ui** — direction RATIFIED by Kim 2026-07-10 (all ADR-0119 forks answered at the ratification pass; began life as a v0.1 scope intake, 2026-07-10) — authored 2026-07-10 by the design seat
 > at the design-system-surfaces intake ([TKT-0007](../tickets/tkt-0007-design-system-surfaces.md)).
 > Kim pre-answered the load-bearing packaging fork at intake (Q4, 2026-07-10): **a swappable pack
 > adapter on the `@agent-ui/icons` model — `@agent-ui/code` (new) → pure core + `./highlight` +

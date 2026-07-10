@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0007
-status: open
+status: done
 date: 2026-07-10
 owner:
 kind: feature
@@ -141,3 +141,15 @@ Kim weighed a `ui-tokens-*` namespace and ruled: **flat names stand** (`ui-swatc
 contract. Ramp=color / ladder=dimensions confirmed with the **vocabulary rider**: the site token
 page's "Dimensional ramps" section retitles to "Dimensional ladders" at the M1 re-host. Recorded in
 ADR-0118 §Forks F1 + Acceptance; F2–F4 remain open.
+
+### 2026-07-10 — RATIFIED: all three ADRs accepted; token surfaces sequenced first; ticket closes
+
+- Kim's explicit word ("ratify all three") after the fork passes; 0118's Status he hand-flipped
+  in-tree himself. Housekeeping applied: Status/Ratified-by cells · README index rows ·
+  ADR-0113's escape-hatch (b) gains its ANSWERED pointer + the reciprocal Extended-by-0119
+  backlink · both new PRDs → accepted v1.0 · agent-app-surfaces → v1.2 (the F1/F3 widenings) ·
+  CHANGELOG + llms-full regenerated · adr gate 33/33.
+- **Sequencing (Kim): token-surfaces M1 first** — the build-intake (decomposition → SPEC → LLD,
+  the chart-family chain) dispatches from the accepted PRD/ADR-0118; no build without his
+  separate order. The intake protocol this ticket owns is COMPLETE — M-wave work rides the
+  accepted family records from here.

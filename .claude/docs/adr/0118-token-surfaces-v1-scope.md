@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-10 |
 > | **Proposed by** | planner (design seat — the design-system-surfaces intake, [TKT-0007](../tickets/tkt-0007-design-system-surfaces.md); Kim selected the family at intake, fork Q2 2026-07-10) |
-> | **Ratified by** | *(fork passes COMPLETE 2026-07-10: F1 answered at the naming interrogation; F2–F4 answered by Kim at the ratification fork pass — ALL as recommended, see §Forks. Status flip awaits Kim's explicit word.)* |
+> | **Ratified by** | Kim, 2026-07-10 — the ratification fork passes (F1 at the naming interrogation; F2–F4 all as recommended) + his explicit "ratify all three" (Status hand-flipped by Kim in-tree) |
 > | **Repairs** | NEW [`../prd/token-surfaces.prd.md`](../prd/token-surfaces.prd.md) (authored in this same change — the owning doc whose scope §3 + goals this ADR pins) |
 > | **Supersedes / Superseded by** | (none) — relates [ADR-0107](./0107-chart-family-v1-scope.md) (the display-family intake pattern + the same-wave catalog and no-new-package clauses this reuses) · [ADR-0117](./0117-theme-provider-shipped-component.md) (the site-local → shipped-control promotion precedent) · [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) (the whole-fleet catalog gate clause 6 obeys) · [ADR-0078](./0078-ui-text-three-axis-variant-size-as.md) (the type tokens label text reads) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (every default must survive the CSS-less consumer) |
 

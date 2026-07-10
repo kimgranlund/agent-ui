@@ -1,6 +1,6 @@
 # PRD — Token-Surface Component Family (`ui-swatch` · `ui-ramp` · `ui-ladder`)
 
-> Status: **proposed · v0.1 (scope intake) · Owner: agent-ui** — authored 2026-07-10 by the design seat
+> Status: **accepted · v1.0 · Owner: agent-ui** — direction RATIFIED by Kim 2026-07-10 (all ADR-0118 forks answered at the ratification pass; began life as a v0.1 scope intake, 2026-07-10) — authored 2026-07-10 by the design seat
 > at the design-system-surfaces intake ([TKT-0007](../tickets/tkt-0007-design-system-surfaces.md));
 > Kim's family selection is on record (intake fork Q2, 2026-07-10), the contract-direction forks await
 > his pass on [ADR-0118](../adr/0118-token-surfaces-v1-scope.md). This is an INTAKE, not a build

@@ -3786,3 +3786,18 @@ recommended; the ADR's own Status marker is untouched by this wave.
   saturated vite transform server in full suites (33% failure reproduced under load); the
   test now polls the observable it needs (0/15 failures under higher load; assertions
   unchanged).
+
+## 2026-07-10 (ratifications) — ADR-0118/0119/0120 accepted: token surfaces · @agent-ui/code · app-surfaces M4
+
+- **Kim ratified all three design-system-surfaces records** (TKT-0007's fork passes, ten forks
+  answered): ADR-0118 (ui-swatch/ramp/ladder — value-first contracts, img/list semantics, M2
+  catalog rows), ADR-0119 (`@agent-ui/code`: pure core + hand-rolled ./highlight + ./markdown
+  packs, GFM tables in, hunks-first ui-diff at M2 — realizing ADR-0113's named escape hatch,
+  reciprocal backlink applied), ADR-0120 (panes + settings as app-surfaces M4).
+- **Two forks diverged from recommendation, scope widened at ratification:** `ui-split` ships
+  MULTI-PANE in v1 (two-slot-only overruled), and the settings surface gains the schema-driven
+  preferences FRAMEWORK (config-in → form-out over the form spine + a persistence seam; the
+  shell-only fence rejected). `agent-app-surfaces.prd.md` → v1.2; both new family PRDs →
+  accepted v1.0.
+- Sequencing (Kim): **token surfaces M1 first** — its build-intake (decomp → SPEC → LLD)
+  dispatched; no build without a separate order.
