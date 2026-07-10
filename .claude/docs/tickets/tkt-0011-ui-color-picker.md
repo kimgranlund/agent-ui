@@ -79,3 +79,51 @@ well COMPOSE a swatch; it never re-owns value rendering). No text-field `type` c
   behind TKT-0008/0009/0010, Kim's call on order.
 
 ## Findings
+
+- **2026-07-10 — Design intake complete (docs only, no code).** Ran `agent-ui-component-design`. Records
+  authored: **ADR-0123** (`../adr/0123-ui-color-picker-value-model-and-2d-input.md`, status `proposed`, README
+  row added) · **SPEC** (`../spec/color-picker.spec.md`, SPEC-R1…R12) · **LLD** (`../lld/color-picker.lld.md`,
+  LLD-C1…C9 + a frozen-interface-vs-real-code proof table) · **decomp**
+  (`../decompositions/color-picker-ship.decomp.json`, `coverage_check.py --strict` clean, exit 0). No PRD
+  (single-control intake — the ADR-0117/theme-provider deviation, recorded in the SPEC header).
+- **Classification:** base class `UIFormElement` (a composite — no `_base/` family fits); size-class
+  **`pattern`** (no new geometry row — the pad is a sized surface, channels are Indicator `ui-slider`s, the
+  readout is a Control `ui-text-field`); catalog posture **emittable** (`ColorPicker`, argued via ADR-0087).
+- **Research:** the exe.xyz docs page returned an empty SPA shell on fetch (recorded, as the toolbar/timeline
+  intakes hit) — the design leans on the adia `color-picker` family, read in full and **promoted, not ported**.
+- **Open questions RESOLVED at intake:** (a) **alpha** — the adia prior art has NO alpha channel (verified in
+  `color-picker.class.js`, only `#L/#C/#H`); v1 recommends **no alpha** (F6). (b) **`ui-swatch` sequencing** —
+  `ui-swatch` is already SHIPPED (`controls/swatch/`), so the preview composes it now (no bespoke preview). (c)
+  **presets** — a `[slot=presets]`, not a prop (palette generation stays a non-goal).
+- **Fork recommendations for Kim** (all `proposed`, none self-ratified): **F1 (the one that touches design-system
+  identity — flagged for Kim's ruling):** OKLCH-internal model, `value` serialized per `format` (default
+  **sRGB hex**, `oklch` opt-in), gamut-mapped to sRGB before hex — serves web interop AND the fleet's
+  OKLCH-native tokens; sub-fork = canvas pad. **F2 (the 2D-pad a11y):** a new `area-drag` trait; the composed
+  per-channel `ui-slider`s are the accessible spine (a keyboard/SR user never needs the pad); the pad is a
+  `role=slider`+`aria-roledescription="2D slider"` accelerator with cross-announcing `aria-valuetext` — there is
+  **no blessed WAI-ARIA 2D-slider role** (verified vs the APG + react-aria/Adobe-Spectrum ColorArea, which
+  synthesize one from two hidden inputs). **F3:** standalone-first + a `type=color` lazy-overlay leg (ADR-0048
+  seam). **F4:** editable `ui-text-field` readout + composed `ui-swatch` preview + presets slot. **F5:** catalog
+  emittable (M2 follow-on wave, `FEED_EXCLUDED`). **F6:** no alpha v1. **F7:** feature-detected EyeDropper
+  (progressive enhancement).
+- **Doc-review:** three fresh-context `doc-reviewer` passes (ADR/SPEC/LLD), pre-armed on the blockquote house
+  style + the frozen-interface check; findings applied; the design is frozen. The build dispatches only on Kim's
+  F1 ruling + the review PASS.
+- **2026-07-10 — Doc-review log (three fresh-context `doc-reviewer` passes; all findings applied).**
+  - **ADR** — PASS (fix-then-ship). Applied: chroma-not-saturation vocabulary (coupled to the F1 ruling);
+    re-anchored the codec-dialect citation to ADR-0047 (0044 is the wave, 0047 the dialect); resolved the
+    oklch-mode preview WYSIWYG tension (preview tracks the serialized `value`); noted F1 is the explicit-ruling
+    exception; corrected the ADR-0112 cl.6 example to `Toast`/`ToastRegion` (ThemeProvider is 0117).
+  - **SPEC** — REVISE → applied. **MAJOR**: EyeDropper (F7) was claimed-recommended but uncontracted →
+    **added SPEC-R13** (feature-detected, both-branch ACs) + trace row. Also: SPEC-R2 restated as the
+    unambiguous five-attribute fence; added the unset-but-displayed default-color contract (§2 + SPEC-R9 AC4);
+    trace SPEC-R6 corrected to `n10` only; softened the SPEC-R11 literal import path to LLD-owned.
+  - **LLD** — REVISE → applied. **TWO frozen-interface MAJORs the check exists to catch:** (1) `this.syncValue()`
+    is INVENTED (zero matches in-tree) — the form value syncs via the base effect `internals.setFormValue(
+    formValue())` at `dom/form.ts:174`; removed from §3 + §5. (2) `OverlayHandle` methods are `open/close/toggle/
+    cleanup`, NOT `show/hide` — corrected §5 + §10. Also: readout validity reads a control-owned `#readoutError`
+    (the standalone doesn't instantiate the `valueCodec` controller); added a §12 Risks section
+    (WebKit-tab-near-`[popover]` instrument-bridge, canvas DPR cost, gamut 8-iteration bound); aria-label
+    chroma-not-saturation.
+  - Gates re-verified after revisions: `coverage_check.py --strict` clean (exit 0, 34 nodes); `site/lib/adr.test.ts`
+    33/33 green.
