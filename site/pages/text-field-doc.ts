@@ -8,7 +8,7 @@
 // attributes, so they are authored here rather than derived from the parse.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import { loadTextFieldDoc } from '../lib/frontmatter.ts'
-import { findAttr, heading, renderApiTable, renderMarkdownBody, specimenRow } from '../lib/doc-page.ts'
+import { findAttr, heading, renderApiTable, renderMarkdownBody, renderPartsTable, specimenRow } from '../lib/doc-page.ts'
 import { applyDemoWidth, searchIcon } from '../lib/specimens.ts'
 import type { ParsedDescriptor } from '@agent-ui/components/descriptor'
 
@@ -23,7 +23,17 @@ const { content } = mountPage({
     'drift; the States examples and the anatomy shapes are hand-authored.',
 })
 
-content.append(renderApiTable(descriptor.attributes), renderExamples(descriptor), renderAnatomy(), renderMarkdownBody(body))
+// Parts: the editor + the two adornment cells are control-created `[data-part]` nodes (ADR-0014 cl.1), not
+// attributes — renderPartsTable is the SAME derivation composeDocPage's other consumers use (router-doc.ts is
+// the other hand-built page that wires it directly), so this page's Parts section can't drift from text-field.md.
+const partsTable = renderPartsTable(descriptor)
+content.append(
+  renderApiTable(descriptor.attributes),
+  ...(partsTable ? [partsTable] : []),
+  renderExamples(descriptor),
+  renderAnatomy(),
+  renderMarkdownBody(body),
+)
 
 // ── live specimens (derived from the parsed enum + the real boolean attributes) ─────────────────────────────
 

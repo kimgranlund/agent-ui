@@ -358,3 +358,100 @@ describe('site coverage — the type-sample check BITES (synthetic negative cont
     expect(keys.has('zzreal')).toBe(true)
   })
 })
+
+// ── the descriptor `parts[]` → doc-page RENDER coverage gate ─────────────────────────────────────────────────
+// The page-EXISTENCE gate above (site coverage — every shipped component has its required per-tier page set)
+// proves a required `{name}-doc.html` FILE exists; it says nothing about whether the page that exists actually
+// renders every FACT its descriptor declares. text-field.md carries real `parts[]` rows (the count is read at runtime — never trust a comment), but text-field-doc.ts
+// — one of the hand-built T4 pages that predates the shared `composeDocPage` composer — silently dropped them:
+// the page existed, `check`/`test` were green, and the Parts section was simply never called into being. This
+// gate closes that class: every descriptor with a non-empty `parts[]` sequence must have its `{name}-doc.ts`
+// PAGE SOURCE invoke the shared derivation — either `composeDocPage(` (which threads every descriptor it is
+// given through `renderPartsTable` for free) or a direct `renderPartsTable(` call (the pattern the OTHER
+// hand-built pages, router-doc.ts and now text-field-doc.ts, use) — so a future hand-built doc page that forgets
+// the call fails the build instead of silently under-rendering for however long nobody happens to look.
+//
+// SOURCE-LEVEL, not a live DOM render: mounting the ~19 real parts-bearing page modules here would import
+// `@agent-ui/components/components` from each and self-register the SAME ui-* custom elements repeatedly against
+// one shared jsdom `customElements` registry (a global per test file) — colliding with each other and with every
+// other page module the site test project exercises elsewhere. The house's own precedent for exactly this
+// question — "did this page thread a derived fact through" — is site-canon's dead-name scan and this file's own
+// TYPE_SAMPLES gate above: read the descriptor plus the page SOURCE TEXT through the same parser/scan pattern,
+// comment-stripped, never mount a full page module to prove it.
+
+const PAGES_DIR = `${SITE}/pages`
+
+/** One descriptor with a non-empty `parts[]` sequence — the tag-derived doc-page stem + its real part count. */
+interface PartsBearingComponent {
+  readonly name: string
+  readonly tag: string
+  readonly partCount: number
+}
+
+/** Every shipped descriptor whose `parts[]` carries at least one NAMED entry (mirrors declaredSlotNames's name-guard). */
+function componentsWithParts(): PartsBearingComponent[] {
+  const out: PartsBearingComponent[] = []
+  for (const base of FAMILY_ROOTS) {
+    for (const file of walk(base)) {
+      if (!file.endsWith('.md')) continue
+      let parsed
+      try {
+        parsed = parseDescriptor(splitFrontmatter(read(file)).fence)
+      } catch {
+        continue // a .md with no frontmatter fence is not a descriptor
+      }
+      const tag = parsed.scalars.get('tag')
+      if (typeof tag !== 'string' || !tag.startsWith('ui-')) continue
+      const named = (parsed.sequences.get('parts') ?? []).filter((item) => {
+        const name = item.get('name')
+        return typeof name === 'string' && name !== ''
+      })
+      if (named.length > 0) out.push({ name: tag.slice('ui-'.length), tag, partCount: named.length })
+    }
+  }
+  return out
+}
+
+/** True when a doc-page SOURCE (comment-stripped) threads its descriptor through the shared Parts derivation. */
+function rendersParts(src: string): boolean {
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*$/gm, '$1')
+  return /\bcomposeDocPage\s*\(/.test(code) || /\brenderPartsTable\s*\(/.test(code)
+}
+
+describe('site coverage — every descriptor with parts[] renders a Parts section on its doc page', () => {
+  const WITH_PARTS = componentsWithParts()
+
+  it('found parts-bearing descriptors (anti-vacuous — text-field + at least a dozen more)', () => {
+    expect(WITH_PARTS.length).toBeGreaterThanOrEqual(15)
+    expect(WITH_PARTS.map((c) => c.name)).toContain('text-field')
+  })
+
+  for (const c of WITH_PARTS) {
+    it(`${c.tag} (${c.partCount} part${c.partCount === 1 ? '' : 's'}) — ${c.name}-doc.ts renders its Parts section`, () => {
+      let src: string
+      try {
+        src = read(`${PAGES_DIR}/${c.name}-doc.ts`)
+      } catch {
+        throw new Error(`no doc-page source at pages/${c.name}-doc.ts for a parts-bearing descriptor`)
+      }
+      expect(rendersParts(src), `pages/${c.name}-doc.ts declares no composeDocPage(/renderPartsTable( call`).toBe(true)
+    })
+  }
+})
+
+describe('site coverage — the parts-render check BITES (synthetic negative controls)', () => {
+  it('flags a hand-built doc page that never calls renderPartsTable/composeDocPage (the exact text-field-doc.ts regression)', () => {
+    const src = "import { renderApiTable } from '../lib/doc-page.ts'\ncontent.append(renderApiTable(descriptor.attributes))"
+    expect(rendersParts(src)).toBe(false)
+  })
+
+  it('does NOT count a call that lives only in a comment', () => {
+    const src = '// renderPartsTable(descriptor) — TODO wire this in\nconst x = 1'
+    expect(rendersParts(src)).toBe(false)
+  })
+
+  it('recognizes both the composeDocPage and the direct renderPartsTable spelling', () => {
+    expect(rendersParts('composeDocPage(content, descriptor, body)')).toBe(true)
+    expect(rendersParts('content.append(renderPartsTable(descriptor))')).toBe(true)
+  })
+})
