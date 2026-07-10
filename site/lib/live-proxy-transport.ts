@@ -11,6 +11,7 @@
 
 import type { AgentTransport, TurnInput } from './agent-runtime.ts'
 import type { GenUiMode } from '../../packages/agent-ui/a2ui/tools/agent/gen-ui-mode.ts'
+import { readNdjsonLines } from './ndjson-lines.ts'
 
 const ENDPOINT = '/__a2ui/agent'
 
@@ -51,25 +52,10 @@ export function createLiveProxyTransport(selection: SelectionRef): AgentTranspor
       if (!res.ok || res.body === null) {
         throw new Error(`Live agent proxy error (${res.status} ${res.statusText}).`)
       }
-      // The proxy streams VALIDATED A2UI JSONL — one message per line. Read + re-yield line by line so the
-      // browser transport is identical to the recorded backbone (SPEC-R5: same ingest path either way).
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-      for (;;) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        let nl = buffer.indexOf('\n')
-        while (nl !== -1) {
-          const line = buffer.slice(0, nl).trim()
-          buffer = buffer.slice(nl + 1)
-          if (line.length > 0) yield line
-          nl = buffer.indexOf('\n')
-        }
-      }
-      const tail = buffer.trim()
-      if (tail.length > 0) yield tail
+      // The proxy streams VALIDATED A2UI JSONL — one message per line. Read + re-yield line by line (via the
+      // shared reader, LLD-C1) so the browser transport is identical to the recorded backbone (SPEC-R5: same
+      // ingest path either way).
+      yield* readNdjsonLines(res.body)
     },
   }
 }

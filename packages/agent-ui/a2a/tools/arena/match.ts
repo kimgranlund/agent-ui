@@ -4,6 +4,12 @@
 // straggler send here would be loud, not silent). Star topology: the runner is the ONE composer that
 // sees both seats — solely to relay each turn through the referee and record it; it never forwards
 // content between seats (the wire audit — SPEC-R9 AC1 — proves nothing ever crosses directly).
+//
+// LLD-C4 (SPEC-R17 AC3): `RunMatchOptions.signal` adds a user-initiated abort, raced at the SAME point
+// `withTimeout` already races the per-move timeout, plus checked between outbound deliveries. On fire,
+// the runner throws `MatchAborted` — the existing `finally` below still closes all four channel
+// endpoints, so a cancel is never a silent leak. With no signal passed, every race/check is a no-op and
+// `runMatch` is byte-identical to before this option existed (the scripted CI zero-regression control).
 import { createLoopbackPair } from '../../src/channel/loopback.ts'
 import type { A2aChannel } from '../../src/channel/loopback.ts'
 import { beginMatch, createRefereeState, reduce } from '../../src/arena/referee.ts'
@@ -37,6 +43,26 @@ export interface RunMatchOptions {
    * buffer-then-serialize shape). Invoked AFTER the event is pushed, so a hook that reads the accumulated
    * array sees itself included; the returned `MatchResult.events` stays byte-identical either way. */
   onEvent?: (event: TranscriptEvent) => void
+  /** LLD-C4 (SPEC-R17 AC3): a user-initiated abort. Raced at the SAME point the per-move timeout already
+   * races (`withTimeout`'s three-way race) and checked between outbound deliveries; on fire, the runner
+   * throws `MatchAborted` — the existing `finally` still closes all four channel endpoints. Omitted (the
+   * default), `runMatch` behaves byte-identically to before this option existed (the zero-regression
+   * control, SPEC-R17 AC3). */
+  signal?: AbortSignal
+}
+
+/** LLD-C4: thrown when `opts.signal` fires mid-match. Never thrown for any other reason — a caller (the
+ * dev proxy) distinguishes "the match was cancelled" from every other runner failure by catching this
+ * specific type. */
+export class MatchAborted extends Error {
+  constructor() {
+    super('match aborted')
+    this.name = 'MatchAborted'
+  }
+}
+
+function throwIfAborted(signal: AbortSignal | undefined): void {
+  if (signal?.aborted) throw new MatchAborted()
 }
 
 export interface MatchResult {
@@ -128,14 +154,40 @@ async function deliverBoardMessage(
   sink.push({ wire: { from: 'referee', to, message: delivered } })
 }
 
-/** Timeout wrapper (LLD §7): a per-move timeout counts as a MALFORMED reply — the runner's concern; the
- * reducer stays pure/timer-free (SPEC-N3). */
-function withTimeout<T>(promise: Promise<T>, ms: number | undefined): Promise<{ ok: true; value: T } | { ok: false }> {
-  if (ms === undefined) return promise.then((value) => ({ ok: true as const, value }))
-  return Promise.race([
-    promise.then((value): { ok: true; value: T } => ({ ok: true, value })),
-    new Promise<{ ok: false }>((resolve) => setTimeout(() => resolve({ ok: false }), ms)),
-  ])
+/** Timeout + abort wrapper (LLD §7/LLD-C4): a per-move timeout counts as a MALFORMED reply — the runner's
+ * concern; the reducer stays pure/timer-free (SPEC-N3). A three-way race with `signal` (SPEC-R17 AC3):
+ * the seat's reply, the timeout, or the caller's abort — whichever settles first. Cleans up its own timer
+ * + abort listener on every path (no dangling handles across a 9-move game). With `signal` omitted this
+ * degrades to the original two-way race, byte-identical to before the seam existed (the zero-regression
+ * control). */
+function withTimeout<T>(promise: Promise<T>, ms: number | undefined, signal?: AbortSignal): Promise<{ ok: true; value: T } | { ok: false }> {
+  return new Promise((resolve, reject) => {
+    let settled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    function cleanup(): void {
+      if (timer !== undefined) clearTimeout(timer)
+      signal?.removeEventListener('abort', onAbort)
+    }
+    function finish(fn: () => void): void {
+      if (settled) return
+      settled = true
+      cleanup()
+      fn()
+    }
+    function onAbort(): void {
+      finish(() => reject(new MatchAborted()))
+    }
+    if (signal?.aborted) {
+      finish(() => reject(new MatchAborted()))
+      return
+    }
+    signal?.addEventListener('abort', onAbort)
+    if (ms !== undefined) timer = setTimeout(() => finish(() => resolve({ ok: false })), ms)
+    promise.then(
+      (value) => finish(() => resolve({ ok: true, value })),
+      (err: unknown) => finish(() => reject(err as Error)),
+    )
+  })
 }
 
 async function collectSeatReply(
@@ -146,8 +198,9 @@ async function collectSeatReply(
   perMoveTimeoutMs: number | undefined,
   sink: EventSink,
   nextSeq: () => number,
+  signal?: AbortSignal,
 ): Promise<RefereeInput> {
-  const raced = await withTimeout(seat.respond(boardMessage), perMoveTimeoutMs)
+  const raced = await withTimeout(seat.respond(boardMessage), perMoveTimeoutMs, signal)
   if (!raced.ok) {
     return { kind: 'malformed', seat: mark, detail: `per-move timeout exceeded (${String(perMoveTimeoutMs)}ms)` }
   }
@@ -193,6 +246,7 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
     state = begin.state
 
     for (const ob of begin.outbound) {
+      throwIfAborted(opts.signal)
       await deliverBoardMessage(channels[ob.to], ob.to, ob.message, sink, nextSeq)
       pendingBoardMessage[ob.to] = ob.message
       drainContext(opts.seats[ob.to].seat, ob.to, sink)
@@ -204,7 +258,7 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
       if (boardMessage === undefined) throw new Error(`match runner: no pending BoardMessage for ${toMove} (referee/runner desync)`)
 
       const boardBefore = state.board
-      const input = await collectSeatReply(opts.seats[toMove].seat, channels[toMove], toMove, boardMessage, opts.perMoveTimeoutMs, sink, nextSeq)
+      const input = await collectSeatReply(opts.seats[toMove].seat, channels[toMove], toMove, boardMessage, opts.perMoveTimeoutMs, sink, nextSeq, opts.signal)
       drainContext(opts.seats[toMove].seat, toMove, sink)
 
       const result = reduce(state, input)
@@ -215,6 +269,7 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
       }
 
       for (const ob of result.outbound) {
+        throwIfAborted(opts.signal)
         const feedback = gameEventForOutbound(ob.to, ob.message)
         await deliverBoardMessage(channels[ob.to], ob.to, ob.message, sink, nextSeq)
         pendingBoardMessage[ob.to] = ob.message

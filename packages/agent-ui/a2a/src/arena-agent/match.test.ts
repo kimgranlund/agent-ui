@@ -5,16 +5,35 @@
 // (e.g. `providers-config.test.ts` tests `tools/agent/providers-config.ts` the same way). This file
 // imports `tools/arena/*` by relative path; it asserts BEHAVIOR only, never re-derives it.
 import { describe, expect, it } from 'vitest'
-import { buildMatchHeader, runMatch } from '../../tools/arena/match.ts'
+import { buildMatchHeader, MatchAborted, runMatch } from '../../tools/arena/match.ts'
 import type { SeatChannels } from '../../tools/arena/match.ts'
 import type { TranscriptEvent } from '../arena/transcript.ts'
 import { A2aChannelClosedError } from '../channel/loopback.ts'
 import type { Mark } from '../arena/board.ts'
 import { createFirstLegalMoveSeat, createScriptedSeat } from '../../tools/arena/seats/scripted.ts'
+import type { ContextEntry, Seat, SeatReply } from '../../tools/arena/seat.ts'
 import { deriveCanary } from '../../tools/arena/canary.ts'
 import { serializeTranscript, validateTranscript } from '../arena/transcript.ts'
 import { checkIsolation } from '../arena/isolation.ts'
 import { PROTOCOL_VERSION } from '../../src/protocol/types.ts'
+
+/** A seat that never replies — used ONLY to prove the abort seam settles a race that nothing else would
+ * (no timeout configured, no scripted move coming); `respond()`'s promise is deliberately left pending
+ * forever so the ONLY way `withTimeout`'s race resolves is via `signal`. */
+function createHangingSeat(mark: Mark, canary: string): Seat {
+  const pending: ContextEntry[] = [{ role: 'system', content: `You are ${mark}, and will never reply. Canary: ${canary}` }]
+  return {
+    respond(): Promise<SeatReply> {
+      pending.push({ role: 'user', content: 'awaiting a reply that never comes' })
+      return new Promise<SeatReply>(() => {
+        /* never settles */
+      })
+    },
+    pullContext(): ContextEntry[] {
+      return pending.splice(0, pending.length)
+    },
+  }
+}
 
 function seatsFor(matchId: string, scriptX: Parameters<typeof createScriptedSeat>[2], scriptO: Parameters<typeof createScriptedSeat>[2]) {
   return {
@@ -167,6 +186,77 @@ describe('runMatch (LLD-C7) — scripted end-to-end', () => {
       },
     })
     expect(result.end.kind).toBe('win')
+    expect(captured).toBeDefined()
+    for (const mark of ['X', 'O'] as const) {
+      await expect(captured![mark].referee.send({ kind: 'message', role: 'agent', parts: [], messageId: 'straggler' })).rejects.toBeInstanceOf(A2aChannelClosedError)
+      await expect(captured![mark].seat.send({ kind: 'message', role: 'user', parts: [], messageId: 'straggler' })).rejects.toBeInstanceOf(A2aChannelClosedError)
+    }
+  })
+})
+
+describe('runMatch — the abort seam (LLD-C4, SPEC-R17 AC3)', () => {
+  it('zero-regression: a signal that never fires produces a BYTE-IDENTICAL transcript to the no-signal run', async () => {
+    const matchId = 'test-abort-zero-regression'
+    const date = '2026-07-08T00:00:00.000Z'
+    const build = (signal?: AbortSignal) =>
+      runMatch({
+        matchId,
+        scripted: true,
+        date,
+        seats: seatsFor(matchId, [{ move: 0 }, { move: 1 }, { move: 2 }], [{ move: 3 }, { move: 4 }]),
+        signal,
+      })
+    const withoutSignal = await build(undefined)
+    const withUnfiredSignal = await build(new AbortController().signal)
+    expect(serializeTranscript({ header: withUnfiredSignal.header, events: withUnfiredSignal.events })).toBe(
+      serializeTranscript({ header: withoutSignal.header, events: withoutSignal.events }),
+    )
+  })
+
+  it('a signal already aborted before the match starts rejects immediately with MatchAborted — no seat is ever asked to move', async () => {
+    const matchId = 'test-abort-preemptive'
+    const controller = new AbortController()
+    controller.abort()
+    let xAsked = false
+    const seats = {
+      X: {
+        seat: {
+          respond: (): Promise<SeatReply> => {
+            xAsked = true
+            return Promise.resolve({ kind: 'move', move: { move: 0 } })
+          },
+          pullContext: (): ContextEntry[] => [],
+        },
+        provider: 'scripted',
+        model: 'scripted',
+      },
+      O: { seat: createScriptedSeat('O', deriveCanary(matchId, 'O'), [{ move: 3 }]), provider: 'scripted', model: 'scripted' },
+    }
+    await expect(runMatch({ matchId, scripted: true, seats, signal: controller.signal })).rejects.toBeInstanceOf(MatchAborted)
+    expect(xAsked).toBe(false)
+  })
+
+  it('a signal aborted mid-match (while a seat reply is pending) rejects with MatchAborted, and teardown STILL closes all four channel endpoints', async () => {
+    const matchId = 'test-abort-mid-match'
+    const controller = new AbortController()
+    let captured: Record<Mark, SeatChannels> | undefined
+    const seats = {
+      X: { seat: createHangingSeat('X', deriveCanary(matchId, 'X')), provider: 'scripted', model: 'scripted' },
+      O: { seat: createScriptedSeat('O', deriveCanary(matchId, 'O'), [{ move: 3 }]), provider: 'scripted', model: 'scripted' },
+    }
+    const run = runMatch({
+      matchId,
+      scripted: true,
+      seats,
+      signal: controller.signal,
+      captureChannels: (channels) => {
+        captured = channels
+      },
+    })
+    // Give the runner a turn to reach the point of awaiting X's (forever-pending) reply before cancelling.
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    controller.abort()
+    await expect(run).rejects.toBeInstanceOf(MatchAborted)
     expect(captured).toBeDefined()
     for (const mark of ['X', 'O'] as const) {
       await expect(captured![mark].referee.send({ kind: 'message', role: 'agent', parts: [], messageId: 'straggler' })).rejects.toBeInstanceOf(A2aChannelClosedError)

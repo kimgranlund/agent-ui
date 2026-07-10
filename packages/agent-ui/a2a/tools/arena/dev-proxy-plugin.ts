@@ -9,16 +9,20 @@
 // proxy, no key path, and this whole module is unreachable from the browser bundle (SPEC-R13/N2). `GET
 // /status` answers a boolean + count; a key value is NEVER sent to the browser.
 //
-// GENUINELY STREAMING (review finding 4 closed): `match.ts` now exposes `onEvent` (LLD §6, C10) — this
-// proxy writes the header line up front, then taps `onEvent` to `res.write()` each transcript event line
-// to the response AS the runner appends it, mid-match, not after `runMatch()` resolves. Each line is
+// GENUINELY STREAMING (review finding 4 closed): `match.ts` exposes `onEvent` (LLD §6, C10) — this proxy
+// writes the header line up front, then taps `onEvent` to `res.write()` each transcript event line to the
+// response AS the runner appends it, mid-match, not after `runMatch()` resolves. Each line is
 // `JSON.stringify` of the exact object the runner produces — the same wire shape `serializeTranscript`
 // builds for a committed fixture, just emitted one line at a time instead of joined-then-dumped. The
-// page's live-match consumer (`site/lib/arena-live-transport.ts`) still reads the WHOLE response via
-// `res.text()` before returning (its own banner explains why — there's nothing mid-flight for it to
-// render yet), so this change is purely a server-side latency/honesty fix: first bytes now leave the
-// proxy as soon as the header is known, not after the entire game finishes. Paths resolve from
+// page's live-match consumer (`site/lib/arena-live-transport.ts`, LLD-C3) now reads incrementally too, so
+// this is a genuine end-to-end stream, not just a server-side latency fix. Paths resolve from
 // `process.cwd()` (the repo root `vite` runs from) — the a2ui dev-proxy-plugin.ts precedent.
+//
+// LLD-C4 (SPEC-R17 AC3): the response's/request's `close` event (fired on a client-initiated abort, e.g.
+// the page's Cancel control severing the fetch) drives an `AbortController` whose signal is threaded into
+// `runMatch`. A `MatchAborted` thrown after headers are already sent (always true here — the header line
+// is written before `runMatch` is even called) falls straight into the existing catch's `res.end()` arm
+// below: no special-casing needed, the client already sees a truncated stream, which is exactly discard.
 import { readFileSync } from 'node:fs'
 import { loadEnv } from 'vite'
 import type { Plugin } from 'vite'
@@ -176,18 +180,32 @@ export function a2aDevProxyPlugin(): Plugin {
               // then dumped line-by-line.
               res.write(JSON.stringify(header) + '\n')
 
-              await runMatch({
-                matchId,
-                scripted: false,
-                date,
-                retryBound: RETRY_BOUND,
-                perMoveTimeoutMs: PER_MOVE_TIMEOUT_MS,
-                seats,
-                onEvent: (event) => {
-                  res.write(JSON.stringify(event) + '\n')
-                },
-              })
-              res.end()
+              // LLD-C4: wire a client-disconnect (Cancel) to the runner's abort seam. `close` fires on
+              // EITHER endpoint for a premature disconnect; it also fires on the normal path once `res.end()`
+              // completes, but by then `runMatch` has already returned and nobody is listening — an abort
+              // after the fact is a harmless no-op.
+              const abortController = new AbortController()
+              const onClientClose = (): void => abortController.abort()
+              res.on('close', onClientClose)
+              req.on('close', onClientClose)
+              try {
+                await runMatch({
+                  matchId,
+                  scripted: false,
+                  date,
+                  retryBound: RETRY_BOUND,
+                  perMoveTimeoutMs: PER_MOVE_TIMEOUT_MS,
+                  seats,
+                  signal: abortController.signal,
+                  onEvent: (event) => {
+                    res.write(JSON.stringify(event) + '\n')
+                  },
+                })
+                res.end()
+              } finally {
+                res.off('close', onClientClose)
+                req.off('close', onClientClose)
+              }
               return
             }
 

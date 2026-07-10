@@ -159,3 +159,39 @@ describe('loadFeed — fail-closed edge cases (LLD §8)', () => {
     expect(loaded.ok).toBe(true)
   })
 })
+
+// ── SPEC-R18 AC2 (offline) — the same-checker controls over a LIVE-shaped log (B7, the wave review's
+// named gap): (a) an accumulated live conversation's log — the recorded fixture plus a further turn in
+// exactly the wire shape the live arm appends — passes the standing loadFeed checks identically; (b) the
+// BITING negative: a faulted turn forced into the log as its raw frame lines (`{"turn":…}`/`{"part":…}`
+// — the /__a2a/feed wire framing, NOT valid A2A messages) makes loadFeed REFUSE the whole feed. The live
+// page never appends a faulted turn (proven in the browser leg); this proves what happens if one ever
+// slipped through — the checker, downstream, still refuses it (fail-closed at every layer). ─────────────
+describe('SPEC-R18 AC2 — the standing checker over a live-accumulated log (offline)', () => {
+  it('(a) the fixture log + a live-appended user turn (the exact wire shape the composer sends) stays CLEAN', () => {
+    const liveUserTurn = JSON.stringify({
+      kind: 'message',
+      role: 'user',
+      messageId: 'live-u1',
+      contextId: 'live-ctx-1',
+      parts: [{ kind: 'text', text: 'And the Q3 forecast?' }],
+      extensions: ['https://a2ui.org/a2a-extension/a2ui/v1.0'],
+      metadata: { a2uiClientCapabilities: { 'v1.0': { supportedCatalogIds: ['agent-ui'] } } },
+    })
+    const loaded = loadFeed(`${raw.trim()}\n${liveUserTurn}`)
+    expect(loaded.ok).toBe(true)
+    if (loaded.ok) {
+      expect(loaded.verdict.clean).toBe(true)
+      expect(loaded.entries.length).toBe(7) // the fixture's 6 + the live turn
+    }
+  })
+
+  it('(b) BITING negative: raw frame lines forced into the log in place of a completed message REFUSE the whole feed', () => {
+    // The /__a2a/feed wire framing — what a truncated/faulted turn would look like if its frames were
+    // ever appended raw instead of the reassembled A2A message. Frames are NOT valid A2A messages.
+    const headerFrame = JSON.stringify({ turn: { messageId: 'live-a1', contextId: 'live-ctx-1', role: 'agent', parts: 2 } })
+    const partFrame = JSON.stringify({ part: { kind: 'text', text: 'partial…' } })
+    const loaded = loadFeed(`${raw.trim()}\n${headerFrame}\n${partFrame}`)
+    expect(loaded.ok).toBe(false)
+  })
+})

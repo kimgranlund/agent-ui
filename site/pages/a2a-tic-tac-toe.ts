@@ -8,16 +8,26 @@
 //     shown side by side with the wire/board timeline, so "neither seat ever saw the other's reasoning" is
 //     inspectable, not merely asserted. The contaminated fixtures are one click away, so the gate can be
 //     seen FAILING loudly (the proof it bites — LLD §2/§9).
-//  3. THE DEV-ONLY LIVE SEAM: the arena dev proxy (`/__a2a/arena`) runs a real match server-side; the "run
-//     a live match" control appears only once `probeArenaLive()` reports a key is configured (mirrors the
-//     a2ui-live `probeLive()` precedent) — a dynamic import behind `import.meta.env.DEV`, so `vite build`
-//     tree-shakes the whole live path out (SPEC-N2).
+//  3. THE DEV-ONLY LIVE SEAM (LLD-C5, SPEC-R17): the arena dev proxy (`/__a2a/arena`) runs a real match
+//     server-side and streams it incrementally; the "run a live match" control appears only once
+//     `probeArenaLive()` reports a key is configured (mirrors the a2ui-live `probeLive()` precedent) — a
+//     dynamic import behind `import.meta.env.DEV`, so `vite build` tree-shakes the whole live path out
+//     (SPEC-N2). Moves append into this SAME replay UI as stream lines arrive (via the incremental
+//     `ReplayAccumulator`, LLD-C2) — a follow-tail scrubber, a truthful "pending" isolation verdict while
+//     the match is in flight, and a Cancel control. The `done` state is GATED ON the accumulator's own
+//     `isComplete()` — never on stream end alone (a cleanly truncated transcript still validates, SPEC-R17
+//     AC2) — and only then does the completed raw text re-enter the EXISTING `loadTranscript` →
+//     `applyLoaded('live')` call sites the recorded fixtures use, so the finished replay/isolation
+//     panel/inspector are code-identical to the batch path. A cancelled or faulted stream (including one
+//     that ends without the terminal event) is DISCARDED — the previously selected recorded fixture is
+//     re-selected, never a partial live transcript.
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './a2a-tic-tac-toe.css'
-import type { Board, Transcript } from '@agent-ui/a2a'
+import type { Board, Mark, Transcript } from '@agent-ui/a2a'
 import {
   buildIsolationReport,
   buildReplaySteps,
+  createReplayAccumulator,
   ISOLATION_CHECKS,
   loadTranscript,
   type ContextLine,
@@ -210,6 +220,9 @@ function renderTimeline(steps: readonly ReplayStep[]): void {
 let currentSteps: ReplayStep[] = []
 let stepIndex = 0
 let liveRaw: string | undefined
+// The recorded fixture to fall back to when a live run is cancelled/faulted (SPEC-R17: "the page returns
+// to the previously selected recorded fixture") — never 'live' itself.
+let lastRecordedKey: Exclude<FixtureKey, 'live'> = 'flagship'
 
 function renderStep(): void {
   const step = currentSteps[stepIndex]
@@ -252,6 +265,7 @@ function applyLoaded(loaded: LoadedTranscript, key: FixtureKey): void {
 function selectFixture(key: FixtureKey): void {
   const raw = key === 'live' ? liveRaw : FIXTURES[key].raw
   if (raw === undefined) return
+  if (key !== 'live') lastRecordedKey = key
   applyLoaded(loadTranscript(raw), key)
 }
 
@@ -277,6 +291,19 @@ liveSection.dataset.live = ''
 liveSection.hidden = true
 content.append(liveSection)
 
+/** Append newly-arrived steps to the live board/timeline (LLD-C5 follow-tail rule): if the viewer was
+ * resting on the tail before this append, advance with it; otherwise leave them exactly where they
+ * scrubbed to. Re-renders unconditionally either way, so the prev/next disabled state (which depends on
+ * `currentSteps.length`) always reflects the newly-grown step count. */
+function appendLiveSteps(steps: readonly ReplayStep[]): void {
+  if (steps.length === 0) return
+  const wasAtTail = stepIndex === currentSteps.length - 1
+  currentSteps = currentSteps.concat(steps)
+  if (wasAtTail) stepIndex = currentSteps.length - 1
+  renderStep()
+  renderTimeline(currentSteps)
+}
+
 function wireLiveOverlay(): void {
   if (!import.meta.env.DEV) return
   void (async () => {
@@ -287,31 +314,97 @@ function wireLiveOverlay(): void {
       liveSection.hidden = false
       const liveStatus = document.createElement('p')
       liveStatus.className = 'live-status'
+      liveStatus.dataset.liveStatus = ''
       liveStatus.textContent = `Live agent connected (${status.providers} provider(s) available).`
+      const liveControls = document.createElement('div')
+      liveControls.className = 'live-controls'
       const runBtn = document.createElement('ui-button')
       runBtn.setAttribute('variant', 'solid')
       runBtn.setAttribute('tabindex', '0')
+      runBtn.dataset.liveAction = 'run'
       runBtn.textContent = 'Run a live match (Sonnet 5 vs Haiku 4.5)'
+      const cancelBtn = document.createElement('ui-button')
+      cancelBtn.setAttribute('variant', 'ghost')
+      cancelBtn.setAttribute('tabindex', '0')
+      cancelBtn.dataset.liveAction = 'cancel'
+      cancelBtn.textContent = 'Cancel'
+      cancelBtn.hidden = true
+      liveControls.append(runBtn, cancelBtn)
+
+      let liveController: AbortController | undefined
+
+      function setRunningUi(running: boolean): void {
+        runBtn.toggleAttribute('disabled', running)
+        cancelBtn.hidden = !running
+        for (const [, btn] of fixtureButtons) btn.toggleAttribute('disabled', running)
+      }
+
+      function showPendingVerdict(): void {
+        verdict.dataset.verdict = 'pending'
+        verdict.textContent = 'ISOLATION VERDICT: pending — the verdict runs over the completed transcript.'
+        checksList.replaceChildren()
+      }
+
       runBtn.addEventListener('click', () => {
         void (async () => {
-          runBtn.setAttribute('disabled', '')
-          liveStatus.textContent = 'Running a live match — this calls a real model and can take a little while…'
+          const controller = new AbortController()
+          liveController = controller
+          setRunningUi(true)
+          liveStatus.textContent = 'Running a live match — moves will appear below as they are played…'
+          errorPanel.hidden = true
+          replayCard.hidden = false
+          isolationCard.hidden = false
+          inspector.hidden = false
+          currentSteps = []
+          stepIndex = 0
+          renderTimeline([])
+          const liveContexts: Record<Mark, ContextLine[]> = { X: [], O: [] }
+          renderContextLines(seatXCol.list, [])
+          renderContextLines(seatOCol.list, [])
+          showPendingVerdict()
+
+          const accumulator = createReplayAccumulator()
           try {
-            const text = await overlay.runLiveMatch({
-              X: { provider: 'anthropic', model: 'claude-sonnet-5' },
-              O: { provider: 'anthropic', model: 'claude-haiku-4-5-20251001' },
-            })
-            liveRaw = text
-            liveStatus.textContent = 'Live match complete — loaded below.'
-            selectFixture('live')
+            const stream = await overlay.runLiveMatchStream(
+              { X: { provider: 'anthropic', model: 'claude-sonnet-5' }, O: { provider: 'anthropic', model: 'claude-haiku-4-5-20251001' } },
+              { signal: controller.signal },
+            )
+            for await (const line of stream.lines) {
+              const result = accumulator.push(line)
+              if (!result.ok) throw new Error(`live stream malformed: ${result.reason}`)
+              appendLiveSteps(result.steps)
+              if (result.contexts.length > 0) {
+                for (const c of result.contexts) liveContexts[c.seat].push(c.line)
+                renderContextLines(seatXCol.list, liveContexts.X)
+                renderContextLines(seatOCol.list, liveContexts.O)
+              }
+            }
+            if (accumulator.isComplete()) {
+              // DONE — gated on the accumulator's OWN completion fact, never on stream end alone (SPEC-R17
+              // AC2). The completed raw text re-enters the EXISTING batch call site: code-identical replay,
+              // isolation panel, and inspector to a recorded fixture.
+              liveRaw = accumulator.raw()
+              liveStatus.textContent = 'Live match complete — loaded below.'
+              selectFixture('live')
+            } else {
+              // The stream ended (a proxy error-after-headers `res.end()`, e.g.) WITHOUT the terminal event —
+              // a partial that would still pass schema validation. Discard, never load it.
+              liveStatus.textContent = 'Live match ended before completion — discarded.'
+              selectFixture(lastRecordedKey)
+            }
           } catch (e) {
-            liveStatus.textContent = `Live match failed: ${(e as Error).message}`
+            liveStatus.textContent = controller.signal.aborted ? 'Live match cancelled.' : `Live match failed: ${(e as Error).message}`
+            selectFixture(lastRecordedKey)
           } finally {
-            runBtn.removeAttribute('disabled')
+            liveController = undefined
+            setRunningUi(false)
           }
         })()
       })
-      liveSection.append(liveStatus, runBtn)
+
+      cancelBtn.addEventListener('click', () => liveController?.abort())
+
+      liveSection.append(liveStatus, liveControls)
     } catch {
       /* no proxy (production build) or a network fault — the live section stays hidden */
     }

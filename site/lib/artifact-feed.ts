@@ -1,4 +1,4 @@
-// site/lib/artifact-feed.ts — LLD-C6 (SPEC-R16 AC2): the artifact-feed derivation lib. No DOM (the
+// site/lib/artifact-feed.ts — LLD-C6/C9 (SPEC-R16 AC2, SPEC-R18): the artifact-feed derivation lib. No DOM (the
 // `arena-replay.ts` derivation-vs-page split, so the drift gate can assert this module directly, exactly
 // like `a2ui-gallery.ts`'s buildSeedGallery/buildSeedCard split). Parses the committed A2A-over-A2UI
 // JSONL feed and decodes it into an ordered `FeedEntry[]` (prose / artifact / handshake), computing the
@@ -15,7 +15,9 @@ import { validateA2a } from '@agent-ui/a2a'
 import type { A2aMessage } from '@agent-ui/a2a'
 import { A2UI_MIME, unwrapTurn } from '../../packages/agent-ui/a2ui/tools/pipeline/transports/a2a.ts'
 
-const PROTOCOL_VERSION = '0.3.0'
+// Exported (LLD-C11): the live overlay's synthesized feed header pins this SAME literal — one fact, one
+// home in this package, never a second hardcoded "0.3.0" in the page drifting out of sync with this one.
+export const PROTOCOL_VERSION = '0.3.0'
 
 /** One feed timeline entry — a prose bubble, an artifact bubble (one renderer host per surface), or both. */
 export interface FeedEntry {
@@ -80,6 +82,22 @@ function surfaceIdOfEnvelopes(envelopes: readonly unknown[]): string | undefined
   return undefined
 }
 
+/**
+ * LLD-C9: the per-message entry derivation, extracted from `loadFeed`'s own mapping (a behavioral no-op
+ * for the recorded path — the existing jsdom leg passes unchanged, entry-for-entry). Stated honestly: this
+ * moves ONLY the per-entry shape (prose / artifact / handshake / wire) — `loadFeed` keeps parse +
+ * `validateA2a` + the whole-feed verdict accumulation it owns today (including the `validateA2ui` check
+ * over an artifact message's envelopes); those checks do NOT move here, so this function never appends to
+ * a verdict and never fails — it only DERIVES. The live overlay (LLD-C11) renders every bubble, live or
+ * recorded, through this ONE derivation — no second bubble-building fork. */
+export function deriveFeedEntry(message: A2aMessage, index: number): FeedEntry {
+  const { envelopes, prose } = unwrapTurn(message)
+  const surfaceId = surfaceIdOfEnvelopes(envelopes)
+  const artifact: FeedEntry['artifact'] = surfaceId !== undefined ? { surfaceId, lines: envelopes.map((e) => JSON.stringify(e)) } : undefined
+  const handshake = message.role === 'user' ? (message.metadata?.a2uiClientCapabilities as Record<string, unknown> | undefined) : undefined
+  return { index, role: message.role, prose, artifact, handshake, wire: JSON.stringify(message) }
+}
+
 /** Parse + validate a raw feed (a Vite `?raw` static import of the committed fixture, or a live proxy's
  *  response text — this module only parses/derives, never fetches). */
 export function loadFeed(raw: string): LoadedFeed {
@@ -115,6 +133,11 @@ export function loadFeed(raw: string): LoadedFeed {
     for (const f of validateA2a(msg, { protocolVersion: PROTOCOL_VERSION })) {
       schemaFailures.push(`line ${i + 2} (${msg.messageId}): ${f.code} at ${f.path} — ${f.detail}`)
     }
+    // A line that isn't message-shaped at all (e.g. a raw /__a2a/feed frame — `{"turn":…}`/`{"part":…}` —
+    // forced into a log) has no `parts` array to walk: validateA2a already refused it above; iterating
+    // `msg.parts` here would CRASH instead of refusing (a TypeError is not fail-closed — caught by the
+    // SPEC-R18 AC2 offline negative, B7). Skip the per-part/caps walks for it; the schema failure stands.
+    if (!Array.isArray(msg.parts)) continue
     for (const part of msg.parts) {
       if (part.kind === 'data' && part.metadata?.mimeType !== A2UI_MIME && looksLikeA2uiEnvelope(part.data)) {
         mimeFailures.push(`line ${i + 2} (${msg.messageId}): an a2ui-shaped DataPart is missing metadata.mimeType === "${A2UI_MIME}"`)
@@ -129,19 +152,21 @@ export function loadFeed(raw: string): LoadedFeed {
     messages.push(msg)
   }
 
+  // LLD-C9: the per-entry SHAPE comes from `deriveFeedEntry` (the ONE derivation the live overlay reuses
+  // too); the a2ui validity CHECK stays here — it is part of the whole-feed verdict accumulation, not the
+  // entry's own derivation (the refactor's stated scope: only the per-entry derivation moved).
   const entries: FeedEntry[] = messages.map((msg, i) => {
-    const { envelopes, prose } = unwrapTurn(msg)
-    const surfaceId = surfaceIdOfEnvelopes(envelopes)
-    let artifact: FeedEntry['artifact']
-    if (surfaceId !== undefined) {
+    const entry = deriveFeedEntry(msg, i)
+    if (entry.artifact !== undefined) {
+      const envelopes = entry.artifact.lines.map((l) => JSON.parse(l) as unknown)
       const verdict = validateA2ui(envelopes, defaultCatalog)
       if (!verdict.valid) {
-        for (const f of verdict.failures) a2uiFailures.push(`message ${i + 1} (${msg.messageId}, surface ${surfaceId}): ${f.code} at ${f.path}`)
+        for (const f of verdict.failures) {
+          a2uiFailures.push(`message ${i + 1} (${msg.messageId}, surface ${entry.artifact.surfaceId}): ${f.code} at ${f.path}`)
+        }
       }
-      artifact = { surfaceId, lines: envelopes.map((e) => JSON.stringify(e)) }
     }
-    const handshake = msg.role === 'user' ? (msg.metadata?.a2uiClientCapabilities as Record<string, unknown> | undefined) : undefined
-    return { index: i, role: msg.role, prose, artifact, handshake, wire: JSON.stringify(msg) }
+    return entry
   })
 
   const checks: FeedVerdict['checks'] = [

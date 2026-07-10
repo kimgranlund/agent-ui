@@ -335,3 +335,63 @@ wave) was ratified by Kim the same day as this wave, closing the last standing `
 Whether/how the twelve new components extend into the A2UI feed and report surfaces beyond their v1 scope,
 and the router's URL-reflection replace/push semantics under real multi-tab usage, are **Kim's scope-dial
 decisions — deliberately left unchosen here**.
+
+## 2026-07-09 (late) — the docs conceptual layer + B7 live real-time A2A arms (ADR-0116)
+
+### What shipped
+
+- **The docs site's conceptual layer** — seven guide pages (getting-started · theming · a fully-derived
+  token reference · sizing & density with a live measured matrix · an end-to-end forms guide · a
+  which-component-when chooser · the changelog on-site), plus `/llms.txt` (the agent-facing index, 83
+  pages) and `/llms-full.txt` (the fetch-readable corpus: every component descriptor's prose + this
+  changelog, drift-gated byte-identical to its generator).
+- **TKT-0002 — a real production-only bug found by the theming guide's own demo**: LightningCSS was
+  rewriting all 310 `light-dark()` declarations into a `prefers-color-scheme`-only polyfill, silently
+  breaking `<theme-provider scheme>`'s whole per-subtree mechanism in every `vite build` while dev stayed
+  correct. Fixed at the build config (`Features.LightDark` exclude — the narrowest option), proven
+  bidirectionally against the served production artifact, gated (`light-dark-minify.test.ts`).
+- **ui-segmented-control dropped its inter-segment dividers** (Kim's ruling — the outer track, moving
+  fill, and hover washes carry the segmentation), with the old divider assertions inverted into
+  zero-divider regression guards. **TKT-0001/0004** — the ADR-index search field's discarded inner grid
+  anatomy (`display: block` → `grid`) and the artifact-feed's missing animate-to-new-content scroll.
+- **B7 — the A2A examples went live, real-time, user-initiated (ADR-0116, proposed).** The arena's
+  dev-only live match now STREAMS move-by-move into the shipped replay UI (a shared NDJSON line reader ·
+  a replay accumulator whose `isComplete()` tracks the referee's terminal event — completion is a tracked
+  fact, never inferred from stream end, the doc-review's HIGH corrected at design · a real abort seam
+  through `runMatch` with a byte-identical no-signal control · cancel = abort + discard, and the isolation
+  verdict runs the same checker over the completed transcript only). The artifact-feed's reserved live arm
+  became a real conversational loop over A2A: a part-frame protocol whose header declares the part count
+  (completeness decidable from the frames), the client-held A2A log as the whole session (the proxy stays
+  stateless), a new `/__a2a/feed` mount that server-verifies the HV-8 caps handshake, and a composer that
+  genuinely sends — prose + live A2UI artifacts rendering progressively. Proven with a real
+  Sonnet-5-vs-Haiku-4.5 match streamed over ~25s plus a clean mid-match disconnect; offline stub legs +
+  biting truncation negatives are the CI truth. Recorded-default and the server-side-key trust boundary
+  unchanged — both arms stay dev-only, tree-shaken from the static build.
+
+### Final gates (2026-07-09, late)
+
+- `npm run check` — green. `npm test` — **4495** jsdom tests across 258 files, 0 failures.
+- Scoped browser legs (both engines): the arena + feed pages incl. the new live suites — green. The full
+  `test:browser` matrix remains environment-bound (the standing OOM ceiling); scoped runs are the truth.
+- `npm run build` — green; the dist grep over both live mounts shows zero functional leakage (the only
+  textual hits are ADR prose inside the embedded decision-log page, by design).
+
+### Decision ledger
+
+ADR-**0116** proposed — seven forks carrying firm recommendations, awaiting Kim (the SPEC §4.6 widening
+passed independent doc-review, one HIGH corrected at design). TKT-0001/0002/0004 closed `done`; TKT-0003
+(ship theme-provider as a real component) recorded `open`.
+
+### Deferred follow-ups (recorded, owned)
+
+- ADR-0116 Open #2: a "save this live run as a fixture" affordance — deferred until a run worth curating.
+- The feed's user-bubble UX in live mode shows the handshake + wire only (no human-readable action
+  description — `deriveFeedEntry` has no such field, unlike a2ui-live's bespoke describer); a follow-up
+  if the sparseness grates.
+- Cancel does not reach into an in-flight provider HTTP call (ADR-0116's accepted risk — one dangling
+  model call may run to its per-move timeout server-side after a cancel).
+
+### Next tier
+
+Ratification of ADR-0116's forks and TKT-0003's theme-provider promotion are **Kim's calls — deliberately
+left unchosen here**.

@@ -7,7 +7,11 @@
 import { describe, it, expect } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (fleet precedent)
 import { readFileSync } from 'node:fs'
-import { buildIsolationReport, buildReplaySteps, ISOLATION_CHECKS, loadTranscript } from './arena-replay.ts'
+import { validateTranscript, PROTOCOL_VERSION } from '@agent-ui/a2a'
+import type { Mark } from '@agent-ui/a2a'
+import { buildIsolationReport, buildReplaySteps, createReplayAccumulator, ISOLATION_CHECKS, loadTranscript } from './arena-replay.ts'
+import type { ContextLine, ReplayStep } from './arena-replay.ts'
+import { readNdjsonLines } from './ndjson-lines.ts'
 
 declare const process: { cwd(): string }
 const MATCHES_DIR = `${process.cwd()}/packages/agent-ui/a2a/matches`
@@ -136,5 +140,119 @@ describe('buildIsolationReport — the committed negative controls FAIL loudly (
     // both fail, but the exact failure sets need not be identical — anti-vacuous: assert each is independently non-empty
     expect(a.failures.length).toBeGreaterThan(0)
     expect(b.failures.length).toBeGreaterThan(0)
+  })
+})
+
+// ── createReplayAccumulator — LLD-C2 chunk-equivalence gate (SPEC-R17 AC1) ────────────────────────────
+// For every committed fixture: pushing its lines one at a time (and via the shared reader over
+// adversarially re-chunked bytes) must deep-equal the batch derivation exactly, with `isComplete()` true
+// once the fixture's final line lands.
+
+function linesOf(raw: string): string[] {
+  return raw
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0)
+}
+
+/** Feed every line through a fresh accumulator; return the cumulative steps + contexts (grouped by seat,
+ * exactly `IsolationReport.contexts`'s shape) plus the accumulator itself (for `isComplete()`/`raw()`). */
+function accumulate(lines: string[]): { steps: ReplayStep[]; contexts: Record<Mark, ContextLine[]>; acc: ReturnType<typeof createReplayAccumulator> } {
+  const acc = createReplayAccumulator()
+  const steps: ReplayStep[] = []
+  const contexts: Record<Mark, ContextLine[]> = { X: [], O: [] }
+  for (const line of lines) {
+    const r = acc.push(line)
+    if (!r.ok) throw new Error(`accumulator refused a line it should have accepted: ${r.reason}`)
+    steps.push(...r.steps)
+    for (const c of r.contexts) contexts[c.seat].push(c.line)
+  }
+  return { steps, contexts, acc }
+}
+
+/** Re-chunk `raw` at byte offsets that do NOT respect line boundaries, then drain it through the shared
+ * `readNdjsonLines` reader — the adversarial-chunk-boundary leg the gate names. */
+function adversarialChunksOf(raw: string): ReadableStream<Uint8Array> {
+  const bytes = new TextEncoder().encode(raw)
+  const chunkSize = 7 // deliberately small + not a divisor of any line length — guarantees mid-line splits
+  const chunks: Uint8Array[] = []
+  for (let i = 0; i < bytes.length; i += chunkSize) chunks.push(bytes.slice(i, i + chunkSize))
+  let idx = 0
+  return new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (idx < chunks.length) {
+        controller.enqueue(chunks[idx]!)
+        idx += 1
+      } else {
+        controller.close()
+      }
+    },
+  })
+}
+
+describe('createReplayAccumulator — chunk-equivalence gate (SPEC-R17 AC1)', () => {
+  const fixtures: [string, string][] = [
+    ['flagship', flagshipRaw],
+    ['scripted', scriptedRaw],
+    ['contaminated-control', contaminatedControlRaw],
+    ['contaminated-provider-control', contaminatedProviderRaw],
+  ]
+
+  for (const [name, raw] of fixtures) {
+    it(`${name}: line-by-line accumulation deep-equals the batch derivation, isComplete() true at the end`, () => {
+      const loaded = loadTranscript(raw)
+      if (!loaded.ok) throw new Error(`${name} fixture failed to load`)
+      const { steps, contexts, acc } = accumulate(linesOf(raw))
+      expect(steps).toEqual(buildReplaySteps(loaded.transcript))
+      expect(contexts).toEqual(buildIsolationReport(loaded.transcript).contexts)
+      expect(acc.isComplete()).toBe(true)
+    })
+
+    it(`${name}: accumulating over adversarially re-chunked bytes (via the shared reader) yields the identical lines, hence the identical derivation`, async () => {
+      const rechunkedLines: string[] = []
+      for await (const line of readNdjsonLines(adversarialChunksOf(raw))) rechunkedLines.push(line)
+      expect(rechunkedLines).toEqual(linesOf(raw))
+      const { steps, acc } = accumulate(rechunkedLines)
+      const loaded = loadTranscript(raw)
+      if (!loaded.ok) throw new Error(`${name} fixture failed to load`)
+      expect(steps).toEqual(buildReplaySteps(loaded.transcript))
+      expect(acc.isComplete()).toBe(true)
+    })
+
+    it(`${name}: raw() reconstructs text that reloads through loadTranscript identically to the source fixture (live/batch convergence)`, () => {
+      const { acc } = accumulate(linesOf(raw))
+      const reloaded = loadTranscript(acc.raw())
+      const original = loadTranscript(raw)
+      expect(reloaded).toEqual(original)
+    })
+  }
+
+  it('negative control: a malformed line mid-stream is refused, and the accumulator stays fail-closed for every line after it', () => {
+    const lines = linesOf(scriptedRaw)
+    const acc = createReplayAccumulator()
+    const midpoint = Math.floor(lines.length / 2)
+    for (let i = 0; i < midpoint; i++) {
+      const r = acc.push(lines[i]!)
+      expect(r.ok).toBe(true)
+    }
+    const fault = acc.push('not json at all {{{')
+    expect(fault.ok).toBe(false)
+    // fail-closed: even a perfectly well-formed line arriving after the fault is refused, never processed.
+    const afterFault = acc.push(lines[midpoint]!)
+    expect(afterFault.ok).toBe(false)
+    expect(acc.isComplete()).toBe(false)
+  })
+
+  it('negative control (SPEC-R17 AC2, the truncation gate that bites): a fixture with its trailing game-end event dropped still VALIDATES line-by-line, but isComplete() stays FALSE — proving the completion gate, not the validator, is what refuses it', () => {
+    const lines = linesOf(scriptedRaw)
+    const truncated = lines.slice(0, -1) // drop the final {"game":{"kind":"end",...}} line
+    expect(lines.at(-1)).toContain('"kind":"end"')
+
+    // the point of this control: the truncated PREFIX still validates clean...
+    expect(validateTranscript(truncated, { protocolVersion: PROTOCOL_VERSION })).toEqual([])
+
+    // ...yet the accumulator's own completion gate correctly reports it incomplete.
+    const { acc } = accumulate(truncated)
+    expect(acc.isComplete()).toBe(false)
   })
 })
