@@ -49,13 +49,15 @@ families):
 - `-hover` · `-active` — the idle→hover→active solid steps (ADR-0008), each distinct from idle and from each
   other in **both** `light-dark()` branches (they replaced the `-dim`/`-high` pairing that collapsed in light).
 - `-selected` — the persistent **chosen** fill, **guaranteed WCAG-AA (≥4.5:1) against `-on-{f}` TEXT in BOTH
-  schemes** (light `550`/dark `600`). Use it wherever selected TEXT sits on an accent fill; the accent anchor
+  schemes** (`light-dark(600, 600)` since the 2026-07-10 ramp rework — the older light `550` fell to 3.85:1
+  against the new ramp; 600 is the lightest AA-clearing stop, reviewer-recomputed). Use it wherever selected TEXT sits on an accent fill; the accent anchor
   pair (`--md-sys-color-{f}` + `-on-{f}`) is report-only and drops below 4.5:1 in dark — fine for a *glyph* (3:1 bar), not
   for a *numeral/label*. First consumer: the `ui-calendar` selected day (ADR-0048). The four intent families
   (`danger/warning/success/info`) have **no `-selected` step yet**: white-on-intent-FILL TEXT is a measured but
   currently *unreachable* AA gap (the anchor dark leg is 3.13–3.41:1, below 4.5 — but no filled intent control
-  exists). The siblings are **reserved** with a pre-computed remedy (`light-dark({f}-550, {f}-600)`, verified
-  ≥4.5:1 both legs) that mints at the first filled intent control (ADR-0058).
+  exists). The siblings are **reserved**; the pre-computed remedy is `light-dark({f}-600, {f}-600)` on the
+  2026-07-10 ramp (the older `550` light leg no longer clears — RE-VERIFY per family against the live
+  ramp when minting) at the first filled intent control (ADR-0058).
 
 ## Consumption invariants
 
@@ -149,11 +151,22 @@ constant inks) + 1 disabled override — all `var()` over semantic roles, **no `
 >    **system↔info · positive↔success · critical↔danger**. Resolve: **(a)** *alias at the component
 >    boundary* — the `family` attr maps `system→info` etc.; tokens keep `info/success/danger`
 >    *(recommended, low-risk)*; or **(b)** *rename the token families*. Default = alias.
-> 2. **State separation — the no-`color-mix` consequence.** hover/selected now lean on the **accent
->    ladder** (`--md-sys-color-{f}` / `-dim` / `-high`) and **container ladder** (`-container-low` / `-container` /
->    `-container-high`) giving enough visual separation idle → hover → selected. **Verify in the real
->    palette**; if a step is too close, the token layer needs dedicated per-state roles (`--md-sys-color-{f}-hover` /
->    `-selected`) + a `--md-sys-color-*-disabled` pair — states can no longer be synthesized in the component.
+> 2. **State separation — RESOLVED by the 2026-07-10 sheet.** Dedicated per-state roles are now
+>    FIRST-CLASS for all 8 families: `--md-sys-color-{f}-hover` / `-active` / `-disabled`, the
+>    `on-{f}-{state}` inks, `container-{state}`, `outline-{state}`, `-placeholder` — the full ladder is
+>    structurally gated by `tokens.test.ts`. The old framing (state roles as a fallback when ladder
+>    steps sit too close) is inverted: consume the state roles directly; in-component synthesis is the
+>    thing to migrate away from.
+
+## The 2026-07-10 sheet shape (generator-emitted + the hand-authored tail)
+
+The generated sheet carries ~25-step primitive ramps per family (050–950 incl. 075/125-style
+intermediates) and a `-500-NNN` alpha series, plus the full per-family state-role ladders above.
+**The last `:root` block is HAND-AUTHORED** (loudly flagged in-file): the generator drops 15 roles the
+fleet consumes — the six `neutral-tint-*` washes + their six alpha primitives, `neutral-track(-hover)`,
+and `{f}-selected` — while its own `forced-colors` block still references them. Any regeneration
+re-drops them: re-apply the block (the generator wishlist is recorded in the 2026-07-10 CHANGELOG
+entry) or teach the generator to emit them.
 
 ## Source
 
