@@ -122,3 +122,10 @@ export * from './toast/toast-region.ts'    // toast's top-layer host, same-folde
 // pane child, own descriptor/contract per ADR-0080's radio-group special case).
 export * from './split/split.ts'
 export * from './split/split-pane.ts'
+
+// Timeline family — ADR-0122 (timeline-family.lld.md): a three-tag event-rail family — the shared inert
+// visual atom (ui-timeline-item), its durable authored-children host (ui-timeline, role=list), and its
+// live imperatively-fed sibling (ui-status-stream, role=log). The item lands first — both hosts depend on it.
+export * from './timeline-item/timeline-item.ts' // the shared marker+content+detail rail row (F1/F2/F3/F6)
+export * from './timeline/timeline.ts'           // the durable host — authored children, static (F1/F6)
+export * from './status-stream/status-stream.ts' // the live host — append/update/finalize, tail-follow (F4)

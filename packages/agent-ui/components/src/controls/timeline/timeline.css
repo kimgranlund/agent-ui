@@ -1,0 +1,33 @@
+/* timeline.css — ui-timeline, the single-file component stylesheet (ADR-0003; timeline-family.lld.md §3 ·
+ * SPEC-R6/R7/R14/R15). ui-timeline is a STRUCTURAL container (SPEC-R7: "MAY declare nothing else
+ * value-bearing — it is a structural container") — the rail RHYTHM (row-gap) and MARKER geometry are
+ * owned entirely by each authored `ui-timeline-item` child (its own `margin-block-end` + marker-system
+ * table, timeline-item.css); this host contributes ONLY the vertical flex stack + its accessible-name
+ * wiring (`label` → `internals.ariaLabel`, timeline.ts). No `[size]` CSS selector — `size` is a
+ * first-class prop for family/catalog symmetry (ADR-0122 F2) but this structural container itself has no
+ * geometry of its own to repoint (family-coherence A2b: a CSS `[size` selector is never present WITHOUT a
+ * declared attribute — the inverse holds trivially here, same shape as toast.css's "no [size] axis" note).
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-timeline)` declares the one dimensional quantity this host owns: the
+ *       bare-host `min-inline-size` floor (the ui-slider whole-shape lesson — SPEC-R14 AC1).
+ *   [2] STYLES BLOCK — `@scope (ui-timeline)` lays out the authored `ui-timeline-item` children as a
+ *       vertical stack, DOM order, no auto-sort (the adia rule) — page/container-scrolled, static.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-timeline) declares --ui-timeline-* ════════════════ */
+
+:where(ui-timeline) {
+  --ui-timeline-min-inline-size: 12rem;
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-timeline) consumes ONLY --ui-timeline-* ════════════════ */
+
+@scope (ui-timeline) {
+  :scope {
+    display: flex;
+    flex-direction: column;
+    /* min-inline-size floor — the ui-slider whole-shape lesson: a bare/unsized host must not collapse to a
+       0-width sliver (SPEC-R14 AC1). Above the floor, width stays the layout's job. */
+    min-inline-size: var(--ui-timeline-min-inline-size);
+  }
+}

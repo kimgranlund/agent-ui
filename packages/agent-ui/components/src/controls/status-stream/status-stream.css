@@ -1,0 +1,33 @@
+/* status-stream.css — ui-status-stream, the single-file component stylesheet (ADR-0003;
+ * timeline-family.lld.md §4 · SPEC-R10/R14/R15). Like ui-timeline, the rail geometry/rhythm belongs
+ * entirely to the authored `ui-timeline-item` children this host creates via its own API
+ * (status-stream.ts) — this file owns ONLY the live strip's scroll region (the one-owned-scroll-region
+ * law, SPEC-R10) and its bounded viewport.
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-status-stream)` declares the strip's OWN dimensional facts: the
+ *       bare-host `min-inline-size` floor (the ui-slider whole-shape lesson) and a bounded
+ *       `max-block-size` so the strip is a genuine scrollable "now" viewport, not an ever-growing page.
+ *   [2] STYLES BLOCK — `@scope (ui-status-stream)` lays out the imperatively-appended `ui-timeline-item`
+ *       children as a vertical flex stack and OWNS its scroll region (`overflow-y: auto` — the fleet's
+ *       physical-property convention for a scroll viewport, card.css/menu.css/combo-box.css precedent).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-status-stream) declares --ui-status-stream-* ════════════════ */
+
+:where(ui-status-stream) {
+  --ui-status-stream-min-inline-size: 16rem;
+  --ui-status-stream-max-block-size: 20rem;
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-status-stream) consumes ONLY --ui-status-stream-* ════════════════ */
+
+@scope (ui-status-stream) {
+  :scope {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: var(--ui-status-stream-min-inline-size);
+    max-block-size: var(--ui-status-stream-max-block-size);
+    overflow-y: auto; /* the stream OWNS its scroll region (SPEC-R10) — the one-owned-scroll-region law */
+    overscroll-behavior: contain; /* a nested strip's scroll never chains into the page behind it */
+  }
+}

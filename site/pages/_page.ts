@@ -325,6 +325,29 @@ export const NAV: readonly NavGroup[] = [
       { href: './toast-doc.html', label: 'API' },
     ],
   },
+  // ADR-0122 — the timeline family: the shared marker-system rail row (ui-timeline-item), its durable
+  // authored-children host (ui-timeline), and its live imperatively-fed sibling (ui-status-stream).
+  {
+    label: 'ui-timeline-item',
+    links: [
+      { href: './timeline-item-demo.html', label: 'Demo' },
+      { href: './timeline-item-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-timeline',
+    links: [
+      { href: './timeline-demo.html', label: 'Demo' },
+      { href: './timeline-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-status-stream',
+    links: [
+      { href: './status-stream-demo.html', label: 'Demo' },
+      { href: './status-stream-doc.html', label: 'API' },
+    ],
+  },
   {
     // The application-frame primitive (@agent-ui/app, ADR-0082/0083/0084). A GUIDE page, not a fleet component
     // in components/src — so it is an ungrouped site-level link (no `label:`, hence no site-toc GROUP), exactly

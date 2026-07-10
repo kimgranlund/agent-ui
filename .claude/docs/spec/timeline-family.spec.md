@@ -52,7 +52,7 @@ emittable markup).
   non-color marker signifier (ADR-0057).
 - **Durable host** (`ui-timeline`) — authored `ui-timeline-item` light-DOM children, DOM-order read-back,
   `role="list"`, static, no tail-follow.
-- **Live host** (`ui-status-stream`) — an imperative `append`/`update`/`finalize` API, `role="log"` (polite
+- **Live host** (`ui-status-stream`) — an imperative `appendEntry`/`update`/`finalize` API, `role="log"` (polite
   live region), tail-follow scroll, streaming motion, and the completion invariant.
 - **Completion invariant** — a stream that ends without resolving an entry MUST render that entry as
   *truncated* (a visible interrupted affordance), never a silent forever-spinner (the B7 tracked-completion
@@ -144,7 +144,7 @@ prop in v1. *(ADR-0122 F1/F2/F6)*
 - **AC2** *Given* three authored `ui-timeline-item` children, *then* they render in DOM order (no reordering);
   *given* the last item, *then* its connector is suppressed (a `data-last`/`:last-of-type` rule — the terminal
   row has no trailing line).
-- **AC3** *Given* a grep of `timeline.ts`, *then* there is no imperative `append`/`update`/`finalize` API, no
+- **AC3** *Given* a grep of `timeline.ts`, *then* there is no imperative `appendEntry`/`update`/`finalize` API, no
   `MutationObserver` tail-follow, and no live-region role — the durable host is static (the negative control
   separating it from `ui-status-stream`).
 
@@ -168,7 +168,7 @@ created by its API (SPEC-R9). *(ADR-0122 F1/F4)*
 - **AC2** *Given* the same content authored under `ui-timeline` vs appended under `ui-status-stream`, *then* the
   ARIA role differs (`list` vs `log`) — the mechanical proof the two are distinct controls, not one posture.
 
-**SPEC-R9 — Imperative data contract: `append` + keyed `update` + `finalize`.** The component MUST expose a
+**SPEC-R9 — Imperative data contract: `appendEntry` + keyed `update` + `finalize`.** The component MUST expose a
 public imperative API — no bound reactive-list data prop:
 - `append(entry: StatusEntry): UITimelineItemElement` — creates a `ui-timeline-item`, assigns the entry's
   fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?` — the streamed
@@ -301,7 +301,7 @@ the whole-shape + representative-specimen laws)*
 **SPEC-R19 — The live browser proof (a REAL stream).** A cross-engine browser test MUST drive
 `ui-status-stream` from a REAL NDJSON source (the in-repo arena stream via `readNdjsonLines`, an
 INSTRUMENT-BRIDGE where an engine cannot drive a live proxy — feeding recorded NDJSON lines through the same
-`append`/`update`/`finalize` path a live consumer would), proving: append renders a new entry, a keyed update
+`appendEntry`/`update`/`finalize` path a live consumer would), proving: append renders a new entry, a keyed update
 transitions an entry in place, tail-follow tracks the newest entry (with the stick-to-bottom guard), and the
 completion invariant renders a truncated entry when the stream ends mid-flight. *(ADR-0122 F4; the testing bar;
 TKT-0013 acceptance)*

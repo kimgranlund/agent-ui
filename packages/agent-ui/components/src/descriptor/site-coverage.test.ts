@@ -212,9 +212,14 @@ describe('site coverage — every shipped component has its required per-tier pa
     // ADR-0048) + ui-segmented-control (ADR-0095 — geometry.md's own named Pattern example) + the Wave M1
     // content family (ADR-0113): ui-disclosure (native details/summary fold) + the Wave M1 feed family
     // (ADR-0112): ui-toast (a fixed-width notification card — Container/surface geometry, not a control
-    // height). Each requires its {doc, demo} pages.
+    // height) + the timeline family (ADR-0122): ui-timeline-item (the shared marker-system rail row),
+    // ui-timeline (the durable host), ui-status-stream (the live host — deliberately not catalogued, F5).
+    // Each requires its {doc, demo} pages.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
-      ['calendar', 'combo-box', 'disclosure', 'menu', 'modal', 'popover', 'segmented-control', 'select', 'tabs', 'toast', 'toolbar', 'tooltip'],
+      [
+        'calendar', 'combo-box', 'disclosure', 'menu', 'modal', 'popover', 'segmented-control', 'select',
+        'status-stream', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
+      ],
     )
   })
 })

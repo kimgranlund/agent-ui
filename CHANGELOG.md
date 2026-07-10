@@ -606,3 +606,17 @@ consequences), with cross-trait regression tests incl. the re-enable-mid-session
 radio-group's first real-engine one-Tab-stop proof. Family ceiling re-based to 34 KB gz
 (sized for the three queued families); split's marginal line pinned 2176 (gzip
 measurement-frame drift, its source byte-identical). Toolbar marginal: 318 B gz.
+
+## 2026-07-10 (the timeline family) — ui-timeline-item · ui-timeline · ui-status-stream ship
+
+ADR-0122's three-tag family (review SHIP; the extrapolated geometry registers scored a strong
+pass against the band-overlap law): one inert item atom (five distinct non-color marker SHAPES
+incl. the truncated dashed ring — whose pulse-halt the review caught and closed — a new explicit
+(scale × size) marker-geometry table, the disclosure-reused collapsible detail) shared by two
+deliberately divergent hosts — the durable role=list timeline (authored children, static) and
+the live role=log status-stream (imperative appendEntry/keyed update/finalize — renamed from
+append at build: a hard tsc collision with Node.prototype.append — tail-follow with a real
+stick-to-bottom guard, the B7 completion invariant rendering torn streams as truncated, proven
+against the actual in-repo flagship match stream). The one-control-with-a-live-flag shape was
+rejected at design: five mechanical axes diverge. Marginals 0/90/419 B gz. The catalog slice
+(Timeline/TimelineItem rows + the StatusStream exclusion) lands back-to-back next.

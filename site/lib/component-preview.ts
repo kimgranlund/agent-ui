@@ -479,6 +479,45 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     actionable.textContent = 'Upload failed.'
     return [plain, actionable]
   },
+  // ui-timeline-item (ADR-0122): the disclosure precedent exactly — a `[data-role="detail"]` child is
+  // MOVED into a composed `ui-disclosure` at connect (#ensureAnatomy), so it lives in NO_SLOT_TEXT below.
+  'ui-timeline-item': () => {
+    const detail = document.createElement('span')
+    detail.setAttribute('data-role', 'detail')
+    detail.textContent = 'Carrier: UPS · Tracking 1Z999AA10123456784'
+    return [detail]
+  },
+  // ui-timeline (ADR-0122): a STRUCTURAL target — its real content model is authored `ui-timeline-item`
+  // children, read back in DOM order (the timeline.md example markup: a real order-tracking chronology).
+  'ui-timeline': () => {
+    const rows: Array<[string, string, string]> = [
+      ['done', 'Order placed', 'Apr 15, 2:30 PM'],
+      ['active', 'Shipped', 'Apr 17, 11:45 AM'],
+      ['pending', 'Delivered', 'Expected Apr 20'],
+    ]
+    return rows.map(([status, label, timestamp]) => {
+      const item = document.createElement('ui-timeline-item')
+      item.setAttribute('status', status)
+      item.setAttribute('label', label)
+      item.setAttribute('timestamp', timestamp)
+      return item
+    })
+  },
+  // ui-status-stream (ADR-0122): the ui-toast-region precedent exactly — a STRUCTURAL target whose real
+  // content model is `ui-timeline-item` children this host normally creates via its OWN imperative
+  // appendEntry/update API, but which render identically when pre-authored (a representative bare specimen).
+  'ui-status-stream': () => {
+    const rows: Array<[string, string]> = [
+      ['done', 'Searching the codebase…'],
+      ['active', 'Generating the patch…'],
+    ]
+    return rows.map(([status, label]) => {
+      const item = document.createElement('ui-timeline-item')
+      item.setAttribute('status', status)
+      item.setAttribute('label', label)
+      return item
+    })
+  },
 }
 
 // The component-mode counterpart to a2ui-mode's A2UI_INITIAL: a per-tag knob-value seed for a control whose
@@ -504,6 +543,9 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   'ui-badge': { label: '3 failing', intent: 'danger' },
   'ui-disclosure': { summary: 'Full log' },
   'ui-swatch': { value: '--md-sys-color-primary', label: 'primary' },
+  // ui-timeline-item (ADR-0122): `label`/`timestamp` are real string knobs defaulting to '' — the same
+  // demonstrability gap as ui-disclosure's `summary` above; a bare specimen would render an unlabeled dot.
+  'ui-timeline-item': { status: 'done', label: 'Deployed', timestamp: 'Apr 15, 2:30 PM' },
 }
 
 // A per-tag static HOST ATTRIBUTE seed (batch C) — distinct from COMPONENT_INITIAL (which seeds a KNOB's
@@ -608,6 +650,9 @@ export const NO_SLOT_TEXT = new Set([
   'ui-swatch',
   'ui-ramp',
   'ui-ladder',
+  // ui-timeline-item (ADR-0122): #ensureAnatomy() ADOPTS a `[data-role="detail"]` host child into a
+  // composed `ui-disclosure` part (never left as a direct host child) — the ui-disclosure precedent exactly.
+  'ui-timeline-item',
 ])
 
 // STRUCTURAL (batch B) — the default slot IS the real content model (children ARE the grid cells / flex items /
@@ -625,7 +670,11 @@ export const NO_SLOT_TEXT = new Set([
 // ui-split-pane's default slot IS the author's own arbitrary content — both the exact STRUCTURAL shape.
 // ui-toolbar (ADR-0121) joins this set too: host-as-flex, light-DOM children ARE the roving items — the exact
 // ui-row STRUCTURAL shape, not a text/label slot.
-export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-theme-provider', 'ui-toast-region', 'ui-toolbar'])
+// ui-timeline / ui-status-stream (ADR-0122) join this set too: ui-timeline's default slot IS its authored
+// `ui-timeline-item` chronology; ui-status-stream's is the SAME item children, normally created via its own
+// appendEntry/update API but rendering identically when pre-authored — both the exact STRUCTURAL shape,
+// never a text/label string (the ui-toast-region precedent).
+export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-theme-provider', 'ui-timeline', 'ui-status-stream', 'ui-toast-region', 'ui-toolbar'])
 
 // SLOT_TEXT_OK — SLOT_TEXT is a real, safe, MEANINGFUL knob: a genuine text/label default slot, the accessible
 // label content a viewer edits to see the control's OWN typography/sizing respond (button/checkbox/radio/

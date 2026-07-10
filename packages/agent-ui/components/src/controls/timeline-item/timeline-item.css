@@ -1,0 +1,391 @@
+/* timeline-item.css — ui-timeline-item, the single-file component stylesheet (ADR-0003;
+ * timeline-family.lld.md §2.4/§5 · SPEC-R3/R4/R13/R15). Three sections:
+ *
+ *   [0] THE MARKER-SYSTEM RAMP — a NEW explicit per-(scale × size) integer table (ADR-0122 F2's novelty
+ *       leg, the ADR-0038 no-multiplier law, the ADR-0035/0036 hoisted-per-[scale] pattern). Bare
+ *       `:root`/`[scale=...]` selectors (the dimensions.css idiom) declare the RAMP FAMILY
+ *       `--ui-timeline-item-{marker-box,dot-size,connector-width,gutter,row-gap}-{sm,md,lg}` — literals,
+ *       no calc/multiplier. Kept LOCAL to this file (not shared/dimensions.css) because the marker system
+ *       is consumed by ONLY ui-timeline-item — a family-scoped novelty, the ADR-0048 calendar precedent's
+ *       shape, not its substance (the calendar aliases the EXISTING --ui-height-* ramp; this table is
+ *       genuinely new). Every declared/consumed token is prefixed `--ui-timeline-item-` (own-name, per
+ *       family-coherence's B invariant) — a deliberate rename off the LLD's illustrative `--ui-timeline-*`
+ *       spelling, since that prefix is NOT this control's own name and would cross-file-leak under the
+ *       fleet's per-control token-ownership gate; ui-timeline/ui-status-stream never touch these tokens.
+ *   [1] TOKEN BLOCK — `:where(ui-timeline-item)` DECLARES the CONSUMED `--ui-timeline-item-*` chain,
+ *       picking a ramp row via `[size]` (Kim's (scale × size) → row lookup: `[scale]` (ambient) selects
+ *       the register via [0]'s tiers; `size` (an author prop) picks the row within it) + status-keyed ink.
+ *   [2] STYLES BLOCK — `@scope (ui-timeline-item)` CONSUMES only `--ui-timeline-item-*` (+ the shared
+ *       focus-ring/type-scale allowlist): host-as-grid (marker | content | aside), the marker's `::before`
+ *       dot/ring/pulse + `::after` connector (a REAL row-gap realized as `margin-block-end`, suppressed on
+ *       `[data-last]` — so the item is its OWN row-rhythm authority, no cross-file host coordination), the
+ *       `data-role` content cells (empty ones collapse), and a `forced-colors` block keeping every status
+ *       marker legible by SHAPE (SPEC-R4 AC2).
+ *
+ * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from timeline-item.ts.
+ */
+
+/* ════════════════ [0] THE MARKER-SYSTEM RAMP — bare :root / [scale=…] (dimensions.css idiom) ════════════════ */
+
+:root {
+  /* The default register (≡ [scale="ui-md"] / [scale="content-sm"] — Kim's band-overlap law, SPEC-R13 AC2's
+     frozen row: connector-width is deliberately 2 across every size AND every scale tier — the stepping
+     lesson the geometry probe must not assume away). */
+  --ui-timeline-item-marker-box-sm: 14px;
+  --ui-timeline-item-marker-box-md: 16px;
+  --ui-timeline-item-marker-box-lg: 20px;
+  --ui-timeline-item-dot-size-sm: 6px;
+  --ui-timeline-item-dot-size-md: 8px;
+  --ui-timeline-item-dot-size-lg: 10px;
+  --ui-timeline-item-connector-width-sm: 2px;
+  --ui-timeline-item-connector-width-md: 2px;
+  --ui-timeline-item-connector-width-lg: 2px;
+  --ui-timeline-item-gutter-sm: 18px;
+  --ui-timeline-item-gutter-md: 20px;
+  --ui-timeline-item-gutter-lg: 24px;
+  --ui-timeline-item-row-gap-sm: 8px;
+  --ui-timeline-item-row-gap-md: 12px;
+  --ui-timeline-item-row-gap-lg: 16px;
+}
+
+/* ui-sm — the compact register (tighter than the default). */
+[scale='ui-sm'] {
+  --ui-timeline-item-marker-box-sm: 12px;
+  --ui-timeline-item-marker-box-md: 14px;
+  --ui-timeline-item-marker-box-lg: 18px;
+  --ui-timeline-item-dot-size-sm: 5px;
+  --ui-timeline-item-dot-size-md: 6px;
+  --ui-timeline-item-dot-size-lg: 8px;
+  --ui-timeline-item-connector-width-sm: 2px;
+  --ui-timeline-item-connector-width-md: 2px;
+  --ui-timeline-item-connector-width-lg: 2px;
+  --ui-timeline-item-gutter-sm: 16px;
+  --ui-timeline-item-gutter-md: 18px;
+  --ui-timeline-item-gutter-lg: 22px;
+  --ui-timeline-item-row-gap-sm: 6px;
+  --ui-timeline-item-row-gap-md: 8px;
+  --ui-timeline-item-row-gap-lg: 12px;
+}
+/* ui-md — the default register, restated explicitly (byte-identical to :root) so every [scale] tier is a
+   complete, self-contained row (the ADR-0038 discipline: no tier relies on falling through to :root). */
+[scale='ui-md'] {
+  --ui-timeline-item-marker-box-sm: 14px;
+  --ui-timeline-item-marker-box-md: 16px;
+  --ui-timeline-item-marker-box-lg: 20px;
+  --ui-timeline-item-dot-size-sm: 6px;
+  --ui-timeline-item-dot-size-md: 8px;
+  --ui-timeline-item-dot-size-lg: 10px;
+  --ui-timeline-item-connector-width-sm: 2px;
+  --ui-timeline-item-connector-width-md: 2px;
+  --ui-timeline-item-connector-width-lg: 2px;
+  --ui-timeline-item-gutter-sm: 18px;
+  --ui-timeline-item-gutter-md: 20px;
+  --ui-timeline-item-gutter-lg: 24px;
+  --ui-timeline-item-row-gap-sm: 8px;
+  --ui-timeline-item-row-gap-md: 12px;
+  --ui-timeline-item-row-gap-lg: 16px;
+}
+/* ui-lg — a step up (also = the content-md register, Kim's 6-names→4-registers band overlap). */
+[scale='ui-lg'] {
+  --ui-timeline-item-marker-box-sm: 16px;
+  --ui-timeline-item-marker-box-md: 20px;
+  --ui-timeline-item-marker-box-lg: 24px;
+  --ui-timeline-item-dot-size-sm: 7px;
+  --ui-timeline-item-dot-size-md: 10px;
+  --ui-timeline-item-dot-size-lg: 12px;
+  --ui-timeline-item-connector-width-sm: 2px;
+  --ui-timeline-item-connector-width-md: 2px;
+  --ui-timeline-item-connector-width-lg: 2px;
+  --ui-timeline-item-gutter-sm: 20px;
+  --ui-timeline-item-gutter-md: 24px;
+  --ui-timeline-item-gutter-lg: 28px;
+  --ui-timeline-item-row-gap-sm: 10px;
+  --ui-timeline-item-row-gap-md: 16px;
+  --ui-timeline-item-row-gap-lg: 20px;
+}
+/* content-sm ≡ ui-md (Kim's band-overlap law: the content-* band is the ui-* band shifted up one row —
+   6 [scale] names render 4 distinct marker-system registers, matching --ui-height-* and --ui-font-*). */
+[scale='content-sm'] {
+  --ui-timeline-item-marker-box-sm: 14px;
+  --ui-timeline-item-marker-box-md: 16px;
+  --ui-timeline-item-marker-box-lg: 20px;
+  --ui-timeline-item-dot-size-sm: 6px;
+  --ui-timeline-item-dot-size-md: 8px;
+  --ui-timeline-item-dot-size-lg: 10px;
+  --ui-timeline-item-connector-width-sm: 2px;
+  --ui-timeline-item-connector-width-md: 2px;
+  --ui-timeline-item-connector-width-lg: 2px;
+  --ui-timeline-item-gutter-sm: 18px;
+  --ui-timeline-item-gutter-md: 20px;
+  --ui-timeline-item-gutter-lg: 24px;
+  --ui-timeline-item-row-gap-sm: 8px;
+  --ui-timeline-item-row-gap-md: 12px;
+  --ui-timeline-item-row-gap-lg: 16px;
+}
+/* content-md ≡ ui-lg (same band-overlap law). */
+[scale='content-md'] {
+  --ui-timeline-item-marker-box-sm: 16px;
+  --ui-timeline-item-marker-box-md: 20px;
+  --ui-timeline-item-marker-box-lg: 24px;
+  --ui-timeline-item-dot-size-sm: 7px;
+  --ui-timeline-item-dot-size-md: 10px;
+  --ui-timeline-item-dot-size-lg: 12px;
+  --ui-timeline-item-connector-width-sm: 2px;
+  --ui-timeline-item-connector-width-md: 2px;
+  --ui-timeline-item-connector-width-lg: 2px;
+  --ui-timeline-item-gutter-sm: 20px;
+  --ui-timeline-item-gutter-md: 24px;
+  --ui-timeline-item-gutter-lg: 28px;
+  --ui-timeline-item-row-gap-sm: 10px;
+  --ui-timeline-item-row-gap-md: 16px;
+  --ui-timeline-item-row-gap-lg: 20px;
+}
+/* content-lg — the largest register, its own row (no overlap partner, mirroring --ui-height-*). */
+[scale='content-lg'] {
+  --ui-timeline-item-marker-box-sm: 20px;
+  --ui-timeline-item-marker-box-md: 24px;
+  --ui-timeline-item-marker-box-lg: 28px;
+  --ui-timeline-item-dot-size-sm: 9px;
+  --ui-timeline-item-dot-size-md: 12px;
+  --ui-timeline-item-dot-size-lg: 14px;
+  --ui-timeline-item-connector-width-sm: 2px;
+  --ui-timeline-item-connector-width-md: 2px;
+  --ui-timeline-item-connector-width-lg: 2px;
+  --ui-timeline-item-gutter-sm: 24px;
+  --ui-timeline-item-gutter-md: 28px;
+  --ui-timeline-item-gutter-lg: 32px;
+  --ui-timeline-item-row-gap-sm: 12px;
+  --ui-timeline-item-row-gap-md: 20px;
+  --ui-timeline-item-row-gap-lg: 24px;
+}
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-timeline-item) declares --ui-timeline-item-* ════════════════ */
+
+:where(ui-timeline-item) {
+  /* size → picks the row within the ambient [scale] register (Kim's (scale × size) → row lookup). Frame
+     quantities (marker-box/dot/connector/gutter) are density-INVARIANT (the centering law); row-gap is
+     the ONE rhythm quantity and rides [density] via the shared `--ui-density` multiplier below. */
+  --ui-timeline-item-marker-box: var(--ui-timeline-item-marker-box-md);
+  --ui-timeline-item-dot-size: var(--ui-timeline-item-dot-size-md);
+  --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-md);
+  --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-md);
+  --ui-timeline-item-row-gap: calc(var(--ui-timeline-item-row-gap-md) * var(--ui-density));
+  /* a slotted/consumer marker icon reads the CONTENT-ICON register, not this table (LLD §5). */
+  --ui-timeline-item-icon-size: var(--ui-icon-md);
+
+  /* status-keyed ink — the SECONDARY, redundant channel (ADR-0057); the marker SHAPE is the primary one. */
+  --ui-timeline-item-marker-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-timeline-item-connector-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-timeline-item-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-timeline-item-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
+}
+:where(ui-timeline-item[size='sm']) {
+  --ui-timeline-item-marker-box: var(--ui-timeline-item-marker-box-sm);
+  --ui-timeline-item-dot-size: var(--ui-timeline-item-dot-size-sm);
+  --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-sm);
+  --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-sm);
+  --ui-timeline-item-row-gap: calc(var(--ui-timeline-item-row-gap-sm) * var(--ui-density));
+  --ui-timeline-item-icon-size: var(--ui-icon-sm);
+}
+:where(ui-timeline-item[size='lg']) {
+  --ui-timeline-item-marker-box: var(--ui-timeline-item-marker-box-lg);
+  --ui-timeline-item-dot-size: var(--ui-timeline-item-dot-size-lg);
+  --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-lg);
+  --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-lg);
+  --ui-timeline-item-row-gap: calc(var(--ui-timeline-item-row-gap-lg) * var(--ui-density));
+  --ui-timeline-item-icon-size: var(--ui-icon-lg);
+}
+
+/* status → the redundant ink channel (never the ONLY channel — SHAPE carries the state, styles block below). */
+:where(ui-timeline-item[status='pending']) {
+  --ui-timeline-item-marker-ink: var(--md-sys-color-neutral-on-surface-variant);
+}
+:where(ui-timeline-item[status='active']) {
+  --ui-timeline-item-marker-ink: var(--md-sys-color-primary);
+}
+:where(ui-timeline-item[status='done']) {
+  --ui-timeline-item-marker-ink: var(--md-sys-color-success);
+}
+:where(ui-timeline-item[status='error']) {
+  --ui-timeline-item-marker-ink: var(--md-sys-color-danger);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-timeline-item) consumes ONLY --ui-timeline-item-* ════════════════ */
+
+@scope (ui-timeline-item) {
+  :scope {
+    display: grid;
+    grid-template-columns: var(--ui-timeline-item-gutter) 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: var(--ui-space-sm);
+    align-items: start;
+    color: var(--ui-timeline-item-ink);
+    /* the item is its OWN row-rhythm authority — a real margin, not a cross-file host-set gap (LLD §8's
+       accepted tradeoff: alignment/rhythm via inherited/local tokens, not subgrid). */
+    margin-block-end: var(--ui-timeline-item-row-gap);
+  }
+  /* the terminal row of a host (ui-timeline/ui-status-stream marks its last child `[data-last]`) carries
+     no trailing rhythm and no dangling connector (SPEC-R6 AC2). */
+  :scope[data-last] {
+    margin-block-end: 0;
+  }
+
+  /* ── the marker cell — dot/ring/pulse (::before) + connector (::after), gutter column, full row span ── */
+  :scope [data-part='marker'] {
+    position: relative;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    inline-size: var(--ui-timeline-item-marker-box);
+    block-size: var(--ui-timeline-item-marker-box);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ui-timeline-item-marker-ink);
+  }
+  /* the plain dot — '' (neutral) + 'active' share it (filled); 'pending' hollows it via a border instead
+     of a fill (SPEC-R4: a distinct SHAPE, not hue alone). 'done'/'error' suppress it entirely (below). */
+  :scope [data-part='marker']::before {
+    content: '';
+    position: absolute;
+    inline-size: var(--ui-timeline-item-dot-size);
+    block-size: var(--ui-timeline-item-dot-size);
+    border-radius: 50%;
+    background: var(--ui-timeline-item-marker-ink);
+  }
+  :scope[status='pending'] [data-part='marker']::before {
+    background: transparent;
+    border: var(--ui-timeline-item-connector-width) solid var(--ui-timeline-item-marker-ink);
+  }
+  /* 'active' — a consumer-opt-in pulse (SPEC-R4: "a pulse/spinner is a consumer-opt-in presentation
+     hint"), realized as a box-shadow ping so the dot's OWN box never resizes (the centering law); static
+     under reduced-motion (SPEC-R4 AC3). */
+  :scope[status='active'] [data-part='marker']::before {
+    animation: ui-timeline-item-pulse 1.6s ease-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope[status='active'] [data-part='marker']::before {
+      animation: none;
+    }
+  }
+  @keyframes ui-timeline-item-pulse {
+    0% {
+      box-shadow: 0 0 0 0 var(--ui-timeline-item-marker-ink);
+    }
+    100% {
+      box-shadow: 0 0 0 calc(var(--ui-timeline-item-dot-size) / 1.5) transparent;
+    }
+  }
+
+  /* the connector — a REAL element, not a pseudo (bridges the item's own margin-block-end row-gap so the
+     line is visually continuous into the next item); suppressed on the host's terminal item. */
+  :scope [data-part='marker']::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    inset-inline-start: calc(50% - var(--ui-timeline-item-connector-width) / 2);
+    inline-size: var(--ui-timeline-item-connector-width);
+    block-size: var(--ui-timeline-item-row-gap);
+    background: var(--ui-timeline-item-connector-ink);
+  }
+  :scope[data-last] [data-part='marker']::after {
+    display: none;
+  }
+
+  /* a consumer-adopted / icon-prop-driven / status-glyph marker suppresses the plain dot (NOT the
+     connector — the two are independent facts) and sizes to the content-icon register (LLD §5). */
+  :scope:has([data-role='marker']) [data-part='marker']::before {
+    display: none;
+  }
+  :scope [data-role='marker'] {
+    inline-size: var(--ui-timeline-item-icon-size);
+    block-size: var(--ui-timeline-item-icon-size);
+  }
+
+  /* ── content cells — label/timestamp share row 1, description/trailing share row 2 ── */
+  :scope [data-role='label'] {
+    grid-column: 2;
+    grid-row: 1;
+    font-weight: 500;
+  }
+  :scope [data-role='timestamp'] {
+    grid-column: 3;
+    grid-row: 1;
+    color: var(--ui-timeline-item-muted-ink);
+    white-space: nowrap;
+  }
+  :scope [data-role='description'] {
+    grid-column: 2;
+    grid-row: 2;
+    color: var(--ui-timeline-item-muted-ink);
+  }
+  :scope [data-role='trailing'] {
+    grid-column: 3;
+    grid-row: 2;
+  }
+  /* empty cells collapse — no phantom gutter (SPEC-R3 AC1). */
+  :scope > [data-role]:empty {
+    display: none;
+  }
+
+  /* the streamed chain-of-thought text cell (ui-status-stream's #growText, timeline-item.md's residual
+     imperative fact) — an implicit row below the label/description/timestamp/trailing rows. */
+  :scope [data-role='text'] {
+    grid-column: 2 / 4;
+    grid-row: 3;
+    color: var(--ui-timeline-item-muted-ink);
+    white-space: pre-wrap;
+  }
+
+  /* the composed detail (ui-disclosure) spans the content+aside columns, an implicit row below any
+     streamed text (so a status-stream entry with BOTH reads top-to-bottom: text, then the detail toggle). */
+  :scope [data-part='detail'] {
+    grid-column: 2 / 4;
+    grid-row: 4;
+  }
+  /* the PRE-adoption consumer child (moved into [data-part='detail'] by #ensureAnatomy, synchronously in
+     connected()) — hidden in the brief window before upgrade/adoption so it never paints loose, unstyled
+     content outside the grid (the same anti-FOUC discipline the toast/disclosure adopted-part precedent
+     relies on implicitly; here made explicit since the source attribute survives the move). */
+  :scope > [data-role='detail'] {
+    display: none;
+  }
+
+  /* :state(truncated) — ui-status-stream's completion invariant (SPEC-R11): a dashed ring OVERRIDES
+     whatever status shape/glyph was showing (a torn stream never lies "still working"). The dash pattern
+     is a non-color-only signifier — `border-style` alone distinguishes it under forced-colors, where the
+     warning fill is not the sole cue. Wins over the injected done/error glyph by clearing it back to the
+     CSS dot (the marker glyph effect never runs for truncation — it is a pure CSS override). */
+  :scope:state(truncated) [data-part='marker']::before {
+    display: block;
+    background: transparent;
+    border: var(--ui-timeline-item-connector-width) dashed var(--md-sys-color-warning);
+    /* an active entry's pulse must NOT survive truncation — a torn stream showing a still-pulsing marker
+       is exactly the "still working" cue SPEC-R11 exists to kill (component-review finding). Wins over the
+       [status='active']::before pulse rule above by source order (equal specificity). */
+    animation: none;
+  }
+  :scope:state(truncated) [data-role='marker'] {
+    display: none; /* the dashed ring is the sole marker once truncated — no competing built-in glyph */
+  }
+
+  /* forced-colors (WHCM) — every marker SHAPE keeps a system-colour border/fill so the state survives
+     when fills flatten (SPEC-R4 AC2). The pending ring, the connector, and the label/description ink all
+     already resolve through a WHCM-mapped role at the token layer; this block is the explicit,
+     computed-style-provable belt-and-suspenders (the disclosure precedent). */
+  @media (forced-colors: active) {
+    :scope {
+      color: CanvasText;
+    }
+    :scope [data-part='marker']::before {
+      background: CanvasText;
+      border-color: CanvasText;
+    }
+    :scope [data-part='marker']::after {
+      background: CanvasText;
+    }
+    :scope [data-role='description'],
+    :scope [data-role='timestamp'] {
+      color: CanvasText;
+    }
+  }
+}

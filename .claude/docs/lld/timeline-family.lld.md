@@ -40,12 +40,12 @@ const STATUS = ['', 'pending', 'active', 'done', 'error'] as const
 const SIZE = ['sm', 'md', 'lg'] as const
 
 const props = {
-  status: prop.enum(STATUS, ''),        // '' = neutral marker (F3)
+  status: { ...prop.enum(STATUS, ''), reflect: true },  // '' = neutral marker (F3); reflect added at build — CSS [status] selectors + SPEC-R2 AC2 round-trip (review-ratified)
   label: prop.string(''),
   description: prop.string(''),
   timestamp: prop.string(''),           // the consumer's string — NO codec (F6)
   icon: prop.string(''),                // a marker glyph name replacing the dot (adia icon-mode)
-  size: prop.enum(SIZE, 'md'),          // first-class geometry (F2)
+  size: { ...prop.enum(SIZE, 'md'), reflect: true },    // first-class geometry (F2); reflect added at build (CSS [size] registers)
 } satisfies PropsSchema
 
 export interface UITimelineItemElement extends ReactiveProps<typeof props> {}
@@ -81,7 +81,7 @@ if (!customElements.get('ui-timeline-item')) customElements.define('ui-timeline-
   set (or a consumer `[data-role="marker"]` child is present at connect), the dot is suppressed
   (`:scope:has([data-role="marker"])::before { display: none }`) and the slotted marker fills the cell.
 - content cells keyed by `data-role`: `label` · `description` · `timestamp` (the aside) · `trailing`. Pre-existing
-  light-DOM children carrying `[data-role]` are ADOPTED (moved, ADR-0022 `moveBefore`/`append`) into position;
+  light-DOM children carrying `[data-role]` are ADOPTED (moved, ADR-0022 `moveBefore`/`appendEntry`) into position;
   otherwise `#renderContent()` stamps `label`/`description`/`timestamp` from the props (the adia stamp-if-absent
   model + its wrapper-trap regression: a wrapped consumer `[data-role="label"]` must SUPPRESS the default stamp,
   not duplicate — the adia `timeline.test.js` lesson, carried as a probe).
@@ -99,13 +99,16 @@ event name — the adia `timeline-toggle` custom name is dropped). One nesting l
 ### 2.4 `timeline-item.css` — the marker-system grid
 
 Scoped `@scope (ui-timeline-item)` / `:where(ui-timeline-item)`. Host is `display: grid` with the shared
-three-column track — `[gutter] var(--ui-timeline-gutter) [content] 1fr [aside] auto` — so an item inside a
+three-column track — `[gutter] var(--ui-timeline-item-gutter) [content] 1fr [aside] auto` — so an item inside a
 `ui-timeline`/`ui-status-stream` aligns to ONE vertical axis (the adia subgrid idea, realized as inherited
 custom props the host sets, kept jsdom-safe — no `subgrid` dependency for the alignment proof). The marker
 `::before` dot and `::after` connector are absolutely positioned in the gutter column; the connector's
 `bottom` reaches the next row (suppressed on the host's last item, §3.2). All rail quantities read the
-`--ui-timeline-*` chain (§5). Content text reads the ambient type scale (`--md-sys-typescale-*`), NOT the marker
+`--ui-timeline-item-*` chain (§5). Content text reads the ambient type scale (`--md-sys-typescale-*`), NOT the marker
 table. A `@media (forced-colors: active)` block keeps each `status` marker shape legible (SPEC-R4/R15).
+
+> *Import-edge amendment (build, review-ratified): `ui-timeline-item` ALSO imports `@agent-ui/icons` (+ the phosphor pack activation in consumers/tests) for the done/error marker glyphs (SPEC-R4) — the sanctioned cross-control edge; §1's original dom+disclosure-only edge list was incomplete.*
+
 
 ## 3. `ui-timeline` — the durable host
 
@@ -114,12 +117,12 @@ table. A `@media (forced-colors: active)` block keeps each `status` marker shape
 ```ts
 // timeline.ts
 import { UIContainerElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
-import './timeline-item.ts' // registers the item child (the same-folder sibling edge is timeline-item next door;
+import '../timeline-item/timeline-item.ts' // registers the item child (the same-folder sibling edge is timeline-item next door;
                             // this import is the cross-folder sibling — the toast→button precedent direction)
 
 const SIZE = ['sm', 'md', 'lg'] as const
 const props = {
-  size: prop.enum(SIZE, 'md'),   // first-class geometry (F2); NO variant/data/orientation prop in v1
+  size: { ...prop.enum(SIZE, 'md'), reflect: true },   // first-class geometry (F2), reflect at build; NO variant/data/orientation prop in v1
   label: prop.string(''),        // author accessible name → internals.ariaLabel when non-empty (ADR-0051 spirit)
 } satisfies PropsSchema
 
@@ -148,7 +151,7 @@ if (!customElements.get('ui-timeline')) customElements.define('ui-timeline', UIT
   `:scope > ui-timeline-item`, clears `data-last` on all, sets it on the last — the CSS suppresses that item's
   `::after` connector. Re-run on child-list change via a `MutationObserver({ childList: true })` (the
   toast-region observer precedent) so a late-appended durable item re-marks the terminal correctly.
-- **Static** — NO imperative `append`/`update`/`finalize`, NO tail-follow, NO live-region role. This is the
+- **Static** — NO imperative `appendEntry`/`update`/`finalize`, NO tail-follow, NO live-region role. This is the
   negative control separating it from `ui-status-stream` (SPEC-R6 AC3): a grep of `timeline.ts` finds none of
   those (a standing probe).
 - `internals.role = 'list'` + `internals.ariaLabel` from `label`; items are `role="listitem"` (§2.1) — the
@@ -255,19 +258,19 @@ fail-closed path) calls `finalize()` (or `update(key,{status:'error'})` then `fi
 
 ## 5. The marker-system geometry — the explicit token table (F2, SPEC-R13)
 
-A NEW `--ui-timeline-*` token set, hoisted per `[size]` × `[scale]` — the ADR-0035/0036 `--ui-font`/`--ui-icon`
+A NEW `--ui-timeline-item-*` token set, hoisted per `[size]` × `[scale]` — the ADR-0035/0036 `--ui-font`/`--ui-icon`
 hoisted-per-`[scale]` pattern, and Kim's `(scale × size) → row` LOOKUP (NO multiplier — ADR-0038). Authored on
-`:root` + per-`[scale]` + per-`[size]` selectors (the item reads `--ui-timeline-*`; the host sets `size`).
+`:root` + per-`[scale]` + per-`[size]` selectors (the item reads `--ui-timeline-item-*`; the host sets `size`).
 The rail quantities and their families:
 
 | Token | Family | Notes |
 |---|---|---|
-| `--ui-timeline-marker-box` | frame ∝ (scale×size) | the marker footprint (dot + slotted-icon share it) |
-| `--ui-timeline-dot-size` | frame ∝ (scale×size) | the plain-status dot (< marker-box) |
-| `--ui-timeline-icon-size` | content-icon register | a slotted marker glyph = `--ui-icon-{size}` |
-| `--ui-timeline-connector-width` | NEW structural | a hairline (NOT `= font`); explicit per row |
-| `--ui-timeline-gutter` | frame ∝ marker-box | the marker-column width (≥ marker-box for breathing room) |
-| `--ui-timeline-row-gap` | rhythm ∝ font × density | the ONLY density-multiplied quantity (the gap) |
+| `--ui-timeline-item-marker-box` | frame ∝ (scale×size) | the marker footprint (dot + slotted-icon share it) |
+| `--ui-timeline-item-dot-size` | frame ∝ (scale×size) | the plain-status dot (< marker-box) |
+| `--ui-timeline-item-icon-size` | content-icon register | a slotted marker glyph = `--ui-icon-{size}` |
+| `--ui-timeline-item-connector-width` | NEW structural | a hairline (NOT `= font`); explicit per row |
+| `--ui-timeline-item-gutter` | frame ∝ marker-box | the marker-column width (≥ marker-box for breathing room) |
+| `--ui-timeline-item-row-gap` | rhythm ∝ font × density | the ONLY density-multiplied quantity (the gap) |
 
 **The frozen integer rows at the default `[scale]`** (px; SPEC-R13 AC2's "the integers the LLD fixes" — pinned
 HERE, not deferred to the build). Grounded in the shipped ramps: `marker-box` reads the compact widget ramp
@@ -286,12 +289,12 @@ stepping law the probe must honor (SPEC-R13 AC2: assert the explicit values, do 
 all-distinct). A slotted marker `icon-size` = the content-icon register `--ui-icon-{size}` (not this table).
 
 **Per-`[scale]` registers** extend this table the way the shipped `--ui-font`/`--ui-icon` tables do (ADR-0035/
-0036): the `--ui-timeline-*` rows above are the default-register (`[scale]` unset ≡ the `md`-scale register);
+0036): the `--ui-timeline-item-*` rows above are the default-register (`[scale]` unset ≡ the `md`-scale register);
 each `[scale]` value re-declares the six tokens on `:root[scale=…]` / `[scale=…]` selectors, hoisted the SAME
 way (NO `pow()`, NO multiplier — ADR-0038), so `(scale × size)` selects a cell by explicit lookup. The compact
 band (xs·sm·md) steps gently; the expressive band (lg·xl·2xl) steps larger — the build fills the remaining
 registers by the same generating discipline the ADR-0035/0036 tables used, PINNED in `timeline-item.css` and
-asserted per `(scale, size)` cell by the geometry probe. `[density]` multiplies `--ui-timeline-row-gap` ONLY;
+asserted per `(scale, size)` cell by the geometry probe. `[density]` multiplies `--ui-timeline-item-row-gap` ONLY;
 `marker-box`/`dot`/`gutter`/`connector-width` are density-invariant (the centering law — scaling the frame
 un-centers the marker).
 
@@ -352,7 +355,7 @@ mutations, slots/roles via CSS selectors) must document any `:state(truncated)` 
   proves material, the composition moves to a lazy `import()` on first-detail (the calendar lazy-import
   precedent, ADR-0048), a build-time swap with no contract change.
 - **Alignment via inherited custom props, NOT CSS `subgrid`** (§2.4) — the shared gutter axis is realized by the
-  host setting `--ui-timeline-gutter` that every item reads, rather than the adia `subgrid`. *Tradeoff:* keeps
+  host setting `--ui-timeline-item-gutter` that every item reads, rather than the adia `subgrid`. *Tradeoff:* keeps
   the whole-shape alignment proof jsdom-legible and dodges cross-engine `subgrid` variance, at the cost of a
   looser coupling than true subgrid (the host must set the gutter var; a stray non-item child would not align).
   Accepted — the item query is family-scoped so strays are out of contract.

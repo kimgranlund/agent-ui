@@ -701,6 +701,54 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // ADR-0122 — the timeline family: one shared marker-system rail row (ui-timeline-item) hosted by a
+    // durable authored-children chronology (ui-timeline, role=list) and a live imperatively-fed strip
+    // (ui-status-stream, role=log, deliberately not catalogued — a consumer-owned streaming host).
+    label: 'ui-timeline-item',
+    cards: [
+      {
+        href: './timeline-item-demo.html',
+        title: 'Demo',
+        blurb: 'The shared rail row, standalone: every status marker shape (pending/active/done/error), an icon-driven marker, and a collapsible detail via the composed ui-disclosure.',
+      },
+      {
+        href: './timeline-item-doc.html',
+        title: 'API reference',
+        blurb: 'The item\'s status/label/description/timestamp/icon/size attributes, the marker-system geometry, and the one toggle event, generated from timeline-item.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-timeline',
+    cards: [
+      {
+        href: './timeline-demo.html',
+        title: 'Demo',
+        blurb: 'A durable order-tracking chronology — authored ui-timeline-item children, role=list, the terminal connector suppressed on the last entry.',
+      },
+      {
+        href: './timeline-doc.html',
+        title: 'API reference',
+        blurb: 'The durable host\'s size/label attributes and its static, authored-children contract, generated from timeline.md.',
+      },
+    ],
+  },
+  {
+    label: 'ui-status-stream',
+    cards: [
+      {
+        href: './status-stream-demo.html',
+        title: 'Demo',
+        blurb: 'The live "what the system is doing now" strip — a REAL recorded arena match streamed through appendEntry/update/finalize, with tail-follow and the completion invariant.',
+      },
+      {
+        href: './status-stream-doc.html',
+        title: 'API reference',
+        blurb: 'The imperative appendEntry/update/finalize API, role=log, and the tail-follow + completion-invariant contract, generated from status-stream.md. Deliberately not catalogued (ADR-0122 F5).',
+      },
+    ],
+  },
+  {
     // The application-frame primitive (@agent-ui/app) — an ungrouped site-level card (no `label:`, so not a
     // fleet TOC group per site-toc.test.ts), mirroring its ungrouped nav link in _page.ts.
     cards: [

@@ -63,6 +63,12 @@ import avatarMd from '../../packages/agent-ui/components/src/controls/avatar/ava
 import attachmentMd from '../../packages/agent-ui/components/src/controls/attachment/attachment.md?raw'
 import toastMd from '../../packages/agent-ui/components/src/controls/toast/toast.md?raw'
 import toastRegionMd from '../../packages/agent-ui/components/src/controls/toast/toast-region.md?raw'
+// ADR-0122 (timeline-family.lld.md): the shared marker-system rail row (ui-timeline-item, tier=pattern), its
+// durable authored-children host (ui-timeline, tier=pattern), and its live imperatively-fed sibling
+// (ui-status-stream, tier=pattern — deliberately not catalogued, F5) — all three ⇒ {doc, demo}.
+import timelineItemMd from '../../packages/agent-ui/components/src/controls/timeline-item/timeline-item.md?raw'
+import timelineMd from '../../packages/agent-ui/components/src/controls/timeline/timeline.md?raw'
+import statusStreamMd from '../../packages/agent-ui/components/src/controls/status-stream/status-stream.md?raw'
 // M4 Phase 1 (ADR-0120 cl.2, app-surfaces-m4.lld.md LLD-C1): the split primitive, one folder, two
 // components — both tier=layout ⇒ {doc} only.
 import splitMd from '../../packages/agent-ui/components/src/controls/split/split.md?raw'
@@ -143,6 +149,10 @@ export const loadAvatarDoc       = (): ComponentDoc => parseDoc(avatarMd)
 export const loadAttachmentDoc   = (): ComponentDoc => parseDoc(attachmentMd)
 export const loadToastDoc        = (): ComponentDoc => parseDoc(toastMd)
 export const loadToastRegionDoc  = (): ComponentDoc => parseDoc(toastRegionMd)
+// ADR-0122 — the timeline family (all three tier=pattern ⇒ {doc, demo}).
+export const loadTimelineItemDoc  = (): ComponentDoc => parseDoc(timelineItemMd)
+export const loadTimelineDoc      = (): ComponentDoc => parseDoc(timelineMd)
+export const loadStatusStreamDoc  = (): ComponentDoc => parseDoc(statusStreamMd)
 // M4 Phase 1 (ADR-0120 cl.2 — both tier=layout ⇒ {doc} only, folded into the shared Layout primitives showcase).
 export const loadSplitDoc     = (): ComponentDoc => parseDoc(splitMd)
 export const loadSplitPaneDoc = (): ComponentDoc => parseDoc(splitPaneMd)
