@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-10 |
 > | **Proposed by** | design intake (TKT-0012, Kim's ask 2026-07-10: *"the classic CMD-K modal search/action menu as `ui-command-modal` — learn from the exe.xyz command docs + the adia `command` component"*). The fleet has **no** command-palette/cmd-k anything — a dedup grep of `controls/`, the tickets, the specs, and the ADR log is clean. The machinery it needs already ships: `ui-modal` (surface + dismissal), `ui-combo-box` (typeahead filter + active-descendant listbox), the `scroll-fade` trait, the ADR-0017 child-move. |
-> | **Ratified by** | — (proposed; forks F1–F8 as recommended, none self-ratified — only Kim flips a status. **F2, the global hotkey, is flagged as the taste fork most wanting Kim's ruling.**) |
+> | **Ratified by** | Kim, 2026-07-11 — hand-flipped in-tree (07:01 PT) + confirmed at the ratification prompt |
 > | **Repairs** | NEW [`../spec/command-modal.spec.md`](../spec/command-modal.spec.md) · NEW [`../lld/command-modal.lld.md`](../lld/command-modal.lld.md) · NEW [`../decompositions/command-modal-ship.decomp.json`](../decompositions/command-modal-ship.decomp.json) (coverage-clean `--strict`, plan mode, exit 0). On ratification+build: NEW `packages/agent-ui/components/src/controls/command-modal/*` · `packages/agent-ui/a2ui/src/catalog/default/index.test.ts` `EXCLUSION_ALLOWLIST` (+`CommandModal`, permanent — F8) · NEW `site/pages/command-modal-{doc,demo}.ts` · a `<component-gallery>` specimen · the `controls/index.ts` barrel + `package.json` subpath |
 > | **Supersedes / Superseded by** | relates ADR-0017 (the child-move pattern + the native-`<dialog>` modal this nests) · relates ADR-0019/0020 (the two-way `open` + `persistent`/dismissal contract this delegates to `ui-modal`) · relates ADR-0043/0045 (the overlay/dismissal law — Escape is platform-owned by the nested modal, single close path) · relates ADR-0085 (the combo-box active-descendant editor + labelling seam this re-derives) · relates ADR-0082 (the no-global-singletons law F2 answers) · relates ADR-0115 (the router-DAG law F4 honours — the palette never imports `@agent-ui/router`) · relates ADR-0087 / ADR-0112 cl.6 (the catalog-or-allowlist gate F8 answers, the Toast/ThemeProvider exclusion class) · relates the `avatar → icon` sanctioned sibling-control import precedent (`avatar.ts:25`) F1 reuses |
 

@@ -531,6 +531,21 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  {
+    label: 'ui-command-modal',
+    cards: [
+      {
+        href: './command-modal-demo.html',
+        title: 'Demo',
+        blurb: 'The CMD-K command palette — a search combobox filtering a grouped listbox nested inside a ui-modal, with the empty-state affordance, the result-count live region, and both hotkey modes.',
+      },
+      {
+        href: './command-modal-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-command-modal attributes (open/label/placeholder/hotkey), generated from its command-modal.md descriptor — permanently excluded from the A2UI catalog (app-owner launcher chrome).',
+      },
+    ],
+  },
   // Picker controls — Wave 5B (ADR-0048): standalone date picker + future type=date overlay body.
   {
     label: 'ui-calendar',

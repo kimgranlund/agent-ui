@@ -313,3 +313,10 @@ Illustrative specimens (normative for shape, not exhaustive) — the end-state a
 | SPEC-R12 | — | n20, n21 |
 | SPEC-R13 | F8 | n22 |
 | SPEC-R14 | — | n26 |
+
+> **SPEC-R15 (added 2026-07-11, TKT-0017 — Kim's pre-ship QA, review-driven):** the palette renders a
+> FIXED frame — a set inline-size and a viewport-top anchor (~15svh); the search field's box is
+> IDENTICAL across result-count changes (AC: browser-asserted rects before/after a filter that empties
+> the list, both engines); only the list region absorbs elasticity, growing downward within its cap.
+> The mechanism is ui-modal's new public frame dials (its own tokens, defaults identity — a bare modal
+> is unchanged, browser-asserted).

@@ -1,0 +1,191 @@
+/* command-modal.css — ui-command-modal, the single-file component stylesheet (ADR-0003 / ADR-0125 / LLD-C11).
+ * Two clearly-SECTIONED blocks, mirroring combo-box.css / modal.css:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-command-modal)` (specificity 0,0,0) declares the `--ui-command-modal-*`
+ *       chain: the search field borrows the entry-control height register (--ui-height-md), item/group/active
+ *       geometry rides the `--ui-space` ladder (ambient under [scale]/[density]). Raw `--md-sys-color-*` roles
+ *       enter ONLY here.
+ *   [2] STYLES BLOCK — `@scope (ui-command-modal)` CONSUMES only `--ui-command-modal-*`. The host itself is
+ *       `display: contents` — it paints NOTHING; the nested `ui-modal` owns the whole surface (the modal's own
+ *       sheet supplies the dialog/backdrop/frame). This sheet styles only the parts THIS control creates:
+ *       search / list / status / empty / option / group, all rendered INSIDE the nested modal's <dialog>.
+ *
+ * Standalone stylesheet — NOT injected from command-modal.ts (behaviour-only `.ts`, plan §2). Linked via the
+ * component-styles barrel, appended after every other control (ADR-0003 append-only import order).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-command-modal) ════════════════ */
+
+:where(ui-command-modal) {
+  /* The search field borrows the entry-control height register (the combo-box/select trigger precedent) — no
+     new geometry row (Pattern class, geometry.md; no §1 control-height row of its own). */
+  --ui-command-modal-search-block-size: var(--ui-height-md);
+  --ui-command-modal-search-font: var(--ui-font-md);
+  --ui-command-modal-search-padding-inline: calc(var(--ui-command-modal-search-block-size) / 2); /* the fleet h/2 value-edge standard */
+
+  /* Frame — matches the entry-control border channel (solid, WCAG 1.4.11 parity). */
+  --ui-command-modal-search-border: var(--md-sys-color-neutral);
+  --ui-command-modal-search-bg: var(--md-sys-color-neutral-surface);
+  --ui-command-modal-search-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-command-modal-search-placeholder: var(--md-sys-color-neutral-on-surface-variant);
+
+  /* The bounded scroll viewport (the list is the dialog's body; scroll-fade wired in .ts). */
+  --ui-command-modal-list-max-block: 50vh;
+  /* TKT-0017 — the FIXED FRAME (the CMD-K convention): a set width and a top anchor so the search field
+     never moves as filtering changes the result count; only the list below grows/shrinks (downward, the
+     VS Code palette convention). command-modal.ts forwards these onto the nested ui-modal's frame dials. */
+  --ui-command-modal-inline-size: min(92vw, 36rem);
+  --ui-command-modal-block-anchor: 15svh;
+
+  /* Item/group geometry off the --ui-space ladder (ambient under [scale]/[density] — no new geometry row). */
+  --ui-command-modal-item-pad-inline: var(--ui-space-sm);
+  --ui-command-modal-item-pad-block: var(--ui-space-xs);
+  --ui-command-modal-item-gap: var(--ui-space-xs);
+  --ui-command-modal-group-gap: var(--ui-space-sm);
+  --ui-command-modal-caption-font: var(--ui-font-sm); /* group-label + shortcut display — a caption-weight read, off the live ramp (--ui-type-* is retired, ADR-0078 cl.2) */
+
+  --ui-command-modal-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-command-modal-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-command-modal-group-label-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-command-modal-radius: var(--ui-radius-base);
+
+  /* The [data-active] active-descendant highlight — a background treatment paired with the ARIA/attribute
+     signifier itself (never color-only intent, ADR-0057). */
+  --ui-command-modal-active-bg: var(--md-sys-color-neutral-tint-dim);
+  --ui-command-modal-active-ink: var(--md-sys-color-neutral-on-surface);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-command-modal) ════════════════ */
+
+@scope (ui-command-modal) {
+  /* The palette host paints nothing of its own — the nested ui-modal owns the entire surface. */
+  :scope {
+    display: contents;
+  }
+
+  /* ── Search field (role=combobox, Control-class height) ─────────────────────────────────────── */
+
+  :scope [data-part='search'] {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    min-block-size: var(--ui-command-modal-search-block-size);
+    line-height: 1;
+    padding-block: 0;
+    padding-inline: var(--ui-command-modal-search-padding-inline);
+    font-size: var(--ui-command-modal-search-font);
+    background-color: var(--ui-command-modal-search-bg);
+    color: var(--ui-command-modal-search-ink);
+    border: none;
+    border-block-end: 1px solid var(--ui-command-modal-search-border);
+    cursor: text;
+    outline: none; /* the shared focus-ring convention — a palette search field is always focused while open */
+    /* single-line — the contenteditable UA default is pre-wrap; every fleet entry field overrides it */
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  :scope [data-part='search'][data-empty]::before {
+    content: attr(data-placeholder);
+    color: var(--ui-command-modal-search-placeholder);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* ── List (role=listbox) — the bounded scroll viewport, [data-box] region rhythm ─────────────── */
+
+  :scope [data-part='list'] {
+    box-sizing: border-box;
+    max-block-size: var(--ui-command-modal-list-max-block);
+    overflow-y: auto;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  /* ── Groups + their heading ───────────────────────────────────────────────────────────────────── */
+
+  :scope [role='group'] {
+    display: block;
+    margin-block-end: var(--ui-command-modal-group-gap);
+  }
+  :scope [role='group'][hidden] {
+    display: none;
+  }
+  :scope [data-role='group-label'] {
+    padding-inline: var(--ui-command-modal-item-pad-inline);
+    padding-block: var(--ui-command-modal-item-pad-block);
+    font-size: var(--ui-command-modal-caption-font);
+    color: var(--ui-command-modal-group-label-ink);
+  }
+
+  /* ── Option rows ───────────────────────────────────────────────────────────────────────────────── */
+
+  :scope [role='option'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-command-modal-item-gap);
+    padding-inline: var(--ui-command-modal-item-pad-inline);
+    padding-block: var(--ui-command-modal-item-pad-block);
+    border-radius: var(--ui-command-modal-radius);
+    color: var(--ui-command-modal-ink);
+    cursor: pointer;
+  }
+  :scope [role='option'][hidden] {
+    display: none;
+  }
+  :scope [role='option'][aria-disabled='true'] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  /* The [data-active] active-descendant highlight — CSS face of aria-activedescendant (focus stays on search). */
+  :scope [role='option'][data-active] {
+    background-color: var(--ui-command-modal-active-bg);
+    color: var(--ui-command-modal-active-ink);
+  }
+  :scope [data-role='shortcut'] {
+    margin-inline-start: auto;
+    color: var(--ui-command-modal-muted-ink);
+    font-size: var(--ui-command-modal-caption-font);
+  }
+
+  /* ── Result-count live region — visually hidden, present to AT ───────────────────────────────────── */
+
+  :scope [data-part='status'] {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* ── Empty state (default row; an author [slot=empty]/[data-role=empty] overrides it) ────────────── */
+
+  :scope [data-part='empty'] {
+    padding-inline: var(--ui-command-modal-item-pad-inline);
+    padding-block: var(--ui-command-modal-item-pad-block);
+    color: var(--ui-command-modal-muted-ink);
+    cursor: default;
+    pointer-events: none;
+  }
+  :scope [data-part='empty'][hidden] {
+    display: none;
+  }
+
+  /* forced-colors (WHCM) — the active-option highlight becomes Highlight/HighlightText (not a faint bg that
+     vanishes under WHCM); the aria-activedescendant + [data-active] pairing is the non-color signifier, so no
+     color-only intent exists (the combo-box [data-active] forced-colors precedent). */
+  @media (forced-colors: active) {
+    :scope [data-part='search'] {
+      background-color: Field;
+      color: FieldText;
+      border-block-end-color: FieldText;
+    }
+    :scope [role='option'][data-active] {
+      background-color: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+  }
+}

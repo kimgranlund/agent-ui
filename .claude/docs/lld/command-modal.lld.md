@@ -17,6 +17,9 @@
 > escalates — the fix is a coordinated LLD repair, never a local deviation. The two verified footguns are called
 > out inline (the nested-modal child-move ORDER, and the connect-time vs reactive accessible-name split).
 
+> *REV (build review, 2026-07-11): the shipped close/toggle handlers add `event.stopPropagation()` beyond this frozen body — CORRECT and necessary (`emit()` bubbles and the nested modal is a light-DOM descendant; without it a consumer's `close` listener double-fires on platform dismissal). The close guard on `this.open` vs unconditional toggle asymmetry is deliberate. Do not revert.*
+
+
 ## 1 · Intent
 
 Ship a Pattern-class coordinator that (a) nests a `ui-modal` for its modal surface, (b) renders a `role=combobox`

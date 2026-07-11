@@ -46,6 +46,7 @@
 - [ui-popover](./popover-doc.html): the anchored light-dismiss panel; [demo](./popover-demo.html).
 - [ui-tooltip](./tooltip-doc.html): the hover/focus hint panel; [demo](./tooltip-demo.html).
 - [ui-modal](./modal-doc.html): the top-layer dialog — persistent or dismissable; [demo](./modal-demo.html).
+- [ui-command-modal](./command-modal-doc.html): the CMD-K command palette — a search combobox filtering a grouped listbox nested inside a ui-modal; permanently catalog-excluded (app-owner launcher chrome); [demo](./command-modal-demo.html).
 
 ## Components — forms plumbing
 

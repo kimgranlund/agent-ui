@@ -562,11 +562,11 @@ describe("Lifecycle — an `open` attribute always pairs with BOTH toggle and cl
   it('finds the open-bearing controls to check, split into overlay vs the documented exception (anti-vacuous)', () => {
     expect(openBearing.length).toBeGreaterThan(0)
     expect(openBearing.map((c) => c.name).sort()).toEqual(
-      ['combo-box', 'disclosure', 'menu', 'modal', 'popover', 'select', 'tooltip'].filter((n) =>
+      ['combo-box', 'command-modal', 'disclosure', 'menu', 'modal', 'popover', 'select', 'tooltip'].filter((n) =>
         openBearing.some((c) => c.name === n),
       ),
     )
-    expect(overlays.map((c) => c.name).sort()).toEqual(['combo-box', 'menu', 'modal', 'popover', 'select', 'tooltip'])
+    expect(overlays.map((c) => c.name).sort()).toEqual(['combo-box', 'command-modal', 'menu', 'modal', 'popover', 'select', 'tooltip'])
   })
 
   for (const c of overlays) {

@@ -221,9 +221,9 @@ describe('site coverage — every shipped component has its required per-tier pa
     // renderInto/fill seam (ui-swiper-pagination, ui-swiper-paddles) — each requires its {doc, demo} pages.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
-        'calendar', 'combo-box', 'disclosure', 'menu', 'modal', 'popover', 'segmented-control', 'select',
-        'status-stream', 'swiper', 'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline', 'timeline-item',
-        'toast', 'toolbar', 'tooltip',
+        'calendar', 'combo-box', 'command-modal', 'disclosure', 'menu', 'modal', 'popover', 'segmented-control',
+        'select', 'status-stream', 'swiper', 'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline',
+        'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],
     )
   })

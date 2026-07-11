@@ -149,7 +149,7 @@ function fleetPrimaryTypes(): string[] {
  *  descriptor exists, so they never enter the derived set to begin with (they stay a documentary-only note
  *  in SPEC §5.2.1, never code-derived). A future undispositioned control re-seeds this map with a reason +
  *  citation, same as Wave 0's seed. */
-// `Toast`/`ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel` are
+// `Toast`/`ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
 // the only entries left — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
 // content) — a PERMANENT exclusion, never drained.
 const EXCLUSION_ALLOWLIST = new Map<string, string>([
@@ -178,6 +178,10 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'ADR-0124 F5 / swiper-family.lld.md LLD-C11 — PERMANENT exclusion, same reasoning: an author-placed ' +
     'anchor whose light-DOM text becomes the owning ui-swiper\'s accessible name; an agent-emitted empty ' +
     'marker node carries no catalog-visible content, and the region already falls back to "Carousel" absent one.'],
+  ['CommandModal',
+    'ADR-0125 F8 / command-modal.lld.md LLD-C16 — PERMANENT exclusion: the CMD-K palette is app-owner ' +
+    'launcher chrome (the Toast/ThemeProvider/StatusStream class, ADR-0112 cl.6 reasoning) — an agent ' +
+    'emitting an app\'s command palette is the wrong trust shape; its items are the consumer\'s actions.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

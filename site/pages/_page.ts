@@ -244,6 +244,15 @@ export const NAV: readonly NavGroup[] = [
       { href: './combo-box-doc.html', label: 'API' },
     ],
   },
+  {
+    // ADR-0125 — the CMD-K command palette: nests ui-modal + re-derives the combo-box active-descendant filter.
+    // Permanently catalog-excluded (app-owner launcher chrome, F8) — still a site-documented fleet member.
+    label: 'ui-command-modal',
+    links: [
+      { href: './command-modal-demo.html', label: 'Demo' },
+      { href: './command-modal-doc.html', label: 'API' },
+    ],
+  },
   // Picker controls — Wave 5B (ADR-0048): standalone date picker + future type=date overlay body.
   {
     label: 'ui-calendar',

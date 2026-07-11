@@ -133,3 +133,7 @@
 @import './controls/timeline-item/timeline-item.css';
 @import './controls/timeline/timeline.css';
 @import './controls/status-stream/status-stream.css';
+
+/* ADR-0125 — ui-command-modal, the CMD-K command palette (command-modal.lld.md): nests ui-modal for the
+ * surface (already imported above) and paints only its own search/list/status/empty parts. */
+@import './controls/command-modal/command-modal.css';

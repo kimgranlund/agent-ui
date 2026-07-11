@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-10 |
 > | **Proposed by** | agent-ui-component-design intake (TKT-0008, F1 shakedown) |
-> | **Ratified by** | <orchestration-lead, on accept> |
+> | **Ratified by** | Kim, 2026-07-11 — hand-flipped in-tree (07:01 PT) + confirmed at the ratification prompt |
 > | **Repairs** | `SPEC-R1…R14` (`spec/swiper-family.spec.md`, new) · `LLD-C1…C12` (`lld/swiper-family.lld.md`, new) · extends the ADR-0087 catalog-or-allowlist gate with three reasoned `EXCLUSION_ALLOWLIST` entries |
 > | **Supersedes / Superseded by** | — |
 

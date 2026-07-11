@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-10 |
 > | **Proposed by** | design intake (TKT-0009, Kim's directive 2026-07-10: *"a `ui-toolbar` that works floating OR embedded in a shell header — one element, two postures"*). The fleet has no toolbar primitive; the a2ui corpus's `document-row-toolbar` seed (in `catalog-coverage.ts`) hand-composes one from `Card+Row+Attachment+overlays` precisely because none exists — recorded evidence of the gap. |
-> | **Ratified by** | — (proposed; forks F1–F7 as recommended, none self-ratified — only Kim flips a status) |
+> | **Ratified by** | Kim, 2026-07-11 — hand-flipped in-tree (07:01 PT) + confirmed at the ratification prompt |
 > | **Repairs** | NEW [`../spec/toolbar.spec.md`](../spec/toolbar.spec.md) · NEW [`../lld/toolbar.lld.md`](../lld/toolbar.lld.md) · NEW [`../decompositions/toolbar-ship.decomp.json`](../decompositions/toolbar-ship.decomp.json) (coverage-clean, plan mode, exit 0). On ratification+build: NEW `packages/agent-ui/components/src/controls/toolbar/*` · a `Toolbar` catalog row in `packages/agent-ui/a2ui/src/catalog/default/*` (F7, emittable) · the `document-row-toolbar` corpus seed upgraded to the real `Toolbar` type · NEW `site/pages/toolbar-{doc,demo}.ts` · a `<component-gallery>` specimen |
 > | **Supersedes / Superseded by** | relates ADR-0015 (the `elevation`/`brightness` surface seam this reuses as the posture lever) · relates the `roving-focus` trait / ADR-0042 family bases (`UIContainerElement`, the tabs precedent) · relates ADR-0039 (the box-alignment dialect `align`/`justify` reuse) · relates ADR-0052 (`[data-box]` z-scope for the raised posture) · relates ADR-0087 (the catalog-or-allowlist gate F7 answers) · relates ADR-0112 cl.6 (the Toast/ToastRegion exclusion test F7 applies; and the record whose `document-row-toolbar` seed F7 re-bases) · relates ADR-0043/0045 (the overlay/dismissal law this deliberately does NOT inherit — §F1) |
 

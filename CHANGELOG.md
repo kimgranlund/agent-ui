@@ -639,3 +639,20 @@ may consume their folder-primary's tokens, never declare; both negative controls
 recorded in ADR-0124, ADR-0081 untouched). Fleet-first internals.ariaRoleDescription
 ('carousel'). Marginals: the family entry 2406 B gz under a 3072 override; ceiling re-based
 to 38 KB. Eight site pages. The M3 catalog slice lands next.
+
+## 2026-07-10 (ui-command-modal) — the CMD-K palette ships as pure composition
+
+ADR-0125's control: nests the shipped ui-modal for surface+dismissal (the child-move ordering
+constraints honored), re-derives combo-box's active-descendant filter (privates never
+imported), role-attributed option/group children with rich content, the decorative shortcut
+EXCLUDED from both the filter haystack and select's label (the design review's sharpest
+catch), a new aria-live result-count region, select-then-close as the single event, and the
+opt-in per-instance hotkey (consumer-wired open is the floor — no unconditional document
+listener, the ADR-0082 law; multi-instance non-collision proven). Permanently
+catalog-excluded (app-owner launcher chrome — the fourth… fifth allowlist class member).
+Marginal 1006 B gz. Validated green through the account-limit interruption (the seat died
+mid-loop; the host completed validation directly: 52 jsdom + 22 cross-engine browser tests —
+incl. TKT-0017's same-day pre-ship fix, 2026-07-11: the FIXED FRAME per Kim's QA — ui-modal
+gained three public frame dials (identity defaults, bare-modal-unchanged browser-asserted)
+and the palette pins a set width + 15svh top anchor so the search field never moves as
+filtering resizes the list).

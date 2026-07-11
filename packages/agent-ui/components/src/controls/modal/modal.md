@@ -146,3 +146,12 @@ defaulting to the neutral base. Unlike a layout primitive (transparent by defaul
 default `--ui-container-bg` so the plane is opaque. The shell pads off `--ui-space` (density-responsive,
 **not** a control height) and corners off the shared `--ui-radius-base`. A forced-colors block keeps the
 surface, frame, and ink visible as system colours.
+
+## The frame dials (TKT-0017 — the composition seam)
+
+Three public tokens let a COMPOSER that nests `ui-modal` (the `ui-command-modal` precedent) pin the
+dialog's frame, set as inline custom properties on the nested element it owns (the JS-seam exemption,
+family-coherence B): `--ui-modal-inline-size` (a length ⇒ FIXED width; default `auto` = shrink-fit) ·
+`--ui-modal-max-inline-size` (default `min(92vw, 32rem)`) · `--ui-modal-margin-block-start` (a length,
+e.g. `15svh`, ⇒ TOP-ANCHORED; default `auto` = centered). Defaults reproduce the classic centered
+shrink-fit exactly — a bare `ui-modal` is byte-identical (browser-asserted).

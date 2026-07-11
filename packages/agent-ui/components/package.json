@@ -17,6 +17,7 @@
     "./controls/code": "./src/controls/code/code.ts",
     "./controls/column": "./src/controls/column/column.ts",
     "./controls/combo-box": "./src/controls/combo-box/combo-box.ts",
+    "./controls/command-modal": "./src/controls/command-modal/command-modal.ts",
     "./controls/disclosure": "./src/controls/disclosure/disclosure.ts",
     "./controls/field": "./src/controls/field/field.ts",
     "./controls/form-provider": "./src/controls/form-provider/form-provider.ts",

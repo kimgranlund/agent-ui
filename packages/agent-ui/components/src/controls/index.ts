@@ -140,3 +140,8 @@ export * from './swiper/swiper-item.ts'
 export * from './swiper/swiper-pagination.ts'
 export * from './swiper/swiper-paddles.ts'
 export * from './swiper/swiper-label.ts'
+
+// ADR-0125 — ui-command-modal, the CMD-K command palette (command-modal.lld.md): a Pattern-class coordinator
+// that nests a ui-modal for the surface and re-derives ui-combo-box's active-descendant filter. Permanently
+// catalog-excluded (app-owner launcher chrome, F8) — still a fleet member, exported like any other control.
+export * from './command-modal/command-modal.ts'

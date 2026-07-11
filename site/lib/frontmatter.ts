@@ -41,6 +41,8 @@ import tooltipMd from '../../packages/agent-ui/components/src/controls/tooltip/t
 import menuMd from '../../packages/agent-ui/components/src/controls/menu/menu.md?raw'
 import selectMd from '../../packages/agent-ui/components/src/controls/select/select.md?raw'
 import comboBoxMd from '../../packages/agent-ui/components/src/controls/combo-box/combo-box.md?raw'
+// ADR-0125 — ui-command-modal, the CMD-K command palette (nests ui-modal + re-derives the combo-box filter).
+import commandModalMd from '../../packages/agent-ui/components/src/controls/command-modal/command-modal.md?raw'
 import calendarMd from '../../packages/agent-ui/components/src/controls/calendar/calendar.md?raw'
 // The G7 form-composition family (ADR-0050/0051): the label/description/error wrapper + the coordination provider.
 import fieldMd from '../../packages/agent-ui/components/src/controls/field/field.md?raw'
@@ -133,6 +135,8 @@ export const loadTooltipDoc = (): ComponentDoc => parseDoc(tooltipMd)
 export const loadMenuDoc = (): ComponentDoc => parseDoc(menuMd)
 export const loadSelectDoc = (): ComponentDoc => parseDoc(selectMd)
 export const loadComboBoxDoc = (): ComponentDoc => parseDoc(comboBoxMd)
+// ADR-0125 — the CMD-K command palette (tier=pattern ⇒ {doc,demo}; permanently catalog-excluded, F8).
+export const loadCommandModalDoc = (): ComponentDoc => parseDoc(commandModalMd)
 export const loadCalendarDoc  = (): ComponentDoc => parseDoc(calendarMd)
 // The G7 form-composition family (ADR-0050/0051 — both tier=container ⇒ {doc, demo}).
 export const loadFieldDoc        = (): ComponentDoc => parseDoc(fieldMd)

@@ -35,6 +35,12 @@
   --ui-modal-radius: var(--ui-radius-base); /* the shared fleet radius (ADR-0015 cl.5) */
   --ui-modal-padding: var(--ui-space-lg); /* the shell pad off the density-responsive ladder (NOT a control height) */
   --ui-modal-scrim: var(--md-sys-color-neutral-scrim); /* the ::backdrop blocking wash — a translucent scrim role (ADR-0017) */
+  /* The FRAME dials — ui-modal's public composition seam (TKT-0017): a composer that nests ui-modal (the
+     command-modal precedent) pins these via inline style on the element it owns (the slider --value-pct
+     JS-seam exemption, family-coherence B). Defaults reproduce the classic centered shrink-fit exactly. */
+  --ui-modal-inline-size: auto; /* set a length for a FIXED-width dialog (shrink-fit by default) */
+  --ui-modal-max-inline-size: min(92vw, 32rem);
+  --ui-modal-margin-block-start: auto; /* set a length (e.g. 15svh) to TOP-ANCHOR; auto = centered */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-modal) consumes ONLY --ui-modal-* + the --ui-container-* seam ════════════════ */
@@ -52,8 +58,13 @@
      overridden. `margin: auto` keeps the showModal centring; the size caps keep a long modal scrollable. */
   :scope > [data-part='dialog'] {
     box-sizing: border-box;
-    margin: auto; /* centre in the top layer (the showModal default — restated so a UA reset cannot drop it) */
-    max-inline-size: min(92vw, 32rem);
+    /* centre in the top layer by default (the showModal default — restated so a UA reset cannot drop it);
+       the block-start dial top-anchors when a composer sets it (TKT-0017). */
+    margin-inline: auto;
+    margin-block-start: var(--ui-modal-margin-block-start);
+    margin-block-end: auto;
+    inline-size: var(--ui-modal-inline-size);
+    max-inline-size: var(--ui-modal-max-inline-size);
     max-block-size: 85svh;
     overflow: auto; /* a tall modal scrolls within the cap, not off-screen */
 

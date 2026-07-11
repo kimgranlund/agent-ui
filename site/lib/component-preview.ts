@@ -450,6 +450,40 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     actions.append(close)
     return [heading, body, actions]
   },
+  // ui-command-modal (ADR-0125): the palette's real job — a populated, GROUPED command list (not a one-child
+  // stub), the whole-shape/representative-specimen law. Also do NOT auto-open (the ui-modal precedent, above);
+  // the `open` knob reveals it, so the viewer sees the trigger-to-palette flow rather than a pre-opened dialog.
+  'ui-command-modal': () => {
+    const commandOption = (value: string, label: string, shortcut?: string): HTMLElement => {
+      const option = document.createElement('div')
+      option.setAttribute('role', 'option')
+      option.setAttribute('value', value)
+      option.append(document.createTextNode(label))
+      if (shortcut) {
+        const span = document.createElement('span')
+        span.setAttribute('data-role', 'shortcut')
+        span.setAttribute('aria-hidden', 'true')
+        span.textContent = shortcut
+        option.append(span)
+      }
+      return option
+    }
+    const group = (id: string, label: string, ...options: HTMLElement[]): HTMLElement => {
+      const heading = document.createElement('div')
+      heading.id = id
+      heading.setAttribute('data-role', 'group-label')
+      heading.textContent = label
+      const g = document.createElement('div')
+      g.setAttribute('role', 'group')
+      g.setAttribute('aria-labelledby', id)
+      g.append(heading, ...options)
+      return g
+    }
+    return [
+      group('cp-cmd-nav', 'Navigation', commandOption('home', 'Go Home', '⌘H'), commandOption('settings', 'Settings', '⌘,')),
+      group('cp-cmd-actions', 'Actions', commandOption('logout', 'Log out'), commandOption('share', 'Share file')),
+    ]
+  },
   // ui-disclosure (ADR-0113): the host's light-DOM children seed the fold's body content at connect time —
   // the "children = body" anatomy invariant (disclosure.md). NOT the STRUCTURAL bucket below: #ensureParts()
   // ADOPTS these children into a nested `<div data-part="body">` part rather than leaving them as direct
@@ -620,6 +654,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-bar-chart', // component-built rows (replaceChildren) — one role=listitem row per datum, never author-slotted (slots: [] — bar-chart.md)
   'ui-calendar', // #ensureShell() builds the whole nav+grid panel unconditionally
   'ui-combo-box', // #ensureParts(): a control-created editor + listbox
+  'ui-command-modal', // #ensureParts(): a control-created search/list/status + a nested ui-modal (ADR-0125)
   'ui-field', // #ensureParts(): the label/description/error chrome (3 parts)
   'ui-icon', // setIcon() injects a real <svg> child whenever `name` is non-empty (icon.ts:38-41) — a name-driven slot, not authored text
   'ui-menu', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel

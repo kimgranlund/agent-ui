@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-10 |
 > | **Proposed by** | planner (design seat — the `ui-color-picker` design intake, [TKT-0011](../tickets/tkt-0011-ui-color-picker.md)) |
-> | **Ratified by** | (awaiting Kim — the seven forks below carry firm recommendations; **F1 the value-model fork touches the design system's identity and is the one Kim will want to rule**; none self-ratified) |
+> | **Ratified by** | Kim, 2026-07-11 — hand-flipped in-tree (07:01 PT) + confirmed at the ratification prompt |
 > | **Repairs** | NEW [`../spec/color-picker.spec.md`](../spec/color-picker.spec.md) + NEW [`../lld/color-picker.lld.md`](../lld/color-picker.lld.md) + NEW [`../decompositions/color-picker-ship.decomp.json`](../decompositions/color-picker-ship.decomp.json) (authored in this same change — the owning docs whose contract this ADR pins) |
 > | **Supersedes / Superseded by** | (none) — **it is the edit-class other side of [ADR-0118](./0118-token-surfaces-v1-scope.md)** (`ui-swatch`/`ramp`/`ladder` DISPLAY color, this INPUTS it; 0118 Context names "a color picker owes channel models, gamut UI, precision input" as exactly the out-of-scope edit family — this ADR opens that scope). Relates [ADR-0044](./0044-contenteditable-password-masking.md)/[ADR-0047](./0047-numeric-codec-expansion.md) (the value-codec parse/format dialect the color codec joins) · [ADR-0048](./0048-date-time-picker-architecture.md) (the `type=date` → lazily-imported overlay-`ui-calendar` composition precedent the `type=color` leg copies verbatim) · [ADR-0042](./0042-face-widget-value-control-bases.md) (`UIRangeElement`/`ui-slider`, the channel-slider machinery this composes) · [ADR-0038](./0038-control-sizing-size-scale-row-lookup.md) (the geometry lookup the composed rows obey) · [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) (the catalog-or-allowlist gate) · [ADR-0057](./0057-intent-non-color-signifier-rule.md) (non-color signifier — load-bearing for a control whose subject IS color) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (every default survives the CSS-less consumer) |
 
