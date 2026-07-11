@@ -683,3 +683,30 @@ filtering resizes the list).
   suite unregressed · repo 5411/5412 (the one red was the expected fixture drift, regenerated at this
   commit) · size green. The app-surfaces LLD's fork-list numbering repaired (the dropped F6 entry
   restored; LLD-C10's F8→F6 mis-citation fixed).
+
+## 2026-07-11 (ui-color-picker) — the OKLCH picker ships, and ui-text-field gains its 13th type
+
+- **`ui-color-picker` (ADR-0123, accepted 2026-07-11):** OKLCH-internal value model with sRGB-hex the
+  default external `format` — `color.ts` (pure OKLCH↔sRGB + CSS-Color-4 gamut mapping, zero-dep/no-DOM)
+  + a 2D lightness×chroma pad (canvas-painted, `role=slider` + `aria-roledescription="2D slider"`,
+  cross-announcing `aria-valuetext`), a hue/channel spine of three REAL `ui-slider`s, a parseable
+  readout, and per-channel visible numerals (the SPEC-R8 AC2 non-color signifier). Forced-colors: the
+  canvas hides, channels stay operable on system colors.
+- **`traits/area-drag.ts`** — the 2-axis sibling of `value-drag`, honoring the drag laws: per-drag
+  baseline snapshot captured POST-jump inside `onValue` (the `#committed`-on-focus precedent —
+  pre-touch capture fired a spurious `change` on an out-and-back drag in BOTH engines until fixed),
+  user-select suspension, INSTRUMENT-BRIDGE tests.
+- **`ui-text-field type=color`** — the 13th type: a swatch affordance (live `ui-swatch` preview) + the
+  lazily-imported `ui-color-picker` overlay (the type=date→calendar precedent; the picker control stays
+  OUT of non-color bundles, tree-shake-asserted) + a `format` prop. Deliberate widening, recorded:
+  `ui-swatch` (+`_token-surface`) is now STATICALLY pulled by all text-field consumers for the
+  immediate preview — documented, budget-absorbed.
+- **The build found two real bugs pre-review** (drag-baseline timing; an untracked reactive read that
+  made every keystroke rebuild the codec and wipe `typeMismatch`), and the independent review added
+  one more (a stuck `customError`: `#commit()` never cleared the readout error — fixed + tested) plus
+  the CSS-Color-4 chroma-percent scale (C 100% → 0.4) and five undeclared descriptor parts.
+- Catalog: a TEMPORARY `ColorPicker` `EXCLUSION_ALLOWLIST` seed (the ADR-0118 M1/M2 discipline) — the
+  M2 wave lands the catalog row + exemplar + §5.2 guidance and drains it. Family budget re-based
+  38→44 KB gz (measured 42595 B; the picker's own leave-one-out marginal is NEGATIVE, the gzip
+  dictionary artifact). Gates: check · jsdom 238/238 scoped (repo green minus the regenerated
+  fixtures) · browser 84+ both engines · size green.

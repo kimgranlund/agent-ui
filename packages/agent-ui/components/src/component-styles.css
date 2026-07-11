@@ -137,3 +137,7 @@
 /* ADR-0125 — ui-command-modal, the CMD-K command palette (command-modal.lld.md): nests ui-modal for the
  * surface (already imported above) and paints only its own search/list/status/empty parts. */
 @import './controls/command-modal/command-modal.css';
+
+/* ADR-0123 — ui-color-picker, the OKLCH-internal 2-axis color-input control (color-picker.lld.md): the
+ * pad + channel-row/readout geometry; composes ui-slider/ui-text-field/ui-swatch (already imported above). */
+@import './controls/color-picker/color-picker.css';

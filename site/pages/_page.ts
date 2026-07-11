@@ -261,6 +261,15 @@ export const NAV: readonly NavGroup[] = [
       { href: './calendar-doc.html', label: 'API' },
     ],
   },
+  // ADR-0123 — the OKLCH-internal 2-axis color-input control; also the popup body for ui-text-field
+  // type=color (lazily imported there, the ADR-0048 type=date seam verbatim).
+  {
+    label: 'ui-color-picker',
+    links: [
+      { href: './color-picker-demo.html', label: 'Demo' },
+      { href: './color-picker-doc.html', label: 'API' },
+    ],
+  },
   // The G7 form-composition family (ADR-0050/0051) — the field wrapper + the coordination provider, each a
   // per-component container group (Demo + API), the site-toc container-tier rule.
   {

@@ -8,7 +8,7 @@
 tag: ui-text-field
 tier: control          # geometry size-class (Control band — full control height; geometry.md "five size-classes")
 extends: UIFormElement  # FACE form-associated control (value/validity participation via ElementInternals; ADR-0013)
-# marginal: ui-text-field adds 2623 B gz (10975 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — it + UIFormElement + trackUserInvalid + the Wave 5A codec factories/helpers). Wave 5A (ADR-0047) grew the marginal from 1110 B gz (Wave 3) by adding currencyCodecOptions/unitCodecOptions/currencySymbol/unitLabel, TYPE_CONFIG v2 (10 types), numeric adornment factories, ArrowUp/Down, and range validity. The family total is gated each run by `npm run size` (scripts/measure-size.mjs)
+# marginal: ui-text-field adds 2623 B gz (10975 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — it + UIFormElement + trackUserInvalid + the Wave 5A codec factories/helpers). Wave 5A (ADR-0047) grew the marginal from 1110 B gz (Wave 3) by adding currencyCodecOptions/unitCodecOptions/currencySymbol/unitLabel, TYPE_CONFIG v2 (10 types), numeric adornment factories, ArrowUp/Down, and range validity. ADR-0123 LLD-C9 adds the 13th type=color leg + a NEW static `ui-swatch` pull (the immediate swatch-button preview) — measured marginal ≈0 B gz at that wave (a leave-one-out gzip-dictionary artifact against the heavily-overlapping color-picker/swatch entries, the split/swiper precedent), well within the per-control budget. The family total is gated each run by `npm run size` (scripts/measure-size.mjs)
 
 attributes:            # attributes-as-API — mirrors text-field.ts `static props` (control-specific first, then the spread formProps)
   - name: value
@@ -30,9 +30,9 @@ attributes:            # attributes-as-API — mirrors text-field.ts `static pro
     reflect: true      # reflects so the [size] dimensional-ramp repoint in text-field.css applies to JS-set values
   - name: type
     type: enum
-    values: [text, email, url, tel, password, search, number, currency, unit, percent, date, time]
+    values: [text, email, url, tel, password, search, number, currency, unit, percent, date, time, color]
     default: text
-    reflect: true      # reflects so [type] CSS selectors (e.g. [type=password] for -webkit-text-security masking) + the type-resolver apply to JS-set values; type='text' is the identity config (byte-identical to the pre-Wave-3 shipped control; ADR-0044). Wave 5A (ADR-0047) adds unit + percent. Wave 5B (ADR-0048) adds date + time.
+    reflect: true      # reflects so [type] CSS selectors (e.g. [type=password] for -webkit-text-security masking) + the type-resolver apply to JS-set values; type='text' is the identity config (byte-identical to the pre-Wave-3 shipped control; ADR-0044). Wave 5A (ADR-0047) adds unit + percent. Wave 5B (ADR-0048) adds date + time. ADR-0123 LLD-C9 adds color (the 13th type).
   - name: readonly
     type: boolean
     default: false
@@ -57,6 +57,11 @@ attributes:            # attributes-as-API — mirrors text-field.ts `static pro
     type: string
     default: ''
     reflect: true      # '' = unconstrained. A numeric string sets the upper bound; canonical > max → rangeOverflow validity flag. Matches native <input max> string semantics where '' = no bound.
+  - name: format
+    type: enum
+    values: [hex, oklch]
+    default: hex
+    reflect: true      # ADR-0123 LLD-C9 — the type=color leg's serialization syntax; mirrors ui-color-picker's own `format` prop exactly. Only meaningful for type=color.
   - name: name
     type: string
     default: ''
@@ -92,7 +97,7 @@ events:
     description: Fired on each edit of the editor (surface→model) as the value tracks the contenteditable. Suppressed mid IME composition. The host re-emits; matches native <input> input semantics. Also fired by the clear button (type=search) and steppers (type=number) when they change the value.
   - name: change
     detail: 'null'
-    description: Fired on commit — blur-with-change or Enter (Enter also suppresses the newline). Also fired by the clear button and steppers. For type=date, fired once when the user picks a date in the calendar (the field is the sole emitter — the calendar's own change is stopped at the field boundary so consumers see exactly one change per pick, matching native <input type=date> semantics). Matches native <input> change semantics.
+    description: Fired on commit — blur-with-change or Enter (Enter also suppresses the newline). Also fired by the clear button and steppers. For type=date, fired once when the user picks a date in the calendar (the field is the sole emitter — the calendar's own change is stopped at the field boundary so consumers see exactly one change per pick, matching native <input type=date> semantics). For type=color, fired once per picker `change` (a channel/gesture commit — the picker's own change is stopped at the field boundary; the overlay stays open for further adjustment). Matches native <input> change semantics.
   - name: toggle
     detail: 'null'
     description: Fired by the password reveal button (type=password) when the user toggles password masking on/off. The :state(revealed) custom state reflects the current revealed condition.
@@ -111,7 +116,7 @@ parts:                 # the contenteditable editable surface is a control-owned
   - name: leading-adornment
     description: Control-injected leading adornment (type=search → Phosphor `magnifying-glass` icon via `setIcon`; type=currency → narrow currency symbol TEXT per `currency` attr, e.g. '$' for USD, '¥' for JPY). `[slot="leading"]` element with aria-hidden="true". Present only when the type resolver maps a leading role (search/currency).
   - name: trailing-adornment
-    description: Control-injected trailing adornment container. type=search → clear button (data-role="clear"); type=password → reveal button (data-role="reveal"); type=number or type=currency → stepper only (data-role="stepper"); type=unit or type=percent → suffix span + steppers (data-role="numeric"); type=date → calendar button (data-role="calendar"). Present only for these types.
+    description: Control-injected trailing adornment container. type=search → clear button (data-role="clear"); type=password → reveal button (data-role="reveal"); type=number or type=currency → stepper only (data-role="stepper"); type=unit or type=percent → suffix span + steppers (data-role="numeric"); type=date → calendar button (data-role="calendar"); type=color → swatch button (data-role="swatch"). Present only for these types.
   - name: suffix
     description: Inside the trailing-adornment for type=unit and type=percent. A `<span data-part="suffix" aria-hidden="true">` carrying the trailing text label — the localized unit label (e.g. 'kg') for type=unit, or '%' for type=percent. Sized = font (§4.6 inline affordance law); decorative only.
   - name: clear-button
@@ -126,6 +131,10 @@ parts:                 # the contenteditable editable surface is a control-owned
     description: Inside the trailing-adornment for type=date. A `<button data-part="calendar-button" aria-haspopup="dialog" aria-label="Open date picker">`, injected with the Phosphor `calendar-blank` glyph via `setIcon`, that opens the calendar popup overlay. Button chrome is reset (no border/background) and forced-color-adjust is none (ADR-0048 §2). Created and removed with the type-effect lifecycle.
   - name: calendar-popup
     description: For type=date only. A `<div data-part="calendar-popup" popover="auto">` wrapper hosting a `<ui-calendar>` in the Popover API top layer. The wrapper has no visual chrome (padding/border/background reset to 0); the `<ui-calendar>` owns all spacing. NOT created eagerly with the type-effect — the wrapper + `<ui-calendar>` + its overlay wiring are built on the calendar button's FIRST CLICK (ensureCalendar(), idempotent past the first call), the same activation moment that triggers the lazy module import; a type=date field carries no popup subtree at all until then. Removed with the type-effect lifecycle on type-change/disconnect (C10) if it was ever built. The calendar module (`ui-calendar`) is loaded lazily via a dynamic `import('../calendar/calendar.ts')` on first open when not already registered; if the module is pre-registered (barrel import), the open is synchronous. NOTE — dynamic-import slow path: the test suite cannot exercise the slow path in isolation because the spec does not allow unregistering a custom element once defined. The fast path (`customElements.get('ui-calendar') !== undefined`) is always taken in tests.
+  - name: swatch-button
+    description: Inside the trailing-adornment for type=color. A `<button data-part="swatch-button" aria-haspopup="dialog" aria-label="Open color picker">` containing a composed `<ui-swatch>` (never a bespoke color div — the ADR-0118 fence) whose `value` tracks the field's own value, that opens the color-picker popup overlay (ADR-0123 LLD-C9). Created and removed with the type-effect lifecycle.
+  - name: color-picker-popup
+    description: For type=color only. A `<div data-part="color-picker-popup" popover="auto">` wrapper hosting a `<ui-color-picker>` in the Popover API top layer, the `<ui-calendar>` seam verbatim (ADR-0048 decision 3). NOT created eagerly — built on the swatch button's FIRST CLICK (ensureColorPicker(), idempotent), the same activation moment that triggers the lazy `import('../color-picker/color-picker.ts')`; a type=color field carries no picker subtree until then. Removed with the type-effect lifecycle on type-change/disconnect. Unlike the calendar leg, a picker `change` does NOT auto-close the overlay (one channel commit is not "done"); it closes via its own light-dismiss (Escape/outside-click).
 
 customStates:          # :state() hooks the stylesheet keys off — set via internals.states, never host attrs
   - ready              # the motion gate (ADR-0008): armed one frame past first paint so the upgrade SNAPS and only subsequent state changes animate

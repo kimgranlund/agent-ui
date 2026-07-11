@@ -44,6 +44,9 @@ import comboBoxMd from '../../packages/agent-ui/components/src/controls/combo-bo
 // ADR-0125 — ui-command-modal, the CMD-K command palette (nests ui-modal + re-derives the combo-box filter).
 import commandModalMd from '../../packages/agent-ui/components/src/controls/command-modal/command-modal.md?raw'
 import calendarMd from '../../packages/agent-ui/components/src/controls/calendar/calendar.md?raw'
+// ADR-0123 — ui-color-picker, the OKLCH-internal 2-axis color-input control (pad + channel ui-sliders +
+// an editable ui-text-field readout + a composed ui-swatch preview).
+import colorPickerMd from '../../packages/agent-ui/components/src/controls/color-picker/color-picker.md?raw'
 // The G7 form-composition family (ADR-0050/0051): the label/description/error wrapper + the coordination provider.
 import fieldMd from '../../packages/agent-ui/components/src/controls/field/field.md?raw'
 import formProviderMd from '../../packages/agent-ui/components/src/controls/form-provider/form-provider.md?raw'
@@ -138,6 +141,8 @@ export const loadComboBoxDoc = (): ComponentDoc => parseDoc(comboBoxMd)
 // ADR-0125 — the CMD-K command palette (tier=pattern ⇒ {doc,demo}; permanently catalog-excluded, F8).
 export const loadCommandModalDoc = (): ComponentDoc => parseDoc(commandModalMd)
 export const loadCalendarDoc  = (): ComponentDoc => parseDoc(calendarMd)
+// ADR-0123 — the OKLCH-internal 2-axis color-input control (tier=pattern ⇒ {doc,demo}).
+export const loadColorPickerDoc = (): ComponentDoc => parseDoc(colorPickerMd)
 // The G7 form-composition family (ADR-0050/0051 — both tier=container ⇒ {doc, demo}).
 export const loadFieldDoc        = (): ComponentDoc => parseDoc(fieldMd)
 export const loadFormProviderDoc = (): ComponentDoc => parseDoc(formProviderMd)

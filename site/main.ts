@@ -562,6 +562,24 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0123 — the OKLCH-internal 2-axis color-input control (pad + channel ui-sliders + an editable
+  // ui-text-field readout + a composed ui-swatch preview). Also the popup body for the ui-text-field
+  // type=color lazy-overlay leg.
+  {
+    label: 'ui-color-picker',
+    cards: [
+      {
+        href: './color-picker-demo.html',
+        title: 'Demo',
+        blurb: 'The standalone color-input control — drag the pad or a channel slider, or type a value into the readout, with form submission, required validation, and an author-supplied presets slot.',
+      },
+      {
+        href: './color-picker-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-color-picker attributes (value/format + form props), the 2-axis pad a11y model, and the OKLCH-internal/format-selected value contract, generated from its color-picker.md descriptor.',
+      },
+    ],
+  },
   // The G7 form-composition family (ADR-0050/0051): the label/description/error wrapper + the coordination
   // provider (both tier=container → a Demo + a descriptor-derived API doc each).
   {

@@ -127,3 +127,34 @@ well COMPOSE a swatch; it never re-owns value rendering). No text-field `type` c
     chroma-not-saturation.
   - Gates re-verified after revisions: `coverage_check.py --strict` clean (exit 0, 34 nodes); `site/lib/adr.test.ts`
     33/33 green.
+- **2026-07-11 — M1 + M1b BUILD complete (ADR-0123 ratified, Kim's F1 = OKLCH-internal).** Shipped: the standalone
+  `ui-color-picker` (pad + area-drag trait + hue/chroma/lightness `ui-slider` channels + editable
+  `ui-text-field` readout + composed `ui-swatch` preview + EyeDropper progressive enhancement + presets
+  slot), `color.ts` (OKLCH↔sRGB + gamut-map + `colorCodecOptions`, promoted from adia, zero-dep/pure), the
+  new `traits/area-drag.ts` (the 2-axis sibling of value-drag), and the `ui-text-field type=color` leg
+  (13th type, lazy overlay, the ADR-0048 seam). Descriptor, jsdom (64 tests: color.test.ts 20 + area-drag
+  6 + color-picker.test.ts 38 incl. the contract trip-wire) + cross-engine browser (10 tests × 2 engines,
+  whole-shape + real 2-axis pointer-drag + real keyboard + forced-colors + EyeDropper both branches) +
+  text-field's own new type=color coverage (9 jsdom + 5×2 browser). M1 seeded `EXCLUSION_ALLOWLIST`
+  (`'ColorPicker'`, a2ui/catalog/default/index.test.ts) — M2 (catalog row + exemplar + §5.2 +
+  `FEED_EXCLUDED`) is a follow-on wave, not yet built. Site pages (color-picker-doc/-demo), nav, llms.txt
+  landed. Family barrel budget re-based 38→44 KB (measured 42587 B gz; ADR-0123's own Consequences named
+  this re-base as expected for "the largest single control yet"); color-picker's own per-control marginal
+  is negative (shared bytes already counted via text-field's static swatch/codec pull — the split/swiper
+  gzip-dictionary artifact). Two real bugs found and fixed during the build (recorded for the pattern,
+  not just the fix): (1) the pad's drag-baseline for "a drag that returns to its start fires no change"
+  must be captured AFTER the drag's own first jump (inside `onValue`), not before (on `pointerdown`) — the
+  UIRangeElement `#committed`-on-`focus` precedent captures the POST-jump value, since native
+  mousedown-driven focus fires after `pointerdown`'s own dispatch; capturing before it compares against a
+  stale pre-touch baseline. (2) a synchronous, untracked-less read of `this.value` inside the swatch-
+  button's one-time creation code (called from within the type-effect's own scope) silently added `value`
+  as a dependency of the WHOLE type-effect, rebuilding the codec (and wiping its `hasError`) on every
+  keystroke — fixed with `untracked(() => this.value)`, the value-codec.ts `canonical` seed precedent.
+  Judgment calls flagged for review: no dedicated EyeDropper icon exists in `@agent-ui/icons`'s small
+  curated set — used a plain text-labeled button rather than inventing a new icon asset; the picker's
+  `change` does NOT auto-close the `type=color` overlay (unlike the calendar leg) — one channel/gesture
+  commit is not "the user is done," closing is left to the overlay's own light-dismiss; the pad's
+  `applyFieldLabelling` merge (field label + the fixed axis description) is a string-concat synthesis, not
+  explicitly specified by the LLD. Gates green repo-wide (`npm run check`; jsdom 5492/5494 — the two
+  pre-existing, explicitly-allowed red fixtures unchanged; browser suite scoped to the touched files, both
+  engines; `npm run size` exit 0). No commits made — the coordinator routes the independent review.

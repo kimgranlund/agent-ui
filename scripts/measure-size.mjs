@@ -79,7 +79,14 @@ const targets = [
   // marginal carries its own MARGINAL_OVERRIDES entry above, 3072 B gz — a five-tag family behind one
   // entry, not guessed at). The bump to 38912 B gz (38 KB) is sized ahead for command-modal, the last
   // QUEUED, already-frozen control family — recorded here, not silently absorbed.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 38 * KB],
+  // 44 KB re-based at the ui-color-picker wave (ADR-0123, the SAME Consequences-anticipated re-base
+  // precedent — ADR-0123's own Consequences named this re-base as EXPECTED for "the largest single
+  // control yet"): color-picker's OKLCH↔sRGB math + canvas paint + area-drag trait + three composed
+  // ui-slider channels + the ui-text-field type=color leg (a NEW static ui-swatch pull for the immediate
+  // preview) landed in one wave — measured 42587 B gz 2026-07-11; the per-control marginal stays the
+  // real gate (color-picker itself measures NEGATIVE — its bytes are already counted via text-field's
+  // own static swatch/codec pull, a leave-one-out gzip-dictionary artifact, the split/swiper precedent).
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 44 * KB],
 ]
 
 let over = false

@@ -698,3 +698,94 @@ describe('ui-text-field Wave-5B — type=time codec (s11 Wave-5B, both engines)'
     expect(box.width, 'type=time field is narrower than tall (should be a text-input shape)').toBeGreaterThan(box.height)
   })
 })
+
+// ── ADR-0123 LLD-C9: type=color swatch affordance + ui-color-picker overlay — cross-engine browser smoke ─
+//
+// These tests prove what jsdom cannot:
+//   1. SHAPE — type=color field is not a collapsed dot in a flex row.
+//   2. OVERLAY — the swatch button opens the picker popup in the top layer (Popover API) on BOTH engines.
+//   3. LIVE UPDATE — a real picker `change` (dispatched on the real <ui-color-picker>, since the barrel
+//      pre-registers it — customElements.get shortcut) updates the field value AND does NOT close the
+//      popup (SPEC-R11 — unlike the calendar leg, one channel commit is not "done").
+//   4. FOCUS — the swatch button stays a real, focusable anchor for the overlay.
+//
+// The `@agent-ui/components/components` barrel already registers `<ui-color-picker>` (controls/index.ts),
+// so the swatch button's click handler opens synchronously (the customElements.get fast path — the
+// ADR-0048 precedent). The popup/`<ui-color-picker>` do not exist in the DOM until the swatch button's
+// first click (`ensureColorPicker()`) — every test below queries them AFTER `swatchBtn.click()`.
+
+describe('ui-text-field Wave-C9 — type=color swatch picker (both engines)', () => {
+  it('SHAPE: type=color field in a flex row has positive bounding-box and is wider than tall (not a dot)', () => {
+    const wrap = document.createElement('div')
+    wrap.style.display = 'flex'
+    wrap.style.flexDirection = 'row'
+    wrap.innerHTML = '<ui-text-field type="color" value="#3b82f6"></ui-text-field>'
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const field = wrap.querySelector('ui-text-field') as HTMLElement
+    const box = field.getBoundingClientRect()
+
+    expect(box.width, 'type=color field collapsed to zero width in a flex row').toBeGreaterThan(0)
+    expect(box.height, 'type=color field collapsed to zero height in a flex row').toBeGreaterThan(0)
+    expect(box.width, 'type=color field is narrower than tall — should be a text-input shape').toBeGreaterThan(box.height)
+  })
+
+  it('the swatch-button preview renders a real, non-collapsed ui-swatch immediately (before the picker ever loads)', () => {
+    const { field } = mount('<ui-text-field type="color" value="#3b82f6"></ui-text-field>')
+    const swatch = field.querySelector('[data-part="swatch-button"] ui-swatch') as HTMLElement
+    expect(swatch, 'the swatch preview must be present immediately').not.toBeNull()
+    const rect = swatch.getBoundingClientRect()
+    expect(rect.width, 'the swatch preview collapsed to zero width').toBeGreaterThan(0)
+    expect(rect.height, 'the swatch preview collapsed to zero height').toBeGreaterThan(0)
+    expect(field.querySelector('ui-color-picker'), 'the picker itself must not exist before first open').toBeNull()
+  })
+
+  it('OVERLAY: swatch button click opens the popup in the top layer (:popover-open)', async () => {
+    const { field } = mount('<ui-text-field type="color" value="#3b82f6"></ui-text-field>')
+    const swatchBtn = field.querySelector('[data-part="swatch-button"]') as HTMLElement
+    expect(swatchBtn, 'swatch-button must be present for type=color').not.toBeNull()
+    expect(field.querySelector('[data-part="color-picker-popup"]'), 'popup must not exist before first open').toBeNull()
+
+    swatchBtn.click() // first open: builds the popup + <ui-color-picker> AND opens synchronously
+    const popup = field.querySelector('[data-part="color-picker-popup"]') as HTMLElement
+    expect(popup, 'color-picker-popup must be present after first open').not.toBeNull()
+    const picker = popup.querySelector('ui-color-picker') as HTMLElement & { value: string }
+    expect(picker.value, 'the picker must be seeded with the field\'s current value').toBe('#3b82f6')
+    await new Promise<void>((r) => setTimeout(r, 0)) // let Popover toggle event (queued task) settle
+
+    expect(popup.matches(':popover-open'), 'popup must be in the Popover top layer after button click').toBe(true)
+  })
+
+  it('LIVE UPDATE: a picker `change` updates the field value and does NOT close the popup', async () => {
+    const { field } = mount('<ui-text-field type="color" value="#3b82f6"></ui-text-field>')
+    const swatchBtn = field.querySelector('[data-part="swatch-button"]') as HTMLElement
+
+    swatchBtn.click()
+    const popup = field.querySelector('[data-part="color-picker-popup"]') as HTMLElement
+    const picker = popup.querySelector('ui-color-picker') as HTMLElement & { value: string }
+    await new Promise<void>((r) => setTimeout(r, 0))
+    expect(popup.matches(':popover-open'), 'popup must be open before the picker change').toBe(true)
+
+    const events: string[] = []
+    field.addEventListener('input', () => events.push('input'))
+    field.addEventListener('change', () => events.push('change'))
+
+    // Simulate a picker commit (what UIColorPickerElement fires on pointer-up / channel blur / readout parse).
+    picker.value = '#ff0000'
+    picker.dispatchEvent(new Event('change', { bubbles: true, composed: true }))
+
+    expect((field as HTMLElement & { value: string }).value, 'field value must be set to the picked color').toBe('#ff0000')
+    expect(events, 'must emit input then change').toEqual(['input', 'change'])
+
+    // Deliberately UNLIKE the calendar leg: the overlay stays open (SPEC-R11 — one channel commit is not "done").
+    await new Promise<void>((r) => setTimeout(r, 0))
+    expect(popup.matches(':popover-open'), 'the overlay must stay open after a picker change (unlike calendar select)').toBe(true)
+  })
+
+  it('the swatch button remains a real, focusable anchor for the overlay', () => {
+    const { field } = mount('<ui-text-field type="color" value="#3b82f6"></ui-text-field>')
+    const swatchBtn = field.querySelector('[data-part="swatch-button"]') as HTMLElement
+    swatchBtn.focus()
+    expect(document.activeElement, 'the swatch button must accept real focus').toBe(swatchBtn)
+  })
+})

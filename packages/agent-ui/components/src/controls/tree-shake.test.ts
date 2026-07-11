@@ -132,8 +132,14 @@ describe('ui-text-field tree-shake — the entry graph is tight (s12)', () => {
     expect(tfLayers('reactive/').length).toBeGreaterThan(0)
   })
 
-  it('drags ONLY {controls/text-field, dom, traits, reactive} — and NOT the sibling ui-button', () => {
-    const ALLOWED = ['controls/text-field/', 'dom/', 'traits/', 'reactive/']
+  it('drags ONLY {controls/text-field, controls/swatch, controls/_token-surface, dom, traits, reactive} — and NOT the sibling ui-button', () => {
+    // ADR-0123 LLD-C9 — the type=color leg statically pulls TWO deliberate additions: ui-swatch (a tiny,
+    // zero-dep Display-class leaf, so the trailing swatch-button preview renders immediately, before the
+    // lazy picker has ever loaded — the ADR-0123 own reasoning) and its own `_token-surface/token-surface.ts`
+    // value-lane dependency; the color CODEC (color-picker/color.ts, pure/zero-DOM) is ALSO statically
+    // reached (the currency/date/time codec precedent) — but the color-picker CONTROL itself
+    // (color-picker/color-picker.ts, the pad/canvas/codec machinery) stays out, via dynamic import() below.
+    const ALLOWED = ['controls/text-field/', 'controls/swatch/', 'controls/_token-surface/', 'controls/color-picker/color.ts', 'dom/', 'traits/', 'reactive/']
     for (const p of tf.reached) {
       expect(ALLOWED.some((a) => p.startsWith(a)), `unexpected module in text-field graph: ${p}`).toBe(true)
     }
@@ -144,6 +150,10 @@ describe('ui-text-field tree-shake — the entry graph is tight (s12)', () => {
     // first button-click — the static regex crawler cannot match `import()` expressions, so the
     // calendar module is invisible to the graph and `controls/calendar/` stays empty here.
     expect(tfLayers('controls/calendar/')).toEqual([])
+    // ADR-0123 LLD-C9 — the SAME dynamic-import proof for the color-picker CONTROL: the swatch button's
+    // FIRST activation lazily import()s color-picker.ts — the static crawl never reaches it, so ONLY
+    // color.ts (the pure codec, statically imported for the codec wiring) shows up under this folder.
+    expect(tfLayers('controls/color-picker/')).toEqual(['controls/color-picker/color.ts'])
   })
 
   it('does NOT drag the descriptor tooling, and pulls ONLY @agent-ui/icons as its non-relative import', () => {

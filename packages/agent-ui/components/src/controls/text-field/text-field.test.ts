@@ -3,6 +3,8 @@ import { signal, effect, inspect, whenFlushed, type Signal } from '@agent-ui/com
 import { UITextFieldElement } from './text-field.ts'
 import { currencySymbol, unitLabel } from '../../traits/value-codec.ts'
 import type { FormValue, ValidityResult } from '../../dom/form.ts'
+import { readFileSync } from 'node:fs'
+declare const process: { cwd(): string }
 
 // G6 s8 — UITextFieldElement jsdom behaviour/value/validity/form/disabled/readonly/zero-residue probes
 // (ADR-0014). jsdom reality (verified at the base, dom/form.test.ts): the ElementInternals form-association
@@ -1712,5 +1714,123 @@ describe('ui-text-field type=time — codec + typeMismatch (Wave 5B)', () => {
     await whenFlushed()
     expect(el.formValidityProbe().valid).toBe(true)
     el.remove()
+  })
+})
+
+// ── type='color' — swatch affordance + hex/oklch codec + typeMismatch (ADR-0123 LLD-C9) ──────
+// M1 note (the calendar precedent): `ui-color-picker` is never imported in this file, so the swatch
+// button's first click always takes the SLOW (real dynamic import, unresolved during a synchronous
+// test) path — the popup wrapper + `<ui-color-picker>` element existing (upgraded or not) is what these
+// probes assert; the picker's OWN behavior is color-picker.test.ts's job.
+
+/** Click the type=color swatch button, triggering `ensureColorPicker()` (first-open creation) — returns
+ *  the now-present popup wrapper. Synchronous: `ensureColorPicker()` runs inline in the click listener. */
+function openColorPickerPopup(el: Element): HTMLElement {
+  const btn = el.querySelector('[data-part="swatch-button"]') as HTMLElement
+  btn.click()
+  return el.querySelector('[data-part="color-picker-popup"]') as HTMLElement
+}
+
+describe('ui-text-field type=color — swatch affordance + codec + typeMismatch (ADR-0123 LLD-C9)', () => {
+  it('has a trailing swatch affordance (data-role=swatch) containing a composed ui-swatch', async () => {
+    const { el } = makeTyped('color')
+    await whenFlushed()
+    const trailing = el.querySelector('[data-part="trailing-adornment"][data-role="swatch"]')
+    expect(trailing).not.toBeNull()
+    const btn = el.querySelector('[data-part="swatch-button"]')
+    expect(btn).not.toBeNull()
+    expect(btn?.getAttribute('aria-haspopup')).toBe('dialog')
+    const swatch = btn?.querySelector('ui-swatch')
+    expect(swatch, 'the swatch preview must be a REAL ui-swatch — no bespoke color div').not.toBeNull()
+    el.remove()
+  })
+
+  it('the swatch preview tracks the field value', async () => {
+    const { el } = makeTyped('color')
+    el.value = '#3b82f6'
+    await whenFlushed()
+    const swatch = el.querySelector('[data-part="swatch-button"] ui-swatch') as unknown as { value: string }
+    expect(swatch.value).toBe('#3b82f6')
+    el.remove()
+  })
+
+  it('has no leading adornment or steppers for type=color', async () => {
+    const { el } = makeTyped('color')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="leading-adornment"]')).toBeNull()
+    expect(el.querySelector('[data-part="step-up"]')).toBeNull()
+    el.remove()
+  })
+
+  it('inputmode is NOT set on the editor (type=color uses text inputmode)', async () => {
+    const { el, editor } = makeTyped('color')
+    await whenFlushed()
+    expect(editor.hasAttribute('inputmode')).toBe(false)
+    el.remove()
+  })
+
+  it('has NO color-picker popup/`<ui-color-picker>` until the swatch button is first clicked (first-open creation)', async () => {
+    const { el } = makeTyped('color')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="color-picker-popup"]'), 'the popup wrapper must not exist before first open').toBeNull()
+    expect(el.querySelector('ui-color-picker'), 'the picker element must not exist before first open').toBeNull()
+    el.remove()
+  })
+
+  it('the swatch button click creates the popup wrapper + a `<ui-color-picker>` (first-open, idempotent past the first call)', async () => {
+    const { el } = makeTyped('color')
+    el.value = '#3b82f6'
+    await whenFlushed()
+    const popup = openColorPickerPopup(el)
+    expect(popup).not.toBeNull()
+    const picker = el.querySelector('ui-color-picker')
+    expect(picker).not.toBeNull()
+    expect(picker?.getAttribute('value')).toBe('#3b82f6')
+    expect(picker?.getAttribute('format')).toBe('hex')
+
+    // second click is idempotent — no duplicate popup/picker
+    const btn = el.querySelector('[data-part="swatch-button"]') as HTMLElement
+    btn.click()
+    expect(el.querySelectorAll('[data-part="color-picker-popup"]')).toHaveLength(1)
+    expect(el.querySelectorAll('ui-color-picker')).toHaveLength(1)
+    el.remove()
+  })
+
+  it('invalid color input → typeMismatch (not customError) — ADR-0123 mirrors ADR-0048', async () => {
+    const { el, editor } = makeTyped('color')
+    await whenFlushed()
+    el.value = 'not-a-color'
+    editor.textContent = 'not-a-color'
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    const verdict = el.formValidityProbe()
+    expect(verdict.valid).toBe(false)
+    if (!verdict.valid) {
+      expect(verdict.flags).toEqual({ typeMismatch: true }) // NOT customError
+      expect(verdict.message).toContain('color')
+    }
+    el.remove()
+  })
+
+  it('valid hex color (#ff0000) → valid; codec parses and canonical is set on blur', async () => {
+    const { el, editor } = makeTyped('color')
+    await whenFlushed()
+    el.value = '#ff0000'
+    editor.textContent = '#ff0000'
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    expect(el.formValidityProbe().valid).toBe(true)
+    el.remove()
+  })
+
+  it('the type=text static import graph does not statically pull color-picker.ts (SPEC-R11 AC1 — tree-shake)', () => {
+    // Source-level proof (the calendar-precedent shape) — a runtime module-registry check cannot isolate
+    // an already-registered element in this shared test file; the STATIC import graph is what the tree-
+    // shake test (tree-shake.test.ts) and this file's own header both assert never includes color-picker.ts
+    // for a plain `import './text-field.ts'`. The dynamic `import(` call site (verified in source below)
+    // is the only reference — never matched by the static crawl.
+    const src = readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/text-field/text-field.ts`, 'utf8') as string
+    expect(/import\(['"]\.\.\/color-picker\/color-picker\.ts['"]\)/.test(src)).toBe(true)
+    expect(/^import .*color-picker\.ts['"]$/m.test(src.replace(/import\([^)]*\)/g, ''))).toBe(false)
   })
 })

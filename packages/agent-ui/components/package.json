@@ -15,6 +15,7 @@
     "./controls/card": "./src/controls/card/card.ts",
     "./controls/checkbox": "./src/controls/checkbox/checkbox.ts",
     "./controls/code": "./src/controls/code/code.ts",
+    "./controls/color-picker": "./src/controls/color-picker/color-picker.ts",
     "./controls/column": "./src/controls/column/column.ts",
     "./controls/combo-box": "./src/controls/combo-box/combo-box.ts",
     "./controls/command-modal": "./src/controls/command-modal/command-modal.ts",

@@ -149,10 +149,20 @@ function fleetPrimaryTypes(): string[] {
  *  descriptor exists, so they never enter the derived set to begin with (they stay a documentary-only note
  *  in SPEC §5.2.1, never code-derived). A future undispositioned control re-seeds this map with a reason +
  *  citation, same as Wave 0's seed. */
+// ADR-0123 (color-picker.lld.md) M1 wave: `ColorPicker` ships its control here but NOT its catalog row —
+// the M1/M2 discipline (ADR-0118 precedent) splits control-ship from catalog-row+exemplar+guidance into a
+// separate, one-context-sized M2 wave. This is a TEMPORARY "shipped ahead of its catalog row" seed (the
+// report/content/feed/token-surface precedent above) — M2 lands the `ColorPicker` row + a validator-clean
+// exemplar + §5.2 guidance and DRAINS this entry, the same way those families' seeds were drained.
+//
 // `Toast`/`ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
-// the only entries left — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
-// content) — a PERMANENT exclusion, never drained.
+// the only PERMANENT entries — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
+// content) — never drained.
 const EXCLUSION_ALLOWLIST = new Map<string, string>([
+  ['ColorPicker',
+    'ADR-0123 / color-picker.lld.md — TEMPORARY, M1-seeded: the control ships in this wave, the catalog ' +
+    'row + exemplar + §5.2 guidance land in a follow-on M2 wave (the ADR-0118 M1/M2 discipline). Drains ' +
+    'at M2, not permanent.'],
   ['Toast', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: app-surface chrome driven by show(), not agent-emittable (rejected explicitly: history-must-not-lie · payload↔DOM traceability · teaching a forbidden type).'],
   ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, same reasoning as Toast: app-surface chrome, never a catalog row.'],
   ['ThemeProvider',

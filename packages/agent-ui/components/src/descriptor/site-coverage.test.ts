@@ -218,12 +218,14 @@ describe('site coverage — every shipped component has its required per-tier pa
     // height) + the timeline family (ADR-0122): ui-timeline-item (the shared marker-system rail row),
     // ui-timeline (the durable host), ui-status-stream (the live host — deliberately not catalogued, F5) +
     // the ui-swiper family (ADR-0124): ui-swiper (the coordinator) + its two chrome anchors that ship a
-    // renderInto/fill seam (ui-swiper-pagination, ui-swiper-paddles) — each requires its {doc, demo} pages.
+    // renderInto/fill seam (ui-swiper-pagination, ui-swiper-paddles) + ui-color-picker (ADR-0123, the
+    // OKLCH-internal 2-axis color-input composite — pad + channel sliders + readout, no new geometry row)
+    // — each requires its {doc, demo} pages.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
-        'calendar', 'combo-box', 'command-modal', 'disclosure', 'menu', 'modal', 'popover', 'segmented-control',
-        'select', 'status-stream', 'swiper', 'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline',
-        'timeline-item', 'toast', 'toolbar', 'tooltip',
+        'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'menu', 'modal', 'popover',
+        'segmented-control', 'select', 'status-stream', 'swiper', 'swiper-paddles', 'swiper-pagination',
+        'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],
     )
   })

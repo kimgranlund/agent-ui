@@ -77,6 +77,12 @@ export * from './combo-box/combo-box.ts' // form-associated filter combobox (ove
 // for ui-text-field type=date (lazily imported there in slice 5B-3).
 export * from './calendar/calendar.ts'   // form-associated date picker (bespoke 2D grid, UIFormElement base)
 
+// ADR-0123 — ui-color-picker, the OKLCH-internal 2-axis color-input control (color-picker.lld.md): a
+// Pattern-class UIFormElement composite (pad + composed ui-slider channels + ui-text-field readout +
+// ui-swatch preview). Also the popup body for ui-text-field type=color (lazily imported there, LLD-C9),
+// the ADR-0048 type=date→ui-calendar seam verbatim.
+export * from './color-picker/color-picker.ts'
+
 // Coordination controls — G7 (ADR-0050/ADR-0051): the labelling wrapper + the aggregation/discovery provider.
 export * from './field/field.ts'               // the label/description/error wrapper (LLD-C4)
 export * from './form-provider/form-provider.ts' // also surfaces FormSubmitDetail (LLD-C7)

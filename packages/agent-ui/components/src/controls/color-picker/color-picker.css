@@ -1,0 +1,208 @@
+/* color-picker.css — ui-color-picker, the OKLCH-internal 2-axis color-input control (color-picker.lld.md
+ * LLD-C7 · ADR-0123). Two clearly-sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-color-picker)` (specificity 0,0,0) DECLARES the `--ui-color-picker-*`
+ *       chain: the pad's bespoke density-invariant block-size floor (the whole-shape law, SPEC-R8 — a
+ *       picker that collapses to a line is the ui-slider DOT-bug's cousin), the shell gap (off the space
+ *       scale), the pad border/radius (off --md-sys-color-outline-variant, so the pad never vanishes), and
+ *       the thumb geometry. Size-class **pattern** (ADR-0123 cl.1): no new geometry ROW is invented — the
+ *       channel rows are Indicator-class ui-sliders (self-sized under ADR-0038), the readout is a
+ *       Control-height ui-text-field; only the pad's OWN block-size is bespoke here.
+ *
+ *   [2] STYLES BLOCK — `@scope (ui-color-picker)` CONSUMES only `--ui-color-picker-*` (+ the shared
+ *       focus-ring/space-scale tokens, the fleet-standard exception). The host is a flex COLUMN shell (pad →
+ *       channels → readout), filling its container's inline-size by construction (a flex container is
+ *       block-outside) — the CSS-less-consumer floor (ADR-0102 Lane A). The pad is `position:relative`
+ *       (containing block for the canvas + thumb); the canvas fills the pad via `inset:0`; the thumb is a
+ *       small circle positioned by `left`/`top` percentages the control sets on model change (JS geometry
+ *       seam, the ui-slider `--value-pct` precedent generalized to two axes via inline style since a single
+ *       custom property can't carry a pair). `[slot=presets]` (author content, a plain light-DOM sibling —
+ *       no real Shadow `<slot>` exists in this light-DOM fleet; `slot` is a CSS/positioning discriminator,
+ *       the text-field leading/trailing-adornment precedent) is ordered LAST via flex `order` and paints
+ *       nothing when absent (no layout hole, SPEC-R4 AC3).
+ *
+ * Standalone stylesheet — linked via component-styles.css; never injected from color-picker.ts (behaviour-
+ * only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ══════════════════════ [1] TOKEN BLOCK — :where(ui-color-picker) ══════════════════════════════ */
+
+:where(ui-color-picker) {
+  /* Shell gap — off the space scale (the container-box.css / calendar-panel precedent). */
+  --ui-color-picker-gap: var(--space-sm, 0.5rem);
+
+  /* Pad geometry — a bespoke density-invariant floor (SPEC-R8: never collapse to a line). 10rem reads as
+     a comfortable, clearly-2D gesture surface at every density/scale tier (the ui-swatch box / ui-calendar
+     cell precedent: a bespoke token, not a §1 geometry-lookup row). */
+  --ui-color-picker-pad-block-size: 10rem;
+  --ui-color-picker-pad-radius: var(--ui-radius-base, 0.375rem);
+  --ui-color-picker-pad-outline: var(--md-sys-color-neutral-outline-variant, #c4c4c4);
+
+  /* Thumb geometry — a small ringed circle, visible against any painted hue (a light ring + a dark ring
+     stacked, so the thumb reads on both light and dark pad colors — the swatch/calendar thumb-vs-any-
+     backdrop lesson, ADR-0094). */
+  --ui-color-picker-thumb-size: 1rem;
+  --ui-color-picker-thumb-ring: var(--md-sys-color-neutral-on-surface, #1c1c1e);
+  --ui-color-picker-thumb-ring-inner: var(--md-sys-color-neutral-surface-brightest, #fff);
+}
+
+/* ══════════════════════ [2] STYLES BLOCK — @scope (ui-color-picker) ═══════════════════════════ */
+
+@scope (ui-color-picker) {
+  /* Host: a flex COLUMN shell — fills its container's inline-size by construction (flex is block-outside),
+     the CSS-less-consumer floor (ADR-0102 Lane A). */
+  :scope {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-color-picker-gap);
+  }
+
+  /* ── The pad ([data-part=pad]) — the 2-axis chroma×lightness area ────────────────────────────── */
+  :scope [data-part='pad'] {
+    order: 0;
+    position: relative;
+    display: block;
+    inline-size: 100%;
+    block-size: var(--ui-color-picker-pad-block-size);
+    border-radius: var(--ui-color-picker-pad-radius);
+    border: 1px solid var(--ui-color-picker-pad-outline);
+    overflow: hidden;
+    cursor: crosshair;
+    touch-action: none; /* give pointer events exclusively to the pad during drag — the ui-slider precedent */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  :scope [data-part='pad']:focus-visible {
+    outline: var(--ui-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
+    outline-offset: calc(-1 * var(--ui-focus-ring-width, 2px)); /* inset — the pad already has its own border */
+  }
+
+  /* Disabled — pointer-inert; muted (the effectiveDisabled channel forwards `disabled` onto the composed
+     channel sliders + readout independently, see color-picker.ts). */
+  :scope[disabled] [data-part='pad'] {
+    pointer-events: none;
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  /* The canvas fills the pad exactly — the per-pixel OKLCH→sRGB paint (LLD-C7). Decorative only: the pad
+     ITSELF carries the pointer/keyboard/ARIA surface, never the canvas. */
+  :scope [data-part='pad-canvas'] {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    display: block;
+    pointer-events: none;
+  }
+
+  /* The thumb — a small ringed circle, positioned by `left`/`top` percentages the control sets on every
+     model change (JS geometry seam — a pair of axes can't ride one CSS custom property the way the
+     1-D `--value-pct` slider precedent does). `transform: translate(-50%,-50%)` centres it on the point. */
+  :scope [data-part='pad-thumb'] {
+    position: absolute;
+    inline-size: var(--ui-color-picker-thumb-size);
+    block-size: var(--ui-color-picker-thumb-size);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow:
+      0 0 0 2px var(--ui-color-picker-thumb-ring-inner),
+      0 0 0 3px var(--ui-color-picker-thumb-ring);
+    pointer-events: none;
+  }
+
+  /* ── Channels ([data-part=channels]) — hue always; chroma + lightness mirrored (SPEC-R6 spine) ──── */
+  :scope [data-part='channels'] {
+    order: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-color-picker-gap);
+  }
+
+  /* Each channel row: a fixed-width label, the composed ui-slider (flex:1), and a printed numeral
+     (ADR-0123 cl.8 non-color signifier — a plain ui-slider carries no visible text of its own). */
+  :scope [data-part='channel-row'] {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--ui-color-picker-gap);
+  }
+
+  :scope [data-part='channel-label'] {
+    inline-size: 4.5em;
+    flex-shrink: 0;
+    font-size: var(--ui-font-sm, 13px);
+  }
+
+  :scope [data-part='channel-row'] ui-slider {
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  :scope [data-part='channel-value'] {
+    inline-size: 3.5em;
+    flex-shrink: 0;
+    text-align: end;
+    font-size: var(--ui-font-sm, 13px);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Readout ([data-part=readout]) — the editable ui-text-field + the composed ui-swatch preview ── */
+  :scope [data-part='readout'] {
+    order: 2;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--ui-color-picker-gap);
+  }
+
+  :scope [data-part='readout'] ui-text-field {
+    flex: 1;
+    min-inline-size: 0; /* the flex-child shrink-to-fit guard (the fleet's standard row-child pattern) */
+  }
+
+  :scope [data-part='eyedropper'] {
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid var(--ui-color-picker-pad-outline);
+    border-radius: var(--ui-color-picker-pad-radius);
+    padding: 0.25rem 0.5rem;
+    font-size: var(--ui-font-sm, 13px);
+    cursor: pointer;
+    color: inherit;
+  }
+
+  :scope [data-part='eyedropper']:focus-visible {
+    outline: var(--ui-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset, 2px);
+  }
+
+  /* ── Presets ([slot=presets]) — author-supplied content, ordered LAST; absent = no layout hole ──── */
+  :scope > [slot='presets'] {
+    order: 3;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-color-picker-gap);
+  }
+
+  /* ── forced-colors (WHCM, SPEC-R8/cl.8) — the pad CANNOT paint a gradient under forced-colors; it
+     degrades to a Canvas field with a CanvasText-bordered thumb, never a fake system color. The channel
+     sliders + numeric readout remain the authoritative, operable input path (they are real controls that
+     survive WHCM unaided — the ADR-0118 "the printed value IS the content there" doctrine). ──────────── */
+  @media (forced-colors: active) {
+    :scope [data-part='pad'] {
+      background: Canvas;
+      border-color: CanvasText;
+      forced-color-adjust: none;
+    }
+    :scope [data-part='pad-canvas'] {
+      display: none; /* the gradient paint cannot honestly represent color under system-color flattening */
+    }
+    :scope [data-part='pad-thumb'] {
+      background: Canvas;
+      box-shadow: 0 0 0 2px CanvasText;
+      forced-color-adjust: none;
+    }
+  }
+}

@@ -47,6 +47,7 @@
 // associates.
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+import { untracked } from '../../reactive/index.ts'
 import { UIFormElement, type FormValue, type ValidityResult, type FieldLabelling } from '../../dom/form.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
 import {
@@ -61,6 +62,13 @@ import {
   type ValueCodecController,
 } from '../../traits/value-codec.ts'
 import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
+// ADR-0123 LLD-C9 — the color codec (pure, zero-DOM; color.ts is import-free) reused verbatim by the
+// type=color leg. NOT the color-picker.ts CONTROL itself (that stays a LAZY dynamic import, below, so a
+// type=text field ships no picker bytes — the tree-shake proof, SPEC-R11 AC1). ui-swatch IS imported
+// statically (a tiny, zero-dep Display-class leaf, not the picker's pad/canvas/codec machinery) so the
+// trailing swatch-button preview renders immediately, before the lazy picker has ever loaded.
+import { colorCodecOptions } from '../color-picker/color.ts'
+import { UISwatchElement } from '../swatch/swatch.ts'
 import { setIcon } from '@agent-ui/icons'
 
 // The editor's editable mode (ADR-0014 cl.1) and a per-instance id seed for aria-describedby.
@@ -85,9 +93,9 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 type LeadingRole = 'magnifier' | 'currency'
 type SuffixKind = 'percent' | 'unit'
-type AffordanceRole = 'clear' | 'reveal' | 'calendar'
-type ValidationType = 'email' | 'url' | 'number' | 'date' | 'time'
-type CodecKind = 'number' | 'currency' | 'unit' | 'date' | 'time'
+type AffordanceRole = 'clear' | 'reveal' | 'calendar' | 'swatch'
+type ValidationType = 'email' | 'url' | 'number' | 'date' | 'time' | 'color'
+type CodecKind = 'number' | 'currency' | 'unit' | 'date' | 'time' | 'color'
 
 interface TypeConfig {
   readonly inputmode: string
@@ -112,6 +120,7 @@ const TYPE_CONFIG = {
   percent:  { inputmode: 'decimal', leading: null,        suffix: 'percent', affordance: null,       validation: 'number', codec: 'number'   },
   date:     { inputmode: 'text',    leading: null,        suffix: null,      affordance: 'calendar', validation: 'date',   codec: 'date'     },
   time:     { inputmode: 'text',    leading: null,        suffix: null,      affordance: null,       validation: 'time',   codec: 'time'     },
+  color:    { inputmode: 'text',    leading: null,        suffix: null,      affordance: 'swatch',   validation: 'color',  codec: 'color'    },
 } as const satisfies Record<string, TypeConfig>
 
 // ── props ─────────────────────────────────────────────────────────────────────
@@ -130,7 +139,7 @@ const props = {
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
   // type reflects so [type] CSS selectors (e.g. [type=password] for masking) and the type-resolver apply
   // to JS-set values; 'text' is the identity config (byte-identical to the pre-Wave-3 shipped control).
-  type: { ...prop.enum(['text', 'email', 'url', 'tel', 'password', 'search', 'number', 'currency', 'unit', 'percent', 'date', 'time'] as const, 'text'), reflect: true },
+  type: { ...prop.enum(['text', 'email', 'url', 'tel', 'password', 'search', 'number', 'currency', 'unit', 'percent', 'date', 'time', 'color'] as const, 'text'), reflect: true },
   readonly: { ...prop.boolean(false), reflect: true },
   // Wave 5A — the five new numeric-type props (ADR-0047). All reflected for native attribute-IDL parity.
   // Reading this.currency / this.unit inside the type-effect's currency/unit branch makes the effect reactive
@@ -140,6 +149,10 @@ const props = {
   step: { ...prop.number(1), reflect: true },          // stepper/Arrow increment; null (unset attr) → 1
   min: { ...prop.string(''), reflect: true },          // '' = unconstrained; numeric → rangeUnderflow guard
   max: { ...prop.string(''), reflect: true },          // '' = unconstrained; numeric → rangeOverflow guard
+  // ADR-0123 LLD-C9 — the type=color leg's serialization syntax: mirrors ui-color-picker's own `format`
+  // prop exactly (hex default, oklch opt-in). Reading this.format inside the color branch makes the effect
+  // reactive ONLY for type=color (the currency/unit precedent).
+  format: { ...prop.enum(['hex', 'oklch'] as const, 'hex'), reflect: true },
 } satisfies PropsSchema
 
 export interface UITextFieldElement extends ReactiveProps<typeof props> {}
@@ -169,6 +182,11 @@ export class UITextFieldElement extends UIFormElement {
   // Password reveal state: tracks whether -webkit-text-security is suppressed.
   // Drives :state(revealed) on internals and aria-pressed on the reveal button.
   #revealed = false
+
+  // ADR-0123 LLD-C9 — the type=color swatch-button's composed ui-swatch preview, for the CURRENT type-effect
+  // run only (torn down on type change/disconnect via the effect cleanup, the calendar-popup precedent).
+  // The model→surface effect below keeps its `value` synced to `this.value`.
+  #colorSwatchPreview: UISwatchElement | null = null
 
   protected connected(): void {
     // Seed the reset baseline ONCE from the INITIAL `value` attribute (native `defaultValue` — the value
@@ -369,11 +387,84 @@ export class UITextFieldElement extends UIFormElement {
         }, { signal: typeAc.signal })
       }
 
+      // Color-picker overlay (type=color only): a lazily-imported `<ui-color-picker>` in a popover popup —
+      // the ADR-0048 type=date→ui-calendar seam verbatim (LLD-C9). BOTH the picker MODULE (dynamic
+      // `import()`) AND the picker ELEMENT (popup wrapper + `<ui-color-picker>` + overlay wiring) are
+      // deferred to the swatch button's FIRST activation — a type=text field ships no picker bytes
+      // (SPEC-R11 AC1). `ensureColorPicker()` is the ONE creation choke point — idempotent.
+      let colorPickerPopup: HTMLElement | null = null
+      let colorPickerHandle: OverlayHandle | null = null
+
+      if (config.affordance === 'swatch' && trailingEl !== null) {
+        const swatchBtn = trailingEl.querySelector('[data-part="swatch-button"]') as HTMLElement
+        let colorPickerEl: HTMLElement | null = null
+        let colorPickerLoaded = false
+
+        const ensureColorPicker = (): { colorPickerEl: HTMLElement; handle: OverlayHandle } => {
+          if (colorPickerPopup !== null) return { colorPickerEl: colorPickerEl!, handle: colorPickerHandle! }
+
+          colorPickerEl = document.createElement('ui-color-picker')
+          colorPickerPopup = document.createElement('div')
+          colorPickerPopup.setAttribute('data-part', 'color-picker-popup')
+          colorPickerPopup.append(colorPickerEl)
+          this.append(colorPickerPopup)
+
+          colorPickerHandle = overlay(this, {
+            popup: colorPickerPopup,
+            anchor: swatchBtn,
+            placement: 'bottom-start',
+            auto: true,
+            focusOnOpen: true,
+          })
+
+          // Event-boundary guard (the ADR-0048 §3 B1 precedent) — the picker's own input/change bubble
+          // (UIElement.emit() is bubbles:true composed:true); stop both at the picker boundary and
+          // re-derive the field's OWN input/change from its committed value, so the field remains the
+          // sole emitter for its own events (no doubling).
+          colorPickerEl.addEventListener('input', (e) => { e.stopPropagation() }, { signal: typeAc.signal })
+          colorPickerEl.addEventListener('change', (event) => {
+            event.stopPropagation()
+            const v = (colorPickerEl as unknown as { value: string }).value
+            this.value = v
+            this.#codec?.setCanonical(v)
+            this.emit('input')
+            this.emit('change')
+            // Deliberately does NOT close the overlay — unlike a calendar day-click (one atomic pick),
+            // a color-picker `change` is one channel/gesture commit, not "the user is done"; the overlay
+            // stays open for further adjustment and closes via its own light-dismiss (Escape/outside-click).
+          }, { signal: typeAc.signal })
+
+          return { colorPickerEl, handle: colorPickerHandle }
+        }
+
+        // Button click: build the picker on first activation (idempotent), sync field value/format →
+        // picker, then open. Fast path (already registered) vs slow path (dynamic import) — the
+        // ui-calendar precedent verbatim.
+        swatchBtn.addEventListener('click', () => {
+          const { colorPickerEl, handle } = ensureColorPicker()
+          colorPickerEl.setAttribute('value', this.value)
+          colorPickerEl.setAttribute('format', this.format ?? 'hex')
+
+          if (colorPickerLoaded || customElements.get('ui-color-picker') !== undefined) {
+            colorPickerLoaded = true
+            handle.open()
+          } else {
+            // First open: dynamic import (NOT static — keeps ui-color-picker out of the static graph).
+            import('../color-picker/color-picker.ts').then(() => {
+              colorPickerLoaded = true
+              handle.open()
+            })
+          }
+        }, { signal: typeAc.signal })
+      }
+
       // Codec: number/currency/unit/percent get the numeric display↔canonical split (ADR-0047).
-      // date/time get the locale display↔ISO-canonical split (ADR-0048). typeAc.signal is passed so
-      // the codec's focus/blur listeners die on the NEXT type change (the M1-fix seam).
-      // Local variable captures config.codec so TypeScript can narrow the literal union correctly
-      // through the ternary chain (narrowing through `config.codec` on a union config type is fragile).
+      // date/time get the locale display↔ISO-canonical split (ADR-0048). color gets the hex/oklch
+      // display↔canonical split (ADR-0123, reusing colorCodecOptions verbatim — the standalone control's
+      // own dialect). typeAc.signal is passed so the codec's focus/blur listeners die on the NEXT type
+      // change (the M1-fix seam). Local variable captures config.codec so TypeScript can narrow the
+      // literal union correctly through the ternary chain (narrowing through `config.codec` on a union
+      // config type is fragile).
       const codecKind = config.codec
       const codec: ValueCodecController | null =
         codecKind === 'number'
@@ -386,7 +477,9 @@ export class UITextFieldElement extends UIFormElement {
                 ? valueCodec(this, dateCodecOptions(), typeAc.signal)
                 : codecKind === 'time'
                   ? valueCodec(this, timeCodecOptions(), typeAc.signal)
-                  : null
+                  : codecKind === 'color'
+                    ? valueCodec(this, colorCodecOptions(this.format ?? 'hex'), typeAc.signal)
+                    : null
       this.#codec = codec
 
       // Clear reveal state on type change so switching away from 'password' doesn't leave ghost state.
@@ -397,11 +490,14 @@ export class UITextFieldElement extends UIFormElement {
 
       // Effect cleanup: runs before the next type-change run AND on scope.dispose() (disconnect).
       return (): void => {
-        typeAc.abort() // removes adornment-button listeners (clear/reveal/calendar) registered with typeAc.signal
+        typeAc.abort() // removes adornment-button listeners (clear/reveal/calendar/swatch) registered with typeAc.signal
         leadingEl?.remove()
         trailingEl?.remove()
         calendarPopup?.remove()   // remove the calendar popup panel from the host on type-change or disconnect
         calendarHandle?.cleanup() // early-teardown of the overlay controller (closed, cleaned=true — idempotent)
+        colorPickerPopup?.remove()
+        colorPickerHandle?.cleanup()
+        this.#colorSwatchPreview = null
         codec?.release()
         this.#codec = null
       }
@@ -415,6 +511,9 @@ export class UITextFieldElement extends UIFormElement {
       // already updated textContent) never resets the caret; a programmatic write/reset/restore DOES flow.
       if (editor.textContent !== value) editor.textContent = value
       editor.toggleAttribute('data-empty', value === '') // keys the CSS placeholder (not :empty — see ADR cl.1)
+      // ADR-0123 LLD-C9 — the type=color swatch-button preview tracks the field's own value (a no-op for
+      // every other type, since the ref is only ever set inside the type=color branch).
+      if (this.#colorSwatchPreview) this.#colorSwatchPreview.value = value
     })
 
     // ── editor attribute mirror — the label seam, the placeholder text, the required mirror ──
@@ -545,12 +644,12 @@ export class UITextFieldElement extends UIFormElement {
     const type = this.type
 
     // Codec parse error: hasError is set by the valueCodec controller on blur (all codec types).
-    // date/time → typeMismatch (the platform validity flag for wrong-format date/time — ADR-0048);
+    // date/time/color → typeMismatch (the platform validity flag for wrong-format entry — ADR-0048/ADR-0123);
     // numeric types → customError (a free-form parse failure, not a native input-type mismatch).
     if (this.#codec?.hasError.value) {
       return {
         valid: false,
-        flags: type === 'date' || type === 'time' ? { typeMismatch: true } : { customError: true },
+        flags: type === 'date' || type === 'time' || type === 'color' ? { typeMismatch: true } : { customError: true },
         message: this.#codec.errorMessage,
         anchor: this.#editor ?? undefined,
       }
@@ -560,9 +659,9 @@ export class UITextFieldElement extends UIFormElement {
     const v = this.value
     if (v !== '') {
       // Range validity for NUMERIC types only (ADR-0047): rangeUnderflow / rangeOverflow from min/max.
-      // date/time are excluded — their min/max are ISO strings, not numeric bounds (parseFloat would
-      // silently truncate to the year portion, producing wrong comparisons). Date-range is a future item.
-      if (this.#codec !== null && type !== 'date' && type !== 'time') {
+      // date/time/color are excluded — their min/max are not numeric bounds (parseFloat would silently
+      // truncate a date to its year portion, or NaN a hex/oklch string, producing wrong comparisons).
+      if (this.#codec !== null && type !== 'date' && type !== 'time' && type !== 'color') {
         const canonical = this.#codec.canonical.value
         if (canonical !== '') {
           const numVal = parseFloat(canonical)
@@ -756,8 +855,8 @@ export class UITextFieldElement extends UIFormElement {
         this.emit('toggle')
       }, { signal: typeAc })
       container.append(btn)
-    } else {
-      // 'calendar': trailing icon button that opens the date picker popup.
+    } else if (role === 'calendar') {
+      // trailing icon button that opens the date picker popup.
       // The click listener + overlay wiring are done by the type-effect AFTER overlay() is called —
       // the button must exist first so it can serve as the overlay anchor.
       const btn = document.createElement('button')
@@ -766,6 +865,25 @@ export class UITextFieldElement extends UIFormElement {
       btn.setAttribute('aria-label', 'Open date picker')
       btn.setAttribute('aria-haspopup', 'dialog')
       setIcon(btn, 'calendar-blank') // Phosphor, via @agent-ui/icons
+      container.append(btn)
+    } else {
+      // 'swatch' (ADR-0123 LLD-C9): trailing button that opens the color picker popup, showing the
+      // CURRENT color via a composed ui-swatch (never a bespoke color div — the ADR-0118 fence). The
+      // click listener + overlay wiring are done by the type-effect AFTER overlay() is called; the model
+      // → surface effect keeps the swatch's `value` synced to `this.value` (`#colorSwatchPreview`).
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.setAttribute('data-part', 'swatch-button')
+      btn.setAttribute('aria-label', 'Open color picker')
+      btn.setAttribute('aria-haspopup', 'dialog')
+      const swatchPreview = document.createElement('ui-swatch') as UISwatchElement
+      // untracked: a one-time creation-time seed, not a live binding — a plain read here would make
+      // `value` a dependency of the WHOLE type-effect (this call runs synchronously inside its scope),
+      // rebuilding the entire adornment/codec/overlay wiring on every keystroke (the bug this untracked()
+      // read closes). The model→surface effect keeps `#colorSwatchPreview.value` live going forward.
+      swatchPreview.value = untracked(() => this.value)
+      btn.append(swatchPreview)
+      this.#colorSwatchPreview = swatchPreview
       container.append(btn)
     }
 

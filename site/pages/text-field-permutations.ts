@@ -185,6 +185,7 @@ const TYPE_SAMPLES: Record<string, TypeSample> = {
   percent: { value: '65', placeholder: '0', note: 'percent suffix (%) · steppers · numeric codec', step: '5', min: '0', max: '100' },
   date: { value: '2026-07-15', placeholder: 'YYYY-MM-DD', note: 'calendar button (trailing) → ui-calendar overlay' },
   time: { value: '14:30', placeholder: 'HH:MM', note: 'time codec · HH:MM · typed' },
+  color: { value: '#3b82f6', placeholder: '#rrggbb', note: 'swatch button (trailing) → ui-color-picker overlay' },
 }
 
 // typeSection — one section iterating the parsed `type` enum: a live field per type, seeded with a plausible
