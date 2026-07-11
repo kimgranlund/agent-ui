@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0016
-status: open
+status: doing
 date: 2026-07-10
 owner:
 kind: feature
@@ -77,3 +77,22 @@ Two lanes, one record (the knowledge lane feeds the demo lane):
   owners as contract); no build from this ticket directly.
 
 ## Findings
+
+**2026-07-11 — design intake complete, documents-only, no build.** Produced:
+- `.claude/docs/adr/0126-a2ui-message-lifecycle-decision-layer.md` (proposed — the wave's ratifying ADR;
+  indexed in `adr/README.md`; `adr_check.py` passes).
+- `.claude/docs/spec/a2ui-message-lifecycle.spec.md` (SPEC-R1…R5, the decision-layer contract).
+- `.claude/docs/lld/a2ui-message-lifecycle.lld.md` (exact insertion points, worked corpus exemplar, recorded-
+  transcript script, test plan).
+- `.claude/docs/decompositions/a2ui-message-lifecycle.decomp.json` (build slices; `coverage_check.py --strict`
+  clean).
+- `doc-reviewer` ran independently against the SPEC and LLD (fresh context each); findings applied in place —
+  see the reviewer verdicts recorded in this session's handoff to the team lead.
+
+Guidance home: a NEW dedicated SPEC, not §5.2 of the catalog SPEC or the runtime SPEC's lifecycle sections —
+neither owns the producer-side "which envelope, when" axis (catalog SPEC owns component-TYPE choice; runtime
+SPEC owns renderer-side mechanics). Demo vehicle: extend `a2ui-live`'s recorded transcript (already persistent-
+host, already multi-surface, already per-turn-annotated) — no new page. Two genuine forks left for Kim in
+ADR-0126: F2 (the exact GRAMMAR insertion mechanism + its permanent prompt-growth consequence) and F5 (the
+delete-vs-keep UX heuristic the demo models). No code, no site pages, no skill edits were made — build is a
+separate, later dispatch per the ticket's own sequencing note.
