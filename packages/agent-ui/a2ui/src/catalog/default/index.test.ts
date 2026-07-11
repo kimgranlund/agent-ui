@@ -149,8 +149,9 @@ function fleetPrimaryTypes(): string[] {
  *  descriptor exists, so they never enter the derived set to begin with (they stay a documentary-only note
  *  in SPEC §5.2.1, never code-derived). A future undispositioned control re-seeds this map with a reason +
  *  citation, same as Wave 0's seed. */
-// `Toast`/`ToastRegion`/`ThemeProvider`/`StatusStream` are the only entries left — NOT catalogue-bound AT
-// ALL (app-surface/theming/live-streaming chrome, never agent-emittable) — a PERMANENT exclusion, never drained.
+// `Toast`/`ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel` are
+// the only entries left — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
+// content) — a PERMANENT exclusion, never drained.
 const EXCLUSION_ALLOWLIST = new Map<string, string>([
   ['Toast', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: app-surface chrome driven by show(), not agent-emittable (rejected explicitly: history-must-not-lie · payload↔DOM traceability · teaching a forbidden type).'],
   ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, same reasoning as Toast: app-surface chrome, never a catalog row.'],
@@ -163,6 +164,20 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'system is doing now" strip driven entirely by a consumer-owned imperative API (appendEntry/update/' +
     'finalize) over a stream the consumer holds — not a one-shot serializable component tree (the ADR-0112 ' +
     'cl.6 Toast/ToastRegion reasoning applied verbatim: an agent emits a durable Timeline snapshot instead).'],
+  ['SwiperPagination',
+    'ADR-0124 F5 / swiper-family.lld.md LLD-C9 — PERMANENT exclusion, never catalogue-bound: an author-' +
+    'placed chrome anchor the owning ui-swiper fills/wires wherever it is written; an agent reaches the ' +
+    'same dots UI via the [pagination] boolean stamp on Swiper itself (F3) — an agent-emitted anchor node ' +
+    'would carry no content of its own (the coordinator renders every dot), pure noise (the ADR-0112 cl.6 ' +
+    'Toast/ToastRegion reasoning applied verbatim).'],
+  ['SwiperPaddles',
+    'ADR-0124 F5 / swiper-family.lld.md LLD-C10 — PERMANENT exclusion, same reasoning as SwiperPagination: ' +
+    'an author-placed anchor the coordinator fills with two composed prev/next ui-buttons; the [paddles] ' +
+    'boolean stamp is the agent-reachable fallback (F3).'],
+  ['SwiperLabel',
+    'ADR-0124 F5 / swiper-family.lld.md LLD-C11 — PERMANENT exclusion, same reasoning: an author-placed ' +
+    'anchor whose light-DOM text becomes the owning ui-swiper\'s accessible name; an agent-emitted empty ' +
+    'marker node carries no catalog-visible content, and the region already falls back to "Carousel" absent one.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists
@@ -1002,5 +1017,110 @@ describe('default catalog — Swatch/Ramp/Ladder via the shared validator (ADR-0
 
     r.dispose()
     mount.remove()
+  })
+})
+
+// ── the ADR-0124 swiper family (Swiper / SwiperItem), catalog rows per swiper-family.lld.md §2/§3 ──────
+//
+// jsdom has NO scroll layout (swiper-family.lld.md / ADR-0124 Consequences) — the real settle-triggered
+// `select` emit is a browser-only proof (components/src/controls/swiper/swiper.browser.test.ts; jsdom's
+// own swiper.test.ts header documents the same boundary). This block proves the CATALOG-LEVEL contract:
+// a representative payload validates 0-CATALOG, the row shapes (bindable `active` + its `value` mark, the
+// structural non-bindable axes, the diverging `slidesInView`/`slides-in-view` name), unknown/wrong-
+// primitive props still fail CATALOG, and the generic LLD-C8 input controller writes a committed `active`
+// back into `surface.data` off a REAL `ui-swiper`'s `select` event — the commit is synthesized at the
+// DOM-event level (set `active`, dispatch `select`) since the scroll-settle that would normally fire it
+// cannot run under jsdom; this proves the renderer/catalog wiring, not the component-internal settle
+// mechanism (already proven, real-engine, in swiper.browser.test.ts).
+describe('default catalog — Swiper/SwiperItem via the shared validator (ADR-0124 F5, swiper-family.spec.md)', () => {
+  it('a representative Swiper+SwiperItem payload validates 0 failures via validateA2ui', () => {
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          {
+            id: 'root', component: 'Swiper', loop: true, pagination: true, paddles: true,
+            active: { path: '/slide' }, children: ['s1', 's2', 's3'],
+          },
+          { id: 's1', component: 'SwiperItem', children: ['t1'] },
+          { id: 't1', component: 'Text', text: 'Slide one', variant: 'body' },
+          { id: 's2', component: 'SwiperItem', children: ['t2'] },
+          { id: 't2', component: 'Text', text: 'Slide two', variant: 'body' },
+          { id: 's3', component: 'SwiperItem', children: ['t3'] },
+          { id: 't3', component: 'Text', text: 'Slide three', variant: 'body' },
+        ],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('Swiper is two-way bound on active via the select event; SwiperItem is a ChildList sub-type with NO properties (the Tab.value precedent — ADR-0024 positional addressing)', () => {
+    const swiper = defaultCatalog.components.Swiper
+    expect(swiper.value).toEqual({ prop: 'active', event: 'select' })
+    expect(swiper.properties.active?.bindable).toBe(true)
+    expect(swiper.children).toBe('ChildList')
+    expect(defaultCatalog.components.SwiperItem.children).toBe('ChildList')
+    expect(defaultCatalog.components.SwiperItem.properties).toEqual({})
+  })
+
+  it('orientation/slidesInView/align/loop/duration/easing/pagination/paddles are structural, non-bindable axes (the Toolbar arrangement-axis precedent)', () => {
+    for (const p of ['orientation', 'slidesInView', 'align', 'loop', 'duration', 'easing', 'pagination', 'paddles']) {
+      expect(defaultCatalog.components.Swiper.properties[p]?.bindable, p).toBeFalsy()
+    }
+  })
+
+  it("slidesInView's catalog key diverges from its mapsTo ('slides-in-view') — the fleet's first hyphenated accessor name, UAX-31-invalid as a bare identifier (catalog SPEC-R2)", () => {
+    expect(defaultCatalog.components.Swiper.properties.slidesInView?.mapsTo).toBe('slides-in-view')
+  })
+
+  it('NEGATIVE: an unknown prop fails CATALOG for both Swiper and SwiperItem', () => {
+    const swiper: A2uiComponent = { id: 'sw1', component: 'Swiper', bogus: 1 }
+    expect(validateCatalogConformance(swiper, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'sw1.bogus' })
+
+    const item: A2uiComponent = { id: 'si1', component: 'SwiperItem', bogus: 1 }
+    expect(validateCatalogConformance(item, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'si1.bogus' })
+  })
+
+  it('NEGATIVE: a wrong-primitive literal fails CATALOG for a structural boolean (loop)', () => {
+    const swiper: A2uiComponent = { id: 'sw2', component: 'Swiper', loop: 'yes' }
+    expect(validateCatalogConformance(swiper, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'sw2.loop' }))
+  })
+
+  it('accepts a {path} binding OR a literal number for active (the Tabs.selected precedent — a numeric index crosses the wire as a JS number)', () => {
+    const byPath: A2uiComponent = { id: 'sw3', component: 'Swiper', active: { path: '/slide' } }
+    const byNumber: A2uiComponent = { id: 'sw4', component: 'Swiper', active: 1 }
+    expect(validateCatalogConformance(byPath, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(byNumber, defaultCatalog)).toEqual([])
+  })
+
+  it("a REAL ui-swiper's user-driven select commit writes back into surface.data via the generic LLD-C8 controller", () => {
+    const surface = createSurface({ id: 's1', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { slide: '' }
+
+    // The real family (defaultFactories self-defines it on import, catalog/default/factories.ts:1) — no
+    // mocks, no stub factory.
+    const swiper = defaultFactories.Swiper.create() as HTMLElement & { active: string }
+    const s1 = document.createElement('ui-swiper-item')
+    s1.setAttribute('value', 'intro')
+    const s2 = document.createElement('ui-swiper-item')
+    s2.setAttribute('value', 'pricing')
+    swiper.append(s1, s2)
+    document.body.append(swiper)
+
+    const node: A2uiComponent = { id: 'sw', component: 'Swiper', active: { path: '/slide' } }
+    installInputBinding(swiper, defaultFactories.Swiper, node, surface)
+
+    // ui-swiper's OWN #commit (swiper.ts) sets `active` then emits `select` — but ONLY off a real
+    // scroll-snap settle (browser-only, ADR-0124 Consequences: jsdom has no scroll layout). Reproduced at
+    // the DOM-event level here to prove the catalog/renderer wiring around that commit, not the settle
+    // mechanism itself (real-engine-proven in swiper.browser.test.ts).
+    swiper.active = 'pricing'
+    swiper.dispatchEvent(new Event('select'))
+
+    expect((surface.data.peek() as { slide: unknown }).slide).toBe('pricing') // LLD-C8 wrote it back (SPEC-R7)
+
+    swiper.remove()
+    disposeSurface(surface)
   })
 })

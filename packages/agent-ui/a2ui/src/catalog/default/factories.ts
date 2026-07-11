@@ -75,6 +75,12 @@
 // same as Toast: a consumer-owned imperative streaming host is app chrome, never a one-shot serializable
 // tree). Both ride plain `accessorFactory` (no bespoke mapping, no submitGate) — see their own factory doc
 // comments below.
+//
+// ADR-0124 F5 (swiper-family.lld.md, the swiper-family-ship wave) adds `Swiper`/`SwiperItem` — the
+// scroll-snap carousel pair (the three chrome tags, `SwiperPagination`/`SwiperPaddles`/`SwiperLabel`, stay
+// `EXCLUSION_ALLOWLIST` entries, index.test.ts: author-placement refinements the coordinator drives, not
+// agent-composed content). Both ride plain `accessorFactory`; `Swiper` two-way binds `active`/`select`
+// (F4, the `Tabs` `selected`/`select` pattern) — see their own factory doc comments below.
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
@@ -665,6 +671,56 @@ export const timelineFactory: WidgetFactory = accessorFactory('ui-timeline')
 // `value:{prop:'open',event:'toggle'}`, which binds its OWN `open` prop).
 export const timelineItemFactory: WidgetFactory = accessorFactory('ui-timeline-item')
 
+// ── ADR-0124 F5 (swiper-family.lld.md §2/§3) — Swiper + SwiperItem are catalog-emittable; the three chrome
+// tags (`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`) stay `EXCLUSION_ALLOWLIST` (index.test.ts) ────
+//
+// Swiper → ui-swiper (SPEC-R1..R8/R10/R11/R14/R15). `elevation`/`brightness` (surface, ADR-0015) +
+// `orientation`/`slidesInView`/`align`/`loop`/`duration`/`easing`/`pagination`/`paddles` are ALL 1:1
+// reflecting accessor props verified against swiper.ts `static props` — and ALL non-bindable: each is a
+// presentation/mechanism axis the author picks once, the exact `Toolbar` arrangement-axis / `Row`/`Column`
+// flex-grammar precedent, not content an agent live-updates mid-conversation (`pagination`/`paddles` are
+// the F3 boolean-stamp fallback for chrome placement — a structural capability gate, the same shape as
+// `SplitPane.collapsible`, not a dynamic-enablement `disabled`). **`slidesInView`'s catalog property KEY
+// deliberately diverges from its `mapsTo`** (`'slides-in-view'`) — the FIRST catalog prop whose component
+// accessor name contains a hyphen: `naming.ts`'s UAX-31 `validName` check (catalog SPEC-R2) rejects a
+// hyphen (`-` is not Unicode `ID_Continue`), so the wire-facing identifier is camelCased while `mapsTo`
+// carries the real `this['slides-in-view']` accessor key verbatim. **This forces a BESPOKE factory, not
+// plain `accessorFactory`:** the renderer's generic `applyProp(el, prop, value)` call (widget.ts) passes
+// the WIRE property name straight through (never `mapsTo` — verified against `makeCreateWidget`'s
+// `Object.entries(node)` loop), so the plain `setProp` `el[prop] = value` path would land the value on a
+// nonexistent `el.slidesInView`, never the real `el['slides-in-view']` accessor — silently inert. The
+// `MenuItem.value`→`data-value`/`Code.code`→textContent rows hit the identical shape (their wire key
+// differs from their real DOM target) and are ALSO bespoke factories for exactly this reason — `mapsTo`
+// is the schema's/tests' documentation of the target, never something the render path re-derives at
+// apply time. `active` is the ONE bindable prop — `value:{prop:'active',event:'select'}` (F4, the
+// ratified `Tabs` `selected`/`select` pattern, ADR-0019 verbatim); its wire type widens to `string|number`
+// (the `Tabs.selected` precedent — an item's `value` OR its DOM index, crossing the attribute boundary as
+// a string regardless; verified against swiper.ts `#resolveIndex`, whose `/^\d+$/.test(sel)` numeric-index
+// fallback coerces either form). `ChildList` children — `ui-swiper-item` slides in DOM order PLUS zero or
+// more author-placed chrome anchors (an agent can never actually emit a chrome anchor node, since none of
+// the three carries a catalog row — an attempted `SwiperPagination`/`SwiperPaddles`/`SwiperLabel` child
+// fails `CATALOG` at that child's own node, the same enforcement `Toast`'s allowlisting relies on).
+export const swiperFactory: WidgetFactory = {
+  tag: 'ui-swiper',
+  create: () => document.createElement('ui-swiper'),
+  applyProp: (el, prop, value) => {
+    if (prop === 'slidesInView') (el as unknown as Record<string, unknown>)['slides-in-view'] = value
+    else (el as unknown as Record<string, unknown>)[prop] = value
+  },
+  value: { prop: 'active', event: 'select' },
+}
+
+// SwiperItem → ui-swiper-item (SPEC-R9). Deliberately `properties: {}` — the ONE real accessor prop on the
+// component, `value` (the stable slide identity `active` resolves against; verified against
+// swiper-item.ts `static props`), is NOT catalogued: it is the EXACT `Tab.value` shape (a composite child's
+// optional stable identity the PARENT'S selection resolves against first, falling back to DOM-index
+// addressing per ADR-0024's positional convention — the index already serves as the key) — `Tab`'s own
+// catalog row (factories.ts:225/tabFactory) carries the identical `properties: {}` for the identical
+// reason, so this is the precedent applied verbatim, not a new omission. `ChildList` children — a slide is
+// arbitrary author content with no anatomy slots to misroute past (unlike `TimelineItem`'s `data-role`
+// anatomy), the `Card`/`CardHeader` generic-children precedent.
+export const swiperItemFactory: WidgetFactory = accessorFactory('ui-swiper-item')
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -721,4 +777,6 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Toolbar: toolbarFactory,
   Timeline: timelineFactory,
   TimelineItem: timelineItemFactory,
+  Swiper: swiperFactory,
+  SwiperItem: swiperItemFactory,
 }

@@ -534,6 +534,29 @@
         "icon": { "type": { "type": "string" }, "bindable": true, "mapsTo": "icon" },
         "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "mapsTo": "size" }
       }
+    },
+
+    "Swiper": {
+      "properties": {
+        "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
+        "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" },
+        "orientation": { "type": { "type": "string", "enum": ["horizontal", "vertical"] }, "mapsTo": "orientation" },
+        "slidesInView": { "type": { "type": "string" }, "mapsTo": "slides-in-view" },
+        "align": { "type": { "type": "string", "enum": ["start", "center", "end"] }, "mapsTo": "align" },
+        "loop": { "type": { "type": "boolean" }, "mapsTo": "loop" },
+        "duration": { "type": { "type": "string" }, "mapsTo": "duration" },
+        "easing": { "type": { "type": "string" }, "mapsTo": "easing" },
+        "pagination": { "type": { "type": "boolean" }, "mapsTo": "pagination" },
+        "paddles": { "type": { "type": "boolean" }, "mapsTo": "paddles" },
+        "active": { "type": { "type": ["string", "number"] }, "bindable": true, "mapsTo": "active" }
+      },
+      "value": { "prop": "active", "event": "select" },
+      "children": "ChildList"
+    },
+
+    "SwiperItem": {
+      "properties": {},
+      "children": "ChildList"
     }
   },
 

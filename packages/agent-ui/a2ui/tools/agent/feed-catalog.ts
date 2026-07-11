@@ -32,7 +32,10 @@
  * `role="toolbar"` + arrow-key roving focus, but no overlay, no pagination, no dashboard/canvas-scale
  * shape — the `Row` parity argument, not the `Split`/`Grid` exclusion reasoning. NOT widened by the
  * timeline-family wave (ADR-0122 F5) — `Timeline`/`TimelineItem` land in `FEED_EXCLUDED` below instead
- * (a narrative chronology is report content, the `List`/`Table` reasoning, not an ask affordance).
+ * (a narrative chronology is report content, the `List`/`Table` reasoning, not an ask affordance). NOT
+ * widened by the swiper-family wave either (ADR-0124 F5) — `Swiper`/`SwiperItem` land in `FEED_EXCLUDED`
+ * below instead (a scroll-snap carousel deliberately hides all-but-one slide behind navigation, the
+ * `Tabs` "hides half the ask" reasoning, not the `Toolbar`/`Row` parity argument).
  */
 export const FEED_SURFACE_TYPES = [
   'Text',
@@ -75,12 +78,13 @@ export interface FeedExclusion {
 }
 
 /**
- * The 25 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
+ * The 27 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
  * the ADR-0097 Amendment / ADR-0107 Amendment 2 — + the report/content/feed catalog wave's five:
  * `Stat`/`Table` [ADR-0111], `Disclosure` [ADR-0113], `Progress`/`Attachment` [ADR-0112] — + the
  * token-surface family's three: `Swatch`/`Ramp`/`Ladder` [ADR-0118 cl.6] — + the M4 app-surfaces panes
  * wave's two: `Split`/`SplitPane` [ADR-0120 cl.5, app-surfaces-m4.spec.md SPEC-R6] — + the timeline-family
- * wave's two: `Timeline`/`TimelineItem` [ADR-0122 F5, timeline-family.spec.md]). Composite-closure note: a
+ * wave's two: `Timeline`/`TimelineItem` [ADR-0122 F5, timeline-family.spec.md] — + the swiper-family
+ * wave's two: `Swiper`/`SwiperItem` [ADR-0124 F5, swiper-family.spec.md]). Composite-closure note: a
  * composite's children are excluded ALONGSIDE their parent for the SAME reason (Tab/TabPanel with Tabs;
  * MenuItem with Menu) — `feed-catalog.test.ts` asserts this closure holds, both here and for the IN
  * composites (RadioGroup/Radio, SegmentedControl/Segment, Card/its three sub-types, Select+ComboBox/Option).
@@ -178,6 +182,12 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
       'report/narrative content, not an ask affordance (ADR-0122 F5) — a durable chronology (order-tracking, audit log, reasoning recap) is homogeneous-collection report content, the List/Table "canvas-scale content" reasoning applied to an event rail: no value mark, no commit semantics — an ask is a commit-gated question, not a narrative record.',
   },
   { type: 'TimelineItem', reason: 'a Timeline child — excluded alongside its parent (composite closure).' },
+  {
+    type: 'Swiper',
+    reason:
+      'a scroll-snap carousel deliberately shows one (or a few) slide(s) at a time behind pagination/paddle navigation — the Tabs "hides half the ask" reasoning taken further (ADR-0124 F5): an ask must be fully visible and operable inline, never paged through to be seen in full.',
+  },
+  { type: 'SwiperItem', reason: 'a Swiper child — excluded alongside its parent (composite closure).' },
 ] as const
 
 /** `Set` view for O(1) membership checks (produce()'s FEED_SCOPE gate, the page's fail-closed drop). */

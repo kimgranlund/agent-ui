@@ -10,9 +10,10 @@
 // (SPEC-N2) rather than a hand-frozen name list — a shipped-but-uncatalogued control fails CI instead of
 // passing silently. Every fleet descriptor resolves to a catalog row OR a deliberate `EXCLUSION_ALLOWLIST`
 // entry (ADR-0087's two arms); the allowlist holds the PERMANENT page/app-owner-chrome exclusions —
-// Toast/ToastRegion (ADR-0112 cl.6), ThemeProvider (ADR-0117), and StatusStream (ADR-0122 F5, the same
-// cl.6 reasoning: a consumer-owned imperative streaming host, not a one-shot serializable tree) as of
-// 2026-07-10.
+// Toast/ToastRegion (ADR-0112 cl.6), ThemeProvider (ADR-0117), StatusStream (ADR-0122 F5, the same cl.6
+// reasoning: a consumer-owned imperative streaming host, not a one-shot serializable tree), and
+// SwiperPagination/SwiperPaddles/SwiperLabel (ADR-0124 F5: author-placed chrome anchors the coordinator
+// drives, not agent-composed content) as of 2026-07-10.
 // `Image`/`Video` stay absent because no `ui-image`/`ui-video` descriptor exists yet — they never enter
 // the derived set. Each declared type binds to a `ui-*` factory in `./factories.ts`.
 
