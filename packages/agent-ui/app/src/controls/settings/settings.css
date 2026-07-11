@@ -1,0 +1,84 @@
+/* settings.css — ui-settings, the single-file component stylesheet (ADR-0003). Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-settings)` declares ONLY `--ui-settings-*`.
+ *   [2] STYLES BLOCK — `@scope (ui-settings)` consumes ONLY `--ui-settings-*`. "0 bespoke shell CSS"
+ *       (SPEC-R9): the rail|panel drill-in geometry is entirely the composed `ui-master-detail`/
+ *       `ui-split`'s OWN shipped CSS — this sheet adds only the rail's nav-list chrome (the settings-
+ *       specific bit master-detail knows nothing about) + the panel host's content inset.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-settings) declares --ui-settings-* ════════════════ */
+
+:where(ui-settings) {
+  --ui-settings-rail-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-settings-rail-ink-active: var(--md-sys-color-primary);
+  --ui-settings-rail-surface-hover: var(--md-sys-color-neutral-surface-high);
+  --ui-settings-rail-indicator: var(--md-sys-color-primary);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-settings) consumes ONLY --ui-settings-* ════════════════ */
+
+@scope (ui-settings) {
+  :scope {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+
+  /* The one composed child (a real ui-master-detail) fills the available block space — the SAME
+     flex-overflow guard master-detail.css uses for its own composed ui-split. */
+  :scope > ui-master-detail {
+    flex: 1 1 auto;
+    min-block-size: 0;
+  }
+
+  [data-part='rail'] {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    inline-size: 100%;
+  }
+
+  [data-part='rail-item'] {
+    display: block;
+    box-sizing: border-box;
+    cursor: pointer;
+    font: inherit;
+    text-align: start;
+    color: var(--ui-settings-rail-ink);
+    background: transparent;
+    border: none;
+    border-inline-start: 2px solid transparent; /* the active marker's own box — never color-only (rubric C8) */
+    padding-block: 0.5rem;
+    padding-inline: 0.75rem;
+    inline-size: 100%;
+  }
+
+  [data-part='rail-item']:hover {
+    background: var(--ui-settings-rail-surface-hover);
+  }
+
+  /* The active item's non-color-alone signifier: a real border (survives forced-colors, C8) PLUS the
+     ink color — never color alone. */
+  [data-part='rail-item'][data-active] {
+    border-inline-start-color: var(--ui-settings-rail-indicator);
+    color: var(--ui-settings-rail-ink-active);
+    font-weight: 600;
+  }
+
+  [data-part='panel'] {
+    box-sizing: border-box;
+    padding: 1rem;
+  }
+
+  [data-part='notice'] {
+    color: var(--ui-settings-rail-ink);
+    padding-inline: 0.75rem;
+    padding-block: 0.5rem;
+  }
+
+  [data-part='unsupported-field'] {
+    color: var(--ui-settings-rail-ink);
+    font-style: italic;
+  }
+}

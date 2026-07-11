@@ -67,6 +67,18 @@ export default defineConfig({
       // `controls/text`/`controls/theme-provider`/`controls/code`/`controls/table` above.
       '@agent-ui/components/controls/split': r('./packages/agent-ui/components/src/controls/split/split.ts'),
       '@agent-ui/components/controls/split-pane': r('./packages/agent-ui/components/src/controls/split/split-pane.ts'),
+      // app-surfaces-m4.lld.md LLD-C13/C14 — `@agent-ui/app`'s `ui-settings` schema/generate.ts are the
+      // sixth/seventh/etc. direct `./controls/{name}` subpath consumers from OUTSIDE the components
+      // package: the field-type registry self-defines the four mapped controls (text-field/switch/
+      // select/slider) for their `document.createElement` side effect, and the generator self-defines
+      // the two form-coordination controls (field/form-provider) the same way — same alias-ordering
+      // necessity as `controls/split`/`controls/split-pane` above.
+      '@agent-ui/components/controls/text-field': r('./packages/agent-ui/components/src/controls/text-field/text-field.ts'),
+      '@agent-ui/components/controls/switch': r('./packages/agent-ui/components/src/controls/switch/switch.ts'),
+      '@agent-ui/components/controls/select': r('./packages/agent-ui/components/src/controls/select/select.ts'),
+      '@agent-ui/components/controls/slider': r('./packages/agent-ui/components/src/controls/slider/slider.ts'),
+      '@agent-ui/components/controls/field': r('./packages/agent-ui/components/src/controls/field/field.ts'),
+      '@agent-ui/components/controls/form-provider': r('./packages/agent-ui/components/src/controls/form-provider/form-provider.ts'),
       // EXACT (not prefix) matches, `?url`-suffixed: `@agent-ui/app`'s isolated-shell connect-flow
       // (app-shell.ts, LLD-C5/ADR-0082) resolves these two package CSS assets to a real runtime URL via
       // Vite's `?url` suffix, to inject as `<link>` hrefs INSIDE a shadow root. Vite's aliasing is FIRST-

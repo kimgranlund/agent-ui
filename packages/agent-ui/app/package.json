@@ -10,7 +10,12 @@
     "./master-detail": "./src/controls/master-detail/master-detail.ts",
     "./master-detail.css": "./src/controls/master-detail/master-detail.css",
     "./master-detail-pane": "./src/controls/master-detail/master-detail-pane.ts",
-    "./master-detail-pane.css": "./src/controls/master-detail/master-detail-pane.css"
+    "./master-detail-pane.css": "./src/controls/master-detail/master-detail-pane.css",
+    "./settings": "./src/controls/settings/settings.ts",
+    "./settings.css": "./src/controls/settings/settings.css",
+    "./settings-schema": "./src/controls/settings/schema.ts",
+    "./settings-store": "./src/controls/settings/store.ts",
+    "./settings-memory-store": "./src/controls/settings/memory-store.ts"
   },
   "dependencies": {
     "@agent-ui/components": "*",

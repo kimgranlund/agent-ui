@@ -216,16 +216,17 @@ const appCssQuerySuffixPlugin = {
   },
 }
 
-// 5 KB re-based at the M4 Phase 2 wave (app-surfaces-m4.lld.md LLD-C9/C16, SPEC-R14 — the SAME
-// Consequences-anticipated re-base precedent as the components family ceiling above): ui-master-detail +
-// ui-master-detail-pane compose the shipped ui-split/ui-split-pane (LLD-C10, 0 bespoke split code) — their
-// bytes ride the app marginal now too, since `split`/`split-pane` sit OUTSIDE the `.` foundation baseline
-// this marginal is measured against. Measured 4576 B gz post-master-detail 2026-07-11 (up from the M1
-// ui-app-shell-only 3 KB provisional); ~12% headroom reserved for the app-shell/master-detail pair as they
-// stand today. Phase 3 (ui-settings, composing ui-master-detail per LLD F8) will re-base this again when it
-// lands — not sized ahead here (unlike the toolbar wave's queued-family precedent), since Phase 3 has no
-// frozen file-level shape yet to measure against.
-const APP_MARGINAL_BUDGET = 5 * KB
+// 26 KB re-based at the M4 Phase 3 wave (app-surfaces-m4.lld.md LLD-C9/C16, SPEC-R14 — the SAME
+// Consequences-anticipated re-base precedent as the components family ceiling above and the Phase 2
+// re-base this comment replaces). `ui-settings` (schema.ts's registry + generate.ts) statically
+// self-registers SIX components the app barrel never dragged before — `ui-text-field`, `ui-switch`,
+// `ui-select`, `ui-slider`, `ui-field`, `ui-form-provider` — all of which sit OUTSIDE the `.` foundation
+// baseline this marginal is measured against, and this script joins EVERY reachable chunk (incl.
+// text-field's own dynamically-imported calendar/color-picker, per its established "absorbs the picker
+// bytes" worst-case convention above) — so the jump is real, not a regression to chase down. Measured
+// 24494 B gz post-ui-settings 2026-07-11 (up from the Phase 2 ui-app-shell+ui-master-detail-only 4576 B
+// gz); ~9% headroom reserved. A future control riding this barrel re-bases again, measured, not guessed.
+const APP_MARGINAL_BUDGET = 26 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
@@ -241,7 +242,7 @@ const appMarginal = appGz - foundationGz
 const appStatus = appMarginal <= APP_MARGINAL_BUDGET ? 'within' : 'OVER'
 const appOver = appMarginal > APP_MARGINAL_BUDGET
 console.log(
-  `\n@agent-ui/app . (ui-app-shell + ui-master-detail): marginal ${appMarginal} B gz — ${appStatus} budget (${APP_MARGINAL_BUDGET} B gz)   solo ${appGz} B gz (${appMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
+  `\n@agent-ui/app . (ui-app-shell + ui-master-detail + ui-settings): marginal ${appMarginal} B gz — ${appStatus} budget (${APP_MARGINAL_BUDGET} B gz)   solo ${appGz} B gz (${appMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
 )
 
 // ── @agent-ui/router (LLD-C9, SPEC-R7 AC4) — the SPA router family, ANOTHER package above components on

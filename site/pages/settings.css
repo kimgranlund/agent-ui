@@ -1,0 +1,25 @@
+/* settings.css — PAGE-LOCAL demo chrome for the ui-settings composition guide (the master-detail.css page's
+ * .md-resize/.md-demo precedent, ported). Styles only the resizable demo frame — it never restyles
+ * ui-settings/ui-master-detail/ui-split's own internals. Every colour is a --md-sys-color-* role (imported
+ * first via _page.ts), so the demo tracks light/dark. */
+
+.settings-resize {
+  inline-size: min(48rem, 100%);
+  min-inline-size: 18rem;
+  max-inline-size: 100%;
+  resize: horizontal;
+  overflow: hidden;
+  padding: 0.5rem;
+  border: 1px dashed var(--md-sys-color-neutral-outline);
+  border-radius: 14px;
+}
+
+.settings-demo {
+  inline-size: 100%;
+  block-size: 340px;
+  margin: 0;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--md-sys-color-neutral-surface-lowest);
+}

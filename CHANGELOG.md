@@ -737,3 +737,59 @@ filtering resizes the list).
   clean at every prefix; admission rides the standing corpus follow-up. `a2ui-compose` serviced 3→4
   kinds. Review: GO (the teaching verified precise against renderer source; zone-guard tests
   anti-vacuous). Gates: check · a2ui 964/964 · a2ui-live jsdom 7/7 + browser 34/34 both engines.
+
+## 2026-07-11 (M4 Phase 3) — `ui-settings` ships the schema-driven settings surface
+
+- **`ui-settings`, NEW in `@agent-ui/app`** (app-surfaces-m4 LLD-C12, SPEC-R9/R10/R11/R12; ADR-0120 cl.4 —
+  shell + schema framework land together): a sections rail + panel composing the shipped
+  `ui-master-detail` for the rail|panel drill-in (fork F8 — the mechanism is built exactly once) with
+  every panel **generated** from a typed, versioned `SettingsSchema` onto the fleet's own form spine
+  (`ui-form-provider`/`ui-field`) — zero app-authored form CSS/glue. The field-type → control registry
+  (`schema.ts`, the ADR-0065 swappable-pack precedent) maps `text`/`number`/`date` → `ui-text-field`,
+  `boolean` → `ui-switch`, `select` → `ui-select`, `slider` → `ui-slider`; an unrecognised type degrades to
+  a disabled placeholder + one warning, never a throw.
+- **Validation rides the control's OWN validity, one timing source** (`validate.ts`, ADR-0051): native
+  constraint props where a control already enforces them (`required`/`min`/`max`/`step` on text-field/
+  select), a reactive `setCustomValidity` bridge only where nothing native exists (`required` on a
+  `boolean` field → `ui-switch`, which has no native required check of its own).
+- **The `SettingsStore` persistence seam** (`store.ts`): a plain `get`/`set`/optional-`subscribe`/optional-
+  `save` interface — `ui-settings` imports only the interface, never a concrete store (grep-guarded).
+  `memory-store.ts` ships a reference adapter (in-memory, or `localStorage`-backed via `persistKey`, for a
+  real cross-instance round-trip).
+- **`schema`/`store` are REACTIVE, not read-once** (a build-time upgrade over the LLD's own "read once"
+  framing): a real reassignment (an async-loaded schema landing after mount) rebuilds the rail + every
+  section's form from scratch; a bare reconnect with the SAME schema/store objects (an isolated
+  `ui-app-shell` region relocating) skips the rebuild entirely — live field VALUES survive the relocation
+  untouched, but every PER-CONNECTION reactive seam a disconnect tore down (the rail's click listeners AND
+  every generated field's validation effect) is re-armed on the reconnect, never left one-time.
+- **Two build-time defects found and fixed, both root-caused to the kernel's single global
+  `activeConsumer` during a nested connect cascade:** (1) an infinite reconnect loop — `#showPanel`
+  connecting a freshly-generated `ui-form-provider`/`ui-field`/control tree from INSIDE an active effect
+  let a nested signal read get misattributed as that effect's own dependency, re-triggering it forever
+  (fixed: `untracked()` around the whole DOM-mutating body, the write-loop budget in `scheduler.ts` is what
+  surfaced it); (2) a doubled `select`/`change` emission — the internally-composed `ui-master-detail`'s
+  OWN `select`/`change` (bubbling) reached listeners on `ui-settings` itself, since both elements emit the
+  same event names (fixed: an event-boundary guard at the composition seam, the text-field.ts color-picker-
+  popup precedent).
+- **The review earned its keep (independent pre-commit review, NO-GO→fix→GO):** a MAJOR — the reconnect
+  branch above re-armed the rail listeners but not the generated forms' reactive validation, since those
+  effects (created inside `generateSection`/`applyValidation`) die on EVERY disconnect same as the rail
+  listeners, but nothing re-armed them on a same-schema reconnect (a `required` boolean field's
+  `setCustomValidity` would stop reacting forever post-relocation). Fixed via a NEW `GeneratedSection.
+  reapplyValidation()` (`generate.ts`) the reconnect branch calls per live section — re-runs `validate.ts`
+  on the ALREADY-GENERATED controls, no DOM regeneration. Two fold-ins: `validate.ts` now warns (not
+  silently ignores) a `required` rule on a field type with neither a native check nor a bridge (`slider`);
+  the SPEC-R11 AC2 tests now assert the `ui-form-provider` AGGREGATE reports invalid too, not just that
+  `setCustomValidity` was called.
+- App marginal re-based 5→26 KB gz (measured 24494 B) — `ui-settings` statically self-registers SIX
+  controls the app barrel never dragged before (`ui-text-field`/`ui-switch`/`ui-select`/`ui-slider`/
+  `ui-field`/`ui-form-provider`), all outside the `.` foundation baseline the marginal is measured against;
+  the measurement also carries text-field's own dynamically-imported calendar/color-picker bytes per the
+  script's established worst-case-reachable convention. Negative control confirmed the gate bites.
+- New site guide (`settings.html`) — a live schema + a real `localStorage`-backed store demo; nav +
+  `llms.txt` entries added by hand (the generated `llms-full.txt` corpus scans only `components/src`
+  descriptors, so it does not need — or get — a regeneration for an app-tier page).
+- Gates: check clean · app jsdom 151/151 · app browser 78/78 (Chromium+WebKit) · repo jsdom 5584/5586 (the
+  two reds are the expected `llms-full.txt`/`theme-provider-built.css` drift from this wave's own
+  CSS/CHANGELOG content — both host-regenerated artifacts per the standing note, left untouched) · size
+  green (app marginal 24604 B gz, within the re-based 26 KB budget).

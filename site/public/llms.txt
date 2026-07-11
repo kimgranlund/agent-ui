@@ -19,6 +19,7 @@
 - [A2UI authoring guide](./a2ui-authoring.html): how to author A2UI catalogs and training data against this fleet, derived from the real catalog and examples.
 - [App shell](./app-shell.html): composing the `agent-app-shell` application frame — regions, landmarks, narrow-reflow strategies, and per-instance style isolation.
 - [Master detail](./master-detail.html): composing `ui-master-detail` — docking list/detail panes over the shipped `ui-split`, consumer-owned selection, and the narrow drill-in with a back affordance.
+- [Settings](./settings.html): composing `ui-settings` — a sections rail + panel over the shipped `ui-master-detail`, schema-driven fields generated onto the fleet's own form spine, and the `SettingsStore` persistence seam.
 - [Router](./router-doc.html): the memory-first SPA router — route state as one signal, opt-in URL reflection (hash default, history opt-in), `ui-router-outlet`, and `ui-router-link`, with a live memory-mode demo.
 - [Changelog](./changelog.html): the shipping history, newest-first, rendered from the repo's CHANGELOG.md.
 

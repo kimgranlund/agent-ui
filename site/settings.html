@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Composing a ui-settings surface</title>
+  </head>
+  <body>
+    <!-- The ui-settings composition guide: a sections rail + panel, schema-driven fields, and the
+         SettingsStore persistence seam (@agent-ui/app, ADR-0120 cl.4; app-surfaces-m4.lld.md LLD-C12). An
+         MPA entry auto-discovered by vite.config.ts's site/**/*.html glob — no config edit. The page module
+         imports pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls, then the
+         settings CSS/modules and its own demo chrome. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/settings.ts"></script>
+  </body>
+</html>
