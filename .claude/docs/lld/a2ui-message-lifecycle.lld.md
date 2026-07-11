@@ -63,7 +63,15 @@ Content to add (verbatim intent, exact wording is the build seat's to finalize a
   {"version":"v1.0","deleteSurface":{"surfaceId":"main"}}
 - Resending a component "id" in updateComponents REPLACES its ENTIRE record — include every prop that should
   still apply (not only the changed one) and the full children list; there is no partial-prop patch.
+- One exception: "id":"root" can be delivered only ONCE per surface — resending it is an id-graph error
+  that silently keeps the OLD root, never your change. If a surface's structure will need to grow later,
+  give root one stable wrapper child up front and put the growing container under ITS OWN id, one level
+  down, never root itself.
 ```
+
+> **REV 2026-07-11:** the 4th (root-immutability) bullet was added at build time — the same repair wave as
+> LLD-C4/C5's root-safe JSONL below; the LLD's original worked payloads hitting the `IDGRAPH` wall is the
+> proof the teaching needed this rule (SPEC-R2's root carve-out is the normative home).
 
 ### LLD-C2 — test coverage for LLD-C1
 
@@ -106,19 +114,30 @@ In `SKILL.md`'s "Mental model" section (currently: "An A2UI payload is an ordere
 One new exemplar record (facet `'exemplar'`), `a2uiOutput` (single `surfaceId`, e.g. `"kpi-panel"`), narrating a
 dashboard-KPI arc that touches all four types:
 
+> **REV 2026-07-11 (build-time repair, empirically forced):** the original worked JSONL here resent
+> `id:"root"` itself to add the second KPI — which the SHIPPED runtime forbids unconditionally: runtime
+> SPEC-R3 AC2 / `renderer/tree.ts`'s `#rootDelivered` guard treats ANY second delivery of `id:"root"` as
+> `IDGRAPH` and keeps the old root (proven: the literal payload failed `validate-payload` with
+> `IDGRAPH kpi-panel:root`). Corrected to the root-stable shape the build shipped: `root` is a STABLE
+> wrapper delivered exactly once, never resent; the mutable container one level down (`grid`, a plain
+> non-root id) is what gets its whole record resent. The same repair retargeted LLD-C5's transcript arc
+> (below). SPEC-R2 gained the matching root carve-out sentence.
+
 ```jsonc
-// 1. open — a new task boundary (SPEC-R1 rule 3)
+// 1. open — a new task boundary (SPEC-R1 rule 3). "root" is a stable wrapper, delivered ONCE, never resent
+//    (runtime SPEC-R3 AC2); "grid", one level down, is the mutable container.
 {"version":"v1.0","createSurface":{"surfaceId":"kpi-panel","catalogId":"agent-ui"}}
 {"version":"v1.0","updateComponents":{"surfaceId":"kpi-panel","components":[
-  {"id":"root","component":"Grid","min":"12rem","children":["revenue"]},
+  {"id":"root","component":"Column","gap":"md","children":["grid"]},
+  {"id":"grid","component":"Grid","min":"12rem","gap":"md","children":["revenue"]},
   {"id":"revenue","component":"Stat","label":"Revenue","value":{"path":"/revenue"}}
 ]}}
 {"version":"v1.0","updateDataModel":{"surfaceId":"kpi-panel","path":"/revenue","value":128000}}
 
-// 2. restructure — a second KPI joins the grid (SPEC-R1 rule 2 / SPEC-R2: root resent WHOLE, incl. its
-//    existing "min" prop, plus the new child id)
+// 2. restructure — a second KPI joins the grid (SPEC-R1 rule 2 / SPEC-R2: "grid" resent WHOLE, incl. its
+//    existing "min"/"gap" props, plus the new child id — root is untouched)
 {"version":"v1.0","updateComponents":{"surfaceId":"kpi-panel","components":[
-  {"id":"root","component":"Grid","min":"12rem","children":["revenue","churn"]},
+  {"id":"grid","component":"Grid","min":"12rem","gap":"md","children":["revenue","churn"]},
   {"id":"churn","component":"Stat","label":"Churn","value":{"path":"/churn"}}
 ]}}
 {"version":"v1.0","updateDataModel":{"surfaceId":"kpi-panel","path":"/churn","value":2.4}}
@@ -139,46 +158,48 @@ follow-up's to finalize; this LLD fixes only that the `a2uiOutput` stream above 
 Continuing `transcript.ts`'s shipped `recordedTranscript.turns` (today: turn 1 = `canvas` button, turn 2 =
 `confirmation` Text), append:
 
+> **REV 2026-07-11 (build-time repair, same root cause as LLD-C4's):** the original turn 3 resent
+> `id:"root"` (re-typing canvas's Button root as a Column) — illegal for the same reason: the renderer
+> drops ANY second `id:"root"` delivery (`IDGRAPH`), so the resend would silently never render. And
+> canvas's root cannot host a child any other way (Button has no children model). The shipped fix
+> retargets the whole restructure/react/close arc onto **`confirmation`** instead of canvas: turn 2's
+> confirmation tree is delivered root-stable (`root` Column → `group` Column → `msg` Text), turn 3
+> resends `group` (NOT root) whole to add the `status` Text — the same SPEC-R2 whole-record-upsert
+> teaching — turn 4 is the data-only react on `/status`, and turn 5 deletes confirmation while canvas
+> (never touched after turn 1) stays: the cleanest durable-vs-superseded contrast (ADR-0126 F5).
+
 ```ts
-// Turn 3 — restructure the SAME "canvas" surface (SPEC-R1 rule 2). IMPORTANT: the seed's existing root is a
-// Button (canvasButtonSeed.messages[1].updateComponents.components[0]), and the catalog gives Button NO
-// children model (§5.2 — Button carries no child/children key) — a Button cannot directly host a Text child.
-// So the restructure changes root's OWN type: "root" is resent as a Column wrapping the ORIGINAL Button
-// (moved to a new id "btn", every one of its original props preserved verbatim — SPEC-R2 whole-record) plus
-// the new "status" Text. This is a stronger illustration of SPEC-R2 than a same-type prop change: even a
-// node's component TYPE can change on a resend, because the renderer's upsert-by-id has no notion of "the
-// previous type" — it replaces the record wholesale (renderer/tree.ts:85).
+// Turn 3 — restructure the SAME "confirmation" surface (SPEC-R1 rule 2). "group" (NOT "root") is the
+// mutable container: its FULL record is resent (props + complete children list) with the new "status" id —
+// the renderer's upsert-by-id replaces the record wholesale (renderer/tree.ts:85); root is never resent.
 const TURN3: A2uiServerMessage[] = [
-  { version: 'v1.0', updateComponents: { surfaceId: canvasButtonSeed.surfaceId, components: [
-    { id: 'root', component: 'Column', gap: 'sm', children: ['btn', 'status'] },
-    { id: 'btn', component: 'Button', variant: 'solid', label: 'Click me', action: { action: 'submit' } }, // canvasButtonSeed's original root props, verbatim, now a child
+  { version: 'v1.0', updateComponents: { surfaceId: 'confirmation', components: [
+    { id: 'group', component: 'Column', gap: 'sm', children: ['msg', 'status'] },
     { id: 'status', component: 'Text', text: { path: '/status' } },
   ] } },
-  { version: 'v1.0', updateDataModel: { surfaceId: canvasButtonSeed.surfaceId, path: '/status', value: 'Ready' } },
+  { version: 'v1.0', updateDataModel: { surfaceId: 'confirmation', path: '/status', value: 'Ready' } },
 ]
-// note: 'I wrapped the button in a Column and added a status line on the SAME canvas surface — a structural
-//        change (even the root's own type changed), so I used updateComponents, not a new surface.'
+// note: 'I added a status line to the SAME confirmation surface — a structural change, so updateComponents
+//        (the group container resent whole, root untouched), not a new surface.'
 ```
-Turn 1's own `expectClientMessage` (the round-trip gate's scripted click, `sourceComponentId: 'root'`) is
-unaffected by this LLD — it is asserted BEFORE turn 3 ever runs, against the ORIGINAL Button-rooted state.
-Any FUTURE click assertion added against the post-turn-3 tree would need `sourceComponentId: 'btn'` (root is a
-Column from turn 3 onward); this LLD's own turns 3–5 add no new `expectClientMessage`, so no such fixture exists
-yet — the build seat must not accidentally clone turn 1's assertion past this point.
+Turn 1's own `expectClientMessage` (the round-trip gate's scripted click on canvas, `sourceComponentId:
+'root'`) is unaffected — canvas is never restructured; this LLD's turns 3–5 add no new `expectClientMessage`.
 
 ```ts
-// Turn 4 — data-ONLY change (SPEC-R1 rule 1 / SPEC-R5 AC2): no updateComponents in this turn's lines.
+// Turn 4 — data-ONLY change on confirmation (SPEC-R1 rule 1 / SPEC-R5 AC2): no updateComponents this turn.
 const TURN4: A2uiServerMessage[] = [
-  { version: 'v1.0', updateDataModel: { surfaceId: canvasButtonSeed.surfaceId, path: '/status', value: 'Clicked again' } },
+  { version: 'v1.0', updateDataModel: { surfaceId: 'confirmation', path: '/status', value: 'Clicked again' } },
 ]
-// note: 'Just the status text changed — I updated the data model only, the button and layout are untouched.'
+// note: 'Just the status text changed — I updated the data model only; the layout is untouched.'
 
-// Turn 5 — the "confirmation" surface's job (acknowledging turn 1's click) is superseded by turns 3-4's own
-// status line now carrying that role; canvas itself stays (SPEC-R1 rule 4 / ADR-0126 F5).
+// Turn 5 — "confirmation"'s whole job (acknowledging turn 1's click, then narrating a status update) is
+// done and would confuse later turns if left visible → deleteSurface; canvas stays (SPEC-R1 rule 4 /
+// ADR-0126 F5's "otherwise leave it" arm demonstrated by canvas's persistence).
 const TURN5: A2uiServerMessage[] = [
   { version: 'v1.0', deleteSurface: { surfaceId: 'confirmation' } },
 ]
-// note: 'The confirmation surface's job is done — the canvas now shows its own status line, so I closed
-//        confirmation. I left canvas open; it is still the point of the conversation.'
+// note: 'The confirmation surface's job is done, so I closed it. I left canvas open; it is still the
+//        point of the conversation.'
 ```
 Each turn's `note` is exactly the ADR-0126 F4 "annotation" mechanism SPEC-R5 AC3 needs — no new field, no new
 UI. `expectClientMessage` is omitted on turns 3–5 (no scripted user interaction needed to demonstrate the arc;
@@ -219,10 +240,11 @@ build seat's convenience:
   Kim's explicit sign-off (ADR-0126 Acceptance) before LLD-C1 ships, keeping the added bullets terse.
   Cross-checked against sibling `mini-skills.ts`'s own `PER_MODULE_TOKEN_BUDGET` precedent (~200 tokens) as an
   informal ceiling for the new bullets, though this addition is NOT a mini-skill (ADR-0126 rejects that shape).
-- **Turn 3's root-type change (Button → Column) is a stronger claim than a same-type prop resend** — if a
-  future reviewer or test assumes `updateComponents` can only ever resend a node AS its existing type, this
-  turn falsifies that assumption on purpose (§3 LLD-C5 note). Mitigation: the note inline at LLD-C5 flags this
-  explicitly so it is not mistaken for an error during build.
+- **Root is immutable once delivered** (the REV-repaired defect this LLD originally carried): runtime
+  SPEC-R3 AC2 / `renderer/tree.ts`'s `#rootDelivered` guard rejects ANY second `id:"root"` delivery as
+  `IDGRAPH` — no whole-record-resend exception. Every worked payload here therefore keeps root a stable,
+  never-resent wrapper with the mutable container one level down; the GRAMMAR teaching and SPEC-R2's root
+  carve-out now state the rule so future producers (and LLD authors) don't rediscover it the hard way.
 - **F2/F5 are still open Kim rulings** (ADR-0126) — LLD-C1's exact anchor and LLD-C5's exact delete-vs-keep
   turns assume ADR-0126's recorded recommendation. A Kim override on either fork after build has started is an
   LLD repair, not a silent rewrite (§7).

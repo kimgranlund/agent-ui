@@ -102,7 +102,12 @@ that `id` wholesale (verified `renderer/tree.ts:85`) — there is no partial-pro
 an existing container REQUIRES resending the parent's own record with its updated `children` list, in the same
 or an out-of-order-tolerant later message (the `Select`+`Option` "ship together" precedent, `a2ui-compose`
 `node-idioms.md`, generalizes to every container). *(→ TKT-0016 "updateComponents partial semantics" open item —
-now settled: it is never partial.)*
+now settled: it is never partial.)* **Root carve-out (REV 2026-07-11, build-time repair):** the ONE id this
+resend rule can never touch is `"root"` — the shipped runtime rejects any second `id:"root"` delivery as
+`IDGRAPH` and keeps the original, no whole-record-resend exception (runtime SPEC-R3 AC2, `renderer/tree.ts`'s
+`#rootDelivered` guard; proven empirically at build via `validate-payload`). A producer whose surface may grow
+MUST deliver root as a stable, never-resent wrapper (e.g. a `Column`) and place the mutable container one level
+down under its own non-root id.
 - **AC1** *Given* a node `{id:"btn", component:"Button", label:"Go", action:{...}}` re-emitted as
   `{id:"btn", component:"Button", label:"Go!"}` (omitting `action`), *when* applied, *then* the node's `action`
   is gone — the omission is a silent drop, not a preserved prior value. A producer MUST NOT rely on partial

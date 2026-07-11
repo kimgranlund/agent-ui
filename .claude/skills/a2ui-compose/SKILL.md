@@ -2,7 +2,7 @@
 name: a2ui-compose
 description: >-
   Compose an A2UI payload/surface — the server→client message stream (createSurface,
-  updateComponents, updateDataModel) that renders a Generative UI. Use when authoring,
+  updateComponents, updateDataModel, deleteSurface) that renders a Generative UI. Use when authoring,
   extending, or debugging an A2UI payload against a catalog: idiomatic node shapes per
   catalog type, adjacency-list component trees, ChildList list templates, data bindings,
   actions, and validity checks, plus the bounded compose→validate→self-correct loop.
@@ -30,27 +30,35 @@ skill exists for the WIRE: an agent emitting messages a renderer paints).
 ## Mental model
 
 An A2UI payload is an ordered stream of `version:"v1.0"` server→client messages (`protocol.ts:143-150`), of
-three kinds you compose:
+four kinds you compose:
 
 1. **`createSurface`** — opens the surface (`{ surfaceId, catalogId, sendDataModel? }`). Always first.
 2. **`updateDataModel`** — the JSON data model bound paths read (`{ surfaceId, path?, value }`).
 3. **`updateComponents`** — a FLAT adjacency list of nodes (`{ surfaceId, components: [...] }`), each
    `{ id, component, …props, child?|children? }`, wired parent→child by `id` string, not nested JSON.
+4. **`deleteSurface`** — closes a surface (`{ surfaceId }`). See `a2ui-message-lifecycle.spec.md` SPEC-R1
+   rule 4 for WHEN to reach for it (a surface whose task is done AND would confuse a later turn left
+   visible) versus leaving a finished surface in place as standing history.
 
 Everything reactive — text that tracks data, two-way inputs, list templates, actions, validity — hangs off
 those nodes via bindings. The catalog (`packages/agent-ui/a2ui/src/catalog/default/catalog.json`) is the
-authority on which components and props exist; never invent a component or prop.
+authority on which components and props exist; never invent a component or prop. For WHICH of the four
+message kinds a given conversational moment calls for, `a2ui-message-lifecycle.spec.md` (SPEC-R1) is the
+single normative rule — this skill cites it, not re-derives it.
 
 ## Compose
 
 Condition on real payloads FIRST, then build outside-in:
 
 1. **Read the nearest idiom.** Skim the committed corpus shard
-   (`packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`) and the 11-seed shelf
-   (`packages/agent-ui/a2ui/src/examples/`) for the closest existing payload — a settings form, a dashboard of
-   tiles, a wizard, a dynamic list. Adapt a shipped shape rather than inventing one.
+   (`packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`) and the example seed shelf
+   (`packages/agent-ui/a2ui/src/examples/` — `allSeeds` in `index.ts` names the current count) for the closest
+   existing payload — a settings form, a dashboard of tiles, a wizard, a dynamic list. Adapt a shipped shape
+   rather than inventing one.
 2. **Open the surface.** Emit `createSurface` with the target `catalogId` (default `agent-ui`). Add
-   `sendDataModel:true` when a triggered action must carry the model back.
+   `sendDataModel:true` when a triggered action must carry the model back. Deciding createSurface vs.
+   updateDataModel vs. updateComponents for a given turn is `a2ui-message-lifecycle.spec.md` SPEC-R1's
+   call, not a fresh judgment each time — a value-only change never re-opens or re-sends the tree.
 3. **Seed the model.** Emit `updateDataModel` with the initial JSON for every path a control will bind.
    Load required fields empty when a blocked-submit state is the point.
 4. **Build the tree, root-first.** Emit nodes as a flat list. Start at `id:"root"`, wire children by id.
@@ -113,6 +121,14 @@ Draft → validate → fix → re-check → finalize only when clean:
 
 ## Common traps (non-obvious)
 
+- **Resending an id replaces the WHOLE node.** `updateComponents` upserts by id
+  (`renderer/tree.ts`'s `components.set(comp.id, comp)`) — omitting a previously-set prop on a resend DROPS
+  it, it does not preserve it (`a2ui-message-lifecycle.spec.md` SPEC-R2). Adding a child to a container
+  means resending that container's FULL record with the updated `children` list, not a diff. Exception:
+  never resend `id:"root"` itself — the renderer treats ANY second delivery of `id:"root"` as an id-graph
+  error and drops it, keeping the original (runtime SPEC-R3 AC2) — so if the container that needs a new
+  child is the surface's root, wrap it one level down (a stable, never-resent root whose single child is
+  the mutable container) rather than resending root.
 - **Field uses `child`, not `children`.** It wraps exactly one control; its `label` is that control's
   accessible name (ADR-0051).
 - **Select/Options first-connect.** Options added to an already-connected Select never reach its panel — emit
@@ -129,6 +145,7 @@ Draft → validate → fix → re-check → finalize only when clean:
 
 | Path | Use when |
 |---|---|
+| `a2ui-message-lifecycle.spec.md` (`.claude/docs/spec/`) | The message-type decision rule — which of the four kinds (createSurface/updateComponents/updateDataModel/deleteSurface), and when |
 | `references/node-idioms.md` | The idiomatic node shape, bindable props, and ordering traps for each catalog component |
 | `references/trees-and-lists.md` | Building the adjacency-list tree, `child` vs `children`, `ChildList` templates, `${…}` interpolation, nesting |
 | `references/bindings-actions-checks.md` | Data bindings, two-way inputs, Button actions, reactive `checks`, FormProvider submit-gating |

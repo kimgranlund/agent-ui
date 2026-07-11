@@ -11,6 +11,25 @@
 // kind-tally fallback (`a2ui-live.ts`'s `note ?? summarize(turnLines)`). `lines` stays protocol-only
 // (unchanged) so every existing direct-ingest consumer of this transcript (`round-trip.test.ts`) is
 // undisturbed; the note only takes effect when a turn is driven through the `AgentTransport` seam.
+//
+// ADR-0126 (TKT-0016, a2ui-message-lifecycle.lld.md LLD-C5): turns 3-5 complete the four-type lifecycle
+// arc on TOP of the shipped turn 1/2 script — restructure (turn 3) / data-only react (turn 4) / close
+// (turn 5). DEVIATION from the LLD's literal worked script (flagged to the team lead during build, needs
+// a coordinated LLD repair): the LLD's turn 3 resends `id:"root"` itself (wrapping canvas's Button in a
+// Column). That resend is NOT legal — runtime SPEC-R3 AC2 (`renderer/tree.ts`'s `#rootDelivered` guard)
+// treats ANY second delivery of `id:"root"` as an id-graph error and drops it, keeping the ORIGINAL root;
+// it would silently never show the wrapping Column at all. Also, `canvas`'s root is already a childless
+// `Button` (the shared `canvas-button.ts` shelf seed, out of this LLD's file scope to reshape) — there is
+// no way to add a sibling under it without first changing what `root` IS, which the renderer refuses.
+//
+// Fixed by retargeting the restructure/react/close arc onto "confirmation" instead of "canvas", and by
+// widening turn 2's OWN tree (this module's, freely reshapable) with one stable extra level: `root` (a
+// Column) is delivered once and never resent; `group`, one level down (a plain non-root id), is the
+// MUTABLE container turn 3 resends whole to add the new "status" Text — the same SPEC-R2 whole-record-
+// upsert teaching the LLD intended, just never touching the one id the renderer refuses to re-deliver.
+// `canvas` (turn 1) is untouched by any of turns 2-5 — it is the demo's "durable, never-deleted" subject
+// (SPEC-R1 rule 4's "otherwise" arm); `confirmation` runs its whole open→restructure→react→close arc and
+// is the one turn 5 deletes once superseded (ADR-0126 F5).
 
 import type { A2uiServerMessage } from '../../src/protocol.ts'
 import type { A2uiClientMessage } from '../../src/renderer/index.ts'
@@ -41,8 +60,12 @@ export interface RecordedTranscript {
 const jsonl = (m: A2uiServerMessage): string => JSON.stringify(m)
 
 // Turn 2 — the agent's follow-up after the user clicks the button: a second surface confirming the
-// interaction. A Text root (catalog-valid: Text carries a `text` prop) on a NEW surface id, so the
-// renderer attaches a second root under the mount (no in-place type change of turn-1's Button root).
+// interaction. `root` (a Column, catalog-valid: Grid/Column/Row all declare a `ChildList` children model)
+// is a STABLE wrapper delivered ONCE and never resent — runtime SPEC-R3 AC2 forbids a 2nd `id:"root"`
+// delivery outright, so the actually-mutable container `group`, one level down (a plain non-root id), is
+// what turn 3 resends whole to add the "status" Text (SPEC-R2 whole-record upsert). This is a NEW surface
+// id, so the renderer attaches a second root under the mount (no in-place type change of turn-1's Button
+// root either way).
 const TURN2: A2uiServerMessage[] = [
   { version: 'v1.0', createSurface: { surfaceId: 'confirmation', catalogId: 'agent-ui' } },
   {
@@ -50,8 +73,10 @@ const TURN2: A2uiServerMessage[] = [
     updateComponents: {
       surfaceId: 'confirmation',
       components: [
+        { id: 'root', component: 'Column', gap: 'sm', children: ['group'] },
+        { id: 'group', component: 'Column', gap: 'sm', children: ['msg'] },
         {
-          id: 'root',
+          id: 'msg',
           component: 'Text',
           text: 'Thanks — you clicked the button. The agent continues: this second surface is turn 2 of the conversation.',
         },
@@ -59,6 +84,34 @@ const TURN2: A2uiServerMessage[] = [
     },
   },
 ]
+
+// Turn 3 — restructure the SAME "confirmation" surface (SPEC-R1 rule 2 / ADR-0126). `group` (NOT `root`)
+// is resent WHOLE — its existing `gap` prop carried forward, its `children` list grown from `["msg"]` to
+// `["msg","status"]` — alongside the new `status` Text node, in the same message (SPEC-R2's whole-record-
+// upsert rule; the `Select`+`Option` "ship together" precedent, generalized to any container).
+const TURN3: A2uiServerMessage[] = [
+  {
+    version: 'v1.0',
+    updateComponents: {
+      surfaceId: 'confirmation',
+      components: [
+        { id: 'group', component: 'Column', gap: 'sm', children: ['msg', 'status'] },
+        { id: 'status', component: 'Text', text: { path: '/status' } },
+      ],
+    },
+  },
+  { version: 'v1.0', updateDataModel: { surfaceId: 'confirmation', path: '/status', value: 'Ready' } },
+]
+
+// Turn 4 — data-ONLY change (SPEC-R1 rule 1 / SPEC-R5 AC2): no updateComponents in this turn's lines.
+const TURN4: A2uiServerMessage[] = [
+  { version: 'v1.0', updateDataModel: { surfaceId: 'confirmation', path: '/status', value: 'Clicked again' } },
+]
+
+// Turn 5 — "confirmation"'s whole job (acknowledging turn 1's click, then narrating a status update) is
+// now complete; leaving it visible would sit stale next to whatever the dialog does next (SPEC-R1 rule 4 /
+// ADR-0126 F5). `canvas` — the durable subject of the dialog — is never deleted in this script.
+const TURN5: A2uiServerMessage[] = [{ version: 'v1.0', deleteSurface: { surfaceId: 'confirmation' } }]
 
 /** The single committed transcript the demo's backbone replays (and the round-trip gate drives). */
 export const recordedTranscript: RecordedTranscript = {
@@ -88,6 +141,23 @@ export const recordedTranscript: RecordedTranscript = {
       // Honest per-turn rationale: this turn's actual payload is a NEW "confirmation" surface holding
       // one Text component that reports the click back — no other change to the canvas surface.
       note: 'Thanks for the click — I added a second surface with a Text confirming the button worked.',
+    },
+    {
+      lines: TURN3.map(jsonl),
+      // Honest per-turn rationale (ADR-0126): a structural change on the SAME confirmation surface, so
+      // updateComponents — resending its "group" container's full record, not a diff.
+      note: 'I added a status line to the confirmation surface — a structural change, so I used updateComponents (resending its container\'s full record), not a new surface.',
+    },
+    {
+      lines: TURN4.map(jsonl),
+      // Honest per-turn rationale: only the bound value changed — updateDataModel alone, no re-render.
+      note: 'Just the status text changed — I updated the data model only; confirmation\'s layout is untouched.',
+    },
+    {
+      lines: TURN5.map(jsonl),
+      // Honest per-turn rationale (ADR-0126 F5): confirmation's job is done and would sit stale, so it's
+      // explicitly closed; canvas — the durable subject of the conversation — stays.
+      note: 'The confirmation surface\'s job is done — I closed it. I left canvas open; it\'s still the point of the conversation.',
     },
   ],
 }

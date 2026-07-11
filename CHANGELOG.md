@@ -710,3 +710,30 @@ filtering resizes the list).
   38→44 KB gz (measured 42595 B; the picker's own leave-one-out marginal is NEGATIVE, the gzip
   dictionary artifact). Gates: check · jsdom 238/238 scoped (repo green minus the regenerated
   fixtures) · browser 84+ both engines · size green.
+
+## 2026-07-11 (A2UI message lifecycle) — the four-type decision layer taught, demoed, and pinned (TKT-0016 · ADR-0126)
+
+- **The teaching (F2, Kim-ratified):** four new GRAMMAR bullets in the machine system prompt's
+  mode-invariant output-rules zone — the when/how choice rule (data change → `updateDataModel`;
+  shape change → `updateComponents`, same surface; new task → `createSurface`, fresh surface; done-and-
+  would-confuse → `deleteSurface`, else leave it — F5), the `deleteSurface` wire shape (ABSENT from the
+  prompt entirely until now — the generating model could not know the type existed), the whole-record
+  upsert warning (partial resends silently drop props — `tree.ts`'s `components.set` semantics made
+  normative), and the root-immutability exception. +1248 B (~311 tokens) to every mode, permanent, as
+  signed off; noted: ~1.5× the informal 200-token reference ceiling.
+- **The root-immutability discovery (the build's real find):** the ratified LLD's own worked payloads
+  resent `id:"root"` to grow a surface — which the shipped runtime rejects unconditionally as `IDGRAPH`,
+  silently keeping the old root (proven via `validate-payload`). The producer rule is now everywhere it
+  belongs: root is a stable, never-resent wrapper; the mutable container lives one level down under its
+  own id. SPEC-R2 gained the carve-out, the LLD's worked JSONL was REV-repaired to the shipped shapes,
+  and the GRAMMAR + `a2ui-compose` Common-traps teach it — the LLD's own author hitting the wall is the
+  proof the decision layer needed the rule.
+- **The demo (LLD-C5):** `a2ui-live`'s recorded transcript now runs the full arc — turn 2 opens
+  `confirmation` (root-stable Column→group→msg), turn 3 restructures it (`group` resent whole), turn 4
+  reacts data-only (`/status`, provably ONE `updateDataModel` line, no re-render), turn 5 deletes it
+  while `canvas` (untouched since turn 1) stays — the durable-vs-superseded contrast, each turn's note
+  honestly naming which type fired and why. Zero page-code changes (the shipped mechanisms carried it).
+- **The corpus exemplar (LLD-C4):** `kpi-panel-lifecycle` — all four types on one surface, validator-
+  clean at every prefix; admission rides the standing corpus follow-up. `a2ui-compose` serviced 3→4
+  kinds. Review: GO (the teaching verified precise against renderer source; zone-guard tests
+  anti-vacuous). Gates: check · a2ui 964/964 · a2ui-live jsdom 7/7 + browser 34/34 both engines.

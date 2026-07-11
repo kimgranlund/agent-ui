@@ -19,13 +19,14 @@
 // than per-instance — every real form control connects safely for the duration of this suite only.
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { allSeeds, generativeFormSeed } from './index.ts'
+import { allSeeds, generativeFormSeed, kpiPanelLifecycleSeed } from './index.ts'
 import type { ExampleSeed } from './types.ts'
 import { canvasSeeds } from './canvas-button.ts'
 import { dynamicListSeeds } from './dynamic-lists.ts'
 import { generativeFormSeeds } from './generative-form.ts'
 import { patternSeeds } from './patterns.ts'
 import { catalogCoverageSeeds } from './catalog-coverage.ts'
+import { messageLifecycleSeeds } from './message-lifecycle.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { createRenderer } from '../renderer/renderer.ts'
@@ -70,7 +71,12 @@ function renderSmoke(seed: Pick<ExampleSeed, 'surfaceId' | 'messages'>): A2uiCli
 describe('the example seed shelf (ADR-0055) — shape', () => {
   it('composes allSeeds from exactly the family arrays each module exports (derived count — never a hand-counted literal)', () => {
     const expectedTotal =
-      canvasSeeds.length + dynamicListSeeds.length + generativeFormSeeds.length + patternSeeds.length + catalogCoverageSeeds.length
+      canvasSeeds.length +
+      dynamicListSeeds.length +
+      generativeFormSeeds.length +
+      patternSeeds.length +
+      catalogCoverageSeeds.length +
+      messageLifecycleSeeds.length
     expect(allSeeds).toHaveLength(expectedTotal)
   })
 
@@ -138,6 +144,65 @@ describe('the generative-form seed — shape pins (protects the a2ui-stream Demo
       (m) => 'updateComponents' in m && m.updateComponents.components.some((c) => c.id === 'root'),
     )
     expect(hasRoot).toBe(true)
+  })
+})
+
+// ── the message-lifecycle exemplar — SPEC-R4 fixture-validation (ADR-0126/TKT-0016, LLD-C4) ────────────
+//
+// Beyond the generic per-seed loop above (which validates the COMPLETE stream + a full render smoke),
+// SPEC-R4 AC1 requires every PREFIX of the exemplar's stream to validate 0-errors (the round-trip.test.ts
+// method: treating each prefix as the surface's state at that point) and AC2 requires the restructure
+// step's resent container to carry its FULL prior prop set, not a diff.
+
+describe('the kpi-panel-lifecycle exemplar — SPEC-R4 fixture validation', () => {
+  it('every prefix of the stream validates 0-failure (SPEC-R4 AC1)', () => {
+    const messages = kpiPanelLifecycleSeed.messages
+    for (let i = 1; i <= messages.length; i++) {
+      const prefix = messages.slice(0, i)
+      expect(validateA2ui(prefix, defaultCatalog), `prefix of length ${i}`).toEqual({ valid: true, failures: [] })
+    }
+  })
+
+  it('carries all four message types, in order, addressing the SAME surfaceId (SPEC-R4)', () => {
+    const messages = kpiPanelLifecycleSeed.messages
+    const kinds = messages.map((m) => Object.keys(m).find((k) => k !== 'version')!)
+    expect(kinds).toContain('createSurface')
+    expect(kinds).toContain('updateComponents')
+    expect(kinds).toContain('updateDataModel')
+    expect(kinds).toContain('deleteSurface')
+    // Ordering: open before restructure before close; a data-only react sits after the restructure.
+    expect(kinds.indexOf('createSurface')).toBeLessThan(kinds.indexOf('updateComponents'))
+    expect(kinds.lastIndexOf('updateDataModel')).toBeLessThan(kinds.indexOf('deleteSurface'))
+    for (const m of messages) {
+      const body = (m as Record<string, { surfaceId?: string }>)[Object.keys(m).find((k) => k !== 'version')!]
+      expect(body?.surfaceId, JSON.stringify(m)).toBe(kpiPanelLifecycleSeed.surfaceId)
+    }
+  })
+
+  it("the restructure step resends \"grid\" WHOLE — its prior min/gap props survive, not just the new child (SPEC-R4 AC2 / SPEC-R2)", () => {
+    // The FIRST updateComponents already delivers "grid" too (with children:["revenue"]) — locate the
+    // SECOND delivery specifically (the restructure step), not the initial one.
+    const gridDeliveries = kpiPanelLifecycleSeed.messages.filter(
+      (m): m is Extract<typeof m, { updateComponents: unknown }> =>
+        'updateComponents' in m && m.updateComponents.components.some((c) => c.id === 'grid'),
+    )
+    expect(gridDeliveries).toHaveLength(2)
+    const resent = gridDeliveries[1]!.updateComponents.components.find((c) => c.id === 'grid')!
+    expect(resent.min).toBe('12rem') // the ORIGINAL prop, carried forward on the resend — not dropped
+    expect(resent.gap).toBe('md')
+    expect(resent.children).toEqual(['revenue', 'churn']) // the new child, alongside the original
+  })
+
+  it('root is delivered exactly once — never resent (runtime SPEC-R3 AC2; the LLD-repair this seed proves)', () => {
+    const rootDeliveries = kpiPanelLifecycleSeed.messages.filter(
+      (m) => 'updateComponents' in m && m.updateComponents.components.some((c) => c.id === 'root'),
+    )
+    expect(rootDeliveries).toHaveLength(1)
+  })
+
+  it('the final deleteSurface leaves no orphaned references (SPEC-R4 AC1) — a fresh renderer finalizes clean', () => {
+    const sent = renderSmoke(kpiPanelLifecycleSeed)
+    expect(sent.filter(isError)).toEqual([])
   })
 })
 

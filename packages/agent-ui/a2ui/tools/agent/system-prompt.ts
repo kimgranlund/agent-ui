@@ -47,6 +47,19 @@
 // `miniSkillsBlock` composes it (they're already present via (1)) — `'specific'`/`'default'`/absent mode
 // carry none of this prose inline anywhere, so the registry selection still injects them normally there.
 // `login-form`/`master-detail-split` were never duplicated and are untouched by either fix.
+//
+// ADR-0126 (LLD-C1, TKT-0016): the message-lifecycle decision-layer teaching — the four-type choice rule
+// (updateDataModel-alone for a value change / updateComponents for a shape change / createSurface with a
+// FRESH surfaceId for a new task / deleteSurface when a done surface would otherwise confuse a later turn)
+// plus the deleteSurface wire shape, the whole-record-upsert warning, and the root-immutability exception
+// (a component with "id":"root" can be delivered only ONCE per surface — build discovered this the hard
+// way: the LLD's own first-drafted worked payloads resent root and failed IDGRAPH; the fix taught here —
+// a stable wrapper root, the mutable container one level down — is exactly the decision-layer knowledge
+// this ADR exists to teach) — is appended INSIDE GRAMMAR's existing "Output rules for the A2UI JSONL"
+// section, after the updateDataModel bullet and before the action-report bullet. Because the insertion
+// sits entirely after `OUTPUT_MARKER`, it rides `OUTPUT_RULES` (sliced below) into every mode with ZERO
+// `grammarFor` edits — the single normative source is `a2ui-message-lifecycle.spec.md` (SPEC-R1/R2); this
+// prose teaches it, never re-derives it.
 
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import type { CorpusRecord } from '../../src/corpus/record.ts'
@@ -124,6 +137,20 @@ Output rules for the A2UI JSONL that follows the note line (omit entirely if the
   - To replace the WHOLE data model, OMIT "path" entirely (or use "path":"") — the fewest-token,
     version-proof idiom. "path":"/" also works (the spec defines "/" as the root default), but
     prefer omitting "path".
+- Choose the right message for the change: a value change on an EXISTING surface is updateDataModel alone
+  (never re-emit updateComponents just because a bound value changed); a change to the SHAPE of the surface
+  (a node added, removed, or whose props/children actually change) is updateComponents, same surfaceId; a
+  genuinely new task in the conversation is createSurface with a FRESH surfaceId, leaving prior surfaces
+  untouched; a surface whose task is done AND would confuse a later turn if left visible is deleteSurface —
+  otherwise leave it in place, no message needed.
+- Remove a surface the user no longer needs to see:
+  {"version":"v1.0","deleteSurface":{"surfaceId":"main"}}
+- Resending a component "id" in updateComponents REPLACES its ENTIRE record — include every prop that should
+  still apply (not only the changed one) and the full children list; there is no partial-prop patch.
+- One exception: "id":"root" can be delivered only ONCE per surface — resending it is an id-graph error
+  that silently keeps the OLD root, never your change. If a surface's structure will need to grow later,
+  give root one stable wrapper child up front and put the growing container under ITS OWN id, one level
+  down, never root itself.
 - Make a control report back to you by giving it an "action", e.g. a Button:
   {"id":"go","component":"Button","label":"Submit","action":{"action":"submit"}}
 - Use ONLY the component types and props listed in the catalog below. NEVER invent a component or a prop.

@@ -522,6 +522,51 @@ describe('buildSystemPrompt feed-ask derived allowed-types list (ADR-0097 §3/§
   })
 })
 
+// ── ADR-0126 (TKT-0016): the message-lifecycle decision-layer teaching, appended in the OUTPUT_RULES
+// zone — the four-type choice rule + deleteSurface's wire shape + the whole-record-upsert warning. ──────
+
+describe('buildSystemPrompt message-lifecycle teaching (ADR-0126 F2, LLD-C1/C2)', () => {
+  it('teaches the four-type message-lifecycle choice, including deleteSurface (ADR-0126 F2)', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [])
+    expect(prompt).toContain('deleteSurface')
+    expect(prompt).toMatch(/updateDataModel alone/i)
+    expect(prompt).toMatch(/FRESH surfaceId/)
+    expect(prompt).toMatch(/REPLACES its ENTIRE record/)
+  })
+
+  it('the lifecycle teaching survives specific/blue-sky mode composition (OUTPUT_RULES zone, no new plumbing)', () => {
+    for (const mode of ['specific', 'blue-sky'] as const) {
+      const prompt = buildSystemPrompt(defaultCatalog, [], mode)
+      expect(prompt).toContain('deleteSurface')
+      expect(prompt).toMatch(/updateDataModel alone/i)
+      expect(prompt).toMatch(/FRESH surfaceId/)
+      expect(prompt).toMatch(/REPLACES its ENTIRE record/)
+    }
+  })
+
+  it('teaches the deleteSurface wire shape verbatim', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [])
+    expect(prompt).toMatch(/\{"version":"v1\.0","deleteSurface":\{"surfaceId":"main"\}\}/)
+  })
+
+  it('teaches the root-immutability exception — resending "id":"root" is an id-graph error, not an upsert', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [])
+    expect(prompt).toMatch(/"id":"root" can be delivered only ONCE per surface/)
+    expect(prompt).toMatch(/silently keeps the OLD root/)
+    expect(prompt).toMatch(/stable wrapper child up front/)
+  })
+
+  it('the teaching does NOT leak into the catalog-derived inventory section (drift gate untouched)', () => {
+    for (const mode of [undefined, 'default', 'specific', 'blue-sky'] as const) {
+      const prompt = buildSystemPrompt(defaultCatalog, [], mode)
+      const body = catalogInventoryBody(prompt)
+      expect(body).not.toMatch(
+        /deleteSurface|updateDataModel alone|FRESH surfaceId|REPLACES its ENTIRE record|delivered only ONCE per surface/i,
+      )
+    }
+  })
+})
+
 describe('buildSystemPrompt feed-ask archetype vocabulary — mode-scaled (ADR-0097 §4)', () => {
   it('default carries ONLY the terse "balanced" archetype line, not the full per-mode archetype teaching', () => {
     const prompt = buildSystemPrompt(defaultCatalog, [])
