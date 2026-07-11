@@ -94,6 +94,16 @@
 @import './controls/code/code.css';
 @import './controls/disclosure/disclosure.css';
 
+/* ADR-0124 — the ui-swiper family: a CSS-native scroll-snap carousel (swiper-family.lld.md). Five files —
+ * swiper.css is the PRIMARY sheet (declares the family --ui-swiper-* token table + the host's own anatomy)
+ * and MUST load before the four leaf sheets, which consume that prefix (the family-root rule, ADR-0124
+ * Consequences). */
+@import './controls/swiper/swiper.css';
+@import './controls/swiper/swiper-item.css';
+@import './controls/swiper/swiper-pagination.css';
+@import './controls/swiper/swiper-paddles.css';
+@import './controls/swiper/swiper-label.css';
+
 /* Token-surface family — M1 (ADR-0118, token-surfaces.lld.md LLD-C9): show-never-edit color/dimension
  * primitives (swatch/ramp/ladder). All Display-class, non-interactive, non-form-associated leaves. */
 @import './controls/swatch/swatch.css';

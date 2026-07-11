@@ -620,3 +620,22 @@ stick-to-bottom guard, the B7 completion invariant rendering torn streams as tru
 against the actual in-repo flagship match stream). The one-control-with-a-live-flag shape was
 rejected at design: five mechanical axes diverge. Marginals 0/90/419 B gz. The catalog slice
 (Timeline/TimelineItem rows + the StatusStream exclusion) lands back-to-back next.
+
+## 2026-07-10 (the swiper family) — ui-swiper ships on the fleet's first scroll-snap
+
+ADR-0124's five-tag family (review SHIP): ui-swiper + ui-swiper-item + the author-placed
+chrome (pagination dots with size-signified active state, never-disabling paddles, label) —
+CSS scroll-snap as the mechanism (the fleet's first; custom easing/duration honestly apply
+ONLY to programmatic goTo's JS animation, never claimed for native snaps — the ADR's timing
+consequence), and the INFINITE LOOP via clone-based scroll-teleport (aria-hidden+inert+
+uncounted clones, an instant same-frame jump at the clone-band settle; position announces
+real index/count — the prior art's 'loop' was actually a visible rewind, so this goes beyond
+it). One build correction review-proven: the LLD's eager double-emit guard suppressed the
+wrap's select entirely — removed; the teleport latch alone guarantees one commit per gesture.
+The build also surfaced and resolved a standing-gate conflict: the family-root CSS shape
+(five descriptors, one token namespace) vs family-coherence's per-descriptor ownership —
+resolved as five physical sheets with a NARROW consumption widening (non-primary descriptors
+may consume their folder-primary's tokens, never declare; both negative controls bite;
+recorded in ADR-0124, ADR-0081 untouched). Fleet-first internals.ariaRoleDescription
+('carousel'). Marginals: the family entry 2406 B gz under a 3072 override; ceiling re-based
+to 38 KB. Eight site pages. The M3 catalog slice lands next.

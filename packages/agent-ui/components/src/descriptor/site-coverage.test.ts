@@ -182,9 +182,10 @@ describe('site coverage — every shipped component has its required per-tier pa
     // Display tier: ui-text (ADR-0025) + ui-icon (ADR-0065/0066, the icon-adapter's declarative consumer) +
     // the Wave M1 chart family (ADR-0107): ui-sparkline + ui-bar-chart + the Wave M1 report family (ADR-0111):
     // ui-table + ui-stat + ui-badge + the Wave M1 content family (ADR-0113): ui-code + the Wave M1 feed
-    // family (ADR-0112): ui-progress (a rail, not a widget box) + ui-attachment (a compact file card).
+    // family (ADR-0112): ui-progress (a rail, not a widget box) + ui-attachment (a compact file card) + the
+    // ui-swiper family's accessible-name anchor (ui-swiper-label, ADR-0124, LLD-C11).
     expect(COMPONENTS.filter((c) => c.tier === 'display').map((c) => c.name).sort()).toEqual(
-      ['attachment', 'badge', 'bar-chart', 'code', 'icon', 'ladder', 'progress', 'ramp', 'sparkline', 'stat', 'swatch', 'table', 'text'],
+      ['attachment', 'badge', 'bar-chart', 'code', 'icon', 'ladder', 'progress', 'ramp', 'sparkline', 'stat', 'swatch', 'swiper-label', 'table', 'text'],
     )
     // Wave 1 Indicator family (checkbox, switch, radio, radio-group) + ui-segment (ADR-0095 clause 3 —
     // the SAME real ancestor, UIIndicatorElement, as ui-radio) + the Wave M1 feed family (ADR-0112): ui-avatar
@@ -203,9 +204,11 @@ describe('site coverage — every shipped component has its required per-tier pa
     )
     // Layout tier + the Wave M1 feed family's ui-toast-region (ADR-0112, LLD-C8 — a pure inset/gap host,
     // no surface paint of its own) + M4 Phase 1's ui-split/ui-split-pane (ADR-0120 cl.2, app-surfaces-m4
-    // .lld.md LLD-C1 — the split primitive + its generic pane child, both folded into the same bundle).
+    // .lld.md LLD-C1 — the split primitive + its generic pane child, both folded into the same bundle) +
+    // the ui-swiper family's slide (ui-swiper-item, ADR-0124, LLD-C4 — sized entirely by the track, folds
+    // into the Layout primitives TOC bundle rather than growing its own group, the toast-region precedent).
     expect(COMPONENTS.filter((c) => c.tier === 'layout').map((c) => c.name).sort()).toEqual(
-      ['column', 'grid', 'list', 'row', 'split', 'split-pane', 'toast-region'],
+      ['column', 'grid', 'list', 'row', 'split', 'split-pane', 'swiper-item', 'toast-region'],
     )
     // Pattern tier = the G9 patterns (modal, tabs) + the Wave 4 Overlay family (popover, tooltip, menu, select,
     // combo-box — all tier=pattern on the overlay controller, ADR-0043) + the Wave 5B date picker (calendar,
@@ -213,12 +216,14 @@ describe('site coverage — every shipped component has its required per-tier pa
     // content family (ADR-0113): ui-disclosure (native details/summary fold) + the Wave M1 feed family
     // (ADR-0112): ui-toast (a fixed-width notification card — Container/surface geometry, not a control
     // height) + the timeline family (ADR-0122): ui-timeline-item (the shared marker-system rail row),
-    // ui-timeline (the durable host), ui-status-stream (the live host — deliberately not catalogued, F5).
-    // Each requires its {doc, demo} pages.
+    // ui-timeline (the durable host), ui-status-stream (the live host — deliberately not catalogued, F5) +
+    // the ui-swiper family (ADR-0124): ui-swiper (the coordinator) + its two chrome anchors that ship a
+    // renderInto/fill seam (ui-swiper-pagination, ui-swiper-paddles) — each requires its {doc, demo} pages.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
         'calendar', 'combo-box', 'disclosure', 'menu', 'modal', 'popover', 'segmented-control', 'select',
-        'status-stream', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
+        'status-stream', 'swiper', 'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline', 'timeline-item',
+        'toast', 'toolbar', 'tooltip',
       ],
     )
   })

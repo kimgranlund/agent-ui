@@ -1,0 +1,60 @@
+/* swiper-pagination.css — ui-swiper-pagination's own sheet (ADR-0124 Consequences, the family-root
+ * resolution; swiper-family.lld.md LLD-C9/§7 REV). No `--ui-swiper-pagination-*` tokens of its own — the
+ * dot ladder (`--ui-swiper-dot-*`) is declared once in the family root (swiper.css) and CONSUMED here
+ * (the family-root rule the amended family-coherence.test.ts invariant B allows). Standalone; never
+ * injected from a .ts (behaviour-only .ts, no runtime style injection — plan §2). */
+
+@scope (ui-swiper-pagination) {
+  :scope {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ui-space-xs);
+  }
+  /* Default-stamped placement: below the track, in normal flow (the coordinator's boolean-stamp fallback). */
+  :scope[data-default] {
+    margin-block-start: var(--ui-space-sm);
+  }
+  :scope [data-part='dot'] {
+    inline-size: var(--ui-swiper-dot-size);
+    block-size: var(--ui-swiper-dot-size);
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--ui-swiper-dot-color);
+    cursor: pointer;
+  }
+  /* The active dot is SIZE-larger — the non-colour signifier (ADR-0057); colour is a secondary cue. */
+  :scope [data-part='dot'][aria-current='true'] {
+    inline-size: var(--ui-swiper-dot-size-active);
+    block-size: var(--ui-swiper-dot-size-active);
+    background: var(--ui-swiper-dot-color-active);
+  }
+  :scope [data-part='dot']:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+  :scope [data-part='fraction'] {
+    font-size: var(--ui-font-sm);
+    color: var(--md-sys-color-neutral-on-surface-variant);
+  }
+
+  /* NOTE: the ready-gated dot-transition motion rule lives in swiper.css (the PRIMARY sheet), not here —
+     `ready` is a custom state ui-swiper alone owns (sets via its own internals.states); a rule referencing
+     it, even one styling a descendant, belongs with its owner so customStates stays truthful per file (the
+     contract-to-source trip-wire is file-scoped: swiper-pagination.md declares customStates as empty, and
+     this file carries no state-selector text of its own). See swiper.css's own "cross-tag motion" section.
+
+     Forced-colors (WHCM) — the pagination dots need a non-colour signifier that also survives WHCM (they
+     already carry SIZE; here the idle/active dots additionally map to system colours so they remain visible
+     against Canvas). */
+  @media (forced-colors: active) {
+    :scope [data-part='dot'] {
+      background: CanvasText;
+      forced-color-adjust: none;
+    }
+    :scope [data-part='dot'][aria-current='true'] {
+      background: Highlight;
+    }
+  }
+}

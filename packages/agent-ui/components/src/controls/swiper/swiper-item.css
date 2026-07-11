@@ -1,0 +1,17 @@
+/* swiper-item.css — ui-swiper-item's own sheet (ADR-0124 Consequences, the family-root resolution;
+ * swiper-family.lld.md LLD-C4/§7 REV). No `--ui-swiper-item-*` tokens of its own — a slide is sized
+ * ENTIRELY by the owning track, so this file DECLARES nothing (an empty :where() token block would be
+ * vacuous; there is none) and only CONSUMES the family `--ui-swiper-*` prefix swiper.css declares
+ * (`--ui-swiper-align`) — the family-root consumption rule the amended family-coherence.test.ts invariant
+ * B allows for a non-primary descriptor in a multi-descriptor folder. Standalone; never injected from a
+ * .ts (behaviour-only .ts, no runtime style injection — plan §2). */
+
+@scope (ui-swiper-item) {
+  /* Sized by the track; snap-align/stop off the family tokens; no geometry of its own (SPEC-R9). */
+  :scope {
+    min-inline-size: 0;
+    min-block-size: 0;
+    scroll-snap-align: var(--ui-swiper-align);
+    scroll-snap-stop: always;
+  }
+}

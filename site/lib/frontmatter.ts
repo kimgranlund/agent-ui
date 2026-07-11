@@ -69,6 +69,13 @@ import toastRegionMd from '../../packages/agent-ui/components/src/controls/toast
 import timelineItemMd from '../../packages/agent-ui/components/src/controls/timeline-item/timeline-item.md?raw'
 import timelineMd from '../../packages/agent-ui/components/src/controls/timeline/timeline.md?raw'
 import statusStreamMd from '../../packages/agent-ui/components/src/controls/status-stream/status-stream.md?raw'
+// ADR-0124 (swiper-family.lld.md): the ui-swiper family — the coordinator, the slide (tier=layout, folds
+// into the Layout primitives bundle), and the three pattern/display chrome anchors.
+import swiperMd from '../../packages/agent-ui/components/src/controls/swiper/swiper.md?raw'
+import swiperItemMd from '../../packages/agent-ui/components/src/controls/swiper/swiper-item.md?raw'
+import swiperPaginationMd from '../../packages/agent-ui/components/src/controls/swiper/swiper-pagination.md?raw'
+import swiperPaddlesMd from '../../packages/agent-ui/components/src/controls/swiper/swiper-paddles.md?raw'
+import swiperLabelMd from '../../packages/agent-ui/components/src/controls/swiper/swiper-label.md?raw'
 // M4 Phase 1 (ADR-0120 cl.2, app-surfaces-m4.lld.md LLD-C1): the split primitive, one folder, two
 // components — both tier=layout ⇒ {doc} only.
 import splitMd from '../../packages/agent-ui/components/src/controls/split/split.md?raw'
@@ -153,6 +160,12 @@ export const loadToastRegionDoc  = (): ComponentDoc => parseDoc(toastRegionMd)
 export const loadTimelineItemDoc  = (): ComponentDoc => parseDoc(timelineItemMd)
 export const loadTimelineDoc      = (): ComponentDoc => parseDoc(timelineMd)
 export const loadStatusStreamDoc  = (): ComponentDoc => parseDoc(statusStreamMd)
+// ADR-0124 — the ui-swiper family.
+export const loadSwiperDoc           = (): ComponentDoc => parseDoc(swiperMd)
+export const loadSwiperItemDoc       = (): ComponentDoc => parseDoc(swiperItemMd)
+export const loadSwiperPaginationDoc = (): ComponentDoc => parseDoc(swiperPaginationMd)
+export const loadSwiperPaddlesDoc    = (): ComponentDoc => parseDoc(swiperPaddlesMd)
+export const loadSwiperLabelDoc      = (): ComponentDoc => parseDoc(swiperLabelMd)
 // M4 Phase 1 (ADR-0120 cl.2 — both tier=layout ⇒ {doc} only, folded into the shared Layout primitives showcase).
 export const loadSplitDoc     = (): ComponentDoc => parseDoc(splitMd)
 export const loadSplitPaneDoc = (): ComponentDoc => parseDoc(splitPaneMd)

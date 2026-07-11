@@ -327,6 +327,15 @@ describe('API — descriptor present + tag↔class↔folder naming aligned (ADR-
 // per-instance `--value-pct{,-lo,-hi}` the slider/slider-multi JS geometry seam sets as an inline style,
 // traits/value-drag.ts) is simply not this invariant's concern — it is not part of the `{name}.md` token
 // vocabulary at all.
+//
+// FAMILY-ROOT CONSUMPTION (ADR-0124 Consequences, ratified 2026-07-10 — the ui-swiper family's five
+// descriptors sharing one token table forced this): a folder holding N>1 descriptors may designate ONE as
+// its "primary" (the descriptor whose `name === folder`, e.g. `swiper` in `swiper/`). Declaration ownership
+// is UNCHANGED — every descriptor still declares only its own `--ui-{name}-*` (tokenAllowedToDeclare, used
+// by BOTH invariants below for the declare-side check). Consumption widens ONLY for a non-primary descriptor
+// in that same folder: it may additionally CONSUME (never declare) the primary's `--ui-{primary}-*` prefix
+// as family-shared (tokenAllowedToConsume). radio/radio-group and toast/toast-region are unaffected — each
+// already owns fully distinct tokens and consumes none of its sibling's.
 
 const sharedSurfaceFiles: string[] = readdirSync(`${CONTROLS}/_surface`).filter((f: string) => f.endsWith('.css'))
 const SHARED_SOURCES = [
@@ -337,13 +346,45 @@ const SHARED_SOURCES = [
 const SHARED_UI_TOKENS = new Set<string>()
 for (const text of SHARED_SOURCES) for (const m of text.matchAll(/--ui-[\w-]+/g)) SHARED_UI_TOKENS.add(m[0])
 
-/** Is `token` legal for a control named `name` to declare/consume? Own `--ui-{name}-*` ∪ the shared allowlist;
- *  anything outside the `--ui-*`/`--md-sys-*` namespace entirely is out of scope (not this invariant's concern). */
-function tokenAllowed(name: string, token: string): boolean {
+// The "primary" descriptor of each folder (name === folder) — e.g. `swiper` in `swiper/`, `radio` in `radio/`,
+// `toast` in `toast/`. A folder with no name === folder descriptor (none observed today) has no primary.
+const FOLDER_PRIMARY = new Map<string, string>()
+for (const c of FLEET) if (c.name === c.folder) FOLDER_PRIMARY.set(c.folder, c.name)
+
+// Folders holding MORE than one descriptor — only inside these does the family-root consumption widening
+// apply at all (a single-descriptor folder has no sibling to share tokens with).
+const MULTI_DESCRIPTOR_FOLDERS = new Set<string>()
+{
+  const counts = new Map<string, number>()
+  for (const c of FLEET) counts.set(c.folder, (counts.get(c.folder) ?? 0) + 1)
+  for (const [folder, n] of counts) if (n > 1) MULTI_DESCRIPTOR_FOLDERS.add(folder)
+}
+
+/** Is `token` legal for a control named `name` to DECLARE? Own `--ui-{name}-*` ∪ the shared allowlist ONLY —
+ *  declaration ownership is untouched by the family-root rule (a leaf may never DECLARE another control's,
+ *  including its own family-root's, private token — only consumption is widened, below). Anything outside
+ *  the `--ui-*`/`--md-sys-*` namespace entirely is out of scope (not this invariant's concern). */
+function tokenAllowedToDeclare(name: string, token: string): boolean {
   if (!/^--(ui|md-sys)-/.test(token)) return true
   if (token.startsWith(`--ui-${name}-`)) return true
   if (token.startsWith('--md-sys-color-') || token.startsWith('--md-sys-typescale-')) return true
   return SHARED_UI_TOKENS.has(token)
+}
+
+/** Is `token` legal for `control` (folder + name) to CONSUME? Own ∪ shared (tokenAllowedToDeclare) ∪ — for a
+ *  NON-PRIMARY descriptor in a multi-descriptor folder — its folder's PRIMARY descriptor's `--ui-{primary}-*`
+ *  prefix (the family-root rule, ADR-0124 Consequences). `primaryOf`/`multiFolders` are injectable so the
+ *  negative control below can drive the rule with synthetic inputs without mutating the real fleet maps. */
+function tokenAllowedToConsume(
+  control: { name: string; folder: string },
+  token: string,
+  primaryOf: ReadonlyMap<string, string> = FOLDER_PRIMARY,
+  multiFolders: ReadonlySet<string> = MULTI_DESCRIPTOR_FOLDERS,
+): boolean {
+  if (tokenAllowedToDeclare(control.name, token)) return true
+  const primary = primaryOf.get(control.folder)
+  if (primary && control.name !== primary && multiFolders.has(control.folder) && token.startsWith(`--ui-${primary}-`)) return true
+  return false
 }
 
 /** Custom properties DECLARED inside a bare `:where(ui-{name}...)` block (the TOKEN block, ADR-0003) — a
@@ -368,7 +409,7 @@ function consumedProps(css: string): Set<string> {
 describe('Tokens — a `{name}.css` TOKEN block declares only its own ∪ the shared allowlist', () => {
   for (const c of FLEET) {
     it(`${c.name}.css declares no other control's private token`, () => {
-      const bad = [...declaredProps(read(c.cssPath), c.name)].filter((t) => !tokenAllowed(c.name, t))
+      const bad = [...declaredProps(read(c.cssPath), c.name)].filter((t) => !tokenAllowedToDeclare(c.name, t))
       expect(bad, `${c.name}.css declares out-of-family token(s): ${bad.join(', ')}`).toEqual([])
     })
   }
@@ -380,28 +421,42 @@ describe('Tokens — a `{name}.css` TOKEN block declares only its own ∪ the sh
         --ui-button-bg: blue; /* the planted defect — cross-control reach into ui-button's own token */
       }
     `
-    const bad = [...declaredProps(css, 'widget')].filter((t) => !tokenAllowed('widget', t))
+    const bad = [...declaredProps(css, 'widget')].filter((t) => !tokenAllowedToDeclare('widget', t))
     expect(bad).toEqual(['--ui-button-bg'])
+  })
+
+  it('negative control: a family LEAF declaring its own family-root\'s prefix is STILL caught (consumption widens, declaration does not)', () => {
+    const css = `:where(ui-swiper-item) { --ui-swiper-columns: 2; }` // a leaf DECLARING (not consuming) the primary's token
+    const bad = [...declaredProps(css, 'swiper-item')].filter((t) => !tokenAllowedToDeclare('swiper-item', t))
+    expect(bad).toEqual(['--ui-swiper-columns'])
   })
 })
 
-describe('Tokens — consumed custom properties ∈ own ∪ the shared allowlist (no cross-control reach)', () => {
+describe('Tokens — consumed custom properties ∈ own ∪ shared ∪ (a family leaf) its root\'s prefix', () => {
   for (const c of FLEET) {
-    it(`${c.name}.css consumes no other control's private token`, () => {
-      const bad = [...consumedProps(read(c.cssPath))].filter((t) => !tokenAllowed(c.name, t))
+    it(`${c.name}.css consumes no out-of-family token`, () => {
+      const bad = [...consumedProps(read(c.cssPath))].filter((t) => !tokenAllowedToConsume(c, t))
       expect(bad, `${c.name}.css reaches into out-of-family token(s): ${bad.join(', ')}`).toEqual([])
     })
   }
 
   it("negative control: a synthetic control consuming another control's private token is caught", () => {
     const css = `@scope (ui-widget) { :scope { background: var(--ui-button-bg); } }`
-    const bad = [...consumedProps(css)].filter((t) => !tokenAllowed('widget', t))
+    const bad = [...consumedProps(css)].filter((t) => !tokenAllowedToConsume({ name: 'widget', folder: 'widget' }, t))
     expect(bad).toEqual(['--ui-button-bg'])
+  })
+
+  it('negative control: a family leaf consuming its OWN root\'s prefix is allowed; a THIRD control\'s prefix still fails', () => {
+    const primaryOf = new Map([['widget', 'widget']])
+    const multi = new Set(['widget'])
+    const leaf = { name: 'widget-leaf', folder: 'widget' }
+    expect(tokenAllowedToConsume(leaf, '--ui-widget-bg', primaryOf, multi)).toBe(true) // its own family-root's prefix
+    expect(tokenAllowedToConsume(leaf, '--ui-button-bg', primaryOf, multi)).toBe(false) // a THIRD control's prefix — still out of family
   })
 
   it('negative control: an out-of-namespace property (e.g. a JS-set inline style hook) is NOT flagged', () => {
     const css = `@scope (ui-widget) { :scope { left: calc(var(--value-pct, 0) * 1%); } }`
-    const bad = [...consumedProps(css)].filter((t) => !tokenAllowed('widget', t))
+    const bad = [...consumedProps(css)].filter((t) => !tokenAllowedToConsume({ name: 'widget', folder: 'widget' }, t))
     expect(bad).toEqual([])
   })
 })

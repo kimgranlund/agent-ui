@@ -1,0 +1,26 @@
+/* swiper-paddles.css — ui-swiper-paddles's own sheet (ADR-0124 Consequences, the family-root resolution;
+ * swiper-family.lld.md LLD-C10/§7 REV). No `--ui-swiper-paddles-*` tokens of its own — each composed
+ * ui-button keeps its OWN geometry (icon-only square structure, default md size); this sheet contributes
+ * only the flex layout wrapping them + the default-stamped overlay placement. Standalone; never injected
+ * from a .ts (behaviour-only .ts, no runtime style injection — plan §2). */
+
+@scope (ui-swiper-paddles) {
+  :scope {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  /* Default-stamped placement: overlaid on the track, spanning its full extent (author-placed anchors keep
+     whatever layout the author gave them — only the DEFAULT stamp gets this positioning). The host
+     (ui-swiper) is `position: relative` (swiper.css), the anchor for this overlay. */
+  :scope[data-default] {
+    position: absolute;
+    inset-block: 0;
+    inset-inline: 0;
+    pointer-events: none; /* only the buttons themselves are hit-testable */
+    z-index: 1;
+  }
+  :scope[data-default] ui-button {
+    pointer-events: auto;
+  }
+}

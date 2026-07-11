@@ -348,6 +348,34 @@ export const NAV: readonly NavGroup[] = [
       { href: './status-stream-doc.html', label: 'API' },
     ],
   },
+  // ADR-0124 — the ui-swiper family: a CSS-native scroll-snap carousel. ui-swiper-item (tier=layout) folds
+  // into the Layout primitives bundle (no group of its own, the ui-toast-region/ui-split-pane precedent);
+  // the three pattern/display chrome tags (pagination/paddles/label) each get their own group.
+  {
+    label: 'ui-swiper',
+    links: [
+      { href: './swiper-demo.html', label: 'Demo' },
+      { href: './swiper-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-swiper-pagination',
+    links: [
+      { href: './swiper-pagination-demo.html', label: 'Demo' },
+      { href: './swiper-pagination-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-swiper-paddles',
+    links: [
+      { href: './swiper-paddles-demo.html', label: 'Demo' },
+      { href: './swiper-paddles-doc.html', label: 'API' },
+    ],
+  },
+  {
+    label: 'ui-swiper-label',
+    links: [{ href: './swiper-label-doc.html', label: 'API' }],
+  },
   {
     // The application-frame primitive (@agent-ui/app, ADR-0082/0083/0084). A GUIDE page, not a fleet component
     // in components/src — so it is an ungrouped site-level link (no `label:`, hence no site-toc GROUP), exactly

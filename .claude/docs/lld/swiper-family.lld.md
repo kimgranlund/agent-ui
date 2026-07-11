@@ -23,6 +23,21 @@ four leaf tags are the slide and the three chrome anchors.
 
 ## 2 · Layout & files (one writer per file)
 
+> **REV 2026-07-10 (build-driven, ADR-0124 Consequences — the family-root resolution).** The original
+> single-`swiper.css`-for-the-whole-folder design collided with `family-coherence.test.ts`'s A4 (a
+> `{name}.css` must exist per `{name}.md` descriptor) the moment each leaf tag got its own descriptor
+> (§10 — unlike `ui-tab`/`ui-tab-panel`, which share `tabs.css` but carry no descriptor of their own, so
+> A4 never applied to them). Resolved as a coordinated repair: **FIVE physical CSS files**, one per
+> descriptor. `swiper.css` stays the PRIMARY sheet — it alone DECLARES the whole family's `--ui-swiper-*`
+> token table and styles the HOST (`ui-swiper` itself: the track + the live region); the four leaf sheets
+> declare NOTHING of their own and CONSUME the family prefix (`family-coherence.test.ts`'s amended
+> invariant B, the family-root consumption rule — a non-primary descriptor in a multi-descriptor folder
+> may consume, never declare, its folder's primary's `--ui-{primary}-*` prefix). The ONE deliberate
+> exception: the pagination dot's `ready`-gated motion transition lives in the PRIMARY sheet (not
+> `swiper-pagination.css`) because `ready` is a custom state `ui-swiper` alone owns — a rule referencing a
+> state belongs in its owner's file even when it styles a descendant (the contract↔source trip-wire is
+> file-scoped).
+
 ```
 packages/agent-ui/components/src/controls/swiper/
   swiper.ts              LLD-C1/C2/C3/C5/C6/C7 — UISwiperElement (coordinator): props, track, loop, keyboard, events, chrome drive
@@ -30,14 +45,22 @@ packages/agent-ui/components/src/controls/swiper/
   swiper-pagination.ts   LLD-C9 — UISwiperPaginationElement (dots/fraction anchor)
   swiper-paddles.ts      LLD-C10 — UISwiperPaddlesElement (prev/next anchor)
   swiper-label.ts        LLD-C11 — UISwiperLabelElement (accessible-name anchor)
-  swiper.css             LLD-C8 — @scope track/slide/chrome geometry + scroll-snap + reduced-motion
+  swiper.css             LLD-C8 — the PRIMARY sheet: the family --ui-swiper-* token table + the HOST's own
+                          @scope anatomy (track/live/vertical/reduced-motion/@container) + the ready-gated
+                          cross-tag pagination-dot motion rule (ready is ui-swiper's own state)
+  swiper-item.css        LLD-C8 — declares nothing; consumes --ui-swiper-align (min-inline/block-size 0 + snap-align/-stop)
+  swiper-pagination.css  LLD-C8 — declares nothing; consumes the --ui-swiper-dot-* ladder (dots/fraction anatomy + forced-colors)
+  swiper-paddles.css     LLD-C8 — declares nothing; pure flex-wrapper + default-stamped overlay anatomy
+  swiper-label.css       LLD-C8 — declares nothing; trivial display:inline
   swiper.md              swiper descriptor (primary)
   swiper-item.md · swiper-pagination.md · swiper-paddles.md · swiper-label.md   per-element descriptors
   *.test.ts · *.browser.test.ts   the probe sets
 ```
 
-`swiper.ts` imports the four leaf modules (registering all five tags), so the barrel needs only
-`export * from './swiper/swiper.ts'` (the `ui-tabs` precedent).
+`swiper.ts` imports the four leaf modules (registering all five tags); the barrel carries FIVE export
+lines (one per descriptor — the C1 lifecycle bijection, family-coherence.test.ts), each a harmless
+re-export of an already-registered module (`swiper.ts`'s own import already ran the `customElements.define`
+side effect); `component-styles.css` imports all five sheets, PRIMARY first (the family-root token order).
 
 **Component ids (LLD-C1…C12 — the requirement→component spine the SPEC Trace binds to):**
 
@@ -50,7 +73,7 @@ packages/agent-ui/components/src/controls/swiper/
 | LLD-C5 | the infinite loop (clone-teleport + loop a11y) | §5 · `swiper.ts` |
 | LLD-C6 | keyboard + focus safety | §6 · `swiper.ts` |
 | LLD-C7 | bindable `active` + `select` commit | §4 · `swiper.ts` |
-| LLD-C8 | geometry, tokens, whole-shape, reduced-motion | §7 · `swiper.css` |
+| LLD-C8 | geometry, tokens, whole-shape, reduced-motion | §7 · `swiper.css` (PRIMARY) + `swiper-item/-pagination/-paddles/-label.css` (REV 2026-07-10, five files) |
 | LLD-C9 | `ui-swiper-pagination` drive | §3.3 · §9 · `swiper-pagination.ts` |
 | LLD-C10 | `ui-swiper-paddles` drive | §3.3 · §9 · `swiper-paddles.ts` |
 | LLD-C11 | `ui-swiper-label` + region-label wiring | §3.3 · §9 · `swiper-label.ts` |
@@ -143,6 +166,8 @@ frame past paint (`requestAnimationFrame(() => this.internals.states?.add('ready
 motion-gate precedent). A `MutationObserver` on the host child list rebuilds clones + re-labels + re-drives
 chrome when the author adds/removes slides.
 
+> *REV (build review, 2026-07-10, latent — recorded not fixed): clones build at connect and rebuild on childList mutation + resize only; a RUNTIME `loop` toggle re-runs chrome but never `#rebuildLoop` — outside the v1 contract (agents set `loop` once); an attribute-observed rebuild is the foreseen close if runtime toggling ever becomes a consumer need.*
+
 ### 3.3 `ui-swiper-pagination` (LLD-C9) · `ui-swiper-paddles` (LLD-C10) · `ui-swiper-label` (LLD-C11)
 
 ```ts
@@ -195,12 +220,20 @@ renderer's own two-way write (ADR-0019) never echoes. `identity` = the item's `v
   offset forward by exactly the real-set extent (the distance from the first-real to first-trailing-clone
   snap target) with `scroll-behavior: auto`, then clear `#teleporting` on the next frame; symmetric for the
   trailing band. The jump lands on the pixel-identical real slide → seamless (SPEC-R10).
-  - **No double-`select` at the seam — the primary guard is the changed-index test, not the flag.** On the
-    clone-band settle the coordinator eager-sets `#activeIndex` to the settled slide's **real-twin** index
-    *before* the teleport; the post-teleport scroll then settles on that same real index → `#commit`'s
-    emit-only-when-`changed` (§4) sees `changed === false` → no emit. `#teleporting` is a *secondary* guard
-    (it also suppresses any interim scroll-event handling during the jump); a builder must not rely on the
-    flag's frame-timing alone — the changed-index test is what makes double-emit impossible.
+  - **No double-`select` at the seam — one settle, one commit, the changed-index test decides.** (**REV
+    2026-07-10, build-driven, browser-proven, ADR-0124 Consequences.** The original text here had the
+    coordinator eager-set `#activeIndex` to the settled slide's real-twin index *before* the teleport, on
+    the theory that the post-teleport scroll would independently re-settle and need suppressing. Built
+    literally, that eager pre-set made `#commit`'s own emit-only-when-`changed` test compare the resolved
+    index against ITSELF — `changed` was always `false`, so the wrap **never** emitted `select` at all (the
+    cross-engine one-select-per-wrap browser probe caught this: 0 events where 1 was expected). Corrected:
+    the eager pre-set is REMOVED.) `#teleporting` alone is the guard that matters, and it is sufficient on
+    its own: it is set before the jump and cleared next frame, and `#onScroll` returns immediately whenever
+    it is set — so the jump's OWN scroll events never re-enter the settle-detection path, and there is
+    STRUCTURALLY only one `#onSettle` → one `#commit` call per user gesture (never a second one to
+    suppress). `#commit`'s changed-index test then runs against the genuinely PRE-settle `#activeIndex`
+    (e.g. the last real slide → the first, a real change), so a full wrap emits exactly one `select` — the
+    same guard that makes a non-loop settle emit correctly, no seam-specific special case needed.
 - **Announcement** — after settle (debounced to the snap end), `#activeIndex` = the REAL index of the
   settled slide (a clone maps to its real twin by `k`-offset arithmetic); the `[data-part=live]` region text
   is set to `Slide {realIndex+1} of {realCount}` (SPEC-R11). Paddles never disable in loop mode.
@@ -221,26 +254,41 @@ tab stop that AT announces). `#onKeydown` on the host: ArrowForward/ArrowBack al
 content inside a slide never teleports (the `#teleporting` guard only fires on clone-band *settle*, not on
 `scrollIntoView`-from-focus of a real slide). Clones are `inert` → never in the tab order.
 
-## 7 · Geometry + tokens (LLD-C8, no token.css edit)
+## 7 · Geometry + tokens (LLD-C8, no tokens.css edit)
 
-`@scope (ui-swiper)`. The track: `display: grid; grid-auto-flow: column` (row for vertical);
-`grid-auto-columns: calc((100% - (var(--ui-swiper-columns) - 1) * var(--ui-swiper-gap)) /
-var(--ui-swiper-columns))`; `overflow-{x|y}: auto`; `scroll-snap-type: {x|y} mandatory`; `scrollbar-width:
-none`. Slides: `scroll-snap-align: var(--ui-swiper-align)`; `scroll-snap-stop: always`; `min-inline-size: 0`.
+> **REV 2026-07-10 (build-driven, ADR-0124 Consequences).** Five files, not one (§2's REV note). The whole
+> `--ui-swiper-*` token table below is declared ONCE, in the PRIMARY `swiper.css`; the four leaf sheets
+> consume it (the family-root rule) and declare nothing of their own. Two token values below were
+> corrected against the shipped fleet vocabulary during the build (the fleet's motion ramp has no "medium"
+> step and no `--ui-space-1`/`--md-sys-color-outline` role — the real tokens every other control's own
+> transition/token chain already uses were substituted, not invented): `--ui-swiper-duration`/`-easing` →
+> `--ui-motion-fast`/`--ui-ease-standard` (tabs.css/button.css's own tokens); the dot-size bump → a flat
+> `2px` literal (the compact-realm box is density-invariant, geometry.md — density rides the pad/gap, never
+> the box, so a `--ui-space-*` step would have been the wrong family of quantity); the idle dot colour →
+> `--md-sys-color-neutral-outline-variant` (the real outline-variant role; `--md-sys-color-outline` does
+> not exist in the token set).
+
+`@scope (ui-swiper)` (the PRIMARY sheet, host-only). The track: `display: grid; grid-auto-flow: column`
+(row for vertical); `grid-auto-columns: calc((100% - (var(--ui-swiper-columns) - 1) * var(--ui-swiper-gap))
+/ var(--ui-swiper-columns))`; `overflow-{x|y}: auto`; `scroll-snap-type: {x|y} mandatory`; `scrollbar-width:
+none`. Slides (`swiper-item.css`, consuming the family prefix): `scroll-snap-align:
+var(--ui-swiper-align)`; `scroll-snap-stop: always`; `min-inline-size: 0`; `min-block-size: 0`.
 
 | Token | Value | Note |
 |---|---|---|
 | `--ui-swiper-columns` | `1` | responsive-auto via `@container` when `slides-in-view=''`; pinned by `[slides-in-view="n"]` |
 | `--ui-swiper-align` | `start` | repointed by `[align=center|end]` |
 | `--ui-swiper-gap` | `var(--ui-space-md)` | inter-slide gap off the space ladder (density-responsive) |
-| `--ui-swiper-duration` | `var(--ui-motion-medium)` | scroll/goto timing; `[duration]` overrides via inline `style` |
-| `--ui-swiper-easing` | `var(--ui-motion-standard-easing)` | `[easing]` overrides via inline `style` |
-| `--ui-swiper-dot-size` / `-active` | compact px + `+ --ui-space-1` | active dot **larger** = the non-color signifier (ADR-0057) |
-| `--ui-swiper-dot-color` / `-active` | `--md-sys-color-outline` / `--md-sys-color-primary` | ROLE-level; consumed, never defined |
+| `--ui-swiper-duration` | `var(--ui-motion-fast)` | scroll/goto timing; `[duration]` overrides via inline `style` |
+| `--ui-swiper-easing` | `var(--ui-ease-standard)` | `[easing]` overrides via inline `style` |
+| `--ui-swiper-dot-size` / `-active` | `var(--ui-compact-sm)` / `+ 2px` flat | active dot **larger** = the non-color signifier (ADR-0057) |
+| `--ui-swiper-dot-color` / `-active` | `--md-sys-color-neutral-outline-variant` / `--md-sys-color-primary` | ROLE-level; declared in the PRIMARY sheet, consumed by `swiper-pagination.css` |
 
-Paddles compose `ui-button` (icon-only, `variant=ghost`), nav-icon sized to context (geometry.md's named
-carousel exception) — no new color role. Reduced-motion: `@media (prefers-reduced-motion: reduce) {
-[data-part=track] { scroll-behavior: auto } }`. Vertical orientation swaps the grid flow + overflow axis +
+Paddles (`swiper-paddles.css`) compose `ui-button` (icon-only, `variant=ghost`), nav-icon sized to context
+(geometry.md's named carousel exception) — no new color role, no tokens of its own. Reduced-motion:
+`@media (prefers-reduced-motion: reduce) { [data-part=track] { scroll-behavior: auto } }` (the PRIMARY
+sheet) + the ready-gated dot-transition zeroing (also the PRIMARY sheet — see §2's REV note on why that one
+cross-tag rule lives there). Vertical orientation swaps the grid flow + overflow axis +
 snap axis.
 
 **`duration`/`easing` mechanism (ADR-0124 Consequences — the F1 trade-off).** Native `scroll-behavior:
@@ -328,6 +376,14 @@ keyboard/events/active (n7,n11,n12,n13) → swiper.css (n15,n16) → loop + loop
 **M2 (chrome):** swiper-pagination/paddles/label + drive (n17,n18,n19). **M3 (catalog + site):** catalog rows
 + allowlist (n20) → site doc/demo (n23,n24) →
 barrels/exports/size (n29).
+
+> **REV 2026-07-10 (build-driven, ADR-0124 Consequences).** n15/n16 (`swiper.css`) resolved to FIVE files,
+> not one: the primary `swiper.css` (the family token table + host anatomy) plus `swiper-item/-pagination/
+> -paddles/-label.css` (each declaring nothing, consuming the family prefix) — `family-coherence.test.ts`'s
+> A4 (a `{name}.css` must exist per descriptor) forced the split once §10's five descriptors landed; its
+> invariant B gained the narrow family-root consumption amendment described in §2/§7's own REV notes. n29
+> (barrels/exports) also carries five `export *` lines, one per descriptor (the C1 lifecycle bijection),
+> not the original one-line assumption.
 
 ## 14 · Risks / tradeoffs
 

@@ -74,7 +74,12 @@ const targets = [
   // not). The bump to 34816 B gz is sized ahead, not guessed at per-control: it covers the three QUEUED,
   // already-frozen control families (timeline / swiper / command-modal) so the ceiling is not re-based
   // again on the very next wave — recorded here, not silently absorbed.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 34 * KB],
+  // 38 KB re-based at the ui-swiper wave (ADR-0124, Consequences amendment — the same Consequences-
+  // anticipated re-base precedent): measured 37157 B gz post-timeline+post-swiper (swiper's own per-control
+  // marginal carries its own MARGINAL_OVERRIDES entry above, 3072 B gz — a five-tag family behind one
+  // entry, not guessed at). The bump to 38912 B gz (38 KB) is sized ahead for command-modal, the last
+  // QUEUED, already-frozen control family — recorded here, not silently absorbed.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 38 * KB],
 ]
 
 let over = false
@@ -144,6 +149,7 @@ const MARGINAL_OVERRIDES = {
   // name: [budget in B gz, reason]
   'text-field': [4352, 'the 12-type value-codec family (ADR-0044/0047), which absorbs the calendar picker bytes above — measured 4021 B gz 2026-07-05, ~8% headroom'],
   'split': [2176, 'gzip measurement-frame drift as the family bundle crossed 33 KB (leave-one-out deltas shift with the shared dictionary; toolbar added similar roving/flex/enum code) — split source byte-identical that wave; measured 2082 B gz 2026-07-10'],
+  'swiper': [3072, 'a five-tag family behind one entry (the per-control 2048 cap is sized for one component; measured 2913 B gz 2026-07-10 pre-split, 2406 B gz post-split — host + item + three chrome tags, each carrying its own barrel line + package.json subpath per family-coherence.test.ts C1; the four leaf lines each measure ~0 B gz since swiper.ts already imports them transitively)'],
 }
 
 console.log('\nper-control marginal (leave-one-out through the public `./controls/{name}` entries, ADR-0080):')

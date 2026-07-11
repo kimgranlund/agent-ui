@@ -1,0 +1,148 @@
+/* swiper.css — the PRIMARY sheet for the ui-swiper family (ADR-0124 Consequences, the family-root
+ * resolution; swiper-family.lld.md §2/§7/§13 REV). Declares the WHOLE family's `--ui-swiper-*` token
+ * table (columns/gap/align/duration/easing + the pagination dot ladder) — the four leaf sheets
+ * (swiper-item/-pagination/-paddles/-label.css) CONSUME this prefix as family-shared but declare NONE of
+ * it themselves (family-coherence.test.ts's amended invariant B). This sheet's OWN styles block covers
+ * only the HOST (`ui-swiper` itself: the track + the live region) — each leaf's own anatomy lives in its
+ * own file, the fleet's one-file-per-descriptor law (ADR-0081 A4) held for every tag.
+ *
+ * Two sectioned blocks (ADR-0003): a :where() TOKEN block (specificity 0 — declares the --ui-swiper-*
+ * chain from the colour roles + the space/motion ladders) then an @scope STYLES block (consumes ONLY
+ * --ui-swiper-* + the shared fleet focus-ring/motion tokens). Linked via the component-styles barrel;
+ * NEVER injected from a .ts (behaviour holds no runtime style; plan §2).
+ *
+ * Geometry (swiper-family.lld.md §7 — the fleet's FIRST scroll-snap surface, ADR-0124 F1): the track is a
+ * `grid-auto-flow` scroll container sized off `--ui-swiper-columns` + `--ui-swiper-gap`; slides snap via
+ * `scroll-snap-type`/`scroll-snap-align`/`scroll-snap-stop` (declared here, consumed by swiper-item.css).
+ * `ui-swiper` is `tier: pattern` (geometry.md — container + control-height rows). The surface (elevation/
+ * brightness) is the shared container.css seam — this sheet does not repoint --ui-container-bg (the
+ * ui-tabs precedent): a bare <ui-swiper> is transparent by default (ADR-0015 cl.1). */
+
+/* ════════════════════════ [1] TOKEN BLOCK — :where() declarations (the WHOLE family's chain) ════════════════════════ */
+
+:where(ui-swiper) {
+  /* Track geometry — the responsive-auto column count (real @container repoint below); `[slides-in-view="n"]`
+     pins it. */
+  --ui-swiper-columns: 1;
+  --ui-swiper-align: start; /* repointed by [align=center|end]; consumed by swiper-item.css's scroll-snap-align */
+  --ui-swiper-gap: var(--ui-space-md); /* inter-slide gap off the space ladder (density-responsive) */
+
+  /* Programmatic-advance timing (F1 Consequences — native gesture snaps use the UA's own timing and cannot be
+     shaped by these; `goTo`/paddle/dot/keyboard read them via the JS scroll animation, swiper.ts). The fleet
+     motion ramp has no "medium" step — `--ui-motion-fast` (300ms) + `--ui-ease-standard` are the real tokens
+     every other control's transition consumes (tabs.css/button.css); reused here rather than inventing a new one. */
+  --ui-swiper-duration: var(--ui-motion-fast);
+  --ui-swiper-easing: var(--ui-ease-standard);
+
+  /* Pagination dots — the compact widget ramp; the ACTIVE dot is size-larger (non-colour signifier, ADR-0057).
+     Declared HERE (the family root) though only swiper-pagination.css consumes them — the family-root rule
+     (ADR-0124 Consequences): a leaf never DECLARES another tag's private token, but MAY consume the primary's
+     `--ui-swiper-*` prefix. The +2px bump is a flat literal (the compact-realm box is density-invariant,
+     geometry.md — density rides the pad/gap, never the box), not a --ui-space step. */
+  --ui-swiper-dot-size: var(--ui-compact-sm);
+  --ui-swiper-dot-size-active: calc(var(--ui-compact-sm) + 2px);
+  --ui-swiper-dot-color: var(--md-sys-color-neutral-outline-variant);
+  --ui-swiper-dot-color-active: var(--md-sys-color-primary);
+}
+
+/* [slides-in-view="n"] — pin the visible column count (a numeric string; '' stays responsive-auto below). */
+:where(ui-swiper[slides-in-view='2']) { --ui-swiper-columns: 2; }
+:where(ui-swiper[slides-in-view='3']) { --ui-swiper-columns: 3; }
+:where(ui-swiper[slides-in-view='4']) { --ui-swiper-columns: 4; }
+:where(ui-swiper[slides-in-view='5']) { --ui-swiper-columns: 5; }
+:where(ui-swiper[slides-in-view='6']) { --ui-swiper-columns: 6; }
+
+:where(ui-swiper[align='center']) { --ui-swiper-align: center; }
+:where(ui-swiper[align='end']) { --ui-swiper-align: end; }
+
+/* ════════════════════════ [2] STYLES BLOCK — @scope (ui-swiper) — the HOST only ════════════════════════ */
+
+@scope (ui-swiper) {
+  :scope {
+    display: block;
+    position: relative; /* the anchor for a default-stamped [data-default] paddles overlay */
+    container-type: inline-size; /* the responsive-auto @container basis for --ui-swiper-columns below */
+  }
+
+  /* The owned scroll track (SPEC-R3 — the ONLY scrolling element). Horizontal (default): column flow, x-axis
+     scroll/snap. Slides are sized off the columns + gap formula (the prior-art formula). */
+  :scope > [data-part='track'] {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - (var(--ui-swiper-columns) - 1) * var(--ui-swiper-gap)) / var(--ui-swiper-columns));
+    gap: var(--ui-swiper-gap);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    outline: none; /* the shared focus-ring (:focus-visible) below replaces the UA default */
+  }
+  :scope > [data-part='track']::-webkit-scrollbar {
+    display: none;
+  }
+
+  :scope[orientation='vertical'] > [data-part='track'] {
+    grid-auto-flow: row;
+    grid-auto-rows: calc((100% - (var(--ui-swiper-columns) - 1) * var(--ui-swiper-gap)) / var(--ui-swiper-columns));
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+  }
+
+  /* [data-part=live] — visually hidden, announced (the stat.css delta-word idiom). */
+  :scope > [data-part='live'] {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* The shared focus ring (ADR-0009) on the track's single tab stop. */
+  :scope > [data-part='track']:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: calc(-1 * var(--ui-focus-ring-offset));
+  }
+
+  /* Reduced motion — native snap loses its smooth-scroll animation; the JS scroll animation (swiper.ts)
+     already checks prefers-reduced-motion and skips its own rAF loop, so this rule only needs to neutralise
+     any UA-applied smooth-scroll behaviour on the track itself. */
+  @media (prefers-reduced-motion: reduce) {
+    :scope > [data-part='track'] {
+      scroll-behavior: auto;
+    }
+  }
+
+  /* Responsive-auto columns (slides-in-view='') — a real @container basis; a built-output-only truth. */
+  @container (min-width: 40rem) {
+    :scope:not([slides-in-view]) > [data-part='track'],
+    :scope[slides-in-view=''] > [data-part='track'] {
+      --ui-swiper-columns: 2;
+    }
+  }
+  @container (min-width: 64rem) {
+    :scope:not([slides-in-view]) > [data-part='track'],
+    :scope[slides-in-view=''] > [data-part='track'] {
+      --ui-swiper-columns: 3;
+    }
+  }
+
+  /* Cross-tag motion (interaction-states standard) — the pagination dot's size/colour swap transitions
+     ONLY after first paint, gated behind THIS host's :state(ready) (the ui-tabs ready-gate precedent: the
+     synchronous initial position snaps; only later changes animate). Lives HERE, not in
+     swiper-pagination.css, because `ready` is a state ui-swiper alone owns (sets via its own
+     internals.states) — the contract↔source trip-wire is file-scoped, so a rule referencing a state
+     belongs in its owner's file even when it styles a descendant. Geometry never animates. */
+  :scope:state(ready) ui-swiper-pagination [data-part='dot'] {
+    transition:
+      inline-size var(--ui-motion-fast) var(--ui-ease-standard),
+      block-size var(--ui-motion-fast) var(--ui-ease-standard),
+      background-color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope:state(ready) ui-swiper-pagination [data-part='dot'] {
+      transition: none;
+    }
+  }
+}

@@ -83,6 +83,11 @@
 - [ui-timeline-item](./timeline-item-doc.html): the timeline family's shared marker-system rail row — status/label/description/timestamp/icon/size, a collapsible detail; [demo](./timeline-item-demo.html).
 - [ui-timeline](./timeline-doc.html): the durable authored-children chronology host — role=list, DOM-order, static; [demo](./timeline-demo.html).
 - [ui-status-stream](./status-stream-doc.html): the live imperatively-fed host — append/update/finalize, role=log, tail-follow, the completion invariant; deliberately not catalogued (ADR-0122 F5); [demo](./status-stream-demo.html).
+- [ui-swiper](./swiper-doc.html): a CSS-native scroll-snap carousel — the fleet's first scroll-snap surface, a pixel-seamless infinite clone-teleport loop, the bindable `active`/`select` commit; [demo](./swiper-demo.html).
+- [ui-swiper-item](./swiper-item-doc.html): the slide of the ui-swiper family — sized entirely by the owning track.
+- [ui-swiper-pagination](./swiper-pagination-doc.html): the dots/fraction chrome anchor the owning ui-swiper fills; [demo](./swiper-pagination-demo.html).
+- [ui-swiper-paddles](./swiper-paddles-doc.html): the prev/next chrome anchor — two composed ui-buttons; [demo](./swiper-paddles-demo.html).
+- [ui-swiper-label](./swiper-label-doc.html): the accessible-name chrome anchor for ui-swiper.
 
 ## Components — containers & layout
 

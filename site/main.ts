@@ -748,6 +748,64 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0124 — the ui-swiper family: a CSS-native scroll-snap carousel. ui-swiper-item (tier=layout) folds
+  // into the Layout primitives bundle (no card group of its own); the three pattern/display chrome tags
+  // (pagination/paddles/label) each get their own group.
+  {
+    label: 'ui-swiper',
+    cards: [
+      {
+        href: './swiper-demo.html',
+        title: 'Demo',
+        blurb: 'A live scroll-snap carousel — the infinite clone-teleport loop, responsive slides-in-view, and author-placed pagination/paddles/label chrome.',
+      },
+      {
+        href: './swiper-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-swiper attributes (surface + orientation/slides-in-view/align/loop/duration/easing/pagination/paddles + the bindable active), generated from its swiper.md descriptor.',
+      },
+    ],
+  },
+  {
+    label: 'ui-swiper-pagination',
+    cards: [
+      {
+        href: './swiper-pagination-demo.html',
+        title: 'Demo',
+        blurb: 'The dots/fraction anchor, author-placed inside a live ui-swiper.',
+      },
+      {
+        href: './swiper-pagination-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-swiper-pagination type attribute + its renderInto coordinator seam, generated from its swiper-pagination.md descriptor.',
+      },
+    ],
+  },
+  {
+    label: 'ui-swiper-paddles',
+    cards: [
+      {
+        href: './swiper-paddles-demo.html',
+        title: 'Demo',
+        blurb: 'The prev/next anchor — two composed ui-buttons, author-placed inside a live ui-swiper.',
+      },
+      {
+        href: './swiper-paddles-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-swiper-paddles fill coordinator seam, generated from its swiper-paddles.md descriptor.',
+      },
+    ],
+  },
+  {
+    label: 'ui-swiper-label',
+    cards: [
+      {
+        href: './swiper-label-doc.html',
+        title: 'API reference',
+        blurb: 'The accessible-name anchor — author text becomes the carousel region\'s aria-labelledby, generated from its swiper-label.md descriptor.',
+      },
+    ],
+  },
   {
     // The application-frame primitive (@agent-ui/app) — an ungrouped site-level card (no `label:`, so not a
     // fleet TOC group per site-toc.test.ts), mirroring its ungrouped nav link in _page.ts.

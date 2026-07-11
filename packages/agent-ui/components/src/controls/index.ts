@@ -129,3 +129,14 @@ export * from './split/split-pane.ts'
 export * from './timeline-item/timeline-item.ts' // the shared marker+content+detail rail row (F1/F2/F3/F6)
 export * from './timeline/timeline.ts'           // the durable host — authored children, static (F1/F6)
 export * from './status-stream/status-stream.ts' // the live host — append/update/finalize, tail-follow (F4)
+
+// ADR-0124 — the ui-swiper family: a CSS-native scroll-snap carousel (swiper-family.lld.md). swiper.ts
+// imports the four leaf modules (registering all five family tags on its own import), but each of the
+// five carries its own `{name}.md` descriptor (LLD §10 — unlike ui-tab/ui-tab-panel, which have none), so
+// every one gets its own barrel export line too (the C1 lifecycle bijection, family-coherence.test.ts) —
+// a harmless re-export of an already-registered module, and it surfaces each leaf's class at the barrel.
+export * from './swiper/swiper.ts'
+export * from './swiper/swiper-item.ts'
+export * from './swiper/swiper-pagination.ts'
+export * from './swiper/swiper-paddles.ts'
+export * from './swiper/swiper-label.ts'

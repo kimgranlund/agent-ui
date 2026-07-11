@@ -1,0 +1,10 @@
+/* swiper-label.css — ui-swiper-label's own sheet (ADR-0124 Consequences, the family-root resolution;
+ * swiper-family.lld.md LLD-C11/§7 REV). No `--ui-swiper-label-*` tokens of its own — display-only author
+ * text with no geometry law beyond inline flow. Standalone; never injected from a .ts (behaviour-only .ts,
+ * no runtime style injection — plan §2). */
+
+@scope (ui-swiper-label) {
+  :scope {
+    display: inline;
+  }
+}

@@ -653,6 +653,13 @@ export const NO_SLOT_TEXT = new Set([
   // ui-timeline-item (ADR-0122): #ensureAnatomy() ADOPTS a `[data-role="detail"]` host child into a
   // composed `ui-disclosure` part (never left as a direct host child) — the ui-disclosure precedent exactly.
   'ui-timeline-item',
+  // The ui-swiper family (ADR-0124): ui-swiper reparents ui-swiper-item children into a control-created
+  // `[data-part=track]` PART — the ui-tabs tablist-strip precedent exactly. ui-swiper-pagination/-paddles
+  // build their ENTIRE visible content imperatively (renderInto()/fill()) from the coordinator — no author
+  // content model at all (slots: [] on both).
+  'ui-swiper',
+  'ui-swiper-pagination',
+  'ui-swiper-paddles',
 ])
 
 // STRUCTURAL (batch B) — the default slot IS the real content model (children ARE the grid cells / flex items /
@@ -674,7 +681,9 @@ export const NO_SLOT_TEXT = new Set([
 // `ui-timeline-item` chronology; ui-status-stream's is the SAME item children, normally created via its own
 // appendEntry/update API but rendering identically when pre-authored — both the exact STRUCTURAL shape,
 // never a text/label string (the ui-toast-region precedent).
-export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-theme-provider', 'ui-timeline', 'ui-status-stream', 'ui-toast-region', 'ui-toolbar'])
+// ui-swiper-item (ADR-0124) joins this set too: its default slot IS the slide's own arbitrary content, left
+// as direct host children (sized entirely by the owning track) — the exact STRUCTURAL shape.
+export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-swiper-item', 'ui-theme-provider', 'ui-timeline', 'ui-status-stream', 'ui-toast-region', 'ui-toolbar'])
 
 // SLOT_TEXT_OK — SLOT_TEXT is a real, safe, MEANINGFUL knob: a genuine text/label default slot, the accessible
 // label content a viewer edits to see the control's OWN typography/sizing respond (button/checkbox/radio/
@@ -682,7 +691,9 @@ export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', '
 // content, the ui-text precedent exactly — code.md). Paired with NO_SLOT_TEXT + STRUCTURAL: the three sets
 // PARTITION the whole fleet — the coverage test asserts this, so a new control lands in none of them by
 // default and fails loud instead of silently inheriting a guess.
-export const SLOT_TEXT_OK = new Set(['ui-button', 'ui-checkbox', 'ui-code', 'ui-radio', 'ui-segment', 'ui-switch', 'ui-text'])
+// ui-swiper-label (ADR-0124) joins this set too: its default slot IS a genuine text/label content — the
+// author's text becomes the owning ui-swiper's accessible name.
+export const SLOT_TEXT_OK = new Set(['ui-button', 'ui-checkbox', 'ui-code', 'ui-radio', 'ui-segment', 'ui-swiper-label', 'ui-switch', 'ui-text'])
 
 // ── the element ──────────────────────────────────────────────────────────────────────────────────────────────
 type Mode = 'component' | 'a2ui'
