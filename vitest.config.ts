@@ -60,6 +60,13 @@ export default defineConfig({
       // alias-ordering necessity as `controls/text`/`controls/theme-provider` above.
       '@agent-ui/components/controls/code': r('./packages/agent-ui/components/src/controls/code/code.ts'),
       '@agent-ui/components/controls/table': r('./packages/agent-ui/components/src/controls/table/table.ts'),
+      // app-surfaces-m4.lld.md LLD-C10 — `@agent-ui/app`'s `ui-master-detail` (master-detail.ts) is the
+      // fifth direct `./controls/{name}` subpath consumer from OUTSIDE the components package: it imports
+      // `ui-split`/`ui-split-pane` for their self-defining side effect, so `document.createElement('ui-split')`
+      // resolves to the REAL class before it composes them. Same alias-ordering necessity as
+      // `controls/text`/`controls/theme-provider`/`controls/code`/`controls/table` above.
+      '@agent-ui/components/controls/split': r('./packages/agent-ui/components/src/controls/split/split.ts'),
+      '@agent-ui/components/controls/split-pane': r('./packages/agent-ui/components/src/controls/split/split-pane.ts'),
       // EXACT (not prefix) matches, `?url`-suffixed: `@agent-ui/app`'s isolated-shell connect-flow
       // (app-shell.ts, LLD-C5/ADR-0082) resolves these two package CSS assets to a real runtime URL via
       // Vite's `?url` suffix, to inject as `<link>` hrefs INSIDE a shadow root. Vite's aliasing is FIRST-

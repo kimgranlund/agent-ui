@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Composing a ui-master-detail</title>
+  </head>
+  <body>
+    <!-- The ui-master-detail composition guide: how docking (ui-master-detail-pane), selection, and the
+         narrow drill-in work, shown on a live, resizable <ui-master-detail> (@agent-ui/app, ADR-0120 cl.3a;
+         app-surfaces-m4.lld.md LLD-C10). An MPA entry auto-discovered by vite.config.ts's site/**/*.html
+         glob — no config edit. The page module imports pages/_page.ts FIRST for the foundation CSS cascade +
+         self-defining ui-* controls, then the master-detail CSS/modules and its own demo chrome. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/master-detail.ts"></script>
+  </body>
+</html>

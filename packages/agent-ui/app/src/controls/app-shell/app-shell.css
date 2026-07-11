@@ -116,6 +116,62 @@
       inline-size: auto;
       margin-inline: 0;
     }
+
+    /* ADR-0084/SPEC-R8 collapse="toggle" (LLD-C11): the SAME "stay visible, full-width" span as `stack`
+       above — the equal-specificity/source-order caveat applies IDENTICALLY (this rule MUST stay AFTER the
+       hide rules, for the same reason `stack` must). What differs from `stack`: the region's `content` part
+       hides when the user has collapsed it (:state(collapsed), below), and the `collapse-toggle` button
+       affordance (invisible by default, base rule further down) becomes visible HERE — narrow only, the
+       wide-layout-unchanged invariant (SPEC-R8 AC2): nothing about `toggle` renders differently wide. */
+    :scope > ui-app-shell-region[collapse='toggle'] {
+      display: block;
+      grid-column: 1 / -1;
+      grid-row: auto;
+      inline-size: auto;
+      margin-inline: 0;
+    }
+    :scope > ui-app-shell-region[collapse='toggle'] [data-part='collapse-toggle'] {
+      display: inline-flex;
+    }
+    :scope > ui-app-shell-region[collapse='toggle']:state(collapsed) [data-part='content'] {
+      display: none;
+    }
+  }
+}
+
+/* ════════════════ [ui-app-shell-region] collapse="toggle" affordance (SPEC-R8, LLD-C11) ════════════════ */
+
+/* The toggle button is INVISIBLE outside the narrow branch above (higher specificity via the `:scope > […]
+   […]` descendant combinator overrides this `:where()` 0-specificity base regardless of source order) — the
+   wide-layout-unchanged invariant: a region that never collapses looks IDENTICAL to one that never carries
+   `collapse="toggle"` at all, wide. Minimal, fleet-neutral styling — a plain inline affordance, not a sized
+   `ui-*` control (this element composes no fleet control of its own). */
+:where(ui-app-shell-region) [data-part='collapse-toggle'] {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--ui-app-shell-divider);
+  border-radius: 0.25rem;
+  padding-inline: 0.5rem;
+  padding-block: 0.25rem;
+}
+
+/* The content wrapper is transparent to layout by default (`display: contents` — the SAME box-tree shape as
+   an unwrapped host, so an EXPANDED collapse="toggle" region is visually indistinguishable from one with no
+   toggle anatomy at all); `:state(collapsed)` overrides it to `display: none` above, narrow only. */
+:where(ui-app-shell-region) [data-part='content'] {
+  display: contents;
+}
+
+@media (forced-colors: active) {
+  [data-part='collapse-toggle'] {
+    border-color: CanvasText;
+    forced-color-adjust: none;
   }
 }
 

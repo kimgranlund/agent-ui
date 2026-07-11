@@ -18,6 +18,7 @@
 - [Choosing a component](./choosing.html): which component for which job — the report four-way (Stat/Sparkline/BarChart/Table), content (Text/Code/Disclosure/links), feed (Avatar/Progress/Attachment), forms, overlays, and layout.
 - [A2UI authoring guide](./a2ui-authoring.html): how to author A2UI catalogs and training data against this fleet, derived from the real catalog and examples.
 - [App shell](./app-shell.html): composing the `agent-app-shell` application frame — regions, landmarks, narrow-reflow strategies, and per-instance style isolation.
+- [Master detail](./master-detail.html): composing `ui-master-detail` — docking list/detail panes over the shipped `ui-split`, consumer-owned selection, and the narrow drill-in with a back affordance.
 - [Router](./router-doc.html): the memory-first SPA router — route state as one signal, opt-in URL reflection (hash default, history opt-in), `ui-router-outlet`, and `ui-router-link`, with a live memory-mode demo.
 - [Changelog](./changelog.html): the shipping history, newest-first, rendered from the repo's CHANGELOG.md.
 

@@ -1,0 +1,46 @@
+/* master-detail.css — PAGE-LOCAL demo chrome for the ui-master-detail composition guide (the app-shell.ts
+ * page's .as-resize/.as-demo precedent, ported). Styles the demo's list rows + detail body + the resizable
+ * frame — it never restyles ui-master-detail/ui-split's own internals. Every colour is a --md-sys-color-*
+ * role (imported first via _page.ts), so the demo tracks light/dark. */
+
+.md-resize {
+  inline-size: min(48rem, 100%);
+  min-inline-size: 18rem;
+  max-inline-size: 100%;
+  resize: horizontal;
+  overflow: hidden;
+  padding: 0.5rem;
+  border: 1px dashed var(--md-sys-color-neutral-outline);
+  border-radius: 14px;
+}
+
+.md-demo {
+  inline-size: 100%;
+  block-size: 260px;
+  margin: 0;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--md-sys-color-neutral-surface-lowest);
+}
+
+.md-row {
+  display: block;
+  inline-size: 100%;
+  text-align: start;
+  padding: 0.55rem 0.85rem;
+  border: none;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  background: transparent;
+  color: var(--md-sys-color-neutral-on-surface);
+  font: inherit;
+  cursor: pointer;
+}
+.md-row.is-active {
+  background: var(--md-sys-color-primary-container-low);
+}
+
+.md-detail-body {
+  padding: 0.85rem 1rem;
+  color: var(--md-sys-color-neutral-on-surface);
+}

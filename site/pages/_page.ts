@@ -393,6 +393,12 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './app-shell.html', label: 'App Shell' }],
   },
   {
+    // ui-master-detail (@agent-ui/app, ADR-0120 cl.3a; app-surfaces-m4.lld.md LLD-C10, M4 Phase 2) — the
+    // SAME ungrouped-site-level-link posture as App Shell just above: a GUIDE page for an app-tier
+    // composition, not a fleet component in components/src.
+    links: [{ href: './master-detail.html', label: 'Master Detail' }],
+  },
+  {
     // @agent-ui/router (LLD-C10b, SPEC-R8) — another package above components on the DAG, same posture as
     // App Shell just above: a GUIDE page for a package, not a fleet component in components/src, so it is an
     // ungrouped site-level link — site-coverage/site-toc/site-canon (all components/src-scoped) never expect a

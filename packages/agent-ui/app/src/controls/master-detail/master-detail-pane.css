@@ -1,0 +1,18 @@
+/* master-detail-pane.css — ui-master-detail-pane, the single-file component stylesheet (ADR-0003).
+ *
+ * NO geometry of its own (Container/layout size-class, no control height): the parent `ui-master-detail`
+ * relocates this element wholesale into a `ui-split-pane` wrapper, which already owns the flex/min/max
+ * distribution math (split-pane.css). This element is a plain content region — `overflow` is left to the
+ * wrapping split-pane (which already sets `overflow: auto`).
+ */
+
+:where(ui-master-detail-pane) {
+  /* no --ui-master-detail-pane-* tokens — this element paints nothing of its own */
+}
+
+@scope (ui-master-detail-pane) {
+  :scope {
+    display: block;
+    box-sizing: border-box;
+  }
+}

@@ -175,10 +175,92 @@ describe('ui-app-shell-region — collapse (ADR-0084): a reflected attribute, no
     expect(el.ii.role).toBe('main') // unaffected — collapse never touches the role
   })
 
-  it('an out-of-set collapse value (incl. the RESERVED "toggle") coerces to "hide" — order-significant, never throws', () => {
+  it('an out-of-set collapse value coerces to "hide" — order-significant, never throws', () => {
     const el = mount(new ProbeRegion())
-    el.setAttribute('collapse', 'toggle') // reserved, not yet a real member (ADR-0084)
+    el.setAttribute('collapse', 'bogus-collapse')
     expect(el.collapse).toBe('hide')
+  })
+})
+
+describe('ui-app-shell-region — collapse="toggle" (SPEC-R8, LLD-C11): a REAL, user-collapsible affordance', () => {
+  it('is now a real member — no longer coerced to "hide"', () => {
+    const el = mount(new ProbeRegion())
+    el.collapse = 'toggle'
+    expect(el.collapse).toBe('toggle')
+    expect(el.getAttribute('collapse')).toBe('toggle')
+  })
+
+  it('lazily creates a collapse-toggle button + a content wrapper adopting the ORIGINAL children, in order', () => {
+    const el = new ProbeRegion()
+    el.collapse = 'toggle'
+    el.append(document.createTextNode(''), (() => { const s = document.createElement('span'); s.textContent = 'body'; return s })())
+    mount(el)
+    const btn = el.querySelector('[data-part="collapse-toggle"]') as HTMLButtonElement
+    const content = el.querySelector('[data-part="content"]') as HTMLElement
+    expect(btn).not.toBeNull()
+    expect(btn.tagName).toBe('BUTTON')
+    expect(btn.getAttribute('type')).toBe('button')
+    expect(content).not.toBeNull()
+    expect(content.textContent).toContain('body') // the original child was ADOPTED into content, not dropped
+    // the button comes BEFORE the content part in the DOM (LLD-C11)
+    expect(el.children[0]).toBe(btn)
+    expect(el.children[1]).toBe(content)
+  })
+
+  it('a hide/stack region NEVER creates the toggle anatomy at all', () => {
+    const hideEl = mount(new ProbeRegion()) // collapse defaults to 'hide'
+    expect(hideEl.querySelector('[data-part="collapse-toggle"]')).toBeNull()
+    const stackEl = new ProbeRegion()
+    stackEl.collapse = 'stack'
+    mount(stackEl)
+    expect(stackEl.querySelector('[data-part="collapse-toggle"]')).toBeNull()
+  })
+
+  it('starts expanded: no `collapsed` custom state, aria-expanded=true, button reads "Hide"', () => {
+    const el = new ProbeRegion()
+    el.collapse = 'toggle' // pre-upgrade property write — the FIRST effect pass already sees it (ADR-0005)
+    mount(el)
+    const btn = el.querySelector('[data-part="collapse-toggle"]') as HTMLButtonElement
+    if (el.ii.states) expect(el.ii.states.has('collapsed')).toBe(false)
+    expect(btn.getAttribute('aria-expanded')).toBe('true')
+    expect(btn.textContent).toBe('Hide')
+  })
+
+  it('clicking the button toggles the collapsed custom state, aria-expanded, button text, and fires `toggle`', async () => {
+    const el = new ProbeRegion()
+    el.collapse = 'toggle'
+    mount(el)
+    const btn = el.querySelector('[data-part="collapse-toggle"]') as HTMLButtonElement
+    const spy = vi.fn()
+    el.addEventListener('toggle', spy)
+
+    btn.click()
+    await el.updateComplete // the #collapsed signal write's effect re-run is microtask-batched
+    if (el.ii.states) expect(el.ii.states.has('collapsed')).toBe(true)
+    expect(btn.getAttribute('aria-expanded')).toBe('false')
+    expect(btn.textContent).toBe('Show')
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect((spy.mock.calls[0][0] as CustomEvent).detail).toBe(true)
+
+    btn.click()
+    await el.updateComplete
+    if (el.ii.states) expect(el.ii.states.has('collapsed')).toBe(false)
+    expect(btn.getAttribute('aria-expanded')).toBe('true')
+    expect(btn.textContent).toBe('Hide')
+    expect(spy).toHaveBeenCalledTimes(2)
+    expect((spy.mock.calls[1][0] as CustomEvent).detail).toBe(false)
+  })
+
+  it('disconnect clears the collapsed custom state (no residue across a reconnect)', async () => {
+    const el = new ProbeRegion()
+    el.collapse = 'toggle'
+    mount(el)
+    const btn = el.querySelector('[data-part="collapse-toggle"]') as HTMLButtonElement
+    btn.click()
+    await el.updateComplete
+    if (el.ii.states) expect(el.ii.states.has('collapsed')).toBe(true)
+    el.remove()
+    if (el.ii.states) expect(el.ii.states.has('collapsed')).toBe(false)
   })
 })
 
@@ -527,14 +609,20 @@ describe('app-shell-region.md descriptor (ui-app-shell-region)', () => {
     )
   })
 
-  it('ADR-0084: the collapse enum fallback member (values[0]) FAILS if it disagrees with the live "hide"-leads order (negative control)', () => {
+  it('ADR-0084/SPEC-R8: the collapse enum fallback member (values[0]) FAILS if it disagrees with the live "hide"-leads order (negative control)', () => {
     const badValues: ParsedAttribute[] = parsed.attributes.map((a) =>
-      a.name === 'collapse' ? { ...a, values: ['stack', 'hide'] } : a,
+      a.name === 'collapse' ? { ...a, values: ['stack', 'hide', 'toggle'] } : a,
     )
     expect(compareDescriptorToProps(badValues, UIAppShellRegionElement.props)).toContainEqual(
       expect.objectContaining({ code: 'DRIFT_VALUES', path: 'attributes.collapse.values' }),
     )
   })
+
+  // NOTE: `compareDescriptorToProps`'s VALUES check (enumMembersMatch) only proves every DECLARED value is a
+  // real live member + the fallback lands correctly — it does NOT prove the declared set is COMPLETE (a
+  // descriptor omitting a real live member, e.g. dropping 'toggle', is NOT flagged as drift by this
+  // mechanism). That gap is pre-existing tool behaviour, not something this wave's `attributes.collapse.values
+  // = [hide, stack, toggle]` (asserted above, matching live) introduces or should paper over here.
 
   it('a removed attribute FAILS (bijection both ways)', () => {
     const dropOne: ParsedAttribute[] = parsed.attributes.filter((a) => a.name !== 'region')

@@ -39,7 +39,7 @@
 // the public `@agent-ui/components` barrel/subpaths are imported (SPEC-R2 AC1 — no deep `packages/**/src`
 // import), the apex-of-the-DAG law LLD-C2's layering.test.ts enforces.
 
-import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import { UIElement, prop, signal, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 // The fleet stylesheets, injected INTO the isolated shadow root (LLD-C5 F1/F3) — resolved to their BUILT
 // ASSET URLs via Vite's `?url` suffix (a bare `@import url('@agent-ui/components/...')` written into a
 // dynamically-created `<style>` node would NOT resolve: the browser's own CSS `url()` fetch has no notion of
@@ -195,26 +195,45 @@ const REGION_ROLE = {
 // index-0-by-coincidence — it's the same mechanism, just with the default and the fallback target already equal).
 const LANDMARK_VALUES = ['', 'banner', 'navigation', 'main', 'complementary', 'contentinfo', 'region', 'form', 'search'] as const
 
-// The `collapse` narrow-reflow set (ADR-0084) — `hide` leads (= the declared default = today's back-compat
-// behaviour). `toggle` is a RESERVED future value (a stateful collapse-behind-an-affordance) — named nowhere
-// in this array on purpose: an author writing `collapse="toggle"` today gets the SAME out-of-set fallback to
-// `hide` every other unrecognized value gets, until a future slice adds it as a real member.
-const COLLAPSE_VALUES = ['hide', 'stack'] as const
+// The `collapse` narrow-reflow set (ADR-0084/SPEC-R8) — `hide` leads (= the declared default = today's
+// back-compat behaviour). `toggle` is now a REAL member (app-surfaces-m4.lld.md LLD-C11, M4 Phase 2): a
+// user-collapsible region behind a control-rendered affordance (below) — narrow, the region stays visible +
+// full-width like `stack` UNLESS the user has collapsed it via the affordance, in which case only the
+// affordance itself remains reachable. `hide`/`stack` stay pure-CSS (this element drives no behaviour for
+// either, app-shell.css/app-shell-isolation.css's own comment); `toggle` is the first `collapse` value with
+// real .ts behaviour.
+const COLLAPSE_VALUES = ['hide', 'stack', 'toggle'] as const
 
 const regionProps = {
   region: { ...prop.enum(REGION_VALUES, 'main'), reflect: true },
   // ADR-0083: an OPTIONAL ARIA-landmark override, decoupled from `region`'s grid-column duty. Absent (the
   // default `''`) ⇒ the role falls through to `REGION_ROLE[region]` (back-compat, see the role effect below).
   landmark: { ...prop.enum(LANDMARK_VALUES, ''), reflect: true },
-  // ADR-0084: per-region narrow-reflow behaviour. `hide` (default) is today's `display:none`, unchanged;
-  // `stack` keeps the region visible + full-width in the narrow single column (app-shell.css's `@container`
-  // branch reads this reflected attribute directly — `collapse` drives NO behaviour in this .ts file at all).
+  // ADR-0084/SPEC-R8: per-region narrow-reflow behaviour. `hide` (default) is today's `display:none`,
+  // unchanged; `stack` keeps the region visible + full-width in the narrow single column — BOTH pure-CSS
+  // (app-shell.css's `@container` branch reads this reflected attribute directly, no .ts behaviour). `toggle`
+  // is the exception: it gains a real, control-rendered user-collapsible affordance (below).
   collapse: { ...prop.enum(COLLAPSE_VALUES, 'hide'), reflect: true },
 } satisfies PropsSchema
 
 export interface UIAppShellRegionElement extends ReactiveProps<typeof regionProps> {}
 export class UIAppShellRegionElement extends UIElement {
   static props = regionProps
+
+  // The `collapse="toggle"` anatomy (SPEC-R8, LLD-C11) — a control-rendered `<button data-part=
+  // "collapse-toggle">` + a `<div data-part="content">` wrapping the host's original light-DOM children,
+  // created LAZILY and ONCE the first time `collapse` is ever `'toggle'` (the disclosure.ts "control-owned
+  // part, created once, idempotent" precedent) — a region that never uses `toggle` gets NEITHER part, so
+  // `hide`/`stack`-only usage is byte-identical to before this slice (the wide-layout-unchanged invariant's
+  // .ts half; the CSS half is app-shell.css/app-shell-isolation.css's job). Once created, the parts persist
+  // even if `collapse` later changes away from `toggle` (no unwrap-on-demand — the disclosure precedent
+  // again: parts are created once, never torn down short of disconnect).
+  #toggleBtn: HTMLButtonElement | null = null
+  #contentWrap: HTMLElement | null = null
+  // Whether the user has collapsed a `collapse="toggle"` region — a kernel signal (not `static props`: this
+  // is presentation state a user ACTION drives, not an author-settable attribute; `internals.states` mirrors
+  // it for CSS as a genuine custom state, SPEC-R8's "carries a collapsed custom-state").
+  readonly #collapsed = signal(false)
 
   protected connected(): void {
     // ARIA landmark role (SPEC-R3 AC2, overridable per ADR-0083) — set THROUGH internals, never a host role
@@ -228,6 +247,64 @@ export class UIAppShellRegionElement extends UIElement {
     this.effect(() => {
       this.internals.role = this.landmark || REGION_ROLE[this.region]
     })
+
+    // `collapse="toggle"` anatomy + collapsed-state sync (SPEC-R8, LLD-C11). A region that never sets
+    // `collapse="toggle"` never runs the part-creation branch at all — this effect's FIRST read of
+    // `this.collapse` for such a region is `!== 'toggle'`, an early return, no DOM touched.
+    //
+    // `wired` is a closure-local flag, fresh on EVERY `connected()` call (including a reconnect) — deliberately
+    // NOT a `#`-field. It is what makes the click listener survive a disconnect/reconnect the PARTS themselves
+    // survive (the disclosure.ts precedent: "the toggle LISTENER is wired ... once in connected() ... covers
+    // the initial connect AND every reconnect, since parts persist across disconnect/reconnect but a fresh
+    // AbortController is minted each connect"). MEASURED (isolation cross-engine, app-shell-isolation.browser.
+    // test.ts): relocating an authored region into a shadow root (`shadow.append(...this.children)`,
+    // app-shell.ts's OWN isolated connectedCallback) fires a genuine disconnect+reconnect on the moved node
+    // (a plain `append()`/`appendChild()` of an already-connected custom element is remove-then-insert, not a
+    // same-connection move — the `repeat` moveBefore precedent this repo already tracks elsewhere) — a listener
+    // bound only inside `#ensureToggleParts`'s ONE-TIME part-creation branch would die with that first,
+    // pre-relocation connection and never rebind, leaving an inert button post-relocation. Binding through
+    // `wired` here instead re-listens on the CURRENT connection every time, while `#ensureToggleParts`'s own
+    // field-based guard still creates the DOM nodes only once.
+    let wired = false
+    this.effect(() => {
+      if (this.collapse !== 'toggle') return
+      const { toggleBtn } = this.#ensureToggleParts()
+      if (!wired) {
+        wired = true
+        this.listen(toggleBtn, 'click', () => {
+          this.#collapsed.value = !this.#collapsed.value
+          this.emit<boolean>('toggle', this.#collapsed.value)
+        })
+      }
+      const collapsed = this.#collapsed.value
+      toggleBtn.textContent = collapsed ? 'Show' : 'Hide'
+      toggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true')
+      if (collapsed) this.internals.states?.add('collapsed')
+      else this.internals.states?.delete('collapsed')
+    })
+  }
+
+  protected override disconnected(): void {
+    this.internals.states?.delete('collapsed')
+  }
+
+  /** Idempotent part creation (disclosure.ts precedent) — moves the host's CURRENT light-DOM children into
+   *  the content wrapper the FIRST time this runs; a part created on a later call is a no-op (parts persist,
+   *  never torn down short of disconnect). Wires NO listener of its own — see the `wired` flag in `connected()`
+   *  above for why that must be re-armed per-connection instead. */
+  #ensureToggleParts(): { toggleBtn: HTMLButtonElement; contentWrap: HTMLElement } {
+    if (this.#toggleBtn && this.#contentWrap) return { toggleBtn: this.#toggleBtn, contentWrap: this.#contentWrap }
+    const contentWrap = document.createElement('div')
+    contentWrap.setAttribute('data-part', 'content')
+    contentWrap.append(...this.children) // adopt whatever the author composed, in order
+    const toggleBtn = document.createElement('button')
+    toggleBtn.type = 'button'
+    toggleBtn.setAttribute('data-part', 'collapse-toggle')
+    toggleBtn.setAttribute('aria-label', 'Toggle panel')
+    this.append(toggleBtn, contentWrap)
+    this.#toggleBtn = toggleBtn
+    this.#contentWrap = contentWrap
+    return { toggleBtn, contentWrap }
   }
 }
 

@@ -6,7 +6,11 @@
   "exports": {
     ".": "./src/index.ts",
     "./app-shell": "./src/controls/app-shell/app-shell.ts",
-    "./app-shell.css": "./src/controls/app-shell/app-shell.css"
+    "./app-shell.css": "./src/controls/app-shell/app-shell.css",
+    "./master-detail": "./src/controls/master-detail/master-detail.ts",
+    "./master-detail.css": "./src/controls/master-detail/master-detail.css",
+    "./master-detail-pane": "./src/controls/master-detail/master-detail-pane.ts",
+    "./master-detail-pane.css": "./src/controls/master-detail/master-detail-pane.css"
   },
   "dependencies": {
     "@agent-ui/components": "*",

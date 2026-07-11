@@ -23,9 +23,9 @@ attributes:              # attributes-as-API — mirrors app-shell.ts `regionPro
     reflect: true         # reflects so the override is inspectable/testable as a plain attribute (drives NO css of its own — role only)
   - name: collapse
     type: enum
-    values: [hide, stack]   # ORDER-SIGNIFICANT: `hide` LEADS (= the declared default = today's back-compat display:none). `toggle` is RESERVED (ADR-0084) — not yet a member; an author writing it today gets the ordinary out-of-set fallback to `hide`
+    values: [hide, stack, toggle]   # ORDER-SIGNIFICANT: `hide` LEADS (= the declared default = today's back-compat display:none). `toggle` is now a REAL member (ADR-0084/SPEC-R8, LLD-C11, M4 Phase 2) — a user-collapsible region behind a control-rendered affordance
     default: hide
-    reflect: true         # reflects so app-shell.css's/app-shell-isolation.css's [collapse="stack"] narrow-reflow selector applies to JS-set values too
+    reflect: true         # reflects so app-shell.css's/app-shell-isolation.css's [collapse="stack"/"toggle"] narrow-reflow selectors apply to JS-set values too
 
 properties:               # `region`/`landmark`/`collapse` beyond the bare attributes-as-API rows
   - name: region
@@ -33,14 +33,23 @@ properties:               # `region`/`landmark`/`collapse` beyond the bare attri
   - name: landmark
     description: (ADR-0083) An OPTIONAL override of the ARIA landmark role, independent of `region`'s grid-column duty — lets an author pick the column via `region` and the landmark separately (e.g. `region="navigation" landmark="complementary"`, a chat composer in the left column with a correct, non-navigation landmark). Absent/`''` (the default) ⇒ the role falls through to `region`'s own default (back-compat, no migration). Resolution is `internals.role = landmark || REGION_ROLE[region]` — the `||`, not `??`, is load-bearing (the unset value is the falsy `''`). An out-of-set value coerces to `''` (the same order-significant codec fallback `region` uses) and likewise falls through. Author responsibility: exactly one `main` landmark per document; a second `landmark="main"` is a duplicate-landmark author error the generic element cannot prevent cross-instance (documented, not enforced).
   - name: collapse
-    description: (ADR-0084) Per-region narrow-reflow behaviour, reflected so app-shell.css's/app-shell-isolation.css's `@container` branch can read it as a plain CSS attribute selector — this element's OWN `.ts` has no behaviour for it at all. `hide` (default) is today's `display:none` below the 40rem threshold, unchanged. `stack` keeps the region visible + spans the full single-column width (DOM order) instead of hiding, so a side region carrying essential, interactive content (e.g. a chat composer) stays reachable when narrow. `toggle` is a RESERVED future value (a collapse-behind-an-affordance emitting the allow-listed `toggle` event) — not built at M1; writing it today coerces to `hide` via the ordinary out-of-set fallback.
+    description: (ADR-0084/SPEC-R8) Per-region narrow-reflow behaviour, reflected so app-shell.css's/app-shell-isolation.css's `@container` branch can read it as a plain CSS attribute selector. `hide` (default) is today's `display:none` below the 40rem threshold; `stack` keeps the region visible + spans the full single-column width (DOM order) instead of hiding — BOTH pure-CSS, no `.ts` behaviour. `toggle` (LLD-C11, M4 Phase 2) is the exception: this element LAZILY creates a control-rendered `<button data-part="collapse-toggle">` + a `<div data-part="content">` wrapping its original children the first time `collapse` is ever `'toggle'` (created once, persists — the disclosure.ts precedent) — narrow, the region stays visible/full-width like `stack` UNLESS the user clicks the affordance to collapse it (a `collapsed` custom state + an emitted `toggle` event), in which case only the affordance itself remains reachable. Wide, `toggle` has NO effect at all (the affordance is invisible, the content wrapper is `display:contents`) — byte-identical to a region that never uses it.
 
-events: []                # a static landmark region fires no events of its own
+events:
+  - name: toggle
+    detail: 'boolean'
+    description: Fired when the user activates the `collapse="toggle"` affordance (never for `hide`/`stack`, which carry no behaviour). Detail is the NEW collapsed state (`true` = now collapsed). Only ever fires on a `collapse="toggle"` region — a region using `hide`/`stack` creates no affordance and so never fires this.
 
-slots: []                 # plain default/unnamed light-DOM children (a ChildList, no anatomy grid) — no NAMED slots
+slots: []                 # plain default/unnamed light-DOM children (a ChildList, no anatomy grid) — no NAMED slots; a `collapse="toggle"` region ADOPTS these into its own `content` part rather than slotting them
 
-parts: []                 # light-DOM, host-as-block — no shadow parts exposed (render() stays void)
-customStates: []          # no interaction states — a passive landmark region has no hover/active/motion gate
+parts:                    # NOT shadow-DOM ::part() (light-DOM only) — control-rendered ONLY when `collapse="toggle"` (LLD-C11); documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the split.md precedent)
+  - name: collapse-toggle
+    description: A `<button data-part="collapse-toggle" type="button">`, created lazily the first time `collapse` is `'toggle'`. Invisible outside the narrow `@container` branch (the wide-layout-unchanged invariant, SPEC-R8 AC2). Native `<button>` — keyboard-operable (Enter/Space) with no bespoke handling.
+  - name: content
+    description: A `<div data-part="content">` wrapping the region's original light-DOM children, created alongside `collapse-toggle`. `display:contents` when expanded (visually identical to unwrapped children); `display:none` when the region is collapsed AND narrow.
+
+customStates:            # a scalar sequence (the split.md `dragging` precedent) — NOT a name/description map
+  - collapsed             # (SPEC-R8) set via `internals.states` when the user has collapsed a `collapse="toggle"` region (cleared on disconnect); only ever used on a `collapse="toggle"` region — `hide`/`stack` never touch it
 
 face:
   formAssociated: false    # NOT a FACE form control — a container contributes nothing to a form
@@ -58,7 +67,7 @@ geometry:
   paddingBlock: 0            # this element declares no padding of its own; any inset is the author's/composed content's job
   display: block                     # this element's OWN base rule (an unstyled custom element defaults to inline otherwise) — the SPEC-R3 degrade-gracefully block, unconditional, in app-shell.css
   gridPlacement: owned by the PARENT ui-app-shell (app-shell.css's `[region=…]` attribute selectors), not by this element — a region used standalone has no grid to place into and simply renders as a plain block (SPEC-R3's degrade-gracefully edge)
-  narrowCollapse: owned by the PARENT ui-app-shell's `@container` narrow branch, reading this element's reflected `collapse` attribute directly (ADR-0084) — `hide` (default) display:nones below 40rem; `stack` stays visible + spans the full column instead. This element's OWN .ts has no behaviour for `collapse` at all — pure CSS attribute-selector consumption, same ownership shape as gridPlacement above.
+  narrowCollapse: owned by the PARENT ui-app-shell's `@container` narrow branch, reading this element's reflected `collapse` attribute directly (ADR-0084/SPEC-R8) — `hide` (default) display:nones below 40rem; `stack` stays visible + spans the full column instead — BOTH pure CSS attribute-selector consumption, no .ts behaviour. `toggle` is the one exception: THIS element lazily creates its own `collapse-toggle`/`content` parts (see `properties.collapse` above) — the narrow branch only decides where those parts are VISIBLE, not whether they exist.
 
 forcedColors: The region-facing DIVIDER borders (and their CanvasText high-contrast override) are owned by the PARENT `ui-app-shell`'s own stylesheet (app-shell.css, `@scope (ui-app-shell) > ui-app-shell-region[region=…]`) — this element carries no CSS of its own, so it declares no forced-colors rule independently. A standalone (shell-less) region has no divider to begin with.
 ---
@@ -112,18 +121,27 @@ likewise falls through — it never throws and never sets a garbage role. **Auth
 `main` landmark per document remains the author's job, as it already is for `region` — a second
 `landmark="main"` is a duplicate-landmark error the generic element cannot prevent cross-instance.
 
-## `collapse` — per-region narrow-reflow behaviour (ADR-0084)
+## `collapse` — per-region narrow-reflow behaviour (ADR-0084/SPEC-R8)
 
 Below the shell's `40rem` narrow threshold (SPEC-R5), a side region's default fate is to **hide**
 (`display:none`) — right for a secondary rail, wrong for a region carrying essential, interactive content
 (the same chat composer would otherwise vanish, making the app's primary input unreachable narrow).
 **`collapse="stack"`** opts a region OUT of hiding: it stays visible and **stacks** full-width into the
 single-column narrow layout instead, in DOM order (the author controls stack order via composition order).
-`collapse` is purely a **CSS attribute selector** the PARENT `ui-app-shell`'s stylesheet reads — this element's
-own `.ts` has no behaviour for it at all (drives no ARIA, no JS). The wide (non-narrow) layout is **unchanged**
-regardless of `collapse` — it only affects the `@container` narrow branch. `toggle` is a **reserved** future
-value (a collapse-behind-an-affordance, not built at M1); writing it today coerces to `hide` via the ordinary
-out-of-set fallback.
+Both `hide` and `stack` are purely **CSS attribute selectors** the PARENT `ui-app-shell`'s stylesheet reads —
+this element's own `.ts` has no behaviour for either. The wide (non-narrow) layout is **unchanged** regardless
+of `collapse` — it only ever affects the `@container` narrow branch.
+
+**`collapse="toggle"`** (M4 Phase 2) is the exception: a **user-collapsible** region behind a control-rendered
+affordance. The first time `collapse` is `'toggle'`, this element lazily wraps its original children in a
+`<div data-part="content">` and inserts a `<button data-part="collapse-toggle">` ahead of it (created once,
+persisting even if `collapse` later changes away from `toggle`). Narrow, the region starts **expanded** —
+visible and full-width, exactly like `stack` — until the user clicks the button, which sets a `collapsed`
+custom state (`:state(collapsed)`), hides the `content` part, and fires an allow-listed `toggle` event
+(detail: the new collapsed boolean). The affordance itself is invisible wide and the content wrapper is
+`display:contents` when expanded — an EXPANDED `collapse="toggle"` region wide is byte-identical to a region
+that never uses `toggle` at all (the wide-layout-unchanged invariant, SPEC-R8 AC2). An out-of-set `collapse`
+value still coerces to `hide` via the ordinary out-of-set fallback (unchanged).
 
 ## Docking — composition, not an attribute-on-arbitrary-child
 

@@ -4720,3 +4720,30 @@ incl. TKT-0017's same-day pre-ship fix, 2026-07-11: the FIXED FRAME per Kim's QA
 gained three public frame dials (identity defaults, bare-modal-unchanged browser-asserted)
 and the palette pins a set width + 15svh top anchor so the search field never moves as
 filtering resizes the list).
+
+## 2026-07-11 (M4 Phase 2) — ui-master-detail + collapse:"toggle" land the app-tier panes chrome
+
+- **`ui-master-detail` (+ `ui-master-detail-pane`), NEW in `@agent-ui/app`** (app-surfaces-m4 LLD-C10,
+  SPEC-R7): the list|detail surface composing the shipped `ui-split` with ZERO bespoke split code — a
+  generic `ui-master-detail-pane` (`pane="list"|"detail"`, the app-shell generic-region model, fork F6)
+  is relocated wholesale into control-created `ui-split-pane` wrappers at connect. `selected` (reflected)
+  drives a derived `data-view` for the narrow (<40rem) drill-in; a control-rendered back affordance flips
+  the view without touching `selected`; `select`/`change` fire on post-initial changes only (no deep-link
+  echo). App marginal re-based 3→5 KB gz (measured 4603 B).
+- **`collapse="toggle"` realized in the shipped `ui-app-shell`** (LLD-C11, SPEC-R8): ADR-0084's reserved
+  value becomes a real narrow-viewport disclosure — lazily-built toggle button + content wrapper,
+  `:state(collapsed)`, an allow-listed `toggle` event. The wide-layout-unchanged invariant is
+  CSS-enforced (affordance hidden outside the narrow @container branch, `display:contents` expanded) and
+  browser-PROVEN comparatively (toggle region vs default region, pixel-compared wide, both engines);
+  both grid copies (plain + isolated `:host` mirror) kept in sync.
+- **The review earned its keep twice (independent pre-commit review, NO-GO→fix→GO):** the relocation
+  disconnect/reconnect class (an isolated shell's `shadow.append(...this.children)`, ADR-0082) was caught
+  THREE deep this wave — the toggle button's one-time listener (builder, browser gate), then
+  `#compose()`'s non-idempotence double-composing a second empty `ui-split` (reviewer, reproduced), then
+  the back button's per-connection listener going inert post-reconnect (builder, found while fixing #2).
+  All three fixed on the same shape: one-time DOM behind a field guard, per-connection wiring re-armed in
+  `connected()`. New reconnect + isolated-relocation tests pin the class down, both engines.
+- Gates: check clean · app jsdom 84/84 · app browser 62/62 (Chromium+WebKit) incl. the full M1 shell
+  suite unregressed · repo 5411/5412 (the one red was the expected fixture drift, regenerated at this
+  commit) · size green. The app-surfaces LLD's fork-list numbering repaired (the dropped F6 entry
+  restored; LLD-C10's F8→F6 mis-citation fixed).

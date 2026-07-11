@@ -1,0 +1,89 @@
+/* master-detail.css — ui-master-detail, the single-file component stylesheet (ADR-0003). Two sectioned
+ * blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-master-detail)` declares ONLY `--ui-master-detail-*`: the narrow
+ *       threshold (mirroring `ui-app-shell`'s own bare-literal 40rem, app-shell.css — a custom property
+ *       cannot drive an `@container` condition, so the VALUE is restated here, not shared as a token).
+ *   [2] STYLES BLOCK — `@scope (ui-master-detail)` consumes ONLY `--ui-master-detail-*` for the host; the
+ *       composed `ui-split`/`ui-split-pane` children keep their OWN shipped CSS untouched — this sheet adds
+ *       only the narrow drill-in (show one `[data-role]` pane at a time, hide the separator, let the
+ *       visible pane fill) + the "back" affordance's visibility, exactly as `ui-app-shell`'s `collapse`
+ *       narrow branch adds behaviour on TOP of the shipped layout family rather than reimplementing it.
+ *
+ * Wide (above the threshold): NO rule in this sheet applies at all — both `[data-role]` panes show via the
+ * composed `ui-split`, resizable, with 0 CSS of this file's own touching them (SPEC-R7 "0 bespoke split
+ * code").
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-master-detail) declares --ui-master-detail-* ════════════════ */
+
+:where(ui-master-detail) {
+  --ui-master-detail-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-master-detail-divider: var(--md-sys-color-neutral-outline-variant, currentColor);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-master-detail) consumes ONLY --ui-master-detail-* ════════════════ */
+
+@scope (ui-master-detail) {
+  :scope {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    container-type: inline-size; /* reflow on the element's OWN width, never the viewport (the ui-app-shell precedent) */
+  }
+
+  /* The one composed child (the JS-created ui-split) fills the available block space; min-block-size:0
+     is the standard flex-overflow guard so the split's own content can scroll internally rather than
+     blowing out this element's box. */
+  :scope > ui-split {
+    flex: 1 1 auto;
+    min-block-size: 0;
+  }
+
+  /* The "back" affordance — control-rendered inside the detail ui-split-pane (master-detail.ts). Hidden by
+     default (wide, or narrow-but-showing-the-list); the narrow branch below reveals it only when drilled
+     into `detail`. */
+  [data-part='back'] {
+    display: none;
+    align-items: center;
+    box-sizing: border-box;
+    cursor: pointer;
+    font: inherit;
+    color: var(--ui-master-detail-ink);
+    background: transparent;
+    border: none;
+    border-block-end: 1px solid var(--ui-master-detail-divider);
+    padding-block: 0.5rem;
+    padding-inline: 0.75rem;
+    inline-size: 100%;
+    text-align: start;
+  }
+
+  /* Narrow drill-in (SPEC-R7 AC1) — `40rem` mirrors ui-app-shell.css's own starting threshold (a bare
+     literal; custom properties cannot drive an @container condition). */
+  @container (inline-size < 40rem) {
+    :scope[data-view='list'] [data-role='detail'] {
+      display: none;
+    }
+    :scope[data-view='detail'] [data-role='list'] {
+      display: none;
+    }
+
+    /* Resizing between one visible pane and a hidden one is meaningless narrow — hide the separator. */
+    :scope [data-separator] {
+      display: none;
+    }
+
+    /* Whichever pane remains fills the full width, regardless of its assigned flex ratio (which was
+       computed for the WIDE two-pane layout and would otherwise leave the lone visible pane too narrow). */
+    :scope ui-split-pane {
+      flex: 1 1 auto;
+      max-width: none;
+      max-height: none;
+    }
+
+    :scope[data-view='detail'] [data-part='back'] {
+      display: flex;
+    }
+  }
+}

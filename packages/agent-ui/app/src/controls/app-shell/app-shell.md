@@ -24,7 +24,15 @@ events: []              # a structural layout container fires no events of its o
 slots: []               # content model is a ChildList of ui-app-shell-region children (docking = composition, SPEC-R4) — no NAMED slots on the shell itself
 
 parts: []               # light-DOM, host-as-grid — no shadow parts exposed (render() stays void)
-customStates: []        # no interaction states — a structural container has no hover/active/motion gate of its own
+customStates:           # ui-app-shell ITSELF has no interaction state of its own — `collapsed` is genuinely
+                        # ui-app-shell-region's state (see app-shell-region.md), NOT the shell's. It is listed
+                        # here too ONLY because app-shell.ts/app-shell.css is ONE shared file pair for BOTH
+                        # elements (LLD-C3) and the contract↔source trip-wire (compareDescriptorToSource)
+                        # scans that shared source at FILE granularity, not per-class — so `collapsed`'s real
+                        # `internals.states.add/delete` + `:state(collapsed)` usage (both on the REGION) would
+                        # otherwise show as "used in source but undocumented" against THIS descriptor too.
+  - collapsed
+
 
 face:
   formAssociated: false  # NOT a FACE form control — a container contributes nothing to a form

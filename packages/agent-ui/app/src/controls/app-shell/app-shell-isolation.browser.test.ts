@@ -40,6 +40,7 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css' // ui-button's own CSS, for the light-DOM reference control
 import './app-shell.css'
 import './app-shell.ts'
+import type { UIAppShellRegionElement } from './app-shell.ts'
 import '@agent-ui/components/controls/button' // self-defines ui-button — the real composed control both legs use
 // The SAME two fleet-asset `?url` imports app-shell.ts uses — reused ONLY by the negative-control harnesses
 // below to hand-construct an isolated shadow missing one specific piece.
@@ -344,6 +345,25 @@ describe('ui-app-shell isolated — AC5: the isolated LAYOUT (grid-area placemen
     const shellRect = shell.getBoundingClientRect()
     expect(navRect.width).toBeCloseTo(shellRect.width, 0)
     expect(navRect.height).toBeGreaterThan(0)
+  })
+
+  it('collapse="toggle" (SPEC-R8 AC3, LLD-C11) holds under isolation — the affordance + collapse behaviour work in-shadow', async () => {
+    const { wrapper, shell } = await mountFullIsolatedShell('900px', {
+      navigation: 'collapse="toggle"',
+    })
+    const root = shell.shadowRoot!
+    const nav = root.querySelector('[region="navigation"]') as UIAppShellRegionElement
+
+    wrapper.style.width = '300px' // narrow the CONTAINER (< 40rem)
+    expect(getComputedStyle(nav).display, 'the isolated collapse="toggle" region hid before any collapse — it should start expanded like stack').not.toBe('none')
+    const btn = nav.querySelector('[data-part="collapse-toggle"]') as HTMLElement
+    expect(getComputedStyle(btn).display, 'the toggle affordance did not become visible narrow, in-shadow').not.toBe('none')
+
+    btn.click()
+    await nav.updateComplete // the #collapsed signal write's effect re-run is microtask-batched
+    const content = nav.querySelector('[data-part="content"]') as HTMLElement
+    expect(getComputedStyle(content).display, 'clicking the in-shadow affordance did not collapse the content — the mirror rule is missing').toBe('none')
+    expect(getComputedStyle(nav).display, 'the region itself vanished on collapse — only its content part should hide').not.toBe('none')
   })
 
   it('collapse="stack" HARDEN (review fix, off the a2ui-live dogfood): the shell rule out-specifies a competing consumer width rule, even inside the shadow', async () => {

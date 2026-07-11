@@ -4,7 +4,7 @@
 > Implements: [`../spec/app-surfaces-m4.spec.md`](../spec/app-surfaces-m4.spec.md) (`SPEC-R1…R14`). Realizes the ratified [`../adr/0120-app-surfaces-m4-panes-settings.md`](../adr/0120-app-surfaces-m4-panes-settings.md).
 > Decomposition: [`../decompositions/app-surfaces-m4.decomp.json`](../decompositions/app-surfaces-m4.decomp.json) (coverage-clean; nodes ≈ the components below). Build-order edges are the decomposition's.
 > Precedents: `traits/value-drag.ts` + `controls/slider-multi/slider-multi.ts` (the multi-handle pointer gesture + nearer-handle gate + per-handle ARIA + keyboard-step-with-clamp — the shape `ui-split`'s separators generalize) · `traits/roving-focus.ts` (keyboard-nav prior art) · `controls/row|column|grid` (the layout-family box model + `tier: layout` geometry) · `controls/form-provider` + `controls/field` + `dom/form.ts` (the form spine SPEC-R11 generates onto; ADR-0050/0051) · `controls/app-shell` (the M1 shell M4 composes; the `collapse` prop + the isolated `:host` mirror keep-in-sync obligation, LLD-C5).
-> Altitude: owns **how M4 is built** — file map, concrete interfaces, per-component failure/edge handling, build sequence. Behavior is the SPEC's; this doc never re-derives it. **Open forks needing Kim/an ADR are in §11 — this LLD recommends but does not self-ratify them.**
+> Altitude: owns **how M4 is built** — file map, concrete interfaces, per-component failure/edge handling, build sequence. Behavior is the SPEC's; this doc never re-derives it. **Open forks needing Kim/an ADR are in §8 — this LLD recommends but does not self-ratify them.**
 
 ## 1. Component map (LLD-C# → SPEC-R#, → decomp node)
 
@@ -124,7 +124,7 @@ When `split.md` lands, the a2ui whole-fleet coverage gate (`a2ui/src/catalog/def
 
 ### 3.1 LLD-C10 — `ui-master-detail` (→ SPEC-R7)
 
-`app/src/controls/master-detail/master-detail.ts`: a `UIElement` composing `ui-split` (list | detail) wide, drilling in narrow (a container-query threshold, the M1 shell precedent). Props: `selected` (reflected, item key). Slots/regions: a `list` and a `detail` region (fork F8 — authored sub-elements `ui-master-detail-list`/`-detail`, OR named slots; recommend the M1 generic-region precedent: two light-DOM regions the element arranges). Emits `select`/`change` on selection. Narrow: a `[data-view=list|detail]` state (driven by whether `selected` is set + the container width) toggles which region shows + a back affordance. **Imports only `@agent-ui/components` (incl. `ui-split`) — NEVER `@agent-ui/router`** (SPEC-R13).
+`app/src/controls/master-detail/master-detail.ts`: a `UIElement` composing `ui-split` (list | detail) wide, drilling in narrow (a container-query threshold, the M1 shell precedent). Props: `selected` (reflected, item key). Slots/regions: a `list` and a `detail` region (fork F6 — authored sub-elements `ui-master-detail-list`/`-detail`, OR named slots; recommend the M1 generic-region precedent: two light-DOM regions the element arranges). Emits `select`/`change` on selection. Narrow: a `[data-view=list|detail]` state (driven by whether `selected` is set + the container width) toggles which region shows + a back affordance. **Imports only `@agent-ui/components` (incl. `ui-split`) — NEVER `@agent-ui/router`** (SPEC-R13).
 
 **Failure/edge handling.** No selection narrow ⇒ show the list. Wide ⇒ both via `ui-split` (the split's own resize/keyboard/DoD is inherited — master-detail adds no bespoke split code, SPEC-R7). Selection binding to a URL is the consumer's 3 lines (ADR-0115); the element exposes state/events only.
 
@@ -217,6 +217,11 @@ Gates green before each phase's commit: `npm run check` (+`check:site`) · `npm 
 3. **F3 — dynamic panes. RESOLVED by SPEC-R2 (M1 repair) — no longer open.** Dynamism (add/remove after connect) is now a REQUIRED behavior; the `MutationObserver` re-deriving separators + ratios (+ `abortDrag()` on a mid-drag count change, SPEC-R2 M2) is its realization. Static-at-connect is no longer an acceptable alternative.
 4. **F4 — `aria-valuenow` scale. SPEC-RESOLVED (SPEC-R4) — no longer open.** SPEC-R4 normatively fixes it: integer % of the two-neighbor pair's combined extent (`valuemin`/`valuemax` = the clamp window) — the most announceable scale, matching the two-neighbor semantics. Recorded here only as the rationale trail, not a decision awaiting a ruling.
 5. **F5 — push-through (cascade a clamped delta to non-adjacent panes).** *Recommend RESERVED for v2* (local clamp at v1 — predictable, matches VS Code sash behavior + the one-separator-per-pair ARIA model). Not built at M4.
-6. **F7 — `SettingsStore` sync vs async.** *Recommend sync `get`/`set` + optional `subscribe`* (+ optional batch `save`); async/remote sync is out-of-scope (PRD fence). Revisit if a real async store need appears.
-7. **F8 — settings shell composes master-detail vs bespoke.** *Recommend `ui-settings` composes `ui-master-detail`* for the rail|panel drill-in (build the drill-in once), adding the schema-driven panels on top. Alt: settings has its own shell. Recommend reuse.
-8. **F-catalog — `Split` row vs `EXCLUSION_ALLOWLIST`.** *Recommend a `Split` container row* (parity with the bound layout+slider family). The allowlist arm is the fallback if resize can't be agent-parameterized safely. Resolved at the C8 build against the catalog's real shape.
+6. **F6 — master-detail region mechanism (authored sub-elements vs named slots).** *Recommend the M1
+   generic-region precedent* — a single generic `ui-master-detail-pane` (`pane="list"|"detail"`, the
+   `ui-app-shell-region` model) the element arranges; named slots are shadow-DOM idiom the light-DOM fleet
+   avoids. (This entry was dropped in an earlier revision while §3's LLD-C10 kept citing it — restored
+   2026-07-11 at the Phase 2 review; the build followed the recommendation.)
+7. **F7 — `SettingsStore` sync vs async.** *Recommend sync `get`/`set` + optional `subscribe`* (+ optional batch `save`); async/remote sync is out-of-scope (PRD fence). Revisit if a real async store need appears.
+8. **F8 — settings shell composes master-detail vs bespoke.** *Recommend `ui-settings` composes `ui-master-detail`* for the rail|panel drill-in (build the drill-in once), adding the schema-driven panels on top. Alt: settings has its own shell. Recommend reuse.
+9. **F-catalog — `Split` row vs `EXCLUSION_ALLOWLIST`.** *Recommend a `Split` container row* (parity with the bound layout+slider family). The allowlist arm is the fallback if resize can't be agent-parameterized safely. Resolved at the C8 build against the catalog's real shape.

@@ -169,8 +169,9 @@ for (const [name, path] of CONTROL_ENTRIES) {
   )
 }
 
-// ── @agent-ui/app (LLD-C8, SPEC-R7 AC4) — the ui-app-shell primitive, one package UP the DAG from
-// components. `app-shell.ts` is the fleet's first `?url`/`?raw` consumer (the isolation-mode fleet-CSS
+// ── @agent-ui/app (LLD-C8, SPEC-R7 AC4) — the whole app-tier barrel (ui-app-shell + ui-master-detail,
+// LLD-C9/C16), one package UP the DAG from components. `app-shell.ts` is the fleet's first `?url`/`?raw`
+// consumer (the isolation-mode fleet-CSS
 // injection, LLD-C5): a bare `rolldown()` call can't load those Vite query-suffixed specifiers (Vite's own
 // asset pipeline resolves them; raw Rolldown has no such plugin), so this section carries a small stub
 // plugin — `?raw` inlines the real file's text (a real byte cost: this IS the CSS the shell injects at
@@ -208,7 +209,16 @@ const appCssQuerySuffixPlugin = {
   },
 }
 
-const APP_MARGINAL_BUDGET = 3 * KB // provisional, recorded at M1 kickoff (LLD-C8) — pending confirmation the real number lands inside it
+// 5 KB re-based at the M4 Phase 2 wave (app-surfaces-m4.lld.md LLD-C9/C16, SPEC-R14 — the SAME
+// Consequences-anticipated re-base precedent as the components family ceiling above): ui-master-detail +
+// ui-master-detail-pane compose the shipped ui-split/ui-split-pane (LLD-C10, 0 bespoke split code) — their
+// bytes ride the app marginal now too, since `split`/`split-pane` sit OUTSIDE the `.` foundation baseline
+// this marginal is measured against. Measured 4576 B gz post-master-detail 2026-07-11 (up from the M1
+// ui-app-shell-only 3 KB provisional); ~12% headroom reserved for the app-shell/master-detail pair as they
+// stand today. Phase 3 (ui-settings, composing ui-master-detail per LLD F8) will re-base this again when it
+// lands — not sized ahead here (unlike the toolbar wave's queued-family precedent), since Phase 3 has no
+// frozen file-level shape yet to measure against.
+const APP_MARGINAL_BUDGET = 5 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
@@ -224,7 +234,7 @@ const appMarginal = appGz - foundationGz
 const appStatus = appMarginal <= APP_MARGINAL_BUDGET ? 'within' : 'OVER'
 const appOver = appMarginal > APP_MARGINAL_BUDGET
 console.log(
-  `\n@agent-ui/app . (ui-app-shell): marginal ${appMarginal} B gz — ${appStatus} budget (${APP_MARGINAL_BUDGET} B gz)   solo ${appGz} B gz (${appMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
+  `\n@agent-ui/app . (ui-app-shell + ui-master-detail): marginal ${appMarginal} B gz — ${appStatus} budget (${APP_MARGINAL_BUDGET} B gz)   solo ${appGz} B gz (${appMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
 )
 
 // ── @agent-ui/router (LLD-C9, SPEC-R7 AC4) — the SPA router family, ANOTHER package above components on

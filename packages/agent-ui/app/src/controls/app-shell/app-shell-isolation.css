@@ -15,13 +15,15 @@
  * back onto the DOM attribute, so an inclusion selector would miss a typo'd region here exactly as it would
  * in light mode (see app-shell.css's own banner for the full explanation).
  *
- * KEEP-IN-SYNC OBLIGATION (ADR-0082 §Consequences, extended by ADR-0084): this intentionally DUPLICATES
- * app-shell.css's grid-template + the 40rem narrow threshold + the `collapse="stack"` rule (harmless —
- * identical values, by design). Any future edit to the region grid-template, the narrow threshold, OR the
- * `collapse` rule in app-shell.css MUST be mirrored here too, or the isolated layout silently drifts from
- * light mode — app-shell-isolation.browser.test.ts's AC5 leg is the gate that would catch such a drift (its
- * negative control bites when this file is NOT injected). ⚠️ The `collapse="stack"` rule MUST stay AFTER the
- * hide rules in THIS copy too — same equal-specificity/source-order reasoning as app-shell.css's own comment.
+ * KEEP-IN-SYNC OBLIGATION (ADR-0082 §Consequences, extended by ADR-0084/SPEC-R8): this intentionally
+ * DUPLICATES app-shell.css's grid-template + the 40rem narrow threshold + the `collapse="stack"`/`"toggle"`
+ * rules AND the `collapse="toggle"` button/content BASE rules (harmless — identical values, by design). Any
+ * future edit to the region grid-template, the narrow threshold, OR either `collapse` rule in app-shell.css
+ * MUST be mirrored here too, or the isolated layout silently drifts from light mode —
+ * app-shell-isolation.browser.test.ts's AC5 leg is the gate that would catch such a drift (its negative
+ * control bites when this file is NOT injected). ⚠️ The `collapse="stack"`/`"toggle"` rules MUST stay AFTER
+ * the hide rules in THIS copy too — same equal-specificity/source-order reasoning as app-shell.css's own
+ * comment.
  *
  * CHROME PARITY (SPEC-R7, restored post-review): the region dividers + the `forced-colors` block are
  * mirrored below, `:host`-scoped, from app-shell.css's light-mode rules — an isolated shell keeps its
@@ -43,6 +45,33 @@
 
 ui-app-shell-region {
   display: block;
+}
+
+/* ADR-0084/SPEC-R8 collapse="toggle" (LLD-C11) — the SAME third, distinct keep-in-sync duplicate the
+ * banner above documents for `display: block`: these are document-level rules in app-shell.css too, so
+ * they never reach a relocated in-shadow region's own children (the button/content parts) either. */
+[data-part='collapse-toggle'] {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--ui-app-shell-divider);
+  border-radius: 0.25rem;
+  padding-inline: 0.5rem;
+  padding-block: 0.25rem;
+}
+[data-part='content'] {
+  display: contents;
+}
+@media (forced-colors: active) {
+  [data-part='collapse-toggle'] {
+    border-color: CanvasText;
+    forced-color-adjust: none;
+  }
 }
 
 :host {
@@ -92,6 +121,23 @@ ui-app-shell-region {
     grid-row: auto;
     inline-size: auto;
     margin-inline: 0;
+  }
+
+  /* ADR-0084/SPEC-R8 collapse="toggle" (LLD-C11) — the `:host >` mirror of app-shell.css's own rules (see
+     that file's comment for the full source-order/wide-invariant rationale; MUST stay after the hide rules
+     above, same reasoning as `stack`). */
+  :host > ui-app-shell-region[collapse='toggle'] {
+    display: block;
+    grid-column: 1 / -1;
+    grid-row: auto;
+    inline-size: auto;
+    margin-inline: 0;
+  }
+  :host > ui-app-shell-region[collapse='toggle'] [data-part='collapse-toggle'] {
+    display: inline-flex;
+  }
+  :host > ui-app-shell-region[collapse='toggle']:state(collapsed) [data-part='content'] {
+    display: none;
   }
 }
 

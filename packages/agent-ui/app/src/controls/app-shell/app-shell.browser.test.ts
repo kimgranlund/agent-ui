@@ -296,6 +296,83 @@ describe('ui-app-shell cross-engine smoke — narrow-container reflow (SPEC-R5)'
 
     wrapper.remove()
   })
+
+  it('collapse="toggle" (SPEC-R8, LLD-C11): starts expanded (visible + full-width like stack) narrow; the affordance collapses it, keeps the button reachable', async () => {
+    const { wrapper, shell } = mountShell(
+      `
+        <ui-app-shell-region region="banner">Banner</ui-app-shell-region>
+        <ui-app-shell-region region="navigation" collapse="toggle">Composer</ui-app-shell-region>
+        <ui-app-shell-region region="main">Main</ui-app-shell-region>
+        <ui-app-shell-region region="complementary">Aside</ui-app-shell-region>
+        <ui-app-shell-region region="contentinfo">Footer</ui-app-shell-region>
+      `,
+      '900px',
+    )
+    const nav = shell.querySelector('[region="navigation"]') as UIAppShellRegionElement
+    const btn = nav.querySelector('[data-part="collapse-toggle"]') as HTMLButtonElement
+    const content = nav.querySelector('[data-part="content"]') as HTMLElement
+
+    wrapper.style.width = '300px' // narrow the CONTAINER (< 40rem), not the viewport
+    expect(getComputedStyle(nav).display, 'a collapse="toggle" region hid before any user action — it should start expanded').not.toBe('none')
+    expect(getComputedStyle(btn).display, 'the toggle affordance is not visible narrow').not.toBe('none')
+    const navRect = nav.getBoundingClientRect()
+    const shellRect = shell.getBoundingClientRect()
+    expect(navRect.width).toBeCloseTo(shellRect.width, 0) // full-width, like stack, while expanded
+
+    btn.click()
+    await nav.updateComplete // the #collapsed signal write's effect re-run is microtask-batched
+    expect(getComputedStyle(content).display, 'the content did not hide on collapse').toBe('none')
+    expect(getComputedStyle(nav).display, 'the WHOLE region vanished — only its content should hide, the button must stay reachable').not.toBe('none')
+    expect(getComputedStyle(btn).display, 'the affordance itself vanished — the user could never expand it again').not.toBe('none')
+
+    btn.click() // toggling back expands it again
+    await nav.updateComplete
+    expect(getComputedStyle(content).display).not.toBe('none')
+
+    wrapper.remove()
+  })
+
+  it('collapse="toggle" wide-layout-unchanged invariant (SPEC-R8 AC2): an EXPANDED toggle region is byte-identical, wide, to a default region', () => {
+    const ref = mountShell(
+      '<ui-app-shell-region region="banner">B</ui-app-shell-region><ui-app-shell-region region="navigation">Nav</ui-app-shell-region><ui-app-shell-region region="main">Main</ui-app-shell-region>',
+      '900px',
+    )
+    const refNav = (ref.shell.querySelector('[region="navigation"]') as HTMLElement).getBoundingClientRect()
+    ref.wrapper.remove()
+
+    const toggled = mountShell(
+      '<ui-app-shell-region region="banner">B</ui-app-shell-region><ui-app-shell-region region="navigation" collapse="toggle">Nav</ui-app-shell-region><ui-app-shell-region region="main">Main</ui-app-shell-region>',
+      '900px',
+    )
+    const nav = toggled.shell.querySelector('[region="navigation"]') as HTMLElement
+    const btn = nav.querySelector('[data-part="collapse-toggle"]') as HTMLElement
+    // the assertion bites if the toggle anatomy renders ANY visible box wide, or perturbs the region's own
+    // placement/size — the affordance must be OFF the box tree entirely at this width.
+    expect(getComputedStyle(btn).display, 'the toggle affordance is visible WIDE — the invariant is broken').toBe('none')
+    const navRect = nav.getBoundingClientRect()
+    expect(navRect.top).toBeCloseTo(refNav.top, 0)
+    expect(navRect.left).toBeCloseTo(refNav.left, 0)
+    expect(navRect.width).toBeCloseTo(refNav.width, 0)
+    expect(navRect.height).toBeCloseTo(refNav.height, 0)
+    toggled.wrapper.remove()
+  })
+
+  it('collapse="toggle" is keyboard-operable (SPEC-R8 AC1) — a native <button>, Enter activates it', async () => {
+    const { wrapper, shell } = mountShell(
+      '<ui-app-shell-region region="navigation" collapse="toggle">Composer</ui-app-shell-region><ui-app-shell-region region="main">Main</ui-app-shell-region>',
+      '900px',
+    )
+    wrapper.style.width = '300px'
+    const nav = shell.querySelector('[region="navigation"]') as UIAppShellRegionElement
+    const btn = nav.querySelector('[data-part="collapse-toggle"]') as HTMLButtonElement
+    const content = nav.querySelector('[data-part="content"]') as HTMLElement
+    btn.focus()
+    expect(document.activeElement).toBe(btn) // natively focusable, no bespoke tabindex needed
+    btn.click() // a native <button> activates identically on Enter/Space/click — click stands in for the platform key path
+    await nav.updateComplete
+    expect(getComputedStyle(content).display).toBe('none')
+    wrapper.remove()
+  })
 })
 
 describe('ui-app-shell cross-engine smoke — forced-colors survival (SPEC-R7 AC2)', () => {

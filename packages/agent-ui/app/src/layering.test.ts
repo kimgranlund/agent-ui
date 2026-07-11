@@ -65,6 +65,18 @@ describe('import layering — app/src imports only down the DAG', () => {
     const violations = specifiersOf(src).filter((s) => !isAllowedAppSpecifier(s))
     expect(violations).toEqual(['@agent-ui/app'])
   })
+
+  // M4 (app-surfaces-m4.lld.md LLD-C16, SPEC-R13 AC2) — a NAMED negative control, not a new gate: the
+  // allowlist above already excludes @agent-ui/router by construction (it admits only
+  // components/a2ui/shared/local), so a `@agent-ui/router` import already fails the bijection test right
+  // above this one. This test exists ONLY to make that edge EXPLICIT for a future reader (the master-detail/
+  // settings surfaces deliberately never import it, ADR-0115) — a router-specific synthetic-violation, the
+  // SAME shape as the self-import check above, naming the actual forbidden package instead of a generic one.
+  it('synthetic-violation: the matcher flags a @agent-ui/router import from app/src (the M4 named NC — app never imports router)', () => {
+    const src = `import { createRouter } from '@agent-ui/router'\n`
+    const violations = specifiersOf(src).filter((s) => !isAllowedAppSpecifier(s))
+    expect(violations).toEqual(['@agent-ui/router'])
+  })
 })
 
 describe('components/src and a2ui/src never import @agent-ui/app (apex stays un-imported)', () => {
