@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0017
-status: open
+status: done
 date: 2026-07-11
 owner:
 kind: bug
@@ -62,3 +62,18 @@ but not a fixed frame; the SPEC has no frame-stability requirement — the fix a
 - TKT-0014/0015 — the sibling same-day QA-catch precedent.
 
 ## Findings
+
+### 2026-07-11 — fixed inline (the host, spawns limit-blocked; the wave is uncommitted and pre-review)
+
+- **The call:** top-anchored + growing-down (the VS Code palette convention) over fixed-total-height.
+- **The seam:** ui-modal gained three PUBLIC frame dials in its OWN token prefix
+  (`--ui-modal-{inline-size,max-inline-size,margin-block-start}`, defaults byte-behavior-identical —
+  modal.css tokenized its hardcoded frame); command-modal declares its own two dials
+  (`--ui-command-modal-{inline-size,block-anchor}` = `min(92vw, 36rem)` / `15svh`) and forwards them
+  onto the nested modal element it owns via inline `style.setProperty` — the slider `--value-pct`
+  JS-seam exemption, so family-coherence's cross-control token law is untouched.
+- **Tests (both engines, +4):** the frame-stability proof (dialog left/width/top + the search rect
+  identical ±1px across a filter that empties the list; the top anchor anti-vacuously < 30% viewport)
+  and the ui-modal IDENTITY check (a bare modal stays centered shrink-fit — the dials default clean).
+- SPEC-R15 added (annotated); modal.md + command-modal.md document the dials. Rides the wave's
+  pending pre-commit component review like everything else in it.
