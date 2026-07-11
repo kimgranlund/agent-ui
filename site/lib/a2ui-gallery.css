@@ -50,6 +50,20 @@
   white-space: nowrap;
 }
 
+/* The "closes with deleteSurface" honest-label badge (TKT-0016) — a seed whose own arc ends by deleting
+ * its own surface; the live surface below shows the arc's FULLEST state, not the empty post-close void, so
+ * this badge is how a reader learns the arc actually closes itself. Informational, not a defect — a
+ * neutral outline chip, never the danger tint `.seed-card-defect` uses. */
+.seed-card-badge {
+  flex: none;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 999px;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
 .seed-card-desc {
   margin: 0;
   color: var(--md-sys-color-neutral-on-surface);

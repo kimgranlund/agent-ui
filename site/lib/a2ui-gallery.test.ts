@@ -65,6 +65,69 @@ describe('the A2UI gallery — every card renders a live, non-empty surface with
   }
 })
 
+// ── self-deleting seeds (TKT-0016) — a seed whose OWN arc ends in `deleteSurface` correctly renders an
+// EMPTY surface on a full ingest (the delete really did tear it down); the gallery card DISPLAYS the arc's
+// fullest state instead (every message except that final deleteSurface) with an honest badge, while a
+// SEPARATE probe proves the full stream (close included) still tears down cleanly. Detected structurally
+// (the seed's last message is a deleteSurface targeting the seed's OWN surfaceId) — never by seed name, so
+// the next seed of this shape rides free with zero test edits. This turns the collision the gallery drift
+// gate first caught (`kpi-panel-lifecycle` rendering empty) into a STRONGER assertion, not an exclusion:
+// every seed above (including this one) still proves "non-empty, clean, no defect" via the loop above; this
+// block additionally proves the badge is honest and the full close is genuinely leak-free.
+describe('the A2UI gallery — self-deleting seeds display their fullest state + prove a clean full close', () => {
+  const { cards } = buildSeedGallery()
+  const selfDeleting = cards.filter((c) => c.closesWithDeleteSurface)
+
+  it('at least one shelf seed closes its own surface (anti-vacuous — TKT-0016 kpi-panel-lifecycle)', () => {
+    expect(selfDeleting.length).toBeGreaterThanOrEqual(1)
+  })
+
+  for (const { seed, card, deletesCleanly } of selfDeleting) {
+    it(`seed "${seed.name}": carries the honest "closes with deleteSurface" badge`, () => {
+      const badge = card.querySelector('.seed-card-badge')
+      expect(badge, `seed "${seed.name}" should carry the self-deleting badge`).not.toBeNull()
+      expect(badge?.textContent).toBe('closes with deleteSurface')
+    })
+
+    it(`seed "${seed.name}": the FULL stream (its own closing deleteSurface included) tears down cleanly`, () => {
+      expect(deletesCleanly, `seed "${seed.name}"'s full close left an error or an orphaned DOM node`).toBe(true)
+    })
+  }
+})
+
+// ── the detection negative control — a trailing deleteSurface that does NOT target the seed's OWN
+// surfaceId must NOT be treated as a self-close (never by name — structural: "last message is deleteSurface
+// AND targets seed.surfaceId"). Proves the generic detection actually discriminates, not merely "any
+// trailing deleteSurface". ──────────────────────────────────────────────────────────────────────────────
+describe('the self-close detection BITES only on the seed\'s OWN surfaceId (negative control)', () => {
+  const trailingDeleteOfOtherSurfaceSeed: ExampleSeed = {
+    name: 'trailing-delete-of-other-fixture',
+    description: 'A seed whose trailing deleteSurface targets a DIFFERENT surfaceId — not a self-close. Never on the shelf.',
+    promptText: 'n/a — negative control only',
+    surfaceId: 'mine',
+    protocolVersion: 'v1.0',
+    catalogId: 'agent-ui',
+    messages: [
+      { version: 'v1.0', createSurface: { surfaceId: 'mine', catalogId: 'agent-ui' } },
+      { version: 'v1.0', updateComponents: { surfaceId: 'mine', components: [{ id: 'root', component: 'Text', text: 'hi' }] } },
+      { version: 'v1.0', deleteSurface: { surfaceId: 'someone-else' } }, // targets a DIFFERENT surface
+    ],
+  }
+
+  it('is NOT flagged as self-deleting, renders the FULL stream (including the stray trailing delete), and stays non-empty/clean', () => {
+    const card = buildSeedCard(trailingDeleteOfOtherSurfaceSeed)
+    expect(card.closesWithDeleteSurface).toBe(false)
+    expect(card.deletesCleanly).toBe(true) // vacuously true — nothing to prove for a non-self-closing seed
+    expect(card.card.querySelector('.seed-card-badge')).toBeNull()
+    expect(card.errors).toEqual([])
+    expect(card.surface.childElementCount).toBeGreaterThan(0) // "mine"'s own root survives the OTHER surface's delete
+  })
+
+  it('the fixture is NOT on the shelf', () => {
+    expect(allSeeds.some((s) => s.name === 'trailing-delete-of-other-fixture')).toBe(false)
+  })
+})
+
 // ── the render-leg negative control (the examples.test.ts broken fixture — NOT on the shelf) ────────────
 // A corrupted seed whose Button's `component` is an unknown catalog type. buildSeedCard must DETECT the
 // rejection (a VALIDATION_FAILED client-error from the real host's placeholder path, SPEC-R9 AC2), mark

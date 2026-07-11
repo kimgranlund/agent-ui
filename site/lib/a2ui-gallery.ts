@@ -36,21 +36,66 @@ export interface SeedCard {
   readonly card: HTMLElement
   readonly surface: HTMLElement
   readonly errors: readonly A2uiErrorMessage[]
+  /** Whether this seed's OWN arc ends by deleting its own surface — detected GENERICALLY (the seed's last
+   *  message is `deleteSurface`), never by name, so a future seed with the same shape rides free. When
+   *  `true`, `surface` above shows the arc at its FULLEST point (every message EXCEPT that final
+   *  `deleteSurface`) rather than the post-close void a full ingest would correctly, but uselessly, show. */
+  readonly closesWithDeleteSurface: boolean
+  /** ONLY meaningful when `closesWithDeleteSurface` is `true` (else vacuously `true` — nothing to prove):
+   *  whether ingesting the seed's COMPLETE stream (the final `deleteSurface` included) through a SEPARATE,
+   *  undisplayed probe host leaves the surface cleanly torn down — zero renderer errors AND zero DOM
+   *  children. Proves the close is clean without sacrificing the card's own "fullest state" display. */
+  readonly deletesCleanly: boolean
+}
+
+/** A seed's arc ends by deleting its OWN surface iff its LAST message is a `deleteSurface` targeting the
+ *  seed's own `surfaceId` — detected structurally (never by seed name), so the next seed of this shape
+ *  needs no gallery edit (TKT-0016, the fleet's first such seed: `kpi-panel-lifecycle`). */
+function closesWithOwnDeleteSurface(seed: ExampleSeed): boolean {
+  const last = seed.messages[seed.messages.length - 1]
+  return last !== undefined && 'deleteSurface' in last && last.deleteSurface.surfaceId === seed.surfaceId
+}
+
+/** Ingest `messages` into a FRESH, throwaway (never mounted-and-kept) renderer + detached mount, purely to
+ *  observe the resulting client errors + DOM child count — the probe `buildSeedCard` uses to prove a
+ *  self-deleting seed's FULL stream (final `deleteSurface` included) tears down cleanly, without touching
+ *  the card's own displayed surface (which stays at the arc's fullest, pre-close state). */
+function probeFullIngest(seed: ExampleSeed): { errors: A2uiErrorMessage[]; childElementCount: number } {
+  const errors: A2uiErrorMessage[] = []
+  const host = createRenderer()
+  host.onClientMessage((m) => {
+    if ('error' in m) errors.push(m)
+  })
+  const mount = document.createElement('div')
+  host.mount(mount)
+  for (const message of seed.messages) host.ingestMessage(message)
+  host.finalize(seed.surfaceId)
+  const childElementCount = mount.childElementCount
+  host.dispose()
+  return { errors, childElementCount }
 }
 
 /**
- * buildSeedCard — one card for one seed: a head (name + derived message-count facet), the seed's
- * description + the prompt an agent would have received, a collapsed disclosure of the exact JSON payload
- * (derived from `seed.messages`), then a LIVE surface produced by feeding those messages through a fresh
- * real renderer. The host is left live (not disposed) so the surface stays
- * interactive, exactly like the a2ui-patterns demos. Errors emitted on the client channel (a validator
- * rejection or a widget-resolution failure) are collected and reflected onto `data-rendered` so a defect is
- * visible on the page AND assertable by the gate.
+ * buildSeedCard — one card for one seed: a head (name + derived message-count facet, + an honest
+ * "closes with deleteSurface" badge when the seed's own arc ends that way), the seed's description + the
+ * prompt an agent would have received, a collapsed disclosure of the exact JSON payload (derived from
+ * `seed.messages`), then a LIVE surface produced by feeding those messages through a fresh real renderer.
+ * A seed whose own arc ends in `deleteSurface` (TKT-0016: `kpi-panel-lifecycle`, the fleet's first) is
+ * DISPLAYED at its FULLEST state — every message except that final `deleteSurface` — rather than the
+ * post-close void a full ingest would correctly, but uselessly, show; a separate undisplayed probe proves
+ * the full stream (close included) still tears down cleanly (`deletesCleanly`). The host behind the
+ * DISPLAYED surface is left live (not disposed) so it stays interactive, exactly like the a2ui-patterns
+ * demos. Errors emitted on the client channel (a validator rejection or a widget-resolution failure) are
+ * collected and reflected onto `data-rendered` so a defect is visible on the page AND assertable by the gate.
  */
 export function buildSeedCard(seed: ExampleSeed): SeedCard {
   const card = document.createElement('div')
   card.className = 'seed-card'
   card.dataset.seed = seed.name // a stable per-seed selector (the gate + any browser probe)
+
+  const closesWithDeleteSurface = closesWithOwnDeleteSurface(seed)
+  // Show the arc at its FULLEST point when the seed closes itself — everything except that final message.
+  const displayMessages = closesWithDeleteSurface ? seed.messages.slice(0, -1) : seed.messages
 
   const head = document.createElement('div')
   head.className = 'seed-card-head'
@@ -63,6 +108,14 @@ export function buildSeedCard(seed: ExampleSeed): SeedCard {
   // message count (read off the seed, never invented). Pluralized off the real length.
   count.textContent = `${seed.messages.length} ${seed.messages.length === 1 ? 'message' : 'messages'}`
   head.append(heading, count)
+  if (closesWithDeleteSurface) {
+    // Honest-labels discipline: the card shows the FULLEST state, not the empty post-close surface, so a
+    // reader must be told the arc actually ends by deleting its own surface.
+    const badge = document.createElement('span')
+    badge.className = 'seed-card-badge'
+    badge.textContent = 'closes with deleteSurface'
+    head.append(badge)
+  }
 
   const desc = document.createElement('p')
   desc.className = 'seed-card-desc'
@@ -75,7 +128,9 @@ export function buildSeedCard(seed: ExampleSeed): SeedCard {
   // The collapsed payload disclosure — the exact JSON the agent sends, DERIVED from `seed.messages` (never
   // hand-transcribed), so the card literally shows "the payload the agent sends" beside the surface it
   // produces. Rendered through the shared `codeBlock` helper (textContent, never innerHTML) and height-
-  // capped in CSS. This is the payload half of the page's promise; the live surface below is the produced half.
+  // capped in CSS. This is the payload half of the page's promise; the live surface below is the produced
+  // half. Shows the COMPLETE stream (including a final deleteSurface) — the payload disclosure is honest
+  // about what the agent actually sends, independent of what the live surface below chooses to DISPLAY.
   const payload = document.createElement('details')
   payload.className = 'seed-card-payload'
   const payloadSummary = document.createElement('summary')
@@ -85,21 +140,32 @@ export function buildSeedCard(seed: ExampleSeed): SeedCard {
   const surface = document.createElement('div')
   surface.className = 'seed-surface'
 
-  // Drive the payload through a fresh renderer via its PUBLIC surface — exactly as the transport would.
+  // Drive the DISPLAY payload through a fresh renderer via its PUBLIC surface — exactly as the transport
+  // would, except a final self-deleteSurface is withheld so the card shows the arc's fullest state.
   const errors: A2uiErrorMessage[] = []
   const host = createRenderer()
   host.onClientMessage((m) => {
     if ('error' in m) errors.push(m)
   })
   host.mount(surface)
-  for (const message of seed.messages) host.ingestMessage(message)
+  for (const message of displayMessages) host.ingestMessage(message)
   host.finalize(seed.surfaceId)
+
+  // ONLY for a self-deleting seed: prove the FULL stream (deleteSurface included) still closes cleanly,
+  // via a separate, undisplayed probe — never affecting the card's own live (fullest-state) surface.
+  const deletesCleanly = closesWithDeleteSurface
+    ? (() => {
+        const probe = probeFullIngest(seed)
+        return probe.errors.length === 0 && probe.childElementCount === 0
+      })()
+    : true // vacuously true — nothing to prove for a seed that never deletes its own surface
 
   card.dataset.rendered = errors.length === 0 && surface.childElementCount > 0 ? 'true' : 'false'
   card.append(head, desc, prompt, payload, surface)
 
-  // A SEED DEFECT is shown, not hidden: if the surface failed to render, an honest note names it on the
-  // card (the drift gate fails independently on the same `errors`/empty-surface condition).
+  // A SEED DEFECT is shown, not hidden: if the DISPLAYED (fullest-state) surface failed to render, OR a
+  // self-deleting seed's full close leaves an error/orphan, an honest note names it on the card (the drift
+  // gate fails independently on the same conditions).
   if (card.dataset.rendered === 'false') {
     const defect = document.createElement('p')
     defect.className = 'seed-card-defect'
@@ -109,9 +175,15 @@ export function buildSeedCard(seed: ExampleSeed): SeedCard {
         ? `This seed did not render — the renderer rejected its payload (${errors[0]!.error.code}).`
         : 'This seed rendered an empty surface.'
     card.append(defect)
+  } else if (!deletesCleanly) {
+    const defect = document.createElement('p')
+    defect.className = 'seed-card-defect'
+    defect.setAttribute('role', 'status')
+    defect.textContent = "This seed's closing deleteSurface did not cleanly tear down the surface."
+    card.append(defect)
   }
 
-  return { seed, card, surface, errors }
+  return { seed, card, surface, errors, closesWithDeleteSurface, deletesCleanly }
 }
 
 /**
