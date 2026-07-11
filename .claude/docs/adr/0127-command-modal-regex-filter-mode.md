@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-11 *(authored)* |
 > | **Proposed by** | design intake (TKT-0018, site command-search) — the load-bearing open TKT-0018 names: does the shipped `ui-command-modal` support regex-over-description filtering, and does it need a control change to get it? |
-> | **Ratified by** | *(awaiting Kim — the taste fork below)* |
+> | **Ratified by** | Kim, 2026-07-11 — hand-flipped in-tree + confirmed at the ratification prompt (the closed `filter` enum as recommended) |
 > | **Repairs** | NEW [`../spec/site-command-search.spec.md`](../spec/site-command-search.spec.md) SPEC-R6/R7 (the filter contingency). On ratification+build: amends [`../spec/command-modal.spec.md`](../spec/command-modal.spec.md) SPEC-R2 (props schema, +`filter`) and SPEC-R5 (filter semantics, +mode axis) · amends [`../lld/command-modal.lld.md`](../lld/command-modal.lld.md) LLD-C1/C5 · amends `packages/agent-ui/components/src/controls/command-modal/{command-modal.ts,command-modal.md}` — none edited by this design intake itself (build-team scope) |
 > | **Supersedes / Superseded by** | **Extends ADR-0125** (does not reverse it — F1/F7 stand: substring stays the default and the proven v1 behavior; regex is a new, opt-in, additive mode, not the "fuzzy-match sophistication" F7 fenced) |
 
