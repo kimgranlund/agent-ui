@@ -307,4 +307,4 @@ set to begin with.
 | SPEC-R3 AC3, N2 | PRD-G6 (whole-fleet coverage — the anti-drift catalog↔fleet gate, ADR-0087) |
 | SPEC-R8 | PRD-D3 (resolved: direct, not adapter) |
 
-_Co-serves PRD-G1 with the runtime SPEC and PRD-G2/G4 with sibling SPECs. See [`../README.md`](../archive/a2ui-expert-system/README.md)._
+_Co-serves PRD-G1 with the runtime SPEC and PRD-G2/G4 with sibling SPECs. Status: each doc's own header (the tree wins); the original charter table is archived (frozen 2026-07-08)._

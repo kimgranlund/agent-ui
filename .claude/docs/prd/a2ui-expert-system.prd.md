@@ -1,7 +1,7 @@
 # PRD — A2UI Expert System
 
 > Status: proposed · v0.1 · 2026-06-26 · Owner: agent-ui
-> Document family: this PRD is upstream of the SPECs in [`specs/`](../spec/) and the LLDs in [`llds/`](../lld/). See [`README.md`](../archive/a2ui-expert-system/README.md) for the map + traceability matrix.
+> Document family: this PRD is upstream of the SPECs in [`specs/`](../spec/) and the LLDs in [`llds/`](../lld/). The family lives on the unified map (`../spec/`·`../lld/`); decisions index: [`../adr/README.md`](../adr/README.md); the original charter is [archived](../archive/a2ui-expert-system/README.md) (frozen 2026-07-08).
 > Altitude: this document owns **why + what-should-exist**. Behavior contracts live in the SPECs; implementation in the LLDs. Lower documents reference these goal IDs; they do not restate them.
 
 ## 1. Problem
@@ -126,7 +126,7 @@ Sequencing rationale only; the SPECs own the behavior and the LLDs own the build
 
 ## 7. Downstream documents (the series this PRD spawns)
 
-This PRD is refined by the following SPECs (what must be built / how it behaves) and LLDs (how it is built). Status and traceability are tracked in [`README.md`](../archive/a2ui-expert-system/README.md).
+This PRD is refined by the following SPECs (what must be built / how it behaves) and LLDs (how it is built). Status lives in each doc's own header (the tree wins — `agent-ui-doc-standards` §2); decisions in [`../adr/README.md`](../adr/README.md); the original charter table is [archived](../archive/a2ui-expert-system/README.md) (frozen 2026-07-08).
 
 - `specs/a2ui-runtime.spec.md` — protocol-conformance behavior + the zero-dep renderer contract *(PRD-G1)*
 - `specs/a2ui-catalog.spec.md` — catalog model: default catalog + the two-tier extensibility surface *(PRD-G1, PRD-G2, PRD-D3)*

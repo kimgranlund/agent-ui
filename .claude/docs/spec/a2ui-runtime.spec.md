@@ -202,4 +202,4 @@ interface A2uiRenderer {
 | SPEC-R13 | PRD-G6 (version coherence) |
 | SPEC-N3, N5 | PRD-G1 + Constraint C2 (zero-dep, leak-free) |
 
-_Covers PRD-G1 fully; PRD-G2/G4/G6/G7 are co-served with sibling SPECs (catalog, harness, streaming-pipeline). See [`../README.md`](../archive/a2ui-expert-system/README.md)._
+_Covers PRD-G1 fully; PRD-G2/G4/G6/G7 are co-served with sibling SPECs (catalog, harness, streaming-pipeline). Status: each doc's own header (the tree wins); the original charter table is archived (frozen 2026-07-08)._

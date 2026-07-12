@@ -120,4 +120,4 @@ interface A2uiMcpTools {
 | SPEC-R4, R5, R6 | PRD-G7 (AG-UI / A2A / MCP interop) · PRD-D5 |
 | SPEC-R7, N3 | PRD-G1, PRD-G6 (conformance/version coherence) |
 
-_Co-serves PRD-G1 with runtime/catalog and completes PRD-G7. See [`../README.md`](../archive/a2ui-expert-system/README.md)._
+_Co-serves PRD-G1 with runtime/catalog and completes PRD-G7. Status: each doc's own header (the tree wins); the original charter table is archived (frozen 2026-07-08)._

@@ -1,3 +1,8 @@
+> **ARCHIVED 2026-07-12 (repo-alignment Phase 5, manifest M3):** parked 2026-06-28; its entire
+> scope (the card/container family + the nested-radius law + the elevation/brightness surface model)
+> shipped via ADR-0046 and the G9/container waves WITHOUT ever citing this draft — a dead orphan with
+> zero inbound references. Kept as the dated exploration record.
+
 # Container family — design notes
 
 > **Status: design decisions RATIFIED via a planning session (2026-06-28); handed to planning-lead for

@@ -160,4 +160,4 @@ interface VerdictsFile {
 | SPEC-R3, R4, R6, R8, N3 | PRD-G4 (provable validity) |
 | SPEC-R4 (version-pin, realized), R7 | PRD-G6 (coherence) |
 
-_Covers PRD-G3 fully and co-serves PRD-G4 with the runtime/catalog/corpus SPECs. See [`../README.md`](../archive/a2ui-expert-system/README.md)._
+_Covers PRD-G3 fully and co-serves PRD-G4 with the runtime/catalog/corpus SPECs. Status: each doc's own header (the tree wins); the original charter table is archived (frozen 2026-07-08)._

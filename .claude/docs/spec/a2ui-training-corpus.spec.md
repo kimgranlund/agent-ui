@@ -242,4 +242,4 @@ interface CorpusOps {
 | SPEC-R8, R14 | PRD-G4 (provable validity) + PRD-G5 |
 | SPEC-R11 | PRD-G7 (MCP transport) |
 
-_No requirement here is orphaned; coverage of PRD-G5/PRD-D1 is complete. PRD-G1/G2/G3 are covered by sibling SPECs (see [`../README.md`](../archive/a2ui-expert-system/README.md))._
+_No requirement here is orphaned; coverage of PRD-G5/PRD-D1 is complete. PRD-G1/G2/G3 are covered by sibling SPECs (the original charter table is [archived](../archive/a2ui-expert-system/README.md), frozen 2026-07-08)._
