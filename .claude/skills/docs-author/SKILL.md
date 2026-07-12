@@ -8,6 +8,8 @@ description: >-
   the theming guide"). Pick the content type, derive the page from its canonical source (the {name}.md
   descriptor, the real renderer, the props enum, the token roles) instead of hand-maintaining it, wire
   the deterministic drift-gate that backs it, and score it against the type's rubric.
+disable-model-invocation: false
+user-invocable: true
 ---
 
 # Authoring docs

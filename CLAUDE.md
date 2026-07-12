@@ -42,7 +42,7 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   rendering the agent-common markdown subset into real fleet DOM, sanitized by construction); depends only
   on `@agent-ui/components` + `@agent-ui/shared`; a sibling branch off `components` alongside `router`,
   catalog-invisible by construction (never imported by `a2ui`)
-- `.claude/docs/` — plan, goals, process, references, adr, specs, llds, decompositions, rubrics (agent-scoped project docs) · `*.test.ts` co-located with source
+- `.claude/docs/` — plan, goals, process, references, adr, prd, spec, lld, decompositions, tickets, rubrics, archive (agent-scoped project docs; the doc grammar + status law: `.claude/skills/agent-ui-doc-standards/`) · `*.test.ts` co-located with source
 
 ## Conventions (non-obvious only)
 

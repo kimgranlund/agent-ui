@@ -4,6 +4,8 @@ id: tkt-0003
 status: done
 date: 2026-07-09
 owner:
+kind: feature
+size: small
 ---
 # TKT-0003 — promote `theme-provider` to a shipped library component
 

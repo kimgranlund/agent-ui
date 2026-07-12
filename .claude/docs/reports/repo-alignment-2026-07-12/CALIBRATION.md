@@ -35,3 +35,15 @@ Deviations, false premises, guesses, corrections — appended continuously (an e
   records, sanctioned) — the Phase-5 corpus-tier gate must scope to .md links, not .json strings.
   (e) prd/a2ui-expert-system.prd.md carried a pre-existing dangling `.claude/CLAUDE.md` link
   (never existed) — repointed to the repo-root entry file.
+- **Phase 3 execution:** the survey's key reversal — the template expected "extract a hardcoded
+  schema"; the reality was THREE deliberate dialects + a deliberate proposed-forever SPEC/LLD
+  convention, so the standards skill CODIFIES observed practice rather than normalizing it. The
+  new S1 gate bit on its FIRST run (tkt-0003 predates the `kind` field — backfilled) — the
+  check-catches-your-own-mistakes property working as the playbook predicts. The adr-status-guard
+  registration changes MY OWN workflow: agents can no longer flip proposed→accepted even at a
+  prompt-confirmed ratification — Kim hand-flips in-tree (his existing pattern), agents do the
+  surrounding housekeeping only. S4 makes the orphaned-guard class structurally impossible.
+- **Phase 3 scope note:** the component-NAMING master plan (tags/tokens/events/parts — Kim's
+  separate exploration) is NOT folded into this phase's doc-grammar skill; it needs its own
+  exception-count inventory and lands as `references/naming.md` — queued in the Phase-6 follow-up
+  work queue as a decisions+mechanical item.

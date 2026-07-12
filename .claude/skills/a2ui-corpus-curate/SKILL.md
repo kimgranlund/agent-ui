@@ -11,6 +11,8 @@ description: >-
   the dedup math, or the pipeline internals. NOT for composing an A2UI payload from the catalog — that is
   `a2ui-compose`; NOT for writing the pipeline / renderer / validator / catalog code — that is the
   `a2ui-builder` agent. This skill only DRIVES the realized pipeline, as a curator.
+disable-model-invocation: false
+user-invocable: true
 ---
 
 # Curating the A2UI corpus
