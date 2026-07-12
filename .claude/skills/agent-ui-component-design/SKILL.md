@@ -135,3 +135,11 @@ The TKT-0003 `ui-theme-provider` intake end-to-end: ADR-0117 + `spec/theme-provi
 + `lld/theme-provider.lld.md` + `decompositions/theme-provider-ship.decomp.json` — including
 what review caught pre-build (an unrunnable test design, an unsatisfiable migration gate) and
 the honest deviation records the build added. Read it before running your first intake.
+
+## Naming (run before the fork sheet freezes)
+
+Every new component's names derive from ONE decision — the family name — via
+`.claude/docs/references/naming.md` §13's worked derivation. Run its §10 five-question rubric
+(namespace(s) entered · reserved-word/concept-canon collision · closed-set admission → the wave's
+ADR · prefix = ownership · derivability) at the intake, and check §12's recorded exceptions so a
+deviation is either avoided or knowingly extended. Naming is not re-litigated at build.

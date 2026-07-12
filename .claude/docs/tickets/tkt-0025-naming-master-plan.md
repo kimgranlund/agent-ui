@@ -50,3 +50,15 @@ names-as-machine-readable-API, grep-ability over brevity (the `^ui-` palette rul
   agent-ui-doc-standards at the repo-alignment).
 
 ## Findings
+
+### 2026-07-12 — steps 1+2 done: the inventory + references/naming.md (review-shipped)
+
+- The sized inventory: [`../reports/naming-inventory-2026-07-12.md`](../reports/naming-inventory-2026-07-12.md)
+  (9 namespaces, top-10 exceptions; one count corrected at review — `axis` is ui-split only, 7:1).
+- [`../references/naming.md`](../references/naming.md) authored + independently reviewed (SHIP after one
+  MAJOR — ui-text falsely listed as an axis exception, fixed; the data-role registry scoped to
+  control-emitted + named author hooks; the 7-class ladder footnoted). The §10 five-question rubric
+  folded into `agent-ui-component-design` (naming is not re-litigated at build).
+- REMAINING: the four §11 gate closures (emit-seam allowlist · custom-state vocabulary · data-role
+  registry scan · descriptor↔DOM parts) — build slices; and the §12 OPEN fork (the two token
+  dialects) → Kim.
