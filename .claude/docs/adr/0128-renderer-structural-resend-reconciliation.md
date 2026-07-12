@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-12 |
 > | **Proposed by** | design intake (TKT-0024, host-reproduced 2026-07-12: a mounted non-root container resent whole via `updateComponents` with a grown `children` list never repaints — `SurfaceTree.apply` reuses the cached widget on any later delivery of that id) |
-> | **Ratified by** | — the SPEC-R5 fork RULED (Kim, 2026-07-12, at the batched prompt: option B — reorder deferred as a documented non-goal); the Status flip is Kim's hand-edit per the registered guard |
+> | **Ratified by** | Kim, 2026-07-12 — SPEC-R5 ruled option B (reorder deferred) at the batched prompt; Status hand-flipped in-tree + 'proceed' confirmed (the registered-guard workflow's first full pass) |
 > | **Repairs** | NEW [`../spec/renderer-structural-resend.spec.md`](../spec/renderer-structural-resend.spec.md) · NEW [`../lld/renderer-structural-resend.lld.md`](../lld/renderer-structural-resend.lld.md) · NEW [`../decompositions/renderer-structural-resend.decomp.json`](../decompositions/renderer-structural-resend.decomp.json) (coverage-clean, plan mode). On ratification+build (NOT this intake): `packages/agent-ui/a2ui/src/renderer/{tree.ts,widget.ts,renderer.ts,types.ts}` · a forward cross-reference note in [`../spec/a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) SPEC-R3/R4 (the gap this ADR closes, left unedited by this intake per its docs-only scope) · `round-trip.test.ts` (a2ui-live) · the a2ui-chat build's turn 3/4 assertions · the `message-lifecycle` corpus seed's fixture test |
 > | **Supersedes / Superseded by** | None. **Relates ADR-0024** (the LLD-C6 per-item `(scope, ac)` pair this ADR generalizes to every static-tree node — a sibling mechanism, not a supersession: LLD-C6 stays positional/no-key for array-template lists, this ADR is id-keyed for static `children` references) · **Relates ADR-0053** (the Select+Option first-connect limitation this ADR's mechanism interacts with but does NOT resolve — retained, disposition corrected below) · **Relates ADR-0126/the message-lifecycle SPEC** (SPEC-R2's whole-record-upsert rule, whose AC2 already modeled exactly this scenario without the renderer honoring it — this ADR makes that assumption true) |
 

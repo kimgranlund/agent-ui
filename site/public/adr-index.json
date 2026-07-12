@@ -880,5 +880,12 @@
     "description": "ui-command-modal gains an opt-in filter=\"regex\" match mode (TKT-0018 site command-search) — EXTENDS ADR-0125 (F1/F7 stand; substring stays the default). Source…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0128",
+    "url": "./adr-index.html#adr-0128",
+    "description": "The renderer reconciles a mounted container's resent record (TKT-0024, host-reproduced 2026-07-12: SurfaceTree.apply reuses the cached widget on any later deli…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
