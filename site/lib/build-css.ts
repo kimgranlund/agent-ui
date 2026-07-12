@@ -176,6 +176,9 @@ function writeCacheAtomically(cacheFile: string, content: string): void {
  * the (presumed-abandoned) lock and building independently rather than hanging forever.
  */
 export async function buildSiteCssShared(root: string, scratchOutDir: string): Promise<string> {
+  // Guard: a falsy/relative root once minted a literal `undefined/dist-shared-build-cache/` dir at the
+  // caller's CWD (found at the 2026-07-12 repo-alignment sweep) — fail loud instead of littering.
+  if (!root || !root.startsWith('/')) throw new Error(`buildSiteCssShared: root must be an absolute path, got ${JSON.stringify(root)}`)
   const cacheDir = `${root}/dist-shared-build-cache`
   const cacheFile = `${cacheDir}/all.css`
   const lockDir = `${cacheDir}/.lock`
