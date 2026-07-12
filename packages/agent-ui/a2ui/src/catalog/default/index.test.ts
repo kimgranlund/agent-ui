@@ -148,21 +148,15 @@ function fleetPrimaryTypes(): string[] {
  *  feed seeds above were drained. `Image`/`Video` are deliberately NOT here — no `ui-image`/`ui-video`
  *  descriptor exists, so they never enter the derived set to begin with (they stay a documentary-only note
  *  in SPEC §5.2.1, never code-derived). A future undispositioned control re-seeds this map with a reason +
- *  citation, same as Wave 0's seed. */
-// ADR-0123 (color-picker.lld.md) M1 wave: `ColorPicker` ships its control here but NOT its catalog row —
-// the M1/M2 discipline (ADR-0118 precedent) splits control-ship from catalog-row+exemplar+guidance into a
-// separate, one-context-sized M2 wave. This is a TEMPORARY "shipped ahead of its catalog row" seed (the
-// report/content/feed/token-surface precedent above) — M2 lands the `ColorPicker` row + a validator-clean
-// exemplar + §5.2 guidance and DRAINS this entry, the same way those families' seeds were drained.
+ *  citation, same as Wave 0's seed. The color-picker family (ADR-0123, `ColorPicker`) re-seeded this SAME
+ *  "shipped ahead of its catalog row" shape at M1 (color-picker.lld.md, the ADR-0118 M1/M2 discipline) —
+ *  this M2 wave lands the row below and DRAINS that seed too, the same way the token-surface/report/
+ *  content/feed seeds above were drained. */
 //
 // `Toast`/`ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
 // the only PERMANENT entries — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
 // content) — never drained.
 const EXCLUSION_ALLOWLIST = new Map<string, string>([
-  ['ColorPicker',
-    'ADR-0123 / color-picker.lld.md — TEMPORARY, M1-seeded: the control ships in this wave, the catalog ' +
-    'row + exemplar + §5.2 guidance land in a follow-on M2 wave (the ADR-0118 M1/M2 discipline). Drains ' +
-    'at M2, not permanent.'],
   ['Toast', 'ADR-0112 cl.6 — PERMANENT exclusion, never catalogue-bound: app-surface chrome driven by show(), not agent-emittable (rejected explicitly: history-must-not-lie · payload↔DOM traceability · teaching a forbidden type).'],
   ['ToastRegion', 'ADR-0112 cl.6 — PERMANENT exclusion, same reasoning as Toast: app-surface chrome, never a catalog row.'],
   ['ThemeProvider',
@@ -1135,6 +1129,104 @@ describe('default catalog — Swiper/SwiperItem via the shared validator (ADR-01
     expect((surface.data.peek() as { slide: unknown }).slide).toBe('pricing') // LLD-C8 wrote it back (SPEC-R7)
 
     swiper.remove()
+    disposeSurface(surface)
+  })
+})
+
+// ── the ADR-0123 color-picker family (ColorPicker), catalog row per color-picker.lld.md (M2 wave) ────────
+//
+// SPEC-N2 (fleet-derived coverage, zero allowlist residue) is proven by the two describe blocks near the
+// top of this file (the drained `EXCLUSION_ALLOWLIST` + the residue guard — `ColorPicker` no longer
+// appears there). This block proves the row itself: a representative payload validates 0-`CATALOG`,
+// `value` is bindable + carries the real `value:{prop:'value',event:'change'}` two-way mark (the
+// `Calendar`/`Slider` precedent), `format` is a non-bindable structural enum (the `Calendar.mode`
+// precedent — it selects HOW `value` serializes, not live content), unknown/wrong-primitive props still
+// fail CATALOG, and a REAL `ui-color-picker`'s user-driven commit (a committed entry through its embedded
+// readout `ui-text-field`, the control's OWN `change` listener on that composed child — color-picker.ts
+// `#commitReadout`) writes back into `surface.data` via the generic LLD-C8 controller (the RadioGroup/
+// SegmentedControl/Swiper live-bind precedent — a real composed-child event, never a mocked pointer-drag;
+// pad/channel drag geometry is browser-only truth, color-picker.lld.md §11).
+describe('default catalog — ColorPicker via the shared validator (ADR-0123, color-picker.spec.md)', () => {
+  it('a representative ColorPicker payload validates 0 failures via validateA2ui', () => {
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'ColorPicker', name: 'accent', required: true, value: { path: '/accent' }, format: 'hex' },
+        ],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('ColorPicker is two-way bound on value via the change event (the Calendar/Slider precedent)', () => {
+    const cp = defaultCatalog.components.ColorPicker
+    expect(cp.value).toEqual({ prop: 'value', event: 'change' })
+    expect(cp.properties.value?.bindable).toBe(true)
+  })
+
+  it('format is a non-bindable structural enum (the Calendar.mode precedent — selects HOW value serializes, not live content)', () => {
+    expect(defaultCatalog.components.ColorPicker.properties.format).toEqual({
+      type: { type: 'string', enum: ['hex', 'oklch'] },
+      mapsTo: 'format',
+    })
+  })
+
+  it('name/required are declared, non-bindable structural props (the formProps precedent — disabled is the one bindable structural prop)', () => {
+    expect(defaultCatalog.components.ColorPicker.properties.name?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.ColorPicker.properties.required?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.ColorPicker.properties.disabled?.bindable).toBe(true)
+  })
+
+  it('ColorPicker declares no children (a leaf composite — pad/channels/readout are ALL built by the control itself, never agent-composed)', () => {
+    expect(defaultCatalog.components.ColorPicker.children).toBeUndefined()
+  })
+
+  it('accepts a {path} binding for value/disabled (bindable props)', () => {
+    const byValue: A2uiComponent = { id: 'cp1', component: 'ColorPicker', value: { path: '/accent' } }
+    const byDisabled: A2uiComponent = { id: 'cp2', component: 'ColorPicker', disabled: { path: '/formDisabled' } }
+    expect(validateCatalogConformance(byValue, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(byDisabled, defaultCatalog)).toEqual([])
+  })
+
+  it('NEGATIVE: an unknown prop fails CATALOG', () => {
+    const cp: A2uiComponent = { id: 'cp3', component: 'ColorPicker', value: '#fff', bogus: 1 }
+    expect(validateCatalogConformance(cp, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'cp3.bogus' })
+  })
+
+  it('NEGATIVE: a wrong-primitive literal fails CATALOG (value is a string prop, format is a string enum)', () => {
+    const wrongValue: A2uiComponent = { id: 'cp4', component: 'ColorPicker', value: 1 }
+    expect(validateCatalogConformance(wrongValue, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'cp4.value' }))
+
+    const wrongFormat: A2uiComponent = { id: 'cp5', component: 'ColorPicker', format: 42 }
+    expect(validateCatalogConformance(wrongFormat, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'cp5.format' }))
+  })
+
+  it("a REAL ui-color-picker's committed readout entry (change on the composed ui-text-field) writes back into surface.data via the generic LLD-C8 controller (mirrors the Slider/Calendar/RadioGroup value:{prop,event} round trip)", () => {
+    const surface = createSurface({ id: 's4', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { accent: '' }
+
+    // The real ui-color-picker (defaultFactories self-defines the whole family on import,
+    // catalog/default/factories.ts:1) — no mocks, no stub factory.
+    const picker = defaultFactories.ColorPicker.create() as HTMLElement & { value: string }
+    document.body.append(picker)
+
+    const node: A2uiComponent = { id: 'cp', component: 'ColorPicker', value: { path: '/accent' } }
+    installInputBinding(picker, defaultFactories.ColorPicker, node, surface)
+
+    // The user gesture: committing a color through the embedded readout ui-text-field — the control's
+    // OWN `change` listener on that composed child (color-picker.ts's `#commitReadout` path, wired
+    // directly to the readout element, LLD-C1). A real DOM event on a real composed child, never a
+    // mocked pointer-drag (pad/channel gesture geometry is browser-only truth, LLD §11).
+    const readout = picker.querySelector('ui-text-field') as HTMLElement & { value: string }
+    readout.value = '#3b82f6'
+    readout.dispatchEvent(new Event('change'))
+
+    expect(picker.value).toBe('#3b82f6') // the control's own committed, gamut-mapped hex serialization
+    expect((surface.data.peek() as { accent: unknown }).accent).toBe('#3b82f6') // LLD-C8 wrote it back (SPEC-R7)
+
+    picker.remove()
     disposeSurface(surface)
   })
 })

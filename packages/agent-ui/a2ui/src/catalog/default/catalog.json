@@ -557,6 +557,17 @@
     "SwiperItem": {
       "properties": {},
       "children": "ChildList"
+    },
+
+    "ColorPicker": {
+      "properties": {
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "required": { "type": { "type": "boolean" }, "mapsTo": "required" },
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "format": { "type": { "type": "string", "enum": ["hex", "oklch"] }, "mapsTo": "format" }
+      },
+      "value": { "prop": "value", "event": "change" }
     }
   },
 

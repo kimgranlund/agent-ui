@@ -35,7 +35,10 @@
  * (a narrative chronology is report content, the `List`/`Table` reasoning, not an ask affordance). NOT
  * widened by the swiper-family wave either (ADR-0124 F5) — `Swiper`/`SwiperItem` land in `FEED_EXCLUDED`
  * below instead (a scroll-snap carousel deliberately hides all-but-one slide behind navigation, the
- * `Tabs` "hides half the ask" reasoning, not the `Toolbar`/`Row` parity argument).
+ * `Tabs` "hides half the ask" reasoning, not the `Toolbar`/`Row` parity argument). NOT widened by the
+ * color-picker wave (ADR-0123 cl.6) — `ColorPicker` lands in `FEED_EXCLUDED` below instead: it is an
+ * INPUT (unlike `Swatch`/`Ramp`/`Ladder`'s display-only report content), but no ask affordance admits an
+ * editor to the artifact feed.
  */
 export const FEED_SURFACE_TYPES = [
   'Text',
@@ -188,6 +191,11 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
       'a scroll-snap carousel deliberately shows one (or a few) slide(s) at a time behind pagination/paddle navigation — the Tabs "hides half the ask" reasoning taken further (ADR-0124 F5): an ask must be fully visible and operable inline, never paged through to be seen in full.',
   },
   { type: 'SwiperItem', reason: 'a Swiper child — excluded alongside its parent (composite closure).' },
+  {
+    type: 'ColorPicker',
+    reason:
+      'an INPUT, not report/reference content (ADR-0123 cl.6) — unlike the display-only Swatch/Ramp/Ladder trio, ColorPicker DOES carry a value:{prop,event} mark, but no ask affordance admits an editor to the artifact feed; a color ask inside a chat bubble stays a TextField/ComboBox choice, not a 2-axis pad+channels composite.',
+  },
 ] as const
 
 /** `Set` view for O(1) membership checks (produce()'s FEED_SCOPE gate, the page's fail-closed drop). */

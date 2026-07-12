@@ -582,6 +582,44 @@ export const brandPaletteSeed: ExampleSeed = {
   ],
 }
 
+const COLOR_PICKER_FORM_ID = 'color-picker-form'
+export const colorPickerFormSeed: ExampleSeed = {
+  name: 'color-picker-form',
+  description: 'A theme-color editing form — a Field-wrapped ColorPicker bound two-way to the data model, with a live Swatch preview beside it (color-picker.lld.md M2 — the ADR-0118 fence: ui-color-picker EDITS the color, ui-swatch only SHOWS the same bound value).',
+  promptText: "Let me pick our app's accent color.",
+  surfaceId: COLOR_PICKER_FORM_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: COLOR_PICKER_FORM_ID, catalogId: 'agent-ui' } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: COLOR_PICKER_FORM_ID,
+        value: { accentColor: '#3b82f6' },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: COLOR_PICKER_FORM_ID,
+        components: [
+          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
+          { id: 'root_content', component: 'CardContent', children: ['col'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'row'] },
+          { id: 'title', component: 'Text', variant: 'h3', text: 'Accent color' },
+          { id: 'row', component: 'Row', gap: 'lg', align: 'start', children: ['field', 'preview'] },
+          { id: 'field', component: 'Field', label: 'Accent', child: 'picker' },
+          { id: 'picker', component: 'ColorPicker', name: 'accentColor', value: { path: '/accentColor' } },
+          // The SEPARATE Swatch reader of the SAME bound path — the ADR-0123 fence in one payload:
+          // ColorPicker EDITS the color, Swatch only SHOWS it (never one node doing both jobs).
+          { id: 'preview', component: 'Swatch', value: { path: '/accentColor' }, label: 'Current accent' },
+        ],
+      },
+    },
+  ],
+}
+
 /** Every seed this module defines — the barrel's family-array precedent (index.ts derives `allSeeds`
  *  length from these, never a hand-counted literal). */
 export const catalogCoverageSeeds: readonly ExampleSeed[] = [
@@ -594,4 +632,5 @@ export const catalogCoverageSeeds: readonly ExampleSeed[] = [
   deploymentReportSeed,
   agentTaskStatusSeed,
   brandPaletteSeed,
+  colorPickerFormSeed,
 ]

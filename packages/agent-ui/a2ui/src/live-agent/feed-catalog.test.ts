@@ -18,9 +18,9 @@ const inSet = new Set<string>(FEED_SURFACE_TYPES)
 const outSet = new Set<string>(FEED_EXCLUDED.map((e) => e.type))
 
 describe('feed sub-catalog partition gate (ADR-0097 §3 / SPEC-R15 / LLD-C14)', () => {
-  it('has the exact ADR-0097 §3 counts — 27 IN, 27 OUT (11 at ratification + the chart-family pair, ADR-0097 Amendment / ADR-0107 Amendment 2 + the report/content/feed catalog wave\'s 3 IN / 5 OUT, ADR-0111/0113/0112 + the token-surface family\'s 0 IN / 3 OUT, ADR-0118 cl.6 + the M4 app-surfaces panes wave\'s 0 IN / 2 OUT, ADR-0120 cl.5 + the toolbar wave\'s 1 IN / 0 OUT, ADR-0121 F7 + the timeline-family wave\'s 0 IN / 2 OUT, ADR-0122 F5 + the swiper-family wave\'s 0 IN / 2 OUT, ADR-0124 F5)', () => {
+  it('has the exact ADR-0097 §3 counts — 27 IN, 28 OUT (11 at ratification + the chart-family pair, ADR-0097 Amendment / ADR-0107 Amendment 2 + the report/content/feed catalog wave\'s 3 IN / 5 OUT, ADR-0111/0113/0112 + the token-surface family\'s 0 IN / 3 OUT, ADR-0118 cl.6 + the M4 app-surfaces panes wave\'s 0 IN / 2 OUT, ADR-0120 cl.5 + the toolbar wave\'s 1 IN / 0 OUT, ADR-0121 F7 + the timeline-family wave\'s 0 IN / 2 OUT, ADR-0122 F5 + the swiper-family wave\'s 0 IN / 2 OUT, ADR-0124 F5 + the color-picker wave\'s 0 IN / 1 OUT, ADR-0123 cl.6)', () => {
     expect(FEED_SURFACE_TYPES.length).toBe(27)
-    expect(FEED_EXCLUDED.length).toBe(27)
+    expect(FEED_EXCLUDED.length).toBe(28)
   })
 
   it('IN and OUT are disjoint — no type carries two dispositions', () => {

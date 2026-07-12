@@ -4837,6 +4837,19 @@ filtering resizes the list).
   dictionary artifact). Gates: check · jsdom 238/238 scoped (repo green minus the regenerated
   fixtures) · browser 84+ both engines · size green.
 
+## 2026-07-11 (color-picker M2) — ColorPicker joins the catalog; the M1 allowlist seed drains
+
+The follow-on teaching wave (ADR-0123 cl.6, the ADR-0118 M1/M2 precedent applied verbatim): a
+`ColorPicker` catalog row (`value:{prop:'value',event:'change'}` two-way, `format` a non-bindable
+structural enum — the `Calendar.mode` precedent, not live content), the M1 `EXCLUSION_ALLOWLIST`
+seed drained to ZERO residue, the feed partition re-proven a TOTAL 27 IN / 28 OUT (`ColorPicker`
+joins `FEED_EXCLUDED` — an INPUT, but no ask affordance admits an editor to the artifact feed), the
+§5.2 row + a ColorPicker-vs-`TextField type=color` usage note, and a validator-clean `color-picker-form`
+exemplar (a Field-wrapped ColorPicker beside a live Swatch reading the SAME bound path — the ADR-0118
+fence in one payload: one edits, one shows). A real composed-child `change` commit (the embedded
+readout `ui-text-field`, no mocked pointer-drag) proves the generic LLD-C8 input controller writes the
+committed color back into `surface.data`. Gates: check · a2ui 975/975 · the site gallery 35/35.
+
 ## 2026-07-11 (A2UI message lifecycle) — the four-type decision layer taught, demoed, and pinned (TKT-0016 · ADR-0126)
 
 - **The teaching (F2, Kim-ratified):** four new GRAMMAR bullets in the machine system prompt's

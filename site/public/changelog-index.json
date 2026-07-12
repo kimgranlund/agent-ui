@@ -21,6 +21,13 @@
     "section": "Records"
   },
   {
+    "name": "2026-07-11 (color-picker M2) — ColorPicker joins the catalog; the M1 allowlist seed drains",
+    "url": "./changelog.html#2026-07-11-color-picker-m2-colorpicker-joins-the-catalog-the-m1-allowlist-seed-drains",
+    "description": "The follow-on teaching wave (ADR-0123 cl.6, the ADR-0118 M1/M2 precedent applied verbatim): a ColorPicker catalog row (value:{prop:'value',event:'change'} two-…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "2026-07-11 (ui-color-picker) — the OKLCH picker ships, and ui-text-field gains its 13th type",
     "url": "./changelog.html#2026-07-11-ui-color-picker-the-oklch-picker-ships-and-ui-text-field-gains-its-13th-type",
     "description": "ui-color-picker (ADR-0123, accepted 2026-07-11): OKLCH-internal value model with sRGB-hex the default external format — color.ts (pure OKLCH↔sRGB + CSS-Color-4…",

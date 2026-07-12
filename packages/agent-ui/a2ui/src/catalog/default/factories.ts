@@ -81,6 +81,11 @@
 // `EXCLUSION_ALLOWLIST` entries, index.test.ts: author-placement refinements the coordinator drives, not
 // agent-composed content). Both ride plain `accessorFactory`; `Swiper` two-way binds `active`/`select`
 // (F4, the `Tabs` `selected`/`select` pattern) — see their own factory doc comments below.
+//
+// ADR-0123 (color-picker.lld.md, the M2 catalog wave) adds `ColorPicker` — the OKLCH-internal 2-axis
+// color-input control (the standalone control shipped ahead of this row at M1, the ADR-0118 M1/M2
+// discipline; this wave drains that `EXCLUSION_ALLOWLIST` seed, index.test.ts). Plain `accessorFactory`,
+// two-way bound `value`/`change` — see its own factory doc comment below.
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
@@ -721,6 +726,24 @@ export const swiperFactory: WidgetFactory = {
 // anatomy), the `Card`/`CardHeader` generic-children precedent.
 export const swiperItemFactory: WidgetFactory = accessorFactory('ui-swiper-item')
 
+// ── ADR-0123 (color-picker.lld.md, the M2 catalog wave) — ColorPicker, the OKLCH-internal 2-axis
+// color-input control (M1 shipped the standalone control ahead of this row, EXCLUSION_ALLOWLIST-seeded
+// in index.test.ts; this wave drains that seed) ─────────────────────────────────────────────────────
+//
+// ColorPicker → ui-color-picker (color-picker.spec.md SPEC-R1…R9/R12/R13). `name`/`disabled`(bindable)/
+// `required` are the inherited `UIFormElement.formProps` — 1:1 reflecting accessor props, verified
+// against color-picker.ts `static props`; `value` (bindable, the serialized color in whatever syntax
+// `format` selects) is likewise a 1:1 reflecting accessor. `format` (`hex`|`oklch`) is deliberately NOT
+// bindable — a structural rendering-SYNTAX axis picked once by the author (which serialization `value`
+// reads/writes), not live content — the exact `Calendar.mode` precedent (a sibling structural enum next
+// to a bindable ISO-string `value`). Two-way bindable on `value` via the VERIFIED commit event `change`:
+// `#commit(kind)` (color-picker.ts) calls `this.emit(kind)` with `kind==='change'` on pad pointer-up
+// (moved-since-drag-start only), a channel slider's blur-with-moved-value, a pad keyboard step (atomic
+// input+change), or a successful readout-entry parse — never on a live/uncommitted `input`. A plain
+// `accessorFactory` suffices — no bespoke mapping needed (`value`/`format`/`name`/`disabled`/`required`
+// are ALL identity `mapsTo`).
+export const colorPickerFactory: WidgetFactory = accessorFactory('ui-color-picker', { prop: 'value', event: 'change' })
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -779,4 +802,5 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   TimelineItem: timelineItemFactory,
   Swiper: swiperFactory,
   SwiperItem: swiperItemFactory,
+  ColorPicker: colorPickerFactory,
 }
