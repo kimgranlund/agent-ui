@@ -1,5 +1,12 @@
 [
   {
+    "name": "2026-07-12 (TKT-0027) — overlay panels get a real max-height default: min(50vh, 12 rows)",
+    "url": "./changelog.html#2026-07-12-tkt-0027-overlay-panels-get-a-real-max-height-default-min-50vh-12-rows",
+    "description": "Kim's ruling applied family-wide: menu, select, and combo-box panels drop the hardcoded 40vh for PUBLIC dials (--ui-{control}-…max-block-size, the TKT-0017 fra…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "2026-07-12 (TKT-0020) — a2ui-chat: the conversational agent surface ships",
     "url": "./changelog.html#2026-07-12-tkt-0020-a2ui-chat-the-conversational-agent-surface-ships",
     "description": "The product-shaped chat page (site/pages/a2ui-chat.ts, sibling to the a2ui-live wire-debug harness): one scrolling log of user and agent bubbles — agent turns…",

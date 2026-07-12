@@ -81,10 +81,11 @@ geometry:
   panelPadding: var(--ui-menu-padding)             # = var(--ui-space-xs) — shell spacing
   panelRadius: var(--ui-menu-radius)               # = var(--ui-radius-base), the shared fleet radius
   panelMinInlineSize: var(--ui-menu-min-inline-size)  # 10rem floor (ADR-0021 lesson)
-  panelMaxBlockSize: 40vh (scrolls) # bounds an unbounded item list (matches ui-select); gets the shared edge-aware scroll-fade by default (traits/scroll-fade.ts, container-box.css)
+  panelMaxBlockSize: var(--ui-menu-max-block-size) (scrolls) # PUBLIC dial (TKT-0027), default min(50vh, calc(12 * var(--ui-menu-item-block-size) + 13 * var(--ui-box-inset, 0.375rem) + 2px)) — 12 real item rows + their box-model insets + the panel's own 2px border (box-sizing: border-box) or half the viewport, whichever is smaller; gets the shared edge-aware scroll-fade by default (traits/scroll-fade.ts, container-box.css)
   panelSurface: var(--ui-menu-bg)                  # opaque neutral-surface plane
   itemPadBlock: var(--ui-menu-item-pad-block)      # = var(--ui-space-xs) — legacy item-pad block axis
   itemPadInline: var(--ui-menu-item-pad-inline)    # = var(--ui-space-md) — legacy item-pad inline axis
+  itemBlockSize: var(--ui-menu-item-block-size)    # = font + 2×pad-block (line-height:1 makes it exact) — the real rendered row height, feeding panelMaxBlockSize
   itemRadius: var(--ui-menu-item-radius)           # nested-radius from panel corner = panelRadius − --ui-box-inset (FIXED 2026-07-06: was subtracting the unrelated --ui-space-xs, an ADR-0018 inset-inconsistency)
   note: ui-menu has NO `[size]` attribute and renders no trigger geometry (the trigger is fully author-owned) — the select/combo-box family's size-carrying derivation (panel inset + option pad off the trigger's own height/font) does not apply here; flagged as a structural divergence, not forced (2026-07-06 pass)
 
@@ -172,6 +173,17 @@ the trigger on close (the overlay handle's `restoreFocus()`). On close without a
 positioning controller (LLD-C3) **flips** to the opposite side when the preferred side lacks space,
 and **shifts** within the viewport edges. `data-placement` on the panel reflects the resolved
 placement. Placement is captured at connection time.
+
+## The panel scroll cap (TKT-0027)
+
+`--ui-menu-max-block-size` is a public dial capping the panel's height, defaulting to
+`min(50vh, calc(12 * var(--ui-menu-item-block-size) + 13 * var(--ui-box-inset, 0.375rem) + 2px))` —
+the smaller of half the viewport or twelve real item rows (plus their box-model insets, plus a 2px
+border-box compensation — the panel is `box-sizing: border-box` with a 1px border, so without this
+term the 12th row would overflow its own cap by exactly the border width, FIXED 2026-07-12), so a
+short list never over-reserves and a long list scrolls at a scannable page instead of a flat 40vh
+magic number. `--ui-menu-item-block-size` (`= font + 2×block-pad`) tracks the item-pad geometry
+directly, so a denser/spacious theme or a repointed item font repoints the cap for free.
 
 ## Forced colors
 

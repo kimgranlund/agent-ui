@@ -948,3 +948,20 @@ committed color back into `surface.data`. Gates: check · a2ui 975/975 · the si
   double system bubble after Reset; SPEC-R8 proven at the mechanism not a dist-grep — sibling-
   consistent). Gates: check · site 500/500 · chat browser 6/6 both engines · size neutral · all drift
   gates green.
+
+## 2026-07-12 (TKT-0027) — overlay panels get a real max-height default: min(50vh, 12 rows)
+
+- **Kim's ruling applied family-wide:** menu, select, and combo-box panels drop the hardcoded
+  `40vh` for PUBLIC dials (`--ui-{control}-…max-block-size`, the TKT-0017 frame-dial precedent)
+  defaulting to `min(50vh, calc(12 × the control's real row + 13 collapsed margin-insets + 2px))` —
+  a short list never over-reserves, a long one caps at a scannable dozen, and the whole expression
+  rides `[size]`/density live (select's `lg` arm correctly loses to 50vh at common viewports — the
+  dial working, not a bug).
+- **The wave found and fixed a real boundary defect its own gate caught:** the row math computed
+  the CONTENT box while `max-block-size` caps the BORDER box — a reproducible 2px overflow at
+  exactly 12 rows on both engines (342 vs 340px), fixed with the commented `+ 2px` term; post-fix
+  clientHeight == scrollHeight exactly. The menu item row also gained `line-height: 1` (required
+  for the row math; aligns menu with the ADR-0036 single-line standard — a deliberate ~5px
+  tightening of every menu row, reviewer-flagged and kept).
+- Cross-engine proof: 12-fit / 13-scroll / the 50vh clamp genuinely binding at a short viewport.
+  Review GO. Gates: check · 220 jsdom · 172 browser both engines · size unchanged.

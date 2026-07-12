@@ -141,6 +141,7 @@ geometry:
     radius: var(--ui-select-listbox-radius)
     padding: var(--ui-select-listbox-padding)  # = h/4 (h = --ui-select-height) — DERIVED off the trigger ramp (2026-07-06), scales with [size]
     minInlineSize: var(--ui-select-listbox-min-inline-size)
+    maxBlockSize: var(--ui-select-listbox-max-block-size) (scrolls) # PUBLIC dial (TKT-0027), default min(50vh, calc(12 * var(--ui-select-height) + 13 * var(--ui-select-listbox-padding) + 2px)) — 12 real option rows (the row-height law makes a row == --ui-select-height exactly) + their insets + the panel's own 2px border (box-sizing: border-box) or half the viewport, whichever is smaller; was a flat 40vh
   options:
     sizeClass: legacy item-pad (ROV-C5 / §5.1) — numbers DERIVED off the trigger ramp (2026-07-06), not the fixed px this superseded
     paddingBlock: var(--ui-select-option-block)    # = (h − font)/2 — row height == trigger height
@@ -201,3 +202,14 @@ is selected (`value = ''`), the placeholder is shown and the form entry is absen
 ## Accessibility
 
 The trigger has `aria-haspopup="listbox"` + `aria-expanded` (synced to `open`). The panel carries `role="listbox"`. Each option carries `aria-selected` (driven by `selectionCommit`). Focus is restored to the trigger on close. The host has no explicit role.
+
+## The panel scroll cap (TKT-0027)
+
+`--ui-select-listbox-max-block-size` is a public dial capping the listbox's height, defaulting to
+`min(50vh, calc(12 * var(--ui-select-height) + 13 * var(--ui-select-listbox-padding) + 2px))` — the
+smaller of half the viewport or twelve real option rows (plus their box-model insets, plus a 2px
+border-box compensation — the listbox is `box-sizing: border-box` with a 1px border, so without
+this term the 12th row would overflow its own cap by exactly the border width, FIXED 2026-07-12),
+replacing the old flat 40vh. An option row renders at exactly `--ui-select-height` (the row-height
+law above), so the cap tracks `[size]` for free — a `size="lg"` select's listbox scrolls at twelve
+*taller* rows, not the same fixed pixel count.

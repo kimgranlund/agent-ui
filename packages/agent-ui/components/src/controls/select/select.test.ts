@@ -1132,3 +1132,33 @@ describe('select.md descriptor — contract↔props trip-wire (select-descriptor
     )
   })
 })
+
+// ── TKT-0027: listbox max-block-size is a public dial, default min(50vh, 12 option rows) ──────
+// Token-chain proof (jsdom — the calc() itself is exercised for real in select.browser.test.ts,
+// the 12-fit/13-scroll + 50vh-clamp cross-engine legs): the :where() token block declares the
+// default expression (reusing --ui-select-height directly — the row-height law makes an option
+// row == the trigger height exactly, no separate item-block token needed); the @scope listbox
+// rule consumes the public dial (no hardcoded 40vh anywhere in the file).
+const selectCss = readFileSync(`${SELECT_DIR}/select.css`, 'utf8') as string
+
+describe('select.css — TKT-0027 listbox max-block-size dial (select-max-block-size-token-chain)', () => {
+  it('select-max-block-size-token-chain: the 40vh magic number is gone from the property value', () => {
+    expect(selectCss).not.toMatch(/max-block-size:\s*40vh/)
+  })
+
+  it('select-max-block-size-token-chain: --ui-select-listbox-max-block-size defaults to min(50vh, 12 option rows + 13 insets + the 2px border compensation)', () => {
+    expect(selectCss).toMatch(
+      /--ui-select-listbox-max-block-size:\s*min\(50vh,\s*calc\(12 \* var\(--ui-select-height\) \+ 13 \* var\(--ui-select-listbox-padding\) \+ 2px\)\)/,
+    )
+  })
+
+  it('select-max-block-size-token-chain: the listbox rule consumes the public dial, not a literal', () => {
+    const stylesBlock = selectCss.slice(selectCss.indexOf('@scope (ui-select)'))
+    expect(stylesBlock).toMatch(/max-block-size:\s*var\(--ui-select-listbox-max-block-size\)/)
+  })
+
+  it('select-max-block-size-token-chain: the option row already sets line-height: 1 (the row-height law holds unchanged)', () => {
+    const optionRule = (selectCss.match(/:scope > \[data-part='listbox'\] \[role='option'\]\s*\{[^}]*\}/) ?? [''])[0]
+    expect(optionRule).toMatch(/line-height:\s*1;/)
+  })
+})

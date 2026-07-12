@@ -95,6 +95,23 @@
   --ui-select-listbox-padding: calc(var(--ui-select-height) / 4); /* panel-edge inset + inter-row gap (feeds --ui-box-inset below) */
   --ui-select-listbox-min-inline-size: 12ch;       /* floor: at least as wide as a short option */
 
+  /* Panel max-block-size (TKT-0027) — public dial, default min(50vh, 12 real option rows): the
+     smaller of half the viewport or a scannable dozen rows, replacing the old flat 40vh magic
+     number. An option row's rendered height IS --ui-select-height exactly (the row-height law
+     above: (h−font)/2 padding × 2 + font == h, line-height:1 makes it exact) — no separate item-
+     block token needed, unlike ui-menu (which has no analogous control height to reuse). 12 rows
+     = 12 option boxes + 13 inset margins (leading + 11 collapsed inter-row + trailing — the
+     listbox is `[data-box]`, a BFC that collapses adjacent siblings' margins to ONE inset, never
+     doubled); --ui-select-listbox-padding IS the value fed to --ui-box-inset below, so this reads
+     the same source, not the DOM-positional --ui-box-inset itself. Rides [size]/[scale] naturally
+     (both terms derive from --ui-select-height); density-invariant, like the trigger height itself
+     (geometry.md: height is a frame quantity, not rhythm). + 2px — the panel's border-box:
+     max-block-size caps the BORDER box (box-sizing: border-box below), but the row math above
+     computed the CONTENT box (12 rows + 13 insets, no border term) — without this the 12th row
+     would overflow its own cap by exactly the 1px+1px border width (FIXED 2026-07-12, TKT-0027
+     browser-leg finding, same shape as ui-menu). */
+  --ui-select-listbox-max-block-size: min(50vh, calc(12 * var(--ui-select-height) + 13 * var(--ui-select-listbox-padding) + 2px));
+
   /* ── Option rows — legacy item-pad (§5.1 / ROV-C5): padding-based row height, NOT a fixed
      --ui-compact widget box. Options are text list items, not stand-alone widgets. The row
      radius is inset from the listbox shell radius (nested-radius: shell − padding, ADR-0018). */
@@ -271,7 +288,7 @@
     /* Matching the trigger width is done in JS (see select.ts model→overlay effect): in the
        Popover API top layer `100%` resolves to 100vw (the viewport), NOT the trigger width.
        select.ts stamps `listbox.style.minInlineSize = triggerWidth + 'px'` before showPopover(). */
-    max-block-size: 40vh; /* prevent the panel from occupying the entire viewport height */
+    max-block-size: var(--ui-select-listbox-max-block-size); /* TKT-0027 — public dial, default min(50vh, 12 option rows) */
     overflow-y: auto;
 
     background-color: var(--ui-select-listbox-bg);

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { server, cdp, userEvent } from 'vitest/browser'
+import { server, cdp, userEvent, page } from 'vitest/browser'
 import type { UIMenuElement } from './menu.ts'
 
 // Wave-4 S3 browser smoke — ui-menu (decomp S3 · overlay-controller.lld.md LLD-C1..C4 · ADR-0043).
@@ -621,5 +621,76 @@ describe('ui-menu — the panel is now BOUNDED (max-block-size:40vh) and gets an
     await nextFrames()
     await scrollTo(panel, 0)
     expect(maskOf(panel), `${server.browser}: the panel's fade flag did not paint a mask`).toMatch(/gradient/)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  TKT-0027 — the panel max-block-size dial: default min(50vh, calc(12 * item-row + 13 * inset)).
+//  At default [size]/[density] (--ui-menu-item-font=14px, --ui-menu-item-pad-block=--ui-space-xs=
+//  4px ⇒ a 22px item row; --ui-box-inset=6px), the calc arm resolves to 12×22 + 13×6 = 342px — under
+//  the default 896px-tall viewport's 50vh (448px), so the calc arm is the one actually binding
+//  (anti-vacuous: 12 real items fit, a 13th genuinely overflows). At a viewport short enough that
+//  50vh < 342px, min() flips to the vh arm instead — the THIRD leg below proves that flip is real,
+//  not just "some cap exists".
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+const manyItems = (n: number): string => {
+  const rows = Array.from({ length: n }, (_, i) => `<div data-value="item-${i}">Item ${i}</div>`).join('\n')
+  return `
+    <ui-menu>
+      <button style="padding:6px 12px">Open menu</button>
+      ${rows}
+    </ui-menu>`
+}
+
+describe('ui-menu — TKT-0027 panel max-block-size dial (default min(50vh, 12 item rows), both engines)', () => {
+  it('12 real items fit within the default cap without scrolling (the 12-row calc arm, not a vacuous cap)', async () => {
+    const { el } = mount(manyItems(12))
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    expect(
+      panel.scrollHeight,
+      `${server.browser}: 12 items unexpectedly overflow the default cap — the 12-row calc math regressed`,
+    ).toBeLessThanOrEqual(panel.clientHeight)
+  })
+
+  it('a 13th item overflows the default cap (scrollHeight > clientHeight)', async () => {
+    const { el } = mount(manyItems(13))
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    expect(
+      panel.scrollHeight,
+      `${server.browser}: the 13th item did not overflow the default cap`,
+    ).toBeGreaterThan(panel.clientHeight)
+  })
+
+  it('at a short viewport, min() flips to the 50vh arm instead of the 12-row calc arm', async () => {
+    const { el } = mount(manyItems(13))
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    // 500px tall ⇒ 50vh = 250px, well under the 342px calc arm (the default-viewport legs above) —
+    // short enough that min() must resolve to the vh side, not a rounding-distance coincidence.
+    await page.viewport(414, 500)
+    try {
+      el.open = true
+      await el.updateComplete
+      await nextFrames()
+      const resolvedMax = px(getComputedStyle(panel).maxBlockSize)
+      const expectedVh = window.innerHeight * 0.5
+      expect(
+        resolvedMax,
+        `${server.browser}: max-block-size (${resolvedMax}px) did not resolve to the 50vh arm (${expectedVh}px) — min() picked the calc arm instead`,
+      ).toBeCloseTo(expectedVh, -1)
+      // Anti-vacuous: the clamp genuinely binds — 13 rows still overflow this shorter cap.
+      expect(
+        panel.scrollHeight,
+        `${server.browser}: the panel did not overflow the 50vh-clamped cap`,
+      ).toBeGreaterThan(panel.clientHeight)
+    } finally {
+      await page.viewport(414, 896) // restore the fleet default viewport for subsequent tests in this file
+    }
   })
 })

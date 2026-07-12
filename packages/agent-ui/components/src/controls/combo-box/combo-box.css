@@ -80,6 +80,19 @@
      a new-attribute contract change) would make this repoint for free, same as ui-select. */
   --ui-combo-box-listbox-padding: calc(var(--ui-combo-box-padding-inline) / 2);
 
+  /* Panel max-block-size (TKT-0027) — public dial, default min(50vh, 12 real option rows), same
+     shape as ui-select's listbox dial (the family precedent — combo-box's option row height IS
+     --ui-combo-box-height exactly, by the same row-height law: (height−font)/2 padding × 2 + font
+     == height). 12 rows = 12 option boxes + 13 inset margins (leading + 11 collapsed inter-row +
+     trailing — the panel is `[data-box]`, a BFC collapsing adjacent siblings' margins to ONE
+     inset); --ui-combo-box-listbox-padding is the value fed to --ui-box-inset below, read here
+     directly (not the DOM-positional --ui-box-inset itself). Density-invariant (height is a frame
+     quantity, geometry.md). + 2px — the panel's border-box: max-block-size caps the BORDER box
+     (box-sizing: border-box below), but the row math above computed the CONTENT box (12 rows + 13
+     insets, no border term) — without this the 12th row would overflow its own cap by exactly the
+     1px+1px border width (FIXED 2026-07-12, TKT-0027 browser-leg finding, same shape as ui-menu). */
+  --ui-combo-box-panel-max-block-size: min(50vh, calc(12 * var(--ui-combo-box-height) + 13 * var(--ui-combo-box-listbox-padding) + 2px));
+
   /* ── Option rows (legacy item-pad — ROV-C5 / §4.6/5.1) — DERIVED (2026-07-06), same model as
      ui-select: block-pad = (editor height − option font)/2 (the row's rendered height == the
      editor's own height); inline-pad pairs with --ui-combo-box-listbox-padding above to total the
@@ -204,7 +217,7 @@
 
     /* No panel padding — options have their own padding-inline to align the ink edge */
     padding: 0;
-    max-block-size: 40vh; /* prevent an unbounded option list from occupying the entire viewport (matches ui-select) */
+    max-block-size: var(--ui-combo-box-panel-max-block-size); /* TKT-0027 — public dial, default min(50vh, 12 option rows) */
     overflow-y: auto; /* still clips options to the panel radius (an `auto` axis clips like `hidden`, just scrollably) */
     list-style: none;
     /* Repoint the shared container-box.css inset LOCALLY to the size-derived value (the panel

@@ -868,3 +868,38 @@ describe('menu.md descriptor — contract↔props trip-wire (menu-descriptor-bij
     )
   })
 })
+
+// ── TKT-0027: panel max-block-size is a public dial, default min(50vh, 12 item rows) ──────────
+// Token-chain proof (jsdom — the calc() itself is only exercised for real in menu.browser.test.ts,
+// the 12-fit/13-scroll + 50vh-clamp cross-engine legs): the :where() token block declares the
+// default expression and the item's own row-height feeder; the @scope panel rule consumes the
+// public dial (not a hardcoded 40vh anywhere in the file).
+const menuCss = readFileSync(`${MENU_DIR}/menu.css`, 'utf8') as string
+
+describe('menu.css — TKT-0027 panel max-block-size dial (menu-max-block-size-token-chain)', () => {
+  it('menu-max-block-size-token-chain: the 40vh magic number is gone from the property value', () => {
+    expect(menuCss).not.toMatch(/max-block-size:\s*40vh/)
+  })
+
+  it('menu-max-block-size-token-chain: --ui-menu-max-block-size defaults to min(50vh, 12 real item rows + 13 insets + the 2px border compensation)', () => {
+    expect(menuCss).toMatch(
+      /--ui-menu-max-block-size:\s*min\(50vh,\s*calc\(12 \* var\(--ui-menu-item-block-size\) \+ 13 \* var\(--ui-box-inset,\s*0\.375rem\) \+ 2px\)\)/,
+    )
+  })
+
+  it('menu-max-block-size-token-chain: --ui-menu-item-block-size derives from the item font + block-pad (font + 2×pad)', () => {
+    expect(menuCss).toMatch(
+      /--ui-menu-item-block-size:\s*calc\(var\(--ui-menu-item-font\) \+ 2 \* var\(--ui-menu-item-pad-block\)\)/,
+    )
+  })
+
+  it('menu-max-block-size-token-chain: the panel rule consumes the public dial, not a literal', () => {
+    const stylesBlock = menuCss.slice(menuCss.indexOf('@scope (ui-menu)'))
+    expect(stylesBlock).toMatch(/max-block-size:\s*var\(--ui-menu-max-block-size\)/)
+  })
+
+  it('menu-max-block-size-token-chain: the menuitem row sets line-height: 1 (makes the row-height calc exact)', () => {
+    const itemRule = (menuCss.match(/:scope \[role='menuitem'\]\s*\{[^}]*\}/) ?? [''])[0]
+    expect(itemRule).toMatch(/line-height:\s*1;/)
+  })
+})

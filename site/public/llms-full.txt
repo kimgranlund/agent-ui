@@ -1129,6 +1129,16 @@ own form value was catalogued). `value` holds the **last committed** value — u
 typing. `formValue()` returns `null` when `value` is empty (no form entry submitted, matching native
 `<select>` convention).
 
+## The panel scroll cap (TKT-0027)
+
+`--ui-combo-box-panel-max-block-size` is a public dial capping the panel's height, defaulting to
+`min(50vh, calc(12 * var(--ui-combo-box-height) + 13 * var(--ui-combo-box-listbox-padding) + 2px))`
+— the smaller of half the viewport or twelve real option rows (plus their box-model insets, plus a
+2px border-box compensation — the panel is `box-sizing: border-box` with a 1px border, so without
+this term the 12th row would overflow its own cap by exactly the border width, FIXED 2026-07-12),
+replacing the old flat 40vh. An option row renders at exactly `--ui-combo-box-height` (the
+row-height law above), the same shape as `ui-select`'s listbox dial.
+
 ---
 
 <!-- source: packages/agent-ui/components/src/controls/command-modal/command-modal.md -->
@@ -1836,6 +1846,17 @@ the trigger on close (the overlay handle's `restoreFocus()`). On close without a
 positioning controller (LLD-C3) **flips** to the opposite side when the preferred side lacks space,
 and **shifts** within the viewport edges. `data-placement` on the panel reflects the resolved
 placement. Placement is captured at connection time.
+
+## The panel scroll cap (TKT-0027)
+
+`--ui-menu-max-block-size` is a public dial capping the panel's height, defaulting to
+`min(50vh, calc(12 * var(--ui-menu-item-block-size) + 13 * var(--ui-box-inset, 0.375rem) + 2px))` —
+the smaller of half the viewport or twelve real item rows (plus their box-model insets, plus a 2px
+border-box compensation — the panel is `box-sizing: border-box` with a 1px border, so without this
+term the 12th row would overflow its own cap by exactly the border width, FIXED 2026-07-12), so a
+short list never over-reserves and a long list scrolls at a scannable page instead of a flat 40vh
+magic number. `--ui-menu-item-block-size` (`= font + 2×block-pad`) tracks the item-pad geometry
+directly, so a denser/spacious theme or a repointed item font repoints the cap for free.
 
 ## Forced colors
 
@@ -2573,6 +2594,17 @@ is selected (`value = ''`), the placeholder is shown and the form entry is absen
 ## Accessibility
 
 The trigger has `aria-haspopup="listbox"` + `aria-expanded` (synced to `open`). The panel carries `role="listbox"`. Each option carries `aria-selected` (driven by `selectionCommit`). Focus is restored to the trigger on close. The host has no explicit role.
+
+## The panel scroll cap (TKT-0027)
+
+`--ui-select-listbox-max-block-size` is a public dial capping the listbox's height, defaulting to
+`min(50vh, calc(12 * var(--ui-select-height) + 13 * var(--ui-select-listbox-padding) + 2px))` — the
+smaller of half the viewport or twelve real option rows (plus their box-model insets, plus a 2px
+border-box compensation — the listbox is `box-sizing: border-box` with a 1px border, so without
+this term the 12th row would overflow its own cap by exactly the border width, FIXED 2026-07-12),
+replacing the old flat 40vh. An option row renders at exactly `--ui-select-height` (the row-height
+law above), so the cap tracks `[size]` for free — a `size="lg"` select's listbox scrolls at twelve
+*taller* rows, not the same fixed pixel count.
 
 ---
 
@@ -5098,3 +5130,20 @@ committed color back into `surface.data`. Gates: check · a2ui 975/975 · the si
   double system bubble after Reset; SPEC-R8 proven at the mechanism not a dist-grep — sibling-
   consistent). Gates: check · site 500/500 · chat browser 6/6 both engines · size neutral · all drift
   gates green.
+
+## 2026-07-12 (TKT-0027) — overlay panels get a real max-height default: min(50vh, 12 rows)
+
+- **Kim's ruling applied family-wide:** menu, select, and combo-box panels drop the hardcoded
+  `40vh` for PUBLIC dials (`--ui-{control}-…max-block-size`, the TKT-0017 frame-dial precedent)
+  defaulting to `min(50vh, calc(12 × the control's real row + 13 collapsed margin-insets + 2px))` —
+  a short list never over-reserves, a long one caps at a scannable dozen, and the whole expression
+  rides `[size]`/density live (select's `lg` arm correctly loses to 50vh at common viewports — the
+  dial working, not a bug).
+- **The wave found and fixed a real boundary defect its own gate caught:** the row math computed
+  the CONTENT box while `max-block-size` caps the BORDER box — a reproducible 2px overflow at
+  exactly 12 rows on both engines (342 vs 340px), fixed with the commented `+ 2px` term; post-fix
+  clientHeight == scrollHeight exactly. The menu item row also gained `line-height: 1` (required
+  for the row math; aligns menu with the ADR-0036 single-line standard — a deliberate ~5px
+  tightening of every menu row, reviewer-flagged and kept).
+- Cross-engine proof: 12-fit / 13-scroll / the 50vh clamp genuinely binding at a short viewport.
+  Review GO. Gates: check · 220 jsdom · 172 browser both engines · size unchanged.

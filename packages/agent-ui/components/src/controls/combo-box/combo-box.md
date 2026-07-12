@@ -135,7 +135,7 @@ geometry:
     surface: var(--ui-combo-box-panel-bg)  # = var(--md-sys-color-neutral-surface) — opaque neutral surface
     radius: var(--ui-combo-box-panel-radius)  # = var(--ui-radius-base)
     minInlineSize: var(--ui-combo-box-panel-min-inline-size)  # 12rem panel collapse floor
-    maxBlockSize: 40vh (scrolls) # REVISED 2026-07-04: was `overflow: hidden` (unbounded, unscrollable) — now bounded + overflow-y:auto, matching ui-select/ui-menu; gets the shared edge-aware scroll-fade by default (traits/scroll-fade.ts, container-box.css)
+    maxBlockSize: var(--ui-combo-box-panel-max-block-size) (scrolls) # PUBLIC dial (TKT-0027), default min(50vh, calc(12 * var(--ui-combo-box-height) + 13 * var(--ui-combo-box-listbox-padding) + 2px)) — 12 real option rows (the row-height law makes a row == --ui-combo-box-height exactly) + their insets + the panel's own 2px border (box-sizing: border-box) or half the viewport, whichever is smaller; was a flat 40vh (REVISED 2026-07-04: before that, `overflow: hidden`, unbounded/unscrollable) — gets the shared edge-aware scroll-fade by default (traits/scroll-fade.ts, container-box.css)
     padding: var(--ui-combo-box-listbox-padding)  # = editor-padding-inline/2 = h/4 — DERIVED off the editor ramp (2026-07-06), same mechanism as ui-select
   options:
     sizeClass: legacy item-pad (ROV-C5 / §4.6/5.1) — numbers DERIVED off the editor ramp (2026-07-06), superseding the fixed --ui-space-xs/sm px
@@ -214,3 +214,13 @@ earlier stale comment here that named `open`/`toggle`, copied from the overlay f
 own form value was catalogued). `value` holds the **last committed** value — unchanged while the user is
 typing. `formValue()` returns `null` when `value` is empty (no form entry submitted, matching native
 `<select>` convention).
+
+## The panel scroll cap (TKT-0027)
+
+`--ui-combo-box-panel-max-block-size` is a public dial capping the panel's height, defaulting to
+`min(50vh, calc(12 * var(--ui-combo-box-height) + 13 * var(--ui-combo-box-listbox-padding) + 2px))`
+— the smaller of half the viewport or twelve real option rows (plus their box-model insets, plus a
+2px border-box compensation — the panel is `box-sizing: border-box` with a 1px border, so without
+this term the 12th row would overflow its own cap by exactly the border width, FIXED 2026-07-12),
+replacing the old flat 40vh. An option row renders at exactly `--ui-combo-box-height` (the
+row-height law above), the same shape as `ui-select`'s listbox dial.

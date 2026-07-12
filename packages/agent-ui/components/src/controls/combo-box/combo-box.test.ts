@@ -1343,3 +1343,33 @@ describe('combo-box.md descriptor — contract↔props trip-wire (combo-descript
     )
   })
 })
+
+// ── TKT-0027: panel max-block-size is a public dial, default min(50vh, 12 option rows) ────────
+// Token-chain proof (jsdom — the calc() itself is exercised for real in combo-box.browser.test.ts,
+// the 12-fit/13-scroll + 50vh-clamp cross-engine legs): the :where() token block declares the
+// default expression (reusing --ui-combo-box-height directly — the row-height law makes an
+// option row == the editor height exactly, no separate item-block token needed, the same shape
+// as ui-select); the @scope panel rule consumes the public dial (no hardcoded 40vh anywhere).
+const comboCss = readFileSync(`${COMBO_DIR}/combo-box.css`, 'utf8') as string
+
+describe('combo-box.css — TKT-0027 panel max-block-size dial (combo-box-max-block-size-token-chain)', () => {
+  it('combo-box-max-block-size-token-chain: the 40vh magic number is gone from the property value', () => {
+    expect(comboCss).not.toMatch(/max-block-size:\s*40vh/)
+  })
+
+  it('combo-box-max-block-size-token-chain: --ui-combo-box-panel-max-block-size defaults to min(50vh, 12 option rows + 13 insets + the 2px border compensation)', () => {
+    expect(comboCss).toMatch(
+      /--ui-combo-box-panel-max-block-size:\s*min\(50vh,\s*calc\(12 \* var\(--ui-combo-box-height\) \+ 13 \* var\(--ui-combo-box-listbox-padding\) \+ 2px\)\)/,
+    )
+  })
+
+  it('combo-box-max-block-size-token-chain: the panel rule consumes the public dial, not a literal', () => {
+    const stylesBlock = comboCss.slice(comboCss.indexOf('@scope (ui-combo-box)'))
+    expect(stylesBlock).toMatch(/max-block-size:\s*var\(--ui-combo-box-panel-max-block-size\)/)
+  })
+
+  it('combo-box-max-block-size-token-chain: the option row already sets line-height: 1 (the row-height law holds unchanged)', () => {
+    const optionRule = (comboCss.match(/:scope \[role='option'\]\s*\{[^}]*\}/) ?? [''])[0]
+    expect(optionRule).toMatch(/line-height:\s*1;/)
+  })
+})

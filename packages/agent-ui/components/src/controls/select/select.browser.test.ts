@@ -573,6 +573,32 @@ describe('ui-select — the listbox panel gets an edge-aware fade by default (bo
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
+//  TKT-0027 spot leg — the default listbox cap is min(50vh, 12 option rows); an option row renders
+//  at exactly --ui-select-height (28px at default [size=md]), so the 12-row calc arm is 12×28 +
+//  13×7 = 427px (under the default 896px-viewport's 448px 50vh) — the arm actually binding. The
+//  full 12-fit/13-scroll/50vh-clamp trio lives on ui-menu (menu.browser.test.ts); this is the spot
+//  check confirming the same formula holds here too.
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-select — TKT-0027 listbox max-block-size dial: a 13th option overflows the default cap (both engines)', () => {
+  it('13 real options overflow the default min(50vh, 12 rows) cap (scrollHeight > clientHeight)', async () => {
+    const { el } = mount(`
+      <ui-select placeholder="Choose…">
+        ${Array.from({ length: 13 }, (_, i) => `<div role="option" value="opt-${i}">Option ${i}</div>`).join('\n')}
+      </ui-select>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    expect(
+      listbox.scrollHeight,
+      `${server.browser}: the 13th option did not overflow the default cap (TKT-0027 formula regression?)`,
+    ).toBeGreaterThan(listbox.clientHeight)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
 //  [B4] Trigger geometry — [size] sm/md/lg exact px + [scale] anti-vacuous (C9 gate, both engines)
 //
 //  Proves the Control-class trigger resolves the §1-ramp height correctly for each size and that
