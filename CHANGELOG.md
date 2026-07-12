@@ -903,3 +903,23 @@ committed color back into `surface.data`. Gates: check · a2ui 975/975 · the si
   Shard 11→21 records, regenerated only through the tool; retrieve + round-trip + prompt legs re-run
   green (the ADR-0087 consequence). Follow-up recorded: a same-named candidate escaping near-dup on a
   routine import silently revises a valid record — no halt guards that case yet.
+
+## 2026-07-12 (TKT-0023) — the codec wall falls: programmatic writes reach the form value
+
+- **The fix landed entirely in the shared trait** (`traits/value-codec.ts` — `text-field.ts`
+  unchanged, all 13 types + any future codec type inherit): a third reactive path beside
+  focus/blur — an independent effect (its own kernel graph node, leak-free by the
+  activeConsumer swap, reviewer-traced to graph.ts) tracking `host.value`. An UNFOCUSED
+  programmatic write now mirrors blur's parse contract exactly (success → canonical; failure →
+  hasError, canonical untouched; '' → known-good-empty) — `formValue()`/FormData update with no
+  blur, SILENTLY (zero change/input events, the fleet law now asserted). While FOCUSED the write
+  defers — display-is-source mid-edit, canonical catches up on the real blur, no double-change
+  (tested). Attribute and property writes behave identically (the reflected-prop route).
+- **The A2UI renderer inherits for free** — its data→control write path (a plain `el.value =`)
+  hit the exact same wall, proven pre/post-fix with a scratch test against the real control;
+  zero a2ui edits needed.
+- The consumer records flipped to the new truth: settings' `schema.test.ts` documented-wall test
+  now PROVES the fix; tkt-0021's number/date external-sync limitation is superseded. Review GO
+  (kernel isolation, focused-flag paths, loop risk all traced clean); the two LOW hardenings
+  folded at commit (firstRun consumed before the isConnected return; the zero-emit assertion).
+  Gates: check · 529 scoped jsdom · 80 text-field browser both engines · size zero-delta.

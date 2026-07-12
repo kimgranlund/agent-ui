@@ -272,3 +272,14 @@ announced error, the field's.
 ADR-0013), so the field round-trips through `FormData`/submit, `formResetCallback` restores its initial
 `value`, and `validity`/`validationMessage`/`checkValidity()`/`reportValidity()` delegate to `internals` —
 all without a native `<input>`.
+
+For a codec type (`number`/`currency`/`unit`/`percent`/`date`/`time`/`color`), the submitted form value is
+the codec's **canonical** — not the raw `value` you may be reading mid-edit as a formatted display string.
+A **programmatic `value` write reaches canonical (and the FACE form value) without a blur**, as long as the
+editor is not currently focused (TKT-0023) — an external form-fill, an A2UI two-way binding's data→control
+write, or any other `el.value = …` from outside the control all commit immediately, the same as a real blur
+would. The one exception is the **mid-edit case**: a programmatic write that arrives *while the editor is
+focused* updates the display (the existing model→surface caret guard) but does **not** resync canonical —
+the codec's display-is-source-of-truth-while-typing contract wins, and canonical catches up on the next
+real blur, exactly as a normal typed edit would. This never double-fires `change` — the resync is silent
+(no event), only the control's own blur/Enter commit logic emits it.

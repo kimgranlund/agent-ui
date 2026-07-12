@@ -1834,3 +1834,92 @@ describe('ui-text-field type=color — swatch affordance + codec + typeMismatch 
     expect(/^import .*color-picker\.ts['"]$/m.test(src.replace(/import\([^)]*\)/g, ''))).toBe(false)
   })
 })
+
+// ── TKT-0023 — the unfocused-write canonical resync, at the FACE/form-value boundary ─────────────────
+//
+// A programmatic `el.value = …` write from OUTSIDE the control (a form generator, an A2UI two-way
+// binding's data→control effect, the settings external sync — TKT-0021's discovering consumer) must
+// reach the FACE form value (`internals.setFormValue`, probed here via `calls.formValues`) WITHOUT a
+// real blur, for every codec family. `calls.formValues.at(-1)` is the base's own reactive
+// `setFormValue(this.formValue())` effect (dom/form.ts) — it already re-runs on ANY canonical change,
+// from ANY source, so it is the correct FACE-level proof (not a components-internal peek).
+
+describe('ui-text-field — TKT-0023 unfocused programmatic write reaches the FACE form value (no blur)', () => {
+  it('type=number: an unfocused `el.value =` write updates the FACE form value with NO blur', async () => {
+    const { el, calls } = makeTyped('number')
+    await whenFlushed()
+    // The fleet law locked in (review L2): a programmatic write never emits — the resync is SILENT.
+    let changes = 0
+    let inputs = 0
+    el.addEventListener('change', () => { changes += 1 })
+    el.addEventListener('input', () => { inputs += 1 })
+    el.value = '42' // programmatic, unfocused — no editor.dispatchEvent('blur') anywhere in this test
+    await whenFlushed()
+    expect(calls.formValues.at(-1)).toBe('42')
+    expect(changes).toBe(0)
+    expect(inputs).toBe(0)
+    el.remove()
+  })
+
+  it('type=currency: an unfocused `el.value =` write updates the FACE form value with NO blur', async () => {
+    const { el, calls } = makeTyped('currency')
+    await whenFlushed()
+    el.value = '19.99'
+    await whenFlushed()
+    expect(calls.formValues.at(-1)).toBe('19.99')
+    el.remove()
+  })
+
+  it('type=date: an unfocused `el.value =` write (ISO) updates the FACE form value with NO blur', async () => {
+    const { el, calls } = makeTyped('date')
+    await whenFlushed()
+    el.value = '2024-07-04'
+    await whenFlushed()
+    expect(calls.formValues.at(-1)).toBe('2024-07-04')
+    el.remove()
+  })
+
+  it('type=color: an unfocused `el.value =` write (hex) updates the FACE form value with NO blur', async () => {
+    const { el, calls } = makeTyped('color')
+    await whenFlushed()
+    el.value = '#3b82f6'
+    await whenFlushed()
+    expect(calls.formValues.at(-1)).toBe('#3b82f6')
+    el.remove()
+  })
+
+  it('the FOCUSED mid-edit case: a programmatic write while focused defers to the documented blur-resync semantic', async () => {
+    const { el, editor, calls } = makeTyped('number')
+    await whenFlushed()
+    el.value = '5'
+    editor.textContent = '5'
+    editor.dispatchEvent(new Event('blur')) // establish a committed baseline canonical = '5'
+    await whenFlushed()
+    expect(calls.formValues.at(-1)).toBe('5')
+
+    editor.dispatchEvent(new Event('focus')) // enters the mid-edit window
+    el.value = '77' // a programmatic write arrives mid-edit — display moves, canonical must NOT yet
+    await whenFlushed()
+    expect(calls.formValues.at(-1)).toBe('5') // unchanged — still the pre-edit committed canonical
+
+    editor.dispatchEvent(new Event('blur')) // the documented semantic: canonical catches up on the NEXT blur
+    await whenFlushed()
+    expect(calls.formValues.at(-1)).toBe('77')
+    el.remove()
+  })
+
+  it('no double-commit: a mid-edit programmatic write followed by a real blur emits exactly ONE change event', async () => {
+    const { el, editor } = makeTyped('number')
+    await whenFlushed()
+    let changes = 0
+    el.addEventListener('change', () => changes++)
+
+    editor.dispatchEvent(new Event('focus'))
+    el.value = '8' // mid-edit programmatic write — the resync effect is a no-op here (focused)
+    editor.textContent = '8'
+    editor.dispatchEvent(new Event('blur')) // the ONE commit — must not double-fire
+    await whenFlushed()
+    expect(changes).toBe(1)
+    el.remove()
+  })
+})

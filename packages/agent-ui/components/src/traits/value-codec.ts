@@ -16,13 +16,34 @@
 //   • setCanonical(v): used by affordances (clear, steppers) that change the value programmatically
 //     outside the normal blur path, so the canonical stays in sync.
 //
+// TKT-0023 — the unfocused-write resync (root-cause fix, not a consumer-facing method): a THIRD reactive
+// path, alongside focus/blur, watches host.value directly so a programmatic `host.value = …` write reaches
+// canonical without waiting for a real blur. It is its OWN effect() (not nested in the control's type-effect
+// — see the untracked() seed note below for why that separation matters), so it tracks host.value on its
+// own graph node:
+//   • First run (at attach/type-switch) is a no-op — the seed line above already copied host.value into
+//     canonical for this same run; re-deriving it here would risk flipping hasError on a bad *seeded*
+//     value that the pre-fix code never flagged before an interaction. Out of scope for this fix.
+//   • While FOCUSED (the codec's own `focused` flag, set by the same onFocus/onBlur pair — NOT
+//     document.activeElement, so the seam matches how focus/blur are actually driven: synthetic dispatch
+//     in tests, real focus in the browser): SKIPPED. The documented semantic (TKT-0023 acceptance,
+//     mid-edit case) is display-is-source-of-truth while the user is mid-edit — canonical still resyncs
+//     on the NEXT blur, same as any typed edit. A programmatic write while focused updates the surface
+//     (the existing model→surface effect) but does not fight the in-flight edit.
+//   • While UNFOCUSED: resync canonical exactly as a blur would — '' short-circuits to canonical=''/
+//     hasError=false (the same "known-good empty" precedent setCanonical's callers already rely on, e.g.
+//     the clear button); non-empty parses through opts.parse, mirroring onBlur's success/failure branches
+//     (parse failure sets hasError, canonical stays untouched — never a silent wrong-canonical).
+//   • Never rewrites host.value/display — the model→surface caret-guard effect already reflects the raw
+//     written value; reformatting-on-write is not part of this fix's contract (only blur reformats).
+//
 // Lifetime: listeners ride host.listen() → the connection AbortSignal → zero residue on disconnect.
 // release() is the idempotent early-teardown guard; the control calls it from the type-change effect
-// cleanup or from disconnected().
+// cleanup or from disconnected(). The unfocused-write effect above is disposed by the SAME release() call.
 //
 // Layering: traits → reactive (L0) + dom (L1) — downward imports, import-layering trip-wire holds.
 
-import { signal, untracked } from '../reactive/index.ts'
+import { signal, untracked, effect } from '../reactive/index.ts'
 import type { ReadonlySignal } from '../reactive/index.ts'
 import type { UIElement } from '../dom/index.ts'
 
@@ -94,6 +115,11 @@ export function valueCodec(host: CodecHost, opts: ValueCodecOptions, typeSignal?
 
   const editor = host.querySelector('[data-part="editor"]') as HTMLElement | null
 
+  // The codec's own focus-tracking flag — driven by the SAME onFocus/onBlur pair below, not
+  // document.activeElement (this control is exercised by synthetic focus/blur dispatch throughout the
+  // test suite, which never moves real DOM focus). The unfocused-write resync effect (below) reads this.
+  let focused = false
+
   // Focus (captured on host): fires in the capture phase BEFORE the control's direct-on-editor focus
   // listener. This ensures host.value is reverted to canonical BEFORE the control records #committed,
   // so a focus→no-change→blur cycle does not emit a spurious change event.
@@ -101,6 +127,7 @@ export function valueCodec(host: CodecHost, opts: ValueCodecOptions, typeSignal?
     if (released) return
     // Guard: only the editor's own focus, not a descendant button (e.g. reveal toggle) getting focus.
     if (editor && event.target !== editor) return
+    focused = true
     if (!hasError.value) host.value = canonical.value
   }
 
@@ -109,6 +136,7 @@ export function valueCodec(host: CodecHost, opts: ValueCodecOptions, typeSignal?
   // codec reformats the display — no spurious second change from host.value being rewritten.
   const onBlur = (): void => {
     if (released) return
+    focused = false
     const parsed = opts.parse(host.value)
     if (parsed === null) {
       hasError.value = true
@@ -120,6 +148,47 @@ export function valueCodec(host: CodecHost, opts: ValueCodecOptions, typeSignal?
     // editor's textContent. Safe on blur — no active caret to protect at this point.
     host.value = opts.format(parsed)
   }
+
+  // TKT-0023 — the unfocused-write resync: an OWN effect() (not nested inside the control's type-effect),
+  // so its tracked read of host.value never becomes a dependency of the caller's outer effect (the same
+  // untracked-read discipline the seed line above protects — see the header note). Skips its own first
+  // run (the seed already covers it), skips entirely while focused (the documented mid-edit semantic —
+  // canonical catches up on the next blur), and otherwise mirrors blur's parse/hasError contract without
+  // ever touching host.value (no reformat-on-write — only blur reformats the display).
+  let firstRun = true
+  const disposeResync = effect((): void => {
+    const v = host.value // tracked — the whole point: wake on ANY host.value write, typed or programmatic
+    if (released) return
+    // firstRun is consumed BEFORE the isConnected early-return (review L1): if the seed run ever executed
+    // while disconnected, a still-armed firstRun would otherwise silently swallow the first REAL
+    // post-connect write. Unreachable from the shipped control today (valueCodec runs inside connected()'s
+    // type-effect), but the ordering costs nothing and removes the latent trap.
+    if (firstRun) {
+      firstRun = false
+      return
+    }
+    // Defense-in-depth for the no-typeSignal fallback path (this function's only caller without a real
+    // control wrapping it is the trait-level unit test): host.listen()'s fallback listeners ride the
+    // connection AbortSignal, which this free-standing effect() has no access to (host.connectionSignal
+    // is `protected`— a trait cannot reach it, same reasoning as the file header's `internals` note). An
+    // isConnected guard gives the same observable outcome — zero state changes once the host is gone —
+    // without widening UIElement's protected surface for a defensive-only need.
+    if (!host.isConnected) return
+    if (focused) return // mid-edit: display is source of truth; canonical resyncs on the existing blur path
+    if (v === '') {
+      // The same "known-good empty" precedent setCanonical's internal callers rely on (clear button et al.).
+      canonical.value = ''
+      hasError.value = false
+      return
+    }
+    const parsed = opts.parse(v)
+    if (parsed === null) {
+      hasError.value = true // mirrors onBlur: canonical stays untouched, let the caller correct it
+      return
+    }
+    hasError.value = false
+    canonical.value = parsed
+  })
 
   if (editor) {
     if (typeSignal) {
@@ -146,6 +215,7 @@ export function valueCodec(host: CodecHost, opts: ValueCodecOptions, typeSignal?
     },
     release: (): void => {
       released = true
+      disposeResync() // idempotent (EffectNode.dispose) — tears down the unfocused-write resync effect too
     },
   }
 }

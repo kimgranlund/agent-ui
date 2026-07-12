@@ -285,6 +285,140 @@ describe('valueCodec — C10 zero residue', () => {
   })
 })
 
+// ── TKT-0023 — the unfocused-write resync ───────────────────────────────────────
+//
+// A programmatic `host.value = …` write (never through focus/blur — e.g. an external form-fill or an
+// A2UI two-way binding's data→control effect) must reach `canonical` without a blur, as long as the
+// editor is not mid-edit (no prior focus() dispatch since attach/last blur).
+
+describe('valueCodec — TKT-0023 unfocused-write resync', () => {
+  it('number: an unfocused programmatic write reaches canonical with NO blur dispatched', async () => {
+    const { host } = makeHost() // editor never focused
+    const codec = valueCodec(host, numberCodecOptions('en-US'))
+
+    host.value = '42' // programmatic — simulates an external setValue/A2UI setProp
+    await whenFlushed()
+
+    expect(codec.canonical.value).toBe('42')
+    expect(codec.hasError.value).toBe(false)
+    host.remove()
+  })
+
+  it('currency: an unfocused programmatic write reaches canonical with NO blur dispatched', async () => {
+    const { host } = makeHost()
+    const codec = valueCodec(host, currencyCodecOptions('USD', 'en-US'))
+
+    host.value = '1234.5'
+    await whenFlushed()
+
+    expect(codec.canonical.value).toBe('1234.5')
+    expect(codec.hasError.value).toBe(false)
+    host.remove()
+  })
+
+  it('date: an unfocused programmatic write reaches canonical with NO blur dispatched', async () => {
+    const { host } = makeHost()
+    const codec = valueCodec(host, dateCodecOptions('en-US'))
+
+    host.value = '2024-07-04'
+    await whenFlushed()
+
+    expect(codec.canonical.value).toBe('2024-07-04')
+    expect(codec.hasError.value).toBe(false)
+    host.remove()
+  })
+
+  it('time: an unfocused programmatic write reaches canonical with NO blur dispatched', async () => {
+    const { host } = makeHost()
+    const codec = valueCodec(host, timeCodecOptions('en-US'))
+
+    host.value = '14:30'
+    await whenFlushed()
+
+    expect(codec.canonical.value).toBe('14:30')
+    expect(codec.hasError.value).toBe(false)
+    host.remove()
+  })
+
+  it('an unfocused programmatic write of "" resyncs canonical to "" (the known-good-empty precedent, not a parse error)', async () => {
+    const { host } = makeHost()
+    const codec = valueCodec(host, numberCodecOptions('en-US'))
+
+    // First get canonical to a non-empty, non-default value so the '' write is an observable change.
+    host.value = '7'
+    await whenFlushed()
+    expect(codec.canonical.value).toBe('7')
+
+    host.value = ''
+    await whenFlushed()
+    expect(codec.canonical.value).toBe('')
+    expect(codec.hasError.value).toBe(false)
+    host.remove()
+  })
+
+  it('an unfocused programmatic write of unparsable input sets hasError — canonical stays untouched (mirrors onBlur)', async () => {
+    const { host } = makeHost()
+    const codec = valueCodec(host, numberCodecOptions('en-US'))
+
+    host.value = '5'
+    await whenFlushed()
+    expect(codec.canonical.value).toBe('5')
+
+    host.value = 'not-a-number'
+    await whenFlushed()
+    expect(codec.hasError.value).toBe(true)
+    expect(codec.canonical.value).toBe('5') // untouched — the caller corrects it, same as a bad blur
+    host.remove()
+  })
+
+  it('the FOCUSED mid-edit case: a programmatic write while focused does NOT resync canonical — it resyncs on the NEXT blur (documented semantic)', async () => {
+    const { host, editor } = makeHost()
+    const codec = valueCodec(host, numberCodecOptions('en-US'))
+
+    editor.dispatchEvent(new Event('focus')) // enters the mid-edit window
+    host.value = '99' // a programmatic write arrives WHILE focused (display updates; canonical must not yet)
+    await whenFlushed()
+    expect(codec.canonical.value).toBe('') // untouched — still the seed; the mid-edit write did not resync
+
+    editor.dispatchEvent(new Event('blur')) // the existing blur path parses whatever host.value currently holds
+    await whenFlushed()
+    expect(codec.canonical.value).toBe('99') // caught up on blur, exactly as the acceptance criteria specifies
+    host.remove()
+  })
+
+  it('a later real blur after an unfocused resync does not re-emit / re-parse a DIFFERENT value (no phantom double-commit)', async () => {
+    const { host, editor } = makeHost()
+    const codec = valueCodec(host, numberCodecOptions('en-US'))
+
+    host.value = '10' // unfocused resync: canonical → '10'
+    await whenFlushed()
+    expect(codec.canonical.value).toBe('10')
+
+    editor.dispatchEvent(new Event('focus')) // reverts host.value to canonical ('10') — a no-op divergence
+    await whenFlushed()
+    editor.dispatchEvent(new Event('blur')) // re-parses '10' — idempotent, canonical stays '10'
+    await whenFlushed()
+    expect(codec.canonical.value).toBe('10')
+    expect(codec.hasError.value).toBe(false)
+    host.remove()
+  })
+
+  it('zero residue: once the host disconnects, a later host.value write does NOT resync canonical (even without release())', async () => {
+    const { host } = makeHost()
+    const codec = valueCodec(host, numberCodecOptions('en-US')) // release() deliberately never called — proves the
+    // isConnected guard, not the released flag, is what stops this specific path post-disconnect.
+
+    host.value = '3'
+    await whenFlushed()
+    expect(codec.canonical.value).toBe('3')
+
+    host.remove() // disconnect — no release() call
+    host.value = '999'
+    await whenFlushed()
+    expect(codec.canonical.value).toBe('3') // untouched — the disconnected host no longer resyncs
+  })
+})
+
 // ── dateCodecOptions (Wave 5B, ADR-0048) ──────────────────────────────────────
 //
 // All tests pin locale='en-US' for deterministic output in CI. The parse tests are entirely

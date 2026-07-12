@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, beforeAll, afterAll } from 'vitest'
+import { whenFlushed } from '@agent-ui/components'
 import { FIELD_CONTROL_REGISTRY, type SettingsField } from './schema.ts'
 
 // n3b (schema half) — jsdom probes for the field-type → control registry (LLD-C13, SPEC-R10). Proves each
@@ -124,11 +125,12 @@ describe('RegisteredControl — getValue/setValue bridge (the FormConnectDetail 
     expect(registered.getValue()).toBe(42)
   })
 
-  it('number: a setValue AFTER connect does NOT reach the codec canonical without a real blur (documented limitation — not this build\'s to fix; generate.ts never calls setValue post-connect)', () => {
+  it('number: a setValue AFTER connect now reaches the codec canonical with NO blur (TKT-0023 fix — value-codec.ts\'s unfocused-write resync; supersedes the old documented wall)', async () => {
     const registered = FIELD_CONTROL_REGISTRY.number!(field({ type: 'number' }))
     connect(registered.element)
-    registered.setValue(42)
-    expect(registered.getValue()).toBe(undefined) // canonical stays seeded at '' — only a real blur/setCanonical updates it
+    registered.setValue(42) // a programmatic, unfocused write — the exact shape generate.ts's external-sync uses
+    await whenFlushed() // the codec's unfocused-write resync effect is microtask-scheduled
+    expect(registered.getValue()).toBe(42) // canonical resynced — no blur needed
   })
 
   it('text: setValue/getValue round-trip a plain string', () => {

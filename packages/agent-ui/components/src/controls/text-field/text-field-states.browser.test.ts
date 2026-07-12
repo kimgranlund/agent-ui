@@ -235,6 +235,50 @@ describe('ui-text-field — forced-colors survival (Chromium emulates via CDP; W
 //      a real layout engine since jsdom does not evaluate `display:block` vs `hidden`.)
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [6] TKT-0023 — the unfocused-write canonical resync, under REAL focus/blur (both engines)
+//      (jsdom drives this via synthetic focus/blur dispatch — text-field.test.ts / value-codec.test.ts.
+//      This is the real-engine proof: genuine userEvent.click() focus transitions, a real <form> +
+//      FormData for the FACE form-value boundary — the focus-sensitive path the ticket calls out.)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-text-field — TKT-0023 unfocused-write resync under REAL focus (both engines)', () => {
+  it('an unfocused programmatic write reaches the real FormData value — no blur, no prior focus at all', async () => {
+    const { field } = mount('<form><ui-text-field type="number" name="amount"></ui-text-field></form>')
+    const form = field.closest('form') as HTMLFormElement
+
+    ;(field as unknown as { value: string }).value = '42' // programmatic — the editor is never focused
+    await field.updateComplete
+
+    expect(new FormData(form).get('amount'), 'the unfocused write did not reach the FACE form value').toBe('42')
+  })
+
+  it('a mid-edit programmatic write (REAL focus) defers to the next REAL blur, then catches up', async () => {
+    const { field, editor } = mount(
+      `<form><ui-text-field type="number" name="amount" ${SIZED}></ui-text-field></form>`,
+    )
+    const form = field.closest('form') as HTMLFormElement
+
+    // establish a committed baseline via a real focus→type→blur cycle.
+    await userEvent.click(editor)
+    await userEvent.keyboard('5')
+    await userEvent.click(document.body) // real blur
+    await field.updateComplete
+    expect(new FormData(form).get('amount'), 'the baseline commit did not reach FormData').toBe('5')
+
+    // re-focus (REAL), then a programmatic write arrives mid-edit — canonical must NOT resync yet.
+    await userEvent.click(editor)
+    ;(field as unknown as { value: string }).value = '77'
+    await field.updateComplete
+    expect(new FormData(form).get('amount'), 'a mid-edit programmatic write resynced canonical early').toBe('5')
+
+    // the real blur that follows commits the documented semantic: canonical catches up.
+    await userEvent.click(document.body)
+    await field.updateComplete
+    expect(new FormData(form).get('amount'), 'canonical did not catch up on the following real blur').toBe('77')
+  })
+})
+
 describe('ui-text-field — visible inline-validation message (ADR-0029 A1, extends ADR-0014)', () => {
   it('the .ui-text-field-message node appears visible with danger ink ONLY after :state(user-invalid) is active', async () => {
     // A required field that is empty fires `valueMissing` on blur (the user-invalid timing controller
