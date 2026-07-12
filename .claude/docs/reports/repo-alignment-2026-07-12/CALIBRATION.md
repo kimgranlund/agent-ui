@@ -52,3 +52,15 @@ Deviations, false premises, guesses, corrections — appended continuously (an e
   red and was fixed forward one commit later. The playbook's "expect the check to catch your own
   mistakes" applied to the campaign itself. Rule reinforced: gate commands ALWAYS `&&`-chain into
   the commit.
+- **Phase 5 WP1 staging slip:** the commit's `git add` chain included the just-dissolved
+  `drafts/` pathspec with `2>/dev/null` masking the failure — git add aborts the WHOLE command on
+  a bad pathspec, so a84855c captured only the rename; the 13 real edits landed one commit later.
+  Combined with the Phase-3 `;`-chain slip: the campaign's own two errors were both COMMAND-
+  COMPOSITION failures, not judgment failures — the Phase-6 lessons skill should carry the pair
+  (always `&&`-chain gates; never mask git add stderr; verify `git diff --cached --stat` before
+  every campaign commit).
+- **External event mid-campaign:** Kim's token-generator rework appeared live in the working tree
+  (tokens.css, 656+/408-; the generator now EMITS --md-sys-color-dialog-backdrop natively — the
+  hand-authored ④ graduates). Never staged (the standing rule); the campaign's remaining commits
+  stage explicitly around it. The hand-authored-block reconciliation belongs to Kim's token wave,
+  not this campaign.
