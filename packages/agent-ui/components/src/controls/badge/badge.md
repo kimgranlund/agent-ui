@@ -4,6 +4,7 @@
 # below the fence is the /site doc. The `attributes[]` block MUST mirror UIBadgeElement.props
 # (label/intent) — the contract↔props trip-wire in badge.test.ts targets this fence.
 tag: ui-badge
+description: A non-interactive status tag with an intent-keyed color and a matching non-color glyph.
 tier: display           # SPEC-R11 AC3 + LLD-C9: a non-interactive display leaf (site-tier classification,
                         # not the geometry MECHANISM) — the LLD-C10 display-tier roster explicitly includes
                         # `badge`. The box still rides the compact-realm ramp (--ui-compact-lg, ADR-0041,

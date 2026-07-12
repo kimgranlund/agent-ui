@@ -4,6 +4,7 @@
 # the fence is the /site doc. The `attributes[]` block MUST mirror sparkline.ts `static props`
 # (values/label/variant) — the contract<->props trip-wire (sparkline-descriptor.test.ts) targets this fence.
 tag: ui-sparkline
+description: An inline, axis-free line or area mark that shows the shape of a numeric series at a glance.
 tier: display          # geometry size-class (Display band — NO control frame/height; SPEC-R12/ADR-0107 cl.5)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R1)
 # marginal: 715 B gz — within the 2048 B gz per-control budget (ADR-0080 clause 3); solo 5309 B gz

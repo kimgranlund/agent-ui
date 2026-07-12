@@ -6,6 +6,7 @@
 # (s10, text-field-descriptor.test.ts) and the frontmatter schema both target this fence. Field set per
 # .claude/docs/plan.md §10 / ADR-0004; the form participation + the contenteditable editor part per ADR-0013 / ADR-0014.
 tag: ui-text-field
+description: A form-associated text input with a contenteditable surface supporting thirteen typed input variants.
 tier: control          # geometry size-class (Control band — full control height; geometry.md "five size-classes")
 extends: UIFormElement  # FACE form-associated control (value/validity participation via ElementInternals; ADR-0013)
 # marginal: ui-text-field adds 2623 B gz (10975 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — it + UIFormElement + trackUserInvalid + the Wave 5A codec factories/helpers). Wave 5A (ADR-0047) grew the marginal from 1110 B gz (Wave 3) by adding currencyCodecOptions/unitCodecOptions/currencySymbol/unitLabel, TYPE_CONFIG v2 (10 types), numeric adornment factories, ArrowUp/Down, and range validity. ADR-0123 LLD-C9 adds the 13th type=color leg + a NEW static `ui-swatch` pull (the immediate swatch-button preview) — measured marginal ≈0 B gz at that wave (a leave-one-out gzip-dictionary artifact against the heavily-overlapping color-picker/swatch entries, the split/swiper precedent), well within the per-control budget. The family total is gated each run by `npm run size` (scripts/measure-size.mjs)

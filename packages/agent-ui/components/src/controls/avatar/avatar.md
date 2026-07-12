@@ -4,6 +4,7 @@
 # the fence is the /site doc. The `attributes[]` block MUST mirror avatar.ts `static props`
 # (src/name/label/size) — the contract<->props trip-wire (avatar-descriptor.test.ts) targets this fence.
 tag: ui-avatar
+description: A compact circular identity mark that shows a photo, initials, or a fallback glyph for one person.
 tier: indicator        # geometry size-class — the F3 widget-box class (ADR-0041; SPEC-R20), NOT display:
                         # a small fixed painted box, same kin as checkbox/switch/tag, sized off the
                         # compact ramp — non-interactive is stated in prose (no keyboard/focus contract)

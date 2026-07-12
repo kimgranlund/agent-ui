@@ -4,6 +4,7 @@
 # the fence is the /site doc. The `attributes[]` block MUST mirror bar-chart.ts `static props`
 # (data/label) — the contract<->props trip-wire (bar-chart-descriptor.test.ts) targets this fence.
 tag: ui-bar-chart
+description: An axis-free horizontal bar list that compares magnitudes with a printed value, no ticks or legend.
 tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; SPEC-R12/ADR-0107 cl.5)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R5)
 # marginal: 447 B gz — within the 2048 B gz per-control budget (ADR-0080 clause 3); solo 5067 B gz

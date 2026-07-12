@@ -4,6 +4,7 @@
 # the /site doc. Field set per .claude/docs/plan.md §10 / ADR-0004; the promotion contract per
 # .claude/docs/spec/theme-provider.spec.md / .claude/docs/lld/theme-provider.lld.md.
 tag: ui-theme-provider
+description: A coordination element that establishes a color-scheme, scale, and density subtree for its descendants.
 tier: container         # geometry.md Container/layout band — no control height, no --ui-space opinion (the ui-form-provider precedent)
 extends: UIElement      # NOT UIFormElement (carries no value/validity of its own) and NOT UIContainerElement (paints no surface of its own) — same reasoning ADR-0050 already ratified for ui-form-provider
 # marginal: ui-theme-provider adds a small delta to the self-defining ui-* family (measured via `npm run size`'s leave-one-out per-control marginal, tree-shaken) — a single reflected-scheme effect plus three pure-carrier reflections, materially smaller than ui-form-provider's registry-backed footprint.

@@ -8,6 +8,7 @@
 # entry (a toast is app-surface chrome, never agent-emittable content); see "App-surface consumption
 # story" below.
 tag: ui-toast
+description: A self-expiring, non-interrupting notification card shown in the platform's top layer via ui-toast-region.
 tier: pattern            # geometry size-class — a fixed-width notification card (Container/surface geometry), NOT a control height
 extends: UIElement       # NOT form-associated — a toast carries no value; it announces + optionally emits an action (select)
 # marginal: measured at the LLD-C11 shared-file integration slice (npm run size, ADR-0040 §3) — not measured in this folder-local wave

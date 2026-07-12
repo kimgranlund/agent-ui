@@ -5,6 +5,7 @@
 # block MUST mirror attachment.ts `static props` (name/mimeType/sizeBytes/href) — the contract<->props
 # trip-wire (attachment-descriptor.test.ts) targets this fence.
 tag: ui-attachment
+description: A non-interactive compact file card showing a category glyph, name, and formatted size for one attached file.
 tier: display          # geometry size-class (Display band — NO control frame/height; SPEC-R20)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R8)
 # marginal: not yet measured — this folder-only wave (M1-a) ships ahead of the LLD-C11 shared-file

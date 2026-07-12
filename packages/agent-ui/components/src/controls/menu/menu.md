@@ -7,6 +7,7 @@
 # both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; overlay mechanism per
 # the overlay-controller LLD-C1..C4; bindable `open` two-way per ADR-0019.
 tag: ui-menu
+description: A keyboard-navigable overlay menu opened from a trigger, with roving focus and type-ahead selection.
 tier: pattern           # geometry size-class — panel uses Container/surface geometry; items use the legacy item-pad (NOT a control height)
 extends: UIElement      # NOT form-associated — the menu carries no form value; it emits an action (`select`)
 # marginal: tracked at the wave-4 integration slice (s12 barrel pass); ≤ ~2 kB tier budget (plan §10)

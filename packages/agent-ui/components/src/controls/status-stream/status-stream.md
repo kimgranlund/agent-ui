@@ -7,6 +7,7 @@
 # ADR-0122 F5's EXCLUSION_ALLOWLIST entry (a consumer-owned imperative streaming host, the
 # Toast/ToastRegion cl.6 precedent; the catalog slice is a separate a2ui-builder dispatch).
 tag: ui-status-stream
+description: A live status strip that streams work-in-progress entries and tail-follows the newest arrival.
 tier: pattern            # mirrors ui-timeline's classification (the family's shared marker-system geometry)
 extends: UIContainerElement  # NOT form-associated — a live display strip, no value/validity
 # marginal: measured at the family barrel integration slice (npm run size, ADR-0040 §3)

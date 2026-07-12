@@ -5,6 +5,7 @@
 # the contract↔props trip-wire (color-picker.test.ts) and the frontmatter schema (validateComponentDescriptor)
 # both target this fence.
 tag: ui-color-picker
+description: A color-input control combining a 2D chroma-lightness pad, three channel sliders, and an editable readout.
 tier: pattern             # a composite: 2-axis pad + channel sliders + editable readout — no _base/ family fits
 extends: UIFormElement    # form-associated: formValue() = the serialized `value` (null when unset); formValidity() = valueMissing + customError
 

@@ -6,6 +6,7 @@
 # contract↔props trip-wire (timeline-item-descriptor.test.ts) and the frontmatter schema both target
 # this fence.
 tag: ui-timeline-item
+description: One rail row in a timeline or status stream, showing a status marker, label, timestamp, and optional detail.
 tier: pattern            # geometry.md's Pattern band does not literally fit (no interactive control-height
                          # row) — the marker-system novelty leg (ADR-0122 F2) generalizes it to a
                          # structural, non-interactive multi-row family, kin to accordion/menu

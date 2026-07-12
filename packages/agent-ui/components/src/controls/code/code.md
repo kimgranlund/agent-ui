@@ -4,6 +4,7 @@
 # below the fence is the /site doc. The `attributes[]` block MUST mirror code.ts `static props`
 # (language) — the contract↔props trip-wire (code-descriptor.test.ts) targets this fence.
 tag: ui-code
+description: A zero-machinery block that displays verbatim, whitespace-preserved code with its own horizontal scroll.
 tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; SPEC-R20)
 extends: UIElement     # a non-interactive, non-form-associated, ZERO-MACHINERY display LEAF (SPEC-R1)
 # marginal: measured at the build wave (`npm run size`, manual discipline, ADR-0040/SPEC-N4) once

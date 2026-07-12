@@ -11,6 +11,7 @@
 # `orientation`; this subclass adds NO new prop of its own) — the contract↔props trip-wire and the
 # frontmatter schema both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-segmented-control
+description: A joined-button single-select toggle with one shared, animated highlight sliding between segments.
 tier: pattern           # geometry size-class — geometry.md's Pattern band names "segmented-control" as its own example (geometry.md:133): "interactive rows take the control height"
 extends: UIFormElement  # FACE form-associated container (value/validity participation via ElementInternals; ADR-0013) — the base-ladder ancestor of the real parent, UIRadioGroupElement
 # marginal: ui-segmented-control adds 62 B gz (measured via `npm run size`'s per-control leave-one-out leg, ADR-0080, 2026-07-07) to the self-defining ui-* family — almost all its real cost (UIRadioGroupElement's exclusivity/roving/value machinery, ui-segment's own graph) is already paid for by ui-radio-group/ui-segment; this control contributes only its own small class body + segmented-control.css — well within the per-control ≤ ~2 kB tier budget (plan §10)

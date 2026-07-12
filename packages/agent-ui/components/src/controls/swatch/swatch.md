@@ -4,6 +4,7 @@
 # the fence is the /site doc. The `attributes[]` block MUST mirror swatch.ts `static props` (value/label/
 # scheme) — the contract↔props trip-wire (swatch-descriptor.test.ts) targets this fence.
 tag: ui-swatch
+description: A bordered color box that shows one resolved color value alongside its token name as accessible text.
 tier: display          # Display band — no control frame/height/[size]/[scale] (SPEC-R16/ADR-0118 cl.5)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (SPEC-R1)
 # marginal: 118 B gz — within the 2048 B gz per-control budget (ADR-0080 clause 3); solo 4789 B gz

@@ -5,6 +5,7 @@
 # timeline.ts `static props` (size/label) — the contract↔props trip-wire (timeline-descriptor.test.ts) and
 # the frontmatter schema both target this fence.
 tag: ui-timeline
+description: A static, authored chronology of ui-timeline-item rows showing an order history or audit trail.
 tier: pattern            # geometry.md's Pattern band does not literally fit (no interactive control-height
                          # row) — the marker-system family (ADR-0122 F2) generalizes it, mirroring timeline-item
 extends: UIContainerElement  # NOT form-associated — a structural container hosting authored children (ADR-0015)

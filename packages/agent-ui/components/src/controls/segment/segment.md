@@ -7,6 +7,7 @@
 # ancestor (family-coherence.test.ts A3), not the immediate non-ladder parent UIRadioElement (the
 # radio.md/radio-group.md convention). Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-segment
+description: The child button of ui-segmented-control, rendering only its label while the host supplies all geometry.
 tier: indicator        # geometry size-class — the SAME tier as ui-radio (its real ancestor); the Control-height SIZING it actually renders at is applied by the HOST ui-segmented-control via a descendant compound selector, not this leaf's own tier classification
 extends: UIIndicatorElement  # Indicator-class base (ADR-0042) — boolean form value + checked-state machine + pressActivation toggle (inherited via UIRadioElement)
 # marginal: ui-segment adds 0 B gz (measured via `npm run size`'s per-control leave-one-out leg, ADR-0080, 2026-07-07) to the self-defining ui-* family — its whole graph (UIIndicatorElement + traits) is already paid for by ui-radio/ui-checkbox/ui-switch; the tag itself contributes only its own tiny class body — well within the per-control ≤ ~2 kB tier budget (plan §10)

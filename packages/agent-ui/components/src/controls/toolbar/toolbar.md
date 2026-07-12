@@ -5,6 +5,7 @@
 # elevation/brightness — plus orientation/align/justify/gap/overflow/label) — the contract↔props trip-wire
 # (toolbar-descriptor.test.ts) targets this fence.
 tag: ui-toolbar
+description: A flex action bar that arranges the consumer's own controls with role=toolbar and arrow-key roving focus.
 tier: pattern          # geometry.md names toolbar explicitly as a Pattern-class example (container + control-height item rows)
 extends: UIContainerElement   # the first non-form family — surface axes + reused internals (ARIA); NOT form-associated (face below)
 # marginal: measured at integration time via `npm run size` (the delta of the components barrel with vs.

@@ -4,6 +4,7 @@
 # the fence is the /site doc. The `attributes[]` block MUST mirror ladder.ts `static props` (tiers/label) —
 # the contract↔props trip-wire (ladder-descriptor.test.ts) targets this fence.
 tag: ui-ladder
+description: A labeled list of dimensional tiers shown as literal-length bars alongside their printed values.
 tier: display          # Display band — no control frame/height/[size]/[scale] (SPEC-R16/ADR-0118 cl.5)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (SPEC-R9)
 # marginal: 282 B gz — within the 2048 B gz per-control budget (ADR-0080 clause 3); solo 5062 B gz

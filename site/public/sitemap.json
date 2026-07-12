@@ -4,7 +4,7 @@
       "name": "Attachment",
       "tag": "ui-attachment",
       "url": "./attachment-doc.html",
-      "description": "ui-attachment is the Display-class, FilePart-aligned compact file card (ADR-0112, feed family v1) — a category glyph plus a name/size cell, real selectable DOM…",
+      "description": "A non-interactive compact file card showing a category glyph, name, and formatted size for one attached file.",
       "level": "L1",
       "section": "Components"
     },
@@ -12,7 +12,7 @@
       "name": "Avatar",
       "tag": "ui-avatar",
       "url": "./avatar-doc.html",
-      "description": "ui-avatar is the Indicator-class compact identity mark (ADR-0112, feed family v1) — a circle-masked widget box that walks a fallback chain: an image, then init…",
+      "description": "A compact circular identity mark that shows a photo, initials, or a fallback glyph for one person.",
       "level": "L1",
       "section": "Components"
     },
@@ -20,7 +20,7 @@
       "name": "Badge",
       "tag": "ui-badge",
       "url": "./badge-doc.html",
-      "description": "ui-badge is a compact-realm, non-interactive display leaf (extends UIElement) — a status or neutral \"tag\" token with an intent-keyed colour + a component-drawn…",
+      "description": "A non-interactive status tag with an intent-keyed color and a matching non-color glyph.",
       "level": "L1",
       "section": "Components"
     },
@@ -28,7 +28,7 @@
       "name": "Bar Chart",
       "tag": "ui-bar-chart",
       "url": "./bar-chart-doc.html",
-      "description": "ui-bar-chart is the Display-class magnitude-comparison bar list (ADR-0107, chart-family v1) — an axis-free chart that answers \"how do these magnitudes compare?…",
+      "description": "An axis-free horizontal bar list that compares magnitudes with a printed value, no ticks or legend.",
       "level": "L1",
       "section": "Components"
     },
@@ -44,7 +44,7 @@
       "name": "Calendar",
       "tag": "ui-calendar",
       "url": "./calendar-doc.html",
-      "description": "A standalone month-grid date picker that is a FACE form control (contributes a selected ISO YYYY-MM-DD date to a form) and will also serve as the popup body fo…",
+      "description": "A month-grid date picker form control that selects a single date or a start/end date range.",
       "level": "L1",
       "section": "Components"
     },
@@ -68,7 +68,7 @@
       "name": "Code",
       "tag": "ui-code",
       "url": "./code-doc.html",
-      "description": "ui-code is the Display-class, zero-machinery verbatim code leaf (ADR-0113, content family v1) — a block-level element that shows exactly what it is given: mono…",
+      "description": "A zero-machinery block that displays verbatim, whitespace-preserved code with its own horizontal scroll.",
       "level": "L1",
       "section": "Components"
     },
@@ -76,7 +76,7 @@
       "name": "Color Picker",
       "tag": "ui-color-picker",
       "url": "./color-picker-doc.html",
-      "description": "A standalone color-input control that edits ONE color through a 2-axis chroma×lightness pad, three channel sliders (hue always; chroma + lightness mirrored), a…",
+      "description": "A color-input control combining a 2D chroma-lightness pad, three channel sliders, and an editable readout.",
       "level": "L1",
       "section": "Components"
     },
@@ -108,7 +108,7 @@
       "name": "Disclosure",
       "tag": "ui-disclosure",
       "url": "./disclosure-doc.html",
-      "description": "ui-disclosure folds content behind a one-line summary — a Pattern-class control (UIElement, not form-associated) built on the native <details>/<summary> elemen…",
+      "description": "A one-line summary that expands or collapses its content, built on the native <details> element.",
       "level": "L1",
       "section": "Components"
     },
@@ -132,7 +132,7 @@
       "name": "Grid",
       "tag": "ui-grid",
       "url": "./grid-doc.html",
-      "description": "ui-grid is a track-grid layout primitive (extends UIContainerElement, ADR-0016): a display: grid container whose columns are an intrinsic auto-fit / minmax tra…",
+      "description": "A responsive track-grid container that fits as many columns as its own width allows, no breakpoints needed.",
       "level": "L1",
       "section": "Components"
     },
@@ -148,7 +148,7 @@
       "name": "Ladder",
       "tag": "ui-ladder",
       "url": "./ladder-doc.html",
-      "description": "ui-ladder is the Display-class labeled-dimensional-tiers leaf (ADR-0118, token-surfaces v1) — a magnitude-bar list whose whole contract is \"show these dimensio…",
+      "description": "A labeled list of dimensional tiers shown as literal-length bars alongside their printed values.",
       "level": "L1",
       "section": "Components"
     },
@@ -164,7 +164,7 @@
       "name": "Menu",
       "tag": "ui-menu",
       "url": "./menu-doc.html",
-      "description": "ui-menu is a keyboard-navigable overlay menu built on the Overlay controller (overlay-controller.lld.md · ADR-0043) and the rovingFocus trait (listbox-roving L…",
+      "description": "A keyboard-navigable overlay menu opened from a trigger, with roving focus and type-ahead selection.",
       "level": "L1",
       "section": "Components"
     },
@@ -196,7 +196,7 @@
       "name": "Radio",
       "tag": "ui-radio",
       "url": "./radio-doc.html",
-      "description": "ui-radio is the radio-button leaf of the Indicator class — a FACE form-associated control that extends UIIndicatorElement with role='radio' and a circular dot…",
+      "description": "A single radio-button control, typically grouped inside a ui-radio-group for exclusive selection.",
       "level": "L1",
       "section": "Components"
     },
@@ -204,7 +204,7 @@
       "name": "Radio Group",
       "tag": "ui-radio-group",
       "url": "./radio-group-doc.html",
-      "description": "ui-radio-group is the container for the radio-button family — a FACE form-associated element that extends UIFormElement and owns single-selection exclusivity,…",
+      "description": "A form-associated container that gives its ui-radio children exclusive selection and roving-focus navigation.",
       "level": "L1",
       "section": "Components"
     },
@@ -212,7 +212,7 @@
       "name": "Ramp",
       "tag": "ui-ramp",
       "url": "./ramp-doc.html",
-      "description": "ui-ramp is the Display-class ordered-color-series leaf (ADR-0118, token-surfaces v1) — a wrapping strip of color cells whose whole contract is \"show this color…",
+      "description": "An ordered strip of color cells, each labeled with real accessible text, showing a tonal or palette series.",
       "level": "L1",
       "section": "Components"
     },
@@ -228,7 +228,7 @@
       "name": "Segment",
       "tag": "ui-segment",
       "url": "./segment-doc.html",
-      "description": "ui-segment is the child leaf of ui-segmented-control — a FACE form-associated control that extends UIRadioElement/UIIndicatorElement with role=\"radio\", adding…",
+      "description": "The child button of ui-segmented-control, rendering only its label while the host supplies all geometry.",
       "level": "L1",
       "section": "Components"
     },
@@ -236,7 +236,7 @@
       "name": "Segmented Control",
       "tag": "ui-segmented-control",
       "url": "./segmented-control-doc.html",
-      "description": "ui-segmented-control is the fleet's segmented control — a joined-button single-select toggle with one shared, animated highlight that slides between adjoining…",
+      "description": "A joined-button single-select toggle with one shared, animated highlight sliding between segments.",
       "level": "L1",
       "section": "Components"
     },
@@ -268,7 +268,7 @@
       "name": "Sparkline",
       "tag": "ui-sparkline",
       "url": "./sparkline-doc.html",
-      "description": "ui-sparkline is the Display-class series-shape mark (ADR-0107, chart-family v1) — an inline, axis-free chart that answers one question: \"what is the shape of t…",
+      "description": "An inline, axis-free line or area mark that shows the shape of a numeric series at a glance.",
       "level": "L1",
       "section": "Components"
     },
@@ -276,7 +276,7 @@
       "name": "Split",
       "tag": "ui-split",
       "url": "./split-doc.html",
-      "description": "ui-split is a multi-pane (N-slot), user-resizable split container — a light-DOM custom element that lays its ui-split-pane children out along one axis, separat…",
+      "description": "A multi-pane container with user-resizable, draggable and keyboard-adjustable dividers between panes.",
       "level": "L1",
       "section": "Components"
     },
@@ -284,7 +284,7 @@
       "name": "Split Pane",
       "tag": "ui-split-pane",
       "url": "./split-pane-doc.html",
-      "description": "ui-split-pane is the generic pane child of ui-split — a structural, non-interactive content region (like ui-card's header/content/footer regions: the container…",
+      "description": "One resizable pane inside a ui-split container, with optional initial ratio, min, and max bounds.",
       "level": "L1",
       "section": "Components"
     },
@@ -300,7 +300,7 @@
       "name": "Status Stream",
       "tag": "ui-status-stream",
       "url": "./status-stream-doc.html",
-      "description": "ui-status-stream is the timeline family's live host (ADR-0122 F1) — a \"what the system is working on right now\" strip: entries appear as work starts, transitio…",
+      "description": "A live status strip that streams work-in-progress entries and tail-follows the newest arrival.",
       "level": "L1",
       "section": "Components"
     },
@@ -308,7 +308,7 @@
       "name": "Swatch",
       "tag": "ui-swatch",
       "url": "./swatch-doc.html",
-      "description": "ui-swatch is the Display-class color-identity leaf (ADR-0118, token-surfaces v1) — a bordered color box whose whole contract is \"show this one color value, res…",
+      "description": "A bordered color box that shows one resolved color value alongside its token name as accessible text.",
       "level": "L1",
       "section": "Components"
     },
@@ -340,7 +340,7 @@
       "name": "Swiper Paddles",
       "tag": "ui-swiper-paddles",
       "url": "./swiper-paddles-doc.html",
-      "description": "ui-swiper-paddles is an author-placed anchor the owning ui-swiper fills with two composed, icon-only ui-buttons wired to prev/next (swiper-family.lld.md LLD-C1…",
+      "description": "An author-placed anchor that the owning ui-swiper fills with previous/next navigation buttons.",
       "level": "L1",
       "section": "Components"
     },
@@ -364,7 +364,7 @@
       "name": "Table",
       "tag": "ui-table",
       "url": "./table-doc.html",
-      "description": "ui-table is the Display-class static data table (ADR-0111, report family v1) — typed columns + record rows rendered as a real native <table> in light DOM (the…",
+      "description": "A static data table with typed columns and record rows, rendered as a real native HTML table.",
       "level": "L1",
       "section": "Components"
     },
@@ -372,7 +372,7 @@
       "name": "Tabs",
       "tag": "ui-tabs",
       "url": "./tabs-doc.html",
-      "description": "ui-tabs is the tabs compound — a container (extends UIContainerElement, the first non-form family) that coordinates a set of ui-tab rows and their ui-tab-panel…",
+      "description": "A tab strip and panel container that switches visible content via keyboard-navigable, roving-focus tabs.",
       "level": "L1",
       "section": "Components"
     },
@@ -388,7 +388,7 @@
       "name": "Text Field",
       "tag": "ui-text-field",
       "url": "./text-field-doc.html",
-      "description": "ui-text-field is the first FACE form-associated control (extends UIFormElement, ADR-0013): it carries a value, participates in form submission and constraint v…",
+      "description": "A form-associated text input with a contenteditable surface supporting thirteen typed input variants.",
       "level": "L1",
       "section": "Components"
     },
@@ -396,7 +396,7 @@
       "name": "Theme Provider",
       "tag": "ui-theme-provider",
       "url": "./theme-provider-doc.html",
-      "description": "ui-theme-provider is a real, importable theming element for @agent-ui/components — a pure coordination/carrier layer establishing a color-scheme subtree plus t…",
+      "description": "A coordination element that establishes a color-scheme, scale, and density subtree for its descendants.",
       "level": "L1",
       "section": "Components"
     },
@@ -404,7 +404,7 @@
       "name": "Timeline",
       "tag": "ui-timeline",
       "url": "./timeline-doc.html",
-      "description": "ui-timeline is the timeline family's durable host (ADR-0122 F1) — a static, authored-children chronology (an order-tracking card, an audit log, a reasoning rec…",
+      "description": "A static, authored chronology of ui-timeline-item rows showing an order history or audit trail.",
       "level": "L1",
       "section": "Components"
     },
@@ -412,7 +412,7 @@
       "name": "Timeline Item",
       "tag": "ui-timeline-item",
       "url": "./timeline-item-doc.html",
-      "description": "ui-timeline-item is the timeline family's shared, inert visual atom (ADR-0122 F1) — one rail row: a marker (dot/ring/pulse, a built-in glyph, or a consumer ico…",
+      "description": "One rail row in a timeline or status stream, showing a status marker, label, timestamp, and optional detail.",
       "level": "L1",
       "section": "Components"
     },
@@ -420,7 +420,7 @@
       "name": "Toast",
       "tag": "ui-toast",
       "url": "./toast-doc.html",
-      "description": "ui-toast is the fleet's first transient notification surface — a self-expiring, non-interrupting announcement card, region-hosted in the platform top layer via…",
+      "description": "A self-expiring, non-interrupting notification card shown in the platform's top layer via ui-toast-region.",
       "level": "L1",
       "section": "Components"
     },
@@ -436,7 +436,7 @@
       "name": "Toolbar",
       "tag": "ui-toolbar",
       "url": "./toolbar-doc.html",
-      "description": "ui-toolbar is a Pattern-class UIContainerElement — a light-DOM, host-as-flex action bar that arranges the consumer's own interactive controls (ui-button, nativ…",
+      "description": "A flex action bar that arranges the consumer's own controls with role=toolbar and arrow-key roving focus.",
       "level": "L1",
       "section": "Components"
     },

@@ -4,6 +4,7 @@
 # /site doc. The `attributes[]` block MUST mirror split.ts `static props` (axis + sizes) — the
 # contract↔props trip-wire (split-descriptor.test.ts) targets this fence.
 tag: ui-split
+description: A multi-pane container with user-resizable, draggable and keyboard-adjustable dividers between panes.
 tier: layout           # geometry size-class (Container/layout band — NO control height; geometry.md §"five size-classes")
 extends: UIContainerElement   # structural surface container, NOT form-associated (face below)
 # marginal: measured at build (npm run size, LLD-C9) — the per-control ≤ ~2 kB tier budget (plan §10); the

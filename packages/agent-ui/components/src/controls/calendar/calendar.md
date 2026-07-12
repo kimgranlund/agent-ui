@@ -8,6 +8,7 @@
 # §10 / ADR-0004; grid navigation per ADR-0048 decision 2; form-value per UIFormElement / ADR-0013;
 # [data-box] panel per ADR-0046; mode/range value contract per ADR-0093.
 tag: ui-calendar
+description: A month-grid date picker form control that selects a single date or a start/end date range.
 tier: pattern           # a composite picker: nav + 2D grid + form-associated selection
 extends: UIFormElement  # form-associated: formValue() = ISO string (or FormData pair in mode=range); formValidity() = valueMissing + range
 # marginal: tracked at the wave-5 integration slice (s12 barrel pass) + the ADR-0093 range-mode re-base; ≤ ~3 kB tier budget (plan §10)

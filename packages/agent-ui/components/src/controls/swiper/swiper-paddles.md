@@ -5,6 +5,7 @@
 # contract↔props trip-wire (swiper-paddles-descriptor.test.ts) targets the empty bijection. Prose below
 # documents only this element (the primary /site prose lives on swiper.md, the one-folder precedent).
 tag: ui-swiper-paddles
+description: An author-placed anchor that the owning ui-swiper fills with previous/next navigation buttons.
 tier: pattern            # geometry size-class — an author-placed anchor the coordinator fills (LLD-C10)
 extends: UIElement       # NOT form-associated — a pure render-target anchor, no value of its own
 # marginal: measured at integration (npm run size, ADR-0040 §3) — the five-tag family total

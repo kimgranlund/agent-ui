@@ -6,6 +6,7 @@
 # frontmatter schema both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; the
 # native-<details> wrap per ADR-0113 cl.4/fork F3; the bindable `open` two-way per ADR-0019/ADR-0101.
 tag: ui-disclosure
+description: A one-line summary that expands or collapses its content, built on the native <details> element.
 tier: pattern          # geometry.md Pattern band — "accordion" is named there: the summary row = control height, the shell rides the space scale
 extends: UIElement     # NOT form-associated — a <details> participates in no form (the ADR-0017 <dialog> precedent; the no-native-form-elements law does not bind, ADR-0113 Context)
 # marginal: measured at the LLD-C11 integration slice (the family barrel pass) — not guessed here (SPEC-N4)

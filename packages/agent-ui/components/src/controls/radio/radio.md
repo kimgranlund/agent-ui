@@ -5,6 +5,7 @@
 # spread: name/disabled/required — plus checked/value) — the contract↔props trip-wire and the frontmatter
 # schema both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-radio
+description: A single radio-button control, typically grouped inside a ui-radio-group for exclusive selection.
 tier: indicator        # geometry size-class (Indicator band — widget box, not full control height; geometry.md)
 extends: UIIndicatorElement  # Indicator-class base (ADR-0042) — boolean form value + checked-state machine + pressActivation toggle
 # marginal: ui-radio adds 129 B gz (423 B min) to the self-defining ui-* family above ui-checkbox+switch (UIIndicatorElement shared from checkbox; UIRadioElement contributes the grouped() hook + static role='radio') — within the per-control ≤ ~2 kB tier budget (plan §10)

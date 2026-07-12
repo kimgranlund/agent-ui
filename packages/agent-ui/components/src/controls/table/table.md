@@ -4,6 +4,7 @@
 # the fence is the /site doc. The `attributes[]` block MUST mirror table.ts `static props` (columns/rows/
 # label) — the contract<->props trip-wire (table-descriptor.test.ts) targets this fence.
 tag: ui-table
+description: A static data table with typed columns and record rows, rendered as a real native HTML table.
 tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; SPEC-R17)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R1)
 # marginal: NOT measured this wave — `npm run size` is LLD-C10's shared-file integration slice (the ONE
