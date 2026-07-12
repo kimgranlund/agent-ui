@@ -1,7 +1,7 @@
 # LLD — A2UI Expert Harness Wiring
 
 > Status: proposed · v0.2 · 2026-07-03 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
-> Implements: [`../specs/a2ui-expert-harness.spec.md`](../specs/a2ui-expert-harness.spec.md) (SPEC-R1..R8, SPEC-N1..N4) at **v0.2**.
+> Implements: [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md) (SPEC-R1..R8, SPEC-N1..N4) at **v0.2**.
 > **v0.2 reconciliation (2026-07-03):** the v0.1 wiring predated the corpus store; §0 rules every
 > v0.1 component against the realized tree. Headlines: LLD-C4's gate scripts are **REALIZED
 > elsewhere** (the shared validator + admission + the standing shard gate — the planned

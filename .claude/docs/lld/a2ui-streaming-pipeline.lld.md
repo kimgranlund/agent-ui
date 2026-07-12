@@ -1,7 +1,7 @@
 # LLD — A2UI Streaming Pipeline (codec · transports · MCP)
 
 > Status: proposed · v0.2 · 2026-07-02 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
-> Implements: [`../specs/a2ui-streaming-pipeline.spec.md`](../specs/a2ui-streaming-pipeline.spec.md) (SPEC-R1..R8, SPEC-N1..N4), targeting A2UI **v1.0**. Consolidates the previously-planned `a2ui-stream-codec` + `a2ui-mcp` LLDs.
+> Implements: [`../spec/a2ui-streaming-pipeline.spec.md`](../spec/a2ui-streaming-pipeline.spec.md) (SPEC-R1..R8, SPEC-N1..N4), targeting A2UI **v1.0**. Consolidates the previously-planned `a2ui-stream-codec` + `a2ui-mcp` LLDs.
 > Altitude: adds the **how**; cites `SPEC-R*`. Reuses the shared validator (`renderer/validate.ts`) and the corpus store's healer (`corpus/heal.ts`, corpus-store LLD-C7 — unbuilt) + retriever/exporters — no forks (parity).
 > **v0.2 reconciliation (2026-07-02):** realized/unrealized column added; the v0.1 "renderer healer `heal.ts`" citations repaired — no renderer healer exists or ever did. The RENDERER deliberately does not heal: its shipped parser (`src/renderer/parser.ts`) fault-isolates a malformed line as a `PARSE` error and continues (runtime SPEC-N4), so client-side provable validity (PRD-G4) is never masked. Healing is producer/admission-side ONLY — the ONE healer is the corpus store's LLD-C7, shared by admission and this codec when built.
 
@@ -25,7 +25,7 @@ out-of-order tolerance (`renderer/tree.ts`, runtime SPEC-R3/R4/N1), validate-at-
 | **LLD-C2** | Generation pipeline driver | SPEC-R2 | `tools/pipeline/produce.ts` | dev/CI | **REALIZED (2026-07-08 re-sync)** — by the live-agent wave's `tools/agent/produce.ts` (its header: "streaming LLD-C2 realized"): generate→validate→self-correct, bounded, validate-then-stream. The planned `tools/pipeline/produce.ts` module is superseded by that realization; no second driver gets built |
 | **LLD-C3** | Transport abstraction + stdio | SPEC-R3, R8 | `src/stream/transport.ts` + `tools/pipeline/stdio.ts` | runtime (iface) / dev (stdio) | unbuilt |
 | **LLD-C4** | AG-UI adapter | SPEC-R4 | `tools/pipeline/transports/ag-ui.ts` | dev/server | unbuilt |
-| **LLD-C5** | A2A adapter | SPEC-R5 | `tools/pipeline/transports/a2a.ts` | dev/server | **REALIZED (2026-07-08, B6)** — by the A2A family's bridge build ([`../../lld/a2a-a2ui-bridge.lld.md`](../../lld/a2a-a2ui-bridge.lld.md), its LLD-C1/C2), at the exact planned path, on the `@agent-ui/a2a` substrate: `envelopeToPart`/`partToEnvelope`/`wrapServerTurn`/`unwrapTurn`/`wrapClientTurn`, one envelope per tagged DataPart, `a2uiClientCapabilities` on every client→server message (HV-8). SPEC-R5 stays this family's contract; acceptance is proven by that build's `bridge.test.ts` (SPEC-R16 AC1) |
+| **LLD-C5** | A2A adapter | SPEC-R5 | `tools/pipeline/transports/a2a.ts` | dev/server | **REALIZED (2026-07-08, B6)** — by the A2A family's bridge build ([`../../lld/a2a-a2ui-bridge.lld.md`](./a2a-a2ui-bridge.lld.md), its LLD-C1/C2), at the exact planned path, on the `@agent-ui/a2a` substrate: `envelopeToPart`/`partToEnvelope`/`wrapServerTurn`/`unwrapTurn`/`wrapClientTurn`, one envelope per tagged DataPart, `a2uiClientCapabilities` on every client→server message (HV-8). SPEC-R5 stays this family's contract; acceptance is proven by that build's `bridge.test.ts` (SPEC-R16 AC1) |
 | **LLD-C6** | MCP server | SPEC-R6 | `tools/pipeline/mcp-server.ts` | dev/CLI | unbuilt · blocked by corpus store (retrieve/admit) |
 | **LLD-C7** | Conformance/negotiation | SPEC-R7, N3 | `src/stream/conformance.ts` | runtime | unbuilt |
 

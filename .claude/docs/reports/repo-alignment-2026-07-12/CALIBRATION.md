@@ -24,3 +24,14 @@ Deviations, false premises, guesses, corrections — appended continuously (an e
   2026-07-10) — establishing `.claude/docs/archive/` as the archive convention (none existed;
   the corpus `archive` disposition sanctions this). To verify NEXT.md's items all shipped before
   marking (read-before-archive), else it stays live and relocates instead.
+- **Phase 1 WP3 execution notes:** (a) my inbound-repair map missed the RELATIVE `../specs/llds/`
+  form (rubrics + a2a-section PRD) — caught by the post-move dangling-link sweep, which is the
+  real gate; lesson: sweep-verify beats replacement-list completeness. (b) The moved docs' link
+  DISPLAY TEXT (backticked path literals) needed repair separately from targets. (c) The sweep
+  caught FOUR pre-existing dangling refs unrelated to the move (ADR-0066 cited under a wrong
+  filename twice; chart-family.lld's wrong-depth ../../ links; anatomy.md citing the long-renamed
+  component-author skill) — repaired in the same package, recorded as incidental findings.
+  (d) Executed decompositions' context strings keep old-path snapshots BY DESIGN (historical
+  records, sanctioned) — the Phase-5 corpus-tier gate must scope to .md links, not .json strings.
+  (e) prd/a2ui-expert-system.prd.md carried a pre-existing dangling `.claude/CLAUDE.md` link
+  (never existed) — repointed to the repo-root entry file.

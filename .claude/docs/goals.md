@@ -19,7 +19,7 @@
 > foundation (G0–G9) + Control Suite + icon adapter. The one still-deferred item is the multi-theme
 > `theme` package-swapping system (the seam is wired; one `default` package ships).
 > Layout: npm-workspaces monorepo — `src/core/*` in milestone text now lives under `packages/agent-ui/components/src/*`.
-> Consumed by the A2UI effort (`.claude/docs/specs/`, `@agent-ui/a2ui`), which tracks these milestones (its
+> Consumed by the A2UI effort (`@agent-ui/a2ui`; docs on the unified `.claude/docs/{spec,lld,prd}/` map), which tracks these milestones (its
 > Assumption A-2 ≈ G7) and is coordinated by the planning/execution team (`.claude/agents/`).
 
 ## Standing definition of done (applies to every milestone)

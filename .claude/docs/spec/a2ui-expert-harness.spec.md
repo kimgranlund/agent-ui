@@ -17,8 +17,8 @@
 > driver being the live-agent wave's (NEXT item 4); **SPEC-N2 re-binds to the realized routing
 > instrument** (`routing_eval.py` is a tripwire aid, not a certification). Scope/reshape decisions:
 > ADR-0067; judge mechanism: ADR-0068 (both proposed).
-> Refines: [`../a2ui-expert-system.prd.md`](../a2ui-expert-system.prd.md) — primarily **PRD-G3, PRD-G4**; supports PRD-G6. Honors Constraint **C3** (governance via the `skill-author`/`agent-author`/`rubric-author` family + `process.md`).
-> Refined by: [`../llds/a2ui-harness-wiring.lld.md`](../llds/a2ui-harness-wiring.lld.md).
+> Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G3, PRD-G4**; supports PRD-G6. Honors Constraint **C3** (governance via the `skill-author`/`agent-author`/`rubric-author` family + `process.md`).
+> Refined by: [`../lld/a2ui-harness-wiring.lld.md`](../lld/a2ui-harness-wiring.lld.md).
 > Altitude: owns *what authoring capabilities exist and how they compose + verify*. The concrete files/frontmatter/wiring are the LLD's. Requirement IDs file-scoped (`SPEC-R1…`).
 
 ---
@@ -160,4 +160,4 @@ interface VerdictsFile {
 | SPEC-R3, R4, R6, R8, N3 | PRD-G4 (provable validity) |
 | SPEC-R4 (version-pin, realized), R7 | PRD-G6 (coherence) |
 
-_Covers PRD-G3 fully and co-serves PRD-G4 with the runtime/catalog/corpus SPECs. See [`../README.md`](../README.md)._
+_Covers PRD-G3 fully and co-serves PRD-G4 with the runtime/catalog/corpus SPECs. See [`../README.md`](../archive/a2ui-expert-system/README.md)._

@@ -6,7 +6,7 @@
 > |---|---|
 > | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored)* · 2026-07-01 *(ratified)* |
-> | **Proposed by** | planning-lead — the design seat, on the control-suite foundation (#49 Wave 0); details in `.claude/docs/llds/indicator-element.lld.md` + `range-element.lld.md` |
+> | **Proposed by** | planning-lead — the design seat, on the control-suite foundation (#49 Wave 0); details in `.claude/docs/lld/indicator-element.lld.md` + `range-element.lld.md` |
 > | **Ratified by** | orchestration-lead — on the green **G6 / G6.5** gates (when checkbox/switch/radio + slider prove the bases) |
 > | **Repairs** | **NEW** `controls/_base/indicator-element.ts` (`UIIndicatorElement`) + `controls/_base/range-element.ts` (`UIRangeElement`) + `traits/value-drag.ts` (the pointer→value controller) + their tests + `controls/_base/index.ts` barrel · `goals.md §G6` (the Indicator-class detail) + `§G6.5` (Range, new) · **establishes the `controls/_base/` shared control-base sub-layer** (sibling of `controls/_surface/`). **Extends ADR-0013** (UIFormElement — the value base both extend) + **ADR-0041** (the widget-box geometry both consume). |
 > | **Supersedes / Superseded by** | None — new foundation. **Extends ADR-0013** (↔ extended-by). Relates ADR-0010 (tabbable/disabled), ADR-0006/0012 (anatomy). |

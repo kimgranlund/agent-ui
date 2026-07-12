@@ -27,12 +27,12 @@ your own output.
 
 ## Canonical sources (read before you start; single-owner)
 
-- **Why/what** — the product frame + goals: `.claude/docs/specs/a2ui-expert-system.prd.md` (PRD-G#).
+- **Why/what** — the product frame + goals: `.claude/docs/prd/a2ui-expert-system.prd.md` (PRD-G#).
 - **Wire truth** — the discriminated unions the protocol IS: `packages/agent-ui/a2ui/src/protocol.ts`.
-- **Requirements** — `.claude/docs/specs/specs/a2ui-runtime.spec.md` (SPEC-R#/SPEC-N#; N5 zero-dep,
+- **Requirements** — `.claude/docs/spec/a2ui-runtime.spec.md` (SPEC-R#/SPEC-N#; N5 zero-dep,
   N6 validator parity) · `a2ui-catalog.spec.md` (the two-tier catalog model, PropDef shapes) ·
   `a2ui-streaming-pipeline.spec.md` · `a2ui-training-corpus.spec.md` · `a2ui-expert-harness.spec.md`.
-- **Design** — `.claude/docs/specs/llds/a2ui-renderer.lld.md` (LLD-C1..C14 + the build sequence) ·
+- **Design** — `.claude/docs/lld/a2ui-renderer.lld.md` (LLD-C1..C14 + the build sequence) ·
   `a2ui-catalog.lld.md` · `a2ui-streaming-pipeline.lld.md` · `a2ui-corpus-store.lld.md` ·
   `a2ui-harness-wiring.lld.md`.
 - **Decided history** — the A2UI ADR line in `.claude/docs/adr/`: 0011 (action shape) · 0024

@@ -5,8 +5,8 @@
 > **v0.3 (2026-07-03, s1-build discrepancy repair):** the §5.1 schema block contradicted SPEC-R2 AC2 — `description` sat in the top-level `required` array, and under strict draft-07 semantics (top-level `required` ANDs with every `allOf` branch) the eval `anyOf(target, description)` carve-out was unreachable, making R2 AC2's own fixture untriggerable. Repaired in R2 AC2's favor (the resolution the s1 build shipped, `src/corpus/record.ts`): `description` moved out of the top-level `required` into the facet conditionals; upstream-interop caveat logged in §7. **Reversed at v0.4.**
 > **v0.4 (2026-07-03, ADR-0063 proposed — the §7 caveat fired):** the host fetched the authoritative upstream (`google/A2UI@main` `eval/datasets/dataset_schema.json`); verbatim: `"required": ["name", "description", "promptText"]` (unconditional `description`); `target` "If omitted, defaults to the value of `description`" (NO missing-target failure mode); items set `additionalProperties:false` (only the 7 upstream fields survive projection — `a2uiOutput` is not among them); the dataset file is one JSON **array**, not JSONL. Per Constraint C1 the v0.3 carve-out is **reversed**: `description` unconditionally required (§5.1/R1); `target` optional with the explicit fallback semantic (R2); **`E_NO_TARGET` retired** from §5.3 (unreachable by construction); R1 AC1's interop check is a PROJECTION onto the upstream field set; the array-form fact noted at R16. §7's open item is resolved.
 > **v0.5 (2026-07-03, ADR-0064 proposed — the s6 multi-surface ruling):** a v1 corpus record is **single-surface** — SPEC-R2 gains the clause (exemplar `a2uiOutput` addresses exactly ONE surface; surfaceless `callFunction` excluded from the count) + AC3. Grounded in the s6 trace: the shared validator judges per surface but the canonicalizer folds globally, so a multi-surface record would pass tier-1 and silently chimera before hashing. Corpus-only; wire/renderer multi-surface stays legal; widening trigger named in the ADR.
-> Refines: [`../a2ui-expert-system.prd.md`](../a2ui-expert-system.prd.md) — primarily **PRD-G5** (flagship) and **PRD-D1**; supports PRD-G4, PRD-G6, PRD-G7.
-> Refined by: [`../llds/a2ui-corpus-store.lld.md`](../llds/a2ui-corpus-store.lld.md) (storage, dedup algorithm, MCP wiring) and the harness LLDs (gates).
+> Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G5** (flagship) and **PRD-D1**; supports PRD-G4, PRD-G6, PRD-G7.
+> Refined by: [`../lld/a2ui-corpus-store.lld.md`](../lld/a2ui-corpus-store.lld.md) (storage, dedup algorithm, MCP wiring) and the harness LLDs (gates).
 > Altitude: this document owns the corpus **behavior + data/schema contract**. Storage substrate, indexing internals, and file layout are deferred to the LLD. Requirements reference PRD goal IDs; they do not restate them.
 
 ---
@@ -242,4 +242,4 @@ interface CorpusOps {
 | SPEC-R8, R14 | PRD-G4 (provable validity) + PRD-G5 |
 | SPEC-R11 | PRD-G7 (MCP transport) |
 
-_No requirement here is orphaned; coverage of PRD-G5/PRD-D1 is complete. PRD-G1/G2/G3 are covered by sibling SPECs (see [`../README.md`](../README.md))._
+_No requirement here is orphaned; coverage of PRD-G5/PRD-D1 is complete. PRD-G1/G2/G3 are covered by sibling SPECs (see [`../README.md`](../archive/a2ui-expert-system/README.md))._

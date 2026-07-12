@@ -76,7 +76,7 @@ names, and the surface paints progressively.
 ## The bounded compose→verify→self-correct loop (SPEC-R6)
 
 Encode this loop; it is the contract every composed payload passes. Depth and the who-drives-what rules are in
-`.claude/docs/specs/llds/a2ui-harness-wiring.lld.md` §6.
+`.claude/docs/lld/a2ui-harness-wiring.lld.md` §6.
 
 1. **Generate** the payload, corpus-conditioned (step above).
 2. **Run the deterministic gates FIRST** — the `validate-payload` CLI, before any grading:

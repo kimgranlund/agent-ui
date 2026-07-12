@@ -8,7 +8,7 @@
 > *how-to-apply* the NEXT control copies. It places adornments; **it does not size them** — the glyph sizing law
 > is [`geometry-sizing-spec.md`](./geometry-sizing-spec.md) (§1.4 frame/rhythm · §1.5 per-edge pad · §4.1/§4.6
 > affordance vs content-icon), distilled in [`geometry.md`](./geometry.md). First consumer: `ui-button` (G5);
-> [`component-author`](../../.claude/skills/component-author/SKILL.md) points here for the convention.
+> [`component-author`](../../skills/agent-ui-component-create/SKILL.md) points here for the convention.
 
 ## The two axes (the one frame)
 

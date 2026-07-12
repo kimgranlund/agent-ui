@@ -1,8 +1,8 @@
 # LLD — Chart Family (`ui-sparkline` + `ui-bar-chart`, catalog rows, report-card exemplar)
 
 > Refines: [`../spec/chart-family.spec.md`](../spec/chart-family.spec.md) (SPEC-R1…R14, SPEC-N1…N4) under
-> [ADR-0107](../../adr/0107-chart-family-v1-scope.md) (accepted). Build plan:
-> [`../../decompositions/chart-family-build.decomp.json`](../../decompositions/chart-family-build.decomp.json)
+> [ADR-0107](../adr/0107-chart-family-v1-scope.md) (accepted). Build plan:
+> [`../decompositions/chart-family-build.decomp.json`](../decompositions/chart-family-build.decomp.json)
 > (coverage-clean, plan mode). · proposed · 2026-07-08 · planner
 >
 > **Composes on:** `UIElement` (`dom/element.ts`) + the props/signal system (`dom/props.ts`) + `ElementInternals`

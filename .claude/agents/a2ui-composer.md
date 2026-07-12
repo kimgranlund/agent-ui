@@ -55,7 +55,7 @@ authority on which components and props exist; never invent a component or a pro
 ## The bounded loop (SPEC-R6) — and who drives it
 
 Every payload passes the compose→validate→self-correct loop. Depth: your skill's SPEC-R6 section +
-`.claude/docs/specs/llds/a2ui-harness-wiring.lld.md` §6.
+`.claude/docs/lld/a2ui-harness-wiring.lld.md` §6.
 
 1. **Generate** the payload, corpus-conditioned (above).
 2. **Run the deterministic gate FIRST**, before any grading — the `validate-payload` CLI:

@@ -1,8 +1,8 @@
 # SPEC — A2UI Runtime (`@agent-ui/a2ui` renderer)
 
 > Status: proposed · v0.1 · 2026-06-26 · Layer: SPEC (execution contract)
-> Refines: [`../a2ui-expert-system.prd.md`](../a2ui-expert-system.prd.md) — primarily **PRD-G1**; supports PRD-G2, PRD-G4, PRD-G6, PRD-G7. Target protocol: **A2UI v1.0** (Constraint C1; v0.9.1 supported via version pin).
-> Refined by: [`../llds/a2ui-renderer.lld.md`](../llds/a2ui-renderer.lld.md). The component **catalog** (type→widget mapping) is owned by [`./a2ui-catalog.spec.md`](./a2ui-catalog.spec.md); this SPEC owns the *runtime that consumes a stream and drives a catalog*.
+> Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1**; supports PRD-G2, PRD-G4, PRD-G6, PRD-G7. Target protocol: **A2UI v1.0** (Constraint C1; v0.9.1 supported via version pin).
+> Refined by: [`../lld/a2ui-renderer.lld.md`](../lld/a2ui-renderer.lld.md). The component **catalog** (type→widget mapping) is owned by [`./a2ui-catalog.spec.md`](./a2ui-catalog.spec.md); this SPEC owns the *runtime that consumes a stream and drives a catalog*.
 > Altitude: owns the renderer **behavior + message contract**. Module/signal internals are the LLD's. Requirements reference PRD goal IDs; they do not restate them.
 > Requirement IDs are file-scoped (`SPEC-R1…`); cross-document references qualify by doc name (e.g. "corpus SPEC-R8").
 
@@ -202,4 +202,4 @@ interface A2uiRenderer {
 | SPEC-R13 | PRD-G6 (version coherence) |
 | SPEC-N3, N5 | PRD-G1 + Constraint C2 (zero-dep, leak-free) |
 
-_Covers PRD-G1 fully; PRD-G2/G4/G6/G7 are co-served with sibling SPECs (catalog, harness, streaming-pipeline). See [`../README.md`](../README.md)._
+_Covers PRD-G1 fully; PRD-G2/G4/G6/G7 are co-served with sibling SPECs (catalog, harness, streaming-pipeline). See [`../README.md`](../archive/a2ui-expert-system/README.md)._

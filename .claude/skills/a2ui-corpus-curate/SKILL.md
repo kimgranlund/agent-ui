@@ -29,11 +29,11 @@ contract:
 
 - **Record schema** → `src/corpus/record.ts` + `ADR-0063` (unconditional `description`, `E_NO_TARGET`
   retired) + `ADR-0064` (single-surface v1). Do **not** transcribe the field list into this skill.
-- **Admission pipeline** (stages · codes · order) → `.claude/docs/specs/llds/a2ui-corpus-store.lld.md` §6
+- **Admission pipeline** (stages · codes · order) → `.claude/docs/lld/a2ui-corpus-store.lld.md` §6
   and its §8 error table. Name the shape; read §6 for the detail.
 - **Dedup / MinHash math** (`θ_dup`, shingles, permutations) → corpus LLD §5. Cite the value, not the code.
 - **Judge activation** (verdict adapter · parse logic · rescore · `--replace`) →
-  `.claude/docs/specs/llds/a2ui-harness-wiring.lld.md` §7 + `ADR-0068`.
+  `.claude/docs/lld/a2ui-harness-wiring.lld.md` §7 + `ADR-0068`.
 - **Healer contract** (the closed repair list) → `ADR-0061`.
 
 ## Procedure — seed → admit → judge → back-score
@@ -112,8 +112,8 @@ Cite these; reproducing them here forks the frozen contract and rots on the next
 
 | Path | Use when |
 |---|---|
-| `.claude/docs/specs/llds/a2ui-corpus-store.lld.md` §6/§8 | The admission pipeline stages, codes, and order — the authority this procedure sequences |
-| `.claude/docs/specs/llds/a2ui-harness-wiring.lld.md` §7 | The judge activation — verdict adapter, rescore, `--verdicts`/`--replace`, the halt table |
+| `.claude/docs/lld/a2ui-corpus-store.lld.md` §6/§8 | The admission pipeline stages, codes, and order — the authority this procedure sequences |
+| `.claude/docs/lld/a2ui-harness-wiring.lld.md` §7 | The judge activation — verdict adapter, rescore, `--verdicts`/`--replace`, the halt table |
 | `ADR-0055` | The seed shelf (`src/examples/` shape) an authored candidate is written in |
 | `ADR-0060` … `ADR-0064` | The corpus store: injected judge seam · shared healer · packaging · record schema |
 | `ADR-0068` | The verdict adapter, back-score/quarantine semantics, and the standing-gate amendment |

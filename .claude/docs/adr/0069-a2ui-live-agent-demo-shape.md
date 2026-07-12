@@ -8,7 +8,7 @@
 > | **Date** | 2026-07-04 |
 > | **Proposed by** | planner (design seat — the live-agent intake, NEXT item 3) |
 > | **Ratified by** | orchestration-coordinator + Kim ("proceed", 2026-07-04) — green gates: coverage --strict · adr_check 5/5 · harness spec/lld 3/3; all 3 independent doc-reviews GO |
-> | **Repairs** | `a2ui-streaming-pipeline.lld.md` LLD-C2 (the `produce()` driver is realized concretely by this wave — the "blocked by the live-agent wave" note resolves; edit on build, gated on ratification) · `.claude/docs/specs/NEXT.md` item 3 (marked realized on ship) · new: `a2ui-live-agent.spec.md`, `a2ui-live-agent.lld.md`, `a2ui-live-agent.decomp.json` |
+> | **Repairs** | `a2ui-streaming-pipeline.lld.md` LLD-C2 (the `produce()` driver is realized concretely by this wave — the "blocked by the live-agent wave" note resolves; edit on build, gated on ratification) · `.claude/docs/archive/a2ui-expert-system/NEXT.md` item 3 (marked realized on ship) · new: `a2ui-live-agent.spec.md`, `a2ui-live-agent.lld.md`, `a2ui-live-agent.decomp.json` |
 > | **Supersedes / Superseded by** | Relates ADR-0055 (the seed-shelf home + `examples.test.ts` gate the backbone rides) · ADR-0062 (the pure-core / Node-shell / subpath split the tools harness mirrors) · ADR-0067 (the SPEC-R6 loop's programmatic driver is this wave — streaming LLD-C2 re-pointed here) · ADR-0073 (the model-provider seam the live overlay injects) |
 
 ## Context

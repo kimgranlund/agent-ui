@@ -6,7 +6,7 @@
 > |---|---|
 > | **Status** | accepted |
 > | **Date** | 2026-06-30 *(authored)* |
-> | **Proposed by** | planning-lead — the design seat, on the control-suite foundation (#49 Wave 0); details in `.claude/docs/llds/overlay-controller.lld.md` + `listbox-roving.lld.md` |
+> | **Proposed by** | planning-lead — the design seat, on the control-suite foundation (#49 Wave 0); details in `.claude/docs/lld/overlay-controller.lld.md` + `listbox-roving.lld.md` |
 > | **Ratified by** | orchestration-lead — on the green **G7** gate (when select/combo-box/menu prove the primitives) |
 > | **Repairs** | **NEW** `traits/overlay.ts` (the Popover-API overlay controller) + `traits/roving-focus.ts` (extracted/generalized from `tabs.ts:130-168`) + `traits/selection-commit.ts` + `controls/_base/listbox-element.ts` (`UIListboxElement`) + their tests + barrels · **REFACTOR** `controls/tabs/tabs.ts` to consume `roving-focus` (behavior-preserving) · `goals.md §G7` (listbox/select/menu) · **Relates ADR-0042** (`UIListboxElement` lives in the `controls/_base/` layer it established) + **ADR-0017** (modal `<dialog>` — the focus-trap boundary) + **ADR-0019** (the two-way `open`/`selected` bind). |
 > | **Supersedes / Superseded by** | None — new foundation. Relates ADR-0042/0017/0019/0013. |

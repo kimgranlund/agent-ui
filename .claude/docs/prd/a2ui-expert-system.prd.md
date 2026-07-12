@@ -1,7 +1,7 @@
 # PRD — A2UI Expert System
 
 > Status: proposed · v0.1 · 2026-06-26 · Owner: agent-ui
-> Document family: this PRD is upstream of the SPECs in [`specs/`](./specs/) and the LLDs in [`llds/`](./llds/). See [`README.md`](./README.md) for the map + traceability matrix.
+> Document family: this PRD is upstream of the SPECs in [`specs/`](../spec/) and the LLDs in [`llds/`](../lld/). See [`README.md`](../archive/a2ui-expert-system/README.md) for the map + traceability matrix.
 > Altitude: this document owns **why + what-should-exist**. Behavior contracts live in the SPECs; implementation in the LLDs. Lower documents reference these goal IDs; they do not restate them.
 
 ## 1. Problem
@@ -95,7 +95,7 @@ Each goal carries a stable ID and a priority tier. Metrics are baselined at **0 
 
 **Constraints** (as of 2026-06-26):
 - **C1 — Conform to A2UI v1.0.** The runtime, catalogs, payloads, and corpus target Google A2UI **v1.0** ([a2ui.org](https://a2ui.org); aligns to the v1.0 basic-catalog guide + `v1_0_prompts` eval set) and are protocol-version-aware (version negotiation; every record/catalog pins a version, default `v1.0`). **Caveat:** as of 2026-06-26 v1.0 is a *release candidate* and upstream recommends **v0.9.1** for production — so v0.9.1 is a first-class supported pin and the production-stable fallback; the repair loop migrates across versions. *(Decided 2026-06-26 — supersedes the initial v0.9 anchor.)* v1.0 message-model deltas to honor: `createSurface.surfaceProperties` (was `theme`), the new server `actionResponse` message, `actionId` + `wantResponse` on actions, `Video`/`TextField.placeholder` components, UAX-31 naming + reserved `@` namespace.
-- **C2 — Zero runtime dependencies.** `@agent-ui/a2ui` may depend only on `@agent-ui/components` (+ `@agent-ui/shared`); no native form elements; strict, decorator-free TS (`erasableSyntaxOnly` etc.); inward-only layering — per [`../../CLAUDE.md`](../../CLAUDE.md).
+- **C2 — Zero runtime dependencies.** `@agent-ui/a2ui` may depend only on `@agent-ui/components` (+ `@agent-ui/shared`); no native form elements; strict, decorator-free TS (`erasableSyntaxOnly` etc.); inward-only layering — per [`../../CLAUDE.md`](../../../CLAUDE.md).
 - **C3 — Governance via the harness.** Every skill/agent/rubric is authored with the local first-party `authoring-*` / `agent-*` skill family and obeys [`../process.md`](../process.md): true/false → script/hook (never agent judgment); judgment grounds against a small rubric; progressive disclosure.
 - **C4 — Documents are authored via the spec family.** PRD → SPEC → LLD, authored with `prd-author/specs/llds`; reference-by-ID, not duplication; traceability is a CI check.
 
@@ -126,7 +126,7 @@ Sequencing rationale only; the SPECs own the behavior and the LLDs own the build
 
 ## 7. Downstream documents (the series this PRD spawns)
 
-This PRD is refined by the following SPECs (what must be built / how it behaves) and LLDs (how it is built). Status and traceability are tracked in [`README.md`](./README.md).
+This PRD is refined by the following SPECs (what must be built / how it behaves) and LLDs (how it is built). Status and traceability are tracked in [`README.md`](../archive/a2ui-expert-system/README.md).
 
 - `specs/a2ui-runtime.spec.md` — protocol-conformance behavior + the zero-dep renderer contract *(PRD-G1)*
 - `specs/a2ui-catalog.spec.md` — catalog model: default catalog + the two-tier extensibility surface *(PRD-G1, PRD-G2, PRD-D3)*

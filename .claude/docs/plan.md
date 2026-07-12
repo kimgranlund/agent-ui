@@ -4,8 +4,8 @@
 > Reference standards (canonical, distilled): [`references/geometry.md`](./references/geometry.md) ·
 > [`references/tokens.md`](./references/tokens.md). Provenance (rce ledgers + token values):
 > `references/{dimensional-standard,geometry-sizing-spec}.md`. Token values: `@agent-ui/shared/src/tokens/tokens.css`.
-> Coordination: the A2UI layer that consumes this foundation is specced under [`specs/`](./specs/)
-> (PRD→SPEC→LLD) and built by the planning/execution team in [`../.claude/agents/`](../.claude/agents/);
+> Coordination: the A2UI layer that consumes this foundation is specced under [`specs/`](./spec/)
+> (PRD→SPEC→LLD) and built by the planning/execution team in [`../.claude/agents/`](../agents/);
 > ratified design changes are logged as ADRs in [`adr/`](./adr/).
 
 ## 1. What this is
@@ -52,7 +52,7 @@ root `CHANGELOG.md`.)*
 
 The kernel is small (rce's is ~2.3k lines across 8 modules). agent-ui is an **npm-workspaces monorepo**,
 now **seven packages**: the framework (`components`), `shared` for cross-cutting tokens/styles/utils,
-`a2ui` (the A2UI layer, team-led under `.claude/docs/specs/`), `a2a` (the A2A/Agent2Agent protocol layer
+`a2ui` (the A2UI layer, team-led; docs on the unified `.claude/docs/{spec,lld,prd}/` map), `a2a` (the A2A/Agent2Agent protocol layer
 + the tic-tac-toe arena + its concepts corpus), `icons` (the swappable icon-pack adapter), `app`
 (app-surface compositions, the agent-app-shell) and `router` (the SPA router, ADR-0115).
 
@@ -82,7 +82,7 @@ packages/agent-ui/
     src/
       tokens/  raw-color-tokens.css  semantic-color-tokens.css  runtime-tokens.css  tokens.css (barrel)
       index.ts
-  a2ui/                        # @agent-ui/a2ui — A2UI layer, team-led (.claude/docs/specs/); depends on @agent-ui/components
+  a2ui/                        # @agent-ui/a2ui — A2UI layer, team-led (.claude/docs/{spec,lld,prd}/); depends on @agent-ui/components
   a2a/                         # @agent-ui/a2a — A2A protocol layer (wire types + validation, spec v0.3.0),
                                 #   the tic-tac-toe isolation-proof arena, its own concepts-corpus shards; zero deps
   icons/                       # @agent-ui/icons — swappable icon-pack adapter (pure core + ./phosphor subpath); zero deps

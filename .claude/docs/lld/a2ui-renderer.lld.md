@@ -1,7 +1,7 @@
 # LLD — A2UI Renderer
 
 > Status: proposed · v0.1 · 2026-06-26 · Layer: LLD (implementation plan)
-> Implements: [`../specs/a2ui-runtime.spec.md`](../specs/a2ui-runtime.spec.md) (SPEC-R1..R13, SPEC-N1..N6), targeting A2UI **v1.0**.
+> Implements: [`../spec/a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) (SPEC-R1..R13, SPEC-N1..N6), targeting A2UI **v1.0**.
 > Owns the shared **`validate.ts`** that the corpus LLD imports (validator parity, runtime SPEC-N6 / corpus SPEC-N1).
 > Altitude: adds the **how** on the `@agent-ui/components` signals kernel; cites `SPEC-R*` for behavior, never re-derives it.
 

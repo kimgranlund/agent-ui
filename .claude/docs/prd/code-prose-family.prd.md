@@ -18,7 +18,7 @@
 > Grounding: Kim's seed (TKT-0007: *"code viewers"*) + his Q4 pack-adapter answer ·
 > [ADR-0113](../adr/0113-content-family-v1-scope.md) (the fence + escape hatches, `language` shipped
 > inert, host-as-content) · [ADR-0065](../adr/0065-icon-adapter-swappable-pack-architecture.md)/
-> [ADR-0066](../adr/0066-icons-phosphor-default-pack.md) (the pure-core + subpath pack architecture
+> [ADR-0066](../adr/0066-phosphor-default-pack-buildtime-vendoring.md) (the pure-core + subpath pack architecture
 > this reuses) · [ADR-0107](../adr/0107-chart-family-v1-scope.md) Alternatives (vendored *runtime
 > code* is "a dependency in costume" — the law this family must satisfy, not dodge) · `CLAUDE.md`
 > (zero-dep pillar, DAG law).

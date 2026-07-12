@@ -1,8 +1,8 @@
 # Rubric — A2UI Payload (validity · composition)
 
 > The referential standard an A2UI payload is graded against. Implements
-> [`../specs/specs/a2ui-expert-harness.spec.md`](../specs/specs/a2ui-expert-harness.spec.md) SPEC-R3;
-> the dimension list is fixed by [`../specs/llds/a2ui-harness-wiring.lld.md`](../specs/llds/a2ui-harness-wiring.lld.md) §4.
+> [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md) SPEC-R3;
+> the dimension list is fixed by [`../lld/a2ui-harness-wiring.lld.md`](../lld/a2ui-harness-wiring.lld.md) §4.
 
 The maker `a2ui-composer` is graded by this rubric; the critic `a2ui-reviewer` scores against it in an
 independent context — the composer never self-grades (SPEC-R8). It rides the SPEC-R6 loop: the deterministic

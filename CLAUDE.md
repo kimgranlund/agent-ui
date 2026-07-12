@@ -28,7 +28,7 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   - `controls/` — `ui-*` FACE controls; one folder per component; self-define on import
 - `packages/agent-ui/shared/` — `@agent-ui/shared`, cross-cutting tokens/styles/utility types. Color
   `tokens.css` adopted (`src/tokens/`, exported as `@agent-ui/shared/tokens.css`); dimensional/runtime tokens land G5
-- `packages/agent-ui/a2ui/` — `@agent-ui/a2ui`, the A2UI layer (team-led, `.claude/docs/specs/`); depends on `@agent-ui/components`
+- `packages/agent-ui/a2ui/` — `@agent-ui/a2ui`, the A2UI layer (team-led; docs on the unified map — `.claude/docs/{spec,lld,prd}/`); depends on `@agent-ui/components`
 - `packages/agent-ui/a2a/` — `@agent-ui/a2a`, the A2A (Agent2Agent) protocol layer: wire types + validation pinned to spec v0.3.0, the tic-tac-toe arena (isolation-proven agent-vs-agent matches), and its own concept/demo corpus shards; zero deps
 - `packages/agent-ui/icons/` — `@agent-ui/icons`, swappable icon-pack adapter (pure core + `./phosphor` subpath; ADR-0065/0066); zero deps
 - `packages/agent-ui/app/` — `@agent-ui/app`, app-surface compositions (`agent-app-shell`, ADR-0082..0084); depends on components + a2ui + shared

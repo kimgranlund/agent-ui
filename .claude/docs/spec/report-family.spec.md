@@ -3,7 +3,7 @@
 > Status: proposed · v0.1 · 2026-07-09 · Layer: SPEC (execution contract)
 > Refines: [`../prd/report-family.prd.md`](../prd/report-family.prd.md) — **PRD-G1, PRD-G2, PRD-G3** — under the ratified scope + contract directions of [ADR-0111](../adr/0111-report-family-v1-scope.md) (accepted; forks F1–F4 as recommended). Every clause of ADR-0111 is binding here; this SPEC adds the behavior contract, it re-litigates nothing.
 > Refined by: [`../lld/report-family.lld.md`](../lld/report-family.lld.md). Build plan: [`../decompositions/report-family-build.decomp.json`](../decompositions/report-family-build.decomp.json) (coverage-clean).
-> Altitude: owns **what the three report controls do and how they behave at every boundary** + the report rows' catalog contract and feed dispositions. Implementation (stamp mechanics internals, CSS mechanics, file layout) is the LLD's. Filed in the charter home (`docs/spec/`, the chart-family precedent); the catalog surface (§5.2 of [`../specs/specs/a2ui-catalog.spec.md`](../specs/specs/a2ui-catalog.spec.md)) stays a first-class same-wave deliverable, cross-referenced.
+> Altitude: owns **what the three report controls do and how they behave at every boundary** + the report rows' catalog contract and feed dispositions. Implementation (stamp mechanics internals, CSS mechanics, file layout) is the LLD's. Filed in the charter home (`docs/spec/`, the chart-family precedent); the catalog surface (§5.2 of [`../spec/a2ui-catalog.spec.md`](../spec/a2ui-catalog.spec.md)) stays a first-class same-wave deliverable, cross-referenced.
 > Requirement IDs file-scoped (`SPEC-R1…`); cross-document references qualify by doc name.
 
 ---

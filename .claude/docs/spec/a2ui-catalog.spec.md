@@ -1,8 +1,8 @@
 # SPEC — A2UI Catalog (default catalog + two-tier extensibility)
 
 > Status: proposed · v0.1 · 2026-06-26 · Layer: SPEC (execution contract)
-> Refines: [`../a2ui-expert-system.prd.md`](../a2ui-expert-system.prd.md) — primarily **PRD-G1, PRD-G2**; closes **PRD-D3**; supports PRD-G4, PRD-G6. Target protocol: **A2UI v1.0** (Constraint C1).
-> Refined by: [`../llds/a2ui-catalog.lld.md`](../llds/a2ui-catalog.lld.md). Consumed by the renderer ([`./a2ui-runtime.spec.md`](./a2ui-runtime.spec.md) SPEC-R9) for widget resolution.
+> Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1, PRD-G2**; closes **PRD-D3**; supports PRD-G4, PRD-G6. Target protocol: **A2UI v1.0** (Constraint C1).
+> Refined by: [`../lld/a2ui-catalog.lld.md`](../lld/a2ui-catalog.lld.md). Consumed by the renderer ([`./a2ui-runtime.spec.md`](./a2ui-runtime.spec.md) SPEC-R9) for widget resolution.
 > Altitude: owns the **catalog contract + default-catalog coverage**. Renderer mechanics are the runtime SPEC's; storage/wiring is the LLD's.
 > Requirement IDs file-scoped (`SPEC-R1…`); cross-document references qualify by doc name.
 
@@ -307,4 +307,4 @@ set to begin with.
 | SPEC-R3 AC3, N2 | PRD-G6 (whole-fleet coverage — the anti-drift catalog↔fleet gate, ADR-0087) |
 | SPEC-R8 | PRD-D3 (resolved: direct, not adapter) |
 
-_Co-serves PRD-G1 with the runtime SPEC and PRD-G2/G4 with sibling SPECs. See [`../README.md`](../README.md)._
+_Co-serves PRD-G1 with the runtime SPEC and PRD-G2/G4 with sibling SPECs. See [`../README.md`](../archive/a2ui-expert-system/README.md)._

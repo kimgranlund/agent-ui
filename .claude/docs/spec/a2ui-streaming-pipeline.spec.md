@@ -7,8 +7,8 @@
 > (`renderer/{parser,renderer,tree}.ts`, ADR-0002). THIS SPEC's own scope — producer, codec, transports,
 > MCP — is entirely unrealized. SPEC-R1's healing note sharpened (below): healing is producer/admission-side
 > only; the renderer never heals.
-> Refines: [`../a2ui-expert-system.prd.md`](../a2ui-expert-system.prd.md) — primarily **PRD-G1, PRD-G7**; closes **PRD-D2** (transport) and contributes to **PRD-D5** (MCP). Target protocol: **A2UI v1.0**.
-> Refined by: [`../llds/a2ui-streaming-pipeline.lld.md`](../llds/a2ui-streaming-pipeline.lld.md). Produces the message stream the renderer ([`./a2ui-runtime.spec.md`](./a2ui-runtime.spec.md)) consumes; conditioned by the corpus ([`./a2ui-training-corpus.spec.md`](./a2ui-training-corpus.spec.md)).
+> Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1, PRD-G7**; closes **PRD-D2** (transport) and contributes to **PRD-D5** (MCP). Target protocol: **A2UI v1.0**.
+> Refined by: [`../lld/a2ui-streaming-pipeline.lld.md`](../lld/a2ui-streaming-pipeline.lld.md). Produces the message stream the renderer ([`./a2ui-runtime.spec.md`](./a2ui-runtime.spec.md)) consumes; conditioned by the corpus ([`./a2ui-training-corpus.spec.md`](./a2ui-training-corpus.spec.md)).
 > Altitude: owns the **producer + transport behavior + message codec contract**. Wiring internals are the LLD's. Requirement IDs file-scoped (`SPEC-R1…`).
 
 ---
@@ -120,4 +120,4 @@ interface A2uiMcpTools {
 | SPEC-R4, R5, R6 | PRD-G7 (AG-UI / A2A / MCP interop) · PRD-D5 |
 | SPEC-R7, N3 | PRD-G1, PRD-G6 (conformance/version coherence) |
 
-_Co-serves PRD-G1 with runtime/catalog and completes PRD-G7. See [`../README.md`](../README.md)._
+_Co-serves PRD-G1 with runtime/catalog and completes PRD-G7. See [`../README.md`](../archive/a2ui-expert-system/README.md)._

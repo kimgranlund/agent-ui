@@ -3,7 +3,7 @@
 > Status: proposed · v0.1 · 2026-07-08 · Layer: SPEC (execution contract)
 > Refines: [`../prd/chart-family.prd.md`](../prd/chart-family.prd.md) — **PRD-G1, PRD-G2, PRD-G3** — under the ratified scope + contract directions of [ADR-0107](../adr/0107-chart-family-v1-scope.md) (accepted; forks F1–F3 as recommended). Every clause of ADR-0107 is binding here; this SPEC adds the behavior contract, it re-litigates nothing.
 > Refined by: [`../lld/chart-family.lld.md`](../lld/chart-family.lld.md).
-> Altitude: owns **what the two chart controls do and how they behave at every boundary** + the chart rows' catalog contract. Implementation (path math internals, CSS mechanics, file layout) is the LLD's. Filed in the charter home (`docs/spec/`, the a2a-family regime — doc-review F1 ruling 2026-07-08); the catalog surface (§5.2 of [`../specs/specs/a2ui-catalog.spec.md`](../specs/specs/a2ui-catalog.spec.md)) stays a first-class same-wave deliverable, cross-referenced.
+> Altitude: owns **what the two chart controls do and how they behave at every boundary** + the chart rows' catalog contract. Implementation (path math internals, CSS mechanics, file layout) is the LLD's. Filed in the charter home (`docs/spec/`, the a2a-family regime — doc-review F1 ruling 2026-07-08); the catalog surface (§5.2 of [`../spec/a2ui-catalog.spec.md`](../spec/a2ui-catalog.spec.md)) stays a first-class same-wave deliverable, cross-referenced.
 > Requirement IDs file-scoped (`SPEC-R1…`); cross-document references qualify by doc name.
 
 ---

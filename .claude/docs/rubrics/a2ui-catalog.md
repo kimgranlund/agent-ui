@@ -1,7 +1,7 @@
 # Rubric — a2ui-catalog (a catalog row)
 
 > Status: proposed · v0.1 · 2026-07-03 · Layer: rubric (the referential standard `a2ui-reviewer` grades a catalog row against).
-> Implements: [`../specs/specs/a2ui-expert-harness.spec.md`](../specs/specs/a2ui-expert-harness.spec.md) SPEC-R3 · wired by [`../specs/llds/a2ui-harness-wiring.lld.md`](../specs/llds/a2ui-harness-wiring.lld.md) §4.
+> Implements: [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md) SPEC-R3 · wired by [`../lld/a2ui-harness-wiring.lld.md`](../lld/a2ui-harness-wiring.lld.md) §4.
 
 The standard a **catalog row** is authored against and graded by when a new A2UI component type is added
 or an existing one extended. A row is the mapping from **one A2UI component type → one `ui-*` control

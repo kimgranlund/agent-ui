@@ -1,13 +1,18 @@
-# A2UI Expert System — spec family
+# A2UI Expert System — spec family (ARCHIVED charter)
+
+> **SUPERSEDED 2026-07-12 (repo-alignment Phase 1):** the tree this README mapped dissolved into
+> the unified doc map — its specs live in `../../spec/`, LLDs in `../../lld/`, the PRD in
+> `../../prd/a2ui-expert-system.prd.md`, the decomposition in `../../decompositions/`. Kept as the
+> family's historical charter; the status table below reflects 2026-07-08.
 
 > The PRD → SPEC → LLD document family for the **A2UI Expert System**: a first-party runtime (`@agent-ui/a2ui`), a harness of authoring agents + domain skills + eval rubrics + deterministic gates, and a training corpus — for authoring streaming A2UI (Google A2UI v0.9) against this repo's zero-dependency controls.
-> Authored via the `prd-author/specs/llds` skills. Altitude discipline and sync mechanics: see [`../process.md`](../process.md) and each skill's `references/document-relationships.md`.
+> Authored via the `prd-author/specs/llds` skills. Altitude discipline and sync mechanics: see [`../process.md`](../../process.md) and each skill's `references/document-relationships.md`.
 
 ## How to read this
 
-- **[`a2ui-expert-system.prd.md`](./a2ui-expert-system.prd.md)** — start here. Owns *why + what-should-exist*: the problem, goals (`PRD-G#`), scope, constraints, open decisions (`PRD-D#`), milestones (A1–A4).
-- **[`specs/`](./specs/)** — owns *what must be built / how it behaves*. Each SPEC requirement (`SPEC-R#`) traces up to a `PRD-G#`.
-- **[`llds/`](./llds/)** — owns *how it is built*. Each component (`LLD-C#`) traces up to a `SPEC-R#`.
+- **[`a2ui-expert-system.prd.md`](../../prd/a2ui-expert-system.prd.md)** — start here. Owns *why + what-should-exist*: the problem, goals (`PRD-G#`), scope, constraints, open decisions (`PRD-D#`), milestones (A1–A4).
+- **[`specs/`](../../spec/)** — owns *what must be built / how it behaves*. Each SPEC requirement (`SPEC-R#`) traces up to a `PRD-G#`.
+- **[`llds/`](../../lld/)** — owns *how it is built*. Each component (`LLD-C#`) traces up to a `SPEC-R#`.
 
 One fact, one home: lower documents reference upper IDs, they never restate them. Change a fact by editing its owner, then propagate down.
 

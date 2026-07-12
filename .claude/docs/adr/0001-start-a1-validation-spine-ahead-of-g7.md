@@ -13,7 +13,7 @@
 
 ## Context
 
-The A1 decomposition ([`../specs/decompositions/a1-runtime-foundation.decomp.json`](../specs/decompositions/a1-runtime-foundation.decomp.json), coverage-clean — `coverage_check.py --strict` exits 0: 24 nodes · 30 actions · 34 hosts) surfaced a **discovered reality** the milestone framing did not make explicit: `@agent-ui/components` is at **G1** — only the `reactive/` kernel exists; `dom/`, `traits/`, `controls/` are empty stubs, so there is **no `repeat` directive and no `ui-*` control family**, and `packages/agent-ui/a2ui` does not exist yet. A1 and PRD §4 Assumption **A-2** assume the component plan has reached **~G7** (button, text-field, checkbox, switch, select, field).
+The A1 decomposition ([`../decompositions/a1-runtime-foundation.decomp.json`](../decompositions/a1-runtime-foundation.decomp.json), coverage-clean — `coverage_check.py --strict` exits 0: 24 nodes · 30 actions · 34 hosts) surfaced a **discovered reality** the milestone framing did not make explicit: `@agent-ui/components` is at **G1** — only the `reactive/` kernel exists; `dom/`, `traits/`, `controls/` are empty stubs, so there is **no `repeat` directive and no `ui-*` control family**, and `packages/agent-ui/a2ui` does not exist yet. A1 and PRD §4 Assumption **A-2** assume the component plan has reached **~G7** (button, text-field, checkbox, switch, select, field).
 
 Read literally, the A1 milestone note "*(depends on `@agent-ui/components` ≈ G7)*" could be taken as "write no A1 code before G7." But the owners already distinguish two things:
 

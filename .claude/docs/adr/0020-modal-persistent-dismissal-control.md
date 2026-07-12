@@ -145,8 +145,8 @@ Verified by reading each file (16 files reference `dismissable`). Grouped by own
 
 **D. Spec-family owning docs** — the by-ID repairs (this ADR's `Repairs`) *(the a2ui specs are team-led — route per orchestration)*
 
-14. **`.claude/docs/specs/specs/a2ui-catalog.spec.md`** — the `Modal` row (line ~136): `dismissable` → `persistent`.
-15. **`.claude/docs/specs/llds/a2ui-catalog.lld.md`** — the `mapsTo` 1:1 list (line ~80): `selected`/`open`/**`dismissable`**/`scroll`
+14. **`.claude/docs/spec/a2ui-catalog.spec.md`** — the `Modal` row (line ~136): `dismissable` → `persistent`.
+15. **`.claude/docs/lld/a2ui-catalog.lld.md`** — the `mapsTo` 1:1 list (line ~80): `selected`/`open`/**`dismissable`**/`scroll`
     → …/**`persistent`**/`scroll`.
 16. **`.claude/docs/decompositions/g9-containers.decomp.json`** — the `s9` acceptance text (line ~54):
     `dismissable: boolean(reflect, default true)` → `persistent: boolean(reflect, default false)`, and the

@@ -1,4 +1,9 @@
-# A2UI — the current frontier
+# A2UI — the current frontier (ARCHIVED)
+
+> **SUPERSEDED 2026-07-12 (repo-alignment Phase 1):** the ticket spine (`../../tickets/`) has
+> carried the frontier since 2026-07-10; this note was last repaired 2026-07-08 and predates the
+> corpus drain, the message-lifecycle wave, and a2ui-chat. Kept as a dated historical record of
+> the A1–A4 build arc — do not repair further.
 
 > The living state-of-the-build note for `@agent-ui/a2ui`. **The ground truth is always
 > `git log -- packages/agent-ui/a2ui/` + the realized modules and their co-located probes** — this
@@ -188,12 +193,12 @@ Driven by live-agent output against the real canvas — all shipped, all gates g
 - **Dev-proxy re-reads `providers.json` PER REQUEST** (catalog + shard stay loaded once) so a registry
   edit needs no dev-server restart — the switcher (HMR-reloaded) and the PAIR-allowlist can't drift
   (the Haiku-4.5 `400 unknown-model` symptom). Recorded as an ADR-0069 realization note.
-- **`ui-column` refinements ([ADR-0075](../adr/0075-ui-column-canvas-root-stretch-no-center.md), accepted):**
+- **`ui-column` refinements ([ADR-0075](../../adr/0075-ui-column-canvas-root-stretch-no-center.md), accepted):**
   a column-local `stretch` boolean prop (`width: stretch`, fill cascade) the canvas sets on a ROOT column
   so the surface fills the artboard (a root column shrink-collapses under `align-items:center` +
   `container-type:inline-size`); AND `align="center"` PROHIBITED on `ui-column` (enum narrowed +
   `Column.align` drops center; Row keeps it). The canvas gained a definite-width artboard too.
-- **The renderer honors catalog-declared `enum`s ([ADR-0076](../adr/0076-renderer-honors-catalog-declared-enums.md), accepted):**
+- **The renderer honors catalog-declared `enum`s ([ADR-0076](../../adr/0076-renderer-honors-catalog-declared-enums.md), accepted):**
   the widget resolver skips a LITERAL value the PropDef enum doesn't list — the mechanism that makes the
   `Column.align` narrowing (and every catalog enum) effective in the DOM (the factory's property-set path
   bypassed the component's own coercion; the wire validator checks type, not enum membership). Pure
@@ -204,10 +209,10 @@ Driven by live-agent output against the real canvas — all shipped, all gates g
 
 ## Docs-site Generative-UI playground (2026-07-04, gate-green; ADR-0077 ACCEPTED 2026-07-04)
 
-The a2ui-relevant slice of the docs-site wave ([decomp](../decompositions/site-preview-catalog-adr.decomp.md) · [ADR-0077](../adr/0077-docs-site-genui-playground-preview-catalog-adr-index.md)):
+The a2ui-relevant slice of the docs-site wave ([decomp](../../decompositions/site-preview-catalog-adr.decomp.md) · [ADR-0077](../../adr/0077-docs-site-genui-playground-preview-catalog-adr-index.md)):
 
 - **New live catalog consumer** — `site/a2ui-catalog` renders EVERY `defaultCatalog` component through the real renderer via a site-local `<component-preview mode="a2ui">` element (metadata ← `catalog.json` props; a live-knobs playground per type; the specimen is authoritative for its own state, read-back-before-rebuild). A second mode previews `ui-*` controls off their `{name}.md` descriptor. Derived, not hand-authored; pinned by `site-preview-catalog.test.ts` (hand-authored sample-tree maps ⊆ catalog names).
-- **`catalog.json` `Button.variant` tightened → `enum:["solid","soft","ghost"]`** (was an un-enumerated string) — brings the catalog into agreement with the control's own declared enum; **realizes [ADR-0076](../adr/0076-renderer-honors-catalog-declared-enums.md) for Button** (the renderer now skips a non-member variant) + gives a2ui-mode Button a chip switcher. Verified safe: every example uses `solid`/`soft`; corpus unaffected.
+- **`catalog.json` `Button.variant` tightened → `enum:["solid","soft","ghost"]`** (was an un-enumerated string) — brings the catalog into agreement with the control's own declared enum; **realizes [ADR-0076](../../adr/0076-renderer-honors-catalog-declared-enums.md) for Button** (the renderer now skips a non-member variant) + gives a2ui-mode Button a chip switcher. Verified safe: every example uses `solid`/`soft`; corpus unaffected.
 - Deferred (a2ui-adjacent): consolidate the `a2ui-live` canvas onto the new shared `site/lib/canvas-surface` module (currently a proven CSS copy).
 
 ## How to start a unit

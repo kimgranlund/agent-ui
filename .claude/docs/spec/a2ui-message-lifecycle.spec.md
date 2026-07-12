@@ -10,8 +10,8 @@
 > carrying Summary/Acceptance/Links per its own type contract). Known, deliberate gap: the SPEC↔PRD uplink
 > harness check fails on this file by construction; recorded as a reviewed deviation, not a silent miss.
 >
-> Cites [`../specs/specs/a2ui-runtime.spec.md`](../specs/specs/a2ui-runtime.spec.md) §3.2/§3.4 (SPEC-R2 surface
-> create/delete, SPEC-R5 data upsert) and [`../specs/specs/a2ui-catalog.spec.md`](../specs/specs/a2ui-catalog.spec.md)
+> Cites [`../spec/a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) §3.2/§3.4 (SPEC-R2 surface
+> create/delete, SPEC-R5 data upsert) and [`../spec/a2ui-catalog.spec.md`](../spec/a2ui-catalog.spec.md)
 > §5.2 (component-type usage guidance, a *sibling*, orthogonal axis) — this SPEC restates neither; it owns the
 > axis neither covers: **which message envelope a producer emits, when, and why.**
 >

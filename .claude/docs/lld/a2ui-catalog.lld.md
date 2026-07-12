@@ -1,7 +1,7 @@
 # LLD — A2UI Catalog (default catalog · registry · validators)
 
 > Status: proposed · v0.1 · 2026-06-26 · Layer: LLD (implementation plan)
-> Implements: [`../specs/a2ui-catalog.spec.md`](../specs/a2ui-catalog.spec.md) (SPEC-R1..R9, SPEC-N1..N4), targeting A2UI **v1.0**. Consolidates the previously-planned `a2ui-default-catalog` + `a2ui-catalog-schema` LLDs.
+> Implements: [`../spec/a2ui-catalog.spec.md`](../spec/a2ui-catalog.spec.md) (SPEC-R1..R9, SPEC-N1..N4), targeting A2UI **v1.0**. Consolidates the previously-planned `a2ui-default-catalog` + `a2ui-catalog-schema` LLDs.
 > Altitude: adds the **how**; cites `SPEC-R*` for behavior. Catalog-conformance validation is contributed *into* the renderer's shared `validate.ts` (renderer LLD-C11) to preserve one-implementation parity.
 
 ---

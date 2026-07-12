@@ -2,7 +2,7 @@
 
 > Companion to the gated manifest [`g8-gallery-release-readiness.decomp-v2.json`](./g8-gallery-release-readiness.decomp-v2.json)
 > (`coverage_check.py` exit 0, plan mode — every leaf carries an `accept` predicate). Spec of record:
-> **`goals.md` §G8** (its Goal/Scope/DoD). Design doc: [`component-gallery.lld.md`](../llds/component-gallery.lld.md).
+> **`goals.md` §G8** (its Goal/Scope/DoD). Design doc: [`component-gallery.lld.md`](../lld/component-gallery.lld.md).
 > ADRs (all `proposed`; Kim ratifies): **ADR-0079** (gallery architecture) · **ADR-0080** (per-control
 > exports + marginal gate) · **ADR-0081** (family coherence gate). · 2026-07-05 · planner
 >
