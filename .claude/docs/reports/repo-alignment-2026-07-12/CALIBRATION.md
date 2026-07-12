@@ -64,3 +64,9 @@ Deviations, false premises, guesses, corrections — appended continuously (an e
   hand-authored ④ graduates). Never staged (the standing rule); the campaign's remaining commits
   stage explicitly around it. The hand-authored-block reconciliation belongs to Kim's token wave,
   not this campaign.
+- **Phase 5 closed (f93ad6f).** All ten manifest items executed across three WPs. Note for the
+  Phase-6 review: the repo-wide `npm test` is currently red ONLY at the theme-provider fixture —
+  that is Kim's live tokens.css rework in the working tree (external to the campaign, never
+  staged); every campaign-scoped gate (docs-grammar 104 · adr 33 · check ×3) is green.
+- **Phase 6 gate:** (a) findings ratified ✓ (two checkpoints), (b) execution landed ✓,
+  (c) calibration reviewed by Kim — PENDING (this is the ask).

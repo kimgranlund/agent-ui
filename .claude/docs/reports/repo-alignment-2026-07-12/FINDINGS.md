@@ -12,3 +12,9 @@
 | F8 | 3 | tkt-0003 predates the `kind`/`size` convention (caught by the NEW S1 gate's first run) | RESOLVED (backfilled) |
 | F9 | 3 | Hygiene backlog (reported by the standing gate, promotion pending): LLD Layer-spelling split + 3 header dialects · lowercase tkt- cites in prose · ADR numbering gap 0108 · skill-dial completeness (2 fixed this phase) | docs-grammar.test.ts HYGIENE tier |
 | F10 | 0 | No CI workflows exist — gates are npm scripts; the campaign's checks wire into `npm test`, not CI | calibration log |
+| F11 | 4 | 7 live docs cited the FROZEN archived charter README as their traceability home | RESOLVED (WP1 M1, `3753db6`) |
+| F12 | 4 | ADR-0088/89/90/97/98 accepted with unfilled "pending Kim" Ratified-by placeholders (landed accepted-at-birth in the 96a0778 batch) | RESOLVED (WP1 M2 — evidence-backed fills, Kim-ratified via the manifest) |
+| F13 | 4 | drafts/container-family-design.md — dead orphan (scope shipped without citing it) | RESOLVED (WP1 M3 — archived; drafts/ dissolved) |
+| F14 | 4 | scripts/harness_wiring_check.py BROKEN since the 2026-07-01 skill renames (probed dead dirs) | RESOLVED (WP2 M5 — forge-cache probe, declared-or-absent; 19/19 exit 0; surfaced the forge D9 'composer' registry gap → accepted-divergence + upstream ask queued) |
+| F15 | 4 | component-builder.md + process gated on the RETIRED repo component-reviewer seat | RESOLVED naming (WP2 M6 → ui:component-reviewer); the grades-against-which-rubric verification queued |
+| F16 | 5 | The exit criteria are standing law: S5 (archive-as-history-only) · S6 (TKT case) · S7 (dials) · S8 (ADR contiguity vs KNOWN_GAPS) promoted/added; hygiene slims to H1 (the LLD dialect split — follow-up queue) | `f93ad6f` |
