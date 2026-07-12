@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0008
-status: open
+status: done
 date: 2026-07-10
 owner:
 kind: feature
@@ -132,3 +132,6 @@ surface?" as a standing fork-sheet check when a mechanism is greenfield.
 **Status:** design FROZEN pending ratification. Next action: Kim/orchestration-lead flips ADR-0124
 `proposed → accepted`, then the `component-builder` builds M1 (core) → M2 (chrome) → M3 (catalog+site) against
 the LLD as contract, with the `component-reviewer` GO gate before each wave commit.
+
+### 2026-07-11 — ticket closed (status housekeeping)
+the swiper family SHIPPED 2026-07-10 — controls `f500ec4` + catalog rows `3b1805e` (ADR-0124 accepted; the FAMILY-ROOT gate extension, the clone-teleport loop). This entry repairs the ticket's stale `open` status found at the post-goal sweep — the build Findings above predate the ship commits.

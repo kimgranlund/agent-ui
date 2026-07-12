@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0011
-status: open
+status: done
 date: 2026-07-10
 owner:
 kind: feature
@@ -158,3 +158,6 @@ well COMPOSE a swatch; it never re-owns value rendering). No text-field `type` c
   explicitly specified by the LLD. Gates green repo-wide (`npm run check`; jsdom 5492/5494 — the two
   pre-existing, explicitly-allowed red fixtures unchanged; browser suite scoped to the touched files, both
   engines; `npm run size` exit 0). No commits made — the coordinator routes the independent review.
+
+### 2026-07-11 — ticket closed (status housekeeping)
+ui-color-picker SHIPPED 2026-07-11 — `b8dee12` (ADR-0123 accepted, OKLCH-internal; + text-field type=color; review GO + fix pass) and the M2 catalog wave `bdf17cf` (the row landed, the M1 allowlist seed drained). This entry repairs the ticket's stale `open` status found at the post-goal sweep — the build Findings above predate the ship commits.

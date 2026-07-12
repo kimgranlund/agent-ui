@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0010
-status: open
+status: done
 date: 2026-07-10
 owner:
 kind: feature
@@ -97,3 +97,6 @@ flagship demo hand-builds this shape today.
   dropped); timestamp is the consumer's string (no codec); items are authored children (no `data` array prop).
 - **Follow-up recorded (NOT scope):** repoint the `a2a-artifact-feed` page's hand-rolled `.feed-timeline`
   chrome onto the shipped `ui-status-stream` (the ADR-0117/0121 dogfood-promotion pattern).
+
+### 2026-07-11 — ticket closed (status housekeeping)
+the timeline family SHIPPED 2026-07-10 — `8cb316b` + catalog `34099d1` (ADR-0122 accepted; ui-timeline-item + ui-timeline + ui-status-stream, appendEntry rename). This entry repairs the ticket's stale `open` status found at the post-goal sweep — the build Findings above predate the ship commits.

@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0013
-status: open
+status: done
 date: 2026-07-10
 owner:
 kind: feature
@@ -134,3 +134,6 @@ amends feed-family or earns a sibling record).
   with no live key.
 - **Follow-up recorded (NOT scope):** the a2a pages narrating their own live matches through it (dogfood); the
   eventual `a2ui-chat` surface consuming it.
+
+### 2026-07-11 — ticket closed (status housekeeping)
+ui-status-stream SHIPPED 2026-07-10 inside the timeline-family wave — `8cb316b` (ADR-0122; role=log live region, StatusStream = permanent allowlist entry). This entry repairs the ticket's stale `open` status found at the post-goal sweep — the build Findings above predate the ship commits.

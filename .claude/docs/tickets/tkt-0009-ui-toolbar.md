@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0009
-status: open
+status: done
 date: 2026-07-10
 owner:
 kind: feature
@@ -102,3 +102,6 @@ not patched on this file alone.
 **Build gate:** the design is frozen; no build dispatches from this ticket (sequencing: intake first). The
 build wave, when authorized, dispatches `component-builder` on LLD-C1…C9, then `a2ui-builder` on LLD-C10/C11
 (the `Toolbar` catalog row + corpus upgrade) once the component is green.
+
+### 2026-07-11 — ticket closed (status housekeeping)
+ui-toolbar SHIPPED 2026-07-10 — control `e831461` + catalog `67a30da` (ADR-0121 accepted; the ROVING-MARKER fleet repair rode the wave). This entry repairs the ticket's stale `open` status found at the post-goal sweep — the build Findings above predate the ship commits.

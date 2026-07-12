@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0012
-status: open
+status: done
 date: 2026-07-10
 owner:
 kind: feature
@@ -125,3 +125,6 @@ added for M1 · `#setActive` lazy-id guard · teardown note re-homed to the reac
 **Ready to build on ADR-0125 ratification.** Build seat = `component-builder` (LLD-C1…C15/C17/C18) + an
 `a2ui-builder` slice for LLD-C16 (the `EXCLUSION_ALLOWLIST` entry) after the descriptor ships. Constraints held:
 no tokens.css / no `site/lib/__fixtures__/` touched; ROLE-level colors only; docs-only, no code, no commits.
+
+### 2026-07-11 — ticket closed (status housekeeping)
+ui-command-modal SHIPPED 2026-07-11 — `3a3458f` (ADR-0125 accepted; TKT-0017's fixed frame folded in pre-ship); later gained filter='regex' (ADR-0127, `4ee53ee`) and the TKT-0019 two-line option display (`ce92d56`). This entry repairs the ticket's stale `open` status found at the post-goal sweep — the build Findings above predate the ship commits.
