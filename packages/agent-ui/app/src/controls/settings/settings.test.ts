@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from 'vitest
 import { UISettingsElement } from './settings.ts'
 import { createMemoryStore } from './memory-store.ts'
 import type { SettingsSchema } from './schema.ts'
+import type { SettingsStore } from './store.ts'
 import { whenFlushed, UIFormElement } from '@agent-ui/components'
 import {
   splitFrontmatter,
@@ -205,6 +206,29 @@ describe('UISettingsElement — a real store round-trip through the generated fi
     await Promise.resolve() // the commit is deferred one microtask (generate.ts — the codec staleness guard)
     expect(store.get('name')).toBe('Ada')
   })
+
+  it("a REAL select field's user commit (its own 'select' event) reaches the store end-to-end (the select gap fix)", async () => {
+    const store = createMemoryStore()
+    const el = mount(new UISettingsElement())
+    el.store = store
+    el.schema = {
+      version: 1,
+      sections: [{
+        id: 'general', label: 'General',
+        fields: [{
+          key: 'theme', type: 'select', label: 'Theme', default: 'light',
+          options: [{ value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }],
+        }],
+      }],
+    }
+    await el.updateComplete
+    const control = el.querySelector('ui-select') as unknown as HTMLElement & { value: string }
+    expect(control).not.toBeNull()
+    control.value = 'dark'
+    control.dispatchEvent(new Event('select', { bubbles: true })) // ui-select's OWN commit event — never 'change'
+    await Promise.resolve()
+    expect(store.get('theme')).toBe('dark')
+  })
 })
 
 describe('UISettingsElement — reconnect (component-reviewer MAJOR class — the master-detail precedent)', () => {
@@ -299,6 +323,74 @@ describe('UISettingsElement — reconnect (component-reviewer MAJOR class — th
     } finally {
       UIFormElement.prototype.setCustomValidity = original
     }
+  })
+})
+
+describe('UISettingsElement — external sync (TKT-0021, store.subscribe)', () => {
+  it('an external store.set reflects into the LIVE generated control', async () => {
+    const store = createMemoryStore()
+    const el = mount(new UISettingsElement())
+    el.store = store
+    el.schema = SCHEMA
+    await el.updateComplete
+    const control = el.querySelector('ui-text-field') as unknown as HTMLElement & { value: string }
+    store.set('name', 'Grace') // the "external" write — no user gesture, no `change` dispatch
+    expect(control.value).toBe('Grace')
+  })
+
+  it('the subscribe wiring survives a reconnect (the reconnect law — the reactive-validation precedent)', async () => {
+    const store = createMemoryStore()
+    const el = mount(new UISettingsElement())
+    el.store = store
+    el.schema = SCHEMA
+    await el.updateComplete
+
+    const newParent = document.createElement('div')
+    document.body.append(newParent)
+    newParent.append(el) // reconnect — SAME schema/store objects, the re-arm branch (never a rebuild)
+    await el.updateComplete
+
+    const control = el.querySelector('ui-text-field') as unknown as HTMLElement & { value: string }
+    store.set('name', 'Hedy')
+    expect(control.value, 'external sync went inert after a reconnect — the reconnect law regressed').toBe('Hedy')
+    newParent.remove()
+  })
+
+  it('repeated relocations never leak subscriptions (the reconnect-law leak test)', async () => {
+    // A hand-rolled store (not memory-store.ts) so the test can read the listener Set's SIZE directly —
+    // the leak signature is "grows without bound across relocations", not any particular value round-trip.
+    const listenerCounts: number[] = []
+    const values = new Map<string, unknown>()
+    const listeners = new Set<(key: string, value: unknown) => void>()
+    const store: SettingsStore = {
+      get: (key) => values.get(key),
+      set: (key, value) => {
+        values.set(key, value)
+        for (const listener of listeners) listener(key, value)
+      },
+      subscribe: (listener) => {
+        listeners.add(listener)
+        listenerCounts.push(listeners.size)
+        return () => listeners.delete(listener)
+      },
+    }
+    const el = mount(new UISettingsElement())
+    el.store = store
+    el.schema = SCHEMA // 2 sections × 1 field each = 2 fields total, generated (and subscribed) up front
+    await el.updateComplete
+
+    const parent = document.createElement('div')
+    document.body.append(parent)
+    for (let i = 0; i < 5; i++) {
+      parent.append(el) // a genuine disconnect+reconnect each time (already connected elsewhere)
+      await el.updateComplete
+    }
+
+    // SCHEMA's 2 fields ⇒ exactly 2 active subscriptions at rest, on the LAST reconnect same as the
+    // very first mount — never 3, 4, 5… as relocations repeat.
+    expect(listeners.size).toBe(2)
+    expect(new Set(listenerCounts)).toEqual(new Set([1, 2])) // every (re)subscribe ever saw AT MOST 2 active — no growth observed across any of the 6 build/re-arm cycles (1 initial + 5 reconnects)
+    parent.remove()
   })
 })
 

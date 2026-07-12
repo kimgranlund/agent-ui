@@ -153,6 +153,13 @@ Edit `app-shell.ts`: add `'toggle'` to `COLLAPSE_VALUES` (`['hide','stack','togg
 
 **Failure/edge handling.** Unsupported `version` (≠1) → the surface renders an empty/notice state + warns (SPEC-R10 AC3), never crashes. A `select` field with no `options` → an empty select + warn. The generator writes ids/`for` deterministically (the `field.ts` `fieldSeq` precedent) so labels associate.
 
+> **REV (TKT-0021, 2026-07-11) — commit-event defect fix.** `generate.ts` wired a single `change` listener
+> for every field's commit, universally — but `ui-select` only ever emits `select` (never `change`), so a
+> `select`-type field's user edit never reached `store.set` in the shipped build. Fixed with `COMMIT_EVENT`,
+> a `Record<SettingsFieldType, string>` (exhaustive by construction) naming each registry control's OWN
+> documented commit event, verified per-control against its `.md` descriptor: `select` → `select`; every
+> other v1 type → `change`. SPEC-R12 AC1 now genuinely holds for all six types.
+
 ### 4.3 LLD-C14 — validation wiring (→ SPEC-R11)
 
 `validate.ts`: map each `Field.validation` onto the generated control's **own validity** — `required`/`min`/`max`/`step`/`pattern` via the control's native constraint props where they exist (text-field/number/slider), else a `setCustomValidity` write on a reactive effect over the value. Errors then render through the control's existing `user-invalid` timing + the `ui-field` error part + the `ui-form-provider` aggregate (ADR-0050/0051) — **no second timing source, no bespoke validation engine** (the ADR-0051 reactive-error law; the two shipped error-timing bugs are the cautionary precedent). Submit/commit uses the provider's `submit()`/`valid()` aggregate.
@@ -165,6 +172,17 @@ Edit `app-shell.ts`: add `'toggle'` to `COLLAPSE_VALUES` (`['hide','stack','togg
 - **`memory-store.ts`** — a reference in-memory (or `localStorage`-backed) `SettingsStore` for the demo/tests. **`ui-settings` imports only the `store.ts` interface, never a concrete store** (SPEC-R12 AC3 — the seam is a contract; grep-guarded).
 
 **Failure/edge handling.** No store supplied → render from `field.default`, no throw (SPEC-R12 AC2). `store.get` returning a type-mismatched value → coerce via the control's codec or fall back to `default` + warn. `subscribe` absent → no external-change reactivity (documented; the store is authoritative on read).
+
+> **REV (TKT-0021, 2026-07-11)** — Fork F7's optional-`subscribe` arm is now WIRED (`generate.ts`'s
+> `subscribeExternalSync`), not only declared: every generated field subscribes and reflects a matching
+> external `set(key, value)` via the registry's `setValue`, re-armed on a relocation reconnect the same way
+> `applyValidation` is (the same "dies with the connection" branch, `settings.ts`). Zero-echo suppression
+> is an Object.is value-equality cutoff against the control's own `getValue()` — no reflecting-write flag.
+> The two `ui-text-field` codec types (`number`/`date`) reflect the raw value only; their canonical stays
+> blur-gated (schema.test.ts's documented limitation) — no public `ui-text-field` seam exists to force a
+> resync short of a real blur, and a synthetic blur dispatch was ruled out as a disallowed hack, so this
+> stays a `ui-text-field`-tier gap, not a LLD-C15 one. Additive to the fork's recommendation, not a
+> re-fork.
 
 ---
 
@@ -222,6 +240,6 @@ Gates green before each phase's commit: `npm run check` (+`check:site`) · `npm 
    `ui-app-shell-region` model) the element arranges; named slots are shadow-DOM idiom the light-DOM fleet
    avoids. (This entry was dropped in an earlier revision while §3's LLD-C10 kept citing it — restored
    2026-07-11 at the Phase 2 review; the build followed the recommendation.)
-7. **F7 — `SettingsStore` sync vs async.** *Recommend sync `get`/`set` + optional `subscribe`* (+ optional batch `save`); async/remote sync is out-of-scope (PRD fence). Revisit if a real async store need appears.
+7. **F7 — `SettingsStore` sync vs async.** *Recommend sync `get`/`set` + optional `subscribe`* (+ optional batch `save`); async/remote sync is out-of-scope (PRD fence). Revisit if a real async store need appears. **(TKT-0021, 2026-07-11 — the optional-`subscribe` arm is now WIRED by `ui-settings`, not only declared by the interface; see §4.4's REV note.)**
 8. **F8 — settings shell composes master-detail vs bespoke.** *Recommend `ui-settings` composes `ui-master-detail`* for the rail|panel drill-in (build the drill-in once), adding the schema-driven panels on top. Alt: settings has its own shell. Recommend reuse.
 9. **F-catalog — `Split` row vs `EXCLUSION_ALLOWLIST`.** *Recommend a `Split` container row* (parity with the bound layout+slider family). The allowlist arm is the fallback if resize can't be agent-parameterized safely. Resolved at the C8 build against the catalog's real shape.

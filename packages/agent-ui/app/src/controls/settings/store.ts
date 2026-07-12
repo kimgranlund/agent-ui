@@ -27,9 +27,14 @@ export interface SettingsStore {
    * Optional external-change notification: the store may call `listener(key, value)` when a value
    * changes from OUTSIDE `ui-settings` (another tab, a remote push). Returns an unsubscribe function.
    * Absent ⇒ no external-change reactivity — `ui-settings` is authoritative on read only at mount
-   * (documented, LLD-C15 failure/edge handling); this is NOT wired by `ui-settings` in this build (a
-   * deliberate v1 scope cut — the seam is defined so a future consumer/build can wire it without an
-   * interface change).
+   * (documented, LLD-C15 failure/edge handling).
+   *
+   * WIRED by `ui-settings` (TKT-0021, generate.ts's `subscribeExternalSync`): every generated field
+   * subscribes and reflects a matching external `set(key, value)` into its own control via the registry's
+   * `setValue`. Zero-echo is the kernel's Object.is precedent, not a flag — a notification whose value
+   * already equals the control's own current `getValue()` (true for the store's own re-notification of a
+   * commit the field JUST made) is a silent no-op; a genuinely different value reflects. Re-armed across a
+   * relocation reconnect the same way the field's validation wiring is (settings.ts's reconnect branch).
    */
   subscribe?(listener: (key: string, value: unknown) => void): () => void
 

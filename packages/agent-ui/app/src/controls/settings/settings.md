@@ -25,7 +25,7 @@ properties:
   - name: schema
     description: The typed, versioned `SettingsSchema` (`{ version: 1, sections: [...] }`, schema.ts) driving the generated panels. Reactive — a reassignment (e.g. an async-loaded schema landing after mount) rebuilds the rail + every section's form from scratch; a bare reconnect with the SAME schema object skips the rebuild (preserving live field values) but still re-arms every per-connection reactive seam a disconnect tore down — the rail's click listeners AND every generated field's validation, re-shows the current section. Absent ⇒ an empty rail/panel, never a throw.
   - name: store
-    description: An optional `SettingsStore` adapter (store.ts — `get`/`set`/optional `subscribe`/`save`) the surface reads initial values from and writes changes back to, per-field-on-change. Reactive the same way as `schema` (a reassignment rebuilds; a reconnect with the same object skips the rebuild but still re-arms per-connection wiring). Absent ⇒ every field renders from its own schema `default` and changes are never persisted (SPEC-R12 AC2).
+    description: An optional `SettingsStore` adapter (store.ts — `get`/`set`/optional `subscribe`/`save`) the surface reads initial values from and writes changes back to, per-field-on-change. A supplied `subscribe` is WIRED (TKT-0021) — an external `set(key, value)` (another tab, a remote push) reflects into the matching field's control, with no echo back into `store.set` (an Object.is cutoff against the control's own current value). Reactive the same way as `schema` (a reassignment rebuilds; a reconnect with the same object skips the rebuild but still re-arms per-connection wiring, subscribe included). Absent ⇒ every field renders from its own schema `default` and changes are never persisted (SPEC-R12 AC2).
   - name: section
     description: The active section id. A reactive effect derives which generated panel shows + the rail's active marker from it, and emits `select`/`change` on every change AFTER the first (the initial/resolved-default state at connect does not fire — the `ui-master-detail` `selected` precedent).
 
@@ -117,10 +117,24 @@ existing `user-invalid` timing, never a second observation path (ADR-0051).
 ## Persistence — the `SettingsStore` seam
 
 `store` is optional (`store.ts`'s `SettingsStore` interface: `get`/`set`/optional `subscribe`/`save`). A
-field reads `store.get(key) ?? field.default` at generation time and commits `store.set(key, value)` on its
-own `change` event (per-field-on-change). No store supplied ⇒ every field still renders from its schema
-`default`, and changes are simply not persisted. `memory-store.ts` ships a reference adapter for demos/tests
-— `ui-settings` itself never imports a concrete store, only the interface.
+field reads `store.get(key) ?? field.default` at generation time and commits `store.set(key, value)` on the
+mapped control's OWN documented commit event (per-field-on-change, immediately per field, never batched) —
+`change` for every v1 type except `select`, which commits on its own `select` event (`ui-select` never
+emits `change` — a per-type table, not a universal `change` listener, TKT-0021). No store supplied ⇒ every
+field still renders from its schema `default`, and changes are simply not persisted. `memory-store.ts`
+ships a reference adapter for demos/tests — `ui-settings` itself never imports a concrete store, only the
+interface.
+
+**External sync (TKT-0021 — realizes the M4 LLD §8 Fork F7 optional-`subscribe` arm).** A supplied
+`store.subscribe` is wired: an external `store.set(key, value)` — another tab, a remote push — reflects
+into the matching field's control via the registry's `setValue`. No echo loop: the suppression is the
+kernel's Object.is precedent (reactive/index.ts), not a flag — a notification whose value already equals
+the control's own `getValue()` is a silent no-op, which is also how the store's own re-notification of a
+commit the field just made resolves to nothing. The two `ui-text-field` codec types (`number`/`date`)
+reflect the raw value visibly, but their internal display↔canonical codec only resyncs on a real blur — a
+pre-existing `ui-text-field` limitation (schema.test.ts documents it), not something this seam changes. A
+store without `subscribe` behaves byte-identically to before (no external-change reactivity, as already
+documented above). The subscription is re-armed across a relocation reconnect the same way validation is.
 
 ## Accessibility
 

@@ -105,6 +105,26 @@ Normative per RFC 2119; each carries an ID, a PRD/ADR trace, and testable accept
 - **AC2** *Given* no store supplied, *then* the surface still renders from `Field.default` and does not throw (the store seam is optional-but-defined); *given* the reference adapter, *then* a round-trip (write → reload) preserves values.
 - **AC3** *Given* the store seam, *when* `ui-settings` source is grepped, *then* no concrete store (localStorage, fetch) is imported by the element itself — only the interface (the seam is a contract, not an implementation).
 
+> **REV (TKT-0021, 2026-07-11)** — the LLD §8 Fork F7 optional-`subscribe` arm (RESOLVED at the LLD, sync
+> `get`/`set` + optional `subscribe`) is now REALIZED, not merely declared: `ui-settings` wires it. An
+> external `store.set(key, value)` reflects into the matching field's control (every v1 registry type,
+> including the two `ui-text-field` codec types raw-value-only — their display↔canonical resync stays
+> blur-gated, an existing `ui-text-field` limitation, not a SPEC-R12 concern); zero echo back into
+> `store.set` (an Object.is value-equality cutoff, not a flag); re-armed across a relocation reconnect.
+> Additive — AC1/AC2/AC3 above are unchanged and still hold; a store without `subscribe` is byte-identical.
+
+> **REV (TKT-0021, 2026-07-11) — AC1 defect fix, not additive.** The generator wired a UNIVERSAL `change`
+> listener for every field-type's commit — but `ui-select` never emits `change` (only `select`, its own
+> documented event; `select.md`'s `events:` block does not list `change` at all). AC1's "when a field
+> changes and commits, then the store's `set` is called" was therefore silently FALSE for `select`-type
+> fields in the shipped Phase 3 build: a user's selection never persisted. Fixed with a per-type,
+> exhaustively-typed commit-event table (`generate.ts`'s `COMMIT_EVENT`) verified against each of the six
+> v1 registry controls' own `.md` descriptor — `select` commits on `select`, every other v1 type still on
+> `change`. AC1 now genuinely holds for all six types (regression-tested, incl. a negative control proving
+> the OLD `change`-only wiring commits nothing for `select`).
+
+
+
 ### 3.4 Cross-cutting — layering + DoD + budget
 
 **SPEC-R13 — Layering: `ui-split` components-tier (no cycle); `app` never imports `router`.** `ui-split`/`ui-split-pane` MUST live under `@agent-ui/components` (`controls/split/`), importing only inward (`dom`/`traits`) — no cycle; the components `layering.test.ts` trip-wire stays green. The M4 app-tier surfaces (`ui-master-detail`, `ui-settings`, the `collapse:"toggle"` change) MUST NOT import `@agent-ui/router` (ADR-0115 catalog-invisible law) nor any deep `packages/**/src` path. **This edge is ALREADY forbidden by construction** — `app/src/layering.test.ts`'s `isAllowedAppSpecifier` allowlist admits only `{@agent-ui/components, @agent-ui/a2ui, @agent-ui/shared, local}`, so `@agent-ui/router` fails the existing gate with no new assertion needed; the M4 work is a **named negative-control** proving a planted `@agent-ui/router` import under `app/src` turns the existing test RED (making the `router` case explicit for the reader), NOT closing an open hole. *(→ PRD-G6; ADR-0115, ADR-0120 clause 4)*

@@ -147,6 +147,52 @@ describe('ui-settings — reduced motion (inherited — no bespoke transition of
   })
 })
 
+describe('ui-settings — external sync (TKT-0021, store.subscribe), cross-engine', () => {
+  it('a real store.set reflects into a REAL boolean (ui-switch) field — no user gesture involved', async () => {
+    const { wrapper, el } = mountSettings('900px')
+    await el.updateComplete
+    const appearanceItem = [...el.querySelectorAll<HTMLButtonElement>('[data-part="rail-item"]')].find(
+      (item) => item.dataset.sectionId === 'appearance',
+    )!
+    appearanceItem.click()
+    await el.updateComplete
+    const control = el.querySelector('ui-switch') as unknown as HTMLElement & { checked: boolean }
+    expect(control.checked).toBe(false)
+    ;(el.store as ReturnType<typeof createMemoryStore>).set('darkMode', true)
+    expect(control.checked).toBe(true)
+    wrapper.remove()
+  })
+
+  it('a real store.set reflects the RAW value into a REAL codec-wall field (ui-text-field type=number) — visible immediately via the same control identity, real layout, real engine', async () => {
+    const wrapper = document.createElement('div')
+    wrapper.style.containerType = 'inline-size'
+    wrapper.style.width = '900px'
+    wrapper.style.height = '500px'
+    const el = document.createElement('ui-settings') as UISettingsElement
+    const store = createMemoryStore()
+    el.store = store
+    el.schema = {
+      version: 1,
+      sections: [{
+        id: 'general', label: 'General',
+        fields: [{ key: 'retryCount', type: 'number', label: 'Retry count', default: 0 }],
+      }],
+    }
+    wrapper.append(el)
+    document.body.append(wrapper)
+    try {
+      await el.updateComplete
+      const control = el.querySelector('ui-text-field[name="retryCount"]') as unknown as HTMLElement & { value: string }
+      const before = control
+      store.set('retryCount', 5) // the "external" write — no user gesture, no blur
+      expect(control.value).toBe('5')
+      expect(el.querySelector('ui-text-field[name="retryCount"]'), 'the reflection regenerated the control instead of reusing it').toBe(before)
+    } finally {
+      wrapper.remove()
+    }
+  })
+})
+
 describe('ui-settings — keyboard (rail buttons are native <button>s; Tab reaches the generated field)', () => {
   it('Tab from the first rail item reaches the next rail item, then the panel’s first control', async () => {
     const { wrapper, el } = mountSettings('900px')

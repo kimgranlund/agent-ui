@@ -13,8 +13,10 @@
 // RECONNECT with the SAME schema/store objects (`#builtSchema`/`#builtStore` still match) skips the
 // rebuild entirely (an isolated-shell relocation never regenerates/loses live field VALUES it doesn't
 // need to) but STILL re-arms every per-connection reactive seam a disconnect tore down — the rail's click
-// listeners AND every generated field's validation effect (both die with the connection, both must be
-// re-armed on reconnect, never left one-time — the component-reviewer MAJOR finding on the latter).
+// listeners, every generated field's validation effect, AND (TKT-0021) every field's `store.subscribe`
+// external-sync listener (all three die with the connection, all three must be re-armed on reconnect,
+// never left one-time — the component-reviewer MAJOR finding on the validation case; subscribe joins it
+// on the same branch, generate.ts's `resubscribe`).
 //
 // `schema`/`store` are non-reflected PROPERTIES (the `ui-split` `sizes` precedent: `prop.json<T>()` with
 // `attribute: false` is a pure type-carrier, never actually round-tripped through JSON — `store` in
@@ -94,6 +96,7 @@ export class UISettingsElement extends UIElement {
           this.#showPanel(this.section)
           for (const generated of this.#sections.values()) {
             this.#disposeGenerated.push(generated.reapplyValidation())
+            this.#disposeGenerated.push(generated.resubscribe())
           }
           return
         }

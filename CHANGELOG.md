@@ -857,3 +857,25 @@ committed color back into `surface.data`. Gates: check · a2ui 975/975 · the si
   extended to parse any CSS Color 4 `/ alpha` tail; the ~0.8 assertion is now load-bearing cross-engine.
   Review GO; the hand-block header count repaired (15→16 roles). Gates: check · scoped 160+ jsdom ·
   56 browser both engines · size green (command-modal 1093/2048 B).
+
+## 2026-07-12 (TKT-0021) — ui-settings gains external sync, and select fields finally persist
+
+- **store.subscribe wired (realizes the accepted ADR-0120 F7 optional arm):** an external
+  `store.set` now reflects into the rendered control for every registry field type; echo safety
+  rests on the fleet property that programmatic writes never dispatch commit events, with the
+  Object.is read-side cutoff as defense-in-depth (reviewer-verified sound even for a
+  synchronously-notifying store); `GeneratedSection.resubscribe()` joins `reapplyValidation()` in
+  the reconnect branch (leak-proven across repeated relocations — the M4 house lesson applied
+  pre-emptively this time).
+- **The wave's real find, fixed:** the settings generator listened for `change` universally — but
+  `ui-select` only ever emits `select` (its documented contract), so a user's select-field edit
+  NEVER persisted in shipped Phase 3. Now a per-type `COMMIT_EVENT` table, exhaustive by
+  construction, each of six types verified against its descriptor; the fix revert-proven (3 of 5
+  new tests fail with it backed out).
+- **The second find became its own ticket (tkt-0023):** programmatic value writes on codec types
+  (number/date/currency/…) leave `canonical`/formValue stale until a real blur — root-caused to
+  the components tier and correctly STOPPED at the boundary rather than hacked around; the fix
+  runs as its own reviewed wave. Until it lands, number/date external sync reflects the display
+  only (the documented limitation, honestly tested as such).
+- Review: GO, zero blocking findings. Gates: check · app 170/170 jsdom · browser both engines ·
+  size 24829/26624 B gz.
