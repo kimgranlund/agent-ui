@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0018
-status: doing
+status: done
 date: 2026-07-11
 owner:
 kind: feature
