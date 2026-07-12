@@ -24,6 +24,13 @@
 // HALTS with nothing written. `--replace <name>` is the sanctioned exit: a deliberate, judged
 // re-admission of that one seed, with its predecessor's dedup signatures omitted from warming for this
 // run only (an improved seed is near-identical to its predecessor BY CONSTRUCTION).
+//
+// TKT-0022 cl.1: a batch's collected non-`E_DUP` rejections split into two reporting/abort lanes via
+// `../../src/corpus/import-report.ts` — `E_QUALITY` joins `E_DUP`'s own established non-aborting
+// `alreadyPresent` lane rather than blocking the whole run, because the rubric itself frames a below-bar
+// score as a NORMAL, anticipated admission outcome ("Below-bar on admission → reject `E_QUALITY`",
+// `a2ui-corpus.md`); every other rejection code still hard-aborts (nothing written, even for candidates
+// that themselves passed) exactly as before — this is a realized-tool decision, not an ADR-0060/0068 edit.
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -35,6 +42,8 @@ import { admit } from '../../src/corpus/admit.ts'
 import type { AdmitDeps, AdmitResult } from '../../src/corpus/admit.ts'
 import type { CorpusStore } from '../../src/corpus/store.ts'
 import { createVerdictJudge, parseVerdictsFile, UnjudgedCandidateError } from '../../src/corpus/judge.ts'
+import { classifyRejections, shouldAbort } from '../../src/corpus/import-report.ts'
+import type { SeedRejection } from '../../src/corpus/import-report.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import type { ExampleSeed } from '../../src/examples/types.ts'
@@ -48,6 +57,19 @@ import {
   patternDashboardSeed,
   patternScheduleSeed,
 } from '../../src/examples/patterns.ts'
+import {
+  bookingReservationSeed,
+  rentalFilterPanelSeed,
+  documentRowToolbarSeed,
+  statsGridDashboardSeed,
+  reportCardDashboardSeed,
+  opsReportSeed,
+  deploymentReportSeed,
+  agentTaskStatusSeed,
+  brandPaletteSeed,
+  colorPickerFormSeed,
+} from '../../src/examples/catalog-coverage.ts'
+import { kpiPanelLifecycleSeed } from '../../src/examples/message-lifecycle.ts'
 import { allSeeds } from '../../src/examples/index.ts'
 
 declare const process: { cwd(): string; argv: string[]; exit(code?: number): never }
@@ -101,6 +123,22 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
     module: 'patterns.ts',
     seeds: [patternSettingsSeed, patternConfirmSeed, patternWizardSeed, patternDashboardSeed, patternScheduleSeed],
   },
+  {
+    module: 'catalog-coverage.ts',
+    seeds: [
+      bookingReservationSeed,
+      rentalFilterPanelSeed,
+      documentRowToolbarSeed,
+      statsGridDashboardSeed,
+      reportCardDashboardSeed,
+      opsReportSeed,
+      deploymentReportSeed,
+      agentTaskStatusSeed,
+      brandPaletteSeed,
+      colorPickerFormSeed,
+    ],
+  },
+  { module: 'message-lifecycle.ts', seeds: [kpiPanelLifecycleSeed] },
 ]
 
 /** Fail loudly (not silently) if the shelf's seed count/membership ever drifts from this script's
@@ -169,7 +207,9 @@ async function warmDedupIndex(store: CorpusStore, dedupIndex: DedupIndex, exclud
 interface ImportReport {
   admitted: string[]
   alreadyPresent: string[]
-  errors: Array<{ name: string; code: string; message: string; paths?: string[] }>
+  /** Every non-`E_DUP` rejection collected this run — classified into the abort/non-abort lanes
+   *  AFTER the loop completes (TKT-0022 cl.1, `../../src/corpus/import-report.ts`). */
+  rejections: SeedRejection[]
 }
 
 /** The `--replace <name>` sanctioned exit's audit trail (ADR-0068 clause 5c): the prior record's
@@ -225,7 +265,7 @@ async function main(): Promise<void> {
     deps.judge = createVerdictJudge(parsed.file)
   }
 
-  const report: ImportReport = { admitted: [], alreadyPresent: [], errors: [] }
+  const report: ImportReport = { admitted: [], alreadyPresent: [], rejections: [] }
   let replaced: ReplacedInfo | undefined
 
   for (const group of SEEDS_BY_MODULE) {
@@ -289,13 +329,23 @@ async function main(): Promise<void> {
         process.exit(1)
       }
 
-      report.errors.push({ name: seed.name, code: result.code, message: result.message, paths: result.paths })
+      report.rejections.push({
+        name: seed.name,
+        code: result.code,
+        message: result.message,
+        paths: result.paths,
+        failingDimensions: result.failingDimensions,
+      })
     }
   }
 
-  if (report.errors.length > 0) {
-    console.error(`import-seeds: ${report.errors.length} seed(s) failed admission for a non-duplicate reason:`)
-    for (const e of report.errors) {
+  // TKT-0022 cl.1: E_QUALITY joins E_DUP's own non-aborting lane — only a genuine hard-error code
+  // (E_SCHEMA/E_CATALOG/E_IDGRAPH/E_POINTER/E_PIN/E_LEAK) still blocks the whole run.
+  const { qualityRejected, hardErrors } = classifyRejections(report.rejections)
+
+  if (shouldAbort({ qualityRejected, hardErrors })) {
+    console.error(`import-seeds: ${hardErrors.length} seed(s) failed admission for a non-duplicate, non-quality reason:`)
+    for (const e of hardErrors) {
       console.error(`  - ${e.name}: ${e.code} — ${e.message}${e.paths ? ` [${e.paths.join(', ')}]` : ''}`)
     }
     console.error('Nothing was written.')
@@ -304,12 +354,19 @@ async function main(): Promise<void> {
 
   saveStore(repoRoot, store)
 
+  // Three reporting lanes, clearly distinguished with counts (TKT-0022 cl.1): written / already-present
+  // (idempotent E_DUP re-run) / quality-rejected (judged below-bar this run, never written).
   console.log(
     `import-seeds: ${report.admitted.length} admitted, ${report.alreadyPresent.length} already present ` +
-      `(E_DUP, idempotent), 0 errors.`,
+      `(E_DUP, idempotent), ${qualityRejected.length} quality-rejected (E_QUALITY, not written).`,
   )
   if (report.admitted.length > 0) console.log(`  admitted: ${report.admitted.join(', ')}`)
   if (report.alreadyPresent.length > 0) console.log(`  already present: ${report.alreadyPresent.join(', ')}`)
+  if (qualityRejected.length > 0) {
+    for (const q of qualityRejected) {
+      console.log(`  quality-rejected: "${q.name}" — ${q.message}${q.failingDimensions ? ` [failing: ${q.failingDimensions.join(', ')}]` : ''}`)
+    }
+  }
   if (replaced !== undefined) {
     console.log(`  replaced: "${replaced.name}" (prior status: ${replaced.priorStatus}, prior canonicalHash: ${replaced.priorCanonicalHash ?? 'none'})`)
   }

@@ -879,3 +879,27 @@ committed color back into `surface.data`. Gates: check · a2ui 975/975 · the si
   only (the documented limitation, honestly tested as such).
 - Review: GO, zero blocking findings. Gates: check · app 170/170 jsdom · browser both engines ·
   size 24829/26624 B gz.
+
+## 2026-07-12 (TKT-0022) — the corpus-admission gap drains: 21 judged records, a trip-wire, and a pipeline fix
+
+- **The root cause was mundane and old:** `import-seeds.ts`'s module registry was never updated when
+  two shelf modules landed — 11 authored seeds (the ten catalog-coverage exemplars + the
+  kpi-panel-lifecycle arc) rendered on the gallery for waves while the retrieval corpus never saw them.
+- **The judged admission (generator≠critic, the ADR-0068 VerdictsFile flow):** an independent
+  a2ui-reviewer scored all candidates against the corpus rubric — 10 promoted at 4; ONE genuine
+  rejection: `stats-grid-dashboard`, D5=3 (a strict-subset duplicate of the admitted
+  pattern-dashboard-tiles, container-swap-only; Grid coverage survives via kpi-panel-lifecycle) — now
+  the DISPOSITION_ALLOWLIST's first real entry, repair path recorded. The run also surfaced a STALE
+  admitted record: `generative-form`'s stored exemplar predated its seed's 2026-07-08 layout-bug fix
+  (teaching crashed-together fields) — judged fresh on its current content (D5 scored against the shard
+  excluding its own predecessor: the same-name-refresh precedent) and refreshed in place.
+- **The pipeline fix the wave forced (host-authorized):** the importer aborted the WHOLE batch on any
+  non-dup rejection — one honest below-bar verdict blocked ten honest admissions, making a real
+  curation pass impossible. New `import-report.ts`: E_QUALITY joins the per-candidate-skip lane
+  (reported, never written); the six hard codes — and any FUTURE code, by catch-all — still abort
+  everything. Integration-proven both directions against the real admit() in memory.
+- **The trip-wire:** `admission-coverage.test.ts` — every shelf seed present-in-corpus or
+  dispositioned-with-citation; residue-guarded, negative-controlled; the gap can't silently reopen.
+  Shard 11→21 records, regenerated only through the tool; retrieve + round-trip + prompt legs re-run
+  green (the ADR-0087 consequence). Follow-up recorded: a same-named candidate escaping near-dup on a
+  routine import silently revises a valid record — no halt guards that case yet.
