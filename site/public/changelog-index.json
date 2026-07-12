@@ -1,5 +1,12 @@
 [
   {
+    "name": "2026-07-12 (TKT-0021) — ui-settings gains external sync, and select fields finally persist",
+    "url": "./changelog.html#2026-07-12-tkt-0021-ui-settings-gains-external-sync-and-select-fields-finally-persist",
+    "description": "store.subscribe wired (realizes the accepted ADR-0120 F7 optional arm): an external store.set now reflects into the rendered control for every registry field t…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "2026-07-11 (TKT-0019) — the palette's options decompose; dialogs get a real backdrop",
     "url": "./changelog.html#2026-07-11-tkt-0019-the-palette-s-options-decompose-dialogs-get-a-real-backdrop",
     "description": "Kim's same-day QA on the fresh search palette (screenshot): every result rendered as one flat concatenated paragraph wrapping to three uniform-size lines, and…",
