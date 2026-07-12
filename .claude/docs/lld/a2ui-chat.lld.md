@@ -146,14 +146,14 @@ worked proof of SPEC-R2/R3/R4/R5 against the REAL, already-shipped five-turn arc
 Zero new transcript authoring is required — this table IS the acceptance evidence for SPEC-R3 AC1/AC2 and
 SPEC-R4 AC1, played against the real shipped arc.
 
-> **REV 2026-07-12 (build-time discovery, host-reproduced — tkt-0024):** the table above describes turns
+> **REV 2026-07-12 (build-time discovery, host-reproduced — TKT-0024):** the table above describes turns
 > 3/4's ROUTING correctly (same mount, node identity — the SPEC-R3 requirement the build tests), but its
 > implication that the surface VISIBLY updates is wrong today: the renderer never repaints a mounted,
 > non-root container on a whole-record resend (`SurfaceTree.apply` reuses the cached widget on any later
 > delivery of that id), so turn 3's `status` line and turn 4's data update never appear in the DOM —
 > the same silent no-op the a2ui-live demo has carried since TKT-0016 shipped. The build correctly
 > asserts routing (node identity), not visible restructure. The renderer defect + the teaching's
-> repair path are `tkt-0024-renderer-structural-resend.md`'s scope; when it lands, this page's turn-3/4
+> repair path are `TKT-0024-renderer-structural-resend.md`'s scope; when it lands, this page's turn-3/4
 > assertions upgrade to visible-restructure per that ticket's acceptance.
 
 ## 5 · Data shapes

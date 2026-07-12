@@ -15,10 +15,16 @@ import { describe, it, expect } from 'vitest'
 //      points at an existing file, AND every file in .claude/hooks/ is registered somewhere — the
 //      orphaned-guard class (adr-status-guard sat unregistered for weeks) can never silently recur.
 //
-// HYGIENE tier — REPORTED, never failing (promoted to structural once the backlog clears):
-//   H1 LLD `Layer:` spelling uniformity · H2 lowercase tkt-#### cites in prose (prose cites are
-//   uppercase TKT-####) · H3 ADR numbering gaps (0108 is a known one) · H4 skill invocation-dial
-//   completeness (forge's postwrite lint enforces on-write; this reports drift at rest).
+//   S5 archive cites annotated: an active doc may link into archive/ ONLY on a line that says so
+//      ("archived"/"archive") — history may be cited, never as live authority. (Manifest M10.)
+//   S6 lowercase tkt-#### prose cites (paths/filenames exempt) — promoted from hygiene at M7.
+//   S7 skill invocation-dial completeness — promoted from hygiene at M8 (backlog cleared Phase 3).
+//   S8 ADR numbering contiguity against a KNOWN_GAPS allowlist ([108] — history, never renumbered);
+//      a NEW gap fails (manifest M9).
+//
+// HYGIENE tier — REPORTED, never failing (promotion pending its backlog):
+//   H1 LLD `Layer:` spelling uniformity + the three header dialects (unification is update-in-place
+//   authoring — the Phase-6 follow-up queue owns it).
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs'
 declare const process: { cwd(): string }
@@ -125,38 +131,55 @@ describe('STRUCTURAL — S4 hook liveness, both directions', () => {
   })
 })
 
-describe('HYGIENE — reported, non-failing (promote once the backlog clears)', () => {
-  it('reports the standing hygiene counts', () => {
-    const report: string[] = []
-    // H1 — LLD Layer spellings
+describe('STRUCTURAL — S5-S8 (promoted at Phase 5, manifest M7-M10)', () => {
+  const activeDocs = () => walkMd(DOCS, (p: string) => p.includes('/archive/') || p.includes('/reports/'))
+  it('S5: every archive/ cite in an active doc sits on a line that names it archived', () => {
+    const bad: string[] = []
+    for (const f of activeDocs())
+      for (const line of readFileSync(f, 'utf8').split('\n'))
+        if (line.includes('/archive/') && !/archiv/i.test(line))
+          bad.push(`${f.slice(ROOT.length + 1)} :: ${line.slice(0, 80)}`)
+    expect(bad, bad.join('\n')).toEqual([])
+  })
+  it('S6: no lowercase tkt-#### prose cites outside tickets/ (paths exempt; prose canon TKT-####)', () => {
+    const bad: string[] = []
+    for (const f of activeDocs()) {
+      if (f.includes('/tickets/')) continue
+      const hits = [...readFileSync(f, 'utf8').matchAll(/(?<![\w/.-])tkt-\d{4}/g)]
+      if (hits.length) bad.push(`${f.slice(ROOT.length + 1)} ×${hits.length}`)
+    }
+    expect(bad, bad.join('\n')).toEqual([])
+  })
+  it('S7: every repo skill declares BOTH invocation dials', () => {
+    const missing: string[] = []
+    for (const name of readdirSync(`${ROOT}/.claude/skills`)) {
+      const p = `${ROOT}/.claude/skills/${name}/SKILL.md`
+      if (!existsSync(p)) continue
+      const s = readFileSync(p, 'utf8')
+      if (!s.includes('disable-model-invocation') || !s.includes('user-invocable')) missing.push(name)
+    }
+    expect(missing, missing.join(', ')).toEqual([])
+  })
+  it('S8: ADR numbering contiguous modulo the KNOWN_GAPS allowlist', () => {
+    const KNOWN_GAPS = new Set([108]) // history — a numbering-race casualty, never renumbered
+    const nums = readdirSync(`${DOCS}/adr`).map((f: string) => /^(\d{4})-/.exec(f)?.[1]).filter(Boolean).map(Number).sort((a: number, b: number) => a - b) as number[]
+    const newGaps: number[] = []
+    for (let n = nums[0]!; n <= nums[nums.length - 1]!; n++)
+      if (!nums.includes(n) && !KNOWN_GAPS.has(n)) newGaps.push(n)
+    expect(newGaps, `NEW ADR numbering gaps: ${newGaps.join(', ')}`).toEqual([])
+  })
+})
+
+describe('HYGIENE — reported, non-failing (H1 pending the LLD-dialect unification)', () => {
+  it('reports the LLD Layer-spelling split', () => {
     const spellings = new Map<string, number>()
     for (const f of mdFiles(`${DOCS}/lld`)) {
       const m = /Layer:\s*LLD\s*\(([^)]+)\)/.exec(readFileSync(f, 'utf8'))
       if (m) spellings.set(m[1]!, (spellings.get(m[1]!) ?? 0) + 1)
     }
-    if (spellings.size > 1)
-      report.push(`H1 LLD Layer spellings split: ${[...spellings].map(([k, v]) => `"${k}"×${v}`).join(' · ')}`)
-    // H2 — lowercase tkt-#### cites outside filenames/YAML
-    let lowercase = 0
-    for (const f of walkMd(DOCS, (p: string) => p.includes('/archive/') || p.includes('/reports/') || p.includes('/tickets/')))
-      lowercase += [...readFileSync(f, 'utf8').matchAll(/(?<![\w/-])tkt-\d{4}/g)].length
-    if (lowercase) report.push(`H2 lowercase tkt-#### prose cites outside tickets/: ${lowercase} (prose canon is TKT-####)`)
-    // H3 — ADR numbering gaps
-    const nums = readdirSync(`${DOCS}/adr`).map((f: string) => /^(\d{4})-/.exec(f)?.[1]).filter(Boolean).map(Number).sort((a: number, b: number) => a - b) as number[]
-    const gaps: number[] = []
-    for (let n = nums[0]!; n <= nums[nums.length - 1]!; n++) if (!nums.includes(n)) gaps.push(n)
-    if (gaps.length) report.push(`H3 ADR numbering gaps: ${gaps.join(', ')}`)
-    // H4 — skill invocation-dial completeness
-    const missing: string[] = []
-    for (const name of readdirSync(`${ROOT}/.claude/skills`)) {
-      const p = `${ROOT}/.claude/skills/${name}/SKILL.md`
-      if (!existsSync(p)) continue
-      const t = readFileSync(p, 'utf8')
-      if (!t.includes('disable-model-invocation') || !t.includes('user-invocable')) missing.push(name)
-    }
-    if (missing.length) report.push(`H4 skills missing an invocation dial: ${missing.join(', ')}`)
     // eslint-disable-next-line no-console
-    if (report.length) console.warn(`[docs-grammar HYGIENE]\n  ${report.join('\n  ')}`)
-    expect(true).toBe(true) // hygiene never fails the run — it reports
+    if (spellings.size > 1)
+      console.warn(`[docs-grammar HYGIENE] H1 LLD Layer spellings split: ${[...spellings].map(([k, v]) => `"${k}"×${v}`).join(' · ')}`)
+    expect(true).toBe(true)
   })
 })
