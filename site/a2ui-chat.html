@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · A2UI Chat</title>
+  </head>
+  <body>
+    <!-- The conversational agent surface (TKT-0020, a2ui-chat.spec.md/lld.md): one scrolling chat log where
+         the agent's narration streams live (ui-status-stream) and its A2UI surfaces render inline, persisting
+         across later turns via SurfaceRegistry until closed. Recorded transcript by default; a dev-only live
+         overlay swaps in a real model (the a2ui-live.ts/a2a-artifact-feed.ts precedent). An MPA entry
+         auto-discovered by vite.config.ts's site/**/*.html glob — no config edit. The page module imports
+         pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/a2ui-chat.ts"></script>
+  </body>
+</html>

@@ -923,3 +923,28 @@ committed color back into `surface.data`. Gates: check · a2ui 975/975 · the si
   (kernel isolation, focused-flag paths, loop risk all traced clean); the two LOW hardenings
   folded at commit (firstRun consumed before the isConnected return; the zero-emit assertion).
   Gates: check · 529 scoped jsdom · 80 text-field browser both engines · size zero-delta.
+
+## 2026-07-12 (TKT-0020) — a2ui-chat: the conversational agent surface ships
+
+- **The product-shaped chat page** (`site/pages/a2ui-chat.ts`, sibling to the a2ui-live wire-debug
+  harness): one scrolling log of user and agent bubbles — agent turns stream `ui-status-stream`
+  narration drawn ONLY from each turn's mechanical envelope categories (the ADR-0088 confabulation
+  guard, zero-fabrication asserted), carry the turn's note, and mount rendered A2UI surfaces inline.
+  The full four-type lifecycle plays against the SHIPPED five-turn transcript verbatim: canvas opens
+  and persists; confirmation opens, restructures, reacts, and CLOSES — `deleteSurface` disposes the
+  one mount and annotates its bubble "Closed." (visible history, never a silent disappearance).
+- **`site/lib/surface-registry.ts`** — the per-ask host lifecycle (ask-registry, ADR-0097 §2)
+  generalized BESIDE (not forked): one renderer host + mount per surfaceId, anchored at the surface's
+  creating bubble; later turns route to the SAME host (node-identity-proven both engines). Tail-follow
+  owns only the log's scroll (the embedded stream's own follow proven independent); per-bubble wire
+  disclosure; the live arm ships DEV-guarded on the standing overlay pattern.
+- **The build's real discovery (host-reproduced, now tkt-0024, MAJOR):** the renderer never repaints a
+  MOUNTED non-root container on a whole-record resend — the lifecycle teaching's own "restructure via
+  updateComponents" rule is a silent visual no-op at runtime (a2ui-live's turns 3/4 never visibly
+  restructured; the teardown-only round-trip assertion couldn't see it, exactly as its review's INFO
+  note warned). This page therefore asserts turn-3/4 ROUTING (node identity) — the honest requirement —
+  and the LLD carries the REV note; the renderer reconciliation is tkt-0024's own wave.
+- Review: GO (three LOW notes recorded: post-render narration batching on the live arm; a cosmetic
+  double system bubble after Reset; SPEC-R8 proven at the mechanism not a dist-grep — sibling-
+  consistent). Gates: check · site 500/500 · chat browser 6/6 both engines · size neutral · all drift
+  gates green.

@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0020
-status: doing
+status: done
 date: 2026-07-11
 owner:
 kind: feature
@@ -111,3 +111,43 @@ pass).
 
 Build is a separate, later dispatch per this ticket's own sequencing; no code, no site pages, no `site/main.ts`
 nav edit were made this wave.
+
+**2026-07-11 — build complete.** Shipped to the frozen LLD's file map, all 7 build slices (§7):
+`site/lib/surface-registry.ts` (LLD-C2), `site/pages/a2ui-chat.ts` (LLD-C1/C3/C4/C5/C6) + `a2ui-chat.css` +
+`site/a2ui-chat.html`, plus the nav row (`site/pages/_page.ts`), the `site/lib/site-manifest.json` L2 row +
+regenerated `site/public/sitemap.json`, and the `site/public/llms.txt` hand-entry. Tests:
+`site/lib/surface-registry.test.ts` (jsdom, the registry contract), `site/pages/a2ui-chat.test.ts` (jsdom —
+the real 5-turn `recordedTranscript` routing arc, narration-honesty, the SPEC-R5 AC3 thrown-transport
+recovery, a source-level SPEC-R8 AC1 DEV-guard/dynamic-import proxy check), `site/pages/a2ui-chat.browser.test.ts`
+(Chromium+WebKit — real geometry, tail-follow independence, wire disclosure). Gates green: `npm run check`,
+the full repo `npx vitest run` (324 files/5710 tests), the two browser files (6/6 both engines), `npm run size`
+(site pages are package-size-neutral, confirmed). Constraints honored: zero edits under `packages/agent-ui/**`
+(verified via `git diff --name-only`), text-field/corpus untouched.
+
+**Two deviations, both verified against source, not assumed, and neither is architectural:**
+- **The LLD §4 worked table's claim that turns 3/4 make confirmation's rendered text visibly change
+  ("Ready"/"Clicked again") does not hold against the REAL renderer.** Verified directly (a standalone
+  repro ingesting the real `recordedTranscript` turn-by-turn through one host per surface, mirroring
+  `SurfaceRegistry`): `SurfaceTree.apply` (`renderer/tree.ts`) mounts a node ONCE and reuses the cached
+  widget on any later re-delivery of that same id — a resent `updateComponents` growing an
+  ALREADY-MOUNTED, non-root container's `children` (turn 3's `group`) never repaints, and the correspondingly
+  never-mounted `status` Text node means turn 4's `updateDataModel` has nothing bound to render either.
+  `deleteSurface` (turn 5) is unaffected (it disposes the surface's tree outright) and behaves exactly as
+  the LLD describes. This does not affect SPEC-R3's actual, tested claim — the routing destination (turns
+  3/4 land at confirmation's ORIGINAL mount, never a new one) is unchanged and is what the build's tests
+  assert (via same-node-identity, not the never-appearing text). Flagged per the LLD's own escalation rule
+  (§ header: "a coordinated LLD repair, never a silent deviation") — the LLD's §4 table needs a follow-up
+  correction pass; no renderer/transcript change is in scope or was made.
+- **A genuinely new mechanism, `SurfaceRegistry`'s per-surface tail-follow interaction, needed more care
+  than the LLD's one-line SPEC-R6 gave it.** An embedded `ui-status-stream`'s own `scrollIntoView({behavior:
+  'smooth', block:'end'})` tail-follow cascades into the outer chat-log's scroll position too (the real
+  `scrollIntoView` algorithm walks every scrolling ancestor as needed), and a freshly mounted A2UI subtree
+  can keep growing the log's `scrollHeight` for a stretch after its DOM nodes first exist. A naive reactive
+  `scroll`-listener port of `status-stream.ts`'s own guard mis-fires against that cascade; the shipped fix
+  samples "was the log near bottom" ONCE per turn (before that turn's own content starts growing) and
+  settles the catch-up scroll via `waitUntilSettled`-style polling (the `status-stream.browser.test.ts`
+  precedent) rather than a fixed frame count, releasing `busy` only once settled. Cross-engine proven
+  (Chromium + WebKit); a WebKit-specific quirk around rapid successive JS `scrollTop` writes also surfaced
+  in the test harness itself (documented in `a2ui-chat.browser.test.ts`, not a page defect).
+
+Host routes review.

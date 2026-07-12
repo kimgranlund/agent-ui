@@ -133,6 +133,13 @@
     "section": "Guides"
   },
   {
+    "href": "./a2ui-chat.html",
+    "label": "A2UI Chat",
+    "description": "One scrolling chat log where the agent's narration streams live and its A2UI surfaces render inline, persisting across turns until closed.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./a2ui-authoring.html",
     "label": "A2UI Authoring Guide",
     "description": "How to author a catalog row and an example payload, the two things that teach an agent this fleet.",

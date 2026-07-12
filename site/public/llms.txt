@@ -106,6 +106,7 @@
 - [Live catalog](./a2ui-catalog.html): every catalog component type rendered through the real renderer, with live prop knobs — derived from catalog.json.
 - [Composition gallery](./a2ui-gallery.html): one live mini-surface per example seed, rendered through the real renderer — the derived companion to Patterns.
 - [Live agent demo](./a2ui-live.html): a real LLM emitting A2UI over the wire — prompt → validated stream → rendered surface → round-trip interaction (recorded backbone by default, dev-only live overlay).
+- [A2UI Chat](./a2ui-chat.html): one scrolling conversational log — the agent's narration streams live via ui-status-stream and its A2UI surfaces render inline, persisting across later turns until closed (recorded transcript by default, dev-only live overlay).
 - [Streaming](./a2ui-stream.html): root-early vs root-last streaming order on the same payload, with a live first-paint metric and mid-stream fault isolation.
 - [Patterns](./a2ui-patterns.html): idiomatic A2UI payload compositions against this catalog.
 - [Generative form](./a2ui-form.html): a full A2UI-rendered form with two-way bindings and validity checks.
