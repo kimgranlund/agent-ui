@@ -142,7 +142,7 @@ describe('HYGIENE — reported, non-failing (promote once the backlog clears)', 
       lowercase += [...readFileSync(f, 'utf8').matchAll(/(?<![\w/-])tkt-\d{4}/g)].length
     if (lowercase) report.push(`H2 lowercase tkt-#### prose cites outside tickets/: ${lowercase} (prose canon is TKT-####)`)
     // H3 — ADR numbering gaps
-    const nums = readdirSync(`${DOCS}/adr`).map((f: string) => /^(\d{4})-/.exec(f)?.[1]).filter(Boolean).map(Number).sort((a, b) => a! - b!) as number[]
+    const nums = readdirSync(`${DOCS}/adr`).map((f: string) => /^(\d{4})-/.exec(f)?.[1]).filter(Boolean).map(Number).sort((a: number, b: number) => a - b) as number[]
     const gaps: number[] = []
     for (let n = nums[0]!; n <= nums[nums.length - 1]!; n++) if (!nums.includes(n)) gaps.push(n)
     if (gaps.length) report.push(`H3 ADR numbering gaps: ${gaps.join(', ')}`)
