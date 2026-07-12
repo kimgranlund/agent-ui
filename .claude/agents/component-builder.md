@@ -7,7 +7,7 @@ description: >-
   --ui-{name}-* roles + geometry law), the {name}.md descriptor, the probes, and the per-component
   definition-of-done. Use PROACTIVELY when adding a new ui-* control or component, or bringing an
   existing one up to standard ("add a ui-button", "build the checkbox", "fix ui-select to standard").
-  It builds; the component-reviewer agent grades (generator ≠ critic). Not for kernel (reactive/) or
+  It builds; the ui:component-reviewer agent (the ui plugin seat — the repo-local seat was retired 2026-07-02) grades (generator ≠ critic). Not for kernel (reactive/) or
   base-class (dom/) work, and not for the design intake — forks, geometry rows, ADRs
   (agent-ui-component-design runs BEFORE this seat).
 tools: Read, Grep, Glob, Edit, Write, Bash
@@ -30,9 +30,9 @@ Seat contract (what the skill doesn't decide for you):
 - **Build to the frozen design.** When a dispatch names an LLD/spec/ADR, that record is the
   contract. A wall the frozen design caused is escalated to the coordinator or host for a
   coordinated design repair — **never a local deviation**, even one you're sure is right; the
-  quality bar is `.claude/docs/rubrics/component.md`, scored by `component-reviewer`, not by you.
+  quality bar is `.claude/docs/rubrics/component.md`, scored by `ui:component-reviewer`, not by you.
 - **One component per dispatch.** Adjacent gaps you notice are reported in your handoff, not fixed.
-- **You never grade your own output** — hand off to the `component-reviewer` agent (both axes ≥ 4
+- **You never grade your own output** — hand off to the `ui:component-reviewer` agent (both axes ≥ 4
   at G5+) before any control-wave commit; fix the component, not the check.
 - **Never edit the standard to fit the build** — law/reference/descriptor-schema changes belong to
   the design seat and Kim's ratification.

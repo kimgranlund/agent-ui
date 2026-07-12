@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """harness_wiring_check.py — the A2UI expert-harness wave-close governance proof (LLD-C7).
 
-Realizes `.claude/docs/specs/llds/a2ui-harness-wiring.lld.md` §9 for
-`.claude/docs/specs/specs/a2ui-expert-harness.spec.md` SPEC-R5 AC1 + SPEC-R7. Two jobs:
+Realizes `.claude/docs/lld/a2ui-harness-wiring.lld.md` §9 for
+`.claude/docs/spec/a2ui-expert-harness.spec.md` SPEC-R5 AC1 + SPEC-R7 (paths on the unified doc
+map since the 2026-07-12 repo-alignment). Two jobs:
 
   1. MODE CHECKS — run the shared `harness_checks.py` (skill|agent|rubric mode) over EVERY file
      in the enumerated harness artifact set (SPEC §5.1). This is the same mechanical gate each
@@ -67,9 +68,22 @@ RUBRICS = [
 
 
 def find_harness_checks():
-    """`harness_checks.py` — the shared mechanical checker. skill|agent|rubric modes all live in
-    ONE file (agent-author/scripts/harness_checks.py symlinks to skill-author's); either resolves."""
+    """`harness_checks.py` — the shared mechanical checker (skill|agent|rubric modes in one file).
+    Home history: ~/.claude/skills/{skill-author,agent-author}/ until the 2026-07-01 domain-verb
+    rename, then the forge PLUGIN (repaired at the 2026-07-12 repo-alignment — the old probes had
+    silently broken this script). Probes, newest first: the forge plugin cache (latest version
+    wins), then the legacy skill dirs. Declared-or-absent: the caller degrades to
+    reachability-only when no copy resolves (external plugins are never assumed present)."""
     home = Path.home()
+    cache = home / ".claude" / "plugins" / "cache" / "nonoun-plugins" / "forge"
+    if cache.is_dir():
+        versions = sorted(
+            (d for d in cache.iterdir() if d.is_dir() and (d / "scripts" / "harness_checks.py").is_file()),
+            key=lambda d: tuple(int(x) for x in d.name.split(".") if x.isdigit()),
+            reverse=True,
+        )
+        if versions:
+            return versions[0] / "scripts" / "harness_checks.py"
     for owner in ("skill-author", "agent-author"):
         p = home / ".claude" / "skills" / owner / "scripts" / "harness_checks.py"
         if p.is_file():
@@ -103,6 +117,17 @@ class Report:
 
 # --- 1. mode checks ----------------------------------------------------------------------------
 
+# Accepted divergences from forge's harness_checks — each entry is (relpath, a substring that
+# uniquely identifies the finding). Repo law outranks the plugin registry here: this repo's
+# agent-naming convention is "domain + -er actor noun" and sanctions `composer`; forge's D9 role
+# registry simply doesn't list it (upstream ask queued at the 2026-07-12 repo-alignment). A file
+# whose ONLY failures are its accepted divergences passes with a note; any OTHER failure still
+# fails loudly.
+ACCEPTED_DIVERGENCES = {
+    ".claude/agents/a2ui-composer.md": ["D9 name suffix is a registered role"],
+}
+
+
 def run_mode(hc, mode, relpath, r):
     f = REPO / relpath
     if not f.is_file():
@@ -114,7 +139,13 @@ def run_mode(hc, mode, relpath, r):
     detail = ""
     if not ok:
         fails = [ln.strip() for ln in proc.stdout.splitlines() if "[FAIL]" in ln]
-        detail = "; ".join(fails) or (proc.stdout.strip() or proc.stderr.strip())
+        accepted = ACCEPTED_DIVERGENCES.get(relpath, [])
+        residual = [fl for fl in fails if not any(sub in fl for sub in accepted)]
+        if fails and not residual:
+            ok = True
+            detail = "accepted divergence(s) only: " + "; ".join(fails)
+        else:
+            detail = "; ".join(residual or fails) or (proc.stdout.strip() or proc.stderr.strip())
     r.add(ok, "harness_checks.py %s exits 0: %s" % (mode, relpath), detail)
 
 
@@ -223,9 +254,9 @@ def check_no_self_grade(relpath, r):
 def main():
     hc = find_harness_checks()
     if hc is None:
-        print("FATAL: harness_checks.py not found under "
-              "~/.claude/skills/{skill-author,agent-author}/scripts/ — cannot run mode checks.")
-        return 1
+        print("SKIP: harness_checks.py not found (forge plugin cache or the legacy skill dirs) — "
+              "mode checks skipped (declared-or-absent posture, repo-alignment Phase 5 M5); "
+              "reachability checks still run and still gate.")
 
     r = Report()
 

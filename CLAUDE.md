@@ -10,7 +10,7 @@ Plan `.claude/docs/plan.md` · Goals + per-milestone DoD `.claude/docs/goals.md`
 
 ## Commands
 
-- `npm run check` — `tsc` type-check of the packages AND the site (`&& check:site`; the standing type gate; `noEmit`)
+- `npm run check` — the standing type gate, three steps: `tsc` (packages) `&& check:site` (the docs site's own tsconfig) `&& check:tools` (`tsconfig.tools.json` — scripts + a2ui tools); all `noEmit`
 - `npm test` — Vitest (jsdom), once · `npm run test:watch` — watch mode
 - `npm run dev` / `npm run build` — the docs site (`site/`) is the app entry; build live since the
   ADR-0077 wave, incl. the G8 `<component-gallery>` (`gallery.html`)
