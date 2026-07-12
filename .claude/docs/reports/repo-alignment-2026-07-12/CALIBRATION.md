@@ -70,3 +70,8 @@ Deviations, false premises, guesses, corrections — appended continuously (an e
   staged); every campaign-scoped gate (docs-grammar 104 · adr 33 · check ×3) is green.
 - **Phase 6 gate:** (a) findings ratified ✓ (two checkpoints), (b) execution landed ✓,
   (c) calibration reviewed by Kim — PENDING (this is the ask).
+- **Phase 6 closed:** the lessons skill minted (agent-ui-repo-hygiene), fresh-context reviewed
+  (REVISE — one major: the historical-records bullet restated doc-standards §6, exactly the
+  one-fact-two-homes drift the skill itself warns about; all four findings applied), the typed
+  follow-up queue committed (follow-up-queue.md, 7 items) + TKT-0025 minted for the naming master
+  plan. Campaign CLOSED — 6 phases, 16 findings, 12 commits, every exit criterion a standing gate.
