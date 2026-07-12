@@ -47,3 +47,8 @@ Deviations, false premises, guesses, corrections — appended continuously (an e
   separate exploration) is NOT folded into this phase's doc-grammar skill; it needs its own
   exception-count inventory and lands as `references/naming.md` — queued in the Phase-6 follow-up
   work queue as a decisions+mechanical item.
+- **Phase 3 check failure (own mistake, logged per the standing discipline):** the Phase-3 commit
+  command chained `npm run check ... ;` instead of `&&`, so a TS7006 in the new gate file shipped
+  red and was fixed forward one commit later. The playbook's "expect the check to catch your own
+  mistakes" applied to the campaign itself. Rule reinforced: gate commands ALWAYS `&&`-chain into
+  the commit.
