@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-06-28 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, ratified G9 container-family session |
-> | **Ratified by** | orchestration-lead (on gate) |
+> | **Ratified by** | Kim, 2026-07-12 — the repo-alignment Phase-0 checkpoint (all five June foundation ADRs ratified together; shipped law since late June) |
 > | **Repairs** | `goals §G9` (NEW — LLD-C8 enters the milestone DoD) · `a2ui-renderer LLD-C8` (`input.ts` — the deferred two-way input controller) · `a2ui-catalog SPEC-R4/R7` (the `value: { prop, event }` two-way contract for the new bindable components + the back-filled text-field) · **NEW** `a2ui/src/renderer/input.ts` |
 > | **Supersedes / Superseded by** | Relates: **ADR-0001/0002** (the A1 spine-ahead-of-G7 sequencing that deferred the control-dependent renderer tail) · **ADR-0017** (Modal `open`) · the G9 Tabs `selected` bind (ADR not separately needed — booked here) |
 

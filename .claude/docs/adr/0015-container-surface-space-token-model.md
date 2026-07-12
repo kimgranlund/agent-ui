@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-06-28 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, turning the ratified G9 container-family session into the token contract |
-> | **Ratified by** | orchestration-lead (on gate) |
+> | **Ratified by** | Kim, 2026-07-12 — the repo-alignment Phase-0 checkpoint (all five June foundation ADRs ratified together; shipped law since late June) |
 > | **Repairs** | `goals §G9` (NEW — the surface/space DoD) · `references/tokens.md` (NEW surface-axis section) · `references/geometry.md` (the *Container/layout* size-class — the `--ui-space` ladder + `--ui-radius-base`) · **NEW** `@agent-ui/shared` `dimensions.css` (`--ui-space-*`, `--ui-radius-base`) + `tokens.css` (the both-axes composition) |
 > | **Supersedes / Superseded by** | Relates: **ADR-0007** (the universal-selector ramp — `--ui-space` joins the `*` ramp, density-responsive) · **ADR-0008/0009** (the role-ladder / no-`color-mix` discipline this surface model obeys) · the `ui-text-field` radius follow-up (#71, the shared `--ui-radius-base`) |
 

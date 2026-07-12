@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-06-28 *(authored)* |
 > | **Proposed by** | planning-lead — the design seat, on the `review-g9-modal` (s16) escalation |
-> | **Ratified by** | orchestration-lead (on gate) |
+> | **Ratified by** | Kim, 2026-07-12 — the repo-alignment Phase-0 checkpoint (all five June foundation ADRs ratified together; shipped law since late June) |
 > | **Repairs** | `a2ui-catalog SPEC §5.2` (the `Modal` row: `dismissable` → `persistent`) · `a2ui-catalog LLD` (the `mapsTo` 1:1 list) · **controls/modal/\*** (the control + descriptor + probes) · `a2ui catalog/default/catalog.json` (the `Modal` property descriptor) |
 > | **Supersedes / Superseded by** | **Supersedes ADR-0017 cl.3 in part** (the `[dismissable]` dismissal-gate prop → `persistent`); ADR-0017's native-`<dialog>` decision and clauses 1 / 2 / 4 / 5 **stand** |
 
