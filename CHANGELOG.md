@@ -793,3 +793,30 @@ filtering resizes the list).
   two reds are the expected `llms-full.txt`/`theme-provider-built.css` drift from this wave's own
   CSS/CHANGELOG content — both host-regenerated artifacts per the standing note, left untouched) · size
   green (app marginal 24604 B gz, within the re-based 26 KB budget).
+
+## 2026-07-11 (site command-search) — the docs site dogfoods its own palette (TKT-0018 · ADR-0127)
+
+- **`ui-command-modal` gains `filter: 'substring'|'regex'`** (ADR-0127, accepted): a closed enum,
+  substring default (shipped behavior byte-identical — the original suite untouched as the identity
+  proof), one RegExp per keystroke compiled from the RAW query (the review caught lowercase-first
+  corrupting `\D`/`\S`/`\W` semantics — fixed, `\D`-regression-tested), invalid patterns fall back to
+  literal substring, never a throw. +1088 B gz marginal.
+- **The site-wide search palette:** every page mounts the REAL shipped control (lazily — a 0.78 KB gz
+  chunk, closed = free) on the ratified hotkey, `filter="regex"`, searching a build-time-derived
+  `sitemap.json` (56 component pages from descriptors + 24 guide/package rows from the single-owner
+  `site/lib/site-manifest.json` + 2 lazy L3 stubs), grouped L1→L2→L3 on the control's shipped
+  `[role=group]` model, navigating via plain MPA hrefs with hash anchors (adr-index/changelog gained
+  per-record ids + on-load reveal).
+- **Lazy L3:** per-ADR (126 records, derived from the ADR README Index) + per-milestone (the CHANGELOG's
+  own `## ` headings) indexes fetched as separate files; injection via element teardown/recreate while
+  closed, riding the shipped hotkey reconnect-rearm guarantee; the resolved-while-open case defers to the
+  next close (race-fix re-derives against live state; both-corpora-while-open re-entrancy TESTED).
+- **Drift gates with teeth:** all three generated indexes are regenerate-and-compare gated with negative
+  controls; a site page without a sitemap entry is red. Kim's ruling at build: L1 labels are TAG-FIRST
+  (`ui-swiper-paddles (Swiper Paddles) — …`) so anchored patterns like `^ui-swiper` genuinely work — the
+  name-first format and anchor support were mutually exclusive under the control's single-haystack
+  filter. Follow-ups recorded: 30/56 L1 descriptions truncate at 160 chars (authoring `description:`
+  descriptor scalars rides the backlog); the Changelog's contract-faithful L2+L3 double-listing.
+- Gates: check · site/lib 247 jsdom + the palette browser legs both engines · full jsdom 5618 green ·
+  size green. Reviews: control slice NO-GO→fix→GO; site half GO with two fold-ins (the deferred-merge
+  AC3 test, the anchor fix).

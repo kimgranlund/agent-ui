@@ -61,6 +61,11 @@ function statusBadge(record: AdrRecord): HTMLElement {
 function card(record: AdrRecord): HTMLDetailsElement {
   const details = document.createElement('details')
   details.className = 'adr-card'
+  // The command palette's hash-anchor navigation target (site-command-search.lld.md LLD-C11, SPEC-R9 AC2): the
+  // SAME `adr-{number}` string the sitemap generator writes as each ADR's L3 entry url fragment
+  // (`./adr-index.html#adr-{number}` — scripts/generate-sitemap.mjs's `generateAdrIndex`), so the on-load
+  // handler below can resolve `location.hash` with a plain `getElementById`, no translation.
+  details.id = `adr-${record.number}`
 
   const summary = document.createElement('summary')
   summary.className = 'adr-summary'
@@ -137,3 +142,14 @@ search.addEventListener('input', () => {
         ? '' // the unfiltered list — no announcement needed, nothing is hidden
         : `${visible} of ${RECORDS.length} decision records match.`
 })
+
+// ── the command palette's hash-anchor landing (site-command-search.lld.md LLD-C11, SPEC-R9 AC2) ─────────────
+// A resolved L3 selection navigates here as `./adr-index.html#adr-{number}`; on load, scroll that record's
+// card into view and expand it (`<details open>`) — a bad/absent hash is a no-op, never an error.
+if (location.hash) {
+  const target = document.getElementById(location.hash.slice(1))
+  if (target instanceof HTMLDetailsElement) {
+    target.open = true
+    target.scrollIntoView()
+  }
+}

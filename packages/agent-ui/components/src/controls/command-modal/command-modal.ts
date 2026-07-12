@@ -32,6 +32,11 @@ const props = {
   // `hotkey` — the F2 opt-in convenience. '' = NO document listener. A non-empty chord (e.g. 'mod+k') binds ONE
   // per-instance document keydown that toggles THIS instance's open. NOT a global singleton (ADR-0082).
   hotkey: prop.string(''),
+  // `filter` — ADR-0127: the match-test mode. 'substring' (default) is the original, byte-identical hay.includes(q)
+  // test; 'regex' runs a case-insensitive RegExp test over the SAME haystack, falling back to the substring test
+  // for that keystroke only when the pattern is invalid (never throws — SPEC-R5 AC5). NOT reflected (a behavior
+  // switch, not a styling hook).
+  filter: prop.enum(['substring', 'regex'] as const, 'substring'),
 } satisfies PropsSchema
 
 export interface UICommandModalElement extends ReactiveProps<typeof props> {}
@@ -211,12 +216,25 @@ export class UICommandModalElement extends UIElement {
     return s.trim()
   }
 
-  // LLD-C5 — substring/keyword filter; hide empty group headings; reset active; update status + empty-state.
+  // LLD-C5 — substring/keyword filter (or ADR-0127 regex, mode-gated); hide empty group headings; reset active;
+  // update status + empty-state.
   #filter(text: string): void {
-    const q = text.trim().toLowerCase()
+    const raw = text.trim()
+    const q = raw.toLowerCase()
+    // ADR-0127 — build the regex ONCE per keystroke, not per option, from the RAW (un-lowercased) text: the 'i'
+    // flag alone delivers case-insensitivity (SPEC-R5 AC4) — lowercasing the PATTERN text first would corrupt
+    // case-sensitive regex metacharacters (\D/\S/\W/\B → \d/\s/\w/\b), a materially different match, not merely
+    // a case change. An invalid pattern throws a SyntaxError at `new RegExp`, caught here and never retried
+    // per-option, then EVERY option falls back to the substring test for this keystroke (SPEC-R5 AC5 — degrade
+    // gracefully, never throw, never surface an error to the user).
+    let re: RegExp | null = null
+    if (this.filter === 'regex' && raw !== '') {
+      try { re = new RegExp(raw, 'i') } catch { re = null } // invalid pattern ⇒ fall back to substring below
+    }
     for (const opt of this.#options()) {
       const hay = (this.#labelText(opt) + ' ' + (opt.getAttribute('data-keywords') ?? '')).toLowerCase()
-      opt.hidden = q !== '' && !hay.includes(q)   // item label + data-keywords ONLY (shortcut excluded — SPEC-R5 AC1)
+      const matches = q === '' || (re ? re.test(hay) : hay.includes(q)) // item label + data-keywords ONLY (shortcut excluded — SPEC-R5 AC1)
+      opt.hidden = !matches
     }
     for (const group of this.#list?.querySelectorAll<HTMLElement>('[role=group]') ?? []) {
       group.hidden = ![...group.querySelectorAll<HTMLElement>('[role=option]')].some((o) => !o.hidden)

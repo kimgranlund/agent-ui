@@ -72,16 +72,22 @@ precedent — a composed control with internal parts and no §1 control-height r
   behavior (`face.formAssociated: false`) — the palette holds no form value.
 
 **SPEC-R2 — Props schema.** The component MUST declare exactly these attribute-synced props (only `open`
-reflected — `label`/`placeholder`/`hotkey` are a11y/config hints, not styling hooks): `open: boolean(false)`
-(reflected, bindable two-way — the drive signal for the nested modal); `label: string('')` (the accessible name
-for both the search field and the dialog); `placeholder: string('')` (the search field's placeholder text);
-`hotkey: string('')` (the F2 opt-in convenience; `''` = no document listener). It MUST NOT declare a
-`persistent`, `value`, `recents`, `results`, or `size` prop.
+reflected — `label`/`placeholder`/`hotkey`/`filter` are a11y/config/behavior hints, not styling hooks):
+`open: boolean(false)` (reflected, bindable two-way — the drive signal for the nested modal); `label: string('')`
+(the accessible name for both the search field and the dialog); `placeholder: string('')` (the search field's
+placeholder text); `hotkey: string('')` (the F2 opt-in convenience; `''` = no document listener). It MUST NOT
+declare a `persistent`, `value`, `recents`, `results`, or `size` prop.
 *(ADR-0125 F2/F5/F6/F7)*
 - **AC1** *Given* a fresh instance, *then* `open` reads `false`, and `label`/`placeholder`/`hotkey` read `''`.
 - **AC2** *Given* `el.open = true`, *then* `el.getAttribute('open') === ''`/reflected, and `setAttribute('open',
   '')` → `el.open === true`; `label`/`placeholder`/`hotkey` round-trip attribute↔property.
 - **AC3** *Given* a grep of `static props`, *then* NO `persistent`/`value`/`recents`/`results`/`size` prop exists.
+
+> **REV 2026-07-11 (ADR-0127, ratified):** the component gains a fifth prop, `filter: 'substring'|'regex'`,
+> default `'substring'`, NOT reflected (a behavior switch, not a styling hook) — see SPEC-R5's REV for the
+> semantics. A fresh instance's `filter` reads `'substring'`; the grep in AC3 is unaffected (`filter` is not in
+> that exclusion list). Every existing consumer passes no `filter` attribute and sees zero behavior change
+> (blast radius: none on ship, per the ADR).
 
 **SPEC-R3 — Composition with `ui-modal` (the surface).** The component MUST render its surface by **nesting a
 `ui-modal`** (a sanctioned sibling-control import, `avatar.ts:25` precedent) — it MUST NOT re-implement a native
@@ -134,6 +140,18 @@ the first/last. Filtering MUST reset the active option. A group with zero visibl
   visible option wraps to the last** (and ArrowDown from the last wraps to the first).
 - **AC3** *Given* the query changes, *then* the active option resets (no stale `aria-activedescendant` pointing
   at a now-hidden option).
+
+> **REV 2026-07-11 (ADR-0127, ratified):** the match test is now mode-dependent over the SAME haystack (item
+> label + `data-keywords`, unchanged). `filter='substring'` (default) is the AC1 test above, byte-identical.
+> `filter='regex'` runs a case-insensitive `RegExp` test instead; a `SyntaxError` from an invalid pattern is
+> caught and that keystroke falls back to the substring test, never throwing (TKT-0018's own acceptance line).
+> Group-hide, active-reset (AC2/AC3), the status live region (SPEC-R7), and the empty-state (SPEC-R8) are all
+> mode-independent and unchanged. The docs site's own search palette
+> ([`site-command-search.spec.md`](site-command-search.spec.md) SPEC-R7) is the first consumer of this mode.
+> - **AC4** *Given* `filter="regex"` and a valid pattern, *then* only options whose haystack matches the regex
+>   (case-insensitive) remain visible.
+> - **AC5** *Given* `filter="regex"` and an invalid pattern (e.g. an unbalanced `(`), *then* the palette does not
+>   throw and falls back to matching that literal string as a substring for that keystroke.
 
 **SPEC-R6 — Selection = `select` + close (no command bus, no router).** Clicking an enabled option, or pressing
 Enter with an active option, MUST emit a `select` event (⊂ the `change·input·select·open·close·toggle`
@@ -202,7 +220,8 @@ The component MUST ship a single fleet-scoped stylesheet declaring its `--ui-com
 
 **SPEC-R12 — Descriptor + trip-wire.** The descriptor (`command-modal.md`) MUST declare `tag: ui-command-modal`,
 `tier: pattern`, `extends: UIElement`, `geometry.sizeClass: pattern`, `face.formAssociated: false`, an
-`attributes[]` fence mirroring `static props` 1:1 (`open`/`label`/`placeholder`/`hotkey`), the `events` it emits
+`attributes[]` fence mirroring `static props` 1:1 (`open`/`label`/`placeholder`/`hotkey`/`filter` — REV
+2026-07-11, ADR-0127), the `events` it emits
 (`select`, `close`, `toggle` — all ⊂ allowlist; it does NOT emit an `open` event — `open` is a prop, driven not
 announced), the `parts` it creates (search, list, status, the nested modal), the author content model
 (`[role=option]`/`[role=group]` children; the `empty` slot), the ARIA

@@ -1,0 +1,636 @@
+{
+  "entries": [
+    {
+      "name": "Attachment",
+      "tag": "ui-attachment",
+      "url": "./attachment-doc.html",
+      "description": "ui-attachment is the Display-class, FilePart-aligned compact file card (ADR-0112, feed family v1) — a category glyph plus a name/size cell, real selectable DOM…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Avatar",
+      "tag": "ui-avatar",
+      "url": "./avatar-doc.html",
+      "description": "ui-avatar is the Indicator-class compact identity mark (ADR-0112, feed family v1) — a circle-masked widget box that walks a fallback chain: an image, then init…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Badge",
+      "tag": "ui-badge",
+      "url": "./badge-doc.html",
+      "description": "ui-badge is a compact-realm, non-interactive display leaf (extends UIElement) — a status or neutral \"tag\" token with an intent-keyed colour + a component-drawn…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Bar Chart",
+      "tag": "ui-bar-chart",
+      "url": "./bar-chart-doc.html",
+      "description": "ui-bar-chart is the Display-class magnitude-comparison bar list (ADR-0107, chart-family v1) — an axis-free chart that answers \"how do these magnitudes compare?…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Button",
+      "tag": "ui-button",
+      "url": "./button-doc.html",
+      "description": "ui-button is the reference FACE control — a light-DOM custom element that renders an activatable button.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Calendar",
+      "tag": "ui-calendar",
+      "url": "./calendar-doc.html",
+      "description": "A standalone month-grid date picker that is a FACE form control (contributes a selected ISO YYYY-MM-DD date to a form) and will also serve as the popup body fo…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Card",
+      "tag": "ui-card",
+      "url": "./card-doc.html",
+      "description": "ui-card is the surface container of the G9 layout family — the first non-form container with a default plane.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Checkbox",
+      "tag": "ui-checkbox",
+      "url": "./checkbox-doc.html",
+      "description": "ui-checkbox is a FACE form-associated Indicator-class control (extends UIIndicatorElement → UIFormElement, ADR-0042).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Code",
+      "tag": "ui-code",
+      "url": "./code-doc.html",
+      "description": "ui-code is the Display-class, zero-machinery verbatim code leaf (ADR-0113, content family v1) — a block-level element that shows exactly what it is given: mono…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Color Picker",
+      "tag": "ui-color-picker",
+      "url": "./color-picker-doc.html",
+      "description": "A standalone color-input control that edits ONE color through a 2-axis chroma×lightness pad, three channel sliders (hue always; chroma + lightness mirrored), a…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Column",
+      "tag": "ui-column",
+      "url": "./column-doc.html",
+      "description": "ui-column is the vertical A2UI layout primitive — ui-row's sibling with the main axis flipped to the block axis (flex-direction: column).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Combo Box",
+      "tag": "ui-combo-box",
+      "url": "./combo-box-doc.html",
+      "description": "ui-combo-box is a FACE form-associated combo-box: a contenteditable text input + a top-layer listbox panel (Popover API).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Command Modal",
+      "tag": "ui-command-modal",
+      "url": "./command-modal-doc.html",
+      "description": "ui-command-modal is a Pattern-class UIElement coordinator — the classic CMD-K command palette.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Disclosure",
+      "tag": "ui-disclosure",
+      "url": "./disclosure-doc.html",
+      "description": "ui-disclosure folds content behind a one-line summary — a Pattern-class control (UIElement, not form-associated) built on the native <details>/<summary> elemen…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Field",
+      "tag": "ui-field",
+      "url": "./field-doc.html",
+      "description": "ui-field is the visible label / description / error wrapper around ONE slotted form control.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Form Provider",
+      "tag": "ui-form-provider",
+      "url": "./form-provider-doc.html",
+      "description": "ui-form-provider is the fleet's first context/provider primitive — a pure coordination layer over UIFormElement descendants (ADR-0050).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Grid",
+      "tag": "ui-grid",
+      "url": "./grid-doc.html",
+      "description": "ui-grid is a track-grid layout primitive (extends UIContainerElement, ADR-0016): a display: grid container whose columns are an intrinsic auto-fit / minmax tra…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Icon",
+      "tag": "ui-icon",
+      "url": "./icon-doc.html",
+      "description": "ui-icon is the Display-class icon primitive — the declarative consumer surface over the @agent-ui/icons adapter (ADR-0065/0066).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Ladder",
+      "tag": "ui-ladder",
+      "url": "./ladder-doc.html",
+      "description": "ui-ladder is the Display-class labeled-dimensional-tiers leaf (ADR-0118, token-surfaces v1) — a magnitude-bar list whose whole contract is \"show these dimensio…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "List",
+      "tag": "ui-list",
+      "url": "./list-doc.html",
+      "description": "ui-list is a semantic vertical stack — a ui-column specialization that adds list semantics.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Menu",
+      "tag": "ui-menu",
+      "url": "./menu-doc.html",
+      "description": "ui-menu is a keyboard-navigable overlay menu built on the Overlay controller (overlay-controller.lld.md · ADR-0043) and the rovingFocus trait (listbox-roving L…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Modal",
+      "tag": "ui-modal",
+      "url": "./modal-doc.html",
+      "description": "ui-modal is a modal dialog built on the native <dialog> element opened with showModal() (ADR-0017).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Popover",
+      "tag": "ui-popover",
+      "url": "./popover-doc.html",
+      "description": "ui-popover is a disclosure popover built on the Overlay controller (overlay-controller.lld.md · ADR-0043) and the native Popover API.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Progress",
+      "tag": "ui-progress",
+      "url": "./progress-doc.html",
+      "description": "ui-progress is the Display-class thin-rail progress bar (feed family v1, ADR-0112) — bar-only task progress with a native-<progress>-shaped value model.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Radio",
+      "tag": "ui-radio",
+      "url": "./radio-doc.html",
+      "description": "ui-radio is the radio-button leaf of the Indicator class — a FACE form-associated control that extends UIIndicatorElement with role='radio' and a circular dot…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Radio Group",
+      "tag": "ui-radio-group",
+      "url": "./radio-group-doc.html",
+      "description": "ui-radio-group is the container for the radio-button family — a FACE form-associated element that extends UIFormElement and owns single-selection exclusivity,…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Ramp",
+      "tag": "ui-ramp",
+      "url": "./ramp-doc.html",
+      "description": "ui-ramp is the Display-class ordered-color-series leaf (ADR-0118, token-surfaces v1) — a wrapping strip of color cells whose whole contract is \"show this color…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Row",
+      "tag": "ui-row",
+      "url": "./row-doc.html",
+      "description": "ui-row is the canonical layout primitive — a light-DOM custom element that lays its children out as a horizontal flex row.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Segment",
+      "tag": "ui-segment",
+      "url": "./segment-doc.html",
+      "description": "ui-segment is the child leaf of ui-segmented-control — a FACE form-associated control that extends UIRadioElement/UIIndicatorElement with role=\"radio\", adding…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Segmented Control",
+      "tag": "ui-segmented-control",
+      "url": "./segmented-control-doc.html",
+      "description": "ui-segmented-control is the fleet's segmented control — a joined-button single-select toggle with one shared, animated highlight that slides between adjoining…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Select",
+      "tag": "ui-select",
+      "url": "./select-doc.html",
+      "description": "ui-select is a single-select form control built on the Overlay controller (overlay-controller.lld.md · ADR-0043), rovingFocus, and selectionCommit.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Slider",
+      "tag": "ui-slider",
+      "url": "./slider-doc.html",
+      "description": "ui-slider is a FACE form-associated Indicator-class Range control (extends UIRangeElement → UIFormElement, ADR-0042).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Slider Multi",
+      "tag": "ui-slider-multi",
+      "url": "./slider-multi-doc.html",
+      "description": "ui-slider-multi is a FACE form-associated Range-class control (extends UIRangeElement → UIFormElement, ADR-0042).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Sparkline",
+      "tag": "ui-sparkline",
+      "url": "./sparkline-doc.html",
+      "description": "ui-sparkline is the Display-class series-shape mark (ADR-0107, chart-family v1) — an inline, axis-free chart that answers one question: \"what is the shape of t…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Split",
+      "tag": "ui-split",
+      "url": "./split-doc.html",
+      "description": "ui-split is a multi-pane (N-slot), user-resizable split container — a light-DOM custom element that lays its ui-split-pane children out along one axis, separat…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Split Pane",
+      "tag": "ui-split-pane",
+      "url": "./split-pane-doc.html",
+      "description": "ui-split-pane is the generic pane child of ui-split — a structural, non-interactive content region (like ui-card's header/content/footer regions: the container…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Stat",
+      "tag": "ui-stat",
+      "url": "./stat-doc.html",
+      "description": "ui-stat is the Display-class metric tile (ADR-0111, report family v1) — label + value + optional delta + optional caption as real, selectable DOM text.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Status Stream",
+      "tag": "ui-status-stream",
+      "url": "./status-stream-doc.html",
+      "description": "ui-status-stream is the timeline family's live host (ADR-0122 F1) — a \"what the system is working on right now\" strip: entries appear as work starts, transitio…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Swatch",
+      "tag": "ui-swatch",
+      "url": "./swatch-doc.html",
+      "description": "ui-swatch is the Display-class color-identity leaf (ADR-0118, token-surfaces v1) — a bordered color box whose whole contract is \"show this one color value, res…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Swiper",
+      "tag": "ui-swiper",
+      "url": "./swiper-doc.html",
+      "description": "ui-swiper is a CSS-native (scroll-snap) carousel family — the fleet's first scroll-snap surface (ADR-0124).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Swiper Item",
+      "tag": "ui-swiper-item",
+      "url": "./swiper-item-doc.html",
+      "description": "ui-swiper-item is the slide of the ui-swiper family (swiper-family.lld.md LLD-C4) — an author-written wrapper around arbitrary content, one per logical slide.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Swiper Label",
+      "tag": "ui-swiper-label",
+      "url": "./swiper-label-doc.html",
+      "description": "ui-swiper-label is an author-placed anchor whose light-DOM text becomes the owning ui-swiper's accessible name (swiper-family.lld.md LLD-C11, SPEC-R15).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Swiper Paddles",
+      "tag": "ui-swiper-paddles",
+      "url": "./swiper-paddles-doc.html",
+      "description": "ui-swiper-paddles is an author-placed anchor the owning ui-swiper fills with two composed, icon-only ui-buttons wired to prev/next (swiper-family.lld.md LLD-C1…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Swiper Pagination",
+      "tag": "ui-swiper-pagination",
+      "url": "./swiper-pagination-doc.html",
+      "description": "ui-swiper-pagination is an author-placed anchor the owning ui-swiper fills and wires wherever it is written (swiper-family.lld.md LLD-C9).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Switch",
+      "tag": "ui-switch",
+      "url": "./switch-doc.html",
+      "description": "ui-switch is the FACE switch indicator control (extends UIIndicatorElement, ADR-0013): a pill track + sliding thumb representing a boolean ON/OFF value.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Table",
+      "tag": "ui-table",
+      "url": "./table-doc.html",
+      "description": "ui-table is the Display-class static data table (ADR-0111, report family v1) — typed columns + record rows rendered as a real native <table> in light DOM (the…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Tabs",
+      "tag": "ui-tabs",
+      "url": "./tabs-doc.html",
+      "description": "ui-tabs is the tabs compound — a container (extends UIContainerElement, the first non-form family) that coordinates a set of ui-tab rows and their ui-tab-panel…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Text",
+      "tag": "ui-text",
+      "url": "./text-doc.html",
+      "description": "ui-text is the Display-class text primitive — a light-DOM custom element rendering text on the fleet's M3-derived type scale.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Text Field",
+      "tag": "ui-text-field",
+      "url": "./text-field-doc.html",
+      "description": "ui-text-field is the first FACE form-associated control (extends UIFormElement, ADR-0013): it carries a value, participates in form submission and constraint v…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Theme Provider",
+      "tag": "ui-theme-provider",
+      "url": "./theme-provider-doc.html",
+      "description": "ui-theme-provider is a real, importable theming element for @agent-ui/components — a pure coordination/carrier layer establishing a color-scheme subtree plus t…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Timeline",
+      "tag": "ui-timeline",
+      "url": "./timeline-doc.html",
+      "description": "ui-timeline is the timeline family's durable host (ADR-0122 F1) — a static, authored-children chronology (an order-tracking card, an audit log, a reasoning rec…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Timeline Item",
+      "tag": "ui-timeline-item",
+      "url": "./timeline-item-doc.html",
+      "description": "ui-timeline-item is the timeline family's shared, inert visual atom (ADR-0122 F1) — one rail row: a marker (dot/ring/pulse, a built-in glyph, or a consumer ico…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Toast",
+      "tag": "ui-toast",
+      "url": "./toast-doc.html",
+      "description": "ui-toast is the fleet's first transient notification surface — a self-expiring, non-interrupting announcement card, region-hosted in the platform top layer via…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Toast Region",
+      "tag": "ui-toast-region",
+      "url": "./toast-region-doc.html",
+      "description": "ui-toast-region is the top-layer host ui-toast instances stack inside — the fleet's first transient notification surface (ADR-0112, feed-family.lld.md LLD-C8).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Toolbar",
+      "tag": "ui-toolbar",
+      "url": "./toolbar-doc.html",
+      "description": "ui-toolbar is a Pattern-class UIContainerElement — a light-DOM, host-as-flex action bar that arranges the consumer's own interactive controls (ui-button, nativ…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Tooltip",
+      "tag": "ui-tooltip",
+      "url": "./tooltip-doc.html",
+      "description": "ui-tooltip is a non-modal tooltip built on the Overlay controller (overlay-controller.lld.md · ADR-0043) and the native Popover API (popover=manual).",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
+      "name": "Getting started",
+      "url": "./getting-started.html",
+      "description": "How to consume agent-ui in your own app: the workspace packages and the one load-bearing CSS import order.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Theming",
+      "url": "./theming.html",
+      "description": "One theming subtree, three live axes: scheme (light/dark), scale, and density.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Token reference",
+      "url": "./tokens.html",
+      "description": "Every colour role across every family, the numbered tonal primitives, plus the dimensional ramp.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Sizing & density",
+      "url": "./sizing.html",
+      "description": "Control geometry is an explicit (scale x size) lookup, never a multiplier; density touches spacing only.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Forms",
+      "url": "./forms.html",
+      "description": "A form-provider coordinating three field-wrapped controls, one working example narrated concern by concern.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Which component when",
+      "url": "./choosing.html",
+      "description": "A quick chooser between components that overlap in purpose, condensed from the A2UI catalog's own guidance.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Changelog",
+      "url": "./changelog.html",
+      "description": "The shipping summary of agent-ui's milestones, newest-first.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "App Shell",
+      "url": "./app-shell.html",
+      "description": "ui-app-shell is the application frame: a presence-driven grid of named landmark regions that reflows.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Master Detail",
+      "url": "./master-detail.html",
+      "description": "ui-master-detail is a docked list | detail arrangement over the shipped ui-split, drilling into one record.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Settings",
+      "url": "./settings.html",
+      "description": "ui-settings is a sections rail + panel, composing ui-master-detail for a schema-driven settings surface.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Router",
+      "url": "./router-doc.html",
+      "description": "@agent-ui/router: a memory-first SPA router whose route state lives in a kernel signal.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "A2UI Canvas",
+      "url": "./a2ui-canvas.html",
+      "description": "A live A2UI payload rendering a real button through the shipped renderer, round-tripping its click as an action message.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "A2UI Catalog",
+      "url": "./a2ui-catalog.html",
+      "description": "Every component the default agent-ui A2UI catalog declares, rendered live through the real renderer.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "A2UI Dynamic List",
+      "url": "./a2ui-list.html",
+      "description": "A2UI v1.0's data-bound children: one ChildList template rendering one live element per array row.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "A2UI Generative Form",
+      "url": "./a2ui-form.html",
+      "description": "One A2UI payload becomes a complete, validated, accessibly-labelled form, submitting a typed aggregate action.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "A2UI Patterns",
+      "url": "./a2ui-patterns.html",
+      "description": "Five UIs an agent actually emits: a settings form, a destructive confirmation, a wizard, and more.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "A2UI Gallery",
+      "url": "./a2ui-gallery.html",
+      "description": "Every composition on the A2UI example-seed shelf, rendered live through the same renderer.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "A2UI Streaming",
+      "url": "./a2ui-stream.html",
+      "description": "An agent streams a screen one JSONL line at a time; each line applies the moment it arrives.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "A2UI Live Agent",
+      "url": "./a2ui-live.html",
+      "description": "A live-agent chat app: the agent's A2UI stream renders into a real canvas that round-trips actions as the next turn.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "A2UI Authoring Guide",
+      "url": "./a2ui-authoring.html",
+      "description": "How to author a catalog row and an example payload, the two things that teach an agent this fleet.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "A2A Tic-Tac-Toe Arena",
+      "url": "./a2a-tic-tac-toe.html",
+      "description": "Two agents play tic-tac-toe through a deterministic referee, an isolation-proven Agent2Agent match.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "A2A Concepts & Demos",
+      "url": "./a2a-concepts.html",
+      "description": "The A2A corpus made readable: one card per admitted record, the wire shape it teaches, and why.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "A2A Artifact Feed",
+      "url": "./a2a-artifact-feed.html",
+      "description": "A conversation carried over A2A, some turns bearing live A2UI artifacts.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Gallery",
+      "url": "./gallery.html",
+      "description": "Every shipped component, browsable and filterable in one live grid.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Changelog",
+      "url": "./changelog.html",
+      "description": "Every milestone as its own searchable record, loaded lazily as a separate per-entry index.",
+      "level": "L3",
+      "section": "Records",
+      "index": "./changelog-index.json"
+    },
+    {
+      "name": "Decision Records",
+      "url": "./adr-index.html",
+      "description": "Every ratified ADR as its own searchable record, loaded lazily as a separate per-decision index.",
+      "level": "L3",
+      "section": "Records",
+      "index": "./adr-index.json"
+    }
+  ]
+}

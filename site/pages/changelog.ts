@@ -12,6 +12,11 @@ import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cas
 import './changelog.css'
 import { renderMarkdownBody } from '../lib/doc-page.ts'
 import changelogRaw from '../../CHANGELOG.md?raw'
+// The ONE shared slug() helper (site-command-search.lld.md LLD-C4/C11) — also imported directly by the Node
+// CLI script scripts/generate-sitemap.mjs, so the id THIS page stamps and the #fragment the changelog-index.json
+// generator writes can never independently drift apart (the same cross-boundary-import precedent
+// site/lib/llms.test.ts already uses for scripts/generate-llms-full.mjs).
+import { slug } from '../../scripts/slug.mjs'
 
 interface ChangelogEntry {
   readonly heading: string
@@ -48,8 +53,20 @@ content.append(
 for (const entry of ENTRIES) {
   const section = document.createElement('section')
   section.className = 'changelog-entry'
+  // The command palette's hash-anchor navigation target (LLD-C11, SPEC-R9 AC2/AC3) — the SAME slug()
+  // output changelog-index.json's generator writes as this entry's url fragment.
+  section.id = slug(entry.heading)
   const h2 = document.createElement('h2')
   h2.textContent = entry.heading
   section.append(h2, renderMarkdownBody(entry.body))
   content.append(section)
+}
+
+// ── the command palette's hash-anchor landing (LLD-C11, SPEC-R9 AC2/AC3) ─────────────────────────────────────
+// A resolved L3 selection navigates here as `./changelog.html#{slug}`; on load, scroll that milestone's
+// section into view — no expand/collapse state to restore (changelog entries are not <details>). A bad/absent
+// hash is a no-op, never an error.
+if (location.hash) {
+  const target = document.getElementById(location.hash.slice(1))
+  if (target) target.scrollIntoView()
 }

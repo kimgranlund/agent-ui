@@ -1,0 +1,884 @@
+[
+  {
+    "name": "ADR-0001",
+    "url": "./adr-index.html#adr-0001",
+    "description": "Start A1 with the control-free validation spine ahead of G7",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0002",
+    "url": "./adr-index.html#adr-0002",
+    "description": "Validator parity: missing-root, finalize granularity, syntactic-only pointer",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0003",
+    "url": "./adr-index.html#adr-0003",
+    "description": "Single-file component CSS + barrels + host-page packaging",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0004",
+    "url": "./adr-index.html#adr-0004",
+    "description": "Component descriptor: {name}.md frontmatter replaces {name}.api.json",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0005",
+    "url": "./adr-index.html#adr-0005",
+    "description": "Lazy-property upgrade precedence: property-wins",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0006",
+    "url": "./adr-index.html#adr-0006",
+    "description": "Button anatomy: optional leading icon slot + law-true [density] acceptance",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0007",
+    "url": "./adr-index.html#adr-0007",
+    "description": "Universal-selector ramp tokens: derived dimensions on * for subtree scale/density",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0008",
+    "url": "./adr-index.html#adr-0008",
+    "description": "Control interaction-state styling standard (per-variant hover/active via role ladders)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0009",
+    "url": "./adr-index.html#adr-0009",
+    "description": "The shared focus-ring standard (--md-sys-color-focus-ring + :focus-visible outline)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0010",
+    "url": "./adr-index.html#adr-0010",
+    "description": "Interactive-control focus + disabled a11y standard (the tabbable trait + internals.ariaDisabled)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0011",
+    "url": "./adr-index.html#adr-0011",
+    "description": "Canonical inbound action-prop shape ({ action, context?, wantResponse? })",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0012",
+    "url": "./adr-index.html#adr-0012",
+    "description": "Button anatomy: position slots × data-role roles (the family adornment standard)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0013",
+    "url": "./adr-index.html#adr-0013",
+    "description": "UIFormElement, the FACE form base (form-associated participation over UIElement)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0014",
+    "url": "./adr-index.html#adr-0014",
+    "description": "ui-text-field: the contenteditable editable surface + form-control interaction deviations",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0015",
+    "url": "./adr-index.html#adr-0015",
+    "description": "Container surface model (elevation × brightness) + --ui-space / --ui-radius-base tokens",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0016",
+    "url": "./adr-index.html#adr-0016",
+    "description": "A2UI-faithful flex layout (Row/Column/List/Grid) + container-query responsiveness",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0017",
+    "url": "./adr-index.html#adr-0017",
+    "description": "ui-modal on native <dialog> showModal() (top-layer, not a form widget)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0018",
+    "url": "./adr-index.html#adr-0018",
+    "description": "CSS one-level nested radius (--ui-card-child-radius), JS controller rejected",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0019",
+    "url": "./adr-index.html#adr-0019",
+    "description": "Pull renderer LLD-C8 (two-way input binding) into the G9 milestone",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0020",
+    "url": "./adr-index.html#adr-0020",
+    "description": "ui-modal dismissal control: persistent (presence-boolean, default false) replaces dismissable",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0021",
+    "url": "./adr-index.html#adr-0021",
+    "description": "ui-text-field intrinsic width: the entry-control min-inline-size floor (native <input size> parity), chars-width prop rejected",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0022",
+    "url": "./adr-index.html#adr-0022",
+    "description": "ChildPart.moveBefore over native Node.prototype.moveBefore (atomic reorder — focus/selection preserved, identity-only fallback)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0023",
+    "url": "./adr-index.html#adr-0023",
+    "description": "Public mount() directive-host seam + the directive-authoring trio (imperative consumers drive kernel directives; render/html stay private)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0024",
+    "url": "./adr-index.html#adr-0024",
+    "description": "A2UI v1.0 dynamic lists are positional (index-based, no key); list.ts uses a bespoke positional reconcile, not repeat",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0025",
+    "url": "./adr-index.html#adr-0025",
+    "description": "ui-text Display-class text primitive + the --ui-type-* typographic scale (+ the A2UI Text catalog type)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0026",
+    "url": "./adr-index.html#adr-0026",
+    "description": "A2UI v1.0 function-call bindings: the {call,args} value kind + the @index system function (renderer LLD-C10)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0027",
+    "url": "./adr-index.html#adr-0027",
+    "description": "A2UI v1.0 ${…} DynamicString interpolation (path interpolation in any bindable string; function-expression grammar deferred)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0028",
+    "url": "./adr-index.html#adr-0028",
+    "description": "A2UI v1.0 ${fn(arg:val)} function-expression grammar — the in-string call form parses → FunctionCall → evaluate (no second evaluator; positional/unnamed-arg fo…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0029",
+    "url": "./adr-index.html#adr-0029",
+    "description": "A2UI v1.0 checks — client-side inline validation (custom-validity seam + reactive checks controller + button auto-disable; NO server error)",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0030",
+    "url": "./adr-index.html#adr-0030",
+    "description": "ui-column default cross-axis align start→stretch (children fill width); row keeps start, list flips too (ratified), grid n/a",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0031",
+    "url": "./adr-index.html#adr-0031",
+    "description": "A2UI error-vocab: rich internal taxonomy (8 codes) mapped to the v1.0 two-code wire contract at the #emit boundary — every error → VALIDATIONFAILED+surfaceId t…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0032",
+    "url": "./adr-index.html#adr-0032",
+    "description": "The ui-sm…content-lg two-band [scale] tier system — control ramp = --ui-scale multiplier ladder (user-confirmed), compact-box ramp = --ui-compact-* re-table (b…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0033",
+    "url": "./adr-index.html#adr-0033",
+    "description": "Sublinear font/glyph decoupling — under [scale], height stays linear but glyphs re-derive from height via §1.1 power laws (font = base × pow(scale, 0.45), icon…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0034",
+    "url": "./adr-index.html#adr-0034",
+    "description": "A2UI server-initiated function invocation — NEW callFunction inbound RPC + functionResponse outbound; activates ADR-0031's reserved INVALIDFUNCTIONCALL arm; ca…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0035",
+    "url": "./adr-index.html#adr-0035",
+    "description": "Control fonts/icons = the exact §1 SET integers via an explicit per-[scale]-tier table (replaces ADR-0033's pow approximation that yielded decimals); snap = ne…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0037",
+    "url": "./adr-index.html#adr-0037",
+    "description": "Control heights = the explicit §1 SET-height table — snap --ui-height to the ramp (nearest row, h=42 round-down — the SAME rule as ADR-0035, so height+font+ico…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0036",
+    "url": "./adr-index.html#adr-0036",
+    "description": "Single-line Control-class text = line-height: 1 (the centering law's vertical companion) via a fleet :root token --ui-control-line-height: 1; consumed on the c…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0038",
+    "url": "./adr-index.html#adr-0038",
+    "description": "Control sizing = Kim's authoritative (scale × size) → §1-row lookup (no multipliers — \"let's not use multipliers\"; Kim provided the table); each cell is ONE §1…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0039",
+    "url": "./adr-index.html#adr-0039",
+    "description": "The layout family standardizes on the box-alignment align/justify dialect (start/end, not flex-start/flex-end) — normalize ui-column+ui-list off the flexbox ke…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0040",
+    "url": "./adr-index.html#adr-0040",
+    "description": "Re-base the reactive+dom foundation barrel consumer budget 6 kB → 7 kB (6144 → 7168 B gz) — legitimate ADR-0023 public-API growth (mount + the directive-author…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0041",
+    "url": "./adr-index.html#adr-0041",
+    "description": "The widget-box geometry sub-system (Indicator/Range classes) — Kim's 8-value widget ramp 12·14·16·18·20·22·24·28 (the widget analog of the §1 control ramp), si…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0042",
+    "url": "./adr-index.html#adr-0042",
+    "description": "FACE widget value-control bases — establishes the controls/base/ shared control-base sub-layer (extends a dom base + wires traits; sibling of surface/) + UIInd…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0043",
+    "url": "./adr-index.html#adr-0043",
+    "description": "Overlay + selection primitives — the Overlay controller (traits/overlay.ts: native Popover API surface + light-dismiss + a zero-dep JS positioning baseline + a…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0044",
+    "url": "./adr-index.html#adr-0044",
+    "description": "Mask ui-text-field type=password with -webkit-text-security: disc on the contenteditable editor (native <input type=password> is unavailable — ADR-0014's no-na…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0045",
+    "url": "./adr-index.html#adr-0045",
+    "description": "Overlay dismissal semantics — the reconciliation the Wave-4 cross-engine smokes forced (jsdom-green controls failed 18 assertions). auto popovers: the PLATFORM…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0046",
+    "url": "./adr-index.html#adr-0046",
+    "description": "The container box-model — one shared spacing layer (NEW _surface/container-box.css) beside container.css's PAINT; a surface opts in with [data-box] (a flow-roo…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0047",
+    "url": "./adr-index.html#adr-0047",
+    "description": "Numeric-codec expansion — the Wave-5A ui-text-field numeric family completion: TYPE_CONFIG v2 splits the single trailing role into {leading, suffix, affordance…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0048",
+    "url": "./adr-index.html#adr-0048",
+    "description": "Date/time picker architecture — the Wave-5B pickers: NEW ui-calendar (extends UIFormElement, canonical ISO YYYY-MM-DD) that is BOTH standalone AND the type=dat…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0049",
+    "url": "./adr-index.html#adr-0049",
+    "description": "Family barrel budget 16 → 22 KB gz — the self-defining ui-* family barrel exceeded its 16 KB gz ceiling once Wave 5 added a whole new control (ui-calendar) + t…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0050",
+    "url": "./adr-index.html#adr-0050",
+    "description": "form-provider context via a connect-time registration event — the fleet's FIRST context/provider primitive (G7 completion): UIFormElement dispatches a composed…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0051",
+    "url": "./adr-index.html#adr-0051",
+    "description": "The UIFormElement field-labelling seam (fork 2 = option B, user-ratified \"1b + 2B, go\") — ui-field hands its id-seeded label/description/error ELEMENTS to the…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0052",
+    "url": "./adr-index.html#adr-0052",
+    "description": "A container is its own z-depth scope — isolation: isolate joins the :where([data-box]) rule (the ADR-0046 opt-in now grants layout BFC + PAINT SCOPE in one att…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0053",
+    "url": "./adr-index.html#adr-0053",
+    "description": "A2UI form-family catalog rows — six new default-catalog rows exposing G7: Field→ui-field (label/description, single-child) · FormProvider→ui-form-provider (zer…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0054",
+    "url": "./adr-index.html#adr-0054",
+    "description": "The submit-gated action — the action shape gains an optional, CLIENT-consumed submit: true key (extends ADR-0011; the wire message is byte-identical) + WidgetF…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0055",
+    "url": "./adr-index.html#adr-0055",
+    "description": "Example payloads → a package-owned seed shelf — the four /site pages' inline A2uiServerMessage[] consts move to NEW src/examples/ as typed ExampleSeed records…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0056",
+    "url": "./adr-index.html#adr-0056",
+    "description": "The region-less card humane default — Kim's forked diagnosis (all 8 example Cards composed BARE children; ADR-0046's box-model never engaged — ui-card holds ze…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0057",
+    "url": "./adr-index.html#adr-0057",
+    "description": "Intent never travels by color alone — the fleet non-color-signifier rule (item 5, 2026-07-02 color-verify audit): the intent anchors are deliberately L-matched…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0058",
+    "url": "./adr-index.html#adr-0058",
+    "description": "Defer the dark intent-fill AA text roles — item 3, 2026-07-02 color-verify audit: white on the intent FILL dark leg (--md-sys-color-{f}→{f}-450) measures 3.13–…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0059",
+    "url": "./adr-index.html#adr-0059",
+    "description": "The solid --md-sys-color-neutral-track role for state-bearing widget tracks — item 4, 2026-07-02 color-verify audit: the switch off-track + slider rail bound -…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0060",
+    "url": "./adr-index.html#adr-0060",
+    "description": "Corpus store phase 1 — admission ships with the tier-2 judge as an INJECTED seam (admit(candidate, {judge?}); absent judge ⇒ stage skipped, qualityScore absent…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0061",
+    "url": "./adr-index.html#adr-0061",
+    "description": "The ONE shared healer's contract — text-first heal(input: string \\| A2uiOutput, pin?) → {ok, messages, changed, repairs} \\| {ok:false} serving BOTH corpus admi…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0062",
+    "url": "./adr-index.html#adr-0062",
+    "description": "Corpus packaging — src/corpus/* = platform-neutral PURE core (zero deps AND zero Node builtins; createStore(shards) over provided text; crypto.subtle hashing ⇒…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0063",
+    "url": "./adr-index.html#adr-0063",
+    "description": "Corpus record aligns to the VERIFIED upstream datasetschema.json (google/A2UI@main, host-fetched 2026-07-03 — the SPEC §7 THEN-branch fired): description uncon…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0064",
+    "url": "./adr-index.html#adr-0064",
+    "description": "A v1 corpus record is SINGLE-SURFACE — the s6 builder's trace: validateA2ui judges PER SURFACE but canonical.ts's foldStream upserts into ONE global id map (ca…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0065",
+    "url": "./adr-index.html#adr-0065",
+    "description": "The icon adapter — a swappable-pack registry in a NEW zero-dep leaf @agent-ui/icons (mirrors the ADR-0062 pure-core + subpath shape; sibling of @agent-ui/share…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0066",
+    "url": "./adr-index.html#adr-0066",
+    "description": "Phosphor is the default pack — a curated 9-icon subset vendored at BUILD TIME into committed inert TS (zero runtime dep) (extends ADR-0065). Weight = regular.…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0067",
+    "url": "./adr-index.html#adr-0067",
+    "description": "The expert harness right-sizes onto the realized estate — TWO skills (a2ui-compose merges the v0.1 patterns+composition areas; a2ui-corpus-curate = a THIN poin…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0068",
+    "url": "./adr-index.html#adr-0068",
+    "description": "The corpus-quality judge = a deterministic VERDICT-ADAPTER over critic-authored verdicts (activates ADR-0060's injected seam — its named trigger IS this wave):…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0069",
+    "url": "./adr-index.html#adr-0069",
+    "description": "The live-agent demo is a LAYERED shape isolated behind an AgentTransport seam (Fork A, the headline): the page consumes ONLY AgentTransport (turn(input)→AsyncI…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0070",
+    "url": "./adr-index.html#adr-0070",
+    "description": "The live runtime loop = the SPEC-R6 contract MINUS the critic round (Fork B): retrieve → generate → shared heal+validateA2ui → self-correct on the validator's…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0071",
+    "url": "./adr-index.html#adr-0071",
+    "description": "The machine system prompt is DERIVED from catalog.json + the a2ui-compose grammar and drift-gated (Fork D): buildSystemPrompt(catalog, exemplars) composes the…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0072",
+    "url": "./adr-index.html#adr-0072",
+    "description": "The multi-turn session: a client message becomes the next turn's user input; a stateless proxy; surface continuity via the host (Fork E): a Session is the stan…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0073",
+    "url": "./adr-index.html#adr-0073",
+    "description": "The config-driven multi-provider seam (Fork G, Kim-directed via /intent-extract): each provider is a module exposing AgentProvider.stream({model,system,message…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0074",
+    "url": "./adr-index.html#adr-0074",
+    "description": "The color-token namespace becomes --md-sys-color-* — an extension of Google Material Design 3 is the official color foundation (Kim-directed; scope via /intent…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0075",
+    "url": "./adr-index.html#adr-0075",
+    "description": "ui-column A2UI-canvas-root refinements (Kim-directed): a column-LOCAL stretch boolean prop → width: stretch (fill-available cascade; NOT folded into shared fle…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0076",
+    "url": "./adr-index.html#adr-0076",
+    "description": "The renderer honors catalog-declared enums at widget resolution: the widget resolver (widget.ts, LLD-C7) consults each prop's declared enum and SKIPS applying…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0077",
+    "url": "./adr-index.html#adr-0077",
+    "description": "The docs-site Generative-UI playground: <component-preview> + A2UI Catalog + ADR index: a site-local PLAIN custom element (light DOM, NOT a ui-* control → no f…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0078",
+    "url": "./adr-index.html#adr-0078",
+    "description": "ui-text three-axis redesign (Kim-ratified model via intent-extract): the one variant prop conflated a SEMANTIC marker with a VISUAL treatment (“h4 is a semanti…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0079",
+    "url": "./adr-index.html#adr-0079",
+    "description": "<component-gallery> — the G8 kernel-dogfooding gallery: a site-local element (plain tag, no fleet obligation — ADR-0077 precedent) whose class extends the PUBL…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0080",
+    "url": "./adr-index.html#adr-0080",
+    "description": "Per-control exports + the leave-one-out marginal size gate (realizes the ADR-0049 Amendment 1 booking): explicit \"./controls/{name}\" entries (incl. radio-group…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0081",
+    "url": "./adr-index.html#adr-0081",
+    "description": "The family coherence gate — \"audit clean\" defined as a STANDING mechanical gate + a judged remainder: new controls/family-coherence.test.ts asserts cross-famil…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0082",
+    "url": "./adr-index.html#adr-0082",
+    "description": "The app-shell's per-instance style isolation (M1, agent-app-surfaces): ui-app-shell isolates per instance via an isolated boolean → attachShadow at CONNECT (no…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0083",
+    "url": "./adr-index.html#adr-0083",
+    "description": "Decouple the app-shell region's column from its ARIA landmark (M1-polish): ui-app-shell-region's region keeps driving the grid column + the DEFAULT landmark, b…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0084",
+    "url": "./adr-index.html#adr-0084",
+    "description": "App-shell narrow-reflow: per-region collapse (hide/stack) (M1-polish): the @container (< 40rem) reflow becomes a per-region opt-in — collapse:'hide'/'stack' de…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0085",
+    "url": "./adr-index.html#adr-0085",
+    "description": "The ui-select / ui-combo-box labelling seam (accepted 2026-07-06, Kim; ADR-0079 gallery dogfood): a label prop (bare-usage name source) on both, plus each over…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0086",
+    "url": "./adr-index.html#adr-0086",
+    "description": "ui-radio-group[variant=segmented]: the joined-button single-select presentation, both orientations, one animated highlight (docs-preview de-doubling): reflecte…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0087",
+    "url": "./adr-index.html#adr-0087",
+    "description": "**A2UI default catalog covers the whole shipped ui-* fleet (gate-encoded exclusion allowlist)** (proposed — robust-App-usage intake, Kim's \"keep EVERYTHING in…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0088",
+    "url": "./adr-index.html#adr-0088",
+    "description": "The live-agent conversational channel: a natural-language note beside (never inside) the A2UI stream, a grounded per-turn decision-trace, and wantResponse-rout…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0089",
+    "url": "./adr-index.html#adr-0089",
+    "description": "Clarify-before-acting + catalog-boundary negotiation: teaching the live agent to ASK (a note-only turn) instead of guess, and to be honest about the wall the c…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0090",
+    "url": "./adr-index.html#adr-0090",
+    "description": "The Gen-UI mode axis: a per-turn mode that SCALES the ADR-0089 ASK grammar (directive specific ↔ exploratory blue-sky), a mode-invariant honesty floor, and Str…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0091",
+    "url": "./adr-index.html#adr-0091",
+    "description": "The Gen-UI mini-skill registry: a modular, on-demand-selected idiom-instruction layer composed into the prompt as one bounded block, degrading to empty on no m…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0092",
+    "url": "./adr-index.html#adr-0092",
+    "description": "\"Segmented control\" becomes a first-class NAMED PATTERN; the tag stays ui-radio-group[variant=segmented] — ADR-0086 STANDS (proposed — the design-only answer t…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0095",
+    "url": "./adr-index.html#adr-0095",
+    "description": "ui-segmented-control becomes a standalone first-class component (supersedes the ADR-0086 variant architecture) (proposed — authored from ADR-0092 §Alternatives…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0093",
+    "url": "./adr-index.html#adr-0093",
+    "description": "Date-range selection: a mode=\"range\" FLAG on ui-calendar — swap-complete picks, single grid (proposed — Kim's \"from → to calendar, days inside selection filled…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0096",
+    "url": "./adr-index.html#adr-0096",
+    "description": "The reflow prop gate: catalog-reachable container-reflow control for ui-row/ui-column; the column default flips to locked (proposed — Kim's reproduced live Gen…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0097",
+    "url": "./adr-index.html#adr-0097",
+    "description": "Feed-embedded interactive A2UI asks: the ADR-0089 ASK becomes a small inline surface in the chat message — an ask routing field on the ADR-0088 meta envelope,…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0094",
+    "url": "./adr-index.html#adr-0094",
+    "description": "The slider thumb ring: the thumb-vs-page-surface third SC 1.4.11 contrast dimension (proposed — re-filed from ADR-0059's ## Amendment per the doc-reviewer's th…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0098",
+    "url": "./adr-index.html#adr-0098",
+    "description": "Validator-level catalog enum-membership enforcement: a non-member literal fails validateA2ui and enters the self-correct loop (proposed — the fleet-wide gap co…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0099",
+    "url": "./adr-index.html#adr-0099",
+    "description": "updateDataModel path:\"/\" is the protocol's root alias — whole-model replace at every apply-site (proposed — the reproduced live-agent \"empty hand\" defect, host…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0100",
+    "url": "./adr-index.html#adr-0100",
+    "description": "Query-container establishment moves off the layout primitives to externally-sized boundaries; card min-inline-size: 0 retained (accepted — the live visual-audi…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0101",
+    "url": "./adr-index.html#adr-0101",
+    "description": "Overlay open-state transitions always announce — toggle fires on every actual show/hide (platform fidelity), ending light-dismiss-only suppression (proposed —…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0102",
+    "url": "./adr-index.html#adr-0102",
+    "description": "The CSS-less-consumer contract law: no rendered-correctness concern (layout/spacing/surface/width/overflow) may live only in \"the page author's CSS\"; the three…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0103",
+    "url": "./adr-index.html#adr-0103",
+    "description": "The spacing pair (#31+#33): ui-radio-group owns its interior layout — flex axis from [orientation] + --ui-radio-group-gap: var(--ui-space-sm); ui-form-provider…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0104",
+    "url": "./adr-index.html#adr-0104",
+    "description": "ui-tabs drops its self-seeded surface plane — transparent by default (ADR-0015 cl.1 restored); a plane becomes an asked-for intent via the already-shipped elev…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0105",
+    "url": "./adr-index.html#adr-0105",
+    "description": "ui-calendar fills its given width: repeat(7, minmax(var(--ui-calendar-cell-size), 1fr)) tracks + a two-layer cell — the band layer (the gridcell button, stretc…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0106",
+    "url": "./adr-index.html#adr-0106",
+    "description": "ui-text gains truncate (boolean, reflected, default false) — single-line ellipsis on the host AND the ADR-0078 stamp; an unconditional title mirror (CSS-only c…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0107",
+    "url": "./adr-index.html#adr-0107",
+    "description": "**Chart family v1 scope: ui-sparkline + ui-bar-chart — axis-free by construction, hand-rolled inline-SVG/CSS (rendering follows the mark: line = component-buil…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0109",
+    "url": "./adr-index.html#adr-0109",
+    "description": "ui-text gains emphasis (boolean, reflected, default false) — visual weight intent, the schema's FIFTH orthogonal axis: [emphasis] repoints --ui-text-weight to…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0110",
+    "url": "./adr-index.html#adr-0110",
+    "description": "Visual-regression (pixel-diff) harness: vitest-native toMatchScreenshot (INSTALLED @vitest/browser 4.1.9 ships it with a bundled pixelmatch comparator — ZERO n…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0111",
+    "url": "./adr-index.html#adr-0111",
+    "description": "Report family v1 scope: ui-table + ui-stat + ui-badge — static display vocabulary (NO interactivity: sorting/selection/pagination/virtualization/resizing/cell-…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0112",
+    "url": "./adr-index.html#adr-0112",
+    "description": "Feed/agent-activity family v1 scope: ui-progress + ui-avatar + ui-attachment + ui-toast/ui-toast-region — bar-only progress (value/max default 100, absent valu…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0113",
+    "url": "./adr-index.html#adr-0113",
+    "description": "Content family v1 scope: ui-code + the ui-text hyperlink capability + ui-disclosure — ui-code = Display-class verbatim code (host-as-content bindable code → te…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0114",
+    "url": "./adr-index.html#adr-0114",
+    "description": "ui-text gains the hyperlink capability: as gains \"a\" + a reflected href prop (the stamp becomes a real <a> — native link semantics free, the ADR-0078 cl.4 doct…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0115",
+    "url": "./adr-index.html#adr-0115",
+    "description": "**SPA router v1 scope: a NEW top-level @agent-ui/router package — memory-first (route state = ONE kernel signal, the single source of truth in every host; navi…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0116",
+    "url": "./adr-index.html#adr-0116",
+    "description": "A2A live real-time examples (B7): the arena's dev-only live match STREAMS move-by-move into the existing replay UI (the proxy already emits per-event NDJSON —…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0117",
+    "url": "./adr-index.html#adr-0117",
+    "description": "ui-theme-provider: promoting the docs-site theming wrapper to a shipped, fleet-law-compliant control (proposed — TKT-0003, Kim's \"add building a real, shipped…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0118",
+    "url": "./adr-index.html#adr-0118",
+    "description": "Token-surface family v1 scope: ui-swatch + ui-ramp + ui-ladder — Display-class token vocabulary (color identity · ordered color relationship · dimensional rhyt…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0119",
+    "url": "./adr-index.html#adr-0119",
+    "description": "**Code+prose family v1 scope: NEW @agent-ui/code sibling package (shared ← components ← code, the ADR-0115 branch precedent — a2ui/app never import it) — pure…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0120",
+    "url": "./adr-index.html#adr-0120",
+    "description": "Panes + settings join agent-app-surfaces as M4 (PRD-G7/G8, v1.1) — and the family splits by tier: the split-pane PRIMITIVE (ui-split: two slots, axis prop, dra…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0121",
+    "url": "./adr-index.html#adr-0121",
+    "description": "ui-toolbar — a Pattern-class UIContainerElement action bar, ONE element across the floating & embedded postures (TKT-0009; greenfield — no toolbar in the fleet…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0122",
+    "url": "./adr-index.html#adr-0122",
+    "description": "**ui-timeline — a THREE-tag event-rail family + ui-status-stream, its live sibling host (COMBINED TKT-0010 + TKT-0013; greenfield — the a2a-artifact-feed page…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0123",
+    "url": "./adr-index.html#adr-0123",
+    "description": "**ui-color-picker — the color-INPUT control, the sanctioned EDIT-class other side of ADR-0118's display fence (TKT-0011; greenfield — no ui-* edits color, no t…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0124",
+    "url": "./adr-index.html#adr-0124",
+    "description": "ui-swiper — a CSS-native scroll-snap carousel FAMILY (TKT-0008; greenfield — nothing in the fleet does carousel/slideshow, and this is the fleet's FIRST scroll…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0125",
+    "url": "./adr-index.html#adr-0125",
+    "description": "ui-command-modal — the CMD-K command palette as COMPOSITION (TKT-0012; greenfield — no palette/cmd-k anything in the fleet; adia's command promoted-not-ported)…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0126",
+    "url": "./adr-index.html#adr-0126",
+    "description": "The A2UI message-lifecycle decision layer (TKT-0016; teaching+demo, no component-design skill) — all four server→client message types (createSurface/updateComp…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0127",
+    "url": "./adr-index.html#adr-0127",
+    "description": "ui-command-modal gains an opt-in filter=\"regex\" match mode (TKT-0018 site command-search) — EXTENDS ADR-0125 (F1/F7 stand; substring stays the default). Source…",
+    "level": "L3",
+    "section": "Records"
+  }
+]

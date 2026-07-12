@@ -1,0 +1,186 @@
+[
+  {
+    "href": "./getting-started.html",
+    "label": "Getting started",
+    "description": "How to consume agent-ui in your own app: the workspace packages and the one load-bearing CSS import order.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./theming.html",
+    "label": "Theming",
+    "description": "One theming subtree, three live axes: scheme (light/dark), scale, and density.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./tokens.html",
+    "label": "Token reference",
+    "description": "Every colour role across every family, the numbered tonal primitives, plus the dimensional ramp.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./sizing.html",
+    "label": "Sizing & density",
+    "description": "Control geometry is an explicit (scale x size) lookup, never a multiplier; density touches spacing only.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./forms.html",
+    "label": "Forms",
+    "description": "A form-provider coordinating three field-wrapped controls, one working example narrated concern by concern.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./choosing.html",
+    "label": "Which component when",
+    "description": "A quick chooser between components that overlap in purpose, condensed from the A2UI catalog's own guidance.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./changelog.html",
+    "label": "Changelog",
+    "description": "The shipping summary of agent-ui's milestones, newest-first.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./app-shell.html",
+    "label": "App Shell",
+    "description": "ui-app-shell is the application frame: a presence-driven grid of named landmark regions that reflows.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./master-detail.html",
+    "label": "Master Detail",
+    "description": "ui-master-detail is a docked list | detail arrangement over the shipped ui-split, drilling into one record.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./settings.html",
+    "label": "Settings",
+    "description": "ui-settings is a sections rail + panel, composing ui-master-detail for a schema-driven settings surface.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./router-doc.html",
+    "label": "Router",
+    "description": "@agent-ui/router: a memory-first SPA router whose route state lives in a kernel signal.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./a2ui-canvas.html",
+    "label": "A2UI Canvas",
+    "description": "A live A2UI payload rendering a real button through the shipped renderer, round-tripping its click as an action message.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./a2ui-catalog.html",
+    "label": "A2UI Catalog",
+    "description": "Every component the default agent-ui A2UI catalog declares, rendered live through the real renderer.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./a2ui-list.html",
+    "label": "A2UI Dynamic List",
+    "description": "A2UI v1.0's data-bound children: one ChildList template rendering one live element per array row.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./a2ui-form.html",
+    "label": "A2UI Generative Form",
+    "description": "One A2UI payload becomes a complete, validated, accessibly-labelled form, submitting a typed aggregate action.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./a2ui-patterns.html",
+    "label": "A2UI Patterns",
+    "description": "Five UIs an agent actually emits: a settings form, a destructive confirmation, a wizard, and more.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./a2ui-gallery.html",
+    "label": "A2UI Gallery",
+    "description": "Every composition on the A2UI example-seed shelf, rendered live through the same renderer.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./a2ui-stream.html",
+    "label": "A2UI Streaming",
+    "description": "An agent streams a screen one JSONL line at a time; each line applies the moment it arrives.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./a2ui-live.html",
+    "label": "A2UI Live Agent",
+    "description": "A live-agent chat app: the agent's A2UI stream renders into a real canvas that round-trips actions as the next turn.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./a2ui-authoring.html",
+    "label": "A2UI Authoring Guide",
+    "description": "How to author a catalog row and an example payload, the two things that teach an agent this fleet.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./a2a-tic-tac-toe.html",
+    "label": "A2A Tic-Tac-Toe Arena",
+    "description": "Two agents play tic-tac-toe through a deterministic referee, an isolation-proven Agent2Agent match.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./a2a-concepts.html",
+    "label": "A2A Concepts & Demos",
+    "description": "The A2A corpus made readable: one card per admitted record, the wire shape it teaches, and why.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./a2a-artifact-feed.html",
+    "label": "A2A Artifact Feed",
+    "description": "A conversation carried over A2A, some turns bearing live A2UI artifacts.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./gallery.html",
+    "label": "Gallery",
+    "description": "Every shipped component, browsable and filterable in one live grid.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./changelog.html",
+    "label": "Changelog",
+    "description": "Every milestone as its own searchable record, loaded lazily as a separate per-entry index.",
+    "level": "L3",
+    "section": "Records",
+    "index": "./changelog-index.json"
+  },
+  {
+    "href": "./adr-index.html",
+    "label": "Decision Records",
+    "description": "Every ratified ADR as its own searchable record, loaded lazily as a separate per-decision index.",
+    "level": "L3",
+    "section": "Records",
+    "index": "./adr-index.json"
+  }
+]

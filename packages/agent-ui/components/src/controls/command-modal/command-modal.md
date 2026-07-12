@@ -27,6 +27,11 @@ attributes:              # attributes-as-API — mirrors UICommandModalElement.p
     type: string
     default: ''
     reflect: false       # the F2 opt-in convenience; '' = no document listener (ADR-0082 no-global-singletons law)
+  - name: filter
+    type: enum
+    values: [substring, regex]
+    default: substring
+    reflect: false       # ADR-0127 — a behavior switch, not a styling hook; substring is byte-identical to pre-ADR-0127 behavior
 
 properties:
   - name: open
@@ -37,6 +42,8 @@ properties:
     description: The search field's placeholder text.
   - name: hotkey
     description: '' = no document listener at all. A non-empty chord (e.g. "mod+k", mod = ⌘ on macOS / Ctrl elsewhere) binds ONE per-instance document keydown — riding the connection lifetime, re-armed on reconnect — that preventDefaults the chord and toggles THIS instance's `open`. No global singleton/registry; multi-instance collision on the same chord is the author's own concern (ADR-0125 F2).
+  - name: filter
+    description: The match-test mode (ADR-0127). `'substring'` (default) is the original case-insensitive `hay.includes(q)` test, byte-identical to pre-ADR-0127 behavior. `'regex'` runs a case-insensitive `RegExp` test over the SAME haystack (item label + `data-keywords`); an invalid pattern is caught and that keystroke falls back to the substring test instead — the palette never throws on a bad pattern.
 
 events:                  # all ⊂ the change·input·select·open·close·toggle allowlist (NO `dismiss`)
   - name: select
@@ -79,7 +86,7 @@ aria:
 
 keyboard:
   - keys: <printable>
-    action: Filters the list (case-insensitive substring/keyword match over the option's primary label + an optional data-keywords string — a decorative [data-role=shortcut] display is excluded from the match); resets the active option.
+    action: Filters the list (case-insensitive substring/keyword match by default, or regex when `filter="regex"` — ADR-0127, falling back to substring on an invalid pattern — over the option's primary label + an optional data-keywords string; a decorative [data-role=shortcut] display is excluded from the match); resets the active option.
   - keys: ArrowDown
     action: Moves the active option (aria-activedescendant + [data-active]) to the next visible, enabled option, wrapping. Focus STAYS in the search field.
   - keys: ArrowUp
@@ -164,6 +171,13 @@ The palette is **arrangement + filter + selection semantics**, never a command b
 Choosing an option (click on an enabled option, or Enter on the active one) emits `select` with
 `{ value, label, group }`, then sets `open=false`. Navigation/invocation is entirely the consumer's `select`
 handler — the palette imports no `@agent-ui/router` and holds no command/action registry.
+
+## The filter mode (ADR-0127)
+
+`filter` defaults to `'substring'` — the original, byte-identical case-insensitive `includes` test over the
+item label + `data-keywords`. Setting `filter="regex"` runs a case-insensitive `RegExp` test over the same
+haystack instead; an invalid pattern (e.g. an unbalanced `(`) is caught and that keystroke falls back to the
+substring test — the palette never throws and never blanks the list on a bad pattern.
 
 ## The result-count live region
 

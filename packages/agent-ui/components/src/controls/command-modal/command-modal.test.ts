@@ -114,6 +114,11 @@ describe('ui-command-modal — upgrade + typed prop surface', () => {
     expect(el.hotkey).toBe('')
   })
 
+  it('ADR-0127: filter defaults to \'substring\' (a fresh instance is unaffected by the new prop)', () => {
+    const el = document.createElement('ui-command-modal') as UICommandModalElement
+    expect(el.filter).toBe('substring')
+  })
+
   it('self-defines ui-command-modal, guarded against a double-define', () => {
     expect(customElements.get('ui-command-modal')).toBe(UICommandModalElement)
     expect(() => {
@@ -351,6 +356,73 @@ describe('ui-command-modal — filter (SPEC-R5)', () => {
     expect(search.getAttribute('aria-activedescendant')).toBe(opts[2]!.id)
     fireKey(search, 'Home')
     expect(search.getAttribute('aria-activedescendant')).toBe(opts[0]!.id)
+    el.remove()
+  })
+})
+
+// ── ADR-0127 regex filter mode (LLD-C14) — additive, does not touch the substring-mode tests above ─────────
+
+describe('ui-command-modal — regex filter mode (ADR-0127, LLD-C14)', () => {
+  it('filter="regex" narrows to a valid pattern over the item label', () => {
+    const { el, search, list } = makePalette(
+      [option('home', 'Go Home'), option('settings', 'Settings')],
+      { filter: 'regex' },
+    )
+    search.textContent = '^go'
+    search.dispatchEvent(new Event('input', { bubbles: true }))
+    const opts = [...list.querySelectorAll<HTMLElement>('[role=option]')]
+    expect(opts[0]!.hidden).toBe(false) // "Go Home" matches /^go/i
+    expect(opts[1]!.hidden).toBe(true)
+    el.remove()
+  })
+
+  it('filter="regex" folds data-keywords into the same regex haystack', () => {
+    const { el, search, list } = makePalette(
+      [option('logout', 'Log out', { keywords: 'sign out exit' })],
+      { filter: 'regex' },
+    )
+    search.textContent = 'sign.+exit' // spans the label + the data-keywords string in the SAME haystack
+    search.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(list.querySelector<HTMLElement>('[role=option]')!.hidden).toBe(false)
+    el.remove()
+  })
+
+  it('an invalid regex pattern does NOT throw and falls back to literal-substring matching for that keystroke', () => {
+    const { el, search, list } = makePalette(
+      [option('home', 'Go Home'), option('paren', 'ui-swiper(')],
+      { filter: 'regex' },
+    )
+    expect(() => {
+      search.textContent = 'ui-swiper(' // an unbalanced group — `new RegExp` throws SyntaxError
+      search.dispatchEvent(new Event('input', { bubbles: true }))
+    }).not.toThrow()
+    const opts = [...list.querySelectorAll<HTMLElement>('[role=option]')]
+    // literal-substring fallback: only the option whose label CONTAINS the literal string "ui-swiper(" matches
+    expect(opts[0]!.hidden).toBe(true)
+    expect(opts[1]!.hidden).toBe(false)
+    el.remove()
+  })
+
+  it('filter="regex" does NOT lowercase the pattern text — a case-sensitive escape (\\D) keeps its meaning', () => {
+    // Regression: lowercasing the query BEFORE compiling would corrupt \D/\S/\W/\B into \d/\s/\w/\b (a
+    // materially different match, not merely a case change). The 'i' flag alone must deliver case-insensitivity.
+    const { el, search, list } = makePalette(
+      [option('v2', 'v2'), option('beta', 'beta')],
+      { filter: 'regex' },
+    )
+    search.textContent = '\\D' // "a non-digit character" — every label has one; \d would match ONLY "v2"
+    search.dispatchEvent(new Event('input', { bubbles: true }))
+    const opts = [...list.querySelectorAll<HTMLElement>('[role=option]')]
+    expect(opts[0]!.hidden).toBe(false) // "v2" — the '2' is a digit but the 'v' is not, so \D still matches
+    expect(opts[1]!.hidden).toBe(false) // "beta" — no digits at all, \D matches
+    el.remove()
+  })
+
+  it('filter="substring" (the default, no attribute) is unaffected by regex-special characters', () => {
+    const { el, search, list } = makePalette([option('a', 'a(b)c')])
+    search.textContent = 'a('
+    search.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(list.querySelector<HTMLElement>('[role=option]')!.hidden).toBe(false) // plain includes(), never a RegExp
     el.remove()
   })
 })

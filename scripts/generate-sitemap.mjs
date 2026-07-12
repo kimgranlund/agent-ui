@@ -1,0 +1,243 @@
+// generate-sitemap.mjs — derives site/public/sitemap.json (+ site/public/adr-index.json /
+// changelog-index.json), the leveled index behind the docs site's ui-command-modal search palette
+// (TKT-0018, site-command-search.lld.md LLD-C1/C2/C4). Follows generate-llms-full.mjs's exact shape: pure
+// `fs`-based (no bundler, no TS execution), a `generateSitemap(repoRoot)` export the drift gate
+// (site/lib/sitemap.test.ts) imports directly (no generator/gate drift pair), deterministic ordering,
+// written only when run as a CLI (`node scripts/generate-sitemap.mjs`).
+//
+// L1 (component pages) derives from ONE tree only — packages/agent-ui/components/src/controls — NOT the
+// second tree generate-llms-full.mjs also walks (packages/agent-ui/router/src/controls). Verified against
+// the real site (site/*.html): every one of the 56 components/src/controls descriptors has its own real
+// `{tag-minus-ui-}-doc.html` page (a clean 1:1 match), but the router package's two descriptors
+// (ui-router-outlet / ui-router-link) do NOT — the site ships exactly ONE combined `router-doc.html` for the
+// whole package, no `router-outlet-doc.html`/`router-link-doc.html` ever existed. Deriving L1 URLs from the
+// router tree too would mint two dead links the palette could select and 404 on. The router page itself is
+// still fully searchable — it is one of site-manifest.json's L2 rows (site/pages/_page.ts already treats it
+// as an ungrouped site-level GUIDE link, the same posture as App Shell/Master Detail/Settings, never a
+// per-component page set) — so nothing is lost, only a literal LLD §3 instruction ("reuse CONTROL_TREES, the
+// same two trees") is narrowed to the one tree that actually has a 1:1 page convention. Named here, not
+// silently done, per the LLD's own freeze discipline.
+
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
+import { slug } from './slug.mjs'
+
+const repoRootFromScript = () => fileURLToPath(new URL('..', import.meta.url))
+
+const L1_TREE = 'packages/agent-ui/components/src/controls'
+
+/** Split a descriptor's `---`-fenced frontmatter from its prose body; null when no fence leads the file.
+ *  (generate-llms-full.mjs precedent, duplicated rather than imported — that script has no export for it.) */
+function splitFence(source) {
+  if (!source.startsWith('---\n')) return null
+  const end = source.indexOf('\n---\n', 4)
+  if (end === -1) return null
+  return { fence: source.slice(4, end), body: source.slice(end + 5) }
+}
+
+/** The `tag: ui-…` scalar out of a frontmatter fence; null when absent (a non-descriptor .md). */
+function tagOf(fence) {
+  const m = fence.match(/^tag:\s*(ui-[a-z-]+)\s*$/m)
+  return m ? m[1] : null
+}
+
+/** The new, purely-additive `description:` scalar (SPEC-R2) out of a frontmatter fence; null when absent —
+ *  the caller falls back to `deriveFallbackDescription`. A one-line value, same shape as `tagOf`. */
+function descriptionOf(fence) {
+  const m = fence.match(/^description:\s*(.+)$/m)
+  return m ? m[1].trim() : null
+}
+
+/** A plain-text reduction of the corpus's small inline markdown grammar — links/backticks/bold/italic — so a
+ *  derived description never leaks raw `**`/backtick/`_` characters (SPEC-R2 AC3, the anti-vacuous check). */
+function stripEmphasis(text) {
+  return text
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+}
+
+/** truncate — hard-cap `text` to `max` chars, `…`-suffixed ONLY when the cap actually bites (a string that
+ *  already fits is returned verbatim — no truncation, no suffix). Shared by every description derivation
+ *  below, so "a one-line summary" means the same 160-char ceiling everywhere in this generator. */
+function truncate(text, max) {
+  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text
+}
+
+/**
+ * deriveFallbackDescription — the first sentence of a descriptor's (or changelog entry's) prose body, when no
+ * authored `description:` scalar exists (SPEC-R2 AC2/AC3): skip leading blank lines and heading lines, drop a
+ * leading list-item marker (changelog entries commonly open straight into a `- **X**, NEW…` bullet, no lead
+ * paragraph of their own), then take the first PARAGRAPH — up to the first truly blank line — and cut it at
+ * the first ". " within that paragraph, truncating to 160 chars.
+ *
+ * DEVIATION from the LLD §3 literal wording ("split at the first '. ' or the first newline, whichever is
+ * sooner"): a single '\n' is treated as a soft line-wrap WITHIN a paragraph (unwrapped to a space before the
+ * sentence search), not a cut point — this repo's own prose (verified against command-modal.md's body and a
+ * real CHANGELOG.md entry, e.g. the 2026-07-11 "ui-settings ships" milestone) hand-wraps flowing prose at
+ * ~100–120 chars with single newlines; a literal every-'\n' cut severed real sentences mid-clause on that
+ * corpus (measured: "…ADR-0120 cl.4 —" instead of the real first sentence, a source line-wrap artifact, not a
+ * sentence boundary). The LLD's own "first newline" instruction was written for the single-paragraph
+ * command-modal.md example where the real period happens to land before ANY newline (soft-wrapped or not) —
+ * this fix generalizes the same intent (stop before drifting into a second sentence/thought) to a body whose
+ * first period lands AFTER a soft wrap, which the changelog corpus exercises constantly and no L1 descriptor
+ * happened to.
+ */
+export function deriveFallbackDescription(body) {
+  const lines = body.split('\n')
+  let i = 0
+  while (i < lines.length && (lines[i].trim() === '' || /^#{1,6}\s/.test(lines[i]))) i++
+  const rest = lines.slice(i).join('\n').replace(/^[-*]\s+/, '')
+  const paragraphBreak = rest.search(/\n[ \t]*\n/) // the first BLANK line = a real paragraph boundary
+  const firstParagraph = paragraphBreak === -1 ? rest : rest.slice(0, paragraphBreak)
+  const unwrapped = firstParagraph.replace(/\n/g, ' ').replace(/\s+/g, ' ')
+  const stripped = stripEmphasis(unwrapped).trim()
+  const periodIdx = stripped.indexOf('. ')
+  const sentence = periodIdx !== -1 ? stripped.slice(0, periodIdx + 1) : stripped
+  return truncate(sentence.trim(), 160)
+}
+
+/** titleCaseFromTag — `ui-swiper-paddles` -> `Swiper Paddles` (SPEC-R1 AC2's own example format). */
+export function titleCaseFromTag(tag) {
+  return tag
+    .slice('ui-'.length)
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+}
+
+/** generateL1 — one entry per components/src/controls descriptor: name/tag/url derived, description from the
+ *  authored scalar or the fallback derivation. Alphabetical by tag (the generate-llms-full.mjs precedent). */
+function generateL1(repoRoot) {
+  const entries = []
+  const controlsDir = join(repoRoot, L1_TREE)
+  for (const folder of readdirSync(controlsDir, { withFileTypes: true })) {
+    if (!folder.isDirectory()) continue
+    for (const file of readdirSync(join(controlsDir, folder.name))) {
+      if (!file.endsWith('.md')) continue
+      const source = readFileSync(join(controlsDir, folder.name, file), 'utf8')
+      const split = splitFence(source)
+      if (split === null) continue
+      const tag = tagOf(split.fence)
+      if (tag === null) continue // a .md without a tag: scalar is not a component descriptor
+      const authored = descriptionOf(split.fence)
+      const description = authored !== null ? authored : deriveFallbackDescription(split.body)
+      const slugName = tag.slice('ui-'.length)
+      entries.push({
+        name: titleCaseFromTag(tag),
+        tag,
+        url: `./${slugName}-doc.html`,
+        description,
+        level: 'L1',
+        section: 'Components',
+      })
+    }
+  }
+  if (entries.length === 0) throw new Error('generate-sitemap: zero L1 descriptors found — the controls glob is broken')
+  entries.sort((a, b) => (a.tag < b.tag ? -1 : 1))
+  return entries
+}
+
+/** generateL2AndStubs — L2 + the two L3 loader-stub rows, read straight from the single-owner manifest
+ *  (SPEC-R3/R4) and mapped through unchanged (it is already SitemapEntry-shaped minus `tag`). */
+function generateL2AndStubs(repoRoot) {
+  const rows = JSON.parse(readFileSync(join(repoRoot, 'site/lib/site-manifest.json'), 'utf8'))
+  return rows.map((row) => ({
+    name: row.label,
+    url: row.href,
+    description: row.description,
+    level: row.level,
+    section: row.section,
+    ...(row.index ? { index: row.index } : {}),
+  }))
+}
+
+/** generateSitemap — the whole sitemap.json {entries} shape: L1 (descriptor-derived) + L2/L3-stubs (manifest-
+ *  derived), pure and deterministic (the drift gate calls this too — no generator/gate drift pair). */
+export function generateSitemap(repoRoot = repoRootFromScript()) {
+  return { entries: [...generateL1(repoRoot), ...generateL2AndStubs(repoRoot)] }
+}
+
+// ── L3 index files (LLD-C4) ──────────────────────────────────────────────────────────────────────────────
+
+// One ADR README Index table row: `| [NNNN](./NNNN-slug.md) | Title | Status | Repairs |` (.claude/docs/adr/
+// README.md §Index). Anchored on one of the 4 known status keywords (optionally `**bold**`-wrapped, e.g. a
+// superseded row's `**superseded by ADR-0038**`) rather than a generic `\w+`+trailing-pipe shape — the Index
+// table's Status cell is NOT held to the same bare-keyword discipline as the per-ADR blockquote frontmatter
+// (README.md's own machine-readable rule targets that OTHER table); several rows carry trailing annotation
+// prose after the keyword (`accepted *(amended by 0014: …)*`). Anchoring on the keyword itself is what forces
+// the lazy title capture to backtrack to the CORRECT closing pipe (verified against all 126 real rows).
+const ADR_ROW_RE = /^\|\s*\[(\d{4})\]\(\.\/[^)]+\)\s*\|\s*(.+?)\s*\|\s*\*{0,2}(accepted|proposed|superseded|deprecated)\b/gm
+
+/**
+ * generateAdrIndex — one entry per ADR (SPEC-R4/AC2), derived from the ADR log's own README Index table (never
+ * a second directory glob — one source of row-truth). `url` carries the SAME `adr-{number}` fragment
+ * adr-index.ts stamps as each card's DOM id (LLD-C11) — not the bare `#{number}` SPEC-R4 AC2's illustrative
+ * example shows, a deliberate, named deviation: an all-numeric id (`id="0125"`) is technically legal HTML but
+ * an unescaped CSS/`querySelector` footgun, and the LLD's own §6 on-load handler reads
+ * `document.getElementById(location.hash.slice(1))` with ZERO translation — that only resolves if the hash
+ * fragment and the DOM id are the same literal string. Matching them (`#adr-0125` both places) is what makes
+ * the LLD's own snippet correct; a bare numeric hash would require translation logic the LLD never specifies.
+ */
+export function generateAdrIndex(repoRoot) {
+  const readme = readFileSync(join(repoRoot, '.claude/docs/adr/README.md'), 'utf8')
+  const rows = [...readme.matchAll(ADR_ROW_RE)]
+  if (rows.length === 0) throw new Error('generate-sitemap: zero ADR index rows found — README.md table shape changed')
+  return rows.map(([, number, rawTitle]) => ({
+    name: `ADR-${number}`,
+    url: `./adr-index.html#adr-${number}`,
+    description: truncate(stripEmphasis(rawTitle), 160),
+    level: 'L3',
+    section: 'Records',
+  }))
+}
+
+/** generateChangelogIndex — one entry per `## ` milestone heading in CHANGELOG.md (SPEC-R4 AC3), reusing
+ *  changelog.ts's own section-splitting shape (duplicated as a small pure function here — the Node script
+ *  cannot import a Vite-transformed TS module, the SAME constraint generate-llms-full.mjs's own comment names
+ *  for why it re-derives from raw text). `url`'s `#{slug}` uses the ONE shared `slug()` helper (scripts/
+ *  slug.mjs) that changelog.ts ALSO imports for its per-`<section>` id — so the id-producer and the
+ *  id-consumer cannot drift apart. Reversed to newest-first, matching changelog.ts's own display order. */
+export function generateChangelogIndex(repoRoot) {
+  const raw = readFileSync(join(repoRoot, 'CHANGELOG.md'), 'utf8')
+  const sections = raw.split(/\n(?=## )/)
+  const entries = []
+  for (const section of sections) {
+    const m = /^## (.+)\n([\s\S]*)$/.exec(section.trim())
+    if (!m) continue // the H1 title + lead paragraph before the first `## ` — not an entry
+    const heading = m[1].trim()
+    const body = m[2].trim()
+    entries.push({
+      name: heading,
+      url: `./changelog.html#${slug(heading)}`,
+      description: deriveFallbackDescription(body),
+      level: 'L3',
+      section: 'Records',
+    })
+  }
+  if (entries.length === 0) throw new Error('generate-sitemap: zero changelog entries found — CHANGELOG.md shape changed')
+  return entries.reverse() // file is oldest-first; the site (and this index) read newest-first
+}
+
+/** formatJson — the ONE serialization both the CLI writer and the drift gate's "fresh" value use, so the two
+ *  can never independently drift on formatting alone. */
+export function formatJson(value) {
+  return `${JSON.stringify(value, null, 2)}\n`
+}
+
+// Written only when run directly (`node scripts/generate-sitemap.mjs`) — the drift gate imports the three
+// generator functions above and never writes.
+if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
+  const root = repoRootFromScript()
+  const sitemap = generateSitemap(root)
+  const adrIndex = generateAdrIndex(root)
+  const changelogIndex = generateChangelogIndex(root)
+  writeFileSync(join(root, 'site/public/sitemap.json'), formatJson(sitemap))
+  writeFileSync(join(root, 'site/public/adr-index.json'), formatJson(adrIndex))
+  writeFileSync(join(root, 'site/public/changelog-index.json'), formatJson(changelogIndex))
+  console.log(
+    `sitemap: wrote ${sitemap.entries.length} entries, ${adrIndex.length} ADR records, ${changelogIndex.length} changelog records`,
+  )
+}

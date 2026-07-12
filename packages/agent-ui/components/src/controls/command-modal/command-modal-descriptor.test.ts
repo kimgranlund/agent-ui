@@ -20,7 +20,7 @@ const md = readFileSync(`${DIR}/command-modal.md`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['open', 'label', 'placeholder', 'hotkey']
+const ATTR_NAMES = ['open', 'label', 'placeholder', 'hotkey', 'filter']
 
 describe('command-modal.md descriptor — frontmatter parses + schema-valid', () => {
   it('has a leading frontmatter fence and a prose body', () => {

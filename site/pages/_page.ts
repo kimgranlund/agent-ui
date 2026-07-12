@@ -722,6 +722,20 @@ export interface PageOptions {
   readonly cta?: PageCta
 }
 
+// mountCommandPaletteOnce — the ui-command-modal search palette (TKT-0018, site-command-search.lld.md LLD-C6),
+// lazily import()ed so a page that never opens it (mod+k) pays no bundle cost beyond this stub call — the
+// text-field type=date -> ui-calendar lazy-import precedent. Called from BOTH mountPage and
+// mountFullBleedPage, so every /site page gets exactly one instance; the module itself guards re-entry
+// (command-palette.ts's `if (current) return`) in case a page somehow calls both in one load.
+function mountCommandPaletteOnce(): void {
+  // `.catch` is load-bearing, not defensive filler: a jsdom page-mount test (no real network/base URL) or a
+  // real `sitemap.json` fetch failure must never surface as an unhandled rejection off page mount — the
+  // palette is optional site chrome, not a page's own render path.
+  void import('../lib/command-palette.ts')
+    .then((m) => m.mountCommandPalette())
+    .catch(() => {})
+}
+
 // mountPage — stamp the app shell into `#app` (falling back to <body>) and hand back the page-content container.
 // The shell is a CSS grid (`_page.css`): a full-height nav RAIL down the left, and a right column of
 // [ context-header | page | context-footer ]. The PAGE (row 2) is the scroll region — itself
@@ -742,6 +756,7 @@ export function mountPage(options: PageOptions): PageHandle {
   shell.append(buildNav(), buildContextHeader(), page, buildContextFooter())
 
   root.append(shell)
+  mountCommandPaletteOnce()
   return { content }
 }
 
@@ -766,5 +781,6 @@ export function mountFullBleedPage(): PageHandle {
   shell.append(buildNav(), buildContextHeader(), page, buildContextFooter())
 
   root.append(shell)
+  mountCommandPaletteOnce()
   return { content }
 }

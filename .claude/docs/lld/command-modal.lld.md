@@ -19,6 +19,15 @@
 
 > *REV (build review, 2026-07-11): the shipped close/toggle handlers add `event.stopPropagation()` beyond this frozen body — CORRECT and necessary (`emit()` bubbles and the nested modal is a light-DOM descendant; without it a consumer's `close` listener double-fires on platform dismissal). The close guard on `this.open` vs unconditional toggle asymmetry is deliberate. Do not revert.*
 
+> **REV 2026-07-11 (ADR-0127, ratified):** LLD-C1's props schema gains `filter: 'substring'|'regex'` (default
+> `'substring'`); LLD-C5's `#filter()` (§3 snippet below predates this and shows the substring-only body) gains a
+> mode branch — `filter==='regex'` builds `new RegExp(raw, 'i')` ONCE per keystroke, compiled from the RAW
+> (un-lowercased) query text over the SAME haystack (item label + `data-keywords`) — the `'i'` flag alone
+> delivers case-insensitivity; lowercasing the pattern text first would corrupt case-sensitive metacharacters
+> (`\D`/`\S`/`\W`/`\B`). A `SyntaxError` from an invalid pattern is caught and that keystroke falls back to the
+> substring test, never throwing (SPEC-R5 AC5). `filter='substring'` (absent/default) is byte-identical to the
+> pre-ADR-0127 body. See `command-modal.ts`'s live `#filter()` for the current source.
+
 
 ## 1 · Intent
 
@@ -34,11 +43,11 @@ wiring (the nested modal + the search/list parts + the filter/active-descendant 
 
 | ID | Component | File | Traces |
 |---|---|---|---|
-| LLD-C1 | class + tag + self-define (tier pattern) AND the props schema (`open`/`label`/`placeholder`/`hotkey`) | `controls/command-modal/command-modal.ts` | SPEC-R1, R2 |
+| LLD-C1 | class + tag + self-define (tier pattern) AND the props schema (`open`/`label`/`placeholder`/`hotkey`/`filter` — REV 2026-07-11, ADR-0127) | `controls/command-modal/command-modal.ts` | SPEC-R1, R2 |
 | LLD-C2 | `#ensureParts()` — create the nested `ui-modal` + the search/list/status parts, child-move the author `[role=option]`/`[role=group]` children into the list, assign stable option ids (idempotent) | `controls/command-modal/command-modal.ts` | SPEC-R3, R4 |
 | LLD-C3 | the nested-`ui-modal` surface seam — drive `open`→modal, sync the modal's `close`/`toggle` back, forward the accessible name, NO own dialog/backdrop/Escape | `controls/command-modal/command-modal.ts` | SPEC-R3, R9 |
 | LLD-C4 | the search field — `role=combobox` contenteditable, aria wiring (`aria-controls`/`aria-expanded`/`aria-autocomplete`), reactive `aria-label`, focus-on-open | `controls/command-modal/command-modal.ts` | SPEC-R4 |
-| LLD-C5 | filter — `hidden`-based substring/keyword match, group-heading hide, active reset | `controls/command-modal/command-modal.ts` | SPEC-R5 |
+| LLD-C5 | filter — `hidden`-based substring/keyword match (default), OR a regex test over the same haystack when `filter="regex"` (REV 2026-07-11, ADR-0127) — an invalid pattern is caught and that keystroke falls back to substring, never throwing; group-heading hide, active reset | `controls/command-modal/command-modal.ts` | SPEC-R5 |
 | LLD-C6 | active-descendant navigation — `#getVisibleOptions`/`#setActive`/`#moveActive` (aria-activedescendant + `[data-active]`, focus stays in the search field) | `controls/command-modal/command-modal.ts` | SPEC-R5 |
 | LLD-C7 | selection — click/Enter commit → `emit('select', {value,label,group})` + `open=false`; NO router import, NO command bus | `controls/command-modal/command-modal.ts` | SPEC-R6 |
 | LLD-C8 | result-count live region — `[data-part=status]` `aria-live=polite`, updated on filter | `controls/command-modal/command-modal.ts` | SPEC-R7 |

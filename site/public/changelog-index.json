@@ -1,0 +1,170 @@
+[
+  {
+    "name": "2026-07-11 (site command-search) — the docs site dogfoods its own palette (TKT-0018 · ADR-0127)",
+    "url": "./changelog.html#2026-07-11-site-command-search-the-docs-site-dogfoods-its-own-palette-tkt-0018-adr-0127",
+    "description": "ui-command-modal gains filter: 'substring'|'regex' (ADR-0127, accepted): a closed enum, substring default (shipped behavior byte-identical — the original suite…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-11 (M4 Phase 3) — `ui-settings` ships the schema-driven settings surface",
+    "url": "./changelog.html#2026-07-11-m4-phase-3-ui-settings-ships-the-schema-driven-settings-surface",
+    "description": "ui-settings, NEW in @agent-ui/app (app-surfaces-m4 LLD-C12, SPEC-R9/R10/R11/R12; ADR-0120 cl.4 — shell + schema framework land together): a sections rail + pan…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-11 (A2UI message lifecycle) — the four-type decision layer taught, demoed, and pinned (TKT-0016 · ADR-0126)",
+    "url": "./changelog.html#2026-07-11-a2ui-message-lifecycle-the-four-type-decision-layer-taught-demoed-and-pinned-tkt-0016-adr-0126",
+    "description": "The teaching (F2, Kim-ratified): four new GRAMMAR bullets in the machine system prompt's mode-invariant output-rules zone — the when/how choice rule (data chan…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-11 (ui-color-picker) — the OKLCH picker ships, and ui-text-field gains its 13th type",
+    "url": "./changelog.html#2026-07-11-ui-color-picker-the-oklch-picker-ships-and-ui-text-field-gains-its-13th-type",
+    "description": "ui-color-picker (ADR-0123, accepted 2026-07-11): OKLCH-internal value model with sRGB-hex the default external format — color.ts (pure OKLCH↔sRGB + CSS-Color-4…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-11 (M4 Phase 2) — ui-master-detail + collapse:\"toggle\" land the app-tier panes chrome",
+    "url": "./changelog.html#2026-07-11-m4-phase-2-ui-master-detail-collapse-toggle-land-the-app-tier-panes-chrome",
+    "description": "ui-master-detail (+ ui-master-detail-pane), NEW in @agent-ui/app (app-surfaces-m4 LLD-C10, SPEC-R7): the list|detail surface composing the shipped ui-split wit…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-10 (ui-command-modal) — the CMD-K palette ships as pure composition",
+    "url": "./changelog.html#2026-07-10-ui-command-modal-the-cmd-k-palette-ships-as-pure-composition",
+    "description": "ADR-0125's control: nests the shipped ui-modal for surface+dismissal (the child-move ordering constraints honored), re-derives combo-box's active-descendant fi…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-10 (the swiper family) — ui-swiper ships on the fleet's first scroll-snap",
+    "url": "./changelog.html#2026-07-10-the-swiper-family-ui-swiper-ships-on-the-fleet-s-first-scroll-snap",
+    "description": "ADR-0124's five-tag family (review SHIP): ui-swiper + ui-swiper-item + the author-placed chrome (pagination dots with size-signified active state, never-disabl…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-10 (the timeline family) — ui-timeline-item · ui-timeline · ui-status-stream ship",
+    "url": "./changelog.html#2026-07-10-the-timeline-family-ui-timeline-item-ui-timeline-ui-status-stream-ship",
+    "description": "ADR-0122's three-tag family (review SHIP; the extrapolated geometry registers scored a strong pass against the band-overlap law): one inert item atom (five dis…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-10 (ui-toolbar) — the toolbar ships, and the fleet's roving/tabbable contract is repaired",
+    "url": "./changelog.html#2026-07-10-ui-toolbar-the-toolbar-ships-and-the-fleet-s-roving-tabbable-contract-is-repaired",
+    "description": "ADR-0121's control (review GO): dual-posture via the surface axis (no posture enum, no overlay machinery), host-as-flex with light-DOM children AS the roving i…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-10 (ui-split, M4 Phase 1) — the multi-pane split primitive ships",
+    "url": "./changelog.html#2026-07-10-ui-split-m4-phase-1-the-multi-pane-split-primitive-ships",
+    "description": "ADR-0120 Phase 1 (review SHIP after one fix pass): ui-split + ui-split-pane — N-pane, two-neighbor local redistribution (residual dropped), a pure constrain.ts…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-10 (@agent-ui/code M1) — the code+prose family ships: highlight · markdown, hand-rolled and gated",
+    "url": "./changelog.html#2026-07-10-agent-ui-code-m1-the-code-prose-family-ships-highlight-markdown-hand-rolled-and-gated",
+    "description": "ADR-0119's package lands (double-reviewed: the ui-markdown element GO 5/5; the package-level review GO with the throwing-highlighter path hardened): a zero-dep…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-10 (token surfaces M2) — Swatch · Ramp · Ladder join the catalog; the allowlist seeds drain",
+    "url": "./changelog.html#2026-07-10-token-surfaces-m2-swatch-ramp-ladder-join-the-catalog-the-allowlist-seeds-drain",
+    "description": "The teaching wave (ADR-0118 cl.6, a2ui-reviewed SHIP, all rubric dimensions at gate): three display-only catalog rows (content props bindable per the chart-fam…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-10 (the token system lands) — Kim's generated palette rework + the 15-role restore",
+    "url": "./changelog.html#2026-07-10-the-token-system-lands-kim-s-generated-palette-rework-the-15-role-restore",
+    "description": "Kim's ultimate-tokens rework is IN (reviewed, zero-red): 126 new roles — systematic per-family interaction-state ladders (hover/active/disabled, on-role, conta…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-10 (token surfaces M1) — ui-swatch · ui-ramp · ui-ladder ship; the token page dogfoods them",
+    "url": "./changelog.html#2026-07-10-token-surfaces-m1-ui-swatch-ui-ramp-ui-ladder-ship-the-token-page-dogfoods-them",
+    "description": "The fleet's third display family (ADR-0118, PRD accepted): the browser is the only color engine — value-first contracts (value=\"oklch(…)\" with the --var lane w…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-10 (ratifications) — ADR-0118/0119/0120 accepted: token surfaces · @agent-ui/code · app-surfaces M4",
+    "url": "./changelog.html#2026-07-10-ratifications-adr-0118-0119-0120-accepted-token-surfaces-agent-ui-code-app-surfaces-m4",
+    "description": "Kim ratified all three design-system-surfaces records (TKT-0007's fork passes, ten forks answered): ADR-0118 (ui-swatch/ramp/ladder — value-first contracts, im…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-10 — the debt sweep: G7 labelling/error-leg completion · parts drift gate · the live-test flake retired",
+    "url": "./changelog.html#2026-07-10-the-debt-sweep-g7-labelling-error-leg-completion-parts-drift-gate-the-live-test-flake-retired",
+    "description": "The G7 follow-ups close (recorded open since 2026-07-01): ui-calendar gains the ADR-0051 labelling merge (a field's label merges into the grid's aria-labelledb…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-09 (ratifications + the component skill suite) — ADR-0116/0117 accepted · `agent-ui-component-*` (TKT-0005)",
+    "url": "./changelog.html#2026-07-09-ratifications-the-component-skill-suite-adr-0116-0117-accepted-agent-ui-component-tkt-0005",
+    "description": "ADR-0116 (A2A live real-time examples) and ADR-0117 (ui-theme-provider) RATIFIED by Kim (hand-flipped in-tree + verbal, 2026-07-09).",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-09 (ui-theme-provider) — the docs-site theming wrapper ships as a real control (ADR-0117)",
+    "url": "./changelog.html#2026-07-09-ui-theme-provider-the-docs-site-theming-wrapper-ships-as-a-real-control-adr-0117",
+    "description": "ui-theme-provider — TKT-0003's promotion of site/lib/theme-provider.ts's CONTRACT (not its file) to a real, importable @agent-ui/components control (controls/t…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-09 (late) — the docs conceptual layer + B7 live real-time A2A arms (ADR-0116)",
+    "url": "./changelog.html#2026-07-09-late-the-docs-conceptual-layer-b7-live-real-time-a2a-arms-adr-0116",
+    "description": "The docs site's conceptual layer — seven guide pages (getting-started · theming · a fully-derived token reference · sizing & density with a live measured matri…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-09 — report/content/feed component families + `@agent-ui/router` (ADR-0111–0115)",
+    "url": "./changelog.html#2026-07-09-report-content-feed-component-families-agent-ui-router-adr-0111-0115",
+    "description": "Twelve new components across three families, each built → independently reviewed → integrated → documented → catalogued, plus a brand-new top-level package.",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-08 (afternoon/evening) — the CSS-less-consumer law + the chart family (ADR-0101–0110)",
+    "url": "./changelog.html#2026-07-08-afternoon-evening-the-css-less-consumer-law-the-chart-family-adr-0101-0110",
+    "description": "The CSS-less-consumer contract law (ADR-0102).",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-08 (morning) — `@agent-ui/a2a` + the A2UI live-agent/feed/bridge wave (ADR-0087–0100)",
+    "url": "./changelog.html#2026-07-08-morning-agent-ui-a2a-the-a2ui-live-agent-feed-bridge-wave-adr-0087-0100",
+    "description": "@agent-ui/a2a — a new top-level, zero-dep package: the A2A (Agent2Agent) protocol core (wire types + task-lifecycle model pinned to spec v0.3.0), the tic-tac-t…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-06 — G8 polish + the agent-app-shell M1 (ADR-0082–0086)",
+    "url": "./changelog.html#2026-07-06-g8-polish-the-agent-app-shell-m1-adr-0082-0086",
+    "description": "The agent-app-shell — M1 of agent-app-surfaces (ADR-0082/0083/0084).",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "2026-07-05 — the components foundation is COMPLETE (G0–G9 · Control Suite · icons · G8)",
+    "url": "./changelog.html#2026-07-05-the-components-foundation-is-complete-g0-g9-control-suite-icons-g8",
+    "description": "The full arc — G0 (tooling) through G8 (gallery + release-readiness) — is done and green.",
+    "level": "L3",
+    "section": "Records"
+  }
+]
