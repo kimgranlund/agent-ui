@@ -102,7 +102,7 @@ gate is the planned closure (§11).
   list · label · numeric · currency · stepper · magnifier · description · timestamp · shortcut ·
   reveal · group-label · calendar · swatch · trailing · clear · before-sentinel (mechanism
   artifact — rename candidates stay fix-on-touch). The registry covers control-emitted roles plus
-  named AUTHOR hooks a descriptor advertises (today: `empty`, command-modal).
+  named AUTHOR hooks a descriptor advertises (today: `empty` — command-modal's author hook; the gate pins that no data-role="command-modal" exists).
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,
   kebab: ready · user-invalid · checked · dragging · revealed · disabled · collapsed · truncated
   · selected · indeterminate. A verb or noun is not a state name.
