@@ -48,7 +48,7 @@ properties:
 events:                  # all ⊂ the change·input·select·open·close·toggle allowlist (NO `dismiss`)
   - name: select
     detail: '{ value: string, label: string, group: string }'
-    description: Fired when a command is chosen (click on an enabled option, or Enter on the active option). `label` is the option's primary label text — its decorative [data-role=shortcut]/[data-role=icon]/aria-hidden descendants are excluded. `group` is the containing [role=group]'s [data-role=group-label] heading text, or '' when ungrouped. The palette then sets `open=false` (closing the nested modal) — a selection-driven close emits ONLY `select`, never `close`/`toggle`.
+    description: Fired when a command is chosen (click on an enabled option, or Enter on the active option). `label` is the option's primary label text — its decorative [data-role=shortcut]/[data-role=icon]/aria-hidden descendants are excluded, as is an optional [data-role=description] second line (TKT-0019 — still fully in the accessibility tree, only excluded from this label). `group` is the containing [role=group]'s [data-role=group-label] heading text, or '' when ungrouped. The palette then sets `open=false` (closing the nested modal) — a selection-driven close emits ONLY `select`, never `close`/`toggle`.
   - name: close
     detail: 'null'
     description: Fired when the nested modal is dismissed by the platform (Escape/backdrop) — relayed one level up, the two-way `open` pattern (ADR-0019). NOT fired on a selection-driven close (that emits only `select`).
@@ -86,7 +86,7 @@ aria:
 
 keyboard:
   - keys: <printable>
-    action: Filters the list (case-insensitive substring/keyword match by default, or regex when `filter="regex"` — ADR-0127, falling back to substring on an invalid pattern — over the option's primary label + an optional data-keywords string; a decorative [data-role=shortcut] display is excluded from the match); resets the active option.
+    action: Filters the list (case-insensitive substring/keyword match by default, or regex when `filter="regex"` — ADR-0127, falling back to substring on an invalid pattern — over the option's primary label + an optional data-keywords string; a decorative [data-role=shortcut] display and an optional [data-role=description] second line are excluded from the match — a consumer folds description text into data-keywords instead if it should stay filterable); resets the active option.
   - keys: ArrowDown
     action: Moves the active option (aria-activedescendant + [data-active]) to the next visible, enabled option, wrapping. Focus STAYS in the search field.
   - keys: ArrowUp
@@ -109,7 +109,7 @@ geometry:
 forcedColors: A `@media (forced-colors: active)` block keeps the search field frame and the active-option highlight legible as system colours (Field/FieldText, Highlight/HighlightText) — the aria-activedescendant + [data-active] pairing is the non-color signifier, so no color-only intent exists (the combo-box [data-active] precedent). The nested modal's own forced-colors block covers the dialog surface/backdrop.
 
 catalog: excluded          # PERMANENT EXCLUSION_ALLOWLIST entry (ADR-0125 F8 / ADR-0112 cl.6 exclusion class) — app-owner launcher chrome, never agent-emittable
-contentModel: '[role=option][value] children (an optional leading icon element + label text + an optional decorative [data-role=shortcut] display + an optional data-keywords string), optionally grouped under [role=group][aria-labelledby] with a [data-role=group-label] heading; an optional [slot=empty] override'
+contentModel: '[role=option][value] children (an optional leading icon element + label text + an optional decorative [data-role=shortcut] display + an optional [data-role=description] second-line display, muted + single-line-clamped, excluded from labelText/select.label but NOT aria-hidden + an optional data-keywords string), optionally grouped under [role=group][aria-labelledby] with a [data-role=group-label] heading; an optional [slot=empty] override'
 ---
 
 # ui-command-modal
@@ -162,9 +162,22 @@ The palette is **arrangement + filter + selection semantics**, never a command b
   `aria-activedescendant` + `[data-active]` **without moving DOM focus**.
 - **The item model = author-declared children (ADR-0017 child-move).** Commands are stateless, declarative
   `[role="option"][value]` entries — rich inner content is author-authored (an optional leading icon, the
-  label text, an optional decorative `[data-role="shortcut"]` display). `disabled`/`aria-disabled` opts an
-  option out of navigation and commit. Grouping is a `[role="group"]` wrapper with a `[data-role="group-label"]`
-  heading; the heading text becomes the `select` detail's `group` field.
+  label text, an optional decorative `[data-role="shortcut"]` display, an optional `[data-role="description"]`
+  second line). `disabled`/`aria-disabled` opts an option out of navigation and commit. Grouping is a
+  `[role="group"]` wrapper with a `[data-role="group-label"]` heading; the heading text becomes the `select`
+  detail's `group` field.
+
+## The two-line option shape (TKT-0019)
+
+An option renders as **two lines**: line 1 is the existing title-row content (an optional leading icon, the
+label text, an optional trailing `[data-role="shortcut"]`) — unchanged. Line 2 is an optional
+`[data-role="description"]` — smaller, muted type, clamped to one line with an ellipsis; it never wraps and
+never grows the option beyond two lines. The description is excluded from `#labelText` exactly like the
+shortcut (so `select` detail.label and the filter's item-label text stay the title), but — unlike the
+shortcut, which also carries `aria-hidden="true"` — the description carries **no** `aria-hidden`: it is a
+real, visible second line and stays fully in the accessibility tree. It is not part of the filter haystack
+either; a consumer who wants the description text searchable folds it into `data-keywords` instead (the
+control's own filter already reads item-label + data-keywords).
 
 ## Selection — never a command bus
 

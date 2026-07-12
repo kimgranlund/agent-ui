@@ -46,7 +46,7 @@ function simulatePlatformClose(dialog: HTMLDialogElement): void {
 
 // ── helpers ──────────────────────────────────────────────────────────────────────────────────────────────
 
-function option(value: string, label: string, extra?: { keywords?: string; disabled?: boolean; shortcut?: string }): HTMLElement {
+function option(value: string, label: string, extra?: { keywords?: string; disabled?: boolean; shortcut?: string; description?: string }): HTMLElement {
   const opt = document.createElement('div')
   opt.setAttribute('role', 'option')
   opt.setAttribute('value', value)
@@ -57,6 +57,14 @@ function option(value: string, label: string, extra?: { keywords?: string; disab
     s.setAttribute('aria-hidden', 'true')
     s.textContent = extra.shortcut
     opt.append(s)
+  }
+  if (extra?.description) {
+    // TKT-0019 — the second-line description: NOT aria-hidden (stays in the a11y tree), only excluded from
+    // #labelText/select.label (the same shape as the shortcut precedent above, minus the aria-hidden).
+    const d = document.createElement('div')
+    d.setAttribute('data-role', 'description')
+    d.textContent = extra.description
+    opt.append(d)
   }
   if (extra?.keywords) opt.setAttribute('data-keywords', extra.keywords)
   if (extra?.disabled) opt.setAttribute('aria-disabled', 'true')
@@ -418,6 +426,30 @@ describe('ui-command-modal — regex filter mode (ADR-0127, LLD-C14)', () => {
     el.remove()
   })
 
+  it('TKT-0019: a [data-role=description] second line is excluded from the filter haystack (labelText), so an anchored `^` pattern still narrows on the title alone', () => {
+    const { el, search, list } = makePalette(
+      [
+        option('home', 'ui-home (Home)', { description: 'Navigate to the dashboard' }),
+        option('button', 'ui-button (Button)', { description: 'A pressable control' }),
+      ],
+      { filter: 'regex' },
+    )
+    search.textContent = '^ui-home' // an anchor: can only match a labelText that STARTS with it — never the description
+    search.dispatchEvent(new Event('input', { bubbles: true }))
+    const opts = [...list.querySelectorAll<HTMLElement>('[role=option]')]
+    expect(opts[0]!.hidden).toBe(false) // "ui-home (Home)" — labelText itself starts with the anchor
+    expect(opts[1]!.hidden).toBe(true) // "ui-button (Button)" — excluded, even though it too starts with "ui-"
+    // The DISCRIMINATING leg (review fold-in): "dashboard" appears ONLY inside opts[0]'s description div
+    // (no data-keywords in this fixture). If #labelText wrongly folded the description in, this would
+    // match — the anchor assertions above alone cannot tell (the description is appended AFTER the title,
+    // so a `^` pattern inspects position 0 identically either way).
+    search.textContent = 'dashboard'
+    search.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(opts[0]!.hidden).toBe(true) // description text is NOT in the haystack (only label + data-keywords are)
+    expect(opts[1]!.hidden).toBe(true)
+    el.remove()
+  })
+
   it('filter="substring" (the default, no attribute) is unaffected by regex-special characters', () => {
     const { el, search, list } = makePalette([option('a', 'a(b)c')])
     search.textContent = 'a('
@@ -496,6 +528,23 @@ describe('ui-command-modal — selection = select + close (SPEC-R6)', () => {
 
     expect(detail).toEqual({ value: 'home', label: 'Go Home', group: 'Navigation' })
     expect(el.open).toBe(false)
+    el.remove()
+  })
+
+  it('TKT-0019: a [data-role=description] second line is excluded from select.label but stays in the a11y tree (no aria-hidden)', () => {
+    const { el, search } = makePalette([
+      option('home', 'Go Home', { description: 'Navigate to the dashboard' }),
+    ])
+    let detail: { value: string; label: string; group: string } | undefined
+    el.addEventListener('select', (e) => { detail = (e as CustomEvent).detail })
+
+    const desc = el.querySelector<HTMLElement>('[data-role=description]')!
+    expect(desc.hasAttribute('aria-hidden'), 'the description must stay in the accessibility tree').toBe(false)
+    expect(desc.textContent).toBe('Navigate to the dashboard')
+
+    fireKey(search, 'ArrowDown')
+    fireKey(search, 'Enter')
+    expect(detail?.label, 'select.label must be the title only, never the description').toBe('Go Home')
     el.remove()
   })
 

@@ -1,5 +1,12 @@
 [
   {
+    "name": "2026-07-11 (TKT-0019) — the palette's options decompose; dialogs get a real backdrop",
+    "url": "./changelog.html#2026-07-11-tkt-0019-the-palette-s-options-decompose-dialogs-get-a-real-backdrop",
+    "description": "Kim's same-day QA on the fresh search palette (screenshot): every result rendered as one flat concatenated paragraph wrapping to three uniform-size lines, and…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "2026-07-11 (site command-search) — the docs site dogfoods its own palette (TKT-0018 · ADR-0127)",
     "url": "./changelog.html#2026-07-11-site-command-search-the-docs-site-dogfoods-its-own-palette-tkt-0018-adr-0127",
     "description": "ui-command-modal gains filter: 'substring'|'regex' (ADR-0127, accepted): a closed enum, substring default (shipped behavior byte-identical — the original suite…",

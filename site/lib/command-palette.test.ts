@@ -109,13 +109,17 @@ describe('mountCommandPalette — render + grouping', () => {
     expect(labels).toEqual(['Components', 'Guides', 'Records'])
 
     // The tag leads (not the display name) — load-bearing for SPEC-R7 AC1's anchored-regex example; see
-    // buildOption's own doc comment for why data-keywords alone cannot make `^ui-…` match.
+    // buildOption's own doc comment for why data-keywords alone cannot make `^ui-…` match. TKT-0019 — the
+    // title (labelText-visible, a plain text node) and the description (a separate [data-role=description]
+    // line, excluded from labelText) are asserted SEPARATELY now, not as one flattened textContent string.
     const buttonOption = palette.querySelector('[role=option][value="./button-doc.html"]')!
-    expect(buttonOption.textContent).toBe('ui-button (Button) — A pressable control.')
+    expect(buttonOption.childNodes[0]?.textContent).toBe('ui-button (Button)')
+    expect(buttonOption.querySelector('[data-role=description]')?.textContent).toBe('A pressable control.')
     expect((buttonOption as HTMLElement).dataset.keywords).toBe('ui-button A pressable control.')
 
     const guideOption = palette.querySelector('[role=option][value="./theming.html"]')!
-    expect(guideOption.textContent).toBe('Theming — One theming subtree.') // no tag => no "(tag)" segment
+    expect(guideOption.childNodes[0]?.textContent).toBe('Theming') // no tag => no "(tag)" segment
+    expect(guideOption.querySelector('[data-role=description]')?.textContent).toBe('One theming subtree.')
   })
 
   it('mounts the hotkey + regex filter + accessible label on the created instance', async () => {

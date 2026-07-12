@@ -75,13 +75,22 @@ const scrollTo = (el: HTMLElement, top: number): Promise<void> =>
     el.scrollTop = top
   })
 
-/** Alpha of a computed colour — 0 ⇒ the paint has VANISHED (a bare system keyword with no rgb() is opaque). */
+/** Alpha of a computed colour — 0 ⇒ the paint has VANISHED (a bare system keyword with no rgb() is opaque).
+ *  TKT-0019 — the legacy `rgba?(r,g,b,a)` parse first; a modern colour-function computed value (oklch()/
+ *  color()/lab()/etc., e.g. the new --md-sys-color-dialog-backdrop role) serializes with the SAME trailing
+ *  `/ alpha` syntax as rgb() under CSS Color 4, so a generic "alpha is whatever follows the last `/` before the
+ *  closing paren" fallback reads it too — engines are free to keep an author's oklch() computed value verbatim
+ *  instead of down-converting to rgb() when it's in-gamut, which real Chromium/WebKit do for this role. */
 const alphaOf = (color: string): number => {
   if (color === 'transparent') return 0
   const m = color.match(/rgba?\(([^)]+)\)/i)
-  if (!m) return 1
-  const parts = m[1].split(/[\s,/]+/).filter(Boolean)
-  return parts.length >= 4 ? Number(parts[3]) : 1
+  if (m) {
+    const parts = m[1].split(/[\s,/]+/).filter(Boolean)
+    return parts.length >= 4 ? Number(parts[3]) : 1
+  }
+  const slash = color.match(/\/\s*([\d.]+)(%)?\s*\)\s*$/)
+  if (slash) return slash[2] ? Number(slash[1]) / 100 : Number(slash[1])
+  return 1
 }
 
 /** Minimal CDP surface — `cdp()`'s public type is empty; the playwright provider gives `.send` at runtime. */
@@ -422,6 +431,11 @@ describe('ui-modal — the ::backdrop scrim (Chromium emulates forced-colors via
       alphaOf(getComputedStyle(dialog, '::backdrop').backgroundColor),
       `${server.browser}: the ::backdrop did not paint a scrim`,
     ).toBeGreaterThan(0)
+    // TKT-0019 — black 80% opacity (Kim-specified), not the old lighter --md-sys-color-neutral-scrim (30%).
+    expect(
+      alphaOf(getComputedStyle(dialog, '::backdrop').backgroundColor),
+      `${server.browser}: the ::backdrop is not the ruled black-80% (TKT-0019)`,
+    ).toBeCloseTo(0.8, 1)
     expect(alphaOf(getComputedStyle(dialog).backgroundColor), 'the dialog surface is not opaque').toBeGreaterThan(0)
 
     if (server.browser !== 'chromium') {

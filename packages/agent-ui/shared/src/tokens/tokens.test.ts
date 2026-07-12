@@ -214,6 +214,18 @@ describe('tokens.css — the AA-guaranteed --md-sys-color-primary-selected fill 
   })
 })
 
+// tok-dialog-backdrop (TKT-0019) — the fleet-wide ui-modal ::backdrop scrim role, Kim-specified verbatim: black
+// at 80% opacity, SCHEME-INVARIANT by design (a backdrop isolates the dialog from the busy page behind it in
+// EITHER scheme, not tinted by the surface ramp) — resolved via light-dark() with identical legs, the sheet's
+// own idiom for every semantic role (including the other scheme-invariant hand-authored roles above it).
+describe('tokens.css — the dialog-backdrop scrim role (TKT-0019)', () => {
+  it('declares --md-sys-color-dialog-backdrop as black 80% opacity, both light-dark() legs identical', () => {
+    expect(rootBlock).toMatch(
+      /--md-sys-color-dialog-backdrop:\s*light-dark\(\s*oklch\(0 0 0\s*\/\s*0\.8\)\s*,\s*oklch\(0 0 0\s*\/\s*0\.8\)\s*\)/,
+    )
+  })
+})
+
 // tok-system — the SYSTEMATIC per-family role grammar of Kim's ultimate-tokens generator. The migration
 // replaced ad-hoc, per-need roles with a uniform grammar: eight intent families (neutral + the accent set
 // + the status set) each carry the IDENTICAL semantic-role ladder, every role resolved via light-dark(),

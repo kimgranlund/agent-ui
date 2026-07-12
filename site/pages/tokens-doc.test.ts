@@ -45,8 +45,11 @@ describe('tokens.html source — color roles', () => {
     expect(roles.some((r) => r.varName === '--md-sys-color-focus-ring')).toBe(true)
   })
 
-  it('derives exactly the nine families the current palette ships (fails loudly if one is added/removed)', () => {
-    expect(familiesOf(roles).sort()).toEqual(['danger', 'focus', 'info', 'neutral', 'primary', 'secondary', 'success', 'tertiary', 'warning'])
+  it('derives exactly the ten families the current palette ships (fails loudly if one is added/removed)', () => {
+    // TKT-0019 — 'dialog' joins the list: --md-sys-color-dialog-backdrop parses as { family: 'dialog', role:
+    // 'backdrop' } via the SAME bare-utility-token shape as 'focus' (parseColorRoles's own doc comment — no
+    // special case needed), so it renders as its own one-role family section on tokens.html.
+    expect(familiesOf(roles).sort()).toEqual(['danger', 'dialog', 'focus', 'info', 'neutral', 'primary', 'secondary', 'success', 'tertiary', 'warning'])
   })
 
   it('every role value is a real declared expression (light-dark(...) or a literal), never empty', () => {
@@ -88,6 +91,10 @@ describe('tokens.html source — tonal primitives (SPEC-R17 AC2, additive)', () 
 
   it('a family with no numbered primitives (focus — a bare utility token) resolves to no entry, not a crash', () => {
     expect(primitives.focus).toBeUndefined()
+  })
+
+  it('same for dialog (TKT-0019 — --md-sys-color-dialog-backdrop, also a bare utility token)', () => {
+    expect(primitives.dialog).toBeUndefined()
   })
 })
 

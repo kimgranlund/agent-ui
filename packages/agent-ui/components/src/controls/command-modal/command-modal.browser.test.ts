@@ -268,6 +268,52 @@ describe('ui-command-modal — forced-colors (Chromium via CDP; WebKit asserts t
   })
 })
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [5] TKT-0019 — the two-line option shape: a clamped, single-line description, never a third line
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-command-modal — TKT-0019: the two-line option shape (both engines)', () => {
+  it('a long [data-role=description] clamps to ONE line with an ellipsis; the option never wraps to a third line', async () => {
+    const LONG =
+      'This is a deliberately very long description that will not fit on one line at the palette’s realistic narrow width, so it must clamp with an ellipsis instead of wrapping onto a second or third line.'
+    const { el } = mount(`
+      <ui-command-modal label="Command palette">
+        <div role="option" value="plain">No description</div>
+        <div role="option" value="home">Go Home<div data-role="description">${LONG}</div></div>
+      </ui-command-modal>
+    `)
+    el.open = true
+    await el.updateComplete
+    const plainOption = el.querySelector<HTMLElement>('[value=plain]')!
+    const option = el.querySelector<HTMLElement>('[value=home]')!
+    const description = el.querySelector<HTMLElement>('[data-role=description]')!
+
+    // genuinely too long to fit — otherwise the truncation assertion below would be vacuous.
+    expect(
+      description.scrollWidth,
+      `${server.browser}: the description fixture is not actually wider than its box — the clamp assertion would be vacuous`,
+    ).toBeGreaterThan(description.clientWidth)
+
+    // clamped to exactly one line — no vertical overflow (it did NOT wrap onto a second physical line of its own).
+    expect(
+      description.scrollHeight,
+      `${server.browser}: the description wrapped instead of clamping to one line`,
+    ).toBeLessThanOrEqual(description.clientHeight + 1)
+
+    // the whole option renders as exactly TWO lines, never three: taller than a title-only (one-line) option by
+    // roughly one description line's worth (+ the item's own row-gap between the two lines), not by a full
+    // SECOND description line's worth of extra growth (which a wrapped/unclamped description would cost).
+    const oneLineHeight = plainOption.getBoundingClientRect().height
+    const twoLineHeight = option.getBoundingClientRect().height
+    const descLineHeight = description.getBoundingClientRect().height
+    expect(twoLineHeight, `${server.browser}: the option with a description is not taller than the one-line option`).toBeGreaterThan(oneLineHeight)
+    expect(
+      twoLineHeight,
+      `${server.browser}: the option grew a third line (taller than one title line + ~two description lines' headroom)`,
+    ).toBeLessThan(oneLineHeight + descLineHeight * 2)
+  })
+})
+
 describe('ui-command-modal — TKT-0017: the fixed frame (both engines)', () => {
   it('the search field and the panel frame do NOT move as filtering changes the result count', async () => {
     const { el } = mount(PALETTE_MARKUP)

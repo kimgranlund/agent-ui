@@ -43,7 +43,9 @@ describe('modal.css — structure + sectioning (s9)', () => {
     for (const slot of ['ink', 'outline', 'radius', 'padding', 'scrim']) {
       expect(tokenBlock).toMatch(new RegExp(`--ui-modal-${slot}:`))
     }
-    expect(tokenBlock).toMatch(/--ui-modal-scrim:\s*var\(--md-sys-color-neutral-scrim\)/) // the backdrop wash (a scrim role)
+    // TKT-0019 — black 80% opacity (Kim-specified), NOT the generated --md-sys-color-neutral-scrim (too light);
+    // the dedicated --md-sys-color-dialog-backdrop role is fleet-wide (every ui-modal dialog).
+    expect(tokenBlock).toMatch(/--ui-modal-scrim:\s*var\(--md-sys-color-dialog-backdrop\)/)
     expect(tokenBlock).toMatch(/--ui-modal-radius:\s*var\(--ui-radius-base\)/) // the shared fleet radius
     expect(tokenBlock).toMatch(/--ui-modal-padding:\s*var\(--ui-space-/) // the density-responsive layout spacing
   })

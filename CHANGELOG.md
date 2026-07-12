@@ -833,3 +833,27 @@ committed color back into `surface.data`. Gates: check · a2ui 975/975 · the si
 - Gates: check · site/lib 247 jsdom + the palette browser legs both engines · full jsdom 5618 green ·
   size green. Reviews: control slice NO-GO→fix→GO; site half GO with two fold-ins (the deferred-merge
   AC3 test, the anchor fix).
+
+## 2026-07-11 (TKT-0019) — the palette's options decompose; dialogs get a real backdrop
+
+- **Kim's same-day QA on the fresh search palette (screenshot):** every result rendered as one flat
+  concatenated paragraph wrapping to three uniform-size lines, and the modal scrim (30% neutral alpha)
+  barely dimmed the page. His intake rulings: a NEW `--md-sys-color-dialog-backdrop` token at
+  `oklch(0 0 0 / 0.8)` consumed fleet-wide, and a two-line option shape (tag-led title + one clamped
+  muted description line).
+- **The backdrop (token lane):** the new role lives in the hand-authored block (④ beside
+  tint-wash/track/selected — a PERMANENT bespoke role the generator will never emit, regen-protected by
+  placement); `--ui-modal-scrim` defaults to it — every `ui-modal` dialog darkens; the public dial and the
+  forced-colors exclusion stand.
+- **The option display (component-owned lane, ADR-0102):** the command-modal content model gains
+  `[data-role=description]` — excluded from `#labelText` (so `select` detail.label stays the title and the
+  `^ui-` anchor invariant holds, now discriminating-tested against description smuggling) but NOT
+  aria-hidden (announced by AT as part of a sane two-line read); the control's CSS owns the layout
+  (flex-wrap + flex-basis:100% + single-line ellipsis clamp, muted ink held under [data-active]); the site
+  palette builds title + description as separate nodes. data-keywords unchanged — descriptions stay
+  filterable.
+- The wave also fixed a VACUOUS test helper: `alphaOf` returned 1 for `oklch(...)` serializations (both
+  real engines serialize ::backdrop that way), so the prior backdrop-alpha assertion could never fail —
+  extended to parse any CSS Color 4 `/ alpha` tail; the ~0.8 assertion is now load-bearing cross-engine.
+  Review GO; the hand-block header count repaired (15→16 roles). Gates: check · scoped 160+ jsdom ·
+  56 browser both engines · size green (command-modal 1093/2048 B).

@@ -29,21 +29,33 @@ const GROUP_ORDER: readonly SitemapEntry['level'][] = ['L1', 'L2', 'L3']
  * `contentModel`): `value` carries the navigation target, `data-keywords` folds tag+description into the
  * control's existing filter haystack (item label + data-keywords) with zero control change (LLD-C7).
  *
- * The tag LEADS an L1 entry's rendered text (`ui-swiper-paddles (Swiper Paddles) — …`), not the display name —
- * a deliberate reorder off the ticket's own illustrative `Name (tag) — …` example, load-bearing for SPEC-R7
- * AC1's anchored-regex example (`^ui-swiper` narrowing to the swiper family): the control's own haystack is
+ * TKT-0019 — the two-line shape: line 1 is a plain text node (the title, `#labelText`-visible); line 2 is a
+ * `[data-role="description"]` div (command-modal's own two-line/clamp CSS — the component-owned lane, never a
+ * site-side CSS reach into control internals). The description div is EXCLUDED from `#labelText` (so `select`
+ * detail.label and the filter's item-label text stay just the title) but carries no `aria-hidden` — it stays a
+ * real, visible, announced line; `data-keywords` (below) is what keeps it filterable.
+ *
+ * The tag LEADS an L1 entry's title line (`ui-swiper-paddles (Swiper Paddles)`), not the display name — a
+ * deliberate reorder off the ticket's own illustrative `Name (tag) — …` example, load-bearing for SPEC-R7 AC1's
+ * anchored-regex example (`^ui-swiper` narrowing to the swiper family): the control's own haystack is
  * `#labelText(opt) + ' ' + data-keywords` (labelText ALWAYS first — verified against command-modal.ts), so an
  * anchored `^` pattern can only ever match a position-0 string, and can NEVER reach into `data-keywords` no
  * matter what leads there. Leading `data-keywords` with the raw tag alone (kept below) is therefore necessary
  * but not sufficient — the VISIBLE label itself must start with the tag, or `^ui-…` can never match anything.
  * This keeps every piece (tag, name, description) present and DOM order == visual order == accessible order (no
- * aria-hidden/visual-order mismatch), just swaps which of tag/name is primary vs parenthetical.
+ * aria-hidden/visual-order mismatch on the title line), just swaps which of tag/name is primary vs parenthetical.
  */
 function buildOption(entry: SitemapEntry): HTMLElement {
   const option = document.createElement('div')
   option.setAttribute('role', 'option')
   option.setAttribute('value', entry.url)
-  option.textContent = entry.tag ? `${entry.tag} (${entry.name}) — ${entry.description}` : `${entry.name} — ${entry.description}`
+  option.append(document.createTextNode(entry.tag ? `${entry.tag} (${entry.name})` : entry.name))
+  if (entry.description) {
+    const description = document.createElement('div')
+    description.dataset.role = 'description'
+    description.textContent = entry.description
+    option.append(description)
+  }
   option.dataset.keywords = `${entry.tag ?? ''} ${entry.description}`
   return option
 }

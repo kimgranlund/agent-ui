@@ -123,6 +123,8 @@
 
   :scope [role='option'] {
     display: flex;
+    flex-wrap: wrap; /* TKT-0019 — lets [data-role=description] (flex-basis:100%, below) push onto its own line;
+                        the title row (icon/label/shortcut) is unaffected while it still fits one line */
     align-items: center;
     gap: var(--ui-command-modal-item-gap);
     padding-inline: var(--ui-command-modal-item-pad-inline);
@@ -147,6 +149,24 @@
     margin-inline-start: auto;
     color: var(--ui-command-modal-muted-ink);
     font-size: var(--ui-command-modal-caption-font);
+  }
+
+  /* TKT-0019 — the option's second line: a clamped, muted, single-line description below the title row.
+     flex-basis:100% is the wrap-forcing idiom (the sibling title-row content stays on line 1 as long as it
+     fits; this item never does, so it always starts a fresh flex line). min-inline-size:0 overrides the flex
+     default (min-width:auto, i.e. "never shrink below intrinsic content size") — without it, overflow/
+     text-overflow below would never actually engage and the line would just push the option wider instead of
+     clamping. Ink stays the muted role UNCONDITIONALLY (the [data-role=shortcut] precedent, two rules up) —
+     it does not re-color under [data-active]; the muted role is AA-proven against the active-bg wash by the
+     same composed-surface math tokens.test.ts already runs for --md-sys-color-neutral-on-surface-variant. */
+  :scope [data-role='description'] {
+    flex-basis: 100%;
+    min-inline-size: 0;
+    color: var(--ui-command-modal-muted-ink);
+    font-size: var(--ui-command-modal-caption-font);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   /* ── Result-count live region — visually hidden, present to AT ───────────────────────────────────── */

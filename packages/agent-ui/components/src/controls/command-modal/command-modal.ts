@@ -201,13 +201,19 @@ export class UICommandModalElement extends UIElement {
 
   // The option's PRIMARY label text — excludes decorative descendants ([data-role=shortcut]/[data-role=icon]/
   // aria-hidden and <ui-icon>) so a `⌘H` shortcut is neither in select.detail.label nor matchable by the filter
-  // (SPEC §2 Item label). Iterates childNodes: skips decorative element children, keeps text + real label spans.
+  // (SPEC §2 Item label). TKT-0019 — [data-role=description] joins the exclusion for the SAME reason (`select`
+  // detail.label and the `^ui-` anchored labelText must stay the title, never the second line); unlike the
+  // shortcut this is a labelText-ONLY exclusion — the description carries no aria-hidden and stays fully in
+  // the accessibility tree (a visible line SHOULD be announced; only its ROLE in this control's own label/
+  // filter text is excluded). Filterability is unaffected — the site's own data-keywords already folds the
+  // description text into the (separate) filter haystack. Iterates childNodes: skips decorative element
+  // children, keeps text + real label spans.
   #labelText(opt: HTMLElement): string {
     let s = ''
     for (const node of opt.childNodes) {
       if (node.nodeType === Node.ELEMENT_NODE) {
         const el = node as HTMLElement
-        if (el.tagName === 'UI-ICON' || el.matches('[data-role=shortcut],[data-role=icon],[aria-hidden=true]')) continue
+        if (el.tagName === 'UI-ICON' || el.matches('[data-role=shortcut],[data-role=icon],[data-role=description],[aria-hidden=true]')) continue
         s += el.textContent ?? ''
       } else if (node.nodeType === Node.TEXT_NODE) {
         s += node.textContent ?? ''

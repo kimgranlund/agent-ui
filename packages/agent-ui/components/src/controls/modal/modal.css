@@ -34,7 +34,7 @@
   --ui-modal-outline: var(--md-sys-color-neutral-outline-variant); /* the faint dialog frame */
   --ui-modal-radius: var(--ui-radius-base); /* the shared fleet radius (ADR-0015 cl.5) */
   --ui-modal-padding: var(--ui-space-lg); /* the shell pad off the density-responsive ladder (NOT a control height) */
-  --ui-modal-scrim: var(--md-sys-color-neutral-scrim); /* the ::backdrop blocking wash — a translucent scrim role (ADR-0017) */
+  --ui-modal-scrim: var(--md-sys-color-dialog-backdrop); /* the ::backdrop blocking wash — black 80% opacity (TKT-0019; was --md-sys-color-neutral-scrim, too light) */
   /* The FRAME dials — ui-modal's public composition seam (TKT-0017): a composer that nests ui-modal (the
      command-modal precedent) pins these via inline style on the element it owns (the slider --value-pct
      JS-seam exemption, family-coherence B). Defaults reproduce the classic centered shrink-fit exactly. */

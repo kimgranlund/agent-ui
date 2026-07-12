@@ -751,9 +751,12 @@
 
   /* ─────────────────────────────────────────────────────────────────────────────────────────────
      HAND-AUTHORED — NOT emitted by the ultimate-tokens generator (GENERATOR WISHLIST).
-     These 15 roles are consumed by shipped, AA-critical controls but have no home in the generated
+     These 16 roles are consumed by shipped, AA-critical controls but have no home in the generated
      state-ladder vocabulary (which offers hover, active, disabled, on-role, outline, container, surface, scrim
-     but no black/white elevation wash, no solid "track" rail, and no "selected" accent rung). The
+     but no black/white elevation wash, no solid "track" rail, no "selected" accent rung, and no dialog
+     backdrop). ④ --md-sys-color-dialog-backdrop (TKT-0019, Kim-specified) is a PERMANENT bespoke role the
+     generator will never emit — not a pending-generator gap like the tint-* six; it lives here for the same
+     regen-survival reason. The
      generated sheet's own `@media (forced-colors)` block below STILL references the six
      --md-sys-color-neutral-tint-* roles, so the generator is aware of them but drops their :root
      definitions — re-add them here after every regeneration until the generator emits them.
@@ -792,6 +795,14 @@
         (4.73:1) against on-primary white, so BOTH legs pin to 600. This is the one dropped role whose
         exact stops the ramp change forced to move; the visual shift is one step darker in light mode. */
   --md-sys-color-primary-selected: light-dark(var(--md-sys-color-primary-600), var(--md-sys-color-primary-600));
+
+  /* ④ Dialog backdrop scrim (TKT-0019) — the fleet-wide `ui-modal` `::backdrop`, black at 80% opacity.
+        Scheme-invariant BY DESIGN (both legs identical): a backdrop's job is to isolate the dialog from
+        whatever busy page sits behind it, in EITHER scheme, not to tint with the surface ramp — the
+        generated `-scrim` ladder (translucent neutral-500, capped 30%) reads too light for that job.
+        Kim-specified verbatim (2026-07-11 intake); replaces `--md-sys-color-neutral-scrim` as
+        `--ui-modal-scrim`'s default (modal.css). */
+  --md-sys-color-dialog-backdrop: light-dark(oklch(0 0 0 / 0.8), oklch(0 0 0 / 0.8));
   /* ─────────────────────────────────────────────────────────────────────────────────────────────── */
 }
 
