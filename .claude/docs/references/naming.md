@@ -88,7 +88,8 @@ gate is the planned closure (§11).
 - **System tier** `--md-sys-{color,typescale}-*`: generator/spec-owned (tokens.md). The
   typescale's four editorial voices (kicker/lead/overline/quote) extend M3 deliberately —
   documented as extensions, never presented as Material canon.
-- The `--ui-*`-vs-`--md-sys-*` two-tier split is the standing OPEN fork (§12 → Kim).
+- The `--ui-*`-vs-`--md-sys-*` two-tier split is PERMANENT (Kim ruled 2026-07-12): this file §5
+  owns the boundary; the generator owns `--md-sys-*`. No convergence.
 
 ## 6 · Parts, roles, states
 
@@ -158,11 +159,9 @@ the color-picker L2 hole).
 `emphasis` as a boolean · `data-part="aria-label"` ×3 · ComponentPreview extends HTMLElement ·
 the foundation/control `--ui-` overlap (allowlist-managed) · anatomy.md's stale data-role list
 (repair owed) · the nested-vs-own-folder sub-element split · `open` declared with zero producers
-(keep: the vocabulary slot is real; producers arrive with future overlays) · **OPEN → Kim: the
-two token dialects** (`--ui-*` control/foundation vs `--md-sys-*` system) — permanent two-tier
-(document the boundary; zero migration) vs convergence under one namespace with a tier segment
-(≈2800 reference sites churn; every consumer + the generator re-teach). Two-tier is the standing
-recommendation until ruled otherwise.
+(keep: the vocabulary slot is real; producers arrive with future overlays) · **the two token dialects — RULED
+(Kim, 2026-07-12): permanent two-tier** (`--ui-*` control/foundation vs `--md-sys-*` system; §5
+owns the boundary; convergence — ≈2830 sites — rejected). The fork is closed.
 
 ## 13 · The worked example — deriving a family's names from ONE decision
 

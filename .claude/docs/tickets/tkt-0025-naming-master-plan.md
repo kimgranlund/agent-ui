@@ -62,3 +62,4 @@ names-as-machine-readable-API, grep-ability over brevity (the `^ui-` palette rul
 - REMAINING: the four §11 gate closures (emit-seam allowlist · custom-state vocabulary · data-role
   registry scan · descriptor↔DOM parts) — build slices; and the §12 OPEN fork (the two token
   dialects) → Kim.
+- **The §12 fork RULED (Kim, 2026-07-12): two-tier stands, permanent.** Remaining: the four gate closures only.
