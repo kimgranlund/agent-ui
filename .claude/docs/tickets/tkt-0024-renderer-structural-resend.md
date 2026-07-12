@@ -135,19 +135,35 @@ permanent `tree.test.ts` regression; `round-trip.test.ts` gains a present-after-
 visible-restructure; the `kpi-panel`-shaped corpus seed's fixture test gains a real-render assertion for its
 restructure step; full `a2ui` suite + both demo pages + catalog conformance stay green.
 
-**Doc review (self-run, SPEC + LLD).** Requirement IDs are stable and cross-referenced correctly, every
-acceptance criterion is testable, and the SPEC's non-goals section explicitly fences the three adjacent
-concerns a reader could mistake this for (survivor reorder, ADR-0053/Select, list-item instances). **One real
-gap caught and fixed, not merely a wording pass:** the first LLD draft's `#reconcileProps` disposed a resent
-node's old scope and re-wired only the keys present in the NEW record — correct for changed/added props, but
-silently insufficient for SPEC-R2 AC3 ("an omitted prop does not linger"), since disposing an effect stops it
-from re-running without undoing whatever value it already wrote to the element, and the catalog's
-`WidgetFactory` (verified `catalog/types.ts`) exposes no per-prop default registry to reset an omitted key
-against. Fixed by sourcing the reset value from a throwaway, never-connected `factory.create()` instance (its
-reactive props already sit at their class-declared defaults) for exactly the keys dropped between the old and
-new record — LLD §7, plus a matching SPEC-R2 wording tightening (a fresh `create()` must not REPLACE the
-reconciled node's own element; an ephemeral default-lookup instance is not that). `TreeDeps` gained two more
-collaborators (`create`, `resetProp`) to carry it. No other findings above INFO.
+**Doc review — two independent `scribe:doc-reviewer` dispatches (SPEC, LLD), each with source-verification
+access, not a self-review.** The SPEC review verdict was **fix-then-ship**: every cross-reference it sampled
+against the real runtime SPEC/message-lifecycle SPEC/ADR-0053/`select.ts` held (no citation drift), but flagged
+SPEC-R3 for carrying no acceptance criterion despite the doc's own "every requirement carries an AC" claim,
+SPEC-R2 for leaking LLD mechanism into normative behavioral text, SPEC-R4 for being un-falsifiable, and the
+missing Examples section this repo's sibling SPECs carry — all four fixed (SPEC-R3/R4 gained real ACs, SPEC-R2
+now states behavior only, an Examples section was added using the ticket's own repro).
+
+**The LLD review verdict was rethink — three real, source-verified defects, not wording issues:** (1) the
+first draft's omitted-prop reset read `pristine[key]` assuming the A2UI prop name always identity-maps to the
+DOM property, which `catalog/types.ts`'s `WidgetFactory` (no reader, only `applyProp`) does not guarantee for a
+bespoke (non-identity `mapsTo`) factory — verified against `catalog/default/factories.ts`'s `accessorFactory`
+(`applyProp = setProp`, a direct identity write) vs. bespoke rows (`Button.label`, etc.); (2) the diff gate
+compared props by `Object.is`, which fails on every resend of a node carrying an object-valued prop (a `{path}`
+binding is a NEW reference on every fresh `JSON.parse`), defeating the whole no-op guarantee; (3) the per-node
+scope registry had no surface-teardown owner and `#disposeSubtree` never purged `#pendingParents`, both real
+leaks verified against `tree.ts`'s actual `#patchPending`/`disposeSurface` code. A fourth, lower-severity finding
+— locally-minted `LLD-C4..C7` colliding with the runtime LLD's own same-numbered components — was also real.
+
+**All four fixed, for real, in both documents (LLD now v0.2):** the reset mechanism narrowed to identity-mapped
+props only (verified sound for that case via `@agent-ui/components`' `dom/props.ts:168`, `signalFor` lazy-inits
+to `config.default`, so a throwaway pristine instance's property read IS the true default when `mapsTo ===
+prop`) — non-identity props are now an explicit, honest non-goal with a named follow-up (`WidgetFactory.
+resetProp?`), not a silent gap; the diff gate is now a structural `samePropsDeep`/`deepEqualJson`, not
+`Object.is`; a surface-teardown carrier (mirroring `list.ts`'s own pattern) now disposes every remaining node
+scope on `deleteSurface`; `#disposeSubtree` now purges the disposed subtree's own `#pendingParents` anchors;
+every locally-minted component was renamed `RSR-C1…C7` to end the collision. SPEC-R2 AC3 and ADR-0128's
+Decision/Consequences were updated to state the narrowed scope honestly rather than the original, broader claim.
+No further findings above INFO on either document after the fix pass.
 
 ### 2026-07-12 — the SPEC-R5 fork RULED (Kim, at the batched prompt): option B — reorder deferred
 
