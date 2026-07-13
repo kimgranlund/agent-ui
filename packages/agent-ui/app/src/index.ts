@@ -17,3 +17,10 @@ export type {
 export type { SettingsStore } from './controls/settings/store.ts'
 export { createMemoryStore } from './controls/settings/memory-store.ts'
 export type { MemoryStoreOptions } from './controls/settings/memory-store.ts'
+// ADR-0130 (nav-rail family) Phase 1 — the family's public surface. Importing `nav-rail.ts` registers all
+// three tags (it imports nav-rail-group.ts / nav-rail-item.ts in turn). The `package.json` `./nav-rail`
+// subpath + the app-package size re-base are LLD-C12 (Phase 3, after both consumer migrations land) —
+// not added here; this is the barrel export only.
+export { UINavRailElement } from './controls/nav-rail/nav-rail.ts'
+export { UINavRailGroupElement } from './controls/nav-rail/nav-rail-group.ts'
+export { UINavRailItemElement } from './controls/nav-rail/nav-rail-item.ts'

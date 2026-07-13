@@ -79,6 +79,11 @@ export default defineConfig({
       '@agent-ui/components/controls/slider': r('./packages/agent-ui/components/src/controls/slider/slider.ts'),
       '@agent-ui/components/controls/field': r('./packages/agent-ui/components/src/controls/field/field.ts'),
       '@agent-ui/components/controls/form-provider': r('./packages/agent-ui/components/src/controls/form-provider/form-provider.ts'),
+      // nav-rail-family.lld.md LLD-C2 (ADR-0130) — `@agent-ui/app`'s `ui-nav-rail-group` is the next direct
+      // `./controls/{name}` subpath consumer from OUTSIDE the components package: `collapse="icon-popover"`
+      // composes a real `ui-menu` (self-defining side effect) for its per-group flyout. Same alias-ordering
+      // necessity as `controls/split`/`controls/text-field` above.
+      '@agent-ui/components/controls/menu': r('./packages/agent-ui/components/src/controls/menu/menu.ts'),
       // EXACT (not prefix) matches, `?url`-suffixed: `@agent-ui/app`'s isolated-shell connect-flow
       // (app-shell.ts, LLD-C5/ADR-0082) resolves these two package CSS assets to a real runtime URL via
       // Vite's `?url` suffix, to inject as `<link>` hrefs INSIDE a shadow root. Vite's aliasing is FIRST-

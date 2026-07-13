@@ -292,6 +292,10 @@ const ALLOWED_ROLES = new Set([
   'icon', 'caret', 'marker', 'detail', 'text', 'list', 'label', 'numeric', 'currency', 'stepper', 'magnifier',
   'description', 'timestamp', 'shortcut', 'reveal', 'group-label', 'calendar', 'swatch', 'trailing', 'clear',
   'before-sentinel', 'empty',
+  // 'tag' — ADR-0130 cl.7 (nav-rail-family): anatomy.md's RESERVED tag role realized, ui-nav-rail-item's
+  // trailing name|tag row (app/src/controls/nav-rail/nav-rail.css `[data-role='tag']`). Extended here in
+  // the SAME change as naming.md §6 (this gate's own "extend together" contract, header comment above).
+  'tag',
 ])
 
 /** Every `data-role` value used in one file's TEXT (comment-stripped): `data-role="x"` / `data-role='x'` /

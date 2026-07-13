@@ -1,0 +1,223 @@
+/* nav-rail.css — ui-nav-rail + ui-nav-rail-group + ui-nav-rail-item, the single-file family stylesheet
+ * (ADR-0003, extended to a family per naming.md §9 "one folder per family" + ADR-0124 "the prefix is the
+ * ownership boundary" — `--ui-nav-rail-*` is root-declared here, member-consumed by the two sub-elements,
+ * never re-declared by them). Two sectioned blocks:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-nav-rail)` declares ONLY `--ui-nav-rail-*` (ink/ink-active/surface-hover/
+ *       indicator ported from `settings.css`'s `--ui-settings-rail-*` verbatim, renamed; geometry off the
+ *       shared dimensional ramp, Pattern size-class — geometry.md "interactive rows take the control
+ *       height", a fixed default size at v1, no `[size]` prop yet, SPEC §7 non-goal).
+ *   [2] STYLES BLOCK — `@scope (ui-nav-rail)` consumes ONLY `--ui-nav-rail-*` (+ the shared focus-ring
+ *       tokens, the button.css exception) for all three elements' anatomy. `[collapse=…]` attribute-
+ *       selector branches (menu narrow disclosure; icon-popover icon-only sizing) live in this ONE file
+ *       (the `ui-app-shell-region [collapse=…]` precedent) — never a second stylesheet.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-nav-rail) declares --ui-nav-rail-* ════════════════ */
+
+:where(ui-nav-rail) {
+  --ui-nav-rail-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-nav-rail-ink-active: var(--md-sys-color-primary);
+  --ui-nav-rail-surface-hover: var(--md-sys-color-neutral-surface-high);
+  --ui-nav-rail-indicator: var(--md-sys-color-primary);
+  --ui-nav-rail-surface: var(--md-sys-color-neutral-surface);
+  --ui-nav-rail-outline: var(--md-sys-color-neutral-outline-variant);
+  --ui-nav-rail-scrim: var(--md-sys-color-neutral-scrim);
+
+  --ui-nav-rail-height: var(--ui-height-md);
+  --ui-nav-rail-font: var(--ui-font-md);
+  --ui-nav-rail-icon: var(--ui-icon-md);
+  --ui-nav-rail-gap: var(--ui-gap-md);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-nav-rail) consumes ONLY --ui-nav-rail-* ════════════════ */
+
+@scope (ui-nav-rail) {
+  :scope {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    container-type: inline-size; /* the rail's OWN width drives collapse — never the viewport (ui-app-shell precedent) */
+  }
+
+  ui-nav-rail-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  [data-part='context-label'] {
+    font-size: var(--ui-font-sm);
+    color: var(--ui-nav-rail-ink);
+    padding-inline: calc(var(--ui-nav-rail-height) / 2);
+    padding-block-start: var(--ui-space-sm);
+    padding-block-end: var(--ui-space-xs);
+  }
+
+  [data-part='items'] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ui-nav-rail-item contributes no box of its own — the created activator part IS the row (anatomy.md
+     slot/role axes, ported from button.css's host-as-grid pattern one level down). */
+  ui-nav-rail-item {
+    display: contents;
+  }
+
+  [data-part='activator'] {
+    display: grid;
+    grid-template-columns: 1fr; /* bare label — slotless (button.css precedent) */
+    align-items: center;
+    column-gap: var(--ui-nav-rail-gap);
+    box-sizing: border-box;
+    block-size: var(--ui-nav-rail-height); /* Pattern size-class — geometry.md "interactive rows take the control height" */
+    padding-block: 0; /* NEVER block-padding (geometry.md) */
+    padding-inline: calc(var(--ui-nav-rail-height) / 2);
+    font-size: var(--ui-nav-rail-font);
+    line-height: var(--ui-control-line-height);
+    color: var(--ui-nav-rail-ink);
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    border-inline-start: 2px solid transparent; /* the active marker's own box — never color-only (rubric C8) */
+    cursor: pointer;
+    text-align: start;
+    white-space: nowrap;
+  }
+
+  [data-part='activator']:hover {
+    background: var(--ui-nav-rail-surface-hover);
+  }
+
+  [data-part='activator']:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: calc(-1 * var(--ui-focus-ring-width)); /* inset — the row already sits at the rail's own edge */
+  }
+
+  /* The active item's non-color-alone signifier: a real border (survives forced-colors below) + the ink. */
+  ui-nav-rail-item[selected] [data-part='activator'] {
+    border-inline-start-color: var(--ui-nav-rail-indicator);
+    color: var(--ui-nav-rail-ink-active);
+    font-weight: 600;
+  }
+
+  /* Anatomy — leading icon / label / trailing tag, presence-driven (anatomy.md; SPEC-R6). */
+  [data-part='activator']:has(> [slot='leading']):not(:has(> [slot='trailing'])) {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  [data-part='activator']:has(> [slot='trailing']):not(:has(> [slot='leading'])) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+  }
+  [data-part='activator']:has(> [slot='leading']):has(> [slot='trailing']) {
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, max-content);
+  }
+
+  [data-part='activator'] > [slot='leading'],
+  [data-part='activator'] > [slot='trailing'] {
+    display: inline-flex;
+    align-items: center;
+    min-inline-size: 0;
+  }
+  [data-part='activator'] > [data-role='icon'] {
+    inline-size: var(--ui-nav-rail-icon);
+    block-size: var(--ui-nav-rail-icon);
+  }
+  /* The trailing tag (SPEC-R6) — text, not an icon: it must SHRINK/truncate, never grow the row. */
+  [data-part='activator'] > [data-role='tag'] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-inline-size: 0;
+    font-size: var(--ui-font-sm);
+    color: var(--ui-nav-rail-ink);
+  }
+  [data-part='activator'] > [data-part='label'] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-inline-size: 0;
+  }
+
+  /* ── collapse="menu" — the narrow disclosure (SPEC-R5, LLD-C4) ─────────────────────────────────────── */
+
+  [data-part='disclosure'] > [data-part='trigger'] {
+    display: none; /* wide: the disclosure is inert chrome */
+  }
+  [data-part='disclosure']::details-content {
+    content-visibility: visible; /* force a CLOSED <details> to still reveal `list` wide (Chromium 120+ mechanism) */
+  }
+  [data-part='list'] {
+    display: flex;
+    flex-direction: column; /* always visible wide — overrides the UA closed-<details> child-hiding rule */
+  }
+
+  @container (inline-size < 40rem) {
+    [data-part='disclosure'] {
+      position: relative;
+    }
+    [data-part='disclosure'] > [data-part='trigger'] {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--ui-nav-rail-gap);
+      box-sizing: border-box;
+      block-size: var(--ui-nav-rail-height);
+      padding-inline: calc(var(--ui-nav-rail-height) / 2);
+      color: var(--ui-nav-rail-ink);
+      cursor: pointer;
+      list-style: none;
+    }
+    [data-part='disclosure'] > [data-part='trigger']::-webkit-details-marker {
+      display: none;
+    }
+    [data-part='disclosure'] > [data-part='trigger']::after {
+      content: '';
+      inline-size: 0.5rem;
+      block-size: 0.5rem;
+      border-inline-end: 1.5px solid currentColor;
+      border-block-end: 1.5px solid currentColor;
+      transform: rotate(45deg);
+      transition: transform var(--ui-motion-fast) var(--ui-ease-standard);
+    }
+    [data-part='disclosure'][open] > [data-part='trigger']::after {
+      transform: rotate(-135deg);
+    }
+    [data-part='list'] {
+      display: none; /* closed: hidden */
+    }
+    [data-part='disclosure'][open] > [data-part='list'] {
+      display: flex;
+      position: absolute;
+      inset-inline: 0;
+      inset-block-start: 100%;
+      z-index: 5;
+      padding: var(--ui-space-xs);
+      border: 1px solid var(--ui-nav-rail-outline);
+      border-radius: var(--ui-radius-base);
+      background: var(--ui-nav-rail-surface);
+      box-shadow: 0 0.5rem 1.5rem var(--ui-nav-rail-scrim);
+    }
+  }
+
+  /* ── collapse="icon-popover" — icon-only items (SPEC-R8 AC1) ───────────────────────────────────────── */
+
+  :scope[collapse='icon-popover'] [data-part='activator'] {
+    justify-content: center;
+  }
+  :scope[collapse='icon-popover'] [data-part='activator'] > [data-part='label'] {
+    /* visually-hidden (clip), NOT display:none/aria-hidden — the label stays the accessible name
+       (anatomy.md's disclosure boundary; the `ui-icon` `label`-prop precedent). */
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  /* ── forced-colors — the active indicator survives (SPEC-R4) ───────────────────────────────────────── */
+  @media (forced-colors: active) {
+    ui-nav-rail-item[selected] [data-part='activator'] {
+      border-inline-start-color: Highlight;
+    }
+  }
+}

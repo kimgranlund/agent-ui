@@ -100,7 +100,9 @@ gate is the planned closure (§11).
   is the law; anatomy.md's shorter list is historical (§12 repair). A new role joins via the
   descriptor's `contentModel` + this file's registry: icon · caret · marker · detail · text ·
   list · label · numeric · currency · stepper · magnifier · description · timestamp · shortcut ·
-  reveal · group-label · calendar · swatch · trailing · clear · before-sentinel (mechanism
+  reveal · group-label · calendar · swatch · trailing · clear · before-sentinel · tag (ADR-0130
+  cl.7 — anatomy.md's reserved `tag` role realized, `ui-nav-rail-item`'s trailing name|tag row;
+  purely additive, no anatomy.md text change needed) (mechanism
   artifact — rename candidates stay fix-on-touch). The registry covers control-emitted roles plus
   named AUTHOR hooks a descriptor advertises (today: `empty` — command-modal's author hook; the gate pins that no data-role="command-modal" exists).
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,
