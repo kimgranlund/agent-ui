@@ -190,6 +190,12 @@ container, the `ui-app-shell` SPEC-R5 precedent — width, not viewport) hides t
 reveals the `<summary>` trigger below the threshold; at/above it, the disclosure is inert chrome (summary
 hidden, list always shown) — byte-for-byte the existing `_page.css` rule set, relocated.
 
+**Extended, TKT-0035** (a narrow-sidebar consumer, e.g. the docs-nav column, is always below the threshold
+against its own box): the query container is NAMED (`@container ui-nav-rail-collapse`, was unnamed) and a
+new `collapseContainer` prop (`self` default / `ancestor`) lets a consumer relinquish the rail's own
+containment so the query resolves against a named ancestor instead — the supported replacement for the
+`_page.css` unnamed-`container-type` re-pointing hack this LLD's own mode-1 migration originally shipped.
+
 **Failure/edge handling.** The trigger's label ("current item" name) is derived the same way
 `currentNavLabel()` derives it today (`_page.ts`) — ported into `nav-rail.ts` as a private helper reading
 the SAME "which item/group am I in" derivation, now over authored children instead of the `NAV` array.

@@ -11,6 +11,15 @@
  *       tokens, the button.css exception) for all three elements' anatomy. `[collapse=…]` attribute-
  *       selector branches (menu narrow disclosure; icon-popover icon-only sizing) live in this ONE file
  *       (the `ui-app-shell-region [collapse=…]` precedent) — never a second stylesheet.
+ *
+ * `collapse="menu"`'s narrow threshold (TKT-0035) is a NAMED `@container ui-nav-rail-collapse (…)` query.
+ * `:scope` establishes that named container itself by default (`collapse-container="self"`, the fallback
+ * default — byte-identical to the pre-TKT-0035 behaviour: the rail measures its OWN box). A consumer whose
+ * rail sits in a narrow column (e.g. a ~15rem docs sidebar, always below the 40rem threshold) sets
+ * `collapse-container="ancestor"`: the rail relinquishes its own containment (`container-type: normal`
+ * below) and the NAMED query walks up to the nearest ancestor the consumer opts in via
+ * `container-type: inline-size; container-name: ui-nav-rail-collapse` — the supported seam replacing the
+ * old unnamed-`@container` re-pointing hack (no consumer CSS override of the rail's own container-type).
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-nav-rail) declares --ui-nav-rail-* ════════════════ */
@@ -37,7 +46,18 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    container-type: inline-size; /* the rail's OWN width drives collapse — never the viewport (ui-app-shell precedent) */
+    /* collapse-container="self" (default) — the rail establishes the NAMED collapse container itself, so
+       the query below resolves against its OWN width (unchanged pre-TKT-0035 behaviour). */
+    container-type: inline-size;
+    container-name: ui-nav-rail-collapse;
+  }
+
+  /* collapse-container="ancestor" (TKT-0035) — relinquish the rail's own containment so the NAMED query
+     below walks up to the nearest ancestor the CONSUMER opted in (`container-type: inline-size;
+     container-name: ui-nav-rail-collapse`) — the supported "collapse relative to an ancestor / the
+     viewport, not my own box" seam. No consumer override of the rail's own container-type needed anymore. */
+  :scope[collapse-container='ancestor'] {
+    container-type: normal;
   }
 
   ui-nav-rail-group {
@@ -150,7 +170,10 @@
     flex-direction: column; /* always visible wide — overrides the UA closed-<details> child-hiding rule */
   }
 
-  @container (inline-size < 40rem) {
+  /* NAMED (TKT-0035) — resolves against whichever ancestor establishes `container-name: ui-nav-rail-collapse`
+     nearest the queried element: `:scope` itself under the default `collapse-container="self"` (unchanged
+     40rem-against-own-box behaviour), or a consumer-opted ancestor under `collapse-container="ancestor"`. */
+  @container ui-nav-rail-collapse (inline-size < 40rem) {
     [data-part='disclosure'] {
       position: relative;
     }

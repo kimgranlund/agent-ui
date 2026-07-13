@@ -15,6 +15,9 @@ import { UINavRailItemElement } from './nav-rail-item.ts'
 //   [1] SPEC-R3 — ARIA role rides internals: all-link ⇒ navigation, all-bare ⇒ tablist
 //   [2] SPEC-R5 — collapse="menu": WHOLE-SHAPE wide (list visible, trigger inert) vs. narrow (list hidden,
 //       trigger visible, the open dropdown OVERLAYS rather than reflows); Escape + outside-click dismiss
+//   [2b] TKT-0035 — collapse-container="ancestor": a narrow-column rail defers its 40rem threshold to a
+//       NAMED `@container ui-nav-rail-collapse` a consumer opts an ancestor into (WIDE ancestor ⇒ vertical
+//       rail even in a narrow column; NARROW ancestor ⇒ still collapses); "self" (default) ignores it
 //   [3] SPEC-R7 — collapse="drill-in": the rail itself never reflows at any width (anatomy-only)
 //   [4] SPEC-R8 — collapse="icon-popover": icon-only rendering (label visually-hidden, kept as the AX
 //       name), a group flyout opens/roving-focuses/commits-and-closes, one-group-open-at-a-time
@@ -69,6 +72,29 @@ function mountRail(el: HTMLElement, width = '300px'): { wrapper: HTMLElement; el
   document.body.append(wrapper)
   mounted.push(wrapper)
   return { wrapper, el }
+}
+
+/** A NAMED-ancestor wrapper for `collapse-container="ancestor"` (TKT-0035): an OUTER box that establishes
+ *  `container-type: inline-size; container-name: ui-nav-rail-collapse` sized to `ancestorWidth`, and an
+ *  INNER narrow "sidebar column" (`columnWidth`, no container-type of its own) the rail actually sits in —
+ *  proving the rail's OWN box plays no part once `collapse-container="ancestor"` relinquishes its containment
+ *  (the _page.css `.app-shell` / buildNav shape, reduced to its load-bearing structure). */
+function mountRailInNamedAncestor(
+  el: HTMLElement,
+  ancestorWidth: string,
+  columnWidth: string,
+): { ancestor: HTMLElement; column: HTMLElement } {
+  const ancestor = document.createElement('div')
+  ancestor.style.width = ancestorWidth
+  ancestor.style.containerType = 'inline-size'
+  ancestor.style.containerName = 'ui-nav-rail-collapse'
+  const column = document.createElement('div')
+  column.style.width = columnWidth
+  column.append(el)
+  ancestor.append(column)
+  document.body.append(ancestor)
+  mounted.push(ancestor)
+  return { ancestor, column }
 }
 
 afterEach(async () => {
@@ -215,6 +241,65 @@ describe('ui-nav-rail collapse="menu" — WHOLE-SHAPE wide vs. narrow (SPEC-R5 A
     await new Promise((r) => requestAnimationFrame(() => r(undefined)))
     const list = el.querySelector('[data-part="list"]') as HTMLElement
     expect(getComputedStyle(list).display).not.toBe('none')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [2b] collapse-container="ancestor" — the narrow-sidebar seam (TKT-0035)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-nav-rail collapse-container="ancestor" — the narrow-sidebar seam (TKT-0035)', () => {
+  it('a rail in a narrow ~15rem column shows the WIDE vertical rail when a WIDE named ancestor opts in (the acceptance)', async () => {
+    const el = document.createElement('ui-nav-rail')
+    el.setAttribute('collapse', 'menu')
+    el.setAttribute('collapse-container', 'ancestor')
+    el.append(makeItem('/a', 'Alpha'), makeItem('/b', 'Beta'))
+    mountRailInNamedAncestor(el, '900px', '240px') // ancestor WIDE (≥40rem), rail's own column ~15rem
+    await new Promise((r) => requestAnimationFrame(() => r(undefined)))
+
+    expect(getComputedStyle(el).containerType, `${server.browser}: the rail did not relinquish its own containment`).toBe('normal')
+    const list = el.querySelector('[data-part="list"]') as HTMLElement
+    const trigger = el.querySelector('[data-part="trigger"]') as HTMLElement
+    expect(getComputedStyle(list).display, `${server.browser}: the list collapsed despite a WIDE named ancestor`).not.toBe('none')
+    expect(getComputedStyle(trigger).display, `${server.browser}: the trigger showed despite a WIDE named ancestor`).toBe('none')
+
+    // WHOLE-SHAPE: real rendered rows in the narrow column, not a zero-size ghost (the [[test-the-whole-shape]] law).
+    const rows = [...el.querySelectorAll('[data-part="activator"]')] as HTMLElement[]
+    expect(rows).toHaveLength(2)
+    for (const row of rows) {
+      const rect = row.getBoundingClientRect()
+      expect(rect.width, `${server.browser}: a row collapsed to zero width`).toBeGreaterThan(0)
+      expect(rect.height, `${server.browser}: a row collapsed to zero height`).toBeGreaterThan(0)
+    }
+  })
+
+  it('the SAME narrow-column rail correctly collapses when the named ancestor itself goes NARROW', async () => {
+    const el = document.createElement('ui-nav-rail')
+    el.setAttribute('collapse', 'menu')
+    el.setAttribute('collapse-container', 'ancestor')
+    el.append(makeItem('/a', 'Alpha'), makeItem('/b', 'Beta'))
+    mountRailInNamedAncestor(el, '300px', '240px') // ancestor NARROW (<40rem) too
+    await new Promise((r) => requestAnimationFrame(() => r(undefined)))
+
+    const list = el.querySelector('[data-part="list"]') as HTMLElement
+    const trigger = el.querySelector('[data-part="trigger"]') as HTMLElement
+    expect(getComputedStyle(list).display, `${server.browser}: the list stayed visible despite a NARROW named ancestor`).toBe('none')
+    expect(getComputedStyle(trigger).display, `${server.browser}: the trigger did not show despite a NARROW named ancestor`).not.toBe('none')
+  })
+
+  it('NEGATIVE CONTROL — collapse-container="self" (default) ignores a wide named ancestor; the rail measures its OWN narrow box', async () => {
+    const el = document.createElement('ui-nav-rail')
+    el.setAttribute('collapse', 'menu') // collapse-container defaults to 'self' — no attribute set
+    el.append(makeItem('/a', 'Alpha'), makeItem('/b', 'Beta'))
+    mountRailInNamedAncestor(el, '900px', '240px') // ancestor WIDE, but self mode must ignore it
+    await new Promise((r) => requestAnimationFrame(() => r(undefined)))
+
+    expect(getComputedStyle(el).containerType, `${server.browser}: self mode should still self-contain`).toBe('inline-size')
+    const list = el.querySelector('[data-part="list"]') as HTMLElement
+    expect(
+      getComputedStyle(list).display,
+      `${server.browser}: self mode read the ancestor instead of its own box (non-vacuous negative control)`,
+    ).toBe('none')
   })
 })
 

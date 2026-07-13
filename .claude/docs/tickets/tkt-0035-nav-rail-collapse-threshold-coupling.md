@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0035
-status: open
+status: done
 date: 2026-07-13
 owner:
 kind: bug
@@ -58,3 +58,54 @@ coupling and a footgun for the next narrow-rail consumer, who'd have to rediscov
   ADR-0084 (the app-shell `collapse` grammar precedent, which faced the same "relative to what" question).
 
 ## Findings
+### 2026-07-13 — supported seam shipped: NAMED `@container` + `collapse-container` enum (inline, host)
+
+Chose a **NAMED `@container` + a `collapse-container` enum prop**, over the ticket's other two candidates:
+
+- **A configurable threshold custom property was rejected as infeasible, not just non-preferred**:
+  `master-detail.css`/`app-shell.css` already document, load-bearing, that "custom properties cannot drive
+  an `@container` condition" — a real CSS limitation, not a style choice. Even if it worked, a VALUE knob
+  doesn't fix THIS defect anyway: no literal threshold makes a 15rem sidebar ever reach a "wide" reading
+  against its OWN box — the axis that needs to change is WHICH box is measured, not what number it's
+  compared to.
+- **A boolean `collapsed` override was rejected**: it would fight the primitive's own responsive mechanism
+  (the consumer manually flipping a mode) rather than fixing the mechanism — exactly the "local deviation
+  around a wall" the build-seat contract forbids.
+- **Named `@container` won**: `nav-rail.css`'s `:scope` now declares `container-name: ui-nav-rail-collapse`
+  alongside its existing `container-type: inline-size` (self-establishing, unchanged default), and the
+  `collapse="menu"` query is now `@container ui-nav-rail-collapse (inline-size < 40rem)` (was unnamed). A
+  new `collapseContainer` prop (`self` default / `ancestor`, reflects to `collapse-container`, pure CSS via
+  `:scope[collapse-container='ancestor'] { container-type: normal }`) lets a consumer relinquish the rail's
+  own containment so the NAMED query resolves against whichever ancestor THEY opt in via
+  `container-type: inline-size; container-name: ui-nav-rail-collapse` — matching `ADR-0100`'s existing
+  fleet idiom (row/column/list/grid establish no `container-type` of their own; an ancestor's job) applied
+  to a component that DOES need a sensible self-measuring default. A safe failure mode: if no ancestor
+  names the container, the query never matches and the rail simply never collapses (never the opposite,
+  more dangerous, always-collapsed failure the old unnamed coupling risked).
+
+Workaround removed (`site/pages/_page.css`): `.app-shell > [data-site-nav] { container-type: normal }` is
+DELETED — the rail's own attribute-selector CSS now owns that, driven by `collapse-container="ancestor"`
+set on the element itself in `buildNav` (`_page.ts`). `.app-shell`'s `container-type: inline-size` gained a
+`container-name: ui-nav-rail-collapse` (the ONE line of consumer CSS inherent to naming a container — not a
+re-pointing hack, a declared opt-in).
+
+Tests: `nav-rail.browser.test.ts` gained 3 new cases (a WIDE named ancestor gives a narrow ~15rem column
+rail its real vertical rail — the acceptance, WHOLE-SHAPE asserted; the same column correctly collapses
+under a NARROW named ancestor; a `collapse-container="self"` negative control proves the default still
+self-measures, ignoring a wide ancestor). Non-vacuity verified by reverting the CSS/prop change: the
+acceptance test fails in both Chromium and WebKit on the old code. `site-nav.browser.test.ts`'s pinned
+`containerType === 'normal'` assertion was rewritten to assert the SEAM (the `collapse-container="ancestor"`
+attribute + the NAMED `.app-shell` container) rather than the old bare CSS override. `nav-rail.test.ts` +
+`nav-rail.md` updated for the new prop (contract↔props bijection, `static props` list).
+
+Environment note (not a defect in the fix): this worktree's own `node_modules/@agent-ui/*` was missing
+(package resolution walked up to the PARENT checkout's `node_modules`, reading STALE `@agent-ui/app`
+source for any BARE-specifier import — e.g. `_page.ts`'s `import '@agent-ui/app/nav-rail.css'`). Repaired
+by symlinking `node_modules/@agent-ui/{a2a,a2ui,app,code,components,icons,router,shared}` to this
+worktree's own `packages/agent-ui/*` (gitignored, no repo files touched) — this also fixed two UNRELATED
+pre-existing `npm test` failures (an `a2ui-live` sandbox "Denied ID" on a main-checkout path, and the
+`theme-provider-build-fixture` byte-diff, which needed a regenerate anyway per its own banner once `_page.css`
+changed).
+
+Gates: `npm run check` exit 0 · `npm test` (jsdom) 328/328 files, 6023/6023 tests · `npm run test:browser`
+scoped to nav-rail + site-nav: 4/4 files, 50/50 tests, both Chromium and WebKit.

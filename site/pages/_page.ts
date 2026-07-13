@@ -516,6 +516,11 @@ function activeGroup(): NavGroup | undefined {
 function buildNav(): HTMLElement {
   const rail = document.createElement('ui-nav-rail')
   rail.setAttribute('collapse', 'menu')
+  // TKT-0035 — the rail column is ~15rem, always below nav-rail's OWN 40rem collapse threshold; without
+  // this it would render as a dropdown at every width (no desktop vertical rail). `collapse-container=
+  // "ancestor"` relinquishes the rail's own containment so its collapse query reads the NAMED
+  // `ui-nav-rail-collapse` container `.app-shell` establishes instead (_page.css), tracking the viewport.
+  rail.setAttribute('collapse-container', 'ancestor')
   rail.setAttribute('data-site-nav', '') // the shell's grid/scroll hook (_page.css); NOT the rail's own anatomy
   rail.setAttribute('aria-label', 'Site')
 

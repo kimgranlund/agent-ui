@@ -33,27 +33,29 @@ body {
   grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   block-size: 100dvh;
-  /* The QUERY CONTAINER for the composed ui-nav-rail's `collapse="menu"` disclosure. The rail is a narrow
-     (~15rem) left column, so its OWN inline-size would always read below the primitive's 40rem collapse
-     threshold and it would render as a dropdown at every width. Re-pointing the container boundary to the
-     SHELL (whose inline-size tracks the viewport) makes the rail collapse when the WHOLE shell goes narrow —
-     the desktop vertical rail, the narrow dropdown — which is the site's intended behavior. The rail's own
-     `container-type` is overridden to `normal` below so this ancestor container is the one its @container reads.
-     (This depends on nav-rail's collapse query being an UNNAMED @container that resolves to an ancestor — a
-     coupling flagged to the family owner; see the migration report.) */
+  /* The NAMED collapse container the composed `ui-nav-rail collapse="menu" collapse-container="ancestor"`
+     opts into (TKT-0035's supported seam — nav-rail.css/nav-rail.md). The rail is a narrow (~15rem) left
+     column, so its OWN inline-size would always read below the primitive's 40rem collapse threshold and it
+     would render as a dropdown at every width; `collapse-container="ancestor"` (set on the element itself
+     in buildNav, below) relinquishes the rail's own containment so its `@container ui-nav-rail-collapse`
+     query resolves against THIS container instead (whose inline-size tracks the viewport) — the desktop
+     vertical rail, the narrow dropdown, matching the site's intended behavior. `container-name` is the
+     ONLY half of the seam owned by the consumer; the rail's own container-type override is the primitive's
+     job now, not a page-level re-point. */
   container-type: inline-size;
+  container-name: ui-nav-rail-collapse;
 }
 
 /* The nav RAIL — column 1, spanning all three rows; its own scroll if the list overflows. The composed
    ui-nav-rail carries `data-site-nav`; its internal anatomy (rows, active bar, the collapse="menu" disclosure)
-   is nav-rail.css's — this shell owns only the rail's PLACEMENT + scroll container + the container re-point. */
+   is nav-rail.css's — this shell owns only the rail's PLACEMENT + scroll container, never its containment
+   (that is `collapse-container="ancestor"`'s job, set on the element itself in buildNav — TKT-0035). */
 .app-shell > [data-site-nav] {
   grid-column: 1;
   grid-row: 1 / -1;
   overflow-y: auto;
   scrollbar-width: none; /* hide the scrollbar — scroll stays functional (Firefox/standards) */
   min-block-size: 0; /* allow the rail to scroll inside the 100dvh grid rather than grow it */
-  container-type: normal; /* defeat the rail's self-container so its collapse @container reads the .app-shell one */
   background: var(--md-sys-color-neutral-surface-low);
   border-inline-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
@@ -380,13 +382,14 @@ code {
  * `border-inline-start` bar, the name|tag row, and the narrow `collapse="menu"` `<details>` dropdown with its
  * chevron + Escape/outside-click dismissal) all live in `nav-rail.css` now — this shell no longer hand-rolls a
  * `<nav>`/`<ul>`/`<details>` of its own. What remains here is only the rail's PLACEMENT + scroll container
- * (above) and the shell's own narrow reflow (below). The rail collapses to its dropdown off the .app-shell
- * container (its container-type is overridden to `normal` above) at nav-rail's own 40rem threshold. */
+ * (above) and the shell's own narrow reflow (below). The rail collapses to its dropdown off the NAMED
+ * `.app-shell` `ui-nav-rail-collapse` container (`collapse-container="ancestor"`, TKT-0035) at nav-rail's
+ * own 40rem threshold. */
 
 /* ── narrow viewports — stack the whole shell into one column ──────────────────────────────────────────────
  * Below the breakpoint the shell reflows to a single column: the context-header, then the nav (its OWN
  * `collapse="menu"` disclosure has already turned it into a dropdown trigger by this width — the .app-shell
- * query container is < 40rem here), then the page, then the footer. 40rem matches nav-rail's own collapse
+ * named query container is < 40rem here), then the page, then the footer. 40rem matches nav-rail's own collapse
  * threshold so the two transitions land together — no band where a full 82-row list stacks in a one-column
  * shell. The rail's own scroll-container settings are dropped so its dropdown panel sizes to its content. */
 @media (max-width: 40rem) {

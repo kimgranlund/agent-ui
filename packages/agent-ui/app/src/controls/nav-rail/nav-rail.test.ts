@@ -77,8 +77,8 @@ describe('UINavRailElement — upgrade + defaults', () => {
     expect(el.collapse).toBe('menu')
   })
 
-  it('static props is exactly [collapse]', () => {
-    expect(Object.keys(UINavRailElement.props)).toEqual(['collapse'])
+  it('static props is exactly [collapse, collapseContainer]', () => {
+    expect(Object.keys(UINavRailElement.props)).toEqual(['collapse', 'collapseContainer'])
   })
 
   it('an out-of-set collapse attribute coerces to the index-0 member ("menu"), never throws (SPEC-R1 AC2)', () => {
@@ -86,6 +86,13 @@ describe('UINavRailElement — upgrade + defaults', () => {
     el.setAttribute('collapse', 'bogus')
     expect(() => mount(el)).not.toThrow()
     expect((el as UINavRailElement).collapse).toBe('menu')
+  })
+
+  it('collapseContainer defaults to "self"; reflects to `collapse-container` (TKT-0035)', () => {
+    const el = mount(document.createElement('ui-nav-rail') as UINavRailElement)
+    expect(el.collapseContainer).toBe('self')
+    el.collapseContainer = 'ancestor'
+    expect(el.getAttribute('collapse-container')).toBe('ancestor')
   })
 
   it('no children ⇒ an empty rail, never throws (SPEC-R2 AC1)', () => {
@@ -571,7 +578,7 @@ describe('nav-rail.md descriptor (ui-nav-rail)', () => {
   })
 
   it('attributes[] is a faithful bijection with finalize(UINavRailElement).props', () => {
-    expect(parsed.attributes.map((a) => a.name)).toEqual(['collapse'])
+    expect(parsed.attributes.map((a) => a.name)).toEqual(['collapse', 'collapseContainer'])
     expect(compareDescriptorToProps(parsed.attributes, UINavRailElement.props)).toEqual([])
   })
 

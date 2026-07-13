@@ -48,9 +48,9 @@ use fleet machinery (ComponentPreview's raw-HTMLElement shape is a recorded exce
 
 ## 3 · Props & attributes
 
-- camelCase property; a multi-word prop declares its explicit kebab `attribute:` (the 7 existing
-  overrides are the template). Enum props are closed literal unions via `prop.enum` — values
-  kebab/lowercase.
+- camelCase property; a multi-word prop declares its explicit kebab `attribute:` (the 8 existing
+  overrides are the template — `ui-nav-rail`'s `collapseContainer`/`collapse-container`, TKT-0035,
+  is the newest). Enum props are closed literal unions via `prop.enum` — values kebab/lowercase.
 - **Booleans are bare adjectives/participles** (`disabled`, `checked`, `persistent`), never
   `is-`/`has-`. A verb is not a boolean name (see `truncate`, §12).
 - **Reserved words** (one meaning fleet-wide): `size` ≡ the widget enum (GATED, A2/A2b) ·

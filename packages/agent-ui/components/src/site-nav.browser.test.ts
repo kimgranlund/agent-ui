@@ -14,9 +14,11 @@ import { userEvent } from 'vitest/browser'
 // NARROW side of the 40rem breakpoint — and CDP does NOT change the CSS viewport the cascade reads. So this suite
 // proves the DROPDOWN side at its native viewport with REAL computed styles, and asserts the breakpoint under
 // test IS the narrow one (`matchMedia` true) so the styles read are the collapsed branch — anti-vacuous. The
-// container the rail's `collapse="menu"` measures is `.app-shell` (its own `container-type` is overridden to
-// `normal` in _page.css so a ~15rem rail column does not always read as collapsed) — at 414px it is < 40rem, so
-// the collapsed branch is live. The WIDE vertical rail branch is covered by the static CSS + the jsdom shape.
+// container the rail's `collapse="menu"` measures is the NAMED `ui-nav-rail-collapse` container `.app-shell`
+// establishes (TKT-0035's supported seam — the rail carries `collapse-container="ancestor"`, _page.ts, so a
+// ~15rem rail column does not always read as collapsed) — at 414px `.app-shell` is < 40rem, so the collapsed
+// branch is live. The WIDE vertical rail branch (a genuinely wide named ancestor) is proven in
+// nav-rail.browser.test.ts (the seam's OWN cross-engine suite); this file covers the static CSS + jsdom shape.
 //
 // `mountPage` performs the load-bearing foundation cascade (ADR-0003) on import, pulling the foundation roles +
 // dimensional ramp, the self-defining controls, the ui-nav-rail family (+ nav-rail.css), and `_page.css`.
@@ -102,14 +104,19 @@ describe('site nav — collapse="menu" dropdown below 40rem (both engines)', () 
     expect(isNarrow(), 'harness viewport is not below 40rem — dropdown assertions would be vacuous').toBe(true)
   })
 
-  it('the rail is NOT its own query container (_page.css re-points collapse to the .app-shell container)', async () => {
-    // The load-bearing shell coupling: the rail column is ~15rem, always below nav-rail's 40rem collapse
-    // threshold, so if the rail self-measured it would show the dropdown at EVERY width (no desktop vertical
-    // rail). _page.css overrides the rail's `container-type` to `normal` so its `collapse="menu"` @container
-    // reads the .app-shell container (viewport-tracking) instead — the desktop rail shows wide, the dropdown
-    // shows narrow. Assert the override won (else the wide vertical rail silently regresses to a dropdown).
+  it('the rail opts out of self-containment via the SUPPORTED `collapse-container="ancestor"` seam (TKT-0035)', async () => {
+    // The load-bearing shell coupling, now a supported primitive seam (not a page-level CSS override): the
+    // rail column is ~15rem, always below nav-rail's 40rem collapse threshold, so if the rail self-measured
+    // it would show the dropdown at EVERY width (no desktop vertical rail). buildNav sets
+    // `collapse-container="ancestor"` on the rail element itself; nav-rail.css's OWN attribute-selector rule
+    // (`:scope[collapse-container='ancestor']`) is what neutralizes its container-type — _page.css owns only
+    // the NAMED `ui-nav-rail-collapse` container-name on `.app-shell`, never the rail's container-type.
     await ready()
+    expect(rail().getAttribute('collapse-container'), 'buildNav did not opt the rail into the ancestor seam').toBe('ancestor')
     expect(getComputedStyle(rail()).containerType).toBe('normal')
+    const shell = document.querySelector('.app-shell') as HTMLElement
+    expect(getComputedStyle(shell).containerType, '.app-shell must establish the size container the rail defers to').toBe('inline-size')
+    expect(getComputedStyle(shell).containerName, '.app-shell must NAME the container ui-nav-rail-collapse for the seam to resolve').toBe('ui-nav-rail-collapse')
   })
 
   it('the trigger is shown and the closed list is collapsed; opening drops the panel', async () => {

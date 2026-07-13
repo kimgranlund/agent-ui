@@ -32,6 +32,11 @@
 // `controls → @agent-ui/components` (incl. `ui-menu`, transitively via nav-rail-group.ts) only — NEVER
 // `ui-master-detail`/`@agent-ui/router` (SPEC §5 layering gate; `collapse="drill-in"` contributes anatomy
 // ONLY, the consumer composes `ui-master-detail`, ADR-0130 cl.5).
+//
+// `collapseContainer` (TKT-0035) — the `collapse="menu"` `@container` threshold's WHICH-BOX seam: 'self'
+// (default) measures the rail's own inline-size (unchanged); 'ancestor' relinquishes it to a named
+// `@container ui-nav-rail-collapse` a consumer opts an ancestor into — the narrow-sidebar escape hatch (a
+// docs-nav-column rail can track the shell/viewport instead of its own ~15rem box). Pure CSS, see nav-rail.css.
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import type { UIMenuElement } from '@agent-ui/components/controls/menu'
@@ -40,8 +45,19 @@ import { UINavRailItemElement } from './nav-rail-item.ts'
 
 const COLLAPSE_VALUES = ['menu', 'drill-in', 'icon-popover'] as const // 'menu' leads = the enum-fallback default (ADR-0130 cl.2)
 
+// `collapseContainer` (TKT-0035) — an orthogonal axis from `collapse`: WHICH box the `collapse="menu"`
+// `@container` query measures. 'self' (default, byte-identical to pre-TKT-0035 behaviour) — the rail
+// measures its OWN inline-size, the right default for a full-width rail. 'ancestor' — the rail relinquishes
+// its own containment (nav-rail.css `:scope[collapse-container='ancestor'] { container-type: normal }`) so
+// the NAMED `@container ui-nav-rail-collapse (…)` query walks up to the nearest ancestor the CONSUMER has
+// opted in via `container-type: inline-size; container-name: ui-nav-rail-collapse` — the supported seam for
+// a narrow-sidebar rail (e.g. a ~15rem docs nav column) whose collapse should track the shell/viewport, not
+// its own box. Pure-CSS (attribute-selector consumption only, nav-rail.css) — no `.ts` behaviour here.
+const COLLAPSE_CONTAINER_VALUES = ['self', 'ancestor'] as const
+
 const props = {
   collapse: { ...prop.enum(COLLAPSE_VALUES, 'menu'), reflect: true },
+  collapseContainer: { ...prop.enum(COLLAPSE_CONTAINER_VALUES, 'self'), reflect: true, attribute: 'collapse-container' },
 } satisfies PropsSchema
 
 export interface UINavRailElement extends ReactiveProps<typeof props> {}

@@ -107,6 +107,11 @@ folded requirements; ADR-0130 cl.1)*
 - **AC2** *Given* the narrow trigger activated (click or Enter/Space), *when* observed, *then* the dropdown
   panel opens overlaying the page (not reflowing it) and is keyboard-dismissable (Escape or outside-click).
 
+*(Extended, TKT-0035: the container-width threshold is measured against a NAMED `@container
+ui-nav-rail-collapse` query. `collapseContainer="self"` [default] is this AC's own box, unchanged; `="ancestor"`
+relinquishes the rail's own containment so a narrow-sidebar consumer opts an ancestor into the same named
+container instead — see nav-rail.md.)*
+
 **SPEC-R6 — Group context labels + the wide name|tag row.** A `ui-nav-rail-group` with a `label` MUST
 render it as a context heading above its items (replacing the site's current bare-tag group headers, the
 TKT-0029 requirement). A `ui-nav-rail-item` MAY carry `slot="trailing" data-role="tag"` content (realizing

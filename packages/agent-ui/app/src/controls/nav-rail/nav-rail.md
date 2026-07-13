@@ -15,6 +15,11 @@ attributes:              # attributes-as-API — mirrors nav-rail.ts `static pro
     values: [menu, drill-in, icon-popover]
     default: menu
     reflect: true         # the [collapse=…] CSS branches (nav-rail.css) + the CONSUMER's own narrow-behavior choice; out-of-set/unset coerces to `menu` (values[0] fallback, SPEC-R1 AC2)
+  - name: collapseContainer
+    type: enum
+    values: [self, ancestor]
+    default: self
+    reflect: true         # TKT-0035 — WHICH box the collapse="menu" 40rem @container query measures. self (default): the rail's own box (unchanged). ancestor: the rail relinquishes its own containment so the NAMED `@container ui-nav-rail-collapse` query resolves against the nearest ancestor the consumer opts in via `container-type: inline-size; container-name: ui-nav-rail-collapse` — the narrow-sidebar seam (a rail in a ~15rem column tracks the shell/viewport instead of its own always-narrow box). HTML attribute is `collapse-container` (an explicit `attribute:` override in nav-rail.ts — same as button.ts's `icon-only`).
 
 properties: []           # no manual accessors beyond the attributes-as-API
 
@@ -54,7 +59,7 @@ geometry:
   sizeClass: pattern
   blockSize: auto            # fills its layout parent; each item ROW takes --ui-nav-rail-height (the Pattern law)
   paddingBlock: 0
-  narrowThreshold: 40rem     # the rail's OWN container-width threshold (collapse="menu"; mirrors ui-app-shell/ui-master-detail's own starting value)
+  narrowThreshold: 40rem     # the NAMED `@container ui-nav-rail-collapse` threshold (collapse="menu"); mirrors ui-app-shell/ui-master-detail's own starting value. Measured against the rail's own box under collapse-container="self" (default), or a consumer-opted ancestor under collapse-container="ancestor" (TKT-0035)
 
 forcedColors: The active item's indicator border (ui-nav-rail-item's own signifier) repaints to `Highlight` under `forced-colors: active` (SPEC-R4), never vanishing — the `ui-app-shell` divider precedent.
 ---
@@ -95,6 +100,37 @@ role-derivation `MutationObserver` (SPEC-R2 AC2).
 - **`icon-popover`** — items render icon-only; a `ui-nav-rail-group` with 2+ items discloses them via an
   internally-composed `ui-menu` (roving focus, commit-and-close, dismissal — inherited wholesale). At most
   one group's menu is open at a time (ADR-0130 cl.6).
+
+## `collapse-container` — WHICH box `collapse="menu"` measures (TKT-0035)
+
+`collapse="menu"`'s narrow disclosure is gated by a **NAMED** `@container ui-nav-rail-collapse (inline-size
+< 40rem)` query. `collapse-container` picks which box that named container resolves against:
+
+- **`self`** (default) — the rail establishes the named container itself; the query reads its own
+  inline-size, unchanged from the primitive's original behaviour. Right for a rail that fills its layout
+  region (a full-width top bar, a wide panel).
+- **`ancestor`** — the rail relinquishes its own containment (`container-type: normal`); the query walks up
+  to the nearest ancestor the CONSUMER opts in:
+
+  ```css
+  .app-shell {
+    container-type: inline-size;
+    container-name: ui-nav-rail-collapse;
+  }
+  ```
+
+  ```html
+  <div class="app-shell">
+    <ui-nav-rail collapse="menu" collapse-container="ancestor">…</ui-nav-rail>
+  </div>
+  ```
+
+  This is the seam for a narrow-sidebar rail (e.g. a ~15rem docs nav column, which would otherwise always
+  read below 40rem and never show a desktop vertical rail) whose collapse should track an ancestor's width
+  (the app shell, effectively the viewport) instead of its own box. No consumer override of the rail's own
+  `container-type` is needed — `collapse-container="ancestor"` is the supported seam, not a CSS workaround.
+  If no ancestor names the container, the query never matches and the rail simply never collapses (a safe
+  failure — never the opposite, always-collapsed, failure the unnamed-container coupling risked).
 
 ## Accessibility — role derives from item SHAPE, not `collapse`
 
