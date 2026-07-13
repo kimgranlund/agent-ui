@@ -13,15 +13,18 @@ import { parseDoc, loadSparklineDoc, loadBarChartDoc, loadButtonDoc } from './fr
 //     "no empty section" discipline the other sequence tables already follow).
 // Real descriptors (sparkline/bar-chart declare parts, button declares `parts: []`) anchor the page-level legs;
 // synthetic fences give the precise unit + the negative control.
+//
+// Rows render as Form-B (TKT-0033: `.api-row` name-rail + flowing detail, not a `<table>`) — the helpers below
+// read that shape (`.api-row`/`.api-row-name code`/`.api-row-description`) rather than `<table>`/`<tr>`/`<td>`.
 
 /** The composed page's Parts <section> (its titled by an <h2>Parts</h2>), or undefined when none was rendered. */
 function partsSection(content: HTMLElement): HTMLElement | undefined {
   return [...content.querySelectorAll('section')].find((s) => s.querySelector('h2')?.textContent === 'Parts')
 }
 
-/** The first-column (`name`) code text of every body row in a rendered Parts section. */
+/** The name-rail code text of every Form-B row in a rendered Parts section. */
 function partNames(section: HTMLElement): string[] {
-  return [...section.querySelectorAll('tbody tr')].map((tr) => tr.querySelector('code')?.textContent ?? '')
+  return [...section.querySelectorAll('.api-row')].map((row) => row.querySelector('.api-row-name code')?.textContent ?? '')
 }
 
 // A parts-bearing fence (two declared parts) and a parts-less one (`parts: []`) — the minimum descriptor pair
@@ -54,10 +57,13 @@ describe('renderPartsTable — the descriptor parts[] surface', () => {
     const section = renderPartsTable(descriptor)
     expect(section).toBeDefined()
     expect(section!.querySelector('h2')?.textContent).toBe('Parts')
-    expect([...section!.querySelectorAll('thead th')].map((th) => th.textContent)).toEqual(['Name', 'Description'])
     expect(partNames(section!)).toEqual(['track', 'fill'])
-    // the description is rendered as real text derived straight from the parse (not hand-copied)
-    expect(section!.textContent).toContain('The decorative rail.')
+    // the description is rendered as real text derived straight from the parse (not hand-copied), in the
+    // Form-B row's prose paragraph — not a table cell
+    expect([...section!.querySelectorAll('.api-row-description')].map((p) => p.textContent)).toEqual([
+      'The decorative rail.',
+      'The proportional bar inside the track.',
+    ])
   })
 
   it('renders NOTHING for a parts-LESS descriptor (parts: []) — no empty Parts section', () => {

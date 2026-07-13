@@ -10,12 +10,106 @@
 // from the parse the contract trip-wire validates (ADR-0004).
 import type { ParsedAttribute, ParsedDescriptor, SequenceItem } from '@agent-ui/components/descriptor'
 import { codeBlock } from './code-block.ts' // shared `<pre><code>` previews — one chrome for every code sample on the site
+import './doc-page.css' // Form-B per-attribute/per-item ROW styling (TKT-0033) — dedicated stylesheet, joined by
+// buildSiteCss the same way every other site/lib/*.css sibling is (component-preview.ts's own `import './component-preview.css'`
+// precedent). Deliberately NOT in site/pages/_page.css (a concurrent nav wave owns that file this session).
 
-// ── API table (derived from the parsed attributes) ────────────────────────────────────────────────────────
+// ── API reference rows (Form B: per-attribute rows — TKT-0033, Kim's ruling) ───────────────────────────────
+//
+// Every one of the five sibling reference tables (Attributes / Properties / Events / Slots / Parts) now renders
+// as the SAME row shape: the entry NAME is a prominent left rail (the scan axis / index — a code chip), and its
+// payload flows in a right column as small labelled fields (`.api-field`) — an enum's `values[]` widens into a
+// WRAPPED chip-set rather than one long dotted string, a rarely-needed boolean (`reflect` / `optional`) demotes to
+// a subtle inline `.api-badge` (shown only when true — the common/false case needs no footnote), and an empty
+// default reads as a plain em-dash, never a lonely empty `<code>` chip. `apiRow`/`apiField`/`apiChipset`/`apiBadge`
+// below are the ONE set of row-builders both `renderApiTable` and `renderSequenceTable` compose from, so the five
+// tables stay one coherent reference pattern rather than five independent designs.
+
+/** apiRow — one reference entry: the NAME as a prominent left-rail code chip, then a flowing right column of
+ *  `metaChildren` (fields/badges) and an optional prose `description` paragraph underneath them. Degrades to a
+ *  stacked block on narrow widths (doc-page.css's `@media` leg) — no dead horizontal gap at any width. */
+function apiRow(name: string, metaChildren: readonly Node[], description?: string): HTMLElement {
+  const row = document.createElement('div')
+  row.className = 'api-row'
+
+  const nameCell = document.createElement('div')
+  nameCell.className = 'api-row-name'
+  const nameCode = document.createElement('code')
+  nameCode.textContent = name
+  nameCell.append(nameCode)
+
+  const detail = document.createElement('div')
+  detail.className = 'api-row-detail'
+  if (metaChildren.length > 0) {
+    const meta = document.createElement('div')
+    meta.className = 'api-row-meta'
+    meta.append(...metaChildren)
+    detail.append(meta)
+  }
+  if (description !== undefined && description !== '' && description !== '—') {
+    const p = document.createElement('p')
+    p.className = 'api-row-description'
+    p.textContent = description
+    detail.append(p)
+  }
+
+  row.append(nameCell, detail)
+  return row
+}
+
+/** apiField — one labelled meta value (e.g. "Type" → a chip-set, "Default" → a code chip): a small uppercase
+ *  label above the value node, flowing inline with its sibling fields inside `.api-row-meta`. */
+function apiField(label: string, value: Node): HTMLElement {
+  const field = document.createElement('div')
+  field.className = 'api-field'
+  const lbl = document.createElement('span')
+  lbl.className = 'api-field-label'
+  lbl.textContent = label
+  field.append(lbl, value)
+  return field
+}
+
+/** apiChipset — an enum's `values[]` as a WRAPPING row of code chips (never one long dotted string). */
+function apiChipset(values: readonly string[]): HTMLElement {
+  const set = document.createElement('div')
+  set.className = 'api-chipset'
+  for (const v of values) {
+    const chip = document.createElement('code')
+    chip.className = 'api-chip'
+    chip.textContent = v
+    set.append(chip)
+  }
+  return set
+}
+
+/** codeOrDash — `text` as a code chip, or a plain em-dash (never a lonely EMPTY chip) when `text` is absent/empty
+ *  or already the sentinel '—' `cellText` returns for a missing sequence field. */
+function codeOrDash(text: string | undefined): HTMLElement {
+  if (text === undefined || text === '' || text === '—') {
+    const dash = document.createElement('span')
+    dash.className = 'api-empty'
+    dash.textContent = '—'
+    return dash
+  }
+  const code = document.createElement('code')
+  code.textContent = text
+  return code
+}
+
+/** apiBadge — a subtle inline badge/dot for a rarely-needed boolean footnote (`reflect` / `optional`): shown only
+ *  when the flag is true (the false/absent case is the unremarkable default and needs no headline column). */
+function apiBadge(label: string, title: string): HTMLElement {
+  const badge = document.createElement('span')
+  badge.className = 'api-badge'
+  badge.title = title
+  badge.textContent = label
+  return badge
+}
 
 /**
- * renderApiTable — one table row per `attributes[]` entry (name · type · default · reflect), read straight from
- * the parse so the published surface IS the contract, not a hand-transcribed copy. Wrapped in a titled section.
+ * renderApiTable — one Form-B row per `attributes[]` entry (name · type[+enum chips] · default · reflect badge),
+ * read straight from the parse so the published surface IS the contract, not a hand-transcribed copy. Wrapped in
+ * a titled section.
  *
  * `level` is the section-title heading level (DEFAULT 2), so the standard control doc page (composeDocPage) is
  * byte-identical, while a bespoke page that nests these tables under its own sub-headings (the app-shell guide's
@@ -25,32 +119,20 @@ export function renderApiTable(attributes: readonly ParsedAttribute[], level = 2
   const section = document.createElement('section')
   section.append(heading(level, 'Attributes'))
 
-  const table = document.createElement('table')
-  table.append(tableHead('Name', 'Type', 'Default', 'Reflect'))
-
-  const tbody = document.createElement('tbody')
-  for (const attr of attributes) {
-    tbody.append(
-      tableRow(
-        codeCell(attr.name ?? '—'),
-        textCell(typeLabel(attr)),
-        codeCell(attr.default ?? '—'),
-        textCell(attr.reflect === undefined ? '—' : String(attr.reflect)),
-      ),
-    )
-  }
-  table.append(tbody)
-  section.append(table)
+  const rows = document.createElement('div')
+  rows.className = 'api-rows'
+  for (const attr of attributes) rows.append(attributeRow(attr))
+  section.append(rows)
   return section
 }
 
-/**
- * typeLabel — the codec kind, widened with its enum members when the parse carried a `values[]` list (e.g.
- * `enum (sm · md · lg)`), so the table surfaces the allowed set without a second source.
- */
-export function typeLabel(attr: ParsedAttribute): string {
-  const kind = attr.type ?? '—'
-  return attr.values && attr.values.length > 0 ? `${kind} (${attr.values.join(' · ')})` : kind
+/** attributeRow — one Attributes row: Type (chip-set when enum) + Default (code-or-dash) as flowing fields, plus
+ *  a "reflects" badge ONLY when the descriptor marks `reflect: true` (false/undefined needs no footnote). */
+function attributeRow(attr: ParsedAttribute): HTMLElement {
+  const typeValue = attr.values && attr.values.length > 0 ? apiChipset(attr.values) : codeOrDash(attr.type)
+  const meta: Node[] = [apiField('Type', typeValue), apiField('Default', codeOrDash(attr.default))]
+  if (attr.reflect === true) meta.push(apiBadge('reflects', 'Reflects to a DOM attribute (JS-set values stay visible to CSS/attribute selectors)'))
+  return apiRow(attr.name ?? '—', meta)
 }
 
 /** findAttr — the parsed attribute named `name`, or undefined; the seam doc pages iterate the enum off of. */
@@ -64,11 +146,13 @@ export const findAttr = (d: ParsedDescriptor, name: string): ParsedAttribute | u
 // than its attributes can. Each table renders ONLY when its sequence has rows, so a control with (say) no events
 // ships no Events table rather than an empty one.
 
-/** A column of a sequence table: a header + the SequenceItem field it reads (rendered as a code cell or text). */
+/** A field of a sequence row beyond name/description: a header + the SequenceItem field it reads, rendered as
+ *  a code-or-dash value (`code`) or a subtle true-only badge (`badge` — the `reflect`/`optional` treatment). */
 interface SeqColumn {
   readonly header: string
   readonly field: string
   readonly code?: boolean
+  readonly badge?: boolean
 }
 
 /** cellText — one SequenceItem field as a display string: '—' when absent, an inline-array field comma-joined. */
@@ -79,23 +163,45 @@ function cellText(item: SequenceItem, field: string): string {
 }
 
 /**
- * renderSequenceTable — a titled table over a descriptor sequence (events/properties/slots), one row per parsed
- * item, derived straight from the parse. Returns undefined when the sequence is empty/absent, so the caller ships
- * no empty table.
+ * renderSequenceTable — a titled Form-B row group over a descriptor sequence (events/properties/slots/parts), one
+ * row per parsed item, derived straight from the parse: `name` is the row's left-rail index, a `description`
+ * column (if present) renders as the row's prose, and every other column is a flowing meta field — `code` fields
+ * as a code-or-dash chip, `badge` fields (reflect/optional) as a subtle badge shown ONLY when true. Returns
+ * undefined when the sequence is empty/absent, so the caller ships no empty section — the SAME row shape
+ * `renderApiTable` builds, so all five sibling tables read as one coherent reference pattern.
  */
 function renderSequenceTable(title: string, items: SequenceItem[] | undefined, columns: readonly SeqColumn[], level = 2): HTMLElement | undefined {
   if (!items || items.length === 0) return undefined
   const section = document.createElement('section')
   section.append(heading(level, title))
-  const table = document.createElement('table')
-  table.append(tableHead(...columns.map((c) => c.header)))
-  const tbody = document.createElement('tbody')
+
+  const nameField = columns.find((c) => c.field === 'name')?.field ?? 'name'
+  const descColumn = columns.find((c) => c.field === 'description')
+  const metaColumns = columns.filter((c) => c.field !== nameField && c !== descColumn)
+
+  const rows = document.createElement('div')
+  rows.className = 'api-rows'
   for (const item of items) {
-    tbody.append(tableRow(...columns.map((c) => (c.code ? codeCell(cellText(item, c.field)) : textCell(cellText(item, c.field))))))
+    const meta: Node[] = []
+    for (const c of metaColumns) {
+      const text = cellText(item, c.field)
+      if (c.badge) {
+        if (text === 'true') meta.push(apiBadge(c.header.toLowerCase(), `${c.header}: yes`))
+      } else {
+        meta.push(apiField(c.header, c.code ? codeOrDash(text) : textNode(text)))
+      }
+    }
+    const description = descColumn ? cellText(item, descColumn.field) : undefined
+    rows.append(apiRow(cellText(item, nameField), meta, description))
   }
-  table.append(tbody)
-  section.append(table)
+  section.append(rows)
   return section
+}
+
+/** textNode — a plain-text meta value (no column in the current five tables uses this leg outside `description`,
+ *  which apiRow handles separately — kept for a future non-code, non-badge meta field). */
+function textNode(text: string): Node {
+  return document.createTextNode(text)
 }
 
 /** renderPropertiesTable — the descriptor `properties[]` (IDL beyond attributes-as-API): name · description. `level` (default 2) sets the section-title heading level (see renderApiTable). */
@@ -115,11 +221,11 @@ export function renderEventsTable(d: ParsedDescriptor): HTMLElement | undefined 
   ])
 }
 
-/** renderSlotsTable — the descriptor `slots[]` (named light-DOM positions): name · optional · description. */
+/** renderSlotsTable — the descriptor `slots[]` (named light-DOM positions): name · optional (badge) · description. */
 export function renderSlotsTable(d: ParsedDescriptor): HTMLElement | undefined {
   return renderSequenceTable('Slots', d.sequences.get('slots'), [
     { header: 'Name', field: 'name', code: true },
-    { header: 'Optional', field: 'optional' },
+    { header: 'Optional', field: 'optional', badge: true },
     { header: 'Description', field: 'description' },
   ])
 }

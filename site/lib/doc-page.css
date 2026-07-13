@@ -1,0 +1,123 @@
+/* site/lib/doc-page.css — Form-B "per-attribute rows" for the shared API-reference render kit (doc-page.ts,
+ * TKT-0033, Kim's ruling). Every one of the five sibling reference tables (Attributes / Properties / Events /
+ * Slots / Parts) shares this ONE row shape: `.api-row` puts the entry NAME in a prominent left rail (the scan
+ * axis / index) and flows its payload — type/default/detail fields, a chip-set, a subtle reflect/optional badge,
+ * prose description — in a right column. A DEDICATED stylesheet (not site/pages/_page.css — a concurrent nav
+ * wave owns that file this session), imported once by doc-page.ts (`import './doc-page.css'`) the same way every
+ * other site/lib/*.css sibling ships (component-preview.ts's own `import './component-preview.css'` precedent) —
+ * every *-doc.ts page pulls it in for free by importing doc-page.ts.
+ *
+ * Every colour rides a `--md-sys-color-*` role (the fleet's own token layer, adopted by the foundation cascade
+ * _page.ts loads first) — light-dark()-driven, so both themes stay AA with zero local overrides here. The `code`
+ * chip itself (name rail, type/default values, chip-set members) is deliberately a PLAIN `<code>` element: it
+ * inherits the site's existing global `code` chip treatment (_page.css's monospace/surface-high/outline-variant
+ * rule) rather than duplicating it — one chip idiom, reused, not forked.
+ */
+
+.api-rows {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--md-sys-color-neutral-surface-low);
+  margin: 0.5rem 0 1.5rem;
+}
+
+/* ── one reference entry: NAME left rail (the scan axis) + a flowing right column ───────────────────────────── */
+.api-row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 13rem) 1fr;
+  gap: 0.25rem 1.25rem;
+  padding: 0.75rem 1rem;
+  align-items: start;
+}
+.api-row + .api-row {
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+
+.api-row-name {
+  padding-block-start: 0.15rem; /* nudge the name to optically align with the first field's baseline */
+}
+.api-row-name code {
+  font-weight: 650; /* the index — visually the most prominent chip on the row */
+  font-size: 0.9rem;
+}
+
+.api-row-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-inline-size: 0; /* let a long chip-set/description actually wrap inside the grid track, not overflow it */
+}
+
+/* ── the meta strip: Type / Default / Detail fields + the reflect·optional badge, all flowing + wrapping ──────── */
+.api-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 1.5rem;
+  row-gap: 0.4rem;
+}
+
+.api-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-inline-size: 0;
+}
+.api-field-label {
+  font-size: 0.65rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* an enum's values[] — a WRAPPED chip-set, never one long dotted string (the #1 defect this redesign fixes) */
+.api-chipset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+/* an absent/empty value (a missing default, an absent detail) — a plain em-dash, never a lonely empty code chip */
+.api-empty {
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* the reflect/optional footnote — demoted to a small dot + label, shown ONLY when the flag is true */
+.api-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  align-self: center;
+  font-size: 0.7rem;
+  color: var(--md-sys-color-primary-on-surface-variant, var(--md-sys-color-neutral-on-surface-variant));
+}
+.api-badge::before {
+  content: '';
+  inline-size: 0.4em;
+  block-size: 0.4em;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  flex: none;
+}
+
+/* the row's prose (a sequence item's `description`, when the descriptor declares one) */
+.api-row-description {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* ── narrow: stack name-over-detail (no dead horizontal gap at any width) ───────────────────────────────────── */
+@media (max-inline-size: 32rem) {
+  .api-row {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+  .api-row-name {
+    padding-block-start: 0;
+  }
+}
