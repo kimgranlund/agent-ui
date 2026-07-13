@@ -81,91 +81,91 @@
     "label": "A2UI Canvas",
     "description": "A live A2UI payload rendering a real button through the shipped renderer, round-tripping its click as an action message.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2UI"
   },
   {
     "href": "./a2ui-catalog.html",
     "label": "A2UI Catalog",
     "description": "Every component the default agent-ui A2UI catalog declares, rendered live through the real renderer.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2UI"
   },
   {
     "href": "./a2ui-list.html",
     "label": "A2UI Dynamic List",
     "description": "A2UI v1.0's data-bound children: one ChildList template rendering one live element per array row.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2UI"
   },
   {
     "href": "./a2ui-form.html",
     "label": "A2UI Generative Form",
     "description": "One A2UI payload becomes a complete, validated, accessibly-labelled form, submitting a typed aggregate action.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2UI"
   },
   {
     "href": "./a2ui-patterns.html",
     "label": "A2UI Patterns",
     "description": "Five UIs an agent actually emits: a settings form, a destructive confirmation, a wizard, and more.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2UI"
   },
   {
     "href": "./a2ui-gallery.html",
     "label": "A2UI Gallery",
     "description": "Every composition on the A2UI example-seed shelf, rendered live through the same renderer.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2UI"
   },
   {
     "href": "./a2ui-stream.html",
     "label": "A2UI Streaming",
     "description": "An agent streams a screen one JSONL line at a time; each line applies the moment it arrives.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2UI"
   },
   {
     "href": "./a2ui-live.html",
     "label": "A2UI Live Agent",
     "description": "A live-agent chat app: the agent's A2UI stream renders into a real canvas that round-trips actions as the next turn.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2UI"
   },
   {
     "href": "./a2ui-chat.html",
     "label": "A2UI Chat",
     "description": "One scrolling chat log where the agent's narration streams live and its A2UI surfaces render inline, persisting across turns until closed.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2UI"
   },
   {
     "href": "./a2ui-authoring.html",
     "label": "A2UI Authoring Guide",
     "description": "How to author a catalog row and an example payload, the two things that teach an agent this fleet.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2UI"
   },
   {
     "href": "./a2a-tic-tac-toe.html",
     "label": "A2A Tic-Tac-Toe Arena",
     "description": "Two agents play tic-tac-toe through a deterministic referee, an isolation-proven Agent2Agent match.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2A"
   },
   {
     "href": "./a2a-concepts.html",
     "label": "A2A Concepts & Demos",
     "description": "The A2A corpus made readable: one card per admitted record, the wire shape it teaches, and why.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2A"
   },
   {
     "href": "./a2a-artifact-feed.html",
     "label": "A2A Artifact Feed",
     "description": "A conversation carried over A2A, some turns bearing live A2UI artifacts.",
     "level": "L2",
-    "section": "Guides"
+    "section": "A2A"
   },
   {
     "href": "./gallery.html",
