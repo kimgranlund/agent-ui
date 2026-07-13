@@ -1130,20 +1130,19 @@ describe('renderer host — TKT-0026: a structural resend that adds an Option re
     cleanup()
   })
 
-  // TKT-0026 review (component-reviewer NO-GO on scope): the "fully general — tail is the only
-  // reachable position" claim above is true ONLY for direct-DOM/author mutations. The RENDERER's own
-  // `#reconcileChildren` (tree.ts) resolves a SURVIVOR's anchor as its bare widget node with no
-  // `parentNode === el` check (RSR-C5) — for ANY child-relocating control (the ADR-0017 family:
-  // select/combo-box/menu), a survivor's true parent by resend time is the control's internal panel,
-  // not the host `el` `#reconcileChildren` inserts into. A MID-POSITION resend (a new id inserted
-  // BETWEEN two already-delivered survivors) therefore throws an uncaught `NotFoundError` out of
-  // `ingest()` — LATENT and PRE-EXISTING (reproducible identically before TKT-0026: ship-together's
-  // own first-connect move already relocates the initial set before any resend can reference it).
-  // TKT-0026 never fixed this — it only ever made the APPEND (tail) position safe. Tracked as its own
-  // ticket, TKT-0031 (tree.ts's own wave), minted by this review. This test PINS the boundary honestly:
-  // it must FAIL (the `.toThrow()` flips to NOT throwing) the moment TKT-0031 lands, at which point
-  // this test — and the caveats above — should be revised together.
-  it('TKT-0031 (latent, NOT fixed by TKT-0026): a MID-POSITION resend inserted between two survivors throws', async () => {
+  // TKT-0026 review (component-reviewer NO-GO on scope) found this LATENT: the "fully general — tail
+  // is the only reachable position" claim above was true ONLY for direct-DOM/author mutations, because
+  // the RENDERER's own `#reconcileChildren` (tree.ts) resolved a SURVIVOR's anchor as its bare widget
+  // node with no `parentNode === el` check (RSR-C5) — for ANY child-relocating control (the ADR-0017
+  // family: select/combo-box/menu/popover/tooltip/modal/command-modal/disclosure), a survivor's true
+  // parent by resend time is the control's internal panel, not the host `el` `#reconcileChildren`
+  // inserts into. A MID-POSITION resend (a new id inserted BETWEEN two already-delivered survivors)
+  // threw an uncaught `NotFoundError` out of `ingest()`. TKT-0031 (tree.ts's own wave) fixes this: a
+  // relocated survivor (`parentNode !== el`) is now SKIPPED as an anchor candidate — `anchor` falls
+  // through to the next still-genuine-child-of-`el` survivor, or `null` (a safe, always-valid
+  // `insertBefore` target) — so the insert no longer crashes. This test, formerly the pinned
+  // `.toThrow()` boundary, is REWRITTEN (TKT-0031) to assert the insert now SUCCEEDS.
+  it('TKT-0031 (fixed): a MID-POSITION resend inserted between two survivors succeeds — the new Option adopts into the select panel', async () => {
     const { r, mount, cleanup } = harness()
 
     r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's-select-mid', catalogId: 'agent-ui' } }))
@@ -1162,11 +1161,14 @@ describe('renderer host — TKT-0026: a structural resend that adds an Option re
       }),
     )
     await whenFlushed()
-    expect(mount.querySelector('ui-select')?.querySelectorAll('[role=option]')).toHaveLength(2)
+    const select = mount.querySelector('ui-select') as UISelectElement
+    expect(select.querySelectorAll('[role=option]')).toHaveLength(2) // ship-together: both adopt at first connect
 
-    // opt_c is NEW, inserted BETWEEN the two already-delivered survivors opt_a/opt_b — the anchor
-    // for opt_c resolves to opt_b's widget, which by now lives inside the select's own listbox panel
-    // (adopted at first connect), not as a child of the select host `#reconcileChildren` inserts into.
+    // opt_c is NEW, inserted BETWEEN the two already-delivered survivors opt_a/opt_b — the anchor for
+    // opt_c would resolve to opt_a's or opt_b's widget, both of which by now live inside the select's
+    // own listbox panel (adopted at first connect), not as a child of the select host
+    // `#reconcileChildren` inserts into. TKT-0031: both are skipped as anchor candidates (relocated),
+    // so this no longer throws.
     expect(() => {
       r.ingest(
         line({
@@ -1180,7 +1182,101 @@ describe('renderer host — TKT-0026: a structural resend that adds an Option re
           },
         }),
       )
-    }).toThrow()
+    }).not.toThrow()
+
+    await whenFlushed()
+    await Promise.resolve() // select's own #optionObserver adoption is microtask-deferred (TKT-0026)
+    await Promise.resolve()
+
+    // opt_c mounted as a fresh light-DOM child of `sel` (tail — anchor fell through to `null`, both
+    // survivors having been skipped as relocated) and select's own `#optionObserver` adopts it into the
+    // panel on the next microtask, exactly like TKT-0026's own late-arrival proof above.
+    expect(select.querySelectorAll('[role=option]')).toHaveLength(3)
+    const late = select.querySelector<HTMLElement>('[value="cherry"]')!
+    expect(late.closest('[data-part="listbox"]')).not.toBeNull()
+
+    // Position fidelity: TKT-0031 fixes the THROW, not SPEC-R5 reorder (ADR-0128, deferred, per
+    // ADR-0128's reorder-stays-a-non-goal ruling) — a relocating control owns its OWN internal order
+    // once children are adopted (select.ts's `#syncOptions` doc: a newly-adopted node always lands at
+    // the listbox's CURRENT TAIL, regardless of where the wire referenced it). So the realized panel
+    // order is [apple, banana, cherry], not the wire's requested [apple, cherry, banana] — a documented
+    // divergence inside the control's own ownership, not a defect.
+    expect([...select.querySelectorAll('[role=option]')].map((o) => o.getAttribute('value'))).toEqual([
+      'apple',
+      'banana',
+      'cherry',
+    ])
+
+    // …and genuinely selectable, same as TKT-0026's own proof.
+    late.click()
+    await whenFlushed()
+    expect(select.value).toBe('cherry')
+
+    cleanup()
+  })
+})
+
+// ── TKT-0031: mid-position resend against a SECOND child-relocating family member (proves the fix
+// isn't select-shaped) ───────────────────────────────────────────────────────────────────────────────
+//
+// `ui-menu` (ADR-0017 family) moves all non-trigger light children into its internal panel ONCE, at
+// first connect (menu.ts `#ensureParts`) — it has no ongoing adoption observer the way select does.
+// A mid-position resend inserting a new MenuItem between two already-relocated survivors exercises the
+// SAME anchor-resolution path as select's Option case above, with a different (simpler) relocation
+// shape: the new item mounts fresh and is appended as a light-DOM sibling of the panel (reachable, not
+// re-adopted into the panel — menu has no observer to do that), proving the throw is gone regardless
+// of whether the specific control re-adopts late-arriving children.
+describe('renderer host — TKT-0031: mid-position resend against a second child-relocating family member (Menu)', () => {
+  it('a MenuItem resend inserted between two already-relocated survivors succeeds (no NotFoundError)', async () => {
+    const { r, mount, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's-menu-mid', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 's-menu-mid',
+          components: [
+            { id: 'root', component: 'Column', children: ['menu'] },
+            { id: 'menu', component: 'Menu', open: false, children: ['menu_trigger', 'item_a', 'item_b'] },
+            { id: 'menu_trigger', component: 'Button', label: 'Open menu' },
+            { id: 'item_a', component: 'MenuItem', value: 'a', label: 'Option A' },
+            { id: 'item_b', component: 'MenuItem', value: 'b', label: 'Option B' },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+
+    const menu = mount.querySelector('ui-menu')!
+    expect(menu.querySelectorAll('[role=menuitem]')).toHaveLength(2) // both moved into the panel at first connect
+
+    // item_c is NEW, inserted BETWEEN the two already-relocated survivors item_a/item_b — the anchor for
+    // item_c would resolve to one of their widgets, both now children of the menu's internal panel, not
+    // of `menu` itself. Pre-TKT-0031 this threw; post-fix it does not.
+    expect(() => {
+      r.ingest(
+        line({
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId: 's-menu-mid',
+            components: [
+              { id: 'menu', component: 'Menu', open: false, children: ['menu_trigger', 'item_a', 'item_c', 'item_b'] },
+              { id: 'item_c', component: 'MenuItem', value: 'c', label: 'Option C' },
+            ],
+          },
+        }),
+      )
+    }).not.toThrow()
+
+    await whenFlushed()
+
+    // item_c is mounted and reachable (menu has no re-adoption observer, so it lands as a light-DOM
+    // sibling of the panel rather than moving inside it — still a correct, leak-free, non-throwing
+    // mount, which is all TKT-0031 claims for a family member without select's adoption mechanism).
+    expect(menu.querySelectorAll('[role=menuitem]')).toHaveLength(3)
+    const items = [...menu.querySelectorAll('[role=menuitem]')]
+    expect(items.map((i) => i.getAttribute('data-value'))).toContain('c')
 
     cleanup()
   })

@@ -312,6 +312,12 @@ export class SurfaceTree {
    * Walking `newRefs` in REVERSE and tracking `anchor` as "the next already-positioned sibling" gives
    * correct insertion order in one pass with no DOM query per insert; `insertBefore(x, null)` is
    * `appendChild`, the natural base case for the last-in-order child.
+   *
+   * TKT-0031: a survivor's anchor is only ever adopted when it is still genuinely `el`'s OWN direct
+   * child — a child-relocating container (ADR-0017 family) may have moved a survivor's widget into its
+   * own internal panel by resend time, and such a node cannot serve as an `insertBefore(x, anchor)`
+   * anchor against `el` (it would throw `NotFoundError`, the ticket's defect). See the per-iteration
+   * comment below for the ownership argument.
    */
   #reconcileChildren(id: string, oldRefs: string[], newRefs: string[]): void {
     const el = this.#surface.widgets.get(id)! // guaranteed present — this id is a resend of a mounted node
@@ -329,7 +335,21 @@ export class SurfaceTree {
         // registered anchors (L1 review fix — a naive `?? anchor` fallback here would insert a new sibling
         // relative to the WRONG anchor when a still-pending survivor sits between it and the next survivor).
         const survivor = this.#surface.widgets.get(childId) ?? this.#pendingParents.get(childId)?.find((a) => a.parentNode === el)
-        if (survivor !== undefined) anchor = survivor
+        // TKT-0031: a child-relocating container (the ADR-0017 family — select/combo-box/menu/popover/
+        // tooltip/modal/command-modal/disclosure) may, by resend time, have MOVED a survivor's widget out
+        // of `el` into its own internal panel/overlay (select.ts's listbox adoption is the shipped
+        // precedent). Such a survivor is no longer genuinely `el`'s own child, so it is UNUSABLE as an
+        // `insertBefore` anchor here — `el.insertBefore(x, anchor)` requires `anchor.parentNode === el`
+        // and throws `NotFoundError` otherwise. Only adopt a survivor as `anchor` when it still IS `el`'s
+        // direct child; a relocated survivor is skipped (this iteration leaves `anchor` pointing at the
+        // next-still-genuine survivor, or `null`), which is always a valid anchor. This is the fix's
+        // named ownership argument (ticket's Arm 1): once a control adopts a child, the light-DOM order is
+        // no longer the rendered order, so a NEW sibling can only be positioned relative to `el`'s
+        // remaining real children — the relocating control owns wherever it places new children after
+        // adoption (see e.g. select.ts's `#syncOptions` doc, which already documents "always lands at the
+        // listbox's current tail" for exactly this reason — so no positional fidelity is lost by this skip
+        // that the control itself would have preserved anyway).
+        if (survivor !== undefined && survivor.parentNode === el) anchor = survivor
         continue
       }
       const node = this.#mountNode(childId) // fresh mount — SPEC-R1 AC1, the ordinary #mountNode path

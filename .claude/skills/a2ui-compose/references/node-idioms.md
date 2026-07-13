@@ -82,12 +82,14 @@ bindable `value`, `disabled`, `required`; plain `placeholder`, `name`. Option: `
 connect AND on every later light-DOM mutation (TKT-0026, 2026-07-12 — a late-arriving Option now DOES
 reach the panel and becomes selectable, superseding ADR-0053's ship-together limitation, BUT ONLY when
 the new id is APPENDED after every already-delivered Option). A resend that INSERTS a new Option id
-BETWEEN two already-delivered ones still throws an uncaught error — the renderer's generic
-`tree.ts#reconcileChildren` anchors on a survivor's bare widget node with no check that it is still a
-child of the Select host (it has already relocated into the internal panel) — LATENT/pre-existing,
-tracked as TKT-0031 (not fixed by TKT-0026). Shipping a Select and its Options in the SAME
-`updateComponents` message is still the natural, simplest, and only-fully-safe shape — prefer it; if
-adding Options later, only append new ids to the END of `children`.
+BETWEEN two already-delivered ones no longer throws either (TKT-0031, fixed — the renderer's generic
+`tree.ts#reconcileChildren` now skips a survivor whose real parent is no longer the Select host, for the
+whole ADR-0017 child-relocating family, not just Select), but it is still NOT position-faithful: the
+new Option lands at the listbox's CURRENT TAIL (select.ts's own adoption-ordering doc), not at its
+wire-requested mid-list position (SPEC-R5 reorder stays a deliberate non-goal, ADR-0128). Shipping a
+Select and its Options in the SAME `updateComponents` message is still the natural, simplest shape for
+EXACT panel order — prefer it when order matters; a mid-list splice is now safe to send, just not
+position-faithful.
 ```json
 { "id": "in_plan", "component": "Select", "name": "plan", "required": true,
   "placeholder": "Choose a plan…", "value": { "path": "/form/plan" }, "children": ["opt_s","opt_m","opt_l"] }

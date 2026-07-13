@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0031
-status: open
+status: done
 date: 2026-07-13
 owner:
 kind: bug
@@ -66,3 +66,29 @@ today only by the append-only teaching caveat.
   caveats relax when this lands).
 
 ## Findings
+
+Fixed via the ticket's Arm 1 (skip-relocated-survivor anchor walk) — the sounder arm: it needs no new
+component-side seam (Arm 2's "stable anchor" would have widened the `WidgetFactory`/control public
+surface for every ADR-0017 family member) and it matches the ownership semantics select.ts already
+documents (`#syncOptions`: a relocating control owns its own adoption order once it moves a child).
+
+`tree.ts#reconcileChildren` (:316-338) now only adopts a survivor as the `insertBefore` anchor when
+`survivor.parentNode === el` — a relocated survivor (moved into a control's internal panel by resend
+time) is skipped, so `anchor` falls through to the next still-genuine-child-of-`el` survivor, or `null`
+(always a valid `insertBefore` target). This never throws for the whole ADR-0017 family.
+
+Proven against the real renderer + default catalog for TWO family members (not select-shaped): Select
+(the reviewer's exact repro, `renderer.test.ts`'s rewritten former `.toThrow` pin) and Menu (a second
+family member with a DIFFERENT relocation shape — one-time move at connect, no re-adoption observer —
+proving the fix isn't tied to select's own adoption mechanism).
+
+Non-vacuity proven: the fix was temporarily reverted (the `survivor.parentNode === el` guard removed)
+and both rewritten tests failed with the exact pre-fix `NotFoundError`, then the fix was restored
+(diffed byte-identical to the pre-revert state).
+
+Scope held: this fixes the THROW, not SPEC-R5 reorder (ADR-0128, deliberately deferred) — a relocating
+control still owns its own realized order past adoption (select.ts's shipped tail-only adoption
+ordering), so a mid-list splice is now SAFE to send but not POSITION-FAITHFUL inside the panel. The
+seven append-only teaching sites (ADR-0053 amendment, `a2ui-catalog.spec.md` Option row, `factories.ts`,
+`generative-form.ts`, `SKILL.md` ×2, `node-idioms.md`) are relaxed to reflect exactly this: mid-position
+resend no longer crashes, ship-together remains the recommended shape only for exact panel order.

@@ -115,8 +115,9 @@ Draft → validate → fix → re-check → finalize only when clean:
 - [ ] Every `{path}` bind and `${…}` template resolves against the seeded data model; relative paths only
       inside a list-item template.
 - [ ] `Tabs` and its `Tab`/`TabPanel` children ship in one `updateComponents` message. (`Select`/`Option`
-      no longer requires this for a plain APPEND — TKT-0026 — but a follow-on resend must only ADD ids,
-      never insert one BETWEEN two already-delivered Options: see the Common-trap entry below, TKT-0031.)
+      no longer requires this for a plain APPEND — TKT-0026 — and a mid-list splice no longer crashes
+      either — TKT-0031 — but still does not land at its wire-requested position inside the panel: see
+      the Common-trap entry below.)
 - [ ] Required inputs sit under a `FormProvider` with a `submit:true` action to gate them.
 - [ ] The `validate-payload` CLI exits 0 (repairs, if any, reviewed) — THEN report gate-green to the host,
       which dispatches `a2ui-reviewer` for grading (you never invoke the critic yourself).
@@ -133,18 +134,19 @@ Draft → validate → fix → re-check → finalize only when clean:
   the mutable container) rather than resending root.
 - **Field uses `child`, not `children`.** It wraps exactly one control; its `label` is that control's
   accessible name (ADR-0051).
-- **Select/Options — APPEND is safe, MID-POSITION insert still crashes.** TKT-0026 (2026-07-12): a late
-  Option (or `[role=group]`) appended AFTER every currently-delivered Option now DOES adopt into an
-  already-connected Select's panel and becomes selectable — `node-idioms.md`'s prior "must arrive
-  together" limitation (ADR-0053) is superseded for this shape. It is NOT fully general: a resend that
-  inserts a new Option id BETWEEN two already-delivered ones (e.g. `["opt_a","opt_b"]` →
-  `["opt_a","opt_c","opt_b"]`) still throws an uncaught error — the renderer's generic child-reconcile
-  code (`tree.ts#reconcileChildren`) resolves the anchor as a bare widget node with no check that it is
-  still a child of the Select host (it has already relocated into the internal panel by then). This is
-  LATENT/pre-existing, not something TKT-0026 fixed — tracked as TKT-0031 (tree.ts's own wave). Until
-  TKT-0031 lands: when adding Options to an already-connected Select, only APPEND new ids to the END of
-  `children`, never splice one in the middle — shipping the full set together up front remains the
-  simplest, safest shape.
+- **Select/Options — APPEND and MID-POSITION insert are both safe; only the panel POSITION is not
+  wire-faithful.** TKT-0026 (2026-07-12): a late Option (or `[role=group]`) appended AFTER every
+  currently-delivered Option DOES adopt into an already-connected Select's panel and becomes
+  selectable — `node-idioms.md`'s prior "must arrive together" limitation (ADR-0053) is superseded for
+  this shape. TKT-0031 (fixed): a resend that inserts a new Option id BETWEEN two already-delivered
+  ones (e.g. `["opt_a","opt_b"]` → `["opt_a","opt_c","opt_b"]`) no longer throws — the renderer's
+  generic child-reconcile code (`tree.ts#reconcileChildren`) now skips a survivor whose real parent is
+  no longer the Select host (already relocated into the internal panel) as an insertion anchor, for the
+  whole ADR-0017 child-relocating family, not just Select. What TKT-0031 does NOT deliver: the new
+  Option still lands at the listbox's CURRENT TAIL (select.ts's own adoption-ordering doc), not at its
+  wire-requested mid-list position — SPEC-R5 (true reorder) stays a deliberate non-goal (ADR-0128).
+  Ship-together up front remains the simplest shape when EXACT panel order matters; a mid-list splice
+  is now safe to send, just not position-faithful.
 - **`submit:true` is client-only.** It gates the FormProvider; it never appears on the emitted action wire.
 - **Bindable prop = the control's own prop.** Bind `checked` on a Checkbox/Switch, `selected` on Tabs — not a
   generic `value` (ADR-0053 naming law).

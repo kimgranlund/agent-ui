@@ -107,3 +107,13 @@ renderer's generic `reconcileChildren` anchor resolution against ANY child-reloc
 (the latent, pre-existing gap TKT-0026's review reproduced; tracked as TKT-0031, with a deliberate
 `.toThrow` pin in renderer.test.ts that flips when it lands). Until TKT-0031: ship-together
 remains the recommended composing default; appends are safe; never splice mid-list.
+
+**TKT-0031 landed (2026-07-13):** `tree.ts#reconcileChildren` now skips a relocated survivor
+(`parentNode !== el`) as an insertion anchor, so a MID-POSITION resend no longer throws — for the
+whole ADR-0017 child-relocating family, not just Select. What TKT-0031 does NOT deliver: exact
+positional fidelity inside the relocating control's own panel — a control that owns adoption order
+(select.ts's `#syncOptions`: a newly-adopted node always lands at the listbox's CURRENT TAIL) still
+lands the new child there regardless of where the wire referenced it; a control with no re-adoption
+observer (e.g. Menu) lands the new child reachable but outside the panel. Ship-together stays the
+recommended default for exact panel order; mid-list splice is now SAFE (no throw), not
+POSITION-FAITHFUL. SPEC-R5 (pure reorder) remains a deliberate non-goal (ADR-0128).

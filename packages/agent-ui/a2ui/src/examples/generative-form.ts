@@ -9,9 +9,10 @@
 // each field's components land, SPEC-R4).
 //
 // `f_plan`/`in_plan`/its three Options land in ONE message (line 7): the ship-together default
-// (ADR-0053 + its 2026-07-13 Amendment). Late APPENDED Options now adopt (TKT-0026), but
-// mid-position inserts still crash the generic reconciler (TKT-0031, latent) — one message stays
-// the recommended composing shape.
+// (ADR-0053 + its 2026-07-13 Amendment). Late APPENDED Options adopt (TKT-0026), and a mid-position
+// insert no longer crashes the generic reconciler either (TKT-0031, FIXED) — but a mid-list splice
+// still lands at the listbox's current tail, not its wire-requested position, so ship-together
+// remains the recommended composing shape for exact panel order.
 //
 // Every property is a declared default-catalog row (Field/FormProvider/Checkbox/Switch/Select/Option +
 // the TextField `type`/`currency`/`step`/`min` reach) — a payload only a coordinated form catalog can
