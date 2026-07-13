@@ -67,3 +67,26 @@ site nav and the settings rail are ONE nav-rail concept with three collapse mode
 sitemap-derivation, context-group, and name|tag-row requirements become the MODE-1 CONSUMER's
 requirements inside TKT-0030's unified family intake. One seat designs both; this ticket's build
 lands as that family's site consumer.
+
+### 2026-07-12 — TKT-0030's design intake landed this ticket's mode-1 consumer slice
+
+`ADR-0130` (proposed) + `spec/nav-rail-family.spec.md` SPEC-R6/R10 + `lld/nav-rail-family.lld.md`
+LLD-C11 name the concrete build for this ticket's three asks, as the **mode-1 consumer** of the
+shared `ui-nav-rail collapse="menu"` family (not a bespoke rail): **derivation inverts** —
+`site/pages/_page.ts`'s `buildNav()` constructs `<ui-nav-rail>`/`<ui-nav-rail-group>`/
+`<ui-nav-rail-item>` from `sitemap.json`'s `L1`/`L2` entries grouped by their `section` field
+(the sitemap's own taxonomy — no curated re-grouping at v1, this ticket's "exactly the sitemap's
+sections" default), the hand `NAV` array retiring to whatever ordering residue genuinely cannot
+derive; **context labels** render from each `ui-nav-rail-group`'s `label` (SPEC-R6); **the wide
+name|tag row** is `ui-nav-rail-item`'s `slot="trailing" data-role="tag"` (realizing `anatomy.md`'s
+previously-RESERVED `tag` role), narrow-degrading by truncation (ellipsis), never a wrapped
+two-line jumble — the intake's call on this ticket's own open question. **Sub-links disposition
+(Permutations/States/API):** confirmed to STAY on the existing page-header tab strip
+(`buildTabs()`) — not folded into the rail, a non-goal (SPEC-R10 AC3). **The narrow collapse**
+retires the page's own hand-rolled `<details>` mechanism into the component itself
+(`collapse="menu"`, SPEC-R5) — `_page.css`'s `nav[data-site-nav]` block deletes; `site-nav.
+browser.test.ts`'s expected-count assertion re-derives from `sitemap.json` instead of
+`NAV.length` (SPEC-R10 AC1), so the drift gate survives the inversion as this ticket's acceptance
+requires. Build dispatches as LLD-C11 (`n3b`, `decompositions/nav-rail-family.decomp.json`),
+parallel-safe with the settings migration, gated on `ADR-0130`'s ratification and the family
+(Phase 1) landing first.

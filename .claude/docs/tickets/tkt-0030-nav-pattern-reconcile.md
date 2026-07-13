@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0030
-status: open
+status: doing
 date: 2026-07-12
 owner:
 kind: bug
@@ -70,3 +70,47 @@ surface (tkt-0029 would have minted a third implementation).
   cite, don't collide).
 
 ## Findings
+
+### 2026-07-12 — design intake complete: `ui-nav-rail` family frozen for build, `ADR-0130` proposed
+
+Ran the design intake per `agent-ui-component-design` — precedent sweep over both embryos
+(`ui-settings`/`settings.{ts,css}`, `site/pages/_page.{ts,css}` + `sitemap.json`), the composition
+substrate (`ui-master-detail`, `ui-menu`/`ui-popover` ADR-0043/0045, `ui-app-shell`'s `collapse`-enum
+grammar ADR-0084), and the naming/geometry/anatomy law.
+
+**Family + scope (settled by this ticket's own acceptance criterion):** ONE element,
+`ui-nav-rail` + `ui-nav-rail-group` + `ui-nav-rail-item`, in `@agent-ui/app` (the same PRD-D2 chrome
+posture as `ui-app-shell`/`ui-master-detail`/`ui-settings` — `EXCLUSION_ALLOWLIST`, never a catalog row).
+A single closed-enum `collapse: 'menu'|'drill-in'|'icon-popover'` selects the narrow-width disposition —
+the prop NAME is deliberately reused from ADR-0084 (same concept: a component's own narrow-reflow
+disposition), not a naming collision.
+
+**Six forks recorded in `ADR-0130` (proposed — awaiting Kim's ruling, none self-ratified), each with a
+firm recommendation:** (1) one element (settled); (2) reuse `collapse` as the prop name; (3) content
+model = authored `ChildList`, both consumers derive children programmatically from their own data
+(unchanged from both embryos' existing pattern); (4) a11y role derives from item SHAPE — `href` present
+⇒ real `<a>` + `navigation` landmark; absent ⇒ `role=tab`/`tablist` + `aria-selected` — a named
+CORRECTION to `ui-settings`' current `aria-current="page"` misuse of page-nav semantics for an in-page
+selection commit; (5) `collapse="drill-in"` — nav-rail owns anatomy only, `ui-master-detail`'s shipped
+drill-in stays the mechanism, never re-derived; (6) `collapse="icon-popover"` composes `ui-menu` per
+group (roving-focus + commit + dismissal inherited wholesale) with nav-rail self-coordinating one-group-
+open-at-a-time; (7) `anatomy.md`'s RESERVED `data-role="tag"` role realizes here for TKT-0029's wide
+name|tag row (narrow degrade = truncate, never wrap); the per-component page-type sub-links stay on the
+existing tab strip (confirmed non-goal, not reopened).
+
+**Deliverables:** `spec/nav-rail-family.spec.md` (SPEC-R1..R10) · `lld/nav-rail-family.lld.md`
+(LLD-C1..C12, a 3-phase build: the family → the two consumer migrations in parallel → barrel/budget) ·
+`decompositions/nav-rail-family.decomp.json` (coverage-clean `--strict`) · `adr/0130-nav-rail-family-
+unification.md` (proposed) + its `adr/README.md` index row. Independent doc review (`scribe:doc-reviewer`)
+run against both SPEC and LLD; verdict + any fixes recorded in that review's own pass (see the doc-review
+log below this Findings entry once posted).
+
+**ADR numbering race (per the dispatch brief's caution):** the concurrent TKT-0028 (M2 app surfaces)
+intake minted `ADR-0129` the same day. This intake took `0130` as the next free number at
+`.claude/docs/adr/` write time (highest existing = 0129); if another concurrent wave also claimed 0130
+before this lands, the collision is the host's to reconcile at commit (renumber whichever lands second) —
+flagged, not resolved here.
+
+Next: Kim's ruling on `ADR-0130`'s six clauses; on ratification, the build fans out per the LLD's 3-phase
+sequence (component-builder for the family, then the two migration slices in parallel, gated by
+`component-reviewer` before each commit).
