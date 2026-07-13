@@ -23,7 +23,7 @@ attributes:              # attributes-as-API — mirrors settings.ts `settingsPr
 
 properties:
   - name: schema
-    description: The typed, versioned `SettingsSchema` (`{ version: 1, sections: [...] }`, schema.ts) driving the generated panels. Reactive — a reassignment (e.g. an async-loaded schema landing after mount) rebuilds the rail + every section's form from scratch; a bare reconnect with the SAME schema object skips the rebuild (preserving live field values) but still re-arms every per-connection reactive seam a disconnect tore down — the rail's click listeners AND every generated field's validation, re-shows the current section. Absent ⇒ an empty rail/panel, never a throw.
+    description: The typed, versioned `SettingsSchema` (`{ version: 1, sections: [...] }`, schema.ts) driving the generated panels. Reactive — a reassignment (e.g. an async-loaded schema landing after mount) rebuilds the rail + every section's form from scratch; a bare reconnect with the SAME schema object skips the rebuild (preserving live field values) but still re-arms every per-connection reactive seam a disconnect tore down — the rail's `select` listener AND every generated field's validation, re-shows the current section. Absent ⇒ an empty rail/panel, never a throw.
   - name: store
     description: An optional `SettingsStore` adapter (store.ts — `get`/`set`/optional `subscribe`/`save`) the surface reads initial values from and writes changes back to, per-field-on-change. A supplied `subscribe` is WIRED (TKT-0021) — an external `set(key, value)` (another tab, a remote push) reflects into the matching field's control, with no echo back into `store.set` (an Object.is cutoff against the control's own current value). Reactive the same way as `schema` (a reassignment rebuilds; a reconnect with the same object skips the rebuild but still re-arms per-connection wiring, subscribe included). Absent ⇒ every field renders from its own schema `default` and changes are never persisted (SPEC-R12 AC2).
   - name: section
@@ -40,23 +40,19 @@ events:
 slots: []                 # no authored children at all — the rail + every section's form are GENERATED from `schema` (unlike ui-master-detail, which docks AUTHORED panes)
 
 parts:                     # NOT shadow-DOM ::part() (light-DOM only) — documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the split.md/master-detail.md precedent)
-  - name: rail
-    description: A control-rendered `<nav data-part="rail" aria-label="Settings sections">` holding one `<button data-part="rail-item" data-section-id="…">` per schema section.
-  - name: rail-item
-    description: One control-rendered `<button type="button" data-part="rail-item">` per section; carries `[data-active]` + `aria-current="page"` when it names the active `section`.
   - name: panel
     description: A control-rendered `<div data-part="panel">` — the mount point the active section's generated `ui-form-provider` is attached into (detached, never destroyed, when the section changes).
 
-customStates: []          # no :state() hooks — the active rail item rides a plain [data-active] attribute + aria-current, not a custom state (the ui-master-detail `data-view` precedent)
+customStates: []          # no :state() hooks — the active rail item rides the composed ui-nav-rail-item's own `selected` reflected attribute, not a custom state of ui-settings' own (the ui-master-detail `data-view` precedent)
 
 face:
   formAssociated: false    # NOT a FACE form control — a layout composition; the GENERATED per-field controls are each their own FACE participant
 
 aria:
-  role: none               # this element carries no ARIA of its own — the rail is a native <nav>, rail items are native <button>s, and every generated field rides its own control's ARIA (inherited, unchanged)
+  role: none               # this element carries no ARIA of its own — the rail is a composed ui-nav-rail collapse="drill-in" (its own role/AX contract, ADR-0130), and every generated field rides its own control's ARIA (inherited, unchanged)
   roleSource: none
 
-keyboard: []                # no bespoke keyboard handling of this element's own — rail items are native <button>s (Enter/Space activate natively); the composed ui-master-detail's own drill-in/back-affordance keyboard contract is inherited unchanged; each generated field's keyboard contract is its own control's
+keyboard: []                # no bespoke keyboard handling of this element's own — the composed ui-nav-rail-item's activator is a real <a>/<button> (Enter/Space activate natively); the composed ui-master-detail's own drill-in/back-affordance keyboard contract is inherited unchanged; each generated field's keyboard contract is its own control's
 
 geometry:
   sizeClass: layout          # Container/layout — NO control height
@@ -64,7 +60,7 @@ geometry:
   paddingBlock: 0             # no padding of its own — the rail/panel own their own inset
   narrowThreshold: inherited  # the drill-in threshold is entirely the composed ui-master-detail's own (40rem) — this element declares none of its own
 
-forcedColors: The active rail item's marker is a real `border-inline-start` (currentColor-derived via the role-pure ink token), not a fill-only affordance — it survives forced-colors the same way the composed ui-master-detail's/`ui-split`'s own dividers do (inherited + this element's own rule, settings.css).
+forcedColors: The active rail item's marker is entirely the composed ui-nav-rail-item's own (SPEC-R4, nav-rail.css) — a real `border-inline-start` that survives forced-colors, inherited unchanged; ui-settings contributes no forced-colors rule of its own.
 ---
 
 # ui-settings
@@ -98,13 +94,15 @@ typed schema** over the fleet's own form spine (`ui-form-provider`/`ui-field`).
 
 Unlike `ui-master-detail` (which docks *authored* panes), `ui-settings` takes **no light-DOM children at
 all**: at connect it composes one `ui-master-detail` (a rail `ui-master-detail-pane` + a panel
-`ui-master-detail-pane`) and **generates** the rail's buttons + every section's form from `schema`
-(`schema.ts`/`generate.ts`) — the rail|panel drill-in behaviour, ARIA, and keyboard contract are entirely
-`ui-master-detail`'s own, inherited unchanged. `schema`/`store` are reactive: setting them after mount (an
-async-loaded schema, a swapped store) rebuilds the rail + every section's form; a relocation reconnect with
-the SAME schema/store objects never rebuilds (live field VALUES survive an isolated-shell relocation
-untouched) but still re-arms every per-connection reactive seam a disconnect tore down — the rail's click
-listeners AND every generated field's validation, and re-shows the current section.
+`ui-master-detail-pane`) whose rail is a composed `ui-nav-rail collapse="drill-in"` (ADR-0130, nav-rail
+Phase 2 — the shared sections-rail primitive), and **generates** the rail's `ui-nav-rail-item`s + every
+section's form from `schema` (`schema.ts`/`generate.ts`) — the rail|panel drill-in behaviour and the
+composed `ui-master-detail`'s own keyboard contract are inherited unchanged. `schema`/`store` are reactive:
+setting them after mount (an async-loaded schema, a swapped store) rebuilds the rail + every section's form;
+a relocation reconnect with the SAME schema/store objects never rebuilds (live field VALUES survive an
+isolated-shell relocation untouched) but still re-arms every per-connection reactive seam a disconnect tore
+down — the rail's `select` listener AND every generated field's validation, and re-shows the current
+section.
 
 ## Schema-driven fields
 
@@ -138,7 +136,10 @@ documented above). The subscription is re-armed across a relocation reconnect th
 
 ## Accessibility
 
-The rail is a native `<nav aria-label="Settings sections">` of native `<button>`s (natively focusable/
-activatable); the active item carries `aria-current="page"`. The composed `ui-master-detail`'s drill-in +
+The rail is a composed `ui-nav-rail collapse="drill-in"` (`aria-label="Settings sections"`) of
+`ui-nav-rail-item`s; every item is empty-`href` ⇒ button-shaped, so its activator carries `role="tab"` +
+`aria-selected` (an in-page selection commit — the deliberate ADR-0130 cl.4 correction away from the older
+`aria-current="page"` page-nav verb this surface used before the migration). `role: none` on `ui-settings`
+itself is unchanged — it carries no ARIA of its own. The composed `ui-master-detail`'s drill-in +
 its "back" affordance keep their own contract unchanged. Every generated field's ARIA rides its own
 control — this element adds none of its own.

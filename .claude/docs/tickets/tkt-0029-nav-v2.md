@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0029
-status: open
+status: done
 date: 2026-07-12
 owner:
 kind: feature
@@ -90,3 +90,11 @@ browser.test.ts`'s expected-count assertion re-derives from `sitemap.json` inste
 requires. Build dispatches as LLD-C11 (`n3b`, `decompositions/nav-rail-family.decomp.json`),
 parallel-safe with the settings migration, gated on `ADR-0130`'s ratification and the family
 (Phase 1) landing first.
+
+### 2026-07-13 — shipped as the mode-1 consumer (TKT-0030 Phase 2)
+
+All three asks landed via the family migration: sitemap-derived (the derivation inverted;
+`NAV` retired to the tab-strip residue), context-labeled groups (the sitemap's `section` axis —
+Components/Guides/Records; finer A2UI/A2A grouping = a manifest-curation follow-up), and the wide
+name|tag two-column row (`data-role="tag"`, ellipsis-truncate narrow). See TKT-0030's Phase-2
+Findings for the full delta + gates.

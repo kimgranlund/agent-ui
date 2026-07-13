@@ -27,6 +27,11 @@ declare const process: { cwd(): string }
 
 const ROOT = process.cwd()
 const COMPONENTS_SRC = `${ROOT}/packages/agent-ui/components/src`
+// The app-tier controls (@agent-ui/app) the docs SHELL now composes — ui-nav-rail (+group/item) et al. Their
+// descriptors' slots and their CSS's `[data-role]` roles are canonical vocab too: since the site nav migrated
+// onto `ui-nav-rail` (ADR-0130 / SPEC-R10), site/ uses `data-role="tag"` (nav-rail.css's realized tag role),
+// which is NOT a components/src name. Sourcing the vocab from BOTH package trees keeps the guard truthful.
+const APP_SRC = `${ROOT}/packages/agent-ui/app/src`
 const SITE = `${ROOT}/site`
 
 const read = (p: string): string => readFileSync(p, 'utf8') as string
@@ -51,8 +56,9 @@ function walk(dir: string): string[] {
   return files
 }
 
-// The component family roots the canonical vocab is sourced from (controls today; components is future-proof).
-const FAMILY_ROOTS = [`${COMPONENTS_SRC}/controls`, `${COMPONENTS_SRC}/components`]
+// The component family roots the canonical vocab is sourced from: the fleet (controls today; components is
+// future-proof) PLUS the app-tier controls the docs shell composes (ui-nav-rail's realized `tag` role et al.).
+const FAMILY_ROOTS = [`${COMPONENTS_SRC}/controls`, `${COMPONENTS_SRC}/components`, `${APP_SRC}/controls`]
 
 /** Canonical SLOT vocab — the union of every descriptor's `slots[].name` (a position name; includes `label`). */
 function canonicalSlots(): Set<string> {

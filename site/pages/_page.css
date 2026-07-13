@@ -30,18 +30,30 @@ body {
  * scroll container rather than growing the whole grid. */
 .app-shell {
   display: grid;
-  grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   block-size: 100dvh;
+  /* The QUERY CONTAINER for the composed ui-nav-rail's `collapse="menu"` disclosure. The rail is a narrow
+     (~15rem) left column, so its OWN inline-size would always read below the primitive's 40rem collapse
+     threshold and it would render as a dropdown at every width. Re-pointing the container boundary to the
+     SHELL (whose inline-size tracks the viewport) makes the rail collapse when the WHOLE shell goes narrow —
+     the desktop vertical rail, the narrow dropdown — which is the site's intended behavior. The rail's own
+     `container-type` is overridden to `normal` below so this ancestor container is the one its @container reads.
+     (This depends on nav-rail's collapse query being an UNNAMED @container that resolves to an ancestor — a
+     coupling flagged to the family owner; see the migration report.) */
+  container-type: inline-size;
 }
 
-/* The nav RAIL — column 1, spanning all three rows; its own scroll if the TOC overflows. */
-.app-shell > nav[data-site-nav] {
+/* The nav RAIL — column 1, spanning all three rows; its own scroll if the list overflows. The composed
+   ui-nav-rail carries `data-site-nav`; its internal anatomy (rows, active bar, the collapse="menu" disclosure)
+   is nav-rail.css's — this shell owns only the rail's PLACEMENT + scroll container + the container re-point. */
+.app-shell > [data-site-nav] {
   grid-column: 1;
   grid-row: 1 / -1;
   overflow-y: auto;
   scrollbar-width: none; /* hide the scrollbar — scroll stays functional (Firefox/standards) */
   min-block-size: 0; /* allow the rail to scroll inside the 100dvh grid rather than grow it */
+  container-type: normal; /* defeat the rail's self-container so its collapse @container reads the .app-shell one */
   background: var(--md-sys-color-neutral-surface-low);
   border-inline-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
@@ -123,7 +135,7 @@ body {
 
 /* WebKit/Chromium counterpart to `scrollbar-width: none` on the two scroll containers (the nav rail + the page
  * region): a hidden bar, scroll still works. */
-.app-shell > nav[data-site-nav]::-webkit-scrollbar,
+.app-shell > [data-site-nav]::-webkit-scrollbar,
 .app-page::-webkit-scrollbar {
   display: none;
 }
@@ -363,129 +375,21 @@ code {
 }
 
 /* ── the shared site nav (the rail) ───────────────────────────────────────────────────────────────────────
- * A single flat list down the rail: one entry per COMPONENT (linking to its first page) plus the site-level
- * links (Home, A2UI Canvas). A component's per-type pages are NOT listed here — the page-header tab strip offers
- * them. A new component appends one group in _page.ts's NAV (contributing one rail entry).
- *
- * The list is wrapped in a `<details data-site-nav-disclosure>` (a `<summary>` trigger over the `<ul>`). At rail
- * width — THIS block — the disclosure is inert chrome: the summary is hidden and the list shows ALWAYS (the
- * `display: flex` below overrides the UA rule that hides a closed `<details>`'s non-summary content), so the rail
- * looks exactly as before. The collapse to a real dropdown happens only in the narrow media query at the end. */
-nav[data-site-nav] {
-  display: flex;
-  flex-direction: column;
-  padding: var(--ui-space-lg) var(--ui-space-md);
-}
+ * The rail is now a real `ui-nav-rail collapse="menu"` (ADR-0130 / SPEC-R10) — the mode-1 consumer of the
+ * shared nav-rail family, fed from `sitemap.json`. Its INTERNAL anatomy (the grouped rows, the active
+ * `border-inline-start` bar, the name|tag row, and the narrow `collapse="menu"` `<details>` dropdown with its
+ * chevron + Escape/outside-click dismissal) all live in `nav-rail.css` now — this shell no longer hand-rolls a
+ * `<nav>`/`<ul>`/`<details>` of its own. What remains here is only the rail's PLACEMENT + scroll container
+ * (above) and the shell's own narrow reflow (below). The rail collapses to its dropdown off the .app-shell
+ * container (its container-type is overridden to `normal` above) at nav-rail's own 40rem threshold. */
 
-/* At rail width the disclosure is structural only — the trigger is hidden; the list is the rail. */
-nav[data-site-nav] > [data-site-nav-disclosure] > summary {
-  display: none;
-}
-
-/* Force a CLOSED `<details>` to still reveal its content at rail width. Two UA hiding mechanisms exist for a
- * collapsed disclosure — the legacy `display:none` on non-summary children (defeated by the `display:flex` on
- * the `<ul>` below), and the modern `content-visibility:hidden` on the `::details-content` wrapper (Chromium
- * 120+) — so both are overridden here. Without this, a rail-width page whose `<details>` happens to be closed
- * would render an empty rail in a modern engine. */
-nav[data-site-nav] > [data-site-nav-disclosure]::details-content {
-  content-visibility: visible;
-}
-
-nav[data-site-nav] ul {
-  display: flex; /* always visible at rail width — overrides the legacy UA closed-<details> child hiding */
-  flex-direction: column;
-  gap: 0.1rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-nav[data-site-nav] a {
-  display: block;
-  padding: 0.3rem 0.55rem;
-  border-radius: 0.5rem;
-  color: var(--md-sys-color-neutral-on-surface-variant);
-  font-size: 0.875rem;
-  text-decoration: none;
-}
-
-nav[data-site-nav] a:hover {
-  background: var(--md-sys-color-neutral-surface-high);
-  color: var(--md-sys-color-neutral-on-surface);
-}
-
-/* The active entry — flagged by buildNav with aria-current (so the marker tracks the route, not a class): the
- * exact page (`page` — a site link, or a component on its landing page) OR the active SECTION (`true` — a
- * component while you are on one of its sub-pages). Both spellings light the same. */
-nav[data-site-nav] a[aria-current] {
-  background: var(--md-sys-color-neutral-surface-high);
-  color: var(--md-sys-color-neutral-on-surface);
-  font-weight: 600;
-}
-
-/* ── the disclosure trigger (the collapsed-state dropdown button) ──────────────────────────────────────────
- * The `<summary>` is hidden at rail width (above) and revealed only below the breakpoint, where it is the
- * dropdown trigger. Styled as a full-width control naming the current page, with a chevron that flips on
- * `[open]`. `list-style: none` + the WebKit marker reset remove the native disclosure triangle so only our
- * chevron shows. `<summary>` is focusable and toggles on Enter/Space natively (keyboard for free). */
-.site-nav-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ui-space-sm);
-  padding: 0.4rem 0.7rem;
-  border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 0.5rem;
-  background: var(--md-sys-color-neutral-surface-high);
-  color: var(--md-sys-color-neutral-on-surface);
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  list-style: none; /* drop the native disclosure triangle (standards) */
-}
-
-.site-nav-trigger::-webkit-details-marker {
-  display: none; /* drop the native disclosure triangle (WebKit/Chromium) */
-}
-
-/* The chevron — a CSS-drawn caret after the label; rotates a half-turn when the disclosure is open. */
-.site-nav-trigger::after {
-  content: '';
-  inline-size: 0.5rem;
-  block-size: 0.5rem;
-  border-inline-end: 1.5px solid currentColor;
-  border-block-end: 1.5px solid currentColor;
-  transform: rotate(45deg); /* points down — closed */
-  transform-origin: center;
-  transition: transform 120ms ease;
-  margin-block-end: 0.15rem; /* optical centring of the rotated square */
-}
-
-[data-site-nav-disclosure][open] .site-nav-trigger::after {
-  transform: rotate(-135deg); /* points up — open */
-}
-
-.site-nav-trigger:focus-visible {
-  outline: 2px solid var(--md-sys-color-neutral-on-surface);
-  outline-offset: 2px;
-}
-
-/* The label leg of the trigger fills the row, pushing the chevron to the far end; truncate a long page name. */
-.site-nav-trigger-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* ── narrow viewports — collapse the rail to a DROPDOWN top bar, stacking the whole shell into one column ────
- * Below the breakpoint the 10-item rail would overflow a one-row bar, so instead of a horizontal scroller the
- * nav becomes a `<details>` DISCLOSURE: the `<summary>` trigger (current page + chevron) shows, and the link
- * list is revealed as a dropdown panel ONLY when the disclosure is open. Zero JS — `<details>` gives the
- * open/close, `aria-expanded`-equivalent state, and keyboard operation natively. 48rem (~768px) is where the
- * 10 entries stop fitting one rail-width row; the canvas/full-bleed pages collapse here too (the shell is one
- * shared grid). The rail's own scroll container settings (overflow-y / scrollbar-width) are dropped so the
- * dropdown panel can size to its content rather than scroll inside a 100dvh row. */
-@media (max-width: 48rem) {
+/* ── narrow viewports — stack the whole shell into one column ──────────────────────────────────────────────
+ * Below the breakpoint the shell reflows to a single column: the context-header, then the nav (its OWN
+ * `collapse="menu"` disclosure has already turned it into a dropdown trigger by this width — the .app-shell
+ * query container is < 40rem here), then the page, then the footer. 40rem matches nav-rail's own collapse
+ * threshold so the two transitions land together — no band where a full 82-row list stacks in a one-column
+ * shell. The rail's own scroll-container settings are dropped so its dropdown panel sizes to its content. */
+@media (max-width: 40rem) {
   .app-shell {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto minmax(0, 1fr) auto;
@@ -496,47 +400,12 @@ nav[data-site-nav] a[aria-current] {
     grid-row: 1;
   }
 
-  .app-shell > nav[data-site-nav] {
+  .app-shell > [data-site-nav] {
     grid-column: 1;
     grid-row: 2;
     border-inline-end: none;
     border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
-    overflow-y: visible; /* not a scroll container here — the dropdown sizes to its content */
-  }
-
-  nav[data-site-nav] {
-    padding: var(--ui-space-sm) var(--ui-space-md);
-  }
-
-  /* The disclosure relatively-positions the panel, so the open list overlays the page rather than pushing it. */
-  nav[data-site-nav] > [data-site-nav-disclosure] {
-    position: relative;
-  }
-
-  /* Reveal the trigger (hidden at rail width) as the dropdown button. */
-  nav[data-site-nav] > [data-site-nav-disclosure] > summary {
-    display: flex;
-  }
-
-  /* The link list is the dropdown PANEL: hidden when closed, shown as a raised overlay when the disclosure is
-   * open. It overlays the page content (absolute, full trigger width) so opening the menu does not reflow the
-   * page; a high z-index keeps it above the sticky page-header. */
-  nav[data-site-nav] ul {
-    display: none;
-  }
-
-  [data-site-nav-disclosure][open] > ul {
-    display: flex;
-    position: absolute;
-    inset-inline: 0;
-    inset-block-start: calc(100% + 0.4rem);
-    z-index: 5;
-    gap: 0.1rem;
-    padding: var(--ui-space-xs);
-    border: 1px solid var(--md-sys-color-neutral-outline-variant);
-    border-radius: 0.6rem;
-    background: var(--md-sys-color-neutral-surface);
-    box-shadow: 0 0.5rem 1.5rem var(--md-sys-color-neutral-scrim); /* scrim role (theme-adaptive) — not a raw literal */
+    overflow-y: visible; /* not a scroll container here — the rail's own dropdown sizes to its content */
   }
 
   .app-page {

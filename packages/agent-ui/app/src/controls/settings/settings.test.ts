@@ -4,6 +4,7 @@ import { createMemoryStore } from './memory-store.ts'
 import type { SettingsSchema } from './schema.ts'
 import type { SettingsStore } from './store.ts'
 import { whenFlushed, UIFormElement } from '@agent-ui/components'
+import type { UINavRailItemElement } from '../nav-rail/nav-rail-item.ts'
 import {
   splitFrontmatter,
   parseDescriptor,
@@ -90,14 +91,14 @@ describe('UISettingsElement — composition (SPEC-R9, "0 bespoke shell CSS")', (
     expect(el.children).toHaveLength(1)
     const listPane = md!.querySelector('ui-master-detail-pane[pane="list"]')
     const detailPane = md!.querySelector('ui-master-detail-pane[pane="detail"]')
-    expect(listPane!.querySelector('[data-part="rail"]')).not.toBeNull()
+    expect(listPane!.querySelector('ui-nav-rail')).not.toBeNull()
     expect(detailPane!.querySelector('[data-part="panel"]')).not.toBeNull()
   })
 
   it('no schema ⇒ an empty rail, no throw', () => {
     const el = new UISettingsElement()
     expect(() => mount(el)).not.toThrow()
-    expect(el.querySelectorAll('[data-part="rail-item"]')).toHaveLength(0)
+    expect(el.querySelectorAll('ui-nav-rail-item')).toHaveLength(0)
   })
 
   it('an unsupported schema version renders a notice, never throws', () => {
@@ -107,11 +108,11 @@ describe('UISettingsElement — composition (SPEC-R9, "0 bespoke shell CSS")', (
     expect(el.querySelector('[data-part="notice"]')).not.toBeNull()
   })
 
-  it('one rail-item button per section, labelled from the schema', () => {
+  it('one rail-item per section, labelled from the schema', () => {
     const el = new UISettingsElement()
     el.schema = SCHEMA
     mount(el)
-    const items = el.querySelectorAll<HTMLButtonElement>('[data-part="rail-item"]')
+    const items = el.querySelectorAll<UINavRailItemElement>('ui-nav-rail-item')
     expect(items).toHaveLength(2)
     expect(items[0].textContent).toBe('General')
     expect(items[0].dataset.sectionId).toBe('general')
@@ -170,20 +171,27 @@ describe('UISettingsElement — section → panel/rail-marker + select/change (S
     expect(panel.querySelector('ui-switch')).not.toBeNull()
     expect(panel.querySelector('ui-text-field')).toBeNull() // the general provider was DETACHED, not destroyed
 
-    const items = el.querySelectorAll<HTMLButtonElement>('[data-part="rail-item"]')
+    const items = el.querySelectorAll<UINavRailItemElement>('ui-nav-rail-item')
     const privacyItem = [...items].find((i) => i.dataset.sectionId === 'privacy')!
     const generalItem = [...items].find((i) => i.dataset.sectionId === 'general')!
-    expect(privacyItem.hasAttribute('data-active')).toBe(true)
-    expect(privacyItem.getAttribute('aria-current')).toBe('page')
-    expect(generalItem.hasAttribute('data-active')).toBe(false)
-    expect(generalItem.hasAttribute('aria-current')).toBe(false)
+    // ADR-0130 cl.4 a11y CORRECTION: an in-page selection commit is role="tab"/aria-selected on the
+    // composed ui-nav-rail-item's OWN activator — NOT the old aria-current="page" page-nav verb.
+    expect(privacyItem.selected).toBe(true)
+    const privacyActivator = privacyItem.querySelector('[data-part="activator"]')!
+    expect(privacyActivator.getAttribute('role')).toBe('tab')
+    expect(privacyActivator.getAttribute('aria-selected')).toBe('true')
+    expect(privacyActivator.hasAttribute('aria-current')).toBe(false)
+    expect(generalItem.selected).toBe(false)
+    const generalActivator = generalItem.querySelector('[data-part="activator"]')!
+    expect(generalActivator.getAttribute('aria-selected')).toBe('false')
+    expect(generalActivator.hasAttribute('aria-current')).toBe(false)
   })
 
   it('clicking a rail item sets `.section` and switches the panel', async () => {
     const el = mount(new UISettingsElement())
     el.schema = SCHEMA
     await el.updateComplete
-    const items = el.querySelectorAll<HTMLButtonElement>('[data-part="rail-item"]')
+    const items = el.querySelectorAll<UINavRailItemElement>('ui-nav-rail-item')
     const privacyItem = [...items].find((i) => i.dataset.sectionId === 'privacy')!
     privacyItem.click()
     await el.updateComplete
@@ -243,11 +251,11 @@ describe('UISettingsElement — reconnect (component-reviewer MAJOR class — th
     newParent.append(el) // a real re-parent: disconnectedCallback then connectedCallback, no children changed
 
     expect(el.querySelectorAll('ui-master-detail'), 'a second, duplicate composition was appended on reconnect').toHaveLength(1)
-    expect(el.querySelectorAll('[data-part="rail-item"]')).toHaveLength(2) // not regenerated either
+    expect(el.querySelectorAll('ui-nav-rail-item')).toHaveLength(2) // not regenerated either
     newParent.remove()
   })
 
-  it('a rail button still works after a reconnect (the click listener is re-armed, not just the DOM preserved)', async () => {
+  it('a rail item still works after a reconnect (the select listener is re-armed, not just the DOM preserved)', async () => {
     const el = new UISettingsElement()
     el.schema = SCHEMA
     mount(el)
@@ -255,9 +263,9 @@ describe('UISettingsElement — reconnect (component-reviewer MAJOR class — th
 
     const newParent = document.createElement('div')
     document.body.append(newParent)
-    newParent.append(el) // reconnect — a fresh AbortController; the OLD rail-item listener (if any) died with it
+    newParent.append(el) // reconnect — a fresh AbortController; the OLD rail select listener (if any) died with it
 
-    const items = el.querySelectorAll<HTMLButtonElement>('[data-part="rail-item"]')
+    const items = el.querySelectorAll<UINavRailItemElement>('ui-nav-rail-item')
     const privacyItem = [...items].find((i) => i.dataset.sectionId === 'privacy')!
     privacyItem.click()
     await el.updateComplete
@@ -397,12 +405,12 @@ describe('UISettingsElement — external sync (TKT-0021, store.subscribe)', () =
 describe('UISettingsElement — schema/store are REACTIVE (a real reassignment rebuilds; a reconnect does not)', () => {
   it('assigning `schema` AFTER mount (the async-loaded-schema case) builds the rail + panel from scratch', async () => {
     const el = mount(new UISettingsElement()) // no schema at connect time — an empty shell
-    expect(el.querySelectorAll('[data-part="rail-item"]')).toHaveLength(0)
+    expect(el.querySelectorAll('ui-nav-rail-item')).toHaveLength(0)
 
     el.schema = SCHEMA // arrives later — e.g. after an async fetch
     await el.updateComplete
 
-    expect(el.querySelectorAll('[data-part="rail-item"]')).toHaveLength(2)
+    expect(el.querySelectorAll('ui-nav-rail-item')).toHaveLength(2)
     expect(el.querySelector('[data-part="panel"] ui-text-field')).not.toBeNull() // the resolved default section's field
   })
 
@@ -420,8 +428,8 @@ describe('UISettingsElement — schema/store are REACTIVE (a real reassignment r
     el.schema = OTHER_SCHEMA
     await el.updateComplete
 
-    expect(el.querySelectorAll('[data-part="rail-item"]')).toHaveLength(1)
-    expect(el.querySelector('[data-part="rail-item"]')?.textContent).toBe('Only')
+    expect(el.querySelectorAll('ui-nav-rail-item')).toHaveLength(1)
+    expect(el.querySelector('ui-nav-rail-item')?.textContent).toBe('Only')
     expect(el.querySelector('ui-text-field')).toBeNull() // the old schema's field is GONE, not just hidden
     expect(el.querySelector('ui-switch')).not.toBeNull()
     expect(el.section).toBe('only') // re-resolved — the old `section` ('general') no longer exists

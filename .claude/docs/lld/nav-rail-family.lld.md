@@ -1,6 +1,6 @@
 # LLD — the unified nav-rail family (`ui-nav-rail`)
 
-> Status: proposed · v0.1 · 2026-07-12 · pending doc-review · Layer: LLD (implementation plan)
+> Status: shipped · v1.0 · 2026-07-13 · Layer: LLD (implementation plan)
 > Refines: [`../spec/nav-rail-family.spec.md`](../spec/nav-rail-family.spec.md) (`SPEC-R1…R10`) +
 > [`../adr/0130-nav-rail-family-unification.md`](../adr/0130-nav-rail-family-unification.md) (proposed — the
 > seven ratifying clauses this LLD builds to).

@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0030
-status: doing
+status: done
 date: 2026-07-12
 owner:
 kind: bug
@@ -114,3 +114,20 @@ flagged, not resolved here.
 Next: Kim's ruling on `ADR-0130`'s six clauses; on ratification, the build fans out per the LLD's 3-phase
 sequence (component-builder for the family, then the two migration slices in parallel, gated by
 `component-reviewer` before each commit).
+
+### 2026-07-13 — Phase 2 shipped: both consumers migrated, the duplication DELETED
+
+The reconciliation is proven by consumption, closing this ticket's acceptance: **settings** (mode 2)
+— `ui-settings`' bespoke rail replaced by a composed `ui-nav-rail collapse="drill-in"`; the
+hand-rolled `[data-part=rail]`/`[data-part=rail-item]` anatomy + its CSS/tokens deleted; the
+ADR-0130 cl.4 a11y correction landed (in-page selection = `role=tab`/`aria-selected`, the old
+`aria-current="page"` gone — asserted jsdom + both engines). **Site nav** (mode 1) — `buildNav()`
+derives a `ui-nav-rail collapse="menu"` from `sitemap.json` grouped by `section`; the hand-rolled
+`<nav>/<details>` markup + rail CSS deleted; name|tag rows via `slot="trailing" data-role="tag"`;
+the hand `NAV` array survives only as the page-header tab-strip source (SPEC-R10 AC3 non-goal).
+Drift gates re-derive (site-nav count from `SITE_NAV_ENTRIES`; site-canon FAMILY_ROOTS gains
+app/src/controls). Follow-ups minted: TKT-0035 (the collapse-threshold container coupling — the
+site works via a CSS re-point workaround) · the group taxonomy is the sitemap's literal
+Components/Guides/Records axis (coarser than this ticket's context assumed; splitting A2UI/A2A out
+= a site-manifest curation follow-up, Kim's call). Gates: check green · jsdom 6015 · browser 64/64
+both engines. Phase 3 (LLD-C12 barrel/budget) remains.

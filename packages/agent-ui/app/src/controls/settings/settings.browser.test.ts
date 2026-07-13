@@ -16,6 +16,7 @@ import './settings.css'
 import { UISettingsElement } from './settings.ts'
 import { createMemoryStore } from './memory-store.ts'
 import type { SettingsSchema } from './schema.ts'
+import type { UINavRailItemElement } from '../nav-rail/nav-rail-item.ts'
 
 const mounted: HTMLElement[] = []
 afterEach(() => {
@@ -67,7 +68,7 @@ describe('ui-settings cross-engine smoke — wide (composes ui-master-detail, SP
   it('rail and panel show SIDE BY SIDE via the composed ui-master-detail/ui-split — realistic mixed-type section', async () => {
     const { wrapper, el } = mountSettings('900px')
     await el.updateComplete
-    const rail = el.querySelector('[data-part="rail"]') as HTMLElement
+    const rail = el.querySelector('ui-nav-rail') as HTMLElement
     const panel = el.querySelector('[data-part="panel"]') as HTMLElement
     expect(getComputedStyle(rail).display).not.toBe('none')
     expect(getComputedStyle(panel).display).not.toBe('none')
@@ -87,7 +88,7 @@ describe('ui-settings cross-engine smoke — wide (composes ui-master-detail, SP
   it('clicking a rail item switches the panel to a DIFFERENT mixed-type section, real click + real layout', async () => {
     const { wrapper, el } = mountSettings('900px')
     await el.updateComplete
-    const appearanceItem = [...el.querySelectorAll<HTMLButtonElement>('[data-part="rail-item"]')].find(
+    const appearanceItem = [...el.querySelectorAll<UINavRailItemElement>('ui-nav-rail-item')].find(
       (item) => item.dataset.sectionId === 'appearance',
     )!
     appearanceItem.click()
@@ -97,7 +98,13 @@ describe('ui-settings cross-engine smoke — wide (composes ui-master-detail, SP
     expect(panel.querySelector('ui-select')).not.toBeNull()
     expect(panel.querySelector('ui-slider')).not.toBeNull()
     expect(panel.querySelectorAll('ui-text-field')).toHaveLength(0) // the profile section's fields were DETACHED
-    expect(appearanceItem.getAttribute('aria-current')).toBe('page')
+    // ADR-0130 cl.4 a11y CORRECTION: a bare/button-shaped item's activator carries role=tab/aria-selected
+    // (an in-page selection commit), never aria-current="page" (that verb is reserved for href/link items).
+    expect(appearanceItem.selected).toBe(true)
+    const activator = appearanceItem.querySelector('[data-part="activator"]')!
+    expect(activator.getAttribute('role')).toBe('tab')
+    expect(activator.getAttribute('aria-selected')).toBe('true')
+    expect(activator.hasAttribute('aria-current')).toBe(false)
     wrapper.remove()
   })
 
@@ -120,7 +127,7 @@ describe('ui-settings cross-engine smoke — narrow drill-in (inherited from ui-
     const { wrapper, el } = mountSettings('900px')
     await el.updateComplete
     wrapper.style.width = '300px' // narrow the CONTAINER (< 40rem), not the viewport
-    const rail = el.querySelector('[data-part="rail"]') as HTMLElement
+    const rail = el.querySelector('ui-nav-rail') as HTMLElement
     const panel = el.querySelector('[data-part="panel"]') as HTMLElement
     // master-detail's OWN drill-in keys off ITS `selected` — ui-settings syncs that to a resolved section
     // (never empty once a schema is present), so narrow already shows the panel/detail view by default.
@@ -138,7 +145,7 @@ describe('ui-settings — reduced motion (inherited — no bespoke transition of
   it('settings.css declares no transition/animation of its own on any part', async () => {
     const { wrapper, el } = mountSettings('900px')
     await el.updateComplete
-    for (const selector of ['[data-part="rail"]', '[data-part="rail-item"]', '[data-part="panel"]']) {
+    for (const selector of ['ui-nav-rail', 'ui-nav-rail-item', '[data-part="panel"]']) {
       const node = el.querySelector(selector) as HTMLElement
       const style = getComputedStyle(node)
       expect(style.transitionDuration === '0s' || style.transitionDuration === '').toBe(true)
@@ -151,7 +158,7 @@ describe('ui-settings — external sync (TKT-0021, store.subscribe), cross-engin
   it('a real store.set reflects into a REAL boolean (ui-switch) field — no user gesture involved', async () => {
     const { wrapper, el } = mountSettings('900px')
     await el.updateComplete
-    const appearanceItem = [...el.querySelectorAll<HTMLButtonElement>('[data-part="rail-item"]')].find(
+    const appearanceItem = [...el.querySelectorAll<UINavRailItemElement>('ui-nav-rail-item')].find(
       (item) => item.dataset.sectionId === 'appearance',
     )!
     appearanceItem.click()
@@ -193,28 +200,31 @@ describe('ui-settings — external sync (TKT-0021, store.subscribe), cross-engin
   })
 })
 
-describe('ui-settings — keyboard (rail buttons are native <button>s; Tab reaches the generated field)', () => {
+describe('ui-settings — keyboard (rail items are real <button> activators; Tab reaches the generated field)', () => {
   it('Tab from the first rail item reaches the next rail item, then the panel’s first control', async () => {
     const { wrapper, el } = mountSettings('900px')
     await el.updateComplete
-    const items = el.querySelectorAll<HTMLButtonElement>('[data-part="rail-item"]')
-    items[0].focus()
-    expect(document.activeElement).toBe(items[0])
+    // ui-nav-rail-item is `display:contents` (never itself a focusable node) — the created `[data-part=
+    // activator]` <button> is the real focusable/AX-bearing node (nav-rail-item.ts).
+    const activators = el.querySelectorAll<HTMLButtonElement>('ui-nav-rail-item [data-part="activator"]')
+    activators[0].focus()
+    expect(document.activeElement).toBe(activators[0])
     // native <button> Tab order is the platform's own — asserting focusability + native semantics is the
     // composition-level proof; the exhaustive real-Tab traversal is the form-e2e.browser.test.ts precedent
     // (components/src/controls/form-provider), not re-derived per composing surface.
-    expect(items[0].tabIndex).not.toBe(-1)
+    expect(activators[0].tabIndex).not.toBe(-1)
     wrapper.remove()
   })
 
   it('activating a rail item via Enter/Space (native <button> semantics) switches the section', async () => {
     const { wrapper, el } = mountSettings('900px')
     await el.updateComplete
-    const appearanceItem = [...el.querySelectorAll<HTMLButtonElement>('[data-part="rail-item"]')].find(
+    const appearanceItem = [...el.querySelectorAll<UINavRailItemElement>('ui-nav-rail-item')].find(
       (item) => item.dataset.sectionId === 'appearance',
     )!
-    appearanceItem.focus()
-    appearanceItem.click() // native <button> Enter/Space parity is the platform's own — proven by every ui-master-detail "back" button already
+    const activator = appearanceItem.querySelector<HTMLButtonElement>('[data-part="activator"]')!
+    activator.focus()
+    activator.click() // native <button> Enter/Space parity is the platform's own — proven by every ui-master-detail "back" button already
     await el.updateComplete
     expect(el.section).toBe('appearance')
     wrapper.remove()
@@ -240,7 +250,7 @@ describe('ui-settings composed inside an ISOLATED ui-app-shell region (the maste
       const inShadow = shell.shadowRoot!.querySelector('ui-settings') as HTMLElement
       expect(inShadow, 'the settings surface did not relocate into the shadow at all — setup broken').not.toBeNull()
       expect(inShadow.querySelectorAll('ui-master-detail'), 'a duplicate composition survived the isolation relocation reconnect').toHaveLength(1)
-      expect(inShadow.querySelectorAll('[data-part="rail-item"]')).toHaveLength(2)
+      expect(inShadow.querySelectorAll('ui-nav-rail-item')).toHaveLength(2)
     } finally {
       shell.remove()
     }

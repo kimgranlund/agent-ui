@@ -1,6 +1,6 @@
 # SPEC — the unified nav-rail family (`ui-nav-rail`)
 
-> Status: proposed · v0.1 · 2026-07-12 · Layer: SPEC (execution contract)
+> Status: shipped · v1.0 · 2026-07-13 · Layer: SPEC (execution contract)
 > Traces: TKT-0030 (nav-pattern reconcile — the design ruling) · TKT-0029 (site-nav v2 — SUBSUMED, its
 > requirements are this SPEC's mode-1 consumer acceptance) · [`../adr/0130-nav-rail-family-unification.md`](../adr/0130-nav-rail-family-unification.md) (proposed — the six ratifying clauses this SPEC realizes).
 > Refined by: [`../lld/nav-rail-family.lld.md`](../lld/nav-rail-family.lld.md) (implementation). Decomposition:

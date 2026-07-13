@@ -30,6 +30,9 @@
 import { UIElement, prop, untracked, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import { UIMasterDetailElement } from '../master-detail/master-detail.ts'
 import { UIMasterDetailPaneElement } from '../master-detail/master-detail-pane.ts'
+import '../nav-rail/nav-rail.ts'
+import { UINavRailItemElement } from '../nav-rail/nav-rail-item.ts'
+import type { UINavRailElement } from '../nav-rail/nav-rail.ts'
 import { generateSection, type GeneratedSection } from './generate.ts'
 import type { SettingsSchema } from './schema.ts'
 import type { SettingsStore } from './store.ts'
@@ -52,7 +55,7 @@ export class UISettingsElement extends UIElement {
   // The composed SHELL (LLD-C12) — created ONCE (idempotent, `#masterDetail` doubles as the guard) and
   // PERSISTS across a reconnect, the master-detail.ts `#split`/`#backBtn` precedent.
   #masterDetail: UIMasterDetailElement | null = null
-  #rail: HTMLElement | null = null // the list pane's nav — holds one button per section
+  #rail: UINavRailElement | null = null // the composed ui-nav-rail — holds one ui-nav-rail-item per section
   #panelHost: HTMLElement | null = null // the detail pane's content mount point
 
   // The schema/store OBJECTS the rail/sections currently reflect — a `#build()` re-run compares against
@@ -134,10 +137,10 @@ export class UISettingsElement extends UIElement {
   // ── composition (idempotent — mirrors master-detail.ts's own `#compose` doc comment) ─────────────────
 
   /**
-   * Build ONLY the rail|panel SHELL over ONE composed `ui-master-detail` — an empty `<nav>` + an empty
-   * panel mount point. `#masterDetail` already being set means this ran before — a no-op (the SAME
-   * reconnect guard `ui-master-detail` itself uses for its own composed `ui-split`). The schema-driven
-   * CONTENT is `#build()`'s job, run reactively from `connected()`, not here.
+   * Build ONLY the rail|panel SHELL over ONE composed `ui-master-detail` — an empty `ui-nav-rail
+   * collapse="drill-in"` + an empty panel mount point. `#masterDetail` already being set means this ran
+   * before — a no-op (the SAME reconnect guard `ui-master-detail` itself uses for its own composed
+   * `ui-split`). The schema-driven CONTENT is `#build()`'s job, run reactively from `connected()`, not here.
    */
   #compose(): void {
     if (this.#masterDetail) return
@@ -156,9 +159,14 @@ export class UISettingsElement extends UIElement {
     const detailPane = new UIMasterDetailPaneElement()
     detailPane.pane = 'detail'
 
-    const rail = document.createElement('nav')
-    rail.setAttribute('data-part', 'rail')
+    const rail = document.createElement('ui-nav-rail') as UINavRailElement
+    rail.setAttribute('collapse', 'drill-in')
     rail.setAttribute('aria-label', 'Settings sections')
+    // Event-boundary guard (the `md` guard above, same rationale): the rail emits its OWN bubbling
+    // select/change on a genuine item activation — ui-settings must stay the SOLE emitter of its own
+    // select/change (fired from the section-effect below), so the rail's raw events must not bubble out.
+    rail.addEventListener('select', (event) => event.stopPropagation())
+    rail.addEventListener('change', (event) => event.stopPropagation())
     listPane.append(rail)
 
     const panelHost = document.createElement('div')
@@ -177,7 +185,7 @@ export class UISettingsElement extends UIElement {
    *  Never throws: no schema ⇒ an empty rail/panel; an unsupported `version` ⇒ a notice, not a crash. Tears
    *  down whatever a PRIOR build produced first — a real schema/store reassignment rebuilds from scratch. */
   #build(schema: SettingsSchema | undefined, store: SettingsStore | undefined): void {
-    const rail = this.#rail as HTMLElement
+    const rail = this.#rail as UINavRailElement
 
     for (const dispose of this.#disposeGenerated) dispose()
     this.#disposeGenerated = []
@@ -197,10 +205,10 @@ export class UISettingsElement extends UIElement {
     }
 
     for (const section of schema.sections) {
-      const item = document.createElement('button')
-      item.type = 'button'
-      item.setAttribute('data-part', 'rail-item')
-      item.setAttribute('data-section-id', section.id)
+      const item = document.createElement('ui-nav-rail-item') as UINavRailItemElement
+      // href defaults to '' ⇒ button-shaped (an in-page selection commit, never page navigation) — do not
+      // set href.
+      item.dataset.sectionId = section.id
       item.textContent = section.label
       rail.append(item)
 
@@ -223,18 +231,19 @@ export class UISettingsElement extends UIElement {
     this.#markActiveRailItem(this.section)
   }
 
-  /** (Re-)wire every current rail button's click listener. `this.listen` scopes to THIS connection's
-   *  AbortSignal, so it must be called again whenever either the CONNECTION is fresh (reconnect) or the
-   *  BUTTONS themselves are fresh (a rebuild) — never left to a one-time install. */
+  /** (Re-)wire the rail's OWN `select` — ONE listener, not one per item (the rail delegates its click and
+   *  emits its own `select` on a genuine bare-item activation, nav-rail.ts). `this.listen` scopes to THIS
+   *  connection's AbortSignal, so it must be called again whenever either the CONNECTION is fresh
+   *  (reconnect) or the RAIL itself is fresh (a rebuild) — never left to a one-time install. */
   #armRailListeners(): void {
     const rail = this.#rail
     if (!rail) return
-    for (const item of rail.querySelectorAll<HTMLButtonElement>('[data-part="rail-item"]')) {
-      const id = item.dataset.sectionId ?? ''
-      this.listen(item, 'click', () => {
-        this.section = id
-      })
-    }
+    this.listen(rail, 'select', () => {
+      // The nav-rail sets the activated item's `selected` PROPERTY synchronously before emitting; scan the
+      // PROPERTY (not the [selected] attribute — reflection is async on flush) to find the chosen section.
+      const active = [...rail.querySelectorAll('ui-nav-rail-item')].find((i) => (i as UINavRailItemElement).selected)
+      if (active instanceof HTMLElement && active.dataset.sectionId) this.section = active.dataset.sectionId
+    })
   }
 
   /** Show the active section's generated form inside `#panelHost` — detaches whichever provider was
@@ -248,16 +257,15 @@ export class UISettingsElement extends UIElement {
     if (generated) host.append(generated.element)
   }
 
-  /** Mark the active rail item — `aria-current="page"` (native-parity current-page-in-nav semantics) +
-   *  a `[data-active]` marker settings.css keys its non-color-alone signifier off (rubric C8). */
+  /** Mark the active rail item — drives the composed `ui-nav-rail-item`'s own `selected` property, which
+   *  is itself responsible for its indicator + ARIA (ADR-0130 cl.4: a bare/button-shaped item stamps
+   *  `role="tab"`/`aria-selected` on its own activator — an in-page selection commit, NOT the old
+   *  `aria-current="page"` page-nav verb). ui-settings sets no ARIA on the rail itself. */
   #markActiveRailItem(id: string): void {
     const rail = this.#rail
     if (!rail) return
-    for (const item of rail.querySelectorAll<HTMLButtonElement>('[data-part="rail-item"]')) {
-      const active = item.dataset.sectionId === id
-      item.toggleAttribute('data-active', active)
-      if (active) item.setAttribute('aria-current', 'page')
-      else item.removeAttribute('aria-current')
+    for (const item of rail.querySelectorAll('ui-nav-rail-item')) {
+      ;(item as UINavRailItemElement).selected = (item as HTMLElement).dataset.sectionId === id
     }
   }
 }

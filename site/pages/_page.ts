@@ -8,18 +8,26 @@
 // page module imports `_page.ts` as its first statement, ES depth-first evaluation runs these three before any
 // other control-touching import in the page — so the cascade order holds for the whole site.
 //
-// SHELL NOTE — this is a CSS-ONLY app shell (the outer nav-rail / context frame + the per-page sticky
-// header/footer is `_page.css` grid + sticky and the structure below; it uses NO `ui-*` components). It is a
-// deliberate placeholder: once an app-shell component family ships, this shell should be REBUILT to dogfood
-// those controls (rail / top-bar / tab-strip / CTA become real `ui-*` specimens), the same way the pages
-// already dogfood ui-button / ui-text-field. Until then, plain light-DOM keeps the shell dependency-free.
+// SHELL NOTE — a CSS-only app shell (the outer context frame + the per-page sticky header/footer is
+// `_page.css` grid + sticky and the structure below). The LEFT NAV RAIL is no longer hand-rolled: it is now
+// a real `ui-nav-rail collapse="menu"` (ADR-0130 / SPEC-R10, the mode-1 consumer of the shared nav-rail
+// family), fed from `sitemap.json`. The remaining top-bar / footer / CTA are still CSS-only placeholders an
+// app-shell component family will own later, the same way the pages already dogfood ui-button / ui-text-field.
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css -> dimensions.css (FIRST)
 import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation
 import '@agent-ui/components/components' // [3] self-defining ui-* controls (registers ui-button on import)
+import '@agent-ui/app/nav-rail' // [3a] the shared ui-nav-rail family (@agent-ui/app) the site nav composes (ADR-0130, mode 1)
+import '@agent-ui/app/nav-rail.css' // [3a] its stylesheet — the rail anatomy + collapse="menu" disclosure, after the foundation
 import '@agent-ui/icons/phosphor' // [3b] activate the Phosphor default pack (ADR-0065/0066): the controls above render their
 // affordances (select caret, text-field clear/reveal/steppers, calendar nav) through the app-owned icon pack — pack-agnostic
 // by design, so the SHELL that self-defines them must activate the default pack, else those glyphs resolve to an empty <svg>.
 import './_page.css' // [4] shared page chrome (shell + nav + header), AFTER the foundation so it reads the --md-sys-color-* roles
+
+// The build-time site index (TKT-0018): the ONE source the browse rail derives from. 56 L1 components
+// (proper name + tag), 25 L2 guides, the 2 L3 record landings — each carrying a `section` (Components /
+// Guides / Records). A static import keeps `buildNav()` synchronous and lets the drift gate re-derive the
+// expected rail count from the SAME source (the command palette fetches it at runtime for a different reason).
+import sitemapData from '../public/sitemap.json'
 
 // What a page builder gets back from mountPage: the <main> container to append its content into. Kept to a
 // single field so every page slice shares a stable, minimal contract.
@@ -27,22 +35,15 @@ export interface PageHandle {
   readonly content: HTMLElement
 }
 
-// ── shared site nav ──────────────────────────────────────────────────────────────────────────────────────
-// The site's table of contents, rendered into the LEFT RAIL of EVERY page so the whole site shares one nav. The
-// rail lists COMPONENTS, not pages: each per-component group (`ui-button`, `ui-text-field`, …) collapses to ONE
-// entry linking to that control's first page — its per-type pages are NOT repeated in the rail, because the
-// page-header tab strip (DERIVED from the same group) already offers them once you are on the component. The
-// component entries are bracketed by the ungrouped site-level links (Home, A2UI Canvas). A new component's docs
-// append ONE group here. Hrefs are sibling-relative (`./x.html`): every page shell lives at the site root, so
-// these resolve from any page. Per-component page filenames follow the one convention `{name}-{page-type}.html`
-// (the coverage gate, site-coverage.test.ts, derives the required set from it). The same grouping DERIVES each
-// page's context-label + tab strip (see mountPage), so a component's page-type pages tab between each other for
-// free — which is exactly why the rail need not list them a second time.
-//
-// EXPORTED so the cross-engine nav smoke (site-nav.browser.test.ts) derives its expected rail-entry count from
-// this single source rather than a magic constant: the rendered `<a>` count must equal ONE entry per labelled
-// group + each ungrouped link (buildNav's rule), so the rail can't silently drop/duplicate entries AND the gate
-// never re-drifts when a component group is appended here.
+// ── the page-header tab-strip source (formerly ALSO the rail source) ─────────────────────────────────────────
+// `NAV` groups the site's per-component page-type links (Permutations/States/API/Demo). Since ADR-0130's mode-1
+// migration, the LEFT RAIL no longer derives from this array — it derives from `sitemap.json` (SITE_NAV_ENTRIES
+// below, rendered on `ui-nav-rail collapse="menu"`). `NAV` SURVIVES only as the residue that genuinely cannot
+// derive from the sitemap: the per-component page-type sub-links, which `sitemap.json` (one `-doc.html` per
+// component) does not carry. `activeGroup()`/`buildTabs()`/`buildPageHeader()` read it to render the page-header
+// context-label + tab strip, so a component's page-type pages tab between each other for free (SPEC-R10 AC3 —
+// the sub-links stay on the tab strip, deliberately NOT folded into the rail). Hrefs are sibling-relative
+// (`./x.html`). The site-toc drift gate still scans this array to hold its per-component groups ≡ the fleet.
 interface NavLink {
   readonly href: string
   readonly label: string
@@ -456,6 +457,37 @@ export const NAV: readonly NavGroup[] = [
   },
 ]
 
+// ── the sitemap-derived browse rail source (mode-1, SPEC-R10) ────────────────────────────────────────────────
+// One rail entry per sitemap.json entry, grouped by the sitemap's own `section` axis. The derivation INVERTED
+// (TKT-0029): the rail reads the build-time index, not the hand array. `section` is exactly the sitemap's field
+// today — Components (56 L1, name|tag rows) / Guides (25 L2) / Records (the ADR index) — no curated re-grouping.
+interface SitemapEntry {
+  readonly name: string
+  readonly tag?: string
+  readonly url: string
+  readonly section: string
+}
+
+// dedupeByUrl — collapse entries that resolve to the SAME page (the sitemap lists `changelog.html` under both
+// the Guides L2 and the Records L3 rows); the rail lists each destination once, first occurrence winning.
+function dedupeByUrl(entries: readonly SitemapEntry[]): SitemapEntry[] {
+  const seen = new Set<string>()
+  const out: SitemapEntry[] = []
+  for (const entry of entries) {
+    const url = entry.url.split('#')[0]
+    if (seen.has(url)) continue
+    seen.add(url)
+    out.push({ ...entry, url })
+  }
+  return out
+}
+
+// EXPORTED so the cross-engine nav smoke (site-nav.browser.test.ts) re-derives its expected rail-entry count
+// from the SAME source the rail is built from — the sitemap, never `NAV.length` (the derivation inverted): the
+// rendered `<a>` count must equal the unique-url entry count, so the rail can't silently drop/duplicate an entry
+// AND the gate never re-drifts as the fleet grows.
+export const SITE_NAV_ENTRIES: readonly SitemapEntry[] = dedupeByUrl(sitemapData.entries as SitemapEntry[])
+
 // isCurrent — is this link the page we are on? Compare resolved pathnames, treating the site root (`/`) as
 // `index.html` so Home highlights on the landing. Marks the active link with `aria-current="page"`.
 function isCurrent(href: string): boolean {
@@ -471,75 +503,57 @@ function activeGroup(): NavGroup | undefined {
   return NAV.find((group) => group.links.some((link) => isCurrent(link.href)))
 }
 
-// navItem — one rail entry (`<li><a>`): a sibling-relative link, flagged active via aria-current when `active`.
-// `exact` picks the token — `page` when the href IS the current page (a site-level link, or a component sitting
-// on its landing page), `true` when the entry merely represents the active SECTION (a component while you are on
-// one of its sub-pages, which the tab strip is showing). Both spellings get the active rail style (_page.css).
-function navItem(href: string, label: string, active: boolean, exact: boolean): HTMLElement {
-  const item = document.createElement('li')
-  const anchor = document.createElement('a')
-  anchor.href = href
-  anchor.textContent = label
-  if (active) anchor.setAttribute('aria-current', exact ? 'page' : 'true')
-  item.append(anchor)
-  return item
-}
-
-// currentNavLabel — the label of the rail entry for the page we are on, for the collapsed disclosure trigger.
-// Mirrors buildNav's entry rule: a component group contributes ONE entry labelled by the component name (active
-// across its whole section), so a sub-page reports the component label; a site-level link reports its own label.
-// Falls back to 'Menu' off any known route (defensive — every shipped page is in NAV).
-function currentNavLabel(): string {
-  const group = activeGroup()
-  if (group) return group.label ?? group.links.find((link) => isCurrent(link.href))?.label ?? 'Menu'
-  return 'Menu'
-}
-
-// buildNav — the shared cross-page nav: a `<nav data-site-nav>` (one shell, identical on every page). At rail
-// width it is a single flat `<ul>` down the left; below the shell's collapse breakpoint that same list becomes a
-// zero-JS `<details>` DROPDOWN — a `<summary>` trigger (current page + chevron, `aria-expanded` for free) over
-// the list, so the 10-item bar no longer overflows into a horizontal scroller. ONE list is built; CSS alone
-// (the `_page.css` media query) decides rail-vs-dropdown — no per-width markup, so the nav structure (and the
-// drift gates that mirror it) is untouched. A per-component group contributes ONE entry — the component name,
-// linking to its first page and highlighted across the WHOLE group; its per-type pages live in the page-header
-// tab strip, not the rail. An ungrouped site-level group contributes its link(s) directly. Dependency-free light
-// DOM; the rail/dropdown styling lives in `_page.css`.
+// buildNav — the shared cross-page browse rail, now a real `ui-nav-rail collapse="menu"` (ADR-0130, SPEC-R10,
+// the mode-1 consumer) fed from `sitemap.json`. Wide: a grouped vertical rail — one `ui-nav-rail-group` per
+// sitemap `section`, its context-label the section name, each item a real `<a>` with the proper name at the
+// leading edge and (for the tag-bearing Components) the tag right-justified in the trailing `data-role="tag"`
+// cell (SPEC-R6's name|tag row). Narrow: the component's OWN `collapse="menu"` disclosure collapses the list
+// into a dropdown (the zero-JS `<details>` mechanism, now owned by ui-nav-rail, not this shell). The rail's
+// active indicator + the collapsed trigger's label both key off the `selected` item — the current page, or,
+// on a component's sub-page (Permutations/States/API), that component's own doc entry so the rail still shows
+// where you are while the tab strip carries the sub-pages. Role derivation (all items href-bearing) makes the
+// rail a `navigation` landmark and stamps `aria-current="page"` on the active link — the primitive's own job.
 function buildNav(): HTMLElement {
-  const nav = document.createElement('nav')
-  nav.setAttribute('data-site-nav', '')
-  nav.setAttribute('aria-label', 'Site')
+  const rail = document.createElement('ui-nav-rail')
+  rail.setAttribute('collapse', 'menu')
+  rail.setAttribute('data-site-nav', '') // the shell's grid/scroll hook (_page.css); NOT the rail's own anatomy
+  rail.setAttribute('aria-label', 'Site')
 
+  // On a component's sub-page the exact URL is not in the sitemap (only its `-doc.html` is), so map the active
+  // NAV group (the tab-strip residue) to that component's doc URL and mark IT selected — the rail stays oriented.
   const active = activeGroup()
-  const list = document.createElement('ul')
+  const activeDocUrl = active?.label?.startsWith('ui-') ? `./${active.label.slice('ui-'.length)}-doc.html` : undefined
+  const isSelected = (url: string): boolean => isCurrent(url) || url === activeDocUrl
 
-  for (const group of NAV) {
-    if (group.label) {
-      // A component group → ONE rail entry, linking to its first page; the tab strip offers its per-type pages.
-      const [first] = group.links
-      list.append(navItem(first.href, group.label, active === group, isCurrent(first.href)))
-    } else {
-      // Ungrouped site-level links (Home, A2UI Canvas) — a direct link each, active only on its exact page.
-      for (const link of group.links) list.append(navItem(link.href, link.label, isCurrent(link.href), true))
-    }
+  // Group by the sitemap's `section`, preserving first-seen section + item order (a Map keeps insertion order).
+  const bySection = new Map<string, SitemapEntry[]>()
+  for (const entry of SITE_NAV_ENTRIES) {
+    const list = bySection.get(entry.section) ?? []
+    list.push(entry)
+    bySection.set(entry.section, list)
   }
 
-  // Wrap the list in a `<details>` disclosure. At rail width CSS hides the summary and shows the list always
-  // (the disclosure is inert chrome); below the breakpoint the summary IS the trigger and the list shows only
-  // when open. `<details>`/`<summary>` is keyboard-operable and exposes expanded/collapsed state with zero JS —
-  // the zero-dependency choice. The summary carries the current page label so the collapsed trigger names where
-  // you are; the chevron (a CSS pseudo-element, `_page.css`) flips with `[open]`.
-  const disclosure = document.createElement('details')
-  disclosure.setAttribute('data-site-nav-disclosure', '')
-  const summary = document.createElement('summary')
-  summary.className = 'site-nav-trigger'
-  const triggerLabel = document.createElement('span')
-  triggerLabel.className = 'site-nav-trigger-label'
-  triggerLabel.textContent = currentNavLabel()
-  summary.append(triggerLabel)
-  disclosure.append(summary, list)
-
-  nav.append(disclosure)
-  return nav
+  for (const [section, entries] of bySection) {
+    const group = document.createElement('ui-nav-rail-group')
+    group.setAttribute('label', section) // the context-label (SPEC-R6)
+    for (const entry of entries) {
+      const item = document.createElement('ui-nav-rail-item')
+      item.setAttribute('href', entry.url) // link-shaped ⇒ real navigation + aria-current on the active one
+      if (isSelected(entry.url)) item.setAttribute('selected', '')
+      item.append(document.createTextNode(entry.name)) // the proper name (leading edge)
+      if (entry.tag) {
+        // The wide name|tag row: the tag right-justified in the trailing tag cell; narrow it truncates (ellipsis).
+        const tag = document.createElement('span')
+        tag.setAttribute('slot', 'trailing')
+        tag.setAttribute('data-role', 'tag')
+        tag.textContent = entry.tag
+        item.append(tag)
+      }
+      group.append(item)
+    }
+    rail.append(group)
+  }
+  return rail
 }
 
 // ── the app chrome frame (right column, rows 1 & 3) ──────────────────────────────────────────────────────

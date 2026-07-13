@@ -3,17 +3,15 @@
  *   [1] TOKEN BLOCK — `:where(ui-settings)` declares ONLY `--ui-settings-*`.
  *   [2] STYLES BLOCK — `@scope (ui-settings)` consumes ONLY `--ui-settings-*`. "0 bespoke shell CSS"
  *       (SPEC-R9): the rail|panel drill-in geometry is entirely the composed `ui-master-detail`/
- *       `ui-split`'s OWN shipped CSS — this sheet adds only the rail's nav-list chrome (the settings-
- *       specific bit master-detail knows nothing about) + the panel host's content inset.
+ *       `ui-split`'s OWN shipped CSS, and (ADR-0130, nav-rail Phase 2) the rail's own anatomy is now
+ *       entirely the composed `ui-nav-rail collapse="drill-in"`'s OWN shipped CSS (nav-rail.css) — this
+ *       sheet adds only the panel host's content inset + the notice/unsupported-field chrome.
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-settings) declares --ui-settings-* ════════════════ */
 
 :where(ui-settings) {
-  --ui-settings-rail-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-settings-rail-ink-active: var(--md-sys-color-primary);
-  --ui-settings-rail-surface-hover: var(--md-sys-color-neutral-surface-high);
-  --ui-settings-rail-indicator: var(--md-sys-color-primary);
+  --ui-settings-ink: var(--md-sys-color-neutral-on-surface);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-settings) consumes ONLY --ui-settings-* ════════════════ */
@@ -32,53 +30,19 @@
     min-block-size: 0;
   }
 
-  [data-part='rail'] {
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-    inline-size: 100%;
-  }
-
-  [data-part='rail-item'] {
-    display: block;
-    box-sizing: border-box;
-    cursor: pointer;
-    font: inherit;
-    text-align: start;
-    color: var(--ui-settings-rail-ink);
-    background: transparent;
-    border: none;
-    border-inline-start: 2px solid transparent; /* the active marker's own box — never color-only (rubric C8) */
-    padding-block: 0.5rem;
-    padding-inline: 0.75rem;
-    inline-size: 100%;
-  }
-
-  [data-part='rail-item']:hover {
-    background: var(--ui-settings-rail-surface-hover);
-  }
-
-  /* The active item's non-color-alone signifier: a real border (survives forced-colors, C8) PLUS the
-     ink color — never color alone. */
-  [data-part='rail-item'][data-active] {
-    border-inline-start-color: var(--ui-settings-rail-indicator);
-    color: var(--ui-settings-rail-ink-active);
-    font-weight: 600;
-  }
-
   [data-part='panel'] {
     box-sizing: border-box;
     padding: 1rem;
   }
 
   [data-part='notice'] {
-    color: var(--ui-settings-rail-ink);
+    color: var(--ui-settings-ink);
     padding-inline: 0.75rem;
     padding-block: 0.5rem;
   }
 
   [data-part='unsupported-field'] {
-    color: var(--ui-settings-rail-ink);
+    color: var(--ui-settings-ink);
     font-style: italic;
   }
 }
