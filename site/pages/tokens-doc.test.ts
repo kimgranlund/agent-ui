@@ -49,7 +49,7 @@ describe('tokens.html source — color roles', () => {
     // TKT-0019 — 'dialog' joins the list: --md-sys-color-dialog-backdrop parses as { family: 'dialog', role:
     // 'backdrop' } via the SAME bare-utility-token shape as 'focus' (parseColorRoles's own doc comment — no
     // special case needed), so it renders as its own one-role family section on tokens.html.
-    expect(familiesOf(roles).sort()).toEqual(['danger', 'dialog', 'focus', 'info', 'neutral', 'primary', 'secondary', 'success', 'tertiary', 'warning'])
+    expect(familiesOf(roles).sort()).toEqual(['accent', 'danger', 'dialog', 'focus', 'info', 'neutral', 'primary', 'secondary', 'success', 'warning'])
   })
 
   it('every role value is a real declared expression (light-dark(...) or a literal), never empty', () => {

@@ -52,7 +52,7 @@
   color: var(--md-sys-color-primary);
 }
 .board-cell[data-mark='O'] {
-  color: var(--md-sys-color-tertiary, var(--md-sys-color-secondary));
+  color: var(--md-sys-color-accent, var(--md-sys-color-secondary));
 }
 
 .narration {
@@ -87,7 +87,7 @@
   font-weight: 650;
 }
 .isolation-verdict[data-verdict='clean'] {
-  color: var(--md-sys-color-tertiary, var(--md-sys-color-primary));
+  color: var(--md-sys-color-accent, var(--md-sys-color-primary));
 }
 .isolation-verdict[data-verdict='failed'] {
   color: var(--md-sys-color-error);
@@ -169,7 +169,7 @@
   border-inline-start: 3px solid var(--md-sys-color-primary);
 }
 .context-line[data-role='assistant'] {
-  border-inline-start: 3px solid var(--md-sys-color-tertiary, var(--md-sys-color-secondary));
+  border-inline-start: 3px solid var(--md-sys-color-accent, var(--md-sys-color-secondary));
 }
 .context-line.timeline-step[data-kind='end'] {
   font-weight: 650;

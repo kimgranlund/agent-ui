@@ -219,9 +219,12 @@ describe('tokens.css — the AA-guaranteed --md-sys-color-primary-selected fill 
 // EITHER scheme, not tinted by the surface ramp) — resolved via light-dark() with identical legs, the sheet's
 // own idiom for every semantic role (including the other scheme-invariant hand-authored roles above it).
 describe('tokens.css — the dialog-backdrop scrim role (TKT-0019)', () => {
-  it('declares --md-sys-color-dialog-backdrop as black 80% opacity, both light-dark() legs identical', () => {
+  it('declares --md-sys-color-dialog-backdrop as scheme-invariant black 80% opacity', () => {
+    // Generator-native since Kim's ultimate-tokens rework: a single bare black role (no light-dark()
+    // wrapper — a scheme-invariant scrim needs none; the prior light-dark()-with-identical-legs form was
+    // equivalent). 80% either as `0.8` or `80%`.
     expect(rootBlock).toMatch(
-      /--md-sys-color-dialog-backdrop:\s*light-dark\(\s*oklch\(0 0 0\s*\/\s*0\.8\)\s*,\s*oklch\(0 0 0\s*\/\s*0\.8\)\s*\)/,
+      /--md-sys-color-dialog-backdrop:\s*oklch\(0 0 0\s*\/\s*(?:0\.8|80%)\)/,
     )
   })
 })
@@ -235,7 +238,7 @@ describe('tokens.css — the dialog-backdrop scrim role (TKT-0019)', () => {
 // does NOT re-check the hand-authored wash/track/selected roles above (those have their own blocks); it
 // verifies the generator's own promise across every family at once.
 describe('tokens.css — the systematic per-family role grammar (ultimate-tokens generator)', () => {
-  const FAMILIES = ['neutral', 'primary', 'secondary', 'tertiary', 'info', 'success', 'warning', 'danger'] as const
+  const FAMILIES = ['neutral', 'primary', 'secondary', 'accent', 'info', 'success', 'warning', 'danger'] as const
   // every semantic role a family MUST carry, each a light-dark() pair. `{f}` = the family's own name
   // (the self-referential on-{family} rungs). '' = the base --md-sys-color-{family} role.
   const LD_ROLES = [
