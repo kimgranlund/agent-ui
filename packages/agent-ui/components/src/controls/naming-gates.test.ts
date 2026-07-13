@@ -314,14 +314,20 @@ function usedRoles(src: string): string[] {
   return out
 }
 
-/** DYNAMIC `setAttribute('data-role', <identifier>)` sites — a value a TEXT scan cannot resolve. Gate-1
- *  parity (the review's MAJOR): fail CLOSED unless the site is allowlisted below, pinned per
- *  `file::identifier` with the identifier's VERIFIED closed union cited — a future dynamic write anywhere
- *  else yields a different key and fails. */
+/** DYNAMIC `setAttribute('data-role', <identifier>)` OR `<expr>.dataset.role = <identifier>` sites — a
+ *  value a TEXT scan cannot resolve. Gate-1 parity (the review's MAJOR): fail CLOSED unless the site is
+ *  allowlisted below, pinned per `file::identifier` with the identifier's VERIFIED closed union cited — a
+ *  future dynamic write anywhere else yields a different key and fails.
+ *  TKT-0032: the `dataset.role = <ident>` form (an identifier RHS, not a quoted string literal — those stay
+ *  governed by `usedRoles`'s literal matcher above, unchanged) previously matched NEITHER matcher and slipped
+ *  through vacuously; this second alternative closes that gap the same fail-closed way the `setAttribute`
+ *  form already works. An RHS starting with `'`/`"` never matches `[A-Za-z_$]`, so the two matchers stay
+ *  partitioned — no double-count, no overlap with `usedRoles`. */
 function dynamicRoleSites(src: string): string[] {
   const code = stripComments(src)
   const out: string[] = []
   for (const m of code.matchAll(/setAttribute\(\s*['"]data-role['"]\s*,\s*([A-Za-z_$][\w$.]*)\s*\)/g)) out.push(m[1]!)
+  for (const m of code.matchAll(/dataset\.role\s*=\s*([A-Za-z_$][\w$.]*)/g)) out.push(m[1]!)
   return out
 }
 
@@ -383,6 +389,16 @@ describe('Gate 3 — the data-role registry (naming.md §6, packages/**/src, non
     expect(usedRoles("el.setAttribute('data-role', 'zzbogus')")).toEqual(['zzbogus'])
     expect(dynamicRoleSites("el.setAttribute('data-role', someVar)")).toEqual(['someVar'])
     expect(ROLE_IDENTIFIER_EXCEPTIONS.has('some/other/file.ts::someVar')).toBe(false)
+  })
+
+  it('negative control (TKT-0032): an unregistered `dataset.role = ident` dynamic write is caught, the same as the setAttribute form', () => {
+    expect(dynamicRoleSites('bubble.dataset.role = someUnregisteredIdent')).toEqual(['someUnregisteredIdent'])
+    expect(ROLE_IDENTIFIER_EXCEPTIONS.has('some/other/file.ts::someUnregisteredIdent')).toBe(false)
+  })
+
+  it('negative control (TKT-0032): the literal `dataset.role = \'x\'` form is untouched — governed by usedRoles only, never double-counted by dynamicRoleSites', () => {
+    expect(usedRoles("bubble.dataset.role = 'agent'")).toEqual(['agent'])
+    expect(dynamicRoleSites("bubble.dataset.role = 'agent'")).toEqual([])
   })
 
   it('negative control: a CSS attribute selector is found; a comment mention is not (no false positive)', () => {
