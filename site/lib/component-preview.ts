@@ -24,6 +24,8 @@ import type {
   UITextFieldElement,
   UISegmentedControlElement,
   UISegmentElement,
+  UISwiperPaginationElement,
+  UISwiperPaddlesElement,
 } from '@agent-ui/components/components'
 import { createCanvasSurface, applyRootStretch } from './canvas-surface.ts'
 
@@ -322,6 +324,11 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
       return pane
     }),
   'ui-split-pane': () => [sampleItem('Pane content')],
+  // ui-swiper-item (ADR-0124) — the ui-split-pane precedent exactly: its default slot IS the author's own
+  // arbitrary slide content, left as direct host children (swiper-item.ts's `connected()` is a documented
+  // no-op — it builds nothing of its own, see that file's comment). A bare specimen with no sample content
+  // would render an empty box, the same representative-specimen gap ui-split-pane closes above.
+  'ui-swiper-item': () => [sampleItem('Slide content')],
   // ui-toolbar (ADR-0121) — the real job, not a one-child stub: a formatting cluster + an alignment cluster +
   // undo/redo, real ui-buttons throughout (the whole-shape/representative-specimen law, LLD §5). Mirrors the
   // ui-modal sample function's own ui-row + ui-button construction, above.
@@ -619,6 +626,18 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
   'ui-ladder': {
     tiers: '[{"label":"sm","value":"24px"},{"label":"md","value":"28px"},{"label":"lg","value":"36px"}]',
   },
+}
+
+// COMPONENT_SAMPLE_INIT — a per-tag post-construction driver call, distinct from COMPONENT_SAMPLE_CHILDREN
+// (light-DOM children appended BEFORE connect): ui-swiper-pagination/-paddles are pure coordinator-driven
+// anchors (swiper-pagination.md/swiper-paddles.md: `slots: []` on both) — ALL their visible content is built
+// imperatively by the owning `ui-swiper`'s `renderInto`/`fill` PUBLIC methods (properties: in their own .md),
+// never authored as children. A bare specimen has nothing to seed as light DOM at all; calling their own
+// public coordinator method directly (rather than hand-duplicating the dot/button markup it produces) gives a
+// representative specimen that can never drift from the real renderInto()/fill() shape.
+const COMPONENT_SAMPLE_INIT: Record<string, (el: HTMLElement) => void> = {
+  'ui-swiper-pagination': (el) => (el as UISwiperPaginationElement).renderInto(3, 0, () => {}),
+  'ui-swiper-paddles': (el) => (el as UISwiperPaddlesElement).fill(() => {}, () => {}, 'horizontal'),
 }
 
 // ── SLOT_TEXT gating — component mode (the fleet-wide hardening) ──────────────────────────────────────────────
@@ -1103,6 +1122,7 @@ class ComponentPreview extends HTMLElement {
     for (const [attr, value] of Object.entries(COMPONENT_SAMPLE_ATTRS[this.#target] ?? {})) el.setAttribute(attr, value)
     this.#liveEl = el
     surface.replaceChildren(el)
+    COMPONENT_SAMPLE_INIT[this.#target]?.(el)
     for (const knob of this.#knobs) this.#applyKnob(el, knob) // no SLOT_TEXT knob at all for a NO_SLOT_TEXT/STRUCTURAL target (above)
     for (const evt of ['change', 'input', 'toggle', 'select']) el.addEventListener(evt, () => this.#readBackComponent())
     applyRootStretch(surface)

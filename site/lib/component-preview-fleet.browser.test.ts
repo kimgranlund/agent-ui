@@ -57,26 +57,35 @@ describe('component-preview — NO_SLOT_TEXT targets keep their structural child
 // This is the "whole shape, measured" assertion the fleet gate needs — it fails if a future edit ever drops
 // COMPONENT_SAMPLE_CHILDREN back down to a stub for one of these targets.
 describe('component-preview — STRUCTURAL targets mount a representative specimen (batch B, not a stub)', () => {
-  const CASES: ReadonlyArray<{ tag: string; minChildren: number }> = [
-    { tag: 'ui-grid', minChildren: 6 }, // 6 cells — multiple auto-fit tracks form
-    { tag: 'ui-row', minChildren: 3 },
-    { tag: 'ui-column', minChildren: 3 },
-    { tag: 'ui-list', minChildren: 3 },
-    { tag: 'ui-card', minChildren: 3 }, // header + content + footer
-    { tag: 'ui-radio-group', minChildren: 3 }, // sm/md/lg radios
-    { tag: 'ui-segmented-control', minChildren: 3 }, // sm/md/lg segments (ADR-0095)
-    { tag: 'ui-form-provider', minChildren: 2 }, // a field + a submit button
-    { tag: 'ui-toast-region', minChildren: 2 }, // a plain toast + an actionable urgent toast (ADR-0112)
-    { tag: 'ui-toolbar', minChildren: 4 }, // 2 ui-row clusters (bold/italic/underline · left/center/right) + undo + redo (ADR-0121)
-    { tag: 'ui-theme-provider', minChildren: 1 }, // a themed ui-button — the scheme boundary needs a real subject (ADR-0117)
-    { tag: 'ui-split', minChildren: 3 }, // three ui-split-panes (M4 Phase 1)
-    { tag: 'ui-split-pane', minChildren: 1 }, // pane content
-  ]
-  it('CASES covers every STRUCTURAL tag (anti-vacuous)', () => {
-    expect(new Set(CASES.map((c) => c.tag))).toEqual(STRUCTURAL)
+  // MIN_CHILDREN is a lookup, not a second membership list — the loop below iterates the imported STRUCTURAL
+  // set itself (component-preview.ts's own single-owned vocabulary), so a future STRUCTURAL addition/removal
+  // can never silently drift out of sync with this file again: a forgotten entry fails LOUDLY (the "has no
+  // MIN_CHILDREN case" assertion) instead of the two sets quietly diverging (TKT-0038).
+  const MIN_CHILDREN: Readonly<Record<string, number>> = {
+    'ui-grid': 6, // 6 cells — multiple auto-fit tracks form
+    'ui-row': 3,
+    'ui-column': 3,
+    'ui-list': 3,
+    'ui-card': 3, // header + content + footer
+    'ui-radio-group': 3, // sm/md/lg radios
+    'ui-segmented-control': 3, // sm/md/lg segments (ADR-0095)
+    'ui-form-provider': 2, // a field + a submit button
+    'ui-toast-region': 2, // a plain toast + an actionable urgent toast (ADR-0112)
+    'ui-toolbar': 4, // 2 ui-row clusters (bold/italic/underline · left/center/right) + undo + redo (ADR-0121)
+    'ui-theme-provider': 1, // a themed ui-button — the scheme boundary needs a real subject (ADR-0117)
+    'ui-split': 3, // three ui-split-panes (M4 Phase 1)
+    'ui-split-pane': 1, // pane content
+    'ui-swiper-item': 1, // slide content (ADR-0124)
+    'ui-timeline': 3, // 3 ui-timeline-item rows (ADR-0122)
+    'ui-status-stream': 2, // 2 ui-timeline-item rows (ADR-0122)
+  }
+  it('MIN_CHILDREN covers every STRUCTURAL tag (anti-vacuous)', () => {
+    expect(new Set(Object.keys(MIN_CHILDREN))).toEqual(STRUCTURAL)
   })
-  for (const { tag, minChildren } of CASES) {
-    it(`${tag}: mounts ≥ ${minChildren} real children (not a single stub / an empty box)`, async () => {
+  for (const tag of STRUCTURAL) {
+    it(`${tag}: mounts ≥ ${MIN_CHILDREN[tag]} real children (not a single stub / an empty box)`, async () => {
+      const minChildren = MIN_CHILDREN[tag]
+      expect(minChildren, `${tag} has no MIN_CHILDREN case`).toBeDefined()
       const live = await mountPreview(tag)
       expect(live, `no live ${tag} rendered`).not.toBeNull()
       expect(live.children.length, `${tag} rendered a stub`).toBeGreaterThanOrEqual(minChildren)
