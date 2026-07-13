@@ -79,6 +79,62 @@ describe('ui-conversation cross-engine smoke — whole-shape (SPEC-R4)', () => {
   })
 })
 
+// TKT-0034 — the busy/re-entrancy composer affordance is CSS-driven (conversation.css's `[data-busy]` dim +
+// button.css/text-field.ts's own `[disabled]` pointer-inert rule); a jsdom text-level probe (conversation.
+// test.ts) can assert the DOM attributes toggle, but NOT that a real engine actually CASCADES them into a
+// dimmed, pointer-inert paint — the exact "jsdom-green ≠ done" gap the CSS-comment `*/`-in-a-comment trap
+// documents fleet-wide (only a browser smoke catches a rule that silently never applied).
+describe('ui-conversation cross-engine smoke — busy/re-entrancy composer affordance (TKT-0034)', () => {
+  it('a turn in flight genuinely dims the composer + makes field/Send pointer-inert in a REAL engine; both resolve back to idle once finalize() runs', () => {
+    const el = mountConversation()
+    const composer = el.querySelector('[data-part="composer"]') as HTMLElement
+    const field = el.querySelector('[data-part="field"]') as HTMLElement
+    const sendBtn = el.querySelector('[data-part="send"]') as HTMLElement
+
+    // idle baseline — fully opaque, real pointer interaction
+    expect(getComputedStyle(composer).opacity).toBe('1')
+    expect(getComputedStyle(field).pointerEvents).not.toBe('none')
+    expect(getComputedStyle(sendBtn).pointerEvents).not.toBe('none')
+
+    const handle = el.beginAgentTurn()
+
+    // busy — the composer's OWN [data-busy] dim rule cascaded, AND each control's own [disabled] rule made
+    // it pointer-inert (button.css/text-field.css) — a REAL engine resolution, not just an attribute present.
+    expect(Number(getComputedStyle(composer).opacity), 'the composer did not visibly dim while a turn is in flight').toBeLessThan(1)
+    expect(getComputedStyle(field).pointerEvents, 'the field did not become pointer-inert while busy').toBe('none')
+    expect(getComputedStyle(sendBtn).pointerEvents, 'Send did not become pointer-inert while busy').toBe('none')
+
+    handle.finalize()
+
+    // idle again — every rule releases the moment finalize() runs (synchronous, no settle wait needed)
+    expect(getComputedStyle(composer).opacity).toBe('1')
+    expect(getComputedStyle(field).pointerEvents).not.toBe('none')
+    expect(getComputedStyle(sendBtn).pointerEvents).not.toBe('none')
+  })
+
+  it('a focused field NEVER loses focus while disabled mid-turn, in any engine (component-reviewer finding, investigated)', () => {
+    // A focus-loss/restore concern was raised at review and INVESTIGATED empirically here (not assumed):
+    // disabling `ui-text-field` rides `contenteditable=false` + a removed `tabindex`, never a native
+    // `disabled` attribute — only the latter carries a browser-mandated blur, so focus genuinely never
+    // leaves an already-focused field, in Chromium OR WebKit (nor in jsdom — see conversation.test.ts's own
+    // note). No restoration mechanism exists in the primitive; this pins that none is needed.
+    const el = mountConversation()
+    const field = el.querySelector('[data-part="field"]') as HTMLElement & { focus(): void }
+
+    field.focus()
+    expect(field.contains(document.activeElement), 'the field did not take focus in a real engine').toBe(true)
+
+    const handle = el.beginAgentTurn()
+    expect(
+      field.contains(document.activeElement),
+      'disabling the field unexpectedly dropped focus — if this ever starts failing, the primitive needs a real restore mechanism',
+    ).toBe(true)
+
+    handle.finalize()
+    expect(field.contains(document.activeElement)).toBe(true)
+  })
+})
+
 const line = (obj: unknown): string => JSON.stringify(obj)
 
 // The composed-path proof (SPEC-R7, the component-reviewer's Blocker 2 finding): the persistent-identity

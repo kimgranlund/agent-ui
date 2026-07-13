@@ -157,6 +157,14 @@
     flex: 1 1 auto;
     min-inline-size: 0;
   }
+
+  /* TKT-0034 — the busy/re-entrancy in-flight affordance: the field + Send button already dim/pointer-inert
+     themselves via their OWN `disabled` reflected attribute (button.css/text-field.ts); this whole-composer
+     dim is the visible "a turn is in flight" cue, mirroring the pre-migration a2ui-chat.ts `.is-busy` rule
+     (`pointer-events:none; opacity:.55`) this primitive now makes redundant-but-harmless for that consumer. */
+  [data-part='composer'][data-busy] {
+    opacity: 0.55;
+  }
 }
 
 /* ════════════════ forced-colors (WHCM) ════════════════ */

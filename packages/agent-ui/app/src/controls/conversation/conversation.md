@@ -39,7 +39,7 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
   - name: disclosure
     description: The opt-in raw-wire `<details>` dump (`[data-part="disclosure"]`), shown only when `disclosure` is true.
   - name: composer
-    description: The reply form (`[data-part="composer"]`) — a `ui-text-field` + a `ui-button`.
+    description: The reply form (`[data-part="composer"]`) — a `ui-text-field` + a `ui-button`. Auto-disables + carries `aria-busy`/`aria-disabled`/`data-busy` while a `beginAgentTurn()` handle is in flight (TKT-0034); see "Busy/re-entrancy guard" below.
 
 customStates: []          # no :state() hooks — a closed surface's dimmed bubble rides a plain `data-state` attribute, not a custom state (the master-detail.md `data-view` precedent)
 
@@ -113,6 +113,20 @@ elsewhere in the fleet) — this ships **unconditionally** (ADR-0088's honest-na
 `ui-conversation` exposes **no** transport/provider-shaped type. The app's own turn loop (its own
 transport, iterating an `AsyncIterable<string>`) drives `AgentTurnHandle.ingestLine()`/`finalize()`/
 `fail()` imperatively; there is no `AgentTransport`/`AgentProvider`/API-key prop anywhere on this element.
+
+## Busy/re-entrancy guard — auto-tracked, zero consumer wiring (TKT-0034)
+
+`ui-conversation` owns tracking its own in-flight turns: while one or more `beginAgentTurn()` handles exist
+that have not yet `finalize()`d/`fail()`d, `#send()` (Enter or the Send click) is a **no-op** — the typed
+text is **retained**, never cleared, and no `addUserMessage`/`onSubmit` callback fires. The composer
+reflects this visually the moment a handle opens: the field + Send button disable (each control's own
+`disabled` styling/AX applies), and the composer form itself carries `aria-busy="true"`/
+`aria-disabled="true"`/`data-busy` for the whole-composer dim (`conversation.css`). Every one of these
+releases the instant the LAST open handle `finalize()`s or `fail()`s — no consumer wiring required; a
+consumer's own busy flag (e.g. serializing its transport loop, the a2ui-chat.ts precedent) stays
+independently useful for re-entrancy paths that never touch the composer (a click on a rendered A2UI
+surface triggering another `beginAgentTurn()`), but is redundant-but-harmless for the composer send path,
+which this primitive now guards unconditionally.
 
 ## Pre-connect calls are a documented no-op
 

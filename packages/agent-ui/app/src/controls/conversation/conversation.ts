@@ -42,7 +42,7 @@ import type { UIStatusStreamElement } from '@agent-ui/components/components'
 import '../surface-host/surface-host.ts' // registers <ui-surface-host> — composed internally (ADR-0129 clause 2)
 import type { UISurfaceHostElement } from '../surface-host/surface-host.ts'
 import type { ClientMessageListener } from '@agent-ui/a2ui'
-import type { UITextFieldElement } from '@agent-ui/components/components'
+import type { UITextFieldElement, UIButtonElement } from '@agent-ui/components/components'
 
 const props = {
   // OPT-IN raw-wire disclosure (ADR-0129 clause 3) — reflected, default false. Narration itself (below)
@@ -171,13 +171,17 @@ export class UIConversationElement extends UIElement {
   #log: HTMLElement | undefined
   #composer: HTMLFormElement | undefined
   #field: UITextFieldElement | undefined
-  #sendBtn: HTMLElement | undefined
+  #sendBtn: UIButtonElement | undefined
   #warnedPreConnect = false
 
   readonly #registry = new Map<string, SurfaceRecord>()
   #onSubmitCb: ((text: string) => void) | undefined
   #onClientMessageCb: ClientMessageListener | undefined
   #turnSeq = 0
+  // TKT-0034 — the busy/re-entrancy guard: a COUNT (not a bool) of `beginAgentTurn()` handles that exist
+  // but have not yet `finalize()`d/`fail()`d. `#send` no-ops while this is > 0 (auto-tracked, zero consumer
+  // wiring — the primitive already owns the AgentTurnHandle lifecycle); the composer reflects it visually.
+  #turnsInFlight = 0
 
   protected connected(): void {
     if (this.#log === undefined) {
@@ -196,7 +200,7 @@ export class UIConversationElement extends UIElement {
       this.#field = document.createElement('ui-text-field') as UITextFieldElement
       this.#field.setAttribute('label', 'Message')
       this.#field.dataset.part = 'field'
-      this.#sendBtn = document.createElement('ui-button')
+      this.#sendBtn = document.createElement('ui-button') as UIButtonElement
       this.#sendBtn.setAttribute('variant', 'solid')
       this.#sendBtn.dataset.part = 'send'
       this.#sendBtn.textContent = 'Send'
@@ -258,6 +262,18 @@ export class UIConversationElement extends UIElement {
 
     this.#turnSeq += 1
     const seq = this.#turnSeq
+    // TKT-0034 — this handle is now genuinely in flight: bump the count + reflect busy onto the composer.
+    // ONE #endTurn() per handle guards against a caller invoking BOTH finalize() and fail() (never legal
+    // per the SPEC, but a stray double-call must not under-flow the count into a stuck-busy negative).
+    this.#turnsInFlight += 1
+    this.#setComposerBusy(true)
+    let ended = false
+    const endTurn = (): void => {
+      if (ended) return
+      ended = true
+      this.#turnsInFlight = Math.max(0, this.#turnsInFlight - 1)
+      this.#setComposerBusy(this.#turnsInFlight > 0)
+    }
     let noteText: string | undefined
     const turnLines: string[] = []
     const touchedIds = new Set<string>()
@@ -305,6 +321,7 @@ export class UIConversationElement extends UIElement {
         noteText = text
       },
       finalize: () => {
+        endTurn() // TKT-0034 — re-enable the composer THE MOMENT finalize() runs, not after narration settles
         void narrateCategories(narration, seq, categoriesSeen).then(() => narration.finalize())
         note.textContent = noteText ?? summarize(turnLines)
         if (this.disclosure && turnLines.length > 0) bubble.append(this.#buildDisclosure(turnLines))
@@ -312,6 +329,7 @@ export class UIConversationElement extends UIElement {
         void this.#tailFollowLog(wasNear)
       },
       fail: (message: string) => {
+        endTurn() // TKT-0034 — re-enable the composer THE MOMENT fail() runs
         // A genuine finally-scoped truncation (SPEC-R6 AC3) — never a2ui-live's try-scoped mistake.
         // narrateCategories was never started on this path (finalize() never ran), so this is the ONLY
         // narration entry the failed turn gets; still settles whatever surfaces the partial turn touched
@@ -335,12 +353,18 @@ export class UIConversationElement extends UIElement {
     this.#onClientMessageCb = cb
   }
 
-  /** Disposes every open surface host and clears the thread. A documented no-op pre-connect. */
+  /** Disposes every open surface host and clears the thread. A documented no-op pre-connect. A consumer that
+   *  resets mid-turn (abandoning an un-finalized `AgentTurnHandle` rather than calling `finalize()`/`fail()`
+   *  on it) must not leave the composer permanently disabled — TKT-0034's counter/busy-state zero here too
+   *  (component-reviewer note, 2026-07-13; the shipped consumer always finalizes, so this is a robustness
+   *  floor for a future one, not a fix to an observed bug). */
   reset(): void {
     if (!this.#guard('reset')) return
     for (const record of this.#registry.values()) record.host.dispose()
     this.#registry.clear()
     this.#log!.replaceChildren()
+    this.#turnsInFlight = 0
+    this.#setComposerBusy(false)
   }
 
   /** Leak-safety net (the select.ts/text-field.ts "heavyweight per-connection resource" precedent) — a
@@ -366,12 +390,40 @@ export class UIConversationElement extends UIElement {
 
   // ── internals ────────────────────────────────────────────────────────────────────────────────────────
 
+  /** TKT-0034 — a no-op while a turn is in flight (`#turnsInFlight > 0`): the typed text is RETAINED, not
+   *  cleared — no `addUserMessage`, no `#onSubmitCb`. Auto-tracked off `beginAgentTurn()`/`finalize()`/
+   *  `fail()`, so every consumer gets this for free (the composer is ALSO disabled while busy, below, but
+   *  this guard holds even if a caller somehow fires `#send()` past that — e.g. a stray Enter keydown
+   *  racing the disabled-effect's own attribute write). */
   #send(): void {
+    if (this.#turnsInFlight > 0) return
     const text = this.#field!.value.trim()
     if (text === '') return
     this.addUserMessage(text)
     this.#field!.value = ''
     this.#onSubmitCb?.(text)
+  }
+
+  /** TKT-0034 — the composer's in-flight affordance: the field + Send button disable (each control's OWN
+   *  disabled styling/AX already dims + pointer-inerts them, button.css/text-field.ts), and the composer
+   *  form itself carries `aria-busy`/`aria-disabled` + a `data-busy` CSS hook (conversation.css) for the
+   *  whole-composer dim, mirroring the pre-migration a2ui-chat.ts `.is-busy` affordance this replaces.
+   *  A focus-loss/restore concern was raised and INVESTIGATED (component-reviewer note, 2026-07-13): disabling
+   *  a focused field does NOT drop focus in ANY engine (jsdom, Chromium, WebKit — verified empirically) —
+   *  `ui-text-field`'s disabled state rides `contenteditable=false` + a removed `tabindex`, never a native
+   *  `disabled` attribute, and only the latter carries a browser-mandated blur. No restoration code is needed;
+   *  adding it would be speculative complexity for a scenario that does not occur. */
+  #setComposerBusy(busy: boolean): void {
+    this.#field!.disabled = busy
+    this.#sendBtn!.disabled = busy
+    this.#composer!.toggleAttribute('data-busy', busy)
+    if (busy) {
+      this.#composer!.setAttribute('aria-busy', 'true')
+      this.#composer!.setAttribute('aria-disabled', 'true')
+    } else {
+      this.#composer!.removeAttribute('aria-busy')
+      this.#composer!.removeAttribute('aria-disabled')
+    }
   }
 
   /** `finalize()` every OPEN surface host this turn touched (LLD-C4) — shared by the success and the

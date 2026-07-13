@@ -205,6 +205,114 @@ describe('ui-conversation — onSubmit (SPEC-R5)', () => {
   })
 })
 
+describe('ui-conversation — busy/re-entrancy guard (TKT-0034)', () => {
+  it('a re-entrant send while a turn is in flight is a no-op (text RETAINED, no orphan bubble, no 2nd callback); send works again once finalize() runs', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const received: string[] = []
+    el.onSubmit((text) => received.push(text))
+    const field = el.querySelector('[data-part="field"]') as HTMLElement & { value: string; disabled: boolean }
+    const sendBtn = el.querySelector('[data-part="send"]') as HTMLElement & { disabled: boolean }
+    const composer = el.querySelector('[data-part="composer"]') as HTMLFormElement
+
+    // idle (no turn yet): the composer carries none of the busy affordance
+    expect(composer.hasAttribute('data-busy')).toBe(false)
+    expect(composer.getAttribute('aria-busy')).toBeNull()
+    expect(composer.getAttribute('aria-disabled')).toBeNull()
+    expect(field.disabled).toBe(false)
+    expect(sendBtn.disabled).toBe(false)
+
+    // the FIRST send (no turn in flight yet) fires normally, same as the plain onSubmit suite above.
+    field.value = 'first message'
+    composer.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    expect(received).toEqual(['first message'])
+    expect(field.value).toBe('')
+
+    // begin an agent turn — an un-finalized handle IS the in-flight state (SPEC-R8: the app's own turn loop
+    // drives this; a busy-guarded onSubmit consumer, the normal pattern, would begin one here too).
+    const handle = el.beginAgentTurn()
+
+    // the composer now reflects busy — auto-tracked, zero consumer wiring.
+    expect(composer.hasAttribute('data-busy')).toBe(true)
+    expect(composer.getAttribute('aria-busy')).toBe('true')
+    expect(composer.getAttribute('aria-disabled')).toBe('true')
+    expect(field.disabled).toBe(true)
+    expect(sendBtn.disabled).toBe(true)
+
+    // THE REGRESSION (ticket repro): a re-entrant send mid-turn. Before the fix this appended an orphan user
+    // bubble, cleared the field, and fired a 2nd onSubmit — silently discarding the typed text.
+    field.value = 'second message'
+    composer.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    expect(received, 'a 2nd onSubmit fired during an in-flight turn').toEqual(['first message'])
+    expect(field.value, 'the typed text was NOT retained across a re-entrant send').toBe('second message')
+    expect(
+      log(el).querySelectorAll('[data-part="bubble"][data-role="user"]'),
+      'a re-entrant send minted an orphan user bubble',
+    ).toHaveLength(1)
+
+    // finalize() ends the in-flight window — the composer re-enables THE MOMENT it runs.
+    handle.finalize()
+    expect(composer.hasAttribute('data-busy')).toBe(false)
+    expect(composer.getAttribute('aria-busy')).toBeNull()
+    expect(composer.getAttribute('aria-disabled')).toBeNull()
+    expect(field.disabled).toBe(false)
+    expect(sendBtn.disabled).toBe(false)
+
+    // send works again: the RETAINED text from the blocked attempt is what actually goes out.
+    composer.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    expect(received).toEqual(['first message', 'second message'])
+    expect(field.value).toBe('')
+    expect(log(el).querySelectorAll('[data-part="bubble"][data-role="user"]')).toHaveLength(2)
+  })
+
+  it('fail() also ends the in-flight window (not only finalize()) and re-enables the composer', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const field = el.querySelector('[data-part="field"]') as HTMLElement & { disabled: boolean }
+    const composer = el.querySelector('[data-part="composer"]') as HTMLFormElement
+
+    const handle = el.beginAgentTurn()
+    expect(field.disabled).toBe(true)
+    handle.fail('network error')
+    expect(field.disabled).toBe(false)
+    expect(composer.hasAttribute('data-busy')).toBe(false)
+    expect(composer.getAttribute('aria-busy')).toBeNull()
+  })
+
+  it('two overlapping turns keep the composer busy until BOTH end (the in-flight count, not a bare flag)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const field = el.querySelector('[data-part="field"]') as HTMLElement & { disabled: boolean }
+
+    const t1 = el.beginAgentTurn()
+    const t2 = el.beginAgentTurn()
+    expect(field.disabled).toBe(true)
+
+    t1.finalize()
+    expect(field.disabled, 't1 ended but t2 is still in flight — the composer must stay busy').toBe(true)
+
+    t2.finalize()
+    expect(field.disabled).toBe(false)
+  })
+
+  it('reset() mid-turn zeroes the in-flight count and re-enables the composer (an abandoned handle must not stick it disabled)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const field = el.querySelector('[data-part="field"]') as HTMLElement & { disabled: boolean }
+    const composer = el.querySelector('[data-part="composer"]') as HTMLFormElement
+
+    el.beginAgentTurn() // never finalize()d/fail()d — the handle is abandoned
+    expect(field.disabled).toBe(true)
+
+    el.reset()
+    expect(field.disabled, 'reset() must clear the busy state even for an abandoned in-flight handle').toBe(false)
+    expect(composer.hasAttribute('data-busy')).toBe(false)
+
+    // and a fresh beginAgentTurn()/finalize() cycle behaves normally afterward (the count is truly zeroed,
+    // not left at some stale negative/positive value a Math.max(0,…) floor would otherwise mask).
+    const handle = el.beginAgentTurn()
+    expect(field.disabled).toBe(true)
+    handle.finalize()
+    expect(field.disabled).toBe(false)
+  })
+})
+
 describe('ui-conversation — narration (SPEC-R6)', () => {
   it('two distinct categories transition pending -> active -> done, in emission order, deduplicated', async () => {
     vi.useFakeTimers()
