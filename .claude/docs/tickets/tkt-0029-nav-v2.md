@@ -59,3 +59,11 @@ per-component clusters labeled by bare TAG (`ui-button`) each holding page-type 
 - **Non-goals:** the palette (shipped, tag-first by ruling); new pages; router adoption.
 
 ## Findings
+
+### 2026-07-12 — design phase SUBSUMED by TKT-0030
+
+Kim's same-day reconcile report (two screenshots: the settings rail vs this nav) rules that the
+site nav and the settings rail are ONE nav-rail concept with three collapse modes — this ticket's
+sitemap-derivation, context-group, and name|tag-row requirements become the MODE-1 CONSUMER's
+requirements inside TKT-0030's unified family intake. One seat designs both; this ticket's build
+lands as that family's site consumer.
