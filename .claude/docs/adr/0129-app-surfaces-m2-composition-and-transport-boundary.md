@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-12 |
 > | **Proposed by** | design intake (agent-app-surfaces M2 — PRD-G3/G4, the two never-specced goals; both now have working site-level prototypes: `site/lib/surface-registry.ts`, `site/lib/ask-registry.ts`, `site/lib/canvas-surface.ts`, `site/pages/a2ui-chat.ts`, `site/pages/a2ui-live.ts`) |
-> | **Ratified by** | *(awaits Kim)* |
+> | **Ratified by** | Kim, 2026-07-12 ("Ratify all four as recommended"; hand-flipped in-tree) |
 > | **Repairs** | NEW [`../spec/app-surfaces-m2.spec.md`](../spec/app-surfaces-m2.spec.md) (SPEC-R6, R7, R8, R9 — R5's callback-vs-event choice is threaded through clauses 1–2, not itself a fork here; it is settled directly from `references/naming.md` §4's closed event vocabulary) · NEW [`../lld/app-surfaces-m2.lld.md`](../lld/app-surfaces-m2.lld.md) (LLD §8 forks 1–4) · NEW [`../decompositions/app-surfaces-m2.decomp.json`](../decompositions/app-surfaces-m2.decomp.json) |
 > | **Supersedes / Superseded by** | (none) — relates [ADR-0082](./0082-app-shell-per-instance-isolation.md)/[ADR-0083](./0083-app-shell-region-role-decouple.md)/[ADR-0084](./0084-app-shell-narrow-reflow-collapse.md) (the M1 shell these primitives dock into) · [ADR-0097](./0097-a2ui-feed-embedded-asks.md) (the per-ask lifecycle `ui-conversation`'s registry generalizes) · [ADR-0088](./0088-a2ui-live-conversational-channel.md) (the honest-narration law SPEC-R6 realizes) · [ADR-0069](./0069-a2ui-live-agent-demo-shape.md)/[ADR-0073](./0073-a2ui-live-model-provider-seam.md) (the recorded-default + provider-seam security posture SPEC-R8 leaves untouched) · [ADR-0128](./0128-renderer-structural-resend-reconciliation.md) (accepted; the resend-reconciliation fix `ui-conversation`'s persistent surface identity assumes) · [ADR-0023](./0023-components-mount-directive-host-public-seam.md) (the public-method-seam precedent both elements' imperative APIs follow) |
 

@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-12 |
 > | **Proposed by** | planner — TKT-0030 design intake (Kim's reconcile report: the shipped `ui-settings` sections rail and the docs-site `<nav>` rail are one nav-rail concept, drifted into two implementations; TKT-0029's site-nav-v2 design phase is SUBSUMED into this intake) |
-> | **Ratified by** | — (awaiting Kim) |
+> | **Ratified by** | Kim, 2026-07-12 ("Ratify all seven as recommended"; hand-flipped in-tree) |
 > | **Repairs** | NEW `spec/nav-rail-family.spec.md` · NEW `lld/nav-rail-family.lld.md` · NEW `decompositions/nav-rail-family.decomp.json` — on ratification+build: `packages/agent-ui/app/src/controls/nav-rail/**`, `site/pages/_page.{ts,css}` (mode-1 consumption), `packages/agent-ui/app/src/controls/settings/{settings.ts,settings.css}` (mode-2 adoption) |
 > | **Supersedes / Superseded by** | (none) — extends [ADR-0084](./0084-app-shell-narrow-reflow-collapse.md)'s `collapse` grammar to a new component; relates [ADR-0043](./0043-overlay-selection-primitives.md)/[ADR-0045](./0045-overlay-dismissal-semantics.md) (mode 3 composes the shipped overlay primitives) · [ADR-0120](./0120-app-surfaces-m4-panes-settings.md) (the `ui-master-detail`/`ui-settings` embryo mode 2 unifies onto) · [ADR-0101](./0101-overlay-transitions-always-announce.md) (the overlay announce contract mode 3 inherits) |
 
