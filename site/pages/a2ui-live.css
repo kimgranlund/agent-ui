@@ -272,12 +272,15 @@ ui-tabs.canvas-tabs {
   overflow: auto;
 }
 
-/* The Canvas tab's stage — the SHARED artboard (lib/canvas-surface), mounted via createCanvasSurface() in
- * a2ui-live.ts: the checkered stage, the translate-centered, width-floored surface all live in
- * canvas-surface.css now. Only this page's empty-state copy differs from the shared generic default (it
- * prompts a send, which the standalone module doesn't know about); scoped to `.canvas-pane` so it outranks
- * the shared rule's specificity regardless of CSS import order. */
-.canvas-pane .canvas-surface:empty::after {
+/* The Canvas tab's stage — the SHARED artboard is now `<ui-surface-host>` (`@agent-ui/app`, ADR-0129
+ * Amendment re-host): the checkered stage and the translate-centered, width-floored surface live in the
+ * component's own surface-host.css/surface-host.ts now. This page mounts the element and lets it fill the
+ * active tab panel (block-size:100%, the component's own contract) — no page-local override of its artboard
+ * chrome remains, EXCEPT the one page-specific string below (component-reviewer LOW finding, 2026-07-13):
+ * the primitive's generic empty-state copy ("The rendered surface appears here.") drops this page's own
+ * call-to-action; restored scoped to `.canvas-pane` only, overriding the component's `content` value —
+ * every other empty-state rule (position, color, forced-colors) stays the primitive's. */
+.canvas-pane [data-part='surface']:empty::after {
   content: 'Send a prompt — the rendered surface appears here.';
 }
 

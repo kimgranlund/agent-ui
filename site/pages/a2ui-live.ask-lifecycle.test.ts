@@ -177,7 +177,7 @@ describe('a2ui-live ask lifecycle (ADR-0097 §2, post-ship review finding 2) —
     expect(message.action.dataModel).toEqual({ choice: 'A' })
 
     // And the agent's turn-2 response rendered into the shared canvas (the conversation genuinely continued).
-    await waitUntil(() => document.querySelector('.canvas-surface')?.textContent?.includes('Got it.') === true)
+    await waitUntil(() => document.querySelector("ui-surface-host [data-part='surface']")?.textContent?.includes('Got it.') === true)
   })
 
   it('a DIFFERENT turn (typed prose) freezes the pending ask "bypassed", not "answered"', async () => {
@@ -281,7 +281,7 @@ describe('a2ui-live — finding 3: a stale line targeting a still-PENDING (not y
     await waitUntil(() => askBubble('ask-1')?.dataset.state !== undefined) // the turn still completes + freezes normally
 
     expect(askBubble('ask-1')?.dataset.state, 'the ask itself must still freeze normally').toBe('bypassed')
-    expect(document.querySelector('.canvas-surface')?.textContent, 'the stale line must NEVER reach the canvas').not.toContain('STALE-MARKER-XYZ')
+    expect(document.querySelector("ui-surface-host [data-part='surface']")?.textContent, 'the stale line must NEVER reach the canvas').not.toContain('STALE-MARKER-XYZ')
     expect(jsonTabText(), 'a dropped line is never ingested anywhere — not even the JSON tab').not.toContain('STALE-MARKER-XYZ')
   })
 })

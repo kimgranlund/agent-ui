@@ -69,9 +69,9 @@ describe('a2ui-live — ADR-0088 §3: the wantResponse-routed click→turn', () 
     expect(sendBtn, 'the composer Send button was not found').not.toBeNull()
     sendBtn.click()
 
-    await waitUntil(() => document.querySelector('.canvas-surface ui-button') !== null)
+    await waitUntil(() => document.querySelector("ui-surface-host [data-part='surface'] ui-button") !== null)
 
-    const realButton = [...document.querySelectorAll<HTMLElement>('.canvas-surface ui-button')].find(
+    const realButton = [...document.querySelectorAll<HTMLElement>("ui-surface-host [data-part='surface'] ui-button")].find(
       (b) => b.textContent?.trim() === 'Click me',
     )
     expect(realButton, 'the seed Button did not render into the real canvas').not.toBeUndefined()
@@ -109,7 +109,7 @@ describe('a2ui-live — ADR-0097 §2: the recorded-transport page path is unaffe
     await waitUntil(() => chatMessages('system').length > 0)
 
     expect(document.querySelectorAll('.msg[data-ask]'), 'a Reset must leave no ask bubbles behind').toHaveLength(0)
-    expect(document.querySelector('.canvas-surface ui-button'), 'Reset must clear the canvas too').toBeNull()
+    expect(document.querySelector("ui-surface-host [data-part='surface'] ui-button"), 'Reset must clear the canvas too').toBeNull()
 
     // The backbone still works post-Reset — a fresh turn 1 renders the seed again (non-interference proof).
     const editor = document.querySelector('.chat-composer [data-part="editor"]') as HTMLElement
@@ -117,7 +117,7 @@ describe('a2ui-live — ADR-0097 §2: the recorded-transport page path is unaffe
     editor.dispatchEvent(new Event('input', { bubbles: true }))
     const sendBtn = document.querySelector('.chat-composer ui-button') as HTMLElement
     sendBtn.click()
-    await waitUntil(() => document.querySelector('.canvas-surface ui-button') !== null)
-    expect(document.querySelector('.canvas-surface ui-button')).not.toBeNull()
+    await waitUntil(() => document.querySelector("ui-surface-host [data-part='surface'] ui-button") !== null)
+    expect(document.querySelector("ui-surface-host [data-part='surface'] ui-button")).not.toBeNull()
   })
 })

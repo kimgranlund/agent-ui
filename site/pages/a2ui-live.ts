@@ -14,11 +14,12 @@
 import { mountFullBleedPage } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import '@agent-ui/app/app-shell.css' // ui-app-shell region-grid CSS (LLD-C9 re-host), after foundation
 import '@agent-ui/app/app-shell' // self-defines ui-app-shell / ui-app-shell-region
+import '@agent-ui/app/surface-host.css' // ui-surface-host's own artboard chrome (ADR-0129 Amendment re-host)
+import '@agent-ui/app/surface-host' // self-defines <ui-surface-host>
 import './a2ui-live.css'
 import { codeBlock } from '../lib/code-block.ts'
-import { createCanvasSurface, applyRootStretch } from '../lib/canvas-surface.ts'
-import { createRenderer } from '@agent-ui/a2ui'
-import type { RendererHost, A2uiClientMessage, A2uiServerMessage } from '@agent-ui/a2ui'
+import type { A2uiClientMessage, A2uiServerMessage } from '@agent-ui/a2ui'
+import type { UISurfaceHostElement } from '@agent-ui/app'
 import {
   createRecordedTransport,
   nextTurn,
@@ -159,9 +160,13 @@ tabs.append(
 )
 canvasPane.append(tabs)
 
-// Canvas tab → the shared artboard (translate-centered stage/surface pair — lib/canvas-surface).
-const { stage, surface: surfaceEl } = createCanvasSurface()
-canvasPanel.append(stage)
+// Canvas tab → the persistent shared artboard, now the `ui-surface-host` mount/stream primitive (ADR-0129
+// Amendment re-host) in place of the former hand-mounted `lib/canvas-surface.ts` pair. No `label` (parallels
+// `ui-conversation`'s own choice, surface-host.md): the tab-panel this element lives in already carries an
+// accessible name ("Canvas") via `ui-tabs`' own aria-labelledby wiring — a nested `region` landmark of the
+// same name would only be redundant.
+let canvasHost = document.createElement('ui-surface-host') as UISurfaceHostElement
+canvasPanel.append(canvasHost)
 
 // Switch to the Canvas tab programmatically — a plain reflected `selected` write applies SILENTLY (no `select`
 // event echoed, so it never loops back through a listener; binding hygiene, tabs.md). Replaces the old selectTab().
@@ -174,7 +179,8 @@ function refreshJson(lines: string[]): void {
   jsonPanel.replaceChildren(codeBlock(pretty || '(no payload yet)', 'json'))
 }
 function refreshHtml(): void {
-  const html = surfaceEl.innerHTML.replace(/></g, '>\n<').trim()
+  const surfaceEl = canvasHost.querySelector('[data-part="surface"]')
+  const html = (surfaceEl?.innerHTML ?? '').replace(/></g, '>\n<').trim()
   htmlPanel.replaceChildren(codeBlock(html || '(nothing rendered yet)', 'html'))
 }
 
@@ -193,7 +199,6 @@ export function __setTransportForTest(next: AgentTransport): void {
   transport = next
 }
 
-let host: RendererHost = createRenderer()
 let session: Session = { turns: [] }
 const allLines: string[] = []
 let busy = false
@@ -213,8 +218,7 @@ const notesByTurnIndex = new Map<number, string>()
 const askRegistry = new AskRegistry()
 const knownSurfaceIds = new Set<string>()
 
-host.onClientMessage(handleClientMessage)
-host.mount(surfaceEl)
+canvasHost.onClientMessage(handleClientMessage)
 
 let busyRow: HTMLElement | null = null
 function setBusy(next: boolean): void {
@@ -288,7 +292,7 @@ async function runTurn(input: TurnInput): Promise<void> {
     let ask: AskDeclaration | undefined
     for await (const line of transport.turn(input)) {
       // ADR-0088 §1: peel the reserved leading meta-line BEFORE it ever reaches the renderer — it must
-      // never enter `allLines`/the JSON tab or `host.ingest` (the meta-line is provably not an
+      // never enter `allLines`/the JSON tab or `canvasHost.ingest` (the meta-line is provably not an
       // `A2uiServerMessage`, but filtering here — not just relying on that fact — keeps the renderer's
       // ingest path pristine by construction). ADR-0097 §1: `ask`, if any, rides the SAME meta-line.
       const meta = readMetaLine(line)
@@ -318,10 +322,9 @@ async function runTurn(input: TurnInput): Promise<void> {
       turnLines.push(line)
       allLines.push(line)
       noteCreatedSurface(line)
-      host.ingest(line) // validated JSONL streamed line-by-line → progressive paint (SPEC-N4)
+      canvasHost.ingest(line) // validated JSONL streamed line-by-line → progressive paint (SPEC-N4)
     }
-    host.finalize()
-    applyRootStretch(surfaceEl) // a root ui-column fills the artboard (before refreshHtml so the HTML tab reflects it)
+    canvasHost.finalize() // also stretches a root ui-column to fill the artboard (ui-surface-host's own finalize())
 
     // ADR-0097 §2 — freeze whatever was pending BEFORE this turn, now that it has genuinely completed
     // (never on a thrown turn — the catch block below never reaches here).
@@ -437,11 +440,13 @@ resetBtn.setAttribute('variant', 'ghost')
 resetBtn.setAttribute('tabindex', '0')
 resetBtn.textContent = 'Reset'
 resetBtn.addEventListener('click', () => {
-  host.dispose()
-  host = createRenderer()
-  host.onClientMessage(handleClientMessage)
-  host.mount(surfaceEl)
-  surfaceEl.replaceChildren()
+  // Swap in a FRESH `<ui-surface-host>` rather than reusing this one: removal fires its `disconnected()`
+  // leak-safety net (surface-host.ts), disposing the old internal `RendererHost` automatically — no explicit
+  // `.dispose()` call needed here — and the fresh element's own `connected()` mounts a brand-new host.
+  const freshCanvasHost = document.createElement('ui-surface-host') as UISurfaceHostElement
+  canvasHost.replaceWith(freshCanvasHost)
+  canvasHost = freshCanvasHost
+  canvasHost.onClientMessage(handleClientMessage)
   askRegistry.disposeAll() // ADR-0097 §2 — every ask host disposed alongside the canvas host, no leak
   knownSurfaceIds.clear()
   session = { turns: [] }
