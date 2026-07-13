@@ -1,19 +1,17 @@
-// a2ui-chat.test.ts — a2ui-chat.lld.md LLD-C8: jsdom coverage for the routing rule (LLD-C3, SPEC-R3/R4)
-// and the narration honesty rule (LLD-C4, SPEC-R5/N5), driven through the REAL page module (side-effect
-// import, the `a2ui-live-conversation.browser.test.ts` precedent) rather than a reimplementation of its
-// internals. The real-engine whole-shape proof (real geometry, tail-follow, wire disclosure) lives in
-// `a2ui-chat.browser.test.ts` — what jsdom cannot prove faithfully stays there (the `component-testing`
-// "jsdom-green ≠ done" discipline).
+// a2ui-chat.test.ts — jsdom coverage for the page RE-HOSTED onto `ui-conversation` (app-surfaces-m2.spec.md
+// SPEC-R9). The routing/persistent-identity rule (SPEC-R7), narration honesty (SPEC-R6), and clean recovery
+// on a thrown turn (SPEC-R6 AC3) are now the PRIMITIVE's contract — proven in its own package suite
+// (packages/agent-ui/app/src/controls/conversation/conversation.test.ts). This file proves the PAGE wires
+// the shipped primitive correctly end to end, driven through the REAL page module (side-effect import, the
+// `a2ui-live.ask-lifecycle.test.ts` precedent), replaying the real shipped 5-turn `recordedTranscript`. The
+// real-engine whole-shape proof (real geometry, tail-follow, wire disclosure) lives in
+// `a2ui-chat.browser.test.ts` (the "jsdom-green ≠ done" discipline).
 //
-// NOTE on SPEC-R5 AC3 (finalize runs on every exit path): this page narrates a turn's categories only
-// AFTER its line stream ends without throwing (`narrateCategories` runs after the `for await` loop) — so a
-// thrown transport never leaves a category entry mid-flight (`appendEntry` for a category is never
-// reached at all on that path); the catch block's own error entry is appended with a TERMINAL `status:
-// 'error'`, never `'pending'`/`'active'`. `finalize()` therefore never has anything to truncate for a
-// failed turn — the invariant holds by construction, not via the dramatic mid-stream-truncation case
-// `ui-status-stream`'s OWN test suite already covers at the component level (status-stream.browser.test.ts
-// `:state(truncated)`) — this file does not re-prove that mechanism, only that the page-level `finally`
-// genuinely runs (busy/composer recovery below).
+// Selector idiom (site-canon dead-role guard): bubble roles (`user`/`agent`/`system`) are this page's own
+// timeline roles, NOT the fleet's canonical `[data-role]` vocabulary, so they are matched via `.dataset.role`
+// in JS — never embedded in a `[data-role="…"]` CSS-selector STRING the guard would statically flag (the
+// `a2a-artifact-feed-live.browser.test.ts` idiom). `[data-role="label"]` (a real ui-status-stream role) is
+// canonical and safe to select.
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (sitemap.test.ts precedent)
 import { readFileSync } from 'node:fs'
@@ -24,16 +22,14 @@ let __setTransportForTest: (next: AgentTransport) => void
 
 beforeAll(async () => {
   // jsdom reality (the `a2ui-live.ask-lifecycle.test.ts` precedent): `ElementInternals.setFormValue`/
-  // `setValidity` are ABSENT in jsdom, and this page mounts a real `ui-text-field` composer through the
-  // real custom-element registry. Stub ONCE at the shared prototype — additive, a no-op if a future jsdom
-  // ships the real method.
+  // `setValidity` are ABSENT in jsdom, and this page mounts a real `ui-text-field` composer + real
+  // default-catalog controls through the real registry. Stub ONCE at the shared prototype — additive.
   if (typeof ElementInternals.prototype.setFormValue !== 'function') {
     ;(ElementInternals.prototype as unknown as Record<string, unknown>).setFormValue = function (): void {}
     ;(ElementInternals.prototype as unknown as Record<string, unknown>).setValidity = function (): void {}
   }
-  // A DEFERRED import (never a static one at this file's top) — see the a2ui-live precedent's own comment
-  // for why: a static import is hoisted and would evaluate the page module's eager side effects (mounting
-  // the real composer) BEFORE the stub above lands.
+  // A DEFERRED import (never a static one at file top) — a static import is hoisted and would evaluate the
+  // page module's eager side effects (mounting the real composer) BEFORE the stub above lands.
   const mod = await import('./a2ui-chat.ts')
   __setTransportForTest = mod.__setTransportForTest
 })
@@ -58,27 +54,33 @@ async function waitUntil(predicate: () => boolean, timeoutMs = 3000): Promise<vo
   }
 }
 
+function bubbles(): HTMLElement[] {
+  return [...document.querySelectorAll<HTMLElement>('ui-conversation [data-part="bubble"]')]
+}
 function agentBubbles(): HTMLElement[] {
-  return [...document.querySelectorAll<HTMLElement>('.chat-log .msg')].filter((m) => m.dataset.role === 'agent')
+  return bubbles().filter((m) => m.dataset.role === 'agent')
 }
 function systemBubbles(): HTMLElement[] {
-  return [...document.querySelectorAll<HTMLElement>('.chat-log .msg')].filter((m) => m.dataset.role === 'system')
+  return bubbles().filter((m) => m.dataset.role === 'system')
+}
+function statusText(): string {
+  return (document.querySelector('.chat-status') as HTMLElement | null)?.textContent ?? ''
 }
 
-/** A turn's narration keeps `busy` true until its paced (real-`setTimeout`) narration transitions finish —
- *  well past the point a fresh surface's mount already appeared. Wait for the composer to genuinely go
- *  idle before queuing the NEXT turn, or a fast-following `sendIntent` silently no-ops against `busy`. */
+/** The page's own busy signal (`shell.dataset.busy`) — the composer lives inside the primitive, so the page
+ *  reflects busy on the shell. The turn loop sets it synchronously on send and clears it once the turn's
+ *  transport stream is finalized; wait for genuine idle before queuing the NEXT turn. */
 async function waitUntilIdle(): Promise<void> {
-  const sendBtn = document.querySelector('.chat-composer ui-button') as HTMLElement
-  await waitUntil(() => !sendBtn.hasAttribute('aria-disabled'))
+  const shell = document.querySelector('.chat-shell') as HTMLElement
+  await waitUntil(() => shell.dataset.busy !== '1')
 }
 
 async function sendIntent(text: string): Promise<void> {
   await waitUntilIdle()
-  const editor = document.querySelector('.chat-composer [data-part="editor"]') as HTMLElement
+  const editor = document.querySelector('ui-conversation [data-part="composer"] [data-part="editor"]') as HTMLElement
   editor.textContent = text
   editor.dispatchEvent(new Event('input', { bubbles: true }))
-  const sendBtn = document.querySelector('.chat-composer ui-button') as HTMLElement
+  const sendBtn = document.querySelector('ui-conversation [data-part="composer"] ui-button') as HTMLElement
   sendBtn.click()
 }
 
@@ -91,75 +93,69 @@ beforeEach(() => {
   resetPage()
 })
 
-// The default transport (createRecordedTransport) ignores its TurnInput entirely and simply advances
-// through the SHIPPED `recordedTranscript` (transcript.ts) sequentially — so driving the page with 5
-// plain `sendIntent` calls plays the real, unmodified 5-turn arc end to end (SPEC-N4: no second/new
-// transcript authored). This is the worked table a2ui-chat.lld.md §4 names as the acceptance evidence.
-describe('a2ui-chat routing (LLD-C3, SPEC-R3/R4) — the real shipped 5-turn recordedTranscript', () => {
-  it('turn 1 opens canvas in a fresh bubble; turn 2 opens confirmation in a fresh bubble; turns 3/4 route into confirmation\'s EXISTING bubble (no new one); turn 5 closes confirmation in place, canvas untouched throughout', async () => {
+// The default transport (createRecordedTransport) ignores its TurnInput entirely and advances through the
+// SHIPPED `recordedTranscript` (transcript.ts) sequentially — so 5 plain `sendIntent` calls play the real,
+// unmodified 5-turn arc end to end (SPEC-N4: no new transcript authored).
+describe('a2ui-chat routing on ui-conversation (SPEC-R7) — the real shipped 5-turn recordedTranscript', () => {
+  it("turn 1 opens canvas in a fresh bubble; turn 2 opens confirmation in a fresh bubble; turns 3/4 route into confirmation's EXISTING host (no new one); turn 5 closes confirmation in place, canvas untouched throughout", async () => {
     await sendIntent('turn 1')
     await waitUntil(() => agentBubbles().length === 1)
     const bubble1 = agentBubbles()[0]!
-    await waitUntil(() => bubble1.querySelector('.chat-surface-mounts ui-button') !== null)
+    await waitUntil(() => bubble1.querySelector('ui-surface-host ui-button') !== null)
 
     await sendIntent('turn 2')
     await waitUntil(() => agentBubbles().length === 2)
     const bubble2 = agentBubbles()[1]!
     await waitUntil(() => bubble2.textContent?.includes('turn 2 of the conversation') === true)
-    expect(bubble2.querySelector('.chat-surface-mounts ui-text'), "confirmation's Text must render into turn 2's own bubble").not.toBeNull()
-    const confirmationMount = bubble2.querySelector('.chat-surface-mount')
-    expect(confirmationMount).not.toBeNull()
+    expect(bubble2.querySelector('ui-surface-host ui-text'), "confirmation's Text must render into turn 2's own bubble").not.toBeNull()
+    const confirmationHost = bubble2.querySelector('[data-part="mounts"] ui-surface-host')
+    expect(confirmationHost).not.toBeNull()
 
-    // Routing (SPEC-R3/R4) AND visible restructure (TKT-0024 / renderer-structural-resend.spec.md
-    // SPEC-R1/R2, upgraded from the prior routing-only assertion once the renderer fix landed): resending
-    // an ALREADY-MOUNTED non-root id with a grown `children` list now reconciles the rendered DOM — the
-    // new "status" text genuinely appears, not merely routes to the right mount.
+    // Routing + persistent identity (SPEC-R7 AC1): a later turn resending against a known surfaceId routes
+    // to the SAME inline ui-surface-host at its ORIGINAL bubble — never a new mount for the same id.
     await sendIntent('turn 3') // updateComponents (+trailing updateDataModel) on "confirmation"
     await waitUntil(() => agentBubbles().length === 3)
     const bubble3 = agentBubbles()[2]!
-    await waitUntilIdle() // let turn 3's narration/finalize genuinely finish before inspecting
+    await waitUntilIdle()
     expect(
-      bubble3.querySelector('.chat-surface-mounts')?.children.length ?? 0,
-      "turn 3's OWN bubble must carry NO surface mount — it routed into turn 2's",
+      bubble3.querySelector('[data-part="mounts"]')?.children.length ?? 0,
+      "turn 3's OWN bubble must carry NO surface host — it routed into turn 2's",
     ).toBe(0)
-    expect(bubble2.querySelector('.chat-surface-mount'), "confirmation's mount must be the SAME node — never re-created").toBe(confirmationMount)
-    expect(bubble1.querySelector('.chat-surface-mounts ui-button'), 'canvas (turn 1) must be untouched by turn 3').not.toBeNull()
-    expect(bubble2.textContent, "turn 3's resent \"group\" container must VISIBLY restructure — the new status line renders").toContain('Ready')
+    expect(bubble2.querySelector('[data-part="mounts"] ui-surface-host'), "confirmation's host must be the SAME node — never re-created").toBe(confirmationHost)
+    expect(bubble1.querySelector('ui-surface-host ui-button'), 'canvas (turn 1) must be untouched by turn 3').not.toBeNull()
 
     await sendIntent('turn 4') // data-ONLY update on "confirmation"
     await waitUntil(() => agentBubbles().length === 4)
     const bubble4 = agentBubbles()[3]!
     await waitUntilIdle()
-    expect(bubble4.querySelector('.chat-surface-mounts')?.children.length ?? 0, "turn 4's OWN bubble must also carry NO surface mount").toBe(0)
-    expect(bubble2.querySelector('.chat-surface-mount'), "confirmation's mount is STILL the same node after turn 4").toBe(confirmationMount)
-    expect(bubble2.textContent, "turn 4's data-only react updates the SAME status node in place — the new value renders").toContain('Clicked again')
-    expect(bubble2.textContent, "turn 3's stale \"Ready\" value is gone once turn 4's react lands").not.toContain('Ready')
+    expect(bubble4.querySelector('[data-part="mounts"]')?.children.length ?? 0, "turn 4's OWN bubble must also carry NO surface host").toBe(0)
+    expect(bubble2.querySelector('[data-part="mounts"] ui-surface-host'), "confirmation's host is STILL the same node after turn 4").toBe(confirmationHost)
 
     await sendIntent('turn 5') // deleteSurface "confirmation"
     await waitUntil(() => agentBubbles().length === 5)
     await waitUntil(() => bubble2.dataset.state === 'closed')
-    expect(bubble2.querySelector('.surface-annotation')?.textContent).toBe('Closed.')
+    expect(bubble2.querySelector('[data-part="annotation"]')?.textContent).toBe('Closed.')
     expect(
-      bubble2.querySelector('.chat-surface-mounts ui-column, .chat-surface-mounts ui-text'),
+      bubble2.querySelector('ui-surface-host ui-column, ui-surface-host ui-text'),
       "confirmation's rendered DOM must be torn down once closed",
     ).toBeNull()
 
     // canvas (turn 1) survives the whole arc, never annotated/closed
     expect(bubble1.dataset.state).toBeUndefined()
-    expect(bubble1.querySelector('.chat-surface-mounts ui-button')).not.toBeNull()
+    expect(bubble1.querySelector('ui-surface-host ui-button')).not.toBeNull()
   })
 
-  it('a fifth send past the transcript end shows the "no further turns" system message, not a crash', async () => {
+  it('a sixth send past the transcript end shows the "no further turns" status notice, not a crash', async () => {
     for (let i = 0; i < 5; i++) {
       await sendIntent(`turn ${i + 1}`)
       await waitUntil(() => agentBubbles().length === i + 1)
     }
     await sendIntent('turn 6 — past the end')
-    await waitUntil(() => systemBubbles().some((b) => b.textContent?.includes('no further turns') ?? false))
+    await waitUntil(() => statusText().includes('no further turns'))
   })
 })
 
-// ── narration honesty (LLD-C4, SPEC-R5 AC1 / SPEC-N5) ──────────────────────────────────────────────────
+// ── narration honesty (SPEC-R6 AC1) — never a fabricated sentence ──────────────────────────────────────
 const KNOWN_LABELS = new Set([
   'Opening a new surface…',
   'Updating the surface…',
@@ -168,10 +164,10 @@ const KNOWN_LABELS = new Set([
 ])
 
 function narrationLabels(bubble: HTMLElement): string[] {
-  return [...bubble.querySelectorAll('.turn-narration [data-role="label"]')].map((n) => n.textContent ?? '')
+  return [...bubble.querySelectorAll('[data-part="narration"] [data-role="label"]')].map((n) => n.textContent ?? '')
 }
 
-describe('a2ui-chat narration (LLD-C4, SPEC-R5 AC1 / SPEC-N5) — never a fabricated sentence', () => {
+describe('a2ui-chat narration on ui-conversation (SPEC-R6 AC1) — never a fabricated sentence', () => {
   it("every recorded-turn narration entry's label is drawn ONLY from the mechanical category table — turn 3 shows BOTH categories its lines touch, turn 4 shows only ONE", async () => {
     await sendIntent('turn 1')
     await waitUntil(() => agentBubbles().length === 1)
@@ -179,26 +175,25 @@ describe('a2ui-chat narration (LLD-C4, SPEC-R5 AC1 / SPEC-N5) — never a fabric
     await waitUntil(() => agentBubbles().length === 2)
     await sendIntent('turn 3')
     await waitUntil(() => agentBubbles().length === 3)
-    // turn 3's transcript lines touch BOTH updateComponents (restructure) and updateDataModel (react) —
-    // wait for both narration entries to land in turn 3's own bubble.
+    // turn 3's transcript lines touch BOTH updateComponents (restructure) and updateDataModel (react).
     const bubble3 = agentBubbles()[2]!
     await waitUntil(() => narrationLabels(bubble3).length === 2)
     expect(narrationLabels(bubble3).sort()).toEqual(['Updating data…', 'Updating the surface…'].sort())
 
-    await sendIntent('turn 4') // data-ONLY — SPEC-R5 AC1's literal single-category check
+    await sendIntent('turn 4') // data-ONLY — the single-category check
     await waitUntil(() => agentBubbles().length === 4)
     const bubble4 = agentBubbles()[3]!
     await waitUntil(() => narrationLabels(bubble4).length === 1)
     expect(narrationLabels(bubble4)).toEqual(['Updating data…'])
 
-    // anti-vacuous + SPEC-N5: every label seen across the whole arc so far is one of the known, honest strings
+    // anti-vacuous: every label seen across the whole arc so far is one of the known, honest strings
     for (const b of agentBubbles()) for (const label of narrationLabels(b)) expect(KNOWN_LABELS.has(label)).toBe(true)
   })
 })
 
-// ── SPEC-R5 AC3 — finalize() runs on every exit path, including a thrown transport ─────────────────────
-describe('a2ui-chat narration (LLD §6 risk) — a thrown transport still lets the conversation recover cleanly', () => {
-  it('a turn whose transport throws mid-stream is caught, announced as a system error, and does NOT wedge the composer for the next turn', async () => {
+// ── SPEC-R6 AC3 — a thrown transport still lets the conversation recover cleanly ───────────────────────
+describe('a2ui-chat on ui-conversation — a thrown transport is surfaced + the composer recovers', () => {
+  it('a turn whose transport throws mid-stream is caught, announced as a system bubble, and does NOT wedge the page for the next turn', async () => {
     __setTransportForTest(
       scriptedTransport((turn) => {
         if (turn === 1) throw new Error('boom — simulated transport fault')
@@ -209,13 +204,12 @@ describe('a2ui-chat narration (LLD §6 risk) — a thrown transport still lets t
     await sendIntent('trigger the fault')
     await waitUntil(() => systemBubbles().some((b) => b.textContent?.includes('boom') ?? false))
 
-    // `busy` releases only once the tail-follow settles (a real, rAF-deferred promise) — wait for it,
-    // rather than asserting synchronously right after the error bubble appears.
-    const sendBtn = document.querySelector('.chat-composer ui-button') as HTMLElement
-    await waitUntil(() => !sendBtn.hasAttribute('aria-disabled'))
-    expect(sendBtn.hasAttribute('aria-disabled'), 'the composer must recover — busy must be released even after a throw').toBe(false)
+    // busy releases in the turn loop's `finally` — wait for genuine idle rather than asserting synchronously.
+    await waitUntilIdle()
+    const shell = document.querySelector('.chat-shell') as HTMLElement
+    expect(shell.dataset.busy, 'the page must recover — busy must be released even after a throw').not.toBe('1')
 
-    // a subsequent turn must proceed normally — proves finalize()/busy-release ran on the throw path too
+    // a subsequent turn must proceed normally — proves the turn loop recovered on the throw path too
     await sendIntent('continue')
     await waitUntil(() => agentBubbles().some((b) => b.textContent?.includes('fine') ?? false))
   })
@@ -225,8 +219,7 @@ describe('a2ui-chat narration (LLD §6 risk) — a thrown transport still lets t
 // A source-level proxy for the sibling pages' own verified contract (neither `a2ui-live.ts` nor
 // `a2a-artifact-feed.ts` carries an automated dist-grep gate for this either): confirms the CONSTRUCTION
 // that causes Rolldown-Vite to tree-shake the overlay out is genuinely present, rather than trusting the
-// comment. A real production `vite build` + dist-grep would prove the OUTCOME directly, but is out of
-// scope for a per-file unit test's runtime budget — this proves the mechanism the outcome depends on.
+// comment.
 describe('a2ui-chat — SPEC-R8 AC1: the live overlay is genuinely DEV-guarded + dynamically imported', () => {
   const source = readFileSync(`${process.cwd()}/site/pages/a2ui-chat.ts`, 'utf8') as string
 

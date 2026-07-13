@@ -52,3 +52,17 @@ Realized in four clauses; the M2 SPEC/LLD own the concrete mechanism.
 - **A single combined `ui-agent-surface` element (conversation + canvas fused into one tag).** Rejected: it cannot serve `a2ui-live`'s shape (a persistent, chat-external canvas) and `a2ui-chat`'s shape (every surface inline in the log) from one API without a mode axis that would itself need this ADR's same forks answered first — decomposing into two composable primitives is strictly more general and is what the PRD's own goal IDs (separate PRD-G3/PRD-G4) already imply.
 - **Placing `ui-surface-host` in `@agent-ui/a2ui` itself (the PRD's Fork 2/PRD-D2 territory revisited).** Rejected: already settled at the PRD level — the DAG-forcing cycle argument (PRD-D3, Fork 3) requires anything importing `a2ui`'s renderer to live ABOVE it; `@agent-ui/app`'s M1 `package.json` already declared this dependency for exactly this purpose. Re-litigating it here would contradict a ratified decision this intake was told not to re-open.
 - **A synchronous `render(lines: string[])` batch API instead of `ingest(line)` streaming.** Rejected: A2UI's whole value proposition is progressive rendering as lines arrive (`a2ui-runtime.spec.md` SPEC-N4); a batch API would force the app to buffer a full turn before any paint, regressing the exact behavior `a2ui-live`/`a2ui-chat` already prove works well streamed.
+
+## Amendment — 2026-07-13 (Phase-2 build): clause 4's deletion scope corrected
+
+Clause 4's premise "anything that imported them directly (only the two chat pages, verified)" was
+**factually wrong for `canvas-surface.ts`**: at Phase-2 build time it had FOUR importers —
+`a2ui-live.ts`, `a2ui-chat.ts`, **`site/lib/component-preview.ts`** (the docs preview/gallery
+system) and **`site/pages/a2a-artifact-feed.ts`** — the latter two outside M2's scope entirely.
+The deletion scope corrects to: **`surface-registry.ts` deleted** (done this wave — `a2ui-chat`
+was its only consumer post-migration) · **`ask-registry.ts` pending** the Fork-B ruling on
+`a2ui-live` (its asks carry ADR-0097 freeze/fail-closed semantics `ui-conversation` cannot yet
+express; Kim's call, TKT-0028 tracks) · **`canvas-surface.ts` STAYS** — it is a general artboard
+helper with legitimate non-chat consumers, not chat-lifecycle duplication; PRD-G6's coherence bar
+is not violated by keeping it. Clause 4's re-expression requirement stands for both pages
+(`a2ui-chat` done; `a2ui-live` held on Fork B). SPEC-R9/LLD-C13 read subject to this scope.

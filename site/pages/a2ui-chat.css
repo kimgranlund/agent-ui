@@ -1,36 +1,37 @@
-/* a2ui-chat.css — PAGE-LOCAL chrome for the conversational agent surface (a2ui-chat.lld.md LLD-C1). ONE
- * scrolling chat log (not a2ui-live's two-pane [chat | canvas] split) — a single bordered card filling the
- * full-bleed page region, its own log region owning its own scroll (SPEC-R6), composer + reset docked
- * below. Every colour is a `--md-sys-color-*` role (imported first via _page.ts), so it tracks light/dark.
- * Mounts via mountFullBleedPage: [data-page-content] fills the bounded `.app-page` region. This page never
- * restyles a ui-* control — `.turn-narration` only sets the ONE documented custom-property hook
- * (status-stream.css's `--ui-status-stream-max-block-size`), the same consumer-tuning seam every other
- * embedding of a sized control uses (never a `@scope`-internal override). */
+/* a2ui-chat.css — PAGE-LOCAL chrome for the conversational agent surface, RE-HOSTED onto `ui-conversation`
+ * (app-surfaces-m2.spec.md SPEC-R9). The thread, bubbles, composer, narration strip, per-surface mounts, the
+ * "Closed." annotation, and the wire disclosure are ALL owned by the `<ui-conversation>` primitive now (its
+ * own `conversation.css`, imported by the page) — this sheet keeps only the surrounding page chrome: the
+ * full-bleed region, the header, the dev-overlay switcher slot, the meta-notice status line, and the reset
+ * bar. Every colour is a `--md-sys-color-*` role (imported first via _page.ts), so it tracks light/dark.
+ * This page never restyles a ui-* control. */
 
 [data-page-content] {
   display: flex;
   padding: 1.25rem 1.5rem;
   box-sizing: border-box;
   min-block-size: 0;
-  overflow: hidden; /* clip — the inner shell scrolls, not the region */
+  overflow: hidden; /* clip — the conversation owns its own inner scroll, not the region */
 }
 
 .chat-shell {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  gap: 0.6rem;
   min-inline-size: 0;
   min-block-size: 0;
-  border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
-  background: var(--md-sys-color-neutral-surface-low);
-  overflow: hidden;
+}
+
+/* The conversation IS the bordered card (conversation.css gives it its own border/radius/background) — it
+ * fills the remaining column height and owns its own scroll region. */
+.chat-shell ui-conversation {
+  flex: 1 1 auto;
+  min-block-size: 0;
 }
 
 .chat-head {
   flex: 0 0 auto;
-  padding: 0.85rem 1rem 0.6rem;
-  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 .chat-title {
   margin: 0;
@@ -44,131 +45,19 @@
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
-/* ── the chat log — SPEC-R6: owns its OWN scroll region, independent of each embedded ui-status-stream's ── */
-.chat-log {
-  flex: 1 1 auto;
-  min-block-size: 0;
-  overflow-y: auto;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.msg {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 10px;
-  max-inline-size: 92%;
-}
-.msg[data-role='user'] {
-  align-self: flex-end;
-  background: var(--md-sys-color-primary-container-low);
-}
-.msg[data-role='agent'] {
-  align-self: flex-start;
-  background: var(--md-sys-color-neutral-surface-high);
-  inline-size: 92%; /* an agent bubble's narration/mounted surface want real room, unlike a short prose reply */
-}
-.msg[data-role='system'] {
-  align-self: center;
-  max-inline-size: 100%;
-  color: var(--md-sys-color-neutral-on-surface-variant);
+/* ── the meta-notice status line (reset / transcript-exhausted / dev-overlay connection status) ─────────── */
+.chat-status {
+  flex: 0 0 auto;
+  margin: 0;
   font-size: 0.78rem;
   text-align: center;
-}
-.msg-who {
-  font-size: 0.66rem;
-  font-weight: 650;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
-.msg[data-role='system'] .msg-who {
+.chat-status:empty {
   display: none;
 }
-.msg-body {
-  margin: 0;
-  font-size: 0.86rem;
-  line-height: 1.4;
-  white-space: pre-wrap;
-  color: var(--md-sys-color-neutral-on-surface);
-}
-.msg[data-role='system'] .msg-body {
-  color: inherit;
-  font-size: inherit;
-}
 
-/* An agent bubble's turn-duration narration — compact (`size="sm"`) and height-bounded to a fraction of
- * the default (status-stream.css's own consumer-tuning custom property), since a bubble holds at most a
- * couple of entries, never the whole session's history. */
-.turn-narration {
-  --ui-status-stream-max-block-size: 9rem;
-  margin-block-end: 0.2rem;
-}
-
-/* Fresh inline A2UI surfaces this bubble's OWN creating turn mounted (SPEC-R2(c)/R3) — later turns route
- * into these same mounts in place; this bubble never grows a SECOND one for a known surfaceId. */
-.chat-surface-mounts:empty {
-  display: none;
-}
-.chat-surface-mounts {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.chat-surface-mount {
-  min-inline-size: 0;
-}
-
-/* A closed surface's bubble (SurfaceRegistry.close, SPEC-R4) — dimmed as VISIBLE, non-interactive
- * history (its rendered DOM is already gone; this is only the visual cue). */
-.msg[data-role='agent'][data-state='closed'] {
-  opacity: 0.6;
-}
-.surface-annotation {
-  margin: 0.3rem 0 0;
-  font-size: 0.72rem;
-  font-style: italic;
-  color: var(--md-sys-color-neutral-on-surface-variant);
-}
-
-/* The per-bubble wire disclosure (SPEC-R7) — the a2a-artifact-feed.ts `disclosure()` idiom. */
-.chat-disclosure {
-  margin-block-start: 0.15rem;
-  font-size: 0.72rem;
-}
-.chat-disclosure > summary {
-  cursor: pointer;
-  color: var(--md-sys-color-neutral-on-surface-variant);
-}
-.chat-disclosure .code-block {
-  margin-block-start: 0.35rem;
-  max-block-size: 16rem;
-  overflow: auto;
-  font-size: 0.72rem;
-}
-
-/* ── composer + switcher + reset ─────────────────────────────────────────────────────────────────────── */
-.chat-composer {
-  flex: 0 0 auto;
-  display: flex;
-  gap: 0.5rem;
-  align-items: end;
-  padding: 0.75rem;
-  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
-}
-.chat-composer ui-text-field {
-  flex: 1 1 auto;
-  min-inline-size: 0;
-}
-.chat-composer.is-busy {
-  opacity: 0.55;
-  pointer-events: none;
-}
-
+/* ── the dev-only provider switcher slot ──────────────────────────────────────────────────────────────── */
 .switcher-slot {
   flex: 0 0 auto;
 }
@@ -179,7 +68,8 @@
   display: flex;
   gap: 0.75rem;
   padding: 0.6rem 0.75rem;
-  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 10px;
   background: var(--md-sys-color-neutral-surface);
 }
 .switcher-field {
@@ -198,6 +88,4 @@
   flex: 0 0 auto;
   display: flex;
   justify-content: flex-end;
-  padding: 0.5rem 0.75rem;
-  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
 }

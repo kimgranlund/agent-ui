@@ -226,7 +226,19 @@ const appCssQuerySuffixPlugin = {
 // bytes" worst-case convention above) — so the jump is real, not a regression to chase down. Measured
 // 24494 B gz post-ui-settings 2026-07-11 (up from the Phase 2 ui-app-shell+ui-master-detail-only 4576 B
 // gz); ~9% headroom reserved. A future control riding this barrel re-bases again, measured, not guessed.
-const APP_MARGINAL_BUDGET = 26 * KB
+//
+// 68 KB re-based at the M2 wave (app-surfaces-m2.lld.md LLD-C9, SPEC-R11 AC3 — the SAME
+// Consequences-anticipated re-base precedent). ADR-0129's Consequences called this exactly: M2 is where
+// `@agent-ui/a2ui` moves from a DECLARED-but-unexercised app dependency to a genuinely IMPORTED one. The
+// barrel now exports `UISurfaceHostElement`/`UIConversationElement`, each of which statically
+// `import { createRenderer } from '@agent-ui/a2ui'` — so a consumer of the whole app barrel `.` now drags
+// the ENTIRE A2UI renderer + default catalog (every catalog adapter) on top of everything above. This is
+// the dominant cost by far; the ui-nav-rail family (ADR-0130) also newly rides this barrel but is trivial
+// beside it. Measured 63083 B gz post-M2 2026-07-12 (up from 24494); ~8% headroom reserved (68 KB). The
+// worst-case whole-barrel ceiling moves; per-subpath tree-shaking is unaffected — `@agent-ui/app/surface-host`
+// alone drags only itself + a2ui's real deps, never `ui-conversation`/`ui-settings`/`ui-nav-rail` (SPEC-R11
+// AC3). A future control riding this barrel re-bases again, measured, not guessed.
+const APP_MARGINAL_BUDGET = 68 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
@@ -242,7 +254,7 @@ const appMarginal = appGz - foundationGz
 const appStatus = appMarginal <= APP_MARGINAL_BUDGET ? 'within' : 'OVER'
 const appOver = appMarginal > APP_MARGINAL_BUDGET
 console.log(
-  `\n@agent-ui/app . (ui-app-shell + ui-master-detail + ui-settings): marginal ${appMarginal} B gz — ${appStatus} budget (${APP_MARGINAL_BUDGET} B gz)   solo ${appGz} B gz (${appMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
+  `\n@agent-ui/app . (app-shell + master-detail + settings + surface-host + conversation + nav-rail): marginal ${appMarginal} B gz — ${appStatus} budget (${APP_MARGINAL_BUDGET} B gz)   solo ${appGz} B gz (${appMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
 )
 
 // ── @agent-ui/router (LLD-C9, SPEC-R7 AC4) — the SPA router family, ANOTHER package above components on
