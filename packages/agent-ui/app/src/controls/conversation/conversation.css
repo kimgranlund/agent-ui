@@ -1,0 +1,178 @@
+/* conversation.css — ui-conversation, the M2 thread/composer/narration layout (LLD-C6 · SPEC-R4). Single
+ * file, two sectioned blocks (ADR-0003): a `:where(ui-conversation)` TOKEN block declaring only
+ * `--ui-conversation-*` custom properties (promoted/renamed from site/pages/a2ui-chat.css's equivalents —
+ * the SAME visual contract, no new visual design), then an `@scope (ui-conversation)` STYLES block
+ * consuming ONLY that chain (role-purity, the app-shell.css/card.css discipline).
+ *
+ * Standalone sheet — linked via the package `./conversation.css` export; NEVER injected from
+ * conversation.ts (behaviour-only `.ts`, no runtime style; plan §2).
+ */
+
+/* ════════════════ [ui-conversation] TOKEN BLOCK — :where(ui-conversation) declares --ui-conversation-* ═══ */
+
+:where(ui-conversation) {
+  --ui-conversation-border: var(--md-sys-color-neutral-outline-variant, currentColor);
+  --ui-conversation-surface: var(--md-sys-color-neutral-surface-low, currentColor);
+  --ui-conversation-ink: var(--md-sys-color-neutral-on-surface, currentColor);
+  --ui-conversation-ink-variant: var(--md-sys-color-neutral-on-surface-variant, currentColor);
+  --ui-conversation-user-bubble: var(--md-sys-color-primary-container-low, currentColor);
+  --ui-conversation-agent-bubble: var(--md-sys-color-neutral-surface-high, currentColor);
+}
+
+/* ════════════════ [ui-conversation] STYLES — @scope (ui-conversation) consumes ONLY --ui-conversation-* ══ */
+
+@scope (ui-conversation) {
+  :scope {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    min-inline-size: 0;
+    min-block-size: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    border: 1px solid var(--ui-conversation-border);
+    border-radius: 12px;
+    background: var(--ui-conversation-surface);
+    overflow: hidden;
+  }
+
+  /* ── the thread — owns its OWN scroll region (SPEC-R4) ──────────────────────────────────────────────── */
+  [data-part='log'] {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  [data-part='bubble'] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+    max-inline-size: 92%;
+  }
+  [data-part='bubble'][data-role='user'] {
+    align-self: flex-end;
+    background: var(--ui-conversation-user-bubble);
+  }
+  [data-part='bubble'][data-role='agent'] {
+    align-self: flex-start;
+    background: var(--ui-conversation-agent-bubble);
+    inline-size: 92%; /* an agent bubble's narration/mounted surface want real room, unlike a short reply */
+  }
+  [data-part='bubble'][data-role='system'] {
+    align-self: center;
+    max-inline-size: 100%;
+    color: var(--ui-conversation-ink-variant);
+    font-size: 0.78rem;
+    text-align: center;
+  }
+
+  [data-part='who'] {
+    font-size: 0.66rem;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ui-conversation-ink-variant);
+  }
+
+  [data-part='body'] {
+    margin: 0;
+    font-size: 0.86rem;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    color: var(--ui-conversation-ink);
+  }
+  [data-part='bubble'][data-role='system'] [data-part='body'] {
+    color: inherit;
+    font-size: inherit;
+  }
+
+  /* An agent bubble's turn-duration narration — compact, height-bounded to a fraction of the default
+     (status-stream.css's own consumer-tuning custom property), since a bubble holds at most a couple of
+     entries, never the whole session's history. */
+  [data-part='narration'] {
+    --ui-status-stream-max-block-size: 9rem;
+    margin-block-end: 0.2rem;
+  }
+
+  /* Fresh inline ui-surface-host instances this bubble's OWN creating turn mounted (SPEC-R7) — later turns
+     route into these same hosts in place; this bubble never grows a SECOND one for a known surfaceId. */
+  [data-part='mounts']:empty {
+    display: none;
+  }
+  [data-part='mounts'] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  [data-part='mounts'] ui-surface-host {
+    min-inline-size: 0;
+    block-size: 16rem; /* a definite artboard height per inline surface (ui-surface-host's own consumer-supplied contract) */
+  }
+
+  /* A closed surface's bubble (SPEC-R7) — dimmed as VISIBLE, non-interactive history (its rendered DOM is
+     already gone; this is only the visual cue). */
+  [data-part='bubble'][data-role='agent'][data-state='closed'] {
+    opacity: 0.6;
+  }
+  [data-part='annotation'] {
+    margin: 0.3rem 0 0;
+    font-size: 0.72rem;
+    font-style: italic;
+    color: var(--ui-conversation-ink-variant);
+  }
+
+  /* The per-turn wire disclosure (ADR-0129 clause 3, opt-in via `disclosure`). */
+  [data-part='disclosure'] {
+    margin-block-start: 0.15rem;
+    font-size: 0.72rem;
+  }
+  [data-part='disclosure'] > summary {
+    cursor: pointer;
+    color: var(--ui-conversation-ink-variant);
+  }
+  [data-part='wire'] {
+    margin-block-start: 0.35rem;
+    max-block-size: 16rem;
+    overflow: auto;
+    font-size: 0.72rem;
+    white-space: pre-wrap;
+  }
+
+  /* ── the composer ────────────────────────────────────────────────────────────────────────────────────── */
+  [data-part='composer'] {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 0.5rem;
+    align-items: end;
+    padding: 0.75rem;
+    border-block-start: 1px solid var(--ui-conversation-border);
+  }
+  [data-part='field'] {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+}
+
+/* ════════════════ forced-colors (WHCM) ════════════════ */
+
+/* The bordered shell + composer divider stay legible (SPEC-R11 AC2) — nested in its OWN @scope block (the
+ * app-shell.css precedent) so the selector/specificity matches the light-mode rule exactly. The narration
+ * strip (ui-status-stream) and the composer's own ui-text-field/ui-button carry their OWN forced-colors
+ * handling; the "Closed." annotation and composer text are plain text, legible for free under the
+ * platform's own forced-colors text/background repaint. */
+@media (forced-colors: active) {
+  @scope (ui-conversation) {
+    :scope {
+      border-color: CanvasText;
+    }
+    [data-part='composer'] {
+      border-block-start-color: CanvasText;
+    }
+  }
+}

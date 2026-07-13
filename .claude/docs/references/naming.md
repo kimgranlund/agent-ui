@@ -105,6 +105,8 @@ gate is the planned closure (§11).
   purely additive, no anatomy.md text change needed) (mechanism
   artifact — rename candidates stay fix-on-touch). The registry covers control-emitted roles plus
   named AUTHOR hooks a descriptor advertises (today: `empty` — command-modal's author hook; the gate pins that no data-role="command-modal" exists).
+  `ui-conversation`'s per-turn bubble speaker kind adds three: `user` · `agent` · `system`
+  (app-surfaces-m2.spec.md SPEC-R4 — the thread's own light-DOM content model; app-tier, not agent-emittable).
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,
   kebab: ready · user-invalid · checked · dragging · revealed · disabled · collapsed · truncated
   · selected · indeterminate. A verb or noun is not a state name.

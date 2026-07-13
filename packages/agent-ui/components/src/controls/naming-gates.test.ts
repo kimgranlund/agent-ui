@@ -296,6 +296,9 @@ const ALLOWED_ROLES = new Set([
   // trailing name|tag row (app/src/controls/nav-rail/nav-rail.css `[data-role='tag']`). Extended here in
   // the SAME change as naming.md §6 (this gate's own "extend together" contract, header comment above).
   'tag',
+  // ui-conversation's per-turn bubble speaker kind (@agent-ui/app, app-surfaces-m2.spec.md SPEC-R4) —
+  // added in the SAME change as naming.md §6's registry line (the fix-on-touch rule).
+  'user', 'agent', 'system',
 ])
 
 /** Every `data-role` value used in one file's TEXT (comment-stripped): `data-role="x"` / `data-role='x'` /
@@ -330,6 +333,9 @@ const ROLE_IDENTIFIER_EXCEPTIONS = new Set([
   // AffordanceRole = 'clear'|'reveal'|'calendar'|'swatch' (text-field.ts:96): every member ∈ ALLOWED_ROLES.
   // Verified 2026-07-12 (review MAJOR fix). One key covers both sites — same file, same identifier.
   'packages/agent-ui/components/src/controls/text-field/text-field.ts::role',
+  // conversation.ts's #makeBubble(role: Role) — Role = 'user'|'agent'|'system' (conversation.ts, this
+  // file's own top-level type alias): every member ∈ ALLOWED_ROLES (added in the SAME change above).
+  'packages/agent-ui/app/src/controls/conversation/conversation.ts::role',
 ])
 
 describe('Gate 3 — the data-role registry (naming.md §6, packages/**/src, non-test)', () => {

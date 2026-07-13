@@ -24,3 +24,8 @@ export type { MemoryStoreOptions } from './controls/settings/memory-store.ts'
 export { UINavRailElement } from './controls/nav-rail/nav-rail.ts'
 export { UINavRailGroupElement } from './controls/nav-rail/nav-rail-group.ts'
 export { UINavRailItemElement } from './controls/nav-rail/nav-rail-item.ts'
+// M2 Phase 1 (app-surfaces-m2.lld.md LLD-C1/C4) — the agent-native pair: ui-surface-host (the mount/stream
+// seam) + ui-conversation (thread/composer/narration, composing ui-surface-host internally, ADR-0129).
+export { UISurfaceHostElement } from './controls/surface-host/surface-host.ts'
+export { UIConversationElement } from './controls/conversation/conversation.ts'
+export type { AgentTurnHandle } from './controls/conversation/conversation.ts'

@@ -1,0 +1,89 @@
+/* surface-host.css — ui-surface-host, the M2 mount/stream artboard (LLD-C2 · SPEC-R2/R11). Single file,
+ * two sectioned blocks (ADR-0003): a `:where(ui-surface-host)` TOKEN block declaring only
+ * `--ui-surface-host-*` custom properties (promoted 1:1 from site/lib/canvas-surface.css's
+ * `.canvas-stage`/`.canvas-surface` rules, renamed prefix — the SAME visual contract, no new visual
+ * design), then an `@scope (ui-surface-host)` STYLES block consuming ONLY that chain (role-purity — the
+ * shared `--md-sys-color-*` roles enter ONLY in the token block, the app-shell.css/card.css discipline).
+ *
+ * Standalone sheet — linked via the package `./surface-host.css` export; NEVER injected from
+ * surface-host.ts (behaviour-only `.ts`, no runtime style; plan §2).
+ */
+
+/* ════════════════ [ui-surface-host] TOKEN BLOCK — :where(ui-surface-host) declares --ui-surface-host-* ═══ */
+
+:where(ui-surface-host) {
+  --ui-surface-host-checker-a: transparent;
+  --ui-surface-host-checker-b: var(--md-sys-color-neutral-surface, currentColor);
+  --ui-surface-host-stage-bg: var(--md-sys-color-neutral-surface-low, currentColor);
+  --ui-surface-host-empty-ink: var(--md-sys-color-neutral-on-surface-variant, currentColor);
+}
+
+/* ════════════════ [ui-surface-host] STYLES — @scope (ui-surface-host) consumes ONLY --ui-surface-host-* ═══ */
+
+@scope (ui-surface-host) {
+  :scope {
+    display: block;
+    /* Consumer-supplied box (the canvas-surface.ts contract, unchanged): this host fills whatever
+       definite inline/block size its own containing layout gives it (a flex/grid item, or an explicit
+       style) — it establishes no intrinsic artboard size of its own. */
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  /* The artboard box — the rendered surface is CENTERED via a CSS translate transform (per the A2UI spec). */
+  [data-part='stage'] {
+    position: relative;
+    inline-size: 100%;
+    block-size: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+    background:
+      repeating-linear-gradient(0deg, var(--ui-surface-host-checker-a) 0 15px, var(--ui-surface-host-checker-b) 15px 16px),
+      repeating-linear-gradient(90deg, var(--ui-surface-host-checker-a) 0 15px, var(--ui-surface-host-checker-b) 15px 16px);
+    background-color: var(--ui-surface-host-stage-bg);
+  }
+
+  [data-part='surface'] {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* centre the surface within the stage via translate offsets (per spec) */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 1rem;
+    /* A DEFINITE artboard width — NOT just max-inline-size (the collapse-to-1ch trap canvas-surface.ts's
+       own comment records: an absolutely-positioned flex column with only a max width shrink-fits, and its
+       align-items:center children then resolve to min-content). Content wider than the cap scrolls. */
+    inline-size: min(32rem, calc(100% - 2rem));
+    /* ADR-0100 cl.2 — the A2UI mount boundary: THIS box (not any rendered ui-row/ui-column/ui-list/ui-grid)
+       is the query container the fleet's layout primitives resolve their `@container` reflow against. It
+       qualifies (an EXTERNALLY, definite-sized box) because its inline-size is fixed above, not content-
+       derived. */
+    container-type: inline-size;
+    /* Cap at the stage box so the translate-centered surface never clips above the top edge. */
+    max-block-size: 100%;
+    overflow: auto;
+  }
+  [data-part='surface']:empty::after {
+    content: 'The rendered surface appears here.';
+    color: var(--ui-surface-host-empty-ink);
+    font-size: 0.85rem;
+  }
+}
+
+/* ════════════════ forced-colors (WHCM) ════════════════ */
+
+/* The checkered stage background is decorative (a positioning/measurement aid, not information-bearing) —
+ * it simplifies to the platform Canvas colour under forced-colors, as long as the mounted surface's OWN
+ * controls carry their own forced-colors handling (they do, per-control). Nested in its OWN @scope block
+ * (the app-shell.css precedent) so the selector/specificity matches the light-mode rule exactly. */
+@media (forced-colors: active) {
+  @scope (ui-surface-host) {
+    [data-part='stage'] {
+      background: Canvas;
+    }
+  }
+}
