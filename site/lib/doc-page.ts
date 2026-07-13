@@ -10,9 +10,11 @@
 // from the parse the contract trip-wire validates (ADR-0004).
 import type { ParsedAttribute, ParsedDescriptor, SequenceItem } from '@agent-ui/components/descriptor'
 import { codeBlock } from './code-block.ts' // shared `<pre><code>` previews — one chrome for every code sample on the site
-import './doc-page.css' // Form-B per-attribute/per-item ROW styling (TKT-0033) — dedicated stylesheet, joined by
-// buildSiteCss the same way every other site/lib/*.css sibling is (component-preview.ts's own `import './component-preview.css'`
-// precedent). Deliberately NOT in site/pages/_page.css (a concurrent nav wave owns that file this session).
+import './doc-page.css' // Form-B per-attribute/per-item ROW styling (TKT-0033) + the `.doc-body` prose reading
+// design (TKT-0036: measure, heading typescale, tint-only chip register, blockquote treatment) — ONE dedicated
+// stylesheet, joined by buildSiteCss the same way every other site/lib/*.css sibling is (component-preview.ts's
+// own `import './component-preview.css'` precedent). Deliberately NOT in site/pages/_page.css (a concurrent nav
+// wave owns that file this session).
 
 // ── API reference rows (Form B: per-attribute rows — TKT-0033, Kim's ruling) ───────────────────────────────
 //
@@ -261,15 +263,23 @@ export function composeDocPage(content: HTMLElement, descriptor: ParsedDescripto
 
 /**
  * renderMarkdownBody — a small, dependency-free markdown render of the body text: fenced code blocks, ATX
- * headings (demoted one level so they nest under the page <h1>), `- ` bullet lists, and blank-line-separated
- * paragraphs. Text-only (textContent, never innerHTML) — enough to read the doc, no markdown engine pulled in.
+ * headings (demoted one level so they nest under the page <h1>), `- ` bullet lists, `>`-prefixed blockquote
+ * runs (TKT-0036 — a generic markdown blockquote: contiguous `>` lines join ONE block; nesting/lazy-continuation
+ * are NOT supported, kept tiny by design), and blank-line-separated paragraphs. Text-only (textContent, never
+ * innerHTML) — enough to read the doc, no markdown engine pulled in. Returns the render as `<article
+ * class="doc-body">` — the ONE wrapper class the prose reading-design CSS (doc-page.css) keys on: the 72ch
+ * measure, heading typescale, tint-only chip register, and blockquote treatment are ALL scoped to `.doc-body`,
+ * so every page composing this render (composeDocPage AND the standalone callers — adr-index.ts, changelog.ts,
+ * the hand-assembled *-doc.ts pages) gets the ONE reading design for free, never a per-page opt-in.
  */
 export function renderMarkdownBody(src: string): HTMLElement {
   const article = document.createElement('article')
+  article.className = 'doc-body'
   const lines = src.split('\n')
   let i = 0
   let paragraph: string[] = []
   let list: string[] = []
+  let quote: string[] = []
 
   const flushParagraph = (): void => {
     if (paragraph.length === 0) return
@@ -289,6 +299,16 @@ export function renderMarkdownBody(src: string): HTMLElement {
     article.append(ul)
     list = []
   }
+  // flushQuote — one <blockquote> per contiguous `>` run, its lines joined the same way a paragraph's wrapped
+  // lines are (space-joined, then inline-parsed as one unit) — a generic markdown blockquote, no nested
+  // constructs (a nested list/heading inside `>` stays plain text, matching the tiny-parser trade-off above).
+  const flushQuote = (): void => {
+    if (quote.length === 0) return
+    const bq = document.createElement('blockquote')
+    appendInline(bq, quote.join(' '))
+    article.append(bq)
+    quote = []
+  }
 
   while (i < lines.length) {
     const line = lines[i]
@@ -296,9 +316,14 @@ export function renderMarkdownBody(src: string): HTMLElement {
     if (line.startsWith('```')) {
       flushParagraph()
       flushList()
+      flushQuote()
       const lang = line.slice(3).trim() // the info string after the opening fence (```ts → "ts"), if any
       const code: string[] = []
       i++
+      // Every line up to the closing fence is opaque code TEXT — a `>` here (e.g. a shell heredoc, a diff hunk)
+      // is never matched against the blockquote regex below: this loop only checks for the closing ``` and
+      // pushes the raw line, so a lone `>` inside a fence can never be mis-parsed as a blockquote (the negative
+      // control this ticket's tests pin).
       while (i < lines.length && !lines[i].startsWith('```')) code.push(lines[i++])
       i++ // consume the closing fence
       article.append(codeBlock(code.join('\n'), lang || undefined)) // shared <pre><code> chrome (textContent, no injection)
@@ -309,6 +334,7 @@ export function renderMarkdownBody(src: string): HTMLElement {
     if (atx) {
       flushParagraph()
       flushList()
+      flushQuote()
       article.append(heading(Math.min(atx[1].length + 1, 6), atx[2].trim()))
       i++
       continue
@@ -317,7 +343,17 @@ export function renderMarkdownBody(src: string): HTMLElement {
     const bullet = /^[-*]\s+(.*)$/.exec(line)
     if (bullet) {
       flushParagraph()
+      flushQuote()
       list.push(bullet[1].trim())
+      i++
+      continue
+    }
+
+    const quoteLine = /^>\s?(.*)$/.exec(line)
+    if (quoteLine) {
+      flushParagraph()
+      flushList()
+      quote.push(quoteLine[1].trim())
       i++
       continue
     }
@@ -325,17 +361,20 @@ export function renderMarkdownBody(src: string): HTMLElement {
     if (line.trim() === '') {
       flushParagraph()
       flushList()
+      flushQuote()
       i++
       continue
     }
 
     flushList()
+    flushQuote()
     paragraph.push(line.trim())
     i++
   }
 
   flushParagraph()
   flushList()
+  flushQuote()
   return article
 }
 

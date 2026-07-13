@@ -121,3 +121,100 @@
     padding-block-start: 0;
   }
 }
+
+/* ── the markdown-body prose reading design (TKT-0036, Kim's ruling: Direction B) ────────────────────────────
+ * `.doc-body` is the class `renderMarkdownBody`'s returned `<article>` carries — the ONE wrapper every page
+ * composing a control's `{name}.md` body renders through (composeDocPage AND the standalone callers:
+ * adr-index.ts, changelog.ts, the hand-assembled *-doc.ts pages). Scoping every rule below to `.doc-body` keeps
+ * this ONE shared treatment — no page opts in/out, no per-page hand-copy.
+ *
+ * Three read tasks share this surface (skim / verify-one-token / learn end-to-end); the source register is an
+ * agent-facing CONTRACT (near-every noun backticked, parenthetical citations, hedge clauses) that display CANNOT
+ * turn into flowing prose — so this design narrows the measure, restores a heading scale, and quiets the chip
+ * (a scoped register split, not a rewrite of the Form-B chip above) rather than pretending the register isn't
+ * there (ticket Findings §1-2). */
+
+/* MEASURE — prose regions (paragraphs/lists/headings/blockquotes) clamp to 72ch (Kim's ruling: wider than
+ * `.page-lead`'s 68ch, tuned to this corpus's compound-sentence-and-citation register). Fenced code blocks are
+ * DELIBERATELY excluded from this :is() list — they escape to the full content-column width, same full-bleed
+ * treatment `.code-block` already gets elsewhere on the page (ticket Findings §2 "Measure"). */
+.doc-body > :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6) {
+  max-inline-size: 72ch;
+}
+
+/* HEADING SCALE + RHYTHM — stop inheriting UA defaults (ADR-0078's --md-sys-typescale-*, no bespoke sizing).
+ * The demoted ATX levels collapse to a two-tier scale: h2 (the source body's top-level `# heading`, demoted one
+ * level to nest under the page's own <h1>) reads -title-medium; everything below (h3…h6) reads -title-small —
+ * a flatter ladder than the full six-level ATX range, matching how the corpus actually nests (at most one
+ * further level down in practice). Body copy is left alone: it already rides -body-medium as the shell's
+ * ambient step (_page.css's `body { line-height: … }` rule) — redeclaring it here would just restate that. */
+.doc-body > h2 {
+  font-size: var(--md-sys-typescale-title-medium-size);
+  font-weight: var(--md-sys-typescale-title-medium-weight);
+  line-height: var(--md-sys-typescale-title-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-title-medium-tracking);
+}
+.doc-body > :is(h3, h4, h5, h6) {
+  font-size: var(--md-sys-typescale-title-small-size);
+  font-weight: var(--md-sys-typescale-title-small-weight);
+  line-height: var(--md-sys-typescale-title-small-line-height);
+  letter-spacing: var(--md-sys-typescale-title-small-tracking);
+}
+
+/* RHYTHM — a heading binds TIGHTER to its following paragraph than to the block above it: a big margin-start +
+ * a small margin-end on every heading, relying on ordinary block-margin collapsing against its neighbours'
+ * margins (the larger of the two collapsed margins wins) rather than hand-tuning every pairwise gap. Every
+ * other prose block (paragraph/list/blockquote/code) carries one consistent trailing margin, so the rhythm
+ * reads as one scale throughout, not a per-construct special case. */
+.doc-body > :is(h2, h3, h4, h5, h6) {
+  margin-block: var(--ui-space-2xl) var(--ui-space-xs);
+}
+.doc-body > :is(h2, h3, h4, h5, h6):first-child {
+  margin-block-start: 0; /* no dead gap above the article's own first heading */
+}
+.doc-body > :is(p, ul, ol, blockquote, .code-block) {
+  margin-block: 0 var(--ui-space-lg);
+}
+.doc-body > :last-child {
+  margin-block-end: 0; /* no dead gap below the article's last block */
+}
+
+/* PROSE CHIP REGISTER SPLIT (the core fork, Kim ruled tint-only) — `code` inside `.doc-body` PROSE (a paragraph/
+ * list-item/heading/blockquote inline span) drops the border, keeps only a faint surface tint, and shrinks
+ * pad/radius: the same token reads quieter here than it does as the Form-B API-table scan-axis chip
+ * (`.api-row-name code` etc., UNTOUCHED — ticket Findings §2 direction (c)). The `:not(.code-block) > code`
+ * shape is load-bearing: it excludes the ONE `code` this split must NOT touch — the fenced-block `<pre
+ * class="code-block"><code>`, whose own chip-reset (_page.css `.code-block code`) must keep winning. This
+ * selector would OUTWEIGH that reset ((0,2,1) vs (0,1,1)) if it ever matched the fenced case — the structural
+ * exclusion is a correctness requirement, not a specificity bet. */
+.doc-body :not(.code-block) > code {
+  border: none;
+  padding: 0.05em 0.3em;
+  border-radius: 0.25rem;
+  background: var(--md-sys-color-neutral-surface-low);
+}
+
+/* BLOCKQUOTE — the descriptor corpus's own `>` decision-log-aside convention (card.md), now a real construct
+ * instead of a silent degrade to a plain paragraph. `--md-sys-typescale-quote-medium-*` (the ui-text `quote`
+ * variant's own default step, text.css) + the same italic / left-rule / indent treatment ui-text's `quote`
+ * variant already uses — one quote idiom, reused, not reinvented. */
+.doc-body > blockquote {
+  margin-inline: 0;
+  font-style: italic;
+  font-size: var(--md-sys-typescale-quote-medium-size);
+  font-weight: var(--md-sys-typescale-quote-medium-weight);
+  line-height: var(--md-sys-typescale-quote-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-quote-medium-tracking);
+  border-inline-start: 3px solid var(--md-sys-color-neutral-outline-variant);
+  padding-inline-start: var(--ui-space-md);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* LISTS — token-spaced indent inside the same prose measure (not the UA ~40px default), a subtle inter-item
+ * gap so a long list still reads as discrete items rather than one dense block. */
+.doc-body > :is(ul, ol) {
+  padding-inline-start: var(--ui-space-xl);
+}
+.doc-body li + li {
+  margin-block-start: var(--ui-space-xs);
+}

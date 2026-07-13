@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0036
-status: doing
+status: done
 date: 2026-07-13
 owner:
 kind: bug
@@ -199,3 +199,17 @@ rule); **citation subordination (direction C) holds as a named follow-up** gated
 typescale headings/rhythm as specced. Build next: `renderMarkdownBody` (+ blockquote support) in
 `site/lib/doc-page.ts`, styles into `site/lib/doc-page.css` (TKT-0033's stylesheet — one page
 system), independently reviewed, drift-gates green.
+
+### 2026-07-13 — Direction B SHIPPED
+
+The build landed exactly to the ruled spec: `renderMarkdownBody` returns `<article class="doc-body">`
+and parses contiguous `>` runs into real `<blockquote>`s (EOF/list-abutment/fence-interior edges all
+handled; card.md's two decision-log asides render); `doc-page.css` gains the `.doc-body` ruleset —
+72ch prose measure (`.code-block` escapes full-width), h2→title-medium / h3+→title-small with
+loose-above/tight-below `--ui-space-*` rhythm, the tint-only prose-chip register split
+(`.doc-body :not(.code-block) > code` — structurally unable to reach the Form-B table chips [API
+sections are article SIBLINGS, proven 0 inside] or the fenced reset), token-spaced lists. 5 new
+non-vacuous tests incl. the biting fence negative-control. Independent review GO (chip split proven
+by a real card.md render: 202 prose chips retinted, 0 API rows affected, 2 blockquotes). Gates:
+check green · doc-page 13/13 · fixture byte-fresh. Direction C (citation demotion) stays the named
+follow-up.

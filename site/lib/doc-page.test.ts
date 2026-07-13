@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { composeDocPage, renderPartsTable } from './doc-page.ts'
-import { parseDoc, loadSparklineDoc, loadBarChartDoc, loadButtonDoc } from './frontmatter.ts'
+import { composeDocPage, renderMarkdownBody, renderPartsTable } from './doc-page.ts'
+import { parseDoc, loadSparklineDoc, loadBarChartDoc, loadButtonDoc, loadCardDoc } from './frontmatter.ts'
 
 // doc-page.test.ts — the DERIVATION gate for the descriptor `parts[]` surface (LLD-C7: a control's
 // control-created interior anatomy nodes, `[data-part='X']`). A descriptor declares `parts[]` the same way it
@@ -119,5 +119,72 @@ describe('composeDocPage — real chart descriptors derive their declared parts'
     const { descriptor, body } = loadButtonDoc()
     composeDocPage(content, descriptor, body)
     expect(partsSection(content)).toBeUndefined()
+  })
+})
+
+// ── renderMarkdownBody — the TKT-0036 prose reading design ─────────────────────────────────────────────────
+// The DISPLAY-plane build: the `.doc-body` wrapper class the CSS keys on (measure/typescale/chip-split/quote
+// all scoped to it, doc-page.css), and the new `>`-blockquote construct the tiny parser now supports. These
+// pin the two things a test CAN decide about a display design: the structural hook the CSS depends on exists,
+// and the parser change is correct (including its biting negative control — a fenced `>` stays literal code).
+
+describe('renderMarkdownBody — the .doc-body wrapper (the reading-design CSS hook)', () => {
+  it('returns an <article class="doc-body"> — the class site/lib/doc-page.css scopes every prose rule to', () => {
+    const article = renderMarkdownBody('Just one paragraph.')
+    expect(article.tagName).toBe('ARTICLE')
+    expect(article.classList.contains('doc-body')).toBe(true)
+  })
+})
+
+describe('renderMarkdownBody — blockquote parsing (TKT-0036: the card.md `>` decision-log convention)', () => {
+  it('a contiguous `>` line run renders ONE <blockquote> with the joined, inline-parsed text', () => {
+    const src = [
+      '> **The HOLD:** the gradient fully occludes through the band, by design — the ramp',
+      '> starts at the `--ui-box-head-hold` offset, not at the edge.',
+      '',
+      'An ordinary paragraph after the aside.',
+    ].join('\n')
+    const article = renderMarkdownBody(src)
+    const quotes = article.querySelectorAll('blockquote')
+    expect(quotes).toHaveLength(1)
+    // the two `>` lines join as ONE block (space-joined, matching a wrapped paragraph's own line-join rule)
+    expect(quotes[0].textContent).toBe(
+      'The HOLD: the gradient fully occludes through the band, by design — the ramp starts at the --ui-box-head-hold offset, not at the edge.',
+    )
+    // inline markdown inside the quote is still parsed (bold + code), same grammar as a paragraph
+    expect(quotes[0].querySelector('strong')?.textContent).toBe('The HOLD:')
+    expect(quotes[0].querySelector('code')?.textContent).toBe('--ui-box-head-hold')
+    // the trailing paragraph renders as an ordinary <p>, not folded into the quote
+    expect(article.querySelectorAll('p')).toHaveLength(1)
+    expect(article.querySelector('p')?.textContent).toBe('An ordinary paragraph after the aside.')
+  })
+
+  it('two `>` runs separated by a blank line render as TWO separate blockquotes', () => {
+    const src = ['> First aside.', '> still first.', '', '> Second aside.'].join('\n')
+    const article = renderMarkdownBody(src)
+    const quotes = [...article.querySelectorAll('blockquote')]
+    expect(quotes).toHaveLength(2)
+    expect(quotes[0].textContent).toBe('First aside. still first.')
+    expect(quotes[1].textContent).toBe('Second aside.')
+  })
+
+  // The BITING negative control: a `>` line inside a fenced code block must stay literal CODE text, never
+  // get parsed as a blockquote — the fence-consuming inner loop must run before the blockquote regex ever
+  // sees that line. Fails if blockquote detection were hoisted above (or run independent of) fence handling.
+  it('a lone `>` inside a fenced code block is NOT parsed as a blockquote', () => {
+    const src = ['```', '> not a quote — a diff/heredoc marker inside the fence', '```'].join('\n')
+    const article = renderMarkdownBody(src)
+    expect(article.querySelectorAll('blockquote')).toHaveLength(0)
+    const code = article.querySelector('.code-block code')
+    expect(code?.textContent).toBe('> not a quote — a diff/heredoc marker inside the fence')
+  })
+
+  it('card.md — the real corpus: its two decision-log asides render as two <blockquote> elements', () => {
+    const { body } = loadCardDoc()
+    const article = renderMarkdownBody(body)
+    const quotes = article.querySelectorAll('blockquote')
+    expect(quotes.length).toBe(2)
+    expect(quotes[0].textContent).toMatch(/^Why this keeps the running mid-scroll fade/)
+    expect(quotes[1].textContent).toMatch(/^The HOLD/)
   })
 })
