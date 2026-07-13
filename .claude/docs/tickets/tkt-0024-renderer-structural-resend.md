@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0024
-status: doing
+status: done
 date: 2026-07-12
 owner:
 kind: bug
@@ -170,3 +170,17 @@ No further findings above INFO on either document after the fix pass.
 Add/remove reconcile ships; a survivor keeps its DOM position; reorder is a documented non-goal
 until a focus-safe move primitive lands (consistent with the standing repeat/moveBefore deferral).
 ADR-0128's Status flip is Kim's hand-edit (the registered guard); the build dispatches on it.
+
+### 2026-07-12 — BUILT, reviewed NO-GO→fix→GO, shipped
+
+The reconciliation landed per the frozen design (the create/wire split, per-node scopes, id-keyed
+children diff, structural no-op gate, root never reconciled) with two mechanical LLD deltas. The
+independent review PROVED one blocker the frozen design's implementation fused: the node's own
+scope doubled as a nested dynamic list's parentScope, so a PROP-ONLY resend of a templated
+container silently froze the list — fixed by the propsScope/childrenScope split (item state
+preserved), reintroduction-proven regression permanent. Plus: the SPEC-N3 CATALOG re-emit guard
+hoisted; the pending-survivor insertion anchor fixed. Consumers upgraded: round-trip's
+present-after-turn-3 (the original blind spot closed), a2ui-chat's visible-restructure, the
+kpi-panel exemplar rendering its churn step, focus-survival browser legs both engines. Gates:
+check · a2ui 1019 · browser legs green · size clean. The four-type lifecycle teaching is now TRUE
+end-to-end for the first time since it shipped.

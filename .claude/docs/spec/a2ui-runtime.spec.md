@@ -50,6 +50,18 @@ Normative per RFC 2119. Each carries a stable ID, a PRD trace, and acceptance cr
 - **AC1** *Given* a parent referencing a child ID that arrives in a later message, *when* the child arrives, *then* it is patched into place with no full re-render of the unaffected subtree.
 - **AC2** *Given* a binding to an undefined `path`, *when* rendered, *then* the widget shows an empty/placeholder value (not an error) and updates when the data arrives.
 
+> **REV 2026-07-12 (ADR-0128, TKT-0024) — forward cross-reference, a genuine SPEC gap closed, not this
+> SPEC amended in place.** SPEC-R3/R4 above specify **progressive first build** only — a tree not yet
+> fully delivered, a referenced child arriving for the FIRST time later (AC1 of each). Neither addresses
+> the different case of an **already-mounted** component's **own record** being resent on a later
+> `updateComponents` (e.g. a container's `children` grows, or a prop changes, on an id already in
+> `surface.widgets`). That case is now normatively specified by
+> [`./renderer-structural-resend.spec.md`](./renderer-structural-resend.spec.md) (SPEC-R1…R5, SPEC-N1…N3)
+> and realized by [`../lld/renderer-structural-resend.lld.md`](../lld/renderer-structural-resend.lld.md) —
+> a resent, already-mounted id now reconciles (id-keyed children diff + whole-record prop rewire onto the
+> SAME element, survivor identity preserved); a resent `"root"` stays governed by SPEC-R3 AC2's IDGRAPH
+> guard, unaffected. Cite that SPEC for resend behavior; this SPEC's own text is unchanged.
+
 ### 3.4 Data model & binding
 
 **SPEC-R5 — Data model upsert + binding resolution.** `updateDataModel` MUST apply upsert semantics at the given JSON-Pointer `path` (whole-model when `path` is omitted, `""`, or `"/"` — the protocol defines `/` as the root-equivalent default, both v0.9/v1.0 §updateDataModel; ADR-0099), per surface. Bindings (`{path}`) MUST resolve against the surface data model and MUST re-resolve (update the widget) when the bound data changes. *(→ PRD-G1)*

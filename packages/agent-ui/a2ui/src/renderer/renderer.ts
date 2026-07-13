@@ -41,13 +41,15 @@ import { parseLine, isParseError } from './parser.ts'
 import { SurfaceStore } from './surface.ts'
 import type { Surface } from './surface.ts'
 import { SurfaceTree } from './tree.ts'
-import { makeCreateWidget } from './widget.ts'
+import { create as createOnly, wireProps } from './widget.ts'
+import type { WidgetDeps } from './widget.ts'
 import { wireChecks } from './checks.ts'
 import { ActionDispatcher } from './action.ts'
 import { validateA2ui } from './validate.ts'
 import { resolveValue as dispatchValue } from './functions.ts'
 import { setPointer } from './binding.ts'
-import type { CreateWidget } from './types.ts'
+import type { CreateWidget, ItemScope } from './types.ts'
+import type { Scope } from '@agent-ui/components'
 import { Registry } from '../catalog/registry.ts'
 import type { WidgetFactory } from '../catalog/types.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
@@ -132,6 +134,8 @@ class Renderer implements RendererHost {
   readonly #listeners = new Set<ClientMessageListener>()
   readonly #actions: ActionDispatcher
   readonly #createWidget: CreateWidget
+  readonly #widgetDeps: WidgetDeps
+  readonly #emitError: (error: A2uiError) => void
   readonly #handlers: DispatchHandlers
   readonly #defaultVersion: string
   #mountEl: HTMLElement | undefined
@@ -152,6 +156,20 @@ class Renderer implements RendererHost {
       warn: options.warn,
     })
 
+    // The internal error sink: applies toWireError at the single client→server chokepoint (ADR-0031
+    // clause 1/2) so every outbound error carries the v1.0 two-code wire shape. Internal callers
+    // (functions.ts / checks.ts) still receive and emit `A2uiError` (the 8-code internal taxonomy)
+    // unchanged — the map is applied HERE, not at the emit sites.
+    this.#emitError = (error) => this.#emitInternalError(this.#versionFor(error.surfaceId), error)
+    this.#widgetDeps = {
+      registry: this.#registry,
+      emitError: this.#emitError,
+      // The value dispatcher (LLD-C5 + LLD-C10, ADR-0026): routes a literal, a `{path}` binding
+      // (per-path memo in binding.ts — SPEC-N2 fine-grained waking), or a `{call}` function-call
+      // (evaluator in functions.ts — @index, required/email/regex, recursive args) to its resolver.
+      // Closed over `emitError` + registry so FUNCTION errors surface through the same sink.
+      resolveValue: (value, surface, itemScope) => dispatchValue(value, surface, itemScope, this.#emitError, this.#registry),
+    }
     this.#createWidget = this.#makeHostCreateWidget()
 
     // Handlers close over the store; each applies its slice and (where relevant) version-specific
@@ -251,6 +269,17 @@ class Renderer implements RendererHost {
       surface.id,
       new SurfaceTree(surface, {
         createWidget: this.#createWidget,
+        // RSR-C2/C6 (renderer-structural-resend.lld.md §2): the three additional entry points structural-
+        // resend reconciliation needs beyond `createWidget` — mint-only (no wiring), wire-onto-an-EXISTING-
+        // element, and the narrowed identity-mapped omitted-prop reset. `create`/`rewireNode` compose the
+        // SAME `#create`/`#wireNode` halves `#makeHostCreateWidget` itself composes below — one wiring path.
+        create: (node, surface) => this.#create(node, surface),
+        rewireNode: (el, node, surface, scope, itemScope, ac) => this.#wireNode(el, node, surface, scope, itemScope, ac),
+        resetProp: (el, node, surface, prop, value) => {
+          const factory = this.#registry.get(surface.catalogId)?.factories[node.component]
+          factory?.applyProp(el, prop, value)
+        },
+        componentDefOf: (node, surface) => this.#registry.get(surface.catalogId)?.catalog?.components?.[node.component],
         onError: (error) => this.#onTreeError(surface.id, error),
       }),
     )
@@ -295,34 +324,34 @@ class Renderer implements RendererHost {
   // ── widget resolution + action wiring ─────────────────────────────────────────────
 
   /**
-   * The host's `createWidget`: the base catalog resolver (LLD-C7) plus the action trigger. Action-typed
-   * props are stripped before the base resolver (so the action object is never `applyProp`'d onto the
-   * DOM) and re-expressed as a `click → emitAction` listener owned by the surface's `AbortController`.
+   * The host's create/wire split (RSR-C3, ADR-0128 — a pure refactor of the prior fused
+   * `#makeHostCreateWidget`, zero behavior change on its own). `#create` mints ONLY the element
+   * (`widget.ts`'s `create`, no action-prop stripping needed — nothing is applied yet); `#wireNode`
+   * applies the base props (action-typed props stripped first, so the action object is never
+   * `applyProp`'d/stringified onto the DOM), then wires the click→action trigger + the checks controller
+   * onto an ALREADY-EXISTING element. `#makeHostCreateWidget` composes both for every ordinary mount path
+   * (`tree.ts`'s `#mountNode`/`#mountInstance`, `list.ts`'s `appendInstance`) — byte-for-byte the prior
+   * fused behavior. Structural-resend reconciliation (`tree.ts`'s `#reconcileProps`) calls `#wireNode`
+   * directly, via the `rewireNode` collaborator wired into `TreeDeps` above, never `#create` again.
    */
-  #makeHostCreateWidget(): CreateWidget {
-    // The internal error sink: applies toWireError at the single client→server chokepoint (ADR-0031
-    // clause 1/2) so every outbound error carries the v1.0 two-code wire shape. Internal callers
-    // (functions.ts / checks.ts) still receive and emit `A2uiError` (the 8-code internal taxonomy)
-    // unchanged — the map is applied HERE, not at the emit sites.
-    const emitError = (error: A2uiError): void => this.#emitInternalError(this.#versionFor(error.surfaceId), error)
-    const base = makeCreateWidget({
-      registry: this.#registry,
-      emitError,
-      // The value dispatcher (LLD-C5 + LLD-C10, ADR-0026): routes a literal, a `{path}` binding
-      // (per-path memo in binding.ts — SPEC-N2 fine-grained waking), or a `{call}` function-call
-      // (evaluator in functions.ts — @index, required/email/regex, recursive args) to its resolver.
-      // Closed over `emitError` + registry so FUNCTION errors surface through the same sink.
-      resolveValue: (value, surface, itemScope) => dispatchValue(value, surface, itemScope, emitError, this.#registry),
-    })
+  #create(node: A2uiComponent, surface: Surface): HTMLElement {
+    return createOnly(node, surface, this.#widgetDeps)
+  }
 
+  #wireNode(el: HTMLElement, node: A2uiComponent, surface: Surface, scope: Scope, itemScope: ItemScope | undefined, ac: AbortController): void {
+    const actionProps = this.#actionPropsOf(node, surface)
+    wireProps(el, actionProps.size === 0 ? node : withoutProps(node, actionProps), surface, scope, itemScope, ac, this.#widgetDeps)
+    for (const spec of actionProps.values()) this.#wireAction(el, node, surface, spec, ac)
+    // Wire the checks controller (ADR-0029): reads node.checks, installs one scope-owned effect that
+    // evaluates each check via evaluate (LLD-C10) and drives setCustomValidity / el.disabled.
+    // A no-op when node.checks is absent or empty (the common case — no overhead).
+    wireChecks(el, node, surface, scope, ac, itemScope, this.#emitError, this.#registry)
+  }
+
+  #makeHostCreateWidget(): CreateWidget {
     return (node, surface, scope = surface.scope, itemScope, ac = surface.ac) => {
-      const actionProps = this.#actionPropsOf(node, surface)
-      const el = base(actionProps.size === 0 ? node : withoutProps(node, actionProps), surface, scope, itemScope, ac)
-      for (const spec of actionProps.values()) this.#wireAction(el, node, surface, spec, ac)
-      // Wire the checks controller (ADR-0029): reads node.checks, installs one scope-owned effect that
-      // evaluates each check via evaluate (LLD-C10) and drives setCustomValidity / el.disabled.
-      // A no-op when node.checks is absent or empty (the common case — no overhead).
-      wireChecks(el, node, surface, scope, ac, itemScope, emitError, this.#registry)
+      const el = this.#create(node, surface)
+      this.#wireNode(el, node, surface, scope, itemScope, ac)
       return el
     }
   }

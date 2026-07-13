@@ -7,6 +7,7 @@
 import type { A2uiComponent } from '../protocol.ts'
 import type { Surface } from './surface.ts'
 import type { Scope } from '@agent-ui/components'
+import type { ComponentDef } from '../catalog/catalog.ts'
 
 /**
  * A dynamic-list item's binding scope (renderer LLD-C6, A2UI v1.0 / ADR-0024). Carries the array
@@ -46,3 +47,32 @@ export type CreateWidget = (
   itemScope?: ItemScope,
   ac?: AbortController,
 ) => HTMLElement
+
+// ── structural-resend reconciliation collaborators (RSR-C2/C6, renderer-structural-resend.lld.md §2) ──
+//
+// `SurfaceTree` (renderer LLD-C4, amended by RSR-C4..C7) needs three additional host-level entry points
+// beyond `CreateWidget` to reconcile an already-mounted node without ever re-minting its element: mint
+// ONLY (no wiring, reused for a throwaway pristine-default read), wire an EXISTING element's complete
+// prop/action/checks set, and reset one dropped, identity-mapped prop back to its factory default.
+
+/** Mint only — no prop/input/action/checks wiring (the host's `create`, composing `widget.ts`'s `create`). */
+export type CreateOnly = (node: A2uiComponent, surface: Surface) => HTMLElement
+
+/** Wire props + input + action + checks onto an ALREADY-EXISTING element (the host's `#wireNode`, exported). */
+export type RewireNode = (
+  el: HTMLElement,
+  node: A2uiComponent,
+  surface: Surface,
+  scope: Scope,
+  itemScope: ItemScope | undefined,
+  ac: AbortController,
+) => void
+
+/**
+ * Resolve `node`'s factory (per `surface.catalogId`) and call its `applyProp(el, prop, value)` — needs
+ * `node`/`surface` (not a bare function) because `applyProp` is resolved PER FACTORY, not globally.
+ */
+export type ResetProp = (el: HTMLElement, node: A2uiComponent, surface: Surface, prop: string, value: unknown) => void
+
+/** The catalog `ComponentDef` for `node.component` under `surface.catalogId`, or `undefined` if unresolved. */
+export type ComponentDefOf = (node: A2uiComponent, surface: Surface) => ComponentDef | undefined

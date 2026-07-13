@@ -1,5 +1,12 @@
 [
   {
+    "name": "2026-07-12 (TKT-0024) — the renderer reconciles structural resends: the lifecycle teaching becomes true",
+    "url": "./changelog.html#2026-07-12-tkt-0024-the-renderer-reconciles-structural-resends-the-lifecycle-teaching-becomes-true",
+    "description": "The gap: since the four-type teaching shipped (ADR-0126), \"restructure via updateComponents\" was a silent visual no-op for mounted containers — the renderer st…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "2026-07-12 (TKT-0027) — overlay panels get a real max-height default: min(50vh, 12 rows)",
     "url": "./changelog.html#2026-07-12-tkt-0027-overlay-panels-get-a-real-max-height-default-min-50vh-12-rows",
     "description": "Kim's ruling applied family-wide: menu, select, and combo-box panels drop the hardcoded 40vh for PUBLIC dials (--ui-{control}-…max-block-size, the TKT-0017 fra…",

@@ -233,6 +233,13 @@ build seat's convenience:
 - LLD-C5's turns are `RecordedTurn` (`tools/agent/transcript.ts:28-33`: `{ lines, note?, ask?,
   expectClientMessage? }`) — turns 3–5 use only `lines`/`note`, per the existing shape.
 
+> **REV 2026-07-12 — the resend assumption is now TRUE:** this LLD's teaching (and SPEC-R2's
+> whole-record-upsert rule) assumed the renderer acts on a mounted container's resend; TKT-0024
+> host-reproduced that it did NOT (the visual no-op), and ADR-0128's build closed it — the
+> renderer now reconciles structural resends (add/remove; survivor reorder deferred per SPEC-R5
+> option B). No wording change needed here (renderer-structural-resend.spec.md §7's prior-art
+> table); this note confirms the assumption holds end-to-end.
+
 ## 5 · Risks
 
 - **Prompt byte-growth is permanent, not scoped** (ADR-0126 F2) — LLD-C1's insertion lands in every mode's

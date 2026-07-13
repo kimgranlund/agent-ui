@@ -965,3 +965,27 @@ committed color back into `surface.data`. Gates: check · a2ui 975/975 · the si
   tightening of every menu row, reviewer-flagged and kept).
 - Cross-engine proof: 12-fit / 13-scroll / the 50vh clamp genuinely binding at a short viewport.
   Review GO. Gates: check · 220 jsdom · 172 browser both engines · size unchanged.
+
+## 2026-07-12 (TKT-0024) — the renderer reconciles structural resends: the lifecycle teaching becomes true
+
+- **The gap:** since the four-type teaching shipped (ADR-0126), "restructure via updateComponents"
+  was a silent visual no-op for mounted containers — the renderer stored the resent record and
+  rendered on; a2ui-live's and a2ui-chat's turns 3/4 never visibly restructured. ADR-0128 (Kim-
+  ratified, the guard workflow's first full pass) closed it as a genuine SPEC gap with a new
+  sibling SPEC.
+- **The mechanism:** a create/wire split (reconciliation re-wires the EXISTING element — DOM
+  identity, focus, and state survive, browser-proven both engines) + per-node scopes + an id-keyed
+  children diff (adds insert at position, removes dispose recursively incl. the pendingParents
+  purge, survivors untouched; reorder deferred per Kim's SPEC-R5 ruling) + a structural no-op gate
+  (deep equality — fresh-parse props never false-positive).
+- **The review earned its keep at the highest-blast-radius file in the package:** the implementation
+  fused the node's own scope with a nested list's parentScope — a prop-only resend of a templated
+  container silently FROZE the list (reviewer-proven against the live host; mainline under the
+  whole-record rule). Fixed with the propsScope/childrenScope split; the regression is permanent
+  and reintroduction-proven. Two more review catches folded (a SPEC-N3 CATALOG re-emit; a
+  pending-survivor insertion anchor).
+- **The consumers now prove it:** round-trip asserts turn 3's status line VISIBLE (closing the
+  rendered-vs-never-rendered blind spot its own review flagged at TKT-0016); a2ui-chat's turns 3/4
+  upgraded to visible-restructure; the kpi-panel exemplar renders its churn step. ADR-0053 retained
+  (the late-Option limit is ui-select's own — tkt-0026). Gates: check · a2ui 1019 · both engines ·
+  size clean.

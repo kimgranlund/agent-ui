@@ -110,12 +110,10 @@ describe('a2ui-chat routing (LLD-C3, SPEC-R3/R4) — the real shipped 5-turn rec
     const confirmationMount = bubble2.querySelector('.chat-surface-mount')
     expect(confirmationMount).not.toBeNull()
 
-    // NOTE (verified against the real renderer, not assumed): resending an ALREADY-MOUNTED non-root id
-    // with a grown `children` list (`SurfaceTree.apply`'s "a tree node is reached once; reuse defends
-    // against re-entry", renderer/tree.ts) does not itself repaint new text — that mechanism only patches
-    // a PREVIOUSLY-PENDING id in. So turns 3/4 below do not visibly change confirmation's rendered text;
-    // what THIS routing test proves is SPEC-R3's actual claim — the lines land at confirmation's ORIGINAL
-    // mount (same node identity, no second one created) and never at the new turn's own bubble.
+    // Routing (SPEC-R3/R4) AND visible restructure (TKT-0024 / renderer-structural-resend.spec.md
+    // SPEC-R1/R2, upgraded from the prior routing-only assertion once the renderer fix landed): resending
+    // an ALREADY-MOUNTED non-root id with a grown `children` list now reconciles the rendered DOM — the
+    // new "status" text genuinely appears, not merely routes to the right mount.
     await sendIntent('turn 3') // updateComponents (+trailing updateDataModel) on "confirmation"
     await waitUntil(() => agentBubbles().length === 3)
     const bubble3 = agentBubbles()[2]!
@@ -126,6 +124,7 @@ describe('a2ui-chat routing (LLD-C3, SPEC-R3/R4) — the real shipped 5-turn rec
     ).toBe(0)
     expect(bubble2.querySelector('.chat-surface-mount'), "confirmation's mount must be the SAME node — never re-created").toBe(confirmationMount)
     expect(bubble1.querySelector('.chat-surface-mounts ui-button'), 'canvas (turn 1) must be untouched by turn 3').not.toBeNull()
+    expect(bubble2.textContent, "turn 3's resent \"group\" container must VISIBLY restructure — the new status line renders").toContain('Ready')
 
     await sendIntent('turn 4') // data-ONLY update on "confirmation"
     await waitUntil(() => agentBubbles().length === 4)
@@ -133,6 +132,8 @@ describe('a2ui-chat routing (LLD-C3, SPEC-R3/R4) — the real shipped 5-turn rec
     await waitUntilIdle()
     expect(bubble4.querySelector('.chat-surface-mounts')?.children.length ?? 0, "turn 4's OWN bubble must also carry NO surface mount").toBe(0)
     expect(bubble2.querySelector('.chat-surface-mount'), "confirmation's mount is STILL the same node after turn 4").toBe(confirmationMount)
+    expect(bubble2.textContent, "turn 4's data-only react updates the SAME status node in place — the new value renders").toContain('Clicked again')
+    expect(bubble2.textContent, "turn 3's stale \"Ready\" value is gone once turn 4's react lands").not.toContain('Ready')
 
     await sendIntent('turn 5') // deleteSurface "confirmation"
     await waitUntil(() => agentBubbles().length === 5)

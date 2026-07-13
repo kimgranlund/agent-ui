@@ -16,6 +16,14 @@
 // slice builds + tests against stubs in isolation; the renderer host (LLD-C13) wires the real
 // registry/factories and the LLD-C5 resolver at integration. This module owns the produced
 // `CreateWidget` (pinned in `./types.ts`); `makeCreateWidget` is its constructor.
+//
+// Create/wire split (RSR-C2, ADR-0128/renderer-structural-resend.lld.md §2). `create()` mints ONLY the
+// element (the placeholder branch on an unknown type included); `wireProps()` applies props + the input
+// binding onto an ALREADY-MINTED element, re-resolving the factory itself rather than sharing a closure
+// local — a no-op (not a second `CATALOG` emit) when that re-resolution comes back empty (a placeholder).
+// `makeCreateWidget` composes both, byte-for-byte the prior fused behavior for every existing caller. The
+// split's ONE new caller is structural-resend reconciliation (`tree.ts`'s `#reconcileProps`), which needs
+// to re-wire an EXISTING element without ever calling `create()` again (identity/focus preservation).
 
 import { effect } from '@agent-ui/components'
 import type { Scope } from '@agent-ui/components'
@@ -97,44 +105,77 @@ export interface WidgetDeps {
 }
 
 /**
- * Build the pinned `createWidget` (renderer LLD-C7) over its injected collaborators. The returned
- * function resolves + instantiates the control for one node, or — on an unknown type — emits
- * `CATALOG` and returns a placeholder; it ALWAYS returns an element (non-fatal, SPEC-R9 AC2).
+ * Mint ONLY the live control for one node — no prop/input wiring (renderer LLD-C7, split for
+ * RSR-C2/ADR-0128). On an unknown type, emits `CATALOG` and returns a placeholder; ALWAYS returns an
+ * element (non-fatal, SPEC-R9 AC2). Reused standalone by structural-resend reconciliation (RSR-C6) to
+ * mint a throwaway, never-connected instance whose fresh property reads ARE the factory's declared
+ * defaults — a pristine-default lookup that must not run the prop loop.
+ */
+export function create(node: A2uiComponent, surface: Surface, deps: WidgetDeps): HTMLElement {
+  const entry = deps.registry.get(surface.catalogId)
+  const factory = entry?.factories[node.component]
+  if (factory === undefined) {
+    // Unknown component type — or, defensively, a catalog that vanished after createSurface's
+    // CATALOG_UNKNOWN guard. Non-fatal: report + placeholder so sibling nodes still mount.
+    deps.emitError({
+      code: 'CATALOG',
+      surfaceId: surface.id,
+      path: node.id,
+      message: `unknown component type "${node.component}" in catalog "${surface.catalogId}"`,
+    })
+    return placeholder(node)
+  }
+  return factory.create()
+}
+
+/**
+ * Wire an ALREADY-MINTED element's props + two-way input binding (renderer LLD-C7, split for
+ * RSR-C2/ADR-0128) — never mints a new element. A no-op (no props applied, no CATALOG re-emitted) when
+ * `el` came from an unresolved factory (the placeholder path already reported `CATALOG` at `create()`
+ * time) — re-resolving the factory here and finding it absent again must not double-report.
+ */
+export function wireProps(
+  el: HTMLElement,
+  node: A2uiComponent,
+  surface: Surface,
+  scope: Scope,
+  itemScope: ItemScope | undefined,
+  ac: AbortController,
+  deps: WidgetDeps,
+): void {
+  const { registry, resolveValue } = deps
+  const entry = registry.get(surface.catalogId)
+  const factory = entry?.factories[node.component]
+  if (factory === undefined) return // placeholder element — no props/input wiring (create() already reported CATALOG)
+
+  const componentDef = entry?.catalog?.components?.[node.component] // the PropDefs — the enum authority for `applies` (absent in a stub catalog ⇒ unconstrained)
+  for (const [prop, value] of Object.entries(node)) {
+    if (RESERVED.has(prop)) continue
+    const members = enumOf(componentDef, prop) // the prop's declared enum (or undefined = unconstrained)
+    if (isBinding(value)) bindProp(el, factory, prop, value, surface, resolveValue, scope, itemScope, members)
+    else if (applies(members, value)) factory.applyProp(el, prop, value) // static literal → set once, IF a declared enum member
+  }
+  // Two-way input binding (renderer LLD-C8, ADR-0019). Wired here — right after the data→control props are
+  // applied, with `el`/`factory`/`node`/`surface` all in scope — so a control marked `value:{prop,event}`
+  // (Tabs `selected`/`select`, Modal `open`/`toggle`, the back-filled TextField `value`/`change`) commits
+  // its value BACK into surface.data on its commit event. For a list item, `itemScope` threads through so
+  // the writeback resolves the same absolute pointer as the read (ADR-0024 amendment, symmetric rewrite);
+  // `ac` threads the per-item AbortController so the listener is removed on item removal (SPEC-N3).
+  // A no-op for a non-input factory or a literal-bound value prop (opt-in by the factory mark; see input.ts).
+  installInputBinding(el, factory, node, surface, itemScope, ac)
+}
+
+/**
+ * Build the pinned `createWidget` (renderer LLD-C7) over its injected collaborators — composes
+ * `create()` + `wireProps()` (RSR-C2/ADR-0128's create/wire split), byte-for-byte the prior fused
+ * behavior for every existing caller. The returned function resolves + instantiates the control for one
+ * node, or — on an unknown type — emits `CATALOG` and returns a placeholder; it ALWAYS returns an
+ * element (non-fatal, SPEC-R9 AC2).
  */
 export function makeCreateWidget(deps: WidgetDeps): CreateWidget {
-  const { registry, emitError, resolveValue } = deps
-
   return (node, surface, scope = surface.scope, itemScope, ac = surface.ac) => {
-    const entry = registry.get(surface.catalogId)
-    const factory = entry?.factories[node.component]
-    if (factory === undefined) {
-      // Unknown component type — or, defensively, a catalog that vanished after createSurface's
-      // CATALOG_UNKNOWN guard. Non-fatal: report + placeholder so sibling nodes still mount.
-      emitError({
-        code: 'CATALOG',
-        surfaceId: surface.id,
-        path: node.id,
-        message: `unknown component type "${node.component}" in catalog "${surface.catalogId}"`,
-      })
-      return placeholder(node)
-    }
-
-    const componentDef = entry?.catalog?.components?.[node.component] // the PropDefs — the enum authority for `applies` (absent in a stub catalog ⇒ unconstrained)
-    const el = factory.create()
-    for (const [prop, value] of Object.entries(node)) {
-      if (RESERVED.has(prop)) continue
-      const members = enumOf(componentDef, prop) // the prop's declared enum (or undefined = unconstrained)
-      if (isBinding(value)) bindProp(el, factory, prop, value, surface, resolveValue, scope, itemScope, members)
-      else if (applies(members, value)) factory.applyProp(el, prop, value) // static literal → set once, IF a declared enum member
-    }
-    // Two-way input binding (renderer LLD-C8, ADR-0019). Wired here — right after the data→control props are
-    // applied, with `el`/`factory`/`node`/`surface` all in scope — so a control marked `value:{prop,event}`
-    // (Tabs `selected`/`select`, Modal `open`/`toggle`, the back-filled TextField `value`/`change`) commits
-    // its value BACK into surface.data on its commit event. For a list item, `itemScope` threads through so
-    // the writeback resolves the same absolute pointer as the read (ADR-0024 amendment, symmetric rewrite);
-    // `ac` threads the per-item AbortController so the listener is removed on item removal (SPEC-N3).
-    // A no-op for a non-input factory or a literal-bound value prop (opt-in by the factory mark; see input.ts).
-    installInputBinding(el, factory, node, surface, itemScope, ac)
+    const el = create(node, surface, deps)
+    wireProps(el, node, surface, scope, itemScope, ac, deps)
     return el
   }
 }

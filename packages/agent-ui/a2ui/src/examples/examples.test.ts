@@ -204,6 +204,32 @@ describe('the kpi-panel-lifecycle exemplar — SPEC-R4 fixture validation', () =
     const sent = renderSmoke(kpiPanelLifecycleSeed)
     expect(sent.filter(isError)).toEqual([])
   })
+
+  it('the restructure step actually RENDERS the added "churn" KPI through a REAL createRenderer — not merely validated (TKT-0024 / renderer-structural-resend.spec.md SPEC-R1/R2)', () => {
+    // Replay every message up to (but not including) the final `deleteSurface` — the arc's open → restructure
+    // → react steps — through a real host + mount, mirroring `renderSmoke` but stopping short of teardown so
+    // the restructured DOM is still there to inspect.
+    const messages = kpiPanelLifecycleSeed.messages
+    const beforeClose = messages.filter((m) => !('deleteSurface' in m))
+    expect(beforeClose.length).toBe(messages.length - 1) // exactly the one deleteSurface line excluded
+
+    const sent: A2uiClientMessage[] = []
+    const r = createRenderer()
+    r.onClientMessage((m) => void sent.push(m))
+    const mount = document.createElement('div')
+    document.body.appendChild(mount)
+    r.mount(mount)
+    for (const message of beforeClose) r.ingest(JSON.stringify(message))
+
+    // Both KPI tiles are genuinely in the DOM — "revenue" from the initial build, "churn" from the
+    // restructure step that resends "grid" whole with the grown children list (the bug TKT-0024 closes).
+    expect(mount.textContent).toContain('Revenue')
+    expect(mount.textContent).toContain('Churn')
+    expect(sent.filter(isError)).toEqual([])
+
+    r.dispose()
+    mount.remove()
+  })
 })
 
 // ── the negative control (ADR-0055 clause 4 — "a deliberately-broken local fixture... fails it") ──────

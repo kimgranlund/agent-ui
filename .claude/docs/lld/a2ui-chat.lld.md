@@ -155,6 +155,10 @@ SPEC-R4 AC1, played against the real shipped arc.
 > asserts routing (node identity), not visible restructure. The renderer defect + the teaching's
 > repair path are `TKT-0024-renderer-structural-resend.md`'s scope; when it lands, this page's turn-3/4
 > assertions upgrade to visible-restructure per that ticket's acceptance.
+>
+> **REV 2026-07-12 (closed):** ADR-0128 ratified + built — the renderer now reconciles a mounted
+> container's resent record (TKT-0024's build), and this page's turn-3/4 assertions WERE upgraded to
+> visible-restructure in that same wave. The paragraph above stands as the dated discovery record.
 
 ## 5 · Data shapes
 

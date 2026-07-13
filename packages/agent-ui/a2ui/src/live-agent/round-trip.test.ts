@@ -4,6 +4,7 @@
 // round-trips the expected action, the reducer frames it, and turn-2 continues the conversation.
 
 import { describe, it, expect } from 'vitest'
+import { whenFlushed } from '@agent-ui/components'
 import '@agent-ui/components/components' // self-defines the ui-* controls so the renderer's nodes upgrade + wire clicks
 import { createRenderer } from '../renderer/renderer.ts'
 import type { A2uiClientMessage } from '../renderer/renderer.ts'
@@ -152,6 +153,31 @@ describe('the message-lifecycle arc — turns 3-5 (ADR-0126, LLD-C6)', () => {
     expect(turn3Kinds).toContain('updateComponents')
     const turn5Parsed = JSON.parse(turn5.lines[0]!) as { deleteSurface?: { surfaceId?: string } }
     expect(turn5Parsed.deleteSurface?.surfaceId).toBe('confirmation')
+  })
+
+  it('turn 3\'s restructure is genuinely VISIBLE after turn 3 ingests (before turn 5 deletes it) — turn 4\'s data-only react updates the SAME node in place (TKT-0024 / renderer-structural-resend.spec.md SPEC-R1 AC1, SPEC-R2 AC1). Closes the "rendered-then-removed vs never-rendered" blind spot this suite\'s own prior review flagged as INFO — the teardown-only assertion below cannot distinguish the two.', async () => {
+    const mount = document.createElement('div')
+    document.body.append(mount)
+    const host = createRenderer({ newId: () => 'act-1', now: () => '2026-07-04T00:00:00.000Z' })
+    host.mount(mount)
+
+    const [turn1, turn2, turn3, turn4] = recordedTranscript.turns
+
+    for (const line of turn1!.lines) host.ingest(line)
+    for (const line of turn2!.lines) host.ingest(line)
+    expect(mount.textContent).not.toContain('Ready') // not yet — turn 3 (the restructure) hasn't landed
+
+    for (const line of turn3!.lines) host.ingest(line) // updateComponents (group grows "status") + updateDataModel
+    await whenFlushed() // the status line's bound-prop effect re-run (scheduled by the updateDataModel write) is microtask-batched
+    expect(mount.textContent).toContain('Ready') // the resent container's new child is REALLY rendered, not routed
+
+    for (const line of turn4!.lines) host.ingest(line) // data-ONLY react — no updateComponents this turn
+    await whenFlushed()
+    expect(mount.textContent).toContain('Clicked again') // the SAME status node's bound text updated in place
+    expect(mount.textContent).not.toContain('Ready') // the stale value is gone, not merely superseded in the buffer
+
+    host.dispose()
+    mount.remove()
   })
 
   it('after all 5 turns: confirmation is torn down (no DOM remnant), canvas remains (SPEC-R5 AC4 + AC1 "left undeleted")', () => {
