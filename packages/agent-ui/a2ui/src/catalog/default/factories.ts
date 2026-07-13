@@ -291,7 +291,9 @@ export const selectFactory: WidgetFactory = accessorFactory('ui-select', { prop:
 /**
  * Option → `div[role=option]` (ADR-0053) — a sanctioned NON-`ui-*` primitive (the pre-`ui-text` `Text`
  * precedent, catalog SPEC-R3 AC1's "sanctioned primitive" exception): `ui-select` moves author
- * `[role=option]` light-DOM children into its listbox panel at first connect (select.ts), so Option
+ * `[role=option]` light-DOM children into its listbox panel at first connect AND adopts late
+ * APPENDED ones via a MutationObserver (TKT-0026; mid-position inserts still crash the generic
+ * reconciler — TKT-0031, latent), so Option
  * never self-defines a custom element of its own. `value` → the `value` attribute (the match key
  * `ui-select` reads); `label` → textContent (bespoke, the non-identity-`mapsTo` invariant). Not an
  * input (no `value` mark — Option is a passive list item, not a bindable component).

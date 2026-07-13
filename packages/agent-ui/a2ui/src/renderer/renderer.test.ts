@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 import { whenFlushed, UIFormElement, prop } from '@agent-ui/components'
 import type { FormValue, ValidityResult, PropsSchema, ReactiveProps } from '@agent-ui/components'
-import { UIButtonElement } from '@agent-ui/components/components'
+import { UIButtonElement, UISelectElement } from '@agent-ui/components/components'
 import { createRenderer } from './renderer.ts'
 import type { A2uiClientMessage, RendererHost } from './renderer.ts'
 import type { A2uiAction, A2uiActionMessage } from './action.ts'
@@ -1030,6 +1030,157 @@ describe('renderer host — updateDataModel path:"/" vs. path-omitted (live-agen
     const cards = mount.querySelectorAll('ui-row > *')
     expect(cards).toHaveLength(2)
     expect([...cards].map((el) => el.textContent)).toEqual(['A♠', 'K♥']) // the byte-equivalence target above
+
+    cleanup()
+  })
+})
+
+// ── TKT-0026 × TKT-0024 synergy: a late catalog Option adopts into ui-select's panel ──────────────
+//
+// TKT-0024's structural-resend reconciliation (ADR-0128, `tree.ts#reconcileChildren`) already gets a
+// newly-referenced child id onto the DOM correctly (mounted fresh, inserted at its position). Before
+// TKT-0026, that was where it stopped for a Select's Option children: the new `<div role=option>`
+// landed as a raw light-DOM child of `<ui-select>` itself — never adopted into the control's internal
+// listbox panel — so it was reachable in the DOM but invisible and unselectable (TKT-0026's own repro,
+// now realized through the FULL renderer path instead of a hand-authored `select.append(...)`).
+
+describe('renderer host — TKT-0026: a structural resend that adds an Option renders it INTO the select panel', () => {
+  // jsdom reality (the catalog/default/index.test.ts precedent): `ElementInternals.setFormValue`/
+  // `setValidity` are absent in jsdom — `ui-select` (form-associated) calls both unconditionally in its
+  // own `connectedCallback`, which throws. The real `selectFactory` builds the element via a plain
+  // `document.createElement` (no per-instance stub hook), so the stub is applied ONCE at the shared
+  // `ElementInternals.prototype`, scoped to this describe's `beforeAll`/`afterAll` (saved + restored).
+  let savedSetFormValue: unknown
+  let savedSetValidity: unknown
+  beforeAll(() => {
+    savedSetFormValue = ElementInternals.prototype.setFormValue
+    savedSetValidity = ElementInternals.prototype.setValidity
+    if (typeof ElementInternals.prototype.setFormValue !== 'function') {
+      ElementInternals.prototype.setFormValue = function (): void {}
+    }
+    if (typeof ElementInternals.prototype.setValidity !== 'function') {
+      ElementInternals.prototype.setValidity = function (): void {}
+    }
+  })
+  afterAll(() => {
+    ElementInternals.prototype.setFormValue = savedSetFormValue as typeof ElementInternals.prototype.setFormValue
+    ElementInternals.prototype.setValidity = savedSetValidity as typeof ElementInternals.prototype.setValidity
+  })
+
+  it('a late Option id (resent onto root.children) is adopted into the panel and becomes selectable', async () => {
+    const { r, mount, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's-select', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 's-select',
+          components: [
+            // `root` is a stable, never-resent wrapper (SurfaceTree#reconcileNode never reconciles
+            // `id:'root'` itself, SPEC-R4) one level above the mutable Select — the a2ui-compose
+            // "never resend root" precedent (node-idioms.md).
+            { id: 'root', component: 'Column', children: ['sel'] },
+            { id: 'sel', component: 'Select', name: 'fruit', children: ['opt_a', 'opt_b'] },
+            { id: 'opt_a', component: 'Option', value: 'apple', label: 'Apple' },
+            { id: 'opt_b', component: 'Option', value: 'banana', label: 'Banana' },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+
+    const select = mount.querySelector('ui-select') as UISelectElement
+    expect(select).toBeInstanceOf(UISelectElement)
+    expect(select.querySelectorAll('[role=option]')).toHaveLength(2) // ship-together: both adopt at first connect
+
+    // A structural resend of `sel` referencing a THIRD, previously-undelivered Option id — the exact
+    // TKT-0024 reconciliation path (`#reconcileChildren` mounts `opt_c` fresh via the ordinary
+    // `#mountNode`, then `el.insertBefore(node, anchor)` — `anchor` is `null` here since `opt_c` is
+    // last in the new order, so this degrades to a plain append onto the SELECT host).
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 's-select',
+          components: [
+            { id: 'sel', component: 'Select', name: 'fruit', children: ['opt_a', 'opt_b', 'opt_c'] },
+            { id: 'opt_c', component: 'Option', value: 'cherry', label: 'Cherry' },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+    await Promise.resolve() // ui-select's own #optionObserver adoption (TKT-0026) is microtask-deferred
+    await Promise.resolve()
+
+    // TKT-0026: the late Option is not just reachable in the DOM (TKT-0024's own proof) — it is
+    // ADOPTED into the control's listbox panel, exactly like the ship-together pair above.
+    expect(select.querySelectorAll('[role=option]')).toHaveLength(3)
+    const late = select.querySelector<HTMLElement>('[value="cherry"]')!
+    expect(late.closest('[data-part="listbox"]')).not.toBeNull()
+    expect(late.parentElement?.getAttribute('data-part')).toBe('listbox')
+
+    // …and it is genuinely SELECTABLE (roving/selectionCommit re-read the live DOM — select.ts's own
+    // "dynamic option sets" contract) — the value round-trips through the control's own commit path.
+    late.click()
+    await whenFlushed()
+    expect(select.value).toBe('cherry')
+
+    cleanup()
+  })
+
+  // TKT-0026 review (component-reviewer NO-GO on scope): the "fully general — tail is the only
+  // reachable position" claim above is true ONLY for direct-DOM/author mutations. The RENDERER's own
+  // `#reconcileChildren` (tree.ts) resolves a SURVIVOR's anchor as its bare widget node with no
+  // `parentNode === el` check (RSR-C5) — for ANY child-relocating control (the ADR-0017 family:
+  // select/combo-box/menu), a survivor's true parent by resend time is the control's internal panel,
+  // not the host `el` `#reconcileChildren` inserts into. A MID-POSITION resend (a new id inserted
+  // BETWEEN two already-delivered survivors) therefore throws an uncaught `NotFoundError` out of
+  // `ingest()` — LATENT and PRE-EXISTING (reproducible identically before TKT-0026: ship-together's
+  // own first-connect move already relocates the initial set before any resend can reference it).
+  // TKT-0026 never fixed this — it only ever made the APPEND (tail) position safe. Tracked as its own
+  // ticket, TKT-0031 (tree.ts's own wave), minted by this review. This test PINS the boundary honestly:
+  // it must FAIL (the `.toThrow()` flips to NOT throwing) the moment TKT-0031 lands, at which point
+  // this test — and the caveats above — should be revised together.
+  it('TKT-0031 (latent, NOT fixed by TKT-0026): a MID-POSITION resend inserted between two survivors throws', async () => {
+    const { r, mount, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's-select-mid', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 's-select-mid',
+          components: [
+            { id: 'root', component: 'Column', children: ['sel'] },
+            { id: 'sel', component: 'Select', name: 'fruit', children: ['opt_a', 'opt_b'] },
+            { id: 'opt_a', component: 'Option', value: 'apple', label: 'Apple' },
+            { id: 'opt_b', component: 'Option', value: 'banana', label: 'Banana' },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+    expect(mount.querySelector('ui-select')?.querySelectorAll('[role=option]')).toHaveLength(2)
+
+    // opt_c is NEW, inserted BETWEEN the two already-delivered survivors opt_a/opt_b — the anchor
+    // for opt_c resolves to opt_b's widget, which by now lives inside the select's own listbox panel
+    // (adopted at first connect), not as a child of the select host `#reconcileChildren` inserts into.
+    expect(() => {
+      r.ingest(
+        line({
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId: 's-select-mid',
+            components: [
+              { id: 'sel', component: 'Select', name: 'fruit', children: ['opt_a', 'opt_c', 'opt_b'] },
+              { id: 'opt_c', component: 'Option', value: 'cherry', label: 'Cherry' },
+            ],
+          },
+        }),
+      )
+    }).toThrow()
 
     cleanup()
   })

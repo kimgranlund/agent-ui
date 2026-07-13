@@ -84,13 +84,13 @@ events:
 slots:
   - name: options
     optional: false
-    description: Provide [role=option] children (e.g. <div role="option" value="apple">Apple</div>) as direct children of ui-combo-box. These are moved into the control-created listbox panel at connect time (the child-move pattern, ADR-0017) and serve as the filterable option set. Each option must have a `value` attribute (the key submitted to the form) and textContent (the display label). Options without a `value` attribute use their textContent as the key.
+    description: Provide [role=option] children (e.g. <div role="option" value="apple">Apple</div>) as direct children of ui-combo-box. These are adopted into the control-created listbox panel at connect time AND on every later light-DOM mutation (TKT-0026, 2026-07-12 — the select.ts precedent, a MutationObserver on the host's own childList) — the child-move pattern, ADR-0017 — and serve as the filterable option set. A late-adopted option is re-filtered against whatever text is already typed (it never bypasses an active filter) and gets a stable id lazily, the moment it becomes the active-descendant. Each option must have a `value` attribute (the key submitted to the form) and textContent (the display label). Options without a `value` attribute use their textContent as the key.
 
 parts:
   - name: editor
     description: The control-created `<div data-part="editor" contenteditable="plaintext-only" role="combobox">`. Carries the combobox ARIA role (never on the host — FACE pattern), aria-haspopup="listbox", aria-autocomplete="list", aria-expanded (synced via the scope-owned effect), aria-controls (pointing to the listbox's id), and aria-activedescendant (updated on Arrow navigation). DOM focus lives HERE throughout keyboard navigation — it never moves to the listbox or options (the active-descendant pattern, OVL/ROV-C1).
   - name: listbox
-    description: The control-created `<div data-part="listbox" role="listbox" popover="auto" id="...">` that enters the Popover API top layer when open. Author-provided [role=option] children are moved into this part at connect time. Created ONCE (idempotent guard — the same node persists across disconnect/reconnect). The overlay controller sets position:fixed + inset on open.
+    description: The control-created `<div data-part="listbox" role="listbox" popover="auto" id="...">` that enters the Popover API top layer when open. Author-provided [role=option] children are adopted into this part at connect time AND on every later light-DOM mutation (TKT-0026). Created ONCE (idempotent guard — the same node persists across disconnect/reconnect). The overlay controller sets position:fixed + inset on open.
   - name: empty
     description: The control-created `<div data-part="empty" role="presentation">No matches</div>`, appended LAST inside the listbox (2026-07-07 fix). Hidden by default; `#syncEmptyState()` reveals it exactly when zero `[role=option]` children are visible (the filter matched nothing, or no options were provided at all). Not an option — never navigable, never commit-able. Root-cause fix for a filtered-to-zero panel collapsing to a stray border-only line (no min-block-size, no content): this row gives the panel real, deliberate height and an explicit "no matches" affordance instead.
 
@@ -182,9 +182,9 @@ entry-control law — prevents collapse in a flex row). The **editor part** is t
 input (`role="combobox"`, `contenteditable="plaintext-only"`); the **listbox panel** is the
 control-created `<div role="listbox" popover="auto">` that enters the top layer on open.
 
-Author-provided `[role=option]` children are moved into the listbox at connect time (the
-child-move pattern, ADR-0017). Each option needs a `value` attribute (the form key) and
-`textContent` (the display label).
+Author-provided `[role=option]` children are adopted into the listbox at connect time AND on
+every later light-DOM mutation (TKT-0026 — the child-move pattern, ADR-0017, made dynamic). Each
+option needs a `value` attribute (the form key) and `textContent` (the display label).
 
 ## Active-descendant navigation
 

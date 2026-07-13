@@ -78,9 +78,16 @@ Real: `examples/generative-form.ts:134-135`, `examples/patterns.ts:42-44`.
 ## Select / Option
 `catalog.json:86-103`. Select: `value: { prop:"value", event:"select" }`, `children:"ChildList"` of Option;
 bindable `value`, `disabled`, `required`; plain `placeholder`, `name`. Option: `value` (plain), `label`
-(bindable → `textContent`). CRITICAL ordering: a Select and its Options MUST arrive in the SAME
-`updateComponents` message — `ui-select` moves `[role=option]` children into its panel only at first connect
-(ADR-0053 limitation, `generative-form.ts:11-13`); Options added to an already-connected Select never appear.
+(bindable → `textContent`). Ordering: `ui-select` adopts `[role=option]` children into its panel at first
+connect AND on every later light-DOM mutation (TKT-0026, 2026-07-12 — a late-arriving Option now DOES
+reach the panel and becomes selectable, superseding ADR-0053's ship-together limitation, BUT ONLY when
+the new id is APPENDED after every already-delivered Option). A resend that INSERTS a new Option id
+BETWEEN two already-delivered ones still throws an uncaught error — the renderer's generic
+`tree.ts#reconcileChildren` anchors on a survivor's bare widget node with no check that it is still a
+child of the Select host (it has already relocated into the internal panel) — LATENT/pre-existing,
+tracked as TKT-0031 (not fixed by TKT-0026). Shipping a Select and its Options in the SAME
+`updateComponents` message is still the natural, simplest, and only-fully-safe shape — prefer it; if
+adding Options later, only append new ids to the END of `children`.
 ```json
 { "id": "in_plan", "component": "Select", "name": "plan", "required": true,
   "placeholder": "Choose a plan…", "value": { "path": "/form/plan" }, "children": ["opt_s","opt_m","opt_l"] }

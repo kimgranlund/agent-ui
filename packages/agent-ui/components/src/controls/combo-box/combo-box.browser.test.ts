@@ -1131,3 +1131,81 @@ describe('ui-combo-box — user-invalid leg (ADR-0051)', () => {
     expect(el.matches(':state(user-invalid)'), 'user-invalid persists after a value is committed').toBe(false)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [10] TKT-0026 — a late-added Option adopts into the REAL top-layer panel (both engines)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-combo-box — dynamic options: a late Option adopts into the panel (TKT-0026, both engines)', () => {
+  it('appended WHILE CLOSED: the late option renders inside the panel once opened, and is clickable', async () => {
+    const { el } = mount(`
+      <ui-combo-box>
+        <div role="option" value="apple">Apple</div>
+        <div role="option" value="banana">Banana</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'cherry')
+    late.textContent = 'Cherry'
+    el.append(late)
+    await Promise.resolve() // MutationObserver callback is microtask-deferred
+    await Promise.resolve()
+
+    expect(late.parentElement, `${server.browser}: the late option was not adopted into the panel`).toBe(listbox)
+
+    await userEvent.click(editor)
+    await userEvent.keyboard('{ArrowDown}')
+    await el.updateComplete
+    expect(listbox.matches(':popover-open'), `${server.browser}: the panel did not open`).toBe(true)
+
+    const rect = late.getBoundingClientRect()
+    expect(rect.width, `${server.browser}: the late option collapsed to zero width in the open panel`).toBeGreaterThan(0)
+    expect(rect.height, `${server.browser}: the late option collapsed to zero height in the open panel`).toBeGreaterThan(0)
+
+    await userEvent.click(late)
+    await el.updateComplete
+    expect(el.value, `${server.browser}: clicking the late option did not commit it`).toBe('cherry')
+    expect(editor.textContent, `${server.browser}: the editor should show the committed label`).toBe('Cherry')
+  })
+
+  it('appended WHILE OPEN: the panel updates LIVE — the late option renders + is clickable without closing/reopening', async () => {
+    const { el } = mount(`
+      <ui-combo-box>
+        <div role="option" value="apple">Apple</div>
+        <div role="option" value="banana">Banana</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+
+    await userEvent.click(editor)
+    await userEvent.keyboard('{ArrowDown}')
+    await el.updateComplete
+    expect(listbox.matches(':popover-open'), `${server.browser}: the panel did not open`).toBe(true)
+
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'cherry')
+    late.textContent = 'Cherry'
+    el.append(late)
+    await Promise.resolve() // MutationObserver callback is microtask-deferred
+    await Promise.resolve()
+
+    // Still open (the adoption must not disturb the open panel) AND the new option renders live,
+    // BEFORE the "no matches" row (the emptyRow-stays-last invariant, live in a real engine too).
+    expect(listbox.matches(':popover-open'), `${server.browser}: adopting a late option unexpectedly closed the panel`).toBe(true)
+    expect(late.parentElement, `${server.browser}: the late option was not adopted into the OPEN panel`).toBe(listbox)
+    expect(listbox.lastElementChild?.getAttribute('data-part'), `${server.browser}: the "no matches" row should stay last`).toBe('empty')
+    const rect = late.getBoundingClientRect()
+    expect(rect.width, `${server.browser}: the live-adopted option collapsed to zero width`).toBeGreaterThan(0)
+    expect(rect.height, `${server.browser}: the live-adopted option collapsed to zero height`).toBeGreaterThan(0)
+
+    await userEvent.click(late)
+    await el.updateComplete
+    expect(el.value, `${server.browser}: clicking the live-adopted option did not commit it`).toBe('cherry')
+  })
+})

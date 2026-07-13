@@ -53,7 +53,7 @@ resend.spec.md` closes the gap (SPEC-R1/R2); this ADR ratifies that closure and 
 | `renderer/widget.ts`'s `makeCreateWidget` + `renderer.ts`'s `#makeHostCreateWidget` | The full "mint + wire props + wire input + wire action + wire checks" pipeline, already composed once per node | No way to re-run "wire" alone against an ALREADY-EXISTING element — `factory.create()` is fused into the same closure that applies props, so reconciling props today would necessarily mint a NEW element, destroying identity |
 | `renderer/tree.ts`'s `#pendingParents`/`#patchPending` (SPEC-R4) | A working out-of-order PATCH-IN mechanism for a first-arrival id | It is keyed on absence (`components.get(id) === undefined`), the exact opposite of a resend's precondition (the id already has a widget) — structurally cannot be reused as-is, only as a design precedent for "patch, don't re-render the whole tree" |
 | `a2ui-message-lifecycle.spec.md` SPEC-R2 (whole-record upsert) | The PRODUCER-side rule this renderer fix must make true end-to-end; its AC2 is the bug's own repro shape | Nothing renderer-side — it is explicitly producer POLICY over "already-shipped mechanics" (its own SPEC-N1), an assumption this ADR discovers was false |
-| ADR-0053 (Select+Option first-connect limitation) | A DIFFERENT, already-documented resend limitation exists in the fleet, so this is not the first time "a later `updateComponents` doesn't reach where it should" has surfaced | Verified (`select.ts:470-503`) to be a SEPARATE, component-owned cause (a connect-time-only move-to-panel guard) — this ADR's generic renderer fix does not, by itself, resolve it (§ Consequences) |
+| ADR-0053 (Select+Option first-connect limitation) | A DIFFERENT, already-documented resend limitation exists in the fleet, so this is not the first time "a later `updateComponents` doesn't reach where it should" has surfaced | Verified (select.ts, the connect-time move-to-panel guard — since fixed for APPENDS by TKT-0026's adoption observer; mid-position remains TKT-0031's latent reconciler gap) to be a SEPARATE, component-owned cause — this ADR's generic renderer fix does not, by itself, resolve it (§ Consequences) |
 
 ## Decision
 
@@ -120,7 +120,7 @@ primitive lands — this defers a real gap, it does not close the door on it.
   only" and would otherwise mislead a future reader into thinking resend reconciliation is unspecified rather
   than specified-elsewhere.
 - **ADR-0053's first-connect limitation is RETAINED, with a corrected precision, not lifted.** Verified against
-  `select.ts:470-503`: `ui-select` moves its authored `[role=option]`/`[role=group]` children into the internal
+  `select.ts` (the connect-time guard as of this ADR's date; TKT-0026 has since added append-adoption): `ui-select` moves its authored `[role=option]`/`[role=group]` children into the internal
   listbox panel **only at first connect** (an idempotent, one-time guard), never on a later childList mutation.
   Even after this ADR ships, a late-arriving `Option` mounts correctly as a light-DOM child of `<ui-select>`
   (SPEC-R1 now guarantees that much) but is **not** moved into the panel and stays invisible/inert — a

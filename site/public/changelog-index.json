@@ -1,5 +1,12 @@
 [
   {
+    "name": "2026-07-13 (TKT-0026) — select and combo-box adopt late Options (append-safe; the mid-position truth pinned)",
+    "url": "./changelog.html#2026-07-13-tkt-0026-select-and-combo-box-adopt-late-options-append-safe-the-mid-position-truth-pinned",
+    "description": "The one-time child-move becomes live adoption: both controls arm a host MutationObserver; an idempotent sync adopts late [role=option]/groups into the panel (c…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "2026-07-12 (TKT-0024) — the renderer reconciles structural resends: the lifecycle teaching becomes true",
     "url": "./changelog.html#2026-07-12-tkt-0024-the-renderer-reconciles-structural-resends-the-lifecycle-teaching-becomes-true",
     "description": "The gap: since the four-type teaching shipped (ADR-0126), \"restructure via updateComponents\" was a silent visual no-op for mounted containers — the renderer st…",

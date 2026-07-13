@@ -989,3 +989,24 @@ committed color back into `surface.data`. Gates: check · a2ui 975/975 · the si
   upgraded to visible-restructure; the kpi-panel exemplar renders its churn step. ADR-0053 retained
   (the late-Option limit is ui-select's own — tkt-0026). Gates: check · a2ui 1019 · both engines ·
   size clean.
+
+## 2026-07-13 (TKT-0026) — select and combo-box adopt late Options (append-safe; the mid-position truth pinned)
+
+- **The one-time child-move becomes live adoption:** both controls arm a host MutationObserver;
+  an idempotent sync adopts late `[role=option]`/groups into the panel (combo-box keeps its
+  empty-row last and re-filters adoptees against the typed query), with a connect-time catch-up
+  scan for disconnected-gap appends and structurally-impossible double-adoption on reconnect. The
+  TKT-0024 synergy proven end-to-end: a structural resend APPENDING a new Option through the real
+  renderer + default catalog renders and commits a real selection.
+- **The review disproved the wave's own generality claim and found a LATENT renderer bug:**
+  tail-adoption is fully general for author mutations (a native insertBefore can never reference
+  an adopted node) — but the renderer's generic `reconcileChildren` resolves survivor anchors
+  without checking they're still the container's children, so a MID-POSITION resend against ANY
+  child-relocating control (the whole ADR-0017 family) throws an uncaught NotFoundError —
+  pre-existing, reproduced identically before this fix. Now **tkt-0031**, with a deliberate
+  `.toThrow` pin in the suite that flips when it lands.
+- **The teaching relaxes honestly, everywhere it lives:** ADR-0053 gains its append-only
+  Amendment; the catalog SPEC's Known-limitation clause, the a2ui-compose skill + node-idioms,
+  the optionFactory and generative-form comments all say the same thing — appends adopt,
+  mid-position still crashes, ship-together stays the composing default. Review NO-GO→scope→GO.
+  Gates: check · 1205 targeted jsdom · 138 browser both engines · size +45/+98 B.

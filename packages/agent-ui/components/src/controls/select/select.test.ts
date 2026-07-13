@@ -326,6 +326,149 @@ describe('ui-select — option groups (select-groups)', () => {
   })
 })
 
+// ── Dynamic options (TKT-0026 — late-added Option/group adoption) ──────────────────────────────
+
+describe('ui-select — dynamic options (select-dynamic-options)', () => {
+  it('select-dynamic-options: an Option appended AFTER connect is adopted into the listbox panel', async () => {
+    const { el, listbox } = makeSelect()
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve() // MutationObserver callback is microtask-deferred
+    await Promise.resolve()
+
+    expect(late.parentElement).toBe(listbox)
+    expect(listbox.querySelectorAll('[role=option]')).toHaveLength(4)
+    el.remove()
+  })
+
+  it('select-dynamic-options: multiple late additions land in the panel in their authored (append) order', async () => {
+    const { el, listbox } = makeSelect()
+    for (const [value, label] of [['date', 'Date'], ['elderberry', 'Elderberry']] as const) {
+      const opt = document.createElement('div')
+      opt.setAttribute('role', 'option')
+      opt.setAttribute('value', value)
+      opt.textContent = label
+      el.append(opt)
+    }
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const values = [...listbox.querySelectorAll<HTMLElement>('[role=option]')].map((o) => o.getAttribute('value'))
+    expect(values).toEqual(['apple', 'banana', 'cherry', 'date', 'elderberry'])
+    el.remove()
+  })
+
+  it('select-dynamic-options: a late-added option becomes selectable — click commits value + trigger label', async () => {
+    const { el, listbox, trigger } = makeSelect()
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    listbox.querySelector<HTMLElement>('[value="date"]')!.click()
+    await whenFlushed()
+
+    expect(el.value).toBe('date')
+    expect(trigger.querySelector('[data-part="label"]')?.textContent).toBe('Date')
+    el.remove()
+  })
+
+  it('select-dynamic-options: a late [role=group] adopts with its nested options + renders a header', async () => {
+    const { el, listbox } = makeSelect()
+    const group = document.createElement('div')
+    group.setAttribute('role', 'group')
+    group.setAttribute('label', 'Berries')
+    const opt = document.createElement('div')
+    opt.setAttribute('role', 'option')
+    opt.setAttribute('value', 'strawberry')
+    opt.textContent = 'Strawberry'
+    group.append(opt)
+    el.append(group)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(group.parentElement).toBe(listbox)
+    expect(listbox.querySelectorAll('[role=option]')).toHaveLength(4)
+    const header = listbox.querySelector('[data-part="group-label"]')
+    expect(header?.textContent).toBe('Berries')
+    expect(group.getAttribute('aria-labelledby')).toBe(header?.id)
+    el.remove()
+  })
+
+  it('select-dynamic-options: removing an already-adopted option leaves the panel cleanly (no throw)', async () => {
+    const { el, listbox } = makeSelect()
+    const banana = listbox.querySelector<HTMLElement>('[value="banana"]')!
+    expect(() => banana.remove()).not.toThrow()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(listbox.querySelectorAll('[role=option]')).toHaveLength(2)
+    expect(banana.isConnected).toBe(false)
+    el.remove()
+  })
+
+  it('select-dynamic-options: adopting a late option never disturbs an existing committed selection', async () => {
+    const { el, listbox, trigger } = makeSelect()
+    el.value = 'banana'
+    await whenFlushed()
+    expect(trigger.querySelector('[data-part="label"]')?.textContent).toBe('Banana')
+
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(el.value).toBe('banana')
+    expect(trigger.querySelector('[data-part="label"]')?.textContent).toBe('Banana')
+    expect(listbox.querySelectorAll('[role=option]')).toHaveLength(4)
+    el.remove()
+  })
+
+  it('select-dynamic-options: no double-move on reconnect — an already-adopted option is untouched', async () => {
+    const { el, listbox } = makeSelect()
+    const before = [...listbox.querySelectorAll('[role=option]')]
+
+    el.remove()
+    document.body.append(el)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const newListbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    expect(newListbox).toBe(listbox) // the panel itself persists across reconnect (idempotent parts)
+    expect([...newListbox.querySelectorAll('[role=option]')]).toEqual(before) // same 3 nodes, same order
+    expect(newListbox.querySelectorAll('[role=option]')).toHaveLength(3)
+    el.remove()
+  })
+
+  it('select-dynamic-options: an option appended WHILE DISCONNECTED is adopted on the next reconnect', async () => {
+    const { el, listbox } = makeSelect()
+    el.remove() // no observer runs while disconnected
+
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late) // lands as a direct host child — no observer is armed to adopt it yet
+
+    document.body.append(el) // reconnect: connected()'s explicit #syncOptions() call catches it
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(late.parentElement).toBe(listbox)
+    expect(listbox.querySelectorAll('[role=option]')).toHaveLength(4)
+    el.remove()
+  })
+})
+
 // ── Two-way `open` — model→overlay ─────────────────────────────────────────────────────────
 
 describe('ui-select — open prop → overlay handle (select-open-effect · select-close-effect · select-open-noop)', () => {

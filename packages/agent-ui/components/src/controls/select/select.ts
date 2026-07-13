@@ -8,7 +8,10 @@
 // glyph sized = font (the §4.1 caret law: --ui-select-glyph = font). The panel is a
 // Container/surface `<div>` with `role=listbox` (set on the panel element itself, NOT on
 // the host — the host has no ARIA role: it is a logical select wrapper). Options are
-// light-DOM children ([role=option]) moved into the panel at first connect (idempotent).
+// light-DOM children ([role=option]) adopted into the panel at first connect AND on every
+// LATER light-DOM mutation (TKT-0026: a MutationObserver on the host's own childList; see
+// #syncOptions) — an Option (or [role=group]) appended after connect is adopted too, in the
+// order it was added.
 //
 // Two-way `open` (ADR-0019): a scope-owned effect drives model→overlay (open/close the
 // handle); a `close` listener on the host drives overlay→model (light-dismiss syncs the
@@ -24,7 +27,7 @@
 //     <span data-part="aria-label">…visually-hidden `label` prop text…</span>
 //     <div data-part="listbox" role="listbox" id="ui-select-listbox-N"
 //          popover="auto" tabindex="-1">
-//       <!-- author's [role=option] children, moved here at first connect -->
+//       <!-- author's [role=option] children, adopted here at first connect and on every later add -->
 //     </div>
 //   </ui-select>
 //
@@ -117,6 +120,14 @@ export class UISelectElement extends UIFormElement {
   #labelSpan: HTMLElement | null = null
   #ariaLabelSpan: HTMLElement | null = null
 
+  // TKT-0026 — watches the HOST's own light-DOM childList so an Option/group added AFTER first
+  // connect still adopts into the panel (see #syncOptions below). Created fresh on every connect
+  // (the split.ts precedent); disconnected + nulled in disconnected().
+  #optionObserver: MutationObserver | null = null
+  // Shared group-header id sequence (was a local `let groupSeq` inside the old one-time move loop) —
+  // hoisted to an instance field so a LATE group's header id never collides with an earlier one.
+  #groupSeq = 0
+
   // The user-invalid TIMING controller (ADR-0051), created per connection (re-arms on reconnect;
   // released on disconnect) — the text-field precedent.
   #userInvalid: TrackUserInvalidController | null = null
@@ -153,6 +164,8 @@ export class UISelectElement extends UIFormElement {
   protected override disconnected(): void {
     this.#userInvalid?.release() // idempotent — the listeners already die with the connection scope
     this.#userInvalid = null
+    this.#optionObserver?.disconnect() // TKT-0026 — the observer does not outlive the connection
+    this.#optionObserver = null
   }
 
   /** Feeds `FormConnectDetail.userInvalid` (ADR-0050) — the `trackUserInvalid` tracker IS the one
@@ -207,6 +220,14 @@ export class UISelectElement extends UIFormElement {
 
   protected override connected(): void {
     const { trigger, listbox, labelSpan, ariaLabelSpan } = this.#ensureParts()
+
+    // TKT-0026 — adopt any [role=option]/[role=group] children sitting as direct light-DOM children
+    // of the host RIGHT NOW (catches anything appended while disconnected — no observer runs during
+    // that gap) and arm the observer for everything after. Idempotent + self-terminating: see
+    // #syncOptions' own doc for why this never double-moves an already-adopted node on reconnect.
+    this.#syncOptions()
+    this.#optionObserver = new MutationObserver(() => this.#syncOptions())
+    this.#optionObserver.observe(this, { childList: true })
 
     // ADR-0051 — the user-invalid TIMING controller. `select` never emits a native `change` event
     // (selectionCommit only emits `select` — grep-provable), so BLUR is the sole interaction signal
@@ -467,36 +488,10 @@ export class UISelectElement extends UIFormElement {
     // effect in connected(); aria-controls is stable and set here once at part creation).
     trigger.setAttribute('aria-controls', listbox.id)
 
-    // Move author [role=option] AND [role=group] light-DOM children into the listbox panel at first
-    // connect (one-time; the idempotent guard prevents re-moving on reconnect). The overlay controller
-    // sets popover="auto" on the listbox — not here (single-ownership).
-    //
-    // GROUPS (optgroup parity): a `<div role="group" label="…">` renders a NON-interactive header from
-    // its `label` (or `aria-label`) and moves with its nested `[role=option]` children. rovingFocus +
-    // selectionCommit operate on `[role=option]` (found nested via querySelectorAll), so they traverse
-    // groups transparently and never land on a header. The group is named for AT via aria-labelledby.
-    let child = this.firstElementChild
-    let groupSeq = 0
-    while (child) {
-      const next = child.nextElementSibling
-      const role = child.getAttribute('role')
-      if (role === 'option') {
-        listbox.appendChild(child)
-      } else if (role === 'group') {
-        const label = child.getAttribute('label') ?? child.getAttribute('aria-label') ?? ''
-        if (label && !child.querySelector(':scope > [data-part="group-label"]')) {
-          const header = document.createElement('div')
-          header.setAttribute('data-part', 'group-label')
-          header.id = `${listbox.id}-grp-${++groupSeq}`
-          header.textContent = label
-          child.removeAttribute('label') // consumed — the visible header + aria-labelledby replace it
-          child.setAttribute('aria-labelledby', header.id) // AT names the group from the header
-          child.insertBefore(header, child.firstChild)
-        }
-        listbox.appendChild(child)
-      }
-      child = next
-    }
+    // Author [role=option]/[role=group] light-DOM children are adopted into the listbox panel by
+    // #syncOptions (TKT-0026) — called once here (below the parts are recorded) AND on every later
+    // light-DOM mutation via #optionObserver (wired in connected()). The overlay controller sets
+    // popover="auto" on the listbox — not here (single-ownership).
 
     this.appendChild(trigger)
     this.appendChild(ariaLabelSpan)
@@ -508,6 +503,70 @@ export class UISelectElement extends UIFormElement {
     this.#ariaLabelSpan = ariaLabelSpan
 
     return { trigger, listbox, labelSpan, ariaLabelSpan }
+  }
+
+  // ── Dynamic-options adoption (TKT-0026) ─────────────────────────────────────────────────────────
+
+  /**
+   * Adopt every author [role=option]/[role=group] node CURRENTLY sitting as a DIRECT light-DOM child
+   * of the host into the listbox panel. Runs once per connect (first-connect AND reconnect — the
+   * reconnect call catches anything appended while disconnected, when no observer was running) and
+   * again on every subsequent host `childList` mutation via `#optionObserver` (armed in connected()).
+   *
+   * Idempotent + self-terminating, no re-entrancy guard needed: an already-adopted node lives inside
+   * `#listbox`, not as a direct child of `this` — so `this.firstElementChild`/`nextElementSibling`
+   * traversal never re-visits it (the relocation law: no double-move on reconnect, and the mutation
+   * this method's OWN `listbox.appendChild` calls trigger on `this` resolves to a no-op re-entry: the
+   * moved node is gone from `this`'s childList by the time the self-triggered notification fires).
+   *
+   * Ordering: a newly-adopted node ALWAYS lands at the listbox's CURRENT tail, in the relative order
+   * it (and any OTHER not-yet-adopted sibling) currently occupies among the host's own children — the
+   * only position a native mutation can ever produce. An already-adopted sibling's true parent is the
+   * listbox, not the host, so no `insertBefore`/`insertAfter` call an author makes against the host can
+   * ever reference it — there is no DOM operation that legally splices new content BEFORE previously-
+   * adopted content. Processing the host's current children in document order is therefore already the
+   * fully general fix, not a narrowed one: it exactly preserves the one authored ordering an append/
+   * insert into the SELECT itself can ever express.
+   */
+  #syncOptions(): void {
+    const listbox = this.#listbox
+    if (!listbox) return
+    let child = this.firstElementChild
+    while (child) {
+      const next = child.nextElementSibling
+      const role = child.getAttribute('role')
+      if (role === 'option' || role === 'group') this.#adoptChild(child, listbox)
+      child = next
+    }
+  }
+
+  /**
+   * Move ONE author [role=option] or [role=group] child into the listbox panel — the group-header
+   * mint-once logic is byte-identical to the original first-connect-only loop (GROUPS/optgroup
+   * parity: a `<div role="group" label="…">` renders a non-interactive header from its `label` (or
+   * `aria-label`) and moves with its nested `[role=option]` children; rovingFocus + selectionCommit
+   * operate on `[role=option]` found nested via querySelectorAll, so they traverse groups
+   * transparently and never land on a header; the group is named for AT via aria-labelledby). Shared
+   * by `#syncOptions`' first-connect and later-mutation passes — one code path, one behaviour.
+   */
+  #adoptChild(child: Element, listbox: HTMLElement): void {
+    const role = child.getAttribute('role')
+    if (role === 'option') {
+      listbox.appendChild(child)
+      return
+    }
+    // role === 'group' — the only other caller-checked branch.
+    const label = child.getAttribute('label') ?? child.getAttribute('aria-label') ?? ''
+    if (label && !child.querySelector(':scope > [data-part="group-label"]')) {
+      const header = document.createElement('div')
+      header.setAttribute('data-part', 'group-label')
+      header.id = `${listbox.id}-grp-${++this.#groupSeq}`
+      header.textContent = label
+      child.removeAttribute('label') // consumed — the visible header + aria-labelledby replace it
+      child.setAttribute('aria-labelledby', header.id) // AT names the group from the header
+      child.insertBefore(header, child.firstChild)
+    }
+    listbox.appendChild(child)
   }
 }
 

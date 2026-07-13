@@ -1065,3 +1065,74 @@ describe('ui-select — user-invalid leg (ADR-0051)', () => {
     expect(el.matches(':state(user-invalid)'), 'user-invalid persists after a value is picked').toBe(false)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [10] TKT-0026 — a late-added Option adopts into the REAL top-layer panel (both engines)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-select — dynamic options: a late Option adopts into the panel (TKT-0026, both engines)', () => {
+  it('appended WHILE CLOSED: the late option renders inside the panel once opened, and is clickable', async () => {
+    const { el } = mount(`
+      <ui-select placeholder="Choose…">
+        <div role="option" value="apple">Apple</div>
+        <div role="option" value="banana">Banana</div>
+      </ui-select>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'cherry')
+    late.textContent = 'Cherry'
+    el.append(late)
+    await Promise.resolve() // MutationObserver callback is microtask-deferred
+    await Promise.resolve()
+
+    expect(late.parentElement, `${server.browser}: the late option was not adopted into the panel`).toBe(listbox)
+
+    el.open = true
+    await el.updateComplete
+
+    const rect = late.getBoundingClientRect()
+    expect(rect.width, `${server.browser}: the late option collapsed to zero width in the open panel`).toBeGreaterThan(0)
+    expect(rect.height, `${server.browser}: the late option collapsed to zero height in the open panel`).toBeGreaterThan(0)
+
+    await userEvent.click(late)
+    await el.updateComplete
+    expect(el.value, `${server.browser}: clicking the late option did not commit it`).toBe('cherry')
+    expect(listbox.matches(':popover-open'), `${server.browser}: commit should close the panel`).toBe(false)
+  })
+
+  it('appended WHILE OPEN: the panel updates LIVE — the late option renders + is clickable without closing/reopening', async () => {
+    const { el } = mount(`
+      <ui-select placeholder="Choose…">
+        <div role="option" value="apple">Apple</div>
+        <div role="option" value="banana">Banana</div>
+      </ui-select>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+
+    el.open = true
+    await el.updateComplete
+    expect(listbox.matches(':popover-open'), `${server.browser}: the panel did not open`).toBe(true)
+
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'cherry')
+    late.textContent = 'Cherry'
+    el.append(late)
+    await Promise.resolve() // MutationObserver callback is microtask-deferred
+    await Promise.resolve()
+
+    // Still open (the adoption must not disturb the open panel) AND the new option renders live.
+    expect(listbox.matches(':popover-open'), `${server.browser}: adopting a late option unexpectedly closed the panel`).toBe(true)
+    expect(late.parentElement, `${server.browser}: the late option was not adopted into the OPEN panel`).toBe(listbox)
+    const rect = late.getBoundingClientRect()
+    expect(rect.width, `${server.browser}: the live-adopted option collapsed to zero width`).toBeGreaterThan(0)
+    expect(rect.height, `${server.browser}: the live-adopted option collapsed to zero height`).toBeGreaterThan(0)
+
+    await userEvent.click(late)
+    await el.updateComplete
+    expect(el.value, `${server.browser}: clicking the live-adopted option did not commit it`).toBe('cherry')
+  })
+})

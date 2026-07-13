@@ -16,8 +16,10 @@
 //     editor.textContent when this.value changes (not on every keystroke), so the user's caret
 //     is never reset mid-typing.
 //   - Listbox panel: control-created <div data-part="listbox" role="listbox" popover="auto">.
-//     Author-provided [role=option] children are moved in at connect time (the child-move
-//     pattern, ADR-0017). Stable per-option ids assigned once for aria-activedescendant.
+//     Author-provided [role=option] children are adopted in at connect time AND on every later
+//     light-DOM mutation (TKT-0026: a MutationObserver on the host's own childList — the select.ts
+//     precedent; see #syncOptions), the child-move pattern, ADR-0017. Stable per-option ids
+//     assigned lazily (#setActive) so a late-adopted option gets one too.
 //   - overlay(this, { popup: listbox, anchor: editor, focusOnOpen: false }) — focus NEVER
 //     leaves the editor. Two-way `open` (ADR-0019): scope-owned effect drives model→overlay;
 //     the overlay's `close` event drives overlay→model.
@@ -84,7 +86,8 @@ export class UIComboBoxElement extends UIFormElement {
   #editor: HTMLElement | null = null
 
   // The control-created listbox panel part — created ONCE. Children with [role=option] are
-  // moved into it at connect time and stay there. The overlay controller sets popover="auto".
+  // adopted into it at connect time AND on every later light-DOM mutation (TKT-0026 — see
+  // #syncOptions) and stay there. The overlay controller sets popover="auto".
   #listbox: HTMLElement | null = null
 
   // The control-created "no matches" row — created ONCE, appended AFTER the moved-in options so it
@@ -113,6 +116,11 @@ export class UIComboBoxElement extends UIFormElement {
   // released on disconnect) — the text-field precedent.
   #userInvalid: TrackUserInvalidController | null = null
 
+  // TKT-0026 — the select.ts precedent: watches the HOST's own light-DOM childList so an Option
+  // added AFTER first connect still adopts into the panel (see #syncOptions below). Created fresh on
+  // every connect; disconnected + nulled in disconnected().
+  #optionObserver: MutationObserver | null = null
+
   // ── Override `focus()` to forward to the editor part ────────────────────────────────────────
 
   override focus(options?: FocusOptions): void {
@@ -130,6 +138,13 @@ export class UIComboBoxElement extends UIFormElement {
     }
 
     const { editor, listbox } = this.#ensureParts()
+
+    // TKT-0026 — adopt any light-DOM children sitting as direct children of the host RIGHT NOW
+    // (catches anything appended while disconnected — no observer runs during that gap) and arm the
+    // observer for everything after. See #syncOptions for why this never double-moves on reconnect.
+    this.#syncOptions()
+    this.#optionObserver = new MutationObserver(() => this.#syncOptions())
+    this.#optionObserver.observe(this, { childList: true })
 
     // ── ADR-0051 — the user-invalid TIMING controller ────────────────────────────────────────
     // `blur` (capture) + `change` (emitted by #commitOption/#commitFreeText) — the text-field
@@ -356,14 +371,13 @@ export class UIComboBoxElement extends UIFormElement {
     // aria-controls on the editor links it to the listbox (the AT association).
     editor.setAttribute('aria-controls', listbox.id)
 
-    // Move author-provided [role=option] children (and other children) into the listbox.
-    // This is the child-move pattern (ADR-0017): the options live in the top-layer panel.
-    let node = this.firstChild
-    while (node) {
-      const next = node.nextSibling
-      listbox.appendChild(node)
-      node = next
-    }
+    // Adopt author-provided children (and other children) into the listbox — the child-move pattern
+    // (ADR-0017): the options live in the top-layer panel. #syncOptions (TKT-0026) is the single,
+    // reusable adopt pass shared with `connected()`'s first-connect call AND every later light-DOM
+    // mutation via `#optionObserver` — at this point `#emptyRow` is still null, so its own
+    // `insertBefore(node, null)` degrades to a plain append (the emptyRow-stays-last invariant below
+    // only matters once emptyRow exists).
+    this.#syncOptions()
 
     // Assign stable ids to options for aria-activedescendant (done ONCE per connection).
     let optSeq = 0
@@ -387,6 +401,46 @@ export class UIComboBoxElement extends UIFormElement {
 
     this.append(editor, listbox)
     return { editor, listbox }
+  }
+
+  // ── Dynamic-options adoption (TKT-0026) ─────────────────────────────────────────────────────
+
+  /**
+   * Adopt every light-DOM node CURRENTLY sitting as a DIRECT child of the host — other than the
+   * control-created `editor`/`listbox` parts themselves — into the listbox panel, immediately
+   * BEFORE `#emptyRow` (so the "no matches" row stays the panel's last child regardless of how much
+   * gets adopted over time; `insertBefore(node, null)` degrades to a plain append when `#emptyRow`
+   * does not exist yet, i.e. the very first call from inside `#ensureParts()`). Runs once per connect
+   * (first-connect AND reconnect — the reconnect call catches anything appended while disconnected,
+   * when no observer was running) and again on every subsequent host `childList` mutation via
+   * `#optionObserver` (armed in connected()).
+   *
+   * Idempotent + self-terminating, no re-entrancy guard needed: an already-adopted node lives inside
+   * `#listbox`, not as a direct child of `this` — so `this.firstChild`/`nextSibling` traversal never
+   * re-visits it (the relocation law: no double-move on reconnect). `editor`/`listbox` are excluded
+   * by reference (they DO become direct children of `this` at the end of `#ensureParts()`, and must
+   * never be adopted into themselves).
+   *
+   * A late adoption re-runs the CURRENT filter (`#filterOptions`, which also refreshes the empty-state
+   * row) against the whole option set — a freshly-adopted option must obey whatever the user has
+   * already typed, not bypass it by arriving after the fact.
+   */
+  #syncOptions(): void {
+    const listbox = this.#listbox
+    if (!listbox) return
+    const editor = this.#editor
+    const emptyRow = this.#emptyRow
+    let adopted = false
+    let node = this.firstChild
+    while (node) {
+      const next = node.nextSibling
+      if (node !== editor && node !== listbox) {
+        listbox.insertBefore(node, emptyRow)
+        adopted = true
+      }
+      node = next
+    }
+    if (adopted && editor) this.#filterOptions(editor.textContent ?? '')
   }
 
   // ── Active-descendant helpers ──────────────────────────────────────────────────────────────
@@ -617,6 +671,8 @@ export class UIComboBoxElement extends UIFormElement {
   protected override disconnected(): void {
     this.#userInvalid?.release() // idempotent — the listeners already die with the connection scope
     this.#userInvalid = null
+    this.#optionObserver?.disconnect() // TKT-0026 — the observer does not outlive the connection
+    this.#optionObserver = null
   }
 
   /** Feeds `FormConnectDetail.userInvalid` (ADR-0050) — the `trackUserInvalid` tracker IS the one

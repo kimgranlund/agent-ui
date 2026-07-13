@@ -307,6 +307,202 @@ describe('ui-combo-box — control-created parts (combo-parts-idempotent · comb
   })
 })
 
+// ── Dynamic options (TKT-0026 — late-added Option adoption) ────────────────────────────────────
+
+describe('ui-combo-box — dynamic options (combo-dynamic-options)', () => {
+  it('combo-dynamic-options: an Option appended AFTER connect is adopted into the listbox panel', async () => {
+    const { el, listbox } = makeCombo()
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve() // MutationObserver callback is microtask-deferred
+    await Promise.resolve()
+
+    expect(late.parentElement).toBe(listbox)
+    expect(listbox.querySelectorAll('[role=option]')).toHaveLength(4)
+    el.remove()
+  })
+
+  it('combo-dynamic-options: the late option lands BEFORE the "no matches" row (emptyRow stays last)', async () => {
+    const { el, listbox } = makeCombo()
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(listbox.lastElementChild?.getAttribute('data-part')).toBe('empty')
+    el.remove()
+  })
+
+  it('combo-dynamic-options: multiple late additions land in the panel in their authored (append) order', async () => {
+    const { el, listbox } = makeCombo()
+    for (const [value, label] of [['date', 'Date'], ['elderberry', 'Elderberry']] as const) {
+      const opt = document.createElement('div')
+      opt.setAttribute('role', 'option')
+      opt.setAttribute('value', value)
+      opt.textContent = label
+      el.append(opt)
+    }
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const values = [...listbox.querySelectorAll<HTMLElement>('[role=option]')].map((o) => o.getAttribute('value'))
+    expect(values).toEqual(['apple', 'banana', 'cherry', 'date', 'elderberry'])
+    el.remove()
+  })
+
+  it('combo-dynamic-options: a late-added option becomes selectable — click commits value + editor text', async () => {
+    const { el, editor, listbox } = makeCombo()
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    listbox.querySelector<HTMLElement>('[value="date"]')!.click()
+    await whenFlushed()
+
+    expect(el.value).toBe('date')
+    expect(editor.textContent).toBe('Date')
+    el.remove()
+  })
+
+  it('combo-dynamic-options: a late option gets a stable id lazily when it becomes active-descendant', async () => {
+    const { el, editor } = makeCombo()
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(late.id).toBe('') // not yet assigned — no #setActive call has touched it
+    editor.focus()
+    fireKey(editor, 'ArrowUp') // opens + moves active to the LAST visible option (the late one)
+    expect(late.id).toBeTruthy()
+    expect(editor.getAttribute('aria-activedescendant')).toBe(late.id)
+    el.remove()
+  })
+
+  it('combo-dynamic-options: a late option obeys the CURRENTLY typed filter (not shown if it does not match)', async () => {
+    const { el, editor, listbox } = makeCombo()
+    editor.textContent = 'app'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    await whenFlushed()
+
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(late.hidden).toBe(true) // "date" does not match the "app" filter already in effect
+    expect(listbox.querySelector<HTMLElement>('[data-part="empty"]')?.hidden).toBe(true) // apple still matches
+    el.remove()
+  })
+
+  it('combo-dynamic-options: removing an already-adopted option leaves the panel cleanly (no throw)', async () => {
+    const { el, listbox } = makeCombo()
+    const banana = listbox.querySelector<HTMLElement>('[value="banana"]')!
+    expect(() => banana.remove()).not.toThrow()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(listbox.querySelectorAll('[role=option]')).toHaveLength(2)
+    expect(banana.isConnected).toBe(false)
+    el.remove()
+  })
+
+  it('combo-dynamic-options: adopting a late option never disturbs an existing committed value', async () => {
+    const { el, editor, listbox } = makeCombo({ value: 'banana' })
+    expect(editor.textContent).toBe('Banana')
+
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(el.value).toBe('banana')
+    expect(editor.textContent).toBe('Banana')
+    expect(listbox.querySelectorAll('[role=option]')).toHaveLength(4)
+    el.remove()
+  })
+
+  it('combo-dynamic-options: no double-move on reconnect — an already-adopted option is untouched', async () => {
+    const { el, listbox } = makeCombo()
+    const before = [...listbox.querySelectorAll('[role=option]')]
+
+    el.remove()
+    document.body.append(el)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const newListbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    expect(newListbox).toBe(listbox) // the panel itself persists across reconnect (idempotent parts)
+    expect([...newListbox.querySelectorAll('[role=option]')]).toEqual(before) // same 3 nodes, same order
+    expect(newListbox.querySelectorAll('[role=option]')).toHaveLength(3)
+    el.remove()
+  })
+
+  it('combo-dynamic-options: an option appended WHILE DISCONNECTED is adopted on the next reconnect', async () => {
+    const { el, listbox } = makeCombo()
+    el.remove() // no observer runs while disconnected
+
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late) // lands as a direct host child — no observer is armed to adopt it yet
+
+    document.body.append(el) // reconnect: connected()'s explicit #syncOptions() call catches it
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(late.parentElement).toBe(listbox)
+    expect(listbox.querySelectorAll('[role=option]')).toHaveLength(4)
+    el.remove()
+  })
+
+  // TKT-0026 review — the aria-activedescendant-stability-during-adoption minor gap, NAMED not
+  // fixed: `#syncOptions` re-runs `#filterOptions` on every late adoption (so a fresh option obeys
+  // the current filter, combo-dynamic-options above), and `#filterOptions` unconditionally resets
+  // the active-descendant to -1 (the "visible set changed" contract). A late arrival therefore
+  // clears whatever option the user was already navigating to via Arrow keys, even one wholly
+  // unrelated to the new arrival. This pins the CURRENT behaviour honestly rather than leaving it
+  // silently unverified — a future pass MAY choose to preserve the active option's identity across
+  // an adoption (re-find it by reference after the reset) if this proves user-visible in practice.
+  it('a late adoption clears an in-progress Arrow-key highlight (named gap, not fixed by TKT-0026)', async () => {
+    const { el, editor } = makeCombo()
+    editor.focus()
+    fireKey(editor, 'ArrowDown') // highlights the first visible option (Apple)
+    expect(editor.getAttribute('aria-activedescendant')).toBeTruthy()
+
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(editor.getAttribute('aria-activedescendant'), 'the in-progress highlight was cleared by the late adoption').toBe(null)
+    el.remove()
+  })
+})
+
 // ── Filter on type ────────────────────────────────────────────────────────────────────────────
 
 describe('ui-combo-box — filter on type (combo-filter · combo-filter-open-on-type)', () => {

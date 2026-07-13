@@ -8,9 +8,10 @@
 // makes the stream *feel* progressive (the out-of-order-tolerant `children` refs on `form` resolve as
 // each field's components land, SPEC-R4).
 //
-// `f_plan`/`in_plan`/its three Options land in ONE message (line 7): `ui-select` moves `[role=option]`
-// children into its listbox panel only at FIRST connect (ADR-0053's known limitation) — Options added to
-// an already-connected Select never reach the panel, so the Select and its Options must arrive together.
+// `f_plan`/`in_plan`/its three Options land in ONE message (line 7): the ship-together default
+// (ADR-0053 + its 2026-07-13 Amendment). Late APPENDED Options now adopt (TKT-0026), but
+// mid-position inserts still crash the generic reconciler (TKT-0031, latent) — one message stays
+// the recommended composing shape.
 //
 // Every property is a declared default-catalog row (Field/FormProvider/Checkbox/Switch/Select/Option +
 // the TextField `type`/`currency`/`step`/`min` reach) — a payload only a coordinated form catalog can

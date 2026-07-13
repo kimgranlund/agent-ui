@@ -114,7 +114,9 @@ Draft → validate → fix → re-check → finalize only when clean:
 - [ ] Every `child`/`children` id resolves to a node (allowing later-in-stream arrival); no dangling refs.
 - [ ] Every `{path}` bind and `${…}` template resolves against the seeded data model; relative paths only
       inside a list-item template.
-- [ ] A `Select`/`Tabs` and their `Option`/`Tab`/`TabPanel` children ship in one `updateComponents` message.
+- [ ] `Tabs` and its `Tab`/`TabPanel` children ship in one `updateComponents` message. (`Select`/`Option`
+      no longer requires this for a plain APPEND — TKT-0026 — but a follow-on resend must only ADD ids,
+      never insert one BETWEEN two already-delivered Options: see the Common-trap entry below, TKT-0031.)
 - [ ] Required inputs sit under a `FormProvider` with a `submit:true` action to gate them.
 - [ ] The `validate-payload` CLI exits 0 (repairs, if any, reviewed) — THEN report gate-green to the host,
       which dispatches `a2ui-reviewer` for grading (you never invoke the critic yourself).
@@ -131,8 +133,18 @@ Draft → validate → fix → re-check → finalize only when clean:
   the mutable container) rather than resending root.
 - **Field uses `child`, not `children`.** It wraps exactly one control; its `label` is that control's
   accessible name (ADR-0051).
-- **Select/Options first-connect.** Options added to an already-connected Select never reach its panel — emit
-  them together (`node-idioms.md`, ADR-0053).
+- **Select/Options — APPEND is safe, MID-POSITION insert still crashes.** TKT-0026 (2026-07-12): a late
+  Option (or `[role=group]`) appended AFTER every currently-delivered Option now DOES adopt into an
+  already-connected Select's panel and becomes selectable — `node-idioms.md`'s prior "must arrive
+  together" limitation (ADR-0053) is superseded for this shape. It is NOT fully general: a resend that
+  inserts a new Option id BETWEEN two already-delivered ones (e.g. `["opt_a","opt_b"]` →
+  `["opt_a","opt_c","opt_b"]`) still throws an uncaught error — the renderer's generic child-reconcile
+  code (`tree.ts#reconcileChildren`) resolves the anchor as a bare widget node with no check that it is
+  still a child of the Select host (it has already relocated into the internal panel by then). This is
+  LATENT/pre-existing, not something TKT-0026 fixed — tracked as TKT-0031 (tree.ts's own wave). Until
+  TKT-0031 lands: when adding Options to an already-connected Select, only APPEND new ids to the END of
+  `children`, never splice one in the middle — shipping the full set together up front remains the
+  simplest, safest shape.
 - **`submit:true` is client-only.** It gates the FormProvider; it never appears on the emitted action wire.
 - **Bindable prop = the control's own prop.** Bind `checked` on a Checkbox/Switch, `selected` on Tabs — not a
   generic `value` (ADR-0053 naming law).

@@ -887,5 +887,19 @@
     "description": "The renderer reconciles a mounted container's resent record (TKT-0024, host-reproduced 2026-07-12: SurfaceTree.apply reuses the cached widget on any later deli…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0129",
+    "url": "./adr-index.html#adr-0129",
+    "description": "M2's two never-specced primitives (PRD-G3 surface-host, PRD-G4 conversation) — design intake against two already-shipped site prototypes (a2ui-live's canvas+as…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0130",
+    "url": "./adr-index.html#adr-0130",
+    "description": "The unified nav-rail family (TKT-0030 reconcile ruling, SUBSUMING TKT-0029's site-nav-v2 design phase) — ui-settings' hand-rolled sections rail and the docs si…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

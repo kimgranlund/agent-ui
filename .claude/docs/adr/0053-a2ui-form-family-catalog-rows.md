@@ -95,3 +95,15 @@ SPEC §5.2 is the owning doc for the row facts; this ADR records why the table c
 - **Staging the TextField reach (text types now, numeric/date later)** — rejected: the mechanism is one
   enum + five accessor props either way; staging leaves shipped capability catalog-invisible (SPEC-N2
   spirit) for no cost saving.
+
+## Amendment (2026-07-13 — TKT-0026/TKT-0031)
+
+The "Options reach the panel only at first connect" limitation this ADR documented is PARTIALLY
+lifted: `ui-select` (and `ui-combo-box`) now adopt late-added Options/groups via a MutationObserver
+(TKT-0026) — an `updateComponents` resend APPENDING new Option ids after every already-delivered
+one renders and selects correctly (proven end-to-end through the real renderer, both engines).
+MID-POSITION insertion between already-delivered Options still fails — not here, but in the
+renderer's generic `reconcileChildren` anchor resolution against ANY child-relocating container
+(the latent, pre-existing gap TKT-0026's review reproduced; tracked as TKT-0031, with a deliberate
+`.toThrow` pin in renderer.test.ts that flips when it lands). Until TKT-0031: ship-together
+remains the recommended composing default; appends are safe; never splice mid-list.
