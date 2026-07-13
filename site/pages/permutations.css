@@ -53,6 +53,27 @@
   align-items: center;
 }
 
+/* TKT-0037 — the type-variants matrix: one self-contained CARD per type (head + specimen + caption
+ * stacked), auto-fill so the grid WRAPS to as many columns as fit instead of forcing types.length
+ * fixed columns (12 types → a ≥132rem non-wrapping row, clipped everywhere). The 15rem track minimum
+ * clears ui-text-field's 20ch min-inline-size floor (ADR-0021) so a specimen never overflows its
+ * track into a neighbor's caption; min(100%, …) keeps sub-15rem viewports overflow-free. */
+.matrix--type-cards {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  align-items: start;
+}
+
+.type-card {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  min-inline-size: 0; /* let the track, not the content, own the width */
+}
+
+.type-card .geo-label {
+  margin: 0;
+}
+
 /* The geometry demo — each block stacks labelled rows so the per-subtree delta reads top-to-bottom. */
 .geometry-demo {
   display: flex;

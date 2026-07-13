@@ -208,14 +208,19 @@ function typeSection(): HTMLElement {
     'button, the steppers, or the date picker overlay.'
   section.append(intro)
 
+  // TKT-0037: one SELF-CONTAINED cell per type (head + specimen + caption stacked), in an auto-fill grid
+  // that WRAPS to as many columns as fit (permutations.css `.matrix--type-cards`). The old shape — all heads
+  // appended, then all cells, on a `repeat(types.length, …)` template — forced a single non-wrapping
+  // 12-column row (≥132rem minimum, clipped on every real viewport), and its 11rem track minimum sat BELOW
+  // the field's own 20ch min-inline-size floor (ADR-0021), so specimens overflowed into the neighbors'
+  // captions. Head↔specimen↔caption binding now survives every wrap by construction.
   const matrix = document.createElement('div')
-  matrix.className = 'matrix'
-  matrix.style.gridTemplateColumns = `repeat(${types.length}, minmax(11rem, 1fr))`
-  for (const type of types) matrix.append(gridText(`type = ${type}`, 'matrix-head'))
+  matrix.className = 'matrix matrix--type-cards'
   for (const type of types) {
     const sample = TYPE_SAMPLES[type] ?? { value: '', placeholder: type, note: type }
     const cell = document.createElement('div')
-    cell.className = 'matrix-cell'
+    cell.className = 'matrix-cell type-card'
+    cell.append(gridText(`type = ${type}`, 'matrix-head'))
     cell.append(makeField({
       size: 'md', type, value: sample.value, placeholder: sample.placeholder,
       currency: sample.currency, unit: sample.unit, step: sample.step, min: sample.min, max: sample.max,
