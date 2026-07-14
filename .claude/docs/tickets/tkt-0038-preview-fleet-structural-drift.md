@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0038
-status: open
+status: done
 date: 2026-07-13
 owner:
 kind: bug
@@ -54,3 +54,15 @@ swiper leg may upgrade it if a real WebKit rendering gap is confirmed).
   build reports (2026-07-13), both stash-verified pre-existing.
 
 ## Findings
+
+### 2026-07-13 — Fixed in `25bb157`
+Two independently root-caused defects, neither what the ticket first assumed: (a) the fleet test's
+hand-maintained `CASES` array had drifted from `STRUCTURAL` — fixed by making `STRUCTURAL` the
+single-owner iteration source, with `MIN_CHILDREN` supplying only the per-tag threshold, guarded
+bidirectionally so membership divergence now fails loudly instead of drifting silently again
+(`component-preview-fleet.browser.test.ts:82-85`, `MIN_CHILDREN covers every STRUCTURAL tag
+(anti-vacuous)`). (b) `ui-swiper-pagination`/`ui-swiper-paddles` "losing" structural children was
+not a component bug — both are pure coordinator-driven anchors with no `connectedCallback`
+override; standalone in the preview (no owning `ui-swiper`) they legitimately render empty. Fixed
+on the test side with representative specimens, not a component change. Re-verified now: the
+anti-vacuous `MIN_CHILDREN`/`STRUCTURAL` parity assertion is in place and passing.

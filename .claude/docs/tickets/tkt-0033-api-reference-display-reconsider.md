@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0033
-status: doing
+status: done
 date: 2026-07-13
 owner:
 kind: bug
@@ -112,3 +112,16 @@ implement in `doc-page.ts`'s `renderApiTable` + `renderSequenceTable`, with the 
 stylesheet doc-page imports (NOT `_page.css` — a concurrent nav wave owns that file). Stays a thin
 descriptor-derived render; the doc-page drift gates stay green; independently reviewed before commit.
 D's grouping is a deferred follow-on, not this build.
+
+## Findings
+
+### 2026-07-13 — Built in `c386132`
+Form B shipped across all five sibling tables: name as a prominent left-rail index, enum values as
+a wrapped chip-set, empty defaults as an em-dash, `reflect` demoted to a true-only badge, stacking
+to one column below 32rem. Styles live in a new `site/lib/doc-page.css` (the
+`component-preview.css` precedent), not `_page.css`; all colors on `--md-sys-color-*` roles, both
+schemes. Derive-from-descriptor preserved — rows still build straight from
+`ParsedAttribute`/`SequenceItem`, zero hand-authoring. Independent review GO at commit time
+(live-render verified: 13-chip type enum wraps, 7 em-dash defaults, zero empty chips). Re-verified
+now: `doc-page.test.ts` 13/13 green. D's grouping (large controls clustered by type-relevance)
+remains a deferred follow-on, not scoped here.

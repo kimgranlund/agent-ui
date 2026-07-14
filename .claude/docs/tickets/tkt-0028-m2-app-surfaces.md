@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0028
-status: doing
+status: done
 date: 2026-07-12
 owner:
 kind: feature
@@ -114,3 +114,16 @@ added (SPEC-R10).
 **Doc review (self-run, `scribe:doc-reviewer`):** dispatched against both new documents; see the
 review verdicts recorded by the reviewing pass. Fixes applied pre-commit where the review found
 gaps; verdicts reported to the requesting seat.
+
+## Findings
+
+### 2026-07-13 — Built in `58bc577`, hardened in `4463350` (TKT-0034)
+Both primitives shipped per the ratified ADR-0129: `UISurfaceHostElement` (`ui-surface-host`,
+LLD-C1/C4, SPEC-R2/R3 — the standalone-usable mount/stream seam, no ancestor coupling) and
+`UIConversationElement` (`ui-conversation`, LLD-C4/C5, SPEC-R4 — composes `ui-surface-host`
+internally, one instance per open surface, an imperative `AgentTurnHandle` the app's own turn loop
+drives), both exported from `@agent-ui/app`'s barrel, both carrying their `.md` descriptor, unit
+tests, and browser cross-engine smoke tests. TKT-0034 (already `done`) closed a follow-on defect
+in `ui-conversation`'s busy-reentrancy tracking discovered post-ship. Re-verified now:
+`surface-host.test.ts` + `conversation.test.ts` 42/42 green, `npm run check` clean, full suite
+328 files / 6029 tests green.

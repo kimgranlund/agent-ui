@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0032
-status: open
+status: done
 date: 2026-07-13
 owner:
 kind: bug
@@ -55,3 +55,11 @@ all current values are registered). The cost is a latent enforcement hole a futu
   (the naming master plan that minted the gate).
 
 ## Findings
+
+### 2026-07-13 — Fixed in `f555d3b`
+`dynamicRoleSites` gained a second regex alternative recognizing the identifier-RHS
+`<expr>.dataset.role = <ident>` form, correctly partitioned from `usedRoles`' literal-string
+matcher so a quoted-string RHS never double-counts. Non-vacuous proof taken at fix time (a temp
+fixture with an unregistered `dataset.role = ident` write, confirmed caught, then deleted).
+Repo-wide grep confirmed no other `dataset.role = ident` site exists — no new
+`ROLE_IDENTIFIER_EXCEPTIONS` entries needed. Re-verified now: `naming-gates.test.ts` 58/58 green.
