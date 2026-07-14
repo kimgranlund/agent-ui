@@ -186,6 +186,11 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'ADR-0125 F8 / command-modal.lld.md LLD-C16 — PERMANENT exclusion: the CMD-K palette is app-owner ' +
     'launcher chrome (the Toast/ThemeProvider/StatusStream class, ADR-0112 cl.6 reasoning) — an agent ' +
     'emitting an app\'s command palette is the wrong trust shape; its items are the consumer\'s actions.'],
+  ['Textarea',
+    'ADR-0134 Consequences — TEMPORARY, "shipped ahead of its catalog row" (the chart-family/report-family/ ' +
+    'token-surface precedent): the ADR ratifies the fleet primitive only and explicitly defers "whether it ' +
+    'earns an A2UI catalog type" to a separate intake. Drain this entry (add the catalog + factory row) when ' +
+    'that intake lands — not a permanent exclusion like Toast/ThemeProvider above.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

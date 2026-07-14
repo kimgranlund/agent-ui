@@ -3,16 +3,19 @@
 // verbatim by all FIVE instantiations (prompt sections + skill/workflow/resource/tool) — no kind gets
 // its own bespoke list/toggle/author code (ADR-0132 cl.1).
 //
-// The per-entry content editor is a plain native `<textarea>` — the SAME tracked, unratified deviation
-// TKT-0041 already flags for the single-field v1 (no shipped FACE control renders long-form multi-line
-// text); this build does not introduce a NEW instance of that gap, it generalizes the one already known.
+// The per-entry content editor is `<ui-textarea>` (ADR-0134) — the fleet's first FACE long-form multi-line
+// primitive, closing the native-`<textarea>` deviation TKT-0041 tracked (the single-field v1 gap ADR-0132
+// generalized, unresolved until now). `.value` get/set and the commit-on-`change` (never `input`) timing
+// are byte-identical to the native textarea this replaces — `ui-textarea` emits `change` on blur-with-change,
+// exactly the existing contract below.
 //
 // DOM ownership: `mountEntryList` builds the section shell (heading + list host + add-form host) ONCE
 // and returns a `render(entries)` that rebuilds the list body from scratch on every call — acceptable
 // because `render` is only invoked on a genuine entries-array change (add/delete/toggle, or an external
-// store notification), never per-keystroke; a content edit commits on the textarea's own `change` (blur),
+// store notification), never per-keystroke; a content edit commits on ui-textarea's own `change` (blur),
 // not on `input`, matching the fleet's per-field-on-change law (settings.ts's own SPEC-R12 timing).
 
+import type { UITextareaElement } from '@agent-ui/components/controls/textarea'
 import type { Entry, NewEntryInput } from './entries.ts'
 
 export interface EntryListHandlers {
@@ -71,7 +74,7 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
   descriptionField.placeholder = 'Description (optional)'
   descriptionField.setAttribute('data-part', 'entry-add-description')
 
-  const contentField = document.createElement('textarea')
+  const contentField = document.createElement('ui-textarea') as UITextareaElement
   contentField.placeholder = 'Content'
   contentField.setAttribute('data-part', 'entry-add-content')
 
@@ -121,10 +124,11 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
     // and focus stolen into the OTHER section's same-id row on that section's own re-render.
     const activeRow = active?.closest('[data-part="entry"]') as HTMLElement | null
     const activeId = activeRow !== null && list.contains(active) ? (activeRow.getAttribute('data-entry-id') ?? undefined) : undefined
-    const preservedValue =
-      activeId !== undefined && active instanceof HTMLTextAreaElement && active.getAttribute('data-part') === 'entry-content'
-        ? active.value
-        : undefined
+    // `ui-textarea`'s focused DOM node is its internal `[data-part="editor"]` part, not the host the
+    // `entry-content` data-part lives on (unlike the native `<textarea>` this replaces, where the focused
+    // node WAS the data-part-bearing element) — `.closest()` walks up from either to the host.
+    const activeField = active?.closest('[data-part="entry-content"]') as UITextareaElement | null
+    const preservedValue = activeId !== undefined && activeField !== null ? activeField.value : undefined
 
     list.replaceChildren()
     const sorted = [...entries].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
@@ -167,7 +171,7 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
         row.append(desc)
       }
 
-      const contentField = document.createElement('textarea')
+      const contentField = document.createElement('ui-textarea') as UITextareaElement
       contentField.setAttribute('data-part', 'entry-content')
       contentField.setAttribute('aria-label', `${entry.label} content`)
       // Restore an in-progress, uncommitted edit for THIS entry (captured above) rather than the
@@ -180,9 +184,16 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
       // Focusing only works once `contentField` is actually connected to the document — calling
       // `.focus()` before `list.append(row)` is a silent no-op in real browsers (the element isn't
       // part of the rendered tree yet), which is what let this ship broken past the jsdom leg.
+      // `selectToEnd()` (ADR-0134's migration seam) focuses the editor part AND collapses the caret to the
+      // end in one call — the ui-textarea-friendly equivalent of the native
+      // `.focus()` + `.setSelectionRange(len, len)` pair a contenteditable host does not expose.
+      // component-reviewer MINOR fix: the `.value =` write above lands its model→surface sync
+      // asynchronously (the render effect), so calling `selectToEnd()` synchronously here would
+      // collapse the range against a not-yet-populated editor (`selectNodeContents` on an empty node
+      // caret-collapses to 0, not the end) — focus alone still lands (verified in the cross-engine
+      // suite), but the caret position wouldn't. Await the flush first.
       if (entry.id === activeId && preservedValue !== undefined) {
-        contentField.focus()
-        contentField.setSelectionRange(contentField.value.length, contentField.value.length)
+        void contentField.updateComplete.then(() => contentField.selectToEnd())
       }
     }
   }

@@ -90,6 +90,16 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0134 — ui-textarea, the multi-line FACE sibling of ui-text-field (tier=control ⇒ the same
+    // {permutations, states, doc} set as ui-button/ui-text-field).
+    label: 'ui-textarea',
+    links: [
+      { href: './textarea-permutations.html', label: 'Permutations' },
+      { href: './textarea-states.html', label: 'States' },
+      { href: './textarea-doc.html', label: 'API' },
+    ],
+  },
+  {
     // The Display-class text primitive — a single descriptor-derived API doc (tier=display ⇒ {doc} only).
     label: 'ui-text',
     links: [{ href: './text-doc.html', label: 'API' }],

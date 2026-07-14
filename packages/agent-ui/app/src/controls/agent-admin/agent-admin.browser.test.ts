@@ -16,6 +16,7 @@ import '../surface-host/surface-host.css'
 import './agent-admin.css'
 import './agent-admin.ts'
 import type { UIAgentAdminElement } from './agent-admin.ts'
+import type { UITextareaElement } from '@agent-ui/components/controls/textarea'
 import { ENTRY_KINDS } from './entries.ts'
 
 const mounted: HTMLElement[] = []
@@ -55,9 +56,11 @@ describe('ui-agent-admin cross-engine smoke — three panes render side by side 
 
   it('a seeded prompt-section entry\'s content field is visibly focusable and legible (a real element, not display:none)', () => {
     const { el } = mountAgentAdmin()
-    const field = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLTextAreaElement
+    const field = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
     field.focus()
-    expect(document.activeElement).toBe(field)
+    // ui-textarea forwards .focus() to its internal contenteditable editor part (the text-field precedent) —
+    // the ACTIVE element is that editor div, not the host; :focus-within proves focus landed inside the field.
+    expect(field.matches(':focus-within')).toBe(true)
     const box = field.getBoundingClientRect()
     expect(box.width).toBeGreaterThan(0)
     expect(box.height).toBeGreaterThan(0)
@@ -108,11 +111,11 @@ describe('ui-agent-admin cross-engine smoke — the add-form is GENUINELY collap
 })
 
 describe('ui-agent-admin cross-engine smoke — an uncommitted edit survives a sibling toggle (component-reviewer MAJOR fix)', () => {
-  it('a mid-edit content field keeps its live value AND its focus after a sibling entry re-renders the list', () => {
+  it('a mid-edit content field keeps its live value AND its focus after a sibling entry re-renders the list', async () => {
     const { el } = mountAgentAdmin()
     const foundationField = el.querySelector(
       '[data-entry-id="foundation"] [data-part="entry-content"]',
-    ) as HTMLTextAreaElement
+    ) as UITextareaElement
     foundationField.focus()
     foundationField.value = 'Half-typed, never committed'
     foundationField.dispatchEvent(new Event('input', { bubbles: true }))
@@ -125,10 +128,17 @@ describe('ui-agent-admin cross-engine smoke — an uncommitted edit survives a s
 
     const foundationAfter = el.querySelector(
       '[data-entry-id="foundation"] [data-part="entry-content"]',
-    ) as HTMLTextAreaElement
+    ) as UITextareaElement
     expect(foundationAfter.value).toBe('Half-typed, never committed')
-    expect(document.activeElement).toBe(foundationAfter) // real browser focus semantics — the jsdom leg
-    // only asserts the value half; this leg is where the fix's focus claim is actually provable.
+    // component-reviewer MINOR fix: entry-list.ts's restore path awaits `updateComplete` before calling
+    // `selectToEnd()` (the model→surface sync that populates the editor's textContent is async, and
+    // collapsing a range onto a still-empty editor caret-lands at 0, not the end) — await the SAME flush
+    // here before asserting focus, matching the real timing `selectToEnd()` now runs on.
+    await foundationAfter.updateComplete
+    // real browser focus semantics — the jsdom leg only asserts the value half; this leg is where the fix's
+    // focus claim is actually provable. ui-textarea's selectToEnd() (entry-list.ts's ADR-0134 migration seam)
+    // focuses the internal editor part, not the host — :focus-within proves focus survived onto the NEW row.
+    expect(foundationAfter.matches(':focus-within')).toBe(true)
   })
 })
 

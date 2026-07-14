@@ -689,6 +689,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-table', // connected() builds the scroll/table/thead/tbody skeleton — fully columns/rows-prop-driven, no light-DOM content model at all (slots: [] — table.md)
   'ui-tabs', // the control-created tablist strip PART
   'ui-text-field', // the contenteditable editor PART (×2 parts: editor + measurer)
+  'ui-textarea', // ADR-0134: the SAME contenteditable editor PART pattern as ui-text-field (editor + message)
   'ui-tooltip', // #ensureParts(): anchor (COMPONENT_SAMPLE_CHILDREN) + panel
   // Feed family (ADR-0112): ui-progress/ui-avatar/ui-attachment build their own display parts once
   // (replaceChildren/append) from PROPS alone — no light-DOM content model at all (slots: [] on all three).

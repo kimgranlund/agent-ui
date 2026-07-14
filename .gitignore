@@ -30,6 +30,7 @@ dist-*
 
 # reference dumps (design-token exports, etc.) — not source of truth, not committed
 .claude/docs/other
+.claude/docs/brand
 .env
 
 # Vitest browser-mode run artifacts (Playwright screenshots/attachments) — on-failure debris only.

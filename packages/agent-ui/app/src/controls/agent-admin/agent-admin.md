@@ -49,7 +49,7 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: entry-description
     description: An entry's optional one-line description, when non-empty.
   - name: entry-content
-    description: An entry's `<textarea data-part="entry-content">` — a plain native textarea (not a FACE control; no shipped fleet control renders long-form multi-line text, TKT-0041 tracked, inherited unresolved by ADR-0132).
+    description: An entry's `<ui-textarea data-part="entry-content">` — the fleet's FACE multi-line primitive (ADR-0134), closing the TKT-0041 native-`<textarea>` deviation this composition inherited from ADR-0132.
   - name: entry-add-toggle
     description: A section's "+ Add ..." button, revealing/hiding the add-form.
   - name: entry-add-form
@@ -71,10 +71,10 @@ face:
   formAssociated: false    # NOT a FACE form control — a layout composition; the composed ui-settings' OWN generated fields are each their own FACE participant, unchanged
 
 aria:
-  role: none               # this element carries no ARIA of its own — the composed ui-split/ui-settings/ui-conversation/ui-switch each carry their own, inherited unchanged; every native form control (textarea/input/button) here carries native semantics
+  role: none               # this element carries no ARIA of its own — the composed ui-split/ui-settings/ui-conversation/ui-switch/ui-textarea each carry their own, inherited unchanged; the remaining native form controls (input/button) here carry native semantics
   roleSource: none
 
-keyboard: []                # no bespoke keyboard handling of this element's own — the composed ui-split's separators, ui-settings' rail, ui-conversation's composer, and every ui-switch each carry their OWN keyboard contract, inherited unchanged; every native form control is native (platform keyboard behavior)
+keyboard: []                # no bespoke keyboard handling of this element's own — the composed ui-split's separators, ui-settings' rail, ui-conversation's composer, every ui-switch, and every ui-textarea each carry their OWN keyboard contract, inherited unchanged; the remaining native form controls are native (platform keyboard behavior)
 
 geometry:
   sizeClass: layout          # Container/layout — NO control height

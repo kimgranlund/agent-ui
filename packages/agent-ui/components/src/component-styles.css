@@ -141,3 +141,7 @@
 /* ADR-0123 — ui-color-picker, the OKLCH-internal 2-axis color-input control (color-picker.lld.md): the
  * pad + channel-row/readout geometry; composes ui-slider/ui-text-field/ui-swatch (already imported above). */
 @import './controls/color-picker/color-picker.css';
+
+/* ADR-0134 — ui-textarea, the multi-line FACE sibling of ui-text-field (a SEPARATE geometry law, not the
+ * single-line (scale×size)→§1-row lookup text-field.css uses — see textarea.css's own header). */
+@import './controls/textarea/textarea.css';

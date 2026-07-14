@@ -18,6 +18,8 @@ import buttonMd from '../../packages/agent-ui/components/src/controls/button/but
 import textMd from '../../packages/agent-ui/components/src/controls/text/text.md?raw'
 import iconMd from '../../packages/agent-ui/components/src/controls/icon/icon.md?raw'
 import textFieldMd from '../../packages/agent-ui/components/src/controls/text-field/text-field.md?raw'
+// ADR-0134 — ui-textarea, the multi-line FACE sibling of ui-text-field (tier=control ⇒ {permutations, states, doc}).
+import textareaMd from '../../packages/agent-ui/components/src/controls/textarea/textarea.md?raw'
 import rowMd from '../../packages/agent-ui/components/src/controls/row/row.md?raw'
 import columnMd from '../../packages/agent-ui/components/src/controls/column/column.md?raw'
 import listMd from '../../packages/agent-ui/components/src/controls/list/list.md?raw'
@@ -115,6 +117,7 @@ export const loadButtonDoc = (): ComponentDoc => parseDoc(buttonMd)
 export const loadTextDoc = (): ComponentDoc => parseDoc(textMd)
 export const loadIconDoc = (): ComponentDoc => parseDoc(iconMd)
 export const loadTextFieldDoc = (): ComponentDoc => parseDoc(textFieldMd)
+export const loadTextareaDoc = (): ComponentDoc => parseDoc(textareaMd)
 export const loadRowDoc = (): ComponentDoc => parseDoc(rowMd)
 export const loadColumnDoc = (): ComponentDoc => parseDoc(columnMd)
 export const loadListDoc = (): ComponentDoc => parseDoc(listMd)
