@@ -39,7 +39,15 @@ import { UIConversationElement } from '../conversation/conversation.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsSchema } from '../settings/schema.ts'
 import type { SettingsStore } from '../settings/store.ts'
-import { defaultAgentConfigSchema, initialValuesFor, runStubAgentTurn, sanitizeNumber, sanitizeSelect, type AgentConfigSnapshot } from './agent-admin-schema.ts'
+import {
+  DEFAULT_MODEL_ID,
+  defaultAgentConfigSchema,
+  initialValuesFor,
+  runStubAgentTurn,
+  sanitizeNumber,
+  sanitizeSelect,
+  type AgentConfigSnapshot,
+} from './agent-admin-schema.ts'
 import { ENTRY_KINDS, entriesStoreKey, initialEntryValues, readEntries, composeSystemPrompt, validateNewEntry, type Entry } from './entries.ts'
 import { mountEntryList, showAddError, type EntryListSection } from './entry-list.ts'
 
@@ -260,7 +268,7 @@ export class UIAgentAdminElement extends UIElement {
 
     const config: AgentConfigSnapshot = {
       name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
-      model: sanitizeSelect(schema, 'model', store?.get('model'), 'default'),
+      model: sanitizeSelect(schema, 'model', store?.get('model'), DEFAULT_MODEL_ID),
       temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
       toolsEnabled: store?.get('toolsEnabled') === true,
       systemPrompt,

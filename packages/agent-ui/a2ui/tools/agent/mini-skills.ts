@@ -28,9 +28,17 @@
 // `../../src/corpus/text-similarity.ts` (slice 1) — NOT the `CorpusRecord` schema or `admit.ts`'s
 // pipeline (§1's scoping line: instruction prose doesn't fit the exemplar-required schema).
 //
-// Zero-dep, platform-neutral (SPEC-N5): the only import is the shared math util.
+// ADR-0135 cl.11: the six-entry registry is no longer an inline object-literal array — each entry is a
+// `prompts/mini-skills/<id>.md` frontmatter file (`---\nid:\ntriggers:\n---\n<body>`), loaded + parsed at
+// module load. The bodies are prose, editable/diffable as prose; `selectMiniSkills` and the token-budget
+// test are unchanged. Node-only tooling (never a browser bundle, SPEC-R3/N2), so the synchronous
+// filesystem read at module load is safe — the same lifecycle position the prior static literal held.
 
+import { readFileSync, readdirSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname } from 'node:path'
 import { topKByCosine } from '../../src/corpus/text-similarity.ts'
+import { parseFrontmatter } from './prompts/frontmatter.ts'
 
 /** A named, self-contained, prompt-injectable idiom-instruction module (ADR-0091 Decision §1). */
 export interface MiniSkill {
@@ -54,65 +62,27 @@ export const DEFAULT_MINI_SKILL_CAP = 3
 /**
  * The seed registry — ADR-0090's five calibration examples, at their general (not mode-scaled) maturity,
  * plus the ADR-0103 `form-rhythm` module (the Lane C teaching lane for `ui-form-provider`'s spacing fork).
- * Order is registry-declaration order; selection ranks by relevance, not this order.
+ * Loaded from `prompts/mini-skills/*.md` (ADR-0135 cl.11), one frontmatter file per module. Loaded in a
+ * stable filename-sorted order; the order is NOT load-bearing — `selectMiniSkills` ranks by relevance with
+ * an id tiebreak, and every id-keyed consumer (`calibrationExampleBullet`, the §4 filter) looks up by id.
  */
-export const MINI_SKILLS: MiniSkill[] = [
-  {
-    id: 'card-game-sheet',
-    triggers:
-      'card game hand deck discard pile score board tabletop collection sheet cards player turn',
-    body:
-      'A card-game component sheet. Parts: hand, discard/deck pile, score readout, action bar. Map: hand = ' +
-      'Row(gap) of Cards · pile = a Card with a Text count · score = a Grid of Text (name→value) · action ' +
-      'bar = a Row of Buttons. Wall: drag-to-reorder, card-flip animation, and playing-card face art are not ' +
-      'hosted — name them in the note, render static Cards as the approximation.',
-  },
-  {
-    id: 'settings-screen',
-    triggers: 'settings preferences options toggle switch configuration screen save profile account',
-    body:
-      'A settings screen. Parts: grouped preference rows + save. Map: Card › CardContent › List of Field ' +
-      '(label+description) each wrapping a Switch/Select/TextField; CardFooter › Button. Wall: none — ' +
-      'fully hosted.',
-  },
-  {
-    id: 'dashboard-kpi-grid',
-    triggers: 'dashboard summary kpi stats metrics analytics overview report numbers grid',
-    body:
-      'A dashboard / summary. Parts: 3-7 KPI stats. Map: Grid(min) of Cards, each a Column of ' +
-      'Text variant="caption" (label) + Text variant="h2" (value). Wall: real charts/sparklines are not ' +
-      'hosted — offer the numeric grid, name the missing chart.',
-  },
-  {
-    id: 'login-form',
-    triggers: 'login sign up signup form register account password email submit authentication',
-    body:
-      "A sign-up / login form. Parts: titled section, labelled validated inputs, submit. Map: FormProvider " +
-      "› Card › CardHeader(Text h3) + CardContent(Column of Field › TextField with required, " +
-      "type=email/password, wired to the catalog's required/email functions) + CardFooter(Button " +
-      'action=submit). Wall: none.',
-  },
-  {
-    id: 'master-detail-split',
-    triggers: 'master detail list inspector split selection browse table view records rows',
-    body:
-      'A master-detail / list-and-inspector split. Parts: scannable list + selection-bound detail. Map: ' +
-      'Row split — left List of selectable rows; right Card detail bound via an updateDataModel path. ' +
-      'Wall: true two-way selection sync is a live action→updateComponents round-trip — worth naming.',
-  },
-  {
-    // ADR-0103 §Decision cl.4: FormProvider is a pure coordination wrapper with no layout opinion (Lane
-    // C) — the Column-gap wrap is the taught idiom, not a component default. Distinct from `login-form`
-    // (one concrete worked form): this module is the general rhythm rule for ANY FormProvider surface.
-    id: 'form-rhythm',
-    triggers: 'form signup sign-up register fields survey checkout questionnaire fieldset validation labels',
-    body:
-      "Any FormProvider form's vertical rhythm. FormProvider declares zero layout (page-author-owns-layout) " +
-      "— its fields render crashed together unless wrapped. Map: FormProvider › Column gap='md' (the house " +
-      'rhythm) › one Field per control, each wrapping a TextField/Select/Switch/Checkbox; the submit Button ' +
-      "rides inside the FormProvider, after the fields, gated by the form's validity. Wall: none — fully hosted.",
-  },
-]
+function loadMiniSkills(): MiniSkill[] {
+  // Resolve relative to THIS module via `import.meta.dirname` (a plain path string, correct under the
+  // Node proxy AND vitest), falling back to `import.meta.url` parsed by `node:url`/`node:path` — a STRING
+  // parse, never the jsdom-global `URL` (jsdom mis-resolves `new URL(rel, fileUrl)` to `http://localhost`).
+  const here = (import.meta as { dirname?: string }).dirname ?? dirname(fileURLToPath(import.meta.url))
+  const dir = `${here}/prompts/mini-skills`
+  const files = readdirSync(dir)
+    .filter((name) => name.endsWith('.md'))
+    .sort()
+  return files.map((name) => {
+    const { data, body } = parseFrontmatter(readFileSync(`${dir}/${name}`, 'utf8'))
+    if (!data.id || !data.triggers) throw new Error(`mini-skills: ${name} is missing id/triggers frontmatter`)
+    return { id: data.id, triggers: data.triggers, body }
+  })
+}
+
+export const MINI_SKILLS: MiniSkill[] = loadMiniSkills()
 
 /**
  * Select up to `cap` mini-skills from `registry` whose `triggers` best match `intent` (ADR-0091 §2), via

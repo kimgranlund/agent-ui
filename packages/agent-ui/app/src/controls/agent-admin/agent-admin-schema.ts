@@ -11,7 +11,38 @@
 // `SYSTEM_PROMPT_KEY`/`DEFAULT_SYSTEM_PROMPT` pair this file used to export is gone, replaced by
 // `entries.ts`'s `DEFAULT_PROMPT_SECTIONS`/`composeSystemPrompt`/`DEFAULT_SYSTEM_PROMPT_FALLBACK`.
 
-import type { SettingsField, SettingsSchema } from '../settings/schema.ts'
+import type { SettingsSchema } from '../settings/schema.ts'
+// ADR-0135 Piece A / Fork 2: the fail-closed guards + seed helper hoisted to `@agent-ui/shared` so app
+// and a2ui share ONE implementation. Re-exported here so `agent-admin.ts` keeps its current
+// `'./agent-admin-schema.ts'` import path unchanged.
+export { initialValuesFor, sanitizeNumber, sanitizeSelect } from '@agent-ui/shared'
+
+/** One selectable model — `{ id, label }` (TKT-0043). Scoped local to `agent-admin`, not
+ *  `@agent-ui/shared`: nothing else in the repo consumes this list yet, and hoisting it cross-package
+ *  before a second real consumer exists would be premature (the repo's own `providers.json`,
+ *  `@agent-ui/a2ui/tools/agent/`, is a different package's dev-only JSON precedent, not a shared TS
+ *  constant to extend). A live model call remains explicitly out of scope (ADR-0131 cl.4/cl.7) — this
+ *  list only replaces the old generic `default`/`fast`/`careful` tiers with real, named options. */
+export interface SupportedModel {
+  id: string
+  label: string
+}
+
+export const SUPPORTED_MODELS: readonly SupportedModel[] = [
+  { id: 'claude-opus-4-8', label: 'Opus 4.8' },
+  { id: 'claude-sonnet-5', label: 'Sonnet 5' },
+  { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5' },
+  { id: 'claude-fable-5', label: 'Fable 5' },
+]
+
+export const DEFAULT_MODEL_ID: string = 'claude-sonnet-5'
+
+/** A model id's display label for the stub reply's citation string — falls back to the raw id itself
+ *  (never throws) if `id` isn't one `SUPPORTED_MODELS` names, matching this file's own fail-closed law
+ *  for a bring-your-own store's out-of-range values. */
+function modelLabel(id: string): string {
+  return SUPPORTED_MODELS.find((m) => m.id === id)?.label ?? id
+}
 
 /** The default agent-config `SettingsSchema` (ADR-0131 cl.1: name/model/temperature/tools — no external
  *  runtime dependency). Rendered by the composed `ui-settings` pane exactly as any other settings schema
@@ -36,13 +67,9 @@ export const defaultAgentConfigSchema: SettingsSchema = {
           key: 'model',
           type: 'select',
           label: 'Model',
-          description: 'A generic behavior tier — this preview has no live model dependency (ADR-0131).',
-          default: 'default',
-          options: [
-            { value: 'default', label: 'Default' },
-            { value: 'fast', label: 'Fast' },
-            { value: 'careful', label: 'Careful' },
-          ],
+          description: 'Which model this agent runs on — no live model call happens here (ADR-0131).',
+          default: DEFAULT_MODEL_ID,
+          options: SUPPORTED_MODELS.map((m) => ({ value: m.id, label: m.label })),
         },
         {
           key: 'temperature',
@@ -62,53 +89,6 @@ export const defaultAgentConfigSchema: SettingsSchema = {
       ],
     },
   ],
-}
-
-/** Every key + its schema `default` this schema's fields declare — the `initial` a
- *  `createMemoryStore({ persistKey })` needs to actually read its OWN localStorage-backed values back
- *  after a reload. `memory-store.ts`'s seed loop only checks `localStorage` for keys already present in
- *  `initial` at construction time (it iterates `values.keys()`, never a blind localStorage scan) — an
- *  empty `initial` means every `get()` returns `undefined` forever, even after a real prior `set()`,
- *  silently defeating ADR-0131 cl.3's ruled real-persistence scope. `agent-admin.ts` merges this with
- *  `entries.ts`'s own `initialEntryValues()` — the two files seed disjoint key sets, this one the flat
- *  "Agent" section, that one every entry-list kind. */
-export function initialValuesFor(schema: SettingsSchema): Record<string, unknown> {
-  const initial: Record<string, unknown> = {}
-  for (const section of schema.sections) {
-    for (const field of section.fields) initial[field.key] = field.default
-  }
-  return initial
-}
-
-/** Find one field's definition across every section of a schema, or `undefined` if the schema doesn't
- *  declare it (a bring-your-own schema/store combination the turn loop must still degrade safely against). */
-function findField(schema: SettingsSchema, key: string): SettingsField | undefined {
-  for (const section of schema.sections) {
-    const field = section.fields.find((f) => f.key === key)
-    if (field) return field
-  }
-  return undefined
-}
-
-/** Fail-closed against the SCHEMA's own declared bounds (SPEC-R11 is `ui-settings`' own commit-time
- *  guarantee for values IT writes; this is the turn loop's own guard for a bring-your-own store that
- *  bypassed `ui-settings` entirely — an out-of-range or unrecognized stored value must never reach the
- *  stub reply verbatim). `raw` wins only if it validates; otherwise the field's own schema `default` does. */
-export function sanitizeNumber(schema: SettingsSchema, key: string, raw: unknown, fallback: number): number {
-  const field = findField(schema, key)
-  const min = field?.validation?.min ?? -Infinity
-  const max = field?.validation?.max ?? Infinity
-  if (typeof raw === 'number' && Number.isFinite(raw) && raw >= min && raw <= max) return raw
-  const def = field?.default
-  return typeof def === 'number' ? def : fallback
-}
-
-export function sanitizeSelect(schema: SettingsSchema, key: string, raw: unknown, fallback: string): string {
-  const field = findField(schema, key)
-  const allowed = field?.options?.map((o) => o.value)
-  if (typeof raw === 'string' && (allowed === undefined || allowed.includes(raw))) return raw
-  const def = field?.default
-  return typeof def === 'string' ? def : fallback
 }
 
 /** The agent-config values the stub turn loop reads at turn time — always the CURRENT store contents,
@@ -146,7 +126,7 @@ export function runStubAgentTurn(userText: string, config: AgentConfigSnapshot):
   const promptPreview = config.systemPrompt.length > 60 ? `${config.systemPrompt.slice(0, 60)}…` : config.systemPrompt
   const toolsNote = config.toolsEnabled ? ' Tools are enabled.' : ''
   return (
-    `[stub preview — no live model call] ${config.name} (${config.model}, temp ${config.temperature.toFixed(1)}): ` +
+    `[stub preview — no live model call] ${config.name} (${modelLabel(config.model)}, temp ${config.temperature.toFixed(1)}): ` +
     `instructed as "${promptPreview}".${toolsNote} ` +
     `Skills: ${labelList(config.skills)}. Workflows: ${labelList(config.workflows)}. ` +
     `Resources: ${labelList(config.resources)}. Tools: ${labelList(config.tools)}. You said: ${userText}`

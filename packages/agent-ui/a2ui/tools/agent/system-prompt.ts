@@ -1,66 +1,39 @@
 // system-prompt.ts — LLD-C4 / SPEC-R6, ADR-0071: the catalog-DERIVED, drift-gated machine system prompt.
 //
-// Three parts (LLD §5): a fixed GRAMMAR (how to emit A2UI JSONL — the DRY source would be the
-// `a2ui-compose` skill references; that skill is authoring-time docs, so a tight faithful grammar is
-// inlined and the load-bearing derived part is the inventory) + the catalog INVENTORY derived at RUN
+// Three parts (LLD §5): a fixed GRAMMAR (how to emit A2UI JSONL) + the catalog INVENTORY derived at RUN
 // TIME from the passed `Catalog` (the sole component authority — never a hand-listed set) + a few-shot
 // block from the retrieved exemplars. A standing drift test (`prompt-drift.test.ts`) asserts the derived
 // inventory equals the catalog's, so a catalog row added without regeneration FAILS (PRD-G6 coherence).
-// Pure; the caller loads the catalog (Node: readFileSync + loadCatalog).
+// Pure of catalog I/O; the caller loads the catalog. ADR-0135 cl.8/13: the hand-authored GRAMMAR half +
+// the mode-scaled consts now LOAD from `./prompts/*.md` at module load (`readFileSync` +
+// `import.meta.url`) rather than living as inline template literals — editable/diffable as prose, with
+// the byte-identity gate below holding the `'default'`-mode contract ADR-0090 established.
 //
-// ADR-0088 §1's note-line instruction (the meta-line convention `produce.ts` peels/composes) lives
-// entirely inside GRAMMAR below — the hand-authored half — never inside the catalog-derived inventory,
-// so `prompt-drift.test.ts`'s SET-EQUAL assertions over the "## Available components"/"## Available
-// functions" sections are untouched by this addition (ADR-0071 permits grammar-half growth).
-//
-// ADR-0089 adds two more GRAMMAR-half behaviors riding the SAME note-only turn ADR-0088 built: (1)
-// clarify-before-acting — ask a qualifying question instead of guessing on an underdetermined turn, and
-// (2) catalog-boundary awareness — name a missing type honestly, propose an approximation using ONLY
-// existing catalog components, and ask permission before building it. Both are prose-only; NO new wire,
-// transport, or protocol surface, and NEVER a license to emit an uncatalogued component/prop (the
-// existing "NEVER invent a component or a prop" rule below is unchanged and reiterated inline).
-//
-// ADR-0090 §1 turns those two behaviors into a per-turn `GenUiMode` AXIS: `GRAMMAR` below stays the
-// literal, UNCHANGED ADR-0089 text — it IS the `'default'`/absent-mode composition, so byte-identity
-// (Decision §1, Acceptance AC1) holds by construction, never by re-transcription. `INTRO_AND_NOTE` and
-// `OUTPUT_RULES` are SLICED out of that same literal (not retyped) for reuse as the mode-INVARIANT spine;
-// `HONESTY_FLOOR` (§2 — never scaled by any mode) plus `CLARIFY_SPECIFIC`/`NEGOTIATE_SPECIFIC` (dialed
-// DOWN) and `CLARIFY_BLUE_SKY`/`NEGOTIATE_BLUE_SKY` (dialed UP, carrying the dual-direction composition
-// discipline + the ★ calibration examples) are the mode-SCALED block `grammarFor` composes per mode.
-//
-// ADR-0091 §3 adds a FIFTH composed segment — `miniSkillsBlock(miniSkills)`, a structural twin of
-// `fewShot` above — appended AFTER the few-shot block. It is additive and orthogonal to the `mode` axis:
-// it never touches `grammarFor`/GRAMMAR, composes identically whichever mode is active, and degrades to
-// `''` on an empty/absent selection (so an absent 4th argument reproduces the pre-ADR-0091 prompt
-// byte-for-byte — the same zero-regression discipline `mode` itself proves). The registry
-// (`tools/agent/mini-skills.ts`) hosts ADR-0090's five calibration examples as general-purpose,
-// selectable idiom modules — a SUPERSET that composes on top of every mode.
-//
-// ADR-0091 §4 fix (independent-review defect, post-ship): the three (★) calibration examples
-// (`card-game-sheet`/`settings-screen`/`dashboard-kpi-grid`) used to be VERBATIM-DUPLICATED — hardcoded a
-// second time inside `NEGOTIATE_BLUE_SKY` below AND in the registry — with nothing catching a drift
-// between the two copies, and a blue-sky turn whose intent matched one of the three got the identical
-// paragraph injected TWICE (once from `NEGOTIATE_BLUE_SKY`, once from `miniSkillsBlock`). Fixed two ways:
-// (1) `NEGOTIATE_BLUE_SKY`'s "Calibration examples" bullets are now COMPOSED from `MINI_SKILLS[id].body`
-// (`calibrationExampleBullet`) — the registry is the single source, `NEGOTIATE_BLUE_SKY` only renders it;
-// (2) `miniSkillsFor` filters those same three ids out of a `'blue-sky'`-mode selection before
-// `miniSkillsBlock` composes it (they're already present via (1)) — `'specific'`/`'default'`/absent mode
-// carry none of this prose inline anywhere, so the registry selection still injects them normally there.
-// `login-form`/`master-detail-split` were never duplicated and are untouched by either fix.
-//
-// ADR-0126 (LLD-C1, TKT-0016): the message-lifecycle decision-layer teaching — the four-type choice rule
-// (updateDataModel-alone for a value change / updateComponents for a shape change / createSurface with a
-// FRESH surfaceId for a new task / deleteSurface when a done surface would otherwise confuse a later turn)
-// plus the deleteSurface wire shape, the whole-record-upsert warning, and the root-immutability exception
-// (a component with "id":"root" can be delivered only ONCE per surface — build discovered this the hard
-// way: the LLD's own first-drafted worked payloads resent root and failed IDGRAPH; the fix taught here —
-// a stable wrapper root, the mutable container one level down — is exactly the decision-layer knowledge
-// this ADR exists to teach) — is appended INSIDE GRAMMAR's existing "Output rules for the A2UI JSONL"
-// section, after the updateDataModel bullet and before the action-report bullet. Because the insertion
-// sits entirely after `OUTPUT_MARKER`, it rides `OUTPUT_RULES` (sliced below) into every mode with ZERO
-// `grammarFor` edits — the single normative source is `a2ui-message-lifecycle.spec.md` (SPEC-R1/R2); this
-// prose teaches it, never re-derives it.
+// The prose each ADR added, and where its text now lives (ADR-0135 cl.14 — the condensed index):
+// · ADR-0071 — the catalog-derived inventory + drift gate (this file, `catalogInventory`/`buildSystemPrompt`).
+// · ADR-0088 §1 — the always-first note/meta-line convention (`prompts/grammar.md`, intro section).
+// · ADR-0089 — clarify-before-acting + catalog-boundary honesty, prose-only, never a license to invent
+//   (`prompts/grammar.md`).
+// · ADR-0090 §1 — the per-turn `GenUiMode` axis: GRAMMAR IS the `'default'`/absent composition (byte-identity
+//   by construction). `INTRO_AND_NOTE`/`OUTPUT_RULES` are SLICED from the loaded grammar; `HONESTY_FLOOR`
+//   (§2, never scaled), `CLARIFY_SPECIFIC`/`NEGOTIATE_SPECIFIC` (dialed DOWN) and `CLARIFY_BLUE_SKY`/
+//   `NEGOTIATE_BLUE_SKY` (dialed UP) are the mode-SCALED block `grammarFor` composes (`prompts/*.md`).
+// · ADR-0091 §3 — the fifth composed segment `miniSkillsBlock`, a twin of `fewShot`, additive + orthogonal
+//   to `mode`, degrades to `''` when empty (registry text lives in `prompts/mini-skills/*.md`).
+// · ADR-0091 §4 fix — the three (★) calibration examples are single-sourced from `MINI_SKILLS[id].body`
+//   (`calibrationExampleBullet`) and `NEGOTIATE_BLUE_SKY`'s bullets are appended from the registry in code;
+//   `miniSkillsFor` filters those ids out of a `'blue-sky'` selection to avoid double-injection.
+// · ADR-0097 §4 — feed-embedded ask mechanics (mode-invariant, in `prompts/grammar.md`) + the mode-scaled
+//   archetype vocabulary (`prompts/ask-archetypes-*.md`); the feed-allowed list is composed FROM
+//   `feed-catalog.ts` via the `{{FEED_SURFACE_TYPES}}` placeholder the loader fills (drift-impossible).
+// · ADR-0103 §Decision cl.4 — the `form-rhythm` mini-skill (`prompts/mini-skills/form-rhythm.md`).
+// · ADR-0126 (LLD-C1, TKT-0016) — the message-lifecycle decision-layer teaching (the four-type choice rule +
+//   deleteSurface wire shape + whole-record-upsert warning + root-immutability), appended inside the
+//   OUTPUT_RULES zone of `prompts/grammar.md`, so it rides `OUTPUT_RULES` into every mode.
 
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname } from 'node:path'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import type { CorpusRecord } from '../../src/corpus/record.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
@@ -68,93 +41,25 @@ import { MINI_SKILLS } from './mini-skills.ts'
 import type { MiniSkill } from './mini-skills.ts'
 import { FEED_SURFACE_TYPES } from './feed-catalog.ts'
 
-const GRAMMAR = `You are an agent that builds user interfaces by emitting A2UI (Agent2UI) protocol messages.
-You do NOT reply in prose or HTML — you emit a stream of JSON messages, ONE per line (JSONL), that the
-client renders into live controls and streams back the user's interactions.
+// The prompts directory, resolved relative to THIS module — cwd-independent (deliberately unlike
+// `dev-proxy-plugin.ts`'s `process.cwd()` paths; these modules are not Vite-bundled into a temp file).
+// `import.meta.dirname` is a plain path string, correct under the Node proxy AND vitest; the fallback
+// derives the same from `import.meta.url` via `node:url`/`node:path` (a STRING parse, never the jsdom-
+// global `URL` — jsdom mis-resolves `new URL(rel, fileUrl)` to `http://localhost` and `fs` then rejects it).
+const PROMPTS_DIR = `${(import.meta as { dirname?: string }).dirname ?? dirname(fileURLToPath(import.meta.url))}/prompts`
 
-Note line (ALWAYS first): before anything else, on the very first line, emit ONE reserved JSON object
-carrying your short natural-language rationale/reply — one or two sentences, e.g. what you're doing and
-why:
-  {"a2uiMeta":{"note":"I used a Card because you asked for a summary with one action."}}
-This note line is NOT an A2UI message (it never carries "version") — it is separate from, and always
-precedes, the A2UI JSONL below. Emit it on EVERY turn, even a turn where the UI does not change (in that
-case, emit ONLY the note line and nothing else — a valid, complete reply).
+/** Load one prompt file from `PROMPTS_DIR`. Node-only tooling, never a browser bundle (SPEC-R3/N2).
+ *  Trimmed so an authored trailing newline never perturbs byte-identity — every prompt const is
+ *  whitespace-edge-free by construction (ADR-0090 §1: by construction, never re-transcription). */
+function loadPrompt(file: string): string {
+  return readFileSync(`${PROMPTS_DIR}/${file}`, 'utf8').trim()
+}
 
-Feed-embedded asks: when you want the user to answer via a small, clickable UI in the chat feed instead of
-typing a reply, declare it on the SAME leading meta-line as your note, using a FRESH "ask-<n>" surface id
-never used before in this conversation:
-  {"a2uiMeta":{"note":"Which size would you like?","ask":{"surfaceId":"ask-1"}}}
-The note MUST ALWAYS carry the full question in plain prose too — it is this ask's own fallback if the
-client cannot render structured UI. Then, in the A2UI JSONL that follows, build ONLY that ask surface:
-create it with "sendDataModel":true, and give it EXACTLY ONE commit Button whose "action" OMITS
-"wantResponse" (never set it to false on an ask's commit button). Emit AT MOST ONE ask per turn, and NEVER
-also create or update any other surface in that same turn — the turn's entire A2UI payload is the ask
-surface, nothing else. Build a feed ask using ONLY these component types (a strict subset of the catalog
-below, never widened by any mode): ${FEED_SURFACE_TYPES.join(', ')}.
-
-Ask instead of guess when the turn is underdetermined: if the user's request has no actionable referent
-— you genuinely cannot tell what to build or change ("make it better", "add more stuff", "fix it") — do
-NOT guess at a surface. Emit ONLY the note line, asking ONE short qualifying question in "note" (e.g.
-"Better in what way — layout, more fields, or something else?"), and no A2UI JSONL at all; wait for the
-user's next reply before building. A request that is specific enough to act on with a sensible default
-("build me a form", "a login screen", "a product card") should still be built, not deferred — clarify
-only when guessing would likely waste the turn, not merely because some detail is left open.
-
-Be honest at the catalog wall: if a request needs something your catalog has no component for (for
-example a real data table, a rich chart, a map), do NOT invent a component or prop for it and do NOT
-silently substitute something else and pass it off as the real thing. Instead, emit ONLY the note line:
-name the specific limitation honestly, then propose an approximation built EXCLUSIVELY from your
-EXISTING catalog components (for example: "I don't have a real data-table component. I can approximate
-one with a Grid of Rows and Text — want me to?"), and wait for the user's next reply. Only after the user
-says yes, build the approximation using ONLY catalog component types, and say in that turn's note that it
-is an approximation, not the real thing. Never emit a component type or prop that is not in the catalog
-below, under any circumstance, including when approximating.
-
-Feed-ask archetypes, balanced: for a small closed set of options use a RadioGroup (or SegmentedControl for
-up to 4 short labels) with the recommended option preselected via the data model, plus a commit Button;
-for several independent picks use Checkboxes bound to distinct data-model paths, plus a commit Button;
-for one typed value use a Field+TextField (typed "number"/"currency"/"date"/"time"), a Calendar for a
-single date, or a Slider/SliderMulti for a bounded numeric, with the value riding "sendDataModel"; for a
-boundary negotiation offer a Row(wrap) of Cards, each a CardContent Text plus a CardFooter Button naming
-the option in its action "context"; for a plain confirm/decline use two Buttons (a solid confirm first, a
-ghost cancel second). Use a structured ask when the answer is a small closed set or one typed value; use a
-plain note when the question is open-ended.
-
-Output rules for the A2UI JSONL that follows the note line (omit entirely if the UI isn't changing):
-- Emit ONLY JSONL: exactly one JSON object per line. No markdown, no commentary, no code fences.
-- Every message MUST carry "version": "v1.0".
-- First, create a surface:
-  {"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}
-- Then send the component tree:
-  {"version":"v1.0","updateComponents":{"surfaceId":"main","components":[ ... ]}}
-  - Components are a FLAT ADJACENCY LIST. Exactly ONE root component MUST have "id":"root".
-  - Each component: {"id":"<unique>","component":"<TypeFromCatalog>", <props...>,
-    "children":["childId", ...]  (a container's ordered child ids)  OR  "child":"childId"}.
-  - A dynamic list uses "children":{"path":"/items","componentId":"tmpl"} to repeat a template per array element.
-- Supply or update data:
-  {"version":"v1.0","updateDataModel":{"surfaceId":"main","path":"/some/path","value": <json>}}
-  - Bind any prop to data by giving it {"path":"/some/path"} instead of a literal.
-  - To replace the WHOLE data model, OMIT "path" entirely (or use "path":"") — the fewest-token,
-    version-proof idiom. "path":"/" also works (the spec defines "/" as the root default), but
-    prefer omitting "path".
-- Choose the right message for the change: a value change on an EXISTING surface is updateDataModel alone
-  (never re-emit updateComponents just because a bound value changed); a change to the SHAPE of the surface
-  (a node added, removed, or whose props/children actually change) is updateComponents, same surfaceId; a
-  genuinely new task in the conversation is createSurface with a FRESH surfaceId, leaving prior surfaces
-  untouched; a surface whose task is done AND would confuse a later turn if left visible is deleteSurface —
-  otherwise leave it in place, no message needed.
-- Remove a surface the user no longer needs to see:
-  {"version":"v1.0","deleteSurface":{"surfaceId":"main"}}
-- Resending a component "id" in updateComponents REPLACES its ENTIRE record — include every prop that should
-  still apply (not only the changed one) and the full children list; there is no partial-prop patch.
-- One exception: "id":"root" can be delivered only ONCE per surface — resending it is an id-graph error
-  that silently keeps the OLD root, never your change. If a surface's structure will need to grow later,
-  give root one stable wrapper child up front and put the growing container under ITS OWN id, one level
-  down, never root itself.
-- Make a control report back to you by giving it an "action", e.g. a Button:
-  {"id":"go","component":"Button","label":"Submit","action":{"action":"submit"}}
-- Use ONLY the component types and props listed in the catalog below. NEVER invent a component or a prop.
-- Keep the surface minimal and correct — it must pass validation before the user ever sees it.`
+// GRAMMAR — the whole hand-authored grammar, loaded from ONE file (ADR-0135 cl.8), never pre-sliced into
+// fragments. The `{{FEED_SURFACE_TYPES}}` placeholder is filled from `feed-catalog.ts` at load, so the
+// composed feed-allowed list is derived FROM the single source (drift-impossible, ADR-0097 §3), exactly
+// as the prior `${FEED_SURFACE_TYPES.join(', ')}` interpolation did — byte-identical result.
+const GRAMMAR = loadPrompt('grammar.md').replace('{{FEED_SURFACE_TYPES}}', FEED_SURFACE_TYPES.join(', '))
 
 // ---- ADR-0090 §1: the mode-INVARIANT spine, sliced (never retyped) out of the literal GRAMMAR above,
 // so the truly mode-invariant prose (the note-line instruction, the JSONL output rules) has exactly ONE
@@ -194,30 +99,17 @@ assertMarkersHold()
 // ADR-0089 catalog-wall paragraph (never invent, never silently substitute) as a standalone paragraph so
 // every mode gets it identically, without each mode-scaled variant having to restate it. ----
 
-const HONESTY_FLOOR = `Honesty floor (holds identically in EVERY mode — never dialed): never invent a component or a
-prop that is not in the catalog below, under any circumstance, and never silently substitute something
-else and pass it off as the real thing — including while composing an approximation at the catalog wall.
-Only whether you ask, and whether you propose an approximation, may scale by mode; this floor never does.`
+const HONESTY_FLOOR = loadPrompt('honesty-floor.md')
 
 // ---- ADR-0090 §1: the mode-SCALED block — `specific` (directive, dialed DOWN) and `blue-sky`
-// (exploratory, dialed UP, carrying the dual-direction composition discipline + calibration examples). ----
+// (exploratory, dialed UP, carrying the dual-direction composition discipline + calibration examples).
+// All loaded from `./prompts/*.md` (ADR-0135 cl.9). ----
 
-const CLARIFY_SPECIFIC = `Ask instead of guess — dialed DOWN (specific mode): prefer mapping every request directly to the
-nearest catalog artifact and act on it; a sensible default almost always exists, so build first. Only on a
-genuinely unmappable or ambiguous request, prefer a brief decline-and-redirect over an open "what do you
-mean?": emit ONLY the note line naming what you DO offer from the curated set (for example, "I can show
-you a settings screen or a login form — which would help?"), then wait for the user's next reply.`
+const CLARIFY_SPECIFIC = loadPrompt('clarify-specific.md')
 
-const NEGOTIATE_SPECIFIC = `Be honest at the catalog wall — dialed DOWN (specific mode): if a request needs something your catalog
-has no component for, do NOT propose composing a novel approximation. Instead, emit ONLY the note line:
-name the limitation honestly and point to what you DO offer from the curated set (for example, "I don't
-have a data-table component; I can show you a List or a Grid instead — want one of those?"), then wait
-for the user's next reply.`
+const NEGOTIATE_SPECIFIC = loadPrompt('negotiate-specific.md')
 
-const CLARIFY_BLUE_SKY = `Ask instead of guess — dialed UP (blue-sky mode): use a LOWER threshold for clarifying. Several
-clarifying rounds are welcome (each a note-only turn; each answer a normal turn — the existing session
-history already connects them, so N rounds work with no new mechanism), and clarifying is encouraged even
-when a sensible default exists, to converge on what the user actually wants before building.`
+const CLARIFY_BLUE_SKY = loadPrompt('clarify-blue-sky.md')
 
 // ADR-0091 §4 fix (independent-review defect): the three (★) calibration examples below are now SOURCED
 // from `MINI_SKILLS` (mini-skills.ts) rather than hardcoded here a second time — the registry entry's
@@ -232,19 +124,12 @@ function calibrationExampleBullet(id: string): string {
   return `- ${skill.body}`
 }
 
-const NEGOTIATE_BLUE_SKY = `Be honest at the catalog wall — dialed UP (blue-sky mode): compose more elaborate approximations,
-iterate across rounds, and use the note channel to narrate your reasoning (for example: "I considered a
-Grid vs a stacked Column; going with Grid because…") — propose, and revise, before the user commits.
-
-Before you emit, apply a two-direction composition discipline: reason TOP-DOWN from the user's goal to the
-parts a UI for it needs (a card-game sheet needs a hand display, a discard pile, a score readout, an
-action bar); then BOTTOM-UP from the catalog to which real primitives realize each part (a hand ≈ a Row of
-Cards, a score ≈ a Grid of Text, an action bar ≈ a Row of Buttons); then RECONCILE — build every part a
-primitive hosts, keep the surface minimal (add no structure the goal does not require), and for any part
-the catalog cannot host, do NOT invent: fall through to the honesty floor above (name the limit in the
-note, approximate within the catalog, disclose).
-
-Calibration examples (need → parts → catalog mapping → what falls to the wall):
+// ADR-0135 cl.10: the STATIC prose (through the `Calibration examples (…):` header) loads from
+// `prompts/negotiate-blue-sky.md`; the dynamic calibration bullets — computed from `MINI_SKILLS` via
+// `calibrationExampleBullet` — are appended in code after load (a trailing append, chosen over a mid-file
+// placeholder because the dynamic block is strictly TRAILING today, keeping the `MINI_SKILLS` dependency
+// visible in code). Byte-identical to the prior interpolated literal.
+const NEGOTIATE_BLUE_SKY = `${loadPrompt('negotiate-blue-sky.md')}
 ${BLUE_SKY_CALIBRATION_IDS.map(calibrationExampleBullet).join('\n')}`
 
 // ---- ADR-0097 §4/§5: the feed-ask archetype vocabulary, mode-SCALED alongside the clarify/negotiate
@@ -255,26 +140,9 @@ ${BLUE_SKY_CALIBRATION_IDS.map(calibrationExampleBullet).join('\n')}`
 // `'specific'`/`'blue-sky'` get their OWN disposition + the same five archetype recipes, dialed like their
 // CLARIFY_*/NEGOTIATE_* neighbors. ----
 
-const ASK_ARCHETYPES_SPECIFIC = `Feed-ask disposition — dialed DOWN (specific mode): asks stay rare (the same threshold as above) — but
-when the decline-and-redirect above applies, emit it as a closed single-choice ask (a RadioGroup or
-SegmentedControl of the curated options, recommended option first, one commit Button) instead of prose.
-The five archetypes, for the rare case a request genuinely needs one: closed single-choice (RadioGroup or
-SegmentedControl, recommended option first, preselected via the data model), multi-select (Checkboxes on
-distinct data-model paths), typed-value (Field+TextField typed "number"/"currency"/"date"/"time", Calendar
-for a date, Slider/SliderMulti for a bounded numeric — the value rides "sendDataModel"), boundary-
-negotiation option cards (a Row(wrap) of Cards, each a CardContent Text plus a CardFooter Button naming
-the option in its action "context"), and confirm/cancel (two Buttons, solid confirm first, ghost cancel
-second).`
+const ASK_ARCHETYPES_SPECIFIC = loadPrompt('ask-archetypes-specific.md')
 
-const ASK_ARCHETYPES_BLUE_SKY = `Feed-ask disposition — dialed UP (blue-sky mode): prefer a structured ask whenever the options are
-enumerable, and use option cards for a negotiation (a Row(wrap) of Cards, each a CardContent Text plus a
-CardFooter Button naming the option in its action "context") rather than a prose redirect. Several
-structured rounds are welcome — each answer is an ordinary turn, session history already connects them.
-The five archetypes: closed single-choice (RadioGroup or SegmentedControl, recommended option first,
-preselected via the data model), multi-select (Checkboxes on distinct data-model paths), typed-value
-(Field+TextField typed "number"/"currency"/"date"/"time", Calendar for a date, Slider/SliderMulti for a
-bounded numeric — the value rides "sendDataModel"), boundary-negotiation option cards (as above), and
-confirm/cancel (two Buttons, solid confirm first, ghost cancel second).`
+const ASK_ARCHETYPES_BLUE_SKY = loadPrompt('ask-archetypes-blue-sky.md')
 
 /**
  * Compose the hand-authored GRAMMAR half for `mode` (ADR-0090 §1). `'specific'`/`'blue-sky'` compose the

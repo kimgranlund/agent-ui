@@ -9,7 +9,8 @@
     "./corpus": "./src/corpus/index.ts"
   },
   "dependencies": {
-    "@agent-ui/components": "*"
+    "@agent-ui/components": "*",
+    "@agent-ui/shared": "*"
   },
   "devDependencies": {
     "@agent-ui/icons": "*",

@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { UIAgentAdminElement } from './agent-admin.ts'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
-import { defaultAgentConfigSchema } from './agent-admin-schema.ts'
+import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, entriesStoreKey, initialEntryValues, readEntries, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK, type Entry } from './entries.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsStore } from '../settings/store.ts'
@@ -68,6 +68,48 @@ describe('UIAgentAdminElement — upgrade + defaults', () => {
     expect(el.schema).toBe(defaultAgentConfigSchema)
     expect(el.store).toBeDefined()
     expect(el.store?.get('nonexistent-key')).toBeUndefined() // a real SettingsStore.get, not a stub
+  })
+})
+
+describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)', () => {
+  it("the model field's options are real named models, not the old default/fast/careful tiers", () => {
+    const modelField = defaultAgentConfigSchema.sections[0].fields.find((f) => f.key === 'model')
+    expect(modelField?.options?.map((o) => o.value)).toEqual(SUPPORTED_MODELS.map((m) => m.id))
+    expect(modelField?.options?.map((o) => o.value)).not.toContain('default')
+    expect(modelField?.options?.map((o) => o.value)).not.toContain('fast')
+    expect(modelField?.default).toBe(DEFAULT_MODEL_ID)
+  })
+
+  it('selecting a model and submitting cites its display LABEL, not its raw id, in the next stub reply', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const target = SUPPORTED_MODELS.find((m) => m.id !== DEFAULT_MODEL_ID)!
+    el.store!.set('model', target.id)
+    const field = el.querySelector('[data-role="canvas"] [data-part="field"]') as HTMLElement & { value: string }
+    const form = el.querySelector('[data-role="canvas"] [data-part="composer"]') as HTMLFormElement
+    field.value = 'ping'
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    const bubbles = [...el.querySelectorAll('[data-role="agent"]')]
+    const body = (bubbles[bubbles.length - 1]?.querySelector('[data-part="body"]') as HTMLElement)?.textContent ?? ''
+    expect(body).toContain(target.label)
+    expect(body).not.toContain(target.id)
+  })
+
+  it('all three built-in prompt sections seed REAL, non-empty content (not just Foundation)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    for (const id of ['foundation', 'personality', 'critical-items']) {
+      const row = entryEl(el, ENTRY_KINDS.promptSection, id)
+      expect(contentFieldOf(row).value.trim().length).toBeGreaterThan(0)
+    }
+  })
+
+  it('a fresh element with every section left at its seed default composes all three labeled blocks, not just Foundation', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const sections = readEntries(el.store, ENTRY_KINDS.promptSection)
+    const composed = composeSystemPrompt(sections)
+    expect(composed).toContain('## Foundation')
+    expect(composed).toContain('## Personality')
+    expect(composed).toContain('## Critical Items')
+    expect(composed).not.toBe(DEFAULT_SYSTEM_PROMPT_FALLBACK)
   })
 })
 
