@@ -1,0 +1,63 @@
+{
+  "domain": "technical-architecture",
+  "plan": false,
+  "nodes": [
+    { "id": "n0", "label": "Agent Admin UI — live-editable agent config + instructions with a working chat preview (TKT-0039)", "leaf": false, "justify": "grouping — the ticket root; subsystems are the layout shell, the config data model, the three panes, and the live-wiring slice that connects edits to the canvas" },
+
+    { "id": "n1", "label": "layout shell", "leaf": false, "justify": "grouping — the ui-split composition assembling the panes" },
+    { "id": "n1a", "label": "split-container wiring — ui-split hosting N resizable panes (pane count/grouping pending Fork 2)", "leaf": true },
+
+    { "id": "n2", "label": "agent config data model", "leaf": false, "justify": "grouping — schema + where instances live" },
+    { "id": "n2a", "label": "config schema — what an 'agent' means here is Fork 1; candidate shape: name, model/provider, system prompt/instructions, generation params, tools", "leaf": true },
+    { "id": "n2b", "label": "config store — session-held instance behind ADR-0120's store-adapter seam (persistence is Fork 3)", "leaf": true },
+
+    { "id": "n3", "label": "settings/options pane", "leaf": false, "justify": "grouping — the ui-settings composition" },
+    { "id": "n3a", "label": "settings/options UI — ui-settings (M4, schema-driven) rendering the config schema as a form", "leaf": true },
+
+    { "id": "n4", "label": "prompts pane", "leaf": false, "justify": "grouping — the instructions editor" },
+    { "id": "n4a", "label": "instructions editor — structured long-form text editing surface for the system prompt/instructions field", "leaf": true },
+
+    { "id": "n5", "label": "chat canvas", "leaf": false, "justify": "grouping — the live preview" },
+    { "id": "n5a", "label": "canvas composition — ui-conversation + ui-surface-host (M2, ADR-0129) reflecting the current config", "leaf": true },
+
+    { "id": "n6", "label": "live-apply wiring", "leaf": false, "justify": "grouping — the mechanism connecting edits to the canvas without a manual reload" },
+    { "id": "n6a", "label": "propagation — an edited config/prompt reaches the canvas's next turn", "leaf": true },
+    { "id": "n6b", "label": "turn-loop ownership — the app drives the turn loop itself; ui-conversation owns no transport (ADR-0129 clause held)", "leaf": true },
+    { "id": "n6c", "label": "apply-time validation — a bad edit is rejected before it reaches a live turn, never silently applied", "leaf": true }
+  ],
+  "actions": [
+    { "id": "a1", "label": "lay out N resizable panes via ui-split" },
+    { "id": "a2", "label": "model an agent's configuration as a typed, schema-shaped data structure" },
+    { "id": "a3", "label": "hold that config in session state behind a store-adapter seam" },
+    { "id": "a4", "label": "render settings/options as a schema-driven form" },
+    { "id": "a5", "label": "edit an agent's instructions/system prompt as structured long-form text" },
+    { "id": "a6", "label": "render a live chat surface reflecting the current agent config" },
+    { "id": "a7", "label": "propagate an edited config/prompt into the next chat turn without a manual reload" },
+    { "id": "a8", "label": "drive the chat turn loop from the app itself, never handing transport ownership to the composed primitives" },
+    { "id": "a9", "label": "validate an edited config against its schema before it reaches a live turn" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n1a" },
+    { "action": "a2", "node": "n2a" },
+    { "action": "a3", "node": "n2b" },
+    { "action": "a4", "node": "n3a" },
+    { "action": "a5", "node": "n4a" },
+    { "action": "a6", "node": "n5a" },
+    { "action": "a7", "node": "n6a" },
+    { "action": "a8", "node": "n6b" },
+    { "action": "a9", "node": "n6c" }
+  ],
+  "edges": [
+    { "from": "n2a", "to": "n2b", "why": "a store needs a schema to hold instances of before it can exist meaningfully" },
+    { "from": "n2a", "to": "n3a", "why": "the settings UI is schema-driven (ui-settings) — it renders FROM the schema, not the reverse" },
+    { "from": "n2a", "to": "n6c", "why": "validation checks an edit against the schema; the schema must exist first" },
+    { "from": "n2b", "to": "n6a", "why": "propagation reads the current edited value from the store" },
+    { "from": "n4a", "to": "n6a", "why": "an edited prompt is one of the values that propagates" },
+    { "from": "n3a", "to": "n6a", "why": "an edited setting is one of the values that propagates" },
+    { "from": "n6c", "to": "n6a", "why": "an edit must pass validation before propagation applies it — fail-closed, not fail-open" },
+    { "from": "n6a", "to": "n5a", "why": "the chat canvas receives the propagated, validated config on its next turn" },
+    { "from": "n3a", "to": "n1a", "why": "the shell composes the actual pane elements; the settings pane must exist before the split-container can host it" },
+    { "from": "n4a", "to": "n1a", "why": "same assembly dependency for the prompts pane" },
+    { "from": "n5a", "to": "n1a", "why": "same assembly dependency for the chat canvas pane" }
+  ]
+}

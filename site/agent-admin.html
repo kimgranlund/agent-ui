@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Composing a ui-agent-admin surface</title>
+  </head>
+  <body>
+    <!-- The ui-agent-admin composition guide: a three-pane ui-split composing ui-settings (M4) + a
+         prompts pane + ui-conversation (M2) — a live-editable agent config with a working chat preview
+         (@agent-ui/app, TKT-0039/ADR-0131). An MPA entry auto-discovered by vite.config.ts's
+         site/**/*.html glob — no config edit. The page module imports pages/_page.ts FIRST for the
+         foundation CSS cascade + self-defining ui-* controls, then agent-admin's CSS/modules and its own
+         demo chrome. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/agent-admin.ts"></script>
+  </body>
+</html>

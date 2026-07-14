@@ -77,6 +77,20 @@
     "section": "Guides"
   },
   {
+    "href": "./agent-admin.html",
+    "label": "Agent Admin",
+    "description": "ui-agent-admin is a three-pane ui-split (chat canvas, prompts, settings) over ui-conversation and ui-settings, one shared SettingsStore, live-apply with no external model dependency.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./layout-overview.html",
+    "label": "Layout Primitives",
+    "description": "The structural layout family — ui-row, ui-column, ui-list, ui-grid — sharing the UIContainerElement base and gap/align/justify props.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./a2ui-canvas.html",
     "label": "A2UI Canvas",
     "description": "A live A2UI payload rendering a real button through the shipped renderer, round-tripping its click as an action message.",

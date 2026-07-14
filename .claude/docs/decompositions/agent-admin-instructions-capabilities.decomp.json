@@ -1,0 +1,78 @@
+{
+  "domain": "technical-architecture",
+  "plan": false,
+  "nodes": [
+    { "id": "n0", "label": "Agent Admin instructions + capabilities architecture — a general-purpose foundation, not a single textarea/flat config", "leaf": false, "justify": "grouping — the root; subsystems are the generic entry-list primitive, the instructions layer built on it, the capabilities layer built on it, persistence/live-apply integration, and the migration from the currently-shipped v1" },
+
+    { "id": "n1", "label": "generic ordered-entry-list primitive — the shared foundation both panes instantiate", "leaf": false, "justify": "grouping — one typed, ordered, toggleable list model + its UI + its authoring form, reused everywhere rather than rebuilt per kind" },
+    { "id": "n1a", "label": "entry data model — id/label/content-or-config/order/enabled/builtin-vs-custom, parameterized by a `kind`", "leaf": true },
+    { "id": "n1b", "label": "list UI — renders a kind's entries in order with per-entry edit/enable-disable affordances", "leaf": true },
+    { "id": "n1c", "label": "custom-entry authoring form — one shared form producing a new entry of a given kind, fail-closed validated", "leaf": true },
+
+    { "id": "n2", "label": "instructions layer — an instance of the generic list, kind=\"prompt-section\"", "leaf": false, "justify": "grouping — the structured system prompt, not a single free-text field" },
+    { "id": "n2a", "label": "seeded default sections — Foundation / Personality / Critical Items, built-in (toggle-off, not deletable)", "leaf": true },
+    { "id": "n2b", "label": "prompt composer — concatenates the ENABLED sections, in their defined order, into the one final system-prompt string", "leaf": true },
+
+    { "id": "n3", "label": "capabilities layer — four instances of the generic list, kind=skill|workflow|resource|tool", "leaf": false, "justify": "grouping — the settings pane's toggleable capability lists" },
+    { "id": "n3a", "label": "Skills list — toggleable, custom-authorable", "leaf": true },
+    { "id": "n3b", "label": "Workflows list — toggleable, custom-authorable", "leaf": true },
+    { "id": "n3c", "label": "Resources list — toggleable, custom-authorable", "leaf": true },
+    { "id": "n3d", "label": "Tools list — toggleable, custom-authorable", "leaf": true },
+
+    { "id": "n4", "label": "persistence + live-apply integration", "leaf": false, "justify": "grouping — extends the already-shipped real-persistence SettingsStore work, does not replace it" },
+    { "id": "n4a", "label": "store schema extension — persists section content + all 4 capability lists' toggle states + custom entries", "leaf": true },
+    { "id": "n4b", "label": "turn-loop integration — the stub reply reads the COMPOSED prompt + the enabled-capabilities snapshot, not the old flat single-key read", "leaf": true },
+
+    { "id": "n5", "label": "migration from the currently-shipped v1 build", "leaf": false, "justify": "grouping — what changes/is preserved from the already-reviewed, already-shipped agent-admin" },
+    { "id": "n5a", "label": "replace the single native-textarea prompts pane with the section-list editor", "leaf": true },
+    { "id": "n5b", "label": "disposition of the existing flat agent config (name/model/temperature/toolsEnabled) — folded in, not silently discarded", "leaf": true }
+  ],
+  "actions": [
+    { "id": "a1", "label": "model a named, ordered, toggleable entry within a typed list — the ONE generic shape every section/capability reuses" },
+    { "id": "a2", "label": "render a typed list's entries in order with per-entry enable/disable + edit affordances" },
+    { "id": "a3", "label": "author a new custom entry of a given kind through one shared form" },
+    { "id": "a4", "label": "seed built-in default sections (Foundation/Personality/Critical Items) as non-deletable, toggle-off-only entries" },
+    { "id": "a5", "label": "compose the final system-prompt string from the enabled sections, in their defined order" },
+    { "id": "a6", "label": "instantiate the generic list once per capability kind, each independently toggleable" },
+    { "id": "a7", "label": "extend the store schema to persist section content + all 4 capability lists' toggle states and custom entries" },
+    { "id": "a8", "label": "feed the turn loop the composed prompt + the enabled-capabilities snapshot" },
+    { "id": "a9", "label": "fold the existing flat agent config into this architecture without silently discarding it" },
+    { "id": "a10", "label": "validate a custom entry before admission (name required, no duplicate id) — fail-closed" },
+    { "id": "a11", "label": "extend the section/capability KIND taxonomy without a code change to the generic primitive itself" },
+    { "id": "a12", "label": "replace the single free-text prompt field with the section-list editor" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n1a" },
+    { "action": "a11", "node": "n1a" },
+    { "action": "a2", "node": "n1b" },
+    { "action": "a3", "node": "n1c" },
+    { "action": "a10", "node": "n1c" },
+    { "action": "a4", "node": "n2a" },
+    { "action": "a5", "node": "n2b" },
+    { "action": "a6", "node": "n3a" },
+    { "action": "a6", "node": "n3b" },
+    { "action": "a6", "node": "n3c" },
+    { "action": "a6", "node": "n3d" },
+    { "action": "a7", "node": "n4a" },
+    { "action": "a8", "node": "n4b" },
+    { "action": "a12", "node": "n5a" },
+    { "action": "a9", "node": "n5b" }
+  ],
+  "edges": [
+    { "from": "n1a", "to": "n1b", "why": "the list UI renders instances of the entry model — the model must exist first" },
+    { "from": "n1a", "to": "n1c", "why": "the authoring form produces a new instance of the entry model" },
+    { "from": "n1a", "to": "n2a", "why": "seeded sections are instances of the generic entry model" },
+    { "from": "n1a", "to": "n3a", "why": "the Skills list is an instance of the generic entry model" },
+    { "from": "n1a", "to": "n3b", "why": "the Workflows list is an instance of the generic entry model" },
+    { "from": "n1a", "to": "n3c", "why": "the Resources list is an instance of the generic entry model" },
+    { "from": "n1a", "to": "n3d", "why": "the Tools list is an instance of the generic entry model" },
+    { "from": "n2a", "to": "n2b", "why": "the composer concatenates sections that must already exist" },
+    { "from": "n2b", "to": "n4b", "why": "the turn loop reads the composed prompt string" },
+    { "from": "n3a", "to": "n4b", "why": "the turn loop reads the enabled-skills snapshot" },
+    { "from": "n3b", "to": "n4b", "why": "the turn loop reads the enabled-workflows snapshot" },
+    { "from": "n3c", "to": "n4b", "why": "the turn loop reads the enabled-resources snapshot" },
+    { "from": "n3d", "to": "n4b", "why": "the turn loop reads the enabled-tools snapshot" },
+    { "from": "n1a", "to": "n4a", "why": "the store schema persists instances of the entry model; the model must be defined first" },
+    { "from": "n2b", "to": "n5a", "why": "migrating away from the old single textarea only makes sense once the new section editor + composer are ready to replace it" }
+  ]
+}

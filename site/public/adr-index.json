@@ -901,5 +901,19 @@
     "description": "The unified nav-rail family (TKT-0030 reconcile ruling, SUBSUMING TKT-0029's site-nav-v2 design phase) — ui-settings' hand-rolled sections rail and the docs si…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0131",
+    "url": "./adr-index.html#adr-0131",
+    "description": "Agent Admin UI (TKT-0039) composes the shipped M2 (ui-conversation/ui-surface-host) + M4 (ui-split/ui-settings) primitives into one new @agent-ui/app surface —…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0132",
+    "url": "./adr-index.html#adr-0132",
+    "description": "Agent Admin's Instructions/Settings become a generic ordered-entry-list foundation (Kim's directive: \"we cannot just have a simple 'Instructions' text field\")…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

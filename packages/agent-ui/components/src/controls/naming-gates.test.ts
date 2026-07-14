@@ -299,6 +299,10 @@ const ALLOWED_ROLES = new Set([
   // ui-conversation's per-turn bubble speaker kind (@agent-ui/app, app-surfaces-m2.spec.md SPEC-R4) —
   // added in the SAME change as naming.md §6's registry line (the fix-on-touch rule).
   'user', 'agent', 'system',
+  // ui-agent-admin's three composed panes (@agent-ui/app, TKT-0039/ADR-0131) — the SAME "which pane is
+  // this" role category master-detail's own 'list'/'detail' already cover, added in the SAME change as
+  // naming.md §6's registry line.
+  'canvas', 'prompts', 'settings',
 ])
 
 /** Every `data-role` value used in one file's TEXT (comment-stripped): `data-role="x"` / `data-role='x'` /

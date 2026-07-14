@@ -21,7 +21,10 @@
     "./surface-host": "./src/controls/surface-host/surface-host.ts",
     "./surface-host.css": "./src/controls/surface-host/surface-host.css",
     "./conversation": "./src/controls/conversation/conversation.ts",
-    "./conversation.css": "./src/controls/conversation/conversation.css"
+    "./conversation.css": "./src/controls/conversation/conversation.css",
+    "./agent-admin": "./src/controls/agent-admin/agent-admin.ts",
+    "./agent-admin.css": "./src/controls/agent-admin/agent-admin.css",
+    "./agent-admin-schema": "./src/controls/agent-admin/agent-admin-schema.ts"
   },
   "dependencies": {
     "@agent-ui/components": "*",

@@ -26,8 +26,12 @@ import './_page.css' // [4] shared page chrome (shell + nav + header), AFTER the
 // The build-time site index (TKT-0018): the ONE source the browse rail derives from. 56 L1 components
 // (proper name + tag), 25 L2 guides, the 2 L3 record landings — each carrying a `section` (Components /
 // Guides / Records). A static import keeps `buildNav()` synchronous and lets the drift gate re-derive the
-// expected rail count from the SAME source (the command palette fetches it at runtime for a different reason).
-import sitemapData from '../public/sitemap.json'
+// expected rail count from the SAME source (the command palette fetches it at runtime for a different
+// reason). Imports the src-tree COPY, not site/public/sitemap.json directly — Vite hard-errors on a static
+// JS import of anything under publicDir ("Assets in public directory cannot be imported from
+// JavaScript"); generate-sitemap.mjs writes both copies from the same generation, byte-identical, so this
+// can never independently drift from the public copy command-palette.ts fetches at runtime.
+import sitemapData from '../sitemap.json'
 
 // What a page builder gets back from mountPage: the <main> container to append its content into. Kept to a
 // single field so every page slice shares a stable, minimal contract.
@@ -420,6 +424,12 @@ export const NAV: readonly NavGroup[] = [
     // ungrouped site-level link — site-coverage/site-toc/site-canon (all components/src-scoped) never expect a
     // `router-{type}.html` per-component set for it.
     links: [{ href: './router-doc.html', label: 'Router' }],
+  },
+  {
+    // ui-agent-admin (@agent-ui/app, TKT-0039/ADR-0131) — the SAME ungrouped-site-level-link posture as
+    // App Shell/Master Detail/Settings just above: a GUIDE page for an app-tier composition (ui-split +
+    // ui-settings + ui-conversation), not a fleet component in components/src.
+    links: [{ href: './agent-admin.html', label: 'Agent Admin' }],
   },
   {
     links: [

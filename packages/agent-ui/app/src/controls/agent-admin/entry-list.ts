@@ -1,0 +1,202 @@
+// entry-list.ts — the generic ordered-entry-list UI (ADR-0132 `n1b`/`n1c`): renders one kind's entries in
+// order with a per-entry toggle + content editor, plus a shared custom-entry authoring form. Reused
+// verbatim by all FIVE instantiations (prompt sections + skill/workflow/resource/tool) — no kind gets
+// its own bespoke list/toggle/author code (ADR-0132 cl.1).
+//
+// The per-entry content editor is a plain native `<textarea>` — the SAME tracked, unratified deviation
+// TKT-0041 already flags for the single-field v1 (no shipped FACE control renders long-form multi-line
+// text); this build does not introduce a NEW instance of that gap, it generalizes the one already known.
+//
+// DOM ownership: `mountEntryList` builds the section shell (heading + list host + add-form host) ONCE
+// and returns a `render(entries)` that rebuilds the list body from scratch on every call — acceptable
+// because `render` is only invoked on a genuine entries-array change (add/delete/toggle, or an external
+// store notification), never per-keystroke; a content edit commits on the textarea's own `change` (blur),
+// not on `input`, matching the fleet's per-field-on-change law (settings.ts's own SPEC-R12 timing).
+
+import type { Entry, NewEntryInput } from './entries.ts'
+
+export interface EntryListHandlers {
+  onToggle(id: string, enabled: boolean): void
+  onContentChange(id: string, content: string): void
+  onDelete(id: string): void
+  /** Returns `true` on a successful add, `false` on a fail-closed rejection (component-reviewer MAJOR
+   *  fix: the caller needs this to decide whether to reset/hide the form — resetting on a REJECTED
+   *  submit silently discarded the typed description/content the user still needs to see and fix. */
+  onAdd(input: NewEntryInput): boolean
+}
+
+export interface EntryListSection {
+  /** The section's own host element — append this into the pane. */
+  host: HTMLElement
+  /** Rebuild the list body from `entries` (already filtered to this section's own kind by the caller). */
+  render(entries: readonly Entry[]): void
+}
+
+/** Build one kind's section shell (heading + list + collapsible add-form), once. `kindLabel` is the
+ *  plural display name ("Skills", "Workflows", ...); `addLabel` is the add-button's own text
+ *  ("+ Add skill"). `handlers` are called on the corresponding user action — this module owns no store
+ *  access of its own (the caller wires persistence, matching `agent-admin.ts`'s existing seam). */
+export function mountEntryList(kind: string, kindLabel: string, addLabel: string, handlers: EntryListHandlers): EntryListSection {
+  const section = document.createElement('div')
+  section.setAttribute('data-part', 'entry-section')
+  section.setAttribute('data-kind', kind)
+
+  const heading = document.createElement('h3')
+  heading.setAttribute('data-part', 'entry-section-heading')
+  heading.textContent = kindLabel
+  section.append(heading)
+
+  const list = document.createElement('div')
+  list.setAttribute('data-part', 'entry-list')
+  section.append(list)
+
+  const addToggle = document.createElement('button')
+  addToggle.type = 'button'
+  addToggle.setAttribute('data-part', 'entry-add-toggle')
+  addToggle.textContent = addLabel
+  section.append(addToggle)
+
+  const addForm = document.createElement('form')
+  addForm.setAttribute('data-part', 'entry-add-form')
+  addForm.hidden = true
+
+  const labelField = document.createElement('input')
+  labelField.type = 'text'
+  labelField.required = true
+  labelField.placeholder = 'Name'
+  labelField.setAttribute('data-part', 'entry-add-label')
+
+  const descriptionField = document.createElement('input')
+  descriptionField.type = 'text'
+  descriptionField.placeholder = 'Description (optional)'
+  descriptionField.setAttribute('data-part', 'entry-add-description')
+
+  const contentField = document.createElement('textarea')
+  contentField.placeholder = 'Content'
+  contentField.setAttribute('data-part', 'entry-add-content')
+
+  const submitBtn = document.createElement('button')
+  submitBtn.type = 'submit'
+  submitBtn.setAttribute('data-part', 'entry-add-submit')
+  submitBtn.textContent = 'Add'
+
+  const errorNote = document.createElement('p')
+  errorNote.setAttribute('data-part', 'entry-add-error')
+  errorNote.hidden = true
+
+  addForm.append(labelField, descriptionField, contentField, submitBtn, errorNote)
+  section.append(addForm)
+
+  addToggle.addEventListener('click', () => {
+    addForm.hidden = !addForm.hidden
+    if (!addForm.hidden) labelField.focus()
+  })
+
+  addForm.addEventListener('submit', (event) => {
+    event.preventDefault()
+    const input: NewEntryInput = { label: labelField.value, description: descriptionField.value, content: contentField.value }
+    const succeeded = handlers.onAdd(input)
+    // Reset/hide ONLY on success (component-reviewer MAJOR fix) — a rejection keeps every typed field
+    // AND the form open, so the author sees their own input alongside `showAddError`'s message instead
+    // of having it silently discarded. `showAddError` (below) is the ONLY thing that un-hides the form
+    // on a rejection now — this handler no longer fights it by re-hiding on every submit.
+    if (succeeded) {
+      labelField.value = ''
+      descriptionField.value = ''
+      contentField.value = ''
+      addForm.hidden = true
+    }
+  })
+
+  function render(entries: readonly Entry[]): void {
+    // Component-reviewer MAJOR fix: a SIBLING entry's action (toggle/delete/add on a DIFFERENT entry in
+    // this same list) re-renders the whole list via the store's subscribe notification — a full
+    // `replaceChildren()` would otherwise silently discard whatever uncommitted (not-yet-`change`d) text
+    // sits in a content field the author is actively mid-edit in. Capture that field's identity + LIVE
+    // value BEFORE the rebuild, restore it (value + focus) onto the new row for the SAME entry id after.
+    const active = document.activeElement
+    // `list.contains(active)` scopes this to THIS section's own list — without it, two different
+    // sections whose entries happen to share an id (e.g. a Skill and a Workflow both slugified to
+    // "deploy") could cross-contaminate: a focused field in one section's row would get its value
+    // and focus stolen into the OTHER section's same-id row on that section's own re-render.
+    const activeRow = active?.closest('[data-part="entry"]') as HTMLElement | null
+    const activeId = activeRow !== null && list.contains(active) ? (activeRow.getAttribute('data-entry-id') ?? undefined) : undefined
+    const preservedValue =
+      activeId !== undefined && active instanceof HTMLTextAreaElement && active.getAttribute('data-part') === 'entry-content'
+        ? active.value
+        : undefined
+
+    list.replaceChildren()
+    const sorted = [...entries].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+    for (const entry of sorted) {
+      const row = document.createElement('div')
+      row.setAttribute('data-part', 'entry')
+      row.setAttribute('data-entry-id', entry.id)
+      row.toggleAttribute('data-builtin', entry.builtin)
+
+      const header = document.createElement('div')
+      header.setAttribute('data-part', 'entry-header')
+
+      const entryLabel = document.createElement('span')
+      entryLabel.setAttribute('data-part', 'entry-label')
+      entryLabel.textContent = entry.label
+
+      const toggle = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
+      toggle.setAttribute('data-part', 'entry-toggle')
+      toggle.setAttribute('aria-label', `${entry.label} enabled`)
+      toggle.checked = entry.enabled
+      toggle.addEventListener('change', () => handlers.onToggle(entry.id, toggle.checked))
+
+      header.append(entryLabel, toggle)
+
+      if (!entry.builtin) {
+        const deleteBtn = document.createElement('button')
+        deleteBtn.type = 'button'
+        deleteBtn.setAttribute('data-part', 'entry-delete')
+        deleteBtn.textContent = 'Remove'
+        deleteBtn.addEventListener('click', () => handlers.onDelete(entry.id))
+        header.append(deleteBtn)
+      }
+
+      row.append(header)
+
+      if (entry.description.length > 0) {
+        const desc = document.createElement('p')
+        desc.setAttribute('data-part', 'entry-description')
+        desc.textContent = entry.description
+        row.append(desc)
+      }
+
+      const contentField = document.createElement('textarea')
+      contentField.setAttribute('data-part', 'entry-content')
+      contentField.setAttribute('aria-label', `${entry.label} content`)
+      // Restore an in-progress, uncommitted edit for THIS entry (captured above) rather than the
+      // possibly-stale `entry.content` from the store — the whole point of the preservation above.
+      contentField.value = entry.id === activeId && preservedValue !== undefined ? preservedValue : entry.content
+      contentField.addEventListener('change', () => handlers.onContentChange(entry.id, contentField.value))
+      row.append(contentField)
+      list.append(row)
+
+      // Focusing only works once `contentField` is actually connected to the document — calling
+      // `.focus()` before `list.append(row)` is a silent no-op in real browsers (the element isn't
+      // part of the rendered tree yet), which is what let this ship broken past the jsdom leg.
+      if (entry.id === activeId && preservedValue !== undefined) {
+        contentField.focus()
+        contentField.setSelectionRange(contentField.value.length, contentField.value.length)
+      }
+    }
+  }
+
+  return { host: section, render }
+}
+
+/** Show `message` in the add-form's own error note (fail-closed validation feedback, ADR-0132 cl.4) —
+ *  exported so `agent-admin.ts` can surface `validateNewEntry`'s rejection without this module owning
+ *  the validation call itself (the caller decides WHEN to validate; this module only renders the result). */
+export function showAddError(section: EntryListSection, message: string): void {
+  const note = section.host.querySelector('[data-part="entry-add-error"]') as HTMLElement
+  const form = section.host.querySelector('[data-part="entry-add-form"]') as HTMLElement
+  note.textContent = message
+  note.hidden = false
+  form.hidden = false
+}

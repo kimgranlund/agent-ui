@@ -21,6 +21,7 @@
 - [Master detail](./master-detail.html): composing `ui-master-detail` — docking list/detail panes over the shipped `ui-split`, consumer-owned selection, and the narrow drill-in with a back affordance.
 - [Settings](./settings.html): composing `ui-settings` — a sections rail + panel over the shipped `ui-master-detail`, schema-driven fields generated onto the fleet's own form spine, and the `SettingsStore` persistence seam.
 - [Router](./router-doc.html): the memory-first SPA router — route state as one signal, opt-in URL reflection (hash default, history opt-in), `ui-router-outlet`, and `ui-router-link`, with a live memory-mode demo.
+- [Agent Admin](./agent-admin.html): composing `ui-agent-admin` — a three-pane `ui-split` (chat canvas · prompts · settings) over `ui-conversation` and `ui-settings`, one shared `SettingsStore`, and a live-apply stub turn loop with no external model dependency.
 - [Changelog](./changelog.html): the shipping history, newest-first, rendered from the repo's CHANGELOG.md.
 
 ## Components — actions & entry

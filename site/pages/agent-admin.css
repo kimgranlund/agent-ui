@@ -1,0 +1,26 @@
+/* agent-admin.css — PAGE-LOCAL demo chrome for the ui-agent-admin composition guide (the
+ * master-detail.css/settings.css page's .*-resize/.*-demo precedent, ported). Styles only the resizable
+ * demo frame — it never restyles ui-agent-admin/ui-split/ui-settings/ui-conversation's own internals.
+ * Every colour is a --md-sys-color-* role (imported first via _page.ts), so the demo tracks light/dark. */
+
+.agent-admin-resize {
+  inline-size: min(64rem, 100%);
+  min-inline-size: 24rem;
+  max-inline-size: 100%;
+  resize: horizontal;
+  overflow: hidden;
+  padding: 0.5rem;
+  border: 1px dashed var(--md-sys-color-neutral-outline);
+  border-radius: 14px;
+}
+
+.agent-admin-demo {
+  display: flex;
+  inline-size: 100%;
+  block-size: 420px;
+  margin: 0;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--md-sys-color-neutral-surface-lowest);
+}

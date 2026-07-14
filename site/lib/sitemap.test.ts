@@ -68,6 +68,11 @@ describe('sitemap.json — byte-identical to a fresh generation (the committed i
   it('negative control: a sitemap edit is genuinely caught (the equality check bites)', () => {
     expect(committed + 'x').not.toBe(fresh)
   })
+
+  it('the src-tree copy (site/sitemap.json, _page.ts\'s static-import target) is byte-identical to the public copy — Vite forbids importing anything under publicDir from JS, so this cannot be the SAME file; both must stay the SAME generation', () => {
+    const srcCopy = read('site/sitemap.json')
+    expect(srcCopy).toBe(committed)
+  })
 })
 
 describe('adr-index.json — byte-identical to a fresh generation', () => {
@@ -116,11 +121,22 @@ describe('changelog-index.json — byte-identical to a fresh generation', () => 
 
 // ── G2 · page coverage — every doc/manifest page resolves to a sitemap entry ────────────────────────────────
 
-/** The `real site pages that need a sitemap entry`: any `{name}-doc.html` page, OR any page site-manifest.json
- *  already lists (SPEC-R5 AC1(b)) — NOT every *.html file (permutation/states/demo pages are intentionally
- *  outside the sitemap's scope; only descriptor-derived doc pages and manifest-listed guide pages are). */
-function pagesRequiringEntry(allPages: readonly string[], manifestHrefs: ReadonlySet<string>): string[] {
-  return allPages.filter((p) => /-doc\.html$/.test(p) || manifestHrefs.has(`./${p}`))
+/** The KNOWN, deliberately-unindexed page-type suffixes — permutation/states/demo pages are per-component
+ *  tab content reached only through their owning `-doc.html` page, never surfaced as a standalone
+ *  searchable/navigable entry. Everything else is real, top-level content and needs an entry. */
+const EXCLUDED_SUFFIX = /-(demo|permutations|states)\.html$/
+
+/** The `real site pages that need a sitemap entry`: any `{name}-doc.html` page, OR any OTHER page not
+ *  matching `EXCLUDED_SUFFIX` (SPEC-R5 AC1(b)) — a genuinely new guide page (e.g. a fresh `{name}.html` +
+ *  `{name}.ts` under site/pages/, no `site-manifest.json` row yet) must be REQUIRED here, not silently
+ *  exempted for having no manifest row yet — that is precisely the gap that let `layout-overview.html`
+ *  and a freshly-shipped `agent-admin.html` both go unindexed until this fix (neither is a `-doc.html`
+ *  page, and `manifestHrefs.has(...)` can only ever confirm a page that's ALREADY registered — it can
+ *  never catch one that never got registered in the first place). The prior version of this function
+ *  used `manifestHrefs.has(...)` as an allow-list instead of this suffix-based deny-list; that is what
+ *  let both gaps through undetected. */
+function pagesRequiringEntry(allPages: readonly string[]): string[] {
+  return allPages.filter((p) => !EXCLUDED_SUFFIX.test(p))
 }
 
 /** unindexedPages — the pages `pagesRequiringEntry` names that `sitemap.json` fails to cover, out of `pages`
@@ -145,7 +161,7 @@ describe('sitemap.json — every doc/manifest page resolves to an entry (minus t
   })
 
   it('0 unindexed doc/manifest pages — a new component doc page or manifest row must land with a sitemap entry', () => {
-    const required = pagesRequiringEntry(allPages, manifestHrefs)
+    const required = pagesRequiringEntry(allPages)
     expect(required.length).toBeGreaterThan(50) // anti-vacuous: the filter genuinely selects a real subset
     expect(unindexedPages(required, sitemapUrls, ALLOWLIST)).toEqual([])
   })
@@ -158,7 +174,7 @@ describe('sitemap.json — every doc/manifest page resolves to an entry (minus t
   })
 
   it('negative control: a page missing from the sitemap is genuinely caught', () => {
-    const fakeRequired = pagesRequiringEntry(['zz-fake-thing-doc.html'], new Set())
+    const fakeRequired = pagesRequiringEntry(['zz-fake-thing-doc.html'])
     expect(unindexedPages(fakeRequired, sitemapUrls, ALLOWLIST)).toEqual(['zz-fake-thing-doc.html'])
     expect(unindexedPages(fakeRequired, sitemapUrls, new Set(['zz-fake-thing-doc.html']))).toEqual([]) // allowlist honored
   })

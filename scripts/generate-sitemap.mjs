@@ -1,5 +1,6 @@
-// generate-sitemap.mjs — derives site/public/sitemap.json (+ site/public/adr-index.json /
-// changelog-index.json), the leveled index behind the docs site's ui-command-modal search palette
+// generate-sitemap.mjs — derives site/public/sitemap.json (+ a byte-identical site/sitemap.json copy
+// for _page.ts's static import — Vite forbids importing anything under publicDir from JS) + site/public/
+// adr-index.json / changelog-index.json, the leveled index behind the docs site's ui-command-modal search palette
 // (TKT-0018, site-command-search.lld.md LLD-C1/C2/C4). Follows generate-llms-full.mjs's exact shape: pure
 // `fs`-based (no bundler, no TS execution), a `generateSitemap(repoRoot)` export the drift gate
 // (site/lib/sitemap.test.ts) imports directly (no generator/gate drift pair), deterministic ordering,
@@ -235,6 +236,14 @@ if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).
   const adrIndex = generateAdrIndex(root)
   const changelogIndex = generateChangelogIndex(root)
   writeFileSync(join(root, 'site/public/sitemap.json'), formatJson(sitemap))
+  // A second, byte-identical copy INSIDE the src tree (not site/public/) — Vite hard-errors on a static
+  // JS `import` of anything under publicDir ("Assets in public directory cannot be imported from
+  // JavaScript"), which _page.ts's `import sitemapData from '../sitemap.json'` needs; the public copy
+  // stays for command-palette.ts's own runtime `fetch('./sitemap.json')` (a genuinely different
+  // consumption mode — static-import-at-module-load vs. fetch-on-demand — neither can serve the other).
+  // Both copies are generated from the SAME `sitemap` value in the SAME run, so they cannot independently
+  // drift; sitemap.test.ts's freshness gate checks both.
+  writeFileSync(join(root, 'site/sitemap.json'), formatJson(sitemap))
   writeFileSync(join(root, 'site/public/adr-index.json'), formatJson(adrIndex))
   writeFileSync(join(root, 'site/public/changelog-index.json'), formatJson(changelogIndex))
   console.log(
