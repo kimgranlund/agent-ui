@@ -32,8 +32,6 @@
 //   OUTPUT_RULES zone of `prompts/grammar.md`, so it rides `OUTPUT_RULES` into every mode.
 
 import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { dirname } from 'node:path'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import type { CorpusRecord } from '../../src/corpus/record.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
@@ -41,12 +39,16 @@ import { MINI_SKILLS } from './mini-skills.ts'
 import type { MiniSkill } from './mini-skills.ts'
 import { FEED_SURFACE_TYPES } from './feed-catalog.ts'
 
-// The prompts directory, resolved relative to THIS module — cwd-independent (deliberately unlike
-// `dev-proxy-plugin.ts`'s `process.cwd()` paths; these modules are not Vite-bundled into a temp file).
-// `import.meta.dirname` is a plain path string, correct under the Node proxy AND vitest; the fallback
-// derives the same from `import.meta.url` via `node:url`/`node:path` (a STRING parse, never the jsdom-
-// global `URL` — jsdom mis-resolves `new URL(rel, fileUrl)` to `http://localhost` and `fs` then rejects it).
-const PROMPTS_DIR = `${(import.meta as { dirname?: string }).dirname ?? dirname(fileURLToPath(import.meta.url))}/prompts`
+declare const process: { cwd(): string }
+
+// Paths resolve from `process.cwd()` (the repo root `vite`/`vitest` runs from), matching
+// `dev-proxy-plugin.ts`'s own established pattern — NOT `import.meta.url`-relative resolution, which this
+// file used at first and which broke live under `npm run dev` (TKT-0044): Vite bundles `vite.config.ts`
+// (via esbuild, into a `node_modules/.vite-temp/*.mjs` temp file) and that bundling pulls in the WHOLE
+// reachable import graph — `dev-proxy-plugin.ts` imports `produce.ts` imports THIS file — so an
+// `import.meta.url`-relative path resolved against the TEMP file's location, not this file's real source
+// location, and `readFileSync` on a path that only exists under the real source tree threw ENOENT.
+const PROMPTS_DIR = `${process.cwd()}/packages/agent-ui/a2ui/tools/agent/prompts`
 
 /** Load one prompt file from `PROMPTS_DIR`. Node-only tooling, never a browser bundle (SPEC-R3/N2).
  *  Trimmed so an authored trailing newline never perturbs byte-identity — every prompt const is

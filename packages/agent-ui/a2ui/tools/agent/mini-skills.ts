@@ -35,10 +35,21 @@
 // filesystem read at module load is safe — the same lifecycle position the prior static literal held.
 
 import { readFileSync, readdirSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { dirname } from 'node:path'
 import { topKByCosine } from '../../src/corpus/text-similarity.ts'
 import { parseFrontmatter } from './prompts/frontmatter.ts'
+
+declare const process: { cwd(): string }
+
+// Paths resolve from `process.cwd()` (the repo root `vite`/`vitest` runs from), NOT `import.meta.url` —
+// the dev-proxy-plugin.ts precedent this file failed to follow at first: Vite bundles `vite.config.ts`
+// (via esbuild, into a `node_modules/.vite-temp/*.mjs` temp file) and that bundling pulls in the WHOLE
+// reachable import graph, not just the plugin entry point — `dev-proxy-plugin.ts` imports `produce.ts`
+// imports THIS file, so `mini-skills.ts` gets relocated into the same temp file too. An
+// `import.meta.url`-relative path then resolves against the TEMP file's location, not this file's real
+// source location — `readdirSync` on a directory that only exists under the real source tree throws
+// ENOENT under `npm run dev` (caught live: TKT-0044/this ADR-0135 follow-up fix).
+const ROOT = process.cwd()
+const MINI_SKILLS_DIR = `${ROOT}/packages/agent-ui/a2ui/tools/agent/prompts/mini-skills`
 
 /** A named, self-contained, prompt-injectable idiom-instruction module (ADR-0091 Decision §1). */
 export interface MiniSkill {
@@ -67,16 +78,11 @@ export const DEFAULT_MINI_SKILL_CAP = 3
  * an id tiebreak, and every id-keyed consumer (`calibrationExampleBullet`, the §4 filter) looks up by id.
  */
 function loadMiniSkills(): MiniSkill[] {
-  // Resolve relative to THIS module via `import.meta.dirname` (a plain path string, correct under the
-  // Node proxy AND vitest), falling back to `import.meta.url` parsed by `node:url`/`node:path` — a STRING
-  // parse, never the jsdom-global `URL` (jsdom mis-resolves `new URL(rel, fileUrl)` to `http://localhost`).
-  const here = (import.meta as { dirname?: string }).dirname ?? dirname(fileURLToPath(import.meta.url))
-  const dir = `${here}/prompts/mini-skills`
-  const files = readdirSync(dir)
+  const files = readdirSync(MINI_SKILLS_DIR)
     .filter((name) => name.endsWith('.md'))
     .sort()
   return files.map((name) => {
-    const { data, body } = parseFrontmatter(readFileSync(`${dir}/${name}`, 'utf8'))
+    const { data, body } = parseFrontmatter(readFileSync(`${MINI_SKILLS_DIR}/${name}`, 'utf8'))
     if (!data.id || !data.triggers) throw new Error(`mini-skills: ${name} is missing id/triggers frontmatter`)
     return { id: data.id, triggers: data.triggers, body }
   })
