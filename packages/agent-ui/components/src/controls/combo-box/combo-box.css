@@ -56,6 +56,12 @@
   --ui-combo-box-ink: var(--md-sys-color-neutral-on-surface);
   --ui-combo-box-placeholder: var(--md-sys-color-neutral-on-surface-variant);
 
+  /* Disabled state — muted neutral roles (TKT-0047: the select.css precedent, converging off the
+     bare `opacity: 0.5` the editor rule used to carry). */
+  --ui-combo-box-border-disabled: var(--md-sys-color-neutral-outline-variant);
+  --ui-combo-box-bg-disabled: var(--md-sys-color-neutral-surface-high);
+  --ui-combo-box-ink-disabled: var(--md-sys-color-neutral-on-surface-variant);
+
   /* Frame shape */
   --ui-combo-box-radius: var(--ui-radius-base);
 
@@ -104,6 +110,15 @@
   --ui-combo-box-option-active-ink: var(--md-sys-color-neutral-on-surface);
   --ui-combo-box-option-selected-bg: var(--md-sys-color-primary-container-low); /* selected-value row — matches ui-select's AA-safe pairing (was the undefined -tint-5) */
   --ui-combo-box-option-selected-ink: var(--md-sys-color-primary-high);
+}
+
+/* ── disabled → muted neutral roles (TKT-0047, the select.css precedent) ──────────────────────── */
+
+:where(ui-combo-box[disabled]) {
+  --ui-combo-box-border: var(--ui-combo-box-border-disabled);
+  --ui-combo-box-bg: var(--ui-combo-box-bg-disabled);
+  --ui-combo-box-ink: var(--ui-combo-box-ink-disabled);
+  --ui-combo-box-placeholder: var(--ui-combo-box-ink-disabled);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-combo-box) ════════════════ */
@@ -184,8 +199,8 @@
      border-focus approach — a coloured border-focus would double with the ring). */
   :scope > [data-part='editor']:focus {
     border-color: var(--ui-combo-box-border-focus);
-    outline: 2px solid var(--md-sys-color-focus-ring);
-    outline-offset: 2px;
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
   }
 
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. */
@@ -196,10 +211,11 @@
     border-color: var(--ui-combo-box-border-invalid-hover);
   }
 
-  /* Disabled */
+  /* Disabled — TKT-0047: converges on the fleet's dominant mechanism (token-repoint, not opacity).
+     The :where(ui-combo-box[disabled]) block above already repoints --ui-combo-box-border/-bg/-ink
+     (this rule's own base declarations already read those tokens) — no opacity needed. */
   :scope > [data-part='editor'][aria-disabled='true'] {
     cursor: default;
-    opacity: 0.5;
     pointer-events: none;
   }
 

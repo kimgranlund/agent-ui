@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0047
-status: open
+status: done
 date: 2026-07-14
 owner:
 kind: bug
@@ -153,5 +153,43 @@ suite: 108/108, both Chromium and WebKit · independently reviewed (`ui:componen
 context) — CONDITIONAL GO on first pass (one MINOR-BUT-REAL defect: the checkbox ordering bug above),
 fixed and re-verified.
 
-**Status stays `open`**: the combo-box leg of finding 2 and the token-layer follow-up for finding 3 are
-both real, out-of-this-pass remainder — not silently dropped.
+### 2026-07-14 (later same day) — finding 2's combo-box leg closed; ticket now DONE
+
+The concurrent session's activity on `combo-box.css` settled (confirmed: no live process, file
+unchanged since the earlier check) — Kim explicitly authorized proceeding despite the residual risk.
+`combo-box.css` now converges exactly like radio/command-modal: three new `-disabled` suffix tokens
+(`--ui-combo-box-border-disabled`/`-bg-disabled`/`-ink-disabled`, muted neutral roles) plus a new
+`:where(ui-combo-box[disabled])` repoint block, byte-mirroring `select.css`'s own fully-repointed
+`[disabled]` precedent exactly (same 4 properties, same naming). The editor's `opacity: 0.5` disabled
+rule is gone. New cross-engine test in `combo-box.browser.test.ts` proves the ink genuinely differs
+disabled-vs-idle (a real, distinct token pair — `-on-surface` vs `-on-surface-variant` — unlike
+radio's border leg, which needed a corrected test target) and that opacity dimming is gone.
+
+**Independently reviewed (`ui:component-reviewer`, fresh context) — GO**, with one real finding
+recorded rather than silently absorbed:
+
+- **The disabled token-repoint is blind to `<fieldset disabled>`/form-disabled inheritance** — every
+  control's REAL disabled state is `effectiveDisabled() = disabled || #formDisabled`
+  (`dom/form.ts:364-366`), but the CSS `[disabled]` attribute selector only ever matches a control's
+  OWN `disabled` prop, never an inherited fieldset/form state. A fieldset-disabled combo-box is
+  correctly inert (uneditable, unfocusable, always valid) but paints 100% idle. **Not a regression
+  this change introduced** — `select.css:151` has the identical, pre-existing gap; this change
+  converges combo-box precisely onto that same ratified precedent. Filed as its own fleet-wide
+  follow-up: [TKT-0051](tkt-0051-disabled-token-repoint-blind-to-fieldset-disabled.md).
+- **Unadvertised hunk, now recorded**: the same diff also converged the editor's `:focus` outline
+  from hardcoded `2px solid`/`2px` offset to `var(--ui-focus-ring-width)`/`var(--ui-focus-ring-offset)`
+  (both tokens resolve to `2px` — zero rendering delta), matching `select.css`'s own focus-ring
+  wiring. A correct, deliberate convergence, called out explicitly per the review's request rather
+  than left as a silent piggyback change.
+
+**Gates**: `npm run check` clean · combo-box jsdom suite 99/99 · combo-box cross-engine browser suite
+80/80, both Chromium and WebKit.
+
+**Ticket closes as DONE.** All three findings are resolved: finding 1 (checkbox hover, with its own
+caught-and-fixed ordering defect) and finding 2 (radio + command-modal + combo-box, all three legs)
+are fully landed; finding 3 (disclosure hover) shipped the architecturally-correct wiring with its
+real token-layer limitation named and NOT silently masked. Two genuine follow-ups spun out with
+named owners rather than left dangling: [TKT-0051](tkt-0051-disabled-token-repoint-blind-to-fieldset-disabled.md)
+(the fieldset-disabled paint gap, fleet-wide) and disclosure's own token-layer value divergence
+(a `color:token-builder` seat concern, noted inline above — no separate ticket minted for it since
+it's a single-token, single-owner-domain change already fully specified in this record).

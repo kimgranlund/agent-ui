@@ -1132,6 +1132,35 @@ describe('ui-combo-box — user-invalid leg (ADR-0051)', () => {
   })
 })
 
+// TKT-0047 — the editor's disabled `opacity: 0.5` was replaced with a token-repoint (the fleet's
+// dominant disabled mechanism, matching select.css's fully-repointed [disabled] precedent). No
+// CSS transition on border/background/color in this file, so no settle-wait is needed.
+describe('ui-combo-box — disabled paint (TKT-0047, opacity removed)', () => {
+  it('disabled: the editor is fully opaque (no opacity dimming) yet its ink repaints to the muted token', async () => {
+    const { el: idle } = mount(`
+      <ui-combo-box>
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const idleEditor = idle.querySelector('[data-part="editor"]') as HTMLElement
+    const idleInk = getComputedStyle(idleEditor).color
+
+    const { el: disabled } = mount(`
+      <ui-combo-box disabled>
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const disabledEditor = disabled.querySelector('[data-part="editor"]') as HTMLElement
+
+    expect(getComputedStyle(disabledEditor).opacity, 'opacity dimming should be gone — the token repoint carries it now').toBe(
+      '1',
+    )
+    expect(getComputedStyle(disabledEditor).color, 'the disabled ink must still repaint to the muted token').not.toBe(
+      idleInk,
+    )
+  })
+})
+
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 //  [10] TKT-0026 — a late-added Option adopts into the REAL top-layer panel (both engines)
 // ════════════════════════════════════════════════════════════════════════════════════════════════
