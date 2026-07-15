@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0051
-status: open
+status: wontfix
 date: 2026-07-14
 owner:
 kind: bug
@@ -81,3 +81,33 @@ likely to hit without a fieldset-wrapped form composition, which no current ship
 confirmed to use.
 
 ## Findings
+
+### 2026-07-14 (overnight autonomous pass) — closed via Acceptance's own path B: a verified, documented deferral
+
+Investigated both of this ticket's own named closure paths before choosing between them (no one was
+available to rule the fork in real time — this repo's own standing rule against fabricating a "Kim
+ruled X" attribution applies equally to an implied one, so this is recorded as an autonomous decision,
+not a user ruling):
+
+- **Path A** (a real `:state(...)`-based mechanism, mirroring how `user-invalid` already solves the
+  same "CSS needs to react to a JS-computed condition, not an attribute" problem) would touch every
+  control listed in this ticket's own Acceptance — button, checkbox, switch, slider, text-field,
+  select, textarea, radio, command-modal, combo-box — a genuinely cross-cutting, ten-control CSS +
+  `formDisabledCallback` change with real regression surface, landing with nobody available to review
+  it in real time.
+- **Path B** (a documented, evidence-backed deferral) — verified directly rather than assumed:
+  `formDisabledCallback` IS fully implemented and correctly wired fleet-wide (confirmed present in
+  `form-registry.ts` + every affected control's own `.ts` file) — the FUNCTIONAL inheritance already
+  works; only the CSS-paint layer has the gap this ticket names. A repo-wide grep for a real
+  `<fieldset>` element wrapping any of these controls in a SHIPPED site page or demo (`site/**`)
+  found ZERO matches — every `fieldset` reference in the codebase is either the base implementation
+  itself (`dom/form.ts`, `select.ts`, `range-element.ts`) or a TEST proving the mechanism works
+  (`text-field.test.ts`), never a real consumer composition. The premise this ticket's own Acceptance
+  names for path B — "no consumer currently wraps a form control in a disabled fieldset" — is
+  confirmed true, not assumed.
+
+**Closed via path B.** No code changed. If a future consumer genuinely composes a fieldset-disabled
+form (this repo's own `ui-form-provider`/`ui-agent-admin` surfaces, or any future one), REOPEN this
+ticket rather than filing a new one — the investigation above (which controls are affected, where
+`formDisabledCallback` lives, the `user-invalid` custom-state precedent path A would follow) stays
+valid and doesn't need re-deriving.
