@@ -106,16 +106,17 @@ describe('disclosure.css — the v1 fences (SPEC-R18): no fold animation, no che
   })
 })
 
-describe('disclosure.css — hover (TKT-0047, the tabs.css ink-step precedent)', () => {
-  it('declares --ui-disclosure-ink-hover, reading the dedicated -on-surface-hover role (not a repeat of idle)', () => {
-    expect(tokenBlock).toMatch(/--ui-disclosure-ink-hover:\s*var\(--md-sys-color-neutral-on-surface-hover\)/)
+describe('disclosure.css — hover (TKT-0047, the fleet row-hover convergence: surface-high, not the tint ladder)', () => {
+  it('declares --ui-disclosure-bg-hover, reading the solid surface-high role every other row-hover uses (not the evicted tint ladder)', () => {
+    expect(tokenBlock).toMatch(/--ui-disclosure-bg-hover:\s*var\(--md-sys-color-neutral-surface-high\)/)
+    expect(tokenBlock).not.toMatch(/--ui-disclosure-bg-hover:\s*var\(--md-sys-color-neutral-tint-/)
   })
 
-  it('the summary paints --ui-disclosure-ink-hover on :hover', () => {
+  it('the summary paints --ui-disclosure-bg-hover as a background on :hover', () => {
     const m = stylesBlock.match(/:scope \[data-part='summary'\]:hover\s*\{([^}]*)\}/)
     expect(m, 'the summary :hover rule is missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
-    expect(rule).toMatch(/color:\s*var\(--ui-disclosure-ink-hover\)/)
+    expect(rule).toMatch(/background-color:\s*var\(--ui-disclosure-bg-hover\)/)
   })
 })
 

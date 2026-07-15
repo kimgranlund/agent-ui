@@ -1049,8 +1049,10 @@
         roles + their black/white alpha primitives are HAND-AUTHORED and re-added VERBATIM after every
         regeneration until the generator emits them (the regenerated `@media (forced-colors)` block below
         already references the six tint roles, so the generator is aware of them but drops their :root
-        definitions). Consumed by _surface/container.css (all six) + combo-box.css / menu.css /
-        command-modal.css (-dim). Pinned by tokens.test.ts. */
+        definitions). Consumed by _surface/container.css (all six) + combo-box.css / command-modal.css
+        (-dim, active-descendant highlighting — NOT row-hover, which reads the solid, scheme-inverting
+        `-surface-high` role instead, per the 2026-07-07 menu.css convergence, menu.css:87-96). Pinned by
+        tokens.test.ts. */
   --md-sys-color-neutral-050-50: oklch(1 0 89.88 / 5%);
   --md-sys-color-neutral-050-100: oklch(1 0 89.88 / 10%);
   --md-sys-color-neutral-050-140: oklch(1 0 89.88 / 14%);

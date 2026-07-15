@@ -185,11 +185,56 @@ recorded rather than silently absorbed:
 **Gates**: `npm run check` clean · combo-box jsdom suite 99/99 · combo-box cross-engine browser suite
 80/80, both Chromium and WebKit.
 
-**Ticket closes as DONE.** All three findings are resolved: finding 1 (checkbox hover, with its own
-caught-and-fixed ordering defect) and finding 2 (radio + command-modal + combo-box, all three legs)
-are fully landed; finding 3 (disclosure hover) shipped the architecturally-correct wiring with its
-real token-layer limitation named and NOT silently masked. Two genuine follow-ups spun out with
-named owners rather than left dangling: [TKT-0051](tkt-0051-disabled-token-repoint-blind-to-fieldset-disabled.md)
-(the fieldset-disabled paint gap, fleet-wide) and disclosure's own token-layer value divergence
-(a `color:token-builder` seat concern, noted inline above — no separate ticket minted for it since
-it's a single-token, single-owner-domain change already fully specified in this record).
+### 2026-07-15 — finding 3 (disclosure hover) SUPERSEDED: the ink-step mechanism itself was replaced, not just deferred
+
+The prior entry above closed the ticket with disclosure's hover shipped as an ink-step reading
+`--ui-disclosure-ink-hover: var(--md-sys-color-neutral-on-surface-hover)`, framed as "correct-but-
+latent" pending a future token-layer value decision. That framing was itself replaced, not just the
+value it was waiting on — the ink-step mechanism CANNOT ever work for this consumer, independent of
+whatever value `-on-surface-hover` is eventually given: disclosure's idle ink already sits at the
+ceiling of the neutral ramp, so there is no headroom above it for a hover-ink value to occupy. This
+was reasoned through directly rather than waiting on the token-layer decision, since the mechanism
+itself — not the specific colour — was the actual blocker.
+
+**Revised twice, in one pass, both revisions independently reviewed:**
+
+1. First revision — switched to a background-tint wash (`--md-sys-color-neutral-tint-dim`, the
+   `combo-box.css` active-descendant precedent) instead of an ink-step. **`ui:component-reviewer`
+   caught this was wrong**: the tint ladder was already EVICTED from row-hover fleet-wide by a prior,
+   ratified `menu.css` consistency pass (2026-07-07, `menu.css:87-96`) — a 10% tint wash was the
+   fleet's ONLY row-hover using it, read as visibly weaker/inconsistent against every other
+   interactive-row/control hover (select's option, button — even its ghost variant, the closest
+   structural analogue to this summary row — text-field, checkbox, switch, calendar's cell, all of
+   which hover to the solid, scheme-inverting `--md-sys-color-neutral-surface-high` role), and was
+   converged onto `surface-high` for exactly that reason. `tint-dim` is additionally a
+   scheme-INVARIANT ~5% black wash (`tokens.css:1060`) — visibly weaker still than the ALREADY-evicted
+   10% figure, and near-invisible over a dark surface, silently resurfacing this exact defect in dark
+   scheme.
+2. Second revision (this entry) — repointed `--ui-disclosure-bg-hover` to
+   `--md-sys-color-neutral-surface-high`, converging disclosure onto the SAME solid row-hover role
+   every sibling control already uses, satisfying the ticket's own original Expected clause ("every
+   Pattern-class interactive row — tabs/menu/disclosure — paints on hover the same way") for real.
+   `disclosure-css.test.ts` updated to assert the `surface-high` role AND explicitly assert the tint
+   ladder is NOT used (a negative regression guard against re-introducing the evicted mechanism).
+   A stale doc note this same review surfaced — `tokens.css:1052`'s tint-role consumer list still
+   naming `menu.css` after its own 2026-07-07 convergence away from that role — corrected in the same
+   pass.
+
+**`--ui-disclosure-ink-hover` removal confirmed correct, not just adequate**: the reviewer noted
+keeping it as unused belt-and-suspenders would have been actively wrong — a silently-inert consumer
+token would start double-repainting (ink AND background) the moment a future token-layer pass ever
+gives `-on-surface-hover` a real distinct value, a combination nobody designed for. The shared
+`-on-surface-hover` role itself remains real at the token layer for a future consumer that might
+actually have ink headroom to use it — it simply has no named consumer in THIS repo anymore.
+
+**Gates**: `npm run check` clean · disclosure jsdom suite 44/44 · disclosure cross-engine browser
+suite 24/24, both Chromium and WebKit (including a NEW real hover test proving the background
+genuinely repaints — the tint-wash revision's own test only proved the CSS rule fired, not that the
+change was perceptible, which is exactly the gap `surface-high`'s solid, scheme-inverting paint
+closes for real) · independently reviewed twice (`ui:component-reviewer`, fresh context each time) —
+first pass NO-GO on the tint-ladder eviction + a stale-record finding, both fixed and captured here.
+
+**Ticket stays DONE** — this entry supersedes, not reopens, the prior closure: finding 3 is now
+genuinely, perceptibly resolved in both colour schemes, not deferred behind an unmade token-layer
+decision. [TKT-0051](tkt-0051-disabled-token-repoint-blind-to-fieldset-disabled.md) remains the one
+real follow-up this whole ticket spun out.
