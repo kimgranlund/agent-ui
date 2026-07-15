@@ -28,6 +28,14 @@
   --ui-disclosure-height: var(--ui-height-md);
   --ui-disclosure-font: var(--ui-font-md);
   --ui-disclosure-ink: var(--md-sys-color-neutral-on-surface);
+  /* Hover (TKT-0047) — the tabs.css precedent: an ink-step, no background fill to step instead (a
+     disclosure summary carries no bg of its own, unlike menu's filled item rows). Reads the dedicated
+     `-on-surface-hover` role (not a repeat of the idle `-on-surface` token) for the correct semantic
+     wiring — disclosure's idle ink already sits at that role's ceiling, so this token is CURRENTLY
+     value-identical to idle (tokens.css:56,58 both resolve to neutral-950/050) and this specific finding
+     stays visually undetectable until the token layer's own `-on-surface-hover` role earns a distinct
+     value; flagged as a real, separate token-layer gap, not silently masked as done (TKT-0047 Findings). */
+  --ui-disclosure-ink-hover: var(--md-sys-color-neutral-on-surface-hover);
 
   /* The chevron — an INLINE AFFORDANCE (geometry.md §"Affordance vs content-icon"): `= font`, never the
      icon ramp (`--ui-ind`) — the named oversize-caret bug class this law fixes. */
@@ -106,6 +114,11 @@
   :scope [data-part='summary-text'] {
     flex: 1 1 auto;
     min-inline-size: 0;
+  }
+
+  /* Hover (TKT-0047) — the tabs.css precedent (ink-step, no bg fill to step instead). */
+  :scope [data-part='summary']:hover {
+    color: var(--ui-disclosure-ink-hover);
   }
 
   /* The body — rides the `--ui-space` layout ladder (density-responsive; the Pattern-class split). No

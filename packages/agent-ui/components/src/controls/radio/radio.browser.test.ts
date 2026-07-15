@@ -172,6 +172,30 @@ describe('ui-radio browser smoke — checked paint', () => {
   })
 })
 
+// TKT-0047 — the redundant `opacity: 0.5` disabled dimming was removed; the TOKEN block's own
+// `:where(ui-radio[disabled])` repoint (border/ink/dot → muted neutral) is now the ONLY disabled
+// mechanism. Proves the muted repaint is real WITHOUT the opacity crutch — via the CHECKED fill
+// (idle checked = primary blue; disabled checked = muted neutral), since the IDLE border token
+// already equals the disabled-repoint border value (both `-on-surface-variant`), so an unchecked
+// radio's border alone shows no delta either way.
+describe('ui-radio browser smoke — disabled paint (TKT-0047, opacity removed)', () => {
+  it('disabled + checked: the host is fully opaque (no opacity dimming) yet the ::before fill still repaints muted', () => {
+    const idle = mount(document.createElement('ui-radio') as UIRadioElement)
+    idle.checked = true
+    idle.textContent = 'Idle checked'
+    const idleFill = getComputedStyle(idle, '::before').backgroundColor
+
+    const disabled = mount(document.createElement('ui-radio') as UIRadioElement)
+    disabled.checked = true
+    disabled.disabled = true
+    disabled.textContent = 'Disabled checked'
+
+    expect(getComputedStyle(disabled).opacity, 'opacity dimming should be gone — the token repoint carries it now').toBe('1')
+    const disabledFill = getComputedStyle(disabled, '::before').backgroundColor
+    expect(disabledFill, 'the disabled checked fill must still repaint to the muted token').not.toBe(idleFill)
+  })
+})
+
 // ── 2026-07-07 fix: the checked DOT reads as a genuinely distinct indicator (SC 1.4.11) ────────────
 //
 // Regression pin for the Kim-filed visual bug: the checked ring (::before) and dot (::after) used to

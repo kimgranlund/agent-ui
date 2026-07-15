@@ -184,11 +184,14 @@
     }
   }
 
-  /* Disabled: pointer-inert + cursor reset (the reflected [disabled] attribute makes the host inert). */
+  /* Disabled: pointer-inert + cursor reset (the reflected [disabled] attribute makes the host inert).
+     TKT-0047 — the redundant `opacity: 0.5` this rule carried is removed: the TOKEN block's own
+     `:where(ui-radio[disabled])` already repoints border/ink/dot to the muted neutral role, converging
+     on the fleet's dominant disabled mechanism (token-repoint, not opacity) — the doubled dimming was
+     never load-bearing, just an acknowledged v1 leftover. */
   :scope:is([disabled]) {
     pointer-events: none;
     cursor: default;
-    opacity: 0.5; /* disabled dimming — a simple global dim vs. per-token repoint (v1, no danger repoint needed) */
   }
 
   /* ── Forced colors (WHCM) ────────────────────────────────────────────────────────────────────── */

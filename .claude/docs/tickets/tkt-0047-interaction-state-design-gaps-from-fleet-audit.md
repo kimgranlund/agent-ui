@@ -1,0 +1,157 @@
+---
+doc-type: ticket
+id: tkt-0047
+status: open
+date: 2026-07-14
+owner:
+kind: bug
+---
+# TKT-0047 — interaction-state design gaps surfaced by the TKT-0046 fleet audit
+
+## Summary
+TKT-0046's fleet-wide interaction-state sweep (`.claude/docs/references/interaction-states.md` vs. every
+interactive `ui-*` control) found three classes of real deviation that need a design call rather than a
+mechanical fix — routed here per TKT-0046's Acceptance ("file a separate, scoped ticket for anything
+needing design judgment or touching a control's shipped contract"). All three are **cosmetic/consistency**,
+not accessibility regressions (every control still has a compliant focus ring and a working disabled
+contract; only the *hover/active/disabled paint mechanism* is inconsistent).
+
+## Acceptance
+Each finding below gets its own decision + fix, independently landable:
+
+1. **`ui-checkbox` has no `:hover` state at all** (`packages/agent-ui/components/src/controls/checkbox/
+   checkbox.css`) — its Indicator-class siblings both repaint on hover: `ui-switch` steps the track to
+   `--ui-switch-track-hover` (switch.css:142-144) and `ui-radio` steps the ring to `--ui-radio-ink`
+   (radio.css:160-162). Checkbox's `::before` box has no matching `:hover` rule anywhere in the file. Decide
+   whether checkbox should gain a hover treatment (and if so, which — a border-color lift matching radio, or
+   a new `--ui-checkbox-bg-hover`/`-border-hover` step) and implement it.
+2. **Disabled styling uses ad hoc `opacity` instead of the token-repoint discipline in three places with no
+   documented rationale**, unlike the fleet's dominant pattern (button/checkbox/switch/slider/text-field/
+   select/textarea all repoint `--ui-{cmp}-bg/-border/-ink` to muted neutral roles):
+   - `radio.css:191` — `opacity: 0.5`, explicitly flagged in its own comment as "v1, no danger repoint
+     needed" (acknowledged debt, not a documented permanent choice).
+   - `combo-box.css:202` — `opacity: 0.5` on the editor's `[aria-disabled='true']` rule; combo-box has **no**
+     `:where(ui-combo-box[disabled])` token block at all (unlike its sibling `select.css:151-156`, which
+     fully repoints `border`/`bg`/`ink`).
+   - `command-modal.css:140` — `opacity: 0.5` on a disabled option row, no comment.
+   (NOTE: `calendar.css:411-419` and `color-picker.css:81-87` also use `opacity` for disabled, but both
+   carry an explicit, reasoned comment — opacity collapses a multi-layer stacking context, e.g. a calendar
+   cell's numeral + selection band + point-glyph, in one declaration where a token repoint would need a
+   rule per pseudo-layer. Those two are judged **intentional and out of this ticket's scope** — see TKT-0046
+   Findings.) Decide whether opacity is an accepted second disabled mechanism for simple, single-layer parts
+   too, or whether radio/combo-box/command-modal should converge on the token-repoint pattern, then apply
+   consistently.
+3. **`ui-disclosure`'s summary row has no hover feedback** (`disclosure.css`) — only a `:focus-visible` rule
+   exists; no `:hover` at all. Its Pattern-class siblings both paint on hover: `ui-tabs` steps ink to
+   `--ui-tabs-ink-hover` (tabs.css:82-84) and `ui-menu`'s `[role=menuitem]` steps background to
+   `--ui-menu-item-bg-hover` (menu.css:151-153). Decide whether the summary row should gain a matching hover
+   treatment (ink-step, matching tabs, is the closer sibling — disclosure has no background fill to step)
+   and implement it.
+
+## Repro
+No single repro — read the cited `file:line`s directly; each is a static CSS/absence check, not a runtime
+bug.
+
+## Expected vs actual
+- **Expected:** every Indicator-class control (checkbox/switch/radio) offers the same hover feedback shape;
+  every disabled control follows the fleet's dominant token-repoint mechanism, or opacity is explicitly
+  ratified as a second accepted mechanism with a stated rule for when it applies; every Pattern-class
+  interactive row (tabs/menu/disclosure) paints on hover the same way.
+- **Actual:** checkbox is the one Indicator control with zero hover feedback; three controls disable via
+  bare opacity with no rationale (vs. two controls that do so **with** a documented multi-layer rationale);
+  disclosure is the one Pattern-class row with zero hover feedback.
+
+## Classification
+Axis: **structural/consistency** — same axis as TKT-0046, split out because each item needs a design
+decision (which hover token/ladder step to mint, whether opacity is an accepted second disabled mechanism)
+rather than a mechanical, zero-judgment fix.
+
+## Severity
+**cosmetic** — no accessibility regression; every affected control still has a working focus ring and a
+functionally inert disabled state. This is a visual-consistency gap only.
+
+## Links
+- `TKT-0046` (`.claude/docs/tickets/tkt-0046-fleet-interaction-state-styling-consistency-audit.md`) — the
+  audit that surfaced these three findings (see its dated Findings entry for the full sweep table).
+- `.claude/docs/references/interaction-states.md` — the standard these deviate from.
+- `.claude/docs/adr/0008-interaction-state-styling-standard.md` — hover/active role-ladder + the disabled
+  structural-hold discipline (`tokens.md` canon: disabled is a role-repoint, not opacity).
+
+## Findings
+
+### 2026-07-14 — findings 1 and 3 fully closed; finding 2 partial (radio + command-modal done, combo-box deferred)
+
+**Finding 1 — checkbox hover: FIXED.** `checkbox.css` gained `:scope:hover::before { border-color:
+var(--ui-checkbox-border-checked); }`, mirroring `radio.css`'s own border-lift mechanism exactly (no
+new token minted — reuses the existing `--ui-checkbox-border-checked`). Real cross-engine proof in
+`checkbox.browser.test.ts`.
+
+**Component-reviewer MINOR-BUT-REAL fix caught before landing**: the hover rule was first authored
+AFTER the `:state(user-invalid)` rule at equal specificity (0,2,1) — source order let hover mask the
+danger border, so hovering a required, unchecked, already-blurred checkbox would hide the invalid
+signal at the exact moment a user is about to interact. Fixed by relocating the hover rule ABOVE
+user-invalid (source order now correctly lets the danger colour win), matching the fleet's own
+documented precedence law (`text-field.css:205-208`: idle < hover < user-invalid, source-later wins).
+A new regression test proves this — and its own first version was itself briefly wrong: it compared
+computed `border-color` immediately after `userEvent.hover()` with no settle wait, catching the
+in-flight `border-color` transition (`--ui-motion-fast` = 300ms, `dimensions.css:82`) mid-interpolation
+rather than either endpoint colour. Fixed by waiting past the real transition duration (`setTimeout`,
+350ms) on both measurements before asserting equality — a 2-animation-frame wait (the pattern the
+pre-existing, adjacent user-invalid test uses) is only sufficient for an INEQUALITY assertion (any
+mid-transition value already differs from idle), not for an EXACT settled-value comparison.
+
+**Finding 2 — disabled-opacity → token-repoint convergence: PARTIAL.**
+- `radio.css` — DONE. Removed the redundant `opacity: 0.5` from the disabled STYLES rule; the TOKEN
+  block's own `:where(ui-radio[disabled])` already fully repoints border/ink/dot to
+  `--md-sys-color-neutral-on-surface-variant`, so the opacity was pure double-dimming. **Named
+  consequence** (component-reviewer finding): radio's slotted LABEL text has no ink token of its own in
+  `radio.css` — the removed opacity was the ONLY thing dimming it, so a disabled labelled radio's text
+  now renders at full ink, a real (intentional, now-recorded) behavior change. This converges radio with
+  checkbox, which never dimmed its label either — the fleet is now CONSISTENT on this point, and disabled
+  remains functionally inert + announced (interaction-states.md §3), so no accessibility regression. A
+  future Indicator-class disabled-label-ink treatment (`--md-sys-color-neutral-on-surface-disabled`
+  exists, tokens.css:60, with a genuinely distinct value) is a separate design call, not this ticket.
+  Cross-engine proof in `radio.browser.test.ts` (checked-state fill colour, since an UNCHECKED radio's
+  border token is already identical idle vs. disabled — both `-on-surface-variant` — so that leg alone
+  proves nothing; the test was corrected once to target the checked fill instead, verified sound).
+- `command-modal.css` — DONE. `[role='option'][aria-disabled='true']` now repoints `color` to the
+  EXISTING `--ui-command-modal-muted-ink` token (already used for the group-label ink in the same file)
+  instead of `opacity: 0.5`, matching `select.css`'s fully-repointed `[disabled]` precedent exactly.
+  Cross-engine proof in `command-modal.browser.test.ts`.
+- `combo-box.css` — **DELIBERATELY NOT TOUCHED.** A separate, concurrently-running session was actively
+  editing this exact file at the time of this work (confirmed via live process evidence — a running
+  `vitest`/`npm run dev` plus very recent modification timestamps in the same area); touching it risked
+  a real collision with in-progress work. combo-box.css's own `opacity: 0.5` disabled rule (and its
+  missing `:where(ui-combo-box[disabled])` token block, unlike sibling `select.css`) remains open. **This
+  ticket stays open for this leg** — either resume it directly once the concurrent session's combo-box
+  work has landed, or split it into its own follow-up ticket at that point.
+
+**Finding 3 — disclosure hover: FIXED, with a named, real limitation.** `disclosure.css` gained a new
+`--ui-disclosure-ink-hover` token (reading `var(--md-sys-color-neutral-on-surface-hover)` — an EXISTING
+fleet token-layer role, not newly minted) and `:scope [data-part='summary']:hover { color:
+var(--ui-disclosure-ink-hover); }`, structurally mirroring `tabs.css`'s ink-step mechanism. Static
+CSS-text coverage added to `disclosure-css.test.ts` (no browser hover-colour test — see below for why).
+
+**Verified, real token-layer gap (component-reviewer confirmed by reading `tokens.css` directly):**
+disclosure's idle ink (`--md-sys-color-neutral-on-surface`) and the new hover token
+(`--md-sys-color-neutral-on-surface-hover`) currently resolve to the EXACT SAME palette value
+(`light-dark(neutral-950, neutral-050)`, `tokens.css:56,58`) — this specific hover wiring is
+architecturally correct (reads the semantically right role, the fleet's "always read through a role"
+convention) but is CURRENTLY VISUALLY UNDETECTABLE. Porting tabs' literal mechanism (idle
+`-on-surface-variant` → hover `-on-surface`, which is why tabs' hover IS visible today) was considered
+and rejected: tabs' idle ink is deliberately muted because it labels nav chrome, whereas disclosure's
+summary is content-bearing prose and reads correctly at full ink already — dimming disclosure's idle
+state to gain hover headroom would be a worse, unrequested regression. Per `interaction-states.md`
+§103-105's own standard, a collapsed idle≈hover ladder step is a TOKEN-layer fix (a dedicated,
+distinct-valued state role + an ADR-0008 amendment), never something a single component should
+special-case around. **A token-layer follow-up is needed** — give `--md-sys-color-neutral-on-surface-hover`
+its own genuinely distinct value fleet-wide (a `color:token-builder` seat concern) — before this specific
+wiring becomes visually real; until then it is correct-but-latent, not broken.
+
+**Gates**: `npm run check` clean · jsdom suite for all four controls: 229/229 · cross-engine browser
+suite: 108/108, both Chromium and WebKit · independently reviewed (`ui:component-reviewer`, fresh
+context) — CONDITIONAL GO on first pass (one MINOR-BUT-REAL defect: the checkbox ordering bug above),
+fixed and re-verified.
+
+**Status stays `open`**: the combo-box leg of finding 2 and the token-layer follow-up for finding 3 are
+both real, out-of-this-pass remainder — not silently dropped.

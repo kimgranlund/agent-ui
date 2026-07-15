@@ -136,8 +136,11 @@
   :scope [role='option'][hidden] {
     display: none;
   }
+  /* TKT-0047 — converges on the fleet's dominant disabled mechanism (token-repoint, not opacity): reuses
+     the EXISTING `--ui-command-modal-muted-ink` role (already used for the group-label ink, above) rather
+     than dimming via opacity, matching select.css's fully-repointed `[disabled]` precedent. */
   :scope [role='option'][aria-disabled='true'] {
-    opacity: 0.5;
+    color: var(--ui-command-modal-muted-ink);
     pointer-events: none;
   }
   /* The [data-active] active-descendant highlight — CSS face of aria-activedescendant (focus stays on search). */

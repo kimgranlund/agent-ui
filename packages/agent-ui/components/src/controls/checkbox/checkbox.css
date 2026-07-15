@@ -101,11 +101,23 @@
     border-color: var(--ui-checkbox-border-checked);
   }
 
+  /* Hover (TKT-0047) — border-color lift toward the checked colour, the radio.css precedent: same
+     Indicator-class idle shape (border + transparent bg), so the same mechanism ports directly. Invisible
+     while checked (the border already blends into the same-colour fill) — harmless, no state gate needed.
+     Disabled is pointer-inert (below), so :hover never matches it. Authored BEFORE the user-invalid rule
+     below (component-reviewer MINOR fix) — equal specificity (0,2,1) means source order decides which
+     wins on hover+user-invalid, and the danger signal must win (the text-field.css:205-208 precedent:
+     idle < hover < user-invalid, source-later). Placing hover here, ahead of user-invalid, is the fix. */
+  :scope:hover::before {
+    border-color: var(--ui-checkbox-border-checked);
+  }
+
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. Cannot
      co-occur with :state(checked) (valueMissing only fires when unchecked) — but it CAN co-occur with
-     :state(indeterminate) (required + indeterminate + unchecked IS valueMissing). Equal specificity
-     (0,2,1) with the indeterminate rule above: SOURCE ORDER is load-bearing — this rule must stay
-     authored after it so the danger border wins on the co-occurring state. */
+     :state(indeterminate) (required + indeterminate + unchecked IS valueMissing), AND with :hover (a user
+     hovering a required, still-unchecked box after an earlier blur). Equal specificity (0,2,1) with BOTH
+     the indeterminate rule above AND the hover rule immediately above it: SOURCE ORDER is load-bearing —
+     this rule must stay authored LAST among the three so the danger border always wins. */
   :scope:state(user-invalid)::before {
     border-color: var(--ui-checkbox-border-invalid);
   }
