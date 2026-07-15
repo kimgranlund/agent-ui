@@ -117,6 +117,58 @@ export function composeSystemPrompt(sections: readonly Entry[]): string {
   return blocks.length > 0 ? blocks.join('\n\n') : DEFAULT_SYSTEM_PROMPT_FALLBACK
 }
 
+// ── The live system-prompt projection (ALM-C1, TKT-0052/ADR-0136 Fork 3) ───────────────────────────────
+// The DEV-only live turn's system prompt IS `composeSystemPrompt`'s output with every ENABLED capability
+// entry projected after it as labeled prose (LLD Q2). ADR-0132 Fork 3 made entries generic prose — label +
+// description + free-text content, NO parameter schema — so there is nothing machine-callable to declare as
+// API `tools`; system-prompt projection is the maximal FAITHFUL wire representation of what the user
+// authored (the model genuinely receives every enabled entry, so a capability edit changes the very next
+// live reply). A real tool-execution loop stays a future, separately-decomposed feature (ADR-0132's own
+// named deferral — it needs parameter schemas first).
+
+/** One capability kind's contribution to the live prompt: its `##` group heading + its entries (this
+ *  function does the enabled-filter/sort/tools-gate itself, so the caller just hands over each kind's raw
+ *  store slice). */
+export interface LiveCapabilityGroup {
+  kind: string
+  /** The `## {heading}` group header (e.g. "Skills available to you"). */
+  heading: string
+  entries: readonly Entry[]
+}
+
+/**
+ * The live system prompt: `composeSystemPrompt(sections)` followed by one `## {heading}` block per
+ * capability kind that has ≥1 enabled entry, each enabled entry rendered as `### {label}` + its
+ * description + its content, in `order` (ties by `id`, the composeSystemPrompt law). `toolsEnabled === false`
+ * gates the whole `tool` kind out (the master switch wins over per-entry toggles — the flat boolean finally
+ * gets a live meaning consistent with its label). GATED EQUIVALENCE (ADR-0136 Fork 3): with no enabled
+ * capability entries the result is byte-identical to `composeSystemPrompt(sections)` — the live prompt
+ * degrades exactly to today's composed prompt, never a trailing empty header.
+ */
+export function composeLiveSystemPrompt(
+  sections: readonly Entry[],
+  capabilities: readonly LiveCapabilityGroup[],
+  toolsEnabled: boolean,
+): string {
+  const base = composeSystemPrompt(sections)
+  const groups: string[] = []
+  for (const group of capabilities) {
+    if (group.kind === ENTRY_KINDS.tool && !toolsEnabled) continue // the master switch gates the tools kind out
+    const enabled = [...group.entries]
+      .filter((e) => e.enabled)
+      .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+    if (enabled.length === 0) continue // a kind with nothing enabled contributes no header
+    const blocks = enabled.map((e) => {
+      const lines = [`### ${e.label}`]
+      if (e.description.trim().length > 0) lines.push(e.description.trim())
+      if (e.content.trim().length > 0) lines.push('', e.content.trim())
+      return lines.join('\n')
+    })
+    groups.push(`## ${group.heading}\n${blocks.join('\n\n')}`)
+  }
+  return groups.length > 0 ? `${base}\n\n${groups.join('\n\n')}` : base
+}
+
 /** A slug id from a label — lowercase, non-alphanumeric runs collapsed to one hyphen, trimmed. Falls
  *  back to `entry` if the label is entirely non-alphanumeric (e.g. all emoji/punctuation) — never an
  *  empty id. */

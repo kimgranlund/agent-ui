@@ -19,13 +19,13 @@ import type { Plugin } from 'vite'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { produce } from './produce.ts'
 import type { ProduceDeps } from './produce.ts'
-import { resolvePair, validateProvidersConfig } from './providers-config.ts'
+import { providerForModel, resolvePair, validateProvidersConfig } from './providers-config.ts'
 import type { ProvidersConfig } from './providers-config.ts'
 import { providerFor } from './providers/index.ts'
 import { retrieve } from '../../src/corpus/retrieve.ts'
 import type { CorpusRecord } from '../../src/corpus/record.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
-import type { TurnInput } from './agent-transport.ts'
+import type { TurnInput, Turn } from './agent-transport.ts'
 import { GEN_UI_MODES } from './gen-ui-mode.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 
@@ -47,6 +47,46 @@ const MAX_BODY = 1 << 20 // 1 MiB — a dev-only intent/turn body is tiny; cap i
 // The membership set is `GEN_UI_MODES` (`gen-ui-mode.ts`) — the single source of truth, not a local copy.
 export function validateMode(mode: unknown): GenUiMode | undefined {
   return typeof mode === 'string' && (GEN_UI_MODES as readonly string[]).includes(mode) ? (mode as GenUiMode) : undefined
+}
+
+/**
+ * ALM-C6 (TKT-0052/ADR-0136) — the `/chat` route's pure validation spine, extracted so its 400/503 arms
+ * are deterministically testable without a live key or a real fetch (the impure `provider.stream` path
+ * stays manual live acceptance, the SPEC-R3 adapter precedent). Derives the `{provider}` server-side from
+ * the bare model id (`providerForModel` — `providers.json` is the single source, the browser never names a
+ * provider), then runs `resolvePair` belt-and-braces (the SAME trust-boundary check the produce route uses),
+ * then reads the env key. Returns the resolved dispatch bits, or a `{status, error}` degrade — never a key.
+ */
+export type ChatDispatch =
+  | { ok: true; provider: string; apiKey: string; endpoint: string }
+  | { ok: false; status: number; error: string }
+
+/**
+ * ALM-C6 follow-up (TKT-0052 review MEDIUM-1) — the `/chat` route's own request-shape guard, a pure
+ * predicate so the 400 `bad-request` arm is deterministically testable without a live key. A malformed
+ * body (missing `messages`, or `system`/`model` of the wrong type) must never reach `resolveChatDispatch`/
+ * `provider.stream()` — that lands the failure in the untested "impure" remainder as a 500, not a 400.
+ */
+export function isChatBody(body: { system?: unknown; model?: unknown; messages?: unknown }): body is {
+  system: string
+  model: string
+  messages: Turn[]
+} {
+  return typeof body.system === 'string' && typeof body.model === 'string' && Array.isArray(body.messages)
+}
+
+export function resolveChatDispatch(
+  config: ProvidersConfig,
+  env: Record<string, string | undefined>,
+  model: string,
+): ChatDispatch {
+  const providerId = providerForModel(config, model)
+  if (providerId === undefined) return { ok: false, status: 400, error: 'unknown-model' }
+  const pair = resolvePair(config, providerId, model) // belt-and-braces (SPEC-R12 PAIR-allowlist)
+  if (!pair.ok) return { ok: false, status: 400, error: pair.reason }
+  const apiKey = env[pair.envKey]
+  if (apiKey === undefined || apiKey === '') return { ok: false, status: 503, error: 'no-key' }
+  return { ok: true, provider: providerId, apiKey, endpoint: pair.entry.endpoint }
 }
 
 function readBody(req: IncomingMessage): Promise<string> {
@@ -116,6 +156,40 @@ export function a2uiDevProxyPlugin(): Plugin {
                 (e) => e.implemented && typeof env[e.envKey] === 'string' && env[e.envKey] !== '',
               ).length
               sendJson(res, 200, { available: available > 0, providers: available })
+              return
+            }
+
+            // POST /chat — ALM-C6 (TKT-0052/ADR-0136): a SECOND branch on the same mount, one level BELOW
+            // produce(). It rides the SAME trust boundary (providers.json PAIR-allowlist + server-side key)
+            // but calls `provider.stream({model, system, messages})` directly with the CALLER's own system
+            // prompt (agent-admin's composed prompt + capability projection) and buffers the raw prose
+            // fragments into ONE JSON `{text}` — never a produce() A2UI-JSONL heal/validate loop (§0: the
+            // agent-admin turn is prose, which produce() would reject as invalid A2UI). MUST precede the
+            // generic POST branch below, which otherwise claims every POST regardless of sub-path.
+            if (req.method === 'POST' && url.startsWith('/chat')) {
+              const body = JSON.parse(await readBody(req)) as { system?: unknown; model?: unknown; messages?: unknown }
+              if (!isChatBody(body)) {
+                sendJson(res, 400, { error: 'bad-request' }) // a malformed body is a deterministic failure — never let it fall through to provider.stream()
+                return
+              }
+              const { system, model, messages } = body
+              const dispatch = resolveChatDispatch(config, env, model)
+              if (!dispatch.ok) {
+                sendJson(res, dispatch.status, { error: dispatch.error }) // 400 unknown/rejected pair · 503 no key
+                return
+              }
+              // The SECOND, independent line of defense (SPEC-R11 AC4): even an allowlisted provider degrades
+              // here if its adapter module isn't wired — never an unhandled crash.
+              const providerDispatch = providerFor(dispatch.provider, { apiKey: dispatch.apiKey, endpoint: dispatch.endpoint })
+              if (!providerDispatch.ok) {
+                sendJson(res, 503, { error: providerDispatch.reason })
+                return
+              }
+              let text = ''
+              for await (const fragment of providerDispatch.provider.stream({ model, system, messages })) {
+                text += fragment // buffered server-side — single-shot (LLD Q3); one full reply, no mid-stream truncation
+              }
+              sendJson(res, 200, { text })
               return
             }
 

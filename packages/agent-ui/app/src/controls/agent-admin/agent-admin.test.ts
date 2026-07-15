@@ -59,8 +59,15 @@ describe('UIAgentAdminElement — upgrade + defaults', () => {
     expect(el.store).toBeUndefined()
   })
 
-  it('static props is exactly [schema, store]', () => {
-    expect(Object.keys(UIAgentAdminElement.props)).toEqual(['schema', 'store'])
+  it('static props is exactly [schema, store, agentTurn]', () => {
+    expect(Object.keys(UIAgentAdminElement.props)).toEqual(['schema', 'store', 'agentTurn'])
+  })
+
+  it('agentTurn starts undefined pre-connect and stays undefined after connect (the stub arm is the default)', () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    expect(el.agentTurn).toBeUndefined()
+    mount(el)
+    expect(el.agentTurn).toBeUndefined()
   })
 
   it('connecting lazily assigns the real default schema + a real, persisted store seeded for BOTH the flat Agent config and every entry-list kind', () => {
@@ -407,6 +414,154 @@ describe('UIAgentAdminElement — live-apply turn loop (ADR-0132 cl.6: composed 
   })
 })
 
+describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136)', () => {
+  function submit(el: UIAgentAdminElement, text: string): void {
+    const field = el.querySelector('[data-role="canvas"] [data-part="field"]') as HTMLElement & { value: string }
+    const form = el.querySelector('[data-role="canvas"] [data-part="composer"]') as HTMLFormElement
+    field.value = text
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+  }
+  function lastAgentBody(el: UIAgentAdminElement): string {
+    const bubbles = [...el.querySelectorAll('[data-role="agent"]')]
+    return ((bubbles[bubbles.length - 1]?.querySelector('[data-part="body"]')) as HTMLElement)?.textContent ?? ''
+  }
+  function systemBubbleText(el: UIAgentAdminElement): string {
+    const bubbles = [...el.querySelectorAll('[data-role="system"]')]
+    return ((bubbles[bubbles.length - 1]?.querySelector('[data-part="body"]')) as HTMLElement)?.textContent ?? ''
+  }
+  function addEntry(el: UIAgentAdminElement, kind: string, label: string): void {
+    const section = el.querySelector(`[data-kind="${kind}"]`) as HTMLElement
+    ;(section.querySelector('[data-part="entry-add-label"]') as HTMLInputElement).value = label
+    ;(section.querySelector('[data-part="entry-add-form"]') as HTMLFormElement).dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true }),
+    )
+  }
+  async function waitFor(predicate: () => boolean, label: string): Promise<void> {
+    for (let i = 0; i < 100; i += 1) {
+      if (predicate()) return
+      await Promise.resolve() // drain the runner's own microtask chain (setNote/finalize run synchronously after await)
+    }
+    throw new Error(`waitFor timed out: ${label}`)
+  }
+
+  interface Recorder {
+    fn: import('./agent-admin-schema.ts').AdminAgentTurn
+    calls: import('./agent-admin-schema.ts').AdminTurnRequest[]
+  }
+  function recordingRunner(reply: string): Recorder {
+    const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    const fn: import('./agent-admin-schema.ts').AdminAgentTurn = async (req) => {
+      calls.push(req)
+      return reply
+    }
+    return { fn, calls }
+  }
+
+  it('an injected resolving runner renders its reply as the agent note (setNote/finalize), NOT the stub string', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const runner = recordingRunner('The live model says hi.')
+    el.agentTurn = runner.fn
+    submit(el, 'hello')
+    await waitFor(() => lastAgentBody(el) === 'The live model says hi.', 'live reply rendered')
+    expect(lastAgentBody(el)).not.toMatch(/^\[stub preview/)
+    expect(runner.calls).toHaveLength(1)
+    expect(runner.calls[0]!.text).toBe('hello')
+  })
+
+  it("the request's `system` is the composed prompt PLUS the enabled-capability projection; `model` is the current selection", async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const target = SUPPORTED_MODELS.find((m) => m.id !== DEFAULT_MODEL_ID)!
+    el.store!.set('model', target.id)
+    addEntry(el, ENTRY_KINDS.skill, 'Web search')
+    const runner = recordingRunner('ok')
+    el.agentTurn = runner.fn
+    submit(el, 'ping')
+    await waitFor(() => runner.calls.length === 1, 'runner called')
+    const req = runner.calls[0]!
+    expect(req.model).toBe(target.id)
+    expect(req.system).toContain('## Foundation') // the composed prompt is the base
+    expect(req.system).toContain('## Skills available to you') // the capability projection is appended
+    expect(req.system).toContain('### Web search')
+  })
+
+  it('toolsEnabled gates the Tools projection: a Tool entry only reaches `system` when the master switch is on', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    addEntry(el, ENTRY_KINDS.tool, 'Calculator')
+    const runner = recordingRunner('ok')
+    el.agentTurn = runner.fn
+
+    submit(el, 'one') // toolsEnabled default false
+    await waitFor(() => runner.calls.length === 1, 'first call')
+    expect(runner.calls[0]!.system).not.toContain('## Tools available to you')
+
+    el.store!.set('toolsEnabled', true)
+    submit(el, 'two')
+    await waitFor(() => runner.calls.length === 2, 'second call')
+    expect(runner.calls[1]!.system).toContain('## Tools available to you')
+    expect(runner.calls[1]!.system).toContain('### Calculator')
+  })
+
+  it('fresh-read: a store edit between two turns changes the SECOND request; history accumulates and the FIRST request object is never rewritten', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const foundation = contentFieldOf(entryEl(el, ENTRY_KINDS.promptSection, 'foundation'))
+    foundation.value = 'Speak like a pirate.'
+    foundation.dispatchEvent(new Event('change', { bubbles: true }))
+    const runner = recordingRunner('aye')
+    el.agentTurn = runner.fn
+
+    submit(el, 'one')
+    await waitFor(() => runner.calls.length === 1, 'first call')
+    const firstReq = runner.calls[0]!
+    expect(firstReq.system).toContain('Speak like a pirate.')
+    expect(firstReq.history).toEqual([]) // turn 1 carries no prior history
+
+    // switch the model + edit the prompt between turns
+    const target = SUPPORTED_MODELS.find((m) => m.id !== DEFAULT_MODEL_ID)!
+    el.store!.set('model', target.id)
+    foundation.value = 'Speak like a robot.'
+    foundation.dispatchEvent(new Event('change', { bubbles: true }))
+
+    submit(el, 'two')
+    await waitFor(() => runner.calls.length === 2, 'second call')
+    const secondReq = runner.calls[1]!
+    expect(secondReq.model).toBe(target.id)
+    expect(secondReq.system).toContain('Speak like a robot.')
+    expect(secondReq.system).not.toContain('Speak like a pirate.')
+    // the second request replays the first COMPLETED turn as prior history (user + assistant)
+    expect(secondReq.history).toEqual([
+      { role: 'user', content: 'one' },
+      { role: 'assistant', content: 'aye' },
+    ])
+    // the first request object is untouched — no retroactive rewrite of a prior turn's system/model/history
+    expect(firstReq.system).toContain('Speak like a pirate.')
+    expect(firstReq.system).not.toContain('Speak like a robot.')
+    expect(firstReq.history).toEqual([])
+  })
+
+  it('a THROWING runner degrades via fail(): a ⚠ system bubble surfaces the message and the composer re-enables — never a crash', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.agentTurn = async () => {
+      throw new Error('network is down')
+    }
+    submit(el, 'boom')
+    await waitFor(() => systemBubbleText(el).includes('network is down'), 'error system bubble')
+    expect(systemBubbleText(el)).toContain('⚠')
+    const composer = el.querySelector('[data-role="canvas"] [data-part="composer"]') as HTMLElement
+    expect(composer.hasAttribute('data-busy'), 'the composer must re-enable after a failed live turn').toBe(false)
+    // a subsequent turn still proceeds (the page recovered on the throw path)
+    el.agentTurn = async () => 'recovered'
+    submit(el, 'again')
+    await waitFor(() => lastAgentBody(el) === 'recovered', 'recovery turn rendered')
+  })
+
+  it('agentTurn UNSET keeps the stub reply byte-identical to today (the static-build default path)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    submit(el, 'hi')
+    expect(lastAgentBody(el)).toMatch(/^\[stub preview — no live model call\]/)
+    expect(lastAgentBody(el)).toContain('You said: hi')
+  })
+})
+
 describe('UIAgentAdminElement — a bring-your-own store with NO subscribe() still re-renders (component-reviewer MODERATE fix)', () => {
   it('adding a custom entry to a store lacking subscribe() still appears in the rendered list', () => {
     // SettingsStore.subscribe is OPTIONAL (store.ts) — a spec-conformant store may omit it entirely.
@@ -480,7 +635,7 @@ describe('agent-admin.md descriptor (ui-agent-admin)', () => {
   const md = readFileSync(`${DIR}/agent-admin.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['schema', 'store']
+  const ATTR_NAMES = ['schema', 'store', 'agentTurn']
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)

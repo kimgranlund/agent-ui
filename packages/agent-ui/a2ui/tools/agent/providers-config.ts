@@ -106,3 +106,19 @@ export function resolvePair(cfg: ProvidersConfig, provider: string, model: strin
   }
   return { ok: true, entry, envKey: entry.envKey }
 }
+
+/**
+ * ALM-C5 (TKT-0052/ADR-0136): derive the owning IMPLEMENTED provider id for a bare model id. The
+ * `agent-admin` chat client sends only a model id (its `SUPPORTED_MODELS` selection) — never a provider —
+ * so `providers.json` stays the SINGLE source of truth for the `{provider, model}` pair (a second
+ * implemented provider later needs zero client change). Returns the first implemented provider whose
+ * `models` contain the id, or `undefined` (unknown id, or an id owned only by an `implemented: false`
+ * provider). The proxy still runs `resolvePair` on the result (belt-and-braces, the same trust-boundary
+ * check the produce route uses).
+ */
+export function providerForModel(cfg: ProvidersConfig, model: string): string | undefined {
+  for (const [id, entry] of Object.entries(cfg.providers)) {
+    if (entry.implemented && entry.models.some((m) => m.id === model)) return id
+  }
+  return undefined
+}

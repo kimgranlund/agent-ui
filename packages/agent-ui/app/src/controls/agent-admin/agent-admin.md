@@ -16,12 +16,18 @@ attributes:              # attributes-as-API — mirrors agent-admin.ts `agentAd
     type: json             # a JS object (SettingsStore: get/set/subscribe?/save?) — functions cannot round-trip through JSON.stringify, safe only because `attribute: false` means the codec never actually runs
     default: undefined     # undefined ⇒ lazily assigned a real, localStorage-backed store (persistKey 'ui-agent-admin') at first connect, seeded for BOTH the flat Agent config AND every entry-list kind (ADR-0131 cl.3 / ADR-0132's extension of it)
     reflect: false
+  - name: agentTurn
+    type: json             # a function (AdminAgentTurn: (req) => Promise<string>) — too structured to reflect, and functions cannot round-trip through JSON.stringify, safe only because `attribute: false` means the codec never actually runs (the store precedent)
+    default: undefined     # undefined ⇒ the deterministic stub arm runs (ADR-0131); the DEV-only site page assigns a real live runner ONLY under import.meta.env.DEV (TKT-0052/ADR-0136), so the static build carries no live-call code
+    reflect: false
 
 properties:
   - name: schema
     description: The "Agent" section's flat `SettingsSchema` (name/model/temperature/toolsEnabled) rendered by the composed settings pane — instructions/capabilities are OUT of this schema entirely; they live in the generic entry-list primitive (entries.ts, ADR-0132). Undefined at author-set time lazily becomes `agent-admin-schema.ts`'s `defaultAgentConfigSchema` at first connect (a shared, read-only constant — safe across instances, unlike `store`). Reactive the same way `ui-settings`' own `schema` is.
   - name: store
     description: A `SettingsStore` adapter (store.ts) EVERY pane reads/writes through — the Agent config, all three built-in prompt sections, and all four capability kinds share ONE persisted store (ADR-0132 cl.5). Undefined at author-set time lazily becomes a real `createMemoryStore({ persistKey 'ui-agent-admin' })` at first connect (survives a reload). Every entry-list kind's own external-sync subscription is wired the same way `ui-settings`' generated fields wire theirs (TKT-0021 precedent), generalized to five keys (`#rewireAllSections`).
+  - name: agentTurn
+    description: An OPTIONAL injectable live-turn runner (`AdminAgentTurn` — `(req) => Promise<string>`, agent-admin-schema.ts) that, when set, replaces the deterministic stub with a real live model turn (TKT-0052/ADR-0136). Default `undefined` ⇒ the stub arm runs and the packaged component carries NO fetch/env/proxy code — the static docs build's "no external runtime dependency" guarantee (ADR-0131 cl.4/7) holds unchanged. The docs site page assigns a real runner ONLY under `import.meta.env.DEV` through the reused `dev-proxy-plugin.ts` trust boundary (ADR-0073), so a live call happens only in a local `vite dev` session with a configured provider key; a thrown/rejected runner degrades visibly via the conversation's `fail()` path, never a crash.
 
 events: []               # no DOM events of its own — the composed ui-settings/ui-conversation each emit their OWN events (unchanged, not re-emitted); this element adds no new event vocabulary
 
@@ -127,12 +133,22 @@ stub turn loop reads the store's CURRENT entries at the moment each turn begins 
 prompt sections and gathering each capability kind's enabled labels — a store read trivially reflects
 whatever was most recently written, so no separate propagation channel exists because none is needed.
 
-## The chat canvas is a stub, not a live model call (ADR-0131)
+## The chat canvas: a stub by default, a real model call under a DEV-only opt-in (ADR-0131/ADR-0136)
 
-`ui-agent-admin` has no external runtime dependency — the turn loop that answers each message
-(`agent-admin-schema.ts`'s `runStubAgentTurn`) is a deterministic function that visibly cites the composed
-prompt AND the enabled capabilities in its reply, proving the live-apply wiring works without a real model
-integration. A real model call is a separate, future, explicitly-scoped addition.
+By default `ui-agent-admin` has **no external runtime dependency** — the turn loop that answers each
+message (`agent-admin-schema.ts`'s `runStubAgentTurn`) is a deterministic function that visibly cites the
+composed prompt AND the enabled capabilities in its reply, proving the live-apply wiring works without a
+real model integration. This is the ONLY path the static build carries, so the shipped docs site's
+"no external dependency" guarantee (ADR-0131 cl.4/7) holds for every visitor.
+
+Set the optional `agentTurn` property to swap that stub for a **real live model turn** (TKT-0052/ADR-0136):
+the request is projected fresh from the current config every turn — the selected model, the composed
+system prompt, and every enabled capability entry (skills/workflows/resources/tools, projected as prose;
+the Tools kind gated by the `toolsEnabled` switch) — and replayed with the running multi-turn history. The
+docs site wires this ONLY under `import.meta.env.DEV`, through the reused `dev-proxy-plugin.ts` trust
+boundary (ADR-0073, the browser never holds a key), so a live call happens only in a local `vite dev`
+session with a configured provider key; a network/provider failure degrades visibly via the conversation's
+error path, never a crash. A switch of model or prompt mid-conversation applies to the NEXT turn only.
 
 ## Fail-closed everywhere
 

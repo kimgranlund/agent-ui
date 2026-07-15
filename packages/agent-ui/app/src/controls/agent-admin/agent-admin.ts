@@ -47,8 +47,21 @@ import {
   sanitizeNumber,
   sanitizeSelect,
   type AgentConfigSnapshot,
+  type AdminAgentTurn,
+  type AdminTurn,
+  type AdminTurnRequest,
 } from './agent-admin-schema.ts'
-import { ENTRY_KINDS, entriesStoreKey, initialEntryValues, readEntries, composeSystemPrompt, validateNewEntry, type Entry } from './entries.ts'
+import {
+  ENTRY_KINDS,
+  entriesStoreKey,
+  initialEntryValues,
+  readEntries,
+  composeSystemPrompt,
+  composeLiveSystemPrompt,
+  validateNewEntry,
+  type Entry,
+  type LiveCapabilityGroup,
+} from './entries.ts'
 import { mountEntryList, showAddError, type EntryListSection } from './entry-list.ts'
 
 const agentAdminProps = {
@@ -61,16 +74,20 @@ const agentAdminProps = {
   // would leak state across independently-constructed instances — each element gets its OWN default store).
   schema: { ...prop.json<SettingsSchema | undefined>(undefined), attribute: false as const },
   store: { ...prop.json<SettingsStore | undefined>(undefined), attribute: false as const },
+  // The DEV-only live-turn seam (TKT-0052/ADR-0136): default `undefined` ⇒ the stub branch runs, so the
+  // static build carries no live-call code (the site page assigns this ONLY under `import.meta.env.DEV`,
+  // the a2ui-live.ts construction-site precedent — the packaged component itself stays fetch/env/proxy-free).
+  agentTurn: { ...prop.json<AdminAgentTurn | undefined>(undefined), attribute: false as const },
 } satisfies PropsSchema
 
 /** The five ENTRY_KINDS instantiations, each paired with its display copy — the single source of truth
  *  `#compose()`/the reactive effect both iterate, so a future 6th kind (ADR-0132 Fork 2's extensibility)
  *  is one array entry, never new list/toggle/author/render code. */
-const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: string }> = [
-  { kind: ENTRY_KINDS.skill, label: 'Skills', addLabel: '+ Add skill' },
-  { kind: ENTRY_KINDS.workflow, label: 'Workflows', addLabel: '+ Add workflow' },
-  { kind: ENTRY_KINDS.resource, label: 'Resources', addLabel: '+ Add resource' },
-  { kind: ENTRY_KINDS.tool, label: 'Tools', addLabel: '+ Add tool' },
+const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: string; liveHeading: string }> = [
+  { kind: ENTRY_KINDS.skill, label: 'Skills', addLabel: '+ Add skill', liveHeading: 'Skills available to you' },
+  { kind: ENTRY_KINDS.workflow, label: 'Workflows', addLabel: '+ Add workflow', liveHeading: 'Workflows available to you' },
+  { kind: ENTRY_KINDS.resource, label: 'Resources', addLabel: '+ Add resource', liveHeading: 'Resources available to you' },
+  { kind: ENTRY_KINDS.tool, label: 'Tools', addLabel: '+ Add tool', liveHeading: 'Tools available to you' },
 ]
 
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
@@ -90,6 +107,12 @@ export class UIAgentAdminElement extends UIElement {
   // The no-subscribe fallback trigger — `#updateEntries` calls this directly ONLY when the current
   // store has no `subscribe` method to notify it instead (component-reviewer MODERATE fix).
   #renders: Map<string, () => void> = new Map()
+  // The multi-turn conversation history (TKT-0052 Q4, element-lifetime, private): prior COMPLETED turns —
+  // user text + reply — appended on BOTH the stub and the live path. Replayed into the live request as
+  // PRIOR turns only; the system prompt is rebuilt fresh every turn and NEVER stored here, so a mid-
+  // conversation model/prompt/capability switch applies to the NEXT turn only and prior turns are never
+  // rewritten (the acceptance criterion falls out by construction).
+  #history: AdminTurn[] = []
 
   protected connected(): void {
     this.#compose() // idempotent — builds ONLY the split/pane shell + the composed children, once ever
@@ -247,11 +270,16 @@ export class UIAgentAdminElement extends UIElement {
     }
   }
 
-  /** The stub turn loop (ADR-0131: no external runtime dependency — this is not a live model call). Reads
-   *  the store's CURRENT entries at turn time (the live-apply mechanism itself — no propagation channel,
-   *  just a fresh read): composes the enabled prompt sections into the final prompt string
-   *  (`composeSystemPrompt`, fail-closed to `DEFAULT_SYSTEM_PROMPT_FALLBACK` if every section is
-   *  disabled/empty), and gathers each capability kind's enabled entry labels (ADR-0132 cl.6). */
+  /** The turn loop. Reads the store's CURRENT entries at turn time (the live-apply mechanism itself — no
+   *  propagation channel, just a fresh read): composes the enabled prompt sections into the final prompt
+   *  string (`composeSystemPrompt`, fail-closed to `DEFAULT_SYSTEM_PROMPT_FALLBACK` if every section is
+   *  disabled/empty), and gathers each capability kind's enabled entry labels (ADR-0132 cl.6).
+   *
+   *  Two arms (TKT-0052/ADR-0136): `agentTurn` UNSET ⇒ the deterministic stub (ADR-0131, byte-unchanged —
+   *  the only path the static build ever carries); `agentTurn` SET (a DEV-only, site-page-injected runner)
+   *  ⇒ a real live turn through the reused `dev-proxy-plugin.ts` trust boundary, single-shot into
+   *  `setNote`/`finalize` (LLD Q3), degrading a thrown/rejected runner via `handle.fail()` (LLD Q5, no crash,
+   *  no silent swallow). Both arms append the completed exchange to `#history`. */
   #handleSubmit(text: string): void {
     const conversation = this.#conversation
     if (!conversation) return
@@ -277,11 +305,64 @@ export class UIAgentAdminElement extends UIElement {
       resources: enabledLabels(ENTRY_KINDS.resource),
       tools: enabledLabels(ENTRY_KINDS.tool),
     }
+
     // setNote (not ingestLine): ingestLine expects A2UI wire JSONL (surfaceIdOf/categoryOf parse it) — a
-    // plain stub reply is prose, exactly what setNote's contract is for ("rendered verbatim at finalize()").
+    // plain prose reply is exactly what setNote's contract is for ("rendered verbatim at finalize()").
     const handle = conversation.beginAgentTurn()
-    handle.setNote(runStubAgentTurn(text, config))
-    handle.finalize()
+    const agentTurn = this.agentTurn
+
+    // Stub arm — byte-unchanged (ADR-0131). The only path the static build carries.
+    if (agentTurn === undefined) {
+      const reply = runStubAgentTurn(text, config)
+      handle.setNote(reply)
+      handle.finalize()
+      this.#recordTurn(text, reply)
+      return
+    }
+
+    // Live arm (DEV-only, injected). The system prompt is rebuilt FRESH here (with the capability
+    // projection, ADR-0136 Fork 3) and never stored in history; `history` carries PRIOR turns only, so a
+    // mid-conversation config switch applies next-turn-only by construction (Q4). The in-flight busy-lock
+    // (TKT-0034, auto-tracked off beginAgentTurn) disables the composer until finalize()/fail() runs.
+    const request: AdminTurnRequest = {
+      text,
+      system: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), config.toolsEnabled),
+      model: config.model,
+      history: [...this.#history],
+    }
+    void (async () => {
+      try {
+        const reply = await agentTurn(request)
+        handle.setNote(reply)
+        handle.finalize()
+        this.#recordTurn(text, reply)
+      } catch (err) {
+        // A network/provider fault, a non-2xx proxy response, or the runner's 120s timeout: surface it
+        // visibly (an error narration entry + a "⚠ …" system bubble, composer re-enabled) — never a crash
+        // or a silent swallow (SPEC-R6 AC3 path, the shipped ui-conversation affordance). The failed
+        // exchange is NOT recorded into history — there is no assistant reply to pair.
+        handle.fail(err instanceof Error ? err.message : String(err))
+      }
+    })()
+  }
+
+  /** Each capability kind's raw store slice + its live `##` group heading, for `composeLiveSystemPrompt`
+   *  (which does the enabled-filter/sort/tools-gate itself). */
+  #capabilityGroups(store: SettingsStore | undefined): LiveCapabilityGroup[] {
+    return CAPABILITY_KINDS.map(({ kind, liveHeading }) => ({
+      kind,
+      heading: liveHeading,
+      entries: readEntries(store, kind),
+    }))
+  }
+
+  /** Append one completed exchange to the multi-turn history (both arms). */
+  #recordTurn(text: string, reply: string): void {
+    const turns: AdminTurn[] = [
+      { role: 'user', content: text },
+      { role: 'assistant', content: reply },
+    ]
+    this.#history.push(...turns)
   }
 }
 

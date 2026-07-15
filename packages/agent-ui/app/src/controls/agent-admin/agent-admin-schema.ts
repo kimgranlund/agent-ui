@@ -109,6 +109,38 @@ export interface AgentConfigSnapshot {
   tools: readonly string[]
 }
 
+// ── The injectable turn-runner seam (ALM-C2, TKT-0052/ADR-0136) ────────────────────────────────────────
+// The DEV-only live overlay's contract. App-local by construction: a2ui's tools-internal `Turn`
+// (agent-transport.ts) is deliberately NOT a package export (SPEC-N1), so this surface declares its OWN
+// minimal shapes and the site runner matches them structurally. This is NOT `resolveProduceOptions`/
+// `ProduceOptions` (ADR-0135) — those carry `produce()`-loop knobs this surface never runs and a Node-side
+// `ProvidersConfig` the browser can't read (LLD Q1). `agentTurn` stays `undefined` in every default/static
+// path, so the packaged component itself carries zero fetch/env/proxy code (the stub is the only built path).
+
+/** One prior completed turn replayed into a live request — the standard Messages-API role/content shape,
+ *  matching a2ui's `Turn` structurally without importing it (SPEC-N1). */
+export interface AdminTurn {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+/** One live turn's request, projected from `agent-admin`'s OWN current config at turn time (LLD Q1/Q4). */
+export interface AdminTurnRequest {
+  /** The user's message, verbatim. */
+  text: string
+  /** `composeLiveSystemPrompt(...)` output — the composed prompt + enabled-capability projection, fresh-read. */
+  system: string
+  /** The sanitized `SUPPORTED_MODELS` id (`sanitizeSelect`, `DEFAULT_MODEL_ID` fallback). */
+  model: string
+  /** Prior completed turns only — NOT including `text` (the runner appends the user message itself). */
+  history: readonly AdminTurn[]
+}
+
+/** The single injectable seam `ui-agent-admin` exposes as its `agentTurn` prop: one request in, one full
+ *  reply string out (single-shot, LLD Q3 — the frozen `AgentTurnHandle` contract hosts no incremental
+ *  prose method). A thrown/rejected runner degrades via `handle.fail()` (LLD Q5). */
+export type AdminAgentTurn = (req: AdminTurnRequest) => Promise<string>
+
 /** `"none" | "a, b, c"` — the shared list-labeling shape `runStubAgentTurn` uses for every capability
  *  kind, so an empty enabled-list reads as an explicit "none" rather than a bare empty string. */
 function labelList(labels: readonly string[]): string {

@@ -67,11 +67,37 @@ function code(text: string): HTMLElement {
 
 /** A live, dogfooded ui-agent-admin — the default schema + a real localStorage-backed store (reload the
  *  page to see the round-trip: values you change persist under the `docs-agent-admin-demo` key). */
-function demo(): HTMLElement {
+function demo(): UIAgentAdminElement {
   const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
   admin.className = 'agent-admin-demo'
   admin.store = createMemoryStore({ persistKey: 'docs-agent-admin-demo' })
   return admin
+}
+
+// ════════════════ the DEV-only live-model overlay (SPEC-N2: dynamic + DEV-guarded ⇒ tree-shaken from build)
+// The a2ui-live.ts construction-site precedent: the `import.meta.env.DEV` guard lives HERE in the site page,
+// never in the packaged component. Under `vite dev` with a configured provider key, `agent-admin`'s stub is
+// swapped for a real live turn through the already-mounted dev-proxy trust boundary; the static build never
+// reaches the dynamic import, so no live-call code is baked into it (ADR-0131 cl.4/7 held). ════════════════
+function wireLiveOverlay(admin: UIAgentAdminElement, status: HTMLElement): void {
+  if (!import.meta.env.DEV) {
+    status.textContent = 'Stub preview — the shipped build makes no live model call.'
+    return
+  }
+  void (async () => {
+    try {
+      const overlay = await import('../lib/admin-live-runner.ts')
+      const probe = await overlay.probeLive()
+      if (probe.available) {
+        admin.agentTurn = overlay.createAdminAgentTurn()
+        status.textContent = `Live model connected (${probe.providers} provider(s)) — replies are real model output. Edit a setting, prompt, or capability and send: it applies to the next turn.`
+      } else {
+        status.textContent = 'Stub preview — set a provider key in .env and restart `npm run dev` for a real live model.'
+      }
+    } catch {
+      status.textContent = 'Stub preview — the live overlay is unavailable.'
+    }
+  })()
 }
 
 content.append(sectionHeading('1 · One primitive, five instantiations (ADR-0132)'))
@@ -88,8 +114,11 @@ content.append(
   ),
 )
 const resizeFrame = el('div', 'agent-admin-resize')
-resizeFrame.append(demo())
-content.append(resizeFrame, el('p', 'as-caption', '↑ Reload the page after changing a value — it persists via the store.'))
+const adminEl = demo()
+resizeFrame.append(adminEl)
+const liveStatus = el('p', 'as-caption', 'Stub preview — the shipped build makes no live model call.')
+content.append(resizeFrame, el('p', 'as-caption', '↑ Reload the page after changing a value — it persists via the store.'), liveStatus)
+wireLiveOverlay(adminEl, liveStatus)
 
 content.append(sectionHeading('2 · Live-apply is a fresh read, not a push'))
 content.append(
