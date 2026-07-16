@@ -330,8 +330,16 @@ export class UISplitElement extends UIContainerElement {
       pane.toggleAttribute('data-axis-vertical', !isH)
       const min = pane.min // tracked — a per-pane min/max change re-runs this whole effect
       const max = pane.max
-      pane.style.setProperty('--_pane-min', min || '')
-      pane.style.setProperty('--_pane-max', max || '')
+      // TKT-0045: `setProperty(name, '')` REMOVES a custom property (CSSOM spec) rather than setting it
+      // to an empty value — an unset `--_pane-min`/`--_pane-max` would then INHERIT from the nearest
+      // ancestor that set a real one, which leaks THIS split's per-pane geometry into any independent
+      // nested `ui-split` further down a pane's own content (e.g. `ui-master-detail`'s internal split)
+      // whose own panes don't set `min`/`max` themselves. The literal `'initial'` keyword is a real
+      // (non-removed) declaration that resets to the custom property's guaranteed-invalid value —
+      // blocking inheritance while still tripping `var(--_pane-min, var(--ui-split-pane-min))`'s
+      // fallback exactly as an actually-unset property would.
+      pane.style.setProperty('--_pane-min', min || 'initial')
+      pane.style.setProperty('--_pane-max', max || 'initial')
     }
 
     const ratios = this.#effectiveRatios(panes)

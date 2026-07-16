@@ -51,13 +51,13 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: entry-toggle
     description: An entry's `<ui-switch data-part="entry-toggle">` — enable/disable without deleting (ADR-0132 Fork 4).
   - name: entry-delete
-    description: An entry's remove affordance — present ONLY for a non-built-in (custom) entry.
+    description: An entry's remove affordance — a `<ui-button data-part="entry-delete">`, present ONLY for a non-built-in (custom) entry (TKT-0048).
   - name: entry-description
     description: An entry's optional one-line description, when non-empty.
   - name: entry-content
     description: An entry's `<ui-textarea data-part="entry-content">` — the fleet's FACE multi-line primitive (ADR-0134), closing the TKT-0041 native-`<textarea>` deviation this composition inherited from ADR-0132.
   - name: entry-add-toggle
-    description: A section's "+ Add ..." button, revealing/hiding the add-form.
+    description: A section's `<ui-button data-part="entry-add-toggle">` ("Add ...", with a leading `plus` icon adornment — TKT-0048), revealing/hiding the add-form.
   - name: entry-add-form
     description: A section's custom-entry authoring form — hidden by default.
   - name: entry-add-label

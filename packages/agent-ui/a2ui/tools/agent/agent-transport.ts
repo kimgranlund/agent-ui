@@ -70,6 +70,14 @@ export interface AgentTransport {
 
 // ── The provider seam (SPEC-R11 / ADR-0073) ─────────────────────────────────────────────────────────
 
+/** A reasoning-effort dial (the Figma chat-input refactor's Effort picker) — a plain, LOCAL union rather
+ *  than importing `@agent-ui/app`'s `EffortLevel` (composer-options.ts): this file is Node-scoped
+ *  `tools/agent/` and the package DAG runs `a2ui ← app`, never the reverse — a duplicated four-value
+ *  union is cheaper than an upward dependency (the `AdminTurn`/a2ui `Turn` precedent, TKT-0052). `undefined`
+ *  ⇒ no effort dial requested, the provider's own default applies — byte-behavior-unchanged for every
+ *  caller that predates this. */
+export type Effort = 'low' | 'medium' | 'high' | 'xhigh'
+
 /**
  * The injected model seam (SPEC-R11): one isolated module PER provider implements this (Anthropic this
  * wave; OpenAI/Gemini the next slices). `stream` yields raw text fragments that accumulate into the
@@ -83,6 +91,14 @@ export interface AgentProvider {
     model: string
     system: string
     messages: Turn[]
+    /** Optional reasoning-effort dial. This is the SEAM's contract, not a guarantee every adapter already
+     *  meets: an adapter SHOULD ignore an effort level it can't map (a degraded DIAL, never a degraded
+     *  REQUEST) rather than let it reach the upstream API unconditionally. The shipped Anthropic adapter
+     *  (code-reviewer finding) currently sends `thinking` for every non-'low' value with no model-
+     *  capability check — latent today because every `SUPPORTED_MODELS` entry supports extended thinking,
+     *  but a future non-thinking model added to that list would 400 here, not degrade. Gate on model
+     *  capability before adding one. */
+    effort?: Effort
     signal?: AbortSignal
   }): AsyncIterable<string>
 }

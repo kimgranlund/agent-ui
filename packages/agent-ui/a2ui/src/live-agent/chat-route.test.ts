@@ -72,4 +72,19 @@ describe('isChatBody (TKT-0052 review MEDIUM-1 — the /chat route request-shape
   it('rejects a messages value that is not an array', () => {
     expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5', messages: 'not-an-array' })).toBe(false)
   })
+
+  it('effort is OPTIONAL (the Figma chat-input refactor\'s Effort picker) — absent is a valid body', () => {
+    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5', messages: [] })).toBe(true)
+  })
+
+  it('accepts each of the four closed effort values', () => {
+    for (const effort of ['low', 'medium', 'high', 'xhigh']) {
+      expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5', messages: [], effort })).toBe(true)
+    }
+  })
+
+  it('rejects an effort value outside the closed four — never forwarded as an arbitrary string', () => {
+    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5', messages: [], effort: 'ultra' })).toBe(false)
+    expect(isChatBody({ system: 'be helpful', model: 'claude-sonnet-5', messages: [], effort: 3 })).toBe(false)
+  })
 })

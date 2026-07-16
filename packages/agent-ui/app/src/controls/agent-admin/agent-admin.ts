@@ -29,11 +29,21 @@
 // only — NEVER `@agent-ui/router`/`@agent-ui/a2a`; the app `layering.test.ts` trip-wire guards it.
 
 import { UIElement, prop, untracked, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
-// Side-effect only: registers `ui-split` / `ui-split-pane` before this element's `connected()` ever calls
-// `document.createElement` on either tag.
+// Side-effect only: registers these tags before this element (or the `entry-list.ts` sibling it composes)
+// ever calls `document.createElement` on one. `button`/`icon` (TKT-0048) register entry-list.ts's
+// `entry-add-toggle`/`entry-delete` `<ui-button>`s + the add-toggle's leading `<ui-icon>` explicitly;
+// `textarea` (TKT-0049) registers entry-list.ts's `entry-content`/`entry-add-content` `<ui-textarea>`s the
+// same way; `text-field` (TKT-0060) registers its `entry-add-label`/`entry-add-description` `<ui-text-field>`s
+// — previously these upgraded only via an incidental transitive path (agent-admin → conversation →
+// surface-host → the a2ui default catalog's factories.ts, which value-imports the whole family) that a
+// future tree-shaking change could sever.
 import '@agent-ui/components/controls/split'
 import '@agent-ui/components/controls/split-pane'
 import '@agent-ui/components/controls/switch'
+import '@agent-ui/components/controls/button'
+import '@agent-ui/components/controls/icon'
+import '@agent-ui/components/controls/textarea'
+import '@agent-ui/components/controls/text-field'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
@@ -41,6 +51,7 @@ import type { SettingsSchema } from '../settings/schema.ts'
 import type { SettingsStore } from '../settings/store.ts'
 import {
   DEFAULT_MODEL_ID,
+  SUPPORTED_MODELS,
   defaultAgentConfigSchema,
   initialValuesFor,
   runStubAgentTurn,
@@ -51,6 +62,7 @@ import {
   type AdminTurn,
   type AdminTurnRequest,
 } from './agent-admin-schema.ts'
+import { EFFORT_LEVELS, type EffortLevel } from '../conversation/composer-options.ts'
 import {
   ENTRY_KINDS,
   entriesStoreKey,
@@ -84,10 +96,10 @@ const agentAdminProps = {
  *  `#compose()`/the reactive effect both iterate, so a future 6th kind (ADR-0132 Fork 2's extensibility)
  *  is one array entry, never new list/toggle/author/render code. */
 const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: string; liveHeading: string }> = [
-  { kind: ENTRY_KINDS.skill, label: 'Skills', addLabel: '+ Add skill', liveHeading: 'Skills available to you' },
-  { kind: ENTRY_KINDS.workflow, label: 'Workflows', addLabel: '+ Add workflow', liveHeading: 'Workflows available to you' },
-  { kind: ENTRY_KINDS.resource, label: 'Resources', addLabel: '+ Add resource', liveHeading: 'Resources available to you' },
-  { kind: ENTRY_KINDS.tool, label: 'Tools', addLabel: '+ Add tool', liveHeading: 'Tools available to you' },
+  { kind: ENTRY_KINDS.skill, label: 'Skills', addLabel: 'Add skill', liveHeading: 'Skills available to you' },
+  { kind: ENTRY_KINDS.workflow, label: 'Workflows', addLabel: 'Add workflow', liveHeading: 'Workflows available to you' },
+  { kind: ENTRY_KINDS.resource, label: 'Resources', addLabel: 'Add resource', liveHeading: 'Resources available to you' },
+  { kind: ENTRY_KINDS.tool, label: 'Tools', addLabel: 'Add tool', liveHeading: 'Tools available to you' },
 ]
 
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
@@ -113,6 +125,12 @@ export class UIAgentAdminElement extends UIElement {
   // conversation model/prompt/capability switch applies to the NEXT turn only and prior turns are never
   // rewritten (the acceptance criterion falls out by construction).
   #history: AdminTurn[] = []
+  // The composer's Effort picker selection (the Figma chat-input refactor) — ephemeral, element-lifetime
+  // state, deliberately NOT persisted to `store` (unlike `model`): reasoning effort is a per-conversation
+  // dial, not a saved agent-profile setting, and Figma's own composer design carries no Effort field in
+  // the settings pane either. Written into `#conversation.effort` imperatively whenever it changes — see
+  // `#syncConversationConfig`.
+  #effort: EffortLevel = 'medium'
 
   protected connected(): void {
     this.#compose() // idempotent — builds ONLY the split/pane shell + the composed children, once ever
@@ -148,6 +166,7 @@ export class UIAgentAdminElement extends UIElement {
           this.#settingsEl.store = store
         }
         this.#rewireAllSections(store)
+        this.#syncConversationConfig(schema, store)
       })
     })
   }
@@ -169,17 +188,47 @@ export class UIAgentAdminElement extends UIElement {
 
     const canvasPane = document.createElement('ui-split-pane')
     canvasPane.setAttribute('data-role', 'canvas')
+    // TKT-0045: the composer has a genuine content-driven minimum — since the TKT-0058 v2 unroll that
+    // is ui-conversation-composer's OWN field frame (its 20ch entry-control min-inline-size floor,
+    // ADR-0021, plus frame padding/margins and the options row's picker pills + icon buttons) — below
+    // it, ui-conversation's own `overflow-x: hidden` clips the composer with no scrollbar (invisible,
+    // not just tight; re-verified against v2 by agent-admin.browser.test.ts's no-horizontal-overflow
+    // probe). ui-split-pane's generic --ui-split-pane-min (4rem) knows nothing about this pane's
+    // specific content; giving the pane a real `min` lets ui-split's own flex resolution (SPEC-R2)
+    // respect that floor instead of squeezing past it.
+    canvasPane.setAttribute('min', '16rem')
     const conversation = new UIConversationElement()
     conversation.onSubmit((text) => this.#handleSubmit(text))
+    // Models picker → the SAME persisted `model` store key the settings pane's own generated field reads/
+    // writes (one source of truth, TKT-0021's own external-store-write precedent) — `#syncConversationConfig`'s
+    // subscription feeds the committed value back down into `conversation.model` (props down, callbacks up).
+    conversation.onModelChange((id) => this.store?.set('model', id))
+    // Effort picker → ephemeral element state only (no persisted counterpart) — write-then-reflect
+    // immediately, since nothing external can also change it the way another tab's store write could.
+    conversation.onEffortChange((id) => {
+      this.#effort = id as EffortLevel
+      conversation.effort = this.#effort
+    })
     canvasPane.append(conversation)
 
     const promptsPane = document.createElement('ui-split-pane')
     promptsPane.setAttribute('data-role', 'prompts')
-    const promptSections = this.#makeSection(ENTRY_KINDS.promptSection, 'Instructions', '+ Add section')
+    // TKT-0045: the generic --ui-split-pane-min (4rem) is too tight even for prompts' own entry cards
+    // (the "Add section" add-toggle plus a seeded entry's label row) once the sibling panes above claim
+    // their own real floors — 10rem keeps it readable without the same hard per-control floor the other
+    // two have.
+    promptsPane.setAttribute('min', '10rem')
+    const promptSections = this.#makeSection(ENTRY_KINDS.promptSection, 'Instructions', 'Add section')
     promptsPane.append(promptSections.host)
 
     const settingsPane = document.createElement('ui-split-pane')
     settingsPane.setAttribute('data-role', 'settings')
+    // TKT-0045: ui-settings composes an internal ui-master-detail, whose own narrow-mode drill-in
+    // (master-detail.css's `@container (inline-size < 40rem)`) fills whatever width this pane is given —
+    // real evidence puts its combined field floor (the widest generated control, a ui-slider at
+    // 192px min-width, plus this pane's own padding/scrollbar gutter) at ~280px; 20rem gives headroom
+    // across engines. Same generic-vs-content-aware gap as the canvas pane above.
+    settingsPane.setAttribute('min', '20rem')
     const agentHeading = document.createElement('h3')
     agentHeading.setAttribute('data-part', 'agent-heading')
     agentHeading.textContent = 'Agent'
@@ -270,6 +319,30 @@ export class UIAgentAdminElement extends UIElement {
     }
   }
 
+  /** Feed the composer's Models/Effort pickers from THIS element's own current config (the Figma
+   *  chat-input refactor) — `models`/`efforts` are static option lists (no re-render cost in setting them
+   *  every call); `model` re-derives from `store`'s CURRENT value (the SAME `sanitizeSelect`/fail-closed
+   *  guard `#handleSubmit`'s own config snapshot uses) and re-arms a subscription so an EXTERNAL write to
+   *  `model` (the settings pane's own field, another tab, TKT-0021's own precedent) also reflects into the
+   *  picker — one source of truth, not a second parallel selection. Shares `#unsubscribes` with
+   *  `#rewireAllSections` (called first, same effect tick) — that method's own unconditional clear-then-
+   *  rebuild at the top of every call is what keeps this subscription from leaking across re-runs. */
+  #syncConversationConfig(schema: SettingsSchema | undefined, store: SettingsStore | undefined): void {
+    const conversation = this.#conversation
+    if (!conversation) return
+    conversation.models = SUPPORTED_MODELS
+    conversation.efforts = EFFORT_LEVELS
+    conversation.effort = this.#effort
+    const renderModel = (): void => {
+      conversation.model = sanitizeSelect(schema ?? defaultAgentConfigSchema, 'model', store?.get('model'), DEFAULT_MODEL_ID)
+    }
+    renderModel()
+    const unsubscribe = store?.subscribe?.((key) => {
+      if (key === 'model') renderModel()
+    })
+    if (unsubscribe) this.#unsubscribes.set('model', unsubscribe)
+  }
+
   /** The turn loop. Reads the store's CURRENT entries at turn time (the live-apply mechanism itself — no
    *  propagation channel, just a fresh read): composes the enabled prompt sections into the final prompt
    *  string (`composeSystemPrompt`, fail-closed to `DEFAULT_SYSTEM_PROMPT_FALLBACK` if every section is
@@ -328,6 +401,7 @@ export class UIAgentAdminElement extends UIElement {
       text,
       system: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), config.toolsEnabled),
       model: config.model,
+      effort: this.#effort,
       history: [...this.#history],
     }
     void (async () => {

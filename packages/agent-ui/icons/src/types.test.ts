@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { ICON_NAMES, type IconName, type IconPack } from './types.ts'
 
 describe('ICON_NAMES', () => {
-  it('has exactly twenty names', () => {
-    expect(ICON_NAMES.length).toBe(20)
+  it('has exactly twenty-three names', () => {
+    expect(ICON_NAMES.length).toBe(23)
   })
 
   it('is all distinct strings', () => {
@@ -14,7 +14,7 @@ describe('ICON_NAMES', () => {
     for (const name of ICON_NAMES) expect(typeof name).toBe('string')
   })
 
-  it('contains the curated audit set (ADR-0066 clause 2 + the feed-family LLD-C9 addition)', () => {
+  it('contains the curated audit set (ADR-0066 clause 2 + the feed-family LLD-C9 addition + the TKT-0048 plus glyph + the Figma chat-input refactor\'s arrow-up/microphone)', () => {
     expect([...ICON_NAMES].sort()).toEqual(
       [
         'caret-down', 'caret-up', 'caret-left', 'caret-right',
@@ -22,6 +22,7 @@ describe('ICON_NAMES', () => {
         'arrow-right', 'magnifying-glass',
         'user', 'file', 'file-image', 'file-audio', 'file-video',
         'file-pdf', 'file-text', 'file-zip', 'file-code',
+        'plus', 'arrow-up', 'microphone',
       ].sort(),
     )
   })

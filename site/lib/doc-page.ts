@@ -465,3 +465,60 @@ export function codeCell(text: string): HTMLElement {
   td.append(code)
   return td
 }
+
+// ── the page-end Changelog table (TKT-0053) ───────────────────────────────────────────────────────────────
+// A page's provenance citations (which TKT/ADR built or changed this surface) never belong woven into
+// descriptive prose (best-practices.md's provenance-vs-normative split) — they land here instead, one row
+// per record, newest-first. Hand-authored (provenance has no canonical index to derive from) — flag the
+// entry array as such at the call site, the same discipline as any other underivable fact.
+
+/** One provenance record: `date`/`id` are the record's OWN fields (a ticket's `date:`, an ADR's `Date`),
+ *  never invented; `type` is the ticket's `kind:` Title-cased (Feature/Fix/Change) or `Decision` for an ADR. */
+export interface ChangelogEntry {
+  readonly date: string // ISO YYYY-MM-DD
+  readonly type: 'Feature' | 'Fix' | 'Change' | 'Decision'
+  readonly id: string // 'TKT-0039' | 'ADR-0131'
+  readonly summary: string // one present-tense clause: what changed
+}
+
+/** changelogIdCell — the ID column: an ADR-#### id links to the real site surface (adr-index.ts resolves
+ *  the `#adr-{number}` hash); a TKT-#### id renders as plain code — no ticket index is published yet. */
+function changelogIdCell(id: string): HTMLElement {
+  const td = document.createElement('td')
+  const adrNumber = /^ADR-(\d+)$/.exec(id)?.[1]
+  if (adrNumber) {
+    const a = document.createElement('a')
+    a.href = `./adr-index.html#adr-${adrNumber}`
+    const code = document.createElement('code')
+    code.textContent = id
+    a.append(code)
+    td.append(a)
+  } else {
+    const code = document.createElement('code')
+    code.textContent = id
+    td.append(code)
+  }
+  return td
+}
+
+/**
+ * renderChangelogTable — the page-end Changelog: one Date | Type | ID | Summary row per provenance record,
+ * newest-first. Returns undefined for an empty `entries` list, so a page with no provenance to report ships
+ * no section (the same "no empty table" discipline the Properties/Events/Slots/Parts tables above follow).
+ */
+export function renderChangelogTable(entries: readonly ChangelogEntry[], level = 2): HTMLElement | undefined {
+  if (entries.length === 0) return undefined
+  const section = document.createElement('section')
+  section.append(heading(level, 'Changelog'))
+
+  const table = document.createElement('table')
+  table.append(tableHead('Date', 'Type', 'ID', 'Summary'))
+  const tbody = document.createElement('tbody')
+  const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date))
+  for (const entry of sorted) {
+    tbody.append(tableRow(textCell(entry.date), textCell(entry.type), changelogIdCell(entry.id), textCell(entry.summary)))
+  }
+  table.append(tbody)
+  section.append(table)
+  return section
+}

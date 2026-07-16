@@ -30,7 +30,7 @@ export function createAdminAgentTurn(): AdminAgentTurn {
     const res = await fetch(ENDPOINT, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ system: req.system, model: req.model, messages }),
+      body: JSON.stringify({ system: req.system, model: req.model, messages, effort: req.effort }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
     if (!res.ok) {

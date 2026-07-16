@@ -12,6 +12,7 @@
 // `entries.ts`'s `DEFAULT_PROMPT_SECTIONS`/`composeSystemPrompt`/`DEFAULT_SYSTEM_PROMPT_FALLBACK`.
 
 import type { SettingsSchema } from '../settings/schema.ts'
+import type { EffortLevel } from '../conversation/composer-options.ts'
 // ADR-0135 Piece A / Fork 2: the fail-closed guards + seed helper hoisted to `@agent-ui/shared` so app
 // and a2ui share ONE implementation. Re-exported here so `agent-admin.ts` keeps its current
 // `'./agent-admin-schema.ts'` import path unchanged.
@@ -132,6 +133,11 @@ export interface AdminTurnRequest {
   system: string
   /** The sanitized `SUPPORTED_MODELS` id (`sanitizeSelect`, `DEFAULT_MODEL_ID` fallback). */
   model: string
+  /** The composer's Effort picker selection (the Figma chat-input refactor) — ephemeral, per-conversation
+   *  state (unlike `model`, it has no persisted-settings counterpart; `undefined` if the picker was never
+   *  shown/committed). A runner that ignores it (or the value maps to no real dial) degrades the DIAL,
+   *  never the request. */
+  effort?: EffortLevel
   /** Prior completed turns only — NOT including `text` (the runner appends the user message itself). */
   history: readonly AdminTurn[]
 }

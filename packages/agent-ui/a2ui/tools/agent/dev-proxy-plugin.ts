@@ -25,7 +25,7 @@ import { providerFor } from './providers/index.ts'
 import { retrieve } from '../../src/corpus/retrieve.ts'
 import type { CorpusRecord } from '../../src/corpus/record.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
-import type { TurnInput, Turn } from './agent-transport.ts'
+import type { TurnInput, Turn, Effort } from './agent-transport.ts'
 import { GEN_UI_MODES } from './gen-ui-mode.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 
@@ -67,12 +67,27 @@ export type ChatDispatch =
  * body (missing `messages`, or `system`/`model` of the wrong type) must never reach `resolveChatDispatch`/
  * `provider.stream()` — that lands the failure in the untested "impure" remainder as a 500, not a 400.
  */
-export function isChatBody(body: { system?: unknown; model?: unknown; messages?: unknown }): body is {
+const EFFORT_VALUES = ['low', 'medium', 'high', 'xhigh'] as const
+
+export function isChatBody(body: {
+  system?: unknown
+  model?: unknown
+  messages?: unknown
+  effort?: unknown
+}): body is {
   system: string
   model: string
   messages: Turn[]
+  effort?: Effort
 } {
-  return typeof body.system === 'string' && typeof body.model === 'string' && Array.isArray(body.messages)
+  return (
+    typeof body.system === 'string' &&
+    typeof body.model === 'string' &&
+    Array.isArray(body.messages) &&
+    // `effort` is OPTIONAL (the Figma chat-input refactor's Effort picker) — absent is valid (no dial
+    // requested); present must be one of the closed four values, never forwarded as an arbitrary string.
+    (body.effort === undefined || (EFFORT_VALUES as readonly unknown[]).includes(body.effort))
+  )
 }
 
 export function resolveChatDispatch(
@@ -167,12 +182,17 @@ export function a2uiDevProxyPlugin(): Plugin {
             // agent-admin turn is prose, which produce() would reject as invalid A2UI). MUST precede the
             // generic POST branch below, which otherwise claims every POST regardless of sub-path.
             if (req.method === 'POST' && url.startsWith('/chat')) {
-              const body = JSON.parse(await readBody(req)) as { system?: unknown; model?: unknown; messages?: unknown }
+              const body = JSON.parse(await readBody(req)) as {
+                system?: unknown
+                model?: unknown
+                messages?: unknown
+                effort?: unknown
+              }
               if (!isChatBody(body)) {
                 sendJson(res, 400, { error: 'bad-request' }) // a malformed body is a deterministic failure — never let it fall through to provider.stream()
                 return
               }
-              const { system, model, messages } = body
+              const { system, model, messages, effort } = body
               const dispatch = resolveChatDispatch(config, env, model)
               if (!dispatch.ok) {
                 sendJson(res, dispatch.status, { error: dispatch.error }) // 400 unknown/rejected pair · 503 no key
@@ -186,7 +206,7 @@ export function a2uiDevProxyPlugin(): Plugin {
                 return
               }
               let text = ''
-              for await (const fragment of providerDispatch.provider.stream({ model, system, messages })) {
+              for await (const fragment of providerDispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined })) {
                 text += fragment // buffered server-side — single-shot (LLD Q3); one full reply, no mid-stream truncation
               }
               sendJson(res, 200, { text })

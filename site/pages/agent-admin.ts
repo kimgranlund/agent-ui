@@ -14,6 +14,7 @@ import '@agent-ui/app/master-detail.css'
 import '@agent-ui/app/nav-rail.css'
 import '@agent-ui/app/settings.css'
 import '@agent-ui/app/conversation.css'
+import '@agent-ui/app/conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '@agent-ui/app/surface-host.css'
 import '@agent-ui/app/agent-admin.css'
 import '@agent-ui/app/master-detail-pane' // self-defines ui-master-detail-pane (composed by ui-settings)
@@ -24,7 +25,7 @@ import '@agent-ui/app/surface-host' // self-defines ui-surface-host (composed by
 import '@agent-ui/app/conversation' // self-defines ui-conversation
 import '@agent-ui/app/agent-admin' // self-defines ui-agent-admin
 import './agent-admin.css' // page-local demo chrome only (the resizable frame) — never restyles a control's internals
-import { renderApiTable, renderPropertiesTable, heading } from '../lib/doc-page.ts'
+import { renderApiTable, renderPropertiesTable, renderChangelogTable, heading } from '../lib/doc-page.ts'
 import { parseDoc } from '../lib/frontmatter.ts'
 import agentAdminMd from '../../packages/agent-ui/app/src/controls/agent-admin/agent-admin.md?raw'
 import { createMemoryStore } from '@agent-ui/app/settings-memory-store'
@@ -33,9 +34,9 @@ import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 const { content } = mountPage({
   title: 'Composing a ui-agent-admin surface',
   intro:
-    'ui-agent-admin (TKT-0039, ADR-0131/ADR-0132) is a live-editable agent config + instructions with a ' +
-    'working chat preview — a three-pane ui-split composing ui-settings (M4), ui-conversation (M2), and a ' +
-    'generic ordered-entry-list primitive (ADR-0132) instantiated five times. No new protocol dependency.',
+    'ui-agent-admin is a live-editable agent config + instructions with a working chat preview — a ' +
+    'three-pane ui-split composing ui-settings, ui-conversation, and a generic ordered-entry-list ' +
+    'primitive instantiated five times. No new protocol dependency.',
 })
 
 content.append(
@@ -100,7 +101,7 @@ function wireLiveOverlay(admin: UIAgentAdminElement, status: HTMLElement): void 
   })()
 }
 
-content.append(sectionHeading('1 · One primitive, five instantiations (ADR-0132)'))
+content.append(sectionHeading('1 · One primitive, five instantiations'))
 content.append(
   para(
     'Left to right: the chat canvas (', code('ui-conversation'), '), the prompts pane — a generic ' +
@@ -109,8 +110,8 @@ content.append(
     code('ui-settings'), ') plus four MORE instances of that same entry-list primitive — Skills, ' +
       'Workflows, Resources, Tools — each unseeded and purely custom-authorable. Toggle a section off, ' +
       'add a custom skill, then send a message — the reply is a deterministic stub that visibly cites ' +
-      'the composed prompt AND every enabled capability, proving the wiring without a live model call ' +
-      '(ADR-0131: no external runtime dependency).',
+      'the composed prompt AND every enabled capability, proving the wiring without a live model call: ' +
+      'the shipped build makes no external network dependency.',
   ),
 )
 const resizeFrame = el('div', 'agent-admin-resize')
@@ -154,3 +155,12 @@ if (agentAdminDoc.descriptor.attributes.length > 0) content.append(renderApiTabl
   const props = renderPropertiesTable(agentAdminDoc.descriptor, 4)
   if (props) content.append(props)
 }
+
+// Provenance (TKT-0053): the build/decision records this page previously cited inline now live here only —
+// HAND-AUTHORED, not derivable from any canonical index (no ADR/TKT index cross-links to the pages it built).
+const changelog = renderChangelogTable([
+  { date: '2026-07-13', type: 'Feature', id: 'TKT-0039', summary: 'Shipped ui-agent-admin: a three-pane composition over ui-settings + ui-conversation, with real persistence.' },
+  { date: '2026-07-14', type: 'Decision', id: 'ADR-0131', summary: 'Ratified the scope: a generic self-contained config, three panes, no new protocol dependency.' },
+  { date: '2026-07-14', type: 'Decision', id: 'ADR-0132', summary: 'Instructions/settings became one shared ordered-entry-list primitive, instantiated five times across the prompts and settings panes.' },
+])
+if (changelog) content.append(changelog)

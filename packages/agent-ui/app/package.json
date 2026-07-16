@@ -22,6 +22,9 @@
     "./surface-host.css": "./src/controls/surface-host/surface-host.css",
     "./conversation": "./src/controls/conversation/conversation.ts",
     "./conversation.css": "./src/controls/conversation/conversation.css",
+    "./conversation-composer": "./src/controls/conversation/conversation-composer.ts",
+    "./conversation-composer.css": "./src/controls/conversation/conversation-composer.css",
+    "./composer-options": "./src/controls/conversation/composer-options.ts",
     "./agent-admin": "./src/controls/agent-admin/agent-admin.ts",
     "./agent-admin.css": "./src/controls/agent-admin/agent-admin.css",
     "./agent-admin-schema": "./src/controls/agent-admin/agent-admin-schema.ts"

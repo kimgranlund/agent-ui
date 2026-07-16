@@ -23,8 +23,9 @@
 // dynamic-import + switcher pattern `a2ui-live.ts`/`a2a-artifact-feed.ts` each already ship (SPEC-R8).
 import { mountFullBleedPage } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './a2ui-chat.css'
-import '@agent-ui/app/conversation.css' // ui-conversation's own thread/composer/narration layout (LLD-C6)
-import '@agent-ui/app/conversation' // self-defines <ui-conversation> (which registers <ui-surface-host> in turn)
+import '@agent-ui/app/conversation.css' // ui-conversation's own thread/narration layout (LLD-C6)
+import '@agent-ui/app/conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
+import '@agent-ui/app/conversation' // self-defines <ui-conversation> (which registers <ui-surface-host>/<ui-conversation-composer> in turn)
 import type { A2uiClientMessage } from '@agent-ui/a2ui'
 import type { UIConversationElement } from '@agent-ui/app'
 import {

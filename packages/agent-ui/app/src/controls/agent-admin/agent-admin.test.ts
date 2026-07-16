@@ -1,5 +1,7 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, beforeAll, afterAll } from 'vitest'
+import { whenFlushed } from '@agent-ui/components'
 import { UIAgentAdminElement } from './agent-admin.ts'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
 import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID } from './agent-admin-schema.ts'
@@ -25,6 +27,24 @@ declare const process: { cwd(): string }
 // primitive's own behavior (toggle/edit/delete/add, fail-closed validation, built-in non-deletability),
 // the composed-prompt + enabled-capabilities live-apply wiring, persistence across a real reload,
 // reconnect idempotence, and the descriptor's structural + contract↔props + contract↔source trip-wires.
+
+// jsdom reality (the conversation.test.ts precedent, code-reviewer BLOCKER finding — this file composes
+// ui-switch/ui-textarea via entry-list.ts, and jsdom's ElementInternals carries no real setFormValue/
+// setValidity): stubbed for this file's duration so every real composed FACE form control can connect
+// without an uncaught teardown exception failing the whole run despite every assertion passing.
+let realAttachInternals: typeof HTMLElement.prototype.attachInternals
+beforeAll(() => {
+  realAttachInternals = HTMLElement.prototype.attachInternals
+  HTMLElement.prototype.attachInternals = function (this: HTMLElement): ElementInternals {
+    const internals = realAttachInternals.call(this) as unknown as Record<string, unknown>
+    if (typeof internals.setFormValue !== 'function') internals.setFormValue = () => {}
+    if (typeof internals.setValidity !== 'function') internals.setValidity = () => {}
+    return internals as unknown as ElementInternals
+  }
+})
+afterAll(() => {
+  HTMLElement.prototype.attachInternals = realAttachInternals
+})
 
 const mounted: Element[] = []
 afterEach(() => {
@@ -91,10 +111,9 @@ describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)',
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const target = SUPPORTED_MODELS.find((m) => m.id !== DEFAULT_MODEL_ID)!
     el.store!.set('model', target.id)
-    const field = el.querySelector('[data-role="canvas"] [data-part="field"]') as HTMLElement & { value: string }
-    const form = el.querySelector('[data-role="canvas"] [data-part="composer"]') as HTMLFormElement
-    field.value = 'ping'
-    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'ping' // the composer's own value prop (TKT-0058 — the nested field/form are gone)
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
     const bubbles = [...el.querySelectorAll('[data-role="agent"]')]
     const body = (bubbles[bubbles.length - 1]?.querySelector('[data-part="body"]') as HTMLElement)?.textContent ?? ''
     expect(body).toContain(target.label)
@@ -127,6 +146,32 @@ describe('UIAgentAdminElement — composition (ADR-0131 cl.2 three panes; ADR-01
     expect(split).not.toBeNull()
     const panes = [...split!.querySelectorAll(':scope > ui-split-pane')]
     expect(panes.map((p) => p.getAttribute('data-role'))).toEqual(['canvas', 'prompts', 'settings'])
+  })
+
+  it('TKT-0045: the three panes\' real content-floor `min`s sum (+ frame chrome) to the docs demo frame\'s stated minimum', () => {
+    // Coherence guard (component-reviewer M1 fix): site/pages/agent-admin.css's `.agent-admin-resize`
+    // hardcodes `min-inline-size: 48rem` as "the sum of the three panes' own `min` ... plus chrome" — a
+    // claim nothing else checks. If a pane's `min` here drifts without a matching frame-floor update (or
+    // vice versa), the docs demo silently regresses to the exact TKT-0045 clipping bug. This test is the
+    // gate: it re-derives the expected frame floor from the LIVE pane `min` attributes rather than from a
+    // second hardcoded copy of 16/10/20, so only the frame's own constant (asserted at the bottom) can
+    // drift out of sync.
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const panes = [...el.querySelectorAll(':scope > ui-split > ui-split-pane')]
+    const paneMinsRem = panes.map((p) => {
+      const min = p.getAttribute('min') ?? ''
+      const match = /^([\d.]+)rem$/.exec(min)
+      expect(match, `pane min "${min}" must be an explicit rem value`).not.toBeNull()
+      return Number.parseFloat(match![1]!)
+    })
+    const paneMinsSum = paneMinsRem.reduce((sum, n) => sum + n, 0)
+    // Divider (2 × 1px) + .agent-admin-resize padding (2 × 0.5rem) + its border (2 × 1px) + .agent-admin-demo
+    // border (2 × 1px) — site/pages/agent-admin.css's own chrome constants, restated here as the ONE other
+    // place this arithmetic lives (matching that file's own comment).
+    const chromeRem = 2 / 16 + 1 + 2 / 16 + 2 / 16
+    const expectedFloorRem = Math.ceil(paneMinsSum + chromeRem)
+    expect(expectedFloorRem).toBeLessThanOrEqual(48) // the frame's actual stated floor must cover the real need
+    expect(paneMinsSum).toBe(46) // 16 + 10 + 20 — pins the THREE pane mins together as one changeset
   })
 
   it('the canvas pane composes a real ui-conversation', () => {
@@ -238,12 +283,10 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
   it('submitting a valid custom skill adds it, enabled, to the list — and the form resets/hides', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const section = el.querySelector('[data-kind="skill"]') as HTMLElement
-    ;(section.querySelector('[data-part="entry-add-label"]') as HTMLInputElement).value = 'Web search'
-    ;(section.querySelector('[data-part="entry-add-description"]') as HTMLInputElement).value = 'Searches the web'
+    ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'Web search'
+    ;(section.querySelector('[data-part="entry-add-description"]') as UITextFieldElement).value = 'Searches the web'
     ;(section.querySelector('[data-part="entry-add-content"]') as HTMLTextAreaElement).value = 'search(query)'
-    ;(section.querySelector('[data-part="entry-add-form"]') as HTMLFormElement).dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true }),
-    )
+    ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     const stored = readEntries(el.store, ENTRY_KINDS.skill)
     expect(stored).toHaveLength(1)
     expect(stored[0]).toMatchObject({ id: 'web-search', label: 'Web search', enabled: true, builtin: false })
@@ -254,9 +297,7 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
   it('an empty name is rejected — fail-closed, nothing added, an error note shown', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const section = el.querySelector('[data-kind="tool"]') as HTMLElement
-    ;(section.querySelector('[data-part="entry-add-form"]') as HTMLFormElement).dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true }),
-    )
+    ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     expect(readEntries(el.store, ENTRY_KINDS.tool)).toHaveLength(0)
     const error = section.querySelector('[data-part="entry-add-error"]') as HTMLElement
     expect(error.hidden).toBe(false)
@@ -266,13 +307,11 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
   it('a REJECTED submit keeps the form open AND the typed description/content — never silently discarded (component-reviewer MAJOR fix)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const section = el.querySelector('[data-kind="tool"]') as HTMLElement
-    const descriptionField = section.querySelector('[data-part="entry-add-description"]') as HTMLInputElement
+    const descriptionField = section.querySelector('[data-part="entry-add-description"]') as UITextFieldElement
     const contentField = section.querySelector('[data-part="entry-add-content"]') as HTMLTextAreaElement
     descriptionField.value = 'A description worth keeping'
     contentField.value = 'Content worth keeping'
-    ;(section.querySelector('[data-part="entry-add-form"]') as HTMLFormElement).dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true }),
-    )
+    ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
     expect(form.hidden).toBe(false) // stays open — a rejection is not a reset
     expect(descriptionField.value).toBe('A description worth keeping')
@@ -283,10 +322,8 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const section = el.querySelector('[data-kind="workflow"]') as HTMLElement
     const addOnce = (label: string): void => {
-      ;(section.querySelector('[data-part="entry-add-label"]') as HTMLInputElement).value = label
-      ;(section.querySelector('[data-part="entry-add-form"]') as HTMLFormElement).dispatchEvent(
-        new Event('submit', { bubbles: true, cancelable: true }),
-      )
+      ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
+      ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     }
     addOnce('Deploy')
     addOnce('Deploy')
@@ -297,10 +334,8 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
   it('a custom entry CAN be deleted (unlike a built-in)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const section = el.querySelector('[data-kind="resource"]') as HTMLElement
-    ;(section.querySelector('[data-part="entry-add-label"]') as HTMLInputElement).value = 'Docs site'
-    ;(section.querySelector('[data-part="entry-add-form"]') as HTMLFormElement).dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true }),
-    )
+    ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'Docs site'
+    ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     const row = entryEl(el, ENTRY_KINDS.resource, 'docs-site')
     expect(row.querySelector('[data-part="entry-delete"]')).not.toBeNull()
     ;(row.querySelector('[data-part="entry-delete"]') as HTMLElement).click()
@@ -316,10 +351,8 @@ describe('UIAgentAdminElement — the default store persists across a reload (AD
     field.dispatchEvent(new Event('change', { bubbles: true }))
 
     const skillSection = first.querySelector('[data-kind="skill"]') as HTMLElement
-    ;(skillSection.querySelector('[data-part="entry-add-label"]') as HTMLInputElement).value = 'Persisted skill'
-    ;(skillSection.querySelector('[data-part="entry-add-form"]') as HTMLFormElement).dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true }),
-    )
+    ;(skillSection.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'Persisted skill'
+    ;(skillSection.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
 
     first.remove()
     mounted.length = 0
@@ -351,10 +384,9 @@ describe('UIAgentAdminElement — composeSystemPrompt (ADR-0132 cl.2)', () => {
 
 describe('UIAgentAdminElement — live-apply turn loop (ADR-0132 cl.6: composed prompt + enabled-capabilities snapshot)', () => {
   function submit(el: UIAgentAdminElement, text: string): void {
-    const field = el.querySelector('[data-role="canvas"] [data-part="field"]') as HTMLElement & { value: string }
-    const form = el.querySelector('[data-role="canvas"] [data-part="composer"]') as HTMLFormElement
-    field.value = text
-    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = text // the composer's own value prop (TKT-0058 — the nested field/form are gone)
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
   }
 
   function lastAgentBody(el: UIAgentAdminElement): string {
@@ -365,10 +397,8 @@ describe('UIAgentAdminElement — live-apply turn loop (ADR-0132 cl.6: composed 
 
   function addEntry(el: UIAgentAdminElement, kind: string, label: string): void {
     const section = el.querySelector(`[data-kind="${kind}"]`) as HTMLElement
-    ;(section.querySelector('[data-part="entry-add-label"]') as HTMLInputElement).value = label
-    ;(section.querySelector('[data-part="entry-add-form"]') as HTMLFormElement).dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true }),
-    )
+    ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
+    ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
   }
 
   it('the reply cites the composed prompt AND the enabled capability labels, clearly labeled as a stub', () => {
@@ -416,10 +446,9 @@ describe('UIAgentAdminElement — live-apply turn loop (ADR-0132 cl.6: composed 
 
 describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136)', () => {
   function submit(el: UIAgentAdminElement, text: string): void {
-    const field = el.querySelector('[data-role="canvas"] [data-part="field"]') as HTMLElement & { value: string }
-    const form = el.querySelector('[data-role="canvas"] [data-part="composer"]') as HTMLFormElement
-    field.value = text
-    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = text // the composer's own value prop (TKT-0058 — the nested field/form are gone)
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
   }
   function lastAgentBody(el: UIAgentAdminElement): string {
     const bubbles = [...el.querySelectorAll('[data-role="agent"]')]
@@ -431,10 +460,8 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
   }
   function addEntry(el: UIAgentAdminElement, kind: string, label: string): void {
     const section = el.querySelector(`[data-kind="${kind}"]`) as HTMLElement
-    ;(section.querySelector('[data-part="entry-add-label"]') as HTMLInputElement).value = label
-    ;(section.querySelector('[data-part="entry-add-form"]') as HTMLFormElement).dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true }),
-    )
+    ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
+    ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
   }
   async function waitFor(predicate: () => boolean, label: string): Promise<void> {
     for (let i = 0; i < 100; i += 1) {
@@ -482,6 +509,50 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     expect(req.system).toContain('## Foundation') // the composed prompt is the base
     expect(req.system).toContain('## Skills available to you') // the capability projection is appended
     expect(req.system).toContain('### Web search')
+  })
+
+  it('defaults `effort` to "medium" when the composer Effort picker was never touched', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const runner = recordingRunner('ok')
+    el.agentTurn = runner.fn
+    submit(el, 'ping')
+    await waitFor(() => runner.calls.length === 1, 'runner called')
+    expect(runner.calls[0]!.effort).toBe('medium')
+  })
+
+  it('the composer\'s Models picker is wired to SUPPORTED_MODELS + the persisted `model` store key (one source of truth with the settings pane)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    await whenFlushed() // the models/model props ride ui-conversation's own reactive-prop effect, not synchronous
+    const conversation = el.querySelector('ui-conversation') as UIConversationElement
+    expect(conversation.models).toEqual(SUPPORTED_MODELS)
+    expect(conversation.model).toBe(DEFAULT_MODEL_ID)
+
+    // An EXTERNAL store write (another tab, the settings pane's own field) feeds back into `conversation.model`.
+    const target = SUPPORTED_MODELS.find((m) => m.id !== DEFAULT_MODEL_ID)!
+    el.store!.set('model', target.id)
+    await whenFlushed()
+    expect(conversation.model).toBe(target.id)
+
+    // Committing a Models picker choice writes the SAME store key — never a second, parallel selection.
+    const other = SUPPORTED_MODELS.find((m) => m.id !== target.id)!
+    const menu = el.querySelector('[data-part="models-menu"]') as HTMLElement
+    ;(menu.querySelector(`[data-value="${other.id}"]`) as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    expect(el.store!.get('model')).toBe(other.id)
+  })
+
+  it("the request's `effort` reflects the composer's Effort picker selection", async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    await whenFlushed()
+    const conversation = el.querySelector('ui-conversation') as UIConversationElement
+    expect(conversation.efforts?.map((o) => o.id)).toEqual(['low', 'medium', 'high', 'xhigh'])
+    // Drive the SAME path a real picker commit does: fire the registered onEffortChange callback.
+    const menu = el.querySelector('[data-part="effort-menu"]') as HTMLElement
+    ;(menu.querySelector('[data-value="high"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    const runner = recordingRunner('ok')
+    el.agentTurn = runner.fn
+    submit(el, 'ping')
+    await waitFor(() => runner.calls.length === 1, 'runner called')
+    expect(runner.calls[0]!.effort).toBe('high')
   })
 
   it('toolsEnabled gates the Tools projection: a Tool entry only reaches `system` when the master switch is on', async () => {
@@ -546,8 +617,8 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     submit(el, 'boom')
     await waitFor(() => systemBubbleText(el).includes('network is down'), 'error system bubble')
     expect(systemBubbleText(el)).toContain('⚠')
-    const composer = el.querySelector('[data-role="canvas"] [data-part="composer"]') as HTMLElement
-    expect(composer.hasAttribute('data-busy'), 'the composer must re-enable after a failed live turn').toBe(false)
+    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement
+    expect(composer.hasAttribute('busy'), 'the composer must re-enable after a failed live turn').toBe(false)
     // a subsequent turn still proceeds (the page recovered on the throw path)
     el.agentTurn = async () => 'recovered'
     submit(el, 'again')
@@ -575,10 +646,8 @@ describe('UIAgentAdminElement — a bring-your-own store with NO subscribe() sti
     el.store = noSubscribeStore
     mount(el)
     const section = el.querySelector('[data-kind="skill"]') as HTMLElement
-    ;(section.querySelector('[data-part="entry-add-label"]') as HTMLInputElement).value = 'No-subscribe skill'
-    ;(section.querySelector('[data-part="entry-add-form"]') as HTMLFormElement).dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true }),
-    )
+    ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'No-subscribe skill'
+    ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
     const row = el.querySelector('[data-kind="skill"] [data-entry-id="no-subscribe-skill"]')
     expect(row, 'the fallback direct-render must have fired since no subscribe() could').not.toBeNull()
   })
