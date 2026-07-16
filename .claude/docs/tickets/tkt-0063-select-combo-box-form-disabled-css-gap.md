@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0063
-status: open
+status: done
 date: 2026-07-15
 owner:
 kind: bug
@@ -61,3 +61,18 @@ apparent by giving disabled a real, larger visual delta worth getting right ever
   participation fix" discipline this session has held elsewhere.
 
 ## Findings
+
+### 2026-07-15 — fixed in the TKT-0062 follow-up batch — CLOSED (write-back restored 2026-07-16)
+
+Both controls now key their disabled-row CSS off the effective-disabled channel, exactly the
+text-field precedent: `select.css:163` / `combo-box.css:141` widened to
+`:where(ui-{cmp}:is([disabled], :state(disabled)))`, and each `.ts` `effectiveDisabled()` effect now
+also sets/deletes the host-level `:state(disabled)` (`select.ts:340-343`, `combo-box.ts:310-315`) —
+so a select/combo-box disabled ONLY via a form/fieldset provider repaints the disabled row instead of
+silently keeping the enabled look. Covered by the TKT-0063-labelled tests in `select.test.ts:1056`
+(the form-disabled channel, jsdom) + the `:state(disabled)` browser legs (CustomStateSet is
+jsdom-invisible), and the combo-box effective-disabled block (`combo-box.test.ts:1352`). Shipped in
+the arc's PR #9; this entry restores the Findings write-back that was lost when the batch closed
+(the code + tests carried the ticket citation throughout — the record lagged the tree, repaired on
+the TKT-0069 close-out sweep).
+
