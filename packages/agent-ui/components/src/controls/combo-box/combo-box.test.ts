@@ -1349,6 +1349,30 @@ describe('ui-combo-box — disabled option guard (combo-disabled-nav · combo-di
   })
 })
 
+// ── The combo-box's OWN disabled state — the effective-disabled channel (TKT-0063) ────────────
+//
+// Distinct from combo-disabled-nav above (per-OPTION disabled) — this is the CONTROL's own
+// disabled prop, and specifically the FORM-disabled channel (own || ancestor <fieldset disabled>),
+// which combo-box.css's disabled row previously missed (it keyed off the host's own [disabled]
+// attribute only). :state(disabled) itself is unobservable in jsdom (no CustomStateSet) — proven
+// end-to-end in combo-box.browser.test.ts.
+describe('ui-combo-box — the control\'s own effective-disabled channel (combo-effective-disabled)', () => {
+  it('combo-effective-disabled: the FORM-disabled channel (formDisabledCallback, not the own `disabled` attribute) also marks the editor aria-disabled', async () => {
+    const { el, editor } = makeCombo()
+    expect(editor.getAttribute('aria-disabled'), 'editor should NOT be aria-disabled initially').toBeNull()
+
+    el.formDisabledCallback(true) // an ancestor <fieldset disabled> — the platform calls this directly
+    await whenFlushed()
+    expect(editor.getAttribute('aria-disabled'), 'the FORM-disabled channel must ALSO mark the editor aria-disabled').toBe('true')
+    expect(editor.getAttribute('contenteditable')).toBe('false')
+
+    el.formDisabledCallback(false)
+    await whenFlushed()
+    expect(editor.getAttribute('aria-disabled'), 'clearing form-disabled must re-enable the editor').toBeNull()
+    el.remove()
+  })
+})
+
 // ── ADR-0085 — the editor's accessible-name seam (text-field ADR-0014 parity) ────────────────
 //
 // jsdom cannot compute an accessible name — the read-back that the editor really names as "City"

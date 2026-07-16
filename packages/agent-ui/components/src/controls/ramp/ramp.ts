@@ -21,7 +21,7 @@ import { cleanEntries, cssValue, tokenEntriesProp, type TokenEntry } from '../_t
 
 const props = {
   steps: tokenEntriesProp(), // { label: string; value: string }[] · safe JSON codec (LLD-C1) · default []
-  label: prop.string(''), // the strip's accessible name — SPEC-R8: unlabeled is legal, never a silent state
+  label: { ...prop.string(''), reflect: true }, // the strip's accessible name — SPEC-R8: unlabeled is legal, never a silent state
   scheme: prop.enum(['auto', 'light', 'dark'] as const, 'auto'), // pins the WHOLE strip's color-scheme resolution
 } satisfies PropsSchema
 

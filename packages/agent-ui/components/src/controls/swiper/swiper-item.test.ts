@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { UISwiperItemElement } from './swiper-item.ts'
 
 // swiper-item.test.ts — n5 jsdom probes (swiper-family.lld.md LLD-C4 · SPEC-R9). Under proof: the class
-// resolves + self-defines, `value` defaults/reflects, `labelAs` sets role/roledescription/label via
+// resolves + self-defines, `key` defaults/reflects, `labelAs` sets role/roledescription/label via
 // internals, and connect() applies NO self-driven ARIA (the coordinator alone owns labelling).
 
 class ProbeItem extends UISwiperItemElement {
@@ -23,12 +23,12 @@ describe('UISwiperItemElement — upgrade + typed props', () => {
     expect(customElements.get('ui-swiper-item')).toBe(UISwiperItemElement)
   })
 
-  it('`value` defaults to \'\' and reflects', () => {
+  it('`key` defaults to \'\' and reflects', () => {
     const el = make()
     document.body.append(el)
-    expect(el.value).toBe('')
-    el.value = 'intro'
-    expect(el.getAttribute('value')).toBe('intro')
+    expect(el.key).toBe('')
+    el.key = 'intro'
+    expect(el.getAttribute('key')).toBe('intro')
     el.remove()
   })
 })

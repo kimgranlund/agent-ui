@@ -46,3 +46,8 @@
     font-style: italic;
   }
 }
+/* No forced-colors block — documented absence (TKT-0066, the list.css/theme-provider.css dialect): this
+   sheet paints ink/typography only (no borders or fills that would vanish under WHCM's repaint); the
+   composed form controls (ui-text-field/ui-switch/ui-select/…) each carry their OWN forced-colors
+   handling, and plain text stays legible for free under the platform's forced-colors text/background
+   repaint. */

@@ -44,7 +44,7 @@ function commandOption(value: string, icon: string, label: string, shortcut: str
   const attrs: Record<string, string> = { role: 'option', value }
   if (keywords) attrs['data-keywords'] = keywords
   return el('div', attrs, [
-    el('ui-icon', { name: icon, 'data-role': 'icon' }),
+    el('ui-icon', { glyph: icon, 'data-role': 'icon' }),
     text(label),
     el('span', { 'data-role': 'shortcut', 'aria-hidden': 'true' }, [text(shortcut)]),
   ])

@@ -9,14 +9,14 @@ extends: UIElement     # a non-interactive display LEAF — NOT form-associated 
 # marginal: ui-icon adds 513 B gz (1546 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without ui-icon's export — it + the @agent-ui/icons resolve/registry/types path it pulls in, zero Phosphor bytes — subpath-only) — within budget: family total 22193 B gz / 22528 B gz (scripts/measure-size.mjs); the family total stays gated each run.
 
 attributes:            # attributes-as-API — mirrors icon.ts `static props` (name, label)
-  - name: name
+  - name: glyph
     type: string
     default: ''
     reflect: false     # NOT reflected — an empty name clears the host; a set name re-resolves via setIcon() (@agent-ui/icons). Deliberately a plain string, not an enum: a consumer's own pack can register names beyond the shipped nine (ADR-0065 clause 5)
   - name: label
     type: string
     default: ''
-    reflect: false     # NOT reflected — property-only accessible-name input. Empty → decorative (aria-hidden); non-empty → meaningful (role=img + aria-label)
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
 
 properties: []         # no manual accessors beyond the two typed props
 
@@ -54,9 +54,9 @@ carries no value, no focus, and no keyboard contract. Given a canonical icon `na
 active pack's SVG body and injects it as its only child.
 
 ```html
-<ui-icon name="caret-down"></ui-icon>
-<ui-icon name="eye-slash" label="Hide password"></ui-icon>
-<ui-icon name="calendar-blank" style="font-size: 1.5rem"></ui-icon>
+<ui-icon glyph="caret-down"></ui-icon>
+<ui-icon glyph="eye-slash" label="Hide password"></ui-icon>
+<ui-icon glyph="calendar-blank" style="font-size: 1.5rem"></ui-icon>
 ```
 
 ## Resolution

@@ -37,6 +37,13 @@
   --ui-nav-rail-font: var(--ui-font-md);
   --ui-nav-rail-icon: var(--ui-icon-md);
   --ui-nav-rail-gap: var(--ui-gap-md);
+
+  /* TKT-0066 item 5 ruling: dimensional constants route through the own chain, never read raw in @scope. */
+  --ui-nav-rail-label-font: var(--ui-font-sm);
+  --ui-nav-rail-context-pad-block-start: var(--ui-space-sm);
+  --ui-nav-rail-context-pad-block-end: var(--ui-space-xs);
+  --ui-nav-rail-flyout-pad: var(--ui-space-xs);
+  --ui-nav-rail-flyout-radius: var(--ui-radius-base);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-nav-rail) consumes ONLY --ui-nav-rail-* ════════════════ */
@@ -66,11 +73,11 @@
   }
 
   [data-part='context-label'] {
-    font-size: var(--ui-font-sm);
+    font-size: var(--ui-nav-rail-label-font);
     color: var(--ui-nav-rail-ink);
     padding-inline: calc(var(--ui-nav-rail-height) / 2);
-    padding-block-start: var(--ui-space-sm);
-    padding-block-end: var(--ui-space-xs);
+    padding-block-start: var(--ui-nav-rail-context-pad-block-start);
+    padding-block-end: var(--ui-nav-rail-context-pad-block-end);
   }
 
   [data-part='items'] {
@@ -148,7 +155,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     min-inline-size: 0;
-    font-size: var(--ui-font-sm);
+    font-size: var(--ui-nav-rail-label-font);
     color: var(--ui-nav-rail-ink);
   }
   [data-part='activator'] > [data-part='label'] {
@@ -213,11 +220,19 @@
       inset-inline: 0;
       inset-block-start: 100%;
       z-index: 5;
-      padding: var(--ui-space-xs);
+      padding: var(--ui-nav-rail-flyout-pad);
       border: 1px solid var(--ui-nav-rail-outline);
-      border-radius: var(--ui-radius-base);
+      border-radius: var(--ui-nav-rail-flyout-radius);
       background: var(--ui-nav-rail-surface);
       box-shadow: 0 0.5rem 1.5rem var(--ui-nav-rail-scrim);
+    }
+  }
+
+  /* §4c (interaction-states.md) — non-negotiable: reduced motion zeroes the chevron transition
+     (TKT-0065 lateral review: this file declared the transition with no reduced-motion leg at all). */
+  @media (prefers-reduced-motion: reduce) {
+    [data-part='group-chevron'] {
+      transition: none;
     }
   }
 

@@ -6,9 +6,9 @@
  * wrapping split-pane (which already sets `overflow: auto`).
  */
 
-:where(ui-master-detail-pane) {
-  /* no --ui-master-detail-pane-* tokens — this element paints nothing of its own */
-}
+/* No :where(ui-master-detail-pane) token block — this element paints nothing of its own, and an empty
+   token block is deliberately NOT invented (the form-provider.css dialect, ruled the fleet shape by the
+   TKT-0066 hygiene pass — TKT-0065's lateral review found the two documented dialects in conflict). */
 
 @scope (ui-master-detail-pane) {
   :scope {

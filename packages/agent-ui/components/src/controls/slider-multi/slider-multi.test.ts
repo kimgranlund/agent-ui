@@ -602,8 +602,9 @@ describe('UISliderMultiElement — disabled state', () => {
     expect(el.hiThumb!.getAttribute('tabindex')).toBe('0')
     el.disabled = true
     await el.updateComplete
-    expect(el.loThumb!.getAttribute('tabindex')).toBe('-1')
-    expect(el.hiThumb!.getAttribute('tabindex')).toBe('-1')
+    // TKT-0068 item 2 ruling: disabled REMOVES the tabindex attribute (native parity), never '-1'.
+    expect(el.loThumb!.hasAttribute('tabindex')).toBe(false)
+    expect(el.hiThumb!.hasAttribute('tabindex')).toBe(false)
     el.remove()
   })
 })

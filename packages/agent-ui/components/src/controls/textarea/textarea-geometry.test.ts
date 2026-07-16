@@ -129,14 +129,74 @@ describe('textarea.css — the MULTI-LINE geometry law (ADR-0134 — the inversi
   })
 })
 
-describe('textarea.css — the BORDER-channel state ladder + focus ring (ADR-0014 cl.2c/dev#1, reused verbatim)', () => {
-  it('declares the full border ladder from the PINNED roles: idle/hover/focus/invalid/invalid+hover', () => {
+// ── The filled/container state law (TKT-0062, Kim's ruling) ──────────────────────────────────────────────
+// SUPERSEDES the old border-only channel: bg/border/ink ALL repoint per state now (default / filled / hover
+// / focus / disabled). The SOLID role ladder (NOT soft-alpha) is declared per-state in the :where() token
+// block, consumed at the matching pseudo-/`:has()` selector in @scope. Roles, never a color-mix (colour
+// opinions live in the token layer). user-invalid is UNCHANGED/orthogonal — its own border-only danger
+// channel is asserted separately, unaffected by this table. Mirrors text-field-css.test.ts's rewritten
+// TKT-0062 describe blocks verbatim, renamed to textarea's own token chain.
+describe('textarea.css — the filled/container state law (TKT-0062)', () => {
+  it('declares the full bg/border/ink ladder from the PINNED roles: default/filled/hover/focus', () => {
     const b = whereBlock(':where(ui-textarea) {')
-    expect(b).toMatch(/--ui-textarea-border:\s*var\(--md-sys-color-neutral\)/)
-    expect(b).toMatch(/--ui-textarea-border-hover:\s*var\(--md-sys-color-neutral-high\)/)
-    expect(b).toMatch(/--ui-textarea-border-focus:\s*transparent/)
-    expect(b).toMatch(/--ui-textarea-border-invalid:\s*var\(--md-sys-color-danger\)/)
-    expect(b).toMatch(/--ui-textarea-border-invalid-hover:\s*var\(--md-sys-color-danger-high\)/)
+    expect(b).toMatch(/--ui-textarea-bg:\s*var\(--md-sys-color-neutral-container-low\)/) // default
+    expect(b).toMatch(/--ui-textarea-bg-filled:\s*var\(--md-sys-color-neutral-container\)/) // filled
+    expect(b).toMatch(/--ui-textarea-bg-hover:\s*var\(--md-sys-color-neutral-container\)/) // hover
+    expect(b).toMatch(/--ui-textarea-bg-focus:\s*var\(--md-sys-color-neutral-container-low\)/) // focus
+    expect(b).toMatch(/--ui-textarea-border:\s*transparent/) // default
+    expect(b).toMatch(/--ui-textarea-border-hover:\s*var\(--md-sys-color-neutral-outline-variant\)/) // hover — the ONE visible-border state
+    expect(b).toMatch(/--ui-textarea-border-focus:\s*transparent/) // focus = transparent (the outline ring is the sole indicator)
+    expect(b).toMatch(/--ui-textarea-ink:\s*var\(--md-sys-color-neutral\)/) // default
+    expect(b).toMatch(/--ui-textarea-ink-filled:\s*var\(--md-sys-color-neutral-on-surface-variant\)/) // filled
+    expect(b).toMatch(/--ui-textarea-ink-hover:\s*var\(--md-sys-color-neutral-on-surface-variant\)/) // hover
+    expect(b).toMatch(/--ui-textarea-ink-focus:\s*var\(--md-sys-color-neutral-on-surface\)/) // focus
+  })
+
+  it('user-invalid stays UNCHANGED — its own border-only danger channel, orthogonal to the bg/ink table', () => {
+    const b = whereBlock(':where(ui-textarea) {')
+    expect(b).toMatch(/--ui-textarea-border-invalid:\s*var\(--md-sys-color-danger\)/) // user-invalid
+    expect(b).toMatch(/--ui-textarea-border-invalid-hover:\s*var\(--md-sys-color-danger-high\)/) // invalid + hover
+  })
+
+  it('the placeholder ink tracks the SAME default-state ink role (Kim\'s table has no separate placeholder row)', () => {
+    const b = whereBlock(':where(ui-textarea) {')
+    expect(b).toMatch(/--ui-textarea-placeholder:\s*var\(--ui-textarea-ink\)/)
+  })
+
+  it('the ladder is SOLID role steps or `transparent` — NEVER a color-mix, NEVER a soft-alpha primitive', () => {
+    expect(css).not.toContain('color-mix(') // a mix ratio is a component colour opinion
+    const borderDecls = [...tokenBlock.matchAll(/--ui-textarea-border[\w-]*:\s*([^;]+);/g)].map((m) => m[1] as string)
+    expect(borderDecls.length).toBeGreaterThan(0) // anti-vacuous: the border tokens were actually found
+    for (const decl of borderDecls) {
+      expect(decl).not.toMatch(/-500-\d/) // not an alpha primitive
+      expect(decl).not.toContain('scrim') // not a scrim role
+    }
+  })
+
+  it('@scope repoints background/border-color/color together at filled/hover/focus (not border-color alone)', () => {
+    expect(stylesBlock).toMatch(
+      /:scope:not\(:hover\):not\(:focus-within\):not\(:is\(\[disabled\], :state\(disabled\)\)\):has\(> \[data-part='editor'\]:not\(\[data-empty\]\)\)\s*\{\s*background:\s*var\(--ui-textarea-bg-filled\);\s*--ui-textarea-ink:\s*var\(--ui-textarea-ink-filled\)/,
+    )
+    expect(stylesBlock).toMatch(
+      /:scope:not\(:focus-within\):not\(:is\(\[disabled\], :state\(disabled\)\)\):hover\s*\{\s*background:\s*var\(--ui-textarea-bg-hover\);\s*border-color:\s*var\(--ui-textarea-border-hover\);\s*--ui-textarea-ink:\s*var\(--ui-textarea-ink-hover\)/,
+    )
+    expect(stylesBlock).toMatch(
+      /:scope:focus-within\s*\{\s*background:\s*var\(--ui-textarea-bg-focus\);\s*border-color:\s*var\(--ui-textarea-border-focus\);\s*--ui-textarea-ink:\s*var\(--ui-textarea-ink-focus\)/,
+    )
+    expect(stylesBlock).toMatch(/:scope:state\(user-invalid\)\s*\{\s*border-color:\s*var\(--ui-textarea-border-invalid\)/)
+    expect(stylesBlock).toMatch(
+      /:scope:state\(user-invalid\):hover\s*\{\s*border-color:\s*var\(--ui-textarea-border-invalid-hover\)/,
+    )
+  })
+
+  it('filled/hover precedence is enforced by MUTUAL EXCLUSION (:not()), never bare source-order/specificity', () => {
+    // filled excludes hover, focus-within, AND disabled — hover excludes focus-within AND disabled — so
+    // exactly one rule can ever match a given DOM state, regardless of how :has()/:not() specificity
+    // computes (the live regression this fixes, first found in ui-text-field: a :not(disabled)-guarded
+    // :hover measured HIGHER specificity than an unguarded :focus-within, so a mouse-click focus — which
+    // also leaves the pointer hovering — kept the visible hover border instead of stepping transparent).
+    expect(stylesBlock).toMatch(/:scope:not\(:hover\):not\(:focus-within\):not\(:is\(\[disabled\], :state\(disabled\)\)\):has\(/)
+    expect(stylesBlock).toMatch(/:scope:not\(:focus-within\):not\(:is\(\[disabled\], :state\(disabled\)\)\):hover/)
   })
 
   it(':focus-within (not :focus-visible) draws the shared outline ring and steps the border transparent', () => {
@@ -147,10 +207,22 @@ describe('textarea.css — the BORDER-channel state ladder + focus ring (ADR-001
     expect(focusBlock).toMatch(/border-color:\s*var\(--ui-textarea-border-focus\)/)
     expect(focusBlock).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s*solid\s*var\(--md-sys-color-focus-ring\)/)
   })
+})
 
-  it('disabled is a role-REPOINT (not opacity)', () => {
+// ── Disabled — a role REPOINT, not opacity (tokens.md canon; TKT-0062's disabled row) ──────────────────────
+describe('textarea.css — disabled is a role REPOINT, not opacity', () => {
+  it('repoints the base bg/ink/border trio to TKT-0062\'s disabled row, matching BOTH [disabled] and :state(disabled)', () => {
     const b = whereBlock(':where(ui-textarea:is([disabled], :state(disabled))) {')
-    expect(b).toMatch(/--ui-textarea-bg:\s*var\(--md-sys-color-neutral-surface-high\)/)
-    expect(b).not.toMatch(/opacity/)
+    expect(b.length).toBeGreaterThan(0) // the disabled repoint block exists
+    expect(b).toMatch(/--ui-textarea-bg:\s*var\(--md-sys-color-neutral-container-low\)/)
+    expect(b).toMatch(/--ui-textarea-ink:\s*var\(--md-sys-color-neutral-low\)/)
+    expect(b).toMatch(/--ui-textarea-border:\s*transparent/)
+  })
+
+  it('NEVER opacity — the muted look is a token repoint (the disabled host is also pointer-inert)', () => {
+    expect(css).not.toMatch(/opacity\s*:/) // disabled is a role repoint, not an opacity fade (tokens.md canon)
+    expect(stylesBlock).toMatch(
+      /:scope:is\(\[disabled\],\s*:state\(disabled\)\)\s*\{[^}]*pointer-events:\s*none/,
+    )
   })
 })

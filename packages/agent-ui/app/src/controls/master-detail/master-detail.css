@@ -20,6 +20,11 @@
 :where(ui-master-detail) {
   --ui-master-detail-ink: var(--md-sys-color-neutral-on-surface);
   --ui-master-detail-divider: var(--md-sys-color-neutral-outline-variant, currentColor);
+  /* TKT-0066 (from TKT-0065 styling F11): the back affordance previously had NO hover state and NO
+     focus ring at all (UA default only) — the same class as TKT-0046's disclosure finding. The fleet
+     row-hover role (the surface-high step every interactive row uses since the 2026-07-07 menu.css
+     consistency pass — the TKT-0047 disclosure-fix precedent). */
+  --ui-master-detail-back-bg-hover: var(--md-sys-color-neutral-surface-high);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-master-detail) consumes ONLY --ui-master-detail-* ════════════════ */
@@ -58,6 +63,16 @@
     inline-size: 100%;
     text-align: start;
   }
+  /* Hover + the shared keyboard ring (TKT-0066, from TKT-0065 styling F11 — both were entirely absent):
+     the fleet row-hover role, and the exact shared ring recipe every control draws (:focus-visible — the
+     back affordance is a real <button>, action-control kin, the keyboard-only convention). */
+  [data-part='back']:hover {
+    background: var(--ui-master-detail-back-bg-hover);
+  }
+  [data-part='back']:focus-visible {
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: calc(-1 * var(--ui-focus-ring-offset)); /* inset — the row spans the pane edge-to-edge (the nav-rail/tabs inset-ring precedent) */
+  }
 
   /* Narrow drill-in (SPEC-R7 AC1) — `40rem` mirrors ui-app-shell.css's own starting threshold (a bare
      literal; custom properties cannot drive an @container condition). */
@@ -87,3 +102,8 @@
     }
   }
 }
+/* No forced-colors block — documented absence (TKT-0066, the list.css/theme-provider.css dialect): the
+   divider is a real 1px border (WHCM repaints real borders to CanvasText for free), the back affordance
+   is text + a real border, and the panes paint no fills — nothing here vanishes under the forced-colors
+   repaint. (The back affordance's hover/focus states — absent when
+   TKT-0065's sweep ran, styling F11 — were added in the same TKT-0066 pass as this comment.) */

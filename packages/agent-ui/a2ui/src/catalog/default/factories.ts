@@ -218,6 +218,22 @@ function accessorFactory(tag: string, value?: { prop: string; event: string }, s
   return factory
 }
 
+/**
+ * Build a factory whose catalog properties are 1:1 reflecting accessors EXCEPT the named wire→prop
+ * renames (TKT-0069 item 1: the fleet reserved `name`/`value` for form semantics and renamed the
+ * repurposing controls' props, but the CATALOG keeps its shipped wire field names — the corpus and
+ * every taught idiom stay valid — so these factories translate at apply time). `catalog.json`'s
+ * `mapsTo` records the same mapping (the reset-authority side; a non-identity mapping is skipped by
+ * tree.ts's narrowed omitted-prop reset, the documented Button.label limitation).
+ */
+function mappedAccessorFactory(tag: string, mapping: Record<string, string>): WidgetFactory {
+  return {
+    tag,
+    create: () => document.createElement(tag),
+    applyProp: (el, prop, value) => setProp(el, mapping[prop] ?? prop, value),
+  }
+}
+
 // Layout primitives (ADR-0016) — surface axes + the shared flex grammar; not inputs (no `value`).
 export const rowFactory: WidgetFactory = accessorFactory('ui-row')
 export const columnFactory: WidgetFactory = accessorFactory('ui-column')
@@ -323,9 +339,9 @@ export const optionFactory: WidgetFactory = {
 
 // ── the ADR-0087 Wave A rows (Icon / Menu+MenuItem / Popover / Tooltip) ─────────────
 
-// Icon → ui-icon (ADR-0065/0066). `name`/`label` are BOTH 1:1 reflecting accessors on `UIIconElement`
-// (verified against icon.ts `static props`) — a plain `accessorFactory`, no bespoke mapping needed.
-export const iconFactory: WidgetFactory = accessorFactory('ui-icon')
+// Icon → ui-icon (ADR-0065/0066). Wire `name` → prop `glyph` (TKT-0069 item 1 — the control renamed;
+// the catalog keeps its shipped wire field); `label` stays 1:1.
+export const iconFactory: WidgetFactory = mappedAccessorFactory('ui-icon', { name: 'glyph' })
 
 // Menu → ui-menu (ADR-0043/overlay-controller.lld). Two-way bindable on `open` via the `toggle` event
 // (ADR-0019) — the family contract shared with Popover/Modal/Tabs. `children` is a plain ChildList: the
@@ -555,10 +571,10 @@ export const barChartFactory: WidgetFactory = accessorFactory('ui-bar-chart')
 // leaf: no `value` mark, no children, no submitGate.
 export const tableFactory: WidgetFactory = accessorFactory('ui-table')
 
-// Stat → ui-stat (SPEC-R7..R10). `label`/`value`/`delta`/`caption` are ALL 1:1 reflecting accessor props
-// — verified against stat.ts `static props` (`value`'s string|number union + `delta`'s null-defaulting
-// numeric codec are both real accessors, `setProp` writes either straight through). Display-only leaf.
-export const statFactory: WidgetFactory = accessorFactory('ui-stat')
+// Stat → ui-stat (SPEC-R7..R10). Wire `value` → prop `figure` (TKT-0069 item 1); `label`/`delta`/
+// `caption` stay 1:1 (`figure`'s string|number union + `delta`'s null-defaulting numeric codec are real
+// accessors, `setProp` writes either straight through). Display-only leaf.
+export const statFactory: WidgetFactory = mappedAccessorFactory('ui-stat', { value: 'figure' })
 
 // Badge → ui-badge (SPEC-R11..R13). `label`/`intent` are 1:1 reflecting accessor props — verified against
 // badge.ts `static props`; the control's OWN effect snaps an out-of-range `intent` (bound-garbage) back to
@@ -591,20 +607,18 @@ export const disclosureFactory: WidgetFactory = accessorFactory('ui-disclosure',
 
 // ── the ADR-0112 feed family (Progress / Avatar / Attachment, catalog LLD-C13, feed-family.lld.md §7) ──
 //
-// Progress → ui-progress (SPEC-R1..R3). `value`/`max`/`label` are ALL 1:1 reflecting accessor props —
-// verified against progress.ts `static props` (`value`'s null-as-indeterminate codec is a real accessor,
-// `setProp` writes it straight through; the control's own `effectiveMax`/`effectiveValue` clamps re-run
-// inside its render effect regardless of which path delivered the value). Display-only leaf: no `value`
-// mark (ADR-0019 sense — a progress bar is not an input), no children.
-export const progressFactory: WidgetFactory = accessorFactory('ui-progress')
+// Progress → ui-progress (SPEC-R1..R3). Wire `value` → prop `current` (TKT-0069 item 1); `max`/`label`
+// stay 1:1 (`current`'s null-as-indeterminate codec is a real accessor; the control's own
+// `effectiveMax`/`effectiveValue` clamps re-run inside its render effect regardless of which path
+// delivered the value). Display-only leaf: no `value` mark (ADR-0019 sense — not an input), no children.
+export const progressFactory: WidgetFactory = mappedAccessorFactory('ui-progress', { value: 'current' })
 
-// Avatar → ui-avatar (SPEC-R4..R7). `src`/`name`/`label`/`size` are ALL 1:1 reflecting accessor props —
-// verified against avatar.ts `static props`. Not an input (no `value` mark) — a non-interactive identity
-// mark, the Icon precedent.
-export const avatarFactory: WidgetFactory = accessorFactory('ui-avatar')
+// Avatar → ui-avatar (SPEC-R4..R7). Wire `name` → prop `identity` (TKT-0069 item 1); `src`/`label`/
+// `size` stay 1:1. Not an input (no `value` mark) — a non-interactive identity mark, the Icon precedent.
+export const avatarFactory: WidgetFactory = mappedAccessorFactory('ui-avatar', { name: 'identity' })
 
-// Attachment → ui-attachment (SPEC-R8..R11). `name`/`mimeType`/`sizeBytes`/`href` are ALL 1:1 reflecting
-// accessor props — verified against attachment.ts `static props` (the catalog property key `sizeBytes`
+// Attachment → ui-attachment (SPEC-R8..R11). Wire `name` → prop `filename` (TKT-0069 item 1);
+// `mimeType`/`sizeBytes`/`href` stay 1:1 — verified against attachment.ts `static props` (the catalog key `sizeBytes`
 // deliberately matches the control's OWN accessor name, not the earlier LLD sketch's `size`: ADR-0112
 // Amendment 1 renamed the control prop away from `size` specifically to avoid colliding with the fleet's
 // reserved widget-tier `[sm,md,lg]` geometry enum, and `accessorFactory`'s generic `setProp` writes
@@ -613,16 +627,16 @@ export const avatarFactory: WidgetFactory = accessorFactory('ui-avatar')
 // (LLD-C6, the name cell becoming a native `<a>`) is a separately-tracked component-side follow-up — the
 // catalog/factory wiring here is correct today and simply inert until that leg lands (attachment.ts's own
 // header note). Display-only leaf: no `value` mark, no children.
-export const attachmentFactory: WidgetFactory = accessorFactory('ui-attachment')
+export const attachmentFactory: WidgetFactory = mappedAccessorFactory('ui-attachment', { name: 'filename' })
 
 // ── the ADR-0118 token-surface family (Swatch / Ramp / Ladder, catalog LLD-C13, token-surfaces.lld.md §6) ──
 //
-// Swatch → ui-swatch (SPEC-R1..R4). `value`/`label` are bindable (a model may drive the color/caption from
+// Swatch → ui-swatch (SPEC-R1..R4). Wire `value` → prop `color` (TKT-0069 item 1); `value`/`label` are bindable (a model may drive the color/caption from
 // the data model, the Sparkline.values/label precedent); `scheme` is a NON-bindable structural enum (the
 // Sparkline.variant/Avatar.size precedent — an author-set rendering axis, not runtime data) — all three are
 // 1:1 reflecting accessor props, verified against swatch.ts `static props`. Display-only leaf: no `value`
 // mark (no ADR-0019 seam slot — ADR-0118 cl.6, "one-way props"), no children.
-export const swatchFactory: WidgetFactory = accessorFactory('ui-swatch')
+export const swatchFactory: WidgetFactory = mappedAccessorFactory('ui-swatch', { value: 'color' })
 
 // Ramp → ui-ramp (SPEC-R5..R8). `steps` (`{label,value}[]`, bindable — the BarChart.data array-prop
 // precedent) + `label` (bindable) + `scheme` (non-bindable structural enum, as Swatch above) are ALL 1:1

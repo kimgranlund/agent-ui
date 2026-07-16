@@ -133,6 +133,20 @@ describe('UIRadioGroupElement — ARIA + tabindex setup', () => {
     expect(radios[1]!.tabIndex).toBe(-1)
     expect(radios[2]!.tabIndex).toBe(-1)
   })
+
+  it('group-tabindex-late-append: a radio appended to an ALREADY-connected group is not a second tab stop', () => {
+    // The radio.ts grouped() tabindex correction's load-bearing case (TKT-0068 item 3, measured):
+    // rovingFocus's applyTabindexes ran at GROUP connect, before this radio existed — it never
+    // stamped `data-roving` here, so the tabbable trait's tabIndex=0 write is NOT deferred. Without
+    // the correction the late joiner keeps 0 and the group grows a second tab stop. (Disabling the
+    // correction flips exactly this assertion; every other radio-family test stays green — the
+    // mutation probe that motivated this test.)
+    const late = makeRadio('r-late', 'Late option')
+    group.append(late)
+    expect(late.tabIndex).toBe(-1)
+    // The seeded roving stop is untouched.
+    expect(radios[0]!.tabIndex).toBe(0)
+  })
 })
 
 // ── S3 probe: group exclusivity ───────────────────────────────────────────────────────────────────

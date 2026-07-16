@@ -1,6 +1,6 @@
 ---
 # swiper-item.md frontmatter — the attributes-as-API descriptor for ui-swiper-item (ADR-0004 /
-# swiper-family.lld.md LLD-C4). The `attributes[]` block MUST mirror swiper-item.ts `static props` (value) —
+# swiper-family.lld.md LLD-C4). The `attributes[]` block MUST mirror swiper-item.ts `static props` (key) —
 # the contract↔props trip-wire (swiper-item-descriptor.test.ts) targets this fence. Prose below documents
 # only this element (the primary /site prose lives on swiper.md, the one-folder precedent — ui-tab/ui-tab-panel
 # mirror this split against tabs.md).
@@ -10,7 +10,7 @@ extends: UIElement       # NOT form-associated — a slide wrapper carries no va
 # marginal: measured at integration (npm run size, ADR-0040 §3) — the five-tag family total
 
 attributes:
-  - name: value
+  - name: key
     type: string
     default: ''
     reflect: true      # the stable slide identity `active` resolves against; '' ⇒ addressed by real index
@@ -57,8 +57,8 @@ form-associated, and carries no geometry of its own (sized entirely by the ownin
 
 ```html
 <ui-swiper>
-  <ui-swiper-item value="intro">Welcome</ui-swiper-item>
-  <ui-swiper-item value="pricing">Pricing</ui-swiper-item>
+  <ui-swiper-item key="intro">Welcome</ui-swiper-item>
+  <ui-swiper-item key="pricing">Pricing</ui-swiper-item>
 </ui-swiper>
 ```
 

@@ -178,11 +178,11 @@ describe('ui-color-picker — anatomy + composition (SPEC-R4)', () => {
     el.remove()
   })
 
-  it('the preview is a REAL <ui-swatch> whose value tracks the color — no bespoke color div outside the pad (SPEC-R4 AC2)', () => {
+  it('the preview is a REAL <ui-swatch> whose color prop tracks the picker value — no bespoke color div outside the pad (SPEC-R4 AC2)', () => {
     const el = makePicker({ value: '#3b82f6' })
     const sw = swatchEl(el)
     expect(sw.tagName.toLowerCase()).toBe('ui-swatch')
-    expect((sw as unknown as { value: string }).value).toBe(el.value)
+    expect((sw as unknown as { color: string }).color).toBe(el.value)
     // grep-provable: no background-painting div outside the pad/thumb
     const divs = [...el.querySelectorAll('div')].filter((d) => !d.closest('[data-part="pad"]') && d.getAttribute('data-part') !== 'pad-thumb')
     for (const d of divs) expect((d as HTMLElement).style.background).toBe('')
@@ -394,7 +394,8 @@ describe('ui-color-picker — whole-shape + disabled (ADR-0102/0057/0010)', () =
     await whenFlushed()
     expect((slider(el, 'hue') as unknown as { disabled: boolean }).disabled).toBe(true)
     expect((readoutField(el) as unknown as { disabled: boolean }).disabled).toBe(true)
-    expect(pad(el).getAttribute('tabindex')).toBe('-1')
+    // TKT-0068 item 2 ruling: disabled REMOVES the tabindex attribute (native parity), never '-1'.
+    expect(pad(el).hasAttribute('tabindex')).toBe(false)
     el.remove()
   })
 

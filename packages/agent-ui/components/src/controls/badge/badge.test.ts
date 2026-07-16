@@ -175,13 +175,21 @@ describe('UIBadgeElement — zero internals ARIA; the label IS the accessible na
 })
 
 describe('UIBadgeElement — zero residue across connect/disconnect', () => {
-  it('reconnect rebuilds the same two-span shape (not stacked, not duplicated)', () => {
+  it('reconnect keeps the SAME two spans — node identity, not just shape (TKT-0067 regression)', () => {
+    // Tightened from a shape-only assertion (children.length === 2, which the old rebuild-every-connect
+    // code also passed): the glyph/label must be the SAME node objects across an ordinary
+    // disconnect/reconnect — the parts-once canon the in-file "neither node is ever replaced" comment
+    // always claimed but the code didn't honor until TKT-0067.
     const el = make()
     document.body.append(el)
     expect(el.children.length).toBe(2)
+    const glyph = el.querySelector('[data-part="glyph"]')
+    const label = el.querySelector('[data-part="label"]')
     el.remove()
     document.body.append(el)
-    expect(el.children.length).toBe(2) // connected() re-runs fresh — replaceChildren, not append
+    expect(el.children.length).toBe(2)
+    expect(el.querySelector('[data-part="glyph"]'), 'the glyph was re-minted on reconnect').toBe(glyph)
+    expect(el.querySelector('[data-part="label"]'), 'the label was re-minted on reconnect').toBe(label)
     el.remove()
   })
 

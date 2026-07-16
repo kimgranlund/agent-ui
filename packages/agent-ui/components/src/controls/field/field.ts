@@ -68,7 +68,7 @@ function hasStringLabel(control: UIFormElement): control is UIFormElement & Labe
 }
 
 const props = {
-  label: prop.string(), // the visible label text → [data-part=label] (reflect: false — text-field precedent)
+  label: { ...prop.string(), reflect: true }, // the visible label text → [data-part=label] (reflect: false — text-field precedent)
   description: prop.string(), // the visible description text → [data-part=description] (reflect: false)
 } satisfies PropsSchema
 

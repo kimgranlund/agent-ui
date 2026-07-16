@@ -189,7 +189,7 @@
 
     "Icon": {
       "properties": {
-        "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "name" },
+        "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "glyph" },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
       }
     },
@@ -403,7 +403,7 @@
     "Stat": {
       "properties": {
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
-        "value": { "type": { "type": ["string", "number"] }, "bindable": true, "mapsTo": "value" },
+        "value": { "type": { "type": ["string", "number"] }, "bindable": true, "mapsTo": "figure" },
         "delta": { "type": { "type": "number" }, "bindable": true, "mapsTo": "delta" },
         "caption": { "type": { "type": "string" }, "bindable": true, "mapsTo": "caption" }
       }
@@ -434,7 +434,7 @@
 
     "Progress": {
       "properties": {
-        "value": { "type": { "type": "number" }, "bindable": true, "mapsTo": "value" },
+        "value": { "type": { "type": "number" }, "bindable": true, "mapsTo": "current" },
         "max": { "type": { "type": "number" }, "bindable": true, "mapsTo": "max" },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
       }
@@ -443,7 +443,7 @@
     "Avatar": {
       "properties": {
         "src": { "type": { "type": "string" }, "bindable": true, "mapsTo": "src" },
-        "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "name" },
+        "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "identity" },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
         "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "mapsTo": "size" }
       }
@@ -451,7 +451,7 @@
 
     "Attachment": {
       "properties": {
-        "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "name" },
+        "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "filename" },
         "mimeType": { "type": { "type": "string" }, "bindable": true, "mapsTo": "mimeType" },
         "sizeBytes": { "type": { "type": "number" }, "bindable": true, "mapsTo": "sizeBytes" },
         "href": { "type": { "type": "string" }, "bindable": true, "mapsTo": "href", "format": "safe-href" }
@@ -460,7 +460,7 @@
 
     "Swatch": {
       "properties": {
-        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "color" },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
         "scheme": { "type": { "type": "string", "enum": ["auto", "light", "dark"] }, "mapsTo": "scheme" }
       }

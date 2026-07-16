@@ -3,8 +3,12 @@
 // via internals element-reflection and emits `select` on commit. Value-codec-agnostic: the host
 // maps its option elements to string keys.
 //
-// Decoupleable: menu hosts pass `onSelect` → an action (no form value); listbox/tabs hosts couple
-// `onSelect` → a value prop update (selection-follows-commit or selection-follows-focus).
+// Consumer contract (trued by the TKT-0065 lateral review — the original header named hosts that
+// lawfully cannot consume this trait): the selection marker is an `aria-selected` ATTRIBUTE on each
+// item, so the trait fits attribute-reflected `[role=option]` hosts ONLY (ui-select is the shipped
+// consumer). `role=menuitem` hosts (ui-menu) must not carry aria-selected (action semantics — menu.ts
+// commits via its own click + Enter/Space path, which this trait also lacks a Space leg for), and
+// ui-tab items drive selection through ElementInternals, never host attributes (the fleet ARIA law).
 //
 // `traits → dom` is the one allowed cross-layer direction; the host type only.
 

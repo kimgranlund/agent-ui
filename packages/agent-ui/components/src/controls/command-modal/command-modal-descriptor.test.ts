@@ -55,12 +55,12 @@ describe('command-modal.md descriptor — frontmatter parses + schema-valid', ()
     expect(events).not.toContain('dismiss')
   })
 
-  it('label/placeholder/hotkey are NOT reflected string props defaulting to \'\'', () => {
+  it('placeholder/hotkey are NOT reflected; label reflects (TKT-0069 item 2 ruling); all string, default \'\'', () => {
     for (const name of ['label', 'placeholder', 'hotkey']) {
       const attr = parsed.attributes.find((a) => a.name === name)
       expect(attr?.type, `${name} type`).toBe('string')
       expect(attr?.default, `${name} default`).toBe('')
-      expect(attr?.reflect, `${name} reflect`).toBe(false)
+      expect(attr?.reflect, `${name} reflect`).toBe(name === 'label')
     }
   })
 

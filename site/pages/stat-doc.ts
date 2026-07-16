@@ -56,7 +56,7 @@ function renderSpecimens(): HTMLElement {
 function statSpecimen(stat: StatSpecimen): HTMLElement {
   const el = document.createElement('ui-stat')
   el.setAttribute('label', stat.label)
-  el.setAttribute('value', stat.value)
+  el.setAttribute('figure', stat.value)
   if (stat.delta !== undefined) el.setAttribute('delta', String(stat.delta))
   if (stat.caption !== undefined) el.setAttribute('caption', stat.caption)
   return el

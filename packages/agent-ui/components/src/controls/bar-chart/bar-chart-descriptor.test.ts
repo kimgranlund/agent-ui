@@ -87,7 +87,8 @@ describe('bar-chart.md descriptor — contract↔props trip-wire', () => {
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default, isolated on `label`)', () => {
     const labelOnly = parsed.attributes.filter((a) => a.name === 'label')
     const labelOnlyProps = { label: UIBarChartElement.props.label }
-    const flipReflect = labelOnly.map((a) => ({ ...a, reflect: true }))
+    // label reflects TRUE since the TKT-0069 item 2 ruling — the synthetic drift flips the other way.
+    const flipReflect = labelOnly.map((a) => ({ ...a, reflect: false }))
     expect(compareDescriptorToProps(flipReflect, labelOnlyProps)).toContainEqual(
       expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.label.reflect' }),
     )

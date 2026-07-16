@@ -8,7 +8,7 @@
 // they are authored here rather than derived from the parse.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import { loadButtonDoc } from '../lib/frontmatter.ts'
-import { findAttr, heading, renderApiTable, renderMarkdownBody, specimenRow } from '../lib/doc-page.ts'
+import { findAttr, heading, renderApiTable, renderMarkdownBody, renderPartsTable, specimenRow } from '../lib/doc-page.ts'
 import type { ParsedDescriptor } from '@agent-ui/components/descriptor'
 
 // Declared up top (not beside its anatomy-section users) so it is initialised before the render below runs:
@@ -24,7 +24,12 @@ const { content } = mountPage({
     'States examples and the anatomy shapes are hand-authored.',
 })
 
-content.append(renderApiTable(descriptor.attributes), renderExamples(descriptor), renderAnatomy(), renderMarkdownBody(body))
+content.append(renderApiTable(descriptor.attributes), renderExamples(descriptor), renderAnatomy())
+// ADR-0133 — the label wrapper is the control's first `[data-part]` node; renders ONLY when parts[] is
+// non-empty (the "no empty section" discipline every derived-surface table follows, doc-page.test.ts).
+const partsTable = renderPartsTable(descriptor)
+if (partsTable) content.append(partsTable)
+content.append(renderMarkdownBody(body))
 
 // ── live specimens (derived from the parsed enum members) ───────────────────────────────────────────────
 

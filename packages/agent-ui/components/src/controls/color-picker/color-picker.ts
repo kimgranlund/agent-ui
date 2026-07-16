@@ -274,7 +274,10 @@ export class UIColorPickerElement extends UIFormElement {
       chroma.disabled = dis
       lightness.disabled = dis
       if (this.#readoutField) this.#readoutField.disabled = dis
-      pad.setAttribute('tabindex', dis ? '-1' : '0')
+      // removeAttribute, not '-1' — the TKT-0068 item 2 ruling: a disabled part is not even
+      // programmatically focusable (native parity; the textarea/text-field/combo-box editor shape).
+      if (dis) pad.removeAttribute('tabindex')
+      else pad.setAttribute('tabindex', '0')
     })
 
     // ResizeObserver — redraw the pad canvas on resize (feature-detected; jsdom lacks it — LLD §12).
@@ -379,6 +382,9 @@ export class UIColorPickerElement extends UIFormElement {
       eyedropperBtn.setAttribute('data-part', 'eyedropper')
       eyedropperBtn.setAttribute('aria-label', 'Pick color from screen')
       eyedropperBtn.textContent = 'Pick'
+      // Node-lifetime listener, deliberately NOT `this.listen` (ratified, TKT-0065 lateral review):
+      // the button is a build-once part — the listener lives and dies with the node, so it survives
+      // reconnect by construction (the settings.ts/entry-list.ts tier, the inverse of the TKT-0056 bug).
       eyedropperBtn.addEventListener('click', () => { this.#openEyedropper() })
       readout.appendChild(eyedropperBtn)
     }
@@ -435,7 +441,7 @@ export class UIColorPickerElement extends UIFormElement {
     if (this.#chromaValueEl) this.#chromaValueEl.textContent = this.#C.toFixed(3)
     if (this.#lightnessValueEl) this.#lightnessValueEl.textContent = this.#L.toFixed(2)
     if (this.#readoutField) this.#readoutField.value = this.value
-    if (this.#swatch) this.#swatch.value = this.value
+    if (this.#swatch) this.#swatch.color = this.value
   }
 
   /** Per-pixel OKLCH→sRGB canvas paint of the chroma(X)×lightness(Y) plane at the current hue (the adia

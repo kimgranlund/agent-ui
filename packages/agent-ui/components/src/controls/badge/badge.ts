@@ -27,7 +27,7 @@ import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom
 const INTENTS = ['neutral', 'info', 'success', 'warning', 'danger'] as const
 
 const props = {
-  label: prop.string(''),
+  label: { ...prop.string(''), reflect: true },
   // Bindable status data (fork F3): `prop.enum`'s codec snaps an unknown ATTRIBUTE string to 'neutral'
   // for free; the property-write path is hardened separately (see the connected() effect). REFLECTS so
   // `[intent]` CSS keys on JS-set/bound values (the ui-text `variant`/`size` precedent).
@@ -37,6 +37,10 @@ const props = {
 export interface UIBadgeElement extends ReactiveProps<typeof props> {}
 export class UIBadgeElement extends UIElement {
   static props = props
+
+  // The label part — held so the build below is genuinely once-EVER (TKT-0067): light-DOM children
+  // persist across a disconnect, so a reconnect reuses the SAME nodes instead of re-minting them.
+  #label: HTMLSpanElement | undefined
 
   protected override connected(): void {
     // Component-side hardening (SPEC-R11 AC2, ADR-0111 cl.2): a bound-garbage `intent` value snaps back
@@ -49,15 +53,20 @@ export class UIBadgeElement extends UIElement {
       if (!(INTENTS as readonly string[]).includes(this.intent)) this.intent = 'neutral'
     })
 
-    // One-time DOM build (LLD-C7): the glyph is decorative-only (aria-hidden; shape/visibility ride CSS
-    // off `[intent]`), the label carries the announced text. Neither node is ever replaced — only the
-    // label's textContent updates, and only the host's `[intent]` attribute flips.
-    const glyph = document.createElement('span')
-    glyph.dataset.part = 'glyph'
-    glyph.setAttribute('aria-hidden', 'true')
-    const label = document.createElement('span')
-    label.dataset.part = 'label'
-    this.replaceChildren(glyph, label)
+    // One-time DOM build (LLD-C7), now genuinely once-EVER behind an idempotent guard (TKT-0067: the
+    // prior code re-minted both nodes on every connect despite this comment's own "neither node is ever
+    // replaced" claim — true within a connection, false across reconnect; the parts-once canon): the
+    // glyph is decorative-only (aria-hidden; shape/visibility ride CSS off `[intent]`), the label
+    // carries the announced text. Only the label's textContent updates; only the host's `[intent]` flips.
+    if (this.#label === undefined) {
+      const glyph = document.createElement('span')
+      glyph.dataset.part = 'glyph'
+      glyph.setAttribute('aria-hidden', 'true')
+      this.#label = document.createElement('span')
+      this.#label.dataset.part = 'label'
+      this.replaceChildren(glyph, this.#label)
+    }
+    const label = this.#label
 
     // The one render effect: real text is the whole announcement (SPEC-R12 AC3) — no internals ARIA is
     // minted at all (no role, no aria-label); the host's accessible name is its own text content.

@@ -50,7 +50,7 @@ import type { UIMenuElement } from '@agent-ui/components/controls/menu'
 import { UINavRailItemElement } from './nav-rail-item.ts'
 
 const props = {
-  label: { ...prop.string(''), reflect: false },
+  label: { ...prop.string(''), reflect: true },
 } satisfies PropsSchema
 
 export interface UINavRailGroupElement extends ReactiveProps<typeof props> {}

@@ -38,6 +38,7 @@
   --ui-attachment-glyph: var(--ui-icon-md); /* content-icon register (geometry.md taxonomy), fixed tier — Display class, no [scale] row */
   --ui-attachment-name-ink: var(--md-sys-color-neutral-on-surface);
   --ui-attachment-meta-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-attachment-radius: var(--ui-radius-base); /* TKT-0066 item 5 ruling: constants route through the own chain */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-attachment) consumes ONLY --ui-attachment-* ════════════════ */
@@ -51,7 +52,7 @@
     padding-inline: var(--ui-attachment-pad-inline);
     padding-block: var(--ui-attachment-pad-block);
     border: 1px solid var(--ui-attachment-border);
-    border-radius: var(--ui-radius-base); /* the entry/container radius kin (F4) */
+    border-radius: var(--ui-attachment-radius); /* the entry/container radius kin (F4) */
     background: var(--ui-attachment-surface);
     min-inline-size: var(--ui-attachment-min-inline-size);
     max-inline-size: 100%; /* composability — never grows past its container (SPEC-R9 AC3) */

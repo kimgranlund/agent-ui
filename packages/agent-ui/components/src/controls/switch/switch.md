@@ -19,7 +19,7 @@ attributes:              # attributes-as-API — mirrors indicator-element.ts `i
     reflect: true        # reflects so `[checked]` drives CSS paint + is observable as an attribute; the form value when true
   - name: value
     type: string
-    default: 'on'
+    default: on
     reflect: true        # reflects (platform checkbox semantics: the submitted string when checked); default 'on'
   - name: size
     type: enum

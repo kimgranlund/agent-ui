@@ -43,6 +43,11 @@
   --ui-swiper-dot-size-active: calc(var(--ui-compact-sm) + 2px);
   --ui-swiper-dot-color: var(--md-sys-color-neutral-outline-variant);
   --ui-swiper-dot-color-active: var(--md-sys-color-primary);
+  --ui-swiper-pagination-fraction-ink: var(--md-sys-color-neutral-on-surface-variant); /* TKT-0066: the fraction readout's ink — was a direct role read in swiper-pagination.css's @scope; declared HERE per the family token tunnel (pagination declares nothing of its own, its pin test enforces that) */
+  /* TKT-0066 item 5 ruling: pagination's dimensional constants ALSO route through the tunnel. */
+  --ui-swiper-pagination-gap: var(--ui-space-xs);
+  --ui-swiper-pagination-margin-block-start: var(--ui-space-sm);
+  --ui-swiper-pagination-fraction-font: var(--ui-font-sm);
 }
 
 /* [slides-in-view="n"] — pin the visible column count (a numeric string; '' stays responsive-auto below). */

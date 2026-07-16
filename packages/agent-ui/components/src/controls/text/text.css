@@ -40,6 +40,7 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-text) declares --ui-text-* ════════════════ */
 
 :where(ui-text) {
+  --ui-text-quote-border: var(--md-sys-color-neutral-outline-variant); /* TKT-0066: was a direct role read in @scope */
   /* Typography tokens — default = body-medium (variant=body, size=md). The role/size-override blocks
      below repoint these five to the matching --md-sys-typescale-{role}-{size}-* row (cl.3's role-pure
      seam). The component reads only --ui-text-* (never --md-sys-typescale-* directly), so a fleet
@@ -50,6 +51,9 @@
   --ui-text-tracking: var(--md-sys-typescale-body-medium-tracking);
   /* Color — the AA-gated surface-text ink role (the ONLY --md-sys-color-* role ui-text needs). */
   --ui-text-color: var(--md-sys-color-neutral-on-surface);
+
+  /* TKT-0066 item 5 ruling: dimensional constants route through the own chain, never read raw in @scope. */
+  --ui-text-quote-pad: var(--ui-space-md); /* the ≈12px rhythm step — density-responsive, cl.2b */
 }
 
 /* ── 8 ROLE blocks (cl.3) — [variant] alone, at the size=md default (…-medium). body is the base above,
@@ -256,8 +260,8 @@
   }
   :scope[variant='quote'] {
     font-style: italic;
-    border-inline-start: 3px solid var(--md-sys-color-neutral-outline-variant);
-    padding-inline-start: var(--ui-space-md); /* the ≈12px rhythm step — density-responsive, cl.2b */
+    border-inline-start: 3px solid var(--ui-text-quote-border);
+    padding-inline-start: var(--ui-text-quote-pad);
   }
 
   /* The stamp-transparency reset (ADR-0078 cl.4) — the `as` real element inherits ALL typography from the

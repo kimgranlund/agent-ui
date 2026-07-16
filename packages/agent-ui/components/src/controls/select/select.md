@@ -32,7 +32,7 @@ attributes:             # attributes-as-API — mirrors UISelectElement.props (f
   - name: label
     type: string
     default: ''
-    reflect: false      # NOT reflected — an accessibility hint (ADR-0085), not a styling hook (the text-field `label` precedent); a host aria-label attribute stays inert (role-less host) — this prop is the seam
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
   - name: open
     type: boolean
     default: false

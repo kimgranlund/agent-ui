@@ -17,7 +17,7 @@
 // BEFORE append) are adopted (moved, ADR-0022) into a component-built `<span data-part="message">`;
 // late-added children are out of scope v1 (ledger #7, documented in toast.md). `action` non-empty ⇒ an
 // `<ui-button data-part="action">` is appended; a `<ui-button data-part="close">` icon-only
-// (`<ui-icon name="x">`, `aria-label="Dismiss"`) is ALWAYS appended. Both affordances are reachable in
+// (`<ui-icon glyph="x">`, `aria-label="Dismiss"`) is ALWAYS appended. Both affordances are reachable in
 // normal tab order (ui-button's own `tabbable` trait) — no tabindex games, no autofocus (SPEC-R15
 // AC3). Native `<button>` is banned (fleet law); the `<ui-button>`/`<ui-icon>` sibling imports are the
 // sanctioned cross-control edge (the segmented-control → radio precedent).
@@ -195,7 +195,7 @@ export class UIToastElement extends UIElement {
     const icon = document.createElement('ui-icon')
     icon.setAttribute('slot', 'leading')
     icon.setAttribute('data-role', 'icon')
-    icon.setAttribute('name', 'x')
+    icon.setAttribute('glyph', 'x')
     closeBtn.appendChild(icon)
     this.appendChild(closeBtn)
     this.listen(closeBtn, 'click', () => this.close())

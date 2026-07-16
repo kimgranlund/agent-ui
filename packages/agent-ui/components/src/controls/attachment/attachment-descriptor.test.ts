@@ -23,7 +23,7 @@ const css = readFileSync(`${DIR}/attachment.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['name', 'mimeType', 'sizeBytes', 'href']
+const ATTR_NAMES = ['filename', 'mimeType', 'sizeBytes', 'href']
 
 describe('attachment.md descriptor — structural validity', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -66,9 +66,9 @@ describe('attachment.md descriptor — contract↔props trip-wire', () => {
   })
 
   it('negative control: a genuinely drifted attribute still FAILS the trip-wire', () => {
-    const flipDefault = parsed.attributes.map((a) => (a.name === 'name' ? { ...a, default: 'x' } : { ...a }))
+    const flipDefault = parsed.attributes.map((a) => (a.name === 'filename' ? { ...a, default: 'x' } : { ...a }))
     expect(compareDescriptorToProps(flipDefault, UIAttachmentElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_DEFAULT', path: 'attributes.name.default' }),
+      expect.objectContaining({ code: 'DRIFT_DEFAULT', path: 'attributes.filename.default' }),
     )
     const dropHref = parsed.attributes.filter((a) => a.name !== 'href')
     expect(compareDescriptorToProps(dropHref, UIAttachmentElement.props)).toContainEqual(

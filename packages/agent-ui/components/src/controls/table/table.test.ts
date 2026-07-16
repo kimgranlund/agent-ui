@@ -177,6 +177,32 @@ describe('UITableElement — the re-render contract: node identity (SPEC-R4.3)',
     expect(el.querySelectorAll('tbody tr')).toHaveLength(2)
   })
 
+  it('an ORDINARY disconnect/reconnect keeps the WHOLE skeleton — scroll/table/thead/tbody node identity survives (TKT-0067 regression)', async () => {
+    // The bug this pins: connected() previously rebuilt the skeleton unconditionally on EVERY connect,
+    // discarding the prior nodes — and with them the scroll offset SPEC-R4.1 claims "survives by
+    // omission" (jsdom has no layout, so scrollLeft itself is the browser leg's job; node identity is
+    // the jsdom-provable half — the same nodes ⇒ the same live scroll state in a real engine).
+    const el = new UITableElement()
+    el.columns = [{ key: 'v', label: 'V' }]
+    el.rows = [{ v: 1 }]
+    mount(el)
+    const scroll = el.querySelector('[data-part="scroll"]')
+    const table = el.querySelector('table')
+    const thead = el.querySelector('thead')
+    const tbody = el.querySelector('tbody')
+
+    el.remove() // an ordinary detach — NOT moveBefore
+    document.body.append(el) // reconnect — connected() re-runs; the guard must NOT rebuild
+    await el.updateComplete
+
+    expect(el.querySelector('[data-part="scroll"]'), 'the scroll region was re-minted on reconnect').toBe(scroll)
+    expect(el.querySelector('table'), 'the <table> was re-minted on reconnect').toBe(table)
+    expect(el.querySelector('thead')).toBe(thead)
+    expect(el.querySelector('tbody')).toBe(tbody)
+    expect(el.querySelectorAll('[data-part="scroll"]'), 'a second scroll region appeared').toHaveLength(1)
+    el.remove()
+  })
+
   it('a columns change rebuilds the header row (thead content, not the thead ELEMENT itself)', async () => {
     const el = new UITableElement()
     el.columns = [{ key: 'a', label: 'A' }]

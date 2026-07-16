@@ -15,7 +15,7 @@ extends: UIElement     # a non-interactive, non-form-associated display LEAF (SP
 # `npm run size` figure lands with that slice, per feed-family.lld.md §6 (measured, never guessed).
 
 attributes:            # attributes-as-API — mirrors progress.ts `static props` (value, max, label)
-  - name: value
+  - name: current
     type: number        # kindOf's behavioural verdict (see the header note) — the TS type is number|null
     default: null        # String(null) = 'null' — the LIVE default; null/absent/non-finite ⇒ indeterminate
     reflect: false        # NOT reflected — property-only render input
@@ -26,7 +26,7 @@ attributes:            # attributes-as-API — mirrors progress.ts `static props
   - name: label
     type: string
     default: ''
-    reflect: false        # NOT reflected — plain accessible-name text, no CSS keys on it
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
 
 properties: []         # no manual accessors beyond the three typed props
 
@@ -73,7 +73,7 @@ progress with a native-`<progress>`-shaped value model. It is **not** interactiv
 form-associated: no events, no keyboard contract, no `[size]`/`[scale]` control geometry.
 
 ```html
-<ui-progress value="42" label="Indexing"></ui-progress>
+<ui-progress current="42" label="Indexing"></ui-progress>
 <ui-progress label="Working"></ui-progress>  <!-- no value ⇒ indeterminate -->
 ```
 

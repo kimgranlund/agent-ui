@@ -28,6 +28,7 @@
 
 - [ui-button](./button-doc.html): the action control — solid/soft/ghost variants, six sizes, adornment slots with role-driven glyph sizing, and an `icon-only` square structure; see also its [permutation matrix](./button-permutations.html) and [interaction states](./button-states.html).
 - [ui-text-field](./text-field-doc.html): the 13-type entry control (text · email · url · tel · password · search · number · currency · unit · percent · date · time · color) with typed value codecs, steppers, and affordances; see also its [permutations](./text-field-permutations.html) and [states](./text-field-states.html).
+- [ui-textarea](./textarea-doc.html): the multi-line FACE entry control (a sibling of ui-text-field, not a mode) — Enter inserts a newline instead of committing, `rows` sets a growable minimum height, and `resize: vertical` is native `<textarea>` parity; see also its [permutations](./textarea-permutations.html) and [states](./textarea-states.html).
 - [ui-calendar](./calendar-doc.html): the date grid — ISO values, range selection, fluid tracks; [demo](./calendar-demo.html).
 - [ui-color-picker](./color-picker-doc.html): the OKLCH-internal 2-axis color-input control — a chroma×lightness pad accelerator over three composed ui-slider channels (the accessible spine), an editable readout, and a composed ui-swatch preview; `value` serializes to hex (default) or oklch; [demo](./color-picker-demo.html).
 

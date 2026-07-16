@@ -20,11 +20,11 @@ import { UIElement } from '../../dom/element.ts'
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 
 const props = {
-  // `value` — the slide's optional STABLE identity (the agent's slide id), REFLECTED so the attribute mirrors
-  // it. ui-swiper resolves `active` against `value` first, then falls back to the real DOM index, so a
-  // `value`-less item is addressed positionally (the ui-tab `value` precedent, though ui-tab does not reflect —
+  // `key` — the slide's optional STABLE identity (the agent's slide id), REFLECTED so the attribute mirrors
+  // it. ui-swiper resolves `active` against `key` first, then falls back to the real DOM index, so a
+  // `key`-less item is addressed positionally (the ui-tab `key` precedent, though ui-tab does not reflect —
   // swiper-family.lld.md §3.1 is explicit that THIS one does).
-  value: { ...prop.string(), reflect: true },
+  key: { ...prop.string(), reflect: true }, // renamed from `value` (TKT-0069 item 1 ruling: `value` = the FACE form value, reserved)
 } satisfies PropsSchema
 
 export interface UISwiperItemElement extends ReactiveProps<typeof props> {}

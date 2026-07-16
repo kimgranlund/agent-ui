@@ -15,11 +15,11 @@ extends: UIIndicatorElement  # Indicator-class base (ADR-0042) — boolean form 
 attributes:            # attributes-as-API — mirrors segment.ts's LIVE static props (inherited from UIRadioElement/UIIndicatorElement.indicatorProps, unchanged)
   - name: checked
     type: boolean
-    default: 'false'
+    default: false
     reflect: true      # reflects so [checked] CSS attribute selector + JS-set values drive the checked ink + ariaChecked
   - name: value
     type: string
-    default: 'on'
+    default: on
     reflect: true      # reflects (HTML checkbox semantics: the submitted string when checked; default 'on')
   - name: size
     type: enum
@@ -32,11 +32,11 @@ attributes:            # attributes-as-API — mirrors segment.ts's LIVE static 
     reflect: true      # the form field name (FACE; UIFormElement.formProps) — reflects for native form-submission parity
   - name: disabled
     type: boolean
-    default: 'false'
+    default: false
     reflect: true      # reflects; pointer-inert + removed from tab order; effectiveDisabled = own || form-disabled
   - name: required
     type: boolean
-    default: 'false'
+    default: false
     reflect: true      # reflects; drives valueMissing on the individual segment (group-owned validity is preferred)
 
 properties:            # IDL beyond attributes-as-API (inherited from UIIndicatorElement)

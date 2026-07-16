@@ -21,10 +21,10 @@ function make(): ProbeProgress {
 }
 
 describe('UIProgressElement — upgrade + typed props', () => {
-  it('defaults: value=null, max=100, label=""', () => {
+  it('defaults: current=null, max=100, label=""', () => {
     const el = document.createElement('ui-progress') as UIProgressElement
     expect(el).toBeInstanceOf(UIProgressElement)
-    expect(el.value).toBeNull()
+    expect(el.current).toBeNull()
     expect(el.max).toBe(100)
     expect(el.label).toBe('')
   })
@@ -36,11 +36,11 @@ describe('UIProgressElement — upgrade + typed props', () => {
     }).not.toThrow()
   })
 
-  it('a value="42" attribute upgrades to the typed number', () => {
+  it('a current="42" attribute upgrades to the typed number', () => {
     const el = document.createElement('ui-progress') as UIProgressElement
-    el.setAttribute('value', '42')
+    el.setAttribute('current', '42')
     document.body.append(el)
-    expect(el.value).toBe(42)
+    expect(el.current).toBe(42)
     el.remove()
   })
 
@@ -64,9 +64,9 @@ describe('UIProgressElement — DOM shape (LLD-C1)', () => {
     expect(track?.children.length).toBe(1)
     expect(track?.querySelector('[data-part="fill"]')).not.toBeNull()
 
-    el.value = 10
+    el.current = 10
     await el.updateComplete
-    el.value = 90
+    el.current = 90
     await el.updateComplete
     expect(el.childElementCount).toBe(1) // still exactly one track — no duplicate mint
     el.remove()
@@ -87,7 +87,7 @@ describe('UIProgressElement — DOM shape (LLD-C1)', () => {
 
   it('determinate value=42/max=100 ⇒ fill --_pct=42, no data-indeterminate', async () => {
     const el = document.createElement('ui-progress') as UIProgressElement
-    el.value = 42
+    el.current = 42
     document.body.append(el)
     await el.updateComplete
     const fill = el.querySelector('[data-part="fill"]') as HTMLElement
@@ -108,17 +108,17 @@ describe('UIProgressElement — DOM shape (LLD-C1)', () => {
 
   it('transitioning value → null flips determinate to indeterminate and back', async () => {
     const el = document.createElement('ui-progress') as UIProgressElement
-    el.value = 50
+    el.current = 50
     document.body.append(el)
     await el.updateComplete
     const fill = el.querySelector('[data-part="fill"]') as HTMLElement
     expect(fill.hasAttribute('data-indeterminate')).toBe(false)
 
-    el.value = null
+    el.current = null
     await el.updateComplete
     expect(fill.hasAttribute('data-indeterminate')).toBe(true)
 
-    el.value = 75
+    el.current = 75
     await el.updateComplete
     expect(fill.hasAttribute('data-indeterminate')).toBe(false)
     expect(fill.style.getPropertyValue('--_pct')).toBe('75')
@@ -142,7 +142,7 @@ describe('UIProgressElement — hardening (SPEC-R1 AC1/AC2, the effective-pair t
   for (const c of cases) {
     it(`${c.name} ⇒ no exception, ${c.wantIndeterminate ? 'indeterminate' : `determinate --_pct=${c.wantPct}`}`, async () => {
       const el = document.createElement('ui-progress') as UIProgressElement
-      if (c.value !== undefined) el.value = c.value as number
+      if (c.value !== undefined) el.current = c.value as number
       if (c.max !== undefined) el.max = c.max as number
       expect(() => document.body.append(el)).not.toThrow()
       await el.updateComplete
@@ -157,7 +157,7 @@ describe('UIProgressElement — hardening (SPEC-R1 AC1/AC2, the effective-pair t
 describe('UIProgressElement — ARIA (SPEC-R3)', () => {
   it('AC1: value=42 label="Indexing" ⇒ role=progressbar, valueNow=42, valueText="42%", ariaLabel="Indexing"', async () => {
     const el = make()
-    el.value = 42
+    el.current = 42
     el.label = 'Indexing'
     document.body.append(el)
     await el.updateComplete
@@ -172,12 +172,12 @@ describe('UIProgressElement — ARIA (SPEC-R3)', () => {
 
   it('AC2: removing value at runtime clears valueNow/valueText while role/min/max persist — and restores', async () => {
     const el = make()
-    el.value = 30
+    el.current = 30
     document.body.append(el)
     await el.updateComplete
     expect(el.probeInternals.ariaValueNow).toBe('30')
 
-    el.value = null
+    el.current = null
     await el.updateComplete
     expect(el.probeInternals.ariaValueNow).toBeNull()
     expect(el.probeInternals.ariaValueText).toBeNull()
@@ -185,7 +185,7 @@ describe('UIProgressElement — ARIA (SPEC-R3)', () => {
     expect(el.probeInternals.ariaValueMin).toBe('0')
     expect(el.probeInternals.ariaValueMax).toBe('100')
 
-    el.value = 55
+    el.current = 55
     await el.updateComplete
     expect(el.probeInternals.ariaValueNow).toBe('55')
     expect(el.probeInternals.ariaValueText).toBe('55%')

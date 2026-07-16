@@ -22,7 +22,7 @@ import { cleanEntries, cssValue, isRenderableLength, tokenEntriesProp, type Toke
 
 const props = {
   tiers: tokenEntriesProp(), // { label: string; value: string }[] · safe JSON codec (LLD-C1) · default []
-  label: prop.string(''), // the list's accessible name — SPEC-R12: unlabeled is legal, never a silent state
+  label: { ...prop.string(''), reflect: true }, // the list's accessible name — SPEC-R12: unlabeled is legal, never a silent state
   // NO `scheme` — dimensions are scheme-invariant (SPEC-R9).
 } satisfies PropsSchema
 

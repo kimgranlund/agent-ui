@@ -9,11 +9,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--ui-space-xs);
+    gap: var(--ui-swiper-pagination-gap);
   }
   /* Default-stamped placement: below the track, in normal flow (the coordinator's boolean-stamp fallback). */
   :scope[data-default] {
-    margin-block-start: var(--ui-space-sm);
+    margin-block-start: var(--ui-swiper-pagination-margin-block-start);
   }
   :scope [data-part='dot'] {
     inline-size: var(--ui-swiper-dot-size);
@@ -35,8 +35,8 @@
     outline-offset: var(--ui-focus-ring-offset);
   }
   :scope [data-part='fraction'] {
-    font-size: var(--ui-font-sm);
-    color: var(--md-sys-color-neutral-on-surface-variant);
+    font-size: var(--ui-swiper-pagination-fraction-font);
+    color: var(--ui-swiper-pagination-fraction-ink);
   }
 
   /* NOTE: the ready-gated dot-transition motion rule lives in swiper.css (the PRIMARY sheet), not here —

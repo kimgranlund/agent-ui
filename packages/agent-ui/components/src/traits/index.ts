@@ -8,8 +8,6 @@ export type { TrackUserInvalidOptions, TrackUserInvalidController } from './trac
 // controller, invoked from a provider's `connected()` — the same trackUserInvalid controller pattern above.
 export { formRegistry } from './form-registry.ts'
 export type { FormRegistryController, FormMember } from './form-registry.ts'
-// Wave 0 PREP stubs — interfaces pinned; implementations are the listbox-roving / overlay-controller /
-// range-element LLD build slices.
 export { rovingFocus } from './roving-focus.ts'
 export type { RovingFocusOptions, RovingOrientation } from './roving-focus.ts'
 export { overlay } from './overlay.ts'
@@ -27,3 +25,7 @@ export { valueCodec, numberCodecOptions, currencyCodecOptions } from './value-co
 export type { ValueCodecOptions, ValueCodecController } from './value-codec.ts'
 export { scrollFade } from './scroll-fade.ts'
 export type { ScrollFadeOptions } from './scroll-fade.ts'
+export { pressActivation } from './press-activation.ts'
+export type { PressActivationOptions } from './press-activation.ts'
+export { areaDrag } from './area-drag.ts'
+export type { AreaDragOptions } from './area-drag.ts'

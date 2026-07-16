@@ -1067,6 +1067,79 @@ describe('ui-select — user-invalid leg (ADR-0051)', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [9b] TKT-0062 — the filled/container state law genuinely repaints in a REAL engine
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-select — the TKT-0062 filled/container state law (real repaint, both engines)', () => {
+  it('placeholder (empty) vs a real selection (filled) repaint background AND ink together', async () => {
+    const { el } = mount(`
+      <ui-select placeholder="Choose…">
+        <div role="option" value="light">light</div>
+        <div role="option" value="dark">dark</div>
+      </ui-select>
+    `)
+    const trigger = el.querySelector('[data-part="trigger"]') as HTMLElement
+    const emptyBg = getComputedStyle(trigger).backgroundColor
+    const emptyInk = getComputedStyle(trigger).color
+
+    el.value = 'light'
+    await el.updateComplete
+
+    const filledBg = getComputedStyle(trigger).backgroundColor
+    const filledInk = getComputedStyle(trigger).color
+    expect(filledBg, 'the background did not repaint between placeholder and a real selection').not.toBe(emptyBg)
+    expect(filledInk, 'the ink did not repaint between placeholder and a real selection').not.toBe(emptyInk)
+  })
+
+  it('focus wins over filled: a focused-AND-filled trigger shows the FOCUS row, not the filled row', async () => {
+    const { el } = mount(`
+      <ui-select>
+        <div role="option" value="light">light</div>
+      </ui-select>
+    `)
+    const trigger = el.querySelector('[data-part="trigger"]') as HTMLElement
+    el.value = 'light'
+    await el.updateComplete
+    await new Promise((r) => setTimeout(r, 250)) // past --ui-motion-fast — let the filled repaint settle
+    const filledInk = getComputedStyle(trigger).color
+
+    trigger.focus()
+    await expect.poll(() => trigger.matches(':focus-visible')).toBe(true)
+    // anti-vacuous, MOTION-AWARE: `color` is a transitioned state-paint property — poll until it settles
+    // off the filled value rather than reading it synchronously right after the state change (a real
+    // timing bug hit while authoring the text-field.css equivalent of this test — a synchronous read
+    // caught the color still mid-CSS-transition).
+    await expect
+      .poll(() => getComputedStyle(trigger).color, { timeout: 1500 })
+      .not.toBe(filledInk)
+  })
+})
+
+// TKT-0063 — a real <fieldset disabled> (the FORM-disabled channel, never the select's own `disabled`
+// attribute) must paint the SAME disabled row as the own-attribute case — proven end-to-end in a real
+// engine, not just that select.ts's effectiveDisabled()-driven attribute effects run (jsdom's job).
+describe('ui-select — TKT-0063: a real <fieldset disabled> paints the disabled row too, not just the own [disabled] attribute (both engines)', () => {
+  it('a select inside a real <fieldset disabled> repaints to the SAME muted ink as the select\'s own [disabled] attribute', async () => {
+    const { el: ownDisabled } = mount(`
+      <ui-select disabled placeholder="Choose…">
+        <div role="option" value="light">light</div>
+      </ui-select>
+    `)
+    const ownTrigger = ownDisabled.querySelector('[data-part="trigger"]') as HTMLElement
+    const ownDisabledInk = getComputedStyle(ownTrigger).color
+
+    const { wrap } = mount(`<fieldset disabled><ui-select placeholder="Choose…"><div role="option" value="light">light</div></ui-select></fieldset>`)
+    const formDisabled = wrap.querySelector('ui-select') as UISelectElement
+    const formTrigger = formDisabled.querySelector('[data-part="trigger"]') as HTMLElement
+    await formDisabled.updateComplete
+
+    expect(formTrigger.hasAttribute('disabled'), 'the trigger must be disabled under the FORM-disabled channel too').toBe(true)
+    expect(getComputedStyle(formTrigger).color, 'a form-disabled select must paint the SAME muted ink as an own-[disabled] select').toBe(ownDisabledInk)
+    expect(getComputedStyle(formTrigger).cursor, 'a form-disabled trigger must also read cursor:default, not the idle pointer cursor').toBe('default')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
 //  [10] TKT-0026 — a late-added Option adopts into the REAL top-layer panel (both engines)
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 

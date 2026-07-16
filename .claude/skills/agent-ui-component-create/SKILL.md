@@ -62,10 +62,16 @@ before a first build; `controls/checkbox/` is the gold probe template.
    blocks: a `:where(ui-{name})` **token block** declaring `--ui-{name}-*` from the
    `--md-sys-color-{family}-{role}` roles + the dimensional ramps (`[size]`/`[tone]` repoint
    in pure CSS), and an `@scope (ui-{name}) { :scope { … } }` **styles block** consuming ONLY
-   `--ui-{name}-*`. Geometry per [[agent-ui-component-standards]]'s law: `block-size` off the
-   ramp, zero block padding, the centering law. Keep the blocks sectioned so the "tokens in
-   `:where()`" probe can tell declaration from consumption. (Beware the `*/`-inside-a-comment trap — a
-   stray close silently drops the next rule; only browser smokes catch it.)
+   `--ui-{name}-*`. That "ONLY" includes dimensional `:root` constants (TKT-0066 item 5,
+   Kim-ruled): `@scope` never reads `--ui-font-*`/`--ui-space-*`/`--ui-radius-base` directly —
+   mint a role-named own-chain token for each (`--ui-{name}-radius: var(--ui-radius-base)`); a
+   family LEAF mints in the family tunnel (ADR-0124). The only sanctioned direct reads are the
+   fleet constants: focus-ring, motion, `--ui-control-line-height`. Enforced fleet-wide by
+   `controls/styling-gates.test.ts`. Geometry per [[agent-ui-component-standards]]'s law:
+   `block-size` off the ramp, zero block padding, the centering law. Keep the blocks sectioned
+   so the "tokens in `:where()`" probe can tell declaration from consumption. (Beware the
+   `*/`-inside-a-comment trap — a stray close silently drops the next rule; only browser
+   smokes catch it.)
 
 6. **Descriptor** (`{name}.md`) — the attributes-as-API record; the field set is what
    `FIELD_SHAPE` enumerates in the schema source
@@ -100,7 +106,8 @@ before a first build; `controls/checkbox/` is the gold probe template.
 
 - [ ] Right base class + size-class; props typed (literal unions, not `string`).
 - [ ] Light DOM; ARIA via `internals`; no native form elements; events ∈ the allowlist.
-- [ ] Single `{name}.css` with `@scope`; tokens in `:where()` from the color roles; geometry
+- [ ] Single `{name}.css` with `@scope`; tokens in `:where()` from the color roles AND the
+      dimensional constants (no raw `--ui-font/space/radius-base` reads in `@scope`); geometry
       off the ramp.
 - [ ] `{name}.md` validates and matches `static props` AND the source.
 - [ ] Full probe set green incl. cross-engine browser truth (+ built-output leg where earned).

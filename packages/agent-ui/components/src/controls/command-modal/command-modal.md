@@ -18,7 +18,7 @@ attributes:              # attributes-as-API — mirrors UICommandModalElement.p
   - name: label
     type: string
     default: ''
-    reflect: false       # a11y hint (search field aria-label, reactive; the dialog's accessible name at connect) — not a styling hook
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
   - name: placeholder
     type: string
     default: ''
@@ -126,8 +126,8 @@ active-descendant filter pattern (ADR-0085) — typing filters the list; Arrow k
 <ui-command-modal label="Command palette" placeholder="Type a command…">
   <div role="group" aria-labelledby="cmd-nav">
     <div id="cmd-nav" data-role="group-label">Navigation</div>
-    <div role="option" value="home"><ui-icon name="house" data-role="icon"></ui-icon>Go Home<span data-role="shortcut" aria-hidden="true">⌘H</span></div>
-    <div role="option" value="settings"><ui-icon name="gear" data-role="icon"></ui-icon>Settings<span data-role="shortcut" aria-hidden="true">⌘,</span></div>
+    <div role="option" value="home"><ui-icon glyph="house" data-role="icon"></ui-icon>Go Home<span data-role="shortcut" aria-hidden="true">⌘H</span></div>
+    <div role="option" value="settings"><ui-icon glyph="gear" data-role="icon"></ui-icon>Settings<span data-role="shortcut" aria-hidden="true">⌘,</span></div>
   </div>
   <div role="option" value="logout" data-keywords="sign out exit">Log out</div>
   <div slot="empty">No commands match — try a different search.</div>

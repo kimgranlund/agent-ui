@@ -14,7 +14,7 @@ attributes:            # attributes-as-API — mirrors field.ts `static props` (
   - name: label
     type: string
     default: ''
-    reflect: false     # the visible label text → [data-part=label]; not reflected (rendered content, not a CSS hook) — the text-field `label`/`placeholder` precedent
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
   - name: description
     type: string
     default: ''

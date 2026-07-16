@@ -29,7 +29,7 @@ describe('UISwatchElement — upgrade + typed props', () => {
   it('upgrades to the class; value/label default to "", scheme defaults to "auto"', () => {
     const el = document.createElement('ui-swatch') as UISwatchElement
     expect(el).toBeInstanceOf(UISwatchElement)
-    expect(el.value).toBe('')
+    expect(el.color).toBe('')
     expect(el.label).toBe('')
     expect(el.scheme).toBe('auto')
   })
@@ -61,14 +61,14 @@ describe('UISwatchElement — the composed accessible name (SPEC-R4)', () => {
   it('label + value: "label, value"', () => {
     const el = new ProbeSwatch()
     el.label = 'primary-500'
-    el.value = 'oklch(0.6 0.03 225)'
+    el.color = 'oklch(0.6 0.03 225)'
     mount(el)
     expect(el.probeInternals.ariaLabel).toBe('primary-500, oklch(0.6 0.03 225)')
   })
 
   it('value only: the value alone', () => {
     const el = new ProbeSwatch()
-    el.value = 'oklch(0.6 0.03 225)'
+    el.color = 'oklch(0.6 0.03 225)'
     mount(el)
     expect(el.probeInternals.ariaLabel).toBe('oklch(0.6 0.03 225)')
   })
@@ -91,12 +91,12 @@ describe('UISwatchElement — the composed accessible name (SPEC-R4)', () => {
     expect(el.probeInternals.ariaLabel).toBe('swatch')
 
     el.label = 'primary-500'
-    el.value = '#336699'
+    el.color = '#336699'
     await el.updateComplete
     expect(el.probeInternals.ariaLabel).toBe('primary-500, #336699')
 
     el.label = ''
-    el.value = ''
+    el.color = ''
     await el.updateComplete
     expect(el.probeInternals.ariaLabel).toBe('swatch')
   })
@@ -105,7 +105,7 @@ describe('UISwatchElement — the composed accessible name (SPEC-R4)', () => {
 describe('UISwatchElement — DOM shape (box + value, mutate in place)', () => {
   it('builds exactly [data-part=box] + [data-part=value] once', () => {
     const el = new UISwatchElement()
-    el.value = '#336699'
+    el.color = '#336699'
     el.label = 'primary-500'
     mount(el)
     expect(el.children).toHaveLength(2)
@@ -115,7 +115,7 @@ describe('UISwatchElement — DOM shape (box + value, mutate in place)', () => {
 
   it('the value node text content IS the composed name (SPEC-R2: real DOM text)', () => {
     const el = new UISwatchElement()
-    el.value = '#336699'
+    el.color = '#336699'
     el.label = 'primary-500'
     mount(el)
     expect(el.querySelector('[data-part="value"]')?.textContent).toBe('primary-500, #336699')
@@ -123,7 +123,7 @@ describe('UISwatchElement — DOM shape (box + value, mutate in place)', () => {
 
   it('a literal value routes verbatim to box.style.background', () => {
     const el = new UISwatchElement()
-    el.value = 'rgb(1, 2, 3)'
+    el.color = 'rgb(1, 2, 3)'
     mount(el)
     const box = el.querySelector('[data-part="box"]') as HTMLElement
     expect(box.style.background).toBe('rgb(1, 2, 3)')
@@ -131,7 +131,7 @@ describe('UISwatchElement — DOM shape (box + value, mutate in place)', () => {
 
   it('a --var value routes through var() into box.style.background (SPEC-R2, the LLD-C1 cssValue transform)', () => {
     const el = new UISwatchElement()
-    el.value = '--md-sys-color-primary-container'
+    el.color = '--md-sys-color-primary-container'
     mount(el)
     const box = el.querySelector('[data-part="box"]') as HTMLElement
     expect(box.style.background).toBe('var(--md-sys-color-primary-container)')
@@ -155,7 +155,7 @@ describe('UISwatchElement — DOM shape (box + value, mutate in place)', () => {
     const boxBefore = el.querySelector('[data-part="box"]')
     const valueBefore = el.querySelector('[data-part="value"]')
 
-    el.value = '#abcdef'
+    el.color = '#abcdef'
     await el.updateComplete
 
     expect(el.querySelector('[data-part="box"]')).toBe(boxBefore)
@@ -176,7 +176,7 @@ describe('UISwatchElement — degenerate value (SPEC-R3)', () => {
   it('an invalid color string never throws (jsdom drops the bad declaration, same as a real browser)', () => {
     const el = new UISwatchElement()
     expect(() => {
-      el.value = 'not-a-real-color'
+      el.color = 'not-a-real-color'
       mount(el)
     }).not.toThrow()
   })
@@ -185,13 +185,13 @@ describe('UISwatchElement — degenerate value (SPEC-R3)', () => {
 describe('UISwatchElement — zero residue across connect/disconnect', () => {
   it('effects die on disconnect; reconnect re-installs exactly once (not stacked)', async () => {
     const el = mount(new ProbeSwatch()) as ProbeSwatch
-    el.value = '#111'
+    el.color = '#111'
     el.label = 'a'
     await el.updateComplete
     expect(el.probeInternals.ariaLabel).toBe('a, #111')
 
     el.remove() // disconnect → the connection scope is disposed → the effect dies with it
-    el.value = '#222' // mutate WHILE disconnected
+    el.color = '#222' // mutate WHILE disconnected
     el.label = 'b'
     await el.updateComplete // give any leaked effect a chance to flush
 

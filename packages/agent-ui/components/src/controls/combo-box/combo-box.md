@@ -18,7 +18,7 @@ attributes:            # attributes-as-API — mirrors UIComboBoxElement.props (
   - name: label
     type: string
     default: ''
-    reflect: false     # NOT reflected — an accessibility hint (ADR-0085; text-field ADR-0014 parity), not a styling hook
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
   - name: open
     type: boolean
     default: false

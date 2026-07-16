@@ -76,7 +76,7 @@ function describe(text: string): HTMLElement {
 /** A labelled live `<ui-swatch>` specimen. */
 function swatch(value: string, label: string, scheme?: 'light' | 'dark'): HTMLElement {
   const el = document.createElement('ui-swatch')
-  if (value) el.setAttribute('value', value)
+  if (value) el.setAttribute('color', value)
   if (label) el.setAttribute('label', label)
   if (scheme) el.setAttribute('scheme', scheme)
   return el

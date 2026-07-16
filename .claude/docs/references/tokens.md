@@ -64,6 +64,14 @@ families):
 - Components reference **roles** (or their own `--ui-{cmp}-*` chain pointing at roles), never raw
   primitives. The token-hygiene trip-wire enforces it: no raw primitive refs in component CSS; every
   `--ui-{cmp}-*` declared in `:where()`.
+- **Dimensional `:root` constants route through the own chain too** (TKT-0066 item 5, Kim-ruled
+  2026-07-15): a `@scope` styles block never reads `--ui-font-*` / `--ui-space-*` / `--ui-radius-base`
+  directly — it mints a role-named `--ui-{cmp}-*` token in the `:where()` block
+  (`--ui-toast-radius: var(--ui-radius-base)`) and consumes that, same as color roles. The sanctioned
+  direct-read list stays exactly the fleet constants: focus-ring (`--ui-focus-ring-*`,
+  `--md-sys-color-focus-ring`), motion (`--ui-motion-*`, `--ui-ease-*`), and
+  `--ui-control-line-height`. A family LEAF routes through the family tunnel (swiper-pagination's
+  constants are declared on `:where(ui-swiper)`, ADR-0124's family-root rule).
 - `color-scheme: light dark` on `:root`; roles resolve per-scheme via `light-dark()` — components do not
   branch on scheme.
 - **Forced-colors** lives in the token layer: roles carry the WHCM mapping (anchors → `Highlight`,

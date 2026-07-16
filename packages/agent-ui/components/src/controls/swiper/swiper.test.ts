@@ -54,7 +54,7 @@ function build(
   for (let i = 0; i < count; i++) {
     const item = document.createElement('ui-swiper-item') as UISwiperItemElement
     item.textContent = `Slide ${i}`
-    if (opts.values) item.setAttribute('value', opts.values[i])
+    if (opts.values) item.setAttribute('key', opts.values[i])
     swiper.append(item)
     items.push(item)
   }

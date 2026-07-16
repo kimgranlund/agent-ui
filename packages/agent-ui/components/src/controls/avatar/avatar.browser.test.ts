@@ -33,24 +33,24 @@ afterEach(() => {
 
 describe('ui-avatar — compact-ramp widget-box geometry (SPEC-R20 AC1, ADR-0041)', () => {
   it('default (size=md, no ancestor [scale]) → 16×16 box (--ui-compact-md at ui-md scale)', () => {
-    const el = mount('<ui-avatar name="Ada Lovelace"></ui-avatar>')
+    const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
     const box = el.getBoundingClientRect()
     expect(box.width).toBe(16)
     expect(box.height).toBe(16)
   })
 
   it('[size=sm] → 14px box; [size=lg] → 18px box (the compact ramp)', () => {
-    const sm = mount('<ui-avatar name="Ada Lovelace" size="sm"></ui-avatar>')
+    const sm = mount('<ui-avatar identity="Ada Lovelace" size="sm"></ui-avatar>')
     expect(sm.getBoundingClientRect().width).toBe(14)
 
-    const lg = mount('<ui-avatar name="Ada Lovelace" size="lg"></ui-avatar>')
+    const lg = mount('<ui-avatar identity="Ada Lovelace" size="lg"></ui-avatar>')
     expect(lg.getBoundingClientRect().width).toBe(18)
   })
 
   it('[scale=ui-lg] × [size=md] → 18px (the scale × size lookup, ADR-0041 clause 2)', () => {
     const wrap = document.createElement('div')
     wrap.setAttribute('scale', 'ui-lg')
-    wrap.innerHTML = '<ui-avatar name="Ada Lovelace"></ui-avatar>'
+    wrap.innerHTML = '<ui-avatar identity="Ada Lovelace"></ui-avatar>'
     document.body.append(wrap)
     mounted.push(wrap)
     const el = wrap.querySelector('ui-avatar') as HTMLElement
@@ -58,7 +58,7 @@ describe('ui-avatar — compact-ramp widget-box geometry (SPEC-R20 AC1, ADR-0041
   })
 
   it('the box is a true CIRCLE (border-radius 50%) at every size', () => {
-    const el = mount('<ui-avatar name="Ada Lovelace"></ui-avatar>')
+    const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
     expect(getComputedStyle(el).borderRadius).toBe('50%')
   })
 })
@@ -74,7 +74,7 @@ describe('ui-avatar — whole-shape: every fallback link actually paints (test-t
   })
 
   it('the initials span fills a non-zero area inside the box', () => {
-    const el = mount('<ui-avatar name="Ada Lovelace"></ui-avatar>')
+    const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
     const initials = el.querySelector('[data-part="initials"]') as HTMLElement
     const rect = initials.getBoundingClientRect()
     expect(rect.width).toBeGreaterThan(0)
@@ -82,7 +82,7 @@ describe('ui-avatar — whole-shape: every fallback link actually paints (test-t
   })
 
   it('the image fills the whole box (object-fit: cover)', () => {
-    const el = mount('<ui-avatar name="Ada Lovelace" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7"></ui-avatar>')
+    const el = mount('<ui-avatar identity="Ada Lovelace" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7"></ui-avatar>')
     const img = el.querySelector('img') as HTMLElement
     const boxRect = el.getBoundingClientRect()
     const imgRect = img.getBoundingClientRect()
@@ -143,8 +143,8 @@ const contrastOf = (a: [number, number, number], b: [number, number, number]): n
 
 describe('ui-avatar — no-hue identity surface (SPEC-R7 AC1)', () => {
   it('two avatars with DIFFERENT names compute IDENTICAL plane + ink (no hash-color identity)', () => {
-    const a = mount('<ui-avatar name="Ada Lovelace"></ui-avatar>')
-    const b = mount('<ui-avatar name="Grace Hopper"></ui-avatar>')
+    const a = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
+    const b = mount('<ui-avatar identity="Grace Hopper"></ui-avatar>')
     const csA = getComputedStyle(a)
     const csB = getComputedStyle(b)
     expect(csA.backgroundColor).toBe(csB.backgroundColor)
@@ -152,7 +152,7 @@ describe('ui-avatar — no-hue identity surface (SPEC-R7 AC1)', () => {
   })
 
   it('the initials ink clears AA (>= 4.5:1) against the fallback plane', () => {
-    const el = mount('<ui-avatar name="Ada Lovelace"></ui-avatar>')
+    const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
     const cs = getComputedStyle(el)
     const plane = parseOpaqueColor(cs.backgroundColor)
     const ink = parseOpaqueColor(cs.color)
@@ -162,7 +162,7 @@ describe('ui-avatar — no-hue identity surface (SPEC-R7 AC1)', () => {
 
 describe('ui-avatar — forced colors (SPEC-R19 AC1)', () => {
   it('the circle boundary survives under forced-colors — Chromium emulates (CDP); WebKit asserts baseline', async () => {
-    const el = mount('<ui-avatar name="Ada Lovelace"></ui-avatar>')
+    const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
 
     if (server.browser !== 'chromium') {
       expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)

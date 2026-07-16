@@ -71,12 +71,12 @@ describe('timeline-item.md descriptor — status/size reflect, label/description
     expect(size?.reflect).toBe(true)
   })
 
-  it('label/description/timestamp/icon are unreflected strings, default empty', () => {
+  it('description/timestamp/icon are unreflected; label reflects (TKT-0069 item 2 ruling); all strings, default empty', () => {
     for (const name of ['label', 'description', 'timestamp', 'icon']) {
       const a = parsed.attributes.find((x) => x.name === name)
       expect(a?.type, name).toBe('string')
       expect(a?.default, name).toBe('')
-      expect(a?.reflect, name).toBe(false)
+      expect(a?.reflect, name).toBe(name === 'label')
     }
   })
 

@@ -25,7 +25,7 @@ import '../icon/icon.ts' // side-effect: defines <ui-icon>, the glyph's declarat
 import { categoryGlyph, categoryLabel, fileCategory, formatBytes } from './attachment-meta.ts'
 
 const props = {
-  name: prop.string(''), // optional on the A2aFilePart wire — empty falls back to the category label
+  filename: prop.string(''), // optional on the A2aFilePart wire — empty falls back to the category label. Renamed from `name` (TKT-0069 item 1 ruling: `name` = the FORM name, reserved; the A2UI catalog keeps wire `name`, mapped in its bespoke factory)
   // `attribute: 'mime-type'` is load-bearing, not stylistic: Element.setAttribute lowercases the name in
   // an HTML document, so a camelCase observed-attribute name ('mimeType') would never match the always-
   // lowercase real attribute and attributeChangedCallback would silently never fire (the fleet's existing
@@ -49,12 +49,12 @@ export class UIAttachmentElement extends UIElement {
   protected override connected(): void {
     this.effect(() => {
       const category = fileCategory(this.mimeType)
-      const title = this.name || categoryLabel(category)
+      const title = this.filename || categoryLabel(category)
       const size = formatBytes(this.sizeBytes)
 
       const glyph = document.createElement('ui-icon')
       glyph.setAttribute('data-part', 'glyph')
-      glyph.setAttribute('name', categoryGlyph(category))
+      glyph.setAttribute('glyph', categoryGlyph(category))
 
       // The name cell is a plain <span> in this pass — the LLD-C6 <a> leg is deferred (file header note).
       const name = document.createElement('span')

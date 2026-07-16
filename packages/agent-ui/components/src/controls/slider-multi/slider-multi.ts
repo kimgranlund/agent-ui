@@ -198,11 +198,18 @@ export class UISliderMultiElement extends UIRangeElement {
     })
 
     // ── Disabled state: thumb tabindex + aria-disabled ────────────────────────────────────────────────
+    // Disabled removes the tabindex ATTRIBUTE entirely (not tabindex='-1') — the fleet dialect ruled in
+    // TKT-0068 item 2: native-parity, a disabled part is not even programmatically focusable (the
+    // textarea/text-field/combo-box editor shape).
     this.effect(() => {
       const disabled = this.effectiveDisabled()
-      const tabindex = disabled ? '-1' : '0'
-      this.#loThumb?.setAttribute('tabindex', tabindex)
-      this.#hiThumb?.setAttribute('tabindex', tabindex)
+      if (disabled) {
+        this.#loThumb?.removeAttribute('tabindex')
+        this.#hiThumb?.removeAttribute('tabindex')
+      } else {
+        this.#loThumb?.setAttribute('tabindex', '0')
+        this.#hiThumb?.setAttribute('tabindex', '0')
+      }
       this.#loThumb?.setAttribute('aria-disabled', String(disabled))
       this.#hiThumb?.setAttribute('aria-disabled', String(disabled))
     })

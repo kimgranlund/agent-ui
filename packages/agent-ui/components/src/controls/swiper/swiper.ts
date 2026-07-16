@@ -307,7 +307,7 @@ export class UISwiperElement extends UIContainerElement {
     if (slides.length === 0) return 0
     const sel = this.active
     if (sel === '') return 0
-    const byValue = slides.findIndex((s) => s.value !== '' && s.value === sel)
+    const byValue = slides.findIndex((s) => s.key !== '' && s.key === sel)
     if (byValue !== -1) return byValue
     if (/^\d+$/.test(sel)) {
       const n = Number(sel)
@@ -345,7 +345,7 @@ export class UISwiperElement extends UIContainerElement {
     const item = this.#slides[index]
     if (!item) return
     const changed = index !== this.#activeIndex
-    const identity = item.value !== '' ? item.value : String(index)
+    const identity = item.key !== '' ? item.key : String(index)
     this.#activeIndex = index
     this.active = identity
     this.#announce(index)

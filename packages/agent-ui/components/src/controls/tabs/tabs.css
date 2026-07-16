@@ -65,7 +65,15 @@
     padding-inline: var(--ui-tabs-tab-pad-inline);
     font-size: var(--ui-tabs-tab-font);
     color: var(--ui-tabs-ink);
-    white-space: nowrap;
+    white-space: nowrap; /* anonymous host-as-content label text — the SAME no-wrapper gap ui-button had
+                            (button.css, fixed by ADR-0133) also exists here: no overflow/text-overflow, so
+                            a tab label in a narrow tablist would clip/overlap with no ellipsis affordance.
+                            NAMED DEFERRAL, not fixed here (ADR-0133 §Decision cl.3, TKT-0042): no evidence
+                            has been submitted that a tab label actually overflows in practice, and
+                            ADR-0106's Alternatives already rejected a generic fleet-wide truncate fix —
+                            per-control adoption stays per-control evidence. A future report against this
+                            control reopens ADR-0133's Alternatives with its own evidence, rather than
+                            starting cold. */
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none; /* WebKit honours selection-none only via the prefix (button.browser proof) */

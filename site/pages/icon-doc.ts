@@ -34,7 +34,7 @@ function renderGallery(): HTMLElement {
         const figure = document.createElement('figure')
         figure.style.cssText = 'display:flex; flex-direction:column; gap:0.35rem; align-items:center; margin:0; font-size:1.5rem;'
         const icon = document.createElement('ui-icon')
-        icon.setAttribute('name', name)
+        icon.setAttribute('glyph', name)
         const caption = document.createElement('figcaption')
         caption.style.fontSize = '0.75rem'
         const code = document.createElement('code')

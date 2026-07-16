@@ -7,7 +7,7 @@
 # .claude/docs/plan.md §10 / ADR-0004; the form participation + the contenteditable editor part per ADR-0013 /
 # ADR-0014 (reused pattern); the multi-line geometry law + the sibling-not-mode decision per ADR-0134.
 tag: ui-textarea
-description: A form-associated multi-line text input with a contenteditable surface — the fleet's first long-form editable primitive (ADR-0134), a sibling of ui-text-field, not one of its modes.
+description: A form-associated multi-line text input with a contenteditable surface — a long-form editable primitive, and a sibling of ui-text-field, not one of its modes.
 tier: control          # geometry size-class (Control band); the geometry LEVER itself is ADR-0134's own multi-line law, not the single-line (scale×size)→§1-row lookup ui-text-field rides
 extends: UIFormElement  # FACE form-associated control (value/validity participation via ElementInternals; ADR-0013)
 # marginal: measured by `npm run size` (scripts/measure-size.mjs) — the delta of the components barrel with vs. without this control's export, tree-shaken.
@@ -20,7 +20,7 @@ attributes:            # attributes-as-API — mirrors textarea.ts `static props
   - name: label
     type: string
     default: ''
-    reflect: false     # → the editor's aria-label (the labelling SEAM; yields to a ui-field association's aria-labelledby, ADR-0051)
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
   - name: placeholder
     type: string
     default: ''

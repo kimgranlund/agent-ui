@@ -387,14 +387,15 @@ describe('default catalog factories — Select / Option (ADR-0053, ChoicePicker 
 })
 
 describe('default catalog factories — Icon (ADR-0087 Wave A, ADR-0065/0066)', () => {
-  it('Icon → ui-icon: name/label are BOTH 1:1 reflecting accessors; not an input (no value bind)', () => {
+  it('Icon → ui-icon: wire `name` maps to the `glyph` prop (TKT-0069 item 1); label 1:1; not an input (no value bind)', () => {
     expect(iconFactory.tag).toBe('ui-icon')
     expect(iconFactory.value).toBeUndefined() // a display leaf — no two-way binding
     const el = iconFactory.create()
     iconFactory.applyProp(el, 'name', 'caret-down')
     iconFactory.applyProp(el, 'label', 'Expand')
     const target = el as unknown as Record<string, unknown>
-    expect(target.name).toBe('caret-down')
+    expect(target.glyph).toBe('caret-down') // the wire field lands on the RENAMED prop
+    expect(target.name).toBeUndefined() // and never on a stale `name` expando
     expect(target.label).toBe('Expand')
   })
 })

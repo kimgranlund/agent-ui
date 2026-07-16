@@ -48,7 +48,7 @@ function build(opts: { selected?: string; values?: string[]; count?: number } = 
   for (let i = 0; i < count; i++) {
     const t = new ProbeTab()
     t.textContent = `Tab ${i}`
-    if (opts.values) t.setAttribute('value', opts.values[i])
+    if (opts.values) t.setAttribute('key', opts.values[i])
     tabs.append(t)
     tabEls.push(t)
   }
@@ -128,7 +128,7 @@ describe('ui-tabs — selected drives aria-selected + roving tabindex + panel vi
 
   it('`selected` resolves a tab VALUE (id), not only an index', async () => {
     const { tabs, tabEls } = build({ values: ['overview', 'pricing', 'faq'], selected: 'pricing' })
-    expect(tabEls[1].ii.ariaSelected).toBe('true') // matched by value, not index
+    expect(tabEls[1].ii.ariaSelected).toBe('true') // matched by key, not index
     tabs.selected = 'faq'
     await tabs.updateComplete
     expect(tabEls[2].ii.ariaSelected).toBe('true')

@@ -41,7 +41,7 @@ interface CdpSession {
 
 describe('ui-swatch — whole-shape (SPEC-R13 AC1, test-the-whole-shape)', () => {
   it('a bare, unstyled swatch in an unstyled flex row paints a visible, non-collapsed box >= the token floor', () => {
-    const row = mount('<div style="display:flex"><ui-swatch value="#336699" label="x"></ui-swatch></div>')
+    const row = mount('<div style="display:flex"><ui-swatch color="#336699" label="x"></ui-swatch></div>')
     const el = row.querySelector('ui-swatch') as HTMLElement
     const floor = tokenPx(el, '--ui-swatch-box-size')
     expect(floor, 'anti-vacuous: the floor token must resolve to a real px value').toBeGreaterThan(0)
@@ -61,7 +61,7 @@ describe('ui-swatch — whole-shape (SPEC-R13 AC1, test-the-whole-shape)', () =>
 
 describe('ui-swatch — real color resolution (SPEC-R2 AC1)', () => {
   it('a --var value resolves to the token\'s real computed color, not the literal string', () => {
-    const el = mount('<ui-swatch value="--md-sys-color-primary-container" scheme="light"></ui-swatch>') as HTMLElement
+    const el = mount('<ui-swatch color="--md-sys-color-primary-container" scheme="light"></ui-swatch>') as HTMLElement
     const box = el.querySelector('[data-part="box"]') as HTMLElement
     const resolved = getComputedStyle(box).backgroundColor
     expect(resolved).not.toBe('')
@@ -76,7 +76,7 @@ describe('ui-swatch — real color resolution (SPEC-R2 AC1)', () => {
   })
 
   it('a literal color value resolves to that exact color', () => {
-    const el = mount('<ui-swatch value="rgb(51, 102, 153)"></ui-swatch>') as HTMLElement
+    const el = mount('<ui-swatch color="rgb(51, 102, 153)"></ui-swatch>') as HTMLElement
     const box = el.querySelector('[data-part="box"]') as HTMLElement
     expect(getComputedStyle(box).backgroundColor).toBe('rgb(51, 102, 153)')
   })
@@ -86,8 +86,8 @@ describe('ui-swatch — scheme-pin divergence (SPEC-R2 AC2, SPEC-N5)', () => {
   it('scheme="light" vs scheme="dark" on a genuinely light-dark()-divergent role compute DIFFERENT colors', () => {
     // SPEC-N5: --md-sys-color-neutral-surface is a real light-dark()-divergent role (NOT a scheme-invariant
     // one) — picking a scheme-invariant role here would make this assertion pass vacuously.
-    const light = mount('<ui-swatch value="--md-sys-color-neutral-surface" scheme="light"></ui-swatch>') as HTMLElement
-    const dark = mount('<ui-swatch value="--md-sys-color-neutral-surface" scheme="dark"></ui-swatch>') as HTMLElement
+    const light = mount('<ui-swatch color="--md-sys-color-neutral-surface" scheme="light"></ui-swatch>') as HTMLElement
+    const dark = mount('<ui-swatch color="--md-sys-color-neutral-surface" scheme="dark"></ui-swatch>') as HTMLElement
     const lightBox = light.querySelector('[data-part="box"]') as HTMLElement
     const darkBox = dark.querySelector('[data-part="box"]') as HTMLElement
     const lightColor = getComputedStyle(lightBox).backgroundColor
@@ -97,7 +97,7 @@ describe('ui-swatch — scheme-pin divergence (SPEC-R2 AC2, SPEC-N5)', () => {
   })
 
   it('scheme="auto" sets no color-scheme override (inherits ambient)', () => {
-    const el = mount('<ui-swatch value="--md-sys-color-neutral-surface"></ui-swatch>') as HTMLElement
+    const el = mount('<ui-swatch color="--md-sys-color-neutral-surface"></ui-swatch>') as HTMLElement
     const box = el.querySelector('[data-part="box"]') as HTMLElement
     expect(getComputedStyle(box).colorScheme).not.toContain('only') // no forced override; ambient value applies
   })
@@ -105,7 +105,7 @@ describe('ui-swatch — scheme-pin divergence (SPEC-R2 AC2, SPEC-N5)', () => {
 
 describe('ui-swatch — forced colors (SPEC-R14 AC1)', () => {
   it('the box degrades to a CanvasText border with no painted fill; Chromium emulates (CDP), WebKit asserts the baseline', async () => {
-    const el = mount('<ui-swatch value="#336699" label="primary-500"></ui-swatch>') as HTMLElement
+    const el = mount('<ui-swatch color="#336699" label="primary-500"></ui-swatch>') as HTMLElement
     const box = el.querySelector('[data-part="box"]') as HTMLElement
 
     // Baseline (BOTH engines): the box is a painted, non-transparent background outside forced-colors.

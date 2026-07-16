@@ -22,7 +22,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg'
 
 const props = {
   values: sparklineValuesProp, // number[] · safe JSON codec (sparkline-math.ts)
-  label: prop.string(''), // accessible context (SPEC-R4), e.g. "Revenue trend"
+  label: { ...prop.string(''), reflect: true }, // accessible context (SPEC-R4), e.g. "Revenue trend"
   variant: prop.enum(['line', 'area'] as const, 'line'), // structural — enumType snaps unknowns to 'line'
 } satisfies PropsSchema
 

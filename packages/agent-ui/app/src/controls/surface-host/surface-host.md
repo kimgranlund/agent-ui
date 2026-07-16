@@ -16,7 +16,7 @@ attributes:             # attributes-as-API — mirrors surface-host.ts `props`
   - name: label
     type: string
     default: ''
-    reflect: false      # property-only — a purely cosmetic accessible name; never mirrored onto the DOM attribute (ARIA is set via internals, not a host attribute)
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
 
 properties:
   - name: label

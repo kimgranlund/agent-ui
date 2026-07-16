@@ -40,7 +40,7 @@ const props = {
   // `value` is OBSERVED (its initial attribute seeds the reset baseline) but NOT reflected — the live value
   // rides the editor surface, never a host attribute.
   value: prop.string(),
-  label: prop.string(), // → the editor's aria-label (the labelling SEAM; yields under a ui-field association)
+  label: { ...prop.string(), reflect: true }, // → the editor's aria-label (the labelling SEAM; yields under a ui-field association)
   placeholder: prop.string(), // shown via [data-empty]::before { content: attr(data-placeholder) } when empty
   // rows: native <textarea rows> parity — the MIN-height lever (ADR-0134), not a fixed control height. reflects
   // so [rows] attribute-selector / attr-based CSS repoints apply to JS-set values too.

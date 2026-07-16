@@ -56,6 +56,15 @@ export class UISliderElement extends UIRangeElement {
       },
     })
   }
+
+  protected override disconnected(): void {
+    // Explicitly release the valueDrag binding so its closure is marked released — the slider-multi
+    // shape, adopted here by the TKT-0068 item 1 ruling (the connection AbortController removes the
+    // outer pointerdown listener, but `released = true` is a belt-and-suspenders guard against any
+    // edge case where the outer listener fires after abort). Idempotent: releasing twice is a no-op.
+    this._releaseDrag()
+    this._releaseDrag = () => {}
+  }
 }
 
 if (!customElements.get('ui-slider')) customElements.define('ui-slider', UISliderElement)

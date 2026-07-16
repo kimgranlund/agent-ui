@@ -14,7 +14,7 @@ import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
 // progress-descriptor.test.ts — the stat.md/button.md three-layer pattern: structural, contract↔props,
-// contract↔source. `value` and `max` both ride the fleet's `prop.number` codec — kindOf classifies BOTH
+// contract↔source. `current` and `max` both ride the fleet's `prop.number` codec — kindOf classifies BOTH
 // as "number" purely from the codec's `type.from` BEHAVIOUR (probed on null/''/5 inputs), never from the
 // schema default (null vs 100); the dedicated describe block below pins that verdict before trusting the
 // descriptor cells that depend on it (the stat.md LLD-C9 build-verify precedent).
@@ -26,15 +26,15 @@ const css = readFileSync(`${DIR}/progress.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['value', 'max', 'label']
+const ATTR_NAMES = ['current', 'max', 'label']
 
-describe('kindOf build-verify — value AND max both classify "number" despite differing defaults', () => {
-  it('value: a null-defaulting numeric codec classifies as "number"', () => {
+describe('kindOf build-verify — current AND max both classify "number" despite differing defaults', () => {
+  it('current: a null-defaulting numeric codec classifies as "number"', () => {
     const drift = compareDescriptorToProps(
-      parsed.attributes.map((a) => (a.name === 'value' ? { ...a, type: 'number' } : a)),
+      parsed.attributes.map((a) => (a.name === 'current' ? { ...a, type: 'number' } : a)),
       UIProgressElement.props,
     )
-    expect(drift.filter((d) => d.path.startsWith('attributes.value'))).toEqual([])
+    expect(drift.filter((d) => d.path.startsWith('attributes.current'))).toEqual([])
   })
 
   it('max: a 100-defaulting numeric codec ALSO classifies as "number" (kindOf probes behaviour, not the default)', () => {
@@ -45,10 +45,10 @@ describe('kindOf build-verify — value AND max both classify "number" despite d
     expect(drift.filter((d) => d.path.startsWith('attributes.max'))).toEqual([])
   })
 
-  it('NEGATIVE: value mis-declared as "string" fails DRIFT_TYPE (kindOf does not blindly green everything)', () => {
-    const flip = parsed.attributes.map((a) => (a.name === 'value' ? { ...a, type: 'string' } : a))
+  it('NEGATIVE: current mis-declared as "string" fails DRIFT_TYPE (kindOf does not blindly green everything)', () => {
+    const flip = parsed.attributes.map((a) => (a.name === 'current' ? { ...a, type: 'string' } : a))
     expect(compareDescriptorToProps(flip, UIProgressElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_TYPE', path: 'attributes.value.type' }),
+      expect.objectContaining({ code: 'DRIFT_TYPE', path: 'attributes.current.type' }),
     )
   })
 

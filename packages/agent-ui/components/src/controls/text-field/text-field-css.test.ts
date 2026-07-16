@@ -68,29 +68,40 @@ describe('text-field.css — structure + sectioning (s9)', () => {
   })
 })
 
-// ── The BORDER-channel state ladder (ADR-0014 cl.2c) ─────────────────────────────────────────────────────
-// A text field has no pressed/active state, so the button's BACKGROUND ladder does not apply — the state is a
-// BORDER channel. The SOLID role ladder (NOT soft-alpha — alpha outlines resolve sub-3:1 against the field
-// surface, failing WCAG 1.4.11) is declared per-state in the :where() token block, consumed at the matching
-// pseudo-/custom-state in @scope. Roles, never a color-mix (colour opinions live in the token layer).
-describe('text-field.css — the SOLID border-channel ladder (ADR-0014 cl.2c)', () => {
-  it('declares the full border ladder from the PINNED roles: idle/hover/focus/invalid/invalid+hover', () => {
+// ── The filled/container state law (TKT-0062, Kim's ruling) ──────────────────────────────────────────────
+// SUPERSEDES the ADR-0014 cl.2c border-only channel: bg/border/ink ALL repoint per state now (default /
+// filled / hover / focus / disabled). The SOLID role ladder (NOT soft-alpha) is declared per-state in the
+// :where() token block, consumed at the matching pseudo-/`:has()` selector in @scope. Roles, never a
+// color-mix (colour opinions live in the token layer). user-invalid is UNCHANGED/orthogonal — its own
+// border-only danger channel is asserted separately, unaffected by this table.
+describe('text-field.css — the filled/container state law (TKT-0062)', () => {
+  it('declares the full bg/border/ink ladder from the PINNED roles: default/filled/hover/focus', () => {
     const b = whereBlock(':where(ui-text-field) {')
-    expect(b).toMatch(/--ui-text-field-border:\s*var\(--md-sys-color-neutral\)/) // idle
-    expect(b).toMatch(/--ui-text-field-border-hover:\s*var\(--md-sys-color-neutral-high\)/) // hover
+    expect(b).toMatch(/--ui-text-field-bg:\s*var\(--md-sys-color-neutral-container-low\)/) // default
+    expect(b).toMatch(/--ui-text-field-bg-filled:\s*var\(--md-sys-color-neutral-container\)/) // filled
+    expect(b).toMatch(/--ui-text-field-bg-hover:\s*var\(--md-sys-color-neutral-container\)/) // hover
+    expect(b).toMatch(/--ui-text-field-bg-focus:\s*var\(--md-sys-color-neutral-container-low\)/) // focus
+    expect(b).toMatch(/--ui-text-field-border:\s*transparent/) // default
+    expect(b).toMatch(/--ui-text-field-border-hover:\s*var\(--md-sys-color-neutral-outline-variant\)/) // hover — the ONE visible-border state
     expect(b).toMatch(/--ui-text-field-border-focus:\s*transparent/) // focus = transparent (the outline ring is the sole indicator; ADR-0014 dev#1)
+    expect(b).toMatch(/--ui-text-field-ink:\s*var\(--md-sys-color-neutral\)/) // default
+    expect(b).toMatch(/--ui-text-field-ink-filled:\s*var\(--md-sys-color-neutral-on-surface-variant\)/) // filled
+    expect(b).toMatch(/--ui-text-field-ink-hover:\s*var\(--md-sys-color-neutral-on-surface-variant\)/) // hover
+    expect(b).toMatch(/--ui-text-field-ink-focus:\s*var\(--md-sys-color-neutral-on-surface\)/) // focus
+  })
+
+  it('user-invalid stays UNCHANGED — its own border-only danger channel, orthogonal to the bg/ink table', () => {
+    const b = whereBlock(':where(ui-text-field) {')
     expect(b).toMatch(/--ui-text-field-border-invalid:\s*var\(--md-sys-color-danger\)/) // user-invalid
     expect(b).toMatch(/--ui-text-field-border-invalid-hover:\s*var\(--md-sys-color-danger-high\)/) // invalid + hover
   })
 
-  it('the field surface roles: bg=surface · ink=on-surface · placeholder=on-surface-variant', () => {
+  it('the placeholder ink tracks the SAME default-state ink role (Kim\'s table has no separate placeholder row)', () => {
     const b = whereBlock(':where(ui-text-field) {')
-    expect(b).toMatch(/--ui-text-field-bg:\s*var\(--md-sys-color-neutral-surface\)/)
-    expect(b).toMatch(/--ui-text-field-ink:\s*var\(--md-sys-color-neutral-on-surface\)/)
-    expect(b).toMatch(/--ui-text-field-placeholder:\s*var\(--md-sys-color-neutral-on-surface-variant\)/)
+    expect(b).toMatch(/--ui-text-field-placeholder:\s*var\(--ui-text-field-ink\)/)
   })
 
-  it('the ladder is SOLID role steps — NEVER a color-mix, NEVER a soft-alpha primitive', () => {
+  it('the ladder is SOLID role steps or `transparent` — NEVER a color-mix, NEVER a soft-alpha primitive', () => {
     expect(css).not.toContain('color-mix(') // a mix ratio is a component colour opinion (ADR-0008/0014)
     // no alpha primitive (`--md-sys-color-*-500-NNN`) and no scrim role leaks into the border channel — SOLID only.
     const borderDecls = [...tokenBlock.matchAll(/--ui-text-field-border[\w-]*:\s*([^;]+);/g)].map((m) => m[1] as string)
@@ -101,23 +112,41 @@ describe('text-field.css — the SOLID border-channel ladder (ADR-0014 cl.2c)', 
     }
   })
 
-  it('@scope repoints ONLY border-color from the ladder tokens (the geometry law is untouched)', () => {
-    expect(stylesBlock).toMatch(/:scope:hover\s*\{\s*border-color:\s*var\(--ui-text-field-border-hover\)/)
+  it('@scope repoints background + the --ui-text-field-ink TOKEN together at filled/hover/focus (not border-color alone, and not a host-only `color:` — code-reviewer HIGH finding: the editor part reads var(--ui-text-field-ink) directly, so the state must repoint the TOKEN, not just the host property, or the visible typed text/placeholder never repaints)', () => {
+    expect(stylesBlock).toMatch(
+      /:scope:not\(:hover\):not\(:focus-within\):not\(:is\(\[disabled\], :state\(disabled\)\)\):has\(> \[data-part='editor'\]:not\(\[data-empty\]\)\)\s*\{\s*background:\s*var\(--ui-text-field-bg-filled\);\s*--ui-text-field-ink:\s*var\(--ui-text-field-ink-filled\)/,
+    )
+    expect(stylesBlock).toMatch(
+      /:scope:not\(:focus-within\):not\(:is\(\[disabled\], :state\(disabled\)\)\):hover\s*\{\s*background:\s*var\(--ui-text-field-bg-hover\);\s*border-color:\s*var\(--ui-text-field-border-hover\);\s*--ui-text-field-ink:\s*var\(--ui-text-field-ink-hover\)/,
+    )
+    expect(stylesBlock).toMatch(
+      /:scope:focus-within\s*\{\s*background:\s*var\(--ui-text-field-bg-focus\);\s*border-color:\s*var\(--ui-text-field-border-focus\);\s*--ui-text-field-ink:\s*var\(--ui-text-field-ink-focus\)/,
+    )
     expect(stylesBlock).toMatch(/:scope:state\(user-invalid\)\s*\{\s*border-color:\s*var\(--ui-text-field-border-invalid\)/)
     expect(stylesBlock).toMatch(
       /:scope:state\(user-invalid\):hover\s*\{\s*border-color:\s*var\(--ui-text-field-border-invalid-hover\)/,
     )
   })
+
+  it('filled/hover precedence is enforced by MUTUAL EXCLUSION (:not()), never bare source-order/specificity', () => {
+    // filled excludes hover, focus-within, AND disabled — hover excludes focus-within AND disabled — so
+    // exactly one rule can ever match a given DOM state, regardless of how :has()/:not() specificity
+    // computes (the live regression this fixes: a :not(disabled)-guarded :hover measured HIGHER
+    // specificity than an unguarded :focus-within, so a mouse-click focus — which also leaves the
+    // pointer hovering — kept the visible hover border instead of stepping transparent).
+    expect(stylesBlock).toMatch(/:scope:not\(:hover\):not\(:focus-within\):not\(:is\(\[disabled\], :state\(disabled\)\)\):has\(/)
+    expect(stylesBlock).toMatch(/:scope:not\(:focus-within\):not\(:is\(\[disabled\], :state\(disabled\)\)\):hover/)
+  })
 })
 
-// ── Disabled — a role REPOINT, not opacity (ADR-0014 cl.2c / tokens.md canon) ────────────────────────────
+// ── Disabled — a role REPOINT, not opacity (ADR-0014 cl.2c / tokens.md canon; TKT-0062's disabled row) ────
 describe('text-field.css — disabled is a role REPOINT, not opacity', () => {
-  it('repoints bg/ink/border to the muted neutral roles, matching BOTH [disabled] and :state(disabled)', () => {
+  it('repoints the base bg/ink/border trio to TKT-0062\'s disabled row, matching BOTH [disabled] and :state(disabled)', () => {
     const b = whereBlock(":where(ui-text-field:is([disabled], :state(disabled)))")
     expect(b.length).toBeGreaterThan(0) // the disabled repoint block exists
-    expect(b).toMatch(/--ui-text-field-bg:\s*var\(--md-sys-color-neutral-surface-high\)/)
-    expect(b).toMatch(/--ui-text-field-ink:\s*var\(--md-sys-color-neutral-on-surface-variant\)/)
-    expect(b).toMatch(/--ui-text-field-border:\s*var\(--md-sys-color-neutral-outline-variant\)/) // the faint disabled frame
+    expect(b).toMatch(/--ui-text-field-bg:\s*var\(--md-sys-color-neutral-container-low\)/)
+    expect(b).toMatch(/--ui-text-field-ink:\s*var\(--md-sys-color-neutral-low\)/)
+    expect(b).toMatch(/--ui-text-field-border:\s*transparent/)
   })
 
   it('NEVER opacity — the muted look is a token repoint (the disabled host is also pointer-inert)', () => {

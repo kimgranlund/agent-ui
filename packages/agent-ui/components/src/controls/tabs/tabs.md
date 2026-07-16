@@ -26,7 +26,7 @@ attributes:            # attributes-as-API — mirrors tabs.ts `static props` (t
   - name: selected
     type: string
     default: ''
-    reflect: true      # the active tab's identity (a tab `value`, or its DOM index as a string; '' ⇒ the first tab). BINDABLE — the renderer two-way-binds it via LLD-C8 (value:{prop:'selected',event:'select'}, ADR-0019); reflects so the attribute mirrors the live selection
+    reflect: true      # the active tab's identity (a tab `key`, or its DOM index as a string; '' ⇒ the first tab). BINDABLE — the renderer two-way-binds it via LLD-C8 (value:{prop:'selected',event:'select'}, ADR-0019); reflects so the attribute mirrors the live selection
 
 properties:            # IDL beyond attributes-as-API
   - name: selected
@@ -91,8 +91,8 @@ never as a host attribute.
 
 ```html
 <ui-tabs selected="overview">
-  <ui-tab value="overview">Overview</ui-tab>
-  <ui-tab value="pricing">Pricing</ui-tab>
+  <ui-tab key="overview">Overview</ui-tab>
+  <ui-tab key="pricing">Pricing</ui-tab>
   <ui-tab-panel>Overview content…</ui-tab-panel>
   <ui-tab-panel>Pricing content…</ui-tab-panel>
 </ui-tabs>
@@ -109,7 +109,7 @@ attribute**. A tab's accessible name is its own light-DOM children.
 
 ## Selection
 
-`selected` names the active tab — a tab's **`value`** (its stable id) if it has one, otherwise its **DOM
+`selected` names the active tab — a tab's **`key`** (its stable id) if it has one, otherwise its **DOM
 index** as a string; `''` selects the first tab. A single scope-owned effect applies it: the active tab gets
 `aria-selected="true"` + `:state(selected)` (the ink + underline indicator) + the roving `tabindex=0`; every
 other tab gets `aria-selected="false"` + `tabindex="-1"`; and only the active **panel** is shown (the rest

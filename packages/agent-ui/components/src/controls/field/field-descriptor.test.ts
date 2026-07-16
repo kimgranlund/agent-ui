@@ -70,7 +70,8 @@ describe('field.md descriptor — contract↔props trip-wire (s10 part b)', () =
 
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default)', () => {
     // mutate a COPY of the parsed descriptor (field.md is never touched); each patch flips ONE field.
-    const flipReflect: ParsedAttribute[] = parsed.attributes.map((a) => (a.name === 'label' ? { ...a, reflect: true } : { ...a }))
+    // label reflects TRUE since the TKT-0069 item 2 ruling — the synthetic drift flips the other way.
+    const flipReflect: ParsedAttribute[] = parsed.attributes.map((a) => (a.name === 'label' ? { ...a, reflect: false } : { ...a }))
     expect(compareDescriptorToProps(flipReflect, UIFieldElement.props)).toContainEqual(
       expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.label.reflect' }),
     )

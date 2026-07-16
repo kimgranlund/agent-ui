@@ -59,7 +59,7 @@ const props = {
   // `label` — the bare-usage accessible-name source (ADR-0085; text-field ADR-0014 parity — the
   // editor has a DISTINCT accessible value, so aria-label does not erase it, unlike ui-select's
   // button trigger). NOT reflected — an accessibility hint, not a styling hook.
-  label: prop.string(),
+  label: { ...prop.string(), reflect: true },
 
   // `open` — whether the listbox panel is shown. Reflected (bindable two-way, ADR-0019).
   // Drives the overlay handle via a scope-owned effect; synced back on light-dismiss.
@@ -298,15 +298,21 @@ export class UIComboBoxElement extends UIFormElement {
       else editor.removeAttribute('aria-label')
     })
 
+    // TKT-0063: also mirrors text-field.ts's `:state(disabled)` CSS hook (the effective-disabled
+    // channel) — the editor's `aria-disabled` attribute is an AX signal, not a CSS-visible one, so
+    // combo-box.css's disabled row (:where(ui-combo-box[disabled])) missed the ancestor-fieldset case
+    // without this.
     this.effect(() => {
       if (this.effectiveDisabled()) {
         editor.setAttribute('contenteditable', 'false')
         editor.setAttribute('aria-disabled', 'true')
         editor.removeAttribute('tabindex')
+        this.internals.states?.add('disabled')
       } else {
         editor.setAttribute('contenteditable', 'plaintext-only')
         editor.removeAttribute('aria-disabled')
         // contenteditable is intrinsically focusable; no explicit tabindex needed.
+        this.internals.states?.delete('disabled')
       }
     })
 

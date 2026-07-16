@@ -132,7 +132,7 @@ const props = {
   // `value` is OBSERVED (its initial attribute seeds the reset baseline) but NOT reflected — the live value
   // rides the editor surface, never a host attribute.
   value: prop.string(),
-  label: prop.string(), // → the editor's aria-label (the labelling SEAM; the visible wrapper is ui-field at G7)
+  label: { ...prop.string(), reflect: true }, // → the editor's aria-label (the labelling SEAM; the visible wrapper is ui-field at G7)
   placeholder: prop.string(), // shown via [data-empty]::before { content: attr(data-placeholder) } when empty
   // size/readonly reflect so the [size] dimensional-ramp repoint + the [readonly]/[disabled] CSS hooks apply
   // to JS-set values too, not only author-set attributes.
@@ -513,7 +513,7 @@ export class UITextFieldElement extends UIFormElement {
       editor.toggleAttribute('data-empty', value === '') // keys the CSS placeholder (not :empty — see ADR cl.1)
       // ADR-0123 LLD-C9 — the type=color swatch-button preview tracks the field's own value (a no-op for
       // every other type, since the ref is only ever set inside the type=color branch).
-      if (this.#colorSwatchPreview) this.#colorSwatchPreview.value = value
+      if (this.#colorSwatchPreview) this.#colorSwatchPreview.color = value
     })
 
     // ── editor attribute mirror — the label seam, the placeholder text, the required mirror ──
@@ -880,8 +880,8 @@ export class UITextFieldElement extends UIFormElement {
       // untracked: a one-time creation-time seed, not a live binding — a plain read here would make
       // `value` a dependency of the WHOLE type-effect (this call runs synchronously inside its scope),
       // rebuilding the entire adornment/codec/overlay wiring on every keystroke (the bug this untracked()
-      // read closes). The model→surface effect keeps `#colorSwatchPreview.value` live going forward.
-      swatchPreview.value = untracked(() => this.value)
+      // read closes). The model→surface effect keeps `#colorSwatchPreview.color` live going forward.
+      swatchPreview.color = untracked(() => this.value)
       btn.append(swatchPreview)
       this.#colorSwatchPreview = swatchPreview
       container.append(btn)

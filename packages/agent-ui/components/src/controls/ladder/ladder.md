@@ -22,7 +22,7 @@ attributes:            # attributes-as-API — mirrors ladder.ts `static props` 
   - name: label
     type: string
     default: ''         # the list's accessible name (SPEC-R12: unlabeled is legal, never a silent state)
-    reflect: false
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
 
 properties: []          # no manual accessors beyond the two typed props
 

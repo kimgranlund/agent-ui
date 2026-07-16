@@ -23,11 +23,15 @@
   --ui-command-modal-search-font: var(--ui-font-md);
   --ui-command-modal-search-padding-inline: calc(var(--ui-command-modal-search-block-size) / 2); /* the fleet h/2 value-edge standard */
 
-  /* Frame — matches the entry-control border channel (solid, WCAG 1.4.11 parity). */
-  --ui-command-modal-search-border: var(--md-sys-color-neutral);
-  --ui-command-modal-search-bg: var(--md-sys-color-neutral-surface);
+  /* Frame — the §1b entry-control law applied DEGENERATELY (TKT-0068 item 4 ruling): the palette search
+     is always focused while the modal is open, so it wears §1b's FOCUS row permanently — container-low
+     bg · transparent border · on-surface ink (the field/panel bg contrast now carries the search/list
+     separation the old solid divider drew; the 1px border-block-end stays for layout, transparent).
+     The placeholder aliases the ink per §1b's alias shape (no sixth row). */
+  --ui-command-modal-search-border: transparent;
+  --ui-command-modal-search-bg: var(--md-sys-color-neutral-container-low);
   --ui-command-modal-search-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-command-modal-search-placeholder: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-command-modal-search-placeholder: var(--ui-command-modal-search-ink);
 
   /* The bounded scroll viewport (the list is the dialog's body; scroll-fade wired in .ts). */
   --ui-command-modal-list-max-block: 50vh;

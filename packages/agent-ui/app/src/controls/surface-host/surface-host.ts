@@ -31,7 +31,7 @@ const props = {
   // An OPTIONAL accessible name for the artboard region — purely cosmetic when unset. Meaningful only
   // when this element is composed standalone (e.g. a2ui-live's Canvas tab panel); `ui-conversation`'s
   // inline usage never sets it — the surrounding turn bubble already carries the accessible structure.
-  label: prop.string(''),
+  label: { ...prop.string(''), reflect: true },
 } satisfies PropsSchema
 
 export interface UISurfaceHostElement extends ReactiveProps<typeof props> {}

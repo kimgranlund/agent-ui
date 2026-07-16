@@ -134,7 +134,7 @@ export class UITabsElement extends UIContainerElement {
     if (tabs.length === 0) return -1
     const sel = this.selected
     if (sel === '') return 0
-    const byValue = tabs.findIndex((t) => t.value !== '' && t.value === sel)
+    const byValue = tabs.findIndex((t) => t.key !== '' && t.key === sel)
     if (byValue !== -1) return byValue
     if (/^\d+$/.test(sel)) {
       const n = Number(sel)
@@ -161,7 +161,7 @@ export class UITabsElement extends UIContainerElement {
     const tab = this.#tabs[index]
     if (!tab) return
     const changed = index !== this.#activeIndex
-    const identity = tab.value !== '' ? tab.value : String(index)
+    const identity = tab.key !== '' ? tab.key : String(index)
     this.#activeIndex = index // eager — keep the keyboard delta correct before the effect flush
     this.selected = identity // → reflects + wakes the selection effect
     if (moveFocus) tab.focus()

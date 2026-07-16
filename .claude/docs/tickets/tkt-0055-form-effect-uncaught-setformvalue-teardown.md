@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0055
-status: open
+status: done
 date: 2026-07-15
 owner:
 kind: bug
@@ -90,3 +90,46 @@ which could mask a REAL regression's exit-code signal in the same run.
   discovery time was a second, independent reason to not touch shared kernel files right now.
 
 ## Findings
+
+### 2026-07-15 — root-caused: NOT a kernel bug — a missing test-file `ElementInternals` stub — CLOSED
+
+**Corrected root cause** (this ticket's original Classification, "a reactive-effect/host-lifecycle
+mismatch in the kernel layer," was WRONG — investigated properly this time, not left as a hypothesis):
+`dom/form.ts:172-174`'s form-value-sync effect runs `this.internals.setFormValue(this.formValue())`
+synchronously on its FIRST invocation (every `this.effect()` call runs its body once immediately to
+establish dependencies) — i.e. it throws DURING `connectedCallback()` itself, on a freshly-constructed
+element, not later via a stale/leaked async re-run. jsdom's REAL `ElementInternals` genuinely has no
+`setFormValue`/`setValidity` at all (a long-documented jsdom gap — see
+[jsdom/jsdom#2931](https://github.com/jsdom/jsdom/issues/2931)) — every OTHER jsdom test file in this
+repo that composes a FACE form control already stubs these onto `HTMLElement.prototype.attachInternals`
+(or per-instance) before connecting anything (the "conversation.test.ts precedent"). **The committed
+`agent-admin.test.ts` at `b8ed741` — verified directly, byte-for-byte, in a clean `git worktree` — simply
+never had this stub.** Every `ui-switch`/`ui-textarea` `entry-list.ts` creates therefore threw
+synchronously on connect — custom-element reaction errors are caught and reported by the platform's own
+CEReactions error-handling (never propagated to the calling script), which is exactly why "every
+assertion still passes" while vitest separately collects hundreds of "uncaught exception" reports. Proven
+by isolated repro: a bare `ui-textarea` reconnecting repeatedly, with or without the stub, in a minimal
+standalone test — clean with the stub, reproduces the exact `setFormValue is not a function` trace
+without it, confirming the mechanism has nothing to do with disconnect/reconnect timing, effect-graph
+staleness, or `entry-list.ts`'s full-teardown `replaceChildren()` render pattern (all three were live
+hypotheses this ticket carried — none panned out; the crash is purely "no stub, so a real jsdom
+`ElementInternals` genuinely lacks the method every fresh connect calls").
+
+**The fix already exists** — the current working tree's `agent-admin.test.ts` (uncommitted, part of this
+session's broader agent-admin work) already carries the exact `attachInternals` stub pattern every
+sibling form-composing test file uses. No `dom/form.ts` kernel change was needed or made — this was
+never a kernel bug, just one test file missing an already-established, well-precedented scaffolding
+pattern. Verified this genuinely closes it: `npx vitest run packages/agent-ui/app/src/controls/
+agent-admin/agent-admin.test.ts` exits 0, zero uncaught exceptions, in the current tree; the SAME repro
+against a clean worktree at committed HEAD (no stub) reproduces 821 uncaught exceptions, confirming the
+stub is the load-bearing difference.
+
+**Swept for the same gap elsewhere** (per this ticket's own Scope/Open — "not yet confirmed whether this
+reproduces in OTHER control test files"): every jsdom test file composing `UITextareaElement`/
+`UISwitchElement`-family controls already carries either the global prototype stub or an equivalent
+per-instance stub (`textarea.test.ts`'s own `stubFormInternals` pattern) — no other gap found.
+
+**Gates**: full jsdom sweep 339/340 files, 6264/6265 tests green (the one failure, `site/gallery.test.ts`,
+is the already-documented, pre-existing environment hook-timeout flake — confirmed clean in isolation,
+unrelated); `npm run check` unaffected (no `.ts`/`.css` production code touched, this ticket was pure
+investigation + verification, the fix was already present).

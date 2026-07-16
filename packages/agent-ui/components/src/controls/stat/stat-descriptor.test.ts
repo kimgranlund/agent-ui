@@ -25,15 +25,15 @@ const css = readFileSync(`${DIR}/stat.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['label', 'value', 'delta', 'caption']
+const ATTR_NAMES = ['label', 'figure', 'delta', 'caption']
 
 describe('kindOf build-verify (LLD-C9) — value classifies "string", delta classifies "number"', () => {
   it('value: a null-defaulting, non-enum-snapping string-shaped codec classifies as "string"', () => {
     const drift = compareDescriptorToProps(
-      parsed.attributes.map((a) => (a.name === 'value' ? { ...a, type: 'string' } : a)),
+      parsed.attributes.map((a) => (a.name === 'figure' ? { ...a, type: 'string' } : a)),
       UIStatElement.props,
     )
-    expect(drift.filter((d) => d.path.startsWith('attributes.value'))).toEqual([])
+    expect(drift.filter((d) => d.path.startsWith('attributes.figure'))).toEqual([])
   })
 
   it('delta: a null-defaulting numeric codec classifies as "number"', () => {
@@ -45,9 +45,9 @@ describe('kindOf build-verify (LLD-C9) — value classifies "string", delta clas
   })
 
   it('NEGATIVE: value mis-declared as "number" fails DRIFT_TYPE (kindOf does not blindly green everything)', () => {
-    const flip = parsed.attributes.map((a) => (a.name === 'value' ? { ...a, type: 'number' } : a))
+    const flip = parsed.attributes.map((a) => (a.name === 'figure' ? { ...a, type: 'number' } : a))
     expect(compareDescriptorToProps(flip, UIStatElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_TYPE', path: 'attributes.value.type' }),
+      expect.objectContaining({ code: 'DRIFT_TYPE', path: 'attributes.figure.type' }),
     )
   })
 

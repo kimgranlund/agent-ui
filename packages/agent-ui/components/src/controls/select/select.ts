@@ -90,7 +90,7 @@ const props = {
   // NOT reflected — an accessibility hint, not a styling hook. '' = no label → the trigger keeps its
   // content-only accessible name (back-compat). A host `aria-label` attribute stays inert (the host is
   // role-less) — this prop, not an attribute passthrough, is the seam.
-  label: prop.string(),
+  label: { ...prop.string(), reflect: true },
 
   // `open` — whether the listbox panel is currently shown. Reflected + BINDABLE (ADR-0019).
   // Drives the overlay handle via a scope-owned effect (model→overlay). Overlay→model sync via
@@ -286,9 +286,14 @@ export class UISelectElement extends UIFormElement {
     // Trigger label effect: update the visible label whenever `value` or `placeholder` changes.
     // Reads both signals reactively — re-runs on either change. Searches for the matching option
     // by its `value` attribute (options are in the listbox, still within host.contains()).
+    // `[data-empty]` on the trigger (TKT-0062) — the SAME emptiness signal text-field/textarea/combo-box
+    // already toggle on their own editor part (`value === '' ⇒ showing the placeholder`), added here so
+    // select.css's filled/container state law can key off it identically to its siblings — select had no
+    // prior emptiness hook (it always wrote SOME text into labelSpan, selection or placeholder alike).
     this.effect(() => {
       const val = this.value
       const ph = this.placeholder
+      trigger.toggleAttribute('data-empty', val === '')
       if (val !== '') {
         const options = listbox.querySelectorAll<HTMLElement>('[role=option]')
         let found: HTMLElement | null = null
@@ -326,9 +331,17 @@ export class UISelectElement extends UIFormElement {
     // makes the trigger pointer-inert and prevents AT from activating it while disabled.
     // aria-disabled is NOT set additionally — the button's `disabled` attribute is sufficient
     // (it carries the a11y semantics natively for <button>; a dual aria-disabled would be redundant).
+    // TKT-0063: also mirrors text-field.ts's `:state(disabled)` CSS hook (the effective-disabled
+    // channel) — the host's own `[disabled]` attribute alone misses the ancestor-fieldset case, so
+    // select.css's disabled row (:is([disabled], :state(disabled))) needs this to key off form-disabled too.
     this.effect(() => {
-      if (this.effectiveDisabled()) trigger.setAttribute('disabled', '')
-      else trigger.removeAttribute('disabled')
+      if (this.effectiveDisabled()) {
+        trigger.setAttribute('disabled', '')
+        this.internals.states?.add('disabled')
+      } else {
+        trigger.removeAttribute('disabled')
+        this.internals.states?.delete('disabled')
+      }
     })
 
     // Trigger click → toggle the panel (the disclosure interaction).

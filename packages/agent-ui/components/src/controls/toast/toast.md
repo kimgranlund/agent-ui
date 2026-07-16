@@ -47,7 +47,7 @@ parts:
   - name: action
     description: An optional <ui-button data-part="action"> rendered ONLY when the action prop is non-empty at connect time (read once — a later action prop change does not retroactively add/remove this part). Its label is the action prop's text. Activating it emits select, then closes the toast.
   - name: close
-    description: The ALWAYS-present icon-only <ui-button data-part="close" variant="ghost" icon-only>, containing a decorative <ui-icon name="x"> and carrying aria-label="Dismiss" (the icon-only-button idiom — the accessible name has nothing to read from textContent; `icon-only` opts into ui-button's square fifth structure, geometry.md). Pinned to the card's grid-column 3 explicitly (toast.css), so its optical inset from the card's right edge always matches the message's inset from the left edge, whether or not the action part is present (TKT-0014). Activating it closes the toast.
+    description: The ALWAYS-present icon-only <ui-button data-part="close" variant="ghost" icon-only>, containing a decorative <ui-icon glyph="x"> and carrying aria-label="Dismiss" (the icon-only-button idiom — the accessible name has nothing to read from textContent; `icon-only` opts into ui-button's square fifth structure, geometry.md). Pinned to the card's grid-column 3 explicitly (toast.css), so its optical inset from the card's right edge always matches the message's inset from the left edge, whether or not the action part is present (TKT-0014). Activating it closes the toast.
 
 customStates: []           # no :state() hooks — the LLD ships no entrance/exit animation in v1 (a fade/slide-in is a named foreseen extension)
 
@@ -122,7 +122,7 @@ At connect, any light-DOM children present on the host (typically message text) 
 moved, not cloned — into a component-built `<span data-part="message">`. This is a **one-time** move:
 children added to the host after connect are not adopted (out of scope v1). The affordance cluster is
 appended alongside it: an `<ui-button data-part="action">` **only** when `action` is non-empty at
-connect, and an icon-only `<ui-button data-part="close" icon-only>` (`<ui-icon name="x">`, `aria-label="Dismiss"`)
+connect, and an icon-only `<ui-button data-part="close" icon-only>` (`<ui-icon glyph="x">`, `aria-label="Dismiss"`)
 **always**. Both affordances are `ui-button` instances — native `<button>` is banned (fleet law) — and
 are reachable in normal Tab order via `ui-button`'s own `tabbable` trait; no tabindex games, no
 autofocus.
