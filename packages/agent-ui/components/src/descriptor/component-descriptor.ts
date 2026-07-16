@@ -108,6 +108,12 @@ function addField(item: SequenceItem, text: string): void {
     return
   }
   const value = scalarValue(m[2])
+  // Quoted-default marker (TKT-0070, closing TKT-0069's String(default) gate hole): `unquote` erases the
+  // authored quoting, but a QUOTED scalar default on a boolean/number/integer attribute is exactly the
+  // YAML mis-typing the contract↔props trip-wire cannot see (it compares String(config.default), so
+  // 'false' == false). Record quotedness under a sentinel key (the BARE_SCALAR_KEY trick — `#` can never
+  // be a real field name) for the validator's rule 5b below. Only `default` needs it.
+  if (m[1] === 'default' && /^(['"])[\s\S]*\1$/.test(stripComment(m[2]))) item.set('#quoted:default', 'true')
   if (/^\[.*\]$/.test(value)) {
     item.set(
       m[1],
@@ -289,6 +295,12 @@ export function validateComponentDescriptor(d: ParsedDescriptor): DescriptorFail
       add('BAD_ATTRIBUTE', at('values'), `enum attribute "${name ?? i}" needs a non-empty values list`)
     }
     if (!item.has('default')) add('BAD_ATTRIBUTE', at('default'), `attribute "${name ?? i}" is missing a default`)
+    // 5b (TKT-0070): a QUOTED scalar default on a typed attribute is a YAML mis-typing the downstream
+    // String(config.default) comparison is structurally blind to — reject at the schema (`default: false`,
+    // never `default: 'false'`; a STRING attribute's quoted default — `''` — stays legal).
+    if (item.has('#quoted:default') && typeof type === 'string' && (type === 'boolean' || type === 'number')) {
+      add('BAD_ATTRIBUTE', at('default'), `attribute "${name ?? i}" has a QUOTED default for type ${type} — unquote it (the trip-wire compares String(default) and cannot catch this)`)
+    }
     const reflect = item.get('reflect')
     if (typeof reflect !== 'string' || !has(BOOLEANS, reflect)) add('BAD_ATTRIBUTE', at('reflect'), `attribute "${name ?? i}" reflect must be true|false`)
   }

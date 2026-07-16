@@ -38,7 +38,9 @@ attributes:            # attributes-as-API — mirrors attachment.ts `static pro
   - name: href
     type: string
     default: ''
-    reflect: false      # NOT reflected — SPEC-R8's fourth wire-mirroring prop. Present in the CONTRACT now;
+    reflect: false      # NOT reflected — TEMPORARY-INERT (naming.md §3: a navigation-URL href REFLECTS;
+                         # the LLD-C6 rendering wave flips this to reflect: true per that canon, TKT-0070).
+                         # SPEC-R8's fourth wire-mirroring prop. Present in the CONTRACT now;
                          # its RENDERING leg (the name cell becoming a native <a> under the shared ADR-0114
                          # gate, controls/text/href.ts) is DEFERRED to LLD-C6 (a later, separately-dispatched
                          # M1-c wave) — this pass reads it into no effect and renders it nowhere. Do not

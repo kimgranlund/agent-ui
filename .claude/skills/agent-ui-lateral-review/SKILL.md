@@ -160,7 +160,17 @@ TKT-0046 proved single-context works for one axis) — the phases are vehicle-ne
   deliberately DIVERGE from the renamed component props** (`Icon.name` wire → `glyph` prop, etc. —
   `catalog.json` `mapsTo` + `mappedAccessorFactory` translate; corpus stability is the reason;
   naming.md §12 records it) — a catalog-vs-descriptor attribute-name mismatch on these six wire
-  props is the ruled design, not drift.
+  props is the ruled design, not drift · **(campaign 2, TKT-0070, Kim-ratified 2026-07-16):**
+  per-control enum DEFAULT divergence on a shared/near-identical vocab is benign where each side
+  cites its own ADR/ruling in-file (align's row/list/toolbar defaults; reflow's per-tag
+  default-first ordering — "order-only diffs with matching defaults" was too narrow) · `min`/`max`
+  carry TWO sanctioned senses (naming.md §3: value-domain bound vs CSS-length layout-dimension
+  bound) — a cross-cluster type divergence is not drift · navigation-URL `href` reflects (§3);
+  `ui-attachment.href`'s reflect:false is TEMPORARY-INERT, flips at its LLD-C6 wave — do not flag
+  until then · `scheme` reflect split is principled: a JS-global-effect prop reflects
+  (theme-provider), a pure-render input doesn't (ramp/swatch) · `rows` (table data vs textarea
+  sizing) and `type` (pagination mode vs input-type) are confirmed different-concept matrix
+  artifacts — suppress both in the pre-pass flag list next run.
 
 ## Axis pack — traits
 

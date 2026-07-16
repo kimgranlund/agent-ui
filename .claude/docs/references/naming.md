@@ -72,6 +72,17 @@ use fleet machinery (ComponentPreview's raw-HTMLElement shape is a recorded exce
 - **The `duration` canon is a MILLISECONDS NUMBER** (TKT-0069 item 4, Kim-ruled 2026-07-16): a JS
   timer quantity (`ui-toast` is the shape). `ui-swiper`'s CSS `<time>` STRING is the recorded §12
   exception — it genuinely feeds CSS timing and reflects for that reason.
+- **`min`/`max` carry two sanctioned senses** (TKT-0070, Kim-ruled 2026-07-16): a **value-domain
+  bound** — numeric where the control's value is natively numeric (slider/slider-multi), or a
+  string-serialized bound with native-`<input min>` attribute-IDL parity (text-field, calendar —
+  already cross-cited to each other) — and a **layout-dimension bound**, an arbitrary CSS `<length>`
+  (grid's `minmax()` track floor, split-pane's pane floor; CSS's own `minmax()` idiom overloads the
+  words the same way). A new control picks the sense its concept matches; no third sense without a
+  ruling.
+- **A navigation-URL `href` REFLECTS** (TKT-0070, Kim-ruled 2026-07-16): the real-`<a>` inspection
+  surface (nav-rail-item, ui-text — both ADR-0114-gated). `ui-attachment.href`'s `reflect: false` is
+  TEMPORARY-INERT (its rendering leg is deferred to its LLD-C6 wave; the descriptor says so in-file)
+  — that wave flips it to reflect per this canon rather than deciding silently.
 - `variant` is deliberately per-control (visual voice is context-bound); its VALUES still obey
   the closed-enum rule.
 
