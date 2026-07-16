@@ -1,7 +1,9 @@
 // conversation.ts — UIConversationElement, the M2 thread/composer/narration primitive (LLD-C4/C5 ·
 // SPEC-R4/R5/R6/R7; ADR-0129 clauses 2/3). BEHAVIOUR + props + the internal per-surface registry +
-// narration + self-define ONLY; the thread/bubble/composer layout lives in conversation.css, the public
-// contract in conversation.md.
+// narration + self-define ONLY; the thread/bubble layout lives in conversation.css, the public contract
+// in conversation.md. The message-COMPOSITION UI itself (TKT-0056) is a separate composed child,
+// `ui-conversation-composer` (own `.ts`/`.css`/`.md`) — this file forwards props down and callbacks up to
+// it (the master-detail.ts → ui-split precedent), it does not build the composer's own DOM.
 //
 // Renders its OWN internal thread (user/agent/system bubbles) + composer — never author-composed, driven
 // entirely through the imperative API (SPEC-R4). Composes `ui-surface-host` INTERNALLY, one instance per
@@ -42,13 +44,29 @@ import type { UIStatusStreamElement } from '@agent-ui/components/components'
 import '../surface-host/surface-host.ts' // registers <ui-surface-host> — composed internally (ADR-0129 clause 2)
 import type { UISurfaceHostElement } from '../surface-host/surface-host.ts'
 import type { ClientMessageListener } from '@agent-ui/a2ui'
-import type { UITextFieldElement, UIButtonElement } from '@agent-ui/components/components'
+import './conversation-composer.ts' // registers <ui-conversation-composer> (TKT-0056) — composed internally, the master-detail.ts → ui-split precedent
+import type { UIConversationComposerElement } from './conversation-composer.ts'
+import type { PickerOption, ContextItem } from './composer-options.ts'
 
 const props = {
   // OPT-IN raw-wire disclosure (ADR-0129 clause 3) — reflected, default false. Narration itself (below)
   // ships unconditionally; this gates only the per-turn `<details>` wire dump, a debugging/inspection
   // affordance most product surfaces should not show by default.
   disclosure: { ...prop.boolean(false), reflect: true },
+
+  // ── The opt-in composer capabilities (the Figma chat-input refactor) ────────────────────────────────
+  // Every one below defaults to undefined/empty, so an existing consumer that never sets them (a2ui-chat,
+  // a2ui-live) gets the ORIGINAL field+Send composer, unchanged. A consumer (e.g. ui-agent-admin) opts in
+  // by supplying its own option list + selected value; ui-conversation stays generic — it never names a
+  // model or hardcodes "Effort"'s levels beyond the shared `EFFORT_LEVELS` constant a consumer may reuse.
+  models: { ...prop.json<readonly PickerOption[] | undefined>(undefined), attribute: false as const },
+  model: { ...prop.json<string | undefined>(undefined), attribute: false as const },
+  efforts: { ...prop.json<readonly PickerOption[] | undefined>(undefined), attribute: false as const },
+  effort: { ...prop.json<string | undefined>(undefined), attribute: false as const },
+  // `undefined`, not `[]` (the schema/store/models/efforts precedent) — an array literal default cannot
+  // round-trip through the descriptor's `default:` token (ADR-0004); forwarded straight through to the
+  // composed `ui-conversation-composer` child (TKT-0056), which coalesces to `[]` at its own read site.
+  contextItems: { ...prop.json<readonly ContextItem[] | undefined>(undefined), attribute: false as const },
 } satisfies PropsSchema
 
 /** The imperative per-turn driver the APP'S OWN transport loop calls — NOT a DOM type (SPEC-R8). */
@@ -169,14 +187,19 @@ export class UIConversationElement extends UIElement {
   static props = props
 
   #log: HTMLElement | undefined
-  #composer: HTMLFormElement | undefined
-  #field: UITextFieldElement | undefined
-  #sendBtn: UIButtonElement | undefined
+  // The composed message-composition child (TKT-0056) — JS-created ONCE (the master-detail.ts → ui-split
+  // precedent), forwarded props down via an effect, forwarded callbacks via the closures registered in
+  // #compose() below.
+  #composer: UIConversationComposerElement | undefined
   #warnedPreConnect = false
 
   readonly #registry = new Map<string, SurfaceRecord>()
   #onSubmitCb: ((text: string) => void) | undefined
   #onClientMessageCb: ClientMessageListener | undefined
+  #onModelChangeCb: ((id: string) => void) | undefined
+  #onEffortChangeCb: ((id: string) => void) | undefined
+  #onContextDismissCb: ((id: string) => void) | undefined
+  #onMicClickCb: (() => void) | undefined
   #turnSeq = 0
   // TKT-0034 — the busy/re-entrancy guard: a COUNT (not a bool) of `beginAgentTurn()` handles that exist
   // but have not yet `finalize()`d/`fail()`d. `#send` no-ops while this is > 0 (auto-tracked, zero consumer
@@ -189,39 +212,41 @@ export class UIConversationElement extends UIElement {
       this.#log.dataset.part = 'log'
       this.#log.setAttribute('aria-live', 'polite')
 
-      // A native <form> — this is the fleet's first native form ELEMENT (as opposed to a native form
-      // WIDGET: <input>/<button type=submit>/<select>/etc.). ADR-0017 bans the latter (every fleet control
-      // is its own FACE re-implementation of a widget's behavior); it says nothing about the structural
-      // <form> element itself, which contributes no widget semantics of its own — only Enter-triggers-
-      // submit plumbing this composer already handles directly via its own listeners below, never relying
-      // on native form-submission/validation.
-      this.#composer = document.createElement('form')
-      this.#composer.dataset.part = 'composer'
-      this.#field = document.createElement('ui-text-field') as UITextFieldElement
-      this.#field.setAttribute('label', 'Message')
-      this.#field.dataset.part = 'field'
-      this.#sendBtn = document.createElement('ui-button') as UIButtonElement
-      this.#sendBtn.setAttribute('variant', 'solid')
-      this.#sendBtn.dataset.part = 'send'
-      this.#sendBtn.textContent = 'Send'
-      this.#composer.append(this.#field, this.#sendBtn)
+      // JS-created internal child (TKT-0056, the master-detail.ts → ui-split precedent) — the message-
+      // composition UI (context chips, field, Models/Effort pickers, mic/send) lives entirely inside
+      // ui-conversation-composer now; this element only forwards props down and callbacks up (below).
+      const composer = document.createElement('ui-conversation-composer') as UIConversationComposerElement
+      // The four side-effect-free forwarders — safe to register ONCE, unconditionally: none of them has a
+      // visible effect on registration, and each reads its own `#onXCb` field FRESH on every invocation, so
+      // it works regardless of whether the consumer's own `onXChange(cb)` call happens before or after
+      // THIS element connects (LLD CVC-C5, code-reviewer finding F1).
+      composer.onSubmit((text) => {
+        this.addUserMessage(text)
+        this.#onSubmitCb?.(text)
+      })
+      composer.onModelChange((id) => this.#onModelChangeCb?.(id))
+      composer.onEffortChange((id) => this.#onEffortChangeCb?.(id))
+      composer.onContextDismiss((id) => this.#onContextDismissCb?.(id))
+      // `onMicClick` is DIFFERENT: the composer's own onMicClick has a visible side effect (revealing the
+      // mic button) — forwarding it unconditionally here would un-hide the mic for every consumer
+      // regardless of whether they ever asked for voice input. Only forward if a real callback is ALREADY
+      // registered (the pre-connect registration case) — `onMicClick` below handles the post-connect case.
+      if (this.#onMicClickCb !== undefined) composer.onMicClick(() => this.#onMicClickCb?.())
 
-      this.append(this.#log, this.#composer)
+      this.#composer = composer
+      this.append(this.#log, composer)
     }
 
-    // Listeners ride THIS connection's abort signal — re-armed every connect (the app-shell-region.ts
-    // `wired`-per-connection precedent): the DOM parts persist across a reconnect, but a listener bound to
-    // a PRIOR connection's signal already died with it.
-    this.listen(this.#composer!, 'submit', (e) => {
-      e.preventDefault()
-      this.#send()
-    })
-    this.listen(this.#sendBtn!, 'click', () => this.#send())
-    this.listen(this.#field!, 'keydown', (e) => {
-      if ((e as KeyboardEvent).key === 'Enter') {
-        e.preventDefault()
-        this.#send()
-      }
+    // Forward models/model/efforts/effort/contextItems straight through — the composed child's OWN
+    // reference-equality guards (rebuild only when the option-list REFERENCE changes) handle avoiding
+    // unnecessary DOM churn; this element just re-assigns the current values on every relevant change.
+    this.effect(() => {
+      if (!this.#composer) return
+      this.#composer.models = this.models
+      this.#composer.model = this.model
+      this.#composer.efforts = this.efforts
+      this.#composer.effort = this.effort
+      this.#composer.contextItems = this.contextItems
     })
   }
 
@@ -266,13 +291,13 @@ export class UIConversationElement extends UIElement {
     // ONE #endTurn() per handle guards against a caller invoking BOTH finalize() and fail() (never legal
     // per the SPEC, but a stray double-call must not under-flow the count into a stuck-busy negative).
     this.#turnsInFlight += 1
-    this.#setComposerBusy(true)
+    if (this.#composer) this.#composer.busy = true
     let ended = false
     const endTurn = (): void => {
       if (ended) return
       ended = true
       this.#turnsInFlight = Math.max(0, this.#turnsInFlight - 1)
-      this.#setComposerBusy(this.#turnsInFlight > 0)
+      if (this.#composer) this.#composer.busy = this.#turnsInFlight > 0
     }
     let noteText: string | undefined
     const turnLines: string[] = []
@@ -353,6 +378,37 @@ export class UIConversationElement extends UIElement {
     this.#onClientMessageCb = cb
   }
 
+  /** Fires with a `models` entry's `id` when the Models picker commits a choice — a callback, matching
+   *  `onSubmit`'s own precedent (SPEC-R5's closed event vocabulary has no picker-commit kind). The picker
+   *  itself never writes `this.model` — the consumer owns that (its own store), then hands the new value
+   *  back down through the `model` prop, same "props down, callbacks up" shape as everywhere else in this
+   *  fleet. Safe to call before or after connect. */
+  onModelChange(cb: (id: string) => void): void {
+    this.#onModelChangeCb = cb
+  }
+
+  /** Fires with an `efforts` entry's `id` when the Effort picker commits a choice. See `onModelChange`. */
+  onEffortChange(cb: (id: string) => void): void {
+    this.#onEffortChangeCb = cb
+  }
+
+  /** Fires with a `contextItems` entry's `id` when its dismiss affordance is clicked — the consumer owns
+   *  actually removing it from `contextItems` (props down, callbacks up, the `onModelChange` precedent). */
+  onContextDismiss(cb: (id: string) => void): void {
+    this.#onContextDismissCb = cb
+  }
+
+  /** Fires when the mic button is clicked. OPT-IN: the button stays hidden until this is actually called —
+   *  reveals it immediately if already connected, or on the next connect otherwise (matching `onSubmit`'s
+   *  "safe to call before or after connect" law). Deliberately inert beyond this callback — `ui-conversation`
+   *  has no speech-to-text mechanism of its own; a consumer that wants real voice input wires it here. */
+  onMicClick(cb: () => void): void {
+    this.#onMicClickCb = cb
+    // Forward immediately if the composer already exists (post-connect case); the pre-connect case is
+    // handled at compose time in connected() (LLD CVC-C5, code-reviewer finding F1).
+    this.#composer?.onMicClick(() => this.#onMicClickCb?.())
+  }
+
   /** Disposes every open surface host and clears the thread. A documented no-op pre-connect. A consumer that
    *  resets mid-turn (abandoning an un-finalized `AgentTurnHandle` rather than calling `finalize()`/`fail()`
    *  on it) must not leave the composer permanently disabled — TKT-0034's counter/busy-state zero here too
@@ -364,7 +420,7 @@ export class UIConversationElement extends UIElement {
     this.#registry.clear()
     this.#log!.replaceChildren()
     this.#turnsInFlight = 0
-    this.#setComposerBusy(false)
+    if (this.#composer) this.#composer.busy = false
   }
 
   /** Leak-safety net (the select.ts/text-field.ts "heavyweight per-connection resource" precedent) — a
@@ -389,42 +445,6 @@ export class UIConversationElement extends UIElement {
   }
 
   // ── internals ────────────────────────────────────────────────────────────────────────────────────────
-
-  /** TKT-0034 — a no-op while a turn is in flight (`#turnsInFlight > 0`): the typed text is RETAINED, not
-   *  cleared — no `addUserMessage`, no `#onSubmitCb`. Auto-tracked off `beginAgentTurn()`/`finalize()`/
-   *  `fail()`, so every consumer gets this for free (the composer is ALSO disabled while busy, below, but
-   *  this guard holds even if a caller somehow fires `#send()` past that — e.g. a stray Enter keydown
-   *  racing the disabled-effect's own attribute write). */
-  #send(): void {
-    if (this.#turnsInFlight > 0) return
-    const text = this.#field!.value.trim()
-    if (text === '') return
-    this.addUserMessage(text)
-    this.#field!.value = ''
-    this.#onSubmitCb?.(text)
-  }
-
-  /** TKT-0034 — the composer's in-flight affordance: the field + Send button disable (each control's OWN
-   *  disabled styling/AX already dims + pointer-inerts them, button.css/text-field.ts), and the composer
-   *  form itself carries `aria-busy`/`aria-disabled` + a `data-busy` CSS hook (conversation.css) for the
-   *  whole-composer dim, mirroring the pre-migration a2ui-chat.ts `.is-busy` affordance this replaces.
-   *  A focus-loss/restore concern was raised and INVESTIGATED (component-reviewer note, 2026-07-13): disabling
-   *  a focused field does NOT drop focus in ANY engine (jsdom, Chromium, WebKit — verified empirically) —
-   *  `ui-text-field`'s disabled state rides `contenteditable=false` + a removed `tabindex`, never a native
-   *  `disabled` attribute, and only the latter carries a browser-mandated blur. No restoration code is needed;
-   *  adding it would be speculative complexity for a scenario that does not occur. */
-  #setComposerBusy(busy: boolean): void {
-    this.#field!.disabled = busy
-    this.#sendBtn!.disabled = busy
-    this.#composer!.toggleAttribute('data-busy', busy)
-    if (busy) {
-      this.#composer!.setAttribute('aria-busy', 'true')
-      this.#composer!.setAttribute('aria-disabled', 'true')
-    } else {
-      this.#composer!.removeAttribute('aria-busy')
-      this.#composer!.removeAttribute('aria-disabled')
-    }
-  }
 
   /** `finalize()` every OPEN surface host this turn touched (LLD-C4) — shared by the success and the
    *  fail() path alike (the a2ui-chat.ts `finally` block precedent: settling is unconditional). */

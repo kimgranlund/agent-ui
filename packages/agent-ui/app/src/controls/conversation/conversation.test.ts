@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from 'vitest'
+import { whenFlushed } from '@agent-ui/components'
 import { UIConversationElement } from './conversation.ts'
+import type { UIConversationComposerElement } from './conversation-composer.ts'
 import type { UISurfaceHostElement } from '../surface-host/surface-host.ts'
-import '@agent-ui/components/components' // self-registers ui-button/ui-text-field/ui-status-stream/ui-timeline-item
+import '@agent-ui/components/components' // self-registers ui-button/ui-status-stream/ui-timeline-item
 import {
   splitFrontmatter,
   parseDescriptor,
@@ -18,8 +20,8 @@ declare const process: { cwd(): string }
 // scrollHeight behaviour, forced-colors — is conversation.browser.test.ts's job.
 
 // jsdom reality (the settings.test.ts/schema.test.ts precedent) — no native ElementInternals.setFormValue/
-// setValidity; the prototype is stubbed for this file's duration so the REAL composed ui-text-field this
-// element's composer connects can connect at all.
+// setValidity; the prototype is stubbed for this file's duration so the REAL composed form-associated
+// ui-button parts the composer connects can connect at all.
 let realAttachInternals: typeof HTMLElement.prototype.attachInternals
 beforeAll(() => {
   realAttachInternals = HTMLElement.prototype.attachInternals
@@ -49,6 +51,9 @@ const line = (obj: unknown): string => JSON.stringify(obj)
 
 function log(el: UIConversationElement): HTMLElement {
   return el.querySelector('[data-part="log"]') as HTMLElement
+}
+function composer(el: UIConversationElement): UIConversationComposerElement {
+  return el.querySelector('ui-conversation-composer') as UIConversationComposerElement
 }
 
 describe('ui-conversation — pre-connect calls are a documented no-op', () => {
@@ -174,142 +179,164 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
   })
 })
 
-describe('ui-conversation — onSubmit (SPEC-R5)', () => {
-  it('fires exactly once with the trimmed text; the composer clears', () => {
+describe('ui-conversation — onSubmit (SPEC-R5), forwarded from the composed ui-conversation-composer (TKT-0056)', () => {
+  it('a send through the composed composer calls addUserMessage AND fires onSubmit; the value clears', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     const received: string[] = []
     el.onSubmit((text) => received.push(text))
-    const field = el.querySelector('[data-part="field"]') as HTMLElement & { value: string }
-    const form = el.querySelector('[data-part="composer"]') as HTMLFormElement
-    field.value = '  hello agent  '
-    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    const child = composer(el)
+    child.value = '  hello agent  ' // the composer's own value prop (TKT-0058 — no nested field/form anymore)
+    ;(child.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
     expect(received).toEqual(['hello agent'])
-    expect(field.value).toBe('')
+    expect(child.value).toBe('')
+    const bubble = log(el).querySelector('[data-part="bubble"][data-role="user"]') as HTMLElement
+    expect(bubble.querySelector('[data-part="body"]')!.textContent).toBe('hello agent') // addUserMessage was called
   })
 
-  it('an empty/whitespace-only submit is a no-op — the callback never fires', () => {
+  it('no registered onSubmit never throws (the composer\'s own empty/no-callback guards are conversation-composer.test.ts\'s job)', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
-    const received: string[] = []
-    el.onSubmit((text) => received.push(text))
-    const form = el.querySelector('[data-part="composer"]') as HTMLFormElement
-    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
-    expect(received).toEqual([])
-  })
-
-  it('no registered onSubmit never throws on submit (a no-op consumer is legal, SPEC-R5 AC2)', () => {
-    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
-    const field = el.querySelector('[data-part="field"]') as HTMLElement & { value: string }
-    const form = el.querySelector('[data-part="composer"]') as HTMLFormElement
-    field.value = 'hi'
-    expect(() => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))).not.toThrow()
+    const child = composer(el)
+    child.value = 'hi'
+    expect(() => (child.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))).not.toThrow()
   })
 })
 
-describe('ui-conversation — busy/re-entrancy guard (TKT-0034)', () => {
-  it('a re-entrant send while a turn is in flight is a no-op (text RETAINED, no orphan bubble, no 2nd callback); send works again once finalize() runs', () => {
+describe('ui-conversation — the composed ui-conversation-composer (TKT-0056): props forwarded down, callbacks forwarded up', () => {
+  it('models/model/efforts/effort/contextItems all forward straight through to the composed child', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.models = [{ id: 'a', label: 'Model A' }]
+    el.model = 'a'
+    el.efforts = [{ id: 'low', label: 'Low' }]
+    el.effort = 'low'
+    el.contextItems = [{ id: 'sel-1', label: 'Context Selection' }]
+    await whenFlushed() // the forwarding effect is microtask-batched, not synchronous
+    const child = composer(el)
+    expect(child.models).toEqual(el.models)
+    expect(child.model).toBe('a')
+    expect(child.efforts).toEqual(el.efforts)
+    expect(child.effort).toBe('low')
+    expect(child.contextItems).toEqual(el.contextItems)
+  })
+
+  it('committing a Models/Effort picker choice in the composed child fires ui-conversation\'s OWN onModelChange/onEffortChange', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.models = [{ id: 'a', label: 'A' }, { id: 'b', label: 'B' }]
+    el.efforts = [{ id: 'low', label: 'Low' }, { id: 'high', label: 'High' }]
+    await whenFlushed()
+    const modelIds: string[] = []
+    const effortIds: string[] = []
+    el.onModelChange((id) => modelIds.push(id))
+    el.onEffortChange((id) => effortIds.push(id))
+    ;(el.querySelector('[data-part="models-menu"] [data-value="b"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    ;(el.querySelector('[data-part="effort-menu"] [data-value="high"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    expect(modelIds).toEqual(['b'])
+    expect(effortIds).toEqual(['high'])
+  })
+
+  it('dismissing a context chip in the composed child fires ui-conversation\'s OWN onContextDismiss', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.contextItems = [{ id: 'sel-1', label: 'Context Selection' }]
+    await whenFlushed()
+    const received: string[] = []
+    el.onContextDismiss((id) => received.push(id))
+    ;(el.querySelector('[data-part="context-chip-dismiss"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    expect(received).toEqual(['sel-1'])
+  })
+
+  it('onMicClick reveals the composed child\'s mic button — POST-connect registration', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const mic = el.querySelector('[data-part="mic"]') as HTMLElement
+    expect(mic.hasAttribute('hidden')).toBe(true)
+    let clicks = 0
+    el.onMicClick(() => (clicks += 1))
+    expect(mic.hasAttribute('hidden')).toBe(false)
+    mic.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(clicks).toBe(1)
+  })
+
+  it('onMicClick registered BEFORE connect ALSO reveals the mic once composed (code-reviewer finding F1 — the conditional forwarder)', () => {
+    const el = document.createElement('ui-conversation') as UIConversationElement
+    let clicks = 0
+    el.onMicClick(() => (clicks += 1)) // pre-connect — no composer exists yet, must not throw
+    mount(el)
+    const mic = el.querySelector('[data-part="mic"]') as HTMLElement
+    expect(mic.hasAttribute('hidden')).toBe(false)
+    mic.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(clicks).toBe(1)
+  })
+
+  it('an unregistered onMicClick never reveals the mic for a consumer that never asked for voice input (the a2ui-chat.ts hazard this fixes)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const mic = el.querySelector('[data-part="mic"]') as HTMLElement
+    expect(mic.hasAttribute('hidden')).toBe(true)
+  })
+})
+
+describe('ui-conversation — busy/re-entrancy guard (TKT-0034), forwarded to the composed child\'s `busy` prop', () => {
+  it('beginAgentTurn() sets the composed child\'s busy to true; finalize() clears it', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    expect(composer(el).busy).toBe(false)
+    const handle = el.beginAgentTurn()
+    expect(composer(el).busy).toBe(true)
+    handle.finalize()
+    expect(composer(el).busy).toBe(false)
+  })
+
+  it('fail() also clears busy (not only finalize())', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    expect(composer(el).busy).toBe(true)
+    handle.fail('network error')
+    expect(composer(el).busy).toBe(false)
+  })
+
+  it('two overlapping turns keep busy true until BOTH end (the in-flight count, not a bare flag)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    const t2 = el.beginAgentTurn()
+    expect(composer(el).busy).toBe(true)
+    t1.finalize()
+    expect(composer(el).busy, 't1 ended but t2 is still in flight — busy must stay true').toBe(true)
+    t2.finalize()
+    expect(composer(el).busy).toBe(false)
+  })
+
+  it('reset() mid-turn zeroes the in-flight count and clears busy (an abandoned handle must not stick it true)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.beginAgentTurn() // never finalize()d/fail()d — the handle is abandoned
+    expect(composer(el).busy).toBe(true)
+    el.reset()
+    expect(composer(el).busy, 'reset() must clear busy even for an abandoned in-flight handle').toBe(false)
+    // and a fresh beginAgentTurn()/finalize() cycle behaves normally afterward.
+    const handle = el.beginAgentTurn()
+    expect(composer(el).busy).toBe(true)
+    handle.finalize()
+    expect(composer(el).busy).toBe(false)
+  })
+
+  it('a re-entrant send while a turn is in flight is a no-op (the composer\'s own busy guard, TKT-0034 end-to-end)', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     const received: string[] = []
     el.onSubmit((text) => received.push(text))
-    const field = el.querySelector('[data-part="field"]') as HTMLElement & { value: string; disabled: boolean }
-    const sendBtn = el.querySelector('[data-part="send"]') as HTMLElement & { disabled: boolean }
-    const composer = el.querySelector('[data-part="composer"]') as HTMLFormElement
+    const child = composer(el)
+    const send = child.querySelector('[data-part="send"]') as HTMLElement
+    const clickSend = (): boolean => send.dispatchEvent(new Event('click', { bubbles: true }))
 
-    // idle (no turn yet): the composer carries none of the busy affordance
-    expect(composer.hasAttribute('data-busy')).toBe(false)
-    expect(composer.getAttribute('aria-busy')).toBeNull()
-    expect(composer.getAttribute('aria-disabled')).toBeNull()
-    expect(field.disabled).toBe(false)
-    expect(sendBtn.disabled).toBe(false)
-
-    // the FIRST send (no turn in flight yet) fires normally, same as the plain onSubmit suite above.
-    field.value = 'first message'
-    composer.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    child.value = 'first message'
+    clickSend()
     expect(received).toEqual(['first message'])
-    expect(field.value).toBe('')
 
-    // begin an agent turn — an un-finalized handle IS the in-flight state (SPEC-R8: the app's own turn loop
-    // drives this; a busy-guarded onSubmit consumer, the normal pattern, would begin one here too).
     const handle = el.beginAgentTurn()
-
-    // the composer now reflects busy — auto-tracked, zero consumer wiring.
-    expect(composer.hasAttribute('data-busy')).toBe(true)
-    expect(composer.getAttribute('aria-busy')).toBe('true')
-    expect(composer.getAttribute('aria-disabled')).toBe('true')
-    expect(field.disabled).toBe(true)
-    expect(sendBtn.disabled).toBe(true)
-
-    // THE REGRESSION (ticket repro): a re-entrant send mid-turn. Before the fix this appended an orphan user
-    // bubble, cleared the field, and fired a 2nd onSubmit — silently discarding the typed text.
-    field.value = 'second message'
-    composer.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    child.value = 'second message'
+    clickSend()
     expect(received, 'a 2nd onSubmit fired during an in-flight turn').toEqual(['first message'])
-    expect(field.value, 'the typed text was NOT retained across a re-entrant send').toBe('second message')
-    expect(
-      log(el).querySelectorAll('[data-part="bubble"][data-role="user"]'),
-      'a re-entrant send minted an orphan user bubble',
-    ).toHaveLength(1)
+    expect(child.value, 'the typed text was NOT retained across a re-entrant send').toBe('second message')
+    expect(log(el).querySelectorAll('[data-part="bubble"][data-role="user"]')).toHaveLength(1)
 
-    // finalize() ends the in-flight window — the composer re-enables THE MOMENT it runs.
     handle.finalize()
-    expect(composer.hasAttribute('data-busy')).toBe(false)
-    expect(composer.getAttribute('aria-busy')).toBeNull()
-    expect(composer.getAttribute('aria-disabled')).toBeNull()
-    expect(field.disabled).toBe(false)
-    expect(sendBtn.disabled).toBe(false)
-
-    // send works again: the RETAINED text from the blocked attempt is what actually goes out.
-    composer.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    clickSend()
     expect(received).toEqual(['first message', 'second message'])
-    expect(field.value).toBe('')
     expect(log(el).querySelectorAll('[data-part="bubble"][data-role="user"]')).toHaveLength(2)
-  })
-
-  it('fail() also ends the in-flight window (not only finalize()) and re-enables the composer', () => {
-    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
-    const field = el.querySelector('[data-part="field"]') as HTMLElement & { disabled: boolean }
-    const composer = el.querySelector('[data-part="composer"]') as HTMLFormElement
-
-    const handle = el.beginAgentTurn()
-    expect(field.disabled).toBe(true)
-    handle.fail('network error')
-    expect(field.disabled).toBe(false)
-    expect(composer.hasAttribute('data-busy')).toBe(false)
-    expect(composer.getAttribute('aria-busy')).toBeNull()
-  })
-
-  it('two overlapping turns keep the composer busy until BOTH end (the in-flight count, not a bare flag)', () => {
-    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
-    const field = el.querySelector('[data-part="field"]') as HTMLElement & { disabled: boolean }
-
-    const t1 = el.beginAgentTurn()
-    const t2 = el.beginAgentTurn()
-    expect(field.disabled).toBe(true)
-
-    t1.finalize()
-    expect(field.disabled, 't1 ended but t2 is still in flight — the composer must stay busy').toBe(true)
-
-    t2.finalize()
-    expect(field.disabled).toBe(false)
-  })
-
-  it('reset() mid-turn zeroes the in-flight count and re-enables the composer (an abandoned handle must not stick it disabled)', () => {
-    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
-    const field = el.querySelector('[data-part="field"]') as HTMLElement & { disabled: boolean }
-    const composer = el.querySelector('[data-part="composer"]') as HTMLFormElement
-
-    el.beginAgentTurn() // never finalize()d/fail()d — the handle is abandoned
-    expect(field.disabled).toBe(true)
-
-    el.reset()
-    expect(field.disabled, 'reset() must clear the busy state even for an abandoned in-flight handle').toBe(false)
-    expect(composer.hasAttribute('data-busy')).toBe(false)
-
-    // and a fresh beginAgentTurn()/finalize() cycle behaves normally afterward (the count is truly zeroed,
-    // not left at some stale negative/positive value a Math.max(0,…) floor would otherwise mask).
-    const handle = el.beginAgentTurn()
-    expect(field.disabled).toBe(true)
-    handle.finalize()
-    expect(field.disabled).toBe(false)
   })
 })
 
@@ -492,7 +519,7 @@ describe('conversation.md descriptor', () => {
   const md = readFileSync(`${DIR}/conversation.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['disclosure']
+  const ATTR_NAMES = ['disclosure', 'models', 'model', 'efforts', 'effort', 'contextItems']
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)

@@ -8,7 +8,8 @@ tag: ui-conversation
 # label) — `layout` is the closest real class: a CSS-flex distributor of its OWN thread/composer bands, no
 # control height of its own (the ui-app-shell/ui-master-detail precedent).
 tier: layout
-extends: UIElement      # a plain structural base — composes ui-surface-host/ui-status-stream rather than extending either (ADR-0129 clause 2)
+extends: UIElement      # a plain structural base — composes ui-surface-host/ui-status-stream/ui-conversation-composer rather than extending any of them (ADR-0129 clause 2)
+composes: [ui-surface-host, ui-status-stream, ui-conversation-composer]  # all JS-created internal children — documentary only (component-descriptor.ts's FIELD_SHAPE has no `composes` key)
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs, LLD-C9), after the M2 reference-app re-host — the M1/M4 kickoff discipline, never guessed in advance
 
 attributes:              # attributes-as-API — mirrors conversation.ts `props`
@@ -16,12 +17,42 @@ attributes:              # attributes-as-API — mirrors conversation.ts `props`
     type: boolean
     default: false
     reflect: true         # reflects so a JS-set value applies identically to an author-set attribute (ADR-0129 clause 3)
+  - name: models
+    type: json            # readonly {id,label}[] (composer-options.ts's PickerOption) — too structured to reflect
+    default: undefined    # undefined ⇒ no Models picker; the original field+Send composer, unchanged
+    reflect: false
+  - name: model
+    type: json            # a plain string id, but attribute:false alongside its list (the schema/store pairing precedent) — never reflected, so the codec never runs
+    default: undefined
+    reflect: false
+  - name: efforts
+    type: json            # readonly {id,label}[] — same shape/opt-in law as `models`
+    default: undefined    # undefined ⇒ no Effort picker
+    reflect: false
+  - name: effort
+    type: json
+    default: undefined
+    reflect: false
+  - name: contextItems
+    type: json            # readonly {id,label}[] (composer-options.ts's ContextItem) — the dismissable chip row
+    default: undefined    # undefined ⇒ no chip row (coalesced to [] at the one read site — an array literal default cannot round-trip through this token)
+    reflect: false
 
 properties:
   - name: disclosure
     description: OPT-IN raw-wire disclosure (ADR-0129 clause 3). Reflected boolean, default false. Narration itself (the per-turn `ui-status-stream`) ships UNCONDITIONALLY — this prop gates only the per-turn `<details>` wire dump of the turn's own raw JSONL lines, a debugging/inspection affordance most product surfaces should not show by default. Appended at `AgentTurnHandle.finalize()` time when true and the turn carried at least one line.
+  - name: models
+    description: OPTIONAL `readonly {id, label}[]` (composer-options.ts's `PickerOption`) — when set (and non-empty), the composer renders a Models picker. Default `undefined` ⇒ no picker, the original field+Send composer shape, unchanged for any consumer that never sets this (a2ui-chat, a2ui-live).
+  - name: model
+    description: The Models picker's CURRENT selection (an id from `models`). The picker never writes this itself — a consumer supplies it (its own persisted selection) and reads the committed choice back via `onModelChange` (props down, callbacks up).
+  - name: efforts
+    description: OPTIONAL `readonly {id, label}[]` — same shape/opt-in law as `models`, for the Effort picker. `composer-options.ts` exports a ready-made `EFFORT_LEVELS` constant (low/medium/high/xhigh) a consumer may reuse verbatim rather than inventing its own scale.
+  - name: effort
+    description: The Effort picker's CURRENT selection. See `model` — same props-down/callbacks-up law, via `onEffortChange`.
+  - name: contextItems
+    description: A `readonly {id, label}[]` of dismissable chips shown above the field (e.g. "something selected elsewhere, attached to this turn's context"). Default `undefined` — no chip row. A dismiss click fires `onContextDismiss(id)`; the consumer owns actually removing it from this list.
 
-events: []               # no DOM events — the reply affordance (onSubmit) and outbound client messages (onClientMessage) are callback registrations, never CustomEvents (SPEC-R5; the closed six-event vocabulary has no submission/client-message kind)
+events: []               # no DOM events — onSubmit/onClientMessage/onModelChange/onEffortChange/onContextDismiss/onMicClick are ALL callback registrations, never CustomEvents (SPEC-R5; the closed six-event vocabulary has no submission/picker-commit/client-message kind)
 
 slots: []                 # content model is NOT author-composed — the thread/composer are built entirely by this element's own connect-time logic and imperative API; no slotted children
 
@@ -38,8 +69,12 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
     description: The visible "Closed." note (`[data-part="annotation"]`) appended to a surface's bubble on deletion (SPEC-R7).
   - name: disclosure
     description: The opt-in raw-wire `<details>` dump (`[data-part="disclosure"]`), shown only when `disclosure` is true.
-  - name: composer
-    description: The reply form (`[data-part="composer"]`) — a `ui-text-field` + a `ui-button`. Auto-disables + carries `aria-busy`/`aria-disabled`/`data-busy` while a `beginAgentTurn()` handle is in flight (TKT-0034); see "Busy/re-entrancy guard" below.
+
+  Note (TKT-0056): the composer's own parts (`composer`, `context-chips`, `options`, the picker triggers,
+  `mic`, `send`) moved to `ui-conversation-composer` — see `conversation-composer.md`'s own `parts:` block.
+  `ui-conversation` composes it as a JS-created internal child; reach its parts via
+  `ui-conversation ui-conversation-composer [data-part="…"]` (the `[data-part]` boundary is unaffected by
+  the extra custom-element nesting).
 
 customStates: []          # no :state() hooks — a closed surface's dimmed bubble rides a plain `data-state` attribute, not a custom state (the master-detail.md `data-view` precedent)
 
@@ -49,20 +84,20 @@ face:
 aria:
   role: none               # this element carries no ARIA role of its own
   roleSource: none
-  childModel: none — the thread/composer are built entirely by this element's own connect-time logic and imperative API; nothing is ever author-composed or slotted
+  childModel: none — the thread is built entirely by this element's own connect-time logic and imperative API; the composer is a JS-created composed child (ui-conversation-composer, TKT-0056); nothing is ever author-composed or slotted
 
 contentModel: '[data-part=bubble] children carry a [data-role=user|agent|system] speaker kind (references/naming.md §6 registry, added in this change); a user/agent bubble also carries a [data-part=who] label ("You"/"Agent"), a [data-part=body] text cell, and (agent only) [data-part=narration]/[data-part=mounts]/[data-part=annotation]/[data-part=disclosure] children — none of these are author-composed (SPEC-R4)'
 
 keyboard:
   - keys: Enter
-    action: In the composer's ui-text-field, submits the composer text (same as clicking Send) — SPEC-R5 AC1.
+    action: In the composed ui-conversation-composer's own field, submits the composer text (same as clicking Send) — SPEC-R5 AC1; see conversation-composer.md.
 
 geometry:
   sizeClass: layout                 # Container/layout band — a flex distributor of its own bands, no control height
   blockSize: consumer-supplied      # fills its containing box (100% inline/block) — give it a definite block-size in the surrounding layout (the ui-surface-host/ui-app-shell precedent)
-  paddingBlock: 0                    # the host itself adds no block padding — the log/composer own their own insets
+  paddingBlock: 0                    # the host itself adds no block padding — the log owns its own insets; the composed ui-conversation-composer owns its own
 
-forcedColors: The bordered shell + composer divider stay legible under `forced-colors: active` (`conversation.css`, `CanvasText`-repointed). The narration strip (`ui-status-stream`) and the composer's own `ui-text-field`/`ui-button` carry their own forced-colors handling; the "Closed." annotation and composer/bubble text are plain text, legible for free under the platform's own forced-colors text/background repaint.
+forcedColors: The bordered shell stays legible under `forced-colors: active` (`conversation.css`, `CanvasText`-repointed). The narration strip (`ui-status-stream`) and the composed `ui-conversation-composer` (its own field frame + `ui-button`/`ui-menu` parts) carry their own forced-colors handling; the "Closed." annotation and bubble text are plain text, legible for free under the platform's own forced-colors text/background repaint.
 ---
 
 # ui-conversation
@@ -114,19 +149,54 @@ elsewhere in the fleet) — this ships **unconditionally** (ADR-0088's honest-na
 transport, iterating an `AsyncIterable<string>`) drives `AgentTurnHandle.ingestLine()`/`finalize()`/
 `fail()` imperatively; there is no `AgentTransport`/`AgentProvider`/API-key prop anywhere on this element.
 
+## The composer is a composed child, `ui-conversation-composer` (TKT-0056)
+
+`ui-conversation` JS-creates ONE `<ui-conversation-composer>` (the `master-detail.ts` → `ui-split`
+precedent — never author-composed), forwarding `models`/`model`/`efforts`/`effort`/`contextItems` down as
+props and forwarding its five callback registrations up to whatever THIS element's own consumer
+registered. See `conversation-composer.md` for the composer's own full contract (its parts, its `busy`
+prop, its opt-in mic/pickers/chips). Beyond the field + send button, the composer can carry a **Models
+picker**, an **Effort picker**, dismissable **context chips**, and a **mic button** — every one of them
+OFF by default, so an existing consumer that never sets `models`/`efforts`/`contextItems` gets the
+ORIGINAL composer, unchanged:
+
+```ts
+import { EFFORT_LEVELS } from '@agent-ui/app/composer-options'
+conv.models = [{ id: 'claude-sonnet-5', label: 'Sonnet 5' }, /* … */]
+conv.model = 'claude-sonnet-5'
+conv.efforts = EFFORT_LEVELS
+conv.effort = 'medium'
+conv.onModelChange((id) => { /* persist the new selection, e.g. a settings store */ })
+conv.onEffortChange((id) => { /* ephemeral — no persisted counterpart expected */ })
+conv.contextItems = [{ id: 'sel-1', label: 'Context Selection' }]
+conv.onContextDismiss((id) => { /* remove `id` from contextItems */ })
+conv.onMicClick(() => { /* wire real voice input here — none is built in */ }) // ALSO reveals the mic button — hidden until this is called
+```
+
+Every picker follows **props down, callbacks up** (the `onSubmit` precedent) — `ui-conversation` never
+writes `model`/`effort` itself; a consumer supplies the current value and reads the committed choice back
+through the matching callback. `models`/`efforts` are generic `{id, label}` option lists — `ui-conversation`
+never hardcodes a model catalog or invents Effort's own semantics beyond the shared `EFFORT_LEVELS`
+constant a consumer may reuse. All six new callbacks (`onModelChange`/`onEffortChange`/`onContextDismiss`/
+`onMicClick`, alongside `onSubmit`/`onClientMessage`) are safe to register before or after connect.
+
+The send/mic/caret glyphs need a registered `@agent-ui/icons` pack (`ui-icon`'s own requirement, not new
+here) — a consumer that composes `ui-conversation` without one gets correctly-sized but BLANK icon-only
+buttons (their `aria-label`s stay intact; nothing is inaccessible, just visually empty).
+
 ## Busy/re-entrancy guard — auto-tracked, zero consumer wiring (TKT-0034)
 
 `ui-conversation` owns tracking its own in-flight turns: while one or more `beginAgentTurn()` handles exist
-that have not yet `finalize()`d/`fail()`d, `#send()` (Enter or the Send click) is a **no-op** — the typed
-text is **retained**, never cleared, and no `addUserMessage`/`onSubmit` callback fires. The composer
-reflects this visually the moment a handle opens: the field + Send button disable (each control's own
-`disabled` styling/AX applies), and the composer form itself carries `aria-busy="true"`/
-`aria-disabled="true"`/`data-busy` for the whole-composer dim (`conversation.css`). Every one of these
-releases the instant the LAST open handle `finalize()`s or `fail()`s — no consumer wiring required; a
-consumer's own busy flag (e.g. serializing its transport loop, the a2ui-chat.ts precedent) stays
-independently useful for re-entrancy paths that never touch the composer (a click on a rendered A2UI
-surface triggering another `beginAgentTurn()`), but is redundant-but-harmless for the composer send path,
-which this primitive now guards unconditionally.
+that have not yet `finalize()`d/`fail()`d, it sets the composed `ui-conversation-composer`'s own `busy`
+prop to `true` — the composer's OWN send path (Enter or the Send click) is then a **no-op**, the typed
+text **retained**, never cleared, and no `addUserMessage`/`onSubmit` callback fires (see
+`conversation-composer.md`'s "busy is load-bearing behavior" note — the composer checks `busy`
+synchronously, not only via the reflected disabled state). Every one of these releases the instant the
+LAST open handle `finalize()`s or `fail()`s — no consumer wiring required; a consumer's own busy flag
+(e.g. serializing its transport loop, the a2ui-chat.ts precedent) stays independently useful for
+re-entrancy paths that never touch the composer (a click on a rendered A2UI surface triggering another
+`beginAgentTurn()`), but is redundant-but-harmless for the composer send path, which this primitive now
+guards unconditionally.
 
 ## Pre-connect calls are a documented no-op
 
@@ -143,10 +213,11 @@ must not leak every composed `ui-surface-host`'s `RendererHost` — `disconnecte
 `reset()`, the thread DOM itself is left untouched — this is resource teardown, not a user-facing "start
 over" action.
 
-## A native `<form>`, not a native form widget (ADR-0017)
+## The composer is its own field (TKT-0058)
 
-The composer's `[data-part="composer"]` is a genuine native `<form>` element — this element's first native
-form ELEMENT, as distinct from a native form WIDGET (`<input>`/`<button type=submit>`/`<select>`/etc.),
-which ADR-0017 bans (every fleet control is its own FACE re-implementation of a widget's behavior). The
-`<form>` contributes no widget semantics of its own; submission is driven entirely by this element's own
-listeners (Enter, the Send click), never native form-submission/validation.
+The composed `ui-conversation-composer` is ITSELF the message field since the TKT-0058 v2 unroll: one
+ADR-0014 field frame (focus ring on the composer host) containing the context-chip tags row, the
+composer's OWN contenteditable multi-line editor (the `ui-textarea` ADR-0134 pattern — no nested
+`ui-text-field`), and the options row. Its v1 nested native `<form>` (the former ADR-0017
+native-form-ELEMENT carve-out) is gone — submission is driven entirely by the composer's own listeners
+(Enter, the Send click). See `conversation-composer.md` for the full anatomy.
