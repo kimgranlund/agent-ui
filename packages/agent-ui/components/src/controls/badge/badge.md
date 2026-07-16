@@ -22,7 +22,7 @@ attributes:             # attributes-as-API — mirrors UIBadgeElement.props (la
   - name: label
     type: string
     default: ''
-    reflect: false      # NOT reflected — property-only announced text (the host's real accessible name)
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
   - name: intent
     type: enum
     values: [neutral, info, success, warning, danger]

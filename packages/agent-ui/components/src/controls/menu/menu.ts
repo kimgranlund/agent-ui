@@ -145,6 +145,9 @@ export class UIMenuElement extends UIElement {
     // Keydown on the panel → Enter/Space on focused menuitems that are NOT native buttons or
     // links (those convert Enter/Space → click natively, which our click listener then commits).
     // For non-interactive elements (`<div role=menuitem>`), we must commit on keydown.
+    // DELIBERATE selectionCommit bypass (ratified, TKT-0065 lateral review): that trait reflects
+    // `aria-selected` on items — invalid on `role=menuitem` (action semantics, no selected state) —
+    // and carries no Space leg; this hand-rolled click+Enter/Space path IS the menu commit contract.
     this.listen(panel, 'keydown', (ev) => {
       const e = ev as KeyboardEvent
       if (e.key !== 'Enter' && e.key !== ' ') return

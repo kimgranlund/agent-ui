@@ -8,11 +8,11 @@ import { UIStatElement } from './stat.ts'
 // effect builds.
 
 describe('UIStatElement — upgrade + typed props', () => {
-  it('defaults: label="", value="", delta=null, caption=""', () => {
+  it('defaults: label="", figure="", delta=null, caption=""', () => {
     const el = document.createElement('ui-stat') as UIStatElement
     expect(el).toBeInstanceOf(UIStatElement)
     expect(el.label).toBe('')
-    expect(el.value).toBe('')
+    expect(el.figure).toBe('')
     expect(el.delta).toBeNull()
     expect(el.caption).toBe('')
   })
@@ -26,17 +26,17 @@ describe('UIStatElement — upgrade + typed props', () => {
 
   it('a numeric value="48200" attribute upgrades to the typed NUMBER (so it formats)', () => {
     const el = document.createElement('ui-stat') as UIStatElement
-    el.setAttribute('value', '48200')
+    el.setAttribute('figure', '48200')
     document.body.append(el)
-    expect(el.value).toBe(48200)
+    expect(el.figure).toBe(48200)
     el.remove()
   })
 
   it('a pre-formatted value="$1.2M" attribute stays the verbatim STRING (author-controlled formatting)', () => {
     const el = document.createElement('ui-stat') as UIStatElement
-    el.setAttribute('value', '$1.2M')
+    el.setAttribute('figure', '$1.2M')
     document.body.append(el)
-    expect(el.value).toBe('$1.2M')
+    expect(el.figure).toBe('$1.2M')
     el.remove()
   })
 
@@ -53,7 +53,7 @@ describe('UIStatElement — no heading stamp (SPEC-R8 AC1)', () => {
   it('a fully-populated stat contains zero heading elements', () => {
     const el = document.createElement('ui-stat') as UIStatElement
     el.label = 'Revenue'
-    el.value = 48200
+    el.figure = 48200
     el.delta = 12
     el.caption = 'vs last month'
     document.body.append(el)
@@ -66,7 +66,7 @@ describe('UIStatElement — tile DOM shape (SPEC-R7 AC1/AC3, SPEC-R8, LLD-C5)', 
   it('the ADR-0111 cl.2 example renders all four parts, value Intl-formatted, reading order intact', async () => {
     const el = document.createElement('ui-stat') as UIStatElement
     el.label = 'Revenue'
-    el.value = 48200
+    el.figure = 48200
     el.delta = 12
     el.caption = 'vs last month'
     document.body.append(el)
@@ -82,7 +82,7 @@ describe('UIStatElement — tile DOM shape (SPEC-R7 AC1/AC3, SPEC-R8, LLD-C5)', 
 
   it('value=NaN renders the placeholder, delta=NaN renders no delta region, no exception escapes (AC3)', async () => {
     const el = document.createElement('ui-stat') as UIStatElement
-    el.value = Number.NaN
+    el.figure = Number.NaN
     el.delta = Number.NaN
     expect(() => document.body.append(el)).not.toThrow()
     await el.updateComplete
@@ -94,7 +94,7 @@ describe('UIStatElement — tile DOM shape (SPEC-R7 AC1/AC3, SPEC-R8, LLD-C5)', 
   it('absent delta ⇒ no delta region; absent/empty caption ⇒ no caption part', async () => {
     const el = document.createElement('ui-stat') as UIStatElement
     el.label = 'Uptime'
-    el.value = '99.98%'
+    el.figure = '99.98%'
     document.body.append(el)
     await el.updateComplete
     expect(el.querySelector('[data-part="delta"]')).toBeNull()
@@ -106,7 +106,7 @@ describe('UIStatElement — tile DOM shape (SPEC-R7 AC1/AC3, SPEC-R8, LLD-C5)', 
   it('whole-swap rebuild: only tbody-equivalent children exist after any prop change (no leftover nodes)', async () => {
     const el = document.createElement('ui-stat') as UIStatElement
     el.label = 'A'
-    el.value = 1
+    el.figure = 1
     document.body.append(el)
     await el.updateComplete
     expect(el.childElementCount).toBe(2) // label + value only
@@ -127,7 +127,7 @@ describe('UIStatElement — delta direction as text (SPEC-R9 AC1)', () => {
   it('delta=12 ⇒ dir/word="up", glyph present + aria-hidden + text-free, signed text "+12"', async () => {
     const el = document.createElement('ui-stat') as UIStatElement
     el.label = 'Revenue'
-    el.value = 100
+    el.figure = 100
     el.delta = 12
     document.body.append(el)
     await el.updateComplete
@@ -146,7 +146,7 @@ describe('UIStatElement — delta direction as text (SPEC-R9 AC1)', () => {
 
   it('delta=-3 ⇒ dir/word="down", signed text "-3"', async () => {
     const el = document.createElement('ui-stat') as UIStatElement
-    el.value = 100
+    el.figure = 100
     el.delta = -3
     document.body.append(el)
     await el.updateComplete
@@ -161,7 +161,7 @@ describe('UIStatElement — delta direction as text (SPEC-R9 AC1)', () => {
 
   it('delta=0 ⇒ dir="flat", word="unchanged", bare "0", and NO glyph node', async () => {
     const el = document.createElement('ui-stat') as UIStatElement
-    el.value = 100
+    el.figure = 100
     el.delta = 0
     document.body.append(el)
     await el.updateComplete
@@ -176,7 +176,7 @@ describe('UIStatElement — delta direction as text (SPEC-R9 AC1)', () => {
 
   it('the direction word precedes the signed number in DOM order (real, announced text)', async () => {
     const el = document.createElement('ui-stat') as UIStatElement
-    el.value = 100
+    el.figure = 100
     el.delta = 12
     document.body.append(el)
     await el.updateComplete

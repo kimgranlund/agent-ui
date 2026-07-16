@@ -43,7 +43,7 @@ interface ChoiceGroup {
 function miniStat(): HTMLElement {
   const stat = document.createElement('ui-stat')
   stat.setAttribute('label', 'Revenue')
-  stat.setAttribute('value', '48200')
+  stat.setAttribute('figure', '48200')
   stat.setAttribute('delta', '4.2')
   return stat
 }
@@ -87,14 +87,14 @@ function miniLink(): HTMLElement {
 }
 function miniAvatar(): HTMLElement {
   const a = document.createElement('ui-avatar')
-  a.setAttribute('name', 'Ada Lovelace')
+  a.setAttribute('identity', 'Ada Lovelace')
   a.setAttribute('size', 'sm')
   return a
 }
 function miniProgress(): HTMLElement {
   const p = document.createElement('ui-progress')
   p.setAttribute('label', 'Uploading')
-  p.setAttribute('value', '60')
+  p.setAttribute('current', '60')
   return p
 }
 function miniAttachment(): HTMLElement {

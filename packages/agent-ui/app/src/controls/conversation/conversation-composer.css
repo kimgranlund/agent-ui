@@ -1,0 +1,284 @@
+/* conversation-composer.css — ui-conversation-composer (TKT-0056 · TKT-0058 v2). Single file, two
+ * sectioned blocks (ADR-0003): a `:where(ui-conversation-composer)` TOKEN block declaring its OWN
+ * `--ui-conversation-composer-*` custom properties, then an `@scope (ui-conversation-composer)` STYLES
+ * block consuming ONLY that chain (plus the one fleet exception: the shared focus-ring + motion
+ * constants, read directly — the text-field/textarea precedent).
+ *
+ * Since the v2 unroll (TKT-0058) the HOST is ITSELF the field: the ADR-0014 field-frame map (borrowed
+ * verbatim from ui-textarea's own token block — a multi-line entry surface is the SAME entry-control kin,
+ * only the content differs) wraps the chips row + the own contenteditable editor + the options row in ONE
+ * frame, with ONE focus ring on the host.
+ *
+ * Standalone sheet — linked via the package `./conversation-composer.css` export; NEVER injected from
+ * conversation-composer.ts (behaviour-only `.ts`, no runtime style; plan §2).
+ */
+
+/* ═══ [ui-conversation-composer] TOKEN BLOCK ═══ */
+
+:where(ui-conversation-composer) {
+  /* Field-frame colour channel (family = neutral) — Kim's filled/container state law (TKT-0062, the
+     SAME table text-field/textarea/select/combo-box all now carry), applied to the v2 unrolled field
+     frame (TKT-0058: the HOST paints the frame directly, no nested ui-text-field). THREE channels
+     repoint per state — default (empty, idle) / filled (has text, idle) / hover / focus / busy (this
+     element's own disabled-equivalent — a turn in flight, TKT-0034):
+       state   | bg              | border           | ink
+       default | container-low   | transparent       | neutral
+       filled  | container       | transparent       | on-surface-variant
+       hover   | container       | outline-variant   | on-surface-variant
+       focus   | container-low   | transparent (ring)| on-surface
+       busy    | container-low   | transparent       | neutral-low
+     "filled" reads `[data-part='editor']:not([data-empty])` — the SAME emptiness signal the placeholder
+     ::before already keys off (see @scope's `:has()` selector below). */
+  --ui-conversation-composer-bg: var(--md-sys-color-neutral-container-low); /* default */
+  --ui-conversation-composer-bg-filled: var(--md-sys-color-neutral-container);
+  --ui-conversation-composer-bg-hover: var(--md-sys-color-neutral-container);
+  --ui-conversation-composer-bg-focus: var(--md-sys-color-neutral-container-low);
+  --ui-conversation-composer-border: transparent; /* default — the ring is the interactive indicator */
+  --ui-conversation-composer-border-hover: var(--md-sys-color-neutral-outline-variant); /* the ONE visible-border state */
+  --ui-conversation-composer-border-focus: transparent; /* editor-focused — the ring is the sole indicator */
+  --ui-conversation-composer-ink: var(--md-sys-color-neutral); /* default — empty, idle (== the placeholder ink) */
+  --ui-conversation-composer-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-conversation-composer-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-conversation-composer-ink-focus: var(--md-sys-color-neutral-on-surface);
+  --ui-conversation-composer-placeholder: var(--ui-conversation-composer-ink); /* tracks the SAME default-state ink role */
+  --ui-conversation-composer-ink-variant: var(--md-sys-color-neutral-on-surface-variant); /* unrelated to this table — the chip/picker retint role, unchanged */
+  --ui-conversation-composer-chip-bg: var(--md-sys-color-neutral-container); /* TKT-0066: was a direct role read in @scope */
+
+  /* Text formatting = the text-input law, multi-line (TKT-0058): prose line-height, never the single-line
+     control's line-height:1. The editor auto-grows from ONE line-box, capped at Kim's 6em (then scrolls). */
+  --ui-conversation-composer-font: var(--ui-font-md);
+  --ui-conversation-composer-line-height: 1.5;
+  --ui-conversation-composer-line-box: calc(var(--ui-conversation-composer-font) * var(--ui-conversation-composer-line-height));
+  --ui-conversation-composer-editor-max-block-size: 6em; /* the TKT-0058 growth cap — content past it scrolls */
+
+  /* Size-invariant frame quantities — the entry-control class referents (geometry.md), the same fleet
+     tokens the text-field/textarea frames ride. */
+  --ui-conversation-composer-radius: var(--ui-radius-base);
+  --ui-conversation-composer-min-inline-size: 20ch; /* the entry-control typing-width floor (ADR-0021) */
+}
+
+/* busy → this element's own disabled-equivalent — TKT-0062's disabled row (bg=container-low,
+   border=transparent, ink=neutral-low), a role-REPOINT (NOT only the dim — tokens.md canon). The
+   opacity dim below is an ADDITIONAL, deliberate layer on top (kept from TKT-0034) — "a turn in
+   flight" is a transient, in-progress state distinct from a permanently disabled control, and the
+   stronger visual weight cue is intentional here, not a canon violation (the underlying colours are
+   still a genuine role-repoint, not opacity STANDING IN for one). */
+:where(ui-conversation-composer[busy]) {
+  --ui-conversation-composer-bg: var(--md-sys-color-neutral-container-low);
+  --ui-conversation-composer-border: transparent;
+  --ui-conversation-composer-ink: var(--md-sys-color-neutral-low);
+}
+
+/* ═══ [ui-conversation-composer] STYLES ═══ */
+
+@scope (ui-conversation-composer) {
+  /* The HOST is the field frame AND the flex column (TKT-0058): chips row → editor → options row. It is
+     also `ui-conversation`'s own flex child (`flex: 0 0 auto` — a custom element defaults to
+     display:inline, which would collapse in that flex column). `cursor: text` host-wide — clicking the
+     component's own area focuses the editor (conversation-composer.ts's click-to-focus); the buttons/
+     menus/chips inside carry their own cursors. */
+  :scope {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    min-inline-size: var(--ui-conversation-composer-min-inline-size);
+    padding: 0.65rem 0.75rem;
+    background: var(--ui-conversation-composer-bg);
+    color: var(--ui-conversation-composer-ink);
+    border: 1px solid var(--ui-conversation-composer-border);
+    border-radius: var(--ui-conversation-composer-radius);
+    font-size: var(--ui-conversation-composer-font);
+    line-height: var(--ui-conversation-composer-line-height);
+    cursor: text;
+  }
+
+  /* The editor — the ADR-0014/0134 contenteditable surface: grows with content from a one-line minimum,
+     capped at 6em (TKT-0058), then scrolls. The focus ring is on the HOST frame, never the editor child. */
+  [data-part='editor'] {
+    display: block;
+    min-inline-size: 0;
+    min-block-size: var(--ui-conversation-composer-line-box);
+    max-block-size: var(--ui-conversation-composer-editor-max-block-size);
+    overflow-y: auto;
+    outline: none;
+    white-space: pre-wrap; /* multi-line — newlines + wrapping both render (the ADR-0134 inversion of nowrap) */
+    overflow-wrap: break-word;
+    font-size: var(--ui-conversation-composer-font);
+    line-height: var(--ui-conversation-composer-line-height);
+    color: var(--ui-conversation-composer-ink);
+  }
+
+  /* The placeholder — a control-toggled `data-empty` attr keys generated content (the ADR-0014 pattern;
+     NOT `:empty` — a cleared contenteditable can carry a bogus trailing <br>). */
+  [data-part='editor'][data-empty]::before {
+    content: attr(data-placeholder);
+    color: var(--ui-conversation-composer-placeholder);
+    pointer-events: none;
+  }
+
+  /* The filled/container state ladder (TKT-0062, Kim's ruling) — repoints background/border-color/color
+     together. "filled" = the editor carries a value (`:not([data-empty])`, the SAME emptiness signal the
+     placeholder ::before already keys off). Precedence is enforced by MUTUAL EXCLUSION (`:not()`), never
+     source-order/specificity: `:has()` contributes REAL specificity in a plain selector, so a naive
+     source-order-only approach can let a guarded `:hover` outrank an unguarded focus selector (the
+     measured regression that shaped text-field.css's own build — a mouse-click focus, which also leaves
+     the pointer hovering, kept the visible hover border instead of stepping transparent). Excluding every
+     higher-priority state explicitly removes the ambiguity regardless of computed specificity: filled
+     excludes hover/focus/busy; hover excludes focus/busy; focus (below) is checked last and wins
+     unconditionally — the editor is non-focusable while busy (contenteditable=false), so no busy guard is
+     needed there, matching the fleet's own disabled-is-never-focusable precedent. */
+  /* NOTE (code-reviewer HIGH finding, fixed — the text-field.css precedent): repointing the
+     --ui-conversation-composer-ink TOKEN itself here, NOT a direct color: declaration on :scope — the
+     editor part carries its own color declaration reading that same token, so a host-only color:
+     override never reached the visible typed text or the placeholder (proven red in a real browser
+     gate before this fix). Repointing the token cascades to every consumer for free. */
+  :scope:not(:hover):not(:has([data-part='editor']:focus)):not([busy]):has([data-part='editor']:not([data-empty])) {
+    background: var(--ui-conversation-composer-bg-filled);
+    --ui-conversation-composer-ink: var(--ui-conversation-composer-ink-filled);
+  }
+  :scope:not(:has([data-part='editor']:focus)):not([busy]):hover {
+    background: var(--ui-conversation-composer-bg-hover);
+    border-color: var(--ui-conversation-composer-border-hover);
+    --ui-conversation-composer-ink: var(--ui-conversation-composer-ink-hover);
+  }
+
+  /* Focus (ADR-0014 dev#1) — the shared outline ring on the HOST frame is the SOLE indicator; the border
+     steps to transparent. `:has(editor:focus)`, deliberately NOT `:focus-within` (LLD CVC-C8): focus on
+     the send/mic buttons or inside a picker menu must NOT light the field frame — each of those carries
+     its OWN ring, and a doubled indication is the exact hazard the transparent-border rule exists to avoid.
+     Focus's bg/ink (TKT-0062) override filled/hover unconditionally — a focused-and-filled composer still
+     shows the FOCUS row (container-low bg, on-surface ink), not filled's. */
+  :scope:has([data-part='editor']:focus) {
+    background: var(--ui-conversation-composer-bg-focus);
+    border-color: var(--ui-conversation-composer-border-focus);
+    --ui-conversation-composer-ink: var(--ui-conversation-composer-ink-focus);
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  /* The context-chip row (opt-in, `contextItems`) — the tags row above the text. `[hidden]` (toggled in
+     .ts, never a CSS-only concern) already gets `display:none` from the UA default; this rule only
+     supplies the SHOWN layout. */
+  [data-part='context-chips']:not([hidden]) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  [data-part='context-chip'] {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.3rem 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: var(--ui-conversation-composer-chip-bg);
+    font-size: 0.72rem;
+    color: var(--ui-conversation-composer-ink-variant);
+    cursor: default; /* a chip is not part of the click-to-focus text area (LLD CVC-C8) */
+  }
+  [data-part='context-chip-dismiss'] {
+    --ui-button-height: 0.875rem;
+    --ui-button-icon: 0.625rem;
+  }
+
+  /* The options row — Models/Effort pickers (leading, opt-in) + mic/send (trailing, always present). */
+  [data-part='options'] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  [data-part='options-leading'],
+  [data-part='options-trailing'] {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  /* An empty leading cell (neither picker enabled) collapses rather than reserving dead space — the
+     `justify-content: space-between` above still puts the trailing group flush right. */
+  [data-part='options-leading']:empty {
+    display: none;
+  }
+
+  /* The Models/Effort trigger pills — `variant="soft"` gives the right STRUCTURAL treatment (a tonal
+     pill), but ui-button's own soft/ghost variants are PRIMARY-family by design (button.css's own "colour
+     channel, default family = primary" comment) — wrong color family for a neutral utility picker.
+     Repointing the exposed `--ui-button-*` channel to the neutral container ladder is the sanctioned way
+     a consumer retints a composed control (the token-repoint pattern, not a structural override).
+     `[data-picker]` (not `data-part`): `ui-menu`'s own `connected()` unconditionally overwrites its
+     trigger's `data-part` to the literal "trigger" (menu.ts) — `data-picker` is this element's OWN,
+     untouched marker set AFTER the menu connects. */
+  [data-picker='models'],
+  [data-picker='effort'] {
+    --ui-button-bg: var(--md-sys-color-neutral-container-low);
+    --ui-button-bg-hover: var(--md-sys-color-neutral-container);
+    --ui-button-bg-active: var(--md-sys-color-neutral-container-high);
+    --ui-button-ink: var(--ui-conversation-composer-ink-variant);
+  }
+
+  /* The mic/send icon buttons — BOTH neutral ghost (Kim's ruling): the ghost STRUCTURE (transparent idle,
+     wash on hover/active) comes from ui-button's own variant; only the FAMILY is repointed here, primary →
+     neutral (ghost's own wash/ink are primary-family by design, button.css — the same reason the picker
+     pills above are retinted). */
+  [data-part='mic'],
+  [data-part='send'] {
+    --ui-button-bg-hover: var(--md-sys-color-neutral-container-low);
+    --ui-button-bg-active: var(--md-sys-color-neutral-container);
+    --ui-button-ink: var(--ui-conversation-composer-ink-variant);
+  }
+  [data-part='models-menu'][hidden],
+  [data-part='effort-menu'][hidden] {
+    display: none;
+  }
+
+  /* TKT-0034 — the busy/re-entrancy in-flight affordance, keyed off the host's own reflected `[busy]`
+     (the v1 form's `data-busy`, moved to the host with the form's removal): the whole-composer dim is the
+     visible "a turn is in flight" cue; the editor is additionally pointer-inert (its contenteditable=false
+     alone still allows text selection — the frame reads busy, the text must too). The send/mic/picker
+     triggers dim/pointer-inert themselves via their OWN `disabled` reflected attribute (button.css). */
+  :scope[busy] {
+    opacity: 0.55;
+    cursor: default;
+  }
+  :scope[busy] [data-part='editor'] {
+    pointer-events: none;
+  }
+
+  /* Motion (interaction-states standard, the textarea reuse) — state-PAINT properties only, never
+     geometry (the editor's own growth must SNAP). Gated behind :state(ready), zeroed under reduced-motion. */
+  :scope:state(ready) {
+    transition:
+      border-color var(--ui-motion-fast) var(--ui-ease-standard),
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      color var(--ui-motion-fast) var(--ui-ease-standard),
+      opacity var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope:state(ready) {
+      transition: none;
+    }
+  }
+}
+
+/* ═══ forced-colors (WHCM) ═══ */
+
+/* The field frame + ink + placeholder stay legible (SPEC-R11 AC2; the textarea block, adapted) — nested
+ * in its OWN @scope block (the app-shell.css precedent) so selector/specificity match the light-mode
+ * rules exactly. The composed ui-button/ui-menu parts carry their OWN forced-colors handling; the focus
+ * ring survives for free via --md-sys-color-focus-ring → Highlight. */
+@media (forced-colors: active) {
+  @scope (ui-conversation-composer) {
+    :scope {
+      border-color: CanvasText;
+      color: CanvasText;
+    }
+    [data-part='editor'][data-empty]::before {
+      color: CanvasText;
+    }
+    :scope[busy] {
+      border-color: GrayText;
+      color: GrayText;
+    }
+  }
+}

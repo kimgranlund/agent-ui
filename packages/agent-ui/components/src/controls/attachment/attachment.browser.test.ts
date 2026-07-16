@@ -48,7 +48,7 @@ interface CdpSession {
 
 describe('ui-attachment — whole-shape floor (SPEC-R18 AC1, test-the-whole-shape)', () => {
   it('a bare, populated attachment in an unstyled flex row paints a visible, non-collapsed box >= the min-inline-size floor', () => {
-    const el = mount('<ui-attachment name="report.pdf" mime-type="application/pdf" size-bytes="48200"></ui-attachment>')
+    const el = mount('<ui-attachment filename="report.pdf" mime-type="application/pdf" size-bytes="48200"></ui-attachment>')
     const floor = tokenPx(el, '--ui-attachment-min-inline-size')
     expect(floor, 'anti-vacuous: the floor token must resolve to a real px value').toBeGreaterThan(0)
     const box = el.getBoundingClientRect()
@@ -62,7 +62,7 @@ describe('ui-attachment — whole-shape floor (SPEC-R18 AC1, test-the-whole-shap
   })
 
   it('a minimal attachment (unknown mime, no size) still paints — meta absent, not zero-size', () => {
-    const el = mount('<ui-attachment name="mystery.bin"></ui-attachment>')
+    const el = mount('<ui-attachment filename="mystery.bin"></ui-attachment>')
     const box = el.getBoundingClientRect()
     expect(box.width).toBeGreaterThan(0)
     expect(box.height).toBeGreaterThan(0)
@@ -75,7 +75,7 @@ describe('ui-attachment — truncation (SPEC-R9 AC3)', () => {
     // Narrower than the card's own whole-shape floor (12em, SPEC-R18 AC1) would just re-prove the floor —
     // this container sits ABOVE the floor so the truncation mechanism itself (not the floor) is on trial.
     const el = mount(
-      '<ui-attachment name="a-very-long-descriptive-filename-that-should-truncate.pdf" mime-type="application/pdf"></ui-attachment>',
+      '<ui-attachment filename="a-very-long-descriptive-filename-that-should-truncate.pdf" mime-type="application/pdf"></ui-attachment>',
       { width: '16em' },
     )
     const name = el.querySelector('[data-part="name"]') as HTMLElement
@@ -91,7 +91,7 @@ describe('ui-attachment — truncation (SPEC-R9 AC3)', () => {
   })
 
   it('RTL: the glyph still leads visually (grid column order follows the writing direction)', () => {
-    const el = mount('<ui-attachment name="a.pdf" mime-type="application/pdf" dir="rtl"></ui-attachment>')
+    const el = mount('<ui-attachment filename="a.pdf" mime-type="application/pdf" dir="rtl"></ui-attachment>')
     const glyph = el.querySelector('[data-part="glyph"]') as HTMLElement
     const body = el.querySelector('[data-part="body"]') as HTMLElement
     // logical grid-template-columns (auto 1fr) — in RTL the glyph's inline-start edge is the card's RIGHT edge.
@@ -101,7 +101,7 @@ describe('ui-attachment — truncation (SPEC-R9 AC3)', () => {
 
 describe('ui-attachment — forced colors (SPEC-R19)', () => {
   it('the card border survives in a system ink under forced-colors — Chromium emulates (CDP); WebKit asserts baseline', async () => {
-    const el = mount('<ui-attachment name="report.pdf" mime-type="application/pdf" size-bytes="48200"></ui-attachment>')
+    const el = mount('<ui-attachment filename="report.pdf" mime-type="application/pdf" size-bytes="48200"></ui-attachment>')
 
     // Baseline (BOTH engines): the border paints a non-transparent color.
     expect(getComputedStyle(el).borderColor).not.toBe('rgba(0, 0, 0, 0)')

@@ -12,19 +12,19 @@ extends: UIRangeElement   # the Range base (ADR-0042); UISliderMultiElement → 
 attributes:           # attributes-as-API — mirrors UISliderMultiElement.props (range params first, then formProps)
   - name: min
     type: number
-    default: '0'
+    default: 0
     reflect: true     # reflects so the [min] attribute stays observable and drives CSS via attribute presence
   - name: max
     type: number
-    default: '100'
+    default: 100
     reflect: true     # reflects; the range upper boundary (inclusive)
   - name: step
     type: number
-    default: '1'
+    default: 1
     reflect: true     # reflects; ≤ 0 = continuous (no snap)
   - name: value
     type: number
-    default: '0'
+    default: 0
     reflect: true     # inherited from UIRangeElement.props (base single-value seam); slider-multi does not
                       # activate the base's value normaliser/ARIA/keyboard — it uses valueLo/valueHi instead.
                       # Present here so the contract↔props trip-wire (compareDescriptorToProps) does not flag DRIFT.
@@ -47,11 +47,11 @@ attributes:           # attributes-as-API — mirrors UISliderMultiElement.props
     reflect: true     # reflects; carried from formProps (range sliders are always value-bearing so required is informational)
   - name: valueLo
     type: number
-    default: '0'
+    default: 0
     reflect: true     # reflects so attribute-driven initial lo values round-trip to JS
   - name: valueHi
     type: number
-    default: '100'
+    default: 100
     reflect: true     # reflects; attribute-driven hi round-trips; lo ≤ hi is enforced by the normalization effect
 
 properties:           # IDL beyond attributes-as-API

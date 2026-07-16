@@ -48,12 +48,14 @@ slots:                 # slots name a POSITION; a slotted adornment's CONTENT ro
     description: Optional leading adornment — a light-DOM `[slot="leading"]` child placed in the start cell by the presence-driven host-as-grid (ADR-0006; renamed from `icon` — the slot names a POSITION, not its content). Absent ⇒ the slotless bare-label layout.
   - name: label
     optional: true
-    description: The label — the default/unnamed children (an explicit `[slot="label"]` is equivalent); the accessible name, filling the 1fr centre cell. May be omitted entirely for an icon-only button (set `icon-only` and supply `aria-label` for the accessible name — see Slots & roles).
+    description: The label — the default/unnamed children (an explicit `[slot="label"]` is equivalent); the accessible name, filling the 1fr centre cell. May be omitted entirely for an icon-only button (set `icon-only` and supply `aria-label` for the accessible name — see Slots & roles). Adopted into the control-created `<span data-part="label">` wrapper (ADR-0133 — see Parts) so an overflowing label can carry `text-overflow: ellipsis`; the accessible name is unaffected (the wrapper carries no ARIA role, textContent still computes the name).
   - name: trailing
     optional: true
     description: Optional trailing adornment — a light-DOM `[slot="trailing"]` child (commonly a caret/chevron/arrow with `data-role="caret"`) placed in the end cell. Layout only; carry any popup/disclosure meaning via ARIA on the host and mark the glyph aria-hidden.
 
-parts: []              # light-DOM, host-as-grid — no shadow parts exposed
+parts:                 # light-DOM, host-as-grid — ONE control-created wrapper (ADR-0133), everything else is author content
+  - name: label
+    description: The control-created `<span data-part="label">` the label region's light-DOM children (the default/unnamed children — anything without a `slot`) are adopted into, MOVED never cloned. Built on connect and self-healed by a `childList` MutationObserver (ui-text's ADR-0078 cl.4 stamp/heal shape, adapted): a stray label child that lands on the host later (parser streaming, or an external `textContent` write — e.g. the A2UI `buttonFactory`'s bound `label`) is re-adopted, and a full clobber that destroys the wrapper rebuilds it fresh. Never created for an empty label (an `icon-only` button keeps its square anatomy untouched — see Slots & roles). Carries `overflow: hidden; text-overflow: ellipsis` (button.css) so a label that overflows the frame's available inline space truncates with a visible ellipsis instead of clipping/overlapping silently; `white-space: nowrap` (already unconditional on the host) inherits into it for free. No geometry change when the label fits (no padding/margin/border of its own; blockified as a grid item, inherits font/line-height/color from the host).
 customStates:          # :state(ready) — the motion gate (ADR-0008): armed one frame past first paint via internals.states (never a host attr) so the upgrade SNAPS and only subsequent state changes animate
   - ready
 
@@ -181,6 +183,23 @@ Because there is no label text, the accessible name must come from `aria-label` 
 trailing) — the fifth structure is one column, so both slots present together is undefined layout (the
 second silently wraps/overflows rather than erroring); no current consumer needs two icons on an
 icon-only button, so this is documented rather than fenced.
+
+### Overflow (ADR-0133)
+
+A label that overflows the frame's available inline space truncates to a single line with an
+ellipsis instead of clipping or overlapping without affordance. This is unconditional — no prop
+opts in — because the label is already forced to one line (`white-space: nowrap`); ellipsis
+completes that existing contract rather than adding a new one. The mechanism: `button.ts` adopts
+the label region's light-DOM children into a control-created `<span data-part="label">` (moved,
+never cloned — see **Parts** in the frontmatter) so `text-overflow` has a real box to attach to
+(anonymous host-as-grid text has none). The wrapper is self-healing — a childList `MutationObserver`
+re-adopts label content that arrives after connect, including a bound `label` write that replaces
+`textContent` wholesale (the A2UI catalog's `Button.label` factory) — so ellipsis keeps working
+across dynamic label updates, not just the initial render. The accessible name is unaffected: the
+wrapper carries no ARIA role, and the full label text is still read by assistive tech regardless of
+visual clipping. There is no `title` reveal mirror (contrast `ui-text[truncate]`, ADR-0106) — button
+labels are short, first-order UI copy, not free-form prose, and no evidence has surfaced that a
+hover-reveal affordance is needed here.
 
 ## Keyboard & focus
 

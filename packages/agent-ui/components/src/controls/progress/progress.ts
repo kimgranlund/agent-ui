@@ -13,9 +13,9 @@
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 
 const props = {
-  value: prop.number(null), // null ⇒ indeterminate (the native <progress> semantic — no boolean to desync)
+  current: prop.number(null), // null ⇒ indeterminate (the native <progress> semantic — no boolean to desync). Renamed from `value` (TKT-0069 item 1 ruling: `value` = the FACE form value, reserved — this rename spends real native-<progress> parity deliberately; the A2UI catalog keeps wire `value`, mapped in its bespoke factory)
   max: prop.number(100), // the ARIA progressbar default — percent-natural for {value:42} with zero extra props
-  label: prop.string(''), // the accessible name (SPEC-R3); empty ⇒ no internals.ariaLabel
+  label: { ...prop.string(''), reflect: true }, // the accessible name (SPEC-R3); empty ⇒ no internals.ariaLabel
 } satisfies PropsSchema
 
 /** SPEC-R1: non-finite / ≤0 / malformed `max` floors to the ARIA progressbar default. */
@@ -55,7 +55,7 @@ export class UIProgressElement extends UIElement {
     // data-indeterminate on the fill (an interior node, never a host attribute — CSS drives the sweep).
     this.effect(() => {
       const eMax = effectiveMax(this.max)
-      const eValue = effectiveValue(this.value, eMax)
+      const eValue = effectiveValue(this.current, eMax)
       if (eValue === null) {
         fill.setAttribute('data-indeterminate', '')
         fill.style.removeProperty('--_pct')
@@ -70,7 +70,7 @@ export class UIProgressElement extends UIElement {
     // role/min/max persist — the ARIA-native indeterminate signal.
     this.effect(() => {
       const eMax = effectiveMax(this.max)
-      const eValue = effectiveValue(this.value, eMax)
+      const eValue = effectiveValue(this.current, eMax)
       this.internals.role = 'progressbar'
       this.internals.ariaValueMin = '0'
       this.internals.ariaValueMax = String(eMax)

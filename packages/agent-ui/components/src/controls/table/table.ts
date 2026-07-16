@@ -39,15 +39,17 @@ import { cleanColumns, cleanRows, resolveCell, tableColumnsProp, tableRowsProp, 
 const props = {
   columns: tableColumnsProp, // TableColumn[] · safe JSON codec (table-model.ts) · default []
   rows: tableRowsProp, // TableRow[] · safe JSON codec (table-model.ts) · default []
-  label: prop.string(''), // the rendered <caption> text — the table's accessible name (SPEC-R2/R6)
+  label: { ...prop.string(''), reflect: true }, // the rendered <caption> text — the table's accessible name (SPEC-R2/R6)
 } satisfies PropsSchema
 
 export interface UITableElement extends ReactiveProps<typeof props> {}
 export class UITableElement extends UIElement {
   static props = props
 
-  // The stable skeleton (SPEC-R4.1) — built ONCE per connection, held privately, NEVER replaced by any
-  // data-update effect below. `#`-private: nothing outside the host can reach in and mutate scroll state.
+  // The stable skeleton (SPEC-R4.1) — built ONCE EVER behind the `#built` guard (TKT-0067), held
+  // privately, NEVER replaced by any data-update effect below. `#`-private: nothing outside the host can
+  // reach in and mutate scroll state.
+  #built = false
   #scroll!: HTMLDivElement
   #table!: HTMLTableElement
   #thead!: HTMLTableSectionElement
@@ -55,21 +57,49 @@ export class UITableElement extends UIElement {
   // The mounted `<caption>` — null while `label` is empty (LLD-C2 step 4). Held so the label effect can
   // find/remove/reuse the SAME element across reruns instead of re-minting one on every `label` change.
   #caption: HTMLTableCaptionElement | null = null
+  // Live scroll-offset shadow (TKT-0067, MEASURED): node identity alone does NOT preserve scroll across
+  // a disconnect/reconnect — every engine resets a scroll container's offsets when it leaves the
+  // document (scroll state lives in the LAYOUT tree, not the DOM node; the probe measured 40 → 0 in
+  // Chromium AND WebKit even with the identical node reattached). Tracked by the scroll listener in
+  // connected() and restored on reconnect. Reading scrollLeft in disconnected() is too late — the
+  // element is already out of the document and reads 0 there.
+  #lastScrollLeft = 0
+  #lastScrollTop = 0
 
   protected connected(): void {
-    // The skeleton — built once, NOT inside an effect (SPEC-R4.1's identity clause). `#table` starts with
-    // its `#thead`/`#tbody` already attached; `#scroll` starts EMPTY (the columns effect below attaches
-    // `#table` only once real columns exist — SPEC-R3 row 1's "no table is stamped" empty state).
-    this.#scroll = document.createElement('div')
-    this.#scroll.setAttribute('data-part', 'scroll')
-    this.#scroll.setAttribute('role', 'region') // SPEC-R5 AC2 — the accessible-overflow pattern
-    this.#scroll.setAttribute('tabindex', '0') // platform scroll affordance, NOT a keyboard contract
-    this.#table = document.createElement('table')
-    this.#thead = document.createElement('thead')
-    this.#tbody = document.createElement('tbody')
-    this.#table.append(this.#thead, this.#tbody)
-    this.#caption = null
-    this.replaceChildren(this.#scroll)
+    // The skeleton — built ONCE EVER behind an idempotent guard (TKT-0067: previously rebuilt on every
+    // connect, which discarded the prior skeleton — and with it the scroll offset SPEC-R4.1 says
+    // "survives by omission" — on an ordinary disconnect/reconnect; the progress.ts field-guard shape,
+    // the fleet parts-once canon). NOT inside an effect (SPEC-R4.1's identity clause). `#table` starts
+    // with its `#thead`/`#tbody` already attached; `#scroll` starts EMPTY (the columns effect below
+    // attaches `#table` only once real columns exist — SPEC-R3 row 1's "no table is stamped" empty
+    // state). Light-DOM children persist across a disconnect, so a reconnect finds the prior skeleton —
+    // including its live `scrollLeft`/`scrollTop` and any mounted `#caption` — intact.
+    if (!this.#built) {
+      this.#built = true
+      this.#scroll = document.createElement('div')
+      this.#scroll.setAttribute('data-part', 'scroll')
+      this.#scroll.setAttribute('role', 'region') // SPEC-R5 AC2 — the accessible-overflow pattern
+      this.#scroll.setAttribute('tabindex', '0') // platform scroll affordance, NOT a keyboard contract
+      this.#table = document.createElement('table')
+      this.#thead = document.createElement('thead')
+      this.#tbody = document.createElement('tbody')
+      this.#table.append(this.#thead, this.#tbody)
+      this.#caption = null
+      this.replaceChildren(this.#scroll)
+    }
+
+    // Restore the pre-disconnect scroll offsets (TKT-0067) — a no-op on first connect (0/0). The
+    // synchronous write forces layout on the just-reinserted, already-populated skeleton so the value
+    // clamps against real content. Rides the connection: the listener below re-arms every connect.
+    if (this.#lastScrollLeft !== 0 || this.#lastScrollTop !== 0) {
+      this.#scroll.scrollLeft = this.#lastScrollLeft
+      this.#scroll.scrollTop = this.#lastScrollTop
+    }
+    this.listen(this.#scroll, 'scroll', () => {
+      this.#lastScrollLeft = this.#scroll.scrollLeft
+      this.#lastScrollTop = this.#scroll.scrollTop
+    })
 
     // The COLUMNS effect (SPEC-R4.3) — reads ONLY `columns`. A `rows`-only update never re-runs this, so
     // `#table`/`#thead` node identity holds across it (the identity clause proper).
@@ -92,7 +122,9 @@ export class UITableElement extends UIElement {
 
     // The BODY effect (SPEC-R4.3) — reads `columns` AND `rows`; rebuilds ONLY `#tbody`'s content
     // (`replaceChildren`, whole-array swap). `#scroll`/`#table`/`#thead` are never touched here, and no
-    // code path anywhere writes `#scroll.scrollLeft`/`.scrollTop` — the scroll offset survives by omission.
+    // DATA-update path writes `#scroll.scrollLeft`/`.scrollTop` — across data updates the scroll offset
+    // survives by omission. (Across a RECONNECT it cannot — the platform resets a removed container's
+    // offsets — so connected() restores from the tracked shadow; TKT-0067.)
     this.effect(() => {
       const cols = cleanColumns(this.columns)
       const rows = cleanRows(this.rows)

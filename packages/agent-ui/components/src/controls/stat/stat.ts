@@ -18,8 +18,8 @@ import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom
 import { deltaParts, formatStatValue, statDeltaProp, statValueProp, type DeltaParts } from './stat-model.ts'
 
 const props = {
-  label: prop.string(''),
-  value: statValueProp, // string | number · number → Intl-formatted, string passes through (stat-model.ts)
+  label: { ...prop.string(''), reflect: true },
+  figure: statValueProp, // string | number · number → Intl-formatted, string passes through (stat-model.ts). Renamed from `value` (TKT-0069 item 1 ruling: `value` = the FACE form value, reserved; the A2UI catalog keeps wire `value`, mapped in its bespoke factory)
   delta: statDeltaProp, // number | null · absent/non-finite → the delta region is not rendered (SPEC-R7)
   caption: prop.string(''),
 } satisfies PropsSchema
@@ -31,7 +31,7 @@ export class UIStatElement extends UIElement {
   protected override connected(): void {
     this.effect(() => {
       const label = this.label
-      const value = formatStatValue(this.value)
+      const value = formatStatValue(this.figure)
       const caption = this.caption
       const delta = deltaParts(this.delta)
 

@@ -74,7 +74,7 @@ content.append(
 function swatchCell(role: ColorRole, scheme: 'light' | 'dark'): HTMLElement {
   const td = document.createElement('td')
   const el = document.createElement('ui-swatch')
-  el.setAttribute('value', role.varName)
+  el.setAttribute('color', role.varName)
   el.setAttribute('label', role.role)
   el.setAttribute('scheme', scheme)
   td.append(el)

@@ -7,6 +7,8 @@ export const ICON_NAMES = [
   'arrow-right', 'magnifying-glass',
   'user', 'file', 'file-image', 'file-audio', 'file-video',
   'file-pdf', 'file-text', 'file-zip', 'file-code',
+  'plus',
+  'arrow-up', 'microphone',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 

@@ -42,11 +42,11 @@ function logSelect(detail: unknown): void {
 }
 
 const deck = el('ui-swiper', { 'slides-in-view': '', pagination: '', paddles: '' }, [
-  el('ui-swiper-item', { value: 'a' }, [demoBox('Card A')]),
-  el('ui-swiper-item', { value: 'b' }, [demoBox('Card B')]),
-  el('ui-swiper-item', { value: 'c' }, [demoBox('Card C')]),
-  el('ui-swiper-item', { value: 'd' }, [demoBox('Card D')]),
-  el('ui-swiper-item', { value: 'e' }, [demoBox('Card E')]),
+  el('ui-swiper-item', { key: 'a' }, [demoBox('Card A')]),
+  el('ui-swiper-item', { key: 'b' }, [demoBox('Card B')]),
+  el('ui-swiper-item', { key: 'c' }, [demoBox('Card C')]),
+  el('ui-swiper-item', { key: 'd' }, [demoBox('Card D')]),
+  el('ui-swiper-item', { key: 'e' }, [demoBox('Card E')]),
 ])
 deck.addEventListener('select', (e) => logSelect((e as CustomEvent).detail))
 

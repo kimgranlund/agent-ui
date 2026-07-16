@@ -19,7 +19,8 @@
   manipulating the live page.
 - **Cite, don't restate.** When prose touches a canonical fact (a token role, an ADR, a SPEC requirement),
   name the owner (`docs/references/tokens.md`, ADR-0012, `SPEC-R#`) and link — never paraphrase it into a
-  second copy that can drift.
+  second copy that can drift. This is a **normative-fact citation** — see below for the line between it
+  and a **provenance citation**, which never belongs inline.
 
 ## Do
 
@@ -52,6 +53,106 @@
   them. Restated prose is drift waiting to happen.
 - **Don't ship a structurable page without its gate.** If a fact could be checked (a dead name, a missing
   page, an API mismatch) and isn't, the drift it prevents is only a matter of time.
+- **Don't weave provenance into descriptive prose.** A `TKT-####`, or an ADR cited only for "which record
+  built this," does not belong in an intro, a section heading, or mid-sentence — it belongs in the
+  page-end Changelog table (below). A normative-fact citation (a rule's owner) is a different thing and
+  stays inline.
+
+## Provenance vs. normative citations — the page-end Changelog
+
+Every ADR/SPEC/TKT citation on a page is one of two kinds, and only one of them belongs in descriptive
+prose. Conflating them is the top citation defect (TKT-0053): a page's intro and section prose read as a
+build log instead of a description of the feature.
+
+- **Normative-fact citation (stays inline, unchanged).** Prose states a **rule, mechanism, or contract**
+  that is true *right now*, and cites the record that **owns** it — "the shared fleet focus ring
+  (ADR-0009)", "the concentric-corner law (ADR-0018)", "per ADR-0012's anatomy rule." This is the existing
+  "Cite, don't restate" discipline above: the citation stands in for a fuller rule the page deliberately
+  does **not** re-derive, so a reader who needs the complete detail has somewhere real to go.
+- **Provenance citation (moves to the page-end Changelog, never inline).** A ticket/ADR/PR cited as **which
+  record built or changed this surface** — build history, not an ongoing rule. `"ui-agent-admin (TKT-0039,
+  ADR-0131/ADR-0132) is a live-editable agent config…"` is provenance: TKT-0039 and ADR-0131/0132 are this
+  page's own scope/intake records, tacked on as a receipt, not cited because the reader needs to go verify
+  a rule the page doesn't already fully state.
+
+**The test — delete the parenthetical and ask what's lost:**
+
+1. **Does the reader lose access to a rule's full detail that this page deliberately doesn't restate?**
+   Yes → normative, keep it inline (that's the citation doing its job). No — the page already says
+   everything the citation would add, or the citation only answers "which ticket paid for this" → it's
+   provenance, move it out.
+2. **A `TKT-####` citation is always provenance.** A ticket record documents that something was requested
+   or built; it is never the owner of an ongoing rule. A `TKT-####` in descriptive prose is a violation by
+   construction — always move it to the Changelog, no case-by-case judgment needed.
+3. **A heading never carries a citation, normative or not.** A heading is a scanning aid, not a citation
+   site. `"1 · One primitive, five instantiations (ADR-0132)"` is wrong even where the underlying content
+   would be legitimately citable in body prose — move the citation into the paragraph beneath the heading
+   (if it's normative — the reader still needs the pointer) or the Changelog (if it's provenance).
+4. **An ADR cited only on the one page whose own build it chronicles — usually paired with that page's own
+   TKT, appearing in the page's opening intro before any rule content — is provenance.** An ADR cited
+   as the authority behind a reusable mechanism, taxonomy, or family classification (the "Display-class X
+   leaf (ADR-0112, feed family v1)" pattern repeated across a whole component family's doc pages, or a
+   fleet-wide law like ADR-0003's CSS cascade order, ADR-0007's geometry bands, ADR-0009's focus ring) is
+   normative even where only one page currently cites it — the test is what the citation is *for*, not how
+   many pages happen to use it today.
+
+### The Changelog section — shape
+
+A page that carries provenance citations ends with one `## Changelog` section (heading level 2, same tier
+as any other top-level section — `heading(2, 'Changelog')` from `doc-page.ts`), placed **last**, after the
+API reference tables if the page has any (T4's `renderApiTable`/`renderPropertiesTable`/etc.). A page with
+no provenance citations to report ships **no** Changelog section — an empty/vacuous section is the same
+defect as an empty API table (`doc-page.ts`'s "no empty table" discipline extends here).
+
+The section is one table, columns **Date | Type | ID | Summary**:
+
+| Column | Content |
+|---|---|
+| **Date** | ISO `YYYY-MM-DD`, the record's **own** date — a ticket's frontmatter `date:`, an ADR's table `Date` field. Never invented or approximated. |
+| **Type** | One of `Feature` / `Fix` / `Change` (from a ticket's `kind:` frontmatter — `feature`/`bug`/`chore`, Title-cased) or `Decision` (any ADR). |
+| **ID** | `TKT-0039` / `ADR-0131` as a code chip. An `ADR-####` id links to `./adr-index.html#adr-{number}` (the real site surface — `adr-index.ts` already resolves that hash). A `TKT-####` id renders as plain code — there is no published ticket index to link to yet. |
+| **Summary** | One clause, present tense, *what changed* — not a restatement of the page's own intro. |
+
+Sorted **newest-first** (the `adr-index.ts` / `changelog.ts` site convention). Entries are **hand-authored**
+— provenance isn't parseable from any canonical source (no ADR/TKT index cross-links to the pages it
+affects) — so flag the entry array as hand-authored content, same discipline as any other underivable fact
+(`content-types.md` T4's anatomy-shape precedent).
+
+Implementation: `renderChangelogTable(entries: readonly ChangelogEntry[]): HTMLElement | undefined` in
+`site/lib/doc-page.ts`, reusing the file's existing generic `tableHead`/`tableRow`/`textCell`/`codeCell`
+helpers (the `getting-started.ts`/`text-doc.ts` precedent) — not the Form-B `apiRow` row-builders, which
+are shaped for attribute/property entries, not a flat provenance log. Returns `undefined` (render nothing)
+when `entries` is empty, so a caller can unconditionally `if (table) content.append(table)`.
+
+### Worked example (agent-admin.ts, before → after)
+
+Before (provenance interleaved into the intro and a section heading):
+
+```ts
+intro:
+  'ui-agent-admin (TKT-0039, ADR-0131/ADR-0132) is a live-editable agent config + instructions with a ' +
+  'working chat preview — a three-pane ui-split composing ui-settings (M4), ui-conversation (M2), and a ' +
+  'generic ordered-entry-list primitive (ADR-0132) instantiated five times. No new protocol dependency.',
+// …
+content.append(sectionHeading('1 · One primitive, five instantiations (ADR-0132)'))
+```
+
+After (the intro and heading describe the feature; the same facts move to the page-end table):
+
+```ts
+intro:
+  'ui-agent-admin is a live-editable agent config + instructions with a working chat preview — a ' +
+  'three-pane ui-split composing ui-settings, ui-conversation, and a generic ordered-entry-list ' +
+  'primitive instantiated five times. No new protocol dependency.',
+// …
+content.append(sectionHeading('1 · One primitive, five instantiations'))
+// … page body …
+content.append(renderChangelogTable([
+  { date: '2026-07-13', type: 'Feature', id: 'TKT-0039', summary: 'Shipped ui-agent-admin: three-pane composition over ui-settings + ui-conversation, real persistence.' },
+  { date: '2026-07-14', type: 'Decision', id: 'ADR-0131', summary: 'Ratified the scope: a generic self-contained config, three panes, no new protocol dependency.' },
+  { date: '2026-07-14', type: 'Decision', id: 'ADR-0132', summary: 'Instructions/settings became one shared ordered-entry-list primitive, instantiated five times.' },
+]))
+```
 
 ## Recurring patterns
 

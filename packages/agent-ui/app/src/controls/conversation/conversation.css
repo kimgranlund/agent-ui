@@ -17,6 +17,12 @@
   --ui-conversation-ink-variant: var(--md-sys-color-neutral-on-surface-variant, currentColor);
   --ui-conversation-user-bubble: var(--md-sys-color-primary-container-low, currentColor);
   --ui-conversation-agent-bubble: var(--md-sys-color-neutral-surface-high, currentColor);
+  /* TKT-0066: the shell/bubble radii were 12px/10px literals — now the shared fleet radius + a
+     nested-radius derivation off it (ADR-0018's concentric-corner spirit; identical rendered values at
+     the default base). Minted here (not read directly in @scope) so the pending dimensional-constants
+     ruling (TKT-0066 item 5) is satisfied either way. */
+  --ui-conversation-radius: var(--ui-radius-base, 12px);
+  --ui-conversation-bubble-radius: calc(var(--ui-conversation-radius) - 2px);
 }
 
 /* ════════════════ [ui-conversation] STYLES — @scope (ui-conversation) consumes ONLY --ui-conversation-* ══ */
@@ -31,7 +37,7 @@
     inline-size: 100%;
     block-size: 100%;
     border: 1px solid var(--ui-conversation-border);
-    border-radius: 12px;
+    border-radius: var(--ui-conversation-radius);
     background: var(--ui-conversation-surface);
     overflow: hidden;
   }
@@ -52,7 +58,7 @@
     flex-direction: column;
     gap: 0.3rem;
     padding: 0.5rem 0.75rem;
-    border-radius: 10px;
+    border-radius: var(--ui-conversation-bubble-radius);
     max-inline-size: 92%;
   }
   [data-part='bubble'][data-role='user'] {
@@ -144,43 +150,29 @@
     white-space: pre-wrap;
   }
 
-  /* ── the composer ────────────────────────────────────────────────────────────────────────────────────── */
-  [data-part='composer'] {
+  /* ── the composed message-composition child (TKT-0056 · TKT-0058) ───────────────────────────────────── */
+  /* `ui-conversation-composer`'s own frame/layout/parts live in conversation-composer.css; this rule ONLY
+     places it as THIS element's flex child: `flex: 0 0 auto` (a custom element defaults to
+     `display:inline`, which would collapse in this flex column) + an inset margin — since TKT-0058 the
+     composer paints its OWN rounded field frame (the old flush border-top divider is gone), so it sits
+     inset from the shell's edges rather than flush against them. */
+  ui-conversation-composer {
     flex: 0 0 auto;
-    display: flex;
-    gap: 0.5rem;
-    align-items: end;
-    padding: 0.75rem;
-    border-block-start: 1px solid var(--ui-conversation-border);
-  }
-  [data-part='field'] {
-    flex: 1 1 auto;
-    min-inline-size: 0;
-  }
-
-  /* TKT-0034 — the busy/re-entrancy in-flight affordance: the field + Send button already dim/pointer-inert
-     themselves via their OWN `disabled` reflected attribute (button.css/text-field.ts); this whole-composer
-     dim is the visible "a turn is in flight" cue, mirroring the pre-migration a2ui-chat.ts `.is-busy` rule
-     (`pointer-events:none; opacity:.55`) this primitive now makes redundant-but-harmless for that consumer. */
-  [data-part='composer'][data-busy] {
-    opacity: 0.55;
+    margin: 0 0.75rem 0.75rem;
   }
 }
 
 /* ════════════════ forced-colors (WHCM) ════════════════ */
 
-/* The bordered shell + composer divider stay legible (SPEC-R11 AC2) — nested in its OWN @scope block (the
- * app-shell.css precedent) so the selector/specificity matches the light-mode rule exactly. The narration
- * strip (ui-status-stream) and the composer's own ui-text-field/ui-button carry their OWN forced-colors
- * handling; the "Closed." annotation and composer text are plain text, legible for free under the
- * platform's own forced-colors text/background repaint. */
+/* The bordered shell stays legible (SPEC-R11 AC2) — nested in its OWN @scope block (the app-shell.css
+ * precedent) so the selector/specificity matches the light-mode rule exactly. The narration strip
+ * (ui-status-stream) and the composed ui-conversation-composer (its OWN forced-colors block, TKT-0056)
+ * carry their own handling; the "Closed." annotation and bubble text are plain text, legible for free
+ * under the platform's own forced-colors text/background repaint. */
 @media (forced-colors: active) {
   @scope (ui-conversation) {
     :scope {
       border-color: CanvasText;
-    }
-    [data-part='composer'] {
-      border-block-start-color: CanvasText;
     }
   }
 }

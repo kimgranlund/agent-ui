@@ -30,6 +30,9 @@ const NAME_MAP = {
   'file-text': 'file-text',
   'file-zip': 'file-zip',
   'file-code': 'file-code',
+  plus: 'plus',
+  'arrow-up': 'arrow-up',
+  microphone: 'microphone',
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'

@@ -22,7 +22,7 @@ attributes:            # attributes-as-API — mirrors ramp.ts `static props` (s
   - name: label
     type: string
     default: ''         # the strip's accessible name (SPEC-R8: unlabeled is legal, never a silent state)
-    reflect: false
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
   - name: scheme
     type: enum
     values: [auto, light, dark]

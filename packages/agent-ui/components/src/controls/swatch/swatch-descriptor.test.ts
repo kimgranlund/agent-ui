@@ -23,7 +23,7 @@ const css = readFileSync(`${DIR}/swatch.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['value', 'label', 'scheme']
+const ATTR_NAMES = ['color', 'label', 'scheme']
 
 describe('swatch.md descriptor — structural validity', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -75,7 +75,8 @@ describe('swatch.md descriptor — contract↔props trip-wire', () => {
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default, isolated on `label`)', () => {
     const labelOnly = parsed.attributes.filter((a) => a.name === 'label')
     const labelOnlyProps = { label: UISwatchElement.props.label }
-    const flipReflect = labelOnly.map((a) => ({ ...a, reflect: true }))
+    // label reflects TRUE since the TKT-0069 item 2 ruling — the synthetic drift flips the other way.
+    const flipReflect = labelOnly.map((a) => ({ ...a, reflect: false }))
     expect(compareDescriptorToProps(flipReflect, labelOnlyProps)).toContainEqual(
       expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.label.reflect' }),
     )

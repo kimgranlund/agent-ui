@@ -98,9 +98,8 @@
     line-height: var(--ui-control-line-height); /* single-line control standard — ADR-0036; tight line box centered in the fixed frame */
     white-space: nowrap; /* a control label NEVER wraps (Kim, 2026-07-08 — the gallery toolbar's two-line
                             "More actions"); the ADR-0036 single-line frame assumes one line, so wrapping
-                            was always an overflow of the control's own contract. Ellipsis-on-constraint
-                            needs a label wrapper (anonymous grid text can't carry text-overflow) — that
-                            anatomy follow-up is ticketed with the ui-text overflow-ellipsis pattern. */
+                            was always an overflow of the control's own contract. Inherits into the label
+                            wrapper below for free — ellipsis-on-constraint is completed there (ADR-0133). */
     background: var(--ui-button-bg);
     color: var(--ui-button-ink);
     border: 1px solid var(--ui-button-border);
@@ -108,6 +107,18 @@
     cursor: pointer;
     -webkit-user-select: none; /* WebKit/Safari still needs the prefix — the label is a control surface, not selectable text */
     user-select: none;
+  }
+
+  /* The label wrapper (ADR-0133) — the real element button.ts adopts the label region into, so
+     `text-overflow` has a real box to attach to (anonymous grid text has none). `white-space: nowrap`
+     already lives on `:scope` above and inherits here for free — only the two CLIPPING properties are
+     needed. `min-inline-size: 0` overrides the grid item's default `min-width: auto` (its content's
+     intrinsic size), which would otherwise refuse to shrink below the label's full width and defeat the
+     clip — the one addition ADR-0106's block-level two-leg pattern never needed, host-as-grid's own. */
+  :scope > [data-part='label'] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-inline-size: 0;
   }
 
   /* Anatomy (ADR-0006, extended by ADR-0012): host-as-grid with three POSITION regions — an OPTIONAL leading

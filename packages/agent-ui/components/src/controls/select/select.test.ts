@@ -1053,6 +1053,20 @@ describe('ui-select — disabled state (select-disabled)', () => {
     el.remove()
   })
 
+  it('select-disabled (TKT-0063): the FORM-disabled channel (own <fieldset disabled>, not the own `disabled` attribute) also disables the trigger — :state(disabled) itself is unobservable in jsdom (no CustomStateSet), proven instead in select.browser.test.ts', async () => {
+    const { el, trigger } = makeSelect()
+    expect(trigger.hasAttribute('disabled'), 'trigger should NOT be disabled initially').toBe(false)
+
+    el.formDisabledCallback(true) // an ancestor <fieldset disabled> — the platform calls this directly
+    await whenFlushed()
+    expect(trigger.hasAttribute('disabled'), 'the FORM-disabled channel must ALSO disable the trigger').toBe(true)
+
+    el.formDisabledCallback(false)
+    await whenFlushed()
+    expect(trigger.hasAttribute('disabled'), 'clearing form-disabled must re-enable the trigger').toBe(false)
+    el.remove()
+  })
+
   it('select-disabled: a disabled select still reports its value (disabled ≠ no value)', () => {
     const { el } = makeSelect()
     el.value = 'cherry'

@@ -67,7 +67,7 @@ attributes:              # attributes-as-API — mirrors swiper.ts `static props
   - name: active
     type: string
     default: ''
-    reflect: true      # the bindable active-slide identity (ADR-0019; commit path = LLD-C7). '' ⇒ first slide; a real item's `value` wins; else a numeric index; else first
+    reflect: true      # the bindable active-slide identity (ADR-0019; commit path = LLD-C7). '' ⇒ first slide; a real item's `key` wins; else a numeric index; else first
 
 properties:              # IDL beyond attributes-as-API
   - name: slides
@@ -174,7 +174,7 @@ real-index/real-count; paddles never disable in loop mode.
 
 `active` is bindable (ADR-0019): the agent **sets** it to move the carousel (programmatic → no event
 echoed); a user gesture (scroll settle, paddle, dot, keyboard) commits it and emits the one `select {
-value, index }`. Resolution mirrors `ui-tabs`: `''` ⇒ first slide; a value matching a real item's `value`
+value, index }`. Resolution mirrors `ui-tabs`: `''` ⇒ first slide; a value matching a real item's `key`
 wins; else a numeric index; else the first slide.
 
 ## Chrome

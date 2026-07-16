@@ -9,10 +9,12 @@ import { server, cdp } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import './conversation.css'
+import './conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '../surface-host/surface-host.css'
 import { UIConversationElement } from './conversation.ts'
+import { whenFlushed } from '@agent-ui/components'
 
-// jsdom-free here (real engine), but ui-text-field is still form-associated — no stub needed in a REAL
+// jsdom-free here (real engine) — the composer's form-associated ui-button parts need no stub in a REAL
 // browser (only jsdom lacks ElementInternals.setFormValue/setValidity, the settings.test.ts precedent).
 
 const mounted: HTMLElement[] = []
@@ -68,7 +70,7 @@ describe('ui-conversation cross-engine smoke — whole-shape (SPEC-R4)', () => {
   it('the log + composer are real, non-zero-area boxes; the composer sits below the log', () => {
     const el = mountConversation()
     const log = logOf(el)
-    const composer = el.querySelector('[data-part="composer"]') as HTMLElement
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement
     const logRect = log.getBoundingClientRect()
     const composerRect = composer.getBoundingClientRect()
     expect(logRect.width).toBeGreaterThan(0)
@@ -79,16 +81,17 @@ describe('ui-conversation cross-engine smoke — whole-shape (SPEC-R4)', () => {
   })
 })
 
-// TKT-0034 — the busy/re-entrancy composer affordance is CSS-driven (conversation.css's `[data-busy]` dim +
-// button.css/text-field.ts's own `[disabled]` pointer-inert rule); a jsdom text-level probe (conversation.
-// test.ts) can assert the DOM attributes toggle, but NOT that a real engine actually CASCADES them into a
-// dimmed, pointer-inert paint — the exact "jsdom-green ≠ done" gap the CSS-comment `*/`-in-a-comment trap
-// documents fleet-wide (only a browser smoke catches a rule that silently never applied).
+// TKT-0034 — the busy/re-entrancy composer affordance is CSS-driven (conversation-composer.css's `[busy]`
+// dim + its editor pointer-events rule + button.css's own `[disabled]` pointer-inert rule); a jsdom
+// text-level probe (conversation.test.ts) can assert the DOM attributes toggle, but NOT that a real engine
+// actually CASCADES them into a dimmed, pointer-inert paint — the exact "jsdom-green ≠ done" gap the
+// CSS-comment `*/`-in-a-comment trap documents fleet-wide (only a browser smoke catches a rule that
+// silently never applied — the TKT-0056 never-imported-stylesheet BLOCKER was caught by exactly this test).
 describe('ui-conversation cross-engine smoke — busy/re-entrancy composer affordance (TKT-0034)', () => {
-  it('a turn in flight genuinely dims the composer + makes field/Send pointer-inert in a REAL engine; both resolve back to idle once finalize() runs', () => {
+  it('a turn in flight genuinely dims the composer + makes editor/Send pointer-inert in a REAL engine; both resolve back to idle once finalize() runs', async () => {
     const el = mountConversation()
-    const composer = el.querySelector('[data-part="composer"]') as HTMLElement
-    const field = el.querySelector('[data-part="field"]') as HTMLElement
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement
+    const field = el.querySelector('[data-part="editor"]') as HTMLElement
     const sendBtn = el.querySelector('[data-part="send"]') as HTMLElement
 
     // idle baseline — fully opaque, real pointer interaction
@@ -97,41 +100,153 @@ describe('ui-conversation cross-engine smoke — busy/re-entrancy composer affor
     expect(getComputedStyle(sendBtn).pointerEvents).not.toBe('none')
 
     const handle = el.beginAgentTurn()
+    // TKT-0056 — `busy` now rides ui-conversation-composer's own reactive prop (its scope-owned effect),
+    // not conversation.ts's old direct/imperative DOM writes — the same microtask-batching every other
+    // reactive prop in the fleet already has (the checkbox checked-effect precedent). A real engine still
+    // paints the dim before the next frame; only a bare-synchronous assertion (this test, pre-extraction)
+    // needs the flush made explicit.
+    await whenFlushed()
 
-    // busy — the composer's OWN [data-busy] dim rule cascaded, AND each control's own [disabled] rule made
-    // it pointer-inert (button.css/text-field.css) — a REAL engine resolution, not just an attribute present.
+    // busy — the composer's OWN `[busy]` dim rule cascaded, its editor pointer-events rule cascaded, AND
+    // the send button's own [disabled] rule made it pointer-inert (button.css) — a REAL engine resolution,
+    // not just an attribute present.
     expect(Number(getComputedStyle(composer).opacity), 'the composer did not visibly dim while a turn is in flight').toBeLessThan(1)
-    expect(getComputedStyle(field).pointerEvents, 'the field did not become pointer-inert while busy').toBe('none')
+    expect(getComputedStyle(field).pointerEvents, 'the editor did not become pointer-inert while busy').toBe('none')
     expect(getComputedStyle(sendBtn).pointerEvents, 'Send did not become pointer-inert while busy').toBe('none')
 
     handle.finalize()
+    await whenFlushed()
 
-    // idle again — every rule releases the moment finalize() runs (synchronous, no settle wait needed)
+    // idle again — every rule releases once the busy effect's next flush runs
     expect(getComputedStyle(composer).opacity).toBe('1')
     expect(getComputedStyle(field).pointerEvents).not.toBe('none')
     expect(getComputedStyle(sendBtn).pointerEvents).not.toBe('none')
   })
 
-  it('a focused field NEVER loses focus while disabled mid-turn, in any engine (component-reviewer finding, investigated)', () => {
-    // A focus-loss/restore concern was raised at review and INVESTIGATED empirically here (not assumed):
-    // disabling `ui-text-field` rides `contenteditable=false` + a removed `tabindex`, never a native
-    // `disabled` attribute — only the latter carries a browser-mandated blur, so focus genuinely never
-    // leaves an already-focused field, in Chromium OR WebKit (nor in jsdom — see conversation.test.ts's own
-    // note). No restoration mechanism exists in the primitive; this pins that none is needed.
+  it('a focused editor′s focus survives a busy/idle cycle in WebKit; Chromium blurs it (TKT-0057′s question, re-asked against the TKT-0058 own editor)', async () => {
+    // TKT-0057 found (against the OLD nested ui-text-field) that Chromium blurs an already-focused
+    // contenteditable when the disable effect lands, WebKit does not — and that the original synchronous
+    // assertion had been vacuously passing around it. The v2 own editor (TKT-0058) disables differently
+    // (contenteditable=false only; it never carried a tabindex), so the engine split is RE-VERIFIED here
+    // against the new mechanism, not assumed: Chromium still drops focus when a focused element stops
+    // being editable/focusable; WebKit still keeps it.
     const el = mountConversation()
-    const field = el.querySelector('[data-part="field"]') as HTMLElement & { focus(): void }
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
 
-    field.focus()
-    expect(field.contains(document.activeElement), 'the field did not take focus in a real engine').toBe(true)
+    editor.focus()
+    expect(editor.contains(document.activeElement) || document.activeElement === editor, 'the editor did not take focus in a real engine').toBe(true)
 
     const handle = el.beginAgentTurn()
-    expect(
-      field.contains(document.activeElement),
-      'disabling the field unexpectedly dropped focus — if this ever starts failing, the primitive needs a real restore mechanism',
-    ).toBe(true)
+    await whenFlushed() // the busy effect must actually flush before this proves anything (TKT-0057)
+
+    if (server.browser === 'chromium') {
+      expect(document.activeElement === editor, 'TKT-0057 behavior shifted — Chromium no longer blurs on disable (update this test + the ticket)').toBe(false)
+    } else {
+      expect(document.activeElement === editor, 'the busy transition unexpectedly dropped focus in a non-Chromium engine').toBe(true)
+    }
 
     handle.finalize()
-    expect(field.contains(document.activeElement)).toBe(true)
+    await whenFlushed()
+    expect(document.activeElement === editor, 'the post-idle focus state shifted — update this test + TKT-0057').toBe(
+      server.browser === 'chromium' ? false : true,
+    )
+  })
+})
+
+// TKT-0058 — the v2 field-frame legs only a real engine can prove: the :has()-driven focus ring on the
+// HOST (jsdom applies no CSS), the click-to-focus hit area (jsdom cannot focus a contenteditable), and
+// the editor's 6em growth cap (jsdom has no layout).
+describe('ui-conversation-composer cross-engine smoke — the v2 field frame (TKT-0058)', () => {
+  it('focusing the editor rings the HOST frame; focusing the send button does NOT (LLD CVC-C8 — :has, not :focus-within)', async () => {
+    const el = mountConversation()
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+    const sendBtn = el.querySelector('[data-part="send"]') as HTMLElement
+
+    expect(getComputedStyle(composer).outlineStyle, 'idle — no ring').toBe('none')
+
+    editor.focus()
+    expect(getComputedStyle(composer).outlineStyle, 'the editor focus must ring the host frame').toBe('solid')
+    expect(parseFloat(getComputedStyle(composer).outlineWidth)).toBeGreaterThan(0)
+
+    sendBtn.focus()
+    expect(getComputedStyle(composer).outlineStyle, 'focus on the send button must NOT ring the field frame (it has its own)').toBe('none')
+  })
+
+  it('clicking the composer′s own area focuses the editor; clicking the send button does not steal it there', () => {
+    const el = mountConversation()
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+    const options = el.querySelector('[data-part="options"]') as HTMLElement
+
+    composer.click() // the host's own padding/area
+    expect(document.activeElement === editor, 'a click on the component area must focus the editor').toBe(true)
+
+    ;(document.activeElement as HTMLElement)?.blur()
+    options.click() // the options-row background — still the component area
+    expect(document.activeElement === editor, 'a click on the options-row background must focus the editor').toBe(true)
+  })
+
+  it('the editor auto-grows with content and caps at 6em, then scrolls (the TKT-0058 growth cap)', async () => {
+    const el = mountConversation()
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+
+    const oneLine = editor.getBoundingClientRect().height
+    composer.value = 'line 1\nline 2'
+    await whenFlushed()
+    const twoLines = editor.getBoundingClientRect().height
+    expect(twoLines, 'the editor must grow with a second line').toBeGreaterThan(oneLine)
+
+    composer.value = Array.from({ length: 20 }, (_, i) => `line ${i + 1}`).join('\n')
+    await whenFlushed()
+    const capped = editor.getBoundingClientRect().height
+    const capPx = 6 * parseFloat(getComputedStyle(editor).fontSize) // 6em in the editor's own em
+    expect(capped, 'the editor must cap at 6em').toBeLessThanOrEqual(capPx + 1)
+    expect(editor.scrollHeight, 'past the cap, content scrolls instead of growing').toBeGreaterThan(editor.clientHeight)
+  })
+
+  it('the TKT-0062 filled/container state law: empty vs typed repaint background AND ink together', async () => {
+    // code-reviewer HIGH finding: reading `composer.color` (the host) alone is vacuous — the editor
+    // part carries its own color declaration reading the same token, so a state rule that only
+    // repaints the host's `color` property never reaches the visible typed text. Read the EDITOR's
+    // own computed color — the element the user actually sees text in.
+    const el = mountConversation()
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+    const emptyBg = getComputedStyle(composer).backgroundColor
+    const emptyInk = getComputedStyle(editor).color
+
+    composer.value = 'filled now'
+    await whenFlushed()
+    ;(document.activeElement as HTMLElement)?.blur() // drop focus so the FILLED (idle) row paints, not the focus row
+    await new Promise((r) => setTimeout(r, 250)) // past --ui-motion-fast — let the repaint settle
+
+    const filledBg = getComputedStyle(composer).backgroundColor
+    const filledInk = getComputedStyle(editor).color
+    expect(filledBg, 'the background did not repaint between empty and filled').not.toBe(emptyBg)
+    expect(filledInk, 'the VISIBLE editor ink did not repaint between empty and filled').not.toBe(emptyInk)
+  })
+
+  it('focus wins over filled: a focused-AND-filled composer shows the FOCUS row, not the filled row', async () => {
+    const el = mountConversation()
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+    composer.value = 'filled and focused'
+    await whenFlushed()
+    ;(document.activeElement as HTMLElement)?.blur()
+    await new Promise((r) => setTimeout(r, 250))
+    const filledInk = getComputedStyle(editor).color
+
+    editor.focus()
+    await expect.poll(() => getComputedStyle(composer).outlineStyle).toBe('solid')
+    // MOTION-AWARE, anti-vacuous: `color` is a transitioned state-paint property — poll until it settles
+    // off the filled value rather than reading it synchronously right after the state change (the exact
+    // timing bug a synchronous read hit while authoring text-field.css's equivalent of this test).
+    // code-reviewer HIGH finding: read the EDITOR's own computed color, not the host's.
+    await expect
+      .poll(() => getComputedStyle(editor).color, { timeout: 1500 })
+      .not.toBe(filledInk)
   })
 })
 

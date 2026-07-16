@@ -153,6 +153,24 @@ describe('ui-disclosure — real platform click/keyboard activation (SPEC-R15 AC
   })
 })
 
+// TKT-0047 (revised) — the summary was the one Pattern-class interactive row (siblings: tabs, menu)
+// with zero hover feedback. An ink-step (matching tabs.css) turned out visually inert here — disclosure's
+// idle ink already sits at the ceiling of the neutral ramp, so no ink-step value could ever show. Fixed
+// with a background-tint wash instead (the combo-box.css active-descendant precedent) — a mechanism with
+// real headroom regardless of ink. Real cross-engine proof only possible here (jsdom can't compute colour).
+describe('ui-disclosure — hover (TKT-0047, background-tint revision)', () => {
+  it('the summary paints a real background tint on real pointer hover', async () => {
+    const { summary } = mount('<ui-disclosure summary="X"><p>Y</p></ui-disclosure>')
+    const idleBg = getComputedStyle(summary).backgroundColor
+
+    await userEvent.hover(summary)
+    const hoverBg = getComputedStyle(summary).backgroundColor
+    expect(hoverBg, 'the summary background did not repaint on hover').not.toBe(idleBg)
+
+    await userEvent.unhover(summary)
+  })
+})
+
 describe('ui-disclosure — the native marker is replaced (SPEC-R18 AC1)', () => {
   it('no native ::marker/::-webkit-details-marker triangle survives (list-style: none holds)', () => {
     const { summary } = mount('<ui-disclosure summary="X"><p>Y</p></ui-disclosure>')

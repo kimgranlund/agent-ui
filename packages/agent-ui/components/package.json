@@ -54,6 +54,7 @@
     "./controls/tabs": "./src/controls/tabs/tabs.ts",
     "./controls/text": "./src/controls/text/text.ts",
     "./controls/text-field": "./src/controls/text-field/text-field.ts",
+    "./controls/textarea": "./src/controls/textarea/textarea.ts",
     "./controls/theme-provider": "./src/controls/theme-provider/theme-provider.ts",
     "./controls/timeline": "./src/controls/timeline/timeline.ts",
     "./controls/timeline-item": "./src/controls/timeline-item/timeline-item.ts",

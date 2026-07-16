@@ -44,6 +44,7 @@
   --ui-color-picker-thumb-size: 1rem;
   --ui-color-picker-thumb-ring: var(--md-sys-color-neutral-on-surface, #1c1c1e);
   --ui-color-picker-thumb-ring-inner: var(--md-sys-color-neutral-surface-brightest, #fff);
+  --ui-color-picker-label-font: var(--ui-font-sm, 13px); /* TKT-0066 item 5 ruling: constants route through the own chain — the shared small-text size for channel labels, value readouts, and the format toggle */
 }
 
 /* ══════════════════════ [2] STYLES BLOCK — @scope (ui-color-picker) ═══════════════════════════ */
@@ -132,7 +133,7 @@
   :scope [data-part='channel-label'] {
     inline-size: 4.5em;
     flex-shrink: 0;
-    font-size: var(--ui-font-sm, 13px);
+    font-size: var(--ui-color-picker-label-font);
   }
 
   :scope [data-part='channel-row'] ui-slider {
@@ -144,7 +145,7 @@
     inline-size: 3.5em;
     flex-shrink: 0;
     text-align: end;
-    font-size: var(--ui-font-sm, 13px);
+    font-size: var(--ui-color-picker-label-font);
     font-variant-numeric: tabular-nums;
   }
 
@@ -168,7 +169,7 @@
     border: 1px solid var(--ui-color-picker-pad-outline);
     border-radius: var(--ui-color-picker-pad-radius);
     padding: 0.25rem 0.5rem;
-    font-size: var(--ui-font-sm, 13px);
+    font-size: var(--ui-color-picker-label-font);
     cursor: pointer;
     color: inherit;
   }

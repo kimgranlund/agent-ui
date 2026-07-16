@@ -57,11 +57,13 @@ export class UIRadioElement extends UIIndicatorElement {
       { capture: true },
     )
 
-    // Tabindex correction: the `tabbable` trait (called earlier in connected()) set tabIndex=0 on
-    // this radio. In a group, however, rovingFocus on the group already ran applyTabindexes before
-    // each radio's connected() fires (the group connects first, then its children). The tabbable
-    // trait overrides rovingFocus's -1 assignments. We correct non-roving radios back to -1 here,
-    // AFTER tabbable has run (grouped() is called at the END of connected() — after tabbable).
+    // Tabindex correction — load-bearing for the LATE-APPENDED radio (TKT-0068 item 3, measured).
+    // For a same-subtree connect the ADR-0121 `data-roving` deferral already covers this: rovingFocus's
+    // applyTabindexes stamps every item it manages, and tabbable defers its tabIndex=0 write on stamped
+    // hosts. But a radio appended to an ALREADY-connected group was never stamped (applyTabindexes ran
+    // before it existed), so tabbable sets 0 and the group would grow a second tab stop. We correct
+    // non-roving radios back to -1 here, AFTER tabbable has run (grouped() is called at the END of
+    // connected()). Pinned by radio-group.test.ts's `group-tabindex-late-append` (mutation-verified).
     //
     // Which radio deserves tabIndex=0? The checked one (matches rovingFocus initialIndex), or the
     // first sibling when nothing is checked. `this === firstOrChecked` → leave at 0; else → -1.

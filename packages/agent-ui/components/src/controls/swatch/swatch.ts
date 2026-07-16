@@ -23,8 +23,8 @@ import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom
 import { cssValue } from '../_token-surface/token-surface.ts'
 
 const props = {
-  value: prop.string(''), // a literal CSS color OR a --var name (cssValue routes it) — SPEC-R1
-  label: prop.string(''), // the token name / caption — SPEC-R1
+  color: prop.string(''), // a literal CSS color OR a --var name (cssValue routes it) — SPEC-R1. Renamed from `value` (TKT-0069 item 1 ruling: `value` = the FACE form value, reserved; the A2UI catalog keeps wire `value`, mapped in its bespoke factory)
+  label: { ...prop.string(''), reflect: true }, // the token name / caption — SPEC-R1
   scheme: prop.enum(['auto', 'light', 'dark'] as const, 'auto'), // the color-scheme pin — SPEC-R2
 } satisfies PropsSchema
 
@@ -67,11 +67,11 @@ export class UISwatchElement extends UIElement {
 
       // SPEC-R2/R3: empty/invalid/undefined-var value → the browser resolves `background` to transparent (or
       // drops the declaration); the box's own hairline border (swatch.css) always carries the shape.
-      box.style.background = cssValue(this.value)
+      box.style.background = cssValue(this.color)
       // SPEC-R2: the scheme pin — 'auto' sets nothing (ambient inheritance); light/dark pins color-scheme.
       box.style.colorScheme = this.scheme === 'auto' ? '' : this.scheme
 
-      const name = composeName(this.label, this.value)
+      const name = composeName(this.label, this.color)
       valueText.textContent = name
       this.internals.ariaLabel = name
     })

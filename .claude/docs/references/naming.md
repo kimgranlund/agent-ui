@@ -61,6 +61,17 @@ use fleet machinery (ComponentPreview's raw-HTMLElement shape is a recorded exce
 - **The orientation canon is `orientation`** (7:1 dominant; `axis` on ui-split is the
   recorded exception — split-pane consumes it; fix-on-touch). One concept, one prop name — check the reserved/canon list
   before minting any prop whose concept exists elsewhere.
+- **`label` reflects, fleet-wide** (TKT-0069 item 2, Kim-ruled 2026-07-16): every `label` prop is
+  `reflect: true` — one policy, no per-control fork (the 20 non-reflecting controls were converted;
+  the descriptor trip-wires pin it per control).
+- **The `scheme` inherit-ambient sentinel canon is `'auto'`** (TKT-0069 item 3, Kim-ruled
+  2026-07-16): self-documenting in markup, matching `color-scheme: auto` semantics (ramp/swatch are
+  the shape). `ui-theme-provider`'s `''`-first sentinel is the recorded §12 exception — its
+  empty-string-first contract is ADR-0117 load-bearing ("unset means inherit-ambient, never a
+  forced default"), not drift.
+- **The `duration` canon is a MILLISECONDS NUMBER** (TKT-0069 item 4, Kim-ruled 2026-07-16): a JS
+  timer quantity (`ui-toast` is the shape). `ui-swiper`'s CSS `<time>` STRING is the recorded §12
+  exception — it genuinely feeds CSS timing and reflects for that reason.
 - `variant` is deliberately per-control (visual voice is context-bound); its VALUES still obey
   the closed-enum rule.
 
@@ -168,7 +179,19 @@ the foundation/control `--ui-` overlap (allowlist-managed) · anatomy.md's stale
 (repair owed) · the nested-vs-own-folder sub-element split · `open` declared with zero producers
 (keep: the vocabulary slot is real; producers arrive with future overlays) · **the two token dialects — RULED
 (Kim, 2026-07-12): permanent two-tier** (`--ui-*` control/foundation vs `--md-sys-*` system; §5
-owns the boundary; convergence — ≈2830 sites — rejected). The fork is closed.
+owns the boundary; convergence — ≈2830 sites — rejected). The fork is closed. ·
+`ui-theme-provider.scheme`'s `''` sentinel (canon: `'auto'`, §3) — ADR-0117 load-bearing, keep ·
+`ui-swiper.duration`'s CSS `<time>` string (canon: milliseconds number, §3) — feeds CSS timing,
+reflected for that reason, keep · **the `name`/`value` repurposers — RULED (Kim, 2026-07-16,
+TKT-0069 item 1) and EXECUTED same day: the fleet-wide §3 reservation STANDS; all EIGHT renamed**
+(`ui-icon.name`→`glyph` · `ui-avatar.name`→`identity` · `ui-attachment.name`→`filename` ·
+`ui-stat.value`→`figure` · `ui-swatch.value`→`color` · `ui-swiper-item.value`→`key` ·
+`ui-progress.value`→`current` · `ui-tab.value`→`key`, the eighth — found at execution, the
+swiper-item comment's own cited precedent). The A2UI catalog keeps its shipped WIRE field names
+(`Icon.name`, `Stat.value`, …): `catalog.json`'s `mapsTo` + `mappedAccessorFactory` translate
+wire→prop at apply time, so every corpus record and taught idiom stays valid — the ONE catalog-vs-
+component naming divergence class, deliberate (§7's namespace is the protocol surface, §3's is the
+DOM surface).
 
 ## 13 · The worked example — deriving a family's names from ONE decision
 

@@ -67,6 +67,18 @@ export default defineConfig({
       // `controls/text`/`controls/theme-provider`/`controls/code`/`controls/table` above.
       '@agent-ui/components/controls/split': r('./packages/agent-ui/components/src/controls/split/split.ts'),
       '@agent-ui/components/controls/split-pane': r('./packages/agent-ui/components/src/controls/split/split-pane.ts'),
+      // TKT-0048 — `@agent-ui/app`'s `entry-list.ts` (composed by `ui-agent-admin`) is the next direct
+      // `./controls/{name}` subpath consumer from OUTSIDE the components package: `agent-admin.ts`
+      // side-effect-imports `button`/`icon` so entry-list.ts's `document.createElement('ui-button'
+      // | 'ui-icon')` calls resolve to the REAL classes explicitly, not only via the incidental
+      // conversation→a2ui transitive path. Same alias-ordering necessity as `controls/split`/
+      // `controls/split-pane` above.
+      '@agent-ui/components/controls/button': r('./packages/agent-ui/components/src/controls/button/button.ts'),
+      '@agent-ui/components/controls/icon': r('./packages/agent-ui/components/src/controls/icon/icon.ts'),
+      // TKT-0049 — `agent-admin.ts` also side-effect-imports `textarea` so entry-list.ts's
+      // `document.createElement('ui-textarea')` calls resolve to the REAL class explicitly. Same
+      // alias-ordering necessity as `controls/button`/`controls/icon` immediately above.
+      '@agent-ui/components/controls/textarea': r('./packages/agent-ui/components/src/controls/textarea/textarea.ts'),
       // app-surfaces-m4.lld.md LLD-C13/C14 — `@agent-ui/app`'s `ui-settings` schema/generate.ts are the
       // sixth/seventh/etc. direct `./controls/{name}` subpath consumers from OUTSIDE the components
       // package: the field-type registry self-defines the four mapped controls (text-field/switch/

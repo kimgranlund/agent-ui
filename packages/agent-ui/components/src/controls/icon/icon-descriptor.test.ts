@@ -23,7 +23,7 @@ const css = readFileSync(`${ICN}/icon.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['name', 'label']
+const ATTR_NAMES = ['glyph', 'label']
 
 describe('icon.md descriptor — structural validity (s8)', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -60,19 +60,19 @@ describe('icon.md descriptor — contract↔props trip-wire (s10)', () => {
     expect(compareDescriptorToProps(parsed.attributes, UIIconElement.props)).toEqual([])
   })
 
-  it('both attributes are string type, non-reflected, default empty string', () => {
+  it('both attributes are string type, default empty string; only label reflects (TKT-0069 item 2 ruling)', () => {
     for (const name of ATTR_NAMES) {
       const a = parsed.attributes.find((x) => x.name === name)
       expect(a?.type, `${name}.type`).toBe('string')
       expect(a?.default, `${name}.default`).toBe('')
-      expect(a?.reflect, `${name}.reflect`).toBe(false)
+      expect(a?.reflect, `${name}.reflect`).toBe(name === 'label')
     }
   })
 
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default)', () => {
-    const flipReflect = parsed.attributes.map((a) => (a.name === 'name' ? { ...a, reflect: true } : { ...a }))
+    const flipReflect = parsed.attributes.map((a) => (a.name === 'glyph' ? { ...a, reflect: true } : { ...a }))
     expect(compareDescriptorToProps(flipReflect, UIIconElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.name.reflect' }),
+      expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.glyph.reflect' }),
     )
     const flipDefault = parsed.attributes.map((a) => (a.name === 'label' ? { ...a, default: 'x' } : { ...a }))
     expect(compareDescriptorToProps(flipDefault, UIIconElement.props)).toContainEqual(
@@ -81,9 +81,9 @@ describe('icon.md descriptor — contract↔props trip-wire (s10)', () => {
   })
 
   it('a removed or added attribute FAILS the trip-wire (negative control — bijection both ways)', () => {
-    const dropName = parsed.attributes.filter((a) => a.name !== 'name')
+    const dropName = parsed.attributes.filter((a) => a.name !== 'glyph')
     expect(compareDescriptorToProps(dropName, UIIconElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_MISSING', path: 'attributes.name' }),
+      expect.objectContaining({ code: 'DRIFT_MISSING', path: 'attributes.glyph' }),
     )
     const addBogus = [...parsed.attributes, { name: 'bogus', type: 'string', default: '', reflect: false }]
     expect(compareDescriptorToProps(addBogus, UIIconElement.props)).toContainEqual(

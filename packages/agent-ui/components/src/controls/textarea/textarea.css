@@ -1,0 +1,251 @@
+/* textarea.css — ui-textarea, the single-file component stylesheet (ADR-0003). Two clearly-SECTIONED
+ * blocks, mirroring text-field.css:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-textarea)` (specificity 0,0,0) DECLARES the `--ui-textarea-*` chain from the
+ *       colour roles (`--md-sys-color-{family}-{role}`; family = neutral, the text-field field-frame map reused
+ *       verbatim) and the `--ui-font-{size}` dimensional ramp. The state channel is Kim's filled/container
+ *       state law (TKT-0062) — THREE channels repoint per state (background, border, text-ink), keyed off
+ *       five states (default/filled/hover/focus/disabled), the text-field precedent reused verbatim. `[size]`
+ *       repoints ONLY the font — padding-block/padding-inline/the per-row line-box all DERIVE from font via
+ *       calc(), so one repoint cascades through all three (ADR-0134's "[size] repoints font + block-padding +
+ *       per-row line-box").
+ *   [2] STYLES BLOCK — `@scope (ui-textarea)` CONSUMES only `--ui-textarea-*` for its OWN tokens (the one
+ *       fleet exception: the shared focus-ring + motion constants, read DIRECTLY, the text-field precedent).
+ *       ui-textarea declares its OWN multi-line geometry law (ADR-0134) — NOT the single-line Control-class
+ *       `(scale × size) → §1-row` lookup ui-text-field rides (geometry.md / ADR-0038/0036): `min-block-size`
+ *       is a GROWABLE minimum (`rows × line-box + 2·block-padding`), never a fixed height; real
+ *       `padding-block` (never 0); top-left text placement via normal BLOCK flow — `display: block`, no
+ *       `align-items` rule at all, deliberately (textarea-geometry.test.ts documents the choice; simpler
+ *       than a flex `align-items: start` for a single block-axis child, same visual result); a prose
+ *       `line-height` (never the single-line `line-height: 1`); `resize: vertical` (native `<textarea>`
+ *       parity) + `overflow-y: auto`. The filled/container state ladder, `:focus-within` ring, forced-colors,
+ *       and reduced-motion are inherited verbatim from the text-field precedent (the field-frame pattern is
+ *       shape-independent — ADR-0134 "The multi-line geometry law").
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from textarea.ts
+ * (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-textarea) declares --ui-textarea-* ════════════════ */
+
+:where(ui-textarea) {
+  /* Field-frame colour channel (family = neutral) — Kim's filled/container state law (TKT-0062),
+     SUPERSEDING the old border-only channel: THREE channels now repoint per state (background, border,
+     text-ink), keyed off five states — default (empty, idle) / filled (has a value, idle) / hover / focus /
+     disabled. user-invalid is UNCHANGED — its own border-only danger channel (below) layers on top of
+     whichever bg/ink this table already picked; it never touches bg. The text-field precedent reused
+     verbatim (a multi-line surface is the SAME entry-control kin as a single-line one, only the box shape
+     differs):
+       state    | bg              | border           | ink
+       default  | container-low   | transparent       | neutral
+       filled   | container       | transparent       | on-surface-variant
+       hover    | container       | outline-variant   | on-surface-variant
+       focus    | container-low   | transparent (ring)| on-surface
+       disabled | container-low   | transparent       | neutral-low
+     "filled" reads `[data-part='editor']:not([data-empty])` (the SAME emptiness signal the placeholder
+     ::before already keys off) — see @scope's `:has()` selector below. Declared here, consumed at the
+     matching pseudo-/state selector in @scope (so @scope reads only --ui-textarea-*, never a role). */
+  --ui-textarea-bg: var(--md-sys-color-neutral-container-low); /* default */
+  --ui-textarea-bg-filled: var(--md-sys-color-neutral-container);
+  --ui-textarea-bg-hover: var(--md-sys-color-neutral-container);
+  --ui-textarea-bg-focus: var(--md-sys-color-neutral-container-low);
+  --ui-textarea-border: transparent; /* default — the ring is the interactive indicator, not the border */
+  --ui-textarea-border-hover: var(--md-sys-color-neutral-outline-variant); /* :hover — the ONE visible-border state */
+  --ui-textarea-border-focus: transparent; /* :focus-within — TRANSPARENT: the shared outline ring is the SOLE focus indicator (a --md-sys-color-focus-ring border-color step doubled with the ring into a visible double border; text-field ADR-0014 dev#1 precedent). Transparent holds the box geometry (the 1px frame still occupies its track — no layout shift). */
+  --ui-textarea-border-invalid: var(--md-sys-color-danger); /* :state(user-invalid) — UNCHANGED, orthogonal to the table above */
+  --ui-textarea-border-invalid-hover: var(--md-sys-color-danger-high); /* user-invalid + :hover — UNCHANGED */
+  --ui-textarea-ink: var(--md-sys-color-neutral); /* default — empty, idle (== the placeholder ink, below) */
+  --ui-textarea-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-textarea-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-textarea-ink-focus: var(--md-sys-color-neutral-on-surface);
+  --ui-textarea-placeholder: var(--ui-textarea-ink); /* tracks the SAME default-state ink role (Kim's table has no separate placeholder row) — re-resolves live off whatever --ui-textarea-ink cascades to for this element, so the disabled repoint below reaches it for free */
+
+  /* Geometry — the MULTI-LINE law (ADR-0134), not the single-line ramp. Font is the ONE sizing lever that
+     [size] repoints; padding-block/padding-inline/line-box all DERIVE from it via calc() below, so a single
+     repoint cascades through all three — the growable box has no fixed §1 height row. */
+  --ui-textarea-font: var(--ui-font-md);
+  --ui-textarea-line-height: 1.5; /* prose line-height — NEVER the single-line control's line-height:1 (geometry.md) */
+  --ui-textarea-line-box: calc(var(--ui-textarea-font) * var(--ui-textarea-line-height)); /* one rendered text row */
+  --ui-textarea-padding-block: calc(var(--ui-textarea-font) * 0.5); /* a comfortable text inset (ADR-0134) — never 0 */
+  --ui-textarea-padding-inline: calc(var(--ui-textarea-font) * 0.75);
+  --ui-textarea-rows: 3; /* the JS-set --ui-textarea-rows inline custom property overrides this per-instance (textarea.ts) */
+  --ui-textarea-min-block-size: calc(var(--ui-textarea-rows) * var(--ui-textarea-line-box) + 2 * var(--ui-textarea-padding-block));
+
+  /* Size-INVARIANT frame quantities — the entry-control class referents (geometry.md "Frame quantities that
+     split by control class"), the SAME fleet tokens ui-text-field's #71/#21 amendments introduced. */
+  --ui-textarea-radius: var(--ui-radius-base); /* fixed rounded-rect — the container-fleet referent, not the action h/2 pill */
+  --ui-textarea-min-inline-size: 20ch; /* the entry-control typing-width floor (ADR-0021), native <textarea> parity */
+
+  /* Visible inline-validation message tokens (ADR-0029 A1, the text-field precedent) — the .ui-textarea-message
+     node (control-managed, aria-describedby target) becomes VISIBLE when non-empty under :state(user-invalid). */
+  --ui-textarea-message-font: var(--ui-font-sm);
+  --ui-textarea-message-ink: var(--md-sys-color-danger-on-surface-variant); /* AA-gated on-surface danger text ink */
+}
+
+/* size → the ONE sizing lever (font); padding-block/padding-inline/line-box all derive from it via calc() above. */
+:where(ui-textarea[size='sm']) {
+  --ui-textarea-font: var(--ui-font-sm);
+}
+:where(ui-textarea[size='lg']) {
+  --ui-textarea-font: var(--ui-font-lg);
+}
+
+/* disabled → a role-REPOINT (NOT opacity, tokens.md canon; TKT-0062's disabled row). Matches BOTH the
+   own/reflected [disabled] AND the effective :state(disabled) (own || form-disabled). Declared LAST so it
+   wins the specificity-0 cascade for the BASE `--ui-textarea-{bg,border,ink}` tokens the unconditional
+   `:scope` rule reads. Only the base trio needs repointing — @scope's `filled`/`hover` selectors are
+   explicitly guarded with `:not(:is([disabled], :state(disabled)))` (a genuinely new hazard the old
+   border-only law never had: "filled" is a content-based `:has()` selector, not an interaction
+   pseudo-class, so it WOULD still match a disabled-but-non-empty field without that guard — unlike
+   `:hover`/`:focus-within`, which a pointer-inert, non-focusable disabled host can never really trigger).
+   user-invalid cannot co-occur (a disabled textarea does not willValidate — textarea.ts gates it), so the
+   danger border is left untouched. The text-field precedent reused verbatim. */
+:where(ui-textarea:is([disabled], :state(disabled))) {
+  --ui-textarea-bg: var(--md-sys-color-neutral-container-low);
+  --ui-textarea-border: transparent;
+  --ui-textarea-ink: var(--md-sys-color-neutral-low);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-textarea) consumes ONLY --ui-textarea-* ════════════════ */
+
+@scope (ui-textarea) {
+  :scope {
+    display: block; /* no adornment slots (ADR-0134: no leading/trailing machinery) — the host IS the resizable box */
+    box-sizing: border-box;
+
+    /* the MULTI-LINE geometry law (ADR-0134) — a GROWABLE minimum, never a fixed §1-row height. */
+    min-block-size: var(--ui-textarea-min-block-size);
+    min-inline-size: var(--ui-textarea-min-inline-size); /* the entry-control typing-width floor (ADR-0021 parity) */
+    padding-block: var(--ui-textarea-padding-block); /* REAL block padding — the inversion of the single-line law's 0 */
+    padding-inline: var(--ui-textarea-padding-inline);
+    overflow-y: auto; /* content past min-block-size scrolls rather than growing the box unbounded */
+    resize: vertical; /* native <textarea> parity — user-draggable (requires overflow != visible, satisfied above) */
+
+    font-size: var(--ui-textarea-font);
+    line-height: var(--ui-textarea-line-height); /* prose line-height — NEVER the single-line control's line-height:1 */
+    background: var(--ui-textarea-bg);
+    color: var(--ui-textarea-ink);
+
+    border: 1px solid var(--ui-textarea-border);
+    border-radius: var(--ui-textarea-radius);
+    cursor: text;
+  }
+
+  :scope > [data-part='editor'] {
+    display: block;
+    min-inline-size: 0;
+    min-block-size: 100%;
+    font-size: var(--ui-textarea-font);
+    line-height: var(--ui-textarea-line-height);
+    color: var(--ui-textarea-ink);
+    outline: none; /* the focus ring is on the HOST frame, never the editor child */
+    white-space: pre-wrap; /* multi-line — newlines + wrapping both render (the ADR-0134 inversion of nowrap) */
+    overflow-wrap: break-word;
+  }
+
+  /* the placeholder — a control-toggled `data-empty` attr keys generated content (the text-field precedent
+     verbatim; NOT `:empty` — a cleared contenteditable can carry a bogus trailing <br>, ADR-0014). */
+  :scope > [data-part='editor'][data-empty]::before {
+    content: attr(data-placeholder);
+    color: var(--ui-textarea-placeholder);
+    pointer-events: none;
+  }
+
+  /* The filled/container state ladder (TKT-0062, Kim's ruling — supersedes the old border-only channel,
+     the text-field precedent reused verbatim) — repoints `background`/`border-color`/`color` together
+     from the per-state tokens declared in the :where() block (the geometry law is untouched). "filled" =
+     the editor carries a value (`:not([data-empty])`, the SAME emptiness signal the placeholder ::before
+     already keys off) — a CONTENT-based selector, not an interaction pseudo-class, so unlike :hover/
+     :focus-within it WOULD still match a disabled-but-non-empty field.
+
+     Precedence is enforced by MUTUAL EXCLUSION (`:not()`), not source-order/specificity: `:has()`/
+     `:not()` combinators contribute REAL specificity in a plain (non-:where()) selector — unlike the old
+     border-only law's bare single-pseudo-class rules, source order alone can no longer be trusted to pick
+     a winner (a `:not(:is(disabled))`-guarded `:hover` was measured to OUTRANK an unguarded
+     `:focus-within` by specificity in ui-text-field, so clicking to focus — which also leaves the pointer
+     hovering — kept the hover border instead of stepping transparent; a live regression this exact history
+     was caught fixing). Making each rule EXPLICITLY exclude every state that should outrank it removes the
+     ambiguity regardless of computed specificity: filled excludes hover/focus/disabled; hover excludes
+     focus/disabled; focus is checked last and excludes nothing (a disabled field is never focusable, so no
+     guard is needed there, matching the old law). user-invalid's border-only override still layers on top
+     of whichever bg/ink row above resolved, untouched. */
+  /* NOTE (code-reviewer HIGH finding, fixed — the text-field.css precedent): repointing the
+     --ui-textarea-ink TOKEN itself here, NOT a direct color: declaration on :scope — the editor part
+     carries its own color declaration reading that same token, so a host-only color: override never
+     reached the visible typed text or the placeholder (proven red in a real browser gate before this
+     fix). Repointing the token cascades to every consumer for free. */
+  :scope:not(:hover):not(:focus-within):not(:is([disabled], :state(disabled))):has(> [data-part='editor']:not([data-empty])) {
+    background: var(--ui-textarea-bg-filled);
+    --ui-textarea-ink: var(--ui-textarea-ink-filled);
+  }
+  :scope:not(:focus-within):not(:is([disabled], :state(disabled))):hover {
+    background: var(--ui-textarea-bg-hover);
+    border-color: var(--ui-textarea-border-hover);
+    --ui-textarea-ink: var(--ui-textarea-ink-hover);
+  }
+
+  /* Focus (the text-field ADR-0014 dev#1 precedent, reused verbatim) — the shared `outline` ring is the
+     SOLE interactive-frame indicator; the frame border steps to TRANSPARENT (a colour-step border here
+     would double with the ring). :focus-within (ALL focus, native text-input parity), not :focus-visible —
+     the focusable element is the editor child. Focus's bg/ink (TKT-0062) override filled/hover
+     unconditionally — a focused-and-filled field still shows the FOCUS row (container-low bg, on-surface
+     ink), not filled's. A disabled field is never focusable, so no guard is needed here (matching the old
+     law). */
+  :scope:focus-within {
+    background: var(--ui-textarea-bg-focus);
+    border-color: var(--ui-textarea-border-focus);
+    --ui-textarea-ink: var(--ui-textarea-ink-focus);
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
+  }
+
+  :scope:state(user-invalid) {
+    border-color: var(--ui-textarea-border-invalid);
+  }
+  :scope:state(user-invalid):hover {
+    border-color: var(--ui-textarea-border-invalid-hover);
+  }
+
+  /* Visible inline-validation message (ADR-0029 A1, the text-field precedent verbatim). */
+  :scope:state(user-invalid) > .ui-textarea-message {
+    display: block;
+    font-size: var(--ui-textarea-message-font);
+    color: var(--ui-textarea-message-ink);
+  }
+
+  :scope:is([disabled], :state(disabled)) {
+    pointer-events: none;
+    cursor: default;
+    resize: none; /* a disabled surface is not user-resizable */
+  }
+
+  /* Motion (ADR-0008 / interaction-states standard, reused verbatim) — state-PAINT properties only, never
+     geometry (a resize/rows change must SNAP). Gated behind :state(ready), zeroed under reduced-motion. */
+  :scope:state(ready) {
+    transition:
+      border-color var(--ui-motion-fast) var(--ui-ease-standard),
+      background-color var(--ui-motion-fast) var(--ui-ease-standard),
+      color var(--ui-motion-fast) var(--ui-ease-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope:state(ready) {
+      transition: none;
+    }
+  }
+
+  /* forced-colors — keep the frame border + ink + placeholder VISIBLE (the text-field precedent verbatim).
+     The focus ring survives for free via --md-sys-color-focus-ring → Highlight. */
+  @media (forced-colors: active) {
+    :scope {
+      border-color: CanvasText;
+      color: CanvasText;
+    }
+    :scope > [data-part='editor'][data-empty]::before {
+      color: CanvasText;
+    }
+    :scope:is([disabled], :state(disabled)) {
+      border-color: GrayText;
+      color: GrayText;
+    }
+  }
+}

@@ -31,6 +31,7 @@
 // registers the WHOLE family — importing the barrel self-defines all ~20+ tags.
 export * from './button/button.ts'
 export * from './text-field/text-field.ts'
+export * from './textarea/textarea.ts' // ui-textarea (ADR-0134) — the multi-line FACE sibling of ui-text-field
 export * from './text/text.ts'
 export * from './icon/icon.ts' // ui-icon (ADR-0065/0066) — the icon-adapter's declarative consumer surface
 

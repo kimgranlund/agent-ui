@@ -1,6 +1,6 @@
 // site/pages/avatar-doc.ts — the ui-avatar API doc page (tier=indicator ⇒ {doc} only, ADR-0112 /
 // feed-family.lld.md LLD-C12). DERIVED from `avatar.md` via the shared doc-page.ts renderer: the attribute
-// table (src, name, label, the [size] enum) and the parts[] table (initials) are read straight from the parse
+// table (src, identity, label, the [size] enum) and the parts[] table (initials) are read straight from the parse
 // — so neither can drift from the descriptor the contract trip-wire enforces (ADR-0004). The fallback-chain
 // specimens are hand-authored (a doc page has no source to derive representative data from): a real inline-SVG
 // image (link 1), an intentionally-broken data URI proving the fallback (link 1 → 2), initials-only (link 2),
@@ -36,10 +36,10 @@ function renderSpecimens(): HTMLElement {
   const section = document.createElement('section')
   section.append(
     heading(2, 'Examples'),
-    labelled('The fallback chain', 'Image (link 1) · a failed image falling back to initials (link 1 → 2) · initials-only (link 2) · no src/no name → the generic glyph (link 3).', row(
-      avatar({ src: PORTRAIT_SRC, name: 'Ada Lovelace' }),
-      avatar({ src: BROKEN_SRC, name: 'Grace Hopper' }),
-      avatar({ name: 'Katherine Johnson' }),
+    labelled('The fallback chain', 'Image (link 1) · a failed image falling back to initials (link 1 → 2) · initials-only (link 2) · no src/no identity → the generic glyph (link 3).', row(
+      avatar({ src: PORTRAIT_SRC, identity: 'Ada Lovelace' }),
+      avatar({ src: BROKEN_SRC, identity: 'Grace Hopper' }),
+      avatar({ identity: 'Katherine Johnson' }),
       avatar({}),
     )),
     labelled('Sizes', 'Every parsed [size] tier, off the shared compact-realm ramp.', row(...sizeRow())),
@@ -49,7 +49,7 @@ function renderSpecimens(): HTMLElement {
 
 function sizeRow(): HTMLElement[] {
   const sizes = findAttr(descriptor, 'size')?.values ?? []
-  return sizes.map((size) => avatar({ name: 'Ada Lovelace', size }))
+  return sizes.map((size) => avatar({ identity: 'Ada Lovelace', size }))
 }
 
 function avatar(attrs: Record<string, string>): HTMLElement {

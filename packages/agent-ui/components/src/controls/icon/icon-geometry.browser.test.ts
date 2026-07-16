@@ -53,7 +53,7 @@ const tokenPx = (btn: HTMLElement, name: string): number => px(getComputedStyle(
 describe('ui-icon cell-fit geometry (s-ui-icon-tests, LLD §3) — cross-engine', () => {
   it('an ui-icon in a [data-role="icon"] cell fills it: rendered svg box == --ui-button-icon (NO CSS edit)', () => {
     const btn = mount(
-      '<ui-button><ui-icon slot="leading" data-role="icon" name="caret-down"></ui-icon>Label</ui-button>',
+      '<ui-button><ui-icon slot="leading" data-role="icon" glyph="caret-down"></ui-icon>Label</ui-button>',
     )
     const cell = btn.querySelector('[data-role="icon"]') as HTMLElement
     const svg = cell.querySelector('svg') as SVGSVGElement
@@ -68,7 +68,7 @@ describe('ui-icon cell-fit geometry (s-ui-icon-tests, LLD §3) — cross-engine'
 
   it('an ui-icon in a [data-role="caret"] cell insets to font-rhythm: rendered svg box == --ui-button-glyph (NO CSS edit)', () => {
     const btn = mount(
-      '<ui-button>Label<ui-icon slot="trailing" data-role="caret" name="caret-down"></ui-icon></ui-button>',
+      '<ui-button>Label<ui-icon slot="trailing" data-role="caret" glyph="caret-down"></ui-icon></ui-button>',
     )
     const cell = btn.querySelector('[data-role="caret"]') as HTMLElement
     const svg = cell.querySelector('svg') as SVGSVGElement
@@ -83,7 +83,7 @@ describe('ui-icon cell-fit geometry (s-ui-icon-tests, LLD §3) — cross-engine'
 
   it('anti-vacuous: the SAME icon asset renders at two genuinely DIFFERENT sizes purely from ambient cell geometry', () => {
     const btn = mount(
-      '<ui-button><ui-icon slot="leading" data-role="icon" name="caret-down"></ui-icon>Label<ui-icon slot="trailing" data-role="caret" name="caret-down"></ui-icon></ui-button>',
+      '<ui-button><ui-icon slot="leading" data-role="icon" glyph="caret-down"></ui-icon>Label<ui-icon slot="trailing" data-role="caret" glyph="caret-down"></ui-icon></ui-button>',
     )
     const iconSvg = btn.querySelector('[data-role="icon"] svg') as SVGSVGElement
     const caretSvg = btn.querySelector('[data-role="caret"] svg') as SVGSVGElement

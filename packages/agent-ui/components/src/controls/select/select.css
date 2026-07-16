@@ -4,8 +4,11 @@
  *   [1] TOKEN BLOCK  — `:where(ui-select)` (specificity 0,0,0) DECLARES the `--ui-select-*`
  *       chain from the colour roles (`--md-sys-color-{family}-{role}`; family = neutral for the trigger frame)
  *       and the dimensional ramp (`--ui-height-{size}` / `--ui-font-{size}` / `--ui-icon-{size}`).
- *       The trigger is a Control-class surface (border channel, like text-field — the state is the
- *       frame colour, NOT a background fill; a caret = font inline affordance, §4.1). The listbox
+ *       The trigger is a Control-class surface carrying Kim's filled/container state law (TKT-0062,
+ *       superseding the ADR-0014 cl.2c border-only channel) — background/border/text-ink ALL repoint
+ *       per state (default/filled/hover/focus/disabled; "filled" = a real selection, via a NEW
+ *       `[data-empty]` toggle select.ts's label effect now maintains); a caret = font inline
+ *       affordance, §4.1. The listbox
  *       panel is a Container/surface (bg + outline + radius + padding — NOT a control height). The
  *       option rows use the legacy item-pad model (§5.1 / ROV-C5: padding-based row height, NOT
  *       the --ui-compact widget box — option rows are text items, not stand-alone widgets) — but
@@ -36,22 +39,29 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-select) declares --ui-select-* ════════════════ */
 
 :where(ui-select) {
-  /* ── Trigger frame — the state is the BORDER channel (like text-field, NOT a background fill):
-     a select trigger is an entry-class surface — it announces state through its frame colour.
-     The idle/hover/focus steps are SOLID role steps (NOT soft-alpha — alpha outlines can fail
-     WCAG 1.4.11 against the trigger bg). Focus = transparent: the shared outline ring is the
-     SOLE focus indicator (ADR-0014 dev#1; a border-focus step doubles with the ring). */
-  --ui-select-border: var(--md-sys-color-neutral);
-  --ui-select-border-hover: var(--md-sys-color-neutral-high);
+  /* ── Trigger frame — Kim's filled/container state law (TKT-0062), SUPERSEDING the ADR-0014
+     cl.2c border-only channel: bg/border/ink ALL repoint per state now (default/filled/hover/
+     focus/disabled — same table as text-field/textarea/combo-box). "filled" = the trigger shows a
+     real selection, not the placeholder (`[data-empty]`, a NEW toggle this ticket added to
+     select.ts's own label effect — select previously had no emptiness hook at all, unlike its
+     siblings). Focus = transparent: the shared outline ring is the SOLE focus indicator (ADR-0014
+     dev#1; a border-focus step doubles with the ring). */
+  --ui-select-bg: var(--md-sys-color-neutral-container-low); /* default */
+  --ui-select-bg-filled: var(--md-sys-color-neutral-container);
+  --ui-select-bg-hover: var(--md-sys-color-neutral-container);
+  --ui-select-bg-focus: var(--md-sys-color-neutral-container-low);
+  --ui-select-border: transparent; /* default */
+  --ui-select-border-hover: var(--md-sys-color-neutral-outline-variant); /* the ONE visible-border state */
   --ui-select-border-focus: transparent;    /* transparent holds the geometry — no layout shift */
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction (the
      trackUserInvalid controller owns that timing; select.ts toggles :state(user-invalid)). The
-     text-field precedent, on the trigger's border channel. */
+     text-field precedent, on the trigger's border channel — UNCHANGED, orthogonal to the table above. */
   --ui-select-border-invalid: var(--md-sys-color-danger);
   --ui-select-border-invalid-hover: var(--md-sys-color-danger-high);
-  --ui-select-bg: var(--md-sys-color-neutral-surface);
-  --ui-select-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-select-placeholder-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-select-ink: var(--md-sys-color-neutral); /* default — showing the placeholder */
+  --ui-select-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-select-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-select-ink-focus: var(--md-sys-color-neutral-on-surface);
   --ui-select-radius: var(--ui-radius-base); /* fixed rounded-rect radius, like text-field */
 
   /* ── Trigger geometry (Control class, default size = md) — off the §1-row ramp (ADR-0038).
@@ -68,10 +78,10 @@
      needs a floor so it is hittable and the overlay positions against a real anchor rect. */
   --ui-select-min-inline-size: 10ch;
 
-  /* ── Disabled state — muted neutral roles (the same pattern as button/text-field disabled) */
-  --ui-select-border-disabled: var(--md-sys-color-neutral-outline-variant);
-  --ui-select-bg-disabled: var(--md-sys-color-neutral-surface-high);
-  --ui-select-ink-disabled: var(--md-sys-color-neutral-on-surface-variant);
+  /* ── Disabled state — TKT-0062's disabled row (bg=container-low, border=transparent, ink=neutral-low) */
+  --ui-select-border-disabled: transparent;
+  --ui-select-bg-disabled: var(--md-sys-color-neutral-container-low);
+  --ui-select-ink-disabled: var(--md-sys-color-neutral-low);
 
   /* ── Listbox panel — Container/surface geometry (NOT a control height; like modal/card/popover) */
   --ui-select-listbox-bg: var(--md-sys-color-neutral-surface);
@@ -147,12 +157,13 @@
 }
 
 /* ── disabled → muted neutral roles ────────────────────────────────────────────────────────── */
-
-:where(ui-select[disabled]) {
+/* TKT-0063: widened to `:is([disabled], :state(disabled))` — the own `[disabled]` attribute ALONE
+   missed the effective-disabled case (own || ancestor <fieldset disabled>/form-provider); select.ts's
+   effectiveDisabled() effect now also sets :state(disabled), mirroring text-field.ts's own precedent. */
+:where(ui-select:is([disabled], :state(disabled))) {
   --ui-select-border: var(--ui-select-border-disabled);
   --ui-select-bg: var(--ui-select-bg-disabled);
   --ui-select-ink: var(--ui-select-ink-disabled);
-  --ui-select-placeholder-ink: var(--ui-select-ink-disabled);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-select) consumes ONLY --ui-select-* ════════════════ */
@@ -247,9 +258,24 @@
     block-size: var(--ui-select-glyph);
   }
 
-  /* Trigger hover/focus states (state-PAINT only; geometry is never transitioned). */
-  :scope > [data-part='trigger']:hover {
+  /* Trigger filled/container state law (TKT-0062, Kim's ruling — supersedes the ADR-0014 cl.2c
+     border-only channel) — repoints background/border-color/color together. "filled" = the trigger
+     shows a real selection (`[data-part='trigger']:not([data-empty])` — the NEW toggle select.ts's
+     label effect now maintains). Precedence is enforced by MUTUAL EXCLUSION (`:not()`), never
+     source-order/specificity (the lesson from text-field.css's own build: a disabled-guarded `:hover`
+     measured HIGHER specificity than an unguarded focus selector, so a mouse-click focus — which also
+     leaves the pointer hovering — kept the wrong state painted). `[disabled]` is checked directly on
+     the TRIGGER (select.ts already collapses own-disabled OR form-disabled onto the trigger's own
+     attribute — `trigger.setAttribute('disabled', ...)` in the effectiveDisabled() effect — so no
+     separate `:state(disabled)` check is needed here, unlike text-field/textarea/combo-box). */
+  :scope > [data-part='trigger']:not(:hover):not(:focus-visible):not([disabled]):not([data-empty]) {
+    background: var(--ui-select-bg-filled);
+    color: var(--ui-select-ink-filled);
+  }
+  :scope > [data-part='trigger']:not(:focus-visible):not([disabled]):hover {
+    background: var(--ui-select-bg-hover);
     border-color: var(--ui-select-border-hover);
+    color: var(--ui-select-ink-hover);
   }
 
   :scope > [data-part='trigger']:focus-within,
@@ -257,8 +283,13 @@
     outline: none; /* the outline ring below replaces the UA default */
   }
 
+  /* Focus (keyboard-only :focus-visible, the button precedent — a trigger is an action control, not a
+     text-entry surface) wins over filled/hover unconditionally; a disabled trigger cannot be focused,
+     so no guard is needed here (matching the old law). */
   :scope > [data-part='trigger']:focus-visible {
+    background: var(--ui-select-bg-focus);
     border-color: var(--ui-select-border-focus);
+    color: var(--ui-select-ink-focus);
     outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--ui-focus-ring-offset);
   }
@@ -271,8 +302,13 @@
     border-color: var(--ui-select-border-invalid-hover);
   }
 
-  /* Disabled trigger: pointer-inert; :hover/:active become inert (host attribute reflects). */
-  :scope[disabled] > [data-part='trigger'] {
+  /* Disabled trigger: pointer-inert; :hover/:active become inert. The trigger is a REAL native
+     <button> whose own `disabled` attribute select.ts already sets from effectiveDisabled() (own ||
+     form-disabled) — a native disabled button is platform-inert regardless of this rule, so
+     `pointer-events: none` here is defensive-only; `:state(disabled)` (TKT-0063) widens the match so
+     `cursor: default` also applies under the form-disabled-only case, not just the host's own
+     `[disabled]` attribute. */
+  :scope:is([disabled], :state(disabled)) > [data-part='trigger'] {
     pointer-events: none;
     cursor: default;
   }

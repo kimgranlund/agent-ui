@@ -437,3 +437,35 @@ describe('ui-split browser smoke (keyboard resize, SPEC-R4)', () => {
     el.remove()
   })
 })
+
+// ── TKT-0045: an outer pane's `min`/`max` must not leak into an independent NESTED ui-split ─────────
+// `--_pane-min`/`--_pane-max` are unregistered custom properties, which inherit by default. Before the
+// fix, an unset `pane.min`/`.max` was cleared via `style.setProperty(name, '')`, which per the CSSOM spec
+// REMOVES the declaration rather than setting it empty — leaving nothing to block inheritance, so a
+// nested ui-split's own (unset-min) pane would pick up an ANCESTOR ui-split-pane's real `--_pane-min`
+// value straight through, even though the two splits have no relationship to each other (discovered
+// live: ui-agent-admin's settings pane set a real `min`, and ui-settings' internally-composed
+// ui-master-detail — a wholly separate ui-split further down that pane's own content — inherited it,
+// forcing its own drill-in pane far wider than its actual container).
+describe('ui-split browser smoke (TKT-0045 — an outer pane min does not leak into a nested ui-split)', () => {
+  it('a nested ui-split pane with no explicit min stays at the generic floor, not an ancestor pane\'s min', async () => {
+    const { el: outer, panes: outerPanes } = mount(1, { size: 400 })
+    outerPanes[0].min = '300px' // a large, deliberately-distinct outer floor
+
+    const inner = document.createElement('ui-split') as UISplitElement
+    inner.style.width = '100%'
+    const innerPane = document.createElement('ui-split-pane') as UISplitPaneElement // no .min set
+    inner.append(innerPane)
+    outerPanes[0].append(inner)
+
+    await outer.updateComplete
+    await inner.updateComplete
+
+    const innerMinWidth = Number.parseFloat(getComputedStyle(innerPane).minWidth)
+    // The generic --ui-split-pane-min default (4rem) — NOT the outer pane's leaked 300px.
+    expect(innerMinWidth).toBeLessThan(100)
+    expect(innerPane.style.getPropertyValue('--_pane-min')).toBe('initial')
+
+    outer.remove()
+  })
+})

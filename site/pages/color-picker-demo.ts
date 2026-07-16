@@ -95,7 +95,7 @@ picker3.setAttribute('value', '#3b82f6')
 
 const presetColors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6']
 for (const c of presetColors) {
-  const swatch = el('ui-swatch', { value: c, label: c, slot: 'presets' })
+  const swatch = el('ui-swatch', { color: c, label: c, slot: 'presets' })
   swatch.style.cursor = 'pointer'
   swatch.addEventListener('click', () => {
     picker3.setAttribute('value', c)

@@ -113,12 +113,16 @@ describe('composeDocPage — real chart descriptors derive their declared parts'
     expect(partNames(section!)).toEqual(['label', 'track', 'fill', 'value'])
   })
 
-  // button.md declares `parts: []` — the real part-less control; its page must ship no Parts section.
-  it('ui-button (parts: []) renders NO Parts section', () => {
+  // button.md declares one part (ADR-0133's label wrapper) and button-doc.ts renders it via
+  // renderPartsTable directly (it is hand-authored, not composeDocPage) — this pins the parse AND the
+  // render the same way the sparkline/bar-chart legs above do.
+  it('ui-button (1 part, ADR-0133) renders its label-wrapper part as a Parts table', () => {
     const content = document.createElement('div')
-    const { descriptor, body } = loadButtonDoc()
-    composeDocPage(content, descriptor, body)
-    expect(partsSection(content)).toBeUndefined()
+    const { descriptor } = loadButtonDoc()
+    const section = renderPartsTable(descriptor)
+    expect(section).toBeDefined()
+    expect(partNames(section!)).toEqual(['label'])
+    content.append(section!) // exercise the DOM attach path too, matching the other real-descriptor legs
   })
 })
 

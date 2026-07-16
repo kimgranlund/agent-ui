@@ -117,12 +117,17 @@ describe('text.css — structure + token hygiene (ADR-0078 cl.3)', () => {
     expect(stylesBlock).toMatch(/:scope\[variant='kicker'\],\s*\n?\s*:scope\[variant='overline'\][\s\S]{0,40}text-transform:\s*uppercase/)
   })
 
-  it("quote gets italic + an inline-start rule (--md-sys-color-neutral-outline-variant) + an indent (--ui-space-md)", () => {
+  it("quote gets italic + an inline-start rule (via the own-chain --ui-text-quote-border, TKT-0066) + an indent (own-chain --ui-text-quote-pad, TKT-0066 item 5)", () => {
     const quoteRule = (stylesBlock.match(/:scope\[variant='quote'\]\s*\{[^}]*\}/) ?? [''])[0]
     expect(quoteRule.length).toBeGreaterThan(0)
     expect(quoteRule).toMatch(/font-style:\s*italic/)
-    expect(quoteRule).toMatch(/border-inline-start:\s*3px solid var\(--md-sys-color-neutral-outline-variant\)/)
-    expect(quoteRule).toMatch(/padding-inline-start:\s*var\(--ui-space-md\)/)
+    // TKT-0066 (from the TKT-0065 lateral review): the border reads the OWN chain, declared from the role
+    // in the :where() token block — no raw role read inside @scope.
+    expect(quoteRule).toMatch(/border-inline-start:\s*3px solid var\(--ui-text-quote-border\)/)
+    expect(css).toMatch(/--ui-text-quote-border:\s*var\(--md-sys-color-neutral-outline-variant\)/)
+    // TKT-0066 item 5 ruling: dimensional constants ALSO route through the own chain.
+    expect(quoteRule).toMatch(/padding-inline-start:\s*var\(--ui-text-quote-pad\)/)
+    expect(css).toMatch(/--ui-text-quote-pad:\s*var\(--ui-space-md\)/)
   })
 
   it('the stamp-transparency reset (cl.4) resets margin/font/letter-spacing/color to inherit for every stampable tag, INCL. a (ADR-0114)', () => {

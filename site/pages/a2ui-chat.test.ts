@@ -22,8 +22,10 @@ let __setTransportForTest: (next: AgentTransport) => void
 
 beforeAll(async () => {
   // jsdom reality (the `a2ui-live.ask-lifecycle.test.ts` precedent): `ElementInternals.setFormValue`/
-  // `setValidity` are ABSENT in jsdom, and this page mounts a real `ui-text-field` composer + real
-  // default-catalog controls through the real registry. Stub ONCE at the shared prototype — additive.
+  // `setValidity` are ABSENT in jsdom, and this page mounts real form-associated controls — the
+  // composer's ui-buttons (its editor is the composer's OWN contenteditable part since TKT-0058, not a
+  // ui-text-field) + real default-catalog controls through the real registry. Stub ONCE at the shared
+  // prototype — additive.
   if (typeof ElementInternals.prototype.setFormValue !== 'function') {
     ;(ElementInternals.prototype as unknown as Record<string, unknown>).setFormValue = function (): void {}
     ;(ElementInternals.prototype as unknown as Record<string, unknown>).setValidity = function (): void {}
@@ -77,10 +79,17 @@ async function waitUntilIdle(): Promise<void> {
 
 async function sendIntent(text: string): Promise<void> {
   await waitUntilIdle()
-  const editor = document.querySelector('ui-conversation [data-part="composer"] [data-part="editor"]') as HTMLElement
+  // Scoped through `ui-conversation-composer` (TKT-0058 — the old `[data-part="composer"]` form wrapper is
+  // gone; the editor is the composer's OWN part now; the scope hop keeps this clear of any
+  // `[data-part="editor"]` inside an A2UI-mounted surface in the log).
+  const editor = document.querySelector('ui-conversation ui-conversation-composer [data-part="editor"]') as HTMLElement
   editor.textContent = text
   editor.dispatchEvent(new Event('input', { bubbles: true }))
-  const sendBtn = document.querySelector('ui-conversation [data-part="composer"] ui-button') as HTMLElement
+  // `[data-part="send"]`, not the bare `ui-button` descendant selector (code-reviewer BLOCKER finding):
+  // the composer's options row can also carry an opt-in, hidden-by-default mic button BEFORE send in DOM
+  // order (the Figma chat-input refactor) — `hidden` doesn't remove an element from `querySelector`'s
+  // reach, so the old selector silently picked the mic instead once one existed.
+  const sendBtn = document.querySelector('ui-conversation ui-conversation-composer [data-part="send"]') as HTMLElement
   sendBtn.click()
 }
 

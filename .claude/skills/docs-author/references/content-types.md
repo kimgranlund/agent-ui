@@ -4,7 +4,8 @@
 > "must-contain + score-on" lives in `rubric.md`; the cross-cutting voice/do-don't in
 > `best-practices.md`. Each type names its **canonical source** (what it derives from) and its **drift
 > gate** (the deterministic check that backs it). Anchors cite the realized pages under `site/`.
-> 2026-06-28.
+> 2026-06-28, provenance-vs-normative citation split + the page-end Changelog table added 2026-07-15
+> (TKT-0053) — cross-cutting, applies to any type carrying a provenance citation, not just T4.
 
 ## T1 — landing / overview
 
@@ -77,7 +78,10 @@ no parse to derive from (a markup *shape* like an anatomy diagram) — label it 
 **Standards.** The page is the **second consumer** of the same parser the contract trip-wire uses
 (`site/lib/frontmatter.ts` → `@agent-ui/components/descriptor`) — never a re-implemented frontmatter
 dialect. No hand-typed attribute row. Text-only rendering (`textContent`, never `innerHTML`) for the
-body.
+body. Any TKT/ADR that documents *this control's own build* (not a normative rule the intro/body cites
+for its owner) is provenance — it moves to a page-end Changelog table, **after** the attribute/properties/
+events/slots/parts tables, never into the intro or a heading (`best-practices.md`'s provenance-vs-normative
+split).
 
 **Drift gate.** `component-descriptor-driftwire.test.ts` (frontmatter `attributes[]` ≡ `finalize(Class)`)
 + `…-sourcewire.test.ts` (`customStates`/`slots` ≡ source). Because the page reads the same parse, the

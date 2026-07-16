@@ -106,6 +106,20 @@ describe('disclosure.css — the v1 fences (SPEC-R18): no fold animation, no che
   })
 })
 
+describe('disclosure.css — hover (TKT-0047, the fleet row-hover convergence: surface-high, not the tint ladder)', () => {
+  it('declares --ui-disclosure-bg-hover, reading the solid surface-high role every other row-hover uses (not the evicted tint ladder)', () => {
+    expect(tokenBlock).toMatch(/--ui-disclosure-bg-hover:\s*var\(--md-sys-color-neutral-surface-high\)/)
+    expect(tokenBlock).not.toMatch(/--ui-disclosure-bg-hover:\s*var\(--md-sys-color-neutral-tint-/)
+  })
+
+  it('the summary paints --ui-disclosure-bg-hover as a background on :hover', () => {
+    const m = stylesBlock.match(/:scope \[data-part='summary'\]:hover\s*\{([^}]*)\}/)
+    expect(m, 'the summary :hover rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/background-color:\s*var\(--ui-disclosure-bg-hover\)/)
+  })
+})
+
 describe('disclosure.css — the shared focus ring (ADR-0009) + token hygiene', () => {
   it('the summary draws the ONE shared fleet focus ring on :focus-visible', () => {
     const m = stylesBlock.match(/:scope \[data-part='summary'\]:focus-visible\s*\{([^}]*)\}/)

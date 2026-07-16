@@ -22,11 +22,11 @@ attributes:            # attributes-as-API — mirrors radio-group.ts static pro
     reflect: true      # the form field name; FACE submission keys the entry by the name content attribute (ADR-0013)
   - name: disabled
     type: boolean
-    default: 'false'
+    default: false
     reflect: true      # reflects; effectiveDisabled = own || form-disabled channel (ADR-0013)
   - name: required
     type: boolean
-    default: 'false'
+    default: false
     reflect: true      # reflects; required + no selection → valueMissing validity verdict
   - name: orientation
     type: enum

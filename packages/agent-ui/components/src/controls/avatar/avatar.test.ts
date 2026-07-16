@@ -21,7 +21,7 @@ describe('UIAvatarElement — upgrade + typed props', () => {
     const el = document.createElement('ui-avatar') as UIAvatarElement
     expect(el).toBeInstanceOf(UIAvatarElement)
     expect(el.src).toBe('')
-    expect(el.name).toBe('')
+    expect(el.identity).toBe('')
     expect(el.label).toBe('')
     expect(el.size).toBe('md')
   })
@@ -53,7 +53,7 @@ describe('UIAvatarElement — the fallback chain (SPEC-R5)', () => {
     await el.updateComplete
     const icon = el.querySelector('ui-icon') as UIIconElement | null
     expect(icon).not.toBeNull()
-    expect(icon?.name).toBe('user') // `name` is property-only (not reflected) on ui-icon
+    expect(icon?.glyph).toBe('user') // `glyph` is property-only (not reflected) on ui-icon
     expect(el.querySelector('img')).toBeNull()
     expect(el.querySelector('[data-part="initials"]')).toBeNull()
     el.remove()
@@ -61,7 +61,7 @@ describe('UIAvatarElement — the fallback chain (SPEC-R5)', () => {
 
   it('no src, name="Ada Lovelace" ⇒ initials "AL" render, no glyph, no img', async () => {
     const el = document.createElement('ui-avatar') as UIAvatarElement
-    el.name = 'Ada Lovelace'
+    el.identity = 'Ada Lovelace'
     document.body.append(el)
     await el.updateComplete
     const initials = el.querySelector('[data-part="initials"]')
@@ -73,7 +73,7 @@ describe('UIAvatarElement — the fallback chain (SPEC-R5)', () => {
 
   it('a non-empty src renders an <img alt=""> with that src, no initials, no glyph', async () => {
     const el = document.createElement('ui-avatar') as UIAvatarElement
-    el.name = 'Ada Lovelace'
+    el.identity = 'Ada Lovelace'
     el.src = '/users/42/photo.jpg'
     document.body.append(el)
     await el.updateComplete
@@ -88,7 +88,7 @@ describe('UIAvatarElement — the fallback chain (SPEC-R5)', () => {
 
   it('a src load error falls back to initials — no <img> remains in the final state (AC1)', async () => {
     const el = document.createElement('ui-avatar') as UIAvatarElement
-    el.name = 'Ada Lovelace'
+    el.identity = 'Ada Lovelace'
     el.src = '/broken.jpg'
     document.body.append(el)
     await el.updateComplete
@@ -107,7 +107,7 @@ describe('UIAvatarElement — the fallback chain (SPEC-R5)', () => {
     el.querySelector('img')?.dispatchEvent(new Event('error'))
     await el.updateComplete
     expect(el.querySelector('img')).toBeNull()
-    expect((el.querySelector('ui-icon') as UIIconElement | null)?.name).toBe('user')
+    expect((el.querySelector('ui-icon') as UIIconElement | null)?.glyph).toBe('user')
     el.remove()
   })
 
@@ -130,7 +130,7 @@ describe('UIAvatarElement — the fallback chain (SPEC-R5)', () => {
 
   it('clearing src falls back immediately, without waiting for an error event', async () => {
     const el = document.createElement('ui-avatar') as UIAvatarElement
-    el.name = 'Ada Lovelace'
+    el.identity = 'Ada Lovelace'
     el.src = '/users/42/photo.jpg'
     document.body.append(el)
     await el.updateComplete
@@ -145,7 +145,7 @@ describe('UIAvatarElement — the fallback chain (SPEC-R5)', () => {
 
   it('re-setting the SAME failed src (via a clear round-trip) does not resurrect the <img>', async () => {
     const el = document.createElement('ui-avatar') as UIAvatarElement
-    el.name = 'Ada Lovelace'
+    el.identity = 'Ada Lovelace'
     el.src = '/broken.jpg'
     document.body.append(el)
     await el.updateComplete

@@ -8,10 +8,10 @@ import { UIAttachmentElement } from './attachment.ts'
 // coercion, and the DOM structure the render effect builds.
 
 describe('UIAttachmentElement — upgrade + typed props', () => {
-  it('defaults: name="", mimeType="", sizeBytes=null, href=""', () => {
+  it('defaults: filename="", mimeType="", sizeBytes=null, href=""', () => {
     const el = document.createElement('ui-attachment') as UIAttachmentElement
     expect(el).toBeInstanceOf(UIAttachmentElement)
-    expect(el.name).toBe('')
+    expect(el.filename).toBe('')
     expect(el.mimeType).toBe('')
     expect(el.sizeBytes).toBeNull()
     expect(el.href).toBe('')
@@ -44,7 +44,7 @@ describe('UIAttachmentElement — upgrade + typed props', () => {
 describe('UIAttachmentElement — DOM shape (SPEC-R8/R9/R10, LLD-C5)', () => {
   it('a fully-populated attachment renders glyph + body[name, meta]', async () => {
     const el = document.createElement('ui-attachment') as UIAttachmentElement
-    el.name = 'report.pdf'
+    el.filename = 'report.pdf'
     el.mimeType = 'application/pdf'
     el.sizeBytes = 48200
     document.body.append(el)
@@ -53,7 +53,7 @@ describe('UIAttachmentElement — DOM shape (SPEC-R8/R9/R10, LLD-C5)', () => {
     const parts = [...el.children].map((c) => c.getAttribute('data-part'))
     expect(parts).toEqual(['glyph', 'body'])
     expect(el.querySelector('[data-part="glyph"]')?.tagName.toLowerCase()).toBe('ui-icon')
-    expect(el.querySelector('[data-part="glyph"]')?.getAttribute('name')).toBe('file-pdf')
+    expect(el.querySelector('[data-part="glyph"]')?.getAttribute('glyph')).toBe('file-pdf')
     expect(el.querySelector('[data-part="name"]')?.textContent).toBe('report.pdf')
     expect(el.querySelector('[data-part="meta"]')?.textContent).toBe('48.2 KB')
     el.remove()
@@ -70,7 +70,7 @@ describe('UIAttachmentElement — DOM shape (SPEC-R8/R9/R10, LLD-C5)', () => {
 
   it('SPEC-R9 AC2: absent sizeBytes ⇒ no meta cell (absent, not empty)', async () => {
     const el = document.createElement('ui-attachment') as UIAttachmentElement
-    el.name = 'notes.txt'
+    el.filename = 'notes.txt'
     el.mimeType = 'text/plain'
     document.body.append(el)
     await el.updateComplete
@@ -82,14 +82,14 @@ describe('UIAttachmentElement — DOM shape (SPEC-R8/R9/R10, LLD-C5)', () => {
     const el = document.createElement('ui-attachment') as UIAttachmentElement
     expect(() => document.body.append(el)).not.toThrow()
     await el.updateComplete
-    expect(el.querySelector('[data-part="glyph"]')?.getAttribute('name')).toBe('file')
+    expect(el.querySelector('[data-part="glyph"]')?.getAttribute('glyph')).toBe('file')
     expect(el.querySelector('[data-part="name"]')?.textContent).toBe('File')
     el.remove()
   })
 
   it('the glyph carries no `label` — SPEC-R10 relies on ui-icon\'s OWN decorative default (proven in icon.test.ts)', async () => {
     const el = document.createElement('ui-attachment') as UIAttachmentElement
-    el.name = 'a.zip'
+    el.filename = 'a.zip'
     el.mimeType = 'application/zip'
     document.body.append(el)
     await el.updateComplete
@@ -101,7 +101,7 @@ describe('UIAttachmentElement — DOM shape (SPEC-R8/R9/R10, LLD-C5)', () => {
 
   it('the host mints NO internals ARIA of its own (SPEC-R10 — real text is the whole accessible datum)', async () => {
     const el = document.createElement('ui-attachment') as UIAttachmentElement
-    el.name = 'a.zip'
+    el.filename = 'a.zip'
     document.body.append(el)
     await el.updateComplete
     expect((el as unknown as { internals: ElementInternals }).internals.role).toBeNull()
@@ -110,7 +110,7 @@ describe('UIAttachmentElement — DOM shape (SPEC-R8/R9/R10, LLD-C5)', () => {
 
   it('whole-swap rebuild: only glyph+body exist after any prop change (no leftover nodes)', async () => {
     const el = document.createElement('ui-attachment') as UIAttachmentElement
-    el.name = 'a.txt'
+    el.filename = 'a.txt'
     el.mimeType = 'text/plain'
     document.body.append(el)
     await el.updateComplete
@@ -137,7 +137,7 @@ describe('UIAttachmentElement — the href prop exists but its rendering leg is 
 
   it('a non-empty href does NOT change the name cell to an anchor in this pass — plain text only', async () => {
     const el = document.createElement('ui-attachment') as UIAttachmentElement
-    el.name = 'report.pdf'
+    el.filename = 'report.pdf'
     el.href = 'https://example.com/report.pdf'
     document.body.append(el)
     await el.updateComplete

@@ -393,6 +393,14 @@
       "section": "Components"
     },
     {
+      "name": "Textarea",
+      "tag": "ui-textarea",
+      "url": "./textarea-doc.html",
+      "description": "A form-associated multi-line text input with a contenteditable surface — a long-form editable primitive, and a sibling of ui-text-field, not one of its modes.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Theme Provider",
       "tag": "ui-theme-provider",
       "url": "./theme-provider-doc.html",

@@ -102,6 +102,38 @@ describe('ui-table — the MANDATORY scroll-preservation leg (SPEC-R4 AC1)', () 
     // the new value actually rendered — this was a real update, not a no-op
     expect(table.querySelector('tbody td')?.textContent).toBe(new Intl.NumberFormat().format(2000))
   })
+
+  it('an ORDINARY disconnect/reconnect keeps a scrolled table\'s scrollLeft (TKT-0067 — the [NEEDS PROBE] claim, measured)', async () => {
+    // The TKT-0065 lateral review found connected() rebuilt the whole skeleton on every connect —
+    // discarding the scroll offset SPEC-R4.1's own comment claims "survives by omission". This is the
+    // measured proof of the fix: scroll, detach, reattach, and the SAME node (light DOM persists across
+    // a disconnect) still carries the live scrollLeft.
+    const manyCols = JSON.stringify(
+      Array.from({ length: 12 }, (_, i) => ({ key: `c${i}`, label: `Column ${i}`, type: 'number' })),
+    )
+    const wideRow = Object.fromEntries(Array.from({ length: 12 }, (_, i) => [`c${i}`, (i + 1) * 1000]))
+    const table = mount(
+      `<ui-table style="inline-size: 200px" columns='${manyCols}' rows='${JSON.stringify([wideRow])}'></ui-table>`,
+    ) as HTMLElement
+    const scroll = table.querySelector('[data-part="scroll"]') as HTMLElement
+    expect(scroll.scrollWidth, 'anti-vacuous: must actually overflow').toBeGreaterThan(scroll.clientWidth)
+    scroll.scrollLeft = 40
+    const scrolledTo = scroll.scrollLeft
+    expect(scrolledTo, 'anti-vacuous: the scroll write must land').toBeGreaterThan(0)
+    // Let the scroll EVENT fire (it dispatches async, next frame) so the component's live scroll-shadow
+    // listener captures the offset BEFORE the detach — matching real usage, where a user's scroll always
+    // fires events long before any reparenting happens.
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const parent = table.parentElement as HTMLElement
+    table.remove() // an ordinary detach — NOT moveBefore
+    parent.append(table) // reconnect — connected() re-runs; the TKT-0067 guard must NOT rebuild
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    expect(table.querySelector('[data-part="scroll"]'), 'the scroll region was re-minted on reconnect').toBe(scroll)
+    expect((table.querySelector('[data-part="scroll"]') as HTMLElement).scrollLeft,
+      'the scroll offset was lost across a disconnect/reconnect').toBe(scrolledTo)
+  })
 })
 
 describe('ui-table — overflow in the component\'s own container (SPEC-R5 AC1)', () => {

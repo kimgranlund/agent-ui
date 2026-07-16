@@ -18,7 +18,8 @@
   --ui-agent-admin-surface: var(--md-sys-color-neutral-surface);
   --ui-agent-admin-border: var(--md-sys-color-neutral-outline-variant, currentColor);
   --ui-agent-admin-label-ink: var(--md-sys-color-neutral-on-surface-variant, var(--ui-agent-admin-ink));
-  --ui-agent-admin-error-ink: var(--md-sys-color-error-on-surface, var(--ui-agent-admin-ink));
+  --ui-agent-admin-error-ink: var(--md-sys-color-danger-on-surface-variant, var(--ui-agent-admin-ink)); /* TKT-0065: was --md-sys-color-error-on-surface — an ERROR family has never existed in tokens.css (the fleet family is danger), so the fallback ALWAYS won and validation errors rendered in plain neutral ink; danger-on-surface-variant is the AA-gated danger TEXT ink (the text-field message precedent) */
+  --ui-agent-admin-entry-radius: var(--ui-radius-base, 0.25rem); /* TKT-0066 item 5 ruling: dimensional constants route through the own chain */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-agent-admin) consumes ONLY --ui-agent-admin-* ════════════════ */
@@ -97,7 +98,7 @@
     box-sizing: border-box;
     padding: 0.5rem 0.75rem;
     border: 1px solid var(--ui-agent-admin-border);
-    border-radius: var(--ui-radius-base, 0.25rem);
+    border-radius: var(--ui-agent-admin-entry-radius);
     background: var(--ui-agent-admin-surface);
   }
 
@@ -119,37 +120,18 @@
     color: var(--ui-agent-admin-label-ink);
   }
 
-  [data-part='entry-content'] {
-    box-sizing: border-box;
-    min-block-size: 4rem;
-    resize: vertical;
-    font: inherit;
-    color: var(--ui-agent-admin-ink);
-    background: var(--ui-agent-admin-surface);
-    border: 1px solid var(--ui-agent-admin-border);
-    border-radius: var(--ui-radius-base, 0.25rem);
-    padding: 0.5rem 0.75rem;
-  }
+  /* TKT-0050: `[data-part='entry-content']`'s rule block used to declare box-sizing/resize/font/color/
+     background/border/border-radius/padding here — every one of them was DEAD (real Chromium+WebKit
+     computed-style evidence, TKT-0050's Findings), losing to `ui-textarea`'s own `@scope`-scoped
+     `:scope { ... }` rule via the same scoping-proximity cascade tiebreak TKT-0049 already proved for
+     `min-block-size`. Removed rather than left as misleading no-op CSS; `ui-textarea` renders entirely off
+     its own `--ui-textarea-*` token chain, which TKT-0059 confirmed already matches `ui-text-field`'s. */
 
-  [data-part='entry-content']:focus-visible,
-  [data-part='entry-add-content']:focus-visible,
-  [data-part='entry-add-label']:focus-visible,
-  [data-part='entry-add-description']:focus-visible {
-    outline: 2px solid var(--md-sys-color-primary, Highlight);
-    outline-offset: 1px;
-  }
-
-  [data-part='entry-delete'],
-  [data-part='entry-add-toggle'],
-  [data-part='entry-add-submit'] {
-    cursor: pointer;
-    font: inherit;
-    color: var(--ui-agent-admin-ink);
-    background: transparent;
-    border: 1px solid var(--ui-agent-admin-border);
-    border-radius: var(--ui-radius-base, 0.25rem);
-    padding: 0.25rem 0.625rem;
-  }
+  /* TKT-0060: entry-add-submit is now a real <ui-button> (button.css owns its anatomy/state-styling) and
+     entry-add-label/entry-add-description are real <ui-text-field>s (text-field.css owns theirs, including
+     their own :focus-within outline ring) — the bespoke `:focus-visible` rule that used to live here for the
+     native `<input>`s is gone the same way TKT-0050 already removed it for entry-content/entry-add-content
+     (focus lands on the internal editor part, not the host — the identical dead mechanism). */
 
   /* :not([hidden]) — component-reviewer CRITICAL fix: an author `display` declaration beats the UA
      `[hidden] { display: none }` rule (the combo-box.css precedent for the identical pitfall); without
@@ -162,31 +144,18 @@
     box-sizing: border-box;
     padding: 0.5rem 0.75rem;
     border: 1px dashed var(--ui-agent-admin-border);
-    border-radius: var(--ui-radius-base, 0.25rem);
+    border-radius: var(--ui-agent-admin-entry-radius);
   }
 
-  [data-part='entry-add-label'],
-  [data-part='entry-add-description'] {
-    box-sizing: border-box;
-    font: inherit;
-    color: var(--ui-agent-admin-ink);
-    background: var(--ui-agent-admin-surface);
-    border: 1px solid var(--ui-agent-admin-border);
-    border-radius: var(--ui-radius-base, 0.25rem);
-    padding: 0.375rem 0.625rem;
-  }
+  /* TKT-0060: `[data-part='entry-add-label'], [data-part='entry-add-description']`'s rule block (box-sizing/
+     font/color/background/border/border-radius/padding) was fully dead by the same `@scope`-proximity
+     mechanism TKT-0050 already proved for entry-add-content — `ui-text-field`'s own `@scope (ui-text-field)
+     { :scope { ... } }` rule wins the cascade over this plain attribute selector regardless of specificity.
+     Removed rather than left as misleading no-op CSS. */
 
-  [data-part='entry-add-content'] {
-    box-sizing: border-box;
-    min-block-size: 3rem;
-    resize: vertical;
-    font: inherit;
-    color: var(--ui-agent-admin-ink);
-    background: var(--ui-agent-admin-surface);
-    border: 1px solid var(--ui-agent-admin-border);
-    border-radius: var(--ui-radius-base, 0.25rem);
-    padding: 0.375rem 0.625rem;
-  }
+  /* TKT-0050: `[data-part='entry-add-content']`'s rule block (box-sizing/resize/font/color/background/
+     border/border-radius/padding) was ALSO fully dead by the same mechanism as `entry-content` above —
+     removed rather than left as misleading no-op CSS. */
 
   [data-part='entry-add-error'] {
     margin: 0;

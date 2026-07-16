@@ -20,9 +20,9 @@ const code = (s: string): HTMLElement => el('code', {}, [text(s)])
 // `ui-tabs` is transparent by default (ADR-0104) — this specimen asks for its plane explicitly, dogfooding the
 // elevation/brightness intent lane rather than relying on the removed self-seeded surface.
 const tabs = el('ui-tabs', { selected: 'overview', elevation: '0' }, [
-  el('ui-tab', { value: 'overview' }, [text('Overview')]),
-  el('ui-tab', { value: 'pricing' }, [text('Pricing')]),
-  el('ui-tab', { value: 'support' }, [text('Support')]),
+  el('ui-tab', { key: 'overview' }, [text('Overview')]),
+  el('ui-tab', { key: 'pricing' }, [text('Pricing')]),
+  el('ui-tab', { key: 'support' }, [text('Support')]),
   el('ui-tab-panel', {}, [text('Overview panel — the product at a glance.')]),
   el('ui-tab-panel', {}, [text('Pricing panel — plans and tiers.')]),
   el('ui-tab-panel', {}, [text('Support panel — docs and contact.')]),

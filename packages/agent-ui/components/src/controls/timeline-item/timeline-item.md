@@ -22,7 +22,7 @@ attributes:               # attributes-as-API — mirrors timeline-item.ts stati
   - name: label
     type: string
     default: ''
-    reflect: false       # stamped into the label cell by a reactive effect; not an inspectable attribute
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
   - name: description
     type: string
     default: ''

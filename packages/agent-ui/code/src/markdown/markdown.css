@@ -22,6 +22,7 @@
   --ui-markdown-item-gap: var(--ui-space-sm); /* rhythm between list items */
   --ui-markdown-code-ink: var(--md-sys-color-neutral-on-surface);
   --ui-markdown-code-surface: var(--ui-container-bg, var(--md-sys-color-neutral-surface)); /* the ui-code/ui-card seam */
+  --ui-markdown-code-radius: var(--ui-radius-base); /* TKT-0066 item 5 ruling: constants route through the own chain */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-markdown) consumes --ui-markdown-* ════════════════ */
@@ -45,7 +46,7 @@
     font-family: var(--ui-mono);
     color: var(--ui-markdown-code-ink);
     background: var(--ui-markdown-code-surface);
-    border-radius: var(--ui-radius-base);
+    border-radius: var(--ui-markdown-code-radius);
     padding: 0.125em 0.375em;
   }
 

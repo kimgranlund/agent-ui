@@ -28,6 +28,22 @@
   --ui-disclosure-height: var(--ui-height-md);
   --ui-disclosure-font: var(--ui-font-md);
   --ui-disclosure-ink: var(--md-sys-color-neutral-on-surface);
+  /* Hover (TKT-0047, revised twice): a background-PAINT wash, not an ink-step. The original ink-step
+     attempt (matching tabs.css) turned out visually inert — disclosure's idle ink already sits at the
+     ceiling of the neutral ramp (`-on-surface`, tokens.css:56), so no hover-ink value could ever show a
+     change. A first background-wash attempt reached for the tint ladder (`neutral-tint-dim`) — WRONG:
+     component-reviewer caught that the tint ladder was already EVICTED from row-hover fleet-wide (the
+     2026-07-07 menu.css consistency pass, menu.css:87-96 — a 10% tint wash was the ONLY row-hover using
+     it, read as visibly weaker/inconsistent, and was converged onto the solid, scheme-inverting
+     `--md-sys-color-neutral-surface-high` role every other interactive-row/control hover already uses:
+     select's option, button (even the ghost variant, the closest structural analogue to this summary
+     row), text-field, checkbox, switch, calendar's cell). `tint-dim` is also near-invisible in dark
+     scheme (a scheme-INVARIANT ~5% black wash, tokens.css:1060, vs. `surface-high`'s scheme-inverting
+     solid role, tokens.css:86) — it would have silently resurfaced this exact defect in dark mode.
+     Converged onto the fleet's actual hover answer instead. Forced-colors: no extra WHCM rule needed —
+     the UA forces any background to Canvas regardless of which role is named here (the tabs.css
+     precedent: only the SELECTED state gets an explicit forced-colors rule, not hover). */
+  --ui-disclosure-bg-hover: var(--md-sys-color-neutral-surface-high);
 
   /* The chevron — an INLINE AFFORDANCE (geometry.md §"Affordance vs content-icon"): `= font`, never the
      icon ramp (`--ui-ind`) — the named oversize-caret bug class this law fixes. */
@@ -106,6 +122,13 @@
   :scope [data-part='summary-text'] {
     flex: 1 1 auto;
     min-inline-size: 0;
+  }
+
+  /* Hover (TKT-0047, revised) — a background-tint wash (the combo-box.css active-descendant
+     precedent), not an ink-step: disclosure's idle ink has no headroom to step to (see the
+     TOKEN block comment above). */
+  :scope [data-part='summary']:hover {
+    background-color: var(--ui-disclosure-bg-hover);
   }
 
   /* The body — rides the `--ui-space` layout ladder (density-responsive; the Pattern-class split). No

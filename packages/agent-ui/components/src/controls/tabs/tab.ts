@@ -29,7 +29,7 @@ const props = {
   // `value` — the tab's optional STABLE identity (the agent's tab id), OBSERVED (its initial attribute seeds the
   // prop) but not reflected. ui-tabs resolves `selected` against `value` first, then falls back to the DOM index,
   // so a `value`-less tab is addressed positionally. Mirrors the text-field `value` reflect:false precedent.
-  value: prop.string(),
+  key: prop.string(), // renamed from `value` (TKT-0069 item 1 ruling: `value` = the FACE form value, reserved)
 } satisfies PropsSchema
 
 export interface UITabElement extends ReactiveProps<typeof props> {}

@@ -32,7 +32,7 @@ attributes:            # attributes-as-API — mirrors table.ts `static props` (
   - name: label
     type: string
     default: ''
-    reflect: false      # NOT reflected — property-only; the rendered <caption> text (SPEC-R2/R6), the table's accessible name
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
 
 properties: []         # no manual accessors beyond the three typed props
 

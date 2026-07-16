@@ -138,10 +138,10 @@ canvasPane.append(paneTitle('A2UI canvas', 'The rendered surface, its JSONL payl
 
 const tabs = document.createElement('ui-tabs')
 tabs.className = 'canvas-tabs'
-tabs.setAttribute('selected', 'canvas') // the active tab's `value` (a plain reflected prop; '' would pick the first)
+tabs.setAttribute('selected', 'canvas') // the active tab's `key` (a plain reflected prop; '' would pick the first)
 function makeTab(value: string, label: string): HTMLElement {
   const tab = document.createElement('ui-tab')
-  tab.setAttribute('value', value)
+  tab.setAttribute('key', value)
   tab.textContent = label
   return tab
 }

@@ -12,7 +12,7 @@ attributes:
   - name: label
     type: string
     default: ''
-    reflect: false        # '' ⇒ no context-label rendered (an ungrouped-equivalent cluster); ALSO the icon-popover trigger's accessible name — one prop, two renderings, no divergence risk
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
 
 properties:
   - name: label

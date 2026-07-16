@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { UIIconElement } from './icon.ts'
 import { ICON_NAMES, iconRegistry, type IconName, type IconPack } from '@agent-ui/icons'
 
-// LLD-C5 (icon-adapter.lld.md) — UIIconElement (Display-class leaf; name/label props; two connected()
+// LLD-C5 (icon-adapter.lld.md) — UIIconElement (Display-class leaf; glyph/label props; two connected()
 // effects; void render; self-define). A deterministic in-file IconPack is registered + activated so the
 // svg-injection assertions don't depend on whether the Phosphor subpath happened to self-register
 // elsewhere in the same test run (ADR-0065/0066 — pack registration is app-owned, not implicit).
@@ -25,10 +25,10 @@ class ProbeIcon extends UIIconElement {
 customElements.define('ui-icon-probe', ProbeIcon)
 
 describe('UIIconElement — upgrade + typed props', () => {
-  it('upgrades to the class; name and label default to empty string', () => {
+  it('upgrades to the class; glyph and label default to empty string', () => {
     const el = document.createElement('ui-icon') as UIIconElement
     expect(el).toBeInstanceOf(UIIconElement)
-    expect(el.name).toBe('')
+    expect(el.glyph).toBe('')
     expect(el.label).toBe('')
   })
 
@@ -40,10 +40,10 @@ describe('UIIconElement — upgrade + typed props', () => {
   })
 })
 
-describe('UIIconElement — name-driven svg injection (LLD-C5)', () => {
-  it('a set name resolves + injects the pack svg synchronously on connect', () => {
+describe('UIIconElement — glyph-driven svg injection (LLD-C5)', () => {
+  it('a set glyph resolves + injects the pack svg synchronously on connect', () => {
     const el = new ProbeIcon()
-    el.name = 'caret-down'
+    el.glyph = 'caret-down'
     document.body.append(el)
     const svg = el.querySelector('svg')
     expect(svg).not.toBeNull()
@@ -52,7 +52,7 @@ describe('UIIconElement — name-driven svg injection (LLD-C5)', () => {
     el.remove()
   })
 
-  it('an empty name renders nothing (no svg child)', () => {
+  it('an empty glyph renders nothing (no svg child)', () => {
     const el = new ProbeIcon()
     document.body.append(el)
     expect(el.querySelector('svg')).toBeNull()
@@ -60,33 +60,33 @@ describe('UIIconElement — name-driven svg injection (LLD-C5)', () => {
     el.remove()
   })
 
-  it('changing name re-resolves to the new icon (reactive effect)', async () => {
+  it('changing glyph re-resolves to the new icon (reactive effect)', async () => {
     const el = new ProbeIcon()
-    el.name = 'x'
+    el.glyph = 'x'
     document.body.append(el)
     expect(el.querySelector('path')?.getAttribute('data-icon')).toBe('x')
 
-    el.name = 'eye'
+    el.glyph = 'eye'
     await el.updateComplete
     expect(el.querySelector('path')?.getAttribute('data-icon')).toBe('eye')
     el.remove()
   })
 
-  it('clearing name back to empty removes the injected svg (reactive)', async () => {
+  it('clearing glyph back to empty removes the injected svg (reactive)', async () => {
     const el = new ProbeIcon()
-    el.name = 'check'
+    el.glyph = 'check'
     document.body.append(el)
     expect(el.querySelector('svg')).not.toBeNull()
 
-    el.name = ''
+    el.glyph = ''
     await el.updateComplete
     expect(el.querySelector('svg')).toBeNull()
     el.remove()
   })
 
-  it('an unregistered name resolves to a non-throwing data-icon-missing svg (resolve.ts contract)', () => {
+  it('an unregistered glyph resolves to a non-throwing data-icon-missing svg (resolve.ts contract)', () => {
     const el = new ProbeIcon()
-    el.name = 'not-a-real-icon'
+    el.glyph = 'not-a-real-icon'
     expect(() => document.body.append(el)).not.toThrow()
     expect(el.querySelector('svg')?.getAttribute('data-icon-missing')).toBe('not-a-real-icon')
     el.remove()
@@ -139,7 +139,7 @@ describe('UIIconElement — label-driven ARIA via internals (LLD-C5)', () => {
 describe('UIIconElement — zero residue across connect/disconnect', () => {
   it('both effects die on disconnect; reconnect re-installs exactly once (not stacked)', async () => {
     const el = new ProbeIcon()
-    el.name = 'check'
+    el.glyph = 'check'
     el.label = 'Done'
     document.body.append(el)
     await el.updateComplete
@@ -147,7 +147,7 @@ describe('UIIconElement — zero residue across connect/disconnect', () => {
     expect(el.probeInternals.role).toBe('img')
 
     el.remove() // disconnect → the connection scope is disposed → both effects die with it
-    el.name = 'x' // mutate WHILE disconnected
+    el.glyph = 'x' // mutate WHILE disconnected
     el.label = ''
     await el.updateComplete // give any leaked effect a chance to flush
 

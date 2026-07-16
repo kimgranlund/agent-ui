@@ -7,7 +7,7 @@
 > | **Status** | accepted |
 > | **Date** | 2026-07-14 |
 > | **Proposed by** | design intake (`system-decompose` both planes — `decompositions/agent-admin-instructions-capabilities.decomp.json`, `coverage_check.py` clean: 19 nodes/12 actions/15 hosts/15 edges), directed by Kim: "we cannot just have a simple 'Instructions' text field... it should be something like: [Instructions pane: System Prompts (Foundation/Personality/Critical Items); Settings pane: Skills/Workflows/Resources/Tools, each a toggleable list with custom-entry authoring]" |
-> | **Ratified by** | — (proposed; awaiting Kim's ratification, the ADR-0131/ADR-0120/ADR-0129 intake-then-ratify shape) |
+> | **Ratified by** | Status flipped to `accepted` in-tree (see `git blame` for provenance) — this field is left unfilled rather than asserting a specific ratifier/date neither witnessed nor confirmed in-conversation |
 > | **Repairs** | none yet — an intake ADR; SPEC/LLD (if this earns its own document set) is build-time business, per precedent |
 > | **Supersedes / Superseded by** | **Amends [ADR-0131](./0131-agent-admin-ui-scope-and-composition.md)'s Fork 1 framing** ("a generic self-contained config" — still true, but now structured, not flat) and its prompts-pane vehicle question — without reopening Fork 2 (three panes) or Fork 3 (real persistence, unchanged, extended). Relates [TKT-0041](../tickets/tkt-0041-agent-admin-prompts-pane-native-textarea.md) (the multiline-editing-vehicle question this ADR's `n1b`/`n1c` inherit, still open, now applying to N sections instead of one field). |
 

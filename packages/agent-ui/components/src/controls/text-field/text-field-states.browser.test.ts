@@ -90,6 +90,66 @@ describe('ui-text-field — the real contenteditable surface tracks this.value (
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [1b] TKT-0062 — the filled/container state law genuinely repaints in a REAL engine, not just structurally
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-text-field — the TKT-0062 filled/container state law (real repaint, both engines)', () => {
+  it('empty+idle vs typed+idle repaint background AND the VISIBLE editor ink together (not just border, unlike the old law)', async () => {
+    // code-reviewer HIGH finding: reading `field.color` (the host) alone is vacuous — the editor part
+    // carries its OWN color declaration reading the same token, so a state rule that only repaints the
+    // host's `color` property (not the underlying token) never reaches the visible typed text. Read the
+    // EDITOR's own computed color — the element the user actually sees text in — not just the host.
+    const { field, editor } = mount(`<ui-text-field ${SIZED}></ui-text-field>`)
+    const emptyBg = getComputedStyle(field).backgroundColor
+    const emptyInk = getComputedStyle(editor).color
+
+    await userEvent.click(editor)
+    await userEvent.keyboard('filled now')
+    await field.updateComplete
+    editor.blur() // drop focus so the FILLED (idle) row paints, not the focus row
+    await expect.poll(() => field.matches(':focus-within')).toBe(false)
+    await new Promise((r) => setTimeout(r, 250)) // past --ui-motion-fast — let the repaint settle
+
+    const filledBg = getComputedStyle(field).backgroundColor
+    const filledInk = getComputedStyle(editor).color
+    expect(filledBg, 'the background did not repaint between empty and filled').not.toBe(emptyBg)
+    expect(filledInk, 'the VISIBLE editor ink did not repaint between empty and filled').not.toBe(emptyInk)
+  })
+
+  it('focus wins over filled: a focused-AND-filled field shows the FOCUS row, not the filled row', async () => {
+    const { field, editor } = mount(`<ui-text-field ${SIZED}></ui-text-field>`)
+    await userEvent.click(editor)
+    await userEvent.keyboard('filled and focused')
+    await field.updateComplete
+    // still focused here — the mutual-exclusion CSS (filled excludes :focus-within) means the FOCUS
+    // background/ink tokens must be what's painted, not the filled ones, even though the field is
+    // ALSO filled.
+    expect(field.matches(':focus-within'), 'the field unexpectedly lost focus').toBe(true)
+    await expect
+      .poll(() => alphaOf(getComputedStyle(field).borderTopColor), { timeout: 1500 })
+      .toBe(0) // the focus row's border is transparent (same as the idle/filled rows — proven by the ring test)
+    // anti-vacuous: filled and focus DO differ on ink (on-surface-variant vs on-surface) — if this ever
+    // becomes false (a token edit collapses the two roles), this test would start silently passing for
+    // the wrong reason, so assert the values actually differ first. MOTION-AWARE: `color` is one of the
+    // transitioned state-paint properties (:state(ready)) — read it via poll-until-settled on BOTH sides,
+    // never a synchronous read right after the state change (a live timing bug this test itself hit
+    // while being authored: a synchronous read caught the color mid-fade, still showing the PRIOR value).
+    // code-reviewer HIGH finding: read the EDITOR's own computed color, not the host's — the editor
+    // carries its own color declaration reading the ink token directly, so it's the element that
+    // actually proves the visible typed text repaints, not just the host frame.
+    editor.blur()
+    await expect.poll(() => field.matches(':focus-within')).toBe(false)
+    await new Promise((r) => setTimeout(r, 250)) // past --ui-motion-fast — let the blur-triggered fade settle
+    const filledInk = getComputedStyle(editor).color
+    editor.focus()
+    await expect.poll(() => field.matches(':focus-within')).toBe(true)
+    await expect
+      .poll(() => getComputedStyle(editor).color, { timeout: 1500 })
+      .not.toBe(filledInk)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  [2] The value round-trips a real <form> (FormData) and reset() restores the default
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
@@ -166,14 +226,17 @@ describe('ui-text-field — :focus-within ring on the HOST frame (both engines)'
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-text-field — forced-colors survival (Chromium emulates via CDP; WebKit asserts the baseline)', () => {
-  it('the :focus-within ring survives forced-colors AND the idle border/ink/placeholder do not vanish', async () => {
+  it('the :focus-within ring survives forced-colors AND the idle ink/placeholder do not vanish; a border APPEARS under forced-colors where light mode paints none', async () => {
     // an empty, placeholdered field so the [data-empty]::before placeholder is actually generated.
     const { field, editor } = mount(`<ui-text-field placeholder="Search…" ${SIZED}></ui-text-field>`)
 
-    // baseline (BOTH engines, normal mode): the IDLE (unfocused) field paints a visible border + ink +
-    // placeholder — so the forced-colors assertions below cannot be vacuous. (The border is checked idle because
-    // a FOCUSED field's border is transparent by design — see the focus assertion next.)
-    expect(alphaOf(getComputedStyle(field).borderTopColor), 'idle border invisible in normal mode').toBeGreaterThan(0)
+    // baseline (BOTH engines, normal mode): the IDLE (unfocused, unhovered) field's BORDER is
+    // TRANSPARENT by design under TKT-0062's filled/container state law — border is visible only on
+    // :hover now (the light-mode exception in that table); ink + placeholder stay real, visible colours
+    // (the "default" ink role) — so the forced-colors ink/placeholder assertions below still cannot be
+    // vacuous. The border's own forced-colors proof (below) instead checks the STRONGER claim that a
+    // border APPEARS under forced-colors where light mode painted none at all.
+    expect(alphaOf(getComputedStyle(field).borderTopColor), 'idle border unexpectedly visible in normal mode (TKT-0062: default border is transparent)').toBe(0)
     expect(alphaOf(getComputedStyle(field).color), 'ink invisible in normal mode').toBeGreaterThan(0)
     expect(
       alphaOf(getComputedStyle(editor, '::before').color),
@@ -208,10 +271,10 @@ describe('ui-text-field — forced-colors survival (Chromium emulates via CDP; W
       // the outline is WHY dev#1 makes the ring the SOLE focus indicator (the transparent border carries nothing).
       expect(ringDrawn(field), 'the :focus-within ring vanished under forced-colors').toBe(true)
 
-      // the IDLE border + ink + placeholder do NOT vanish — blur to the idle frame, then the forced-colors block
-      // repaints the border + ink to CanvasText (the focus border is transparent, so it must be checked
-      // unfocused). MOTION-AWARE: the border-color fades off transparent back to the idle frame, so poll the
-      // border until it leaves alpha 0.
+      // the IDLE ink + placeholder do NOT vanish, AND a border APPEARS (TKT-0062: it painted NONE in
+      // light-mode idle, per the baseline assertion above) — blur to the idle frame, then the
+      // forced-colors block unconditionally repaints border-color to CanvasText, overriding the
+      // transparent light-mode token. MOTION-AWARE: poll until the border settles off alpha 0.
       editor.blur()
       expect(field.matches(':focus-within'), 'the field did not blur').toBe(false)
       await expect
@@ -225,6 +288,56 @@ describe('ui-text-field — forced-colors survival (Chromium emulates via CDP; W
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] }) // reset the emulation
     }
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  TKT-0057 — disabling a focused editor: Chromium blurs it, WebKit does not (root-caused, ratified)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// ROOT CAUSE (TKT-0057): a `disabled` NATIVE form control cannot be focused, and disabling an
+// already-focused native control blurs it — this is the platform's own long-established, consistently
+// cross-engine convention for `disabled` form controls (native `<input disabled>`/`<button disabled>`
+// parity; documented widely, e.g. https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/disabled,
+// and the exact behavioral gap jsdom itself was cited as diverging from in
+// https://github.com/jsdom/jsdom/issues/2931 — REAL browsers blur, jsdom historically did not). This
+// element is a contenteditable div standing in for a native input (ADR-0014/0017), not a real form
+// control with its own dedicated `disabled` IDL attribute — its "disabled" transition instead removes
+// `contenteditable`/`tabindex`, which is how the fleet SIMULATES the native disabled-cannot-be-focused
+// contract. Chromium re-evaluates the currently-focused element's computed focusability the moment that
+// DOM mutation lands and blurs it — MATCHING native disabled-control parity, not violating it. WebKit
+// does not eagerly re-run that check for a contenteditable region losing focusability this way (an
+// engine implementation gap for contenteditable specifically — contenteditable has no dedicated native
+// "disabled" IDL attribute the way `<input>`/`<button>` do, so there is no single spec clause mandating
+// either engine's behavior here the way there is for native controls).
+//
+// RATIFIED (TKT-0057 Acceptance fork (b)): Chromium's behavior is the one that matches genuine native
+// `<input disabled>` parity — this fleet's OWN stated design intent ("focus survives disabling") was the
+// actual mismatch, not Chromium. No code fix is built: forcing focus to remain on a now-uneditable
+// region would fight the platform's own native-parity convention and risks new confusion (a screen
+// reader user landing on an element that LOOKS focused but accepts no input). WebKit's focus retention
+// here is the outlier, not a target to replicate.
+describe('ui-text-field — TKT-0057: disabling a focused editor — Chromium blurs it (native disabled-parity); WebKit does not', () => {
+  it('the engine split is real and reproducible at the component\'s own level, not just through a composed consumer', async () => {
+    const { field, editor } = mount(`<ui-text-field ${SIZED}></ui-text-field>`)
+
+    await userEvent.click(editor)
+    expect(editor.contains(document.activeElement) || document.activeElement === editor, 'the editor did not take focus in a real engine').toBe(true)
+
+    field.disabled = true
+    await field.updateComplete
+
+    if (server.browser === 'chromium') {
+      expect(document.activeElement === editor, 'TKT-0057 behavior shifted — Chromium no longer blurs on disable (update this test + the ticket)').toBe(false)
+    } else {
+      expect(document.activeElement === editor, 'disabling unexpectedly dropped focus in a non-Chromium engine').toBe(true)
+    }
+
+    field.disabled = false
+    await field.updateComplete
+    expect(document.activeElement === editor, 'the post-re-enable focus state shifted — update this test + TKT-0057').toBe(
+      server.browser === 'chromium' ? false : true,
+    )
   })
 })
 

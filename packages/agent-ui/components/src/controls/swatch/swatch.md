@@ -13,14 +13,14 @@ extends: UIElement     # a non-interactive display LEAF — NOT form-associated 
 # (`components` barrel): 30593 B gz — within the 30720 B gz ceiling (127 B headroom), no re-base needed.
 
 attributes:            # attributes-as-API — mirrors swatch.ts `static props` (value, label, scheme)
-  - name: value
+  - name: color
     type: string
     default: ''        # a literal CSS color OR a --var name (cssValue routes it — SPEC-R2)
     reflect: false
   - name: label
     type: string
     default: ''        # the token name / caption (SPEC-R1)
-    reflect: false
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
   - name: scheme
     type: enum
     values: [auto, light, dark]
@@ -68,8 +68,8 @@ real, accessible text. It is **not** interactive and **not** form-associated: no
 contract.
 
 ```html
-<ui-swatch value="oklch(0.6 0.03 225)" label="primary-500"></ui-swatch>
-<ui-swatch value="--md-sys-color-primary-container" label="primary-container" scheme="dark"></ui-swatch>
+<ui-swatch color="oklch(0.6 0.03 225)" label="primary-500"></ui-swatch>
+<ui-swatch color="--md-sys-color-primary-container" label="primary-container" scheme="dark"></ui-swatch>
 ```
 
 ## Rendering

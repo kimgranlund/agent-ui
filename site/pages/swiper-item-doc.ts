@@ -17,8 +17,8 @@ const { content } = mountPage({
 })
 
 const swiper = el('ui-swiper', {}, [
-  el('ui-swiper-item', { value: 'one' }, [demoBox('Slide one')]),
-  el('ui-swiper-item', { value: 'two' }, [demoBox('Slide two')]),
+  el('ui-swiper-item', { key: 'one' }, [demoBox('Slide one')]),
+  el('ui-swiper-item', { key: 'two' }, [demoBox('Slide two')]),
 ])
 
 composeDocPage(content, descriptor, body, exampleSection('Example', swiper))

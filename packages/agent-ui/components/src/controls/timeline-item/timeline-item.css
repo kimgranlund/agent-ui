@@ -162,6 +162,7 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-timeline-item) declares --ui-timeline-item-* ════════════════ */
 
 :where(ui-timeline-item) {
+  --ui-timeline-item-truncated-border: var(--md-sys-color-warning); /* TKT-0066: was a direct role read in @scope */
   /* size → picks the row within the ambient [scale] register (Kim's (scale × size) → row lookup). Frame
      quantities (marker-box/dot/connector/gutter) are density-INVARIANT (the centering law); row-gap is
      the ONE rhythm quantity and rides [density] via the shared `--ui-density` multiplier below. */
@@ -169,6 +170,7 @@
   --ui-timeline-item-dot-size: var(--ui-timeline-item-dot-size-md);
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-md);
   --ui-timeline-item-gutter: var(--ui-timeline-item-gutter-md);
+  --ui-timeline-item-column-gap: var(--ui-space-sm); /* TKT-0066 item 5 ruling: constants route through the own chain */
   --ui-timeline-item-row-gap: calc(var(--ui-timeline-item-row-gap-md) * var(--ui-density));
   /* a slotted/consumer marker icon reads the CONTENT-ICON register, not this table (LLD §5). */
   --ui-timeline-item-icon-size: var(--ui-icon-md);
@@ -217,7 +219,7 @@
     display: grid;
     grid-template-columns: var(--ui-timeline-item-gutter) 1fr auto;
     grid-template-rows: auto auto;
-    column-gap: var(--ui-space-sm);
+    column-gap: var(--ui-timeline-item-column-gap);
     align-items: start;
     color: var(--ui-timeline-item-ink);
     /* the item is its OWN row-rhythm authority — a real margin, not a cross-file host-set gap (LLD §8's
@@ -358,7 +360,7 @@
   :scope:state(truncated) [data-part='marker']::before {
     display: block;
     background: transparent;
-    border: var(--ui-timeline-item-connector-width) dashed var(--md-sys-color-warning);
+    border: var(--ui-timeline-item-connector-width) dashed var(--ui-timeline-item-truncated-border);
     /* an active entry's pulse must NOT survive truncation — a torn stream showing a still-pulsing marker
        is exactly the "still working" cue SPEC-R11 exists to kill (component-review finding). Wins over the
        [status='active']::before pulse rule above by source order (equal specificity). */

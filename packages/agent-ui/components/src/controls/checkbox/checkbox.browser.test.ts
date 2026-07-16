@@ -134,3 +134,52 @@ describe('ui-checkbox — user-invalid leg (ADR-0051)', () => {
     el.remove()
   })
 })
+
+// TKT-0047 — checkbox was the one Indicator-class control with zero hover feedback (switch/radio both
+// repaint on hover). Real border-color repaint can only be proven here (the user-invalid leg above's own
+// precedent for this same reason).
+describe('ui-checkbox — hover (TKT-0047)', () => {
+  it('the ::before border repaints toward the checked colour on real pointer hover', async () => {
+    const el = document.createElement('ui-checkbox')
+    document.body.append(el)
+    const idleBorder = getComputedStyle(el, '::before').borderColor
+
+    await userEvent.hover(el)
+    const hoverBorder = getComputedStyle(el, '::before').borderColor
+    expect(hoverBorder, 'the ::before border-color did not repaint on hover').not.toBe(idleBorder)
+
+    await userEvent.unhover(el)
+    el.remove()
+  })
+
+  // component-reviewer MINOR fix: the hover rule was originally authored AFTER the user-invalid rule at
+  // equal specificity (0,2,1), so source order let hover mask the danger border — hovering a required,
+  // unchecked checkbox that had already been focus+blurred would hide the invalid signal at the exact
+  // moment the user is about to interact. Fixed by moving the hover rule ABOVE user-invalid in the
+  // stylesheet; this pins the fix as a real, provable behavior, not just a reordered comment.
+  it('hover does NOT mask the user-invalid danger border (the danger colour always wins)', async () => {
+    const el = document.createElement('ui-checkbox')
+    el.setAttribute('required', '')
+    document.body.append(el)
+
+    el.focus()
+    el.blur()
+    // `border-color` transitions over `--ui-motion-fast` (300ms, dimensions.css) — a couple of animation
+    // frames (~33ms) is enough to observe a value merely CHANGED (the existing user-invalid-arms test
+    // above only needs that), but this test needs the SETTLED end-state colour for an exact equality
+    // comparison, so it waits past the real transition duration on both measurements below.
+    await new Promise((r) => setTimeout(r, 350))
+    expect(el.matches(':state(user-invalid)'), 'user-invalid was not armed on blur').toBe(true)
+    const invalidBorder = getComputedStyle(el, '::before').borderColor
+
+    await userEvent.hover(el)
+    await new Promise((r) => setTimeout(r, 350)) // let the border-color transition fully settle
+    const invalidHoverBorder = getComputedStyle(el, '::before').borderColor
+    expect(invalidHoverBorder, 'hovering a user-invalid checkbox must NOT repaint away from the danger colour').toBe(
+      invalidBorder,
+    )
+
+    await userEvent.unhover(el)
+    el.remove()
+  })
+})

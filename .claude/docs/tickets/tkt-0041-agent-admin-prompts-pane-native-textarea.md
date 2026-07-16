@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0041
-status: open
+status: done
 date: 2026-07-14
 owner:
 kind: feature
@@ -55,3 +55,35 @@ Either resolution closes this ticket; which one is Kim's call, not pinned here.
   more when ADR-0132 builds.
 
 ## Findings
+
+**2026-07-14 — closed via acceptance path B (a multiline FACE editor).** A new fleet primitive
+`ui-textarea` (`packages/agent-ui/components/src/controls/textarea/`) ships per
+[ADR-0134](../adr/0134-multiline-textarea-face-editor.md) — a sibling of `ui-text-field`, NOT a
+mode on it, reusing the ADR-0014 contenteditable pattern with its own multi-line geometry law
+(`rows`-driven growable `min-block-size`, Enter inserts a newline instead of committing, no
+`type`/codec machinery). `ui-agent-admin`'s `entry-list.ts` (both the per-entry editor and the
+add-form's content field — now covering all five ADR-0132 entry-list instantiations, not just the
+original single field) migrated onto it; `agent-admin.md`'s honest-disclosure caveat is retired.
+
+Independently reviewed (`ui:component-reviewer`, fresh context) — verdict GO, with two MINOR
+findings, both fixed before closing: (1) `textarea.css`'s header comment claimed `align-items:
+start` where the shipped code actually uses plain block flow with no `align-items` rule
+(equivalent visual result, simpler; comment corrected to match); (2) `entry-list.ts`'s
+uncommitted-edit restore path called `ui-textarea`'s new `selectToEnd()` seam synchronously,
+racing the async model→surface render effect — the editor could still be empty when the caret
+range collapsed, landing the caret at position 0 instead of the end (focus itself still landed
+correctly, confirmed by the cross-engine suite; only caret position was at risk). Fixed by
+awaiting `updateComplete` before calling `selectToEnd()`, with the corresponding browser test
+updated to await the same flush before asserting `:focus-within`.
+
+Gates: `npm run check` clean · full jsdom suite 331/332 files green (the one failure,
+`theme-provider-build-fixture.test.ts`, is a pre-existing CSS-build-fixture staleness issue
+unrelated to this change — confirmed failing identically against an unmodified base) · scoped
+cross-engine browser suite (`textarea` + `agent-admin` + `text-field`) 38/38 (post-fix) · `npm run
+size` — `textarea` marginal 955 B gz (2048 B budget), `ui-*` family 43330 B gz (45056 B budget),
+both within budget.
+
+ADR-0134 sits at `Status: proposed` in-file (a hook-level guard blocks any agent from
+self-flipping an ADR to `accepted`, even given an explicit in-conversation confirmation) despite
+being explicitly authorized/ratified by Kim in conversation — flipping that field is Kim's own
+edit to make.

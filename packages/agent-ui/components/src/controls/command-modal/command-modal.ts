@@ -26,7 +26,7 @@ const props = {
   open: { ...prop.boolean(false), reflect: true },
   // `label` — the accessible name for BOTH the search field (reactive → aria-label) and the dialog (connect-time
   // → forwarded onto the nested ui-modal). NOT reflected (an a11y hint, not a styling hook).
-  label: prop.string(''),
+  label: { ...prop.string(''), reflect: true },
   // `placeholder` — the search field placeholder (shown via [data-empty]::before, the combo-box CSS read-back).
   placeholder: prop.string(''),
   // `hotkey` — the F2 opt-in convenience. '' = NO document listener. A non-empty chord (e.g. 'mod+k') binds ONE

@@ -2,7 +2,7 @@
 # avatar.md frontmatter — the attributes-as-API descriptor for ui-avatar (ADR-0004; LLD-C10,
 # feed-family.lld.md §6). The machine-checkable public surface lives HERE (frontmatter); the prose below
 # the fence is the /site doc. The `attributes[]` block MUST mirror avatar.ts `static props`
-# (src/name/label/size) — the contract<->props trip-wire (avatar-descriptor.test.ts) targets this fence.
+# (src/identity/label/size) — the contract<->props trip-wire (avatar-descriptor.test.ts) targets this fence.
 tag: ui-avatar
 description: A compact circular identity mark that shows a photo, initials, or a fallback glyph for one person.
 tier: indicator        # geometry size-class — the F3 widget-box class (ADR-0041; SPEC-R20), NOT display:
@@ -13,13 +13,13 @@ extends: UIElement     # a non-interactive, non-form-associated display LEAF (SP
 # integration slice (barrel export, component-styles.css import, package.json exports entry); the real
 # `npm run size` figure lands with that slice, per feed-family.lld.md §6 (measured, never guessed).
 
-attributes:            # attributes-as-API — mirrors avatar.ts `static props` (src, name, label, size)
+attributes:            # attributes-as-API — mirrors avatar.ts `static props` (src, identity, label, size)
   - name: src
     type: string
     default: ''
     reflect: false      # NOT reflected — property-only render input; a load error falls back without ever
                          # exposing the failed URL as a host attribute
-  - name: name
+  - name: identity
     type: string
     default: ''
     reflect: false      # NOT reflected — the identity the initials derive from; NOT announced by default
@@ -27,7 +27,7 @@ attributes:            # attributes-as-API — mirrors avatar.ts `static props` 
   - name: label
     type: string
     default: ''
-    reflect: false      # NOT reflected — the a11y escape hatch (SPEC-R6); non-empty makes the avatar
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
                          # itself the accessible name (role=img)
   - name: size
     type: enum
@@ -86,7 +86,7 @@ widget box that walks a fallback chain: an image, then initials, then a generic 
 
 ```html
 <ui-avatar src="/users/42/photo.jpg" name="Ada Lovelace"></ui-avatar>
-<ui-avatar name="Grace Hopper" size="lg"></ui-avatar>
+<ui-avatar identity="Grace Hopper" size="lg"></ui-avatar>
 <ui-avatar label="Ada Lovelace"></ui-avatar>
 ```
 
@@ -100,7 +100,7 @@ Exactly one link renders at a time (SPEC-R5) — **never a broken-image box, nev
 2. **Initials** — derived from `name` by a pure, grapheme-safe function (`avatar-initials.ts`): the first
    grapheme of the first word + the first grapheme of the last word (a single word yields one grapheme),
    locale-uppercased. Empty/whitespace `name` skips straight to the glyph.
-3. **Glyph** — the vendored person icon (`<ui-icon name="user">`), decorative by its own default.
+3. **Glyph** — the vendored person icon (`<ui-icon glyph="user">`), decorative by its own default.
 
 ## Accessibility
 

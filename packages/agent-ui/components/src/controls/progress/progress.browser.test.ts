@@ -60,7 +60,7 @@ describe('ui-progress — whole-shape floor (SPEC-R18 AC1, test-the-whole-shape)
   })
 
   it('a determinate, populated progress also paints non-collapsed', () => {
-    const el = mount('<ui-progress value="42" label="Indexing"></ui-progress>')
+    const el = mount('<ui-progress current="42" label="Indexing"></ui-progress>')
     const box = el.getBoundingClientRect()
     expect(box.width).toBeGreaterThan(0)
     expect(box.height).toBeGreaterThan(0)
@@ -69,7 +69,7 @@ describe('ui-progress — whole-shape floor (SPEC-R18 AC1, test-the-whole-shape)
 
 describe('ui-progress — determinate fill proportion (SPEC-R2 AC1)', () => {
   it('value=25 max=100 ⇒ the fill measures within ε of 25% of the track', () => {
-    const el = mount('<ui-progress value="25" style="inline-size: 400px"></ui-progress>')
+    const el = mount('<ui-progress current="25" style="inline-size: 400px"></ui-progress>')
     const track = el.querySelector('[data-part="track"]') as HTMLElement
     const fill = el.querySelector('[data-part="fill"]') as HTMLElement
     const trackWidth = track.getBoundingClientRect().width
@@ -78,11 +78,11 @@ describe('ui-progress — determinate fill proportion (SPEC-R2 AC1)', () => {
   })
 
   it('value=0 ⇒ the fill measures ~0; value=max ⇒ the fill measures the full track', () => {
-    const zero = mount('<ui-progress value="0" style="inline-size: 400px"></ui-progress>')
+    const zero = mount('<ui-progress current="0" style="inline-size: 400px"></ui-progress>')
     const zeroFill = zero.querySelector('[data-part="fill"]') as HTMLElement
     expect(zeroFill.getBoundingClientRect().width).toBeLessThan(1)
 
-    const full = mount('<ui-progress value="100" style="inline-size: 400px"></ui-progress>')
+    const full = mount('<ui-progress current="100" style="inline-size: 400px"></ui-progress>')
     const fullTrack = full.querySelector('[data-part="track"]') as HTMLElement
     const fullFill = full.querySelector('[data-part="fill"]') as HTMLElement
     expect(fullFill.getBoundingClientRect().width).toBeCloseTo(fullTrack.getBoundingClientRect().width, 0)
@@ -94,7 +94,7 @@ describe('ui-progress — RTL mirroring (SPEC-R2 AC3)', () => {
     const wrap = document.createElement('div')
     wrap.setAttribute('dir', 'rtl')
     wrap.style.display = 'flex'
-    wrap.innerHTML = '<ui-progress value="25" style="inline-size: 400px"></ui-progress>'
+    wrap.innerHTML = '<ui-progress current="25" style="inline-size: 400px"></ui-progress>'
     document.body.append(wrap)
     mounted.push(wrap)
 
@@ -118,7 +118,7 @@ describe('ui-progress — motion: indeterminate sweep, suppressed under reduced-
   })
 
   it('a determinate bar carries no animation at all — distinguishable from indeterminate', () => {
-    const el = mount('<ui-progress value="50"></ui-progress>')
+    const el = mount('<ui-progress current="50"></ui-progress>')
     const fill = el.querySelector('[data-part="fill"]') as HTMLElement
     expect(getComputedStyle(fill).animationName).toBe('none')
   })
@@ -152,7 +152,7 @@ describe('ui-progress — motion: indeterminate sweep, suppressed under reduced-
 
 describe('ui-progress — forced colors (SPEC-R19 AC1)', () => {
   it('fill and track survive as distinguishable system inks — Chromium emulates (CDP); WebKit asserts baseline', async () => {
-    const el = mount('<ui-progress value="50"></ui-progress>')
+    const el = mount('<ui-progress current="50"></ui-progress>')
     const track = el.querySelector('[data-part="track"]') as HTMLElement
     const fill = el.querySelector('[data-part="fill"]') as HTMLElement
 

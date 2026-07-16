@@ -28,7 +28,7 @@ import { barDataProp, barRows, cleanData, type BarRow } from './bar-math.ts'
 
 const props = {
   data: barDataProp, // { label: string; value: number }[] · safe JSON codec (bar-math.ts) · default []
-  label: prop.string(''), // the list's accessible name — SPEC-R8: unlabeled is legal, never a silent state
+  label: { ...prop.string(''), reflect: true }, // the list's accessible name — SPEC-R8: unlabeled is legal, never a silent state
 } satisfies PropsSchema
 
 export interface UIBarChartElement extends ReactiveProps<typeof props> {}

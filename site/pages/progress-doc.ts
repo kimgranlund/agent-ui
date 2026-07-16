@@ -1,6 +1,6 @@
 // site/pages/progress-doc.ts — the ui-progress API doc page (tier=display ⇒ {doc} only, ADR-0112 /
 // feed-family.lld.md LLD-C12). DERIVED from `progress.md` via the shared doc-page.ts renderer: the attribute
-// table (value, max, label) and the parts[] table (track, fill) are read straight from the parse — so neither
+// table (current, max, label) and the parts[] table (track, fill) are read straight from the parse — so neither
 // can drift from the descriptor the contract trip-wire enforces (ADR-0004). The specimens are hand-authored
 // (a doc page has no source to derive representative data from): a determinate bar, the indeterminate sweep,
 // and a degenerate strip (negative + over-max clamping) as a live visual fixture (the bar-chart precedent).
@@ -25,9 +25,9 @@ function renderSpecimens(): HTMLElement {
   const section = document.createElement('section')
   section.append(
     heading(2, 'Examples'),
-    labelled('Determinate', 'value=42, max=100 (the default) — the fill grows from the inline-start edge.', bar({ value: '42', label: 'Indexing' })),
-    labelled('Indeterminate', 'No value ⇒ a visibly-animated sweep — "working", not "0%".', bar({ label: 'Working' })),
-    labelled('Degenerate: clamping', 'value=150 against max=100 clamps to 100%; value=-20 clamps to 0% — every input resolves to a paintable, announced state, never a throw.', row(bar({ value: '150', label: 'Over max' }), bar({ value: '-20', label: 'Negative' }))),
+    labelled('Determinate', 'current=42, max=100 (the default) — the fill grows from the inline-start edge.', bar({ current: '42', label: 'Indexing' })),
+    labelled('Indeterminate', 'No current ⇒ a visibly-animated sweep — "working", not "0%".', bar({ label: 'Working' })),
+    labelled('Degenerate: clamping', 'current=150 against max=100 clamps to 100%; current=-20 clamps to 0% — every input resolves to a paintable, announced state, never a throw.', row(bar({ current: '150', label: 'Over max' }), bar({ current: '-20', label: 'Negative' }))),
   )
   return section
 }

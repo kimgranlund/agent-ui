@@ -50,6 +50,17 @@ the markdown body below the fence is the prose `/site` page. Two consumers read 
 `@agent-ui/components/descriptor` parser — the contract↔props trip-wire (frontmatter `attributes[]` ≡ the
 live `finalize(Class)` table) and the `/site` doc generator — **one parser, never a forked dialect**.
 
+**The `description:` field describes, it doesn't cite provenance.** It flows verbatim into every `/site`
+T4 API page (`docs-author`'s DERIVE-FIRST principle — one source, many consumers), so the same rule
+`docs-author`'s `best-practices.md` states for page prose applies here, at the source: say what the
+component *is* and *does* for a reader deciding whether to use it — never which `TKT-####`/`ADR-####`
+built or changed it. A **normative** citation is still fine if the description states a rule/contract the
+reader needs (rare for a one-line summary); a **provenance** citation (which ticket shipped this, which
+ADR record exists) never belongs here — link it from the component's own ADR/ticket instead, not the
+public-facing descriptor. `textarea.md`'s `description:` was the one fleet instance found carrying this
+(`"...the fleet's first long-form editable primitive (ADR-0134), a sibling of..."`) — fixed alongside this
+rule (TKT-0053).
+
 ## The package exports map — the barrels
 
 The package exposes its surface through `exports` subpaths, not deep file paths. Verified against

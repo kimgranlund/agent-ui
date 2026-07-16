@@ -1132,6 +1132,147 @@ describe('ui-combo-box — user-invalid leg (ADR-0051)', () => {
   })
 })
 
+// TKT-0047 — the editor's disabled `opacity: 0.5` was replaced with a token-repoint (the fleet's
+// dominant disabled mechanism, matching select.css's fully-repointed [disabled] precedent). No
+// CSS transition on border/background/color in this file, so no settle-wait is needed.
+describe('ui-combo-box — disabled paint (TKT-0047, opacity removed)', () => {
+  it('disabled: the editor is fully opaque (no opacity dimming) yet its ink repaints to the muted token', async () => {
+    const { el: idle } = mount(`
+      <ui-combo-box>
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const idleEditor = idle.querySelector('[data-part="editor"]') as HTMLElement
+    const idleInk = getComputedStyle(idleEditor).color
+
+    const { el: disabled } = mount(`
+      <ui-combo-box disabled>
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const disabledEditor = disabled.querySelector('[data-part="editor"]') as HTMLElement
+
+    expect(getComputedStyle(disabledEditor).opacity, 'opacity dimming should be gone — the token repoint carries it now').toBe(
+      '1',
+    )
+    expect(getComputedStyle(disabledEditor).color, 'the disabled ink must still repaint to the muted token').not.toBe(
+      idleInk,
+    )
+  })
+
+  // TKT-0063 — a real <fieldset disabled> (the FORM-disabled channel, never the combo-box's own `disabled`
+  // attribute) must paint the SAME disabled row as the own-attribute case above.
+  it('a combo-box inside a real <fieldset disabled> repaints to the SAME muted ink as the combo-box\'s own [disabled] attribute', async () => {
+    const { el: ownDisabled } = mount(`
+      <ui-combo-box disabled>
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const ownEditor = ownDisabled.querySelector('[data-part="editor"]') as HTMLElement
+    const ownDisabledInk = getComputedStyle(ownEditor).color
+
+    const { wrap } = mount(`<fieldset disabled><ui-combo-box><div role="option" value="apple">Apple</div></ui-combo-box></fieldset>`)
+    const formDisabled = wrap.querySelector('ui-combo-box') as UIComboBoxElement
+    const formEditor = formDisabled.querySelector('[data-part="editor"]') as HTMLElement
+    await formDisabled.updateComplete
+
+    expect(formEditor.getAttribute('aria-disabled'), 'the editor must be aria-disabled under the FORM-disabled channel too').toBe('true')
+    expect(getComputedStyle(formEditor).color, 'a form-disabled combo-box must paint the SAME muted ink as an own-[disabled] combo-box').toBe(ownDisabledInk)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  TKT-0062 — the filled/container state law genuinely repaints in a REAL engine, not just structurally
+//  (the text-field-states.browser.test.ts precedent, adapted: combo-box's editor IS the frame, so
+//  every assertion reads the editor part directly rather than the host).
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-combo-box — the TKT-0062 filled/container state law (real repaint, both engines)', () => {
+  it('empty+idle vs typed+idle repaint background AND ink together (not just border, unlike the old law)', async () => {
+    const { el } = mount(`
+      <ui-combo-box>
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+    const emptyBg = getComputedStyle(editor).backgroundColor
+    const emptyInk = getComputedStyle(editor).color
+
+    await userEvent.click(editor)
+    await userEvent.keyboard('apple')
+    editor.blur() // drop focus so the FILLED (idle) row paints, not the focus row
+    await expect.poll(() => editor.matches(':focus')).toBe(false)
+
+    const filledBg = getComputedStyle(editor).backgroundColor
+    const filledInk = getComputedStyle(editor).color
+    expect(filledBg, 'the background did not repaint between empty and filled').not.toBe(emptyBg)
+    expect(filledInk, 'the ink did not repaint between empty and filled').not.toBe(emptyInk)
+  })
+
+  it('focus wins over filled: a focused-AND-filled editor shows the FOCUS row, not the filled row', async () => {
+    const { el } = mount(`
+      <ui-combo-box>
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+
+    await userEvent.click(editor)
+    await userEvent.keyboard('apple')
+    // still focused here — the mutual-exclusion CSS (filled excludes :focus) means the FOCUS
+    // background/ink tokens must be what's painted, not the filled ones, even though the editor is
+    // ALSO filled.
+    expect(editor.matches(':focus'), 'the editor unexpectedly lost focus').toBe(true)
+    await expect
+      .poll(() => alphaOf(getComputedStyle(editor).borderTopColor), { timeout: 1500 })
+      .toBe(0) // the focus row's border is transparent (same as the idle/filled rows — proven by the forced-colors test)
+
+    // anti-vacuous: filled and focus DO differ on ink (on-surface-variant vs on-surface) — if this
+    // ever becomes false (a token edit collapses the two roles), this test would start silently
+    // passing for the wrong reason, so assert the values actually differ. POLL-BASED (not a
+    // synchronous read) — combo-box.css carries no state transition today, but the read stays
+    // poll-based to match the fleet's TKT-0062 pattern (a synchronous read caught text-field's ink
+    // mid-fade the first time this shape was authored there).
+    editor.blur()
+    await expect.poll(() => editor.matches(':focus')).toBe(false)
+    const filledInk = getComputedStyle(editor).color
+    editor.focus()
+    await expect.poll(() => editor.matches(':focus')).toBe(true)
+    await expect
+      .poll(() => getComputedStyle(editor).color, { timeout: 1500 })
+      .not.toBe(filledInk)
+  })
+
+  it('an EMPTY combo-box\'s PLACEHOLDER repaints on hover and focus too (TKT-0065 lateral-review F13 regression)', async () => {
+    // The bug this pins: the state rules repointed the editor's `color:` PROPERTY, but the
+    // placeholder ::before carries its own `color: var(--ui-combo-box-placeholder)` — an alias of
+    // the ink TOKEN — so a property-only repoint never reached it: an empty combo-box's placeholder
+    // stayed frozen at the default ink under hover AND focus while text-field's repainted (proven
+    // frozen in a real Chromium+WebKit probe). The fix repoints the --ui-combo-box-ink token itself
+    // (the TKT-0062 mechanic-[b] shape); this test reads the ::before — the element that renders
+    // the visible placeholder — never the editor's own color.
+    const { el } = mount(`
+      <ui-combo-box placeholder="Pick…">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+    const defaultInk = getComputedStyle(editor, '::before').color
+
+    await userEvent.hover(editor)
+    await expect
+      .poll(() => getComputedStyle(editor, '::before').color, { timeout: 1500 })
+      .not.toBe(defaultInk)
+    await userEvent.unhover(editor)
+
+    editor.focus()
+    await expect.poll(() => editor.matches(':focus')).toBe(true)
+    await expect
+      .poll(() => getComputedStyle(editor, '::before').color, { timeout: 1500 })
+      .not.toBe(defaultInk)
+  })
+})
+
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 //  [10] TKT-0026 — a late-added Option adopts into the REAL top-layer panel (both engines)
 // ════════════════════════════════════════════════════════════════════════════════════════════════

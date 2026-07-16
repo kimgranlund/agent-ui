@@ -19,7 +19,7 @@ attributes:            # attributes-as-API — mirrors text-field.ts `static pro
   - name: label
     type: string
     default: ''
-    reflect: false     # → the editor's aria-label (the labelling SEAM; the visible label/description/error wrapper is ui-field, SHIPPED — ADR-0051, controls/field/field.md)
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
   - name: placeholder
     type: string
     default: ''
@@ -233,12 +233,23 @@ editor keeps the accessible name. The editor itself is a control **part**, not a
 
 ## States
 
-The control authors its own interaction states off the **border channel** (a text field has no
-pressed/active state, so the button's background-fill ladder does not apply; `interaction-states.md`,
-ADR-0014 dev#c). The border steps through a solid colour-role ladder — idle → `:hover` → focus → the
-`user-invalid` danger border — and `disabled` is a role **repoint** (muted surface + ink, a faint frame),
-**not** opacity. Motion is gated behind `:state(ready)` and zeroed under reduced-motion (the
-`interaction-states.md` motion standard).
+The control authors its interaction states off Kim's filled/container law (TKT-0062, superseding the
+older border-only channel; `interaction-states.md`, ADR-0014 dev#c) — background, border, AND text-ink
+all repoint together across five states:
+
+| State | Background | Border | Text ink |
+|---|---|---|---|
+| default (empty, idle) | `neutral-container-low` | `transparent` | `neutral` |
+| filled (has a value, idle) | `neutral-container` | `transparent` | `neutral-on-surface-variant` |
+| hover | `neutral-container` | `neutral-outline-variant` | `neutral-on-surface-variant` |
+| focus | `neutral-container-low` | `transparent` (the ring is the indicator) | `neutral-on-surface` |
+| disabled | `neutral-container-low` | `transparent` | `neutral-low` |
+
+"Filled" is `[data-empty]`'s absence on the editor part — the same emptiness signal the placeholder
+already keys off. The `user-invalid` danger border is UNCHANGED/orthogonal — it layers on top of
+whichever bg/ink the table above already picked. `disabled` is a role **repoint**, **not** opacity.
+Motion is gated behind `:state(ready)` and zeroed under reduced-motion (the `interaction-states.md`
+motion standard).
 
 Two deviations from the button-derived standard are explicit (ADR-0014):
 

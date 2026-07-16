@@ -22,7 +22,7 @@ describe('the Phosphor subpath self-registers + activates on import (LLD-C4)', (
     expect(phosphorPack.viewBox).toBe('0 0 256 256')
   })
 
-  it('every one of the 20 ICON_NAMES resolves to a distinct, non-empty body', () => {
+  it('every one of the 21 ICON_NAMES resolves to a distinct, non-empty body', () => {
     const bodies = ICON_NAMES.map((name) => phosphorPack.icons[name])
     for (const [i, body] of bodies.entries()) {
       expect(typeof body, `icons.${ICON_NAMES[i]} is not a string`).toBe('string')

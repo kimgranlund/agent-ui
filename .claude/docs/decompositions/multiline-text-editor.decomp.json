@@ -1,0 +1,65 @@
+{
+  "domain": "components",
+  "plan": false,
+  "_meta": {
+    "title": "Multiline FACE text editor (ui-textarea) — TKT-0041 resolution",
+    "date": "2026-07-14",
+    "ruling": "New sibling primitive ui-textarea (UIFormElement), NOT a ui-text-field mode. See ADR-0134.",
+    "note": "Two planes derived independently: OUTSIDE-IN = the COMPOSE axis (component -> parts/seams); INSIDE-OUT = the REALIZE axis (the semantic + interaction obligations). Crossed in `hosts`. Not a `plan` manifest — this is the design decomposition that feeds ADR-0134 + the build slicing, not the leaf-accept build card."
+  },
+  "nodes": [
+    { "id": "n1", "label": "ui-textarea component root (UIFormElement)", "leaf": false, "justify": null },
+    { "id": "n2", "label": "editor part — [data-part=editor] contenteditable=plaintext-only, role=textbox, aria-multiline=TRUE", "leaf": true, "justify": null },
+    { "id": "n3", "label": "control-managed validity message node (aria-describedby target, hidden until user-invalid)", "leaf": true, "justify": null },
+    { "id": "n4", "label": "host frame — the GROWABLE box: min-block-size from `rows`, real block padding, align-items:start, overflow-y:auto, resize:vertical", "leaf": true, "justify": null },
+    { "id": "n5", "label": "placeholder — data-empty ::before content(attr(data-placeholder))", "leaf": true, "justify": null },
+    { "id": "n6", "label": "value<->surface sync seam — caret-guarded model->surface effect + surface->model input listener + IME composition guard", "leaf": true, "justify": null },
+    { "id": "n7", "label": "FACE form seam — formValue / formValidity / formReset / formStateRestore on UIFormElement", "leaf": true, "justify": null },
+    { "id": "n8", "label": "user-invalid timing controller (trackUserInvalid) — gates danger treatment to first blur/change", "leaf": true, "justify": null },
+    { "id": "n9", "label": "field-labelling seam — applyFieldLabelling: aria-labelledby / aria-describedby against ui-field parts (ADR-0051 part-role override)", "leaf": true, "justify": null }
+  ],
+  "actions": [
+    { "id": "a1", "label": "enter multi-line prose (free text, newlines permitted)" },
+    { "id": "a2", "label": "insert a newline on Enter (NOT commit — the inversion of ui-text-field's Enter-commits law)" },
+    { "id": "a3", "label": "commit the value on blur-with-change — emit `change` (the entry-list commit-on-change timing the consumer depends on)" },
+    { "id": "a4", "label": "emit live `input` on each edit" },
+    { "id": "a5", "label": "edit safely under IME composition (suppress sync mid-composition)" },
+    { "id": "a6", "label": "contribute the value to the owning form (setFormValue)" },
+    { "id": "a7", "label": "validate — required/valueMissing — and expose the verdict" },
+    { "id": "a8", "label": "reset to the initial-attribute default value on form reset" },
+    { "id": "a9", "label": "restore the value after navigation/autofill (state restore)" },
+    { "id": "a10", "label": "show the placeholder when empty" },
+    { "id": "a11", "label": "carry an accessible name + description + error via the ui-field seam" },
+    { "id": "a12", "label": "surface the user-invalid danger treatment only after the first blur/change" },
+    { "id": "a13", "label": "size to `rows` as a MIN height, then grow-to-content or scroll past it (multiline geometry)" },
+    { "id": "a14", "label": "let the user resize the box vertically (native <textarea> parity)" },
+    { "id": "a15", "label": "honour disabled / readonly on the editable surface" },
+    { "id": "a16", "label": "reflect a programmatic value write back to the surface (caret-guarded, reset/restore path)" },
+    { "id": "a17", "label": "render the validity message text as the non-colour cue (WCAG 1.4.1)" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n2" },
+    { "action": "a2", "node": "n2" },
+    { "action": "a3", "node": "n6" },
+    { "action": "a4", "node": "n6" },
+    { "action": "a5", "node": "n6" },
+    { "action": "a6", "node": "n7" },
+    { "action": "a7", "node": "n7" },
+    { "action": "a8", "node": "n7" },
+    { "action": "a9", "node": "n7" },
+    { "action": "a10", "node": "n5" },
+    { "action": "a11", "node": "n9" },
+    { "action": "a12", "node": "n8" },
+    { "action": "a13", "node": "n4" },
+    { "action": "a14", "node": "n4" },
+    { "action": "a15", "node": "n2" },
+    { "action": "a16", "node": "n6" },
+    { "action": "a17", "node": "n3" }
+  ],
+  "edges": [
+    { "from": "n2", "to": "n6", "why": "the sync seam wires the editor's input/blur/composition listeners — the editor part must be created first" },
+    { "from": "n2", "to": "n7", "why": "formValue reads the editor's textContent — the editor part is the value source" },
+    { "from": "n2", "to": "n9", "why": "applyFieldLabelling id-references the editor directly (the ADR-0051 part-role override) — the editor must exist to receive aria-labelledby/describedby" },
+    { "from": "n2", "to": "n4", "why": "the growable host frame lays out the editor cell (align-items:start, min-block-size) — the editor is the content it sizes around" }
+  ]
+}

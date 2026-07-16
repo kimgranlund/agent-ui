@@ -20,8 +20,8 @@ attributes:            # attributes-as-API — mirrors stat.ts `static props` (l
   - name: label
     type: string
     default: ''
-    reflect: false      # NOT reflected — plain accessible text, no CSS keys on it
-  - name: value
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
+  - name: figure
     type: string        # kindOf's behavioural verdict (see the header note) — NOT the TS union type
     default: ''         # String('') = '' — the LIVE default; a finite-number attribute (e.g. "48200")
                          # still coerces to the typed number 48200 at the property (SPEC-R7), the codec's

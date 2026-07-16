@@ -44,17 +44,45 @@
      of the frame-law h/2 inset; this brings it into line. */
   --ui-combo-box-padding-inline: calc(var(--ui-combo-box-height) / 2);
 
-  /* Frame — matches the text-field border channel (solid, not alpha — WCAG 1.4.11 parity). */
-  --ui-combo-box-border: var(--md-sys-color-neutral);
-  --ui-combo-box-border-hover: var(--md-sys-color-neutral-high);
+  /* Frame — Kim's filled/container state law (TKT-0062), SUPERSEDING the earlier border-only
+     channel: THREE channels now repoint per state (background, border, text-ink), keyed off five
+     states — default (empty, idle) / filled (has a value, idle) / hover / focus / disabled.
+     user-invalid is UNCHANGED — its own border-only danger channel (below) layers on top of
+     whichever bg/ink this table already picked; it never touches bg.
+       state    | bg              | border           | ink
+       default  | container-low   | transparent       | neutral
+       filled   | container       | transparent       | on-surface-variant
+       hover    | container       | outline-variant   | on-surface-variant
+       focus    | container-low   | transparent (ring)| on-surface
+       disabled | container-low   | transparent       | neutral-low
+     "filled" reads `[data-part='editor']:not([data-empty])` DIRECTLY (no :has() indirection needed
+     — unlike text-field/textarea, whose editor is a SEPARATE part inside :scope, combo-box's
+     `[data-part='editor']` IS both the frame and the value surface); see @scope's selector below.
+     Declared here, consumed at the matching pseudo-/attribute selector in @scope (so @scope reads
+     only --ui-combo-box-*, never a role). */
+  --ui-combo-box-bg: var(--md-sys-color-neutral-container-low); /* default */
+  --ui-combo-box-bg-filled: var(--md-sys-color-neutral-container);
+  --ui-combo-box-bg-hover: var(--md-sys-color-neutral-container);
+  --ui-combo-box-bg-focus: var(--md-sys-color-neutral-container-low);
+  --ui-combo-box-border: transparent; /* default — the ring is the interactive indicator, not the border */
+  --ui-combo-box-border-hover: var(--md-sys-color-neutral-outline-variant); /* :hover — the ONE visible-border state */
   --ui-combo-box-border-focus: transparent; /* sole focus indicator = shared outline ring */
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction (the
-     trackUserInvalid controller owns that timing; combo-box.ts toggles :state(user-invalid)). */
+     trackUserInvalid controller owns that timing; combo-box.ts toggles :state(user-invalid)).
+     UNCHANGED/orthogonal to the table above — never touches bg. */
   --ui-combo-box-border-invalid: var(--md-sys-color-danger);
   --ui-combo-box-border-invalid-hover: var(--md-sys-color-danger-high);
-  --ui-combo-box-bg: var(--md-sys-color-neutral-surface);
-  --ui-combo-box-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-combo-box-placeholder: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-combo-box-ink: var(--md-sys-color-neutral); /* default — empty, idle */
+  --ui-combo-box-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-combo-box-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-combo-box-ink-focus: var(--md-sys-color-neutral-on-surface);
+  --ui-combo-box-placeholder: var(--ui-combo-box-ink); /* tracks the SAME default-state ink role dynamically (Kim's table has no separate placeholder row) — re-resolves live off whatever --ui-combo-box-ink cascades to, so the disabled repoint below reaches it for free */
+
+  /* Disabled state (TKT-0062's disabled row) — an indirection layer of -disabled-suffixed tokens
+     fed to the base bg/border/ink trio by the [disabled] block below (keeps the TKT-0047 shape). */
+  --ui-combo-box-border-disabled: transparent;
+  --ui-combo-box-bg-disabled: var(--md-sys-color-neutral-container-low);
+  --ui-combo-box-ink-disabled: var(--md-sys-color-neutral-low);
 
   /* Frame shape */
   --ui-combo-box-radius: var(--ui-radius-base);
@@ -106,6 +134,17 @@
   --ui-combo-box-option-selected-ink: var(--md-sys-color-primary-high);
 }
 
+/* ── disabled → muted neutral roles (TKT-0047, the select.css precedent) ──────────────────────── */
+/* TKT-0063: widened to `:is([disabled], :state(disabled))` — the own `[disabled]` attribute ALONE
+   missed the effective-disabled case (own || ancestor <fieldset disabled>/form-provider); combo-box.ts's
+   effectiveDisabled() effect now also sets :state(disabled), mirroring text-field.ts's own precedent. */
+:where(ui-combo-box:is([disabled], :state(disabled))) {
+  --ui-combo-box-border: var(--ui-combo-box-border-disabled);
+  --ui-combo-box-bg: var(--ui-combo-box-bg-disabled);
+  --ui-combo-box-ink: var(--ui-combo-box-ink-disabled);
+  --ui-combo-box-placeholder: var(--ui-combo-box-ink-disabled);
+}
+
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-combo-box) ════════════════ */
 
 @scope (ui-combo-box) {
@@ -122,6 +161,15 @@
 
   :scope > [data-part='editor'] {
     box-sizing: border-box;
+    /* Re-declare the placeholder alias AT THE EDITOR (TKT-0065 F13, second half of the fix): a custom
+       property resolves at computed-value time ON THE ELEMENT THAT DECLARES IT — the host-level
+       `--ui-combo-box-placeholder: var(--ui-combo-box-ink)` locks in the HOST's ink and inherits down
+       as a resolved value, so the state rules' editor-level ink repoints below never reached the
+       placeholder ::before (proven by the F13 regression test: hover/focus repainted the typed text but
+       the placeholder stayed frozen). Declaring the same alias here re-resolves it against the EDITOR's
+       own (state-repointed) ink. Own-chain read — @scope hygiene holds. Unlike text-field, whose state
+       rules live on the host itself, combo-box's frame IS the editor part, so the alias must live here. */
+    --ui-combo-box-placeholder: var(--ui-combo-box-ink);
     /* Control-class height (block-size off the ramp, not a content-height).
        line-height: 1 + padding-block: 0 = the text fills the box without double-spacing
        (matches --ui-control-line-height, ADR-0036). */
@@ -176,16 +224,51 @@
     user-select: none;
   }
 
-  :scope > [data-part='editor']:hover {
+  /* The filled/container state ladder (TKT-0062, Kim's ruling — supersedes the earlier border-only
+     channel) — repoints background/border-color/color together from the per-state tokens declared
+     in the :where() block (the geometry law is untouched). "filled" = the editor itself carries a
+     value (`:not([data-empty])`, the SAME emptiness signal the placeholder ::before above already
+     keys off) — read DIRECTLY on `[data-part='editor']` (no `:has()` indirection: combo-box's
+     editor IS both the frame and the value surface, unlike text-field/textarea's separate
+     editor-inside-host split).
+
+     Precedence is enforced by MUTUAL EXCLUSION (`:not()`), not source-order/specificity — the SAME
+     lesson text-field's law was fixed under (a `:not(:is(disabled))`-guarded `:hover` was measured
+     to OUTRANK an unguarded `:focus-within` by specificity, so clicking to focus — which also
+     leaves the pointer hovering — kept the hover border instead of stepping transparent, a live
+     regression that history was caught fixing). Making each rule EXPLICITLY exclude every state
+     that should outrank it removes the ambiguity regardless of computed specificity: filled
+     excludes hover/focus/disabled; hover excludes focus/disabled (fill state doesn't matter — hover
+     overrides regardless); focus is checked last (the `:not([aria-disabled='true'])` guard there is
+     defensive — `contenteditable="false"` already makes a disabled editor non-focusable,
+     combo-box.ts — so it should never actually engage). user-invalid's border-only override still
+     layers on top of whichever bg/ink row above resolved, untouched. */
+  /* NOTE (TKT-0065 lateral review, fixed — the text-field.css precedent): repointing the
+     --ui-combo-box-ink TOKEN itself, NOT a direct color: declaration — the placeholder ::before above
+     carries its own `color: var(--ui-combo-box-placeholder)`, which ALIASES the ink token; a property
+     repoint on the editor never reached it, so an EMPTY combo-box's placeholder stayed at the default
+     ink under hover/focus while text-field's repainted (proven frozen in a real Chromium+WebKit probe
+     before this fix — the exact TKT-0062 mechanic-[b] regression, one consumer over). */
+  :scope > [data-part='editor']:not(:hover):not(:focus):not([aria-disabled='true']):not([data-empty]) {
+    background-color: var(--ui-combo-box-bg-filled);
+    --ui-combo-box-ink: var(--ui-combo-box-ink-filled);
+  }
+  :scope > [data-part='editor']:not(:focus):not([aria-disabled='true']):hover {
+    background-color: var(--ui-combo-box-bg-hover);
     border-color: var(--ui-combo-box-border-hover);
+    --ui-combo-box-ink: var(--ui-combo-box-ink-hover);
   }
 
   /* Focus: the shared outline ring is the SOLE indicator (matches text-field's transparent
-     border-focus approach — a coloured border-focus would double with the ring). */
-  :scope > [data-part='editor']:focus {
+     border-focus approach — a coloured border-focus would double with the ring). Focus's bg/ink
+     (TKT-0062) override filled/hover unconditionally — a focused-and-filled editor still shows the
+     FOCUS row (container-low bg, on-surface ink), not filled's. */
+  :scope > [data-part='editor']:not([aria-disabled='true']):focus {
+    background-color: var(--ui-combo-box-bg-focus);
     border-color: var(--ui-combo-box-border-focus);
-    outline: 2px solid var(--md-sys-color-focus-ring);
-    outline-offset: 2px;
+    --ui-combo-box-ink: var(--ui-combo-box-ink-focus);
+    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--ui-focus-ring-offset);
   }
 
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. */
@@ -196,10 +279,11 @@
     border-color: var(--ui-combo-box-border-invalid-hover);
   }
 
-  /* Disabled */
+  /* Disabled — TKT-0047: converges on the fleet's dominant mechanism (token-repoint, not opacity).
+     The :where(ui-combo-box[disabled]) block above already repoints --ui-combo-box-border/-bg/-ink
+     (this rule's own base declarations already read those tokens) — no opacity needed. */
   :scope > [data-part='editor'][aria-disabled='true'] {
     cursor: default;
-    opacity: 0.5;
     pointer-events: none;
   }
 

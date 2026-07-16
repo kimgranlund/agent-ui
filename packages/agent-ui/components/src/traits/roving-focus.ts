@@ -53,8 +53,11 @@ export interface RovingFocusOptions {
    */
   typeAhead?: boolean
   /**
-   * Called each time the roving index changes. Use to couple selection-follows-focus (listbox/tabs)
-   * or to update `aria-activedescendant` (combobox active-descendant mode).
+   * Called each time the roving index changes. Use to couple selection-follows-focus (listbox/tabs).
+   * NOT an active-descendant seam: `moveTo()` unconditionally transfers REAL focus to the item, which
+   * is exactly what active-descendant hosts must never do — combo-box/command-modal correctly hand-roll
+   * their focus-stays-on-editor navigation instead (their in-file records; TKT-0065 lateral review
+   * trued this header to the shipped reality).
    */
   onMove?: (index: number) => void
   /**

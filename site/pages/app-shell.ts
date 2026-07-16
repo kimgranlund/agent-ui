@@ -18,7 +18,7 @@ import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cas
 import '@agent-ui/app/app-shell.css' // ui-app-shell light-mode region grid (after the foundation), as a2ui-live does
 import '@agent-ui/app/app-shell' // self-defines ui-app-shell / ui-app-shell-region
 import './app-shell.css' // page-local demo chrome only (region cells + the resizable frame) — never restyles a control's internals
-import { renderApiTable, renderPropertiesTable, heading } from '../lib/doc-page.ts'
+import { renderApiTable, renderPropertiesTable, renderChangelogTable, heading } from '../lib/doc-page.ts'
 import { parseDoc } from '../lib/frontmatter.ts'
 // The two shipped descriptors, pulled at build time via Vite's `?raw` (the frontmatter.ts convention). These ARE
 // the single source of truth the app package's own contract trip-wire (app-shell.test.ts) checks against.
@@ -173,7 +173,7 @@ content.append(
 )
 
 // ════════════════ 3 · The role system + the decouple ════════════════
-content.append(sectionHeading('3 · The role system — and decoupling it from the column (ADR-0083)'))
+content.append(sectionHeading('3 · The role system — and decoupling it from the column'))
 content.append(
   para(
     'By default, region drives TWO things at once: the grid column AND the ARIA landmark. A region sets its ' +
@@ -219,7 +219,7 @@ content.append(
 )
 
 // ════════════════ 4 · The narrow-reflow (collapse) system ════════════════
-content.append(sectionHeading('4 · The narrow-reflow system (ADR-0084)'))
+content.append(sectionHeading('4 · The narrow-reflow system'))
 content.append(
   para(
     'ui-app-shell establishes its own query container (container-type: inline-size) and reflows on ITS OWN width, ' +
@@ -277,7 +277,7 @@ content.append(
 )
 
 // ════════════════ 5 · Isolation (opt-in, per instance) ════════════════
-content.append(sectionHeading('5 · Isolation — opt-in style encapsulation (ADR-0082)'))
+content.append(sectionHeading('5 · Isolation — opt-in style encapsulation'))
 content.append(
   para(
     'The advanced, opt-in mechanism. ',
@@ -345,3 +345,12 @@ if (regionDoc.descriptor.attributes.length > 0) content.append(renderApiTable(re
   const props = renderPropertiesTable(regionDoc.descriptor, 4)
   if (props) content.append(props)
 }
+
+// Provenance (TKT-0053): the decisions behind sections 3–5, previously cited inline in their own headings,
+// now live here only — HAND-AUTHORED, not derivable from any canonical index.
+const changelog = renderChangelogTable([
+  { date: '2026-07-05', type: 'Decision', id: 'ADR-0082', summary: 'Per-instance style isolation: shadow root at connect, fleet CSS injected inside the boundary.' },
+  { date: '2026-07-06', type: 'Decision', id: 'ADR-0083', summary: "Decoupled a region's grid column from its ARIA landmark via the optional landmark prop." },
+  { date: '2026-07-06', type: 'Decision', id: 'ADR-0084', summary: 'Established the narrow-reflow strategy: per-region collapse (hide | stack) below a 40rem threshold.' },
+])
+if (changelog) content.append(changelog)

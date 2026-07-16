@@ -29,7 +29,7 @@ attributes:            # attributes-as-API — mirrors bar-chart.ts `static prop
   - name: label
     type: string
     default: ''
-    reflect: false      # NOT reflected — property-only accessible name; SPEC-R8: unlabeled is legal (never a silent state)
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
 
 properties: []         # no manual accessors beyond the two typed props
 

@@ -194,6 +194,26 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    label: 'ui-textarea',
+    cards: [
+      {
+        href: './textarea-permutations.html',
+        title: 'Permutations',
+        blurb: 'Every size × state of ui-textarea, plus the rows growable-minimum demo — no variant/type axis (ADR-0134).',
+      },
+      {
+        href: './textarea-states.html',
+        title: 'Interaction states',
+        blurb: 'The live field across placeholder, Enter-inserts-newline, focus, hover, validation, disabled, readonly, and resize — with an event log.',
+      },
+      {
+        href: './textarea-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-textarea attribute surface, generated from its textarea.md descriptor — it cannot drift.',
+      },
+    ],
+  },
+  {
     label: 'ui-text',
     cards: [
       {

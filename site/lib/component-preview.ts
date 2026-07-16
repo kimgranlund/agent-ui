@@ -402,10 +402,10 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
   },
   'ui-tabs': () => {
     const tab1 = document.createElement('ui-tab')
-    tab1.setAttribute('value', 'overview')
+    tab1.setAttribute('key', 'overview')
     tab1.textContent = 'Overview'
     const tab2 = document.createElement('ui-tab')
-    tab2.setAttribute('value', 'pricing')
+    tab2.setAttribute('key', 'pricing')
     tab2.textContent = 'Pricing'
     const panel1 = document.createElement('ui-tab-panel')
     panel1.textContent = 'The overview panel content.'
@@ -562,28 +562,28 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
 }
 
 // The component-mode counterpart to a2ui-mode's A2UI_INITIAL: a per-tag knob-value seed for a control whose
-// OWN descriptor default is not demonstrable (not a design fix — icon.md's `name: ''` default is CORRECT, an
+// OWN descriptor default is not demonstrable (not a design fix — icon.md's `glyph: ''` default is CORRECT, an
 // unset icon legitimately renders nothing; this only supplies a DEMO value, same discipline as A2UI_INITIAL
-// never touching the catalog). ui-icon is one fleet member: `name` defaults to '' (renders nothing, icon.ts:
+// never touching the catalog). ui-icon is one fleet member: `glyph` defaults to '' (renders nothing, icon.ts:
 // 38-41), so a bare specimen would be an invisible 0×0 box — seeded with a real, shipped Phosphor name so the
 // gallery's whole-shape law (box > 0) has something to measure. ui-grid/ui-field (batch B) seed a legible
 // starting prop value to go with their new sample children (grid-doc.ts's own gap/min; field.md's own default
 // label is '').
-// Wave M1 (ADR-0111/ADR-0113): ui-stat's `label`/`value` and ui-badge's `label` are real string knobs (not
-// a codec skip), but their descriptor default is '' (blank) — same demonstrability gap as ui-icon's `name`
+// Wave M1 (ADR-0111/ADR-0113): ui-stat's `label`/`figure` and ui-badge's `label` are real string knobs (not
+// a codec skip), but their descriptor default is '' (blank) — same demonstrability gap as ui-icon's `glyph`
 // — so a bare specimen would render an empty tile / an unlabeled dot. ui-disclosure's `summary` is likewise
 // a real string knob defaulting to '' — an unlabeled fold reads as a bare chevron with no affordance text.
-// Wave M1 (ADR-0118): ui-swatch's `value`/`label` are real string knobs (not a codec skip) but default to
-// '' (blank) — the same demonstrability gap as ui-icon's `name` — so a bare specimen would render an empty
+// Wave M1 (ADR-0118): ui-swatch's `color`/`label` are real string knobs (not a codec skip) but default to
+// '' (blank) — the same demonstrability gap as ui-icon's `glyph` — so a bare specimen would render an empty
 // transparent box with no name to read.
 const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
-  'ui-icon': { name: 'check' },
+  'ui-icon': { glyph: 'check' },
   'ui-grid': { gap: 'md', min: '8rem' },
   'ui-field': { label: 'Email' },
-  'ui-stat': { label: 'Revenue', value: '48200', delta: '12' },
+  'ui-stat': { label: 'Revenue', figure: '48200', delta: '12' },
   'ui-badge': { label: '3 failing', intent: 'danger' },
   'ui-disclosure': { summary: 'Full log' },
-  'ui-swatch': { value: '--md-sys-color-primary', label: 'primary' },
+  'ui-swatch': { color: '--md-sys-color-primary', label: 'primary' },
   // ui-timeline-item (ADR-0122): `label`/`timestamp` are real string knobs defaulting to '' — the same
   // demonstrability gap as ui-disclosure's `summary` above; a bare specimen would render an unlabeled dot.
   'ui-timeline-item': { status: 'done', label: 'Deployed', timestamp: 'Apr 15, 2:30 PM' },
@@ -689,6 +689,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-table', // connected() builds the scroll/table/thead/tbody skeleton — fully columns/rows-prop-driven, no light-DOM content model at all (slots: [] — table.md)
   'ui-tabs', // the control-created tablist strip PART
   'ui-text-field', // the contenteditable editor PART (×2 parts: editor + measurer)
+  'ui-textarea', // ADR-0134: the SAME contenteditable editor PART pattern as ui-text-field (editor + message)
   'ui-tooltip', // #ensureParts(): anchor (COMPONENT_SAMPLE_CHILDREN) + panel
   // Feed family (ADR-0112): ui-progress/ui-avatar/ui-attachment build their own display parts once
   // (replaceChildren/append) from PROPS alone — no light-DOM content model at all (slots: [] on all three).

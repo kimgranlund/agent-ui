@@ -22,49 +22,20 @@ import '@agent-ui/components/controls/select'
 import '@agent-ui/components/controls/slider'
 
 // ── the schema types (SPEC §4) ────────────────────────────────────────────────────────────────────────
-
-/** The v1 field-type set (SPEC-R10) — an unknown/future type degrades (generate.ts), never throws. */
-export type SettingsFieldType = 'text' | 'number' | 'boolean' | 'select' | 'slider' | 'date'
-
-export interface SettingsFieldValidation {
-  required?: boolean
-  min?: number
-  max?: number
-  step?: number
-  /** Only meaningful for `type: 'text'` — ignored (+ warned) on every other type (validate.ts). */
-  pattern?: string
-}
-
-export interface SettingsFieldOption {
-  value: string
-  label: string
-}
-
-export interface SettingsField {
-  key: string
-  type: SettingsFieldType
-  label: string
-  description?: string
-  default: unknown
-  validation?: SettingsFieldValidation
-  /** Required (and consumed) only by `type: 'select'`. */
-  options?: SettingsFieldOption[]
-}
-
-export interface SettingsSection {
-  id: string
-  label: string
-  description?: string
-  fields: SettingsField[]
-}
-
-/** `version` is a plain literal union of ONE member today — a future v2 schema adds a member here; an
- *  unrecognised runtime value (SPEC-R10 AC3) is handled at the generate.ts/settings.ts boundary, not by
- *  narrowing this type. */
-export interface SettingsSchema {
-  version: 1
-  sections: SettingsSection[]
-}
+// The six pure types hoisted to `@agent-ui/shared` (ADR-0135 Piece A) so below-`app` consumers can
+// describe a config as a schema. Imported for this registry's own internal use AND re-exported so every
+// existing app-side consumer (settings.ts / generate.ts / validate.ts / agent-admin-schema.ts) keeps
+// its current `'../settings/schema.ts'` import path unchanged. This file now owns ONLY the DOM/
+// components-coupled control registry below.
+import type { SettingsField, SettingsFieldType } from '@agent-ui/shared'
+export type {
+  SettingsFieldType,
+  SettingsFieldValidation,
+  SettingsFieldOption,
+  SettingsField,
+  SettingsSection,
+  SettingsSchema,
+} from '@agent-ui/shared'
 
 // ── the field → control registry (SPEC-R10 "the field-type → control registry") ──────────────────────
 

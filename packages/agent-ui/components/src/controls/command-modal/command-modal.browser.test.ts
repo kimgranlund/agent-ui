@@ -114,6 +114,25 @@ describe('ui-command-modal — whole-shape opened dialog (both engines)', () => 
     const list = el.querySelector<HTMLElement>('[data-part="list"]')!
     expect(list.scrollHeight, `${server.browser}: the list did not genuinely overflow its bound`).toBeGreaterThan(list.clientHeight)
   })
+
+  // TKT-0047 — the disabled option's `opacity: 0.5` was replaced with a token-repoint (the fleet's
+  // dominant disabled mechanism, matching select.css's fully-repointed [disabled] precedent).
+  it('a disabled option repaints ink to the muted role, fully opaque (no opacity dimming)', async () => {
+    const { el } = mount(`
+      <ui-command-modal label="Palette">
+        <div role="option" value="enabled">Enabled</div>
+        <div role="option" value="disabled" aria-disabled="true">Disabled</div>
+      </ui-command-modal>
+    `)
+    el.open = true
+    await el.updateComplete
+    const enabled = el.querySelector<HTMLElement>('[role=option][value=enabled]')!
+    const disabled = el.querySelector<HTMLElement>('[role=option][value=disabled]')!
+    expect(getComputedStyle(disabled).opacity, 'opacity dimming should be gone — the token repoint carries it now').toBe('1')
+    expect(getComputedStyle(disabled).color, 'the disabled ink must still repaint to the muted token').not.toBe(
+      getComputedStyle(enabled).color,
+    )
+  })
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════

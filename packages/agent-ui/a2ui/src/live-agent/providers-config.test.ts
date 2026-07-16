@@ -7,7 +7,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { validateProvidersConfig, resolvePair } from '../../tools/agent/providers-config.ts'
+import { validateProvidersConfig, resolvePair, providerForModel } from '../../tools/agent/providers-config.ts'
 import type { ProvidersConfig } from '../../tools/agent/providers-config.ts'
 
 declare const process: { cwd(): string }
@@ -55,5 +55,16 @@ describe('providers.json registry (LLD-C11 / SPEC-R11 AC2)', () => {
     expect(resolvePair(cfg, 'openai', 'gpt-4.1')).toEqual({ ok: false, reason: 'unimplemented' })
     expect(resolvePair(cfg, 'bogus', 'x')).toEqual({ ok: false, reason: 'unknown-provider' })
     expect(resolvePair(cfg, 'anthropic', 'not-a-model')).toEqual({ ok: false, reason: 'unknown-model' })
+  })
+
+  it('providerForModel derives the owning IMPLEMENTED provider from a bare model id (ALM-C5, TKT-0052)', () => {
+    const cfg = loadConfig()
+    // hit: an anthropic model → 'anthropic' (the browser never named the provider)
+    expect(providerForModel(cfg, 'claude-sonnet-5')).toBe('anthropic')
+    // unknown id → undefined
+    expect(providerForModel(cfg, 'not-a-real-model')).toBeUndefined()
+    // an id owned ONLY by an implemented:false provider (gpt-4.1 ∈ openai, implemented:false) → undefined —
+    // this is what keeps a not-yet-wired provider's models out of the derivation (a live-only 400 otherwise)
+    expect(providerForModel(cfg, 'gpt-4.1')).toBeUndefined()
   })
 })

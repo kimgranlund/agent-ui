@@ -73,6 +73,9 @@ export interface ProduceOptions {
   /** ADR-0090 §1/§4 — the per-turn Gen-UI disposition, threaded to `buildSystemPrompt`. Absent ⇒
    * `buildSystemPrompt` receives `undefined` ⇒ the default/zero-regression composition (Decision §1). */
   mode?: GenUiMode
+  /** ADR-0135 cl.7 — the mini-skill cap, now a tunable knob (was the hardcoded `DEFAULT_MINI_SKILL_CAP`
+   * module constant). Absent ⇒ `DEFAULT_MINI_SKILL_CAP`, reproducing today's behavior byte-for-byte. */
+  miniSkillCap?: number
 }
 
 /**
@@ -259,7 +262,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   const k = opts.k ?? 3
   const query = queryOf(input, k)
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
-  const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP) // ADR-0091 §2 — once per turn, beside retrieve()
+  const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default
   const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills
   const model = opts.model ?? input.model ?? DEFAULT_MODEL // opts.model = the proxy's allowlist-validated model (SPEC-R12); it WINS over a client-supplied input.model
   // ADR-0088 §2 — data ALREADY flowing above, captured once for the eventual TurnTrace (no new collection).

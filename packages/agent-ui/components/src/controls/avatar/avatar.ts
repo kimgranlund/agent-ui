@@ -3,14 +3,14 @@
 // no focus. The fallback chain (SPEC-R5) never renders a broken-image box and never renders empty —
 // exactly one of `src` image / initials / person glyph paints at a time.
 //
-// ONE render effect (reads src/name/#failedSrc) walks the chain in order:
+// ONE render effect (reads src/identity/#failedSrc) walks the chain in order:
 //   1. `src` non-empty AND not the failed src ⇒ an <img alt=""> (empty-alt — the Option/MenuItem sanction;
 //      host ARIA stays on internals) with an `error` listener that records the src into `#failedSrc`. The
 //      effect re-runs on that write and falls through to initials/glyph — no broken-image final state. A
 //      NEW `src` no longer equals `#failedSrc`, so it re-attempts (SPEC-R5's re-attempt transition falls
 //      out of the equality check, no extra state machine); clearing `src` falls back immediately.
-//   2. else `initialsFrom(name)` non-empty ⇒ a `<span data-part="initials">`.
-//   3. else ⇒ `<ui-icon name="user">` — decorative by its own default; the icon control module is
+//   2. else `initialsFrom(identity)` non-empty ⇒ a `<span data-part="initials">`.
+//   3. else ⇒ `<ui-icon glyph="user">` — decorative by its own default; the icon control module is
 //      statically imported so the tag is defined before use (the sanctioned sibling-control import).
 //
 // A second effect owns ARIA (SPEC-R6) — the `ui-icon` contract shape verbatim: decorative by default
@@ -26,8 +26,8 @@ import { UIIconElement } from '../icon/icon.ts' // sanctioned sibling-control im
 
 const props = {
   src: prop.string(''), // image URL; a load error falls back without ever painting a broken-image box
-  name: prop.string(''), // the identity the initials derive from; NOT announced by default (SPEC-R6)
-  label: prop.string(''), // the a11y escape hatch — non-empty makes the avatar itself the accessible name
+  identity: prop.string(''), // the identity the initials derive from; NOT announced by default (SPEC-R6). Renamed from `name` (TKT-0069 item 1 ruling: `name` = the FORM name, reserved; the A2UI catalog keeps wire `name`, mapped in its bespoke factory)
+  label: { ...prop.string(''), reflect: true }, // the a11y escape hatch — non-empty makes the avatar itself the accessible name
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true }, // reflected — the CSS [size] hook
 } satisfies PropsSchema
 
@@ -42,7 +42,7 @@ export class UIAvatarElement extends UIElement {
   protected override connected(): void {
     this.effect(() => {
       const src = this.src
-      const name = this.name
+      const name = this.identity
       const failedSrc = this.#failedSrc.value
 
       if (src !== '' && src !== failedSrc) {
@@ -64,7 +64,7 @@ export class UIAvatarElement extends UIElement {
       }
 
       const icon = document.createElement('ui-icon') as UIIconElement
-      icon.name = 'user'
+      icon.glyph = 'user'
       this.replaceChildren(icon)
     })
 

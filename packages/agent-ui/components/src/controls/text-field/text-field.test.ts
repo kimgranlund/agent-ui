@@ -1749,8 +1749,8 @@ describe('ui-text-field type=color — swatch affordance + codec + typeMismatch 
     const { el } = makeTyped('color')
     el.value = '#3b82f6'
     await whenFlushed()
-    const swatch = el.querySelector('[data-part="swatch-button"] ui-swatch') as unknown as { value: string }
-    expect(swatch.value).toBe('#3b82f6')
+    const swatch = el.querySelector('[data-part="swatch-button"] ui-swatch') as unknown as { color: string }
+    expect(swatch.color).toBe('#3b82f6')
     el.remove()
   })
 

@@ -109,11 +109,11 @@ const itemParsed = parseDescriptor(itemFence)
 const itemTs = readFileSync(`${DIR}/swiper-item.ts`, 'utf8') as string
 
 describe('swiper-item.md descriptor', () => {
-  it('tag ui-swiper-item; tier layout; extends UIElement; attributes=[value]', () => {
+  it('tag ui-swiper-item; tier layout; extends UIElement; attributes=[key]', () => {
     expect(/^tag:\s*ui-swiper-item\s*$/m.test(itemFence)).toBe(true)
     expect(/^tier:\s*layout\b/m.test(itemFence)).toBe(true)
     expect(/^extends:\s*UIElement\b/m.test(itemFence)).toBe(true)
-    expect(itemParsed.attributes.map((a) => a.name)).toEqual(['value'])
+    expect(itemParsed.attributes.map((a) => a.name)).toEqual(['key'])
   })
 
   it('validateComponentDescriptor is schema-valid + the props bijection holds (0 drift)', () => {

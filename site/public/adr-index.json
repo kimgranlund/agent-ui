@@ -915,5 +915,33 @@
     "description": "Agent Admin's Instructions/Settings become a generic ordered-entry-list foundation (Kim's directive: \"we cannot just have a simple 'Instructions' text field\")…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0133",
+    "url": "./adr-index.html#adr-0133",
+    "description": "ui-button gains a real [data-part=\"label\"] wrapper — the evidence-backed anatomy follow-up ADR-0106 clause 6 reserved (TKT-0042 supplies the evidence: a report…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0134",
+    "url": "./adr-index.html#adr-0134",
+    "description": "A new FACE primitive ui-textarea for long-form multi-line text — a SIBLING of ui-text-field, not a text-field mode (TKT-0041 acceptance path B: the user chose…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0135",
+    "url": "./adr-index.html#adr-0135",
+    "description": "The agent harness's config unifies on a hoisted SettingsSchema and its prompt text moves into files — three intertwined pieces, one change. Piece A: hoist Sett…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0136",
+    "url": "./adr-index.html#adr-0136",
+    "description": "ui-agent-admin's chat preview gains an opt-in, DEV-only live-model overlay, reusing the already-proven AgentTransport/dev-proxy-plugin.ts seam a2ui-live.ts (LL…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

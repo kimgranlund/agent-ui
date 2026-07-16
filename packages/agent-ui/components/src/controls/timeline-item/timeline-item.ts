@@ -50,7 +50,7 @@ const props = {
   // interface names the constructors; the CSS [status]/[size] repoint (and the AC2 round-trip itself)
   // requires `reflect: true`, the container.ts/disclosure.ts convention for every attribute-selector-driven prop.
   status: { ...prop.enum(STATUS, ''), reflect: true }, // '' = neutral marker (F3)
-  label: prop.string(''),
+  label: { ...prop.string(''), reflect: true },
   description: prop.string(''),
   timestamp: prop.string(''), // the consumer's string — NO codec (F6)
   icon: prop.string(''), // a marker glyph name replacing the dot (adia icon-mode)

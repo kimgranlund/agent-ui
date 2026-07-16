@@ -2,7 +2,7 @@
 # attachment.md frontmatter — the attributes-as-API descriptor for ui-attachment (ADR-0004; LLD-C10,
 # feed-family.lld.md §6; SPEC-R8/R9/R10; ADR-0112 Amendment 1 — the sizeBytes rename). The machine-checkable
 # public surface lives HERE (frontmatter); the prose below the fence is the /site doc. The `attributes[]`
-# block MUST mirror attachment.ts `static props` (name/mimeType/sizeBytes/href) — the contract<->props
+# block MUST mirror attachment.ts `static props` (filename/mimeType/sizeBytes/href) — the contract<->props
 # trip-wire (attachment-descriptor.test.ts) targets this fence.
 tag: ui-attachment
 description: A non-interactive compact file card showing a category glyph, name, and formatted size for one attached file.
@@ -12,8 +12,8 @@ extends: UIElement     # a non-interactive, non-form-associated display LEAF (SP
 # integration slice (barrel export, component-styles.css import, package.json exports entry); the real
 # `npm run size` figure lands with that slice, per feed-family.lld.md §11.
 
-attributes:            # attributes-as-API — mirrors attachment.ts `static props` (name, mimeType, sizeBytes, href)
-  - name: name
+attributes:            # attributes-as-API — mirrors attachment.ts `static props` (filename, mimeType, sizeBytes, href)
+  - name: filename
     type: string
     default: ''
     reflect: false      # NOT reflected — property-only render input; empty falls back to the category label
@@ -93,7 +93,7 @@ forcedColors: An explicit `@media (forced-colors: active)` block repoints the ca
 and **not** form-associated: no events, no keyboard contract, no `[size]`/`[scale]` control geometry.
 
 ```html
-<ui-attachment name="report.pdf" mime-type="application/pdf" size-bytes="48200"></ui-attachment>
+<ui-attachment filename="report.pdf" mime-type="application/pdf" size-bytes="48200"></ui-attachment>
 <ui-attachment mime-type="image/png" size-bytes="12000"></ui-attachment> <!-- name falls back to "Image" -->
 ```
 

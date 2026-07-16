@@ -24,7 +24,7 @@ const css = readFileSync(`${DIR}/avatar.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['src', 'name', 'label', 'size']
+const ATTR_NAMES = ['src', 'identity', 'label', 'size']
 
 describe('avatar.md descriptor — structural validity', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -66,12 +66,12 @@ describe('avatar.md descriptor — contract↔props trip-wire', () => {
     expect(drift).toEqual([])
   })
 
-  it('src/name/label are string, reflect=false, default=\'\'', () => {
-    for (const name of ['src', 'name', 'label']) {
+  it('src/name are string, reflect=false; label reflects (TKT-0069 item 2 ruling); all default \'\'', () => {
+    for (const name of ['src', 'identity', 'label']) {
       const a = parsed.attributes.find((x) => x.name === name)
       expect(a?.type, name).toBe('string')
       expect(a?.default, name).toBe('')
-      expect(a?.reflect, name).toBe(false)
+      expect(a?.reflect, name).toBe(name === 'label')
     }
   })
 
@@ -90,9 +90,9 @@ describe('avatar.md descriptor — contract↔props trip-wire', () => {
     expect(compareDescriptorToProps(flipReflect, UIAvatarElement.props)).toContainEqual(
       expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.size.reflect' }),
     )
-    const dropName = parsed.attributes.filter((a) => a.name !== 'name')
+    const dropName = parsed.attributes.filter((a) => a.name !== 'identity')
     expect(compareDescriptorToProps(dropName, UIAvatarElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_MISSING', path: 'attributes.name' }),
+      expect.objectContaining({ code: 'DRIFT_MISSING', path: 'attributes.identity' }),
     )
   })
 })

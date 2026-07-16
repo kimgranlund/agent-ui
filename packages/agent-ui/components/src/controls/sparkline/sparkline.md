@@ -28,7 +28,7 @@ attributes:            # attributes-as-API — mirrors sparkline.ts `static prop
   - name: label
     type: string
     default: ''
-    reflect: false      # NOT reflected — property-only accessible context (prefixes the generated summary)
+    reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
   - name: variant
     type: enum
     values: [line, area]
