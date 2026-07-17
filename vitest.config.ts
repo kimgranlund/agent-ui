@@ -143,6 +143,11 @@ export default defineConfig({
       // Kept ready regardless, so a future site import switching to the bare specifier needs no new row.
       '@agent-ui/a2ui/agent': r('./packages/agent-ui/a2ui/src/agent/index.ts'),
       '@agent-ui/a2ui': r('./packages/agent-ui/a2ui/src/index.ts'),
+      // ADR-0139 — the `./editor` subpath (ui-code-editor). `@agent-ui/app`'s entry-list.ts/agent-admin.ts are
+      // the first cross-package consumers of `@agent-ui/code/editor` (the CM editor); a jsdom test driving
+      // agent-admin transitively imports it, so it resolves through this row. Placed as an exact entry (there
+      // is no broad `@agent-ui/code` alias to prefix-collide with; mirrors the package's `exports['./editor']`).
+      '@agent-ui/code/editor': r('./packages/agent-ui/code/src/editor/index.ts'),
       // The A2A arena's zero-dep surface (board/referee/transcript/isolation, LLD-C11) — mirrors the
       // `@agent-ui/a2ui` broad alias above; the site demo page is its first consumer.
       '@agent-ui/a2a': r('./packages/agent-ui/a2a/src/index.ts'),

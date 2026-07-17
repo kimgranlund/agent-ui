@@ -6,6 +6,7 @@
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css → dimensions.css (FIRST)
 import '@agent-ui/components/base-styles.css' // [1b] the DOCUMENT BASE layer: typeface/leading/ink/rendering (shell-less pages need this or they render in the UA serif)
 import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation
+import '@agent-ui/code/editor.css' // [2b] ADR-0139 — ui-code-editor's own sheet (the entry editors' frame + CM highlight tokens)
 import '@agent-ui/components/components' // [3] self-defining ui-* controls
 import '@agent-ui/icons/phosphor' // [3b] the Phosphor default pack — composer/entry-list glyphs render real SVGs
 import '@agent-ui/app/master-detail-pane.css'

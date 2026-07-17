@@ -959,6 +959,13 @@
     "section": "Records"
   },
   {
+    "name": "ADR-0139",
+    "url": "./adr-index.html#adr-0139",
+    "description": "CodeMirror 6 becomes agent-ui's first genuine third-party runtime dependency — a lazy-loaded ./editor subpath on @agent-ui/code (accepted — TKT-0090 intake; Ki…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "ADR-0140",
     "url": "./adr-index.html#adr-0140",
     "description": "The system-token consolidation (proposed — the THEMING intake; Kim's \"embrace --md-sys-* throughout\", clarified to FULL shared migration): every SHARED foundat…",

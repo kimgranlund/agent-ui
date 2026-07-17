@@ -32,6 +32,7 @@
   "dependencies": {
     "@agent-ui/components": "*",
     "@agent-ui/a2ui": "*",
-    "@agent-ui/shared": "*"
+    "@agent-ui/shared": "*",
+    "@agent-ui/code": "*"
   }
 }

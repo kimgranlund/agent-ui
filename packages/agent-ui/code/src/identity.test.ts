@@ -38,6 +38,33 @@ describe('the identity gate — importing the core barrel registers nothing (LLD
   })
 })
 
+// The CodeMirror exception stays confined (ADR-0139 cl.8a) — the DEFAULT barrels (`.`, ./highlight,
+// ./markdown) remain CodeMirror-free for any consumer not importing `./editor`. Source-text CM-freeness on
+// the three barrels + the no-registration proof; the STATIC-graph proof that CM appears nowhere outside
+// editor/cm-editor.ts is the separate editor/confinement.test.ts, and the tree-shake proof that `.` never
+// re-exports a pack (now incl. ./editor) is barrels.test.ts.
+describe('the default barrels stay CodeMirror-free — the ADR-0139 exception is opt-in (cl.8a)', () => {
+  const PKG = `${process.cwd()}/packages/agent-ui/code`
+  const CM_RE = /@codemirror\/|@lezer\//
+
+  it('the `.`, ./highlight and ./markdown barrel sources reference no @codemirror/@lezer', () => {
+    for (const rel of ['src/index.ts', 'src/highlight/index.ts', 'src/markdown/index.ts']) {
+      const src = readFileSync(`${PKG}/${rel}`, 'utf8') as string
+      expect(src, rel).not.toMatch(CM_RE)
+    }
+  })
+
+  it('importing the core `.` barrel registers no ui-code-editor (the CM control is reachable ONLY via ./editor)', () => {
+    // This test file imports `./index.ts` (the core barrel) but never `./editor.ts`; with per-file module
+    // isolation, ui-code-editor is registered only if the core graph pulled it — it must not.
+    expect(customElements.get('ui-code-editor')).toBeUndefined()
+  })
+
+  it('negative control: the CM matcher would catch a planted @codemirror reference in a barrel', () => {
+    expect(`export { markdown } from '@codemirror/lang-markdown'`).toMatch(CM_RE)
+  })
+})
+
 describe('the empty path is byte-identical (SPEC-C3 AC2 — the identity level)', () => {
   it('projectHighlight with an empty registry yields a single text node equal to the code, byte-level', () => {
     const host = document.createElement('ui-code')

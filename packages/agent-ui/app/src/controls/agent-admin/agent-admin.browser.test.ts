@@ -7,6 +7,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 // CSS), then every composed sibling's own CSS, then this element's own.
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
+import '@agent-ui/code/editor.css' // ADR-0139 — ui-code-editor's own sheet (the entry editors' frame + CM highlight tokens)
 import '../master-detail/master-detail.css'
 import '../master-detail/master-detail-pane.css'
 import '../nav-rail/nav-rail.css'
@@ -21,7 +22,7 @@ import '@agent-ui/components/controls/tabs'
 import './agent-admin.css'
 import './agent-admin.ts'
 import type { UIAgentAdminElement } from './agent-admin.ts'
-import type { UITextareaElement } from '@agent-ui/components/controls/textarea'
+import type { UICodeEditorElement } from '@agent-ui/code/editor'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 // Activates the Phosphor pack (TKT-0048) — without this, `ui-icon[glyph="plus"]` renders an EMPTY (but
 // still correctly-sized) leading cell: `resolveIcon` against an inactive registry doesn't throw, so a
@@ -249,7 +250,7 @@ describe('ui-agent-admin cross-engine smoke — an uncommitted edit survives a s
     const { el } = mountAgentAdmin()
     const foundationField = el.querySelector(
       '[data-entry-id="foundation"] [data-part="entry-content"]',
-    ) as UITextareaElement
+    ) as UICodeEditorElement
     foundationField.focus()
     foundationField.value = 'Half-typed, never committed'
     foundationField.dispatchEvent(new Event('input', { bubbles: true }))
@@ -262,7 +263,7 @@ describe('ui-agent-admin cross-engine smoke — an uncommitted edit survives a s
 
     const foundationAfter = el.querySelector(
       '[data-entry-id="foundation"] [data-part="entry-content"]',
-    ) as UITextareaElement
+    ) as UICodeEditorElement
     expect(foundationAfter.value).toBe('Half-typed, never committed')
     // component-reviewer MINOR fix: entry-list.ts's restore path awaits `updateComplete` before calling
     // `selectToEnd()` (the model→surface sync that populates the editor's textContent is async, and
@@ -400,11 +401,11 @@ describe('ui-agent-admin cross-engine smoke — TKT-0045: no pane overflows at t
   })
 })
 
-describe('ui-agent-admin cross-engine smoke — TKT-0049: entry-content/entry-add-content min-height is driven by ui-textarea\'s own `rows` lever, not dead agent-admin.css', () => {
-  // `--ui-textarea-min-block-size`'s formula (textarea.css:52): rows × line-box + 2×padding-block, where
-  // line-box = font-size × 1.5 and padding-block = font-size × 0.5. Deriving the expected px from the
-  // field's OWN real computed font-size (never a hardcoded px) proves the FIX mechanism — `rows` is the
-  // one lever that moves this — rather than re-asserting a specific legacy pixel value.
+describe('ui-agent-admin cross-engine smoke — TKT-0049/ADR-0139: entry-content/entry-add-content min-height is driven by ui-code-editor\'s own `rows` lever, not dead agent-admin.css', () => {
+  // `--ui-code-editor-min-block-size`'s formula (editor.css): rows × line-box + 2×padding-block, where
+  // line-box = font-size × 1.5 and padding-block = font-size × 0.5 (identical to the ui-textarea it replaced,
+  // ADR-0139 cl.6). Deriving the expected px from the field's OWN real computed font-size (never a hardcoded
+  // px) proves the `rows` mechanism carried over rather than re-asserting a specific legacy pixel value.
   function expectedMinBlockSize(field: HTMLElement, rows: number): number {
     const fontSize = Number.parseFloat(getComputedStyle(field).fontSize)
     const lineBox = fontSize * 1.5
@@ -414,7 +415,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0049: entry-content/entry-ad
 
   it('entry-content (rows=4) renders a real computed min-height matching the rows formula', () => {
     const { el } = mountAgentAdmin()
-    const field = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as UITextareaElement
+    const field = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as UICodeEditorElement
     expect(field.rows).toBe(4)
     const computed = Number.parseFloat(getComputedStyle(field).minHeight)
     expect(computed).toBeCloseTo(expectedMinBlockSize(field, 4), 1)
@@ -424,7 +425,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0049: entry-content/entry-ad
     const { el } = mountAgentAdmin()
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
-    const field = section.querySelector('[data-part="entry-add-content"]') as UITextareaElement
+    const field = section.querySelector('[data-part="entry-add-content"]') as UICodeEditorElement
     expect(field.rows).toBe(2)
     const computed = Number.parseFloat(getComputedStyle(field).minHeight)
     expect(computed).toBeCloseTo(expectedMinBlockSize(field, 2), 1)
@@ -432,7 +433,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0049: entry-content/entry-ad
 
   it('changing `.rows` moves entry-content\'s rendered min-height (proves the mechanism; catches a future competing CSS rule that WINS the cascade)', async () => {
     const { el } = mountAgentAdmin()
-    const field = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as UITextareaElement
+    const field = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as UICodeEditorElement
     const before = Number.parseFloat(getComputedStyle(field).minHeight)
     field.rows = 8
     await field.updateComplete // the rows→CSS-custom-property write rides a reactive effect, not a sync write
@@ -442,7 +443,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0049: entry-content/entry-ad
   })
 })
 
-describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059: entry-content/entry-add-content render off ui-textarea\'s OWN tokens, not agent-admin.css\'s dead competing declarations', () => {
+describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entry-content/entry-add-content render off ui-code-editor\'s OWN tokens, not agent-admin.css\'s dead competing declarations', () => {
   // TKT-0049 proved `min-block-size` alone; TKT-0050 extended real computed-style evidence to the REST of
   // both rule blocks (box-sizing/resize/font/color/background/border/border-radius/padding) — every one of
   // them loses to `ui-textarea`'s own `@scope`-scoped `:scope { ... }` rule via the same scoping-proximity
@@ -454,7 +455,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059: entry-content
   // renders — --md-sys-color-neutral, ui-textarea's own idle border token).
   function expectedPadding(field: HTMLElement): { block: number; inline: number } {
     const fontSize = Number.parseFloat(getComputedStyle(field).fontSize)
-    return { block: fontSize * 0.5, inline: fontSize * 0.75 } // textarea.css:49-50's formula
+    return { block: fontSize * 0.5, inline: fontSize * 0.75 } // editor.css's formula (same factors as textarea's)
   }
 
   it('entry-content and entry-add-content render the SAME computed padding despite agent-admin.css declaring two different literal values for them (both dead)', () => {
@@ -472,7 +473,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059: entry-content
     }
   })
 
-  it('entry-content\'s idle border-color is ui-textarea\'s OWN --ui-textarea-border token, not agent-admin.css\'s --ui-agent-admin-border (a genuinely different role)', () => {
+  it('entry-content\'s idle border-color is ui-code-editor\'s OWN --ui-code-editor-border token, not agent-admin.css\'s --ui-agent-admin-border (a genuinely different role)', () => {
     const { el } = mountAgentAdmin()
     const entryContent = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
     // component-reviewer MINOR fix: comparing a RAW custom-property string (e.g. an unresolved
@@ -482,11 +483,11 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059: entry-content
     // inside the SAME tree (so `light-dark()` picks up the identical colour-scheme context) and read back
     // ITS computed value — a genuine apples-to-apples comparison.
     function resolveBorderColor(token: string): string {
-      // `--ui-textarea-border` is declared ON `:where(ui-textarea)` itself (textarea.css:34) — custom
+      // `--ui-code-editor-border` is declared ON `:where(ui-code-editor)` itself (editor.css) — custom
       // properties inherit DOWNWARD only, so the probe must be a DESCENDANT of entryContent to see it (a
-      // sibling/ancestor probe would resolve an unset token instead). ui-textarea only ever references its
-      // editor/message parts by stored reference (never by children[] index or count — verified against
-      // textarea.ts), so an extra light-DOM child is inert to its own logic; removed immediately after read.
+      // sibling/ancestor probe would resolve an unset token instead). ui-code-editor only ever references its
+      // editor/message/cm parts by stored reference (never by children[] index or count — verified against
+      // editor.ts), so an extra light-DOM child is inert to its own logic; removed immediately after read.
       const probe = document.createElement('div')
       probe.style.borderStyle = 'solid'
       probe.style.borderColor = `var(${token})`
@@ -496,11 +497,11 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059: entry-content
       return resolved
     }
     const renderedBorderColor = getComputedStyle(entryContent).borderColor
-    expect(renderedBorderColor).toBe(resolveBorderColor('--ui-textarea-border'))
+    expect(renderedBorderColor).toBe(resolveBorderColor('--ui-code-editor-border'))
     expect(renderedBorderColor).not.toBe(resolveBorderColor('--ui-agent-admin-border'))
   })
 
-  it('TKT-0059: entry-content/entry-add-content\'s ui-textarea renders the SAME font-size/border-color/border-radius as the settings pane\'s ui-text-field (Name field) — the reported mismatch does not reproduce', async () => {
+  it('TKT-0059/ADR-0139: entry-content/entry-add-content\'s ui-code-editor renders the SAME font-size/border-color/border-radius as the settings pane\'s ui-text-field (Name field) — the frame parity carries over from ui-textarea', async () => {
     const { el } = mountAgentAdmin()
     const entryContent = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
 
@@ -513,11 +514,11 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059: entry-content
     const nameField = el.querySelector('[data-role="settings"] ui-text-field[name="name"]') as HTMLElement
     expect(nameField).not.toBeNull()
 
-    const textareaStyle = getComputedStyle(entryContent)
+    const editorStyle = getComputedStyle(entryContent)
     const textFieldStyle = getComputedStyle(nameField)
-    expect(textareaStyle.fontSize).toBe(textFieldStyle.fontSize)
-    expect(textareaStyle.borderColor).toBe(textFieldStyle.borderColor)
-    expect(textareaStyle.borderRadius).toBe(textFieldStyle.borderRadius)
+    expect(editorStyle.fontSize).toBe(textFieldStyle.fontSize)
+    expect(editorStyle.borderColor).toBe(textFieldStyle.borderColor)
+    expect(editorStyle.borderRadius).toBe(textFieldStyle.borderRadius)
   })
 
   it('the entry-content/entry-add-content :focus-visible rule never matches (focus lands on ui-textarea\'s internal editor, not the host) — dead by a DIFFERENT mechanism than the cascade-proximity loss above', () => {

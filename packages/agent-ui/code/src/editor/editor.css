@@ -1,0 +1,219 @@
+/* editor.css — ui-code-editor, the single-file component stylesheet (ADR-0003 / ADR-0139). Two SECTIONED
+ * blocks, mirroring textarea.css:
+ *
+ *   [1] TOKEN BLOCK — `:where(ui-code-editor)` (specificity 0,0,0) DECLARES the `--ui-code-editor-*` chain:
+ *       the neutral field-frame colour ladder (the ui-textarea TKT-0062 filled/container state law, reused
+ *       verbatim — a code editor is the same entry-control kin as a textarea, only its surface differs), the
+ *       multi-line geometry law (ADR-0134: rows is a growable MINIMUM), and the highlight `--ui-code-editor-
+ *       token-*` roles fed by `--md-sys-color-*` ROLES (the ./highlight pack's own non-numbered-step mapping).
+ *   [2] STYLES BLOCK — `@scope (ui-code-editor)` CONSUMES only `--ui-code-editor-*` (the one fleet exception:
+ *       the shared focus-ring + motion constants, read directly — the text-field/textarea precedent). It
+ *       styles BOTH surfaces: the plain contenteditable `[data-part='editor']` (the editable-first fallback)
+ *       and the CodeMirror mount `[data-part='cm']` + its `.cm-*` internals + the class-based `tok-*` highlight
+ *       spans. `EditorView.theme()` stays structural-only (cm-editor.ts); every colour rides here (ADR-0139
+ *       cl.4). Token colour is a non-essential enhancement (SPEC-C5): the source is legible as plain ink with
+ *       or without it — no information rides hue alone, so no non-colour signifier is owed.
+ *
+ * Standalone stylesheet — exported as `./editor.css`; NEVER injected from editor.ts (behaviour-only .ts). */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-code-editor) declares --ui-code-editor-* ════════════════ */
+
+:where(ui-code-editor) {
+  /* Field-frame colour ladder (family = neutral) — the ui-textarea TKT-0062 filled/container state law
+     reused verbatim: three channels (bg/border/ink) repoint across five states (default/filled/hover/
+     focus/disabled); user-invalid is an orthogonal border-only danger layer. */
+  --ui-code-editor-bg: var(--md-sys-color-neutral-container-low);
+  --ui-code-editor-bg-filled: var(--md-sys-color-neutral-container);
+  --ui-code-editor-bg-hover: var(--md-sys-color-neutral-container);
+  --ui-code-editor-bg-focus: var(--md-sys-color-neutral-container-low);
+  --ui-code-editor-border: transparent;
+  --ui-code-editor-border-hover: var(--md-sys-color-neutral-outline-variant);
+  --ui-code-editor-border-focus: transparent; /* the shared outline ring is the SOLE focus indicator */
+  --ui-code-editor-border-invalid: var(--md-sys-color-danger);
+  --ui-code-editor-border-invalid-hover: var(--md-sys-color-danger-high);
+  --ui-code-editor-ink: var(--md-sys-color-neutral);
+  --ui-code-editor-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-code-editor-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-code-editor-ink-focus: var(--md-sys-color-neutral-on-surface);
+  --ui-code-editor-placeholder: var(--ui-code-editor-ink);
+
+  /* Geometry — the MULTI-LINE law (ADR-0134). Fixed font (this control carries no [size] lever); padding /
+     line-box DERIVE from it via calc(). rows is a growable MINIMUM, never a fixed §1-row height. */
+  --ui-code-editor-font: var(--md-sys-font-md);
+  --ui-code-editor-line-height: 1.5; /* prose line-height — NEVER the single-line control's line-height:1 */
+  --ui-code-editor-line-box: calc(var(--ui-code-editor-font) * var(--ui-code-editor-line-height));
+  --ui-code-editor-padding-block: calc(var(--ui-code-editor-font) * 0.5);
+  --ui-code-editor-padding-inline: calc(var(--ui-code-editor-font) * 0.75);
+  --ui-code-editor-rows: 4; /* the JS-set inline --ui-code-editor-rows overrides this per-instance (editor.ts) */
+  --ui-code-editor-min-block-size: calc(var(--ui-code-editor-rows) * var(--ui-code-editor-line-box) + 2 * var(--ui-code-editor-padding-block));
+  --ui-code-editor-radius: var(--md-sys-shape-corner-base);
+  --ui-code-editor-min-inline-size: 20ch; /* the entry-control typing-width floor (ADR-0021), textarea parity */
+
+  /* Visible inline-validation message tokens (ADR-0029 A1, the textarea precedent). */
+  --ui-code-editor-message-font: var(--md-sys-font-sm);
+  --ui-code-editor-message-ink: var(--md-sys-color-danger-on-surface-variant);
+
+  /* Highlight token roles — the markdown constructs' colours, fed from --md-sys-color-* ROLES (the
+     ./highlight.css mapping reused; role-family only). */
+  --ui-code-editor-token-comment: var(--md-sys-color-neutral-on-surface-variant); /* muted */
+  --ui-code-editor-token-heading: var(--md-sys-color-primary-on-surface); /* accent */
+  --ui-code-editor-token-keyword: var(--md-sys-color-primary-on-surface);
+  --ui-code-editor-token-string: var(--md-sys-color-success-on-surface);
+  --ui-code-editor-token-link: var(--md-sys-color-accent-on-surface);
+  --ui-code-editor-token-punctuation: var(--md-sys-color-neutral-on-surface); /* default ink */
+}
+
+/* disabled → a role-REPOINT (NOT opacity, tokens.md canon), the textarea precedent. */
+:where(ui-code-editor:is([disabled], :state(disabled))) {
+  --ui-code-editor-bg: var(--md-sys-color-neutral-container-low);
+  --ui-code-editor-border: transparent;
+  --ui-code-editor-ink: var(--md-sys-color-neutral-low);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-code-editor) consumes ONLY --ui-code-editor-* ════════════════ */
+
+@scope (ui-code-editor) {
+  :scope {
+    display: block;
+    box-sizing: border-box;
+    min-block-size: var(--ui-code-editor-min-block-size);
+    min-inline-size: var(--ui-code-editor-min-inline-size);
+    padding-block: var(--ui-code-editor-padding-block);
+    padding-inline: var(--ui-code-editor-padding-inline);
+    overflow-y: auto;
+    resize: vertical; /* native <textarea> parity */
+    font-size: var(--ui-code-editor-font);
+    line-height: var(--ui-code-editor-line-height);
+    background: var(--ui-code-editor-bg);
+    color: var(--ui-code-editor-ink);
+    border: 1px solid var(--ui-code-editor-border);
+    border-radius: var(--ui-code-editor-radius);
+    cursor: text;
+  }
+
+  /* the plain contenteditable editor part (the editable-first fallback surface). */
+  :scope > [data-part='editor'] {
+    display: block;
+    min-inline-size: 0;
+    min-block-size: 100%;
+    font-size: var(--ui-code-editor-font);
+    line-height: var(--ui-code-editor-line-height);
+    color: var(--ui-code-editor-ink);
+    outline: none; /* the focus ring is on the HOST frame, never the editor child */
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+  :scope > [data-part='editor'][data-empty]::before {
+    content: attr(data-placeholder);
+    color: var(--ui-code-editor-placeholder);
+    pointer-events: none;
+  }
+
+  /* the CodeMirror mount host (the progressively-enhanced surface). */
+  :scope > [data-part='cm'] {
+    display: block;
+    min-inline-size: 0;
+    min-block-size: 100%;
+    color: var(--ui-code-editor-ink);
+  }
+  :scope > [data-part='cm'] .cm-editor {
+    height: 100%;
+    background: transparent;
+  }
+  :scope > [data-part='cm'] .cm-content {
+    font-family: inherit;
+  }
+  :scope > [data-part='cm'] .cm-placeholder {
+    color: var(--ui-code-editor-placeholder);
+  }
+
+  /* class-based highlight — the markdown constructs' colours (cm-editor.ts's HighlightStyle → tok-*). */
+  :scope .tok-comment { color: var(--ui-code-editor-token-comment); }
+  :scope .tok-heading { color: var(--ui-code-editor-token-heading); font-weight: 600; }
+  :scope .tok-strong { font-weight: 700; }
+  :scope .tok-emphasis { font-style: italic; }
+  :scope .tok-link { color: var(--ui-code-editor-token-link); text-decoration: underline; }
+  :scope .tok-list { color: var(--ui-code-editor-token-punctuation); }
+  :scope .tok-quote { color: var(--ui-code-editor-token-comment); font-style: italic; }
+  :scope .tok-code { color: var(--ui-code-editor-token-string); font-family: monospace; }
+  :scope .tok-keyword { color: var(--ui-code-editor-token-keyword); }
+  :scope .tok-string { color: var(--ui-code-editor-token-string); }
+  :scope .tok-punctuation { color: var(--ui-code-editor-token-punctuation); }
+
+  /* the filled/container state ladder (TKT-0062, mutual-exclusion precedence — the textarea precedent). The
+     "filled" signal keys off EITHER surface carrying content: the plain editor is non-empty, or a CM mount is
+     present (CM only mounts once there is an editable markdown surface, and its own content carries the text). */
+  :scope:not(:hover):not(:focus-within):not(:is([disabled], :state(disabled))):has(> [data-part='editor']:not([data-empty])),
+  :scope:not(:hover):not(:focus-within):not(:is([disabled], :state(disabled))):has(> [data-part='cm']) {
+    background: var(--ui-code-editor-bg-filled);
+    --ui-code-editor-ink: var(--ui-code-editor-ink-filled);
+  }
+  :scope:not(:focus-within):not(:is([disabled], :state(disabled))):hover {
+    background: var(--ui-code-editor-bg-hover);
+    border-color: var(--ui-code-editor-border-hover);
+    --ui-code-editor-ink: var(--ui-code-editor-ink-hover);
+  }
+  :scope:focus-within {
+    background: var(--ui-code-editor-bg-focus);
+    border-color: var(--ui-code-editor-border-focus);
+    --ui-code-editor-ink: var(--ui-code-editor-ink-focus);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  :scope:state(user-invalid) {
+    border-color: var(--ui-code-editor-border-invalid);
+  }
+  :scope:state(user-invalid):hover {
+    border-color: var(--ui-code-editor-border-invalid-hover);
+  }
+
+  :scope:state(user-invalid) > .ui-code-editor-message {
+    display: block;
+    font-size: var(--ui-code-editor-message-font);
+    color: var(--ui-code-editor-message-ink);
+  }
+
+  :scope:is([disabled], :state(disabled)) {
+    pointer-events: none;
+    cursor: default;
+    resize: none;
+  }
+
+  /* Motion — state-PAINT properties only, never geometry. Gated behind :state(ready), zeroed under reduced-motion. */
+  :scope:state(ready) {
+    transition:
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope:state(ready) {
+      transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    :scope {
+      border-color: CanvasText;
+      color: CanvasText;
+    }
+    :scope > [data-part='editor'][data-empty]::before {
+      color: CanvasText;
+    }
+    :scope .tok-comment,
+    :scope .tok-heading,
+    :scope .tok-link,
+    :scope .tok-code,
+    :scope .tok-keyword,
+    :scope .tok-string,
+    :scope .tok-punctuation {
+      color: CanvasText; /* a token is NEVER invisible — every tier degrades to plain ink (SPEC-C5 AC2) */
+    }
+    :scope:is([disabled], :state(disabled)) {
+      border-color: GrayText;
+      color: GrayText;
+    }
+  }
+}

@@ -2,7 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-`agent-ui` is a zero-dependency, signals-based web-component library authored in strict, modern
+`agent-ui` is a zero-dependency, signals-based web-component library (one ruled exception: the opt-in
+`@agent-ui/code/editor` surface adopts CodeMirror 6, lazy-loaded — ADR-0139; every default barrel stays
+dependency-free) authored in strict, modern
 TypeScript — carrying over the `rce` architecture: signals reactivity · FACE custom elements ·
 tagged-template rendering · traits. First component family = FACE form controls.
 
@@ -37,11 +39,14 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   depends only on `@agent-ui/components` + `@agent-ui/shared`; catalog-invisible by construction (never
   imported by `a2ui`)
 - `packages/agent-ui/code/` — `@agent-ui/code`, the code+prose family (ADR-0119): a zero-dep core (token
-  types + a swappable highlighter registry + a light-DOM projection seam, `.`) plus two opt-in subpath
-  packs — `./highlight` (seven hand-rolled tokenizers, self-registering) and `./markdown` (`ui-markdown`,
-  rendering the agent-common markdown subset into real fleet DOM, sanitized by construction); depends only
-  on `@agent-ui/components` + `@agent-ui/shared`; a sibling branch off `components` alongside `router`,
-  catalog-invisible by construction (never imported by `a2ui`)
+  types + a swappable highlighter registry + a light-DOM projection seam, `.`) plus three opt-in subpath
+  packs — `./highlight` (seven hand-rolled tokenizers, self-registering), `./markdown` (`ui-markdown`,
+  rendering the agent-common markdown subset into real fleet DOM, sanitized by construction), and `./editor`
+  (`ui-code-editor`, the editable-first FACE source editor — the ONE ruled zero-dep exception: it adopts
+  CodeMirror 6, declared in `code/package.json` and LAZY-loaded per mount, ADR-0139; the default barrels stay
+  CodeMirror-free); depends only on `@agent-ui/components` + `@agent-ui/shared` (+ the CodeMirror runtime deps,
+  confined to `./editor`); a sibling branch off `components` alongside `router`, catalog-invisible by
+  construction (never imported by `a2ui`)
 - `.claude/docs/` — plan, goals, process, references, adr, prd, spec, lld, decompositions, tickets, rubrics, archive (agent-scoped project docs; the doc grammar + status law: `.claude/skills/agent-ui-doc-standards/`) · `*.test.ts` co-located with source
 
 ## Conventions (non-obvious only)
@@ -53,9 +58,10 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
 - Vite 8 is Rolldown-based (not esbuild/Rollup) — bundler/plugin behaviour follows Rolldown-Vite.
 - Imports point inward only: layers `reactive` ← `dom` ← `traits`/`controls`; cross-package the DAG is
   `shared` ← `components` ← `a2ui` ← `app`, with `router` AND `code` as sibling branches off `components`
-  (`shared` ← `components` ← {`router`, `code`}) — neither `router` nor `code` imports `a2ui`, and `a2ui`/
-  `app` never import either (catalog-invisible by construction, ADR-0115/ADR-0119) (`icons`/`a2a` import
-  nothing). Nothing imports upward. (Enforced by the per-package `layering.test.ts` trip-wires.)
+  (`shared` ← `components` ← {`router`, `code`}) — neither `router` nor `code` imports `a2ui`; `a2ui` never
+  imports either, and `app` may import `code` (the editor surface, ADR-0139) but never `router`
+  (catalog-invisible by construction, ADR-0115/ADR-0119) (`icons`/`a2a` import nothing). Nothing imports
+  upward. (Enforced by the per-package `layering.test.ts` trip-wires.)
 - Naming: tags `ui-{name}`, classes `UI{Name}Element`, tokens `--ui-{name}-*` / color roles
   `--md-sys-color-{family}-{role}` / type scale `--md-sys-typescale-{role}-{size}-*` (ADR-0078);
   event names ∈ `change · input · select · open · close · toggle`.

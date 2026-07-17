@@ -32,8 +32,9 @@ import { UIElement, prop, untracked, type PropsSchema, type ReactiveProps } from
 // Side-effect only: registers these tags before this element (or the `entry-list.ts` sibling it composes)
 // ever calls `document.createElement` on one. `button`/`icon` (TKT-0048) register entry-list.ts's
 // `entry-add-toggle`/`entry-delete` `<ui-button>`s + the add-toggle's leading `<ui-icon>` explicitly;
-// `textarea` (TKT-0049) registers entry-list.ts's `entry-content`/`entry-add-content` `<ui-textarea>`s the
-// same way; `text-field` (TKT-0060) registers its `entry-add-label`/`entry-add-description` `<ui-text-field>`s
+// `@agent-ui/code/editor` (ADR-0139, superseding TKT-0049's `textarea`) registers entry-list.ts's
+// `entry-content`/`entry-add-content` `<ui-code-editor>`s the same way (the import registers the tag only —
+// the CodeMirror runtime stays lazy); `text-field` (TKT-0060) registers its `entry-add-label`/`entry-add-description` `<ui-text-field>`s
 // — previously these upgraded only via an incidental transitive path (agent-admin → conversation →
 // surface-host → the a2ui default catalog's factories.ts, which value-imports the whole family) that a
 // future tree-shaking change could sever. `field` (TKT-0073) registers the `<ui-field>` wrapper entry-list.ts
@@ -43,7 +44,7 @@ import '@agent-ui/components/controls/split-pane'
 import '@agent-ui/components/controls/switch'
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
-import '@agent-ui/components/controls/textarea'
+import '@agent-ui/code/editor'
 import '@agent-ui/components/controls/field'
 import '@agent-ui/components/controls/text-field'
 // TKT-0085: registers <ui-tabs>/<ui-tab>/<ui-tab-panel> — the responsive-collapse shells `#applyLayout`

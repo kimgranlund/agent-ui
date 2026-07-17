@@ -1,7 +1,16 @@
 # PRD — Code + Prose Component Family (`@agent-ui/code`: highlight · markdown · diff)
 
-> Status: **accepted · v1.0 · Owner: agent-ui** — direction RATIFIED by Kim 2026-07-10 (all ADR-0119 forks answered at the ratification pass; began life as a v0.1 scope intake, 2026-07-10) — authored 2026-07-10 by the design seat
+> Status: **accepted · v1.1 · Owner: agent-ui** — direction RATIFIED by Kim 2026-07-10 (all ADR-0119 forks answered at the ratification pass; began life as a v0.1 scope intake, 2026-07-10) — authored 2026-07-10 by the design seat
 > at the design-system-surfaces intake ([TKT-0007](../tickets/tkt-0007-design-system-surfaces.md)).
+>
+> **v1.1 amendment (2026-07-17, docs-only — the accepted body below is UNCHANGED, append-only):** the §3
+> *"Editing (a code editor, editable markdown) — input-class explosion; this family is display-class
+> throughout"* out-of-scope fence is CROSSED, deliberately and narrowly, by the opt-in `./editor` surface
+> (`ui-code-editor`) per **[ADR-0139](../adr/0139-codemirror-editor-first-runtime-dependency.md)** — agent-ui's
+> first ruled zero-dependency exception, adopting CodeMirror 6 (lazy-loaded, confined to `./editor`) for
+> editable markdown SOURCE editing only. The display-class law otherwise STANDS: `./highlight`'s tokenizers and
+> `./markdown` remain hand-rolled and zero-dep and untouched, and live-preview/WYSIWYG markdown stays out of
+> scope (ADR-0139's explicit non-goal — `ui-markdown` is the future composing partner, a separate intake).
 > Kim pre-answered the load-bearing packaging fork at intake (Q4, 2026-07-10): **a swappable pack
 > adapter on the `@agent-ui/icons` model — `@agent-ui/code` (new) → pure core + `./highlight` +
 > `./markdown` subpaths.** The remaining contract forks await his pass on

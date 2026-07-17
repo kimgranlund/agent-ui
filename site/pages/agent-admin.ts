@@ -9,6 +9,7 @@
 // backed store, dogfooded so the reader can edit a setting/prompt, submit, and see the stub reply cite it).
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import '@agent-ui/components/component-styles.css' // ui-split/ui-text-field/ui-switch/etc.'s shipped CSS (composed transitively)
+import '@agent-ui/code/editor.css' // ADR-0139 — ui-code-editor's own sheet (the entry editors' frame + CM highlight tokens)
 import '@agent-ui/app/master-detail-pane.css'
 import '@agent-ui/app/master-detail.css'
 import '@agent-ui/app/nav-rail.css'

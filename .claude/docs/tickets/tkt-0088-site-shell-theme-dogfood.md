@@ -49,7 +49,9 @@ Acceptance section (a live, actively-owned record) — appending as grounding fo
 it.
 
 **2026-07-17 — shipped.** Leg 3 of the THEMING arc, built in an isolated worktree
-(`.claude/worktrees/tkt-0088-site-theme-dogfood`) alongside the concurrent TKT-0084 session.
+(`.claude/worktrees/tkt-0088-site-theme-dogfood`) alongside a concurrent session (its CodeMirror
+work was numbered TKT-0084 at the time this entry was written; renumbered to TKT-0090 on landing
+after an ID collision with the separately-shipped TKT-0084 surface-host-wrap ticket).
 
 - **`site/lib/theme-loader.ts`** (new) — the site-side loader ADR-0141 cl.5 assigns: `THEME_OPTIONS`
   (`default`/`ocean`/`ember`, the TKT-0087 proof packs), `applyTheme`/`applyScheme` (the latter a pure
@@ -92,7 +94,7 @@ it.
   `site/lib/llms.test.ts`, derives from this descriptor) — caught by the standing test, not missed.
 - **Full gate sweep, in the worktree:** `npm run check` clean (tsc + check:site + check:tools); full jsdom
   run 6371/6372 (the one failure is the pre-existing, cross-session, self-resolving ADR-0139 numbering gap
-  from the concurrent TKT-0084 work — unrelated, same single failure present before this ticket's changes);
+  from the concurrent TKT-0090 (CodeMirror) work — unrelated, same single failure present before this ticket's changes);
   `npx vitest run --config vitest.browser.config.ts` real-Chromium proof green (12/12 across the precedent
   file + the new one).
 - **What was NOT done:** the gallery's (`site/lib/component-gallery.ts`) own `THEMES = ['default']`

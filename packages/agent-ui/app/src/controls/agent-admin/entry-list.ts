@@ -3,21 +3,23 @@
 // verbatim by all FIVE instantiations (prompt sections + skill/workflow/resource/tool) — no kind gets
 // its own bespoke list/toggle/author code (ADR-0132 cl.1).
 //
-// The per-entry content editor is `<ui-textarea>` (ADR-0134) — the fleet's first FACE long-form multi-line
-// primitive, closing the native-`<textarea>` deviation TKT-0041 tracked (the single-field v1 gap ADR-0132
-// generalized, unresolved until now). `.value` get/set and the commit-on-`change` (never `input`) timing
-// are byte-identical to the native textarea this replaces — `ui-textarea` emits `change` on blur-with-change,
-// exactly the existing contract below.
+// The per-entry content editor is `<ui-code-editor language="markdown">` (ADR-0139) — the fleet's
+// editable-first markdown source editor (CodeMirror 6, lazy-loaded on the opt-in @agent-ui/code/editor
+// subpath). It replaces the plain `<ui-textarea>` these blocks used before: the content is markdown by
+// construction (`composeSystemPrompt` renders `## {label}` / `### {label}` blocks), so authors now edit it
+// with syntax highlighting. `.value` get/set, `rows`, and the commit-on-`change` (never `input`, blur-with-
+// change) timing are byte-identical to the ui-textarea it replaces (ADR-0139 cl.4/cl.6 make this a drop-in
+// tag+type swap); `selectToEnd()` carries over as the same mid-edit caret-restoration seam (ADR-0134).
 //
 // DOM ownership: `mountEntryList` builds the section shell (heading + list host + add-form host) ONCE
 // and returns a `render(entries)` that rebuilds the list body from scratch on every call — acceptable
 // because `render` is only invoked on a genuine entries-array change (add/delete/toggle, or an external
-// store notification), never per-keystroke; a content edit commits on ui-textarea's own `change` (blur),
+// store notification), never per-keystroke; a content edit commits on ui-code-editor's own `change` (blur),
 // not on `input`, matching the fleet's per-field-on-change law (settings.ts's own SPEC-R12 timing).
 
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UIIconElement } from '@agent-ui/components/controls/icon'
-import type { UITextareaElement } from '@agent-ui/components/controls/textarea'
+import type { UICodeEditorElement } from '@agent-ui/code/editor'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import type { UIFieldElement } from '@agent-ui/components/controls/field'
 import type { Entry, NewEntryInput } from './entries.ts'
@@ -101,7 +103,8 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
   descriptionFieldWrap.description = 'Optional'
   descriptionFieldWrap.append(descriptionField)
 
-  const contentField = document.createElement('ui-textarea') as UITextareaElement
+  const contentField = document.createElement('ui-code-editor') as UICodeEditorElement
+  contentField.language = 'markdown' // ADR-0139 — markdown-highlighted source editing (CM lazy-loaded)
   contentField.placeholder = 'Content'
   contentField.rows = 2 // TKT-0049: a compose/draft field — the smaller of the two content sizes
   contentField.setAttribute('data-part', 'entry-add-content')
@@ -162,10 +165,10 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
     // and focus stolen into the OTHER section's same-id row on that section's own re-render.
     const activeRow = active?.closest('[data-part="entry"]') as HTMLElement | null
     const activeId = activeRow !== null && list.contains(active) ? (activeRow.getAttribute('data-entry-id') ?? undefined) : undefined
-    // `ui-textarea`'s focused DOM node is its internal `[data-part="editor"]` part, not the host the
-    // `entry-content` data-part lives on (unlike the native `<textarea>` this replaces, where the focused
-    // node WAS the data-part-bearing element) — `.closest()` walks up from either to the host.
-    const activeField = active?.closest('[data-part="entry-content"]') as UITextareaElement | null
+    // `ui-code-editor`'s focused DOM node is an INTERNAL surface — the plain `[data-part="editor"]` part or,
+    // once CodeMirror enhances, its `.cm-content` inside `[data-part="cm"]` — never the host the
+    // `entry-content` data-part lives on; `.closest()` walks up from any of them to the host either way.
+    const activeField = active?.closest('[data-part="entry-content"]') as UICodeEditorElement | null
     const preservedValue = activeId !== undefined && activeField !== null ? activeField.value : undefined
 
     list.replaceChildren()
@@ -212,7 +215,8 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
         row.append(desc)
       }
 
-      const contentField = document.createElement('ui-textarea') as UITextareaElement
+      const contentField = document.createElement('ui-code-editor') as UICodeEditorElement
+      contentField.language = 'markdown' // ADR-0139 — markdown-highlighted source editing (CM lazy-loaded)
       contentField.rows = 4 // TKT-0049: the saved, potentially longer per-entry content — bigger than the add-form's draft field
       contentField.setAttribute('data-part', 'entry-content')
       contentField.setAttribute('aria-label', `${entry.label} content`)

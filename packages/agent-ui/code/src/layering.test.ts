@@ -31,10 +31,15 @@ const specifiersOf = (src: string): string[] => {
 }
 
 // Shared predicates so the synthetic-violation tests exercise the exact matcher the real gates run.
+// `@codemirror/*` / `@lezer/*` are the ADR-0139 runtime deps (code's first genuine third-party runtime
+// dependency, the ruled zero-dep exception). They are ADMITTED to the code-package DAG here; WHERE they may
+// appear is the separate, tighter job of editor/confinement.test.ts (only editor/cm-editor.ts, reached via a
+// dynamic import) — layering answers "may code/src depend on this at all", confinement answers "which file".
 const isAllowedCodeSpecifier = (spec: string): boolean =>
   spec.startsWith('.') ||
   spec === '@agent-ui/components' || spec.startsWith('@agent-ui/components/') ||
-  spec === '@agent-ui/shared' || spec.startsWith('@agent-ui/shared/')
+  spec === '@agent-ui/shared' || spec.startsWith('@agent-ui/shared/') ||
+  spec.startsWith('@codemirror/') || spec.startsWith('@lezer/')
 
 const isCodeSpecifier = (spec: string): boolean =>
   spec === '@agent-ui/code' || spec.startsWith('@agent-ui/code/')

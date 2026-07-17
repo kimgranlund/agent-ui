@@ -7,8 +7,10 @@ declare const process: { cwd(): string }
 // Trip-wire: the apex-of-the-DAG invariant @agent-ui/app rests on (SPEC-R1, LLD-C2). Two checks, one
 // file:
 //   (1) every import under app/src/** resolves ONLY to {@agent-ui/components, @agent-ui/a2ui,
-//       @agent-ui/shared} or a local `./`/`../` path — app may depend DOWN the DAG (it sits at the top,
-//       nothing is above it) and never on itself via its own package name.
+//       @agent-ui/shared, @agent-ui/code} or a local `./`/`../` path — app may depend DOWN the DAG (it sits
+//       at the top, nothing is above it) and never on itself via its own package name. The @agent-ui/code
+//       edge is ADR-0139's opened `app ← code` edge (ui-agent-admin's entry editors use @agent-ui/code/editor);
+//       app still never imports @agent-ui/router (the M4 named NC below stays intact).
 //   (2) no source under components/src or a2ui/src — the two inward packages app sits above — imports
 //       @agent-ui/app; the apex is never imported back by anything it depends on (SPEC-R1 AC2).
 // (1) reuses the no-execution raw-text glob idiom from components/src/layering.test.ts; (2) reuses the
@@ -36,7 +38,8 @@ const isAllowedAppSpecifier = (spec: string): boolean =>
   spec.startsWith('.') ||
   spec === '@agent-ui/components' || spec.startsWith('@agent-ui/components/') ||
   spec === '@agent-ui/a2ui' || spec.startsWith('@agent-ui/a2ui/') ||
-  spec === '@agent-ui/shared' || spec.startsWith('@agent-ui/shared/')
+  spec === '@agent-ui/shared' || spec.startsWith('@agent-ui/shared/') ||
+  spec === '@agent-ui/code' || spec.startsWith('@agent-ui/code/') // ADR-0139 — the app ← code editor edge
 
 const isAppSpecifier = (spec: string): boolean =>
   spec === '@agent-ui/app' || spec.startsWith('@agent-ui/app/')
@@ -50,7 +53,7 @@ describe('import layering — app/src imports only down the DAG', () => {
     expect(files.length).toBeGreaterThan(0) // holds even pre-C3: the barrel alone still counts
   })
 
-  it('every app/src file imports only {components,a2ui,shared} or a local path', () => {
+  it('every app/src file imports only {components,a2ui,shared,code} or a local path', () => {
     const violations: string[] = []
     for (const [path, src] of files) {
       for (const spec of specifiersOf(src)) {

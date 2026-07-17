@@ -27,6 +27,11 @@ describe('package.json exports map — every target resolves to a real file (LLD
     expect(pkg.exports['./markdown.css']).toBe('./src/markdown/markdown.css')
   })
 
+  it('the ./editor subpath (ADR-0139) is present with its pinned targets', () => {
+    expect(pkg.exports['./editor']).toBe('./src/editor/index.ts')
+    expect(pkg.exports['./editor.css']).toBe('./src/editor/editor.css')
+  })
+
   it('every export target resolves to a real file', () => {
     for (const target of Object.values(pkg.exports)) {
       expect(existsSync(`${PKG}/${target}`), `missing export target: ${target}`).toBe(true)
@@ -41,11 +46,14 @@ describe('package.json exports map — every target resolves to a real file (LLD
 })
 
 describe('the `.` barrel exports the core ONLY — never a pack (SPEC-C1 AC3)', () => {
-  it('does NOT re-export a ./highlight or ./markdown module (grep the source text)', () => {
+  it('does NOT re-export a ./highlight, ./markdown or ./editor module (grep the source text)', () => {
     expect(barrelSrc).not.toMatch(/highlight\/index\.ts/)
     expect(barrelSrc).not.toMatch(/markdown\/index\.ts/)
     expect(barrelSrc).not.toMatch(/UIMarkdownElement/)
     expect(barrelSrc).not.toMatch(/bundledHighlighter/)
+    // ADR-0139 — the core barrel must never drag the CodeMirror editor into a core-only consumer's graph.
+    expect(barrelSrc).not.toMatch(/editor\/index\.ts/)
+    expect(barrelSrc).not.toMatch(/UICodeEditorElement/)
   })
 
   it('importing the barrel does NOT register the ui-markdown element (the tree-shake contract, functionally)', () => {

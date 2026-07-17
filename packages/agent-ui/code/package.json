@@ -8,10 +8,20 @@
     "./highlight": "./src/highlight/index.ts",
     "./highlight.css": "./src/highlight/highlight.css",
     "./markdown": "./src/markdown/index.ts",
-    "./markdown.css": "./src/markdown/markdown.css"
+    "./markdown.css": "./src/markdown/markdown.css",
+    "./editor": "./src/editor/index.ts",
+    "./editor.css": "./src/editor/editor.css"
   },
   "dependencies": {
     "@agent-ui/components": "*",
-    "@agent-ui/shared": "*"
+    "@agent-ui/shared": "*",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.0",
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/language": "^6.11.0",
+    "@lezer/highlight": "^1.2.1"
+  },
+  "optionalDependencies": {
+    "@codemirror/lang-markdown": "^6.3.2"
   }
 }

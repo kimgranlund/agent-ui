@@ -355,7 +355,31 @@ console.log(
   `@agent-ui/code/markdown (ui-markdown; pulls ui-text/ui-code/ui-table): marginal ${codeMarkdownMarginal} B gz — ${codeMarkdownOver ? 'OVER' : 'within'} budget (${CODE_MARKDOWN_BUDGET} B gz)   solo ${codeMarkdown.gz} B gz (${codeMarkdown.min} B min, informational — includes the ${foundationGz} B gz components foundation)`,
 )
 
-if (over || marginalOver || appOver || routerOver || codeCoreOver || codeHighlightOver || codeMarkdownOver) {
+// ./editor (ADR-0139 cl.8c) — the CM-carrying subpath, measured in TWO parts so CodeMirror bytes NEVER enter
+// a gated figure: (1) the `ui-code-editor` wrapper's own ENTRY chunk (CM-free by the confinement gate — it
+// statically pulls only @agent-ui/components), measured MARGINAL over the components foundation and GATED, the
+// same frame as ./markdown/@agent-ui/app/@agent-ui/router; (2) the lazy CM chunk(s) the dynamic
+// `import('./cm-editor.ts')` splits off, reported INFORMATIONALLY, never gated (CM version bumps move it — an
+// ordinary dependency PR, ADR-0139 cl.8d). Baselined against gen-ui-kit's own measured CM footprint.
+const CODE_EDITOR_BUDGET = 2 * KB // measured 247 B gz marginal at the build wave (ADR-0080 discipline) — pinned with headroom; the CM-free wrapper is a single control's worth of code on top of the foundation. The lazy CM chunk (~167 KB gz, below) is informational, NEVER gated.
+const editorBundle = await rolldown({ input: `${codePkgDir}/src/editor/index.ts` })
+const { output: editorOutput } = await editorBundle.generate({ format: 'esm', minify: true })
+await editorBundle.close()
+const editorChunks = editorOutput.filter((c) => c.type === 'chunk')
+const editorEntryCode = editorChunks.filter((c) => c.isEntry).map((c) => c.code).join('')
+const editorLazyCode = editorChunks.filter((c) => !c.isEntry).map((c) => c.code).join('')
+const editorEntryGz = gzipSync(editorEntryCode, { level: 9 }).length
+const editorLazyGz = editorLazyCode ? gzipSync(editorLazyCode, { level: 9 }).length : 0
+const editorMarginal = editorEntryGz - foundationGz
+const codeEditorOver = editorMarginal > CODE_EDITOR_BUDGET
+console.log(
+  `\n@agent-ui/code/editor (ui-code-editor wrapper — the CM-FREE entry chunk): marginal ${editorMarginal} B gz — ${codeEditorOver ? 'OVER' : 'within'} budget (${CODE_EDITOR_BUDGET} B gz)   solo ${editorEntryGz} B gz (informational — includes the ${foundationGz} B gz components foundation)`,
+)
+console.log(
+  `@agent-ui/code/editor — the lazy CodeMirror chunk(s) (dynamic import('./cm-editor.ts'), never in any main bundle): ${editorLazyGz} B gz (informational, non-gating — ADR-0139 cl.8c/8d)`,
+)
+
+if (over || marginalOver || appOver || routerOver || codeCoreOver || codeHighlightOver || codeMarkdownOver || codeEditorOver) {
   if (over) console.error('size: a barrel exceeds its budget')
   if (marginalOver) console.error('size: a control exceeds its per-control marginal budget')
   if (appOver) console.error('size: @agent-ui/app exceeds its marginal budget')
@@ -363,5 +387,6 @@ if (over || marginalOver || appOver || routerOver || codeCoreOver || codeHighlig
   if (codeCoreOver) console.error('size: @agent-ui/code . (core) exceeds its budget')
   if (codeHighlightOver) console.error('size: @agent-ui/code/highlight exceeds its budget')
   if (codeMarkdownOver) console.error('size: @agent-ui/code/markdown exceeds its marginal budget')
+  if (codeEditorOver) console.error('size: @agent-ui/code/editor (wrapper) exceeds its marginal budget')
   process.exit(1)
 }
