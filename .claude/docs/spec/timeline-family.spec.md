@@ -24,6 +24,18 @@
 > divergence (data ingress, scroll, a11y role, motion, completion invariant), the catalog dispositions, the
 > site surfaces. Implementation (exact CSS grid mechanics, the marker-system integer rows, the tail-follow
 > guard, page content) is the LLD's. Requirement IDs file-scoped (`SPEC-R1…`).
+>
+> **Amendment (2026-07-17, docs-only — the body below is UNCHANGED, append-only):** §4's *"Deep nesting
+> (> 1 level of sub-steps)… a fenced new intake"* non-goal, and **SPEC-R5**'s own normative "Nesting is
+> ONE level in v1 (flat + 1)" sentence + its AC2 (§3.1), are UNFENCED/superseded by
+> [ADR-0143](../adr/0143-timeline-item-recursive-nesting-accordion.md) (proposed) — `ui-timeline-item` gains
+> arbitrary-depth recursive nesting via a new `[data-role="nested"]` adoption slot (reusing `ui-timeline`
+> itself), a shared composed `ui-disclosure` wrapping `detail` AND `nested` together, and a
+> live-updating collapsed-summary preview in the existing `trailing` cell. §3.1's anatomy list gains the
+> `nested` slot; §3.4's marker-system geometry is untouched (F4: each nesting level paints its own
+> independent rail, no cross-level connector continuity; F7: `size` does not cascade into nested
+> levels). See ADR-0143 for the full fork sheet and firm recommendations; this is a design record only
+> — no build has landed against this amendment yet.
 
 ---
 

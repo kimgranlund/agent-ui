@@ -1,0 +1,70 @@
+{
+  "domain": "components",
+  "plan": true,
+  "_note": "TKT-0091 / ADR-0143 — ui-timeline-item recursive nesting, shared accordion, collapsed-summary preview. Extends the ALREADY-SHIPPED timeline family (timeline-family-ship.decomp.json) rather than rebuilding it — nodes here touch ONLY timeline-item.ts/.css/.md plus the SPEC/LLD amendment already landed as docs-only. OUTSIDE-IN nodes = the anatomy/geometry/docs surfaces this extension touches. INSIDE-OUT actions = what the extended item must newly DO, crossed via hosts. plan:true — every leaf carries a checkable accept predicate; timeline.ts/disclosure.ts/status-stream.ts are UNTOUCHED (verified no-op for timeline.ts's terminal-connector marking, ADR-0143's own finding) so no nodes exist for them. Catalog wiring (ADR-0143 F6) is explicitly NOT a node here — a deferred, separate a2ui-builder intake.",
+  "nodes": [
+    { "id": "n1", "label": "ui-timeline-item — recursive nesting + shared accordion + collapsed-summary preview", "leaf": false },
+
+    { "id": "n2", "label": "the [data-role=\"nested\"] adoption slot (F1) — a genuine nested <ui-timeline> child, adopted like [data-role=\"detail\"] today", "leaf": true, "accept": "`npm test timeline-item` — jsdom: a <ui-timeline-item> authored with a <ui-timeline data-role=\"nested\"> light-DOM child adopts it (moved, not cloned — ADR-0022) exactly once at connect (idempotent guard); the descriptor gains a `nested` slot entry mirroring `detail`'s shape" },
+    { "id": "n3", "label": "the shared composed ui-disclosure (F2) — adopts detail THEN nested, one caret, materializes only if either exists", "leaf": true, "accept": "`npm test timeline-item` — jsdom: an item with ONLY detail composes a disclosure with just that content (byte-identical to today's shipped behavior, a regression guard); an item with ONLY nested composes a disclosure with just the nested <ui-timeline>; an item with BOTH composes ONE disclosure containing detail's content followed by nested's, in that order; an item with NEITHER composes no disclosure at all (unchanged from today)" },
+    { "id": "n4", "label": "recursion depth — a nested <ui-timeline> item itself carries its own [data-role=\"nested\"] child, arbitrary depth", "leaf": true, "accept": "`npm test timeline-item` — jsdom: a 3-level-deep authored nesting (item > nested timeline > item > nested timeline > item) connects cleanly with no depth cap, no error, no infinite-loop guard needed (the recursion is authored markup depth, not runtime-generated)" },
+
+    { "id": "n8", "label": "the confirmed no-op — timeline.ts terminal-connector marking needs no change", "leaf": true, "accept": "`npm test timeline` — timeline.ts and timeline.test.ts stay byte-UNMODIFIED by this build (`:scope > ui-timeline-item` already self-scopes per nesting level, verified by ADR-0143's own precedent read); a NEW regression case added to timeline-item.test.ts (the file this build DOES touch) asserts a nested ui-timeline's own last child gets `[data-last]`, independent of and un-interfered-with by the OUTER timeline's own last-item marking" },
+
+    { "id": "n9", "label": "collapsed-summary preview (F3) — last nested descendant in DOM order, painted into the EXISTING trailing cell, live-updating, collapsed-only", "leaf": false },
+    { "id": "n10", "label": "last-descendant resolution — recurse to the deepest last <ui-timeline-item> in DOM order (last child wins, no status-priority)", "leaf": true, "accept": "`npm test timeline-item` — jsdom: a nested timeline with 3 items resolves the preview source to the LAST one; a 2-level-deep nesting (the last item of the outer nested timeline itself has ITS OWN further-nested timeline) resolves to the DEEPEST leaf item, not the intermediate one; an item with no nested slot never attempts resolution (a plain no-op, not an error)" },
+    { "id": "n11", "label": "the MutationObserver on the nested subtree — recomputes on childList/status/label/characterData changes", "leaf": true, "accept": "`npm test timeline-item` — jsdom: appending a new last item to the nested timeline AFTER connect updates the resolved preview source; changing the current last item's `status` or `label` attribute updates it too; the observer is installed once per nested-slot presence and disconnected in disconnected() (the toast-region/disclosure heal-observer teardown precedent)" },
+    { "id": "n12", "label": "the trailing paint gate — write only while the disclosure is CLOSED and trailing is NOT consumer-owned; clear while open", "leaf": true, "accept": "`npm test timeline-item` — jsdom: with the disclosure open, `trailing`'s cell is empty/unwritten (the real nested content is directly visible instead — no duplicate); closing the disclosure paints the resolved last-descendant's label + a status-shape mirror into trailing; a consumer-authored `[data-role=\"trailing\"]` child (today's existing consumer-owned path, `#consumerOwned.has('trailing')`) is NEVER overwritten by this new effect at any open/closed state — the exact regression guard the wrapper-trap class of bug already tests elsewhere in this file" },
+
+    { "id": "n13", "label": "geometry, ARIA, descriptor, gates", "leaf": false },
+    { "id": "n14", "label": "connector geometry (F4) — zero CSS changes; a nested rail is fully independent, visually indented by the disclosure body's own padding", "leaf": true, "accept": "`npm run test:browser timeline-item` — timeline-item.css is UNCHANGED by this build (a diff-based regression check, or: every existing geometry probe in timeline-item's browser suite still passes unmodified); a nested ui-timeline's items render their OWN complete marker+connector rail, visually offset from the parent's rail by the disclosure body's inline padding, cross-engine" },
+    { "id": "n15", "label": "ARIA (F5) — zero new machinery; nested list is a legal role=list>listitem>role=list structure; closed disclosure hides descendants natively", "leaf": true, "accept": "`npm run test:browser timeline-item` — an OPEN item with nested content exposes the nested list/listitems in the accessibility tree (a real AT-tree probe, not just DOM presence); a CLOSED item's nested descendants are absent from BOTH the accessibility tree and the tab order (the native <details> guarantee, asserted directly rather than assumed); the trailing preview text IS present in the accessible tree while closed (it is ordinary visible content, never aria-hidden)" },
+    { "id": "n16", "label": "timeline-item.md descriptor updated — the nested slot, the trailing cell's new auto-fill behavior noted, no new props/events", "leaf": true, "accept": "`npm test timeline-item` (timeline-item-descriptor.test.ts, the contract trip-wire) — the descriptor's `slots[]` gains the `nested` entry; NO new `attributes[]`/`properties[]`/`events[]` entries (the mechanism is pure anatomy + an internal effect, no new public surface — verified against ADR-0143's own F1-F6 decisions, none of which add a prop or event); compareDescriptorToProps stays green (nothing to drift, since static props is unchanged)" },
+    { "id": "n17", "label": "family-coherence + barrels + size — unchanged token surface, no new import edges beyond the existing timeline-item -> disclosure/timeline composition", "leaf": true, "accept": "`npm run check && npm test` green (family-coherence.test.ts, barrels.test.ts, layering.test.ts) — timeline-item.ts's import of '../timeline/timeline.ts' (needed to reference UITimelineElement's type for the [data-role=\"nested\"] check, if typed) does not create a cross-folder cycle (timeline already imports timeline-item, so this is timeline-item -> timeline -> timeline-item; MUST be resolved as a type-only import or a runtime-safe non-cyclic reference — a real risk this leaf's own test must prove, not assume); `npm run size` run by hand, marginal re-measured only if it moved materially" },
+    { "id": "n18", "label": "independent component-reviewer GO before commit", "leaf": true, "accept": "a fresh-context component-reviewer pass returns GO for the extended ui-timeline-item against ADR-0143's fork sheet (anatomy, the shared-disclosure ordering, the collapsed-summary live-update + paint-gate correctness, connector/ARIA no-new-machinery claims) — generator ≠ critic" },
+    { "id": "n19", "label": "size does NOT cascade (F7) — a nested <ui-timeline> reads its own [size], unaffected by its ancestor's", "leaf": true, "accept": "`npm test timeline-item` — jsdom: a parent ui-timeline-item with size=\"lg\" hosting an unauthored nested <ui-timeline> (no size attribute) resolves the nested timeline's own items to the DEFAULT 'md' register, not 'lg' — a negative control proving no inheritance/forwarding mechanism exists; a nested <ui-timeline size=\"sm\"> resolves its own items to 'sm' regardless of the parent's size, proving each level is independently authored" }
+  ],
+  "actions": [
+    { "id": "a1", "label": "adopt a nested <ui-timeline> child via a new [data-role=\"nested\"] slot, reusing ui-timeline itself" },
+    { "id": "a2", "label": "compose ONE shared disclosure wrapping detail then nested, materializing only when either exists" },
+    { "id": "a3", "label": "support arbitrary authored recursion depth with no cap and no new mechanism per level" },
+    { "id": "a4", "label": "leave the outer host's terminal-connector marking untouched — it already self-scopes per level" },
+    { "id": "a5", "label": "resolve the last nested descendant in DOM order, recursing to the deepest leaf, no status-priority" },
+    { "id": "a6", "label": "keep that resolution live via a MutationObserver on the nested subtree" },
+    { "id": "a7", "label": "paint the resolution into the EXISTING trailing cell only while collapsed and only if not consumer-owned" },
+    { "id": "a8", "label": "add zero new CSS geometry — each nesting level paints its own independent, indented rail" },
+    { "id": "a9", "label": "add zero new ARIA machinery — rely on native <details> collapse + role=list/listitem nesting" },
+    { "id": "a10", "label": "extend the descriptor's slots only — no new props, no new events" },
+    { "id": "a11", "label": "keep the token surface, barrels, and layering byte-unchanged apart from the one new cross-reference" },
+    { "id": "a12", "label": "gate the build on an independent reviewer GO before commit" },
+    { "id": "a13", "label": "leave size non-cascading — each nesting level re-authors its own, no inheritance mechanism" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n2" },
+    { "action": "a2", "node": "n3" },
+    { "action": "a3", "node": "n4" },
+    { "action": "a4", "node": "n8" },
+    { "action": "a5", "node": "n10" },
+    { "action": "a6", "node": "n11" },
+    { "action": "a7", "node": "n12" },
+    { "action": "a8", "node": "n14" },
+    { "action": "a9", "node": "n15" },
+    { "action": "a10", "node": "n16" },
+    { "action": "a11", "node": "n17" },
+    { "action": "a12", "node": "n18" },
+    { "action": "a13", "node": "n19" }
+  ],
+  "edges": [
+    { "from": "n2", "to": "n3", "why": "the disclosure's adoption order (n3) needs the nested slot (n2) to exist first" },
+    { "from": "n3", "to": "n4", "why": "recursion depth (n4) composes on top of the single-level nested-slot + disclosure mechanism (n2/n3)" },
+    { "from": "n2", "to": "n10", "why": "last-descendant resolution (n10) walks the nested slot's content, which must exist first" },
+    { "from": "n10", "to": "n11", "why": "the observer (n11) re-runs the SAME resolution function n10 defines" },
+    { "from": "n11", "to": "n12", "why": "the paint gate (n12) consumes the observer's recomputed value" },
+    { "from": "n3", "to": "n12", "why": "the paint gate reads the disclosure's own open state, which n3 composes" },
+    { "from": "n2", "to": "n16", "why": "the descriptor update (n16) documents the slot n2 adds" },
+    { "from": "n3", "to": "n18", "why": "review (n18) grades the finished mechanism, gated on the disclosure composition landing first" },
+    { "from": "n12", "to": "n18", "why": "review (n18) grades the collapsed-summary paint-gate correctness, which must be built first" },
+    { "from": "n2", "to": "n19", "why": "the size-cascade negative control (n19) needs the nested slot (n2) to exist first" },
+    { "from": "n19", "to": "n18", "why": "review (n18) grades the size-non-cascade claim too, which must be built and tested first" }
+  ]
+}

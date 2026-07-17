@@ -8,6 +8,16 @@
 > token rows, the imperative live-host API + tail-follow guard, the disclosure composition, and the
 > frozen-interface-vs-real-code check. Every API named here is verified against a REAL shipped consumer (§7);
 > a builder implements this without re-deriving. One writer per file (§6 sequence).
+>
+> **Amendment (2026-07-17, docs-only — the body below is UNCHANGED, append-only):**
+> [ADR-0143](../adr/0143-timeline-item-recursive-nesting-accordion.md) (proposed) extends §2's
+> `ui-timeline-item` anatomy with a `[data-role="nested"]` adoption slot (a genuine nested `<ui-timeline>`
+> child), generalizes the item's composed-`ui-disclosure` step from "adopt `detail`" to "adopt `detail`
+> then `nested`, if either exists" (one disclosure, not two), and adds a `MutationObserver`-driven
+> collapsed-summary effect painting the last nested descendant's label/status into the item's EXISTING
+> `trailing` cell while collapsed. §3.2's `#markLastItem()` (`:scope > ui-timeline-item`-scoped) needs NO
+> change — verified: it already self-scopes per nesting level. See ADR-0143 for the full mechanism and
+> the six forks it resolves; no build has landed against this amendment yet — a decomposition gates it.
 
 ---
 
