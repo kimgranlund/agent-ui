@@ -114,3 +114,87 @@ describe('ui-surface-host cross-engine smoke — forced-colors legibility (SPEC-
     }
   })
 })
+
+// ── TKT-0084 — [wrap]: content-hugging artboard, cross-engine ──────────────────────────────────────────
+
+/** An unsized host (no fixed width/height style) — the [wrap] contract: the artboard sizes to its
+ *  mounted content, not a consumer-imposed box (unlike `mountHost` above). */
+function mountWrapHost(): UISurfaceHostElement {
+  const el = document.createElement('ui-surface-host') as UISurfaceHostElement
+  el.wrap = true
+  document.body.append(el)
+  mounted.push(el)
+  return el
+}
+
+describe('ui-surface-host [wrap] — content-hugging artboard (TKT-0084)', () => {
+  it('a small surface sizes to its content, not a fixed/fill box — no scroll needed', () => {
+    const el = mountWrapHost()
+    el.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'w1', catalogId: 'agent-ui' } }))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'w1',
+          components: [
+            { id: 'root', component: 'Column', children: ['t1', 'btn'] },
+            { id: 't1', component: 'Text', variant: 'body', text: 'Small surface' },
+            { id: 'btn', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } },
+          ],
+        },
+      }),
+    )
+    el.finalize()
+    const stage = el.querySelector('[data-part="stage"]') as HTMLElement
+    const hostRect = el.getBoundingClientRect()
+    // Content-hugging: nowhere near the 32rem (512px) wrap cap, and far smaller than mountHost's fixed 400px.
+    expect(hostRect.height).toBeLessThan(200)
+    expect(hostRect.height).toBeGreaterThan(0)
+    // No overflow to reach — content fits entirely within the stage's own box.
+    expect(stage.scrollHeight).toBeLessThanOrEqual(stage.clientHeight + 1) // +1: sub-pixel rounding
+  })
+
+  it('an empty wrapped surface collapses to the placeholder line, not a huge fixed box', () => {
+    const el = mountWrapHost()
+    const hostRect = el.getBoundingClientRect()
+    expect(hostRect.height).toBeGreaterThan(0)
+    expect(hostRect.height).toBeLessThan(100) // one placeholder line + 1rem padding, nowhere near a fixed artboard
+  })
+
+  it('component-reviewer CRITICAL regression pin: content taller than the wrap cap stays FULLY scroll-reachable — no `align-items: center` split that strands content above scrollTop 0', () => {
+    const el = mountWrapHost()
+    el.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'w2', catalogId: 'agent-ui' } }))
+    const children: string[] = []
+    const components: unknown[] = []
+    for (let i = 0; i < 40; i++) {
+      const id = `t${i}`
+      children.push(id)
+      components.push({ id, component: 'Text', variant: 'body', text: `Line ${i} of a long surface` })
+    }
+    components.push({ id: 'btn', component: 'Button', variant: 'solid', label: 'Stand', action: { action: 'stand' } })
+    children.push('btn')
+    components.unshift({ id: 'root', component: 'Column', children })
+    el.ingest(line({ version: 'v1.0', updateComponents: { surfaceId: 'w2', components } }))
+    el.finalize()
+
+    const stage = el.querySelector('[data-part="stage"]') as HTMLElement
+    const firstText = el.querySelector('ui-text') as HTMLElement
+    const lastButton = el.querySelector('ui-button') as HTMLElement
+    expect(stage.scrollHeight).toBeGreaterThan(stage.clientHeight) // genuinely over the cap — the regression's precondition
+
+    // At scrollTop 0, the FIRST content element must be visible at/below the stage's own top edge —
+    // NEVER clipped above it (the align-items:center defect rendered it negative-offset and
+    // unreachable, since scrollTop cannot go negative to compensate).
+    stage.scrollTop = 0
+    const stageRectAtTop = stage.getBoundingClientRect()
+    const firstRectAtTop = firstText.getBoundingClientRect()
+    expect(firstRectAtTop.top).toBeGreaterThanOrEqual(stageRectAtTop.top - 1) // -1: sub-pixel rounding
+
+    // Scrolled to the max, the LAST content element (the action button) must be reachable — its
+    // bottom edge at/above the stage's own bottom edge, never permanently below it.
+    stage.scrollTop = stage.scrollHeight
+    const stageRectAtBottom = stage.getBoundingClientRect()
+    const lastRectAtBottom = lastButton.getBoundingClientRect()
+    expect(lastRectAtBottom.bottom).toBeLessThanOrEqual(stageRectAtBottom.bottom + 1)
+  })
+})

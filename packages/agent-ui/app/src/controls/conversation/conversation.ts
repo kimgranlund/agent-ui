@@ -356,6 +356,7 @@ export class UIConversationElement extends UIElement {
       }
       // A FRESH surfaceId — this turn's own createSurface line. A new ui-surface-host, inline HERE.
       const host = document.createElement('ui-surface-host') as UISurfaceHostElement
+      host.wrap = true // TKT-0084: a chat bubble hugs its rendered surface's content, never clips it to an arbitrary fixed height
       mounts.append(host)
       host.onClientMessage((m) => this.#onClientMessageCb?.(m)) // bubble up (LLD-C4)
       this.#registry.set(id, { host, bubble, state: 'open' })

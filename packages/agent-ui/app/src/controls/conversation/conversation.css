@@ -122,9 +122,13 @@
     flex-direction: column;
     gap: 0.5rem;
   }
+  /* TKT-0084: conversation.ts sets `wrap` on every surface it mounts here — the bubble hugs the
+     rendered surface's real content height (capped by ui-surface-host's own
+     --ui-surface-host-wrap-max-block-size) instead of a fixed artboard height clipping taller content.
+     No block-size rule needed here anymore; `min-inline-size: 0` still guards the flex-column bubble
+     from stretching to a child's intrinsic width (the standard flex-overflow floor). */
   [data-part='mounts'] ui-surface-host {
     min-inline-size: 0;
-    block-size: 16rem; /* a definite artboard height per inline surface (ui-surface-host's own consumer-supplied contract) */
   }
 
   /* A closed surface's bubble (SPEC-R7) — dimmed as VISIBLE, non-interactive history (its rendered DOM is
