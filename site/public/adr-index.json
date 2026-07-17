@@ -1006,5 +1006,12 @@
     "description": "The TICKET tier (only) moves to GitHub Issues; ADR/SPEC/LLD/PRD stay files, always (proposed — TKT-0092 intake; Kim's ask: \"transition repo to use git issues,…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0146",
+    "url": "./adr-index.html#adr-0146",
+    "description": "The live-turn lifecycle channel: agent turns stop being silent — progress meta-lines interleave on the EXISTING AgentTransport stream during the turn, and the…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

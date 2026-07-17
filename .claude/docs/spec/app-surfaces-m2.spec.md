@@ -5,6 +5,27 @@
 > Refined by: `../lld/app-surfaces-m2.lld.md` (implementation). Decomposition: [`../decompositions/app-surfaces-m2.decomp.json`](../decompositions/app-surfaces-m2.decomp.json). Genuine forks (composition · transport boundary · narration/disclosure split · reference-app scope) are recorded, not self-ratified, in [`../adr/0129-app-surfaces-m2-composition-and-transport-boundary.md`](../adr/0129-app-surfaces-m2-composition-and-transport-boundary.md) (proposed) — this SPEC states the recommended requirement pending Kim's ruling, per that ADR.
 > Altitude: owns the **M2 behavior contract** — the `ui-surface-host` mount/stream seam, the `ui-conversation` thread/composer/narration behavior, their composition relationship, and the transport boundary. Internal build order + file map are the LLD's. This SPEC scopes **M2 only** (PRD-G3, PRD-G4); the tool-call/result surface (PRD-G5) is M3 and out of this SPEC; `ui-split`/master-detail/settings (PRD-G7/G8) are M4 and already specced (`app-surfaces-m4.spec.md`).
 > Requirement IDs file-scoped (`SPEC-R1…`); cross-document references qualify by doc name.
+>
+> **Amendment (2026-07-17, docs-only — the body below is UNCHANGED, append-only):**
+> [ADR-0146](../adr/0146-live-turn-lifecycle-progress-channel.md) (proposed — TKT-0083's live-turn
+> lifecycle intake) supersedes two aspects of **SPEC-R6** and widens the **§4** handle contract, each
+> stated as its delta: **(1)** narration goes LIVE — category entries render as `ingestLine()` observes
+> lines (pending → active as work proceeds, settled at `finalize()`), not replayed after the turn ends;
+> SPEC-R6 AC1's *"when the turn finalizes, then the narration strip shows…"* wording is superseded to
+> "as the turn's lines are ingested" (the entries, categories, and emission-order guarantees are
+> unchanged — only WHEN they appear). **(2)** The honest-narration law is clarified, pending Kim's
+> ratification of ADR-0146 F2's reading: a factual process-STAGE label ("Reasoning…", "Validating…")
+> drawn from a closed, code-owned label table and 1:1-keyed to a REAL observed lifecycle signal (the
+> `TurnProgress` events of ADR-0146 F1) is a process claim, not a fabricated content sentence — the law
+> continues to bar model-authored/invented prose, speculative or decorative progress (no invented
+> percentages), and any stage never actually observed. **(3)** `AgentTurnHandle` (§4) gains a FIFTH
+> method — `progress(ev: TurnProgress): void` — routing lifecycle events into the turn's narration strip
+> live; a real, recorded contract widening (the same class of change the shipped build's own NAMED LLD
+> GAP on `narrateTrace` flagged as design-seat work), never a quiet signature edit. The narration strip
+> additionally composes `ui-status-stream`'s new opt-in `header` (timeline-family amendment, same date)
+> so the strip reads "working" from `beginAgentTurn()` at t=0 — closing TKT-0083's blank-bubble symptom
+> even on a progress-less transport. This is a design record only — no build has landed against this
+> amendment yet.
 
 ---
 

@@ -42,6 +42,30 @@
 > Refined by: [`../lld/a2ui-live-agent.lld.md`](../lld/a2ui-live-agent.lld.md).
 > Decisions: **ADR-0069** (demo shape + security posture — the `AgentTransport` seam, layered backbone+overlay, the `VITE_` build-key-safety invariant) · **ADR-0070** (runtime loop scope) · **ADR-0071** (derived, drift-gated system prompt) · **ADR-0072** (multi-turn session model) · **ADR-0073** (the model-provider seam) · **ADR-0088** (the live conversational channel — a `note` meta-line riding beside the A2UI stream, the browser-held `TurnTrace`, and `wantResponse`-routed click→turn; extends ADR-0070/0072/0011, `AgentTransport.turn`'s signature UNCHANGED) · **ADR-0089** (teaches the agent to ASK — two hand-authored GRAMMAR-half behaviors riding ADR-0088's note-only turn: clarify-when-underdetermined + catalog-boundary negotiated approximation; extends ADR-0088/0071, NO new wire/transport/protocol surface) · **ADR-0090** (a per-turn `GenUiMode` — `default`/`specific`/`blue-sky` — that SCALES ADR-0089's clarify/negotiate grammar directive↔exploratory behind a mode-INVARIANT honesty floor, threaded via `ProduceOptions.mode` through the proxy + a dev-only switcher selector; and Structural named as the already-shipped recorded transport, a doc + a second worked example, NOT a `GenUiMode` member; extends ADR-0089/0088, NO new wire/transport/protocol surface) · **ADR-0091** (the mini-skill registry — a small, hand-curated `MiniSkill[]` registry of catalog-composition idioms selected once per turn, beside `retrieve()`, by a cheap TF-IDF/cosine intent-match (`selectMiniSkills`, reusing the SAME tokenizer/cosine primitives `retrieve()` uses, extracted to a shared `text-similarity.ts`) and composed into `buildSystemPrompt` as a `fewShot`-structural-twin segment that degrades to `''` on no match, capped at a per-turn module count under a per-module token budget so the prompt grows by at most `cap × budget` regardless of registry size; extends ADR-0090's deferred-corpus follow-up, NO new wire/transport/protocol surface; an independent post-ship review caught, and the build fixed, a real double-injection defect — the registry's three ADR-0090-seeded calibration ids are now single-sourced by the registry and filtered out of a `'blue-sky'`-mode selection, ADR-0091 §4) · **ADR-0097** (feed-embedded interactive asks — the ADR-0089 ASK gains a structured, feed-embedded surface form: an additive `ask` routing field on the ADR-0088 meta envelope whose payload rides the SAME validated stream; a page-level per-message `pending → frozen(answered|bypassed)` lifecycle over per-ask `createRenderer()` hosts; a gate-encoded feed sub-catalog partition — `FEED_SURFACE_TYPES`(23)/`FEED_EXCLUDED`(11) — reapplying the ADR-0087 lesson to a policy SUBSET view over the one catalog; ask mechanics + mode-scaled archetype vocabulary in the derived prompt; every failure path degrades to the ADR-0088 prose note, NEVER a protocol break; extends ADR-0088/0089/0090, NO renderer/package/transport-signature change). ADR-0069–0088 accepted (ADR-0088 ratified 2026-07-07); ADR-0089/ADR-0090/ADR-0091/ADR-0097 built + independently reviewed 2026-07-07 (ratification markers pending; ADR-0091's review additionally caught + the build fixed the §4 double-injection defect).
 > Altitude: owns *what the live-agent example is, how it stays provable + secret-free, and how it composes the realized renderer/corpus/loop surfaces*. The concrete files/wiring are the LLD's. Requirement IDs file-scoped (`SPEC-R1…`).
+>
+> **Amendment (2026-07-17, docs-only — the body below is UNCHANGED, append-only):**
+> [ADR-0146](../adr/0146-live-turn-lifecycle-progress-channel.md) (proposed — TKT-0083's live-turn
+> lifecycle intake) extends the ADR-0088 meta-envelope with a fourth, RUNTIME-composed kind and
+> generalizes when meta-lines may appear, each delta stated here: **(1)** `A2uiMetaEnvelope` (§5) gains
+> `progress?: TurnProgress` — `{stage: 'sent'|'started'|'reasoning'|'content'|'validating'|'retry'|'done',
+> round?, detail?}` — carried as `{"a2uiMeta":{"progress":…}}` lines that MAY INTERLEAVE DURING the turn
+> (superseding the "one leading meta-line, emitted only on the round that succeeds" convention for this
+> kind ONLY; `note`/`trace`/`ask` stay a single leading line). **SPEC-R5 is otherwise UNCHANGED**:
+> progress is not content — it never passes `validateA2ui`, never enters the corpus/`allLines` path, and
+> no A2UI content line ever streams before the whole payload validates; **SPEC-N4**'s filter-before-ingest
+> rule covers the new kind identically (the versionless discriminator + `VERSION_UNSUPPORTED` fault
+> isolation hold unchanged). **(2)** `AgentProvider.stream`'s request (§5, SPEC-R11) gains an OPTIONAL
+> `onEvent?: (ev: ProviderEvent) => void` callback (the `effort?` additive precedent) — the Anthropic
+> adapter maps its currently-discarded `message_start`/`content_block_start`/thinking-delta/`message_stop`
+> SSE events onto it; adapters that ignore it are byte-behavior-unchanged, and unimplemented providers
+> degrade to the stages `produce()` observes itself (SPEC-N5 isolation untouched). **(3)**
+> `ProduceOptions` gains `progressDetail?: 'stages' | 'full'` (absent ⇒ `'stages'` — no raw reasoning
+> text crosses the wire by default, ADR-0146 F3). **(4)** `RecordedTurn` gains `progress?: TurnProgress[]`
+> replayed ahead of the turn's lines (SPEC-R2/N4 recorded↔live parity — the keyless demo demonstrates the
+> feature). `AgentTransport.turn(): AsyncIterable<string>` stays BYTE-IDENTICAL (the ADR-0137-ratified
+> `./agent` surface is why); ADR-0088's typed-frame upgrade trigger is weighed and re-deferred with a
+> sharpened predicate (ADR-0146 F1). This is a design record only — no build has landed against this
+> amendment yet.
 
 ---
 

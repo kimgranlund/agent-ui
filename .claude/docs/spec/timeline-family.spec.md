@@ -36,6 +36,26 @@
 > independent rail, no cross-level connector continuity; F7: `size` does not cascade into nested
 > levels). See ADR-0143 for the full fork sheet and firm recommendations; this is a design record only
 > — no build has landed against this amendment yet.
+>
+> **Amendment (2026-07-17, docs-only — the body below is UNCHANGED, append-only):**
+> [ADR-0146](../adr/0146-live-turn-lifecycle-progress-channel.md) (proposed — TKT-0083's live-turn
+> lifecycle intake) extends this family in three places, each stated as its delta: **(1)** the item's
+> `status` enum (**SPEC-R2**'s props schema, **SPEC-R4**'s signifier rule, §2 Definitions) gains ONE new
+> member, `warning` — a lesser advisory outcome distinct from `error` — with its own distinct non-color
+> marker glyph per ADR-0057 (the existing four members are NOT renamed; TKT-0083's waiting/working/
+> success/danger vocabulary maps to `pending`/`active`/`done`/`error`, ADR-0146 F7); **(2)**
+> `ui-status-stream`'s imperative contract (**SPEC-R9**) gains an optional `StatusEntry.parent?: string`
+> (an existing entry's key) — a parented entry nests inside the parent item via ADR-0143's
+> `[data-role="nested"]` slot + shared `ui-disclosure` (NO second nesting mechanism; the keyed registry
+> stays flat, tail-follow stays the outer host's alone), and a group header's status escalates
+> worst-child-wins over the closed ladder `error > warning > active > pending > done` (ADR-0146 F5/F6);
+> **(3)** `ui-status-stream` (**SPEC-R12**'s props) gains an opt-in reflected boolean `header` (default
+> `false` — shipped consumers render byte-identically) rendering a visible `[data-part="header"]` row:
+> the `label` text plus a live overall-status glyph (`active` from construction until `finalize()`,
+> then the escalated final status; `fail`-path `error`) — the completion invariant (**SPEC-R11**)
+> gains a header-level face. See ADR-0146 for the full fork sheet; this is a design record only — no
+> build has landed against this amendment yet, and the grouping leg is explicitly sequenced on
+> ADR-0143's own build landing first.
 
 ---
 

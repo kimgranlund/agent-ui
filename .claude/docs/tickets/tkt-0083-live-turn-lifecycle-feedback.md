@@ -202,3 +202,57 @@ invention:
   Not decided here whether they ship together or sequenced; named so a build doesn't assume either.
 
 ## Findings
+
+**2026-07-17 — design intake complete: [ADR-0146](../adr/0146-live-turn-lifecycle-progress-channel.md)
+(proposed) + three spec amendments + a coverage-clean decomposition; nothing self-ratified.** All cited
+paths re-verified against the post-ADR-0137 tree first (`produce()`/the Anthropic adapter live in
+`src/agent/`, not the `tools/agent/` this ticket's body cites — the shell that stayed behind is only
+the dev-proxy/registry, `dev-proxy-plugin.ts:20-30`). The ticket's three-layer root cause CONFIRMED at
+the current lines: post-hoc-only narration (`conversation.ts:384` — `narrateCategories` called solely
+inside `finalize()`), full-response buffering (`produce.ts:345-352`, first yield at `:367`/`:399`),
+and the adapter discarding every lifecycle event (`anthropic.ts:86` — only `content_block_delta`
+survives). The Scope/Open forks resolved (recommendations, Kim ratifies): **(1) wire shape** — NOT a
+discriminated `turn()` union (would break the ONE-day-old ADR-0137-ratified `./agent` surface + the
+NDJSON protocol) and NOT a side channel (no cross-channel ordering, no recorded parity); instead the
+ADR-0088 envelope gains a runtime-composed `progress` kind whose lines INTERLEAVE during the turn on
+the same `AsyncIterable<string>`; the provider seam gains an additive optional `onEvent` callback (the
+`effort?` precedent, `agent-transport.ts:89-104`); 0088's typed-frame trigger weighed and re-deferred
+with a sharpened predicate. **(2) honesty law** — no conflict, recommended reading: a stage label from
+a closed code-owned table 1:1-keyed to a REAL observed signal is a process claim, not a fabricated
+content sentence (the shipped `LABEL` table, `conversation.ts:104-109`, is already exactly this class);
+guard made normative in the app-surfaces-m2 amendment. **(3) raw reasoning** — hidden by default at
+BOTH layers (`progressDetail: 'stages'` default keeps thinking text off the wire; UI default is the
+generic grouped "Reasoning…" with raw text behind the ADR-0129-F3-class opt-in disclosure); tradeoff
+named in ADR-0146 F3. **(4) providers** — the stage vocabulary is produce-layer-owned; adapters map
+into the optional callback; an unimplemented adapter degrades to the stages `produce()` itself
+observes — nothing foreclosed. **(5) grouping** — NO new component: `StatusEntry.parent?: string`
+realized through TODAY's sibling ADR-0143 `[data-role="nested"]` slot + shared disclosure (checked
+directly against ADR-0143 F1-F7 — its collapsed-summary preview and observer class serve this feature
+verbatim; a `ui-timeline-group` would be the second nesting primitive family-coherence bars);
+sequenced on ADR-0143's build. **(6) escalation** — worst-child-wins over ONE closed ladder
+`error > warning > active > pending > done` (monotone-truthful, fail-closed like the ADR-0122 F4
+completion invariant; the `error`-beats-`active` case ruled explicitly). Vocabulary: EXTEND not rename
+— waiting/working/success/danger already ARE `pending`/`active`/`done`/`error`; only `warning` is
+genuinely missing (renaming would break the ratified ADR-0122 F3 enum, the emittable catalog row, and
+the A2A guidance map). The blank-bubble symptom gets a structural fix independent of the wire: an
+opt-in visible `header` on `ui-status-stream` reading working-from-t=0 (an empty strip today renders
+ZERO pixels — `label` is aria-only). **Sequencing: TWO slices, ONE decomposition**
+([live-turn-lifecycle-feedback.decomp.json](../decompositions/live-turn-lifecycle-feedback.decomp.json),
+coverage-clean `--strict` exit 0; 17 nodes/15 actions/15 hosts/15 edges incl. an external-gate leaf
+graph-blocking the grouping node on ADR-0143's build) — Slice A component/UI first
+(closes the visible symptom with zero contract wait), Slice B pipeline second; the shared
+`TurnProgress` vocabulary is fixed in the ADR so the slices cannot drift. Spec deltas landed
+append-only (the ADR-0143 template): `a2ui-live-agent.spec.md` (SPEC-R5/N4 + §5 contracts),
+`app-surfaces-m2.spec.md` (SPEC-R6 live-at-ingest + the §4 `AgentTurnHandle.progress` widening — the
+shipped build's own NAMED LLD GAP on `narrateTrace` was the precedent that this contract needed the
+design seat), `timeline-family.spec.md` (warning + header + grouping). `agent-admin`'s overlay
+(`admin-live-runner.ts`) confirmed to ride the same `readMetaLine` loop — routed in Slice B's n13,
+not assumed. Independent doc review (scribe:doc-reviewer, fresh context): fix-then-ship — every
+load-bearing file:line claim independently re-verified TRUE against the shipped source; 1 major
+(the ADR-0143 sequencing gate lived in prose, not the decomp graph — fixed as a real external-gate
+edge n0→n4) + 4 minors (the `content` stage's emitter pinned to produce()'s first text fragment;
+the header's mid-flight escalation rule stated once in F8; F2's honesty-law quote re-cited to its
+true home, SPEC-R6's proposed codification; A-before-B named a delivery-priority ruling, the graph's
+parallelism deliberate) — all applied, coverage re-run clean. NOTE: minted as ADR-0146, not 0144 —
+0144/0145 were claimed same-day by TKT-0093/TKT-0092's intakes (numbering race caught at the
+pre-push fetch, renumbered before commit).
