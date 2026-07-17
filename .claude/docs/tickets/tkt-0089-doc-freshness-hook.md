@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0089
-status: open
+status: done
 date: 2026-07-17
 owner:
 kind: feature
@@ -87,3 +87,35 @@ CHANGELOG.md, CONTRIBUTING.md (doesn't exist yet).
   directly, not a fork needing a ratified ADR.
 
 ## Findings
+
+**2026-07-17 — shipped.** Real README.md and CONTRIBUTING.md (both previously absent) plus
+`.claude/hooks/doc-freshness-guard.py`, registered as a `PreToolUse` hook matching `Bash` in
+`.claude/settings.json`, following `adr-status-guard.py`'s exact posture (fast no-op on anything
+that isn't a `git commit`/`git push` command, exit 2 + one stderr line per failure on block, never
+mixed with JSON).
+
+- **README.md** — what agent-ui is (the pillar + FACE/light-DOM/ARIA-via-ElementInternals summary),
+  the 8 workspace packages, `npm install`/`dev`/`build`, the full Commands list, and a pointer into
+  `.claude/docs/` — references CLAUDE.md's own Commands section rather than forking a second copy.
+- **CONTRIBUTING.md** — the standing `npm run check && npm test` gate, the ticket/ADR/PRD-SPEC-LLD
+  doc grammar (pointing at `agent-ui-doc-standards`, not re-teaching it), the component-design
+  intake procedure, and a pointer at `process.md`'s drift/bloat rationale.
+- **The hook's bounded checks** (deterministic, no judgment call, matching Acceptance exactly):
+  README.md/CONTRIBUTING.md exist, are non-empty, and contain at least one markdown heading
+  (the "not recognizable as a real doc" floor — catches an accidentally-emptied or non-markdown
+  file a bare non-empty check would miss); every internal link in either file resolves — a
+  relative-path link against a real file on disk, or a bare `#anchor` against a heading in the SAME
+  file (GitHub-style slugification). External links (http/https/mailto/tel) are explicitly out of
+  scope — no network call from a hook. CHANGELOG.md is untouched — `sitemap.test.ts`'s existing
+  entry-count gate stays its one freshness check, exactly as scoped.
+- **Verified manually** (no vitest test exists for the other two Python hooks either — matches the
+  repo's own convention, hooks aren't part of the TS/vitest world): fast no-op on a non-Bash tool
+  call and on a non-git Bash command; a clean PASS against the real, just-written README/CONTRIBUTING;
+  three negative controls (both files missing, an empty file, a synthetic dangling relative-path
+  link + dangling anchor) each correctly BLOCK with the specific reason named, and a real matching
+  anchor correctly does NOT false-positive.
+- **Gate:** `npm run check` clean; full jsdom sweep 353 files / 6442 tests green (one test more than
+  the prior sweep, from an existing parameterized gate picking up a new root-level input; no new
+  test file added for the hook itself, matching the repo's own no-vitest-coverage convention for
+  Python hooks).
+
