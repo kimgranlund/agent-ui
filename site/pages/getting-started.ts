@@ -87,6 +87,10 @@ content.append(
   codeBlock(
     [
       "import '@agent-ui/components/foundation-styles.css' // [1] tokens.css -> dimensions.css (FIRST)",
+      "import '@agent-ui/components/base-styles.css'      // [1b] OPT-IN document basics: body typeface (--ui-sans),",
+      '                                                     //      leading, ink/surface, font smoothing — for a page',
+      "                                                     //      WITHOUT its own shell/body rule (this site's shell",
+      '                                                     //      sets its own, so the docs pages skip it)',
       "import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation",
       "import '@agent-ui/components/components'           // [3] self-defining ui-* controls (registers every tag)",
       "import '@agent-ui/icons/phosphor'                   // [3b] the default icon pack — activates the affordances",
