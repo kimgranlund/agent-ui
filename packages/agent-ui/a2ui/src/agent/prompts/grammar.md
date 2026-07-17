@@ -79,7 +79,9 @@ Output rules for the A2UI JSONL that follows the note line (omit entirely if the
 - Remove a surface the user no longer needs to see:
   {"version":"v1.0","deleteSurface":{"surfaceId":"main"}}
 - Resending a component "id" in updateComponents REPLACES its ENTIRE record — include every prop that should
-  still apply (not only the changed one) and the full children list; there is no partial-prop patch.
+  still apply (not only the changed one) and the full children list; there is no partial-prop patch. On an
+  EXISTING surface send ONLY the components that actually changed — never re-emit the unchanged rest of
+  the tree.
 - One exception: "id":"root" can be delivered only ONCE per surface — resending it is an id-graph error
   that silently keeps the OLD root, never your change. If a surface's structure will need to grow later,
   give root one stable wrapper child up front and put the growing container under ITS OWN id, one level

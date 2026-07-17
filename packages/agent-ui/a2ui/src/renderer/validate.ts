@@ -43,10 +43,33 @@ export const MESSAGE_KINDS = ['createSurface', 'updateComponents', 'updateDataMo
 // Structural adjacency keys, not bindable catalog props (kept out of pointer scanning).
 const RESERVED = new Set(['id', 'component', 'child', 'children'])
 
-/** Validate a single A2UI message or a full message stream against a catalog. Never throws. */
-export function validateA2ui(msgOrOutput: unknown, catalog: Catalog): ValidationVerdict {
+/**
+ * TKT-0081 — the optional CROSS-TURN seed for one surface: what a prior conversational turn already
+ * delivered. Without it the validator judges a payload standalone — correct for single-turn generation
+ * (the corpus) but structurally WRONG for a multi-turn producer: a follow-up `updateComponents` without
+ * `root` fails `root-missing`/dangling here while re-sending `root` fails the RENDERER's cross-turn
+ * IDGRAPH guard (ADR-0128) — a contradiction that live models resolved by shipping full trees and eating
+ * a client-error round per move (the Croupier game loop, measured). A seed merges the prior graph UNDER
+ * this payload's deliveries, so update-only payloads validate and a root-resend fails HERE (`sid:root`,
+ * the renderer's exact failure) — pre-wire, as a self-correct round.
+ */
+export interface SurfaceSeed {
+  /** Prior-turn component records, replay-merged (later resends already collapsed by upsert). */
+  components: readonly A2uiComponent[]
+  /** Whether `root` was already delivered for this surface in a prior turn. */
+  rootDelivered: boolean
+}
+
+/** Validate a single A2UI message or a full message stream against a catalog. Never throws.
+ *  `sessionSeed` (optional, TKT-0081) merges prior-turn graphs per surfaceId into the id-graph judgment —
+ *  absent, behavior is byte-identical to before. */
+export function validateA2ui(
+  msgOrOutput: unknown,
+  catalog: Catalog,
+  sessionSeed?: ReadonlyMap<string, SurfaceSeed>,
+): ValidationVerdict {
   try {
-    return run(msgOrOutput, catalog)
+    return run(msgOrOutput, catalog, sessionSeed)
   } catch {
     // Totality safety net: any unforeseen input still yields a verdict, never a throw (LLD-C11).
     return { valid: false, failures: [{ code: 'SCHEMA', path: '' }] }
@@ -58,7 +81,7 @@ interface SurfaceGraph {
   byId: Map<string, A2uiComponent> // merged (upsert) view for dangling/cycle checks
 }
 
-function run(input: unknown, catalog: Catalog): ValidationVerdict {
+function run(input: unknown, catalog: Catalog, sessionSeed?: ReadonlyMap<string, SurfaceSeed>): ValidationVerdict {
   const failures: Failure[] = []
 
   // Stage 1 — MIME/shape. A raw string is parsed first (PARSE on failure); the payload normalizes
@@ -69,6 +92,27 @@ function run(input: unknown, catalog: Catalog): ValidationVerdict {
 
   const surfaces = new Map<string, SurfaceGraph>()
   norm.messages.forEach((msg, i) => validateMessage(msg, i, catalog, failures, surfaces))
+
+  // TKT-0081 — merge each seeded surface's PRIOR graph UNDER this payload's deliveries, only for
+  // surfaces this payload actually touched (an untouched prior surface has nothing to judge). This
+  // payload's records WIN an id collision (a resend REPLACES, the renderer's upsert); the seed's
+  // root delivery COUNTS (so a re-delivery here is the same `sid:root` failure the renderer emits).
+  if (sessionSeed !== undefined) {
+    // A payload that itself (re-)creates a surface starts that surface FRESH — its seed must not apply
+    // (a legitimate delete+create re-delivery of `root` is not a resend).
+    const createdHere = new Set(
+      norm.messages
+        .filter((m): m is { createSurface: { surfaceId?: unknown } } => isObject(m) && isObject(m.createSurface))
+        .map((m) => m.createSurface.surfaceId)
+        .filter((id): id is string => typeof id === 'string'),
+    )
+    for (const [sid, g] of surfaces) {
+      const seed = sessionSeed.get(sid)
+      if (seed === undefined || createdHere.has(sid)) continue
+      for (const comp of seed.components) if (!g.byId.has(comp.id)) g.byId.set(comp.id, comp)
+      if (seed.rootDelivered) g.rootCount += 1
+    }
+  }
 
   // Stage 4 — id-graph, per surface that delivered components.
   for (const [sid, g] of surfaces) checkIdGraph(sid, g, failures)

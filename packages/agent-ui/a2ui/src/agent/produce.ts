@@ -40,6 +40,8 @@ import type { CorpusRecord } from '../corpus/record.ts'
 import type { RetrieveQuery } from '../corpus/retrieve.ts'
 import { heal } from '../corpus/heal.ts'
 import { validateA2ui } from '../renderer/validate.ts'
+import type { SurfaceSeed } from '../renderer/validate.ts'
+import type { A2uiComponent } from '../protocol.ts'
 import type { AgentProvider, Session, Turn, TurnInput } from './agent-transport.ts'
 import { buildSystemPrompt } from './system-prompt.ts'
 import { frameClientMessage } from './session.ts'
@@ -262,6 +264,54 @@ function feedScopeFailures(ask: AskDeclaration, output: A2uiOutput): RoundFailur
   return [...offendingTypes].map((type) => ({ code: 'FEED_SCOPE', path: `${ask.surfaceId}:${type}` }))
 }
 
+/**
+ * TKT-0081 — the cross-turn validation seed: replay the session's prior ASSISTANT turns (validated JSONL,
+ * exactly what `appendAssistantTurn` stored) into a per-surface `SurfaceSeed` for `validateA2ui`. Without
+ * it the per-round validator is session-blind and structurally CONTRADICTS the renderer on follow-up
+ * turns: an update-only payload (no `root`) fails `root-missing`/dangling standalone, while re-sending
+ * `root` passes standalone but fails the renderer's cross-turn ADR-0128 IDGRAPH guard — live models
+ * resolved the trap by shipping full trees and eating a client-error round per move (the Croupier game
+ * loop, measured). Seeded, the validator judges the MERGED graph the renderer will actually hold:
+ * update-only follow-ups validate; a root-resend fails HERE (`sid:root`) as a pre-wire self-correct
+ * round. A prior `deleteSurface` drops that surface's seed (a later re-create starts fresh).
+ */
+function sessionSurfaceSeeds(session: Session): Map<string, SurfaceSeed> {
+  const seeds = new Map<string, { components: A2uiComponent[]; byId: Map<string, A2uiComponent>; rootDelivered: boolean }>()
+  for (const turn of session.turns) {
+    if (turn.role !== 'assistant') continue
+    for (const line of turn.content.split('\n')) {
+      const trimmed = line.trim()
+      if (trimmed.length === 0) continue
+      try {
+        const msg = JSON.parse(trimmed) as {
+          createSurface?: { surfaceId?: string }
+          updateComponents?: { surfaceId?: string; components?: A2uiComponent[] }
+          deleteSurface?: { surfaceId?: string }
+        }
+        if (msg.deleteSurface?.surfaceId !== undefined) {
+          seeds.delete(msg.deleteSurface.surfaceId)
+          continue
+        }
+        const body = msg.updateComponents
+        if (body?.surfaceId === undefined || !Array.isArray(body.components)) continue
+        let seed = seeds.get(body.surfaceId)
+        if (seed === undefined) {
+          seed = { components: [], byId: new Map(), rootDelivered: false }
+          seeds.set(body.surfaceId, seed)
+        }
+        for (const comp of body.components) {
+          if (typeof comp?.id !== 'string') continue
+          seed.byId.set(comp.id, comp) // upsert — a later resend REPLACES (the renderer's merge)
+          if (comp.id === 'root') seed.rootDelivered = true
+        }
+      } catch {
+        // not JSON (shouldn't happen for a stored assistant turn) — skip rather than throw
+      }
+    }
+  }
+  return new Map([...seeds].map(([sid, s]) => [sid, { components: [...s.byId.values()], rootDelivered: s.rootDelivered }]))
+}
+
 export async function* produce(input: TurnInput, deps: ProduceDeps, opts: ProduceOptions): AsyncIterable<string> {
   const k = opts.k ?? 3
   const query = queryOf(input, k)
@@ -275,6 +325,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   // (0, 2, 4, ...). A caller holding a `traces[]` array must correlate by ARRAY POSITION, never assume
   // `traces[i].turnIndex === i` or treat this field as `traces.length`-equivalent.
   const turnIndex = input.session.turns.length
+  const sessionSeeds = sessionSurfaceSeeds(input.session) // TKT-0081 — once per turn; seeds every round's validate
   const exemplarIds = exemplars.map((e) => e.name)
   const traceFor = (rounds: number, healed: number, failureCodes: string[]): TurnTrace => ({
     turnIndex,
@@ -322,7 +373,10 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       failures = [{ code: 'PARSE', path: '' }]
       continue
     }
-    const verdict = validateA2ui(assembled.output, deps.catalog) // SPEC-N3 — the shared validator, no fork
+    // SPEC-N3 — the shared validator, no fork; TKT-0081 — seeded with the session's prior graphs so the
+    // per-round judgment matches the MERGED state the renderer will hold (update-only follow-ups valid;
+    // a cross-turn root-resend fails pre-wire as `sid:root`, a self-correct round).
+    const verdict = validateA2ui(assembled.output, deps.catalog, sessionSeeds)
     if (verdict.valid) {
       // ADR-0097 §3 FEED_SCOPE gate — AFTER the shared validator, BEFORE anything streams. A violation is
       // a self-correct round (never a stream), exactly like a validator failure.

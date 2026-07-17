@@ -506,3 +506,66 @@ describe('produce() feed-embedded ask — the FEED_SCOPE self-correct gate (ADR-
     expect(readMetaLine(lines[0]!)!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
   })
 })
+
+// TKT-0081 — session-seeded validation: the per-round validator judges the MERGED cross-turn graph, so
+// a follow-up turn's root-resend fails PRE-WIRE (a self-correct round with `sid:root` fed back — the
+// renderer's ADR-0128 verdict, minus the shipped client-error round trip it used to cost), and the
+// correct update-only follow-up (standalone-invalid before this ticket) streams clean.
+describe('produce() — TKT-0081 cross-turn seeded validation', () => {
+  const priorAssistant =
+    '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+    '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[' +
+    '{"id":"root","component":"Column","children":["group"]},' +
+    '{"id":"group","component":"Column","children":["msg"]},' +
+    '{"id":"msg","component":"Text","text":"hello"}]}}'
+  const followUp: TurnInput = {
+    kind: 'intent',
+    text: 'set the message to ready',
+    session: {
+      turns: [
+        { role: 'user', content: 'say hello' },
+        { role: 'assistant', content: priorAssistant },
+      ],
+    },
+  }
+  // The trap shape live models shipped before this ticket: the FULL tree again, root included.
+  const RESEND_ROOT =
+    '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[' +
+    '{"id":"root","component":"Column","children":["group"]},' +
+    '{"id":"group","component":"Column","children":["msg"]},' +
+    '{"id":"msg","component":"Text","text":"ready"}]}}'
+  // The correct follow-up: ONLY the changed component — standalone-invalid (root-missing + dangling ref
+  // into the prior turn), valid ONLY under the session seed.
+  const UPDATE_ONLY = '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"msg","component":"Text","text":"ready"}]}}'
+
+  it('a root-resend follow-up self-corrects PRE-WIRE (sid:root fed back), then the update-only round streams', async () => {
+    const { provider, calls, reqs } = stubProvider([RESEND_ROOT, UPDATE_ONLY])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(followUp, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(calls()).toBe(2)
+    expect(lines).toEqual([UPDATE_ONLY]) // only the corrected round streamed — the resend never shipped
+    const round2 = reqs()[1]!.messages
+    expect(round2.some((m) => m.role === 'user' && m.content.includes('main:root'))).toBe(true) // the renderer's verdict, fed back
+  })
+
+  it('a correct update-only follow-up streams CLEAN on round 1 (standalone-invalid before this ticket)', async () => {
+    const { provider, calls } = stubProvider([UPDATE_ONLY])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(followUp, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(calls()).toBe(1) // zero wasted rounds
+    expect(lines).toEqual([UPDATE_ONLY])
+  })
+
+  it('a FRESH first turn is unaffected (empty session ⇒ no seed ⇒ the standalone judgment, unchanged)', async () => {
+    const { provider, calls } = stubProvider([VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(1)
+    expect(lines).toHaveLength(2)
+  })
+})

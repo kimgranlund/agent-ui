@@ -213,3 +213,82 @@ describe('validateA2ui (renderer LLD-C11, SPEC-R11)', () => {
     expect(v.failures).toEqual([{ code: 'SCHEMA', path: '[0].callFunction.call' }])
   })
 })
+
+// TKT-0081 — the optional cross-turn `sessionSeed`: judge THIS payload against the MERGED graph the
+// renderer will actually hold. The pair of concerns: (1) an update-only follow-up (no `root`, refs into
+// the prior turn's components) must VALIDATE seeded — standalone it fails root-missing + dangling, the
+// exact contradiction that forced live producers to resend full trees; (2) a `root` re-delivery for a
+// seeded surface must FAIL as `sid:root` (the renderer's own ADR-0128 verdict), pre-wire.
+describe('validateA2ui — the TKT-0081 sessionSeed (cross-turn merged-graph judgment)', () => {
+  const seed = new Map([
+    [
+      's1',
+      {
+        components: [
+          { id: 'root', component: 'Column', children: ['group'] },
+          { id: 'group', component: 'Column', children: ['msg'] },
+          { id: 'msg', component: 'Text', text: 'hello' },
+        ],
+        rootDelivered: true,
+      },
+    ],
+  ])
+  const updateOnly = [
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'group', component: 'Column', children: ['msg', 'status'] },
+          { id: 'status', component: 'Text', text: 'ready' },
+        ],
+      },
+    },
+  ]
+
+  it('an update-only follow-up VALIDATES seeded (refs resolve in the merged graph; root already held)', () => {
+    expect(validateA2ui(updateOnly, demoCatalog, seed)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('negative control — the SAME payload unseeded fails root-missing (the pre-seed standalone judgment)', () => {
+    const v = validateA2ui(updateOnly, demoCatalog)
+    expect(v.valid).toBe(false)
+    expect(v.failures.some((f) => f.code === 'IDGRAPH' && f.path === 's1:root-missing')).toBe(true)
+  })
+
+  it('re-delivering "root" for a seeded surface fails as the renderer\'s own `sid:root` verdict', () => {
+    const resend = [
+      {
+        version: 'v1.0',
+        updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Column', children: ['group'] }] },
+      },
+    ]
+    const v = validateA2ui(resend, demoCatalog, seed)
+    expect(v.valid).toBe(false)
+    expect(v.failures).toEqual([{ code: 'IDGRAPH', path: 's1:root' }])
+  })
+
+  it('a payload that RE-CREATES the surface starts fresh — its root delivery is legal despite the seed', () => {
+    const recreate = [
+      { version: 'v1.0', deleteSurface: { surfaceId: 's1' } },
+      { version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'demo' } },
+      {
+        version: 'v1.0',
+        updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Text', text: 'fresh' }] },
+      },
+    ]
+    expect(validateA2ui(recreate, demoCatalog, seed)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('an UNSEEDED surface in the same call keeps the standalone judgment (seed never leaks across ids)', () => {
+    const other = [
+      {
+        version: 'v1.0',
+        updateComponents: { surfaceId: 's2', components: [{ id: 'lbl', component: 'Text', text: 'x' }] },
+      },
+    ]
+    const v = validateA2ui(other, demoCatalog, seed)
+    expect(v.valid).toBe(false)
+    expect(v.failures.some((f) => f.code === 'IDGRAPH' && f.path === 's2:root-missing')).toBe(true)
+  })
+})
