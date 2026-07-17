@@ -275,24 +275,47 @@ export class UIConversationElement extends UIElement {
 
   /** Opens one agent turn: a fresh bubble (narration strip + note + mounts container, reserved in that
    *  literal order, SPEC-R2) and the routing state the returned handle closes over (SPEC-R6/R7). A
-   *  no-op-stub handle pre-connect (never throws — the same documented-no-op discipline as ui-surface-host). */
-  beginAgentTurn(): AgentTurnHandle {
+   *  no-op-stub handle pre-connect (never throws — the same documented-no-op discipline as ui-surface-host).
+   *
+   *  TKT-0079 — `opts.intoSurface`: when it names an OPEN registry record whose bubble is still connected,
+   *  the turn RESUMES that bubble instead of opening a new card (Kim: "stay in the same card unless it has
+   *  to become a new card" — ADR-0129's same-surface routing extended to the bubble plane, for the
+   *  action-click game loop). A FRESH narration strip swaps in place of the finalized old one (finalize()
+   *  truncate-marks its entries — ui-status-stream's completion invariant is per-strip, so a resumed turn
+   *  gets its own strip rather than un-finalizing the last one); the note div is reused (overwritten at
+   *  finalize); a fresh surfaceId in a resumed turn mounts into the SAME bubble's mounts. Anything else —
+   *  unknown id, closed record, disconnected bubble — falls through to the fresh-bubble path unchanged. */
+  beginAgentTurn(opts?: { intoSurface?: string }): AgentTurnHandle {
     if (!this.#guard('beginAgentTurn')) {
       return { ingestLine: () => {}, setNote: () => {}, finalize: () => {}, fail: () => {} }
     }
 
     const wasNear = this.#isNearLogBottom()
-    const bubble = this.#makeBubble('agent')
-    const narration = document.createElement('ui-status-stream') as UIStatusStreamElement
-    narration.setAttribute('size', 'sm')
-    narration.setAttribute('label', 'Agent activity')
-    narration.dataset.part = 'narration'
-    const note = document.createElement('div')
-    note.dataset.part = 'body'
-    const mounts = document.createElement('div')
-    mounts.dataset.part = 'mounts'
-    bubble.append(narration, note, mounts)
-    this.#log!.append(bubble)
+    const resumed = opts?.intoSurface !== undefined ? this.#resumableBubble(opts.intoSurface) : undefined
+    let bubble: HTMLElement
+    let narration: UIStatusStreamElement
+    let note: HTMLElement
+    let mounts: HTMLElement
+    if (resumed !== undefined) {
+      ;({ bubble, note, mounts } = resumed)
+      narration = document.createElement('ui-status-stream') as UIStatusStreamElement
+      narration.setAttribute('size', 'sm')
+      narration.setAttribute('label', 'Agent activity')
+      narration.dataset.part = 'narration'
+      resumed.narration.replaceWith(narration)
+    } else {
+      bubble = this.#makeBubble('agent')
+      narration = document.createElement('ui-status-stream') as UIStatusStreamElement
+      narration.setAttribute('size', 'sm')
+      narration.setAttribute('label', 'Agent activity')
+      narration.dataset.part = 'narration'
+      note = document.createElement('div')
+      note.dataset.part = 'body'
+      mounts = document.createElement('div')
+      mounts.dataset.part = 'mounts'
+      bubble.append(narration, note, mounts)
+      this.#log!.append(bubble)
+    }
     void this.#tailFollowLog(wasNear)
 
     this.#turnSeq += 1
@@ -375,6 +398,21 @@ export class UIConversationElement extends UIElement {
         this.#addSystemBubble(`⚠ ${message}`)
       },
     }
+  }
+
+  /** TKT-0079 — the resume probe: `id`'s OPEN record whose bubble is still in this log, plus the three
+   *  turn parts a resumed turn writes into. `undefined` on ANY miss (unknown id, closed record,
+   *  disconnected bubble, missing part) ⇒ the caller takes the fresh-bubble path unchanged. */
+  #resumableBubble(
+    id: string,
+  ): { bubble: HTMLElement; narration: UIStatusStreamElement; note: HTMLElement; mounts: HTMLElement } | undefined {
+    const record = this.#registry.get(id)
+    if (record === undefined || record.state !== 'open' || !record.bubble.isConnected) return undefined
+    const narration = record.bubble.querySelector<UIStatusStreamElement>(':scope > [data-part="narration"]')
+    const note = record.bubble.querySelector<HTMLElement>(':scope > [data-part="body"]')
+    const mounts = record.bubble.querySelector<HTMLElement>(':scope > [data-part="mounts"]')
+    if (narration === null || note === null || mounts === null) return undefined
+    return { bubble: record.bubble, narration, note, mounts }
   }
 
   /** The reply affordance — a callback, NEVER a CustomEvent (SPEC-R5). Safe to call before OR after connect. */

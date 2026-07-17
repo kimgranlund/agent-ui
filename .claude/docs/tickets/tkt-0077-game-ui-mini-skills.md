@@ -68,6 +68,12 @@ clause; the composed-prompt baselines untouched — no ★ body edited); the sit
 zone "9♣" "7♦" tiles + 16 badge, Chips Stat 100, solid Hit / soft Stand footer. Clicking **Hit**
 updated the SAME single host (ADR-0129) and appended a real "4♠" tile.
 
+> **SUPERSEDED (same day):** the detour's "bound-path-never-set variance" conclusion was WRONG —
+> the real mechanism is the template item-relative binding syntax the grammar never taught
+> ([TKT-0080](tkt-0080-template-relative-binding-teaching-gap.md), root-caused from a captured
+> wire: `{"path":"/glyph"}` inside a template is ABSOLUTE and reads the whole model). The guard
+> sentence below was replaced by the template teaching in the same fix.
+
 **The diagnosis detour (recorded because it will recur):** the FIRST post-registry deal rendered
 the right anatomy but EMPTY card tiles. The captured wire (server-side repro + a live fetch-tee)
 proved the tiles were `Text.text` bound to data-model paths — a shape the renderer handles fine

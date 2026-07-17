@@ -120,6 +120,12 @@ const handle = conv.beginAgentTurn()
 for await (const line of transport.turn(input)) handle.ingestLine(line)
 handle.setNote('Built a settings form.')
 handle.finalize()
+
+// TKT-0079 — an interaction turn (e.g. a surface action click) can RESUME the bubble that owns its
+// surface instead of opening a new card: the owning bubble gets a fresh narration strip, its note is
+// overwritten at finalize, and even a fresh surfaceId mounts into that same bubble. Anything
+// non-resumable (unknown id, closed surface, disconnected bubble) falls through to a fresh bubble.
+const followUp = conv.beginAgentTurn({ intoSurface: clickedMessage.action.surfaceId })
 ```
 
 ## Composes `ui-surface-host` internally, one per open surface (ADR-0129 clause 2)

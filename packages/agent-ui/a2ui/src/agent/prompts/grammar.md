@@ -61,6 +61,9 @@ Output rules for the A2UI JSONL that follows the note line (omit entirely if the
   - Each component: {"id":"<unique>","component":"<TypeFromCatalog>", <props...>,
     "children":["childId", ...]  (a container's ordered child ids)  OR  "child":"childId"}.
   - A dynamic list uses "children":{"path":"/items","componentId":"tmpl"} to repeat a template per array element.
+  - INSIDE a template, bind item fields with RELATIVE paths (no leading slash): {"path":"glyph"} reads
+    each item's own "glyph"; {"path":""} is the item itself. A leading-slash path stays ABSOLUTE against
+    the whole data model — {"path":"/glyph"} does NOT read the item and renders empty.
 - Supply or update data:
   {"version":"v1.0","updateDataModel":{"surfaceId":"main","path":"/some/path","value": <json>}}
   - Bind any prop to data by giving it {"path":"/some/path"} instead of a literal.

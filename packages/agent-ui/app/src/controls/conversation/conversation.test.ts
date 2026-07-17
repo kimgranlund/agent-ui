@@ -145,6 +145,49 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
     expect(host1.textContent).toContain('ready') // the resend genuinely reached the SAME host
   })
 
+  it('TKT-0079: beginAgentTurn({intoSurface}) RESUMES the owning bubble — no new card; narration swaps fresh; note overwritten; a fresh surfaceId mounts in the SAME bubble', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'game', catalogId: 'agent-ui' } }))
+    t1.setNote('table dealt')
+    t1.finalize()
+    const bubble1 = log(el).querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const strip1 = bubble1.querySelector('[data-part="narration"]')
+
+    const t2 = el.beginAgentTurn({ intoSurface: 'game' })
+    t2.ingestLine(line({ version: 'v1.0', updateDataModel: { surfaceId: 'game', path: '/x', value: 1 } }))
+    // a FRESH surfaceId inside the resumed turn stays in the same card (the ticket's "unless it has to" rule)
+    t2.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'side-pot', catalogId: 'agent-ui' } }))
+    t2.setNote('you drew a card')
+    t2.finalize()
+
+    expect(log(el).querySelectorAll('[data-part="bubble"][data-role="agent"]')).toHaveLength(1) // NO second card
+    expect(bubble1.querySelector('[data-part="body"]')?.textContent).toBe('you drew a card') // note overwritten
+    const strips = bubble1.querySelectorAll('[data-part="narration"]')
+    expect(strips).toHaveLength(1) // exactly one strip — the fresh one REPLACED the finalized one
+    expect(strips[0]).not.toBe(strip1)
+    expect(bubble1.querySelectorAll('ui-surface-host')).toHaveLength(2) // side-pot mounted HERE, not a new bubble
+  })
+
+  it('TKT-0079 negative control: an unknown (or closed) intoSurface falls through to the fresh-bubble path', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+
+    const t1 = el.beginAgentTurn({ intoSurface: 'never-seen' })
+    t1.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'a', catalogId: 'agent-ui' } }))
+    t1.finalize()
+    expect(log(el).querySelectorAll('[data-part="bubble"][data-role="agent"]')).toHaveLength(1)
+
+    const t2 = el.beginAgentTurn()
+    t2.ingestLine(line({ version: 'v1.0', deleteSurface: { surfaceId: 'a' } }))
+    t2.finalize()
+
+    const t3 = el.beginAgentTurn({ intoSurface: 'a' }) // closed record ⇒ NOT resumable
+    t3.setNote('after close')
+    t3.finalize()
+    expect(log(el).querySelectorAll('[data-part="bubble"][data-role="agent"]')).toHaveLength(3)
+  })
+
   it('a deleteSurface line disposes that ONE host + leaves a VISIBLE "Closed." annotation; a later line re-targeting it is recognized as KNOWN, never throws', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
 
