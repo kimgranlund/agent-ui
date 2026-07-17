@@ -22,7 +22,7 @@ decided**: `tabs.ts`/`tab.ts`/`tab-panel.ts`/`tabs.css`, `split.ts`/`split-pane.
 **The tabs anatomy as shipped.** `ui-tabs` is the coordinator (a `UIContainerElement` with the
 surface axes, transparent by default per ADR-0104); it creates the `[data-part=tablist]` strip and
 reparents the `ui-tab` rows into it; `ui-tab-panel` siblings are bare `UIElement`s — `role=tabpanel`
-via internals, self-set `tabindex=0` (`tab-panel.ts:27-28`, the APG rationale: *"the panel takes
+via internals, self-set `tabindex=0` (`tab-panel.ts:26-28`, the APG rationale: *"the panel takes
 tabindex=0 so a keyboard user can reach its content/scroll it"*), body = light-DOM children. In CSS
 the shell is `display: block`; the panel gets `padding: var(--ui-tabs-panel-pad)` (=
 `--md-sys-space-md`) and the author-origin `[hidden]{display:none}` guard — and **no `overflow`
@@ -128,7 +128,9 @@ the existing generalization as the taught idiom, not to mint anything new. Three
    radius, the `scrollable` masked viewport, its keyboard/focus machinery); **the `[data-box]`
    region system** (`container-box.css`) where the need is structural — sticky brackets, the region
    padding law, scroll-fade — without a card's frame. `[data-box]` IS "Card's regions, generalized"
-   (tag-agnostic, five consumers) and is hereby ratified as a **public, taught composition idiom**
+   (tag-agnostic, six consumers — modal/select/menu/combo-box/calendar plus `ui-command-modal`'s
+   listbox, `command-modal.ts:132`, a doc-review-caught undercount) and is hereby ratified as a
+   **public, taught composition idiom**
    rather than an internal implementation detail: the composing-containers teaching block (ADR-0056
    cl.2's home) gains the rule. No new `ui-region-*`/generic-container element family is minted.
 3. **Content rhythm belongs to content wrappers, never to the host.** Gap-between-sections is
@@ -169,7 +171,8 @@ coverage-clean decomposition are the record the resolution earns.
   panel). Filed as its own ticket at build dispatch.
 - **`[data-box]` becomes a public contract.** Ratifying it as taught (rule 2) means a future
   `container-box.css` change is a public-idiom change, not an internal refactor — named cost,
-  accepted: five families already depend on it identically, so its de-facto stability is priced in.
+  accepted: six families already depend on it identically (`command-modal.ts:132` included), so its
+  de-facto stability is priced in.
 - **The `Tabs` catalog row may grow a structural boolean** (Q1 cl.4, Lane B) — an agent can then ask
   for a bounded, self-scrolling tabs without any consumer CSS, closing the composed-surface gap for
   CSS-less consumers too.
@@ -184,7 +187,7 @@ coverage-clean decomposition are the record the resolution earns.
   modal, drawer, …) — the one-fact-one-home failure; ADR-0120's tier split already answers where
   composed chrome lives.
 - **A new generic region element family ("Card's regions, generalized" as `ui-region-*` elements).**
-  Rejected: `[data-box]` already IS the tag-agnostic generalization, shipped and proven by five
+  Rejected: `[data-box]` already IS the tag-agnostic generalization, shipped and proven by six
   consumers; a parallel element vocabulary beside it is the second-vocabulary failure ADR-0104's own
   Alternatives (a second surface vocabulary) rejected in miniature.
 - **`fill` as `ui-tabs`' DEFAULT posture.** Rejected: breaking for every document-flow tabs (the
