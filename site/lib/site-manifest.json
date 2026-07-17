@@ -77,6 +77,13 @@
     "section": "Guides"
   },
   {
+    "href": "./code-editor-doc.html",
+    "label": "Code Editor",
+    "description": "ui-code-editor: an editable-first source editor progressively enhanced by CodeMirror 6, agent-ui's first third-party runtime dependency.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./agent-admin.html",
     "label": "Agent Admin",
     "description": "ui-agent-admin is a three-pane ui-split (chat canvas, prompts, settings) over ui-conversation and ui-settings, one shared SettingsStore, live-apply with no external model dependency.",

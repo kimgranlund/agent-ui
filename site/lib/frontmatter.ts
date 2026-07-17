@@ -99,6 +99,7 @@ import ladderMd from '../../packages/agent-ui/components/src/controls/ladder/lad
 // gates' source of truth) and router-doc.html is an ungrouped site-level page, exactly like app-shell.html.
 import routerOutletMd from '../../packages/agent-ui/router/src/controls/router-outlet/router-outlet.md?raw'
 import routerLinkMd from '../../packages/agent-ui/router/src/controls/router-link/router-link.md?raw'
+import codeEditorMd from '../../packages/agent-ui/code/src/editor/editor.md?raw'
 
 /** A parsed control descriptor: the structured frontmatter (its attributes-as-API drive the table) + the prose body. */
 export interface ComponentDoc {
@@ -189,6 +190,9 @@ export const loadLadderDoc = (): ComponentDoc => parseDoc(ladderMd)
 // components-scoped ALL_DESCRIPTORS glob below.
 export const loadRouterOutletDoc = (): ComponentDoc => parseDoc(routerOutletMd)
 export const loadRouterLinkDoc   = (): ComponentDoc => parseDoc(routerLinkMd)
+// @agent-ui/code/editor (ADR-0139) — the SAME posture as router above: a package above/beside components on
+// the DAG, its descriptor sits outside the components-scoped ALL_DESCRIPTORS glob below.
+export const loadCodeEditorDoc = (): ComponentDoc => parseDoc(codeEditorMd)
 
 // ── tier enumeration (for the family overview + tier showcase — a DERIVED member list) ───────────────────────
 // The whole `{name}.md` descriptor set, globbed at build time (Vite resolves `import.meta.glob` statically). The

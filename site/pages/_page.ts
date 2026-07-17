@@ -438,6 +438,11 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './router-doc.html', label: 'Router' }],
   },
   {
+    // @agent-ui/code/editor (ui-code-editor, ADR-0139) — the SAME ungrouped-site-level-link posture as Router
+    // just above: a GUIDE page for an opt-in subpath outside components/src, not a fleet component in it.
+    links: [{ href: './code-editor-doc.html', label: 'Code Editor' }],
+  },
+  {
     // ui-agent-admin (@agent-ui/app, TKT-0039/ADR-0131) — the SAME ungrouped-site-level-link posture as
     // App Shell/Master Detail/Settings just above: a GUIDE page for an app-tier composition (ui-split +
     // ui-settings + ui-conversation), not a fleet component in components/src.
