@@ -994,6 +994,13 @@
     "section": "Records"
   },
   {
+    "name": "ADR-0144",
+    "url": "./adr-index.html#adr-0144",
+    "description": "The pane/tab content-region rule system — layout hosts own bounds+scroll, regions compose INSIDE; ui-tabs gains an opt-in fill posture; ui-split-pane stays zer…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "ADR-0145",
     "url": "./adr-index.html#adr-0145",
     "description": "The TICKET tier (only) moves to GitHub Issues; ADR/SPEC/LLD/PRD stay files, always (proposed — TKT-0092 intake; Kim's ask: \"transition repo to use git issues,…",

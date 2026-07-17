@@ -1,0 +1,45 @@
+{
+  "domain": "components",
+  "plan": true,
+  "_note": "TKT-0093 / ADR-0144 — the pane/tab content-region rule system. OUTSIDE-IN: the two layout hosts (ui-split-pane, ui-tab-panel) crossed against the two ALREADY-SHIPPED region systems ([data-box] in container-box.css; ui-card's regions) and the two spacing ledgers (--md-sys-space layout ladder vs the rem-fixed --ui-box-* region pads). INSIDE-OUT: the actions composed content must support inside a bounded pane/panel. The cross found exactly ONE unhosted action — 'fill a bounded parent with a pinned tablist + scrolling active panel' (the composition agent-admin.css:117-137 hand-rolled by its own admission) — so the build is ONE opt-in ui-tabs variant plus doc/teaching statements; every other action already has a shipped host (split-pane overflow:auto; [data-box]/Card regions; row/column gap). Q2 resolved by source verification: split-pane.css declares ZERO padding/gap and references NO space token — ruled to STAY that way (n8), so split.css/split-pane.css are confirmed no-ops (n11). The agent-admin retrofit is a named FOLLOW-UP ticket (n10), explicitly out of this ADR's build per TKT-0093's own scope.",
+  "nodes": [
+    { "id": "n1", "label": "pane/tab content-region rule system (ADR-0144) — hosts own bounds+scroll; regions compose INSIDE; ui-tabs gains [fill]", "leaf": false },
+
+    { "id": "n2", "label": "tabs.css [fill] variant — shell flex column filling a bounded parent, strip auto, visible panel flex:1 + overflow-y:auto; hidden panels stay display:none", "leaf": true, "accept": "`npm run test:browser tabs` — both engines: a <ui-tabs fill> inside a height-bounded box renders the tablist strip at its natural control-row height, pinned (strip rect identical before vs after scrolling the panel); the ACTIVE panel's scrollHeight > clientHeight with internal scroll live; every non-selected panel computes display:none (the author-beats-UA [hidden] guard survives the new display mode); a <ui-tabs> WITHOUT [fill] is byte-identical to today (negative control: no rule outside :scope[fill] changes)" },
+    { "id": "n3", "label": "the `fill` reflected boolean prop on UITabsElement + the tabs.md descriptor row", "leaf": true, "accept": "`npm test tabs` — jsdom: `fill` is a reflected boolean in static props (the split-pane `collapsible` shape); tabs-descriptor.test.ts's compareDescriptorToProps stays green with the new tabs.md attributes[] row; setting the prop from JS mirrors the attribute and vice versa" },
+    { "id": "n4", "label": "the consumer-inherited panel scrollbar seam — --ui-tabs-panel-scrollbar-width, var() fallback only (the --ui-split-pane-scrollbar-width shape)", "leaf": true, "accept": "`npm test tabs` (tabs-css.test.ts) — the [fill] panel rule reads `scrollbar-width: var(--ui-tabs-panel-scrollbar-width, auto)` and the :where(ui-tabs) TOKEN block does NOT declare the property (an own declaration would beat a composing surface's inherited value — the TKT-0065 alias-resolution lesson split-pane.css already records); browser leg: setting the property on an ancestor hides the filled panel's scrollbar while scrollTop still moves" },
+    { "id": "n5", "label": "keyboard-scroll disposition for the filled panel — MEASURE the platform default against the already-shipped tabindex=0, then decide (card-content precedent)", "leaf": true, "accept": "`npm run test:browser tabs` — a focused filled ui-tab-panel is keyboard-scrollable on BOTH engines: either the platform default action moves scrollTop on ArrowDown/PageDown/End (measured, per engine — NOT assumed; card.browser.test.ts measured Chromium-only for the same shape), or, if WebKit no-ops as it did for ui-card-content, the panel gains the same explicit keydown handler card-content.ts ships and the probe passes via it; whichever leg lands, the decision + measurement is recorded in tabs.md" },
+    { "id": "n6", "label": "whole-shape browser proof — the realistic composed case (tabs-in-bounded-pane), not per-part px only", "leaf": true, "accept": "`npm run test:browser tabs` — the test-the-whole-shape law: a <ui-tabs fill> mounted inside a fixed-height flex column (the agent-admin shell shape) asserts the WHOLE rendered bounding box fills the parent, the strip + panel partition it with no overflow leak past the host, and tab-switching to a short panel then back to the long one re-engages scroll — cross-engine" },
+    { "id": "n7", "label": "A2UI catalog disposition for `fill` — the Tabs row (Lane B, ADR-0102): structural boolean accessor or a reasoned exclusion", "leaf": true, "accept": "`npm test a2ui` — the Tabs factory/catalog either exposes `fill` 1:1 (the SplitPane `collapsible` structural-boolean precedent, factories.ts) or the exclusion is recorded with a reason in the catalog spec's Tabs row; the catalog contract gate stays green either way" },
+    { "id": "n8", "label": "the split-pane spacing-policy statement (Q2 ruling) — split-pane.md + tabs.md carry the rule text; NO css change", "leaf": true, "accept": "`npx vitest run site/lib/docs-grammar.test.ts` green; split-pane.md states the ruled policy verbatim shape: a pane holds ZERO padding by law and adopts NO space-ladder token — spacing inside a pane is the hosted content's job (Card/[data-box] region pads are deliberately rem-fixed per ADR-0046; row/column gap rides --md-sys-space) — and names --ui-split-pane-min as geometry, not spacing" },
+    { "id": "n9", "label": "the region rule taught once — the composing-containers teaching block gains the pane/panel rule (regions compose INSIDE: ui-card chrome-grade, [data-box] structural)", "leaf": true, "accept": "the docs-site composing-containers teaching block (the ADR-0056 cl.2 home) gains the three-rule statement (hosts own bounds+scroll · regions compose inside via Card or [data-box] · rhythm belongs to content wrappers) with [data-box]/container-box.css cited as the ALREADY-generalized Card-region system; `npm run check` (check:site) green" },
+    { "id": "n10", "label": "the agent-admin retrofit — a NAMED follow-up ticket, not built here (TKT-0093's own out-of-scope line)", "leaf": true, "accept": "a follow-up ticket exists naming the exact collapse: agent-admin.css:121-137's two hand-rolled rule pairs retire to `fill` on both ui-tabs instances (the scrollbar value keeps riding the existing inherited seam); the `display:flex; gap:1rem` CONTENT rhythm leg is named consumer-owned (rule 3) and explicitly NOT moved into tabs.css" },
+    { "id": "n11", "label": "confirmed no-ops — split.css/split-pane.css, card.css, container-box.css all byte-unchanged by this build", "leaf": true, "accept": "`git diff --stat` for the build commit shows zero hunks in controls/split/*.css, controls/card/*, controls/_surface/container-box.css; split-pane.test.ts / card-css.test.ts / container-box.test.ts pass unmodified (the Q2 ruling and rule 2 are statements about EXISTING shipped law, not changes to it)" }
+  ],
+  "actions": [
+    { "id": "a1", "label": "fill a height-bounded parent with a pinned tablist and an internally scrolling active panel" },
+    { "id": "a2", "label": "keep non-selected panels fully hidden under the new display mode" },
+    { "id": "a3", "label": "opt in via one reflected boolean attribute, defaulting to today's document-flow tabs" },
+    { "id": "a4", "label": "let a composing surface hide the filled panel's scrollbar without killing scroll" },
+    { "id": "a5", "label": "keep the filled panel keyboard-scrollable on every shipped engine" },
+    { "id": "a6", "label": "prove the whole composed shape cross-engine, not per-part px" },
+    { "id": "a7", "label": "stay addressable from a CSS-less A2UI consumer or record why not" },
+    { "id": "a8", "label": "state the pane spacing policy (zero padding, no space-ladder adoption) in the owning descriptors" },
+    { "id": "a9", "label": "teach the region rule once, fleet-wide, in the existing composition pedagogy home" },
+    { "id": "a10", "label": "name the agent-admin retirement path without building it" },
+    { "id": "a11", "label": "leave every already-correct system (split css, card regions, [data-box]) byte-unchanged" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n2" },
+    { "action": "a2", "node": "n2" },
+    { "action": "a3", "node": "n3" },
+    { "action": "a4", "node": "n4" },
+    { "action": "a5", "node": "n5" },
+    { "action": "a6", "node": "n6" },
+    { "action": "a7", "node": "n7" },
+    { "action": "a8", "node": "n8" },
+    { "action": "a9", "node": "n9" },
+    { "action": "a10", "node": "n10" },
+    { "action": "a11", "node": "n11" }
+  ]
+}
