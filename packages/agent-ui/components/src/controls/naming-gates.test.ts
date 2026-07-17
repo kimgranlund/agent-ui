@@ -303,6 +303,11 @@ const ALLOWED_ROLES = new Set([
   // this" role category master-detail's own 'list'/'detail' already cover, added in the SAME change as
   // naming.md §6's registry line.
   'canvas', 'prompts', 'settings',
+  // ui-agent-admin's responsive shell (@agent-ui/app, TKT-0085): 'tabs-medium' — the medium-breakpoint
+  // pane merging prompts/settings into one 2-tab ui-tabs, the SAME "which pane" category as
+  // canvas/prompts/settings above; 'agent-content' — the wrapper bundling the Agent pane's several
+  // sibling nodes into one reparent-able unit. Added in the SAME change as naming.md §6's registry line.
+  'tabs-medium', 'agent-content',
 ])
 
 /** Every `data-role` value used in one file's TEXT (comment-stripped): `data-role="x"` / `data-role='x'` /

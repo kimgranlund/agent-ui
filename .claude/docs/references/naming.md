@@ -131,7 +131,12 @@ gate is the planned closure (§11).
   (app-surfaces-m2.spec.md SPEC-R4 — the thread's own light-DOM content model; app-tier, not agent-emittable).
   `ui-agent-admin`'s three composed panes add: `canvas` · `prompts` · `settings` (TKT-0039/ADR-0131 —
   the SAME "which pane is this" role category `list`/`detail` already cover, above; app-tier, not
-  agent-emittable).
+  agent-emittable). `ui-agent-admin`'s responsive shell (TKT-0085) adds two: `tabs-medium` — the
+  medium-breakpoint pane merging `prompts`/`settings` into one 2-tab `ui-tabs`, the SAME "which pane"
+  category as `canvas`/`prompts`/`settings` above — and `agent-content` — the wrapper bundling the
+  Agent pane's several sibling nodes (heading + `ui-settings` + capability sections) into one
+  reparent-able unit that migrates between the wide split pane and a tab panel; both app-tier, not
+  agent-emittable.
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,
   kebab: ready · user-invalid · checked · dragging · revealed · disabled · collapsed · truncated
   · selected · indeterminate. A verb or noun is not a state name.

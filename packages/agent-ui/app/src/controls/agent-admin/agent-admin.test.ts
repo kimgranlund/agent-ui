@@ -71,6 +71,171 @@ function contentFieldOf(row: HTMLElement): HTMLTextAreaElement {
   return row.querySelector('[data-part="entry-content"]') as HTMLTextAreaElement
 }
 
+// TKT-0085 — the responsive-shell breakpoint watcher. jsdom carries no real ResizeObserver, so
+// `connected()` falls back to unconditionally applying 'wide' (every OTHER describe block in this file
+// relies on that fallback for the pre-TKT-0085 3-pane shape). This stub restores an OBSERVABLE,
+// MANUALLY-DRIVEN ResizeObserver so `#applyLayout` can be exercised through its real public entry point
+// (a resize notification) rather than reaching into the private method — the same "test through the
+// real API" discipline the rest of this file follows. The actual painted CSS (@scope, [hidden]
+// specificity, real box geometry) is agent-admin.browser.test.ts's job; this file proves the DOM
+// RESTRUCTURING (which pane/tab-panel each content unit ends up in) is correct at each of the three
+// bands, and that content nodes are MOVED, never rebuilt, across a round trip.
+class FakeResizeObserver {
+  static instances: FakeResizeObserver[] = []
+  #callback: ResizeObserverCallback
+  target: Element | null = null
+  constructor(callback: ResizeObserverCallback) {
+    this.#callback = callback
+    FakeResizeObserver.instances.push(this)
+  }
+  observe(el: Element): void {
+    this.target = el
+  }
+  unobserve(): void {
+    this.target = null
+  }
+  disconnect(): void {
+    this.target = null
+  }
+  /** Synthesize a resize notification carrying `width` as `contentRect.width` — the one field
+   *  `agent-admin.ts`'s observer callback reads. */
+  trigger(width: number): void {
+    this.#callback([{ contentRect: { width } } as ResizeObserverEntry], this as unknown as ResizeObserver)
+  }
+}
+
+describe('UIAgentAdminElement — responsive shell (TKT-0085): wide / medium / narrow', () => {
+  let realResizeObserver: typeof ResizeObserver | undefined
+  beforeAll(() => {
+    realResizeObserver = globalThis.ResizeObserver
+    globalThis.ResizeObserver = FakeResizeObserver as unknown as typeof ResizeObserver
+  })
+  afterAll(() => {
+    globalThis.ResizeObserver = realResizeObserver as typeof ResizeObserver
+  })
+  afterEach(() => {
+    FakeResizeObserver.instances = []
+  })
+
+  function mountAndResize(width: number): { el: UIAgentAdminElement; ro: FakeResizeObserver } {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const ro = FakeResizeObserver.instances.at(-1) as FakeResizeObserver
+    ro.trigger(width)
+    return { el, ro }
+  }
+
+  it('connected() observes itself via ResizeObserver, disconnected() disconnects it', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const ro = FakeResizeObserver.instances.at(-1) as FakeResizeObserver
+    expect(ro.target).toBe(el)
+    el.remove()
+    expect(ro.target).toBeNull()
+  })
+
+  it('wide (≥1024px): the 3-pane split shows, the narrow all-tabs shell stays hidden', () => {
+    const { el } = mountAndResize(1200)
+    const split = el.querySelector(':scope > ui-split') as HTMLElement
+    expect(split.hidden).toBe(false)
+    const paneRoles = [...split.children].filter((c) => c.tagName === 'UI-SPLIT-PANE').map((c) => c.getAttribute('data-role'))
+    expect(paneRoles).toEqual(['canvas', 'prompts', 'settings'])
+    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
+    expect(narrowTabs.hidden).toBe(true)
+    expect(el.querySelector('[data-role="canvas"] ui-conversation')).not.toBeNull()
+    expect(el.querySelector('[data-role="prompts"] [data-part="entry-section-heading"]')).not.toBeNull()
+    expect(el.querySelector('[data-role="settings"] [data-part="agent-heading"]')).not.toBeNull()
+  })
+
+  it('medium (640–1023px): [ Chat | {Instructions, Agent} tabs ] — canvas pane + ONE tabs-medium pane', () => {
+    const { el } = mountAndResize(800)
+    const split = el.querySelector(':scope > ui-split') as HTMLElement
+    expect(split.hidden).toBe(false)
+    const paneRoles = [...split.children].filter((c) => c.tagName === 'UI-SPLIT-PANE').map((c) => c.getAttribute('data-role'))
+    expect(paneRoles).toEqual(['canvas', 'tabs-medium'])
+    expect(el.querySelector('[data-role="canvas"] ui-conversation')).not.toBeNull()
+    const tabsMediumPane = el.querySelector('[data-role="tabs-medium"]') as HTMLElement
+    const tabLabels = [...tabsMediumPane.querySelectorAll('ui-tab')].map((t) => t.textContent)
+    expect(tabLabels).toEqual(['Instructions', 'Agent'])
+    // Both panels' real content live inside this ONE tabs-medium pane (panel visibility is a CSS/ui-tabs
+    // concern, not a DOM-presence one — both panels stay in the DOM, only the inactive one is [hidden]).
+    expect(tabsMediumPane.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
+    expect(tabsMediumPane.querySelector('[data-part="agent-heading"]')).not.toBeNull()
+  })
+
+  it('narrow (<640px): {Chat, Instructions, Agent} tabs — the split is hidden and empty', () => {
+    const { el } = mountAndResize(500)
+    const split = el.querySelector(':scope > ui-split') as HTMLElement
+    expect(split.hidden).toBe(true)
+    expect([...split.children].filter((c) => c.tagName === 'UI-SPLIT-PANE')).toHaveLength(0)
+    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
+    expect(narrowTabs.hidden).toBe(false)
+    const tabLabels = [...narrowTabs.querySelectorAll('ui-tab')].map((t) => t.textContent)
+    expect(tabLabels).toEqual(['Chat', 'Instructions', 'Agent'])
+    expect(narrowTabs.querySelector('ui-conversation')).not.toBeNull()
+    expect(narrowTabs.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
+    expect(narrowTabs.querySelector('[data-part="agent-heading"]')).not.toBeNull()
+  })
+
+  it('content nodes are MOVED (same identity), never rebuilt, across a wide → narrow → wide round trip', () => {
+    const { el, ro } = mountAndResize(1200)
+    const conversation = el.querySelector('ui-conversation')
+    const settingsHeading = el.querySelector('[data-part="agent-heading"]')
+    const instructionsHeading = el.querySelector('[data-part="entry-section-heading"]')
+
+    ro.trigger(500) // -> narrow
+    expect(el.querySelector('ui-conversation')).toBe(conversation)
+    expect(el.querySelector('[data-part="agent-heading"]')).toBe(settingsHeading)
+    expect(el.querySelector('[data-part="entry-section-heading"]')).toBe(instructionsHeading)
+
+    ro.trigger(1200) // -> back to wide
+    expect(el.querySelector('ui-conversation')).toBe(conversation)
+    expect(el.querySelector('[data-part="agent-heading"]')).toBe(settingsHeading)
+    expect(el.querySelector('[data-part="entry-section-heading"]')).toBe(instructionsHeading)
+    // Landed back in the ORIGINAL wide-shell panes, not left behind in a detached tab shell.
+    expect(el.querySelector('[data-role="canvas"] ui-conversation')).toBe(conversation)
+    expect(el.querySelector('[data-role="settings"] [data-part="agent-heading"]')).toBe(settingsHeading)
+  })
+
+  it('is idempotent — re-triggering a resize WITHIN the same band does not rebuild the shell', () => {
+    const { el, ro } = mountAndResize(1200)
+    const split = el.querySelector(':scope > ui-split') as HTMLElement
+    ro.trigger(1100) // still wide (≥1024) — a different width, same band
+    expect(el.querySelector(':scope > ui-split')).toBe(split) // same node — #applyLayout no-op'd
+  })
+
+  it('pane order stays correct (left-to-right) across a long chain of back-and-forth crossings', () => {
+    const { el, ro } = mountAndResize(1200) // wide
+    const paneRoles = () =>
+      [...(el.querySelector(':scope > ui-split') as HTMLElement).children]
+        .filter((c) => c.tagName === 'UI-SPLIT-PANE')
+        .map((c) => c.getAttribute('data-role'))
+
+    ro.trigger(800) // -> medium
+    expect(paneRoles()).toEqual(['canvas', 'tabs-medium'])
+    ro.trigger(1200) // -> wide
+    expect(paneRoles()).toEqual(['canvas', 'prompts', 'settings'])
+    ro.trigger(500) // -> narrow
+    expect(paneRoles()).toEqual([])
+    ro.trigger(800) // -> medium
+    expect(paneRoles()).toEqual(['canvas', 'tabs-medium'])
+    ro.trigger(1200) // -> wide
+    expect(paneRoles()).toEqual(['canvas', 'prompts', 'settings'])
+
+    // Content stays reachable at real DOM locations after the whole chain — not just structurally present.
+    expect(el.querySelector('[data-role="canvas"] ui-conversation')).not.toBeNull()
+    expect(el.querySelector('[data-role="prompts"] [data-part="entry-section-heading"]')).not.toBeNull()
+    expect(el.querySelector('[data-role="settings"] [data-part="agent-heading"]')).not.toBeNull()
+  })
+
+  it('capability sections (Skills/Workflows/Resources/Tools) travel with the Agent content unit at every band', () => {
+    const { el } = mountAndResize(500) // narrow — the smallest content-unit-grouping test
+    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
+    const agentPanel = [...narrowTabs.querySelectorAll('ui-tab-panel')][2] as HTMLElement
+    for (const label of ['Skills', 'Workflows', 'Resources', 'Tools']) {
+      expect([...agentPanel.querySelectorAll('[data-part="entry-section-heading"]')].some((h) => h.textContent === label), `missing ${label} section`).toBe(true)
+    }
+  })
+})
+
 describe('UIAgentAdminElement — upgrade + defaults', () => {
   it('upgrades to the class; schema/store both start undefined pre-connect (the ui-settings precedent)', () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
