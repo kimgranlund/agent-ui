@@ -992,5 +992,12 @@
     "description": "ui-timeline-item gains recursive nesting, a shared accordion, and a collapsed-summary preview — unfences ADR-0122 F6 (proposed — TKT-0091 intake; Kim's structu…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0145",
+    "url": "./adr-index.html#adr-0145",
+    "description": "The TICKET tier (only) moves to GitHub Issues; ADR/SPEC/LLD/PRD stay files, always (proposed — TKT-0092 intake; Kim's ask: \"transition repo to use git issues,…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

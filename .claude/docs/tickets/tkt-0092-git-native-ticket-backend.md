@@ -76,3 +76,29 @@ ticket-backend file → git-native) and, if the ADR is ratified, a build ships:
   for the new Issue-body contract before any build starts.
 
 ## Findings
+
+**2026-07-17 — design pass complete: [ADR-0145](../adr/0145-ticket-tier-github-issues-backend.md)
+(proposed, awaits Kim's ratification).** Ran the design pass this ticket's own Acceptance names as
+the "done" condition — resolved the backend/migration/scaffolding forks into a proposed ADR, no
+build. Grounded against `forge:github-issue-pr-primitives`'s dated, cited platform-fact corpus
+(GitHub Issue Types GA 2025-04-09, Issue Fields GA 2026-07-02 — 15 days old at that pack's own
+research date, sub-issues GA 2025-04-09) rather than recalled knowledge.
+
+- **The load-bearing correction:** this ticket's own "full replacement... sole intent-capture
+  mechanism" framing is narrower than it reads. The scribe plugin ecosystem this repo's
+  `bug-report`/`feature` skills come from has already ratified a general routing-table pattern (a
+  DIFFERENT workspace's own "ADR-0002 pattern" — never cited bare as "ADR-0002" in ADR-0145 itself,
+  since that number is already taken in THIS repo by an unrelated A2UI validator ADR): only the
+  work-item (TICKET) tier ever delegates to `gh issue`; ADR/SPEC/LLD/PRD/PLAN/ROADMAP never do —
+  they stay files, always. ADR-0145 narrows the scope to match.
+- **Mechanism mapping (F2):** `kind` → native Issue Types (the stronger, GA-for-over-a-year
+  primitive, exact taxonomy match); `size` → a plain label (Issue Fields is too young to bet a
+  migration on); `status` → Issue state + native close-reason (completed/not planned), not a
+  status label; `## Findings` write-back → dated Issue comments — the SAME verb
+  `scribe:bug-report`'s own dispatch contract already names, not invented here.
+- **Migration (F3):** the 92 existing ticket files stay a frozen, unmigrated archive per
+  `agent-ui-doc-standards` §6's own historical-record rule — no bulk backfill, no busywork.
+- **Scaffolding (F4):** `.github/ISSUE_TEMPLATE/{feature,bug}.yml` (GitHub's native Issue Forms
+  YAML) recommended, mirroring the existing section contract — a Repairs deliverable, not built in
+  this design-only pass.
+- **No build dispatched** — per Acceptance, ADR-0145 needs Kim's ratification first.
