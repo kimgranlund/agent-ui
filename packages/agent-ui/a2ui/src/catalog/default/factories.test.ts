@@ -104,14 +104,17 @@ describe('default catalog factories — Text (ADR-0078, catalog LLD-C5)', () => 
     expect(el.textContent).toBe('')
   })
 
-  // The ADR-0078 cl.5 fan-out table: the wire's ONE `variant` enum (catalog-frozen, unchanged) translates
-  // to the control's three-axis triple (as/variant/size) at apply-time — one row per wire value.
+  // The ADR-0078 cl.5 fan-out table (amended, TKT-0082): the wire's ONE `variant` enum (catalog-frozen,
+  // unchanged) translates to the control's three-axis triple (as/variant/size) at apply-time — one row
+  // per wire value. Rows are compact/card-scale (headline/title only, never display) — the catalog's
+  // own mapping choice for a generative-UI surface, shifted one M3 tier down from the original table,
+  // not `ui-text`'s document type scale. Strictly decreasing 28/24/22/16/14px across h1-h5.
   it.each([
-    ['h1', { as: 'h1', variant: 'display', size: 'sm' }],
-    ['h2', { as: 'h2', variant: 'headline', size: 'lg' }],
-    ['h3', { as: 'h3', variant: 'headline', size: 'md' }],
-    ['h4', { as: 'h4', variant: 'headline', size: 'sm' }],
-    ['h5', { as: 'h5', variant: 'title', size: 'lg' }],
+    ['h1', { as: 'h1', variant: 'headline', size: 'md' }],
+    ['h2', { as: 'h2', variant: 'headline', size: 'sm' }],
+    ['h3', { as: 'h3', variant: 'title', size: 'lg' }],
+    ['h4', { as: 'h4', variant: 'title', size: 'md' }],
+    ['h5', { as: 'h5', variant: 'title', size: 'sm' }],
     ['body', { as: 'none', variant: 'body', size: 'md' }],
     ['caption', { as: 'none', variant: 'body', size: 'sm' }],
   ] as const)('wire variant %s fans out to the ui-text triple', (wire, triple) => {
