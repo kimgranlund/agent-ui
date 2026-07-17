@@ -42,10 +42,10 @@ interface SizeClass {
   readonly lever: string
 }
 const CLASSES: readonly SizeClass[] = [
-  { name: 'Control', examples: 'button · text-field · select · field', lever: 'block-size off --ui-height-{size}; font off --ui-font-{size}; line-height:1 (single-line); inline-pad per the slot/slotless model.' },
-  { name: 'Indicator', examples: 'checkbox · radio · switch · slider · tag', lever: 'block/inline-size off the widget ramp --ui-compact-{size} — a separate ramp from Control height.' },
+  { name: 'Control', examples: 'button · text-field · select · field', lever: 'block-size off --md-sys-height-{size}; font off --md-sys-font-{size}; line-height:1 (single-line); inline-pad per the slot/slotless model.' },
+  { name: 'Indicator', examples: 'checkbox · radio · switch · slider · tag', lever: 'block/inline-size off the widget ramp --md-sys-compact-{size} — a separate ramp from Control height.' },
   { name: 'Pattern', examples: 'tabs · segmented-control · toolbar · menu · dialog', lever: 'interactive rows take the control height; the shell uses the space scale.' },
-  { name: 'Container / layout', examples: 'row · column · list · grid · card', lever: 'gaps/margins/padding off --ui-space-* × density; no control height at all.' },
+  { name: 'Container / layout', examples: 'row · column · list · grid · card', lever: 'gaps/margins/padding off --md-sys-space-* × density; no control height at all.' },
   { name: 'Display', examples: 'icon · progress · text · tooltip', lever: 'text-bearing reads the type scale (--md-sys-typescale-*); non-text takes the control-band font-size where it sizes a glyph label. (badge lives in the compact realm — §3 below.)' },
 ]
 {
@@ -141,9 +141,9 @@ content.append(
   el('p', {}, [
     document.createTextNode(
       'Always-compact widgets — checkbox, switch, radio, slider, tag, badge, chip — never use the h/2 pad law: ' +
-        'h/2 would over-pad a keycap or a count pill. They size their box on the dedicated --ui-compact-{size} ' +
+        'h/2 would over-pad a keycap or a count pill. They size their box on the dedicated --md-sys-compact-{size} ' +
         'ramp instead (a two-band ladder, ui-* tight / content-* generous) and keep a fixed compact pad. Below, ' +
-        'a checkbox and a badge — both compact-realm, neither reads --ui-height-*:',
+        'a checkbox and a badge — both compact-realm, neither reads --md-sys-height-*:',
     ),
   ]),
 )
@@ -198,7 +198,7 @@ content.append(heading(2, '5 · single-line controls set line-height: 1'))
 content.append(
   el('p', {}, [
     document.createTextNode(
-      'A single-line Control-class control’s text sets line-height: var(--ui-control-line-height) (= 1): the ' +
+      'A single-line Control-class control’s text sets line-height: var(--md-sys-control-line-height) (= 1): the ' +
         'line, like a glyph, centers in the fixed frame with no extra leading — the frame height is unchanged, ' +
         'the tighter line box just removes the slack a browser’s default line-height would otherwise add. This ' +
         'excludes the Display class (ui-text): multi-line document text keeps its own per-role×size type ' +

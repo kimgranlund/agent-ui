@@ -46,7 +46,7 @@ geometry:
   sizeClass: pattern
   dotSize: var(--ui-swiper-dot-size)             # the compact widget ramp
   dotSizeActive: var(--ui-swiper-dot-size-active) # the ACTIVE dot's size-larger non-colour signifier (ADR-0057)
-  gap: var(--ui-space-xs)
+  gap: var(--md-sys-space-xs)
 
 forcedColors: The dots map to system colours (CanvasText idle, Highlight active) in addition to their SIZE signifier, so the active indicator survives WHCM without relying on hue alone.
 ---

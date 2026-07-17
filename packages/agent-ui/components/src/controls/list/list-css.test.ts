@@ -26,7 +26,7 @@ const whereBlock = (marker: string): string => {
 
 // A layout primitive has NO interaction state of its own (no focus ring / motion / colour), so — unlike
 // button/text-field — there is NO shared-fleet exception: @scope must consume ONLY the own --ui-list-* chain.
-// The shared --ui-space-* ladder is read on the DECLARATION side (the :where token block), never in @scope.
+// The shared --md-sys-space-* ladder is read on the DECLARATION side (the :where token block), never in @scope.
 const foreignScopeRefs = (scope: string): string[] =>
   [...scope.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1] as string).filter((v) => !/^--ui-list-/.test(v))
 
@@ -72,14 +72,14 @@ describe('list.css — the flex mapping (ADR-0016)', () => {
     expect(tokenBlock).toMatch(/:where\(ui-list\[justify='evenly'\]\)\s*\{\s*--ui-list-justify:\s*space-evenly/)
   })
 
-  it('gap → the SHARED density-responsive --ui-space ladder, read ONLY in the token block', () => {
-    // every non-none step repoints --ui-list-gap to a --ui-space-{step} (anti-vacuous: the steps were found)
+  it('gap → the SHARED density-responsive --md-sys-space ladder, read ONLY in the token block', () => {
+    // every non-none step repoints --ui-list-gap to a --md-sys-space-{step} (anti-vacuous: the steps were found)
     const steps = ['xs', 'sm', 'md', 'lg', 'xl', '2xl']
     for (const step of steps) {
-      expect(tokenBlock).toMatch(new RegExp(`:where\\(ui-list\\[gap='${step}'\\]\\)\\s*\\{\\s*--ui-list-gap:\\s*var\\(--ui-space-${step}\\)`))
+      expect(tokenBlock).toMatch(new RegExp(`:where\\(ui-list\\[gap='${step}'\\]\\)\\s*\\{\\s*--ui-list-gap:\\s*var\\(--md-sys-space-${step}\\)`))
     }
-    // the --ui-space ladder is read on the DECLARATION side only — NEVER in @scope (the hygiene law below)
-    expect(stylesBlock).not.toContain('--ui-space-')
+    // the --md-sys-space ladder is read on the DECLARATION side only — NEVER in @scope (the hygiene law below)
+    expect(stylesBlock).not.toContain('--md-sys-space-')
   })
 
   it('wrap → flex-wrap (boolean presence)', () => {
@@ -98,22 +98,22 @@ describe('list.css — @scope layout + hygiene (s5)', () => {
     expect(stylesBlock).toMatch(/flex-wrap:\s*var\(--ui-list-wrap\)/)
   })
 
-  it('NO control height — a Container/layout primitive never reads --ui-height-* (geometry.md)', () => {
-    // target a CONSUMPTION (`var(--ui-height-…)`), not prose — a comment may name the ramp it deliberately
+  it('NO control height — a Container/layout primitive never reads --md-sys-height-* (geometry.md)', () => {
+    // target a CONSUMPTION (`var(--md-sys-height-…)`), not prose — a comment may name the ramp it deliberately
     // avoids (the text-field opacity-probe precedent: bar the declaration, allow the documentary mention).
-    expect(css).not.toMatch(/var\(--ui-height-/) // spacing rides --ui-space × [density], never the control ramp
+    expect(css).not.toMatch(/var\(--md-sys-height-/) // spacing rides --md-sys-space × [density], never the control ramp
     expect(css).not.toMatch(/block-size:/) // no vertical frame lever
   })
 
-  it('@scope CONSUMES only --ui-list-* (no raw --md-sys-color-*, no --ui-space-*, no fleet leak)', () => {
+  it('@scope CONSUMES only --ui-list-* (no raw --md-sys-color-*, no --md-sys-space-*, no fleet leak)', () => {
     expect(foreignScopeRefs(stylesBlock)).toEqual([])
     // anti-vacuous: the own chain IS consumed
     const allRefs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1] as string)
     expect(allRefs.some((v) => /^--ui-list-/.test(v))).toBe(true)
   })
 
-  it('NEGATIVE control: a planted raw --ui-space-* / --md-sys-color-* ref in @scope is CAUGHT by the hygiene predicate', () => {
-    const planted = "@scope (ui-list) { :scope { gap: var(--ui-space-md); background: var(--md-sys-color-neutral-surface); } }"
-    expect(foreignScopeRefs(planted)).toEqual(['--ui-space-md', '--md-sys-color-neutral-surface'])
+  it('NEGATIVE control: a planted raw --md-sys-space-* / --md-sys-color-* ref in @scope is CAUGHT by the hygiene predicate', () => {
+    const planted = "@scope (ui-list) { :scope { gap: var(--md-sys-space-md); background: var(--md-sys-color-neutral-surface); } }"
+    expect(foreignScopeRefs(planted)).toEqual(['--md-sys-space-md', '--md-sys-color-neutral-surface'])
   })
 })

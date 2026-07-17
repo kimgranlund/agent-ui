@@ -4,7 +4,7 @@
  *   [1] TOKEN BLOCK  — `:where(ui-column)` (specificity 0,0,0) DECLARES the `--ui-column-*` flex chain from the
  *       shared layout grammar: the four reflected `flexProps` attributes (`align`/`justify`/`gap`/`wrap`) are
  *       mapped 1:1 onto a CSS flex value (the literal-union → CSS-keyword repoint, ADR-0016 cl.1). `gap` reads
- *       the density-responsive `--ui-space-*` ladder (ADR-0015 cl.4), NEVER a control dimension. The defaults
+ *       the density-responsive `--md-sys-space-*` ladder (ADR-0015 cl.4), NEVER a control dimension. The defaults
  *       are the `flexProps` defaults (align=start, justify=start, gap=none, wrap=nowrap); each non-default
  *       attribute value repoints its token.
  *   [2] STYLES BLOCK — `@scope (ui-column)` CONSUMES the `--ui-column-*` flex tokens, plus the opt-in
@@ -19,7 +19,7 @@
  *       establishes NO query container of its own (ADR-0100 — it is intrinsically sized, so it can never
  *       safely be one); the rule resolves against the nearest EXTERNALLY-SIZED ancestor boundary instead.
  *       NO control height (geometry.md Container/layout class — block-size is content-driven; spacing rides
- *       `--ui-space` × `[density]`, never `--ui-height-*`). A forced-colors block drops any tonal wash.
+ *       `--md-sys-space` × `[density]`, never `--md-sys-height-*`). A forced-colors block drops any tonal wash.
  *
  * The SURFACE (elevation/brightness → `--ui-container-bg`/`-tint`) is painted by the shared
  * controls/_surface/container.css on `:where(…, ui-column, …)`; this sheet holds ZERO colour opinion (no raw
@@ -37,7 +37,7 @@
      token carries the default value — the prop default and the CSS base token must match. */
   --ui-column-align: stretch; /* align (cross axis = inline) → align-items: stretch (ADR-0030 flip start→stretch) */
   --ui-column-justify: start; /* justify (main axis = block) → justify-content; box-alignment start (ADR-0039) */
-  --ui-column-gap: var(--ui-space-none); /* gap → the density-responsive --ui-space ladder (ADR-0015 cl.4) */
+  --ui-column-gap: var(--md-sys-space-none); /* gap → the density-responsive --md-sys-space ladder (ADR-0015 cl.4) */
   --ui-column-wrap: nowrap; /* wrap → flex-wrap (boolean presence repoints below) */
 }
 
@@ -73,25 +73,25 @@
   --ui-column-justify: space-evenly;
 }
 
-/* gap → the --ui-space ladder (none = the var(--ui-space-none) default above). The step vocabulary mirrors the
-   flexProps `gap` union 1:1; --ui-space-* carries var(--ui-density), so the gap responds to a subtree [density]. */
+/* gap → the --md-sys-space ladder (none = the var(--md-sys-space-none) default above). The step vocabulary mirrors the
+   flexProps `gap` union 1:1; --md-sys-space-* carries var(--md-sys-density), so the gap responds to a subtree [density]. */
 :where(ui-column[gap='xs']) {
-  --ui-column-gap: var(--ui-space-xs);
+  --ui-column-gap: var(--md-sys-space-xs);
 }
 :where(ui-column[gap='sm']) {
-  --ui-column-gap: var(--ui-space-sm);
+  --ui-column-gap: var(--md-sys-space-sm);
 }
 :where(ui-column[gap='md']) {
-  --ui-column-gap: var(--ui-space-md);
+  --ui-column-gap: var(--md-sys-space-md);
 }
 :where(ui-column[gap='lg']) {
-  --ui-column-gap: var(--ui-space-lg);
+  --ui-column-gap: var(--md-sys-space-lg);
 }
 :where(ui-column[gap='xl']) {
-  --ui-column-gap: var(--ui-space-xl);
+  --ui-column-gap: var(--md-sys-space-xl);
 }
 :where(ui-column[gap='2xl']) {
-  --ui-column-gap: var(--ui-space-2xl);
+  --ui-column-gap: var(--md-sys-space-2xl);
 }
 
 /* wrap → flex-wrap (boolean presence: the reflected `wrap` attribute is present ⇒ wrap onto multiple lines) */
@@ -111,7 +111,7 @@
     flex-wrap: var(--ui-column-wrap);
     box-sizing: border-box;
     /* NO control height — a layout primitive (geometry.md Container/layout class): block-size is content-driven,
-       spacing rides --ui-space × [density]. It never reads --ui-height-* (that is the control band's lever). */
+       spacing rides --md-sys-space × [density]. It never reads --md-sys-height-* (that is the control band's lever). */
   }
 
   /* stretch → the host FILLS its parent's available inline size (`width: stretch`). Opt-in, default off — a

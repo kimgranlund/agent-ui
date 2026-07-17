@@ -85,7 +85,7 @@ component-gallery {
 
 .gallery-card-heading {
   margin: 0;
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.95rem;
   font-weight: 650;
   color: var(--md-sys-color-neutral-on-surface);

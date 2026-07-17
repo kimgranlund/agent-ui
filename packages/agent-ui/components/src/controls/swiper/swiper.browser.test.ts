@@ -49,7 +49,7 @@ afterEach(() => {
 const THREE = `<ui-swiper><ui-swiper-item>One</ui-swiper-item><ui-swiper-item>Two</ui-swiper-item><ui-swiper-item>Three</ui-swiper-item></ui-swiper>`
 const LOOP_FOUR = `<ui-swiper loop><ui-swiper-item>One</ui-swiper-item><ui-swiper-item>Two</ui-swiper-item><ui-swiper-item>Three</ui-swiper-item><ui-swiper-item>Four</ui-swiper-item></ui-swiper>`
 
-// Outlast the JS scroll ANIMATION (--ui-swiper-duration defaults to --ui-motion-fast, 300ms) THEN the 120ms
+// Outlast the JS scroll ANIMATION (--ui-swiper-duration defaults to --md-sys-motion-duration-fast, 300ms) THEN the 120ms
 // settle debounce (which only starts counting once the last scroll event of the animation has fired) — a
 // non-instant goTo/next/prev needs >= duration+debounce before #onSettle runs; 600ms gives comfortable margin.
 const settle = (ms = 600): Promise<void> => new Promise((r) => setTimeout(r, ms))

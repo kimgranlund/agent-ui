@@ -5,7 +5,7 @@ declare const process: { cwd(): string }
 // bar-chart-css.test.ts — bar-chart.css static structural + token-hygiene probe (LLD-C6,
 // chart-family.lld.md §3). Mirrors the text-css.test.ts / list.css precedent: pin the STRUCTURE (the two
 // sectioned blocks, `:where()` declares `--ui-bar-chart-*`, `@scope` consumes ONLY its own chain ∪ the
-// shared `--md-sys-*`/`--ui-space-*` namespaces, no `[size]` selector — SPEC-R12 AC2 — and a forced-colors
+// shared `--md-sys-*`/`--md-sys-space-*` namespaces, no `[size]` selector — SPEC-R12 AC2 — and a forced-colors
 // block exists). The rendered-px PROOF (proportion/divergence/RTL/WHCM) is bar-chart.browser.test.ts.
 
 const css = readFileSync(
@@ -39,12 +39,12 @@ describe('bar-chart.css — structure + token hygiene', () => {
     expect(bad).toEqual([])
   })
 
-  it('the @scope styles block consumes ONLY --ui-bar-chart-* ∪ the shared --md-sys-*/--ui-space-* namespaces (∪ the row-scoped --_bar-* hooks, out of the governed --ui-*/--md-sys-* namespace entirely — the slider/slider-multi --value-pct precedent) — no cross-control reach', () => {
+  it('the @scope styles block consumes ONLY --ui-bar-chart-* ∪ the shared --md-sys-*/--md-sys-space-* namespaces (∪ the row-scoped --_bar-* hooks, out of the governed --ui-*/--md-sys-* namespace entirely — the slider/slider-multi --value-pct precedent) — no cross-control reach', () => {
     const refs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1])
     expect(refs.length).toBeGreaterThan(0) // anti-vacuous
     for (const v of refs) {
       const allowed =
-        v.startsWith('--ui-bar-chart-') || v.startsWith('--md-sys-') || v.startsWith('--ui-space-') || v.startsWith('--_bar-')
+        v.startsWith('--ui-bar-chart-') || v.startsWith('--md-sys-') || v.startsWith('--md-sys-space-') || v.startsWith('--_bar-')
       expect(allowed, `@scope consumed an out-of-family token: ${v}`).toBe(true)
     }
   })
@@ -61,9 +61,9 @@ describe('bar-chart.css — structure + token hygiene', () => {
     expect(bare).not.toMatch(/\[scale\b/)
   })
 
-  it('no --ui-height-* DECLARATION/consumption anywhere (Display class has no control-height lever, geometry.md)', () => {
+  it('no --md-sys-height-* DECLARATION/consumption anywhere (Display class has no control-height lever, geometry.md)', () => {
     const bare = css.replace(/\/\*[\s\S]*?\*\//g, '') // comment-stripped — a prose mention must not trip this
-    expect(bare).not.toMatch(/--ui-height-/)
+    expect(bare).not.toMatch(/--md-sys-height-/)
   })
 
   it('the row grid is `fit-content(40%) 1fr auto`, subgrid rows spanning all 3 columns (LLD-C6)', () => {

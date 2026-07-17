@@ -176,7 +176,7 @@ geometry:
   paddingBlock: 0
   inlinePad: h/2 (value/text edge) · ½(h−icon) (leading / trailing slot edge)   # the centering law, geometry.md
   gap: var(--ui-text-field-gap)            # adornment↔editor column-gap — the one density-bearing quantity (gap = font/2 × density)
-  radius: var(--ui-radius-base)            # fixed rounded-rect — the container-fleet referent, NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5 (#71 amendment)
+  radius: var(--md-sys-shape-corner-base)            # fixed rounded-rect — the container-fleet referent, NOT the h/2 pill; entry-control class, geometry.md "Corner radius" / ADR-0015 cl.5 (#71 amendment)
   minInlineSize: var(--ui-text-field-min-inline-size) (~20ch — entry-control typing-width floor, native <input size> parity; ADR-0021)   # the host floor so a bare field is hittable; size-invariant (ch is font-relative)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the idle field border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --md-sys-color-focus-ring → Highlight (ADR-0014). Control-injected adornment glyphs (magnifier/symbol/reveal/steppers/calendar-button) use `forced-color-adjust:none` to keep their inherited ink — they are aria-hidden decorative cues, so bypassing the system palette is intentional (ADR-0044/ADR-0048).
@@ -216,7 +216,7 @@ and font; an ancestor `[scale]` multiplies the frame and an ancestor `[density]`
 adornment↔editor gap. The geometry follows the **Control size-class** in `geometry.md`: the block-size is
 the vertical lever (`padding-block` is always `0`), the value/text edge sits at `h/2`, and a leading/trailing
 slot edge at the emergent `½(h − icon)`. The field frame (border + radius) is drawn **on the host** so a
-slotted adornment sits inside the box; the corner is the fixed `--ui-radius-base` rounded-rect (the
+slotted adornment sits inside the box; the corner is the fixed `--md-sys-shape-corner-base` rounded-rect (the
 container-fleet referent an entry control takes, not the action family's `h/2` pill — ADR-0015 cl.5).
 A bare field carries a default minimum **typing width** (`min-inline-size: ~20ch`, native `<input size>`
 parity) so an unsized field stays hittable; **layout owns the width above that floor** (a flex/grid track
@@ -257,7 +257,7 @@ Two deviations from the button-derived standard are explicit (ADR-0014):
   (keyboard-only). The shared `outline` ring is the **sole** focus indicator; the field border steps to
   **`transparent`** on `:focus-within` (a `--md-sys-color-focus-ring` border-color step would double with the ring into a
   visible double border — corrected per ADR-0014's amendment). The ring reads the fleet-wide `--md-sys-color-focus-ring` /
-  `--ui-focus-ring-*` tokens (ADR-0009, as amended), and a transparent border preserves the box geometry (no
+  `--md-sys-state-focus-ring-*` tokens (ADR-0009, as amended), and a transparent border preserves the box geometry (no
   layout shift). The outline is the forced-colors indicator (`--md-sys-color-focus-ring → Highlight`).
 - **`disabled` rides the editor + the platform form-disabled channel** (`effectiveDisabled = own || form`),
   not host `ariaDisabled` — disabled → editor `contenteditable=false` + not focusable + `aria-disabled` +

@@ -5,7 +5,7 @@
 # href/truncate/emphasis, in that order) — the contract↔props trip-wire (text-descriptor.test.ts) targets
 # this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-text
-tier: display          # geometry size-class (Display band — NO control frame/height; geometry.md "size-classes" + ADR-0025 cl.1: the typographic ramp is the lever, not --ui-height-*)
+tier: display          # geometry size-class (Display band — NO control frame/height; geometry.md "size-classes" + ADR-0025 cl.1: the typographic ramp is the lever, not --md-sys-height-*)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (face below), NOT a UIContainerElement surface
 # marginal: re-measure at the build wave (`npm run size`) — ADR-0114 adds one string prop + one private
 # method (#syncLink) + one effect; no new observer. Family total re-based against the 25600 B gz budget.
@@ -91,7 +91,7 @@ keyboard:              # NOT interactive/focusable for every `as` EXCEPT the gat
 geometry:
   sizeClass: display
   blockSize: content   # NO control height (geometry.md Display class) — block-size is content-driven; no padding-block law, no frame
-  fontSize: var(--ui-text-size)         # the --md-sys-typescale-{role}-{size}-size the [variant][size] matrix repoints to (ADR-0078 cl.3) — × var(--ui-scale), density-invariant
+  fontSize: var(--ui-text-size)         # the --md-sys-typescale-{role}-{size}-size the [variant][size] matrix repoints to (ADR-0078 cl.3) — × var(--md-sys-scale), density-invariant
   fontWeight: var(--ui-text-weight)     # from --md-sys-typescale-{role}-{size}-weight (a :root constant)
   lineHeight: var(--ui-text-line-height)  # from --md-sys-typescale-{role}-{size}-line-height (a :root unitless constant)
   tracking: var(--ui-text-tracking)     # from --md-sys-typescale-{role}-{size}-tracking (a :root em constant); NEW — ADR-0025's ramp had no tracking leg
@@ -252,7 +252,7 @@ invisible to AT. Reserve `emphasis` for names/labels/key values where the surrou
 ## Typography & geometry
 
 `ui-text` is the **Display** size-class (`geometry.md`): it has **no** control height, no `padding-block`
-law, and no frame — its lever is the type scale, not `--ui-height-*`. It consumes only its component tokens
+law, and no frame — its lever is the type scale, not `--md-sys-height-*`. It consumes only its component tokens
 (`--ui-text-size`/`-weight`/`-line-height`/`-tracking`), which the `[variant][size]` matrix repoints from the
 fleet `--md-sys-typescale-{role}-{size}-*` scale (ADR-0078 cl.2/cl.3) — the role-pure two-block pattern every
 control uses; `ui-text` holds zero scale opinion. `kicker`/`overline` add `text-transform: uppercase`;

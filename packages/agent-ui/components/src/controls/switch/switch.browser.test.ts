@@ -12,7 +12,7 @@ import { server, cdp } from 'vitest/browser'
 //      height (it IS inset — not flush), and (b) the thumb size DOES NOT CHANGE across states (only position
 //      moves). If either negative control flips, the inset law is broken.
 //
-//   • Track box = --ui-compact-{size} per [size]×[scale] (the Indicator widget ramp, ADR-0041).
+//   • Track box = --md-sys-compact-{size} per [size]×[scale] (the Indicator widget ramp, ADR-0041).
 //   • Thumb = box − 4px in BOTH states; thumb position changes (slides) but size is constant.
 //   • forced-colors: Canvas track + ButtonText border → Highlight track on checked; ButtonText/HighlightText thumb.
 //   • C10 zero-residue: connect→disconnect leaves zero live listeners (toggle inert; reconnect re-wires once).
@@ -42,7 +42,7 @@ afterEach(() => {
 // ── computed-px readers ───────────────────────────────────────────────────────────────────────────────
 const px = (v: string): number => Number.parseFloat(v)
 
-/** The track height (= the widget box, --ui-compact-{size} per [size]×[scale]). */
+/** The track height (= the widget box, --md-sys-compact-{size} per [size]×[scale]). */
 const trackHeight = (sw: HTMLElement): number => px(getComputedStyle(sw).blockSize)
 
 /** The thumb width from the ::after pseudo-element (ADR-0041 cl.3: box − 2×inset = box − 4px). */
@@ -69,17 +69,17 @@ interface CdpSession {
 
 describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0041)', () => {
   it('⭐ ADR-0041: THUMB = BOX − 4px in BOTH checked states; thumb size is STATE-INVARIANT (only position slides)', () => {
-    // ⭐ This assertion is the S2 gate that RATIFIES ADR-0041 (the widget ramp + --ui-widget-inset 2px law).
+    // ⭐ This assertion is the S2 gate that RATIFIES ADR-0041 (the widget ramp + --md-sys-widget-inset 2px law).
     //    The switch ratifies it for the thumbed-widget class (switch knob); the slider thumb ratifies it later.
     //
-    // Law: thumb = box − 2×inset = box − 4px (inset = --ui-widget-inset = 2px, a fleet constant).
+    // Law: thumb = box − 2×inset = box − 4px (inset = --md-sys-widget-inset = 2px, a fleet constant).
     // Proof strategy: measure track blockSize + ::after width in BOTH states; assert width = height − 4px.
     // Negative controls:
     //   (a) thumb < track (it IS inset — not flush with the track edge).
     //   (b) thumb size DOES NOT change across states (only the `translate` position changes).
     const { sw } = mount('<ui-switch></ui-switch>')
 
-    const h = trackHeight(sw) // the widget box = --ui-compact-md (default) = 16px
+    const h = trackHeight(sw) // the widget box = --md-sys-compact-md (default) = 16px
     const twUnchecked = thumbWidth(sw)
     const thUnchecked = thumbHeight(sw)
 
@@ -104,9 +104,9 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
     expect(thUnchecked, 'thumb height changed between states — only position should move').toBeCloseTo(thChecked, 0)
   })
 
-  it('ADR-0041: track box = --ui-compact-{size} per [size] (the widget ramp, NOT the control height ramp)', () => {
+  it('ADR-0041: track box = --md-sys-compact-{size} per [size] (the widget ramp, NOT the control height ramp)', () => {
     // The Indicator widget box rides the COMPACT ramp (ADR-0041), NOT the full control height ramp (ADR-0038).
-    // Default scale ui-md: --ui-compact-sm=14 / --ui-compact-md=16 / --ui-compact-lg=18.
+    // Default scale ui-md: --md-sys-compact-sm=14 / --md-sys-compact-md=16 / --md-sys-compact-lg=18.
     const SIZES: Array<[string, number]> = [
       ['sm', 14],
       ['md', 16],
@@ -115,7 +115,7 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
     for (const [size, expected] of SIZES) {
       const { sw } = mount(`<ui-switch size="${size}"></ui-switch>`)
       const h = trackHeight(sw)
-      expect(h, `[size="${size}"] track height (${h}) ≠ --ui-compact-${size} (${expected}px)`).toBeCloseTo(expected, 0)
+      expect(h, `[size="${size}"] track height (${h}) ≠ --md-sys-compact-${size} (${expected}px)`).toBeCloseTo(expected, 0)
       // Thumb follows the law at each size — anti-vacuous (proves the law holds across the full ramp).
       const tw = thumbWidth(sw)
       expect(tw, `[size="${size}"] thumb (${tw}) ≠ box − 4px (${expected - 4}px)`).toBeCloseTo(expected - 4, 0)
@@ -129,7 +129,7 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
   })
 
   it('ADR-0041: [scale] re-tables the compact ramp; thumb = box − 4px holds at every (scale×size) cell', () => {
-    // ADR-0041 §compact: the [scale] selector re-tables --ui-compact-{sm,md,lg} to its §5.2 row.
+    // ADR-0041 §compact: the [scale] selector re-tables --md-sys-compact-{sm,md,lg} to its §5.2 row.
     // Sampled cells from the Kim's compact table (dimensions.css): ui-sm / ui-md / content-lg.
     // Each cell: (scale, size) → expected compact box → thumb = box − 4px.
     const CELLS: Array<[string, string, number]> = [

@@ -7,7 +7,7 @@
 # notes; the surface axes per ADR-0015, the one-level nested radius per ADR-0018, the host-as-grid per anatomy.md,
 # the region-less humane default (a bare card gets region-equivalent padding) per ADR-0056.
 tag: ui-card
-tier: container         # geometry size-class (Container/layout band — spacing off --ui-space × density, NO control height; geometry.md)
+tier: container         # geometry size-class (Container/layout band — spacing off --md-sys-space × density, NO control height; geometry.md)
 extends: UIContainerElement  # the FACE container surface base (NOT form-associated; ADR-0015 / ADR-0016)
 # marginal: ui-card adds 146 B gz (723 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — the card family: ui-card + ui-card-header/-content/-footer) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
@@ -64,12 +64,12 @@ aria:
 keyboard: []           # ui-card itself is not interactive — no keyboard contract. Its ui-card-content SUB-ELEMENT DOES carry one in scroll mode (ADR-0046 Amendment 6): tabindex=0 + ArrowUp/Down (40px) · PageUp/Down (~90% viewport) · Home/End (start/end) — see the Keyboard section in the prose below
 
 geometry:
-  sizeClass: container   # Container/layout — spacing off --ui-space × density; a card has NO control height (never reads --ui-height-*)
+  sizeClass: container   # Container/layout — spacing off --md-sys-space × density; a card has NO control height (never reads --md-sys-height-*)
   padding: var(--ui-card-padding)        # ALWAYS 0 (ADR-0046 box-model) — the card itself holds no padding; each region carries its own fixed regionPadding + regionMargin instead
   regionPadding: var(--ui-card-region-pad-inline) / var(--ui-card-region-pad-block)   # 12px inline + 6px block, rem-based (density-INVARIANT) — REVISED 2026-07-04: card now reads container-box.css's shared ADR-0046 defaults straight (the card-only 6px override is rescinded); identical to modal/select/menu/combo-box
   regionMargin: var(--ui-card-region-margin)   # 6px uniform inset margin around each region (REVISED 2026-07-04: regions are no longer full-bleed). The DEFAULT (non-scroll) shell is BLOCK FLOW (flow-root, not grid/flex, per Kim's "containers should not use grid or flex"), so adjacent region margins COLLAPSE to a clean 6px gutter and the 1px frame border blocks collapse-through at the edges — one uniform margin, no grid gap or first/last split. SCROLL MODE (REVISED 2026-07-07) keeps the shell as a (sizing-only) flex column, but only `ui-card-content` is a flex item now — header/footer are `position:absolute` overlays that KEEP this same margin (unzeroed) as their own inset-from-edge; `ui-card-content` gets its margin zeroed on the BLOCK axis only (so it can fill "100% of parent height") — its INLINE margin is KEPT (REVISED 2026-07-08, ADR-0046 Amendment 6 refinement) so its text stays aligned with the header/footer's
-  radius: var(--ui-card-radius, var(--ui-radius-base))   # root radius = the shared --ui-radius-base; a nested card decrements one level (ADR-0018)
-  nestedRadius: r_child = max(0, r_parent − pad_parent)  # the concentric-corner law, published as --ui-card-child-radius (ONE level; deeper nesting is manual). REVISED 2026-07-04: pad_parent is now 12px (was the card-only 6px override) — with the default --ui-radius-base of 12px, an unreseeded root card's inner radius now floors at EXACTLY 0 (a knife-edge, not the old 6px-positive headroom); reseed --ui-card-radius larger than 12px for a visibly rounded nested corner
+  radius: var(--ui-card-radius, var(--md-sys-shape-corner-base))   # root radius = the shared --md-sys-shape-corner-base; a nested card decrements one level (ADR-0018)
+  nestedRadius: r_child = max(0, r_parent − pad_parent)  # the concentric-corner law, published as --ui-card-child-radius (ONE level; deeper nesting is manual). REVISED 2026-07-04: pad_parent is now 12px (was the card-only 6px override) — with the default --md-sys-shape-corner-base of 12px, an unreseeded root card's inner radius now floors at EXACTLY 0 (a knife-edge, not the old 6px-positive headroom); reseed --ui-card-radius larger than 12px for a visibly rounded nested corner
 
 forcedColors: A `@media (forced-colors: active)` block keeps the card border visible (CanvasText); the shared container-box.css `[data-fade-top]`/`[data-fade-bottom]` rule drops the scroll-fade mask generically (a mask over system text harms legibility) — the surface itself survives via container.css's role-layer Canvas mapping. In scroll mode the overlaid (backgroundless) header/footer additionally get an own `background: Canvas` fallback (card.css) — without the mask AND without a bracket fill, scrolled content would otherwise bleed straight through the bracket text under WHCM.
 ---
@@ -234,7 +234,7 @@ roving-tabindex control placed inside the content) and `preventDefault()`-ed on 
 (Playwright's WebKit build) but not independently confirmed on Safari proper.
 
 **The focus ring (ADR-0009).** The new tab stop draws the identical shared ring every fleet control does —
-`--md-sys-color-focus-ring` / `--ui-focus-ring-width`, `:focus-visible` only (keyboard, never a mouse click)
+`--md-sys-color-focus-ring` / `--md-sys-state-focus-ring-width`, `:focus-visible` only (keyboard, never a mouse click)
 — but it paints on the **parent `ui-card`**, not on `ui-card-content` itself (Kim, superseding an earlier
 inset/negative-offset draft): `:scope[scrollable]:has(> ui-card-content:focus-visible)` (and the content-
 signal variant) lets the card react to its content region's focus state and draw the ring around the whole
@@ -270,7 +270,7 @@ model) — a card is never marked `[data-region]`, so its region padding stays f
 nesting depth; only the **radius** chain steps one level (ADR-0018, below).
 
 **A flagged consequence:** removing the card-only 6px-inline override means the nested-radius chain now
-decrements against 12px (was 6px). With the default `--ui-radius-base` of 12px, an **unreseeded root card's**
+decrements against 12px (was 6px). With the default `--md-sys-shape-corner-base` of 12px, an **unreseeded root card's**
 inner radius now floors at **exactly 0** (12 − 12), not the old 6px-positive headroom — an author who wants a
 visibly rounded nested corner needs to reseed `--ui-card-radius` larger than 12px.
 
@@ -344,7 +344,7 @@ container; an author in that position owns the fix in plain CSS.
 ## Nested radius — one level (ADR-0018)
 
 Concentric rounded rectangles need the inner radius to shrink with nesting: the **concentric-corner law**
-is `r_child = max(0, r_parent − padding_parent)`. A root `ui-card` rounds to the shared `--ui-radius-base`;
+is `r_child = max(0, r_parent − padding_parent)`. A root `ui-card` rounds to the shared `--md-sys-shape-corner-base`;
 a card publishes its inner radius to descendants as `--ui-card-child-radius`, and a **nested** card (inside
 a `ui-card-content`) reads it for its own radius — **one level**, pure CSS, no JS observer. The normal
 nesting is **card › ui-card-content › card**. A card placed as a *direct* child of **another card** (no region

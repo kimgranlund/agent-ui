@@ -5,73 +5,73 @@
  * The two families (geometry.md): FRAME ∝ height (height, inline-pad, min-inline-size, radius) and RHYTHM
  * ∝ font (gap = font/2, caret = font). [scale] multiplies BOTH the frame and the font; [density] multiplies
  * the RHYTHM ONLY (the gap) — never the frame, since scaling the frame un-centers the glyph and breaks the
- * square. So height/font carry `var(--ui-scale)`; the gap carries `var(--ui-density)` (and font, hence scale).
+ * square. So height/font carry `var(--md-sys-scale)`; the gap carries `var(--md-sys-density)` (and font, hence scale).
  *
  * Loaded AFTER tokens.css (color) in the foundation CSS stack; consumed by a control's `:where(ui-{cmp})`
- * block (e.g. button.css repoints `--ui-button-height: var(--ui-height-md)` etc.). Pure tokens — no imports.
+ * block (e.g. button.css repoints `--ui-button-height: var(--md-sys-height-md)` etc.). Pure tokens — no imports.
  */
 
 :root {
   /* The two global multipliers. Default = 1; an ancestor [scale]/[density] repoints them for its subtree
      (custom properties inherit, so the nearest ancestor wins by cascade proximity). */
-  --ui-scale: 1;
-  --ui-density: 1;
+  --md-sys-scale: 1;
+  --md-sys-density: 1;
 
-  /* --ui-compact-* — the WIDGET-BOX ramp (ADR-0041; Kim's 8-value ramp 12·14·16·18·20·22·24·28). The box of
+  /* --md-sys-compact-* — the WIDGET-BOX ramp (ADR-0041; Kim's 8-value ramp 12·14·16·18·20·22·24·28). The box of
      the Indicator (checkbox/switch/radio) + Range (slider) classes — a SEPARATE size system from the Control
-     height (geometry-sizing-spec §5.1), so NOT --ui-height-*. Same explicit lookup as ADR-0038: a LITERAL
-     per-[scale] table (:root default + the [scale] selectors re-table it; [size] picks sm/md/lg), NO --ui-scale
+     height (geometry-sizing-spec §5.1), so NOT --md-sys-height-*. Same explicit lookup as ADR-0038: a LITERAL
+     per-[scale] table (:root default + the [scale] selectors re-table it; [size] picks sm/md/lg), NO --md-sys-scale
      multiplier — so it can't ride `*` (a literal on `*` re-declares per descendant and defeats subtree
      inheritance). ui-md default 14·16·18 (byte-identical to the §5.2 default). Unlike the control fonts, the 6
      tiers are ALL-DISTINCT (the widget ramp is dense/linear — no content-sm ≡ ui-md overlap). */
-  --ui-compact-sm: 14px;
-  --ui-compact-md: 16px;
-  --ui-compact-lg: 18px;
+  --md-sys-compact-sm: 14px;
+  --md-sys-compact-md: 16px;
+  --md-sys-compact-lg: 18px;
 
-  /* --ui-widget-inset (ADR-0041 cl.3) — the THUMB inset law for thumbed widgets (switch knob, slider handle):
-     thumb = box − 2×inset, track = the widget box. A FLAT fleet CONSTANT (like a 1px border / --ui-radius-base),
+  /* --md-sys-widget-inset (ADR-0041 cl.3) — the THUMB inset law for thumbed widgets (switch knob, slider handle):
+     thumb = box − 2×inset, track = the widget box. A FLAT fleet CONSTANT (like a 1px border / --md-sys-shape-corner-base),
      NOT box-scaled — 2px reads correctly from the 12-box to the 28-box. Geometric (frame family) → density-
      INVARIANT (density rides the gap, never the inset). On :root, not the `*` ramp. */
-  --ui-widget-inset: 2px;
+  --md-sys-widget-inset: 2px;
 
   /* Control-band HEIGHT + FONT + ICON — Kim's explicit (scale × size) → §1-row LOOKUP (ADR-0038, supersedes
      the MULTIPLIER: ADR-0007's control leg + ADR-0032's 0.875…1.75 ladder; re-tables ADR-0035's non-default
      font/icon). The ui-md default triples (height 24·28·36, font 13·14·16, icon 16·18·20 — byte-identical to
      today); each [scale] tier re-tables ALL THREE below to its §1 row — height picks the row, font/icon/caret/
-     gap/pad all derive from that ONE row (the consistency the multiplier broke). NO multiplier: `× var(--ui-
-     scale)` LEAVES the control path entirely; --ui-scale survives for --md-sys-typescale-*-size DISPLAY only (below). LITERALS,
+     gap/pad all derive from that ONE row (the consistency the multiplier broke). NO multiplier: `× var(--md-sys-
+     scale)` LEAVES the control path entirely; --md-sys-scale survives for --md-sys-typescale-*-size DISPLAY only (below). LITERALS,
      so they sit on :root (default) + the [scale] selectors, NEVER `*` (a literal on `*` re-declares per
-     descendant and defeats subtree inheritance — the #25 --ui-compact proof). gap = font/2 (on `*`, reads the
-     inherited --ui-font) + caret = font follow for free. Kim's band overlap: content-sm ≡ ui-md, content-md ≡
+     descendant and defeats subtree inheritance — the #25 --md-sys-compact proof). gap = font/2 (on `*`, reads the
+     inherited --md-sys-font) + caret = font follow for free. Kim's band overlap: content-sm ≡ ui-md, content-md ≡
      ui-lg (the 6 [scale] names render 4 distinct registers). */
-  --ui-height-sm: 24px;
-  --ui-height-md: 28px;
-  --ui-height-lg: 36px;
+  --md-sys-height-sm: 24px;
+  --md-sys-height-md: 28px;
+  --md-sys-height-lg: 36px;
 
-  --ui-font-sm: 13px;
-  --ui-font-md: 14px;
-  --ui-font-lg: 16px;
+  --md-sys-font-sm: 13px;
+  --md-sys-font-md: 14px;
+  --md-sys-font-lg: 16px;
 
-  --ui-icon-sm: 16px;
-  --ui-icon-md: 18px;
-  --ui-icon-lg: 20px;
+  --md-sys-icon-sm: 16px;
+  --md-sys-icon-md: 18px;
+  --md-sys-icon-lg: 20px;
 
   /* Single-line control line-height (ADR-0036) — a CONSTANT 1: a control glyph is ONE line centred in the
      frame by the h/2 law, so line-height 1 keeps the text box = the font box (a >1 leading would inflate the
-     line box and fight the square-centring). Controls read `line-height: var(--ui-control-line-height)` on
+     line box and fight the square-centring). Controls read `line-height: var(--md-sys-control-line-height)` on
      :scope. Not [scale]/[density]-derived → :root, like the focus-ring / motion constants. */
-  --ui-control-line-height: 1;
+  --md-sys-control-line-height: 1;
 
   /* Focus-ring geometry (ADR-0009) — CONSTANTS, not derived via a subtree-repointable multiplier, so they
      stay on :root, NOT on `*`: ADR-0007's universal-selector rule covers only DERIVED tokens (a var() over
-     --ui-scale/--ui-density that must re-substitute per element); a constant on `*` would be needless churn.
+     --md-sys-scale/--md-sys-density that must re-substitute per element); a constant on `*` would be needless churn.
      2px width / 2px offset — the shared ring every control's `:focus-visible` outline reads. */
-  --ui-focus-ring-width: 2px;
-  --ui-focus-ring-offset: 2px;
+  --md-sys-state-focus-ring-width: 2px;
+  --md-sys-state-focus-ring-offset: 2px;
 
   /* Motion (the interaction-states standard) — state-transition timing. CONSTANTS (no var() over a
      subtree-repointable multiplier), so on :root like the focus-ring geometry, NOT the `*` ramp. A control's
-     `@scope` block transitions its state-PAINT properties (background/colour/border) over --ui-motion-fast —
+     `@scope` block transitions its state-PAINT properties (background/colour/border) over --md-sys-motion-duration-fast —
      and one non-paint exception: state-driven `transform` (a moving selection indicator, e.g.
      ui-segmented-control's `::before` that slides between segments, ADR-0095 — the presentation ADR-0086
      originally minted on `ui-radio-group[variant='segmented']`, since promoted to its own standalone tag).
@@ -79,29 +79,29 @@
      only its POSITION animates, so it does not fight the sizing law. Still NEVER a [scale]/[density]/[size]
      sizing-ramp change (those must snap — animating the ramp fights the sizing law). prefers-reduced-motion is
      honoured at the consumption site (the control zeroes the transition). */
-  --ui-motion-fast: 300ms;
-  --ui-ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1); /* Apple "smooth" easing */
+  --md-sys-motion-duration-fast: 300ms;
+  --md-sys-motion-easing-standard: cubic-bezier(0.25, 0.1, 0.25, 1); /* Apple "smooth" easing */
 
   /* Container radius (ADR-0015 cl.5) — ONE shared fleet radius. A CONSTANT on :root, NOT the `*` ramp:
      unlike a control's pill radius (frame family ∝ height, scaled), a container's corner radius is fixed
      regardless of [scale] (the ADR is explicit — "not subtree-derived"). A root container reads
-     `border-radius: var(--ui-card-radius, var(--ui-radius-base))`; it seeds the one-level nested-radius
+     `border-radius: var(--ui-card-radius, var(--md-sys-shape-corner-base))`; it seeds the one-level nested-radius
      chain (ADR-0018: child = max(0px, radius − padding)) and is the radius the ui-text-field follow-up
      (#71) adopts — one referent serving controls and containers. */
-  --ui-radius-base: 12px;
+  --md-sys-shape-corner-base: 12px;
 
   /* Monospace family — the shared typeface CONSTANT for code/figure surfaces (code blocks, inline-code
      chips, captions). A :root constant like the focus-ring / radius constants, NOT the `*` ramp: a
      font-family carries no [scale]/[density] multiplier (it has no scheme/AA/forced-colors dimension
-     either — it is a typeface, not a colour role). Named --ui-mono (NOT --ui-font-*) to stay clear of the
-     --ui-font-{sm,md,lg} SIZE namespace and the :root `--ui-font` guard (dimensions.test.ts). */
-  --ui-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+     either — it is a typeface, not a colour role). Named --md-sys-typeface-mono (NOT --md-sys-font-*) to stay clear of the
+     --md-sys-font-{sm,md,lg} SIZE namespace and the :root `--md-sys-font` guard (dimensions.test.ts). */
+  --md-sys-typeface-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Sans (UI) family — the shared typeface constant for everything else: the document base layer
      (base.css) and any host chrome consume it, so the fleet's one sans stack has ONE home (it was
      previously hand-rolled in the docs shell's _page.css only, and a shell-less page fell back to the
-     UA serif). Same constant class + naming rationale as --ui-mono above. */
-  --ui-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+     UA serif). Same constant class + naming rationale as --md-sys-typeface-mono above. */
+  --md-sys-typeface-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   /* Type scale (ADR-0078 cl.2/cl.2b — retires ADR-0025 cl.3's --ui-type-*) — the fleet typographic ramp,
      now the M3 typescale namespace: --md-sys-typescale-{role}-{size}-{property}, role ∈ display/headline/
@@ -216,195 +216,195 @@
 
 /* The DERIVED ramp lives on `*` (universal), NOT `:root` — deliberately. A var() inside a custom-property
    value is substituted where the property is DECLARED, not where it is read: declared on :root, every ramp
-   token would freeze the :root values of --ui-scale/--ui-density (= 1) into a literal, so a SUBTREE
+   token would freeze the :root values of --md-sys-scale/--md-sys-density (= 1) into a literal, so a SUBTREE
    [scale]/[density] (on a wrapper, not <html>) would repoint the multiplier but the ramp would never
    re-multiply — subtree scale/density would be dead. Declaring the ramp on `*` makes EACH element
-   re-substitute the --ui-scale/--ui-density IT inherits, so subtree repointing works. Do NOT "simplify"
+   re-substitute the --md-sys-scale/--md-sys-density IT inherits, so subtree repointing works. Do NOT "simplify"
    this back onto :root — that re-breaks subtree scale/density. (~9 inheritable custom-prop declarations per
    element; declarations don't trigger layout/paint, so the cost is negligible.) */
 * {
   /* Control HEIGHT + FONT + ICON are NO LONGER on this `*` ramp — ADR-0038 makes all three explicit Kim's-table
-     per-[scale] literals (:root default + the [scale] selectors, the #25 --ui-compact pattern); `× var(--ui-scale)`
+     per-[scale] literals (:root default + the [scale] selectors, the #25 --md-sys-compact pattern); `× var(--md-sys-scale)`
      left the control path. What stays on `*` below is genuinely DERIVED (a var() over a subtree-repointable
-     multiplier that MUST re-substitute per element): the gap (× --ui-density, reads the inherited --ui-font),
-     --md-sys-typescale-*-size (× --ui-scale, the surviving DISPLAY consumer), and --ui-space-* (× --ui-density). */
+     multiplier that MUST re-substitute per element): the gap (× --md-sys-density, reads the inherited --md-sys-font),
+     --md-sys-typescale-*-size (× --md-sys-scale, the surviving DISPLAY consumer), and --md-sys-space-* (× --md-sys-density). */
 
-  /* Rhythm: the gap = font / 2, and density rides it (× var(--ui-density)). This is the ONE quantity
+  /* Rhythm: the gap = font / 2, and density rides it (× var(--md-sys-density)). This is the ONE quantity
      density touches — the frame (height/font/inline-pad) is density-invariant. (gap also carries scale,
-     via font.) A control reads `--ui-gap-{size}` for its slot↔label spacing. */
-  --ui-gap-sm: calc(var(--ui-font-sm) / 2 * var(--ui-density));
-  --ui-gap-md: calc(var(--ui-font-md) / 2 * var(--ui-density));
-  --ui-gap-lg: calc(var(--ui-font-lg) / 2 * var(--ui-density));
+     via font.) A control reads `--md-sys-gap-{size}` for its slot↔label spacing. */
+  --md-sys-gap-sm: calc(var(--md-sys-font-sm) / 2 * var(--md-sys-density));
+  --md-sys-gap-md: calc(var(--md-sys-font-md) / 2 * var(--md-sys-density));
+  --md-sys-gap-lg: calc(var(--md-sys-font-lg) / 2 * var(--md-sys-density));
 
   /* --md-sys-typescale-*-size (ADR-0078 cl.2 — retires ADR-0025 cl.3's --ui-type-*-size) — the fleet
-     typographic scale's ONE scale-riding leg, a peer of --ui-font-* but a SEPARATE ledger: --ui-font-* is
-     the control-band glyph (paired to --ui-height-*, the square-centring law); the typescale is free-
-     standing DOCUMENT typography (its own line-height, no control frame). Rides [scale] (× var(--ui-scale))
-     — the same pre-substitution reason as --ui-font-*, so a subtree [scale] re-multiplies type — and is
-     declared on `*` (NOT :root) so each element re-substitutes the --ui-scale it inherits. Type is DENSITY-
-     INVARIANT: glyph size is a frame-family quantity, not rhythm, so NO var(--ui-density) here ([density]
+     typographic scale's ONE scale-riding leg, a peer of --md-sys-font-* but a SEPARATE ledger: --md-sys-font-* is
+     the control-band glyph (paired to --md-sys-height-*, the square-centring law); the typescale is free-
+     standing DOCUMENT typography (its own line-height, no control frame). Rides [scale] (× var(--md-sys-scale))
+     — the same pre-substitution reason as --md-sys-font-*, so a subtree [scale] re-multiplies type — and is
+     declared on `*` (NOT :root) so each element re-substitutes the --md-sys-scale it inherits. Type is DENSITY-
+     INVARIANT: glyph size is a frame-family quantity, not rhythm, so NO var(--md-sys-density) here ([density]
      re-multiplies gaps only — geometry.md's frame/rhythm split). The 27 rows are M3-verbatim (15 core) +
      editorial extensions (12, cl.2b, marked); the scale-free -weight/-line-height/-tracking legs are :root
      constants (above). */
-  --md-sys-typescale-display-large-size: calc(57px * var(--ui-scale));
-  --md-sys-typescale-display-medium-size: calc(45px * var(--ui-scale));
-  --md-sys-typescale-display-small-size: calc(36px * var(--ui-scale));
-  --md-sys-typescale-headline-large-size: calc(32px * var(--ui-scale));
-  --md-sys-typescale-headline-medium-size: calc(28px * var(--ui-scale));
-  --md-sys-typescale-headline-small-size: calc(24px * var(--ui-scale));
-  --md-sys-typescale-title-large-size: calc(22px * var(--ui-scale));
-  --md-sys-typescale-title-medium-size: calc(16px * var(--ui-scale));
-  --md-sys-typescale-title-small-size: calc(14px * var(--ui-scale));
-  --md-sys-typescale-body-large-size: calc(16px * var(--ui-scale));
-  --md-sys-typescale-body-medium-size: calc(14px * var(--ui-scale));
-  --md-sys-typescale-body-small-size: calc(12px * var(--ui-scale));
-  --md-sys-typescale-label-large-size: calc(14px * var(--ui-scale));
-  --md-sys-typescale-label-medium-size: calc(12px * var(--ui-scale));
-  --md-sys-typescale-label-small-size: calc(11px * var(--ui-scale));
+  --md-sys-typescale-display-large-size: calc(57px * var(--md-sys-scale));
+  --md-sys-typescale-display-medium-size: calc(45px * var(--md-sys-scale));
+  --md-sys-typescale-display-small-size: calc(36px * var(--md-sys-scale));
+  --md-sys-typescale-headline-large-size: calc(32px * var(--md-sys-scale));
+  --md-sys-typescale-headline-medium-size: calc(28px * var(--md-sys-scale));
+  --md-sys-typescale-headline-small-size: calc(24px * var(--md-sys-scale));
+  --md-sys-typescale-title-large-size: calc(22px * var(--md-sys-scale));
+  --md-sys-typescale-title-medium-size: calc(16px * var(--md-sys-scale));
+  --md-sys-typescale-title-small-size: calc(14px * var(--md-sys-scale));
+  --md-sys-typescale-body-large-size: calc(16px * var(--md-sys-scale));
+  --md-sys-typescale-body-medium-size: calc(14px * var(--md-sys-scale));
+  --md-sys-typescale-body-small-size: calc(12px * var(--md-sys-scale));
+  --md-sys-typescale-label-large-size: calc(14px * var(--md-sys-scale));
+  --md-sys-typescale-label-medium-size: calc(12px * var(--md-sys-scale));
+  --md-sys-typescale-label-small-size: calc(11px * var(--md-sys-scale));
   /* extension — not MD3 (cl.2b) */
-  --md-sys-typescale-kicker-large-size: calc(14px * var(--ui-scale));
-  --md-sys-typescale-kicker-medium-size: calc(12px * var(--ui-scale));
-  --md-sys-typescale-kicker-small-size: calc(11px * var(--ui-scale));
-  --md-sys-typescale-overline-large-size: calc(14px * var(--ui-scale));
-  --md-sys-typescale-overline-medium-size: calc(12px * var(--ui-scale));
-  --md-sys-typescale-overline-small-size: calc(11px * var(--ui-scale));
-  --md-sys-typescale-lead-large-size: calc(22px * var(--ui-scale));
-  --md-sys-typescale-lead-medium-size: calc(18px * var(--ui-scale));
-  --md-sys-typescale-lead-small-size: calc(16px * var(--ui-scale));
-  --md-sys-typescale-quote-large-size: calc(22px * var(--ui-scale));
-  --md-sys-typescale-quote-medium-size: calc(18px * var(--ui-scale));
-  --md-sys-typescale-quote-small-size: calc(16px * var(--ui-scale));
+  --md-sys-typescale-kicker-large-size: calc(14px * var(--md-sys-scale));
+  --md-sys-typescale-kicker-medium-size: calc(12px * var(--md-sys-scale));
+  --md-sys-typescale-kicker-small-size: calc(11px * var(--md-sys-scale));
+  --md-sys-typescale-overline-large-size: calc(14px * var(--md-sys-scale));
+  --md-sys-typescale-overline-medium-size: calc(12px * var(--md-sys-scale));
+  --md-sys-typescale-overline-small-size: calc(11px * var(--md-sys-scale));
+  --md-sys-typescale-lead-large-size: calc(22px * var(--md-sys-scale));
+  --md-sys-typescale-lead-medium-size: calc(18px * var(--md-sys-scale));
+  --md-sys-typescale-lead-small-size: calc(16px * var(--md-sys-scale));
+  --md-sys-typescale-quote-large-size: calc(22px * var(--md-sys-scale));
+  --md-sys-typescale-quote-medium-size: calc(18px * var(--md-sys-scale));
+  --md-sys-typescale-quote-small-size: calc(16px * var(--md-sys-scale));
 
-  /* --ui-space — the LAYOUT-SPACING ladder (ADR-0015 cl.4, geometry.md "--space-* is layout spacing,
+  /* --md-sys-space — the LAYOUT-SPACING ladder (ADR-0015 cl.4, geometry.md "--space-* is layout spacing,
      not control geometry"). The gap/padding/margin BETWEEN laid-out children (Row/Column/List/Grid gap,
      Card padding) — a DIFFERENT ledger from the control frame (the h/2 centring law). Two rules set it
      apart from the ramp above:
-       • density rides it (rhythm family): each step is `calc(<base px> * var(--ui-density))`, so a subtree
+       • density rides it (rhythm family): each step is `calc(<base px> * var(--md-sys-density))`, so a subtree
          [density] re-multiplies it (declared on `*`, not :root — same pre-substitution reason as the gap).
-       • [scale] does NOT touch it: the base px is a LITERAL (no var(--ui-scale)), because layout rhythm is
+       • [scale] does NOT touch it: the base px is a LITERAL (no var(--md-sys-scale)), because layout rhythm is
          not control-frame size — a [scale] theme resizes the controls, not the gutters between them.
      A 4px-grid t-shirt vocabulary; `none`=0 (the no-gap case). The flexProps `gap` enum (s2) is exactly
      these step names. Extensible (add 3xl… with the family) — repointing a value is seam-stable; a new
      step name widens the gap enum (a deliberate addition, not drift). */
-  --ui-space-none: 0;
-  --ui-space-xs: calc(4px * var(--ui-density));
-  --ui-space-sm: calc(8px * var(--ui-density));
-  --ui-space-md: calc(12px * var(--ui-density));
-  --ui-space-lg: calc(16px * var(--ui-density));
-  --ui-space-xl: calc(24px * var(--ui-density));
-  --ui-space-2xl: calc(32px * var(--ui-density));
+  --md-sys-space-none: 0;
+  --md-sys-space-xs: calc(4px * var(--md-sys-density));
+  --md-sys-space-sm: calc(8px * var(--md-sys-density));
+  --md-sys-space-md: calc(12px * var(--md-sys-density));
+  --md-sys-space-lg: calc(16px * var(--md-sys-density));
+  --md-sys-space-xl: calc(24px * var(--md-sys-density));
+  --md-sys-space-2xl: calc(32px * var(--md-sys-density));
 }
 
 /* [scale] — Kim's (scale × size) → §1-row LOOKUP selector (ADR-0038, supersedes ADR-0032's multiplier ladder
-   for CONTROLS). Each tier re-tables --ui-{height,font,icon}-{sm,md,lg} to its chosen §1 row (height picks the
+   for CONTROLS). Each tier re-tables --md-sys-{height,font,icon}-{sm,md,lg} to its chosen §1 row (height picks the
    row; font/icon derive from it — ONE consistent row per cell, the thing the multiplier broke). Descendants
-   inherit the re-tabled tokens, so subtree [scale] works WITHOUT --ui-scale (the #25 --ui-compact proof). The
-   tiers ALSO re-table --ui-compact-* (the WIDGET-BOX ramp, ADR-0041 — now CONSUMED by Indicator/Range). Two
+   inherit the re-tabled tokens, so subtree [scale] works WITHOUT --md-sys-scale (the #25 --md-sys-compact proof). The
+   tiers ALSO re-table --md-sys-compact-* (the WIDGET-BOX ramp, ADR-0041 — now CONSUMED by Indicator/Range). Two
    bands by reading distance — ui-* tight (UI
    density), content-* generous (reading density) — and content-* is the ui-* band SHIFTED UP ONE §1 row, so
    content-sm ≡ ui-md and content-md ≡ ui-lg (Kim's design: 6 names → 4 distinct registers; only content-lg
-   exceeds the ui band). ui-md is the DEFAULT (= :root, byte-identical). Each tier STILL sets --ui-scale to its
-   tier value — but ONLY --md-sys-typescale-*-size (DISPLAY, the ADR-0025/0033 ruled-linear fork) reads it now; --ui-scale
+   exceeds the ui band). ui-md is the DEFAULT (= :root, byte-identical). Each tier STILL sets --md-sys-scale to its
+   tier value — but ONLY --md-sys-typescale-*-size (DISPLAY, the ADR-0025/0033 ruled-linear fork) reads it now; --md-sys-scale
    has LEFT the control path (controls are the explicit literals above/here). */
 [scale="ui-sm"] {
-  --ui-scale: 0.875;
-  --ui-height-sm: 20px;
-  --ui-height-md: 24px;
-  --ui-height-lg: 28px;
-  --ui-font-sm: 12px;
-  --ui-font-md: 13px;
-  --ui-font-lg: 14px;
-  --ui-icon-sm: 14px;
-  --ui-icon-md: 16px;
-  --ui-icon-lg: 18px;
-  --ui-compact-sm: 12px;
-  --ui-compact-md: 14px;
-  --ui-compact-lg: 16px;
+  --md-sys-scale: 0.875;
+  --md-sys-height-sm: 20px;
+  --md-sys-height-md: 24px;
+  --md-sys-height-lg: 28px;
+  --md-sys-font-sm: 12px;
+  --md-sys-font-md: 13px;
+  --md-sys-font-lg: 14px;
+  --md-sys-icon-sm: 14px;
+  --md-sys-icon-md: 16px;
+  --md-sys-icon-lg: 18px;
+  --md-sys-compact-sm: 12px;
+  --md-sys-compact-md: 14px;
+  --md-sys-compact-lg: 16px;
 }
 [scale="ui-md"] {
-  --ui-scale: 1;
-  --ui-height-sm: 24px;
-  --ui-height-md: 28px;
-  --ui-height-lg: 36px;
-  --ui-font-sm: 13px;
-  --ui-font-md: 14px;
-  --ui-font-lg: 16px;
-  --ui-icon-sm: 16px;
-  --ui-icon-md: 18px;
-  --ui-icon-lg: 20px;
-  --ui-compact-sm: 14px;
-  --ui-compact-md: 16px;
-  --ui-compact-lg: 18px;
+  --md-sys-scale: 1;
+  --md-sys-height-sm: 24px;
+  --md-sys-height-md: 28px;
+  --md-sys-height-lg: 36px;
+  --md-sys-font-sm: 13px;
+  --md-sys-font-md: 14px;
+  --md-sys-font-lg: 16px;
+  --md-sys-icon-sm: 16px;
+  --md-sys-icon-md: 18px;
+  --md-sys-icon-lg: 20px;
+  --md-sys-compact-sm: 14px;
+  --md-sys-compact-md: 16px;
+  --md-sys-compact-lg: 18px;
 }
 [scale="ui-lg"] {
-  --ui-scale: 1.125;
-  --ui-height-sm: 28px;
-  --ui-height-md: 36px;
-  --ui-height-lg: 48px;
-  --ui-font-sm: 14px;
-  --ui-font-md: 16px;
-  --ui-font-lg: 18px;
-  --ui-icon-sm: 18px;
-  --ui-icon-md: 20px;
-  --ui-icon-lg: 24px;
-  --ui-compact-sm: 16px;
-  --ui-compact-md: 18px;
-  --ui-compact-lg: 20px;
+  --md-sys-scale: 1.125;
+  --md-sys-height-sm: 28px;
+  --md-sys-height-md: 36px;
+  --md-sys-height-lg: 48px;
+  --md-sys-font-sm: 14px;
+  --md-sys-font-md: 16px;
+  --md-sys-font-lg: 18px;
+  --md-sys-icon-sm: 18px;
+  --md-sys-icon-md: 20px;
+  --md-sys-icon-lg: 24px;
+  --md-sys-compact-sm: 16px;
+  --md-sys-compact-md: 18px;
+  --md-sys-compact-lg: 20px;
 }
 [scale="content-sm"] {
-  --ui-scale: 1.375;
-  --ui-height-sm: 24px;
-  --ui-height-md: 28px;
-  --ui-height-lg: 36px;
-  --ui-font-sm: 13px;
-  --ui-font-md: 14px;
-  --ui-font-lg: 16px;
-  --ui-icon-sm: 16px;
-  --ui-icon-md: 18px;
-  --ui-icon-lg: 20px;
-  --ui-compact-sm: 18px;
-  --ui-compact-md: 20px;
-  --ui-compact-lg: 22px;
+  --md-sys-scale: 1.375;
+  --md-sys-height-sm: 24px;
+  --md-sys-height-md: 28px;
+  --md-sys-height-lg: 36px;
+  --md-sys-font-sm: 13px;
+  --md-sys-font-md: 14px;
+  --md-sys-font-lg: 16px;
+  --md-sys-icon-sm: 16px;
+  --md-sys-icon-md: 18px;
+  --md-sys-icon-lg: 20px;
+  --md-sys-compact-sm: 18px;
+  --md-sys-compact-md: 20px;
+  --md-sys-compact-lg: 22px;
 }
 [scale="content-md"] {
-  --ui-scale: 1.5;
-  --ui-height-sm: 28px;
-  --ui-height-md: 36px;
-  --ui-height-lg: 48px;
-  --ui-font-sm: 14px;
-  --ui-font-md: 16px;
-  --ui-font-lg: 18px;
-  --ui-icon-sm: 18px;
-  --ui-icon-md: 20px;
-  --ui-icon-lg: 24px;
-  --ui-compact-sm: 20px;
-  --ui-compact-md: 22px;
-  --ui-compact-lg: 24px;
+  --md-sys-scale: 1.5;
+  --md-sys-height-sm: 28px;
+  --md-sys-height-md: 36px;
+  --md-sys-height-lg: 48px;
+  --md-sys-font-sm: 14px;
+  --md-sys-font-md: 16px;
+  --md-sys-font-lg: 18px;
+  --md-sys-icon-sm: 18px;
+  --md-sys-icon-md: 20px;
+  --md-sys-icon-lg: 24px;
+  --md-sys-compact-sm: 20px;
+  --md-sys-compact-md: 22px;
+  --md-sys-compact-lg: 24px;
 }
 [scale="content-lg"] {
-  --ui-scale: 1.75;
-  --ui-height-sm: 36px;
-  --ui-height-md: 48px;
-  --ui-height-lg: 64px;
-  --ui-font-sm: 16px;
-  --ui-font-md: 18px;
-  --ui-font-lg: 20px;
-  --ui-icon-sm: 20px;
-  --ui-icon-md: 24px;
-  --ui-icon-lg: 28px;
-  --ui-compact-sm: 22px;
-  --ui-compact-md: 24px;
-  --ui-compact-lg: 28px;
+  --md-sys-scale: 1.75;
+  --md-sys-height-sm: 36px;
+  --md-sys-height-md: 48px;
+  --md-sys-height-lg: 64px;
+  --md-sys-font-sm: 16px;
+  --md-sys-font-md: 18px;
+  --md-sys-font-lg: 20px;
+  --md-sys-icon-sm: 20px;
+  --md-sys-icon-md: 24px;
+  --md-sys-icon-lg: 28px;
+  --md-sys-compact-sm: 22px;
+  --md-sys-compact-md: 24px;
+  --md-sys-compact-lg: 28px;
 }
 
-/* [density] — multiplies the RHYTHM only (the gap), never the frame (geometry.md). Repoints --ui-density,
+/* [density] — multiplies the RHYTHM only (the gap), never the frame (geometry.md). Repoints --md-sys-density,
    so the gap recomputes while height/font/inline-pad hold. */
 [density="compact"] {
-  --ui-density: 0.5;
+  --md-sys-density: 0.5;
 }
 [density="comfortable"] {
-  --ui-density: 1;
+  --md-sys-density: 1;
 }
 [density="spacious"] {
-  --ui-density: 1.5;
+  --md-sys-density: 1.5;
 }

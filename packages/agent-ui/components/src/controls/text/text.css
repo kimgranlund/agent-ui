@@ -53,7 +53,7 @@
   --ui-text-color: var(--md-sys-color-neutral-on-surface);
 
   /* TKT-0066 item 5 ruling: dimensional constants route through the own chain, never read raw in @scope. */
-  --ui-text-quote-pad: var(--ui-space-md); /* the ≈12px rhythm step — density-responsive, cl.2b */
+  --ui-text-quote-pad: var(--md-sys-space-md); /* the ≈12px rhythm step — density-responsive, cl.2b */
 }
 
 /* ── 8 ROLE blocks (cl.3) — [variant] alone, at the size=md default (…-medium). body is the base above,
@@ -290,8 +290,8 @@
   /* the fleet's shared focus treatment (ADR-0009) — the SAME ring every control draws, read directly from
      the fleet tokens rather than repointed through the component chain (the button.css precedent). */
   :scope > a[href]:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
   /* :visited shares the link ink at v1 — no visited role minted (SPEC-R13, stated not hidden). */
 

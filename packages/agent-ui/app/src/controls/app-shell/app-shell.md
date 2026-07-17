@@ -45,7 +45,7 @@ aria:
 keyboard: []            # no keyboard interaction — the shell is a pure layout skeleton, not focusable
 
 geometry:
-  sizeClass: layout                 # Container/layout — NO control height (never reads --ui-height-*)
+  sizeClass: layout                 # Container/layout — NO control height (never reads --md-sys-height-*)
   blockSize: auto                   # content-driven — the grid's intrinsic size, no fixed frame
   paddingBlock: 0                   # the shell adds no padding of its own; a region owns any inset it wants
   gridTemplate: 'banner banner banner' auto / 'nav main aside' 1fr / 'footer footer footer' auto / auto 1fr auto   # the presence-driven region grid (LLD-C4) — an unoccupied named area's track collapses to 0 via ordinary CSS Grid auto-sizing, no :has() needed

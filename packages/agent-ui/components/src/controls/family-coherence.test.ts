@@ -363,11 +363,17 @@ const MULTI_DESCRIPTOR_FOLDERS = new Set<string>()
 /** Is `token` legal for a control named `name` to DECLARE? Own `--ui-{name}-*` ∪ the shared allowlist ONLY —
  *  declaration ownership is untouched by the family-root rule (a leaf may never DECLARE another control's,
  *  including its own family-root's, private token — only consumption is widened, below). Anything outside
- *  the `--ui-*`/`--md-sys-*` namespace entirely is out of scope (not this invariant's concern). */
+ *  the `--ui-*`/`--md-sys-*` namespace entirely is out of scope (not this invariant's concern).
+ *
+ *  ADR-0140 (2026-07-17): `--md-sys-*` is now the WHOLE system tier (color/typescale — the original two
+ *  families here — PLUS the migrated dimensional foundation: space/height/font/icon/gap/compact/shape/
+ *  motion/state/widget-inset/control-line-height/typeface/scale/density, all law-owned in `dimensions.css`,
+ *  never a control's to declare). The prefix alone is now the boundary (naming.md §5) — any `--md-sys-*`
+ *  is universally consumable, matching how color/typescale already worked; no per-family allowlist needed. */
 function tokenAllowedToDeclare(name: string, token: string): boolean {
   if (!/^--(ui|md-sys)-/.test(token)) return true
   if (token.startsWith(`--ui-${name}-`)) return true
-  if (token.startsWith('--md-sys-color-') || token.startsWith('--md-sys-typescale-')) return true
+  if (token.startsWith('--md-sys-')) return true
   return SHARED_UI_TOKENS.has(token)
 }
 

@@ -167,13 +167,13 @@
  * other prose block (paragraph/list/blockquote/code) carries one consistent trailing margin, so the rhythm
  * reads as one scale throughout, not a per-construct special case. */
 .doc-body > :is(h2, h3, h4, h5, h6) {
-  margin-block: var(--ui-space-2xl) var(--ui-space-xs);
+  margin-block: var(--md-sys-space-2xl) var(--md-sys-space-xs);
 }
 .doc-body > :is(h2, h3, h4, h5, h6):first-child {
   margin-block-start: 0; /* no dead gap above the article's own first heading */
 }
 .doc-body > :is(p, ul, ol, blockquote, .code-block) {
-  margin-block: 0 var(--ui-space-lg);
+  margin-block: 0 var(--md-sys-space-lg);
 }
 .doc-body > :last-child {
   margin-block-end: 0; /* no dead gap below the article's last block */
@@ -206,15 +206,15 @@
   line-height: var(--md-sys-typescale-quote-medium-line-height);
   letter-spacing: var(--md-sys-typescale-quote-medium-tracking);
   border-inline-start: 3px solid var(--md-sys-color-neutral-outline-variant);
-  padding-inline-start: var(--ui-space-md);
+  padding-inline-start: var(--md-sys-space-md);
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* LISTS — token-spaced indent inside the same prose measure (not the UA ~40px default), a subtle inter-item
  * gap so a long list still reads as discrete items rather than one dense block. */
 .doc-body > :is(ul, ol) {
-  padding-inline-start: var(--ui-space-xl);
+  padding-inline-start: var(--md-sys-space-xl);
 }
 .doc-body li + li {
-  margin-block-start: var(--ui-space-xs);
+  margin-block-start: var(--md-sys-space-xs);
 }

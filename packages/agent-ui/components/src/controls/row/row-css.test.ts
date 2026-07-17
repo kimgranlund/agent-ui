@@ -15,9 +15,9 @@ const tokenBlock = css.slice(css.indexOf(':where(ui-row) {'), css.indexOf('@scop
 const stylesBlock = css.slice(css.indexOf('@scope (ui-row) {'))
 
 // The @scope token-hygiene allowlist (decomp s3): a layout primitive's styles block consumes ONLY its own
-// `--ui-row-*` chain, the shared `--ui-container-*` surface seam, and the `--ui-space-*` ladder — never a raw
+// `--ui-row-*` chain, the shared `--ui-container-*` surface seam, and the `--md-sys-space-*` ladder — never a raw
 // `--md-sys-color-*` colour role (those enter the chain in the token layer / container.css, ADR-0008 role-purity).
-const ALLOWED = /^--ui-(?:row|container|space)-/
+const ALLOWED = /^--ui-(?:row|container)-|^--md-sys-space-/
 const scopeViolations = (block: string): string[] =>
   [...block.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1] as string).filter((ref) => !ALLOWED.test(ref))
 
@@ -34,7 +34,7 @@ describe('row.css — structure + sectioning (ADR-0003) (s3)', () => {
     for (const slot of ['align', 'justify', 'gap', 'wrap', 'radius']) {
       expect(tokenBlock).toMatch(new RegExp(`--ui-row-${slot}:`))
     }
-    expect(tokenBlock).toMatch(/--ui-row-radius:\s*var\(--ui-radius-base\)/) // the shared fleet radius (ADR-0015 cl.5)
+    expect(tokenBlock).toMatch(/--ui-row-radius:\s*var\(--md-sys-shape-corner-base\)/) // the shared fleet radius (ADR-0015 cl.5)
   })
 
   it('@scope sets display:flex with the ROW identity (flex-direction: row — direction is the tag, ADR-0016 cl.2)', () => {
@@ -61,11 +61,11 @@ describe('row.css — the flex grammar repoints (ADR-0016 cl.1) (s3)', () => {
     expect(tokenBlock).toMatch(/ui-row\[justify='evenly'\]\)\s*\{\s*--ui-row-justify:\s*space-evenly/)
   })
 
-  it('gap → the --ui-space ladder: each step repoints to the matching --ui-space-{step}', () => {
+  it('gap → the --md-sys-space ladder: each step repoints to the matching --md-sys-space-{step}', () => {
     for (const step of ['xs', 'sm', 'md', 'lg', 'xl', '2xl']) {
-      expect(tokenBlock).toMatch(new RegExp(`ui-row\\[gap='${step}'\\]\\)\\s*\\{\\s*--ui-row-gap:\\s*var\\(--ui-space-${step}\\)`))
+      expect(tokenBlock).toMatch(new RegExp(`ui-row\\[gap='${step}'\\]\\)\\s*\\{\\s*--ui-row-gap:\\s*var\\(--md-sys-space-${step}\\)`))
     }
-    expect(tokenBlock).toMatch(/--ui-row-gap:\s*var\(--ui-space-none\)/) // the default (no-gap) maps to the none step
+    expect(tokenBlock).toMatch(/--ui-row-gap:\s*var\(--md-sys-space-none\)/) // the default (no-gap) maps to the none step
   })
 
   it('wrap → flex-wrap via boolean presence ([wrap] repoints to wrap)', () => {

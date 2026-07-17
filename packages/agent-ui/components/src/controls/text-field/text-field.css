@@ -75,34 +75,34 @@
   --ui-text-field-placeholder: var(--ui-text-field-ink); /* tracks the SAME default-state ink role (Kim's table has no separate placeholder row) — re-resolves live off whatever --ui-text-field-ink cascades to for this element, so the disabled repoint below reaches it for free */
 
   /* Geometry — off the s6 dimensional ramp (default size = md). [size] repoints below. */
-  --ui-text-field-height: var(--ui-height-md);
-  --ui-text-field-font: var(--ui-font-md);
-  --ui-text-field-gap: var(--ui-gap-md); /* the one density-bearing quantity (slot↔editor column-gap) */
-  --ui-text-field-icon: var(--ui-icon-md); /* §1-SET icon per [scale]-tier (ADR-0038 / ADR-0035 conformance gap); repoints with [scale] from dimensions.css — was calc(18px * var(--ui-scale)) */
+  --ui-text-field-height: var(--md-sys-height-md);
+  --ui-text-field-font: var(--md-sys-font-md);
+  --ui-text-field-gap: var(--md-sys-gap-md); /* the one density-bearing quantity (slot↔editor column-gap) */
+  --ui-text-field-icon: var(--md-sys-icon-md); /* §1-SET icon per [scale]-tier (ADR-0038 / ADR-0035 conformance gap); repoints with [scale] from dimensions.css — was calc(18px * var(--md-sys-scale)) */
 
   /* Size-INVARIANT frame quantities — declared ONCE in the base block (NOT in the per-[size] blocks below): */
-  --ui-text-field-radius: var(--ui-radius-base); /* fixed --ui-radius-base rounded-rect — the container-fleet referent an ENTRY control takes (NOT the action family's h/2 pill); overridable per-field; ADR-0015 cl.5 / #71 amendment. */
+  --ui-text-field-radius: var(--md-sys-shape-corner-base); /* fixed --md-sys-shape-corner-base rounded-rect — the container-fleet referent an ENTRY control takes (NOT the action family's h/2 pill); overridable per-field; ADR-0015 cl.5 / #71 amendment. */
   --ui-text-field-min-inline-size: 20ch; /* the host typing-width floor (entry-control frame-law leg, ADR-0021) — ch is font-relative so one ~20ch already scales with --ui-text-field-font across [size]; native <input size> parity so a bare field is hittable (width above the floor is the layout's job). */
 
   /* Visible inline-validation message tokens (ADR-0029 A1 — extends ADR-0014): the .ui-text-field-message
      node (control-managed, aria-describedby target) becomes VISIBLE when non-empty under :state(user-invalid).
      Declared here (specificity 0, overridable), consumed in the @scope block. */
-  --ui-text-field-message-font: var(--ui-font-sm); /* small type — subordinate to the field's own label/value */
+  --ui-text-field-message-font: var(--md-sys-font-sm); /* small type — subordinate to the field's own label/value */
   --ui-text-field-message-ink: var(--md-sys-color-danger-on-surface-variant); /* danger TEXT ink — AA-gated on-surface (8.48:1 light / 8.91:1 dark). Bare --md-sys-color-danger is 4.05:1 light = an AA text FAIL, so the TEXT ink moves; the danger BORDER channel above (--ui-text-field-border-invalid) stays --md-sys-color-danger (border = 3:1 UI bar). ADR-0014 cl.2c · 2026-07-02 color audit item 1. */
 }
 
 /* size → dimensional ramp (size is reflected, so the attribute is present) */
 :where(ui-text-field[size='sm']) {
-  --ui-text-field-height: var(--ui-height-sm);
-  --ui-text-field-font: var(--ui-font-sm);
-  --ui-text-field-gap: var(--ui-gap-sm);
-  --ui-text-field-icon: var(--ui-icon-sm); /* §1-SET icon per [scale]-tier (ADR-0038) */
+  --ui-text-field-height: var(--md-sys-height-sm);
+  --ui-text-field-font: var(--md-sys-font-sm);
+  --ui-text-field-gap: var(--md-sys-gap-sm);
+  --ui-text-field-icon: var(--md-sys-icon-sm); /* §1-SET icon per [scale]-tier (ADR-0038) */
 }
 :where(ui-text-field[size='lg']) {
-  --ui-text-field-height: var(--ui-height-lg);
-  --ui-text-field-font: var(--ui-font-lg);
-  --ui-text-field-gap: var(--ui-gap-lg);
-  --ui-text-field-icon: var(--ui-icon-lg); /* §1-SET icon per [scale]-tier (ADR-0038) */
+  --ui-text-field-height: var(--md-sys-height-lg);
+  --ui-text-field-font: var(--md-sys-font-lg);
+  --ui-text-field-gap: var(--md-sys-gap-lg);
+  --ui-text-field-icon: var(--md-sys-icon-lg); /* §1-SET icon per [scale]-tier (ADR-0038) */
 }
 
 /* disabled → a role-REPOINT (NOT opacity, tokens.md canon; TKT-0062's disabled row). Matches BOTH the
@@ -146,7 +146,7 @@
     color: var(--ui-text-field-ink);
 
     /* the BORDER-ON-HOST field frame (§5): border + radius on the host, so a slotted adornment sits INSIDE the
-       box. The radius is the fixed --ui-radius-base rounded-rect — the SAME referent the container fleet (card /
+       box. The radius is the fixed --md-sys-shape-corner-base rounded-rect — the SAME referent the container fleet (card /
        modal) uses, because a field is an entry SURFACE kin to a container, NOT the action/keyboard family's
        press-affordance h/2 pill (ADR-0015 cl.5 / the #71 amendment; geometry.md "Corner radius"). It reads the
        component --ui-text-field-radius token (role-purity + per-field override). The browser clamps border-radius
@@ -168,7 +168,7 @@
   :scope > [data-part='editor'] {
     order: 1;
     font-size: var(--ui-text-field-font);
-    line-height: var(--ui-control-line-height); /* single-line control standard — ADR-0036; explicit here because the editor re-declares font-size (the host `:scope` inherits, but the explict editor decl makes the contract visible at both sites) */
+    line-height: var(--md-sys-control-line-height); /* single-line control standard — ADR-0036; explicit here because the editor re-declares font-size (the host `:scope` inherits, but the explict editor decl makes the contract visible at both sites) */
     color: var(--ui-text-field-ink);
     min-inline-size: 0; /* let the 1fr cell shrink so the editor scrolls (overflow) instead of widening the grid */
     white-space: nowrap; /* single-line */
@@ -278,8 +278,8 @@
     background: var(--ui-text-field-bg-focus);
     border-color: var(--ui-text-field-border-focus);
     --ui-text-field-ink: var(--ui-text-field-ink-focus);
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* user-invalid (the danger border) — appears only AFTER the first interaction; the trackUserInvalid
@@ -319,9 +319,9 @@
      past first paint, so the upgrade/first paint snaps and only SUBSEQUENT state changes animate. */
   :scope:state(ready) {
     transition:
-      border-color var(--ui-motion-fast) var(--ui-ease-standard),
-      background-color var(--ui-motion-fast) var(--ui-ease-standard),
-      color var(--ui-motion-fast) var(--ui-ease-standard);
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
   @media (prefers-reduced-motion: reduce) {
     :scope:state(ready) {

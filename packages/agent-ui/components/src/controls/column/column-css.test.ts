@@ -11,7 +11,7 @@ declare const process: { cwd(): string }
 
 const css = readFileSync(`${process.cwd()}/packages/agent-ui/components/src/controls/column/column.css`, 'utf8') as string
 // The sectioned-banner test reads the RAW source (the banners live in comments); every other check reads the
-// comment-STRIPPED code, so a prose mention of `--md-sys-color-*`/`--ui-height-*` in a comment is not a false positive.
+// comment-STRIPPED code, so a prose mention of `--md-sys-color-*`/`--md-sys-height-*` in a comment is not a false positive.
 const code = css.replace(/\/\*[\s\S]*?\*\//g, ' ')
 const tokenBlock = code.slice(code.indexOf(':where(ui-column) {'), code.indexOf('@scope (ui-column) {'))
 const stylesBlock = code.slice(code.indexOf('@scope (ui-column) {'))
@@ -32,8 +32,8 @@ describe('column.css — structure + token hygiene (s4)', () => {
     for (const slot of ['align', 'justify', 'gap', 'wrap']) {
       expect(tokenBlock).toMatch(new RegExp(`--ui-column-${slot}:`))
     }
-    // gap reads the density-responsive --ui-space ladder (ADR-0015 cl.4), never a control dimension
-    expect(tokenBlock).toContain('var(--ui-space-none)')
+    // gap reads the density-responsive --md-sys-space ladder (ADR-0015 cl.4), never a control dimension
+    expect(tokenBlock).toContain('var(--md-sys-space-none)')
   })
 
   it('[align]/[justify]/[gap]/[wrap] attribute selectors repoint the tokens (the literal-union → CSS map)', () => {
@@ -49,7 +49,7 @@ describe('column.css — structure + token hygiene (s4)', () => {
     expect(tokenBlock).toMatch(/ui-column\[justify='between'\]/) // between → space-between
     expect(tokenBlock).toContain('space-between')
     expect(tokenBlock).toMatch(/ui-column\[gap='md'\]/)
-    expect(tokenBlock).toMatch(/var\(--ui-space-md\)/) // gap=md → the --ui-space-md step
+    expect(tokenBlock).toMatch(/var\(--md-sys-space-md\)/) // gap=md → the --md-sys-space-md step
     expect(tokenBlock).toMatch(/ui-column\[wrap\]/) // boolean-presence repoint
   })
 
@@ -78,7 +78,7 @@ describe('column.css — structure + token hygiene (s4)', () => {
     expect(stylesBlock).toMatch(/gap:\s*var\(--ui-column-gap\)/)
     expect(stylesBlock).toMatch(/flex-wrap:\s*var\(--ui-column-wrap\)/)
     // a layout primitive NEVER reads a control height (geometry.md Container/layout class)
-    expect(code).not.toMatch(/--ui-height-/)
+    expect(code).not.toMatch(/--md-sys-height-/)
   })
 
   it('a @container inline-size reflow rule, GATED on [reflow=\'auto\'], flips to a row under a wide container (ADR-0016 cl.4 / ADR-0096)', () => {

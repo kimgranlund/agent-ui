@@ -3,7 +3,7 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-ladder)` (specificity 0,0,0) declares the `--ui-ladder-*` chain: the
  *       whole-shape floor (SPEC-R13 AC1), bar THICKNESS (density-invariant mark geometry), the fill ink
- *       (>=3:1 vs surface — WCAG 1.4.11), and the density-RESPONSIVE row/column rhythm (rides `--ui-space`
+ *       (>=3:1 vs surface — WCAG 1.4.11), and the density-RESPONSIVE row/column rhythm (rides `--md-sys-space`
  *       × `[density]` for free, the `ui-bar-chart` precedent).
  *   [2] STYLES BLOCK — `@scope (ui-ladder)` consumes ONLY `--ui-ladder-*` (∪ the shared `--md-sys-color-*`/
  *       `--md-sys-typescale-*` namespaces). Display-class (SPEC-R16): no `[size]`/`[scale]` row.
@@ -33,8 +33,8 @@
   --ui-ladder-bar-size: 0.75rem; /* bar THICKNESS — density-invariant */
   --ui-ladder-bar-radius: 2px;
   --ui-ladder-bar-ink: var(--md-sys-color-primary); /* the magnitude fill — >=3:1 vs surface (WCAG 1.4.11) */
-  --ui-ladder-row-gap: var(--ui-space-sm); /* rides [density] for free (ADR-0103) */
-  --ui-ladder-col-gap: var(--ui-space-sm);
+  --ui-ladder-row-gap: var(--md-sys-space-sm); /* rides [density] for free (ADR-0103) */
+  --ui-ladder-col-gap: var(--md-sys-space-sm);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-ladder) consumes ONLY --ui-ladder-* ════════════════ */

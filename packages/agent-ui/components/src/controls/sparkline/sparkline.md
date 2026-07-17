@@ -62,7 +62,7 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: display
-  inlineSize: var(--ui-sparkline-inline-size)   # 8em default — the deterministic sizing ruling (SPEC-R9 AC1); NO [size] ramp, NO --ui-height-* (SPEC-R12 AC2)
+  inlineSize: var(--ui-sparkline-inline-size)   # 8em default — the deterministic sizing ruling (SPEC-R9 AC1); NO [size] ramp, NO --md-sys-height-* (SPEC-R12 AC2)
   blockSize: var(--ui-sparkline-block-size)     # 1lh default — rides the ambient line box
 
 forcedColors: No dedicated `@media (forced-colors: active)` block (SPEC-R10) — the mark is `currentColor` stroke/fill, which resolves to whatever forced ink the CONSUMING context already resolves to (the `ui-icon` precedent); the area wash is that same ink at the `--ui-sparkline-area-opacity` token (opacity is not a color property — WHCM never flattens it).

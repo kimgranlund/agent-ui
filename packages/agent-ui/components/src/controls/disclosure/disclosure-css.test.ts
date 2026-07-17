@@ -24,10 +24,10 @@ const stripCssComments = (text: string): string => text.replace(/\/\*[\s\S]*?\*\
 // "consume only --ui-disclosure-*") — the focus-ring pair (ADR-0009) + the single-line Control
 // line-height constant (ADR-0036, the same exemption button-css.test.ts records).
 const sharedSeam = new Set([
-  '--ui-focus-ring-width',
+  '--md-sys-state-focus-ring-width',
   '--md-sys-color-focus-ring',
-  '--ui-focus-ring-offset',
-  '--ui-control-line-height',
+  '--md-sys-state-focus-ring-offset',
+  '--md-sys-control-line-height',
 ])
 
 /** @scope token-hygiene predicate — every var() ref that is NEITHER the own --ui-disclosure-* chain NOR the shared seam. */
@@ -50,12 +50,12 @@ describe('disclosure.css — structure + sectioning', () => {
       expect(tokenBlock).toMatch(new RegExp(`--ui-disclosure-${slot}:`))
     }
     // Pattern-class split (geometry.md): the summary row is the CONTROL band (frame, density-invariant);
-    // the body padding is the --ui-space LAYOUT ladder (density-responsive) — never interchanged.
-    expect(tokenBlock).toMatch(/--ui-disclosure-height:\s*var\(--ui-height-md\)/)
-    expect(tokenBlock).toMatch(/--ui-disclosure-font:\s*var\(--ui-font-md\)/)
+    // the body padding is the --md-sys-space LAYOUT ladder (density-responsive) — never interchanged.
+    expect(tokenBlock).toMatch(/--ui-disclosure-height:\s*var\(--md-sys-height-md\)/)
+    expect(tokenBlock).toMatch(/--ui-disclosure-font:\s*var\(--md-sys-font-md\)/)
     expect(tokenBlock).toMatch(/--ui-disclosure-glyph:\s*var\(--ui-disclosure-font\)/) // = font, the inline-affordance law
-    expect(tokenBlock).toMatch(/--ui-disclosure-body-pad-block:\s*var\(--ui-space-/)
-    expect(tokenBlock).toMatch(/--ui-disclosure-body-pad-inline:\s*var\(--ui-space-/)
+    expect(tokenBlock).toMatch(/--ui-disclosure-body-pad-block:\s*var\(--md-sys-space-/)
+    expect(tokenBlock).toMatch(/--ui-disclosure-body-pad-inline:\s*var\(--md-sys-space-/)
   })
 
   it('NO [size]/[scale] attribute-selector ramp (ui-disclosure exposes no `size` axis, family-coherence A2b)', () => {
@@ -71,29 +71,29 @@ describe('disclosure.css — the @scope geometry law (Pattern-class split)', () 
     expect(rule).toMatch(/block-size:\s*var\(--ui-disclosure-height\)/)
     expect(rule).toMatch(/padding-block:\s*0/) // NEVER block-padding as the sizing lever
     expect(rule).toMatch(/padding-inline-start:\s*calc\(var\(--ui-disclosure-height\)\s*\/\s*2\)/) // h/2 slotless edge
-    expect(rule).toMatch(/line-height:\s*var\(--ui-control-line-height\)/) // ADR-0036 single-line control standard
+    expect(rule).toMatch(/line-height:\s*var\(--md-sys-control-line-height\)/) // ADR-0036 single-line control standard
   })
 
-  it('the chevron is sized = font (--ui-disclosure-glyph), never the icon ramp (--ui-icon-*)', () => {
+  it('the chevron is sized = font (--ui-disclosure-glyph), never the icon ramp (--md-sys-icon-*)', () => {
     const m = stylesBlock.match(/:scope \[data-part='chevron'\]\s*\{([^}]*)\}/)
     expect(m, 'the chevron rule is missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
     expect(rule).toMatch(/inline-size:\s*var\(--ui-disclosure-glyph\)/)
     expect(rule).toMatch(/block-size:\s*var\(--ui-disclosure-glyph\)/)
-    expect(css).not.toMatch(/--ui-disclosure-glyph:\s*var\(--ui-icon-/) // never the content-icon ramp (geometry.md bug class)
+    expect(css).not.toMatch(/--ui-disclosure-glyph:\s*var\(--md-sys-icon-/) // never the content-icon ramp (geometry.md bug class)
   })
 
   it('the chevron rotates 90deg under [open] — orientation carries the state, not colour', () => {
     expect(stylesBlock).toMatch(/\[data-part='details'\]\[open\][^{]*\[data-part='chevron'\][^{]*\{\s*rotate:\s*90deg/)
   })
 
-  it('the body padding rides --ui-space (density-responsive rhythm), never --ui-height-* (the frame ramp)', () => {
+  it('the body padding rides --md-sys-space (density-responsive rhythm), never --md-sys-height-* (the frame ramp)', () => {
     const m = stylesBlock.match(/:scope \[data-part='body'\]\s*\{([^}]*)\}/)
     expect(m, 'the body rule is missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
     expect(rule).toMatch(/padding-block:\s*var\(--ui-disclosure-body-pad-block\)/)
     expect(rule).toMatch(/padding-inline:\s*var\(--ui-disclosure-body-pad-inline\)/)
-    expect(rule).not.toMatch(/--ui-height-/)
+    expect(rule).not.toMatch(/--md-sys-height-/)
   })
 })
 
@@ -125,8 +125,8 @@ describe('disclosure.css — the shared focus ring (ADR-0009) + token hygiene', 
     const m = stylesBlock.match(/:scope \[data-part='summary'\]:focus-visible\s*\{([^}]*)\}/)
     expect(m, 'the summary focus-visible rule is missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
-    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
-    expect(rule).toMatch(/outline-offset:\s*var\(--ui-focus-ring-offset\)/)
+    expect(rule).toMatch(/outline:\s*var\(--md-sys-state-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
+    expect(rule).toMatch(/outline-offset:\s*var\(--md-sys-state-focus-ring-offset\)/)
   })
 
   it('@scope CONSUMES only the own --ui-disclosure-* chain + the shared focus-ring seam', () => {

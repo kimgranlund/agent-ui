@@ -7,7 +7,7 @@ tag: ui-badge
 description: A non-interactive status tag with an intent-keyed color and a matching non-color glyph.
 tier: display           # SPEC-R11 AC3 + LLD-C9: a non-interactive display leaf (site-tier classification,
                         # not the geometry MECHANISM) — the LLD-C10 display-tier roster explicitly includes
-                        # `badge`. The box still rides the compact-realm ramp (--ui-compact-lg, ADR-0041,
+                        # `badge`. The box still rides the compact-realm ramp (--md-sys-compact-lg, ADR-0041,
                         # geometry: sizeClass below) — `tier` here is the descriptor/site classification
                         # field, orthogonal to the geometry mechanism, and must match the fleet-wide
                         # display-tier membership list (site-coverage.test.ts) landing at LLD-C10.
@@ -68,7 +68,7 @@ geometry:
   sizeClass: indicator
   blockSize: var(--ui-badge-box)         # the compact-realm widget-box ramp (ADR-0041) — fixed, NEVER content-driven
   minInlineSize: var(--ui-badge-box)     # empty-label floor → a filled pill/dot, never a sliver (SPEC-R13 AC2)
-  boxRamp: --ui-compact-lg               # 18px @ default ui-md scale; an ancestor [scale] re-tables it for free
+  boxRamp: --md-sys-compact-lg               # 18px @ default ui-md scale; an ancestor [scale] re-tables it for free
   padFormula: 2px + box * 0.375 * density  # the compact-realm pad law (NOT h/2 — geometry.md's compact-realm exception)
   radius: calc(--ui-badge-box / 2)       # the pill = box/2, the realm's "count pill" case
   noSizeAttribute: true                   # v1 ships no [size] axis (SPEC-R13 AC3) — a foreseen extension only
@@ -109,10 +109,10 @@ span's text.
 
 ## Geometry
 
-The box rides the **compact-realm** widget-box ramp (`--ui-compact-lg`, ADR-0041) — fixed regardless of
+The box rides the **compact-realm** widget-box ramp (`--md-sys-compact-lg`, ADR-0041) — fixed regardless of
 label length or an ancestor `[density]`; the pad follows the compact-realm law (`2px + box·ratio·density`,
 never `h/2`); the radius is `box/2` (a pill). There is no `[size]` attribute in v1. The label text itself
-rides the fleet font ramp (`--ui-font-sm`) at `line-height: 1`, centering like a glyph. An empty label
+rides the fleet font ramp (`--md-sys-font-sm`) at `line-height: 1`, centering like a glyph. An empty label
 still floors at `min-inline-size = box` — a filled dot/pill, never a collapsed sliver.
 
 ## Accessibility

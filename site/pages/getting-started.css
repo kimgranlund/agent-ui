@@ -49,7 +49,7 @@ td {
 
 .gs-click-status {
   margin: 0.6rem 0 0;
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.85rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }

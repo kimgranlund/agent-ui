@@ -8,7 +8,7 @@ import { server, cdp } from 'vitest/browser'
 // alignment flip (SPEC-R16 AC1), and forced-colors row-separator survival (SPEC-R15 AC1).
 //
 // Side-effect CSS/JS imports — the load-bearing order (ADR-0003): foundation roles + dimensional ramp FIRST
-// (tokens.css / dimensions.css — the --md-sys-color-*/--md-sys-typescale-*/--ui-space-* this sheet's
+// (tokens.css / dimensions.css — the --md-sys-color-*/--md-sys-typescale-*/--md-sys-space-* this sheet's
 // :where() token block reads), then table.css directly, then table.ts (self-defines). The component-styles
 // barrel does NOT yet @import table.css (that lands at the shared-file integration wave, LLD-C10) — this
 // suite imports it directly, the bar-chart/card pre-integration-folder precedent.

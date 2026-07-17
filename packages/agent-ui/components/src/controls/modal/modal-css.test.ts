@@ -17,7 +17,7 @@ const stylesBlock = css.slice(css.indexOf('@scope (ui-modal) {'))
 
 // A container reads the role-pure `--ui-container-*` surface SEAM (the cross-family seam every container
 // consumes — container.css owns the [elevation]/[brightness] repoints) plus its OWN `--ui-modal-*` chain.
-// Nothing else may appear in @scope (no raw `--md-sys-color-*` role, no `--ui-space-*`/`--ui-radius-base` — those enter
+// Nothing else may appear in @scope (no raw `--md-sys-color-*` role, no `--md-sys-space-*`/`--md-sys-shape-corner-base` — those enter
 // the :where() token block only).
 const surfaceSeam = new Set(['--ui-container-bg', '--ui-container-tint'])
 
@@ -46,12 +46,12 @@ describe('modal.css — structure + sectioning (s9)', () => {
     // TKT-0019 — black 80% opacity (Kim-specified), NOT the generated --md-sys-color-neutral-scrim (too light);
     // the dedicated --md-sys-color-dialog-backdrop role is fleet-wide (every ui-modal dialog).
     expect(tokenBlock).toMatch(/--ui-modal-scrim:\s*var\(--md-sys-color-dialog-backdrop\)/)
-    expect(tokenBlock).toMatch(/--ui-modal-radius:\s*var\(--ui-radius-base\)/) // the shared fleet radius
-    expect(tokenBlock).toMatch(/--ui-modal-padding:\s*var\(--ui-space-/) // the density-responsive layout spacing
+    expect(tokenBlock).toMatch(/--ui-modal-radius:\s*var\(--md-sys-shape-corner-base\)/) // the shared fleet radius
+    expect(tokenBlock).toMatch(/--ui-modal-padding:\s*var\(--md-sys-space-/) // the density-responsive layout spacing
   })
 
-  it('NO control height — the modal shell never reads --ui-height-* (geometry.md Pattern/container class)', () => {
-    expect(css).not.toMatch(/var\(--ui-height-/) // spacing is off --ui-space, never the control-height ramp
+  it('NO control height — the modal shell never reads --md-sys-height-* (geometry.md Pattern/container class)', () => {
+    expect(css).not.toMatch(/var\(--md-sys-height-/) // spacing is off --md-sys-space, never the control-height ramp
     expect(css).not.toContain('color-mix(') // a mix ratio is a component colour opinion (ADR-0008)
   })
 })
@@ -82,7 +82,7 @@ describe('modal.css — the @scope dialog surface + ::backdrop (s9)', () => {
 
 describe('modal.css — @scope token hygiene (s9)', () => {
   it('@scope CONSUMES only the own --ui-modal-* chain + the role-pure --ui-container-* surface seam', () => {
-    expect(foreignScopeRefs(stylesBlock)).toEqual([]) // no raw --md-sys-color-* / no --ui-space-* / no --ui-radius-base in @scope
+    expect(foreignScopeRefs(stylesBlock)).toEqual([]) // no raw --md-sys-color-* / no --md-sys-space-* / no --md-sys-shape-corner-base in @scope
     // anti-vacuous: BOTH the seam AND the own chain ARE consumed (the whitelist is live, not dead)
     const allRefs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1] as string)
     expect(allRefs.some((v) => surfaceSeam.has(v))).toBe(true)

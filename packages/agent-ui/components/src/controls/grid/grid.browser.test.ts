@@ -11,10 +11,10 @@ import { describe, it, expect, afterEach } from 'vitest'
 //     grid's OWN width: resize the WRAPPER (the container), not the viewport, and the column count changes.
 //   • `min` (the minmax floor) — a smaller floor packs MORE tracks at a fixed width; a larger floor packs fewer
 //     (proves the grid.ts --ui-grid-min token thread is live in a real engine).
-//   • gap rides --ui-space × [density] (layout rhythm, ADR-0015 cl.4) — an ancestor [density] changes the gap px.
+//   • gap rides --md-sys-space × [density] (layout rhythm, ADR-0015 cl.4) — an ancestor [density] changes the gap px.
 //
 // HOST-AT-BOUNDARY: ui-grid is NOT in the component-styles barrel yet (that is s12), so this injects the
-// load-bearing sheets DIRECTLY in CSS order — foundation (the --md-sys-color-* roles + --ui-space ramp + [density]) FIRST,
+// load-bearing sheets DIRECTLY in CSS order — foundation (the --md-sys-color-* roles + --md-sys-space ramp + [density]) FIRST,
 // then the SHARED surface seam (elevation/brightness only — ADR-0100: ui-grid never establishes
 // `container-type`, and never needed to: auto-fit/minmax reflows off the grid's OWN rendered width, a track
 // sizing law, not a container query), then grid's own @scope sheet, then the self-defining module (registers
@@ -86,17 +86,17 @@ describe('ui-grid cross-engine auto-fit reflow smoke (s6, both engines)', () => 
     expect(dense).toBeGreaterThan(roomy) // a smaller floor packs MORE tracks — the prop threads into minmax()
   })
 
-  it('the gap responds to an ancestor [density] (layout rhythm off --ui-space, ADR-0015 cl.4)', () => {
+  it('the gap responds to an ancestor [density] (layout rhythm off --md-sys-space, ADR-0015 cl.4)', () => {
     const { wrap, grid } = mount(6)
     wrap.style.inlineSize = '640px'
-    grid.setAttribute('gap', 'md') // --ui-space-md = calc(12px * var(--ui-density))
+    grid.setAttribute('gap', 'md') // --md-sys-space-md = calc(12px * var(--md-sys-density))
 
     const gaps: number[] = []
     for (const density of ['compact', 'comfortable', 'spacious'] as const) {
       wrap.setAttribute('density', density)
       gaps.push(px(getComputedStyle(grid).columnGap))
     }
-    // md base 12px × --ui-density {0.5, 1, 1.5} → 6 · 12 · 18 — [density] re-multiplies the layout gap.
+    // md base 12px × --md-sys-density {0.5, 1, 1.5} → 6 · 12 · 18 — [density] re-multiplies the layout gap.
     expect(gaps[0]).toBeCloseTo(6, 0)
     expect(gaps[1]).toBeCloseTo(12, 0)
     expect(gaps[2]).toBeCloseTo(18, 0)

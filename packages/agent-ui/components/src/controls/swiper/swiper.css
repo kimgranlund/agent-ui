@@ -25,29 +25,29 @@
      pins it. */
   --ui-swiper-columns: 1;
   --ui-swiper-align: start; /* repointed by [align=center|end]; consumed by swiper-item.css's scroll-snap-align */
-  --ui-swiper-gap: var(--ui-space-md); /* inter-slide gap off the space ladder (density-responsive) */
+  --ui-swiper-gap: var(--md-sys-space-md); /* inter-slide gap off the space ladder (density-responsive) */
 
   /* Programmatic-advance timing (F1 Consequences — native gesture snaps use the UA's own timing and cannot be
      shaped by these; `goTo`/paddle/dot/keyboard read them via the JS scroll animation, swiper.ts). The fleet
-     motion ramp has no "medium" step — `--ui-motion-fast` (300ms) + `--ui-ease-standard` are the real tokens
+     motion ramp has no "medium" step — `--md-sys-motion-duration-fast` (300ms) + `--md-sys-motion-easing-standard` are the real tokens
      every other control's transition consumes (tabs.css/button.css); reused here rather than inventing a new one. */
-  --ui-swiper-duration: var(--ui-motion-fast);
-  --ui-swiper-easing: var(--ui-ease-standard);
+  --ui-swiper-duration: var(--md-sys-motion-duration-fast);
+  --ui-swiper-easing: var(--md-sys-motion-easing-standard);
 
   /* Pagination dots — the compact widget ramp; the ACTIVE dot is size-larger (non-colour signifier, ADR-0057).
      Declared HERE (the family root) though only swiper-pagination.css consumes them — the family-root rule
      (ADR-0124 Consequences): a leaf never DECLARES another tag's private token, but MAY consume the primary's
      `--ui-swiper-*` prefix. The +2px bump is a flat literal (the compact-realm box is density-invariant,
-     geometry.md — density rides the pad/gap, never the box), not a --ui-space step. */
-  --ui-swiper-dot-size: var(--ui-compact-sm);
-  --ui-swiper-dot-size-active: calc(var(--ui-compact-sm) + 2px);
+     geometry.md — density rides the pad/gap, never the box), not a --md-sys-space step. */
+  --ui-swiper-dot-size: var(--md-sys-compact-sm);
+  --ui-swiper-dot-size-active: calc(var(--md-sys-compact-sm) + 2px);
   --ui-swiper-dot-color: var(--md-sys-color-neutral-outline-variant);
   --ui-swiper-dot-color-active: var(--md-sys-color-primary);
   --ui-swiper-pagination-fraction-ink: var(--md-sys-color-neutral-on-surface-variant); /* TKT-0066: the fraction readout's ink — was a direct role read in swiper-pagination.css's @scope; declared HERE per the family token tunnel (pagination declares nothing of its own, its pin test enforces that) */
   /* TKT-0066 item 5 ruling: pagination's dimensional constants ALSO route through the tunnel. */
-  --ui-swiper-pagination-gap: var(--ui-space-xs);
-  --ui-swiper-pagination-margin-block-start: var(--ui-space-sm);
-  --ui-swiper-pagination-fraction-font: var(--ui-font-sm);
+  --ui-swiper-pagination-gap: var(--md-sys-space-xs);
+  --ui-swiper-pagination-margin-block-start: var(--md-sys-space-sm);
+  --ui-swiper-pagination-fraction-font: var(--md-sys-font-sm);
 }
 
 /* [slides-in-view="n"] — pin the visible column count (a numeric string; '' stays responsive-auto below). */
@@ -106,8 +106,8 @@
 
   /* The shared focus ring (ADR-0009) on the track's single tab stop. */
   :scope > [data-part='track']:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: calc(-1 * var(--ui-focus-ring-offset));
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: calc(-1 * var(--md-sys-state-focus-ring-offset));
   }
 
   /* Reduced motion — native snap loses its smooth-scroll animation; the JS scroll animation (swiper.ts)
@@ -141,9 +141,9 @@
      belongs in its owner's file even when it styles a descendant. Geometry never animates. */
   :scope:state(ready) ui-swiper-pagination [data-part='dot'] {
     transition:
-      inline-size var(--ui-motion-fast) var(--ui-ease-standard),
-      block-size var(--ui-motion-fast) var(--ui-ease-standard),
-      background-color var(--ui-motion-fast) var(--ui-ease-standard);
+      inline-size var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      block-size var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
   @media (prefers-reduced-motion: reduce) {
     :scope:state(ready) ui-swiper-pagination [data-part='dot'] {

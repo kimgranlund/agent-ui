@@ -59,11 +59,11 @@ keyboard:
 geometry:
   sizeClass: display
   blockSize: content     # NO control height (Display class) — block-size is content-driven
-  fontFamily: var(--ui-code-font)         # --ui-mono, the minted monospace constant
+  fontFamily: var(--ui-code-font)         # --md-sys-typeface-mono, the minted monospace constant
   fontSize: var(--ui-code-size)           # --md-sys-typescale-body-medium-size
   lineHeight: var(--ui-code-line-height)  # --md-sys-typescale-body-medium-line-height
-  padding: var(--ui-code-pad-block) var(--ui-code-pad-inline)  # density-INVARIANT frame (12px/8px, ADR-0113 cl.2 — not the --ui-space rhythm ladder)
-  radius: var(--ui-code-radius)           # the fleet --ui-radius-base referent
+  padding: var(--ui-code-pad-block) var(--ui-code-pad-inline)  # density-INVARIANT frame (12px/8px, ADR-0113 cl.2 — not the --md-sys-space rhythm ladder)
+  radius: var(--ui-code-radius)           # the fleet --md-sys-shape-corner-base referent
 
 forcedColors: An explicit `@media (forced-colors: active)` block (SPEC-R19) — the host paints CanvasText on Canvas with a 1px CanvasText border, so the surface keeps a visible shape even when the container-seam fill is forced away.
 ---
@@ -95,9 +95,9 @@ subsequent bound `code` write clobbers them to a single text node — guaranteed
 ## Verbatim, self-scrolling rendering
 
 Whitespace is preserved (`white-space: pre` — newlines and indentation live in the text nodes, so
-copy-paste fidelity is free), in the `--ui-mono` typeface at `--md-sys-typescale-body-medium-*` metrics,
+copy-paste fidelity is free), in the `--md-sys-typeface-mono` typeface at `--md-sys-typescale-body-medium-*` metrics,
 on a component-owned surface (`--ui-code-surface`, the `--ui-container-bg` cross-family seam) with the
-fleet `--ui-radius-base` corner. The component **owns its own horizontal overflow**: `overflow-x: auto`
+fleet `--md-sys-shape-corner-base` corner. The component **owns its own horizontal overflow**: `overflow-x: auto`
 on the host itself (host-as-content means the text nodes are host children, so no inner wrapper is
 needed) — a bare `<ui-code>` in any container, including a narrow flex column or a feed bubble, never
 wraps mid-token and never blows out its container, with zero consumer CSS (ADR-0102 Lane A). Long

@@ -78,15 +78,15 @@ keyboard:
 
 geometry:
   sizeClass: pattern            # Container/surface for the panel; item-pad rows for the menuitems (NOT a control height)
-  panelPadding: var(--ui-menu-padding)             # = var(--ui-space-xs) — shell spacing
-  panelRadius: var(--ui-menu-radius)               # = var(--ui-radius-base), the shared fleet radius
+  panelPadding: var(--ui-menu-padding)             # = var(--md-sys-space-xs) — shell spacing
+  panelRadius: var(--ui-menu-radius)               # = var(--md-sys-shape-corner-base), the shared fleet radius
   panelMinInlineSize: var(--ui-menu-min-inline-size)  # 10rem floor (ADR-0021 lesson)
   panelMaxBlockSize: var(--ui-menu-max-block-size) (scrolls) # PUBLIC dial (TKT-0027), default min(50vh, calc(12 * var(--ui-menu-item-block-size) + 13 * var(--ui-box-inset, 0.375rem) + 2px)) — 12 real item rows + their box-model insets + the panel's own 2px border (box-sizing: border-box) or half the viewport, whichever is smaller; gets the shared edge-aware scroll-fade by default (traits/scroll-fade.ts, container-box.css)
   panelSurface: var(--ui-menu-bg)                  # opaque neutral-surface plane
-  itemPadBlock: var(--ui-menu-item-pad-block)      # = var(--ui-space-xs) — legacy item-pad block axis
-  itemPadInline: var(--ui-menu-item-pad-inline)    # = var(--ui-space-md) — legacy item-pad inline axis
+  itemPadBlock: var(--ui-menu-item-pad-block)      # = var(--md-sys-space-xs) — legacy item-pad block axis
+  itemPadInline: var(--ui-menu-item-pad-inline)    # = var(--md-sys-space-md) — legacy item-pad inline axis
   itemBlockSize: var(--ui-menu-item-block-size)    # = font + 2×pad-block (line-height:1 makes it exact) — the real rendered row height, feeding panelMaxBlockSize
-  itemRadius: var(--ui-menu-item-radius)           # nested-radius from panel corner = panelRadius − --ui-box-inset (FIXED 2026-07-06: was subtracting the unrelated --ui-space-xs, an ADR-0018 inset-inconsistency)
+  itemRadius: var(--ui-menu-item-radius)           # nested-radius from panel corner = panelRadius − --ui-box-inset (FIXED 2026-07-06: was subtracting the unrelated --md-sys-space-xs, an ADR-0018 inset-inconsistency)
   note: ui-menu has NO `[size]` attribute and renders no trigger geometry (the trigger is fully author-owned) — the select/combo-box family's size-carrying derivation (panel inset + option pad off the trigger's own height/font) does not apply here; flagged as a structural divergence, not forced (2026-07-06 pass)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the panel surface (Canvas/CanvasText), frame (CanvasText border), and hovered/focused items (Highlight/HighlightText) visible. `forced-color-adjust: none` on hover/focus items commits to the system Highlight pair rather than letting the solid fill be discarded.

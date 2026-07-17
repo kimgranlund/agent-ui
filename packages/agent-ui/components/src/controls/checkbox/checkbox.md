@@ -96,7 +96,7 @@ geometry:
   sizeClass: indicator
   inlineSize: var(--ui-checkbox-box)   # square widget box — the Indicator-class lever (ADR-0041)
   blockSize: var(--ui-checkbox-box)
-  boxRamp: --ui-compact-{size}          # 14/16/18 px at ui-md scale for sm/md/lg (ADR-0041 clause 2)
+  boxRamp: --md-sys-compact-{size}          # 14/16/18 px at ui-md scale for sm/md/lg (ADR-0041 clause 2)
   radius: calc(--ui-checkbox-box / 5)  # proportional slight rounding (~3px at 16px default)
 
 forcedColors: A `@media (forced-colors: active)` block maps unchecked to ButtonText border on ButtonFace; checked/indeterminate to Highlight fill with HighlightText glyph. The :focus-visible ring is free via --md-sys-color-focus-ring → Highlight from the token layer (ADR-0009).
@@ -134,7 +134,7 @@ pressing Space keyup toggles `checked` (clearing `indeterminate` first if set).
 
 ## Sizes
 
-`size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--ui-compact-{size}`
+`size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
 (ADR-0041: 14 · 16 · 18 px at the default `ui-md` scale). An ancestor `[scale]` attribute re-tables the
 ramp for its subtree.
 

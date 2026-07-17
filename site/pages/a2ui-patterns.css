@@ -3,7 +3,7 @@
  * the round-trip message log, and the P2 destructive-tone note ONLY. The rendered ui-* controls keep their
  * own {name}.css — this page never restyles a ui-* control. Colours are `--md-sys-color-*` roles declared by the
  * foundation barrels (imported first via _page.ts), so the page tracks light/dark; spacing rides the
- * `--ui-space-*` ramp. Tokens-only — no raw-literal colours (matching a2ui-list.css / _page.css). */
+ * `--md-sys-space-*` ramp. Tokens-only — no raw-literal colours (matching a2ui-list.css / _page.css). */
 
 /* ── a pattern demo: heading + blurb + pedagogy + the two-pane grid ──────────────────────────────────────── */
 .demo {
@@ -180,7 +180,7 @@
 
 .msg-head {
   margin-block-end: 0.3rem;
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.76rem;
   font-weight: 600;
   white-space: pre;

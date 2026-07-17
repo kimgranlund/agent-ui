@@ -81,7 +81,7 @@ describe('ui-toast — whole-shape: a populated card paints a real, non-collapse
 // three-column `1fr auto auto` grid. Auto-placement filled columns 1 and 2 in document order, landing
 // the close button in the MIDDLE (action) track and leaving the THIRD (its intended) track genuinely
 // empty — but still consuming a `gap` between it and the padding-inline-end edge, an extra
-// `--ui-space-sm` (8px) of phantom inset past the close button's own edge. The close button's OWN
+// `--md-sys-space-sm` (8px) of phantom inset past the close button's own edge. The close button's OWN
 // squareness (button.css's icon-only fifth structure) was already correct; the card-level GRID
 // placement was the bug. Fixed by pinning `[data-part='close']` to `grid-column: 3` explicitly
 // (toast.css) — a no-op for the actionable (3-child) case, which already auto-placed correctly.

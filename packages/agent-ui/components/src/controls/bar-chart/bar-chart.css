@@ -6,7 +6,7 @@
  *       visible, non-collapsed, proportionally-correct box), density-INVARIANT mark geometry (bar
  *       thickness/radius — SPEC-R12: mark geometry never rides `[scale]`), the data-bearing fill ink (a
  *       ≥3:1-vs-surface fleet colour role, WCAG 1.4.11 — the fill is the graphic, the track is
- *       decorative) and the density-RESPONSIVE row/column rhythm (rides `--ui-space` × `[density]` for
+ *       decorative) and the density-RESPONSIVE row/column rhythm (rides `--md-sys-space` × `[density]` for
  *       free — the ADR-0103 radio-group precedent, mirroring `ui-list`'s gap).
  *   [2] STYLES BLOCK — `@scope (ui-bar-chart)` consumes ONLY `--ui-bar-chart-*` (∪ the shared
  *       `--md-sys-color-*`/`--md-sys-typescale-*` namespaces the token block itself reads to build that
@@ -43,8 +43,8 @@
   --ui-bar-chart-bar-ink: var(--md-sys-color-primary); /* the data-bearing fill — >=3:1 vs surface (WCAG 1.4.11) */
   --ui-bar-chart-track-ink: var(--md-sys-color-neutral-container); /* the decorative rail */
   --ui-bar-chart-text-ink: var(--md-sys-color-neutral-on-surface); /* label/value ink — the ONE role reference (role-pure) */
-  --ui-bar-chart-row-gap: var(--ui-space-sm); /* row rhythm — rides [density] for free (ADR-0103) */
-  --ui-bar-chart-col-gap: var(--ui-space-sm);
+  --ui-bar-chart-row-gap: var(--md-sys-space-sm); /* row rhythm — rides [density] for free (ADR-0103) */
+  --ui-bar-chart-col-gap: var(--md-sys-space-sm);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-bar-chart) consumes ONLY --ui-bar-chart-* ════════════════ */
@@ -58,7 +58,7 @@
     align-items: center;
     min-inline-size: var(--ui-bar-chart-min-inline-size);
     box-sizing: border-box;
-    /* text-bearing Display (SPEC-R12) — the type matrix is the lever, not [size]/[scale]/--ui-height-* */
+    /* text-bearing Display (SPEC-R12) — the type matrix is the lever, not [size]/[scale]/--md-sys-height-* */
     font-size: var(--md-sys-typescale-body-medium-size);
     line-height: var(--md-sys-typescale-body-medium-line-height);
     color: var(--ui-bar-chart-text-ink);

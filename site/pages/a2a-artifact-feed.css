@@ -3,7 +3,7 @@
  * the step controls ONLY — the rendered ui-card/ui-button/ui-grid/ui-list controls inside an artifact
  * mount keep their OWN component CSS; this page never restyles a control (no `ui-*` selector below).
  * Colours are `--md-sys-color-*` roles (declared by the foundation barrels, imported first via _page.ts);
- * spacing rides the `--ui-space-*` ramp — tokens-only, matching a2a-tic-tac-toe.css / a2ui-live.css. */
+ * spacing rides the `--md-sys-space-*` ramp — tokens-only, matching a2a-tic-tac-toe.css / a2ui-live.css. */
 
 .feed-verdict {
   margin: 0 0 0.5rem;

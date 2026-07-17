@@ -19,7 +19,7 @@ describe('ui-button browser-truth harness (s12)', () => {
     el.textContent = 'Go'
     document.body.append(el)
 
-    // block-size is `var(--ui-button-height)` → `var(--ui-height-md)` → `calc(28px * var(--ui-scale))`.
+    // block-size is `var(--ui-button-height)` → `var(--md-sys-height-md)` → `calc(28px * var(--md-sys-scale))`.
     // If the foundation/component CSS or the token chain hadn't resolved, this would not be a real px.
     const blockSize = getComputedStyle(el).blockSize
     expect(blockSize).toMatch(/px$/)

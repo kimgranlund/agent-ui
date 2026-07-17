@@ -2,14 +2,14 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-list)` (specificity 0,0,0) DECLARES the `--ui-list-*` flex chain. Each
  *       `flexProps` literal-union (align/justify/gap/wrap — ADR-0016 cl.1) is mapped here to its CSS keyword
- *       (start→start, end→end, between→space-between, … — box-alignment dialect, ADR-0039) or to a `--ui-space` ladder step, via `[attr=value]`
- *       attribute selectors. The `--ui-space-*` layout-spacing ladder (the SHARED, density-responsive gap
+ *       (start→start, end→end, between→space-between, … — box-alignment dialect, ADR-0039) or to a `--md-sys-space` ladder step, via `[attr=value]`
+ *       attribute selectors. The `--md-sys-space-*` layout-spacing ladder (the SHARED, density-responsive gap
  *       vocabulary — dimensions.css / ADR-0015 cl.4) is read ONLY here, on the declaration side — exactly as
  *       button.css reads the `--md-sys-color-*` colour roles only in its `:where()` token block.
  *   [2] STYLES BLOCK — `@scope (ui-list)` CONSUMES only `--ui-list-*` for its layout. `ui-list` is a
  *       `ui-column` SPECIALIZATION: `display:flex; flex-direction:column` (the vertical stack — the tag's
  *       identity, A2UI-faithful, ADR-0016 cl.2/3). No control height (geometry.md "Container/layout" class —
- *       spacing rides `--ui-space` × `[density]`, never `--ui-height-*`).
+ *       spacing rides `--md-sys-space` × `[density]`, never `--md-sys-height-*`).
  *
  * Surface — NOT here. The role-pure surface seam (`--ui-container-bg`/`-tint` consumption, the
  * `[elevation]`/`[brightness]` mapping) + the forced-colors surface survival are owned by the SHARED
@@ -35,7 +35,7 @@
      (ADR-0005), so the base token must carry the new default. */
   --ui-list-align: stretch; /* align (cross-axis) → align-items: stretch (ADR-0030 flip start→stretch) */
   --ui-list-justify: start; /* justify (main-axis distribution) → justify-content; box-alignment start (ADR-0039) */
-  --ui-list-gap: var(--ui-space-none); /* gap → a --ui-space ladder step (0 = no gap) */
+  --ui-list-gap: var(--md-sys-space-none); /* gap → a --md-sys-space ladder step (0 = no gap) */
   --ui-list-wrap: nowrap; /* wrap → flex-wrap (boolean presence) */
 }
 
@@ -71,26 +71,26 @@
   --ui-list-justify: space-evenly;
 }
 
-/* gap → the SHARED density-responsive --ui-space ladder (read only here, the declaration side). `none` is the
-   default above; each step is `calc(<base px> * var(--ui-density))`, so a subtree [density] re-multiplies the
+/* gap → the SHARED density-responsive --md-sys-space ladder (read only here, the declaration side). `none` is the
+   default above; each step is `calc(<base px> * var(--md-sys-density))`, so a subtree [density] re-multiplies the
    list's row-gap (the one density-bearing quantity — the geometry smoke proves it CHANGES with [density]). */
 :where(ui-list[gap='xs']) {
-  --ui-list-gap: var(--ui-space-xs);
+  --ui-list-gap: var(--md-sys-space-xs);
 }
 :where(ui-list[gap='sm']) {
-  --ui-list-gap: var(--ui-space-sm);
+  --ui-list-gap: var(--md-sys-space-sm);
 }
 :where(ui-list[gap='md']) {
-  --ui-list-gap: var(--ui-space-md);
+  --ui-list-gap: var(--md-sys-space-md);
 }
 :where(ui-list[gap='lg']) {
-  --ui-list-gap: var(--ui-space-lg);
+  --ui-list-gap: var(--md-sys-space-lg);
 }
 :where(ui-list[gap='xl']) {
-  --ui-list-gap: var(--ui-space-xl);
+  --ui-list-gap: var(--md-sys-space-xl);
 }
 :where(ui-list[gap='2xl']) {
-  --ui-list-gap: var(--ui-space-2xl);
+  --ui-list-gap: var(--md-sys-space-2xl);
 }
 
 /* wrap → flex-wrap (boolean presence: present ⇒ wrap) */
@@ -106,13 +106,13 @@
     flex-direction: column; /* the vertical stack — the list's identity (ADR-0016 cl.2/3) */
     box-sizing: border-box;
 
-    /* The flex mapping — every value reads the own `--ui-list-*` chain (role-pure; no raw --ui-space/--md-sys-color-*
+    /* The flex mapping — every value reads the own `--ui-list-*` chain (role-pure; no raw --md-sys-space/--md-sys-color-*
        leaks into the consumption, mirroring button.css's @scope hygiene). The surface background rides the
        shared controls/_surface/container.css; NO `container-type` (ADR-0100 — ui-list is never a query
        container). NO control height. */
     align-items: var(--ui-list-align);
     justify-content: var(--ui-list-justify);
-    gap: var(--ui-list-gap); /* the density-bearing quantity — rides --ui-space × [density] */
+    gap: var(--ui-list-gap); /* the density-bearing quantity — rides --md-sys-space × [density] */
     flex-wrap: var(--ui-list-wrap);
   }
 }

@@ -2,8 +2,8 @@
  * lld.md LLD-C8 · SPEC-R12). Two clearly-SECTIONED blocks:
  *
  *   [1] TOKEN BLOCK — `:where(ui-toast-region)` declares the `--ui-toast-region-*` chain: `inset`
- *       (block-end/inline-end fixed inset off `--ui-space-lg`) + `gap` (the inter-toast stacking gap
- *       off `--ui-space-sm`). No surface/radius/colour tokens AT ALL — the region paints NOTHING of
+ *       (block-end/inline-end fixed inset off `--md-sys-space-lg`) + `gap` (the inter-toast stacking gap
+ *       off `--md-sys-space-sm`). No surface/radius/colour tokens AT ALL — the region paints NOTHING of
  *       its own (LLD-C8; the ui-form-provider "layout, no colour voice" precedent) — each `ui-toast`
  *       child supplies its own surface.
  *   [2] STYLES BLOCK — `@scope (ui-toast-region)` consumes ONLY `--ui-toast-region-*`. The host IS
@@ -22,8 +22,8 @@
 /* ══════════ [1] TOKEN BLOCK — :where(ui-toast-region) declares --ui-toast-region-* ══════════ */
 
 :where(ui-toast-region) {
-  --ui-toast-region-inset: var(--ui-space-lg); /* block-end/inline-end fixed inset off the shell ramp */
-  --ui-toast-region-gap: var(--ui-space-sm); /* the inter-toast stacking gap */
+  --ui-toast-region-inset: var(--md-sys-space-lg); /* block-end/inline-end fixed inset off the shell ramp */
+  --ui-toast-region-gap: var(--md-sys-space-sm); /* the inter-toast stacking gap */
 }
 
 /* ══════════ [2] STYLES BLOCK — @scope (ui-toast-region) consumes ONLY --ui-toast-region-* ══════════ */

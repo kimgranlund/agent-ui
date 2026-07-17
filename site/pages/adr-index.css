@@ -1,7 +1,7 @@
 /* adr-index.css — PAGE-LOCAL chrome for the Decision Records index: the search box + the newest-first card
  * list. Each card is a native <details> (the expand/collapse needs no JS beyond the lazy-render-on-first-open
  * in adr-index.ts) — the same zero-JS disclosure idiom the shared nav rail already uses (_page.css). Every
- * colour a --md-sys-color-* role, every gutter a --ui-space-* token where the ramp has one (matching the shared
+ * colour a --md-sys-color-* role, every gutter a --md-sys-space-* token where the ramp has one (matching the shared
  * shell's discipline). The search box is now a dogfooded ui-text-field (type=search); the card list is page
  * content (native <details>), so this file restyles no control internals — only layout around them. */
 
@@ -23,7 +23,7 @@ ui-text-field.adr-search {
   below the visible border, so a real user's click landed on nothing (focus stayed on <body>) and typing was
   silently dropped (TKT-0001). */
   inline-size: 100%;
-  margin-block: var(--ui-space-lg) var(--ui-space-md);
+  margin-block: var(--md-sys-space-lg) var(--md-sys-space-md);
 }
 
 /* The filter status (adr-index.ts) — an aria-live region (role="status"), visually-hidden by default (a quiet
@@ -46,8 +46,8 @@ ui-text-field.adr-search {
   overflow: visible;
   clip: auto;
   white-space: normal;
-  margin-block: 0 var(--ui-space-md);
-  padding: var(--ui-space-md);
+  margin-block: 0 var(--md-sys-space-md);
+  padding: var(--md-sys-space-md);
   border: 1px dashed var(--md-sys-color-neutral-outline-variant);
   border-radius: 0.6rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
@@ -57,8 +57,8 @@ ui-text-field.adr-search {
 .adr-list {
   display: flex;
   flex-direction: column;
-  gap: var(--ui-space-sm);
-  padding-block-end: var(--ui-space-xl);
+  gap: var(--md-sys-space-sm);
+  padding-block-end: var(--md-sys-space-xl);
 }
 
 .adr-card {
@@ -75,7 +75,7 @@ ui-text-field.adr-search {
  * or not; the UA already applies `display: none` to `[hidden]`, this rule only documents the intent. */
 
 .adr-summary {
-  padding: var(--ui-space-sm) var(--ui-space-md);
+  padding: var(--md-sys-space-sm) var(--md-sys-space-md);
   cursor: pointer;
   list-style: none; /* drop the native disclosure triangle — the chevron below is the card's own affordance */
 }
@@ -95,7 +95,7 @@ ui-text-field.adr-search {
   display: inline-block;
   inline-size: 0.5rem;
   block-size: 0.5rem;
-  margin-inline-start: var(--ui-space-sm);
+  margin-inline-start: var(--md-sys-space-sm);
   border-inline-end: 1.5px solid var(--md-sys-color-neutral-on-surface-variant);
   border-block-end: 1.5px solid var(--md-sys-color-neutral-on-surface-variant);
   transform: rotate(45deg);
@@ -114,7 +114,7 @@ ui-text-field.adr-search {
 }
 
 .adr-number {
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.78rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
@@ -175,10 +175,10 @@ ui-text-field.adr-search {
 /* The expanded full render — the rendered ADR body (renderMarkdownBody), a hairline above it separating it
  * from the always-visible summary header. */
 .adr-body {
-  padding: 0 var(--ui-space-md) var(--ui-space-md);
+  padding: 0 var(--md-sys-space-md) var(--md-sys-space-md);
   border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
-  margin-block-start: var(--ui-space-sm);
-  padding-block-start: var(--ui-space-sm);
+  margin-block-start: var(--md-sys-space-sm);
+  padding-block-start: var(--md-sys-space-sm);
 }
 
 .adr-body article > :first-child {

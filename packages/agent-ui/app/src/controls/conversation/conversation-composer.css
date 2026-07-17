@@ -46,14 +46,14 @@
 
   /* Text formatting = the text-input law, multi-line (TKT-0058): prose line-height, never the single-line
      control's line-height:1. The editor auto-grows from ONE line-box, capped at Kim's 6em (then scrolls). */
-  --ui-conversation-composer-font: var(--ui-font-md);
+  --ui-conversation-composer-font: var(--md-sys-font-md);
   --ui-conversation-composer-line-height: 1.5;
   --ui-conversation-composer-line-box: calc(var(--ui-conversation-composer-font) * var(--ui-conversation-composer-line-height));
   --ui-conversation-composer-editor-max-block-size: 6em; /* the TKT-0058 growth cap — content past it scrolls */
 
   /* Size-invariant frame quantities — the entry-control class referents (geometry.md), the same fleet
      tokens the text-field/textarea frames ride. */
-  --ui-conversation-composer-radius: var(--ui-radius-base);
+  --ui-conversation-composer-radius: var(--md-sys-shape-corner-base);
   --ui-conversation-composer-min-inline-size: 20ch; /* the entry-control typing-width floor (ADR-0021) */
 }
 
@@ -154,8 +154,8 @@
     background: var(--ui-conversation-composer-bg-focus);
     border-color: var(--ui-conversation-composer-border-focus);
     --ui-conversation-composer-ink: var(--ui-conversation-composer-ink-focus);
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* The context-chip row (opt-in, `contextItems`) — the tags row above the text. `[hidden]` (toggled in
@@ -249,10 +249,10 @@
      geometry (the editor's own growth must SNAP). Gated behind :state(ready), zeroed under reduced-motion. */
   :scope:state(ready) {
     transition:
-      border-color var(--ui-motion-fast) var(--ui-ease-standard),
-      background-color var(--ui-motion-fast) var(--ui-ease-standard),
-      color var(--ui-motion-fast) var(--ui-ease-standard),
-      opacity var(--ui-motion-fast) var(--ui-ease-standard);
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      opacity var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
   @media (prefers-reduced-motion: reduce) {
     :scope:state(ready) {

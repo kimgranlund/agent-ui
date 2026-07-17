@@ -56,7 +56,7 @@ form.style.alignItems = 'flex-start'
 // A live readout of the form value — reads this.value and the FormData entry keyed by `name`, proving the
 // round-trip. Updated on every select commit (the value two-way source) and on submit.
 const readout = document.createElement('p')
-readout.style.fontFamily = 'var(--ui-mono)'
+readout.style.fontFamily = 'var(--md-sys-typeface-mono)'
 readout.style.margin = '0'
 function refreshReadout(): void {
   const value = (select as unknown as { value: string }).value

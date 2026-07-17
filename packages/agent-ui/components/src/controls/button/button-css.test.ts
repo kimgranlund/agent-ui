@@ -26,7 +26,7 @@ describe('button.css — structure + token hygiene (s7)', () => {
       expect(tokenBlock).toMatch(new RegExp(`--ui-button-${slot}:`))
     }
     expect(tokenBlock).toContain('var(--md-sys-color-primary') // colour roles (default family = primary)
-    expect(tokenBlock).toContain('var(--ui-height-md)') // the s6 dimensional ramp
+    expect(tokenBlock).toContain('var(--md-sys-height-md)') // the s6 dimensional ramp
   })
 
   it('[variant] repoints the colour channel; [size] repoints the geometry', () => {
@@ -44,9 +44,9 @@ describe('button.css — structure + token hygiene (s7)', () => {
     // identical ring / uses the identical motion timing — fleet tokens, not per-control opinions: the focus
     // ring (ADR-0009) and the state-transition motion (interaction-states standard).
     const sharedFleet = new Set([
-      '--md-sys-color-focus-ring', '--ui-focus-ring-width', '--ui-focus-ring-offset', // the shared focus ring (ADR-0009)
-      '--ui-motion-fast', '--ui-ease-standard', // the shared state-transition motion (interaction-states standard)
-      '--ui-control-line-height', // the single-line Control line-height fleet constant (ADR-0036)
+      '--md-sys-color-focus-ring', '--md-sys-state-focus-ring-width', '--md-sys-state-focus-ring-offset', // the shared focus ring (ADR-0009)
+      '--md-sys-motion-duration-fast', '--md-sys-motion-easing-standard', // the shared state-transition motion (interaction-states standard)
+      '--md-sys-control-line-height', // the single-line Control line-height fleet constant (ADR-0036)
     ])
     for (const v of refs) {
       if (sharedFleet.has(v as string)) continue
@@ -64,7 +64,7 @@ describe('button.css — structure + token hygiene (s7)', () => {
   it('host-as-grid (ADR-0006): a presence-driven :has() leading slot + the density-bearing column-gap', () => {
     expect(stylesBlock).toMatch(/:scope:has\(>\s*\[slot='leading'\]\)/) // optional leading adornment slot
     expect(stylesBlock).toMatch(/grid-template-columns:\s*auto 1fr/) // leading + label
-    expect(stylesBlock).toMatch(/column-gap:\s*var\(--ui-button-gap\)/) // the gap rides --ui-density
+    expect(stylesBlock).toMatch(/column-gap:\s*var\(--ui-button-gap\)/) // the gap rides --md-sys-density
     expect(stylesBlock).toMatch(/calc\(\(var\(--ui-button-height\)\s*-\s*var\(--ui-button-icon\)\)\s*\/\s*2\)/) // slot ½(h−icon)
   })
 
@@ -123,12 +123,12 @@ describe('button.css — interaction states from role ladders (ADR-0008)', () =>
 })
 
 describe('button.css — the shared focus ring (ADR-0009)', () => {
-  it(':focus-visible draws the fleet ring: a layout-neutral outline from the shared --md-sys-color-focus-ring/--ui-focus-ring-*', () => {
+  it(':focus-visible draws the fleet ring: a layout-neutral outline from the shared --md-sys-color-focus-ring/--md-sys-state-focus-ring-*', () => {
     const m = stylesBlock.match(/:scope:focus-visible\s*\{([^}]*)\}/)
     expect(m, ':scope:focus-visible rule missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
-    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
-    expect(rule).toMatch(/outline-offset:\s*var\(--ui-focus-ring-offset\)/)
+    expect(rule).toMatch(/outline:\s*var\(--md-sys-state-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
+    expect(rule).toMatch(/outline-offset:\s*var\(--md-sys-state-focus-ring-offset\)/)
   })
 
   it('the ring is KEYBOARD-only: :focus-visible, never a bare :focus (no ring on a mouse click)', () => {
@@ -185,7 +185,7 @@ describe('button.css — state-transition motion, gated past first paint', () =>
     expect(rule).not.toMatch(/transition:\s*all/) // enumerated longhands, never the `all` keyword
     // geometry must SNAP, and the focus ring stays instant — none of these may appear in the transition list
     expect(rule).not.toMatch(/height|padding|inline-size|\bwidth\b|gap|transform|outline/)
-    expect(rule).toContain('--ui-motion-fast') // timing from the shared motion token, not a magic number
+    expect(rule).toContain('--md-sys-motion-duration-fast') // timing from the shared motion token, not a magic number
   })
 
   it('is GATED behind :state(ready) — the base :scope rule declares NO transition (so the first paint snaps)', () => {

@@ -100,11 +100,11 @@ describe('tokens.html source — tonal primitives (SPEC-R17 AC2, additive)', () 
 
 describe('tokens.html source — dimensional ramps', () => {
   const cases: readonly [string, number][] = [
-    ['ui-height', 3], // sm · md · lg
-    ['ui-font', 3],
-    ['ui-icon', 3],
-    ['ui-compact', 3],
-    ['ui-space', 7], // none · xs · sm · md · lg · xl · 2xl
+    ['md-sys-height', 3], // sm · md · lg
+    ['md-sys-font', 3],
+    ['md-sys-icon', 3],
+    ['md-sys-compact', 3],
+    ['md-sys-space', 7], // none · xs · sm · md · lg · xl · 2xl
   ]
 
   it.each(cases)('parses the %s ramp with %i tiers, non-vacuous', (prefix, count) => {
@@ -114,7 +114,7 @@ describe('tokens.html source — dimensional ramps', () => {
   })
 
   it('the ui-height ramp reads the default (:root) tiers, not a [scale] override', () => {
-    const tiers = parseDimensionRamp(dimensionsCss, 'ui-height')
+    const tiers = parseDimensionRamp(dimensionsCss, 'md-sys-height')
     expect(tiers.find((t) => t.tier === 'md')?.value).toBe('28px') // the ui-md default (dimensions.css:48)
   })
 

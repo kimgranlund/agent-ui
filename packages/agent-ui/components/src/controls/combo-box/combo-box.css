@@ -3,7 +3,7 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-combo-box)` (specificity 0,0,0) declares the `--ui-combo-box-*`
  *       chain from the colour roles (`--md-sys-color-{family}-{role}`) and the dimensional ramp
- *       (`--ui-height-md` / `--ui-radius-base`). Raw `--md-sys-color-*` roles enter ONLY
+ *       (`--md-sys-height-md` / `--md-sys-shape-corner-base`). Raw `--md-sys-color-*` roles enter ONLY
  *       here; `@scope` never reads them. This is the "Geometry-by-part" three-class pattern
  *       from the decomp: the editor is Control-class, the panel is Container/surface, and the
  *       option rows are the legacy item-pad (ROV-C5 / §4.6/5.1).
@@ -13,16 +13,16 @@
  *       control frame law; the same trap that collapsed ui-text-field + ui-slider). The editor
  *       part is Control-class: `block-size` off `--ui-combo-box-height`; inline text inset = h/2
  *       (the fleet Control-class value-edge standard, matching text-field/select). The listbox
- *       panel is Container/surface: `--ui-container-bg` equivalent, `--ui-radius-base` rounding.
+ *       panel is Container/surface: `--ui-container-bg` equivalent, `--md-sys-shape-corner-base` rounding.
  *       Options use the item-pad row model. `[data-active]` highlights the active-descendant
  *       option without moving DOM focus.
  *       (2026-07-06) The item-pad's numbers are DERIVED off the editor's own height/font
- *       (`--ui-combo-box-height`/`-font`/`-padding-inline`) instead of fixed `--ui-space-*` px, so
+ *       (`--ui-combo-box-height`/`-font`/`-padding-inline`) instead of fixed `--md-sys-space-*` px, so
  *       option text aligns under the editor's text and the option row height matches the editor's
  *       — the same size-carrying model as ui-select's listbox, applied to combo-box's single
  *       (currently size-less) register; see the token-block comment for the exact derivation.
  *       (2026-07-06, follow-up) `--ui-combo-box-padding-inline` itself is now h/2 (was the fixed
- *       `--ui-space-sm`) — the editor was the lone entry-control outlier off the fleet h/2 value-
+ *       `--md-sys-space-sm`) — the editor was the lone entry-control outlier off the fleet h/2 value-
  *       edge law; the item-pad derivation above already read this token, so options auto-followed
  *       (h/4 + h/4 = h/2), now byte-identical in model to ui-select's trigger/listbox pairing.
  *
@@ -36,10 +36,10 @@
 :where(ui-combo-box) {
   /* ── Editor (Control-class) ─────────────────────────────────────────── */
   /* Geometry: control height off the md-scale ramp (the combo-box trigger is the editor). */
-  --ui-combo-box-height: var(--ui-height-md);
-  --ui-combo-box-font: var(--ui-font-md);
+  --ui-combo-box-height: var(--md-sys-height-md);
+  --ui-combo-box-font: var(--md-sys-font-md);
   /* (2026-07-06) h/2 — the fleet Control-class value-edge standard (text-field.css:119,
-     select.css trigger padding-inline-start), replacing the earlier fixed --ui-space-sm.
+     select.css trigger padding-inline-start), replacing the earlier fixed --md-sys-space-sm.
      The editor was the lone entry-control outlier still anchored to a space token instead
      of the frame-law h/2 inset; this brings it into line. */
   --ui-combo-box-padding-inline: calc(var(--ui-combo-box-height) / 2);
@@ -85,7 +85,7 @@
   --ui-combo-box-ink-disabled: var(--md-sys-color-neutral-low);
 
   /* Frame shape */
-  --ui-combo-box-radius: var(--ui-radius-base);
+  --ui-combo-box-radius: var(--md-sys-shape-corner-base);
 
   /* Min-inline-size floor (ADR-0021 entry-control lesson — must NOT be 0 or the editor
      collapses to a zero-width typing target in a flex row, just like text-field #74). */
@@ -95,7 +95,7 @@
   --ui-combo-box-panel-bg: var(--md-sys-color-neutral-surface);
   --ui-combo-box-panel-ink: var(--md-sys-color-neutral-on-surface);
   --ui-combo-box-panel-outline: var(--md-sys-color-neutral-outline-variant);
-  --ui-combo-box-panel-radius: var(--ui-radius-base);
+  --ui-combo-box-panel-radius: var(--md-sys-shape-corner-base);
   --ui-combo-box-panel-min-inline-size: 12rem; /* prevent empty-panel collapse (ADR-0021) */
   /* Panel-edge inset (feeds --ui-box-inset below, same mechanism as ui-select, 2026-07-06):
      DERIVED off the editor's OWN inline text-pad (--ui-combo-box-padding-inline), which is now
@@ -124,7 +124,7 @@
   /* ── Option rows (legacy item-pad — ROV-C5 / §4.6/5.1) — DERIVED (2026-07-06), same model as
      ui-select: block-pad = (editor height − option font)/2 (the row's rendered height == the
      editor's own height); inline-pad pairs with --ui-combo-box-listbox-padding above to total the
-     editor's own inline pad (the alignment law). Supersedes the earlier fixed --ui-space-xs/sm px. */
+     editor's own inline pad (the alignment law). Supersedes the earlier fixed --md-sys-space-xs/sm px. */
   --ui-combo-box-option-padding-block: calc((var(--ui-combo-box-height) - var(--ui-combo-box-font)) / 2);
   --ui-combo-box-option-padding-inline: calc(var(--ui-combo-box-padding-inline) / 2);
   --ui-combo-box-option-font: var(--ui-combo-box-font); /* options were size-blind on FONT too (bug fix) */
@@ -172,7 +172,7 @@
     --ui-combo-box-placeholder: var(--ui-combo-box-ink);
     /* Control-class height (block-size off the ramp, not a content-height).
        line-height: 1 + padding-block: 0 = the text fills the box without double-spacing
-       (matches --ui-control-line-height, ADR-0036). */
+       (matches --md-sys-control-line-height, ADR-0036). */
     min-block-size: var(--ui-combo-box-height);
     line-height: 1;
     padding-block: 0;
@@ -184,7 +184,7 @@
     /* FIXED (2026-07-06, found by the option-font trip-wire): `font: var(--ui-combo-box-font)` was
        an INVALID `font` shorthand (a single value — the shorthand requires font-size AND
        font-family at minimum), so the whole declaration was dropped and the editor silently fell
-       back to the UA default (16px) instead of the --ui-font-md ramp (14px). `font-size` is the
+       back to the UA default (16px) instead of the --md-sys-font-md ramp (14px). `font-size` is the
        correct longhand — this is the same class of bug the option font-size fix below closes. */
     font-size: var(--ui-combo-box-font);
     background-color: var(--ui-combo-box-bg);
@@ -267,8 +267,8 @@
     background-color: var(--ui-combo-box-bg-focus);
     border-color: var(--ui-combo-box-border-focus);
     --ui-combo-box-ink: var(--ui-combo-box-ink-focus);
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. */

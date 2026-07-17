@@ -2,7 +2,7 @@
  * fixture picker, the replay board + scrubber, the isolation verdict panel, and the three-column context
  * inspector ONLY — the rendered ui-card/ui-button controls keep their own component CSS; this page never
  * restyles a control. Colours are `--md-sys-color-*` roles (declared by the foundation barrels, imported
- * first via _page.ts) so the page tracks light/dark; spacing rides the `--ui-space-*` ramp — tokens-only,
+ * first via _page.ts) so the page tracks light/dark; spacing rides the `--md-sys-space-*` ramp — tokens-only,
  * matching a2ui-patterns.css / a2ui-list.css. */
 
 .fixture-picker {

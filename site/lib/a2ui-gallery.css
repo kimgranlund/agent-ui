@@ -5,7 +5,7 @@
  * declares NO selector that would tie with a ui-* component's own @scope-scoped display (the segmented-
  * control cascade-tie lesson), so no element-qualified override is needed here. Colours are
  * `--md-sys-color-*` roles declared by the foundation barrels (imported first via _page.ts / the lib's
- * side-effect import), so the page tracks light/dark; the mono facet rides `--ui-mono`. Tokens-only — no
+ * side-effect import), so the page tracks light/dark; the mono facet rides `--md-sys-typeface-mono`. Tokens-only — no
  * raw-literal colours (matching a2ui-patterns.css / _page.css). */
 
 /* ── the responsive gallery grid — auto-fill so a new seed's card flows in with zero layout edits ──────── */
@@ -36,7 +36,7 @@
 
 .seed-card-heading {
   margin: 0;
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.95rem;
   font-weight: 650;
   overflow-wrap: anywhere;

@@ -4,7 +4,7 @@
  * citations · wire-artifact entries · defect note) ONLY. No `ui-*` control is rendered inside a card (plain
  * elements throughout), so there is no element-qualified `@scope`-display collision to guard against here
  * (the segmented-control cascade-tie lesson does not apply — nothing here ties with a ui-* component's own
- * scoped display). Tokens-only (`--md-sys-color-*` / `--ui-mono`) — no raw-literal colours, matching
+ * scoped display). Tokens-only (`--md-sys-color-*` / `--md-sys-typeface-mono`) — no raw-literal colours, matching
  * a2ui-gallery.css / a2ui-patterns.css / _page.css. */
 
 /* ── one concept/demo card ───────────────────────────────────────────────────────────────────────────────── */
@@ -27,7 +27,7 @@
 
 .concept-card-heading {
   margin: 0;
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.95rem;
   font-weight: 650;
   overflow-wrap: anywhere;

@@ -2,7 +2,7 @@
 //
 // Extends UIIndicatorElement for the boolean form value, the checked-state machine + ARIA (ariaChecked,
 // :state(checked)), the toggle via pressActivation + click, and the widget-box geometry seam (LLD-C1..C4).
-// The leaf provides: `static role = 'radio'`; the dot glyph in a circular --ui-compact box (radio.css);
+// The leaf provides: `static role = 'radio'`; the dot glyph in a circular --md-sys-compact box (radio.css);
 // an optional label slot (the default slot); and group coordination via the `grouped()` hook (LLD-C5).
 //
 // When inside a `ui-radio-group`, the radio:

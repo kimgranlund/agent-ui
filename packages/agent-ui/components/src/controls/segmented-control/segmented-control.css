@@ -3,7 +3,7 @@
  * ADR-0095 (authored from ADR-0092 §Alternatives-1; supersedes ADR-0086's `ui-radio-group[variant=
  * 'segmented']` — a hard cutover, no alias). Every computed value ADR-0086's Acceptance enumerated carries
  * over UNCHANGED, re-keyed onto the new tag/tokens: equal 1fr cells, `100%/count` indicator sizing,
- * `transform`-only placement, `--ui-motion-fast` + reduced-motion jump, the Control-height ramp with `h/2`
+ * `transform`-only placement, `--md-sys-motion-duration-fast` + reduced-motion jump, the Control-height ramp with `h/2`
  * inline pad and `line-height:1`, hover/active washes, `Highlight`/`HighlightText` forced-colors inversion.
  * Since "segmented" IS this control's whole identity (not a variant gate), every selector below is
  * UNCONDITIONAL — no `[variant='segmented']` qualifier anywhere (the ADR-0086 architecture's one CSS
@@ -30,12 +30,12 @@
   /* Geometry — the Pattern-class CONTROL-height ramp (geometry.md's `segmented-control` example,
      geometry.md:133), NOT the Indicator's compact/widget ramp (ADR-0041, unused here). v1 ships the single
      `md` register; an ancestor [scale] re-tables the row for free (ADR-0038). */
-  --ui-segmented-control-segment-height: var(--ui-height-md);
-  --ui-segmented-control-segment-font: var(--ui-font-md);
+  --ui-segmented-control-segment-height: var(--md-sys-height-md);
+  --ui-segmented-control-segment-font: var(--md-sys-font-md);
 
   /* The outer rounded track (segments carry NO divider borders — Kim's ruling, see the styles block). */
   --ui-segmented-control-track: var(--md-sys-color-neutral-outline);
-  --ui-segmented-control-radius: var(--ui-radius-base);
+  --ui-segmented-control-radius: var(--md-sys-shape-corner-base);
 
   /* The shared moving indicator's fill — the AA-safe accent role minted for the calendar (ADR-0048/0058),
      reused here as the strongest fill-presence non-color signal (ADR-0057). */
@@ -96,7 +96,7 @@ ui-segmented-control::before {
   inset-inline-start: 0;
   background: var(--ui-segmented-control-fill);
   border-radius: calc(var(--ui-segmented-control-radius) - 1px); /* the inner radius; ends align to the track */
-  transition: transform var(--ui-motion-fast) var(--ui-ease-standard); /* consumed, not hardcoded */
+  transition: transform var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard); /* consumed, not hardcoded */
 }
 @media (prefers-reduced-motion: reduce) {
   ui-segmented-control::before {
@@ -132,7 +132,7 @@ ui-segmented-control ui-segment {
   padding-block: 0; /* block-size is the vertical lever */
   padding-inline: calc(var(--ui-segmented-control-segment-height) / 2); /* slotless-edge pad, geometry.md */
   font-size: var(--ui-segmented-control-segment-font);
-  line-height: var(--ui-control-line-height); /* single-line control standard, ADR-0036 */
+  line-height: var(--md-sys-control-line-height); /* single-line control standard, ADR-0036 */
   color: var(--ui-segmented-control-ink);
 }
 

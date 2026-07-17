@@ -252,14 +252,14 @@ describe('ui-modal — Escape dismissal + focus restore (both engines)', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
-//  [5] [density] — shell padding shifts (--ui-space-lg); frame (border + radius) HOLDS (both engines)
+//  [5] [density] — shell padding shifts (--md-sys-space-lg); frame (border + radius) HOLDS (both engines)
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-modal — [box-model] the dialog is a padding-less box; region padding + frame are density-invariant (both engines)', () => {
   it('the dialog shell has NO padding (box-model); a content region carries the FIXED 12/6 padding; the frame HOLDS', async () => {
     // Box-model rollout (container-box.css) — REVISED 2026-07-04: the dialog is a [data-box] with ZERO shell
     // padding — a content region inside carries the FIXED region padding (inline 0.75rem=12px · block
-    // 0.375rem=6px, rem-based → NOT --ui-space × --ui-density, so density-INVARIANT). The frame (border 1px ·
+    // 0.375rem=6px, rem-based → NOT --md-sys-space × --md-sys-density, so density-INVARIANT). The frame (border 1px ·
     // radius) is invariant too.
     const { modal, dialog } = mount('<ui-modal><div data-region="content"><p>Body</p></div></ui-modal>')
     modal.open = true
@@ -279,7 +279,7 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
     expect(borderBase, 'border is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
     expect(radiusBase, 'radius is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
 
-    // density-INVARIANT: compact + spacious leave the region padding + frame unchanged (rem, not --ui-space)
+    // density-INVARIANT: compact + spacious leave the region padding + frame unchanged (rem, not --md-sys-space)
     for (const d of ['compact', 'spacious']) {
       modal.setAttribute('density', d)
       expect(px(getComputedStyle(content).paddingLeft), `inline padding changed at ${d}`).toBeCloseTo(padInlineBase, 1)

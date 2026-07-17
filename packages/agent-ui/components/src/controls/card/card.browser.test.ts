@@ -105,7 +105,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
 
   it('a NESTED card radius DECREMENTS one level — measured px == max(0, parent − padding) (ADR-0018)', () => {
     // Reseed the root radius well larger than the region padding so the one-level decrement is a clear
-    // unambiguous px (with the default --ui-radius-base of 12px against the shared 12px region padding, REVISED
+    // unambiguous px (with the default --md-sys-shape-corner-base of 12px against the shared 12px region padding, REVISED
     // 2026-07-04, the inner radius would floor at a knife-edge 0 — reseeding to 32px keeps the margin wide and
     // demonstrative). The author-set --ui-card-radius reseeds the chain root (ADR-0018 cl.1).
     const root = mount(
@@ -180,7 +180,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // Box-model rollout (container-box.css) — REVISED 2026-07-04: the card-only 6px-inline override is
     // RESCINDED. The card itself still has zero padding; the regions carry the SHARED rem-based --ui-box-*
     // region padding straight (inline 0.75rem=12px / block 0.375rem=6px), matching modal/select/menu/combo-box
-    // exactly. Because they are rem-based (not --ui-space × --ui-density), the region padding — like the
+    // exactly. Because they are rem-based (not --md-sys-space × --md-sys-density), the region padding — like the
     // frame — is density-INVARIANT.
     const card = mount(
       '<ui-card><ui-card-header>H</ui-card-header><ui-card-content>C</ui-card-content></ui-card>',
@@ -197,7 +197,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     expect(borderBase, 'border is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
     expect(radiusBase, 'radius is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
 
-    // density-INVARIANT: compact + spacious leave the region padding + frame unchanged (rem, not --ui-space)
+    // density-INVARIANT: compact + spacious leave the region padding + frame unchanged (rem, not --md-sys-space)
     for (const d of ['compact', 'spacious']) {
       card.setAttribute('density', d)
       expect(px(getComputedStyle(content).paddingLeft), `inline padding changed at ${d}`).toBeCloseTo(padInlineBase, 1)

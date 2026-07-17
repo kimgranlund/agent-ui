@@ -1,7 +1,7 @@
 // radio.browser.test.ts — cross-engine browser smoke for ui-radio + ui-radio-group (Wave 1 S3).
 //
 // Runs in Chromium + WebKit via vitest.browser.config.ts (the *.browser.test.ts glob). Excluded from the
-// jsdom run by the root vitest.config.ts. Goals: the dot box = --ui-compact (real px), real focus roves
+// jsdom run by the root vitest.config.ts. Goals: the dot box = --md-sys-compact (real px), real focus roves
 // the group, checked paint (::before ring-fill + ::after dot, the 2026-07-07 fix), forced-colors
 // (CanvasText ink), C10 zero-residue.
 //
@@ -82,13 +82,13 @@ const contrastOf = (a: string, b: string): number => {
   return (hi + 0.05) / (lo + 0.05)
 }
 
-// ── S3 browser smoke: dot box = --ui-compact (exact-px per [size] + [scale]×[size]) ─────────────
+// ── S3 browser smoke: dot box = --md-sys-compact (exact-px per [size] + [scale]×[size]) ─────────────
 
 describe('ui-radio browser smoke — box geometry (exact px, ADR-0041)', () => {
-  it('radio-box-md: ::before circle = 16px (--ui-compact-md at default ui-md scale)', () => {
+  it('radio-box-md: ::before circle = 16px (--md-sys-compact-md at default ui-md scale)', () => {
     const el = mount(document.createElement('ui-radio') as UIRadioElement)
     el.textContent = 'Test'
-    // --ui-compact-md = 16px at the default ui-md scale (ADR-0041 clause 2)
+    // --md-sys-compact-md = 16px at the default ui-md scale (ADR-0041 clause 2)
     expect(Number.parseFloat(getComputedStyle(el, '::before').width)).toBe(16)
     expect(Number.parseFloat(getComputedStyle(el, '::before').height)).toBe(16)
   })
@@ -97,12 +97,12 @@ describe('ui-radio browser smoke — box geometry (exact px, ADR-0041)', () => {
     const sm = mount(document.createElement('ui-radio') as UIRadioElement)
     sm.setAttribute('size', 'sm')
     sm.textContent = 'Small'
-    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(14) // --ui-compact-sm
+    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(14) // --md-sys-compact-sm
 
     const lg = mount(document.createElement('ui-radio') as UIRadioElement)
     lg.setAttribute('size', 'lg')
     lg.textContent = 'Large'
-    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(18) // --ui-compact-lg
+    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(18) // --md-sys-compact-lg
   })
 
   it('radio-box-scale: [scale=ui-lg]×[size=md] → 18px (the scale×size lookup, ADR-0041)', () => {

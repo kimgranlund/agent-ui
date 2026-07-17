@@ -100,7 +100,7 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
 describe('ui-text subtree-[scale] — --md-sys-typescale-*-size re-multiplies for a scaled ancestor', () => {
   it('display/lg under [scale=content-lg] resolves to 99.75px (57px × 1.75 — the * pre-substitution law)', () => {
     const wrap = document.createElement('div')
-    wrap.setAttribute('scale', 'content-lg') // --ui-scale → 1.75
+    wrap.setAttribute('scale', 'content-lg') // --md-sys-scale → 1.75
     document.body.append(wrap)
 
     const el = document.createElement('ui-text')
@@ -122,7 +122,7 @@ describe('ui-text subtree-[scale] — --md-sys-typescale-*-size re-multiplies fo
     unscaled.remove()
 
     const wrap = document.createElement('div')
-    wrap.setAttribute('scale', 'ui-sm') // --ui-scale → 0.875 (a SMALLER multiplier for clear contrast)
+    wrap.setAttribute('scale', 'ui-sm') // --md-sys-scale → 0.875 (a SMALLER multiplier for clear contrast)
     document.body.append(wrap)
     const scaled = document.createElement('ui-text')
     scaled.setAttribute('variant', 'headline')

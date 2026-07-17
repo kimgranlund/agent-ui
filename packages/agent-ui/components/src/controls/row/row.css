@@ -3,9 +3,9 @@
  * SECTIONED blocks, the button.css pattern applied to a layout container:
  *
  *   [1] TOKEN BLOCK  — `:where(ui-row)` (specificity 0,0,0) DECLARES the `--ui-row-*` chain: the flex grammar
- *       (`align`/`justify`/`gap`/`wrap`) mapped to CSS keywords, plus the shared `--ui-radius-base`. The
+ *       (`align`/`justify`/`gap`/`wrap`) mapped to CSS keywords, plus the shared `--md-sys-shape-corner-base`. The
  *       `[align]`/`[justify]`/`[gap]`/`[wrap]` attribute selectors (which reflect from the flexProps, s2)
- *       REPOINT those tokens — `between` → `space-between`, `gap='md'` → `var(--ui-space-md)`, etc. This is
+ *       REPOINT those tokens — `between` → `space-between`, `gap='md'` → `var(--md-sys-space-md)`, etc. This is
  *       the ONE place a literal-union keyword crosses to its CSS value; it is a role-pure repoint, never an
  *       inline style.
  *   [2] STYLES BLOCK — `@scope (ui-row)` CONSUMES only the `--ui-row-*` chain (so the cross-family surface in
@@ -27,7 +27,7 @@
  * delegated entirely to the shared surface seam).
  *
  * NO control height (geometry.md's `Container/layout` size-class): a layout primitive has no frame — spacing
- * is the `--ui-space` ladder × `[density]` (the gap), never `--ui-height-*`. Standalone sheet — linked via
+ * is the `--md-sys-space` ladder × `[density]` (the gap), never `--md-sys-height-*`. Standalone sheet — linked via
  * the component-styles barrel (s12); NEVER injected from row.ts (behaviour-only `.ts`, plan §2).
  */
 
@@ -38,12 +38,12 @@
      literal-union → CSS-keyword crossing happens via the attribute repoints below. */
   --ui-row-align: start; /* align (cross-axis) → align-items */
   --ui-row-justify: start; /* justify (main-axis distribution) → justify-content */
-  --ui-row-gap: var(--ui-space-none); /* gap → the --ui-space density-responsive ladder (ADR-0015 cl.4) */
+  --ui-row-gap: var(--md-sys-space-none); /* gap → the --md-sys-space density-responsive ladder (ADR-0015 cl.4) */
   --ui-row-wrap: nowrap; /* wrap → flex-wrap (boolean presence) */
 
   /* The corner radius — the shared fleet constant (ADR-0015 cl.5). Rounds the surface when a row sits on an
      elevation/brightness plane; a transparent (unset-surface) row shows nothing, so it is harmless there. */
-  --ui-row-radius: var(--ui-radius-base);
+  --ui-row-radius: var(--md-sys-shape-corner-base);
 }
 
 /* align → align-items. start/center/end/stretch/baseline are valid align-items keywords (the box-alignment
@@ -79,25 +79,25 @@
   --ui-row-justify: space-evenly;
 }
 
-/* gap → a step on the --ui-space ladder (calc(<base px> * var(--ui-density)) — so a subtree [density]
+/* gap → a step on the --md-sys-space ladder (calc(<base px> * var(--md-sys-density)) — so a subtree [density]
    re-multiplies the gutter; [scale] does NOT touch it, ADR-0015 cl.4). `none` is the default 0. */
 :where(ui-row[gap='xs']) {
-  --ui-row-gap: var(--ui-space-xs);
+  --ui-row-gap: var(--md-sys-space-xs);
 }
 :where(ui-row[gap='sm']) {
-  --ui-row-gap: var(--ui-space-sm);
+  --ui-row-gap: var(--md-sys-space-sm);
 }
 :where(ui-row[gap='md']) {
-  --ui-row-gap: var(--ui-space-md);
+  --ui-row-gap: var(--md-sys-space-md);
 }
 :where(ui-row[gap='lg']) {
-  --ui-row-gap: var(--ui-space-lg);
+  --ui-row-gap: var(--md-sys-space-lg);
 }
 :where(ui-row[gap='xl']) {
-  --ui-row-gap: var(--ui-space-xl);
+  --ui-row-gap: var(--md-sys-space-xl);
 }
 :where(ui-row[gap='2xl']) {
-  --ui-row-gap: var(--ui-space-2xl);
+  --ui-row-gap: var(--md-sys-space-2xl);
 }
 
 /* wrap → flex-wrap (boolean presence: the `wrap` attribute present ⇒ multi-line). */

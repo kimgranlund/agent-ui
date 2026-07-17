@@ -108,7 +108,7 @@ describe('ui-text-field — the TKT-0062 filled/container state law (real repain
     await field.updateComplete
     editor.blur() // drop focus so the FILLED (idle) row paints, not the focus row
     await expect.poll(() => field.matches(':focus-within')).toBe(false)
-    await new Promise((r) => setTimeout(r, 250)) // past --ui-motion-fast — let the repaint settle
+    await new Promise((r) => setTimeout(r, 250)) // past --md-sys-motion-duration-fast — let the repaint settle
 
     const filledBg = getComputedStyle(field).backgroundColor
     const filledInk = getComputedStyle(editor).color
@@ -139,7 +139,7 @@ describe('ui-text-field — the TKT-0062 filled/container state law (real repain
     // actually proves the visible typed text repaints, not just the host frame.
     editor.blur()
     await expect.poll(() => field.matches(':focus-within')).toBe(false)
-    await new Promise((r) => setTimeout(r, 250)) // past --ui-motion-fast — let the blur-triggered fade settle
+    await new Promise((r) => setTimeout(r, 250)) // past --md-sys-motion-duration-fast — let the blur-triggered fade settle
     const filledInk = getComputedStyle(editor).color
     editor.focus()
     await expect.poll(() => field.matches(':focus-within')).toBe(true)
@@ -197,7 +197,7 @@ describe('ui-text-field — :focus-within ring on the HOST frame (both engines)'
 
     // the ring is the SOLE focus indicator — the field border steps TRANSPARENT on focus (a --md-sys-color-focus-ring
     // border-color step would double with the ring into a visible double border; ADR-0014 dev#1). MOTION-AWARE
-    // read: once :state(ready) is armed the border-color FADES to transparent over --ui-motion-fast, so poll
+    // read: once :state(ready) is armed the border-color FADES to transparent over --md-sys-motion-duration-fast, so poll
     // until it settles to alpha 0 (rgba(0,0,0,0)) — no second blue frame is painted.
     await expect
       .poll(() => alphaOf(getComputedStyle(field).borderTopColor), { timeout: 1500 })
@@ -205,7 +205,7 @@ describe('ui-text-field — :focus-within ring on the HOST frame (both engines)'
 
     // the ring lives on the host, never the editor child (the editor sets outline:none).
     expect(getComputedStyle(editor).outlineStyle, 'the editor child drew its own outline').toBe('none')
-    // the ring width is the shared 2px fleet ring (read from --ui-focus-ring-width).
+    // the ring width is the shared 2px fleet ring (read from --md-sys-state-focus-ring-width).
     expect(px(getComputedStyle(field).outlineWidth), 'the ring is not the shared 2px width').toBeCloseTo(2, 0)
   })
 
@@ -244,7 +244,7 @@ describe('ui-text-field — forced-colors survival (Chromium emulates via CDP; W
     ).toBeGreaterThan(0)
 
     // focus draws the host ring AND steps the field border TRANSPARENT (the ring is the sole indicator — no
-    // double border; ADR-0014 dev#1). MOTION-AWARE: the border-color FADES to transparent over --ui-motion-fast
+    // double border; ADR-0014 dev#1). MOTION-AWARE: the border-color FADES to transparent over --md-sys-motion-duration-fast
     // once :state(ready) is armed, so poll until it settles to alpha 0.
     await userEvent.click(editor)
     expect(ringDrawn(field), 'no :focus-within ring in normal mode').toBe(true)

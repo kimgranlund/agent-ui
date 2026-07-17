@@ -2,14 +2,14 @@
  * feed-family.lld.md §4; SPEC-R9/R18/R19/R20; ADR-0112 cl.4, fork F4). Two sectioned blocks:
  *
  *   [1] TOKEN BLOCK — `:where(ui-attachment)` declares --ui-attachment-* from the colour roles
- *       (--md-sys-color-{family}-{role}) + the content-icon register (--ui-icon-md, geometry.md's
+ *       (--md-sys-color-{family}-{role}) + the content-icon register (--md-sys-icon-md, geometry.md's
  *       "Affordance vs content-icon" taxonomy — the glyph is a CONTENT icon, not an inline affordance,
  *       so it rides the icon ramp, never `= font`). Display class (SPEC-R20 AC2): no [size]/[scale]
- *       control-band lookup, no --ui-height-* consumption — the border/radius/floor are frame constants,
+ *       control-band lookup, no --md-sys-height-* consumption — the border/radius/floor are frame constants,
  *       the glyph is the fixed default icon-ramp tier (no ancestor [scale] repoint needed at v1).
  *   [2] STYLES BLOCK — `@scope (ui-attachment)` consumes ONLY --ui-attachment-*.
  *
- * Posture (fork F4): a compact card with its OWN bordered surface (--ui-radius-base, the entry/container
+ * Posture (fork F4): a compact card with its OWN bordered surface (--md-sys-shape-corner-base, the entry/container
  * radius kin) — one-row anatomy glyph | name+meta, inline-grid + max-inline-size:100% so N-up in a
  * Row(wrap) or as ui-list children both hold with zero extra code (composability, SPEC-R9).
  *
@@ -30,15 +30,15 @@
 
 :where(ui-attachment) {
   --ui-attachment-min-inline-size: 12em; /* the whole-shape floor (SPEC-R18 AC1) */
-  --ui-attachment-gap: var(--ui-space-sm);
-  --ui-attachment-pad-inline: var(--ui-space-sm);
-  --ui-attachment-pad-block: var(--ui-space-xs);
+  --ui-attachment-gap: var(--md-sys-space-sm);
+  --ui-attachment-pad-inline: var(--md-sys-space-sm);
+  --ui-attachment-pad-block: var(--md-sys-space-xs);
   --ui-attachment-border: var(--md-sys-color-neutral-outline);
   --ui-attachment-surface: transparent; /* rides the ambient plane; a page may lift it */
-  --ui-attachment-glyph: var(--ui-icon-md); /* content-icon register (geometry.md taxonomy), fixed tier — Display class, no [scale] row */
+  --ui-attachment-glyph: var(--md-sys-icon-md); /* content-icon register (geometry.md taxonomy), fixed tier — Display class, no [scale] row */
   --ui-attachment-name-ink: var(--md-sys-color-neutral-on-surface);
   --ui-attachment-meta-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-attachment-radius: var(--ui-radius-base); /* TKT-0066 item 5 ruling: constants route through the own chain */
+  --ui-attachment-radius: var(--md-sys-shape-corner-base); /* TKT-0066 item 5 ruling: constants route through the own chain */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-attachment) consumes ONLY --ui-attachment-* ════════════════ */

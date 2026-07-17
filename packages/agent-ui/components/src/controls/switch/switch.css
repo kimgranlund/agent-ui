@@ -2,14 +2,14 @@
  * Two clearly-SECTIONED blocks:
  *
  *   [1] TOKEN BLOCK  — `:where(ui-switch)` (specificity 0,0,0) DECLARES the `--ui-switch-*` chain from the
- *       colour roles (`--md-sys-color-{family}-{role}`) and the compact widget ramp (`--ui-compact-{size}` / ADR-0041).
+ *       colour roles (`--md-sys-color-{family}-{role}`) and the compact widget ramp (`--md-sys-compact-{size}` / ADR-0041).
  *       `[size]` repoints the box token (the widget ramp step); `:state(checked)` repoints the track + thumb
  *       colour channels to the primary family (ON = filled primary, OFF = muted neutral); `[disabled]` mutes
  *       everything. No `color-mix` — colour opinions live in the token layer (ADR-0008).
  *   [2] STYLES BLOCK — `@scope (ui-switch)` CONSUMES only `--ui-switch-*` for its OWN tokens. The host is
  *       an `inline-flex` row: the TRACK (`::before`) is the pill (block-size = box, inline-size ≈ 1.8× box,
  *       border-radius = box/2) and sits as the first flex item; the label slot follows it. The THUMB (`::after`)
- *       is a circle (`position: absolute`) inset by `--ui-widget-inset` (2px) → thumb = box − 4px (ADR-0041
+ *       is a circle (`position: absolute`) inset by `--md-sys-widget-inset` (2px) → thumb = box − 4px (ADR-0041
  *       cl.3: the 2px inset law). The thumb slides from `inset-inline-start: inset` (unchecked) to
  *       `translate: calc(box * 0.8)` on `:state(checked)` — a net shift of 0.8× box, landing the thumb
  *       with a symmetric 2px inset from the track end (the ADR-0041 rendered-px proof).
@@ -34,21 +34,21 @@
   --ui-switch-thumb: var(--md-sys-color-neutral-surface-brightest);
 
   /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md). `[size]` repoints. */
-  --ui-switch-box: var(--ui-compact-md);
+  --ui-switch-box: var(--md-sys-compact-md);
 
-  /* Label gap — the rhythm between the pill and the optional label text (density-bearing, via --ui-gap-md). */
-  --ui-switch-gap: var(--ui-gap-md);
+  /* Label gap — the rhythm between the pill and the optional label text (density-bearing, via --md-sys-gap-md). */
+  --ui-switch-gap: var(--md-sys-gap-md);
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the LITERAL per-[scale] table in dimensions.css
-   re-tables --ui-compact-{sm,md,lg}; `[size]` on the host picks which step the switch box targets). */
+   re-tables --md-sys-compact-{sm,md,lg}; `[size]` on the host picks which step the switch box targets). */
 :where(ui-switch[size='sm']) {
-  --ui-switch-box: var(--ui-compact-sm);
-  --ui-switch-gap: var(--ui-gap-sm);
+  --ui-switch-box: var(--md-sys-compact-sm);
+  --ui-switch-gap: var(--md-sys-gap-sm);
 }
 :where(ui-switch[size='lg']) {
-  --ui-switch-box: var(--ui-compact-lg);
-  --ui-switch-gap: var(--ui-gap-lg);
+  --ui-switch-box: var(--md-sys-compact-lg);
+  --ui-switch-gap: var(--md-sys-gap-lg);
 }
 
 /* :state(checked) — primary-family track + on-primary thumb: the ON state, solid primary fill.
@@ -95,10 +95,10 @@
     border-radius: calc(var(--ui-switch-box) / 2); /* pill radius = box/2 */
 
     background: var(--ui-switch-track);
-    transition: background-color var(--ui-motion-fast) var(--ui-ease-standard);
+    transition: background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
 
-  /* THUMB (::after) — a circle inset by --ui-widget-inset (2px) on all sides (ADR-0041 cl.3).
+  /* THUMB (::after) — a circle inset by --md-sys-widget-inset (2px) on all sides (ADR-0041 cl.3).
    *
    * Size:    thumb = box − 2×inset = box − 4px.
    * Block:   inset-block-start: 50% + transform: translateY(-50%) centres the thumb in the host height.
@@ -116,7 +116,7 @@
     box-sizing: border-box;
 
     /* ADR-0041 cl.3: thumb = box − 2×inset = box − 4px */
-    --ui-switch-thumb-size: calc(var(--ui-switch-box) - 2 * var(--ui-widget-inset));
+    --ui-switch-thumb-size: calc(var(--ui-switch-box) - 2 * var(--md-sys-widget-inset));
     inline-size: var(--ui-switch-thumb-size);
     block-size: var(--ui-switch-thumb-size);
     border-radius: 50%; /* circle */
@@ -124,14 +124,14 @@
     /* Unchecked starting position: 2px from inline-start + vertically centred in the host */
     inset-block-start: 50%;
     transform: translateY(-50%);
-    inset-inline-start: var(--ui-widget-inset);
+    inset-inline-start: var(--md-sys-widget-inset);
 
     background: var(--ui-switch-thumb);
-    transition: translate var(--ui-motion-fast) var(--ui-ease-standard);
+    transition: translate var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
 
   /* :state(checked) — slide the thumb to the END by 0.8×box (the net shift from the start position).
-   * The end-side inset = track_width − (inset_start + 0.8×box + thumb_size) = 2px = --ui-widget-inset ✓
+   * The end-side inset = track_width − (inset_start + 0.8×box + thumb_size) = 2px = --md-sys-widget-inset ✓
    * (the 2px inset law holds on BOTH edges and in BOTH states — the ADR-0041 rendered-px proof). */
   :scope:state(checked)::after {
     translate: calc(var(--ui-switch-box) * 0.8) 0;
@@ -147,8 +147,8 @@
      deliberate exception to "consume only --ui-switch-*": a focus ring is a fleet constant, read directly
      so every control draws the identical ring. `outline` is layout-neutral (no box geometry shift). */
   :scope:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* Reduced motion — zero all transitions on this control (geometry.md: NEVER animate the ramp;

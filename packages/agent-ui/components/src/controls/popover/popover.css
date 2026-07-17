@@ -3,15 +3,15 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-popover)` (specificity 0,0,0) sets the popover's OWN default
  *       surface tokens and DECLARES the `--ui-popover-*` chain from the colour roles
- *       (`--md-sys-color-{family}-{role}`, family = neutral) and the dimensions (`--ui-space-*` /
- *       `--ui-radius-base`). Raw `--md-sys-color-*` roles enter ONLY here; `@scope` never reads them.
+ *       (`--md-sys-color-{family}-{role}`, family = neutral) and the dimensions (`--md-sys-space-*` /
+ *       `--md-sys-shape-corner-base`). Raw `--md-sys-color-*` roles enter ONLY here; `@scope` never reads them.
  *   [2] STYLES BLOCK — `@scope (ui-popover)` CONSUMES only the role-pure `--ui-popover-*` chain.
  *       The host is `display: contents` — a logical disclosure wrapper that generates no box.
  *       The trigger child stays in the document flow (the author provides it; we mark it with
  *       `data-part="trigger"` but do not style it — it is the author's to own). The panel part
  *       (`[data-part="panel"]`) is the Container/surface: `--ui-container-bg` equivalent sourced
- *       from `--ui-popover-bg`, `--ui-radius-base`, `--ui-space-md` padding — NOT a control height
- *       (`--ui-height-*` is never read). The panel needs a `min-inline-size` floor to prevent
+ *       from `--ui-popover-bg`, `--md-sys-shape-corner-base`, `--md-sys-space-md` padding — NOT a control height
+ *       (`--md-sys-height-*` is never read). The panel needs a `min-inline-size` floor to prevent
  *       collapse when content is absent (the ui-text-field #74 / ui-slider trap, ADR-0021).
  *       A `forced-color-adjust: auto` block keeps the surface and frame in system colours.
  *
@@ -32,10 +32,10 @@
 
   /* Frame */
   --ui-popover-outline: var(--md-sys-color-neutral-outline-variant);
-  --ui-popover-radius: var(--ui-radius-base); /* the shared fleet radius (ADR-0015 cl.5) */
+  --ui-popover-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius (ADR-0015 cl.5) */
 
   /* Shell spacing — panel-class geometry (Container/surface, NOT a control height) */
-  --ui-popover-padding: var(--ui-space-md);
+  --ui-popover-padding: var(--md-sys-space-md);
 
   /* Size floor — prevents collapse when content is absent or narrow (the ADR-0021 lesson:
      a surface that can be empty needs a min-inline-size; the overlay JS positions against

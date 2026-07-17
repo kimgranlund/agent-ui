@@ -3,7 +3,7 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-modal)` (specificity 0,0,0) sets the modal's OWN default surface and DECLARES
  *       the `--ui-modal-*` chain from the colour roles (`--md-sys-color-{family}-{role}`, family = neutral) and the
- *       dimensions (`--ui-space-*` / `--ui-radius-base`). This is where roles enter, exactly as button.css's
+ *       dimensions (`--md-sys-space-*` / `--md-sys-shape-corner-base`). This is where roles enter, exactly as button.css's
  *       `:where()` token block does. The container surface base defaults `--ui-container-bg` to TRANSPARENT (an
  *       unset layout primitive is unchanged — ADR-0015 cl.1); a modal is an OPAQUE plane, so it repoints its own
  *       default. The signed `elevation`/`brightness` axes still repoint `--ui-container-bg`/`-tint` on the HOST
@@ -14,7 +14,7 @@
  *       LAYER when `showModal()` is called (ADR-0017). The native UA dialog frame (1em padding, solid border,
  *       Canvas bg, centring margin) is fully repointed onto the surface seam + the space/radius tokens. The
  *       `::backdrop` scrim is the platform-painted blocking layer. Geometry is the Pattern/container size-class
- *       (geometry.md): the shell spaces off `--ui-space-*` × density — NO control height (`--ui-height-*`).
+ *       (geometry.md): the shell spaces off `--md-sys-space-*` × density — NO control height (`--md-sys-height-*`).
  *
  * Standalone stylesheet — linked via the component-styles barrel (s12); NEVER injected from modal.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2). component-styles.css @imports container.css
@@ -32,8 +32,8 @@
   /* the own chain — @scope consumes ONLY these (+ the --ui-container-* seam), never a raw --md-sys-color-* role */
   --ui-modal-ink: var(--md-sys-color-neutral-on-surface);
   --ui-modal-outline: var(--md-sys-color-neutral-outline-variant); /* the faint dialog frame */
-  --ui-modal-radius: var(--ui-radius-base); /* the shared fleet radius (ADR-0015 cl.5) */
-  --ui-modal-padding: var(--ui-space-lg); /* the shell pad off the density-responsive ladder (NOT a control height) */
+  --ui-modal-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius (ADR-0015 cl.5) */
+  --ui-modal-padding: var(--md-sys-space-lg); /* the shell pad off the density-responsive ladder (NOT a control height) */
   --ui-modal-scrim: var(--md-sys-color-dialog-backdrop); /* the ::backdrop blocking wash — black 80% opacity (TKT-0019; was --md-sys-color-neutral-scrim, too light) */
   /* The FRAME dials — ui-modal's public composition seam (TKT-0017): a composer that nests ui-modal (the
      command-modal precedent) pins these via inline style on the element it owns (the slider --value-pct

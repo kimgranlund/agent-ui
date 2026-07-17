@@ -50,8 +50,8 @@ const flexProps = {
   align: { ...prop.enum(['start', 'center', 'end', 'stretch', 'baseline'] as const, 'start'), reflect: true },
   // justify (main-axis distribution) → `justify-content` (`between`/`around`/`evenly` → `space-*` in the CSS)
   justify: { ...prop.enum(['start', 'center', 'end', 'between', 'around', 'evenly'] as const, 'start'), reflect: true },
-  // gap → `gap: var(--ui-space-{step})` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), NEVER a
-  // control dimension. The step vocabulary mirrors s1's `--ui-space-{none,xs,sm,md,lg,xl,2xl}` ramp 1:1.
+  // gap → `gap: var(--md-sys-space-{step})` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), NEVER a
+  // control dimension. The step vocabulary mirrors s1's `--md-sys-space-{none,xs,sm,md,lg,xl,2xl}` ramp 1:1.
   gap: { ...prop.enum(['none', 'xs', 'sm', 'md', 'lg', 'xl', '2xl'] as const, 'none'), reflect: true },
   // wrap → `flex-wrap` (boolean presence: present ⇒ wrap)
   wrap: { ...prop.boolean(false), reflect: true },

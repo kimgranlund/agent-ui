@@ -49,10 +49,10 @@ const alphaOf = (color: string): number => {
 // ── whole-shape + compact-realm geometry (SPEC-R13, ADR-0041) ────────────────────────────────────────
 
 describe('ui-badge whole-shape (SPEC-R13/R14 AC1, test-the-whole-shape)', () => {
-  it('a bare labeled badge in an unstyled flex row paints a non-collapsed box == --ui-compact-lg (18px default)', () => {
+  it('a bare labeled badge in an unstyled flex row paints a non-collapsed box == --md-sys-compact-lg (18px default)', () => {
     const el = mount('<ui-badge label="status"></ui-badge>')
     const cs = getComputedStyle(el)
-    expect(px(cs.blockSize), 'block-size must equal the compact-realm box (--ui-compact-lg, 18px default)').toBeCloseTo(18, 0)
+    expect(px(cs.blockSize), 'block-size must equal the compact-realm box (--md-sys-compact-lg, 18px default)').toBeCloseTo(18, 0)
     const rect = el.getBoundingClientRect()
     expect(rect.width, 'the host collapsed instead of painting a real pill').toBeGreaterThan(0)
     expect(rect.height, 'the host painted a zero-height box').toBeGreaterThan(0)

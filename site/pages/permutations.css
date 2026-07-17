@@ -105,7 +105,7 @@
 .geo-label {
   margin: 0;
   font-size: 0.8rem;
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 

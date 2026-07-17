@@ -124,19 +124,19 @@ describe('ui-segmented-control — grid track + segment geometry (both engines)'
     }
   })
 
-  it('segment geometry: block-size = --ui-height-md, padding-inline = height/2, padding-block = 0', () => {
+  it('segment geometry: block-size = --md-sys-height-md, padding-inline = height/2, padding-block = 0', () => {
     const { segments } = mount(HORIZONTAL)
     const seg = segments[0]!
     const cs = getComputedStyle(seg)
     const height = px(cs.blockSize)
-    expect(height).toBeCloseTo(28, 0) // --ui-height-md default
+    expect(height).toBeCloseTo(28, 0) // --md-sys-height-md default
     expect(px(cs.paddingInlineStart)).toBeCloseTo(height / 2, 0)
     expect(px(cs.paddingInlineEnd)).toBeCloseTo(height / 2, 0)
     expect(px(cs.paddingBlockStart)).toBe(0)
     expect(px(cs.paddingBlockEnd)).toBe(0)
-    // line-height: read the --ui-control-line-height custom property (== '1'), NEVER assert
+    // line-height: read the --md-sys-control-line-height custom property (== '1'), NEVER assert
     // computed lineHeight === '1' (getComputedStyle returns the USED px value).
-    expect(cs.getPropertyValue('--ui-control-line-height').trim()).toBe('1')
+    expect(cs.getPropertyValue('--md-sys-control-line-height').trim()).toBe('1')
     expect(px(cs.lineHeight)).toBeCloseTo(px(cs.fontSize) * 1, 0)
   })
 
@@ -170,7 +170,7 @@ describe('ui-segmented-control — the shared moving indicator (both engines)', 
     const indicatorWidth = px(before(group).width)
     expect(indicatorWidth).toBeCloseTo(cellWidth, 0)
 
-    // the ::before transitions `transform` over --ui-motion-fast (300ms) — a synchronous read right
+    // the ::before transitions `transform` over --md-sys-motion-duration-fast (300ms) — a synchronous read right
     // after the click would sample a MID-FADE interpolated value (the same reasoning as the button
     // motion harness); poll until the transform SETTLES on the target translate instead.
     await expect.poll(() => translateOf(before(group).transform).tx, { timeout: 1500 }).toBeCloseTo(1 * cellWidth, 0)
@@ -205,15 +205,15 @@ describe('ui-segmented-control — the shared moving indicator (both engines)', 
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-//  [3] Motion — transition:transform over --ui-motion-fast; reduced-motion jumps
+//  [3] Motion — transition:transform over --md-sys-motion-duration-fast; reduced-motion jumps
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-segmented-control — motion (both engines)', () => {
-  it('the ::before transitions transform over --ui-motion-fast', () => {
+  it('the ::before transitions transform over --md-sys-motion-duration-fast', () => {
     const { group } = mount(HORIZONTAL)
     const cs = before(group)
     expect(cs.transitionProperty).toContain('transform')
-    expect(px(cs.transitionDuration) * 1000).toBeCloseTo(300, -1) // --ui-motion-fast = 300ms
+    expect(px(cs.transitionDuration) * 1000).toBeCloseTo(300, -1) // --md-sys-motion-duration-fast = 300ms
   })
 
   it('reduced-motion ZEROES the transition — Chromium emulates (CDP); WebKit asserts the baseline', async () => {

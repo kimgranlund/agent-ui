@@ -12,7 +12,7 @@
  *       adornment slots via presence-driven `:has()` — placement is POSITION-driven (the slot), glyph size is
  *       ROLE-driven (`[data-role]`: icon = frame `--ui-button-icon`, caret = rhythm `--ui-button-glyph` = font).
  *       Interaction states (ADR-0008): `:hover`/`:active` repoint `background` from the per-state tokens;
- *       `:focus-visible` draws the SHARED focus ring (ADR-0009 — the fleet `--md-sys-color-focus-ring`/`--ui-focus-ring-*`,
+ *       `:focus-visible` draws the SHARED focus ring (ADR-0009 — the fleet `--md-sys-color-focus-ring`/`--md-sys-state-focus-ring-*`,
  *       keyboard-only, layout-neutral `outline`). Forced-colors keeps the ink/border (the ring survives via the
  *       token layer's `--md-sys-color-focus-ring → Highlight` mapping). The reflected `disabled` attribute makes the host inert.
  *
@@ -33,10 +33,10 @@
   --ui-button-border: transparent;
 
   /* Geometry — off the s6 dimensional ramp (default size = md). [size] repoints below. */
-  --ui-button-height: var(--ui-height-md);
-  --ui-button-font: var(--ui-font-md);
-  --ui-button-gap: var(--ui-gap-md);
-  --ui-button-icon: var(--ui-icon-md); /* content-icon = the shared §1-SET icon table (ADR-0035 4a hoist, dimensions.css), per-[scale]-tier; was pow(scale,0.58) */
+  --ui-button-height: var(--md-sys-height-md);
+  --ui-button-font: var(--md-sys-font-md);
+  --ui-button-gap: var(--md-sys-gap-md);
+  --ui-button-icon: var(--md-sys-icon-md); /* content-icon = the shared §1-SET icon table (ADR-0035 4a hoist, dimensions.css), per-[scale]-tier; was pow(scale,0.58) */
   --ui-button-glyph: var(--ui-button-font); /* inline-affordance (caret) ramp = font (--ui-glyph-ratio 1, §4.1) */
 }
 
@@ -58,16 +58,16 @@
 
 /* size → dimensional ramp */
 :where(ui-button[size='sm']) {
-  --ui-button-height: var(--ui-height-sm);
-  --ui-button-font: var(--ui-font-sm);
-  --ui-button-gap: var(--ui-gap-sm);
-  --ui-button-icon: var(--ui-icon-sm); /* §1-SET icon table (ADR-0035) */
+  --ui-button-height: var(--md-sys-height-sm);
+  --ui-button-font: var(--md-sys-font-sm);
+  --ui-button-gap: var(--md-sys-gap-sm);
+  --ui-button-icon: var(--md-sys-icon-sm); /* §1-SET icon table (ADR-0035) */
 }
 :where(ui-button[size='lg']) {
-  --ui-button-height: var(--ui-height-lg);
-  --ui-button-font: var(--ui-font-lg);
-  --ui-button-gap: var(--ui-gap-lg);
-  --ui-button-icon: var(--ui-icon-lg); /* §1-SET icon table (ADR-0035) */
+  --ui-button-height: var(--md-sys-height-lg);
+  --ui-button-font: var(--md-sys-font-lg);
+  --ui-button-gap: var(--md-sys-gap-lg);
+  --ui-button-icon: var(--md-sys-icon-lg); /* §1-SET icon table (ADR-0035) */
 }
 
 /* disabled → muted neutral roles (overrides the family). HOLDS at idle: -bg-hover/-bg-active repoint to the
@@ -95,7 +95,7 @@
     min-inline-size: var(--ui-button-height); /* frame: icon-only ≈ square */
 
     font-size: var(--ui-button-font);
-    line-height: var(--ui-control-line-height); /* single-line control standard — ADR-0036; tight line box centered in the fixed frame */
+    line-height: var(--md-sys-control-line-height); /* single-line control standard — ADR-0036; tight line box centered in the fixed frame */
     white-space: nowrap; /* a control label NEVER wraps (Kim, 2026-07-08 — the gallery toolbar's two-line
                             "More actions"); the ADR-0036 single-line frame assumes one line, so wrapping
                             was always an overflow of the control's own contract. Inherits into the label
@@ -222,8 +222,8 @@
      participate in box geometry — the geometry law stays intact. (Disabled is removed from the tab order by
      the tabbable trait, so a disabled host never draws the ring.) */
   :scope:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* Motion (ADR-0008 / interaction-states standard) — transition the state-PAINT properties ONLY
@@ -234,9 +234,9 @@
      first-paint styling snaps in and only SUBSEQUENT hover/active/variant changes animate (no first-render flash). */
   :scope:state(ready) {
     transition:
-      background-color var(--ui-motion-fast) var(--ui-ease-standard),
-      color var(--ui-motion-fast) var(--ui-ease-standard),
-      border-color var(--ui-motion-fast) var(--ui-ease-standard);
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
   @media (prefers-reduced-motion: reduce) {
     :scope:state(ready) {

@@ -14,7 +14,7 @@
  *   [1] TOKEN BLOCK  — `:where(ui-segment)` — a genuine RESERVE (no design tokens needed yet: the segment's
  *       own layout primitives below are geometry-agnostic; every SIZED value is the group's token chain).
  *   [2] STYLES BLOCK — `@scope (ui-segment)` consumes only `--ui-segment-*` (empty today) ∪ the shared
- *       focus-ring allowlist (`--ui-focus-ring-*`, `--md-sys-color-focus-ring` — ADR-0009).
+ *       focus-ring allowlist (`--md-sys-state-focus-ring-*`, `--md-sys-color-focus-ring` — ADR-0009).
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-segment) ════════════════ */
@@ -51,8 +51,8 @@
      `ui-radio`'s own ring reads (radio.css), so a segment and a plain radio look identically focused. Not
      clipped: `ui-segmented-control` sets no `overflow:hidden` (would clip the ring). */
   :scope:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* Forced colors (WHCM) — nothing segment-owned to invert here; the GROUP's compound selectors

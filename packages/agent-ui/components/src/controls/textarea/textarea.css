@@ -3,7 +3,7 @@
  *
  *   [1] TOKEN BLOCK — `:where(ui-textarea)` (specificity 0,0,0) DECLARES the `--ui-textarea-*` chain from the
  *       colour roles (`--md-sys-color-{family}-{role}`; family = neutral, the text-field field-frame map reused
- *       verbatim) and the `--ui-font-{size}` dimensional ramp. The state channel is Kim's filled/container
+ *       verbatim) and the `--md-sys-font-{size}` dimensional ramp. The state channel is Kim's filled/container
  *       state law (TKT-0062) — THREE channels repoint per state (background, border, text-ink), keyed off
  *       five states (default/filled/hover/focus/disabled), the text-field precedent reused verbatim. `[size]`
  *       repoints ONLY the font — padding-block/padding-inline/the per-row line-box all DERIVE from font via
@@ -63,7 +63,7 @@
   /* Geometry — the MULTI-LINE law (ADR-0134), not the single-line ramp. Font is the ONE sizing lever that
      [size] repoints; padding-block/padding-inline/line-box all DERIVE from it via calc() below, so a single
      repoint cascades through all three — the growable box has no fixed §1 height row. */
-  --ui-textarea-font: var(--ui-font-md);
+  --ui-textarea-font: var(--md-sys-font-md);
   --ui-textarea-line-height: 1.5; /* prose line-height — NEVER the single-line control's line-height:1 (geometry.md) */
   --ui-textarea-line-box: calc(var(--ui-textarea-font) * var(--ui-textarea-line-height)); /* one rendered text row */
   --ui-textarea-padding-block: calc(var(--ui-textarea-font) * 0.5); /* a comfortable text inset (ADR-0134) — never 0 */
@@ -73,21 +73,21 @@
 
   /* Size-INVARIANT frame quantities — the entry-control class referents (geometry.md "Frame quantities that
      split by control class"), the SAME fleet tokens ui-text-field's #71/#21 amendments introduced. */
-  --ui-textarea-radius: var(--ui-radius-base); /* fixed rounded-rect — the container-fleet referent, not the action h/2 pill */
+  --ui-textarea-radius: var(--md-sys-shape-corner-base); /* fixed rounded-rect — the container-fleet referent, not the action h/2 pill */
   --ui-textarea-min-inline-size: 20ch; /* the entry-control typing-width floor (ADR-0021), native <textarea> parity */
 
   /* Visible inline-validation message tokens (ADR-0029 A1, the text-field precedent) — the .ui-textarea-message
      node (control-managed, aria-describedby target) becomes VISIBLE when non-empty under :state(user-invalid). */
-  --ui-textarea-message-font: var(--ui-font-sm);
+  --ui-textarea-message-font: var(--md-sys-font-sm);
   --ui-textarea-message-ink: var(--md-sys-color-danger-on-surface-variant); /* AA-gated on-surface danger text ink */
 }
 
 /* size → the ONE sizing lever (font); padding-block/padding-inline/line-box all derive from it via calc() above. */
 :where(ui-textarea[size='sm']) {
-  --ui-textarea-font: var(--ui-font-sm);
+  --ui-textarea-font: var(--md-sys-font-sm);
 }
 :where(ui-textarea[size='lg']) {
-  --ui-textarea-font: var(--ui-font-lg);
+  --ui-textarea-font: var(--md-sys-font-lg);
 }
 
 /* disabled → a role-REPOINT (NOT opacity, tokens.md canon; TKT-0062's disabled row). Matches BOTH the
@@ -195,8 +195,8 @@
     background: var(--ui-textarea-bg-focus);
     border-color: var(--ui-textarea-border-focus);
     --ui-textarea-ink: var(--ui-textarea-ink-focus);
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   :scope:state(user-invalid) {
@@ -223,9 +223,9 @@
      geometry (a resize/rows change must SNAP). Gated behind :state(ready), zeroed under reduced-motion. */
   :scope:state(ready) {
     transition:
-      border-color var(--ui-motion-fast) var(--ui-ease-standard),
-      background-color var(--ui-motion-fast) var(--ui-ease-standard),
-      color var(--ui-motion-fast) var(--ui-ease-standard);
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
   @media (prefers-reduced-motion: reduce) {
     :scope:state(ready) {

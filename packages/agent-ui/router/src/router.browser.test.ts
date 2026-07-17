@@ -10,7 +10,7 @@
 //      the instrument-bridge's other half: real engine, real async popstate timing, same assertion.
 //
 // Direct imports (not a family barrel — router has none, LLD-C10a): foundation CSS for the
-// --md-sys-color-*/--ui-focus-ring-* tokens router-link.css consumes, then the two control modules
+// --md-sys-color-*/--md-sys-state-focus-ring-* tokens router-link.css consumes, then the two control modules
 // (self-defining on import) + router-link's own stylesheet (never barrel-injected, plan §2).
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp } from 'vitest/browser'

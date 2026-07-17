@@ -6,7 +6,7 @@ declare const process: { cwd(): string }
 
 // styling-gates.test.ts — the TKT-0066 item 5 ruling's standing trip-wire (Kim-ruled 2026-07-15;
 // tokens.md §Consumption invariants owns the law): a component's `@scope` STYLES block never reads a
-// dimensional `:root` constant (`--ui-font-*` · `--ui-space-*` · `--ui-radius-base`) directly — it
+// dimensional `:root` constant (`--md-sys-font-*` · `--md-sys-space-*` · `--md-sys-shape-corner-base`) directly — it
 // mints a role-named `--ui-{cmp}-*` token in its `:where()` TOKEN block and consumes that, exactly as
 // color roles route. Declarations INSIDE a `:where()` token block (the minting itself) are the
 // sanctioned shape and are out of scope here by construction: the gate scans only `@scope { ... }`
@@ -39,7 +39,7 @@ function walkCss(dir: string): string[] {
   return out
 }
 
-/** Blank out comments (preserving newlines so reported line numbers stay true) — a `var(--ui-space-…)`
+/** Blank out comments (preserving newlines so reported line numbers stay true) — a `var(--md-sys-space-…)`
  *  QUOTED in a rationale comment is documentation, not a read (the css-comment pitfall class). */
 function stripComments(css: string): string {
   return css.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
@@ -64,7 +64,7 @@ function scopeBodies(css: string): { start: number; body: string }[] {
   return out
 }
 
-const BANNED_READ = /var\((--ui-(?:font|space|radius)[a-z0-9-]*)/g
+const BANNED_READ = /var\((--md-sys-(?:font|space)[a-z0-9-]*|--md-sys-shape-corner-base)/g
 
 /** All banned dimensional-constant reads inside a sheet's @scope bodies, as `line: token` strings. */
 function bannedReads(css: string): string[] {
@@ -90,7 +90,7 @@ describe('styling gates — dimensional constants route through the own chain (T
     expect(sheets.length).toBeGreaterThan(60) // 69 components + shared/site-adjacent sheets at gate birth
   })
 
-  it('no @scope body reads --ui-font-* / --ui-space-* / --ui-radius-base directly', () => {
+  it('no @scope body reads --md-sys-font-* / --md-sys-space-* / --md-sys-shape-corner-base directly', () => {
     const offenders: string[] = []
     for (const sheet of sheets) {
       for (const hit of bannedReads(read(sheet))) {
@@ -105,18 +105,18 @@ describe('styling gates — dimensional constants route through the own chain (T
   it('negative control: the scan bites on a synthetic offender', () => {
     const synthetic = `
 :where(ui-fake) {
-  --ui-fake-pad: var(--ui-space-sm); /* minting — sanctioned, outside @scope */
+  --ui-fake-pad: var(--md-sys-space-sm); /* minting — sanctioned, outside @scope */
 }
 @scope (ui-fake) {
   :scope {
-    padding: var(--ui-space-sm); /* comment mentions var(--ui-font-md) — must NOT count */
-    border-radius: var(--ui-radius-base);
+    padding: var(--md-sys-space-sm); /* comment mentions var(--md-sys-font-md) — must NOT count */
+    border-radius: var(--md-sys-shape-corner-base);
     gap: var(--ui-fake-pad);
   }
 }`
     const hits = bannedReads(synthetic)
     expect(hits).toHaveLength(2)
-    expect(hits[0]).toContain('--ui-space-sm')
-    expect(hits[1]).toContain('--ui-radius-base')
+    expect(hits[0]).toContain('--md-sys-space-sm')
+    expect(hits[1]).toContain('--md-sys-shape-corner-base')
   })
 })

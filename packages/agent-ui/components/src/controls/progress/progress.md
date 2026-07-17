@@ -60,7 +60,7 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 geometry:
   sizeClass: display
   minInlineSize: var(--ui-progress-min-inline-size)  # 8em default — the whole-shape floor (SPEC-R18 AC1)
-  # NO [size] attribute, NO [scale] geometry row, NO --ui-height-* consumption (SPEC-R20 AC2) — the rail
+  # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption (SPEC-R20 AC2) — the rail
   # thickness (--ui-progress-track-size) is a fixed, density-invariant px constant.
 
 forcedColors: An explicit `@media (forced-colors: active)` block repoints the fill (a `background`-drawn rectangle, including the indeterminate sweep) to `CanvasText`, and gives the track a `Canvas` background + `CanvasText` border (SPEC-R19 — the bar-chart fill lesson: a background-drawn shape is otherwise forced to `Canvas` and vanishes against the page).

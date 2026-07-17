@@ -9,7 +9,7 @@
 # BAD_EXTENDS, which row-descriptor.test.ts filters as the one deferred code (the contract↔props bijection
 # is unaffected).
 tag: ui-row
-tier: layout           # geometry size-class (Container/layout band — NO control height; spacing off --ui-space × density; geometry.md §"five size-classes")
+tier: layout           # geometry size-class (Container/layout band — NO control height; spacing off --md-sys-space × density; geometry.md §"five size-classes")
 extends: UIContainerElement   # structural surface container, NOT form-associated (face below)
 # marginal: ui-row adds 47 B gz to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken; re-measured after the ADR-0096 `reflow` prop) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
@@ -38,7 +38,7 @@ attributes:            # attributes-as-API — mirrors row.ts `static props` (th
     type: enum
     values: [none, xs, sm, md, lg, xl, 2xl]
     default: none
-    reflect: true      # → gap: var(--ui-space-{step}) — the density-responsive layout-spacing ladder (rides [density], not [scale])
+    reflect: true      # → gap: var(--md-sys-space-{step}) — the density-responsive layout-spacing ladder (rides [density], not [scale])
   - name: wrap
     type: boolean
     default: false
@@ -71,8 +71,8 @@ geometry:
   sizeClass: layout
   blockSize: auto                  # NO control height — a container has no frame; height is content-driven (geometry.md Container/layout)
   paddingBlock: 0                  # layout primitives add no padding; the gap is the spacing lever
-  gap: var(--ui-row-gap)           # → var(--ui-space-{step}) — the one density-bearing quantity (rides [density], never [scale])
-  radius: var(--ui-row-radius)     # → var(--ui-radius-base) — the shared fleet corner radius (rounds a surfaced row)
+  gap: var(--ui-row-gap)           # → var(--md-sys-space-{step}) — the one density-bearing quantity (rides [density], never [scale])
+  radius: var(--ui-row-radius)     # → var(--md-sys-shape-corner-base) — the shared fleet corner radius (rounds a surfaced row)
   containerQuery: 'inline-size: reflow="auto" (the default) stacks children to a column under a narrow ANCESTOR container (ADR-0016 cl.4); reflow="locked" pins flex-direction:row (ADR-0096). ui-row establishes NO container of its own (ADR-0100) — resolves against the nearest externally-sized boundary'
 
 forcedColors: A `@media (forced-colors: active)` block keeps a surfaced row's plane a system colour (Canvas) and drops the tonal wash, so an elevation/brightness row survives high-contrast mode (belt-and-braces with the shared container.css surface block).
@@ -101,13 +101,13 @@ and `ui-column` for a vertical one — there is no `direction` prop.
 - **`align`** (cross-axis) → `align-items`: `start` (default) · `center` · `end` · `stretch` · `baseline`.
 - **`justify`** (main-axis distribution) → `justify-content`: `start` (default) · `center` · `end` ·
   `between` · `around` · `evenly` (the last three map to `space-between` / `space-around` / `space-evenly`).
-- **`gap`** → a step on the `--ui-space` layout-spacing ladder: `none` (default) · `xs` · `sm` · `md` · `lg` ·
+- **`gap`** → a step on the `--md-sys-space` layout-spacing ladder: `none` (default) · `xs` · `sm` · `md` · `lg` ·
   `xl` · `2xl`. The gap is the one quantity that rides `[density]` (a `[density="spacious"]` ancestor widens
   it); `[scale]` does **not** touch it — layout rhythm is not control-frame size (ADR-0015 / geometry.md).
 - **`wrap`** → `flex-wrap` (boolean presence): set `wrap` to allow children to flow onto multiple lines.
 
 A `ui-row` has **no control height** (the `Container/layout` size-class, geometry.md): it never reads
-`--ui-height-*`. Its height is content-driven; the gap is its only spacing lever.
+`--md-sys-height-*`. Its height is content-driven; the gap is its only spacing lever.
 
 ## Surface
 
@@ -120,7 +120,7 @@ literal unions `-3…3` defaulting to `0` (the neutral, transparent base — an 
 
 The surface paint lives once in the shared `controls/_surface/container.css` (the `UIContainerElement` base
 sheet) via the role-pure `--ui-container-bg` / `--ui-container-tint` seam — `ui-row` holds **zero** colour
-opinion. A surfaced row takes the shared `--ui-radius-base` corner radius.
+opinion. A surfaced row takes the shared `--md-sys-shape-corner-base` corner radius.
 
 ## Responsiveness
 

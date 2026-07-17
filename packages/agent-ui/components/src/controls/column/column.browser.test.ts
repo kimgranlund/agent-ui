@@ -57,7 +57,7 @@ describe('ui-column browser-truth harness (s4)', () => {
     expect(getComputedStyle(el).alignItems).toBe('start')
   })
 
-  it('gap responds to [density]: the --ui-space ladder re-multiplies on a subtree [density] (anti-vacuous)', () => {
+  it('gap responds to [density]: the --md-sys-space ladder re-multiplies on a subtree [density] (anti-vacuous)', () => {
     // a plain wrapper (NOT a query container) so flex-direction stays column and only the density changes.
     const wrap = document.createElement('div')
     host.append(wrap)
@@ -65,14 +65,14 @@ describe('ui-column browser-truth harness (s4)', () => {
     wrap.append(el)
 
     const gapPx = (): number => Number.parseFloat(getComputedStyle(el).rowGap)
-    const base = gapPx() // --ui-space-md @ density 1 = 12px
+    const base = gapPx() // --md-sys-space-md @ density 1 = 12px
     expect(base).toBeGreaterThan(0)
 
-    wrap.setAttribute('density', 'compact') // --ui-density → 0.5
+    wrap.setAttribute('density', 'compact') // --md-sys-density → 0.5
     const compact = gapPx()
-    expect(compact).toBeCloseTo(base / 2, 1) // the rhythm halved — gap rides --ui-density (geometry.md)
+    expect(compact).toBeCloseTo(base / 2, 1) // the rhythm halved — gap rides --md-sys-density (geometry.md)
 
-    wrap.setAttribute('density', 'spacious') // --ui-density → 1.5
+    wrap.setAttribute('density', 'spacious') // --md-sys-density → 1.5
     expect(gapPx()).toBeCloseTo(base * 1.5, 1) // and grows — density is the one quantity that moves the gap
   })
 

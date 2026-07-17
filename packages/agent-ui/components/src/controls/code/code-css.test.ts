@@ -51,9 +51,9 @@ describe('code.css — structure + token hygiene', () => {
     expect(rule).toBe('var(--ui-container-bg, var(--md-sys-color-neutral-surface))')
   })
 
-  it('--ui-code-radius rides the fleet --ui-radius-base referent', () => {
+  it('--ui-code-radius rides the fleet --md-sys-shape-corner-base referent', () => {
     const rule = (tokenBlock.match(/--ui-code-radius:\s*([^;]+);/) ?? [])[1]
-    expect(rule).toBe('var(--ui-radius-base)')
+    expect(rule).toBe('var(--md-sys-shape-corner-base)')
   })
 
   it('the @scope styles block consumes ONLY --ui-code-* ∪ the shared --md-sys-* namespace — no cross-control reach', () => {
@@ -71,9 +71,9 @@ describe('code.css — structure + token hygiene', () => {
     expect(bare).not.toMatch(/\[scale\b/)
   })
 
-  it('no --ui-height-* or [density] lever anywhere — Display class has no control-height/rhythm lever (ADR-0113 cl.2: every quantity is density-invariant)', () => {
+  it('no --md-sys-height-* or [density] lever anywhere — Display class has no control-height/rhythm lever (ADR-0113 cl.2: every quantity is density-invariant)', () => {
     const bare = css.replace(/\/\*[\s\S]*?\*\//g, '') // comment-stripped — a prose mention must not trip this
-    expect(bare).not.toMatch(/--ui-height-/)
+    expect(bare).not.toMatch(/--md-sys-height-/)
     expect(bare).not.toMatch(/\[density\b/)
   })
 
@@ -84,8 +84,8 @@ describe('code.css — structure + token hygiene', () => {
     expect(baseRule).toMatch(/max-inline-size:\s*100%\s*;/)
   })
 
-  it('font-family reads --ui-code-font (the --ui-mono repoint)', () => {
-    expect(tokenBlock).toMatch(/--ui-code-font:\s*var\(--ui-mono\)\s*;/)
+  it('font-family reads --ui-code-font (the --md-sys-typeface-mono repoint)', () => {
+    expect(tokenBlock).toMatch(/--ui-code-font:\s*var\(--md-sys-typeface-mono\)\s*;/)
     const baseRule = (stylesBlock.match(/:scope \{[^}]*\}/) ?? [''])[0]
     expect(baseRule).toMatch(/font-family:\s*var\(--ui-code-font\)\s*;/)
   })

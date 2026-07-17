@@ -42,7 +42,7 @@ attributes:            # attributes-as-API — mirrors toolbar.ts `static props`
     type: enum
     values: [none, xs, sm, md, lg, xl, 2xl]
     default: sm
-    reflect: true      # → gap: var(--ui-space-{step}); NOTE default 'sm' — toolbars are tight, differs from ui-row's 'none'
+    reflect: true      # → gap: var(--md-sys-space-{step}); NOTE default 'sm' — toolbars are tight, differs from ui-row's 'none'
   - name: overflow
     type: enum
     values: [wrap, scroll]
@@ -91,9 +91,9 @@ keyboard:
 geometry:
   sizeClass: pattern
   itemHeight: the items' own control height (the toolbar owns no size prop of its own)
-  gap: var(--ui-toolbar-gap)                     # off --ui-space (density-responsive)
-  padInline: var(--ui-toolbar-pad-inline)        # off --ui-space
-  minBlockSize: var(--ui-toolbar-min-block-size) # the whole-shape bar floor — the control-height register (--ui-height-md), NOT a --ui-space quantity
+  gap: var(--ui-toolbar-gap)                     # off --md-sys-space (density-responsive)
+  padInline: var(--ui-toolbar-pad-inline)        # off --md-sys-space
+  minBlockSize: var(--ui-toolbar-min-block-size) # the whole-shape bar floor — the control-height register (--md-sys-height-md), NOT a --md-sys-space quantity
   surface: --ui-container-bg                     # the ADR-0015 seam; transparent at elevation 0/unset (embedded), a raised plane at ≥1 (floating)
 
 forcedColors: A `@media (forced-colors: active)` block keeps a surfaced toolbar's plane a system colour (Canvas) and drops the tonal wash (belt-and-braces with the shared container.css surface block); the toolbar paints no intent surface of its own in v1, so there is no additional indicator/cue to protect.
@@ -122,13 +122,13 @@ arrangement and focus semantics only — it emits **no events** and owns **no va
 `ui-toolbar` is **host-as-flex**: its light-DOM children ARE the flex items (the `ui-row` precedent) — it
 declares no named slots. `orientation` sets the flex axis (`horizontal`, default, → a row; `vertical` → a
 column). `align`/`justify` reuse the ADR-0039 box-alignment dialect (`align` defaults `center` — the bar look,
-unlike `ui-row`'s `start`; `justify` defaults `start`). `gap` is a step on the `--ui-space` layout ladder
+unlike `ui-row`'s `start`; `justify` defaults `start`). `gap` is a step on the `--md-sys-space` layout ladder
 (default `sm` — toolbars are tighter than a bare `ui-row`). `overflow` is CSS-only: `wrap` (default — every
 item stays reachable, never hides an action) or `scroll` (a single line with its own scroll region). A
 spillover overflow *menu* is a fenced, additive v2 — not built in v1.
 
 `ui-toolbar` owns **no `size` prop** — the Pattern-class geometry (`geometry.md`): its items take their own
-control height, and the toolbar's own contribution is padding + gap off the `--ui-space` ladder plus a
+control height, and the toolbar's own contribution is padding + gap off the `--md-sys-space` ladder plus a
 **min-block-size floor** tied to the control-height register, so an empty or short bar still reads as a bar.
 `[scale]`/`[density]` ride ambiently (inherited), never as toolbar props.
 

@@ -71,7 +71,7 @@ keyboard:              # NOT a component keyboard contract — platform scroll a
 
 geometry:
   sizeClass: display
-  minInlineSize: var(--ui-table-min-inline-size)  # 16em default — the whole-shape floor (SPEC-R14/R17 AC1); NO [size] ramp, NO --ui-height-*
+  minInlineSize: var(--ui-table-min-inline-size)  # 16em default — the whole-shape floor (SPEC-R14/R17 AC1); NO [size] ramp, NO --md-sys-height-*
   cellPadInline: var(--ui-table-cell-pad-inline)  # rhythm — rides [density] for free (ADR-0103)
   cellPadBlock: var(--ui-table-cell-pad-block)
 
@@ -152,8 +152,8 @@ when the table needs an accessible name.
 ## Sizing
 
 `ui-table` is **Display**-class (`geometry.md`): no `[size]`/`[scale]` attribute, no control height, no
-`--ui-height-*` lever — cell text rides the `--md-sys-typescale-body-medium-*` row directly, and interior
-rhythm (`--ui-table-cell-pad-inline`/`-block`) rides the `--ui-space` ladder, responding to an ancestor
+`--md-sys-height-*` lever — cell text rides the `--md-sys-typescale-body-medium-*` row directly, and interior
+rhythm (`--ui-table-cell-pad-inline`/`-block`) rides the `--md-sys-space` ladder, responding to an ancestor
 `[density]` for free. The host defaults to a `16em` `min-inline-size` floor — a bare, unstyled table in a
 flex row still paints a visible, non-collapsed box with zero consumer CSS.
 

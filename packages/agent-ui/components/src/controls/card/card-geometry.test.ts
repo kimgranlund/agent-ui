@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
-// G9 s7 — card.css STATIC geometry probes (ADR-0018 one-level nested radius · ADR-0015 --ui-space padding ·
+// G9 s7 — card.css STATIC geometry probes (ADR-0018 one-level nested radius · ADR-0015 --md-sys-space padding ·
 // anatomy.md host-as-grid). jsdom can't resolve @scope / :has() / computed px — these pin the DECLARED
 // formulas + structure; the RENDERED decrement (measured px) is card.browser.test.ts. The load-bearing law:
 // the concentric-corner chain `r_child = max(0, r_parent − pad_parent)`, realized CYCLE-FREE (a card publishes
@@ -22,11 +22,11 @@ const publishBlock = whereBlock(':where(ui-card) > * {')
 const regionTokens = whereBlock(':where(ui-card-header, ui-card-footer) {')
 
 describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)', () => {
-  it('the root radius reads the inherited child-radius channel, else the shared --ui-radius-base', () => {
+  it('the root radius reads the inherited child-radius channel, else the shared --md-sys-shape-corner-base', () => {
     // cl.1 root fallback + cl.2 nested read, in ONE token: a nested card inherits --ui-card-child-radius from
-    // its parent; a root card (channel unset) falls to --ui-radius-base.
+    // its parent; a root card (channel unset) falls to --md-sys-shape-corner-base.
     expect(cardTokens).toMatch(
-      /--ui-card-radius:\s*var\(--ui-card-child-radius,\s*var\(--ui-radius-base\)\)/,
+      /--ui-card-radius:\s*var\(--ui-card-child-radius,\s*var\(--md-sys-shape-corner-base\)\)/,
     )
   })
 
@@ -54,15 +54,15 @@ describe('card.css — the concentric-corner radius chain (ADR-0018, cycle-free)
   })
 })
 
-describe('card.css — padding/gap off the --ui-space ladder (Container/layout class, no control height)', () => {
-  it('the box-model: the card itself holds NO padding; the region padding rides the shared --ui-box-* tokens (NO --ui-height-*)', () => {
+describe('card.css — padding/gap off the --md-sys-space ladder (Container/layout class, no control height)', () => {
+  it('the box-model: the card itself holds NO padding; the region padding rides the shared --ui-box-* tokens (NO --md-sys-height-*)', () => {
     // Box-model rollout (container-box.css): the card itself has zero padding — each region carries its OWN
     // padding off the shared --ui-box-* tokens (REVISED 2026-07-04: the card-only override is gone; see the
     // next test). The shell is plain block flow now — no grid, no --ui-card-gap row-gap (two tests down).
     expect(cardTokens).toMatch(/--ui-card-padding:\s*0/)
     expect(cardTokens).toMatch(/--ui-card-region-pad-inline:\s*var\(--ui-box-pad-inline,/)
     expect(cardTokens).toMatch(/--ui-card-region-pad-block:\s*var\(--ui-box-pad-block,/)
-    expect(css).not.toMatch(/--ui-height-/) // a container has NO control height (geometry.md)
+    expect(css).not.toMatch(/--md-sys-height-/) // a container has NO control height (geometry.md)
   })
 
   it('REVISED 2026-07-04: the card-only override is RESCINDED — card reads the SHARED 12px/6px region defaults', () => {
@@ -95,8 +95,8 @@ describe('card.css — padding/gap off the --ui-space ladder (Container/layout c
     expect(css).not.toMatch(/:where\(ui-card-header,\s*ui-card-content,\s*ui-card-footer\):first-child/)
   })
 
-  it('the adornment column-gap also rides the --ui-space ladder', () => {
-    expect(regionTokens).toMatch(/--ui-card-region-gap:\s*var\(--ui-space-/)
+  it('the adornment column-gap also rides the --md-sys-space ladder', () => {
+    expect(regionTokens).toMatch(/--ui-card-region-gap:\s*var\(--md-sys-space-/)
   })
 })
 

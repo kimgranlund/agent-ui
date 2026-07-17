@@ -173,15 +173,15 @@ describe('<component-gallery> — the ONE <ui-theme-provider> drives every speci
     await chooseOption(selectFor(gallery, 'Scale'), 'ui-md') // back to the default
     expect(Number.parseFloat(getComputedStyle(live).blockSize)).toBeCloseTo(heightMd, 0)
 
-    // Density rides the RHYTHM only (--ui-density), never the frame — a bare (icon-less) button's own height/
+    // Density rides the RHYTHM only (--md-sys-density), never the frame — a bare (icon-less) button's own height/
     // padding is density-INVARIANT by design (button-geometry.browser.test.ts's law), so the specimen's --ui-
     // density CUSTOM PROPERTY itself (dimensions.css's [density] table: comfortable=1, spacious=1.5) is the
     // real, generic proof every specimen inherits, regardless of which of its own rendered properties consume it.
-    const densityValue = (): string => getComputedStyle(live).getPropertyValue('--ui-density').trim()
+    const densityValue = (): string => getComputedStyle(live).getPropertyValue('--md-sys-density').trim()
     expect(densityValue()).toBe('1') // the default (comfortable)
 
     await chooseOption(selectFor(gallery, 'Density'), 'spacious')
-    expect(densityValue(), '[density=spacious] did not repoint --ui-density').toBe('1.5')
+    expect(densityValue(), '[density=spacious] did not repoint --md-sys-density').toBe('1.5')
 
     await chooseOption(selectFor(gallery, 'Density'), 'comfortable') // back to the default
     expect(densityValue()).toBe('1')

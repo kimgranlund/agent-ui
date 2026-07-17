@@ -15,13 +15,13 @@ const read = (f: string): string => readFileSync(`${DIR}/${f}`, 'utf8') as strin
 
 const sharedFleet = new Set([
   '--md-sys-color-focus-ring',
-  '--ui-focus-ring-width',
-  '--ui-focus-ring-offset',
-  '--ui-motion-fast',
-  '--ui-ease-standard',
-  '--ui-font-sm',
-  '--ui-space-xs',
-  '--ui-space-sm',
+  '--md-sys-state-focus-ring-width',
+  '--md-sys-state-focus-ring-offset',
+  '--md-sys-motion-duration-fast',
+  '--md-sys-motion-easing-standard',
+  '--md-sys-font-sm',
+  '--md-sys-space-xs',
+  '--md-sys-space-sm',
   '--md-sys-color-neutral-on-surface-variant',
 ])
 
@@ -61,10 +61,10 @@ describe('swiper.css (PRIMARY) — structure + sectioning', () => {
   it('declares the WHOLE family --ui-swiper-* chain (columns/align/gap/duration/easing + the dot ladder)', () => {
     expect(primaryToken).toMatch(/--ui-swiper-columns:\s*1/)
     expect(primaryToken).toMatch(/--ui-swiper-align:\s*start/)
-    expect(primaryToken).toMatch(/--ui-swiper-gap:\s*var\(--ui-space-md\)/)
-    expect(primaryToken).toMatch(/--ui-swiper-duration:\s*var\(--ui-motion-fast\)/)
-    expect(primaryToken).toMatch(/--ui-swiper-easing:\s*var\(--ui-ease-standard\)/)
-    expect(primaryToken).toMatch(/--ui-swiper-dot-size:\s*var\(--ui-compact-sm\)/)
+    expect(primaryToken).toMatch(/--ui-swiper-gap:\s*var\(--md-sys-space-md\)/)
+    expect(primaryToken).toMatch(/--ui-swiper-duration:\s*var\(--md-sys-motion-duration-fast\)/)
+    expect(primaryToken).toMatch(/--ui-swiper-easing:\s*var\(--md-sys-motion-easing-standard\)/)
+    expect(primaryToken).toMatch(/--ui-swiper-dot-size:\s*var\(--md-sys-compact-sm\)/)
     expect(primaryToken).toMatch(/--ui-swiper-dot-color-active:\s*var\(--md-sys-color-primary\)/)
   })
 

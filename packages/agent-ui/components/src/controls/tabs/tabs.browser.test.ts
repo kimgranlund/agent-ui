@@ -62,11 +62,11 @@ describe('ui-tabs — keyboard roving moves focus + switches the visible panel (
     const { tabs, tabEls, panelEls } = mount(THREE)
     // C6 geometry — the tab rows resolve to a REAL MEASURED control height in a live engine, not a silent
     // 0-collapse if the token chain broke (e.g. a dropped token block — the `*/`-in-comment class of bug the
-    // css-text regex cannot see). Anti-vacuous: it equals the --ui-height-md ramp step (28px @ scale 1), not
-    // merely >0 — so a broken --ui-tabs-tab-height → --ui-height-md chain fails HERE, where jsdom/css-text can't.
+    // css-text regex cannot see). Anti-vacuous: it equals the --md-sys-height-md ramp step (28px @ scale 1), not
+    // merely >0 — so a broken --ui-tabs-tab-height → --md-sys-height-md chain fails HERE, where jsdom/css-text can't.
     const rowHeight = Number.parseFloat(getComputedStyle(tabEls[0]).blockSize)
-    expect(rowHeight, 'the tab row collapsed — the --ui-tabs-tab-height → --ui-height-md chain did not resolve').toBeGreaterThan(0)
-    expect(rowHeight, 'the tab row height is not the --ui-height-md ramp step (28px @ scale 1)').toBeCloseTo(28, 0)
+    expect(rowHeight, 'the tab row collapsed — the --ui-tabs-tab-height → --md-sys-height-md chain did not resolve').toBeGreaterThan(0)
+    expect(rowHeight, 'the tab row height is not the --md-sys-height-md ramp step (28px @ scale 1)').toBeCloseTo(28, 0)
 
     // baseline: tab 0 selected → its panel shows, the others are display:none (the [hidden] author rule).
     expect(getComputedStyle(panelEls[0]).display, 'panel 0 not shown at baseline').toBe('block')
@@ -133,16 +133,16 @@ describe('ui-tabs — the selected-tab indicator paints + survives forced-colors
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-tabs — [density] shifts shell spacing; the tab control height is density-invariant (both engines)', () => {
-  it('[density] strip-gap + panel-pad SHIFT (--ui-space-driven); the tab block-size (--ui-height) HOLDS', () => {
-    // tabs.css:29-30: --ui-tabs-strip-gap rides --ui-space-xs; --ui-tabs-panel-pad rides --ui-space-md.
-    // Both are shell/layout-ladder quantities (density-responsive). The tab CONTROL HEIGHT is --ui-height-md
-    // (28px explicit literal, ADR-0038 — not a --ui-space quantity, density-invariant). Anti-vacuous: strip-gap
+  it('[density] strip-gap + panel-pad SHIFT (--md-sys-space-driven); the tab block-size (--md-sys-height) HOLDS', () => {
+    // tabs.css:29-30: --ui-tabs-strip-gap rides --md-sys-space-xs; --ui-tabs-panel-pad rides --md-sys-space-md.
+    // Both are shell/layout-ladder quantities (density-responsive). The tab CONTROL HEIGHT is --md-sys-height-md
+    // (28px explicit literal, ADR-0038 — not a --md-sys-space quantity, density-invariant). Anti-vacuous: strip-gap
     // and panel-pad must measurably CHANGE, AND the tab height must be the same at compact and spacious.
     const { tabs, tabEls, panelEls } = mount(THREE)
     const tablist = tabs.querySelector('[data-part="tablist"]') as HTMLElement
     const panel = panelEls[0] // the visible panel (tab 0 selected by default)
 
-    // comfortable (no [density] attr = --ui-density 1): the baseline shell spacing + control height
+    // comfortable (no [density] attr = --md-sys-density 1): the baseline shell spacing + control height
     const stripGapBase = px(getComputedStyle(tablist).columnGap)
     const panelPadBase = px(getComputedStyle(panel).paddingTop)
     const tabHeightBase = px(getComputedStyle(tabEls[0]).blockSize)

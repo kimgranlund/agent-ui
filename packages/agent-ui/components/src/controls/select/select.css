@@ -3,7 +3,7 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-select)` (specificity 0,0,0) DECLARES the `--ui-select-*`
  *       chain from the colour roles (`--md-sys-color-{family}-{role}`; family = neutral for the trigger frame)
- *       and the dimensional ramp (`--ui-height-{size}` / `--ui-font-{size}` / `--ui-icon-{size}`).
+ *       and the dimensional ramp (`--md-sys-height-{size}` / `--md-sys-font-{size}` / `--md-sys-icon-{size}`).
  *       The trigger is a Control-class surface carrying Kim's filled/container state law (TKT-0062,
  *       superseding the ADR-0014 cl.2c border-only channel) — background/border/text-ink ALL repoint
  *       per state (default/filled/hover/focus/disabled; "filled" = a real selection, via a NEW
@@ -11,7 +11,7 @@
  *       affordance, §4.1. The listbox
  *       panel is a Container/surface (bg + outline + radius + padding — NOT a control height). The
  *       option rows use the legacy item-pad model (§5.1 / ROV-C5: padding-based row height, NOT
- *       the --ui-compact widget box — option rows are text items, not stand-alone widgets) — but
+ *       the --md-sys-compact widget box — option rows are text items, not stand-alone widgets) — but
  *       (2026-07-06) the item-pad's own NUMBERS are now DERIVED off the trigger ramp
  *       (`--ui-select-height`/`--ui-select-font`), superseding the earlier fixed-px item-pad
  *       (6px/12px): panel inset + option padding now scale with `[size]` the same as the trigger,
@@ -62,16 +62,16 @@
   --ui-select-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-select-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-select-ink-focus: var(--md-sys-color-neutral-on-surface);
-  --ui-select-radius: var(--ui-radius-base); /* fixed rounded-rect radius, like text-field */
+  --ui-select-radius: var(--md-sys-shape-corner-base); /* fixed rounded-rect radius, like text-field */
 
   /* ── Trigger geometry (Control class, default size = md) — off the §1-row ramp (ADR-0038).
      height/font/icon from the explicit per-[scale] table; gap = font/2 × density (on `*`).
      The caret (inline affordance) follows the §4.1 law: glyph size = font (RHYTHM family,
      not frame) → glyph is font-sized, centred in the icon cell by padding=(icon−glyph)/2. */
-  --ui-select-height: var(--ui-height-md);
-  --ui-select-font: var(--ui-font-md);
-  --ui-select-gap: var(--ui-gap-md);          /* the density-bearing column-gap */
-  --ui-select-icon: var(--ui-icon-md);        /* the icon-cell size (caret CELL is icon-wide) */
+  --ui-select-height: var(--md-sys-height-md);
+  --ui-select-font: var(--md-sys-font-md);
+  --ui-select-gap: var(--md-sys-gap-md);          /* the density-bearing column-gap */
+  --ui-select-icon: var(--md-sys-icon-md);        /* the icon-cell size (caret CELL is icon-wide) */
   --ui-select-glyph: var(--ui-select-font);   /* caret GLYPH = font (§4.1 caret law) */
 
   /* ── Sizing floor (ADR-0021 lesson) — a select with no selection or an empty placeholder
@@ -87,10 +87,10 @@
   --ui-select-listbox-bg: var(--md-sys-color-neutral-surface);
   --ui-select-listbox-ink: var(--md-sys-color-neutral-on-surface);
   --ui-select-listbox-outline: var(--md-sys-color-neutral-outline-variant);
-  --ui-select-listbox-radius: var(--ui-radius-base);
+  --ui-select-listbox-radius: var(--md-sys-shape-corner-base);
   /* ── The size-carrying derivation (supersedes the fixed "legacy item-pad" px, 2026-07-06) ──────
      ROV-C5/ADR-0043 cl.5 keep options OUT of the h/2 "comfortable control" model and the
-     `--ui-compact` widget box — that boundary is unchanged. What changes: the item-pad's OWN
+     `--md-sys-compact` widget box — that boundary is unchanged. What changes: the item-pad's OWN
      numbers are now DERIVED off the trigger's `--ui-select-height`/`--ui-select-font` (the same
      ramp the trigger already repoints at `[size=sm|lg]`) instead of hand-picked fixed px, so the
      panel inset + option row scale WITH the trigger — no new sm/lg blocks needed; the calc()s
@@ -123,7 +123,7 @@
   --ui-select-listbox-max-block-size: min(50vh, calc(12 * var(--ui-select-height) + 13 * var(--ui-select-listbox-padding) + 2px));
 
   /* ── Option rows — legacy item-pad (§5.1 / ROV-C5): padding-based row height, NOT a fixed
-     --ui-compact widget box. Options are text list items, not stand-alone widgets. The row
+     --md-sys-compact widget box. Options are text list items, not stand-alone widgets. The row
      radius is inset from the listbox shell radius (nested-radius: shell − padding, ADR-0018). */
   --ui-select-option-block: calc((var(--ui-select-height) - var(--ui-select-font)) / 2); /* (h−font)/2 — row height == trigger height */
   --ui-select-option-inline: calc(var(--ui-select-height) / 4);            /* h/4 — pairs with listbox-padding to total h/2 */
@@ -143,17 +143,17 @@
 /* ── size → dimensional ramp repoint ────────────────────────────────────────────────────────── */
 
 :where(ui-select[size='sm']) {
-  --ui-select-height: var(--ui-height-sm);
-  --ui-select-font: var(--ui-font-sm);
-  --ui-select-gap: var(--ui-gap-sm);
-  --ui-select-icon: var(--ui-icon-sm);
+  --ui-select-height: var(--md-sys-height-sm);
+  --ui-select-font: var(--md-sys-font-sm);
+  --ui-select-gap: var(--md-sys-gap-sm);
+  --ui-select-icon: var(--md-sys-icon-sm);
 }
 
 :where(ui-select[size='lg']) {
-  --ui-select-height: var(--ui-height-lg);
-  --ui-select-font: var(--ui-font-lg);
-  --ui-select-gap: var(--ui-gap-lg);
-  --ui-select-icon: var(--ui-icon-lg);
+  --ui-select-height: var(--md-sys-height-lg);
+  --ui-select-font: var(--md-sys-font-lg);
+  --ui-select-gap: var(--md-sys-gap-lg);
+  --ui-select-icon: var(--md-sys-icon-lg);
 }
 
 /* ── disabled → muted neutral roles ────────────────────────────────────────────────────────── */
@@ -198,7 +198,7 @@
     min-inline-size: 0; /* allow the trigger to shrink within a narrow host (the host sets the floor) */
 
     font-size: var(--ui-select-font);
-    line-height: var(--ui-control-line-height); /* single-line control standard (ADR-0036) */
+    line-height: var(--md-sys-control-line-height); /* single-line control standard (ADR-0036) */
     background: var(--ui-select-bg);
     color: var(--ui-select-ink);
     border: 1px solid var(--ui-select-border);
@@ -290,8 +290,8 @@
     background: var(--ui-select-bg-focus);
     border-color: var(--ui-select-border-focus);
     color: var(--ui-select-ink-focus);
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction. */
@@ -409,8 +409,8 @@
   :scope > [data-part='listbox'] [role='option']:focus-visible {
     background-color: var(--ui-select-option-bg-focus);
     color: var(--ui-select-option-ink-focus);
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* Disabled option — not interactive; rovingFocus skips disabled items. */
@@ -425,9 +425,9 @@
 
   :scope > [data-part='trigger']:state(ready) {
     transition:
-      background-color var(--ui-motion-fast) var(--ui-ease-standard),
-      border-color var(--ui-motion-fast) var(--ui-ease-standard),
-      color var(--ui-motion-fast) var(--ui-ease-standard);
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
   @media (prefers-reduced-motion: reduce) {
     :scope > [data-part='trigger']:state(ready) {

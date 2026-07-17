@@ -16,8 +16,8 @@
  * (radio-group.ts:194's `[...this.children].filter(...)`) cannot be fixed by composition — wrapping the
  * radios in a `ui-column` would sever discovery. So the group owns the SAME flex structure the site used to
  * hand-author per-page (component-preview.css, now deleted): a vertical stack by default,
- * `[orientation='horizontal']` a wrapping row — with the gap re-based to the `--ui-space` ladder (`sm`) so it
- * rides `[density]` for free, rather than the site's hard-coded `0.4rem`/`--ui-space-md` duplicates.
+ * `[orientation='horizontal']` a wrapping row — with the gap re-based to the `--md-sys-space` ladder (`sm`) so it
+ * rides `[density]` for free, rather than the site's hard-coded `0.4rem`/`--md-sys-space-md` duplicates.
  *
  * Standalone stylesheet — linked via the component-styles barrel (s12, after radio.css); NEVER injected
  * from radio-group.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -30,7 +30,7 @@
      this block's comment reserved ("future density/gap props without a cascade-order change"). Page authors
      retune per-instance with one custom property (the ADR-0102 override freedom); no catalog `gap` enum yet
      (a foreseen Lane B extension only if live evidence shows models need magnitude control). */
-  --ui-radio-group-gap: var(--ui-space-sm);
+  --ui-radio-group-gap: var(--md-sys-space-sm);
 
   /* user-invalid (ADR-0051) — the danger border repoint reaching into each ui-radio child's own
      ::before ring (the group has no visual surface of its own, see the file header). Appears only

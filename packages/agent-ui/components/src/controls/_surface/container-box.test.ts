@@ -116,8 +116,8 @@ describe('container-box.css — region padding system (header/footer/content: in
 })
 
 describe('container-box.css — edge-aware scroll fade (the gutter-exposure fix, data-fade-top/bottom)', () => {
-  it('declares --ui-box-fade off the density-linked --ui-space-lg (a self-contained literal fallback too)', () => {
-    expect(CODE).toMatch(/--ui-box-fade:\s*var\(--ui-space-lg,\s*1rem\)/)
+  it('declares --ui-box-fade off the density-linked --md-sys-space-lg (a self-contained literal fallback too)', () => {
+    expect(CODE).toMatch(/--ui-box-fade:\s*var\(--md-sys-space-lg,\s*1rem\)/)
   })
 
   it('BOTH flags present → the offset-aware symmetric mask (ramps PAST a present bracket; the original recipe at 0px)', () => {

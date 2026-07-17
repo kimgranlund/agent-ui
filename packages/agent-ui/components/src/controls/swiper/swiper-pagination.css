@@ -31,8 +31,8 @@
     background: var(--ui-swiper-dot-color-active);
   }
   :scope [data-part='dot']:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
   :scope [data-part='fraction'] {
     font-size: var(--ui-swiper-pagination-fraction-font);

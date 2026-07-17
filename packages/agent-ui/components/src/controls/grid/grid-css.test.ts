@@ -7,7 +7,7 @@ declare const process: { cwd(): string }
 // s6 — grid.css static structural check (ADR-0003 sectioning + token hygiene; ADR-0016 cl.3/4 the intrinsic
 // auto-fit/minmax reflow; ADR-0015 the surface). The rendered-px track-count CHANGE is grid.browser.test.ts;
 // here we pin the STRUCTURE: the two sectioned blocks, that `:where()` DECLARES the `--ui-grid-*` chain (the
-// track floor + the --ui-space gap), that `@scope` CONSUMES only `--ui-grid-*`, the auto-fit/minmax template,
+// track floor + the --md-sys-space gap), that `@scope` CONSUMES only `--ui-grid-*`, the auto-fit/minmax template,
 // NO `@container` rule (the reflow is intrinsic, NOT a wrap rule like ui-row), no control height, and that the
 // surface + forced-colors are the SHARED controls/_surface/container.css's job (not duplicated here).
 
@@ -18,7 +18,7 @@ const containerCss = readFileSync(`${CTRL}/_surface/container.css`, 'utf8') as s
 const tokenBlock = css.slice(css.indexOf(':where(ui-grid) {'), css.indexOf('@scope (ui-grid) {'))
 const stylesBlock = css.slice(css.indexOf('@scope (ui-grid) {'))
 // Comment-stripped CSS for the ABSENCE assertions (the header comment legitimately NAMES @container /
-// --ui-height-* / the surface seam / forced-colors when explaining what grid.css does NOT do — those mentions
+// --md-sys-height-* / the surface seam / forced-colors when explaining what grid.css does NOT do — those mentions
 // must not trip an absence check, which is about real RULES, not prose).
 const code = css.replace(/\/\*[\s\S]*?\*\//g, '')
 
@@ -31,11 +31,11 @@ describe('grid.css — structure + token hygiene (s6)', () => {
     expect(stylesBlock).toMatch(/@scope \(ui-grid\)/)
   })
 
-  it('the :where() block DECLARES the track floor + the --ui-space gap, and [gap=step] repoints it', () => {
+  it('the :where() block DECLARES the track floor + the --md-sys-space gap, and [gap=step] repoints it', () => {
     expect(tokenBlock).toMatch(/--ui-grid-min:\s*\S+/) // a default track floor (a concrete length)
-    expect(tokenBlock).toMatch(/--ui-grid-gap:\s*var\(--ui-space-none\)/) // default gap = none
-    expect(tokenBlock).toMatch(/ui-grid\[gap='md'\][^}]*--ui-grid-gap:\s*var\(--ui-space-md\)/s)
-    expect(tokenBlock).toMatch(/ui-grid\[gap='2xl'\][^}]*--ui-grid-gap:\s*var\(--ui-space-2xl\)/s)
+    expect(tokenBlock).toMatch(/--ui-grid-gap:\s*var\(--md-sys-space-none\)/) // default gap = none
+    expect(tokenBlock).toMatch(/ui-grid\[gap='md'\][^}]*--ui-grid-gap:\s*var\(--md-sys-space-md\)/s)
+    expect(tokenBlock).toMatch(/ui-grid\[gap='2xl'\][^}]*--ui-grid-gap:\s*var\(--md-sys-space-2xl\)/s)
   })
 
   it('@scope is the INTRINSIC auto-fit/minmax track grid (ADR-0016 cl.3/4) — no explicit column count', () => {
@@ -50,7 +50,7 @@ describe('grid.css — structure + token hygiene (s6)', () => {
     expect(code).not.toMatch(/grid-template-columns:\s*repeat\(\d/) // no explicit integer column count
   })
 
-  it('@scope CONSUMES only --ui-grid-* (token hygiene — no raw --md-sys-color-* role, no --ui-space-* leak)', () => {
+  it('@scope CONSUMES only --ui-grid-* (token hygiene — no raw --md-sys-color-* role, no --md-sys-space-* leak)', () => {
     const refs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1])
     expect(refs.length).toBeGreaterThan(0) // anti-vacuous: the styles block really reads tokens
     for (const v of refs) expect(v, `@scope reads a non-grid token: ${v}`).toMatch(/^--ui-grid-/)
@@ -58,7 +58,7 @@ describe('grid.css — structure + token hygiene (s6)', () => {
   })
 
   it('carries NO control height — a Container/layout primitive (geometry.md)', () => {
-    expect(code).not.toMatch(/--ui-height-/) // spacing rides --ui-space × density, never the control-height ramp
+    expect(code).not.toMatch(/--md-sys-height-/) // spacing rides --md-sys-space × density, never the control-height ramp
   })
 })
 

@@ -63,7 +63,7 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: display
-  minInlineSize: var(--ui-bar-chart-min-inline-size)  # 16em default — the whole-shape floor (SPEC-R9 AC1); NO [size] ramp, NO --ui-height-* (SPEC-R12 AC2)
+  minInlineSize: var(--ui-bar-chart-min-inline-size)  # 16em default — the whole-shape floor (SPEC-R9 AC1); NO [size] ramp, NO --md-sys-height-* (SPEC-R12 AC2)
   rowGap: var(--ui-bar-chart-row-gap)                 # the density-RESPONSIVE row rhythm (rides [density] for free — ADR-0103)
   barSize: var(--ui-bar-chart-bar-size)                # bar/track thickness — density-INVARIANT mark geometry (SPEC-R12)
 
@@ -125,8 +125,8 @@ datum either way.
 The host defaults to a `16em` `min-inline-size` floor (`--ui-bar-chart-min-inline-size`) — a bare,
 unstyled chart in a flex row still paints a visible, non-collapsed, proportionally-correct box with zero
 consumer CSS (ADR-0102 Lane A). Bar/track thickness (`--ui-bar-chart-bar-size`) is density-**invariant**;
-row/column gap (`--ui-bar-chart-row-gap`/`-col-gap`) rides the `--ui-space` ladder and responds to an
-ancestor `[density]` for free. There is no `[size]`/`[scale]` attribute and no `--ui-height-*` lever
+row/column gap (`--ui-bar-chart-row-gap`/`-col-gap`) rides the `--md-sys-space` ladder and responds to an
+ancestor `[density]` for free. There is no `[size]`/`[scale]` attribute and no `--md-sys-height-*` lever
 (SPEC-R12 AC2) — labels/values read the `--md-sys-typescale-body-medium-*` row directly.
 
 ## RTL

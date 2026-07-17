@@ -110,7 +110,7 @@ describe('ui-grid — typed literal unions (the @ts-expect-error negative contro
     const el = document.createElement('ui-grid') as UIGridElement
     // @ts-expect-error — elevation is the literal union '-3'…'3' (typed strings), NOT a bare number
     el.elevation = 2
-    // @ts-expect-error — gap is the fixed --ui-space step union; an arbitrary keyword is rejected
+    // @ts-expect-error — gap is the fixed --md-sys-space step union; an arbitrary keyword is rejected
     el.gap = 'huge'
     // @ts-expect-error — min is a CSS <length> string, not a number
     el.min = 12

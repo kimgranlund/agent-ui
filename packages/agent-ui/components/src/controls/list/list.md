@@ -6,7 +6,7 @@
 # trip-wire (list-descriptor.test.ts) and the frontmatter schema both target this fence. Field set per
 # .claude/docs/plan.md §10 / ADR-0004; the surface axes per ADR-0015, the flex layout grammar per ADR-0016.
 tag: ui-list
-tier: layout            # geometry size-class (Container/layout band — gaps/padding off --ui-space × density; NO control height; geometry.md "five size-classes")
+tier: layout            # geometry size-class (Container/layout band — gaps/padding off --md-sys-space × density; NO control height; geometry.md "five size-classes")
 extends: UIContainerElement  # the FACE container surface base (NOT form-associated — no value/validity; ADR-0015). NOTE: UIContainerElement joins the descriptor schema's BASE_CLASSES in s12 (the integration barrel slice)
 # marginal: ui-list adds 34 B gz (257 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
@@ -35,7 +35,7 @@ attributes:            # attributes-as-API — mirrors list.ts `static props` (t
     type: enum
     values: [none, xs, sm, md, lg, xl, 2xl]
     default: none
-    reflect: true      # reflects → gap: var(--ui-space-{step}) — the density-responsive layout-spacing ladder (ADR-0015 cl.4), the one [density]-bearing quantity
+    reflect: true      # reflects → gap: var(--md-sys-space-{step}) — the density-responsive layout-spacing ladder (ADR-0015 cl.4), the one [density]-bearing quantity
   - name: wrap
     type: boolean
     default: false
@@ -65,8 +65,8 @@ aria:
 keyboard: []           # no keyboard interaction — a list is a structural container; its items handle their own keys
 
 geometry:
-  sizeClass: layout                    # Container/layout — NO control height (never reads --ui-height-*)
-  gap: var(--ui-space-{step})          # the inter-item row-gap, off the density-responsive layout ladder — the one [density]-bearing quantity (gap = base px × density)
+  sizeClass: layout                    # Container/layout — NO control height (never reads --md-sys-height-*)
+  gap: var(--md-sys-space-{step})          # the inter-item row-gap, off the density-responsive layout ladder — the one [density]-bearing quantity (gap = base px × density)
   flexDirection: column                # the vertical stack — the tag's identity (ADR-0016)
 
 forcedColors: Owned by the shared controls/_surface/container.css — its `@media (forced-colors: active)` block keeps any container surface as a system colour (Canvas) and drops the tonal wash. list.css carries no colour of its own, so it adds no forced-colors block.
@@ -106,7 +106,7 @@ property (a role-pure repoint in CSS, never an inline style):
 
 - **`align`** (cross-axis) → `align-items`: `stretch` (default — items fill the list's width; use `start` to shrink-wrap) · `center` · `end` · `start` · `baseline`. (ADR-0030: default changed from `start` to `stretch`.)
 - **`justify`** (main-axis distribution) → `justify-content`: `start` · `center` · `end` · `between` · `around` · `evenly`.
-- **`gap`** → `gap: var(--ui-space-{step})` — the density-responsive layout-spacing ladder (`none` · `xs` · `sm`
+- **`gap`** → `gap: var(--md-sys-space-{step})` — the density-responsive layout-spacing ladder (`none` · `xs` · `sm`
   · `md` · `lg` · `xl` · `2xl`). The inter-item gap is the one quantity that rides `[density]` (an ancestor
   `[density]` re-multiplies it); the list has **no control height** (`geometry.md`'s Container/layout class).
 - **`wrap`** → `flex-wrap` (boolean presence).

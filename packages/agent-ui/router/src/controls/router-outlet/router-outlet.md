@@ -32,7 +32,7 @@ aria:
 keyboard: []               # no keyboard interaction of its own — focus/keyboard behavior belongs to the swapped-in content
 
 geometry:
-  sizeClass: layout        # Container/layout — NO control height (never reads --ui-height-*); intrinsic sizing, no padding law
+  sizeClass: layout        # Container/layout — NO control height (never reads --md-sys-height-*); intrinsic sizing, no padding law
   blockSize: auto          # content-driven — whatever the swapped-in element's own geometry resolves to
   paddingBlock: 0          # the outlet adds no padding of its own
 

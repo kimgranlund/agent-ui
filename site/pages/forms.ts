@@ -39,7 +39,7 @@ const provider = el('ui-form-provider', {}, [
   el('ui-switch', { name: 'notify' }, [text('Enable notifications')]),
 ]) as UIFormProviderElement
 // ui-form-provider is deliberately layout-neutral (form-provider.css) — the page supplies the vertical rhythm.
-provider.style.cssText = 'display:flex; flex-direction:column; gap:var(--ui-space-md); max-inline-size:26rem;'
+provider.style.cssText = 'display:flex; flex-direction:column; gap:var(--md-sys-space-md); max-inline-size:26rem;'
 
 const valuesOut = code('{}')
 const validOut = code('true')

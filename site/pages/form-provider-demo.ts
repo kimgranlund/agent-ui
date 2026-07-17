@@ -36,7 +36,7 @@ const provider = el('ui-form-provider', {}, [
 // are themselves `display:inline-flex` — with zero page CSS they lay out inline, running the two fields'
 // validation text straight into the next label and crowding the checkbox+switch rows onto one line (the
 // reported bug). The page supplies the vertical rhythm, same as radio-group-demo's inline gap.
-provider.style.cssText = 'display:flex; flex-direction:column; gap:var(--ui-space-md); max-inline-size:26rem;'
+provider.style.cssText = 'display:flex; flex-direction:column; gap:var(--md-sys-space-md); max-inline-size:26rem;'
 
 // ── the live readout — provider.values() + provider.valid(), refreshed on any member input/change ────────────
 const valuesOut = code('{}')

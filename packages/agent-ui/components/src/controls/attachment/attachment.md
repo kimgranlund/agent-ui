@@ -81,8 +81,8 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 geometry:
   sizeClass: display
   minInlineSize: var(--ui-attachment-min-inline-size)  # 12em default — the whole-shape floor (SPEC-R18 AC1)
-  # NO [size] attribute, NO [scale] geometry row, NO --ui-height-* consumption (SPEC-R20 AC2) — the glyph
-  # rides the fixed content-icon register (--ui-icon-md, geometry.md's "Affordance vs content-icon" law);
+  # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption (SPEC-R20 AC2) — the glyph
+  # rides the fixed content-icon register (--md-sys-icon-md, geometry.md's "Affordance vs content-icon" law);
   # rhythm (gap/padding) rides the space ladder, density-responsive for free (SPEC-R18 AC3).
 
 forcedColors: An explicit `@media (forced-colors: active)` block repoints the card's border to `CanvasText` (the boxed identity survives, SPEC-R19). The glyph is a `<ui-icon>` (an inline SVG the icon adapter draws in `currentColor`) and the name/meta are real text — both survive WHCM with no dedicated rule in this file.
@@ -140,5 +140,5 @@ extra code — list semantics stay in `ui-list`, never baked into this type.
 ## Sizing
 
 The host floors at `--ui-attachment-min-inline-size` (`12em` default) in an unstyled flex row
-(test-the-whole-shape). The glyph rides the fixed content-icon register (`--ui-icon-md`) — there is no
+(test-the-whole-shape). The glyph rides the fixed content-icon register (`--md-sys-icon-md`) — there is no
 `[size]`/`[scale]` axis on this Display-class leaf.

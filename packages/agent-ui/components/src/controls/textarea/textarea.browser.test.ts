@@ -164,7 +164,7 @@ describe('ui-textarea — the TKT-0062 filled/container state law (real repaint,
     await field.updateComplete
     editor.blur() // drop focus so the FILLED (idle) row paints, not the focus row
     await expect.poll(() => field.matches(':focus-within')).toBe(false)
-    await new Promise((r) => setTimeout(r, 250)) // past --ui-motion-fast — let the repaint settle
+    await new Promise((r) => setTimeout(r, 250)) // past --md-sys-motion-duration-fast — let the repaint settle
 
     const filledBg = getComputedStyle(field).backgroundColor
     const filledInk = getComputedStyle(editor).color
@@ -194,7 +194,7 @@ describe('ui-textarea — the TKT-0062 filled/container state law (real repaint,
     // code-reviewer HIGH finding: read the EDITOR's own computed color, not the host's.
     editor.blur()
     await expect.poll(() => field.matches(':focus-within')).toBe(false)
-    await new Promise((r) => setTimeout(r, 250)) // past --ui-motion-fast — let the blur-triggered fade settle
+    await new Promise((r) => setTimeout(r, 250)) // past --md-sys-motion-duration-fast — let the blur-triggered fade settle
     const filledInk = getComputedStyle(editor).color
     editor.focus()
     await expect.poll(() => field.matches(':focus-within')).toBe(true)

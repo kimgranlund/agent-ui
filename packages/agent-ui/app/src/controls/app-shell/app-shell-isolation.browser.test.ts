@@ -22,7 +22,7 @@ import { server, cdp } from 'vitest/browser'
 // UNSTYLED for one paint until they resolve. WORSE, once they DO resolve, a control whose CSS transitions a
 // property gated behind its `ready` custom state (button.css's `background-color`/`color`/`border-color`
 // fade) treats "unstyled → styled" as a genuine style CHANGE eligible for that transition — so a composed
-// control can visibly FADE IN over `--ui-motion-fast` rather than snapping to its final look instantly (measured:
+// control can visibly FADE IN over `--md-sys-motion-duration-fast` rather than snapping to its final look instantly (measured:
 // waiting past the stylesheet `load` event alone still caught an un-settled, still-transitioning background on
 // one engine). Every assertion below awaits BOTH `whenLinksLoad` AND `whenSettled` (which additionally waits
 // out any still-running CSS transition/animation) before measuring. A real consumer sees a brief FOUC +

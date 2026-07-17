@@ -427,9 +427,9 @@ describe('ui-menu — whole-shape assertion (the Test-the-whole-shape DoD law)',
     ).toBeGreaterThan(panelRect.height)
 
     // Menuitem item-pad geometry — the LEGACY ITEM-PAD assertion (§4.6/§5.1, per the decomp).
-    // Each item has block padding of --ui-space-xs (4px at density=1) on each side, so
+    // Each item has block padding of --md-sys-space-xs (4px at density=1) on each side, so
     // padding-block ≥ 1px (anti-vacuous — NOT the control height floor). Also check inline padding
-    // is present (--ui-space-md = 12px at density=1). Both must be positive and non-trivial.
+    // is present (--md-sys-space-md = 12px at density=1). Both must be positive and non-trivial.
     const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitem"]')]
     expect(items.length, 'items were not moved into the panel').toBeGreaterThan(0)
     const firstItem = items[0]!
@@ -460,7 +460,7 @@ describe('ui-menu — whole-shape assertion (the Test-the-whole-shape DoD law)',
     }
   })
 
-  // 2026-07-06 fix: --ui-menu-item-radius used to subtract --ui-space-xs (4px), a DIFFERENT value
+  // 2026-07-06 fix: --ui-menu-item-radius used to subtract --md-sys-space-xs (4px), a DIFFERENT value
   // than the --ui-box-inset (6px) the item's own margin actually reads — an ADR-0018 nested-radius
   // inconsistency. Now both read the SAME --ui-box-inset. (ui-menu has no `[size]` attribute — this
   // is a single-register consistency proof, not a [size] sweep; see menu.css's structural-divergence
@@ -626,7 +626,7 @@ describe('ui-menu — the panel is now BOUNDED (max-block-size:40vh) and gets an
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 //  TKT-0027 — the panel max-block-size dial: default min(50vh, calc(12 * item-row + 13 * inset)).
-//  At default [size]/[density] (--ui-menu-item-font=14px, --ui-menu-item-pad-block=--ui-space-xs=
+//  At default [size]/[density] (--ui-menu-item-font=14px, --ui-menu-item-pad-block=--md-sys-space-xs=
 //  4px ⇒ a 22px item row; --ui-box-inset=6px), the calc arm resolves to 12×22 + 13×6 = 342px — under
 //  the default 896px-tall viewport's 50vh (448px), so the calc arm is the one actually binding
 //  (anti-vacuous: 12 real items fit, a 13th genuinely overflows). At a viewport short enough that

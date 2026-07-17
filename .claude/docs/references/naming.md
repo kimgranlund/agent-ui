@@ -96,22 +96,31 @@ live; `open`/`close`/`toggle` are overlay/disclosure lifecycle. Detail shapes ar
 documented in the descriptor's `events:` block — the descriptor allowlist is gated; the emit-seam
 gate is the planned closure (§11).
 
-## 5 · CSS custom properties — the three tiers
+## 5 · CSS custom properties — the two tiers, split by PREFIX (ADR-0140, 2026-07-17)
+
+The prefix IS the ownership boundary — no allowlist needed:
 
 - **Control tier** `--ui-{control}-{role}`: declared only by the owning folder; non-primary
   family descriptors may CONSUME the family-root prefix, never declare it (ADR-0124). Private
   intermediaries are `--_{name}` (file-local, never public API). JS-seam inline properties
-  (`--value-pct`) are the sanctioned dynamic hook, exempt from the token gate.
-- **Foundation tier** — the ~40 global constants (`--ui-space-*`, `--ui-font`, `--ui-motion-*`,
-  `--ui-focus-ring-*`, …) share the `--ui-` prefix by history; they are told apart from control
-  roles ONLY by the family-coherence shared allowlist. RULE: a new global constant lands in
-  `dimensions.css` + that allowlist in the same change; a control never mints a `--ui-{word}-*`
-  whose first segment could read as a control name.
-- **System tier** `--md-sys-{color,typescale}-*`: generator/spec-owned (tokens.md). The
-  typescale's four editorial voices (kicker/lead/overline/quote) extend M3 deliberately —
-  documented as extensions, never presented as Material canon.
-- The `--ui-*`-vs-`--md-sys-*` two-tier split is PERMANENT (Kim ruled 2026-07-12): this file §5
-  owns the boundary; the generator owns `--md-sys-*`. No convergence.
+  (`--value-pct`) are the sanctioned dynamic hook, exempt from the token gate. `--ui-` on a
+  declaration ALWAYS means "this control folder owns it" — never a foundation constant.
+- **System tier** `--md-sys-{family}-*`: everything global and shared — color (`--md-sys-color-*`),
+  typescale (`--md-sys-typescale-*`), and the dimensional foundation (`--md-sys-space-*`,
+  `--md-sys-height-*`, `--md-sys-font-*`, `--md-sys-icon-*`, `--md-sys-gap-*`, `--md-sys-compact-*`,
+  `--md-sys-shape-corner-base`, `--md-sys-motion-{duration-fast,easing-standard}`,
+  `--md-sys-state-focus-ring-{width,offset}`, `--md-sys-widget-inset`, `--md-sys-control-line-height`,
+  `--md-sys-typeface-{sans,mono}`, `--md-sys-scale`, `--md-sys-density`). Some families are real
+  Material 3 vocabulary (color, typescale, shape, motion, state — a `--md-sys-{family}` M3 already
+  names); the dimensional-control families with no upstream M3 name (space/height/font/icon/gap/
+  compact/scale/density/widget-inset/control-line-height) are DELIBERATE agent-ui extensions of the
+  md-sys grammar — documented here as extensions, never presented as Material canon (the same
+  extension discipline the typescale's four editorial voices already established). System-tier
+  declarations land in `tokens.css` (color) or `dimensions.css` (everything else) — never inside a
+  control folder.
+- **The `--ui-*`-vs-`--md-sys-*` split is PERMANENT** (Kim ruled 2026-07-12, reaffirmed + the
+  BOUNDARY MOVED 2026-07-17 — see §12): this file §5 owns the boundary; `--ui-` is control-owned,
+  `--md-sys-` is system-owned. No convergence, no third tier.
 
 ## 6 · Parts, roles, states
 
@@ -190,7 +199,13 @@ the foundation/control `--ui-` overlap (allowlist-managed) · anatomy.md's stale
 (repair owed) · the nested-vs-own-folder sub-element split · `open` declared with zero producers
 (keep: the vocabulary slot is real; producers arrive with future overlays) · **the two token dialects — RULED
 (Kim, 2026-07-12): permanent two-tier** (`--ui-*` control/foundation vs `--md-sys-*` system; §5
-owns the boundary; convergence — ≈2830 sites — rejected). The fork is closed. ·
+owns the boundary; convergence — ≈2830 sites — rejected). The fork is closed — **PARTIALLY
+SUPERSEDED (Kim, 2026-07-17, ADR-0140, the THEMING intake):** the two-tier split itself STANDS
+(never converged to one prefix), but the BOUNDARY MOVED — the ~34 shared foundation constants
+(`dimensions.css`/`base.css`) that used to share `--ui-` "by history" migrated to `--md-sys-*`
+(TKT-0086, ~2260 sites), so the split is no longer allowlist-managed: `--ui-` now means
+control-owned, full stop. The 2026-07-12 rejection (converging ALL ~2830 sites incl. per-control
+tokens to one prefix) still stands — that fork stays closed; only the FOUNDATION half moved. ·
 `ui-theme-provider.scheme`'s `''` sentinel (canon: `'auto'`, §3) — ADR-0117 load-bearing, keep ·
 `ui-swiper.duration`'s CSS `<time>` string (canon: milliseconds number, §3) — feeds CSS timing,
 reflected for that reason, keep · **the `name`/`value` repurposers — RULED (Kim, 2026-07-16,

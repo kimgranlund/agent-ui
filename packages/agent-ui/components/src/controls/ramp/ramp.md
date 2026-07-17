@@ -61,7 +61,7 @@ keyboard: []            # NOT interactive and NOT focusable — no tabindex, no 
 
 geometry:
   sizeClass: display
-  minInlineSize: var(--ui-ramp-min-inline-size)  # 8em default — the whole-shape floor (SPEC-R13 AC1); NO [size] ramp, NO --ui-height-* (SPEC-R16 AC2)
+  minInlineSize: var(--ui-ramp-min-inline-size)  # 8em default — the whole-shape floor (SPEC-R13 AC1); NO [size] ramp, NO --md-sys-height-* (SPEC-R16 AC2)
   cellSize: var(--ui-ramp-cell-size)              # per-cell box size — density-invariant
 
 forcedColors: An explicit `@media (forced-colors: active)` block (SPEC-R14) — every cell's box degrades to a `CanvasText` border with its `background` forced `transparent` (never a fake system color); the step-label/value text is real text and survives untouched.
@@ -110,8 +110,8 @@ color-encoded only (CVD-safe by construction).
 The host defaults to an `8em` `min-inline-size` floor (`--ui-ramp-min-inline-size`) — a bare, unstyled ramp
 in a flex row still paints a visible, non-collapsed strip with zero consumer CSS (ADR-0102 Lane A). Each
 cell's box (`--ui-ramp-cell-size`) is density-invariant; the strip gap (`--ui-ramp-gap`) rides the
-`--ui-space` ladder and responds to an ancestor `[density]` for free. There is no `[size]`/`[scale]`
-attribute and no `--ui-height-*` lever (SPEC-R16 AC2).
+`--md-sys-space` ladder and responds to an ancestor `[density]` for free. There is no `[size]`/`[scale]`
+attribute and no `--md-sys-height-*` lever (SPEC-R16 AC2).
 
 ## RTL
 

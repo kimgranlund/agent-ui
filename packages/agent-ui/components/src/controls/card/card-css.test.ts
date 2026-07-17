@@ -47,11 +47,11 @@ const scopeCard = balancedBlock('@scope (ui-card)')
 const scopeContent = balancedBlock('@scope (ui-card-content)')
 
 // A consumption block may read ONLY the own --ui-card-* chain + the role-pure container surface seam
-// (--ui-container-*, ADR-0015 cl.2) — never a raw --md-sys-color-* role nor a shared ramp (--ui-space-*/--ui-radius-base).
+// (--ui-container-*, ADR-0015 cl.2) — never a raw --md-sys-color-* role nor a shared ramp (--md-sys-space-*/--md-sys-shape-corner-base).
 // The ONE deliberate exception (matching button.css's precedent): the shared focus-ring FLEET constants
 // (ADR-0009) are read DIRECTLY, never repointed through a --ui-card-* alias, so every control draws the
 // identical ring — a fleet constant, not a per-control opinion.
-const sharedFleet = new Set(['--md-sys-color-focus-ring', '--ui-focus-ring-width', '--ui-focus-ring-offset'])
+const sharedFleet = new Set(['--md-sys-color-focus-ring', '--md-sys-state-focus-ring-width', '--md-sys-state-focus-ring-offset'])
 const allowed = (v: string): boolean => /^--ui-card-/.test(v) || /^--ui-container-/.test(v) || sharedFleet.has(v)
 const foreignRefs = (block: string): string[] =>
   [...block.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1] as string).filter((v) => !allowed(v))
@@ -260,8 +260,8 @@ describe('card.css — scroll mode: ui-card-content IS the viewport, header/foot
     const at = scopeCard.indexOf(':focus-visible')
     expect(at, 'no :focus-visible rule found').toBeGreaterThan(-1)
     const rule = scopeCard.slice(scopeCard.indexOf('{', at), scopeCard.indexOf('}', at) + 1)
-    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
-    expect(rule).toMatch(/outline-offset:\s*var\(--ui-focus-ring-offset\)/)
+    expect(rule).toMatch(/outline:\s*var\(--md-sys-state-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
+    expect(rule).toMatch(/outline-offset:\s*var\(--md-sys-state-focus-ring-offset\)/)
     expect(rule).not.toMatch(/calc\(-1/) // the standard offset, NOT the earlier negated one
     // both scroll-mode triggers get the ring — the selector list spans from the PRIOR rule's closing brace
     // up through this rule's opening brace. It's the CARD's own selector (:scope[scrollable] / :scope:has(…)),
@@ -318,7 +318,7 @@ describe('card.css — REVISED 2026-07-04: the [scroll-fade] mask moved to the s
     // ui-card-content"): the CARD stays the scroll viewport the trait MEASURES, but the mask now PAINTS on
     // ui-card-content, so ui-card-content feeds the depth token and the card no longer does.
     const contentTokens = whereBlock(':where(ui-card-content) {')
-    expect(contentTokens).toMatch(/--ui-box-fade:\s*var\(--ui-space-lg,\s*1rem\)/)
+    expect(contentTokens).toMatch(/--ui-box-fade:\s*var\(--md-sys-space-lg,\s*1rem\)/)
     expect(cardTokens).not.toMatch(/--ui-box-fade/) // the card viewport no longer paints the mask
   })
 

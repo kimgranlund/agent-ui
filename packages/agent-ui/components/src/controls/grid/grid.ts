@@ -4,7 +4,7 @@
 //
 // `ui-grid` is a STRUCTURAL container — it extends `UIContainerElement` (the shared surface base, ADR-0015),
 // is NOT form-associated (no value/validity), and has NO control height (geometry.md Container/layout class —
-// spacing rides `--ui-space` × density, never `--ui-height-*`). Its children are arbitrary light-DOM grid
+// spacing rides `--md-sys-space` × density, never `--md-sys-height-*`). Its children are arbitrary light-DOM grid
 // items (the default cell); it `render()`s nothing (the inherited void), so the user's children are never
 // clobbered (the host-as-grid pattern — the CSS lays them out).
 //
@@ -29,7 +29,7 @@ const props = {
   // The two surface axes (elevation/brightness), spread from the shared base — props.ts has no static-props
   // prototype merge, so the base exposes a SPREADABLE bag the subclass folds in (the ADR-0013 formProps pattern).
   ...UIContainerElement.surfaceProps,
-  // `gap` — the ONE flex-grammar prop a track grid consumes (the `--ui-space` density-responsive ladder,
+  // `gap` — the ONE flex-grammar prop a track grid consumes (the `--md-sys-space` density-responsive ladder,
   // ADR-0016 cl.1). Pulled as a single entry from the shared flexProps (a grid has no align/justify/wrap).
   gap: UIContainerElement.flexProps.gap,
   // `min` — the minmax() track FLOOR, an arbitrary CSS `<length>`. Threaded into the role-pure `--ui-grid-min`

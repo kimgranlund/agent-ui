@@ -8,7 +8,7 @@ import { server, cdp } from 'vitest/browser'
 // forced-colors (SPEC-R19/AC per code-css.test.ts's static leg).
 //
 // Side-effect CSS/JS imports — the load-bearing order (ADR-0003): foundation roles + dimensional ramp
-// FIRST (tokens.css/dimensions.css — the --md-sys-color-*/--ui-mono/--ui-radius-base/--ui-container-bg
+// FIRST (tokens.css/dimensions.css — the --md-sys-color-*/--md-sys-typeface-mono/--md-sys-shape-corner-base/--ui-container-bg
 // this sheet's :where() token block reads), then code.css directly, then code.ts (self-defines). The
 // component-styles barrel does NOT yet @import code.css (LLD-C11's serial integration slice, a separate
 // wave) — this suite imports it directly, the bar-chart/sparkline precedent for a pre-integration folder.
@@ -52,12 +52,12 @@ describe('ui-code — whole-shape + self-scroll (SPEC-R2 AC1, ADR-0102 Lane A, t
 })
 
 describe('ui-code — verbatim rendering (SPEC-R2 AC2)', () => {
-  it('multi-line content with leading indentation preserves exact line breaks/indentation; font-family resolves --ui-mono', () => {
+  it('multi-line content with leading indentation preserves exact line breaks/indentation; font-family resolves --md-sys-typeface-mono', () => {
     const code = mount('<ui-code></ui-code>').parentElement?.querySelector('ui-code') as HTMLElement
     code.textContent = 'if (x) {\n  return 1\n}'
     expect(getComputedStyle(code).whiteSpace).toBe('pre')
     const family = getComputedStyle(code).fontFamily.toLowerCase()
-    // the --ui-mono stack starts with ui-monospace/SFMono-Regular/Menlo/monospace — assert it resolved to
+    // the --md-sys-typeface-mono stack starts with ui-monospace/SFMono-Regular/Menlo/monospace — assert it resolved to
     // SOME monospace stack, not the ambient proportional font.
     expect(family.length).toBeGreaterThan(0)
     expect(family).not.toBe('')

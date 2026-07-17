@@ -7,7 +7,7 @@
 # auto-fit/minmax layout per ADR-0015 / ADR-0016.
 tag: ui-grid
 description: A responsive track-grid container that fits as many columns as its own width allows, no breakpoints needed.
-tier: layout            # geometry size-class (Container/layout band — gaps off --ui-space × density, no control height; geometry.md "five size-classes")
+tier: layout            # geometry size-class (Container/layout band — gaps off --md-sys-space × density, no control height; geometry.md "five size-classes")
 extends: UIContainerElement  # the shared surface base — NOT form-associated (no value/validity); the descriptor schema's BASE_CLASSES gains UIContainerElement at the s12 integration slice
 # marginal: ui-grid adds 79 B gz (340 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
@@ -26,7 +26,7 @@ attributes:            # attributes-as-API — mirrors grid.ts `static props` (t
     type: enum
     values: [none, xs, sm, md, lg, xl, 2xl]
     default: none
-    reflect: true      # the inter-track gap off the --ui-space density-responsive ladder (ADR-0015 cl.4); reflects so the [gap=step] repoint in grid.css applies to JS-set values. The one flexProps grammar prop a track grid consumes
+    reflect: true      # the inter-track gap off the --md-sys-space density-responsive ladder (ADR-0015 cl.4); reflects so the [gap=step] repoint in grid.css applies to JS-set values. The one flexProps grammar prop a track grid consumes
   - name: min
     type: string
     default: ''
@@ -53,9 +53,9 @@ aria:
 keyboard: []           # no keyboard interaction (a layout container)
 
 geometry:
-  sizeClass: layout      # Container/layout — gaps off --ui-space × [density], NO control height (geometry.md)
+  sizeClass: layout      # Container/layout — gaps off --md-sys-space × [density], NO control height (geometry.md)
   trackFloor: var(--ui-grid-min)   # the minmax() track floor (default 16rem; the `min` prop repoints it per-instance)
-  gap: var(--ui-grid-gap)          # the inter-track gap off the --ui-space ladder (density-bearing); [scale] does NOT touch it (layout rhythm, not frame)
+  gap: var(--ui-grid-gap)          # the inter-track gap off the --md-sys-space ladder (density-bearing); [scale] does NOT touch it (layout rhythm, not frame)
 
 forcedColors: The surface survives forced-colors via the SHARED controls/_surface/container.css `@media (forced-colors: active)` block (surface → Canvas, the tonal wash dropped); grid.css owns layout only, which forced-colors does not affect.
 ---
@@ -66,7 +66,7 @@ forcedColors: The surface survives forced-colors via the SHARED controls/_surfac
 container whose columns are an **intrinsic** `auto-fit` / `minmax` track model. It reflows by its **own**
 rendered width — more columns when wide, fewer when narrow — with **no** breakpoint or column-count prop
 and **no** `@container` rule. It is **not** form-associated and has **no** control height (the
-*Container/layout* size-class: spacing rides `--ui-space` × density, never `--ui-height-*`).
+*Container/layout* size-class: spacing rides `--md-sys-space` × density, never `--md-sys-height-*`).
 
 ```html
 <ui-grid gap="md">
@@ -97,7 +97,7 @@ the token, not an attribute selector.
 
 ## Gap & surface
 
-`gap` selects a step on the `--ui-space` layout-spacing ladder (`none` (default) · `xs` · `sm` · `md` · `lg`
+`gap` selects a step on the `--md-sys-space` layout-spacing ladder (`none` (default) · `xs` · `sm` · `md` · `lg`
 · `xl` · `2xl`) for the inter-track gap; an ancestor `[density]` re-multiplies it (it is layout **rhythm**,
 so an ancestor `[scale]` leaves it untouched). The shared **surface** axes — `elevation` (the
 scheme-inverting plane) and `brightness` (the scheme-consistent tonal shift) — come from `UIContainerElement`

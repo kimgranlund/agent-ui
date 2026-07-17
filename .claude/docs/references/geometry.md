@@ -13,11 +13,11 @@ control height. `padding-block` is `0` — **block-size is the vertical lever, n
 
 **Vertical-text companion — single-line Control text is `line-height: 1`.** A single-line **Control**-class
 control (`button`, `text-field`, `select`, the field family — the full-height `block-size` class) sets
-`line-height: var(--ui-control-line-height)` (`= 1`): the single line, like a glyph, centers in the fixed frame
+`line-height: var(--md-sys-control-line-height)` (`= 1`): the single line, like a glyph, centers in the fixed frame
 (the host grid's `align-items: center`) with **no extra leading**. The frame height is unchanged — `line-height 1`
 tightens the line box, it never grows the box. **EXCLUDES the Display class** (`ui-text`): multi-line document text
 keeps its per-role×size type line-height `--md-sys-typescale-{role}-{size}-line-height` (ADR-0078, supersedes
-ADR-0025's `--ui-type-{level}-leading`). `--ui-control-line-height` is a fleet
+ADR-0025's `--ui-type-{level}-leading`). `--md-sys-control-line-height` is a fleet
 `:root` constant (ADR-0036), named with `line-height` (not `leading`) to stay clear of the leading/trailing **slot**
 vocabulary.
 
@@ -44,13 +44,13 @@ text-field's ratified geometry pattern).*
 ### Corner radius
 
 - **Action** → **pill `= h/2`** (the frame-∝-height stadium; the press affordance). Scales with height.
-- **Entry** → a **fixed `--ui-radius-base`** rounded-rect — the **same** fleet referent the container family
+- **Entry** → a **fixed `--md-sys-shape-corner-base`** rounded-rect — the **same** fleet referent the container family
   (card / modal) uses, because a field is an entry *surface* kin to a container, not an action affordance. Fixed
   (a `:root` constant — ADR-0015 cl.5; **not** `[scale]`-derived), so a field corner does not balloon at large
   scale; the browser clamps `border-radius` to `≤ h/2` automatically, so a very dense / short field degrades
   gracefully to the pill, never overflows.
 
-One fleet radius (`--ui-radius-base`) therefore serves both **containers** and **entry controls**; only the
+One fleet radius (`--md-sys-shape-corner-base`) therefore serves both **containers** and **entry controls**; only the
 **action**-control class keeps the scaled pill. (ADR-0015 cl.5 + its `ui-text-field` #71 amendment.)
 
 ### Minimum inline size (the bare-control floor)
@@ -98,7 +98,7 @@ A glyph's size is decided by **what KIND it is**, not where it sits:
 - **Inline affordance** (caret · dropdown-chevron · disclosure-marker · stepper-arrow · clear `×` ·
   calendar-nav `‹›`) → **`= font`** (`--ui-{cmp}-glyph = font × 1`). Mask glyph or slotted
   `<ui-icon name=caret>` — same size, `½(h − font)` inset.
-- **Content icon** (a field's leading icon · status icon · avatar · search magnifier) → **`= --ui-icon-{sm,md,lg}`**
+- **Content icon** (a field's leading icon · status icon · avatar · search magnifier) → **`= --md-sys-icon-{sm,md,lg}`**
   (the fixed content-icon register, `dimensions.css` — `--ui-ind` never shipped; ADR-0112 cl.8 Repairs).
 - **Nav icon in a standalone button** (carousel prev/next; pagination chevron by the numbers) → sized to
   match its context — a deliberate per-case exception, not the font rule.
@@ -110,7 +110,7 @@ The bug class: an inline affordance sized to the content-icon register renders �
 
 `(scale × size)` **selects a §1 row** (Kim's explicit lookup — **no multiplier**; ADR-0038): the cell
 names one §1 row and `--ui-{height,font,icon}-{size}` all come from it (height + glyphs consistent), so a
-control resolves height+font+icon from one row, then obeys the families above. (`--ui-scale` is gone from
+control resolves height+font+icon from one row, then obeys the families above. (`--md-sys-scale` is gone from
 the control path — it survives only as the `--md-sys-typescale-*` **display** `-size` multiplier, ADR-0078.)
 The §1 ramp it selects
 from is two bands that change gear at the **MD|LG seam**:
@@ -128,11 +128,11 @@ A component's sizing lever is set by its class:
 
 | Class | Examples | Lever |
 |---|---|---|
-| **Control** (full height) | button · text-field · number-field · select · field | `block-size: var(--ui-{cmp}-height)` off `--ui-height-{size}`; font `--ui-font-{size}`; **`line-height: 1`** (single-line, ADR-0036); inline-pad per the slot/slotless model |
-| **Indicator** (smaller box) | checkbox · radio · switch · slider · tag | `block/inline-size: var(--ui-{cmp}-size)` off the **widget ramp `--ui-compact-{size}`** (Kim's 8-value `12·14·16·18·20·22·24·28`, ADR-0041 — *not* `--ui-ind`, which never shipped); a thumbed widget (switch/range) insets `--ui-widget-inset: 2px` (`thumb = box − 2×2px`, flat, density-invariant) |
+| **Control** (full height) | button · text-field · number-field · select · field | `block-size: var(--ui-{cmp}-height)` off `--md-sys-height-{size}`; font `--md-sys-font-{size}`; **`line-height: 1`** (single-line, ADR-0036); inline-pad per the slot/slotless model |
+| **Indicator** (smaller box) | checkbox · radio · switch · slider · tag | `block/inline-size: var(--ui-{cmp}-size)` off the **widget ramp `--md-sys-compact-{size}`** (Kim's 8-value `12·14·16·18·20·22·24·28`, ADR-0041 — *not* `--ui-ind`, which never shipped); a thumbed widget (switch/range) insets `--md-sys-widget-inset: 2px` (`thumb = box − 2×2px`, flat, density-invariant) |
 | **Pattern** (container + control-height rows) | tabs · segmented-control · toolbar · accordion · menu · dialog | interactive rows take the control height; the shell uses the space scale |
 | **Container/layout** | spacer · stack · grid | gaps/margins/padding off `--space-*` × density; no control height |
-| **Display** | divider · icon · spinner · progress · alert · tooltip · **text** | **text-bearing** reads the typographic matrix `--md-sys-typescale-{role}-{size}-{size,weight,line-height,tracking}` (`role`×`size` = the orthogonal `variant`×`size` axes — `ui-text`, ADR-0078 cl.2/cl.3; document semantics are the separate `as`-stamp axis, cl.4); non-text display takes the control-band `font-size: var(--ui-font-{size})` where it sizes a glyph label; intrinsic structural sizing otherwise. No control height, no `padding-block` law — the lever is the type scale, not `--ui-height-*`. |
+| **Display** | divider · icon · spinner · progress · alert · tooltip · **text** | **text-bearing** reads the typographic matrix `--md-sys-typescale-{role}-{size}-{size,weight,line-height,tracking}` (`role`×`size` = the orthogonal `variant`×`size` axes — `ui-text`, ADR-0078 cl.2/cl.3; document semantics are the separate `as`-stamp axis, cl.4); non-text display takes the control-band `font-size: var(--md-sys-font-{size})` where it sizes a glyph label; intrinsic structural sizing otherwise. No control height, no `padding-block` law — the lever is the type scale, not `--md-sys-height-*`. |
 
 ## The compact realm (a separate size system)
 
@@ -140,7 +140,7 @@ Always-compact widgets (kbd · slider · slider-multi · radio · switch · tag 
 **not** use `h/2` (badge — first shipped consumer; box = compact law, text = the fleet font ramp):
 
 - keep the **compact pad** `= 2px + box·ratio·density` (`h/2` would over-pad a keycap / count pill / thumb).
-- size the box on the dedicated **compact ramp** `--ui-compact-{sm,md,lg}` — a two-band ladder: the `ui-*`
+- size the box on the dedicated **compact ramp** `--md-sys-compact-{sm,md,lg}` — a two-band ladder: the `ui-*`
   band tight (`12·14·16·18·20`, 2px steps), the `content-*` band generous (`18→32`, 4px within-scale).
   The box is density-invariant; density rides the pad.
 
@@ -156,5 +156,5 @@ Every law lands with a probe (the geometry trip-wire, per [`../process.md`](../p
 the per-edge slot/slotless pad; affordance `== font` (not `--ui-ind`). A law without a probe is not
 enforced.
 
-> Runtime token tables (`--ui-height/font/ind/compact-{size}`, `--space-*`, `--ui-density`) are authored
+> Runtime token tables (`--md-sys-height/font/ind/compact-{size}`, `--space-*`, `--md-sys-density`) are authored
 > in `@agent-ui/shared` when tokens land (G5); until then this doc is the spec they implement.

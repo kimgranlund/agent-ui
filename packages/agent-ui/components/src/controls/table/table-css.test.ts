@@ -4,7 +4,7 @@ declare const process: { cwd(): string }
 
 // table-css.test.ts — table.css static structural + token-hygiene probe (LLD-C3, report-family.lld.md §2).
 // Mirrors the bar-chart-css.test.ts precedent: pin the STRUCTURE (the two sectioned blocks, `:where()`
-// declares `--ui-table-*`, `@scope` consumes ONLY its own chain ∪ the shared `--md-sys-*`/`--ui-space-*`
+// declares `--ui-table-*`, `@scope` consumes ONLY its own chain ∪ the shared `--md-sys-*`/`--md-sys-space-*`
 // namespaces, no `[size]`/`[scale]` selector — SPEC-R17 AC2). The rendered-px PROOF (scroll preservation,
 // overflow, RTL, WHCM) is table.browser.test.ts.
 
@@ -35,11 +35,11 @@ describe('table.css — structure + token hygiene', () => {
     expect(bad).toEqual([])
   })
 
-  it('the @scope styles block consumes ONLY --ui-table-* ∪ the shared --md-sys-*/--ui-space-* namespaces — no cross-control reach', () => {
+  it('the @scope styles block consumes ONLY --ui-table-* ∪ the shared --md-sys-*/--md-sys-space-* namespaces — no cross-control reach', () => {
     const refs = [...stylesBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1])
     expect(refs.length).toBeGreaterThan(0) // anti-vacuous
     for (const v of refs) {
-      const allowed = v.startsWith('--ui-table-') || v.startsWith('--md-sys-') || v.startsWith('--ui-space-')
+      const allowed = v.startsWith('--ui-table-') || v.startsWith('--md-sys-') || v.startsWith('--md-sys-space-')
       expect(allowed, `@scope consumed an out-of-family token: ${v}`).toBe(true)
     }
   })
@@ -50,9 +50,9 @@ describe('table.css — structure + token hygiene', () => {
     expect(bare).not.toMatch(/\[scale\b/)
   })
 
-  it('no --ui-height-* DECLARATION/consumption anywhere (Display class has no control-height lever)', () => {
+  it('no --md-sys-height-* DECLARATION/consumption anywhere (Display class has no control-height lever)', () => {
     const bare = css.replace(/\/\*[\s\S]*?\*\//g, '')
-    expect(bare).not.toMatch(/--ui-height-/)
+    expect(bare).not.toMatch(/--md-sys-height-/)
   })
 
   it('the scroll container owns overflow (SPEC-R5) — overflow-x: auto on [data-part=\'scroll\']', () => {

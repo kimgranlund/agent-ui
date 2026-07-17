@@ -20,7 +20,7 @@ const rangeProps = {
   max: { ...prop.number(100), reflect: true },
   step: { ...prop.number(1), reflect: true },
   value: { ...prop.number(0), reflect: true },
-  // ADR-0042 clause-2: the shared widget-box size axis (the track/thumb ride --ui-compact-{size}); all
+  // ADR-0042 clause-2: the shared widget-box size axis (the track/thumb ride --md-sys-compact-{size}); all
   // Range controls inherit it — typed here, not per-leaf (the same lesson as UIIndicatorElement's size).
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
 } satisfies PropsSchema

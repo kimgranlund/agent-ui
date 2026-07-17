@@ -40,8 +40,8 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no `
 
 geometry:
   sizeClass: display
-  inlineSize: var(--ui-icon-size)   # 1em — NO size/tone lever (no [size] ramp); the consumer's ambient font-size or an explicit inline-size override IS the lever (LLD §3, geometry.md "intrinsic structural sizing")
-  blockSize: var(--ui-icon-size)
+  inlineSize: var(--md-sys-icon-size)   # 1em — NO size/tone lever (no [size] ramp); the consumer's ambient font-size or an explicit inline-size override IS the lever (LLD §3, geometry.md "intrinsic structural sizing")
+  blockSize: var(--md-sys-icon-size)
 
 forcedColors: No dedicated `@media (forced-colors: active)` block — the host paints nothing of its own; `color: inherit` means the injected `<svg fill="currentColor">` (resolve.ts) tracks whatever forced-colors ink the CONSUMING context already resolves to (e.g. a button's ButtonText), so ui-icon needs no WHCM override of its own.
 ---
@@ -77,7 +77,7 @@ swap. The normal case is registering a pack once at startup, before first render
 
 ## Sizing
 
-The host is a `1em × 1em` cell by default (`--ui-icon-size`) — there is no size ramp or lever. A consumer
+The host is a `1em × 1em` cell by default (`--md-sys-icon-size`) — there is no size ramp or lever. A consumer
 sizes an icon via ambient `font-size` (the common case, matching surrounding text) or an explicit
 `inline-size`/`block-size` override on the host. `color: inherit` means the icon's ink (the injected
 `<svg fill="currentColor">`) always tracks the surrounding context with no per-icon color plumbing.

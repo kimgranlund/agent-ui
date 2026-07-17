@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest'
 // precedent — a synthetic PointerEvent is not an active pointer; real capture throws NotFoundError). NOT
 // real pointer capture anywhere in this file (the retired "real pointer capture" phrasing, SPEC-R3).
 
-import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--ui-focus-ring-*)
+import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--md-sys-state-focus-ring-*)
 import './split.css'
 import './split-pane.css'
 import './split.ts'

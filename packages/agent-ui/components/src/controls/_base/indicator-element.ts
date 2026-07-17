@@ -24,7 +24,7 @@ const indicatorProps = {
   checked: { ...prop.boolean(false), reflect: true },
   // LLD-C1: the submitted string when checked (HTML checkbox semantics, default 'on'); reflected.
   value: { ...prop.string('on'), reflect: true },
-  // LLD-C4: the widget-box size axis — selects --ui-compact-{size} via [size] in the leaf's CSS (ADR-0041).
+  // LLD-C4: the widget-box size axis — selects --md-sys-compact-{size} via [size] in the leaf's CSS (ADR-0041).
   // All Indicator controls share this axis; each leaf's stylesheet rewires the token.
   size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
 } satisfies PropsSchema

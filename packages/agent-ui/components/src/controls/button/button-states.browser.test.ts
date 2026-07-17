@@ -97,7 +97,7 @@ describe('ui-button states — per-variant :hover repaint (ADR-0008, both engine
 
       const wantHover = resolveToken(btn, '--ui-button-bg-hover', 'light')
       await userEvent.hover(btn)
-      // MOTION-AWARE read: once `:state(ready)` is armed, the hover repaint FADES over --ui-motion-fast
+      // MOTION-AWARE read: once `:state(ready)` is armed, the hover repaint FADES over --md-sys-motion-duration-fast
       // (300ms), so a bare getComputedStyle right after hover would read a MID-FADE colour. Poll until the
       // background SETTLES on the exact hover token — the anti-vacuous proof the `:scope:hover { background:
       // var(--ui-button-bg-hover) }` wiring genuinely repaints (not just that two tokens differ), read at the
@@ -275,11 +275,11 @@ describe('ui-button BTN-CARET — caret = font, icon = icon (ADR-0012 §6, both 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 //
 // button.css transitions ONLY the state-PAINT properties (background-color · color · border-color) over
-// --ui-motion-fast, behind `:scope:state(ready)`; button.ts arms `ready` ONE FRAME PAST first paint (rAF in
+// --md-sys-motion-duration-fast, behind `:scope:state(ready)`; button.ts arms `ready` ONE FRAME PAST first paint (rAF in
 // connected()). The intent: the upgrade/first paint SNAPS to its colour (no first-render fade-in), and only
 // SUBSEQUENT state changes animate. Geometry + the focus outline are NEVER transitioned (they snap); reduced
 // motion zeroes it. jsdom cannot evaluate `:state(ready)`/the CustomStateSet at all — this is the cross-engine
-// proof. (--ui-motion-fast is read empirically, not hard-coded — it is 300ms in the shipped dimensions.css.)
+// proof. (--md-sys-motion-duration-fast is read empirically, not hard-coded — it is 300ms in the shipped dimensions.css.)
 
 const transDurMs = (el: HTMLElement): number => px(getComputedStyle(el).transitionDuration) * 1000
 

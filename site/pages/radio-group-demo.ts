@@ -16,8 +16,8 @@ const text = (s: string): Text => document.createTextNode(s)
 
 // ── the live group (real container — three radios, the second selected by default) ──────────────────────────
 // ADR-0103: ui-radio-group now owns its own interior layout (flex column by default, a wrapping row under
-// `orientation="horizontal"`, gap off the --ui-space ladder) — the inline `style` below is this page's OWN
-// choice of a slightly larger gap (`--ui-space-md`, not the component's `--ui-space-sm` default) for this
+// `orientation="horizontal"`, gap off the --md-sys-space ladder) — the inline `style` below is this page's OWN
+// choice of a slightly larger gap (`--md-sys-space-md`, not the component's `--md-sys-space-sm` default) for this
 // worked plan-picker shape; it is an override, not a fix for an otherwise-unstyled group. `orientation` still
 // must be declared explicitly (radio-group.ts resolves it once at connect; it does not infer it from CSS).
 const group = el(
@@ -26,7 +26,7 @@ const group = el(
     name: 'plan',
     value: 'pro',
     orientation: 'horizontal',
-    style: 'display:flex; flex-wrap:wrap; align-items:center; gap:var(--ui-space-md);',
+    style: 'display:flex; flex-wrap:wrap; align-items:center; gap:var(--md-sys-space-md);',
   },
   [
     el('ui-radio', { value: 'free' }, [text('Free')]),

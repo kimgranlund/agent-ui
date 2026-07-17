@@ -67,7 +67,7 @@ describe('isRenderableLength — the length router, NOT a drop gate (SPEC-R11)',
 
   it('a --var name is always treated as renderable (its resolution is the browser\'s job)', () => {
     expect(isRenderableLength('--x')).toBe(true)
-    expect(isRenderableLength('--ui-height-md')).toBe(true)
+    expect(isRenderableLength('--md-sys-height-md')).toBe(true)
   })
 
   it('rejects a non-length value', () => {

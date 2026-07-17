@@ -35,7 +35,7 @@
      a comfortable, clearly-2D gesture surface at every density/scale tier (the ui-swatch box / ui-calendar
      cell precedent: a bespoke token, not a §1 geometry-lookup row). */
   --ui-color-picker-pad-block-size: 10rem;
-  --ui-color-picker-pad-radius: var(--ui-radius-base, 0.375rem);
+  --ui-color-picker-pad-radius: var(--md-sys-shape-corner-base, 0.375rem);
   --ui-color-picker-pad-outline: var(--md-sys-color-neutral-outline-variant, #c4c4c4);
 
   /* Thumb geometry — a small ringed circle, visible against any painted hue (a light ring + a dark ring
@@ -44,7 +44,7 @@
   --ui-color-picker-thumb-size: 1rem;
   --ui-color-picker-thumb-ring: var(--md-sys-color-neutral-on-surface, #1c1c1e);
   --ui-color-picker-thumb-ring-inner: var(--md-sys-color-neutral-surface-brightest, #fff);
-  --ui-color-picker-label-font: var(--ui-font-sm, 13px); /* TKT-0066 item 5 ruling: constants route through the own chain — the shared small-text size for channel labels, value readouts, and the format toggle */
+  --ui-color-picker-label-font: var(--md-sys-font-sm, 13px); /* TKT-0066 item 5 ruling: constants route through the own chain — the shared small-text size for channel labels, value readouts, and the format toggle */
 }
 
 /* ══════════════════════ [2] STYLES BLOCK — @scope (ui-color-picker) ═══════════════════════════ */
@@ -75,8 +75,8 @@
   }
 
   :scope [data-part='pad']:focus-visible {
-    outline: var(--ui-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
-    outline-offset: calc(-1 * var(--ui-focus-ring-width, 2px)); /* inset — the pad already has its own border */
+    outline: var(--md-sys-state-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
+    outline-offset: calc(-1 * var(--md-sys-state-focus-ring-width, 2px)); /* inset — the pad already has its own border */
   }
 
   /* Disabled — pointer-inert; muted (the effectiveDisabled channel forwards `disabled` onto the composed
@@ -175,8 +175,8 @@
   }
 
   :scope [data-part='eyedropper']:focus-visible {
-    outline: var(--ui-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset, 2px);
+    outline: var(--md-sys-state-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset, 2px);
   }
 
   /* ── Presets ([slot=presets]) — author-supplied content, ordered LAST; absent = no layout hole ──── */

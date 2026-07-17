@@ -21,10 +21,10 @@ const whereBlock = (marker: string): string => {
 // precedent, so every control draws the identical ring / uses the identical timing).
 const sharedFleet = new Set([
   '--md-sys-color-focus-ring',
-  '--ui-focus-ring-width',
-  '--ui-focus-ring-offset',
-  '--ui-motion-fast',
-  '--ui-ease-standard',
+  '--md-sys-state-focus-ring-width',
+  '--md-sys-state-focus-ring-offset',
+  '--md-sys-motion-duration-fast',
+  '--md-sys-motion-easing-standard',
 ])
 
 const foreignScopeRefs = (scope: string): string[] =>
@@ -46,13 +46,13 @@ describe('textarea.css — structure + sectioning', () => {
       expect(tokenBlock).toMatch(new RegExp(`--ui-textarea-${slot}:`))
     }
     expect(tokenBlock).toContain('var(--md-sys-color-neutral') // the field-frame roles (family = neutral)
-    expect(tokenBlock).toContain('var(--ui-font-md)') // the font ramp (NOT --ui-height-* — no fixed height lever)
+    expect(tokenBlock).toContain('var(--md-sys-font-md)') // the font ramp (NOT --md-sys-height-* — no fixed height lever)
   })
 
   it('[size] repoints ONLY the font token (padding/line-box derive from it via calc — no separate repoint needed)', () => {
     for (const size of ['sm', 'lg'] as const) {
       const b = whereBlock(`:where(ui-textarea[size='${size}'])`)
-      expect(b).toMatch(new RegExp(`--ui-textarea-font:\\s*var\\(--ui-font-${size}\\)`))
+      expect(b).toMatch(new RegExp(`--ui-textarea-font:\\s*var\\(--md-sys-font-${size}\\)`))
     }
   })
 
@@ -82,7 +82,7 @@ describe('textarea.css — the MULTI-LINE geometry law (ADR-0134 — the inversi
   it('a prose line-height is declared — never the single-line control line-height:1', () => {
     expect(tokenBlock).toMatch(/--ui-textarea-line-height:\s*1\.5/)
     expect(stylesBlock).toMatch(/line-height:\s*var\(--ui-textarea-line-height\)/)
-    expect(stylesBlock).not.toMatch(/line-height:\s*var\(--ui-control-line-height\)/) // never the single-line constant
+    expect(stylesBlock).not.toMatch(/line-height:\s*var\(--md-sys-control-line-height\)/) // never the single-line constant
     expect(stylesBlock).not.toMatch(/line-height:\s*1\s*;/) // never a bare 1
   })
 
@@ -115,8 +115,8 @@ describe('textarea.css — the MULTI-LINE geometry law (ADR-0134 — the inversi
     expect(stylesBlock).toMatch(/min-inline-size:\s*var\(--ui-textarea-min-inline-size\)/)
   })
 
-  it('radius reuses the fixed --ui-radius-base entry-control referent (geometry.md "Corner radius")', () => {
-    expect(tokenBlock).toMatch(/--ui-textarea-radius:\s*var\(--ui-radius-base\)/)
+  it('radius reuses the fixed --md-sys-shape-corner-base entry-control referent (geometry.md "Corner radius")', () => {
+    expect(tokenBlock).toMatch(/--ui-textarea-radius:\s*var\(--md-sys-shape-corner-base\)/)
     expect(stylesBlock).toMatch(/border-radius:\s*var\(--ui-textarea-radius\)/)
   })
 
@@ -205,7 +205,7 @@ describe('textarea.css — the filled/container state law (TKT-0062)', () => {
       stylesBlock.indexOf('}', stylesBlock.indexOf(':scope:focus-within {')),
     )
     expect(focusBlock).toMatch(/border-color:\s*var\(--ui-textarea-border-focus\)/)
-    expect(focusBlock).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s*solid\s*var\(--md-sys-color-focus-ring\)/)
+    expect(focusBlock).toMatch(/outline:\s*var\(--md-sys-state-focus-ring-width\)\s*solid\s*var\(--md-sys-color-focus-ring\)/)
   })
 })
 

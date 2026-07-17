@@ -7,8 +7,8 @@
  *       surface-brightest / outline / an inline elevation shadow). No `[variant]`/`[size]` repoint —
  *       toast carries neither axis (SPEC-R19; a `[size]` selector would need a declared `size`
  *       attribute — family-coherence A2b).
- *   [2] STYLES BLOCK — `@scope (ui-toast)` consumes ONLY `--ui-toast-*` (∪ the shared `--ui-space-*`/
- *       `--ui-radius-base` shell-spacing tokens, the ui-menu panel precedent). A three-column grid
+ *   [2] STYLES BLOCK — `@scope (ui-toast)` consumes ONLY `--ui-toast-*` (∪ the shared `--md-sys-space-*`/
+ *       `--md-sys-shape-corner-base` shell-spacing tokens, the ui-menu panel precedent). A three-column grid
  *       (`1fr auto auto` — message | action | close) laid out by the control-built parts in toast.ts;
  *       `[data-part='message']` gets `min-inline-size: 0` (the flex/grid text-overflow floor — an
  *       unbounded message must not blow out the fixed card width) + `overflow-wrap: anywhere` (an
@@ -27,7 +27,7 @@
 
 :where(ui-toast) {
   /* A notification card is a FIXED-width surface, not a control on the height ramp (geometry.md's
-     Pattern band — the ui-menu panel precedent, not a Control-band `--ui-height-*` lookup). */
+     Pattern band — the ui-menu panel precedent, not a Control-band `--md-sys-height-*` lookup). */
   --ui-toast-inline-size: 20em;
 
   /* Surface — neutral roles (a toast carries no [intent]/[variant] colour channel in v1). */
@@ -37,10 +37,10 @@
   --ui-toast-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
 
   /* TKT-0066 item 5 ruling: dimensional constants route through the own chain, never read raw in @scope. */
-  --ui-toast-gap: var(--ui-space-sm); /* shared shell-spacing step — the ui-menu panel precedent */
-  --ui-toast-pad-inline: var(--ui-space-md);
-  --ui-toast-pad-block: var(--ui-space-sm);
-  --ui-toast-radius: var(--ui-radius-base); /* the shared fleet radius (ui-menu/ui-card precedent) */
+  --ui-toast-gap: var(--md-sys-space-sm); /* shared shell-spacing step — the ui-menu panel precedent */
+  --ui-toast-pad-inline: var(--md-sys-space-md);
+  --ui-toast-pad-block: var(--md-sys-space-sm);
+  --ui-toast-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius (ui-menu/ui-card precedent) */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-toast) consumes ONLY --ui-toast-* ════════════════ */
@@ -78,7 +78,7 @@
      children (message, close) landing in auto-placement's columns 1 and 2, leaving the third (intended
      close) column empty. Left unpinned, the close button rendered in the MIDDLE (action) track and the
      genuinely-empty trailing track still consumed a `gap` between it and the padding edge — an extra
-     `--ui-space-sm` of phantom inset past the close button's own edge, reading as an off-standard
+     `--md-sys-space-sm` of phantom inset past the close button's own edge, reading as an off-standard
      double-inset against the message's own left inset (TKT-0014). Explicit placement fixes both the
      actionable AND non-actionable cases uniformly (a 3-child toast already lands here by auto-placement,
      so this is a no-op for it). */

@@ -27,11 +27,11 @@ const whereBlock = (marker: string): string => {
 // state-transition motion (interaction-states standard). Everything else in @scope must be the own chain.
 const sharedFleet = new Set([
   '--md-sys-color-focus-ring',
-  '--ui-focus-ring-width',
-  '--ui-focus-ring-offset',
-  '--ui-motion-fast',
-  '--ui-ease-standard',
-  '--ui-control-line-height', // the single-line Control line-height fleet constant (ADR-0036)
+  '--md-sys-state-focus-ring-width',
+  '--md-sys-state-focus-ring-offset',
+  '--md-sys-motion-duration-fast',
+  '--md-sys-motion-easing-standard',
+  '--md-sys-control-line-height', // the single-line Control line-height fleet constant (ADR-0036)
 ])
 
 /** @scope token-hygiene predicate — every var() ref that is NEITHER the own --ui-text-field-* chain NOR a fleet
@@ -55,15 +55,15 @@ describe('text-field.css — structure + sectioning (s9)', () => {
       expect(tokenBlock).toMatch(new RegExp(`--ui-text-field-${slot}:`))
     }
     expect(tokenBlock).toContain('var(--md-sys-color-neutral') // the field-frame roles (family = neutral)
-    expect(tokenBlock).toContain('var(--ui-height-md)') // the dimensional ramp
+    expect(tokenBlock).toContain('var(--md-sys-height-md)') // the dimensional ramp
   })
 
   it('[size] repoints the geometry ramp (height/font/gap/icon) for sm and lg', () => {
     for (const size of ['sm', 'lg'] as const) {
       const b = whereBlock(`:where(ui-text-field[size='${size}'])`)
       expect(b).toMatch(/--ui-text-field-height:/)
-      // ADR-0038 / ADR-0035 conformance: icon is now the shared §1-SET --ui-icon-* table (not calc × --ui-scale)
-      expect(b).toMatch(new RegExp(`--ui-text-field-icon:\\s*var\\(--ui-icon-${size}\\)`))
+      // ADR-0038 / ADR-0035 conformance: icon is now the shared §1-SET --md-sys-icon-* table (not calc × --md-sys-scale)
+      expect(b).toMatch(new RegExp(`--ui-text-field-icon:\\s*var\\(--md-sys-icon-${size}\\)`))
     }
   })
 })
@@ -189,8 +189,8 @@ describe('text-field.css — the :focus-within ring-only focus, transparent bord
     // in the token-block ladder test), so the ring is the sole indicator and there is no second blue frame.
     expect(rule).toMatch(/border-color:\s*var\(--ui-text-field-border-focus\)/)
     // the SOLE focus indicator — the shared outline ring, read DIRECTLY from the fleet tokens
-    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
-    expect(rule).toMatch(/outline-offset:\s*var\(--ui-focus-ring-offset\)/)
+    expect(rule).toMatch(/outline:\s*var\(--md-sys-state-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
+    expect(rule).toMatch(/outline-offset:\s*var\(--md-sys-state-focus-ring-offset\)/)
   })
 
   it('focus is ALL-focus: :focus-within, NEVER :focus-visible (keyboard-only) and NEVER a bare :focus', () => {
@@ -210,7 +210,7 @@ describe('text-field.css — anatomy, placeholder, motion, forced-colors', () =>
     expect(stylesBlock).toMatch(/display:\s*inline-grid/)
     expect(stylesBlock).toMatch(/:scope:has\(>\s*\[slot='leading'\]\)/)
     expect(stylesBlock).toMatch(/:scope:has\(>\s*\[slot='trailing'\]\)/)
-    expect(stylesBlock).toMatch(/column-gap:\s*var\(--ui-text-field-gap\)/) // the gap rides --ui-density
+    expect(stylesBlock).toMatch(/column-gap:\s*var\(--ui-text-field-gap\)/) // the gap rides --md-sys-density
     expect(stylesBlock).toMatch(/:scope > \[data-part='editor'\][^}]*order:\s*1/) // editor = the centre value cell
     expect(stylesBlock).toMatch(/:scope > \[data-part='editor'\][^}]*outline:\s*none/) // the ring is on the host
   })
@@ -231,7 +231,7 @@ describe('text-field.css — anatomy, placeholder, motion, forced-colors', () =>
     expect(rule).toContain('border-color')
     expect(rule).not.toMatch(/transition:\s*all/) // enumerated longhands, never the `all` keyword
     expect(rule).not.toMatch(/height|padding|inline-size|\bwidth\b|gap|transform|outline/) // geometry/ring must SNAP
-    expect(rule).toContain('--ui-motion-fast') // timing from the shared motion token, not a magic number
+    expect(rule).toContain('--md-sys-motion-duration-fast') // timing from the shared motion token, not a magic number
     // gated: the base :scope rule declares NO transition (so the first paint snaps)
     const baseStart = stylesBlock.indexOf(':scope {')
     const baseScope = stylesBlock.slice(baseStart, stylesBlock.indexOf('}', baseStart) + 1)
@@ -369,7 +369,7 @@ describe('text-field.css — Wave-5A numeric adornment rules (ADR-0047 CSS struc
 // passes because the new scope refs are `--ui-text-field-message-*` (the own chain).
 describe('text-field.css — visible message node (ADR-0029 A1, extends ADR-0014)', () => {
   it('declares the --ui-text-field-message-font and --ui-text-field-message-ink tokens in the :where() block', () => {
-    expect(tokenBlock).toMatch(/--ui-text-field-message-font:\s*var\(--ui-font-sm\)/)
+    expect(tokenBlock).toMatch(/--ui-text-field-message-font:\s*var\(--md-sys-font-sm\)/)
     expect(tokenBlock).toMatch(/--ui-text-field-message-ink:\s*var\(--md-sys-color-danger-on-surface-variant\)/) // AA-gated danger TEXT ink (2026-07-02 audit item 1; bare --md-sys-color-danger is 4.05:1 light, an AA text fail)
   })
 

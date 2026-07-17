@@ -3,24 +3,24 @@ import { describe, it, expect } from 'vitest'
 // S1 browser smoke — ui-slider (decomp S1 · ADR-0042 range-half · ADR-0041).
 //
 // ⭐ This suite RATIFIES the ADR-0042 Range half → accepted (G6.5):
-//   AC1: The host box = --ui-compact-{size} exact px per [size]×[scale] (anti-vacuous, negative controls).
+//   AC1: The host box = --md-sys-compact-{size} exact px per [size]×[scale] (anti-vacuous, negative controls).
 //   AC2: The thumb (::after) = box − 4px (the ADR-0041 cl.3 two-pixel-inset law, Range edition).
 //   AC3: A REAL pointer-drag (pointerdown→move) updates value snapped to step (the value-drag proof).
 //   AC4: Forced-colors — forced-color-adjust:none declared on rail and thumb (track survives HCM).
 //   C10: Reconnect produces exactly one response per keyboard event (no listener stacking).
 //
-// The widget-box ramp table (--ui-compact-{size} per [scale], dimensions.css):
+// The widget-box ramp table (--md-sys-compact-{size} per [scale], dimensions.css):
 //   Default (ui-md):  sm=14px · md=16px · lg=18px
 //   ui-sm:            sm=12px · md=14px · lg=16px
 //   ui-lg:            sm=16px · md=18px · lg=20px
 //   content-lg:       sm=22px · md=24px · lg=28px
-// Thumb = box − 4px (−2px × each side; --ui-widget-inset=2px; ADR-0041 cl.3).
+// Thumb = box − 4px (−2px × each side; --md-sys-widget-inset=2px; ADR-0041 cl.3).
 //
 // These imports are direct (not through the barrel) because the component-styles barrel is the host's
 // integration slice — it gains the slider @import at barrel-wiring time. The foundation CSS (tokens +
-// dimensions) is loaded via the shared package barrel so --md-sys-color-* / --ui-compact-* tokens are present.
+// dimensions) is loaded via the shared package barrel so --md-sys-color-* / --md-sys-compact-* tokens are present.
 
-import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--ui-compact-*)
+import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--md-sys-compact-*)
 import './slider.css'                               // the control stylesheet (direct — pre-barrel)
 import './slider.ts'                                // self-define (registers ui-slider)
 import type { UISliderElement } from './slider.ts'
@@ -109,7 +109,7 @@ const contrastOf = (a: string, b: string): number => {
 }
 
 // ── AC0: RENDERED SHAPE — a slider must LOOK like a slider ───────────────────────────────────────
-// A slider that collapses to its thumb (a dot) passes every per-PART px assertion (box=--ui-compact,
+// A slider that collapses to its thumb (a dot) passes every per-PART px assertion (box=--md-sys-compact,
 // thumb=box−4) yet is visually broken. The prior suite measured only HEIGHT + thumb width — never the
 // host's overall WIDTH — so a dot shipped. This asserts the WHOLE shape in the SHRINK-WRAPPING flex
 // context that exposed the bug (the doc-page specimen row).
@@ -229,13 +229,13 @@ describe('ui-slider — thumb ring "pops" in both schemes without regressing the
   })
 })
 
-// ── AC1: box = --ui-compact-{size} per [size]×[scale] — EXACT px (anti-vacuous) ─────────────────
+// ── AC1: box = --md-sys-compact-{size} per [size]×[scale] — EXACT px (anti-vacuous) ─────────────────
 
 describe('ui-slider browser smoke (AC1 — interactive box exact px per [size]×[scale])', () => {
-  it('AC1 default: host block-size = 16px (--ui-compact-md at default ui-md scale)', () => {
+  it('AC1 default: host block-size = 16px (--md-sys-compact-md at default ui-md scale)', () => {
     const el = document.createElement('ui-slider') as UISliderElement
     document.body.append(el)
-    // The host block-size = --ui-compact-md = 16px at ui-md scale (ADR-0041 clause 2)
+    // The host block-size = --md-sys-compact-md = 16px at ui-md scale (ADR-0041 clause 2)
     const rect = el.getBoundingClientRect()
     expect(rect.height).toBe(16)
     el.remove()
@@ -245,13 +245,13 @@ describe('ui-slider browser smoke (AC1 — interactive box exact px per [size]×
     const sm = document.createElement('ui-slider') as UISliderElement
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    expect(sm.getBoundingClientRect().height).toBe(14) // --ui-compact-sm at ui-md
+    expect(sm.getBoundingClientRect().height).toBe(14) // --md-sys-compact-sm at ui-md
     sm.remove()
 
     const lg = document.createElement('ui-slider') as UISliderElement
     lg.setAttribute('size', 'lg')
     document.body.append(lg)
-    expect(lg.getBoundingClientRect().height).toBe(18) // --ui-compact-lg at ui-md
+    expect(lg.getBoundingClientRect().height).toBe(18) // --md-sys-compact-lg at ui-md
     lg.remove()
   })
 
@@ -261,7 +261,7 @@ describe('ui-slider browser smoke (AC1 — interactive box exact px per [size]×
     const el = document.createElement('ui-slider') as UISliderElement
     wrapper.append(el)
     document.body.append(wrapper)
-    // ui-lg × md = 18px (ADR-0041 table: [scale=ui-lg] → --ui-compact-md = 18px)
+    // ui-lg × md = 18px (ADR-0041 table: [scale=ui-lg] → --md-sys-compact-md = 18px)
     expect(el.getBoundingClientRect().height).toBe(18)
     wrapper.remove()
   })
@@ -288,7 +288,7 @@ describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Ran
   it('AC2 default (ui-md, size=md): thumb ::after width = 12px (16px − 4px)', () => {
     const el = document.createElement('ui-slider') as UISliderElement
     document.body.append(el)
-    // --ui-compact-md=16px → thumb = 16 − 2×2 = 12px (ADR-0041 cl.3: thumb = box − 2×inset)
+    // --md-sys-compact-md=16px → thumb = 16 − 2×2 = 12px (ADR-0041 cl.3: thumb = box − 2×inset)
     const cs = getComputedStyle(el, '::after')
     expect(Number.parseFloat(cs.width)).toBe(12)
     expect(Number.parseFloat(cs.height)).toBe(12)
@@ -299,7 +299,7 @@ describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Ran
     const el = document.createElement('ui-slider') as UISliderElement
     el.setAttribute('size', 'sm')
     document.body.append(el)
-    // --ui-compact-sm=14px → thumb = 14 − 4 = 10px
+    // --md-sys-compact-sm=14px → thumb = 14 − 4 = 10px
     const cs = getComputedStyle(el, '::after')
     expect(Number.parseFloat(cs.width)).toBe(10)
     expect(Number.parseFloat(cs.height)).toBe(10)
@@ -310,7 +310,7 @@ describe('ui-slider browser smoke (AC2 — thumb = box − 4px, the ADR-0042 Ran
     const el = document.createElement('ui-slider') as UISliderElement
     el.setAttribute('size', 'lg')
     document.body.append(el)
-    // --ui-compact-lg=18px → thumb = 18 − 4 = 14px
+    // --md-sys-compact-lg=18px → thumb = 18 − 4 = 14px
     const cs = getComputedStyle(el, '::after')
     expect(Number.parseFloat(cs.width)).toBe(14)
     expect(Number.parseFloat(cs.height)).toBe(14)

@@ -2,11 +2,11 @@
  * report-family.spec.md SPEC-R2/R3/R5/R14/R15/R16/R17). Two clearly-SECTIONED blocks (ADR-0003):
  *
  *   [1] TOKEN BLOCK  — `:where(ui-table)` (specificity 0,0,0) DECLARES every `--ui-table-*` component
- *       token from the fleet `--md-sys-color-*` roles + the `--ui-space-*` rhythm ladder. No `[size]`/
+ *       token from the fleet `--md-sys-color-*` roles + the `--md-sys-space-*` rhythm ladder. No `[size]`/
  *       `[scale]` repoint matrix — `ui-table` is Display-class (SPEC-R17): no control height, no
- *       `--ui-height-*` lever, the type matrix + the space ladder are the whole lever.
+ *       `--md-sys-height-*` lever, the type matrix + the space ladder are the whole lever.
  *   [2] STYLES BLOCK — `@scope (ui-table)` CONSUMES only `--ui-table-*` (∪ the shared `--md-sys-*`/
- *       `--ui-space-*` namespaces). Owns the UA-default + page-cascade reset a stamped native `<table>`
+ *       `--md-sys-space-*` namespaces). Owns the UA-default + page-cascade reset a stamped native `<table>`
  *       needs (border-collapse, cell padding, caption alignment — SPEC-R2 AC2, the ADR-0078 cl.4
  *       `font: inherit`-reset precedent scaled up) and the overflow-in-own-container law (SPEC-R5): the
  *       component's OWN `[data-part='scroll']` container scrolls, never the page.
@@ -28,8 +28,8 @@
 
 :where(ui-table) {
   --ui-table-min-inline-size: 16em; /* the whole-shape floor (SPEC-R14/R17 AC1) */
-  --ui-table-cell-pad-inline: var(--ui-space-sm); /* rhythm — rides [density] free (ADR-0103) */
-  --ui-table-cell-pad-block: var(--ui-space-xs);
+  --ui-table-cell-pad-inline: var(--md-sys-space-sm); /* rhythm — rides [density] free (ADR-0103) */
+  --ui-table-cell-pad-block: var(--md-sys-space-xs);
   --ui-table-rule-ink: var(--md-sys-color-neutral-outline-variant); /* row-separator hairline */
   --ui-table-header-rule-ink: var(--md-sys-color-neutral-outline); /* thead underline, stronger */
   --ui-table-caption-ink: var(--md-sys-color-neutral-on-surface-variant);

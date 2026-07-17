@@ -77,7 +77,7 @@ describe('ui-radio-group browser smoke — component-owned layout (ADR-0103)', (
     expect(rect2.left - rect1.right).toBeGreaterThanOrEqual(gap - 1)
   })
 
-  it('the gap rides --ui-space-sm and responds to a subtree [density] (anti-vacuous)', () => {
+  it('the gap rides --md-sys-space-sm and responds to a subtree [density] (anti-vacuous)', () => {
     const wrap = document.createElement('div')
     document.body.append(wrap)
     mounted.push(wrap)
@@ -85,13 +85,13 @@ describe('ui-radio-group browser smoke — component-owned layout (ADR-0103)', (
     wrap.append(el)
 
     const gapPx = (): number => px(getComputedStyle(el).rowGap)
-    const base = gapPx() // --ui-space-sm @ density 1 = 8px
+    const base = gapPx() // --md-sys-space-sm @ density 1 = 8px
     expect(base).toBeGreaterThan(0)
 
-    wrap.setAttribute('density', 'compact') // --ui-density → 0.5
+    wrap.setAttribute('density', 'compact') // --md-sys-density → 0.5
     expect(gapPx()).toBeCloseTo(base / 2, 1)
 
-    wrap.setAttribute('density', 'spacious') // --ui-density → 1.5
+    wrap.setAttribute('density', 'spacious') // --md-sys-density → 1.5
     expect(gapPx()).toBeCloseTo(base * 1.5, 1)
   })
 

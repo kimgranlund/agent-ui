@@ -3,12 +3,12 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-tooltip)` (specificity 0,0,0) sets the tooltip's OWN default
  *       surface tokens and DECLARES the `--ui-tooltip-*` chain from the colour roles
- *       (`--md-sys-color-{family}-{role}`, family = neutral) and the dimensions (`--ui-space-*` /
- *       `--ui-radius-base`). Raw `--md-sys-color-*` roles enter ONLY here; `@scope` never reads them.
+ *       (`--md-sys-color-{family}-{role}`, family = neutral) and the dimensions (`--md-sys-space-*` /
+ *       `--md-sys-shape-corner-base`). Raw `--md-sys-color-*` roles enter ONLY here; `@scope` never reads them.
  *   [2] STYLES BLOCK — `@scope (ui-tooltip)` CONSUMES only the `--ui-tooltip-*` chain. The host
  *       is `display: contents` — a logical wrapper that generates no box. The panel part
- *       (`[data-part="panel"]`) is the Container/surface: `--ui-tooltip-bg`, `--ui-radius-base`,
- *       `--ui-space-sm` padding — NOT a control height (`--ui-height-*` is never read).
+ *       (`[data-part="panel"]`) is the Container/surface: `--ui-tooltip-bg`, `--md-sys-shape-corner-base`,
+ *       `--md-sys-space-sm` padding — NOT a control height (`--md-sys-height-*` is never read).
  *       A `min-inline-size` floor prevents collapse (the ADR-0021 lesson: the overlay JS
  *       positions against measured bounds, so a zero-width panel places at wrong coords).
  *       A `forced-color-adjust` block keeps the surface visible in system colours.
@@ -29,10 +29,10 @@
 
   /* Frame */
   --ui-tooltip-outline: var(--md-sys-color-neutral-outline-variant);
-  --ui-tooltip-radius: var(--ui-radius-base); /* the shared fleet radius (ADR-0015 cl.5) */
+  --ui-tooltip-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius (ADR-0015 cl.5) */
 
   /* Shell spacing — panel-class geometry (Container/surface, NOT a control height) */
-  --ui-tooltip-padding: var(--ui-space-sm); /* tooltips are compact — sm, not md */
+  --ui-tooltip-padding: var(--md-sys-space-sm); /* tooltips are compact — sm, not md */
 
   /* Size floor — prevents collapse when tooltip content is absent or narrow.
      The overlay JS positions against the measured bounding box, so a zero-width

@@ -7,7 +7,7 @@
 # fence. Field set per .claude/docs/plan.md §10 / ADR-0004; overlay mechanism per the overlay-controller
 # LLD-C1..C4; bindable `open` two-way per ADR-0019; ADR-0043 = the overlay controller gate.
 tag: ui-popover
-tier: pattern           # geometry size-class — the panel uses --ui-space padding (Container/surface, NOT a control height)
+tier: pattern           # geometry size-class — the panel uses --md-sys-space padding (Container/surface, NOT a control height)
 extends: UIElement      # NOT form-associated — the popover carries no value/validity; it is a disclosure surface
 # marginal: tracked at the wave-4 integration slice (s12 barrel pass); ≤ ~2 kB tier budget (plan §10)
 
@@ -69,9 +69,9 @@ keyboard:
     action: When the panel is open with focusOnOpen=true, initial focus moves into the panel (the first focusable descendant, or the panel itself via tabindex="-1"). Focus is restored to the trigger on close (LLD-C4, overlay controller).
 
 geometry:
-  sizeClass: pattern    # Container/surface geometry — the panel uses --ui-space padding; NO control height (--ui-height-* is never read)
-  padding: var(--ui-popover-padding)    # = var(--ui-space-md) — density-responsive layout spacing
-  radius: var(--ui-popover-radius)      # = var(--ui-radius-base), the shared fleet radius
+  sizeClass: pattern    # Container/surface geometry — the panel uses --md-sys-space padding; NO control height (--md-sys-height-* is never read)
+  padding: var(--ui-popover-padding)    # = var(--md-sys-space-md) — density-responsive layout spacing
+  radius: var(--ui-popover-radius)      # = var(--md-sys-shape-corner-base), the shared fleet radius
   minInlineSize: var(--ui-popover-min-inline-size)  # floor to prevent collapse (ADR-0021 lesson)
   surface: var(--ui-popover-bg)         # opaque neutral-surface plane
 

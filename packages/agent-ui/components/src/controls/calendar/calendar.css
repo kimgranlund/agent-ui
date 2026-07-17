@@ -48,14 +48,14 @@
      value is unchanged, only its meaning widens). The day cell's block-size is always this; the
      inline-size is this at the track floor (shrink-wrapped) and grows with surplus width (fluid
      `minmax()` track) — the fixed circular POINT layer (::before) stays this diameter regardless.
-     Aliases --ui-height-md so the cell rides the explicit per-[scale] height ramp (ADR-0038),
+     Aliases --md-sys-height-md so the cell rides the explicit per-[scale] height ramp (ADR-0038),
      tracking scale automatically without a multiplier. [size] repoints below.
-     --ui-calendar-gap is the inter-cell gap; aliases --ui-space-xs (4px × density). */
-  --ui-calendar-cell-size: var(--ui-height-md);
-  --ui-calendar-gap: var(--ui-space-xs);
+     --ui-calendar-gap is the inter-cell gap; aliases --md-sys-space-xs (4px × density). */
+  --ui-calendar-cell-size: var(--md-sys-height-md);
+  --ui-calendar-gap: var(--md-sys-space-xs);
 
   /* ── Day-cell typography — font-size at a comfortable reading size inside the cell. */
-  --ui-calendar-font: var(--ui-font-md, 14px);
+  --ui-calendar-font: var(--md-sys-font-md, 14px);
 
   /* ── Selected-day fill (the committed value cell).
      --md-sys-color-primary-selected is the AA primary-on-accent role (tokens-calendar); fall back to
@@ -76,14 +76,14 @@
 
   /* ── Nav button geometry — the ‹ and › inline affordances are sized = font (§4.6 law).
      They are plain buttons; no fixed icon-cell needed (they're typography glyphs). */
-  --ui-calendar-nav-font: var(--ui-font-md, 14px);
+  --ui-calendar-nav-font: var(--md-sys-font-md, 14px);
 
   /* ── Panel surface — inherits the container/surface tokens for bg/border/radius.
      The panel is a Container/surface (NOT a Control-class surface), so it uses bg + outline. */
   --ui-calendar-panel-bg:      var(--md-sys-color-neutral-surface, #fff);
   --ui-calendar-panel-ink:     var(--md-sys-color-neutral-on-surface, #1c1c1e);
   --ui-calendar-panel-outline: var(--md-sys-color-neutral-outline-variant, #c4c4c4);
-  --ui-calendar-panel-radius:  var(--ui-radius-base, 0.375rem);
+  --ui-calendar-panel-radius:  var(--md-sys-shape-corner-base, 0.375rem);
 
   /* ── Weekday column-header ink (muted row above the cells). */
   --ui-calendar-header-ink: var(--md-sys-color-neutral-on-surface-variant, #767676);
@@ -113,17 +113,17 @@
 }
 
 /* [size] repoints cell size onto the §1-ramp height entries (ADR-0038: explicit per-[scale] table,
-   24/28/36px at the default ui-md scale). Pattern mirrors checkbox [size]→--ui-compact-* repoints. */
+   24/28/36px at the default ui-md scale). Pattern mirrors checkbox [size]→--md-sys-compact-* repoints. */
 :where(ui-calendar[size='sm']) {
-  --ui-calendar-cell-size: var(--ui-height-sm); /* 24px default; retables under [scale] */
-  --ui-calendar-font: var(--ui-font-sm, 13px);
-  --ui-calendar-nav-font: var(--ui-font-sm, 13px);
+  --ui-calendar-cell-size: var(--md-sys-height-sm); /* 24px default; retables under [scale] */
+  --ui-calendar-font: var(--md-sys-font-sm, 13px);
+  --ui-calendar-nav-font: var(--md-sys-font-sm, 13px);
 }
 
 :where(ui-calendar[size='lg']) {
-  --ui-calendar-cell-size: var(--ui-height-lg); /* 36px default ≈ 2.25rem target; retables under [scale] */
-  --ui-calendar-font: var(--ui-font-lg, 16px);
-  --ui-calendar-nav-font: var(--ui-font-lg, 16px);
+  --ui-calendar-cell-size: var(--md-sys-height-lg); /* 36px default ≈ 2.25rem target; retables under [scale] */
+  --ui-calendar-font: var(--md-sys-font-lg, 16px);
+  --ui-calendar-nav-font: var(--md-sys-font-lg, 16px);
 }
 
 /* Disabled host — mute the nav-button ink (day cells carry their own aria-disabled state). */
@@ -224,8 +224,8 @@
 
   :scope [data-part='prev']:focus-visible,
   :scope [data-part='next']:focus-visible {
-    outline: var(--ui-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset, 2px);
+    outline: var(--md-sys-state-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset, 2px);
   }
 
   /* ── Grid container ([data-part="grid"]) ────────────────────────────────────────────────
@@ -292,7 +292,7 @@
     background: transparent;
     color: inherit;
     font-size: var(--ui-calendar-font, 14px);
-    line-height: var(--ui-control-line-height, 1);
+    line-height: var(--md-sys-control-line-height, 1);
     cursor: pointer;
     padding: 0;
     -webkit-user-select: none;
@@ -325,8 +325,8 @@
   }
 
   :scope [data-part='grid'] [role='gridcell']:focus-visible::before {
-    outline: var(--ui-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset, 2px);
+    outline: var(--md-sys-state-focus-ring-width, 2px) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset, 2px);
   }
 
   /* ── Today ring — an inset ring marking the current date (whether selected or not), on the

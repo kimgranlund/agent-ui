@@ -6,7 +6,7 @@
 # the frontmatter schema both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; the native-dialog
 # modal per ADR-0017; the bindable `open` two-way per ADR-0019.
 tag: ui-modal
-tier: pattern             # geometry size-class — geometry.md lists `dialog` under the Pattern band (the shell uses the --ui-space scale, NO control height)
+tier: pattern             # geometry size-class — geometry.md lists `dialog` under the Pattern band (the shell uses the --md-sys-space scale, NO control height)
 extends: UIContainerElement  # the FACE surface base — NOT form-associated (no value/validity); reuses the inherited ElementInternals for nothing here (the dialog carries its own ARIA)
 # marginal: ui-modal adds 330 B gz (1322 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
@@ -68,9 +68,9 @@ keyboard:
     action: Focus is TRAPPED within the dialog by the platform's showModal() (the modal top layer is inert to the page behind it). Focus is RESTORED to the opener on close (the one platform gap the control owns — ADR-0017 cl.4).
 
 geometry:
-  sizeClass: pattern      # geometry.md Pattern band — the shell spaces off --ui-space × density; NO control height (--ui-height-* is never read)
-  padding: var(--ui-modal-padding)   # the dialog shell pad = var(--ui-space-lg) (density-responsive layout spacing, NOT a control dimension)
-  radius: var(--ui-modal-radius)     # = var(--ui-radius-base), the shared fleet radius (ADR-0015 cl.5)
+  sizeClass: pattern      # geometry.md Pattern band — the shell spaces off --md-sys-space × density; NO control height (--md-sys-height-* is never read)
+  padding: var(--ui-modal-padding)   # the dialog shell pad = var(--md-sys-space-lg) (density-responsive layout spacing, NOT a control dimension)
+  radius: var(--ui-modal-radius)     # = var(--md-sys-shape-corner-base), the shared fleet radius (ADR-0015 cl.5)
   surface: var(--ui-container-bg) + var(--ui-container-tint)   # the elevation×brightness surface seam (ADR-0015), inherited from the host onto the dialog part
 
 forcedColors: A `@media (forced-colors: active)` block keeps the dialog surface, frame, and ink visible as system colours (Canvas / CanvasText) and drops the tonal wash (a translucent overlay would defeat the forced Canvas base); the ::backdrop scrim is left to the scrim role / UA so the blocking layer still paints — ADR-0017.
@@ -143,8 +143,8 @@ semantic element; a labelling heading child is the common pattern.
 The dialog plane reads the **elevation × brightness** surface seam (`--ui-container-bg` / `--ui-container-tint`,
 ADR-0015): `elevation` selects the scheme-inverting plane, `brightness` a scheme-consistent tonal wash, both
 defaulting to the neutral base. Unlike a layout primitive (transparent by default), a modal sets its **own**
-default `--ui-container-bg` so the plane is opaque. The shell pads off `--ui-space` (density-responsive,
-**not** a control height) and corners off the shared `--ui-radius-base`. A forced-colors block keeps the
+default `--ui-container-bg` so the plane is opaque. The shell pads off `--md-sys-space` (density-responsive,
+**not** a control height) and corners off the shared `--md-sys-shape-corner-base`. A forced-colors block keeps the
 surface, frame, and ink visible as system colours.
 
 ## The frame dials (TKT-0017 — the composition seam)

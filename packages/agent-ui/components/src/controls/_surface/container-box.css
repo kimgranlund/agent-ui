@@ -54,8 +54,8 @@
      old per-component --ui-card-fade it replaces), NOT the rem-based region padding above (a decorative
      affordance depth, not a layout spacing law). Any consumer may repoint it locally. The literal 1rem
      fallback keeps this self-contained even where only this sheet is loaded (e.g. container-box.browser.test.ts,
-     which never imports the dimensional --ui-space-* ramp). */
-  --ui-box-fade: var(--ui-space-lg, 1rem);
+     which never imports the dimensional --md-sys-space-* ramp). */
+  --ui-box-fade: var(--md-sys-space-lg, 1rem);
 }
 
 /* Popover-carrier re-assertion (the s13 e2e finding, 2026-07-01): the unconditional `display: flow-root`

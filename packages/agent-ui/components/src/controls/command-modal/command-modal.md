@@ -102,9 +102,9 @@ keyboard:
 
 geometry:
   sizeClass: pattern       # no §1 control-height row of its own — the search field borrows the entry-control register
-  searchBlockSize: var(--ui-command-modal-search-block-size)   # = var(--ui-height-md), the entry-control register
+  searchBlockSize: var(--ui-command-modal-search-block-size)   # = var(--md-sys-height-md), the entry-control register
   listMaxBlock: var(--ui-command-modal-list-max-block)         # bounded scroll viewport (50vh, scroll-fade wired)
-  itemGap: var(--ui-command-modal-item-gap)                    # off the --ui-space ladder — ambient under [scale]/[density]
+  itemGap: var(--ui-command-modal-item-gap)                    # off the --md-sys-space ladder — ambient under [scale]/[density]
 
 forcedColors: A `@media (forced-colors: active)` block keeps the search field frame and the active-option highlight legible as system colours (Field/FieldText, Highlight/HighlightText) — the aria-activedescendant + [data-active] pairing is the non-color signifier, so no color-only intent exists (the combo-box [data-active] precedent). The nested modal's own forced-colors block covers the dialog surface/backdrop.
 

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
 // G9 s8 — tabs.css static structural check (ADR-0003 sectioning + token hygiene; ADR-0104 transparent-by-
-// default — no own surface seeding; geometry.md Pattern class — control-height rows / --ui-space shell). jsdom
+// default — no own surface seeding; geometry.md Pattern class — control-height rows / --md-sys-space shell). jsdom
 // can't compute the rendered px/colours — these pin the STRUCTURE + the CSS text; the rendered paint + forced-
 // colors survival is tabs.browser.test.ts.
 
@@ -19,10 +19,10 @@ const stylesBlock = css.slice(css.indexOf('@scope (ui-tabs) {'))
 // transition motion). Everything else in @scope must be the own --ui-tabs-* chain.
 const sharedFleet = new Set([
   '--md-sys-color-focus-ring',
-  '--ui-focus-ring-width',
-  '--ui-focus-ring-offset',
-  '--ui-motion-fast',
-  '--ui-ease-standard',
+  '--md-sys-state-focus-ring-width',
+  '--md-sys-state-focus-ring-offset',
+  '--md-sys-motion-duration-fast',
+  '--md-sys-motion-easing-standard',
 ])
 
 /** @scope token-hygiene predicate — every var() ref that is NEITHER the own --ui-tabs-* chain NOR a fleet token. */
@@ -44,12 +44,12 @@ describe('tabs.css — structure + sectioning (s8)', () => {
     expect(tokenBlock).not.toMatch(/--ui-container-bg\s*:/) // negative control — the seeding regressed the pattern-wizard double-surface (#29)
   })
 
-  it('declares the --ui-tabs-* chain — control-height tab rows + the --ui-space shell + the ink/indicator roles', () => {
-    // the interactive rows take the CONTROL height (geometry.md Pattern class), the shell uses --ui-space
-    expect(tokenBlock).toMatch(/--ui-tabs-tab-height:\s*var\(--ui-height-md\)/)
-    expect(tokenBlock).toMatch(/--ui-tabs-tab-pad-inline:\s*var\(--ui-space-md\)/)
-    expect(tokenBlock).toMatch(/--ui-tabs-strip-gap:\s*var\(--ui-space-xs\)/)
-    expect(tokenBlock).toMatch(/--ui-tabs-panel-pad:\s*var\(--ui-space-md\)/)
+  it('declares the --ui-tabs-* chain — control-height tab rows + the --md-sys-space shell + the ink/indicator roles', () => {
+    // the interactive rows take the CONTROL height (geometry.md Pattern class), the shell uses --md-sys-space
+    expect(tokenBlock).toMatch(/--ui-tabs-tab-height:\s*var\(--md-sys-height-md\)/)
+    expect(tokenBlock).toMatch(/--ui-tabs-tab-pad-inline:\s*var\(--md-sys-space-md\)/)
+    expect(tokenBlock).toMatch(/--ui-tabs-strip-gap:\s*var\(--md-sys-space-xs\)/)
+    expect(tokenBlock).toMatch(/--ui-tabs-panel-pad:\s*var\(--md-sys-space-md\)/)
     // the ink ladder + the indicator (SOLID roles)
     expect(tokenBlock).toMatch(/--ui-tabs-ink:\s*var\(--md-sys-color-neutral-on-surface-variant\)/)
     expect(tokenBlock).toMatch(/--ui-tabs-ink-selected:\s*var\(--md-sys-color-neutral-on-surface\)/)
@@ -121,7 +121,7 @@ describe('tabs.css — the shared focus ring + motion + forced-colors (s8)', () 
     const m = stylesBlock.match(/ui-tab:focus-visible\s*\{([^}]*)\}/)
     expect(m, 'the ui-tab:focus-visible rule is missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
-    expect(rule).toMatch(/outline:\s*var\(--ui-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
+    expect(rule).toMatch(/outline:\s*var\(--md-sys-state-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/)
     expect(rule).toMatch(/outline-offset:/)
   })
 
@@ -133,7 +133,7 @@ describe('tabs.css — the shared focus ring + motion + forced-colors (s8)', () 
       if (!/transition:/.test(rule) || /transition:\s*none/.test(rule)) continue // skip the reduced-motion zeroing rule
       expect(rule).not.toMatch(/transition:\s*all/) // enumerated longhands, never `all`
       expect(rule).not.toMatch(/height|padding|inline-size|\bwidth\b|gap|transform|outline/) // geometry/ring SNAP
-      expect(rule).toContain('--ui-motion-fast') // timing from the shared token
+      expect(rule).toContain('--md-sys-motion-duration-fast') // timing from the shared token
     }
   })
 

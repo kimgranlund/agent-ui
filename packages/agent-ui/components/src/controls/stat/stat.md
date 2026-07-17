@@ -76,7 +76,7 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 geometry:
   sizeClass: display
   minInlineSize: var(--ui-stat-min-inline-size)  # 8em default — the whole-shape floor (SPEC-R10)
-  # NO [size] attribute, NO [scale] geometry row, NO --ui-height-* consumption (SPEC-R17 AC2) — the
+  # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption (SPEC-R17 AC2) — the
   # lever is the type matrix (--md-sys-typescale-*) + the space ladder (--ui-stat-gap).
 
 forcedColors: An explicit `@media (forced-colors: active)` block repoints the delta glyph (a `background:currentColor` mask shape) to `CanvasText` (SPEC-R15 — the bar-chart/badge fill lesson: a background-drawn clip-path glyph is otherwise forced to `Canvas` and vanishes). Label/value/caption/delta-word are real text and survive untouched with no dedicated rule.

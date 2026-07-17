@@ -50,7 +50,7 @@ keyboard:
   - note: Tab — natively focusable (a real `<a href>`); no `tabbable` trait needed, unlike ui-button's synthetic role=button focus parity
 
 geometry:
-  sizeClass: display        # Display band — text-bearing, NO control frame/height (geometry.md); sizes off the ambient font, not --ui-height-*
+  sizeClass: display        # Display band — text-bearing, NO control frame/height (geometry.md); sizes off the ambient font, not --md-sys-height-*
   blockSize: auto           # inline content — no fixed frame
   paddingBlock: 0           # no padding of its own
 

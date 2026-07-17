@@ -70,10 +70,10 @@ keyboard: []           # NOT interactive and NOT focusable — no tabindex, no k
 
 geometry:
   sizeClass: indicator
-  boxSize: var(--ui-avatar-size)  # off the widget-box ramp `--ui-compact-{sm,md,lg}` (ADR-0041, fork F3);
+  boxSize: var(--ui-avatar-size)  # off the widget-box ramp `--md-sys-compact-{sm,md,lg}` (ADR-0041, fork F3);
                                     # `[size]` repoints the tier; `[scale]` on an ancestor re-tables the
                                     # ramp for the subtree for free — no avatar-local [scale] rule needed
-  # NO --ui-height-* consumption (SPEC-R20 AC2) — a box, not a control-height row.
+  # NO --md-sys-height-* consumption (SPEC-R20 AC2) — a box, not a control-height row.
 
 forcedColors: An explicit `@media (forced-colors: active)` block adds a system-ink (`CanvasText`) border so the circle boundary stays visible under WHCM (SPEC-R19 — a background-drawn plane can otherwise merge with the page). Initials are real text and survive untouched; the `ui-icon` glyph inherits the consuming context's forced-colors ink (icon.md's own posture).
 ---
@@ -125,7 +125,7 @@ named foreseen extension if identity-at-a-glance proves needed.
 ## Sizing
 
 `size` (`sm` / `md` / `lg`, default `md`, reflected) selects the widget-box tier off the ratified
-`--ui-compact-{sm,md,lg}` ramp (ADR-0041) — the same ramp checkbox/switch/tag use, 12–28px depending on an
+`--md-sys-compact-{sm,md,lg}` ramp (ADR-0041) — the same ramp checkbox/switch/tag use, 12–28px depending on an
 ancestor `[scale]`. The component token `--ui-avatar-size` is the page's override for larger chrome (a
 profile header); a real fleet register above 28px is a named, separately-earned extension, not this
 component's default.

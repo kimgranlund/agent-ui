@@ -4,7 +4,7 @@
  *   [1] TOKEN BLOCK — `:where(ui-stat)` declares the tile's rhythm/typography as `--ui-stat-*`: interior
  *       gap + label/caption ink ride the space ladder + a supporting-text role (density-responsive for
  *       free, ADR-0103); the delta glyph's mark geometry is density-invariant px/em (badge/sparkline
- *       precedent). Display class (SPEC-R17): no [size]/[scale] control-band lookup, no `--ui-height-*`,
+ *       precedent). Display class (SPEC-R17): no [size]/[scale] control-band lookup, no `--md-sys-height-*`,
  *       no `h/2` law — the lever is the type matrix (`--md-sys-typescale-*`) + the space ladder.
  *   [2] STYLES BLOCK — `@scope (ui-stat)` consumes ONLY `--ui-stat-*`.
  *
@@ -30,7 +30,7 @@
 
 :where(ui-stat) {
   --ui-stat-min-inline-size: 8em; /* the whole-shape floor (SPEC-R10) */
-  --ui-stat-gap: var(--ui-space-xs); /* interior rhythm — rides [density] free (ADR-0103) */
+  --ui-stat-gap: var(--md-sys-space-xs); /* interior rhythm — rides [density] free (ADR-0103) */
   --ui-stat-label-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-stat-caption-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-stat-delta-glyph-size: 0.6em; /* density-invariant mark geometry */

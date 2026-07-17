@@ -2,7 +2,7 @@
  * ui-card + ui-card-header / ui-card-content / ui-card-footer. Sectioned, one TOKEN `:where()` block + one
  * STYLES block per element, mirroring button.css / text-field.css (declaration vs consumption split).
  *
- * Role-purity (ADR-0008 / tokens.md): the `--md-sys-color-*` colour roles and the shared `--ui-space-*` / `--ui-radius-base`
+ * Role-purity (ADR-0008 / tokens.md): the `--md-sys-color-*` colour roles and the shared `--md-sys-space-*` / `--md-sys-shape-corner-base`
  * ramps enter ONLY in the `:where()` TOKEN blocks (the variable-definition side); every STYLES block (`@scope` /
  * the region anatomy) consumes ONLY the element's own `--ui-card-*` chain plus the role-pure container surface
  * seam `--ui-container-bg` (ADR-0015 cl.2 — the cross-family surface seam, not a raw role). A card holds zero
@@ -34,7 +34,7 @@
  * card now reads container-box.css's shared region defaults straight (inline 12px / block 6px), same as
  * modal/select/menu/combo-box (one spacing vocabulary, restoring ADR-0046's original intent). Region padding
  * going from 6px inline to 12px means `--ui-card-inner-radius` (below) now decrements against a LARGER value —
- * with the default `--ui-radius-base` of 12px, the inner radius floors at EXACTLY 0 for an unreseeded root card
+ * with the default `--md-sys-shape-corner-base` of 12px, the inner radius floors at EXACTLY 0 for an unreseeded root card
  * (12 − 12 = 0, a knife-edge, not the old 6px-positive headroom). This is a real visual consequence of removing
  * the override, not a bug: an author who wants a visibly rounded nested corner now needs to reseed
  * `--ui-card-radius` larger than 12px. Flagged for Kim; not silently patched around.
@@ -87,9 +87,9 @@
 
   /* Frame: the neutral hairline border + the corner radius. The radius reads the inherited
      --ui-card-child-radius a PARENT card published (one-level nesting, ADR-0018), else the shared
-     --ui-radius-base (a root card — the channel is unset → the fallback). */
+     --md-sys-shape-corner-base (a root card — the channel is unset → the fallback). */
   --ui-card-border: var(--md-sys-color-neutral-outline-variant);
-  --ui-card-radius: var(--ui-card-child-radius, var(--ui-radius-base));
+  --ui-card-radius: var(--ui-card-child-radius, var(--md-sys-shape-corner-base));
 
   /* The card's INNER radius (the concentric-corner law) — the value handed down to a nested card. Under the
      box-model the inset is the CONTENT region's inline padding (a nested card lives inside ui-card-content),
@@ -273,7 +273,7 @@
      the scrollbar made ui-card-content a genuine keyboard tab stop (card-content.ts's tabindex=0), and every
      fleet control that can take keyboard focus draws the SAME shared ring — this region is no exception. The
      colour/width read the identical fleet constants every sibling reads (checkbox.css is the fleet
-     reference) — `--md-sys-color-focus-ring` / `--ui-focus-ring-width`, never a per-control repoint.
+     reference) — `--md-sys-color-focus-ring` / `--md-sys-state-focus-ring-width`, never a per-control repoint.
      THE RING PAINTS ON THE PARENT CARD, not on ui-card-content itself (Kim, 2026-07-08, superseding an
      earlier inset/negative-offset draft): `:has(> ui-card-content:focus-visible)` lets the card react to its
      content region's focus state and draw the ring around the WHOLE card instead. This sidesteps the clipping
@@ -284,8 +284,8 @@
      keeps it keyboard-only, matching the rest of the fleet. */
   :scope[scrollable]:has(> ui-card-content:focus-visible),
   :scope:has(> ui-card-content[scrollable]:focus-visible) {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 }
 
@@ -298,7 +298,7 @@
    FOUR of its own corners to the card's INNER radius (below) — REVISED 2026-07-04: a region is inset, not
    full-bleed, so it no longer meets the card's outer edge at all. */
 :where(ui-card-header, ui-card-footer) {
-  --ui-card-region-gap: var(--ui-space-sm); /* adornment↔label column-gap (off the --ui-space ladder) */
+  --ui-card-region-gap: var(--md-sys-space-sm); /* adornment↔label column-gap (off the --md-sys-space ladder) */
 
   display: grid;
   grid-template-columns: 1fr; /* [label] — slotless */
@@ -351,7 +351,7 @@
      element — it should be on ui-card-content", REVISED 2026-07-07: content now manages its own overflow AND
      carries the mask directly — no split at all). Density-linked; the 1rem fallback keeps it self-contained
      where only this sheet is loaded. */
-  --ui-box-fade: var(--ui-space-lg, 1rem);
+  --ui-box-fade: var(--md-sys-space-lg, 1rem);
 
   /* The bracket bands `traits/scroll-fade.ts` publishes as INLINE `--ui-box-head`/`--ui-box-foot` on this very
      element (card-content.ts's `brackets` points at the card) — re-declared under the card's own `--ui-card-*`

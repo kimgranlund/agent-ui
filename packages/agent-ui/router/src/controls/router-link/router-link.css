@@ -39,8 +39,8 @@
   }
   /* the fleet's shared focus treatment (ADR-0009) — the SAME ring every control draws. */
   :scope > a:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* The active-link treatment (SPEC-R6 AC4, SPEC-R7 AC2) — never hue-only: a bolder underline + weight

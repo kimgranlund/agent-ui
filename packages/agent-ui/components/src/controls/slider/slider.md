@@ -31,7 +31,7 @@ attributes:            # attributes-as-API — mirrors UISliderElement.props (ra
   - name: size
     type: enum
     values: [sm, md, lg]
-    default: md        # String('md') = 'md'; selects --ui-compact-{size} via [size] in slider.css
+    default: md        # String('md') = 'md'; selects --md-sys-compact-{size} via [size] in slider.css
     reflect: true      # reflects so the [size] widget-box repoint in slider.css applies to JS-set values too
   - name: name
     type: string
@@ -104,9 +104,9 @@ keyboard:
 
 geometry:
   sizeClass: indicator
-  blockSize: var(--ui-slider-box)     # widget box height = --ui-compact-{size} (ADR-0041)
+  blockSize: var(--ui-slider-box)     # widget box height = --md-sys-compact-{size} (ADR-0041)
   inlineSize: 100%                    # stretches to its container (block element, no intrinsic inline-size)
-  thumbSize: box − 4px                # circle thumb = --ui-slider-box − 2×--ui-widget-inset (ADR-0041 cl.3)
+  thumbSize: box − 4px                # circle thumb = --ui-slider-box − 2×--md-sys-widget-inset (ADR-0041 cl.3)
   railHeight: --ui-slider-rail-height # 3px constant, not derived from the widget box
 
 forcedColors: A `@media (forced-colors: active)` block maps the rail to a Highlight/ButtonText gradient (fill/track) and the thumb to a Canvas circle with a Highlight border. Both pseudo-elements carry `forced-color-adjust: none` to preserve the explicit system-colour mappings. The :focus-visible ring is free via --md-sys-color-focus-ring → Highlight from the token layer (ADR-0009).
@@ -135,7 +135,7 @@ HTML spec exempts from `required` entirely.
 
 ## Anatomy
 
-The host is a `block` container with `block-size = --ui-compact-{size}` (the widget-box ramp). The **rail**
+The host is a `block` container with `block-size = --md-sys-compact-{size}` (the widget-box ramp). The **rail**
 (`::before`) is a thin horizontal bar; its `linear-gradient` background paints the fill (primary) from the
 left up to `--value-pct%` and the neutral track beyond. The **thumb** (`::after`) is a circle `box − 4px`
 (the 2px-inset law, ADR-0041 cl.3) centred on the `--value-pct%` position along the host, painted in **two
@@ -167,7 +167,7 @@ after a net move emits `change`.
 
 ## Sizes
 
-`size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--ui-compact-{size}`
+`size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
 (ADR-0041: 14 · 16 · 18 px at the default `ui-md` scale). An ancestor `[scale]` attribute re-tables the
 ramp for its subtree.
 

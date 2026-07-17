@@ -5,7 +5,7 @@
  *       whole-shape floor (SPEC-R13 AC1 — an EXPLICIT `2rem` box, never `auto`: a swatch has no intrinsic
  *       content, so `auto` would collapse to 0 in a shrink-to-fit flex item), the hairline border (SPEC-R2
  *       AC3 — so a surface-colored swatch never disappears into the page), and the density-RESPONSIVE
- *       box↔text gap (rides `--ui-space` × `[density]` for free).
+ *       box↔text gap (rides `--md-sys-space` × `[density]` for free).
  *   [2] STYLES BLOCK — `@scope (ui-swatch)` consumes ONLY `--ui-swatch-*` (∪ the shared `--md-sys-color-*`/
  *       `--md-sys-typescale-*` namespaces). Display-class (SPEC-R16): no `[size]`/`[scale]` row, no control
  *       height — the box is a fixed token size, the value text reads the body-medium type row directly.
@@ -27,8 +27,8 @@
 :where(ui-swatch) {
   --ui-swatch-box-size: 2rem; /* the deterministic default box (whole-shape, SPEC-R13 AC1) — NOT auto */
   --ui-swatch-border: 1px solid var(--md-sys-color-neutral-outline-variant); /* the hairline so a surface color never vanishes (SPEC-R2 AC3) */
-  --ui-swatch-radius: var(--ui-radius-base);
-  --ui-swatch-gap: var(--ui-space-xs); /* box↔text gap — rides [density] for free (ADR-0103) */
+  --ui-swatch-radius: var(--md-sys-shape-corner-base);
+  --ui-swatch-gap: var(--md-sys-space-xs); /* box↔text gap — rides [density] for free (ADR-0103) */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-swatch) consumes ONLY --ui-swatch-* ════════════════ */

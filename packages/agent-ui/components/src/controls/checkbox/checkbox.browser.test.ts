@@ -2,26 +2,26 @@ import { describe, it, expect } from 'vitest'
 import { userEvent } from 'vitest/browser'
 
 // S1 browser smoke — ui-checkbox (decomp S1 · ADR-0041 · ADR-0042).
-// Probes (AC1–AC4 from ADR-0041): the box = --ui-compact-{size} per [size]×[scale]; the checkmark
+// Probes (AC1–AC4 from ADR-0041): the box = --md-sys-compact-{size} per [size]×[scale]; the checkmark
 // renders (::after has a non-zero computed dimension when checked); forced-colors (manual — the Playwright
 // browser does not emulate forced-colors in headless runs, so that branch is verified by reading only);
 // C10 connect→disconnect zero-residue (one toggle per click, no listener stacking).
 //
 // These imports are direct (not through the barrel) because the component-styles barrel is the
 // host's integration slice — it gains the checkbox @import at barrel-wiring time. The foundation CSS
-// (tokens + dimensions) is loaded through the shared package barrel so the --md-sys-color-* / --ui-compact-*
+// (tokens + dimensions) is loaded through the shared package barrel so the --md-sys-color-* / --md-sys-compact-*
 // token chain is in place before the control sheet resolves.
 
-import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--ui-compact-*)
+import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--md-sys-compact-*)
 import './checkbox.css'                             // the control stylesheet (direct — pre-barrel)
 import './checkbox.ts'                             // self-define (registers ui-checkbox)
 
 describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
-  it('AC1 default: ::before box = 16×16 px (--ui-compact-md at ui-md scale)', () => {
+  it('AC1 default: ::before box = 16×16 px (--md-sys-compact-md at ui-md scale)', () => {
     const el = document.createElement('ui-checkbox')
     document.body.append(el)
     const cs = getComputedStyle(el, '::before')
-    // --ui-compact-md = 16px at the default ui-md scale (ADR-0041 clause 2)
+    // --md-sys-compact-md = 16px at the default ui-md scale (ADR-0041 clause 2)
     expect(Number.parseFloat(cs.width)).toBe(16)
     expect(Number.parseFloat(cs.height)).toBe(16)
     el.remove()
@@ -31,13 +31,13 @@ describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
     const sm = document.createElement('ui-checkbox')
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(14) // --ui-compact-sm
+    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(14) // --md-sys-compact-sm
     sm.remove()
 
     const lg = document.createElement('ui-checkbox')
     lg.setAttribute('size', 'lg')
     document.body.append(lg)
-    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(18) // --ui-compact-lg
+    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(18) // --md-sys-compact-lg
     lg.remove()
   })
 
@@ -52,7 +52,7 @@ describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
     wrapper.remove()
   })
 
-  it('AC4 no --ui-scale multiplier: [scale=content-lg] × [size=lg] → 28px (not a CSS calc result)', () => {
+  it('AC4 no --md-sys-scale multiplier: [scale=content-lg] × [size=lg] → 28px (not a CSS calc result)', () => {
     const wrapper = document.createElement('div')
     wrapper.setAttribute('scale', 'content-lg')
     const el = document.createElement('ui-checkbox')
@@ -164,7 +164,7 @@ describe('ui-checkbox — hover (TKT-0047)', () => {
 
     el.focus()
     el.blur()
-    // `border-color` transitions over `--ui-motion-fast` (300ms, dimensions.css) — a couple of animation
+    // `border-color` transitions over `--md-sys-motion-duration-fast` (300ms, dimensions.css) — a couple of animation
     // frames (~33ms) is enough to observe a value merely CHANGED (the existing user-invalid-arms test
     // above only needs that), but this test needs the SETTLED end-state colour for an exact equality
     // comparison, so it waits past the real transition duration on both measurements below.

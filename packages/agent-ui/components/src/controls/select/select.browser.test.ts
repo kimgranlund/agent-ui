@@ -343,7 +343,7 @@ describe('ui-select — whole-shape assertion (Test-the-whole-shape DoD law)', (
     expect(triggerRect.width, `${server.browser}: trigger collapsed to zero width`).toBeGreaterThan(0)
     expect(triggerRect.height, `${server.browser}: trigger collapsed to zero height`).toBeGreaterThan(0)
 
-    // Trigger height must come from the ramp (--ui-select-height = --ui-height-md = 28px at default [scale])
+    // Trigger height must come from the ramp (--ui-select-height = --md-sys-height-md = 28px at default [scale])
     // Allow for sub-pixel and border differences: must be ≥ 24px (the sm height)
     expect(
       triggerRect.height,
@@ -385,7 +385,7 @@ describe('ui-select — whole-shape assertion (Test-the-whole-shape DoD law)', (
     const caretRect = caret.getBoundingClientRect()
     expect(caretRect.width, `${server.browser}: caret collapsed to zero width`).toBeGreaterThan(0)
     expect(caretRect.height, `${server.browser}: caret collapsed to zero height`).toBeGreaterThan(0)
-    // Caret should be approximately icon-sized (--ui-icon-md = 18px at default [scale])
+    // Caret should be approximately icon-sized (--md-sys-icon-md = 18px at default [scale])
     // Allow ± 4px: it must not be gigantic (not icon-proportioned at the wrong size class)
     expect(caretRect.width, `${server.browser}: caret is wider than 36px — not font-sized`).toBeLessThan(36)
 
@@ -712,7 +712,7 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
     const caretW = caret.getBoundingClientRect().width
     const caretH = caret.getBoundingClientRect().height
 
-    // Caret cell is icon-sized (--ui-icon-md = 18px at default scale); trigger is 28px.
+    // Caret cell is icon-sized (--md-sys-icon-md = 18px at default scale); trigger is 28px.
     // The caret cell must be smaller than the trigger height.
     expect(
       caretW,
@@ -1100,7 +1100,7 @@ describe('ui-select — the TKT-0062 filled/container state law (real repaint, b
     const trigger = el.querySelector('[data-part="trigger"]') as HTMLElement
     el.value = 'light'
     await el.updateComplete
-    await new Promise((r) => setTimeout(r, 250)) // past --ui-motion-fast — let the filled repaint settle
+    await new Promise((r) => setTimeout(r, 250)) // past --md-sys-motion-duration-fast — let the filled repaint settle
     const filledInk = getComputedStyle(trigger).color
 
     trigger.focus()

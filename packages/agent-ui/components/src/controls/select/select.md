@@ -133,7 +133,7 @@ geometry:
     font: var(--ui-select-font)
     icon: var(--ui-select-icon)               # the caret CELL is icon-wide
     glyph: var(--ui-select-glyph)             # = font, the §4.1 caret law
-    radius: var(--ui-select-radius)           # = --ui-radius-base (shared fleet radius)
+    radius: var(--ui-select-radius)           # = --md-sys-shape-corner-base (shared fleet radius)
     minInlineSize: var(--ui-select-min-inline-size)  # the 10ch host floor (ADR-0021 lesson)
   listbox:
     sizeClass: Container/surface

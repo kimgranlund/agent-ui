@@ -6,7 +6,7 @@
 # .claude/docs/plan.md §10 / ADR-0004; the labelling seam + association model per ADR-0051 and
 # .claude/docs/llds/field-form-provider.lld.md LLD-C4/LLD-C9.
 tag: ui-field
-tier: container        # geometry size-class (the radio-group precedent — not a sized control): NO control height, the label rides the font/type tokens, spacing off --ui-space
+tier: container        # geometry size-class (the radio-group precedent — not a sized control): NO control height, the label rides the font/type tokens, spacing off --md-sys-space
 extends: UIElement     # a structural label/description/error wrapper — NOT form-associated (carries no value of its own) and NOT UIContainerElement (no elevation/brightness surface paint)
 # marginal: ui-field adds 475 B gz (~2166 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — a structural wrapper with no trait). The family total (21599 B gz) stays within the 22528 B gz budget (ADR-0049) — 929 B headroom left after this wave (field + ui-form-provider + the dom/form.ts protocol growth)
 
@@ -52,9 +52,9 @@ aria:
 keyboard: []           # not interactive itself — no tabindex, no keyboard contract; the slotted control owns its own keyboard model entirely
 
 geometry:
-  sizeClass: container   # Container/layout band — NO control height (never reads --ui-height-*); the radio-group precedent
+  sizeClass: container   # Container/layout band — NO control height (never reads --md-sys-height-*); the radio-group precedent
   display: flex          # column flow: label / control slot / description / error, top to bottom (DOM placement IS reading order)
-  gap: var(--ui-field-gap)   # label↔control↔description↔error rhythm, off --ui-space × density — the one density-bearing quantity (field.css)
+  gap: var(--ui-field-gap)   # label↔control↔description↔error rhythm, off --md-sys-space × density — the one density-bearing quantity (field.css)
   note: The slotted control brings its own geometry (e.g. text-field's ADR-0021 min-inline-size floor); the field itself adds none — it is a pure label/description/error wrapper, never a sizing surface.
 
 forcedColors: A `@media (forced-colors: active)` block keeps the label/description/error ink visible (CanvasText — real text, not decorative glyphs); the error stays distinguishable by PRESENCE, not colour alone (WCAG 1.4.1 — field.css).

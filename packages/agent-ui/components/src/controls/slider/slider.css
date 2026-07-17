@@ -2,12 +2,12 @@
  * Two clearly-SECTIONED blocks:
  *
  *   [1] TOKEN BLOCK  — `:where(ui-slider)` (specificity 0,0,0) DECLARES the `--ui-slider-*` chain from
- *       the colour roles (`--md-sys-color-{family}-{role}`) and the compact widget ramp (`--ui-compact-{size}`,
+ *       the colour roles (`--md-sys-color-{family}-{role}`) and the compact widget ramp (`--md-sys-compact-{size}`,
  *       ADR-0041). `[size]` repoints the box token; `[disabled]` mutes to neutral roles. No `color-mix`
  *       — colour opinions live in the token layer (ADR-0008). `--ui-slider-rail-height` is a thin fleet
  *       constant (3px), NOT widget-box derived — the rail height does NOT scale with the thumb box.
  *   [2] STYLES BLOCK — `@scope (ui-slider)` CONSUMES only `--ui-slider-*` for its OWN tokens. The host
- *       is a `block` container: its block-size = the widget box (`--ui-compact-{size}`). The RAIL (`::before`)
+ *       is a `block` container: its block-size = the widget box (`--md-sys-compact-{size}`). The RAIL (`::before`)
  *       is a thin horizontal bar, full-width, vertically centred, with a gradient fill from the primary
  *       colour up to `--value-pct %` and neutral beyond — one declaration paints both the fill and the
  *       remainder. The THUMB (`::after`) is a circle `box − 2×inset = box − 4px` (ADR-0041 cl.3: the
@@ -49,7 +49,7 @@
 
 :where(ui-slider) {
   /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md). `[size]` repoints. */
-  --ui-slider-box: var(--ui-compact-md);
+  --ui-slider-box: var(--md-sys-compact-md);
 
   /* Rail colour — the unselected portion of the track. A state-bearing control part → the SOLID
      --md-sys-color-neutral-track (SC 1.4.11 3:1 vs every surface plane), NOT the old translucent
@@ -80,12 +80,12 @@
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the per-[scale] table in dimensions.css re-tables
-   --ui-compact-{sm,md,lg}; `[size]` on the host picks which step the slider box targets). */
+   --md-sys-compact-{sm,md,lg}; `[size]` on the host picks which step the slider box targets). */
 :where(ui-slider[size='sm']) {
-  --ui-slider-box: var(--ui-compact-sm);
+  --ui-slider-box: var(--md-sys-compact-sm);
 }
 :where(ui-slider[size='lg']) {
-  --ui-slider-box: var(--ui-compact-lg);
+  --ui-slider-box: var(--md-sys-compact-lg);
 }
 
 /* [disabled] → muted neutral roles for rail, fill, and thumb. The state holds at idle: the styles
@@ -143,7 +143,7 @@
     );
   }
 
-  /* THUMB (::after) — a circle inset by --ui-widget-inset (2px) on all sides (ADR-0041 cl.3).
+  /* THUMB (::after) — a circle inset by --md-sys-widget-inset (2px) on all sides (ADR-0041 cl.3).
    *
    * Size:     thumb = box − 2×inset = box − 4px (the two-pixel inset law, density-invariant flat fleet constant).
    * Block:    inset-block-start: 50% places the top edge at 50% of the host height; `transform: translate(-50%,
@@ -167,7 +167,7 @@
     box-sizing: border-box;
 
     /* ADR-0041 cl.3: thumb = box − 2×inset = box − 4px */
-    --ui-slider-thumb-size: calc(var(--ui-slider-box) - 2 * var(--ui-widget-inset));
+    --ui-slider-thumb-size: calc(var(--ui-slider-box) - 2 * var(--md-sys-widget-inset));
     inline-size: var(--ui-slider-thumb-size);
     block-size: var(--ui-slider-thumb-size);
     border-radius: 50%; /* circle */
@@ -181,16 +181,16 @@
     transform: translate(-50%, -50%);
 
     transition:
-      background-color var(--ui-motion-fast) var(--ui-ease-standard),
-      border-color var(--ui-motion-fast) var(--ui-ease-standard);
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
 
   /* Focus ring (ADR-0009) — the shared fleet ring: `:focus-visible` (keyboard-only). Surrounds the
      whole control (host box), the fleet standard. Reads fleet-wide tokens directly — the one deliberate
      exception to "consume only --ui-slider-*", matching the checkbox/switch pattern. */
   :scope:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* Reduced motion — zero ALL transitions (accessibility non-negotiable). */

@@ -147,7 +147,7 @@ describe('ui-toolbar — whole-shape: a populated bar renders with real width/he
     const { toolbar } = mount(`<ui-toolbar><ui-button variant="ghost">One</ui-button></ui-toolbar>`)
     const box = toolbar.getBoundingClientRect()
     expect(box.width, 'the toolbar collapsed to zero width').toBeGreaterThan(0)
-    // --ui-toolbar-min-block-size: var(--ui-height-md) — 28px @ scale 1 (the ADR-0038 lookup, the tabs precedent)
+    // --ui-toolbar-min-block-size: var(--md-sys-height-md) — 28px @ scale 1 (the ADR-0038 lookup, the tabs precedent)
     expect(box.height, 'the toolbar did not honour its min-block-size floor').toBeGreaterThanOrEqual(28)
   })
 

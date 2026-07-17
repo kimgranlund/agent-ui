@@ -3,7 +3,7 @@
  *   [1] TOKEN BLOCK — `:where(ui-split)` declares ONLY `--ui-split-*`: the divider thickness, the
  *       invisible hit-slop width, the keyboard step ratio, and the divider ink role. Geometry is
  *       Container/layout size-class (geometry.md "the five size-classes"): NO control height, no
- *       `--ui-height-*` — the divider + hit-slop are layout dimensions off the space/dimension scale.
+ *       `--md-sys-height-*` — the divider + hit-slop are layout dimensions off the space/dimension scale.
  *   [2] STYLES BLOCK — `@scope (ui-split)` consumes ONLY `--ui-split-*` for the host + the
  *       control-rendered `[data-separator]` divider (a light-DOM `<div>`, not its own custom element —
  *       styled here via a descendant selector, the `bar-chart.css` `[data-part]` precedent). The pane
@@ -111,8 +111,8 @@
 
   /* Focus ring (ADR-0009) — the shared fleet ring on the focused separator (keyboard-only). */
   [data-separator]:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* Forced-colors — the divider stays a real, visible system colour under `forced-colors: active` (SPEC-R5

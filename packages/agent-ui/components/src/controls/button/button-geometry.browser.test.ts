@@ -8,8 +8,8 @@ import { server, cdp } from 'vitest/browser'
 // says they must, and stay INVARIANT where the law says they must not.
 //
 // The two laws under proof (references/geometry.md · ADR-0006 host-as-grid):
-//   • FRAME ∝ height — block-size + the h/2 inline-pads ride [size] and [scale] (--ui-scale), NOT density.
-//   • RHYTHM ∝ font — the icon↔label gap (--ui-gap) rides [density] (the ONE density-bearing quantity).
+//   • FRAME ∝ height — block-size + the h/2 inline-pads ride [size] and [scale] (--md-sys-scale), NOT density.
+//   • RHYTHM ∝ font — the icon↔label gap (--md-sys-gap) rides [density] (the ONE density-bearing quantity).
 // The sharp ADR-0006 pair: [density] MOVES the icon+label gap but leaves the bare-label FRAME untouched.
 //
 // Side-effect imports — same load-bearing CSS order as the s12 harness (ADR-0003): foundation roles +
@@ -164,14 +164,14 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     expect(read('sm', 'ui-sm').f, 'sm×ui-sm font is not the §1-SET 12').toBe(12)
   })
 
-  it('[density] compact→spacious CHANGES the icon↔label gap (--ui-gap) — the icon+label variant', () => {
+  it('[density] compact→spacious CHANGES the icon↔label gap (--md-sys-gap) — the icon+label variant', () => {
     const { wrap, btn } = mount(ICON) // md size, scale comfortable (1)
     const gaps: number[] = []
     for (const density of ['compact', 'comfortable', 'spacious'] as const) {
       wrap.setAttribute('density', density)
       gaps.push(gapPx(btn))
     }
-    // gap_md = font_md / 2 × --ui-density = 7 × {0.5, 1, 1.5} @ scale 1 (the one density-bearing quantity).
+    // gap_md = font_md / 2 × --md-sys-density = 7 × {0.5, 1, 1.5} @ scale 1 (the one density-bearing quantity).
     expect(gaps[0]).toBeCloseTo(3.5, 1)
     expect(gaps[1]).toBeCloseTo(7, 1)
     expect(gaps[2]).toBeCloseTo(10.5, 1)
@@ -233,7 +233,7 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
   })
 
   it('ADR-0036 line-height = font: computed line-height on the host equals font-size (single-line control standard)', () => {
-    // ADR-0036 law: a single-line Control-class control sets line-height: 1 (via --ui-control-line-height
+    // ADR-0036 law: a single-line Control-class control sets line-height: 1 (via --md-sys-control-line-height
     // from dimensions.css), so its line box equals the em height and the host grid centers it cleanly.
     // AC1 proof: computed line-height px == computed font-size px. Sampled at two sizes for anti-vacuity
     // (proves line-height tracks font, not a fixed px residual from an ancestor 1.5 inheritance).

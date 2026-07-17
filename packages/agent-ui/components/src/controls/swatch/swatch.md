@@ -54,7 +54,7 @@ keyboard: []            # NOT interactive and NOT focusable — no tabindex, no 
 
 geometry:
   sizeClass: display
-  inlineSize: var(--ui-swatch-box-size)   # 2rem default box — NO [size] ramp, NO --ui-height-* (SPEC-R16 AC2)
+  inlineSize: var(--ui-swatch-box-size)   # 2rem default box — NO [size] ramp, NO --md-sys-height-* (SPEC-R16 AC2)
   blockSize: var(--ui-swatch-box-size)
 
 forcedColors: An explicit `@media (forced-colors: active)` block (SPEC-R14) — the box degrades to a `CanvasText` border with its `background` forced `transparent` (never a fake system color); the value/label text is real text and survives untouched.
@@ -103,7 +103,7 @@ text content: the printed datum and the accessible name are the same string, in 
 The host defaults to a `2rem × 2rem` box (`--ui-swatch-box-size`) — an EXPLICIT token size, not `auto`: a
 swatch has no intrinsic content, so a bare `<ui-swatch>` in an unstyled flex row still paints a visible,
 non-collapsed square with zero consumer CSS (ADR-0102 Lane A). There is no `[size]`/`[scale]` attribute and
-no `--ui-height-*` lever (SPEC-R16 AC2) — the value text reads the `--md-sys-typescale-body-medium-*` row
+no `--md-sys-height-*` lever (SPEC-R16 AC2) — the value text reads the `--md-sys-typescale-body-medium-*` row
 directly.
 
 ## Forced colors (WHCM)

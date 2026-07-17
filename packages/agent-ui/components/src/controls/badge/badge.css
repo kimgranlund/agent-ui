@@ -3,11 +3,11 @@
  *
  *   [1] TOKEN BLOCK — `:where(ui-badge)` (specificity 0,0,0) declares the --ui-badge-* chain from the
  *       colour roles (--md-sys-color-{family}-{role}) and the compact-realm widget-box ramp
- *       (--ui-compact-lg, ADR-0041 — box = compact-realm law, NOT h/2; SPEC-R13). `[intent]` repoints the
+ *       (--md-sys-compact-lg, ADR-0041 — box = compact-realm law, NOT h/2; SPEC-R13). `[intent]` repoints the
  *       colour channel (fill/ink/outline) here — the SAME technique checkbox.css uses for `[size]`/
  *       `[disabled]`: every attribute-conditional token repoint stays inside `:where()`, never inside
  *       `@scope` (component-packaging.md/tokens.md — "@scope consumes ONLY --ui-{name}-*"). No `[size]`
- *       attribute in v1 (SPEC-R13 AC3) — the box is fixed to `--ui-compact-lg` regardless of content.
+ *       attribute in v1 (SPEC-R13 AC3) — the box is fixed to `--md-sys-compact-lg` regardless of content.
  *   [2] STYLES BLOCK — `@scope (ui-badge)` consumes ONLY --ui-badge-*. The host is an inline-flex pill:
  *       fixed square block-size (the compact-realm box), the compact pad law `2px + box·ratio·density`
  *       (never `h/2` — geometry.md's compact-realm exception), radius = box/2 (the realm's "count pill"
@@ -27,19 +27,19 @@
 
 :where(ui-badge) {
   /* Compact-realm widget-box (ADR-0041; SPEC-R13) — fixed regardless of content/label length; [scale] on
-     an ancestor re-tables --ui-compact-lg for its subtree for free (no badge-local [scale] rule needed). */
-  --ui-badge-box: var(--ui-compact-lg); /* 18px @ default ui-md scale */
+     an ancestor re-tables --md-sys-compact-lg for its subtree for free (no badge-local [scale] rule needed). */
+  --ui-badge-box: var(--md-sys-compact-lg); /* 18px @ default ui-md scale */
 
   /* The compact pad law (dimensional-standard.md §2.4; geometry.md "the compact realm") — 2px + box ×
      0.375 × density. Density rides the PAD only; the box above stays density-invariant (geometry.md). */
-  --ui-badge-pad: calc(2px + var(--ui-badge-box) * 0.375 * var(--ui-density, 1));
+  --ui-badge-pad: calc(2px + var(--ui-badge-box) * 0.375 * var(--md-sys-density, 1));
 
   /* Text rides the fleet font ramp (NOT the compact box) — ADR-0111 cl.5's dual-listing resolution: box =
-     compact-realm law, text = --ui-font-*. line-height:1 in the styles block centers it like a glyph. */
-  --ui-badge-font: var(--ui-font-sm);
+     compact-realm law, text = --md-sys-font-*. line-height:1 in the styles block centers it like a glyph. */
+  --ui-badge-font: var(--md-sys-font-sm);
 
   /* Rhythm — the glyph↔label gap (density-responsive for free, geometry.md "rhythm ∝ font"). */
-  --ui-badge-gap: var(--ui-gap-sm);
+  --ui-badge-gap: var(--md-sys-gap-sm);
 
   /* The glyph fills half the box — a content-mark, not an inline affordance (anatomy.md's frame family). */
   --ui-badge-glyph: calc(var(--ui-badge-box) * 0.5);

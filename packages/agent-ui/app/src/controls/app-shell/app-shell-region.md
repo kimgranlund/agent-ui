@@ -62,7 +62,7 @@ aria:
 keyboard: []               # no keyboard interaction — a landmark region is not itself focusable; interactive content is the agent's own controls placed inside it
 
 geometry:
-  sizeClass: container      # Container — NO control height (never reads --ui-height-*); no own padding/gap opinion at M1
+  sizeClass: container      # Container — NO control height (never reads --md-sys-height-*); no own padding/gap opinion at M1
   blockSize: auto            # content-driven
   paddingBlock: 0            # this element declares no padding of its own; any inset is the author's/composed content's job
   display: block                     # this element's OWN base rule (an unstyled custom element defaults to inline otherwise) — the SPEC-R3 degrade-gracefully block, unconditional, in app-shell.css

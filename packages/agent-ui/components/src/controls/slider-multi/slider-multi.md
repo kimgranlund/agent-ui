@@ -129,8 +129,8 @@ geometry:
   sizeClass: range
   inlineSize: 100%    # fills the available inline width (the rail flex:1 within the host's flex row)
   blockSize: var(--ui-slider-multi-box)   # the compact widget-box ramp step (ADR-0041)
-  thumbSize: calc(--ui-slider-multi-box - 4px)    # box − 2×--ui-widget-inset (ADR-0041 cl.3: 2px-inset law)
-  boxRamp: --ui-compact-{size}           # 14/16/18 px at ui-md scale for sm/md/lg (ADR-0041 clause 2)
+  thumbSize: calc(--ui-slider-multi-box - 4px)    # box − 2×--md-sys-widget-inset (ADR-0041 cl.3: 2px-inset law)
+  boxRamp: --md-sys-compact-{size}           # 14/16/18 px at ui-md scale for sm/md/lg (ADR-0041 clause 2)
 
 forcedColors: A `@media (forced-colors: active)` block maps the rail to a Canvas fill + ButtonText border; the fill to Highlight; the thumbs to ButtonFace + ButtonText border. forced-color-adjust:none on all three elements preserves the explicit system-colour assignments so the browser cannot re-override them. The :focus-visible ring resolves to Highlight via --md-sys-color-focus-ring from the token layer (ADR-0009).
 ---
@@ -166,7 +166,7 @@ selects the closer thumb and focuses it.
 
 ## Sizes
 
-`size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--ui-compact-{size}`
+`size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
 (ADR-0041: 14 · 16 · 18 px at the default `ui-md` scale). The thumb is always `box − 4px` (the
 ADR-0041 2px-inset law). An ancestor `[scale]` attribute re-tables the ramp for its subtree.
 

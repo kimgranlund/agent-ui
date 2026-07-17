@@ -121,10 +121,10 @@ describe('UILadderElement — row rendering (SPEC-R10/R12)', () => {
 
   it('a --var length tier routes --_mag through var() (SPEC-R2/R10, the LLD-C1 cssValue transform)', () => {
     const el = new UILadderElement()
-    el.tiers = [{ label: 'a', value: '--ui-height-md' }]
+    el.tiers = [{ label: 'a', value: '--md-sys-height-md' }]
     mount(el)
     const bar = el.querySelector('[data-part="bar"]') as HTMLElement
-    expect(bar.style.getPropertyValue('--_mag')).toBe('var(--ui-height-md)')
+    expect(bar.style.getPropertyValue('--_mag')).toBe('var(--md-sys-height-md)')
   })
 
   it('changing `tiers` re-renders reactively (whole-array swap, no incremental patch)', async () => {

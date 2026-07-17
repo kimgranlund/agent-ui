@@ -56,7 +56,7 @@ keyboard: []            # NOT interactive and NOT focusable — no tabindex, no 
 
 geometry:
   sizeClass: display
-  minInlineSize: var(--ui-ladder-min-inline-size)  # 16em default — the whole-shape floor; NO [size] ramp, NO --ui-height-* (SPEC-R16 AC2)
+  minInlineSize: var(--ui-ladder-min-inline-size)  # 16em default — the whole-shape floor; NO [size] ramp, NO --md-sys-height-* (SPEC-R16 AC2)
   rowGap: var(--ui-ladder-row-gap)                  # the density-RESPONSIVE row rhythm (rides [density] for free — ADR-0103)
   barSize: var(--ui-ladder-bar-size)                # bar THICKNESS — density-invariant mark geometry (SPEC-R16)
 
@@ -120,8 +120,8 @@ a color-only signifier.
 The host defaults to a `16em` `min-inline-size` floor (`--ui-ladder-min-inline-size`) — a bare, unstyled
 ladder in a flex row still paints a visible, non-collapsed list with zero consumer CSS (ADR-0102 Lane A).
 Bar thickness (`--ui-ladder-bar-size`) is density-**invariant**; row/column gap
-(`--ui-ladder-row-gap`/`-col-gap`) rides the `--ui-space` ladder and responds to an ancestor `[density]` for
-free. There is no `[size]`/`[scale]` attribute and no `--ui-height-*` lever (SPEC-R16 AC2).
+(`--ui-ladder-row-gap`/`-col-gap`) rides the `--md-sys-space` ladder and responds to an ancestor `[density]` for
+free. There is no `[size]`/`[scale]` attribute and no `--md-sys-height-*` lever (SPEC-R16 AC2).
 
 ## RTL
 

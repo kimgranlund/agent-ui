@@ -37,11 +37,11 @@ if (Object.keys(PRIMITIVES).length === 0) {
 // (color=ramp / dimensions=ladder now converges) — the PARSE helper `parseDimensionRamp` in token-parse.ts is
 // NOT renamed (SPEC-R17: it stays site-local, and `tokens-doc.test.ts` calls it by that name unchanged).
 const DIMENSION_LADDERS: readonly { readonly prefix: string; readonly label: string; readonly note: string }[] = [
-  { prefix: 'ui-height', label: '--ui-height-*', note: 'The Control-class block-size (button · text-field · select · field) — the frame the h/2 centring law measures from.' },
-  { prefix: 'ui-font', label: '--ui-font-*', note: 'The control-band glyph size, paired 1:1 with --ui-height-* (the square-centring law) — never the document type scale.' },
-  { prefix: 'ui-icon', label: '--ui-icon-*', note: 'The fixed CONTENT-icon register (a field’s leading icon, a status glyph) — distinct from an inline affordance, which is sized = font.' },
-  { prefix: 'ui-compact', label: '--ui-compact-*', note: 'The Indicator/Range widget-box ramp (checkbox · switch · radio · slider) — a separate size system from Control height.' },
-  { prefix: 'ui-space', label: '--ui-space-*', note: 'Layout spacing BETWEEN components (gaps, padding, margin) — density-derived, never control geometry (geometry.md’s "not interchangeable" rule).' },
+  { prefix: 'md-sys-height', label: '--md-sys-height-*', note: 'The Control-class block-size (button · text-field · select · field) — the frame the h/2 centring law measures from.' },
+  { prefix: 'md-sys-font', label: '--md-sys-font-*', note: 'The control-band glyph size, paired 1:1 with --md-sys-height-* (the square-centring law) — never the document type scale.' },
+  { prefix: 'md-sys-icon', label: '--md-sys-icon-*', note: 'The fixed CONTENT-icon register (a field’s leading icon, a status glyph) — distinct from an inline affordance, which is sized = font.' },
+  { prefix: 'md-sys-compact', label: '--md-sys-compact-*', note: 'The Indicator/Range widget-box ramp (checkbox · switch · radio · slider) — a separate size system from Control height.' },
+  { prefix: 'md-sys-space', label: '--md-sys-space-*', note: 'Layout spacing BETWEEN components (gaps, padding, margin) — density-derived, never control geometry (geometry.md’s "not interchangeable" rule).' },
 ]
 for (const { prefix } of DIMENSION_LADDERS) {
   if (parseDimensionRamp(dimensionsCss, prefix).length === 0) {

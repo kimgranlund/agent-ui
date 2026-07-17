@@ -3,10 +3,10 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-grid)` (specificity 0,0,0) DECLARES the `--ui-grid-*` chain: the `--ui-grid-min`
  *       track FLOOR (a sensible default; grid.ts repoints it inline for a per-instance `min` override) and the
- *       `--ui-grid-gap` off the `--ui-space-{step}` density-responsive LAYOUT-spacing ladder (ADR-0015 cl.4 /
+ *       `--ui-grid-gap` off the `--md-sys-space-{step}` density-responsive LAYOUT-spacing ladder (ADR-0015 cl.4 /
  *       geometry.md "--space-* is layout spacing, not control geometry"). `[gap=step]` repoints the gap (gap
- *       reflects, so the attribute is present). NO `--ui-height-*` — a Container/layout primitive has no control
- *       height (geometry.md "five size-classes"); spacing rides `--ui-space` × `[density]` only.
+ *       reflects, so the attribute is present). NO `--md-sys-height-*` — a Container/layout primitive has no control
+ *       height (geometry.md "five size-classes"); spacing rides `--md-sys-space` × `[density]` only.
  *   [2] STYLES BLOCK — `@scope (ui-grid)` CONSUMES only `--ui-grid-*` for its layout: `display: grid` with the
  *       INTRINSIC auto-fit/`minmax` track model (ADR-0016 cl.3/4) — `repeat(auto-fit, minmax(var(--ui-grid-min),
  *       1fr))` reflows by the grid's OWN rendered width (more tracks when wide, fewer when narrow) with NO
@@ -32,29 +32,29 @@
   /* the auto-fit/minmax track FLOOR (ADR-0016 cl.3) — a sensible default; grid.ts repoints this INLINE for a
      per-instance `min` override (inline custom property outranks this `:where()` declaration). */
   --ui-grid-min: 16rem;
-  /* gap off the --ui-space density-responsive ladder (ADR-0015 cl.4); default = none (a bare grid has no gap).
+  /* gap off the --md-sys-space density-responsive ladder (ADR-0015 cl.4); default = none (a bare grid has no gap).
      [gap=step] repoints below — gap reflects, so the attribute is present for these selectors. */
-  --ui-grid-gap: var(--ui-space-none);
+  --ui-grid-gap: var(--md-sys-space-none);
 }
 
-/* gap → the --ui-space ladder (the step vocabulary mirrors flexProps' gap enum 1:1) */
+/* gap → the --md-sys-space ladder (the step vocabulary mirrors flexProps' gap enum 1:1) */
 :where(ui-grid[gap='xs']) {
-  --ui-grid-gap: var(--ui-space-xs);
+  --ui-grid-gap: var(--md-sys-space-xs);
 }
 :where(ui-grid[gap='sm']) {
-  --ui-grid-gap: var(--ui-space-sm);
+  --ui-grid-gap: var(--md-sys-space-sm);
 }
 :where(ui-grid[gap='md']) {
-  --ui-grid-gap: var(--ui-space-md);
+  --ui-grid-gap: var(--md-sys-space-md);
 }
 :where(ui-grid[gap='lg']) {
-  --ui-grid-gap: var(--ui-space-lg);
+  --ui-grid-gap: var(--md-sys-space-lg);
 }
 :where(ui-grid[gap='xl']) {
-  --ui-grid-gap: var(--ui-space-xl);
+  --ui-grid-gap: var(--md-sys-space-xl);
 }
 :where(ui-grid[gap='2xl']) {
-  --ui-grid-gap: var(--ui-space-2xl);
+  --ui-grid-gap: var(--md-sys-space-2xl);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-grid) consumes ONLY --ui-grid-* ════════════════ */

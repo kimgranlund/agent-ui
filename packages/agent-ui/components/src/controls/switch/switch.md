@@ -4,8 +4,8 @@
 # The `attributes[]` block MUST mirror indicator-element.ts `indicatorProps` (the ...UIFormElement.formProps
 # spread — name/disabled/required — plus checked/value/size) — the contract↔props trip-wire and the frontmatter
 # schema both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
-# Indicator-class geometry: the box rides `--ui-compact-{size}` (ADR-0041); the thumb insets
-# `--ui-widget-inset` (2px) so thumb = box − 4px (LLD-C4 / ADR-0041 cl.3 — proven by switch.browser.test.ts,
+# Indicator-class geometry: the box rides `--md-sys-compact-{size}` (ADR-0041); the thumb insets
+# `--md-sys-widget-inset` (2px) so thumb = box − 4px (LLD-C4 / ADR-0041 cl.3 — proven by switch.browser.test.ts,
 # which RATIFIES ADR-0041 as the S2 green gate).
 tag: ui-switch
 tier: indicator          # geometry size-class (Indicator widget box — compact ramp, not full control height; geometry.md "five size-classes")
@@ -78,10 +78,10 @@ keyboard:
 
 geometry:
   sizeClass: indicator
-  blockSize: var(--ui-switch-box)                               # the widget box height = --ui-compact-{size} (ADR-0041 widget ramp)
+  blockSize: var(--ui-switch-box)                               # the widget box height = --md-sys-compact-{size} (ADR-0041 widget ramp)
   inlineSize: calc(var(--ui-switch-box) * 1.8)                 # the pill track ≈ 1.8× the box (density-invariant)
   radius: calc(var(--ui-switch-box) / 2)                       # pill radius = box/2 (the track border-radius)
-  thumbSize: calc(var(--ui-switch-box) - 2 * var(--ui-widget-inset))   # ADR-0041 cl.3: thumb = box − 4px
+  thumbSize: calc(var(--ui-switch-box) - 2 * var(--md-sys-widget-inset))   # ADR-0041 cl.3: thumb = box − 4px
 
 forcedColors: A `@media (forced-colors: active)` block renders the track as Canvas + ButtonText border (unchecked) or Highlight + Highlight border (checked), and the thumb as ButtonText / HighlightText. The `:focus-visible` ring survives via `--md-sys-color-focus-ring → Highlight` (the token layer's FC mapping) without a per-control rule.
 ---
@@ -102,19 +102,19 @@ carries **no** `role`/`aria-*` attribute.
 ## Anatomy
 
 The host is an `inline-flex` row: the pill track (`::before`) is the first item; any slotted label text
-follows in the default slot. The TRACK (`::before`) is a pill — `block-size = --ui-compact-{size}` (the
+follows in the default slot. The TRACK (`::before`) is a pill — `block-size = --md-sys-compact-{size}` (the
 ADR-0041 widget-box ramp, `[size]×[scale]`), `inline-size ≈ 1.8×` the box, `border-radius = box/2`. The
-THUMB (`::after`) is a circle inset `--ui-widget-inset` (2px) on all sides — **thumb = box − 4px**
+THUMB (`::after`) is a circle inset `--md-sys-widget-inset` (2px) on all sides — **thumb = box − 4px**
 (ADR-0041 cl.3, the 2px inset law). On `:state(checked)` the thumb translates `0.8×box` to the right,
 landing with the identical 2px inset from the track end (the geometry is symmetric). Density-invariant:
-neither the box nor the inset rides `--ui-density`.
+neither the box nor the inset rides `--md-sys-density`.
 
 ## States + colour
 
 Unchecked: solid `--md-sys-color-neutral-track` track (the state-bearing track role, ADR-0059 — SC 1.4.11 3:1 on every plane; `-track-hover` on hover), near-white thumb. Checked: `--md-sys-color-primary` track
 (`--md-sys-color-primary-on-primary` thumb). Disabled: `--md-sys-color-neutral-surface-high` track, muted ink thumb — the
 host is pointer-inert (`pointer-events: none`), so `:hover` never lifts the state. A `:focus-visible`
-ring (keyboard-only, ADR-0009) uses the fleet `--md-sys-color-focus-ring` / `--ui-focus-ring-*` tokens.
+ring (keyboard-only, ADR-0009) uses the fleet `--md-sys-color-focus-ring` / `--md-sys-state-focus-ring-*` tokens.
 
 ## Form participation
 

@@ -32,7 +32,7 @@ afterEach(() => {
 })
 
 describe('ui-avatar — compact-ramp widget-box geometry (SPEC-R20 AC1, ADR-0041)', () => {
-  it('default (size=md, no ancestor [scale]) → 16×16 box (--ui-compact-md at ui-md scale)', () => {
+  it('default (size=md, no ancestor [scale]) → 16×16 box (--md-sys-compact-md at ui-md scale)', () => {
     const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
     const box = el.getBoundingClientRect()
     expect(box.width).toBe(16)

@@ -21,7 +21,7 @@
      nested-radius derivation off it (ADR-0018's concentric-corner spirit; identical rendered values at
      the default base). Minted here (not read directly in @scope) so the pending dimensional-constants
      ruling (TKT-0066 item 5) is satisfied either way. */
-  --ui-conversation-radius: var(--ui-radius-base, 12px);
+  --ui-conversation-radius: var(--md-sys-shape-corner-base, 12px);
   --ui-conversation-bubble-radius: calc(var(--ui-conversation-radius) - 2px);
 }
 

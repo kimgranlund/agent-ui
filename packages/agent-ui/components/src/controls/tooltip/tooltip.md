@@ -7,7 +7,7 @@
 # fence. Field set per .claude/docs/plan.md §10 / ADR-0004; overlay mechanism per the overlay-controller
 # LLD-C1..C4; bindable `open` two-way per ADR-0019; ADR-0043 = the overlay controller gate.
 tag: ui-tooltip
-tier: pattern           # geometry size-class — the panel uses --ui-space padding (Container/surface, NOT a control height)
+tier: pattern           # geometry size-class — the panel uses --md-sys-space padding (Container/surface, NOT a control height)
 extends: UIElement      # NOT form-associated — the tooltip carries no value/validity; it is a disclosure surface
 # marginal: tracked at the wave-4 integration slice (s12 barrel pass)
 
@@ -73,9 +73,9 @@ keyboard:
     action: Hides the open tooltip (a document-level keydown listener closes and emits close+toggle). The tooltip does NOT take focus (focusOnOpen=false), so Escape is processed wherever focus currently lives.
 
 geometry:
-  sizeClass: pattern    # Container/surface geometry — the panel uses --ui-space-sm padding; NO control height
-  padding: var(--ui-tooltip-padding)          # = var(--ui-space-sm) — compact tooltip spacing
-  radius: var(--ui-tooltip-radius)            # = var(--ui-radius-base), the shared fleet radius
+  sizeClass: pattern    # Container/surface geometry — the panel uses --md-sys-space-sm padding; NO control height
+  padding: var(--ui-tooltip-padding)          # = var(--md-sys-space-sm) — compact tooltip spacing
+  radius: var(--ui-tooltip-radius)            # = var(--md-sys-shape-corner-base), the shared fleet radius
   minInlineSize: var(--ui-tooltip-min-inline-size)  # floor to prevent collapse (ADR-0021 lesson)
   surface: var(--ui-tooltip-bg)              # neutral-variant surface (elevated contrast for tooltip readability)
 

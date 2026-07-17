@@ -11,7 +11,7 @@
 
 body {
   margin: 0;
-  font-family: var(--ui-sans); /* the fleet sans constant (dimensions.css) — one home, shared with base.css */
+  font-family: var(--md-sys-typeface-sans); /* the fleet sans constant (dimensions.css) — one home, shared with base.css */
   /* Docs text DEFAULT leading — the type-scale body step (1.429), one source of truth with
      --md-sys-typescale-body-medium-line-height (ADR-0078; retired --ui-type-body-leading — this rule was a LIVE
      survivor of the retirement until repaired here, since dimensions.css deletes the family it named).
@@ -67,15 +67,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--ui-space-md);
-  padding-inline: var(--ui-space-xl);
-  padding-block: var(--ui-space-sm);
+  gap: var(--md-sys-space-md);
+  padding-inline: var(--md-sys-space-xl);
+  padding-block: var(--md-sys-space-sm);
   background: var(--md-sys-color-neutral-surface);
   border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 .app-brand {
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 1rem;
   font-weight: 650;
   letter-spacing: -0.01em;
@@ -88,7 +88,7 @@ body {
 .app-context-actions {
   display: flex;
   align-items: center;
-  gap: var(--ui-space-xs);
+  gap: var(--md-sys-space-xs);
 }
 
 .app-context-slot {
@@ -113,7 +113,7 @@ body {
 .app-context-footer-inner {
   inline-size: min(64rem, 100% - 3rem);
   margin-inline: auto;
-  padding-block: var(--ui-space-sm);
+  padding-block: var(--md-sys-space-sm);
   display: flex;
   align-items: center;
   font-size: 0.78rem;
@@ -171,10 +171,10 @@ body {
 .page-header-inner {
   inline-size: min(64rem, 100% - 3rem);
   margin-inline: auto;
-  padding-block: var(--ui-space-md);
+  padding-block: var(--md-sys-space-md);
   display: flex;
   flex-direction: column;
-  gap: var(--ui-space-xs);
+  gap: var(--md-sys-space-xs);
 }
 
 /* When the header carries a tab strip, seat it FLUSH to the header's bottom edge (drop the bottom padding) so the
@@ -185,7 +185,7 @@ body {
 }
 
 .page-context-label {
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.7rem;
   letter-spacing: 0.02em;
   color: var(--md-sys-color-neutral-on-surface-variant);
@@ -196,7 +196,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--ui-space-md);
+  gap: var(--md-sys-space-md);
 }
 
 .page-heading {
@@ -249,7 +249,7 @@ body {
  * single divider the active underline rides — the strip carries NO second border-line of its own. The top margin
  * gives clean separation from the description above. */
 .page-tabs {
-  margin-block-start: var(--ui-space-sm);
+  margin-block-start: var(--md-sys-space-sm);
 }
 
 .page-tabs ul {
@@ -295,7 +295,7 @@ body {
 .page-footer-inner {
   inline-size: min(64rem, 100% - 3rem);
   margin-inline: auto;
-  padding-block: var(--ui-space-sm);
+  padding-block: var(--md-sys-space-sm);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -316,7 +316,7 @@ body {
   /* Block breathing room so content clears the sticky page-header (top) and page-footer (bottom) instead of
    * butting against them — padding on the scroll-body region, not a margin on the first child the header would
    * overlap. Reset to 0 on the full-bleed variant below (it owns its region edge-to-edge). */
-  padding-block: var(--ui-space-xl);
+  padding-block: var(--md-sys-space-xl);
 }
 
 /* ── code previews (the shared codeBlock helper — site/lib/code-block.ts) ──────────────────────────────────
@@ -327,14 +327,14 @@ body {
  * helper, so a control's `{name}.md` examples share this exact treatment. */
 .code-block {
   margin: 0;
-  padding: var(--ui-space-sm) var(--ui-space-md);
+  padding: var(--md-sys-space-sm) var(--md-sys-space-md);
   overflow-x: auto;
   scrollbar-width: none; /* hide the bar — horizontal scroll stays functional */
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 0.5rem;
   background: var(--md-sys-color-neutral-surface-high);
   color: var(--md-sys-color-neutral-on-surface);
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.8rem;
   line-height: 1.5;
 }
@@ -365,7 +365,7 @@ body {
  * across lines. Scheme (light-dark) + forced-colors safety ride the --md-sys-color-* role layer, as .code-block does.
  * The `.code-block code` reset above keeps fenced BLOCK code a plain panel. */
 code {
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.85em;
   padding: 0.1em 0.35em;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);

@@ -56,7 +56,7 @@
   display: block;
   margin-block-end: 0.25rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -103,7 +103,7 @@
 
 .feed-counter {
   color: var(--md-sys-color-neutral-on-surface-variant);
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.78rem;
   font-weight: 600;
 }
@@ -125,7 +125,7 @@
 
 .feed-head {
   margin-block-end: 0.3rem;
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.74rem;
   font-weight: 600;
   color: var(--md-sys-color-neutral-on-surface-variant);
@@ -188,7 +188,7 @@
 
 .status-first-paint {
   color: var(--md-sys-color-primary-high);
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.78rem;
   font-weight: 600;
 }
@@ -218,7 +218,7 @@
 
 .msg-head {
   margin-block-end: 0.3rem;
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.76rem;
   font-weight: 600;
   white-space: pre;

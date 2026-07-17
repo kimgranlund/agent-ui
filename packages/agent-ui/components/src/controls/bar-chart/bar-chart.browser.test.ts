@@ -7,7 +7,7 @@ import { server, cdp } from 'vitest/browser'
 // ALL-NEGATIVE degenerate row (SPEC-R7), RTL mirroring (SPEC-R11 AC1), and forced-colors (SPEC-R10 AC1).
 //
 // Side-effect CSS/JS imports — the load-bearing order (ADR-0003): foundation roles + dimensional ramp
-// FIRST (tokens.css / dimensions.css — the --md-sys-color-*/--md-sys-typescale-*/--ui-space-* this sheet's
+// FIRST (tokens.css / dimensions.css — the --md-sys-color-*/--md-sys-typescale-*/--md-sys-space-* this sheet's
 // :where() token block reads), then bar-chart.css directly, then bar-chart.ts (self-defines). The
 // component-styles barrel does NOT yet @import bar-chart.css (that is wave M1-b's LLD-C8 integration
 // slice) — this suite imports it directly, the card.browser.test.ts / sparkline precedent for a

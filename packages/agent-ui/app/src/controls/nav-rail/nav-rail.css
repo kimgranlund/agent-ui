@@ -33,17 +33,17 @@
   --ui-nav-rail-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-nav-rail-scrim: var(--md-sys-color-neutral-scrim);
 
-  --ui-nav-rail-height: var(--ui-height-md);
-  --ui-nav-rail-font: var(--ui-font-md);
-  --ui-nav-rail-icon: var(--ui-icon-md);
-  --ui-nav-rail-gap: var(--ui-gap-md);
+  --ui-nav-rail-height: var(--md-sys-height-md);
+  --ui-nav-rail-font: var(--md-sys-font-md);
+  --ui-nav-rail-icon: var(--md-sys-icon-md);
+  --ui-nav-rail-gap: var(--md-sys-gap-md);
 
   /* TKT-0066 item 5 ruling: dimensional constants route through the own chain, never read raw in @scope. */
-  --ui-nav-rail-label-font: var(--ui-font-sm);
-  --ui-nav-rail-context-pad-block-start: var(--ui-space-sm);
-  --ui-nav-rail-context-pad-block-end: var(--ui-space-xs);
-  --ui-nav-rail-flyout-pad: var(--ui-space-xs);
-  --ui-nav-rail-flyout-radius: var(--ui-radius-base);
+  --ui-nav-rail-label-font: var(--md-sys-font-sm);
+  --ui-nav-rail-context-pad-block-start: var(--md-sys-space-sm);
+  --ui-nav-rail-context-pad-block-end: var(--md-sys-space-xs);
+  --ui-nav-rail-flyout-pad: var(--md-sys-space-xs);
+  --ui-nav-rail-flyout-radius: var(--md-sys-shape-corner-base);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-nav-rail) consumes ONLY --ui-nav-rail-* ════════════════ */
@@ -101,7 +101,7 @@
     padding-block: 0; /* NEVER block-padding (geometry.md) */
     padding-inline: calc(var(--ui-nav-rail-height) / 2);
     font-size: var(--ui-nav-rail-font);
-    line-height: var(--ui-control-line-height);
+    line-height: var(--md-sys-control-line-height);
     color: var(--ui-nav-rail-ink);
     text-decoration: none;
     background: transparent;
@@ -117,8 +117,8 @@
   }
 
   [data-part='activator']:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: calc(-1 * var(--ui-focus-ring-width)); /* inset — the row already sits at the rail's own edge */
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: calc(-1 * var(--md-sys-state-focus-ring-width)); /* inset — the row already sits at the rail's own edge */
   }
 
   /* The active item's non-color-alone signifier: a real border (survives forced-colors below) + the ink. */
@@ -206,7 +206,7 @@
       border-inline-end: 1.5px solid currentColor;
       border-block-end: 1.5px solid currentColor;
       transform: rotate(45deg);
-      transition: transform var(--ui-motion-fast) var(--ui-ease-standard);
+      transition: transform var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
     }
     [data-part='disclosure'][open] > [data-part='trigger']::after {
       transform: rotate(-135deg);

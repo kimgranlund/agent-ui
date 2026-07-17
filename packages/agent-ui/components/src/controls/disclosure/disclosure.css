@@ -4,8 +4,8 @@
  *   [1] TOKEN BLOCK — `:where(ui-disclosure)` (specificity 0,0,0) DECLARES the `--ui-disclosure-*` chain
  *       from the colour roles (`--md-sys-color-neutral-*` — a disclosure carries no accent/family axis)
  *       and the dimensional ramp. Pattern-class split (geometry.md "accordion" row): the summary row is
- *       the interactive CONTROL-height row (`--ui-height-md`/`--ui-font-md`, density-INVARIANT frame); the
- *       body rhythm rides the `--ui-space-*` layout ladder (density-RESPONSIVE). The chevron is an INLINE
+ *       the interactive CONTROL-height row (`--md-sys-height-md`/`--md-sys-font-md`, density-INVARIANT frame); the
+ *       body rhythm rides the `--md-sys-space-*` layout ladder (density-RESPONSIVE). The chevron is an INLINE
  *       AFFORDANCE (geometry.md §"Affordance vs content-icon") — sized `= font`, never the icon ramp.
  *   [2] STYLES BLOCK — `@scope (ui-disclosure)` CONSUMES only `--ui-disclosure-*` (+ the two shared fleet
  *       constants every control reads directly: the focus-ring pair, ADR-0009). The native `::marker`/
@@ -25,8 +25,8 @@
   /* Summary row — Pattern-class interactive row (geometry.md: "interactive rows take the control
      height"). Fixed at the md ramp step (ui-disclosure exposes no [size] axis — a fold header is not a
      sized entry/action control). Density-INVARIANT (frame family, ∝ height). */
-  --ui-disclosure-height: var(--ui-height-md);
-  --ui-disclosure-font: var(--ui-font-md);
+  --ui-disclosure-height: var(--md-sys-height-md);
+  --ui-disclosure-font: var(--md-sys-font-md);
   --ui-disclosure-ink: var(--md-sys-color-neutral-on-surface);
   /* Hover (TKT-0047, revised twice): a background-PAINT wash, not an ink-step. The original ink-step
      attempt (matching tabs.css) turned out visually inert — disclosure's idle ink already sits at the
@@ -50,12 +50,12 @@
   --ui-disclosure-glyph: var(--ui-disclosure-font);
 
   /* Summary row inline layout — the icon↔label gap (rhythm family, ∝ font × density; geometry.md). */
-  --ui-disclosure-gap: var(--ui-gap-md);
+  --ui-disclosure-gap: var(--md-sys-gap-md);
 
-  /* Body rhythm — the `--ui-space-*` LAYOUT ladder (density-RESPONSIVE; the Pattern-class split,
+  /* Body rhythm — the `--md-sys-space-*` LAYOUT ladder (density-RESPONSIVE; the Pattern-class split,
      geometry.md: "the shell uses the space scale"), never the control-height frame. */
-  --ui-disclosure-body-pad-block: var(--ui-space-sm);
-  --ui-disclosure-body-pad-inline: var(--ui-space-md);
+  --ui-disclosure-body-pad-block: var(--md-sys-space-sm);
+  --ui-disclosure-body-pad-inline: var(--md-sys-space-md);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-disclosure) consumes ONLY --ui-disclosure-* ════════════════ */
@@ -79,7 +79,7 @@
     padding-inline-start: calc(var(--ui-disclosure-height) / 2); /* slotless-edge law, h/2 (geometry.md) */
     padding-inline-end: calc(var(--ui-disclosure-height) / 2);
     font-size: var(--ui-disclosure-font);
-    line-height: var(--ui-control-line-height); /* single-line control standard (ADR-0036) */
+    line-height: var(--md-sys-control-line-height); /* single-line control standard (ADR-0036) */
     color: var(--ui-disclosure-ink);
     cursor: pointer;
     list-style: none; /* hide the native ::marker (Chromium) */
@@ -131,7 +131,7 @@
     background-color: var(--ui-disclosure-bg-hover);
   }
 
-  /* The body — rides the `--ui-space` layout ladder (density-responsive; the Pattern-class split). No
+  /* The body — rides the `--md-sys-space` layout ladder (density-responsive; the Pattern-class split). No
      control-height law applies here (it is a content shell, not an interactive row). */
   :scope [data-part='body'] {
     padding-block: var(--ui-disclosure-body-pad-block);
@@ -142,8 +142,8 @@
      exception to "consume only --ui-disclosure-*"): identical across every control, keyboard-only,
      layout-neutral. The summary is natively focusable — no tabbable trait needed. */
   :scope [data-part='summary']:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* forced-colors (WHCM) — summary/body text + the chevron all paint in system inks (SPEC-R18 AC3). Every

@@ -9,7 +9,7 @@ import { server, cdp } from 'vitest/browser'
 // s13) — same harness, same load-bearing CSS order.
 //
 // The laws under proof (references/geometry.md — the field is a Control-class component, ADR-0014):
-//   • FRAME ∝ height — the host block-size rides [size] and [scale] (--ui-scale).
+//   • FRAME ∝ height — the host block-size rides [size] and [scale] (--md-sys-scale).
 //   • EDITOR FONT ∝ font — the contenteditable editor's font rides the same [size]/[scale] ramp.
 //   • VALUE EDGE = h/2 — the value-side inline pad is half the frame height (the per-edge formula); a leading
 //     adornment's slot edge is ½(h − icon). Proven on BOTH the bare and the leading-icon variants.
@@ -119,8 +119,8 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
   })
 
   it('LEADING-ICON: the trailing value edge == h/2 and the leading slot edge == ½(h−icon); 0 < icon ≤ box', () => {
-    // icon = var(--ui-icon-md) = 18px at default scale (ADR-0038 / ADR-0035 conformance: text-field now reads
-    // the shared --ui-icon-* table, dropping the old calc(18px * var(--ui-scale)) local formula).
+    // icon = var(--md-sys-icon-md) = 18px at default scale (ADR-0038 / ADR-0035 conformance: text-field now reads
+    // the shared --md-sys-icon-* table, dropping the old calc(18px * var(--md-sys-scale)) local formula).
     const { field } = mount(ICON) // md @ scale 1 → h = 28, icon = 18, slot edge = ½(28−18) = 5, value edge = 14
     const leadingCell = field.querySelector('[slot="leading"]') as HTMLElement
     const h = frameHeight(field)
@@ -168,7 +168,7 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
       icon.wrap.setAttribute('density', density)
       gaps.push(px(getComputedStyle(icon.field).columnGap)) // the slot↔editor rhythm
     }
-    // gap_md = font_md / 2 × --ui-density = 7 × {0.5, 1, 1.5} @ scale 1 (the one density-bearing quantity).
+    // gap_md = font_md / 2 × --md-sys-density = 7 × {0.5, 1, 1.5} @ scale 1 (the one density-bearing quantity).
     expect(gaps[0]).toBeCloseTo(3.5, 1)
     expect(gaps[1]).toBeCloseTo(7, 1)
     expect(gaps[2]).toBeCloseTo(10.5, 1)
@@ -190,7 +190,7 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
 
   // ── ADR-0036: single-line control line-height = font (the editor cell) ─────────────────────────────────
   it('ADR-0036 line-height = font: computed line-height on the editor equals the editor font-size', () => {
-    // ADR-0036 law: the editor (`[data-part=editor]`) sets line-height: var(--ui-control-line-height) = 1
+    // ADR-0036 law: the editor (`[data-part=editor]`) sets line-height: var(--md-sys-control-line-height) = 1
     // (declared in text-field.css, consuming the fleet token from dimensions.css). The line box collapses to
     // the em height and the host grid centers it — no phantom inherited leading from an ancestor body (1.5).
     // AC1 proof: computed line-height px == computed editor font-size px. Sampled at two sizes for anti-vacuity.

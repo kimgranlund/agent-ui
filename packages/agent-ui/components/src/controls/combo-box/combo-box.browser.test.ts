@@ -545,7 +545,7 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
     ).toBeGreaterThanOrEqual(140)
 
     // A combo-box editor must be far wider than tall — it is an input field, not a square.
-    // The editor height is ~28px (--ui-height-md at default scale); width is ~20ch = ~160px+.
+    // The editor height is ~28px (--md-sys-height-md at default scale); width is ~20ch = ~160px+.
     expect(
       editorRect.width,
       `${server.browser}: editor is NOT wider than tall (collapsed or squeezed — ADR-0021 regression)`,
@@ -589,7 +589,7 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
     const rect = editor.getBoundingClientRect()
 
     // Before the fix this measured ~30px+ (2 wrapped lines); the fixed single-line height is the
-    // --ui-combo-box-height token (--ui-height-md ≈ 28px at default scale). Assert it stays at the
+    // --ui-combo-box-height token (--md-sys-height-md ≈ 28px at default scale). Assert it stays at the
     // sm-height floor (24px) rather than growing for a second line.
     expect(
       rect.height,
@@ -597,7 +597,7 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
     ).toBeLessThan(29)
   })
 
-  it('editor has real Control-class height (≥ 24px = --ui-height-sm floor)', async () => {
+  it('editor has real Control-class height (≥ 24px = --md-sys-height-sm floor)', async () => {
     const { el } = mount(`
       <ui-combo-box placeholder="Search…">
         <div role="option" value="apple">Apple</div>
@@ -606,7 +606,7 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
     const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
     const editorRect = editor.getBoundingClientRect()
 
-    // The editor min-block-size is --ui-height-md = 28px at default scale.
+    // The editor min-block-size is --md-sys-height-md = 28px at default scale.
     // We assert ≥ 24px (the sm-height floor) to allow rendering in different scale contexts.
     expect(
       editorRect.height,
@@ -639,7 +639,7 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
 
   // ────────────────────────────────────────────────────────────────────────────────────────────
   //  The size-carrying model (2026-07-06 fix, ui-select's family): panel inset + option pad were
-  //  fixed px (--ui-space-xs/sm), identical regardless of the editor's own geometry. They are now
+  //  fixed px (--md-sys-space-xs/sm), identical regardless of the editor's own geometry. They are now
   //  DERIVED off --ui-combo-box-height/-font/-padding-inline, so option text aligns under the
   //  editor's own text edge and the option row height matches the editor height. ui-combo-box has
   //  no `[size]` attribute yet (only one register renders today), so this is a single-register
@@ -690,7 +690,7 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
 
   // ────────────────────────────────────────────────────────────────────────────────────────────
   //  h/2 STANDARDIZATION (2026-07-06 follow-up): the editor's inline text inset was the fleet's
-  //  lone entry-control outlier still anchored to a fixed --ui-space-sm token instead of the
+  //  lone entry-control outlier still anchored to a fixed --md-sys-space-sm token instead of the
   //  Control-class h/2 value-edge law (text-field.css:119, select.css trigger). It is now
   //  calc(--ui-combo-box-height / 2) — byte-identical in model to ui-select's trigger/listbox
   //  pairing. These two probes pin the browser-measured consequence: the editor's OWN computed

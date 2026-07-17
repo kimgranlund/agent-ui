@@ -2,17 +2,17 @@ import { describe, it, expect } from 'vitest'
 
 // S2 browser smoke — ui-slider-multi (decomp S2 · ADR-0041 · ADR-0042).
 // Probes (from the Wave-1 review lessons, all baked-in from the gate):
-//   AC1 (anti-vacuous exact-px geometry) — each thumb = --ui-compact-{size} − 4px per [size]×[scale];
-//       negative control: wrong size renders different px; host block-size = --ui-compact-{size}.
+//   AC1 (anti-vacuous exact-px geometry) — each thumb = --md-sys-compact-{size} − 4px per [size]×[scale];
+//       negative control: wrong size renders different px; host block-size = --md-sys-compact-{size}.
 //   AC2 (real dual-pointer-drag) — drag each thumb via pointerdown→pointermove→pointerup; nearer-thumb
 //       selection holds; lo≤hi invariant maintained during drag.
 //   AC3 (forced-colors) — @media forced-colors: the rail/fill/thumbs have forced-color-adjust:none;
 //       stylesheet assertions (verified by reading the CSS @media block).
-//   AC4 (no --ui-scale multiplier) — the scale × size table is LITERAL (ADR-0041 cl.2): content-lg × lg
+//   AC4 (no --md-sys-scale multiplier) — the scale × size table is LITERAL (ADR-0041 cl.2): content-lg × lg
 //       must produce the exact px from the table, not a CSS calc result.
 //   C10 (zero-residue) — connect→disconnect produces no stacked listeners; reconnect re-arms exactly once.
 
-import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--ui-compact-*)
+import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--md-sys-compact-*)
 import './slider-multi.css'                          // the control stylesheet (direct — pre-barrel)
 import './slider-multi.ts'                           // self-define (registers ui-slider-multi)
 import { UISliderMultiElement } from './slider-multi.ts'
@@ -63,11 +63,11 @@ function stubRailCapture(el: UISliderMultiElement): void {
 describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
   // ── AC1: thumb = box − 4px (the ADR-0041 2px-inset law), exact px per [size]×[scale] ─────────────
 
-  it('AC1 default [size=md]: thumbs are (--ui-compact-md − 4px) × 2 = 12px (at default ui-md scale)', () => {
+  it('AC1 default [size=md]: thumbs are (--md-sys-compact-md − 4px) × 2 = 12px (at default ui-md scale)', () => {
     const el = document.createElement('ui-slider-multi')
     document.body.append(el)
 
-    // --ui-compact-md = 16px at ui-md scale → thumb = 16 − 4 = 12px
+    // --md-sys-compact-md = 16px at ui-md scale → thumb = 16 − 4 = 12px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
     const hiThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="hi"]')!
     expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(12)  // box − 4 = 16 − 4 = 12
@@ -77,23 +77,23 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     el.remove()
   })
 
-  it('AC1 [size=sm]: thumbs are (--ui-compact-sm − 4px) = 10px', () => {
+  it('AC1 [size=sm]: thumbs are (--md-sys-compact-sm − 4px) = 10px', () => {
     const el = document.createElement('ui-slider-multi')
     el.setAttribute('size', 'sm')
     document.body.append(el)
 
-    // --ui-compact-sm = 14px → thumb = 14 − 4 = 10px
+    // --md-sys-compact-sm = 14px → thumb = 14 − 4 = 10px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
     expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(10)
     el.remove()
   })
 
-  it('AC1 [size=lg]: thumbs are (--ui-compact-lg − 4px) = 14px', () => {
+  it('AC1 [size=lg]: thumbs are (--md-sys-compact-lg − 4px) = 14px', () => {
     const el = document.createElement('ui-slider-multi')
     el.setAttribute('size', 'lg')
     document.body.append(el)
 
-    // --ui-compact-lg = 18px → thumb = 18 − 4 = 14px
+    // --md-sys-compact-lg = 18px → thumb = 18 − 4 = 14px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
     expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(14)
     el.remove()
@@ -113,17 +113,17 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     lg.remove()
   })
 
-  it('AC1 host block-size equals --ui-compact-md (the interactive area = the box)', () => {
+  it('AC1 host block-size equals --md-sys-compact-md (the interactive area = the box)', () => {
     const el = document.createElement('ui-slider-multi')
     document.body.append(el)
-    // Host block-size = --ui-compact-md = 16px at ui-md scale
+    // Host block-size = --md-sys-compact-md = 16px at ui-md scale
     expect(Number.parseFloat(getComputedStyle(el).height)).toBe(16) // block-size: var(--ui-slider-multi-box)
     el.remove()
   })
 
   // ── AC4: content-lg × lg → exact px from the ADR-0041 literal table ───────────────────────────
 
-  it('AC4 no --ui-scale multiplier: [scale=content-lg] × [size=lg] → thumb = 28px − 4 = 24px (literal table)', () => {
+  it('AC4 no --md-sys-scale multiplier: [scale=content-lg] × [size=lg] → thumb = 28px − 4 = 24px (literal table)', () => {
     const wrapper = document.createElement('div')
     wrapper.setAttribute('scale', 'content-lg')
     const el = document.createElement('ui-slider-multi')
@@ -281,8 +281,8 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
 
   // ── density-invariance — thumb/host geometry HOLDS across [density] (widget-box is scale-only) ──
   //
-  // The compact widget-box ramp (--ui-compact-{size}) is re-tabled by [scale], NOT by [density].
-  // Density shifts layout-ladder quantities (--ui-space-*, gap, padding) but never the control box.
+  // The compact widget-box ramp (--md-sys-compact-{size}) is re-tabled by [scale], NOT by [density].
+  // Density shifts layout-ladder quantities (--md-sys-space-*, gap, padding) but never the control box.
   // A [density=compact/comfortable/spacious] wrapper must produce identical thumb px (anti-vacuous).
 
   it('density-invariant: thumb size is unchanged under [density=compact], default, and [density=spacious]', () => {
@@ -302,10 +302,10 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     const comfortable = makeWithDensity(null)       // no [density] attr = comfortable baseline
     const spacious   = makeWithDensity('spacious')
 
-    // All three must be identical: --ui-compact-md = 16px → thumb = 12px regardless of density
+    // All three must be identical: --md-sys-compact-md = 16px → thumb = 12px regardless of density
     expect(compact,    'compact density changed the thumb size').toBe(comfortable)
     expect(spacious,   'spacious density changed the thumb size').toBe(comfortable)
-    expect(comfortable, '[density=none] thumb must be 12px (--ui-compact-md − 4)').toBe(12)
+    expect(comfortable, '[density=none] thumb must be 12px (--md-sys-compact-md − 4)').toBe(12)
   })
 
   // ── forced-colors (AC3 — stylesheet presence; behavior is system-determined) ────────────────

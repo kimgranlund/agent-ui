@@ -108,7 +108,7 @@ describe('component-preview — batch-A enum knobs render as a real ui-segmented
     expect(px(before(group).width), 'the indicator is not sized to one cell').toBeCloseTo(cellWidth, 0)
 
     await userEvent.click(segments[2]!) // 'lg' — a real commit AWAY from the seeded 'md' (index 1 → 2)
-    // the ::before transitions `transform` over --ui-motion-fast — poll until it SETTLES on the new index's
+    // the ::before transitions `transform` over --md-sys-motion-duration-fast — poll until it SETTLES on the new index's
     // translate rather than sampling a mid-fade interpolated value (the bite: this fails if the indicator is
     // pinned at the seeded position, or sized/placed for the wrong cell).
     await expect

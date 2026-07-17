@@ -220,7 +220,7 @@ describe('ui-conversation-composer cross-engine smoke — the v2 field frame (TK
     composer.value = 'filled now'
     await whenFlushed()
     ;(document.activeElement as HTMLElement)?.blur() // drop focus so the FILLED (idle) row paints, not the focus row
-    await new Promise((r) => setTimeout(r, 250)) // past --ui-motion-fast — let the repaint settle
+    await new Promise((r) => setTimeout(r, 250)) // past --md-sys-motion-duration-fast — let the repaint settle
 
     const filledBg = getComputedStyle(composer).backgroundColor
     const filledInk = getComputedStyle(editor).color

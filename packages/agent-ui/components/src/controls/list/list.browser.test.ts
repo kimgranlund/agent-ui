@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest'
 
 // G9 s5 — the ui-list cross-engine smoke (Chromium + WebKit via Playwright; npm run test:browser). jsdom
 // can't compute flex/gap or honour the [density] ramp — a REAL engine resolves `display:flex; flex-direction
-// :column`, the `--ui-space × [density]` gap, and the host-at-boundary AX role. Anti-vacuous: the gap px must
+// :column`, the `--md-sys-space × [density]` gap, and the host-at-boundary AX role. Anti-vacuous: the gap px must
 // actually CHANGE across two [density] containers.
 //
 // Host-at-boundary: the component-styles barrel does NOT yet @import container.css / list.css (that wiring is
 // s12), so this test injects the needed sheets DIRECTLY — the foundation tokens (the --md-sys-color-* roles + the
-// --ui-space ladder + the [density] selectors), the SHARED surface seam, then list.css — and imports ./list.ts
+// --md-sys-space ladder + the [density] selectors), the SHARED surface seam, then list.css — and imports ./list.ts
 // to self-define `ui-list`. No `container-type` here (ADR-0100 — ui-list never establishes one; it has no
 // `@container` rule of its own anyway, its direction is fixed).
 import '@agent-ui/components/foundation-styles.css' // --md-sys-color-* roles + the --ui-{height,font,gap,space}-* ramp + [scale]/[density]
@@ -164,7 +164,7 @@ describe('ui-list cross-engine smoke (s5)', () => {
   })
 
   it('gap responds to [density] — the row-gap px CHANGES with the ancestor density (anti-vacuous)', () => {
-    // gap='md' → var(--ui-space-md) = calc(12px * var(--ui-density)). compact 0.5 → 6px; spacious 1.5 → 18px.
+    // gap='md' → var(--md-sys-space-md) = calc(12px * var(--md-sys-density)). compact 0.5 → 6px; spacious 1.5 → 18px.
     const compact = mount('ui-list', { gap: 'md' }, 'compact')
     const spacious = mount('ui-list', { gap: 'md' }, 'spacious')
 

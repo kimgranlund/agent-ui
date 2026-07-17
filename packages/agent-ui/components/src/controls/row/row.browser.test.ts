@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest'
 //
 // CSS wiring: the component-styles barrel does not @import container.css / row.css until the integration slice
 // (decomp s12), so this smoke injects them DIRECTLY (Vite resolves the relative .css + the foundation export,
-// and injects each as a <style>). Order is load-bearing: the foundation (--md-sys-color-* roles + the --ui-space ladder +
+// and injects each as a <style>). Order is load-bearing: the foundation (--md-sys-color-* roles + the --md-sys-space ladder +
 // [density]) FIRST, then the shared surface seam (elevation/brightness — NOT a container-type establishment,
 // ADR-0100: the row is never a query container itself), then row.css, then the self-defining element module.
 // The query container each `@container` rule resolves against is the test's OWN wrapper (below), not row/
@@ -52,13 +52,13 @@ describe('ui-row cross-engine smoke — flex grammar maps to computed props (s3)
     wrapper.remove()
   })
 
-  it('gap → the --ui-space ladder responds to an ancestor [density] (the one density-bearing quantity)', () => {
+  it('gap → the --md-sys-space ladder responds to an ancestor [density] (the one density-bearing quantity)', () => {
     const { wrapper, row } = mount('600px')
-    row.setAttribute('gap', 'md') // → var(--ui-space-md) = calc(12px * var(--ui-density))
+    row.setAttribute('gap', 'md') // → var(--md-sys-space-md) = calc(12px * var(--md-sys-density))
     const base = Number.parseFloat(getComputedStyle(row).columnGap)
     expect(base).toBe(12) // density 1 → 12px (the ramp truly resolved — not a fallback)
 
-    wrapper.setAttribute('density', 'spacious') // [density="spacious"] → --ui-density: 1.5 (inherits to the row)
+    wrapper.setAttribute('density', 'spacious') // [density="spacious"] → --md-sys-density: 1.5 (inherits to the row)
     const spacious = Number.parseFloat(getComputedStyle(row).columnGap)
     expect(spacious).toBe(18) // 12 × 1.5 — density re-multiplied the gutter
     expect(spacious).toBeGreaterThan(base) // anti-vacuous: the gap actually grew

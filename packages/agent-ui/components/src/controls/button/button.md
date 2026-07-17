@@ -164,7 +164,7 @@ host-as-grid of ADR-0006 and is the family adornment standard (ADR-0012).
 
 The host grid picks the column template by presence — `1fr` · `auto 1fr` · `1fr auto` · `auto 1fr auto` —
 giving each adornment a square, `½(h − icon)`-edged cell with the density-bearing `column-gap` between
-cells (the one quantity that rides `--ui-density`; the frame stays density-invariant). The trailing glyph
+cells (the one quantity that rides `--md-sys-density`; the frame stays density-invariant). The trailing glyph
 is **layout only** — express any popup/disclosure meaning as ARIA on the host (`aria-haspopup` /
 `aria-expanded` via `ElementInternals`), never on the glyph.
 

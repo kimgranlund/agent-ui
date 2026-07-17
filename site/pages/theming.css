@@ -48,7 +48,7 @@
 
 .theming-panel-label {
   margin: 0;
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.8rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
@@ -73,7 +73,7 @@
 }
 
 .theming-axis-label {
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.78rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }

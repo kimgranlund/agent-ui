@@ -113,7 +113,7 @@ geometry:
   paddingBlock: var(--ui-textarea-padding-block)   # REAL block padding — the inversion of the single-line law's padding-block:0
   inlinePad: var(--ui-textarea-padding-inline)
   gap: n/a                # no adornment slots — no slot↔editor gap
-  radius: var(--ui-radius-base)            # fixed rounded-rect — the container-fleet referent, entry-control class (geometry.md "Corner radius")
+  radius: var(--md-sys-shape-corner-base)            # fixed rounded-rect — the container-fleet referent, entry-control class (geometry.md "Corner radius")
   minInlineSize: var(--ui-textarea-min-inline-size) (~20ch — entry-control typing-width floor, native <textarea> parity; ADR-0021)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the idle frame border, ink, and placeholder visible (CanvasText); the :focus-within outline ring survives via --md-sys-color-focus-ring → Highlight (ADR-0014, reused verbatim).
@@ -166,7 +166,7 @@ control-toggled `data-empty` attribute, not `:empty`.
 per-row line-box all **derive from that font** via `calc()`, so one repoint cascades through all three. This
 is deliberately **not** the `(scale × size) → §1-row` lookup `ui-text-field`/`ui-select` ride — a multi-line
 box has no single fixed height to look up (ADR-0134). The frame (border + radius) is drawn **on the host**,
-the same fixed `--ui-radius-base` rounded-rect entry-control class `ui-text-field` uses (geometry.md "Corner
+the same fixed `--md-sys-shape-corner-base` rounded-rect entry-control class `ui-text-field` uses (geometry.md "Corner
 radius"). A bare textarea carries a default minimum typing width (`min-inline-size: ~20ch`) so it stays
 hittable; layout owns width above the floor.
 

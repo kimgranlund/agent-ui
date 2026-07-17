@@ -1,11 +1,11 @@
 /* toolbar.css — the SINGLE sheet for ui-toolbar (ADR-0121; toolbar.lld.md LLD-C5). Two sectioned blocks
- * (ADR-0003): a :where() TOKEN block (declares the --ui-toolbar-* chain off the --ui-space layout ladder + the
+ * (ADR-0003): a :where() TOKEN block (declares the --ui-toolbar-* chain off the --md-sys-space layout ladder + the
  * control-height register) then an @scope STYLES block (consumes ONLY --ui-toolbar-*). Host-as-flex — light-DOM
  * children ARE the flex items (the ui-row precedent); no named slots, no [slot=…] selector anywhere in this sheet.
  *
  * Geometry (geometry.md "Pattern" size-class — toolbar is a NAMED example): the toolbar owns NO control-height
  * `size` prop of its own — its ITEMS take their own control height. The toolbar's own contribution is padding +
- * gap off the --ui-space layout ladder, plus a min-block-size FLOOR tied to the control-height register (the
+ * gap off the --md-sys-space layout ladder, plus a min-block-size FLOOR tied to the control-height register (the
  * ui-md row height) so an empty or short bar still reads as a bar (SPEC-R7 AC2, the whole-shape law).
  *
  * Surface (ADR-0015): the floating/embedded posture is entirely the shared controls/_surface/container.css seam
@@ -19,10 +19,10 @@
 :where(ui-toolbar) {
   --ui-toolbar-align: center; /* align (cross-axis) → align-items; center is the toolbar's OWN default (the bar look — differs from ui-row's start) */
   --ui-toolbar-justify: start; /* justify (main-axis distribution) → justify-content */
-  --ui-toolbar-gap: var(--ui-space-sm); /* gap default 'sm' — toolbars are tight (differs from ui-row's 'none') */
-  --ui-toolbar-pad-inline: var(--ui-space-sm);
-  --ui-toolbar-pad-block: var(--ui-space-xs);
-  --ui-toolbar-min-block-size: var(--ui-height-md); /* the whole-shape bar floor (SPEC-R7 AC2) — the control-height register, NOT a --ui-space quantity */
+  --ui-toolbar-gap: var(--md-sys-space-sm); /* gap default 'sm' — toolbars are tight (differs from ui-row's 'none') */
+  --ui-toolbar-pad-inline: var(--md-sys-space-sm);
+  --ui-toolbar-pad-block: var(--md-sys-space-xs);
+  --ui-toolbar-min-block-size: var(--md-sys-height-md); /* the whole-shape bar floor (SPEC-R7 AC2) — the control-height register, NOT a --md-sys-space quantity */
 
   box-sizing: border-box;
 }
@@ -61,25 +61,25 @@
   --ui-toolbar-justify: space-evenly;
 }
 
-/* gap → a step on the --ui-space ladder (density-responsive — rides [density], NOT [scale]; ADR-0015 cl.4).
+/* gap → a step on the --md-sys-space ladder (density-responsive — rides [density], NOT [scale]; ADR-0015 cl.4).
    'sm' is the default declared above; every OTHER step needs a repoint. */
 :where(ui-toolbar[gap='none']) {
-  --ui-toolbar-gap: var(--ui-space-none);
+  --ui-toolbar-gap: var(--md-sys-space-none);
 }
 :where(ui-toolbar[gap='xs']) {
-  --ui-toolbar-gap: var(--ui-space-xs);
+  --ui-toolbar-gap: var(--md-sys-space-xs);
 }
 :where(ui-toolbar[gap='md']) {
-  --ui-toolbar-gap: var(--ui-space-md);
+  --ui-toolbar-gap: var(--md-sys-space-md);
 }
 :where(ui-toolbar[gap='lg']) {
-  --ui-toolbar-gap: var(--ui-space-lg);
+  --ui-toolbar-gap: var(--md-sys-space-lg);
 }
 :where(ui-toolbar[gap='xl']) {
-  --ui-toolbar-gap: var(--ui-space-xl);
+  --ui-toolbar-gap: var(--md-sys-space-xl);
 }
 :where(ui-toolbar[gap='2xl']) {
-  --ui-toolbar-gap: var(--ui-space-2xl);
+  --ui-toolbar-gap: var(--md-sys-space-2xl);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-toolbar) consumes ONLY --ui-toolbar-* ════════════════ */

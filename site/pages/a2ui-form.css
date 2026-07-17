@@ -207,7 +207,7 @@
 
 .msg-head {
   margin-block-end: 0.3rem;
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.76rem;
   font-weight: 600;
   white-space: pre;

@@ -67,10 +67,10 @@ keyboard:
 geometry:
   sizeClass: pattern                                  # a fixed-width notification card — Container/surface geometry, not a control-height ramp
   inlineSize: var(--ui-toast-inline-size)              # = 20em, fixed (max-inline-size:100% floors small viewports) — the ui-menu panel's fixed-surface precedent, NOT a [size]/[scale] control ramp
-  paddingInline: var(--ui-space-md)
-  paddingBlock: var(--ui-space-sm)
-  gap: var(--ui-space-sm)                              # message | action | close column gap
-  radius: var(--ui-radius-base)                        # the shared fleet radius (ui-menu/ui-card precedent)
+  paddingInline: var(--md-sys-space-md)
+  paddingBlock: var(--md-sys-space-sm)
+  gap: var(--md-sys-space-sm)                              # message | action | close column gap
+  radius: var(--md-sys-shape-corner-base)                        # the shared fleet radius (ui-menu/ui-card precedent)
   note: No [size] attribute (SPEC-R19) — a notification card has no size axis; family-coherence A2b holds trivially (toast.css declares no [size] selector).
 
 forcedColors: A forced-colors block keeps the card bordered in CanvasText once the box-shadow (an arbitrary-alpha rgb() literal, flattened away under WHCM) vanishes — the border alone carries the card's edge (the bar-chart fill lesson); the ui-button/ui-icon affordance children carry their own independent forced-colors treatment.

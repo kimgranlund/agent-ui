@@ -69,7 +69,7 @@
 
 .sizing-matrix-headcell,
 .sizing-matrix-rowhead {
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.78rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
@@ -86,7 +86,7 @@
 }
 
 .sizing-matrix-caption {
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.72rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
@@ -110,7 +110,7 @@
 }
 
 .sizing-density-label {
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.78rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }

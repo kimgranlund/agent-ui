@@ -63,7 +63,7 @@ extra code — list semantics stay in `ui-list`, never baked into this type.
 ## Sizing
 
 The host floors at `--ui-attachment-min-inline-size` (`12em` default) in an unstyled flex row
-(test-the-whole-shape). The glyph rides the fixed content-icon register (`--ui-icon-md`) — there is no
+(test-the-whole-shape). The glyph rides the fixed content-icon register (`--md-sys-icon-md`) — there is no
 `[size]`/`[scale]` axis on this Display-class leaf.
 
 ---
@@ -117,7 +117,7 @@ named foreseen extension if identity-at-a-glance proves needed.
 ## Sizing
 
 `size` (`sm` / `md` / `lg`, default `md`, reflected) selects the widget-box tier off the ratified
-`--ui-compact-{sm,md,lg}` ramp (ADR-0041) — the same ramp checkbox/switch/tag use, 12–28px depending on an
+`--md-sys-compact-{sm,md,lg}` ramp (ADR-0041) — the same ramp checkbox/switch/tag use, 12–28px depending on an
 ancestor `[scale]`. The component token `--ui-avatar-size` is the page's override for larger chrome (a
 profile header); a real fleet register above 28px is a named, separately-earned extension, not this
 component's default.
@@ -159,10 +159,10 @@ span's text.
 
 ## Geometry
 
-The box rides the **compact-realm** widget-box ramp (`--ui-compact-lg`, ADR-0041) — fixed regardless of
+The box rides the **compact-realm** widget-box ramp (`--md-sys-compact-lg`, ADR-0041) — fixed regardless of
 label length or an ancestor `[density]`; the pad follows the compact-realm law (`2px + box·ratio·density`,
 never `h/2`); the radius is `box/2` (a pill). There is no `[size]` attribute in v1. The label text itself
-rides the fleet font ramp (`--ui-font-sm`) at `line-height: 1`, centering like a glyph. An empty label
+rides the fleet font ramp (`--md-sys-font-sm`) at `line-height: 1`, centering like a glyph. An empty label
 still floors at `min-inline-size = box` — a filled dot/pill, never a collapsed sliver.
 
 ## Accessibility
@@ -236,8 +236,8 @@ datum either way.
 The host defaults to a `16em` `min-inline-size` floor (`--ui-bar-chart-min-inline-size`) — a bare,
 unstyled chart in a flex row still paints a visible, non-collapsed, proportionally-correct box with zero
 consumer CSS (ADR-0102 Lane A). Bar/track thickness (`--ui-bar-chart-bar-size`) is density-**invariant**;
-row/column gap (`--ui-bar-chart-row-gap`/`-col-gap`) rides the `--ui-space` ladder and responds to an
-ancestor `[density]` for free. There is no `[size]`/`[scale]` attribute and no `--ui-height-*` lever
+row/column gap (`--ui-bar-chart-row-gap`/`-col-gap`) rides the `--md-sys-space` ladder and responds to an
+ancestor `[density]` for free. There is no `[size]`/`[scale]` attribute and no `--md-sys-height-*` lever
 (SPEC-R12 AC2) — labels/values read the `--md-sys-typescale-body-medium-*` row directly.
 
 ## RTL
@@ -334,7 +334,7 @@ host-as-grid of ADR-0006 and is the family adornment standard (ADR-0012).
 
 The host grid picks the column template by presence — `1fr` · `auto 1fr` · `1fr auto` · `auto 1fr auto` —
 giving each adornment a square, `½(h − icon)`-edged cell with the density-bearing `column-gap` between
-cells (the one quantity that rides `--ui-density`; the frame stays density-invariant). The trailing glyph
+cells (the one quantity that rides `--md-sys-density`; the frame stays density-invariant). The trailing glyph
 is **layout only** — express any popup/disclosure meaning as ARIA on the host (`aria-haspopup` /
 `aria-expanded` via `ElementInternals`), never on the glyph.
 
@@ -684,7 +684,7 @@ roving-tabindex control placed inside the content) and `preventDefault()`-ed on 
 (Playwright's WebKit build) but not independently confirmed on Safari proper.
 
 **The focus ring (ADR-0009).** The new tab stop draws the identical shared ring every fleet control does —
-`--md-sys-color-focus-ring` / `--ui-focus-ring-width`, `:focus-visible` only (keyboard, never a mouse click)
+`--md-sys-color-focus-ring` / `--md-sys-state-focus-ring-width`, `:focus-visible` only (keyboard, never a mouse click)
 — but it paints on the **parent `ui-card`**, not on `ui-card-content` itself (Kim, superseding an earlier
 inset/negative-offset draft): `:scope[scrollable]:has(> ui-card-content:focus-visible)` (and the content-
 signal variant) lets the card react to its content region's focus state and draw the ring around the whole
@@ -720,7 +720,7 @@ model) — a card is never marked `[data-region]`, so its region padding stays f
 nesting depth; only the **radius** chain steps one level (ADR-0018, below).
 
 **A flagged consequence:** removing the card-only 6px-inline override means the nested-radius chain now
-decrements against 12px (was 6px). With the default `--ui-radius-base` of 12px, an **unreseeded root card's**
+decrements against 12px (was 6px). With the default `--md-sys-shape-corner-base` of 12px, an **unreseeded root card's**
 inner radius now floors at **exactly 0** (12 − 12), not the old 6px-positive headroom — an author who wants a
 visibly rounded nested corner needs to reseed `--ui-card-radius` larger than 12px.
 
@@ -794,7 +794,7 @@ container; an author in that position owns the fix in plain CSS.
 ## Nested radius — one level (ADR-0018)
 
 Concentric rounded rectangles need the inner radius to shrink with nesting: the **concentric-corner law**
-is `r_child = max(0, r_parent − padding_parent)`. A root `ui-card` rounds to the shared `--ui-radius-base`;
+is `r_child = max(0, r_parent − padding_parent)`. A root `ui-card` rounds to the shared `--md-sys-shape-corner-base`;
 a card publishes its inner radius to descendants as `--ui-card-child-radius`, and a **nested** card (inside
 a `ui-card-content`) reads it for its own radius — **one level**, pure CSS, no JS observer. The normal
 nesting is **card › ui-card-content › card**. A card placed as a *direct* child of **another card** (no region
@@ -855,7 +855,7 @@ pressing Space keyup toggles `checked` (clearing `indeterminate` first if set).
 
 ## Sizes
 
-`size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--ui-compact-{size}`
+`size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
 (ADR-0041: 14 · 16 · 18 px at the default `ui-md` scale). An ancestor `[scale]` attribute re-tables the
 ramp for its subtree.
 
@@ -897,9 +897,9 @@ subsequent bound `code` write clobbers them to a single text node — guaranteed
 ## Verbatim, self-scrolling rendering
 
 Whitespace is preserved (`white-space: pre` — newlines and indentation live in the text nodes, so
-copy-paste fidelity is free), in the `--ui-mono` typeface at `--md-sys-typescale-body-medium-*` metrics,
+copy-paste fidelity is free), in the `--md-sys-typeface-mono` typeface at `--md-sys-typescale-body-medium-*` metrics,
 on a component-owned surface (`--ui-code-surface`, the `--ui-container-bg` cross-family seam) with the
-fleet `--ui-radius-base` corner. The component **owns its own horizontal overflow**: `overflow-x: auto`
+fleet `--md-sys-shape-corner-base` corner. The component **owns its own horizontal overflow**: `overflow-x: auto`
 on the host itself (host-as-content means the text nodes are host children, so no inner wrapper is
 needed) — a bare `<ui-code>` in any container, including a narrow flex column or a feed bubble, never
 wraps mid-token and never blows out its container, with zero consumer CSS (ADR-0102 Lane A). Long
@@ -1031,7 +1031,7 @@ the element's **identity** (the tag names the main axis, A2UI-faithfully) — no
 
 - **`align`** (cross axis = inline) → `align-items`: `stretch` (default — children fill the column's width) · `start` (shrink-wrap to content width) · `end` · `baseline`. **`center` is NOT allowed on `ui-column`** — a column centers its children only by shrink-wrapping them, which defeats the fill-width default and is an anti-pattern for stacked content; an `align="center"` snaps back to `stretch` and has no `[align='center']` CSS rule. Use a `ui-row` (or wrap the content) for horizontal centering. (ADR-0030: default `start`→`stretch`.)
 - **`justify`** (main axis = block) → `justify-content`: `start` (default) · `center` · `end` · `between` · `around` · `evenly` (the `between`/`around`/`evenly` keywords map to `space-*`).
-- **`gap`** → `gap: var(--ui-space-{step})`: `none` (default) · `xs` · `sm` · `md` · `lg` · `xl` · `2xl` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), **never** a control dimension. An ancestor `[density]` (`compact/comfortable/spacious`) re-multiplies the gap; `[scale]` (the `ui-sm…content-lg` tier, ADR-0032) does not touch it (spacing is rhythm, not frame).
+- **`gap`** → `gap: var(--md-sys-space-{step})`: `none` (default) · `xs` · `sm` · `md` · `lg` · `xl` · `2xl` — the density-responsive layout-spacing ladder (ADR-0015 cl.4), **never** a control dimension. An ancestor `[density]` (`compact/comfortable/spacious`) re-multiplies the gap; `[scale]` (the `ui-sm…content-lg` tier, ADR-0032) does not touch it (spacing is rhythm, not frame).
 - **`wrap`** → `flex-wrap` (boolean presence): present ⇒ children wrap onto multiple lines.
 
 ## Sizing
@@ -1071,7 +1071,7 @@ corruption (ADR-0100 cl.2).
 ## Geometry
 
 A layout primitive has **no control height** (`geometry.md`'s Container/layout class): the block-size is
-content-driven and spacing rides `--ui-space` × `[density]`, never `--ui-height-*`. A `forced-colors` block
+content-driven and spacing rides `--md-sys-space` × `[density]`, never `--md-sys-height-*`. A `forced-colors` block
 drops the tonal wash so a column never paints over system text.
 
 ---
@@ -1337,7 +1337,7 @@ sized `= font` (geometry.md's inline-affordance law, never the icon ramp), rotat
 (no fold animation either): both are named v1 fences, not omissions (ADR-0113 cl.4). Geometry is Pattern-
 class (geometry.md's own "accordion" row): the summary is an interactive **control-height** row
 (density-invariant frame — height/font/glyph/gap all fixed at the `md` ramp step, no `[size]` axis), while
-the body's padding rides the **`--ui-space`** layout ladder (density-responsive) — the two ledgers never
+the body's padding rides the **`--md-sys-space`** layout ladder (density-responsive) — the two ledgers never
 interchange.
 
 ## Accessibility
@@ -1535,7 +1535,7 @@ container. Its descendants (fields, controls) own their own accessible names and
 container whose columns are an **intrinsic** `auto-fit` / `minmax` track model. It reflows by its **own**
 rendered width — more columns when wide, fewer when narrow — with **no** breakpoint or column-count prop
 and **no** `@container` rule. It is **not** form-associated and has **no** control height (the
-*Container/layout* size-class: spacing rides `--ui-space` × density, never `--ui-height-*`).
+*Container/layout* size-class: spacing rides `--md-sys-space` × density, never `--md-sys-height-*`).
 
 ```html
 <ui-grid gap="md">
@@ -1566,7 +1566,7 @@ the token, not an attribute selector.
 
 ## Gap & surface
 
-`gap` selects a step on the `--ui-space` layout-spacing ladder (`none` (default) · `xs` · `sm` · `md` · `lg`
+`gap` selects a step on the `--md-sys-space` layout-spacing ladder (`none` (default) · `xs` · `sm` · `md` · `lg`
 · `xl` · `2xl`) for the inter-track gap; an ancestor `[density]` re-multiplies it (it is layout **rhythm**,
 so an ancestor `[scale]` leaves it untouched). The shared **surface** axes — `elevation` (the
 scheme-inverting plane) and `brightness` (the scheme-consistent tonal shift) — come from `UIContainerElement`
@@ -1625,7 +1625,7 @@ swap. The normal case is registering a pack once at startup, before first render
 
 ## Sizing
 
-The host is a `1em × 1em` cell by default (`--ui-icon-size`) — there is no size ramp or lever. A consumer
+The host is a `1em × 1em` cell by default (`--md-sys-icon-size`) — there is no size ramp or lever. A consumer
 sizes an icon via ambient `font-size` (the common case, matching surrounding text) or an explicit
 `inline-size`/`block-size` override on the host. `color: inherit` means the icon's ink (the injected
 `<svg fill="currentColor">`) always tracks the surrounding context with no per-icon color plumbing.
@@ -1700,8 +1700,8 @@ a color-only signifier.
 The host defaults to a `16em` `min-inline-size` floor (`--ui-ladder-min-inline-size`) — a bare, unstyled
 ladder in a flex row still paints a visible, non-collapsed list with zero consumer CSS (ADR-0102 Lane A).
 Bar thickness (`--ui-ladder-bar-size`) is density-**invariant**; row/column gap
-(`--ui-ladder-row-gap`/`-col-gap`) rides the `--ui-space` ladder and responds to an ancestor `[density]` for
-free. There is no `[size]`/`[scale]` attribute and no `--ui-height-*` lever (SPEC-R16 AC2).
+(`--ui-ladder-row-gap`/`-col-gap`) rides the `--md-sys-space` ladder and responds to an ancestor `[density]` for
+free. There is no `[size]`/`[scale]` attribute and no `--md-sys-height-*` lever (SPEC-R16 AC2).
 
 ## RTL
 
@@ -1753,7 +1753,7 @@ property (a role-pure repoint in CSS, never an inline style):
 
 - **`align`** (cross-axis) → `align-items`: `stretch` (default — items fill the list's width; use `start` to shrink-wrap) · `center` · `end` · `start` · `baseline`. (ADR-0030: default changed from `start` to `stretch`.)
 - **`justify`** (main-axis distribution) → `justify-content`: `start` · `center` · `end` · `between` · `around` · `evenly`.
-- **`gap`** → `gap: var(--ui-space-{step})` — the density-responsive layout-spacing ladder (`none` · `xs` · `sm`
+- **`gap`** → `gap: var(--md-sys-space-{step})` — the density-responsive layout-spacing ladder (`none` · `xs` · `sm`
   · `md` · `lg` · `xl` · `2xl`). The inter-item gap is the one quantity that rides `[density]` (an ancestor
   `[density]` re-multiplies it); the list has **no control height** (`geometry.md`'s Container/layout class).
 - **`wrap`** → `flex-wrap` (boolean presence).
@@ -1952,8 +1952,8 @@ semantic element; a labelling heading child is the common pattern.
 The dialog plane reads the **elevation × brightness** surface seam (`--ui-container-bg` / `--ui-container-tint`,
 ADR-0015): `elevation` selects the scheme-inverting plane, `brightness` a scheme-consistent tonal wash, both
 defaulting to the neutral base. Unlike a layout primitive (transparent by default), a modal sets its **own**
-default `--ui-container-bg` so the plane is opaque. The shell pads off `--ui-space` (density-responsive,
-**not** a control height) and corners off the shared `--ui-radius-base`. A forced-colors block keeps the
+default `--ui-container-bg` so the plane is opaque. The shell pads off `--md-sys-space` (density-responsive,
+**not** a control height) and corners off the shared `--md-sys-shape-corner-base`. A forced-colors block keeps the
 surface, frame, and ink visible as system colours.
 
 ## The frame dials (TKT-0017 — the composition seam)
@@ -2116,7 +2116,7 @@ the group's form value.
 ## Anatomy
 
 The host is an **inline-flex row**: a circular `::before` pseudo-element (the ring, sized to
-`--ui-compact-{size}`), a circular `::after` pseudo-element (the checked **dot**, absolutely positioned and
+`--md-sys-compact-{size}`), a circular `::after` pseudo-element (the checked **dot**, absolutely positioned and
 centred on `::before`), then any default-slot content (the optional label text). When checked, the ring
 **fills solid primary** (`::before` border + background both `--ui-radio-ink`) and the dot reads the bright
 `--md-sys-color-primary-on-primary` role — the same ring-fills / bright-glyph pairing `ui-switch` uses for its
@@ -2140,7 +2140,7 @@ valid for single-item "accept" patterns, but lacks a form-value owner for multi-
 
 ## Sizes
 
-`size` repoints the box from the `--ui-compact-{sm/md/lg}` widget ramp (ADR-0041). An ancestor `[scale]`
+`size` repoints the box from the `--md-sys-compact-{sm/md/lg}` widget ramp (ADR-0041). An ancestor `[scale]`
 automatically re-tables the compact tokens (ADR-0038 — explicit per-scale lookup in `dimensions.css`), so the
 radio box tracks scale without any per-control `[scale]` rule.
 
@@ -2209,7 +2209,7 @@ be provided by the page author via `aria-label` or `aria-labelledby` on the grou
 ## Layout
 
 `ui-radio-group` **owns its interior layout** (ADR-0103): a `column` flex stack by default, with the gap
-re-based to the layout ladder's `--ui-space-sm` (density-responsive for free) — `[orientation="horizontal"]`
+re-based to the layout ladder's `--md-sys-space-sm` (density-responsive for free) — `[orientation="horizontal"]`
 switches to a wrapping row (`flex-wrap: wrap; align-items: center`), so the visual axis never desyncs from the
 roving-focus keyboard axis the group itself resolves. This is the same structure the group cannot leave to
 composition: its child discovery is direct children only (`[...this.children].filter(el => el instanceof
@@ -2284,8 +2284,8 @@ color-encoded only (CVD-safe by construction).
 The host defaults to an `8em` `min-inline-size` floor (`--ui-ramp-min-inline-size`) — a bare, unstyled ramp
 in a flex row still paints a visible, non-collapsed strip with zero consumer CSS (ADR-0102 Lane A). Each
 cell's box (`--ui-ramp-cell-size`) is density-invariant; the strip gap (`--ui-ramp-gap`) rides the
-`--ui-space` ladder and responds to an ancestor `[density]` for free. There is no `[size]`/`[scale]`
-attribute and no `--ui-height-*` lever (SPEC-R16 AC2).
+`--md-sys-space` ladder and responds to an ancestor `[density]` for free. There is no `[size]`/`[scale]`
+attribute and no `--md-sys-height-*` lever (SPEC-R16 AC2).
 
 ## RTL
 
@@ -2407,13 +2407,13 @@ and `ui-column` for a vertical one — there is no `direction` prop.
 - **`align`** (cross-axis) → `align-items`: `start` (default) · `center` · `end` · `stretch` · `baseline`.
 - **`justify`** (main-axis distribution) → `justify-content`: `start` (default) · `center` · `end` ·
   `between` · `around` · `evenly` (the last three map to `space-between` / `space-around` / `space-evenly`).
-- **`gap`** → a step on the `--ui-space` layout-spacing ladder: `none` (default) · `xs` · `sm` · `md` · `lg` ·
+- **`gap`** → a step on the `--md-sys-space` layout-spacing ladder: `none` (default) · `xs` · `sm` · `md` · `lg` ·
   `xl` · `2xl`. The gap is the one quantity that rides `[density]` (a `[density="spacious"]` ancestor widens
   it); `[scale]` does **not** touch it — layout rhythm is not control-frame size (ADR-0015 / geometry.md).
 - **`wrap`** → `flex-wrap` (boolean presence): set `wrap` to allow children to flow onto multiple lines.
 
 A `ui-row` has **no control height** (the `Container/layout` size-class, geometry.md): it never reads
-`--ui-height-*`. Its height is content-driven; the gap is its only spacing lever.
+`--md-sys-height-*`. Its height is content-driven; the gap is its only spacing lever.
 
 ## Surface
 
@@ -2426,7 +2426,7 @@ literal unions `-3…3` defaulting to `0` (the neutral, transparent base — an 
 
 The surface paint lives once in the shared `controls/_surface/container.css` (the `UIContainerElement` base
 sheet) via the role-pure `--ui-container-bg` / `--ui-container-tint` seam — `ui-row` holds **zero** colour
-opinion. A surfaced row takes the shared `--ui-radius-base` corner radius.
+opinion. A surfaced row takes the shared `--md-sys-shape-corner-base` corner radius.
 
 ## Responsiveness
 
@@ -2650,7 +2650,7 @@ HTML spec exempts from `required` entirely.
 
 ## Anatomy
 
-The host is a `block` container with `block-size = --ui-compact-{size}` (the widget-box ramp). The **rail**
+The host is a `block` container with `block-size = --md-sys-compact-{size}` (the widget-box ramp). The **rail**
 (`::before`) is a thin horizontal bar; its `linear-gradient` background paints the fill (primary) from the
 left up to `--value-pct%` and the neutral track beyond. The **thumb** (`::after`) is a circle `box − 4px`
 (the 2px-inset law, ADR-0041 cl.3) centred on the `--value-pct%` position along the host, painted in **two
@@ -2682,7 +2682,7 @@ after a net move emits `change`.
 
 ## Sizes
 
-`size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--ui-compact-{size}`
+`size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
 (ADR-0041: 14 · 16 · 18 px at the default `ui-md` scale). An ancestor `[scale]` attribute re-tables the
 ramp for its subtree.
 
@@ -2727,7 +2727,7 @@ selects the closer thumb and focuses it.
 
 ## Sizes
 
-`size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--ui-compact-{size}`
+`size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
 (ADR-0041: 14 · 16 · 18 px at the default `ui-md` scale). The thumb is always `box − 4px` (the
 ADR-0041 2px-inset law). An ancestor `[scale]` attribute re-tables the ramp for its subtree.
 
@@ -3058,7 +3058,7 @@ text content: the printed datum and the accessible name are the same string, in 
 The host defaults to a `2rem × 2rem` box (`--ui-swatch-box-size`) — an EXPLICIT token size, not `auto`: a
 swatch has no intrinsic content, so a bare `<ui-swatch>` in an unstyled flex row still paints a visible,
 non-collapsed square with zero consumer CSS (ADR-0102 Lane A). There is no `[size]`/`[scale]` attribute and
-no `--ui-height-*` lever (SPEC-R16 AC2) — the value text reads the `--md-sys-typescale-body-medium-*` row
+no `--md-sys-height-*` lever (SPEC-R16 AC2) — the value text reads the `--md-sys-typescale-body-medium-*` row
 directly.
 
 ## Forced colors (WHCM)
@@ -3243,19 +3243,19 @@ carries **no** `role`/`aria-*` attribute.
 ## Anatomy
 
 The host is an `inline-flex` row: the pill track (`::before`) is the first item; any slotted label text
-follows in the default slot. The TRACK (`::before`) is a pill — `block-size = --ui-compact-{size}` (the
+follows in the default slot. The TRACK (`::before`) is a pill — `block-size = --md-sys-compact-{size}` (the
 ADR-0041 widget-box ramp, `[size]×[scale]`), `inline-size ≈ 1.8×` the box, `border-radius = box/2`. The
-THUMB (`::after`) is a circle inset `--ui-widget-inset` (2px) on all sides — **thumb = box − 4px**
+THUMB (`::after`) is a circle inset `--md-sys-widget-inset` (2px) on all sides — **thumb = box − 4px**
 (ADR-0041 cl.3, the 2px inset law). On `:state(checked)` the thumb translates `0.8×box` to the right,
 landing with the identical 2px inset from the track end (the geometry is symmetric). Density-invariant:
-neither the box nor the inset rides `--ui-density`.
+neither the box nor the inset rides `--md-sys-density`.
 
 ## States + colour
 
 Unchecked: solid `--md-sys-color-neutral-track` track (the state-bearing track role, ADR-0059 — SC 1.4.11 3:1 on every plane; `-track-hover` on hover), near-white thumb. Checked: `--md-sys-color-primary` track
 (`--md-sys-color-primary-on-primary` thumb). Disabled: `--md-sys-color-neutral-surface-high` track, muted ink thumb — the
 host is pointer-inert (`pointer-events: none`), so `:hover` never lifts the state. A `:focus-visible`
-ring (keyboard-only, ADR-0009) uses the fleet `--md-sys-color-focus-ring` / `--ui-focus-ring-*` tokens.
+ring (keyboard-only, ADR-0009) uses the fleet `--md-sys-color-focus-ring` / `--md-sys-state-focus-ring-*` tokens.
 
 ## Form participation
 
@@ -3348,8 +3348,8 @@ when the table needs an accessible name.
 ## Sizing
 
 `ui-table` is **Display**-class (`geometry.md`): no `[size]`/`[scale]` attribute, no control height, no
-`--ui-height-*` lever — cell text rides the `--md-sys-typescale-body-medium-*` row directly, and interior
-rhythm (`--ui-table-cell-pad-inline`/`-block`) rides the `--ui-space` ladder, responding to an ancestor
+`--md-sys-height-*` lever — cell text rides the `--md-sys-typescale-body-medium-*` row directly, and interior
+rhythm (`--ui-table-cell-pad-inline`/`-block`) rides the `--md-sys-space` ladder, responding to an ancestor
 `[density]` for free. The host defaults to a `16em` `min-inline-size` floor — a bare, unstyled table in a
 flex row still paints a visible, non-collapsed box with zero consumer CSS.
 
@@ -3433,7 +3433,7 @@ The roving listeners + the selection effect are installed in `connected()`, so t
 
 ## Motion
 
-The selected-tab ink and the underline indicator transition over the shared `--ui-motion-fast` timing, gated
+The selected-tab ink and the underline indicator transition over the shared `--md-sys-motion-duration-fast` timing, gated
 behind `:state(ready)` (armed one frame past first paint, so the initial selection snaps) and zeroed under
 `prefers-reduced-motion`. Geometry never animates.
 
@@ -3594,7 +3594,7 @@ invisible to AT. Reserve `emphasis` for names/labels/key values where the surrou
 ## Typography & geometry
 
 `ui-text` is the **Display** size-class (`geometry.md`): it has **no** control height, no `padding-block`
-law, and no frame — its lever is the type scale, not `--ui-height-*`. It consumes only its component tokens
+law, and no frame — its lever is the type scale, not `--md-sys-height-*`. It consumes only its component tokens
 (`--ui-text-size`/`-weight`/`-line-height`/`-tracking`), which the `[variant][size]` matrix repoints from the
 fleet `--md-sys-typescale-{role}-{size}-*` scale (ADR-0078 cl.2/cl.3) — the role-pure two-block pattern every
 control uses; `ui-text` holds zero scale opinion. `kicker`/`overline` add `text-transform: uppercase`;
@@ -3660,7 +3660,7 @@ and font; an ancestor `[scale]` multiplies the frame and an ancestor `[density]`
 adornment↔editor gap. The geometry follows the **Control size-class** in `geometry.md`: the block-size is
 the vertical lever (`padding-block` is always `0`), the value/text edge sits at `h/2`, and a leading/trailing
 slot edge at the emergent `½(h − icon)`. The field frame (border + radius) is drawn **on the host** so a
-slotted adornment sits inside the box; the corner is the fixed `--ui-radius-base` rounded-rect (the
+slotted adornment sits inside the box; the corner is the fixed `--md-sys-shape-corner-base` rounded-rect (the
 container-fleet referent an entry control takes, not the action family's `h/2` pill — ADR-0015 cl.5).
 A bare field carries a default minimum **typing width** (`min-inline-size: ~20ch`, native `<input size>`
 parity) so an unsized field stays hittable; **layout owns the width above that floor** (a flex/grid track
@@ -3701,7 +3701,7 @@ Two deviations from the button-derived standard are explicit (ADR-0014):
   (keyboard-only). The shared `outline` ring is the **sole** focus indicator; the field border steps to
   **`transparent`** on `:focus-within` (a `--md-sys-color-focus-ring` border-color step would double with the ring into a
   visible double border — corrected per ADR-0014's amendment). The ring reads the fleet-wide `--md-sys-color-focus-ring` /
-  `--ui-focus-ring-*` tokens (ADR-0009, as amended), and a transparent border preserves the box geometry (no
+  `--md-sys-state-focus-ring-*` tokens (ADR-0009, as amended), and a transparent border preserves the box geometry (no
   layout shift). The outline is the forced-colors indicator (`--md-sys-color-focus-ring → Highlight`).
 - **`disabled` rides the editor + the platform form-disabled channel** (`effectiveDisabled = own || form`),
   not host `ariaDisabled` — disabled → editor `contenteditable=false` + not focusable + `aria-disabled` +
@@ -3790,7 +3790,7 @@ control-toggled `data-empty` attribute, not `:empty`.
 per-row line-box all **derive from that font** via `calc()`, so one repoint cascades through all three. This
 is deliberately **not** the `(scale × size) → §1-row` lookup `ui-text-field`/`ui-select` ride — a multi-line
 box has no single fixed height to look up (ADR-0134). The frame (border + radius) is drawn **on the host**,
-the same fixed `--ui-radius-base` rounded-rect entry-control class `ui-text-field` uses (geometry.md "Corner
+the same fixed `--md-sys-shape-corner-base` rounded-rect entry-control class `ui-text-field` uses (geometry.md "Corner
 radius"). A bare textarea carries a default minimum typing width (`min-inline-size: ~20ch`) so it stays
 hittable; layout owns width above the floor.
 
@@ -4173,13 +4173,13 @@ arrangement and focus semantics only — it emits **no events** and owns **no va
 `ui-toolbar` is **host-as-flex**: its light-DOM children ARE the flex items (the `ui-row` precedent) — it
 declares no named slots. `orientation` sets the flex axis (`horizontal`, default, → a row; `vertical` → a
 column). `align`/`justify` reuse the ADR-0039 box-alignment dialect (`align` defaults `center` — the bar look,
-unlike `ui-row`'s `start`; `justify` defaults `start`). `gap` is a step on the `--ui-space` layout ladder
+unlike `ui-row`'s `start`; `justify` defaults `start`). `gap` is a step on the `--md-sys-space` layout ladder
 (default `sm` — toolbars are tighter than a bare `ui-row`). `overflow` is CSS-only: `wrap` (default — every
 item stays reachable, never hides an action) or `scroll` (a single line with its own scroll region). A
 spillover overflow *menu* is a fenced, additive v2 — not built in v1.
 
 `ui-toolbar` owns **no `size` prop** — the Pattern-class geometry (`geometry.md`): its items take their own
-control height, and the toolbar's own contribution is padding + gap off the `--ui-space` ladder plus a
+control height, and the toolbar's own contribution is padding + gap off the `--md-sys-space` ladder plus a
 **min-block-size floor** tied to the control-height register, so an empty or short bar still reads as a bar.
 `[scale]`/`[density]` ride ambiently (inherited), never as toolbar props.
 

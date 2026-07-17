@@ -2,8 +2,8 @@
  * Two clearly-SECTIONED blocks, mirroring combo-box.css / modal.css:
  *
  *   [1] TOKEN BLOCK  — `:where(ui-command-modal)` (specificity 0,0,0) declares the `--ui-command-modal-*`
- *       chain: the search field borrows the entry-control height register (--ui-height-md), item/group/active
- *       geometry rides the `--ui-space` ladder (ambient under [scale]/[density]). Raw `--md-sys-color-*` roles
+ *       chain: the search field borrows the entry-control height register (--md-sys-height-md), item/group/active
+ *       geometry rides the `--md-sys-space` ladder (ambient under [scale]/[density]). Raw `--md-sys-color-*` roles
  *       enter ONLY here.
  *   [2] STYLES BLOCK — `@scope (ui-command-modal)` CONSUMES only `--ui-command-modal-*`. The host itself is
  *       `display: contents` — it paints NOTHING; the nested `ui-modal` owns the whole surface (the modal's own
@@ -19,8 +19,8 @@
 :where(ui-command-modal) {
   /* The search field borrows the entry-control height register (the combo-box/select trigger precedent) — no
      new geometry row (Pattern class, geometry.md; no §1 control-height row of its own). */
-  --ui-command-modal-search-block-size: var(--ui-height-md);
-  --ui-command-modal-search-font: var(--ui-font-md);
+  --ui-command-modal-search-block-size: var(--md-sys-height-md);
+  --ui-command-modal-search-font: var(--md-sys-font-md);
   --ui-command-modal-search-padding-inline: calc(var(--ui-command-modal-search-block-size) / 2); /* the fleet h/2 value-edge standard */
 
   /* Frame — the §1b entry-control law applied DEGENERATELY (TKT-0068 item 4 ruling): the palette search
@@ -41,17 +41,17 @@
   --ui-command-modal-inline-size: min(92vw, 36rem);
   --ui-command-modal-block-anchor: 15svh;
 
-  /* Item/group geometry off the --ui-space ladder (ambient under [scale]/[density] — no new geometry row). */
-  --ui-command-modal-item-pad-inline: var(--ui-space-sm);
-  --ui-command-modal-item-pad-block: var(--ui-space-xs);
-  --ui-command-modal-item-gap: var(--ui-space-xs);
-  --ui-command-modal-group-gap: var(--ui-space-sm);
-  --ui-command-modal-caption-font: var(--ui-font-sm); /* group-label + shortcut display — a caption-weight read, off the live ramp (--ui-type-* is retired, ADR-0078 cl.2) */
+  /* Item/group geometry off the --md-sys-space ladder (ambient under [scale]/[density] — no new geometry row). */
+  --ui-command-modal-item-pad-inline: var(--md-sys-space-sm);
+  --ui-command-modal-item-pad-block: var(--md-sys-space-xs);
+  --ui-command-modal-item-gap: var(--md-sys-space-xs);
+  --ui-command-modal-group-gap: var(--md-sys-space-sm);
+  --ui-command-modal-caption-font: var(--md-sys-font-sm); /* group-label + shortcut display — a caption-weight read, off the live ramp (--ui-type-* is retired, ADR-0078 cl.2) */
 
   --ui-command-modal-ink: var(--md-sys-color-neutral-on-surface);
   --ui-command-modal-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-command-modal-group-label-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-command-modal-radius: var(--ui-radius-base);
+  --ui-command-modal-radius: var(--md-sys-shape-corner-base);
 
   /* The [data-active] active-descendant highlight — a background treatment paired with the ARIA/attribute
      signifier itself (never color-only intent, ADR-0057). */

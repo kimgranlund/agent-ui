@@ -80,7 +80,7 @@ export function tokenEntriesProp(): PropConfig<TokenEntry[]> {
  * `getComputedStyle` (the browser resolves the returned expression wherever it lands; the readback is an
  * ADR-0118 cl.2 foreseen extension, out of v1). Used by BOTH swatch/ramp's `background` and ladder's `--_mag`
  * (LLD-C6) — the ONE transform, so a `--`-prefixed value never reaches a CSS property as a bare dashed-ident
- * (`min(100%, --ui-height-md)` is invalid at computed-value time; `min(100%, var(--ui-height-md))` is what we want).
+ * (`min(100%, --md-sys-height-md)` is invalid at computed-value time; `min(100%, var(--md-sys-height-md))` is what we want).
  */
 export function cssValue(value: string): string {
   return value.startsWith('--') ? `var(${value})` : value

@@ -1,9 +1,9 @@
 /* field.css — ui-field, the label/description/error wrapper stylesheet (ADR-0051 · LLD-C5).
  *
  *   [1] TOKEN BLOCK  — `:where(ui-field)` (specificity 0,0,0) declares the `--ui-field-*` chain: a single
- *       density-bearing spacing token (`--ui-field-gap`, off `--ui-space-xs` — the label↔control↔description
+ *       density-bearing spacing token (`--ui-field-gap`, off `--md-sys-space-xs` — the label↔control↔description
  *       rhythm) plus the three part inks/fonts (label / description / error), each a ROLE (`--md-sys-color-{family}-{role}`)
- *       or a font-ramp read (`--ui-font-*`) — never a `color-mix` (colour opinions live in the token layer). The
+ *       or a font-ramp read (`--md-sys-font-*`) — never a `color-mix` (colour opinions live in the token layer). The
  *       error ink/font MATCH text-field's own message tokens (`--ui-text-field-message-*`) — one visual voice for
  *       the ONE error, whichever control renders it. `:has([disabled])` on the slotted control REPOINTS the
  *       label/description ink to the muted on-surface-variant role (role REPOINT, NOT opacity — tokens.md); kept
@@ -31,11 +31,11 @@
 
 :where(ui-field) {
   /* Layout rhythm — the ONE density-bearing quantity (label↔control↔description column gap). */
-  --ui-field-gap: var(--ui-space-xs);
+  --ui-field-gap: var(--md-sys-space-xs);
 
   /* Label — the field's own name text, above/beside the slotted control. */
   --ui-field-label-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-field-label-font: var(--ui-font-md);
+  --ui-field-label-font: var(--md-sys-font-md);
   --ui-field-label-weight: 500;
 
   /* Required marker — the STATIC requiredness affordance appended to the label. Reads the LABEL ink, NOT
@@ -49,12 +49,12 @@
 
   /* Description — the muted helper text under the control. */
   --ui-field-description-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-field-description-font: var(--ui-font-sm);
+  --ui-field-description-font: var(--md-sys-font-sm);
 
   /* Error — matches text-field's own message voice (--ui-text-field-message-*): one visual voice for
      the ONE error, whichever control renders it. */
   --ui-field-error-ink: var(--md-sys-color-danger-on-surface-variant); /* danger TEXT ink — AA-gated on-surface (8.48:1 light / 8.91:1 dark). Bare --md-sys-color-danger is 4.05:1 light = an AA text FAIL; only the TEXT ink moves (any danger BORDER channel stays --md-sys-color-danger, the 3:1 UI bar). 2026-07-02 color audit item 1. */
-  --ui-field-error-font: var(--ui-font-sm);
+  --ui-field-error-font: var(--md-sys-font-sm);
 }
 
 /* disabled → a role-REPOINT of the label/description ink (NOT opacity, tokens.md canon), keyed off the
@@ -70,7 +70,7 @@
 
 @scope (ui-field) {
   /* Container/layout geometry class (no control height, no [size] ramp — the radio-group precedent):
-     a column stack, spacing off --ui-space-* × density. The parts' DOM order (label prepended,
+     a column stack, spacing off --md-sys-space-* × density. The parts' DOM order (label prepended,
      description/error appended around the slotted control — field.ts) already IS the reading order. */
   :scope {
     display: flex;
@@ -104,7 +104,7 @@
     display: none;
     color: var(--ui-field-error-ink);
     font-size: var(--ui-field-error-font);
-    transition: color var(--ui-motion-fast) var(--ui-ease-standard); /* unconditional — the INDICATOR pattern: no :state(ready) gate, the error cannot show at first paint (user-invalid is interaction-gated) */
+    transition: color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard); /* unconditional — the INDICATOR pattern: no :state(ready) gate, the error cannot show at first paint (user-invalid is interaction-gated) */
   }
 
   /* Shown when the associated control's user-invalid gate is live (LLD-C1's userInvalid() read, mirrored

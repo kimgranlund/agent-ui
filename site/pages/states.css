@@ -45,7 +45,7 @@
   border: 1px solid var(--md-sys-color-neutral-surface-high, #e2e2e2);
   border-radius: 8px;
   background: var(--md-sys-color-neutral-surface-low, #fafafa);
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.8rem;
   line-height: 1.6;
   list-style: none;

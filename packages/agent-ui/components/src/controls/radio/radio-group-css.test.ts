@@ -25,11 +25,11 @@ describe('radio-group.css — structure + token hygiene (ADR-0103)', () => {
     expect(stylesBlock).toMatch(/@scope \(ui-radio-group\)/)
   })
 
-  it('declares --ui-radio-group-gap off the layout ladder (--ui-space-sm, ADR-0103 clause 2)', () => {
-    expect(tokenBlock).toMatch(/--ui-radio-group-gap:\s*var\(--ui-space-sm\)/)
+  it('declares --ui-radio-group-gap off the layout ladder (--md-sys-space-sm, ADR-0103 clause 2)', () => {
+    expect(tokenBlock).toMatch(/--ui-radio-group-gap:\s*var\(--md-sys-space-sm\)/)
   })
 
-  it('@scope consumes ONLY --ui-radio-group-* (no raw --ui-space-* / --md-sys-color-* leakage)', () => {
+  it('@scope consumes ONLY --ui-radio-group-* (no raw --md-sys-space-* / --md-sys-color-* leakage)', () => {
     expect(foreignScopeRefs(stylesBlock)).toEqual([])
   })
 

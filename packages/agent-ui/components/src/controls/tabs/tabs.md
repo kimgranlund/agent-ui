@@ -8,7 +8,7 @@
 # `selected` bind per ADR-0019 (renderer LLD-C8).
 tag: ui-tabs
 description: A tab strip and panel container that switches visible content via keyboard-navigable, roving-focus tabs.
-tier: pattern          # geometry size-class — geometry.md "Pattern" (container + control-height rows); tabs is the named example: the interactive tab rows take the CONTROL height, the shell uses the --ui-space ladder
+tier: pattern          # geometry size-class — geometry.md "Pattern" (container + control-height rows); tabs is the named example: the interactive tab rows take the CONTROL height, the shell uses the --md-sys-space ladder
 extends: UIContainerElement  # the FIRST non-form family — surface axes + reused internals (ARIA); NOT form-associated (face below). NOTE: UIContainerElement enters the descriptor BASE_CLASSES at decomp s12 (integration) — until then validateComponentDescriptor flags BAD_EXTENDS, filtered in tabs-descriptor.test.ts
 # marginal: ui-tabs adds 727 B gz (2617 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — the tabs compound: ui-tabs + ui-tab + ui-tab-panel) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
@@ -71,10 +71,10 @@ keyboard:
 
 geometry:
   sizeClass: pattern
-  tabBlockSize: var(--ui-tabs-tab-height)   # the interactive tab rows take the CONTROL height (--ui-height-md)
-  tabPaddingInline: var(--ui-tabs-tab-pad-inline)  # off the --ui-space layout ladder
-  stripGap: var(--ui-tabs-strip-gap)        # the inter-tab gap — --ui-space (density-responsive)
-  panelPadding: var(--ui-tabs-panel-pad)    # the panel body padding — --ui-space
+  tabBlockSize: var(--ui-tabs-tab-height)   # the interactive tab rows take the CONTROL height (--md-sys-height-md)
+  tabPaddingInline: var(--ui-tabs-tab-pad-inline)  # off the --md-sys-space layout ladder
+  stripGap: var(--ui-tabs-strip-gap)        # the inter-tab gap — --md-sys-space (density-responsive)
+  panelPadding: var(--ui-tabs-panel-pad)    # the panel body padding — --md-sys-space
   surface: --ui-container-bg                 # the shell plane (ADR-0015 surface seam); transparent by default (ADR-0104) — a plane is asked-for via `elevation`/`brightness`
 
 forcedColors: A `@media (forced-colors: active)` block keeps the SELECTED-tab indicator + label visible (Highlight) and the strip divider visible (CanvasText); the shell surface drops to Canvas via the container.css role layer.
@@ -144,6 +144,6 @@ The roving listeners + the selection effect are installed in `connected()`, so t
 
 ## Motion
 
-The selected-tab ink and the underline indicator transition over the shared `--ui-motion-fast` timing, gated
+The selected-tab ink and the underline indicator transition over the shared `--md-sys-motion-duration-fast` timing, gated
 behind `:state(ready)` (armed one frame past first paint, so the initial selection snaps) and zeroed under
 `prefers-reduced-motion`. Geometry never animates.

@@ -47,7 +47,7 @@ parts:                 # the native <details>/<summary> is a component-owned PAR
   - name: summary-text
     description: A `<span data-part="summary-text">` inside the summary, holding the `summary` prop's text (textContent-only, never markup). Updated by a scope-owned reactive effect; never touches `open`.
   - name: body
-    description: The control-created `<div data-part="body">` inside the details part, holding the host's adopted light-DOM children (see slots above). Padding rides the `--ui-space` layout ladder (density-responsive) — the Pattern-class split from the summary row's density-invariant control-height frame.
+    description: The control-created `<div data-part="body">` inside the details part, holding the host's adopted light-DOM children (see slots above). Padding rides the `--md-sys-space` layout ladder (density-responsive) — the Pattern-class split from the summary row's density-invariant control-height frame.
 
 customStates: []       # no :state() hooks — [open] is the native <details> attribute the platform + the model→platform effect drive; nothing here is a bespoke custom state
 
@@ -76,8 +76,8 @@ geometry:
     gap: var(--ui-disclosure-gap)         # the density-bearing chevron↔label rhythm
   body:
     shellClass: layout-shell
-    padBlock: var(--ui-disclosure-body-pad-block)     # = --ui-space-sm, density-RESPONSIVE
-    padInline: var(--ui-disclosure-body-pad-inline)   # = --ui-space-md, density-RESPONSIVE
+    padBlock: var(--ui-disclosure-body-pad-block)     # = --md-sys-space-sm, density-RESPONSIVE
+    padInline: var(--ui-disclosure-body-pad-inline)   # = --md-sys-space-md, density-RESPONSIVE
 
 forcedColors: A `@media (forced-colors: active)` block keeps the summary/body ink and the chevron (currentColor) visible as system inks (CanvasText); every value already resolves through a role carrying the WHCM mapping at the token layer, so this is explicit belt-and-suspenders, not new colour. The shared focus ring survives via `--md-sys-color-focus-ring → Highlight`.
 ---
@@ -143,7 +143,7 @@ sized `= font` (geometry.md's inline-affordance law, never the icon ramp), rotat
 (no fold animation either): both are named v1 fences, not omissions (ADR-0113 cl.4). Geometry is Pattern-
 class (geometry.md's own "accordion" row): the summary is an interactive **control-height** row
 (density-invariant frame — height/font/glyph/gap all fixed at the `md` ramp step, no `[size]` axis), while
-the body's padding rides the **`--ui-space`** layout ladder (density-responsive) — the two ledgers never
+the body's padding rides the **`--md-sys-space`** layout ladder (density-responsive) — the two ledgers never
 interchange.
 
 ## Accessibility

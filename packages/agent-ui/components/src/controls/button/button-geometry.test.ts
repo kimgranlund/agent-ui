@@ -9,7 +9,7 @@ declare const process: { cwd(): string }
 // Phase-1 s11 — the STATIC geometry trip-wires for ui-button (geometry.md §Mechanization: "a law without
 // a probe is not enforced"). This suite pins the geometry LAW that button-css.test.ts (s7) does NOT:
 //   • 0 < glyph ≤ box — the content-icon ramp fits inside the height box, at every scale (a CROSS-FILE
-//     static relation between button.css's `--ui-button-icon` and dimensions.css's `--ui-height-{size}`).
+//     static relation between button.css's `--ui-button-icon` and dimensions.css's `--md-sys-height-{size}`).
 //   • the glyph IS the slot — `[slot=leading]` is a SQUARE cell sized to `--ui-button-icon` (the slot model).
 //   • per-edge ASYMMETRY by design — the leading slot edge is ½(h−icon), the trailing label edge is h/2.
 // NOT duplicated here (already pinned by button-css.test.ts s7 — referenced, not re-asserted): the two
@@ -32,28 +32,28 @@ const whereBlock = (marker: string): string => {
   return buttonCss.slice(start, buttonCss.indexOf('}', start))
 }
 
-/** The comment-stripped `:root` block of dimensions.css — the no-[scale] DEFAULT tier (where --ui-icon's
+/** The comment-stripped `:root` block of dimensions.css — the no-[scale] DEFAULT tier (where --md-sys-icon's
  *  ui-md band lives). Strip comments first so `[^}]*` cleanly captures the one block. */
 const dimRoot = ((): string => {
   const noComments = dimCss.replace(/\/\*[\s\S]*?\*\//g, '')
   return (noComments.match(/:root\s*\{[^}]*\}/) ?? [''])[0]
 })()
 
-/** Parse the :root default `--ui-icon-{size}: <n>px` — the §1-SET icon table's ui-md band (ADR-0035 4a hoist).
- *  The icon is the shared --ui-icon-* token now (hoisted from button.css); the px @ scale 1 lives here. */
+/** Parse the :root default `--md-sys-icon-{size}: <n>px` — the §1-SET icon table's ui-md band (ADR-0035 4a hoist).
+ *  The icon is the shared --md-sys-icon-* token now (hoisted from button.css); the px @ scale 1 lives here. */
 const iconPx = (size: string): number | null => {
-  const m = dimRoot.match(new RegExp(`--ui-icon-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
+  const m = dimRoot.match(new RegExp(`--md-sys-icon-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
   return m ? Number(m[1]) : null
 }
 
-/** Parse `--ui-height-{size}: <n>px` from dimensions.css :root (ADR-0038 explicit literal table; no × --ui-scale). */
+/** Parse `--md-sys-height-{size}: <n>px` from dimensions.css :root (ADR-0038 explicit literal table; no × --md-sys-scale). */
 const heightPx = (size: string): number | null => {
-  const m = dimRoot.match(new RegExp(`--ui-height-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
+  const m = dimRoot.match(new RegExp(`--md-sys-height-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
   return m ? Number(m[1]) : null
 }
 
 // The §1-SET icon ramp's no-[scale] default (dimensions.css :root, ADR-0035 4a hoist): sm·md·lg = 16·18·20.
-// button.css reads var(--ui-icon-{size}) per [size]; the px @ scale 1 is dimensions.css's :root default.
+// button.css reads var(--md-sys-icon-{size}) per [size]; the px @ scale 1 is dimensions.css's :root default.
 const iconBySize: Record<string, number | null> = {
   sm: iconPx('sm'),
   md: iconPx('md'),
@@ -62,7 +62,7 @@ const iconBySize: Record<string, number | null> = {
 
 describe('button.css — STATIC geometry trip-wires (s11)', () => {
   it('0 < glyph ≤ box: the content-icon ramp is positive and fits the height box at every size', () => {
-    // anti-vacuous: the parse actually found the §1-SET --ui-icon ramp's :root default (ADR-0035 4a hoist,
+    // anti-vacuous: the parse actually found the §1-SET --md-sys-icon ramp's :root default (ADR-0035 4a hoist,
     // dimensions.css) — NOT an empty match silently passing the relation below.
     expect(iconBySize).toEqual({ sm: 16, md: 18, lg: 20 })
 
@@ -70,23 +70,23 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
       const icon = iconBySize[size]
       const box = heightPx(size)
       expect(icon, `--ui-button-icon for ${size} did not parse`).not.toBeNull()
-      expect(box, `--ui-height-${size} did not parse`).not.toBeNull()
+      expect(box, `--md-sys-height-${size} did not parse`).not.toBeNull()
       expect(icon as number).toBeGreaterThan(0) //              0 < glyph
       expect(icon as number).toBeLessThanOrEqual(box as number) // glyph ≤ box
     }
   })
 
-  it('ADR-0038/ADR-0035: the icon is the shared §1-SET --ui-icon table (dimensions.css) — button reads var(--ui-icon-{size}), NO pow/calc', () => {
-    // ADR-0038 supersedes ADR-0032/0037 (multiplier/snap): height is Kim's explicit lookup, not × --ui-scale.
-    // ADR-0035 (4a hoist) established the icon table and the var(--ui-icon-*) wiring — button.css still reads it.
+  it('ADR-0038/ADR-0035: the icon is the shared §1-SET --md-sys-icon table (dimensions.css) — button reads var(--md-sys-icon-{size}), NO pow/calc', () => {
+    // ADR-0038 supersedes ADR-0032/0037 (multiplier/snap): height is Kim's explicit lookup, not × --md-sys-scale.
+    // ADR-0035 (4a hoist) established the icon table and the var(--md-sys-icon-*) wiring — button.css still reads it.
     // Pin the icon wiring (that pow and calc are gone from the icon decl); height format is tok-mono's (dimensions.test.ts).
-    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-icon:\s*var\(--ui-icon-md\)/) //          md → shared token
-    expect(whereBlock(":where(ui-button[size='sm'])")).toMatch(/--ui-button-icon:\s*var\(--ui-icon-sm\)/) // sm
-    expect(whereBlock(":where(ui-button[size='lg'])")).toMatch(/--ui-button-icon:\s*var\(--ui-icon-lg\)/) // lg
+    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-icon:\s*var\(--md-sys-icon-md\)/) //          md → shared token
+    expect(whereBlock(":where(ui-button[size='sm'])")).toMatch(/--ui-button-icon:\s*var\(--md-sys-icon-sm\)/) // sm
+    expect(whereBlock(":where(ui-button[size='lg'])")).toMatch(/--ui-button-icon:\s*var\(--md-sys-icon-lg\)/) // lg
     // the OLD calc/pow icon form is gone — the decl is a bare var(), not a calc()
     expect(whereBlock(':where(ui-button) {')).not.toMatch(/--ui-button-icon:\s*calc\(/)
-    // ADR-0036: button.css sets line-height: var(--ui-control-line-height) on :scope (the single-line law)
-    expect(stylesBlock).toMatch(/line-height:\s*var\(--ui-control-line-height\)/)
+    // ADR-0036: button.css sets line-height: var(--md-sys-control-line-height) on :scope (the single-line law)
+    expect(stylesBlock).toMatch(/line-height:\s*var\(--md-sys-control-line-height\)/)
   })
 
   it('the glyph IS the slot: [slot=leading] AND [slot=trailing] are SQUARE cells sized to --ui-button-icon on BOTH axes', () => {

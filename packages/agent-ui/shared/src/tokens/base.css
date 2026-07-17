@@ -13,9 +13,9 @@
 
 body {
   margin: 0;
-  /* The fleet sans stack (--ui-sans, dimensions.css) — one home for the typeface the docs shell
-     previously hand-rolled. Code/figure surfaces opt into --ui-mono themselves. */
-  font-family: var(--ui-sans);
+  /* The fleet sans stack (--md-sys-typeface-sans, dimensions.css) — one home for the typeface the docs shell
+     previously hand-rolled. Code/figure surfaces opt into --md-sys-typeface-mono themselves. */
+  font-family: var(--md-sys-typeface-sans);
   /* Body leading from the M3 typescale (ADR-0078) — multi-line prose reads at the body step; headings
      and controls set their own and win by specificity (the _page.css precedent, now shared). */
   line-height: var(--md-sys-typescale-body-medium-line-height);

@@ -43,7 +43,7 @@ keyboard: []            # no component-defined key bindings — any interactivit
 geometry:
   sizeClass: display     # Display band — NO control frame/height (geometry.md)
   blockSize: content      # block-size is content-driven — the rendered block sequence's own flow
-  gap: var(--ui-markdown-gap)  # the vertical rhythm between top-level blocks (density-responsive --ui-space-md referent)
+  gap: var(--ui-markdown-gap)  # the vertical rhythm between top-level blocks (density-responsive --md-sys-space-md referent)
 
 forcedColors: No component-owned surface fill exists to force away — ui-markdown is a transparent flow container; each rendered child (ui-code/ui-table/ui-text) carries its own forced-colors handling independently.
 ---
@@ -105,6 +105,6 @@ technology walks straight through to the rendered children, each of which carrie
 ## Sizing
 
 Display-class (`geometry.md`): no control height, no `[size]`/`[scale]` attribute, no `[density]` legs of
-its own beyond the `--ui-markdown-gap` block-rhythm referent (the `--ui-space-md` density-responsive
+its own beyond the `--ui-markdown-gap` block-rhythm referent (the `--md-sys-space-md` density-responsive
 token). Every rendered child owns its own overflow (a wide table scrolls inside `ui-table`, a wide fenced
 block inside `ui-code` — ADR-0102).

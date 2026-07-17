@@ -53,7 +53,7 @@
 }
 
 .demo-caption {
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.78rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
@@ -92,7 +92,7 @@
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 0.5rem;
   background: var(--md-sys-color-neutral-surface-low);
-  font-family: var(--ui-mono);
+  font-family: var(--md-sys-typeface-mono);
   font-size: 0.8rem;
   line-height: 1.6;
   list-style: none;

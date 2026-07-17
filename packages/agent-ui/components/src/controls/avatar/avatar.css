@@ -2,7 +2,7 @@
  * SPEC-R4/R5/R6/R7/R19/R20; ADR-0112 cl.3, fork F3). Two sectioned blocks:
  *
  *   [1] TOKEN BLOCK — `:where(ui-avatar)` declares `--ui-avatar-*`: the widget box off the widget-box
- *       ramp `--ui-compact-{sm,md,lg}` (ADR-0041 — fork F3, no new register minted; `[size]` repoints the
+ *       ramp `--md-sys-compact-{sm,md,lg}` (ADR-0041 — fork F3, no new register minted; `[size]` repoints the
  *       tier, `[scale]` on an ancestor re-tables the ramp for free, no avatar-local [scale] rule needed)
  *       and ONE neutral plane + on-surface ink pair (SPEC-R7 — no per-identity hue).
  *   [2] STYLES BLOCK — `@scope (ui-avatar)` consumes ONLY `--ui-avatar-*`. The host is a circle-masked
@@ -28,7 +28,7 @@
 :where(ui-avatar) {
   /* Widget-box size (ADR-0041 fork F3) — defaults to the compact-realm `md` tier; a page override for
      larger chrome (a profile header) is the token's job, not a new fleet register (F3's named trigger). */
-  --ui-avatar-size: var(--ui-compact-md);
+  --ui-avatar-size: var(--md-sys-compact-md);
 
   /* ONE neutral pair (SPEC-R7) — AA-verifiable once; every `name` computes the identical plane/ink. */
   --ui-avatar-plane: var(--md-sys-color-neutral-surface-high);
@@ -37,10 +37,10 @@
 
 /* [size] → widget-box tier (the checkbox/badge precedent: sm/lg repoint, md is the base default above). */
 :where(ui-avatar[size='sm']) {
-  --ui-avatar-size: var(--ui-compact-sm);
+  --ui-avatar-size: var(--md-sys-compact-sm);
 }
 :where(ui-avatar[size='lg']) {
-  --ui-avatar-size: var(--ui-compact-lg);
+  --ui-avatar-size: var(--md-sys-compact-lg);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-avatar) consumes ONLY --ui-avatar-* ════════════════ */

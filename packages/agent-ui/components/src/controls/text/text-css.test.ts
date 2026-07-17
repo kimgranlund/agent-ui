@@ -127,7 +127,7 @@ describe('text.css — structure + token hygiene (ADR-0078 cl.3)', () => {
     expect(css).toMatch(/--ui-text-quote-border:\s*var\(--md-sys-color-neutral-outline-variant\)/)
     // TKT-0066 item 5 ruling: dimensional constants ALSO route through the own chain.
     expect(quoteRule).toMatch(/padding-inline-start:\s*var\(--ui-text-quote-pad\)/)
-    expect(css).toMatch(/--ui-text-quote-pad:\s*var\(--ui-space-md\)/)
+    expect(css).toMatch(/--ui-text-quote-pad:\s*var\(--md-sys-space-md\)/)
   })
 
   it('the stamp-transparency reset (cl.4) resets margin/font/letter-spacing/color to inherit for every stampable tag, INCL. a (ADR-0114)', () => {
@@ -237,8 +237,8 @@ describe('text.css — the hyperlink capability (ADR-0114, SPEC-R13; LLD-C3)', (
     const hoverRule = (stylesBlock.match(/:scope > a\[href\]:hover\s*\{[^}]*\}/) ?? [''])[0]
     expect(hoverRule).toMatch(/text-decoration-thickness:\s*2px/)
     const focusRule = (stylesBlock.match(/:scope > a\[href\]:focus-visible\s*\{[^}]*\}/) ?? [''])[0]
-    expect(focusRule).toMatch(/outline:\s*var\(--ui-focus-ring-width\) solid var\(--md-sys-color-focus-ring\)/)
-    expect(focusRule).toMatch(/outline-offset:\s*var\(--ui-focus-ring-offset\)/)
+    expect(focusRule).toMatch(/outline:\s*var\(--md-sys-state-focus-ring-width\) solid var\(--md-sys-color-focus-ring\)/)
+    expect(focusRule).toMatch(/outline-offset:\s*var\(--md-sys-state-focus-ring-offset\)/)
   })
 
   it('forced-colors paints the link in the system LinkText ink, underline surviving by inheritance (SPEC-R13 AC2)', () => {

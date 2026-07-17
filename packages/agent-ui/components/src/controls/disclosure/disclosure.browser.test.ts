@@ -9,7 +9,7 @@ import { server, cdp, userEvent } from 'vitest/browser'
 // These imports are DIRECT (not the `@agent-ui/components/components` barrel / `component-styles.css`
 // barrel) — the M1-a checkpoint ships this folder standalone; the barrel/style-barrel wiring is the
 // LLD-C11 integration slice's job (a separate, single-writer wave). The checkbox.browser.test.ts precedent.
-import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--ui-height/font/space-*)
+import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--md-sys-height/font/space-*)
 import './disclosure.css' // the control stylesheet (direct — pre-barrel)
 import './disclosure.ts' // self-define (registers ui-disclosure)
 

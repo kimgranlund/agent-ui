@@ -63,9 +63,9 @@ describe('table.md descriptor — structural validity', () => {
     expect(parsed.attributes.some((a) => a.name === 'size')).toBe(false)
   })
 
-  it('no --ui-height-* declaration/consumption anywhere (Display class has no control-height lever)', () => {
+  it('no --md-sys-height-* declaration/consumption anywhere (Display class has no control-height lever)', () => {
     const bare = css.replace(/\/\*[\s\S]*?\*\//g, '')
-    expect(bare).not.toMatch(/--ui-height-/)
+    expect(bare).not.toMatch(/--md-sys-height-/)
   })
 })
 

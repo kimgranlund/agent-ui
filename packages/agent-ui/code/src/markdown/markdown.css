@@ -2,14 +2,14 @@
  * SECTIONED blocks, the `code.css` precedent:
  *
  *   [1] TOKEN BLOCK — `:where(ui-markdown)` (specificity 0,0,0) declares the block-rhythm token
- *       (`--ui-markdown-gap`, the `--ui-space-md` density-responsive referent) + the native inline-code
+ *       (`--ui-markdown-gap`, the `--md-sys-space-md` density-responsive referent) + the native inline-code
  *       token pair (`--ui-markdown-code-*`, on-surface + a container-tint background — the SAME
  *       cross-family seam ui-code/ui-card ride, ADR-0015 cl.2).
  *   [2] STYLES BLOCK — `@scope (ui-markdown)` consumes ONLY those tokens, plus styles the native
  *       `<em>/<strong>/<code>/<ul>/<ol>/<li>` elements the renderer builds (I-1/I-2 — SPEC-C6). Each
  *       fenced/table CHILD owns its own overflow (`ui-code`/`ui-table`, ADR-0102) — this stylesheet adds
  *       none of its own. No `[size]`/`[scale]` rows (Display class — no control frame/height) and no
- *       `[density]` legs beyond the `--ui-space-md` referent's own density response.
+ *       `[density]` legs beyond the `--md-sys-space-md` referent's own density response.
  *
  * Standalone stylesheet, exported as the `./markdown.css` subpath — an app links it (or a bundler
  * `import`s it as CSS); NEVER injected from any .ts (behaviour-only modules, no runtime style injection).
@@ -18,11 +18,11 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-markdown) declares --ui-markdown-* ════════════════ */
 
 :where(ui-markdown) {
-  --ui-markdown-gap: var(--ui-space-md); /* vertical rhythm between top-level blocks (density-responsive) */
-  --ui-markdown-item-gap: var(--ui-space-sm); /* rhythm between list items */
+  --ui-markdown-gap: var(--md-sys-space-md); /* vertical rhythm between top-level blocks (density-responsive) */
+  --ui-markdown-item-gap: var(--md-sys-space-sm); /* rhythm between list items */
   --ui-markdown-code-ink: var(--md-sys-color-neutral-on-surface);
   --ui-markdown-code-surface: var(--ui-container-bg, var(--md-sys-color-neutral-surface)); /* the ui-code/ui-card seam */
-  --ui-markdown-code-radius: var(--ui-radius-base); /* TKT-0066 item 5 ruling: constants route through the own chain */
+  --ui-markdown-code-radius: var(--md-sys-shape-corner-base); /* TKT-0066 item 5 ruling: constants route through the own chain */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-markdown) consumes --ui-markdown-* ════════════════ */
@@ -43,7 +43,7 @@
     font-weight: 700;
   }
   code {
-    font-family: var(--ui-mono);
+    font-family: var(--md-sys-typeface-mono);
     color: var(--ui-markdown-code-ink);
     background: var(--ui-markdown-code-surface);
     border-radius: var(--ui-markdown-code-radius);

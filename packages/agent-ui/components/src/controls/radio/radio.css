@@ -2,7 +2,7 @@
  *
  * Two SECTIONED blocks:
  *   [1] TOKEN BLOCK  — `:where(ui-radio)` declares `--ui-radio-*` from the compact ramp + colour roles.
- *       [size] repoints the box from the --ui-compact-{sm/md/lg} widget ramp (ADR-0041). No --ui-scale
+ *       [size] repoints the box from the --md-sys-compact-{sm/md/lg} widget ramp (ADR-0041). No --md-sys-scale
  *       multiplier: the compact ramp is an EXPLICIT per-[scale] lookup re-tabled in dimensions.css, so the
  *       radio box tracks scale automatically (ADR-0038 pattern). [checked] reflects so the dot selector
  *       works as a CSS attribute hook (the custom state :state(checked) is the browser-only alternative;
@@ -31,7 +31,7 @@
 
 :where(ui-radio) {
   /* Box size from the widget ramp (ADR-0041). Default = md. */
-  --ui-radio-box: var(--ui-compact-md);
+  --ui-radio-box: var(--md-sys-compact-md);
 
   /* Dot geometry: the SAME 22%-inset law as before (unchanged diameter maths), now sizing a real
      `::after` circle instead of an inset box-shadow annulus — the fix touches COLOUR, not proportion. */
@@ -50,17 +50,17 @@
   --ui-radio-dot: var(--md-sys-color-primary-on-primary);
 
   /* Gap: between the circle and the label slot (font/2, the anatomy gap law — density-bearing). */
-  --ui-radio-gap: var(--ui-gap-md);
+  --ui-radio-gap: var(--md-sys-gap-md);
 }
 
 /* [size] → compact ramp repoint (ADR-0041). Gap follows the font-size tier (density gap = font/2). */
 :where(ui-radio[size='sm']) {
-  --ui-radio-box: var(--ui-compact-sm);
-  --ui-radio-gap: var(--ui-gap-sm);
+  --ui-radio-box: var(--md-sys-compact-sm);
+  --ui-radio-gap: var(--md-sys-gap-sm);
 }
 :where(ui-radio[size='lg']) {
-  --ui-radio-box: var(--ui-compact-lg);
-  --ui-radio-gap: var(--ui-gap-lg);
+  --ui-radio-box: var(--md-sys-compact-lg);
+  --ui-radio-gap: var(--md-sys-gap-lg);
 }
 
 /* disabled → muted neutral roles. Holds at idle (pointer-inert below). Disabled is SC 1.4.11-EXEMPT
@@ -85,7 +85,7 @@
     position: relative;
 
     /* Control-standard single-line line-height (ADR-0036): 1 keeps the text box = the font box. */
-    line-height: var(--ui-control-line-height);
+    line-height: var(--md-sys-control-line-height);
 
     cursor: pointer;
     -webkit-user-select: none; /* WebKit/Safari: prefix needed */
@@ -105,7 +105,7 @@
     block-size: var(--ui-radio-box);
     border-radius: 50%;
 
-    /* 2px border (same weight as the focus ring and --ui-widget-inset's 2px law; ADR-0041). */
+    /* 2px border (same weight as the focus ring and --md-sys-widget-inset's 2px law; ADR-0041). */
     border: 2px solid var(--ui-radio-border);
     box-sizing: border-box;
     background: transparent;
@@ -145,7 +145,7 @@
     transform: translate(-50%, -50%);
 
     background: transparent;
-    transition: background-color var(--ui-motion-fast) var(--ui-ease-standard);
+    transition: background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
 
   :scope:is([checked])::after,
@@ -165,8 +165,8 @@
      AND the label text — standard for labelled controls). Not on ::before alone, so screen-reader
      users see a full enclosing ring. layout-neutral (outline outside the box model). */
   :scope:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* Motion (interaction-states standard) — transition state-PAINT properties on ::before (the ring/fill)
@@ -174,8 +174,8 @@
      transitioned. Unconditional — no :state(ready) gate (the base sets no such state). */
   :scope::before {
     transition:
-      border-color var(--ui-motion-fast) var(--ui-ease-standard),
-      background-color var(--ui-motion-fast) var(--ui-ease-standard);
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
   @media (prefers-reduced-motion: reduce) {
     :scope::before,

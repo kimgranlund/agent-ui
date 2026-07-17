@@ -97,7 +97,7 @@ component-preview {
  *
  * ADR-0103 RETIRES the specimen-root leg that used to live here (`.canvas-surface > ui-radio-group` +
  * its `[orientation='horizontal']` override): `ui-radio-group` now owns this exact flex structure itself
- * (radio-group.css's `@scope` block — column by default, gap off the `--ui-space` ladder, a wrapping row
+ * (radio-group.css's `@scope` block — column by default, gap off the `--md-sys-space` ladder, a wrapping row
  * under `[orientation='horizontal']`), so the bare specimen mounted by `#buildComponent` renders
  * stacked-with-gap FROM THE COMPONENT with zero page-authored CSS. `ui-segmented-control` needs no
  * specimen-root leg either — it too always owns its own grid layout. */

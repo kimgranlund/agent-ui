@@ -89,8 +89,8 @@ keyboard:
 
 geometry:
   sizeClass: indicator
-  blockSize: var(--ui-compact-md)   # the indicator box height = --ui-compact-{size} (widget ramp, ADR-0041)
-  inlineSize: var(--ui-compact-md)  # the indicator box width = same (square circle)
+  blockSize: var(--md-sys-compact-md)   # the indicator box height = --md-sys-compact-{size} (widget ramp, ADR-0041)
+  inlineSize: var(--md-sys-compact-md)  # the indicator box width = same (square circle)
   dotInset: 22% of box (::after dot diameter = box − 2×22%-of-box, same maths as the prior box-shadow annulus)
   labelGap: var(--ui-radio-gap)     # gap between circle and label slot (font/2 × density)
 
@@ -115,7 +115,7 @@ the group's form value.
 ## Anatomy
 
 The host is an **inline-flex row**: a circular `::before` pseudo-element (the ring, sized to
-`--ui-compact-{size}`), a circular `::after` pseudo-element (the checked **dot**, absolutely positioned and
+`--md-sys-compact-{size}`), a circular `::after` pseudo-element (the checked **dot**, absolutely positioned and
 centred on `::before`), then any default-slot content (the optional label text). When checked, the ring
 **fills solid primary** (`::before` border + background both `--ui-radio-ink`) and the dot reads the bright
 `--md-sys-color-primary-on-primary` role — the same ring-fills / bright-glyph pairing `ui-switch` uses for its
@@ -139,6 +139,6 @@ valid for single-item "accept" patterns, but lacks a form-value owner for multi-
 
 ## Sizes
 
-`size` repoints the box from the `--ui-compact-{sm/md/lg}` widget ramp (ADR-0041). An ancestor `[scale]`
+`size` repoints the box from the `--md-sys-compact-{sm/md/lg}` widget ramp (ADR-0041). An ancestor `[scale]`
 automatically re-tables the compact tokens (ADR-0038 — explicit per-scale lookup in `dimensions.css`), so the
 radio box tracks scale without any per-control `[scale]` rule.

@@ -6,7 +6,7 @@
  * runtime style; plan §2).
  *
  * Geometry (geometry.md "Pattern" size-class — tabs is the named example): the interactive TAB ROWS take the
- * CONTROL height (--ui-height-*), while the SHELL (strip gap, panel padding) uses the --ui-space layout ladder.
+ * CONTROL height (--md-sys-height-*), while the SHELL (strip gap, panel padding) uses the --md-sys-space layout ladder.
  * Two distinct ledgers, never interchanged. The surface (the shell background + the elevation/brightness axes)
  * is the shared container.css seam — this sheet does not repoint --ui-container-bg (ADR-0104): a bare <ui-tabs>
  * is transparent by default like the rest of the container family (ADR-0015 cl.1); a plane is an asked-for
@@ -17,13 +17,13 @@
 :where(ui-tabs) {
   /* Tab-row geometry — the CONTROL band (the rows are interactive; geometry.md Pattern class). Fixed at the md
      ramp step (ui-tabs exposes no [size] axis). */
-  --ui-tabs-tab-height: var(--ui-height-md);
-  --ui-tabs-tab-font: var(--ui-font-md);
-  --ui-tabs-tab-pad-inline: var(--ui-space-md); /* a tab's horizontal padding — the layout ladder */
+  --ui-tabs-tab-height: var(--md-sys-height-md);
+  --ui-tabs-tab-font: var(--md-sys-font-md);
+  --ui-tabs-tab-pad-inline: var(--md-sys-space-md); /* a tab's horizontal padding — the layout ladder */
 
-  /* Shell spacing — the --ui-space layout ladder (density-responsive; NEVER the control frame). */
-  --ui-tabs-strip-gap: var(--ui-space-xs); /* gap between tabs in the strip */
-  --ui-tabs-panel-pad: var(--ui-space-md); /* the panel body padding */
+  /* Shell spacing — the --md-sys-space layout ladder (density-responsive; NEVER the control frame). */
+  --ui-tabs-strip-gap: var(--md-sys-space-xs); /* gap between tabs in the strip */
+  --ui-tabs-panel-pad: var(--md-sys-space-md); /* the panel body padding */
 
   /* The strip divider + the indicator thickness. */
   --ui-tabs-strip-line: var(--md-sys-color-neutral-outline-variant);
@@ -105,8 +105,8 @@
   /* The shared focus ring (ADR-0009) — keyboard-only :focus-visible, read DIRECTLY from the fleet tokens (the
      one token-hygiene exception every control shares). Inset offset so the ring sits inside the strip. */
   ui-tab:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: calc(-1 * var(--ui-focus-ring-offset));
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: calc(-1 * var(--md-sys-state-focus-ring-offset));
   }
 
   /* A panel — the body region; only the selected one shows (the rest carry `hidden` and stay in the DOM). The
@@ -124,10 +124,10 @@
      (the selection applied synchronously at connect does not animate) and only later changes transition. Never
      geometry, never `all`; timing from the shared motion token. */
   :scope:state(ready) ui-tab {
-    transition: color var(--ui-motion-fast) var(--ui-ease-standard);
+    transition: color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
   :scope:state(ready) ui-tab::after {
-    transition: background-color var(--ui-motion-fast) var(--ui-ease-standard);
+    transition: background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
   @media (prefers-reduced-motion: reduce) {
     :scope:state(ready) ui-tab,

@@ -31,15 +31,15 @@ const dimRoot = ((): string => {
   return (noComments.match(/:root\s*\{[^}]*\}/) ?? [''])[0]
 })()
 
-/** Parse `--ui-icon-{size}: <n>px` from dimensions.css :root (ADR-0038 / ADR-0035 §1-SET table). */
+/** Parse `--md-sys-icon-{size}: <n>px` from dimensions.css :root (ADR-0038 / ADR-0035 §1-SET table). */
 const iconPx = (size: string): number | null => {
-  const m = dimRoot.match(new RegExp(`--ui-icon-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
+  const m = dimRoot.match(new RegExp(`--md-sys-icon-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
   return m ? Number(m[1]) : null
 }
 
-/** Parse `--ui-height-{size}: <n>px` from dimensions.css :root (ADR-0038 explicit literal table, no × --ui-scale). */
+/** Parse `--md-sys-height-{size}: <n>px` from dimensions.css :root (ADR-0038 explicit literal table, no × --md-sys-scale). */
 const heightPx = (size: string): number | null => {
-  const m = dimRoot.match(new RegExp(`--ui-height-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
+  const m = dimRoot.match(new RegExp(`--md-sys-height-${size}:\\s*(\\d+(?:\\.\\d+)?)px\\s*;`))
   return m ? Number(m[1]) : null
 }
 
@@ -77,27 +77,27 @@ describe('text-field.css — STATIC geometry law (s9)', () => {
     for (const size of ['sm', 'md', 'lg'] as const) {
       const icon = iconBySize[size]
       const box = heightPx(size)
-      expect(icon, `--ui-icon-${size} did not parse from dimensions.css :root`).not.toBeNull()
-      expect(box, `--ui-height-${size} did not parse from dimensions.css :root`).not.toBeNull()
+      expect(icon, `--md-sys-icon-${size} did not parse from dimensions.css :root`).not.toBeNull()
+      expect(box, `--md-sys-height-${size} did not parse from dimensions.css :root`).not.toBeNull()
       expect(icon as number).toBeGreaterThan(0) //                  0 < glyph
       expect(icon as number).toBeLessThanOrEqual(box as number) //  glyph ≤ box
     }
   })
 
-  it('ADR-0038 / ADR-0035 wiring: icon reads the shared §1-SET --ui-icon-* table (not a local calc); height is an explicit literal (not × --ui-scale)', () => {
-    // ADR-0038 supersedes the multiplier: text-field.css drops calc(Npx × --ui-scale) for icon and reads the
-    // shared --ui-icon-* table (ADR-0035 conformance gap now closed — button adopted the table first).
-    // dimensions.css :root has explicit `<n>px` literals for height (no × --ui-scale — ADR-0038 clause 5).
+  it('ADR-0038 / ADR-0035 wiring: icon reads the shared §1-SET --md-sys-icon-* table (not a local calc); height is an explicit literal (not × --md-sys-scale)', () => {
+    // ADR-0038 supersedes the multiplier: text-field.css drops calc(Npx × --md-sys-scale) for icon and reads the
+    // shared --md-sys-icon-* table (ADR-0035 conformance gap now closed — button adopted the table first).
+    // dimensions.css :root has explicit `<n>px` literals for height (no × --md-sys-scale — ADR-0038 clause 5).
     // text-field.css icon wiring
-    expect(whereBlock(':where(ui-text-field) {')).toMatch(/--ui-text-field-icon:\s*var\(--ui-icon-md\)/)
-    expect(whereBlock(":where(ui-text-field[size='sm'])")).toMatch(/--ui-text-field-icon:\s*var\(--ui-icon-sm\)/)
-    expect(whereBlock(":where(ui-text-field[size='lg'])")).toMatch(/--ui-text-field-icon:\s*var\(--ui-icon-lg\)/)
+    expect(whereBlock(':where(ui-text-field) {')).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-md\)/)
+    expect(whereBlock(":where(ui-text-field[size='sm'])")).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-sm\)/)
+    expect(whereBlock(":where(ui-text-field[size='lg'])")).toMatch(/--ui-text-field-icon:\s*var\(--md-sys-icon-lg\)/)
     // the old local calc is gone (ADR-0035 conformance gap closed)
     expect(whereBlock(':where(ui-text-field) {')).not.toMatch(/--ui-text-field-icon:\s*calc\(/)
     // dimensions.css :root: height is now a literal px (no multiplier), confirmed by the `heightPx` parse above
-    expect(heightPx('sm'), '--ui-height-sm :root literal parse returned null').not.toBeNull()
-    expect(heightPx('md'), '--ui-height-md :root literal parse returned null').not.toBeNull()
-    expect(heightPx('lg'), '--ui-height-lg :root literal parse returned null').not.toBeNull()
+    expect(heightPx('sm'), '--md-sys-height-sm :root literal parse returned null').not.toBeNull()
+    expect(heightPx('md'), '--md-sys-height-md :root literal parse returned null').not.toBeNull()
+    expect(heightPx('lg'), '--md-sys-height-lg :root literal parse returned null').not.toBeNull()
   })
 
   it('the slot IS the square cell: [slot=leading] AND [slot=trailing] are sized to --ui-text-field-icon on BOTH axes', () => {

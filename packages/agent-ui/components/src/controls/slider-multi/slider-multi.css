@@ -3,18 +3,18 @@
  *
  *   [1] TOKEN BLOCK  — `:where(ui-slider-multi)` (specificity 0,0,0) DECLARES the `--ui-slider-multi-*`
  *       chain from the colour roles (`--md-sys-color-{family}-{role}`) and the compact widget ramp
- *       (`--ui-compact-{size}` / ADR-0041). `[size]` repoints the box token (the widget ramp step);
+ *       (`--md-sys-compact-{size}` / ADR-0041). `[size]` repoints the box token (the widget ramp step);
  *       `[disabled]` mutes the rail/fill/thumb colours to the neutral muted family.
  *       No `color-mix` — colour opinions live in the token layer (ADR-0008).
  *   [2] STYLES BLOCK — `@scope (ui-slider-multi)` CONSUMES only `--ui-slider-multi-*` for its OWN
  *       tokens. The host is a block-level flex column that sizes to its content; the RAIL (.rail) is a
  *       thin horizontal bar inside the interactive-box-height container; the FILL (.fill) spans lo→hi
  *       using `--value-pct-lo`/`--value-pct-hi` (set by the JS geometry seam); each THUMB (.thumb) is
- *       a circle `box − 4px` = `box − 2×--ui-widget-inset` (ADR-0041 cl.3: the 2px-inset law) positioned
+ *       a circle `box − 4px` = `box − 2×--md-sys-widget-inset` (ADR-0041 cl.3: the 2px-inset law) positioned
  *       absolutely on the rail by `left: calc(var(--value-pct-{lo|hi}) * 1%)`.
  *       `:focus-visible` ring (keyboard-only, ADR-0009). Unconditional transitions + reduced-motion
  *       (the Indicator/Range family pattern — NO :state(ready) gate; ADR-0042 LLD-C6). Forced-colors safe.
- *       Density-invariant (box/thumb scale with `--ui-compact-{size}`, never a raw px override here).
+ *       Density-invariant (box/thumb scale with `--md-sys-compact-{size}`, never a raw px override here).
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
  * from slider-multi.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -25,7 +25,7 @@
 :where(ui-slider-multi) {
   /* Box geometry — the compact widget-box ramp step (ADR-0041; default size = md). `[size]` repoints.
      The box drives the thumb size (box − 4px) and the host's interactive-area height. */
-  --ui-slider-multi-box: var(--ui-compact-md);
+  --ui-slider-multi-box: var(--md-sys-compact-md);
 
   /* Rail colour — the unfilled background track (muted neutral outline, same as switch unchecked track). */
   --ui-slider-multi-rail: var(--md-sys-color-neutral-outline-variant);
@@ -44,9 +44,9 @@
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the LITERAL per-[scale] table in dimensions.css
-   re-tables --ui-compact-{sm,md,lg}; `[size]` on the host picks which step the slider box targets). */
-:where(ui-slider-multi[size='sm']) { --ui-slider-multi-box: var(--ui-compact-sm); }
-:where(ui-slider-multi[size='lg']) { --ui-slider-multi-box: var(--ui-compact-lg); }
+   re-tables --md-sys-compact-{sm,md,lg}; `[size]` on the host picks which step the slider box targets). */
+:where(ui-slider-multi[size='sm']) { --ui-slider-multi-box: var(--md-sys-compact-sm); }
+:where(ui-slider-multi[size='lg']) { --ui-slider-multi-box: var(--md-sys-compact-lg); }
 
 /* [disabled] → muted neutral roles (overrides all states). HOLDS at idle: the disabled host is
    pointer-inert (styles block), so `:hover` never matches it (ADR-0008 disabled pattern). */
@@ -107,12 +107,12 @@
     border-radius: 999px;
     pointer-events: none;                       /* the fill is purely decorative — thumbs capture pointer */
     transition:
-      inset-inline-start var(--ui-motion-fast) var(--ui-ease-standard),
-      inline-size        var(--ui-motion-fast) var(--ui-ease-standard),
-      background-color   var(--ui-motion-fast) var(--ui-ease-standard);
+      inset-inline-start var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      inline-size        var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      background-color   var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
 
-  /* THUMBS (.thumb) — circles inset 2px (--ui-widget-inset) inside the widget box (ADR-0041 cl.3).
+  /* THUMBS (.thumb) — circles inset 2px (--md-sys-widget-inset) inside the widget box (ADR-0041 cl.3).
    *
    * Size:   thumb = box − 2×inset = box − 4px (the ADR-0041 2px-inset law).
    * Block:  top:50% + transform:translateY(-50%) centres the thumb on the rail's midline.
@@ -126,7 +126,7 @@
     position: absolute;
 
     /* ADR-0041 cl.3: thumb = box − 2×inset = box − 4px */
-    --ui-slider-multi-thumb-size: calc(var(--ui-slider-multi-box) - 2 * var(--ui-widget-inset));
+    --ui-slider-multi-thumb-size: calc(var(--ui-slider-multi-box) - 2 * var(--md-sys-widget-inset));
     inline-size: var(--ui-slider-multi-thumb-size);
     block-size:  var(--ui-slider-multi-thumb-size);
     border-radius: 50%;                         /* circle */
@@ -140,9 +140,9 @@
     cursor: pointer;
 
     transition:
-      left             var(--ui-motion-fast) var(--ui-ease-standard),
-      background-color var(--ui-motion-fast) var(--ui-ease-standard),
-      border-color     var(--ui-motion-fast) var(--ui-ease-standard);
+      left             var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      border-color     var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
 
   /* Per-thumb inline position — driven by the JS geometry seam (--value-pct-lo / --value-pct-hi set via
@@ -155,8 +155,8 @@
      Consumes the local --ui-slider-multi-focus-ring (declared in the token block, chained from
      --md-sys-color-focus-ring) — the full token chain is now component-local, no direct fleet reference here. */
   .thumb:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--ui-slider-multi-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--ui-slider-multi-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* Reduced motion — zero all transitions on the fill and thumbs (accessibility non-negotiable;

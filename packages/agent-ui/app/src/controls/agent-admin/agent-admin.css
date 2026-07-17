@@ -19,7 +19,7 @@
   --ui-agent-admin-border: var(--md-sys-color-neutral-outline-variant, currentColor);
   --ui-agent-admin-label-ink: var(--md-sys-color-neutral-on-surface-variant, var(--ui-agent-admin-ink));
   --ui-agent-admin-error-ink: var(--md-sys-color-danger-on-surface-variant, var(--ui-agent-admin-ink)); /* TKT-0065: was --md-sys-color-error-on-surface — an ERROR family has never existed in tokens.css (the fleet family is danger), so the fallback ALWAYS won and validation errors rendered in plain neutral ink; danger-on-surface-variant is the AA-gated danger TEXT ink (the text-field message precedent) */
-  --ui-agent-admin-entry-radius: var(--ui-radius-base, 0.25rem); /* TKT-0066 item 5 ruling: dimensional constants route through the own chain */
+  --ui-agent-admin-entry-radius: var(--md-sys-shape-corner-base, 0.25rem); /* TKT-0066 item 5 ruling: dimensional constants route through the own chain */
   --ui-agent-admin-scrollbar-width: none; /* the app-chrome look: NO visible scrollbars in this surface's panes (scrolling stays live) */
 }
 

@@ -1,7 +1,7 @@
 /* checkbox.css — ui-checkbox, the Indicator-class widget stylesheet (decomp S1 · ADR-0041 · ADR-0042).
  *
  *   [1] TOKEN BLOCK  — `:where(ui-checkbox)` (specificity 0,0,0) declares the --ui-checkbox-* chain from
- *       the colour roles (--md-sys-color-{family}-{role}) and the widget-box ramp (--ui-compact-{size}, ADR-0041).
+ *       the colour roles (--md-sys-color-{family}-{role}) and the widget-box ramp (--md-sys-compact-{size}, ADR-0041).
  *       [size] repoints the box to the correct compact tier; [disabled] mutes to neutral roles.
  *   [2] STYLES BLOCK — `@scope (ui-checkbox)` consumes ONLY --ui-checkbox-*. The host is inline-flex
  *       (box + optional label text). ::before paints the square widget box (2px border + background fill).
@@ -19,7 +19,7 @@
 
 :where(ui-checkbox) {
   /* Widget-box size — the compact-class square, per ADR-0041. Default size = md (16px at ui-md scale). */
-  --ui-checkbox-box: var(--ui-compact-md);
+  --ui-checkbox-box: var(--md-sys-compact-md);
 
   /* Colour channel: unchecked = neutral border on transparent; checked/indeterminate = primary fill + ink.
      The border-color and bg-checked ride the same --md-sys-color-primary ladder step as button.css's solid variant
@@ -30,8 +30,8 @@
   --ui-checkbox-border-checked: var(--md-sys-color-primary);
   --ui-checkbox-ink: var(--md-sys-color-primary-on-primary); /* checkmark / indeterminate-dash fill */
 
-  /* Label gap — the rhythm between the box and the optional label text (density-bearing, via --ui-gap-md). */
-  --ui-checkbox-gap: var(--ui-gap-md);
+  /* Label gap — the rhythm between the box and the optional label text (density-bearing, via --md-sys-gap-md). */
+  --ui-checkbox-gap: var(--md-sys-gap-md);
 
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction (the
      trackUserInvalid controller owns that timing; checkbox.ts toggles :state(user-invalid)). The
@@ -41,12 +41,12 @@
 
 /* [size] → widget-box tier (ADR-0041 clause 2: sm/md/lg at the default ui-md scale = 14/16/18 px). */
 :where(ui-checkbox[size='sm']) {
-  --ui-checkbox-box: var(--ui-compact-sm);
-  --ui-checkbox-gap: var(--ui-gap-sm);
+  --ui-checkbox-box: var(--md-sys-compact-sm);
+  --ui-checkbox-gap: var(--md-sys-gap-sm);
 }
 :where(ui-checkbox[size='lg']) {
-  --ui-checkbox-box: var(--ui-compact-lg);
-  --ui-checkbox-gap: var(--ui-gap-lg);
+  --ui-checkbox-box: var(--md-sys-compact-lg);
+  --ui-checkbox-gap: var(--md-sys-gap-lg);
 }
 
 /* [disabled] → mute the border + fill to neutral roles. The state holds at idle: pointer-events:none (below)
@@ -85,8 +85,8 @@
     background-color: var(--ui-checkbox-bg);
     /* State-PAINT transition only — geometry never animates (geometry.md). */
     transition:
-      background-color var(--ui-motion-fast) var(--ui-ease-standard),
-      border-color var(--ui-motion-fast) var(--ui-ease-standard);
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
 
   /* Checked: fill the box with the primary colour (border disappears into the fill). */
@@ -159,10 +159,10 @@
 
   /* Focus ring (ADR-0009) — the shared fleet ring: :focus-visible (keyboard-only) draws a layout-neutral
      outline on the host. This encircles the whole control (box + label), the fleet standard. The ring
-     reads the fleet-wide --md-sys-color-focus-ring / --ui-focus-ring-* tokens (never a per-control repoint). */
+     reads the fleet-wide --md-sys-color-focus-ring / --md-sys-state-focus-ring-* tokens (never a per-control repoint). */
   :scope:focus-visible {
-    outline: var(--ui-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--ui-focus-ring-offset);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* Motion (interaction-states standard) — zero the box transition under reduced motion. */
