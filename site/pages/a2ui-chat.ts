@@ -26,8 +26,11 @@ import './a2ui-chat.css'
 import '@agent-ui/app/conversation.css' // ui-conversation's own thread/narration layout (LLD-C6)
 import '@agent-ui/app/conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '@agent-ui/app/conversation' // self-defines <ui-conversation> (which registers <ui-surface-host>/<ui-conversation-composer> in turn)
+import '@agent-ui/code/markdown.css'
+import '@agent-ui/code/markdown' // self-defines <ui-markdown> — the SPEC-R12 (TKT-0071) content-render hook's own concern, NOT ui-conversation's; this page is free to import @agent-ui/code, ui-conversation itself never does
 import type { A2uiClientMessage } from '@agent-ui/a2ui'
 import type { UIConversationElement } from '@agent-ui/app'
+import type { UIMarkdownElement } from '@agent-ui/code/markdown'
 import {
   createRecordedTransport,
   nextTurn,
@@ -66,6 +69,14 @@ shell.append(header)
 // The whole thread + composer + narration + per-surface mounts + wire disclosure is ONE primitive now.
 const conv = document.createElement('ui-conversation') as UIConversationElement
 conv.setAttribute('disclosure', '') // opt IN to the raw-wire per-turn dump (ADR-0129 clause 3) — a2ui-chat always showed it
+// SPEC-R12 (TKT-0071): agent-turn note + system-bubble text render through ui-markdown instead of literal
+// `**bold**` syntax reaching the user. This page owns the @agent-ui/code import — ui-conversation itself
+// never does (the app DAG stays untouched, CLAUDE.md's layering law).
+conv.setContentRenderer((text) => {
+  const node = document.createElement('ui-markdown') as UIMarkdownElement
+  node.markdown = text
+  return node
+})
 shell.append(conv)
 
 const switcherSlot = el('div', 'switcher-slot')

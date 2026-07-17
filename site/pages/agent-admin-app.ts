@@ -23,17 +23,61 @@ import '@agent-ui/app/settings' // self-defines ui-settings
 import '@agent-ui/app/surface-host' // self-defines ui-surface-host (composed by ui-conversation)
 import '@agent-ui/app/conversation' // self-defines ui-conversation
 import '@agent-ui/app/agent-admin' // self-defines ui-agent-admin
-import './agent-admin-app.css' // page-local: full-viewport layout only
-import { createMemoryStore } from '@agent-ui/app/settings-memory-store'
+import './agent-admin-app.css' // page-local: full-viewport layout + the preset strip chrome
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import { AGENT_PRESETS, ACTIVE_PRESET_KEY, presetStore, resetPreset, type AgentPreset } from './agent-admin-presets.ts'
 
 const root = document.querySelector('#app') ?? document.body
 
-// The SAME persistKey as the composition guide's demo — one config, both surfaces (edit on either page,
-// the other sees it on reload).
+// ── the six A2UI-showcase personas (TKT-0074) ─────────────────────────────────────────────────────────────
+// Each preset is a persona-scoped store (its own persistKey; edits persist per persona). Switching swaps
+// `admin.store` — the component's reactive store effect re-pushes it into the settings pane, rewires every
+// entry section, and re-syncs the conversation (agent-admin.ts:162; the store-swap probe pins it).
+
 const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
-admin.store = createMemoryStore({ persistKey: 'docs-agent-admin-demo' })
-root.append(admin)
+
+const strip = document.createElement('nav')
+strip.className = 'preset-strip'
+strip.setAttribute('aria-label', 'Agent presets')
+
+const presetButtons = new Map<string, UIButtonElement>()
+let active: AgentPreset =
+  AGENT_PRESETS.find((p) => p.id === localStorage.getItem(ACTIVE_PRESET_KEY)) ?? AGENT_PRESETS[0]!
+
+function applyPreset(preset: AgentPreset): void {
+  active = preset
+  localStorage.setItem(ACTIVE_PRESET_KEY, preset.id)
+  admin.store = presetStore(preset)
+  for (const [id, btn] of presetButtons) btn.variant = id === preset.id ? 'solid' : 'ghost'
+}
+
+for (const preset of AGENT_PRESETS) {
+  const btn = document.createElement('ui-button') as UIButtonElement
+  btn.variant = 'ghost'
+  btn.size = 'sm'
+  btn.textContent = preset.label
+  btn.title = preset.tagline
+  btn.addEventListener('click', () => applyPreset(preset))
+  presetButtons.set(preset.id, btn)
+  strip.append(btn)
+}
+
+// Reset the ACTIVE persona to its seed (clears its persisted edits; the other five untouched).
+const reset = document.createElement('ui-button') as UIButtonElement
+reset.variant = 'ghost'
+reset.size = 'sm'
+reset.className = 'preset-reset'
+reset.textContent = 'Reset persona'
+reset.title = 'Discard this persona’s edits and reseed it from the preset'
+reset.addEventListener('click', () => {
+  resetPreset(active)
+  applyPreset(active)
+})
+strip.append(reset)
+
+applyPreset(active)
+root.append(strip, admin)
 
 // The DEV-only live-model overlay (the agent-admin.ts/a2ui-live.ts construction-site precedent): the
 // `import.meta.env.DEV` guard lives HERE in the site page, never in the packaged component — the static

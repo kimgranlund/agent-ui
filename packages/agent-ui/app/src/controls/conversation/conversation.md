@@ -52,7 +52,7 @@ properties:
   - name: contextItems
     description: A `readonly {id, label}[]` of dismissable chips shown above the field (e.g. "something selected elsewhere, attached to this turn's context"). Default `undefined` — no chip row. A dismiss click fires `onContextDismiss(id)`; the consumer owns actually removing it from this list.
 
-events: []               # no DOM events — onSubmit/onClientMessage/onModelChange/onEffortChange/onContextDismiss/onMicClick are ALL callback registrations, never CustomEvents (SPEC-R5; the closed six-event vocabulary has no submission/picker-commit/client-message kind)
+events: []               # no DOM events — onSubmit/onClientMessage/onModelChange/onEffortChange/onContextDismiss/onMicClick/setContentRenderer are ALL callback/hook registrations, never CustomEvents (SPEC-R5/SPEC-R12; the closed six-event vocabulary has no submission/picker-commit/client-message/render-hook kind)
 
 slots: []                 # content model is NOT author-composed — the thread/composer are built entirely by this element's own connect-time logic and imperative API; no slotted children
 
@@ -86,7 +86,7 @@ aria:
   roleSource: none
   childModel: none — the thread is built entirely by this element's own connect-time logic and imperative API; the composer is a JS-created composed child (ui-conversation-composer, TKT-0056); nothing is ever author-composed or slotted
 
-contentModel: '[data-part=bubble] children carry a [data-role=user|agent|system] speaker kind (references/naming.md §6 registry, added in this change); a user/agent bubble also carries a [data-part=who] label ("You"/"Agent"), a [data-part=body] text cell, and (agent only) [data-part=narration]/[data-part=mounts]/[data-part=annotation]/[data-part=disclosure] children — none of these are author-composed (SPEC-R4)'
+contentModel: '[data-part=bubble] children carry a [data-role=user|agent|system] speaker kind (references/naming.md §6 registry, added in this change); a user/agent bubble also carries a [data-part=who] label ("You"/"Agent"), a [data-part=body] text cell (plain textContent by default; a registered setContentRenderer replaces its children instead, SPEC-R12 — never for the user bubble), and (agent only) [data-part=narration]/[data-part=mounts]/[data-part=annotation]/[data-part=disclosure] children — none of these are author-composed (SPEC-R4)'
 
 keyboard:
   - keys: Enter
@@ -148,6 +148,24 @@ elsewhere in the fleet) — this ships **unconditionally** (ADR-0088's honest-na
 `ui-conversation` exposes **no** transport/provider-shaped type. The app's own turn loop (its own
 transport, iterating an `AsyncIterable<string>`) drives `AgentTurnHandle.ingestLine()`/`finalize()`/
 `fail()` imperatively; there is no `AgentTransport`/`AgentProvider`/API-key prop anywhere on this element.
+
+## Agent/system text renders through an optional content-render hook (SPEC-R12, TKT-0071)
+
+By default, an agent turn's `note` and a system bubble's text render as plain `textContent` — literal,
+unparsed. A consumer can register `setContentRenderer(fn)` to render that text through its own renderer
+instead (e.g. `ui-markdown` from `@agent-ui/code`):
+
+```ts
+import { markdownToNode } from './my-markdown-adapter.ts' // consumer-owned; wraps @agent-ui/code's ui-markdown
+
+conv.setContentRenderer((text) => markdownToNode(text))
+```
+
+`ui-conversation` itself imports nothing from `@agent-ui/code` — `app` stays outside that DAG branch
+unchanged; the renderer function is entirely consumer-supplied code the app/site layer already has
+permission to import. Unregistered (default `undefined`) behavior is byte-identical to before this hook
+existed. **`addUserMessage`'s text never routes through this renderer** — user-authored text stays
+unescaped/unmodified (SPEC-R4 AC1), deliberately unaffected by this hook.
 
 ## The composer is a composed child, `ui-conversation-composer` (TKT-0056)
 

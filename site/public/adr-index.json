@@ -943,5 +943,12 @@
     "description": "ui-agent-admin's chat preview gains an opt-in, DEV-only live-model overlay, reusing the already-proven AgentTransport/dev-proxy-plugin.ts seam a2ui-live.ts (LL…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0137",
+    "url": "./adr-index.html#adr-0137",
+    "description": "The A2UI producer toolkit becomes exportable: a ./agent subpath on @agent-ui/a2ui (proposed — TKT-0072 intake; Kim's direction: follow the exact ADR-0119 opt-i…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

@@ -21,14 +21,36 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
     expect(body['max_tokens']).toBe(4096)
   })
 
-  it("'medium'/'high'/'xhigh' each enable thinking with a real, increasing budget, and max_tokens strictly exceeds it", () => {
+  it("'medium'/'high'/'xhigh' on a CURRENT-family model (sonnet-5): adaptive thinking + output_config.effort — NEVER budget_tokens (TKT-0075: the API 400s on it)", () => {
+    for (const [effort, maxTokens] of [
+      ['medium', 3072],
+      ['high', 4096],
+      ['xhigh', 6144],
+    ] as const) {
+      const body = buildRequestBody({ ...BASE, effort })
+      expect(body['thinking']).toEqual({ type: 'adaptive' })
+      expect(body['output_config']).toEqual({ effort })
+      expect(body['max_tokens']).toBe(maxTokens) // same tiered cap as the legacy arm — reply room unchanged by the migration
+    }
+  })
+
+  it('the current-family arm covers fable-5 and opus-4-8 too (adaptive is legal on all of them)', () => {
+    for (const model of ['claude-fable-5', 'claude-opus-4-8']) {
+      const body = buildRequestBody({ ...BASE, model, effort: 'medium' })
+      expect(body['thinking']).toEqual({ type: 'adaptive' })
+      expect(body['output_config']).toEqual({ effort: 'medium' })
+    }
+  })
+
+  it("'medium'/'high'/'xhigh' on the LEGACY family (haiku-4-5): the budget_tokens shape, NO output_config (effort errors on Haiku 4.5)", () => {
     for (const [effort, budget] of [
       ['medium', 1024],
       ['high', 2048],
       ['xhigh', 4096],
     ] as const) {
-      const body = buildRequestBody({ ...BASE, effort })
+      const body = buildRequestBody({ ...BASE, model: 'claude-haiku-4-5-20251001', effort })
       expect(body['thinking']).toEqual({ type: 'enabled', budget_tokens: budget })
+      expect(body['output_config']).toBeUndefined()
       expect(body['max_tokens'] as number).toBeGreaterThan(budget) // Anthropic requires max_tokens > thinking.budget_tokens
     }
   })

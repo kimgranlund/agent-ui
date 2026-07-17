@@ -294,6 +294,31 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
     expect((reRenderedSection.querySelector('[data-part="entry-add-form"]') as HTMLElement).hidden).toBe(true)
   })
 
+  it('TKT-0073: the required Name field, left empty and blurred, shows its validation message via the wrapping ui-field\'s OWN error part — never the internal .ui-text-field-message fallback the pre-fix bare control rendered inside its own bordered box', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const section = el.querySelector('[data-kind="tool"]') as HTMLElement
+    ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    const labelField = section.querySelector('[data-part="entry-add-label"]') as HTMLElement
+    // A real blur (Tab away / click elsewhere) is what flips `trackUserInvalid`'s `interacted` gate —
+    // jsdom's `.click()` on a sibling button does not itself relocate focus/fire blur the way a real
+    // browser does, so the interaction is dispatched directly on the editor part `trackUserInvalid`'s
+    // host-level capture listener watches (matches the real user gesture this bug's repro relies on).
+    ;(labelField.querySelector('[data-part="editor"]') as HTMLElement).dispatchEvent(new Event('blur'))
+    await whenFlushed() // the error render rides a reactive effect (field.ts #renderValidity), not a synchronous write
+
+    const fieldWrap = labelField.closest('ui-field') as HTMLElement
+    expect(fieldWrap).not.toBeNull() // pins the registration: if `controls/field` is ever unimported, `ui-field` never upgrades and this assertion is what would catch it
+    const error = fieldWrap.querySelector('[data-part="error"]') as HTMLElement
+    expect(error.hidden).toBe(false)
+    expect(error.textContent).toMatch(/fill out this field/i)
+
+    // ADR-0051 cl.4's yield: under a ui-field association, the control's OWN internal fallback message
+    // stays empty + hidden — the mechanism that keeps the message OUT of the text-field's bordered box.
+    const internalMessage = labelField.querySelector('.ui-text-field-message') as HTMLElement
+    expect(internalMessage.hidden).toBe(true)
+    expect(internalMessage.textContent).toBe('')
+  })
+
   it('an empty name is rejected — fail-closed, nothing added, an error note shown', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const section = el.querySelector('[data-kind="tool"]') as HTMLElement

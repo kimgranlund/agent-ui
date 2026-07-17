@@ -29,6 +29,12 @@
 // `site/lib/code-block.ts`'s syntax highlighting was page-local chrome, not part of this SPEC's contract)
 // as a plain `<pre>` dump of the pretty-printed JSONL — same functional disclosure, no new dependency.
 //
+// SPEC-R12 (TKT-0071, added 2026-07-16): agent-turn `note` text and system-bubble text render through an
+// OPTIONAL `setContentRenderer` hook instead of bare `textContent` when a consumer registers one — this
+// file still imports NOTHING from `@agent-ui/code`; the renderer function itself (e.g. one backed by
+// `ui-markdown`) is entirely consumer-supplied at the app/site layer, which already has permission to
+// import that package. `addUserMessage` never routes through it (SPEC-R4 AC1 unchanged).
+//
 // NAMED LLD GAP (flagged, not silently resolved): the LLD's own narration slice (§6) names `narrateTrace`
 // (a `TurnTrace`-shaped fourth narration entry, live-arm only) as promoted "unchanged" alongside
 // `categoryOf`/`narrateCategories`. But SPEC §4's typed `AgentTurnHandle` contract — the ratified public
@@ -200,6 +206,10 @@ export class UIConversationElement extends UIElement {
   #onEffortChangeCb: ((id: string) => void) | undefined
   #onContextDismissCb: ((id: string) => void) | undefined
   #onMicClickCb: (() => void) | undefined
+  // SPEC-R12 (TKT-0071) — a consumer-supplied render hook for agent-turn note / system-bubble text.
+  // `undefined` (default) ⇒ byte-identical plain `textContent`, no dependency. NEVER applied to
+  // `addUserMessage` (SPEC-R4 AC1 — user text stays unescaped/unmodified, deliberately unaffected).
+  #contentRenderer: ((text: string) => Node) | undefined
   #turnSeq = 0
   // TKT-0034 — the busy/re-entrancy guard: a COUNT (not a bool) of `beginAgentTurn()` handles that exist
   // but have not yet `finalize()`d/`fail()`d. `#send` no-ops while this is > 0 (auto-tracked, zero consumer
@@ -277,7 +287,7 @@ export class UIConversationElement extends UIElement {
     narration.setAttribute('size', 'sm')
     narration.setAttribute('label', 'Agent activity')
     narration.dataset.part = 'narration'
-    const note = document.createElement('p')
+    const note = document.createElement('div')
     note.dataset.part = 'body'
     const mounts = document.createElement('div')
     mounts.dataset.part = 'mounts'
@@ -348,7 +358,7 @@ export class UIConversationElement extends UIElement {
       finalize: () => {
         endTurn() // TKT-0034 — re-enable the composer THE MOMENT finalize() runs, not after narration settles
         void narrateCategories(narration, seq, categoriesSeen).then(() => narration.finalize())
-        note.textContent = noteText ?? summarize(turnLines)
+        this.#renderBody(note, noteText ?? summarize(turnLines))
         if (this.disclosure && turnLines.length > 0) bubble.append(this.#buildDisclosure(turnLines))
         this.#settleTouchedHosts(touchedIds)
         void this.#tailFollowLog(wasNear)
@@ -407,6 +417,17 @@ export class UIConversationElement extends UIElement {
     // Forward immediately if the composer already exists (post-connect case); the pre-connect case is
     // handled at compose time in connected() (LLD CVC-C5, code-reviewer finding F1).
     this.#composer?.onMicClick(() => this.#onMicClickCb?.())
+  }
+
+  /** SPEC-R12 (TKT-0071) — registers a render hook applied to agent-turn `note` text and system-bubble
+   *  text in place of plain `textContent`. `undefined` restores the default (byte-identical plain text).
+   *  `ui-conversation` never imports a markdown/highlight package itself (the `app` DAG stays untouched,
+   *  CLAUDE.md's layering law) — the renderer is entirely consumer-supplied code the APP layer already
+   *  has permission to import (e.g. `ui-markdown` from `@agent-ui/code`). NEVER applied to
+   *  `addUserMessage` — user-authored text stays unescaped/unmodified (SPEC-R4 AC1, unchanged). Safe to
+   *  call before or after connect; applies to bubbles rendered after the call, not retroactively. */
+  setContentRenderer(fn: ((text: string) => Node) | undefined): void {
+    this.#contentRenderer = fn
   }
 
   /** Disposes every open surface host and clears the thread. A documented no-op pre-connect. A consumer that
@@ -470,12 +491,23 @@ export class UIConversationElement extends UIElement {
   #addSystemBubble(text: string): void {
     const wasNear = this.#isNearLogBottom()
     const bubble = this.#makeBubble('system')
-    const body = document.createElement('p')
+    const body = document.createElement('div')
     body.dataset.part = 'body'
-    body.textContent = text
+    this.#renderBody(body, text)
     bubble.append(body)
     this.#log!.append(bubble)
     void this.#tailFollowLog(wasNear)
+  }
+
+  /** SPEC-R12 — writes `text` into `el` via the registered content renderer, or plain `textContent`
+   *  (default, byte-identical to pre-TKT-0071 behavior) when none is registered. Never called for
+   *  `addUserMessage`'s body (SPEC-R4 AC1 — that call site keeps its own direct `textContent` write). */
+  #renderBody(el: HTMLElement, text: string): void {
+    if (this.#contentRenderer === undefined) {
+      el.textContent = text
+      return
+    }
+    el.replaceChildren(this.#contentRenderer(text))
   }
 
   #makeBubble(role: Role): HTMLElement {

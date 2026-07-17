@@ -19,6 +19,7 @@ import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UIIconElement } from '@agent-ui/components/controls/icon'
 import type { UITextareaElement } from '@agent-ui/components/controls/textarea'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
+import type { UIFieldElement } from '@agent-ui/components/controls/field'
 import type { Entry, NewEntryInput } from './entries.ts'
 
 export interface EntryListHandlers {
@@ -82,14 +83,23 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
   addForm.setAttribute('data-part', 'entry-add-form')
   addForm.hidden = true
 
+  // TKT-0073: wrapped in `<ui-field>` (the forms.ts/form-provider-demo.ts precedent) so the required
+  // field's validation message renders in the field's OWN error part — outside `ui-text-field`'s
+  // bordered box — instead of `ui-text-field`'s internal pre-`ui-field` fallback message, which shares
+  // that box with the placeholder and visibly collided with it.
   const labelField = document.createElement('ui-text-field') as UITextFieldElement
   labelField.required = true
-  labelField.placeholder = 'Name'
   labelField.setAttribute('data-part', 'entry-add-label')
+  const labelFieldWrap = document.createElement('ui-field') as UIFieldElement
+  labelFieldWrap.label = 'Name'
+  labelFieldWrap.append(labelField)
 
   const descriptionField = document.createElement('ui-text-field') as UITextFieldElement
-  descriptionField.placeholder = 'Description (optional)'
   descriptionField.setAttribute('data-part', 'entry-add-description')
+  const descriptionFieldWrap = document.createElement('ui-field') as UIFieldElement
+  descriptionFieldWrap.label = 'Description'
+  descriptionFieldWrap.description = 'Optional'
+  descriptionFieldWrap.append(descriptionField)
 
   const contentField = document.createElement('ui-textarea') as UITextareaElement
   contentField.placeholder = 'Content'
@@ -106,7 +116,7 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
   errorNote.setAttribute('data-part', 'entry-add-error')
   errorNote.hidden = true
 
-  addForm.append(labelField, descriptionField, contentField, submitBtn, errorNote)
+  addForm.append(labelFieldWrap, descriptionFieldWrap, contentField, submitBtn, errorNote)
   section.append(addForm)
 
   addToggle.addEventListener('click', () => {

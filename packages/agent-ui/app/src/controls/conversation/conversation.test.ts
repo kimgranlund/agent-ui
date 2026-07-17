@@ -405,6 +405,62 @@ describe('ui-conversation — narration (SPEC-R6)', () => {
   })
 })
 
+describe('ui-conversation — content-render hook (SPEC-R12, TKT-0071)', () => {
+  it('AC1: unregistered — note and system-bubble text render as plain textContent, byte-identical to before the hook existed', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'r1', catalogId: 'agent-ui' } }))
+    handle.setNote('**bold** stays literal')
+    handle.finalize()
+    const note = el.querySelector('[data-part="bubble"][data-role="agent"] [data-part="body"]') as HTMLElement
+    expect(note.textContent).toBe('**bold** stays literal')
+    expect(note.children.length).toBe(0) // no element children — plain text node only
+
+    const failed = el.beginAgentTurn()
+    failed.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'r1b', catalogId: 'agent-ui' } }))
+    failed.fail('**err**')
+    const system = el.querySelector('[data-part="bubble"][data-role="system"] [data-part="body"]') as HTMLElement
+    expect(system.textContent).toBe('⚠ **err**')
+    expect(system.children.length).toBe(0)
+  })
+
+  it('AC2: registered — note and system-bubble text route through the renderer, replacing the body\'s children', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.setContentRenderer((text) => {
+      const span = document.createElement('span')
+      span.dataset.testRendered = text
+      return span
+    })
+
+    const handle = el.beginAgentTurn()
+    handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'r2', catalogId: 'agent-ui' } }))
+    handle.setNote('**bold**')
+    handle.finalize()
+    const note = el.querySelector('[data-part="bubble"][data-role="agent"] [data-part="body"]') as HTMLElement
+    expect(note.querySelector('span')?.dataset.testRendered).toBe('**bold**')
+    expect(note.textContent).toBe('') // the renderer's span carries no text of its own in this stub
+
+    const handle2 = el.beginAgentTurn()
+    handle2.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'r3', catalogId: 'agent-ui' } }))
+    handle2.fail('**err**')
+    const system = el.querySelector('[data-part="bubble"][data-role="system"] [data-part="body"]') as HTMLElement
+    expect(system.querySelector('span')?.dataset.testRendered).toBe('⚠ **err**')
+  })
+
+  it('AC3: a registered renderer never applies to addUserMessage — user text stays unescaped/unmodified (SPEC-R4 AC1 unchanged)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.setContentRenderer((text) => {
+      const span = document.createElement('span')
+      span.dataset.testRendered = text
+      return span
+    })
+    el.addUserMessage('**not rendered**')
+    const body = el.querySelector('[data-part="bubble"][data-role="user"] [data-part="body"]') as HTMLElement
+    expect(body.textContent).toBe('**not rendered**')
+    expect(body.querySelector('span')).toBeNull()
+  })
+})
+
 describe('ui-conversation — disclosure (ADR-0129 clause 3)', () => {
   it('default false: no wire dump appended even with lines this turn', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)

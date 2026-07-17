@@ -36,13 +36,15 @@ import { UIElement, prop, untracked, type PropsSchema, type ReactiveProps } from
 // same way; `text-field` (TKT-0060) registers its `entry-add-label`/`entry-add-description` `<ui-text-field>`s
 // — previously these upgraded only via an incidental transitive path (agent-admin → conversation →
 // surface-host → the a2ui default catalog's factories.ts, which value-imports the whole family) that a
-// future tree-shaking change could sever.
+// future tree-shaking change could sever. `field` (TKT-0073) registers the `<ui-field>` wrapper entry-list.ts
+// now hosts those two text-fields in, so their required-validation message renders outside their own box.
 import '@agent-ui/components/controls/split'
 import '@agent-ui/components/controls/split-pane'
 import '@agent-ui/components/controls/switch'
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
 import '@agent-ui/components/controls/textarea'
+import '@agent-ui/components/controls/field'
 import '@agent-ui/components/controls/text-field'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
