@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./tokens.css": "./src/tokens/tokens.css",
     "./dimensions.css": "./src/tokens/dimensions.css",
-    "./base.css": "./src/tokens/base.css"
+    "./base.css": "./src/tokens/base.css",
+    "./themes/*": "./src/tokens/themes/*"
   }
 }
