@@ -37,6 +37,14 @@
     display: block;
     box-sizing: border-box;
     overflow: auto; /* the pane's own content manages its scroll; the pane itself never clips silently */
+    /* Consumer-INHERITED scrollbar-visibility seam (the ui-container-bg seam shape, NOT a token-block
+       declaration): a composing surface hides the pane scroller for an app-chrome look by setting
+       --ui-split-pane-scrollbar-width on ITSELF (ui-agent-admin sets `none`; the value inherits down to
+       every descendant pane). Deliberately NOT declared in this file's :where() block — an own
+       declaration would BEAT the consumer's inherited value (the TKT-0065 alias-resolution lesson's
+       sibling), so the default rides the var() fallback. Scrolling stays live; scrollbar-width is
+       supported by both shipped engines (Chromium 121+/Safari 18.2+), no ::-webkit-scrollbar leg. */
+    scrollbar-width: var(--ui-split-pane-scrollbar-width, auto);
 
     /* horizontal axis (default) — width is the constrained dimension */
     flex: var(--_pane-flex, 1) 0 0%;

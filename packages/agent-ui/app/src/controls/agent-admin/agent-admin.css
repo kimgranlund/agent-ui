@@ -20,6 +20,7 @@
   --ui-agent-admin-label-ink: var(--md-sys-color-neutral-on-surface-variant, var(--ui-agent-admin-ink));
   --ui-agent-admin-error-ink: var(--md-sys-color-danger-on-surface-variant, var(--ui-agent-admin-ink)); /* TKT-0065: was --md-sys-color-error-on-surface — an ERROR family has never existed in tokens.css (the fleet family is danger), so the fallback ALWAYS won and validation errors rendered in plain neutral ink; danger-on-surface-variant is the AA-gated danger TEXT ink (the text-field message precedent) */
   --ui-agent-admin-entry-radius: var(--ui-radius-base, 0.25rem); /* TKT-0066 item 5 ruling: dimensional constants route through the own chain */
+  --ui-agent-admin-scrollbar-width: none; /* the app-chrome look: NO visible scrollbars in this surface's panes (scrolling stays live) */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-agent-admin) consumes ONLY --ui-agent-admin-* ════════════════ */
@@ -29,6 +30,12 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
+    /* Consumer-tuning (the conversation.css → --ui-status-stream-max-block-size precedent): repoint the
+       composed children's PUBLIC scrollbar knobs for this whole subtree — every ui-split-pane scroller
+       (ui-settings' master-detail detail pane is the visible one) and ui-conversation's log/wire go
+       scrollbar-less to match this surface's own panes. Their defaults elsewhere stay `auto`. */
+    --ui-split-pane-scrollbar-width: var(--ui-agent-admin-scrollbar-width);
+    --ui-conversation-scrollbar-width: var(--ui-agent-admin-scrollbar-width);
   }
 
   /* The one composed child (the JS-created ui-split) fills the available block space; min-block-size:0
@@ -61,6 +68,7 @@
     padding: 0.75rem;
     min-block-size: 0;
     overflow-y: auto;
+    scrollbar-width: var(--ui-agent-admin-scrollbar-width); /* app-chrome: hidden scroller, live scroll */
   }
 
   [data-part='agent-heading'] {

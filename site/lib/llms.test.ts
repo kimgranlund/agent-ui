@@ -46,6 +46,8 @@ describe('llms-full.txt — byte-identical to a fresh generation (the committed 
 /** Pages deliberately NOT indexed: chrome, not content. Adding here is a curation decision with a reason. */
 const UNINDEXED = new Set([
   'index.html', // the landing page — site chrome; llms.txt IS its agent-facing equivalent
+  'agent-admin-app.html', // the STANDALONE ui-agent-admin surface — app chrome, zero prose; the indexed
+  // content page for this composition is agent-admin.html (the guide), which llms.txt already links
 ])
 
 /** The pages `llmsTxt` fails to link, out of `pages` minus the allowlist — pure, so the negative control

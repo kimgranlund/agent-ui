@@ -47,6 +47,7 @@
     flex: 1 1 auto;
     min-block-size: 0;
     overflow-y: auto;
+    scrollbar-width: var(--ui-conversation-scrollbar-width, auto); /* consumer-inherited seam (split-pane.css's own note) — deliberately NOT self-declared */
     padding: 1rem;
     display: flex;
     flex-direction: column;
@@ -146,6 +147,7 @@
     margin-block-start: 0.35rem;
     max-block-size: 16rem;
     overflow: auto;
+    scrollbar-width: var(--ui-conversation-scrollbar-width, auto); /* consumer-inherited seam (split-pane.css's own note) — deliberately NOT self-declared */
     font-size: 0.72rem;
     white-space: pre-wrap;
   }

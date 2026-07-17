@@ -1,0 +1,22 @@
+/* agent-admin-app.css — PAGE-LOCAL layout for the standalone ui-agent-admin surface (agent-admin-app.html):
+ * full-viewport, no docs shell, no demo frame. Colour comes entirely from the foundation roles imported
+ * first in agent-admin-app.ts; this file only sizes the one element to the viewport. */
+
+html,
+body {
+  margin: 0;
+  block-size: 100%;
+}
+
+#app {
+  display: flex;
+  block-size: 100dvh;
+  background: var(--md-sys-color-neutral-surface);
+}
+
+#app > ui-agent-admin {
+  display: flex;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
