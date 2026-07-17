@@ -35,6 +35,19 @@ stays untouched (its LLD's own prediction for this seam).
 
 ## Findings
 
+**2026-07-17 — Kim's directive, grounded:** "for theme tickets, include activation of [the
+Search/Theme header buttons]" (screenshot of the docs shell's context header). Grep-verified:
+`site/pages/_page.ts:590-611`'s `buildContextHeader()` currently renders `Search` and `Theme` as
+**inert `<span class="app-context-slot">` placeholders** — plain text, zero click/keyboard
+handler, zero behavior (comment on `:590`: "future app-shell component supplies the real
+controls"). This ticket's own scheme/theme-picker control (Acceptance bullet 1-2) is exactly
+what should replace the `Theme` placeholder with a real, activatable control; the `Search`
+placeholder is a separate concern (the site's command-search feature,
+`.claude/docs/spec/site-command-search.spec.md`/TKT-0018) — flagged here only because it shares
+the same placeholder-header gap, not because this ticket owns it. Not editing this ticket's own
+Acceptance section (a live, actively-owned record) — appending as grounding for whoever builds
+it.
+
 **2026-07-17 — shipped.** Leg 3 of the THEMING arc, built in an isolated worktree
 (`.claude/worktrees/tkt-0088-site-theme-dogfood`) alongside the concurrent TKT-0084 session.
 
