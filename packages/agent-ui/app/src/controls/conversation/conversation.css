@@ -105,6 +105,11 @@
   [data-part='narration'] {
     --ui-status-stream-max-block-size: 9rem;
     margin-block-end: 0.2rem;
+    /* TKT-0078: the timeline family is deliberately type-agnostic (ADR-0122's ramp is geometry-only;
+       content inherits ambient type) — so the compact register is THIS consumer's to set. Unpinned, the
+       strip inherited the page-ambient 1rem and towered over the bubble's own 0.66–0.86rem ladder;
+       0.78rem is the existing meta register (the system-bubble row: above annotation, below body). */
+    font-size: 0.78rem;
   }
 
   /* Fresh inline ui-surface-host instances this bubble's OWN creating turn mounted (SPEC-R7) — later turns
