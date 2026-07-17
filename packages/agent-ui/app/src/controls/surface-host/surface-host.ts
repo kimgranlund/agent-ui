@@ -32,6 +32,11 @@ const props = {
   // when this element is composed standalone (e.g. a2ui-live's Canvas tab panel); `ui-conversation`'s
   // inline usage never sets it — the surrounding turn bubble already carries the accessible structure.
   label: { ...prop.string(''), reflect: true },
+  // TKT-0084: opt-in content-hugging artboard, default false (zero behavior change for existing
+  // consumers — a2ui-live's persistent Canvas tab panel keeps the always-fill-the-container default).
+  // A pure CSS hook (`[wrap]`, surface-host.css) — no JS behavior beyond reflection; the anatomy switch
+  // (absolute+translate centering → in-flow flex centering) lives entirely in the stylesheet.
+  wrap: { ...prop.boolean(), reflect: true },
 } satisfies PropsSchema
 
 export interface UISurfaceHostElement extends ReactiveProps<typeof props> {}

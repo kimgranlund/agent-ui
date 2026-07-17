@@ -16,6 +16,15 @@
   --ui-surface-host-checker-b: var(--md-sys-color-neutral-surface, currentColor);
   --ui-surface-host-stage-bg: var(--md-sys-color-neutral-surface-low, currentColor);
   --ui-surface-host-empty-ink: var(--md-sys-color-neutral-on-surface-variant, currentColor);
+  /* TKT-0084: hidden-but-scrollable, matching the fleet's existing --ui-agent-admin-scrollbar-width /
+     --ui-conversation-scrollbar-width "hidden scroller, live scroll" seam — a generative-UI artboard
+     showing a raw platform scrollbar reads as broken chrome, unlike a docs-site content pane where a
+     scrollbar is expected. Consumer-overridable (the same repoint pattern), never forced. */
+  --ui-surface-host-scrollbar-width: none;
+  /* TKT-0084: the [wrap] mode's cap on oversized content — "wrap contents and not have to overflow"
+     covers the common case, not an unconditional no-scroll guarantee; content taller than this still
+     scrolls (with the hidden-scrollbar treatment above), rather than blowing out page layout. */
+  --ui-surface-host-wrap-max-block-size: 32rem;
 }
 
 /* ════════════════ [ui-surface-host] STYLES — @scope (ui-surface-host) consumes ONLY --ui-surface-host-* ═══ */
@@ -37,6 +46,7 @@
     block-size: 100%;
     box-sizing: border-box;
     overflow: auto;
+    scrollbar-width: var(--ui-surface-host-scrollbar-width); /* TKT-0084 — hidden, still scrollable */
     background:
       repeating-linear-gradient(0deg, var(--ui-surface-host-checker-a) 0 15px, var(--ui-surface-host-checker-b) 15px 16px),
       repeating-linear-gradient(90deg, var(--ui-surface-host-checker-a) 0 15px, var(--ui-surface-host-checker-b) 15px 16px);
@@ -66,11 +76,57 @@
     /* Cap at the stage box so the translate-centered surface never clips above the top edge. */
     max-block-size: 100%;
     overflow: auto;
+    scrollbar-width: var(--ui-surface-host-scrollbar-width); /* TKT-0084 — hidden, still scrollable */
   }
   [data-part='surface']:empty::after {
     content: 'The rendered surface appears here.';
     color: var(--ui-surface-host-empty-ink);
     font-size: 0.85rem;
+  }
+
+  /* TKT-0084 — [wrap]: the opt-in content-hugging artboard. An absolutely positioned box (the base
+     `[data-part='surface']` rule) contributes NO intrinsic size to its parent, so relaxing `block-size`
+     alone on `:scope`/`stage` cannot work while `surface` stays absolute+translate-centered — the
+     anatomy itself switches to normal in-flow centering (the stage becomes a flex formatting context;
+     `surface` centers itself via `margin: auto`, below) whenever `wrap` is set. Both axes hug content,
+     capped by `--ui-surface-host-wrap-max-block-size` (oversized content still scrolls —
+     hidden-scrollbar, per the token above — rather than blowing out page layout; "wrap and not
+     overflow" covers the common case, not an unconditional guarantee).
+     component-reviewer CRITICAL fix: centering via `align-items`/`justify-content: center` on the
+     SCROLLING flex container (stage) splits any over-cap overflow symmetrically — content taller
+     than the cap renders half above, half below, and `scrollTop` cannot go negative, so the top half
+     (measured: up to ~210px of a 900px surface under a 512px cap) is clipped and UNREACHABLE by any
+     scroll — the exact "content cut off" defect class this ticket exists to fix, resurrected the
+     moment content exceeds the cap. `margin: auto` on the flex ITEM is the standard fix: it centers
+     when free space exists but collapses to 0 in the overflow direction, keeping the start edge
+     scroll-reachable at `scrollTop: 0` — verified via a real headless-Chromium layout probe. */
+  :scope[wrap] {
+    inline-size: fit-content;
+    max-inline-size: 100%;
+    block-size: auto;
+  }
+  :scope[wrap] [data-part='stage'] {
+    display: flex;
+    inline-size: auto;
+    block-size: auto;
+    max-block-size: var(--ui-surface-host-wrap-max-block-size);
+  }
+  :scope[wrap] [data-part='surface'] {
+    position: static;
+    transform: none;
+    margin: auto; /* centers within the stage; collapses to 0 (never negative-scroll-clipped) when content exceeds the cap */
+    inline-size: fit-content;
+    max-inline-size: 100%;
+    block-size: auto;
+    max-block-size: none;
+    /* ADR-0100 cl.2's own named tradeoff: a content-derived inline size cannot validly be a query
+       container (the containment paradox the whole ADR is about) — [wrap] drops it explicitly rather
+       than silently breaking the boundary law. Nested ui-row/ui-column/etc. inside a wrapped surface
+       resolve their `@container` reflow against the nearest ANCESTOR boundary instead (e.g. an
+       enclosing ui-app-shell region, if one establishes one) — or render identity if none exists —
+       graceful degradation, never a corrupted 0px collapse; exactly the consequence ADR-0100 cl.2
+       documents for an embedder that opts out of establishment. */
+    container-type: normal;
   }
 }
 
