@@ -125,15 +125,28 @@ export const buttonFactory: WidgetFactory = {
 
 // The ADR-0078 cl.5 fan-out table — the wire `Text.variant` (catalog-frozen `h1…h5 | caption | body`,
 // UNCHANGED) is not bindable, so it translates once at apply-time to the ui-text three-axis triple
-// (`as`/`variant`/`size`). Nearest-M3-row per wire level (ADR-0078's table); an unrecognized wire value
-// (should not occur — the catalog enum already rejects it, conformance-checked upstream) falls back to
-// the `body` triple rather than left half-applied.
+// (`as`/`variant`/`size`). An unrecognized wire value (should not occur — the catalog enum already
+// rejects it, conformance-checked upstream) falls back to the `body` triple rather than left
+// half-applied.
+//
+// TKT-0082 (amends ADR-0078 cl.5's table — see the ADR's own Amendment section, `proposed`, Kim's
+// ratification pending): the row choice is COMPACT, generative-UI-scale — headline/title rows only,
+// never `display` — deliberately NOT the nearest-M3-row-per-heading-level table ADR-0078 originally
+// shipped (display/sm…title/lg, 36→22px), which reused `ui-text`'s DOCUMENT type scale wholesale.
+// That scale is correct for `ui-text`'s own docs-site context (ADR-0025/ADR-0078 rule type
+// density-invariant there, untouched by this change) but every A2UI surface this catalog renders is a
+// compact card/dashboard/quiz tile, not a document — a 36px h1 towers over a small card. This table is
+// the catalog's OWN mapping choice, isolated from `ui-text`'s component contract: shifted exactly one
+// M3 tier down from the original row (display→headline, headline→title), preserving the SAME
+// nearest-row-per-level shape and keeping all 5 heading sizes strictly distinct and monotonically
+// decreasing (28/24/22/16/14px — verified against dimensions.css's `--md-sys-typescale-*-size`
+// values), every one at or above `body`'s own 14px so a heading never reads smaller than prose.
 const TEXT_VARIANT_TABLE: Record<string, { as: string; variant: string; size: string }> = {
-  h1: { as: 'h1', variant: 'display', size: 'sm' },
-  h2: { as: 'h2', variant: 'headline', size: 'lg' },
-  h3: { as: 'h3', variant: 'headline', size: 'md' },
-  h4: { as: 'h4', variant: 'headline', size: 'sm' },
-  h5: { as: 'h5', variant: 'title', size: 'lg' },
+  h1: { as: 'h1', variant: 'headline', size: 'md' },
+  h2: { as: 'h2', variant: 'headline', size: 'sm' },
+  h3: { as: 'h3', variant: 'title', size: 'lg' },
+  h4: { as: 'h4', variant: 'title', size: 'md' },
+  h5: { as: 'h5', variant: 'title', size: 'sm' },
   body: { as: 'none', variant: 'body', size: 'md' },
   caption: { as: 'none', variant: 'body', size: 'sm' },
 }
