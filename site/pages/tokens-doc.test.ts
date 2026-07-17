@@ -35,7 +35,7 @@ describe('tokens.html source — color roles', () => {
 
   it('excludes the numbered/alpha PRIMITIVE scale steps, not just the semantic roles', () => {
     expect(roles.some((r) => r.varName === '--md-sys-color-neutral-500')).toBe(false)
-    expect(roles.some((r) => r.varName === '--md-sys-color-primary-500-200')).toBe(false)
+    expect(roles.some((r) => r.varName === '--md-sys-color-primary-scrim-200')).toBe(false)
   })
 
   it('includes a known role from each documented family', () => {
@@ -75,8 +75,8 @@ describe('tokens.html source — tonal primitives (SPEC-R17 AC2, additive)', () 
     expect(steps).toEqual(sorted) // numerically ordered, not declaration order
   })
 
-  it('excludes the alpha `-{N}-{aa}` variants (a step is a BARE number, never e.g. "500-050")', () => {
-    expect(primitives.primary?.some((s) => s.step === '500-050')).toBe(false)
+  it('excludes the alpha `scrim-{aa}` variants (a step is a BARE number, never e.g. "scrim-050")', () => {
+    expect(primitives.primary?.some((s) => s.step === 'scrim-050')).toBe(false)
     expect(primitives.primary?.some((s) => s.step === '500')).toBe(true)
   })
 

@@ -103,12 +103,12 @@ describe('text-field.css — the filled/container state law (TKT-0062)', () => {
 
   it('the ladder is SOLID role steps or `transparent` — NEVER a color-mix, NEVER a soft-alpha primitive', () => {
     expect(css).not.toContain('color-mix(') // a mix ratio is a component colour opinion (ADR-0008/0014)
-    // no alpha primitive (`--md-sys-color-*-500-NNN`) and no scrim role leaks into the border channel — SOLID only.
+    // no alpha primitive (`--md-sys-color-*-scrim-NNN`) and no scrim role leaks into the border channel — SOLID only
+    // (both the raw primitive and the semantic role share the "scrim" substring, so one check covers both).
     const borderDecls = [...tokenBlock.matchAll(/--ui-text-field-border[\w-]*:\s*([^;]+);/g)].map((m) => m[1] as string)
     expect(borderDecls.length).toBeGreaterThan(0) // anti-vacuous: the border tokens were actually found
     for (const decl of borderDecls) {
-      expect(decl).not.toMatch(/-500-\d/) // not an alpha primitive
-      expect(decl).not.toContain('scrim') // not a scrim role
+      expect(decl).not.toContain('scrim') // not a scrim role, not an alpha primitive
     }
   })
 

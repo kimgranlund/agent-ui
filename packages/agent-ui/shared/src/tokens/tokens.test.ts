@@ -232,7 +232,8 @@ describe('tokens.css — the dialog-backdrop scrim role (TKT-0019)', () => {
 // tok-system — the SYSTEMATIC per-family role grammar of Kim's ultimate-tokens generator. The migration
 // replaced ad-hoc, per-need roles with a uniform grammar: eight intent families (neutral + the accent set
 // + the status set) each carry the IDENTICAL semantic-role ladder, every role resolved via light-dark(),
-// plus a `-500-NNN` alpha series. This block DERIVES the family × role matrix and asserts completeness +
+// plus a `-scrim-NNN` alpha series (ADR-016 in the ultimate-tokens generator, adopted 2026-07-17 — was
+// `-500-NNN`). This block DERIVES the family × role matrix and asserts completeness +
 // light-dark() pairing, so a regenerated sheet that drops a rung or de-pairs a role (emits a flat value
 // where a light-dark() belongs) fails HERE — the state-ladder-completeness gate the new system earns. It
 // does NOT re-check the hand-authored wash/track/selected roles above (those have their own blocks); it
@@ -268,14 +269,14 @@ describe('tokens.css — the systematic per-family role grammar (ultimate-tokens
     expect(missing, `roles missing a light-dark() declaration: ${missing.join(', ')}`).toEqual([])
   })
 
-  it('every family declares the 500-step alpha series (5%…95%) as flat oklch primitives', () => {
+  it('every family declares the scrim-step alpha series (5%…95%) as flat oklch primitives', () => {
     const missing: string[] = []
     for (const f of FAMILIES) {
       for (const a of ALPHAS) {
-        const name = `--md-sys-color-${f}-500-${a}`
+        const name = `--md-sys-color-${f}-scrim-${a}`
         if (!new RegExp(`${name}:\\s*oklch\\([^/]*/\\s*[\\d.]+%\\)`).test(rootBlock)) missing.push(name)
       }
     }
-    expect(missing, `500-step alpha primitives missing: ${missing.join(', ')}`).toEqual([])
+    expect(missing, `scrim-step alpha primitives missing: ${missing.join(', ')}`).toEqual([])
   })
 })

@@ -36,11 +36,16 @@ export function firstTopLevelBlock(css: string, selector: string): string {
   return close < 0 ? css.slice(open + 1) : css.slice(open + 1, close)
 }
 
-// A primitive/alpha scale step's suffix is ALL digits and hyphens (100, 125, 500-050, 950-140, …); a semantic
-// role's suffix always contains a letter (on-surface, container-low, outline-variant, track-hover, …). This is
-// the exact, structural distinction tokens.css's own comments draw ("flat mode-independent primitives" vs
+// A primitive/alpha scale step's suffix is ALL digits and hyphens (100, 125, 950-140, …); a semantic role's
+// suffix always contains a letter (on-surface, container-low, outline-variant, track-hover, …). This is the
+// exact, structural distinction tokens.css's own comments draw ("flat mode-independent primitives" vs
 // "semantic roles") — so the filter needs no hand-maintained exclude-list that could drift from a future family.
 const NUMERIC_SUFFIX = /^[\d-]+$/
+// The ONE exception to the "letter ⇒ semantic role" rule: the raw alpha-scrim primitive series is named
+// `scrim-{aa}` (ADR-016 in the ultimate-tokens generator, adopted here 2026-07-17) — it contains a letter yet
+// is still the palette's raw material, not a published role. The SEMANTIC `-scrim-{weakest…strongest}` roles
+// (tokens.md's own vocabulary) do NOT match this — their suffix after "scrim" is never bare digits.
+const SCRIM_ALPHA_SUFFIX = /^scrim-\d+$/
 
 /**
  * parseColorRoles — every `--md-sys-color-{family}-{role}` SEMANTIC role declared in tokens.css's one `:root`
@@ -55,7 +60,7 @@ export function parseColorRoles(tokensCss: string): ColorRole[] {
   const re = /--md-sys-color-([a-z]+)-([a-z0-9-]+):\s*([^;]+);/g
   for (const m of block.matchAll(re)) {
     const [, family, role, value] = m
-    if (NUMERIC_SUFFIX.test(role)) continue // a primitive/alpha scale step, not a semantic role
+    if (NUMERIC_SUFFIX.test(role) || SCRIM_ALPHA_SUFFIX.test(role)) continue // a primitive/alpha scale step, not a semantic role
     roles.push({ family, role, varName: `--md-sys-color-${family}-${role}`, value: value.trim() })
   }
   return roles
@@ -92,9 +97,9 @@ export interface ColorPrimitive {
   readonly value: string
 }
 
-// A bare numbered step's suffix is ALL digits (100, 125, …, 950) — this excludes the alpha `-{N}-{aa}`
-// variants (e.g. `500-050`, which embeds a hyphen) that share the NUMERIC_SUFFIX exclusion above but are a
-// DIFFERENT thing (opacity ramps of one step, not the ordered tonal series itself).
+// A bare numbered step's suffix is ALL digits (100, 125, …, 950) — this excludes the alpha `scrim-{aa}`
+// variants (e.g. `scrim-050`), which are a DIFFERENT thing (an opacity ramp, not the ordered tonal series
+// itself) and are caught by SCRIM_ALPHA_SUFFIX above, not this digits-only pattern.
 const PRIMITIVE_STEP = /^\d+$/
 
 /**
