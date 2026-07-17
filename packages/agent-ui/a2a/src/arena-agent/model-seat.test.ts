@@ -12,7 +12,7 @@ import { deriveCanary } from '../../tools/arena/canary.ts'
 import { checkIsolation } from '../arena/isolation.ts'
 import { parseTranscriptLines, serializeTranscript, validateTranscript } from '../arena/transcript.ts'
 import { PROTOCOL_VERSION } from '../protocol/types.ts'
-import type { AgentProvider, Turn } from '../../../a2ui/tools/agent/agent-transport.ts'
+import type { AgentProvider, Turn } from '../../../a2ui/src/agent/agent-transport.ts'
 import type { BoardMessage } from '../arena/referee.ts'
 
 declare const process: { cwd(): string }

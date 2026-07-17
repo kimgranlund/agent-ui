@@ -34,12 +34,12 @@
 //       source SPEC-R15 gates) — a violation feeds the failure back as a produce-layer-only `'FEED_SCOPE'`
 //       literal (never joining the protocol's closed `ErrorCode` union) and retries, never streams.
 
-import type { A2uiServerMessage, A2uiOutput } from '../../src/protocol.ts'
-import type { Catalog } from '../../src/catalog/catalog.ts'
-import type { CorpusRecord } from '../../src/corpus/record.ts'
-import type { RetrieveQuery } from '../../src/corpus/retrieve.ts'
-import { heal } from '../../src/corpus/heal.ts'
-import { validateA2ui } from '../../src/renderer/validate.ts'
+import type { A2uiServerMessage, A2uiOutput } from '../protocol.ts'
+import type { Catalog } from '../catalog/catalog.ts'
+import type { CorpusRecord } from '../corpus/record.ts'
+import type { RetrieveQuery } from '../corpus/retrieve.ts'
+import { heal } from '../corpus/heal.ts'
+import { validateA2ui } from '../renderer/validate.ts'
 import type { AgentProvider, Session, Turn, TurnInput } from './agent-transport.ts'
 import { buildSystemPrompt } from './system-prompt.ts'
 import { frameClientMessage } from './session.ts'

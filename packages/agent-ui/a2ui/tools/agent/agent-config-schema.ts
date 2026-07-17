@@ -24,10 +24,10 @@
 import type { SettingsSchema, SettingsFieldOption } from '@agent-ui/shared'
 import { findField, sanitizeNumber, sanitizeSelect } from '@agent-ui/shared'
 import type { ProvidersConfig } from './providers-config.ts'
-import { GEN_UI_MODES, DEFAULT_GEN_UI_MODE } from './gen-ui-mode.ts'
-import type { GenUiMode } from './gen-ui-mode.ts'
-import { DEFAULT_MINI_SKILL_CAP } from './mini-skills.ts'
-import type { ProduceOptions } from './produce.ts'
+import { GEN_UI_MODES, DEFAULT_GEN_UI_MODE } from '../../src/agent/gen-ui-mode.ts'
+import type { GenUiMode } from '../../src/agent/gen-ui-mode.ts'
+import { DEFAULT_MINI_SKILL_CAP } from '../../src/agent/mini-skills.ts'
+import type { ProduceOptions } from '../../src/agent/produce.ts'
 
 /** The minimal `SettingsStore`-shaped read seam `resolveProduceOptions` needs — a synchronous
  *  `get(key)`. Declared locally (not imported from `@agent-ui/app`'s `SettingsStore`, which is downstream

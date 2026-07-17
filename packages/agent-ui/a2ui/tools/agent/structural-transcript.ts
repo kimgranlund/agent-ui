@@ -27,7 +27,7 @@
 // shape), never inventing a parallel check.
 
 import type { A2uiServerMessage } from '../../src/protocol.ts'
-import type { RecordedTranscript } from './transcript.ts'
+import type { RecordedTranscript } from '../../src/agent/recorded-transport.ts'
 
 const jsonl = (m: A2uiServerMessage): string => JSON.stringify(m)
 

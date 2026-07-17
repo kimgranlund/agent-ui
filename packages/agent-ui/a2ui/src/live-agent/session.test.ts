@@ -11,7 +11,7 @@ import {
   appendAssistantTurn,
   appendUserTurn,
   shouldRunTurn,
-} from '../../tools/agent/session.ts'
+} from '../agent/session.ts'
 import type {
   A2uiActionMessage,
   A2uiFunctionResponseMessage,

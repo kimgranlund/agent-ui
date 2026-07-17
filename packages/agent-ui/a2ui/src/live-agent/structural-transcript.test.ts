@@ -13,9 +13,9 @@ import type { A2uiClientMessage } from '../renderer/renderer.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { structuralDashboardTranscript } from '../../tools/agent/structural-transcript.ts'
-import { createRecordedTransport } from '../../tools/agent/recorded-transport.ts'
-import { readMetaLine } from '../../tools/agent/meta-line.ts'
-import type { Session } from '../../tools/agent/agent-transport.ts'
+import { createRecordedTransport } from '../agent/recorded-transport.ts'
+import { readMetaLine } from '../agent/meta-line.ts'
+import type { Session } from '../agent/agent-transport.ts'
 
 const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error: unknown }> => 'error' in m
 

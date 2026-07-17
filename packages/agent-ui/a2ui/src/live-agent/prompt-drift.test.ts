@@ -3,7 +3,7 @@
 // lacks, and a catalog row added without regeneration surfaces automatically. Deterministic, no model.
 
 import { describe, it, expect } from 'vitest'
-import { buildSystemPrompt } from '../../tools/agent/system-prompt.ts'
+import { buildSystemPrompt } from '../agent/system-prompt.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 

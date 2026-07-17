@@ -11,7 +11,7 @@
 // The seat (`../seats/model.ts`) is what compares the FULL captured array against its own accumulated
 // turns — this module's job stops at observing faithfully, byte-for-byte, whatever the wrapped provider
 // actually did to the request it was handed.
-import type { AgentProvider, Turn } from '../../../a2ui/tools/agent/agent-transport.ts'
+import type { AgentProvider, Turn } from '../../../a2ui/src/agent/agent-transport.ts'
 
 export interface RecordedCall {
   request: { model: string; system: string; messages: Turn[] }

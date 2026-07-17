@@ -22,6 +22,7 @@ import type { A2uiClientMessage, A2uiServerMessage } from '@agent-ui/a2ui'
 import type { UISurfaceHostElement } from '@agent-ui/app'
 import {
   createRecordedTransport,
+  recordedTranscript,
   nextTurn,
   appendUserTurn,
   appendAssistantTurn,
@@ -186,7 +187,7 @@ function refreshHtml(): void {
 
 // ════════════════ the transport + the chat loop ════════════════
 // Default: the deterministic recorded backbone (SPEC-R2). Swapped for the live overlay under dev only.
-let transport: AgentTransport = createRecordedTransport()
+let transport: AgentTransport = createRecordedTransport(recordedTranscript)
 
 /**
  * Test-only injection seam (post-ship review finding 2, SPEC §6 open item): `transport` is otherwise
@@ -453,7 +454,7 @@ resetBtn.addEventListener('click', () => {
   allLines.length = 0
   traces.length = 0
   notesByTurnIndex.clear()
-  transport = createRecordedTransport()
+  transport = createRecordedTransport(recordedTranscript)
   chatLog.replaceChildren() // drops every ask bubble's DOM too — disposeAll() above already tore down its host
   refreshJson([])
   refreshHtml()

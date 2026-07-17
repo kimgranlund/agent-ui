@@ -25,7 +25,7 @@
 // pattern-settings-form `patterns.ts:36-37`).
 //
 // Selection reuses `retrieve.ts`'s tokenizer/cosine primitives (ADR-0091 §2), extracted to
-// `../../src/corpus/text-similarity.ts` (slice 1) — NOT the `CorpusRecord` schema or `admit.ts`'s
+// `../corpus/text-similarity.ts` (slice 1) — NOT the `CorpusRecord` schema or `admit.ts`'s
 // pipeline (§1's scoping line: instruction prose doesn't fit the exemplar-required schema).
 //
 // ADR-0135 cl.11: the six-entry registry is no longer an inline object-literal array — each entry is a
@@ -35,7 +35,7 @@
 // filesystem read at module load is safe — the same lifecycle position the prior static literal held.
 
 import { readFileSync, readdirSync } from 'node:fs'
-import { topKByCosine } from '../../src/corpus/text-similarity.ts'
+import { topKByCosine } from '../corpus/text-similarity.ts'
 import { parseFrontmatter } from './prompts/frontmatter.ts'
 
 declare const process: { cwd(): string }
@@ -49,7 +49,7 @@ declare const process: { cwd(): string }
 // source location — `readdirSync` on a directory that only exists under the real source tree throws
 // ENOENT under `npm run dev` (caught live: TKT-0044/this ADR-0135 follow-up fix).
 const ROOT = process.cwd()
-const MINI_SKILLS_DIR = `${ROOT}/packages/agent-ui/a2ui/tools/agent/prompts/mini-skills`
+const MINI_SKILLS_DIR = `${ROOT}/packages/agent-ui/a2ui/src/agent/prompts/mini-skills`
 
 /** A named, self-contained, prompt-injectable idiom-instruction module (ADR-0091 Decision §1). */
 export interface MiniSkill {

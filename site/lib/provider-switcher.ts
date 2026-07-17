@@ -19,8 +19,8 @@
 import '@agent-ui/components/components' // self-defining ui-* controls (registers ui-select; the aliased barrel — component-preview.ts's convention, and the only control specifier wired into the vitest resolve alias)
 import type { UISelectElement } from '@agent-ui/components/components'
 import providers from '../../packages/agent-ui/a2ui/tools/agent/providers.json'
-import type { GenUiMode } from '../../packages/agent-ui/a2ui/tools/agent/gen-ui-mode.ts'
-import { DEFAULT_GEN_UI_MODE, GEN_UI_MODES } from '../../packages/agent-ui/a2ui/tools/agent/gen-ui-mode.ts'
+import type { GenUiMode } from '../../packages/agent-ui/a2ui/src/agent/gen-ui-mode.ts'
+import { DEFAULT_GEN_UI_MODE, GEN_UI_MODES } from '../../packages/agent-ui/a2ui/src/agent/gen-ui-mode.ts'
 
 interface ProviderModel {
   id: string

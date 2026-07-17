@@ -6,7 +6,7 @@
 // something bypasses that degrade path. Per ADR-0073: Gemini's streaming contract is host-verify-BEFORE-
 // this adapter is actually built (Anthropic-first makes this non-blocking now).
 
-import type { AgentProvider } from '../agent-transport.ts'
+import type { AgentProvider } from '../../../src/agent/agent-transport.ts'
 
 /** Not yet implemented (ADR-0073: Gemini is the next adapter slice, gated on its streaming-contract
  * host-verify). `providers/index.ts` never reaches this factory for a live call — it degrades on the

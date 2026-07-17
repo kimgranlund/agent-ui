@@ -32,8 +32,8 @@
 //   OUTPUT_RULES zone of `prompts/grammar.md`, so it rides `OUTPUT_RULES` into every mode.
 
 import { readFileSync } from 'node:fs'
-import type { Catalog } from '../../src/catalog/catalog.ts'
-import type { CorpusRecord } from '../../src/corpus/record.ts'
+import type { Catalog } from '../catalog/catalog.ts'
+import type { CorpusRecord } from '../corpus/record.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 import { MINI_SKILLS } from './mini-skills.ts'
 import type { MiniSkill } from './mini-skills.ts'
@@ -48,7 +48,7 @@ declare const process: { cwd(): string }
 // reachable import graph — `dev-proxy-plugin.ts` imports `produce.ts` imports THIS file — so an
 // `import.meta.url`-relative path resolved against the TEMP file's location, not this file's real source
 // location, and `readFileSync` on a path that only exists under the real source tree threw ENOENT.
-const PROMPTS_DIR = `${process.cwd()}/packages/agent-ui/a2ui/tools/agent/prompts`
+const PROMPTS_DIR = `${process.cwd()}/packages/agent-ui/a2ui/src/agent/prompts`
 
 /** Load one prompt file from `PROMPTS_DIR`. Node-only tooling, never a browser bundle (SPEC-R3/N2).
  *  Trimmed so an authored trailing newline never perturbs byte-identity — every prompt const is

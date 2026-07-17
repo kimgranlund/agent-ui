@@ -4,7 +4,7 @@
 // fetch/stream arm is MANUAL live acceptance only (SPEC-R3; §2 discovery table).
 
 import { describe, it, expect } from 'vitest'
-import { parseAnthropicSSE, ANTHROPIC_SSE_ERROR_PREFIX } from '../../tools/agent/providers/anthropic.ts'
+import { parseAnthropicSSE, ANTHROPIC_SSE_ERROR_PREFIX } from '../agent/providers/anthropic.ts'
 
 // A captured multi-event Anthropic Messages SSE response (the host-verified 2026-07-04 shape): a
 // message_start, a content_block_start, two text_delta content_block_deltas, a ping, a content_block_stop,

@@ -1,6 +1,19 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.4 · 2026-07-07 (v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.5 · 2026-07-16 (v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.5 changelog (docs-only, no requirement/ID/AC shape added or removed): **SPEC-N1** amended for the ADR-0137
+> producer-toolkit export (TKT-0072, built + ratified 2026-07-16). The package surface list gains a FOURTH
+> subpath — `.`/`./examples`/`./corpus`/`./agent` — and the blanket "the live infra is site/tools-scoped only"
+> clause NARROWS to name specifically the key-holding/dev-proxy/provider-registry shell (`dev-proxy-plugin.ts` ·
+> `providers.json`/`providers-config.ts`/`providers/{index,openai,gemini}.ts` · `agent-config-schema.ts`), which
+> stays behind in `tools/agent/`; the genuinely portable producer core (`buildSystemPrompt`/`produce`/the
+> `AgentTransport`+`Session` seam types/`GenUiMode`/the mini-skill registry/`feed-catalog`/`recorded-transport`/
+> the Anthropic adapter) moved `tools/agent/` → `src/agent/` and is exported at `./agent` per the ADR-0119
+> opt-in-pack law (hand-rolled, SDK-free, opt-in, identity-gated — the root `.` barrel carries zero producer
+> bytes). The zero-dep invariant (no LLM SDK, plain `fetch`, `@agent-ui/components`+`@agent-ui/shared` the only
+> deps) is UNCHANGED — only the SPEC constraint derived from ADR-0069 narrows; ADR-0069 itself (append-only
+> accepted) is untouched. No requirement, AC, or ID changed. (The LLD §0 placement law + §2 file map are
+> repaired in the same change to point at the new `src/agent/` home.)
 > v0.4 changelog (docs-only, no requirement/ID/AC shape added or removed): repairs a wording contradiction an
 > independent review of the built ADR-0097 ask feature caught — the freeze clauses (Definitions §2, SPEC-R14
 > Lifecycle, SPEC-R8's freeze-semantics paragraph + AC5) said freeze fires "on ANY turn dispatch", which is
@@ -579,7 +592,7 @@ standing gates the way `a2ui-stream` rides `examples.test.ts`. *(→ PRD-G1)*
 
 | ID | Requirement | Target |
 |---|---|---|
-| **SPEC-N1** | Zero-dep package preserved | `@agent-ui/a2ui/package.json` deps unchanged; the package surface stays exactly `.`/`./examples`/`./corpus`; no LLM SDK anywhere (plain `fetch`); the live infra is site/tools-scoped only (Constraint C2 / ADR-0062/0069). |
+| **SPEC-N1** | Zero-dep package preserved | `@agent-ui/a2ui/package.json` deps unchanged (`@agent-ui/components` + `@agent-ui/shared` only); the package surface is `.`/`./examples`/`./corpus`/`./agent` (the `./agent` producer toolkit exported per **ADR-0137**, TKT-0072 — the portable core in `src/agent/`); no LLM SDK anywhere (plain `fetch`); the KEY-HOLDING, DEV-PROXY, and PROVIDER-REGISTRY infra (`tools/agent/dev-proxy-plugin.ts` · `providers.json`/`providers-config.ts`/`providers/{index,openai,gemini}.ts` · `agent-config-schema.ts`) stays site/tools-scoped only. Exporting `./agent` does NOT compromise the zero-dep core: the pack is hand-rolled, SDK-free, opt-in, and identity-gated (the ROOT `.` barrel carries zero producer bytes — the `./examples`/`./corpus` precedent), the ADR-0119 opt-in-pack law (Constraint C2 / ADR-0062/0069/0119/0137). |
 | **SPEC-N2** | No secret committed / none baked into a build (the `VITE_` footgun) | A gitignored `.env` (untracked) provisions the keys; no key literal appears in committed source (grep gate). The proxy resolves the non-prefixed `ANTHROPIC_API_KEY` SERVER-side via Vite's `loadEnv(mode, <repoRoot>, '')` merged over `process.env` — Vite does NOT auto-load `.env` into `process.env`, so a bare `process.env` read would miss a `.env`-only key; `loadEnv` runs in Node under `apply: 'serve'` only and the value is never inlined nor sent to the browser (`/status` answers a boolean). Vite INLINES `VITE_*` at build time, so every `import.meta.env.VITE_*` reference MUST live only inside a dev-only-guarded, tree-shaken overlay module — a standing source-level gate asserts it, and a manual `vite build` + grep of `dist/` for the key patterns returns zero hits (ADR-0069). |
 | **SPEC-N3** | Validator parity | The runtime loop's validation is the shared `heal`+`validateA2ui` — identical verdict to the renderer and corpus admission; no fork (streaming SPEC-N3). |
 | **SPEC-N4** | Progressive paint | The validated payload streams line-by-line (root-early → first paint before finalize), preserving the `a2ui-stream` aesthetic (streaming SPEC-N1). A turn's optional leading `note` meta-line (ADR-0088 §1) is filtered out BEFORE `host.ingest`/the JSON tab — it never enters the render path and never delays or blocks the progressive paint of the validated lines that follow it. |

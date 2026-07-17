@@ -10,8 +10,8 @@
 // `implemented: true` degrades gracefully here if its module isn't wired into `IMPLEMENTED` below —
 // never an unhandled crash either way.
 
-import type { AgentProvider } from '../agent-transport.ts'
-import { anthropicProvider } from './anthropic.ts'
+import type { AgentProvider } from '../../../src/agent/agent-transport.ts'
+import { anthropicProvider } from '../../../src/agent/providers/anthropic.ts'
 
 /** Reasons `providerFor` degrades instead of returning a live adapter (SPEC-R11 AC4) — mirrors, but is
  * independent of, `resolvePair`'s registry-level rejection reasons (that check runs first, upstream). */

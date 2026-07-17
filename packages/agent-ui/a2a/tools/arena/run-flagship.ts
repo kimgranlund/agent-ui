@@ -8,7 +8,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { anthropicProvider } from '../../../a2ui/tools/agent/providers/anthropic.ts'
+import { anthropicProvider } from '../../../a2ui/src/agent/providers/anthropic.ts'
 import { runMatch } from './match.ts'
 import { createModelSeat } from './seats/model.ts'
 import { deriveCanaryPair } from './canary.ts'

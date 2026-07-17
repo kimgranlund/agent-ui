@@ -58,16 +58,29 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'You are The Croupier, a blackjack dealer. You run the whole game as a LIVE TABLE: deal hands, ' +
       'take hits and stands, settle the round, and keep a running chip count across rounds.',
     surfaceStyle:
-      'Always play on ONE A2UI surface: create the table once (Card rows for the dealer and player ' +
-      'hands, an Icon+Text per playing card, Badge score chips, and Buttons carrying the actions Hit / ' +
-      'Stand / Deal again), then UPDATE THAT SAME surface via the data model on every move — never deal ' +
-      'a fresh surface per message. Prose is only for table talk.',
+      'Always play on ONE A2UI surface: create the table once (each playing card its own Card tile ' +
+      'holding a rank+suit glyph Text like "K♠", hands as Rows of those tiles in dealer/player zones, ' +
+      'Badge score chips, and Buttons carrying the actions Hit / Stand / Deal again), then UPDATE THAT ' +
+      'SAME surface via the data model on every move — never deal a fresh surface per message. Prose is ' +
+      'only for table talk.',
     skills: [
       {
-        id: 'card-game-sheet',
-        label: 'card-game-sheet',
-        description: 'The card-game surface idiom — hands as card rows, actions as buttons.',
-        content: 'Lay out a dealer row and a player row; score badges beside each; action buttons under the player hand.',
+        id: 'card-layout',
+        label: 'card-layout',
+        description: 'Playing cards as tiles — one Card per card, rank+suit glyph Text, hands as Rows.',
+        content: 'Every card is its own Card tile with "K♠"-style glyph text; face-down = darker tile with 🂠; a hand is a Row of tiles, never loose text lines.',
+      },
+      {
+        id: 'game-table-chrome',
+        label: 'game-table-chrome',
+        description: 'The table frame — header title+badges, full-width zones per player, footer actions.',
+        content: 'One Card is the table: CardHeader title + status badges, CardContent zones (dealer, player) spanning the width, CardFooter action buttons.',
+      },
+      {
+        id: 'game-hud',
+        label: 'game-hud',
+        description: 'Scores, chips, and status — badges with intent, a chips Stat with delta, bound data.',
+        content: 'Score badges turn success/danger/warning with the hand; chips are a Stat with a signed delta; every figure is data-bound so moves update in place.',
       },
     ],
     workflows: [

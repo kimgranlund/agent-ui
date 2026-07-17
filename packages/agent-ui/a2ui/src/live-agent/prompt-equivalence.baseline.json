@@ -33,6 +33,21 @@
       "id": "form-rhythm",
       "triggers": "form signup sign-up register fields survey checkout questionnaire fieldset validation labels",
       "body": "Any FormProvider form's vertical rhythm. FormProvider declares zero layout (page-author-owns-layout) — its fields render crashed together unless wrapped. Map: FormProvider › Column gap='md' (the house rhythm) › one Field per control, each wrapping a TextField/Select/Switch/Checkbox; the submit Button rides inside the FormProvider, after the fields, gated by the form's validity. Wall: none — fully hosted."
+    },
+    {
+      "id": "card-layout",
+      "triggers": "cards playing card hand suit rank ace king queen jack hole face-down deck draw deal blackjack poker game",
+      "body": "Playing-card rendering. Each card is its OWN small Card (elevation \"1\") whose child is a Text — variant \"h3\", emphasis true, text = rank AND suit glyph together: \"K♠\", \"10♥\", \"A♦\" (suits are always the glyphs ♠ ♥ ♦ ♣ — never a bare rank letter). A face-down/hole card is a Card with brightness \"-1\" holding a Text \"🂠\" (or \"?\"). A hand = Row (gap \"sm\", align \"center\", wrap true) of those Cards, so cards sit side-by-side as tiles — never stacked as loose text lines. Bind each card's text to a data-model path so a drawn card updates in place — and SET every bound path in the same turn, or the tile renders empty. Wall: card face art, flip animation, and drag-to-reorder are not hosted — name them in the note if asked; the glyph tiles are the approximation."
+    },
+    {
+      "id": "game-table-chrome",
+      "triggers": "table board zone dealer player casino felt layout frame chrome arena match round deal blackjack poker game",
+      "body": "The game-table frame. ONE Card is the table. CardHeader = Row (justify \"between\", align \"center\"): the game title (Text variant \"h4\", emphasis true) on the left, a Row (gap \"sm\") of status Badges (bet, round) on the right. CardContent = Column (gap \"lg\") of ZONES, one per participant: each zone is a Column (gap \"sm\") whose first child is a Row (justify \"between\", align \"center\") holding the zone name (Text variant \"h5\") and that zone's score readout, with the hand Row beneath it at full width. CardFooter = Row (gap \"sm\", justify \"center\") of the action Buttons — variant \"solid\" for the primary move, \"soft\" for the rest. Zones span the table's width; never centre the whole game into one narrow column of bare Text lines."
+    },
+    {
+      "id": "game-hud",
+      "triggers": "score chips bank stake bet hud points tally standings win bust push payout status round deal blackjack poker game",
+      "body": "Game HUD readouts. Score = a Badge beside each zone's name — intent \"neutral\" while the hand is live, \"success\" on a win or blackjack, \"danger\" on a bust or loss, \"warning\" on a push. Bankroll/chips = a Stat (label \"Chips\", value bound to the data model, delta = last round's net so the swing reads signed). Round or shoe progress = Progress (value/max, label). A one-line table status (\"Dealer plays…\", \"Place your bet\") = Text variant \"caption\" near the header. Bind every figure and status to a data-model path so each move repaints the numbers in place instead of re-creating components."
     }
   ]
 }

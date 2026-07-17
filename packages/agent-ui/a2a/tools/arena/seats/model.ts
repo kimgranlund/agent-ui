@@ -14,13 +14,13 @@
 // truth (see `respond()` below).
 //
 // Dev-graph reuse (LLD §8, PRD A-2): `AgentProvider`/`Turn` are imported from the a2ui live-agent seam
-// (`packages/agent-ui/a2ui/tools/agent/agent-transport.ts`) — a dev-graph-only cross-package edge (never
+// (`packages/agent-ui/a2ui/src/agent/agent-transport.ts`) — a dev-graph-only cross-package edge (never
 // `src/`, never a consumer bundle). The reused a2ui provider adapter's STATELESSNESS across calls is a
 // named PRECONDITION (LLD §2): no shared mutable state, no cross-call memory. This module does not (and
 // cannot) verify that of an imported adapter module — the byte-complete recording assertion below plus
 // the out-of-transcript negative control (`src/arena-agent/model-seat.test.ts`) are the trip-wire if a future adapter grows
 // state.
-import type { AgentProvider, Turn } from '../../../../a2ui/tools/agent/agent-transport.ts'
+import type { AgentProvider, Turn } from '../../../../a2ui/src/agent/agent-transport.ts'
 import type { BoardMessage } from '../../../src/arena/referee.ts'
 import type { Mark } from '../../../src/arena/board.ts'
 import type { ContextEntry, Seat, SeatReply } from '../seat.ts'

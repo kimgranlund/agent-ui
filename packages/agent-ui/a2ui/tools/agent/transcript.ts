@@ -32,30 +32,10 @@
 // is the one turn 5 deletes once superseded (ADR-0126 F5).
 
 import type { A2uiServerMessage } from '../../src/protocol.ts'
-import type { A2uiClientMessage } from '../../src/renderer/index.ts'
 import { canvasButtonSeed } from '../../src/examples/index.ts'
-import type { AskDeclaration } from './meta-line.ts'
-
-/** One recorded turn: the A2UI JSONL the agent emitted, and (turn 1) the client message a scripted
- * interaction produces — asserted by the round-trip gate. `note`, if present, is the agent's own
- * contemporaneous rationale for THIS turn's payload (ADR-0088 §1) — streamed as a leading meta-line by
- * `createRecordedTransport`, never mixed into `lines`. `ask`, if present (ADR-0097 §1), is the SAME
- * feed-embedded-ask routing declaration `produce()` composes — `createRecordedTransport` streams it on
- * the SAME meta-line shape, so the recorded backbone can carry an ask turn-for-turn parity with the live
- * path. The SHIPPED transcript below carries no `ask` (ADR-0089's scripted-turn fork stands, untouched);
- * `round-trip.test.ts` exercises the field via a LOCAL fixture transcript, never this one. */
-export interface RecordedTurn {
-  lines: string[]
-  note?: string
-  ask?: AskDeclaration
-  expectClientMessage?: A2uiClientMessage
-}
-
-/** A committed transcript of real captured turns (SPEC-R2). */
-export interface RecordedTranscript {
-  intent: string
-  turns: RecordedTurn[]
-}
+// ADR-0137 clause 2: `RecordedTranscript`/`RecordedTurn` moved to the (now-exported) replay engine at
+// `src/agent/recorded-transport.ts`; this demo fixture re-imports them rather than owning them.
+import type { RecordedTranscript } from '../../src/agent/recorded-transport.ts'
 
 const jsonl = (m: A2uiServerMessage): string => JSON.stringify(m)
 

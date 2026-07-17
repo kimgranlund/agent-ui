@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0072
-status: open
+status: done
 date: 2026-07-16
 owner:
 kind: feature
@@ -120,3 +120,43 @@ shell — not just widening the `exports` map.
   (required param) to keep demo bytes out of consumer graphs. Four forks (F1 shape · F2 cut · F3
   Node-first · F4 provider surface) carry firm recommendations, awaiting Kim's ratification — no code
   changed.
+- **2026-07-16 — built (ADR-0137 ratified `accepted`); pending independent code-review.** The portable
+  core moved `tools/agent/` → `src/agent/` via `git mv` (history preserved): `agent-transport` · `session`
+  · `meta-line` · `gen-ui-mode` · `feed-catalog` · `produce` · `system-prompt` (+ `prompts/`) ·
+  `mini-skills` · `recorded-transport` (now OWNS the `RecordedTranscript`/`RecordedTurn` types extracted
+  from the stayed `transcript.ts`) · `providers/anthropic`. `createRecordedTransport`'s `transcript` param
+  is now REQUIRED (the deliberate API break — every call site passes it explicitly). NEW export
+  `"./agent": "./src/agent/index.ts"` + the pack barrel; the root `.` barrel is byte-unchanged. Four
+  clause-8 gates stand (`src/agent/gates.test.ts` = identity · SDK-free/zero-dep · node-fence; prompt
+  byte-identity carried by the unmodified `prompt-equivalence`/`prompt-drift` tests). SPEC-N1 amended to
+  v0.5 (surface list gains `./agent`; the fence narrows to the key/proxy/registry shell); LLD §0/§2 +
+  CLAUDE.md repaired. Consumers repointed: the site's browser-safe seam via `agent-runtime.ts` (relative
+  into `src/agent/` — the barrel is Node-first, not browser-importable) + `admin-live-runner`/
+  `live-proxy-transport`/`provider-switcher`; the a2a arena/feed harness; the `src/live-agent` gates. A
+  minimal SERVER-SIDE consumer example ships (dogfooding the bare `@agent-ui/a2ui/agent` specifier).
+  `tsc`/`check:tools`/`check:site` GREEN; the agent+live-agent (188) and a2a (309) suites GREEN with no
+  key. ONE known cross-session red: the untracked TKT-0074 `site/pages/agent-admin-app.test.ts:95`
+  hardcodes the OLD `tools/agent/prompts/mini-skills` path (a one-line repoint its owner must make — not
+  edited here per the shared-tree hold). ADR-0138 (persona seam) rode the same three files through the
+  move (its edits traveled with the `git mv`). Awaiting generator≠critic review before status flips.
+- **2026-07-16 — closed: independent review GO-with-repairs, all repairs applied, `done`.** Dispatched
+  `orchestration:code-reviewer` fresh (never saw the build). Verdict: GO, no HIGH finding, build faithful
+  to all 8 ADR-0137 clauses (independently re-walked: exact move/stay lists, the `node:*` fence, the
+  `createRecordedTransport` break confirmed a real `tsc` error at every un-migrated call site, the
+  identity gate's transitive closure traced by hand — 30 modules from `src/index.ts`, zero touch
+  `src/agent/`). Two MEDIUMs + repaired: (1) `agent-transport.ts`'s placement-law comment still said
+  `tools/agent/`/"no package export" post-move — fixed, both occurrences; (2) the corpus root-purity
+  gate's `src/agent` exclusion (necessary — `produce.ts`/`mini-skills.ts`/`system-prompt.ts` legitimately
+  import corpus internals) left no gate proving a THIRD module couldn't bridge root → src/agent → corpus
+  transitively — closed with a 5th `gates.test.ts` leg, **COMPOSITION CONTAINMENT**: no `src/` module
+  outside `src/agent/` may import from it, full stop. Two LOWs fixed (stale `tools/agent/` path mentions
+  in `vitest.config.ts`'s alias comment and two site test-file comments); one LOW (a dynamic-`import()`
+  gap in the gate's specifier regex) and two advisories (the exported pack's `process.cwd()`-bound prompt
+  paths — a real constraint for a future npm-publication intake, correctly out of THIS ticket's scope per
+  ADR-0137's own Consequences; a stale LLD §1 traceability cell, covered by an authoritative "§2 wins"
+  note) left as-is, informational only, not gating. Separately fixed the one known cross-session red
+  myself: `site/pages/agent-admin-app.test.ts:95`'s hardcoded path — a one-line, purely mechanical
+  consequence of this ticket's own move, isolated from that file's actual TKT-0074 feature logic (diffed
+  before/after to confirm). Final state, independently run: `npm run check` (tsc · check:site ·
+  check:tools) fully clean; `npm test` 6307/6307 (one more than the pre-build baseline of 6293 — the new
+  gate leg), no provider key present. Nothing committed — left for Kim.

@@ -107,6 +107,12 @@ describe('root-barrel purity — zero corpus bytes reachable from `@agent-ui/a2u
         const full = `${dir}/${entry.name}`
         if (entry.isDirectory()) {
           if (full === `${SRC_DIR}/corpus`) continue // corpus's own internal relative imports are legitimate
+          // src/agent — the `@agent-ui/a2ui/agent` producer toolkit (ADR-0137) — is a SEPARATE subpath the
+          // ROOT `.` barrel never re-exports (identity gate), so its composing the shared corpus surfaces
+          // (heal/validate/retrieve/text-similarity as in-package relative imports, clause 1's explicit
+          // rationale for a subpath over a sibling package) never makes corpus reachable from `.`. The
+          // root-purity invariant this gate protects is unaffected.
+          if (full === `${SRC_DIR}/agent`) continue
           files.push(...walk(full))
         } else if (entry.name.endsWith('.ts')) {
           files.push(full)

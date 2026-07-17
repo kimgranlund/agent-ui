@@ -15,8 +15,8 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
-import { buildSystemPrompt } from '../../tools/agent/system-prompt.ts'
-import { MINI_SKILLS } from '../../tools/agent/mini-skills.ts'
+import { buildSystemPrompt } from '../agent/system-prompt.ts'
+import { MINI_SKILLS } from '../agent/mini-skills.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 
 interface Baseline {

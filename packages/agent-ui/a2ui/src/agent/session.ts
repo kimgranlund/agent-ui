@@ -12,7 +12,7 @@
 // `nextTurn` when it answers `true`, so a caller can never construct a `TurnInput` for a message that
 // should have stayed silent.
 
-import type { A2uiClientMessage } from '../../src/renderer/index.ts'
+import type { A2uiClientMessage } from '../renderer/index.ts'
 import type { Session, TurnInput } from './agent-transport.ts'
 
 /**

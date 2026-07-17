@@ -1,6 +1,6 @@
 # LLD — A2UI Live-Agent Example (skeleton)
 
-> Status: accepted + REALIZED · v0.4 · 2026-07-04 (ratified) · realized 2026-07-05 · ADR-0088 (note/trace/routing channel) folded 2026-07-07 · ADR-0089 (two GRAMMAR-half ASK behaviors) folded 2026-07-07 · ADR-0090 (the Gen-UI `mode` axis + Structural named as the recorded-transport pattern) folded 2026-07-07 · ADR-0091 (the mini-skill registry — a THIRD `buildSystemPrompt` segment, hand-curated + selected once per turn beside `retrieve()`) folded 2026-07-07 · ADR-0097 (feed-embedded interactive asks) folded 2026-07-07 · Layer: LLD (implementation plan)
+> Status: accepted + REALIZED · v0.4 · 2026-07-04 (ratified) · realized 2026-07-05 · ADR-0088 (note/trace/routing channel) folded 2026-07-07 · ADR-0089 (two GRAMMAR-half ASK behaviors) folded 2026-07-07 · ADR-0090 (the Gen-UI `mode` axis + Structural named as the recorded-transport pattern) folded 2026-07-07 · ADR-0091 (the mini-skill registry — a THIRD `buildSystemPrompt` segment, hand-curated + selected once per turn beside `retrieve()`) folded 2026-07-07 · ADR-0097 (feed-embedded interactive asks) folded 2026-07-07 · ADR-0137 (the producer toolkit exported as `@agent-ui/a2ui/agent`; the portable core relocated `tools/agent/` → `src/agent/`, the dev-proxy/key/registry shell stays behind — §0/§2 repaired) folded 2026-07-16 · Layer: LLD (implementation plan)
 > Implements: [`../spec/a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) (SPEC-R1..R15, SPEC-N1..N5), targeting A2UI **v1.0**.
 > Realizes concretely: [`./a2ui-streaming-pipeline.lld.md`](./a2ui-streaming-pipeline.lld.md) **LLD-C2** (the `produce()` generation driver — the "blocked by the live-agent wave" note resolves here) — the loop CONTRACT stays [`./a2ui-harness-wiring.lld.md`](./a2ui-harness-wiring.lld.md) §6.
 > Decisions: **ADR-0069** (demo shape + the `AgentTransport` seam + the `VITE_` build-key-safety invariant) · **ADR-0070** (runtime loop scope) · **ADR-0071** (derived prompt) · **ADR-0072** (session model) · **ADR-0073** (the model-provider seam) · **ADR-0088** (the note meta-line + `TurnTrace` + `wantResponse`-routed click→turn — accepted, ratified 2026-07-07) · **ADR-0089** (two hand-authored GRAMMAR-half ASK behaviors riding ADR-0088's note-only turn — clarify-when-underdetermined + catalog-boundary negotiated approximation; NO new wire surface — built + reviewed GO 2026-07-07, ratification marker pending) · **ADR-0090** (a per-turn `GenUiMode` — `default`/`specific`/`blue-sky` — that SCALES ADR-0089's clarify/negotiate grammar directive↔exploratory, a mode-INVARIANT honesty floor, and Structural named as the already-shipped recorded transport; NO new wire/transport/protocol surface — built 2026-07-07, ratification marker pending) · **ADR-0091** (the mini-skill registry — a small, hand-curated `MiniSkill[]` registry of catalog-composition idioms, selected once per turn beside `retrieve()` by a cheap TF-IDF/cosine intent-match reusing `retrieve()`'s tokenizer/cosine primitives (extracted to `src/corpus/text-similarity.ts`), composed into `buildSystemPrompt` as a THIRD, `fewShot`-structural-twin segment that degrades to `''` on no match, capped so the prompt grows by at most `cap × budget` regardless of registry size; NO new wire/transport/protocol surface — built 2026-07-07, an independent post-ship review caught + the build fixed a real double-injection defect (§4 below), ratification marker pending) · **ADR-0097** (feed-embedded interactive asks — the ADR-0089 ASK gains a structured, feed-embedded surface form: an additive `ask` field on the ADR-0088 meta envelope, a page-level per-ask `createRenderer()`-host lifecycle (`pending → frozen(answered|bypassed)`), and a gate-encoded feed sub-catalog partition (`FEED_SURFACE_TYPES`/`FEED_EXCLUDED`, the ADR-0087 lesson reapplied to a policy subset); NO renderer/package/transport-signature change — built 2026-07-07, ratification marker pending). ADR-0069–0088 accepted.
@@ -11,27 +11,45 @@
 
 ## 0. Placement law (the one that keeps SPEC-N1 true)
 
-Everything live/keyed/networked lives OUTSIDE `@agent-ui/a2ui`'s public surface — which stays exactly
-`.` / `./examples` / `./corpus` (**no package export/runtime additions this wave**). The Node-scoped
-harness lands NESTED under the a2ui package's `tools/` dir (the realized `tools/corpus/` + `tools/harness/`
-precedent — the ONLY `tools/` in the repo is `packages/agent-ui/a2ui/tools/`, NOT a repo-root dir). The
-split mirrors ADR-0062's pure-core/Node-shell discipline:
+**ADR-0137 (TKT-0072, folded 2026-07-16) split this law in two.** The genuinely portable PRODUCER core is
+now a real package export — `@agent-ui/a2ui/agent` → `src/agent/` — so it enters the real typecheck/test
+include; only the key-holding/dev-proxy/provider-registry SHELL stays site/tools-scoped. The package's
+public surface is now `.` / `./examples` / `./corpus` / `./agent`. Everything live/keyed/networked still
+lives OUTSIDE the renderer-facing surfaces; the split mirrors ADR-0062's pure-core/Node-shell discipline,
+with the producer toolkit added as a FOURTH subpath (the ADR-0119 opt-in-pack law):
 
 - **`site/`** — the page + the browser-side UI (the switcher) + the browser transports (they run in the
   browser; no key, no `fs`). Covered by `check:site` (site tsconfig `include: site/**`); NOT by vitest.
-- **`packages/agent-ui/a2ui/tools/agent/`** — the Node-scoped harness: the loop driver, the prompt
-  derivation, the recorded transcript, the session reducer, the per-provider adapters + the config
-  registry, and the dev-proxy plugin. Node-type-stripped `.ts` (the `tools/corpus/` precedent), zero
-  third-party deps, plain `fetch` for the live call (no LLM SDK). **NOT in any tsconfig `include`
-  (root `include` = `packages/agent-ui/*/src`), so these are typechecked ONLY transitively (when an
-  included src file imports them) and run via `node --experimental-strip-types` — the honest
-  `tools/corpus` reality; see §2's discovery table.**
+  It imports the pack's BROWSER-SAFE seam modules (`src/agent/{agent-transport,session,meta-line,
+  feed-catalog,recorded-transport,gen-ui-mode}.ts`) via `site/lib/agent-runtime.ts` — never the whole
+  `@agent-ui/a2ui/agent` barrel, which is NODE-FIRST (it `export *`s the two `fs`-loading modules; the
+  barrel is the SERVER-SIDE consumer's entry, ADR-0137 clause 4).
+- **`packages/agent-ui/a2ui/src/agent/`** — the EXPORTED producer toolkit (`@agent-ui/a2ui/agent`,
+  ADR-0137): the loop driver (`produce.ts`), the derived prompt (`system-prompt.ts` + `prompts/`), the
+  transport/session seam (`agent-transport.ts`/`session.ts`), the meta-line envelope (`meta-line.ts`),
+  the `GenUiMode` axis (`gen-ui-mode.ts`), the mini-skill registry (`mini-skills.ts`), the feed sub-catalog
+  (`feed-catalog.ts`), the recorded backbone + transcript TYPES (`recorded-transport.ts`), and the
+  hand-rolled Anthropic adapter (`providers/anthropic.ts`). NOW in the real `tsc`+vitest include
+  (`packages/agent-ui/*/src`), typechecked DIRECTLY. Zero third-party deps, plain `fetch`, no LLM SDK;
+  NODE-FIRST — `node:fs` appears in EXACTLY `system-prompt.ts`/`mini-skills.ts` (the ADR-0135 prompt
+  loading), nowhere else. The root `.` barrel does NOT re-export it (identity gate — a renderer-only
+  consumer bundles zero producer bytes).
+- **`packages/agent-ui/a2ui/tools/agent/`** — the site/tools-scoped SHELL that stays behind (ADR-0137
+  clause 3): the dev-proxy plugin (`dev-proxy-plugin.ts` — Vite middleware, `vite`+`node:http`, the local
+  key-holder), the provider registry + switcher config (`providers.json`/`providers-config.ts`/
+  `providers/{index,openai,gemini}.ts`), the ADR-0135 site-config builder (`agent-config-schema.ts`), and
+  the DEMO fixtures (`transcript.ts`/`structural-transcript.ts`). Node-type-stripped `.ts`, zero
+  third-party deps, plain `fetch`. **NOT in any tsconfig `include`, so typechecked ONLY transitively (when
+  a src test imports them) and run via `node --experimental-strip-types` — see §2's discovery table.**
 - **`packages/agent-ui/a2ui/src/live-agent/`** — the STANDING TESTS (round-trip · prompt-drift ·
-  stub-provider loop · providers.json shape · build-key-safety source-grep). This IS the vitest+tsc
-  include (`packages/agent-ui/*/src/**/*.test.ts`), so these run in `npm test` and typecheck in
-  `npm run check`, and they reach out into `../../tools/agent` to drive the harness (the site-canon
-  reach-out — a src TEST importing a tools module, which also transitively typechecks it).
-- **`@agent-ui/a2ui`** (`src/` runtime + exports) — untouched. Consumed via its public surfaces only.
+  stub-provider loop · providers.json shape · build-key-safety source-grep · the ADR-0137 `src/agent/`
+  gates in `src/agent/gates.test.ts`). This IS the vitest+tsc include
+  (`packages/agent-ui/*/src/**/*.test.ts`), so these run in `npm test` and typecheck in `npm run check`;
+  for the shell modules they reach out into `../../tools/agent` (the site-canon reach-out — a src TEST
+  importing a tools module, which also transitively typechecks it); for the moved core they import
+  `../agent/*` directly.
+- **`@agent-ui/a2ui`** (`src/` runtime + `.`/`./examples`/`./corpus` barrels) — the renderer-facing
+  surfaces are untouched (byte-identical `.` barrel). Consumed via its public surfaces only.
 
 **Keys + the `VITE_` footgun (ADR-0069, SPEC-N2).** A gitignored repo-root `.env` (untracked) provides
 per-provider server-side keys (`ANTHROPIC_API_KEY`, …). The proxy resolves each via Vite's
@@ -53,6 +71,11 @@ site tsconfig needs it in-tree); it is pure zero-dep TS either way.
 ## 1. Component map (traceability)
 
 All harness paths are under `packages/agent-ui/a2ui/` (abbreviated `pkg/` below); site paths under `site/`.
+**ADR-0137 relocation (2026-07-16):** the moved-core rows below (LLD-C1/C2/C3/C4/C5/C13/C14 + the Anthropic
+adapter of LLD-C10) now live under `pkg/src/agent/`, not `pkg/tools/agent/` — the authoritative post-move
+file map is §0/§2; the `pkg/tools/agent/` paths in the cells below are the PRE-move locations (the tree +
+§2 win where they disagree). The shell rows (LLD-C6 dev-proxy · LLD-C11 registry · the openai/gemini stubs
++ dispatch of LLD-C10 · the DEMO transcripts of LLD-C2) stay under `pkg/tools/agent/`.
 
 | ID | Component | Implements | File (scope) | State |
 |---|---|---|---|---|
@@ -95,25 +118,30 @@ site/
   lib/provider-switcher.ts             # LLD-C12 — dropdowns rendered from providers.json; localStorage; ADR-0090 §4: +1 `ui-select` for GenUiMode (GEN_UI_MODES)
   lib/browser-direct-transport.ts      # DEFERRED — client-direct (VITE_ key + a C10 adapter in-browser); dev-only-guarded
   main.ts                              # +1 dual-TOC entry for a2ui-live
-packages/agent-ui/a2ui/tools/agent/    # NEW dir — Node-scoped, zero-dep, type-stripped (the tools/corpus precedent)
-  agent-transport.ts                   # LLD-C1 — the seam (pure, zero-dep); site imports it (or a site/lib shim)
-  meta-line.ts                         # ADR-0088 §1/§2 — readMetaLine/isMetaLine + the TurnTrace/A2uiMetaEnvelope types (pure, zero-dep); ADR-0097 §1: +AskDeclaration, +ask? on A2uiMetaEnvelope
-  gen-ui-mode.ts                       # ADR-0090 §1/§4 (NEW) — GEN_UI_MODES/GenUiMode/DEFAULT_GEN_UI_MODE; pure, zero-dep, the single source of truth for the 3-member set
-  mini-skills.ts                       # ADR-0091 §1/§2 (NEW, LLD-C13) — MiniSkill/MINI_SKILLS/PER_MODULE_TOKEN_BUDGET/DEFAULT_MINI_SKILL_CAP/selectMiniSkills; imports only ../../src/corpus/text-similarity.ts
-  feed-catalog.ts                      # ADR-0097 §3 (NEW, LLD-C14) — FEED_SURFACE_TYPES/FEED_EXCLUDED/isFeedSurfaceType; pure, zero-dep, zero imports (not even catalog.json)
-  transcript.ts                        # LLD-C2 data — turns; turn-1 payload = a committed shelf seed; each turn MAY carry a `note` (ADR-0088 slice 6) + an `ask?` (ADR-0097 §1, TYPE only — the shipped transcript carries no ask turn)
-  structural-transcript.ts             # ADR-0090 §3 (NEW) — LLD-C2's SECOND worked example, naming Structural Gen UI as a first-class pattern; a dashboard-of-stats surface + a follow-up refresh surface, ONLY real catalog types, zero live model
-  recorded-transport.ts                # LLD-C2 — replays a transcript (implements AgentTransport, default param = `transcript.ts`'s; ADR-0090 §3 passes it `structural-transcript.ts`'s instead); streams a turn's `note`(+`ask`, ADR-0097 §1) as a leading meta-line
-  produce.ts                           # LLD-C3 — the bounded loop; injected AgentProvider; shared heal+validate; peels/emits the meta-line (ADR-0088); ADR-0090 §1/§4: ProduceOptions.mode?: GenUiMode threads to buildSystemPrompt; ADR-0091 §2: selectMiniSkills() runs once per turn beside retrieve() (`:169`), feeding buildSystemPrompt's 4th param (`:170`); ADR-0097 §1/§3: peels `ask`, gates FEED_SCOPE + ask-integrity AFTER validateA2ui, composes `{note,ask,trace}`
-  system-prompt.ts                     # LLD-C4 — buildSystemPrompt(catalog, exemplars, mode?, miniSkills?), catalog-derived; grammar half instructs the note (ADR-0088 §1) + the ASK behaviors (ADR-0089), now mode-composed via grammarFor() (ADR-0090 §1) + mini-skill-composed via miniSkillsBlock()/miniSkillsFor() (ADR-0091 §3/§4) + feed-ask mechanics/archetypes (ADR-0097 §4, imports feed-catalog.ts)
+packages/agent-ui/a2ui/src/agent/      # ADR-0137 (TKT-0072) — the EXPORTED producer toolkit `@agent-ui/a2ui/agent`; in the real tsc+vitest include; zero-dep, NODE-FIRST (node:fs only in the two prompt loaders)
+  index.ts                             # ADR-0137 clause 1 — the pack barrel (export * of the 10 modules below); NOT re-exported by the root `.` barrel (identity gate)
+  agent-transport.ts                   # LLD-C1 — the seam (pure, browser-safe); imports ../renderer only
+  meta-line.ts                         # ADR-0088 §1/§2 — readMetaLine/isMetaLine + TurnTrace/A2uiMetaEnvelope (pure, zero imports); ADR-0097 §1: +AskDeclaration, +ask? on A2uiMetaEnvelope
+  gen-ui-mode.ts                       # ADR-0090 §1/§4 — GEN_UI_MODES/GenUiMode/DEFAULT_GEN_UI_MODE; pure, zero-dep, single source of truth for the 3-member set
+  mini-skills.ts                       # ADR-0091 §1/§2 (LLD-C13) — MiniSkill/MINI_SKILLS/PER_MODULE_TOKEN_BUDGET/DEFAULT_MINI_SKILL_CAP/selectMiniSkills; node:fs loads prompts/mini-skills/*.md (ADR-0135); imports ../corpus/text-similarity.ts + ./prompts/frontmatter.ts
+  feed-catalog.ts                      # ADR-0097 §3 (LLD-C14) — FEED_SURFACE_TYPES/FEED_EXCLUDED/isFeedSurfaceType; pure, zero imports (not even catalog.json)
+  recorded-transport.ts                # LLD-C2 — replays a transcript (implements AgentTransport); ADR-0137 clause 2 OWNS the RecordedTranscript/RecordedTurn TYPES (extracted out of the demo transcript.ts) + createRecordedTransport(transcript) — transcript param now REQUIRED (the demo-coupling default removed); streams a turn's `note`(+`ask`, ADR-0097 §1) as a leading meta-line
+  produce.ts                           # LLD-C3 — the bounded loop; injected AgentProvider; shared heal+validate; peels/emits the meta-line (ADR-0088); ADR-0090 §1/§4: ProduceOptions.mode?: GenUiMode; ADR-0091 §2: selectMiniSkills() once per turn beside retrieve(); ADR-0097 §1/§3: peels `ask`, gates FEED_SCOPE + ask-integrity AFTER validateA2ui, composes `{note,ask,trace}`; ADR-0138: ProduceOptions.personaSystem threads to buildSystemPrompt
+  system-prompt.ts                     # LLD-C4 — buildSystemPrompt(catalog, exemplars, mode?, miniSkills?, personaSystem?), catalog-derived; node:fs loads prompts/*.md (ADR-0135, PROMPTS_DIR now `src/agent/prompts`); grammar/mode/mini-skill/feed-ask/persona composition (ADR-0088/0089/0090/0091/0097/0138)
   session.ts                           # LLD-C5 — nextTurn() reducer + turn-history + shouldRunTurn() wantResponse-routing predicate (ADR-0088 §3)
+  prompts/                             # ADR-0135 — the hand-authored grammar + mini-skill .md files + frontmatter.ts, loaded by system-prompt.ts/mini-skills.ts at module load (moved with them, ADR-0137)
+  providers/anthropic.ts               # LLD-C10 — the Anthropic adapter (plain fetch; SPEC-N5 SSE parse); ADR-0137 clause 2 / F4: the one adapter exported (its pure parse fixture-tested)
+  gates.test.ts                        # ADR-0137 clause 8 — the standing subpath gates: identity · SDK-free/zero-dep · node-fence
+packages/agent-ui/a2ui/tools/agent/    # the site/tools-scoped SHELL that STAYS behind (ADR-0137 clause 3) — Node-scoped, zero-dep, type-stripped, NOT in any tsconfig include
+  transcript.ts                        # LLD-C2 data (DEMO fixture) — turns; turn-1 payload = a committed shelf seed; re-imports RecordedTranscript from ../../src/agent/recorded-transport.ts (ADR-0137)
+  structural-transcript.ts             # ADR-0090 §3 (DEMO fixture) — LLD-C2's SECOND worked example (Structural Gen UI); ONLY real catalog types, zero live model
   providers.json                       # LLD-C11 data — the registry (env-var NAMES + endpoints/model-ids, NO secrets)
   providers-config.ts                  # LLD-C11 — typed loader + validation helpers (menu + allowlist SoT)
-  providers/index.ts                   # LLD-C10 — provider-id → AgentProvider dispatch
-  providers/anthropic.ts               # LLD-C10 — the Anthropic adapter NOW (plain fetch; SPEC-N5 SSE parse)
+  providers/index.ts                   # LLD-C10 — provider-id → AgentProvider dispatch (imports the exported ../../src/agent/providers/anthropic.ts)
   providers/openai.ts · gemini.ts      # LLD-C10 — the IMMEDIATE NEXT SLICES (host-verify each before building)
-  dev-proxy-plugin.ts                  # LLD-C6 — Vite configureServer middleware (dev-only); allowlist + loadEnv('.env')[envKey] over process.env; C10→C3; ADR-0090 §4: exports validateMode(), reads+validates body.mode, passes it to produce() as opts.mode
-packages/agent-ui/a2ui/src/live-agent/ # the STANDING TESTS (the vitest+tsc include) — reach out into ../../tools/agent
+  agent-config-schema.ts               # ADR-0135 Piece-B — the site-config builder (imports the exported ../../src/agent/{produce,mini-skills,gen-ui-mode})
+  dev-proxy-plugin.ts                  # LLD-C6 — Vite configureServer middleware (dev-only, `vite`+`node:http` — the key-holder fence); allowlist + loadEnv('.env')[envKey] over process.env; C10→C3; ADR-0090 §4: validateMode(); ADR-0138: reads capped body.personaSystem
+packages/agent-ui/a2ui/src/live-agent/ # the STANDING TESTS (the vitest+tsc include) — reach out into ../../tools/agent for the shell, ../agent for the exported core
   round-trip.test.ts · prompt-drift.test.ts · produce-loop.test.ts · providers-config.test.ts · build-key-safety.test.ts
   meta-line.test.ts                    # ADR-0088 §1 — the guard's discriminator, in isolation from produce(); ADR-0097 §1: +the ask field's shallow-validation legs
   feed-catalog.test.ts                 # ADR-0097 §3 (NEW, LLD-C14) — the partition gate: union-equals-catalog, disjointness, composite closure, negative control

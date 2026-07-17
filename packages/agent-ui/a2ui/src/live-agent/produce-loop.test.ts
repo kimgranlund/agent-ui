@@ -15,14 +15,14 @@
 // proves the SPEC-R12 model trust boundary above.
 
 import { describe, it, expect } from 'vitest'
-import { produce, ProduceHalt } from '../../tools/agent/produce.ts'
-import type { ProduceDeps } from '../../tools/agent/produce.ts'
-import type { AgentProvider, TurnInput } from '../../tools/agent/agent-transport.ts'
-import { readMetaLine } from '../../tools/agent/meta-line.ts'
-import { buildSystemPrompt } from '../../tools/agent/system-prompt.ts'
+import { produce, ProduceHalt } from '../agent/produce.ts'
+import type { ProduceDeps } from '../agent/produce.ts'
+import type { AgentProvider, TurnInput } from '../agent/agent-transport.ts'
+import { readMetaLine } from '../agent/meta-line.ts'
+import { buildSystemPrompt } from '../agent/system-prompt.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
-import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from '../../tools/agent/mini-skills.ts'
+import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from '../agent/mini-skills.ts'
 
 // An UNKNOWN component ⇒ CATALOG-invalid (unambiguous, independent of root/surface semantics).
 const INVALID =

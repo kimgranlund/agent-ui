@@ -16,9 +16,36 @@
 // (ADR-0089's scripted-turn fork stands, untouched by this ADR).
 
 import type { AgentTransport, TurnInput } from './agent-transport.ts'
-import type { A2uiMetaEnvelope } from './meta-line.ts'
-import { recordedTranscript } from './transcript.ts'
-import type { RecordedTranscript, RecordedTurn } from './transcript.ts'
+import type { A2uiMetaEnvelope, AskDeclaration } from './meta-line.ts'
+import type { A2uiClientMessage } from '../renderer/index.ts'
+
+// ADR-0137 clause 2: the `RecordedTranscript`/`RecordedTurn` shapes live HERE — the replay engine that
+// consumes them — rather than in the site-internal demo fixture `tools/agent/transcript.ts`. Extracting
+// them lets the exported `./agent` pack replay ANY committed transcript a consumer mints, while the
+// demo fixtures (`transcript.ts`, `structural-transcript.ts`) re-import these types instead of the
+// producer reaching back into `tools/`.
+
+/** One recorded turn: the A2UI JSONL the agent emitted, and (optionally) the client message a scripted
+ * interaction produces — asserted by the round-trip gate. `note`, if present, is the agent's own
+ * contemporaneous rationale for THIS turn's payload (ADR-0088 §1) — streamed as a leading meta-line by
+ * `createRecordedTransport`, never mixed into `lines`. `ask`, if present (ADR-0097 §1), is the SAME
+ * feed-embedded-ask routing declaration `produce()` composes — `createRecordedTransport` streams it on
+ * the SAME meta-line shape, so the recorded backbone can carry an ask turn-for-turn parity with the live
+ * path. */
+export interface RecordedTurn {
+  lines: string[]
+  note?: string
+  ask?: AskDeclaration
+  expectClientMessage?: A2uiClientMessage
+}
+
+/** A committed transcript of real captured turns (SPEC-R2). A consumer may mint its own and hand it to
+ * `createRecordedTransport(transcript)` to render pre-generated, pre-validated JSONL with zero live
+ * model, zero API key, zero network call (the Structural Gen UI pattern, ADR-0090 §3). */
+export interface RecordedTranscript {
+  intent: string
+  turns: RecordedTurn[]
+}
 
 /** Compose a turn's leading meta-line — `note` alone (the pre-ADR-0097 shape) or `{note, ask}` when the
  * turn also carries an ask declaration. `undefined` when the turn carries neither (no meta-line at all —
@@ -35,7 +62,7 @@ function formatTurnMetaLine(t: RecordedTurn): string | undefined {
  * `turn()` calls yield nothing (the demo caps turns anyway). Deterministic and repeatable: pass a fresh
  * transcript, or call the factory again, to replay from the start.
  */
-export function createRecordedTransport(transcript: RecordedTranscript = recordedTranscript): AgentTransport {
+export function createRecordedTransport(transcript: RecordedTranscript): AgentTransport {
   let index = 0
   return {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- input is intentionally ignored (a recording)

@@ -6,8 +6,8 @@ import { describe, it, expect } from 'vitest'
 import { liveAgentConfigSchema, resolveProduceOptions } from '../../tools/agent/agent-config-schema.ts'
 import type { SettingsRead } from '../../tools/agent/agent-config-schema.ts'
 import type { ProvidersConfig } from '../../tools/agent/providers-config.ts'
-import { DEFAULT_GEN_UI_MODE, GEN_UI_MODES } from '../../tools/agent/gen-ui-mode.ts'
-import { DEFAULT_MINI_SKILL_CAP } from '../../tools/agent/mini-skills.ts'
+import { DEFAULT_GEN_UI_MODE, GEN_UI_MODES } from '../agent/gen-ui-mode.ts'
+import { DEFAULT_MINI_SKILL_CAP } from '../agent/mini-skills.ts'
 
 const PROVIDERS: ProvidersConfig = {
   defaultProvider: 'anthropic',

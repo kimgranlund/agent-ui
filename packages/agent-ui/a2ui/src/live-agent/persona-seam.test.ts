@@ -4,7 +4,7 @@
 // stays green because of exactly this); (2) a present persona lands as the FINAL section, after the
 // mini-skills block, carrying the fixed precedence sentence; (3) the persona text rides verbatim.
 import { describe, it, expect } from 'vitest'
-import { buildSystemPrompt } from '../../tools/agent/system-prompt.ts'
+import { buildSystemPrompt } from '../agent/system-prompt.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 
 const base = (): string => buildSystemPrompt(defaultCatalog, [])

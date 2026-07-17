@@ -11,7 +11,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { defaultCatalog } from '../catalog/default/index.ts'
-import { FEED_SURFACE_TYPES, FEED_EXCLUDED, FEED_SURFACE_TYPE_SET, isFeedSurfaceType } from '../../tools/agent/feed-catalog.ts'
+import { FEED_SURFACE_TYPES, FEED_EXCLUDED, FEED_SURFACE_TYPE_SET, isFeedSurfaceType } from '../agent/feed-catalog.ts'
 
 const catalogTypes = new Set(Object.keys(defaultCatalog.components))
 const inSet = new Set<string>(FEED_SURFACE_TYPES)

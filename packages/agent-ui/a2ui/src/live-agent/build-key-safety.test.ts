@@ -26,7 +26,7 @@ const LIVE_AGENT_SOURCE = [
   ...OVERLAY_FILES,
   'packages/agent-ui/a2ui/tools/agent/providers.json',
   'packages/agent-ui/a2ui/tools/agent/dev-proxy-plugin.ts',
-  'packages/agent-ui/a2ui/tools/agent/providers/anthropic.ts',
+  'packages/agent-ui/a2ui/src/agent/providers/anthropic.ts',
 ]
 
 describe('build-key-safety (LLD-C8c / SPEC-N2)', () => {

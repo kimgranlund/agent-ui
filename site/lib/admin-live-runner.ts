@@ -20,10 +20,10 @@ import type {
 // The SURFACE-turn machinery (TKT-0076/ADR-0138) — transport-shaped imports the COMPONENT is fenced from
 // (SPEC-N1): the a2ui Session reducer + meta-line peel live HERE, site-side, exactly like a2ui-chat's own
 // agent-runtime shim usage. All zero-dep, browser-safe TS.
-import type { Session, TurnInput } from '../../packages/agent-ui/a2ui/tools/agent/agent-transport.ts'
+import type { Session, TurnInput } from '../../packages/agent-ui/a2ui/src/agent/agent-transport.ts'
 import type { A2uiClientMessage } from '@agent-ui/a2ui'
-import { nextTurn, appendUserTurn, appendAssistantTurn, frameClientMessage } from '../../packages/agent-ui/a2ui/tools/agent/session.ts'
-import { readMetaLine } from '../../packages/agent-ui/a2ui/tools/agent/meta-line.ts'
+import { nextTurn, appendUserTurn, appendAssistantTurn, frameClientMessage } from '../../packages/agent-ui/a2ui/src/agent/session.ts'
+import { readMetaLine } from '../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
 import { readNdjsonLines } from './ndjson-lines.ts'
 // The live-key probe is shared verbatim with a2ui-live's overlay (a boolean + count; never the key). Static
 // import here is fine — this whole module already lives BEHIND the page's dev-only dynamic import, so it is

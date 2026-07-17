@@ -128,6 +128,15 @@ export default defineConfig({
       // subpath-ordering discipline `@agent-ui/components/components` above relies on). Used by the site's
       // A2UI gallery + its drift gate (site/lib/a2ui-gallery.ts / .test.ts).
       '@agent-ui/a2ui/examples': r('./packages/agent-ui/a2ui/src/examples/index.ts'),
+      // The a2ui `./agent` subpath (the producer toolkit, ADR-0137/TKT-0072) — mirrors the package's
+      // exports map. Placed BEFORE the broad `@agent-ui/a2ui` entry for the same prefix-match reason as
+      // `./examples` above (else the broad alias rewrites `@agent-ui/a2ui/agent` → `.../src/index.ts/agent`).
+      // A future cross-package TEST importing the bare `@agent-ui/a2ui/agent` specifier resolves through
+      // this row (the ADR-0055 vitest-alias caveat, ADR-0137 Consequences) — today only the tools-side
+      // consumer example dogfoods the bare specifier; the site's own agent-runtime shim/switcher import
+      // by relative path into `src/agent/` instead (forced by the Node-first barrel, ADR-0137 clause 4).
+      // Kept ready regardless, so a future site import switching to the bare specifier needs no new row.
+      '@agent-ui/a2ui/agent': r('./packages/agent-ui/a2ui/src/agent/index.ts'),
       '@agent-ui/a2ui': r('./packages/agent-ui/a2ui/src/index.ts'),
       // The A2A arena's zero-dep surface (board/referee/transcript/isolation, LLD-C11) — mirrors the
       // `@agent-ui/a2ui` broad alias above; the site demo page is its first consumer.

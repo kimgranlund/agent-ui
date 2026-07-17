@@ -92,12 +92,12 @@ describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {
     // than silently stop intent-matching. Only labels that TARGET the registry are held to it — persona-
     // invented skills (quiz-round, palette-presentation, …) are prompt-only by design.
     const registry = new Set(
-      (readdirSync(`${process.cwd()}/packages/agent-ui/a2ui/tools/agent/prompts/mini-skills`) as string[])
+      (readdirSync(`${process.cwd()}/packages/agent-ui/a2ui/src/agent/prompts/mini-skills`) as string[])
         .filter((f) => f.endsWith('.md'))
         .map((f) => f.replace(/\.md$/, '')),
     )
     expect(registry.size).toBeGreaterThan(3) // anti-vacuous: the registry directory is real
-    const targeted = ['card-game-sheet', 'dashboard-kpi-grid', 'form-rhythm', 'login-form']
+    const targeted = ['card-layout', 'game-table-chrome', 'game-hud', 'dashboard-kpi-grid', 'form-rhythm', 'login-form'] // TKT-0077: the Croupier now targets the game-UI trio (card-game-sheet stays registry-only)
     const allSkillLabels = new Set(AGENT_PRESETS.flatMap((p) => p.skills.map((s) => s.label)))
     for (const name of targeted) {
       expect(allSkillLabels.has(name), `no preset carries ${name}`).toBe(true)

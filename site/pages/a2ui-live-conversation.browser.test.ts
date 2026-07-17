@@ -38,7 +38,7 @@ describe('a2ui-live — ADR-0088 §3: the wantResponse-routed click→turn', () 
     // sets NO `wantResponse` — the exact real-world shape the ADR's back-compat default must not regress
     // (Context / Decision §3: "any routing rule that treats wantResponse absent ⇒ silent would kill the
     // shipped demo's turn-2"). This is the SAME `shouldRunTurn` the page's `handleClientMessage` calls
-    // (`agent-runtime.ts` re-exports the one `tools/agent/session.ts` implementation) — not a reimplemented
+    // (`agent-runtime.ts` re-exports the one `src/agent/session.ts` implementation) — not a reimplemented
     // rule — so this is a genuine proof of the page's own routing, at the exact seam LLD-C5/C9 split it at.
     const absent: A2uiActionMessage = {
       version: 'v1.0',

@@ -5,8 +5,8 @@
 // exercise their `tools/agent/*.ts` subjects from here rather than co-located.
 
 import { describe, it, expect } from 'vitest'
-import { MINI_SKILLS, PER_MODULE_TOKEN_BUDGET, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from '../../tools/agent/mini-skills.ts'
-import type { MiniSkill } from '../../tools/agent/mini-skills.ts'
+import { MINI_SKILLS, PER_MODULE_TOKEN_BUDGET, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from '../agent/mini-skills.ts'
+import type { MiniSkill } from '../agent/mini-skills.ts'
 
 // The same `chars / 4` estimate ADR-0091 itself uses to size GRAMMAR (~3857 chars ≈ ~964 tokens).
 function estimateTokens(text: string): number {
@@ -39,7 +39,12 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
   it('seeds the ADR-0103 sixth module — `form-rhythm`, the Lane C form-provider teaching lane', () => {
     const ids = MINI_SKILLS.map((m) => m.id)
     expect(ids).toContain('form-rhythm')
-    expect(MINI_SKILLS).toHaveLength(6)
+  })
+
+  it('seeds the TKT-0077 game-UI trio — card-layout · game-table-chrome · game-hud', () => {
+    const ids = MINI_SKILLS.map((m) => m.id)
+    expect(ids).toEqual(expect.arrayContaining(['card-layout', 'game-table-chrome', 'game-hud']))
+    expect(MINI_SKILLS).toHaveLength(9)
   })
 
   it('no registry body embeds A2UI JSONL (a pure-prose module needs only doc-review, ADR-0091 §4)', () => {
@@ -53,6 +58,11 @@ describe('selectMiniSkills — TF-IDF top-cap selection over the registry (ADR-0
   it('a query matching a registry entry\'s triggers returns it', () => {
     const result = selectMiniSkills('build me a settings screen with toggles', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP)
     expect(result.map((m) => m.id)).toContain('settings-screen')
+  })
+
+  it('a terse card-game intent selects the TKT-0077 trio together (the shared `deal` trigger core)', () => {
+    const ids = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP).map((m) => m.id)
+    expect(ids.sort()).toEqual(['card-layout', 'game-hud', 'game-table-chrome'])
   })
 
   it('a query with no vocabulary overlap against the registry returns []', () => {

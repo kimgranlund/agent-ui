@@ -11,15 +11,15 @@
 // holds identically in every mode, and the mode prose never leaks into the catalog-derived inventory.
 
 import { describe, it, expect } from 'vitest'
-import { buildSystemPrompt } from '../../tools/agent/system-prompt.ts'
-import { produce } from '../../tools/agent/produce.ts'
-import type { ProduceDeps } from '../../tools/agent/produce.ts'
-import type { AgentProvider, TurnInput } from '../../tools/agent/agent-transport.ts'
-import { readMetaLine } from '../../tools/agent/meta-line.ts'
+import { buildSystemPrompt } from '../agent/system-prompt.ts'
+import { produce } from '../agent/produce.ts'
+import type { ProduceDeps } from '../agent/produce.ts'
+import type { AgentProvider, TurnInput } from '../agent/agent-transport.ts'
+import { readMetaLine } from '../agent/meta-line.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
-import { MINI_SKILLS } from '../../tools/agent/mini-skills.ts'
-import type { MiniSkill } from '../../tools/agent/mini-skills.ts'
-import { FEED_SURFACE_TYPES } from '../../tools/agent/feed-catalog.ts'
+import { MINI_SKILLS } from '../agent/mini-skills.ts'
+import type { MiniSkill } from '../agent/mini-skills.ts'
+import { FEED_SURFACE_TYPES } from '../agent/feed-catalog.ts'
 
 function stubProvider(outputs: string[]): AgentProvider {
   let n = 0

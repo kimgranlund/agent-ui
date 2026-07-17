@@ -5,10 +5,10 @@
 // client-direct transport — lives entirely BEHIND `AgentTransport`; swapping one for another is a
 // single construction-site edit, no page change (SPEC-R1 AC2).
 //
-// Placement (LLD §0): this file is Node-scoped `tools/agent/` (the `tools/corpus` precedent) — pure,
-// zero-dep TS with no `fs`/`fetch`/key. It is imported both by the Node harness (produce/proxy) and,
-// for its TYPES only, by the browser page (types erase; A2uiClientMessage rides the package's public
-// `@agent-ui/a2ui` surface). No package export is added (SPEC-N1): the seam is tools-internal.
+// Placement (LLD §0, repaired by ADR-0137/TKT-0072): this file lives in `src/agent/` — pure, zero-dep TS
+// with no `fs`/`fetch`/key, exported at the package's `"./agent"` subpath (SPEC-N1 v0.5). It is imported
+// both by the Node harness (produce/proxy) and, for its TYPES only, by the browser page (types erase;
+// A2uiClientMessage rides the package's public `@agent-ui/a2ui` surface).
 //
 // Refinement note vs the LLD skeleton: `AgentProvider` (the injected model seam, SPEC-R11/ADR-0073)
 // is co-located here with the other seam interfaces rather than in `providers/index.ts`. Both the
@@ -17,7 +17,7 @@
 // keeps every cross-cutting seam type in one place. The adapters + the id→adapter dispatch still live
 // under `providers/` (LLD-C10); only the interface moves up.
 
-import type { A2uiClientMessage } from '../../src/renderer/index.ts'
+import type { A2uiClientMessage } from '../renderer/index.ts'
 
 // ── The session (SPEC-R8 / ADR-0072) — the standard Messages-API turn array ─────────────────────────
 
@@ -71,9 +71,9 @@ export interface AgentTransport {
 // ── The provider seam (SPEC-R11 / ADR-0073) ─────────────────────────────────────────────────────────
 
 /** A reasoning-effort dial (the Figma chat-input refactor's Effort picker) — a plain, LOCAL union rather
- *  than importing `@agent-ui/app`'s `EffortLevel` (composer-options.ts): this file is Node-scoped
- *  `tools/agent/` and the package DAG runs `a2ui ← app`, never the reverse — a duplicated four-value
- *  union is cheaper than an upward dependency (the `AdminTurn`/a2ui `Turn` precedent, TKT-0052). `undefined`
+ *  than importing `@agent-ui/app`'s `EffortLevel` (composer-options.ts): the package DAG runs
+ *  `a2ui ← app`, never the reverse — a duplicated four-value union is cheaper than an upward dependency
+ *  (the `AdminTurn`/a2ui `Turn` precedent, TKT-0052). `undefined`
  *  ⇒ no effort dial requested, the provider's own default applies — byte-behavior-unchanged for every
  *  caller that predates this. */
 export type Effort = 'low' | 'medium' | 'high' | 'xhigh'

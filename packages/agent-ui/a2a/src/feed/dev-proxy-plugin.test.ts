@@ -15,7 +15,7 @@ import { createFrameAssembler } from '../../tools/feed/frames.ts'
 import { validateA2a } from '../protocol/validate.ts'
 import { validateA2ui, defaultCatalog } from '@agent-ui/a2ui'
 import { wrapClientTurn, unwrapTurn } from '../../../a2ui/tools/pipeline/transports/a2a.ts'
-import type { AgentProvider } from '../../../a2ui/tools/agent/agent-transport.ts'
+import type { AgentProvider } from '../../../a2ui/src/agent/agent-transport.ts'
 
 const PROTOCOL_VERSION = '0.3.0'
 

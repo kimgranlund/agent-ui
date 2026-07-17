@@ -10,7 +10,7 @@
 // re-validates it independently (never trusts this body verbatim).
 
 import type { AgentTransport, TurnInput } from './agent-runtime.ts'
-import type { GenUiMode } from '../../packages/agent-ui/a2ui/tools/agent/gen-ui-mode.ts'
+import type { GenUiMode } from '../../packages/agent-ui/a2ui/src/agent/gen-ui-mode.ts'
 import { readNdjsonLines } from './ndjson-lines.ts'
 
 const ENDPOINT = '/__a2ui/agent'

@@ -43,7 +43,7 @@ beforeAll(async () => {
 // ── scripting helpers ───────────────────────────────────────────────────────────────────────────────────
 
 /** The reserved leading meta-line envelope (ADR-0088 §1 / ADR-0097 §1) — hand-built here rather than
- * importing `formatMetaLine` (a `tools/agent/produce.ts`-private helper) since the wire shape is tiny and
+ * importing `formatMetaLine` (a `src/agent/produce.ts`-private helper) since the wire shape is tiny and
  * public (`readMetaLine`'s own contract, re-exported by `agent-runtime.ts`). */
 function metaLine(fields: { note?: string; ask?: { surfaceId: string } }): string {
   return JSON.stringify({ a2uiMeta: fields })

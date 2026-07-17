@@ -10,11 +10,11 @@ import { createRenderer } from '../renderer/renderer.ts'
 import type { A2uiClientMessage } from '../renderer/renderer.ts'
 import type { A2uiActionMessage } from '../protocol.ts'
 import { recordedTranscript } from '../../tools/agent/transcript.ts'
-import type { RecordedTranscript } from '../../tools/agent/transcript.ts'
-import { nextTurn, frameClientMessage } from '../../tools/agent/session.ts'
-import { createRecordedTransport } from '../../tools/agent/recorded-transport.ts'
-import { readMetaLine } from '../../tools/agent/meta-line.ts'
-import type { Session } from '../../tools/agent/agent-transport.ts'
+import type { RecordedTranscript } from '../agent/recorded-transport.ts'
+import { nextTurn, frameClientMessage } from '../agent/session.ts'
+import { createRecordedTransport } from '../agent/recorded-transport.ts'
+import { readMetaLine } from '../agent/meta-line.ts'
+import type { Session } from '../agent/agent-transport.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 
@@ -67,7 +67,7 @@ describe('recorded backbone round-trip (LLD-C2/C8 / SPEC-R2 AC1)', () => {
     // Drives the ACTUAL AgentTransport seam `a2ui-live.ts` consumes (not the source transcript object
     // directly, as the render leg above does) — proving the note is genuinely read back OUT of the
     // transport→page wire shape, not merely present in `transcript.ts`.
-    const transport = createRecordedTransport()
+    const transport = createRecordedTransport(recordedTranscript)
     const session: Session = { turns: [] }
     const collect = async (): Promise<string[]> => {
       const lines: string[] = []

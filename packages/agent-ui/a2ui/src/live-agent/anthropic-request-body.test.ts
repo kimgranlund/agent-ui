@@ -4,7 +4,7 @@
 // chat-input refactor). The impure `stream()`/fetch arm stays MANUAL live acceptance only (SPEC-R3).
 
 import { describe, it, expect } from 'vitest'
-import { buildRequestBody } from '../../tools/agent/providers/anthropic.ts'
+import { buildRequestBody } from '../agent/providers/anthropic.ts'
 
 const BASE = { model: 'claude-sonnet-5', system: 'be helpful', messages: [] }
 

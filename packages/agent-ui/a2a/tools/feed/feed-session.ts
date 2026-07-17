@@ -13,8 +13,8 @@
 // `artifact-feed.ts`'s own header-parsing convention) rather than requiring every caller to pre-strip it.
 import { validateA2a } from '../../src/protocol/validate.ts'
 import type { A2aMessage } from '../../src/protocol/types.ts'
-import type { Session, Turn, TurnInput } from '../../../a2ui/tools/agent/agent-transport.ts'
-import { frameClientMessage } from '../../../a2ui/tools/agent/session.ts'
+import type { Session, Turn, TurnInput } from '../../../a2ui/src/agent/agent-transport.ts'
+import { frameClientMessage } from '../../../a2ui/src/agent/session.ts'
 import { unwrapTurn } from '../../../a2ui/tools/pipeline/transports/a2a.ts'
 import type { A2uiClientMessage } from '../../../a2ui/src/renderer/index.ts'
 

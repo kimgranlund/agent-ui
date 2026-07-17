@@ -3,7 +3,7 @@
 // `A2uiServerMessage` shapes, so it stays provably disjoint from the protocol it rides beside.
 
 import { describe, it, expect } from 'vitest'
-import { readMetaLine, isMetaLine } from '../../tools/agent/meta-line.ts'
+import { readMetaLine, isMetaLine } from '../agent/meta-line.ts'
 import type { A2uiServerMessage } from '../protocol.ts'
 
 const realServerMessage: A2uiServerMessage = {

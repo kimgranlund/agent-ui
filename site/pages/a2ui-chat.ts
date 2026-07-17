@@ -33,6 +33,7 @@ import type { UIConversationElement } from '@agent-ui/app'
 import type { UIMarkdownElement } from '@agent-ui/code/markdown'
 import {
   createRecordedTransport,
+  recordedTranscript,
   nextTurn,
   appendUserTurn,
   appendAssistantTurn,
@@ -101,7 +102,7 @@ shell.append(resetBar)
 
 // ════════════════ the transport + the turn loop ════════════════
 
-let transport: AgentTransport = createRecordedTransport()
+let transport: AgentTransport = createRecordedTransport(recordedTranscript)
 
 /** Test-only injection seam (the `a2ui-live.ts` `__setTransportForTest` precedent) — otherwise reassigned
  *  ONLY by `wireLiveOverlay()`'s real, dev-only live-key probe. Never called by any production path. */
@@ -181,7 +182,7 @@ conv.onClientMessage(handleClientMessage)
 resetBtn.addEventListener('click', () => {
   conv.reset() // disposes every open surface host + clears the thread (SPEC-R7)
   session = { turns: [] }
-  transport = createRecordedTransport()
+  transport = createRecordedTransport(recordedTranscript)
   status('New conversation. Send a prompt to begin.')
   wireLiveOverlay() // re-probe (dev only)
 })
