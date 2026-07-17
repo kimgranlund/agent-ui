@@ -30,6 +30,15 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
+    /* TKT-0085 — component-reviewer MAJOR fix: without this, a flex item's default `min-width:auto`
+       floors this host at its CONTENT's intrinsic width (measured: ~659px, driven by the widest
+       composed content) — the ResizeObserver below can then NEVER report an inline-size under the
+       narrow threshold (640px) once real content is mounted, so the narrow layout was reachable only
+       on a fresh mount at a small width, never via an actual live browser resize (the primary way a
+       user would ever hit it). The standard flex-overflow release, same as every `min-block-size: 0`
+       already in this file, just on the inline axis this element's OWN box needs it on (its children
+       already guard their own). */
+    min-inline-size: 0;
     /* Consumer-tuning (the conversation.css → --ui-status-stream-max-block-size precedent): repoint the
        composed children's PUBLIC scrollbar knobs for this whole subtree — every ui-split-pane scroller
        (ui-settings' master-detail detail pane is the visible one) and ui-conversation's log/wire go
@@ -43,6 +52,14 @@
   :scope > ui-split {
     flex: 1 1 auto;
     min-block-size: 0;
+  }
+  /* TKT-0085 — component-reviewer CRITICAL-class guard (the entry-add-form/combo-box.css precedent): an
+     author `display`/`flex` declaration ALWAYS beats the UA `[hidden]{display:none}` rule regardless of
+     specificity (author beats UA origin, not just specificity) — without this, `#applyLayout` setting
+     `split.hidden = true` in the narrow layout would not actually hide it. Written AFTER the rule above
+     so source order breaks the tie between two equally-specific author rules. */
+  :scope > ui-split[hidden] {
+    display: none;
   }
 
   /* Every pane fills its ui-split-pane box; the canvas pane's conversation manages its own internal
@@ -63,16 +80,31 @@
     min-block-size: 0;
   }
 
+  /* TKT-0085: the SCROLL CONTAINER role only — `display:flex; flex-direction:column; gap` moved onto
+     `[data-role='agent-content']` below (the wrapper that now migrates between this pane and a tab
+     panel), since `[data-role='settings']`'s own direct child count dropped from several to exactly one
+     (the wrapper) once the Agent pane's content became a single reparent-able unit. `[data-role='prompts']`
+     never actually needed flex/gap itself either — `promptSections.host` was already a single child;
+     splitting the rule changes nothing there, only removes a no-op. */
   [data-role='prompts'],
-  [data-role='settings'] {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+  [data-role='settings'],
+  [data-role='tabs-medium'] {
     box-sizing: border-box;
     padding: 0.75rem;
     min-block-size: 0;
     overflow-y: auto;
     scrollbar-width: var(--ui-agent-admin-scrollbar-width); /* app-chrome: hidden scroller, live scroll */
+  }
+  /* the medium tabs pane's OWN padding lives on ui-tab-panel (its shipped panel-padding token) — the
+     pane itself is purely the scroll boundary, no doubled inset. */
+  [data-role='tabs-medium'] {
+    padding: 0;
+  }
+
+  [data-role='agent-content'] {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   [data-part='agent-heading'] {
@@ -80,6 +112,43 @@
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--ui-agent-admin-label-ink);
+  }
+
+  /* ── TKT-0085: the medium (Chat | {Instructions,Agent} tabs) + narrow (all-tabs) responsive shells ──
+     Both `ui-tabs` instances fill their container as [pinned tablist | scrolling panel] — the tablist
+     strip must stay reachable without scrolling back up past a long panel (the fleet has no shipped
+     "scrolling tab body" variant yet; this is this consumer's own composition, not a tabs.css change). */
+  [data-role='tabs-medium'] ui-tabs,
+  :scope > ui-tabs {
+    display: flex;
+    flex-direction: column;
+    block-size: 100%;
+    min-block-size: 0;
+  }
+  [data-role='tabs-medium'] ui-tab-panel:not([hidden]),
+  :scope > ui-tabs ui-tab-panel:not([hidden]) {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+    scrollbar-width: var(--ui-agent-admin-scrollbar-width);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* The narrow (all-tabs) shell is a top-level sibling of `ui-split` — fills the SAME available block
+     space `:scope > ui-split` claims above (mutually exclusive: `#applyLayout` shows exactly one of the
+     two at a time, `hidden` on whichever is inactive). */
+  :scope > ui-tabs {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    box-sizing: border-box;
+  }
+  /* TKT-0085 — the SAME author-beats-UA `[hidden]` guard as `:scope > ui-split[hidden]` above, for the
+     narrow shell's own `display: flex` declaration (line 114). Written LAST so it wins source order
+     against every rule above that also targets `:scope > ui-tabs`. */
+  :scope > ui-tabs[hidden] {
+    display: none;
   }
 
   /* ── the generic entry-list primitive (ADR-0132 n1) — one shared shape, five instantiations ────── */

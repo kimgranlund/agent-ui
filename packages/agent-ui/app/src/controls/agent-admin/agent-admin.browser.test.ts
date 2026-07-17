@@ -14,6 +14,10 @@ import '../settings/settings.css'
 import '../conversation/conversation.css'
 import '../conversation/conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '../surface-host/surface-host.css'
+// TKT-0085 — <ui-tabs>/<ui-tab>/<ui-tab-panel> registration for the responsive shell's medium/narrow
+// shells; its CSS is already carried by `component-styles.css` above (`@import
+// './controls/tabs/tabs.css'`), no separate stylesheet import needed.
+import '@agent-ui/components/controls/tabs'
 import './agent-admin.css'
 import './agent-admin.ts'
 import type { UIAgentAdminElement } from './agent-admin.ts'
@@ -49,6 +53,123 @@ function mountAgentAdmin(): { wrapper: HTMLElement; el: UIAgentAdminElement } {
   mounted.push(wrapper)
   return { wrapper, el }
 }
+
+/** TKT-0085 — a mount whose OWN width drives the real ResizeObserver `agent-admin.ts` installs
+ *  (`mountAgentAdmin()` above fixes 1200px on a flex-item host inside a sized wrapper; this widens that
+ *  to an arbitrary width so each of the three responsive bands is reachable with a REAL browser-measured
+ *  resize, not a simulated one). */
+function mountAgentAdminAt(widthPx: number): { wrapper: HTMLElement; el: UIAgentAdminElement } {
+  const wrapper = document.createElement('div')
+  wrapper.style.width = `${widthPx}px`
+  wrapper.style.height = '600px'
+  wrapper.style.display = 'flex'
+  const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+  el.style.flex = '1 1 auto'
+  wrapper.append(el)
+  document.body.append(wrapper)
+  mounted.push(wrapper)
+  return { wrapper, el }
+}
+
+describe('ui-agent-admin cross-engine smoke — the responsive shell (TKT-0085)', () => {
+  it('wide (≥1024px): the 3-pane split is visible; the narrow all-tabs shell computes display:none', async () => {
+    const { el } = mountAgentAdminAt(1200)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))) // let the real ResizeObserver's first callback land
+    const split = el.querySelector(':scope > ui-split') as HTMLElement
+    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
+    expect(getComputedStyle(split).display).not.toBe('none')
+    expect(getComputedStyle(narrowTabs).display).toBe('none') // component-reviewer CRITICAL-class pin: [hidden] must actually compute none, not just carry the attribute (an author `display` declaration silently beats the UA [hidden] rule without an explicit guard — the entry-add-form/combo-box.css precedent this fix follows)
+  })
+
+  it('medium (640–1023px): [ Chat | {tabs} ] — the medium tabs pane renders a real, non-zero tab strip', async () => {
+    const { el } = mountAgentAdminAt(800)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const canvas = el.querySelector('[data-role="canvas"]') as HTMLElement
+    const tabsMediumPane = el.querySelector('[data-role="tabs-medium"]') as HTMLElement
+    expect(canvas.getBoundingClientRect().width).toBeGreaterThan(0)
+    expect(tabsMediumPane.getBoundingClientRect().width).toBeGreaterThan(0)
+    expect(canvas.getBoundingClientRect().right).toBeLessThanOrEqual(tabsMediumPane.getBoundingClientRect().left + 1)
+    const tabs = [...tabsMediumPane.querySelectorAll('ui-tab')]
+    for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
+    // Clicking the Agent tab actually switches the visible panel (a real click, real ui-tabs selection wiring).
+    const agentTab = tabs.find((t) => t.textContent === 'Agent') as HTMLElement
+    agentTab.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    const agentHeading = el.querySelector('[data-part="agent-heading"]') as HTMLElement
+    expect((agentHeading.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(false)
+    expect(agentHeading.getBoundingClientRect().width).toBeGreaterThan(0)
+  })
+
+  it('narrow (<640px): {Chat, Instructions, Agent} tabs fill the shell; the split computes display:none', async () => {
+    const { el } = mountAgentAdminAt(500)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const split = el.querySelector(':scope > ui-split') as HTMLElement
+    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
+    expect(getComputedStyle(split).display).toBe('none') // the SAME [hidden]-specificity pin, the other direction
+    expect(getComputedStyle(narrowTabs).display).not.toBe('none')
+    const tabs = [...narrowTabs.querySelectorAll('ui-tab')]
+    expect(tabs.map((t) => t.textContent)).toEqual(['Chat', 'Instructions', 'Agent'])
+    for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
+    // The composer is reachable and has real, non-zero geometry inside the Chat tab (the default selection).
+    const composer = narrowTabs.querySelector('ui-conversation-composer') as HTMLElement
+    expect(composer.getBoundingClientRect().height).toBeGreaterThan(0)
+  })
+
+  /** Opens a real A2UI surface (a Hit button) in the mounted conversation, returns it + the conversation. */
+  async function openLiveSurface(el: UIAgentAdminElement): Promise<{ conversation: HTMLElement }> {
+    const conversation = el.querySelector('[data-role="canvas"] ui-conversation, ui-tabs ui-conversation') as HTMLElement & {
+      beginAgentTurn(): { ingestLine(l: string): void; finalize(): void }
+    }
+    const handle = conversation.beginAgentTurn()
+    handle.ingestLine(JSON.stringify({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } }))
+    handle.ingestLine(
+      JSON.stringify({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 's1',
+          components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Hit', action: { action: 'hit' } }],
+        },
+      }),
+    )
+    handle.finalize()
+    expect(conversation.querySelector('ui-surface-host ui-button')).not.toBeNull()
+    return { conversation }
+  }
+
+  it('component-reviewer MAJOR regression pin: a live surface SURVIVES a wide→medium crossing — Chat genuinely stays in place, its own split pane is never removed+re-added', async () => {
+    const { el, wrapper } = mountAgentAdminAt(1200)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const { conversation } = await openLiveSurface(el)
+
+    wrapper.style.width = '800px' // real resize into medium — canvasPane is a member of BOTH wide + medium
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    expect(el.querySelector('[data-role="tabs-medium"]'), 'did not actually reach medium').not.toBeNull()
+    expect(conversation.querySelector('[data-state="closed"]'), 'the surface closed on a wide→medium crossing — it should have stayed open').toBeNull()
+    expect(conversation.querySelector('ui-surface-host ui-button'), 'the rendered surface content should still be there').not.toBeNull()
+  })
+
+  it('a live surface open at a crossing INTO narrow shows the documented "Closed." treatment (narrow genuinely reached via a real resize, not silently landing in medium)', async () => {
+    const { el, wrapper } = mountAgentAdminAt(1200)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const { conversation } = await openLiveSurface(el)
+
+    wrapper.style.width = '500px' // real browser resize → the real ResizeObserver fires → 'narrow'
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    // component-reviewer MAJOR fix: assert the layout ACTUALLY reached narrow — the pre-fix host floored
+    // at its content's intrinsic width (~659px, missing `min-inline-size: 0`) and silently landed in
+    // medium instead, which made the "Closed." assertion below pass for the WRONG reason (medium's own
+    // wide-parity closure, itself a since-fixed bug) without ever exercising real narrow at all.
+    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
+    expect(getComputedStyle(narrowTabs).display, 'did not actually reach narrow').not.toBe('none')
+    expect(el.querySelector(':scope > ui-split') && getComputedStyle(el.querySelector(':scope > ui-split') as HTMLElement).display).toBe('none')
+
+    const bubble = conversation.querySelector('[data-state="closed"]')
+    expect(bubble, 'the surface bubble should carry data-state="closed", not vanish silently').not.toBeNull()
+    expect(bubble?.querySelector('[data-part="annotation"]')?.textContent).toBe('Closed.')
+  })
+})
 
 describe('ui-agent-admin cross-engine smoke — three panes render side by side (ADR-0131 cl.2)', () => {
   it('canvas, prompts, and settings each occupy a non-zero, non-overlapping box, left to right', () => {

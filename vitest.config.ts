@@ -96,6 +96,11 @@ export default defineConfig({
       // composes a real `ui-menu` (self-defining side effect) for its per-group flyout. Same alias-ordering
       // necessity as `controls/split`/`controls/text-field` above.
       '@agent-ui/components/controls/menu': r('./packages/agent-ui/components/src/controls/menu/menu.ts'),
+      // TKT-0085 — `@agent-ui/app`'s `ui-agent-admin` is the next direct `./controls/{name}` subpath
+      // consumer from OUTSIDE the components package: the responsive-collapse shell side-effect-imports
+      // `tabs` so its `document.createElement('ui-tabs' | 'ui-tab' | 'ui-tab-panel')` calls resolve to the
+      // REAL classes. Same alias-ordering necessity as `controls/split`/`controls/menu` above.
+      '@agent-ui/components/controls/tabs': r('./packages/agent-ui/components/src/controls/tabs/tabs.ts'),
       // EXACT (not prefix) matches, `?url`-suffixed: `@agent-ui/app`'s isolated-shell connect-flow
       // (app-shell.ts, LLD-C5/ADR-0082) resolves these two package CSS assets to a real runtime URL via
       // Vite's `?url` suffix, to inject as `<link>` hrefs INSIDE a shadow root. Vite's aliasing is FIRST-

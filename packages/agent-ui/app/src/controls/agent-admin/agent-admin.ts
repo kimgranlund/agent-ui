@@ -46,6 +46,9 @@ import '@agent-ui/components/controls/icon'
 import '@agent-ui/components/controls/textarea'
 import '@agent-ui/components/controls/field'
 import '@agent-ui/components/controls/text-field'
+// TKT-0085: registers <ui-tabs>/<ui-tab>/<ui-tab-panel> — the responsive-collapse shells `#applyLayout`
+// moves pane content into below the wide breakpoint.
+import '@agent-ui/components/controls/tabs'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
@@ -110,6 +113,27 @@ const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: s
   { kind: ENTRY_KINDS.tool, label: 'Tools', addLabel: 'Add tool', liveHeading: 'Tools available to you' },
 ]
 
+type AgentAdminLayout = 'wide' | 'medium' | 'narrow'
+
+// TKT-0085 — the responsive-shell thresholds, in px (a ResizeObserver measures px, never rem/ch; both
+// numbers are chosen at the standard 16px/rem baseline this repo's own CSS `@container` rules already
+// assume, e.g. app-shell.css/master-detail.css's bare `40rem` literal — a real user root-font-size change
+// shifts this component's OWN breakpoint the same tiny amount CSS rem breakpoints already do repo-wide,
+// not a new inconsistency).
+//   NARROW_MAX (640px = 40rem): the ONE existing precedent value in this repo (app-shell.css /
+//   master-detail.css's own collapse threshold) — reused rather than inventing a third number.
+//   WIDE_MIN (1024px = 64rem): NEW — chosen with real headroom above the 3-pane MECHANICAL floor (the
+//   split panes' own `min` attributes below: canvas 16rem + prompts 10rem + settings 20rem = 46rem/736px
+//   hard minimum) so the wide layout never renders at its bare squeeze point.
+const NARROW_MAX_PX = 640
+const WIDE_MIN_PX = 1024
+
+function layoutFor(widthPx: number): AgentAdminLayout {
+  if (widthPx >= WIDE_MIN_PX) return 'wide'
+  if (widthPx >= NARROW_MAX_PX) return 'medium'
+  return 'narrow'
+}
+
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
 export class UIAgentAdminElement extends UIElement {
   static props = agentAdminProps
@@ -122,6 +146,29 @@ export class UIAgentAdminElement extends UIElement {
   // Every entry-list instantiation (prompt sections + all four capability kinds), keyed by `kind` — the
   // ONE registry `#rewireAllSections`/`#compose` both iterate uniformly.
   #capabilitySections: Map<string, EntryListSection> = new Map()
+
+  // ── TKT-0085: the responsive-collapse shell — three named layouts, ONE set of content nodes moved
+  // (never cloned/rebuilt) between whichever shell the current layout uses. See `#applyLayout`'s own
+  // doc-comment for the full design; fields here are the STABLE homes + content units it operates on,
+  // all built once in `#compose()`.
+  #canvasPane: HTMLElement | null = null // wide + medium home for `#conversation`
+  #promptsPane: HTMLElement | null = null // wide-only home for `#instructionsContent`
+  #settingsPane: HTMLElement | null = null // wide-only home for `#agentContent`
+  #mediumTabsPane: HTMLElement | null = null // medium-only home (wraps a 2-tab ui-tabs: Instructions, Agent)
+  #mediumInstructionsPanel: HTMLElement | null = null
+  #mediumAgentPanel: HTMLElement | null = null
+  #narrowTabs: HTMLElement | null = null // narrow-only, top-level: 3 tabs: Chat, Instructions, Agent
+  #narrowChatPanel: HTMLElement | null = null
+  #narrowInstructionsPanel: HTMLElement | null = null
+  #narrowAgentPanel: HTMLElement | null = null
+  // The two content UNITS that migrate between a wide-state pane and a tab-panel — `#conversation`
+  // (already a single element) is the third; these two are built once in `#compose()` (the Instructions
+  // section's own host, and a wrapper div bundling the Agent heading + ui-settings + capability sections
+  // into ONE reparent-able node, since that pane's content is several sibling nodes, not one).
+  #instructionsContent: HTMLElement | null = null
+  #agentContent: HTMLElement | null = null
+  #currentLayout: 'wide' | 'medium' | 'narrow' | null = null
+  #layoutObserver: ResizeObserver | null = null
 
   #unsubscribes: Map<string, () => void> = new Map()
   // The no-subscribe fallback trigger — `#updateEntries` calls this directly ONLY when the current
@@ -142,6 +189,26 @@ export class UIAgentAdminElement extends UIElement {
 
   protected connected(): void {
     this.#compose() // idempotent — builds ONLY the split/pane shell + the composed children, once ever
+
+    // TKT-0085: the responsive-collapse watcher. `ui-split`/`ui-app-shell`/`ui-master-detail`'s own
+    // `@container` breakpoints are CSS-only visibility toggles — they can never MOVE a node to a new
+    // parent, and this layout needs real reparenting (a pane's content becomes a tab panel's content).
+    // A ResizeObserver on this host's own content-box is the only mechanism that can drive that decision
+    // in JS; `#applyLayout` is idempotent (a same-layout call is a no-op), so a resize inside the SAME
+    // band costs nothing beyond the width comparison. Feature-detected (jsdom carries no
+    // ResizeObserver — the traits/scroll-fade.ts precedent) and disconnected in `disconnected()`.
+    if (typeof ResizeObserver !== 'undefined' && this.#layoutObserver === null) {
+      this.#layoutObserver = new ResizeObserver((entries) => {
+        const width = entries[0]?.contentRect.width
+        if (width !== undefined) this.#applyLayout(layoutFor(width))
+      })
+      this.#layoutObserver.observe(this)
+    } else if (typeof ResizeObserver === 'undefined') {
+      // jsdom (no real layout to measure anyway) — settle on the widest layout so every pane's content
+      // stays reachable via a stable DOM shape for jsdom-based tests, matching "wide" being byte-identical
+      // to this component's pre-TKT-0085 shape (zero migration needed, the common case).
+      this.#applyLayout('wide')
+    }
 
     // Lazily default `schema`/`store` (once ever — a later reconnect finds them already set and skips
     // this). `schema` shares the module-level constant (plain, read-only data); `store` gets its OWN
@@ -182,6 +249,8 @@ export class UIAgentAdminElement extends UIElement {
   protected disconnected(): void {
     for (const unsubscribe of this.#unsubscribes.values()) unsubscribe()
     this.#unsubscribes.clear()
+    this.#layoutObserver?.disconnect() // TKT-0085 — otherwise the observer outlives the element (a real leak: it holds a live reference to `this`)
+    this.#layoutObserver = null
   }
 
   // ── composition (idempotent — the master-detail.ts/settings.ts `#compose` doc-comment precedent) ──────
@@ -235,7 +304,8 @@ export class UIAgentAdminElement extends UIElement {
     // two have.
     promptsPane.setAttribute('min', '10rem')
     const promptSections = this.#makeSection(ENTRY_KINDS.promptSection, 'Instructions', 'Add section')
-    promptsPane.append(promptSections.host)
+    const instructionsContent = promptSections.host
+    promptsPane.append(instructionsContent)
 
     const settingsPane = document.createElement('ui-split-pane')
     settingsPane.setAttribute('data-role', 'settings')
@@ -254,18 +324,149 @@ export class UIAgentAdminElement extends UIElement {
     // a listener on THIS element, which owns no event vocabulary of its own (descriptor `events: []`).
     settingsEl.addEventListener('select', (event) => event.stopPropagation())
     settingsEl.addEventListener('change', (event) => event.stopPropagation())
-    settingsPane.append(agentHeading, settingsEl)
+    // TKT-0085: the Agent pane's content — heading + ui-settings + every capability section — is SEVERAL
+    // sibling nodes, not one, so it needs a single wrapper to migrate as ONE unit between the wide split
+    // pane and a tab panel (the same reason the Instructions pane above didn't: `mountEntryList` already
+    // returns one host). A plain structural div — no data-role of its own beyond marking what it is.
+    const agentContent = document.createElement('div')
+    agentContent.setAttribute('data-role', 'agent-content')
+    agentContent.append(agentHeading, settingsEl)
     for (const { kind, label, addLabel } of CAPABILITY_KINDS) {
       const section = this.#makeSection(kind, label, addLabel)
-      settingsPane.append(section.host)
+      agentContent.append(section.host)
     }
+    settingsPane.append(agentContent)
 
     split.append(canvasPane, promptsPane, settingsPane)
     this.append(split)
 
+    // ── TKT-0085: the medium (Chat | {Instructions, Agent} tabs) + narrow (all-tabs) shells — built ONCE,
+    // alongside the wide shell above, matching this file's own idempotent-build-once discipline. Both
+    // start EMPTY (no content appended into their panels yet): `#applyLayout`, called once the first
+    // measurement lands, moves `instructionsContent`/`agentContent`/`conversation` into whichever shell
+    // the resolved layout actually uses — nothing here is rendered/visible until then. ──────────────────
+    const mediumTabsPane = document.createElement('ui-split-pane')
+    mediumTabsPane.setAttribute('data-role', 'tabs-medium')
+    // The taller of the two merged panes' own floors (settings' 20rem) — since Instructions/Agent no
+    // longer coexist side-by-side in this layout, the pane only ever needs to fit WHICHEVER tab is
+    // showing, not their sum.
+    mediumTabsPane.setAttribute('min', '20rem')
+    const mediumTabs = document.createElement('ui-tabs')
+    const mediumInstructionsTab = document.createElement('ui-tab')
+    mediumInstructionsTab.setAttribute('key', 'instructions')
+    mediumInstructionsTab.textContent = 'Instructions'
+    const mediumAgentTab = document.createElement('ui-tab')
+    mediumAgentTab.setAttribute('key', 'agent')
+    mediumAgentTab.textContent = 'Agent'
+    const mediumInstructionsPanel = document.createElement('ui-tab-panel')
+    const mediumAgentPanel = document.createElement('ui-tab-panel')
+    mediumTabs.append(mediumInstructionsTab, mediumAgentTab, mediumInstructionsPanel, mediumAgentPanel)
+    mediumTabsPane.append(mediumTabs)
+
+    const narrowTabs = document.createElement('ui-tabs')
+    narrowTabs.hidden = true // the wide shell above is the DEFAULT visible state until the first measurement
+    const narrowChatTab = document.createElement('ui-tab')
+    narrowChatTab.setAttribute('key', 'chat')
+    narrowChatTab.textContent = 'Chat'
+    const narrowInstructionsTab = document.createElement('ui-tab')
+    narrowInstructionsTab.setAttribute('key', 'instructions')
+    narrowInstructionsTab.textContent = 'Instructions'
+    const narrowAgentTab = document.createElement('ui-tab')
+    narrowAgentTab.setAttribute('key', 'agent')
+    narrowAgentTab.textContent = 'Agent'
+    const narrowChatPanel = document.createElement('ui-tab-panel')
+    const narrowInstructionsPanel = document.createElement('ui-tab-panel')
+    const narrowAgentPanel = document.createElement('ui-tab-panel')
+    narrowTabs.append(narrowChatTab, narrowInstructionsTab, narrowAgentTab, narrowChatPanel, narrowInstructionsPanel, narrowAgentPanel)
+    this.append(narrowTabs)
+
     this.#split = split
     this.#conversation = conversation
     this.#settingsEl = settingsEl
+    this.#canvasPane = canvasPane
+    this.#promptsPane = promptsPane
+    this.#settingsPane = settingsPane
+    this.#mediumTabsPane = mediumTabsPane
+    this.#mediumInstructionsPanel = mediumInstructionsPanel
+    this.#mediumAgentPanel = mediumAgentPanel
+    this.#narrowTabs = narrowTabs
+    this.#narrowChatPanel = narrowChatPanel
+    this.#narrowInstructionsPanel = narrowInstructionsPanel
+    this.#narrowAgentPanel = narrowAgentPanel
+    this.#instructionsContent = instructionsContent
+    this.#agentContent = agentContent
+  }
+
+  /**
+   * TKT-0085 — reconcile the composed shell's DOM shape to `layout`. Idempotent (a same-layout call is a
+   * no-op) and content-PRESERVING for its DOM identity: `#conversation`/`#instructionsContent`/
+   * `#agentContent` are MOVED (plain `append()`), never cloned or rebuilt, into whichever pane/tab-panel
+   * the target layout uses (the `master-detail.ts` "relocate a whole pane" idiom, generalized from 2
+   * possible homes to 3 per content unit).
+   *
+   * component-reviewer MAJOR fix: every move below is GUARDED (`if (node.parentElement !== target)`) —
+   * an UNguarded `append()`/`replaceChildren()` cycles `disconnectedCallback`+`connectedCallback` even
+   * when the node is ALREADY exactly where it needs to be (verified: a real Chromium/WebKit probe showed
+   * this for both same-parent re-append AND `replaceChildren()` re-listing an already-present child), so
+   * the FIRST draft's unconditional calls were closing `#conversation`'s open A2UI surfaces on EVERY
+   * band crossing, including wide↔medium — contradicting this feature's own design intent ("Chat stays
+   * its own split pane" in medium). `#split`'s pane SET is reconciled the same way (remove what's no
+   * longer wanted, add what's missing, leave what's already correct untouched) so `#canvasPane` — a
+   * member of BOTH the wide and medium pane sets — is never removed-then-re-added crossing between them.
+   * `#conversation` still disconnects+reconnects (closing any open surface) crossing INTO/OUT OF
+   * `narrow` specifically, since `#canvasPane` itself is not a narrow-layout pane and must genuinely
+   * leave/rejoin `#split`'s children there — see the ticket's Findings for why a `moveBefore`-based
+   * dodge of that ONE remaining case was tried and reverted (the corrected account, not the first
+   * draft's misdiagnosis: `moveBefore` provides no benefit here at all — this fleet has no
+   * `connectedMoveCallback` support, so it cycles the SAME lifecycle callbacks as `append()`, and a
+   * probe found the ORIGINAL narrow branch's detach-before-move ordering could throw
+   * `HierarchyRequestError` — zero callbacks fire on a THROW, which is what actually produced the
+   * reported "silent, callback-free content loss").
+   */
+  #applyLayout(layout: AgentAdminLayout): void {
+    if (layout === this.#currentLayout) return
+    this.#currentLayout = layout
+    const split = this.#split as HTMLElement
+    const canvasPane = this.#canvasPane as HTMLElement
+    const promptsPane = this.#promptsPane as HTMLElement
+    const settingsPane = this.#settingsPane as HTMLElement
+    const mediumTabsPane = this.#mediumTabsPane as HTMLElement
+    const narrowTabs = this.#narrowTabs as HTMLElement
+    const conversation = this.#conversation as UIConversationElement
+    const instructionsContent = this.#instructionsContent as HTMLElement
+    const agentContent = this.#agentContent as HTMLElement
+
+    const moveInto = (node: Element, target: Element): void => {
+      if (node.parentElement !== target) target.append(node)
+    }
+
+    if (layout === 'narrow') {
+      moveInto(conversation, this.#narrowChatPanel as HTMLElement)
+      moveInto(instructionsContent, this.#narrowInstructionsPanel as HTMLElement)
+      moveInto(agentContent, this.#narrowAgentPanel as HTMLElement)
+      if (split.children.length > 0) split.replaceChildren() // guarded: an already-empty split needs no mutation
+      split.hidden = true
+      narrowTabs.hidden = false
+    } else {
+      const desiredPanes = layout === 'wide' ? [canvasPane, promptsPane, settingsPane] : [canvasPane, mediumTabsPane]
+      // Remove any CURRENT pane not in the desired set for this layout.
+      for (const child of [...split.children]) {
+        if (child.tagName === 'UI-SPLIT-PANE' && !desiredPanes.includes(child as HTMLElement)) child.remove()
+      }
+      // Add any desired pane not already present — `canvasPane`, common to wide+medium, is skipped here
+      // (already a child) on a wide↔medium crossing, so it and `#conversation` inside it are UNTOUCHED.
+      for (const pane of desiredPanes) moveInto(pane, split)
+      split.hidden = false
+      narrowTabs.hidden = true
+      moveInto(conversation, canvasPane)
+      if (layout === 'wide') {
+        moveInto(instructionsContent, promptsPane)
+        moveInto(agentContent, settingsPane)
+      } else {
+        moveInto(instructionsContent, this.#mediumInstructionsPanel as HTMLElement)
+        moveInto(agentContent, this.#mediumAgentPanel as HTMLElement)
+      }
+    }
   }
 
   /** Build ONE entry-list section wired to THIS element's store — the ONE shared mechanism every
