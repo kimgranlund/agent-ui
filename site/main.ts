@@ -124,7 +124,7 @@ const CARD_GROUPS: readonly CardGroup[] = [
       {
         href: './theming.html',
         title: 'Theming',
-        blurb: 'ui-theme-provider’s three live axes (scheme/scale/density), the --md-sys-color-{family}-{role} role system, a live subtree token override, and the reserved multi-theme seam.',
+        blurb: "ui-theme-provider's three live axes (scheme/scale/density), the --md-sys-color-{family}-{role} role system, a live subtree token override, and theme packs — swapping whole token palettes live.",
       },
       {
         href: './tokens.html',
@@ -644,7 +644,7 @@ const CARD_GROUPS: readonly CardGroup[] = [
       {
         href: './theme-provider-doc.html',
         title: 'API reference',
-        blurb: 'The ui-theme-provider surface (scheme/scale/density/theme), the unset-inherits scheme mapping, and the reserved theme package seam, from its own descriptor.',
+        blurb: 'The ui-theme-provider surface (scheme/scale/density/theme), the unset-inherits scheme mapping, and the theme package seam, from its own descriptor.',
       },
     ],
   },

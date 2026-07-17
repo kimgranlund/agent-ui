@@ -83,9 +83,17 @@ body {
   text-decoration: none;
 }
 
-/* The app-level chrome placeholder region (search / theme toggle). Inert spans today — the future app-shell
- * component supplies the real controls. */
+/* The app-level chrome region (search / theme). `Search` stays an inert placeholder (TKT-0018's own
+ * concern); `Theme` (TKT-0088) is now a real scheme-cycle button + a theme ui-menu picker. */
 .app-context-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--md-sys-space-xs);
+}
+
+/* The real Theme control's own row — sized to sit flush with the Search placeholder beside it, never
+ * widening the shared .app-context-actions gap rhythm. */
+.app-context-theme-group {
   display: flex;
   align-items: center;
   gap: var(--md-sys-space-xs);

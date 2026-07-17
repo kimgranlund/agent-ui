@@ -1,6 +1,7 @@
 // site/pages/theming.ts — the theming guide: ui-theme-provider's three live axes (scheme/scale/density), how the
-// --md-sys-color-{family}-{role} role system is shaped, how a consumer overrides a token at a subtree, and the
-// reserved multi-theme package seam. Live demos throughout — the scheme demo puts a real light and a real dark
+// --md-sys-color-{family}-{role} role system is shaped, how a consumer overrides a token at a subtree, and how
+// theme packs swap whole token palettes (ADR-0141/TKT-0087) — this site's own header picker is the live demo.
+// Live demos throughout — the scheme demo puts a real light and a real dark
 // subtree side by side (each its own <ui-theme-provider>), the override demo repoints a real token on a real
 // wrapper around a real ui-button. Source of truth for the CONTRACT: the shipped `ui-theme-provider` control
 // (`@agent-ui/components/controls/theme-provider`, ADR-0117) — this page cites it rather than re-implementing it.
@@ -172,16 +173,17 @@ content.append(
   content.append(el('div', { class: 'theming-override-row' }, [plain, overridden]))
 }
 
-// ── 5 · the reserved theme package seam ──────────────────────────────────────────────────────────────────────
-content.append(heading(2, '5 · the reserved theme package seam'))
+// ── 5 · theme packs ───────────────────────────────────────────────────────────────────────────────────────────
+content.append(heading(2, '5 · theme packs'))
 content.append(
   el('p', {}, [
     document.createTextNode(
-      'ui-theme-provider also carries a theme attribute — a reserved, not-yet-implemented seam for swapping whole ' +
-        'token PACKAGES (a distinct palette, not just a subtree override). Today exactly one default package ' +
-        'ships; an unregistered theme name degrades silently to it (no CSS layer matches it yet, so nothing ' +
-        'breaks). The multi-theme package-swapping system is deliberately next-tier scope — see the decision ' +
-        'record for the ratified framing.',
+      'ui-theme-provider also carries a theme attribute — swapping whole token PACKAGES (a distinct palette, ' +
+        "not just a subtree override). A pack is generated out-of-band from Ultimate Tokens' export, then " +
+        "wrapped under a [theme='name'] selector; it only needs to declare the roles it actually changes — " +
+        'anything it omits (the focus ring, the status colors) inherits the default from :root via ordinary CSS ' +
+        "cascade. Pick a theme from this site's own header control to see it live: the shell around this very " +
+        "page is one ui-theme-provider, and the picker lazy-loads each pack's stylesheet on first selection.",
     ),
     document.createTextNode(' '),
     (() => {

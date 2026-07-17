@@ -67,7 +67,7 @@ forcedColors: No forced-colors rules needed — the provider paints nothing of i
 
 `ui-theme-provider` is a real, importable theming element for `@agent-ui/components` — a pure
 coordination/carrier layer establishing a `color-scheme` subtree plus two pure attribute carriers
-(`scale`/`density`) and a reserved package seam (`theme`), promoted from the docs site's own
+(`scale`/`density`) and a theme package seam (`theme`), promoted from the docs site's own
 `site/lib/theme-provider.ts` wrapper (ADR-0117).
 
 ```html
@@ -89,10 +89,12 @@ coordination/carrier layer establishing a `color-scheme` subtree plus two pure a
   JS-side effect. `dimensions.css`'s `[scale]` selectors key off the attribute directly — any wrapper
   element (not just this one) already carries the same mechanism.
 - **`density`** — `'' | compact | comfortable | spacious'`, default `''`. Same pure-carrier shape as `scale`.
-- **`theme`** — a free string, default `''`. The **reserved package seam** (ADR-0079 cl.3): wired
-  (attribute exists, reflects, documented here) but **inert** — no `[theme='<name>']` CSS layer exists
-  anywhere in the fleet yet. An unregistered name degrades silently (no layer matches it, nothing breaks).
-  The multi-theme package-swapping system is explicitly out of scope for this component.
+- **`theme`** — a free string, default `''`. The **package seam** (ADR-0079 cl.3, ADR-0141): swaps whole
+  token palettes. This component itself stays a pure carrier — no JS-side effect, no built-in pack registry
+  — it only sets the attribute a `[theme='<name>']` CSS layer selects on; loading and injecting that layer's
+  stylesheet is the consumer's job (`@agent-ui/shared/themes/*`, lazy-loaded by `site/lib/theme-loader.ts`
+  in this repo's own docs shell). An unregistered name degrades silently (no layer matches it, the subtree
+  keeps the default palette, nothing breaks).
 
 ## Attribute ↔ property reflection
 

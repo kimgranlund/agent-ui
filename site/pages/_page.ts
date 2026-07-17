@@ -22,6 +22,8 @@ import '@agent-ui/icons/phosphor' // [3b] activate the Phosphor default pack (AD
 // affordances (select caret, text-field clear/reveal/steppers, calendar nav) through the app-owned icon pack — pack-agnostic
 // by design, so the SHELL that self-defines them must activate the default pack, else those glyphs resolve to an empty <svg>.
 import './_page.css' // [4] shared page chrome (shell + nav + header), AFTER the foundation so it reads the --md-sys-color-* roles
+import type { UIButtonElement, UIMenuElement, UIThemeProviderElement } from '@agent-ui/components/components'
+import { THEME_OPTIONS, applyTheme, applyScheme, persistTheme, persistScheme, loadPersistedTheme, loadPersistedScheme, type SchemeId } from '../lib/theme-loader.ts'
 
 // The build-time site index (TKT-0018): the ONE source the browse rail derives from. 56 L1 components
 // (proper name + tag), 25 L2 guides, the 2 L3 record landings — each carrying a `section` (Components /
@@ -585,10 +587,92 @@ function buildNav(): HTMLElement {
 // The non-scrolling top-bar + footer that bracket the page scroll region. CSS-only placeholders today (an
 // app-shell component family will own these later). Their CONTENT defaults are chosen here, not per page.
 
+// SCHEME_CYCLE — the compact toggle's three-state ring (ADR-0117's unset='' IS "Auto": it tracks the OS/an
+// ancestor, never re-mapped to a literal 'light'). Order chosen so a first click from the untouched default
+// reaches Light before Dark — the more common explicit override.
+const SCHEME_CYCLE: readonly SchemeId[] = ['', 'light', 'dark']
+const SCHEME_LABEL: Record<SchemeId, string> = { '': 'Auto', light: 'Light', dark: 'Dark' }
+
+/** The real Theme control (TKT-0088/ADR-0141 cl.4/5) — a scheme-cycle button + a theme `ui-menu` picker,
+ *  both wired to `provider` (the shell's own `ui-theme-provider`, ADR-0141 cl.1) via `theme-loader.ts`.
+ *  Mounts already showing the PERSISTED choice (no flash of the default before JS settles — the provider
+ *  itself was already set from the same persisted values at shell-creation time, below; this control just
+ *  reads that same state back for its own initial label). */
+function buildThemeControl(provider: UIThemeProviderElement): HTMLElement {
+  const group = document.createElement('div')
+  group.className = 'app-context-theme-group'
+
+  // ── the scheme-cycle button ──────────────────────────────────────────────────────────────────────────
+  const schemeBtn = document.createElement('ui-button') as UIButtonElement
+  schemeBtn.setAttribute('variant', 'soft')
+  let scheme = loadPersistedScheme()
+  const renderScheme = (): void => {
+    schemeBtn.textContent = SCHEME_LABEL[scheme]
+  }
+  renderScheme()
+  schemeBtn.addEventListener('click', () => {
+    const next = SCHEME_CYCLE[(SCHEME_CYCLE.indexOf(scheme) + 1) % SCHEME_CYCLE.length] as SchemeId
+    scheme = next
+    applyScheme(provider, scheme)
+    persistScheme(scheme)
+    renderScheme()
+  })
+  group.append(schemeBtn)
+
+  // ── the theme picker (the composer's #buildPicker idiom — a pill trigger + ui-menu) ─────────────────
+  const trigger = document.createElement('ui-button') as UIButtonElement
+  trigger.setAttribute('variant', 'soft')
+  const menu = document.createElement('ui-menu') as UIMenuElement
+  menu.dataset.part = 'theme-menu'
+  menu.append(trigger)
+  group.append(menu)
+  trigger.setAttribute('data-picker', 'theme') // set AFTER append — ui-menu's own connected() re-tags the trigger's data-part
+
+  let currentTheme = loadPersistedTheme()
+  const renderTrigger = (): void => {
+    trigger.textContent = THEME_OPTIONS.find((o) => o.id === currentTheme)?.label ?? 'Default'
+  }
+  renderTrigger()
+
+  const populate = (): void => {
+    const panel = menu.querySelector('[data-part="panel"]')
+    if (!panel) return // still not connected — should be unreachable past the microtask deferral below
+    panel.replaceChildren()
+    for (const option of THEME_OPTIONS) {
+      const item = document.createElement('div')
+      item.setAttribute('role', 'menuitem')
+      item.setAttribute('tabindex', option.id === currentTheme ? '0' : '-1')
+      item.dataset.value = option.id
+      item.textContent = option.label
+      item.toggleAttribute('data-selected', option.id === currentTheme)
+      panel.append(item)
+    }
+  }
+  // `menu` builds its own [data-part="panel"] inside ui-menu's connected() — which hasn't run yet at this
+  // point in construction (this whole header is still detached; `mountPage` appends the shell to the
+  // document synchronously AFTER this function returns). A microtask runs after that synchronous append
+  // completes, so by the time `populate()` actually executes, `menu` is guaranteed connected — no retry
+  // loop, no polling.
+  queueMicrotask(populate)
+
+  menu.addEventListener('select', (e) => {
+    const id = (e as CustomEvent<{ value: string }>).detail.value as (typeof THEME_OPTIONS)[number]['id']
+    currentTheme = id
+    renderTrigger()
+    const panel = menu.querySelector('[data-part="panel"]')
+    if (panel) for (const child of panel.children) child.toggleAttribute('data-selected', (child as HTMLElement).dataset.value === id)
+    void applyTheme(provider, id)
+    persistTheme(id)
+  })
+
+  return group
+}
+
 // buildContextHeader — the app top-bar (right column, row 1, fixed): the app wordmark (a Home link) + a
-// placeholder region for app-level chrome (search / theme toggle). The placeholders are inert spans — the
-// future app-shell component supplies the real controls.
-function buildContextHeader(): HTMLElement {
+// placeholder region for app-level chrome. `Search` stays an inert placeholder (TKT-0018's own concern,
+// site-command-search.spec.md — not this ticket's); `Theme` is now the REAL scheme+theme control above,
+// wired to `provider` (TKT-0088/ADR-0141 cl.4/5 — the shell's own ui-theme-provider, created by the caller).
+function buildContextHeader(provider: UIThemeProviderElement): HTMLElement {
   const bar = document.createElement('header')
   bar.className = 'app-context-header'
 
@@ -600,12 +684,10 @@ function buildContextHeader(): HTMLElement {
 
   const actions = document.createElement('div')
   actions.className = 'app-context-actions'
-  for (const text of ['Search', 'Theme']) {
-    const slot = document.createElement('span')
-    slot.className = 'app-context-slot'
-    slot.textContent = text
-    actions.append(slot)
-  }
+  const search = document.createElement('span')
+  search.className = 'app-context-slot'
+  search.textContent = 'Search'
+  actions.append(search, buildThemeControl(provider))
   bar.append(actions)
   return bar
 }
@@ -776,6 +858,22 @@ function mountCommandPaletteOnce(): void {
     .catch(() => {})
 }
 
+// buildThemedShell — TKT-0088/ADR-0141 cl.1/5: the shell's root IS the site-wide `ui-theme-provider` (a
+// tag swap from the old plain `<div class="app-shell">` — `.app-shell`'s own CSS is entirely class-keyed,
+// never tag-keyed, so nothing else moves). Applies the PERSISTED scheme/theme synchronously at creation,
+// before the shell ever paints, so a reload never flashes the default before JS catches up — `applyTheme`
+// for a non-default persisted choice is genuinely async (its pack must load), an accepted one-time cost
+// the ticket's own acceptance criteria names ("first selection injects the pack CSS once"). Shared by
+// `mountPage`/`mountFullBleedPage` so the provider-setup logic has exactly one home.
+function buildThemedShell(page: HTMLElement): UIThemeProviderElement {
+  const shell = document.createElement('ui-theme-provider') as UIThemeProviderElement
+  shell.className = 'app-shell'
+  applyScheme(shell, loadPersistedScheme())
+  void applyTheme(shell, loadPersistedTheme())
+  shell.append(buildNav(), buildContextHeader(shell), page, buildContextFooter())
+  return shell
+}
+
 // mountPage — stamp the app shell into `#app` (falling back to <body>) and hand back the page-content container.
 // The shell is a CSS grid (`_page.css`): a full-height nav RAIL down the left, and a right column of
 // [ context-header | page | context-footer ]. The PAGE (row 2) is the scroll region — itself
@@ -791,11 +889,7 @@ export function mountPage(options: PageOptions): PageHandle {
   page.className = 'app-page'
   page.append(buildPageHeader(options), content, buildPageFooter())
 
-  const shell = document.createElement('div')
-  shell.className = 'app-shell'
-  shell.append(buildNav(), buildContextHeader(), page, buildContextFooter())
-
-  root.append(shell)
+  root.append(buildThemedShell(page))
   mountCommandPaletteOnce()
   return { content }
 }
@@ -816,11 +910,7 @@ export function mountFullBleedPage(): PageHandle {
   page.className = 'app-page app-page--full-bleed'
   page.append(content) // no sticky page-header / page-footer — the page owns the whole region
 
-  const shell = document.createElement('div')
-  shell.className = 'app-shell'
-  shell.append(buildNav(), buildContextHeader(), page, buildContextFooter())
-
-  root.append(shell)
+  root.append(buildThemedShell(page))
   mountCommandPaletteOnce()
   return { content }
 }

@@ -17,8 +17,9 @@ const { content } = mountPage({
   title: 'ui-theme-provider — API',
   intro:
     'A real, shipped theming element — a pure coordination/carrier layer establishing a color-scheme ' +
-    'subtree plus two pure attribute carriers (scale/density) and a reserved package seam (theme). Generated ' +
-    'from its own descriptor. See the ui-theme-provider demo for the nesting + ancestor-inherit proof.',
+    'subtree plus two pure attribute carriers (scale/density) and a theme package seam (swaps whole token ' +
+    'palettes — ADR-0141). Generated from its own descriptor. See the ui-theme-provider demo for the ' +
+    'nesting + ancestor-inherit proof.',
 })
 
 // A representative themed subtree — the markup shape the descriptor documents (a real self-coloring
