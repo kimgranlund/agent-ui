@@ -65,6 +65,7 @@
     "./controls/tooltip": "./src/controls/tooltip/tooltip.ts",
     "./descriptor": "./src/descriptor/index.ts",
     "./component-styles.css": "./src/component-styles.css",
-    "./foundation-styles.css": "./src/foundation-styles.css"
+    "./foundation-styles.css": "./src/foundation-styles.css",
+    "./base-styles.css": "./src/base-styles.css"
   }
 }

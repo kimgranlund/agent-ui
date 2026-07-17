@@ -1,0 +1,8 @@
+/* base-styles.css — the DOCUMENT BASE barrel (the foundation-styles.css pattern): the foundational theme
+ * any host page loads to get the document basics — typeface (--ui-sans), body leading, ambient
+ * surface/ink, font rendering — from @agent-ui/shared's base.css. Load AFTER foundation-styles.css (base
+ * consumes the roles/constants foundation declares) and BEFORE page-local sheets. A page composing the
+ * docs shell does NOT need this (the shell's _page.css sets its own document rule); a SHELL-LESS page
+ * (agent-admin-app.html is the shape) does, or it renders in the UA serif.
+ */
+@import '@agent-ui/shared/base.css';

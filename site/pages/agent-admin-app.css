@@ -2,9 +2,9 @@
  * full-viewport, no docs shell, no demo frame. Colour comes entirely from the foundation roles imported
  * first in agent-admin-app.ts; this file only sizes the one element to the viewport. */
 
+/* body margin/typeface/ink come from the document BASE layer (base-styles.css); this file only sizes. */
 html,
 body {
-  margin: 0;
   block-size: 100%;
 }
 

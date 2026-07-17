@@ -73,9 +73,11 @@ The package exposes its surface through `exports` subpaths, not deep file paths.
 | `@agent-ui/components/descriptor` | `src/descriptor/index.ts` | The `{name}.md` frontmatter reader + schema + contract↔props trip-wire (ADR-0004). |
 | `@agent-ui/components/component-styles.css` | `src/component-styles.css` | **Per-component CSS barrel** — one `@import` per control's single `{name}.css`. |
 | `@agent-ui/components/foundation-styles.css` | `src/foundation-styles.css` | **Foundation CSS barrel** — `@agent-ui/shared/tokens.css` (colour roles) then `dimensions.css` (the ramp). |
+| `@agent-ui/components/base-styles.css` | `src/base-styles.css` | **Document BASE barrel** (opt-in) — `@agent-ui/shared/base.css`: the foundational theme for a SHELL-LESS host page (body typeface `--ui-sans`, body leading, ambient ink/surface, font smoothing). A page composing a shell that sets its own document rule (the docs `_page.css`) does not need it. |
 
-The two CSS barrels chain across the one allowed cross-package edge: `foundation-styles.css` imports
-`@agent-ui/shared`'s `tokens.css` + `dimensions.css` (both also `exports` subpaths of that package).
+The CSS barrels chain across the one allowed cross-package edge: `foundation-styles.css` imports
+`@agent-ui/shared`'s `tokens.css` + `dimensions.css`, and `base-styles.css` imports its `base.css`
+(all three also `exports` subpaths of that package).
 
 ## The load-bearing CSS order
 
@@ -84,6 +86,7 @@ Order is **not** cosmetic — a control's `:where()` token block reads the `--md
 
 ```
 foundation-styles.css   (1) tokens.css  →  (2) dimensions.css     ← FIRST: roles, then the ramp
+base-styles.css         (1b) base.css — OPT-IN document basics    ← after foundation (reads its roles/constants)
 component-styles.css    (3) each control's {name}.css             ← AFTER foundation
 @agent-ui/components/components  (4) the JS modules self-define   ← any time; CSS styles the host even before upgrade
 ```

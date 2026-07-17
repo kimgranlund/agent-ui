@@ -11,7 +11,7 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-family: var(--ui-sans); /* the fleet sans constant (dimensions.css) — one home, shared with base.css */
   /* Docs text DEFAULT leading — the type-scale body step (1.429), one source of truth with
      --md-sys-typescale-body-medium-line-height (ADR-0078; retired --ui-type-body-leading — this rule was a LIVE
      survivor of the retirement until repaired here, since dimensions.css deletes the family it named).

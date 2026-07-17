@@ -1,0 +1,31 @@
+/* base.css — the DOCUMENT BASE layer (@agent-ui/shared/base.css): the foundational theme any host page
+ * can load to get the basics right — typeface, leading, ink/surface, font rendering — without adopting a
+ * docs shell or hand-rolling a body rule (the gap: foundation-styles.css carries only tokens, so a
+ * shell-less page rendered in the UA serif). Loads AFTER tokens.css + dimensions.css (it consumes their
+ * roles/constants; components' `base-styles.css` barrel enforces the order) and BEFORE any page-local
+ * sheet, which wins ties by cascade order.
+ *
+ * Scope discipline: DOCUMENT-level basics only — nothing per-component (controls own their geometry via
+ * their ramp rows) and nothing layout (a page owns its own shell). Everything routes through the token
+ * layer; the one hard-coded surface is the font-rendering switches, which are platform booleans with no
+ * token dimension.
+ */
+
+body {
+  margin: 0;
+  /* The fleet sans stack (--ui-sans, dimensions.css) — one home for the typeface the docs shell
+     previously hand-rolled. Code/figure surfaces opt into --ui-mono themselves. */
+  font-family: var(--ui-sans);
+  /* Body leading from the M3 typescale (ADR-0078) — multi-line prose reads at the body step; headings
+     and controls set their own and win by specificity (the _page.css precedent, now shared). */
+  line-height: var(--md-sys-typescale-body-medium-line-height);
+  /* The ambient plane: neutral surface + its AA-gated ink, resolving per scheme via light-dark()
+     (tokens.css owns `color-scheme: light dark` on :root). */
+  color: var(--md-sys-color-neutral-on-surface);
+  background: var(--md-sys-color-neutral-surface);
+  /* Font rendering: antialiased smoothing on the platforms that expose the switch. Deliberately NOT
+     `text-rendering: optimizeLegibility` — it disables kerning/ligature fast paths and measurably slows
+     long pages for no visible win in system fonts. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

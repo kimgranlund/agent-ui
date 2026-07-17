@@ -97,6 +97,12 @@
      --ui-font-{sm,md,lg} SIZE namespace and the :root `--ui-font` guard (dimensions.test.ts). */
   --ui-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
+  /* Sans (UI) family — the shared typeface constant for everything else: the document base layer
+     (base.css) and any host chrome consume it, so the fleet's one sans stack has ONE home (it was
+     previously hand-rolled in the docs shell's _page.css only, and a shell-less page fell back to the
+     UA serif). Same constant class + naming rationale as --ui-mono above. */
+  --ui-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
   /* Type scale (ADR-0078 cl.2/cl.2b — retires ADR-0025 cl.3's --ui-type-*) — the fleet typographic ramp,
      now the M3 typescale namespace: --md-sys-typescale-{role}-{size}-{property}, role ∈ display/headline/
      title/body/label (M3-verbatim, cl.2) + kicker/overline/quote/lead (editorial extensions, cl.2b), size ∈
