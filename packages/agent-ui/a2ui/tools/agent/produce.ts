@@ -76,6 +76,10 @@ export interface ProduceOptions {
   /** ADR-0135 cl.7 — the mini-skill cap, now a tunable knob (was the hardcoded `DEFAULT_MINI_SKILL_CAP`
    * module constant). Absent ⇒ `DEFAULT_MINI_SKILL_CAP`, reproducing today's behavior byte-for-byte. */
   miniSkillCap?: number
+  /** ADR-0138 — the caller-supplied persona section `buildSystemPrompt` appends AFTER the catalog law
+   * (voice/content only; the wire contract stays authoritative, the fixed precedence sentence says so).
+   * Absent/empty ⇒ byte-identical composition (the `mode`-absent precedent). */
+  personaSystem?: string
 }
 
 /**
@@ -263,7 +267,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   const query = queryOf(input, k)
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
   const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default
-  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills
+  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona
   const model = opts.model ?? input.model ?? DEFAULT_MODEL // opts.model = the proxy's allowlist-validated model (SPEC-R12); it WINS over a client-supplied input.model
   // ADR-0088 §2 — data ALREADY flowing above, captured once for the eventual TurnTrace (no new collection).
   // NOTE: this is a `session.turns` MESSAGE index (the alternating Messages-API array, user+assistant per

@@ -142,6 +142,34 @@ export interface AdminTurnRequest {
   history: readonly AdminTurn[]
 }
 
+// ── the SURFACE-capable live turn (TKT-0076/ADR-0138) ────────────────────────────────────────────────
+// The same SPEC-N1 discipline as AdminTurn above: the a2ui producer transport (agent-transport.ts) is
+// deliberately NOT a package export, so this surface declares its OWN seam. The RUNNER (a site-page
+// injection, admin-live-runner.ts) owns everything transport-shaped — the a2ui `Session` transcript,
+// the ADR-0088 meta-line peel, the provider pairing — and streams back a typed envelope the component
+// consumes without ever importing the fenced machinery.
+
+/** One streamed event of a surface turn: a VALIDATED A2UI wire line (fed to
+ *  `AgentTurnHandle.ingestLine` — it routes by surfaceId to an inline ui-surface-host, ADR-0129), or
+ *  the turn's prose note (the ADR-0088 meta-line, already peeled by the runner — never ingested). */
+export type AdminSurfaceTurnEvent = { kind: 'line'; line: string } | { kind: 'note'; note: string }
+
+/** A surface turn's request. `turn` mirrors the producer's two arms: a typed user intent, or a surface
+ *  client message (an action click / function response bubbled up via `onClientMessage`) — `message` is
+ *  deliberately `unknown` here (the component never inspects it; the runner casts at its own boundary). */
+export interface AdminSurfaceTurnRequest {
+  turn: { kind: 'intent'; text: string } | { kind: 'client'; message: unknown }
+  /** The composed persona (`composeLiveSystemPrompt(...)`) — rides the producer's ADR-0138 persona seam,
+   *  appended AFTER the catalog law (voice/content only, never the wire format). */
+  personaSystem: string
+  /** The sanitized `SUPPORTED_MODELS` id. */
+  model: string
+}
+
+/** The injected surface runner (DEV-only, the `agentTurn` pattern): one turn in, an ordered stream of
+ *  typed events out. Throwing (network fault, proxy error) surfaces via the conversation's fail path. */
+export type AdminAgentSurfaceTurn = (req: AdminSurfaceTurnRequest) => AsyncIterable<AdminSurfaceTurnEvent>
+
 /** The single injectable seam `ui-agent-admin` exposes as its `agentTurn` prop: one request in, one full
  *  reply string out (single-shot, LLD Q3 — the frozen `AgentTurnHandle` contract hosts no incremental
  *  prose method). A thrown/rejected runner degrades via `handle.fail()` (LLD Q5). */

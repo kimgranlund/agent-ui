@@ -4,7 +4,7 @@
 // specimens are hand-authored here.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import { loadTextareaDoc } from '../lib/frontmatter.ts'
-import { composeDocPage, findAttr, heading, specimenRow } from '../lib/doc-page.ts'
+import { composeDocPage, findAttr, heading, renderChangelogTable, specimenRow } from '../lib/doc-page.ts'
 import { applyDemoWidth } from '../lib/specimens.ts'
 import type { ParsedDescriptor } from '@agent-ui/components/descriptor'
 
@@ -12,13 +12,20 @@ const { descriptor, body } = loadTextareaDoc()
 
 const { content } = mountPage({
   title: 'ui-textarea — API',
-  intro: 'The fleet\'s first FACE multi-line text primitive (ADR-0134) — a sibling of ui-text-field, not one ' +
+  intro: 'The fleet\'s first FACE multi-line text primitive — a sibling of ui-text-field, not one ' +
     'of its modes. This page is generated from textarea.md: the API table and the size specimens are derived ' +
     'from the same frontmatter the contract trip-wire validates, so they cannot drift; see the Permutations ' +
     'and States pages for the full size/rows matrix and the live interaction states.',
 })
 
 composeDocPage(content, descriptor, body, renderExamples(descriptor))
+
+// Provenance (TKT-0054): the decision record this page's intro previously cited inline now lives here only —
+// HAND-AUTHORED, not derivable from any canonical index (no ADR/TKT index cross-links to the pages it built).
+const changelog = renderChangelogTable([
+  { date: '2026-07-14', type: 'Decision', id: 'ADR-0134', summary: 'Shipped ui-textarea: a new FACE multi-line text primitive, a sibling of ui-text-field, not one of its modes.' },
+])
+if (changelog) content.append(changelog)
 
 // ── live specimens (derived from the parsed `size` enum + the real boolean attributes) ──────────────────────
 

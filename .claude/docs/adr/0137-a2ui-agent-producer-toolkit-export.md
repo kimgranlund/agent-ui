@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-16 |
 > | **Proposed by** | design seat ([TKT-0072](../tickets/tkt-0072-exportable-a2ui-agent-producer-toolkit.md) intake — Kim's direction, 2026-07-16: export the producer toolkit on the exact [ADR-0119](./0119-code-prose-family-v1-scope.md) pack precedent: pure zero-dep core + opt-in hand-rolled runtime pack) |
 > | **Ratified by** | Kim, 2026-07-16 ("Ratify as recommended" — F1-F4 all as recommended; awaiting Kim's own hand-flip of this Status cell to `accepted`, per this repo's `adr-status-guard.py`, which blocks any agent-performed flip unconditionally) |

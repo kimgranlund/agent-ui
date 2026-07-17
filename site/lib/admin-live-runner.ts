@@ -9,7 +9,22 @@
 // `import.meta.env.VITE_*` reference at all. The `a2ui-live` → `live-proxy-transport.ts` precedent, adapted
 // to agent-admin's prose-reply (not A2UI-JSONL) shape.
 
-import type { AdminAgentTurn, AdminTurnRequest, AdminTurn } from '@agent-ui/app/agent-admin-schema'
+import type {
+  AdminAgentTurn,
+  AdminTurnRequest,
+  AdminTurn,
+  AdminAgentSurfaceTurn,
+  AdminSurfaceTurnRequest,
+  AdminSurfaceTurnEvent,
+} from '@agent-ui/app/agent-admin-schema'
+// The SURFACE-turn machinery (TKT-0076/ADR-0138) — transport-shaped imports the COMPONENT is fenced from
+// (SPEC-N1): the a2ui Session reducer + meta-line peel live HERE, site-side, exactly like a2ui-chat's own
+// agent-runtime shim usage. All zero-dep, browser-safe TS.
+import type { Session, TurnInput } from '../../packages/agent-ui/a2ui/tools/agent/agent-transport.ts'
+import type { A2uiClientMessage } from '@agent-ui/a2ui'
+import { nextTurn, appendUserTurn, appendAssistantTurn, frameClientMessage } from '../../packages/agent-ui/a2ui/tools/agent/session.ts'
+import { readMetaLine } from '../../packages/agent-ui/a2ui/tools/agent/meta-line.ts'
+import { readNdjsonLines } from './ndjson-lines.ts'
 // The live-key probe is shared verbatim with a2ui-live's overlay (a boolean + count; never the key). Static
 // import here is fine — this whole module already lives BEHIND the page's dev-only dynamic import, so it is
 // tree-shaken out of the static build alongside the runner. Re-exported so the page reaches it through the
@@ -52,3 +67,52 @@ export function createAdminAgentTurn(): AdminAgentTurn {
     return body.text
   }
 }
+
+// ── the SURFACE-turn runner (TKT-0076/ADR-0138) ──────────────────────────────────────────────────────────
+
+const PRODUCE_ENDPOINT = '/__a2ui/agent'
+// Every SUPPORTED_MODELS id is a claude-* model, all served by the one implemented provider row in
+// providers.json — the {provider, model} PAIR is still allowlist-validated server-side (SPEC-R12), so a
+// wrong pairing degrades to a 400 here, never an unauthenticated call.
+const PROVIDER = 'anthropic'
+
+/** Build the injectable SURFACE-turn runner: one closure per call, owning ONE fresh a2ui `Session` — the
+ *  page re-creates it per persona switch, so each persona's game/transcript starts clean. Streams typed
+ *  events (the peeled ADR-0088 note + validated wire lines); appends the session turns only after a turn
+ *  fully streams (a thrown turn leaves the transcript unchanged, matching a2ui-chat's failed-turn law). */
+export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
+  let session: Session = { turns: [] }
+  return async function* (req: AdminSurfaceTurnRequest): AsyncIterable<AdminSurfaceTurnEvent> {
+    const input: TurnInput =
+      req.turn.kind === 'intent'
+        ? { kind: 'intent', text: req.turn.text, session }
+        : nextTurn(session, req.turn.message as A2uiClientMessage)
+    const res = await fetch(PRODUCE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ input, provider: PROVIDER, model: req.model, personaSystem: req.personaSystem }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    })
+    if (!res.ok || res.body === null) {
+      throw new Error(`Live agent proxy error (${res.status} ${res.statusText}).`)
+    }
+    const turnLines: string[] = []
+    for await (const line of readNdjsonLines(res.body)) {
+      const meta = readMetaLine(line)
+      if (meta) {
+        if (typeof meta.a2uiMeta.note === 'string' && meta.a2uiMeta.note.length > 0) {
+          yield { kind: 'note', note: meta.a2uiMeta.note }
+        }
+        continue // the meta-line is never ingested (ADR-0088 §1)
+      }
+      turnLines.push(line)
+      yield { kind: 'line', line }
+    }
+    session = appendUserTurn(
+      session,
+      req.turn.kind === 'intent' ? req.turn.text : frameClientMessage(req.turn.message as A2uiClientMessage),
+    )
+    session = appendAssistantTurn(session, turnLines.join('\n'))
+  }
+}
+

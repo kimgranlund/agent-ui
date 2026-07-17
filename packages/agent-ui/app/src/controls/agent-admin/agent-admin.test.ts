@@ -79,8 +79,8 @@ describe('UIAgentAdminElement — upgrade + defaults', () => {
     expect(el.store).toBeUndefined()
   })
 
-  it('static props is exactly [schema, store, agentTurn]', () => {
-    expect(Object.keys(UIAgentAdminElement.props)).toEqual(['schema', 'store', 'agentTurn'])
+  it('static props is exactly [schema, store, agentTurn, agentSurfaceTurn]', () => {
+    expect(Object.keys(UIAgentAdminElement.props)).toEqual(['schema', 'store', 'agentTurn', 'agentSurfaceTurn'])
   })
 
   it('agentTurn starts undefined pre-connect and stays undefined after connect (the stub arm is the default)', () => {
@@ -729,7 +729,7 @@ describe('agent-admin.md descriptor (ui-agent-admin)', () => {
   const md = readFileSync(`${DIR}/agent-admin.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['schema', 'store', 'agentTurn']
+  const ATTR_NAMES = ['schema', 'store', 'agentTurn', 'agentSurfaceTurn']
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)
@@ -764,3 +764,64 @@ describe('agent-admin.md descriptor (ui-agent-admin)', () => {
     expect(compareDescriptorToSource(parsed, { ts: agentAdminTs, css: agentAdminCss })).toEqual([])
   })
 })
+
+// ── the SURFACE arm (TKT-0076/ADR-0138) ──────────────────────────────────────────────────────────────────
+
+describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
+  it('a submit streams the runner: wire lines reach ingestLine (a surface host mounts), the note renders, and the request carries the composed persona + sanitized model', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: { model: 'claude-fable-5' } })
+    const seen: unknown[] = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req)
+      yield { kind: 'note' as const, note: 'Dealt.' }
+      yield { kind: 'line' as const, line: JSON.stringify({ version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui' } }) }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'play'
+    const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0)) // the async iterator drains on a microtask+task boundary
+    await whenFlushed()
+
+    // The request rode the component's OWN seam: composed persona + the store's sanitized model.
+    const req = seen[0] as { turn: { kind: string }; personaSystem: string; model: string }
+    expect(req.turn).toEqual({ kind: 'intent', text: 'play' })
+    expect(req.model).toBe('claude-fable-5')
+    expect(req.personaSystem.length).toBeGreaterThan(0)
+
+    // The wire line mounted a REAL inline surface host; the note rendered at finalize.
+    expect(el.querySelector('ui-surface-host')).not.toBeNull()
+    const agentBody = el.querySelector('[data-part="bubble"][data-role="agent"] [data-part="body"]')
+    expect(agentBody?.textContent).toBe('Dealt.')
+  })
+
+  it('a thrown runner surfaces via the fail path (a system bubble), never an empty success', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.agentSurfaceTurn = async function* () {
+      yield { kind: 'note' as const, note: 'partial' }
+      throw new Error('proxy exploded')
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'play'
+    const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+
+    const system = el.querySelector('[data-part="bubble"][data-role="system"]')
+    expect(system?.textContent).toContain('proxy exploded')
+  })
+})
+

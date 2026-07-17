@@ -215,11 +215,12 @@ export function a2uiDevProxyPlugin(): Plugin {
 
             // POST — run one turn and stream validated A2UI JSONL back.
             if (req.method === 'POST') {
-              const { input, provider, model, mode } = JSON.parse(await readBody(req)) as {
+              const { input, provider, model, mode, personaSystem } = JSON.parse(await readBody(req)) as {
                 input: TurnInput
                 provider: string
                 model: string
                 mode?: unknown
+                personaSystem?: unknown
               }
               const pair = resolvePair(config, provider, model) // SPEC-R12 PAIR-allowlist — the trust boundary
               if (!pair.ok) {
@@ -250,7 +251,10 @@ export function a2uiDevProxyPlugin(): Plugin {
               // it overrides any client-supplied input.model, so a crafted body cannot escape the PAIR check (SPEC-R12).
               // `mode` is the membership-VALIDATED GenUiMode (ADR-0090 §4) — an unrecognized/absent value comes
               // back `undefined`, which `produce()`/`buildSystemPrompt` already treat as the default disposition.
-              for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode) })) {
+              // ADR-0138 cl.3 — the optional persona section: string, length-capped (16 KB — a runaway
+              // guard; the composed admin persona is ~1-2 KB), forwarded verbatim; anything else ⇒ absent.
+              const persona = typeof personaSystem === 'string' && personaSystem.length <= 16_384 ? personaSystem : undefined
+              for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona })) {
                 res.write(line + '\n')
               }
               res.end()

@@ -45,10 +45,15 @@ const presetButtons = new Map<string, UIButtonElement>()
 let active: AgentPreset =
   AGENT_PRESETS.find((p) => p.id === localStorage.getItem(ACTIVE_PRESET_KEY)) ?? AGENT_PRESETS[0]!
 
+// Armed by the DEV overlay below once a live key probes available; re-invoked per persona switch so each
+// persona's SURFACE session (TKT-0076 — the runner closure owns the a2ui transcript) starts clean.
+let armSurfaceTurn: (() => void) | undefined
+
 function applyPreset(preset: AgentPreset): void {
   active = preset
   localStorage.setItem(ACTIVE_PRESET_KEY, preset.id)
   admin.store = presetStore(preset)
+  armSurfaceTurn?.()
   for (const [id, btn] of presetButtons) btn.variant = id === preset.id ? 'solid' : 'ghost'
 }
 
@@ -90,7 +95,14 @@ if (import.meta.env.DEV) {
       const probe = await overlay.probeLive()
       if (probe.available) {
         admin.agentTurn = overlay.createAdminAgentTurn()
-        console.info(`[agent-admin-app] live model connected (${probe.providers} provider(s))`)
+        // The SURFACE arm (TKT-0076/ADR-0138) — takes precedence over the text runner above: turns run
+        // through the a2ui producer (persona riding the ADR-0138 seam) and stream REAL surfaces into the
+        // conversation. A fresh runner per persona switch = a fresh producer session per persona.
+        armSurfaceTurn = () => {
+          admin.agentSurfaceTurn = overlay.createAdminSurfaceTurn()
+        }
+        armSurfaceTurn()
+        console.info(`[agent-admin-app] live model connected (${probe.providers} provider(s)) — surface turns armed`)
       } else {
         console.info('[agent-admin-app] stub preview — set a provider key in .env and restart `npm run dev` for a live model')
       }

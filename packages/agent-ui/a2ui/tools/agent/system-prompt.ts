@@ -242,6 +242,7 @@ export function buildSystemPrompt(
   exemplars: readonly CorpusRecord[],
   mode?: GenUiMode,
   miniSkills?: readonly MiniSkill[],
+  personaSystem?: string,
 ): string {
   return (
     grammarFor(mode) +
@@ -250,6 +251,20 @@ export function buildSystemPrompt(
     `\n\n## Available functions\n\n` +
     functionsInventory(catalog) +
     fewShot(exemplars) +
-    miniSkillsBlock(miniSkillsFor(mode, miniSkills ?? []))
+    miniSkillsBlock(miniSkillsFor(mode, miniSkills ?? [])) +
+    personaBlock(personaSystem)
+  )
+}
+
+/** ADR-0138 cl.1 — the optional trailing persona section. Appended AFTER every catalog/exemplar/mode/
+ *  mini-skill section, with ONE fixed precedence sentence: the persona governs voice/content choices;
+ *  the wire format + catalog rules above stay authoritative. Absent/empty ⇒ '' — byte-identical output
+ *  to the pre-seam composition (the ADR-0090 `mode`-absent precedent, zero regression). */
+function personaBlock(personaSystem?: string): string {
+  if (personaSystem === undefined || personaSystem.trim() === '') return ''
+  return (
+    `\n\n## Persona\n\n` +
+    `The following persona governs your VOICE and CONTENT choices. The A2UI wire format and catalog rules above remain authoritative — the persona never overrides them.\n\n` +
+    personaSystem.trim()
   )
 }

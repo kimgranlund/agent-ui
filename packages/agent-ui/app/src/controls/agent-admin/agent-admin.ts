@@ -61,6 +61,7 @@ import {
   sanitizeSelect,
   type AgentConfigSnapshot,
   type AdminAgentTurn,
+  type AdminAgentSurfaceTurn,
   type AdminTurn,
   type AdminTurnRequest,
 } from './agent-admin-schema.ts'
@@ -92,6 +93,11 @@ const agentAdminProps = {
   // static build carries no live-call code (the site page assigns this ONLY under `import.meta.env.DEV`,
   // the a2ui-live.ts construction-site precedent — the packaged component itself stays fetch/env/proxy-free).
   agentTurn: { ...prop.json<AdminAgentTurn | undefined>(undefined), attribute: false as const },
+  // The SURFACE-capable live seam (TKT-0076/ADR-0138) — same DEV-only injection discipline as agentTurn.
+  // When set it takes PRECEDENCE over agentTurn: the turn streams typed events (validated A2UI wire lines
+  // + the peeled prose note) and the wire lines drive `AgentTurnHandle.ingestLine` — REAL inline surfaces
+  // (ADR-0129) instead of a prose reply.
+  agentSurfaceTurn: { ...prop.json<AdminAgentSurfaceTurn | undefined>(undefined), attribute: false as const },
 } satisfies PropsSchema
 
 /** The five ENTRY_KINDS instantiations, each paired with its display copy — the single source of truth
@@ -210,6 +216,14 @@ export class UIAgentAdminElement extends UIElement {
     conversation.onEffortChange((id) => {
       this.#effort = id as EffortLevel
       conversation.effort = this.#effort
+    })
+    // Surface client messages (an action click inside a mounted ui-surface-host, bubbled per LLD-C4) run
+    // the NEXT surface turn — the Hit/Stand loop (TKT-0076). Callback registration, never a CustomEvent
+    // (SPEC-R5). A no-op unless the surface arm is armed (the stub/text arms mount no surfaces anyway).
+    conversation.onClientMessage((message) => {
+      if (this.agentSurfaceTurn === undefined) return
+      conversation.addUserMessage(`↳ ${describeClientAction(message)}`)
+      this.#runSurfaceTurn({ kind: 'client', message })
     })
     canvasPane.append(conversation)
 
@@ -381,6 +395,13 @@ export class UIAgentAdminElement extends UIElement {
       tools: enabledLabels(ENTRY_KINDS.tool),
     }
 
+    // The SURFACE arm (TKT-0076) — takes precedence when armed: the producer streams validated A2UI
+    // wire lines that DO belong to ingestLine (unlike the prose arms below).
+    if (this.agentSurfaceTurn !== undefined) {
+      this.#runSurfaceTurn({ kind: 'intent', text })
+      return
+    }
+
     // setNote (not ingestLine): ingestLine expects A2UI wire JSONL (surfaceIdOf/categoryOf parse it) — a
     // plain prose reply is exactly what setNote's contract is for ("rendered verbatim at finalize()").
     const handle = conversation.beginAgentTurn()
@@ -422,6 +443,40 @@ export class UIAgentAdminElement extends UIElement {
     })()
   }
 
+  /** One SURFACE turn (TKT-0076/ADR-0138): stream the injected runner's typed events — every `line` is a
+   *  validated A2UI wire message fed to `ingestLine` (fresh surfaceId ⇒ a new inline ui-surface-host in
+   *  this turn's bubble; known ⇒ routed to its ORIGINAL host, ADR-0129 — the Croupier's one-table game);
+   *  the peeled `note` renders via setNote at finalize. The persona + model are FRESH store reads (the
+   *  live-apply law); the runner owns the transport-side session/history (SPEC-N1 — the component never
+   *  sees a transport type). Errors surface through the fail path, exactly the text arm's discipline. */
+  #runSurfaceTurn(turn: { kind: 'intent'; text: string } | { kind: 'client'; message: unknown }): void {
+    const conversation = this.#conversation
+    const surfaceTurn = this.agentSurfaceTurn
+    if (!conversation || surfaceTurn === undefined) return
+    const store = this.store
+    const schema = this.schema ?? defaultAgentConfigSchema
+    const sections = readEntries(store, ENTRY_KINDS.promptSection)
+    const request = {
+      turn,
+      personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), store?.get('toolsEnabled') === true),
+      model: sanitizeSelect(schema, 'model', store?.get('model'), DEFAULT_MODEL_ID),
+    }
+    const handle = conversation.beginAgentTurn()
+    void (async () => {
+      try {
+        let note: string | undefined
+        for await (const event of surfaceTurn(request)) {
+          if (event.kind === 'note') note = event.note
+          else handle.ingestLine(event.line)
+        }
+        if (note !== undefined) handle.setNote(note)
+        handle.finalize()
+      } catch (err) {
+        handle.fail(err instanceof Error ? err.message : String(err))
+      }
+    })()
+  }
+
   /** Each capability kind's raw store slice + its live `##` group heading, for `composeLiveSystemPrompt`
    *  (which does the enabled-filter/sort/tools-gate itself). */
   #capabilityGroups(store: SettingsStore | undefined): LiveCapabilityGroup[] {
@@ -440,6 +495,15 @@ export class UIAgentAdminElement extends UIElement {
     ]
     this.#history.push(...turns)
   }
+}
+
+/** A one-line user-echo for a surface client message (the a2ui-chat `describeClientMessage` shape,
+ *  narrowed — the component treats the message as opaque beyond this display probe). */
+function describeClientAction(message: unknown): string {
+  const m = message as { action?: { name?: unknown }; functionResponse?: { call?: unknown } } | null
+  if (m && typeof m === 'object' && m.action && typeof m.action.name === 'string') return `clicked "${m.action.name}"`
+  if (m && typeof m === 'object' && m.functionResponse && typeof m.functionResponse.call === 'string') return `function ${m.functionResponse.call} responded`
+  return 'surface message'
 }
 
 if (!customElements.get('ui-agent-admin')) customElements.define('ui-agent-admin', UIAgentAdminElement)

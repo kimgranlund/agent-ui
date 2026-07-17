@@ -47,10 +47,14 @@
 
   /* Every pane fills its ui-split-pane box; the canvas pane's conversation manages its own internal
      scrolling — this file adds no overflow rule for it. The prompts/settings panes scroll their own
-     entry-list content (overflow-y: auto below), never clipping it. */
+     entry-list content (overflow-y: auto below), never clipping it. Padding matches the prompts/settings
+     panes below (0.75rem) — the canvas pane previously sat flush against the split-pane edge while its
+     siblings had breathing room, the one asymmetric pane in the three-pane split. */
   [data-role='canvas'] {
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
+    padding: 0.75rem;
     min-block-size: 0;
   }
 

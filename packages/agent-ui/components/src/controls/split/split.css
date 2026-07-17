@@ -36,9 +36,14 @@
   --ui-split-divider: 1px; /* the visible divider thickness */
   --ui-split-hit-slop: 24px; /* the invisible pointer hit target (WCAG 2.5.8, SPEC-R5 AC1) */
   --ui-split-key-step: 5%; /* the keyboard Arrow step, as a PERCENTAGE of the two-neighbor pair (SPEC-R4) */
-  /* A state-bearing widget part (like a slider rail/switch track) — the SOLID --md-sys-color-neutral-track
-     (SC 1.4.11 3:1 vs every surface plane), NOT the translucent -outline-variant (the ADR-0059 lesson). */
-  --ui-split-divider-ink: var(--md-sys-color-neutral-track);
+  /* Kim-directed (2026-07-16): a resting DECORATIVE outline, not the solid ADR-0059 track role — the
+     divider is a layout boundary/drag handle, not a state-bearing part carrying a value a user must
+     perceive (unlike the switch off-track / slider rail ADR-0059 actually gates); its operability
+     already comes from the pointer cursor + the ≥24px hit-slop (SPEC-R5 AC1) + `role=separator`
+     regardless of visual weight, so the softer translucent role is legal here. Primary on hover/drag
+     is the clear "you're interacting with this" cue. */
+  --ui-split-divider-ink: var(--md-sys-color-neutral-outline-variant);
+  --ui-split-divider-ink-hover: var(--md-sys-color-primary);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-split) consumes ONLY --ui-split-* ════════════════ */
@@ -77,6 +82,16 @@
 
   :scope[axis='vertical'] [data-separator] {
     cursor: row-resize;
+  }
+
+  /* Hover repoints to the primary cue; `:state(dragging)` (set host-wide in split.ts around the drag's
+     live-move↔commit span, see the file header) keeps the SAME cue live for the whole gesture even after
+     the pointer sweeps off the thin divider box — `setPointerCapture` keeps the drag routed to this
+     element regardless, but a plain `:hover` alone would drop the highlight the moment the cursor left
+     the 1px track, which reads as the divider "letting go" mid-drag. */
+  [data-separator]:hover,
+  :scope:state(dragging) [data-separator] {
+    background: var(--ui-split-divider-ink-hover);
   }
 
   /* The hit-slop — an invisible `::before`, centred on the divider, expanding the pointer-interactive area
