@@ -436,7 +436,7 @@
       "name": "Timeline Item",
       "tag": "ui-timeline-item",
       "url": "./timeline-item-doc.html",
-      "description": "One rail row in a timeline or status stream, showing a status marker, label, timestamp, and optional detail.",
+      "description": "One rail row in a timeline or status stream, showing a status marker, label, timestamp, and an optional detail/nested-sub-steps accordion.",
       "level": "L1",
       "section": "Components"
     },

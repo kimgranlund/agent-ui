@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0091
-status: open
+status: done
 date: 2026-07-17
 owner:
 kind: feature
@@ -137,4 +137,57 @@ build).** Ran the `agent-ui-component-design` procedure end to end against the r
   gates the whole build on an independent component-reviewer GO.
 - **No build dispatched from this ticket** — per Acceptance, ADR-0143 needs Kim's ratification first;
   the decomposition above is the ready-to-dispatch build sequence once that lands.
+
+**2026-07-18 — build shipped, per ADR-0143 (Kim-ratified 2026-07-18) and the
+[timeline-item-nesting-accordion.decomp.json](../decompositions/timeline-item-nesting-accordion.decomp.json)
+sequence.** Touches ONLY `timeline-item.ts`/`.css`/`.md` (`timeline.ts`/`disclosure.ts`/`status-stream.ts`
+confirmed byte-unmodified, matching the ADR's own no-op finding for `timeline.ts`) plus two site pages
+(`timeline-item-demo.ts`/`timeline-item-doc.ts`), `naming.md`/`naming-gates.test.ts` (the new `nested`
+data-role, extended together per that gate's own contract), and the two generated artifacts
+(`llms-full.txt`/`sitemap.json`, regenerated after the descriptor/page changes).
+
+- **F1/F2** — a new `[data-role="nested"]` slot adopts a genuine `<ui-timeline>` child into the SAME
+  composed `ui-disclosure` alongside `detail` (detail first, then nested); a disclosure materializes only
+  when either exists, byte-identical to today's detail-only behavior otherwise. Arbitrary recursion depth
+  verified (3 levels deep, jsdom + no error/cap).
+- **F3** — the collapsed-summary preview (`#resolvePreviewSource`/`#recomputePreview`/`#paintPreview`)
+  recurses to the deepest LAST descendant in DOM order, painted into the EXISTING `trailing` cell only
+  while closed and only when `trailing` is not consumer-owned; a `MutationObserver`
+  (`{subtree,childList,attributes:['status','label'],characterData}`) keeps it live. **One real
+  implementation correction found and fixed against the real runtime, not assumed**: `ui-disclosure`'s own
+  `#ensureParts()` adopts pre-existing children into its `[data-part="body"]` part via a plain
+  `appendChild` (a connect/disconnect cycle, ADR-0022's own precedent) — by the time an ancestor item
+  resolves a descendant, that descendant's OWN nested slot has already been relocated into ITS OWN
+  disclosure's body part, not a raw direct child. The resolution walk was fixed to query scoped to each
+  item's own `[data-part="detail"]`, not a naive `:scope > [data-role="nested"]` guess — caught via a
+  failing 2-level-deep jsdom test before it ever reached review.
+- **F4** — zero connector/marker-system CSS changes; a nested `<ui-timeline>` paints its own complete,
+  independently-scoped rail, indented by the disclosure body's own padding (browser-measured, cross-engine).
+  One SMALL CSS addition beyond the ADR's own text: `[data-role="nested"]` gets the identical pre-adoption
+  anti-FOUC `display:none` rule `[data-role="detail"]` already had (a real gap the site-canon gate
+  surfaced — the ADR's own F1 says nested is "adopted like detail today," and detail's anti-FOUC rule is
+  part of that "today").
+- **F5** — zero new ARIA machinery; verified directly via CDP (not assumed): a CLOSED item excludes its
+  nested list/listitems from the AX tree, an OPEN item exposes a real `list > listitem > list > listitem`
+  structure, chromium-only (WebKit has no CDP Accessibility domain, the fleet's own documented split) +
+  DOM-presence proof for both engines.
+- **F6** — no catalog change (confirmed: `factories.ts` untouched).
+- **F7** — size does NOT cascade; verified as a negative control (a parent `size="lg"` hosting an
+  unauthored nested item resolves the nested item's own default `"md"`, not `"lg"`) — confirmed zero
+  cascade mechanism exists anywhere in the stack (`timeline.css` has no `[size]` selector at all).
+- Descriptor (`timeline-item.md`) gained the `nested` slot + the `trailing` slot's auto-fill note; NO new
+  attributes/properties/events (F1-F7 add zero public surface beyond the slot).
+- Full probe set: jsdom behavior (nesting/accordion-composition/recursion-depth/preview-resolution/
+  MutationObserver/paint-gate/size-non-cascade — 24 new cases) + cross-engine browser (connector geometry +
+  AX-tree, chromium+webkit) + the descriptor trip-wire, all green. `npm run check && npm test` green
+  (the ONLY 2 failing suites, `a2ui-live.ask-lifecycle.test.ts`/`agent-admin-app.test.ts`, are a
+  pre-existing worktree path-resolution issue unrelated to this build — verified: zero `timeline`
+  references in either file). `npm run size`: family total 43796 B gz (budget 45056 B), `timeline-item`
+  marginal within its 2048 B budget.
+- 🟡 **Independent `ui:component-reviewer` pass NOT run this session** — the executing agent's toolset for
+  this dispatch had no Task/subagent-dispatch capability (Read/Edit/Write/Bash only), so the mandatory
+  generator≠critic gate (this skill's own DoD) could not be exercised from within the build seat. Flagged
+  honestly rather than self-graded or silently skipped: **the coordinator/host must dispatch
+  `ui:component-reviewer` against this diff before merging the PR out of draft** — both rubric axes ≥ 4 at
+  G5+, per the standing component-build law.
 

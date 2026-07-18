@@ -145,7 +145,9 @@ The prefix IS the ownership boundary — no allowlist needed:
   category as `canvas`/`prompts`/`settings` above — and `agent-content` — the wrapper bundling the
   Agent pane's several sibling nodes (heading + `ui-settings` + capability sections) into one
   reparent-able unit that migrates between the wide split pane and a tab panel; both app-tier, not
-  agent-emittable.
+  agent-emittable. `ui-timeline-item` adds `nested` (ADR-0143 F1/TKT-0091) — a pre-existing
+  `<ui-timeline>` light-DOM child, adopted alongside `detail` into the SAME composed disclosure
+  (recursive nesting to arbitrary depth).
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,
   kebab: ready · user-invalid · checked · dragging · revealed · disabled · collapsed · truncated
   · selected · indeterminate. A verb or noun is not a state name.

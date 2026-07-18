@@ -1,5 +1,11 @@
 /* timeline-item.css — ui-timeline-item, the single-file component stylesheet (ADR-0003;
- * timeline-family.lld.md §2.4/§5 · SPEC-R3/R4/R13/R15). Three sections:
+ * timeline-family.lld.md §2.4/§5 · SPEC-R3/R4/R13/R15). ADR-0143 (recursive nesting + the shared accordion
+ * + the collapsed-summary preview) touches this file in exactly ONE place — the pre-adoption anti-FOUC
+ * rule in [2] gains a `[data-role='nested']` twin alongside `[data-role='detail']`'s existing one; the
+ * marker-system ramp, the connector geometry (F4 — no cross-level continuity), and the collapsed-summary
+ * preview's `trailing` cell are all UNCHANGED (the preview reuses the EXISTING `[data-role='trailing']`
+ * rule below; a nested level paints its own complete, independently-scoped rail for free, since every
+ * nesting level is just another `ui-timeline-item` instance). Three sections:
  *
  *   [0] THE MARKER-SYSTEM RAMP — a NEW explicit per-(scale × size) integer table (ADR-0122 F2's novelty
  *       leg, the ADR-0038 no-multiplier law, the ADR-0035/0036 hoisted-per-[scale] pattern). Bare
@@ -347,8 +353,14 @@
   /* the PRE-adoption consumer child (moved into [data-part='detail'] by #ensureAnatomy, synchronously in
      connected()) — hidden in the brief window before upgrade/adoption so it never paints loose, unstyled
      content outside the grid (the same anti-FOUC discipline the toast/disclosure adopted-part precedent
-     relies on implicitly; here made explicit since the source attribute survives the move). */
-  :scope > [data-role='detail'] {
+     relies on implicitly; here made explicit since the source attribute survives the move). ADR-0143 F1's
+     `nested` slot gets the SAME parity treatment — a pre-adoption `<ui-timeline data-role="nested">` is
+     the identical "authored child, about to be moved into the composed disclosure" case `detail` already
+     solves; both selectors only ever match the brief pre-adoption window (`:scope >` = a DIRECT child),
+     since the move itself relocates the node several levels deep, where neither selector matches anymore —
+     zero new geometry, zero connector/marker-system change (F4 stays untouched). */
+  :scope > [data-role='detail'],
+  :scope > [data-role='nested'] {
     display: none;
   }
 

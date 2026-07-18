@@ -216,3 +216,115 @@ describe('ui-timeline-item — whole-shape (a real rail row, not a collapsed dot
     expect(lastAfter.display).toBe('none')
   })
 })
+
+// ── ADR-0143 F4 — recursive nesting: each level paints its own independent rail, zero new CSS ───────────
+
+describe('ui-timeline-item — recursive nesting: each level paints its own independent rail (ADR-0143 F4)', () => {
+  it("a nested <ui-timeline>'s items render their OWN complete marker+connector rail, indented from the parent rail by the disclosure body's own padding — timeline-item.css is otherwise UNCHANGED by this build", async () => {
+    const { item } = mount(
+      '<ui-timeline-item status="active" label="Outer">' +
+        '<ui-timeline data-role="nested">' +
+        '<ui-timeline-item status="done" label="Inner A"></ui-timeline-item>' +
+        '<ui-timeline-item status="active" label="Inner B"></ui-timeline-item>' +
+        '</ui-timeline>' +
+        '</ui-timeline-item>',
+    )
+    const disclosure = item.querySelector('ui-disclosure') as HTMLElement & { open: boolean }
+    disclosure.open = true // open the accordion — native <details> lays out its content only while open
+    await new Promise((r) => setTimeout(r, 0))
+
+    const outerMarker = item.querySelector(':scope > [data-part="marker"]') as HTMLElement
+    const innerItems = Array.from(item.querySelectorAll('ui-timeline[data-role="nested"] > ui-timeline-item')) as HTMLElement[]
+    expect(innerItems).toHaveLength(2)
+    const innerMarkers = innerItems.map((i) => i.querySelector('[data-part="marker"]') as HTMLElement)
+
+    // each nested marker is a REAL, structurally distinct box — its own complete rail, never the parent's
+    // marker reused or a collapsed 0×0 sliver.
+    for (const m of innerMarkers) {
+      expect(m).not.toBe(outerMarker)
+      const rect = m.getBoundingClientRect()
+      expect(rect.width, 'nested marker collapsed to zero width').toBeGreaterThan(0)
+      expect(rect.height, 'nested marker collapsed to zero height').toBeGreaterThan(0)
+    }
+
+    // visually INDENTED relative to the outer rail — the disclosure body's own inline padding realizes the
+    // indentation; F4's explicit overrule means there is no attempt at cross-level connector continuity.
+    const outerLeft = outerMarker.getBoundingClientRect().left
+    const innerLeft = innerMarkers[0]!.getBoundingClientRect().left
+    expect(innerLeft, 'the nested rail must sit to the right of the outer rail (indented)').toBeGreaterThan(outerLeft)
+
+    // the nested items still align their OWN markers to one vertical axis, exactly like a root rail.
+    const innerLefts = innerMarkers.map((m) => m.getBoundingClientRect().left)
+    expect(new Set(innerLefts.map((l) => Math.round(l))).size, 'nested markers did not align to one axis').toBe(1)
+
+    // the nested rail's own terminal item suppresses ITS OWN connector, independent of the outer rail's.
+    const lastInnerAfter = getComputedStyle(innerMarkers[1]!, '::after')
+    expect(lastInnerAfter.display).toBe('none')
+  })
+})
+
+// ── ADR-0143 F5 — recursive nesting: zero new ARIA machinery ─────────────────────────────────────────────
+
+describe('ui-timeline-item — recursive nesting: zero new ARIA machinery (ADR-0143 F5)', () => {
+  it('a CLOSED item keeps its nested descendants STRUCTURALLY present in the DOM (queryable) — the same find-in-page-enabling fact disclosure.md already documents for the flat `detail` case, extended unmodified to `nested`', () => {
+    const { item } = mount(
+      '<ui-timeline-item status="active" label="Outer">' +
+        '<ui-timeline data-role="nested">' +
+        '<ui-timeline-item status="done" label="Inner A"></ui-timeline-item>' +
+        '</ui-timeline>' +
+        '</ui-timeline-item>',
+    )
+    const disclosure = item.querySelector('ui-disclosure') as HTMLElement & { open: boolean }
+    expect(disclosure.open).toBe(false) // the default — collapsed
+    expect(item.querySelector('ui-timeline-item[label="Inner A"]')?.getAttribute('status')).toBe('done')
+  })
+
+  it('CLOSED excludes the nested list/listitems from the accessibility tree; OPEN exposes a real `list > listitem > list > listitem` AX structure — asserted directly via CDP, not assumed (ADR-0143 F5 — zero bespoke ARIA added)', async () => {
+    if (server.browser !== 'chromium') {
+      // WebKit exposes no CDP Accessibility domain (the button/card/table forced-colors precedent — the
+      // SAME instrument-bridge split: tool substituted; the universal DOM-presence leg above already
+      // covers both engines).
+      return
+    }
+    const { item } = mount(
+      '<ui-timeline-item status="active" label="Outer">' +
+        '<ui-timeline data-role="nested" label="Sub-steps">' +
+        '<ui-timeline-item status="done" label="Inner A"></ui-timeline-item>' +
+        '</ui-timeline>' +
+        '</ui-timeline-item>',
+    )
+    const disclosure = item.querySelector('ui-disclosure') as HTMLElement & { open: boolean }
+
+    const session = cdp() as unknown as CdpSession
+    // `cdp()`'s session targets the TOP-LEVEL vitest runner page; the test's own DOM lives inside a CHILD
+    // iframe (`vitest-iframe`) — scope the AX query to that frame (the ui-table AX-probe precedent).
+    const frameTree = (await session.send('Page.getFrameTree')) as {
+      frameTree: { childFrames?: Array<{ frame: { id: string } }> }
+    }
+    const frameId = frameTree.frameTree.childFrames?.[0]?.frame.id
+    expect(frameId, 'anti-vacuous: the vitest-iframe child frame must be found to scope the AX query').toBeDefined()
+    await session.send('Accessibility.enable')
+
+    // CLOSED (the default) — the nested list must NOT appear in the accessibility tree at all.
+    const closedAx = (await session.send('Accessibility.getFullAXTree', { frameId })) as {
+      nodes: Array<{ role?: { value?: string }; name?: { value?: string } }>
+    }
+    expect(
+      closedAx.nodes.find((n) => n.role?.value === 'list' && n.name?.value === 'Sub-steps'),
+      'a CLOSED disclosure must not expose its nested list in the AX tree',
+    ).toBeUndefined()
+
+    // OPEN — the nested list > listitem structure is now a real, exposed part of the AX tree.
+    disclosure.open = true
+    await new Promise((r) => setTimeout(r, 0))
+    const openAx = (await session.send('Accessibility.getFullAXTree', { frameId })) as {
+      nodes: Array<{ role?: { value?: string }; name?: { value?: string } }>
+    }
+    await session.send('Accessibility.disable')
+
+    const nestedList = openAx.nodes.find((n) => n.role?.value === 'list' && n.name?.value === 'Sub-steps')
+    expect(nestedList, 'no AX node with role=list named "Sub-steps" found — the nested <ui-timeline> must expose its own list role once open').toBeDefined()
+    const listItems = openAx.nodes.filter((n) => n.role?.value === 'listitem')
+    expect(listItems.length, 'expected at least the outer item + the nested item as listitem AX nodes').toBeGreaterThanOrEqual(2)
+  })
+})

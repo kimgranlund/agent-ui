@@ -47,8 +47,36 @@ cycleButton.addEventListener('click', () => {
   logEvent(`status  →  ${item.status}`)
 })
 
+// ── recursive nesting + the collapsed-summary preview (ADR-0143) ────────────────────────────────────────
+// [data-role="nested"] composes a genuine <ui-timeline> — the SAME control, reused, not a bespoke recursive
+// template (F1). ONE shared ui-disclosure wraps it (F2); collapsed, the trailing cell auto-fills with the
+// deepest LAST sub-step's label + a status-shape glyph, live-updating via a MutationObserver (F3) — click
+// "Append a sub-step" while collapsed to watch it change without opening the accordion.
+const nestedItem = el('ui-timeline-item', { status: 'active', label: 'Fulfilling order #4821' }, [
+  el('ui-timeline', { 'data-role': 'nested', label: 'Fulfillment sub-steps' }, [
+    el('ui-timeline-item', { status: 'done', label: 'Picked' }),
+    el('ui-timeline-item', { status: 'active', label: 'Packing' }),
+  ]),
+]) as UITimelineItemElement
+
+const nestedToggle = uiButton('Toggle nested accordion', 'soft')
+nestedToggle.addEventListener('click', () => nestedItem.toggleDetail())
+
+const SUB_STEPS = ['Shipping', 'Out for delivery', 'Delivered'] as const
+let subStepIdx = 0
+const addSubStep = uiButton('Append a sub-step (watch the collapsed preview live-update)', 'soft')
+addSubStep.addEventListener('click', () => {
+  if (subStepIdx >= SUB_STEPS.length) return
+  const nested = nestedItem.querySelector('ui-timeline[data-role="nested"]')!
+  const isLast = subStepIdx === SUB_STEPS.length - 1
+  nested.append(el('ui-timeline-item', { status: isLast ? 'done' : 'active', label: SUB_STEPS[subStepIdx]! }))
+  subStepIdx += 1
+  if (subStepIdx >= SUB_STEPS.length) addSubStep.setAttribute('disabled', '')
+})
+
 content.append(
   exampleSection('Click (or model-driven) toggle', item, modelToggle),
   exampleSection('Cycle every marker shape', cycleButton),
+  exampleSection('Recursive nesting + the collapsed-summary preview (ADR-0143)', nestedItem, nestedToggle, addSubStep),
   exampleSection('event log', log),
 )
