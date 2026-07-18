@@ -210,3 +210,18 @@ ADR-0139 numbering gap (unrelated, self-resolving); the theme-provider built-CSS
 regenerated after the scrim rename. ADR-0141 updated to match what was actually built (tool path,
 the real parity-gate shape, the scrim-grammar prerequisite) — status stays `proposed`, not
 self-ratified.
+
+**2026-07-17 — expanded from 2 to 10 packs (Kim: "add 8 more themes").** Same mechanism, no new
+design: the real Modal-Jazz config's 7 identity palettes (neutral/primary/primary-muted/secondary/
+secondary-muted/accent/accent-muted) each hue-rotated by a distinct offset, status palettes
+(info/success/warning/danger) left untouched, driven through UT's real `exportOKLCH` and wrapped
+via the same `wrap-pack.ts` CLI — zero pipeline changes. Named by the RESULTING primary hue
+(measured from each pack's own generated `--md-sys-color-primary-550`, not guessed): `amethyst`
+(276°), `orchid` (316°), `ruby` (356°), `meadow` (85°), `fern` (116°), `lagoon` (186°), `sky`
+(216°), `indigo` (236°) — spread across the wheel, clear of `ocean`'s (~47°) and `ember`'s (~146°)
+existing hues. All 8 pass the standing parity gate (`theme-packs.test.ts`) unmodified — no new
+gate logic needed, confirming the mechanism generalizes exactly as designed.
+`site/lib/theme-loader.ts`'s `THEME_OPTIONS` extended to all ten; the built-CSS fixture
+regenerated (55 asset chunks now, up from 45 — one new chunk per pack, each lazy-`?url`-loaded,
+never eagerly bundled). Full gate sweep green: `npm run check`, jsdom 353/353 files (6471 tests),
+cross-engine `theme-pack-apply.browser.test.ts`/`theme-provider-build.browser.test.ts` 14/14.

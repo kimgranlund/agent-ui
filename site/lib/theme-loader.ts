@@ -20,6 +20,14 @@ export const THEME_OPTIONS = [
   { id: 'default', label: 'Default' },
   { id: 'ocean', label: 'Ocean' },
   { id: 'ember', label: 'Ember' },
+  { id: 'amethyst', label: 'Amethyst' },
+  { id: 'orchid', label: 'Orchid' },
+  { id: 'ruby', label: 'Ruby' },
+  { id: 'meadow', label: 'Meadow' },
+  { id: 'fern', label: 'Fern' },
+  { id: 'lagoon', label: 'Lagoon' },
+  { id: 'sky', label: 'Sky' },
+  { id: 'indigo', label: 'Indigo' },
 ] as const
 
 export type ThemeId = (typeof THEME_OPTIONS)[number]['id']

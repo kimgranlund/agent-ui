@@ -19,9 +19,21 @@ beforeEach(() => {
 })
 
 describe('THEME_OPTIONS', () => {
-  it('includes "default" first (pack zero, ADR-0141 cl.2) and the two TKT-0087 proof packs', () => {
+  it('includes "default" first (pack zero, ADR-0141 cl.2) and all ten shipped proof packs', () => {
     expect(THEME_OPTIONS[0]!.id).toBe('default')
-    expect(THEME_OPTIONS.map((o) => o.id)).toEqual(['default', 'ocean', 'ember'])
+    expect(THEME_OPTIONS.map((o) => o.id)).toEqual([
+      'default',
+      'ocean',
+      'ember',
+      'amethyst',
+      'orchid',
+      'ruby',
+      'meadow',
+      'fern',
+      'lagoon',
+      'sky',
+      'indigo',
+    ])
   })
 })
 
