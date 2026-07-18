@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import { UITimelineItemElement } from './timeline-item.ts'
 import { UIDisclosureElement } from '../disclosure/disclosure.ts'
+import '../timeline/timeline.ts' // registers ui-timeline — needed for the terminal-connector no-op regression (n8)
 
 // timeline-family.lld.md §2 · SPEC-R1…R5 — ui-timeline-item jsdom behaviour probes. Mirrors the
 // disclosure/toast test template (upgrade → anatomy → status/marker glyph → the wrapper-trap regression →
@@ -231,6 +232,262 @@ describe('ui-timeline-item — markTruncated (the completion-invariant custom st
     expect(events).toBe(0)
 
     expect(() => el.markTruncated(false)).not.toThrow()
+    el.remove()
+  })
+})
+
+// ── recursive nesting — the [data-role="nested"] slot + the shared disclosure (ADR-0143 F1/F2, TKT-0091) ──
+
+describe('ui-timeline-item — the nested slot adoption (ADR-0143 F1)', () => {
+  it('a pre-existing [data-role="nested"] <ui-timeline> child is moved into the composed <ui-disclosure data-part="detail">', () => {
+    const { el } = makeItem('<ui-timeline data-role="nested"><ui-timeline-item label="step 1"></ui-timeline-item></ui-timeline>')
+    const disclosure = el.querySelector('[data-part="detail"]')
+    expect(disclosure?.tagName.toLowerCase()).toBe('ui-disclosure')
+    const nested = disclosure?.querySelector('ui-timeline')
+    expect(nested?.tagName.toLowerCase()).toBe('ui-timeline')
+    expect(nested?.querySelector('ui-timeline-item')?.getAttribute('label')).toBe('step 1')
+    el.remove()
+  })
+
+  it('an item with NEITHER detail nor nested composes no disclosure at all (unchanged from today)', () => {
+    const { el } = makeItem()
+    expect(el.querySelector('[data-part="detail"]')).toBeNull()
+    el.remove()
+  })
+})
+
+describe('ui-timeline-item — the shared disclosure adopts detail THEN nested, one caret (ADR-0143 F2)', () => {
+  it('detail-only composes a disclosure with just that content', () => {
+    const { el } = makeItem('<span data-role="detail">detail text</span>')
+    const disclosure = el.querySelector('[data-part="detail"]')!
+    expect(disclosure.textContent).toContain('detail text')
+    expect(disclosure.querySelector('ui-timeline')).toBeNull()
+    el.remove()
+  })
+
+  it('nested-only composes a disclosure with just the nested <ui-timeline>', () => {
+    const { el } = makeItem('<ui-timeline data-role="nested"><ui-timeline-item label="a"></ui-timeline-item></ui-timeline>')
+    const disclosure = el.querySelector('[data-part="detail"]')!
+    expect(disclosure.querySelector('ui-timeline')).not.toBeNull()
+    el.remove()
+  })
+
+  it('BOTH detail and nested compose into ONE disclosure, detail content before nested, in DOM order', () => {
+    const { el } = makeItem(
+      '<span data-role="detail">detail text</span><ui-timeline data-role="nested"><ui-timeline-item label="a"></ui-timeline-item></ui-timeline>',
+    )
+    const disclosures = el.querySelectorAll('[data-part="detail"]')
+    expect(disclosures.length).toBe(1) // exactly ONE shared disclosure, never two
+    const disclosure = disclosures[0]!
+    const body = disclosure.querySelector('[data-part="body"]')! // ui-disclosure adopts its light children into its own body part
+    const children = [...body.children]
+    expect(children.length).toBe(2)
+    expect(children[0]?.getAttribute('data-role')).toBe('detail')
+    expect(children[1]?.tagName.toLowerCase()).toBe('ui-timeline')
+    el.remove()
+  })
+})
+
+describe('ui-timeline-item — arbitrary recursion depth, no cap, no new mechanism per level (ADR-0143 F3 "no infinite-loop guard needed")', () => {
+  it('a 3-level-deep authored nesting connects cleanly with no error', () => {
+    const markup = `
+      <ui-timeline data-role="nested">
+        <ui-timeline-item label="depth 1">
+          <ui-timeline data-role="nested">
+            <ui-timeline-item label="depth 2">
+              <ui-timeline data-role="nested">
+                <ui-timeline-item label="depth 3"></ui-timeline-item>
+              </ui-timeline>
+            </ui-timeline-item>
+          </ui-timeline>
+        </ui-timeline-item>
+      </ui-timeline>`
+    expect(() => makeItem(markup)).not.toThrow()
+    const { el } = makeItem(markup)
+    const depth3 = el.querySelector('[label="depth 3"]')
+    expect(depth3).not.toBeNull()
+    el.remove()
+  })
+})
+
+// ── the confirmed no-op — timeline.ts terminal-connector marking self-scopes per nesting level (n8) ────────
+
+describe('ui-timeline-item — terminal-connector [data-last] self-scopes per nesting level (a confirmed no-op, no code change to timeline.ts)', () => {
+  it("a nested ui-timeline's own last child gets [data-last], independent of the OUTER timeline's own last-item marking", () => {
+    const outer = document.createElement('ui-timeline')
+    outer.innerHTML = `
+      <ui-timeline-item label="outer 1"></ui-timeline-item>
+      <ui-timeline-item label="outer 2">
+        <ui-timeline data-role="nested">
+          <ui-timeline-item label="inner 1"></ui-timeline-item>
+          <ui-timeline-item label="inner 2"></ui-timeline-item>
+        </ui-timeline>
+      </ui-timeline-item>`
+    document.body.append(outer)
+
+    const outerItems = outer.querySelectorAll(':scope > ui-timeline-item')
+    expect(outerItems[0]?.hasAttribute('data-last')).toBe(false)
+    expect(outerItems[1]?.hasAttribute('data-last')).toBe(true) // "outer 2" is the OUTER timeline's own last child
+
+    const innerTimeline = outer.querySelector('[data-role="nested"] ui-timeline, ui-timeline [data-role="nested"]') ?? outer.querySelector('ui-timeline-item[label="outer 2"] ui-timeline')
+    const inner = innerTimeline ?? outer.querySelector('ui-timeline ui-timeline')!
+    const innerItems = inner.querySelectorAll(':scope > ui-timeline-item')
+    expect(innerItems[0]?.hasAttribute('data-last')).toBe(false)
+    expect(innerItems[1]?.hasAttribute('data-last')).toBe(true) // "inner 2" is the NESTED timeline's OWN last child — self-scoped, un-interfered-with
+
+    outer.remove()
+  })
+})
+
+// ── the collapsed-summary preview — last-descendant resolution, live-updating, the trailing paint gate ────
+// (ADR-0143 F3)
+
+describe('ui-timeline-item — last-descendant resolution (last child wins, no status-priority)', () => {
+  it('resolves to the LAST of 3 nested items', async () => {
+    const { el } = makeItem(
+      '<ui-timeline data-role="nested"><ui-timeline-item label="a" status="done"></ui-timeline-item><ui-timeline-item label="b" status="active"></ui-timeline-item><ui-timeline-item label="c" status="pending"></ui-timeline-item></ui-timeline>',
+    )
+    await whenFlushed()
+    const trailing = el.querySelector('[data-role="trailing"]')!
+    expect(trailing.textContent).toContain('c')
+    el.remove()
+  })
+
+  it('a 2-level-deep nesting resolves to the DEEPEST leaf, not the intermediate item', async () => {
+    const { el } = makeItem(`
+      <ui-timeline data-role="nested">
+        <ui-timeline-item label="outer-last">
+          <ui-timeline data-role="nested">
+            <ui-timeline-item label="inner-leaf" status="done"></ui-timeline-item>
+          </ui-timeline>
+        </ui-timeline-item>
+      </ui-timeline>`)
+    await whenFlushed()
+    const trailing = el.querySelector('[data-role="trailing"]')!
+    expect(trailing.textContent).toContain('inner-leaf')
+    expect(trailing.textContent).not.toContain('outer-last')
+    el.remove()
+  })
+
+  it('an item with no nested slot never attempts resolution — trailing stays a plain, unwritten cell', async () => {
+    const { el } = makeItem()
+    await whenFlushed()
+    const trailing = el.querySelector('[data-role="trailing"]')!
+    expect(trailing.textContent).toBe('')
+    el.remove()
+  })
+})
+
+describe('ui-timeline-item — the MutationObserver keeps the preview live', () => {
+  it('appending a new last item to the nested timeline AFTER connect updates the resolved preview source', async () => {
+    const { el } = makeItem('<ui-timeline data-role="nested"><ui-timeline-item label="first"></ui-timeline-item></ui-timeline>')
+    await whenFlushed()
+    const trailing = el.querySelector('[data-role="trailing"]')!
+    expect(trailing.textContent).toContain('first')
+
+    const nested = el.querySelector('ui-timeline')!
+    const extra = document.createElement('ui-timeline-item')
+    extra.setAttribute('label', 'second')
+    nested.append(extra)
+    await new Promise((r) => setTimeout(r, 0)) // MutationObserver callbacks fire as a microtask after the mutation
+    expect(trailing.textContent).toContain('second')
+    el.remove()
+  })
+
+  it("changing the current last item's status or label attribute updates the preview", async () => {
+    const { el } = makeItem('<ui-timeline data-role="nested"><ui-timeline-item label="step" status="active"></ui-timeline-item></ui-timeline>')
+    await whenFlushed()
+    const trailing = el.querySelector('[data-role="trailing"]')!
+    expect(trailing.textContent).toBe('● step')
+
+    const item = el.querySelector('ui-timeline-item[label="step"]')!
+    item.setAttribute('status', 'done')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(trailing.textContent).toBe('✓ step')
+
+    item.setAttribute('label', 'renamed')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(trailing.textContent).toBe('✓ renamed')
+    el.remove()
+  })
+
+  it('the observer disconnects on disconnected() (the toast-region/disclosure heal-observer teardown precedent) — no error on a mutation after removal', async () => {
+    const { el } = makeItem('<ui-timeline data-role="nested"><ui-timeline-item label="a"></ui-timeline-item></ui-timeline>')
+    await whenFlushed()
+    const nested = el.querySelector('ui-timeline')!
+    el.remove()
+    expect(() => {
+      const extra = document.createElement('ui-timeline-item')
+      extra.setAttribute('label', 'b')
+      nested.append(extra)
+    }).not.toThrow()
+  })
+})
+
+describe('ui-timeline-item — the trailing paint gate (open/closed, consumer-owned never overwritten)', () => {
+  it('while the disclosure is OPEN, trailing stays empty (the real nested content is directly visible instead)', async () => {
+    const { el } = makeItem('<ui-timeline data-role="nested"><ui-timeline-item label="a" status="done"></ui-timeline-item></ui-timeline>')
+    await whenFlushed()
+    const trailing = el.querySelector('[data-role="trailing"]')!
+    expect(trailing.textContent).toContain('a') // closed by default — painted
+
+    el.toggleDetail(true)
+    await whenFlushed()
+    expect(trailing.textContent).toBe('') // open — cleared, no duplicate
+    el.remove()
+  })
+
+  it('closing the disclosure (re-closing after open) re-paints the resolved preview', async () => {
+    const { el } = makeItem('<ui-timeline data-role="nested"><ui-timeline-item label="a" status="done"></ui-timeline-item></ui-timeline>')
+    await whenFlushed()
+    el.toggleDetail(true)
+    await whenFlushed()
+    el.toggleDetail(false)
+    await whenFlushed()
+    const trailing = el.querySelector('[data-role="trailing"]')!
+    expect(trailing.textContent).toContain('a')
+    el.remove()
+  })
+
+  it('a consumer-authored [data-role="trailing"] child is NEVER overwritten by the preview effect, at any open/closed state', async () => {
+    const { el } = makeItem(
+      '<span data-role="trailing">consumer text</span><ui-timeline data-role="nested"><ui-timeline-item label="a" status="done"></ui-timeline-item></ui-timeline>',
+    )
+    await whenFlushed()
+    const trailing = el.querySelector('[data-role="trailing"]')!
+    expect(trailing.textContent).toBe('consumer text') // closed — still untouched
+
+    el.toggleDetail(true)
+    await whenFlushed()
+    expect(trailing.textContent).toBe('consumer text') // open — still untouched
+
+    el.toggleDetail(false)
+    await whenFlushed()
+    expect(trailing.textContent).toBe('consumer text') // re-closed — still untouched
+    el.remove()
+  })
+})
+
+// ── size does NOT cascade into a nested <ui-timeline> (ADR-0143 F7, n19) ────────────────────────────────
+
+describe('ui-timeline-item — size does not cascade into a nested <ui-timeline> (ADR-0143 F7)', () => {
+  it('a parent size="lg" item hosting an UNAUTHORED nested <ui-timeline> (no size attribute) resolves the nested items to the DEFAULT "md" register, not "lg"', () => {
+    const el = document.createElement('ui-timeline-item') as UITimelineItemElement
+    el.setAttribute('size', 'lg')
+    el.innerHTML = '<ui-timeline data-role="nested"><ui-timeline-item label="a"></ui-timeline-item></ui-timeline>'
+    document.body.append(el)
+    const nestedItem = el.querySelector('ui-timeline-item[label="a"]') as UITimelineItemElement
+    expect(nestedItem.size).toBe('md') // the shipped default — no forwarding mechanism exists
+    el.remove()
+  })
+
+  it('a nested <ui-timeline size="sm"> resolves its own items to "sm" regardless of the parent\'s size — each level is independently authored', () => {
+    const el = document.createElement('ui-timeline-item') as UITimelineItemElement
+    el.setAttribute('size', 'lg')
+    el.innerHTML = '<ui-timeline data-role="nested" size="sm"><ui-timeline-item label="a"></ui-timeline-item></ui-timeline>'
+    document.body.append(el)
+    const nested = el.querySelector('ui-timeline') as HTMLElement & { size: string }
+    expect(nested.size).toBe('sm')
     el.remove()
   })
 })

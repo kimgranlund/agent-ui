@@ -308,6 +308,10 @@ const ALLOWED_ROLES = new Set([
   // canvas/prompts/settings above; 'agent-content' — the wrapper bundling the Agent pane's several
   // sibling nodes into one reparent-able unit. Added in the SAME change as naming.md §6's registry line.
   'tabs-medium', 'agent-content',
+  // ui-timeline-item's recursive nesting slot (ADR-0143 F1, TKT-0091) — a genuine nested `<ui-timeline>`
+  // adopted alongside 'detail' into the shared disclosure. Added in the SAME change as naming.md §6's
+  // registry line.
+  'nested',
 ])
 
 /** Every `data-role` value used in one file's TEXT (comment-stripped): `data-role="x"` / `data-role='x'` /

@@ -3975,15 +3975,20 @@ The marker cell paints its own dot/ring/pulse and connector via CSS **unless** a
 check/cross glyph) — any of these suppresses the default dot uniformly. Content cells
 (`label`/`description`/`timestamp`/`trailing`) adopt a matching pre-existing `[data-role]` child in place
 (never re-stamped by the matching prop — the wrapper-trap guard) or are created fresh and prop-stamped.
-Empty cells collapse (no phantom gutter). A `[data-role="detail"]` child is moved into a composed
-`ui-disclosure` — the collapse mechanism is **reused**, never reimplemented; its `toggle` surfaces on the
-item host via light-DOM bubbling (the item never emits it itself).
+Empty cells collapse (no phantom gutter). A `[data-role="detail"]` and/or `[data-role="nested"]` child is
+moved into ONE shared composed `ui-disclosure` — the collapse mechanism is **reused**, never
+reimplemented; its `toggle` surfaces on the item host via light-DOM bubbling (the item never emits it
+itself). `nested` is a genuine `<ui-timeline>` — recursion is arbitrary authored depth, and while the
+disclosure is closed the last nested descendant's status + label auto-fill the `trailing` cell (unless a
+consumer already owns it), clearing while open.
 
 ## Accessibility
 
 `internals.role = 'listitem'` is set in the constructor (semantics before insertion). No built-in
 accessible name beyond rendered text content. A `forced-colors` block keeps every status marker legible
-by shape.
+by shape. A nested `<ui-timeline>` forms a legal `list > listitem > list > listitem…` structure; native
+`<details>` already excludes a closed disclosure's descendants from both the accessibility tree and the
+tab order — no ARIA machinery is added for this (ADR-0143 F5).
 
 ---
 
