@@ -373,7 +373,7 @@ export class UIConversationElement extends UIElement {
         lastProgressKey = undefined
         return
       }
-      const label = ev.stage === 'retry' ? `${base} (round ${ev.round ?? 1})` : base
+      const label = ev.stage === 'retry' ? (ev.round === undefined ? base : `${base} (round ${ev.round})`) : base
       const key = ev.stage === 'retry' ? `t${seq}-progress-retry-${ev.round ?? 1}` : `t${seq}-progress-${ev.stage}`
       if (lastProgressKey !== undefined && lastProgressKey !== key) narration.update(lastProgressKey, { status: 'done' })
       if (progressKeysSeen.has(key)) narration.update(key, { status: 'active', label })

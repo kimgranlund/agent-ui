@@ -441,6 +441,15 @@ describe('ui-conversation — narration (SPEC-R6, ADR-0146 live-at-ingest)', () 
     handle.progress({ stage: 'retry', round: 2 })
     expect(labels().some((l) => l === 'Self-correcting… (round 2)'), 'retry composes the real round ordinal in').toBe(true)
 
+    // a 'retry' with NO round number never fabricates one (the F2 honesty guard applies to the ordinal too).
+    // A fresh beginAgentTurn() mounts its OWN bubble/narration — read the LAST one, not the first.
+    const handle2 = el.beginAgentTurn()
+    handle2.progress({ stage: 'retry' })
+    const narrations2 = el.querySelectorAll('[data-part="narration"]')
+    const narration2 = narrations2[narrations2.length - 1]!
+    const labels2 = () => [...narration2.querySelectorAll('ui-timeline-item')].map((i) => i.querySelector('[data-role="label"]')?.textContent)
+    expect(labels2().some((l) => l === 'Self-correcting…'), 'an absent round omits the parenthetical entirely — never a fabricated (round 1)').toBe(true)
+
     // an UNKNOWN/unobserved stage renders NOTHING (the honesty guard — a stage never observed is never shown)
     const before = items().length
     handle.progress({ stage: 'almost-done' as unknown as 'reasoning' })
