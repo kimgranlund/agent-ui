@@ -121,12 +121,6 @@ function setBusy(next: boolean): void {
   else delete shell.dataset.busy
 }
 
-function describeClientMessage(m: A2uiClientMessage): string {
-  if ('action' in m) return `clicked "${m.action.name}"`
-  if ('functionResponse' in m) return `function ${m.functionResponse.call} → ${JSON.stringify(m.functionResponse.value)}`
-  return `error: ${m.error.code}`
-}
-
 async function runTurn(input: TurnInput): Promise<void> {
   if (busy) return
   setBusy(true)
@@ -169,7 +163,6 @@ async function runTurn(input: TurnInput): Promise<void> {
 
 function handleClientMessage(message: A2uiClientMessage): void {
   if (!shouldRunTurn(message)) return // ADR-0088 §3: an explicit wantResponse:false opt-out applies silently
-  conv.addUserMessage(`↳ ${describeClientMessage(message)}`)
   void runTurn(nextTurn(session, message))
 }
 

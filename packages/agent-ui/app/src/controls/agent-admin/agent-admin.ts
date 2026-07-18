@@ -292,7 +292,6 @@ export class UIAgentAdminElement extends UIElement {
     // (SPEC-R5). A no-op unless the surface arm is armed (the stub/text arms mount no surfaces anyway).
     conversation.onClientMessage((message) => {
       if (this.agentSurfaceTurn === undefined) return
-      conversation.addUserMessage(`↳ ${describeClientAction(message)}`)
       this.#runSurfaceTurn({ kind: 'client', message })
     })
     canvasPane.append(conversation)
@@ -701,28 +700,6 @@ export class UIAgentAdminElement extends UIElement {
     ]
     this.#history.push(...turns)
   }
-}
-
-/** A one-line user-echo for a surface client message (the a2ui-chat `describeClientMessage` shape,
- *  narrowed — the component treats the message as opaque beyond this display probe). TKT-0079: the echo
- *  is wire-truthful — the `error` arm quotes the actual A2UI error, and the fallback shows the compact
- *  payload itself, never an opaque `'surface message'` label. */
-function describeClientAction(message: unknown): string {
-  const m = message as
-    | { action?: { name?: unknown }; functionResponse?: { call?: unknown }; error?: { code?: unknown; message?: unknown } }
-    | null
-  if (m && typeof m === 'object' && m.action && typeof m.action.name === 'string') return `clicked "${m.action.name}"`
-  if (m && typeof m === 'object' && m.functionResponse && typeof m.functionResponse.call === 'string') return `function ${m.functionResponse.call} responded`
-  if (m && typeof m === 'object' && m.error && typeof m.error.message === 'string') {
-    const code = typeof m.error.code === 'string' ? m.error.code : 'error'
-    return truncateEcho(`⚠ ${code}: ${m.error.message}`)
-  }
-  return truncateEcho(JSON.stringify(message) ?? 'surface message')
-}
-
-/** TKT-0079 — one-line cap for the wire-truthful echo (a user chip, not a wire pane). */
-function truncateEcho(text: string): string {
-  return text.length > 140 ? `${text.slice(0, 139)}…` : text
 }
 
 /** TKT-0079 — the surface a client message belongs to (`action.surfaceId` / the error union's

@@ -239,12 +239,6 @@ function setBusy(next: boolean): void {
   }
 }
 
-function describeClientMessage(m: A2uiClientMessage): string {
-  if ('action' in m) return `clicked "${m.action.name}"`
-  if ('functionResponse' in m) return `function ${m.functionResponse.call} → ${JSON.stringify(m.functionResponse.value)}`
-  return `error: ${m.error.code}`
-}
-
 function summarize(lines: string[]): string {
   const kinds = lines.map((l) => {
     const msg = JSON.parse(l) as A2uiServerMessage
@@ -412,7 +406,6 @@ function handleClientMessage(message: A2uiClientMessage): void {
   if (!shouldRunTurn(message)) return
   // A control in the canvas emitted an action/response/error → the agent continues on the next turn.
   // The pure reducer (SPEC-R8) frames it as the next TurnInput.
-  addMessage('user', `↳ ${describeClientMessage(message)}`)
   void runTurn(nextTurn(session, message))
 }
 
