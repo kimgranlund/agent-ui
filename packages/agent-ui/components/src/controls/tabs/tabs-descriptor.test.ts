@@ -32,8 +32,9 @@ const css = readFileSync(`${DIR}/tabs.css`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-// The settled attribute surface, in declaration order (anti-vacuous anchor): the surfaceProps spread then selected.
-const ATTR_NAMES = ['elevation', 'brightness', 'selected']
+// The settled attribute surface, in declaration order (anti-vacuous anchor): the surfaceProps spread, then
+// selected, then the ADR-0144 Q1 opt-in `fill`.
+const ATTR_NAMES = ['elevation', 'brightness', 'selected', 'fill']
 
 describe('tabs.md descriptor — frontmatter parses + schema-valid (s8 part a)', () => {
   it('has a leading frontmatter fence and a prose body documenting the three elements', () => {
@@ -84,6 +85,13 @@ describe('tabs.md descriptor — contract↔props trip-wire (s8 part b)', () => 
     expect(selected?.type).toBe('string')
     expect(selected?.reflect).toBe(true)
     expect(selected?.default).toBe('')
+  })
+
+  it('`fill` is a reflected boolean, default false (ADR-0144 Q1 cl.1 — the ui-split-pane `collapsible` shape)', () => {
+    const fill = parsed.attributes.find((a) => a.name === 'fill')
+    expect(fill?.type).toBe('boolean')
+    expect(fill?.reflect).toBe(true)
+    expect(fill?.default).toBe('false')
   })
 
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default + bijection)', () => {

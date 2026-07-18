@@ -78,3 +78,26 @@ separators, the author authors only the panes). It carries no value and emits no
 - **`collapsible`** — when `true`, the parent's `Enter` key (pressed on the separator to this pane's
   trailing side) toggles this pane between its current extent and its floor, remembering the extent to
   restore to.
+
+## Spacing policy (ADR-0144 Q2) — zero padding by law, no space-ladder adoption
+
+`ui-split-pane` does **not** ride the `--md-sys-space` density-responsive ladder, and it should not: a pane
+carries **zero** padding/gap of its own — `split.css`/`split-pane.css` declare no padding, no gap, and
+reference no space token (verified by source grep, not assumed). This is a deliberate, ruled law, not an
+oversight:
+
+1. **Tier mechanics (ADR-0120):** a pane is a layout primitive sibling to `ui-row`/`ui-column`, and even
+   those default their gap to `none`. A primitive that *defaults* to padding stops composing — every
+   region-bearing child placed inside it (a Card's region pads, a `[data-box]`'s inset, a filled tabs'
+   panel pad) would double-inset against it.
+2. **Reconciliation cuts the OTHER way from "adopt the ladder":** Card's box-model is deliberately NOT on
+   the `--md-sys-space` ladder either — ADR-0046 ruled density-invariant rem region padding, rejecting
+   `--ui-space`-driven region padding outright. Adopting the ladder here would contradict that ruling, not
+   align with it.
+3. **The pane's only legitimate dimensional fact is `--ui-split-pane-min`** (the bare-pane floor, above) —
+   a GEOMETRY constant (the entry-control min-floor's spirit), not a spacing token. Everything else —
+   header/body/footer rhythm, region insets — is the hosted content's job: compose a
+   [`ui-card`](../card/card.md) or a `[data-box]` region host *inside* the pane (see
+   [`tabs.md`](../tabs/tabs.md)'s "Composing content inside a panel or pane" for the fleet-wide rule this
+   pane shares with `ui-tab-panel`). `split.css`/`split-pane.css` are confirmed no-ops by this policy — it
+   is a statement about existing shipped law, not a CSS change.

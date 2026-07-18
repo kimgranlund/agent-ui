@@ -257,6 +257,13 @@ describe('default catalog factories — G9 container family (catalog LLD-C5, SPE
     expect((el as unknown as Record<string, unknown>).selected).toBe(1)
   })
 
+  it('Tabs.fill maps 1:1 to ui-tabs.fill (ADR-0144 Q1 cl.4 — the SplitPane.collapsible structural-boolean precedent)', () => {
+    expect(defaultCatalog.components['Tabs']?.properties['fill']).toEqual({ type: { type: 'boolean' }, mapsTo: 'fill' })
+    const el = tabsFactory.create()
+    tabsFactory.applyProp(el, 'fill', true)
+    expect((el as unknown as Record<string, unknown>).fill).toBe(true)
+  })
+
   it('Modal → ui-modal is two-way bound on open via the toggle event (ADR-0019 cl.2)', () => {
     expect(modalFactory.tag).toBe('ui-modal')
     expect(modalFactory.value).toEqual({ prop: 'open', event: 'toggle' })

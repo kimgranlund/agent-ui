@@ -3,16 +3,16 @@
 # machine-checkable PRIMARY-element surface lives HERE (frontmatter for ui-tabs); the prose below the fence is
 # the /site doc and documents all THREE elements (ui-tabs · ui-tab · ui-tab-panel — one folder, one writer). The
 # `attributes[]` block MUST mirror tabs.ts `static props` (the ...UIContainerElement.surfaceProps spread —
-# elevation/brightness — plus the bindable `selected`) — the contract↔props trip-wire (tabs-descriptor.test.ts)
-# targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; the surface axes per ADR-0015; the two-way
-# `selected` bind per ADR-0019 (renderer LLD-C8).
+# elevation/brightness — plus the bindable `selected`, plus the opt-in `fill`) — the contract↔props trip-wire
+# (tabs-descriptor.test.ts) targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; the surface
+# axes per ADR-0015; the two-way `selected` bind per ADR-0019 (renderer LLD-C8); `fill` per ADR-0144 Q1.
 tag: ui-tabs
 description: A tab strip and panel container that switches visible content via keyboard-navigable, roving-focus tabs.
 tier: pattern          # geometry size-class — geometry.md "Pattern" (container + control-height rows); tabs is the named example: the interactive tab rows take the CONTROL height, the shell uses the --md-sys-space ladder
 extends: UIContainerElement  # the FIRST non-form family — surface axes + reused internals (ARIA); NOT form-associated (face below). NOTE: UIContainerElement enters the descriptor BASE_CLASSES at decomp s12 (integration) — until then validateComponentDescriptor flags BAD_EXTENDS, filtered in tabs-descriptor.test.ts
 # marginal: ui-tabs adds 727 B gz (2617 B min) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — the tabs compound: ui-tabs + ui-tab + ui-tab-panel) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs)
 
-attributes:            # attributes-as-API — mirrors tabs.ts `static props` (the surfaceProps spread, then selected)
+attributes:            # attributes-as-API — mirrors tabs.ts `static props` (the surfaceProps spread, then selected, then fill)
   - name: elevation
     type: enum
     values: [0, 1, 2, 3, -1, -2, -3]
@@ -27,6 +27,10 @@ attributes:            # attributes-as-API — mirrors tabs.ts `static props` (t
     type: string
     default: ''
     reflect: true      # the active tab's identity (a tab `key`, or its DOM index as a string; '' ⇒ the first tab). BINDABLE — the renderer two-way-binds it via LLD-C8 (value:{prop:'selected',event:'select'}, ADR-0019); reflects so the attribute mirrors the live selection
+  - name: fill
+    type: boolean
+    default: false     # String(false) = 'false'
+    reflect: true      # ADR-0144 Q1 cl.1 — an opt-in, CSS-only posture: the shell fills a height-bounded parent with a pinned tablist strip + an internally scrolling active panel (the ui-split-pane `collapsible` shape). Absent ⇒ byte-identical document-flow tabs.
 
 properties:            # IDL beyond attributes-as-API
   - name: selected
@@ -68,6 +72,8 @@ keyboard:
   - keys: End
     action: Move selection + roving focus to the last tab; commits.
   - note: ROVING TABINDEX — exactly the selected tab is tabindex=0; the rest are tabindex=-1 (a single tab-order entry). Selection follows focus (APG automatic activation). Re-armed on reconnect (connected() re-installs the listeners + the selection effect).
+  - keys: ArrowDown / ArrowUp / PageDown / PageUp / Home / End
+    action: In `[fill]` mode ONLY, scroll the visible panel when it itself is the focused key target (never a focused descendant's own key). MEASURED at build (ADR-0144 Q1 cl.4) — the identical `ui-card-content` shape found the platform default action for these keys unreliable across engines (Chromium moves it once trusted-focused, WebKit does not move it at all), so the panel wires the SAME explicit keydown handler `card-content.ts` ships (40px/arrow line, ~90%-viewport page step) rather than depend on it.
 
 geometry:
   sizeClass: pattern
@@ -76,6 +82,7 @@ geometry:
   stripGap: var(--ui-tabs-strip-gap)        # the inter-tab gap — --md-sys-space (density-responsive)
   panelPadding: var(--ui-tabs-panel-pad)    # the panel body padding — --md-sys-space
   surface: --ui-container-bg                 # the shell plane (ADR-0015 surface seam); transparent by default (ADR-0104) — a plane is asked-for via `elevation`/`brightness`
+  fillPanelScrollbarSeam: --ui-tabs-panel-scrollbar-width  # ADR-0144 Q1 cl.3 — consumer-INHERITED, var()-fallback ONLY (never declared in the :where() token block); a composing surface hides the filled panel's scrollbar by setting this on ITSELF (the ui-split-pane `--ui-split-pane-scrollbar-width` shape)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the SELECTED-tab indicator + label visible (Highlight) and the strip divider visible (CanvasText); the shell surface drops to Canvas via the container.css role layer.
 ---
@@ -132,6 +139,50 @@ are `-1`, so `Tab` enters/leaves the whole strip as one stop. Within it:
 
 The roving listeners + the selection effect are installed in `connected()`, so they ride the connection
 `AbortSignal` (zero residue on disconnect) and **re-arm on reconnect**.
+
+## Filling a bounded parent (`fill`)
+
+`<ui-tabs fill>` is ONE opt-in, reflected boolean — CSS-only (ADR-0144 Q1). It turns the shell into a flex
+column that fills a height-bounded parent: the tablist strip stays pinned at its natural content height, and
+the **visible** `ui-tab-panel` becomes the one flexible, internally-scrolling item
+(`flex: 1 1 auto; min-block-size: 0; overflow-y: auto`). This is the shipped-once form of the
+"pinned tablist | scrolling panel" composition `agent-admin.css` (TKT-0085) had to hand-roll for lack of a
+fleet variant. Absent `fill`, `ui-tabs` stays byte-identical to today's document-flow layout.
+
+- The panel's scrollbar visibility rides a **consumer-inherited** seam,
+  `--ui-tabs-panel-scrollbar-width` (var()-fallback only — never declared in the token block, the same
+  `--ui-split-pane-scrollbar-width` shape `split-pane.css` already ships): a composing app-chrome surface
+  hides the filled panel's scrollbar by setting the property on *itself*; scrolling stays live regardless.
+- **Keyboard-scroll disposition (measured, not assumed):** the identical "focused, tabindex=0,
+  overflow-y:auto region" shape was already measured for `ui-card-content` (ADR-0046 Amendment 6) — the
+  platform default action for Arrow/Page/Home/End is not reliable across engines (Chromium moves it once
+  trusted-focused, WebKit does not move it at all). `ui-tab-panel` re-measured the same gap and wires the
+  same explicit keydown handler, active only when an ancestor `ui-tabs` carries `fill` and the panel itself
+  is the focused key target.
+
+## Composing content inside a panel or pane (ADR-0144 Q3)
+
+Neither a `ui-tab-panel` nor a [`ui-split-pane`](../split/split-pane.md) ever grows its own
+header/body/footer region anatomy — a layout host owns bounds + scroll (`fill`'s scroll leg above; a pane's
+`overflow: auto`), never content-region semantics. Three rules, fleet-wide:
+
+1. **Layout hosts own bounds + scroll, never content regions.** `fill`'s panel scroll leg above, and
+   `ui-split-pane`'s `overflow: auto` (its own descriptor), are the whole of it — no header/body/footer prop
+   is ever added here.
+2. **Content regions compose INSIDE the host.** Reach for [`ui-card`](../card/card.md) when the region needs
+   chrome (frame, radius, its masked `scrollable` viewport); reach for the `[data-box]` region system
+   (`container-box.css`, ADR-0046) — "Card's regions, generalized" — when the need is structural (sticky
+   header/footer brackets, the region padding law, the scroll-fade mask) without a card's frame. Both are
+   already-shipped, taught idioms; no new region-element family exists or is planned.
+3. **Content rhythm belongs to the content wrapper, never the host.** Gap-between-sections is a
+   `ui-row`/`ui-column` gap, a `[data-region=content]`'s built-in rhythm, or a Card content gap — composed
+   *inside* the panel/pane, never a property this control grows.
+
+**Related — `ui-split-pane`'s spacing policy (Q2):** a pane carries **zero** padding by law and adopts **no**
+`--md-sys-space` ladder token; see [`split-pane.md`](../split/split-pane.md) for the ruled statement. `ui-tabs`'
+own shell spacing (`--ui-tabs-strip-gap` / `--ui-tabs-panel-pad`) is a DIFFERENT ledger — it is the *chrome*
+of the tabs widget itself (the strip gap, the panel's own body inset), not a pane's content-region padding —
+so it is unaffected by, and does not contradict, Q2's ruling.
 
 ## Accessibility
 

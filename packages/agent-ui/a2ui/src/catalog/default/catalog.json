@@ -160,7 +160,8 @@
       "properties": {
         "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
         "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" },
-        "selected": { "type": { "type": ["string", "number"] }, "bindable": true, "mapsTo": "selected" }
+        "selected": { "type": { "type": ["string", "number"] }, "bindable": true, "mapsTo": "selected" },
+        "fill": { "type": { "type": "boolean" }, "mapsTo": "fill" }
       },
       "value": { "prop": "selected", "event": "select" },
       "children": "ChildList"

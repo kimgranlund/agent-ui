@@ -241,6 +241,23 @@ describe('ui-tabs — zero residue + re-arm across connect/disconnect (s8)', () 
   })
 })
 
+describe('ui-tabs — `fill` reflected boolean (ADR-0144 Q1 cl.1)', () => {
+  it('defaults to false/absent; setting the property reflects the attribute and vice versa', () => {
+    const { tabs } = build()
+    expect(tabs.fill).toBe(false)
+    expect(tabs.hasAttribute('fill')).toBe(false)
+
+    tabs.fill = true
+    expect(tabs.hasAttribute('fill')).toBe(true) // property → attribute reflection
+
+    tabs.fill = false
+    expect(tabs.hasAttribute('fill')).toBe(false)
+
+    tabs.setAttribute('fill', '') // attribute → property
+    expect(tabs.fill).toBe(true)
+  })
+})
+
 describe('ui-tabs — self-define (s8)', () => {
   it('registers all three tags', () => {
     expect(customElements.get('ui-tabs')).toBe(UITabsElement)
