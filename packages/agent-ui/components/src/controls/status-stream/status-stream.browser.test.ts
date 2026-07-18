@@ -55,6 +55,34 @@ async function waitUntilSettled(read: () => number, stableFor = 4, maxChecks = 6
   return prev
 }
 
+describe('ui-status-stream — the opt-in streaming header stays PINNED while entries overflow (ADR-0146 F8)', () => {
+  it('the sticky header does not scroll away as the strip overflows and scrolls to the bottom', async () => {
+    // a small bounded viewport so a handful of entries genuinely overflow it
+    const { stream } = mount(
+      '<ui-status-stream header label="Agent activity" style="--ui-status-stream-max-block-size:8rem"></ui-status-stream>',
+    )
+    for (let i = 0; i < 20; i++) {
+      stream.appendEntry({ key: `k${i}`, status: 'active', label: `Step ${i} — a long enough label to force the strip to overflow` })
+    }
+    await raf2()
+    const header = stream.querySelector('[data-part="header"]') as HTMLElement
+    expect(header, 'the header must render when opted in').not.toBeNull()
+    expect(stream.scrollHeight, 'the strip must have overflowed its bounded viewport').toBeGreaterThan(stream.clientHeight)
+
+    // at scrollTop 0 the header sits at the top of the scroll viewport
+    const topAtZero = header.getBoundingClientRect().top
+    expect(Math.abs(topAtZero - stream.getBoundingClientRect().top), 'header should sit at the strip top').toBeLessThan(2)
+
+    // scroll the strip to the bottom — the sticky header must stay at the SAME viewport position (pinned)
+    stream.scrollTop = stream.scrollHeight
+    stream.dispatchEvent(new Event('scroll'))
+    await raf2()
+    expect(stream.scrollTop, 'the strip actually scrolled its content').toBeGreaterThan(0)
+    const topAfterScroll = header.getBoundingClientRect().top
+    expect(Math.abs(topAfterScroll - topAtZero), 'the header must stay pinned, never scrolling away with the entries').toBeLessThan(2)
+  })
+})
+
 describe('ui-status-stream — tail-follow + the stick-to-bottom guard (SPEC-R10)', () => {
   it('follows the newest entry to the bottom on appendEntry (stuck-to-bottom by default)', async () => {
     const { stream } = mount('<ui-status-stream label="Live"></ui-status-stream>')

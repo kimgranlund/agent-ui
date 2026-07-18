@@ -211,6 +211,12 @@
 :where(ui-timeline-item[status='error']) {
   --ui-timeline-item-marker-ink: var(--md-sys-color-danger);
 }
+/* warning (ADR-0146 F7) — a lesser advisory outcome the single `error` state cannot express. The SHAPE
+   (the injected triangle-exclamation glyph) is the primary signifier (ADR-0057); this warning-role ink is
+   the redundant secondary channel, the SAME role the completion-invariant truncated ring already reads. */
+:where(ui-timeline-item[status='warning']) {
+  --ui-timeline-item-marker-ink: var(--md-sys-color-warning);
+}
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-timeline-item) consumes ONLY --ui-timeline-item-* ════════════════ */
 

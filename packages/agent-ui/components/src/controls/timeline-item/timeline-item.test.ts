@@ -153,6 +153,30 @@ describe('ui-timeline-item — the marker glyph (icon prop wins over status; don
     expect(marker.querySelector('svg[data-role="marker"]')).not.toBeNull()
   })
 
+  it('status="warning" (ADR-0146 F7) requests its OWN distinct glyph, never done\'s/error\'s (the browser suite proves the rendered shapes differ)', async () => {
+    const { el, marker } = makeItem()
+    // In jsdom no Phosphor pack is registered, so resolveIcon returns a fallback svg tagged
+    // `data-icon-missing="<name>"` — which proves the STATUS→glyph MAPPING requests the correct, DISTINCT
+    // name per resolved-outcome status (the real logic under test); rendered-shape distinctness is the
+    // browser suite's job (it imports the pack).
+    const glyphName = (): string | null =>
+      marker.querySelector('svg[data-role="marker"]')?.getAttribute('data-icon-missing') ?? null
+
+    el.status = 'warning'
+    await whenFlushed()
+    expect(marker.querySelector('svg[data-role="marker"]'), 'warning must inject a built-in glyph').not.toBeNull()
+    expect(glyphName(), 'warning requests its own triangle glyph').toBe('warning')
+
+    el.status = 'error'
+    await whenFlushed()
+    expect(glyphName(), 'error requests the x glyph — distinct from warning').toBe('x')
+
+    el.status = 'done'
+    await whenFlushed()
+    expect(glyphName(), 'done requests the check glyph — distinct from warning').toBe('check')
+    el.remove()
+  })
+
   it('status="pending"/"active"/"" clear any glyph — pure CSS paints the dot/ring/pulse', async () => {
     const { el, marker } = makeItem()
     el.status = 'done'

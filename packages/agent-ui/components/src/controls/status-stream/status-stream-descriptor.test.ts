@@ -21,7 +21,7 @@ const css = readFileSync(`${STREAM}/status-stream.css`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['size', 'label']
+const ATTR_NAMES = ['size', 'label', 'header']
 
 describe('status-stream.md descriptor — frontmatter parses + schema-valid', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -56,6 +56,13 @@ describe('status-stream.md descriptor — frontmatter parses + schema-valid', ()
 
   it('role is log (a POLITE live region)', () => {
     expect(/role:\s*log\b/.test(fence)).toBe(true)
+  })
+
+  it('header is a reflected boolean, default false (ADR-0146 F8 — the opt-in streaming header)', () => {
+    const header = parsed.attributes.find((a) => a.name === 'header')
+    expect(header?.type).toBe('boolean')
+    expect(header?.default).toBe('false') // the parser stringifies scalar defaults (the disclosure `open` precedent)
+    expect(header?.reflect).toBe(true)
   })
 })
 

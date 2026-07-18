@@ -4,7 +4,9 @@
 
 import { describe, it, expect } from 'vitest'
 import { readMetaLine, isMetaLine } from '../agent/meta-line.ts'
+import { dispatch } from '../renderer/dispatch.ts'
 import type { A2uiServerMessage } from '../protocol.ts'
+import type { DispatchHandlers } from '../renderer/dispatch.ts'
 
 const realServerMessage: A2uiServerMessage = {
   version: 'v1.0',
@@ -102,5 +104,76 @@ describe('readMetaLine — the ask field (ADR-0097 §1)', () => {
   it('the version discriminator still wins even when ask is present (adversarial input)', () => {
     const line = '{"version":"v1.0","a2uiMeta":{"note":"nope","ask":{"surfaceId":"ask-1"}}}'
     expect(isMetaLine(line)).toBe(false)
+  })
+})
+
+// ── ADR-0146 F1: the additive `progress` field (the live-turn lifecycle kind) ─────────────────────────────
+describe('readMetaLine — the progress field (ADR-0146 F1)', () => {
+  it('round-trips a bare progress line {progress:{stage}}', () => {
+    const line = '{"a2uiMeta":{"progress":{"stage":"reasoning"}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed).toBeDefined()
+    expect(parsed!.a2uiMeta.progress).toEqual({ stage: 'reasoning' })
+    expect(parsed!.a2uiMeta.note).toBeUndefined()
+  })
+
+  it('round-trips a retry progress carrying the round ordinal', () => {
+    const line = '{"a2uiMeta":{"progress":{"stage":"retry","round":2}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.progress).toEqual({ stage: 'retry', round: 2 })
+  })
+
+  it('round-trips a progress carrying optional detail text (progressDetail:full)', () => {
+    const line = '{"a2uiMeta":{"progress":{"stage":"reasoning","detail":"weighing the layout options"}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.progress).toEqual({ stage: 'reasoning', detail: 'weighing the layout options' })
+  })
+
+  it('every closed-vocabulary stage round-trips', () => {
+    for (const stage of ['sent', 'started', 'reasoning', 'content', 'validating', 'retry', 'done']) {
+      const parsed = readMetaLine(`{"a2uiMeta":{"progress":{"stage":"${stage}"}}}`)
+      expect(parsed!.a2uiMeta.progress?.stage, stage).toBe(stage)
+    }
+  })
+
+  it('an OUT-OF-VOCABULARY stage drops only progress — the honesty-law guard (F2)', () => {
+    const line = '{"a2uiMeta":{"note":"hi","progress":{"stage":"almost-done"}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed).toBeDefined()
+    expect(parsed!.a2uiMeta.note, 'note still parses').toBe('hi')
+    expect(parsed!.a2uiMeta.progress, 'the fabricated stage never survives the parse').toBeUndefined()
+  })
+
+  it('a malformed progress (non-object / array / non-number round / non-string detail) drops only itself', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"a","progress":"nope"}}')!.a2uiMeta.progress).toBeUndefined()
+    expect(readMetaLine('{"a2uiMeta":{"note":"a","progress":["reasoning"]}}')!.a2uiMeta.progress).toBeUndefined()
+    expect(readMetaLine('{"a2uiMeta":{"note":"a","progress":{"stage":"retry","round":"2"}}}')!.a2uiMeta.progress).toBeUndefined()
+    expect(readMetaLine('{"a2uiMeta":{"note":"a","progress":{"stage":"reasoning","detail":42}}}')!.a2uiMeta.progress).toBeUndefined()
+    // …and in every case the note is untouched (the whole envelope never drops)
+    expect(readMetaLine('{"a2uiMeta":{"note":"a","progress":"nope"}}')!.a2uiMeta.note).toBe('a')
+  })
+
+  it('the version discriminator still wins even when progress is present (adversarial input)', () => {
+    const line = '{"version":"v1.0","a2uiMeta":{"progress":{"stage":"reasoning"}}}'
+    expect(isMetaLine(line)).toBe(false)
+  })
+
+  it('fault isolation: a progress line reaching dispatch() UNFILTERED routes to VERSION_UNSUPPORTED, returned not thrown (the ADR-0088 defense, extended)', () => {
+    // A leaked progress line is a plain object with NO `version` key — so dispatch()'s version gate
+    // catches it and RETURNS the error, never throwing, never reaching a handler (ADR-0088 defense-in-depth).
+    const leaked = JSON.parse('{"a2uiMeta":{"progress":{"stage":"reasoning"}}}') as A2uiServerMessage
+    const noopHandlers: DispatchHandlers = {
+      createSurface: () => {},
+      updateComponents: () => {},
+      updateDataModel: () => {},
+      deleteSurface: () => {},
+      actionResponse: () => {},
+      callFunction: () => {},
+    }
+    let err: ReturnType<typeof dispatch>
+    expect(() => {
+      err = dispatch(leaked, noopHandlers)
+    }).not.toThrow()
+    expect(err!).toEqual({ code: 'VERSION_UNSUPPORTED', message: expect.stringContaining('unsupported protocol version') })
   })
 })

@@ -52,11 +52,36 @@ export interface AskDeclaration {
 }
 
 /**
+ * The closed live-turn lifecycle stage vocabulary (ADR-0146 F1) — produce-layer-owned, provider-agnostic.
+ * Each adapter maps its OWN upstream events onto these (F4); `produce()` composes them with its own loop
+ * stages. A CLOSED union: an out-of-vocabulary stage is dropped at the guard (`readMetaLine`), never
+ * rendered — the honesty-law guard (F2) that a stage never observed is never shown.
+ */
+export const TURN_PROGRESS_STAGES = ['sent', 'started', 'reasoning', 'content', 'validating', 'retry', 'done'] as const
+export type TurnProgressStage = (typeof TURN_PROGRESS_STAGES)[number]
+const TURN_PROGRESS_STAGE_SET: ReadonlySet<string> = new Set(TURN_PROGRESS_STAGES)
+
+/**
+ * A live-turn progress event (ADR-0146 F1) — a runtime-composed, closed-vocabulary lifecycle signal that
+ * rides the SAME `AsyncIterable<string>` as `{"a2uiMeta":{"progress":…}}` meta-lines, INTERLEAVED during
+ * the turn (never content — it never enters heal/validate/corpus; SPEC-R5 validate-then-stream untouched).
+ * `round` carries the self-correct round ordinal on `'retry'`; `detail` carries OPTIONAL factual text
+ * (F3-gated: absent by default, forwarded only under `progressDetail:'full'` — never required for any stage).
+ */
+export interface TurnProgress {
+  stage: TurnProgressStage
+  round?: number
+  detail?: string
+}
+
+/**
  * The reserved wrapper (ADR-0088 §1/§2, ADR-0097 §1). `note` is the model's contemporaneous natural-
  * language rationale/reply; `ask` is the model-authored feed-ask routing declaration (produce() peels it,
  * verifies its integrity, and re-composes it on the outgoing meta-line only when it holds); `trace` is the
  * runtime-assembled `TurnTrace` (the model never authors `trace` itself — only `produce()` attaches it
- * before yielding). All three fields are optional: a note-only line the model emits omits `ask`/`trace`; a
+ * before yielding); `progress` is a runtime-composed live-turn lifecycle event (ADR-0146 F1), the one kind
+ * that may INTERLEAVE during the turn rather than ride only the single leading line. All four fields are
+ * optional: a note-only line omits `ask`/`trace`/`progress`; a progress line carries only `progress`; a
  * malformed/leaked line may omit any of them.
  */
 export interface A2uiMetaEnvelope {
@@ -64,6 +89,10 @@ export interface A2uiMetaEnvelope {
     note?: string
     ask?: AskDeclaration
     trace?: TurnTrace
+    /** ADR-0146 F1: a runtime-composed live-turn lifecycle event, INTERLEAVED during the turn (not just a
+     *  single leading line). Shallow-validated the same way `ask` is — a malformed `progress` drops only
+     *  itself, never the whole envelope. */
+    progress?: TurnProgress
   }
 }
 
@@ -71,8 +100,9 @@ export interface A2uiMetaEnvelope {
  * Parse `line` as a meta-line, or `undefined` if it is not one — never throws. A meta-line is a JSON
  * object carrying the reserved `a2uiMeta` wrapper key and, provably, NO `version` key — the
  * `A2uiServerMessage` discriminator (`dispatch.ts`'s version gate) — which is what keeps this
- * convention disjoint from the protocol it rides beside (ADR-0088 §1). Shallow-validates `note`/`trace`
- * field TYPES (not `trace`'s inner shape — it is runtime-assembled, never wire-validated).
+ * convention disjoint from the protocol it rides beside (ADR-0088 §1). Shallow-validates `note`/`trace`/
+ * `ask`/`progress` field TYPES (not `trace`'s inner shape — it is runtime-assembled, never wire-validated);
+ * a malformed `ask`/`progress` drops only itself, never the whole envelope.
  */
 export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
   let parsed: unknown
@@ -100,11 +130,31 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
     if (typeof surfaceId === 'string') ask = { surfaceId }
   }
 
+  // ADR-0146 F1: `progress` is shallow-validated the SAME way — a malformed `progress` (non-object, or a
+  // `stage` outside the closed vocabulary, or a non-number `round` / non-string `detail`) drops only
+  // itself, never the whole envelope. The closed `stage` union is the honesty-law guard (F2): an
+  // out-of-vocabulary stage never survives the parse, so it can never be rendered.
+  let progress: TurnProgress | undefined
+  if (m.progress !== undefined && typeof m.progress === 'object' && m.progress !== null && !Array.isArray(m.progress)) {
+    const p = m.progress as Record<string, unknown>
+    const stageOk = typeof p.stage === 'string' && TURN_PROGRESS_STAGE_SET.has(p.stage)
+    const roundOk = p.round === undefined || typeof p.round === 'number'
+    const detailOk = p.detail === undefined || typeof p.detail === 'string'
+    if (stageOk && roundOk && detailOk) {
+      progress = {
+        stage: p.stage as TurnProgressStage,
+        ...(p.round !== undefined ? { round: p.round as number } : {}),
+        ...(p.detail !== undefined ? { detail: p.detail as string } : {}),
+      }
+    }
+  }
+
   return {
     a2uiMeta: {
       note: m.note as string | undefined,
       ask,
       trace: m.trace as TurnTrace | undefined,
+      progress,
     },
   }
 }

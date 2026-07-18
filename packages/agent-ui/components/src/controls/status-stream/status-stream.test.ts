@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { UIStatusStreamElement } from './status-stream.ts'
+import { whenFlushed } from '@agent-ui/components'
+import { UIStatusStreamElement, escalateStatus, type ItemStatus } from './status-stream.ts'
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts'
 import { UITimelineElement } from '../timeline/timeline.ts'
 
@@ -14,6 +15,48 @@ function makeStream(): { el: UIStatusStreamElement } {
   document.body.append(el)
   return { el }
 }
+
+/** A stream with the opt-in header already materialized (the effect runs on connect, then flushed). */
+async function makeHeaderStream(label = 'Agent activity'): Promise<{ el: UIStatusStreamElement; header: () => HTMLElement | null }> {
+  const el = document.createElement('ui-status-stream') as UIStatusStreamElement
+  el.label = label
+  el.header = true
+  document.body.append(el)
+  await whenFlushed()
+  return { el, header: () => el.querySelector('[data-part="header"]') }
+}
+
+const headerStatus = (el: UIStatusStreamElement): string | null =>
+  el.querySelector('[data-part="header"]')?.getAttribute('data-status') ?? null
+
+// ── the escalation ladder (ADR-0146 F6) — the pure reduce, directly unit-tested ────────────────────────
+
+describe('escalateStatus — worst-child-wins over the closed ADR-0146 F6 ladder', () => {
+  it('[done, warning] reads warning (warning outranks done)', () => {
+    expect(escalateStatus(['done', 'warning'])).toBe('warning')
+  })
+
+  it('[active, error] reads error — the error-beats-active case, asserted explicitly', () => {
+    expect(escalateStatus(['active', 'error'])).toBe('error')
+    expect(escalateStatus(['error', 'active'])).toBe('error') // order-independent
+  })
+
+  it('neutral "" contributes nothing (a strip of only-neutral reads "")', () => {
+    expect(escalateStatus(['', 'done'])).toBe('done')
+    expect(escalateStatus(['', '', ''])).toBe('')
+    expect(escalateStatus([])).toBe('')
+  })
+
+  it('the full total order error > warning > active > pending > done', () => {
+    const ladder: ItemStatus[] = ['done', 'pending', 'active', 'warning', 'error']
+    // each step outranks all lower ones
+    expect(escalateStatus(['done', 'pending'])).toBe('pending')
+    expect(escalateStatus(['pending', 'active'])).toBe('active')
+    expect(escalateStatus(['active', 'warning'])).toBe('warning')
+    expect(escalateStatus(['warning', 'error'])).toBe('error')
+    expect(escalateStatus(ladder)).toBe('error') // the whole ladder escalates to its worst
+  })
+})
 
 describe('ui-status-stream — upgrade + typed prop surface', () => {
   it('upgrades to the class, extends UIContainerElement, props at their defaults', () => {
@@ -174,6 +217,101 @@ describe('ui-status-stream — the completion invariant (SPEC-R11)', () => {
     el.appendEntry({ key: 'a', status: 'active' })
     el.finalize()
     expect(() => el.update('a', { status: 'done' })).not.toThrow()
+    el.remove()
+  })
+})
+
+describe('ui-status-stream — the opt-in streaming header (ADR-0146 F8)', () => {
+  it('header:false (default) renders NO header DOM — byte-identical to a headerless strip (regression guard)', () => {
+    const { el } = makeStream()
+    expect(el.querySelector('[data-part="header"]')).toBeNull()
+    el.appendEntry({ key: 'a', status: 'active', label: 'x' })
+    el.finalize()
+    expect(el.querySelector('[data-part="header"]'), 'no header DOM ever appears when header is unset').toBeNull()
+    el.remove()
+  })
+
+  it('header:true shows the label VISIBLY (today aria-only) + an overall-status marker', async () => {
+    const { el } = await makeHeaderStream('Agent activity')
+    expect(el.querySelector('[data-part="header"]')).not.toBeNull()
+    expect(el.querySelector('[data-part="header-label"]')?.textContent).toBe('Agent activity')
+    expect(el.querySelector('[data-part="header-marker"]')).not.toBeNull()
+    el.remove()
+  })
+
+  it('an EMPTY un-finalized header reads WORKING (active) from construction — the blank-bubble ROOT fix', async () => {
+    const { el } = await makeHeaderStream()
+    expect(headerStatus(el), 'an empty un-finalized strip must read active from t=0').toBe('active')
+    el.remove()
+  })
+
+  it('a mid-turn error entry flips the header to error immediately (F6 monotone-truth — error outranks active)', async () => {
+    const { el } = await makeHeaderStream()
+    el.appendEntry({ key: 'a', status: 'active', label: 'working' })
+    expect(headerStatus(el), 'an all-active strip still reads active — escalation does NOT outrank active').toBe('active')
+    el.appendEntry({ key: 'b', status: 'error', label: 'boom' })
+    expect(headerStatus(el), 'a mid-turn error flips the header immediately').toBe('error')
+    el.remove()
+  })
+
+  it('a mid-turn warning entry outranks active too (the header reads warning)', async () => {
+    const { el } = await makeHeaderStream()
+    el.appendEntry({ key: 'a', status: 'active' })
+    el.appendEntry({ key: 'b', status: 'warning' })
+    expect(headerStatus(el)).toBe('warning')
+    el.remove()
+  })
+
+  it('a status transition via update() re-escalates the header live', async () => {
+    const { el } = await makeHeaderStream()
+    el.appendEntry({ key: 'a', status: 'active' })
+    expect(headerStatus(el)).toBe('active')
+    el.update('a', { status: 'error' })
+    expect(headerStatus(el), 'update-to-error re-escalates the header').toBe('error')
+    el.remove()
+  })
+
+  it('finalize() settles the header to the escalated FINAL status (all-done → done)', async () => {
+    const { el } = await makeHeaderStream()
+    el.appendEntry({ key: 'a', status: 'done' })
+    el.appendEntry({ key: 'b', status: 'done' })
+    el.finalize()
+    expect(headerStatus(el)).toBe('done')
+    el.remove()
+  })
+
+  it('finalize() on a TORN strip (an active entry remaining) settles to warning — the truncated entry contributes warning', async () => {
+    const { el } = await makeHeaderStream()
+    el.appendEntry({ key: 'a', status: 'done' })
+    el.appendEntry({ key: 'b', status: 'active' }) // never resolves — the stream tears
+    el.finalize()
+    expect(headerStatus(el), 'a torn (truncated) entry settles the header to warning, never active').toBe('warning')
+    el.remove()
+  })
+
+  it('fail() forces the header to error regardless of the entries own escalation', async () => {
+    const { el } = await makeHeaderStream()
+    el.appendEntry({ key: 'a', status: 'done' })
+    el.fail()
+    expect(headerStatus(el), 'fail() forces error even when every entry is done').toBe('error')
+    el.remove()
+  })
+
+  it('toggling header off removes the header DOM entirely (back to byte-identical headerless)', async () => {
+    const { el } = await makeHeaderStream()
+    expect(el.querySelector('[data-part="header"]')).not.toBeNull()
+    el.header = false
+    await whenFlushed()
+    expect(el.querySelector('[data-part="header"]'), 'header DOM must be gone when the prop is unset').toBeNull()
+    el.remove()
+  })
+
+  it('the label prop updates the visible header text reactively', async () => {
+    const { el } = await makeHeaderStream('first')
+    expect(el.querySelector('[data-part="header-label"]')?.textContent).toBe('first')
+    el.label = 'second'
+    await whenFlushed()
+    expect(el.querySelector('[data-part="header-label"]')?.textContent).toBe('second')
     el.remove()
   })
 })

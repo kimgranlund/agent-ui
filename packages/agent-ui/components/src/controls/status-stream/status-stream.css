@@ -17,6 +17,31 @@
 :where(ui-status-stream) {
   --ui-status-stream-min-inline-size: 16rem;
   --ui-status-stream-max-block-size: 20rem;
+
+  /* the opt-in streaming header (ADR-0146 F8) — chrome pinned above the scroll region. Marker sizes are
+     em/rem (never raw px), so the header rides the ambient type scale with no per-scale ramp of its own. */
+  --ui-status-stream-header-marker-box: 1em;
+  --ui-status-stream-header-dot-size: 0.5em;
+  --ui-status-stream-header-gap: var(--md-sys-space-sm);
+  --ui-status-stream-header-pad: var(--md-sys-space-xs) var(--md-sys-space-sm);
+  --ui-status-stream-header-surface: var(--md-sys-color-neutral-surface);
+  --ui-status-stream-header-border: var(--md-sys-color-neutral-outline-variant);
+  --ui-status-stream-header-ink: var(--md-sys-color-neutral-on-surface);
+  /* the overall-status ink — the SHAPE (glyph/dot/ring) is the primary ADR-0057 signifier; this is the
+     redundant secondary channel, keyed by [data-status] in the styles block below. */
+  --ui-status-stream-header-status-ink: var(--md-sys-color-neutral-on-surface-variant);
+}
+:where(ui-status-stream [data-part='header'][data-status='active']) {
+  --ui-status-stream-header-status-ink: var(--md-sys-color-primary);
+}
+:where(ui-status-stream [data-part='header'][data-status='done']) {
+  --ui-status-stream-header-status-ink: var(--md-sys-color-success);
+}
+:where(ui-status-stream [data-part='header'][data-status='error']) {
+  --ui-status-stream-header-status-ink: var(--md-sys-color-danger);
+}
+:where(ui-status-stream [data-part='header'][data-status='warning']) {
+  --ui-status-stream-header-status-ink: var(--md-sys-color-warning);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-status-stream) consumes ONLY --ui-status-stream-* ════════════════ */
@@ -29,5 +54,98 @@
     max-block-size: var(--ui-status-stream-max-block-size);
     overflow-y: auto; /* the stream OWNS its scroll region (SPEC-R10) — the one-owned-scroll-region law */
     overscroll-behavior: contain; /* a nested strip's scroll never chains into the page behind it */
+  }
+
+  /* ── the opt-in streaming header (ADR-0146 F8) — chrome PINNED above the scroll region ── */
+  /* `position: sticky; inset-block-start: 0` keeps the header at the scroll viewport's top while entries
+     overflow under it — the realization of F8's "chrome outside the scroll region, never scrolls away"
+     without restructuring the host's single-scroll-region model (entries stay direct flex children). An
+     opaque surface + a bottom hairline keep scrolled entries from bleeding through. */
+  :scope > [data-part='header'] {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--ui-status-stream-header-gap);
+    padding: var(--ui-status-stream-header-pad);
+    background: var(--ui-status-stream-header-surface);
+    border-block-end: 1px solid var(--ui-status-stream-header-border); /* 1px hairline — the annotated exception */
+    color: var(--ui-status-stream-header-ink);
+    font-weight: 500;
+  }
+  :scope > [data-part='header'] [data-part='header-label'] {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* the overall-status marker — mirrors the ui-timeline-item marker's SHAPE law (ADR-0057): done/error/
+     warning show their injected glyph (currentColor); '' / active paint a filled dot, pending a hollow
+     ring — each a distinct SHAPE, the status ink the redundant secondary channel. */
+  :scope > [data-part='header'] [data-part='header-marker'] {
+    position: relative;
+    flex: 0 0 auto;
+    inline-size: var(--ui-status-stream-header-marker-box);
+    block-size: var(--ui-status-stream-header-marker-box);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ui-status-stream-header-status-ink);
+  }
+  /* the injected done/error/warning glyph — sizes to the marker box, inherits the status ink. */
+  :scope > [data-part='header'] [data-part='header-marker'] [data-role='marker'] {
+    inline-size: var(--ui-status-stream-header-marker-box);
+    block-size: var(--ui-status-stream-header-marker-box);
+  }
+  /* the dot/ring — painted for the in-progress statuses (no injected glyph present). '' / active = filled
+     dot; pending = hollow ring. Suppressed when a glyph is present (done/error/warning). */
+  :scope > [data-part='header'] [data-part='header-marker']:not(:has([data-role='marker']))::before {
+    content: '';
+    position: absolute;
+    inline-size: var(--ui-status-stream-header-dot-size);
+    block-size: var(--ui-status-stream-header-dot-size);
+    border-radius: 50%;
+    background: currentColor;
+  }
+  :scope > [data-part='header'][data-status='pending'] [data-part='header-marker']::before {
+    background: transparent;
+    border: 1px solid currentColor; /* 1px hairline ring — the annotated exception */
+  }
+  /* active — a pulse ping (box-shadow, so the dot box never resizes — the centering law); static under
+     reduced-motion (ADR-0122 F4 / SPEC-R4 AC3). */
+  :scope > [data-part='header'][data-status='active'] [data-part='header-marker']::before {
+    animation: ui-status-stream-header-pulse 1.6s ease-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope > [data-part='header'][data-status='active'] [data-part='header-marker']::before {
+      animation: none;
+    }
+  }
+  @keyframes ui-status-stream-header-pulse {
+    0% {
+      box-shadow: 0 0 0 0 currentColor;
+    }
+    100% {
+      box-shadow: 0 0 0 calc(var(--ui-status-stream-header-dot-size) / 1.5) transparent;
+    }
+  }
+
+  /* forced-colors (WHCM) — keep the header legible by SHAPE when fills flatten. The glyph/dot resolve to
+     CanvasText; the hairline separators to CanvasText so the chrome stays delineated. */
+  @media (forced-colors: active) {
+    :scope > [data-part='header'] {
+      border-block-end-color: CanvasText;
+      color: CanvasText;
+    }
+    :scope > [data-part='header'] [data-part='header-marker'] {
+      color: CanvasText;
+    }
+    :scope > [data-part='header'] [data-part='header-marker']::before {
+      background: CanvasText;
+      border-color: CanvasText;
+    }
   }
 }

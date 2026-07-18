@@ -55,10 +55,10 @@ describe('timeline-item.md descriptor — frontmatter parses + schema-valid', ()
 })
 
 describe('timeline-item.md descriptor — status/size reflect, label/description/timestamp/icon do not', () => {
-  it('status is a reflected enum ["","pending","active","done","error"], default ""', () => {
+  it('status is a reflected enum ["","pending","active","done","error","warning"], default "" (ADR-0146 F7 extends it)', () => {
     const status = parsed.attributes.find((a) => a.name === 'status')
     expect(status?.type).toBe('enum')
-    expect(status?.values).toEqual(['', 'pending', 'active', 'done', 'error'])
+    expect(status?.values).toEqual(['', 'pending', 'active', 'done', 'error', 'warning'])
     expect(status?.default).toBe('')
     expect(status?.reflect).toBe(true)
   })

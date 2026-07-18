@@ -33,6 +33,7 @@ const NAME_MAP = {
   plus: 'plus',
   'arrow-up': 'arrow-up',
   microphone: 'microphone',
+  warning: 'warning',
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'

@@ -16,9 +16,9 @@ extends: UIElement       # NOT form-associated — an inert display row, no valu
 attributes:               # attributes-as-API — mirrors timeline-item.ts static props
   - name: status
     type: enum
-    values: ['', pending, active, done, error]
+    values: ['', pending, active, done, error, warning]
     default: ''
-    reflect: true        # reflects → the CSS [status] marker-shape repoint (SPEC-R4)
+    reflect: true        # reflects → the CSS [status] marker-shape repoint (SPEC-R4); `warning` is the ADR-0146 F7 addition — a lesser advisory outcome the single `error` cannot express, its own triangle glyph (ADR-0057)
   - name: label
     type: string
     default: ''
@@ -124,10 +124,12 @@ imperatively appended) — authored once, shared everywhere.
 
 ## Props
 
-- **`status`** (`''`/`pending`/`active`/`done`/`error`, default `''`) — the item's lifecycle state. Each
-  non-empty value renders a marker distinguished by **SHAPE**, never hue alone (ADR-0057): `pending` a
-  hollow ring, `active` a filled dot (with an optional pulse, static under reduced-motion), `done` a
-  built-in check glyph, `error` a built-in cross glyph. The colour channel is redundant.
+- **`status`** (`''`/`pending`/`active`/`done`/`error`/`warning`, default `''`) — the item's lifecycle
+  state. Each non-empty value renders a marker distinguished by **SHAPE**, never hue alone (ADR-0057):
+  `pending` a hollow ring, `active` a filled dot (with an optional pulse, static under reduced-motion),
+  `done` a built-in check glyph, `error` a built-in cross glyph, `warning` (ADR-0146 F7) a built-in
+  triangle-exclamation glyph — a lesser advisory outcome the single `error` state cannot express, its
+  triangle shape never `error`'s cross recoloured. The colour channel is redundant.
 - **`label`** / **`description`** / **`timestamp`** (string, default `''`) — stamped into their content
   cells; `timestamp` is the consumer's own string, carrying no value-codec.
 - **`icon`** (string, default `''`) — a free marker glyph name (`@agent-ui/icons`) that replaces the dot

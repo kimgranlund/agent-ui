@@ -9,6 +9,7 @@ export const ICON_NAMES = [
   'file-pdf', 'file-text', 'file-zip', 'file-code',
   'plus',
   'arrow-up', 'microphone',
+  'warning', // TKT-0083/ADR-0146 F7 — the ui-timeline-item `warning` status glyph (a triangle-exclamation, shape-coded per ADR-0057, distinct from error's `x`)
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 

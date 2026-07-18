@@ -1,7 +1,8 @@
 // status-stream.ts — UIStatusStreamElement, the timeline family's LIVE host (timeline-family.lld.md §4 ·
-// SPEC-R8…R12 · ADR-0122 F1/F2/F4/F6). BEHAVIOUR + the imperative appendEntry/update/finalize API + the
-// tail-follow guard + the completion invariant + self-define ONLY. Anatomy/geometry per the LLD; styling
-// lives in status-stream.css, the public contract in status-stream.md.
+// SPEC-R8…R12 · ADR-0122 F1/F2/F4/F6 · ADR-0146 F6/F7/F8). BEHAVIOUR + the imperative appendEntry/update/
+// finalize/fail API + the tail-follow guard + the completion invariant + the opt-in streaming header +
+// self-define ONLY. Anatomy/geometry per the LLD; styling lives in status-stream.css, the public contract
+// in status-stream.md.
 //
 // NAMED LLD DEVIATION (build-time, mechanical, flagged for the design seat's amendment): the LLD/SPEC-R9
 // name this method `append(entry): UITimelineItemElement`. That name is UNBUILDABLE as specified — every
@@ -22,30 +23,45 @@
 // token spam does not, for free, by choosing role=log's own default semantics rather than a bespoke
 // aria-live wiring). `internals.role` is set in the CONSTRUCTOR (the toast role precedent) — before insertion.
 //
-// The host owns its own scroll region (`overflow-y: auto`, status-stream.css) — the one-owned-scroll-
-// region law. Tail-follow (#tailFollow, SPEC-R10) is the `revealScroll` mechanism (site/pages/a2a-artifact-feed.ts,
-// TKT-0004) promoted to component behaviour: `scrollIntoView({behavior, block:'end'})`, reduced-motion
-// collapsing to an instant jump, deferred past TWO requestAnimationFrame passes so a lazily-laid-out
-// entry (e.g. one revealing detail) has measured before the scroll target is read. The stick-to-bottom
-// guard (#trackStickToBottom) recomputes on every user 'scroll' — so a user reading history is never
-// yanked, and returning to the bottom resumes follow.
+// The opt-in streaming header (ADR-0146 F8): a reflected boolean `header` prop, default false — every
+// shipped consumer renders byte-identically (NO header DOM at all). When set, a `[data-part="header"]` row
+// renders the `label` VISIBLY (today it is aria-only) plus a live overall-status glyph. The header is
+// PINNED (position: sticky, status-stream.css) so it never scrolls away as entries overflow — the "chrome
+// outside the scroll region" F8 rejects a faked first-entry for (a faked entry would scroll away). The
+// overall status follows ONE rule (F8): while un-finalized, the F6 escalation over the strip's TOP-LEVEL
+// entries whenever that escalation OUTRANKS `active` (a mid-turn error/warning child flips the header
+// immediately), and `active` otherwise — so an EMPTY un-finalized stream reads WORKING from construction
+// (the blank-bubble ROOT fix: a header shows "working" the instant a consumer sets header, before any entry
+// or wire signal). `finalize()` settles it to the escalated final status (still-active/pending entries, now
+// truncated by the completion invariant, contribute `warning` — matching the warning-coloured truncated
+// ring); `fail()` settles it `error`. Because THIS host owns every mutation of its top-level entries
+// (appendEntry/update/finalize/fail), the header is recomputed imperatively at each — no MutationObserver
+// is needed for the stream level (the observer ADR-0146 F6 names is for GROUPED children, a follow-up gated
+// on ADR-0143's nested slot; grouping — `StatusEntry.parent` — is NOT built this pass, see the ticket handoff).
 //
 // The completion invariant (#markTruncated/finalize, SPEC-R11, the B7 tracked-completion doctrine applied
 // to display): `finalize()` marks every still-`pending`/`active` entry TRUNCATED via the item's own
 // `markTruncated()` escape hatch (a `:state(truncated)` custom state, timeline-item.ts) — fail-closed, a
 // torn stream never shows "still working."
 //
-// `controls → dom + controls/timeline-item/timeline-item.ts` — the allowed import direction (cross-folder
-// sibling, the toast→button precedent direction). Holds NO transport of its own (a standing negative-
-// control grep — SPEC-R9 AC3): no fetch/ReadableStream/readNdjsonLines reference anywhere in this file.
+// `controls → dom + controls/timeline-item/timeline-item.ts + @agent-ui/icons` — the allowed import
+// direction (cross-folder sibling + the zero-dep icons pack, the timeline-item precedent). Holds NO
+// transport of its own (a standing negative-control grep — SPEC-R9 AC3): no fetch/ReadableStream/
+// readNdjsonLines reference anywhere in this file.
 
 import { UIContainerElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts' // constructs items via its own API (F4)
+import { resolveIcon } from '@agent-ui/icons' // the header's overall-status glyph (done/error/warning) — the timeline-item glyph precedent
+import type { IconName } from '@agent-ui/icons'
+
+/** The closed lifecycle-status vocabulary (ADR-0122 F3 + ADR-0146 F7's `warning`). Mirrors
+ *  ui-timeline-item's own `status` enum exactly — the entry projects 1:1 onto the item's typed prop. */
+export type ItemStatus = '' | 'pending' | 'active' | 'done' | 'error' | 'warning'
 
 /** The structured entry a consumer pushes as its stream yields (F4). NOT parsed — a plain record. */
 export interface StatusEntry {
   key: string
-  status?: '' | 'pending' | 'active' | 'done' | 'error'
+  status?: ItemStatus
   label?: string
   description?: string
   timestamp?: string
@@ -54,10 +70,38 @@ export interface StatusEntry {
   text?: string
 }
 
+// The total severity order (ADR-0146 F6): error > warning > active > pending > done; neutral '' contributes
+// nothing (rank 0 — a group/strip of only-neutral entries escalates to '' itself). One closed ladder, the
+// SAME order the group-header and the stream-header both reduce over.
+const STATUS_RANK: Record<ItemStatus, number> = { '': 0, done: 1, pending: 2, active: 3, warning: 4, error: 5 }
+
+/** The resolved-outcome header glyphs (mirrors timeline-item's STATUS_GLYPH) — the in-progress '' /
+ *  pending / active states paint a pure-CSS dot/ring/pulse in status-stream.css instead. */
+const HEADER_STATUS_GLYPH = { done: 'check', error: 'x', warning: 'warning' } as const satisfies Partial<
+  Record<ItemStatus, IconName>
+>
+
+/**
+ * Worst-child-wins over the closed ADR-0146 F6 ladder — the single reduce both the (future) group header
+ * and the stream header use. Monotone-truthful: the result never reads calmer than the worst contributor
+ * (a group with one `error` child and one still-`active` child reads `error`, the truth that something
+ * already failed outranking "still working"). Neutral '' entries contribute nothing. Pure + exported so
+ * it is directly unit-tested (the ladder's `error`-beats-`active` and `done`+`warning`→`warning` cases).
+ */
+export function escalateStatus(statuses: readonly ItemStatus[]): ItemStatus {
+  let worst: ItemStatus = ''
+  for (const s of statuses) if (STATUS_RANK[s] > STATUS_RANK[worst]) worst = s
+  return worst
+}
+
 const SIZE = ['sm', 'md', 'lg'] as const
 const props = {
   size: { ...prop.enum(SIZE, 'md'), reflect: true },
   label: { ...prop.string(''), reflect: true },
+  // ADR-0146 F8 — the opt-in visible streaming header. Reflected, default false: every shipped consumer
+  // renders byte-identically (no header DOM) until it opts in. When true, the header shows the label + the
+  // live escalated overall status, pinned outside the scroll region.
+  header: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 // The stick-to-bottom threshold (px) — "at/near the bottom" tolerates sub-pixel/rounding scroll noise
@@ -71,6 +115,18 @@ export class UIStatusStreamElement extends UIContainerElement {
   #byKey = new Map<string, UITimelineItemElement>()
   #stuckToBottom = true // the tail-follow guard (§4.3)
 
+  // ── the opt-in streaming header (ADR-0146 F8) ────────────────────────────────────────────────────────
+  #header: HTMLElement | null = null
+  #headerMarker: HTMLElement | null = null
+  #headerLabel: HTMLElement | null = null
+  // The turn's completion state — drives the header's F8 rule (working-floor while un-finalized; the
+  // settled escalation once finalized; forced `error` once failed).
+  #finalized = false
+  #failed = false
+  // Entries the completion invariant truncated — they contribute `warning` to the settled header (the
+  // warning-coloured truncated ring's header-level face). A WeakSet: no key bookkeeping, GC-friendly.
+  #truncated = new WeakSet<UITimelineItemElement>()
+
   constructor() {
     super()
     this.internals.role = 'log' // a POLITE live region via internals.role (the toast role='status' precedent)
@@ -79,6 +135,13 @@ export class UIStatusStreamElement extends UIContainerElement {
   protected connected(): void {
     this.effect(() => {
       this.internals.ariaLabel = this.label === '' ? null : this.label
+      this.#syncHeaderLabel() // the header shows the SAME label VISIBLY when opted in (F8)
+    })
+    // Create/remove the header as `header` toggles — default false renders byte-identically to a headerless
+    // strip (no header DOM at all, the F8 zero-regression guarantee).
+    this.effect(() => {
+      if (this.header) this.#ensureHeader()
+      else this.#removeHeader()
     })
     this.listen(this, 'scroll', () => this.#trackStickToBottom())
   }
@@ -92,6 +155,7 @@ export class UIStatusStreamElement extends UIContainerElement {
     this.#assign(item, entry)
     this.#byKey.set(entry.key, item)
     this.appendChild(item)
+    this.#refreshHeader() // the escalation may have changed (a mid-turn error/warning flips the header)
     this.#tailFollow(item)
     return item
   }
@@ -101,14 +165,36 @@ export class UIStatusStreamElement extends UIContainerElement {
     const item = this.#byKey.get(key)
     if (item === undefined) return // a late update after truncation is tolerated (never a throw) — SPEC-R9 AC2
     this.#assign(item, patch)
+    if (patch.status !== undefined) this.#refreshHeader() // a status transition may re-escalate the header
     if (this.#growsTail(patch)) this.#tailFollow(item)
   }
 
-  /** The completion invariant — mark every still-pending/active entry TRUNCATED (SPEC-R11). */
+  /** The completion invariant — mark every still-pending/active entry TRUNCATED (SPEC-R11), then settle the
+   *  header to the escalated FINAL status (ADR-0146 F8). */
   finalize(): void {
+    this.#settle(false)
+  }
+
+  /** A failed stream (ADR-0146 F8): the completion invariant PLUS a header forced to `error` — the
+   *  completion invariant now has a header-level face. Marks still-pending/active entries truncated exactly
+   *  as `finalize()` does (a failed turn is also torn), then paints the header `error` regardless of the
+   *  entries' own escalation. */
+  fail(): void {
+    this.#settle(true)
+  }
+
+  /** Shared settle path for finalize()/fail(): truncate the unresolved entries, flip the completion state,
+   *  repaint the header to its settled (or forced-error) face. */
+  #settle(failed: boolean): void {
     for (const item of this.#byKey.values()) {
-      if (item.status === 'active' || item.status === 'pending') this.#markTruncated(item)
+      if (item.status === 'active' || item.status === 'pending') {
+        this.#markTruncated(item)
+        this.#truncated.add(item)
+      }
     }
+    this.#finalized = true
+    this.#failed = failed
+    this.#refreshHeader()
   }
 
   /** The entry → item projection — sets only the provided fields onto the item's typed props; `text`
@@ -145,6 +231,83 @@ export class UIStatusStreamElement extends UIContainerElement {
    *  affordance, fail-closed: an unresolved-at-end entry is truncated, never left silently "still working." */
   #markTruncated(item: UITimelineItemElement): void {
     item.markTruncated(true)
+  }
+
+  // ── the streaming header (ADR-0146 F8) + escalation (F6) ─────────────────────────────────────────────
+
+  /** Build the header anatomy ONCE (idempotent — the part-persistence precedent) and prepend it so it is
+   *  the strip's FIRST child (appendEntry always appends AFTER, so entries never displace it). Sticky
+   *  positioning (status-stream.css) pins it outside the visual scroll region. */
+  #ensureHeader(): void {
+    if (this.#header) return
+    const header = document.createElement('div')
+    header.dataset.part = 'header'
+    const marker = document.createElement('span')
+    marker.dataset.part = 'header-marker'
+    const label = document.createElement('span')
+    label.dataset.part = 'header-label'
+    header.append(marker, label)
+    this.#header = header
+    this.#headerMarker = marker
+    this.#headerLabel = label
+    this.insertBefore(header, this.firstChild) // FIRST child — before any already-appended entry
+    this.#syncHeaderLabel()
+    this.#refreshHeader()
+  }
+
+  /** Remove the header entirely (the `header=false` path) — no header DOM lingers, the byte-identical
+   *  headerless rendering the F8 default guarantees. */
+  #removeHeader(): void {
+    this.#header?.remove()
+    this.#header = null
+    this.#headerMarker = null
+    this.#headerLabel = null
+  }
+
+  /** Paint the CURRENT label into the header (a no-op before the header exists / when not opted in). */
+  #syncHeaderLabel(): void {
+    if (this.#headerLabel) this.#headerLabel.textContent = this.label
+  }
+
+  /** Recompute + paint the header's overall status (a no-op before the header exists). Called at every
+   *  mutation the host owns (appendEntry/update-status/finalize/fail) — no observer needed at the stream
+   *  level since the host is the sole mutator of its top-level entries. */
+  #refreshHeader(): void {
+    const header = this.#header
+    const marker = this.#headerMarker
+    if (!header || !marker) return
+    const status = this.#overallStatus()
+    header.dataset.status = status
+    const glyph = (HEADER_STATUS_GLYPH as Record<string, IconName | undefined>)[status]
+    if (glyph !== undefined) {
+      const svg = resolveIcon(glyph)
+      svg.setAttribute('data-role', 'marker')
+      marker.replaceChildren(svg)
+    } else {
+      marker.replaceChildren() // '' / pending / active — pure CSS paints the dot/ring/pulse
+    }
+  }
+
+  /** The header's overall status under the F8 rule: forced `error` on fail(); the settled escalation once
+   *  finalized; otherwise the working-floored escalation (the F6 reduce when it OUTRANKS `active`, else
+   *  `active` — so an empty un-finalized strip reads WORKING from construction). */
+  #overallStatus(): ItemStatus {
+    if (this.#failed) return 'error'
+    const escalated = escalateStatus(this.#topLevelStatuses())
+    if (this.#finalized) return escalated // settled — no working floor
+    return STATUS_RANK[escalated] > STATUS_RANK['active'] ? escalated : 'active'
+  }
+
+  /** The escalation domain (F6/F8): the strip's TOP-LEVEL entries only — direct `ui-timeline-item`
+   *  children of the host, so a future nested (grouped) entry never double-counts at the stream level. A
+   *  truncated entry contributes `warning` (its settled, torn-outcome face), not its frozen `active`. */
+  #topLevelStatuses(): ItemStatus[] {
+    const items = this.querySelectorAll(':scope > ui-timeline-item')
+    return Array.from(items).map((el) => this.#effectiveStatus(el as UITimelineItemElement))
+  }
+
+  #effectiveStatus(item: UITimelineItemElement): ItemStatus {
+    return this.#truncated.has(item) ? 'warning' : item.status
   }
 
   /** Scroll the item's END into view IFF the guard holds — smooth by default, instant under reduced-

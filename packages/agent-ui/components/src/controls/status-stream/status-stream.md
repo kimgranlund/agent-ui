@@ -21,7 +21,11 @@ attributes:               # attributes-as-API — mirrors status-stream.ts stati
   - name: label
     type: string
     default: ''
-    reflect: true        # author accessible name → internals.ariaLabel, cleared to null on ''
+    reflect: true        # author accessible name → internals.ariaLabel, cleared to null on ''; ALSO shown VISIBLY in the header when `header` is set (ADR-0146 F8)
+  - name: header
+    type: boolean
+    default: false
+    reflect: true        # ADR-0146 F8 — opt-in visible streaming header (label + live escalated overall status, pinned above the scroll region). Default false ⇒ byte-identical to a headerless strip
 
 properties:               # IDL beyond attributes-as-API — the imperative streaming contract (ADR-0122 F4)
   - name: appendEntry
@@ -29,13 +33,21 @@ properties:               # IDL beyond attributes-as-API — the imperative stre
   - name: update
     description: 'Method — update(key: string, patch: Partial<StatusEntry>) => void. A KEYED, in-place mutation to the already-rendered entry with that key: transitions status, grows/replaces streamed text, or reveals detail. A key with no matching entry is a silent no-op (never a throw — SPEC-R9 AC2).'
   - name: finalize
-    description: 'Method — finalize() => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED. Fail-closed — a torn stream never shows "still working."'
+    description: 'Method — finalize() => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED, then settles the header (when opted in) to the escalated FINAL status (ADR-0146 F8; a truncated entry contributes `warning`). Fail-closed — a torn stream never shows "still working."'
+  - name: fail
+    description: 'Method — fail() => void. A FAILED stream (ADR-0146 F8): the completion invariant (like finalize()) PLUS the header forced to `error` regardless of the entries'' own escalation — the completion invariant''s header-level face for a thrown turn. A no-op on the header when `header` is not set.'
 
 events: []                # a display-first live host — streamed text/state ride the role=log live region, never a synthetic event (SPEC-R12)
 
 slots: []                  # no consumer-authored light-DOM children — every ui-timeline-item child is created by this host's own imperative API (F4)
 
-parts: []                  # light-DOM, no control-built parts of its own (the appended ui-timeline-item children are the "parts")
+parts:                     # the appended ui-timeline-item children are the "entries"; the opt-in header IS a control-built part (ADR-0146 F8)
+  - name: header
+    description: The opt-in `<div data-part="header">` (present only when `header` is set) — chrome PINNED above the scroll region (position:sticky), carrying the visible label + the live overall-status marker. Its `[data-status]` reflects the escalated overall status.
+  - name: header-marker
+    description: The overall-status marker inside the header — a done/error/warning glyph (currentColor) or a CSS dot/ring/pulse for the in-progress statuses, mirroring ui-timeline-item's own SHAPE-first marker law (ADR-0057).
+  - name: header-label
+    description: The header's visible label cell — the SAME `label` prop that also sets `internals.ariaLabel` (ADR-0146 F8 makes it visible chrome, not aria-only).
 
 customStates: []           # no :state() hooks of its own — the completion invariant rides the ITEM's own :state(truncated) (timeline-item.md)
 
@@ -56,7 +68,7 @@ geometry:
   maxBlockSize: var(--ui-status-stream-max-block-size)  # the bounded viewport that makes the strip a genuine scroll region (SPEC-R10)
   note: A structural/live container — the marker/row-gap geometry belongs entirely to the ui-timeline-item children this host creates (ADR-0122 F1); this host owns only its scroll region.
 
-forcedColors: No forced-colors block — ui-status-stream paints no colour of its own (the ui-list/ui-timeline precedent). Every visible signifier (the marker shapes, the truncated-state dashed ring, the connector) lives on the ui-timeline-item children, which carry their own forced-colors block.
+forcedColors: The ui-timeline-item children carry their own forced-colors block for every entry-level signifier (marker shapes, truncated ring, connector). The opt-in header (ADR-0146 F8) adds a small forced-colors block of its OWN — the header separator, label ink, and the overall-status glyph/dot/ring resolve to CanvasText so the header stays legible by SHAPE when fills flatten.
 ---
 
 # ui-status-stream
@@ -82,7 +94,24 @@ stream.finalize() // t2 (still active) renders TRUNCATED — never a forever-spi
 
 - **`size`** (`sm`/`md`/`lg`, default `md`) — first-class geometry (ADR-0122 F2) for family/catalog
   symmetry; author matching sizes on appended entries (or rely on the default) for rail alignment.
-- **`label`** (string, default `''`) — the strip's accessible name, set on `internals.ariaLabel`.
+- **`label`** (string, default `''`) — the strip's accessible name, set on `internals.ariaLabel`; also
+  shown VISIBLY in the header when `header` is set.
+- **`header`** (boolean, default `false`) — the opt-in visible streaming header (ADR-0146 F8). When set, a
+  pinned `[data-part="header"]` row shows the `label` plus a live overall-status marker escalated over the
+  strip's top-level entries. Default `false` renders byte-identically to a headerless strip (no header DOM).
+
+## The streaming header (ADR-0146 F8)
+
+Opt in with `header` and the strip grows a pinned chrome row that reads **working from construction** —
+even an empty, un-finalized stream shows an `active` header the instant it is set, which is the structural
+fix for the blank-agent-bubble symptom (a headerless empty strip renders zero pixels). The header's
+overall status follows one rule: while the turn is un-finalized it shows the worst-child escalation over
+the top-level entries **when that outranks `active`** (a mid-turn `error`/`warning` entry flips the header
+immediately — the monotone-truth of ADR-0146 F6), and `active` otherwise. `finalize()` settles the header
+to the escalated final status (a still-running entry, now truncated, contributes `warning`); `fail()`
+forces it `error`. The header is `position: sticky` — pinned above the scroll region, never scrolling away
+as entries overflow. The status marker is SHAPE-first (ADR-0057): a glyph for `done`/`error`/`warning`, a
+dot/ring/pulse for the in-progress states.
 
 ## The imperative API (ADR-0122 F4)
 

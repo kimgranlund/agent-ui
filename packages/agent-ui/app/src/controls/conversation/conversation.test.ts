@@ -383,36 +383,78 @@ describe('ui-conversation — busy/re-entrancy guard (TKT-0034), forwarded to th
   })
 })
 
-describe('ui-conversation — narration (SPEC-R6)', () => {
-  it('two distinct categories transition pending -> active -> done, in emission order, deduplicated', async () => {
-    vi.useFakeTimers()
+describe('ui-conversation — narration (SPEC-R6, ADR-0146 live-at-ingest)', () => {
+  it('categories narrate LIVE-AT-INGEST — an entry appears active the moment its FIRST line is ingested, settles done at finalize, deduplicated in emission order', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     const handle = el.beginAgentTurn()
+    const narration = el.querySelector('[data-part="narration"]')!
+    const items = () => [...narration.querySelectorAll('ui-timeline-item')] as (HTMLElement & { status: string })[]
+
+    // no lines yet — zero category entries (the post-hoc replay is GONE; entries are live now)
+    expect(items()).toHaveLength(0)
+
     handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 's3', catalogId: 'agent-ui' } }))
+    // the 'open' entry appears IMMEDIATELY, active — not replayed at finalize
+    expect(items()).toHaveLength(1)
+    expect(items()[0].status).toBe('active')
+
     handle.ingestLine(
       line({ version: 'v1.0', updateComponents: { surfaceId: 's3', components: [{ id: 'root', component: 'Column', children: [] }] } }),
     )
-    handle.finalize()
+    // the 'restructure' entry appears immediately too, in emission order — both active mid-turn
+    expect(items()).toHaveLength(2)
+    expect(items()[1].status).toBe('active')
 
+    // a SECOND line of the same category does NOT add a duplicate entry (deduplicated)
+    handle.ingestLine(
+      line({ version: 'v1.0', updateComponents: { surfaceId: 's3', components: [{ id: 'root', component: 'Column', children: [] }] } }),
+    )
+    expect(items()).toHaveLength(2)
+
+    handle.finalize()
+    // both settle to done at finalize
+    expect(items().map((i) => i.status)).toEqual(['done', 'done'])
+  })
+
+  it('BLANK-BUBBLE regression proof: a turn with ZERO lines and ZERO progress still shows a visible WORKING header from t=0 (ADR-0146 F8)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.beginAgentTurn() // no lines, no progress — just an opened turn
+    const narration = el.querySelector('[data-part="narration"]')!
+    const header = narration.querySelector('[data-part="header"]')
+    expect(header, 'the narration strip must opt into the header (ADR-0146 F8)').not.toBeNull()
+    expect(header!.getAttribute('data-status'), 'the header reads working (active) from construction — the blank-bubble root fix').toBe('active')
+    // and there is a VISIBLE label, not just aria (today aria-only)
+    expect(narration.querySelector('[data-part="header-label"]')?.textContent).toBe('Agent activity')
+  })
+
+  it('handle.progress() routes a lifecycle stage into the strip via the CLOSED code-owned label table; an unknown stage renders NOTHING (the F2 honesty guard, negative control)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
     const narration = el.querySelector('[data-part="narration"]')!
     const items = () => [...narration.querySelectorAll('ui-timeline-item')] as (HTMLElement & { status: string })[]
-    // narrateCategories paces ONE category at a time (a genuine sequential pending->active->done per
-    // category, promoted unchanged from a2ui-chat.ts) — the second entry does not exist until the first
-    // has fully settled.
-    expect(items()).toHaveLength(1) // 'open' only, so far
-    expect(items()[0].status).toBe('pending')
+    const labels = () => items().map((i) => i.querySelector('[data-role="label"]')?.textContent)
 
-    await vi.advanceTimersByTimeAsync(60)
-    expect(items()[0].status).toBe('active')
-    await vi.advanceTimersByTimeAsync(60)
-    expect(items()[0].status).toBe('done')
-    expect(items()).toHaveLength(2) // 'restructure' now appended, in emission order
-    expect(items()[1].status).toBe('pending')
+    handle.progress({ stage: 'reasoning' })
+    expect(labels(), "reasoning renders the FIXED 'Reasoning…' label — never model text").toContain('Reasoning…')
 
-    await vi.advanceTimersByTimeAsync(60)
-    expect(items()[1].status).toBe('active')
-    await vi.advanceTimersByTimeAsync(60)
-    expect(items()[1].status).toBe('done')
+    // 'retry' carries the round ordinal factually
+    handle.progress({ stage: 'retry', round: 2 })
+    expect(labels().some((l) => l === 'Self-correcting… (round 2)'), 'retry composes the real round ordinal in').toBe(true)
+
+    // an UNKNOWN/unobserved stage renders NOTHING (the honesty guard — a stage never observed is never shown)
+    const before = items().length
+    handle.progress({ stage: 'almost-done' as unknown as 'reasoning' })
+    expect(items().length, 'an unknown stage must add no entry').toBe(before)
+  })
+
+  it('a consumer that never calls progress() is byte-behavior-unchanged (no progress entries appear)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'sx', catalogId: 'agent-ui' } }))
+    handle.finalize()
+    const narration = el.querySelector('[data-part="narration"]')!
+    const labels = [...narration.querySelectorAll('ui-timeline-item [data-role="label"]')].map((n) => n.textContent)
+    expect(labels.some((l) => l?.includes('Reasoning') || l?.includes('Self-correcting')), 'no progress entries without progress()').toBe(false)
   })
 
   it('setNote renders the exact note text; no note falls back to a factual tally, never a fabricated sentence', async () => {
@@ -432,7 +474,16 @@ describe('ui-conversation — narration (SPEC-R6)', () => {
     expect(notes()[1].textContent).toMatch(/Emitted 1 A2UI message\(s\): createSurface\./)
   })
 
-  it('fail() truncates narration with an error entry, adds a system bubble, and settles touched hosts (SPEC-R6 AC3)', () => {
+  it('the post-hoc narrateCategories replay + NARRATION_STEP_MS pacing are DELETED, not stranded (ADR-0146 live-at-ingest — grep-zero in the live code)', () => {
+    const src = readFileSync(`${process.cwd()}/packages/agent-ui/app/src/controls/conversation/conversation.ts`, 'utf8') as string
+    const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '') // strip comments (the file header documents the deletion in prose)
+    expect(code, 'NARRATION_STEP_MS must be gone from the live code').not.toMatch(/NARRATION_STEP_MS/)
+    expect(code, 'the narrateCategories replay must be gone from the live code').not.toMatch(/narrateCategories/)
+    // anti-vacuous: the raw source DOES still mention them in the file-header prose (documenting the deletion)
+    expect(src).toMatch(/narrateCategories/)
+  })
+
+  it('fail() truncates narration with an error entry, forces the header to error, adds a system bubble, and settles touched hosts (SPEC-R6 AC3, ADR-0146 F8)', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     const handle = el.beginAgentTurn()
     handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 's6', catalogId: 'agent-ui' } }))
@@ -442,6 +493,9 @@ describe('ui-conversation — narration (SPEC-R6)', () => {
     const errorItem = narration.querySelector('ui-timeline-item[status="error"]')
     expect(errorItem).not.toBeNull()
     expect(errorItem!.textContent).toMatch(/network error/)
+
+    // ADR-0146 F8 — fail() forces the streaming header to error (the completion invariant's header-level face)
+    expect(narration.querySelector('[data-part="header"]')?.getAttribute('data-status')).toBe('error')
 
     const system = el.querySelector('[data-part="bubble"][data-role="system"] [data-part="body"]') as HTMLElement
     expect(system.textContent).toMatch(/network error/)

@@ -133,6 +133,43 @@ describe('ui-timeline-item — status markers are DISTINCT by SHAPE, not hue alo
     expect(errorSvg!.innerHTML, 'done and error must render DIFFERENT glyph markup').not.toBe(doneMarkup)
   })
 
+  it('warning (ADR-0146 F7) injects its OWN distinct glyph (a triangle) — different from BOTH done (check) and error (x), not a colour swap', async () => {
+    const { item } = mount('<ui-timeline-item></ui-timeline-item>')
+    const glyphFor = async (status: string): Promise<string | undefined> => {
+      item.setAttribute('status', status)
+      await new Promise((r) => setTimeout(r, 0))
+      return item.querySelector('[data-part="marker"] svg[data-role="marker"]')?.innerHTML
+    }
+    const done = await glyphFor('done')
+    const error = await glyphFor('error')
+    const warning = await glyphFor('warning')
+    expect(warning, 'warning must render a built-in glyph').toBeTruthy()
+    expect(warning, 'warning glyph must differ from done (check)').not.toBe(done)
+    expect(warning, 'warning glyph must differ from error (x)').not.toBe(error)
+  })
+
+  it('forced-colors keeps the warning glyph legible — its distinct triangle SHAPE survives in CanvasText (Chromium emulates, WebKit asserts baseline)', async () => {
+    const { item } = mount('<ui-timeline-item status="warning"></ui-timeline-item>')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(item.querySelector('[data-part="marker"] svg[data-role="marker"]'), 'the warning glyph must render').not.toBeNull()
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
+      const svg = item.querySelector('[data-part="marker"] svg[data-role="marker"]')
+      expect(svg, 'the warning glyph shape must survive forced-colors').not.toBeNull()
+      expect(svg!.children.length, 'the glyph path must still be present under forced-colors').toBeGreaterThan(0)
+      const markerColor = getComputedStyle(item.querySelector('[data-part="marker"]')!).color
+      expect(markerColor, 'the glyph must resolve to a visible system colour, never transparent').not.toMatch(/rgba\(0, 0, 0, 0\)/)
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+
   it('prefers-reduced-motion collapses the active pulse to static (no running animation)', async () => {
     if (server.browser !== 'chromium') {
       expect(window.matchMedia('(prefers-reduced-motion: reduce)').matches).toBe(false)

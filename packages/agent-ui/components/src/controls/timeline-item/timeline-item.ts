@@ -28,10 +28,11 @@
 // never re-stamp label/description/timestamp, and vice versa): a consumer-adopted `[data-role="marker"]`
 // child is NEVER touched. Otherwise: `icon` non-empty wins (F3, "a free marker coexists with status,
 // orthogonal") — `resolveIcon(icon)` is injected and tagged `data-role="marker"` so the SAME CSS
-// suppression rule fires; else `status==='done'`/`'error'` inject the built-in `check`/`x` glyph
-// (@agent-ui/icons, already fleet-adopted — disclosure's chevron / toast's close-x precedent) tagged the
-// same way; else (`''`/`pending`/`active`) the marker is cleared and CSS `::before`/`::after` paint the
-// dot/ring/pulse — the non-color SHAPE signifier (ADR-0057, SPEC-R4).
+// suppression rule fires; else a resolved-outcome `status` (`done`/`error`/`warning`, ADR-0146 F7) injects
+// its built-in glyph (`check`/`x`/`warning` — @agent-ui/icons, already fleet-adopted; disclosure's chevron
+// / toast's close-x precedent) tagged the same way, each a DISTINCT shape (ADR-0057: warning's triangle is
+// never error's `x` recoloured); else (`''`/`pending`/`active`) the marker is cleared and CSS
+// `::before`/`::after` paint the dot/ring/pulse — the non-color SHAPE signifier (ADR-0057, SPEC-R4).
 //
 // `controls → dom + controls/disclosure/disclosure.ts + @agent-ui/icons` — the allowed import direction
 // (cross-control, the segmented-control/radio + disclosure/icons precedents).
@@ -42,8 +43,16 @@ import type { UIDisclosureElement } from '../disclosure/disclosure.ts'
 import { resolveIcon } from '@agent-ui/icons'
 import type { IconName } from '@agent-ui/icons'
 
-const STATUS = ['', 'pending', 'active', 'done', 'error'] as const
+const STATUS = ['', 'pending', 'active', 'done', 'error', 'warning'] as const
 const SIZE = ['sm', 'md', 'lg'] as const
+
+// The resolved-outcome states that inject a built-in marker glyph (the in-progress '' / pending / active
+// states paint a pure-CSS dot/ring/pulse instead). `warning` (ADR-0146 F7) joins done/error here with its
+// OWN distinct triangle-exclamation glyph — shape-coded, never hue-alone (ADR-0057): the shape alone,
+// never the colour, distinguishes warning from error's `x`.
+const STATUS_GLYPH = { done: 'check', error: 'x', warning: 'warning' } as const satisfies Partial<
+  Record<(typeof STATUS)[number], IconName>
+>
 
 const props = {
   // reflected (SPEC-R2 AC2: a JS-set status/size round-trips through getAttribute) — the LLD's frozen
@@ -170,8 +179,9 @@ export class UITimelineItemElement extends UIElement {
       marker.replaceChildren(svg)
       return
     }
-    if (this.status === 'done' || this.status === 'error') {
-      const svg = resolveIcon(this.status === 'done' ? 'check' : 'x')
+    const glyph = (STATUS_GLYPH as Record<string, IconName | undefined>)[this.status]
+    if (glyph !== undefined) {
+      const svg = resolveIcon(glyph)
       svg.setAttribute('data-role', 'marker')
       marker.replaceChildren(svg)
       return
