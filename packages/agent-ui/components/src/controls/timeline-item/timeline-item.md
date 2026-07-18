@@ -156,6 +156,19 @@ itself). `nested` is a genuine `<ui-timeline>` — recursion is arbitrary author
 disclosure is closed the last nested descendant's status + label auto-fill the `trailing` cell (unless a
 consumer already owns it), clearing while open.
 
+A GROUP parent — an item that hosts a nested `<ui-timeline>` (`nested`, above) — paints its OWN glyph set
+instead of a leaf's plain dot/bare check/cross: a spinning ring for `active`, a circled check for `done`,
+the same triangle-exclamation glyph for both `error` and `warning` (the card evidences a problem, not
+which flavor). Its header row also reads as one line — `label · description` share row 1 with
+`timestamp`, rather than a leaf's label-then-description stack — and the composed disclosure's toggle
+renders compact rather than at full control-height (the Figma "Claude Code Gateway" reasoning-chain card,
+node 21:1641-1643). The one-line layout is a CSS rule keyed off `:has([data-role="nested"])` with no
+`@scope … to()` bound, so it reaches every item NESTED inside that group too (a "Task Step" row is itself
+a `ui-timeline-item`, several levels down) — which is exactly what the Figma card wants: a step row ALSO
+reads `label · description  time` on one line. Only an item with no grouped ancestor anywhere above it
+keeps the original two-row stack. Both the glyph and the layout are pure-CSS/data distinctions — no new
+prop.
+
 ## Accessibility
 
 `internals.role = 'listitem'` is set in the constructor (semantics before insertion). No built-in
