@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-17 |
 > | **Proposed by** | bug-report intake ([TKT-0082](../tickets/tkt-0082-a2ui-text-heading-sizes-too-large-for-generated-ui.md) — Kim's screenshot: a Quizmaster quiz-card title/question rendering at document-headline scale, "the font-sizes are crazy... this is pointless when generating UI") |
-> | **Ratified by** | pending — Kim |
+> | **Ratified by** | Kim, 2026-07-18 |
 > | **Repairs** | on ratification: `a2ui-catalog.spec.md` §5.2 `Text` row · `a2ui-catalog.lld.md`'s `textFactory` description · this ADR's own Status cell |
 > | **Supersedes / Superseded by** | **Amends [ADR-0078](./0078-ui-text-three-axis-variant-size-as.md) cl.5** (the wire→triple fan-out table only; cl.5's other content — the wire vocabulary staying protocol-unchanged, the real-heading `as` stamp, `catalog.json` untouched — all STAND). Relates [ADR-0025](./0025-ui-text-display-primitive-type-scale.md) / ADR-0078 (both rule `ui-text`'s OWN type scale density-invariant for its docs-site context — untouched by this change, which is scoped to the A2UI catalog's separate mapping choice, never to `ui-text`/`text.css`). |
 

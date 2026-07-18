@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-17 |
 > | **Proposed by** | design seat ([TKT-0091](../tickets/tkt-0091-ui-timeline-nesting-accordion.md) intake — Kim's ask: `ui-timeline` items become nestable to arbitrary depth, a whole-step accordion, and a collapsed-step preview of its last nested descendant) |
-> | **Ratified by** | — |
+> | **Ratified by** | Kim, 2026-07-18 |
 > | **Repairs** | on ratification+build: `packages/agent-ui/components/src/controls/timeline-item/timeline-item.ts` (+`.md`, +`.css`) gains the `[data-role="nested"]` adoption slot, extends the composed `ui-disclosure` to wrap it alongside `[data-role="detail"]`, and adds the collapsed-summary preview effect + observer · `.claude/docs/spec/timeline-family.spec.md` §3.1/§4 amended (append-only, this ADR's Decision is the delta) · `.claude/docs/lld/timeline-family.lld.md` §2 amended likewise · NO catalog change in this build (Fork F6 defers it, a named a2ui-builder follow-up) · [TKT-0091](../tickets/tkt-0091-ui-timeline-nesting-accordion.md) |
 > | **Supersedes / Superseded by** | Extends [ADR-0122](./0122-timeline-family-and-live-status-stream.md) — unfences its F6 clause *"One nesting level v1 (flat + 1); deeper nesting is fenced"* to arbitrary recursion; ADR-0122's own body stays untouched (this is a new, append-only amendment record, not an edit to an accepted ADR). Reuses [ADR-0022](./0022-childpart-native-movebefore-reorder-focus.md) (adoption/move semantics), the `ui-disclosure` (ADR-0113 cl.4) composition ADR-0122 F6 already established, and the `data-last`/heal-observer `MutationObserver` class (`ui-toast-region`, `ui-disclosure`'s own heal observer). |
 

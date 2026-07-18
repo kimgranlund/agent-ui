@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-17 |
 > | **Proposed by** | design seat (the THEMING intake, Kim's directive: "embrace `--md-sys-*` pattern throughout and migrate any `--ui-*` patterns", clarified via AskUserQuestion notes to the FULL shared migration — invented md-sys names where M3 has no upstream family) |
-> | **Ratified by** | — |
+> | **Ratified by** | Kim, 2026-07-18 |
 > | **Repairs** | on ratification+build: `shared/src/tokens/dimensions.css` + `base.css` (the declarations) · every fleet consumer of the ~34 shared names (~150 files) · `naming.md` §5/§12 (the foundation-tier canon + the 2026-07-12 ruling's supersession note) · `dimensions.test.ts`/`styling-gates.test.ts`/`family-coherence.test.ts` (the gates) · the ADR-0038 geometry tables' prose · the theme-provider built-CSS fixture |
 > | **Supersedes / Superseded by** | **Partially supersedes the 2026-07-12 "permanent two-tier, no convergence" naming ruling** (naming.md §5, recorded at its lines 113-114/192): its FOUNDATION half ("foundation constants share `--ui-` by history") is reversed by Kim's 2026-07-17 theming directive — three affirmations: the ask, the full-shared clarification note, the ratified intent read-back. Its CONTROL half **stands and strengthens**: per-component `--ui-{name}-*` stays, so "prefix = ownership" becomes CLEAN (`--ui-` ⇒ component-owned, `--md-sys-` ⇒ system-owned) instead of allowlist-managed. Extends ADR-0078 (the md-sys color/typescale adoption this completes). |
 

@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-17 |
 > | **Proposed by** | design seat ([TKT-0093](../tickets/tkt-0093-composable-content-region-rule-system.md) intake — Kim's ask, off the `ui-agent-admin` screenshots: decompose `ui-tabs`'/`ui-split-pane`'s composition anatomy properly and settle whether panes/tab-panels manage header/body/footer content directly or delegate to a shared container pattern placed inside them) |
-> | **Ratified by** | — |
+> | **Ratified by** | Kim, 2026-07-18 |
 > | **Repairs** | on ratification+build: `controls/tabs/tabs.css` (the `:scope[fill]` variant + the panel scrollbar seam) · `controls/tabs/tabs.ts` (+`tabs.md`) — the ONE reflected `fill` boolean · the A2UI `Tabs` row disposition (Q1 cl.4) · `controls/split/split-pane.md` + `controls/tabs/tabs.md` gain the Q2/Q3 policy statements · the docs-site composing-containers teaching block (the ADR-0056 cl.2 home) gains the three-rule statement · a NAMED follow-up ticket for the `agent-admin.css` retrofit (Q3, Consequences — out of this build per TKT-0093's own scope) · [TKT-0093](../tickets/tkt-0093-composable-content-region-rule-system.md). Decomp: [`pane-tab-content-region-rules.decomp.json`](../decompositions/pane-tab-content-region-rules.decomp.json) (coverage-clean, `--strict`) |
 > | **Supersedes / Superseded by** | Extends [ADR-0120](./0120-app-surfaces-m4-panes-settings.md) (the primitive-vs-chrome tier split, generalized here from "where code lives" to "who owns content regions") · Extends [ADR-0104](./0104-tabs-transparent-surface-default.md) (tabs' no-surface identity — this ADR keeps the panel content-opinion-free the same way) · Extends [ADR-0056](./0056-region-less-card-humane-default.md) cl.2 (the composing-containers pedagogy gains the pane/panel rule) · Relates [ADR-0046](./0046-container-box-model.md) (the `[data-box]` region system this ADR ratifies as the taught generalization; its rem-fixed-padding ruling decides Q2) · [ADR-0015](./0015-container-surface-space-token-model.md) (the space ladder Q2 declines to attach) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (the Lane-B catalog disposition for `fill`) |
 

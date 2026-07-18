@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-17 |
 > | **Proposed by** | design seat ([TKT-0092](../tickets/tkt-0092-git-native-ticket-backend.md) intake — Kim's `/feature` ask: "transition repo to use git issues, PR, etc.") |
-> | **Ratified by** | — |
+> | **Ratified by** | Kim, 2026-07-18 |
 > | **Repairs** | on ratification+build: `CLAUDE.md` (a new entry-file routing-table row: TICKET tier → `gh issue`) · `.claude/skills/agent-ui-doc-standards/SKILL.md` §1/§4 (the ticket dialect row becomes an Issue-Type + label + close-reason contract) · `CONTRIBUTING.md` (the intake-path paragraph) · `site/lib/docs-grammar.test.ts` (the ticket-YAML STRUCTURAL checks retire; nothing replaces them file-side — the Issue-body contract is unenforceable by a markdown-file lint gate) · NEW `.github/ISSUE_TEMPLATE/{feature,bug}.yml` (GitHub issue-forms YAML mirroring the Summary/Acceptance/Links/Scope-Open and Summary/Acceptance/Repro/Expected-Actual/Classification/Severity section contracts) · [TKT-0092](../tickets/tkt-0092-git-native-ticket-backend.md) |
 > | **Supersedes / Superseded by** | Narrows [TKT-0092](../tickets/tkt-0092-git-native-ticket-backend.md)'s own literal framing ("GitHub Issues become the sole intent-capture mechanism") to the TICKET tier only — ADR/SPEC/LLD/PRD/PLAN/ROADMAP are explicitly NOT delegated, per the routing-table pattern below. Relates `agent-ui-doc-standards` §1 (the three status dialects — this amends the Ticket row's mechanism, not its taxonomy) and §6 (the archive/historical-record rule, applied to the 92 existing files). Honors the git-native `github-issue-pr-primitives` pack's own boundary: it states platform facts, it does not decide; this ADR is the decision the pack's Findings ground. |
 
