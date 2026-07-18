@@ -1,0 +1,71 @@
+{
+  "domain": "code",
+  "plan": true,
+  "_note": "ADR-0147 — ui-code-editor richtext live-preview mode. Extends the ALREADY-SHIPPED ./editor surface (ADR-0139) rather than rebuilding it — nodes touch ONLY code/src/editor/* (editor.ts/cm-editor.ts/editor.css/editor.md + a NEW cm-richtext.ts) and the editor's own gates. OUTSIDE-IN nodes = the surfaces the mode touches; INSIDE-OUT actions = what the extended editor must newly DO, crossed via hosts. plan:true — every leaf carries a checkable accept predicate. Kim pre-ratified the two architecture forks (CM6 decorations, mode lives on ui-code-editor) — no node re-opens them. entry-list.ts's five call sites are deliberately NOT nodes: default mode='source' keeps them byte-unchanged (the ADR's compatibility law); ui-markdown / ./highlight / a2ui are untouched by construction.",
+  "nodes": [
+    { "id": "n1", "label": "ui-code-editor — richtext live-preview mode (one component, markdown the only model)", "leaf": false },
+
+    { "id": "n2", "label": "the `mode` prop (source|richtext, default source, reflected) + the inert-fallback law (editor.ts)", "leaf": true, "accept": "`npm test editor` — jsdom: mode defaults to 'source' and reflects; setting mode='richtext' under jsdom (no CM mount possible) leaves the plain surface, value, FACE participation, and input/change timing byte-identical to today (the inert-fallback law, ADR-0147 cl.6); an unknown mode value behaves as 'source'" },
+    { "id": "n3", "label": "the CmHandle richtext seam — `setRichtext(on)` via a new richtextCompartment + `richtextAvailable` on the handle (cm-editor.ts)", "leaf": true, "accept": "`npm run test:browser editor` — both engines: after mount, handle.setRichtext(true/false) reconfigures the live view with NO document change, NO selection loss, NO history reset (undo still reaches pre-toggle edits); richtextAvailable is true iff the lang-markdown pack loaded (false ⇒ the toggle never renders)" },
+
+    { "id": "n4", "label": "cm-richtext.ts — the decoration engine (a pure VIEW transform over the same EditorView document)", "leaf": false },
+    { "id": "n5", "label": "construct decorations — ATX headings, strong, emphasis, inline code, links, unordered-list bullets, blockquote: style the construct, hide its markup (Decoration.mark/line/replace + a bullet WidgetType over the lang-markdown syntax tree)", "leaf": true, "accept": "`npm run test:browser editor` — both engines: with mode='richtext' and value '## Title\\n**bold** _em_ `code`\\n- item\\n> quote\\n[go](https://x)', the visible DOM (cursor parked on a blank line) contains NONE of the raw marks (##, **, _, backticks, -, >, [, ](https://x)) while the construct text is present, the heading line carries rt-h2 with a larger computed font-size, the strong span computes font-weight ≥ 600, and a bullet widget replaces the list mark; a fenced code block's fences + contents stay verbatim (deliberately undecorated)" },
+    { "id": "n6", "label": "reveal-near-cursor — the selection's line(s) suppress the HIDE decorations (styling stays), the standard live-preview UX", "leaf": true, "accept": "`npm run test:browser editor` — both engines: placing the selection on the '## Title' line makes '##' visible in the DOM (the line KEEPS its rt-h2 class/size); moving the selection to another line hides it again; a multi-line range selection reveals every intersected line's marks" },
+    { "id": "n7", "label": "link activation — modifier-click (Cmd/Ctrl) opens the link's URL; plain click stays cursor placement (editing remains primary)", "leaf": true, "accept": "`npm run test:browser editor` — both engines: Cmd/Ctrl+click on a decorated link invokes window.open (stubbed) with the URL resolved from the syntax tree, 'noopener'; a plain click does NOT open and instead places the cursor in the link text" },
+
+    { "id": "n8", "label": "the mode-toggle part (editor.ts) — availability-gated, keyboard-operable, aria-pressed, emits `toggle` on user action", "leaf": true, "accept": "`npm run test:browser editor` — both engines: after CM enhancement with richtextAvailable, a [data-part='mode-toggle'] (role=button, tabindex 0, aria-pressed mirroring mode==='richtext') renders; click AND Enter AND Space each flip `mode` and emit ONE host-targeted `toggle`; a programmatic mode set emits NOTHING and still syncs aria-pressed; disabled hosts render no operable toggle, readonly hosts keep it operable; jsdom leg: no CM ⇒ the part never exists" },
+    { "id": "n9", "label": "editor.css — the rt-* class block + --ui-code-editor-rt-* tokens, toggle-part styling (sticky corner), forced-colors degrade, and the :not([hidden]) visibility guard on every new part rule", "leaf": true, "accept": "`npm run test:browser editor` — both engines: rt-h1..h6 sizes ride --ui-code-editor-rt-* tokens fed from the editor's own font token; forced-colors leg keeps every rt-* construct legible as CanvasText (weight/style survive — SPEC-C5: no information rides hue alone); EVERY new display rule targeting a [data-part] carries :not([hidden]) (the guard whose absence on [data-part='editor'] already caused the duplicate-surface bug — asserted by a css-text probe or the browser visibility leg); no transition animates the mode switch (it SNAPS; reduced-motion owes nothing new)" },
+    { "id": "n10", "label": "confinement.test.ts — the DESIGNATED allowlist widens to the lazy PAIR {cm-editor.ts, cm-richtext.ts}; every other invariant byte-identical", "leaf": true, "accept": "`npm test confinement` — the gate proves: cm-richtext.ts statically imports CM (anti-vacuous), cm-richtext.ts is statically imported ONLY by cm-editor.ts (stays inside the ONE lazy chunk), editor.ts still carries ZERO static CM imports and still reaches cm-editor.ts via dynamic import only, and NO static CM import exists anywhere else under code/src" },
+    { "id": "n11", "label": "editor.md descriptor — the mode attribute row, the mode-toggle part, the toggle event, keyboard rows; the descriptor↔props trip-wire stays green", "leaf": true, "accept": "`npm test editor-descriptor` — the frontmatter gains mode (attributes), mode-toggle (parts), toggle (events), and the toggle's keyboard rows; compareDescriptorToProps passes against the extended static props; the prose section documents the inert-fallback + availability law" },
+    { "id": "n12", "label": "cross-mode identity legs — value/FACE/event-timing byte-identical in both modes; round-trip is vacuous by construction and PROVEN anyway", "leaf": true, "accept": "`npm run test:browser editor` — both engines: type into a richtext-mode editor ⇒ .value is the exact markdown string (marks included); flipping mode source↔richtext (repeatedly) leaves .value, the form value, the undo history, and the committed/change baseline untouched; blur-with-change timing fires identically in both modes; jsdom leg: the FACE suite (reset/restore/validity) passes with mode='richtext' set" },
+    { "id": "n13", "label": "size + identity gates — decoration bytes land in the LAZY chunk only; default barrels stay CM-free and byte-identical", "leaf": true, "accept": "`npm run check && npm test` green (identity, barrels, layering untouched); `npm run size` re-measures the lazy CM chunk line-item (cm-richtext.ts joins it) — the figure moves, the main-graph budgets do NOT; zero new npm dependencies in code/package.json (the gen-ui-kit undeclared-CM-package P0 cannot recur because nothing new is imported)" },
+    { "id": "n14", "label": "independent component-reviewer GO before commit", "leaf": true, "accept": "a fresh-context component-reviewer pass returns GO for the extended ui-code-editor against ADR-0147's clause sheet (mode contract, decoration/reveal correctness, toggle a11y, inert-fallback, confinement/size gates) — generator ≠ critic" }
+  ],
+  "actions": [
+    { "id": "a1", "label": "declare a mode (source|richtext) on the host — default source, reflected, inert wherever CM cannot mount" },
+    { "id": "a2", "label": "reconfigure the LIVE CodeMirror view's richtext layer at runtime via a Compartment, preserving doc/selection/history" },
+    { "id": "a3", "label": "decorate the v1 markdown constructs — style the construct, hide its markup — as a pure view transform over the same document" },
+    { "id": "a4", "label": "reveal raw markup on the line(s) the selection occupies, keeping the styling" },
+    { "id": "a5", "label": "open a link's URL on modifier-click while plain click stays cursor placement" },
+    { "id": "a6", "label": "offer a built-in, keyboard-operable, state-announcing mode toggle that appears only when richtext is actually available" },
+    { "id": "a7", "label": "keep .value, FACE participation, and input/change timing byte-identical in both modes — markdown stays the ONLY model" },
+    { "id": "a8", "label": "paint the richtext constructs from the component's own token chain, degrade under forced-colors, and guard every new part's visibility CSS" },
+    { "id": "a9", "label": "keep the CM confinement invariant — editor.ts static-CM-free, all decoration code inside the one lazy chunk" },
+    { "id": "a10", "label": "keep the public descriptor in lockstep with the new surface" },
+    { "id": "a11", "label": "keep the size/identity gates green with decoration bytes confined to the lazy chunk" },
+    { "id": "a12", "label": "gate the build on an independent reviewer GO" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n2" },
+    { "action": "a2", "node": "n3" },
+    { "action": "a3", "node": "n5" },
+    { "action": "a4", "node": "n6" },
+    { "action": "a5", "node": "n7" },
+    { "action": "a6", "node": "n8" },
+    { "action": "a7", "node": "n12" },
+    { "action": "a8", "node": "n9" },
+    { "action": "a9", "node": "n10" },
+    { "action": "a10", "node": "n11" },
+    { "action": "a11", "node": "n13" },
+    { "action": "a12", "node": "n14" }
+  ],
+  "edges": [
+    { "from": "n5", "to": "n3", "why": "the compartment (n3) wraps the decoration extension n5 builds — the extension must exist to be compartment-configured" },
+    { "from": "n3", "to": "n2", "why": "the host mode effect (n2's build completion) drives handle.setRichtext, which n3 defines" },
+    { "from": "n5", "to": "n6", "why": "reveal-near-cursor (n6) is a suppression pass inside the SAME decoration builder n5 writes" },
+    { "from": "n5", "to": "n7", "why": "link activation (n7) resolves the URL from the same syntax-tree walk and targets the spans n5 decorates" },
+    { "from": "n2", "to": "n8", "why": "the toggle (n8) flips the mode prop n2 declares" },
+    { "from": "n3", "to": "n8", "why": "the toggle's availability gate reads richtextAvailable, which n3 exposes" },
+    { "from": "n5", "to": "n9", "why": "the rt-* classes n9 styles are emitted by n5's decorations" },
+    { "from": "n8", "to": "n9", "why": "the toggle part n9 styles (sticky corner, guard, forced-colors) is created by n8" },
+    { "from": "n5", "to": "n10", "why": "the confinement allowlist widening (n10) names the new module n5 creates" },
+    { "from": "n2", "to": "n11", "why": "the descriptor (n11) documents the prop n2 adds" },
+    { "from": "n8", "to": "n11", "why": "the descriptor (n11) documents the part/event/keyboard surface n8 adds" },
+    { "from": "n2", "to": "n12", "why": "the cross-mode identity legs (n12) flip the prop n2 declares" },
+    { "from": "n3", "to": "n12", "why": "the history/selection-preservation identity claims (n12) ride the compartment reconfigure n3 builds" },
+    { "from": "n6", "to": "n14", "why": "review (n14) grades reveal correctness, which must be built first" },
+    { "from": "n9", "to": "n14", "why": "review (n14) grades the CSS guard + forced-colors legs, which must be built first" },
+    { "from": "n12", "to": "n14", "why": "review (n14) grades the identity claims, which must be proven first" },
+    { "from": "n13", "to": "n14", "why": "review (n14) runs against a green gate set, never a red one" }
+  ]
+}
