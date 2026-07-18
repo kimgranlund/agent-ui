@@ -22,6 +22,10 @@ attributes:               # attributes-as-API — mirrors status-stream.ts stati
     type: string
     default: ''
     reflect: true        # author accessible name → internals.ariaLabel, cleared to null on ''
+  - name: header
+    type: boolean
+    default: false
+    reflect: true        # ADR-0146 F8 — the opt-in visible header; false (default) creates ZERO header DOM, byte-identical to before
 
 properties:               # IDL beyond attributes-as-API — the imperative streaming contract (ADR-0122 F4)
   - name: appendEntry
@@ -29,13 +33,19 @@ properties:               # IDL beyond attributes-as-API — the imperative stre
   - name: update
     description: 'Method — update(key: string, patch: Partial<StatusEntry>) => void. A KEYED, in-place mutation to the already-rendered entry with that key: transitions status, grows/replaces streamed text, or reveals detail. A key with no matching entry is a silent no-op (never a throw — SPEC-R9 AC2).'
   - name: finalize
-    description: 'Method — finalize() => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED. Fail-closed — a torn stream never shows "still working."'
+    description: 'Method — finalize() => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED. Fail-closed — a torn stream never shows "still working." Also settles the opt-in header (F8) to the escalated final status.'
 
 events: []                # a display-first live host — streamed text/state ride the role=log live region, never a synthetic event (SPEC-R12)
 
 slots: []                  # no consumer-authored light-DOM children — every ui-timeline-item child is created by this host's own imperative API (F4)
 
-parts: []                  # light-DOM, no control-built parts of its own (the appended ui-timeline-item children are the "parts")
+parts:                     # control-built, only when opted in — the appended ui-timeline-item children are the rest of the "parts" (F4)
+  - name: header
+    description: 'ADR-0146 F8 — the pinned `<div data-part="header">`, present ONLY when the reflected `header` prop is set. Position-sticky above the scrolling entries; holds the visible label + a live overall-status shape glyph. Absent (zero DOM) while `header` is false — every shipped consumer renders byte-identically.'
+  - name: header-status
+    description: 'The header row''s overall-status shape glyph (○ pending · ● active · ✓ done · ▲ warning · ✕ error) — SHAPE-coded per ADR-0057, `aria-hidden` (decorative; the strip''s entries carry the real live semantics). While un-finalized it reads the escalation over top-level entries when it OUTRANKS `active`, else `active`; `finalize()` settles it to the escalated final status.'
+  - name: header-label
+    description: 'The header row''s VISIBLE label text (mirrors the `label` prop that is otherwise aria-only) — present only inside the opt-in header.'
 
 customStates: []           # no :state() hooks of its own — the completion invariant rides the ITEM's own :state(truncated) (timeline-item.md)
 

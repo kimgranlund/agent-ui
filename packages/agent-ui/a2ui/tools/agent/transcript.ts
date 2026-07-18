@@ -36,8 +36,21 @@ import { canvasButtonSeed } from '../../src/examples/index.ts'
 // ADR-0137 clause 2: `RecordedTranscript`/`RecordedTurn` moved to the (now-exported) replay engine at
 // `src/agent/recorded-transport.ts`; this demo fixture re-imports them rather than owning them.
 import type { RecordedTranscript } from '../../src/agent/recorded-transport.ts'
+import type { TurnProgress } from '../../src/agent/meta-line.ts'
 
 const jsonl = (m: A2uiServerMessage): string => JSON.stringify(m)
+
+// ADR-0146 F1 — plausible authored lifecycle stages for the KEYLESS demo, so the default (no-key) chat
+// shows real staged feedback instead of a blank bubble while a turn "generates". A recorded (non-thinking)
+// turn omits `reasoning`; the live path adds it when extended thinking is on. Replayed AHEAD of the turn's
+// note/lines by `createRecordedTransport` (the SAME meta-line shape the live producer emits).
+const DEMO_PROGRESS: TurnProgress[] = [
+  { stage: 'sent' },
+  { stage: 'started' },
+  { stage: 'content' },
+  { stage: 'validating' },
+  { stage: 'done' },
+]
 
 // Turn 2 — the agent's follow-up after the user clicks the button: a second surface confirming the
 // interaction. `root` (a Column, catalog-valid: Grid/Column/Row all declare a `ChildList` children model)
@@ -99,6 +112,8 @@ export const recordedTranscript: RecordedTranscript = {
   turns: [
     {
       lines: canvasButtonSeed.messages.map(jsonl),
+      // ADR-0146 F1 — staged lifecycle feedback the keyless demo shows while this turn "generates".
+      progress: DEMO_PROGRESS,
       // Honest per-turn rationale (ADR-0088 §1): this turn's actual payload is a `canvas` surface with
       // one solid Button labelled "Click me" wired to a `submit` action — nothing else.
       note: 'I set up a single canvas surface with one button, labeled "Click me" — click it and I\'ll hear about it.',
@@ -118,6 +133,7 @@ export const recordedTranscript: RecordedTranscript = {
     },
     {
       lines: TURN2.map(jsonl),
+      progress: DEMO_PROGRESS, // ADR-0146 F1 — staged feedback for the follow-up turn too
       // Honest per-turn rationale: this turn's actual payload is a NEW "confirmation" surface holding
       // one Text component that reports the click back — no other change to the canvas surface.
       note: 'Thanks for the click — I added a second surface with a Text confirming the button worked.',

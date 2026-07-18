@@ -21,7 +21,7 @@ const css = readFileSync(`${STREAM}/status-stream.css`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['size', 'label']
+const ATTR_NAMES = ['size', 'label', 'header'] // ADR-0146 F8 — the opt-in header attribute
 
 describe('status-stream.md descriptor — frontmatter parses + schema-valid', () => {
   it('has a leading frontmatter fence and a prose body', () => {

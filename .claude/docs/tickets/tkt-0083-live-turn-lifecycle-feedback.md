@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0083
-status: open
+status: doing
 date: 2026-07-17
 owner:
 kind: feature
@@ -256,3 +256,37 @@ true home, SPEC-R6's proposed codification; A-before-B named a delivery-priority
 parallelism deliberate) — all applied, coverage re-run clean. NOTE: minted as ADR-0146, not 0144 —
 0144/0145 were claimed same-day by TKT-0093/TKT-0092's intakes (numbering race caught at the
 pre-push fetch, renumbered before commit).
+
+**2026-07-18 — BUILD landed (status → doing; both slices), gates green, independent review OUTSTANDING.**
+The n0 external gate is satisfied: TKT-0091 shipped ADR-0143's `[data-role="nested"]` slot + shared
+disclosure + collapsed-summary preview to `main` (`a726a8b`), verified against the live
+`timeline-item.ts` before n4 relied on it. **Slice A (component/UI):** `ui-timeline-item` gains the
+`warning` member (n2) — a distinct CSS **triangle** silhouette (F7 leaves the glyph to the build; a
+CSS shape stays in-scope, avoids editing the generated icon pack, and is ADR-0057 shape-coded + legible
+under `forced-colors`); `ui-status-stream` gains the opt-in `header` (n3, pinned via `position: sticky`,
+browser-proven), `StatusEntry.parent` grouping (n4) via a NEW `ui-timeline-item.ensureNestedSlot(factory)`
+that REUSES ADR-0143's shared disclosure + preview observer (never a second nesting primitive), and
+worst-child-wins escalation over `error > warning > active > pending > done` (n5); aria-live discipline
+verified (n6, the nested host is role=list, the outer strip the sole role=log); `ui-conversation` narrates
+categories LIVE at ingest (n7) — the `narrateCategories` replay + `NARRATION_STEP_MS` DELETED (grep-zero) —
+and `AgentTurnHandle` widens with `progress(ev)` (n8) routing lifecycle events through a closed
+`PROGRESS_LABEL` table (unknown stage → nothing; `retry` carries its round ordinal). **Slice B (pipeline):**
+`meta-line.ts` carries the `progress` envelope kind (n9, versionless fault isolation intact);
+`AgentProvider.stream` gains additive `onEvent?` + the Anthropic adapter maps its message_start/
+content_block_start/thinking-delta/message_stop frames (n10, text accumulation byte-identical);
+`produce()` interleaves progress lines behind an OPT-IN `ProduceOptions.progress` flag (n11 — so every
+existing produce-loop test stays byte-identical; validate-then-stream untouched, `progressDetail` gates the
+raw excerpt); `RecordedTurn.progress` replays ahead of the lines + the shipped demo transcript gained
+authored stages (n12); the dev proxy opts the live path in and carries the lines unchanged, and the
+consumer loops (`a2ui-chat.ts` → `handle.progress`, `admin-live-runner.ts`/`agent-admin.ts` via a new
+`AdminSurfaceTurnEvent` `progress` arm; `a2ui-live.ts` peels+skips, no strip) route `meta.progress` (n13).
+**ESCALATED-as-realization (not a design change):** F6's "one MutationObserver serves preview + escalation"
+is realized at the STATUS-STREAM layer (recompute-on-`update`), not driven from timeline-item's observer —
+because status-stream mediates every grouped entry's status change (making a nested-subtree observer
+redundant) and driving escalation from timeline-item would impose auto-status-override on ADR-0143's shipped
+durable-timeline nesting; the OBSERVABLE contract (worst-child ladder, live recompute, top-level-only header)
+is honored exactly. One import subtlety fixed: the app-layer `TurnProgress` type imports from the
+browser-safe `@agent-ui/a2ui/agent/meta-line.ts` (NOT the node-first `./agent` barrel, which drags `node:fs`
+into the site type-check). `npm run check && npm test` green; timeline-item/status-stream/conversation
+browser suites green. **Independent code-review NOT yet run** (this build seat has no dispatch tool) — it
+must pass BEFORE the `doing → done` flip.

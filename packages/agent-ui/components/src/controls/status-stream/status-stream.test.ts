@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
+import { whenFlushed } from '@agent-ui/components'
 import { UIStatusStreamElement } from './status-stream.ts'
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts'
 import { UITimelineElement } from '../timeline/timeline.ts'
@@ -174,6 +175,161 @@ describe('ui-status-stream — the completion invariant (SPEC-R11)', () => {
     el.appendEntry({ key: 'a', status: 'active' })
     el.finalize()
     expect(() => el.update('a', { status: 'done' })).not.toThrow()
+    el.remove()
+  })
+})
+
+// ── ADR-0146 F8 — the opt-in header ────────────────────────────────────────────────────────────────────
+describe('ui-status-stream — the opt-in header (ADR-0146 F8)', () => {
+  it('header:false (default) creates ZERO header DOM — byte-identical to before (the regression guard)', () => {
+    const { el } = makeStream()
+    expect(el.header).toBe(false)
+    expect(el.querySelector('[data-part="header"]')).toBeNull()
+    el.appendEntry({ key: 'a', status: 'active', label: 'x' })
+    expect(el.querySelector('[data-part="header"]')).toBeNull() // still none — an entry never conjures a header
+    el.remove()
+  })
+
+  it('header:true renders the VISIBLE label + a live status glyph, and an EMPTY un-finalized strip reads "working" from construction', async () => {
+    const el = document.createElement('ui-status-stream') as UIStatusStreamElement
+    el.setAttribute('header', '')
+    el.setAttribute('label', 'Agent activity')
+    document.body.append(el)
+    await whenFlushed()
+    const header = el.querySelector('[data-part="header"]')!
+    expect(header).not.toBeNull()
+    expect(header.querySelector('[data-part="header-label"]')?.textContent).toBe('Agent activity') // label is VISIBLE now (not aria-only)
+    // an empty, un-finalized strip reads 'active' (the blank-bubble root fix): header shows working from t=0
+    expect(header.getAttribute('data-status')).toBe('active')
+    expect(header.querySelector('[data-part="header-status"]')?.textContent).toBe('●')
+    el.remove()
+  })
+
+  it('a mid-turn error child flips the header to error IMMEDIATELY (F6 monotone truth: error outranks active)', () => {
+    const el = document.createElement('ui-status-stream') as UIStatusStreamElement
+    el.setAttribute('header', '')
+    document.body.append(el)
+    el.appendEntry({ key: 'a', status: 'active', label: 'working' })
+    const header = el.querySelector('[data-part="header"]')!
+    expect(header.getAttribute('data-status')).toBe('active') // still working
+    el.appendEntry({ key: 'b', status: 'error', label: 'boom' })
+    expect(header.getAttribute('data-status')).toBe('error') // an error outranks active → header flips at once
+    expect(header.querySelector('[data-part="header-status"]')?.textContent).toBe('✕')
+    el.remove()
+  })
+
+  it('a done child does NOT outrank active while un-finalized (the strip still reads working), then finalize() settles to the escalated final status', () => {
+    const el = document.createElement('ui-status-stream') as UIStatusStreamElement
+    el.setAttribute('header', '')
+    document.body.append(el)
+    el.appendEntry({ key: 'a', status: 'done', label: 'one step done' })
+    const header = el.querySelector('[data-part="header"]')!
+    expect(header.getAttribute('data-status')).toBe('active') // done does not outrank active — still working
+    el.finalize()
+    expect(header.getAttribute('data-status')).toBe('done') // settled to the escalated final status (all done)
+    expect(header.querySelector('[data-part="header-status"]')?.textContent).toBe('✓')
+    el.remove()
+  })
+
+  it('toggling `header` false tears the header DOM back down (no orphan)', async () => {
+    const el = document.createElement('ui-status-stream') as UIStatusStreamElement
+    el.header = true
+    document.body.append(el)
+    await whenFlushed()
+    expect(el.querySelector('[data-part="header"]')).not.toBeNull()
+    el.header = false
+    await whenFlushed()
+    expect(el.querySelector('[data-part="header"]')).toBeNull()
+    el.remove()
+  })
+})
+
+// ── ADR-0146 F5 — grouped entries (the ADR-0143 nested-slot mechanism, reused) ────────────────────────────
+describe('ui-status-stream — grouped entries via StatusEntry.parent (ADR-0146 F5)', () => {
+  it('appendEntry({parent}) nests the child INSIDE a nested <ui-timeline> mounted in the parent item\'s [data-role="nested"] slot', async () => {
+    const { el } = makeStream()
+    const group = el.appendEntry({ key: 'g', status: 'active', label: 'Reasoning' })
+    const child = el.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'step 1' })
+    await whenFlushed()
+    // the child is a descendant of the group item, inside a nested ui-timeline (ADR-0143's slot) — NOT a top-level sibling of the strip
+    expect(group.contains(child)).toBe(true)
+    expect(child.closest('ui-timeline')).not.toBeNull()
+    expect(el.querySelectorAll(':scope > ui-timeline-item')).toHaveLength(1) // only the group is a direct strip child
+    el.remove()
+  })
+
+  it('the keyed registry stays FLAT — update(childKey, patch) reaches the nested entry identically', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'g', label: 'group' })
+    const child = el.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'step' })
+    el.update('c1', { status: 'done', label: 'step done' })
+    expect(child.status).toBe('done')
+    expect(child.label).toBe('step done')
+    el.remove()
+  })
+
+  it('finalize() truncation reaches nested pending/active entries', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'g', label: 'group' })
+    const child = el.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'step' })
+    const spy = vi.spyOn(child, 'markTruncated')
+    el.finalize()
+    expect(spy).toHaveBeenCalledWith(true) // a still-active NESTED entry is truncated, fail-closed
+    el.remove()
+  })
+
+  it('the nested group host is a real <ui-timeline> (role=list) — one addition-announcement path, no nested live region (F6/aria discipline)', async () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'g', label: 'group' })
+    el.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'step' })
+    await whenFlushed()
+    const nested = el.querySelector('ui-timeline')!
+    expect(nested).not.toBeNull()
+    // @ts-expect-error — internals is protected; the probe asserts the nested host is role=list, NOT a second live region
+    expect(nested.internals.role).toBe('list')
+    expect(nested.hasAttribute('aria-live')).toBe(false) // no bespoke live-region on the nested host — the outer log is the sole announcer
+    el.remove()
+  })
+})
+
+// ── ADR-0146 F6 — worst-child-wins status escalation ─────────────────────────────────────────────────────
+describe('ui-status-stream — worst-child-wins escalation (ADR-0146 F6)', () => {
+  it('a group with children [done, warning] reads `warning` (warning outranks done)', () => {
+    const { el } = makeStream()
+    const group = el.appendEntry({ key: 'g', label: 'group' })
+    el.appendEntry({ key: 'c1', parent: 'g', status: 'done' })
+    el.appendEntry({ key: 'c2', parent: 'g', status: 'warning' })
+    expect(group.status).toBe('warning')
+    el.remove()
+  })
+
+  it('a group with children [active, error] reads `error` — the error-beats-active case asserted explicitly', () => {
+    const { el } = makeStream()
+    const group = el.appendEntry({ key: 'g', label: 'group' })
+    el.appendEntry({ key: 'c1', parent: 'g', status: 'active' })
+    el.appendEntry({ key: 'c2', parent: 'g', status: 'error' })
+    expect(group.status).toBe('error') // the truth that something already failed outranks "still working"
+    el.remove()
+  })
+
+  it('neutral "" children contribute nothing to the escalation', () => {
+    const { el } = makeStream()
+    const group = el.appendEntry({ key: 'g', label: 'group' })
+    el.appendEntry({ key: 'c1', parent: 'g', status: '' })
+    el.appendEntry({ key: 'c2', parent: 'g', status: 'pending' })
+    expect(group.status).toBe('pending') // '' is severity 0 — pending wins
+    el.remove()
+  })
+
+  it('escalation recomputes LIVE on a child status change (update), monotone-truthful as children settle', () => {
+    const { el } = makeStream()
+    const group = el.appendEntry({ key: 'g', label: 'group' })
+    el.appendEntry({ key: 'c1', parent: 'g', status: 'active' })
+    expect(group.status).toBe('active')
+    el.update('c1', { status: 'warning' })
+    expect(group.status).toBe('warning') // recomputed live from the child's new status
+    el.appendEntry({ key: 'c2', parent: 'g', status: 'error' })
+    expect(group.status).toBe('error') // a later error outranks the warning — never reads calmer than the worst child
     el.remove()
   })
 })

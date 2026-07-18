@@ -64,8 +64,12 @@
 > replayed ahead of the turn's lines (SPEC-R2/N4 recorded↔live parity — the keyless demo demonstrates the
 > feature). `AgentTransport.turn(): AsyncIterable<string>` stays BYTE-IDENTICAL (the ADR-0137-ratified
 > `./agent` surface is why); ADR-0088's typed-frame upgrade trigger is weighed and re-deferred with a
-> sharpened predicate (ADR-0146 F1). This is a design record only — no build has landed against this
-> amendment yet.
+> sharpened predicate (ADR-0146 F1). **Build status (2026-07-18, TKT-0083):** LANDED — `meta-line.ts`
+> carries the `progress` kind (versionless fault isolation intact); `AgentProvider.stream` gains
+> `onEvent?` and the Anthropic adapter maps its lifecycle/thinking SSE frames onto it; `produce()`
+> interleaves progress lines behind the opt-in `ProduceOptions.progress` (validate-then-stream untouched);
+> `progressDetail` gates the raw excerpt; `RecordedTurn.progress` replays ahead of the lines and the dev
+> proxy carries them line-by-line unchanged (deterministic unit/round-trip suites green, no key).
 
 ---
 

@@ -104,3 +104,50 @@ describe('readMetaLine — the ask field (ADR-0097 §1)', () => {
     expect(isMetaLine(line)).toBe(false)
   })
 })
+
+// ── ADR-0146 §F1: the additive `progress` kind ──────────────────────────────────────────────────────────
+describe('readMetaLine — the progress kind (ADR-0146 F1)', () => {
+  it('round-trips a bare {stage} progress line', () => {
+    const line = '{"a2uiMeta":{"progress":{"stage":"reasoning"}}}'
+    const parsed = readMetaLine(line)
+    expect(isMetaLine(line)).toBe(true)
+    expect(parsed?.a2uiMeta.progress).toEqual({ stage: 'reasoning' })
+  })
+
+  it('round-trips a progress line carrying round + detail', () => {
+    const line = '{"a2uiMeta":{"progress":{"stage":"retry","round":2,"detail":"CATALOG at root.mode"}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed?.a2uiMeta.progress).toEqual({ stage: 'retry', round: 2, detail: 'CATALOG at root.mode' })
+  })
+
+  it('accepts every closed stage member and no other', () => {
+    for (const stage of ['sent', 'started', 'reasoning', 'content', 'validating', 'retry', 'done']) {
+      expect(readMetaLine(`{"a2uiMeta":{"progress":{"stage":"${stage}"}}}`)?.a2uiMeta.progress?.stage).toBe(stage)
+    }
+    // a stage OUTSIDE the closed union drops the progress field (never the whole envelope) — note stands
+    const line = '{"a2uiMeta":{"note":"hi","progress":{"stage":"thinking-hard"}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.note).toBe('hi')
+    expect(parsed!.a2uiMeta.progress).toBeUndefined()
+  })
+
+  it('a malformed progress (non-object / array / missing stage) drops only itself — note/ask still parse', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","progress":"nope"}}')!.a2uiMeta.progress).toBeUndefined()
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","progress":["sent"]}}')!.a2uiMeta.progress).toBeUndefined()
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","progress":{}}}')!.a2uiMeta.progress).toBeUndefined()
+    const both = readMetaLine('{"a2uiMeta":{"note":"hi","ask":{"surfaceId":"ask-1"},"progress":42}}')
+    expect(both!.a2uiMeta.note).toBe('hi')
+    expect(both!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
+    expect(both!.a2uiMeta.progress).toBeUndefined()
+  })
+
+  it('drops a non-number round / non-string detail without dropping the valid stage', () => {
+    const line = '{"a2uiMeta":{"progress":{"stage":"retry","round":"two","detail":99}}}'
+    expect(readMetaLine(line)?.a2uiMeta.progress).toEqual({ stage: 'retry' }) // round/detail rejected, stage kept
+  })
+
+  it('the version discriminator still wins even when progress is present (a leaked line fault-isolates)', () => {
+    const line = '{"version":"v1.0","a2uiMeta":{"progress":{"stage":"done"}}}'
+    expect(isMetaLine(line)).toBe(false) // provably an A2uiServerMessage shape ⇒ dispatch() → VERSION_UNSUPPORTED
+  })
+})

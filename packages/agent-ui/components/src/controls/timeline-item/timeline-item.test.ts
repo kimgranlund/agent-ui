@@ -63,6 +63,7 @@ describe('ui-timeline-item — upgrade + typed prop surface', () => {
     const fn = (): void => {
       const el = new UITimelineItemElement()
       el.status = 'done'
+      el.status = 'warning' // ADR-0146 F7 — a real member of the closed union
       el.size = 'sm'
       // @ts-expect-error — status is a closed enum, not an arbitrary string
       el.status = 'bogus'
@@ -154,7 +155,7 @@ describe('ui-timeline-item — the marker glyph (icon prop wins over status; don
     expect(marker.querySelector('svg[data-role="marker"]')).not.toBeNull()
   })
 
-  it('status="pending"/"active"/"" clear any glyph — pure CSS paints the dot/ring/pulse', async () => {
+  it('status="pending"/"active"/""/"warning" clear any glyph — pure CSS paints the dot/ring/pulse/triangle', async () => {
     const { el, marker } = makeItem()
     el.status = 'done'
     await whenFlushed()
@@ -163,6 +164,25 @@ describe('ui-timeline-item — the marker glyph (icon prop wins over status; don
     el.status = 'active'
     await whenFlushed()
     expect(marker.querySelector('svg')).toBeNull()
+
+    // ADR-0146 F7 — `warning` is a CSS SHAPE (a triangle), NOT an injected glyph: the marker clears to let
+    // CSS paint, exactly like ''/pending/active (unlike done/error which inject an svg).
+    el.status = 'done'
+    await whenFlushed()
+    expect(marker.querySelector('svg')).not.toBeNull()
+    el.status = 'warning'
+    await whenFlushed()
+    expect(marker.querySelector('svg')).toBeNull()
+    el.remove()
+  })
+
+  it('ADR-0146 F7 — `warning` is a real, reflected enum member (round-trips through getAttribute, distinct from error)', () => {
+    const el = document.createElement('ui-timeline-item') as UITimelineItemElement
+    el.status = 'warning'
+    expect(el.status).toBe('warning')
+    expect(el.getAttribute('status')).toBe('warning') // reflects (SPEC-R2 AC2)
+    el.status = 'error'
+    expect(el.status).toBe('error') // warning and error are distinct members, never a rename of one another
     el.remove()
   })
 })

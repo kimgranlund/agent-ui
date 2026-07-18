@@ -254,7 +254,11 @@ export function a2uiDevProxyPlugin(): Plugin {
               // ADR-0138 cl.3 — the optional persona section: string, length-capped (16 KB — a runaway
               // guard; the composed admin persona is ~1-2 KB), forwarded verbatim; anything else ⇒ absent.
               const persona = typeof personaSystem === 'string' && personaSystem.length <= 16_384 ? personaSystem : undefined
-              for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona })) {
+              // ADR-0146 F1 — opt the LIVE path into interleaved progress lines (the recorded backbone shows
+              // authored stages; the proxy shows real ones). `progressDetail` stays the default 'stages' — no
+              // raw thinking text crosses the wire (F3). Progress lines flow through the SAME per-line
+              // res.write below (no protocol change) — they are ordinary NDJSON lines to the browser.
+              for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true })) {
                 res.write(line + '\n')
               }
               res.end()

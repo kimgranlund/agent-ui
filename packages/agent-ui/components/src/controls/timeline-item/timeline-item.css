@@ -211,6 +211,11 @@
 :where(ui-timeline-item[status='error']) {
   --ui-timeline-item-marker-ink: var(--md-sys-color-danger);
 }
+/* ADR-0146 F7 — the NEW `warning` member's redundant ink (the SHAPE, a triangle in the styles block below,
+   is the primary channel; --md-sys-color-warning is the secondary one, per ADR-0057). */
+:where(ui-timeline-item[status='warning']) {
+  --ui-timeline-item-marker-ink: var(--md-sys-color-warning);
+}
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-timeline-item) consumes ONLY --ui-timeline-item-* ════════════════ */
 
@@ -276,6 +281,22 @@
     100% {
       box-shadow: 0 0 0 calc(var(--ui-timeline-item-dot-size) / 1.5) transparent;
     }
+  }
+
+  /* 'warning' (ADR-0146 F7) — a distinct TRIANGLE silhouette, categorically NOT the circle the
+     ''/pending/active states wear and NOT the check/x glyph done/error inject: the SHAPE is the primary
+     signifier (SPEC-R4 / ADR-0057, shape first, hue second — --md-sys-color-warning is only the redundant
+     ink). Carved by clip-path on the marker's own ::before (no injected glyph — F7 leaves the glyph to the
+     build, and a CSS shape keeps this entirely within timeline-item's own two files). Sized to the marker
+     box (not the small dot) so the triangle reads at a glance, matching the visual weight of done/error.
+     No pulse: a warning is a settled advisory, not in-progress work. */
+  :scope[status='warning'] [data-part='marker']::before {
+    inline-size: var(--ui-timeline-item-marker-box);
+    block-size: var(--ui-timeline-item-marker-box);
+    border: 0;
+    border-radius: 0;
+    background: var(--ui-timeline-item-marker-ink);
+    clip-path: polygon(50% 6%, 100% 94%, 0% 94%);
   }
 
   /* the connector — a REAL element, not a pseudo (bridges the item's own margin-block-end row-gap so the
@@ -360,6 +381,12 @@
   :scope:state(truncated) [data-part='marker']::before {
     display: block;
     background: transparent;
+    /* normalize away any status-specific shape (e.g. the ADR-0146 warning triangle's clip-path/0-radius)
+       so a torn entry ALWAYS reads as the same dashed interrupted RING, whatever status it wore. */
+    border-radius: 50%;
+    clip-path: none;
+    inline-size: var(--ui-timeline-item-dot-size);
+    block-size: var(--ui-timeline-item-dot-size);
     border: var(--ui-timeline-item-connector-width) dashed var(--ui-timeline-item-truncated-border);
     /* an active entry's pulse must NOT survive truncation — a torn stream showing a still-pulsing marker
        is exactly the "still working" cue SPEC-R11 exists to kill (component-review finding). Wins over the

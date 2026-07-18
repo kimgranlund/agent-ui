@@ -17,7 +17,8 @@
 import { describe, it, expect } from 'vitest'
 import { produce, ProduceHalt } from '../agent/produce.ts'
 import type { ProduceDeps } from '../agent/produce.ts'
-import type { AgentProvider, TurnInput } from '../agent/agent-transport.ts'
+import type { AgentProvider, ProviderEvent, TurnInput } from '../agent/agent-transport.ts'
+import type { TurnProgress } from '../agent/meta-line.ts'
 import { readMetaLine } from '../agent/meta-line.ts'
 import { buildSystemPrompt } from '../agent/system-prompt.ts'
 import { validateA2ui } from '../renderer/validate.ts'
@@ -130,6 +131,96 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect((halted as ProduceHalt).failures.length).toBeGreaterThan(0)
     expect(lines).toHaveLength(0) // NOTHING invalid was emitted
     expect(calls()).toBe(3) // exhausted the round bound
+  })
+})
+
+// ── ADR-0146 F1/F3 — interleaved live progress (opt-in), with a stub that drives onEvent ──────────────────
+
+/** A stub that drives `onEvent` (like the Anthropic adapter would) BEFORE yielding each round's text, so
+ *  produce()'s drain-between-fragments logic sees the lifecycle events ahead of the content. */
+function eventStubProvider(script: { text: string; events?: ProviderEvent[] }[]): AgentProvider {
+  let n = 0
+  return {
+    async *stream(req) {
+      const step = script[Math.min(n, script.length - 1)]!
+      n += 1
+      for (const ev of step.events ?? []) req.onEvent?.(ev)
+      yield step.text
+    },
+  }
+}
+const progressOf = (lines: string[]): TurnProgress[] =>
+  lines.map((l) => readMetaLine(l)?.a2uiMeta.progress).filter((p): p is TurnProgress => p !== undefined)
+
+async function collect(it: AsyncIterable<string>): Promise<string[]> {
+  const out: string[] = []
+  for await (const line of it) out.push(line)
+  return out
+}
+
+describe('produce() interleaved progress (ADR-0146 F1/F3)', () => {
+  const deps = (provider: AgentProvider): ProduceDeps => ({ provider, retrieve: () => [], catalog: defaultCatalog })
+
+  it('progress:true + a stub driving onEvent yields progress lines AS THEY HAPPEN, strictly BEFORE any content line (validate-then-stream intact, SPEC-R5)', async () => {
+    const provider = eventStubProvider([{ text: VALID, events: [{ kind: 'message_start' }, { kind: 'block_start' }] }])
+    const lines = await collect(produce(intent, deps(provider), { maxRounds: 3, progress: true }))
+
+    const stages = progressOf(lines).map((p) => p.stage)
+    expect(stages).toEqual(['sent', 'started', 'content', 'validating', 'done']) // produce's own stages + the provider's `started` (deduped)
+
+    // every progress line precedes every A2UI content line — nothing invalid or unvalidated ever streams first
+    const contentLines = lines.filter((l) => readMetaLine(l) === undefined)
+    expect(contentLines).toHaveLength(2) // the VALID payload's two messages
+    const firstContentIdx = lines.findIndex((l) => readMetaLine(l) === undefined)
+    const lastProgressIdx = lines.map((l, i) => (readMetaLine(l)?.a2uiMeta.progress ? i : -1)).filter((i) => i >= 0).at(-1)!
+    expect(lastProgressIdx).toBeLessThan(firstContentIdx)
+    expect(validateA2ui(contentLines.map((l) => JSON.parse(l)), defaultCatalog).valid).toBe(true)
+  })
+
+  it('progress:false (the default) is BYTE-IDENTICAL — zero progress lines, provider driven without onEvent', async () => {
+    const provider = eventStubProvider([{ text: VALID, events: [{ kind: 'message_start' }, { kind: 'thinking', text: 'x' }] }])
+    const lines = await collect(produce(intent, deps(provider), { maxRounds: 3 })) // no `progress` opt-in
+    expect(progressOf(lines)).toEqual([]) // NOT a single progress line
+    expect(lines).toHaveLength(2) // exactly the VALID payload, as before 0146
+  })
+
+  it('a self-correct round yields {stage:"retry", round} (the round ordinal, factually)', async () => {
+    const provider = eventStubProvider([{ text: INVALID }, { text: VALID }])
+    const lines = await collect(produce(intent, deps(provider), { maxRounds: 3, progress: true }))
+    const retry = progressOf(lines).find((p) => p.stage === 'retry')
+    expect(retry).toBeDefined()
+    expect(typeof retry!.round).toBe('number') // the self-correct round ordinal
+    expect(lines.filter((l) => readMetaLine(l) === undefined).join('\n')).not.toContain('NotARealComponent') // the invalid round never streamed
+  })
+
+  it('progressDetail absent ⇒ NO detail text on a reasoning event (the F3 default, a negative control); "full" ⇒ a bounded excerpt', async () => {
+    const script = [{ text: VALID, events: [{ kind: 'thinking' as const, text: 'my raw chain of thought' }] }]
+
+    const stagesDefault = await collect(produce(intent, deps(eventStubProvider(script)), { maxRounds: 3, progress: true }))
+    const reasoningDefault = progressOf(stagesDefault).find((p) => p.stage === 'reasoning')!
+    expect(reasoningDefault).toBeDefined()
+    expect(reasoningDefault.detail).toBeUndefined() // default 'stages' — NO thinking text on the wire
+
+    const stagesFull = await collect(produce(intent, deps(eventStubProvider(script)), { maxRounds: 3, progress: true, progressDetail: 'full' }))
+    const reasoningFull = progressOf(stagesFull).find((p) => p.stage === 'reasoning')!
+    expect(reasoningFull.detail).toBe('my raw chain of thought') // 'full' forwards the bounded excerpt
+  })
+
+  it('note-only + ProduceHalt behaviour is byte-unchanged even with progress:true (empty ≠ invalid; a halt still throws)', async () => {
+    // a note-only turn returns cleanly (never a ProduceHalt), and emits `done` + the note meta-line
+    const noteOnly = await collect(produce(intent, deps(eventStubProvider([{ text: '{"a2uiMeta":{"note":"nothing"}}' }])), { maxRounds: 3, progress: true }))
+    const note = noteOnly.map((l) => readMetaLine(l)).find((m) => m?.a2uiMeta.note)
+    expect(note!.a2uiMeta.note).toBe('nothing')
+    expect(progressOf(noteOnly).some((p) => p.stage === 'done')).toBe(true)
+
+    // an always-invalid turn STILL halts (progress lines don't change the halt-and-report contract)
+    let halted: unknown
+    try {
+      await collect(produce(intent, deps(eventStubProvider([{ text: INVALID }])), { maxRounds: 3, progress: true }))
+    } catch (e) {
+      halted = e
+    }
+    expect(halted).toBeInstanceOf(ProduceHalt)
   })
 })
 

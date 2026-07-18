@@ -17,6 +17,13 @@
 :where(ui-status-stream) {
   --ui-status-stream-min-inline-size: 16rem;
   --ui-status-stream-max-block-size: 20rem;
+  /* ADR-0146 F8 — the opt-in header row: an opaque backdrop so scrolling entries pass UNDER it, and its
+     own gap/weight. The status glyph inherits the redundant hue from --ui-status-stream-header-ink, which
+     [data-status] repoints per severity (the SHAPE, painted in status-stream.ts, is the primary channel). */
+  --ui-status-stream-header-gap: var(--md-sys-space-xs);
+  --ui-status-stream-header-pad: var(--md-sys-space-2xs);
+  --ui-status-stream-header-surface: var(--md-sys-color-neutral-surface);
+  --ui-status-stream-header-ink: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-status-stream) consumes ONLY --ui-status-stream-* ════════════════ */
@@ -29,5 +36,48 @@
     max-block-size: var(--ui-status-stream-max-block-size);
     overflow-y: auto; /* the stream OWNS its scroll region (SPEC-R10) — the one-owned-scroll-region law */
     overscroll-behavior: contain; /* a nested strip's scroll never chains into the page behind it */
+  }
+
+  /* ADR-0146 F8 — the opt-in header: pinned OUTSIDE the scroll (position: sticky keeps it at the top of the
+     viewport while entries overflow beneath), an opaque backdrop so entries scroll under it, never over it. */
+  :scope [data-part='header'] {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--ui-status-stream-header-gap);
+    padding-block: var(--ui-status-stream-header-pad);
+    background: var(--ui-status-stream-header-surface);
+    color: var(--ui-status-stream-header-ink);
+    font-weight: 500;
+  }
+  :scope [data-part='header-status'] {
+    color: var(--ui-status-stream-header-ink);
+  }
+  /* the redundant hue channel per severity (the SHAPE glyph is the primary signifier — ADR-0057). */
+  :scope [data-part='header'][data-status='active'] [data-part='header-status'] {
+    color: var(--md-sys-color-primary);
+  }
+  :scope [data-part='header'][data-status='done'] [data-part='header-status'] {
+    color: var(--md-sys-color-success);
+  }
+  :scope [data-part='header'][data-status='warning'] [data-part='header-status'] {
+    color: var(--md-sys-color-warning);
+  }
+  :scope [data-part='header'][data-status='error'] [data-part='header-status'] {
+    color: var(--md-sys-color-danger);
+  }
+
+  /* forced-colors (WHCM) — the header stays legible when fills flatten: an opaque Canvas backdrop and
+     CanvasText label/glyph, so the pinned "working/done/error" cue survives (the shape carries it). */
+  @media (forced-colors: active) {
+    :scope [data-part='header'] {
+      background: Canvas;
+      color: CanvasText;
+    }
+    :scope [data-part='header-status'] {
+      color: CanvasText;
+    }
   }
 }

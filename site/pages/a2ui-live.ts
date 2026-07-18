@@ -290,6 +290,9 @@ async function runTurn(input: TurnInput): Promise<void> {
       // never enter `allLines`/the JSON tab or `canvasHost.ingest` (the meta-line is provably not an
       // `A2uiServerMessage`, but filtering here — not just relying on that fact — keeps the renderer's
       // ingest path pristine by construction). ADR-0097 §1: `ask`, if any, rides the SAME meta-line.
+      // ADR-0146 F1: a `progress` meta-line rides here too and is peeled the SAME way — this page renders a
+      // hand-rolled log (no `ui-conversation`/`AgentTurnHandle`), so there is no live status strip to route
+      // it into; peeling it here keeps it off the canvas/JSON tab (the fault-isolation this filter exists for).
       const meta = readMetaLine(line)
       if (meta) {
         note = meta.a2uiMeta.note

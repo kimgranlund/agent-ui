@@ -134,10 +134,13 @@ async function runTurn(input: TurnInput): Promise<void> {
       // ADR-0088 §1: peel the reserved leading meta-line BEFORE it reaches the primitive — it must never be
       // ingested (it is provably not an `A2uiServerMessage`), so it never enters narration, routing, or the
       // wire disclosure. `note` rides the meta-line; a `trace`, if present (live arm only), is ignored here
-      // (the frozen `AgentTurnHandle` has no trace-narration call site — app-surfaces-m2.lld.md §6).
+      // (the frozen `AgentTurnHandle` has no trace-narration call site — app-surfaces-m2.lld.md §6). ADR-0146
+      // F1: a `progress` meta-line routes to `handle.progress()` (the strip narrates it live), never to
+      // ingestLine/the wire disclosure — the SAME `readMetaLine` filter growing one arm, not a new parse path.
       const meta = readMetaLine(line)
       if (meta) {
-        note = meta.a2uiMeta.note
+        if (meta.a2uiMeta.progress !== undefined) handle.progress(meta.a2uiMeta.progress)
+        if (meta.a2uiMeta.note !== undefined) note = meta.a2uiMeta.note
         continue
       }
       turnLines.push(line)

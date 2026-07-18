@@ -16,7 +16,7 @@
 // (ADR-0089's scripted-turn fork stands, untouched by this ADR).
 
 import type { AgentTransport, TurnInput } from './agent-transport.ts'
-import type { A2uiMetaEnvelope, AskDeclaration } from './meta-line.ts'
+import type { A2uiMetaEnvelope, AskDeclaration, TurnProgress } from './meta-line.ts'
 import type { A2uiClientMessage } from '../renderer/index.ts'
 
 // ADR-0137 clause 2: the `RecordedTranscript`/`RecordedTurn` shapes live HERE — the replay engine that
@@ -36,6 +36,10 @@ export interface RecordedTurn {
   lines: string[]
   note?: string
   ask?: AskDeclaration
+  /** ADR-0146 F1 — authored lifecycle stages, replayed as `{"a2uiMeta":{"progress":…}}` lines AHEAD of
+   *  the turn's note/lines (the SAME meta-line shape `produce()` emits live), so the keyless demo shows
+   *  staged feedback with zero network. Absent ⇒ the turn streams byte-identically to before 0146. */
+  progress?: TurnProgress[]
   expectClientMessage?: A2uiClientMessage
 }
 
@@ -70,6 +74,10 @@ export function createRecordedTransport(transcript: RecordedTranscript): AgentTr
       const t = transcript.turns[index]
       if (t === undefined) return
       index += 1
+      // ADR-0146 F1 — authored progress stages FIRST (ahead of note/lines), mirroring the live path's
+      // "yield stages during generation, content after validation" order (SPEC-R5/N4 parity). No artificial
+      // delay: determinism (SPEC-R2) is preserved — the strip renders them as they arrive.
+      for (const p of t.progress ?? []) yield JSON.stringify({ a2uiMeta: { progress: p } })
       const meta = formatTurnMetaLine(t)
       if (meta !== undefined) yield meta
       for (const line of t.lines) yield line

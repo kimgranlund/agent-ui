@@ -69,7 +69,11 @@ import type { UIDisclosureElement } from '../disclosure/disclosure.ts'
 import { resolveIcon } from '@agent-ui/icons'
 import type { IconName } from '@agent-ui/icons'
 
-const STATUS = ['', 'pending', 'active', 'done', 'error'] as const
+// ADR-0146 F7 — `warning` is ONE new member (a lesser advisory outcome the single `error` state can't
+// express); the four shipped values are NEVER renamed (that would break the ratified ADR-0122 F3 contract,
+// the emittable catalog row, and the A2A TaskState mapping). It gets its own distinct marker SHAPE, painted
+// by CSS (a triangle silhouette — timeline-item.css), never hue alone (ADR-0057) and never a color-only cue.
+const STATUS = ['', 'pending', 'active', 'done', 'error', 'warning'] as const
 const SIZE = ['sm', 'md', 'lg'] as const
 
 const props = {
@@ -133,6 +137,41 @@ export class UITimelineItemElement extends UIElement {
     const disclosure = this.#disclosure
     if (!disclosure) return
     disclosure.open = open ?? !disclosure.open
+  }
+
+  /**
+   * ADR-0146 F5 — lazily ensure a nested-timeline slot exists, for ui-status-stream's GROUPED entries.
+   * Returns the `[data-role="nested"]` host, composing it into the SAME shared `ui-disclosure` #ensureAnatomy
+   * uses at connect (ADR-0143 F1/F2) when the item was authored WITHOUT one — never a second nesting
+   * mechanism (the family-coherence law F5 preserves). The collapsed-summary preview + its MutationObserver
+   * (ADR-0143 F3) are armed here exactly as `connected()` arms them for an authored nested slot, so the
+   * group's collapse + preview work with ZERO bespoke nesting code. `factory` mints the host (ui-status-
+   * stream passes a `<ui-timeline>`) so THIS file stays import-free of `ui-timeline` (the cycle guard, header).
+   * Idempotent: a second call returns the existing slot untouched. Must run while connected (it registers a
+   * scope-owned effect) — ui-status-stream only calls it on an item already appended to the live strip.
+   */
+  ensureNestedSlot(factory: () => HTMLElement): HTMLElement {
+    if (this.#nested) return this.#nested
+    const nested = factory()
+    nested.setAttribute('data-role', 'nested')
+    if (this.#disclosure) {
+      // The item already composed a disclosure (it was authored with `detail`) — append nested after it; the
+      // disclosure's own childList heal observer (disclosure.ts) relocates it into the body part.
+      this.#disclosure.appendChild(nested)
+    } else {
+      // No disclosure yet — compose one, adopting `nested` BEFORE connect so #ensureParts moves it into the
+      // body SYNCHRONOUSLY (the exact composition #ensureAnatomy runs, just deferred to first-group time).
+      const disclosure = document.createElement('ui-disclosure') as UIDisclosureElement
+      disclosure.setAttribute('data-part', 'detail')
+      disclosure.appendChild(nested)
+      this.#disclosure = disclosure
+      this.append(disclosure)
+    }
+    this.#nested = nested
+    this.#nestedObserver = new MutationObserver(() => this.#renderTrailingPreview())
+    this.#nestedObserver.observe(nested, { subtree: true, childList: true, attributes: true, attributeFilter: ['status', 'label'], characterData: true })
+    this.effect(() => this.#renderTrailingPreview())
+    return nested
   }
 
   /** Mark/unmark this item TRUNCATED — ui-status-stream's completion invariant (SPEC-R11): a distinct,
@@ -229,6 +268,7 @@ export class UITimelineItemElement extends UIElement {
   #previewGlyph(status: string): string {
     if (status === 'done') return '✓ '
     if (status === 'error') return '✕ '
+    if (status === 'warning') return '▲ ' // ADR-0146 F7 — a distinct SHAPE (a triangle), never hue alone (ADR-0057)
     if (status === 'active') return '● '
     if (status === 'pending') return '○ '
     return ''

@@ -100,6 +100,10 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
     for await (const line of readNdjsonLines(res.body)) {
       const meta = readMetaLine(line)
       if (meta) {
+        // ADR-0146 F1 — a progress meta-line is routed to the strip live (handle.progress), never ingested;
+        // agent-admin's overlay rides the SAME loop, so it gets the live feedback too (TKT-0083's flagged
+        // at-build check, closed here, not assumed).
+        if (meta.a2uiMeta.progress !== undefined) yield { kind: 'progress', progress: meta.a2uiMeta.progress }
         if (typeof meta.a2uiMeta.note === 'string' && meta.a2uiMeta.note.length > 0) {
           yield { kind: 'note', note: meta.a2uiMeta.note }
         }

@@ -80,22 +80,58 @@ describe('recorded backbone round-trip (LLD-C2/C8 / SPEC-R2 AC1)', () => {
     expect(turn1!.note, 'turn 1 must carry a real note for this assertion to be meaningful').not.toBeUndefined()
     expect(turn2!.note, 'turn 2 must carry a real note for this assertion to be meaningful').not.toBeUndefined()
 
-    // Turn 1 — the meta-line arrives FIRST, carries EXACTLY the authored note, and the A2UI JSONL after
-    // it is byte-identical to the transcript's own `lines` (the note rides beside, never inside, SPEC-N4).
+    // ADR-0146 F1 — a turn now leads with authored PROGRESS lines, then the note meta-line, then the A2UI
+    // JSONL. Assert that shape per turn: the note meta-line carries EXACTLY the authored note, the lines
+    // after it are byte-identical to the transcript's own `lines`, and every line BEFORE the note is a
+    // progress meta-line (progress rides ahead of the content, never inside it — SPEC-R5/N4 parity).
+    const noteIdxOf = (wire: string[]): number => wire.findIndex((l) => readMetaLine(l)?.a2uiMeta.note !== undefined)
+    const assertTurnShape = (wire: string[], note: string, lines: string[]): void => {
+      const noteIdx = noteIdxOf(wire)
+      expect(noteIdx, 'a note meta-line must be present').toBeGreaterThanOrEqual(0)
+      expect(readMetaLine(wire[noteIdx]!)?.a2uiMeta.note).toBe(note)
+      expect(wire.slice(noteIdx + 1)).toEqual(lines) // the A2UI JSONL after the note is byte-identical
+      // every line before the note is a progress meta-line; every line after is NOT a meta-line at all
+      expect(wire.slice(0, noteIdx).every((l) => readMetaLine(l)?.a2uiMeta.progress !== undefined)).toBe(true)
+      expect(wire.slice(noteIdx).slice(1).every((l) => readMetaLine(l) === undefined)).toBe(true)
+    }
+
     const turn1Wire = await collect()
-    const meta1 = readMetaLine(turn1Wire[0]!)
-    expect(meta1?.a2uiMeta.note).toBe(turn1!.note)
-    expect(turn1Wire.slice(1)).toEqual(turn1!.lines)
+    expect(turn1Wire.filter((l) => readMetaLine(l)?.a2uiMeta.progress !== undefined).length, 'turn 1 replays authored progress stages').toBeGreaterThan(0)
+    assertTurnShape(turn1Wire, turn1!.note!, turn1!.lines)
 
-    // Turn 2 — same proof, the follow-up note.
     const turn2Wire = await collect()
-    const meta2 = readMetaLine(turn2Wire[0]!)
-    expect(meta2?.a2uiMeta.note).toBe(turn2!.note)
-    expect(turn2Wire.slice(1)).toEqual(turn2!.lines)
+    assertTurnShape(turn2Wire, turn2!.note!, turn2!.lines)
+  })
 
-    // Negative control: every line AFTER the leading meta-line is provably NOT itself a meta-line — the
-    // filter genuinely discriminates rather than passing (or swallowing) every line vacuously.
-    for (const line of [...turn1Wire.slice(1), ...turn2Wire.slice(1)]) expect(readMetaLine(line)).toBeUndefined()
+  // ADR-0146 F1 (n12) — the recorded backbone replays authored `progress` events AHEAD of the note/lines,
+  // as the SAME `{a2uiMeta:{progress}}` shape the live path emits, with zero network; a progress-less turn
+  // is byte-identical to before.
+  it('replays a turn\'s authored progress stages ahead of its lines, in order, and a progress-less turn streams byte-identically', async () => {
+    const fixture: RecordedTranscript = {
+      intent: 'a fixture progress turn',
+      turns: [
+        { lines: ['{"version":"v1.0","createSurface":{"surfaceId":"m","catalogId":"agent-ui"}}'], note: 'staged', progress: [{ stage: 'sent' }, { stage: 'started' }, { stage: 'done' }] },
+        { lines: ['{"version":"v1.0","deleteSurface":{"surfaceId":"m"}}'] }, // no progress, no note → byte-identical to pre-0146
+      ],
+    }
+    const transport = createRecordedTransport(fixture)
+    const collectOne = async (): Promise<string[]> => {
+      const out: string[] = []
+      for await (const line of transport.turn({ kind: 'intent', text: 'x', session: { turns: [] } })) out.push(line)
+      return out
+    }
+
+    const wire1 = await collectOne()
+    // progress lines FIRST, in authored order, then the note meta-line, then the single A2UI line.
+    expect(wire1.slice(0, 3).map((l) => readMetaLine(l)?.a2uiMeta.progress?.stage)).toEqual(['sent', 'started', 'done'])
+    expect(readMetaLine(wire1[3]!)?.a2uiMeta.note).toBe('staged')
+    expect(readMetaLine(wire1[4]!)).toBeUndefined() // the A2UI content line, provably not a meta-line
+
+    const wire2 = await collectOne()
+    expect(wire2).toEqual(['{"version":"v1.0","deleteSurface":{"surfaceId":"m"}}']) // byte-identical — no progress, no note
+
+    // the SHIPPED transcript's turns that carry no `progress` stream unchanged (defense: not every turn gained stages)
+    expect(recordedTranscript.turns.slice(2).every((t) => t.progress === undefined)).toBe(true)
   })
 
   // ADR-0097 §1 (LLD-C2 repair) — a LOCAL fixture transcript (never the shipped one, per ADR-0089's

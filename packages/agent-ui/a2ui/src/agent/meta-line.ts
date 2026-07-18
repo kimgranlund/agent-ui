@@ -19,6 +19,14 @@
 // `surfaceId`) yields the envelope WITHOUT `ask` (never the whole envelope dropped) — the note/trace
 // still parse normally, so a broken `ask` never breaks the conversational channel it rides on.
 //
+// ADR-0146 F1 adds a FOURTH, RUNTIME-COMPOSED kind, `progress`: a closed-vocabulary lifecycle event
+// (`{stage, round?, detail?}`) that — unlike the ONE leading `note`/`ask`/`trace` line — MAY interleave
+// DURING the turn, yielded by `produce()` as stages actually happen (`produce.ts`) or replayed ahead of a
+// recorded turn's lines (`recorded-transport.ts`). It rides the SAME versionless envelope, so a leaked
+// progress line still fault-isolates to `VERSION_UNSUPPORTED` at the renderer (the ADR-0088 defense,
+// unchanged), and is shallow-validated the SAME way `ask` is: a malformed `progress` (non-object, or a
+// `stage` outside the closed union) yields the envelope WITHOUT `progress` — note/trace/ask still parse.
+//
 // Zero-dep, pure (SPEC-N5): no imports.
 
 /**
@@ -52,6 +60,30 @@ export interface AskDeclaration {
 }
 
 /**
+ * The closed lifecycle-stage vocabulary a `progress` meta-line carries (ADR-0146 F1) — provider-agnostic,
+ * produce-layer-owned (F4): `sent` (request issued) → `started` (the provider's first signal) →
+ * `reasoning` (a thinking delta arrived) → `content` (the round's own first text fragment — `produce()` is
+ * that stage's one pinned emitter) → `validating` (assemble/heal/validate entered) → `retry` (a failed
+ * self-correct round, carrying its ordinal) → `done` (the turn is about to yield its final content). An
+ * adapter that maps nothing degrades to the coarser subset `produce()` observes by itself — never broken.
+ */
+export const PROGRESS_STAGES = ['sent', 'started', 'reasoning', 'content', 'validating', 'retry', 'done'] as const
+export type ProgressStage = (typeof PROGRESS_STAGES)[number]
+
+/**
+ * One live lifecycle event (ADR-0146 F1) — a closed, code/observation-authored record, NEVER model prose.
+ * `round` is the self-correct ordinal (present on `retry`); `detail` is optional factual text (F3-gated —
+ * only forwarded under `progressDetail: 'full'`, never required for any stage, and never on the default
+ * `'stages'` dial). Carried as `{"a2uiMeta":{"progress":{…}}}` on the SAME `turn()` stream as every other
+ * meta-line.
+ */
+export interface TurnProgress {
+  stage: ProgressStage
+  round?: number
+  detail?: string
+}
+
+/**
  * The reserved wrapper (ADR-0088 §1/§2, ADR-0097 §1). `note` is the model's contemporaneous natural-
  * language rationale/reply; `ask` is the model-authored feed-ask routing declaration (produce() peels it,
  * verifies its integrity, and re-composes it on the outgoing meta-line only when it holds); `trace` is the
@@ -64,6 +96,9 @@ export interface A2uiMetaEnvelope {
     note?: string
     ask?: AskDeclaration
     trace?: TurnTrace
+    /** ADR-0146 F1 — a runtime-composed lifecycle event; unlike note/ask/trace it MAY interleave during
+     *  the turn (produce()) and be replayed ahead of a recorded turn's lines (recorded-transport.ts). */
+    progress?: TurnProgress
   }
 }
 
@@ -100,11 +135,25 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
     if (typeof surfaceId === 'string') ask = { surfaceId }
   }
 
+  // ADR-0146 F1: `progress` follows the identical drop-only-itself discipline — a non-object, or a `stage`
+  // outside the closed union, yields the envelope WITHOUT `progress` (note/ask/trace still parse). `round`
+  // and `detail` are optional and copied only when they carry the right primitive type.
+  let progress: TurnProgress | undefined
+  if (m.progress !== undefined && typeof m.progress === 'object' && m.progress !== null && !Array.isArray(m.progress)) {
+    const p = m.progress as Record<string, unknown>
+    if (typeof p.stage === 'string' && (PROGRESS_STAGES as readonly string[]).includes(p.stage)) {
+      progress = { stage: p.stage as ProgressStage }
+      if (typeof p.round === 'number') progress.round = p.round
+      if (typeof p.detail === 'string') progress.detail = p.detail
+    }
+  }
+
   return {
     a2uiMeta: {
       note: m.note as string | undefined,
       ask,
       trace: m.trace as TurnTrace | undefined,
+      progress,
     },
   }
 }

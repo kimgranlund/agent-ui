@@ -133,6 +133,41 @@ describe('ui-timeline-item — status markers are DISTINCT by SHAPE, not hue alo
     expect(errorSvg!.innerHTML, 'done and error must render DIFFERENT glyph markup').not.toBe(doneMarkup)
   })
 
+  it('warning (ADR-0146 F7) is a distinct SHAPE — a clip-path TRIANGLE on ::before, NOT an injected glyph like error, NOT the plain circle', async () => {
+    const { item } = mount('<ui-timeline-item></ui-timeline-item>')
+
+    item.setAttribute('status', 'warning')
+    await new Promise((r) => setTimeout(r, 0))
+    // warning paints via CSS (no injected svg — unlike done/error): the marker cell carries NO glyph child.
+    expect(item.querySelector('[data-part="marker"] svg[data-role="marker"]'), 'warning must not inject an svg glyph').toBeNull()
+    const warnBefore = beforeStyle(item.querySelector('[data-part="marker"]')!)
+    expect(warnBefore.clipPath, 'warning ::before must carve a triangle via clip-path').toContain('polygon')
+    expect(warnBefore.backgroundColor, 'the triangle is a FILLED shape').not.toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
+
+    // the plain neutral dot is a CIRCLE (no clip-path) — the triangle is genuinely a different silhouette.
+    item.setAttribute('status', '')
+    const neutralBefore = beforeStyle(item.querySelector('[data-part="marker"]')!)
+    expect(neutralBefore.clipPath === 'none' || neutralBefore.clipPath === '').toBe(true)
+  })
+
+  it('warning keeps its triangle SHAPE legible under forced-colors: active (Chromium emulates, WebKit asserts baseline)', async () => {
+    const { item } = mount('<ui-timeline-item status="warning"></ui-timeline-item>')
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
+      const fcStyle = beforeStyle(item.querySelector('[data-part="marker"]')!)
+      expect(fcStyle.clipPath, 'the triangle silhouette survives WHCM').toContain('polygon') // SHAPE, not hue, carries the state
+      expect(fcStyle.backgroundColor, 'the filled triangle is repainted to a system colour, not left invisible').not.toMatch(/rgba\(0, 0, 0, 0\)/)
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+
   it('prefers-reduced-motion collapses the active pulse to static (no running animation)', async () => {
     if (server.browser !== 'chromium') {
       expect(window.matchMedia('(prefers-reduced-motion: reduce)').matches).toBe(false)

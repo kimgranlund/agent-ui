@@ -35,18 +35,25 @@
 // `ui-markdown`) is entirely consumer-supplied at the app/site layer, which already has permission to
 // import that package. `addUserMessage` never routes through it (SPEC-R4 AC1 unchanged).
 //
-// NAMED LLD GAP (flagged, not silently resolved): the LLD's own narration slice (§6) names `narrateTrace`
-// (a `TurnTrace`-shaped fourth narration entry, live-arm only) as promoted "unchanged" alongside
-// `categoryOf`/`narrateCategories`. But SPEC §4's typed `AgentTurnHandle` contract — the ratified public
-// surface — exposes exactly four methods (`ingestLine`/`setNote`/`finalize`/`fail`), none of which lets a
-// caller ever SUPPLY a `TurnTrace` to narrate. There is no reachable call site for `narrateTrace` under the
-// frozen contract as written; adding a fifth handle method (e.g. `setTrace`) would be inventing NEW public
-// API the SPEC never asked for, a local deviation this build declines to make unilaterally. `narrateTrace`
-// is therefore NOT built this pass — surfaced in the build hand-off for the design seat to thread through
-// (either widen `AgentTurnHandle` or drop the LLD's promotion note) rather than resolved here.
+// RESOLVED NAMED LLD GAP (was: no reachable call site for a `TurnTrace`-shaped narration under the frozen
+// four-method `AgentTurnHandle`). The design seat threaded it through: ADR-0146 F1/§Sequencing widens
+// `AgentTurnHandle` with a FIFTH method — `progress(ev: TurnProgress): void` — the SAME class of contract
+// change the gap flagged, now a recorded SPEC-R6/§4 amendment rather than a unilateral local edit. The turn
+// loop routes the `a2uiMeta.progress` lifecycle events (F1) into the narration strip through a CLOSED,
+// code-owned stage-label table (F2's honesty guard — never model prose). ADR-0146 also turns narration
+// LIVE: category entries render as `ingestLine()` observes lines (active during the turn, settled at
+// `finalize()`) rather than replayed after the turn ends, and the strip opts into `ui-status-stream`'s new
+// `header` (F8) so it reads "working" from `beginAgentTurn()` at t=0 — closing TKT-0083's blank bubble.
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import type { UIStatusStreamElement } from '@agent-ui/components/components'
+// ADR-0146 F1 — the shared wire vocabulary. Imported from the browser-safe, zero-dep `meta-line.ts`
+// module DIRECTLY (not the `./agent` barrel, which is NODE-FIRST: its `system-prompt.ts`/`mini-skills.ts`
+// re-exports `readFileSync` at load, dragging `node:fs` into the browser type-check). Type-only ⇒ fully
+// erased (verbatimModuleSyntax) — no runtime import, no node:fs; resolves via the tsconfig `@agent-ui/a2ui/*`
+// path map to the pure module. The site's `agent-runtime.ts` shim follows the same "browser-safe module,
+// never the barrel" discipline.
+import type { TurnProgress, ProgressStage } from '@agent-ui/a2ui/agent/meta-line.ts'
 import '../surface-host/surface-host.ts' // registers <ui-surface-host> — composed internally (ADR-0129 clause 2)
 import type { UISurfaceHostElement } from '../surface-host/surface-host.ts'
 import type { ClientMessageListener } from '@agent-ui/a2ui'
@@ -82,6 +89,10 @@ export interface AgentTurnHandle {
   ingestLine(line: string): void
   /** Stashes this turn's own prose note (ADR-0088); rendered verbatim at `finalize()` — never a fabricated sentence. */
   setNote(text: string): void
+  /** ADR-0146 F1/§4 — routes ONE lifecycle event into the turn's narration strip LIVE, via a closed,
+   *  code-owned stage-label table (never model prose — the F2 honesty guard). A consumer that never calls
+   *  it is byte-behaviour-unchanged; an unknown stage renders nothing. */
+  progress(ev: TurnProgress): void
   /** Ends narration, renders the note (or a factual fallback tally), and settles every surface host this turn touched. */
   finalize(): void
   /** A thrown turn (SPEC-R6 AC3): narration truncates with an error entry, a system bubble surfaces `message`, still finalizes cleanly. */
@@ -153,20 +164,19 @@ function isDeleteSurfaceFor(line: string, id: string): boolean {
   }
 }
 
-const NARRATION_STEP_MS = 60 // status-stream-demo.ts's delay(60) precedent — visibly live pacing
-const delay = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
-
-/** One entry per DISTINCT category, in emission order — pending -> active -> done. Never a fabricated
- *  sentence — the label table's own text is the entire vocabulary. */
-async function narrateCategories(stream: UIStatusStreamElement, turnSeq: number, categories: readonly Category[]): Promise<void> {
-  for (const cat of categories) {
-    const key = `t${turnSeq}-${cat}`
-    stream.appendEntry({ key, status: 'pending', label: LABEL[cat] })
-    await delay(NARRATION_STEP_MS)
-    stream.update(key, { status: 'active' })
-    await delay(NARRATION_STEP_MS)
-    stream.update(key, { status: 'done' })
-  }
+// ADR-0146 F1/F2 — the CLOSED, code-owned stage → label table `handle.progress()` routes lifecycle events
+// through. Each label is a factual PROCESS claim keyed 1:1 to a real observed signal (never model prose, no
+// invented percentage, no "almost done…"); a stage never observed is never shown. `retry` carries its round
+// ordinal factually (appended below). This table IS the entire progress vocabulary — the SAME honesty class
+// as the `LABEL` category table above (a fixed, code-owned label from an observed event, per SPEC-R6/F2).
+const PROGRESS_LABEL: Record<ProgressStage, string> = {
+  sent: 'Request sent…',
+  started: 'Generating…',
+  reasoning: 'Reasoning…',
+  content: 'Composing the response…',
+  validating: 'Validating…',
+  retry: 'Refining',
+  done: 'Done',
 }
 
 /** Backward-compat fallback for a turn with no `note` (ADR-0088: a factual message-kind tally, never a
@@ -287,7 +297,7 @@ export class UIConversationElement extends UIElement {
    *  unknown id, closed record, disconnected bubble — falls through to the fresh-bubble path unchanged. */
   beginAgentTurn(opts?: { intoSurface?: string }): AgentTurnHandle {
     if (!this.#guard('beginAgentTurn')) {
-      return { ingestLine: () => {}, setNote: () => {}, finalize: () => {}, fail: () => {} }
+      return { ingestLine: () => {}, setNote: () => {}, progress: () => {}, finalize: () => {}, fail: () => {} }
     }
 
     const wasNear = this.#isNearLogBottom()
@@ -301,6 +311,7 @@ export class UIConversationElement extends UIElement {
       narration = document.createElement('ui-status-stream') as UIStatusStreamElement
       narration.setAttribute('size', 'sm')
       narration.setAttribute('label', 'Agent activity')
+      narration.setAttribute('header', '') // ADR-0146 F8 — reads "working" from t=0, before any line/wire signal (the blank-bubble root fix)
       narration.dataset.part = 'narration'
       resumed.narration.replaceWith(narration)
     } else {
@@ -308,6 +319,7 @@ export class UIConversationElement extends UIElement {
       narration = document.createElement('ui-status-stream') as UIStatusStreamElement
       narration.setAttribute('size', 'sm')
       narration.setAttribute('label', 'Agent activity')
+      narration.setAttribute('header', '') // ADR-0146 F8 — reads "working" from t=0, before any line/wire signal (the blank-bubble root fix)
       narration.dataset.part = 'narration'
       note = document.createElement('div')
       note.dataset.part = 'body'
@@ -335,8 +347,10 @@ export class UIConversationElement extends UIElement {
     let noteText: string | undefined
     const turnLines: string[] = []
     const touchedIds = new Set<string>()
-    const categoriesSeen: Category[] = []
     const seenCats = new Set<Category>()
+    // ADR-0146 F1 — every narrated entry's key (categories + progress), settled to `done` at finalize().
+    const narratedKeys: string[] = []
+    const seenStages = new Set<ProgressStage>()
     let freshHostThisTurn: UISurfaceHostElement | undefined
     const heldNoIdLines: string[] = []
 
@@ -369,19 +383,43 @@ export class UIConversationElement extends UIElement {
     return {
       ingestLine: (line: string) => {
         turnLines.push(line)
+        // ADR-0146 (SPEC-R6 amendment) — narrate LIVE, at ingest: the FIRST line of a category appends its
+        // entry `active` immediately (not replayed after the turn ends), settled to `done` at finalize().
         const cat = categoryOf(line)
         if (cat !== undefined && !seenCats.has(cat)) {
           seenCats.add(cat)
-          categoriesSeen.push(cat)
+          const key = `t${seq}-${cat}`
+          narration.appendEntry({ key, status: 'active', label: LABEL[cat] })
+          narratedKeys.push(key)
         }
         routeLine(line)
       },
       setNote: (text: string) => {
         noteText = text
       },
+      progress: (ev: TurnProgress) => {
+        // ADR-0146 F1/F2 — route ONE lifecycle event into the strip via the closed, code-owned label table.
+        // An unknown stage renders NOTHING (the honesty guard's negative control); `retry` carries its round
+        // ordinal factually; a stage seen again updates its existing entry in place, never a duplicate row.
+        const label = (PROGRESS_LABEL as Record<string, string | undefined>)[ev.stage]
+        if (label === undefined) return
+        const key = `t${seq}-progress-${ev.stage}`
+        const text = ev.stage === 'retry' && typeof ev.round === 'number' ? `${label} (round ${ev.round})` : label
+        if (seenStages.has(ev.stage)) {
+          narration.update(key, { label: text })
+        } else {
+          seenStages.add(ev.stage)
+          narration.appendEntry({ key, status: 'active', label: text })
+          narratedKeys.push(key)
+        }
+      },
       finalize: () => {
         endTurn() // TKT-0034 — re-enable the composer THE MOMENT finalize() runs, not after narration settles
-        void narrateCategories(narration, seq, categoriesSeen).then(() => narration.finalize())
+        // Settle every live-narrated entry (categories + progress) to `done`, THEN close the strip (the
+        // completion invariant also settles the F8 header to the escalated final status). Synchronous now —
+        // the post-hoc `narrateCategories` replay + its `NARRATION_STEP_MS` pacing are GONE (ADR-0146).
+        for (const key of narratedKeys) narration.update(key, { status: 'done' })
+        narration.finalize()
         this.#renderBody(note, noteText ?? summarize(turnLines))
         if (this.disclosure && turnLines.length > 0) bubble.append(this.#buildDisclosure(turnLines))
         this.#settleTouchedHosts(touchedIds)
@@ -389,10 +427,11 @@ export class UIConversationElement extends UIElement {
       },
       fail: (message: string) => {
         endTurn() // TKT-0034 — re-enable the composer THE MOMENT fail() runs
-        // A genuine finally-scoped truncation (SPEC-R6 AC3) — never a2ui-live's try-scoped mistake.
-        // narrateCategories was never started on this path (finalize() never ran), so this is the ONLY
-        // narration entry the failed turn gets; still settles whatever surfaces the partial turn touched
-        // (the a2ui-chat.ts `finally` block precedent, unconditional on success/failure).
+        // A genuine finally-scoped truncation (SPEC-R6 AC3) — never a2ui-live's try-scoped mistake. Any
+        // live-narrated category/progress entries already in the strip stay as they were; appending the
+        // error entry makes the F8 header escalate to `error`, and narration.finalize() TRUNCATES every
+        // still-active/pending entry (fail-closed — a torn turn never shows "still working"). Still settles
+        // whatever surfaces the partial turn touched (the a2ui-chat.ts `finally` block precedent).
         narration.appendEntry({ key: `t${seq}-error`, status: 'error', label: `Turn failed — ${message}` })
         narration.finalize()
         this.#settleTouchedHosts(touchedIds)

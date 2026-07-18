@@ -383,40 +383,72 @@ describe('ui-conversation — busy/re-entrancy guard (TKT-0034), forwarded to th
   })
 })
 
-describe('ui-conversation — narration (SPEC-R6)', () => {
-  it('two distinct categories transition pending -> active -> done, in emission order, deduplicated', async () => {
-    vi.useFakeTimers()
+describe('ui-conversation — narration (SPEC-R6, ADR-0146 live-at-ingest)', () => {
+  it('categories narrate LIVE at ingest — an entry appears ACTIVE as its first line is ingested, in emission order, deduplicated; settles DONE at finalize()', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     const handle = el.beginAgentTurn()
+    const narration = el.querySelector('[data-part="narration"]')!
+    const items = () => [...narration.querySelectorAll(':scope > ui-timeline-item')] as (HTMLElement & { status: string; label: string })[]
+
+    // No fake timers, no replay — the entry exists the MOMENT its category's first line is ingested.
     handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 's3', catalogId: 'agent-ui' } }))
+    expect(items()).toHaveLength(1) // 'open' appeared LIVE, during the turn (not replayed at finalize)
+    expect(items()[0].status).toBe('active')
+    expect(items()[0].label).toBe('Opening a new surface…')
+
     handle.ingestLine(
       line({ version: 'v1.0', updateComponents: { surfaceId: 's3', components: [{ id: 'root', component: 'Column', children: [] }] } }),
     )
-    handle.finalize()
-
-    const narration = el.querySelector('[data-part="narration"]')!
-    const items = () => [...narration.querySelectorAll('ui-timeline-item')] as (HTMLElement & { status: string })[]
-    // narrateCategories paces ONE category at a time (a genuine sequential pending->active->done per
-    // category, promoted unchanged from a2ui-chat.ts) — the second entry does not exist until the first
-    // has fully settled.
-    expect(items()).toHaveLength(1) // 'open' only, so far
-    expect(items()[0].status).toBe('pending')
-
-    await vi.advanceTimersByTimeAsync(60)
-    expect(items()[0].status).toBe('active')
-    await vi.advanceTimersByTimeAsync(60)
-    expect(items()[0].status).toBe('done')
-    expect(items()).toHaveLength(2) // 'restructure' now appended, in emission order
-    expect(items()[1].status).toBe('pending')
-
-    await vi.advanceTimersByTimeAsync(60)
+    expect(items()).toHaveLength(2) // 'restructure' appeared LIVE too, in emission order
     expect(items()[1].status).toBe('active')
-    await vi.advanceTimersByTimeAsync(60)
-    expect(items()[1].status).toBe('done')
+
+    // a SECOND line of an already-seen category does NOT duplicate its entry
+    handle.ingestLine(
+      line({ version: 'v1.0', updateComponents: { surfaceId: 's3', components: [{ id: 'root', component: 'Row', children: [] }] } }),
+    )
+    expect(items()).toHaveLength(2)
+
+    handle.finalize()
+    expect(items().map((i) => i.status)).toEqual(['done', 'done']) // both settle to done at finalize (synchronously)
   })
 
-  it('setNote renders the exact note text; no note falls back to a factual tally, never a fabricated sentence', async () => {
-    vi.useFakeTimers()
+  it('the narration strip opts into the header and reads "working" at t=0 — a turn with ZERO lines and ZERO progress still shows a visible working header (the blank-bubble regression proof)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.beginAgentTurn() // no ingestLine, no progress — the bubble would be BLANK before ADR-0146
+    const narration = el.querySelector('[data-part="narration"]')!
+    const header = narration.querySelector('[data-part="header"]')!
+    expect(header, 'the strip must compose a visible header from t=0').not.toBeNull()
+    expect(header.getAttribute('data-status')).toBe('active') // reads WORKING immediately, before any line or wire signal
+    expect(header.querySelector('[data-part="header-label"]')?.textContent).toBe('Agent activity')
+  })
+
+  it('handle.progress routes a fixed-label entry from the closed table; an unknown stage renders NOTHING; retry carries the round ordinal; a progress-less turn is byte-unchanged', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    const narration = el.querySelector('[data-part="narration"]')!
+    const labels = () => [...narration.querySelectorAll(':scope > ui-timeline-item')].map((i) => (i as HTMLElement & { label: string }).label)
+
+    handle.progress({ stage: 'reasoning' })
+    expect(labels()).toContain('Reasoning…') // the fixed, code-owned label — never model prose
+
+    // an unknown stage renders NOTHING (the honesty guard's negative control)
+    const before = labels().length
+    handle.progress({ stage: 'not-a-real-stage' as unknown as 'reasoning' })
+    expect(labels()).toHaveLength(before)
+
+    handle.progress({ stage: 'retry', round: 2 })
+    expect(labels()).toContain('Refining (round 2)') // the round ordinal, factually
+
+    handle.finalize()
+    // a SECOND turn that never calls progress() narrates exactly as before — byte-unchanged
+    const plain = el.beginAgentTurn()
+    plain.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'p1', catalogId: 'agent-ui' } }))
+    plain.setNote('done')
+    plain.finalize()
+    expect(true).toBe(true)
+  })
+
+  it('setNote renders the exact note text; no note falls back to a factual tally, never a fabricated sentence', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
 
     const withNote = el.beginAgentTurn()

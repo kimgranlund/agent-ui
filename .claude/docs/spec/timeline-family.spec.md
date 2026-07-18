@@ -53,9 +53,12 @@
 > `false` — shipped consumers render byte-identically) rendering a visible `[data-part="header"]` row:
 > the `label` text plus a live overall-status glyph (`active` from construction until `finalize()`,
 > then the escalated final status; `fail`-path `error`) — the completion invariant (**SPEC-R11**)
-> gains a header-level face. See ADR-0146 for the full fork sheet; this is a design record only — no
-> build has landed against this amendment yet, and the grouping leg is explicitly sequenced on
-> ADR-0143's own build landing first.
+> gains a header-level face. See ADR-0146 for the full fork sheet. **Build status (2026-07-18, TKT-0083):**
+> LANDED — `ui-timeline-item` carries the `warning` member (a distinct CSS triangle silhouette, legible
+> under forced-colors); `ui-status-stream` gains the opt-in `header` (pinned via `position: sticky`,
+> browser-proven), `StatusEntry.parent` grouping (via `ui-timeline-item.ensureNestedSlot()`, reusing
+> ADR-0143's shared disclosure + preview), and worst-child-wins escalation — the grouping leg's ADR-0143
+> dependency was satisfied by TKT-0091's shipped nested-slot build (jsdom + browser suites green).
 
 ---
 

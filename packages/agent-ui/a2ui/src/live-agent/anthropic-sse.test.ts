@@ -5,6 +5,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { parseAnthropicSSE, ANTHROPIC_SSE_ERROR_PREFIX } from '../agent/providers/anthropic.ts'
+import type { ProviderEvent } from '../agent/agent-transport.ts'
 
 // A captured multi-event Anthropic Messages SSE response (the host-verified 2026-07-04 shape): a
 // message_start, a content_block_start, two text_delta content_block_deltas, a ping, a content_block_stop,
@@ -57,5 +58,32 @@ describe('parseAnthropicSSE (LLD-C10 / SPEC-R11 AC3)', () => {
     expect(fragments).toHaveLength(1)
     expect(fragments[0]!.startsWith(ANTHROPIC_SSE_ERROR_PREFIX)).toBe(true)
     expect(fragments[0]).toContain('overloaded_error')
+  })
+})
+
+// ── ADR-0146 F1/F4 — the optional onEvent lifecycle callback ─────────────────────────────────────────────
+describe('parseAnthropicSSE onEvent (ADR-0146 F1/F4)', () => {
+  it('with onEvent: maps the lifecycle frames to a ProviderEvent sequence WHILE yielding the IDENTICAL text fragments (the byte-identical accumulation regression guard)', () => {
+    const events: ProviderEvent[] = []
+    const fragments = [...parseAnthropicSSE(FIXTURE, (ev) => events.push(ev))]
+    expect(fragments).toEqual(['Hello, ', 'world']) // text accumulation is UNCHANGED by onEvent
+    expect(fragments.join('')).toBe('Hello, world')
+    // the fixture's lifecycle frames, in order: message_start → content_block_start → content_block_stop →
+    // message_stop (message_delta + ping + the two text_deltas are NOT lifecycle events on this seam).
+    expect(events.map((e) => e.kind)).toEqual(['message_start', 'block_start', 'block_stop', 'done'])
+  })
+
+  it('a caller passing NO onEvent gets byte-identical behaviour to before (the additive `effort?` precedent)', () => {
+    expect([...parseAnthropicSSE(FIXTURE)]).toEqual(['Hello, ', 'world'])
+  })
+
+  it('a thinking_delta maps to {kind:"thinking", text} — and is STILL never yielded as a text fragment', () => {
+    const chunk =
+      'event: content_block_delta\n' +
+      'data: {"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"let me reason about this"}}\n\n'
+    const events: ProviderEvent[] = []
+    const fragments = [...parseAnthropicSSE(chunk, (ev) => events.push(ev))]
+    expect(fragments).toEqual([]) // never text (unchanged from the pre-0146 "ignores a non-text delta" test above)
+    expect(events).toEqual([{ kind: 'thinking', text: 'let me reason about this' }])
   })
 })

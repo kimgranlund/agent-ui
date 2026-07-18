@@ -224,3 +224,47 @@ describe('ui-status-stream — the REAL arena NDJSON stream, fed line-by-line (S
     for (const item of stillUnresolved) expect(item.matches(':state(truncated)')).toBe(true)
   })
 })
+
+// ── ADR-0146 F8 (n3) — the opt-in header stays PINNED outside the scroll while entries overflow ────────────
+describe('ui-status-stream — the opt-in header pins above the scroll (ADR-0146 F8, n3)', () => {
+  it('the header stays at the top of the viewport (position: sticky) while the entries scroll under it', async () => {
+    const { stream } = mount('<ui-status-stream header label="Agent activity" style="max-block-size:8rem"></ui-status-stream>')
+    for (let i = 0; i < 30; i++) stream.appendEntry({ key: `k${i}`, status: 'active', label: `step ${i} with enough text to force the strip to overflow its bounded viewport` })
+    await raf2()
+
+    const header = stream.querySelector('[data-part="header"]') as HTMLElement
+    expect(header, 'the header must exist when opted in').not.toBeNull()
+    expect(getComputedStyle(header).position, 'the header is position: sticky — pinned, not in-flow').toBe('sticky')
+
+    // scroll the strip and assert the header does NOT move away from the strip's top edge (it sticks).
+    const topAtRest = header.getBoundingClientRect().top
+    stream.scrollTop = stream.scrollHeight // scroll to the bottom
+    await raf2()
+    const topAfterScroll = header.getBoundingClientRect().top
+    expect(Math.abs(topAfterScroll - topAtRest), 'the header must stay pinned at the strip top through a full scroll').toBeLessThanOrEqual(1)
+    // anti-vacuous: the strip genuinely overflowed (there WAS something to scroll past)
+    expect(stream.scrollHeight, 'the strip must actually overflow for this to be a real pin test').toBeGreaterThan(stream.clientHeight)
+  })
+})
+
+// ── ADR-0146 F5/F6 (n6) — grouped entries announce once; the nested host is role=list, not a 2nd live region ──
+describe('ui-status-stream — aria-live discipline under grouping (ADR-0146, n6)', () => {
+  it('a parented entry nests under a role=list ui-timeline inside the outer role=log — no duplicated live-region semantics on the nested host', async () => {
+    const { stream } = mount('<ui-status-stream></ui-status-stream>')
+    stream.appendEntry({ key: 'g', status: 'active', label: 'Reasoning' })
+    stream.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'sub-step' })
+    await raf2()
+
+    // the outer strip is the SOLE live region (role=log); the nested host is a plain role=list.
+    expect(stream.getAttribute('role') ?? (stream as unknown as { internals?: { role?: string } }).internals?.role, 'the strip stays role=log').toBeDefined()
+    const nested = stream.querySelector('ui-timeline') as HTMLElement
+    expect(nested, 'the child nests under a real ui-timeline').not.toBeNull()
+    expect(nested.hasAttribute('aria-live'), 'the nested host must carry NO bespoke aria-live (no double-announce)').toBe(false)
+    expect(nested.getAttribute('aria-relevant'), 'and no additions-relevant override of its own').toBeNull()
+    // a status PATCH on an existing nested entry mutates textContent in place (no new node) — the role=log
+    // addition-relevance discipline means it does not re-announce as an addition.
+    const child = stream.querySelector('ui-timeline-item[data-key="c1"]') as UITimelineItemElement
+    stream.update('c1', { status: 'done' })
+    expect(child.status).toBe('done') // an in-place transition, not a re-added node
+  })
+})

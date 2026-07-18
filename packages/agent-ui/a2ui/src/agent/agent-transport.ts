@@ -79,6 +79,20 @@ export interface AgentTransport {
 export type Effort = 'low' | 'medium' | 'high' | 'xhigh'
 
 /**
+ * ADR-0146 F1/F4 — one raw upstream lifecycle event an adapter surfaces through the OPTIONAL `onEvent`
+ * callback (below). Provider-AGNOSTIC by design: each adapter maps its OWN upstream shape onto these kinds
+ * (the Anthropic adapter maps `message_start`/`content_block_start`/thinking-delta/`content_block_stop`/
+ * `message_stop`), and `produce()` composes them — plus its OWN loop stages — into the closed
+ * `TurnProgress` vocabulary (meta-line.ts). An adapter that maps nothing degrades to the coarser subset
+ * `produce()` observes by itself: a degraded DIAL, never a broken request. `text` carries a thinking
+ * excerpt on the `thinking` kind ONLY (forwarding is F3-gated downstream in `produce()`, never here).
+ */
+export interface ProviderEvent {
+  kind: 'message_start' | 'block_start' | 'thinking' | 'block_stop' | 'done'
+  text?: string
+}
+
+/**
  * The injected model seam (SPEC-R11): one isolated module PER provider implements this (Anthropic this
  * wave; OpenAI/Gemini the next slices). `stream` yields raw text fragments that accumulate into the
  * model's output (the A2UI JSONL the loop then heals+validates). The `produce()` driver (LLD-C3) depends
@@ -99,6 +113,12 @@ export interface AgentProvider {
      *  but a future non-thinking model added to that list would 400 here, not degrade. Gate on model
      *  capability before adding one. */
     effort?: Effort
+    /** ADR-0146 F1 — an OPTIONAL lifecycle callback (the exact ADDITIVE precedent `effort?` set on this
+     *  same interface): a stub/adapter that ignores it is byte-behaviour-unchanged; an adapter that maps
+     *  it surfaces its upstream lifecycle events (`ProviderEvent`) as they arrive, WHILE still yielding the
+     *  identical text fragments. A callback (not a union-yielding stream) because there is exactly one
+     *  caller (`produce()`) and the text-accumulation contract must not change. */
+    onEvent?: (ev: ProviderEvent) => void
     signal?: AbortSignal
   }): AsyncIterable<string>
 }

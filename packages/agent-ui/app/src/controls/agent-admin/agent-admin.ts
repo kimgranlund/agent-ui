@@ -672,6 +672,7 @@ export class UIAgentAdminElement extends UIElement {
         let note: string | undefined
         for await (const event of surfaceTurn(request)) {
           if (event.kind === 'note') note = event.note
+          else if (event.kind === 'progress') handle.progress(event.progress) // ADR-0146 F1 — live lifecycle feedback into the strip
           else handle.ingestLine(event.line)
         }
         if (note !== undefined) handle.setNote(note)

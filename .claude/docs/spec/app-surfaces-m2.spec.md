@@ -24,8 +24,10 @@
 > GAP on `narrateTrace` flagged as design-seat work), never a quiet signature edit. The narration strip
 > additionally composes `ui-status-stream`'s new opt-in `header` (timeline-family amendment, same date)
 > so the strip reads "working" from `beginAgentTurn()` at t=0 — closing TKT-0083's blank-bubble symptom
-> even on a progress-less transport. This is a design record only — no build has landed against this
-> amendment yet.
+> even on a progress-less transport. **Build status (2026-07-18, TKT-0083):** LANDED — `ui-conversation`
+> narrates categories live at ingest (the `narrateCategories` replay + `NARRATION_STEP_MS` removed),
+> `AgentTurnHandle.progress(ev)` routes lifecycle events through the closed `PROGRESS_LABEL` table, and
+> the narration strip opts into the header (`conversation.ts`; jsdom + browser suites green).
 
 ---
 

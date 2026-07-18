@@ -165,11 +165,20 @@ describe('a2ui-chat routing on ui-conversation (SPEC-R7) — the real shipped 5-
 })
 
 // ── narration honesty (SPEC-R6 AC1) — never a fabricated sentence ──────────────────────────────────────
+// Both closed, code-owned label tables are honest (a factual process claim keyed to an observed signal,
+// ADR-0146 F2): the category table (conversation.ts LABEL) AND the lifecycle table (conversation.ts
+// PROGRESS_LABEL, routed live from the recorded transcript's authored progress stages, ADR-0146 F1).
 const KNOWN_LABELS = new Set([
   'Opening a new surface…',
   'Updating the surface…',
   'Updating data…',
   'Closing the surface…',
+  // the ADR-0146 progress stages the recorded backbone replays (sent/started/content/validating/done)
+  'Request sent…',
+  'Generating…',
+  'Composing the response…',
+  'Validating…',
+  'Done',
 ])
 
 function narrationLabels(bubble: HTMLElement): string[] {
