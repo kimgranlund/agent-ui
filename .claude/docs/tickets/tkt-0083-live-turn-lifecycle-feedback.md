@@ -324,3 +324,40 @@ note above already flagged, now on the ADR itself); (2) recorded progress replay
 reveal staggering noted as a possible follow-up, not a requirement; (3) F8's settled header escalation
 counts truncated entries as `warning` (`status-stream.ts:303-310`) — the fail-closed reading of "the
 escalated final status," now explicit.
+
+**2026-07-18 — BUILD: the grouping leg (n4/n5-group/n6) BUILT on main; status stays `open` pending
+independent review (commit `1b1e1bf`, worktree branch).** The final deferred leg of ADR-0146 is built
+CLEANLY against the current shipped `timeline-item.ts`/`status-stream.ts` — NOT by merging the reference
+squash (`9e0a94d`, which predates main's more-evolved header/`fail()`/`#effectiveStatus` escalation and
+would have regressed them); only the grouping delta was re-implemented. Eight files, +483/−8:
+- **`ui-timeline-item.ensureNestedSlot(factory: () => HTMLElement): HTMLElement`** — the exact contract the
+  ADR-0143 2026-07-18 amendment ratifies (signature confirmed identical). Composes the SAME shared
+  `ui-disclosure` + `[data-role="nested"]` slot + collapsed-summary preview + `MutationObserver` that
+  `#ensureAnatomy` builds at connect, but LAZILY on first call — two branches (no disclosure yet → compose
+  one synchronously; a detail-only disclosure already → append onto it, healed into the body by disclosure's
+  own childList observer). Idempotent (second call returns the same node); arms the preview observer/effect
+  exactly like the connect-time path and re-arms on reconnect via the existing `#nested` guard. Descriptor
+  (`timeline-item.md`) gains the one method; `#previewGlyph` gains the `warning` triangle (F7/ADR-0057 —
+  a grouped warning child previews by shape, never hue).
+- **`ui-status-stream` grouping (F5)** — `StatusEntry.parent?: string` mounts the child under the parent's
+  lazily-created nested `<ui-timeline>` (via `ensureNestedSlot`, once per parent); unknown parent degrades
+  to a flat top-level append (never a throw). The keyed registry stays FLAT (`update(childKey)` reaches
+  nested entries; `finalize()`/`fail()` truncation already walk `#byKey.values()`, nested included).
+- **Escalation (F6)** — worst-child-wins over the closed ladder `error > warning > active > pending > done`
+  (the already-exported, unit-tested `escalateStatus` reduce), bubbling up enclosing groups, painting the
+  group parent's own status + (via the unchanged top-level `#refreshHeader`) flipping the pinned header on a
+  mid-turn nested-child escalation. **The escalation-observer flag is resolved by CONSTRUCTION:** group
+  escalation is recomputed the SAME MEDIATED way the stream header already is — imperatively from THIS host's
+  own `appendEntry`/`update` calls (every child status change flows through `update`), NOT a
+  `MutationObserver`. The nested-slot observer `ensureNestedSlot` installs serves ONLY the collapsed-summary
+  preview (ADR-0143 F3); no redundant escalation observer is added. Verified this matches the repo's own
+  established stream-level discipline (the file-header comment) and does not regress main's
+  `#effectiveStatus` (truncated → warning) header semantics.
+- **Gates:** `npm run check` GREEN (tsc + site + tools). `npx vitest run --project packages` (all component
+  tests + family-coherence/barrels/layering/naming/descriptor gates) 6026/6026 GREEN, exit 0.
+  `npx vitest run --config vitest.browser.config.ts` for timeline-item + status-stream GREEN (62). Full
+  `npm test` = 6445 passed / 2 failed — the 2 are the PRE-EXISTING `vite build` fixture flakes
+  (`theme-provider-build-fixture` + `light-dark-minify`), confirmed reproducing on the pristine base
+  (`cd29851`) with the grouping change stashed; untouched by this build (theme-CSS/site-build only).
+  **Independent code-review NOT run (the builder cannot dispatch it) — MUST be run by the coordinator before
+  this closes; this ticket's own hard gate, twice-required.** Status stays `open`.
