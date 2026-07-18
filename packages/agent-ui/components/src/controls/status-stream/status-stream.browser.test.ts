@@ -252,3 +252,46 @@ describe('ui-status-stream — the REAL arena NDJSON stream, fed line-by-line (S
     for (const item of stillUnresolved) expect(item.matches(':state(truncated)')).toBe(true)
   })
 })
+
+// ── ADR-0146 F5/F6 (n4/n6) — grouped entries render a real nested rail + announce once (no double-announce) ──
+
+describe('ui-status-stream — grouped entries render + aria-live discipline under grouping (ADR-0146 F5/F6)', () => {
+  it('a parented entry nests under a role=list ui-timeline inside the outer role=log — no duplicated live-region semantics on the nested host', async () => {
+    const { stream } = mount('<ui-status-stream></ui-status-stream>')
+    stream.appendEntry({ key: 'g', status: 'active', label: 'Reasoning' })
+    stream.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'sub-step' })
+    await raf2()
+
+    // the outer strip is the SOLE live region (role=log); the nested host is a plain role=list.
+    const nested = stream.querySelector('ui-timeline') as HTMLElement
+    expect(nested, 'the child nests under a real ui-timeline').not.toBeNull()
+    expect(nested.hasAttribute('aria-live'), 'the nested host must carry NO bespoke aria-live (no double-announce)').toBe(false)
+    expect(nested.getAttribute('aria-relevant'), 'and no additions-relevant override of its own').toBeNull()
+
+    // a status PATCH on an existing nested entry mutates textContent in place (no new node) — the role=log
+    // addition-relevance discipline means it does not re-announce as an addition.
+    const child = stream.querySelector('ui-timeline-item[data-key="c1"]') as UITimelineItemElement
+    stream.update('c1', { status: 'done' })
+    expect(child.status).toBe('done') // an in-place transition, not a re-added node
+    expect(stream.querySelectorAll('ui-timeline-item[data-key="c1"]'), 'no duplicate node for the same key').toHaveLength(1)
+  })
+
+  it('the nested rail renders a REAL, indented group once opened (the whole-shape check, not a collapsed dot)', async () => {
+    const { stream } = mount('<ui-status-stream></ui-status-stream>')
+    const group = stream.appendEntry({ key: 'g', status: 'active', label: 'Reasoning' })
+    stream.appendEntry({ key: 'c1', parent: 'g', status: 'done', label: 'inner step' })
+    await raf2()
+
+    // while closed, the group's collapsed-summary preview echoes the last nested child
+    const trailing = group.querySelector(':scope > [data-role="trailing"]') as HTMLElement
+    expect(trailing.textContent, 'the group previews its last nested child while collapsed').toContain('inner step')
+
+    // open the group — the nested rail must actually render, indented past the group's own marker
+    ;(group as unknown as { toggleDetail(open?: boolean): void }).toggleDetail(true)
+    await raf2()
+    const innerItem = group.querySelector('ui-timeline-item[data-key="c1"]') as HTMLElement
+    const groupMarkerLeft = group.querySelector(':scope > [data-part="marker"]')!.getBoundingClientRect().left
+    const innerMarkerLeft = innerItem.querySelector('[data-part="marker"]')!.getBoundingClientRect().left
+    expect(innerMarkerLeft, 'the nested rail is indented past the group rail, a real rendered group').toBeGreaterThan(groupMarkerLeft)
+  })
+})

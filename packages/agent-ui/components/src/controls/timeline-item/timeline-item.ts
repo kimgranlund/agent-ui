@@ -27,6 +27,10 @@
 // two independent disclosures: `detail` (free consumer content) is appended first, `nested` (a genuine
 // `<ui-timeline>` child — ADR-0143 F1, reusing `ui-timeline` itself rather than inventing a second
 // nesting primitive) second, into the SAME disclosure host, which materializes only when either exists.
+// A LIVE host (ui-status-stream's grouping, ADR-0146 F5) that needs a nested slot on an ALREADY-connected
+// item calls `ensureNestedSlot(factory)` — the ONE public method the ADR-0143 2026-07-18 amendment adds
+// (Kim's narrow, additive exception): it composes the EXACT SAME disclosure + nested slot + preview
+// mechanism lazily, on first call, instead of eagerly at connect. Dead code for the authored-markup case.
 // Recursion is authored-markup depth, not runtime-generated: a nested item can carry its OWN
 // `[data-role="nested"]` child, arbitrary levels deep, with zero extra code — `ui-timeline`'s own
 // `#markLastItem()` is already `:scope > ui-timeline-item`-scoped (verified against source, ADR-0143's
@@ -144,6 +148,49 @@ export class UITimelineItemElement extends UIElement {
     disclosure.open = open ?? !disclosure.open
   }
 
+  /**
+   * ADR-0146 F5 (the ADR-0143 2026-07-18 amendment — Kim's narrow, additive exception) — LAZILY ensure a
+   * `[data-role="nested"]` slot exists on an ALREADY-CONNECTED item, for ui-status-stream's GROUPED entries.
+   * Returns the nested host, composing it into the SAME shared `ui-disclosure` `#ensureAnatomy()` uses at
+   * connect (ADR-0143 F1/F2) — never a second nesting mechanism (the family-coherence law the amendment
+   * preserves). The collapsed-summary preview + its `MutationObserver` (ADR-0143 F3) are armed here EXACTLY as
+   * `connected()` arms them for an authored nested slot, so the group's collapse + preview work with ZERO
+   * bespoke nesting code. This is the ONLY new public surface the amendment adds; it is a dead code path for
+   * the durable authored-markup host (which composes `nested` eagerly at connect) — a live host is its sole
+   * caller. `factory` mints the host (ui-status-stream passes a fresh `<ui-timeline>`) so THIS file stays
+   * import-free of `ui-timeline` (the cycle guard, file header). Idempotent: a second call returns the
+   * existing slot untouched. Must run while connected — it registers a scope-owned effect (`this.effect`
+   * throws outside the connected lifetime); ui-status-stream only calls it on an item already appended live.
+   */
+  ensureNestedSlot(factory: () => HTMLElement): HTMLElement {
+    if (this.#nested) return this.#nested
+    const nested = factory()
+    nested.setAttribute('data-role', 'nested')
+    if (this.#disclosure) {
+      // The item already composed a disclosure (it was authored WITH `detail`) — append `nested` onto the
+      // disclosure host; its own childList heal observer (disclosure.ts `#heal`) relocates it into the body
+      // part (the ADR-0143 F2 two-hop adoption, just deferred to first-group time).
+      this.#disclosure.appendChild(nested)
+    } else {
+      // No disclosure yet — compose one, adopting `nested` BEFORE the disclosure connects so its own
+      // `#ensureParts()` moves it into the body SYNCHRONOUSLY (the exact composition `#ensureAnatomy` runs at
+      // connect, deferred to the moment the first grouped child arrives).
+      const disclosure = document.createElement('ui-disclosure') as UIDisclosureElement
+      disclosure.setAttribute('data-part', 'detail')
+      disclosure.appendChild(nested)
+      this.#disclosure = disclosure
+      this.append(disclosure)
+    }
+    this.#nested = nested
+    // Arm the preview observer + paint-gate effect exactly as `connected()` does for an authored nested slot
+    // (ADR-0143 F3). On a later disconnect/reconnect, `connected()` re-arms both because `#nested` is now set
+    // — so the lazily-mounted slot survives reconnect identically to an authored one.
+    this.#nestedObserver = new MutationObserver(() => this.#renderTrailingPreview())
+    this.#nestedObserver.observe(nested, { subtree: true, childList: true, attributes: true, attributeFilter: ['status', 'label'], characterData: true })
+    this.effect(() => this.#renderTrailingPreview())
+    return nested
+  }
+
   /** Mark/unmark this item TRUNCATED — ui-status-stream's completion invariant (SPEC-R11): a distinct,
    *  non-color-only interrupted affordance via a real custom state (`:state(truncated)` in CSS), never a
    *  silent forever-spinner. `internals.states` is optional-chained (absent in jsdom, the fleet convention —
@@ -238,6 +285,7 @@ export class UITimelineItemElement extends UIElement {
   #previewGlyph(status: string): string {
     if (status === 'done') return '✓ '
     if (status === 'error') return '✕ '
+    if (status === 'warning') return '▲ ' // ADR-0146 F7 — a distinct SHAPE (a triangle), never hue alone (ADR-0057)
     if (status === 'active') return '● '
     if (status === 'pending') return '○ '
     return ''

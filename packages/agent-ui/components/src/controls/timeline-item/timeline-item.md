@@ -46,6 +46,8 @@ properties:               # IDL beyond attributes-as-API
     description: Method — reveal/collapse the composed detail disclosure (open?boolean). Delegates to the composed ui-disclosure's `open` prop; a no-op if the item has no detail content.
   - name: markTruncated
     description: Method — mark/unmark the item TRUNCATED (truncated boolean), used by ui-status-stream's completion invariant (SPEC-R11). Toggles the `:state(truncated)` custom state; imperative/CSS-state, not a `static props` field.
+  - name: ensureNestedSlot
+    description: 'Method — ensureNestedSlot(factory: () => HTMLElement) => HTMLElement. LAZILY compose a `[data-role="nested"]` slot on an ALREADY-connected item (ADR-0146 F5, the ADR-0143 2026-07-18 amendment — Kim''s narrow additive exception), for ui-status-stream''s grouped entries. Reuses the SAME shared ui-disclosure + nested slot + collapsed-summary preview + MutationObserver `#ensureAnatomy` composes at connect — just on first call instead of eagerly. `factory` mints the nested host (ui-status-stream passes a fresh `<ui-timeline>`) so this file stays import-free of ui-timeline. Idempotent — a second call returns the same node. Must run while connected (it registers a scope-owned effect). A dead code path for the durable authored-markup host.'
 
 events:
   - name: toggle

@@ -29,7 +29,7 @@ attributes:               # attributes-as-API — mirrors status-stream.ts stati
 
 properties:               # IDL beyond attributes-as-API — the imperative streaming contract (ADR-0122 F4)
   - name: appendEntry
-    description: 'Method — appendEntry(entry: StatusEntry) => UITimelineItemElement. NAMED appendEntry, not append — every element inherits a native, incompatible Node.prototype.append(); a same-name override fails tsc outright (a build-time LLD deviation, flagged for the SPEC-R9/LLD amendment). Creates a ui-timeline-item, assigns the entry''s fields, appends it, tail-follows to it (iff the stick-to-bottom guard holds), and returns the created element (the ui-toast-region.show() return precedent).'
+    description: 'Method — appendEntry(entry: StatusEntry) => UITimelineItemElement. NAMED appendEntry, not append — every element inherits a native, incompatible Node.prototype.append(); a same-name override fails tsc outright (a build-time LLD deviation, flagged for the SPEC-R9/LLD amendment). Creates a ui-timeline-item, assigns the entry''s fields, appends it, tail-follows to it (iff the stick-to-bottom guard holds), and returns the created element (the ui-toast-region.show() return precedent). ADR-0146 F5: an entry carrying a KNOWN `parent` (another entry''s key) NESTS under that group''s `[data-role="nested"]` slot (a nested ui-timeline, mounted lazily once per parent) instead of as a top-level sibling; an unknown parent degrades to a flat append. The keyed registry stays FLAT — `update(childKey, patch)` reaches a nested entry identically.'
   - name: update
     description: 'Method — update(key: string, patch: Partial<StatusEntry>) => void. A KEYED, in-place mutation to the already-rendered entry with that key: transitions status, grows/replaces streamed text, or reveals detail. A key with no matching entry is a silent no-op (never a throw — SPEC-R9 AC2).'
   - name: finalize
@@ -129,6 +129,27 @@ dot/ring/pulse for the in-progress states.
 
 This host holds **no transport** of its own — no `fetch`/`ReadableStream` reference anywhere in its
 source. The consumer owns the stream and drives `appendEntry`/`update`/`finalize` as it yields.
+
+## Grouping (ADR-0146 F5) + worst-child escalation (F6)
+
+An entry can NEST under another by carrying that entry's key as `parent`:
+
+```ts
+stream.appendEntry({ key: 'reasoning', status: 'active', label: 'Reasoning…' })
+stream.appendEntry({ key: 'r1', parent: 'reasoning', status: 'active', label: 'Considering the reconcile loop' })
+stream.appendEntry({ key: 'r2', parent: 'reasoning', status: 'warning', label: 'A partial match — verifying' })
+stream.update('r1', { status: 'done' }) // the group escalates live: reasoning now reads `warning` (worst child)
+```
+
+The host lazily mounts a nested `<ui-timeline>` into the parent item's `[data-role="nested"]` slot (via
+`ui-timeline-item.ensureNestedSlot()`) — **reusing** ADR-0143's shared `ui-disclosure` + collapsed-summary
+preview (never a second nesting primitive). The keyed registry stays **flat**: keys are unique across the
+whole strip, so `update(childKey, patch)` reaches a nested entry identically, and `finalize()`/`fail()`
+truncation reaches nested pending/active entries too. A group parent's status is **derived**, never
+authored: it escalates **worst-child-wins** over the closed ladder `error > warning > active > pending >
+done` (the exported `escalateStatus` reduce), recomputed live from the host's own `appendEntry`/`update`
+calls — no MutationObserver. The nested `<ui-timeline>` is `role="list"` inside the outer `role="log"`: one
+live region, one addition-announcement path, no bespoke `aria-live` on the nested host.
 
 ## Tail-follow + the stick-to-bottom guard
 

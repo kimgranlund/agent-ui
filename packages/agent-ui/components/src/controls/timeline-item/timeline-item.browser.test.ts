@@ -10,6 +10,7 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import '@agent-ui/components/components'
 import '@agent-ui/icons/phosphor' // activates the Phosphor default pack — without it resolveIcon() falls back to an empty <svg data-icon-missing> (the _page.ts shell precedent)
+import type { UITimelineItemElement } from './timeline-item.ts'
 
 const mounted: HTMLElement[] = []
 const mount = (markup: string): { wrap: HTMLElement; item: HTMLElement } => {
@@ -321,5 +322,32 @@ describe('ui-timeline-item — nested content ARIA (ADR-0143 F5, zero new machin
     expect(trailing.getAttribute('aria-hidden')).not.toBe('true')
     expect(trailing.textContent).toContain('inner leaf')
     expect(trailing.checkVisibility ? trailing.checkVisibility() : true).toBe(true)
+  })
+})
+
+// ── ensureNestedSlot — the LAZY late-mount seam renders a REAL nested rail cross-engine (ADR-0146 F5) ──────
+describe('ui-timeline-item — ensureNestedSlot late-mounts a real, rendered nested rail (ADR-0146 F5, the ADR-0143 amendment)', () => {
+  it('a slot ensured AFTER connect renders a complete nested rail (indented, own marker geometry) once opened, and previews its last child while closed', async () => {
+    const { item } = mount('<ui-timeline-item status="active" label="outer"></ui-timeline-item>')
+    // no nested slot at connect — compose one lazily, the exact ui-status-stream grouping path
+    const nested = (item as UITimelineItemElement).ensureNestedSlot(() => document.createElement('ui-timeline'))
+    const child = document.createElement('ui-timeline-item')
+    child.setAttribute('status', 'done')
+    child.setAttribute('label', 'inner leaf')
+    nested.append(child)
+    await new Promise((r) => setTimeout(r, 0)) // let the preview observer + disclosure heal settle
+
+    // while CLOSED, the collapsed-summary preview paints the last descendant into the outer trailing cell
+    const trailing = item.querySelector(':scope > [data-role="trailing"]')!
+    expect(trailing.textContent, 'the late-mounted nested slot drives the collapsed preview').toContain('inner leaf')
+
+    // open the disclosure — the nested rail must render as a REAL, indented rail (the whole-shape check), not a collapsed dot
+    ;(item as unknown as { toggleDetail(open?: boolean): void }).toggleDetail(true)
+    await new Promise((r) => setTimeout(r, 0))
+    const innerItem = item.querySelector('ui-timeline-item[label="inner leaf"]')!
+    expect(markerBox(innerItem), 'the nested item resolves the same frozen marker-box geometry as any item').toBeGreaterThan(0)
+    const outerMarkerLeft = item.querySelector(':scope > [data-part="marker"]')!.getBoundingClientRect().left
+    const innerMarkerLeft = innerItem.querySelector('[data-part="marker"]')!.getBoundingClientRect().left
+    expect(innerMarkerLeft, 'the late-mounted nested rail is indented past the parent rail, not flush with it').toBeGreaterThan(outerMarkerLeft)
   })
 })

@@ -515,3 +515,109 @@ describe('ui-timeline-item — size does not cascade into a nested <ui-timeline>
     el.remove()
   })
 })
+
+// ── ensureNestedSlot — the LAZY late-mount seam (ADR-0146 F5, the ADR-0143 2026-07-18 amendment) ─────────
+// Kim ratified ONE new public method so ui-status-stream's grouping can mount a nested <ui-timeline> into an
+// ALREADY-connected item, composing the SAME disclosure + nested slot + preview `#ensureAnatomy` builds at
+// connect — just lazily. These probes assert the seam's contract directly on the item (grouping-via-the-stream
+// is proven in status-stream.test.ts).
+
+describe('ui-timeline-item — ensureNestedSlot lazy composition (branch: no disclosure yet)', () => {
+  it('composes a fresh <ui-disclosure data-part="detail"> with the nested host in its body, SYNCHRONOUSLY, for an item authored WITHOUT detail/nested', () => {
+    const { el } = makeItem() // no detail, no nested → no disclosure at connect
+    expect(el.querySelector('[data-part="detail"]')).toBeNull()
+
+    const nested = el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    expect(nested.getAttribute('data-role')).toBe('nested')
+    expect(nested.tagName.toLowerCase()).toBe('ui-timeline')
+
+    const disclosure = el.querySelector('[data-part="detail"]')!
+    expect(disclosure.tagName.toLowerCase()).toBe('ui-disclosure')
+    // the nested host is adopted into the disclosure's own body part synchronously (compose-before-connect)
+    const body = disclosure.querySelector('[data-part="body"]')!
+    expect(body.querySelector('ui-timeline')).toBe(nested)
+    el.remove()
+  })
+
+  it('is idempotent — a second call returns the SAME node and never composes a second disclosure', () => {
+    const { el } = makeItem()
+    const first = el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    const second = el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    expect(second).toBe(first)
+    expect(el.querySelectorAll('[data-part="detail"]')).toHaveLength(1) // exactly ONE shared disclosure, never two
+    expect(el.querySelectorAll('[data-role="nested"]')).toHaveLength(1)
+    el.remove()
+  })
+})
+
+describe('ui-timeline-item — ensureNestedSlot lazy composition (branch: a detail-only disclosure already exists)', () => {
+  it('appends the nested host into the EXISTING shared disclosure (the ADR-0143 F2 two-hop, healed into the body)', async () => {
+    const { el } = makeItem('<span data-role="detail">Carrier: UPS</span>')
+    const disclosure = el.querySelector('[data-part="detail"]')!
+    expect(disclosure.tagName.toLowerCase()).toBe('ui-disclosure')
+    expect(disclosure.querySelector('ui-timeline')).toBeNull() // detail-only so far
+
+    const nested = el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    expect(el.querySelectorAll('[data-part="detail"]')).toHaveLength(1) // still ONE shared disclosure, never a second
+
+    // the disclosure's own childList heal observer relocates the late-appended nested host into its body part
+    await new Promise((r) => setTimeout(r, 0))
+    const body = disclosure.querySelector('[data-part="body"]')!
+    expect(body.querySelector('ui-timeline')).toBe(nested)
+    // detail content is preserved alongside the nested host (both live under the ONE disclosure)
+    expect(disclosure.textContent).toContain('Carrier: UPS')
+    el.remove()
+  })
+})
+
+describe('ui-timeline-item — ensureNestedSlot arms the collapsed-summary preview + observer EXACTLY like the connect-time path', () => {
+  it('a child appended to the LATE-mounted nested host updates the trailing preview (the MutationObserver is live)', async () => {
+    const { el } = makeItem() // connected, no nested at connect
+    const nested = el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    await whenFlushed()
+    const trailing = el.querySelector('[data-role="trailing"]')!
+    expect(trailing.textContent).toBe('') // empty nested host → nothing to preview yet
+
+    const child = document.createElement('ui-timeline-item')
+    child.setAttribute('label', 'step 1')
+    child.setAttribute('status', 'active')
+    nested.append(child)
+    await new Promise((r) => setTimeout(r, 0)) // the observer fires as a microtask after the mutation
+    expect(trailing.textContent).toBe('● step 1') // the closed-disclosure preview paints the last descendant
+
+    // a status change on the last descendant re-paints the preview (same observer path as the authored case)
+    child.setAttribute('status', 'warning')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(trailing.textContent).toBe('▲ step 1') // ADR-0146 F7 — warning's distinct triangle shape, never hue alone
+    el.remove()
+  })
+
+  it('the late-mounted preview honours the open/closed paint gate (cleared while the disclosure is OPEN)', async () => {
+    const { el } = makeItem()
+    const nested = el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    const child = document.createElement('ui-timeline-item')
+    child.setAttribute('label', 'a')
+    child.setAttribute('status', 'done')
+    nested.append(child)
+    await new Promise((r) => setTimeout(r, 0))
+    const trailing = el.querySelector('[data-role="trailing"]')!
+    expect(trailing.textContent).toContain('a') // closed → painted
+
+    el.toggleDetail(true)
+    await whenFlushed()
+    expect(trailing.textContent).toBe('') // open → cleared, no duplicate (the real nested content is visible)
+    el.remove()
+  })
+
+  it('the late-armed observer disconnects on disconnected() — no error on a mutation after removal', async () => {
+    const { el } = makeItem()
+    const nested = el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    await whenFlushed()
+    el.remove()
+    expect(() => {
+      const extra = document.createElement('ui-timeline-item')
+      extra.setAttribute('label', 'b')
+      nested.append(extra)
+    }).not.toThrow()
+  })
+})
