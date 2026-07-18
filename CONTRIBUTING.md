@@ -16,9 +16,14 @@ needs to follow, and the commands above in full.
 This repo runs an explicit plan → build → review loop, recorded as it happens rather than after the
 fact, under [`.claude/docs/`](.claude/docs/):
 
-- **Tickets** (`.claude/docs/tickets/`) capture intent before work starts — what's being asked for,
-  the acceptance criteria, and (once work lands) a dated `## Findings` entry recording what actually
-  shipped and why. A bug, feature, or any non-trivial change gets a ticket.
+- **Tickets** capture intent before work starts — what's being asked for, the acceptance criteria,
+  and (once work lands) a dated Findings entry recording what actually shipped and why. A bug,
+  feature, or any non-trivial change gets one. As of 2026-07-18 (ADR-0145) this means a **GitHub
+  Issue** (`gh issue create`, or the `.github/ISSUE_TEMPLATE/{feature,bug}.yml` forms) — `kind` is
+  the `bug`/`enhancement` label, `size` is `size:small`/`size:big`, `status` rides the Issue's own
+  open/closed state plus close reason (`completed`/`not planned`) and a `doing` label for
+  in-progress work, and Findings is the dated comment stream. `.claude/docs/tickets/` is a frozen
+  historical archive (98 files through TKT-0096) — read for context, never a target for new ones.
 - **ADRs** (`.claude/docs/adr/`) record a ratified decision — a naming rule, an architectural fork,
   an accepted tradeoff. An ADR starts `proposed`; only a human ratifies the flip to `accepted` (a
   standing hook blocks any agent-authored self-flip). See [`adr/README.md`](.claude/docs/adr/README.md)

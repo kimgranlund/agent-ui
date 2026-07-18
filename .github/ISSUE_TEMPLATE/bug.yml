@@ -1,0 +1,59 @@
+name: Bug
+description: A defect report — mirrors the TICKET dialect's kind:bug section contract (agent-ui-doc-standards §4)
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What's broken, and the root ask behind reporting it.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance
+      description: What "fixed" looks like — the concrete, checkable criteria.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Repro
+      description: Exact steps to reproduce, or an explicit "no fixed repro" if it's intermittent/subjective.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: Expected vs actual
+      description: What should happen, versus what actually happens.
+    validations:
+      required: true
+  - type: textarea
+    id: classification
+    attributes:
+      label: Classification
+      description: The axis this bug lands on (functional, structural, visual, subjective, or another named axis) and the specific component/plane it implicates.
+    validations:
+      required: false
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: The one scale this repo's own doc standards define — never invented per-ticket.
+      options:
+        - blocker
+        - major
+        - minor
+        - cosmetic
+    validations:
+      required: true
+  - type: textarea
+    id: links
+    attributes:
+      label: Links
+      description: Related ADRs, SPECs, tickets, or source files (repo-relative paths or issue numbers).
+    validations:
+      required: false

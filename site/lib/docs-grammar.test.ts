@@ -4,8 +4,11 @@ import { describe, it, expect } from 'vitest'
 // .claude/skills/agent-ui-doc-standards/SKILL.md — this file owns ONLY the deterministic slice).
 //
 // STRUCTURAL tier — fails the run (the campaign's exit criteria, standing):
-//   S1 ticket YAML: parseable frontmatter, status ∈ {open,doing,done,wontfix}, kind ∈ {bug,feature},
-//      a feature ticket carries `size`.
+//   S1 RETIRED (ADR-0145, 2026-07-18) — the ticket YAML grammar check this label used to own. The
+//      TICKET tier moved to GitHub Issues; `.claude/docs/tickets/` is now a frozen historical
+//      archive nothing ever edits again, so there is nothing left to validate on every run. Left
+//      as a named gap here (the KNOWN_GAPS allowlist pattern S8 already uses below) rather than
+//      renumbering S2-S8 down by one — the label is a citation, not a position.
 //   S2 SPEC/LLD/PRD header: the first blockquote region carries exactly one status keyword
 //      ∈ {proposed,accepted,superseded} (dialect-agnostic — three header dialects are legal, §1 of the
 //      standards skill; a MISSING keyword is the defect this catches).
@@ -32,8 +35,6 @@ declare const process: { cwd(): string }
 const ROOT = process.cwd()
 const DOCS = `${ROOT}/.claude/docs`
 
-const TICKET_STATUS = new Set(['open', 'doing', 'done', 'wontfix'])
-const TICKET_KIND = new Set(['bug', 'feature'])
 const DOC_STATUS = /\b(proposed|accepted|superseded)\b/
 
 function mdFiles(dir: string): string[] {
@@ -58,26 +59,6 @@ function normalize(base: string, rel: string): string {
   }
   return parts.join('/')
 }
-
-describe('STRUCTURAL — S1 ticket YAML grammar', () => {
-  const tickets = mdFiles(`${DOCS}/tickets`)
-  it('found a non-trivial ticket set', () => {
-    expect(tickets.length).toBeGreaterThan(10)
-  })
-  for (const f of mdFiles(`${DOCS}/tickets`)) {
-    it(`${f.split('/').pop()}: frontmatter parses, enums legal, feature carries size`, () => {
-      const text = readFileSync(f, 'utf8')
-      const fm = /^---\n([\s\S]*?)\n---/.exec(text)
-      expect(fm, 'YAML frontmatter block present').toBeTruthy()
-      const get = (k: string) => new RegExp(`^${k}:\\s*(.*)$`, 'm').exec(fm![1]!)?.[1]?.trim()
-      expect(get('doc-type')).toBe('ticket')
-      expect(TICKET_STATUS.has(get('status') ?? ''), `status "${get('status')}" ∈ the enum`).toBe(true)
-      const kind = get('kind') ?? ''
-      expect(TICKET_KIND.has(kind), `kind "${kind}" ∈ the enum`).toBe(true)
-      if (kind === 'feature') expect(get('size'), 'a feature ticket carries size').toBeTruthy()
-    })
-  }
-})
 
 describe('STRUCTURAL — S2 SPEC/LLD/PRD status keyword present', () => {
   for (const dir of ['spec', 'lld', 'prd']) {

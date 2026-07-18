@@ -47,7 +47,7 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   CodeMirror-free); depends only on `@agent-ui/components` + `@agent-ui/shared` (+ the CodeMirror runtime deps,
   confined to `./editor`); a sibling branch off `components` alongside `router`, catalog-invisible by
   construction (never imported by `a2ui`)
-- `.claude/docs/` — plan, goals, process, references, adr, prd, spec, lld, decompositions, tickets, rubrics, archive (agent-scoped project docs; the doc grammar + status law: `.claude/skills/agent-ui-doc-standards/`) · `*.test.ts` co-located with source
+- `.claude/docs/` — plan, goals, process, references, adr, prd, spec, lld, decompositions, tickets, rubrics, archive (agent-scoped project docs; the doc grammar + status law: `.claude/skills/agent-ui-doc-standards/`) · `*.test.ts` co-located with source. `tickets/` is a FROZEN historical archive (98 files through TKT-0096) — new work items route to GitHub Issues instead (ADR-0145): the decision/contract tiers (ADR/PRD/SPEC/LLD) and living-state docs (PLAN/ROADMAP) are never delegated, they stay files on this map, always; only the TICKET tier moved. File via `gh issue create` (`.github/ISSUE_TEMPLATE/{feature,bug}.yml` mirror the old section contract); `kind` is the `bug`/`enhancement` label (GitHub's own defaults — Issue Types isn't available on this personal-account repo, ADR-0145's build-time amendment), `size` is `size:small`/`size:big`, `status` is Issue state + close-reason (`completed`/`not planned`) plus a `doing` label for in-progress, and Findings write-back is a dated Issue comment.
 
 ## Conventions (non-obvious only)
 

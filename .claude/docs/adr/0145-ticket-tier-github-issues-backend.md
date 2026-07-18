@@ -9,6 +9,20 @@
 > | **Proposed by** | design seat ([TKT-0092](../tickets/tkt-0092-git-native-ticket-backend.md) intake — Kim's `/feature` ask: "transition repo to use git issues, PR, etc.") |
 > | **Ratified by** | Kim, 2026-07-18 |
 > | **Repairs** | on ratification+build: `CLAUDE.md` (a new entry-file routing-table row: TICKET tier → `gh issue`) · `.claude/skills/agent-ui-doc-standards/SKILL.md` §1/§4 (the ticket dialect row becomes an Issue-Type + label + close-reason contract) · `CONTRIBUTING.md` (the intake-path paragraph) · `site/lib/docs-grammar.test.ts` (the ticket-YAML STRUCTURAL checks retire; nothing replaces them file-side — the Issue-body contract is unenforceable by a markdown-file lint gate) · NEW `.github/ISSUE_TEMPLATE/{feature,bug}.yml` (GitHub issue-forms YAML mirroring the Summary/Acceptance/Links/Scope-Open and Summary/Acceptance/Repro/Expected-Actual/Classification/Severity section contracts) · [TKT-0092](../tickets/tkt-0092-git-native-ticket-backend.md) |
+
+> **Amendment (2026-07-18, build-time, docs-only — the accepted Decision above is UNCHANGED,
+> append-only):** F2's `kind` → native GitHub **Issue Type** recommendation is NOT buildable on
+> this repo. Issue Types is an **organization-level** GitHub feature (`github-issue-pr-primitives`'s
+> own `issue-types-and-labels.md`: *"Scope: Organization-level, shared across every repo"*) —
+> `kimgranlund/agent-ui` is a personal USER account (`gh api users/kimgranlund` →
+> `"type":"User"`, verified live before any write), which does not expose Issue Types at all; there
+> is no per-repo opt-in. Kim's own ruling on discovering this (2026-07-18, AskUserQuestion):
+> **fall back to a plain label for `kind`, do not convert the repo to an organization.** `kind`
+> therefore reuses GitHub's own long-standing DEFAULT labels — `bug` and `enhancement` — rather
+> than minting a parallel `kind:bug`/`kind:feature` pair that would just duplicate what those
+> already mean; every other F2 mechanism (a label for `size`, Issue state + close-reason for
+> `status`, dated Issue comments for Findings write-back) is unaffected and builds as decided.
+> This is the one platform-fact correction the build surfaced; nothing else in the Decision moved.
 > | **Supersedes / Superseded by** | Narrows [TKT-0092](../tickets/tkt-0092-git-native-ticket-backend.md)'s own literal framing ("GitHub Issues become the sole intent-capture mechanism") to the TICKET tier only — ADR/SPEC/LLD/PRD/PLAN/ROADMAP are explicitly NOT delegated, per the routing-table pattern below. Relates `agent-ui-doc-standards` §1 (the three status dialects — this amends the Ticket row's mechanism, not its taxonomy) and §6 (the archive/historical-record rule, applied to the 92 existing files). Honors the git-native `github-issue-pr-primitives` pack's own boundary: it states platform facts, it does not decide; this ADR is the decision the pack's Findings ground. |
 
 ## Context

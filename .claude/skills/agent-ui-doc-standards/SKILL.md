@@ -27,8 +27,28 @@ the judgment layer. One fact, one home: this file states rules; counts/history l
 | Type | Dialect | Vocabulary | Who flips |
 |---|---|---|---|
 | ADR | blockquote TABLE — `> \| **Status** \| <kw> \|`, six fixed rows (Status · Date · Proposed by · Ratified by · Repairs · Supersedes / Superseded by) | `proposed · accepted · superseded · deprecated` — ONE bare keyword, never trailing prose | **Only Kim flips → accepted** (the registered PreToolUse guard blocks any agent flip; Kim hand-edits in-tree, agents do surrounding housekeeping: Ratified-by row, README index) |
-| Ticket | YAML frontmatter (`doc-type: ticket`) | `open · doing · done · wontfix`; `kind: bug\|feature`; `size` on features only | Agents flip freely as work progresses |
+| Ticket (HISTORICAL — through TKT-0096) | YAML frontmatter (`doc-type: ticket`) | `open · doing · done · wontfix`; `kind: bug\|feature`; `size` on features only | Agents flip freely as work progresses |
 | SPEC / LLD / PRD | blockquote STATUS LINE — `> Status: <kw> · v# · <date> · Layer: …` | `proposed · accepted · superseded` | PRDs flip at Kim's ratification; SPEC/LLD — see §2 |
+
+**Ticket, current (ADR-0145, 2026-07-18):** new work items are GitHub Issues, not files —
+`.claude/docs/tickets/` is a frozen historical archive from here on, never a target for new
+entries (§6's own archive rule applies retroactively to the whole tier, not just superseded
+records). File via `gh issue create` or the repo's `.github/ISSUE_TEMPLATE/{feature,bug}.yml`
+forms, which mirror §4's section contract field-for-field. The status/kind/size vocabulary maps
+onto real GitHub primitives, not a parallel taxonomy:
+
+| Old field | Old value | GitHub mechanism | Note |
+|---|---|---|---|
+| `kind` | `bug` / `feature` | the `bug` / `enhancement` label (GitHub's own defaults) | NOT a native Issue Type — that feature is organization-level and unavailable on this personal-account repo (ADR-0145's build-time amendment); reusing the existing default labels avoids minting a parallel `kind:*` pair that would just duplicate them |
+| `size` | `small` / `big` | the `size:small` / `size:big` label | same taxonomy, just a label instead of frontmatter |
+| `status` | `open` | Issue open, no extra label | |
+| `status` | `doing` | Issue open + the `doing` label | GitHub's own state has no "in progress" value |
+| `status` | `done` | Issue closed, close reason `completed` | native GitHub field, not a label |
+| `status` | `wontfix` | Issue closed, close reason `not planned` | native GitHub field, not a label |
+| `## Findings` | dated entries, appended | dated Issue **comments**, appended | same discipline — the SAME verb `scribe:bug-report`'s own dispatch contract already names |
+
+ADR/PRD/SPEC/LLD and living-state docs (PLAN/ROADMAP) are explicitly **never** delegated — they
+stay files on this map, always; only the TICKET tier moved.
 
 ## 2 · The status philosophy (why shipped specs still read `proposed`)
 
@@ -54,23 +74,32 @@ pointer repairs excepted).
   `Repairs:` (→ the owning PRD-G/SPEC-R/LLD-C IDs). There is no `Implements:`/`Refined-by:` row —
   don't invent one.
 
-## 4 · Ticket section contracts (split by kind — both legal)
+## 4 · Ticket section contracts (split by kind — both legal; the shape survives the ADR-0145 backend move, only the container changed from a markdown file to an Issue body)
 
-- `kind: feature` — Summary · Acceptance · Links · Scope/Open · Findings (+ `size` frontmatter).
+- `kind: feature` — Summary · Acceptance · Links · Scope/Open · Findings (+ `size` frontmatter, now
+  the `size:small`/`size:big` label; on an Issue, Findings is the dated-comment stream, §1).
 - `kind: bug` — Summary · Acceptance · Repro · Expected vs actual · Classification · Severity
-  (`blocker·major·minor·cosmetic`) · Links · Findings.
-- Findings entries are dated, appended at each significant result, never only at the end.
+  (`blocker·major·minor·cosmetic`) · Links · Findings (same Issue-comment mapping).
+- Findings entries are dated, appended at each significant result, never only at the end — a file's
+  `## Findings` section before ADR-0145, an Issue's comment stream after.
+- `.github/ISSUE_TEMPLATE/{feature,bug}.yml` are the current authoring surface for a human filer;
+  they carry this SAME contract as GitHub Issue Forms fields, not a paraphrase of it.
 
 ## 5 · The gates (deterministic tier — cite, never restate)
 
 - `site/lib/adr.test.ts` — ADR filename/table/status-enum/date/summary (the original gate).
-- `site/lib/docs-grammar.test.ts` — the Phase-3 two-tier gate: STRUCTURAL (fails the run): ticket
-  YAML enums + kind/size rules · SPEC/LLD/PRD status-keyword presence · the dangling-relative-link
-  sweep over active docs · hook-registration liveness both directions. HYGIENE (reported, promoted
-  later): LLD dialect/Layer-spelling uniformity · TKT case in prose · ADR numbering gaps.
+- `site/lib/docs-grammar.test.ts` — the Phase-3 two-tier gate: STRUCTURAL (fails the run):
+  SPEC/LLD/PRD status-keyword presence · the dangling-relative-link sweep over active docs ·
+  hook-registration liveness both directions. HYGIENE (reported, promoted later): LLD
+  dialect/Layer-spelling uniformity · TKT case in prose · ADR numbering gaps. The ticket-YAML
+  enum/kind/size STRUCTURAL checks (ADR-0145, 2026-07-18) RETIRED with the file-based ticket
+  tier itself — nothing replaces them file-side, since an Issue body isn't a file this gate can
+  read; `.github/ISSUE_TEMPLATE/*.yml` is the new authoring-time contract, enforced by GitHub's
+  own required-field validation at submission, not a repo-side lint.
 - `.claude/hooks/adr-status-guard.py` (PreToolUse, registered) — blocks agent flips → `accepted`.
-- scribe's `doc_lint.py` fits ONLY tickets here (YAML); the blockquote types are out of its
-  dialect — do not "fix" a doc to satisfy it.
+- scribe's `doc_lint.py` fit ONLY tickets here (YAML) while the file-based tier existed; with no
+  new ticket files being authored, that particular fit is now moot going forward — the blockquote
+  types stay out of its dialect regardless, do not "fix" a doc to satisfy it.
 
 ## 6 · Archive & historical records
 

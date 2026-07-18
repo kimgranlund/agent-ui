@@ -1,0 +1,43 @@
+name: Feature
+description: A feature or improvement — mirrors the TICKET dialect's kind:feature section contract (agent-ui-doc-standards §4)
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What's being asked for, and why — the root ask, not just the literal wording.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance
+      description: What "done" looks like — the concrete, checkable criteria.
+    validations:
+      required: true
+  - type: textarea
+    id: links
+    attributes:
+      label: Links
+      description: Related ADRs, SPECs, tickets, or source files (repo-relative paths or issue numbers).
+    validations:
+      required: false
+  - type: textarea
+    id: scope-open
+    attributes:
+      label: Scope / Open
+      description: Explicit non-goals, and forks or questions left unresolved rather than guessed at.
+    validations:
+      required: false
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      description: One context can hold it (small), or contract-changing / multi-component (big) — the same materiality floor this repo's tickets always used.
+      options:
+        - small
+        - big
+    validations:
+      required: true
