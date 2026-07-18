@@ -254,7 +254,12 @@ export function a2uiDevProxyPlugin(): Plugin {
               // ADR-0138 cl.3 — the optional persona section: string, length-capped (16 KB — a runaway
               // guard; the composed admin persona is ~1-2 KB), forwarded verbatim; anything else ⇒ absent.
               const persona = typeof personaSystem === 'string' && personaSystem.length <= 16_384 ? personaSystem : undefined
-              for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona })) {
+              // ADR-0146 F1 — opt IN to the live-turn progress channel: produce() interleaves
+              // {"a2uiMeta":{"progress":…}} meta-lines that flush through the SAME per-line res.write below
+              // (NO structural proxy change — a progress line is an ordinary NDJSON line; the browser's
+              // readMetaLine filter routes it to handle.progress). progressDetail stays the 'stages' default,
+              // so no raw thinking text crosses the wire (F3).
+              for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true })) {
                 res.write(line + '\n')
               }
               res.end()

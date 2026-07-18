@@ -292,8 +292,12 @@ async function runTurn(input: TurnInput): Promise<void> {
       // ingest path pristine by construction). ADR-0097 §1: `ask`, if any, rides the SAME meta-line.
       const meta = readMetaLine(line)
       if (meta) {
-        note = meta.a2uiMeta.note
-        ask = meta.a2uiMeta.ask
+        // ADR-0146 F1: a `progress` meta-line is FILTERED here like every other meta kind — it never enters
+        // `allLines`/the JSON tab or `canvasHost.ingest`. This canvas page has no narration strip to route
+        // progress INTO (unlike a2ui-chat's ui-conversation), so filtering it out IS the correct handling.
+        // Guard note/ask so a progress-only line (both undefined on it) never clobbers a real note/ask.
+        if (meta.a2uiMeta.note !== undefined) note = meta.a2uiMeta.note
+        if (meta.a2uiMeta.ask !== undefined) ask = meta.a2uiMeta.ask
         const trace = meta.a2uiMeta.trace
         if (trace) {
           traces.push(trace)

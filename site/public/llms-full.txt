@@ -2978,7 +2978,24 @@ stream.finalize() // t2 (still active) renders TRUNCATED — never a forever-spi
 
 - **`size`** (`sm`/`md`/`lg`, default `md`) — first-class geometry (ADR-0122 F2) for family/catalog
   symmetry; author matching sizes on appended entries (or rely on the default) for rail alignment.
-- **`label`** (string, default `''`) — the strip's accessible name, set on `internals.ariaLabel`.
+- **`label`** (string, default `''`) — the strip's accessible name, set on `internals.ariaLabel`; also
+  shown VISIBLY in the header when `header` is set.
+- **`header`** (boolean, default `false`) — the opt-in visible streaming header (ADR-0146 F8). When set, a
+  pinned `[data-part="header"]` row shows the `label` plus a live overall-status marker escalated over the
+  strip's top-level entries. Default `false` renders byte-identically to a headerless strip (no header DOM).
+
+## The streaming header (ADR-0146 F8)
+
+Opt in with `header` and the strip grows a pinned chrome row that reads **working from construction** —
+even an empty, un-finalized stream shows an `active` header the instant it is set, which is the structural
+fix for the blank-agent-bubble symptom (a headerless empty strip renders zero pixels). The header's
+overall status follows one rule: while the turn is un-finalized it shows the worst-child escalation over
+the top-level entries **when that outranks `active`** (a mid-turn `error`/`warning` entry flips the header
+immediately — the monotone-truth of ADR-0146 F6), and `active` otherwise. `finalize()` settles the header
+to the escalated final status (a still-running entry, now truncated, contributes `warning`); `fail()`
+forces it `error`. The header is `position: sticky` — pinned above the scroll region, never scrolling away
+as entries overflow. The status marker is SHAPE-first (ADR-0057): a glyph for `done`/`error`/`warning`, a
+dot/ring/pulse for the in-progress states.
 
 ## The imperative API (ADR-0122 F4)
 
@@ -3957,10 +3974,12 @@ imperatively appended) — authored once, shared everywhere.
 
 ## Props
 
-- **`status`** (`''`/`pending`/`active`/`done`/`error`, default `''`) — the item's lifecycle state. Each
-  non-empty value renders a marker distinguished by **SHAPE**, never hue alone (ADR-0057): `pending` a
-  hollow ring, `active` a filled dot (with an optional pulse, static under reduced-motion), `done` a
-  built-in check glyph, `error` a built-in cross glyph. The colour channel is redundant.
+- **`status`** (`''`/`pending`/`active`/`done`/`error`/`warning`, default `''`) — the item's lifecycle
+  state. Each non-empty value renders a marker distinguished by **SHAPE**, never hue alone (ADR-0057):
+  `pending` a hollow ring, `active` a filled dot (with an optional pulse, static under reduced-motion),
+  `done` a built-in check glyph, `error` a built-in cross glyph, `warning` (ADR-0146 F7) a built-in
+  triangle-exclamation glyph — a lesser advisory outcome the single `error` state cannot express, its
+  triangle shape never `error`'s cross recoloured. The colour channel is redundant.
 - **`label`** / **`description`** / **`timestamp`** (string, default `''`) — stamped into their content
   cells; `timestamp` is the consumer's own string, carrying no value-codec.
 - **`icon`** (string, default `''`) — a free marker glyph name (`@agent-ui/icons`) that replaces the dot

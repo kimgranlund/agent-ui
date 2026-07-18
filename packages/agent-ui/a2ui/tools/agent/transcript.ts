@@ -102,6 +102,17 @@ export const recordedTranscript: RecordedTranscript = {
       // Honest per-turn rationale (ADR-0088 §1): this turn's actual payload is a `canvas` surface with
       // one solid Button labelled "Click me" wired to a `submit` action — nothing else.
       note: 'I set up a single canvas surface with one button, labeled "Click me" — click it and I\'ll hear about it.',
+      // ADR-0146 F1 — plausible authored lifecycle stages so the KEYLESS default demo shows the staged
+      // live-turn feedback (a network-free stand-in for what produce() interleaves live). The same closed
+      // vocabulary the live path emits; replayed ahead of this turn's lines by createRecordedTransport.
+      progress: [
+        { stage: 'sent' },
+        { stage: 'started' },
+        { stage: 'reasoning' },
+        { stage: 'content' },
+        { stage: 'validating' },
+        { stage: 'done' },
+      ],
       // The action a click on the seed's Button emits. Under the round-trip gate's injected deterministic
       // id/clock, actionId/timestamp are fixed; the gate matches the ESSENTIALS (name + surfaceId).
       expectClientMessage: {
@@ -121,6 +132,8 @@ export const recordedTranscript: RecordedTranscript = {
       // Honest per-turn rationale: this turn's actual payload is a NEW "confirmation" surface holding
       // one Text component that reports the click back — no other change to the canvas surface.
       note: 'Thanks for the click — I added a second surface with a Text confirming the button worked.',
+      // ADR-0146 F1 — a shorter authored lifecycle for the follow-up turn (no extended reasoning here).
+      progress: [{ stage: 'sent' }, { stage: 'started' }, { stage: 'content' }, { stage: 'validating' }, { stage: 'done' }],
     },
     {
       lines: TURN3.map(jsonl),

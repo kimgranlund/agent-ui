@@ -79,6 +79,19 @@ export interface AgentTransport {
 export type Effort = 'low' | 'medium' | 'high' | 'xhigh'
 
 /**
+ * A provider lifecycle event (ADR-0146 F1/F4) — the raw upstream signals an adapter already parses and
+ * (today) drops, surfaced through the OPTIONAL `onEvent` callback so `produce()` can compose them into the
+ * closed `TurnProgress` stage vocabulary. Provider-agnostic and MINIMAL: each adapter maps its OWN upstream
+ * events onto these five kinds; an adapter that maps nothing degrades to the coarser stages `produce()`
+ * observes by itself (F4 — a coarser dial, never a broken one). `text` carries a `thinking`-delta excerpt
+ * (raw reasoning), forwarded onto the wire only under an explicit `progressDetail:'full'` opt-in (F3).
+ */
+export interface ProviderEvent {
+  kind: 'message_start' | 'block_start' | 'thinking' | 'block_stop' | 'done'
+  text?: string
+}
+
+/**
  * The injected model seam (SPEC-R11): one isolated module PER provider implements this (Anthropic this
  * wave; OpenAI/Gemini the next slices). `stream` yields raw text fragments that accumulate into the
  * model's output (the A2UI JSONL the loop then heals+validates). The `produce()` driver (LLD-C3) depends
@@ -99,6 +112,13 @@ export interface AgentProvider {
      *  but a future non-thinking model added to that list would 400 here, not degrade. Gate on model
      *  capability before adding one. */
     effort?: Effort
+    /** ADR-0146 F1 — an OPTIONAL lifecycle callback (the exact additive precedent `effort?` set on this
+     *  same interface): a stub/adapter that ignores it is byte-behavior-unchanged; the Anthropic adapter
+     *  maps its already-parsed-and-dropped SSE frames onto it inside its own frame walk. A CALLBACK, not a
+     *  union-yielding stream, because inside `produce()` there is exactly one caller and the text-
+     *  accumulation contract must not change (F1's principled asymmetry — on the wire it is in-band lines,
+     *  here it is a side callback). */
+    onEvent?: (ev: ProviderEvent) => void
     signal?: AbortSignal
   }): AsyncIterable<string>
 }

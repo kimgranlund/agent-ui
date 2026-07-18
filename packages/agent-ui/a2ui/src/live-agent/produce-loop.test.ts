@@ -19,6 +19,7 @@ import { produce, ProduceHalt } from '../agent/produce.ts'
 import type { ProduceDeps } from '../agent/produce.ts'
 import type { AgentProvider, TurnInput } from '../agent/agent-transport.ts'
 import { readMetaLine } from '../agent/meta-line.ts'
+import type { TurnProgress } from '../agent/meta-line.ts'
 import { buildSystemPrompt } from '../agent/system-prompt.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
@@ -53,6 +54,127 @@ function stubProvider(outputs: string[]): { provider: AgentProvider; calls: () =
 }
 
 const intent: TurnInput = { kind: 'intent', text: 'a submit button', session: { turns: [] } }
+
+// ── ADR-0146 F1/F3 helpers: a provider that DRIVES onEvent, + progress/content extractors ──────────────
+/** A stub provider that drives the ADR-0146 onEvent lifecycle (message_start/block_start before the yield,
+ *  an optional thinking delta, block_stop/done after) around each recorded output — proving produce()
+ *  composes real provider events into its stage stream, not just its own loop stages. */
+function progressStub(outputs: string[], opts?: { thinking?: string }): { provider: AgentProvider; calls: () => number } {
+  let n = 0
+  const provider: AgentProvider = {
+    async *stream(req) {
+      req.onEvent?.({ kind: 'message_start' })
+      req.onEvent?.({ kind: 'block_start' })
+      if (opts?.thinking !== undefined) req.onEvent?.({ kind: 'thinking', text: opts.thinking })
+      const out = outputs[Math.min(n, outputs.length - 1)]!
+      n += 1
+      yield out
+      req.onEvent?.({ kind: 'block_stop' })
+      req.onEvent?.({ kind: 'done' })
+    },
+  }
+  return { provider, calls: () => n }
+}
+const isProgress = (l: string): boolean => readMetaLine(l)?.a2uiMeta.progress !== undefined
+const progressOf = (lines: string[]): TurnProgress[] =>
+  lines.map((l) => readMetaLine(l)?.a2uiMeta.progress).filter((p): p is TurnProgress => p !== undefined)
+const isPureContent = (l: string): boolean => readMetaLine(l) === undefined // an A2UI line (no meta wrapper)
+
+describe('produce() interleaved live-turn progress (ADR-0146 F1/F3)', () => {
+  it('a stub driving onEvent yields progress meta-lines AS THEY HAPPEN, strictly BEFORE any content line (SPEC-R5 validate-then-stream preserved)', async () => {
+    const { provider } = progressStub([VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true })) lines.push(line)
+
+    // every A2UI content line comes AFTER every progress line (no content precedes validation)
+    const firstContent = lines.findIndex(isPureContent)
+    const lastProgress = lines.map(isProgress).lastIndexOf(true)
+    expect(firstContent).toBeGreaterThan(-1)
+    expect(lastProgress).toBeLessThan(firstContent)
+    // the content is exactly the validated payload (byte-identical to the no-progress case)
+    const content = lines.filter(isPureContent)
+    expect(content).toHaveLength(2)
+    expect(validateA2ui(content.map((l) => JSON.parse(l)), defaultCatalog).valid).toBe(true)
+    // the stage sequence: sent (produce), started (provider), content (produce's pinned first-fragment), validating, done
+    expect(progressOf(lines).map((p) => p.stage)).toEqual(['sent', 'started', 'content', 'validating', 'done'])
+  })
+
+  it('OFF by default: NO progress lines appear (byte-identical to before) — the note-only/halt guarantee generalized', async () => {
+    const { provider } = progressStub([VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line) // no progress flag
+    expect(lines.some(isProgress)).toBe(false)
+    expect(lines).toHaveLength(2)
+  })
+
+  it('a self-correct round yields {stage:"retry", round} with the attempt ordinal', async () => {
+    const { provider } = progressStub([INVALID, VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true })) lines.push(line)
+    const retry = progressOf(lines).find((p) => p.stage === 'retry')
+    expect(retry, 'the self-correct round must announce a retry stage').toBeDefined()
+    expect(retry!.round, 'retry carries the attempt ordinal (round 2 = the first self-correct)').toBe(2)
+    // content still validate-then-stream: only the corrected payload, nothing from the invalid round
+    expect(lines.filter(isPureContent).join('\n')).not.toContain('NotARealComponent')
+  })
+
+  it('progressDetail absent ⇒ a reasoning event carries NO detail text (the F3 default, a negative control)', async () => {
+    const { provider } = progressStub([VALID], { thinking: 'weighing the layout options' })
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true })) lines.push(line)
+    const reasoning = progressOf(lines).find((p) => p.stage === 'reasoning')
+    expect(reasoning, 'a thinking delta surfaces a reasoning stage').toBeDefined()
+    expect(reasoning!.detail, 'no raw thinking text on the wire by default').toBeUndefined()
+  })
+
+  it("progressDetail:'full' forwards a BOUNDED reasoning excerpt (the explicit opt-in)", async () => {
+    const longThought = 'x'.repeat(500)
+    const { provider } = progressStub([VALID], { thinking: longThought })
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true, progressDetail: 'full' })) lines.push(line)
+    const reasoning = progressOf(lines).find((p) => p.stage === 'reasoning')
+    expect(reasoning!.detail, 'full forwards the excerpt').toBeDefined()
+    expect(reasoning!.detail!.length, 'the excerpt is BOUNDED, never the full 500 chars').toBeLessThanOrEqual(200)
+  })
+
+  it('a note-only turn with progress on stays a CLEAN success (semantics byte-unchanged), and OFF is byte-identical', async () => {
+    // ON: the note still ships correctly (progress lines surround it, the note itself unchanged)
+    const { provider: p1 } = progressStub(['{"a2uiMeta":{"note":"nothing to change"}}'])
+    const deps1: ProduceDeps = { provider: p1, retrieve: () => [], catalog: defaultCatalog }
+    const on: string[] = []
+    for await (const line of produce(intent, deps1, { maxRounds: 3, progress: true })) on.push(line)
+    const noteOn = on.filter((l) => readMetaLine(l)?.a2uiMeta.note !== undefined)
+    expect(noteOn).toHaveLength(1)
+    expect(readMetaLine(noteOn[0]!)!.a2uiMeta.note).toBe('nothing to change')
+
+    // OFF: byte-identical to before progress existed (exactly one line — the note)
+    const { provider: p2 } = progressStub(['{"a2uiMeta":{"note":"nothing to change"}}'])
+    const deps2: ProduceDeps = { provider: p2, retrieve: () => [], catalog: defaultCatalog }
+    const off: string[] = []
+    for await (const line of produce(intent, deps2, { maxRounds: 3 })) off.push(line)
+    expect(off).toHaveLength(1)
+    expect(off.some(isProgress)).toBe(false)
+  })
+
+  it('ProduceHalt behaviour is unchanged with progress on (throws, emits no content) — progress lines are not content', async () => {
+    const { provider } = progressStub([INVALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    let halted: unknown
+    try {
+      for await (const line of produce(intent, deps, { maxRounds: 3, progress: true })) lines.push(line)
+    } catch (e) {
+      halted = e
+    }
+    expect(halted).toBeInstanceOf(ProduceHalt)
+    expect(lines.filter(isPureContent), 'NOTHING invalid (no content) was emitted').toHaveLength(0)
+  })
+})
 
 describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
   it('self-corrects: feeds the validator failure back, then streams ONLY the validated payload', async () => {

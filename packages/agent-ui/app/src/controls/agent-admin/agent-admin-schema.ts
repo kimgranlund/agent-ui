@@ -13,6 +13,7 @@
 
 import type { SettingsSchema } from '../settings/schema.ts'
 import type { EffortLevel } from '../conversation/composer-options.ts'
+import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line.ts' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the node-first ./agent barrel)
 // ADR-0135 Piece A / Fork 2: the fail-closed guards + seed helper hoisted to `@agent-ui/shared` so app
 // and a2ui share ONE implementation. Re-exported here so `agent-admin.ts` keeps its current
 // `'./agent-admin-schema.ts'` import path unchanged.
@@ -150,9 +151,13 @@ export interface AdminTurnRequest {
 // consumes without ever importing the fenced machinery.
 
 /** One streamed event of a surface turn: a VALIDATED A2UI wire line (fed to
- *  `AgentTurnHandle.ingestLine` — it routes by surfaceId to an inline ui-surface-host, ADR-0129), or
- *  the turn's prose note (the ADR-0088 meta-line, already peeled by the runner — never ingested). */
-export type AdminSurfaceTurnEvent = { kind: 'line'; line: string } | { kind: 'note'; note: string }
+ *  `AgentTurnHandle.ingestLine` — it routes by surfaceId to an inline ui-surface-host, ADR-0129), the
+ *  turn's prose note (the ADR-0088 meta-line, already peeled by the runner — never ingested), or a
+ *  live-turn progress stage (the ADR-0146 F1 meta-line, routed to `AgentTurnHandle.progress`). */
+export type AdminSurfaceTurnEvent =
+  | { kind: 'line'; line: string }
+  | { kind: 'note'; note: string }
+  | { kind: 'progress'; progress: TurnProgress }
 
 /** A surface turn's request. `turn` mirrors the producer's two arms: a typed user intent, or a surface
  *  client message (an action click / function response bubbled up via `onClientMessage`) — `message` is

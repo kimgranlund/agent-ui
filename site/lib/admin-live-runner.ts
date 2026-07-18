@@ -100,6 +100,9 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
     for await (const line of readNdjsonLines(res.body)) {
       const meta = readMetaLine(line)
       if (meta) {
+        // ADR-0146 F1 — a progress meta-line routes to the conversation's handle.progress (live narration);
+        // it is never ingested as content (the SAME peel that already isolates note/trace, one arm added).
+        if (meta.a2uiMeta.progress) yield { kind: 'progress', progress: meta.a2uiMeta.progress }
         if (typeof meta.a2uiMeta.note === 'string' && meta.a2uiMeta.note.length > 0) {
           yield { kind: 'note', note: meta.a2uiMeta.note }
         }

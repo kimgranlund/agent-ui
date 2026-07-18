@@ -4,7 +4,10 @@
 // fetch/stream arm is MANUAL live acceptance only (SPEC-R3; §2 discovery table).
 
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { parseAnthropicSSE, ANTHROPIC_SSE_ERROR_PREFIX } from '../agent/providers/anthropic.ts'
+import type { ProviderEvent } from '../agent/agent-transport.ts'
+declare const process: { cwd(): string }
 
 // A captured multi-event Anthropic Messages SSE response (the host-verified 2026-07-04 shape): a
 // message_start, a content_block_start, two text_delta content_block_deltas, a ping, a content_block_stop,
@@ -57,5 +60,40 @@ describe('parseAnthropicSSE (LLD-C10 / SPEC-R11 AC3)', () => {
     expect(fragments).toHaveLength(1)
     expect(fragments[0]!.startsWith(ANTHROPIC_SSE_ERROR_PREFIX)).toBe(true)
     expect(fragments[0]).toContain('overloaded_error')
+  })
+})
+
+// ── ADR-0146 F1: the onEvent lifecycle mapping ────────────────────────────────────────────────────────
+describe('parseAnthropicSSE — onEvent lifecycle mapping (ADR-0146 F1)', () => {
+  it('invokes onEvent with the mapped ProviderEvent sequence while yielding the IDENTICAL text fragments (byte-identical accumulation)', () => {
+    const events: ProviderEvent[] = []
+    const fragments = [...parseAnthropicSSE(FIXTURE, (ev) => events.push(ev))]
+    // text accumulation is unchanged — the regression guard
+    expect(fragments).toEqual(['Hello, ', 'world'])
+    // the dropped lifecycle frames now surface, in order: message_start → block_start → block_stop → done
+    // (message_delta/ping carry no event; content_block_delta text_delta yields text, emits no lifecycle event)
+    expect(events.map((e) => e.kind)).toEqual(['message_start', 'block_start', 'block_stop', 'done'])
+  })
+
+  it('a caller passing NO onEvent gets today\'s behaviour EXACTLY (byte-identical to the no-callback path)', () => {
+    expect([...parseAnthropicSSE(FIXTURE)]).toEqual([...parseAnthropicSSE(FIXTURE, undefined)])
+    expect([...parseAnthropicSSE(FIXTURE)]).toEqual(['Hello, ', 'world'])
+  })
+
+  it('a thinking_delta maps to {kind:"thinking", text} and is NEVER yielded onto the accumulated wire (F3 default)', () => {
+    const chunk =
+      'event: content_block_delta\n' +
+      'data: {"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"weighing the layout"}}\n\n'
+    const events: ProviderEvent[] = []
+    const fragments = [...parseAnthropicSSE(chunk, (ev) => events.push(ev))]
+    expect(fragments, 'thinking text must never reach the accumulated wire').toEqual([])
+    expect(events).toEqual([{ kind: 'thinking', text: 'weighing the layout' }])
+  })
+
+  it('the adapter imports NO @anthropic-ai/sdk (SPEC-R3 — plain fetch/SSE only, comments stripped)', () => {
+    const src = readFileSync(`${process.cwd()}/packages/agent-ui/a2ui/src/agent/providers/anthropic.ts`, 'utf8') as string
+    const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
+    expect(code).not.toMatch(/@anthropic-ai\/sdk/)
+    expect(code).not.toMatch(/\brequire\s*\(\s*['"]@anthropic/)
   })
 })

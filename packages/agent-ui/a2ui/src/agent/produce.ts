@@ -33,6 +33,17 @@
 //       ask-routed surface must be a member of `FEED_SURFACE_TYPES` (`feed-catalog.ts`, the single
 //       source SPEC-R15 gates) — a violation feeds the failure back as a produce-layer-only `'FEED_SCOPE'`
 //       literal (never joining the protocol's closed `ErrorCode` union) and retries, never streams.
+//
+// ADR-0146 F1/F3: when the caller opts in (`opts.progress === true` — absent ⇒ BYTE-IDENTICAL to before,
+// the note-only/halt/every-deterministic-gate guarantee), the loop also INTERLEAVES live-turn lifecycle
+// progress on the SAME stream — `{"a2uiMeta":{"progress":{stage,...}}}` meta-lines yielded AS THEY HAPPEN,
+// strictly ahead of any content line. produce() composes the provider's `onEvent` signals (`started` on the first message_start/
+// content_block_start; `reasoning` on a thinking delta) with its OWN loop stages (`sent` before each
+// request; `content` on the round's OWN first text fragment — produce() is that stage's one pinned emitter;
+// `validating` after accumulation; `retry` with the attempt ordinal on a self-correct round; `done` before
+// the final yield). VALIDATE-THEN-STREAM is UNTOUCHED: progress is not content — it never enters
+// heal/validate/corpus and no A2UI content line ever precedes validation (SPEC-R5). `progressDetail`
+// ('stages' default) keeps raw thinking text OFF the wire; 'full' forwards bounded excerpts (F3).
 
 import type { A2uiServerMessage, A2uiOutput } from '../protocol.ts'
 import type { Catalog } from '../catalog/catalog.ts'
@@ -42,11 +53,11 @@ import { heal } from '../corpus/heal.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import type { SurfaceSeed } from '../renderer/validate.ts'
 import type { A2uiComponent } from '../protocol.ts'
-import type { AgentProvider, Session, Turn, TurnInput } from './agent-transport.ts'
+import type { AgentProvider, ProviderEvent, Session, Turn, TurnInput } from './agent-transport.ts'
 import { buildSystemPrompt } from './system-prompt.ts'
 import { frameClientMessage } from './session.ts'
 import { readMetaLine } from './meta-line.ts'
-import type { AskDeclaration, TurnTrace } from './meta-line.ts'
+import type { AskDeclaration, TurnProgress, TurnTrace } from './meta-line.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-skills.ts'
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
@@ -82,6 +93,30 @@ export interface ProduceOptions {
    * (voice/content only; the wire contract stays authoritative, the fixed precedence sentence says so).
    * Absent/empty ⇒ byte-identical composition (the `mode`-absent precedent). */
   personaSystem?: string
+  /** ADR-0146 F1 — opt IN to interleaved live-turn progress meta-lines. Absent/false ⇒ produce() streams
+   * BYTE-IDENTICALLY to before (no progress lines) — the "note-only and halt paths byte-unchanged"
+   * guarantee, and every deterministic gate/consumer that predates progress is untouched. `true` ⇒ the
+   * loop yields `{"a2uiMeta":{"progress":{stage,…}}}` meta-lines AS THEY HAPPEN, strictly ahead of any
+   * content line (SPEC-R5 validate-then-stream preserved). The live consumer loops (a2ui-chat/a2ui-live/
+   * admin-live-runner) set this; the recorded transport carries authored progress instead (SPEC-R5/N4). */
+  progress?: boolean
+  /** ADR-0146 F3 — how much raw reasoning crosses the wire on `reasoning` progress events (only when
+   * `progress` is on). Absent ⇒ `'stages'`: `produce()` forwards the reasoning stage TRANSITION only, NO
+   * thinking text (the default, conservative posture). `'full'`: forwards bounded excerpts on
+   * `TurnProgress.detail` — an explicit consumer opt-in, never the default. Only affects `reasoning`. */
+  progressDetail?: 'stages' | 'full'
+}
+
+/** The bounded raw-reasoning excerpt cap (ADR-0146 F3, `progressDetail:'full'`) — a `thinking` delta can be
+ * long; a forwarded excerpt is capped so a polite live region is never token-spammed. */
+const REASONING_EXCERPT_CAP = 200
+
+/** Serialize a runtime-composed progress meta-line (ADR-0146 F1) — the SAME reserved-envelope shape every
+ * meta kind uses (no `version` key ⇒ provably not an `A2uiServerMessage`; fault-isolates to
+ * VERSION_UNSUPPORTED if ever leaked to `dispatch()`). Interleaved DURING the turn, never content: it never
+ * enters heal/validate/corpus, and no A2UI content line ever precedes validation (SPEC-R5 untouched). */
+function formatProgressLine(progress: TurnProgress): string {
+  return JSON.stringify({ a2uiMeta: { progress } })
 }
 
 /**
@@ -337,20 +372,62 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     model,
   })
 
+  const emitProgress = opts.progress === true // ADR-0146 F1 — opt-in; absent ⇒ byte-identical to before
+  const progressDetail = opts.progressDetail ?? 'stages' // ADR-0146 F3 — 'stages' (default) keeps thinking text off the wire
   let failures: RoundFailure[] | undefined
   let lastRaw: string | undefined
   for (let round = 0; round < opts.maxRounds; round++) {
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
+    // ADR-0146 F1 — the lifecycle stages, yielded AS THEY HAPPEN, strictly BEFORE any content line (content
+    // still streams only after full validation, SPEC-R5). A self-correct round announces `retry` with the
+    // attempt ordinal first, then `sent` before the provider request. All gated on the `progress` opt-in.
+    if (emitProgress && round > 0 && failures !== undefined) yield formatProgressLine({ stage: 'retry', round: round + 1 })
+    if (emitProgress) yield formatProgressLine({ stage: 'sent' })
+
     let raw = ''
+    // Provider events are collected on a queue by the onEvent callback (it cannot yield from this generator
+    // itself) and drained into the stream between text fragments — `started` on the provider's first
+    // signal, `reasoning` on a thinking delta (text-free at 'stages', a bounded excerpt at 'full'). When
+    // progress is OFF, no callback is installed (byte-identical accumulation) and the queue stays empty.
+    const pending: TurnProgress[] = []
+    let sawStarted = false
+    let sawReasoning = false
+    let sawContent = false
+    const onEvent = emitProgress
+      ? (ev: ProviderEvent): void => {
+          if (!sawStarted && (ev.kind === 'message_start' || ev.kind === 'block_start')) {
+            sawStarted = true
+            pending.push({ stage: 'started' })
+          } else if (ev.kind === 'thinking') {
+            if (progressDetail === 'full') pending.push({ stage: 'reasoning', ...(ev.text ? { detail: ev.text.slice(0, REASONING_EXCERPT_CAP) } : {}) })
+            else if (!sawReasoning) {
+              sawReasoning = true
+              pending.push({ stage: 'reasoning' }) // transition only — NO thinking text on the wire (F3 default)
+            }
+          }
+          // block_stop/done provider events are NOT mapped to a stage — produce() is the pinned emitter of
+          // `content`/`validating`/`done`, owning those transitions itself (F1).
+        }
+      : undefined
     for await (const frag of deps.provider.stream({
       model,
       system,
       messages: messagesFor(input, failures, lastRaw),
+      onEvent,
       signal: opts.signal,
     })) {
+      while (pending.length > 0) yield formatProgressLine(pending.shift()!)
+      // `content` is produce()'s ONE pinned emission on the round's OWN first text fragment (F1).
+      if (emitProgress && !sawContent && frag.length > 0) {
+        sawContent = true
+        yield formatProgressLine({ stage: 'content' })
+      }
       raw += frag
     }
+    while (pending.length > 0) yield formatProgressLine(pending.shift()!) // drain any trailing (text-less) events
     lastRaw = raw
+
+    if (emitProgress) yield formatProgressLine({ stage: 'validating' }) // AFTER accumulation, BEFORE assemble/validate
 
     const { note, ask, rest } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 — peeled BEFORE heal/validate
     const restLines = stripOuterFence(rest)
@@ -364,6 +441,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       // declared `ask` here is trivially integrity-invalid too (no payload creates ANYTHING) — dropped,
       // never even reaching `askIntegrityHolds` (there is nothing to check it against).
       const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
+      if (emitProgress) yield formatProgressLine({ stage: 'done' }) // before the final (note-only) meta-line yield
       yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined)
       return
     }
@@ -394,6 +472,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       // `finalAsk` only ever ride ON the meta-line `formatMetaLine` builds, and that line is yielded ONLY
       // when `note !== undefined`. A turn that authored `ask` but no `note` would have its ask silently
       // discarded here, never reaching the wire — an implicit coupling worth stating explicitly.
+      if (emitProgress) yield formatProgressLine({ stage: 'done' }) // ADR-0146 F1 — before the final content yield; still a meta-line, never content
       if (note !== undefined) {
         const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
         yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk) // meta-line FIRST

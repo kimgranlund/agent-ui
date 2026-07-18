@@ -57,8 +57,10 @@ import type { UISurfaceHostElement } from '../surface-host/surface-host.ts'
 import type { ClientMessageListener } from '@agent-ui/a2ui'
 // ADR-0146 F1: the live-turn progress vocabulary is produce-layer-owned (a2ui) — imported TYPE-ONLY (it
 // erases at build, so zero producer bytes cross the ADR-0137 identity gate) as the shared spine both the
-// pipeline (produce()) and this narration surface consume, so the two never drift.
-import type { TurnProgress, TurnProgressStage } from '@agent-ui/a2ui/agent'
+// pipeline (produce()) and this narration surface consume, so the two never drift. Imported from the PURE
+// `meta-line` module (not the `./agent` barrel) so the app/site type-check never drags in the barrel's
+// NODE-FIRST modules (system-prompt/mini-skills `readFileSync` at load — no node types under those tsconfigs).
+import type { TurnProgress, TurnProgressStage } from '@agent-ui/a2ui/agent/meta-line.ts'
 import './conversation-composer.ts' // registers <ui-conversation-composer> (TKT-0056) — composed internally, the master-detail.ts → ui-split precedent
 import type { UIConversationComposerElement } from './conversation-composer.ts'
 import type { PickerOption, ContextItem } from './composer-options.ts'

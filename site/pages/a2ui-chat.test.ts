@@ -165,11 +165,20 @@ describe('a2ui-chat routing on ui-conversation (SPEC-R7) — the real shipped 5-
 })
 
 // ── narration honesty (SPEC-R6 AC1) — never a fabricated sentence ──────────────────────────────────────
+// The category table (LLD-C5) PLUS the ADR-0146 F1 progress stage-label table — both closed, code-owned,
+// never model text. The recorded demo turns now author `progress` (ADR-0146), routed to handle.progress,
+// so a bubble's narration legitimately mixes category entries and progress-stage entries.
 const KNOWN_LABELS = new Set([
   'Opening a new surface…',
   'Updating the surface…',
   'Updating data…',
   'Closing the surface…',
+  // the ADR-0146 progress stage labels (conversation.ts PROGRESS_LABEL)
+  'Request sent',
+  'Generating…',
+  'Reasoning…',
+  'Writing the response…',
+  'Validating…',
 ])
 
 function narrationLabels(bubble: HTMLElement): string[] {
@@ -177,7 +186,7 @@ function narrationLabels(bubble: HTMLElement): string[] {
 }
 
 describe('a2ui-chat narration on ui-conversation (SPEC-R6 AC1) — never a fabricated sentence', () => {
-  it("every recorded-turn narration entry's label is drawn ONLY from the mechanical category table — turn 3 shows BOTH categories its lines touch, turn 4 shows only ONE", async () => {
+  it("every recorded-turn narration entry's label is drawn ONLY from closed code-owned tables (category + ADR-0146 progress) — turn 3 shows BOTH categories its lines touch, turn 4 shows only ONE", async () => {
     await sendIntent('turn 1')
     await waitUntil(() => agentBubbles().length === 1)
     await sendIntent('turn 2')

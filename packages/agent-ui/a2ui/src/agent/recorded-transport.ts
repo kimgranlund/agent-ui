@@ -14,9 +14,14 @@
 // (SPEC-R5/N4 parity, "the two transports' stream shapes stay identical"). A turn with no `ask` streams
 // byte-identically to before this addition. The SHIPPED `recordedTranscript` carries no `ask` turn
 // (ADR-0089's scripted-turn fork stands, untouched by this ADR).
+//
+// ADR-0146 F1: a recorded turn MAY also carry `progress` — an array of authored `TurnProgress` stages,
+// replayed as the SAME `{"a2uiMeta":{"progress":…}}` meta-lines `produce()` interleaves live, AHEAD of the
+// turn's lines (SPEC-R5/N4 parity). The keyless default demo authors these so a visitor with NO API key
+// still sees the staged live-turn feedback; a turn with no `progress` streams byte-identically to before.
 
 import type { AgentTransport, TurnInput } from './agent-transport.ts'
-import type { A2uiMetaEnvelope, AskDeclaration } from './meta-line.ts'
+import type { A2uiMetaEnvelope, AskDeclaration, TurnProgress } from './meta-line.ts'
 import type { A2uiClientMessage } from '../renderer/index.ts'
 
 // ADR-0137 clause 2: the `RecordedTranscript`/`RecordedTurn` shapes live HERE — the replay engine that
@@ -36,6 +41,11 @@ export interface RecordedTurn {
   lines: string[]
   note?: string
   ask?: AskDeclaration
+  /** ADR-0146 F1 — authored live-turn progress stages, replayed as the SAME `{"a2uiMeta":{"progress":…}}`
+   * meta-lines the live producer emits, AHEAD of this turn's lines (SPEC-R5/N4 parity), so the keyless demo
+   * demonstrates the staged feedback with zero network/key. A turn with no `progress` streams byte-
+   * identically to before (the note/ask optional-field precedent). */
+  progress?: TurnProgress[]
   expectClientMessage?: A2uiClientMessage
 }
 
@@ -70,6 +80,9 @@ export function createRecordedTransport(transcript: RecordedTranscript): AgentTr
       const t = transcript.turns[index]
       if (t === undefined) return
       index += 1
+      // ADR-0146 F1 — authored progress stages replay AHEAD of the turn's lines, the same meta-line shape
+      // produce() interleaves live (SPEC-R5/N4 parity); a turn with no `progress` yields none of these.
+      for (const p of t.progress ?? []) yield JSON.stringify({ a2uiMeta: { progress: p } })
       const meta = formatTurnMetaLine(t)
       if (meta !== undefined) yield meta
       for (const line of t.lines) yield line
