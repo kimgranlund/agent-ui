@@ -32,16 +32,17 @@ describe('mountPage — the shell is a real ui-theme-provider (ADR-0141 cl.1)', 
     expect(shellOf().getAttribute('scheme')).toBe('')
   })
 
-  it('the header renders Search (still inert — a separate ticket\'s concern) and a real Theme control', () => {
+  it('the header renders a real Search button (opens the command palette) and a real Theme control', () => {
     mountPage({ title: 'Probe' })
     const header = document.querySelector('.app-context-header')!
-    const search = [...header.querySelectorAll('.app-context-slot')].find((s) => s.textContent === 'Search')
-    expect(search, 'Search placeholder').toBeTruthy()
+    const buttons = [...header.querySelectorAll('ui-button')]
+    const search = buttons.find((b) => b.textContent === 'Search')
+    expect(search, 'Search ui-button').toBeTruthy()
     const themeGroup = header.querySelector('.app-context-theme-group')
     expect(themeGroup, 'the real Theme control').toBeTruthy()
-    // no leftover inert "Theme" span — the control REPLACED it, not sat beside it
-    const inertTheme = [...header.querySelectorAll('.app-context-slot')].find((s) => s.textContent === 'Theme')
-    expect(inertTheme, 'no stale inert Theme placeholder survives').toBeFalsy()
+    // no leftover inert placeholder spans of any kind — both slots are real controls now
+    const inertSlot = [...header.querySelectorAll('.app-context-slot')]
+    expect(inertSlot, 'no stale inert placeholder survives').toHaveLength(0)
   })
 
   it('the Theme control has a scheme-cycle button and a theme ui-menu, both real ui-button/ui-menu elements', () => {

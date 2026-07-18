@@ -674,9 +674,10 @@ function buildThemeControl(provider: UIThemeProviderElement): HTMLElement {
 }
 
 // buildContextHeader — the app top-bar (right column, row 1, fixed): the app wordmark (a Home link) + a
-// placeholder region for app-level chrome. `Search` stays an inert placeholder (TKT-0018's own concern,
-// site-command-search.spec.md — not this ticket's); `Theme` is now the REAL scheme+theme control above,
-// wired to `provider` (TKT-0088/ADR-0141 cl.4/5 — the shell's own ui-theme-provider, created by the caller).
+// placeholder region for app-level chrome. `Search` is now a REAL button opening the already-mounted
+// `ui-command-modal` (TKT-0018's own palette, `mountCommandPaletteOnce` below — the mod+k hotkey's own
+// affordance, made clickable too); `Theme` is the REAL scheme+theme control above, wired to `provider`
+// (TKT-0088/ADR-0141 cl.4/5 — the shell's own ui-theme-provider, created by the caller).
 function buildContextHeader(provider: UIThemeProviderElement): HTMLElement {
   const bar = document.createElement('header')
   bar.className = 'app-context-header'
@@ -689,9 +690,15 @@ function buildContextHeader(provider: UIThemeProviderElement): HTMLElement {
 
   const actions = document.createElement('div')
   actions.className = 'app-context-actions'
-  const search = document.createElement('span')
-  search.className = 'app-context-slot'
+  const search = document.createElement('ui-button') as UIButtonElement
+  search.setAttribute('variant', 'soft')
   search.textContent = 'Search'
+  // Lazy import — same module `mountCommandPaletteOnce` already pulled in at shell-build time (below),
+  // so this resolves from the browser's own module cache, not a second network fetch; keeps the "a page
+  // that never opens the palette pays no bundle cost" discipline intact for this call site too.
+  search.addEventListener('click', () => {
+    void import('../lib/command-palette.ts').then((m) => m.openCommandPalette())
+  })
   actions.append(search, buildThemeControl(provider))
   bar.append(actions)
   return bar

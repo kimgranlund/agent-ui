@@ -27,13 +27,34 @@ export type SchemeId = '' | 'light' | 'dark'
 
 const injected = new Set<string>()
 
+// A template-literal dynamic import (`import(\`.../${name}.css?url\`)`) is NOT statically analyzable by
+// Vite's import-analysis plugin (own build-time warning: "The above dynamic import cannot be analyzed") —
+// it falls through unresolved to the browser's native module loader, which cannot resolve a bare package
+// specifier without a build-time rewrite and throws `TypeError: Failed to resolve module specifier`
+// (reproduced live, both engines, 2026-07-17 — every non-default theme pack silently failed to load,
+// including on a page reload replaying a PERSISTED choice). `import.meta.glob`'s pattern argument is a
+// literal string (the `*` is glob syntax, not a runtime variable), so Vite CAN analyze and rewrite it —
+// this is the documented fix for "dynamically import one of a known, bounded set of files."
+// `import.meta.glob`'s pattern must itself start with `/` or `./` (Vite's own hard requirement — a
+// bare package specifier like `@agent-ui/shared/themes/*.css` throws `Invalid glob` at transform time,
+// caught live re-verifying this fix); the relative path from THIS file to the real pack sources is used
+// instead — the package's own `./themes/*` export map entry is for CONSUMERS, not for this glob.
+const THEME_PACK_LOADERS = import.meta.glob('../../packages/agent-ui/shared/src/tokens/themes/*.css', {
+  query: '?url',
+  import: 'default',
+}) as Record<string, () => Promise<string>>
+const themePackKey = (name: string): string => Object.keys(THEME_PACK_LOADERS).find((k) => k.endsWith(`/${name}.css`)) ?? ''
+
 /** Lazy-inject `name`'s pack stylesheet the FIRST time it's selected (a no-op on every later call for
  *  the same name — `injected` is the idempotency guard, not a DOM query, since a query would re-pay a
  *  layout cost every call for no reason). `'default'` never reaches this — see `applyTheme`. */
 async function ensurePackLoaded(name: Exclude<ThemeId, 'default'>): Promise<void> {
   if (injected.has(name)) return
   injected.add(name)
-  const href = (await import(`@agent-ui/shared/themes/${name}.css?url`)).default as string
+  const key = themePackKey(name)
+  const loader = THEME_PACK_LOADERS[key]
+  if (!loader) throw new Error(`theme-loader: no pack registered for "${name}" (no glob match ending in /${name}.css)`)
+  const href = await loader()
   const link = document.createElement('link')
   link.rel = 'stylesheet'
   link.href = href

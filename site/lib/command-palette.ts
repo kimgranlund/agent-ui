@@ -186,3 +186,11 @@ export async function mountCommandPalette(): Promise<void> {
       })
   }
 }
+
+/** openCommandPalette — the header's Search control's own verb: the palette is already mounted (every
+ *  `/site` page calls `mountCommandPaletteOnce` at shell-build time), so this just flips `open` on the
+ *  live instance — the mod+k hotkey's own affordance, made reachable by click/tap too. A no-op guard
+ *  (never throws) covers the pre-mount race a very-first-paint click could theoretically hit. */
+export function openCommandPalette(): void {
+  if (current) current.open = true
+}
