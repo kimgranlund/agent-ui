@@ -64,8 +64,10 @@
 > replayed ahead of the turn's lines (SPEC-R2/N4 recorded↔live parity — the keyless demo demonstrates the
 > feature). `AgentTransport.turn(): AsyncIterable<string>` stays BYTE-IDENTICAL (the ADR-0137-ratified
 > `./agent` surface is why); ADR-0088's typed-frame upgrade trigger is weighed and re-deferred with a
-> sharpened predicate (ADR-0146 F1). This is a design record only — no build has landed against this
-> amendment yet.
+> sharpened predicate (ADR-0146 F1). BUILT (TKT-0083 Slice B, 2026-07-18): the `onEvent` seam, the
+> Anthropic lifecycle mapping, `produce()`'s interleaved progress (opt-in; validate-then-stream preserved),
+> `progressDetail`, and `RecordedTurn.progress` all shipped gate-green; `AgentTransport.turn()` stayed
+> byte-identical, the typed-frame trigger re-deferred as recorded.
 
 ---
 

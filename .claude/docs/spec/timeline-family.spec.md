@@ -53,9 +53,13 @@
 > `false` — shipped consumers render byte-identically) rendering a visible `[data-part="header"]` row:
 > the `label` text plus a live overall-status glyph (`active` from construction until `finalize()`,
 > then the escalated final status; `fail`-path `error`) — the completion invariant (**SPEC-R11**)
-> gains a header-level face. See ADR-0146 for the full fork sheet; this is a design record only — no
-> build has landed against this amendment yet, and the grouping leg is explicitly sequenced on
-> ADR-0143's own build landing first.
+> gains a header-level face. See ADR-0146 for the full fork sheet. BUILT (TKT-0083 Slice A, 2026-07-18):
+> the `warning` status member (its own shape-coded glyph + forced-colors legibility), the opt-in `header`
+> with the stream-level worst-child-wins escalation, and `fail()` shipped gate-green (jsdom + browser).
+> DEFERRED: the GROUPING leg (`StatusEntry.parent` nesting via ADR-0143's `[data-role="nested"]` slot) — a
+> real F5↔ADR-0143 gap surfaced at build (that slot adopts CONNECT-TIME-ONLY and ADR-0143 ruled no new
+> `ui-timeline-item` public surface, so the live host has no seam to late-mount a nested timeline into an
+> already-connected parent); escalated to the planner for a late-mount-seam ruling before it can land.
 
 ---
 

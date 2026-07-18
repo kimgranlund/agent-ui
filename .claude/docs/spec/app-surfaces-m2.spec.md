@@ -24,8 +24,10 @@
 > GAP on `narrateTrace` flagged as design-seat work), never a quiet signature edit. The narration strip
 > additionally composes `ui-status-stream`'s new opt-in `header` (timeline-family amendment, same date)
 > so the strip reads "working" from `beginAgentTurn()` at t=0 — closing TKT-0083's blank-bubble symptom
-> even on a progress-less transport. This is a design record only — no build has landed against this
-> amendment yet.
+> even on a progress-less transport. BUILT (TKT-0083 Slice A, 2026-07-18): live-at-ingest narration (the
+> post-hoc replay + `NARRATION_STEP_MS` deleted), the `AgentTurnHandle.progress()` widening routing through
+> a closed code-owned stage-label table, and the strip's header opt-in all shipped gate-green — the
+> blank-bubble regression proof (a zero-line, zero-progress turn shows a working header at t=0) asserted.
 
 ---
 
