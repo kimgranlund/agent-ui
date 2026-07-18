@@ -334,6 +334,71 @@ describe('ui-timeline-item — arbitrary recursion depth, no cap, no new mechani
   })
 })
 
+// ── ensureNestedSlot — the ADR-0143 amendment's late-mount seam (TKT-0083 grouping, ADR-0146 F5) ───────────
+
+describe('ui-timeline-item — ensureNestedSlot(factory) (ADR-0143 amendment, 2026-07-18)', () => {
+  it('lazily composes a disclosure + nested slot on an item authored with NEITHER detail nor nested', () => {
+    const { el } = makeItem()
+    expect(el.querySelector('[data-part="detail"]')).toBeNull() // nothing composed yet
+    const nested = el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    expect(nested.tagName.toLowerCase()).toBe('ui-timeline')
+    expect(nested.getAttribute('data-role')).toBe('nested')
+    const disclosure = el.querySelector('[data-part="detail"]')
+    expect(disclosure?.tagName.toLowerCase()).toBe('ui-disclosure')
+    expect(disclosure?.contains(nested)).toBe(true)
+    el.remove()
+  })
+
+  it('is idempotent — a second call returns the SAME nested host, no second disclosure', () => {
+    const { el } = makeItem()
+    const first = el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    const second = el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    expect(second).toBe(first)
+    expect(el.querySelectorAll('[data-part="detail"]')).toHaveLength(1)
+    el.remove()
+  })
+
+  it('an item already authored with [data-role="detail"] gets nested appended into the SAME existing disclosure, after detail', async () => {
+    const { el } = makeItem('<span data-role="detail">detail text</span>')
+    const disclosuresBefore = el.querySelectorAll('[data-part="detail"]')
+    expect(disclosuresBefore).toHaveLength(1)
+    const nested = el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    await new Promise((r) => setTimeout(r, 0)) // disclosure.ts's own childList heal observer relocates it into the body part
+    const disclosure = el.querySelector('[data-part="detail"]')!
+    expect(el.querySelectorAll('[data-part="detail"]')).toHaveLength(1) // still ONE shared disclosure
+    const body = disclosure.querySelector('[data-part="body"]')!
+    const children = [...body.children]
+    expect(children[0]?.getAttribute('data-role')).toBe('detail')
+    expect(children[1]).toBe(nested)
+    el.remove()
+  })
+
+  it('a group mounted via ensureNestedSlot gets the SAME collapsed-summary preview + live MutationObserver as an authored nested slot', async () => {
+    const { el } = makeItem()
+    const nested = el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    const child = document.createElement('ui-timeline-item')
+    child.setAttribute('label', 'step 1')
+    child.setAttribute('status', 'active')
+    nested.append(child)
+    await whenFlushed()
+    const trailing = el.querySelector('[data-role="trailing"]')!
+    expect(trailing.textContent).toContain('step 1') // the preview resolves the live-mounted group exactly like an authored one
+
+    child.setAttribute('status', 'done')
+    await new Promise((r) => setTimeout(r, 0)) // the MutationObserver's own microtask
+    expect(trailing.textContent).toBe('✓ step 1')
+    el.remove()
+  })
+
+  it('must run while connected — throws no error called on a connected item; the returned host composes into the light DOM immediately', () => {
+    const el = document.createElement('ui-timeline-item') as UITimelineItemElement
+    document.body.append(el)
+    expect(() => el.ensureNestedSlot(() => document.createElement('ui-timeline'))).not.toThrow()
+    expect(el.querySelector('ui-timeline')).not.toBeNull()
+    el.remove()
+  })
+})
+
 // ── the confirmed no-op — timeline.ts terminal-connector marking self-scopes per nesting level (n8) ────────
 
 describe('ui-timeline-item — terminal-connector [data-last] self-scopes per nesting level (a confirmed no-op, no code change to timeline.ts)', () => {

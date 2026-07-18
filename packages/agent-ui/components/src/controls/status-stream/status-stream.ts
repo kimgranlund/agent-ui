@@ -1,8 +1,8 @@
 // status-stream.ts — UIStatusStreamElement, the timeline family's LIVE host (timeline-family.lld.md §4 ·
-// SPEC-R8…R12 · ADR-0122 F1/F2/F4/F6 · ADR-0146 F6/F7/F8). BEHAVIOUR + the imperative appendEntry/update/
-// finalize/fail API + the tail-follow guard + the completion invariant + the opt-in streaming header +
-// self-define ONLY. Anatomy/geometry per the LLD; styling lives in status-stream.css, the public contract
-// in status-stream.md.
+// SPEC-R8…R12 · ADR-0122 F1/F2/F4/F6 · ADR-0146 F5/F6/F7/F8). BEHAVIOUR + the imperative appendEntry/
+// update/finalize/fail API + the tail-follow guard + the completion invariant + the opt-in streaming
+// header + grouped entries + self-define ONLY. Anatomy/geometry per the LLD; styling lives in
+// status-stream.css, the public contract in status-stream.md.
 //
 // NAMED LLD DEVIATION (build-time, mechanical, flagged for the design seat's amendment): the LLD/SPEC-R9
 // name this method `append(entry): UITimelineItemElement`. That name is UNBUILDABLE as specified — every
@@ -34,23 +34,47 @@
 // (the blank-bubble ROOT fix: a header shows "working" the instant a consumer sets header, before any entry
 // or wire signal). `finalize()` settles it to the escalated final status (still-active/pending entries, now
 // truncated by the completion invariant, contribute `warning` — matching the warning-coloured truncated
-// ring); `fail()` settles it `error`. Because THIS host owns every mutation of its top-level entries
-// (appendEntry/update/finalize/fail), the header is recomputed imperatively at each — no MutationObserver
-// is needed for the stream level (the observer ADR-0146 F6 names is for GROUPED children, a follow-up gated
-// on ADR-0143's nested slot; grouping — `StatusEntry.parent` — is NOT built this pass, see the ticket handoff).
+// ring); `fail()` settles it `error`. The mediated API (appendEntry/update/finalize/fail) recomputes the
+// header SYNCHRONOUSLY at each call, so a consumer never observes a stale header even without waiting on
+// a microtask.
+//
+// ADR-0146 F5 — GROUPED entries (TKT-0083's follow-up build, landed on the ADR-0143 amendment):
+// `StatusEntry.parent?: string` (an existing entry's key) mounts the child under the parent item's
+// `[data-role="nested"]` slot — lazily, via `ui-timeline-item.ensureNestedSlot()` (the ADR-0143 amendment
+// ratified 2026-07-18 for exactly this live-mount case) — REUSING ADR-0143's shared `ui-disclosure` +
+// collapsed-summary preview, never a second nesting primitive. The keyed registry (`#byKey`) stays FLAT:
+// `update(childKey, patch)` reaches a nested entry identically, and `finalize()` truncation walks every
+// entry (nested included) with zero code change, since both already iterate `#byKey.values()`.
+//
+// ADR-0146 F6 — status ESCALATION, including the MAJOR-2 fix: a group's status is the WORST of its live
+// children (`error > warning > active > pending > done`, neutral '' contributing nothing), recomputed
+// SYNCHRONOUSLY from the mediated API (appendEntry/update) AND ALSO from a `MutationObserver` — the SAME
+// class ADR-0143 F3 installs on a nested subtree — watching each group's `status` attribute changes. The
+// observer is the fix for a consumer holding the raw `UITimelineItemElement` `appendEntry()` returns and
+// setting `.status` directly, bypassing `update()`'s own mediated recompute entirely (an independently
+// flagged review gap in an earlier build attempt at this same feature): escalation now stays correct
+// regardless of HOW a status changed. This keeps `ui-timeline-item`/`ui-timeline` themselves untouched (no
+// auto-status-override imposed on the durable timeline component) — the observation/recompute lives HERE,
+// at the status-stream layer, which is the sole owner of the escalation-is-a-derived-fact policy.
 //
 // The completion invariant (#markTruncated/finalize, SPEC-R11, the B7 tracked-completion doctrine applied
 // to display): `finalize()` marks every still-`pending`/`active` entry TRUNCATED via the item's own
 // `markTruncated()` escape hatch (a `:state(truncated)` custom state, timeline-item.ts) — fail-closed, a
-// torn stream never shows "still working."
+// torn stream never shows "still working," reaching nested entries too (the flat registry).
 //
-// `controls → dom + controls/timeline-item/timeline-item.ts + @agent-ui/icons` — the allowed import
-// direction (cross-folder sibling + the zero-dep icons pack, the timeline-item precedent). Holds NO
-// transport of its own (a standing negative-control grep — SPEC-R9 AC3): no fetch/ReadableStream/
-// readNdjsonLines reference anywhere in this file.
+// aria-live discipline under grouping (n6): a nested `<ui-timeline>` keeps `internals.role = 'list'`
+// (timeline.ts's own constructor, unconditional, unchanged) — a plain static list, never a second live
+// region — so only THIS host's `role="log"` announces; a grouped append never double-announces through
+// two live-region hosts.
+//
+// `controls → dom + controls/timeline-item/timeline-item.ts + controls/timeline/timeline.ts +
+// @agent-ui/icons` — the allowed import direction (cross-folder sibling + the zero-dep icons pack, the
+// timeline-item precedent). Holds NO transport of its own (a standing negative-control grep — SPEC-R9
+// AC3): no fetch/ReadableStream/readNdjsonLines reference anywhere in this file.
 
 import { UIContainerElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts' // constructs items via its own API (F4)
+import '../timeline/timeline.ts' // registers <ui-timeline> — the nested group host (ADR-0146 F5, ADR-0143's mechanism, reused)
 import { resolveIcon } from '@agent-ui/icons' // the header's overall-status glyph (done/error/warning) — the timeline-item glyph precedent
 import type { IconName } from '@agent-ui/icons'
 
@@ -68,6 +92,11 @@ export interface StatusEntry {
   icon?: string
   /** Streamed chain-of-thought text — appended/replaced in place, NEVER tokenized/parsed. */
   text?: string
+  /** ADR-0146 F5 (grouping) — an existing entry's key: when set, this entry nests UNDER that group (a
+   *  nested `<ui-timeline>` in the parent item's `[data-role="nested"]` slot, mounted lazily via
+   *  `ensureNestedSlot`, the ADR-0143 amendment), rather than as a top-level strip sibling. An unknown
+   *  parent key is a graceful flat fallback — the entry appends top-level, never a throw. */
+  parent?: string
 }
 
 // The total severity order (ADR-0146 F6): error > warning > active > pending > done; neutral '' contributes
@@ -127,6 +156,21 @@ export class UIStatusStreamElement extends UIContainerElement {
   // warning-coloured truncated ring's header-level face). A WeakSet: no key bookkeeping, GC-friendly.
   #truncated = new WeakSet<UITimelineItemElement>()
 
+  // ── grouping (ADR-0146 F5) ───────────────────────────────────────────────────────────────────────────
+  // parentKey → the once-per-parent nested <ui-timeline> host, mounted lazily via the parent item's own
+  // `ensureNestedSlot` (the ADR-0143 amendment). The keyed registry (#byKey) stays FLAT — a grouped
+  // entry's key lives in the SAME map as a top-level one, so update()/finalize() reach it identically
+  // with zero code change.
+  #nestedByParent = new Map<string, HTMLElement>()
+  // The MAJOR-2 escalation-wiring fix: a consumer holding the raw item `appendEntry()` returned may set
+  // `.status` directly, bypassing `update()`'s own mediated escalation recompute. This observer — the
+  // SAME MutationObserver class ADR-0143 F3 installs on a nested subtree — watches every nested group
+  // host's `status` attribute changes and recomputes that group's (and its ancestors') escalated status
+  // regardless of HOW the child's status changed. `ui-timeline-item`/`ui-timeline` themselves stay
+  // untouched (no auto-status-override imposed on the durable component) — the recompute lives HERE, at
+  // the status-stream layer, exactly as the escalation is this host's own derived fact.
+  #groupObservers = new Map<string, MutationObserver>()
+
   constructor() {
     super()
     this.internals.role = 'log' // a POLITE live region via internals.role (the toast role='status' precedent)
@@ -146,26 +190,41 @@ export class UIStatusStreamElement extends UIContainerElement {
     this.listen(this, 'scroll', () => this.#trackStickToBottom())
   }
 
+  protected disconnected(): void {
+    for (const observer of this.#groupObservers.values()) observer.disconnect()
+    this.#groupObservers.clear()
+  }
+
   /** Append a new entry, tail-follow to it, return the created item (the toast-region.show() return
    *  precedent). Named `appendEntry`, NOT `append` — the native Node.prototype.append() every element
-   *  inherits is incompatible; see the file-header NAMED LLD DEVIATION note. */
+   *  inherits is incompatible; see the file-header NAMED LLD DEVIATION note. ADR-0146 F5: an entry
+   *  carrying a known `parent` nests under that group's `[data-role="nested"]` slot instead of a flat,
+   *  top-level sibling — an unknown/absent parent is a graceful flat append, never a throw. */
   appendEntry(entry: StatusEntry): UITimelineItemElement {
     const item = document.createElement('ui-timeline-item') as UITimelineItemElement
     item.dataset.key = entry.key
     this.#assign(item, entry)
-    this.#byKey.set(entry.key, item)
-    this.appendChild(item)
-    this.#refreshHeader() // the escalation may have changed (a mid-turn error/warning flips the header)
+    this.#byKey.set(entry.key, item) // the registry stays FLAT — a grouped entry lives in the SAME map
+
+    const parentItem = entry.parent !== undefined ? this.#byKey.get(entry.parent) : undefined
+    if (entry.parent !== undefined && parentItem !== undefined) {
+      this.#ensureNested(entry.parent, parentItem).appendChild(item) // GROUPED (F5)
+    } else {
+      this.appendChild(item) // TOP-LEVEL (appendChild lands past the pinned header, which is always firstChild)
+    }
+
+    this.#recomputeEscalation() // a new grouped child may re-escalate its group + the header
     this.#tailFollow(item)
     return item
   }
 
-  /** Keyed, in-place mutation — transition status / grow text / reveal detail. No-op if the key is unknown. */
+  /** Keyed, in-place mutation — transition status / grow text / reveal detail. No-op if the key is unknown.
+   *  Reaches a NESTED entry identically (the registry is flat). */
   update(key: string, patch: Partial<StatusEntry>): void {
     const item = this.#byKey.get(key)
     if (item === undefined) return // a late update after truncation is tolerated (never a throw) — SPEC-R9 AC2
     this.#assign(item, patch)
-    if (patch.status !== undefined) this.#refreshHeader() // a status transition may re-escalate the header
+    if (patch.status !== undefined) this.#recomputeEscalation() // a status transition may re-escalate the item's OWN group + the header
     if (this.#growsTail(patch)) this.#tailFollow(item)
   }
 
@@ -231,6 +290,58 @@ export class UIStatusStreamElement extends UIContainerElement {
    *  affordance, fail-closed: an unresolved-at-end entry is truncated, never left silently "still working." */
   #markTruncated(item: UITimelineItemElement): void {
     item.markTruncated(true)
+  }
+
+  // ── grouping (ADR-0146 F5) — StatusEntry.parent, via ADR-0143's ensureNestedSlot amendment ─────────────
+
+  /** The once-per-parent nested `<ui-timeline>` host, mounted lazily via the parent item's OWN
+   *  `ensureNestedSlot` (ADR-0143's amendment — composing the SAME shared-disclosure + collapsed-summary
+   *  preview mechanism, never a second nesting primitive). Also arms the MAJOR-2 escalation-wiring fix: a
+   *  MutationObserver on the nested host's `status` attributes, so a consumer setting `.status` directly
+   *  on a raw item (bypassing `update()`) still re-escalates the group + the stream header — the SAME
+   *  MutationObserver class ADR-0143 F3 installs on a nested subtree, reused HERE at the status-stream
+   *  layer (never imposed on `ui-timeline-item`/`ui-timeline` themselves). */
+  #ensureNested(parentKey: string, parentItem: UITimelineItemElement): HTMLElement {
+    const existing = this.#nestedByParent.get(parentKey)
+    if (existing !== undefined) return existing
+    const nested = parentItem.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    this.#nestedByParent.set(parentKey, nested)
+    const observer = new MutationObserver(() => this.#recomputeEscalation())
+    observer.observe(nested, { subtree: true, attributes: true, attributeFilter: ['status'] })
+    this.#groupObservers.set(parentKey, observer)
+    return nested
+  }
+
+  /**
+   * ADR-0146 F6 — worst-child-wins escalation, recomputed as a bottom-up fixed point over EVERY tracked
+   * group, then the stream header. Called from BOTH the mediated API (appendEntry/update, synchronously —
+   * SPEC's own "recomputes LIVE" acceptance needs no microtask wait) AND the MutationObserver above (the
+   * MAJOR-2 fix for a consumer bypassing `update()`). A parent's escalated status is read straight off its
+   * nested host's LIVE children (`querySelectorAll`, not a separate bookkeeping map) — the DOM and the
+   * registry can never drift apart. Guards every write against a no-op (same-value) assignment: since a
+   * reflected prop setter unconditionally calls `setAttribute` even for an unchanged value, an unguarded
+   * write would re-trigger the observer forever; the guard is what makes the observer-driven path converge
+   * and terminate rather than loop.
+   */
+  #recomputeEscalation(): void {
+    let changed = true
+    let guard = 0
+    while (changed && guard++ < 50) {
+      // 50 passes comfortably exceeds any realistic nesting depth (arbitrary but rare beyond 2-3 levels) —
+      // a bound, not a real ceiling on ADR-0143's own uncapped recursion.
+      changed = false
+      for (const [parentKey, nested] of this.#nestedByParent) {
+        const parentItem = this.#byKey.get(parentKey)
+        if (parentItem === undefined) continue
+        const children = Array.from(nested.querySelectorAll(':scope > ui-timeline-item')) as UITimelineItemElement[]
+        const escalated = escalateStatus(children.map((c) => this.#effectiveStatus(c)))
+        if (parentItem.status !== escalated) {
+          parentItem.status = escalated
+          changed = true
+        }
+      }
+    }
+    this.#refreshHeader()
   }
 
   // ── the streaming header (ADR-0146 F8) + escalation (F6) ─────────────────────────────────────────────

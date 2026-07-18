@@ -46,6 +46,8 @@ properties:               # IDL beyond attributes-as-API
     description: Method — reveal/collapse the composed detail disclosure (open?boolean). Delegates to the composed ui-disclosure's `open` prop; a no-op if the item has no detail content.
   - name: markTruncated
     description: Method — mark/unmark the item TRUNCATED (truncated boolean), used by ui-status-stream's completion invariant (SPEC-R11). Toggles the `:state(truncated)` custom state; imperative/CSS-state, not a `static props` field.
+  - name: ensureNestedSlot
+    description: Method — ensureNestedSlot(factory():HTMLElement) => HTMLElement. Lazily composes a `[data-role="nested"]` slot into the shared detail disclosure (ADR-0143 F1/F2) if one is not already present, arming the same collapsed-summary preview + MutationObserver as an authored nested slot. A narrow, additive exception ratified on ADR-0143 (2026-07-18 amendment) for ui-status-stream's live-mounted groups (ADR-0146 F5), whose parent item is already connected before a group exists. Idempotent — a second call returns the existing slot untouched.
 
 events:
   - name: toggle
@@ -161,3 +163,13 @@ accessible name beyond rendered text content. A `forced-colors` block keeps ever
 by shape. A nested `<ui-timeline>` forms a legal `list > listitem > list > listitem…` structure; native
 `<details>` already excludes a closed disclosure's descendants from both the accessibility tree and the
 tab order — no ARIA machinery is added for this (ADR-0143 F5).
+
+## `ensureNestedSlot(factory)` — the late-mount exception (ADR-0143 amendment, 2026-07-18)
+
+A narrow, additive exception Kim ratified for `ui-status-stream`'s live-mounted **groups** (ADR-0146
+F5): an authored `[data-role="nested"]` child is composed eagerly at connect (above), but a live host
+appends a group AFTER its parent item is already connected, with no authored nested child to adopt.
+`ensureNestedSlot(factory: () => HTMLElement): HTMLElement` composes the SAME shared-disclosure +
+collapsed-summary-preview mechanism lazily, on first call, and returns the `[data-role="nested"]` host
+(idempotent — a second call is a no-op returning the existing slot). Dead code on the durable,
+authored-markup path.

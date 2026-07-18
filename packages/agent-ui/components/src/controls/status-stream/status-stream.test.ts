@@ -316,6 +316,163 @@ describe('ui-status-stream — the opt-in streaming header (ADR-0146 F8)', () =>
   })
 })
 
+// ── ADR-0146 F5 — grouped entries via StatusEntry.parent (the ADR-0143 ensureNestedSlot amendment) ──────
+
+describe('ui-status-stream — grouped entries via StatusEntry.parent (ADR-0146 F5)', () => {
+  it('appendEntry({parent}) nests the child INSIDE a nested <ui-timeline> mounted in the parent item\'s [data-role="nested"] slot', () => {
+    const { el } = makeStream()
+    const group = el.appendEntry({ key: 'g', status: 'active', label: 'Reasoning' })
+    const child = el.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'step 1' })
+    expect(group.contains(child)).toBe(true) // a descendant of the group item — never a top-level strip sibling
+    expect(child.closest('ui-timeline')).not.toBeNull()
+    expect(el.querySelectorAll(':scope > ui-timeline-item')).toHaveLength(1) // only the group is a direct strip child
+    el.remove()
+  })
+
+  it('an unknown parent key is a graceful flat fallback — the entry appends top-level, never a throw', () => {
+    const { el } = makeStream()
+    let child: UITimelineItemElement | undefined
+    expect(() => {
+      child = el.appendEntry({ key: 'c1', parent: 'no-such-key', status: 'active', label: 'orphan' })
+    }).not.toThrow()
+    expect(el.querySelectorAll(':scope > ui-timeline-item')).toHaveLength(1)
+    expect(child).toBeDefined()
+    el.remove()
+  })
+
+  it('the keyed registry stays FLAT — update(childKey, patch) reaches the nested entry identically', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'g', label: 'group' })
+    const child = el.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'step' })
+    el.update('c1', { status: 'done', label: 'step done' })
+    expect(child.status).toBe('done')
+    expect(child.label).toBe('step done')
+    el.remove()
+  })
+
+  it('finalize() truncation reaches nested pending/active entries', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'g', label: 'group' })
+    const child = el.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'step' })
+    const spy = vi.spyOn(child, 'markTruncated')
+    el.finalize()
+    expect(spy).toHaveBeenCalledWith(true) // a still-active NESTED entry is truncated, fail-closed
+    el.remove()
+  })
+
+  it('a duplicate key (re-used across a top-level and a grouped call) is rejected/ignored exactly as today', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'g', label: 'group' })
+    el.appendEntry({ key: 'dup', parent: 'g', status: 'active', label: 'first' })
+    // appendEntry has no de-dup guard today (an existing behavioural fact, unrelated to grouping) — this
+    // probe only proves grouping introduces no NEW crash/drift on a repeated key, not a new dedup contract.
+    expect(() => el.appendEntry({ key: 'dup', parent: 'g', status: 'done', label: 'second' })).not.toThrow()
+    el.remove()
+  })
+
+  it('the nested group host is a real <ui-timeline> (role=list) — one addition-announcement path, no nested live region (n6 aria discipline)', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'g', label: 'group' })
+    el.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'step' })
+    const nested = el.querySelector('ui-timeline')!
+    expect(nested).not.toBeNull()
+    // @ts-expect-error — internals is protected; the probe asserts the nested host is role=list, NOT a second live region
+    expect(nested.internals.role).toBe('list')
+    expect(nested.getAttribute('role')).toBeNull() // internals-set role never reflects to a host attribute
+    expect(nested.hasAttribute('aria-live')).toBe(false) // no bespoke live-region on the nested host — the outer log is the sole announcer
+    el.remove()
+  })
+})
+
+// ── ADR-0146 F6 — worst-child-wins status escalation on groups ──────────────────────────────────────────
+
+describe('ui-status-stream — worst-child-wins group escalation (ADR-0146 F6)', () => {
+  it('a group with children [done, warning] reads `warning` (warning outranks done)', () => {
+    const { el } = makeStream()
+    const group = el.appendEntry({ key: 'g', label: 'group' })
+    el.appendEntry({ key: 'c1', parent: 'g', status: 'done' })
+    el.appendEntry({ key: 'c2', parent: 'g', status: 'warning' })
+    expect(group.status).toBe('warning')
+    el.remove()
+  })
+
+  it('a group with children [active, error] reads `error` — the error-beats-active case asserted explicitly', () => {
+    const { el } = makeStream()
+    const group = el.appendEntry({ key: 'g', label: 'group' })
+    el.appendEntry({ key: 'c1', parent: 'g', status: 'active' })
+    el.appendEntry({ key: 'c2', parent: 'g', status: 'error' })
+    expect(group.status).toBe('error') // the truth that something already failed outranks "still working"
+    el.remove()
+  })
+
+  it('neutral "" children contribute nothing to the escalation', () => {
+    const { el } = makeStream()
+    const group = el.appendEntry({ key: 'g', label: 'group' })
+    el.appendEntry({ key: 'c1', parent: 'g', status: '' })
+    el.appendEntry({ key: 'c2', parent: 'g', status: 'pending' })
+    expect(group.status).toBe('pending') // '' is severity 0 — pending wins
+    el.remove()
+  })
+
+  it('escalation recomputes LIVE (synchronously) on a child status change via update(), monotone-truthful as children settle', () => {
+    const { el } = makeStream()
+    const group = el.appendEntry({ key: 'g', label: 'group' })
+    el.appendEntry({ key: 'c1', parent: 'g', status: 'active' })
+    expect(group.status).toBe('active')
+    el.update('c1', { status: 'warning' })
+    expect(group.status).toBe('warning') // recomputed live from the child's new status — no await needed
+    el.appendEntry({ key: 'c2', parent: 'g', status: 'error' })
+    expect(group.status).toBe('error') // a later error outranks the warning — never reads calmer than the worst child
+    el.remove()
+  })
+
+  it('the stream header (F8) escalates over TOP-LEVEL groups, not their nested children directly — a group child never double-counts at the stream level', async () => {
+    const { el } = await makeHeaderStream()
+    el.appendEntry({ key: 'g', status: 'active', label: 'group' })
+    el.appendEntry({ key: 'c1', parent: 'g', status: 'error' })
+    expect(headerStatus(el), 'the group escalates to error, and the header escalates over the (now error) group').toBe('error')
+    el.remove()
+  })
+
+  // ── MAJOR-2 fix: escalation stays correct even when a consumer bypasses update() entirely ──────────────
+  describe('escalation survives a consumer setting .status DIRECTLY on the raw item (bypassing update())', () => {
+    it('a raw child item held from appendEntry(), mutated directly, still re-escalates its group (via the group MutationObserver)', async () => {
+      const { el } = makeStream()
+      const group = el.appendEntry({ key: 'g', label: 'group' })
+      const child = el.appendEntry({ key: 'c1', parent: 'g', status: 'active' })
+      expect(group.status).toBe('active')
+      child.status = 'error' // BYPASSES el.update() entirely — a consumer holding the raw element
+      await Promise.resolve()
+      await Promise.resolve() // the MutationObserver's own queued microtask
+      expect(group.status, 'the group must re-escalate even though update() was never called').toBe('error')
+      el.remove()
+    })
+
+    it('re-escalation bubbles to the stream header too, when the group is top-level', async () => {
+      const { el } = await makeHeaderStream()
+      el.appendEntry({ key: 'g', status: 'active', label: 'group' })
+      const child = el.appendEntry({ key: 'c1', parent: 'g', status: 'active' })
+      expect(headerStatus(el)).toBe('active')
+      child.status = 'warning' // bypasses update()
+      await Promise.resolve()
+      await Promise.resolve()
+      expect(headerStatus(el), 'the header must reflect the bypassed status change too').toBe('warning')
+      el.remove()
+    })
+
+    it('a converged (no-op) direct write does not loop forever — the observer terminates (guarded against redundant same-value writes)', async () => {
+      const { el } = makeStream()
+      const group = el.appendEntry({ key: 'g', label: 'group' })
+      const child = el.appendEntry({ key: 'c1', parent: 'g', status: 'error' })
+      expect(group.status).toBe('error')
+      child.status = 'error' // already the current value — must not wedge the observer/microtask queue
+      await expect(Promise.race([Promise.resolve().then(() => Promise.resolve()), new Promise((r) => setTimeout(r, 50))])).resolves.toBeUndefined()
+      expect(group.status).toBe('error')
+      el.remove()
+    })
+  })
+})
+
 describe('ui-status-stream — no transport of its own (appendEntry/update never throw in jsdom, where scrollIntoView is absent)', () => {
   it('appendEntry + update never throw even though scrollIntoView does not exist in this test environment', () => {
     const { el } = makeStream()

@@ -313,3 +313,67 @@ no-new-public-surface posture — recorded as an append-only amendment on
 ports `ensureNestedSlot` (plus the escalation-observer wiring fix an independent review separately
 flagged) onto the already-shipped Slice A+B on main. Status stays `open` until that follow-up lands and
 is independently reviewed.
+
+**2026-07-18 — grouping leg BUILT on top of Slice A+B (n4/n5/n6), under the ADR-0143 amendment. Status
+stays `open` — independent review still required.** Branch `tkt-0083-grouping-followup`, fast-forwarded
+onto the ADR-0143 amendment commit (`.claude/docs/adr/0143-…md`, `timeline-family.spec.md`, this ticket's
+own prior entry).
+
+- **Ported `ensureNestedSlot(factory)` onto main's shipped `timeline-item.ts`** (which already carries
+  `warning`/header/escalation from Slice A) from the separately-built, independently-verified reference
+  implementation on `origin/tkt-0083-live-turn-lifecycle` — byte-for-byte the SAME method (lazy
+  `[data-role="nested"]` + shared-disclosure + collapsed-summary-preview composition, idempotent, dead
+  code on the durable authored-markup path), adapted only to sit alongside main's own (differently
+  factored) `warning`-glyph mechanism. `timeline-item.md` gains the method in `properties` + a new prose
+  section. 6 new jsdom tests (`timeline-item.test.ts`): lazy compose from bare, idempotent second call,
+  composing alongside an authored `detail`, the preview/observer working identically on a live-mounted
+  group, and the connected-precondition.
+- **Wired grouping into `ui-status-stream`** (n4): `StatusEntry.parent?: string`; `appendEntry` routes a
+  known-parent entry into `#ensureNested(parentKey, parentItem)` (calling the item's OWN
+  `ensureNestedSlot`), an unknown parent falls back to a flat top-level append (never a throw). The keyed
+  registry (`#byKey`) needed ZERO changes to stay flat — a grouped entry was already registered there
+  before the parent/top-level branch runs, so `update()`/`finalize()` already reach nested entries with no
+  code change (verified by test, not just asserted).
+- **Escalation (n5) + the MAJOR-2 fix, named explicitly:** `#recomputeEscalation()` is a bottom-up
+  fixed-point pass over every tracked group (`error > warning > active > pending > done`, reusing the
+  already-shipped `escalateStatus` pure reduce), called synchronously from the mediated API
+  (`appendEntry`/`update`, so the ladder's own "recomputes LIVE" acceptance needs no microtask wait) —
+  **and** from a `MutationObserver` per group (the SAME class ADR-0143 F3 installs on a nested subtree,
+  watching `status` attribute changes), which is the fix for a consumer holding the raw
+  `UITimelineItemElement` `appendEntry()` returns and setting `.status` **directly** on it, bypassing
+  `update()` entirely — the gap an earlier independent review flagged (MAJOR-2) against the reference
+  implementation, which wired escalation ONLY through its own mediated `update()`. Every escalation write
+  is guarded against a no-op (same-value) re-assignment — load-bearing, since a reflected prop setter
+  unconditionally calls `setAttribute` even for an unchanged value, so an unguarded write would re-trigger
+  the observer forever; the guard is what makes the observer-driven path converge. `ui-timeline-item`/
+  `ui-timeline` themselves are untouched — the recompute lives entirely at the status-stream layer, per
+  the dispatch's own instruction.
+- **aria-live discipline (n6):** the nested `<ui-timeline>` keeps `internals.role = 'list'`
+  (timeline.ts's own constructor, unconditional, already shipped, zero change) — a plain static list, never
+  a second live region — so a grouped append announces through exactly one `role="log"` host. Verified by
+  a jsdom probe (internals.role + no host `aria-live`/`role` attribute) and a browser-cross-engine probe.
+- **Tests added:** 8 jsdom tests in `status-stream.test.ts` (flat-registry mount, unknown-parent fallback,
+  keyed update reaching a nested entry, finalize truncation reaching a nested entry, a repeated-key
+  non-crash probe, the aria-role probe, 4 escalation-ladder cases including error-beats-active, and 3
+  MAJOR-2 bypass-fix probes: direct-write re-escalates the group, bubbles to the stream header, and a
+  converged write does not loop/hang) + 3 new browser tests (`status-stream.browser.test.ts`: cross-engine
+  group mount + escalation, the n6 aria-role/no-second-live-region probe, and the MAJOR-2 bypass fix
+  cross-engine).
+- **Docs:** `timeline-item.md`/`status-stream.md` updated (new method, new `parent` field, a new
+  "Grouped entries" prose section); `site/public/llms-full.txt` regenerated
+  (`node scripts/generate-llms-full.mjs`) — the descriptor edits had gone stale against it, caught by
+  `llms.test.ts`'s own freshness gate, now green.
+- **Gates:** `npm run check` GREEN (tsc + site + tools). `npx vitest run` — **6459/6460 green**; the ONE
+  residual failure is `site/lib/theme-provider-build-fixture.test.ts` — verified NOT caused by this build
+  (diffed the fresh vs. committed fixture directly: the differing CSS chunk is `ui-row`/`ui-column`/
+  container-family rules, and `ui-timeline-item`/`ui-status-stream`'s own CSS substrings are byte-identical
+  between the fresh build and the committed fixture) — the SAME documented pre-existing env/vite-build-
+  race flake this ticket's own prior Findings entry already named (multi-page asset-resolution race, the
+  failing chunk varies run-to-run). No component CSS was touched by this build (`.ts`/`.md` only), so the
+  theme CSS fixture was not regenerated — regenerating it now would only paper over an unrelated,
+  already-flagged flake with a fixture diff this build has no business carrying. `npx vitest run --config
+  vitest.browser.config.ts timeline-item status-stream` — **62/62 green** (4 files: both components' jsdom
+  + browser suites).
+- **Independent code-review NOT run** — no Agent/Task tool to dispatch `ui:component-reviewer` is
+  available in this builder's toolset, the same standing gap the prior Slice A+B Findings entry named.
+  **MUST be run before this ticket closes.** Status stays `open`.

@@ -29,11 +29,11 @@ attributes:               # attributes-as-API — mirrors status-stream.ts stati
 
 properties:               # IDL beyond attributes-as-API — the imperative streaming contract (ADR-0122 F4)
   - name: appendEntry
-    description: 'Method — appendEntry(entry: StatusEntry) => UITimelineItemElement. NAMED appendEntry, not append — every element inherits a native, incompatible Node.prototype.append(); a same-name override fails tsc outright (a build-time LLD deviation, flagged for the SPEC-R9/LLD amendment). Creates a ui-timeline-item, assigns the entry''s fields, appends it, tail-follows to it (iff the stick-to-bottom guard holds), and returns the created element (the ui-toast-region.show() return precedent).'
+    description: 'Method — appendEntry(entry: StatusEntry) => UITimelineItemElement. NAMED appendEntry, not append — every element inherits a native, incompatible Node.prototype.append(); a same-name override fails tsc outright (a build-time LLD deviation, flagged for the SPEC-R9/LLD amendment). Creates a ui-timeline-item, assigns the entry''s fields, appends it, tail-follows to it (iff the stick-to-bottom guard holds), and returns the created element (the ui-toast-region.show() return precedent). ADR-0146 F5 — an entry carrying `parent` (an existing entry''s key) nests the child under that group''s [data-role="nested"] slot instead (lazily mounted via the composed ui-timeline-item''s ensureNestedSlot, the ADR-0143 amendment); an unknown/absent parent falls back to a flat, top-level append, never a throw.'
   - name: update
-    description: 'Method — update(key: string, patch: Partial<StatusEntry>) => void. A KEYED, in-place mutation to the already-rendered entry with that key: transitions status, grows/replaces streamed text, or reveals detail. A key with no matching entry is a silent no-op (never a throw — SPEC-R9 AC2).'
+    description: 'Method — update(key: string, patch: Partial<StatusEntry>) => void. A KEYED, in-place mutation to the already-rendered entry with that key: transitions status, grows/replaces streamed text, or reveals detail. Reaches a GROUPED (nested) entry identically — the keyed registry stays FLAT regardless of parent/child structure. A key with no matching entry is a silent no-op (never a throw — SPEC-R9 AC2).'
   - name: finalize
-    description: 'Method — finalize() => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED, then settles the header (when opted in) to the escalated FINAL status (ADR-0146 F8; a truncated entry contributes `warning`). Fail-closed — a torn stream never shows "still working."'
+    description: 'Method — finalize() => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED, reaching nested (grouped) entries too, then settles the header (when opted in) to the escalated FINAL status (ADR-0146 F8; a truncated entry contributes `warning`). Fail-closed — a torn stream never shows "still working."'
   - name: fail
     description: 'Method — fail() => void. A FAILED stream (ADR-0146 F8): the completion invariant (like finalize()) PLUS the header forced to `error` regardless of the entries'' own escalation — the completion invariant''s header-level face for a thrown turn. A no-op on the header when `header` is not set.'
 
@@ -116,19 +116,40 @@ dot/ring/pulse for the in-progress states.
 ## The imperative API (ADR-0122 F4)
 
 - **`appendEntry(entry: StatusEntry): UITimelineItemElement`** — creates a `ui-timeline-item`, assigns the
-  entry's fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?`), appends it,
-  tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element already
-  inherits a native, incompatible `Node.prototype.append()` (a build-time LLD deviation from SPEC-R9's
-  literal name, flagged for amendment; behaviour/signature otherwise identical).
+  entry's fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?`, `parent?`),
+  appends it, tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every
+  element already inherits a native, incompatible `Node.prototype.append()` (a build-time LLD deviation
+  from SPEC-R9's literal name, flagged for amendment; behaviour/signature otherwise identical).
 - **`update(key: string, patch: Partial<StatusEntry>): void`** — a **keyed** mutation to the
   already-rendered entry with that `key`: transitions `status`, grows/replaces streamed `text`, or reveals
-  detail. A `key` with no matching entry is a silent no-op — never a throw (a late update after
-  truncation is tolerated).
+  detail. Reaches a grouped (nested) entry identically. A `key` with no matching entry is a silent no-op —
+  never a throw (a late update after truncation is tolerated).
 - **`finalize(): void`** — the completion invariant: every still-`pending`/`active` entry renders
-  TRUNCATED (a distinct, non-color-only interrupted affordance on the item). Fail-closed.
+  TRUNCATED (a distinct, non-color-only interrupted affordance on the item), nested entries included.
+  Fail-closed.
 
 This host holds **no transport** of its own — no `fetch`/`ReadableStream` reference anywhere in its
 source. The consumer owns the stream and drives `appendEntry`/`update`/`finalize` as it yields.
+
+## Grouped entries (ADR-0146 F5)
+
+An entry carrying `parent` (an existing entry's key) nests **under** that group instead of appending as a
+flat, top-level sibling: `appendEntry` lazily mounts a nested `<ui-timeline>` into the parent item's
+`[data-role="nested"]` slot via `ui-timeline-item.ensureNestedSlot()` — the narrow ADR-0143 amendment that
+composes the SAME shared `ui-disclosure` + collapsed-summary preview mechanism the durable timeline
+already ships, lazily instead of eagerly. Grouping is therefore never a second nesting primitive. The
+keyed registry stays **flat**: `update(childKey, patch)` reaches a nested entry exactly as it would a
+top-level one, and `finalize()`'s completion invariant walks every entry, nested included. An unknown or
+absent `parent` is a graceful flat fallback — the entry appends top-level, never a throw.
+
+A group's own `status` is the **worst of its children**, escalated live over the closed ladder
+`error > warning > active > pending > done` (neutral `''` contributes nothing) — the SAME rule the opt-in
+header (F8) applies over top-level entries. Escalation recomputes synchronously from the mediated API
+(`appendEntry`/`update`) **and** from a `MutationObserver` watching each group's live children — so a
+consumer holding the raw element `appendEntry()` returned and setting `.status` **directly** on it (never
+calling `update()`) still re-escalates correctly. The nested `<ui-timeline>` keeps its own
+`internals.role = 'list'` (a plain, static list) — never a second live region — so a grouped append still
+announces through exactly one `role="log"` host: this strip.
 
 ## Tail-follow + the stick-to-bottom guard
 

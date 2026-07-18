@@ -145,6 +145,46 @@ describe('ui-status-stream — tail-follow + the stick-to-bottom guard (SPEC-R10
   })
 })
 
+describe('ui-status-stream — grouped entries, cross-engine (ADR-0146 F5/F6)', () => {
+  it('appendEntry({parent}) mounts the child inside a nested <ui-timeline>, and the group escalates worst-child-wins', async () => {
+    const { stream } = mount('<ui-status-stream label="Live"></ui-status-stream>')
+    const group = stream.appendEntry({ key: 'g', status: 'active', label: 'Reasoning' }) as UITimelineItemElement
+    stream.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'step 1' })
+    stream.appendEntry({ key: 'c2', parent: 'g', status: 'error', label: 'step 2' })
+    await raf2()
+    expect(group.status, 'the group must escalate to error — the worst child').toBe('error')
+    const nested = stream.querySelector('ui-timeline')
+    expect(nested).not.toBeNull()
+    expect(group.contains(nested)).toBe(true)
+  })
+
+  it('n6 aria discipline: the nested group host is role=list (via ElementInternals), never a second live region — only the outer strip announces', async () => {
+    const { stream } = mount('<ui-status-stream label="Live"></ui-status-stream>')
+    stream.appendEntry({ key: 'g', label: 'group' })
+    stream.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'step' })
+    await raf2()
+    expect(stream.getAttribute('role'), 'the OUTER strip is the sole role=log host (internals-set, no host attribute)').toBeNull()
+    const nested = stream.querySelector('ui-timeline') as HTMLElement
+    expect(nested.getAttribute('role'), 'the nested host never reflects a host-level role attribute either').toBeNull()
+    expect(nested.getAttribute('aria-live'), 'no bespoke aria-live on the nested host').toBeNull()
+    // ElementInternals-set roles are not reachable via getAttribute in ANY engine (by the platform's own
+    // internals-vs-attribute separation) — the accessible-role assertion itself is the jsdom-level probe
+    // (status-stream.test.ts); this cross-engine leg proves no SECOND live-region attribute leaks onto the
+    // nested host in a real browser, which is the actual double-announce risk surface.
+  })
+
+  it('escalation survives a consumer bypassing update() (setting .status directly), cross-engine', async () => {
+    const { stream } = mount('<ui-status-stream label="Live"></ui-status-stream>')
+    const group = stream.appendEntry({ key: 'g', label: 'group' }) as UITimelineItemElement
+    const child = stream.appendEntry({ key: 'c1', parent: 'g', status: 'active' }) as UITimelineItemElement
+    await raf2()
+    expect(group.status).toBe('active')
+    child.status = 'error' // bypasses stream.update()
+    await wait(50) // the group MutationObserver's own microtask, settled via a real macrotask wait
+    expect(group.status, 'the group must re-escalate even when a consumer sets .status directly on the raw item').toBe('error')
+  })
+})
+
 describe('ui-status-stream — the completion invariant, cross-engine (SPEC-R11)', () => {
   it('finalize() truncates a still-active entry — a distinct :state(truncated), not left "still working"', () => {
     const { stream } = mount('<ui-status-stream></ui-status-stream>')

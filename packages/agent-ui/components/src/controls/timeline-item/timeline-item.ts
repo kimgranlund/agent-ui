@@ -4,6 +4,13 @@
 // marker/content/detail/nested anatomy + self-define ONLY. Anatomy/geometry per the LLD; styling lives
 // in timeline-item.css, the public contract in timeline-item.md.
 //
+// `ensureNestedSlot(factory)` — a narrow, additive exception ratified on ADR-0143 (2026-07-18 amendment,
+// TKT-0083's grouping leg, ADR-0146 F5): the ONE public method that composes the SAME nested-slot/shared-
+// disclosure/collapsed-summary-preview mechanism LAZILY (on first call) rather than eagerly at connect —
+// for ui-status-stream's live-mounted groups, whose parent item is already connected before a group
+// exists. Dead code on the durable authored-markup path (an item authored WITH a `[data-role="nested"]`
+// child never calls it — `connected()`'s own `#ensureAnatomy` already wired it eagerly).
+//
 // One rail row = a marker (dot/ring/pulse via CSS, OR a built-in check/x glyph, OR a consumer-slotted
 // marker) + the content roles (label · description · timestamp · trailing) + an optional collapsible
 // detail/nested pair. Inert: holds no transport, no live-region role, emits ONLY `toggle` (the composed
@@ -142,6 +149,43 @@ export class UITimelineItemElement extends UIElement {
     const disclosure = this.#disclosure
     if (!disclosure) return
     disclosure.open = open ?? !disclosure.open
+  }
+
+  /**
+   * ADR-0143 amendment (2026-07-18, TKT-0083's grouping leg) — lazily ensure a nested-timeline slot
+   * exists, for ui-status-stream's GROUPED entries (ADR-0146 F5). Returns the `[data-role="nested"]`
+   * host, composing it into the SAME shared `ui-disclosure` `#ensureAnatomy` uses at connect (ADR-0143
+   * F1/F2) when the item was authored WITHOUT one — never a second nesting mechanism (the family-
+   * coherence law F5 preserves). The collapsed-summary preview + its `MutationObserver` (ADR-0143 F3)
+   * are armed here exactly as `connected()` arms them for an authored nested slot, so a live-mounted
+   * group's collapse + preview work with ZERO bespoke nesting code. `factory` mints the host
+   * (ui-status-stream passes a `<ui-timeline>`) so THIS file stays import-free of `ui-timeline` (the
+   * cycle guard, file header). Idempotent: a second call returns the existing slot untouched. Must run
+   * while connected (it registers a scope-owned effect) — ui-status-stream only calls it on an item
+   * already appended to the live strip, i.e. already connected.
+   */
+  ensureNestedSlot(factory: () => HTMLElement): HTMLElement {
+    if (this.#nested) return this.#nested
+    const nested = factory()
+    nested.setAttribute('data-role', 'nested')
+    if (this.#disclosure) {
+      // The item already composed a disclosure (it was authored with `detail`) — append nested after
+      // it; disclosure.ts's own childList heal observer relocates it into the body part.
+      this.#disclosure.appendChild(nested)
+    } else {
+      // No disclosure yet — compose one, adopting `nested` BEFORE connect so #ensureParts moves it into
+      // the body SYNCHRONOUSLY (the exact composition #ensureAnatomy runs, just deferred to first-group time).
+      const disclosure = document.createElement('ui-disclosure') as UIDisclosureElement
+      disclosure.setAttribute('data-part', 'detail')
+      disclosure.appendChild(nested)
+      this.#disclosure = disclosure
+      this.append(disclosure)
+    }
+    this.#nested = nested
+    this.#nestedObserver = new MutationObserver(() => this.#renderTrailingPreview())
+    this.#nestedObserver.observe(nested, { subtree: true, childList: true, attributes: true, attributeFilter: ['status', 'label'], characterData: true })
+    this.effect(() => this.#renderTrailingPreview())
+    return nested
   }
 
   /** Mark/unmark this item TRUNCATED — ui-status-stream's completion invariant (SPEC-R11): a distinct,
