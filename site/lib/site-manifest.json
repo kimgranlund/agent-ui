@@ -77,6 +77,13 @@
     "section": "Guides"
   },
   {
+    "href": "./highlight-doc.html",
+    "label": "Highlight",
+    "description": "@agent-ui/code/highlight: a swappable syntax-highlighter registry plus seven bundled, zero-dependency tokenizers.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./agent-admin.html",
     "label": "Agent Admin",
     "description": "ui-agent-admin is a three-pane ui-split (chat canvas, prompts, settings) over ui-conversation and ui-settings, one shared SettingsStore, live-apply with no external model dependency.",

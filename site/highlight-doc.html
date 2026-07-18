@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · @agent-ui/code/highlight</title>
+  </head>
+  <body>
+    <!-- The @agent-ui/code/highlight package guide (ADR-0119, LLD-C4/C7): the swappable registry + seven
+         bundled tokenizers, live, plus the custom-highlighter API. No tagged element — a GUIDE page, same
+         posture as router-doc.html/code-editor-doc.html, not a fleet component's {doc,demo,...} set.
+         An MPA entry auto-discovered by vite.config.ts's site/**/*.html glob — no config edit needed. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/highlight-doc.ts"></script>
+  </body>
+</html>

@@ -169,6 +169,14 @@
       "section": "Components"
     },
     {
+      "name": "Markdown",
+      "tag": "ui-markdown",
+      "url": "./markdown-doc.html",
+      "description": "ui-markdown is the Display-class, flagship element of the code+prose family (ADR-0119, M1) — it renders the agent-common markdown subset into real fleet DOM, s…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Menu",
       "tag": "ui-menu",
       "url": "./menu-doc.html",
@@ -538,6 +546,13 @@
       "name": "Router",
       "url": "./router-doc.html",
       "description": "@agent-ui/router: a memory-first SPA router whose route state lives in a kernel signal.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Highlight",
+      "url": "./highlight-doc.html",
+      "description": "@agent-ui/code/highlight: a swappable syntax-highlighter registry plus seven bundled, zero-dependency tokenizers.",
       "level": "L2",
       "section": "Guides"
     },

@@ -443,6 +443,17 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './code-editor-doc.html', label: 'Code Editor' }],
   },
   {
+    // @agent-ui/code/markdown (ui-markdown, ADR-0119 fork F4) — the SAME posture as Code Editor just above:
+    // a real tagged element outside components/src, so ungrouped here even though TKT-0095's L1_TREES fix
+    // already promotes it to a real Components entry in the sitemap-derived left rail.
+    links: [{ href: './markdown-doc.html', label: 'Markdown' }],
+  },
+  {
+    // @agent-ui/code/highlight (ADR-0119) — no tagged element at all (a registry + 7 tokenizers), the SAME
+    // ungrouped-site-level-link posture as Router: a GUIDE page for a package, not a fleet component.
+    links: [{ href: './highlight-doc.html', label: 'Highlight' }],
+  },
+  {
     // ui-agent-admin (@agent-ui/app, TKT-0039/ADR-0131) — the SAME ungrouped-site-level-link posture as
     // App Shell/Master Detail/Settings just above: a GUIDE page for an app-tier composition (ui-split +
     // ui-settings + ui-conversation), not a fleet component in components/src.

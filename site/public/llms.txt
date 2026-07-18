@@ -22,6 +22,8 @@
 - [Settings](./settings.html): composing `ui-settings` — a sections rail + panel over the shipped `ui-master-detail`, schema-driven fields generated onto the fleet's own form spine, and the `SettingsStore` persistence seam.
 - [Router](./router-doc.html): the memory-first SPA router — route state as one signal, opt-in URL reflection (hash default, history opt-in), `ui-router-outlet`, and `ui-router-link`, with a live memory-mode demo.
 - [Code Editor](./code-editor-doc.html): `ui-code-editor` — an editable-first source editor (a plain contenteditable that CodeMirror 6 progressively enhances for markdown, agent-ui's first third-party runtime dependency, lazy-loaded), a drop-in swap for `ui-textarea`.
+- [Markdown](./markdown-doc.html): `ui-markdown` — a zero-dependency, hand-rolled markdown-subset renderer replacing its own children with real fleet DOM (`ui-text`, `ui-code`, `ui-table`, native lists), sanitized by construction (no raw-HTML node kind exists in its parser).
+- [Highlight](./highlight-doc.html): `@agent-ui/code/highlight` — a swappable, pack-independent syntax-highlighter registry plus seven bundled zero-dependency tokenizers (ts/js, json, html, css, python, shell, markdown/md), self-registering on import.
 - [Agent Admin](./agent-admin.html): composing `ui-agent-admin` — a three-pane `ui-split` (chat canvas · prompts · settings) over `ui-conversation` and `ui-settings`, one shared `SettingsStore`, and a live-apply stub turn loop with no external model dependency.
 - [Changelog](./changelog.html): the shipping history, newest-first, rendered from the repo's CHANGELOG.md.
 
