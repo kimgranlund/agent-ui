@@ -56,10 +56,13 @@
 > gains a header-level face. See ADR-0146 for the full fork sheet. BUILT (TKT-0083 Slice A, 2026-07-18):
 > the `warning` status member (its own shape-coded glyph + forced-colors legibility), the opt-in `header`
 > with the stream-level worst-child-wins escalation, and `fail()` shipped gate-green (jsdom + browser).
-> DEFERRED: the GROUPING leg (`StatusEntry.parent` nesting via ADR-0143's `[data-role="nested"]` slot) — a
-> real F5↔ADR-0143 gap surfaced at build (that slot adopts CONNECT-TIME-ONLY and ADR-0143 ruled no new
-> `ui-timeline-item` public surface, so the live host has no seam to late-mount a nested timeline into an
-> already-connected parent); escalated to the planner for a late-mount-seam ruling before it can land.
+> RESOLVED (2026-07-18): the GROUPING leg (`StatusEntry.parent` nesting via ADR-0143's `[data-role="nested"]`
+> slot) hit a real F5↔ADR-0143 gap at build (that slot adopted CONNECT-TIME-ONLY and ADR-0143 shipped no
+> `ui-timeline-item` public surface, so the live host had no seam to late-mount a nested timeline into an
+> already-connected parent). Kim ruled to accept a narrow, additive exception — see
+> [ADR-0143's own amendment](../adr/0143-timeline-item-recursive-nesting-accordion.md) — granting
+> `ui-timeline-item.ensureNestedSlot(factory)`, which composes the SAME nesting/preview mechanism lazily
+> instead of eagerly at connect. Grouping lands as a follow-up build on top of the already-shipped Slice A+B.
 
 ---
 
