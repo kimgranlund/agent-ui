@@ -3037,6 +3037,27 @@ dot/ring/pulse for the in-progress states.
 This host holds **no transport** of its own — no `fetch`/`ReadableStream` reference anywhere in its
 source. The consumer owns the stream and drives `appendEntry`/`update`/`finalize` as it yields.
 
+## Grouping (ADR-0146 F5) + worst-child escalation (F6)
+
+An entry can NEST under another by carrying that entry's key as `parent`:
+
+```ts
+stream.appendEntry({ key: 'reasoning', status: 'active', label: 'Reasoning…' })
+stream.appendEntry({ key: 'r1', parent: 'reasoning', status: 'active', label: 'Considering the reconcile loop' })
+stream.appendEntry({ key: 'r2', parent: 'reasoning', status: 'warning', label: 'A partial match — verifying' })
+stream.update('r1', { status: 'done' }) // the group escalates live: reasoning now reads `warning` (worst child)
+```
+
+The host lazily mounts a nested `<ui-timeline>` into the parent item's `[data-role="nested"]` slot (via
+`ui-timeline-item.ensureNestedSlot()`) — **reusing** ADR-0143's shared `ui-disclosure` + collapsed-summary
+preview (never a second nesting primitive). The keyed registry stays **flat**: keys are unique across the
+whole strip, so `update(childKey, patch)` reaches a nested entry identically, and `finalize()`/`fail()`
+truncation reaches nested pending/active entries too. A group parent's status is **derived**, never
+authored: it escalates **worst-child-wins** over the closed ladder `error > warning > active > pending >
+done` (the exported `escalateStatus` reduce), recomputed live from the host's own `appendEntry`/`update`
+calls — no MutationObserver. The nested `<ui-timeline>` is `role="list"` inside the outer `role="log"`: one
+live region, one addition-announcement path, no bespoke `aria-live` on the nested host.
+
 ## Tail-follow + the stick-to-bottom guard
 
 Appending an entry (or an `update` that grows visible content) scrolls the newest entry's end into view
