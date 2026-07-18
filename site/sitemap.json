@@ -73,6 +73,14 @@
       "section": "Components"
     },
     {
+      "name": "Code Editor",
+      "tag": "ui-code-editor",
+      "url": "./code-editor-doc.html",
+      "description": "A form-associated, editable-first source editor with markdown syntax highlighting — a plain contenteditable surface that CodeMirror 6 progressively enhances (lazy-loaded, ADR-0139); the editor counterpart of the display-only ui-code.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Color Picker",
       "tag": "ui-color-picker",
       "url": "./color-picker-doc.html",
@@ -530,13 +538,6 @@
       "name": "Router",
       "url": "./router-doc.html",
       "description": "@agent-ui/router: a memory-first SPA router whose route state lives in a kernel signal.",
-      "level": "L2",
-      "section": "Guides"
-    },
-    {
-      "name": "Code Editor",
-      "url": "./code-editor-doc.html",
-      "description": "ui-code-editor: an editable-first source editor progressively enhanced by CodeMirror 6, agent-ui's first third-party runtime dependency.",
       "level": "L2",
       "section": "Guides"
     },

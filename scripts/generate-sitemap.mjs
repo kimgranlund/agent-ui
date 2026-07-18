@@ -6,27 +6,30 @@
 // (site/lib/sitemap.test.ts) imports directly (no generator/gate drift pair), deterministic ordering,
 // written only when run as a CLI (`node scripts/generate-sitemap.mjs`).
 //
-// L1 (component pages) derives from ONE tree only — packages/agent-ui/components/src/controls — NOT the
-// second tree generate-llms-full.mjs also walks (packages/agent-ui/router/src/controls). Verified against
-// the real site (site/*.html): every one of the 56 components/src/controls descriptors has its own real
-// `{tag-minus-ui-}-doc.html` page (a clean 1:1 match), but the router package's two descriptors
-// (ui-router-outlet / ui-router-link) do NOT — the site ships exactly ONE combined `router-doc.html` for the
-// whole package, no `router-outlet-doc.html`/`router-link-doc.html` ever existed. Deriving L1 URLs from the
-// router tree too would mint two dead links the palette could select and 404 on. The router page itself is
-// still fully searchable — it is one of site-manifest.json's L2 rows (site/pages/_page.ts already treats it
-// as an ungrouped site-level GUIDE link, the same posture as App Shell/Master Detail/Settings, never a
-// per-component page set) — so nothing is lost, only a literal LLD §3 instruction ("reuse CONTROL_TREES, the
-// same two trees") is narrowed to the one tree that actually has a 1:1 page convention. Named here, not
-// silently done, per the LLD's own freeze discipline.
+// L1 (component pages) derives from EVERY tree in L1_TREES, gated by a REAL 1:1-page-existence check
+// (TKT-0095) — not from a fixed component/router split assumed once and never re-tested. The original
+// single-tree design (packages/agent-ui/components/src/controls only) reached for the router package's own
+// exclusion as precedent when @agent-ui/code's ui-code-editor shipped (618b43f) — router's two descriptors
+// (ui-router-outlet / ui-router-link) DON'T have a 1:1 page (the site ships exactly ONE combined
+// `router-doc.html` for the whole package), but that reasoning never actually applied to ui-code-editor,
+// which has exactly one descriptor and one real page, same as every genuine L1 component; the resemblance to
+// router was the wrong precedent, not a real structural match. Rather than re-hardcoding a SECOND fixed
+// exception, the walk now covers every tree in L1_TREES and only emits an entry when `./{slug}-doc.html`
+// ACTUALLY EXISTS under `site/` — so a descriptor with no matching page (today: ui-markdown, which has a real
+// tagged descriptor but ships no doc page yet) is silently skipped rather than minting a dead nav link, and a
+// FUTURE @agent-ui/code control with both a descriptor AND a shipped page is picked up automatically, no
+// generator edit required. Router itself still resolves to its one combined page via site-manifest.json's L2
+// row (site/pages/_page.ts's ungrouped site-level GUIDE posture) — unaffected by this change, since
+// `packages/agent-ui/router/src/controls` was never added to L1_TREES.
 
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { slug } from './slug.mjs'
 
 const repoRootFromScript = () => fileURLToPath(new URL('..', import.meta.url))
 
-const L1_TREE = 'packages/agent-ui/components/src/controls'
+const L1_TREES = ['packages/agent-ui/components/src/controls', 'packages/agent-ui/code/src']
 
 /** Split a descriptor's `---`-fenced frontmatter from its prose body; null when no fence leads the file.
  *  (generate-llms-full.mjs precedent, duplicated rather than imported — that script has no export for it.) */
@@ -109,31 +112,31 @@ export function titleCaseFromTag(tag) {
     .join(' ')
 }
 
-/** generateL1 — one entry per components/src/controls descriptor: name/tag/url derived, description from the
- *  authored scalar or the fallback derivation. Alphabetical by tag (the generate-llms-full.mjs precedent). */
+/** generateL1 — one entry per tagged descriptor across every L1_TREES root, name/tag/url derived,
+ *  description from the authored scalar or the fallback derivation — but ONLY when a real `{slug}-doc.html`
+ *  page exists under `site/` (the 1:1-page-existence gate, TKT-0095): a descriptor with no matching page
+ *  (e.g. ui-markdown today) is skipped, never minting a dead nav link. Alphabetical by tag (the
+ *  generate-llms-full.mjs precedent). */
 function generateL1(repoRoot) {
   const entries = []
-  const controlsDir = join(repoRoot, L1_TREE)
-  for (const folder of readdirSync(controlsDir, { withFileTypes: true })) {
-    if (!folder.isDirectory()) continue
-    for (const file of readdirSync(join(controlsDir, folder.name))) {
-      if (!file.endsWith('.md')) continue
-      const source = readFileSync(join(controlsDir, folder.name, file), 'utf8')
-      const split = splitFence(source)
-      if (split === null) continue
-      const tag = tagOf(split.fence)
-      if (tag === null) continue // a .md without a tag: scalar is not a component descriptor
-      const authored = descriptionOf(split.fence)
-      const description = authored !== null ? authored : deriveFallbackDescription(split.body)
-      const slugName = tag.slice('ui-'.length)
-      entries.push({
-        name: titleCaseFromTag(tag),
-        tag,
-        url: `./${slugName}-doc.html`,
-        description,
-        level: 'L1',
-        section: 'Components',
-      })
+  for (const tree of L1_TREES) {
+    const controlsDir = join(repoRoot, tree)
+    for (const folder of readdirSync(controlsDir, { withFileTypes: true })) {
+      if (!folder.isDirectory()) continue
+      for (const file of readdirSync(join(controlsDir, folder.name))) {
+        if (!file.endsWith('.md')) continue
+        const source = readFileSync(join(controlsDir, folder.name, file), 'utf8')
+        const split = splitFence(source)
+        if (split === null) continue
+        const tag = tagOf(split.fence)
+        if (tag === null) continue // a .md without a tag: scalar is not a component descriptor
+        const slugName = tag.slice('ui-'.length)
+        const url = `./${slugName}-doc.html`
+        if (!existsSync(join(repoRoot, 'site', url.slice(2)))) continue // no real page yet — skip, never a dead link
+        const authored = descriptionOf(split.fence)
+        const description = authored !== null ? authored : deriveFallbackDescription(split.body)
+        entries.push({ name: titleCaseFromTag(tag), tag, url, description, level: 'L1', section: 'Components' })
+      }
     }
   }
   if (entries.length === 0) throw new Error('generate-sitemap: zero L1 descriptors found — the controls glob is broken')
