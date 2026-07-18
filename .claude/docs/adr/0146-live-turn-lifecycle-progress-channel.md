@@ -47,6 +47,22 @@
 > settled header fail-closed: it always accounts for incompleteness rather than reading calmer
 > than reality (the same monotone-truth posture F6/F8 themselves state). Recorded here as the
 > binding interpretation, beyond F8's literal text.
+>
+> **Amendment (2026-07-18, build-reconciliation, docs-only — the accepted Decision above is
+> UNCHANGED, append-only): F6's escalation is recomputed IMPERATIVELY, never via a
+> `MutationObserver`.** F6's body says group/header escalation is "recomputed live via the same
+> `MutationObserver` class ADR-0143 F3 already installs on the nested subtree — one observer serves
+> both the collapsed-summary preview and the escalation." The shipped, independently reviewed
+> grouping build (`status-stream.ts`, the `appendEntry`/`update`/`#recomputeGroups` path) does the
+> opposite, deliberately: escalation is recomputed IMPERATIVELY from `ui-status-stream`'s own
+> mutating calls — every grouped entry's status change flows through `appendEntry` or `update`, so
+> no second observer is needed. The `MutationObserver` ADR-0143 F3 installs remains reserved solely
+> for the collapsed-summary preview on `ui-timeline-item`; `ui-status-stream` never touches it. This
+> is more coherent than a shared observer would have been (the stream already mediates every
+> mutation that could change a status, an observer would be redundant machinery watching writes the
+> host itself just made) — recorded here as the real, binding mechanism, correcting F6's original
+> text rather than the reverse. Route: [TKT-0083](../tickets/tkt-0083-live-turn-lifecycle-feedback.md)
+> Findings (the grouping build).
 
 ## Context
 
