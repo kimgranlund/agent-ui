@@ -300,3 +300,16 @@ pre-push fetch, renumbered before commit).
   present). **Independent code-review NOT run: the Agent/Task tool to dispatch `orchestration:code-reviewer`
   is unavailable in the builder's toolset — MUST be run by the coordinator before this closes.** Status
   stays `open` (partial build: grouping deferred + review pending).
+
+**2026-07-18 — grouping escalation RESOLVED; follow-up build dispatched.** A separately-coordinated,
+independently-built attempt at this same ticket (draft PR #18, superseded on everything else already
+shipped above) hit the identical grouping gap and solved it: `ui-timeline-item.ensureNestedSlot(factory)`,
+a new public method composing ADR-0143's existing `[data-role="nested"]` + shared-disclosure +
+collapsed-summary-preview mechanism lazily (on first group) instead of eagerly at connect — verified
+working via a real test (`appendEntry({parent})` after the parent already connected). Kim ruled
+(2026-07-18, in conversation) to accept this as a narrow, additive exception to ADR-0143's original
+no-new-public-surface posture — recorded as an append-only amendment on
+[ADR-0143](../adr/0143-timeline-item-recursive-nesting-accordion.md) itself. A small follow-up build
+ports `ensureNestedSlot` (plus the escalation-observer wiring fix an independent review separately
+flagged) onto the already-shipped Slice A+B on main. Status stays `open` until that follow-up lands and
+is independently reviewed.

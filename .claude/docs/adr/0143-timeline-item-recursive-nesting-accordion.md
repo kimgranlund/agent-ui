@@ -10,6 +10,24 @@
 > | **Ratified by** | Kim, 2026-07-18 |
 > | **Repairs** | on ratification+build: `packages/agent-ui/components/src/controls/timeline-item/timeline-item.ts` (+`.md`, +`.css`) gains the `[data-role="nested"]` adoption slot, extends the composed `ui-disclosure` to wrap it alongside `[data-role="detail"]`, and adds the collapsed-summary preview effect + observer · `.claude/docs/spec/timeline-family.spec.md` §3.1/§4 amended (append-only, this ADR's Decision is the delta) · `.claude/docs/lld/timeline-family.lld.md` §2 amended likewise · NO catalog change in this build (Fork F6 defers it, a named a2ui-builder follow-up) · [TKT-0091](../tickets/tkt-0091-ui-timeline-nesting-accordion.md) |
 > | **Supersedes / Superseded by** | Extends [ADR-0122](./0122-timeline-family-and-live-status-stream.md) — unfences its F6 clause *"One nesting level v1 (flat + 1); deeper nesting is fenced"* to arbitrary recursion; ADR-0122's own body stays untouched (this is a new, append-only amendment record, not an edit to an accepted ADR). Reuses [ADR-0022](./0022-childpart-native-movebefore-reorder-focus.md) (adoption/move semantics), the `ui-disclosure` (ADR-0113 cl.4) composition ADR-0122 F6 already established, and the `data-last`/heal-observer `MutationObserver` class (`ui-toast-region`, `ui-disclosure`'s own heal observer). |
+>
+> **Amendment (2026-07-18, build-time, docs-only — the accepted Decision above is UNCHANGED,
+> append-only):** [ADR-0146](./0146-live-turn-lifecycle-progress-channel.md) (TKT-0083's live-turn
+> lifecycle feedback) needs to mount a nested `<ui-timeline>` into an `ui-timeline-item` that is
+> **already connected** — its grouping leg (F5) appends a live status entry under a parent entry
+> *after* the parent has already rendered, not authored upfront in markup. This ADR's F1-F6 design
+> never anticipated that case: nesting here was scoped to the durable, authored-markup host
+> (`ui-timeline`), so decomp leaf n16's "no new `attributes[]`/`properties[]`/`events[]`" accept
+> criterion was a consequence of that scope (F1-F6 add no prop/event because none was needed), not a
+> standing prohibition against ever widening the surface. Kim ruled (2026-07-18, in conversation) to
+> accept a narrow, additive exception rather than leave TKT-0083's grouping feature deferred
+> indefinitely: `ui-timeline-item` gains ONE new public method, `ensureNestedSlot(factory: () =>
+> HTMLElement): HTMLElement`, composing the EXACT SAME `[data-role="nested"]` adoption + shared
+> `ui-disclosure` + collapsed-summary-preview mechanism this ADR already established — just lazily,
+> on first call, instead of eagerly at connect. It is not a second nesting primitive, and it changes
+> nothing for the durable authored-markup case (dead code path unless a live host calls it). The
+> descriptor (`timeline-item.md`) gains this one method in its build follow-up. Route:
+> [TKT-0083](../tickets/tkt-0083-live-turn-lifecycle-feedback.md).
 
 ## Context
 
