@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0092
-status: open
+status: done
 date: 2026-07-17
 owner:
 kind: feature
@@ -102,3 +102,15 @@ research date, sub-issues GA 2025-04-09) rather than recalled knowledge.
   YAML) recommended, mirroring the existing section contract — a Repairs deliverable, not built in
   this design-only pass.
 - **No build dispatched** — per Acceptance, ADR-0145 needs Kim's ratification first.
+
+**2026-07-18 — ratified and built; this is the LAST edit this file ever gets.** Kim ratified
+ADR-0145 to `accepted` (`b349d9f`); the build landed same day (`4c32e8e`): `.github/ISSUE_TEMPLATE/
+{feature,bug}.yml` Issue Forms, `CLAUDE.md`/`CONTRIBUTING.md`/`agent-ui-doc-standards` updated to
+describe the new mechanism, `docs-grammar.test.ts`'s ticket-YAML STRUCTURAL check retired (nothing
+left to lint file-side). One real correction surfaced during the build and amended into ADR-0145
+itself: native GitHub Issue Types (F2's original recommendation for `kind`) turned out to be an
+org-level-only feature, unavailable on this personal-account repo — Kim ruled a fallback to plain
+`bug`/`enhancement` labels rather than converting the repo to an org. `npm run check` clean, full
+vitest 353/6373 green. `.claude/docs/tickets/` is now a frozen historical archive (98 files through
+TKT-0096) — this ticket's own status flip above is the archive's last legitimate edit, closing the
+loop this ticket itself opened, not new work.
