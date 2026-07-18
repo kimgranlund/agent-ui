@@ -91,8 +91,12 @@
     cursor: text;
   }
 
-  /* the plain contenteditable editor part (the editable-first fallback surface). */
-  :scope > [data-part='editor'] {
+  /* the plain contenteditable editor part (the editable-first fallback surface). `:not([hidden])` is
+     load-bearing, not decorative: an author-stylesheet `display` declaration outranks the UA stylesheet's
+     `[hidden] { display: none }` by cascade ORIGIN alone, regardless of specificity — an unconditional
+     `display: block` here silently defeats `editor.hidden = true` (editor.ts's CM-handoff hide), leaving the
+     plain surface visibly stacked underneath the live CM mount (duplicate text, doubled scrollHeight). */
+  :scope > [data-part='editor']:not([hidden]) {
     display: block;
     min-inline-size: 0;
     min-block-size: 100%;

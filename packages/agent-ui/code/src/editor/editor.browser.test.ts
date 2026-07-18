@@ -52,6 +52,15 @@ describe('ui-code-editor — CodeMirror lazily mounts for language="markdown" (b
     await expect.poll(() => cmOf(field) !== null, { timeout: 5000 }).toBe(true)
     expect(field.querySelector('.cm-editor'), 'CodeMirror did not mount a live view').not.toBeNull()
     expect(cmContentOf(field), 'the CodeMirror content surface is absent').not.toBeNull()
+
+    // Regression (duplicate-text bug): `editor.hidden = true` must actually collapse the plain fallback's
+    // computed style, not just flip the DOM property/attribute — an author `display` declaration with no
+    // `:not([hidden])` guard silently outranks the UA `[hidden] { display: none }` rule by cascade ORIGIN
+    // alone, leaving the plain surface visibly stacked underneath the live CM view (both showing the same
+    // document at once).
+    const plain = field.querySelector('[data-part="editor"]') as HTMLElement
+    expect(plain.hidden, 'the plain fallback must be marked hidden once CM takes over').toBe(true)
+    expect(getComputedStyle(plain).display, 'the plain fallback is marked hidden but still renders — duplicate text').toBe('none')
   })
 
   it('a non-markdown language NEVER mounts CodeMirror — the plain editable surface stays (editable-first)', async () => {
