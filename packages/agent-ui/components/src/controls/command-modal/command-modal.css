@@ -35,6 +35,11 @@
 
   /* The bounded scroll viewport (the list is the dialog's body; scroll-fade wired in .ts). */
   --ui-command-modal-list-max-block: 50vh;
+  /* Hidden-but-scrollable, the fleet's --ui-surface-host-scrollbar-width "hidden scroller, live scroll"
+     seam (TKT-0084 shape): a CMD-K overlay is app chrome, and a raw platform scrollbar reads as broken
+     chrome there — the scroll-fade edge treatment (wired in .ts, above) stays the scroll affordance.
+     Consumer-overridable (the same repoint pattern), never forced. */
+  --ui-command-modal-scrollbar-width: none;
   /* TKT-0017 — the FIXED FRAME (the CMD-K convention): a set width and a top anchor so the search field
      never moves as filtering changes the result count; only the list below grows/shrinks (downward, the
      VS Code palette convention). command-modal.ts forwards these onto the nested ui-modal's frame dials. */
@@ -102,6 +107,9 @@
     box-sizing: border-box;
     max-block-size: var(--ui-command-modal-list-max-block);
     overflow-y: auto;
+    /* Hidden scroller, live scroll (token block, above) — both shipped engines support scrollbar-width
+       (Chromium 121+/Safari 18.2+), no ::-webkit-scrollbar leg (the split-pane.css note). */
+    scrollbar-width: var(--ui-command-modal-scrollbar-width);
     padding: 0;
     margin: 0;
     list-style: none;
