@@ -118,8 +118,22 @@ mechanism. *(ADR-0117 cl.3, ADR-0079 cl.3 F2b — explicitly out of scope)*
 (`display: block`) and MUST NOT declare or consume any `--ui-theme-provider-*` custom property — the
 deliberate absence documented in the sheet (the `ui-form-provider` precedent). No forced-colors block is
 required (the component paints no surface of its own). *(ADR-0117 cl.4)*
+
+> **REV 2026-07-18 ([ADR-0148](../adr/0148-theme-provider-ink-reroot-fold-in.md), proposed — the LLD
+> §5.3 named-not-solved trigger fired, issue #31):** the stylesheet additionally declares the
+> SCHEME-BOUNDARY INK RE-ROOT — `color: var(--md-sys-color-neutral-on-surface)` in a zero-specificity
+> `:where(ui-theme-provider)` block — so ink INHERITED across a forced `color-scheme` boundary
+> re-resolves against the provider's own scheme (ink only, never a surface; any consumer declaration
+> outranks it). "Exactly one rule" reads as amended: the `@scope` structural default plus this one
+> token-block declaration. The `--ui-theme-provider-*` prohibition stands unchanged — the re-root
+> consumes the shared neutral ink role directly and mints nothing.
+
 - **AC1** *Given* `theme-provider.css`, *then* `family-coherence.test.ts`'s B-group token invariant passes
   with zero `--ui-theme-provider-*` declarations or consumptions.
+- **AC2** *(REV 2026-07-18, ADR-0148)* *Given* a dark-pinned root and a `scheme="light"` provider whose
+  bare-text child declares no `color`, *then* the child's rendered ink equals the LIGHT-resolved neutral
+  ink role (and the inverse holds under a light-pinned root with a dark provider) — the
+  `theme-provider.browser.test.ts` ink re-root legs, both engines.
 
 **SPEC-R7 — Descriptor + geometry.** The descriptor (`theme-provider.md`) MUST declare `tier: container`,
 `extends: UIElement`, `geometry.sizeClass: container`, and an `attributes[]` fence mirroring `static props`

@@ -57,10 +57,10 @@ keyboard: []                # no keyboard contract of its own — the themed des
 
 geometry:
   sizeClass: container       # Container/layout band — no control height, no --md-sys-space opinion of its own
-  display: block             # the host's only CSS rule (an unstyled custom element defaults to inline, which would lay slotted block-level descendants out inline against it)
-  note: "No --ui-theme-provider-* token chain (nothing to theme, form-provider precedent)."
+  display: block             # the host's structural default (an unstyled custom element defaults to inline, which would lay slotted block-level descendants out inline against it)
+  note: "No --ui-theme-provider-* token chain (nothing to theme, form-provider precedent). ONE further declaration since ADR-0148: the zero-specificity scheme-boundary ink re-root (`:where(ui-theme-provider) { color: var(--md-sys-color-neutral-on-surface) }`) — inherited ink re-resolves at a forced color-scheme boundary; ink only, any consumer declaration outranks it."
 
-forcedColors: No forced-colors rules needed — the provider paints nothing of its own; its themed descendants carry their own WHCM treatment.
+forcedColors: No forced-colors rules needed — the provider paints no surface of its own (the ADR-0148 ink re-root consumes a system role that WHCM maps like any other ink); its themed descendants carry their own WHCM treatment.
 ---
 
 # ui-theme-provider

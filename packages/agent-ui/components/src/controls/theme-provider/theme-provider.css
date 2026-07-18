@@ -2,26 +2,40 @@
  * minimal case of the fleet's two-block shape (text-field.css / column.css), the SAME shape
  * form-provider.css already establishes for a pure coordination/carrier element —
  *
- *   [1] TOKEN BLOCK — `:where(ui-theme-provider)` declares NOTHING. The provider maps `scheme` to its own
- *       `color-scheme` and reflects `scale`/`density`/`theme` as pure attribute carriers (LLD-C1/C2); it
- *       paints no surface of its own, so there is no `--ui-theme-provider-*` chain to declare (SPEC-R6).
- *       An EMPTY token block is deliberately NOT invented here (the form-provider.css LLD-C8 precedent) —
- *       this comment stands in for the section, so the token-hygiene probes need no special case: an
- *       absent chain is still zero raw `--md-sys-color-*` leakage, zero non-`--ui-theme-provider-*` consumption.
+ *   [1] TOKEN BLOCK — `:where(ui-theme-provider)` declares ONE thing: the scheme-boundary INK RE-ROOT
+ *       (ADR-0148, amending SPEC-R6's original "declares nothing"). The provider maps `scheme` to its own
+ *       `color-scheme` (LLD-C1/C2), but `color-scheme` alone does not re-resolve an INHERITED `color` —
+ *       `light-dark()` only re-resolves where a property containing it is declared, so ink computed ONCE
+ *       at an outer scheme leaks into a forced subtree as the WRONG channel values (white text on a light
+ *       surface; issue #31, first hit by the gallery as the TKT-0002 class). Re-declaring `color` here, at
+ *       the boundary, makes inherited ink re-resolve against the provider's own scheme. Zero specificity
+ *       (`:where()`) is load-bearing: any consumer declaration on any real selector outranks it (and
+ *       `color: inherit` restores the leak-through on purpose). Ink ONLY — no background, no surface: the
+ *       invariant is that every BACKGROUND reachable under a provider is itself scheme-declared (all fleet
+ *       surfaces are), so ink and ground re-resolve in step. Still no `--ui-theme-provider-*` chain — the
+ *       rule consumes the shared, universally-consumable neutral ink role directly (family-coherence
+ *       B-group's sanctioned shape); nothing to theme remains true (form-provider.css LLD-C8 precedent).
  *   [2] STYLES BLOCK — `@scope (ui-theme-provider)` sets exactly one declaration: `display: block`. An
  *       unstyled custom element defaults to `inline`, which would lay its slotted block-level descendants
- *       out inline against the host — a first-paint layout defect. No further rule: no colour, no spacing,
- *       no geometry — the coordination host paints nothing, the slotted subtree owns every box.
+ *       out inline against the host — a first-paint layout defect. No further rule: no spacing, no
+ *       geometry, no surface — the coordination host paints nothing, the slotted subtree owns every box.
+ *       (Deliberately NOT the home of the ink re-root: a scoped `:scope` rule carries (0,1,0) specificity
+ *       plus scoping proximity and would silently BEAT a consumer's class-selector ink — the TKT-0001 trap.)
  *
  * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from theme-provider.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2). No forced-colors block: the component
  * paints no surface of its own (SPEC-R6).
  */
 
-/* ════════════════ [1] TOKEN BLOCK — :where(ui-theme-provider) declares NOTHING ════════════════ */
-/* Deliberate absence (SPEC-R6): a pure coordination/carrier element has no visual voice of its own — there
-   is no --ui-theme-provider-* token chain to declare. `scale`/`density` ride the ambient [scale]/[density]
-   selectors in dimensions.css, unmodified by this sheet (SPEC-R4); `theme` is wired but inert (SPEC-R5). */
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-theme-provider): the ink re-root, nothing else ════════════════ */
+/* Still no --ui-theme-provider-* token chain (SPEC-R6 as amended by ADR-0148): a pure coordination/carrier
+   element has no visual voice of its own. `scale`/`density` ride the ambient [scale]/[density] selectors in
+   dimensions.css, unmodified by this sheet (SPEC-R4); `theme` is wired but inert (SPEC-R5). The single
+   declaration below is the SCHEME-BOUNDARY INK RE-ROOT (banner §[1]) — inherited-ink re-resolution at the
+   provider's own color-scheme, not a painted surface. */
+:where(ui-theme-provider) {
+  color: var(--md-sys-color-neutral-on-surface);
+}
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-theme-provider) consumes NOTHING ════════════════ */
 

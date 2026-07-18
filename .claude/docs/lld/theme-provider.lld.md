@@ -182,6 +182,11 @@ CSS/test rows breaks `npm test`/`npm run test:browser` outright or silently regr
   would change SPEC-R6's "paints nothing of its own" contract and needs its own bite-tested regression
   suite) — it migrates the existing fix unchanged in substance, re-keyed to the new tag, and names the
   broader question as a trigger for a future intake if a second consumer hits the same bug.
+  **Trigger FIRED (REV 2026-07-18, [ADR-0148](../adr/0148-theme-provider-ink-reroot-fold-in.md), issue
+  #31):** the TKT-0088 site shell (`ui-theme-provider.app-shell`) was the second consumer — white
+  headings/prose on every docs page under a light toggle + dark OS. The rule now lives in
+  `theme-provider.css` itself (zero-specificity `:where()`, SPEC-R6 REV-amended, bite legs in
+  `theme-provider.browser.test.ts`); the gallery-local copy retired to a pointer.
 - **`site/gallery.browser.test.ts`** — two `gallery.querySelector('theme-provider')` calls (lines 215, 313)
   become `'ui-theme-provider'` (a missed rename here THROWS — `as HTMLElement` on a `null` querySelector
   result); the describe-block titles (lines 159, 302) and comments (lines 14, 73, 294, 299) are reworded.
@@ -300,7 +305,8 @@ infrastructure — judged sturdier on that basis.
   here too (a regression net on the base class, not new machinery in `theme-provider.ts`).
 - **The ink-re-root latent risk (§5.3)** — named and migrated (re-keyed selector), not solved as a
   component-owned concern this wave; a second consumer hitting the same defect is the trigger for revisiting
-  whether it belongs in `theme-provider.css` itself (ADR-0102 Lane A candidate).
+  whether it belongs in `theme-provider.css` itself (ADR-0102 Lane A candidate). *(REV 2026-07-18: fired and
+  folded in — [ADR-0148](../adr/0148-theme-provider-ink-reroot-fold-in.md), issue #31; see §5.3's note.)*
 - **Zero residue** — the one effect this component establishes rides the standard connect-scope disposal;
   no listener, timer, or subscription of any kind exists outside it.
 
@@ -324,4 +330,5 @@ site/public/llms.txt` empty (SPEC-R9 AC1) · `npm run size` measured by hand (AD
   LLD reflects; no change to this component is anticipated (the seam was built for exactly this).
 - **Folding the scheme-boundary ink re-root (§5.3/§7) into `theme-provider.css` itself** — named, not solved;
   the trigger is a second consumer independently hitting the same "bare text under a per-subtree scheme
-  override" defect the gallery already fixed for itself.
+  override" defect the gallery already fixed for itself. *(CLOSED 2026-07-18 — the trigger fired: the
+  TKT-0088 site shell, issue #31; folded in per [ADR-0148](../adr/0148-theme-provider-ink-reroot-fold-in.md).)*
