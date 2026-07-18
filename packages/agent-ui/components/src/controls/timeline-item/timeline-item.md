@@ -162,8 +162,12 @@ the same triangle-exclamation glyph for both `error` and `warning` (the card evi
 which flavor). Its header row also reads as one line — `label · description` share row 1 with
 `timestamp`, rather than a leaf's label-then-description stack — and the composed disclosure's toggle
 renders compact rather than at full control-height (the Figma "Claude Code Gateway" reasoning-chain card,
-node 21:1641-1643). A leaf item (no nested group) is completely unaffected — both are pure-CSS/glyph-set
-distinctions keyed off whether `nested` content exists, no new prop.
+node 21:1641-1643). The one-line layout is a CSS rule keyed off `:has([data-role="nested"])` with no
+`@scope … to()` bound, so it reaches every item NESTED inside that group too (a "Task Step" row is itself
+a `ui-timeline-item`, several levels down) — which is exactly what the Figma card wants: a step row ALSO
+reads `label · description  time` on one line. Only an item with no grouped ancestor anywhere above it
+keeps the original two-row stack. Both the glyph and the layout are pure-CSS/data distinctions — no new
+prop.
 
 ## Accessibility
 

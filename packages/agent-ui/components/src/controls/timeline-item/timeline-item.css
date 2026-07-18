@@ -363,8 +363,13 @@
   /* ── a GROUP item (hosts a nested sub-timeline, ADR-0146 F5) reads as a denser CARD header: the
      label + its dot-separated status text share row 1 with the elapsed time — the Figma reasoning-chain
      card's single-line "Task Group · <status>  ⋯  32s" — rather than the leaf's two-row label/description
-     stack. Scoped narrowly via :has([data-role='nested']) so a plain expandable leaf (description below
-     label, no nested group) keeps the existing, unrelated two-row layout untouched. */
+     stack. `@scope (ui-timeline-item)` carries no `to()` bound, so this rule is NOT limited to the
+     matching group's own cells — it also reaches every DESCENDANT item's `[data-role='description']`/
+     `[data-role='timestamp']` inside that group's nested `<ui-timeline>` (a "Task Step" row is itself a
+     `ui-timeline-item`, several DOM levels below). That cascade-through is exactly what the Figma card
+     wants too — a step row ALSO reads "Task Step 02 · What went wrong  6s" on one line — so it is kept,
+     not fought. Only a leaf with NO grouped ancestor at all (never nested under any `:has([data-role=
+     'nested'])` item) keeps the original, unrelated two-row layout untouched. */
   :scope:has([data-role='nested']) {
     grid-template-columns: var(--ui-timeline-item-gutter) auto 1fr auto;
   }
