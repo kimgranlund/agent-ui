@@ -385,3 +385,14 @@ advisories, all verified against the real diff rather than the builder's self-re
 - This closes TKT-0083 in full: both original slices (A/B, 2026-07-18) plus the grouping leg (F5/F6) now
   ship together on `main`. `ensureNestedSlot(factory)`'s signature matches the ADR-0143 amendment's ratified
   contract exactly.
+
+**2026-07-18 — hotfix: self-parent crash in `appendEntry`.** A separately-coordinated independent
+fix-it pass (working against a since-superseded parallel build of this same grouping leg) found a real,
+live bug in the shipped `main` code above: `appendEntry({key, parent})` throws
+(`UIElement.effect: no connection scope`) when `parent === key`, because `status-stream.ts`'s
+`#byKey.set(entry.key, item)` ran BEFORE the parent lookup, so a self-referencing key resolved
+`parentItem` to the not-yet-connected item itself instead of falling through to the documented
+"unknown parent → flat top-level append, never a throw" behavior. Fixed by resolving `parentKey`/
+`parentItem` before registering the new entry in `#byKey` — a one-line reorder, no behavior change
+for any other case. Regression test added alongside the existing "unknown parent" test. `npm run check`
++ `npx vitest run status-stream timeline-item` green.

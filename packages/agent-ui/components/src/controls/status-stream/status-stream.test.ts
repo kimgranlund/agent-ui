@@ -375,6 +375,17 @@ describe('ui-status-stream — grouped entries via StatusEntry.parent (ADR-0146 
     el.remove()
   })
 
+  it('a SELF-referencing parent (entry.key === entry.parent) degrades to a flat top-level append — never a throw', () => {
+    const { el } = makeStream()
+    let self: UITimelineItemElement | undefined
+    expect(() => {
+      self = el.appendEntry({ key: 'x', parent: 'x', status: 'active', label: 'self-parent' })
+    }).not.toThrow()
+    expect(self!.parentElement).toBe(el) // the not-yet-connected item can never be its own parent
+    expect(el.querySelectorAll(':scope > ui-timeline-item')).toHaveLength(1)
+    el.remove()
+  })
+
   it('the nested group host is a real <ui-timeline> (role=list) inside the outer role=log — one live region, no bespoke aria-live', () => {
     const { el } = makeStream()
     el.appendEntry({ key: 'g', label: 'group' })

@@ -182,10 +182,14 @@ export class UIStatusStreamElement extends UIContainerElement {
     const item = document.createElement('ui-timeline-item') as UITimelineItemElement
     item.dataset.key = entry.key
     this.#assign(item, entry)
-    this.#byKey.set(entry.key, item)
 
+    // Resolve the parent BEFORE registering `entry.key` in `#byKey` — a self-referencing `parent`
+    // (entry.key === entry.parent) must resolve to "unknown parent", never to this not-yet-connected
+    // item itself (which would route it into #ensureNested and throw: no connection scope).
     const parentKey = entry.parent
     const parentItem = parentKey !== undefined ? this.#byKey.get(parentKey) : undefined
+    this.#byKey.set(entry.key, item)
+
     if (parentKey !== undefined && parentItem !== undefined) {
       // GROUPED (F5) — mount the child into the parent's nested <ui-timeline> (created lazily, once per parent
       // via ADR-0143's shared disclosure/preview composition). The registry stays FLAT (keyed by `key`).
