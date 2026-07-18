@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0096
-status: doing
+status: done
 date: 2026-07-17
 owner:
 kind: bug
@@ -112,3 +112,5 @@ re-running the same test (identical failure with zero changes applied) — not a
 this ticket.
 
 Status → `doing` (fixed, verified, awaiting the user's own live confirmation before `done`).
+
+**2026-07-18 — Kim confirmed live.** Status → `done`.
