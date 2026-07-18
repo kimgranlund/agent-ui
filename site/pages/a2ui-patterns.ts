@@ -313,5 +313,35 @@ function composingContainers(): HTMLElement {
     list.append(li)
   }
   section.append(h2, intro, list)
+
+  // ── the pane/tab content-region rules (ADR-0144, TKT-0093) ──────────────────────────────────────
+  // Same teaching home, one level down: what a Tabs/SplitPane composition should and should not do.
+  const h3 = document.createElement('h3')
+  h3.textContent = 'Panes and tab panels — the region rules'
+  const intro2 = document.createElement('p')
+  intro2.textContent =
+    'A ui-split-pane / TabPanel is a LAYOUT host, never a content-region host — three rules, fleet-wide:'
+  const list2 = document.createElement('ul')
+  for (const [rule, why] of [
+    [
+      'Layout hosts own bounds + scroll, never header/body/footer anatomy.',
+      'A pane (overflow: auto + a min floor) and a tab panel (the opt-in Tabs fill boolean, which pins the tablist strip and makes the active panel the ONE internally-scrolling item) expose zero region semantics of their own — they never grow a header/body/footer prop.',
+    ],
+    [
+      'Content regions compose INSIDE the host: Card where the region needs chrome, [data-box] where it needs structure.',
+      'Reach for CardHeader/CardContent/CardFooter when the region needs a frame, radius, or a masked scrollable viewport; reach for the [data-box] attribute (the SAME region system Card generalizes from — sticky header/footer brackets, the region padding law, the scroll-fade mask) when the need is structural without a card’s chrome. Both are already-shipped, taught idioms — no new region-element family exists.',
+    ],
+    [
+      'Content rhythm belongs to the content wrapper, never the host.',
+      'Gap-between-sections is a Row/Column gap or a Card content gap, composed inside the pane/panel — never a prop this layout host grows itself. A ui-split-pane in particular carries ZERO padding by law and never adopts the density-responsive space ladder (double-inseting every region-bearing child it hosts would break composition).',
+    ],
+  ] as const) {
+    const li = document.createElement('li')
+    const strong = document.createElement('strong')
+    strong.textContent = rule
+    li.append(strong, ' ', why)
+    list2.append(li)
+  }
+  section.append(h3, intro2, list2)
   return section
 }

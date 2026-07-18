@@ -116,6 +116,42 @@ describe('tabs.css — the tablist strip + tab rows + panel anatomy (s8)', () =>
   })
 })
 
+describe('tabs.css — [fill] (ADR-0144 Q1 cl.1) — the shell flex-column + the filled panel scroll leg', () => {
+  it(':scope[fill] is a flex column filling a bounded parent', () => {
+    const m = stylesBlock.match(/:scope\[fill\]\s*\{([^}]*)\}/)
+    expect(m, 'the :scope[fill] rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/display:\s*flex/)
+    expect(rule).toMatch(/flex-direction:\s*column/)
+    expect(rule).toMatch(/block-size:\s*100%/)
+    expect(rule).toMatch(/min-block-size:\s*0/)
+  })
+
+  it('the visible filled panel is the ONE flexible, scrolling item — hidden panels are untouched by this rule', () => {
+    const m = stylesBlock.match(/:scope\[fill\] ui-tab-panel:not\(\[hidden\]\)\s*\{([^}]*)\}/)
+    expect(m, 'the :scope[fill] ui-tab-panel:not([hidden]) rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/flex:\s*1 1 auto/)
+    expect(rule).toMatch(/min-block-size:\s*0/)
+    expect(rule).toMatch(/overflow-y:\s*auto/)
+  })
+
+  it('the fill panel scrollbar-width reads the consumer-INHERITED var()-fallback seam — the :where() TOKEN block does NOT declare it (the TKT-0065/split-pane lesson)', () => {
+    const m = stylesBlock.match(/:scope\[fill\] ui-tab-panel:not\(\[hidden\]\)\s*\{([^}]*)\}/)
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/scrollbar-width:\s*var\(--ui-tabs-panel-scrollbar-width,\s*auto\)/)
+    // an OWN declaration in the token block would beat a composing surface's inherited value — must NOT exist there.
+    expect(tokenBlock).not.toMatch(/--ui-tabs-panel-scrollbar-width\s*:/)
+  })
+
+  it('NEGATIVE control: a fill-less <ui-tabs> is untouched — no bare :scope rule declares block-size/flex/overflow', () => {
+    const bareScope = stylesBlock.match(/:scope\s*\{([^}]*)\}/)
+    expect(bareScope, 'the bare :scope rule is missing').not.toBeNull()
+    const rule = (bareScope as RegExpMatchArray)[1]
+    expect(rule).not.toMatch(/flex|block-size|overflow/)
+  })
+})
+
 describe('tabs.css — the shared focus ring + motion + forced-colors (s8)', () => {
   it('the tab focus ring is :focus-visible from the fleet tokens (ADR-0009)', () => {
     const m = stylesBlock.match(/ui-tab:focus-visible\s*\{([^}]*)\}/)

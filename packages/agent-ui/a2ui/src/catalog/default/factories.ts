@@ -260,6 +260,10 @@ export const cardFooterFactory: WidgetFactory = accessorFactory('ui-card-footer'
 
 // Tabs + its tab/panel sub-elements. `Tabs` is two-way bindable on `selected` via the `select` commit
 // event (ADR-0019 cl.2) — the renderer's LLD-C8 controller writes the active tab back into surface.data.
+// `fill` (ADR-0144 Q1 cl.4, decided at build: Lane B, a structural boolean — the `SplitPane.collapsible`
+// precedent) is a PLAIN 1:1 reflecting accessor prop, riding `accessorFactory` generically (no bespoke
+// mapping needed): a CSS-less A2UI consumer can now ask for a bounded, self-scrolling tabs widget with no
+// consumer CSS of its own.
 export const tabsFactory: WidgetFactory = accessorFactory('ui-tabs', { prop: 'selected', event: 'select' })
 export const tabFactory: WidgetFactory = accessorFactory('ui-tab')
 export const tabPanelFactory: WidgetFactory = accessorFactory('ui-tab-panel')

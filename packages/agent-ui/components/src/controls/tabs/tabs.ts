@@ -39,6 +39,11 @@ const props = {
   // via LLD-C8 (value:{prop:'selected',event:'select'}, ADR-0019). Typed `string` — the value crosses the
   // attribute boundary as a string regardless (a numeric index is its string form); the descriptor records it so.
   selected: { ...prop.string(), reflect: true },
+  // `fill` — ADR-0144 Q1 cl.1: ONE opt-in reflected boolean (the `ui-split-pane` `collapsible` shape), realized
+  // CSS-ONLY in tabs.css (`:scope[fill]`). Fills a height-bounded parent with a pinned tablist strip + an
+  // internally scrolling active panel — the exact composition `agent-admin.css` (TKT-0085) hand-rolled per
+  // consumer for lack of a shipped variant. Absent (the default), tabs stays byte-identical document-flow.
+  fill: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 export interface UITabsElement extends ReactiveProps<typeof props> {}

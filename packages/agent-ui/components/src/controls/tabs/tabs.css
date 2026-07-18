@@ -10,7 +10,15 @@
  * Two distinct ledgers, never interchanged. The surface (the shell background + the elevation/brightness axes)
  * is the shared container.css seam — this sheet does not repoint --ui-container-bg (ADR-0104): a bare <ui-tabs>
  * is transparent by default like the rest of the container family (ADR-0015 cl.1); a plane is an asked-for
- * intent via the already-shipped `elevation`/`brightness` axes (e.g. `<ui-tabs elevation="0">`). */
+ * intent via the already-shipped `elevation`/`brightness` axes (e.g. `<ui-tabs elevation="0">`).
+ *
+ * `[fill]` (ADR-0144 Q1) — ONE opt-in CSS-only posture: the shell becomes a flex column filling a height-bounded
+ * parent (a pinned tablist strip + an internally scrolling active panel) — the exact composition `agent-admin.css`
+ * (TKT-0085) hand-rolled per consumer for lack of a shipped variant. The panel's scrollbar-visibility seam
+ * (`--ui-tabs-panel-scrollbar-width`) is consumer-INHERITED — var()-fallback only, deliberately NOT declared in
+ * the token block below (an own declaration would beat a composing surface's inherited value — the same
+ * TKT-0065 alias-resolution lesson `split-pane.css` already records). Default (`[fill]` absent) stays
+ * byte-identical to today's document-flow tabs — negative control in tabs.browser.test.ts. */
 
 /* ════════════════════════ [1] TOKEN BLOCK — :where() declarations (the --md-sys-color-* + ramp entry) ════════════════════════ */
 
@@ -118,6 +126,27 @@
   }
   ui-tab-panel[hidden] {
     display: none;
+  }
+
+  /* [fill] (ADR-0144 Q1 cl.1) — the shell becomes a flex column filling its height-bounded parent: the tablist
+     strip stays at its natural content height (an ordinary, non-grow flex item, so it stays pinned as the
+     panel scrolls beneath it), the visible panel becomes the ONE flexible, internally-scrolling item. The
+     panel gains NO content-region semantics here (Q3) — it becomes exactly what its shipped `tabindex=0`
+     already promises: a scroll container; header/body/footer composition inside it is the author's own
+     `[data-box]`/`ui-card`, never this sheet's business. */
+  :scope[fill] {
+    display: flex;
+    flex-direction: column;
+    block-size: 100%;
+    min-block-size: 0;
+  }
+  :scope[fill] ui-tab-panel:not([hidden]) {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+    /* Consumer-INHERITED scrollbar-visibility seam (the split-pane shape) — see the file banner; deliberately
+       NOT declared in the :where() token block, so the default rides the var() fallback. */
+    scrollbar-width: var(--ui-tabs-panel-scrollbar-width, auto);
   }
 
   /* Motion — the state PAINT only (ink + the indicator), gated behind :state(ready) so the first paint SNAPS

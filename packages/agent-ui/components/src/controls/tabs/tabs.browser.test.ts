@@ -241,3 +241,120 @@ describe('ui-tabs — ARIA wiring via internals (roles + the element-reflection 
     }
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [5] `fill` (ADR-0144 Q1) — the whole composed shape: a bounded parent, a pinned strip, a scrolling panel
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+const LONG_PANEL = Array.from({ length: 30 }, (_, i) => `<p>Paragraph ${i}</p>`).join('')
+
+// The agent-admin shell shape (TKT-0085): a fixed-height flex column ancestor, `<ui-tabs fill>` as its sole
+// flexed child. One long (overflowing) panel + one short one, so switching between them re-engages scroll.
+const fillMarkup = (): string => `
+  <div style="display:flex; flex-direction:column; block-size:220px;">
+    <ui-tabs fill>
+      <ui-tab>One</ui-tab><ui-tab>Two</ui-tab>
+      <ui-tab-panel>${LONG_PANEL}</ui-tab-panel>
+      <ui-tab-panel>Short</ui-tab-panel>
+    </ui-tabs>
+  </div>`
+
+describe('ui-tabs — `fill`: NEGATIVE control — a fill-less tabs stays byte-identical to today (both engines)', () => {
+  it('no flex/block-size/overflow rule applies without the attribute', () => {
+    const { tabs, panelEls } = mount(THREE)
+    expect(getComputedStyle(tabs).display, 'a fill-less ui-tabs must stay display:block').toBe('block')
+    expect(getComputedStyle(panelEls[0]).overflowY, 'a fill-less panel must not gain overflow-y:auto').toBe('visible')
+  })
+})
+
+describe('ui-tabs — `fill`: the whole composed shape — fills the bounded parent, strip pinned, panel scrolls (both engines)', () => {
+  it('[MUST-PROVE] the shell fills its parent; the strip stays pinned while the active panel scrolls; hidden panels stay display:none; re-selection re-engages scroll', async () => {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = fillMarkup()
+    document.body.append(wrap)
+    mounted.push(wrap)
+
+    const boundedParent = wrap.firstElementChild as HTMLElement
+    const tabs = wrap.querySelector('ui-tabs') as UITabsElement
+    const tabEls = [...wrap.querySelectorAll('ui-tab')] as UITabElement[]
+    const panelEls = [...wrap.querySelectorAll('ui-tab-panel')] as UITabPanelElement[]
+    const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+    const panel = panelEls[0]
+
+    expect(getComputedStyle(tabs).display, `${server.browser}: [fill] did not switch the shell to flex`).toBe('flex')
+    // the whole shape genuinely fills the bounded parent — no overflow leak past the host.
+    expect(tabs.getBoundingClientRect().height, `${server.browser}: the fill shell did not fill its bounded parent`).toBeCloseTo(
+      boundedParent.getBoundingClientRect().height,
+      0,
+    )
+
+    expect(panel.scrollHeight, 'vacuous test setup — the panel did not overflow').toBeGreaterThan(panel.clientHeight)
+    expect(getComputedStyle(panelEls[1]).display, 'a non-selected panel must stay display:none under fill').toBe('none')
+
+    // the strip rect is IDENTICAL before vs after scrolling the panel — it is pinned, not scrolled away with it.
+    const stripBefore = strip.getBoundingClientRect()
+    panel.scrollTop = 60
+    expect(panel.scrollTop, 'the panel did not actually scroll').toBeGreaterThan(0)
+    const stripAfter = strip.getBoundingClientRect()
+    expect(stripAfter.top, `${server.browser}: the tablist strip moved when the panel scrolled — it is not pinned`).toBeCloseTo(stripBefore.top, 0)
+    expect(stripAfter.height).toBeCloseTo(stripBefore.height, 0)
+
+    // switch to the short panel, then back — the long panel's scroll re-engages (a fresh overflow, not a stale flag).
+    await userEvent.click(tabEls[1])
+    await tabs.updateComplete
+    expect(panelEls[1].hidden, 'the short panel did not become visible').toBe(false)
+    await userEvent.click(tabEls[0])
+    await tabs.updateComplete
+    expect(panel.hidden, 'the long panel did not become visible again').toBe(false)
+    expect(panel.scrollHeight, 'the long panel lost its overflow after re-selection').toBeGreaterThan(panel.clientHeight)
+  })
+})
+
+describe('ui-tabs — `fill` panel scrollbar seam — consumer-INHERITED, var()-fallback only (ADR-0144 Q1 cl.3, both engines)', () => {
+  it('an ancestor hides the filled panel scrollbar via --ui-tabs-panel-scrollbar-width; scrollTop still moves', () => {
+    const wrap = document.createElement('div')
+    wrap.style.setProperty('--ui-tabs-panel-scrollbar-width', 'none') // set on an ANCESTOR — inherits down to the panel
+    wrap.innerHTML = fillMarkup()
+    document.body.append(wrap)
+    mounted.push(wrap)
+
+    const panel = wrap.querySelector('ui-tab-panel') as HTMLElement
+    const cs = getComputedStyle(panel) as CSSStyleDeclaration & { scrollbarWidth?: string }
+    expect(cs.scrollbarWidth, `${server.browser}: the inherited seam did not hide the scrollbar`).toBe('none')
+    panel.scrollTop = 30
+    expect(panel.scrollTop, 'scrolling stopped working once the scrollbar was hidden').toBeGreaterThan(0)
+  })
+})
+
+describe('ui-tabs — `fill` panel keyboard scroll — MEASURED, not assumed (ADR-0144 Q1 cl.4, both engines)', () => {
+  it('[MUST-PROVE] a focused filled panel is keyboard-scrollable on every shipped engine (card-content.ts precedent)', async () => {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = fillMarkup()
+    document.body.append(wrap)
+    mounted.push(wrap)
+
+    const panel = wrap.querySelector('ui-tab-panel') as HTMLElement
+    expect(panel.scrollHeight, 'vacuous test setup — the panel did not overflow').toBeGreaterThan(panel.clientHeight)
+
+    // A genuine, trusted click establishes focus (the card-content.ts measurement: a bare `.focus()` call was
+    // NOT sufficient on every engine; a real click is also the representative real-world path).
+    await userEvent.click(panel)
+    expect(document.activeElement, `${server.browser}: the panel did not take focus`).toBe(panel)
+
+    await userEvent.keyboard('{ArrowDown}')
+    expect(panel.scrollTop, `${server.browser}: ArrowDown did not move exactly one line (40px)`).toBeCloseTo(40, 0)
+    await userEvent.keyboard('{ArrowDown}')
+    expect(panel.scrollTop, `${server.browser}: a second ArrowDown did not add another line`).toBeCloseTo(80, 0)
+    await userEvent.keyboard('{ArrowUp}')
+    expect(panel.scrollTop, `${server.browser}: ArrowUp did not move back exactly one line`).toBeCloseTo(40, 0)
+
+    await userEvent.keyboard('{PageDown}')
+    // ±1px tolerance (numDigits -1, precision 5) — sub-pixel clientHeight fuzz measured on WebKit.
+    expect(panel.scrollTop, `${server.browser}: PageDown did not move ~90% of the viewport`).toBeCloseTo(40 + panel.clientHeight * 0.9, -1)
+
+    await userEvent.keyboard('{End}')
+    expect(panel.scrollTop, `${server.browser}: End did not reach the bottom`).toBeCloseTo(panel.scrollHeight - panel.clientHeight, 0)
+    await userEvent.keyboard('{Home}')
+    expect(panel.scrollTop, `${server.browser}: Home did not return to the top`).toBe(0)
+  })
+})
