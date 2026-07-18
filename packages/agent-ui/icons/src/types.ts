@@ -10,6 +10,7 @@ export const ICON_NAMES = [
   'plus',
   'arrow-up', 'microphone',
   'warning', // TKT-0083/ADR-0146 F7 — the ui-timeline-item `warning` status glyph (a triangle-exclamation, shape-coded per ADR-0057, distinct from error's `x`)
+  'circle-notch', 'check-circle', // the Figma "Claude Code Gateway" reasoning-chain card (node 21:1641-1643) — a GROUP-level marker's own distinct glyph set: a spinning ring for `active`, a circled check for `done` (vs. the plain dot/bare check a leaf step's marker uses)
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 

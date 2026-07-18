@@ -177,7 +177,9 @@
 
   /* status-keyed ink — the SECONDARY, redundant channel (ADR-0057); the marker SHAPE is the primary one. */
   --ui-timeline-item-marker-ink: var(--md-sys-color-neutral-on-surface-variant);
-  --ui-timeline-item-connector-ink: var(--md-sys-color-neutral-on-surface-variant);
+  /* a structural DIVIDER, not text ink (the Figma reasoning-chain card's dimmer connector) — the
+     outline-variant role, not on-surface-variant (that role is reserved for legible secondary TEXT). */
+  --ui-timeline-item-connector-ink: var(--md-sys-color-neutral-outline-variant);
   --ui-timeline-item-ink: var(--md-sys-color-neutral-on-surface);
   --ui-timeline-item-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
 }
@@ -284,6 +286,22 @@
     }
   }
 
+  /* the GROUP-level `active` glyph (circle-notch, GROUP_STATUS_GLYPH) is Phosphor's own spinner shape —
+     it reads as "working" only once actually spinning; static under reduced-motion (the pulse precedent). */
+  :scope [data-role='marker'][data-glyph='circle-notch'] {
+    animation: ui-timeline-item-spin 1s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope [data-role='marker'][data-glyph='circle-notch'] {
+      animation: none;
+    }
+  }
+  @keyframes ui-timeline-item-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   /* the connector — a REAL element, not a pseudo (bridges the item's own margin-block-end row-gap so the
      line is visually continuous into the next item); suppressed on the host's terminal item. */
   :scope [data-part='marker']::after {
@@ -330,9 +348,56 @@
     grid-column: 3;
     grid-row: 2;
   }
+  /* elapsed-time readouts read as tabular mono figures (the Figma reasoning-chain card's "Label Mono" /
+     SF Mono treatment) — a telemetry/timestamp cell is machine-emitted data, not authored prose. */
+  :scope [data-role='timestamp'],
+  :scope [data-role='trailing'] {
+    font-family: var(--md-sys-typeface-mono);
+    font-variant-numeric: tabular-nums;
+  }
   /* empty cells collapse — no phantom gutter (SPEC-R3 AC1). */
   :scope > [data-role]:empty {
     display: none;
+  }
+
+  /* ── a GROUP item (hosts a nested sub-timeline, ADR-0146 F5) reads as a denser CARD header: the
+     label + its dot-separated status text share row 1 with the elapsed time — the Figma reasoning-chain
+     card's single-line "Task Group · <status>  ⋯  32s" — rather than the leaf's two-row label/description
+     stack. Scoped narrowly via :has([data-role='nested']) so a plain expandable leaf (description below
+     label, no nested group) keeps the existing, unrelated two-row layout untouched. */
+  :scope:has([data-role='nested']) {
+    grid-template-columns: var(--ui-timeline-item-gutter) auto 1fr auto;
+  }
+  :scope:has([data-role='nested']) [data-role='description'] {
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    align-items: baseline;
+    gap: var(--ui-timeline-item-column-gap);
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  :scope:has([data-role='nested']) [data-role='description']::before {
+    content: '\00B7'; /* a middle-dot separator (the Metadata row's "Dot" glyph, Figma node 21:1403 et al.) */
+  }
+  :scope:has([data-role='nested']) [data-role='timestamp'] {
+    grid-column: 4;
+  }
+  /* the composed detail toggle, contextually compacted (the disclosure's OWN declared --ui-disclosure-*
+     custom properties — the sanctioned override surface, never its internal [data-part] rendering) — a
+     full control-height row reads as a stray, oversized affordance below a now-single-line header. */
+  :scope:has([data-role='nested']) > [data-part='detail'] {
+    /* NOT `inherit` — an explicit `inherit` on a custom property re-triggers inheritance lookup instead of
+       reading the ambient computed value; since ui-timeline-item never declares --ui-disclosure-font, that
+       lookup dead-ends guaranteed-invalid, which cascades into --ui-disclosure-glyph (chevron sizing) also
+       going invalid — the chevron's inline/block-size then falls back to `auto`, and a same-box-referencing
+       `width="100%"` SVG with an indeterminate containing block resolves to the browser's 300×300 replaced-
+       element default (verified empirically — a real, reproduced regression, not a hypothetical). */
+    --ui-disclosure-height: 1.25em;
+    --ui-disclosure-ink: var(--ui-timeline-item-muted-ink);
+    --ui-disclosure-gap: var(--ui-timeline-item-column-gap);
   }
 
   /* the streamed chain-of-thought text cell (ui-status-stream's #growText, timeline-item.md's residual

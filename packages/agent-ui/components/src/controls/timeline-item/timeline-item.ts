@@ -85,6 +85,15 @@ const STATUS_GLYPH = { done: 'check', error: 'x', warning: 'warning' } as const 
   Record<(typeof STATUS)[number], IconName>
 >
 
+// A GROUP item's OWN glyph set (an item hosting a nested sub-timeline, `#nested` — ADR-0146 F5) — the
+// Figma "Claude Code Gateway" reasoning-chain card (node 21:1641-1643): a card-level marker reads as a
+// distinct, prominent status glyph (a spinning ring while working, a circled check when done, the SAME
+// triangle-exclamation `warning` glyph for both `error` and `warning` — the card evidences a problem, not
+// which flavor), never the small plain dot/bare-check a LEAF step's marker uses.
+const GROUP_STATUS_GLYPH = { active: 'circle-notch', done: 'check-circle', error: 'warning', warning: 'warning' } as const satisfies Partial<
+  Record<(typeof STATUS)[number], IconName>
+>
+
 const props = {
   // reflected (SPEC-R2 AC2: a JS-set status/size round-trips through getAttribute) — the LLD's frozen
   // interface names the constructors; the CSS [status]/[size] repoint (and the AC2 round-trip itself)
@@ -182,6 +191,11 @@ export class UITimelineItemElement extends UIElement {
       this.append(disclosure)
     }
     this.#nested = nested
+    // Re-evaluate the marker glyph NOW — this item just became a group parent, and GROUP_STATUS_GLYPH
+    // (#renderMarkerGlyph) only applies once `#nested` is set. The reactive effect that normally drives
+    // this reruns on a status/icon CHANGE, which may not happen at the moment nesting begins (a status
+    // unchanged by the new child's escalation would leave the OLD leaf-style glyph painted).
+    this.#renderMarkerGlyph()
     // Arm the preview observer + paint-gate effect exactly as `connected()` does for an authored nested slot
     // (ADR-0143 F3). On a later disconnect/reconnect, `connected()` re-arms both because `#nested` is now set
     // — so the lazily-mounted slot survives reconnect identically to an authored one.
@@ -332,17 +346,22 @@ export class UITimelineItemElement extends UIElement {
     if (this.icon !== '') {
       const svg = resolveIcon(this.icon as IconName)
       svg.setAttribute('data-role', 'marker')
+      svg.setAttribute('data-glyph', this.icon)
       marker.replaceChildren(svg)
       return
     }
-    const glyph = (STATUS_GLYPH as Record<string, IconName | undefined>)[this.status]
+    // A group parent (`#nested` set — ADR-0146 F5) reads its OWN glyph set (GROUP_STATUS_GLYPH); a leaf
+    // step keeps the existing STATUS_GLYPH (bare check/x) + CSS dot/ring/pulse fallback.
+    const glyphMap = this.#nested ? GROUP_STATUS_GLYPH : STATUS_GLYPH
+    const glyph = (glyphMap as Record<string, IconName | undefined>)[this.status]
     if (glyph !== undefined) {
       const svg = resolveIcon(glyph)
       svg.setAttribute('data-role', 'marker')
+      svg.setAttribute('data-glyph', glyph)
       marker.replaceChildren(svg)
       return
     }
-    marker.replaceChildren() // '' / pending / active — pure CSS paints the dot/ring/pulse
+    marker.replaceChildren() // '' / pending / active(leaf) — pure CSS paints the dot/ring/pulse
   }
 }
 

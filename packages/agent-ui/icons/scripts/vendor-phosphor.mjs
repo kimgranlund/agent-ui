@@ -34,6 +34,8 @@ const NAME_MAP = {
   'arrow-up': 'arrow-up',
   microphone: 'microphone',
   warning: 'warning',
+  'circle-notch': 'circle-notch',
+  'check-circle': 'check-circle',
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'
