@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0083
-status: open
+status: done
 date: 2026-07-17
 owner:
 kind: feature
@@ -361,3 +361,27 @@ would have regressed them); only the grouping delta was re-implemented. Eight fi
   (`cd29851`) with the grouping change stashed; untouched by this build (theme-CSS/site-build only).
   **Independent code-review NOT run (the builder cannot dispatch it) — MUST be run by the coordinator before
   this closes; this ticket's own hard gate, twice-required.** Status stays `open`.
+
+**2026-07-18 — closed: independent code-review GO, grouping leg landed, ticket fully shipped.** An
+independent `orchestration:code-reviewer` pass ran against the grouping build (worktree
+`agent-a097f0dd779525832`) and returned **GO**, with one merge-sequencing condition and three low-severity
+advisories, all verified against the real diff rather than the builder's self-report:
+- **Condition met before landing:** F6's original text claimed escalation recomputes via the SAME
+  `MutationObserver` ADR-0143 F3 installs — the shipped code deliberately does the opposite (imperative
+  recompute from `appendEntry`/`update`). Landed a fourth ADR-0146 amendment correcting F6's text to the
+  real mechanism, plus a matching repair to the decomposition's n5 accept clause, in commit `aade0ce` —
+  *before* the grouping fast-forward, per the review's own sequencing requirement.
+- **A real self-report inaccuracy the review caught:** the builder's "full npm test = 6445/2 failed, both
+  pre-existing" claim missed a THIRD, self-caused failure — `llms-full.txt` drift from `status-stream.md`'s
+  new Grouping section. Fixed by the gate's own prescribed regeneration (folded into the reviewed branch).
+- **Three LOW-severity advisories, filed as follow-up GitHub Issues rather than blocking:** truncation never
+  re-escalates group parents (#26), an unguarded ancestor walk can hang on a contrived cyclic parent chain
+  (#27), and `ensureNestedSlot` throws on a not-yet-connected strip (documented in the method's own docstring
+  as an asymmetry with flat appends, not filed separately).
+- Landed to `main` as commit `9dcab4e` (rebased clean onto `aade0ce`), full gate re-verified in a properly
+  `npm install`-ed worktree (the review's own environmental-flake catch — two suite files false-failed on a
+  stub `node_modules` resolving cross-root into the main checkout; confirmed passing once isolated): `npm run
+  check` green, full `npm test` 353/353 files · 6460/6460 tests, cross-engine browser suite 62/62.
+- This closes TKT-0083 in full: both original slices (A/B, 2026-07-18) plus the grouping leg (F5/F6) now
+  ship together on `main`. `ensureNestedSlot(factory)`'s signature matches the ADR-0143 amendment's ratified
+  contract exactly.
