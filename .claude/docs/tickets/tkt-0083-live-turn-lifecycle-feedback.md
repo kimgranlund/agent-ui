@@ -313,3 +313,14 @@ no-new-public-surface posture — recorded as an append-only amendment on
 ports `ensureNestedSlot` (plus the escalation-observer wiring fix an independent review separately
 flagged) onto the already-shipped Slice A+B on main. Status stays `open` until that follow-up lands and
 is independently reviewed.
+
+**2026-07-18 — ADR-0146 wording reconciled to the shipped build (append-only amendments; Status
+untouched).** Three gaps an independent code review found between the accepted text and the shipped,
+reviewed implementation are now recorded on
+[ADR-0146](../adr/0146-live-turn-lifecycle-progress-channel.md) as dated amendment blocks: (1) progress
+emission is OPT-IN (`ProduceOptions.progress`, default off — the build refinement the 2026-07-18 build
+note above already flagged, now on the ADR itself); (2) recorded progress replays UNPACED
+(`recorded-transport.ts:85`) — "plausible pacing" struck, SPEC-R2 determinism is why; consumer-side
+reveal staggering noted as a possible follow-up, not a requirement; (3) F8's settled header escalation
+counts truncated entries as `warning` (`status-stream.ts:303-310`) — the fail-closed reading of "the
+escalated final status," now explicit.

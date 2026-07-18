@@ -10,6 +10,43 @@
 > | **Ratified by** | Kim, 2026-07-18 |
 > | **Repairs** | on ratification+build: `packages/agent-ui/a2ui/src/agent/{meta-line.ts,agent-transport.ts,produce.ts,providers/anthropic.ts,recorded-transport.ts}` (the progress envelope kind + the additive provider `onEvent` seam + interleaved progress yields + synthetic recorded stages) · `packages/agent-ui/components/src/controls/status-stream/*` (+`timeline-item/*` for the `warning` member) · `packages/agent-ui/app/src/controls/conversation/conversation.ts` (`AgentTurnHandle.progress` + ingest-time narration) · consumer turn loops (`site/pages/a2ui-chat.ts`/`a2ui-live.ts`/`site/lib/admin-live-runner.ts`) · docs-only NOW (this intake): [`../spec/a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) SPEC-R5/N4 amendment · [`../spec/app-surfaces-m2.spec.md`](../spec/app-surfaces-m2.spec.md) SPEC-R6/§4 amendment · [`../spec/timeline-family.spec.md`](../spec/timeline-family.spec.md) status-vocabulary/header/grouping amendment · NEW [`../decompositions/live-turn-lifecycle-feedback.decomp.json`](../decompositions/live-turn-lifecycle-feedback.decomp.json) · [TKT-0083](../tickets/tkt-0083-live-turn-lifecycle-feedback.md) |
 > | **Supersedes / Superseded by** | Extends [ADR-0088](./0088-a2ui-live-conversational-channel.md) (the `a2uiMeta` envelope gains a runtime-composed `progress` kind, and meta-lines may now interleave DURING the turn — 0088's note/trace/ask decisions stand; its "typed frame if meta kinds proliferate" trigger is weighed and re-deferred, F1) · Extends [ADR-0122](./0122-timeline-family-and-live-status-stream.md) (F3's status enum gains `warning`; F4's imperative API gains a `parent` key + a header — the five-axis host split stands) · Composes on [ADR-0143](./0143-timeline-item-recursive-nesting-accordion.md) (grouping REUSES its `[data-role="nested"]` slot + shared disclosure + collapsed-summary preview — no second nesting mechanism, F5) · Relates [ADR-0137](./0137-a2ui-agent-producer-toolkit-export.md) (the day-old ratified `./agent` export is why `AgentTransport.turn()`'s signature stays byte-identical) · [ADR-0057](./0057-intent-non-color-signifier-rule.md) (every new status/stage signifier is icon-coded, never color-only) · [ADR-0129](./0129-app-surfaces-m2-composition-and-transport-boundary.md) F3 (the opt-in disclosure precedent F3 reuses for raw reasoning text) |
+>
+> **Amendment (2026-07-18, build-reconciliation, docs-only — the accepted Decision above is
+> UNCHANGED, append-only): F1's progress emission shipped OPT-IN, not always-on.** F1's body reads
+> as if `produce()` always interleaves progress meta-lines once built. The shipped, independently
+> reviewed build (TKT-0083 Slice B) makes emission an explicit caller opt-in —
+> `ProduceOptions.progress?: boolean` (`produce.ts:102`), absent/`false` ⇒ `produce()` streams
+> BYTE-IDENTICALLY to before, no progress lines — deliberately: always-on would have broken every
+> predating byte-exact gate/consumer and the decomposition's own "note-only/halt byte-unchanged"
+> requirement. This is the real, intentional contract, not drift: `AgentTransport.turn()`'s
+> signature stays byte-identical exactly as F1 rules; the one live producer call site
+> (`dev-proxy-plugin.ts:262`) opts in with `progress: true`; and the recorded transport never calls
+> `produce()` — it carries authored `progress` arrays instead (`recorded-transport.ts:48`, the F1
+> parity bullet's own mechanism). Route:
+> [TKT-0083](../tickets/tkt-0083-live-turn-lifecycle-feedback.md) Findings (the 2026-07-18 build note).
+>
+> **Amendment (2026-07-18, build-reconciliation, docs-only — the accepted Decision above is
+> UNCHANGED, append-only): recorded progress replays UNPACED — "plausible pacing" is struck.** F1's
+> recorded/keyless-parity bullet says authored `progress` is "replayed with plausible pacing ahead
+> of the turn's lines." The shipped behavior (`recorded-transport.ts:85`) yields every authored
+> stage back-to-back, unpaced, ahead of the turn's lines — correctly: pacing (timers) at the
+> transport layer would break SPEC-R2's determinism gates, which this ADR's own Acceptance requires
+> green. "Ahead of the turn's lines" stands; "plausible pacing" does not. *Forward-looking note,
+> NOT a build requirement:* a staged-FEEL presentation remains possible as a CONSUMER-side
+> follow-up (e.g. the keyless demo staggering its own reveal timing) — presentation pacing is the
+> consumer's prerogative; the transport stays deterministic.
+>
+> **Amendment (2026-07-18, build-reconciliation, docs-only — the accepted Decision above is
+> UNCHANGED, append-only): F8's settled escalation counts TRUNCATED entries as `warning` — the
+> ruled interpretation of "the escalated final status."** F8 says `finalize()` "settles the header
+> to the escalated final status" without saying what a still-`pending`/`active` entry contributes
+> once the completion invariant truncates it. The shipped, test-asserted implementation
+> (`status-stream.ts:303-310`, the `#truncated` set) rules it: a truncated entry contributes
+> **`warning`** to the settled F6 escalation — its settled, torn-outcome face, not its frozen
+> `active`/`pending` — matching the warning-coloured truncated ring visually, and keeping the
+> settled header fail-closed: it always accounts for incompleteness rather than reading calmer
+> than reality (the same monotone-truth posture F6/F8 themselves state). Recorded here as the
+> binding interpretation, beyond F8's literal text.
 
 ## Context
 
