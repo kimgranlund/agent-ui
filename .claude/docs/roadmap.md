@@ -64,21 +64,20 @@ here forward is an open call, listed in §3.
   pages (getting-started, theming, tokens, sizing, forms, choosing).
 - **Process** — the TICKET tier just moved to GitHub Issues
   ([ADR-0145](adr/0145-ticket-tier-github-issues-backend.md), shipped 2026-07-18);
-  `.claude/docs/tickets/` is now a frozen historical archive (98 files through TKT-0096, plus three
-  still-open stragglers named in §3). ADR/PRD/SPEC/LLD stay files, always — never delegated.
+  `.claude/docs/tickets/` is now a frozen historical archive (98 files through TKT-0096, plus two
+  still-open stragglers named in §3 — a third, TKT-0091, shipped 2026-07-18, see §4). ADR/PRD/SPEC/LLD
+  stay files, always — never delegated.
 
 ## 3 · Next — concrete, near-term
 
-- **Three ratified ADRs, not yet built.** Design intake landed and Kim ratified all three
-  today, but no build commit exists yet for any of them:
-  - [ADR-0143](adr/0143-timeline-item-recursive-nesting-accordion.md) — `ui-timeline-item`
-    recursive nesting + shared accordion (ticket: TKT-0091, still `status: open`).
+- **Two ratified ADRs, not yet built** (a third, ADR-0143, shipped 2026-07-18 — see §4). Design
+  intake landed and Kim ratified all three on 2026-07-17:
   - [ADR-0144](adr/0144-pane-tab-content-region-rule-system.md) — the pane/tab content-region rule
     system, `ui-tabs` `fill` posture (ticket: TKT-0093, still `status: open`).
   - [ADR-0146](adr/0146-live-turn-lifecycle-progress-channel.md) — the live-turn lifecycle
     progress channel on `AgentTransport` (ticket: TKT-0083, still `status: open`).
 
-  These three are the last open records in the now-frozen ticket archive — building each should
+  These two are the last open records in the now-frozen ticket archive — building each should
   close its ticket AND, per §1's split, get filed/mirrored as a real GitHub Issue going forward
   rather than a new ticket file.
 
@@ -107,4 +106,5 @@ here forward is an open call, listed in §3.
 
 *Closed items move here, one dated line each, rather than being deleted from §3 silently:*
 
-- *(none yet — this section seeds the first time a §3 item ships)*
+- **2026-07-18** — [ADR-0143](adr/0143-timeline-item-recursive-nesting-accordion.md) shipped:
+  `ui-timeline-item` recursive nesting + shared accordion (TKT-0091, commits `a726a8b`/`fe6fe00`).
