@@ -8,7 +8,7 @@ dependency-free) authored in strict, modern
 TypeScript — carrying over the `rce` architecture: signals reactivity · FACE custom elements ·
 tagged-template rendering · traits. First component family = FACE form controls.
 
-Plan `.claude/docs/plan.md` · Goals + per-milestone DoD `.claude/docs/goals.md` · Coherence process `.claude/docs/process.md` · Standards `.claude/docs/references/`
+Plan `.claude/docs/plan.md` · Goals + per-milestone DoD `.claude/docs/goals.md` · Roadmap (forward-looking, Now/Next/Later) `.claude/docs/roadmap.md` · Coherence process `.claude/docs/process.md` · Standards `.claude/docs/references/`
 
 ## Commands
 

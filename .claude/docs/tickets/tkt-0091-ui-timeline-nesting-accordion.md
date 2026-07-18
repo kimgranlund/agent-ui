@@ -1,7 +1,7 @@
 ---
 doc-type: ticket
 id: tkt-0091
-status: open
+status: done
 date: 2026-07-17
 owner:
 kind: feature
@@ -137,4 +137,22 @@ build).** Ran the `agent-ui-component-design` procedure end to end against the r
   gates the whole build on an independent component-reviewer GO.
 - **No build dispatched from this ticket** — per Acceptance, ADR-0143 needs Kim's ratification first;
   the decomposition above is the ready-to-dispatch build sequence once that lands.
+
+**2026-07-18 — build shipped (commit `a726a8b`), closing the loop ADR-0143's ratified design opened.**
+ADR-0143 was ratified (`status: accepted`) and the decomposition above dispatched: `timeline-item.ts`
+gained the `[data-role="nested"]` slot (F1), the shared detail+nested `ui-disclosure` composition (F2),
+the recursive `#resolveLastDescendant()` + `MutationObserver`-backed collapsed-summary preview painted
+into the existing `trailing` cell (F3), and F7's size-non-cascade negative control — `timeline-item.css`
+confirmed byte-unchanged (F4) and zero new ARIA added (F5), both verified directly, not assumed. `nested`
+joined the `data-role` registry (`naming.md` §6) in the same change. Every decomposition leaf (n2-n19) has
+jsdom and/or cross-engine browser coverage; `npm run check && npm test` green (6391/6391, incl.
+family-coherence/barrels/layering/naming-gates); browser suite 34/34 across Chromium + WebKit; `timeline-item`'s
+own `npm run size` marginal measured at 0 B gz (no measurable growth). An independent `ui:component-reviewer`
+pass returned **GO** against ADR-0143's fork sheet, with a handful of low-severity, non-blocking findings —
+one (an over-broad `#resolveLastDescendant` query risking a false match inside free-form `detail` prose) was
+fixed before this commit; the rest are discretionary follow-up, not required for this ticket's own Acceptance.
+Catalog wiring (F6) remains the deliberately deferred a2ui-builder follow-up named in the ADR — not this
+ticket's scope. **Separately noted, not fixed here (pre-existing, unrelated):** `npm run size` also reports
+`@agent-ui/app` over its marginal budget — confirmed present on `origin/main` with zero TKT-0091 changes
+applied, so it is a standing regression this build did not cause and does not fix.
 

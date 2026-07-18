@@ -253,3 +253,73 @@ describe('ui-timeline-item — whole-shape (a real rail row, not a collapsed dot
     expect(lastAfter.display).toBe('none')
   })
 })
+
+// ── recursive nesting geometry + ARIA (ADR-0143 F4/F5, TKT-0091, n14/n15) — cross-engine ──────────────────
+
+describe('ui-timeline-item — a nested rail paints its OWN complete marker+connector rail, zero CSS changes here (ADR-0143 F4)', () => {
+  it('a nested ui-timeline\'s items resolve the SAME frozen marker-box geometry as a top-level item (no bespoke nested styling)', () => {
+    const { item } = mount(
+      '<ui-timeline-item status="active" label="outer">' +
+        '<ui-timeline data-role="nested"><ui-timeline-item status="done" label="inner"></ui-timeline-item></ui-timeline>' +
+        '</ui-timeline-item>',
+    )
+    item.setAttribute('size', 'md')
+    const innerItem = item.querySelector('ui-timeline-item')!
+    expect(markerBox(item), 'outer marker-box').toBeCloseTo(markerBox(innerItem), 0)
+  })
+
+  it('a nested rail is visually offset (indented) from its parent rail by the disclosure body\'s own inline padding', () => {
+    const { item, wrap } = mount(
+      '<ui-timeline-item status="active" label="outer">' +
+        '<ui-timeline data-role="nested"><ui-timeline-item status="done" label="inner"></ui-timeline-item></ui-timeline>' +
+        '</ui-timeline-item>',
+    )
+    // the disclosure is closed by default — open it so the nested rail actually renders on screen
+    ;(item as unknown as { toggleDetail(open?: boolean): void }).toggleDetail(true)
+    void wrap
+    const outerMarkerLeft = item.querySelector(':scope > [data-part="marker"]')!.getBoundingClientRect().left
+    const innerMarker = item.querySelector('ui-timeline-item')!.querySelector('[data-part="marker"]')!
+    const innerMarkerLeft = innerMarker.getBoundingClientRect().left
+    expect(innerMarkerLeft, 'the nested rail must be indented past the parent rail, not flush with it').toBeGreaterThan(outerMarkerLeft)
+  })
+})
+
+describe('ui-timeline-item — nested content ARIA (ADR-0143 F5, zero new machinery — native <details> exclusion)', () => {
+  it('an OPEN item with nested content exposes the nested list/listitems in the accessibility tree', async () => {
+    const { item } = mount(
+      '<ui-timeline-item status="active" label="outer">' +
+        '<ui-timeline data-role="nested"><ui-timeline-item status="done" label="inner leaf"></ui-timeline-item></ui-timeline>' +
+        '</ui-timeline-item>',
+    )
+    ;(item as unknown as { toggleDetail(open?: boolean): void }).toggleDetail(true)
+    await new Promise((r) => setTimeout(r, 0))
+    const innerItem = item.querySelector('ui-timeline-item[label="inner leaf"]')!
+    // the native <details> is open — the descendant is a REAL, focusable/reachable part of the tree
+    expect(innerItem.checkVisibility ? innerItem.checkVisibility() : true, 'the nested item must be visible while open').toBe(true)
+    const details = item.querySelector('[data-part="detail"] details, [data-part="detail"] [data-part="details"]')
+    if (details) expect((details as HTMLDetailsElement).open).toBe(true)
+  })
+
+  it('a CLOSED item\'s nested descendants are absent from both the accessibility tree and the tab order (the native <details> guarantee)', () => {
+    const { item } = mount(
+      '<ui-timeline-item status="active" label="outer">' +
+        '<ui-timeline data-role="nested"><ui-timeline-item status="done" label="inner leaf"><a href="#" data-role="detail">focusable</a></ui-timeline-item></ui-timeline>' +
+        '</ui-timeline-item>',
+    )
+    const innerLink = item.querySelector('a[href="#"]') as HTMLAnchorElement
+    expect(innerLink.checkVisibility ? innerLink.checkVisibility() : false, 'a closed <details> descendant must not be visible/reachable').toBe(false)
+  })
+
+  it('the trailing collapsed-summary preview text IS present in the accessible tree while closed (ordinary visible content, never aria-hidden)', async () => {
+    const { item } = mount(
+      '<ui-timeline-item status="active" label="outer">' +
+        '<ui-timeline data-role="nested"><ui-timeline-item status="done" label="inner leaf"></ui-timeline-item></ui-timeline>' +
+        '</ui-timeline-item>',
+    )
+    await new Promise((r) => setTimeout(r, 0))
+    const trailing = item.querySelector('[data-role="trailing"]')!
+    expect(trailing.getAttribute('aria-hidden')).not.toBe('true')
+    expect(trailing.textContent).toContain('inner leaf')
+    expect(trailing.checkVisibility ? trailing.checkVisibility() : true).toBe(true)
+  })
+})

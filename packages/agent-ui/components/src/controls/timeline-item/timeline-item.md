@@ -67,10 +67,13 @@ slots:
     description: Same adoption rule as label, backed by the `timestamp` prop.
   - name: trailing
     optional: true
-    description: Consumer-content-only — no prop stamps it. Adopted in place if present; otherwise an empty cell that collapses (no phantom gap).
+    description: Consumer-content-only by default — no prop stamps it — UNLESS a `nested` slot exists and the shared disclosure is CLOSED, in which case the collapsed-summary preview (ADR-0143 F3) auto-fills it with the last nested descendant's status glyph + label, live-updating and clearing while open. A consumer-adopted `[data-role="trailing"]` child is NEVER overwritten by the preview, at any state.
   - name: detail
     optional: true
-    description: A pre-existing `[data-role="detail"]` child is moved into a composed `<ui-disclosure data-part="detail">` (ADR-0122 F6) — one nesting level (flat + 1).
+    description: A pre-existing `[data-role="detail"]` child is moved into a composed `<ui-disclosure data-part="detail">` (ADR-0122 F6), appended BEFORE `nested` when both exist (ADR-0143 F2 — one shared disclosure, not two).
+  - name: nested
+    optional: true
+    description: A pre-existing `[data-role="nested"]` child — a genuine `<ui-timeline>` element, reusing the family's own durable host rather than a bespoke recursive template (ADR-0143 F1) — is moved into the SAME shared `<ui-disclosure data-part="detail">` `detail` uses, appended after it. Recursion is arbitrary authored-markup depth: a nested item may itself carry its own `nested` slot, with no code-side depth cap. `size` does NOT cascade into it (ADR-0143 F7) — an unauthored nested `<ui-timeline>` resolves its own default register, unaffected by its ancestor's `[size]`.
   - name: text
     optional: true
     description: NOT authored by a durable-timeline consumer — ui-status-stream's imperative `update(key,{text})` find-or-creates this `[data-role="text"]` cell and grows/replaces it in place (a residual imperative/CSS-only fact, never a `static props` field; timeline-family.lld.md §7).
@@ -79,7 +82,7 @@ parts:
   - name: marker
     description: The control-built `<span data-part="marker">` — paints the status dot/ring/pulse via `::before` and the row connector via `::after` when no consumer marker/icon/status-glyph is present; otherwise holds the adopted or injected glyph.
   - name: detail
-    description: The control-built `<ui-disclosure data-part="detail">` wrapping the adopted `[data-role="detail"]` content, present only when detail content exists at connect.
+    description: The control-built `<ui-disclosure data-part="detail">` wrapping the adopted `[data-role="detail"]` content AND/OR the adopted `[data-role="nested"]` `<ui-timeline>` (ADR-0143 F2), present only when either exists at connect. A nested `<ui-timeline>`'s own items paint their own complete, independently-indented rail — no cross-level connector continuity (ADR-0143 F4), zero geometry changes here.
 
 customStates:
   - truncated             # set/cleared via markTruncated() — ui-status-stream's completion invariant (SPEC-R11); overrides the status marker with a dashed, non-color-only interrupted ring
@@ -144,12 +147,17 @@ The marker cell paints its own dot/ring/pulse and connector via CSS **unless** a
 check/cross glyph) — any of these suppresses the default dot uniformly. Content cells
 (`label`/`description`/`timestamp`/`trailing`) adopt a matching pre-existing `[data-role]` child in place
 (never re-stamped by the matching prop — the wrapper-trap guard) or are created fresh and prop-stamped.
-Empty cells collapse (no phantom gutter). A `[data-role="detail"]` child is moved into a composed
-`ui-disclosure` — the collapse mechanism is **reused**, never reimplemented; its `toggle` surfaces on the
-item host via light-DOM bubbling (the item never emits it itself).
+Empty cells collapse (no phantom gutter). A `[data-role="detail"]` and/or `[data-role="nested"]` child is
+moved into ONE shared composed `ui-disclosure` — the collapse mechanism is **reused**, never
+reimplemented; its `toggle` surfaces on the item host via light-DOM bubbling (the item never emits it
+itself). `nested` is a genuine `<ui-timeline>` — recursion is arbitrary authored depth, and while the
+disclosure is closed the last nested descendant's status + label auto-fill the `trailing` cell (unless a
+consumer already owns it), clearing while open.
 
 ## Accessibility
 
 `internals.role = 'listitem'` is set in the constructor (semantics before insertion). No built-in
 accessible name beyond rendered text content. A `forced-colors` block keeps every status marker legible
-by shape.
+by shape. A nested `<ui-timeline>` forms a legal `list > listitem > list > listitem…` structure; native
+`<details>` already excludes a closed disclosure's descendants from both the accessibility tree and the
+tab order — no ARIA machinery is added for this (ADR-0143 F5).
