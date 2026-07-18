@@ -287,12 +287,15 @@
   }
 
   /* the GROUP-level `active` glyph (circle-notch, GROUP_STATUS_GLYPH) is Phosphor's own spinner shape —
-     it reads as "working" only once actually spinning; static under reduced-motion (the pulse precedent). */
-  :scope [data-role='marker'][data-glyph='circle-notch'] {
+     it reads as "working" only once actually spinning; static under reduced-motion (the pulse precedent).
+     Gated on BOTH `[data-glyph='circle-notch']` AND `[status='active']` (component-review finding) — a
+     consumer who sets a STATIC `icon="circle-notch"` (a free marker glyph, orthogonal to status) must not
+     spin forever; only the group-glyph's OWN active-status meaning animates. */
+  :scope[status='active'] [data-role='marker'][data-glyph='circle-notch'] {
     animation: ui-timeline-item-spin 1s linear infinite;
   }
   @media (prefers-reduced-motion: reduce) {
-    :scope [data-role='marker'][data-glyph='circle-notch'] {
+    :scope[status='active'] [data-role='marker'][data-glyph='circle-notch'] {
       animation: none;
     }
   }
@@ -363,37 +366,50 @@
   /* ── a GROUP item (hosts a nested sub-timeline, ADR-0146 F5) reads as a denser CARD header: the
      label + its dot-separated status text share row 1 with the elapsed time — the Figma reasoning-chain
      card's single-line "Task Group · <status>  ⋯  32s" — rather than the leaf's two-row label/description
-     stack. `@scope (ui-timeline-item)` carries no `to()` bound, so this rule is NOT limited to the
-     matching group's own cells — it also reaches every DESCENDANT item's `[data-role='description']`/
-     `[data-role='timestamp']` inside that group's nested `<ui-timeline>` (a "Task Step" row is itself a
-     `ui-timeline-item`, several DOM levels below). That cascade-through is exactly what the Figma card
-     wants too — a step row ALSO reads "Task Step 02 · What went wrong  6s" on one line — so it is kept,
-     not fought. Only a leaf with NO grouped ancestor at all (never nested under any `:has([data-role=
-     'nested'])` item) keeps the original, unrelated two-row layout untouched. */
-  :scope:has([data-role='nested']) {
+     stack. `@scope (ui-timeline-item)` carries no `to()` bound, so these rules are NOT limited to the
+     matching group's own cells — the plain descendant selectors below (no `>`) also reach every ITEM
+     nested inside that group's `<ui-timeline>` (a "Task Step" row is itself a `ui-timeline-item`, several
+     DOM levels down, at any recursion depth — ADR-0143). That cascade-through is exactly what the Figma
+     card wants too — a step row ALSO reads "Task Step 02 · What went wrong  6s" on one line — so it is
+     kept, not fought. Only a leaf with NO grouped ancestor at all (never nested under any `:has([data-role=
+     'nested'])` item) keeps the original, unrelated two-row layout untouched.
+
+     Component-review correction: the FIRST cut of this rule repointed the cells (`description`/`timestamp`)
+     onto the new 4-column template via a plain descendant selector, but left `grid-template-columns` itself
+     scoped to ONLY the group root — so every nested "Task Step" row still laid out its CELLS against the
+     old 3-column template (a stray 1fr on the label column, the timestamp landing in an uncounted implicit
+     4th track). `grid-template-columns` must reach the SAME descendant set the cell placements do. */
+  :scope:has([data-role='nested']),
+  :scope:has([data-role='nested']) ui-timeline-item {
     grid-template-columns: var(--ui-timeline-item-gutter) auto 1fr auto;
   }
   :scope:has([data-role='nested']) [data-role='description'] {
     grid-column: 3;
     grid-row: 1;
-    display: flex;
-    align-items: baseline;
-    gap: var(--ui-timeline-item-column-gap);
     min-inline-size: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: ellipsis; /* NOT flex — text-overflow only clips reliably on a block container's own inline content, not an anonymous flex item */
     white-space: nowrap;
   }
   :scope:has([data-role='nested']) [data-role='description']::before {
-    content: '\00B7'; /* a middle-dot separator (the Metadata row's "Dot" glyph, Figma node 21:1403 et al.) */
+    content: '\00B7\0020'; /* a middle-dot separator + a spacer (the Metadata row's "Dot" glyph, Figma node 21:1403 et al.) — plain inline content, so it ellipses together with the text rather than as a separate flex item */
   }
   :scope:has([data-role='nested']) [data-role='timestamp'] {
     grid-column: 4;
   }
+  /* `detail`/`text` span columns 2 THROUGH THE END (`-1`), not the base layout's literal `2 / 4` — under
+     the group's 4-column template, `4` is the timestamp column, one short of the true last column. `-1`
+     stays correct regardless of column count instead of hard-coding a track index a sibling rule changes. */
+  :scope:has([data-role='nested']) [data-part='detail'],
+  :scope:has([data-role='nested']) [data-role='text'] {
+    grid-column: 2 / -1;
+  }
   /* the composed detail toggle, contextually compacted (the disclosure's OWN declared --ui-disclosure-*
      custom properties — the sanctioned override surface, never its internal [data-part] rendering) — a
-     full control-height row reads as a stray, oversized affordance below a now-single-line header. */
-  :scope:has([data-role='nested']) > [data-part='detail'] {
+     full control-height row reads as a stray, oversized affordance below a now-single-line header. Reaches
+     every nested item's OWN detail too (no `>` — consistent with the cascade-through above: a "Task Step"
+     row's own continuation disclosure, if it has one, compacts the same way its ancestor group's does). */
+  :scope:has([data-role='nested']) [data-part='detail'] {
     /* NOT `inherit` — an explicit `inherit` on a custom property re-triggers inheritance lookup instead of
        reading the ambient computed value; since ui-timeline-item never declares --ui-disclosure-font, that
        lookup dead-ends guaranteed-invalid, which cascades into --ui-disclosure-glyph (chevron sizing) also

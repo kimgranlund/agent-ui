@@ -87,10 +87,12 @@ const STATUS_GLYPH = { done: 'check', error: 'x', warning: 'warning' } as const 
 
 // A GROUP item's OWN glyph set (an item hosting a nested sub-timeline, `#nested` — ADR-0146 F5) — the
 // Figma "Claude Code Gateway" reasoning-chain card (node 21:1641-1643): a card-level marker reads as a
-// distinct, prominent status glyph (a spinning ring while working, a circled check when done, the SAME
-// triangle-exclamation `warning` glyph for both `error` and `warning` — the card evidences a problem, not
-// which flavor), never the small plain dot/bare-check a LEAF step's marker uses.
-const GROUP_STATUS_GLYPH = { active: 'circle-notch', done: 'check-circle', error: 'warning', warning: 'warning' } as const satisfies Partial<
+// distinct, prominent status glyph (a spinning ring while working, a circled check when done, a circled
+// X on error), never the small plain dot/bare-check/cross a LEAF step's marker uses. `error` gets its OWN
+// `x-circle` glyph, NOT `warning`'s triangle reused (component-review finding, ADR-0057): the two states
+// must stay SHAPE-distinct, not ink-hue-distinct only, the same law the leaf glyph set already honors —
+// reusing `warning`'s shape for `error` at the group level would make them distinguishable by colour alone.
+const GROUP_STATUS_GLYPH = { active: 'circle-notch', done: 'check-circle', error: 'x-circle', warning: 'warning' } as const satisfies Partial<
   Record<(typeof STATUS)[number], IconName>
 >
 
