@@ -256,3 +256,47 @@ true home, SPEC-R6's proposed codification; A-before-B named a delivery-priority
 parallelism deliberate) — all applied, coverage re-run clean. NOTE: minted as ADR-0146, not 0144 —
 0144/0145 were claimed same-day by TKT-0093/TKT-0092's intakes (numbering race caught at the
 pre-push fetch, renumbered before commit).
+
+**2026-07-18 — BUILD (partial; status stays `open`). Slice A + Slice B shipped; the grouping leg
+(n4/n6/n5-group) DEFERRED with a concrete escalation.** Two commits on the worktree branch:
+- **Slice A (component/UI + live-at-ingest)** — `@agent-ui/icons` gains a `warning` glyph (a Phosphor
+  triangle-exclamation, vendored through `scripts/vendor-phosphor.mjs`, count 23→24); `ui-timeline-item`
+  gains the `warning` status member (F7) — its own distinct shape-coded glyph, status ink, forced-colors
+  legibility (jsdom + browser); `ui-status-stream` gains the opt-in `header` prop (F8) — a sticky
+  chrome row reading **working from t=0** (the blank-bubble ROOT fix), plus the pure `escalateStatus`
+  worst-child-wins reduce over the closed F6 ladder (`error>warning>active>pending>done`) applied at the
+  STREAM level, and a `fail()` method forcing the header to error; `ui-conversation` narrates
+  **live-at-ingest** (the post-hoc `narrateCategories` replay + `NARRATION_STEP_MS` DELETED, grep-zero),
+  opts its strip into the header, and `AgentTurnHandle` widens with `progress(ev)` routing `TurnProgress`
+  through a CLOSED code-owned stage-label table (F2 honesty guard — unknown stage renders nothing).
+- **Slice B (the wire)** — `AgentProvider.onEvent(ProviderEvent)` additive seam; the Anthropic adapter
+  maps its previously-dropped lifecycle/thinking frames onto it (text accumulation byte-identical, no SDK
+  import); `produce()` interleaves `{"a2uiMeta":{"progress":{stage}}}` meta-lines AS THEY HAPPEN
+  (sent→started→reasoning→content→validating→retry(n)→done) strictly ahead of content, validate-then-stream
+  (SPEC-R5) preserved, `progressDetail`='stages' default keeps thinking text off the wire (F3). NOTE — a
+  build refinement the ADR's "always interleave" wording did not spell out: progress emission is **opt-in**
+  (`ProduceOptions.progress`, default off) so every predating deterministic gate/consumer stays
+  byte-identical (the decomp's own "note-only/halt byte-unchanged" requirement) — the dev proxy + live
+  consumers opt in. Recorded transport replays authored `progress` (demo turns 1-2 author it → the keyless
+  demo shows the feature); consumer loops (a2ui-chat, agent-admin/admin-live-runner) route `meta.progress`
+  → `handle.progress()`; a2ui-live (canvas, no strip) filters it; the dev proxy needs no structural change.
+- **DEFERRED — grouping (n4, the group-level part of n5, n6):** F5 requires the live stream to *"lazily
+  mount a nested `<ui-timeline>` into the parent item's `[data-role="nested"]` slot"*, but TKT-0091's
+  now-landed nested slot adopts **connect-time-only** (idempotent `#ensureAnatomy`, no host-level heal
+  observer for a late-appended `[data-role="nested"]` child), and ADR-0143 n16 explicitly ruled **no new
+  public method/prop** on `ui-timeline-item`. So there is no seam for the live host to mount a nested
+  timeline into an ALREADY-CONNECTED parent item — a genuine gap between two ratified ADRs that F5 did not
+  anticipate. **ESCALATION (for the planner):** add a small additive late-mount seam to `ui-timeline-item`
+  (e.g. a public `mountNested(timeline)` reusing `#ensureAnatomy`'s disclosure-composition — the exact
+  "compose the slot for the live host" F5 intends, a deliberate widening ADR-0143 declined but F5's dynamic
+  case needs), OR amend F5 to the stream-side parent-recreation approach (no timeline-item change, at the
+  cost of parent node identity). No consumer uses grouping yet, so this defers zero user-facing behaviour.
+- **Gates:** `npm run check` GREEN (tsc + site + tools). `npx vitest run` — 6432/6434 green; the 2
+  failures are `light-dark-minify` + `theme-provider-build-fixture`, BOTH the SAME broken worktree `vite
+  build` (a multi-page asset-resolution RACE — the failing chunk varies run-to-run: `layout-overview`/
+  `a2ui-form`/`adr-index`, none touched here — an ENV issue, not this build; verify/regenerate on a clean
+  build). `npx vitest run --config vitest.browser.config.ts` (timeline-item + status-stream) GREEN (56).
+  `llms-full.txt` + the theme CSS fixture regenerated (CSS content captured — `ui-status-stream-header`
+  present). **Independent code-review NOT run: the Agent/Task tool to dispatch `orchestration:code-reviewer`
+  is unavailable in the builder's toolset — MUST be run by the coordinator before this closes.** Status
+  stays `open` (partial build: grouping deferred + review pending).
