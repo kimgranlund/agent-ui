@@ -9,8 +9,7 @@
 // bubble-resume path hard-freezes the page main thread within ~1s in BOTH engines (bisected: click
 // dispatch alone passes; note-only client turns pass; a same-type updateComponents line ingests — with
 // an "<ui-surface-host>: .ingest() called before connect" no-op warning — and the page then livelocks;
-// even setTimeout stops firing). Filed with full bisection evidence — see the GH bug issue referenced
-// in the skipped leg below; the follow-through assertion lands when the freeze is fixed.
+// even setTimeout stops firing). Filed with full bisection evidence as GH #63; the follow-through assertion lands when the freeze is fixed.
 import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
@@ -146,6 +145,6 @@ describe('ui-agent-admin — GH #42: a REAL canvas click drives the next surface
   // follow-through read after a client-turn line ingest livelocks the page (document-wide reads stop
   // returning; setTimeout stops firing) — the update is ALSO dropped with an ingest-before-connect
   // no-op warning, so the TKT-0079 same-bubble assertion cannot pass until the resume-path ingest is
-  // fixed. Un-skip when the filed bug closes.
-  it.skip('FOLLOW-THROUGH (blocked): the client update renders into the RESUMED bubble (TKT-0079)', () => {})
+  // fixed. Un-skip when GH #63 closes.
+  it.skip('FOLLOW-THROUGH (blocked by GH #63): the client update renders into the RESUMED bubble (TKT-0079)', () => {})
 })
