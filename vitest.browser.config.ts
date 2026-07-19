@@ -14,6 +14,19 @@ import { playwright } from '@vitest/browser-playwright'
 // node_modules and Vite resolves the bare `@agent-ui/*` specifiers (incl. the `./components` + CSS
 // subpaths, and the barrels' inner `@import '@agent-ui/shared/...'`) through their package `exports` map.
 // vitest 4.1 takes the provider as a factory from `@vitest/browser-playwright` (no longer a string).
+//
+// HEAP: the full-suite `npm run test:browser` runs the MAIN vitest process as the single node-side
+// orchestrator for all three projects × both engines (~200 file×engine runs). Browser test bodies run in
+// the Playwright-driven engines (separate OS processes), but this one node process holds the whole Vite
+// module graph (framework + a2ui + site, transformed and cached) PLUS every collected task tree / result /
+// error for the run — a fixed footprint bounded by suite size, ~4.3 GB, that accumulates and only frees at
+// the end. Node's default old-space ceiling is ~4 GB, so the heap crossed it during end-of-run result
+// aggregation and the process died with `FATAL ERROR: Ineffective mark-compacts near heap limit` (exit 134),
+// intermittently, depending on scheduling (issue #22). The `test:browser` npm script therefore prefixes
+// `NODE_OPTIONS=--max-old-space-size=8192` (8 GB, ~2× the fixed footprint, well under the dev/CI RAM budget).
+// This is the whole node-side accumulation, NOT per-browser-worker concurrency, so a raised ceiling — not
+// sharding or fewer workers — is the root-cause fix. If the suite grows enough to approach 8 GB again, bump
+// that number (or shard the projects into sequential invocations); do not paper over it with test timeouts.
 
 export default defineConfig({
   test: {
