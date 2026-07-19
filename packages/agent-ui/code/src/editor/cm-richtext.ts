@@ -203,7 +203,12 @@ function linkAt(state: EditorState, pos: number): string | null {
 // (code-review finding) — a plain click falls through to CM either way (cursor placement stays primary,
 // editing is the whole story, ADR-0147 cl.3).
 const isMac = typeof navigator !== 'undefined' && /mac/i.test(navigator.platform || navigator.userAgent)
-function isOpenModifier(event: MouseEvent): boolean {
+/** Exported for the jsdom platform-gate regression test ONLY (`cm-richtext.test.ts`) — `isMac` is computed
+ *  ONCE at module load, so the test re-imports this module fresh (`vi.resetModules()`) after stubbing
+ *  `navigator` to exercise both branches. Nothing else imports this — `confinement.test.ts`'s lazy-pair
+ *  invariant (only `cm-editor.ts` may statically import this module) is unaffected: `.test.ts` files are
+ *  excluded from that walk by construction. */
+export function isOpenModifier(event: MouseEvent): boolean {
   if (event.metaKey) return true
   return event.ctrlKey && !isMac
 }

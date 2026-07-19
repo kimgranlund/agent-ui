@@ -1,6 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
 import type { UICodeEditorElement } from './editor.ts'
+// The fleet's own link-opening policy constants (code-review finding 2 — cm-richtext.ts now calls
+// `window.open(allowed, LINK_TARGET, LINK_REL)` instead of the old hardcoded `'_blank'`/`'noopener'`
+// strings). Imported here so the test asserts against the SAME constants the fix imports, not a
+// coincidentally-matching literal.
+import { LINK_TARGET, LINK_REL } from '@agent-ui/components/controls/text'
 
 /** Minimal CDP surface (the button-states.browser.test.ts precedent) — `cdp()`'s public type is empty; the
  *  playwright provider gives `.send` at runtime. Chromium-only (WebKit exposes no CDP forced-colors emulation). */
@@ -218,6 +223,31 @@ describe('ui-code-editor — M1/M2/M3 handoff + event-contract fixes (both engin
     await expect.poll(() => hostInputs, { timeout: 2000 }).toBe(1)
     expect(leaked, 'a raw CodeMirror contentDOM input leaked through the host — two events per keystroke (M3)').toBe(0)
   })
+
+  it('M4: `disabled` set DURING the async CM load window still lands — CM mounts NOT editable (code-review finding 4)', async () => {
+    // The exact regression shape M1 already proved for `value`: mount, then mutate a prop BEFORE CM has
+    // finished its lazy load/mount, so the disabled effect's `this.#cm?.setEditable(...)` call is a no-op
+    // (optional chaining, `#cm` still null) — and nothing re-fires it later since `disabled` doesn't
+    // necessarily change again. The post-mount re-sync (editor.ts, "mirroring the value-side m7/M1a
+    // re-sync") must push the CURRENT state in once the handoff completes.
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    field.disabled = true // toggled BEFORE CM mounts — must never be lost
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    expect(cmContentOf(field)?.getAttribute('contenteditable'), 'a disabled-during-load editor must mount NOT editable (M4a)').toBe('false')
+  })
+
+  it('M4: `readonly` set DURING the async CM load window still lands — CM mounts NOT editable (code-review finding 4)', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    field.readonly = true // toggled BEFORE CM mounts — must never be lost
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    expect(cmContentOf(field)?.getAttribute('contenteditable'), 'a readonly-during-load editor must mount NOT editable (M4b)').toBe('false')
+  })
+
+  it('M4: negative control — an editor left alone during load mounts fully editable (the fix does not over-apply)', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    expect(cmContentOf(field)?.getAttribute('contenteditable')).toBe('true')
+  })
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -381,7 +411,7 @@ describe('ui-code-editor — reveal-near-cursor (ADR-0147 n6, both engines)', ()
 })
 
 describe('ui-code-editor — link activation (ADR-0147 n7, both engines)', () => {
-  it('Cmd/Ctrl+click on a decorated link opens its URL (noopener); a plain click does NOT open', async () => {
+  it('Cmd/Ctrl+click on a decorated link opens via safeHref, with LINK_TARGET/LINK_REL exactly (code-review finding 2); a plain click does NOT open', async () => {
     const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
     await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
     field.value = '[go](https://example.com/test) tail'
@@ -402,7 +432,10 @@ describe('ui-code-editor — link activation (ADR-0147 n7, both engines)', () =>
       )
       expect(opened, 'the modifier-click must open the URL').toHaveLength(1)
       expect(opened[0][0]).toBe('https://example.com/test')
-      expect(opened[0][2]).toContain('noopener')
+      // The fleet's shared constants (@agent-ui/components/controls/text) — NOT the old hardcoded
+      // '_blank'/'noopener' literals cm-richtext.ts used before the safeHref migration.
+      expect(opened[0][1], 'window.open must be called with the shared LINK_TARGET constant').toBe(LINK_TARGET)
+      expect(opened[0][2], 'window.open must be called with the shared LINK_REL constant (noopener noreferrer)').toBe(LINK_REL)
 
       // a plain click does NOT open the URL — CM's own mousedown handling may still preventDefault (its normal
       // click-to-place-caret bookkeeping, unrelated to our link handler, which itself returns false/no-op for
@@ -415,10 +448,16 @@ describe('ui-code-editor — link activation (ADR-0147 n7, both engines)', () =>
     }
   })
 
-  it('refuses a javascript: scheme link (sanitize-by-construction, R2)', async () => {
+  // Old behavior baseline (pre-migration `isSafeUrl`): only http(s)/mailto/relative opened, everything else
+  // was refused. safeHref (ADR-0114) must refuse the SAME dangerous schemes — this is the parity proof for
+  // code-review finding 2's safeHref migration, not just a fresh assertion of the new code's own claims.
+  it.each([
+    ['javascript:alert(1)', 'javascript:'],
+    ['data:text/html,<script>alert(1)</script>', 'data:'],
+  ])('refuses a %s scheme link — parity with the old isSafeUrl refusal behavior (R2)', async (url) => {
     const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
     await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
-    field.value = '[bad](javascript:alert(1)) tail'
+    field.value = `[bad](${url}) tail`
     await expect.poll(() => field.querySelector('.rt-link') !== null, { timeout: 2000 }).toBe(true)
 
     let opened = 0
@@ -433,7 +472,7 @@ describe('ui-code-editor — link activation (ADR-0147 n7, both engines)', () =>
       link.dispatchEvent(
         new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: rect.x + 2, clientY: rect.y + 2, metaKey: true, ctrlKey: true }),
       )
-      expect(opened, 'a javascript: URL must never open').toBe(0)
+      expect(opened, `a ${url} URL must never open`).toBe(0)
     } finally {
       window.open = original
     }
@@ -450,6 +489,9 @@ describe('ui-code-editor — the built-in mode toggle (ADR-0147 n8, both engines
     expect(toggle.getAttribute('role')).toBe('button')
     expect(toggle.getAttribute('tabindex')).toBe('0')
     expect(toggle.getAttribute('aria-pressed')).toBe('false')
+    // The dynamic, state-aware aria-label (code-review finding 5 — supersedes the old static "Rendered
+    // markdown view"): state-aware IMMEDIATELY on creation, not just after a later sync.
+    expect(toggle.getAttribute('aria-label'), 'the toggle must announce what activating it will DO, from creation').toBe('Show rendered markdown')
 
     let toggles = 0
     field.addEventListener('toggle', () => toggles++)
@@ -457,11 +499,13 @@ describe('ui-code-editor — the built-in mode toggle (ADR-0147 n8, both engines
     await userEvent.click(toggle)
     expect(field.mode).toBe('richtext')
     expect(toggle.getAttribute('aria-pressed')).toBe('true')
+    expect(toggle.getAttribute('aria-label'), 'the label flips once richtext is active').toBe('Show markdown source')
     expect(toggles).toBe(1)
 
     toggle.focus()
     await userEvent.keyboard('{Enter}')
     expect(field.mode).toBe('source')
+    expect(toggle.getAttribute('aria-label')).toBe('Show rendered markdown')
     expect(toggles).toBe(2)
 
     toggle.focus()
@@ -488,6 +532,33 @@ describe('ui-code-editor — the built-in mode toggle (ADR-0147 n8, both engines
     field.disabled = true
     await expect.poll(() => toggle().hasAttribute('tabindex'), { timeout: 1000 }).toBe(false)
     expect(toggle().getAttribute('aria-disabled')).toBe('true')
+  })
+
+  it('a key-repeat (OS auto-repeat) keydown does NOT flip mode or emit toggle; a real non-repeat keydown still does (code-review finding 3)', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 2000 }).toBe(true)
+    const toggle = field.querySelector('[data-part="mode-toggle"]') as HTMLElement
+
+    let toggles = 0
+    field.addEventListener('toggle', () => toggles++)
+
+    // Holding Enter fires many keydowns with `repeat: true` per physical press — none of them may toggle.
+    toggle.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, repeat: true }))
+    toggle.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, repeat: true }))
+    toggle.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true, repeat: true }))
+    await expect.poll(() => field.mode, { timeout: 1000 }).toBe('source')
+    expect(toggles, 'key-repeat keydowns must never flip mode or emit toggle').toBe(0)
+
+    // Negative control: a genuine (non-repeat) keydown still toggles — the guard targets ONLY the
+    // auto-repeat flag, it does not silently break the real Enter/Space activation path.
+    toggle.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, repeat: false }))
+    await expect.poll(() => field.mode, { timeout: 1000 }).toBe('richtext')
+    await expect.poll(() => toggles, { timeout: 1000 }).toBe(1)
+
+    toggle.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true, repeat: false }))
+    await expect.poll(() => field.mode, { timeout: 1000 }).toBe('source')
+    await expect.poll(() => toggles, { timeout: 1000 }).toBe(2)
   })
 })
 
