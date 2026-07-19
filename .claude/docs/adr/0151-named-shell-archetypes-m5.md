@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-18 |
 > | **Proposed by** | host session (the `*-shell` patterns intake — Kim's ask 2026-07-18; scope pinned at the intake question round: a NAMED SHELL FAMILY, not app-shell hardening and not docs-only patterns) |
-> | **Ratified by** | *(pending — F1/F3 below await Kim's pass; F2 ANSWERED by Kim at the intake question round, 2026-07-18: THREE archetypes)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-07-19, via the [`ratify ADR-0151` utterance](https://github.com/kimgranlund/agent-ui/pull/45#issuecomment-5015949775) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | [`../prd/agent-app-surfaces.prd.md`](../prd/agent-app-surfaces.prd.md) → v1.3 (additive: PRD-G9 + milestone M5 + one scope row; PRD-D1–D6 and the M1–M4 targets untouched — the ADR-0120 amendment discipline applied a second time) |
 > | **Supersedes / Superseded by** | (none) — relates [ADR-0120](./0120-app-surfaces-m4-panes-settings.md) (the "chrome extends agent-app-surfaces" precedent this follows, incl. its F2 shipped-composition-over-taught-pattern ruling) · [ADR-0082](./0082-app-shell-per-instance-isolation.md)/[ADR-0083](./0083-app-shell-region-role-decouple.md)/[ADR-0084](./0084-app-shell-narrow-reflow-collapse.md) (the frame contract the archetypes compose) · [ADR-0129](./0129-app-surfaces-m2-composition-and-transport-boundary.md) (the M2 surfaces the chat archetype docks) · [ADR-0130](./0130-nav-rail-family-unification.md) (the nav-rail family whose mode-1 consumer IS the workspace archetype's extraction source) · [ADR-0132](./0132-agent-admin-instructions-capabilities-architecture.md) (`ui-agent-admin`, the chat archetype's third in-repo instance) · [ADR-0115](./0115-spa-router-v1-scope.md) (router stays app-invisible — archetype navigation binding is consumer wiring) |
 
