@@ -93,6 +93,9 @@ overflowTrigger.variant = 'ghost'
 overflowTrigger.size = 'sm'
 overflowTrigger.textContent = '…'
 overflowTrigger.title = 'Page actions'
+// The glyph-only trigger needs a REAL accessible name — title never reaches the accessible name
+// (PR #54 review finding; the button.ts glyph-trigger convention).
+overflowTrigger.setAttribute('aria-label', 'Page actions')
 const resetItem = document.createElement('div')
 resetItem.dataset.value = 'reset-persona'
 resetItem.textContent = 'Reset persona'

@@ -37,7 +37,13 @@ body {
 }
 
 .canvas-header-name {
-  flex: 0 0 auto; /* the name never shrinks — the tagline is the yielding zone */
+  /* Shrinks ONLY as the last resort (the tagline's flex-shrink:999 collapses first) — but it MUST be
+     able to: the old strip degraded via overflow-x scroll, and a non-shrinking name + two triggers can
+     overflow a very narrow viewport with no fallback at all (PR #54 review finding). */
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: var(--md-sys-typescale-title-medium-size);
   font-weight: var(--md-sys-typescale-title-medium-weight);
   line-height: var(--md-sys-typescale-title-medium-line-height);
@@ -48,8 +54,9 @@ body {
 .canvas-header-tagline {
   /* min-inline-size:0 defeats the flex min-width:auto floor (the classic flexbox-ellipsis trap — a flex
      item refuses to shrink below max-content without it, and the 70-90ch taglines would push the menu
-     triggers out of the header instead of truncating; review finding, PR #54). */
-  flex: 1 1 auto;
+     triggers out of the header instead of truncating; review finding, PR #54). flex-shrink:999 makes the
+     tagline the FIRST yielding zone — the name ellipsizes only after the tagline is fully collapsed. */
+  flex: 1 999 auto;
   min-inline-size: 0;
   font-size: var(--md-sys-typescale-body-small-size);
   line-height: var(--md-sys-typescale-body-small-line-height);
