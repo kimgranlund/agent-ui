@@ -191,6 +191,68 @@ describe('ui-timeline-item — the marker glyph (icon prop wins over status; don
   })
 })
 
+// ── the GROUP marker glyph — GROUP_STATUS_GLYPH is a DISTINCT set from the leaf's STATUS_GLYPH, keyed off
+// `#nested` (ADR-0146 F5), and the shared `data-glyph` stamp is what CSS keys the group-active spin off of
+// (code-review coverage gap: this logic shipped with zero tests) ─────────────────────────────────────────
+
+describe('ui-timeline-item — the GROUP marker glyph (ensureNestedSlot sets #nested; GROUP_STATUS_GLYPH is distinct from the leaf set)', () => {
+  const glyphOf = (marker: HTMLElement): string | null => marker.querySelector('svg[data-role="marker"]')?.getAttribute('data-glyph') ?? null
+
+  it('a LEAF item (never nested) resolves through STATUS_GLYPH — done/error/warning keep their bare leaf glyphs', async () => {
+    const { el, marker } = makeItem()
+    el.status = 'done'
+    await whenFlushed()
+    expect(glyphOf(marker)).toBe('check')
+
+    el.status = 'error'
+    await whenFlushed()
+    expect(glyphOf(marker)).toBe('x')
+  })
+
+  it('ensureNestedSlot() re-paints the marker SYNCHRONOUSLY through GROUP_STATUS_GLYPH — done/error/active each get their OWN distinct group glyph, never the leaf set', () => {
+    const { el, marker } = makeItem()
+    el.status = 'done'
+    el.ensureNestedSlot(() => document.createElement('ui-timeline')) // no `await whenFlushed()` — the repaint is synchronous
+    expect(glyphOf(marker), 'a group parent must NOT reuse the leaf check glyph').toBe('check-circle')
+    el.remove()
+  })
+
+  it("error and warning stay SHAPE-distinct at the group level too (component-review's own fix: error must NOT reuse warning's triangle)", () => {
+    const { el: errorEl, marker: errorMarker } = makeItem()
+    errorEl.status = 'error'
+    errorEl.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    expect(glyphOf(errorMarker)).toBe('x-circle')
+
+    const { el: warnEl, marker: warnMarker } = makeItem()
+    warnEl.status = 'warning'
+    warnEl.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    expect(glyphOf(warnMarker), 'warning keeps its own triangle, distinct from error\'s x-circle').toBe('warning')
+
+    expect(glyphOf(errorMarker)).not.toBe(glyphOf(warnMarker))
+    errorEl.remove()
+    warnEl.remove()
+  })
+
+  it('status="active" on a group parent requests circle-notch (the CSS spin-animation hook, [data-glyph="circle-notch"])', () => {
+    const { el, marker } = makeItem()
+    el.status = 'active'
+    el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    expect(glyphOf(marker)).toBe('circle-notch')
+    el.remove()
+  })
+
+  it('a pre-existing [data-role="nested"] child at connect ALSO drives GROUP_STATUS_GLYPH (not just the lazy ensureNestedSlot path)', async () => {
+    const el = document.createElement('ui-timeline-item') as UITimelineItemElement
+    el.status = 'done'
+    el.innerHTML = '<ui-timeline data-role="nested"></ui-timeline>'
+    document.body.append(el)
+    await whenFlushed()
+    const marker = el.querySelector('[data-part="marker"]') as HTMLElement
+    expect(glyphOf(marker)).toBe('check-circle')
+    el.remove()
+  })
+})
+
 // ── the collapsible detail — ui-disclosure reuse, toggle re-emit, one nesting level ─────────────────────
 
 describe('ui-timeline-item — the collapsible detail (ui-disclosure composition, ADR-0122 F6)', () => {

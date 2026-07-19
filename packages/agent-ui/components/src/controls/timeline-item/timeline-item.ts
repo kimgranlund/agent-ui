@@ -342,14 +342,24 @@ export class UITimelineItemElement extends UIElement {
    *  `error` get a built-in glyph; everything else clears to let CSS `::before`/`::after` paint the
    *  dot/ring/pulse (SPEC-R4). Every injected glyph is tagged `data-role="marker"` so ONE CSS suppression
    *  rule (`:has([data-role="marker"])`) fires uniformly for consumer/icon/status-glyph markers alike. */
+  /** Inject `name` as the marker glyph, tagged the way BOTH resolution paths below need it (`data-role`
+   *  for the shared plain-dot suppression rule, `data-glyph` for the CSS spin-animation hook) — a single
+   *  paint site so the icon-prop path and the status/group path can never silently diverge on how an
+   *  injected glyph is tagged (code-review finding: the two branches had drifted into a hand-duplicated
+   *  4-line block each, already edited in lockstep once for `data-glyph`). */
+  #paintMarkerGlyph(name: IconName): void {
+    const marker = this.#marker as HTMLElement
+    const svg = resolveIcon(name)
+    svg.setAttribute('data-role', 'marker')
+    svg.setAttribute('data-glyph', name)
+    marker.replaceChildren(svg)
+  }
+
   #renderMarkerGlyph(): void {
     const marker = this.#marker
     if (!marker || this.#consumerMarker) return
     if (this.icon !== '') {
-      const svg = resolveIcon(this.icon as IconName)
-      svg.setAttribute('data-role', 'marker')
-      svg.setAttribute('data-glyph', this.icon)
-      marker.replaceChildren(svg)
+      this.#paintMarkerGlyph(this.icon as IconName)
       return
     }
     // A group parent (`#nested` set — ADR-0146 F5) reads its OWN glyph set (GROUP_STATUS_GLYPH); a leaf
@@ -357,10 +367,7 @@ export class UITimelineItemElement extends UIElement {
     const glyphMap = this.#nested ? GROUP_STATUS_GLYPH : STATUS_GLYPH
     const glyph = (glyphMap as Record<string, IconName | undefined>)[this.status]
     if (glyph !== undefined) {
-      const svg = resolveIcon(glyph)
-      svg.setAttribute('data-role', 'marker')
-      svg.setAttribute('data-glyph', glyph)
-      marker.replaceChildren(svg)
+      this.#paintMarkerGlyph(glyph)
       return
     }
     marker.replaceChildren() // '' / pending / active(leaf) — pure CSS paints the dot/ring/pulse

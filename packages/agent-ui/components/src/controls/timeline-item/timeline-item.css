@@ -351,13 +351,6 @@
     grid-column: 3;
     grid-row: 2;
   }
-  /* elapsed-time readouts read as tabular mono figures (the Figma reasoning-chain card's "Label Mono" /
-     SF Mono treatment) — a telemetry/timestamp cell is machine-emitted data, not authored prose. */
-  :scope [data-role='timestamp'],
-  :scope [data-role='trailing'] {
-    font-family: var(--md-sys-typeface-mono);
-    font-variant-numeric: tabular-nums;
-  }
   /* empty cells collapse — no phantom gutter (SPEC-R3 AC1). */
   :scope > [data-role]:empty {
     display: none;
@@ -396,6 +389,23 @@
   }
   :scope:has([data-role='nested']) [data-role='timestamp'] {
     grid-column: 4;
+  }
+  /* `trailing` (the collapsed-summary preview, ADR-0143 F3) is always meant to stack directly under
+     `timestamp` — it kept the base layout's literal `grid-column: 3` even though the group override above
+     repoints `timestamp` to column 4, landing the preview under `description` instead (code-review finding).
+     `grid-row` is untouched (still row 2, the base rule) — only the column follows timestamp's move. */
+  :scope:has([data-role='nested']) [data-role='trailing'] {
+    grid-column: 4;
+  }
+  /* elapsed-time readouts read as tabular mono figures (the Figma reasoning-chain CARD's "Label Mono" /
+     SF Mono treatment) — a telemetry/timestamp cell is machine-emitted data, not authored prose. Scoped to
+     the group block deliberately (code-review finding): an earlier cut left this unconditional, so a plain
+     leaf item's own human-authored timestamp prose (e.g. timeline-demo.ts's "Apr 15, 2:30 PM") silently
+     rendered in monospace too — outside this PR's stated "grouped cards" scope. */
+  :scope:has([data-role='nested']) [data-role='timestamp'],
+  :scope:has([data-role='nested']) [data-role='trailing'] {
+    font-family: var(--md-sys-typeface-mono);
+    font-variant-numeric: tabular-nums;
   }
   /* `detail`/`text` span columns 2 THROUGH THE END (`-1`), not the base layout's literal `2 / 4` — under
      the group's 4-column template, `4` is the timestamp column, one short of the true last column. `-1`
