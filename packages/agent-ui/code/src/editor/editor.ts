@@ -498,9 +498,12 @@ export class UICodeEditorElement extends UIFormElement {
     toggle.addEventListener('keydown', (event) => {
       const key = (event as KeyboardEvent).key
       if (key !== 'Enter' && key !== ' ') return
-      // OS/browser key-auto-repeat fires many keydowns per physical press while a key is held — a real
-      // `<button>` (and the fleet's own pressActivation trait) only activates once per press; guard so
-      // holding Space/Enter doesn't flip mode (and fire `toggle`) repeatedly (code-review finding).
+      // OS/browser key-auto-repeat fires many keydowns per physical press while a key is held — a
+      // DELIBERATE divergence from native/fleet activation (a real `<button>` and the fleet's own
+      // pressActivation trait both re-fire on Enter auto-repeat too; this toggle is stateful, not a
+      // one-shot action, so repeated activation would visibly thrash `mode` back and forth while a key
+      // is held). Guard so holding Space/Enter doesn't flip mode (and fire `toggle`) repeatedly
+      // (code-review finding).
       if ((event as KeyboardEvent).repeat) return
       event.preventDefault() // Space's default is page-scroll; harmless to prevent on Enter too
       void this.#userToggleMode()
