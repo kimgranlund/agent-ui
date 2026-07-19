@@ -672,3 +672,21 @@ describe('ui-agent-admin — entry libraries commit through the real menu (GH #4
     expect(row.getBoundingClientRect().width, 'the menu closed after the commit').toBe(0)
   })
 })
+
+describe('ui-agent-admin — the Agent config panel is a CARD like the entry cards (design-mode ask, 2026-07-19)', () => {
+  it('the settings panel carries the entry-card chrome: real border, radius, surface — matching an entry card computed-for-computed', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    const panel = el.querySelector('ui-settings [data-part="panel"]') as HTMLElement
+    const entry = el.querySelector('[data-part="entry"]') as HTMLElement
+    expect(panel).not.toBeNull()
+    expect(entry, 'an entry card exists to match against (the prompt sections seed three)').not.toBeNull()
+    const p = getComputedStyle(panel)
+    const e = getComputedStyle(entry)
+    expect(p.borderTopWidth, 'a real border').toBe(e.borderTopWidth)
+    expect(p.borderTopColor, 'the same border role').toBe(e.borderTopColor)
+    expect(p.borderTopLeftRadius, 'the same card radius').toBe(e.borderTopLeftRadius)
+    expect(p.backgroundColor, 'the same card surface').toBe(e.backgroundColor)
+    expect(p.backgroundColor).not.toBe('rgba(0, 0, 0, 0)') // anti-vacuous: not transparent-matching-transparent
+  })
+})
