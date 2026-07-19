@@ -1,6 +1,6 @@
 # PRD — Agent-App Surfaces
 
-> Status: **accepted · v1.2 · Owner: agent-ui** — direction RATIFIED by Kim 2026-07-05 (all six forks PRD-D1–D6 accepted as recommended; §5). *(Marker corrected 2026-07-10: was `v1.1`; the changelog below already recorded the v1.2 fork-pass widening — a factual version-marker fix, no decision changed.)* Began life as a scope INTAKE (v0.1 proposed, 2026-07-05). (v1.1, 2026-07-10: **§2 gains PRD-G7 (panes) + PRD-G8 (settings surface), §7 gains milestone M4** at the design-system-surfaces intake ([TKT-0007](../tickets/tkt-0007-design-system-surfaces.md)) — Kim's intake ruling *"panes and a settings shell are chrome — extend agent-app-surfaces (M4)"*; scope + tier split in [ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md); the amendment is additive — PRD-D1–D6 and the M1–M3 targets are untouched — and doc-reviewed 2026-07-10. v1.2, 2026-07-10: Kim's ratification fork pass amended M4's scope — `ui-split` is MULTI-PANE in v1 (ADR-0120 F1, recommendation overruled) and the settings surface gains the schema-driven preferences FRAMEWORK (ADR-0120 F3, shell-only fence rejected); PRD-G7/G8 + §3 updated to match, D1–D6/M1–M3 still untouched.)
+> Status: **accepted · v1.3 · Owner: agent-ui** — direction RATIFIED by Kim 2026-07-05 (all six forks PRD-D1–D6 accepted as recommended; §5). *(Marker corrected 2026-07-10: was `v1.1`; the changelog below already recorded the v1.2 fork-pass widening — a factual version-marker fix, no decision changed.)* Began life as a scope INTAKE (v0.1 proposed, 2026-07-05). (v1.1, 2026-07-10: **§2 gains PRD-G7 (panes) + PRD-G8 (settings surface), §7 gains milestone M4** at the design-system-surfaces intake ([TKT-0007](../tickets/tkt-0007-design-system-surfaces.md)) — Kim's intake ruling *"panes and a settings shell are chrome — extend agent-app-surfaces (M4)"*; scope + tier split in [ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md); the amendment is additive — PRD-D1–D6 and the M1–M3 targets are untouched — and doc-reviewed 2026-07-10. v1.2, 2026-07-10: Kim's ratification fork pass amended M4's scope — `ui-split` is MULTI-PANE in v1 (ADR-0120 F1, recommendation overruled) and the settings surface gains the schema-driven preferences FRAMEWORK (ADR-0120 F3, shell-only fence rejected); PRD-G7/G8 + §3 updated to match, D1–D6/M1–M3 still untouched. v1.3, 2026-07-18: **§2 gains PRD-G9 (named shell archetypes) + §7 gains milestone M5** at the `*-shell` patterns intake — vehicle + proofs in [ADR-0150](../adr/0150-named-shell-archetypes-m5.md), **proposed** (F2, the v1 set, ANSWERED by Kim at the intake question round: THREE archetypes incl. the owner-spec'd super shell, GH #44; F1/F3 await his pass); the amendment is additive — PRD-D1–D6 and the M1–M4 targets untouched — doc-reviewed 2026-07-18, fixes applied + the F2 fold-in delta re-reviewed same day.)
 > Altitude: this document owns **why + what-should-exist** for the next tier. Behaviour contracts (SPEC) and implementation (LLD) are downstream. This is the ceiling-setting Plan artifact — no ADRs live here.
 > Grounding: [`../plan.md`](../plan.md) §5 (`static shadow` seam) · §12 (isolation boundary resolved light-DOM-for-now, with an app-shell family named as the revisit trigger) · [`../goals.md`](../goals.md) (foundation COMPLETE, G0–G9 + Control Suite + icon adapter + G8) · [`../archive/a2ui-expert-system/NEXT.md`](../archive/a2ui-expert-system/NEXT.md) (the A2UI layer + the `a2ui-live` demo) · [`../spec/a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) §5.3 (the renderer `mount` seam) · [`../../../CLAUDE.md`](../../../CLAUDE.md) (import-layering law, package structure).
 > Location note: filed under `.claude/docs/prd/` per the current authoring charter (ratified, PRD-D6); the A2UI family was unified onto this same singular `spec/`·`lld/` map (repo-alignment, 2026-07-12).
@@ -40,6 +40,7 @@ Stable IDs; priority tiers; metrics baselined at **0 / not-possible-today** (not
 | **PRD-G6** | must (cross-cutting) | Every surface meets the fleet DoD and preserves the layering law (no cycles) |
 | **PRD-G7** | should (M4, v1.1) | A developer arranges resizable/collapsible panes — master-detail, user-collapsed regions — without hand-building split mechanics |
 | **PRD-G8** | should (M4, v1.1) | A developer stands up a settings surface (sections nav + panels + narrow drill-in) without hand-building the shell |
+| **PRD-G9** | should (M5, v1.3 — proposed) | A developer stands up a whole named app shape — chat · workspace · the super shell — as one shipped composition, without re-deriving the region/surface assembly |
 
 **PRD-G1 — Compose an agent app, don't hand-build it (flagship).** A developer stands up a working agent app — the persistent chrome plus a place where the agent's generated content and conversation live — by composing tier primitives, with no one-off chrome.
 - *Metric*: (a) bespoke-chrome LOC in a reference agent app; (b) count of reusable app surfaces shipped as primitives.
@@ -105,6 +106,27 @@ imports `router`.
 - *Target*: the surface shipped in `@agent-ui/app`, composing the M1 shell + `ui-split` where apt.
 - *Timeframe*: **M4**.
 
+**PRD-G9 — Stand up a named app shape as one composition (M5, v1.3 — [ADR-0150](../adr/0150-named-shell-archetypes-m5.md), proposed).**
+A developer stands up a whole named app shape — the chat app (`[ conversation | canvas ]`), the
+workspace (nav rail + header + content pages), the maximal SUPER SHELL (the two-level recursive
+geometry, Kim's intake sketch) — as ONE behavior-only composition docking the tier's own surfaces,
+without re-deriving the region preset, narrow-reflow choreography, or surface wiring that today is
+hand-assembled per app. *(How — the `ui-{archetype}-shell` vehicle, the acceptance proofs, the shell
+GRAMMAR the super shell forces — is ADR-0150's direction layer: F2 (the v1 set) ANSWERED by Kim at
+intake 2026-07-18 (three archetypes), F1/F3 pending his pass; the M5 SPEC/LLD own the mechanism.)*
+- *Metric*: a chat app, a workspace, and a super-shell app are each assembled from ONE archetype
+  element + authored content, with 0 bespoke shell/layout CSS and 0 bespoke surface-wiring glue; the
+  two extraction sources re-host at net-negative bespoke-chrome LOC; the super-shell demo proves all
+  three breakpoint states cross-engine.
+- *Baseline*: the chat shape is hand-assembled ≥ 3× in-repo (`a2ui-live`, `a2ui-chat`,
+  `ui-agent-admin`'s internal layout); the workspace shape is the docs site's CSS-only placeholders
+  (`site/pages/_page.ts` SHELL NOTE); the super shell exists only as its owner-supplied spec (the
+  GH #44 sketch — no in-repo instance by construction).
+- *Target*: `ui-chat-shell` + `ui-workspace-shell` + `ui-super-shell` shipped in `@agent-ui/app`
+  (fleet DoD, cross-engine); `a2ui-live` and the docs-site shell re-hosted; the super-shell demo page
+  shipped.
+- *Timeframe*: **M5**.
+
 ## 3. Scope
 
 ### In scope
@@ -116,6 +138,11 @@ imports `router`.
   `collapse: "toggle"`), and the settings surface, composing a NEW components-tier `ui-split`
   primitive (the tier split is [ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md) clause 2 —
   the primitive is a layout control, not apex code). *(PRD-G7, PRD-G8)*
+- **(v1.3) The M5 named shell archetypes** — thin, behavior-only `ui-{archetype}-shell` compositions
+  (v1: chat + workspace, extraction-gated, + the owner-spec'd SUPER SHELL — Kim's F2 intake answer,
+  2026-07-18) docking the tier's own surfaces over the M1 frame; extraction stays the default gate
+  for future archetypes — vehicle + proofs in
+  [ADR-0150](../adr/0150-named-shell-archetypes-m5.md) (proposed, F1/F3 pending). *(PRD-G9)*
 
 ### Out of scope (with rationale)
 - **Specific production agent apps.** We ship primitives + one reference app; building real apps is unbounded downstream consumer work. — *primitives, not products.*
@@ -195,6 +222,14 @@ All six decisions are **ratified as recommended**. This table is now the decisio
   `collapse: "toggle"` · the settings surface **incl. the schema-driven preferences framework**
   (the SPEC may phase shell → framework within the wave). Additive: the PRD-G1 flagship metric stays
   measured at M3; M4 extends the tier, it does not move v1.0's goalposts. *(PRD-G7, PRD-G8.)*
+- **M5 — Named shell archetypes (v1.3, [ADR-0150](../adr/0150-named-shell-archetypes-m5.md) —
+  proposed; F2 answered at intake, F1/F3 pending).** `ui-chat-shell` + `ui-workspace-shell` +
+  `ui-super-shell`, thin behavior-only compositions of the M1 frame + the shipped surfaces, over the
+  shell GRAMMAR the SPEC designs once against the super shell (nesting, compound sides, the
+  collapse→toggle cascade); proofs = re-hosting `a2ui-live` (chat), the docs-site shell (workspace,
+  the `_page.ts` SHELL NOTE IOU), and the super-shell demo page (all three breakpoint states,
+  cross-engine). Additive: v1.0's flagship metric stays measured at M3; M5 extends the tier the same
+  way M4 did. *(PRD-G9.)*
 
 ## 8. Constraints & assumptions (as of 2026-07-05)
 
