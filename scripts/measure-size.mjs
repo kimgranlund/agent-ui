@@ -238,17 +238,24 @@ const appCssQuerySuffixPlugin = {
 // worst-case whole-barrel ceiling moves; per-subpath tree-shaking is unaffected — `@agent-ui/app/surface-host`
 // alone drags only itself + a2ui's real deps, never `ui-conversation`/`ui-settings`/`ui-nav-rail` (SPEC-R11
 // AC3). A future control riding this barrel re-bases again, measured, not guessed.
+// Issue #19: measured in the SAME two parts as ./editor below (entry vs lazy, `c.isEntry`) — `ui-agent-admin`
+// statically imports `@agent-ui/code/editor`, whose own CM-free entry chunk rides the app barrel eagerly,
+// but that import's dynamic `import('./cm-editor.ts')` split still lands as a REACHABLE, non-entry chunk in
+// this bundle's own output graph. Joining every chunk regardless of isEntry (the pre-fix behavior) folded
+// that ~171 KB gz lazy CodeMirror chunk into the app's marginal figure, even though it is NEVER in a main
+// bundle (ADR-0139 cl.8c/8d) — this app entry is exactly such a case. Only entry-chunk code counts toward
+// the gated marginal; the lazy total is reported informationally, matching ./editor's own convention.
 const APP_MARGINAL_BUDGET = 68 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
 await appBundle.close()
-const appCode = appOutput
-  .filter((c) => c.type === 'chunk')
-  .map((c) => c.code)
-  .join('')
-const appMin = Buffer.byteLength(appCode)
-const appGz = gzipSync(appCode, { level: 9 }).length
+const appChunks = appOutput.filter((c) => c.type === 'chunk')
+const appEntryCode = appChunks.filter((c) => c.isEntry).map((c) => c.code).join('')
+const appLazyCode = appChunks.filter((c) => !c.isEntry).map((c) => c.code).join('')
+const appMin = Buffer.byteLength(appEntryCode)
+const appGz = gzipSync(appEntryCode, { level: 9 }).length
+const appLazyGz = appLazyCode ? gzipSync(appLazyCode, { level: 9 }).length : 0
 const foundationGz = gzByLabel.get('@agent-ui/components . (reactive+dom barrel)')
 const appMarginal = appGz - foundationGz
 const appStatus = appMarginal <= APP_MARGINAL_BUDGET ? 'within' : 'OVER'
@@ -256,6 +263,11 @@ const appOver = appMarginal > APP_MARGINAL_BUDGET
 console.log(
   `\n@agent-ui/app . (app-shell + master-detail + settings + surface-host + conversation + nav-rail): marginal ${appMarginal} B gz — ${appStatus} budget (${APP_MARGINAL_BUDGET} B gz)   solo ${appGz} B gz (${appMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
 )
+if (appLazyGz > 0) {
+  console.log(
+    `@agent-ui/app — lazy chunk(s) reachable via a dynamic import (e.g. ui-agent-admin's CodeMirror editor, ADR-0139 cl.8c/8d), never in the main bundle: ${appLazyGz} B gz (informational, non-gating)`,
+  )
+}
 
 // ── @agent-ui/router (LLD-C9, SPEC-R7 AC4) — the SPA router family, ANOTHER package above components on
 // the DAG (`shared ← components ← {a2ui, router} ← app`). Same marginal semantics as the @agent-ui/app
