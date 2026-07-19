@@ -45,12 +45,17 @@ never restate their internals here.
   a documented expectation, not a hard boundary this skill was asked to enforce.
 - **The same law recurses above `0.1.0`.** `0.1.0` → `0.1.1` → … → `0.1.99` (patch-only) → `0.2.0` on
   the next significant release, and so on.
-- **Release history (2026-07-19):** `v0.0.1` was cut but never published (CI E403; tag retracted —
-  tag history = published history). `v0.0.2` published the launch-day UNSCOPED `agent-ui-*` names
-  (locally — the deleted-predecessor names required full user auth to re-create; CI tokens work from
-  the second version on). `v0.0.3` is the SCOPED debut: `@agent-ui-kit/*` with the `agent-ui-` prefix
-  dropped (Kim's ruling, same day); the unscoped `agent-ui-*@0.0.2` set stays on the registry,
-  deprecated with pointer messages to the scoped names — never publish to the unscoped names again.
+- **Release history (2026-07-19):** `v0.0.1` was cut but never published (CI E403 on a brand-new
+  package name — the security posture on the account requires full interactive/user auth for a
+  package's FIRST-EVER publish; a CI automation token only works from the second version of an
+  ALREADY-EXISTING package onward; tag retracted). `v0.0.2` published the launch-day UNSCOPED
+  `agent-ui-*` names, done locally under real user auth to clear that first-publish barrier. `v0.0.3`
+  is the SCOPED debut: `@agent-ui-kit/*` with the redundant `agent-ui-` prefix dropped (Kim's ruling,
+  same day) — since the scope IS the org, restating it in the name is redundant. The unscoped
+  `agent-ui-*@0.0.2` set was fully UNPUBLISHED the same day (not merely deprecated) — those 8 names
+  are gone from the registry entirely; never publish to them again. `v0.0.3` through `v0.0.5` (and
+  onward) all published cleanly via CI — the first-publish barrier only ever applied to a package's
+  very first version, so `@agent-ui-kit/*` normal CI releases work exactly as this procedure documents.
 
 ## The release procedure
 
@@ -76,7 +81,8 @@ never restate their internals here.
   … (the `agent-ui-kit` org owns the scope; the redundant `agent-ui-` prefix dropped with it — Kim,
   2026-07-19). This repo's internal `@agent-ui/*` names/imports stay completely untouched; the publish
   script transforms a COPY of each `package.json` (+ emitted specifiers) at publish time only. The
-  launch-day unscoped `agent-ui-*@0.0.2` set is deprecated-with-pointer, never republished.
+  launch-day unscoped `agent-ui-*@0.0.2` set was fully UNPUBLISHED the same day — those 8 names no
+  longer exist on the registry at all; never republish to them.
 - License: MIT (`LICENSE` at repo root) — Kim's decision, 2026-07-19.
 - `agent-ui-app` currently targets Vite/Rolldown-family bundlers only (`?url`/`?raw` import-query
   specifiers in `app-shell.ts`, documented in `publish-packages.mjs`'s own header — see there for the

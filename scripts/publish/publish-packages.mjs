@@ -8,8 +8,8 @@
 // tsconfig `paths`) — this script transforms a COPY of each package's package.json (published name, real
 // version, dependency versions resolved) into a scratch publish directory and publishes THAT. The public
 // install name (`@agent-ui-kit/components`) therefore differs from the internal import specifier
-// (`@agent-ui/components`). The launch-day unscoped `agent-ui-*@0.0.2` set remains on the registry,
-// deprecated with pointer messages to the scoped names.
+// (`@agent-ui/components`). The launch-day unscoped `agent-ui-*@0.0.2` set was fully UNPUBLISHED the
+// same day — those 8 names no longer exist on the registry; never publish to them again.
 //
 // WHY a build step: every package's `exports` map points straight at `.ts` source (this monorepo's own
 // Vite/Rolldown resolves that directly) — most external npm consumers can't import raw `.ts` from
