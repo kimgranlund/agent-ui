@@ -18,6 +18,8 @@ import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after
 import '@agent-ui/components/components' // [3] self-defining ui-* controls (registers ui-button on import)
 import '@agent-ui/app/nav-rail' // [3a] the shared ui-nav-rail family (@agent-ui/app) the site nav composes (ADR-0130, mode 1)
 import '@agent-ui/app/nav-rail.css' // [3a] its stylesheet — the rail anatomy + collapse="menu" disclosure, after the foundation
+import '@agent-ui/app/super-shell' // [3c] M5 (GH #84): the site chrome now RIDES the shell system — ui-super-shell owns the frame
+import '@agent-ui/app/super-shell.css' // [3c] its stylesheet (the 18px module ladder + per-side collapse)
 import '@agent-ui/icons/phosphor' // [3b] activate the Phosphor default pack (ADR-0065/0066): the controls above render their
 // affordances (select caret, text-field clear/reveal/steppers, calendar nav) through the app-owned icon pack — pack-agnostic
 // by design, so the SHELL that self-defines them must activate the default pack, else those glyphs resolve to an empty <svg>.
@@ -889,12 +891,40 @@ function mountCommandPaletteOnce(): void {
 // the ticket's own acceptance criteria names ("first selection injects the pack CSS once"). Shared by
 // `mountPage`/`mountFullBleedPage` so the provider-setup logic has exactly one home.
 function buildThemedShell(page: HTMLElement): UIThemeProviderElement {
-  const shell = document.createElement('ui-theme-provider') as UIThemeProviderElement
-  shell.className = 'app-shell'
-  applyScheme(shell, loadPersistedScheme())
-  void applyTheme(shell, loadPersistedTheme())
-  shell.append(buildNav(), buildContextHeader(shell), page, buildContextFooter())
-  return shell
+  const provider = document.createElement('ui-theme-provider') as UIThemeProviderElement
+  provider.className = 'app-shell'
+  applyScheme(provider, loadPersistedScheme())
+  void applyTheme(provider, loadPersistedTheme())
+  // M5 / GH #84 — the CSS-grid placeholder chrome retired: the frame is now a real `ui-super-shell`
+  // (shell-archetypes-m5.spec.md). Region builders are UNCHANGED; they just declare their slot —
+  // header full-width (the wireframe's own shape), the ui-nav-rail as the collapsible nav-pane, the
+  // page region as the canvas, the footer as permanent chrome. The provider stays the ROOT (tokens +
+  // the ui-nav-rail-collapse named container both live there, TKT-0035/ADR-0141 unchanged).
+  const shell = document.createElement('ui-super-shell') as HTMLElement & { collapsedLeft: boolean }
+  shell.className = 'site-shell'
+  // Narrow keeps the SHIPPED nav story (TKT-0035): the nav pane STACKS in flow and the rail's own
+  // collapse="menu" dropdown takes over — never the shell's hide/overlay arm (ADR-0084 stack mode).
+  shell.setAttribute('narrow-left', 'stack')
+  const header = buildContextHeader(provider)
+  header.setAttribute('data-slot', 'header')
+  const nav = buildNav()
+  nav.setAttribute('data-slot', 'nav-pane')
+  page.setAttribute('data-slot', 'content')
+  const footer = buildContextFooter()
+  footer.setAttribute('data-slot', 'footer')
+  shell.append(header, nav, page, footer)
+  // SPEC-R2d — the collapse choice persists across navigations (the "collapsible menus" ask): restore
+  // BEFORE first paint, persist on every flip (attribute observation — the reflected state IS the API).
+  try {
+    if (localStorage.getItem('agent-ui.site.nav-collapsed') === 'true') shell.collapsedLeft = true
+  } catch { /* storage unavailable — session-only state */ }
+  new MutationObserver(() => {
+    try {
+      localStorage.setItem('agent-ui.site.nav-collapsed', String(shell.hasAttribute('collapsed-left')))
+    } catch { /* ignore */ }
+  }).observe(shell, { attributes: true, attributeFilter: ['collapsed-left'] })
+  provider.append(shell)
+  return provider
 }
 
 // mountPage — stamp the app shell into `#app` (falling back to <body>) and hand back the page-content container.
