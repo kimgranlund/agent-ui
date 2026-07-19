@@ -84,11 +84,12 @@ describe('ui-code-editor — the CodeMirror path is OFF under jsdom (the editabl
 // ── upgrade + the typed prop surface ──────────────────────────────────────────
 
 describe('ui-code-editor — upgrade + typed prop surface', () => {
-  it('upgrades to the class with the 9 props at their defaults (no connect → no form-internals throw)', () => {
+  it('upgrades to the class with the 10 props at their defaults (no connect → no form-internals throw)', () => {
     const el = document.createElement('ui-code-editor') as UICodeEditorElement
     expect(el).toBeInstanceOf(UICodeEditorElement)
     expect(el.value).toBe('')
     expect(el.language).toBe('')
+    expect(el.mode).toBe('source')
     expect(el.label).toBe('')
     expect(el.placeholder).toBe('')
     expect(el.rows).toBe(4)
@@ -115,6 +116,120 @@ describe('ui-code-editor — upgrade + typed prop surface', () => {
     expect(el.getAttribute('language')).toBe('markdown')
     expect(el.hasAttribute('value')).toBe(false)
     expect(el.hasAttribute('placeholder')).toBe(false)
+    el.remove()
+  })
+})
+
+// ── ADR-0147 — the `mode` prop + the inert-fallback law (jsdom, n2/n8/n12) ─────
+
+describe('ui-code-editor — richtext `mode` (ADR-0147) — jsdom is BLIND to the CM path (n2/n8/n12)', () => {
+  it('mode defaults to "source" (the default is never explicitly SET, so it never reflects — the language precedent); an explicit set DOES reflect', async () => {
+    const { el } = makeField()
+    document.body.append(el)
+    await whenFlushed()
+    expect(el.mode).toBe('source')
+    expect(el.hasAttribute('mode')).toBe(false)
+
+    el.mode = 'richtext'
+    await whenFlushed()
+    expect(el.getAttribute('mode')).toBe('richtext')
+    el.remove()
+  })
+
+  it('an unknown mode value behaves as "source" (no CM to guard against, but the runtime check is `=== "richtext"`)', async () => {
+    const { el } = makeField()
+    el.setAttribute('mode', 'bogus')
+    document.body.append(el)
+    await whenFlushed()
+    expect(el.mode).toBe('bogus') // prop.string has no enum snap-back — the RUNTIME guard is the safety net
+    expect(cmOf(el)).toBeNull()
+    expect(editorOf(el)).not.toBeNull() // still the fully-working plain surface — nothing broke
+    el.remove()
+  })
+
+  it('the INERT-FALLBACK law: mode="richtext" under jsdom leaves the plain surface, value, and events byte-identical to mode="source"', async () => {
+    const source = (() => {
+      const { el } = makeField()
+      el.language = 'markdown'
+      el.mode = 'source'
+      document.body.append(el)
+      return el
+    })()
+    const richtext = (() => {
+      const { el } = makeField()
+      el.language = 'markdown'
+      el.mode = 'richtext'
+      document.body.append(el)
+      return el
+    })()
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0)) // give any (absent) async CM mount a full macrotask to appear
+
+    for (const el of [source, richtext]) {
+      expect(cmOf(el), 'CM must never mount under jsdom regardless of mode').toBeNull()
+      expect(el.querySelector('[data-part="mode-toggle"]'), 'the toggle never exists without CM').toBeNull()
+    }
+
+    // value / input / change timing — identical on both
+    for (const el of [source, richtext]) {
+      let inputs = 0
+      let changes = 0
+      el.addEventListener('input', () => inputs++)
+      el.addEventListener('change', () => changes++)
+      const editor = editorOf(el)
+      editor.dispatchEvent(new Event('focus'))
+      editor.textContent = 'hello'
+      editor.dispatchEvent(new Event('input', { bubbles: true }))
+      editor.dispatchEvent(new Event('blur'))
+      expect(el.value).toBe('hello')
+      expect(inputs).toBe(1)
+      expect(changes).toBe(1)
+    }
+
+    source.remove()
+    richtext.remove()
+  })
+
+  it('FACE participation (reset/restore/validity) is unaffected by mode="richtext" (jsdom leg, n12)', async () => {
+    const { el, calls } = makeField()
+    el.mode = 'richtext'
+    el.required = true
+    el.setAttribute('value', 'init')
+    document.body.append(el)
+    await whenFlushed()
+
+    // required + the CURRENT value 'init' is non-empty ⇒ valid; empty it out ⇒ invalid (mode doesn't change the rule)
+    expect(el.formValidityProbe().valid).toBe(true)
+    el.value = ''
+    expect(el.formValidityProbe().valid).toBe(false)
+    el.value = 'now valid'
+    expect(el.formValidityProbe().valid).toBe(true)
+    await whenFlushed()
+    expect(calls.formValues.at(-1)).toBe('now valid')
+
+    el.formResetCallback()
+    await whenFlushed()
+    expect(el.value).toBe('init') // restores to the #defaultValue baseline (seeded from the initial attribute)
+
+    el.formStateRestoreCallback('restored', 'restore')
+    await whenFlushed()
+    expect(el.value).toBe('restored')
+    el.remove()
+  })
+
+  it('toggling mode repeatedly under jsdom never throws and never mounts a toggle or CM', async () => {
+    const { el } = makeField()
+    el.language = 'markdown'
+    document.body.append(el)
+    await whenFlushed()
+    expect(() => {
+      el.mode = 'richtext'
+      el.mode = 'source'
+      el.mode = 'richtext'
+    }).not.toThrow()
+    await whenFlushed()
+    expect(cmOf(el)).toBeNull()
+    expect(el.querySelector('[data-part="mode-toggle"]')).toBeNull()
     el.remove()
   })
 })

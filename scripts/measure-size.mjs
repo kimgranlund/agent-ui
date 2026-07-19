@@ -361,7 +361,7 @@ console.log(
 // same frame as ./markdown/@agent-ui/app/@agent-ui/router; (2) the lazy CM chunk(s) the dynamic
 // `import('./cm-editor.ts')` splits off, reported INFORMATIONALLY, never gated (CM version bumps move it — an
 // ordinary dependency PR, ADR-0139 cl.8d). Baselined against gen-ui-kit's own measured CM footprint.
-const CODE_EDITOR_BUDGET = 2 * KB // measured 247 B gz marginal at the build wave (ADR-0080 discipline) — pinned with headroom; the CM-free wrapper is a single control's worth of code on top of the foundation. The lazy CM chunk (~167 KB gz, below) is informational, NEVER gated.
+const CODE_EDITOR_BUDGET = 2 * KB // measured 247 B gz marginal at the ADR-0139 build wave, 517 B gz after the ADR-0147 richtext-mode wave (ADR-0080 discipline) — pinned with headroom; the CM-free wrapper is a single control's worth of code on top of the foundation. The lazy CM chunk (~172 KB gz post-ADR-0147 — cm-richtext.ts's decoration engine joined it, below) is informational, NEVER gated.
 const editorBundle = await rolldown({ input: `${codePkgDir}/src/editor/index.ts` })
 const { output: editorOutput } = await editorBundle.generate({ format: 'esm', minify: true })
 await editorBundle.close()
