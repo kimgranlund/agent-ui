@@ -2,7 +2,8 @@
 name: agent-ui-package-release
 description: >-
   Route to THIS repo's npm-package release/versioning law for the 8 @agent-ui/* packages (published
-  unscoped as agent-ui-*, under the agent-ui-kit npm account): lockstep versioning (all 8 always
+  SCOPED as @agent-ui-kit/* under the agent-ui-kit npm org — Kim's 2026-07-19 ruling, prefix dropped):
+  lockstep versioning (all 8 always
   publish at the SAME number, every release), a patch-only 0.0.1-0.0.99 phase for routine releases,
   and a judgment-gated 0.#.0 bump reserved for a more significant release — plus the actual cut-a-
   release procedure (decide the version per the law, tag vX.Y.Z, push — the tag itself triggers
@@ -44,8 +45,12 @@ never restate their internals here.
   a documented expectation, not a hard boundary this skill was asked to enforce.
 - **The same law recurses above `0.1.0`.** `0.1.0` → `0.1.1` → … → `0.1.99` (patch-only) → `0.2.0` on
   the next significant release, and so on.
-- **First real release is `v0.0.1`.** No tag exists yet as of this writing — the very first `v*` tag
-  pushed for this pipeline should be `v0.0.1`, not `v0.1.0` or `v1.0.0`.
+- **Release history (2026-07-19):** `v0.0.1` was cut but never published (CI E403; tag retracted —
+  tag history = published history). `v0.0.2` published the launch-day UNSCOPED `agent-ui-*` names
+  (locally — the deleted-predecessor names required full user auth to re-create; CI tokens work from
+  the second version on). `v0.0.3` is the SCOPED debut: `@agent-ui-kit/*` with the `agent-ui-` prefix
+  dropped (Kim's ruling, same day); the unscoped `agent-ui-*@0.0.2` set stays on the registry,
+  deprecated with pointer messages to the scoped names — never publish to the unscoped names again.
 
 ## The release procedure
 
@@ -67,10 +72,11 @@ never restate their internals here.
 
 ## Facts worth knowing (don't re-derive these)
 
-- Published package names are UNSCOPED (`agent-ui-shared`, `agent-ui-components`, …) under the
-  `agent-ui-kit` npm account — npm requires a scope to literally match the owning org login, and this
-  repo's internal `@agent-ui/*` names/imports stay completely untouched; the publish script transforms
-  a COPY of each `package.json` at publish time only.
+- Published package names are SCOPED under the org: `@agent-ui-kit/shared`, `@agent-ui-kit/components`,
+  … (the `agent-ui-kit` org owns the scope; the redundant `agent-ui-` prefix dropped with it — Kim,
+  2026-07-19). This repo's internal `@agent-ui/*` names/imports stay completely untouched; the publish
+  script transforms a COPY of each `package.json` (+ emitted specifiers) at publish time only. The
+  launch-day unscoped `agent-ui-*@0.0.2` set is deprecated-with-pointer, never republished.
 - License: MIT (`LICENSE` at repo root) — Kim's decision, 2026-07-19.
 - `agent-ui-app` currently targets Vite/Rolldown-family bundlers only (`?url`/`?raw` import-query
   specifiers in `app-shell.ts`, documented in `publish-packages.mjs`'s own header — see there for the
