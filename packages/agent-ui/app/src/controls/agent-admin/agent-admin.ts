@@ -352,6 +352,10 @@ export class UIAgentAdminElement extends UIElement {
     // showing, not their sum.
     mediumTabsPane.setAttribute('min', '20rem')
     const mediumTabs = document.createElement('ui-tabs')
+    // #14 / ADR-0144 Q1: `fill` = the shipped [pinned tablist | internally-scrolling active panel] posture
+    // this shell used to hand-roll in agent-admin.css (TKT-0085). CSS-only; the panel's scrollbar rides the
+    // `--ui-tabs-panel-scrollbar-width` seam this surface aliases on its host (agent-admin.css `:scope`).
+    mediumTabs.setAttribute('fill', '')
     const mediumInstructionsTab = document.createElement('ui-tab')
     mediumInstructionsTab.setAttribute('key', 'instructions')
     mediumInstructionsTab.textContent = 'Instructions'
@@ -364,6 +368,7 @@ export class UIAgentAdminElement extends UIElement {
     mediumTabsPane.append(mediumTabs)
 
     const narrowTabs = document.createElement('ui-tabs')
+    narrowTabs.setAttribute('fill', '') // #14 / ADR-0144 Q1 — the same shipped `fill` posture as the medium shell
     narrowTabs.hidden = true // the wide shell above is the DEFAULT visible state until the first measurement
     const narrowChatTab = document.createElement('ui-tab')
     narrowChatTab.setAttribute('key', 'chat')

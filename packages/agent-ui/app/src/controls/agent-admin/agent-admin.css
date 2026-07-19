@@ -41,10 +41,13 @@
     min-inline-size: 0;
     /* Consumer-tuning (the conversation.css → --ui-status-stream-max-block-size precedent): repoint the
        composed children's PUBLIC scrollbar knobs for this whole subtree — every ui-split-pane scroller
-       (ui-settings' master-detail detail pane is the visible one) and ui-conversation's log/wire go
-       scrollbar-less to match this surface's own panes. Their defaults elsewhere stay `auto`. */
+       (ui-settings' master-detail detail pane is the visible one), ui-conversation's log/wire, AND the
+       `fill` tabs' internally-scrolling active panel (#14 / ADR-0144 Q1 — the `--ui-tabs-panel-scrollbar-width`
+       seam is consumer-INHERITED, set ONCE here on the ancestor host, never per-panel) go scrollbar-less to
+       match this surface's own panes. Their defaults elsewhere stay `auto`. */
     --ui-split-pane-scrollbar-width: var(--ui-agent-admin-scrollbar-width);
     --ui-conversation-scrollbar-width: var(--ui-agent-admin-scrollbar-width);
+    --ui-tabs-panel-scrollbar-width: var(--ui-agent-admin-scrollbar-width);
   }
 
   /* The one composed child (the JS-created ui-split) fills the available block space; min-block-size:0
@@ -114,23 +117,18 @@
     color: var(--ui-agent-admin-label-ink);
   }
 
-  /* ── TKT-0085: the medium (Chat | {Instructions,Agent} tabs) + narrow (all-tabs) responsive shells ──
-     Both `ui-tabs` instances fill their container as [pinned tablist | scrolling panel] — the tablist
-     strip must stay reachable without scrolling back up past a long panel (the fleet has no shipped
-     "scrolling tab body" variant yet; this is this consumer's own composition, not a tabs.css change). */
-  [data-role='tabs-medium'] ui-tabs,
-  :scope > ui-tabs {
-    display: flex;
-    flex-direction: column;
-    block-size: 100%;
-    min-block-size: 0;
-  }
+  /* ── #14 / ADR-0144 Q1 (retrofit of TKT-0085's hand-rolled composition): BOTH `ui-tabs` instances (the
+     medium Chat|{Instructions,Agent} shell and the narrow all-tabs shell) now carry the shipped `fill`
+     attribute (set in agent-admin.ts). tabs.css's `:scope[fill]` mechanism now provides the
+     [pinned tablist strip | internally-scrolling active panel] composition this file used to hand-roll for
+     lack of a fleet variant — the shell's flex column + `block-size:100%; min-block-size:0`, and the visible
+     panel's `flex:1 1 auto; min-block-size:0; overflow-y:auto` scroll leg + its
+     `--ui-tabs-panel-scrollbar-width` seam (aliased to this surface's own hidden-scrollbar knob on `:scope`
+     above). What STAYS this consumer's own is the CONTENT-rhythm of the panel's children — ADR-0144 Q3
+     rule 3: content layout is never the host's job. Left on the panel (a flex column, 1rem between the
+     sections composed inside it), NOT moved into tabs.css. */
   [data-role='tabs-medium'] ui-tab-panel:not([hidden]),
   :scope > ui-tabs ui-tab-panel:not([hidden]) {
-    flex: 1 1 auto;
-    min-block-size: 0;
-    overflow-y: auto;
-    scrollbar-width: var(--ui-agent-admin-scrollbar-width);
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -144,9 +142,11 @@
     min-block-size: 0;
     box-sizing: border-box;
   }
-  /* TKT-0085 — the SAME author-beats-UA `[hidden]` guard as `:scope > ui-split[hidden]` above, for the
-     narrow shell's own `display: flex` declaration (line 114). Written LAST so it wins source order
-     against every rule above that also targets `:scope > ui-tabs`. */
+  /* TKT-0085 — the SAME author-beats-UA `[hidden]` guard as `:scope > ui-split[hidden]` above. Since #14
+     the narrow shell's `display: flex` now comes from tabs.css's `:scope[fill]` (a DIFFERENT @scope, so
+     source order no longer settles it); this guard still wins on SPECIFICITY — `:scope > ui-tabs[hidden]`
+     (0,2,1) beats `:scope[fill]` (0,2,0), and specificity outranks scope proximity — so a hidden narrow
+     tabs genuinely computes `display: none` (pinned by agent-admin.browser.test.ts). */
   :scope > ui-tabs[hidden] {
     display: none;
   }
