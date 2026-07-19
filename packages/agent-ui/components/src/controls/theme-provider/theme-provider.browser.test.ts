@@ -153,3 +153,60 @@ describe('ui-theme-provider — nested-unset inherits the ANCESTOR provider\'s s
     })
   })
 })
+
+// ── the scheme-boundary INK RE-ROOT (ADR-0148 — the fold-in of the gallery-local TKT-0002-class fix) ──────
+// `color-scheme` re-rooting alone does NOT re-resolve an INHERITED `color`: light-dark() only re-resolves
+// where a property containing it is DECLARED, so page-level ink (the `_page.css` body rule) computed once
+// at the outer scheme leaks into a forced subtree as the wrong channel values — white bare text on a light
+// surface (issue #31). theme-provider.css's `:where(ui-theme-provider) { color: … }` re-declares the ink AT
+// the boundary. These are the bite legs whose absence deferred the fold-in (ADR-0117 LLD §5.3): red without
+// the component-owned rule, green with it — plus the zero-specificity guarantee that keeps consumers in charge.
+describe('ui-theme-provider — inherited ink re-resolves at the scheme boundary (ADR-0148, the issue #31 defect class)', () => {
+  /** The `_page.css` body shape: an ancestor OUTSIDE any provider declaring the fleet ink role. */
+  function pageInkWrap(providerScheme: 'light' | 'dark'): HTMLElement {
+    return mount(
+      `<div style="color: var(--md-sys-color-neutral-on-surface);">
+        <span id="outside-text">outside the boundary</span>
+        <ui-theme-provider scheme="${providerScheme}">bare text — never declares color<span id="explicit-probe" style="color: var(--md-sys-color-neutral-on-surface);">explicit</span></ui-theme-provider>
+      </div>`,
+    )
+  }
+
+  it('light-in-dark: bare text under a scheme="light" provider shows the LIGHT-resolved ink, never the inherited dark-scheme ink', () => {
+    withRootScheme('dark', () => {
+      const wrap = pageInkWrap('light')
+      const provider = wrap.querySelector('ui-theme-provider') as HTMLElement
+      const outsideInk = getComputedStyle(wrap.querySelector('#outside-text') as HTMLElement).color
+      const explicitInk = getComputedStyle(wrap.querySelector('#explicit-probe') as HTMLElement).color
+      const bareInk = getComputedStyle(provider).color // the ink every bare text node under the provider paints with
+      // The explicit probe re-resolves by declaration (the mechanism that always worked); bare text must now match it…
+      expect(bareInk, 'bare text kept the dark-root ink across the light boundary — the re-root is not engaging').toBe(explicitInk)
+      // …and genuinely differ from the leaked outer resolution (anti-vacuous: proves the two schemes diverge here).
+      expect(bareInk, 'inside and outside resolved identically — the boundary case never materialized').not.toBe(outsideInk)
+    })
+  })
+
+  it('dark-in-light: the inverse boundary re-resolves too (bidirectional, the gallery precedent)', () => {
+    withRootScheme('light', () => {
+      const wrap = pageInkWrap('dark')
+      const provider = wrap.querySelector('ui-theme-provider') as HTMLElement
+      const outsideInk = getComputedStyle(wrap.querySelector('#outside-text') as HTMLElement).color
+      const explicitInk = getComputedStyle(wrap.querySelector('#explicit-probe') as HTMLElement).color
+      const bareInk = getComputedStyle(provider).color
+      expect(bareInk, 'bare text kept the light-root ink across the dark boundary').toBe(explicitInk)
+      expect(bareInk, 'inside and outside resolved identically — the boundary case never materialized').not.toBe(outsideInk)
+    })
+  })
+
+  it('zero-specificity guarantee: ANY consumer ink declaration outranks the re-root (the rule must never move into @scope — the TKT-0001 proximity trap)', () => {
+    withRootScheme('dark', () => {
+      const style = document.createElement('style')
+      style.textContent = '.consumer-ink { color: rgb(255, 0, 0); }'
+      document.head.append(style)
+      mounted.push(style)
+      const wrap = mount('<ui-theme-provider scheme="light" class="consumer-ink">bare text</ui-theme-provider>')
+      const provider = wrap.querySelector('ui-theme-provider') as HTMLElement
+      expect(getComputedStyle(provider).color, 'a consumer class-selector ink lost to the component rule — the re-root has gained specificity').toBe('rgb(255, 0, 0)')
+    })
+  })
+})
