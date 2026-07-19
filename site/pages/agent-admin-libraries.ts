@@ -22,10 +22,12 @@ const MINI_SKILL_SOURCES = import.meta.glob('../../packages/agent-ui/a2ui/src/ag
  *  on the a2ui exports map). Returns null for a file without the leading `---` fence — skipped, never
  *  thrown (a malformed registry file is the registry gate's problem, not this page's). */
 function splitFrontmatter(source: string): { data: Record<string, string>; body: string } | null {
-  const match = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/.exec(source)
+  // `\r?` throughout — a CRLF-normalized checkout must not silently drop registry files from the pack
+  // (PR #58 review finding; no .gitattributes pins *.md to LF in this repo).
+  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(source)
   if (!match) return null
   const data: Record<string, string> = {}
-  for (const line of match[1]!.split('\n')) {
+  for (const line of match[1]!.split(/\r?\n/)) {
     const at = line.indexOf(':')
     if (at > 0) data[line.slice(0, at).trim()] = line.slice(at + 1).trim()
   }

@@ -1041,3 +1041,24 @@ describe('UIAgentAdminElement — entry libraries (GH #47/#48)', () => {
     expect(after[1]!.id).toBe('grid-idiom-2')
   })
 })
+
+describe('UIAgentAdminElement — a REJECTED library entry surfaces the same error note as the hand path (PR #58 review)', () => {
+  it('an empty-label pack entry shows showAddError feedback instead of failing silently', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore()
+    el.libraries = {
+      skill: [{ id: 'bad-pack', label: 'Bad pack', description: 'fixture', entries: [{ label: '   ', description: '', content: 'x' }] }],
+    }
+    mount(el)
+    await el.updateComplete
+    const section = el.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
+    const row = section.querySelector('[data-value="bad-pack:0"]') as HTMLElement
+    row.click()
+    await el.updateComplete
+    const note = section.querySelector('[data-part="entry-add-error"]') as HTMLElement
+    expect(note.hidden, 'the rejection must be VISIBLE (the fail-closed note un-hides)').toBe(false)
+    expect(note.textContent).toContain('name is required')
+    const entries = (el.store!.get('entries:skill') ?? []) as unknown[]
+    expect(entries, 'nothing was added').toHaveLength(0)
+  })
+})

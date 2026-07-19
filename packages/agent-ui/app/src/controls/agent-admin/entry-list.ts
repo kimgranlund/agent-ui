@@ -117,7 +117,13 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
       const splitAt = value.lastIndexOf(':')
       const pack = libraries.find((p) => p.id === value.slice(0, splitAt))
       const entry = pack?.entries[Number(value.slice(splitAt + 1))]
-      if (entry) handlers.onAdd(entry)
+      if (!entry) return
+      // Mirror submitAdd's contract (PR #58 review finding): `onAdd` returning false is a fail-closed
+      // rejection the CALLER surfaces via `showAddError` (which un-hides the add-form's error note) —
+      // there is nothing to reset here, but the return must not be silently discarded: a rejected
+      // library entry (e.g. a pack shipping an empty label) shows the same visible note the
+      // hand-authored path shows, proven by the rejection test.
+      void handlers.onAdd(entry)
     })
 
     section.append(libraryMenu)
