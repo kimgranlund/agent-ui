@@ -50,10 +50,19 @@ describe('site/pages/agent-admin.ts — SUPPORTED_MODELS ⊆ the real providers.
     readFileSync(`${ROOT}/packages/agent-ui/a2ui/tools/agent/providers.json`, 'utf8') as string,
   ) as ProvidersConfig
 
-  it('every model the admin UI offers resolves to an IMPLEMENTED provider (a drift here is a live-only 400)', () => {
+  it('every model that SHIPS INCLUDED resolves to an IMPLEMENTED provider (a drift here is a live-only 400); off-by-default options must still be KNOWN providers.json ids', () => {
     expect(SUPPORTED_MODELS.length).toBeGreaterThan(0)
     for (const model of SUPPORTED_MODELS) {
-      expect(providerForModel(config, model.id), `SUPPORTED_MODELS id "${model.id}" resolves to no implemented provider`).toBeDefined()
+      if (model.includedByDefault) {
+        // ships switched ON ⇒ a live turn can reach it out of the box ⇒ must be implemented
+        expect(providerForModel(config, model.id), `included-by-default id "${model.id}" resolves to no implemented provider`).toBeDefined()
+      } else {
+        // rev.4: the OpenAI/Gemini options ship OFF (implemented: false roadmap providers — an admin
+        // switching one on gets the proxy's visible degrade, not a silent 400). The id-drift guard stays:
+        // the id must exist SOMEWHERE in providers.json, implemented or not.
+        const known = Object.values(config.providers).some((p) => p.models.some((m) => m.id === model.id))
+        expect(known, `roster id "${model.id}" is unknown to providers.json — an id drift`).toBe(true)
+      }
     }
   })
 })

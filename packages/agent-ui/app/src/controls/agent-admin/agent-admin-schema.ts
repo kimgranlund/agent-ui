@@ -31,13 +31,22 @@ export interface SupportedModel {
   /** The provider this model renders under in the Model GRID (Kim, 2026-07-19 rev.2: "a grid of
    *  options grouped by provider") — 'Anthropic' | 'Google' | 'OpenAI' | 'Other', open-ended. */
   provider: string
+  /** Whether this model ships INCLUDED (its grid switch on) before the admin ever touches the record
+   *  (rev.4: only Haiku+Sonnet ship on; the OpenAI/Gemini tier-equivalents ship as switchable options). */
+  includedByDefault: boolean
 }
 
+/** Rev.4 (Kim, 2026-07-19): Opus and Fable are REMOVED entirely; the roster is the Haiku/Sonnet tier
+ *  pair per provider — ids match the dev proxy's own providers.json rows EXACTLY (the one id namespace;
+ *  openai/gemini are `implemented: false` there, so a live turn on them degrades visibly until their
+ *  adapters land — the grid ships them switched OFF). */
 export const SUPPORTED_MODELS: readonly SupportedModel[] = [
-  { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', provider: 'Anthropic' },
-  { id: 'claude-sonnet-5', label: 'Sonnet 5', provider: 'Anthropic' },
-  { id: 'claude-opus-4-8', label: 'Opus 4.8', provider: 'Anthropic' },
-  { id: 'claude-fable-5', label: 'Fable 5', provider: 'Anthropic' },
+  { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', provider: 'Anthropic', includedByDefault: true },
+  { id: 'claude-sonnet-5', label: 'Sonnet 5', provider: 'Anthropic', includedByDefault: true },
+  { id: 'gpt-4.1-mini', label: 'GPT-4.1 mini', provider: 'OpenAI', includedByDefault: false },
+  { id: 'gpt-4.1', label: 'GPT-4.1', provider: 'OpenAI', includedByDefault: false },
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'Google', includedByDefault: false },
+  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'Google', includedByDefault: false },
 ]
 
 /** Haiku by default (Kim, 2026-07-19) — the cheap/fast tier is the demo's sane default; Sonnet stays one
@@ -69,7 +78,7 @@ export function parseCustomModels(raw: unknown): SupportedModel[] {
     const id = (idPart ?? '').trim()
     if (id.length === 0 || seen.has(id)) continue
     seen.add(id)
-    out.push({ id, label: (labelPart ?? '').trim() || id, provider: inferProvider(id) })
+    out.push({ id, label: (labelPart ?? '').trim() || id, provider: inferProvider(id), includedByDefault: true })
   }
   return out
 }
@@ -85,11 +94,15 @@ export function modelRoster(customRaw: unknown): SupportedModel[] {
   return [...SUPPORTED_MODELS, ...parseCustomModels(customRaw)]
 }
 
-/** Whether `id` is included per the store record — absent entries default TRUE (default-open). */
-export function isModelIncluded(record: unknown, id: string): boolean {
-  if (typeof record !== 'object' || record === null) return true
-  const value = (record as Record<string, unknown>)[id]
-  return typeof value === 'boolean' ? value : true
+/** Whether a model is included per the store record — an explicit boolean wins; an absent entry falls
+ *  back to the model's OWN `includedByDefault` (rev.4: built-ins ship Haiku+Sonnet on, the OpenAI/Gemini
+ *  options off; admin-added customs on — you added it to use it). */
+export function isModelIncluded(record: unknown, model: SupportedModel): boolean {
+  if (typeof record === 'object' && record !== null) {
+    const value = (record as Record<string, unknown>)[model.id]
+    if (typeof value === 'boolean') return value
+  }
+  return model.includedByDefault
 }
 
 /** Fail-closed model read for turn/composer time: a store value naming a roster model passes;

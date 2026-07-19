@@ -631,7 +631,7 @@ export class UIAgentAdminElement extends UIElement {
         const include = document.createElement('ui-switch') as HTMLElement & { checked: boolean; disabled: boolean }
         include.setAttribute('data-part', 'model-include')
         include.setAttribute('aria-label', `Include ${model.label}`)
-        include.checked = isModelIncluded(included, model.id)
+        include.checked = isModelIncluded(included, model)
         // The default is ALWAYS offered — its include switch locks on (checked + disabled).
         if (model.id === current) {
           include.checked = true
@@ -684,7 +684,7 @@ export class UIAgentAdminElement extends UIElement {
       // falls back to DEFAULT_MODEL_ID for anything off-roster.
       const roster = modelRoster(store?.get(CUSTOM_MODELS_KEY))
       const included = store?.get(MODELS_INCLUDED_KEY)
-      conversation.models = roster.filter((m) => isModelIncluded(included, m.id))
+      conversation.models = roster.filter((m) => isModelIncluded(included, m))
       conversation.model = sanitizeModel(store?.get('model'), roster)
     }
     renderModel()

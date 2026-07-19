@@ -37,7 +37,7 @@ afterEach(() => {
   for (const el of mounted.splice(0)) el.remove()
 })
 
-const SUPPORTED_MODEL_IDS = new Set(['claude-opus-4-8', 'claude-sonnet-5', 'claude-haiku-4-5-20251001', 'claude-fable-5'])
+const SUPPORTED_MODEL_IDS = new Set(['claude-sonnet-5', 'claude-haiku-4-5-20251001']) // rev.4: the roster pair presets may seed
 const ALL_ENTRY_KEYS = Object.values(ENTRY_KINDS).map((kind) => entriesStoreKey(kind))
 
 describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {
@@ -60,8 +60,8 @@ describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {
     }
   })
 
-  it('the roster COLLECTIVELY covers the config axes: all four models, tools both states, temp both halves', () => {
-    expect(new Set(AGENT_PRESETS.map((p) => p.config.model)).size).toBe(4)
+  it('the roster COLLECTIVELY covers the config axes: both included models, tools both states, temp both halves', () => {
+    expect(new Set(AGENT_PRESETS.map((p) => p.config.model)).size).toBe(2) // rev.4: haiku + sonnet only
     expect(new Set(AGENT_PRESETS.map((p) => p.config.toolsEnabled)).size).toBe(2)
     expect(AGENT_PRESETS.some((p) => p.config.temperature <= 0.2)).toBe(true)
     expect(AGENT_PRESETS.some((p) => p.config.temperature >= 0.8)).toBe(true)
