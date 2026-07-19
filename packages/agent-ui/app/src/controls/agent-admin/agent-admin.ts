@@ -47,9 +47,11 @@ import '@agent-ui/components/controls/icon'
 import '@agent-ui/code/editor'
 import '@agent-ui/components/controls/field'
 import '@agent-ui/components/controls/text-field'
-// The Model grid's row controls (2026-07-19 rev.2) — ui-switch is already registered above; ui-checkbox
-// registers here for the default-position column.
-import '@agent-ui/components/controls/checkbox'
+// The Model grid's row controls (2026-07-19 rev.2) — ui-switch is already registered above; ui-radio
+// registers here for the default-position column (rev.3: a radio SYSTEM — the semantically honest
+// pick-exactly-one control; selection coordination stays this element's render, not a ui-radio-group,
+// whose roving/one-group contract doesn't fit rows interleaved with switches across provider groups).
+import '@agent-ui/components/controls/radio'
 // TKT-0085: registers <ui-tabs>/<ui-tab>/<ui-tab-panel> — the responsive-collapse shells `#applyLayout`
 // moves pane content into below the wide breakpoint.
 import '@agent-ui/components/controls/tabs'
@@ -642,8 +644,9 @@ export class UIAgentAdminElement extends UIElement {
           if (store !== undefined && store.subscribe === undefined) this.#renderModelGrid() // the #updateEntries no-subscribe fallback
         })
 
-        const isDefault = document.createElement('ui-checkbox') as HTMLElement & { checked: boolean }
+        const isDefault = document.createElement('ui-radio') as HTMLElement & { checked: boolean }
         isDefault.setAttribute('data-part', 'model-default')
+        isDefault.setAttribute('name', 'model-default') // one logical radio SYSTEM across the provider groups
         isDefault.setAttribute('aria-label', `Default: ${model.label}`)
         isDefault.checked = model.id === current
         isDefault.addEventListener('change', () => {
@@ -658,7 +661,8 @@ export class UIAgentAdminElement extends UIElement {
             store?.set('model', model.id)
             if (store !== undefined && store.subscribe === undefined) this.#renderModelGrid()
           } else {
-            // Unchecking the current default is a no-op — re-render restores the checked state.
+            // A grouped radio can't untoggle, but a STANDALONE Indicator-class radio can (pressActivation
+            // toggles) — the restore guard keeps "a roster always has a default" true regardless.
             this.#renderModelGrid()
           }
         })

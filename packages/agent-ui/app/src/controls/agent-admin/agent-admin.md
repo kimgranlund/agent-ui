@@ -51,7 +51,7 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: entry-section
     description: One kind's whole section — `<div data-part="entry-section" data-kind="...">` — the ONE shape all five instantiations share (ADR-0132 `n1`). Carries a heading, the entry list, and the add-form.
   - name: model-grid
-    description: The Model management card (2026-07-19 rev.2) — provider-grouped rows, one per roster model, each `[ model-row-label | model-include ui-switch | model-default ui-checkbox ]`. The default checkbox is radio-like (checking a row writes `model`; unchecking the current default is a no-op) and the default row's include switch locks on (`model`'s row is always offered). Re-rendered wholesale on `model`/`modelsIncluded`/`customModels` store changes.
+    description: The Model management card (2026-07-19 rev.2) — provider-grouped rows, one per roster model, each `[ model-row-label | model-include ui-switch | model-default ui-radio ]` — one logical radio system across the provider groups (rev.3). Checking a row writes `model`; a standalone-radio untoggle restores via re-render (a roster always has a default) and the default row's include switch locks on (`model`'s row is always offered). Re-rendered wholesale on `model`/`modelsIncluded`/`customModels` store changes.
   - name: entry-section-heading
     description: A section's `<h3 data-part="entry-section-heading">` (e.g. "Skills", "Instructions").
   - name: entry-list
