@@ -295,6 +295,24 @@
   --md-sys-space-2xl: calc(32px * var(--md-sys-density));
 }
 
+/* extension — not MD3 (ADR-0150): the compact-window body register — the token layer's ONE
+   viewport-responsive lever. Below 52.5rem (840px, M3's compact/medium window boundary — a documented
+   LITERAL: custom properties are invalid in media-query conditions, so this value cannot be tokenized;
+   a second use repeats it verbatim and cites ADR-0150) the body COLUMN drops 1px: 16/14/12 → 15/13/11.
+   ONLY the three body -size legs move — every other role, all :root constants (unitless line-height
+   compresses proportionally by design), and the ADR-0038 control ladder are untouched. Declared on `*`
+   (NOT :root — the same pre-substitution law as the ramp above: a :root override would freeze
+   --md-sys-scale at 1 and kill subtree [scale] below the line) and AFTER the base ramp — both blocks
+   are specificity 0,0,0 and a media query adds none, so LATER DECLARATION is the only thing that makes
+   this win. Do not move this block above the base `*` ramp. */
+@media (width < 52.5rem) {
+  * {
+    --md-sys-typescale-body-large-size: calc(15px * var(--md-sys-scale));
+    --md-sys-typescale-body-medium-size: calc(13px * var(--md-sys-scale));
+    --md-sys-typescale-body-small-size: calc(11px * var(--md-sys-scale));
+  }
+}
+
 /* [scale] — Kim's (scale × size) → §1-row LOOKUP selector (ADR-0038, supersedes ADR-0032's multiplier ladder
    for CONTROLS). Each tier re-tables --md-sys-{height,font,icon}-{sm,md,lg} to its chosen §1 row (height picks the
    row; font/icon derive from it — ONE consistent row per cell, the thing the multiplier broke). Descendants

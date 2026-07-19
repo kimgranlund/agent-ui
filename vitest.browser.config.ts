@@ -45,6 +45,14 @@ export default defineConfig({
       enabled: true,
       provider: playwright(),
       headless: true,
+      // The fleet default viewport, now EXPLICIT (it was vitest's own 414×896 default, silently). Made a
+      // documented contract by ADR-0150: 414px sits BELOW the 52.5rem/840px compact-window body line, so at
+      // this default every document-typography assertion sees the COMPACT body register (13/15/11px), not
+      // the M3-verbatim base (14/16/12px). Any browser test pinning an absolute body-role px MUST pin its
+      // viewport to the intended side of the line first (text.browser.test.ts is the worked example — its
+      // file-level beforeAll pins 1024×768 for the M3-base legs, one describe drops to 800×600 for the
+      // compact legs). Interaction suites that assert no body-role px run here unchanged.
+      viewport: { width: 414, height: 896 },
       instances: [{ browser: 'chromium' }, { browser: 'webkit' }],
     },
     projects: [
