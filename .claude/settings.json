@@ -39,5 +39,10 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(python3 scripts/adr_ratify.py:*)"
+    ]
   }
 }

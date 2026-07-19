@@ -16,6 +16,12 @@ sufficient to compute the resulting Status cell without needing the whole new fi
 
 Gate posture: PreToolUse + exit 2 + a one-line stderr reason (never mixed with JSON) — this event
 genuinely blocks the tool call before it executes.
+
+REV 2026-07-18 (ADR-0149, comment-only — the deny logic above is byte-unchanged): the sanctioned
+agent-side ratification path is `scripts/adr_ratify.py`, which verifies a `ratify ADR-####`
+comment/review by the repo owner live via `gh` (fail-closed) and performs the flip through plain
+file I/O — outside this hook's Edit/Write surface by design. This guard remains the tripwire on
+the agent-edit path; the script is the verified door. Kim's in-tree hand-flip stays equally legal.
 """
 import json
 import os
