@@ -36,7 +36,9 @@ import { playwright } from '@vitest/browser-playwright'
 // `:components` (packages/agent-ui/components — 71 of the 85 browser files) then `:rest` (everything
 // else via `--exclude 'packages/agent-ui/components/**'` — complementary BY CONSTRUCTION, a new package's
 // browser tests land in `:rest` automatically, nothing silently drops). Same one-project config here;
-// only package.json's invocation sharding changed.
+// only package.json's invocation sharding changed. THIRD SPLIT (same day): `:rest` itself flipped 134
+// under load once the M5 super-shell wave grew the app package — `:app` (packages/agent-ui/app) now runs
+// alone and `:rest` excludes components+app (still complementary by construction via --exclude).
 
 export default defineConfig({
   test: {

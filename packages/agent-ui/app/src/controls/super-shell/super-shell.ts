@@ -1,0 +1,146 @@
+// super-shell.ts — UISuperShellElement (M5, GH #83): the shell-archetype family's grammar ceiling —
+// the two-level recursive shell of shell-archetypes-m5.spec.md (SPEC-R1), spec-sourced from Kim's
+// Figma frames 34-1486 / 34-1506 (GH #44). A BEHAVIOR-ONLY composition (ADR-0151 rule 2 / SPEC-R3):
+// it owns geometry, collapse behavior, and slot placement — never data, transport, or navigation.
+//
+// Grammar (SPEC-R1): `[ header? | side-L? | content | side-R? | footer? ]`, a side = rail + pane
+// (mirrored on the right), every slot OPTIONAL — an unfilled slot is ABSENT (no box), so the inner
+// canvas-shell level is just another <ui-super-shell> composed into `content` with no rails authored
+// (R1b's ring-dropping recursion needs zero extra code). Consumers mark light-DOM children with
+// `data-slot="header|global-nav|nav-pane|content|options-pane|global-options|footer"`; unmarked
+// children fold into `content` (the mandatory slot — console.warn when absent, the app-shell law).
+//
+// Collapse (SPEC-R2): per-side toggles, HEADER-HOSTED (R2b — injected as the header row's leading/
+// trailing affordances; no header ⇒ no toggles, permanent chrome is authored chrome), PAIRED restore
+// (fork F1's default: one toggle drives its side's rail+pane together). State = the reflected
+// `collapsed-left`/`collapsed-right` boolean props (R2d — observable + settable, so a consumer can
+// persist). Narrow (<40rem container, SPEC-R4/F2): CSS auto-collapses both sides; a toggle-restored
+// side overlays the canvas (super-shell.css) rather than squeezing it — and the auto state never
+// writes the props, so the consumer's persisted wide-state choice survives (R4's no-clobber law).
+//
+// `controls → @agent-ui/components` + siblings only — never router/a2a (layering.test.ts).
+
+import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import '@agent-ui/components/controls/button'
+import '@agent-ui/components/controls/icon'
+
+const SLOTS = ['header', 'global-nav', 'nav-pane', 'content', 'options-pane', 'global-options', 'footer'] as const
+type SlotName = (typeof SLOTS)[number]
+
+const props = {
+  // SPEC-R2d — the two side states, reflected so CSS keys off the host and a consumer can persist.
+  collapsedLeft: { ...prop.boolean(false), reflect: true, attribute: 'collapsed-left' },
+  collapsedRight: { ...prop.boolean(false), reflect: true, attribute: 'collapsed-right' },
+  // SPEC-R4 / fork F2, widened with ADR-0084's own region vocabulary: what a side does at narrow —
+  // `collapse` (default: hide, overlay on toggle-restore — the frames' all-collapsed story) or
+  // `stack` (stay in flow, full-width above/below the canvas — the docs site's shipped nav UX,
+  // where the ui-nav-rail's OWN collapse="menu" dropdown takes over). Pure-CSS arms.
+  narrowLeft: { ...prop.enum(['collapse', 'stack'] as const, 'collapse'), reflect: true, attribute: 'narrow-left' },
+  narrowRight: { ...prop.enum(['collapse', 'stack'] as const, 'collapse'), reflect: true, attribute: 'narrow-right' },
+} satisfies PropsSchema
+
+export interface UISuperShellElement extends ReactiveProps<typeof props> {}
+export class UISuperShellElement extends UIElement {
+  static props = props
+
+  #frame: HTMLElement | null = null
+
+  protected connected(): void {
+    this.#compose()
+    this.effect(() => {
+      // Reflect the side states onto the toggles' accessible pressed state (the buttons exist only
+      // when a header was authored).
+      const left = this.querySelector('[data-part="side-toggle"][data-side="left"]')
+      const right = this.querySelector('[data-part="side-toggle"][data-side="right"]')
+      left?.setAttribute('aria-expanded', String(!this.collapsedLeft))
+      right?.setAttribute('aria-expanded', String(!this.collapsedRight))
+    })
+  }
+
+  /** Idempotent (the fleet's #compose law): sort the authored children into the frame ONCE. */
+  #compose(): void {
+    if (this.#frame) return
+    const authored = new Map<SlotName, Element[]>()
+    for (const slot of SLOTS) authored.set(slot, [])
+    for (const child of [...this.children]) {
+      const name = child.getAttribute('data-slot')
+      const slot: SlotName = SLOTS.includes(name as SlotName) ? (name as SlotName) : 'content'
+      authored.get(slot)!.push(child)
+    }
+    if (authored.get('content')!.length === 0) console.warn('ui-super-shell: no content slot authored — the one mandatory slot (SPEC-R1)')
+
+    const frame = document.createElement('div')
+    frame.setAttribute('data-part', 'frame')
+
+    // header row — hosts the side toggles (SPEC-R2b) around the authored header content.
+    const headerChildren = authored.get('header')!
+    if (headerChildren.length > 0) {
+      const header = document.createElement('div')
+      header.setAttribute('data-part', 'bar')
+      header.setAttribute('data-bar', 'header')
+      header.append(this.#makeToggle('left'), ...headerChildren, this.#makeToggle('right'))
+      frame.append(header)
+    }
+
+    // middle row — [ rail | pane | content | pane | rail ], absent slots contribute nothing (R1).
+    const middle = document.createElement('div')
+    middle.setAttribute('data-part', 'middle')
+    const place = (slot: SlotName, part: string, side?: 'left' | 'right'): void => {
+      const children = authored.get(slot)!
+      if (children.length === 0) return
+      const box = document.createElement('div')
+      box.setAttribute('data-part', part)
+      box.setAttribute('data-slot-name', slot)
+      if (side) box.setAttribute('data-side', side)
+      box.append(...children)
+      middle.append(box)
+    }
+    place('global-nav', 'rail', 'left')
+    place('nav-pane', 'pane', 'left')
+    place('content', 'canvas')
+    place('options-pane', 'pane', 'right')
+    place('global-options', 'rail', 'right')
+    frame.append(middle)
+
+    const footerChildren = authored.get('footer')!
+    if (footerChildren.length > 0) {
+      const footer = document.createElement('div')
+      footer.setAttribute('data-part', 'bar')
+      footer.setAttribute('data-bar', 'footer')
+      footer.append(...footerChildren)
+      frame.append(footer)
+    }
+
+    this.append(frame)
+    this.#frame = frame
+  }
+
+  /** One header-hosted side toggle (SPEC-R2b) — flips its side's reflected state; paired restore
+   *  (F1: the rail+pane pair rides ONE state, realized in CSS off the host attribute). */
+  #makeToggle(side: 'left' | 'right'): HTMLElement {
+    const button = document.createElement('ui-button')
+    button.setAttribute('variant', 'ghost')
+    button.setAttribute('data-part', 'side-toggle')
+    button.setAttribute('data-side', side)
+    button.setAttribute('aria-label', side === 'left' ? 'Toggle left panes' : 'Toggle right panes')
+    const icon = document.createElement('ui-icon')
+    icon.setAttribute('data-role', 'icon')
+    icon.setAttribute('glyph', 'list')
+    button.append(icon)
+    button.addEventListener('click', () => {
+      // SPEC-R4 — at narrow, the toggle drives the one-at-a-time OVERLAY state instead of the
+      // persisted side props (the no-clobber law: a narrow visit never rewrites the wide choice).
+      if (this.getBoundingClientRect().width < 640 && this.getBoundingClientRect().width > 0) {
+        const open = this.getAttribute('data-narrow-open') === side ? null : side
+        if (open) this.setAttribute('data-narrow-open', open)
+        else this.removeAttribute('data-narrow-open')
+        return
+      }
+      if (side === 'left') this.collapsedLeft = !this.collapsedLeft
+      else this.collapsedRight = !this.collapsedRight
+    })
+    return button
+  }
+}
+
+if (!customElements.get('ui-super-shell')) customElements.define('ui-super-shell', UISuperShellElement)
