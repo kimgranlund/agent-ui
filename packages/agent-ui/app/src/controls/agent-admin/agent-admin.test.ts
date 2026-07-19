@@ -1110,7 +1110,7 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
     return { el, store }
   }
 
-  it('renders provider-grouped rows: label | include switch | default checkbox; the default row locks its switch', async () => {
+  it('renders provider-grouped rows: label | include switch | default RADIO (rev.3); the default row locks its switch', async () => {
     const { el } = mountAdmin()
     await el.updateComplete
     const grid = el.querySelector('[data-part="model-grid"]') as HTMLElement
@@ -1125,9 +1125,10 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
     expect(lockSwitch.disabled, 'the default row cannot be excluded').toBe(true)
     const defaultBox = defaultRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }
     expect(defaultBox.checked).toBe(true)
+    expect(defaultBox.tagName.toLowerCase(), 'the default column is a RADIO system (rev.3)').toBe('ui-radio')
   })
 
-  it('the include switch writes modelsIncluded; the default checkbox moves `model` (radio semantics) and re-includes', async () => {
+  it('the include switch writes modelsIncluded; the default radio moves `model` and re-includes', async () => {
     const { el, store } = mountAdmin()
     await el.updateComplete
     const grid = el.querySelector('[data-part="model-grid"]') as HTMLElement
