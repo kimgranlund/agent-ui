@@ -24,6 +24,15 @@ Most consumers don't import these directly — `@agent-ui-kit/components/foundat
 - Type scale: `--md-sys-typescale-{role}-{size}-{size|weight|line-height|tracking}` (M3-verbatim core rows).
 - Theme packs: `@agent-ui-kit/shared/themes/<name>.css` re-declare the color surface under `[theme='<name>']`.
 
+## CDN (no build step)
+
+```html
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.0.5/tokens.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.0.5/dimensions.css">
+```
+
+Link `tokens.css` before `dimensions.css` (the ramp reads the color layer's variables). These two sheets are fully self-contained — no bare imports.
+
 ## The @agent-ui-kit family
 
 | Package | What it is |

@@ -19,6 +19,17 @@ import '@agent-ui-kit/router/router-link.css'
 
 Create a router, wire an outlet, navigate by route id; call `connectUrl` only when you want the URL to follow along.
 
+## CDN (no build step)
+
+```html
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/router@0.0.5/router-link.css">
+<script type="module">
+  import { createRouter } from 'https://esm.sh/@agent-ui-kit/router@0.0.5'
+  import 'https://esm.sh/@agent-ui-kit/router@0.0.5/router-outlet'
+  import 'https://esm.sh/@agent-ui-kit/router@0.0.5/router-link'
+</script>
+```
+
 ## The @agent-ui-kit family
 
 | Package | What it is |

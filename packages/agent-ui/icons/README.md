@@ -22,6 +22,14 @@ Then any `ui-icon` from `@agent-ui-kit/components` resolves glyphs through the r
 
 The core entry (`@agent-ui-kit/icons`) carries only the adapter seam — bring your own pack by registering one instead of (or alongside) Phosphor.
 
+## CDN (no build step)
+
+```html
+<script type="module">
+  import 'https://esm.sh/@agent-ui-kit/icons@0.0.5/phosphor' // registers the Phosphor pack
+</script>
+```
+
 ## The @agent-ui-kit family
 
 | Package | What it is |

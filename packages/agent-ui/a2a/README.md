@@ -16,6 +16,14 @@ import { validateA2a } from '@agent-ui-kit/a2a'
 
 Use the typed wire shapes to build A2A servers/clients and validate inbound messages against the pinned spec version. Version pinning is deliberate: A2A v1.0 renames JSON-RPC methods (wire-breaking) — this package speaks v0.3.0.
 
+## CDN (no build step)
+
+```html
+<script type="module">
+  import { validateA2a } from 'https://esm.sh/@agent-ui-kit/a2a@0.0.5'
+</script>
+```
+
 ## The @agent-ui-kit family
 
 | Package | What it is |

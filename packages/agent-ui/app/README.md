@@ -18,6 +18,12 @@ import '@agent-ui-kit/app/agent-admin.css'
 
 > **Consumer profile:** this package targets Vite/Rolldown-family bundlers — one internal module uses Vite import queries (`?raw`/`?url`), so plain Node ESM / webpack / esbuild consumers can't import the root barrel. The rest of the family has no such constraint.
 
+## CDN
+
+Not recommended: this package's Vite-family constraint (the `?raw`/`?url` import queries noted
+above) applies to CDN module rewriters too — use a Vite/Rolldown bundler for `@agent-ui-kit/app`.
+The rest of the family is CDN-friendly.
+
 ## The @agent-ui-kit family
 
 | Package | What it is |
