@@ -83,16 +83,26 @@ describe('a2ui-live — ADR-0088 §3: the wantResponse-routed click→turn', () 
     // `handleClientMessage` — the exact wiring under test, not a synthetic call to a handler.
     realButton!.click()
 
-    // A visible turn happened: a new "clicked" user row (handleClientMessage's own addMessage, gated by
-    // `shouldRunTurn`) AND the agent's turn-2 response followed — proving the absent-wantResponse click was
-    // NOT silently swallowed by the new routing.
-    await waitUntil(() => chatMessages('user').length > userRowsBefore)
+    // A visible turn happened: the agent's turn-2 response followed — a new "Agent" row carrying turn 2's
+    // OWN note — proving the absent-wantResponse click was NOT silently swallowed by the routing predicate
+    // (an explicit `wantResponse:false` would `shouldRunTurn===false` and no turn would run at all, so NO
+    // agent row would ever appear). The recorded backbone's turn 2 is the "confirmation" surface whose Text
+    // reports the click back — see `transcript.ts` TURN2 — so both the chat row AND the canvas re-render are
+    // asserted below as the "full visible turn" this test's title names.
     await waitUntil(() => chatMessages('agent').length > agentRowsBefore)
+    expect(chatMessages('agent').length, 'the agent never continued — turn 2 did not run (the click was silently suppressed)').toBeGreaterThan(agentRowsBefore)
+    expect(chatMessages('agent').at(-1)?.textContent, "the new agent row should carry turn 2's own note").toContain('second surface')
 
-    expect(chatMessages('user').length, 'no new user row — the click was silently suppressed').toBeGreaterThan(userRowsBefore)
-    expect(chatMessages('agent').length, 'the agent never continued — turn 2 did not run').toBeGreaterThan(agentRowsBefore)
-    const lastUserRow = chatMessages('user').at(-1)
-    expect(lastUserRow?.textContent, 'the appended row should describe the click').toContain('submit')
+    // The canvas re-rendered turn 2's continuation — the confirmation surface's Text — into the same host.
+    await waitUntil(() => (document.querySelector("ui-surface-host [data-part='surface']")?.textContent ?? '').includes('turn 2'))
+    expect(document.querySelector("ui-surface-host [data-part='surface']")?.textContent, "turn 2's confirmation surface should render into the canvas").toContain('The agent continues')
+
+    // TKT-0094 contract: a client-action click drives the next turn WITHOUT adding a synthetic "↳ clicked …"
+    // echo row to the chat (the click is the surface interaction, not a typed user message — `handleClient
+    // Message` no longer calls `addMessage('user', …)`). The user-row count must therefore stay UNCHANGED
+    // across the click — asserting this actively locks in the post-TKT-0094 behavior and guards against the
+    // echo bubble being re-introduced (this test previously asserted the OPPOSITE, which is why it was stale).
+    expect(chatMessages('user').length, 'a client-action click must NOT add a synthetic user echo row (TKT-0094)').toBe(userRowsBefore)
   })
 })
 
