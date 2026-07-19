@@ -83,6 +83,21 @@ never restate their internals here.
   script transforms a COPY of each `package.json` (+ emitted specifiers) at publish time only. The
   launch-day unscoped `agent-ui-*@0.0.2` set was fully UNPUBLISHED the same day — those 8 names no
   longer exist on the registry at all; never republish to them.
+- **Package-page content ships AUTOMATICALLY via the transform** (v0.0.4/v0.0.5 waves) — never
+  hand-edit a scratch dir: each package's `README.md` (authored in the PUBLISHED `@agent-ui-kit/*`
+  names — it copies without specifier rewriting, and its CDN examples' `@<pkg>@<semver>` version pins
+  are REWRITTEN to the release version at publish time), the root `LICENSE` (npm only auto-packs one
+  from the package root, i.e. the scratch dir), `description` (single-sourced from the workspace
+  `package.json`), and `keywords`/`homepage`/`bugs` (the script's own `PACKAGE_KEYWORDS` map).
+  **Adding a 9th package** = its README + a `description` in its manifest + a `PACKAGE_KEYWORDS`
+  entry + a `PACKAGE_ORDER` slot.
+- **The CDN recipes are load-bearing contracts** (README `## CDN` sections, probe-verified 2026-07-19):
+  esm.sh resolves the exports-map subpaths for BOTH JS and CSS and rewrites bare `@agent-ui-kit/*`
+  sibling imports; `component-styles.css` must stay RELATIVE-imports-only (CDN-safe today) while
+  `foundation-styles.css` is known-bare (browsers can't resolve its `@import`s — the recipes link
+  shared's `tokens.css` + `dimensions.css` directly instead). A CSS-barrel edit that introduces a bare
+  `@import` silently breaks the documented recipe — GH #71 (install-from-registry smoke) is the gate
+  that should catch it.
 - License: MIT (`LICENSE` at repo root) — Kim's decision, 2026-07-19.
 - `agent-ui-app` currently targets Vite/Rolldown-family bundlers only (`?url`/`?raw` import-query
   specifiers in `app-shell.ts`, documented in `publish-packages.mjs`'s own header — see there for the

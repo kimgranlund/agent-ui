@@ -230,9 +230,14 @@ function preparePackage(pkgDir, version) {
 
   // README + LICENSE ship with every package (npm renders the package page from README and only
   // auto-packs both from the PACKAGE root — which at publish time is this scratch dir). READMEs are
-  // authored against the PUBLISHED names already, so they copy verbatim (no specifier rewrite).
+  // authored against the PUBLISHED names already (no specifier rewrite) — but their CDN examples pin
+  // versions, and a hand-pinned version rots one release later: rewrite every
+  // `@agent-ui-kit/<pkg>@<semver>` pin to THIS release's version at publish time.
   const readmePath = join(pkgRoot, 'README.md')
-  if (existsSync(readmePath)) writeFileSync(join(scratchRoot, 'README.md'), readFileSync(readmePath, 'utf8'))
+  if (existsSync(readmePath)) {
+    const readme = readFileSync(readmePath, 'utf8').replace(/@agent-ui-kit\/([a-z0-9-]+)@\d+\.\d+\.\d+/g, `@agent-ui-kit/$1@${version}`)
+    writeFileSync(join(scratchRoot, 'README.md'), readme)
+  }
   writeFileSync(join(scratchRoot, 'LICENSE'), readFileSync(join(REPO_ROOT, 'LICENSE'), 'utf8'))
 
   writeFileSync(join(scratchRoot, 'package.json'), `${JSON.stringify(transformPackageJson(pkgJson, version), null, 2)}\n`)
