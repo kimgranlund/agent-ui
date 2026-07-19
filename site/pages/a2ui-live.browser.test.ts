@@ -227,7 +227,14 @@ function mountCanvasTabs(selected = 'canvas'): HTMLElement {
   tabs.setAttribute('selected', selected)
   const mk = (value: string, label: string): HTMLElement => {
     const t = document.createElement('ui-tab')
-    t.setAttribute('value', value)
+    // `key` (not `value`) is ui-tab's identity attribute since the TKT-0069 rename (`value` is reserved
+    // fleet-wide for the FACE form value, naming.md §12) — mirrors a2ui-live.ts's own real tab authoring
+    // (a2ui-live.ts:145). This fixture predates that rename (2026-07-06, commit d41f2e8) and was missed by
+    // the rename wave's residue sweep (2026-07-16, commit d6a93cb) because it lives in a LOCAL test helper,
+    // not the production markup the sweep grepped — GH #20's root cause: `tab.key` stayed '' for every tab,
+    // so ui-tabs' commit/resolve logic (tabs.ts's documented, tested "value, else DOM index" fallback)
+    // correctly fell back to the index, exactly as designed for a genuinely key-less tab.
+    t.setAttribute('key', value)
     t.textContent = label
     return t
   }

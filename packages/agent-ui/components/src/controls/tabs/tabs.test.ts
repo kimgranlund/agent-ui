@@ -217,6 +217,23 @@ describe('ui-tabs — the commit `select` event + binding hygiene (s8)', () => {
     await tabs.updateComplete
     expect(count).toBe(0)
   })
+
+  // Regression — GH #20: a keyed tab's user-click commit must reflect `selected` as the tab's VALUE (its
+  // `key`), never its positional DOM index, even though the index and the key can coincidentally collide in
+  // shape (both are strings) — a keyless-tabs fixture (build() above) can't distinguish the two, so this one
+  // pins `values` explicitly. The bug this guards: a tab whose `key` never resolved (e.g. an attribute-name
+  // mismatch upstream) silently falls back to `#commit`'s documented index fallback — correct FOR a genuinely
+  // key-less tab, wrong here because a real key IS present.
+  it('a click commit on a KEYED tab reflects `selected` as the VALUE, not the DOM index (GH #20)', async () => {
+    const { tabs, tabEls } = build({ values: ['overview', 'pricing', 'faq'] })
+    const selects: CustomEvent[] = []
+    tabs.addEventListener('select', (e) => selects.push(e as CustomEvent))
+    tabEls[1].dispatchEvent(new MouseEvent('click', { bubbles: true })) // index 1, key 'pricing'
+    await tabs.updateComplete
+    expect(tabs.getAttribute('selected'), 'selected must reflect the VALUE, not the index "1"').toBe('pricing')
+    expect(selects).toHaveLength(1)
+    expect(selects[0].detail).toEqual({ value: 'pricing', index: 1 })
+  })
 })
 
 describe('ui-tabs — zero residue + re-arm across connect/disconnect (s8)', () => {
