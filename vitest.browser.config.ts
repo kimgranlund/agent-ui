@@ -15,23 +15,19 @@ import { playwright } from '@vitest/browser-playwright'
 // subpaths, and the barrels' inner `@import '@agent-ui/shared/...'`) through their package `exports` map.
 // vitest 4.1 takes the provider as a factory from `@vitest/browser-playwright` (no longer a string).
 //
-// HEAP: the full-suite `npm run test:browser` runs the MAIN vitest process as the single node-side
-// orchestrator for all three projects × both engines (~190 file×engine runs). Browser test bodies run in
-// the Playwright-driven engines (separate OS processes), but this one node process holds the whole Vite
-// module graph (framework + a2ui + site, transformed and cached) PLUS every collected task tree / result /
-// error for the run, accumulating and only freeing at the end. Node's default old-space ceiling is ~4 GB;
-// under a normal run this footprint alone (~4.3 GB) is enough to cross it. But the DOMINANT, contention-
-// sensitive driver isn't suite size — it's an UNBOUNDED error-accumulation cascade from the known a2ui-live
-// orchestrator-protocol poisoning (fetch interception bleeding into vitest-browser's own fetch-based
-// protocol, site/lib/command-palette.browser.test.ts:51-54's documented pathology): under contention this
-// throws tens of thousands of "Unknown event" errors, string-concatenated into gigabytes, review-verified
-// during issue #22. That's why the crash was intermittent/scheduling-dependent rather than a hard suite-
-// size ceiling. The `test:browser` npm script prefixes `NODE_OPTIONS=--max-old-space-size=8192` (8 GB) as
-// the immediate fix (raising the ceiling, not sharding — this is single-process accumulation, not per-
-// worker concurrency), but this ceiling can still be exceeded under heavy contention if that cascade fires
-// long enough (as it has before — see llms-full.txt's 2026-07-09 note). The durable fix is bounding/root-
-// causing the a2ui-live cascade itself (a follow-up issue, filed alongside #22's close) — bump this number
-// only as a stopgap, and do not paper over either problem with test timeouts.
+// HEAP (resolved 2026-07-19, GH #41): the full suite in ONE vitest process holds the whole Vite module
+// graph (framework + a2ui + site) PLUS every collected task tree/result for ~190 file×engine runs, and
+// that footprint OUTGREW the raised 8 GB ceiling as the suite grew — two crash specimens on 2026-07-19
+// carried the plain "Ineffective mark-compacts near heap limit" signature and ZERO "Unknown event" lines,
+// retiring #22-era theory that an a2ui-live fetch-interception error cascade was the dominant driver (no
+// raw `fetch =` assignment exists in site/ or a2ui today; command-palette's stub is per-test scoped). The
+// durable fix is STRUCTURAL, not a bigger number: `npm run test:browser` now runs the three projects as
+// SEQUENTIAL SHARDS (packages → site → visual), each its own process whose peak sits far under node's
+// default ceiling — the crash class is gone regardless of future suite growth, and no NODE_OPTIONS
+// override is needed. Do not re-monolith the script or re-add a ceiling bump; if a single SHARD ever
+// approaches the default ceiling, split that project further instead. Known cost: full-shard concurrency
+// surfaces a focus/timing flake class in ~6 interaction files (each passes solo — GH #56 tracks granting
+// those files isolation or hardening them).
 
 export default defineConfig({
   test: {
