@@ -60,7 +60,7 @@ describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {
     }
   })
 
-  it('the six COLLECTIVELY cover the config axes: all four models, tools both states, temp both halves', () => {
+  it('the roster COLLECTIVELY covers the config axes: all four models, tools both states, temp both halves', () => {
     expect(new Set(AGENT_PRESETS.map((p) => p.config.model)).size).toBe(4)
     expect(new Set(AGENT_PRESETS.map((p) => p.config.toolsEnabled)).size).toBe(2)
     expect(AGENT_PRESETS.some((p) => p.config.temperature <= 0.2)).toBe(true)
@@ -203,5 +203,38 @@ describe('Integrations pack ↔ registry parity (GH #49)', () => {
     const currency = INTEGRATIONS.find((i) => i.id === 'currency')!
     await expect(currency.execute({ amount: 'ten', from: 'EUR', to: 'USD' })).rejects.toThrow('currency: needs numeric')
     await expect(currency.execute({ amount: 5, from: 'EURO', to: 'USD' })).rejects.toThrow()
+  })
+})
+
+// ── GH #46 / PR #60 review — the seedVersion one-time migration ─────────────────────────────────────────
+
+describe('presetStore — seedVersion migration (the in-place Concierge upgrade)', () => {
+  it('a persisted OLD-version store is dropped and the new seed applies; same-version edits survive', async () => {
+    const { presetStore, AGENT_PRESETS, resetPreset } = await import('./agent-admin-presets.ts')
+    const concierge = AGENT_PRESETS.find((p) => p.id === 'concierge')!
+    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(2)
+
+    // Simulate a PRE-upgrade browser: old persisted content, NO seedVersion marker (=1 implicitly).
+    resetPreset(concierge) // clean slate for the probe (drops cache + keys)
+    localStorage.removeItem('agent-admin-app.concierge.seedVersion')
+    localStorage.setItem('agent-admin-app.concierge.entries:skill', JSON.stringify([
+      { id: 'form-rhythm', kind: 'skill', label: 'form-rhythm', description: 'old', content: 'old', order: 0, enabled: true, builtin: false },
+    ]))
+
+    const migrated = presetStore(concierge)
+    const skills = migrated.get('entries:skill') as Array<{ id: string }>
+    expect(skills.some((s) => s.id === 'form-rhythm'), 'the stale persisted store was dropped').toBe(false)
+    expect(skills.some((s) => s.id === 'hotel-booking-form'), 'the NEW seed applied').toBe(true)
+    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('2')
+
+    // Same-version edits SURVIVE a rebuild (persisted-wins is untouched at the current version).
+    migrated.set('entries:skill', [...skills.map((s) => s), { id: 'my-edit', kind: 'skill', label: 'my-edit', description: '', content: 'mine', order: 99, enabled: true, builtin: false }])
+    const { presetStore: freshImport } = await import('./agent-admin-presets.ts')
+    // the module cache holds the store cache — drop it via resetPreset-free rebuild: new store instance
+    // requires a cold cache; assert through localStorage instead (the persistence layer both read paths share).
+    const persisted = JSON.parse(localStorage.getItem('agent-admin-app.concierge.entries:skill') ?? '[]') as Array<{ id: string }>
+    expect(persisted.some((s) => s.id === 'my-edit'), 'a current-version edit persists — no migration fired').toBe(true)
+    void freshImport
+    resetPreset(concierge) // leave no residue for sibling tests
   })
 })

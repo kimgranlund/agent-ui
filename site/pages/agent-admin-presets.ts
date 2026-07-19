@@ -1,7 +1,9 @@
-// site/pages/agent-admin-presets.ts — the six A2UI-SHOWCASE personas for the standalone agent-admin
-// surface (TKT-0074) + their persona-scoped store mechanics. PAGE-LOCAL data, deliberately not a package
-// export (the ticket's scope line): the PAGE owns which personas exist; the packages own only the
-// primitives this file composes (createMemoryStore · entriesStoreKey · DEFAULT_PROMPT_SECTIONS).
+// site/pages/agent-admin-presets.ts — the agent-admin roster: the six original A2UI-SHOWCASE personas
+// (TKT-0074) + the GH #46 hospitality/travel additions (the Concierge upgraded in place to the Hotel
+// Concierge; the Maître d' and the Travel Agent new) + their persona-scoped store mechanics. PAGE-LOCAL
+// data, deliberately not a package export (the ticket's scope line): the PAGE owns which personas
+// exist; the packages own only the primitives this file composes (createMemoryStore · entriesStoreKey ·
+// DEFAULT_PROMPT_SECTIONS).
 //
 // The design (ruled in-conversation 2026-07-16, the option-2 shape): each preset is its OWN store —
 // `createMemoryStore({ initial: seed, persistKey: 'agent-admin-app.<id>' })` — so edits persist PER
@@ -12,9 +14,11 @@
 //
 // Each persona steers a DIFFERENT A2UI catalog family + interaction mechanism: its Foundation builtin is
 // rewritten to the persona, a custom "Surface style" section teaches when to emit UI vs prose, and its
-// capability entries carry labels that intent-match the shipped mini-skill registry (ADR-0091:
-// card-game-sheet · dashboard-kpi-grid · form-rhythm · login-form) so `selectMiniSkills` fires
-// differently per persona on the DEV live path. The stub path still proves the plumbing: the stub reply
+// capability entries either intent-match the shipped mini-skill registry (ADR-0091 — the game/dashboard
+// showcases: card-layout · game-table-chrome · game-hud · dashboard-kpi-grid) or carry AUTHORED
+// hospitality/travel skills seeded from the library packs (GH #46 — projected wholesale into the live
+// prompt via composeLiveSystemPrompt, stronger than registry intent-matching; form-rhythm/login-form
+// left the roster with the old Concierge). The stub path still proves the plumbing: the stub reply
 // cites the composed prompt + enabled capabilities without emitting surfaces.
 import { createMemoryStore } from '@agent-ui/app/settings-memory-store'
 import type { SettingsStore } from '@agent-ui/app/settings-store'
@@ -41,6 +45,10 @@ export interface AgentPreset {
   tools: readonly SeedEntry[]
   /** Builtin prompt-section ids to seed DISABLED (coverage: disabled-but-never-removed, ADR-0132 Fork 4). */
   disabledBuiltins?: readonly string[]
+  /** Bump when a preset's SEED is rewritten in place (GH #46's Concierge upgrade): a browser holding an
+   *  older persisted store for this id gets a one-time reset-to-new-seed (see `presetStore`). Absent = 1.
+   *  User edits on the CURRENT version always survive — only a version bump migrates. */
+  seedVersion?: number
 }
 
 /** A seed capability entry — expanded to a full `Entry` (order = array index) by `presetSeed`. */
@@ -153,6 +161,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   },
   {
     id: 'concierge', // GH #46 — upgraded IN PLACE to the Hotel Concierge (same id: persisted stores key on it)
+    seedVersion: 2, // the in-place rewrite — migrates any pre-upgrade persisted store (PR #60 review)
     label: 'The Hotel Concierge',
     tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
     config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: true },
@@ -377,9 +386,23 @@ const storeCache = new Map<string, SettingsStore>()
 
 /** The persona's store — cached per id so switching away and back keeps one live instance; persisted
  *  values (this persona's OWN prior edits) win over the seed, memory-store.ts's parity law. */
+/** The persisted seed-version marker key (GH #46 / PR #60 review). Persisted-wins-over-seed is the
+ *  store law — correct for USER edits, but it also makes an in-place PRESET UPGRADE (the Concierge →
+ *  Hotel Concierge rewrite) invisible to anyone whose browser carries the old persona's persisted
+ *  store. A preset that declares a bumped `seedVersion` performs an EXPLICIT one-time migration: the
+ *  stale persisted store (old seed AND any edits made on top of it) is dropped and the new seed
+ *  applies — the same semantic as the user's own "Reset persona", triggered by the upgrade instead. */
+const seedVersionKey = (id: string): string => `${persistKeyFor(id)}.seedVersion`
+
 export function presetStore(preset: AgentPreset): SettingsStore {
   let store = storeCache.get(preset.id)
   if (!store) {
+    const wanted = preset.seedVersion ?? 1
+    if (typeof localStorage !== 'undefined') {
+      const persisted = Number(localStorage.getItem(seedVersionKey(preset.id)) ?? '1')
+      if (persisted < wanted) resetPreset(preset) // the one-time migration — drops the stale persisted store
+      localStorage.setItem(seedVersionKey(preset.id), String(wanted))
+    }
     store = createMemoryStore({ initial: presetSeed(preset), persistKey: persistKeyFor(preset.id) })
     storeCache.set(preset.id, store)
   }
