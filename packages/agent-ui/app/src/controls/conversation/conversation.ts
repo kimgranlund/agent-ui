@@ -181,6 +181,7 @@ const PROGRESS_LABEL: Record<TurnProgressStage, string> = {
   content: 'Writing the response…',
   validating: 'Validating…',
   retry: 'Self-correcting…',
+  tool: 'Running an integration…', // GH #49 — detail carries the registry tool NAME, composed at call time
   done: 'Done',
 }
 
@@ -373,8 +374,20 @@ export class UIConversationElement extends UIElement {
         lastProgressKey = undefined
         return
       }
-      const label = ev.stage === 'retry' ? (ev.round === undefined ? base : `${base} (round ${ev.round})`) : base
-      const key = ev.stage === 'retry' ? `t${seq}-progress-retry-${ev.round ?? 1}` : `t${seq}-progress-${ev.stage}`
+      // `retry` composes the real round ordinal; `tool` composes the registry tool NAME from detail —
+      // both factual values from the closed vocabularies, never model prose (GH #49 / ADR-0146 F2).
+      const label =
+        ev.stage === 'retry'
+          ? (ev.round === undefined ? base : `${base} (round ${ev.round})`)
+          : ev.stage === 'tool' && ev.detail
+            ? `${base} (${ev.detail})`
+            : base
+      const key =
+        ev.stage === 'retry'
+          ? `t${seq}-progress-retry-${ev.round ?? 1}`
+          : ev.stage === 'tool'
+            ? `t${seq}-progress-tool-${ev.detail ?? 'unknown'}`
+            : `t${seq}-progress-${ev.stage}`
       if (lastProgressKey !== undefined && lastProgressKey !== key) narration.update(lastProgressKey, { status: 'done' })
       if (progressKeysSeen.has(key)) narration.update(key, { status: 'active', label })
       else {

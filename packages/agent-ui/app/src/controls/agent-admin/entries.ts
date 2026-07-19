@@ -4,9 +4,10 @@
 //
 // Five instantiations share this ONE shape (ADR-0132 cl.1): prompt sections (kind='prompt-section',
 // seeded with three built-in entries — Foundation/Personality/Critical Items) and four capability kinds
-// (skill/workflow/resource/tool, unseeded — purely custom-authored, no backend to seed from). A future
-// kind is a new `ENTRY_KINDS` member + optional seed data — never new list/toggle/author code
-// (ADR-0132 cl.1/Fork 2: the taxonomy is extensible, not a hardcoded enum).
+// (skill/workflow/resource/tool — their STORES start empty; entries arrive hand-authored, or since
+// GH #47/#48 from an opt-in-per-add library pack (`EntryLibraryPack` below) — still never an automatic
+// initial seed). A future kind is a new `ENTRY_KINDS` member + optional seed data — never new
+// list/toggle/author code (ADR-0132 cl.1/Fork 2: the taxonomy is extensible, not a hardcoded enum).
 //
 // Custom-entry depth is DELIBERATELY generic (ADR-0132 Fork 3): label + description + free-text content,
 // uniform across every kind. A kind-specific schema (e.g. a Tool's parameter list) is an explicitly

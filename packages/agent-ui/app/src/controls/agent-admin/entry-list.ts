@@ -94,7 +94,10 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
     libraryMenu.setAttribute('data-part', 'entry-library-menu')
     const libraryTrigger = document.createElement('ui-button') as UIButtonElement
     libraryTrigger.setAttribute('variant', 'soft')
-    libraryTrigger.setAttribute('data-part', 'entry-library-trigger')
+    // NO bespoke data-part on the trigger — ui-menu's #ensureParts unconditionally stamps its first
+    // child `data-part="trigger"` (menu.ts), so any value set here is clobbered at connect (PR #58
+    // review finding). Scope queries through the MENU's own marker instead:
+    // `[data-part='entry-library-menu'] [data-part='trigger']`.
     const libraryIcon = document.createElement('ui-icon') as UIIconElement
     libraryIcon.setAttribute('slot', 'leading')
     libraryIcon.setAttribute('data-role', 'icon')

@@ -163,7 +163,7 @@ describe('ADMIN_LIBRARIES — data integrity (GH #47/#48)', () => {
   it('the a2ui-idioms pack derives from the REAL registry files — same count as the .md glob, known ids present', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
     const { ENTRY_KINDS } = await import('@agent-ui/app')
-    const files = readdirSync('packages/agent-ui/a2ui/src/agent/prompts/mini-skills').filter((f) => f.endsWith('.md'))
+    const files = (readdirSync('packages/agent-ui/a2ui/src/agent/prompts/mini-skills') as string[]).filter((f) => f.endsWith('.md'))
     const pack = ADMIN_LIBRARIES[ENTRY_KINDS.skill]!.find((p) => p.id === 'a2ui-idioms')!
     expect(pack.entries.length, 'one pack entry per registry .md file — drift-free derivation').toBe(files.length)
     const labels = new Set(pack.entries.map((e) => e.label))
