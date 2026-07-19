@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-18 |
 > | **Proposed by** | bug-report intake ([issue #31](https://github.com/kimgranlund/agent-ui/issues/31) — Kim's two screenshots, 2026-07-18: the `h1.page-heading` on `/timeline-demo` and doc-page prose/bullets rendering near-white on the light surface with the site toggle on Light under a dark OS scheme; root-caused to the ink-inheritance hazard ADR-0117's LLD already names) |
 > | **Ratified by** | — (proposed; the Status cell is Kim's to flip) |
