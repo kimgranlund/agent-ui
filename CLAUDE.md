@@ -14,9 +14,10 @@ Plan `.claude/docs/plan.md` · Goals + per-milestone DoD `.claude/docs/goals.md`
 
 - `npm run check` — the standing type gate, three steps: `tsc` (packages) `&& check:site` (the docs site's own tsconfig) `&& check:tools` (`tsconfig.tools.json` — scripts + a2ui tools); all `noEmit`
 - `npm test` — Vitest (jsdom), once · `npm run test:watch` — watch mode
-- `npm run test:browser` — the real-engine gate, THREE SEQUENTIAL per-project shards (packages → site →
-  visual; GH #41 — never re-monolith it or add a heap bump; a single shard nearing the default ceiling
-  splits further)
+- `npm run test:browser` — the real-engine gate, FOUR SEQUENTIAL shards (packages:components →
+  packages:rest → site → visual; GH #41 — never re-monolith it or add a heap bump; a single shard
+  nearing the default ceiling splits further — the packages project itself split 2026-07-19 after
+  crossing the ceiling, measured red on main pre-diff)
 - `npm run dev` / `npm run build` — the docs site (`site/`) is the app entry; build live since the
   ADR-0077 wave, incl. the G8 `<component-gallery>` (`gallery.html`)
 

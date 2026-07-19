@@ -71,6 +71,12 @@ const props = {
   // affordance most product surfaces should not show by default.
   disclosure: { ...prop.boolean(false), reflect: true },
 
+  // Vision rev.5 (agent-admin's Agent master switch) — the whole-conversation availability gate: while
+  // true the composer renders busy-disabled (same visual/behavioral state as a turn in flight, ONE
+  // mechanism) and `#send` no-ops. Orthogonal to the TKT-0034 in-flight COUNT — the two OR together at
+  // every reflect site, so flipping this mid-turn can never unstick or double-free the busy counter.
+  disabled: { ...prop.boolean(false), reflect: true },
+
   // ── The opt-in composer capabilities (the Figma chat-input refactor) ────────────────────────────────
   // Every one below defaults to undefined/empty, so an existing consumer that never sets them (a2ui-chat,
   // a2ui-live) gets the ORIGINAL field+Send composer, unchanged. A consumer (e.g. ui-agent-admin) opts in
@@ -247,6 +253,7 @@ export class UIConversationElement extends UIElement {
       // it works regardless of whether the consumer's own `onXChange(cb)` call happens before or after
       // THIS element connects (LLD CVC-C5, code-reviewer finding F1).
       composer.onSubmit((text) => {
+        if (this.disabled) return // belt to the composer's own busy-disable — no bubble, no callback
         this.addUserMessage(text)
         this.#onSubmitCb?.(text)
       })
@@ -273,6 +280,7 @@ export class UIConversationElement extends UIElement {
       this.#composer.efforts = this.efforts
       this.#composer.effort = this.effort
       this.#composer.contextItems = this.contextItems
+      this.#reflectBusy() // `disabled` reads here too — the effect re-runs on its change
     })
   }
 
@@ -342,13 +350,13 @@ export class UIConversationElement extends UIElement {
     // ONE #endTurn() per handle guards against a caller invoking BOTH finalize() and fail() (never legal
     // per the SPEC, but a stray double-call must not under-flow the count into a stuck-busy negative).
     this.#turnsInFlight += 1
-    if (this.#composer) this.#composer.busy = true
+    this.#reflectBusy()
     let ended = false
     const endTurn = (): void => {
       if (ended) return
       ended = true
       this.#turnsInFlight = Math.max(0, this.#turnsInFlight - 1)
-      if (this.#composer) this.#composer.busy = this.#turnsInFlight > 0
+      this.#reflectBusy()
     }
     let noteText: string | undefined
     const turnLines: string[] = []
@@ -548,7 +556,12 @@ export class UIConversationElement extends UIElement {
     this.#registry.clear()
     this.#log!.replaceChildren()
     this.#turnsInFlight = 0
-    if (this.#composer) this.#composer.busy = false
+    this.#reflectBusy()
+  }
+
+  /** The ONE composer-busy write site: in-flight turns OR the `disabled` availability gate. */
+  #reflectBusy(): void {
+    if (this.#composer) this.#composer.busy = this.disabled || this.#turnsInFlight > 0
   }
 
   /** Leak-safety net (the select.ts/text-field.ts "heavyweight per-connection resource" precedent) — a

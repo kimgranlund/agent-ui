@@ -159,13 +159,6 @@ export function agentConfigSchema(): SettingsSchema {
           default: 0.5,
           validation: { min: 0, max: 1, step: 0.1 },
         },
-        {
-          key: 'toolsEnabled',
-          type: 'boolean',
-          label: 'Tools enabled',
-          description: 'Whether the stub reply mentions tool availability.',
-          default: false,
-        },
       ],
     },
   ],
@@ -173,8 +166,30 @@ export function agentConfigSchema(): SettingsSchema {
 }
 
 /** The shared, read-only default schema — the model select is GONE from it (the grid took over), so
- *  no customModels-driven schema rebuild exists anymore; the grid re-renders itself instead. */
+ *  no customModels-driven schema rebuild exists anymore; the grid re-renders itself instead. The
+ *  `toolsEnabled` boolean FIELD is gone too (vision rev.5, Kim's Figma frame 33:1693): kind-level
+ *  gating moved to each capability section's own header master switch — same store keys, no field. */
 export const defaultAgentConfigSchema: SettingsSchema = agentConfigSchema()
+
+// ── Master toggles (vision rev.5 — Kim's Figma frame 33:1693, ruled 2026-07-19) ─────────────────────────
+
+/** The store key for the Agent card's own master switch — "is this agent active/available" (Kim's
+ *  ruling). `false` disables the composer (no turns run); everything else stays editable. */
+export const AGENT_ENABLED_KEY = 'agentEnabled'
+
+/** The store key carrying one capability kind's MASTER switch (the section-header toggle) — plural
+ *  `${kind}sEnabled`, so the `tool` kind resolves to the PRE-EXISTING `toolsEnabled` key (the old Agent-
+ *  card boolean field's persisted values carry over unchanged). */
+export function kindEnabledKey(kind: string): string {
+  return `${kind}sEnabled`
+}
+
+/** A master-switch read: default ON — only an explicit stored `false` disables (a fresh store ships
+ *  every toggle up, matching the vision frame; NOTE this flips the old `toolsEnabled === true` read,
+ *  whose unset default was OFF — the section-header switch renders its state honestly either way). */
+export function isEnabledFlag(value: unknown): boolean {
+  return value !== false
+}
 
 /** The agent-config values the stub turn loop reads at turn time — always the CURRENT store contents,
  *  never cached (this IS the live-apply mechanism: a store read at turn time trivially reflects whatever

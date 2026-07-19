@@ -104,7 +104,7 @@ class FakeResizeObserver {
   }
 }
 
-describe('UIAgentAdminElement — responsive shell (TKT-0085): wide / medium / narrow', () => {
+describe('UIAgentAdminElement — responsive shell (TKT-0085 → vision rev.5): split / narrow', () => {
   let realResizeObserver: typeof ResizeObserver | undefined
   beforeAll(() => {
     realResizeObserver = globalThis.ResizeObserver
@@ -132,36 +132,35 @@ describe('UIAgentAdminElement — responsive shell (TKT-0085): wide / medium / n
     expect(ro.target).toBeNull()
   })
 
-  it('wide (≥1024px): the 3-pane split shows, the narrow all-tabs shell stays hidden', () => {
+  it('split (≥640px): [ chat | {Settings, Context} tabs ] — the narrow all-tabs shell stays hidden (vision rev.5)', () => {
     const { el } = mountAndResize(1200)
     const split = el.querySelector(':scope > ui-split') as HTMLElement
     expect(split.hidden).toBe(false)
     const paneRoles = [...split.children].filter((c) => c.tagName === 'UI-SPLIT-PANE').map((c) => c.getAttribute('data-role'))
-    expect(paneRoles).toEqual(['canvas', 'prompts', 'settings'])
+    expect(paneRoles).toEqual(['canvas', 'tabs'])
     const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
     expect(narrowTabs.hidden).toBe(true)
     expect(el.querySelector('[data-role="canvas"] ui-conversation')).not.toBeNull()
-    expect(el.querySelector('[data-role="prompts"] [data-part="entry-section-heading"]')).not.toBeNull()
-    expect(el.querySelector('[data-role="settings"] [data-part="agent-heading"]')).not.toBeNull()
+    const tabsPane = el.querySelector('[data-role="tabs"]') as HTMLElement
+    const tabLabels = [...tabsPane.querySelectorAll('ui-tab')].map((t) => t.textContent)
+    expect(tabLabels).toEqual(['Settings', 'Context'])
+    // The Settings panel carries the WHOLE config column (Agent header + prompts + capabilities merged);
+    // the Context panel carries the introspection groups. Panel visibility is a CSS/ui-tabs concern —
+    // both stay in the DOM, only the inactive one is [hidden].
+    expect(tabsPane.querySelector('[data-part="agent-heading"]')).not.toBeNull()
+    expect(tabsPane.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
+    expect(tabsPane.querySelector('[data-role="context-content"]')).not.toBeNull()
   })
 
-  it('medium (640–1023px): [ Chat | {Instructions, Agent} tabs ] — canvas pane + ONE tabs-medium pane', () => {
+  it('the old medium band (640–1023px) now renders the SAME split shape — one layout above the threshold', () => {
     const { el } = mountAndResize(800)
     const split = el.querySelector(':scope > ui-split') as HTMLElement
     expect(split.hidden).toBe(false)
     const paneRoles = [...split.children].filter((c) => c.tagName === 'UI-SPLIT-PANE').map((c) => c.getAttribute('data-role'))
-    expect(paneRoles).toEqual(['canvas', 'tabs-medium'])
-    expect(el.querySelector('[data-role="canvas"] ui-conversation')).not.toBeNull()
-    const tabsMediumPane = el.querySelector('[data-role="tabs-medium"]') as HTMLElement
-    const tabLabels = [...tabsMediumPane.querySelectorAll('ui-tab')].map((t) => t.textContent)
-    expect(tabLabels).toEqual(['Instructions', 'Agent'])
-    // Both panels' real content live inside this ONE tabs-medium pane (panel visibility is a CSS/ui-tabs
-    // concern, not a DOM-presence one — both panels stay in the DOM, only the inactive one is [hidden]).
-    expect(tabsMediumPane.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
-    expect(tabsMediumPane.querySelector('[data-part="agent-heading"]')).not.toBeNull()
+    expect(paneRoles).toEqual(['canvas', 'tabs'])
   })
 
-  it('narrow (<640px): {Chat, Instructions, Agent} tabs — the split is hidden and empty', () => {
+  it('narrow (<640px): {Chat, Settings, Context} tabs — the split is hidden and empty', () => {
     const { el } = mountAndResize(500)
     const split = el.querySelector(':scope > ui-split') as HTMLElement
     expect(split.hidden).toBe(true)
@@ -169,13 +168,14 @@ describe('UIAgentAdminElement — responsive shell (TKT-0085): wide / medium / n
     const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
     expect(narrowTabs.hidden).toBe(false)
     const tabLabels = [...narrowTabs.querySelectorAll('ui-tab')].map((t) => t.textContent)
-    expect(tabLabels).toEqual(['Chat', 'Instructions', 'Agent'])
+    expect(tabLabels).toEqual(['Chat', 'Settings', 'Context'])
     expect(narrowTabs.querySelector('ui-conversation')).not.toBeNull()
     expect(narrowTabs.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
     expect(narrowTabs.querySelector('[data-part="agent-heading"]')).not.toBeNull()
+    expect(narrowTabs.querySelector('[data-role="context-content"]')).not.toBeNull()
   })
 
-  it('content nodes are MOVED (same identity), never rebuilt, across a wide → narrow → wide round trip', () => {
+  it('content nodes are MOVED (same identity), never rebuilt, across a split → narrow → split round trip', () => {
     const { el, ro } = mountAndResize(1200)
     const conversation = el.querySelector('ui-conversation')
     const settingsHeading = el.querySelector('[data-part="agent-heading"]')
@@ -186,19 +186,19 @@ describe('UIAgentAdminElement — responsive shell (TKT-0085): wide / medium / n
     expect(el.querySelector('[data-part="agent-heading"]')).toBe(settingsHeading)
     expect(el.querySelector('[data-part="entry-section-heading"]')).toBe(instructionsHeading)
 
-    ro.trigger(1200) // -> back to wide
+    ro.trigger(1200) // -> back to split
     expect(el.querySelector('ui-conversation')).toBe(conversation)
     expect(el.querySelector('[data-part="agent-heading"]')).toBe(settingsHeading)
     expect(el.querySelector('[data-part="entry-section-heading"]')).toBe(instructionsHeading)
-    // Landed back in the ORIGINAL wide-shell panes, not left behind in a detached tab shell.
+    // Landed back in the ORIGINAL split-shell panes, not left behind in a detached tab shell.
     expect(el.querySelector('[data-role="canvas"] ui-conversation')).toBe(conversation)
-    expect(el.querySelector('[data-role="settings"] [data-part="agent-heading"]')).toBe(settingsHeading)
+    expect(el.querySelector('[data-role="tabs"] [data-part="agent-heading"]')).toBe(settingsHeading)
   })
 
   it('is idempotent — re-triggering a resize WITHIN the same band does not rebuild the shell', () => {
     const { el, ro } = mountAndResize(1200)
     const split = el.querySelector(':scope > ui-split') as HTMLElement
-    ro.trigger(1100) // still wide (≥1024) — a different width, same band
+    ro.trigger(700) // still split (≥640) — a different width, same band
     expect(el.querySelector(':scope > ui-split')).toBe(split) // same node — #applyLayout no-op'd
   })
 
@@ -209,29 +209,29 @@ describe('UIAgentAdminElement — responsive shell (TKT-0085): wide / medium / n
         .filter((c) => c.tagName === 'UI-SPLIT-PANE')
         .map((c) => c.getAttribute('data-role'))
 
-    ro.trigger(800) // -> medium
-    expect(paneRoles()).toEqual(['canvas', 'tabs-medium'])
-    ro.trigger(1200) // -> wide
-    expect(paneRoles()).toEqual(['canvas', 'prompts', 'settings'])
+    ro.trigger(800) // still split (one layout above the threshold)
+    expect(paneRoles()).toEqual(['canvas', 'tabs'])
     ro.trigger(500) // -> narrow
     expect(paneRoles()).toEqual([])
-    ro.trigger(800) // -> medium
-    expect(paneRoles()).toEqual(['canvas', 'tabs-medium'])
-    ro.trigger(1200) // -> wide
-    expect(paneRoles()).toEqual(['canvas', 'prompts', 'settings'])
+    ro.trigger(800) // -> split
+    expect(paneRoles()).toEqual(['canvas', 'tabs'])
+    ro.trigger(500) // -> narrow
+    expect(paneRoles()).toEqual([])
+    ro.trigger(1200) // -> split
+    expect(paneRoles()).toEqual(['canvas', 'tabs'])
 
     // Content stays reachable at real DOM locations after the whole chain — not just structurally present.
     expect(el.querySelector('[data-role="canvas"] ui-conversation')).not.toBeNull()
-    expect(el.querySelector('[data-role="prompts"] [data-part="entry-section-heading"]')).not.toBeNull()
-    expect(el.querySelector('[data-role="settings"] [data-part="agent-heading"]')).not.toBeNull()
+    expect(el.querySelector('[data-role="tabs"] [data-part="entry-section-heading"]')).not.toBeNull()
+    expect(el.querySelector('[data-role="tabs"] [data-part="agent-heading"]')).not.toBeNull()
   })
 
-  it('capability sections (Skills/Workflows/Resources/Tools) travel with the Agent content unit at every band', () => {
+  it('capability sections (Skills/Workflows/Resources/Tools) travel with the Settings content unit at every band', () => {
     const { el } = mountAndResize(500) // narrow — the smallest content-unit-grouping test
     const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
-    const agentPanel = [...narrowTabs.querySelectorAll('ui-tab-panel')][2] as HTMLElement
-    for (const label of ['Skills', 'Workflows', 'Resources', 'Tools']) {
-      expect([...agentPanel.querySelectorAll('[data-part="entry-section-heading"]')].some((h) => h.textContent === label), `missing ${label} section`).toBe(true)
+    const settingsPanel = [...narrowTabs.querySelectorAll('ui-tab-panel')][1] as HTMLElement
+    for (const label of ['Instructions', 'Skills', 'Workflows', 'Resources', 'Tools']) {
+      expect([...settingsPanel.querySelectorAll('[data-part="entry-section-heading"]')].some((h) => h.textContent === label), `missing ${label} section`).toBe(true)
     }
   })
 })
@@ -304,13 +304,13 @@ describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)',
   })
 })
 
-describe('UIAgentAdminElement — composition (ADR-0131 cl.2 three panes; ADR-0132 five entry-list instantiations)', () => {
-  it('builds one ui-split with three ui-split-pane children: canvas, prompts, settings', () => {
+describe('UIAgentAdminElement — composition (vision rev.5: chat + {Settings, Context} tabs; ADR-0132 five entry-list instantiations)', () => {
+  it('builds one ui-split with two ui-split-pane children: canvas, tabs', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const split = el.querySelector(':scope > ui-split')
     expect(split).not.toBeNull()
     const panes = [...split!.querySelectorAll(':scope > ui-split-pane')]
-    expect(panes.map((p) => p.getAttribute('data-role'))).toEqual(['canvas', 'prompts', 'settings'])
+    expect(panes.map((p) => p.getAttribute('data-role'))).toEqual(['canvas', 'tabs'])
   })
 
   it('TKT-0045: the three panes\' real content-floor `min`s sum (+ frame chrome) to the docs demo frame\'s stated minimum', () => {
@@ -330,13 +330,13 @@ describe('UIAgentAdminElement — composition (ADR-0131 cl.2 three panes; ADR-01
       return Number.parseFloat(match![1]!)
     })
     const paneMinsSum = paneMinsRem.reduce((sum, n) => sum + n, 0)
-    // Divider (2 × 1px) + .agent-admin-resize padding (2 × 0.5rem) + its border (2 × 1px) + .agent-admin-demo
-    // border (2 × 1px) — site/pages/agent-admin.css's own chrome constants, restated here as the ONE other
-    // place this arithmetic lives (matching that file's own comment).
-    const chromeRem = 2 / 16 + 1 + 2 / 16 + 2 / 16
+    // Divider (1 × 1px between two panes) + .agent-admin-resize padding (2 × 0.5rem) + its border
+    // (2 × 1px) + .agent-admin-demo border (2 × 1px) — site/pages/agent-admin.css's own chrome constants,
+    // restated here as the ONE other place this arithmetic lives.
+    const chromeRem = 1 / 16 + 1 + 2 / 16 + 2 / 16
     const expectedFloorRem = Math.ceil(paneMinsSum + chromeRem)
     expect(expectedFloorRem).toBeLessThanOrEqual(48) // the frame's actual stated floor must cover the real need
-    expect(paneMinsSum).toBe(46) // 16 + 10 + 20 — pins the THREE pane mins together as one changeset
+    expect(paneMinsSum).toBe(36) // 16 + 20 — vision rev.5's TWO panes, pinned together as one changeset
   })
 
   it('the canvas pane composes a real ui-conversation', () => {
@@ -345,28 +345,38 @@ describe('UIAgentAdminElement — composition (ADR-0131 cl.2 three panes; ADR-01
     expect(canvasPane?.querySelector('ui-conversation')).toBeInstanceOf(UIConversationElement)
   })
 
-  it('the prompts pane composes ONE entry-section, kind=prompt-section', () => {
+  it('the Settings content composes the Agent config (real ui-settings, wired to schema/store) PLUS all FIVE entry-sections (prompts merged in, vision rev.5)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const promptsPane = el.querySelector('[data-role="prompts"]')
-    const section = promptsPane?.querySelector('[data-part="entry-section"]')
-    expect(section?.getAttribute('data-kind')).toBe(ENTRY_KINDS.promptSection)
-  })
-
-  it('the settings pane composes the Agent config (real ui-settings, wired to schema/store) PLUS four capability entry-sections', () => {
-    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const settingsPane = el.querySelector('[data-role="settings"]') as HTMLElement
-    const settingsEl = settingsPane.querySelector('ui-settings') as UISettingsElement
+    const settingsContent = el.querySelector('[data-role="settings-content"]') as HTMLElement
+    const settingsEl = settingsContent.querySelector('ui-settings') as UISettingsElement
     expect(settingsEl).toBeInstanceOf(UISettingsElement)
     expect(settingsEl.schema).toBe(el.schema)
     expect(settingsEl.store).toBe(el.store)
 
-    const sections = [...settingsPane.querySelectorAll('[data-part="entry-section"]')]
+    const sections = [...settingsContent.querySelectorAll('[data-part="entry-section"]')]
     expect(sections.map((s) => s.getAttribute('data-kind'))).toEqual([
+      ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill,
       ENTRY_KINDS.workflow,
       ENTRY_KINDS.resource,
       ENTRY_KINDS.tool,
     ])
+  })
+
+  it('the Context content composes the Agent System + Dialog Turns groups (vision rev.5)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const contextContent = el.querySelector('[data-role="context-content"]') as HTMLElement
+    const groups = [...contextContent.querySelectorAll('[data-part="context-section"]')]
+    expect(groups.map((g) => g.getAttribute('data-section'))).toEqual(['agent-system', 'dialog-turns'])
+    // Agent System: the Agent item (open, with the compiled JSON) + one accordion per capability kind.
+    const items = [...contextContent.querySelectorAll('[data-part="context-system"] [data-part="context-item"]')]
+    expect(items.map((i) => i.getAttribute('data-item'))).toEqual(['agent', ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool])
+    const agentJson = JSON.parse(items[0]!.querySelector('[data-part="context-json"]')!.textContent ?? '{}') as Record<string, unknown>
+    expect(agentJson['model']).toBe(DEFAULT_MODEL_ID)
+    expect(agentJson['active']).toBe(true)
+    expect(typeof agentJson['systemPrompt']).toBe('string')
+    // Dialog Turns: empty until the first turn runs.
+    expect(contextContent.querySelectorAll('[data-part="context-turn"]')).toHaveLength(0)
   })
 })
 
@@ -747,21 +757,81 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     expect(runner.calls[0]!.effort).toBe('high')
   })
 
-  it('toolsEnabled gates the Tools projection: a Tool entry only reaches `system` when the master switch is on', async () => {
+  it('the kind MASTER switches gate the projection (vision rev.5: default ON; an explicit false gates the kind out)', async () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     addEntry(el, ENTRY_KINDS.tool, 'Calculator')
+    addEntry(el, ENTRY_KINDS.skill, 'Web search')
     const runner = recordingRunner('ok')
     el.agentTurn = runner.fn
 
-    submit(el, 'one') // toolsEnabled default false
+    submit(el, 'one') // rev.5: masters default ON — an enabled entry projects out of the box
     await waitFor(() => runner.calls.length === 1, 'first call')
-    expect(runner.calls[0]!.system).not.toContain('## Tools available to you')
+    expect(runner.calls[0]!.system).toContain('## Tools available to you')
+    expect(runner.calls[0]!.system).toContain('## Skills available to you')
 
-    el.store!.set('toolsEnabled', true)
+    el.store!.set('toolsEnabled', false) // the tool kind's master key (kindEnabledKey('tool') — the old key carries over)
+    el.store!.set('skillsEnabled', false)
     submit(el, 'two')
     await waitFor(() => runner.calls.length === 2, 'second call')
-    expect(runner.calls[1]!.system).toContain('## Tools available to you')
-    expect(runner.calls[1]!.system).toContain('### Calculator')
+    expect(runner.calls[1]!.system).not.toContain('## Tools available to you')
+    expect(runner.calls[1]!.system).not.toContain('## Skills available to you')
+  })
+
+  it('Dialog Turns (vision rev.5): every turn logs request/response JSON, newest first, failures included', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const runner = recordingRunner('first reply')
+    el.agentTurn = runner.fn
+    submit(el, 'hello')
+    await waitFor(() => runner.calls.length === 1, 'first turn')
+    await waitFor(() => el.querySelectorAll('[data-part="context-turn"]').length === 1, 'first turn logged')
+    const one = el.querySelector('[data-part="context-turn"]') as HTMLElement
+    expect(one.querySelector('[data-part="summary-text"]')?.textContent).toBe('01')
+    const payload = JSON.parse(one.querySelector('[data-part="context-json"]')!.textContent ?? '{}') as { arm: string; request: { text: string }; response: { reply: string } }
+    expect(payload.arm).toBe('live')
+    expect(payload.request.text).toBe('hello')
+    expect(payload.response.reply).toBe('first reply')
+
+    // A FAILED turn logs too (a payload inspector exists exactly for this) — newest first.
+    el.agentTurn = () => Promise.reject(new Error('proxy down'))
+    submit(el, 'again')
+    await waitFor(() => el.querySelectorAll('[data-part="context-turn"]').length === 2, 'failed turn logged')
+    const labels = [...el.querySelectorAll('[data-part="context-turn"] [data-part="summary-text"]')].map((s) => s.textContent)
+    expect(labels).toEqual(['02', '01'])
+    const failed = JSON.parse(el.querySelector('[data-part="context-turn"] [data-part="context-json"]')!.textContent ?? '{}') as { response: { error: string } }
+    expect(failed.response.error).toBe('proxy down')
+  })
+
+  it('the Context Agent System view re-derives on a store write (name + master toggles reach the JSON)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const agentItemJson = (): Record<string, unknown> =>
+      JSON.parse(el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}') as Record<string, unknown>
+    expect(agentItemJson()['name']).toBe('Untitled agent')
+    el.store!.set('name', 'The Concierge')
+    expect(agentItemJson()['name']).toBe('The Concierge')
+    // a kind master OFF: the kind's context item reflects it AND its section host dims
+    el.store!.set('skillsEnabled', false)
+    const skillsJson = JSON.parse(el.querySelector(`[data-part="context-item"][data-item="${ENTRY_KINDS.skill}"] [data-part="context-json"]`)!.textContent ?? '{}') as { enabled: boolean }
+    expect(skillsJson.enabled).toBe(false)
+    expect(el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"]`)?.hasAttribute('data-kind-disabled')).toBe(true)
+  })
+
+  it('the Agent master switch OFF makes the agent unavailable: composer disabled, a programmatic submit runs NO turn (vision rev.5)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const runner = recordingRunner('ok')
+    el.agentTurn = runner.fn
+    el.store!.set('agentEnabled', false)
+    const conversation = el.querySelector('ui-conversation') as UIConversationElement
+    await whenFlushed()
+    expect(conversation.disabled).toBe(true)
+    submit(el, 'hello') // the belt: even a programmatic submit is refused
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    expect(runner.calls).toHaveLength(0)
+
+    el.store!.set('agentEnabled', true) // flipping back re-enables — the switch is the way back
+    await whenFlushed()
+    expect(conversation.disabled).toBe(false)
+    submit(el, 'hello again')
+    await waitFor(() => runner.calls.length === 1, 'turn after re-enable')
   })
 
   it('fresh-read: a store edit between two turns changes the SECOND request; history accumulates and the FIRST request object is never rewritten', async () => {

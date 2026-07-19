@@ -28,6 +28,15 @@ import { playwright } from '@vitest/browser-playwright'
 // approaches the default ceiling, split that project further instead. Known cost: full-shard concurrency
 // surfaces a focus/timing flake class in ~6 interaction files (each passes solo — GH #56 tracks granting
 // those files isolation or hardening them).
+//
+// SECOND SPLIT (2026-07-19, vision-rev.5 wave): the `packages` shard itself crossed the ceiling —
+// measured exit 134 ("Ineffective mark-compacts near heap limit") on origin/main @ 38a46a5 BEFORE the
+// rev.5 diff (the admin PR streak #64–#78 only ever ran filtered suites, so the growth went unmeasured).
+// Per this file's own law the SCRIPT split again: `test:browser:packages` now runs
+// `:components` (packages/agent-ui/components — 71 of the 85 browser files) then `:rest` (everything
+// else via `--exclude 'packages/agent-ui/components/**'` — complementary BY CONSTRUCTION, a new package's
+// browser tests land in `:rest` automatically, nothing silently drops). Same one-project config here;
+// only package.json's invocation sharding changed.
 
 export default defineConfig({
   test: {
@@ -37,6 +46,17 @@ export default defineConfig({
     // the hang persisted chromium-only; 1s teardown was clean; full `test:browser` never hangs). 2s
     // leaves headroom over the measured-fine 1s.
     teardownTimeout: 2000,
+    // "ResizeObserver loop completed with undelivered notifications." is the SPEC'S OWN benign signal —
+    // an observed element resized again in the same frame the callback ran (ui-agent-admin's rev.5 shell:
+    // the RO callback reparents content whose open Context accordions change the shell's own height), so
+    // delivery defers to the NEXT frame and layout settles there. Real browsers surface it as a window
+    // error but explicitly non-fatal (WHATWG resize-observer §3.1 "loop limit"); vitest's error-catcher
+    // would otherwise fail whatever test happens to be running. Filter EXACTLY this message — every other
+    // unhandled error stays fatal.
+    onUnhandledError(error: unknown): boolean | void {
+      const message = error instanceof Error ? error.message : String(error)
+      if (message.includes('ResizeObserver loop completed with undelivered notifications')) return false
+    },
     browser: {
       enabled: true,
       provider: playwright(),

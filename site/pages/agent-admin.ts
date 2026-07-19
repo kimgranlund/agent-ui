@@ -105,11 +105,14 @@ function wireLiveOverlay(admin: UIAgentAdminElement, status: HTMLElement): void 
 content.append(sectionHeading('1 · One primitive, five instantiations'))
 content.append(
   para(
-    'Left to right: the chat canvas (', code('ui-conversation'), '), the prompts pane — a generic ' +
-      'ordered-entry-list seeded with three built-in sections (Foundation/Personality/Critical Items, ' +
-      'each toggleable, none deletable) — and the settings pane: the unchanged Agent config (',
-    code('ui-settings'), ') plus four MORE instances of that same entry-list primitive — Skills, ' +
-      'Workflows, Resources, Tools — each unseeded and purely custom-authorable. Toggle a section off, ' +
+    'Left to right: the chat canvas (', code('ui-conversation'), ') and the tabbed config region ' +
+      '(vision rev.5) — the Settings tab stacks the Agent config (', code('ui-settings'),
+    ') with its ACTIVE master switch, the model grid, a generic ordered-entry-list seeded with three ' +
+      'built-in prompt sections (Foundation/Personality/Critical Items, each toggleable, none ' +
+      'deletable), and four MORE instances of that same entry-list primitive — Skills, Workflows, ' +
+      'Resources, Tools — each unseeded, custom-authorable, and master-switchable; the Context tab is ' +
+      'the read-only introspection surface (the compiled Agent System JSON + the Dialog Turns payload ' +
+      'log). Toggle a section off, ' +
       'add a custom skill, then send a message — the reply is a deterministic stub that visibly cites ' +
       'the composed prompt AND every enabled capability, proving the wiring without a live model call: ' +
       'the shipped build makes no external network dependency.',
