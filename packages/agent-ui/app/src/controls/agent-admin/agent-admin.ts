@@ -676,10 +676,19 @@ export class UIAgentAdminElement extends UIElement {
     const store = this.store
     const schema = this.schema ?? defaultAgentConfigSchema
     const sections = readEntries(store, ENTRY_KINDS.promptSection)
+    const toolsEnabled = store?.get('toolsEnabled') === true
     const request = {
       turn,
-      personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), store?.get('toolsEnabled') === true),
+      personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), toolsEnabled),
       model: sanitizeSelect(schema, 'model', store?.get('model'), DEFAULT_MODEL_ID),
+      // GH #49 — the ENABLED tool entries' labels, master-gated on toolsEnabled (the SAME switch that
+      // gates the tool kind's prompt projection): the proxy intersects with its registry; non-registry
+      // labels are inert. A FRESH store read (the live-apply law).
+      integrations: toolsEnabled
+        ? readEntries(store, ENTRY_KINDS.tool)
+            .filter((entry) => entry.enabled)
+            .map((entry) => entry.label)
+        : [],
     }
     // TKT-0079 — an action-click/error turn RESUMES the bubble owning its surface (the game loop stays in
     // one card); a typed intent stays a fresh bubble (its reply must not appear above the question).

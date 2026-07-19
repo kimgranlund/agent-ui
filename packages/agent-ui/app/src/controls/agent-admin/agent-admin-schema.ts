@@ -169,6 +169,11 @@ export interface AdminSurfaceTurnRequest {
   personaSystem: string
   /** The sanitized `SUPPORTED_MODELS` id. */
   model: string
+  /** GH #49 — the ENABLED tool-entry labels (the `tool` kind, gated on the config's `toolsEnabled`
+   *  master switch), forwarded raw: the dev proxy intersects them with ITS integration registry and
+   *  ignores everything else — the component knows entry labels, never the registry. Absent/empty ⇒
+   *  no tools on the turn. */
+  integrations?: readonly string[]
 }
 
 /** The injected surface runner (DEV-only, the `agentTurn` pattern): one turn in, an ordered stream of

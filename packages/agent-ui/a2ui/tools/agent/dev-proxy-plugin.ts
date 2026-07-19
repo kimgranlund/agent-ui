@@ -28,6 +28,7 @@ import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { TurnInput, Turn, Effort } from '../../src/agent/agent-transport.ts'
 import { GEN_UI_MODES } from '../../src/agent/gen-ui-mode.ts'
 import type { GenUiMode } from '../../src/agent/gen-ui-mode.ts'
+import { resolveIntegrations } from './integrations.ts'
 
 declare const process: { cwd(): string; env: Record<string, string | undefined> }
 
@@ -215,12 +216,13 @@ export function a2uiDevProxyPlugin(): Plugin {
 
             // POST — run one turn and stream validated A2UI JSONL back.
             if (req.method === 'POST') {
-              const { input, provider, model, mode, personaSystem } = JSON.parse(await readBody(req)) as {
+              const { input, provider, model, mode, personaSystem, integrations } = JSON.parse(await readBody(req)) as {
                 input: TurnInput
                 provider: string
                 model: string
                 mode?: unknown
                 personaSystem?: unknown
+                integrations?: unknown
               }
               const pair = resolvePair(config, provider, model) // SPEC-R12 PAIR-allowlist — the trust boundary
               if (!pair.ok) {
@@ -254,12 +256,27 @@ export function a2uiDevProxyPlugin(): Plugin {
               // ADR-0138 cl.3 — the optional persona section: string, length-capped (16 KB — a runaway
               // guard; the composed admin persona is ~1-2 KB), forwarded verbatim; anything else ⇒ absent.
               const persona = typeof personaSystem === 'string' && personaSystem.length <= 16_384 ? personaSystem : undefined
+              // GH #49 — the browser forwards ENABLED tool-entry labels; only registry matches survive
+              // (resolveIntegrations validates + intersects, malformed ⇒ empty). Execution stays HERE in
+              // the proxy's node process (the ADR-0137 shell law; produce's ExecuteTool cannot cross HTTP).
+              const active = resolveIntegrations(integrations)
+              const toolOpts =
+                active.length > 0
+                  ? {
+                      tools: active.map((integration) => integration.tool),
+                      executeTool: async (name: string, toolInput: Record<string, unknown>): Promise<string> => {
+                        const match = active.find((integration) => integration.tool.name === name)
+                        if (!match) throw new Error(`unknown tool ${name}`)
+                        return match.execute(toolInput)
+                      },
+                    }
+                  : {}
               // ADR-0146 F1 — opt IN to the live-turn progress channel: produce() interleaves
               // {"a2uiMeta":{"progress":…}} meta-lines that flush through the SAME per-line res.write below
               // (NO structural proxy change — a progress line is an ordinary NDJSON line; the browser's
               // readMetaLine filter routes it to handle.progress). progressDetail stays the 'stages' default,
               // so no raw thinking text crosses the wire (F3).
-              for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true })) {
+              for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...toolOpts })) {
                 res.write(line + '\n')
               }
               res.end()
