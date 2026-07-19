@@ -1,13 +1,15 @@
 // publish-packages.mjs — builds and publishes the 8 @agent-ui/* workspace packages to the public npm
-// registry, unscoped (agent-ui-shared, agent-ui-components, …), under the `agent-ui-kit` npm account.
+// registry, SCOPED under the `agent-ui-kit` npm ORG (@agent-ui-kit/shared, @agent-ui-kit/components, …).
 //
-// WHY unscoped: npm requires a scoped package's `@scope` to literally match the owning org/user login.
-// This repo's packages are `@agent-ui/*` internally (naming law, hundreds of imports, tsconfig `paths`) —
-// renaming that scope repo-wide just to publish is its own large, separate effort. Instead, every internal
-// name/import stays EXACTLY as-is; this script transforms a COPY of each package's package.json (unscoped
-// name, real version, dependency versions resolved) into a scratch publish directory and publishes THAT.
-// The public install name (`agent-ui-components`) therefore differs from the internal import specifier
-// (`@agent-ui/components`) — consumers of the published package see only the unscoped name.
+// WHY @agent-ui-kit/* (Kim-ruled 2026-07-19, supersedes the launch-day unscoped agent-ui-* names): npm
+// requires a scoped package's `@scope` to match an owning org/user — the `agent-ui-kit` org now exists,
+// so the packages live natively under it, and the redundant `agent-ui-` prefix drops (the scope carries
+// the branding). This repo's packages stay `@agent-ui/*` INTERNALLY (naming law, hundreds of imports,
+// tsconfig `paths`) — this script transforms a COPY of each package's package.json (published name, real
+// version, dependency versions resolved) into a scratch publish directory and publishes THAT. The public
+// install name (`@agent-ui-kit/components`) therefore differs from the internal import specifier
+// (`@agent-ui/components`). The launch-day unscoped `agent-ui-*@0.0.2` set remains on the registry,
+// deprecated with pointer messages to the scoped names.
 //
 // WHY a build step: every package's `exports` map points straight at `.ts` source (this monorepo's own
 // Vite/Rolldown resolves that directly) — most external npm consumers can't import raw `.ts` from
@@ -51,7 +53,7 @@ const REPO_URL = 'git+https://github.com/kimgranlund/agent-ui.git'
 // components depends on shared+icons; router/code/a2ui depend on components(+shared); app depends on all.
 const PACKAGE_ORDER = ['shared', 'icons', 'a2a', 'components', 'router', 'code', 'a2ui', 'app']
 
-const toUnscoped = (scopedName) => scopedName.replace('@agent-ui/', 'agent-ui-')
+const toPublished = (internalName) => internalName.replace('@agent-ui/', '@agent-ui-kit/')
 
 // Exports subpaths that exist for INTERNAL monorepo consumption (site's own workspace-linked imports) but
 // must NOT ship in the published package — each entry is a real bug an independent review caught by
@@ -66,13 +68,13 @@ const EXCLUDE_EXPORTS_FROM_PUBLISH = {
   '@agent-ui/a2ui': ['./agent'],
 }
 
-/** Rewrite one dependency map: `@agent-ui/X` keys -> unscoped name + the lockstep version; every other
+/** Rewrite one dependency map: `@agent-ui/X` keys -> the published scoped name + the lockstep version; every other
  *  (real, external) dependency passes through with its own declared range untouched. */
 function transformDeps(deps, version) {
   if (!deps) return undefined
   const out = {}
   for (const [key, value] of Object.entries(deps)) {
-    out[key.startsWith('@agent-ui/') ? toUnscoped(key) : key] = key.startsWith('@agent-ui/') ? `^${version}` : value
+    out[key.startsWith('@agent-ui/') ? toPublished(key) : key] = key.startsWith('@agent-ui/') ? `^${version}` : value
   }
   return out
 }
@@ -101,7 +103,7 @@ function transformPackageJson(pkgJson, version) {
     exportsOut[key] = transformExportValue(value)
   }
   return {
-    name: toUnscoped(pkgJson.name),
+    name: toPublished(pkgJson.name),
     version,
     license: 'MIT', // matches the root LICENSE file — Kim's decision
     type: pkgJson.type,
@@ -120,8 +122,8 @@ function transformPackageJson(pkgJson, version) {
 }
 
 /** Every `@agent-ui/X` specifier (bare, or as a subpath prefix like `@agent-ui/components/controls/text`)
- *  becomes `agent-ui-X` — applied to compiled JS + declarations, since the published sibling packages exist
- *  ONLY under their unscoped name; a leftover `@agent-ui/*` specifier in emitted code would 404 at install.
+ *  becomes `@agent-ui-kit/X` — applied to compiled JS + declarations, since the published sibling packages
+ *  exist ONLY under the scoped name; a leftover `@agent-ui/*` specifier in emitted code would 404 at install.
  *  Also rewrites a relative `./foo.ts` / `../foo.ts` specifier to `.js` INSIDE .d.ts files only — confirmed
  *  empirically that `rewriteRelativeImportExtensions` (tsconfig.build.json) fixes this in compiled .js but
  *  NOT in .d.ts declaration output; a specifier ending in `.ts` there matches the standard, universally-
@@ -129,13 +131,13 @@ function transformPackageJson(pkgJson, version) {
  *
  *  KNOWN HAZARD (flagged in review, not fixed here): this is a BLIND `replaceAll` over the whole file text,
  *  not scoped to import/export/`@import` specifier positions — it also mutates matching STRING LITERALS,
- *  e.g. a log/warning tag like `[@agent-ui/icons]` becomes `[agent-ui-icons]` in the published output,
+ *  e.g. a log/warning tag like `[@agent-ui/icons]` becomes `[@agent-ui-kit/icons]` in the published output,
  *  drifting from the repo's own source text. Cosmetic today (nothing currently asserts on such a literal),
  *  but a latent behavior-drift risk if one ever becomes load-bearing (a test string-matching a warning tag,
  *  for instance). Narrowing this to actual specifier positions is a real follow-up, not done here. */
 function rewriteSpecifiers(content, isDeclaration) {
   let out = content
-  for (const pkg of PACKAGE_ORDER) out = out.replaceAll(`@agent-ui/${pkg}`, `agent-ui-${pkg}`)
+  for (const pkg of PACKAGE_ORDER) out = out.replaceAll(`@agent-ui/${pkg}`, `@agent-ui-kit/${pkg}`)
   if (isDeclaration) out = out.replace(/(['"])(\.\.?\/[^'"]*?)\.ts\1/g, '$1$2.js$1')
   return out
 }
@@ -179,8 +181,8 @@ function runBuild() {
 function preparePackage(pkgDir, version) {
   const pkgRoot = join(REPO_ROOT, 'packages/agent-ui', pkgDir)
   const pkgJson = JSON.parse(readFileSync(join(pkgRoot, 'package.json'), 'utf8'))
-  const unscopedName = toUnscoped(pkgJson.name)
-  const scratchRoot = join(SCRATCH, unscopedName)
+  const publishedName = toPublished(pkgJson.name)
+  const scratchRoot = join(SCRATCH, publishedName.replace('/', '__'))
   rmSync(scratchRoot, { recursive: true, force: true })
   mkdirSync(scratchRoot, { recursive: true })
 
@@ -197,7 +199,7 @@ function preparePackage(pkgDir, version) {
   // CSS assets (tsc never touches non-.ts files) — same relative path under dist/, and the SAME @agent-ui/*
   // -> agent-ui-* rewrite as compiled JS/d.ts: several sheets `@import '@agent-ui/shared/tokens.css'` etc,
   // a real load-bearing specifier a bundler resolves, not just a comment (caught in the smoke test — the
-  // published sibling only exists under its unscoped name).
+  // published sibling only exists under its scoped name).
   copyTree(
     join(pkgRoot, 'src'),
     join(scratchRoot, 'dist'),
@@ -206,7 +208,7 @@ function preparePackage(pkgDir, version) {
   )
 
   writeFileSync(join(scratchRoot, 'package.json'), `${JSON.stringify(transformPackageJson(pkgJson, version), null, 2)}\n`)
-  return { unscopedName, scratchRoot }
+  return { publishedName, scratchRoot }
 }
 
 async function main() {
@@ -224,10 +226,10 @@ async function main() {
   rmSync(SCRATCH, { recursive: true, force: true })
   for (const pkgDir of PACKAGE_ORDER) {
     console.log(`\n=== ${pkgDir} ===`)
-    const { unscopedName, scratchRoot } = preparePackage(pkgDir, version)
-    console.log(`  prepared ${unscopedName}@${version} at ${relative(REPO_ROOT, scratchRoot)}`)
-    if (isAlreadyPublished(unscopedName, version)) {
-      console.log(`  ${unscopedName}@${version} is already on the registry — skipping (resumable re-run)`)
+    const { publishedName, scratchRoot } = preparePackage(pkgDir, version)
+    console.log(`  prepared ${publishedName}@${version} at ${relative(REPO_ROOT, scratchRoot)}`)
+    if (isAlreadyPublished(publishedName, version)) {
+      console.log(`  ${publishedName}@${version} is already on the registry — skipping (resumable re-run)`)
       continue
     }
     const publishArgs = ['publish', '--access', 'public', ...(dryRun ? ['--dry-run'] : [])]
