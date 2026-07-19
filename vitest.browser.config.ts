@@ -16,17 +16,22 @@ import { playwright } from '@vitest/browser-playwright'
 // vitest 4.1 takes the provider as a factory from `@vitest/browser-playwright` (no longer a string).
 //
 // HEAP: the full-suite `npm run test:browser` runs the MAIN vitest process as the single node-side
-// orchestrator for all three projects × both engines (~200 file×engine runs). Browser test bodies run in
+// orchestrator for all three projects × both engines (~190 file×engine runs). Browser test bodies run in
 // the Playwright-driven engines (separate OS processes), but this one node process holds the whole Vite
 // module graph (framework + a2ui + site, transformed and cached) PLUS every collected task tree / result /
-// error for the run — a fixed footprint bounded by suite size, ~4.3 GB, that accumulates and only frees at
-// the end. Node's default old-space ceiling is ~4 GB, so the heap crossed it during end-of-run result
-// aggregation and the process died with `FATAL ERROR: Ineffective mark-compacts near heap limit` (exit 134),
-// intermittently, depending on scheduling (issue #22). The `test:browser` npm script therefore prefixes
-// `NODE_OPTIONS=--max-old-space-size=8192` (8 GB, ~2× the fixed footprint, well under the dev/CI RAM budget).
-// This is the whole node-side accumulation, NOT per-browser-worker concurrency, so a raised ceiling — not
-// sharding or fewer workers — is the root-cause fix. If the suite grows enough to approach 8 GB again, bump
-// that number (or shard the projects into sequential invocations); do not paper over it with test timeouts.
+// error for the run, accumulating and only freeing at the end. Node's default old-space ceiling is ~4 GB;
+// under a normal run this footprint alone (~4.3 GB) is enough to cross it. But the DOMINANT, contention-
+// sensitive driver isn't suite size — it's an UNBOUNDED error-accumulation cascade from the known a2ui-live
+// orchestrator-protocol poisoning (fetch interception bleeding into vitest-browser's own fetch-based
+// protocol, site/lib/command-palette.browser.test.ts:51-54's documented pathology): under contention this
+// throws tens of thousands of "Unknown event" errors, string-concatenated into gigabytes, review-verified
+// during issue #22. That's why the crash was intermittent/scheduling-dependent rather than a hard suite-
+// size ceiling. The `test:browser` npm script prefixes `NODE_OPTIONS=--max-old-space-size=8192` (8 GB) as
+// the immediate fix (raising the ceiling, not sharding — this is single-process accumulation, not per-
+// worker concurrency), but this ceiling can still be exceeded under heavy contention if that cascade fires
+// long enough (as it has before — see llms-full.txt's 2026-07-09 note). The durable fix is bounding/root-
+// causing the a2ui-live cascade itself (a follow-up issue, filed alongside #22's close) — bump this number
+// only as a stopgap, and do not paper over either problem with test timeouts.
 
 export default defineConfig({
   test: {
