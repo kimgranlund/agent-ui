@@ -48,6 +48,7 @@ import { UIElement, prop, untracked, type PropsSchema, type ReactiveProps } from
 import '@agent-ui/components/controls/split'
 import '@agent-ui/components/controls/split-pane'
 import '@agent-ui/components/controls/switch'
+import '@agent-ui/components/controls/select' // vision rev.6 — the Surface Options catalog picker
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
 import '@agent-ui/code/editor'
@@ -62,6 +63,10 @@ import '@agent-ui/components/controls/radio'
 // moves pane content into below the wide breakpoint.
 import '@agent-ui/components/controls/tabs'
 import '@agent-ui/components/controls/disclosure' // vision rev.5 — the Context tab's accordion primitive
+// Vision rev.6 (Surface Options): the Markdown modality renders agent notes through <ui-markdown> —
+// sanitized by construction. App → code is the ADR-0139-ruled edge this file already takes for
+// `@agent-ui/code/editor`; ui-conversation itself stays code-free (the SPEC-R12 renderer seam carries it).
+import '@agent-ui/code/markdown'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
@@ -69,12 +74,17 @@ import type { SettingsSchema } from '../settings/schema.ts'
 import type { SettingsStore } from '../settings/store.ts'
 import {
   AGENT_ENABLED_KEY,
+  A2UI_CATALOG_KEY,
+  A2UI_CATALOG_OPTIONS,
   CUSTOM_MODELS_KEY,
   DEFAULT_MODEL_ID,
   MODELS_INCLUDED_KEY,
+  SURFACE_A2UI_KEY,
+  SURFACE_MARKDOWN_KEY,
   defaultAgentConfigSchema,
   isEnabledFlag,
   kindEnabledKey,
+  sanitizeCatalog,
   initialValuesFor,
   isModelIncluded,
   modelRoster,
@@ -192,6 +202,10 @@ export class UIAgentAdminElement extends UIElement {
   // ── vision rev.5: the master switches + the Context tab's render slots ───────────────────────────────
   #agentSwitch: (HTMLElement & { checked: boolean }) | null = null
   #kindSwitches: Map<string, HTMLElement & { checked: boolean }> = new Map()
+  // ── vision rev.6: the Surface Options controls (built once; state re-applied per store change) ───────
+  #surfaceMarkdownSwitch: (HTMLElement & { checked: boolean }) | null = null
+  #surfaceA2uiSwitch: (HTMLElement & { checked: boolean }) | null = null
+  #surfaceCatalogSelect: (HTMLElement & { value: string; disabled: boolean }) | null = null
   #contextSystemHost: HTMLElement | null = null // Agent System — rebuilt wholesale per store change
   #contextTurnsHost: HTMLElement | null = null // Dialog Turns — rebuilt per logged turn
   /** The Context tab's store subscription — its OWN slot (the #modelGridUnsub precedent): it must
@@ -349,6 +363,16 @@ export class UIAgentAdminElement extends UIElement {
       if (this.agentSurfaceTurn === undefined) return
       this.#runSurfaceTurn({ kind: 'client', message })
     })
+    // Vision rev.6 — the Markdown surface rides ui-conversation's SPEC-R12 content-render seam: agent
+    // notes/system bubbles render through <ui-markdown> (sanitized by construction) while the switch is
+    // ON, and fall back to a plain text node (the frame's own "simple text is fallback") when OFF. The
+    // store is read FRESH per render — the live-apply law; flipping the switch changes the NEXT bubble.
+    conversation.setContentRenderer((text) => {
+      if (!isEnabledFlag(this.store?.get(SURFACE_MARKDOWN_KEY))) return document.createTextNode(text)
+      const node = document.createElement('ui-markdown') as HTMLElement & { markdown: string }
+      node.markdown = text
+      return node
+    })
     canvasPane.append(conversation)
 
     // ── Vision rev.5 (Kim's Figma frame 33:1693): the right side is ONE tabbed region — Settings (the
@@ -414,7 +438,79 @@ export class UIAgentAdminElement extends UIElement {
     modelGrid.setAttribute('data-part', 'model-grid')
     this.#modelGrid = modelGrid
     const promptSections = this.#makeSection(ENTRY_KINDS.promptSection, 'Instructions', 'Add section')
-    settingsContent.append(agentHeader, settingsEl, modelHeading, modelGrid, promptSections.host)
+
+    // ── Surface Options (vision rev.6 — the frame's node 34:1312): the agent's output-modality card,
+    // after the prompt sections (the frame's own Agent-card order), before the capability sections.
+    // Rows build ONCE; their state is (re)applied by #applyMasterStates (the master-switch discipline).
+    const surfaceHeading = document.createElement('h3')
+    surfaceHeading.setAttribute('data-part', 'surface-options-heading')
+    surfaceHeading.textContent = 'Surface Options'
+    const surfaceOptions = document.createElement('div')
+    surfaceOptions.setAttribute('data-part', 'surface-options')
+
+    const surfaceRow = (surface: string, label: string, title: string): { row: HTMLElement; toggle: HTMLElement & { checked: boolean; disabled: boolean } } => {
+      const row = document.createElement('div')
+      row.setAttribute('data-part', 'surface-row')
+      row.setAttribute('data-surface', surface)
+      const rowLabel = document.createElement('span')
+      rowLabel.setAttribute('data-part', 'surface-label')
+      rowLabel.textContent = label
+      rowLabel.title = title
+      const toggle = document.createElement('ui-switch') as HTMLElement & { checked: boolean; disabled: boolean }
+      toggle.setAttribute('data-part', 'surface-toggle')
+      toggle.setAttribute('aria-label', `${label} surface`)
+      toggle.checked = true
+      row.append(rowLabel, toggle)
+      return { row, toggle }
+    }
+
+    const markdown = surfaceRow('markdown', 'Markdown', 'Rendered as rich text — simple text is the fallback')
+    markdown.toggle.addEventListener('change', () => {
+      this.store?.set(SURFACE_MARKDOWN_KEY, markdown.toggle.checked)
+      this.#applyMasterStates(this.store)
+      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+    })
+    this.#surfaceMarkdownSwitch = markdown.toggle
+
+    const a2ui = surfaceRow('a2ui', 'A2UI', 'Structured generative UI against the picked catalog')
+    a2ui.toggle.addEventListener('change', () => {
+      this.store?.set(SURFACE_A2UI_KEY, a2ui.toggle.checked)
+      this.#applyMasterStates(this.store)
+      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+    })
+    this.#surfaceA2uiSwitch = a2ui.toggle
+    // The catalog picker (one option today — agent-admin-schema.ts's A2UI_CATALOG_OPTIONS doc owns why).
+    const catalogSelect = document.createElement('ui-select') as HTMLElement & { value: string; disabled: boolean }
+    catalogSelect.setAttribute('data-part', 'surface-catalog')
+    catalogSelect.setAttribute('aria-label', 'A2UI catalog')
+    for (const option of A2UI_CATALOG_OPTIONS) {
+      const optionEl = document.createElement('div')
+      optionEl.setAttribute('role', 'option')
+      optionEl.setAttribute('value', option.id)
+      optionEl.textContent = option.label
+      catalogSelect.append(optionEl)
+    }
+    // ui-select's ONLY commit event is `select` (select.md; the settings generator's own COMMIT_EVENT law).
+    catalogSelect.addEventListener('select', () => {
+      this.store?.set(A2UI_CATALOG_KEY, sanitizeCatalog(catalogSelect.value))
+      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+    })
+    this.#surfaceCatalogSelect = catalogSelect
+    a2ui.row.append(catalogSelect)
+
+    const genui = surfaceRow('genui', 'GenUI', 'Pattern-sourced generative UI — PRD pending (genui-surface.prd.md)')
+    genui.toggle.checked = false
+    genui.toggle.disabled = true // PRD-gated: .claude/docs/prd/genui-surface.prd.md owns the five open forks
+    genui.row.setAttribute('data-disabled', '')
+    const genuiNote = document.createElement('span')
+    genuiNote.setAttribute('data-part', 'surface-note')
+    genuiNote.textContent = 'PRD pending'
+    genuiNote.title = 'Ships after .claude/docs/prd/genui-surface.prd.md ratifies (pattern source picker).'
+    genui.row.append(genuiNote)
+
+    surfaceOptions.append(markdown.row, a2ui.row, genui.row)
+
+    settingsContent.append(agentHeader, settingsEl, modelHeading, modelGrid, promptSections.host, surfaceHeading, surfaceOptions)
     for (const { kind, label, addLabel } of CAPABILITY_KINDS) {
       // The kind's MASTER switch (vision rev.5) — rendered in the section's header row; `false` gates
       // the whole kind out of the composed prompt + the live roster (isEnabledFlag: default ON).
@@ -792,9 +888,9 @@ export class UIAgentAdminElement extends UIElement {
       tools: enabledLabels(ENTRY_KINDS.tool),
     }
 
-    // The SURFACE arm (TKT-0076) — takes precedence when armed: the producer streams validated A2UI
-    // wire lines that DO belong to ingestLine (unlike the prose arms below).
-    if (this.agentSurfaceTurn !== undefined) {
+    // The SURFACE arm (TKT-0076) — takes precedence when armed AND the A2UI surface is on (vision
+    // rev.6: switching the modality off bypasses even an armed runner — the prose arm answers instead).
+    if (this.agentSurfaceTurn !== undefined && isEnabledFlag(store?.get(SURFACE_A2UI_KEY))) {
       this.#runSurfaceTurn({ kind: 'intent', text })
       return
     }
@@ -857,14 +953,18 @@ export class UIAgentAdminElement extends UIElement {
     if (!conversation || surfaceTurn === undefined) return
     const store = this.store
     // The Agent master switch gates surface turns too — BOTH kinds: a typed intent and a surface action
-    // click (an inactive agent runs nothing, Kim's ruling).
+    // click (an inactive agent runs nothing, Kim's ruling). The A2UI surface switch gates the same way
+    // (vision rev.6): a disabled modality runs no hidden turns, not even from an action click.
     if (!isEnabledFlag(store?.get(AGENT_ENABLED_KEY))) return
+    if (!isEnabledFlag(store?.get(SURFACE_A2UI_KEY))) return
     const sections = readEntries(store, ENTRY_KINDS.promptSection)
     const toolsEnabled = isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool)))
     const request = {
       turn,
       personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
       model: sanitizeModel(store?.get('model'), modelRoster(store?.get(CUSTOM_MODELS_KEY))),
+      // Vision rev.6 — the catalog picker's sanitized selection (see AdminSurfaceTurnRequest.catalogId).
+      catalogId: sanitizeCatalog(store?.get(A2UI_CATALOG_KEY)),
       // GH #49 — the ENABLED tool entries' labels, master-gated on toolsEnabled (the SAME switch that
       // gates the tool kind's prompt projection): the proxy intersects with its registry; non-registry
       // labels are inert. A FRESH store read (the live-apply law).
@@ -946,6 +1046,16 @@ export class UIAgentAdminElement extends UIElement {
       if (kindSwitch) kindSwitch.checked = on
       this.#capabilitySections.get(kind)?.host.toggleAttribute('data-kind-disabled', !on)
     }
+    // Vision rev.6 — the Surface Options rows reflect their stored state the same way; the catalog
+    // picker disables while its modality is off (choosing a catalog for a surface that can't run is
+    // noise, not configuration).
+    if (this.#surfaceMarkdownSwitch) this.#surfaceMarkdownSwitch.checked = isEnabledFlag(store?.get(SURFACE_MARKDOWN_KEY))
+    const a2uiOn = isEnabledFlag(store?.get(SURFACE_A2UI_KEY))
+    if (this.#surfaceA2uiSwitch) this.#surfaceA2uiSwitch.checked = a2uiOn
+    if (this.#surfaceCatalogSelect) {
+      this.#surfaceCatalogSelect.value = sanitizeCatalog(store?.get(A2UI_CATALOG_KEY))
+      this.#surfaceCatalogSelect.disabled = !a2uiOn
+    }
   }
 
   /** Rebuild the Agent System view (the Context tab's first group) from the store's CURRENT contents:
@@ -975,6 +1085,12 @@ export class UIAgentAdminElement extends UIElement {
           temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
           effort: this.#effort,
           active: isEnabledFlag(store?.get(AGENT_ENABLED_KEY)),
+          surface: {
+            markdown: isEnabledFlag(store?.get(SURFACE_MARKDOWN_KEY)),
+            a2ui: isEnabledFlag(store?.get(SURFACE_A2UI_KEY)),
+            catalog: sanitizeCatalog(store?.get(A2UI_CATALOG_KEY)),
+            genui: 'prd-pending', // .claude/docs/prd/genui-surface.prd.md
+          },
           systemPrompt: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
         },
         openStates.get('agent') ?? true,

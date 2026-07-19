@@ -191,6 +191,38 @@ export function isEnabledFlag(value: unknown): boolean {
   return value !== false
 }
 
+// ── Surface Options (vision rev.6 — the frame's node 34:1312) ──────────────────────────────────────────
+// The agent's OUTPUT MODALITY contract: Markdown (rendered rich text, plain text the fallback), A2UI
+// (the catalog picker), GenUI (PRD-gated — `.claude/docs/prd/genui-surface.prd.md` owns its five open
+// forks; the row renders disabled until Kim ratifies). Both live modalities default ON.
+
+/** Markdown surface — ON: agent-turn notes/system bubbles render through `ui-markdown` (sanitized by
+ *  construction); OFF (an explicit stored `false`): plain `textContent`, the frame's own fallback. */
+export const SURFACE_MARKDOWN_KEY = 'surfaceMarkdown'
+
+/** A2UI surface — ON: an armed `agentSurfaceTurn` runs surface turns; OFF: even an armed runner is
+ *  bypassed and the prose arm answers (surface action clicks no-op — no hidden turns from a disabled
+ *  modality). */
+export const SURFACE_A2UI_KEY = 'surfaceA2ui'
+
+/** The A2UI catalog picker's persisted selection (an id from `A2UI_CATALOG_OPTIONS`). */
+export const A2UI_CATALOG_KEY = 'a2uiCatalog'
+
+/** The pickable catalogs — ONE today (the id the producer's own `produce.ts` pins), so the picker and
+ *  the producer agree by construction; the choice is a real config value from day one, and the
+ *  create/pick-from-library affordances (Kim's 2026-07-19 ruling) land when a second catalog or the
+ *  GenUI PRD's source registry exists. */
+export const A2UI_CATALOG_OPTIONS: ReadonlyArray<{ id: string; label: string }> = [
+  { id: 'agent-ui', label: 'Default (agent-ui)' },
+]
+
+export const DEFAULT_A2UI_CATALOG_ID: string = 'agent-ui'
+
+/** Fail-closed catalog read — an unknown/malformed stored value coerces to the default id. */
+export function sanitizeCatalog(value: unknown): string {
+  return A2UI_CATALOG_OPTIONS.some((option) => option.id === value) ? (value as string) : DEFAULT_A2UI_CATALOG_ID
+}
+
 /** The agent-config values the stub turn loop reads at turn time — always the CURRENT store contents,
  *  never cached (this IS the live-apply mechanism: a store read at turn time trivially reflects whatever
  *  the settings/prompts panes most recently wrote, no separate propagation channel needed).
@@ -272,6 +304,10 @@ export interface AdminSurfaceTurnRequest {
    *  ignores everything else — the component knows entry labels, never the registry. Absent/empty ⇒
    *  no tools on the turn. */
   integrations?: readonly string[]
+  /** Vision rev.6 — the Surface Options catalog picker's SANITIZED selection. Today always the default
+   *  id (one option exists, and the producer pins the same id), so runner and picker agree by
+   *  construction; a future multi-catalog runner threads it into the producer's catalog choice. */
+  catalogId?: string
 }
 
 /** The injected surface runner (DEV-only, the `agentTurn` pattern): one turn in, an ordered stream of

@@ -92,6 +92,14 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
     description: The add-form's submit button.
   - name: entry-add-error
     description: The add-form's fail-closed validation message (ADR-0132 cl.4) — hidden until a rejected submission names why.
+  - name: surface-options
+    description: The Surface Options card (vision rev.6 — the frame's node 34:1312), after the prompt sections — the agent's OUTPUT-MODALITY contract, three `surface-row`s (`data-surface="markdown|a2ui|genui"`), each `[ surface-label | surface-toggle (| surface-catalog / surface-note) ]`.
+  - name: surface-toggle
+    description: One modality's `<ui-switch data-part="surface-toggle">`. Markdown ON (`surfaceMarkdown`, default) ⇒ agent notes/system bubbles render through `<ui-markdown>` via ui-conversation's SPEC-R12 content-render seam (store read FRESH per render — live-apply); OFF ⇒ plain text, the frame's own fallback. A2UI ON (`surfaceA2ui`, default) ⇒ an armed `agentSurfaceTurn` runs surface turns; OFF ⇒ even an armed runner is bypassed (the prose arm answers; surface action clicks no-op — no hidden turns). The GenUI toggle is genuinely `disabled` — PRD-gated (`.claude/docs/prd/genui-surface.prd.md`, five open forks).
+  - name: surface-catalog
+    description: The A2UI catalog picker (`<ui-select data-part="surface-catalog">`, commit event `select`) — persisted to `a2uiCatalog`, sanitized fail-closed to the default id, disabled while the A2UI modality is off. ONE option today (the id the producer's own produce.ts pins, so picker and producer agree by construction); the create/pick-from-library affordances land with a second catalog or the GenUI PRD's source registry. The sanitized selection rides every surface request as `catalogId`.
+  - name: surface-note
+    description: The GenUI row's "PRD pending" annotation (title carries the PRD path).
   - name: context-section
     description: One of the Context tab's two accordion groups (vision rev.5) — `<ui-disclosure data-part="context-section" data-section="agent-system|dialog-turns">`, both open by default.
   - name: context-system
@@ -139,9 +147,10 @@ protocol dependency.
 A two-pane `ui-split` (vision rev.5, Kim's Figma frame 33:1693 — superseding ADR-0131 cl.2's
 three-pane order): `[ chat canvas | {Settings ⇄ Context} tabs ]`. The Settings tab carries the WHOLE
 config column — the Agent header row (heading + ACTIVE master switch) + `ui-settings` + the Model grid
-+ the prompt sections (the old prompts pane, merged in) + the four capability sections (each with its
-own kind master switch). The Context tab is the read-only introspection surface: the compiled Agent
-System JSON and the Dialog Turns payload log. Below 640px the shell collapses to {Chat, Settings,
++ the prompt sections (the old prompts pane, merged in) + the Surface Options card (rev.6 — the
+output-modality contract: Markdown · A2UI + catalog picker · PRD-gated GenUI) + the four capability
+sections (each with its own kind master switch). The Context tab is the read-only introspection
+surface: the compiled Agent System JSON (incl. the `surface` block) and the Dialog Turns payload log. Below 640px the shell collapses to {Chat, Settings,
 Context} tabs (TKT-0085's mechanism, two bands instead of three).
 
 ## One primitive, five instantiations (ADR-0132)
