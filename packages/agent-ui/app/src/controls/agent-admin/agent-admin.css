@@ -183,6 +183,17 @@
     background: var(--ui-agent-admin-surface);
   }
 
+  /* The entry editors ride the ROW's width (column-flex cross-axis stretch guarantees a full-row typing
+     target), so ui-code-editor's free-standing 20ch floor (--ui-code-editor-min-inline-size, ADR-0021)
+     is redundant here — and since 0c50d9c made source mode MONOSPACE, 20ch(mono) ≈ 171px overflows the
+     TKT-0045 768px-frame prompts pane (190px) by 8px, the exact regression the pane-overflow browser leg
+     caught once the full gate ran. Repoint the published token (never the host property) — the floor
+     keeps protecting free-standing editors; composed rows own their width. */
+  [data-part='entry-content'],
+  [data-part='entry-add-content'] {
+    --ui-code-editor-min-inline-size: 0;
+  }
+
   [data-part='entry-header'] {
     display: flex;
     align-items: center;
