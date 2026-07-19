@@ -129,12 +129,30 @@ function selectFactory(): ControlFactory {
     if (options.length === 0) {
       console.warn(`ui-settings: select field "${field.key}" has no options — the listbox will be empty`)
     }
+    // Grouped options (the models-as-lists ask, 2026-07-19): options sharing a `group` render inside ONE
+    // `<div role="group" label="…">` wrapper — ui-select's documented optgroup parity (select.md: the
+    // control prepends a non-interactive group-label header and names the group for AT; rove/commit skip
+    // it). Groups keep first-appearance order; ungrouped options stay direct children — a group-free
+    // schema renders byte-identical DOM to before this existed.
+    const groupHosts = new Map<string, HTMLElement>()
     for (const option of options) {
       const optionEl = document.createElement('div')
       optionEl.setAttribute('role', 'option')
       optionEl.setAttribute('value', option.value)
       optionEl.textContent = option.label
-      el.append(optionEl)
+      if (option.group) {
+        let host = groupHosts.get(option.group)
+        if (!host) {
+          host = document.createElement('div')
+          host.setAttribute('role', 'group')
+          host.setAttribute('label', option.group)
+          groupHosts.set(option.group, host)
+          el.append(host)
+        }
+        host.append(optionEl)
+      } else {
+        el.append(optionEl)
+      }
     }
     const read = bridgeFormValue(el)
     return {

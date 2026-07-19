@@ -32,7 +32,7 @@ export type { AgentTurnHandle } from './controls/conversation/conversation.ts'
 // TKT-0039 (ADR-0131) — the Agent Admin UI: composes ui-split/ui-settings/ui-conversation into one new
 // app-tier surface. No new primitive family, no new protocol dependency.
 export { UIAgentAdminElement } from './controls/agent-admin/agent-admin.ts'
-export { defaultAgentConfigSchema, runStubAgentTurn } from './controls/agent-admin/agent-admin-schema.ts'
+export { defaultAgentConfigSchema, agentConfigSchema, parseCustomModels, CUSTOM_MODELS_KEY, runStubAgentTurn } from './controls/agent-admin/agent-admin-schema.ts'
 export type { AgentConfigSnapshot } from './controls/agent-admin/agent-admin-schema.ts'
 // ADR-0132 — the generic ordered-entry-list primitive: prompt sections (Foundation/Personality/Critical
 // Items) + Skills/Workflows/Resources/Tools, five instantiations of one shape.

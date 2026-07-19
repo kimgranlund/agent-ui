@@ -50,6 +50,9 @@
   --ui-conversation-composer-line-height: 1.5;
   --ui-conversation-composer-line-box: calc(var(--ui-conversation-composer-font) * var(--ui-conversation-composer-line-height));
   --ui-conversation-composer-editor-max-block-size: 6em; /* the TKT-0058 growth cap — content past it scrolls */
+  /* TWO line-boxes minimum (Kim, 2026-07-19: "show two lines by default on Ask anything..") — the field
+     reads as a real compose area at rest; growth past two lines and the 6em cap are unchanged. */
+  --ui-conversation-composer-editor-min-block-size: calc(2 * var(--ui-conversation-composer-line-box));
 
   /* Size-invariant frame quantities — the entry-control class referents (geometry.md), the same fleet
      tokens the text-field/textarea frames ride. */
@@ -99,7 +102,7 @@
   [data-part='editor'] {
     display: block;
     min-inline-size: 0;
-    min-block-size: var(--ui-conversation-composer-line-box);
+    min-block-size: var(--ui-conversation-composer-editor-min-block-size); /* two line-boxes at rest (2026-07-19) */
     max-block-size: var(--ui-conversation-composer-editor-max-block-size);
     overflow-y: auto;
     outline: none;

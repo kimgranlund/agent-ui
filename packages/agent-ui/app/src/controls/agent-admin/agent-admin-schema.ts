@@ -28,16 +28,43 @@ export { initialValuesFor, sanitizeNumber, sanitizeSelect } from '@agent-ui/shar
 export interface SupportedModel {
   id: string
   label: string
+  /** The Model select's list this model renders under (Kim, 2026-07-19: "models should be a few lists")
+   *  — realized as ui-select role=group wrappers via SettingsFieldOption.group. */
+  group: string
 }
 
 export const SUPPORTED_MODELS: readonly SupportedModel[] = [
-  { id: 'claude-opus-4-8', label: 'Opus 4.8' },
-  { id: 'claude-sonnet-5', label: 'Sonnet 5' },
-  { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5' },
-  { id: 'claude-fable-5', label: 'Fable 5' },
+  { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', group: 'Fast' },
+  { id: 'claude-sonnet-5', label: 'Sonnet 5', group: 'Balanced' },
+  { id: 'claude-opus-4-8', label: 'Opus 4.8', group: 'Frontier' },
+  { id: 'claude-fable-5', label: 'Fable 5', group: 'Frontier' },
 ]
 
-export const DEFAULT_MODEL_ID: string = 'claude-sonnet-5'
+/** Haiku by default (Kim, 2026-07-19) — the cheap/fast tier is the demo's sane default; Sonnet stays one
+ *  commit away in the Balanced list. */
+export const DEFAULT_MODEL_ID: string = 'claude-haiku-4-5-20251001'
+
+// ── admin-added models (Kim, 2026-07-19: "admins can make additional models available") ────────────────
+
+/** The store key carrying the admin's ADDITIONAL model ids (the `customModels` config field below):
+ *  comma-separated, each `id` or `id|Label`. Parsed fail-closed — malformed segments drop silently. */
+export const CUSTOM_MODELS_KEY = 'customModels'
+
+/** Parse the customModels config value into SupportedModel rows (group: 'Additional'). Dedupes against
+ *  the built-in ids and within itself; a non-string/empty value ⇒ []. */
+export function parseCustomModels(raw: unknown): SupportedModel[] {
+  if (typeof raw !== 'string' || raw.trim().length === 0) return []
+  const seen = new Set(SUPPORTED_MODELS.map((m) => m.id))
+  const out: SupportedModel[] = []
+  for (const segment of raw.split(',')) {
+    const [idPart, labelPart] = segment.split('|')
+    const id = (idPart ?? '').trim()
+    if (id.length === 0 || seen.has(id)) continue
+    seen.add(id)
+    out.push({ id, label: (labelPart ?? '').trim() || id, group: 'Additional' })
+  }
+  return out
+}
 
 /** A model id's display label for the stub reply's citation string — falls back to the raw id itself
  *  (never throws) if `id` isn't one `SUPPORTED_MODELS` names, matching this file's own fail-closed law
@@ -46,10 +73,13 @@ function modelLabel(id: string): string {
   return SUPPORTED_MODELS.find((m) => m.id === id)?.label ?? id
 }
 
-/** The default agent-config `SettingsSchema` (ADR-0131 cl.1: name/model/temperature/tools — no external
- *  runtime dependency). Rendered by the composed `ui-settings` pane exactly as any other settings schema
- *  would be (SPEC-R10/R11/R12) — nothing here is agent-admin-specific to `ui-settings` itself. */
-export const defaultAgentConfigSchema: SettingsSchema = {
+/** Build the agent-config `SettingsSchema` (ADR-0131 cl.1: name/model/temperature/tools — no external
+ *  runtime dependency), optionally extended with admin-added models (they join the Model select under
+ *  the 'Additional' list). Rendered by the composed `ui-settings` pane exactly as any other settings
+ *  schema would be (SPEC-R10/R11/R12) — nothing here is agent-admin-specific to `ui-settings` itself. */
+export function agentConfigSchema(customModels: readonly SupportedModel[] = []): SettingsSchema {
+  const allModels = [...SUPPORTED_MODELS, ...customModels]
+  return {
   version: 1,
   sections: [
     {
@@ -71,7 +101,17 @@ export const defaultAgentConfigSchema: SettingsSchema = {
           label: 'Model',
           description: 'Which model this agent runs on — no live model call happens here (ADR-0131).',
           default: DEFAULT_MODEL_ID,
-          options: SUPPORTED_MODELS.map((m) => ({ value: m.id, label: m.label })),
+          options: allModels.map((m) => ({ value: m.id, label: m.label, group: m.group })),
+        },
+        {
+          key: CUSTOM_MODELS_KEY,
+          type: 'text',
+          label: 'Additional models',
+          description:
+            'Comma-separated model ids (optionally `id | Label`) to offer in the Model list under ' +
+            '“Additional”. Live turns still pass the dev proxy’s provider allowlist — an id it doesn’t ' +
+            'know fails that turn visibly.',
+          default: '',
         },
         {
           key: 'temperature',
@@ -91,7 +131,12 @@ export const defaultAgentConfigSchema: SettingsSchema = {
       ],
     },
   ],
+  }
 }
+
+/** The zero-custom-models schema — the shared, read-only default every existing consumer keeps
+ *  (agent-admin rebuilds with `agentConfigSchema(parseCustomModels(...))` when the admin adds models). */
+export const defaultAgentConfigSchema: SettingsSchema = agentConfigSchema()
 
 /** The agent-config values the stub turn loop reads at turn time — always the CURRENT store contents,
  *  never cached (this IS the live-apply mechanism: a store read at turn time trivially reflects whatever

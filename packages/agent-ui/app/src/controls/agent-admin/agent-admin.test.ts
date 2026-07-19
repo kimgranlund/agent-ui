@@ -1062,3 +1062,60 @@ describe('UIAgentAdminElement — a REJECTED library entry surfaces the same err
     expect(entries, 'nothing was added').toHaveLength(0)
   })
 })
+
+// ── the model lists + admin-added models (Kim, 2026-07-19) ──────────────────────────────────────────────
+
+describe('SUPPORTED_MODELS lists + the Haiku default (2026-07-19)', () => {
+  it('the default model is Haiku; Sonnet remains an offered option', async () => {
+    const { DEFAULT_MODEL_ID, SUPPORTED_MODELS } = await import('./agent-admin-schema.ts')
+    expect(DEFAULT_MODEL_ID).toBe('claude-haiku-4-5-20251001')
+    expect(SUPPORTED_MODELS.some((m) => m.id === 'claude-sonnet-5')).toBe(true)
+    // every model carries a list assignment (the grouped-select contract)
+    for (const m of SUPPORTED_MODELS) expect(m.group.length, m.id).toBeGreaterThan(0)
+  })
+
+  it('parseCustomModels: id|Label pairs, dedupe against built-ins and itself, malformed ⇒ dropped', async () => {
+    const { parseCustomModels } = await import('./agent-admin-schema.ts')
+    expect(parseCustomModels('claude-x, claude-y | My Y, claude-x, claude-sonnet-5, , |')).toEqual([
+      { id: 'claude-x', label: 'claude-x', group: 'Additional' },
+      { id: 'claude-y', label: 'My Y', group: 'Additional' },
+    ])
+    expect(parseCustomModels(undefined)).toEqual([])
+    expect(parseCustomModels(42)).toEqual([])
+    expect(parseCustomModels('   ')).toEqual([])
+  })
+
+  it('agentConfigSchema(custom) folds the Additional list into the model options + keeps the customModels field', async () => {
+    const { agentConfigSchema, CUSTOM_MODELS_KEY } = await import('./agent-admin-schema.ts')
+    const schema = agentConfigSchema([{ id: 'claude-x', label: 'X', group: 'Additional' }])
+    const model = schema.sections[0]!.fields.find((f) => f.key === 'model')!
+    expect(model.options!.some((o) => o.value === 'claude-x' && o.group === 'Additional')).toBe(true)
+    expect(model.options!.some((o) => o.value === 'claude-haiku-4-5-20251001' && o.group === 'Fast')).toBe(true)
+    expect(schema.sections[0]!.fields.some((f) => f.key === CUSTOM_MODELS_KEY)).toBe(true)
+  })
+})
+
+describe('ui-agent-admin — admin-added models rebuild the schema reactively (2026-07-19)', () => {
+  it('writing customModels to the store folds an Additional option into the rendered Model select', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    const store = createMemoryStore()
+    el.store = store
+    mount(el)
+    await el.updateComplete
+    expect(el.querySelector('[role="option"][value="claude-custom-1"]'), 'no custom option before the write').toBeNull()
+    store.set('customModels', 'claude-custom-1 | Custom One')
+    await el.updateComplete
+    await whenFlushed()
+    const custom = el.querySelector('[role="option"][value="claude-custom-1"]')
+    expect(custom, 'the Additional option renders after the store write').not.toBeNull()
+    const group = custom!.closest('[role="group"]')!
+    expect(group, 'the option lives inside a group wrapper').not.toBeNull()
+    // ui-select consumes the wrapper's `label` attribute into its rendered group-label header part
+    expect(group.querySelector('[data-part="group-label"]')?.textContent).toBe('Additional')
+    // the churn guard: an unrelated store write must not rebuild (same schema reference)
+    const schemaBefore = el.schema
+    store.set('name', 'Renamed')
+    await el.updateComplete
+    expect(el.schema).toBe(schemaBefore)
+  })
+})
