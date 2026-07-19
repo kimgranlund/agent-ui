@@ -1038,6 +1038,13 @@
   {
     "name": "ADR-0150",
     "url": "./adr-index.html#adr-0150",
+    "description": "Compact-window body type — the body column drops 1px below 52.5rem/840px, the token layer's FIRST viewport-responsive lever (proposed — Kim's ask 2026-07-18: b…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0151",
+    "url": "./adr-index.html#adr-0151",
     "description": "Named shell archetypes join agent-app-surfaces as M5 — thin, BEHAVIOR-ONLY ui-{archetype}-shell compositions in @agent-ui/app, v1 THREE: ui-chat-shell + ui-wor…",
     "level": "L3",
     "section": "Records"
