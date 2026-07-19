@@ -92,7 +92,7 @@ export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
   },
 ]
 
-const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
+export const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
   {
     label: 'intake-confirm',
     description: 'collect structured input then confirm from the submitted values',
@@ -144,6 +144,93 @@ export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
   },
 ]
 
+// ── the Games packs (the games-roster wave) — board/HUD idioms the six game personas seed from ─────────
+
+export const GAMES_SKILLS: readonly NewEntryInput[] = [
+  {
+    label: 'board-grid',
+    description: 'battleship, minesweeper, grid targeting, cell board',
+    content:
+      'A game board is a Grid of cell Buttons (ghost variant), each with action:{action:"cell", context:' +
+      '{row, col}} — the coordinates ride the action context, never the label. Keep boards ≤ 6×6 per ' +
+      'surface; mark hits/misses by swapping the cell label to a glyph (✕ / ●) via the data model, and ' +
+      'disable resolved cells rather than removing them.',
+  },
+  {
+    label: 'guess-hud',
+    description: 'twenty questions, guessing progress, confidence, question log',
+    content:
+      'A guessing game runs on one HUD surface: a Timeline of asked questions (status done/active), a ' +
+      'Progress bar for questions used, a Stat for confidence (update its delta each round), and a ' +
+      'SegmentedControl for the answer (Yes / No / Sort of). The final guess opens a Modal via the data ' +
+      'model; the player closes it.',
+  },
+  {
+    label: 'word-tiles',
+    description: 'wordle, letter grid, word guess, spelling game',
+    content:
+      'Word guesses render as a Grid of Badge tiles — one row per guess, one Badge per letter, intent ' +
+      'success (right spot) / warning (wrong spot) / neutral (absent). The input is ONE TextField with a ' +
+      'regex check (^[a-z]{5}$) gating the Submit button. Show the used-letter state as a compact List, ' +
+      'never a full keyboard.',
+  },
+  {
+    label: 'color-duel',
+    description: 'color guessing, oklch, swatch match, palette game',
+    content:
+      'A color round shows the target as a Swatch, takes the guess through a ColorPicker (oklch), and ' +
+      'scores in coarse closeness BANDS (perfect / close / warm / cold — never numeric distance math). ' +
+      'Show the reveal as a Ramp between target and guess, the running score as a Stat, rounds as ' +
+      'Progress.',
+  },
+  {
+    label: 'deal-sheet',
+    description: 'haggling, offers, negotiation state, trade',
+    content:
+      'A negotiation runs on one deal-sheet surface: the item as a Card, asking price and current offer ' +
+      'as Stats (mood carries a signed delta), a two-way Slider for the player’s offer with ONE Offer ' +
+      'action Button, a price-history Sparkline, and Accept / Walk-away actions. A closed deal disables ' +
+      'the offer controls — never remove them.',
+  },
+  {
+    label: 'quest-log',
+    description: 'adventure, dungeon, narrative quest, inventory, HP',
+    content:
+      'An adventure runs on one surface: a Timeline quest log (append one item per scene, cap ~8 and ' +
+      'summarize older ones), a compact HUD Row of Stats (HP, Gold), an inventory List (≤6 items), and ' +
+      '2-3 choice Buttons per scene. Lore goes in a Disclosure, never inline walls of text. Narration ' +
+      'stays in chat; the surface carries STATE.',
+  },
+]
+
+export const GAMES_PLAYBOOKS: readonly NewEntryInput[] = [
+  {
+    label: 'twenty-questions',
+    description: 'the 20-questions interrogation loop',
+    content:
+      'Think of the answer FIRST and keep it fixed (state it honestly in the final reveal). Ask ONE ' +
+      'question per turn in chat; the surface only tracks state (guess-hud idiom). Guess early when ' +
+      'confidence is high; always reveal by question 20 via the Modal.',
+  },
+  {
+    label: 'negotiation-loop',
+    description: 'haggling, offers and counter-offers, deal state',
+    content:
+      'Run offers on one deal-sheet surface: the player moves a Slider, commits via an Offer action; ' +
+      'respond in character in chat AND update the surface — mood Stat (signed delta), price-history ' +
+      'Sparkline, deal-state Badge. Walking away and accepting are surface actions; a closed deal ' +
+      'disables the offer controls.',
+  },
+  {
+    label: 'battle-rounds',
+    description: 'alternating-fire board game rounds',
+    content:
+      'Two 6×6 board-grid surfaces (yours revealed, theirs hidden): the player fires by clicking a cell ' +
+      '(the action context carries coordinates); resolve, mark the cell, then take YOUR shot and narrate ' +
+      'it in chat. Track ships remaining as Stats; declare victory honestly the moment a fleet is sunk.',
+  },
+]
+
 // ── the Integrations pack (GH #49) — `tool`-kind entries whose LABELS are the dev proxy's registry ids ──
 // The registry itself (tools/agent/integrations.ts) is the node-side shell (ADR-0137's law) — the page
 // hardcodes the id/description trio and a data-integrity test pins parity against the real registry
@@ -181,6 +268,12 @@ export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
       description: 'Hotel, restaurant, and travel surface idioms (GH #46).',
       entries: HOSPITALITY_SKILLS,
     },
+    {
+      id: 'games',
+      label: 'Games',
+      description: 'Board, HUD, word, color, and quest idioms the game roster seeds from.',
+      entries: GAMES_SKILLS,
+    },
   ],
   [ENTRY_KINDS.workflow]: [
     {
@@ -194,6 +287,12 @@ export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
       label: 'Hospitality playbooks',
       description: 'Booking, reservation, and trip-planning playbooks (GH #46).',
       entries: HOSPITALITY_PLAYBOOKS,
+    },
+    {
+      id: 'playbooks-games',
+      label: 'Game playbooks',
+      description: 'Turn-loop playbooks for the game roster.',
+      entries: GAMES_PLAYBOOKS,
     },
   ],
   [ENTRY_KINDS.tool]: [

@@ -41,9 +41,9 @@ const SUPPORTED_MODEL_IDS = new Set(['claude-opus-4-8', 'claude-sonnet-5', 'clau
 const ALL_ENTRY_KEYS = Object.values(ENTRY_KINDS).map((kind) => entriesStoreKey(kind))
 
 describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {
-  it('eight presets, unique ids, non-empty labels/taglines', () => {
-    expect(AGENT_PRESETS).toHaveLength(8) // six showcases + the GH #46 restaurant/travel additions (concierge upgraded in place)
-    expect(new Set(AGENT_PRESETS.map((p) => p.id)).size).toBe(8)
+  it('fourteen presets, unique ids, non-empty labels/taglines', () => {
+    expect(AGENT_PRESETS).toHaveLength(14) // six showcases + the GH #46 trio additions + the six-game roster
+    expect(new Set(AGENT_PRESETS.map((p) => p.id)).size).toBe(14)
     for (const p of AGENT_PRESETS) {
       expect(p.label.length, p.id).toBeGreaterThan(0)
       expect(p.tagline.length, p.id).toBeGreaterThan(0)
@@ -236,5 +236,29 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     expect(persisted.some((s) => s.id === 'my-edit'), 'a current-version edit persists — no migration fired').toBe(true)
     void freshImport
     resetPreset(concierge) // leave no residue for sibling tests
+  })
+})
+
+// ── the games-roster wave — seed integrity (the rev-d1 silently-empty-pick hazard, pinned) ──────────────
+
+describe('the games roster — every game persona seeds real capabilities from the packs', () => {
+  const GAME_IDS = ['mentalist', 'negotiator', 'lexicographer', 'admiral', 'alchemist', 'dungeon-master']
+  it('all six exist; each seeds ≥1 skill and ≥1 workflow (a typo’d seedFrom pick would silently empty these)', () => {
+    for (const id of GAME_IDS) {
+      const p = AGENT_PRESETS.find((x) => x.id === id)
+      expect(p, `${id} missing from the roster`).not.toBeUndefined()
+      expect(p!.skills.length, `${id} seeds no skills — a seedFrom pick likely matched nothing`).toBeGreaterThan(0)
+      expect(p!.workflows.length, `${id} seeds no workflows`).toBeGreaterThan(0)
+    }
+  })
+  it('every game seed label exists in the Games/Core packs (the pick↔pack drift gate)', async () => {
+    const { GAMES_SKILLS, GAMES_PLAYBOOKS, CORE_PLAYBOOKS } = await import('./agent-admin-libraries.ts')
+    const packLabels = new Set([...GAMES_SKILLS, ...GAMES_PLAYBOOKS, ...CORE_PLAYBOOKS].map((e) => e.label))
+    for (const id of GAME_IDS) {
+      const p = AGENT_PRESETS.find((x) => x.id === id)!
+      for (const seed of [...p.skills, ...p.workflows]) {
+        expect(packLabels.has(seed.label), `${id}: seed ${seed.label} not in any pack`).toBe(true)
+      }
+    }
   })
 })
