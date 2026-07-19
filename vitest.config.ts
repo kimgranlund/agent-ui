@@ -79,6 +79,10 @@ export default defineConfig({
       // `document.createElement('ui-textarea')` calls resolve to the REAL class explicitly. Same
       // alias-ordering necessity as `controls/button`/`controls/icon` immediately above.
       '@agent-ui/components/controls/textarea': r('./packages/agent-ui/components/src/controls/textarea/textarea.ts'),
+      // The Model GRID (2026-07-19 rev.2) — `agent-admin.ts` side-effect-imports `checkbox` so the grid's
+      // `document.createElement('ui-checkbox')` default-position column resolves to the REAL class. Same
+      // alias-ordering necessity as `controls/button`/`controls/icon`/`controls/textarea` above.
+      '@agent-ui/components/controls/checkbox': r('./packages/agent-ui/components/src/controls/checkbox/checkbox.ts'),
       // app-surfaces-m4.lld.md LLD-C13/C14 — `@agent-ui/app`'s `ui-settings` schema/generate.ts are the
       // sixth/seventh/etc. direct `./controls/{name}` subpath consumers from OUTSIDE the components
       // package: the field-type registry self-defines the four mapped controls (text-field/switch/

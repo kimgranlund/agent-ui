@@ -47,6 +47,9 @@ import '@agent-ui/components/controls/icon'
 import '@agent-ui/code/editor'
 import '@agent-ui/components/controls/field'
 import '@agent-ui/components/controls/text-field'
+// The Model grid's row controls (2026-07-19 rev.2) — ui-switch is already registered above; ui-checkbox
+// registers here for the default-position column.
+import '@agent-ui/components/controls/checkbox'
 // TKT-0085: registers <ui-tabs>/<ui-tab>/<ui-tab-panel> — the responsive-collapse shells `#applyLayout`
 // moves pane content into below the wide breakpoint.
 import '@agent-ui/components/controls/tabs'
@@ -58,14 +61,14 @@ import type { SettingsStore } from '../settings/store.ts'
 import {
   CUSTOM_MODELS_KEY,
   DEFAULT_MODEL_ID,
-  SUPPORTED_MODELS,
-  agentConfigSchema,
+  MODELS_INCLUDED_KEY,
   defaultAgentConfigSchema,
   initialValuesFor,
-  parseCustomModels,
+  isModelIncluded,
+  modelRoster,
+  sanitizeModel,
   runStubAgentTurn,
   sanitizeNumber,
-  sanitizeSelect,
   type AgentConfigSnapshot,
   type AdminAgentTurn,
   type AdminAgentSurfaceTurn,
@@ -181,10 +184,10 @@ export class UIAgentAdminElement extends UIElement {
   #layoutObserver: ResizeObserver | null = null
 
   #unsubscribes: Map<string, () => void> = new Map()
-  /** The last parsed customModels fingerprint — the churn guard for the schema-rebuild subscription. */
-  #customModelsKey = ''
-  /** The customModels subscription's own teardown (never the shared #unsubscribes map — rewires clear it). */
-  #customModelsUnsub: (() => void) | undefined
+  /** The Model grid's host element (composed once, re-rendered wholesale per store change). */
+  #modelGrid: HTMLElement | null = null
+  /** The grid subscription's own teardown (never the shared #unsubscribes map — rewires clear it). */
+  #modelGridUnsub: (() => void) | undefined
   // The no-subscribe fallback trigger — `#updateEntries` calls this directly ONLY when the current
   // store has no `subscribe` method to notify it instead (component-reviewer MODERATE fix).
   #renders: Map<string, () => void> = new Map()
@@ -236,29 +239,21 @@ export class UIAgentAdminElement extends UIElement {
     if (this.store === undefined) {
       this.store = createMemoryStore({
         persistKey: 'ui-agent-admin',
-        initial: { ...initialValuesFor(this.schema), ...initialEntryValues() },
+        // `model` seeds explicitly — the Model GRID owns it now and the schema carries no model field
+        // for initialValuesFor to walk (Kim, 2026-07-19 rev.2).
+        initial: { model: DEFAULT_MODEL_ID, ...initialValuesFor(this.schema), ...initialEntryValues() },
       })
     }
-    // Admin-added models (Kim, 2026-07-19): a persisted `customModels` value extends the Model select's
-    // lists — fold it into the schema NOW (a store restored from localStorage already carries it), and
-    // rebuild on every later change through the SAME subscribe seam the entry sections use. The rebuild
-    // is a plain schema reassignment — ui-settings' documented reference-change path; generateSection's
-    // setValue writes nothing to the store, so no rebuild loop exists. Comparing the parsed lists keeps
-    // unrelated store writes from churning the pane.
+    // The Model GRID (Kim, 2026-07-19 rev.2 — supersedes the one-day-old customModels→schema rebuild:
+    // the schema carries no model select anymore, the grid re-renders itself instead): render now from
+    // the store's current contents, and re-render on any of its three keys through its OWN teardown
+    // slot — NEVER the shared #unsubscribes map, which #rewireAllSections clears on every store rewire
+    // (this subscription must outlive rewires; it dies with the connection).
     {
-      const foldCustomModels = (): void => {
-        const parsed = parseCustomModels(this.store?.get(CUSTOM_MODELS_KEY))
-        const key = parsed.map((m) => `${m.id}|${m.label}`).join(',')
-        if (key === this.#customModelsKey) return
-        this.#customModelsKey = key
-        this.schema = agentConfigSchema(parsed)
-      }
-      foldCustomModels()
-      // Its OWN teardown slot — NEVER the shared #unsubscribes map, which #rewireAllSections clears on
-      // every store rewire (this subscription must outlive rewires; it dies with the connection).
-      this.#customModelsUnsub?.()
-      this.#customModelsUnsub = this.store?.subscribe?.((key) => {
-        if (key === CUSTOM_MODELS_KEY) foldCustomModels()
+      this.#renderModelGrid()
+      this.#modelGridUnsub?.()
+      this.#modelGridUnsub = this.store?.subscribe?.((key) => {
+        if (key === 'model' || key === MODELS_INCLUDED_KEY || key === CUSTOM_MODELS_KEY) this.#renderModelGrid()
       })
     }
 
@@ -277,7 +272,7 @@ export class UIAgentAdminElement extends UIElement {
           this.#settingsEl.store = store
         }
         this.#rewireAllSections(store)
-        this.#syncConversationConfig(schema, store)
+        this.#syncConversationConfig(store)
       })
     })
   }
@@ -285,8 +280,8 @@ export class UIAgentAdminElement extends UIElement {
   protected disconnected(): void {
     for (const unsubscribe of this.#unsubscribes.values()) unsubscribe()
     this.#unsubscribes.clear()
-    this.#customModelsUnsub?.()
-    this.#customModelsUnsub = undefined
+    this.#modelGridUnsub?.()
+    this.#modelGridUnsub = undefined
     this.#layoutObserver?.disconnect() // TKT-0085 — otherwise the observer outlives the element (a real leak: it holds a live reference to `this`)
     this.#layoutObserver = null
   }
@@ -367,7 +362,15 @@ export class UIAgentAdminElement extends UIElement {
     // returns one host). A plain structural div — no data-role of its own beyond marking what it is.
     const agentContent = document.createElement('div')
     agentContent.setAttribute('data-role', 'agent-content')
-    agentContent.append(agentHeading, settingsEl)
+    // The Model GRID (Kim, 2026-07-19 rev.2): its own heading + card host, sitting between the Agent
+    // form card and the capability sections. Content renders/rerenders from the store (#renderModelGrid).
+    const modelHeading = document.createElement('h3')
+    modelHeading.setAttribute('data-part', 'model-grid-heading')
+    modelHeading.textContent = 'Model'
+    const modelGrid = document.createElement('div')
+    modelGrid.setAttribute('data-part', 'model-grid')
+    this.#modelGrid = modelGrid
+    agentContent.append(agentHeading, settingsEl, modelHeading, modelGrid)
     for (const { kind, label, addLabel } of CAPABILITY_KINDS) {
       const section = this.#makeSection(kind, label, addLabel)
       agentContent.append(section.host)
@@ -594,18 +597,95 @@ export class UIAgentAdminElement extends UIElement {
    *  picker — one source of truth, not a second parallel selection. Shares `#unsubscribes` with
    *  `#rewireAllSections` (called first, same effect tick) — that method's own unconditional clear-then-
    *  rebuild at the top of every call is what keeps this subscription from leaking across re-runs. */
-  #syncConversationConfig(schema: SettingsSchema | undefined, store: SettingsStore | undefined): void {
+  /** (Re)build the Model GRID from the store's CURRENT contents (Kim, 2026-07-19 rev.2): rows grouped
+   *  by provider, each `[ label | include ui-switch | default ui-checkbox ]`. Wholesale rebuild per
+   *  change (the entry-list render precedent — listeners are per-render, no re-arm bookkeeping).
+   *  Semantics: the DEFAULT checkbox is radio-like (checking a row moves the default there; unchecking
+   *  the current default is a no-op — a roster always has a default); the default row's include switch
+   *  is locked ON (the default is always offered). */
+  #renderModelGrid(): void {
+    const host = this.#modelGrid
+    const store = this.store
+    if (!host) return
+    const roster = modelRoster(store?.get(CUSTOM_MODELS_KEY))
+    const included = store?.get(MODELS_INCLUDED_KEY)
+    const current = sanitizeModel(store?.get('model'), roster)
+    host.replaceChildren()
+    for (const provider of [...new Set(roster.map((m) => m.provider))]) {
+      const providerLabel = document.createElement('div')
+      providerLabel.setAttribute('data-part', 'model-provider')
+      providerLabel.textContent = provider
+      host.append(providerLabel)
+      for (const model of roster.filter((m) => m.provider === provider)) {
+        const row = document.createElement('div')
+        row.setAttribute('data-part', 'model-row')
+        if (model.id === current) row.setAttribute('data-default', '')
+
+        const label = document.createElement('span')
+        label.setAttribute('data-part', 'model-row-label')
+        label.textContent = model.label
+        label.title = model.id
+
+        const include = document.createElement('ui-switch') as HTMLElement & { checked: boolean; disabled: boolean }
+        include.setAttribute('data-part', 'model-include')
+        include.setAttribute('aria-label', `Include ${model.label}`)
+        include.checked = isModelIncluded(included, model.id)
+        // The default is ALWAYS offered — its include switch locks on (checked + disabled).
+        if (model.id === current) {
+          include.checked = true
+          include.disabled = true
+        }
+        include.addEventListener('change', () => {
+          const record = { ...((store?.get(MODELS_INCLUDED_KEY) as Record<string, boolean> | undefined) ?? {}) }
+          record[model.id] = include.checked
+          store?.set(MODELS_INCLUDED_KEY, record)
+          if (store !== undefined && store.subscribe === undefined) this.#renderModelGrid() // the #updateEntries no-subscribe fallback
+        })
+
+        const isDefault = document.createElement('ui-checkbox') as HTMLElement & { checked: boolean }
+        isDefault.setAttribute('data-part', 'model-default')
+        isDefault.setAttribute('aria-label', `Default: ${model.label}`)
+        isDefault.checked = model.id === current
+        isDefault.addEventListener('change', () => {
+          if (isDefault.checked) {
+            // Moving the default also re-includes the row (the always-offered law) — one write each,
+            // the store's own notifications re-render the grid (radio semantics fall out of the render).
+            const record = { ...((store?.get(MODELS_INCLUDED_KEY) as Record<string, boolean> | undefined) ?? {}) }
+            if (record[model.id] === false) {
+              record[model.id] = true
+              store?.set(MODELS_INCLUDED_KEY, record)
+            }
+            store?.set('model', model.id)
+            if (store !== undefined && store.subscribe === undefined) this.#renderModelGrid()
+          } else {
+            // Unchecking the current default is a no-op — re-render restores the checked state.
+            this.#renderModelGrid()
+          }
+        })
+
+        row.append(label, include, isDefault)
+        host.append(row)
+      }
+    }
+  }
+
+  #syncConversationConfig(store: SettingsStore | undefined): void {
     const conversation = this.#conversation
     if (!conversation) return
-    conversation.models = SUPPORTED_MODELS
     conversation.efforts = EFFORT_LEVELS
     conversation.effort = this.#effort
     const renderModel = (): void => {
-      conversation.model = sanitizeSelect(schema ?? defaultAgentConfigSchema, 'model', store?.get('model'), DEFAULT_MODEL_ID)
+      // The picker offers the INCLUDED roster only (the Model grid's switches, 2026-07-19 rev.2); the
+      // committed default always stays offered — the grid disables excluding it, and sanitizeModel
+      // falls back to DEFAULT_MODEL_ID for anything off-roster.
+      const roster = modelRoster(store?.get(CUSTOM_MODELS_KEY))
+      const included = store?.get(MODELS_INCLUDED_KEY)
+      conversation.models = roster.filter((m) => isModelIncluded(included, m.id))
+      conversation.model = sanitizeModel(store?.get('model'), roster)
     }
     renderModel()
     const unsubscribe = store?.subscribe?.((key) => {
-      if (key === 'model') renderModel()
+      if (key === 'model' || key === MODELS_INCLUDED_KEY || key === CUSTOM_MODELS_KEY) renderModel()
     })
     if (unsubscribe) this.#unsubscribes.set('model', unsubscribe)
   }
@@ -636,7 +716,7 @@ export class UIAgentAdminElement extends UIElement {
 
     const config: AgentConfigSnapshot = {
       name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
-      model: sanitizeSelect(schema, 'model', store?.get('model'), DEFAULT_MODEL_ID),
+      model: sanitizeModel(store?.get('model'), modelRoster(store?.get(CUSTOM_MODELS_KEY))),
       temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
       toolsEnabled: store?.get('toolsEnabled') === true,
       systemPrompt,
@@ -705,13 +785,12 @@ export class UIAgentAdminElement extends UIElement {
     const surfaceTurn = this.agentSurfaceTurn
     if (!conversation || surfaceTurn === undefined) return
     const store = this.store
-    const schema = this.schema ?? defaultAgentConfigSchema
     const sections = readEntries(store, ENTRY_KINDS.promptSection)
     const toolsEnabled = store?.get('toolsEnabled') === true
     const request = {
       turn,
       personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), toolsEnabled),
-      model: sanitizeSelect(schema, 'model', store?.get('model'), DEFAULT_MODEL_ID),
+      model: sanitizeModel(store?.get('model'), modelRoster(store?.get(CUSTOM_MODELS_KEY))),
       // GH #49 — the ENABLED tool entries' labels, master-gated on toolsEnabled (the SAME switch that
       // gates the tool kind's prompt projection): the proxy intersects with its registry; non-registry
       // labels are inert. A FRESH store read (the live-apply law).
