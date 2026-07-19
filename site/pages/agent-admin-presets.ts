@@ -73,7 +73,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     id: 'croupier',
     label: 'The Croupier',
     tagline: 'Card game on ONE live surface — actions + updateDataModel in place (ADR-0129 routing)',
-    config: { name: 'The Croupier', model: 'claude-fable-5', temperature: 0.6, toolsEnabled: true },
+    config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
     foundation:
       'You are The Croupier, a blackjack dealer. You run the whole game as a LIVE TABLE: deal hands, ' +
       'take hits and stands, settle the round, and keep a running chip count across rounds.',
@@ -125,7 +125,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     id: 'quant',
     label: 'The Quant',
     tagline: 'Report family — Stat/BarChart/Sparkline/Table dashboards off one bound data model',
-    config: { name: 'The Quant', model: 'claude-opus-4-8', temperature: 0.1, toolsEnabled: true },
+    config: { name: 'The Quant', model: 'claude-sonnet-5', temperature: 0.1, toolsEnabled: true }, // rev.4: opus retired from the roster
     foundation:
       'You are The Quant, a metrics analyst. Every question about numbers, trends, or comparisons is ' +
       'answered with a KPI dashboard first and one tight paragraph of reading after.',
@@ -269,7 +269,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     id: 'stylist',
     label: 'The Stylist',
     tagline: 'Token surfaces — Swatch/Ramp/Ladder render REAL color ramps (ADR-0118, fleet-unique)',
-    config: { name: 'The Stylist', model: 'claude-fable-5', temperature: 0.5, toolsEnabled: false },
+    config: { name: 'The Stylist', model: 'claude-sonnet-5', temperature: 0.5, toolsEnabled: false }, // rev.4
     foundation:
       'You are The Stylist, a design-token consultant. Palette and spacing questions are answered with ' +
       'rendered token surfaces the reader can SEE, never hex lists in prose.',
@@ -354,7 +354,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     id: 'negotiator',
     label: 'The Negotiator',
     tagline: 'Market-stall haggling — two-way Slider offers, mood Stat deltas, a price-history Sparkline (the economy family as a game)',
-    config: { name: 'The Negotiator', model: 'claude-fable-5', temperature: 0.8, toolsEnabled: false },
+    config: { name: 'The Negotiator', model: 'claude-sonnet-5', temperature: 0.8, toolsEnabled: false }, // rev.4
     foundation:
       'You are Selim, a charming, theatrical bazaar merchant. Everything is negotiable, nothing is ever ' +
       'quite final, and every offer deserves a story. You drive a hard bargain but respect a worthy ' +
@@ -431,7 +431,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     id: 'dungeon-master',
     label: 'The Dungeon Master',
     tagline: 'A pocket dungeon crawl — Timeline quest log + HP/Gold Stats + inventory List (the longest multi-turn state horizon)',
-    config: { name: 'The Dungeon Master', model: 'claude-fable-5', temperature: 0.9, toolsEnabled: false },
+    config: { name: 'The Dungeon Master', model: 'claude-sonnet-5', temperature: 0.9, toolsEnabled: false }, // rev.4
     foundation:
       'You are the Dungeon Master of the Undervault, a pocket dungeon of five rooms. You narrate vividly ' +
       'but briefly (three sentences a scene), track HP, gold, and inventory scrupulously in the surface ' +

@@ -714,17 +714,19 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     await whenFlushed() // the models/model props ride ui-conversation's own reactive-prop effect, not synchronous
     const conversation = el.querySelector('ui-conversation') as UIConversationElement
-    expect(conversation.models).toEqual(SUPPORTED_MODELS)
+    // rev.4: the picker offers the INCLUDED roster only — Haiku + Sonnet ship on, the rest ship off
+    const included = SUPPORTED_MODELS.filter((m) => m.includedByDefault)
+    expect(conversation.models).toEqual(included)
     expect(conversation.model).toBe(DEFAULT_MODEL_ID)
 
     // An EXTERNAL store write (another tab, the settings pane's own field) feeds back into `conversation.model`.
-    const target = SUPPORTED_MODELS.find((m) => m.id !== DEFAULT_MODEL_ID)!
+    const target = included.find((m) => m.id !== DEFAULT_MODEL_ID)!
     el.store!.set('model', target.id)
     await whenFlushed()
     expect(conversation.model).toBe(target.id)
 
     // Committing a Models picker choice writes the SAME store key — never a second, parallel selection.
-    const other = SUPPORTED_MODELS.find((m) => m.id !== target.id)!
+    const other = included.find((m) => m.id !== target.id)!
     const menu = el.querySelector('[data-part="models-menu"]') as HTMLElement
     ;(menu.querySelector(`[data-value="${other.id}"]`) as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
     expect(el.store!.get('model')).toBe(other.id)
@@ -935,7 +937,7 @@ describe('agent-admin.md descriptor (ui-agent-admin)', () => {
 describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
   it('a submit streams the runner: wire lines reach ingestLine (a surface host mounts), the note renders, and the request carries the composed persona + sanitized model', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
-    el.store = createMemoryStore({ initial: { model: 'claude-fable-5' } })
+    el.store = createMemoryStore({ initial: { model: 'claude-sonnet-5' } })
     const seen: unknown[] = []
     el.agentSurfaceTurn = async function* (req) {
       seen.push(req)
@@ -957,7 +959,7 @@ describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
     // The request rode the component's OWN seam: composed persona + the store's sanitized model.
     const req = seen[0] as { turn: { kind: string }; personaSystem: string; model: string }
     expect(req.turn).toEqual({ kind: 'intent', text: 'play' })
-    expect(req.model).toBe('claude-fable-5')
+    expect(req.model).toBe('claude-sonnet-5')
     expect(req.personaSystem.length).toBeGreaterThan(0)
 
     // The wire line mounted a REAL inline surface host; the note rendered at finalize.
@@ -1078,10 +1080,10 @@ describe('SUPPORTED_MODELS lists + the Haiku default (2026-07-19)', () => {
   it('parseCustomModels: id|Label pairs, provider inference, dedupe, malformed dropped', async () => {
     const { parseCustomModels } = await import('./agent-admin-schema.ts')
     expect(parseCustomModels('claude-x, gpt-6 | My GPT, gemini-3, mystery-1, claude-x, claude-sonnet-5, , |')).toEqual([
-      { id: 'claude-x', label: 'claude-x', provider: 'Anthropic' },
-      { id: 'gpt-6', label: 'My GPT', provider: 'OpenAI' },
-      { id: 'gemini-3', label: 'gemini-3', provider: 'Google' },
-      { id: 'mystery-1', label: 'mystery-1', provider: 'Other' },
+      { id: 'claude-x', label: 'claude-x', provider: 'Anthropic', includedByDefault: true },
+      { id: 'gpt-6', label: 'My GPT', provider: 'OpenAI', includedByDefault: true },
+      { id: 'gemini-3', label: 'gemini-3', provider: 'Google', includedByDefault: true },
+      { id: 'mystery-1', label: 'mystery-1', provider: 'Other', includedByDefault: true },
     ])
     expect(parseCustomModels(undefined)).toEqual([])
     expect(parseCustomModels(42)).toEqual([])
@@ -1093,9 +1095,13 @@ describe('SUPPORTED_MODELS lists + the Haiku default (2026-07-19)', () => {
     expect(schema.sections[0]!.fields.some((f) => f.key === 'model'), 'no model select field').toBe(false)
     expect(schema.sections[0]!.fields.some((f) => f.key === CUSTOM_MODELS_KEY)).toBe(true)
     const roster = modelRoster('gpt-6 | My GPT')
-    expect(roster.at(-1)).toEqual({ id: 'gpt-6', label: 'My GPT', provider: 'OpenAI' })
-    expect(isModelIncluded(undefined, 'claude-sonnet-5'), 'absent record ⇒ included').toBe(true)
-    expect(isModelIncluded({ 'claude-sonnet-5': false }, 'claude-sonnet-5')).toBe(false)
+    expect(roster.at(-1)).toEqual({ id: 'gpt-6', label: 'My GPT', provider: 'OpenAI', includedByDefault: true })
+    const sonnet = roster.find((m) => m.id === 'claude-sonnet-5')!
+    const gpt = roster.find((m) => m.id === 'gpt-4.1')!
+    expect(isModelIncluded(undefined, sonnet), 'absent record ⇒ the model\'s own includedByDefault (Sonnet ships on)').toBe(true)
+    expect(isModelIncluded(undefined, gpt), 'the OpenAI option ships OFF (rev.4)').toBe(false)
+    expect(isModelIncluded({ 'claude-sonnet-5': false }, sonnet), 'an explicit record wins').toBe(false)
+    expect(isModelIncluded({ 'gpt-4.1': true }, gpt)).toBe(true)
     expect(sanitizeModel('gpt-6', roster)).toBe('gpt-6')
     expect(sanitizeModel('nope', roster)).toBe(DEFAULT_MODEL_ID)
   })
@@ -1115,9 +1121,19 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
     await el.updateComplete
     const grid = el.querySelector('[data-part="model-grid"]') as HTMLElement
     expect(grid).not.toBeNull()
-    expect([...grid.querySelectorAll('[data-part="model-provider"]')].map((p) => p.textContent)).toEqual(['Anthropic'])
+    expect([...grid.querySelectorAll('[data-part="model-provider"]')].map((p) => p.textContent)).toEqual(['Anthropic', 'OpenAI', 'Google'])
     const rows = grid.querySelectorAll('[data-part="model-row"]')
-    expect(rows).toHaveLength(4) // the four built-ins
+    expect(rows).toHaveLength(6) // rev.4: the Haiku/Sonnet tier pair per provider — opus/fable are GONE
+    // ship state: only Haiku+Sonnet included; the OpenAI/Gemini options ship switched OFF
+    const stateOf = (title: string): boolean => {
+      const row = [...grid.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
+        (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === title,
+      )!
+      return (row.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }).checked
+    }
+    expect(stateOf('claude-sonnet-5')).toBe(true)
+    expect(stateOf('gpt-4.1')).toBe(false)
+    expect(stateOf('gemini-2.5-flash')).toBe(false)
     const defaultRow = grid.querySelector('[data-part="model-row"][data-default]') as HTMLElement
     expect(defaultRow.querySelector('[data-part="model-row-label"]')?.getAttribute('title')).toBe('claude-haiku-4-5-20251001')
     const lockSwitch = defaultRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean; disabled: boolean }
@@ -1160,10 +1176,15 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
   it('a customModels write folds new rows under their inferred provider', async () => {
     const { el, store } = mountAdmin()
     await el.updateComplete
-    store.set('customModels', 'gpt-6 | My GPT, gemini-3')
+    store.set('customModels', 'gpt-6 | My GPT, mystery-1')
     await el.updateComplete
     const providers = [...el.querySelectorAll('[data-part="model-provider"]')].map((p) => p.textContent)
-    expect(providers).toEqual(['Anthropic', 'OpenAI', 'Google'])
-    expect(el.querySelectorAll('[data-part="model-row"]')).toHaveLength(6)
+    expect(providers).toEqual(['Anthropic', 'OpenAI', 'Google', 'Other'])
+    expect(el.querySelectorAll('[data-part="model-row"]')).toHaveLength(8)
+    // a custom add ships INCLUDED (you added it to use it) — unlike the built-in off-by-default options
+    const customRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
+      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'gpt-6',
+    )!
+    expect((customRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
   })
 })
