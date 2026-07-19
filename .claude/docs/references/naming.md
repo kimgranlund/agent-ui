@@ -138,14 +138,13 @@ The prefix IS the ownership boundary — no allowlist needed:
   named AUTHOR hooks a descriptor advertises (today: `empty` — command-modal's author hook; the gate pins that no data-role="command-modal" exists).
   `ui-conversation`'s per-turn bubble speaker kind adds three: `user` · `agent` · `system`
   (app-surfaces-m2.spec.md SPEC-R4 — the thread's own light-DOM content model; app-tier, not agent-emittable).
-  `ui-agent-admin`'s three composed panes add: `canvas` · `prompts` · `settings` (TKT-0039/ADR-0131 —
-  the SAME "which pane is this" role category `list`/`detail` already cover, above; app-tier, not
-  agent-emittable). `ui-agent-admin`'s responsive shell (TKT-0085) adds two: `tabs-medium` — the
-  medium-breakpoint pane merging `prompts`/`settings` into one 2-tab `ui-tabs`, the SAME "which pane"
-  category as `canvas`/`prompts`/`settings` above — and `agent-content` — the wrapper bundling the
-  Agent pane's several sibling nodes (heading + `ui-settings` + capability sections) into one
-  reparent-able unit that migrates between the wide split pane and a tab panel; both app-tier, not
-  agent-emittable. `ui-timeline-item` adds `nested` (ADR-0143 F1, TKT-0091) — a genuine nested
+  `ui-agent-admin`'s composed panes add: `canvas` · `tabs` (vision rev.5, Kim's Figma frame 33:1693 —
+  the chat pane plus the ONE {Settings, Context} tabs pane the old `prompts`/`settings`/`tabs-medium`
+  trio dissolved into; the SAME "which pane is this" role category `list`/`detail` already cover,
+  above; app-tier, not agent-emittable) — plus `settings-content` · `context-content`, the two
+  reparent-able content units that migrate between a split-layout tab panel and a narrow tab panel
+  (the TKT-0085 `agent-content` wrapper discipline, renamed + doubled when the prompts column merged
+  into Settings and the Context tab landed); all app-tier, not agent-emittable. `ui-timeline-item` adds `nested` (ADR-0143 F1, TKT-0091) — a genuine nested
   `<ui-timeline>` adopted into the same shared disclosure `detail` uses, recursion at arbitrary
   authored depth; control-emitted, agent-emittable like `detail`.
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,

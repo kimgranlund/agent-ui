@@ -51,6 +51,11 @@ export interface EntryListOptions {
   /** GH #47/#48 — packs offered by the add-from-library menu. Absent/empty ⇒ the affordance does not
    *  render at all (byte-identical section shell to before the option existed). */
   libraries?: readonly EntryLibraryPack[]
+  /** Vision rev.5 (Kim's Figma frame 33:1693) — a caller-owned control rendered in the section's header
+   *  row beside the heading (the capability kinds' MASTER switch). Absent ⇒ the bare `h3` shell,
+   *  byte-identical to before the option existed (prompt sections take that arm). The caller wires the
+   *  control's state/listeners; this module only places it. */
+  headerControl?: HTMLElement
 }
 
 export function mountEntryList(kind: string, kindLabel: string, addLabel: string, handlers: EntryListHandlers, options?: EntryListOptions): EntryListSection {
@@ -61,7 +66,15 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
   const heading = document.createElement('h3')
   heading.setAttribute('data-part', 'entry-section-heading')
   heading.textContent = kindLabel
-  section.append(heading)
+  if (options?.headerControl) {
+    // The vision frame's `[ heading | master switch ]` header row — one flex wrapper, CSS-owned gap.
+    const headerRow = document.createElement('div')
+    headerRow.setAttribute('data-part', 'entry-section-header')
+    headerRow.append(heading, options.headerControl)
+    section.append(headerRow)
+  } else {
+    section.append(heading)
+  }
 
   const list = document.createElement('div')
   list.setAttribute('data-part', 'entry-list')

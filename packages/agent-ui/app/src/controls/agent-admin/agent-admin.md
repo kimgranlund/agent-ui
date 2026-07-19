@@ -46,12 +46,20 @@ events: []               # no DOM events of its own — the composed ui-settings
 slots: []                 # content model is NOT author-composed — the split/panes/composed children are built entirely by this element's own connect-time logic, the ui-settings/ui-conversation precedent
 
 parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates; documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the split.md/master-detail.md precedent)
+  - name: agent-header
+    description: The Settings tab's `[ agent-heading | agent-enabled ui-switch ]` header row (vision rev.5 — the frame's own `[ Agent · toggle ]` shape), preceding the composed `ui-settings` instance.
   - name: agent-heading
-    description: The settings pane's `<h3 data-part="agent-heading">` ("Agent"), preceding the composed `ui-settings` instance.
+    description: The `<h3 data-part="agent-heading">` ("Agent") inside the agent-header row.
+  - name: agent-enabled
+    description: The Agent ACTIVE master switch (vision rev.5, Kim's ruling — "is the agent active/available"). OFF sets `conversation.disabled` (composer busy-disabled, no turns run, both prose and surface arms guarded); everything stays editable. Backed by the `agentEnabled` store key (default ON — only an explicit stored `false` disables).
+  - name: kind-enabled
+    description: One capability kind's MASTER switch (vision rev.5), rendered in its section's header row. OFF gates the WHOLE kind out of the composed live prompt, the stub's roster, and the surface arm's integrations — winning over per-entry toggles — and dims the section (`data-kind-disabled` on the section host). Backed by `${kind}sEnabled` store keys — the `tool` kind resolves to the PRE-EXISTING `toolsEnabled` key (the old Agent-card boolean field, retired from the schema in the same change; persisted values carry over).
   - name: entry-section
     description: One kind's whole section — `<div data-part="entry-section" data-kind="...">` — the ONE shape all five instantiations share (ADR-0132 `n1`). Carries a heading, the entry list, and the add-form.
   - name: model-grid
     description: The Model management card (2026-07-19 rev.2) — provider-grouped rows, one per roster model, each `[ model-row-label | model-include ui-switch | model-default ui-radio ]` — one logical radio system across the provider groups (rev.3). Checking a row writes `model`; a standalone-radio untoggle restores via re-render (a roster always has a default) and the default row's include switch locks on (`model`'s row is always offered). Re-rendered wholesale on `model`/`modelsIncluded`/`customModels` store changes.
+  - name: entry-section-header
+    description: A capability section's `[ entry-section-heading | kind-enabled ui-switch ]` header row (vision rev.5) — present only when a master switch was handed in (prompt sections keep the bare heading).
   - name: entry-section-heading
     description: A section's `<h3 data-part="entry-section-heading">` (e.g. "Skills", "Instructions").
   - name: entry-list
@@ -84,6 +92,18 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
     description: The add-form's submit button.
   - name: entry-add-error
     description: The add-form's fail-closed validation message (ADR-0132 cl.4) — hidden until a rejected submission names why.
+  - name: context-section
+    description: One of the Context tab's two accordion groups (vision rev.5) — `<ui-disclosure data-part="context-section" data-section="agent-system|dialog-turns">`, both open by default.
+  - name: context-system
+    description: The Agent System group's render slot — rebuilt wholesale on ANY store write (the compiled view reads nearly every key; writes are commit-time, never per-keystroke). Carries one context-item per subject.
+  - name: context-item
+    description: One Agent System accordion — `<ui-disclosure data-part="context-item" data-item="agent|skill|workflow|resource|tool">` whose body is the pretty-printed JSON. The `agent` item (open by default) carries the COMPILED config — name/model/temperature/effort/active + the EXACT `composeLiveSystemPrompt` output a turn would send; each kind item (closed by default — the frame's caret-right rows) carries `{ enabled, entries: [{label, enabled, description}] }`. Open/closed state survives rebuilds (`data-item`-keyed capture).
+  - name: context-turns
+    description: The Dialog Turns group's render slot — the per-turn payload log, NEWEST FIRST with zero-padded descending numbers (the frame's 04→01), bounded at 20 (the oldest fall off; numbering stays monotonic). Session-ephemeral — never persisted.
+  - name: context-turn
+    description: One logged turn — a context-item variant (`data-part="context-turn"`) whose JSON body is `{ arm: stub|live|surface, request, response }`; failures log too (`response.error`). The newest turn's fold defaults open.
+  - name: context-json
+    description: The mono pretty-printed JSON preview inside every context accordion — its OWN scroll container (overflow-x + a 20rem block cap), so a long systemPrompt line can never widen the pane.
 
 customStates: []          # no :state() hooks — no derived presentation state of this element's own (unlike ui-master-detail's data-view)
 
@@ -116,7 +136,13 @@ protocol dependency.
 <ui-agent-admin></ui-agent-admin>
 ```
 
-A three-pane `ui-split` (ADR-0131 cl.2's ruled order): `[ chat canvas | prompts pane | settings pane ]`.
+A two-pane `ui-split` (vision rev.5, Kim's Figma frame 33:1693 — superseding ADR-0131 cl.2's
+three-pane order): `[ chat canvas | {Settings ⇄ Context} tabs ]`. The Settings tab carries the WHOLE
+config column — the Agent header row (heading + ACTIVE master switch) + `ui-settings` + the Model grid
++ the prompt sections (the old prompts pane, merged in) + the four capability sections (each with its
+own kind master switch). The Context tab is the read-only introspection surface: the compiled Agent
+System JSON and the Dialog Turns payload log. Below 640px the shell collapses to {Chat, Settings,
+Context} tabs (TKT-0085's mechanism, two bands instead of three).
 
 ## One primitive, five instantiations (ADR-0132)
 

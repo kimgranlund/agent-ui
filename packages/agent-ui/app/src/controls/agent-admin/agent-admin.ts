@@ -4,16 +4,22 @@
 // (`entries.ts`/`entry-list.ts`, ADR-0132) — no new primitive FAMILY beyond that one, no new protocol
 // dependency.
 //
-// Three fixed `ui-split-pane` children on ONE composed `ui-split` (axis=horizontal, the ADR-0131 cl.2
-// ruled order): `[ chat canvas | prompts pane | settings pane ]`. Composition is idempotent — the
-// `master-detail.ts`/`settings.ts` `#compose()` precedent: built ONCE at first connect, never rebuilt on
-// a later reconnect.
+// Two fixed `ui-split-pane` children on ONE composed `ui-split` (vision rev.5, Kim's Figma frame
+// 33:1693 — superseding ADR-0131 cl.2's three-pane order): `[ chat canvas | {Settings ⇄ Context} tabs ]`.
+// The Settings tab carries the WHOLE config column (Agent header row + ui-settings + the Model grid +
+// prompt sections + capability sections — the old prompts pane merged in); the Context tab is the
+// read-only introspection surface (the compiled Agent System JSON + the Dialog Turns payload log).
+// Composition is idempotent — the `master-detail.ts`/`settings.ts` `#compose()` precedent: built ONCE at
+// first connect, never rebuilt on a later reconnect.
 //
 // ADR-0132 replaced the single free-text prompt + flat-only settings with FIVE instantiations of one
 // generic entry-list primitive: prompt sections (Foundation/Personality/Critical Items, seeded,
-// toggle-off-only) in the prompts pane; Skills/Workflows/Resources/Tools (unseeded, purely
-// custom-authored) alongside the UNCHANGED "Agent" flat config in the settings pane. All five share ONE
-// shared `SettingsStore` instance (settings/store.ts) — one persisted config, five slices of it.
+// toggle-off-only); Skills/Workflows/Resources/Tools (unseeded, purely custom-authored) alongside the
+// "Agent" flat config — all in the Settings tab. All five share ONE shared `SettingsStore` instance
+// (settings/store.ts) — one persisted config, five slices of it. Vision rev.5 adds the MASTER switches:
+// the Agent ACTIVE toggle (`agentEnabled` — OFF disables the composer, no turns run) and one per
+// capability kind (`${kind}sEnabled` — OFF gates the whole kind out, winning over per-entry toggles;
+// the `tool` kind's key IS the old `toolsEnabled`, whose Agent-card field retired in the same change).
 //
 // LIVE-APPLY (ADR-0131's "no manual reload" requirement, now ADR-0132's richer version): the stub turn
 // loop reads the store's CURRENT entries at turn time — a `composeSystemPrompt` over the enabled prompt
@@ -55,16 +61,20 @@ import '@agent-ui/components/controls/radio'
 // TKT-0085: registers <ui-tabs>/<ui-tab>/<ui-tab-panel> — the responsive-collapse shells `#applyLayout`
 // moves pane content into below the wide breakpoint.
 import '@agent-ui/components/controls/tabs'
+import '@agent-ui/components/controls/disclosure' // vision rev.5 — the Context tab's accordion primitive
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsSchema } from '../settings/schema.ts'
 import type { SettingsStore } from '../settings/store.ts'
 import {
+  AGENT_ENABLED_KEY,
   CUSTOM_MODELS_KEY,
   DEFAULT_MODEL_ID,
   MODELS_INCLUDED_KEY,
   defaultAgentConfigSchema,
+  isEnabledFlag,
+  kindEnabledKey,
   initialValuesFor,
   isModelIncluded,
   modelRoster,
@@ -128,26 +138,23 @@ const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: s
   { kind: ENTRY_KINDS.tool, label: 'Tools', addLabel: 'Add tool', liveHeading: 'Tools available to you' },
 ]
 
-type AgentAdminLayout = 'wide' | 'medium' | 'narrow'
+type AgentAdminLayout = 'split' | 'narrow'
 
-// TKT-0085 — the responsive-shell thresholds, in px (a ResizeObserver measures px, never rem/ch; both
-// numbers are chosen at the standard 16px/rem baseline this repo's own CSS `@container` rules already
-// assume, e.g. app-shell.css/master-detail.css's bare `40rem` literal — a real user root-font-size change
-// shifts this component's OWN breakpoint the same tiny amount CSS rem breakpoints already do repo-wide,
-// not a new inconsistency).
-//   NARROW_MAX (640px = 40rem): the ONE existing precedent value in this repo (app-shell.css /
-//   master-detail.css's own collapse threshold) — reused rather than inventing a third number.
-//   WIDE_MIN (1024px = 64rem): NEW — chosen with real headroom above the 3-pane MECHANICAL floor (the
-//   split panes' own `min` attributes below: canvas 16rem + prompts 10rem + settings 20rem = 46rem/736px
-//   hard minimum) so the wide layout never renders at its bare squeeze point.
+// TKT-0085 → vision rev.5 (Kim's Figma frame 33:1693) — the responsive shell collapsed from THREE bands
+// to TWO: the old wide (chat | prompts | settings) and medium (chat | 2-tab) shapes both dissolve into
+// ONE `split` layout (chat | {Settings, Context} tabs), so a single threshold remains. Same px rationale
+// as before (a ResizeObserver measures px; 640px = 40rem is the repo's own app-shell.css/
+// master-detail.css collapse precedent). The 2-pane mechanical floor is canvas 16rem + tabs 20rem =
+// 36rem/576px, comfortably under the threshold.
 const NARROW_MAX_PX = 640
-const WIDE_MIN_PX = 1024
 
 function layoutFor(widthPx: number): AgentAdminLayout {
-  if (widthPx >= WIDE_MIN_PX) return 'wide'
-  if (widthPx >= NARROW_MAX_PX) return 'medium'
-  return 'narrow'
+  return widthPx >= NARROW_MAX_PX ? 'split' : 'narrow'
 }
+
+/** Dialog Turns retention cap (vision rev.5) — a bounded ring; the oldest records fall off. Session-
+ *  ephemeral by design (like `#history`): the store persists the agent's CONFIG, never its traffic. */
+const TURN_LOG_CAP = 20
 
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
 export class UIAgentAdminElement extends UIElement {
@@ -166,23 +173,35 @@ export class UIAgentAdminElement extends UIElement {
   // (never cloned/rebuilt) between whichever shell the current layout uses. See `#applyLayout`'s own
   // doc-comment for the full design; fields here are the STABLE homes + content units it operates on,
   // all built once in `#compose()`.
-  #canvasPane: HTMLElement | null = null // wide + medium home for `#conversation`
-  #promptsPane: HTMLElement | null = null // wide-only home for `#instructionsContent`
-  #settingsPane: HTMLElement | null = null // wide-only home for `#agentContent`
-  #mediumTabsPane: HTMLElement | null = null // medium-only home (wraps a 2-tab ui-tabs: Instructions, Agent)
-  #mediumInstructionsPanel: HTMLElement | null = null
-  #mediumAgentPanel: HTMLElement | null = null
-  #narrowTabs: HTMLElement | null = null // narrow-only, top-level: 3 tabs: Chat, Instructions, Agent
+  #canvasPane: HTMLElement | null = null // split-layout home for `#conversation`
+  #tabsPane: HTMLElement | null = null // split-layout home for the {Settings, Context} ui-tabs (vision rev.5)
+  #settingsPanel: HTMLElement | null = null // the Settings ui-tab-panel
+  #contextPanel: HTMLElement | null = null // the Context ui-tab-panel
+  #narrowTabs: HTMLElement | null = null // narrow-only, top-level: 3 tabs: Chat, Settings, Context
   #narrowChatPanel: HTMLElement | null = null
-  #narrowInstructionsPanel: HTMLElement | null = null
-  #narrowAgentPanel: HTMLElement | null = null
-  // The two content UNITS that migrate between a wide-state pane and a tab-panel — `#conversation`
-  // (already a single element) is the third; these two are built once in `#compose()` (the Instructions
-  // section's own host, and a wrapper div bundling the Agent heading + ui-settings + capability sections
-  // into ONE reparent-able node, since that pane's content is several sibling nodes, not one).
-  #instructionsContent: HTMLElement | null = null
-  #agentContent: HTMLElement | null = null
-  #currentLayout: 'wide' | 'medium' | 'narrow' | null = null
+  #narrowSettingsPanel: HTMLElement | null = null
+  #narrowContextPanel: HTMLElement | null = null
+  // The two content UNITS that migrate between a split-layout tab panel and a narrow tab panel —
+  // `#conversation` (already a single element) is the third; both are built once in `#compose()`.
+  // `#settingsContent` bundles the WHOLE config column (Agent header row + ui-settings + model grid +
+  // prompt sections + capability sections — the old prompts pane merged in, vision rev.5);
+  // `#contextContent` is the read-only introspection column (Agent System + Dialog Turns).
+  #settingsContent: HTMLElement | null = null
+  #contextContent: HTMLElement | null = null
+  #currentLayout: AgentAdminLayout | null = null
+  // ── vision rev.5: the master switches + the Context tab's render slots ───────────────────────────────
+  #agentSwitch: (HTMLElement & { checked: boolean }) | null = null
+  #kindSwitches: Map<string, HTMLElement & { checked: boolean }> = new Map()
+  #contextSystemHost: HTMLElement | null = null // Agent System — rebuilt wholesale per store change
+  #contextTurnsHost: HTMLElement | null = null // Dialog Turns — rebuilt per logged turn
+  /** The Context tab's store subscription — its OWN slot (the #modelGridUnsub precedent): it must
+   *  outlive `#rewireAllSections`' clear-and-rebuild of the shared #unsubscribes map. */
+  #contextUnsub: (() => void) | undefined
+  /** The Dialog Turns ring (newest LAST here; rendered newest-FIRST) — request/response per turn,
+   *  every arm (stub, live, surface), failures included. Element-lifetime, never persisted. `n` is a
+   *  MONOTONIC turn number (the vision frame's 04→01), stable as the bounded ring drops its oldest. */
+  #turnLog: Array<{ n: number; arm: 'stub' | 'live' | 'surface'; request: unknown; response: unknown }> = []
+  #turnCounter = 0
   #layoutObserver: ResizeObserver | null = null
 
   #unsubscribes: Map<string, () => void> = new Map()
@@ -224,9 +243,8 @@ export class UIAgentAdminElement extends UIElement {
       this.#layoutObserver.observe(this)
     } else if (typeof ResizeObserver === 'undefined') {
       // jsdom (no real layout to measure anyway) — settle on the widest layout so every pane's content
-      // stays reachable via a stable DOM shape for jsdom-based tests, matching "wide" being byte-identical
-      // to this component's pre-TKT-0085 shape (zero migration needed, the common case).
-      this.#applyLayout('wide')
+      // stays reachable via a stable DOM shape for jsdom-based tests.
+      this.#applyLayout('split')
     }
 
     // Lazily default `schema`/`store` (once ever — a later reconnect finds them already set and skips
@@ -275,6 +293,7 @@ export class UIAgentAdminElement extends UIElement {
         }
         this.#rewireAllSections(store)
         this.#syncConversationConfig(store)
+        this.#rewireContext(store)
       })
     })
   }
@@ -284,6 +303,8 @@ export class UIAgentAdminElement extends UIElement {
     this.#unsubscribes.clear()
     this.#modelGridUnsub?.()
     this.#modelGridUnsub = undefined
+    this.#contextUnsub?.()
+    this.#contextUnsub = undefined
     this.#layoutObserver?.disconnect() // TKT-0085 — otherwise the observer outlives the element (a real leak: it holds a live reference to `this`)
     this.#layoutObserver = null
   }
@@ -330,118 +351,158 @@ export class UIAgentAdminElement extends UIElement {
     })
     canvasPane.append(conversation)
 
-    const promptsPane = document.createElement('ui-split-pane')
-    promptsPane.setAttribute('data-role', 'prompts')
-    // TKT-0045: the generic --ui-split-pane-min (4rem) is too tight even for prompts' own entry cards
-    // (the "Add section" add-toggle plus a seeded entry's label row) once the sibling panes above claim
-    // their own real floors — 10rem keeps it readable without the same hard per-control floor the other
-    // two have.
-    promptsPane.setAttribute('min', '10rem')
-    const promptSections = this.#makeSection(ENTRY_KINDS.promptSection, 'Instructions', 'Add section')
-    const instructionsContent = promptSections.host
-    promptsPane.append(instructionsContent)
+    // ── Vision rev.5 (Kim's Figma frame 33:1693): the right side is ONE tabbed region — Settings (the
+    // whole config column) ⇄ Context (the read-only introspection surface). The old three-pane wide
+    // layout (chat | prompts | settings) and its medium two-tab collapse both dissolve into this ONE
+    // split shape; the prompts pane's content merges INTO the Settings column. ──────────────────────────
+    const tabsPane = document.createElement('ui-split-pane')
+    tabsPane.setAttribute('data-role', 'tabs')
+    // The settings column's own field floor (TKT-0045 lineage — ui-settings' master-detail drill-in +
+    // the widest generated control put it at ~280px; 20rem gives headroom across engines).
+    tabsPane.setAttribute('min', '20rem')
+    const rightTabs = document.createElement('ui-tabs')
+    // #14 / ADR-0144 Q1: `fill` = the shipped [pinned tablist | internally-scrolling active panel]
+    // posture; the panel's scrollbar rides the `--ui-tabs-panel-scrollbar-width` seam (agent-admin.css).
+    rightTabs.setAttribute('fill', '')
+    const settingsTab = document.createElement('ui-tab')
+    settingsTab.setAttribute('key', 'settings')
+    settingsTab.textContent = 'Settings'
+    const contextTab = document.createElement('ui-tab')
+    contextTab.setAttribute('key', 'context')
+    contextTab.textContent = 'Context'
+    const settingsPanel = document.createElement('ui-tab-panel')
+    const contextPanel = document.createElement('ui-tab-panel')
+    rightTabs.append(settingsTab, contextTab, settingsPanel, contextPanel)
+    tabsPane.append(rightTabs)
 
-    const settingsPane = document.createElement('ui-split-pane')
-    settingsPane.setAttribute('data-role', 'settings')
-    // TKT-0045: ui-settings composes an internal ui-master-detail, whose own narrow-mode drill-in
-    // (master-detail.css's `@container (inline-size < 40rem)`) fills whatever width this pane is given —
-    // real evidence puts its combined field floor (the widest generated control, a ui-slider at
-    // 192px min-width, plus this pane's own padding/scrollbar gutter) at ~280px; 20rem gives headroom
-    // across engines. Same generic-vs-content-aware gap as the canvas pane above.
-    settingsPane.setAttribute('min', '20rem')
+    // The Settings tab's content unit — the Agent header row (heading + the ACTIVE master switch, Kim's
+    // ruling: "the agent master toggle is just if the agent is active/available or not"), the ui-settings
+    // card, the model grid, the prompt sections (the old prompts pane, merged in), and the capability
+    // sections — ONE reparent-able node (the TKT-0085 wrapper discipline).
+    const agentHeader = document.createElement('div')
+    agentHeader.setAttribute('data-part', 'agent-header')
     const agentHeading = document.createElement('h3')
     agentHeading.setAttribute('data-part', 'agent-heading')
     agentHeading.textContent = 'Agent'
+    const agentSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
+    agentSwitch.setAttribute('data-part', 'agent-enabled')
+    agentSwitch.setAttribute('aria-label', 'Agent active')
+    agentSwitch.checked = true
+    agentSwitch.addEventListener('change', () => {
+      this.store?.set(AGENT_ENABLED_KEY, agentSwitch.checked)
+      // A no-subscribe store never notifies — apply the composer gate + context view directly (the
+      // #updateEntries fallback discipline); with a subscription the callback does both (idempotent).
+      this.#applyMasterStates(this.store)
+      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+    })
+    this.#agentSwitch = agentSwitch
+    agentHeader.append(agentHeading, agentSwitch)
     const settingsEl = new UISettingsElement()
     // Event-boundary guard (the settings.ts `md`/`rail` precedent, same rationale): `settingsEl` is an
     // internal composition detail — its own bubbling `select`/`change` (a section switch) must not reach
     // a listener on THIS element, which owns no event vocabulary of its own (descriptor `events: []`).
     settingsEl.addEventListener('select', (event) => event.stopPropagation())
     settingsEl.addEventListener('change', (event) => event.stopPropagation())
-    // TKT-0085: the Agent pane's content — heading + ui-settings + every capability section — is SEVERAL
-    // sibling nodes, not one, so it needs a single wrapper to migrate as ONE unit between the wide split
-    // pane and a tab panel (the same reason the Instructions pane above didn't: `mountEntryList` already
-    // returns one host). A plain structural div — no data-role of its own beyond marking what it is.
-    const agentContent = document.createElement('div')
-    agentContent.setAttribute('data-role', 'agent-content')
+    const settingsContent = document.createElement('div')
+    settingsContent.setAttribute('data-role', 'settings-content')
     // The Model GRID (Kim, 2026-07-19 rev.2): its own heading + card host, sitting between the Agent
-    // form card and the capability sections. Content renders/rerenders from the store (#renderModelGrid).
+    // form card and the prompt/capability sections. Content renders/rerenders from the store.
     const modelHeading = document.createElement('h3')
     modelHeading.setAttribute('data-part', 'model-grid-heading')
     modelHeading.textContent = 'Model'
     const modelGrid = document.createElement('div')
     modelGrid.setAttribute('data-part', 'model-grid')
     this.#modelGrid = modelGrid
-    agentContent.append(agentHeading, settingsEl, modelHeading, modelGrid)
+    const promptSections = this.#makeSection(ENTRY_KINDS.promptSection, 'Instructions', 'Add section')
+    settingsContent.append(agentHeader, settingsEl, modelHeading, modelGrid, promptSections.host)
     for (const { kind, label, addLabel } of CAPABILITY_KINDS) {
-      const section = this.#makeSection(kind, label, addLabel)
-      agentContent.append(section.host)
+      // The kind's MASTER switch (vision rev.5) — rendered in the section's header row; `false` gates
+      // the whole kind out of the composed prompt + the live roster (isEnabledFlag: default ON).
+      const kindSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
+      kindSwitch.setAttribute('data-part', 'kind-enabled')
+      kindSwitch.setAttribute('aria-label', `${label} enabled`)
+      kindSwitch.checked = true
+      kindSwitch.addEventListener('change', () => {
+        this.store?.set(kindEnabledKey(kind), kindSwitch.checked)
+        this.#applyMasterStates(this.store)
+        if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+      })
+      this.#kindSwitches.set(kind, kindSwitch)
+      const section = this.#makeSection(kind, label, addLabel, kindSwitch)
+      settingsContent.append(section.host)
     }
-    settingsPane.append(agentContent)
 
-    split.append(canvasPane, promptsPane, settingsPane)
+    // The Context tab's content unit (vision rev.5): two accordion groups — the compiled Agent System
+    // (what the agent actually sees, derived fresh from the store per change) and the Dialog Turns
+    // payload log (per-turn request/response JSON, newest first). Group shells build ONCE; their bodies
+    // are render slots rebuilt wholesale (#renderContextSystem / #renderContextTurns).
+    const contextContent = document.createElement('div')
+    contextContent.setAttribute('data-role', 'context-content')
+    const systemSection = document.createElement('ui-disclosure') as HTMLElement & { open: boolean; summary: string }
+    systemSection.setAttribute('data-part', 'context-section')
+    systemSection.setAttribute('data-section', 'agent-system')
+    systemSection.setAttribute('summary', 'Agent System')
+    systemSection.setAttribute('open', '')
+    const contextSystemHost = document.createElement('div')
+    contextSystemHost.setAttribute('data-part', 'context-system')
+    systemSection.append(contextSystemHost)
+    this.#contextSystemHost = contextSystemHost
+    const turnsSection = document.createElement('ui-disclosure') as HTMLElement & { open: boolean; summary: string }
+    turnsSection.setAttribute('data-part', 'context-section')
+    turnsSection.setAttribute('data-section', 'dialog-turns')
+    turnsSection.setAttribute('summary', 'Dialog Turns')
+    turnsSection.setAttribute('open', '')
+    const contextTurnsHost = document.createElement('div')
+    contextTurnsHost.setAttribute('data-part', 'context-turns')
+    turnsSection.append(contextTurnsHost)
+    this.#contextTurnsHost = contextTurnsHost
+    contextContent.append(systemSection, turnsSection)
+
+    // The split shell is the DEFAULT visible state until the first measurement lands (the TKT-0085
+    // discipline — the old code appended the content units into the wide panes right here too): both
+    // content units START in their split-layout tab panels, so a consumer that queries synchronously
+    // after append (and the pre-RO first paint) sees the real default shape; `#applyLayout` then MOVES
+    // them only on a genuine narrow crossing.
+    settingsPanel.append(settingsContent)
+    contextPanel.append(contextContent)
+
+    split.append(canvasPane, tabsPane)
     this.append(split)
 
-    // ── TKT-0085: the medium (Chat | {Instructions, Agent} tabs) + narrow (all-tabs) shells — built ONCE,
-    // alongside the wide shell above, matching this file's own idempotent-build-once discipline. Both
-    // start EMPTY (no content appended into their panels yet): `#applyLayout`, called once the first
-    // measurement lands, moves `instructionsContent`/`agentContent`/`conversation` into whichever shell
-    // the resolved layout actually uses — nothing here is rendered/visible until then. ──────────────────
-    const mediumTabsPane = document.createElement('ui-split-pane')
-    mediumTabsPane.setAttribute('data-role', 'tabs-medium')
-    // The taller of the two merged panes' own floors (settings' 20rem) — since Instructions/Agent no
-    // longer coexist side-by-side in this layout, the pane only ever needs to fit WHICHEVER tab is
-    // showing, not their sum.
-    mediumTabsPane.setAttribute('min', '20rem')
-    const mediumTabs = document.createElement('ui-tabs')
-    // #14 / ADR-0144 Q1: `fill` = the shipped [pinned tablist | internally-scrolling active panel] posture
-    // this shell used to hand-roll in agent-admin.css (TKT-0085). CSS-only; the panel's scrollbar rides the
-    // `--ui-tabs-panel-scrollbar-width` seam this surface aliases on its host (agent-admin.css `:scope`).
-    mediumTabs.setAttribute('fill', '')
-    const mediumInstructionsTab = document.createElement('ui-tab')
-    mediumInstructionsTab.setAttribute('key', 'instructions')
-    mediumInstructionsTab.textContent = 'Instructions'
-    const mediumAgentTab = document.createElement('ui-tab')
-    mediumAgentTab.setAttribute('key', 'agent')
-    mediumAgentTab.textContent = 'Agent'
-    const mediumInstructionsPanel = document.createElement('ui-tab-panel')
-    const mediumAgentPanel = document.createElement('ui-tab-panel')
-    mediumTabs.append(mediumInstructionsTab, mediumAgentTab, mediumInstructionsPanel, mediumAgentPanel)
-    mediumTabsPane.append(mediumTabs)
-
+    // ── The narrow (all-tabs) shell — built ONCE alongside the split shell above, starting EMPTY:
+    // `#applyLayout` moves `conversation`/`settingsContent`/`contextContent` into whichever shell the
+    // resolved layout actually uses. ──────────────────────────────────────────────────────────────────
     const narrowTabs = document.createElement('ui-tabs')
-    narrowTabs.setAttribute('fill', '') // #14 / ADR-0144 Q1 — the same shipped `fill` posture as the medium shell
-    narrowTabs.hidden = true // the wide shell above is the DEFAULT visible state until the first measurement
+    narrowTabs.setAttribute('fill', '') // #14 / ADR-0144 Q1 — the same shipped `fill` posture as the split shell
+    narrowTabs.hidden = true // the split shell above is the DEFAULT visible state until the first measurement
     const narrowChatTab = document.createElement('ui-tab')
     narrowChatTab.setAttribute('key', 'chat')
     narrowChatTab.textContent = 'Chat'
-    const narrowInstructionsTab = document.createElement('ui-tab')
-    narrowInstructionsTab.setAttribute('key', 'instructions')
-    narrowInstructionsTab.textContent = 'Instructions'
-    const narrowAgentTab = document.createElement('ui-tab')
-    narrowAgentTab.setAttribute('key', 'agent')
-    narrowAgentTab.textContent = 'Agent'
+    const narrowSettingsTab = document.createElement('ui-tab')
+    narrowSettingsTab.setAttribute('key', 'settings')
+    narrowSettingsTab.textContent = 'Settings'
+    const narrowContextTab = document.createElement('ui-tab')
+    narrowContextTab.setAttribute('key', 'context')
+    narrowContextTab.textContent = 'Context'
     const narrowChatPanel = document.createElement('ui-tab-panel')
-    const narrowInstructionsPanel = document.createElement('ui-tab-panel')
-    const narrowAgentPanel = document.createElement('ui-tab-panel')
-    narrowTabs.append(narrowChatTab, narrowInstructionsTab, narrowAgentTab, narrowChatPanel, narrowInstructionsPanel, narrowAgentPanel)
+    const narrowSettingsPanel = document.createElement('ui-tab-panel')
+    const narrowContextPanel = document.createElement('ui-tab-panel')
+    narrowTabs.append(narrowChatTab, narrowSettingsTab, narrowContextTab, narrowChatPanel, narrowSettingsPanel, narrowContextPanel)
     this.append(narrowTabs)
 
     this.#split = split
     this.#conversation = conversation
     this.#settingsEl = settingsEl
     this.#canvasPane = canvasPane
-    this.#promptsPane = promptsPane
-    this.#settingsPane = settingsPane
-    this.#mediumTabsPane = mediumTabsPane
-    this.#mediumInstructionsPanel = mediumInstructionsPanel
-    this.#mediumAgentPanel = mediumAgentPanel
+    this.#tabsPane = tabsPane
+    this.#settingsPanel = settingsPanel
+    this.#contextPanel = contextPanel
     this.#narrowTabs = narrowTabs
     this.#narrowChatPanel = narrowChatPanel
-    this.#narrowInstructionsPanel = narrowInstructionsPanel
-    this.#narrowAgentPanel = narrowAgentPanel
-    this.#instructionsContent = instructionsContent
-    this.#agentContent = agentContent
+    this.#narrowSettingsPanel = narrowSettingsPanel
+    this.#narrowContextPanel = narrowContextPanel
+    this.#settingsContent = settingsContent
+    this.#contextContent = contextContent
   }
 
   /**
@@ -475,13 +536,11 @@ export class UIAgentAdminElement extends UIElement {
     this.#currentLayout = layout
     const split = this.#split as HTMLElement
     const canvasPane = this.#canvasPane as HTMLElement
-    const promptsPane = this.#promptsPane as HTMLElement
-    const settingsPane = this.#settingsPane as HTMLElement
-    const mediumTabsPane = this.#mediumTabsPane as HTMLElement
+    const tabsPane = this.#tabsPane as HTMLElement
     const narrowTabs = this.#narrowTabs as HTMLElement
     const conversation = this.#conversation as UIConversationElement
-    const instructionsContent = this.#instructionsContent as HTMLElement
-    const agentContent = this.#agentContent as HTMLElement
+    const settingsContent = this.#settingsContent as HTMLElement
+    const contextContent = this.#contextContent as HTMLElement
 
     const moveInto = (node: Element, target: Element): void => {
       if (node.parentElement !== target) target.append(node)
@@ -489,30 +548,25 @@ export class UIAgentAdminElement extends UIElement {
 
     if (layout === 'narrow') {
       moveInto(conversation, this.#narrowChatPanel as HTMLElement)
-      moveInto(instructionsContent, this.#narrowInstructionsPanel as HTMLElement)
-      moveInto(agentContent, this.#narrowAgentPanel as HTMLElement)
+      moveInto(settingsContent, this.#narrowSettingsPanel as HTMLElement)
+      moveInto(contextContent, this.#narrowContextPanel as HTMLElement)
       if (split.children.length > 0) split.replaceChildren() // guarded: an already-empty split needs no mutation
       split.hidden = true
       narrowTabs.hidden = false
     } else {
-      const desiredPanes = layout === 'wide' ? [canvasPane, promptsPane, settingsPane] : [canvasPane, mediumTabsPane]
-      // Remove any CURRENT pane not in the desired set for this layout.
+      // Vision rev.5: ONE non-narrow shape — [ chat | {Settings, Context} tabs ]. The pane set is
+      // reconciled (never blind-rebuilt) so a narrow→split crossing re-adds both panes while a same-
+      // layout call touches nothing (the TKT-0085 guarded-move discipline, unchanged).
+      const desiredPanes = [canvasPane, tabsPane]
       for (const child of [...split.children]) {
         if (child.tagName === 'UI-SPLIT-PANE' && !desiredPanes.includes(child as HTMLElement)) child.remove()
       }
-      // Add any desired pane not already present — `canvasPane`, common to wide+medium, is skipped here
-      // (already a child) on a wide↔medium crossing, so it and `#conversation` inside it are UNTOUCHED.
       for (const pane of desiredPanes) moveInto(pane, split)
       split.hidden = false
       narrowTabs.hidden = true
       moveInto(conversation, canvasPane)
-      if (layout === 'wide') {
-        moveInto(instructionsContent, promptsPane)
-        moveInto(agentContent, settingsPane)
-      } else {
-        moveInto(instructionsContent, this.#mediumInstructionsPanel as HTMLElement)
-        moveInto(agentContent, this.#mediumAgentPanel as HTMLElement)
-      }
+      moveInto(settingsContent, this.#settingsPanel as HTMLElement)
+      moveInto(contextContent, this.#contextPanel as HTMLElement)
     }
   }
 
@@ -520,7 +574,7 @@ export class UIAgentAdminElement extends UIElement {
    *  instantiation (prompt sections + all four capability kinds) reuses (ADR-0132 cl.1). Registers the
    *  result in `#capabilitySections` (keyed by `kind`, prompt sections included) so
    *  `#rewireAllSections`/`#handleSubmit` can iterate uniformly. */
-  #makeSection(kind: string, label: string, addLabel: string): EntryListSection {
+  #makeSection(kind: string, label: string, addLabel: string, headerControl?: HTMLElement): EntryListSection {
     const section = mountEntryList(
       kind,
       label,
@@ -544,8 +598,9 @@ export class UIAgentAdminElement extends UIElement {
       },
       },
       // GH #47/#48 — this kind's library packs, captured at compose time (the sections' build-once law;
-      // the `libraries` prop doc names the set-before-append requirement).
-      { libraries: this.libraries?.[kind] },
+      // the `libraries` prop doc names the set-before-append requirement). `headerControl` (vision
+      // rev.5) is the kind's caller-wired master switch, placed in the section's header row.
+      { libraries: this.libraries?.[kind], headerControl },
     )
     this.#capabilitySections.set(kind, section)
     return section
@@ -709,20 +764,27 @@ export class UIAgentAdminElement extends UIElement {
     if (!conversation) return
     const store = this.store
     const schema = this.schema ?? defaultAgentConfigSchema
+    // Vision rev.5 — the Agent master switch ("active/available or not", Kim's ruling): the composer is
+    // already busy-disabled via `conversation.disabled`, so this is the belt (a programmatic submit).
+    if (!isEnabledFlag(store?.get(AGENT_ENABLED_KEY))) return
 
     const sections = readEntries(store, ENTRY_KINDS.promptSection)
     const systemPrompt = composeSystemPrompt(sections)
+    // A kind whose MASTER switch is off contributes NOTHING — the section-header toggle wins over
+    // per-entry toggles (vision rev.5, generalizing the old tools-only boolean).
     const enabledLabels = (kind: string): string[] =>
-      readEntries(store, kind)
-        .filter((e) => e.enabled)
-        .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
-        .map((e) => e.label)
+      isEnabledFlag(store?.get(kindEnabledKey(kind)))
+        ? readEntries(store, kind)
+            .filter((e) => e.enabled)
+            .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+            .map((e) => e.label)
+        : []
 
     const config: AgentConfigSnapshot = {
       name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
       model: sanitizeModel(store?.get('model'), modelRoster(store?.get(CUSTOM_MODELS_KEY))),
       temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
-      toolsEnabled: store?.get('toolsEnabled') === true,
+      toolsEnabled: isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool))),
       systemPrompt,
       skills: enabledLabels(ENTRY_KINDS.skill),
       workflows: enabledLabels(ENTRY_KINDS.workflow),
@@ -748,6 +810,7 @@ export class UIAgentAdminElement extends UIElement {
       handle.setNote(reply)
       handle.finalize()
       this.#recordTurn(text, reply)
+      this.#logTurn('stub', { text, config }, { reply })
       return
     }
 
@@ -757,7 +820,7 @@ export class UIAgentAdminElement extends UIElement {
     // (TKT-0034, auto-tracked off beginAgentTurn) disables the composer until finalize()/fail() runs.
     const request: AdminTurnRequest = {
       text,
-      system: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), config.toolsEnabled),
+      system: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
       model: config.model,
       effort: this.#effort,
       history: [...this.#history],
@@ -768,12 +831,16 @@ export class UIAgentAdminElement extends UIElement {
         handle.setNote(reply)
         handle.finalize()
         this.#recordTurn(text, reply)
+        this.#logTurn('live', request, { reply })
       } catch (err) {
         // A network/provider fault, a non-2xx proxy response, or the runner's 120s timeout: surface it
         // visibly (an error narration entry + a "⚠ …" system bubble, composer re-enabled) — never a crash
         // or a silent swallow (SPEC-R6 AC3 path, the shipped ui-conversation affordance). The failed
-        // exchange is NOT recorded into history — there is no assistant reply to pair.
-        handle.fail(err instanceof Error ? err.message : String(err))
+        // exchange is NOT recorded into history — there is no assistant reply to pair. It IS logged to
+        // the Dialog Turns view (a failure is exactly what a payload inspector exists to show).
+        const message = err instanceof Error ? err.message : String(err)
+        handle.fail(message)
+        this.#logTurn('live', request, { error: message })
       }
     })()
   }
@@ -789,11 +856,14 @@ export class UIAgentAdminElement extends UIElement {
     const surfaceTurn = this.agentSurfaceTurn
     if (!conversation || surfaceTurn === undefined) return
     const store = this.store
+    // The Agent master switch gates surface turns too — BOTH kinds: a typed intent and a surface action
+    // click (an inactive agent runs nothing, Kim's ruling).
+    if (!isEnabledFlag(store?.get(AGENT_ENABLED_KEY))) return
     const sections = readEntries(store, ENTRY_KINDS.promptSection)
-    const toolsEnabled = store?.get('toolsEnabled') === true
+    const toolsEnabled = isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool)))
     const request = {
       turn,
-      personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), toolsEnabled),
+      personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
       model: sanitizeModel(store?.get('model'), modelRoster(store?.get(CUSTOM_MODELS_KEY))),
       // GH #49 — the ENABLED tool entries' labels, master-gated on toolsEnabled (the SAME switch that
       // gates the tool kind's prompt projection): the proxy intersects with its registry; non-registry
@@ -810,29 +880,151 @@ export class UIAgentAdminElement extends UIElement {
       turn.kind === 'client' ? { intoSurface: clientMessageSurfaceId(turn.message) } : undefined,
     )
     void (async () => {
+      const wireLines: string[] = []
+      let note: string | undefined
       try {
-        let note: string | undefined
         for await (const event of surfaceTurn(request)) {
           if (event.kind === 'note') note = event.note
           else if (event.kind === 'progress') handle.progress(event.progress) // ADR-0146 F1 — live narration
-          else handle.ingestLine(event.line)
+          else {
+            wireLines.push(event.line)
+            handle.ingestLine(event.line)
+          }
         }
         if (note !== undefined) handle.setNote(note)
         handle.finalize()
+        this.#logTurn('surface', request, { note, lines: wireLines })
       } catch (err) {
-        handle.fail(err instanceof Error ? err.message : String(err))
+        const message = err instanceof Error ? err.message : String(err)
+        handle.fail(message)
+        this.#logTurn('surface', request, { error: message, lines: wireLines })
       }
     })()
   }
 
-  /** Each capability kind's raw store slice + its live `##` group heading, for `composeLiveSystemPrompt`
-   *  (which does the enabled-filter/sort/tools-gate itself). */
+  /** Each capability kind's raw store slice + its live `##` group heading + its MASTER switch (vision
+   *  rev.5), for `composeLiveSystemPrompt` (which does the enabled-filter/sort/master-gate itself). */
   #capabilityGroups(store: SettingsStore | undefined): LiveCapabilityGroup[] {
     return CAPABILITY_KINDS.map(({ kind, liveHeading }) => ({
       kind,
       heading: liveHeading,
       entries: readEntries(store, kind),
+      enabled: isEnabledFlag(store?.get(kindEnabledKey(kind))),
     }))
+  }
+
+  // ── vision rev.5: master-state application + the Context tab's renderers ─────────────────────────────
+
+  /** (Re-)apply the master states + (re-)render the Context tab + (re-)arm its store subscription — the
+   *  Agent System view reads nearly every key (name/model/temperature/customModels, the master toggles,
+   *  all five entry lists) and writes are commit-time (never per-keystroke), so an unfiltered wholesale
+   *  re-render per store write is the honest cheap option. Its OWN teardown slot (the #modelGridUnsub
+   *  precedent — it must outlive `#rewireAllSections`' clears); re-armed per store (re)assignment via
+   *  the connected() effect, torn down in disconnected(). */
+  #rewireContext(store: SettingsStore | undefined): void {
+    this.#applyMasterStates(store)
+    this.#renderContextSystem()
+    this.#renderContextTurns()
+    this.#contextUnsub?.()
+    this.#contextUnsub = store?.subscribe?.(() => {
+      this.#applyMasterStates(store) // keeps the header switches honest on EXTERNAL writes too
+      this.#renderContextSystem()
+    })
+  }
+
+  /** Reflect every master switch's STORED state onto its control + its gated surface — the Agent switch
+   *  onto `conversation.disabled` (an inactive agent takes no input), each kind switch onto its section
+   *  host's `data-kind-disabled` dim. Called at rewire time, from the context subscription (external
+   *  writes), and directly from each switch's own change listener (the no-subscribe fallback). */
+  #applyMasterStates(store: SettingsStore | undefined): void {
+    const agentOn = isEnabledFlag(store?.get(AGENT_ENABLED_KEY))
+    if (this.#agentSwitch) this.#agentSwitch.checked = agentOn
+    if (this.#conversation) this.#conversation.disabled = !agentOn
+    for (const { kind } of CAPABILITY_KINDS) {
+      const on = isEnabledFlag(store?.get(kindEnabledKey(kind)))
+      const kindSwitch = this.#kindSwitches.get(kind)
+      if (kindSwitch) kindSwitch.checked = on
+      this.#capabilitySections.get(kind)?.host.toggleAttribute('data-kind-disabled', !on)
+    }
+  }
+
+  /** Rebuild the Agent System view (the Context tab's first group) from the store's CURRENT contents:
+   *  one `Agent` accordion (open by default — the vision frame's expanded JSON preview) carrying the
+   *  compiled config + the EXACT live system prompt a turn would send, then one accordion per capability
+   *  kind (closed by default — the frame's caret-right rows; Kim's ruling: accordion with nested
+   *  elements). Wholesale rebuild per store change; each open/closed fold survives via a pre-rebuild
+   *  state capture (`data-item` keyed). */
+  #renderContextSystem(): void {
+    const host = this.#contextSystemHost
+    if (!host) return
+    const store = this.store
+    const schema = this.schema ?? defaultAgentConfigSchema
+    const openStates = new Map<string, boolean>()
+    for (const el of host.querySelectorAll<HTMLElement & { open: boolean }>('[data-part="context-item"]')) {
+      openStates.set(el.getAttribute('data-item') ?? '', el.open)
+    }
+    const items: HTMLElement[] = []
+    const sections = readEntries(store, ENTRY_KINDS.promptSection)
+    items.push(
+      contextItem(
+        'agent',
+        'Agent',
+        {
+          name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
+          model: sanitizeModel(store?.get('model'), modelRoster(store?.get(CUSTOM_MODELS_KEY))),
+          temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
+          effort: this.#effort,
+          active: isEnabledFlag(store?.get(AGENT_ENABLED_KEY)),
+          systemPrompt: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
+        },
+        openStates.get('agent') ?? true,
+      ),
+    )
+    for (const { kind, label } of CAPABILITY_KINDS) {
+      items.push(
+        contextItem(
+          kind,
+          label,
+          {
+            enabled: isEnabledFlag(store?.get(kindEnabledKey(kind))),
+            entries: readEntries(store, kind).map((e) => ({ label: e.label, enabled: e.enabled, description: e.description })),
+          },
+          openStates.get(kind) ?? false,
+        ),
+      )
+    }
+    host.replaceChildren(...items)
+  }
+
+  /** Rebuild the Dialog Turns view (the Context tab's second group) from `#turnLog`, NEWEST FIRST with
+   *  zero-padded descending numbers (the vision frame's 04→01). The newest turn's fold defaults open;
+   *  older folds keep whatever state the user left them in (turn-number keyed capture). */
+  #renderContextTurns(): void {
+    const host = this.#contextTurnsHost
+    if (!host) return
+    const openStates = new Map<string, boolean>()
+    for (const el of host.querySelectorAll<HTMLElement & { open: boolean }>('[data-part="context-turn"]')) {
+      openStates.set(el.getAttribute('data-item') ?? '', el.open)
+    }
+    const items: HTMLElement[] = []
+    const newest = this.#turnLog.at(-1)
+    for (let i = this.#turnLog.length - 1; i >= 0; i -= 1) {
+      const turn = this.#turnLog[i]!
+      const label = String(turn.n).padStart(2, '0')
+      const item = contextItem(`turn-${turn.n}`, label, { arm: turn.arm, request: turn.request, response: turn.response }, openStates.get(`turn-${turn.n}`) ?? turn === newest)
+      item.setAttribute('data-part', 'context-turn')
+      items.push(item)
+    }
+    host.replaceChildren(...items)
+  }
+
+  /** Append one turn's request/response to the Dialog Turns ring (every arm, failures included) and
+   *  re-render the view. Bounded at TURN_LOG_CAP — the oldest records fall off. */
+  #logTurn(arm: 'stub' | 'live' | 'surface', request: unknown, response: unknown): void {
+    this.#turnCounter += 1
+    this.#turnLog.push({ n: this.#turnCounter, arm, request, response })
+    if (this.#turnLog.length > TURN_LOG_CAP) this.#turnLog.splice(0, this.#turnLog.length - TURN_LOG_CAP)
+    this.#renderContextTurns()
   }
 
   /** Append one completed exchange to the multi-turn history (both arms). */
@@ -848,6 +1040,23 @@ export class UIAgentAdminElement extends UIElement {
 /** TKT-0079 — the surface a client message belongs to (`action.surfaceId` / the error union's
  *  VALIDATION_FAILED arm), for routing the follow-up turn into that surface's OWNING bubble.
  *  `undefined` (e.g. INVALID_FUNCTION_CALL) ⇒ the fresh-bubble path. */
+/** One Context-tab accordion item (vision rev.5): a `ui-disclosure` labeled `summary` whose body is the
+ *  pretty-printed JSON of `value` — the frame's `[ header + caret | mono JSON preview ]` shape. Built
+ *  fresh per render (the wholesale-rebuild law); `data-item` keys the open-state capture across
+ *  rebuilds. Kim's ruling: carets are accordion behavior and may nest. */
+function contextItem(key: string, summary: string, value: unknown, open: boolean): HTMLElement {
+  const item = document.createElement('ui-disclosure') as HTMLElement & { open: boolean }
+  item.setAttribute('data-part', 'context-item')
+  item.setAttribute('data-item', key)
+  item.setAttribute('summary', summary)
+  if (open) item.setAttribute('open', '')
+  const pre = document.createElement('pre')
+  pre.setAttribute('data-part', 'context-json')
+  pre.textContent = JSON.stringify(value, null, 2)
+  item.append(pre)
+  return item
+}
+
 function clientMessageSurfaceId(message: unknown): string | undefined {
   const m = message as { action?: { surfaceId?: unknown }; error?: { surfaceId?: unknown } } | null
   if (m && typeof m === 'object' && m.action && typeof m.action.surfaceId === 'string') return m.action.surfaceId

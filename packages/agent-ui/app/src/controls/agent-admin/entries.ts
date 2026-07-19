@@ -135,26 +135,29 @@ export interface LiveCapabilityGroup {
   /** The `## {heading}` group header (e.g. "Skills available to you"). */
   heading: string
   entries: readonly Entry[]
+  /** The kind's MASTER switch (vision rev.5 — every capability section's header toggle, generalizing
+   *  the old tools-only boolean): `false` gates the WHOLE kind out, winning over per-entry toggles. */
+  enabled: boolean
 }
 
 /**
  * The live system prompt: `composeSystemPrompt(sections)` followed by one `## {heading}` block per
  * capability kind that has ≥1 enabled entry, each enabled entry rendered as `### {label}` + its
- * description + its content, in `order` (ties by `id`, the composeSystemPrompt law). `toolsEnabled === false`
- * gates the whole `tool` kind out (the master switch wins over per-entry toggles — the flat boolean finally
- * gets a live meaning consistent with its label). GATED EQUIVALENCE (ADR-0136 Fork 3): with no enabled
- * capability entries the result is byte-identical to `composeSystemPrompt(sections)` — the live prompt
- * degrades exactly to today's composed prompt, never a trailing empty header.
+ * description + its content, in `order` (ties by `id`, the composeSystemPrompt law). A group whose
+ * `enabled` master switch is `false` is gated out wholesale (vision rev.5 generalized the old tools-only
+ * `toolsEnabled` boolean to EVERY kind's section-header switch — the master wins over per-entry toggles).
+ * GATED EQUIVALENCE (ADR-0136 Fork 3): with no enabled capability entries the result is byte-identical
+ * to `composeSystemPrompt(sections)` — the live prompt degrades exactly to today's composed prompt,
+ * never a trailing empty header.
  */
 export function composeLiveSystemPrompt(
   sections: readonly Entry[],
   capabilities: readonly LiveCapabilityGroup[],
-  toolsEnabled: boolean,
 ): string {
   const base = composeSystemPrompt(sections)
   const groups: string[] = []
   for (const group of capabilities) {
-    if (group.kind === ENTRY_KINDS.tool && !toolsEnabled) continue // the master switch gates the tools kind out
+    if (!group.enabled) continue // the kind's master switch gates the whole group out
     const enabled = [...group.entries]
       .filter((e) => e.enabled)
       .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
