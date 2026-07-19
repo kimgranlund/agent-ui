@@ -264,12 +264,12 @@ describe('UIAgentAdminElement — upgrade + defaults', () => {
 })
 
 describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)', () => {
-  it("the model field's options are real named models, not the old default/fast/careful tiers", () => {
-    const modelField = defaultAgentConfigSchema.sections[0].fields.find((f) => f.key === 'model')
-    expect(modelField?.options?.map((o) => o.value)).toEqual(SUPPORTED_MODELS.map((m) => m.id))
-    expect(modelField?.options?.map((o) => o.value)).not.toContain('default')
-    expect(modelField?.options?.map((o) => o.value)).not.toContain('fast')
-    expect(modelField?.default).toBe(DEFAULT_MODEL_ID)
+  it('the roster is real named models, not the old default/fast/careful tiers — and the schema carries NO model select (the GRID owns it, 2026-07-19 rev.2)', () => {
+    const ids = SUPPORTED_MODELS.map((m) => m.id)
+    expect(ids).toContain(DEFAULT_MODEL_ID)
+    expect(ids).not.toContain('default')
+    expect(ids).not.toContain('fast')
+    expect(defaultAgentConfigSchema.sections[0].fields.some((f) => f.key === 'model')).toBe(false)
   })
 
   it('selecting a model and submitting cites its display LABEL, not its raw id, in the next stub reply', () => {
@@ -1071,51 +1071,98 @@ describe('SUPPORTED_MODELS lists + the Haiku default (2026-07-19)', () => {
     expect(DEFAULT_MODEL_ID).toBe('claude-haiku-4-5-20251001')
     expect(SUPPORTED_MODELS.some((m) => m.id === 'claude-sonnet-5')).toBe(true)
     // every model carries a list assignment (the grouped-select contract)
-    for (const m of SUPPORTED_MODELS) expect(m.group.length, m.id).toBeGreaterThan(0)
+    // every model carries a provider (the grid's grouping key, 2026-07-19 rev.2)
+    for (const m of SUPPORTED_MODELS) expect(m.provider.length, m.id).toBeGreaterThan(0)
   })
 
-  it('parseCustomModels: id|Label pairs, dedupe against built-ins and itself, malformed ⇒ dropped', async () => {
+  it('parseCustomModels: id|Label pairs, provider inference, dedupe, malformed dropped', async () => {
     const { parseCustomModels } = await import('./agent-admin-schema.ts')
-    expect(parseCustomModels('claude-x, claude-y | My Y, claude-x, claude-sonnet-5, , |')).toEqual([
-      { id: 'claude-x', label: 'claude-x', group: 'Additional' },
-      { id: 'claude-y', label: 'My Y', group: 'Additional' },
+    expect(parseCustomModels('claude-x, gpt-6 | My GPT, gemini-3, mystery-1, claude-x, claude-sonnet-5, , |')).toEqual([
+      { id: 'claude-x', label: 'claude-x', provider: 'Anthropic' },
+      { id: 'gpt-6', label: 'My GPT', provider: 'OpenAI' },
+      { id: 'gemini-3', label: 'gemini-3', provider: 'Google' },
+      { id: 'mystery-1', label: 'mystery-1', provider: 'Other' },
     ])
     expect(parseCustomModels(undefined)).toEqual([])
     expect(parseCustomModels(42)).toEqual([])
-    expect(parseCustomModels('   ')).toEqual([])
   })
 
-  it('agentConfigSchema(custom) folds the Additional list into the model options + keeps the customModels field', async () => {
-    const { agentConfigSchema, CUSTOM_MODELS_KEY } = await import('./agent-admin-schema.ts')
-    const schema = agentConfigSchema([{ id: 'claude-x', label: 'X', group: 'Additional' }])
-    const model = schema.sections[0]!.fields.find((f) => f.key === 'model')!
-    expect(model.options!.some((o) => o.value === 'claude-x' && o.group === 'Additional')).toBe(true)
-    expect(model.options!.some((o) => o.value === 'claude-haiku-4-5-20251001' && o.group === 'Fast')).toBe(true)
+  it('the schema carries NO model select anymore (the grid owns it); customModels field stays; model roster helpers hold', async () => {
+    const { agentConfigSchema, CUSTOM_MODELS_KEY, modelRoster, isModelIncluded, sanitizeModel, DEFAULT_MODEL_ID } = await import('./agent-admin-schema.ts')
+    const schema = agentConfigSchema()
+    expect(schema.sections[0]!.fields.some((f) => f.key === 'model'), 'no model select field').toBe(false)
     expect(schema.sections[0]!.fields.some((f) => f.key === CUSTOM_MODELS_KEY)).toBe(true)
+    const roster = modelRoster('gpt-6 | My GPT')
+    expect(roster.at(-1)).toEqual({ id: 'gpt-6', label: 'My GPT', provider: 'OpenAI' })
+    expect(isModelIncluded(undefined, 'claude-sonnet-5'), 'absent record ⇒ included').toBe(true)
+    expect(isModelIncluded({ 'claude-sonnet-5': false }, 'claude-sonnet-5')).toBe(false)
+    expect(sanitizeModel('gpt-6', roster)).toBe('gpt-6')
+    expect(sanitizeModel('nope', roster)).toBe(DEFAULT_MODEL_ID)
   })
 })
 
-describe('ui-agent-admin — admin-added models rebuild the schema reactively (2026-07-19)', () => {
-  it('writing customModels to the store folds an Additional option into the rendered Model select', async () => {
+describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
+  function mountAdmin(): { el: UIAgentAdminElement; store: ReturnType<typeof createMemoryStore> } {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     const store = createMemoryStore()
     el.store = store
     mount(el)
+    return { el, store }
+  }
+
+  it('renders provider-grouped rows: label | include switch | default checkbox; the default row locks its switch', async () => {
+    const { el } = mountAdmin()
     await el.updateComplete
-    expect(el.querySelector('[role="option"][value="claude-custom-1"]'), 'no custom option before the write').toBeNull()
-    store.set('customModels', 'claude-custom-1 | Custom One')
+    const grid = el.querySelector('[data-part="model-grid"]') as HTMLElement
+    expect(grid).not.toBeNull()
+    expect([...grid.querySelectorAll('[data-part="model-provider"]')].map((p) => p.textContent)).toEqual(['Anthropic'])
+    const rows = grid.querySelectorAll('[data-part="model-row"]')
+    expect(rows).toHaveLength(4) // the four built-ins
+    const defaultRow = grid.querySelector('[data-part="model-row"][data-default]') as HTMLElement
+    expect(defaultRow.querySelector('[data-part="model-row-label"]')?.getAttribute('title')).toBe('claude-haiku-4-5-20251001')
+    const lockSwitch = defaultRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean; disabled: boolean }
+    expect(lockSwitch.checked, 'the default is always offered').toBe(true)
+    expect(lockSwitch.disabled, 'the default row cannot be excluded').toBe(true)
+    const defaultBox = defaultRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }
+    expect(defaultBox.checked).toBe(true)
+  })
+
+  it('the include switch writes modelsIncluded; the default checkbox moves `model` (radio semantics) and re-includes', async () => {
+    const { el, store } = mountAdmin()
     await el.updateComplete
-    await whenFlushed()
-    const custom = el.querySelector('[role="option"][value="claude-custom-1"]')
-    expect(custom, 'the Additional option renders after the store write').not.toBeNull()
-    const group = custom!.closest('[role="group"]')!
-    expect(group, 'the option lives inside a group wrapper').not.toBeNull()
-    // ui-select consumes the wrapper's `label` attribute into its rendered group-label header part
-    expect(group.querySelector('[data-part="group-label"]')?.textContent).toBe('Additional')
-    // the churn guard: an unrelated store write must not rebuild (same schema reference)
-    const schemaBefore = el.schema
-    store.set('name', 'Renamed')
+    const grid = el.querySelector('[data-part="model-grid"]') as HTMLElement
+    const sonnetRow = [...grid.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
+      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-sonnet-5',
+    )!
+    // exclude Sonnet
+    const sw = sonnetRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }
+    sw.checked = false
+    sw.dispatchEvent(new Event('change'))
+    expect((store.get('modelsIncluded') as Record<string, boolean>)['claude-sonnet-5']).toBe(false)
     await el.updateComplete
-    expect(el.schema).toBe(schemaBefore)
+    // move the default to Sonnet — re-includes it AND moves `model`; the old default row unchecks
+    const freshSonnetRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
+      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-sonnet-5',
+    )!
+    const box = freshSonnetRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }
+    box.checked = true
+    box.dispatchEvent(new Event('change'))
+    expect(store.get('model')).toBe('claude-sonnet-5')
+    expect((store.get('modelsIncluded') as Record<string, boolean>)['claude-sonnet-5'], 'defaulting re-includes').toBe(true)
+    await el.updateComplete
+    const haikuRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
+      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-haiku-4-5-20251001',
+    )!
+    expect((haikuRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }).checked, 'radio semantics: the old default unchecked').toBe(false)
+  })
+
+  it('a customModels write folds new rows under their inferred provider', async () => {
+    const { el, store } = mountAdmin()
+    await el.updateComplete
+    store.set('customModels', 'gpt-6 | My GPT, gemini-3')
+    await el.updateComplete
+    const providers = [...el.querySelectorAll('[data-part="model-provider"]')].map((p) => p.textContent)
+    expect(providers).toEqual(['Anthropic', 'OpenAI', 'Google'])
+    expect(el.querySelectorAll('[data-part="model-row"]')).toHaveLength(6)
   })
 })

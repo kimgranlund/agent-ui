@@ -117,6 +117,47 @@
     color: var(--ui-agent-admin-label-ink);
   }
 
+  /* The Model GRID (2026-07-19 rev.2) — provider-grouped rows [ label | include switch | default
+     checkbox ], carded like the entry sections (the same chrome recipe). The heading mirrors
+     agent-heading; provider labels mirror entry-section-heading's register at a quieter weight. */
+  [data-part='model-grid-heading'] {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ui-agent-admin-label-ink);
+  }
+  [data-part='model-grid'] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    box-sizing: border-box;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+  }
+  [data-part='model-provider'] {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ui-agent-admin-label-ink);
+    margin-block-start: 0.25rem;
+  }
+  [data-part='model-provider']:first-child {
+    margin-block-start: 0;
+  }
+  [data-part='model-row'] {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  [data-part='model-row-label'] {
+    color: var(--ui-agent-admin-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   /* The Agent config panel reads as a CARD like the entry cards beside it (Kim, design-mode
      2026-07-19) — the exact [data-part='entry'] chrome recipe (border/radius/surface). Scoped from the
      ADMIN, deliberately: the card language is THIS surface's own (--ui-agent-admin-* tokens); a generic
