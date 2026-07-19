@@ -34,7 +34,7 @@ const props = {
   // formProps precedent). ui-tabs sets its OWN default --ui-container-bg in tabs.css (the base default is
   // transparent), so a bare tabs still has a surface.
   ...UIContainerElement.surfaceProps,
-  // `selected` — the active tab's identity (its `value`, or its DOM index as a string; '' ⇒ the first tab).
+  // `selected` — the active tab's identity (its `key`, or its DOM index as a string; '' ⇒ the first tab).
   // OBSERVED + REFLECTED so the attribute mirrors the live selection, and BINDABLE: the renderer two-way-binds it
   // via LLD-C8 (value:{prop:'selected',event:'select'}, ADR-0019). Typed `string` — the value crosses the
   // attribute boundary as a string regardless (a numeric index is its string form); the descriptor records it so.
@@ -132,15 +132,15 @@ export class UITabsElement extends UIContainerElement {
     return strip
   }
 
-  /** Resolve `selected` → a tab index: '' ⇒ the first tab; a `value` match wins; else a numeric index in range;
+  /** Resolve `selected` → a tab index: '' ⇒ the first tab; a `key` match wins; else a numeric index in range;
    *  else fall back to the first tab. Reads `this.selected` so the selection effect tracks it. */
   #resolveIndex(): number {
     const tabs = this.#tabs
     if (tabs.length === 0) return -1
     const sel = this.selected
     if (sel === '') return 0
-    const byValue = tabs.findIndex((t) => t.key !== '' && t.key === sel)
-    if (byValue !== -1) return byValue
+    const byKey = tabs.findIndex((t) => t.key !== '' && t.key === sel)
+    if (byKey !== -1) return byKey
     if (/^\d+$/.test(sel)) {
       const n = Number(sel)
       if (n >= 0 && n < tabs.length) return n
@@ -160,7 +160,7 @@ export class UITabsElement extends UIContainerElement {
    * Commit a user-driven selection: write `selected` (→ the effect re-applies aria/roving/panels), move focus to
    * the tab (roving), and emit `select` ONLY when the selection actually changed — so a programmatic `selected`
    * set by the agent (the renderer's two-way write) never echoes an event back (binding hygiene). The commit
-   * value is the tab's `value` when it has one, else its index as a string (the addressable identity).
+   * value is the tab's `key` when it has one, else its index as a string (the addressable identity).
    */
   #commit(index: number, moveFocus: boolean): void {
     const tab = this.#tabs[index]
