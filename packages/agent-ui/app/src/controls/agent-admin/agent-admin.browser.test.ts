@@ -624,3 +624,51 @@ describe('ui-agent-admin cross-engine smoke — the live-apply loop actually ren
     expect(box.height).toBeGreaterThan(0)
   })
 })
+
+// ── GH #47/#48 — the add-from-library menu through the REAL popover path (both engines) ────────────────
+
+describe('ui-agent-admin — entry libraries commit through the real menu (GH #47/#48)', () => {
+  it('trigger opens the top-layer panel; a row commit adds the entry; the menu closes', async () => {
+    const { wrapper, el } = mountAgentAdmin()
+    el.libraries = {
+      [ENTRY_KINDS.skill]: [{
+        id: 'pack-a',
+        label: 'Pack A',
+        description: 'fixture pack',
+        entries: [{ label: 'swiper-gallery', description: 'gallery idiom', content: 'Use a Swiper.' }],
+      }],
+    }
+    // libraries is compose-time captured — set BEFORE append; mountAgentAdmin already appended, so
+    // remount fresh: the helper appends inside itself, so build our own element here instead.
+    wrapper.remove()
+    const wrap2 = document.createElement('div')
+    wrap2.style.width = '1200px'
+    wrap2.style.height = '600px'
+    const el2 = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el2.style.flex = '1 1 auto'
+    el2.libraries = el.libraries
+    wrap2.append(el2)
+    document.body.append(wrap2)
+    mounted.push(wrap2)
+    await el2.updateComplete
+
+    const section = el2.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
+    const menu = section.querySelector('[data-part="entry-library-menu"]') as HTMLElement
+    const trigger = menu.querySelector('[data-part="trigger"]') as HTMLElement
+    trigger.click()
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const row = menu.querySelector('[data-value="pack-a:0"]') as HTMLElement
+    expect(row.getAttribute('role'), 'the row entered the menu item contract').toBe('menuitem')
+    expect(row.getBoundingClientRect().width, 'the open panel renders the row visibly').toBeGreaterThan(0)
+    row.click()
+    await el2.updateComplete
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const entryRow = [...section.querySelectorAll<HTMLElement>('[data-part="entry"]')].find((e) =>
+      e.textContent?.includes('swiper-gallery'),
+    )
+    expect(entryRow, 'the committed library entry renders in the section list').not.toBeUndefined()
+    expect(row.getBoundingClientRect().width, 'the menu closed after the commit').toBe(0)
+  })
+})

@@ -28,6 +28,7 @@ import './agent-admin-app.css' // page-local: full-viewport layout + the preset 
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import { AGENT_PRESETS, ACTIVE_PRESET_KEY, presetStore, resetPreset, type AgentPreset } from './agent-admin-presets.ts'
+import { ADMIN_LIBRARIES } from './agent-admin-libraries.ts'
 
 const root = document.querySelector('#app') ?? document.body
 
@@ -37,6 +38,9 @@ const root = document.querySelector('#app') ?? document.body
 // entry section, and re-syncs the conversation (agent-admin.ts:162; the store-swap probe pins it).
 
 const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
+// GH #47/#48 — the library packs, set BEFORE the element ever connects (the compose-time capture law
+// the `libraries` prop documents).
+admin.libraries = ADMIN_LIBRARIES
 
 // ── the canvas-header (GH #51): `[ title | … | agent-menu ]` — replaces the TKT-0074 truncating chip
 // row. The active agent NAMES the surface (the title zone); switching moves into a ui-menu (one row per

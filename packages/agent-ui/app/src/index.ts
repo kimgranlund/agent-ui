@@ -37,4 +37,4 @@ export type { AgentConfigSnapshot } from './controls/agent-admin/agent-admin-sch
 // ADR-0132 — the generic ordered-entry-list primitive: prompt sections (Foundation/Personality/Critical
 // Items) + Skills/Workflows/Resources/Tools, five instantiations of one shape.
 export { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS, DEFAULT_SYSTEM_PROMPT_FALLBACK, composeSystemPrompt, validateNewEntry, entriesStoreKey, initialEntryValues } from './controls/agent-admin/entries.ts'
-export type { Entry, NewEntryInput } from './controls/agent-admin/entries.ts'
+export type { Entry, EntryLibraryPack, NewEntryInput } from './controls/agent-admin/entries.ts'
