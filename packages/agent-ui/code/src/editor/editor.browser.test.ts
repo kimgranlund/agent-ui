@@ -88,6 +88,38 @@ describe('ui-code-editor — CodeMirror lazily mounts for language="markdown" (b
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  source mode reads as CODE (monospace) regardless of the host page's ambient font; richtext mode reads
+//  as PROSE (the fleet sans) — both engines, both the plain fallback AND the CM-mounted surface
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-code-editor — source mode is monospace, richtext mode is the fleet sans (both surfaces, both engines)', () => {
+  it('the plain fallback (pre-CM) renders source mode in monospace', () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="# x" ${SIZED}></ui-code-editor>`)
+    expect(getComputedStyle(field).fontFamily.toLowerCase()).toContain('monospace')
+  })
+
+  it('the CodeMirror-mounted surface stays monospace in source mode (CM inherits — not its own default)', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="# x" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    expect(getComputedStyle(cmContentOf(field)!).fontFamily.toLowerCase()).toContain('monospace')
+  })
+
+  it('richtext mode repoints the base surface to the fleet sans, not monospace', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" value="# x" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    const family = getComputedStyle(cmContentOf(field)!).fontFamily.toLowerCase()
+    expect(family).not.toContain('monospace')
+    expect(family).toContain('sans-serif')
+  })
+
+  it('an inline code span inside richtext STAYS monospace (.rt-code) even though the surrounding prose is sans', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" value="text \`code\` more" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => field.querySelector('.rt-code') !== null, { timeout: 5000 }).toBe(true)
+    expect(getComputedStyle(field.querySelector('.rt-code')!).fontFamily.toLowerCase()).toContain('monospace')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  [2] the markdown pack highlights (both engines)
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 

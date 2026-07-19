@@ -40,6 +40,12 @@
   /* Geometry — the MULTI-LINE law (ADR-0134). Fixed font (this control carries no [size] lever); padding /
      line-box DERIVE from it via calc(). rows is a growable MINIMUM, never a fixed §1-row height. */
   --ui-code-editor-font: var(--md-sys-font-md);
+  /* SOURCE mode is raw markdown syntax (#, **, tables, fences) — monospace by default, matching every
+     mainstream code editor, regardless of the host page's own ambient font. Richtext mode is meant to READ
+     like prose, so it repoints to the fleet sans below. Repoint the TOKEN per [mode] (the entry-control
+     filled-state law's "repoint the token, not the host property" discipline), one consuming declaration
+     in the styles block — never two divergent font-family rules to keep in sync. */
+  --ui-code-editor-font-family: var(--md-sys-typeface-mono);
   --ui-code-editor-line-height: 1.5; /* prose line-height — NEVER the single-line control's line-height:1 */
   --ui-code-editor-line-box: calc(var(--ui-code-editor-font) * var(--ui-code-editor-line-height));
   --ui-code-editor-padding-block: calc(var(--ui-code-editor-font) * 0.5);
@@ -91,6 +97,11 @@
   --ui-code-editor-ink: var(--md-sys-color-neutral-low);
 }
 
+/* richtext mode reads like PROSE (ADR-0147) — repoint off the source-mode mono default to the fleet sans. */
+:where(ui-code-editor[mode='richtext']) {
+  --ui-code-editor-font-family: var(--md-sys-typeface-sans);
+}
+
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-code-editor) consumes ONLY --ui-code-editor-* ════════════════ */
 
 @scope (ui-code-editor) {
@@ -104,6 +115,8 @@
     overflow-y: auto;
     resize: vertical; /* native <textarea> parity */
     font-size: var(--ui-code-editor-font);
+    font-family: var(--ui-code-editor-font-family); /* mono in source mode, sans in richtext — cascades into
+      both the plain fallback (a child) and the CM mount (cm-editor.ts's structural theme reads `inherit`) */
     line-height: var(--ui-code-editor-line-height);
     background: var(--ui-code-editor-bg);
     color: var(--ui-code-editor-ink);
@@ -161,7 +174,7 @@
   :scope .tok-link { color: var(--ui-code-editor-token-link); text-decoration: underline; }
   :scope .tok-list { color: var(--ui-code-editor-token-punctuation); }
   :scope .tok-quote { color: var(--ui-code-editor-token-comment); font-style: italic; }
-  :scope .tok-code { color: var(--ui-code-editor-token-string); font-family: monospace; }
+  :scope .tok-code { color: var(--ui-code-editor-token-string); font-family: var(--md-sys-typeface-mono); }
   :scope .tok-keyword { color: var(--ui-code-editor-token-keyword); }
   :scope .tok-string { color: var(--ui-code-editor-token-string); }
   :scope .tok-punctuation { color: var(--ui-code-editor-token-punctuation); }
@@ -177,7 +190,7 @@
   :scope .rt-h6 { font-size: calc(var(--ui-code-editor-font) * var(--ui-code-editor-rt-h6-scale)); }
   :scope .rt-strong { font-weight: 700; }
   :scope .rt-emphasis { font-style: italic; }
-  :scope .rt-code { font-family: monospace; }
+  :scope .rt-code { font-family: var(--md-sys-typeface-mono); }
   :scope .rt-link { text-decoration: underline; }
   :scope .rt-quote-line {
     border-inline-start: 2px solid var(--ui-code-editor-rt-quote-border);
