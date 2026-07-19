@@ -264,10 +264,10 @@ export function a2uiDevProxyPlugin(): Plugin {
                 active.length > 0
                   ? {
                       tools: active.map((integration) => integration.tool),
-                      executeTool: async (name: string, toolInput: Record<string, unknown>): Promise<string> => {
+                      executeTool: async (name: string, toolInput: Record<string, unknown>, signal?: AbortSignal): Promise<string> => {
                         const match = active.find((integration) => integration.tool.name === name)
                         if (!match) throw new Error(`unknown tool ${name}`)
-                        return match.execute(toolInput)
+                        return match.execute(toolInput, signal)
                       },
                     }
                   : {}

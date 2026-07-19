@@ -162,4 +162,35 @@ describe('anthropicProvider — the GH #49 tool-use loop (mocked fetch)', () => 
     expect(bodies).toHaveLength(1)
     expect('tools' in bodies[0]!).toBe(false)
   })
+
+  it('CAP EXHAUSTION (PR #59 review): a model that always wants tools makes exactly MAX_TOOL_ROUNDS+1 fetches, MAX_TOOL_ROUNDS executions, and the forced-final round\'s text is PRESERVED', async () => {
+    let fetches = 0
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        fetches += 1
+        return sseResponse(TOOL_ROUND) // EVERY round ends stop_reason:'tool_use'
+      }),
+    )
+    let executions = 0
+    const provider = anthropicProvider({ apiKey: 'test-key' })
+    const fragments: string[] = []
+    for await (const frag of provider.stream({
+      model: 'claude-sonnet-5',
+      system: 'sys',
+      messages: [{ role: 'user', content: 'x' }],
+      tools: TOOLS,
+      executeTool: async () => {
+        executions += 1
+        return 'ok'
+      },
+    })) {
+      fragments.push(frag)
+    }
+    // rounds 0..4 fetch (5 calls); rounds 0..3 execute (4); round 4 is FORCED final — its buffered text
+    // must flow, never be lost (the `round <= MAX` / `round < MAX` pairing this leg pins against refactors).
+    expect(fetches).toBe(5)
+    expect(executions).toBe(4)
+    expect(fragments.join('')).toBe('Let me check that. ')
+  })
 })

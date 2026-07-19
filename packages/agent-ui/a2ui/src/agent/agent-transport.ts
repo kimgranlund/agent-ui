@@ -107,8 +107,9 @@ export interface ToolDef {
 
 /** Execute ONE tool call and return the result TEXT handed back to the model. Rejections are surfaced
  *  to the model as an error-text result (the adapter formats them) — a failed integration degrades the
- *  answer, never the turn. */
-export type ExecuteTool = (name: string, input: Record<string, unknown>) => Promise<string>
+ *  answer, never the turn. `signal` (PR #59 review) is the TURN's abort signal, threaded so an aborted
+ *  turn also cancels in-flight tool work (an executor combines it with its own timeout). */
+export type ExecuteTool = (name: string, input: Record<string, unknown>, signal?: AbortSignal) => Promise<string>
 
 /**
  * The injected model seam (SPEC-R11): one isolated module PER provider implements this (Anthropic this

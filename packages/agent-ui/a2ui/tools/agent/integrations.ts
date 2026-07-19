@@ -26,7 +26,7 @@ export interface Integration {
   label: string
   description: string
   tool: ToolDef
-  execute(input: Record<string, unknown>): Promise<string>
+  execute(input: Record<string, unknown>, signal?: AbortSignal): Promise<string>
 }
 
 const FETCH_TIMEOUT_MS = 10_000
@@ -35,8 +35,10 @@ const FETCH_TIMEOUT_MS = 10_000
  *  (compounding with the adapter's per-round fan-out). 256 KB is ~100× any real response here. */
 const MAX_RESPONSE_BYTES = 256_000
 
-async function getJson(url: string): Promise<unknown> {
-  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
+async function getJson(url: string, signal?: AbortSignal): Promise<unknown> {
+  // The turn's abort signal (PR #59 review) combines with the per-fetch timeout — whichever fires first.
+  const combined = signal ? AbortSignal.any([AbortSignal.timeout(FETCH_TIMEOUT_MS), signal]) : AbortSignal.timeout(FETCH_TIMEOUT_MS)
+  const res = await fetch(url, { signal: combined })
   if (!res.ok) throw new Error(`upstream ${res.status} from ${new URL(url).host}`)
   const text = await res.text()
   if (text.length > MAX_RESPONSE_BYTES) throw new Error(`upstream response too large from ${new URL(url).host}`)
