@@ -1027,5 +1027,12 @@
     "description": "The scheme-boundary ink re-root folds into theme-provider.css itself — ADR-0117 LLD §5.3's named-not-solved trigger fired (the TKT-0088 site shell is the secon…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0149",
+    "url": "./adr-index.html#adr-0149",
+    "description": "PR-native ADR ratification — an explicit ratify ADR-#### comment/review by the repo owner on GitHub becomes a second sanctioned ratification signal, executed b…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
