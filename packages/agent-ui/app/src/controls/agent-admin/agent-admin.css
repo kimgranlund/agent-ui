@@ -117,6 +117,20 @@
     color: var(--ui-agent-admin-label-ink);
   }
 
+  /* The Agent config panel reads as a CARD like the entry cards beside it (Kim, design-mode
+     2026-07-19) — the exact [data-part='entry'] chrome recipe (border/radius/surface). Scoped from the
+     ADMIN, deliberately: the card language is THIS surface's own (--ui-agent-admin-* tokens); a generic
+     ui-settings consumer stays chrome-free (settings.css never gains a card opinion). The `ui-settings`
+     type selector lifts specificity to (0,1,1), beating settings.css's own `[data-part='panel']`
+     (0,1,0) padding rule — scoped-cascade law: specificity wins BEFORE ui-settings' closer scope
+     proximity is consulted (the GH #50 settings.css note documents the same contract inverted). */
+  ui-settings [data-part='panel'] {
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+    padding: 0.75rem;
+  }
+
   /* ── #14 / ADR-0144 Q1 (retrofit of TKT-0085's hand-rolled composition): BOTH `ui-tabs` instances (the
      medium Chat|{Instructions,Agent} shell and the narrow all-tabs shell) now carry the shipped `fill`
      attribute (set in agent-admin.ts). tabs.css's `:scope[fill]` mechanism now provides the
