@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "@agent-ui/icons": "*",
+    "@agent-ui/shared": "*"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./components": "./src/controls/index.ts",

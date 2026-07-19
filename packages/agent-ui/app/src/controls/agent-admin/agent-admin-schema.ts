@@ -13,7 +13,7 @@
 
 import type { SettingsSchema } from '../settings/schema.ts'
 import type { EffortLevel } from '../conversation/composer-options.ts'
-import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line.ts' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the node-first ./agent barrel)
+import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the node-first ./agent barrel); a cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
 // ADR-0135 Piece A / Fork 2: the fail-closed guards + seed helper hoisted to `@agent-ui/shared` so app
 // and a2ui share ONE implementation. Re-exported here so `agent-admin.ts` keeps its current
 // `'./agent-admin-schema.ts'` import path unchanged.

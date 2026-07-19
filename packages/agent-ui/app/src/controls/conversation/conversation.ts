@@ -60,7 +60,7 @@ import type { ClientMessageListener } from '@agent-ui/a2ui'
 // pipeline (produce()) and this narration surface consume, so the two never drift. Imported from the PURE
 // `meta-line` module (not the `./agent` barrel) so the app/site type-check never drags in the barrel's
 // NODE-FIRST modules (system-prompt/mini-skills `readFileSync` at load — no node types under those tsconfigs).
-import type { TurnProgress, TurnProgressStage } from '@agent-ui/a2ui/agent/meta-line.ts'
+import type { TurnProgress, TurnProgressStage } from '@agent-ui/a2ui/agent/meta-line' // cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
 import './conversation-composer.ts' // registers <ui-conversation-composer> (TKT-0056) — composed internally, the master-detail.ts → ui-split precedent
 import type { UIConversationComposerElement } from './conversation-composer.ts'
 import type { PickerOption, ContextItem } from './composer-options.ts'

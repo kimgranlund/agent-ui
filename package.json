@@ -17,7 +17,8 @@
     "test:browser": "NODE_OPTIONS=--max-old-space-size=8192 vitest run --config vitest.browser.config.ts",
     "test:visual": "vitest run --config vitest.browser.config.ts --project visual",
     "test:visual:update": "vitest run --config vitest.browser.config.ts --project visual --update",
-    "size": "node scripts/measure-size.mjs"
+    "size": "node scripts/measure-size.mjs",
+    "publish:packages": "node scripts/publish/publish-packages.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

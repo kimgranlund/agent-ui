@@ -1,0 +1,45 @@
+{
+  // tsconfig.build.json — the LIBRARY-EMIT sibling of tsconfig.json's noEmit-only typecheck config. Extends
+  // tsconfig.json (same strict/lint options + the @agent-ui/* -> sibling src `paths` map) but flips on real
+  // JS + .d.ts emit, for `scripts/publish/publish-packages.mjs` to slice per-package publish payloads from.
+  //
+  // ONE compile spanning every package's src (mirroring tsconfig.json's own `"include"` shape), not 8
+  // separate per-package builds: several packages import a sibling at the VALUE level (not just types) —
+  // e.g. components -> icons (setIcon/resolveIcon) and components -> shared (CSS @import) — so a per-package
+  // build with `rootDir` scoped to just that package's own `src/` hits TS6059 ("File is not under rootDir")
+  // the moment it needs to pull in a cross-package file for type/value resolution. Rooting the whole compile
+  // at `packages/agent-ui` (the common ancestor of every package's src) sidesteps that entirely — exactly
+  // how tsconfig.json's own single unified dev-typecheck program already treats the monorepo.
+  //
+  // The source tree imports siblings with an explicit `.ts` extension (allowImportingTsExtensions, the repo-
+  // wide convention) — TS normally only permits that combined with noEmit/emitDeclarationOnly. TS 5.7+'s
+  // `rewriteRelativeImportExtensions` lifts that restriction for real emit: it rewrites a RELATIVE `./foo.ts`
+  // specifier to `./foo.js` in COMPILED JS (empirically confirmed NOT to touch `.d.ts` output — a `.d.ts`
+  // file's own relative specifiers keep the literal `.ts` extension even with this flag on, so
+  // publish-packages.mjs's post-process pass also rewrites `.ts` -> `.js` inside every emitted `.d.ts`,
+  // matching the same specifier-rewrite already needed there for the `@agent-ui/*` -> unscoped publish name).
+  //
+  // outDir is `dist-lib` (repo root) — the `dist-*` glob in .gitignore already covers it, no new ignore rule
+  // needed. Each package's own slice lands at `dist-lib/<pkg>/src/...` (rootDir strips the `packages/agent-ui/`
+  // prefix only, not each package's own `src/` segment) — publish-packages.mjs reads from there per package.
+  //
+  // "types" adds "node" alongside the inherited "vite/client" — build-only, does NOT touch tsconfig.json's
+  // own dev "types" list. a2ui/src/agent/{mini-skills,system-prompt}.ts are the NODE-FIRST producer-toolkit
+  // modules (CLAUDE.md) and genuinely import 'node:fs' — under the dev config's test-file-inclusive program
+  // this happens to type-check anyway (some *.test.ts elsewhere in the program pulls @types/node's ambient
+  // module declarations in as a side effect), but excluding test files from THIS build (deliberately, so
+  // they never ship in the published package) removes that side channel and exposes the gap directly:
+  // TS2591 "Cannot find name 'node:fs'" plus cascading TS7006 implicit-any on readdirSync's now-unresolved
+  // return type. Declaring the real dependency here is the honest fix, not routing around the symptom.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "rewriteRelativeImportExtensions": true,
+    "rootDir": "./packages/agent-ui",
+    "outDir": "./dist-lib",
+    "types": ["vite/client", "node"]
+  },
+  "include": ["packages/agent-ui/*/src"],
+  "exclude": ["packages/agent-ui/*/src/**/*.test.ts", "packages/agent-ui/*/src/**/*.browser.test.ts"]
+}
