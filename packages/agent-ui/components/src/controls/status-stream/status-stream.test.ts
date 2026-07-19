@@ -450,6 +450,28 @@ describe('ui-status-stream — worst-child-wins group escalation (ADR-0146 F6)',
     expect(outer.status).toBe('error') // and it bubbles to the outer group (monotone-truth up the chain)
     el.remove()
   })
+
+  it('issue #26 — finalize() re-escalates a GROUP parent, not just the stream header, accounting for truncation', () => {
+    const { el } = makeStream()
+    const group = el.appendEntry({ key: 'g', status: 'active', label: 'group' })
+    el.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'still working' })
+    expect(group.status).toBe('active')
+    el.finalize() // truncates the still-active child — its EFFECTIVE status becomes 'warning'
+    expect(group.status).toBe('warning') // the group parent must reflect that, not stay frozen at 'active'
+    el.remove()
+  })
+
+  it('issue #27 — a duplicate-keyed re-append that wires a cycle into #parentOf terminates instead of hanging', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'a', label: 'a' })
+    el.appendEntry({ key: 'b', parent: 'a', label: 'b' })
+    // Re-appending 'a' with parent 'b' wires #parentOf to a -> b -> a — a genuine cycle in the ancestor
+    // registry. An unguarded #recomputeGroups walk hangs the main thread here; the fix must return.
+    expect(() => {
+      el.appendEntry({ key: 'a', parent: 'b', label: 'a again' })
+    }).not.toThrow()
+    el.remove()
+  })
 })
 
 describe('ui-status-stream — a mid-turn NESTED child escalation flips the pinned header (ADR-0146 F8 × F6)', () => {

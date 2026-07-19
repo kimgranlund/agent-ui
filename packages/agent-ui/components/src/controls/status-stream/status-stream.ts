@@ -247,6 +247,13 @@ export class UIStatusStreamElement extends UIContainerElement {
         this.#truncated.add(item)
       }
     }
+    // Re-escalate every group chain — a truncated child now contributes `warning` via `#effectiveStatus`,
+    // but only a recompute actually repaints the group parent's `.status` with it (issue #26: the stream
+    // header already reads truncation-aware via `#topLevelStatuses()`, but a GROUP parent's own `.status`
+    // was never recomputed at settle time, so it kept its stale pre-truncation face). Every key, not just
+    // the truncated ones — a group with no truncated child is a harmless no-op walk, and a group-of-groups
+    // needs its own parent's chain walked too, exactly like the live `update()` path already does per key.
+    for (const key of this.#byKey.keys()) this.#recomputeGroups(key)
     this.#finalized = true
     this.#failed = failed
     this.#refreshHeader()
@@ -281,14 +288,29 @@ export class UIStatusStreamElement extends UIContainerElement {
    *  children (bubbling if the group is itself nested). NO MutationObserver — every grouped entry's status
    *  change flows through `appendEntry`/`update`, so a mediated recompute is complete, and the nested-slot
    *  observer `ensureNestedSlot` installs is left to serve ONLY the collapsed-summary preview (ADR-0143 F3).
-   *  A top-level key (no parent) walks zero steps — the header repaint stays the caller's own #refreshHeader. */
+   *  A top-level key (no parent) walks zero steps — the header repaint stays the caller's own #refreshHeader.
+   *  A child's contribution is its `#effectiveStatus` (truncation-aware), not its raw `.status` — so a group
+   *  whose child was truncated by `#settle()` correctly reads `warning`, the SAME rule the stream header
+   *  already applies via `#topLevelStatuses()` (issue #26 — this was previously the raw `.status`, so a
+   *  truncated nested child's group parent kept reading its stale pre-truncation escalation).
+   *  Cycle-guarded (issue #27): `#parentOf` is normally acyclic (an entry nests under an ALREADY-registered
+   *  parent, appendEntry's own ordering), but a duplicate-keyed re-append can still wire a cycle back into
+   *  its own former descendant chain — a `visited` set bounds the walk so a malformed chain terminates
+   *  instead of hanging the main thread, rather than trusting the registry's shape. */
   #recomputeGroups(key: string): void {
+    const visited = new Set<string>()
     let cursor = this.#parentOf.get(key)
-    while (cursor !== undefined) {
+    while (cursor !== undefined && !visited.has(cursor)) {
+      visited.add(cursor)
       const parent = this.#byKey.get(cursor)
       const kids = this.#childrenOf.get(cursor)
       if (parent !== undefined && kids !== undefined) {
-        parent.status = escalateStatus(kids.map((k) => this.#byKey.get(k)?.status ?? ''))
+        parent.status = escalateStatus(
+          kids.map((k) => {
+            const kid = this.#byKey.get(k)
+            return kid !== undefined ? this.#effectiveStatus(kid) : ''
+          }),
+        )
       }
       cursor = this.#parentOf.get(cursor) // keep bubbling if the group is itself nested
     }
