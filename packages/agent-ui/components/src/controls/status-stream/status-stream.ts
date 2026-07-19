@@ -177,8 +177,23 @@ export class UIStatusStreamElement extends UIContainerElement {
   /** Append a new entry, tail-follow to it, return the created item (the toast-region.show() return
    *  precedent). Named `appendEntry`, NOT `append` — the native Node.prototype.append() every element
    *  inherits is incompatible; see the file-header NAMED LLD DEVIATION note. ADR-0146 F5: an entry carrying
-   *  a KNOWN `parent` nests under that group's `[data-role="nested"]` slot instead of as a flat sibling. */
+   *  a KNOWN `parent` nests under that group's `[data-role="nested"]` slot instead of as a flat sibling.
+   *
+   *  Duplicate-key guard (issue #37): a key already in `#byKey` is REJECTED — returns the EXISTING item
+   *  untouched, never creating a second element. This is the same "graceful, never throw, no-op the
+   *  invalid case" posture the rest of this file already applies to creation-adjacent edge cases (an
+   *  unknown `parent` degrades to a flat append rather than throwing; a self-referencing `parent` does the
+   *  same) — appendEntry's contract is to CREATE, so a key collision is the invalid case here, symmetric
+   *  with update()'s own no-op on an UNKNOWN key. The alternative (tear down the old item and re-key it)
+   *  was rejected: the old item may itself be a GROUP PARENT with live nested children (#childrenOf/
+   *  #nestedByParent), and re-parenting those children's DOM + registry links onto a freshly-created
+   *  replacement item is a second, much larger surgery this fix does not need — silently keeping the
+   *  first-registered item is sufficient to close the acceptance criteria (never two live elements for one
+   *  key) without inventing a re-parent path the design never specified. A consumer that truly needs to
+   *  replace an entry's fields still can, via `update(key, patch)` on the SAME key. */
   appendEntry(entry: StatusEntry): UITimelineItemElement {
+    const existing = this.#byKey.get(entry.key)
+    if (existing !== undefined) return existing // duplicate key — reject, the old element/links are left intact
     const item = document.createElement('ui-timeline-item') as UITimelineItemElement
     item.dataset.key = entry.key
     this.#assign(item, entry)

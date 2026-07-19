@@ -465,11 +465,33 @@ describe('ui-status-stream — worst-child-wins group escalation (ADR-0146 F6)',
     const { el } = makeStream()
     el.appendEntry({ key: 'a', label: 'a' })
     el.appendEntry({ key: 'b', parent: 'a', label: 'b' })
-    // Re-appending 'a' with parent 'b' wires #parentOf to a -> b -> a — a genuine cycle in the ancestor
-    // registry. An unguarded #recomputeGroups walk hangs the main thread here; the fix must return.
+    // Re-appending 'a' with parent 'b' would have wired #parentOf to a -> b -> a — a genuine cycle in the
+    // ancestor registry — before the #37 duplicate-key guard rejected the re-append outright. Kept as a
+    // belt-and-suspenders regression: even if the #37 guard were ever removed, an unguarded #recomputeGroups
+    // walk must terminate rather than hang the main thread.
     expect(() => {
       el.appendEntry({ key: 'a', parent: 'b', label: 'a again' })
     }).not.toThrow()
+    el.remove()
+  })
+
+  it('issue #37 — a duplicate-keyed re-append never leaves two live elements for the same key', () => {
+    const { el } = makeStream()
+    const first = el.appendEntry({ key: 'a', label: 'a' })
+    el.appendEntry({ key: 'b', parent: 'a', label: 'b' })
+    // The exact #37 repro: re-append 'a', now naming the already-nested 'b' as its parent.
+    const dup = el.appendEntry({ key: 'a', parent: 'b', label: 'a again' })
+
+    expect(dup).toBe(first) // the duplicate call is rejected — it returns the EXISTING item, not a new one
+    expect(first.label).toBe('a') // untouched — the duplicate call's fields are fully ignored, not partially applied
+
+    const topLevel = el.querySelectorAll(':scope > ui-timeline-item')
+    expect(topLevel).toHaveLength(1) // only ONE live top-level element for key 'a' — never an orphaned second
+    expect(topLevel[0]).toBe(first)
+
+    // The registry still points at the ORIGINAL item — update('a', …) reaches the one visible element.
+    el.update('a', { status: 'done' })
+    expect(first.status).toBe('done')
     el.remove()
   })
 })
