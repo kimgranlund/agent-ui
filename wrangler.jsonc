@@ -1,0 +1,12 @@
+{
+	// The docs site's Workers deploy target (Cloudflare now steers static-site deploys to Workers +
+	// Static Assets rather than Pages — see the Pages→Workers migration guide). Assets-only: `site/`
+	// builds to zero server logic, so no `main` module, just the `vite build` output directory.
+	// A DISTINCT Worker from `agent-ui-site` (that name is a red herring — it's the live nonoun product
+	// app, not this docs site). Custom domain: ui-kit.nonoun.io.
+	"name": "agent-ui-docs",
+	"compatibility_date": "2026-07-19",
+	"assets": {
+		"directory": "./dist"
+	}
+}
