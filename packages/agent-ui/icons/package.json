@@ -1,5 +1,6 @@
 {
   "name": "@agent-ui/icons",
+  "description": "A swappable icon-pack adapter for the agent-ui family: a tiny pure core plus an opt-in Phosphor pack.",
   "version": "0.0.0",
   "private": true,
   "type": "module",

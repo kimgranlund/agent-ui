@@ -53,6 +53,22 @@ const REPO_URL = 'git+https://github.com/kimgranlund/agent-ui.git'
 // components depends on shared+icons; router/code/a2ui depend on components(+shared); app depends on all.
 const PACKAGE_ORDER = ['shared', 'icons', 'a2a', 'components', 'router', 'code', 'a2ui', 'app']
 
+// npm-page metadata (publish concern, so it lives here, not in the workspace manifests): shared base
+// keywords + a per-package flavor. `description` is single-sourced from each workspace package.json.
+const BASE_KEYWORDS = ['agent-ui', 'web-components', 'custom-elements', 'design-system']
+const PACKAGE_KEYWORDS = {
+  shared: ['design-tokens', 'css', 'material-design', 'theming'],
+  icons: ['icons', 'phosphor'],
+  a2a: ['a2a', 'agent2agent', 'protocol', 'agents'],
+  components: ['ui-components', 'signals', 'light-dom', 'form-controls', 'accessibility'],
+  router: ['router', 'spa'],
+  code: ['syntax-highlighting', 'markdown', 'code-editor', 'codemirror'],
+  a2ui: ['a2ui', 'generative-ui', 'agents', 'renderer'],
+  app: ['app-shell', 'chat', 'agent-admin'],
+}
+const HOMEPAGE = 'https://github.com/kimgranlund/agent-ui#readme'
+const BUGS_URL = 'https://github.com/kimgranlund/agent-ui/issues'
+
 const toPublished = (internalName) => internalName.replace('@agent-ui/', '@agent-ui-kit/')
 
 // Exports subpaths that exist for INTERNAL monorepo consumption (site's own workspace-linked imports) but
@@ -102,10 +118,15 @@ function transformPackageJson(pkgJson, version) {
     if (excluded.has(key)) continue
     exportsOut[key] = transformExportValue(value)
   }
+  const pkgDir = pkgJson.name.replace('@agent-ui/', '')
   return {
     name: toPublished(pkgJson.name),
     version,
+    description: pkgJson.description, // single-sourced from the workspace manifest
+    keywords: [...BASE_KEYWORDS, ...(PACKAGE_KEYWORDS[pkgDir] ?? [])],
     license: 'MIT', // matches the root LICENSE file — Kim's decision
+    homepage: HOMEPAGE,
+    bugs: { url: BUGS_URL },
     type: pkgJson.type,
     repository: { type: 'git', url: REPO_URL, directory: `packages/agent-ui/${pkgJson.name.replace('@agent-ui/', '')}` },
     exports: exportsOut,
@@ -206,6 +227,13 @@ function preparePackage(pkgDir, version) {
     (fileName) => fileName.endsWith('.css'),
     (content) => rewriteSpecifiers(content, false),
   )
+
+  // README + LICENSE ship with every package (npm renders the package page from README and only
+  // auto-packs both from the PACKAGE root — which at publish time is this scratch dir). READMEs are
+  // authored against the PUBLISHED names already, so they copy verbatim (no specifier rewrite).
+  const readmePath = join(pkgRoot, 'README.md')
+  if (existsSync(readmePath)) writeFileSync(join(scratchRoot, 'README.md'), readFileSync(readmePath, 'utf8'))
+  writeFileSync(join(scratchRoot, 'LICENSE'), readFileSync(join(REPO_ROOT, 'LICENSE'), 'utf8'))
 
   writeFileSync(join(scratchRoot, 'package.json'), `${JSON.stringify(transformPackageJson(pkgJson, version), null, 2)}\n`)
   return { publishedName, scratchRoot }

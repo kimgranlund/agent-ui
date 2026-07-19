@@ -1,5 +1,6 @@
 {
   "name": "@agent-ui/app",
+  "description": "App-surface compositions for the agent-ui family: application shells, a settings surface, a conversation (chat) surface with an inline generative-UI canvas, and the agent-admin workbench that ties them together.",
   "version": "0.0.0",
   "private": true,
   "type": "module",
