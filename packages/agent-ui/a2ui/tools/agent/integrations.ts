@@ -6,7 +6,14 @@
 //
 // v1 is deliberately KEYLESS: Open-Meteo (weather — no key, no auth), Wikipedia's public REST search,
 // and Frankfurter (ECB FX rates). Hotel booking/PMS integrations are GH #49's named DIRECTION, not this
-// registry's scope. Every `execute` returns compact TEXT for the model (never raw response dumps) and
+// registry's scope.
+//
+// TRUST NOTE (PR #59 review): this registry widens the dev proxy's existing unauthenticated
+// localhost-only assumption — the POST route can now drive real outbound third-party fetches, not just
+// the LLM call. Outbound volume is bounded (the adapter's MAX_TOOL_ROUNDS × MAX_CALLS_PER_ROUND ceiling
+// + the per-response size cap below), every integration URL is host-pinned with encodeURIComponent'd
+// values only, and the whole path exists ONLY in `vite dev`. Do NOT run the dev server with `--host`
+// (LAN-exposed) on an untrusted network — the pre-existing key-spend caveat now also covers tool fan-out. Every `execute` returns compact TEXT for the model (never raw response dumps) and
 // throws on upstream failure — the adapter converts a rejection into an `is_error` tool_result the model
 // can react to (the ExecuteTool contract), so a downed API degrades the answer, never the turn.
 
@@ -23,11 +30,17 @@ export interface Integration {
 }
 
 const FETCH_TIMEOUT_MS = 10_000
+/** PR #59 review — a defensive body-size backstop: the three v1 endpoints are small-payload APIs, but
+ *  nothing should let an anomalous/tampered response buffer unbounded into the proxy's memory
+ *  (compounding with the adapter's per-round fan-out). 256 KB is ~100× any real response here. */
+const MAX_RESPONSE_BYTES = 256_000
 
 async function getJson(url: string): Promise<unknown> {
   const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
   if (!res.ok) throw new Error(`upstream ${res.status} from ${new URL(url).host}`)
-  return res.json()
+  const text = await res.text()
+  if (text.length > MAX_RESPONSE_BYTES) throw new Error(`upstream response too large from ${new URL(url).host}`)
+  return JSON.parse(text)
 }
 
 const str = (v: unknown): string => (typeof v === 'string' ? v : '')
