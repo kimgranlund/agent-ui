@@ -41,9 +41,9 @@ const SUPPORTED_MODEL_IDS = new Set(['claude-opus-4-8', 'claude-sonnet-5', 'clau
 const ALL_ENTRY_KEYS = Object.values(ENTRY_KINDS).map((kind) => entriesStoreKey(kind))
 
 describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {
-  it('six presets, unique ids, non-empty labels/taglines', () => {
-    expect(AGENT_PRESETS).toHaveLength(6)
-    expect(new Set(AGENT_PRESETS.map((p) => p.id)).size).toBe(6)
+  it('eight presets, unique ids, non-empty labels/taglines', () => {
+    expect(AGENT_PRESETS).toHaveLength(8) // six showcases + the GH #46 restaurant/travel additions (concierge upgraded in place)
+    expect(new Set(AGENT_PRESETS.map((p) => p.id)).size).toBe(8)
     for (const p of AGENT_PRESETS) {
       expect(p.label.length, p.id).toBeGreaterThan(0)
       expect(p.tagline.length, p.id).toBeGreaterThan(0)
@@ -97,7 +97,11 @@ describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {
         .map((f) => f.replace(/\.md$/, '')),
     )
     expect(registry.size).toBeGreaterThan(3) // anti-vacuous: the registry directory is real
-    const targeted = ['card-layout', 'game-table-chrome', 'game-hud', 'dashboard-kpi-grid', 'form-rhythm', 'login-form'] // TKT-0077: the Croupier now targets the game-UI trio (card-game-sheet stays registry-only)
+    // TKT-0077: the Croupier targets the game-UI trio (card-game-sheet stays registry-only). GH #46:
+    // form-rhythm/login-form left this list — the upgraded Hotel Concierge seeds AUTHORED hospitality
+    // skills (projected wholesale into the live prompt, stronger than registry intent-matching), so no
+    // preset carries those two registry labels anymore.
+    const targeted = ['card-layout', 'game-table-chrome', 'game-hud', 'dashboard-kpi-grid']
     const allSkillLabels = new Set(AGENT_PRESETS.flatMap((p) => p.skills.map((s) => s.label)))
     for (const name of targeted) {
       expect(allSkillLabels.has(name), `no preset carries ${name}`).toBe(true)

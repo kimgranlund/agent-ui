@@ -48,7 +48,7 @@ const registryEntries: NewEntryInput[] = Object.keys(MINI_SKILL_SOURCES)
 
 // ── the authored packs (hospitality lands with GH #46's trio; games join with the roster wave) ──────────
 
-const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
+export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
   {
     label: 'hotel-booking-form',
     description: 'room, spa, amenity, restaurant, breakfast booking; reservation intake',
@@ -117,7 +117,7 @@ const CORE_PLAYBOOKS: readonly NewEntryInput[] = [
   },
 ]
 
-const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
+export const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
   {
     label: 'booking-flow',
     description: 'hotel room / spa / amenity booking end to end',
@@ -148,7 +148,7 @@ const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
 // The registry itself (tools/agent/integrations.ts) is the node-side shell (ADR-0137's law) — the page
 // hardcodes the id/description trio and a data-integrity test pins parity against the real registry
 // (importable under vitest's node runtime), so a registry edit that forgets this pack goes red.
-const INTEGRATION_TOOLS: readonly NewEntryInput[] = [
+export const INTEGRATION_TOOLS: readonly NewEntryInput[] = [
   {
     label: 'weather',
     description: 'Current conditions + short forecast for a named place (Open-Meteo, keyless).',

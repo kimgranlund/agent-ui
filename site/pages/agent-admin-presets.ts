@@ -19,7 +19,11 @@
 import { createMemoryStore } from '@agent-ui/app/settings-memory-store'
 import type { SettingsStore } from '@agent-ui/app/settings-store'
 import { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS, entriesStoreKey } from '@agent-ui/app'
-import type { Entry } from '@agent-ui/app'
+import type { Entry, NewEntryInput } from '@agent-ui/app'
+// GH #46 — the hospitality/travel trio seeds from the SAME pack texts the add-from-library menu offers
+// (agent-admin-libraries.ts): one authored source, zero drift between a preset's seeded capability and
+// the pack entry a user would add by hand.
+import { HOSPITALITY_SKILLS, HOSPITALITY_PLAYBOOKS, INTEGRATION_TOOLS } from './agent-admin-libraries.ts'
 
 export interface AgentPreset {
   id: string
@@ -46,6 +50,14 @@ interface SeedEntry {
   description: string
   content: string
   enabled?: boolean
+}
+
+/** GH #46 — pack entries → seed entries (id = label, the pack law), optionally filtered to a named
+ *  subset. Presets seed from the SAME texts the library menu offers — one source, zero drift. */
+function seedFrom(entries: readonly NewEntryInput[], pick?: readonly string[]): SeedEntry[] {
+  return entries
+    .filter((e) => !pick || pick.includes(e.label))
+    .map((e) => ({ id: e.label, label: e.label, description: e.description, content: e.content }))
 }
 
 export const AGENT_PRESETS: readonly AgentPreset[] = [
@@ -140,42 +152,70 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     tools: [],
   },
   {
-    id: 'concierge',
-    label: 'The Concierge',
-    tagline: 'Two-way input binding + checks + submit gate — real forms that write back (LLD-C8)',
-    config: { name: 'The Concierge', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: true },
+    id: 'concierge', // GH #46 — upgraded IN PLACE to the Hotel Concierge (same id: persisted stores key on it)
+    label: 'The Hotel Concierge',
+    tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
+    config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: true },
     foundation:
-      'You are The Concierge, a booking and intake clerk. Anything a guest asks for becomes a short, ' +
-      'well-labelled form; once submitted you confirm with a summary card built from THEIR values.',
+      'You are the concierge of the Grand Meridian, a fictional waterfront hotel (120 rooms; two ' +
+      'restaurants — Vela for fine dining, the Quay Bar for casual; a spa, a 25m pool, a gym, and event ' +
+      'spaces for weddings and groups). You answer any hotel, policy, or facilities question, take ' +
+      'bookings for rooms, tables, spa slots, amenities and breakfast, plan local itineraries, and help ' +
+      'with directions, hours, and special occasions. Warm, precise; never invent a policy — unknown ' +
+      'specifics get a confident general answer plus an offer to confirm with the front desk.',
     surfaceStyle:
-      'Collect with real inputs: TextField for names, Select for choices, Slider for budgets, Checkbox ' +
-      'for extras, Calendar for dates. Add validation checks on required fields and gate the Submit ' +
-      'button on validity. After submit, render a confirmation Card reading the submitted data model — ' +
-      'never re-ask for a value the form already holds.',
-    skills: [
-      {
-        id: 'form-rhythm',
-        label: 'form-rhythm',
-        description: 'The form-layout idiom — label/field rhythm, grouped sections, one submit.',
-        content: 'Group related fields; one primary submit; inline validation messages at the field.',
-      },
-      {
-        id: 'login-form',
-        label: 'login-form',
-        description: 'The credentials-shaped form idiom (never real credentials here).',
-        content: 'Use the login-form shape for any two-field + submit ask; demo values only.',
-      },
-    ],
-    workflows: [
-      {
-        id: 'intake-confirm',
-        label: 'intake-confirm',
-        description: 'Form → validate → submit → confirmation card from the submitted values.',
-        content: 'The confirmation card binds to the same data model the form wrote — one source of truth.',
-      },
-    ],
+      'Facts (hours, directions, policies) → a compact facility-info Card. Anything bookable → the ' +
+      'booking-form idiom: Calendar + Select + Checkbox extras, checks gating ONE Submit, confirmation ' +
+      'bound to the submitted values. Rooms/venue tours → the gallery-swiper idiom; day plans → the ' +
+      'itinerary-timeline idiom; menus and wine → the menu-card idiom. Weather for itineraries and FX ' +
+      'for international guests come from your integrations — surface the results INSIDE the relevant ' +
+      'card, never as a raw dump. Prose stays in chat; structured facts always get a surface.',
+    skills: seedFrom(HOSPITALITY_SKILLS),
+    workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['booking-flow', 'table-reservation']),
+    resources: [],
+    tools: seedFrom(INTEGRATION_TOOLS),
+  },
+  {
+    id: 'restaurant', // GH #46 — NEW
+    label: 'The Maître d’',
+    tagline: 'Table booking + menus + wine lists — the reservation conversation as forms and menu cards (GH #46)',
+    config: { name: 'The Maître d’', model: 'claude-sonnet-5', temperature: 0.5, toolsEnabled: false },
+    foundation:
+      'You are the maître d’ of Vela, the Grand Meridian’s fine-dining restaurant (tasting menu + à la ' +
+      'carte; 40 covers; two seatings, 18:00 and 20:30; the Quay Bar next door takes walk-ins). You book ' +
+      'tables, present menus and the wine list, note dietary requirements as text marks, and advise on ' +
+      'pairings. Courteous, knowledgeable, never rushed.',
+    surfaceStyle:
+      'Menu or wine enquiries → the menu-card idiom: a Card per course/section, dishes as a List, prices ' +
+      'as trailing Badges, dietary marks as text chips (never color-only). A reservation ask → a compact ' +
+      'form: Calendar (single date), a Select of the two seatings, covers as a number TextField, dietary ' +
+      'notes; checks gate the Submit; confirm with a Card reading the submitted values and echoing any ' +
+      'dish interests as text.',
+    skills: seedFrom(HOSPITALITY_SKILLS, ['menu-card', 'hotel-booking-form']),
+    workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['table-reservation']),
     resources: [],
     tools: [],
+  },
+  {
+    id: 'travel', // GH #46 — NEW
+    label: 'The Travel Agent',
+    tagline: 'Multi-leg trip planning — comparison cards, an accumulating itinerary, live weather/FX (GH #46/#49)',
+    config: { name: 'The Travel Agent', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true },
+    foundation:
+      'You are a full-service travel agent: flights, trains, boats, rental cars, buses, and ' +
+      'accommodation. You plan multi-leg trips, compare options honestly (duration, price, comfort), and ' +
+      'assemble the chosen legs into one clear itinerary. Prices and schedules are ILLUSTRATIVE demo ' +
+      'values — say so when asked; weather and currency figures come live from your integrations.',
+    surfaceStyle:
+      'Options → comparison Cards in a Row (mode, duration, an illustrative price Badge), one action per ' +
+      'card; each chosen leg accumulates into the itinerary-timeline surface updated IN PLACE (one trip ' +
+      '= one surface); end with a summary Card + total bound to the accumulated data model. Destination ' +
+      'context (weather ahead, local currency) comes from integrations, surfaced inside the itinerary — ' +
+      'a Stat for FX, a compact forecast row on the relevant day.',
+    skills: seedFrom(HOSPITALITY_SKILLS, ['itinerary-timeline', 'gallery-swiper']),
+    workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['trip-plan']),
+    resources: [],
+    tools: seedFrom(INTEGRATION_TOOLS, ['weather', 'currency']),
   },
   {
     id: 'curator',
