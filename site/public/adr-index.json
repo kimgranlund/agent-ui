@@ -1034,5 +1034,12 @@
     "description": "PR-native ADR ratification — an explicit ratify ADR-#### comment/review by the repo owner on GitHub becomes a second sanctioned ratification signal, executed b…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0150",
+    "url": "./adr-index.html#adr-0150",
+    "description": "Compact-window body type — the body column drops 1px below 52.5rem/840px, the token layer's FIRST viewport-responsive lever (proposed — Kim's ask 2026-07-18: b…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
