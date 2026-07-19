@@ -79,6 +79,7 @@ import {
   composeLiveSystemPrompt,
   validateNewEntry,
   type Entry,
+  type EntryLibraryPack,
   type LiveCapabilityGroup,
 } from './entries.ts'
 import { mountEntryList, showAddError, type EntryListSection } from './entry-list.ts'
@@ -102,6 +103,11 @@ const agentAdminProps = {
   // + the peeled prose note) and the wire lines drive `AgentTurnHandle.ingestLine` — REAL inline surfaces
   // (ADR-0129) instead of a prose reply.
   agentSurfaceTurn: { ...prop.json<AdminAgentSurfaceTurn | undefined>(undefined), attribute: false as const },
+  // GH #47/#48 — entry-library packs, keyed by entry kind (skill/workflow/...). Non-reflected pure
+  // type-carrier (the schema/store precedent). Read ONCE at compose time (`#makeSection`) — set it
+  // BEFORE appending the element; a post-connect reassignment takes effect on the next fresh connect,
+  // matching the sections' own build-once law.
+  libraries: { ...prop.json<Record<string, readonly EntryLibraryPack[]> | undefined>(undefined), attribute: false as const },
 } satisfies PropsSchema
 
 /** The five ENTRY_KINDS instantiations, each paired with its display copy — the single source of truth
@@ -479,7 +485,11 @@ export class UIAgentAdminElement extends UIElement {
    *  result in `#capabilitySections` (keyed by `kind`, prompt sections included) so
    *  `#rewireAllSections`/`#handleSubmit` can iterate uniformly. */
   #makeSection(kind: string, label: string, addLabel: string): EntryListSection {
-    const section = mountEntryList(kind, label, addLabel, {
+    const section = mountEntryList(
+      kind,
+      label,
+      addLabel,
+      {
       onToggle: (id, enabled) => this.#updateEntries(kind, (entries) => entries.map((e) => (e.id === id ? { ...e, enabled } : e))),
       onContentChange: (id, content) => this.#updateEntries(kind, (entries) => entries.map((e) => (e.id === id ? { ...e, content } : e))),
       // The `|| e.builtin` guard is defensive, mirroring entry-list.ts's own choice not to render a
@@ -496,7 +506,11 @@ export class UIAgentAdminElement extends UIElement {
         this.#updateEntries(kind, (entries) => [...entries, result.entry])
         return true
       },
-    })
+      },
+      // GH #47/#48 — this kind's library packs, captured at compose time (the sections' build-once law;
+      // the `libraries` prop doc names the set-before-append requirement).
+      { libraries: this.libraries?.[kind] },
+    )
     this.#capabilitySections.set(kind, section)
     return section
   }

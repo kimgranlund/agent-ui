@@ -136,3 +136,39 @@ describe('the store-swap probe (TKT-0074 acceptance) — assigning a new store r
     expect(storeB.get('name')).toBe('The Quant')
   })
 })
+
+// ── GH #47/#48 — the library packs' data integrity (the AGENT_PRESETS describe's discipline) ────────────
+
+describe('ADMIN_LIBRARIES — data integrity (GH #47/#48)', () => {
+  it('skill + workflow kinds each carry packs; every pack has unique non-empty entry labels', async () => {
+    const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow]) {
+      const packs = ADMIN_LIBRARIES[kind]!
+      expect(packs.length, `${kind} has at least one pack`).toBeGreaterThan(0)
+      const packIds = new Set(packs.map((p) => p.id))
+      expect(packIds.size).toBe(packs.length)
+      for (const pack of packs) {
+        expect(pack.entries.length, `${pack.id} is non-empty`).toBeGreaterThan(0)
+        const labels = pack.entries.map((e) => e.label)
+        expect(new Set(labels).size, `${pack.id} labels unique`).toBe(labels.length)
+        for (const entry of pack.entries) {
+          expect(entry.label.trim().length, 'label non-empty (validateNewEntry would reject)').toBeGreaterThan(0)
+          expect(entry.content.trim().length, `${entry.label} carries real content`).toBeGreaterThan(0)
+        }
+      }
+    }
+  })
+
+  it('the a2ui-idioms pack derives from the REAL registry files — same count as the .md glob, known ids present', async () => {
+    const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const files = readdirSync('packages/agent-ui/a2ui/src/agent/prompts/mini-skills').filter((f) => f.endsWith('.md'))
+    const pack = ADMIN_LIBRARIES[ENTRY_KINDS.skill]!.find((p) => p.id === 'a2ui-idioms')!
+    expect(pack.entries.length, 'one pack entry per registry .md file — drift-free derivation').toBe(files.length)
+    const labels = new Set(pack.entries.map((e) => e.label))
+    for (const known of ['game-table-chrome', 'card-game-sheet', 'game-hud', 'form-rhythm']) {
+      expect(labels.has(known), `registry id ${known} present`).toBe(true)
+    }
+  })
+})

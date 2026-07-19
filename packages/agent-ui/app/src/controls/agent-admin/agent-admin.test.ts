@@ -244,8 +244,8 @@ describe('UIAgentAdminElement — upgrade + defaults', () => {
     expect(el.store).toBeUndefined()
   })
 
-  it('static props is exactly [schema, store, agentTurn, agentSurfaceTurn]', () => {
-    expect(Object.keys(UIAgentAdminElement.props)).toEqual(['schema', 'store', 'agentTurn', 'agentSurfaceTurn'])
+  it('static props is exactly [schema, store, agentTurn, agentSurfaceTurn, libraries]', () => {
+    expect(Object.keys(UIAgentAdminElement.props)).toEqual(['schema', 'store', 'agentTurn', 'agentSurfaceTurn', 'libraries'])
   })
 
   it('agentTurn starts undefined pre-connect and stays undefined after connect (the stub arm is the default)', () => {
@@ -894,7 +894,7 @@ describe('agent-admin.md descriptor (ui-agent-admin)', () => {
   const md = readFileSync(`${DIR}/agent-admin.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['schema', 'store', 'agentTurn', 'agentSurfaceTurn']
+  const ATTR_NAMES = ['schema', 'store', 'agentTurn', 'agentSurfaceTurn', 'libraries']
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)
@@ -990,3 +990,75 @@ describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
   })
 })
 
+
+// ── GH #47/#48 — the add-from-library seam ──────────────────────────────────────────────────────────────
+
+describe('UIAgentAdminElement — entry libraries (GH #47/#48)', () => {
+  const PACKS = {
+    skill: [
+      {
+        id: 'test-pack',
+        label: 'Test pack',
+        description: 'fixture',
+        entries: [
+          { label: 'grid-idiom', description: 'grids', content: 'Use a Grid.' },
+          { label: 'form-idiom', description: 'forms', content: 'Use a Form.' },
+        ],
+      },
+    ],
+  }
+
+  it('a kind WITH packs renders the library menu; a kind without stays byte-identical', () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore()
+    el.libraries = PACKS
+    mount(el)
+    const skillSection = el.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
+    const workflowSection = el.querySelector('[data-part="entry-section"][data-kind="workflow"]') as HTMLElement
+    expect(skillSection.querySelector('[data-part="entry-library-menu"]')).not.toBeNull()
+    expect(skillSection.querySelectorAll('[data-value^="test-pack:"]')).toHaveLength(2)
+    expect(workflowSection.querySelector('[data-part="entry-library-menu"]'), 'no packs ⇒ no affordance').toBeNull()
+  })
+
+  it('a library commit routes through the validated add path — the entry lands in the store, deletable and enabled', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    const store = createMemoryStore()
+    el.store = store
+    el.libraries = PACKS
+    mount(el)
+    await el.updateComplete
+    const row = el.querySelector('[data-value="test-pack:0"]') as HTMLElement
+    row.click() // the menu's delegated commit → select → handlers.onAdd (popover open not required for the handler path)
+    await el.updateComplete
+    const entries = (store.get('entries:skill') ?? []) as Array<{ id: string; label: string; enabled: boolean; builtin: boolean; content: string }>
+    expect(entries).toHaveLength(1)
+    expect(entries[0]).toMatchObject({ id: 'grid-idiom', label: 'grid-idiom', enabled: true, builtin: false, content: 'Use a Grid.' })
+    // a SECOND commit of the same library entry slug-dedups instead of colliding (the validateNewEntry law)
+    row.click()
+    await el.updateComplete
+    const after = (store.get('entries:skill') ?? []) as Array<{ id: string }>
+    expect(after).toHaveLength(2)
+    expect(after[1]!.id).toBe('grid-idiom-2')
+  })
+})
+
+describe('UIAgentAdminElement — a REJECTED library entry surfaces the same error note as the hand path (PR #58 review)', () => {
+  it('an empty-label pack entry shows showAddError feedback instead of failing silently', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore()
+    el.libraries = {
+      skill: [{ id: 'bad-pack', label: 'Bad pack', description: 'fixture', entries: [{ label: '   ', description: '', content: 'x' }] }],
+    }
+    mount(el)
+    await el.updateComplete
+    const section = el.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
+    const row = section.querySelector('[data-value="bad-pack:0"]') as HTMLElement
+    row.click()
+    await el.updateComplete
+    const note = section.querySelector('[data-part="entry-add-error"]') as HTMLElement
+    expect(note.hidden, 'the rejection must be VISIBLE (the fail-closed note un-hides)').toBe(false)
+    expect(note.textContent).toContain('name is required')
+    const entries = (el.store!.get('entries:skill') ?? []) as unknown[]
+    expect(entries, 'nothing was added').toHaveLength(0)
+  })
+})

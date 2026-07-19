@@ -187,6 +187,24 @@ export interface NewEntryInput {
   content: string
 }
 
+// ── Entry libraries (GH #47/#48) — packs of ready-to-add entries ────────────────────────────────────────
+// A library pack is pure DATA (the ADR-0132 cl.1 law: a capability surface grows by data, never by new
+// list/toggle/author code): a named collection of `NewEntryInput`s for ONE kind, offered by the entry
+// list's add-from-library affordance and committed through the SAME `validateNewEntry` path as a
+// hand-authored entry (slug-dedup, order, enabled, deletable — a library add IS a custom add with the
+// typing done). Packs live with their consumer (page-local, the presets precedent); the component only
+// renders whatever packs it is handed.
+export interface EntryLibraryPack {
+  /** Stable kebab id — unique within the kind's pack list. */
+  id: string
+  /** Display name ("A2UI composition idioms", "Hospitality"). */
+  label: string
+  /** One-line pack description (menu row tooltip). */
+  description: string
+  /** Ready-to-add entry inputs, in menu order. */
+  entries: readonly NewEntryInput[]
+}
+
 export type ValidateNewEntryResult = { ok: true; entry: Entry } | { ok: false; error: string }
 
 /** Fail-closed validation for a new custom entry (ADR-0132 cl.4): a required, non-empty `label`, and a
