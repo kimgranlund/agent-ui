@@ -236,6 +236,47 @@
     opacity: 0.45;
   }
 
+  /* ── Vision rev.6: the Surface Options card — [ label | toggle (| catalog picker) ] rows ────────── */
+
+  [data-part='surface-options-heading'] {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ui-agent-admin-label-ink);
+  }
+
+  [data-part='surface-options'] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  [data-part='surface-row'] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+  }
+
+  [data-part='surface-label'] {
+    flex: 1 1 auto;
+    font-weight: 600;
+  }
+
+  /* The PRD-gated GenUI row reads as inert (its switch is genuinely disabled; the dim is the visual). */
+  [data-part='surface-row'][data-disabled] {
+    opacity: 0.45;
+  }
+
+  [data-part='surface-note'] {
+    font-size: 0.75rem;
+    color: var(--ui-agent-admin-label-ink);
+  }
+
   /* ── Vision rev.5: the Context tab — Agent System + Dialog Turns accordion groups ──────────────── */
 
   [data-part='context-section'] {

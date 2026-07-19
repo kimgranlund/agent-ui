@@ -4,7 +4,7 @@ import { UIAgentAdminElement } from './agent-admin.ts'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
-import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID } from './agent-admin-schema.ts'
+import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, entriesStoreKey, initialEntryValues, readEntries, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK, type Entry } from './entries.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsStore } from '../settings/store.ts'
@@ -1256,5 +1256,115 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
       (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'gpt-6',
     )!
     expect((customRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
+  })
+})
+
+// ── Surface Options (vision rev.6 — the frame's node 34:1312) ──────────────────────────────────────────
+
+describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
+  function composerSubmit(el: UIAgentAdminElement, text: string): void {
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = text
+    const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+  }
+  function lastAgentBody(el: UIAgentAdminElement): HTMLElement {
+    const bodies = el.querySelectorAll('[data-part="bubble"][data-role="agent"] [data-part="body"]')
+    return bodies[bodies.length - 1] as HTMLElement
+  }
+
+  it('composes the card: markdown/a2ui/genui rows in order; GenUI is PRD-gated (disabled); the catalog picker carries the roster', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const rows = [...el.querySelectorAll('[data-part="surface-row"]')]
+    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui'])
+    const genui = rows[2] as HTMLElement
+    expect(genui.hasAttribute('data-disabled')).toBe(true)
+    expect((genui.querySelector('[data-part="surface-toggle"]') as HTMLElement & { disabled: boolean }).disabled).toBe(true)
+    expect(genui.querySelector('[data-part="surface-note"]')?.textContent).toBe('PRD pending')
+    const catalog = el.querySelector('[data-part="surface-catalog"]') as HTMLElement
+    const options = [...catalog.querySelectorAll('[role="option"]')]
+    expect(options.map((o) => o.getAttribute('value'))).toEqual(A2UI_CATALOG_OPTIONS.map((o) => o.id))
+    // both live modalities ship ON
+    expect((rows[0]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
+    expect((rows[1]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
+  })
+
+  it('Markdown ON by default: an agent note renders through <ui-markdown>; an explicit OFF falls back to a plain text node (live-apply, next bubble)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    composerSubmit(el, 'hello')
+    await whenFlushed()
+    const rendered = lastAgentBody(el).querySelector('ui-markdown') as (HTMLElement & { markdown: string }) | null
+    expect(rendered, 'the stub note should render through ui-markdown').not.toBeNull()
+    expect(rendered!.markdown.length).toBeGreaterThan(0)
+
+    el.store!.set(SURFACE_MARKDOWN_KEY, false)
+    composerSubmit(el, 'again')
+    await whenFlushed()
+    expect(lastAgentBody(el).querySelector('ui-markdown'), 'OFF ⇒ plain text, no ui-markdown').toBeNull()
+    expect(lastAgentBody(el).textContent!.length).toBeGreaterThan(0)
+  })
+
+  it('surfaceA2ui OFF bypasses an ARMED surface runner (the prose stub answers, client messages no-op); ON routes back and the request carries the sanitized catalogId', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: { [SURFACE_A2UI_KEY]: false } })
+    const seen: Array<{ catalogId?: string }> = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req as { catalogId?: string })
+      yield { kind: 'note' as const, note: 'surfaced' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+
+    composerSubmit(el, 'draw')
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(seen, 'the armed runner must be bypassed while the modality is off').toHaveLength(0)
+    expect(lastAgentBody(el).textContent, 'the prose stub answered instead').toContain('stub')
+
+    // the catalog picker disables with the modality (choosing a catalog for a dead surface is noise)
+    expect((el.querySelector('[data-part="surface-catalog"]') as HTMLElement & { disabled: boolean }).disabled).toBe(true)
+
+    el.store!.set(SURFACE_A2UI_KEY, true)
+    await whenFlushed()
+    expect((el.querySelector('[data-part="surface-catalog"]') as HTMLElement & { disabled: boolean }).disabled).toBe(false)
+    composerSubmit(el, 'draw again')
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+    expect(seen).toHaveLength(1)
+    expect(seen[0]!.catalogId).toBe(DEFAULT_A2UI_CATALOG_ID)
+  })
+
+  it('the Context Agent System JSON carries the surface block (markdown/a2ui/catalog/genui)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const agentJson = JSON.parse(
+      el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
+    ) as { surface: { markdown: boolean; a2ui: boolean; catalog: string; genui: string } }
+    expect(agentJson.surface).toEqual({ markdown: true, a2ui: true, catalog: DEFAULT_A2UI_CATALOG_ID, genui: 'prd-pending' })
+    el.store!.set(SURFACE_MARKDOWN_KEY, false)
+    const after = JSON.parse(
+      el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
+    ) as { surface: { markdown: boolean } }
+    expect(after.surface.markdown).toBe(false)
+  })
+
+  it('sanitizeCatalog: a known id passes, anything else coerces to the default (fail-closed)', () => {
+    expect(sanitizeCatalog(DEFAULT_A2UI_CATALOG_ID)).toBe(DEFAULT_A2UI_CATALOG_ID)
+    expect(sanitizeCatalog('not-a-catalog')).toBe(DEFAULT_A2UI_CATALOG_ID)
+    expect(sanitizeCatalog(42)).toBe(DEFAULT_A2UI_CATALOG_ID)
+    expect(sanitizeCatalog(undefined)).toBe(DEFAULT_A2UI_CATALOG_ID)
   })
 })

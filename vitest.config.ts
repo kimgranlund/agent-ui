@@ -155,6 +155,9 @@ export default defineConfig({
       // agent-admin transitively imports it, so it resolves through this row. Placed as an exact entry (there
       // is no broad `@agent-ui/code` alias to prefix-collide with; mirrors the package's `exports['./editor']`).
       '@agent-ui/code/editor': r('./packages/agent-ui/code/src/editor/index.ts'),
+      // Vision rev.6 (Surface Options) — `agent-admin.ts` side-effect-imports `markdown` so the Markdown
+      // modality's `document.createElement('ui-markdown')` renderer resolves to the REAL class in jsdom.
+      '@agent-ui/code/markdown': r('./packages/agent-ui/code/src/markdown/index.ts'),
       // The A2A arena's zero-dep surface (board/referee/transcript/isolation, LLD-C11) — mirrors the
       // `@agent-ui/a2ui` broad alias above; the site demo page is its first consumer.
       '@agent-ui/a2a': r('./packages/agent-ui/a2a/src/index.ts'),
