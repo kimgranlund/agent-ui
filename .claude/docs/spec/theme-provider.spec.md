@@ -119,7 +119,7 @@ mechanism. *(ADR-0117 cl.3, ADR-0079 cl.3 F2b — explicitly out of scope)*
 deliberate absence documented in the sheet (the `ui-form-provider` precedent). No forced-colors block is
 required (the component paints no surface of its own). *(ADR-0117 cl.4)*
 
-> **REV 2026-07-18 ([ADR-0148](../adr/0148-theme-provider-ink-reroot-fold-in.md), proposed — the LLD
+> **REV 2026-07-18 ([ADR-0148](../adr/0148-theme-provider-ink-reroot-fold-in.md), accepted — the LLD
 > §5.3 named-not-solved trigger fired, issue #31):** the stylesheet additionally declares the
 > SCHEME-BOUNDARY INK RE-ROOT — `color: var(--md-sys-color-neutral-on-surface)` in a zero-specificity
 > `:where(ui-theme-provider)` block — so ink INHERITED across a forced `color-scheme` boundary
