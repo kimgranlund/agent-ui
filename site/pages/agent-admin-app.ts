@@ -38,11 +38,22 @@ const root = document.querySelector('#app') ?? document.body
 
 const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
 
-const strip = document.createElement('nav')
-strip.className = 'preset-strip'
-strip.setAttribute('aria-label', 'Agent presets')
+// ── the canvas-header (GH #51): `[ title | … | agent-menu ]` — replaces the TKT-0074 truncating chip
+// row. The active agent NAMES the surface (the title zone); switching moves into a ui-menu (one row per
+// preset, never truncated); page actions (Reset persona today) live in the "…" overflow menu. Page-local
+// by design — a shared canvas-header COMPONENT is #44/M5's call, not this page's (GH #51 scope note).
+const header = document.createElement('header')
+header.className = 'canvas-header'
+header.setAttribute('aria-label', 'Active agent')
 
-const presetButtons = new Map<string, UIButtonElement>()
+const title = document.createElement('div')
+title.className = 'canvas-header-title'
+const titleName = document.createElement('span')
+titleName.className = 'canvas-header-name'
+const titleTagline = document.createElement('span')
+titleTagline.className = 'canvas-header-tagline'
+title.append(titleName, titleTagline)
+
 let active: AgentPreset =
   AGENT_PRESETS.find((p) => p.id === localStorage.getItem(ACTIVE_PRESET_KEY)) ?? AGENT_PRESETS[0]!
 
@@ -50,40 +61,71 @@ let active: AgentPreset =
 // persona's SURFACE session (TKT-0076 — the runner closure owns the a2ui transcript) starts clean.
 let armSurfaceTurn: (() => void) | undefined
 
+// The agent switcher — ui-menu owns the overlay/roving-focus/type-ahead; this page stages one
+// `div[data-value]` row per preset (the menu-demo idiom) and applies the committed selection.
+const agentMenu = document.createElement('ui-menu')
+agentMenu.className = 'agent-menu'
+const agentTrigger = document.createElement('ui-button') as UIButtonElement
+agentTrigger.variant = 'soft'
+agentTrigger.size = 'sm'
+agentMenu.append(agentTrigger)
+const agentItems = new Map<string, HTMLElement>()
+for (const preset of AGENT_PRESETS) {
+  const item = document.createElement('div')
+  item.dataset.value = preset.id
+  item.textContent = preset.label
+  item.title = preset.tagline
+  agentItems.set(preset.id, item)
+  agentMenu.append(item)
+}
+agentMenu.addEventListener('select', (event) => {
+  const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
+  const preset = AGENT_PRESETS.find((p) => p.id === value)
+  if (preset) applyPreset(preset)
+})
+
+// The "…" overflow — page actions; Reset persona is its one row today (future actions join it here).
+const overflowMenu = document.createElement('ui-menu')
+overflowMenu.className = 'overflow-menu'
+overflowMenu.setAttribute('placement', 'bottom-end')
+const overflowTrigger = document.createElement('ui-button') as UIButtonElement
+overflowTrigger.variant = 'ghost'
+overflowTrigger.size = 'sm'
+overflowTrigger.textContent = '…'
+overflowTrigger.title = 'Page actions'
+const resetItem = document.createElement('div')
+resetItem.dataset.value = 'reset-persona'
+resetItem.textContent = 'Reset persona'
+resetItem.title = 'Discard this persona’s edits and reseed it from the preset'
+overflowMenu.append(overflowTrigger, resetItem)
+overflowMenu.addEventListener('select', (event) => {
+  const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
+  if (value === 'reset-persona') {
+    resetPreset(active)
+    applyPreset(active)
+  }
+})
+
 function applyPreset(preset: AgentPreset): void {
   active = preset
   localStorage.setItem(ACTIVE_PRESET_KEY, preset.id)
   admin.store = presetStore(preset)
   armSurfaceTurn?.()
-  for (const [id, btn] of presetButtons) btn.variant = id === preset.id ? 'solid' : 'ghost'
+  titleName.textContent = preset.label
+  titleTagline.textContent = preset.tagline
+  agentTrigger.textContent = `${preset.label} ▾`
+  agentTrigger.title = 'Switch agent'
+  for (const [id, item] of agentItems) {
+    // aria-checked marks the active row (role=menuitem rows tolerate it as a light active marker for
+    // styling + AT); the menu control owns every other ARIA concern.
+    if (id === preset.id) item.setAttribute('aria-checked', 'true')
+    else item.removeAttribute('aria-checked')
+  }
 }
 
-for (const preset of AGENT_PRESETS) {
-  const btn = document.createElement('ui-button') as UIButtonElement
-  btn.variant = 'ghost'
-  btn.size = 'sm'
-  btn.textContent = preset.label
-  btn.title = preset.tagline
-  btn.addEventListener('click', () => applyPreset(preset))
-  presetButtons.set(preset.id, btn)
-  strip.append(btn)
-}
-
-// Reset the ACTIVE persona to its seed (clears its persisted edits; the other five untouched).
-const reset = document.createElement('ui-button') as UIButtonElement
-reset.variant = 'ghost'
-reset.size = 'sm'
-reset.className = 'preset-reset'
-reset.textContent = 'Reset persona'
-reset.title = 'Discard this persona’s edits and reseed it from the preset'
-reset.addEventListener('click', () => {
-  resetPreset(active)
-  applyPreset(active)
-})
-strip.append(reset)
-
+header.append(title, overflowMenu, agentMenu)
 applyPreset(active)
-root.append(strip, admin)
+root.append(header, admin)
 
 // The DEV-only live-model overlay (the agent-admin.ts/a2ui-live.ts construction-site precedent): the
 // `import.meta.env.DEV` guard lives HERE in the site page, never in the packaged component — the static
