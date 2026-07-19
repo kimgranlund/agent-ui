@@ -21,6 +21,15 @@ Feed validated A2UI server messages (`createSurface` / `updateComponents` / `upd
 
 > The repo's agent-producer toolkit (`./agent`) is intentionally **not** part of the published package — it is node-first, repo-internal machinery. The pure `./agent/meta-line` types ARE published.
 
+## CDN (no build step)
+
+```html
+<!-- styles come from the components/shared sheets (see @agent-ui-kit/components' CDN section) -->
+<script type="module">
+  import * as a2ui from 'https://esm.sh/@agent-ui-kit/a2ui@0.0.5'
+</script>
+```
+
 ## The @agent-ui-kit family
 
 | Package | What it is |

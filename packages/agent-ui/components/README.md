@@ -33,6 +33,24 @@ import '@agent-ui-kit/components/controls/menu'
 
 Design notes: light-DOM rendering (your CSS reaches everything), ARIA via `ElementInternals` (form-associated custom elements — real form participation, no native inputs), and per-component `--ui-{name}-*` CSS custom-property seams over the shared `--md-sys-*` token system.
 
+## CDN (no build step)
+
+```html
+<!-- styles: shared's two sheets DIRECTLY (foundation-styles.css uses bare @imports a browser
+     can't resolve), then the component barrel (relative imports only — CDN-safe) -->
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.0.5/tokens.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.0.5/dimensions.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/components@0.0.5/component-styles.css">
+
+<script type="module">
+  import 'https://esm.sh/@agent-ui-kit/components@0.0.5/components' // the whole fleet, self-defining
+</script>
+
+<ui-button variant="solid">Save</ui-button>
+```
+
+esm.sh rewrites the bare `@agent-ui-kit/*` sibling imports for you; pin the version in real pages.
+
 ## The @agent-ui-kit family
 
 | Package | What it is |
