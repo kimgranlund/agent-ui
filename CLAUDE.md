@@ -14,6 +14,9 @@ Plan `.claude/docs/plan.md` · Goals + per-milestone DoD `.claude/docs/goals.md`
 
 - `npm run check` — the standing type gate, three steps: `tsc` (packages) `&& check:site` (the docs site's own tsconfig) `&& check:tools` (`tsconfig.tools.json` — scripts + a2ui tools); all `noEmit`
 - `npm test` — Vitest (jsdom), once · `npm run test:watch` — watch mode
+- `npm run test:browser` — the real-engine gate, THREE SEQUENTIAL per-project shards (packages → site →
+  visual; GH #41 — never re-monolith it or add a heap bump; a single shard nearing the default ceiling
+  splits further)
 - `npm run dev` / `npm run build` — the docs site (`site/`) is the app entry; build live since the
   ADR-0077 wave, incl. the G8 `<component-gallery>` (`gallery.html`)
 
@@ -70,7 +73,12 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
 
 ## Always
 
-- Run `npm run check && npm test` green before treating a change as done.
+- Run `npm run check && npm test` green before treating a change as done — judge gates by EXIT CODES,
+  never by grepping output (a piped grep-count masked a red `check` and an OOM'd browser run, 2026-07-19).
+- A fresh worktree WITHOUT its own `npm install` resolves `@agent-ui/*` through the MAIN checkout's
+  node_modules (import-resolving tests/builds silently exercise main's sources, and Vite's fs-allow
+  denies `?raw` modules) — install in the worktree and `readlink node_modules/@agent-ui/shared` before
+  trusting any import-resolving gate.
 
 <!-- Coherence gates (naming/layering/contract-drift/size/zero-native) are scripts + a planned Stop/pre-commit hook, NOT prose rules — see .claude/docs/process.md §1. Enforcement lives there, not in this file. -->
 <!-- Architecture detail lives in .claude/docs/plan.md; the buildout sequence + DoD in .claude/docs/goals.md — referenced as paths, not @-inlined, to keep standing context thin. -->
