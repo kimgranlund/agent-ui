@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-18 *(authored)* |
 > | **Proposed by** | Kim's ask (2026-07-18 session): body text should read 1px smaller — refined in-session from "edit the table" to "maybe a breakpoint? `< 992` it goes down 1px". The host turned the mechanism into this contract; the three forks below are laid out for ratification with the host's recommendation marked on each. |
-> | **Ratified by** | *(pending — Kim: the in-tree Status edit, or a `ratify ADR-0150` comment/review on GitHub per [ADR-0149](./0149-pr-native-adr-ratification.md). The three forks resolve at ratification — a fork resolved AGAINST a recommendation changes only the named value, never the mechanism.)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-07-19, via the [`ratify ADR-0150` utterance](https://github.com/kimgranlund/agent-ui/pull/43#issuecomment-5014750570) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build: `packages/agent-ui/shared/src/tokens/dimensions.css` (the ONE `@media` override block) · `shared/src/tokens/dimensions.test.ts` (the override-block describe) · `components/src/controls/text/text.browser.test.ts` (the viewport leg) · [`../references/dimensional-standard.md`](../references/dimensional-standard.md) (the breakpoint constant + the type-family row's responsive note) · [`../references/geometry.md`](../references/geometry.md) (Display-row note) |
 > | **Supersedes / Superseded by** | **Extends [ADR-0078](./0078-ui-text-three-axis-variant-size-as.md)** (cl.2's extension-law list gains a RESPONSIVE leg; the 15 M3-verbatim rows and cl.2b's 12 extension rows stand byte-untouched) · Relates [ADR-0007](./0007-universal-selector-ramp-tokens.md) (the `*`-ramp substitution law — the override obeys it, see cl.1) · [ADR-0038](./0038-control-sizing-size-scale-row-lookup.md) (`--md-sys-scale`'s only-consumer-is-display-type invariant survives unchanged) · [ADR-0025](./0025-ui-text-display-primitive-type-scale.md) (type's density-invariance stands — the new lever is width, never `[density]`) · [ADR-0142](./0142-a2ui-text-heading-compact-scale.md) (proposed — the A2UI compact HEADING fan-out; orthogonal levers on different axes: 0142 re-maps wire headings for ALL widths, this ADR shrinks the body COLUMN below one width — they compose, neither depends on the other) |
 

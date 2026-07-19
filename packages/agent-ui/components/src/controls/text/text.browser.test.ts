@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { server, cdp } from 'vitest/browser'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { server, cdp, page } from 'vitest/browser'
 import type { UITextElement } from './text.ts'
 
 // ADR-0078 — ui-text cross-engine browser smoke. jsdom computes no real font metrics and can't prove
@@ -19,6 +19,15 @@ type CdpSession = { send(method: string, params?: object): Promise<unknown> }
 
 /** Wait one microtask tick — long enough for a MutationObserver callback queued earlier to run (FIFO). */
 const tick = (): Promise<void> => new Promise((resolve) => queueMicrotask(resolve))
+
+// ADR-0150: the fleet's default test viewport (414×896) sits BELOW the 52.5rem compact-window line, so
+// this file's M3-base pins (14/16px body rows) are ≥-line truth ONLY under an explicit desktop viewport —
+// pinned here so the dependency is visible, not incidental (ADR-0150 cl.5). The compact-register describe
+// below resizes UNDER the line and restores this baseline after.
+const DESKTOP = { width: 1024, height: 768 } // ≥ 840px — the ADR-0150 line
+beforeAll(async () => {
+  await page.viewport(DESKTOP.width, DESKTOP.height)
+})
 
 describe('ui-text browser-truth harness — the role×size matrix resolves to real px (ADR-0078)', () => {
   it('body/md (the bare default) resolves to 14px — the fully-M3-canonical size (ADR-0078 knob ①)', () => {
@@ -133,6 +142,54 @@ describe('ui-text subtree-[scale] — --md-sys-typescale-*-size re-multiplies fo
 
     expect(compactPx).toBeLessThan(basePx)
     expect(compactPx).toBeCloseTo(basePx * 0.875, 0)
+  })
+})
+
+// ── Compact-window body register (ADR-0150) — the body column drops 1px below 52.5rem ──────────────────
+
+describe('ui-text compact-window override — body 15/13/11 below the 52.5rem line (ADR-0150)', () => {
+  beforeAll(async () => {
+    await page.viewport(800, 600) // below the 840px line
+  })
+  afterAll(async () => {
+    await page.viewport(DESKTOP.width, DESKTOP.height) // restore the file's ≥-line baseline
+  })
+
+  const mountText = (attrs: Record<string, string>): UITextElement => {
+    const el = document.createElement('ui-text') as UITextElement
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v)
+    el.textContent = 'compact'
+    document.body.append(el)
+    return el
+  }
+
+  it('body/md (the bare default) computes 13px below the line — was 14 at/above', () => {
+    const el = mountText({})
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(13, 0)
+    el.remove()
+  })
+
+  it("bare size='lg' (the body-large row via :not([variant])) computes 15px below the line", () => {
+    const el = mountText({ size: 'lg' })
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(15, 0)
+    el.remove()
+  })
+
+  it('a non-body role does NOT shift: headline/md stays 28px (the override is body-column-only)', () => {
+    const el = mountText({ variant: 'headline' })
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(28, 0)
+    el.remove()
+  })
+
+  it('[scale] composes with the breakpoint: body/md under [scale=ui-lg] → 13 × 1.125 (the `*` override keeps the multiplier)', () => {
+    const wrap = document.createElement('div')
+    wrap.setAttribute('scale', 'ui-lg') // --md-sys-scale → 1.125
+    document.body.append(wrap)
+    const el = document.createElement('ui-text')
+    el.textContent = 'compact scaled'
+    wrap.append(el)
+    expect(Number.parseFloat(getComputedStyle(el).fontSize)).toBeCloseTo(13 * 1.125, 1)
+    wrap.remove()
   })
 })
 
