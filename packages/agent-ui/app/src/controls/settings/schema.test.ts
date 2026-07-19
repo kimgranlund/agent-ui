@@ -162,3 +162,37 @@ describe('RegisteredControl — getValue/setValue bridge (the FormConnectDetail 
     expect(registered.getValue()).toBe('')
   })
 })
+
+// ── grouped select options (the models-as-lists ask, 2026-07-19) ────────────────────────────────────────
+
+describe('select factory — grouped options render role=group wrappers (ui-select optgroup parity)', () => {
+  it('options sharing a group land inside ONE role=group host with its label; ungrouped stay direct children', () => {
+    const f = field({
+      type: 'select',
+      options: [
+        { value: 'h', label: 'Haiku', group: 'Fast' },
+        { value: 's', label: 'Sonnet', group: 'Balanced' },
+        { value: 'o', label: 'Opus', group: 'Frontier' },
+        { value: 'f', label: 'Fable', group: 'Frontier' },
+        { value: 'x', label: 'Loose' }, // ungrouped — a direct child exactly as before
+      ],
+    })
+    const { element } = FIELD_CONTROL_REGISTRY.select!(f)
+    const groups = [...element.querySelectorAll('[role="group"]')]
+    expect(groups.map((g) => g.getAttribute('label'))).toEqual(['Fast', 'Balanced', 'Frontier'])
+    const frontier = groups[2]!
+    expect([...frontier.querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value'))).toEqual(['o', 'f'])
+    // the ungrouped option is a DIRECT child (not swallowed into any group)
+    const loose = element.querySelector('[role="option"][value="x"]')!
+    expect(loose.parentElement).toBe(element)
+    // every option is still present exactly once
+    expect(element.querySelectorAll('[role="option"]')).toHaveLength(5)
+  })
+
+  it('a group-free option list renders NO group wrapper (byte-parity with the pre-group shape)', () => {
+    const f = field({ type: 'select', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] })
+    const { element } = FIELD_CONTROL_REGISTRY.select!(f)
+    expect(element.querySelector('[role="group"]')).toBeNull()
+    expect([...element.children].every((c) => c.getAttribute('role') === 'option')).toBe(true)
+  })
+})

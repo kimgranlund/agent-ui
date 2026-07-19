@@ -56,10 +56,13 @@ import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsSchema } from '../settings/schema.ts'
 import type { SettingsStore } from '../settings/store.ts'
 import {
+  CUSTOM_MODELS_KEY,
   DEFAULT_MODEL_ID,
   SUPPORTED_MODELS,
+  agentConfigSchema,
   defaultAgentConfigSchema,
   initialValuesFor,
+  parseCustomModels,
   runStubAgentTurn,
   sanitizeNumber,
   sanitizeSelect,
@@ -178,6 +181,10 @@ export class UIAgentAdminElement extends UIElement {
   #layoutObserver: ResizeObserver | null = null
 
   #unsubscribes: Map<string, () => void> = new Map()
+  /** The last parsed customModels fingerprint — the churn guard for the schema-rebuild subscription. */
+  #customModelsKey = ''
+  /** The customModels subscription's own teardown (never the shared #unsubscribes map — rewires clear it). */
+  #customModelsUnsub: (() => void) | undefined
   // The no-subscribe fallback trigger — `#updateEntries` calls this directly ONLY when the current
   // store has no `subscribe` method to notify it instead (component-reviewer MODERATE fix).
   #renders: Map<string, () => void> = new Map()
@@ -232,6 +239,28 @@ export class UIAgentAdminElement extends UIElement {
         initial: { ...initialValuesFor(this.schema), ...initialEntryValues() },
       })
     }
+    // Admin-added models (Kim, 2026-07-19): a persisted `customModels` value extends the Model select's
+    // lists — fold it into the schema NOW (a store restored from localStorage already carries it), and
+    // rebuild on every later change through the SAME subscribe seam the entry sections use. The rebuild
+    // is a plain schema reassignment — ui-settings' documented reference-change path; generateSection's
+    // setValue writes nothing to the store, so no rebuild loop exists. Comparing the parsed lists keeps
+    // unrelated store writes from churning the pane.
+    {
+      const foldCustomModels = (): void => {
+        const parsed = parseCustomModels(this.store?.get(CUSTOM_MODELS_KEY))
+        const key = parsed.map((m) => `${m.id}|${m.label}`).join(',')
+        if (key === this.#customModelsKey) return
+        this.#customModelsKey = key
+        this.schema = agentConfigSchema(parsed)
+      }
+      foldCustomModels()
+      // Its OWN teardown slot — NEVER the shared #unsubscribes map, which #rewireAllSections clears on
+      // every store rewire (this subscription must outlive rewires; it dies with the connection).
+      this.#customModelsUnsub?.()
+      this.#customModelsUnsub = this.store?.subscribe?.((key) => {
+        if (key === CUSTOM_MODELS_KEY) foldCustomModels()
+      })
+    }
 
     // schema/store → the composed ui-settings pane + every entry-list section's render + subscription.
     // Reactive: a real reassignment (different object references) re-wires from scratch; a reconnect with
@@ -256,6 +285,8 @@ export class UIAgentAdminElement extends UIElement {
   protected disconnected(): void {
     for (const unsubscribe of this.#unsubscribes.values()) unsubscribe()
     this.#unsubscribes.clear()
+    this.#customModelsUnsub?.()
+    this.#customModelsUnsub = undefined
     this.#layoutObserver?.disconnect() // TKT-0085 — otherwise the observer outlives the element (a real leak: it holds a live reference to `this`)
     this.#layoutObserver = null
   }
