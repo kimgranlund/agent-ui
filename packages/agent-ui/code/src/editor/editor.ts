@@ -58,6 +58,11 @@ const props = {
   value: prop.string(),
   // v1: `markdown`; unknown/absent ⇒ plain, no highlight (ADR-0139 cl.4). Reflects for `[language]` CSS hooks.
   language: { ...prop.string(), reflect: true },
+  // v1: 'source' (default) | 'richtext' (ADR-0147). Reflects for `[mode]` CSS hooks. Unknown ⇒ treated as
+  // 'source' — the runtime guard is `this.mode === 'richtext'`, everything else IS source behavior, so an
+  // unknown value degrades safely with zero validation code (the `language` precedent; `erasableSyntaxOnly`
+  // bars an enum, so the type surface `'source' | 'richtext'` is a literal union in prose/descriptor only).
+  mode: { ...prop.string('source'), reflect: true },
   label: { ...prop.string(), reflect: true }, // → the editor's aria-label (the labelling SEAM; yields under ui-field)
   placeholder: prop.string(),
   // multi-line MIN-height lever (ADR-0134's law — rows × line-box + padding as a growable minimum, NOT the
@@ -74,6 +79,11 @@ export class UICodeEditorElement extends UIFormElement {
   // idempotent guard), persisting across disconnect/reconnect.
   #editor: HTMLElement | null = null
   #message: HTMLElement | null = null
+
+  // The richtext mode-toggle part (ADR-0147 cl.5) — created ONLY on a successful CM enhancement whose
+  // handle reports `richtextAvailable` (never in #ensureParts; the affordance appears WITH the capability).
+  // Removed in disconnected() alongside #cmMount; recreated on a reconnect's re-enhance.
+  #modeToggle: HTMLElement | null = null
 
   // The CodeMirror layer — the mount host + the live handle. Null until (and unless) enhancement succeeds.
   #cmMount: HTMLElement | null = null
@@ -179,6 +189,10 @@ export class UICodeEditorElement extends UIFormElement {
         this.internals.states?.delete('disabled')
       }
       this.#cm?.setEditable(!disabled && !readonly)
+      // The toggle interplay (ADR-0147 cl.5/F5): disabled strips operability; readonly stays FULLY operable (a
+      // readonly rendered view is a legitimate "read this rendered" surface — richtext under readonly still
+      // reveals-near-cursor via selection). #syncModeToggle is a no-op before the toggle part exists.
+      this.#syncModeToggle()
     })
 
     // ── user-invalid → aria-invalid + the non-colour message cue + :state(user-invalid) ──
@@ -210,6 +224,16 @@ export class UICodeEditorElement extends UIFormElement {
       this.style.setProperty('--ui-code-editor-rows', String(this.rows ?? 4))
     })
 
+    // ── richtext mode → the CM richtext Compartment (ADR-0147 cl.1/cl.2/cl.6) ──
+    // A no-op via optional chaining wherever CM never mounted (jsdom / load failure / non-markdown language)
+    // — the inert-fallback law: the plain surface, FACE hooks, and event wiring are untouched by `mode` on
+    // every code path (asserted by editor.test.ts's with/without `mode="richtext"` diff).
+    this.effect(() => {
+      const rich = this.mode === 'richtext'
+      this.#cm?.setRichtext(rich && this.#cm.richtextAvailable)
+      this.#syncModeToggle() // aria-pressed + presence; a no-op before the toggle part exists
+    })
+
     // Motion gate — arm `ready` one frame past first paint so the upgrade SNAPS (states optional-chained;
     // jsdom has no CustomStateSet — the browser smoke is the real motion proof).
     requestAnimationFrame(() => this.internals.states?.add('ready'))
@@ -235,6 +259,10 @@ export class UICodeEditorElement extends UIFormElement {
     if (this.#cmMount) {
       this.#cmMount.remove()
       this.#cmMount = null
+    }
+    if (this.#modeToggle) {
+      this.#modeToggle.remove()
+      this.#modeToggle = null
     }
     if (this.#editor) this.#editor.hidden = false // restore the plain surface for a potential reconnect
   }
@@ -272,6 +300,7 @@ export class UICodeEditorElement extends UIFormElement {
         doc: this.value,
         placeholder: this.placeholder,
         editable: !this.effectiveDisabled() && !this.readonly,
+        richtext: this.mode === 'richtext', // captured at mount; LIVE afterward via the mode effect's setRichtext
         onDocChange: (value) => {
           this.value = value
           this.emit('input')
@@ -315,11 +344,19 @@ export class UICodeEditorElement extends UIFormElement {
       // the live value in now — programmatic (fires no `input`, per M2), a no-op when already equal — so no
       // typed characters are lost. (This is also the value-side of the m7 post-mount re-sync.)
       this.#cm.setDoc(this.value)
+      // Re-sync `mode` too (component-review MINOR-1): a `mode` set DURING mountCodeMirror's own nested
+      // markdown-pack await (between the `richtext:` option snapshot and the view existing) would otherwise
+      // be silently dropped — the mode effect no-ops while `#cm` is null and nothing re-fires later, since
+      // `mode` didn't change again. Push the CURRENT mode in now, mirroring the value-side m7/M1a re-sync.
+      this.#cm.setRichtext(this.mode === 'richtext' && this.#cm.richtextAvailable)
       editor.hidden = true // the plain surface yields to CM (kept in the DOM, hidden — the reconnect restore)
       if (hadFocus) {
         this.#skipCmFocusBaseline = true // the handoff's own focus must not re-baseline #committed (M1b)
         handle.focusEnd() // preserve focus across the handoff (best-effort: caret → end)
       }
+      // The mode-toggle part (ADR-0147 cl.5/cl.6) — ONLY when richtext can actually render here; the
+      // affordance appears WITH the capability, never before it.
+      if (handle.richtextAvailable) this.#ensureModeToggle()
     } catch {
       // Load failure / timeout — the plain editable surface stays, permanently (ADR-0139 cl.5). Never read-only.
     } finally {
@@ -435,6 +472,55 @@ export class UICodeEditorElement extends UIFormElement {
 
     this.append(editor, message)
     return editor
+  }
+
+  // ── the richtext mode-toggle part (ADR-0147 cl.5/cl.6/cl.8) ─────────────────────
+
+  /**
+   * Create the mode-toggle part ONCE — ONLY on a successful CM enhancement whose handle reports
+   * `richtextAvailable` (never in #ensureParts; the affordance appears WITH the capability). Placed FIRST
+   * child of the host — before `[data-part='cm']` — so tab order is toggle → editor surface (LLD-C4).
+   */
+  #ensureModeToggle(): void {
+    if (this.#modeToggle) return
+    const toggle = this.ownerDocument.createElement('div')
+    toggle.setAttribute('data-part', 'mode-toggle')
+    toggle.setAttribute('role', 'button') // the no-native-form-elements law — role rides the PART
+    toggle.setAttribute('aria-label', 'Rendered markdown view')
+    // Raw listeners (not this.listen) — the toggle's whole lifecycle is create/remove paired with the CM
+    // mount (disconnected() removes the node), the same pattern the `mount` input-suppression listener uses.
+    toggle.addEventListener('click', () => this.#userToggleMode())
+    toggle.addEventListener('keydown', (event) => {
+      const key = (event as KeyboardEvent).key
+      if (key !== 'Enter' && key !== ' ') return
+      event.preventDefault() // Space's default is page-scroll; harmless to prevent on Enter too
+      this.#userToggleMode()
+    })
+    this.prepend(toggle)
+    this.#modeToggle = toggle
+    this.#syncModeToggle() // seed aria-pressed + tabindex/aria-disabled for the CURRENT state immediately
+  }
+
+  /** A USER-initiated toggle (click/Enter/Space) flips `mode` and emits ONE host-targeted `toggle` — the
+   *  ONLY path that emits it (a programmatic `mode` set is silent, ADR-0147 F4 — the `value`/`input` symmetry). */
+  #userToggleMode(): void {
+    this.mode = this.mode === 'richtext' ? 'source' : 'richtext'
+    this.emit('toggle')
+  }
+
+  /** Sync the toggle's `aria-pressed` (mirrors `mode === 'richtext'`) + its disabled/tabindex interplay
+   *  (ADR-0147 cl.5/F5) to the CURRENT state. A no-op before the toggle part exists. */
+  #syncModeToggle(): void {
+    const toggle = this.#modeToggle
+    if (!toggle) return
+    toggle.setAttribute('aria-pressed', String(this.mode === 'richtext'))
+    if (this.effectiveDisabled()) {
+      toggle.removeAttribute('tabindex')
+      toggle.setAttribute('aria-disabled', 'true')
+    } else {
+      toggle.setAttribute('tabindex', '0')
+      toggle.removeAttribute('aria-disabled')
+    }
   }
 }
 

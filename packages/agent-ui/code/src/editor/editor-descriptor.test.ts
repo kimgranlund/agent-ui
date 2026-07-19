@@ -26,7 +26,7 @@ describe('ui-code-editor — descriptor (ADR-0004, ADR-0139)', () => {
   const css = readFileSync(`${DIR}/editor.css`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['value', 'language', 'label', 'placeholder', 'rows', 'readonly', 'name', 'disabled', 'required']
+  const ATTR_NAMES = ['value', 'language', 'mode', 'label', 'placeholder', 'rows', 'readonly', 'name', 'disabled', 'required']
 
   it('has a leading frontmatter fence and a prose body', () => {
     expect(fence.length).toBeGreaterThan(0)

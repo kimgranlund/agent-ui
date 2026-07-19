@@ -61,6 +61,27 @@
   --ui-code-editor-token-string: var(--md-sys-color-success-on-surface);
   --ui-code-editor-token-link: var(--md-sys-color-accent-on-surface);
   --ui-code-editor-token-punctuation: var(--md-sys-color-neutral-on-surface); /* default ink */
+
+  /* Richtext live-preview tokens (ADR-0147) — heading SCALE off the component's own font var; h6 is
+     weight-only (scale 1). rt-* classes sit beside tok-* (a deliberate namespacing choice, zero contract
+     weight — LLD-C3's non-decision). */
+  --ui-code-editor-rt-h1-scale: 1.6;
+  --ui-code-editor-rt-h2-scale: 1.45;
+  --ui-code-editor-rt-h3-scale: 1.3;
+  --ui-code-editor-rt-h4-scale: 1.15;
+  --ui-code-editor-rt-h5-scale: 1.05;
+  --ui-code-editor-rt-h6-scale: 1;
+  --ui-code-editor-rt-heading-weight: 700;
+  --ui-code-editor-rt-bullet-ink: var(--ui-code-editor-token-punctuation);
+  --ui-code-editor-rt-quote-border: var(--md-sys-color-neutral-outline-variant);
+
+  /* The mode-toggle part tokens. */
+  --ui-code-editor-toggle-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-code-editor-toggle-ink-hover: var(--md-sys-color-neutral-on-surface);
+  --ui-code-editor-toggle-ink-active: var(--md-sys-color-primary-on-surface);
+  --ui-code-editor-toggle-ink-disabled: var(--md-sys-color-neutral-low);
+  --ui-code-editor-toggle-bg-hover: var(--md-sys-color-neutral-container);
+  --ui-code-editor-toggle-size: 24px; /* WCAG 2.5.8 minimum target size (the ui-split --ui-split-hit-slop precedent) — this control carries no [scale]/[size] lever, so a fixed own-chain token, not --md-sys-height-sm */
 }
 
 /* disabled → a role-REPOINT (NOT opacity, tokens.md canon), the textarea precedent. */
@@ -145,6 +166,71 @@
   :scope .tok-string { color: var(--ui-code-editor-token-string); }
   :scope .tok-punctuation { color: var(--ui-code-editor-token-punctuation); }
 
+  /* richtext live-preview construct styling (ADR-0147 cl.4/cl.8) — rt-* classes, beside tok-* (CM measures
+     variable line-heights natively; no geometry compensation owed). */
+  :scope .rt-heading { font-weight: var(--ui-code-editor-rt-heading-weight); }
+  :scope .rt-h1 { font-size: calc(var(--ui-code-editor-font) * var(--ui-code-editor-rt-h1-scale)); }
+  :scope .rt-h2 { font-size: calc(var(--ui-code-editor-font) * var(--ui-code-editor-rt-h2-scale)); }
+  :scope .rt-h3 { font-size: calc(var(--ui-code-editor-font) * var(--ui-code-editor-rt-h3-scale)); }
+  :scope .rt-h4 { font-size: calc(var(--ui-code-editor-font) * var(--ui-code-editor-rt-h4-scale)); }
+  :scope .rt-h5 { font-size: calc(var(--ui-code-editor-font) * var(--ui-code-editor-rt-h5-scale)); }
+  :scope .rt-h6 { font-size: calc(var(--ui-code-editor-font) * var(--ui-code-editor-rt-h6-scale)); }
+  :scope .rt-strong { font-weight: 700; }
+  :scope .rt-emphasis { font-style: italic; }
+  :scope .rt-code { font-family: monospace; }
+  :scope .rt-link { text-decoration: underline; }
+  :scope .rt-quote-line {
+    border-inline-start: 2px solid var(--ui-code-editor-rt-quote-border);
+    padding-inline-start: var(--ui-code-editor-padding-inline);
+  }
+  :scope .rt-bullet {
+    color: var(--ui-code-editor-rt-bullet-ink);
+  }
+
+  /* the mode-toggle part (ADR-0147 cl.5) — availability-gated, sticky to the host's own scroller (NOT
+     `absolute`, which would scroll away with the content). `:not([hidden])` is the SAME load-bearing guard
+     as [data-part='editor']'s (an unconditional display rule would defeat a future `hidden` set the same
+     cascade-origin way — the exact regression class this file has already shipped once). The GLYPH itself
+     (not colour alone) signals the current mode — `</>`  source, `¶` rendered — satisfying SPEC-C5 alongside
+     `aria-pressed`. */
+  :scope > [data-part='mode-toggle']:not([hidden]) {
+    position: sticky;
+    inset-block-start: 0;
+    float: inline-end;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--ui-code-editor-toggle-size);
+    min-block-size: var(--ui-code-editor-toggle-size);
+    border-radius: var(--ui-code-editor-radius);
+    color: var(--ui-code-editor-toggle-ink);
+    font-size: var(--ui-code-editor-message-font);
+    cursor: pointer;
+    user-select: none;
+  }
+  :scope > [data-part='mode-toggle']:not([hidden])::before {
+    content: '</>';
+  }
+  :scope > [data-part='mode-toggle'][aria-pressed='true']:not([hidden])::before {
+    content: '¶';
+  }
+  :scope > [data-part='mode-toggle'][aria-pressed='true']:not([hidden]) {
+    color: var(--ui-code-editor-toggle-ink-active);
+  }
+  :scope > [data-part='mode-toggle']:not([hidden]):hover {
+    background: var(--ui-code-editor-toggle-bg-hover);
+    color: var(--ui-code-editor-toggle-ink-hover);
+  }
+  :scope > [data-part='mode-toggle']:not([hidden]):focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+  :scope > [data-part='mode-toggle'][aria-disabled='true']:not([hidden]) {
+    pointer-events: none;
+    cursor: default;
+    color: var(--ui-code-editor-toggle-ink-disabled);
+  }
+
   /* the filled/container state ladder (TKT-0062, mutual-exclusion precedence — the textarea precedent). The
      "filled" signal keys off EITHER surface carrying content: the plain editor is non-empty, or a CM mount is
      present (CM only mounts once there is an editable markdown surface, and its own content carries the text). */
@@ -215,9 +301,28 @@
     :scope .tok-punctuation {
       color: CanvasText; /* a token is NEVER invisible — every tier degrades to plain ink (SPEC-C5 AC2) */
     }
+    /* richtext constructs degrade the SAME way (ADR-0147 cl.8) — weight/style/size survive (they are not
+       colour), only the hue rides CanvasText; the rt-quote-line border and the bullet glyph stay visible too. */
+    :scope .rt-heading,
+    :scope .rt-link,
+    :scope .rt-code,
+    :scope .rt-bullet {
+      color: CanvasText;
+    }
+    :scope .rt-quote-line {
+      border-inline-start-color: CanvasText;
+    }
+    :scope > [data-part='mode-toggle']:not([hidden]) {
+      color: ButtonText;
+      border: 1px solid ButtonText;
+    }
     :scope:is([disabled], :state(disabled)) {
       border-color: GrayText;
       color: GrayText;
+    }
+    :scope > [data-part='mode-toggle'][aria-disabled='true']:not([hidden]) {
+      color: GrayText;
+      border-color: GrayText;
     }
   }
 }

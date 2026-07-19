@@ -1,6 +1,12 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { userEvent } from 'vitest/browser'
+import { server, cdp, userEvent } from 'vitest/browser'
 import type { UICodeEditorElement } from './editor.ts'
+
+/** Minimal CDP surface (the button-states.browser.test.ts precedent) — `cdp()`'s public type is empty; the
+ *  playwright provider gives `.send` at runtime. Chromium-only (WebKit exposes no CDP forced-colors emulation). */
+interface CdpSession {
+  send(method: string, params?: Record<string, unknown>): Promise<unknown>
+}
 
 // The cross-engine browser smoke for ui-code-editor (ADR-0139 cl.5). jsdom is BLIND to the CodeMirror path
 // (codeMirrorCanMount() is false there, editor.test.ts covers the plain-surface + FACE contract) — so THIS
@@ -38,6 +44,11 @@ afterEach(async () => {
 
 const cmOf = (field: Element): HTMLElement | null => field.querySelector('[data-part="cm"]')
 const cmContentOf = (field: Element): HTMLElement | null => field.querySelector('.cm-content')
+
+// CodeMirror's default/history keymaps bind "Mod-*" — Cmd on Mac, Ctrl elsewhere (resolved off the REAL host
+// platform Playwright reports, not the engine). Undo/select-all below must send the modifier CM itself expects.
+const MOD = /mac/i.test(navigator.platform) ? 'Meta' : 'Control'
+const modKey = (key: string): string => `{${MOD}>}${key}{/${MOD}}`
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  [1] CodeMirror lazily loads + mounts for language="markdown" (both engines)
@@ -206,5 +217,372 @@ describe('ui-code-editor — M1/M2/M3 handoff + event-contract fixes (both engin
     await userEvent.keyboard('x')
     await expect.poll(() => hostInputs, { timeout: 2000 }).toBe(1)
     expect(leaked, 'a raw CodeMirror contentDOM input leaked through the host — two events per keystroke (M3)').toBe(0)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  ADR-0147 — the richtext live-preview mode (decomposition leaves n3/n5/n6/n7/n8/n9/n12, both engines)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+// A fixture exercising every v1 construct: ATX heading, strong, emphasis, inline code, a bullet list, a
+// blockquote, a link, an ORDERED list (component-review MAJOR-1 — Lezer's ListItem/ListMark are shared by
+// bullet AND ordered lists; a numbered list must stay VERBATIM SOURCE, never bulleted), and a fenced code
+// block (which must stay VERBATIM) — plus a trailing plain paragraph to park the cursor away from every
+// construct (ADR-0147 cl.3's reveal-near-cursor, cl.4's construct set).
+const RICHTEXT_SEED = [
+  '## Title',
+  '',
+  '**bold** _em_ `code`',
+  '',
+  '- item one',
+  '- item two',
+  '',
+  '1. first',
+  '2. second',
+  '',
+  '> quote line',
+  '',
+  '[go](https://example.com/test) tail',
+  '',
+  '```js',
+  'const x = 1',
+  '```',
+  '',
+  'plain paragraph for the cursor to park on',
+].join('\n')
+
+describe('ui-code-editor — richtext mode mounts + reconfigures the LIVE view (ADR-0147 n3, both engines)', () => {
+  it('setting mode="richtext" AFTER mount reconfigures the SAME view — no document/selection loss, undo still reaches pre-toggle edits', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard('## Heading')
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('## Heading')
+
+    field.mode = 'richtext'
+    await expect.poll(() => field.querySelector('.rt-h2') !== null, { timeout: 2000 }).toBe(true)
+    expect(field.value, 'the document must not change across a mode reconfigure').toBe('## Heading')
+
+    field.mode = 'source'
+    await expect.poll(() => field.querySelector('.rt-h2'), { timeout: 2000 }).toBeNull()
+    expect(field.value).toBe('## Heading')
+
+    // undo still reaches the pre-toggle edit — the Compartment reconfigure never resets history (ADR-0147 cl.2)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(modKey('z'))
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('')
+  })
+
+  it('richtextAvailable is false for a non-markdown language — mode="richtext" never decorates, the toggle never renders', async () => {
+    const { field } = mount(`<ui-code-editor language="plain" mode="richtext" value="## not markdown" ${SIZED}></ui-code-editor>`)
+    await new Promise((r) => setTimeout(r, 800)) // give any (absent) enhancement a real window to (not) happen
+    expect(cmOf(field)).toBeNull() // language="plain" never mounts CM at all (editable-first, ADR-0139 cl.5)
+    expect(field.querySelector('[data-part="mode-toggle"]')).toBeNull()
+  })
+})
+
+describe('ui-code-editor — richtext construct decorations (ADR-0147 n5, both engines)', () => {
+  it('styles the v1 constructs and hides their markup once the cursor is parked away from them', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = RICHTEXT_SEED
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('paragraph'), { timeout: 2000 }).toBe(true)
+    field.selectToEnd() // parks the caret on the trailing plain paragraph — every construct above un-reveals
+    await expect.poll(() => field.querySelector('.rt-h2') !== null, { timeout: 2000 }).toBe(true)
+
+    const content = cmContentOf(field) as HTMLElement
+    const text = (): string => content.textContent ?? ''
+
+    // headings: styled, marker hidden
+    expect(text()).not.toContain('##')
+    const baseSize = parseFloat(getComputedStyle(content).fontSize)
+    const headingSize = parseFloat(getComputedStyle(field.querySelector('.rt-h2') as Element).fontSize)
+    expect(headingSize, 'the heading must render LARGER than the base font').toBeGreaterThan(baseSize)
+
+    // strong/emphasis/inline-code: styled, marks hidden
+    expect(field.querySelector('.rt-strong')).not.toBeNull()
+    expect(field.querySelector('.rt-emphasis')).not.toBeNull()
+    expect(field.querySelector('.rt-code')).not.toBeNull()
+    expect(text()).not.toContain('**')
+
+    // bullets: both list markers replaced by the widget
+    expect(field.querySelectorAll('.rt-bullet')).toHaveLength(2)
+
+    // ordered list: NEVER bulleted (MAJOR-1 regression) — the numbers stay verbatim source
+    expect(text()).toContain('1. first')
+    expect(text()).toContain('2. second')
+
+    // blockquote: marker hidden, the quote-line class present
+    expect(field.querySelector('.rt-quote-line')).not.toBeNull()
+    expect(text()).not.toContain('>')
+
+    // link: marks hidden, text styled, URL never shown
+    expect(field.querySelector('.rt-link')).not.toBeNull()
+    expect(text()).not.toContain('[')
+    expect(text()).not.toContain('https://example.com/test')
+    expect(text()).toContain('go')
+
+    // fenced code stays VERBATIM — fences + contents render as source (no rt-* decoration inside)
+    expect(text()).toContain('```js')
+    expect(text()).toContain('const x = 1')
+  })
+
+  it('MAJOR-1 regression: an ordered list is NEVER destroyed by the bullet decoration — numbering stays intact', async () => {
+    // Lezer's markdown grammar shares ListItem/ListMark between bullet AND ordered lists; ADR-0147 cl.4
+    // names UNORDERED-list bullets only — an ordered marker ("1.", "2.", …) must render as source (the
+    // ADR's own "everything unnamed renders as source" rule), never replaced by the bullet widget.
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = '1. first\n2. second\n3. third\n\nplain paragraph for the cursor to park on'
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('paragraph'), { timeout: 2000 }).toBe(true)
+    field.selectToEnd() // parks the caret away from every list line
+
+    await new Promise((r) => setTimeout(r, 100)) // let the decoration rebuild settle
+    const content = cmContentOf(field) as HTMLElement
+    expect(content.textContent, 'ordered markers must stay verbatim — never replaced by a bullet glyph').toContain('1. first')
+    expect(content.textContent).toContain('2. second')
+    expect(content.textContent).toContain('3. third')
+    expect(content.textContent, 'no bullet glyph must appear for an ordered list').not.toContain('•')
+    expect(field.querySelectorAll('.rt-bullet'), 'an ordered list must produce ZERO bullet widgets').toHaveLength(0)
+  })
+})
+
+describe('ui-code-editor — reveal-near-cursor (ADR-0147 n6, both engines)', () => {
+  it('the cursor on the heading line reveals its raw ## (styling stays); moving away hides it again', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = RICHTEXT_SEED
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('Title'), { timeout: 2000 }).toBe(true)
+
+    // CM's default initial selection sits at document position 0 — ON the heading's own line.
+    await expect.poll(() => field.querySelector('.rt-h2') !== null, { timeout: 2000 }).toBe(true)
+    expect(cmContentOf(field)?.textContent, 'the cursor sits on the heading line — its marker must reveal').toContain('##')
+    expect(field.querySelector('.rt-h2'), 'styling stays applied even while the line is revealed').not.toBeNull()
+
+    // move the caret to the trailing paragraph — a DIFFERENT line — the marker hides again, styling stays.
+    field.selectToEnd()
+    await expect.poll(() => !cmContentOf(field)?.textContent?.includes('##'), { timeout: 2000 }).toBe(true)
+    expect(field.querySelector('.rt-h2')).not.toBeNull()
+  })
+
+  it('a multi-line selection reveals every intersected line', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = '> line one\n> line two\n\nplain tail'
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('tail'), { timeout: 2000 }).toBe(true)
+    field.selectToEnd()
+    await expect.poll(() => !cmContentOf(field)?.textContent?.includes('>'), { timeout: 2000 }).toBe(true)
+
+    // select the WHOLE document (both quote lines) — both QuoteMarks must reveal.
+    await userEvent.keyboard(modKey('a'))
+    await expect.poll(() => (cmContentOf(field)?.textContent?.match(/>/g) ?? []).length, { timeout: 2000 }).toBe(2)
+  })
+})
+
+describe('ui-code-editor — link activation (ADR-0147 n7, both engines)', () => {
+  it('Cmd/Ctrl+click on a decorated link opens its URL (noopener); a plain click does NOT open', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = '[go](https://example.com/test) tail'
+    await expect.poll(() => field.querySelector('.rt-link') !== null, { timeout: 2000 }).toBe(true)
+
+    const opened: string[][] = []
+    const original = window.open
+    window.open = ((url?: string | URL, target?: string, features?: string) => {
+      opened.push([String(url), target ?? '', features ?? ''])
+      return null
+    }) as typeof window.open
+
+    try {
+      const link = field.querySelector('.rt-link') as HTMLElement
+      const rect = link.getBoundingClientRect()
+      link.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: rect.x + 2, clientY: rect.y + 2, metaKey: true, ctrlKey: true }),
+      )
+      expect(opened, 'the modifier-click must open the URL').toHaveLength(1)
+      expect(opened[0][0]).toBe('https://example.com/test')
+      expect(opened[0][2]).toContain('noopener')
+
+      // a plain click does NOT open the URL — CM's own mousedown handling may still preventDefault (its normal
+      // click-to-place-caret bookkeeping, unrelated to our link handler, which itself returns false/no-op for
+      // a non-modifier click) — only the open-count is this handler's own contract.
+      const plain = new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: rect.x + 2, clientY: rect.y + 2 })
+      link.dispatchEvent(plain)
+      expect(opened, 'a plain click must NOT open the URL').toHaveLength(1)
+    } finally {
+      window.open = original
+    }
+  })
+
+  it('refuses a javascript: scheme link (sanitize-by-construction, R2)', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = '[bad](javascript:alert(1)) tail'
+    await expect.poll(() => field.querySelector('.rt-link') !== null, { timeout: 2000 }).toBe(true)
+
+    let opened = 0
+    const original = window.open
+    window.open = (() => {
+      opened++
+      return null
+    }) as typeof window.open
+    try {
+      const link = field.querySelector('.rt-link') as HTMLElement
+      const rect = link.getBoundingClientRect()
+      link.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: rect.x + 2, clientY: rect.y + 2, metaKey: true, ctrlKey: true }),
+      )
+      expect(opened, 'a javascript: URL must never open').toBe(0)
+    } finally {
+      window.open = original
+    }
+  })
+})
+
+describe('ui-code-editor — the built-in mode toggle (ADR-0147 n8, both engines)', () => {
+  it('renders once richtext is available; click/Enter/Space each flip mode + emit ONE toggle; a programmatic set is silent', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 2000 }).toBe(true)
+    const toggle = field.querySelector('[data-part="mode-toggle"]') as HTMLElement
+
+    expect(toggle.getAttribute('role')).toBe('button')
+    expect(toggle.getAttribute('tabindex')).toBe('0')
+    expect(toggle.getAttribute('aria-pressed')).toBe('false')
+
+    let toggles = 0
+    field.addEventListener('toggle', () => toggles++)
+
+    await userEvent.click(toggle)
+    expect(field.mode).toBe('richtext')
+    expect(toggle.getAttribute('aria-pressed')).toBe('true')
+    expect(toggles).toBe(1)
+
+    toggle.focus()
+    await userEvent.keyboard('{Enter}')
+    expect(field.mode).toBe('source')
+    expect(toggles).toBe(2)
+
+    toggle.focus()
+    await userEvent.keyboard(' ')
+    expect(field.mode).toBe('richtext')
+    expect(toggles).toBe(3)
+
+    // a PROGRAMMATIC mode set is silent — but aria-pressed still syncs (the value/input symmetry, F4)
+    field.mode = 'source'
+    await expect.poll(() => toggle.getAttribute('aria-pressed'), { timeout: 1000 }).toBe('false')
+    expect(toggles, 'a programmatic mode set must never emit toggle').toBe(3)
+  })
+
+  it('disabled hosts render the toggle non-operable; readonly hosts keep it fully operable (F5)', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 2000 }).toBe(true)
+    const toggle = (): HTMLElement => field.querySelector('[data-part="mode-toggle"]') as HTMLElement
+
+    field.readonly = true
+    await expect.poll(() => toggle().getAttribute('tabindex'), { timeout: 1000 }).toBe('0')
+    expect(toggle().hasAttribute('aria-disabled')).toBe(false)
+
+    field.disabled = true
+    await expect.poll(() => toggle().hasAttribute('tabindex'), { timeout: 1000 }).toBe(false)
+    expect(toggle().getAttribute('aria-disabled')).toBe('true')
+  })
+})
+
+describe('ui-code-editor — richtext CSS + a11y (ADR-0147 n9, both engines)', () => {
+  it('every new [data-part] display rule carries the :not([hidden]) guard — the mode-toggle part vanishes when hidden', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 2000 }).toBe(true)
+    const toggle = field.querySelector('[data-part="mode-toggle"]') as HTMLElement
+    expect(getComputedStyle(toggle).display).not.toBe('none')
+    toggle.hidden = true
+    expect(getComputedStyle(toggle).display, 'an author display rule without :not([hidden]) would defeat `hidden`').toBe('none')
+    toggle.hidden = false
+  })
+
+  it('the mode switch SNAPS — no transition on the toggle', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 2000 }).toBe(true)
+    const toggle = field.querySelector('[data-part="mode-toggle"]') as HTMLElement
+    expect(getComputedStyle(toggle).transitionDuration).toMatch(/^0s(,\s*0s)*$/)
+  })
+
+  it('forced-colors keeps every rt-* construct + the toggle legible — Chromium emulates (CDP); WebKit asserts the baseline', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = '## Title\n\nplain paragraph for the cursor to park on'
+    await expect.poll(() => field.querySelector('.rt-h2') !== null, { timeout: 2000 }).toBe(true)
+    field.selectToEnd()
+    await expect.poll(() => !cmContentOf(field)?.textContent?.includes('##'), { timeout: 2000 }).toBe(true)
+
+    if (server.browser !== 'chromium') {
+      // WebKit exposes no CDP / forced-colors emulation (the documented split) — assert we are genuinely NOT
+      // in forced-colors (so the Chromium proof below is not silently faked) and stop.
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
+      const heading = field.querySelector('.rt-h2') as HTMLElement
+      expect(getComputedStyle(heading).color, 'a heading must never go invisible under forced-colors').not.toBe('rgba(0, 0, 0, 0)')
+      expect(getComputedStyle(heading).fontWeight, 'weight must survive forced-colors (SPEC-C5 — no info rides hue alone)').not.toBe('400')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+})
+
+describe('ui-code-editor — cross-mode identity + a long-document sanity probe (ADR-0147 n12, both engines)', () => {
+  it('.value is byte-identical across repeated mode flips and typing-in-richtext; blur-with-change timing is unchanged', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    let changes = 0
+    field.addEventListener('change', () => changes++)
+
+    field.mode = 'richtext'
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 2000 }).toBe(true)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard('## typed in richtext')
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('## typed in richtext')
+    expect(changes, 'change must not fire on keystrokes in richtext either').toBe(0)
+
+    field.mode = 'source'
+    field.mode = 'richtext'
+    field.mode = 'source'
+    expect(field.value, 'repeated mode flips must never mutate the document').toBe('## typed in richtext')
+
+    await userEvent.click(document.body) // real blur — commits exactly once, same timing as source mode
+    await expect.poll(() => changes, { timeout: 2000 }).toBe(1)
+  })
+
+  it('a long document (500+ lines) stays responsive under richtext — typing latency is observably sane', async () => {
+    const lines: string[] = []
+    for (let i = 0; i < 520; i++) lines.push(i % 10 === 0 ? `## Section ${i}` : `plain line ${i} with **bold** text`)
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = lines.join('\n')
+    // the FIRST page renders synchronously (CM virtualizes — only the visible viewport is in the DOM); a far
+    // line only appears once scrolled into view, which selectToEnd() below causes.
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('Section 0'), { timeout: 5000 }).toBe(true)
+    expect(field.value.split('\n')).toHaveLength(520)
+
+    field.selectToEnd() // scrolls the caret (document end) into view — only the near-end lines, not line 510
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('line 519'), { timeout: 5000 }).toBe(true)
+    await expect.poll(() => field.querySelectorAll('.rt-strong').length > 0, { timeout: 2000 }).toBe(true)
+
+    // type one character at the (visible) document end — must land promptly (viewport-bounded decoration
+    // rebuilds, ADR-0147's Consequences bullet: the per-keystroke cost stays O(visible), not O(document)).
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    const before = Date.now()
+    await userEvent.keyboard('Z')
+    await expect.poll(() => field.value.includes('Z'), { timeout: 1500 }).toBe(true)
+    expect(Date.now() - before, 'typing a single character took implausibly long — a full-document walk, not a viewport-bounded one').toBeLessThan(1500)
   })
 })

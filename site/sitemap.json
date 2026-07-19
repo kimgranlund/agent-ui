@@ -76,7 +76,7 @@
       "name": "Code Editor",
       "tag": "ui-code-editor",
       "url": "./code-editor-doc.html",
-      "description": "A form-associated, editable-first source editor with markdown syntax highlighting — a plain contenteditable surface that CodeMirror 6 progressively enhances (lazy-loaded, ADR-0139); the editor counterpart of the display-only ui-code.",
+      "description": "A form-associated, editable-first source editor with markdown syntax highlighting — a plain contenteditable surface that CodeMirror 6 progressively enhances (lazy-loaded, ADR-0139), with an opt-in richtext live-preview mode (decoration-rendered over the SAME document, ADR-0147); the editor counterpart of the display-only ui-code.",
       "level": "L1",
       "section": "Components"
     },

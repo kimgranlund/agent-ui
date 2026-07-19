@@ -1,13 +1,13 @@
 ---
-# editor.md frontmatter — the attributes-as-API descriptor for ui-code-editor (ADR-0004 / ADR-0139). The
-# machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the /site doc. The
+# editor.md frontmatter — the attributes-as-API descriptor for ui-code-editor (ADR-0004 / ADR-0139 / ADR-0147).
+# The machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the /site doc. The
 # `attributes[]` block MUST mirror editor.ts `static props` (the ...UIFormElement.formProps spread —
-# name/disabled/required — plus value/language/label/placeholder/rows/readonly) — the contract↔props
+# name/disabled/required — plus value/language/mode/label/placeholder/rows/readonly) — the contract↔props
 # trip-wire (editor-descriptor.test.ts) and the frontmatter schema both target this fence. The element lives
 # OUTSIDE @agent-ui/components, so it carries NO catalog row (ADR-0139 cl.4); the fleet DoD (descriptor,
 # probes, states, forced-colors, reduced-motion) still applies.
 tag: ui-code-editor
-description: A form-associated, editable-first source editor with markdown syntax highlighting — a plain contenteditable surface that CodeMirror 6 progressively enhances (lazy-loaded, ADR-0139); the editor counterpart of the display-only ui-code.
+description: A form-associated, editable-first source editor with markdown syntax highlighting — a plain contenteditable surface that CodeMirror 6 progressively enhances (lazy-loaded, ADR-0139), with an opt-in richtext live-preview mode (decoration-rendered over the SAME document, ADR-0147); the editor counterpart of the display-only ui-code.
 tier: control          # geometry size-class (Control band); the geometry LEVER is ADR-0134's multi-line law (rows × line-box + padding as a growable minimum), not the single-line (scale×size)→§1-row lookup
 extends: UIFormElement  # FACE form-associated control (value/validity participation via ElementInternals; ADR-0013)
 
@@ -20,6 +20,10 @@ attributes:            # attributes-as-API — mirrors editor.ts `static props` 
     type: string
     default: ''
     reflect: true      # v1: `markdown` triggers CodeMirror + syntax highlighting; unknown/absent ⇒ plain, no highlight, no CM load (ADR-0139 cl.4). Reflects for [language] CSS hooks
+  - name: mode
+    type: string
+    default: source
+    reflect: true      # 'source' (default) | 'richtext' (ADR-0147). Unknown ⇒ treated as 'source'. Reflects for [mode] CSS hooks. `.value` stays the markdown string in BOTH modes — no serializer, no second document model
   - name: label
     type: string
     default: ''
@@ -74,6 +78,9 @@ events:
   - name: change
     detail: 'null'
     description: Fired on commit — blur-with-change ONLY (ADR-0134 — Enter inserts a newline and never commits). Byte-identical timing to ui-textarea's, on both the plain and CodeMirror surfaces. Matches native <textarea> change semantics.
+  - name: toggle
+    detail: 'null'
+    description: Fired ONLY when the mode-toggle part is activated by the USER (click/Enter/Space) — flips `mode` between 'source' and 'richtext' (ADR-0147). A programmatic `mode` set is silent (the value/input symmetry) — never fired on prop-set.
 
 slots: []              # no adornment machinery (the editable-source surface has no leading/trailing slots)
 
@@ -82,6 +89,8 @@ parts:                 # the editable surfaces are control-owned PARTS, not slot
     description: The plain contenteditable editable surface (the editable-first fallback) — a control-created light-DOM `<div data-part="editor" contenteditable="plaintext-only" role="textbox" aria-multiline="true">`. Created ONCE (idempotent guard) and NEVER re-rendered; carries role=textbox (the host carries no role/aria-* attribute). Hidden (kept in the DOM) once CodeMirror enhances the control; restored on disconnect.
   - name: cm
     description: The CodeMirror mount host — a control-created `<div data-part="cm">` inserted before the plain editor and populated by the lazy-loaded CodeMirror 6 view when language="markdown" enhancement succeeds. Absent under jsdom / on load failure / for non-markdown languages (the plain editor stays the surface).
+  - name: mode-toggle
+    description: The built-in richtext mode toggle (ADR-0147) — a control-created `<div data-part="mode-toggle" role="button" tabindex="0" aria-pressed aria-label="Rendered markdown view">`, created ONLY once CodeMirror enhances AND the markdown language pack loaded (richtextAvailable) — the affordance appears WITH the capability, never before it. Absent under jsdom / on load failure / for non-markdown languages / while the optional markdown pack failed to load. Removed on disconnect, recreated on a reconnect's re-enhance. Placed first child of the host (sticky, inline-end corner) so tab order is toggle → editor surface. Disabled hosts render it non-operable (no tabindex, aria-disabled); readonly hosts keep it fully operable (a readonly rendered view is a legitimate reading surface).
 
 customStates:          # :state() hooks the stylesheet keys off — set via internals.states, never host attrs
   - ready              # the motion gate (ADR-0008): armed one frame past first paint so the upgrade SNAPS and only subsequent state changes animate
@@ -105,7 +114,10 @@ keyboard:
     action: Inserts a newline (native <textarea> parity) — does NOT commit. Commit is blur-with-change only, on both surfaces.
   - keys: typing
     action: Edits the surface; each edit updates value (surface→model) and emits input (suppressed mid IME composition on the plain surface).
+  - keys: Enter / Space (on the mode-toggle part)
+    action: Flips `mode` between 'source' and 'richtext' and emits ONE `toggle` (ADR-0147). Space's default (page scroll) is prevented.
   - note: The plain editor is intrinsically focusable (contenteditable); CodeMirror's content DOM is focusable when enhanced. host.focus() forwards to the live surface. disabled removes focusability; readonly keeps it focusable and selectable but not editable.
+  - note: CodeMirror's own `indentWithTab` captures Tab inside the editor content — Esc then Tab is CM's standing escape hatch to move focus onward (unchanged by richtext mode).
 
 geometry:
   sizeClass: control
@@ -161,6 +173,31 @@ For `language="markdown"`, CodeMirror's `lang-markdown` pack colours the markdow
 **class-based highlight tokens** (`tok-*`) mapped to `--ui-code-editor-token-*` roles fed by the fleet
 `--md-sys-color-*` ladders — `EditorView.theme()` stays structural-only (ADR-0139 cl.4). Token colour is a
 non-essential enhancement: the source is legible as plain ink with or without it.
+
+## Richtext live preview (`mode`, ADR-0147)
+
+`mode="richtext"` turns on an Obsidian-style **live preview**: CodeMirror decorations style the markdown
+constructs (headings, **bold**, _emphasis_, `inline code`, links, bullets, blockquotes) and hide their raw
+markup — except on the line(s) the selection touches, where the raw source reveals for editing (**reveal-near-
+cursor**). This is a pure VIEW transform over the exact same `EditorView` and document as `mode="source"`:
+there is no second DOM tree, no serializer, and no round-trip step — `.value` is the markdown string in BOTH
+modes, byte-identical FACE participation and `input`/`change` timing. Fenced code blocks always render
+verbatim (fences visible, contents keep their `tok-*` highlight — code inside markdown is source by nature);
+tables, images, and task-list checkboxes are explicitly out of v1 scope and render as source.
+
+**Availability is capability-gated (editable-first untouched, ADR-0139 cl.5).** Richtext needs the CodeMirror
+mount AND the markdown language pack — no syntax tree, nothing to decorate. Wherever CM cannot or does not
+mount (jsdom, load failure/timeout, a non-markdown `language`), `mode="richtext"` is **inert**: the attribute
+stands, the plain source surface stays fully editable, and the built-in mode toggle never renders. The
+affordance appears WITH the capability.
+
+**The built-in toggle** (`[data-part="mode-toggle"]`) is keyboard-operable (click, Enter, Space), announces its
+state via `aria-pressed`, and emits ONE `toggle` event — but only on a USER-initiated flip; a programmatic
+`mode` set is silent (the same `value`/`input` symmetry). Disabled hosts render it non-operable; readonly
+hosts keep it fully operable (a readonly rendered view is a legitimate reading surface).
+
+Cmd/Ctrl+click on a decorated link opens its URL (`noopener`) — a plain click stays cursor placement, editing
+remains primary. Only `http:`/`https:`/`mailto:`/relative URLs are ever opened.
 
 ## Validity, accessibility & form participation
 

@@ -18,6 +18,7 @@ import type { ViewUpdate } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { tags as t } from '@lezer/highlight'
+import { richtextExtension } from './cm-richtext.ts'
 
 // Marks a PROGRAMMATIC document write (a model→surface `setDoc`) so the update listener can distinguish it
 // from a real user edit — a programmatic write must NOT fire `onDocChange` (which would re-emit `input` on a
@@ -62,6 +63,11 @@ export interface CmHandle {
   focusEnd(): void
   /** Reconfigure editable vs read-only at runtime (own `disabled`/`readonly` or a form-disabled change). */
   setEditable(editable: boolean): void
+  /** Whether richtext CAN render here — true iff the lang-markdown pack loaded (no tree ⇒ nothing to decorate,
+   *  ADR-0147 cl.6). False forever for this mount when the optional markdown pack failed to load. */
+  readonly richtextAvailable: boolean
+  /** Reconfigure the richtext decoration layer at runtime (the `setEditable` Compartment precedent, ADR-0147 cl.2). */
+  setRichtext(on: boolean): void
   /** Tear the view down (disconnect / stale-mount discard). */
   destroy(): void
 }
@@ -71,6 +77,8 @@ export interface CmOptions {
   doc: string
   placeholder: string
   editable: boolean
+  /** Initial mode, captured at mount (like `placeholder`/`language`) — but LIVE afterward via `setRichtext` (ADR-0147 cl.1). */
+  richtext: boolean
   /** Fired on every document change (surface→model) — editor.ts sets `value` + emits `input`. */
   onDocChange(value: string): void
   /** Fired on focus (true) / blur (false) — editor.ts drives the blur-with-change `change` timing. */
@@ -99,6 +107,10 @@ async function loadMarkdown(): Promise<Extension | null> {
 export async function mountCodeMirror(opts: CmOptions): Promise<CmHandle> {
   const languageExtension = await loadMarkdown()
   const editableCompartment = new Compartment()
+  const richtextCompartment = new Compartment()
+  // No syntax tree ⇒ nothing to decorate (ADR-0147 cl.6) — richtext stays unavailable for this mount's
+  // lifetime when the optional markdown pack failed to load, matching the shipped highlight-degrade parity.
+  const richtextAvailable = languageExtension !== null
 
   const extensions: Extension[] = [
     structuralTheme,
@@ -115,6 +127,7 @@ export async function mountCodeMirror(opts: CmOptions): Promise<CmHandle> {
       if (update.focusChanged) opts.onFocusChange(update.view.hasFocus)
     }),
     editableCompartment.of(editableExtensions(opts.editable)),
+    richtextCompartment.of(opts.richtext && richtextAvailable ? richtextExtension() : []),
   ]
   if (opts.placeholder) extensions.push(cmPlaceholder(opts.placeholder))
   if (languageExtension) extensions.push(languageExtension)
@@ -138,6 +151,12 @@ export async function mountCodeMirror(opts: CmOptions): Promise<CmHandle> {
     },
     setEditable(editable: boolean): void {
       view.dispatch({ effects: editableCompartment.reconfigure(editableExtensions(editable)) })
+    },
+    richtextAvailable,
+    setRichtext(on: boolean): void {
+      // A pure Compartment reconfigure — same doc, same selection, same undo history; nothing remounts,
+      // nothing reparses from DOM (ADR-0147 cl.2).
+      view.dispatch({ effects: richtextCompartment.reconfigure(on && richtextAvailable ? richtextExtension() : []) })
     },
     destroy(): void {
       view.destroy()
