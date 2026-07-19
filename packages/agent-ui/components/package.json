@@ -1,5 +1,6 @@
 {
   "name": "@agent-ui/components",
+  "description": "The agent-ui component framework: a fine-grained signals kernel, 50+ accessible light-DOM `ui-*` custom elements (form controls, containers, overlays, data-viz), and a token-driven styling system.",
   "version": "0.0.0",
   "private": true,
   "type": "module",

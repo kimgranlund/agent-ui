@@ -1,5 +1,6 @@
 {
   "name": "@agent-ui/a2ui",
+  "description": "A2UI (agent-generated UI) support for the agent-ui family: a zero-dependency renderer for the A2UI wire protocol, a strict message validator, and the default component catalog mapping protocol types onto `ui-*` elements.",
   "version": "0.0.0",
   "private": true,
   "type": "module",

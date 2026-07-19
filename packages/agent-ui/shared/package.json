@@ -1,5 +1,6 @@
 {
   "name": "@agent-ui/shared",
+  "description": "Design tokens and foundation stylesheets for the agent-ui family: the `--md-sys-*` color/dimension token system (an extension of Material Design 3), the typographic scale, and loadable theme packs.",
   "version": "0.0.0",
   "private": true,
   "type": "module",
