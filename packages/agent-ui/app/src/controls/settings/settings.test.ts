@@ -140,6 +140,40 @@ describe('UISettingsElement — composition (SPEC-R9, "0 bespoke shell CSS")', (
   })
 })
 
+describe('UISettingsElement — single-section posture (GH #50)', () => {
+  it('stamps data-single-section for a ONE-section schema; the section still resolves + renders', () => {
+    const el = new UISettingsElement()
+    el.schema = SCHEMA_WITH_REACTIVE_VALIDATION // one section ('general')
+    mount(el)
+    expect(el.hasAttribute('data-single-section')).toBe(true)
+    expect(el.section).toBe('general') // the posture is presentation-only — resolution is unchanged
+    const panel = el.querySelector('[data-part="panel"]') as HTMLElement
+    expect(panel.querySelector('ui-checkbox, ui-switch')).not.toBeNull() // the lone section's field mounts
+  })
+
+  it('a multi-section schema clears it — including on a live reassignment BOTH ways', async () => {
+    const el = new UISettingsElement()
+    el.schema = SCHEMA // two sections
+    mount(el)
+    expect(el.hasAttribute('data-single-section')).toBe(false)
+    el.schema = SCHEMA_WITH_REACTIVE_VALIDATION // reassign → one section (async effect flush)
+    await el.updateComplete
+    expect(el.hasAttribute('data-single-section')).toBe(true)
+    el.schema = SCHEMA // and back → two sections
+    await el.updateComplete
+    expect(el.hasAttribute('data-single-section')).toBe(false)
+  })
+
+  it('never stamps it without a supported schema (absent schema · unsupported version)', () => {
+    const bare = mount(new UISettingsElement()) // no schema at all
+    expect(bare.hasAttribute('data-single-section')).toBe(false)
+    const unsupported = new UISettingsElement()
+    unsupported.schema = { version: 2 as unknown as 1, sections: [{ id: 'x', label: 'X', fields: [] }] }
+    mount(unsupported)
+    expect(unsupported.hasAttribute('data-single-section')).toBe(false)
+  })
+})
+
 describe('UISettingsElement — section → panel/rail-marker + select/change (SPEC-R9 AC2)', () => {
   it('the resolved default at connect does NOT fire select/change', () => {
     const el = document.createElement('ui-settings') as UISettingsElement

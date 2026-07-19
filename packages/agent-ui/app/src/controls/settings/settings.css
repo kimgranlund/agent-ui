@@ -45,6 +45,29 @@
     color: var(--ui-settings-ink);
     font-style: italic;
   }
+
+  /* GH #50 — the single-section posture (the host marker settings.ts stamps per build): with one
+     section there is nothing to navigate, so the composed master-detail renders DETAIL-ONLY — the
+     rail/list pane, the wide-mode separator, and the narrow drill-in's Back affordance all hide, and
+     the detail pane takes the full width. Specificity note (load-bearing): master-detail.css's narrow
+     branch REVEALS the back affordance at (0,3,0) (`:scope[data-view='detail'] [data-part='back']`)
+     inside its own closer scope — scoped-style cascade compares specificity BEFORE scope proximity, so
+     each rule here carries the `ui-master-detail` type selector to sit at (0,3,1)/(0,3,2) and win.
+     Multi-section schemas never match — zero behavior change outside the one-section case. */
+  :scope[data-single-section] ui-master-detail ui-split-pane[data-role='list'] {
+    display: none;
+  }
+  :scope[data-single-section] ui-master-detail [data-separator] {
+    display: none;
+  }
+  :scope[data-single-section] ui-master-detail [data-part='back'] {
+    display: none;
+  }
+  :scope[data-single-section] ui-master-detail ui-split-pane[data-role='detail'] {
+    flex: 1 1 auto;
+    max-width: none;
+    max-height: none;
+  }
 }
 /* No forced-colors block — documented absence (TKT-0066, the list.css/theme-provider.css dialect): this
    sheet paints ink/typography only (no borders or fills that would vanish under WHCM's repaint); the

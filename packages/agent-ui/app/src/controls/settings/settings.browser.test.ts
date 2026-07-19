@@ -141,6 +141,67 @@ describe('ui-settings cross-engine smoke — narrow drill-in (inherited from ui-
   })
 })
 
+// ── GH #50 — the single-section posture: detail-only, no rail, no Back, at EVERY width ──────────────────
+
+const SINGLE_SECTION_SCHEMA: SettingsSchema = {
+  version: 1,
+  sections: [
+    {
+      id: 'agent', label: 'Agent',
+      fields: [{ key: 'name', type: 'text', label: 'Name', default: '' }],
+    },
+  ],
+}
+
+describe('ui-settings — single-section posture renders detail-only (GH #50)', () => {
+  function mountSingle(width: string): { wrapper: HTMLElement; el: UISettingsElement } {
+    const wrapper = document.createElement('div')
+    wrapper.style.containerType = 'inline-size'
+    wrapper.style.width = width
+    wrapper.style.height = '500px'
+    const el = document.createElement('ui-settings') as UISettingsElement
+    el.store = createMemoryStore()
+    el.schema = SINGLE_SECTION_SCHEMA
+    wrapper.append(el)
+    document.body.append(wrapper)
+    mounted.push(wrapper)
+    return { wrapper, el }
+  }
+
+  it('WIDE: the list pane + separator hide, the Back affordance hides, the detail pane fills', async () => {
+    const { el } = mountSingle('900px')
+    await el.updateComplete
+    expect(el.hasAttribute('data-single-section')).toBe(true)
+    const listPane = el.querySelector('ui-split-pane[data-role="list"]') as HTMLElement
+    const back = el.querySelector('[data-part="back"]') as HTMLElement
+    const detailPane = el.querySelector('ui-split-pane[data-role="detail"]') as HTMLElement
+    expect(getComputedStyle(listPane).display, 'the one-item rail is not navigation — it must hide').toBe('none')
+    expect(getComputedStyle(back).display, 'no list to go back to — the Back affordance must hide').toBe('none')
+    expect(getComputedStyle(detailPane).display).not.toBe('none')
+    // the lone visible pane takes the full container width (minus nothing — no separator remains)
+    expect(detailPane.getBoundingClientRect().width).toBeGreaterThan(850)
+  })
+
+  it('NARROW (< 40rem, the drill-in branch): the Back affordance STAYS hidden — the specificity contract vs master-detail.css:100 holds', async () => {
+    const { wrapper, el } = mountSingle('900px')
+    await el.updateComplete
+    wrapper.style.width = '300px'
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))) // container-query reflow
+    const back = el.querySelector('[data-part="back"]') as HTMLElement
+    const panel = el.querySelector('[data-part="panel"]') as HTMLElement
+    expect(getComputedStyle(back).display, 'narrow drill-in must NOT resurface the Back (the reveal rule loses on specificity)').toBe('none')
+    expect(getComputedStyle(panel).display, 'the detail panel still shows narrow').not.toBe('none')
+  })
+
+  it('control case: the MULTI-section fixture still shows its rail wide (zero behavior change outside the posture)', async () => {
+    const { el } = mountSettings('900px')
+    await el.updateComplete
+    expect(el.hasAttribute('data-single-section')).toBe(false)
+    const listPane = el.querySelector('ui-split-pane[data-role="list"]') as HTMLElement
+    expect(getComputedStyle(listPane).display).not.toBe('none')
+  })
+})
+
 describe('ui-settings — reduced motion (inherited — no bespoke transition of its OWN)', () => {
   it('settings.css declares no transition/animation of its own on any part', async () => {
     const { wrapper, el } = mountSettings('900px')

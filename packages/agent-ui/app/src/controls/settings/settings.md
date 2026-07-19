@@ -43,7 +43,7 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — docume
   - name: panel
     description: A control-rendered `<div data-part="panel">` — the mount point the active section's generated `ui-form-provider` is attached into (detached, never destroyed, when the section changes).
 
-customStates: []          # no :state() hooks — the active rail item rides the composed ui-nav-rail-item's own `selected` reflected attribute, not a custom state of ui-settings' own (the ui-master-detail `data-view` precedent)
+customStates: []          # no :state() hooks — the active rail item rides the composed ui-nav-rail-item's own `selected` reflected attribute, not a custom state of ui-settings' own (the ui-master-detail `data-view` precedent). One DERIVED host marker (never author-settable API, the same `data-view` class): `data-single-section` — stamped per build when the supported schema has exactly ONE section; settings.css keys the GH #50 detail-only posture off it (list pane, separator, and the narrow drill-in's Back all hide — with one section there is nothing to navigate).
 
 face:
   formAssociated: false    # NOT a FACE form control — a layout composition; the GENERATED per-field controls are each their own FACE participant
