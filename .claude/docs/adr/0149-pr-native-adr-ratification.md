@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-18 |
 > | **Proposed by** | Kim's explicit direction, 2026-07-18, at the close of the issue #31 / [ADR-0148](./0148-theme-provider-ink-reroot-fold-in.md) wave: ratifying that ADR meant locating a background job's worktree and hand-editing a table cell — "this system where I have to ratify files manually and dig around to find the right local work tree is completely ridiculous." Kim asked for this ADR by name ("write the PR-approval-as-ratification ADR"). |
-> | **Ratified by** | — (proposed; ratifiable by Kim's hand-flip as always — or, once this ADR's own build ships, by its own mechanism) |
+> | **Ratified by** | kimgranlund (repo owner), 2026-07-19, via the [`ratify ADR-0149` utterance](https://github.com/kimgranlund/agent-ui/pull/38#issuecomment-5013701213) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build: NEW `scripts/adr_ratify.py` (the deterministic verify-then-flip executor) · `.claude/settings.json` (a committed permission allowlist rule for that script, so the harness-side classifier never gates the sanctioned path) · `.claude/skills/agent-ui-doc-standards/SKILL.md` §1 (the ADR row's "Who flips" cell gains the second signal) · [`README.md`](./README.md) lifecycle prose · `.claude/hooks/adr-status-guard.py` (comment-only REV pointing at the script; its deny logic stays byte-unchanged) · cross-repo: a nonoun-plugins issue proposing the generic dialect for scribe's `doc-authoring-standards` (informational — that repo rules itself) |
 > | **Supersedes / Superseded by** | **Extends [ADR-0138](./0138-a2ui-producer-persona-seam.md)** (Status-flip-is-ratification: the flipped cell REMAINS the ratification mark of record; this ADR adds a second sanctioned hand for performing the flip, it never redefines what the mark means) · Relates [ADR-0145](./0145-ticket-tier-github-issues-backend.md) (the signal-moves-to-GitHub precedent: tickets kept their section contract and changed container; ratification keeps its mark and gains a GitHub-native trigger) |
 
