@@ -225,8 +225,10 @@ describe('ui-code-editor — M1/M2/M3 handoff + event-contract fixes (both engin
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 // A fixture exercising every v1 construct: ATX heading, strong, emphasis, inline code, a bullet list, a
-// blockquote, a link, and a fenced code block (which must stay VERBATIM) — plus a trailing plain paragraph to
-// park the cursor away from every construct (ADR-0147 cl.3's reveal-near-cursor, cl.4's construct set).
+// blockquote, a link, an ORDERED list (component-review MAJOR-1 — Lezer's ListItem/ListMark are shared by
+// bullet AND ordered lists; a numbered list must stay VERBATIM SOURCE, never bulleted), and a fenced code
+// block (which must stay VERBATIM) — plus a trailing plain paragraph to park the cursor away from every
+// construct (ADR-0147 cl.3's reveal-near-cursor, cl.4's construct set).
 const RICHTEXT_SEED = [
   '## Title',
   '',
@@ -234,6 +236,9 @@ const RICHTEXT_SEED = [
   '',
   '- item one',
   '- item two',
+  '',
+  '1. first',
+  '2. second',
   '',
   '> quote line',
   '',
@@ -304,6 +309,10 @@ describe('ui-code-editor — richtext construct decorations (ADR-0147 n5, both e
     // bullets: both list markers replaced by the widget
     expect(field.querySelectorAll('.rt-bullet')).toHaveLength(2)
 
+    // ordered list: NEVER bulleted (MAJOR-1 regression) — the numbers stay verbatim source
+    expect(text()).toContain('1. first')
+    expect(text()).toContain('2. second')
+
     // blockquote: marker hidden, the quote-line class present
     expect(field.querySelector('.rt-quote-line')).not.toBeNull()
     expect(text()).not.toContain('>')
@@ -317,6 +326,25 @@ describe('ui-code-editor — richtext construct decorations (ADR-0147 n5, both e
     // fenced code stays VERBATIM — fences + contents render as source (no rt-* decoration inside)
     expect(text()).toContain('```js')
     expect(text()).toContain('const x = 1')
+  })
+
+  it('MAJOR-1 regression: an ordered list is NEVER destroyed by the bullet decoration — numbering stays intact', async () => {
+    // Lezer's markdown grammar shares ListItem/ListMark between bullet AND ordered lists; ADR-0147 cl.4
+    // names UNORDERED-list bullets only — an ordered marker ("1.", "2.", …) must render as source (the
+    // ADR's own "everything unnamed renders as source" rule), never replaced by the bullet widget.
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = '1. first\n2. second\n3. third\n\nplain paragraph for the cursor to park on'
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('paragraph'), { timeout: 2000 }).toBe(true)
+    field.selectToEnd() // parks the caret away from every list line
+
+    await new Promise((r) => setTimeout(r, 100)) // let the decoration rebuild settle
+    const content = cmContentOf(field) as HTMLElement
+    expect(content.textContent, 'ordered markers must stay verbatim — never replaced by a bullet glyph').toContain('1. first')
+    expect(content.textContent).toContain('2. second')
+    expect(content.textContent).toContain('3. third')
+    expect(content.textContent, 'no bullet glyph must appear for an ordered list').not.toContain('•')
+    expect(field.querySelectorAll('.rt-bullet'), 'an ordered list must produce ZERO bullet widgets').toHaveLength(0)
   })
 })
 

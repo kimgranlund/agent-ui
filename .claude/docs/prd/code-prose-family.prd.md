@@ -1,6 +1,6 @@
 # PRD — Code + Prose Component Family (`@agent-ui/code`: highlight · markdown · diff)
 
-> Status: **accepted · v1.1 · Owner: agent-ui** — direction RATIFIED by Kim 2026-07-10 (all ADR-0119 forks answered at the ratification pass; began life as a v0.1 scope intake, 2026-07-10) — authored 2026-07-10 by the design seat
+> Status: **accepted · v1.2 · Owner: agent-ui** — direction RATIFIED by Kim 2026-07-10 (all ADR-0119 forks answered at the ratification pass; began life as a v0.1 scope intake, 2026-07-10) — authored 2026-07-10 by the design seat
 > at the design-system-surfaces intake ([TKT-0007](../tickets/tkt-0007-design-system-surfaces.md)).
 >
 > **v1.1 amendment (2026-07-17, docs-only — the accepted body below is UNCHANGED, append-only):** the §3
@@ -16,6 +16,16 @@
 > `./markdown` subpaths.** The remaining contract forks await his pass on
 > [ADR-0119](../adr/0119-code-prose-family-v1-scope.md). This is an INTAKE, not a build authorization.
 > Ratification = doc-review + Kim's fork answers.
+>
+> **v1.2 amendment (2026-07-18, docs-only — the accepted body below is UNCHANGED, append-only):** the v1.1
+> amendment's "live-preview/WYSIWYG markdown stays out of scope" line is narrowed by
+> **[ADR-0147](../adr/0147-code-editor-richtext-live-preview-mode.md)** — `ui-code-editor` gains an opt-in
+> `mode="richtext"` live-preview (CodeMirror decorations over the SAME document, reveal-near-cursor; markdown
+> stays the ONLY model, no serializer, no second document). §3's fence-crossing now includes a RENDERED VIEW
+> of the same editable source, still editing, still never the display family's territory: `ui-markdown`
+> remains the fleet's hand-rolled, read-only renderer, untouched, and is NOT the composing partner this
+> richtext mode uses (ADR-0147's Context names why that route lost). `./highlight`/`./markdown` are
+> unaffected.
 > Altitude: this document owns **why + what-should-exist**. The scope/contract-direction record is
 > [ADR-0119](../adr/0119-code-prose-family-v1-scope.md); SPEC/LLD are authored at the build wave.
 > **Sibling-vs-extension ruling:** a **new sibling PRD**, and a *named intake firing*: the

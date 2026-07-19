@@ -97,12 +97,16 @@ describe('CodeMirror confinement (ADR-0139 cl.8b, widened by ADR-0147 cl.7)', ()
 
   it('cm-richtext.ts is statically imported ONLY by cm-editor.ts — the lazy chunk boundary holds (ADR-0147 cl.7)', () => {
     // A source-text probe over code/src (mirroring the existing shape): every OTHER file must carry no
-    // static import specifier naming './cm-richtext.ts' (relative form, the only form a same-directory
-    // import can take here).
+    // static import (OR re-export — the (?:import|export) alternation, the same evasion the sibling
+    // staticCmSpecifiers matcher guards against, NIT) specifier naming './cm-richtext.ts' (relative form,
+    // the only form a same-directory import can take here).
     const importers: string[] = []
     for (const [rel, abs] of files) {
       const src = readFileSync(abs, 'utf8') as string
-      if (/\bimport\b[^'";]*?\bfrom\s*['"]\.\/cm-richtext\.ts['"]/.test(src) || /\bimport\s*\(\s*['"]\.\/cm-richtext\.ts['"]\s*\)/.test(src)) {
+      if (
+        /\b(?:import|export)\b[^'";]*?\bfrom\s*['"]\.\/cm-richtext\.ts['"]/.test(src) ||
+        /\bimport\s*\(\s*['"]\.\/cm-richtext\.ts['"]\s*\)/.test(src)
+      ) {
         importers.push(rel)
       }
     }

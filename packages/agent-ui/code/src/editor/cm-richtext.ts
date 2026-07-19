@@ -141,7 +141,12 @@ function buildDecorations(view: EditorView): DecorationSet {
 
         if (name === 'ListItem') {
           const mark = ref.node.getChild('ListMark')
-          if (mark && !touchesRevealedLine(mark.from, mark.to)) {
+          // Lezer's markdown grammar uses ListItem/ListMark for BOTH bullet lists ("-"/"*"/"+") AND ordered
+          // lists ("1."/"2)"...) — ADR-0147 cl.4 names UNORDERED-list bullets only; an ordered marker must
+          // render as source (the ADR's own "everything unnamed renders as source" rule). Guard on the
+          // mark's own TEXT rather than the parent node name — robust regardless of nesting depth.
+          const isBulletMark = mark && /^[-*+]$/.test(doc.sliceString(mark.from, mark.to))
+          if (mark && isBulletMark && !touchesRevealedLine(mark.from, mark.to)) {
             style(mark.from, mark.to, Decoration.replace({ widget: new BulletWidget() }))
           }
           return

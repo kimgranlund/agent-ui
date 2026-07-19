@@ -344,6 +344,11 @@ export class UICodeEditorElement extends UIFormElement {
       // the live value in now — programmatic (fires no `input`, per M2), a no-op when already equal — so no
       // typed characters are lost. (This is also the value-side of the m7 post-mount re-sync.)
       this.#cm.setDoc(this.value)
+      // Re-sync `mode` too (component-review MINOR-1): a `mode` set DURING mountCodeMirror's own nested
+      // markdown-pack await (between the `richtext:` option snapshot and the view existing) would otherwise
+      // be silently dropped — the mode effect no-ops while `#cm` is null and nothing re-fires later, since
+      // `mode` didn't change again. Push the CURRENT mode in now, mirroring the value-side m7/M1a re-sync.
+      this.#cm.setRichtext(this.mode === 'richtext' && this.#cm.richtextAvailable)
       editor.hidden = true // the plain surface yields to CM (kept in the DOM, hidden — the reconnect restore)
       if (hadFocus) {
         this.#skipCmFocusBaseline = true // the handoff's own focus must not re-baseline #committed (M1b)
