@@ -19,6 +19,7 @@ import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirro
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { tags as t } from '@lezer/highlight'
 import { richtextExtension } from './cm-richtext.ts'
+import { formattingKeymap, pasteLinkHandler } from './cm-commands.ts'
 
 // Marks a PROGRAMMATIC document write (a model→surface `setDoc`) so the update listener can distinguish it
 // from a real user edit — a programmatic write must NOT fire `onDocChange` (which would re-emit `input` on a
@@ -116,7 +117,14 @@ export async function mountCodeMirror(opts: CmOptions): Promise<CmHandle> {
     structuralTheme,
     syntaxHighlighting(highlightStyle),
     history(),
-    keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+    // The formatting keymap goes FIRST — the ordering is load-bearing, not just insurance: Mod-i collides
+    // with defaultKeymap's own selectParentSyntax binding, and this precedence deliberately shadows it (a
+    // markdown editor's users need italic far more often than syntax-tree selection; see cm-commands.ts's
+    // own formattingKeymap doc comment for the full rationale). Mode-INDEPENDENT: bound here, not inside
+    // richtextExtension()'s Compartment, since the underlying document is markdown text in BOTH modes —
+    // only the decoration differs by mode, never a command's correctness (Kim's ask, cm-commands.ts).
+    keymap.of([...formattingKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
+    pasteLinkHandler, // same mode-independence reasoning — a paste-time text transform, not a decoration.
     EditorView.lineWrapping, // markdown prose wraps (native <textarea> parity), never a horizontal scroll
     EditorView.updateListener.of((update: ViewUpdate) => {
       // Skip PROGRAMMATIC writes (model→surface setDoc) — only a genuine USER edit re-baselines the model +

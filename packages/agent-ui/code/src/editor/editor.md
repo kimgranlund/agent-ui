@@ -116,6 +116,13 @@ keyboard:
     action: Edits the surface; each edit updates value (surface→model) and emits input (suppressed mid IME composition on the plain surface).
   - keys: Enter / Space (on the mode-toggle part)
     action: Flips `mode` between 'source' and 'richtext' and emits ONE `toggle` (ADR-0147). Space's default (page scroll) is prevented.
+  - keys: Mod-b / Mod-i / Mod-e
+    action: Toggle-wraps the selection in `**`/`*`/`` ` `` (bold/italic/inline code) — a same-marker selection un-wraps instead. An empty selection inserts an empty pair with the caret parked between. Requires CodeMirror (inert on the plain pre-enhancement surface); works identically in both `source` and `richtext` mode — the underlying markdown text is the same either way, only the decoration differs.
+  - keys: Mod-Alt-1 / Mod-Alt-2 / Mod-Alt-3 / Mod-Alt-4
+    action: Sets an ATX heading (`#`…`####`) on every line the selection touches, replacing any existing heading level; pressing the SAME level again strips it back to plain text. Requires CodeMirror; mode-independent.
+  - keys: Mod-Shift-8 / Mod-Shift-7
+    action: Toggles a bullet (`- `) / numbered (`1.`, `2.`, …) list on every line the selection touches, replacing the other list type if present; pressing again strips it. Numbered lists renumber 1..N over the touched lines. Requires CodeMirror; mode-independent.
+  - note: Pasting while text is selected, when the clipboard's plain-text content is nothing but a safe absolute URL (the fleet `safeHref` scheme gate — https/http/mailto), replaces the selection with a markdown link wrapping it (`[selection](url)`) instead of the normal paste-replaces-selection — "select a word, paste a link, it becomes clickable" (the click itself rides `richtext` mode's existing link handler). Any other paste (no selection, multi-line text, an unsafe scheme, unparseable text) is unaffected. Requires CodeMirror; mode-independent.
   - note: The plain editor is intrinsically focusable (contenteditable); CodeMirror's content DOM is focusable when enhanced. host.focus() forwards to the live surface. disabled removes focusability; readonly keeps it focusable and selectable but not editable.
   - note: CodeMirror's own `indentWithTab` captures Tab inside the editor content — Esc then Tab is CM's standing escape hatch to move focus onward (unchanged by richtext mode).
 

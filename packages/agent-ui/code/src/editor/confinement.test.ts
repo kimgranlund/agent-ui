@@ -3,24 +3,24 @@ import { readFileSync, readdirSync } from 'node:fs'
 
 declare const process: { cwd(): string }
 
-// confinement.test.ts (ADR-0139 cl.8b, widened by ADR-0147 cl.7) — the CodeMirror confinement trip-wire.
-// Three invariants, one file:
+// confinement.test.ts (ADR-0139 cl.8b, widened by ADR-0147 cl.7, widened again for the markdown formatting
+// commands, 2026-07-19) — the CodeMirror confinement trip-wire. Three invariants, one file:
 //   (1) NO static `@codemirror/*` / `@lezer/*` import exists ANYWHERE under code/src OUTSIDE editor/.
-//   (2) INSIDE editor/, ONLY the lazy PAIR {cm-editor.ts, cm-richtext.ts} may statically import them; every
-//       OTHER editor/ module (the FACE wrapper editor.ts, the barrel index.ts, the tests' non-test peers)
-//       carries ZERO static CM imports — the runtime arrives via a dynamic import() ONLY (the gen-ui-kit
-//       single-module shape: code.class.js is CM-free; code-editor.js carries CM). This is what keeps CM out
-//       of any main bundle.
-//   (3) cm-richtext.ts (the richtext decoration engine, ADR-0147) is statically imported ONLY by
-//       cm-editor.ts — the lazy chunk BOUNDARY is the load-bearing fact, the pair sits entirely inside it;
-//       nothing outside cm-editor.ts may reach cm-richtext.ts.
+//   (2) INSIDE editor/, ONLY the lazy TRIO {cm-editor.ts, cm-richtext.ts, cm-commands.ts} may statically
+//       import them; every OTHER editor/ module (the FACE wrapper editor.ts, the barrel index.ts, the
+//       tests' non-test peers) carries ZERO static CM imports — the runtime arrives via a dynamic import()
+//       ONLY (the gen-ui-kit single-module shape: code.class.js is CM-free; code-editor.js carries CM).
+//       This is what keeps CM out of any main bundle.
+//   (3) cm-richtext.ts (the richtext decoration engine, ADR-0147) AND cm-commands.ts (the formatting
+//       commands) are each statically imported ONLY by cm-editor.ts — the lazy chunk BOUNDARY is the
+//       load-bearing fact, the trio sits entirely inside it; nothing outside cm-editor.ts may reach either.
 // A dynamic `import('@codemirror/...')` is deliberately NOT matched — the gate is about STATIC module-graph
 // edges (the thing a bundler pulls eagerly), not the lazy chunk boundary editor.ts relies on.
 
 const SRC = `${process.cwd()}/packages/agent-ui/code/src`
-// the lazy PAIR ADR-0147 cl.7 permits static CM imports in — both land in the ONE lazy chunk editor.ts's
-// dynamic import('./cm-editor.ts') splits off.
-const DESIGNATED = ['editor/cm-editor.ts', 'editor/cm-richtext.ts'] as const
+// the lazy TRIO ADR-0147 cl.7 (widened 2026-07-19) permits static CM imports in — all three land in the ONE
+// lazy chunk editor.ts's dynamic import('./cm-editor.ts') splits off.
+const DESIGNATED = ['editor/cm-editor.ts', 'editor/cm-richtext.ts', 'editor/cm-commands.ts'] as const
 
 type Dirent = { name: string; isDirectory(): boolean; isFile(): boolean }
 function walk(dir: string): string[] {
@@ -66,7 +66,7 @@ describe('CodeMirror confinement (ADR-0139 cl.8b, widened by ADR-0147 cl.7)', ()
     for (const designated of DESIGNATED) expect(files.some(([rel]) => rel === designated)).toBe(true)
   })
 
-  it('BOTH designated modules DO statically import CodeMirror (the confinement is not vacuous)', () => {
+  it('ALL THREE designated modules DO statically import CodeMirror (the confinement is not vacuous)', () => {
     const cmEditor = files.find(([rel]) => rel === 'editor/cm-editor.ts')!
     const cmEditorSpecs = staticCmSpecifiers(readFileSync(cmEditor[1], 'utf8') as string)
     expect(cmEditorSpecs.length).toBeGreaterThan(0)
@@ -75,9 +75,13 @@ describe('CodeMirror confinement (ADR-0139 cl.8b, widened by ADR-0147 cl.7)', ()
     const cmRichtext = files.find(([rel]) => rel === 'editor/cm-richtext.ts')!
     const cmRichtextSpecs = staticCmSpecifiers(readFileSync(cmRichtext[1], 'utf8') as string)
     expect(cmRichtextSpecs.length).toBeGreaterThan(0)
+
+    const cmCommands = files.find(([rel]) => rel === 'editor/cm-commands.ts')!
+    const cmCommandsSpecs = staticCmSpecifiers(readFileSync(cmCommands[1], 'utf8') as string)
+    expect(cmCommandsSpecs.length).toBeGreaterThan(0)
   })
 
-  it('NO static @codemirror/@lezer import exists outside editor/, and inside editor/ only the lazy pair has one', () => {
+  it('NO static @codemirror/@lezer import exists outside editor/, and inside editor/ only the lazy trio has one', () => {
     const violations: string[] = []
     for (const [rel, abs] of files) {
       if ((DESIGNATED as readonly string[]).includes(rel)) continue
@@ -106,6 +110,20 @@ describe('CodeMirror confinement (ADR-0139 cl.8b, widened by ADR-0147 cl.7)', ()
       if (
         /\b(?:import|export)\b[^'";]*?\bfrom\s*['"]\.\/cm-richtext\.ts['"]/.test(src) ||
         /\bimport\s*\(\s*['"]\.\/cm-richtext\.ts['"]\s*\)/.test(src)
+      ) {
+        importers.push(rel)
+      }
+    }
+    expect(importers).toEqual(['editor/cm-editor.ts'])
+  })
+
+  it('cm-commands.ts is statically imported ONLY by cm-editor.ts — the same lazy chunk boundary (2026-07-19)', () => {
+    const importers: string[] = []
+    for (const [rel, abs] of files) {
+      const src = readFileSync(abs, 'utf8') as string
+      if (
+        /\b(?:import|export)\b[^'";]*?\bfrom\s*['"]\.\/cm-commands\.ts['"]/.test(src) ||
+        /\bimport\s*\(\s*['"]\.\/cm-commands\.ts['"]\s*\)/.test(src)
       ) {
         importers.push(rel)
       }

@@ -689,3 +689,181 @@ describe('ui-code-editor — cross-mode identity + a long-document sanity probe 
     expect(Date.now() - before, 'typing a single character took implausibly long — a full-document walk, not a viewport-bounded one').toBeLessThan(1500)
   })
 })
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  markdown FORMATTING commands (Kim's ask, 2026-07-19) — mode-INDEPENDENT: every command is a text edit
+//  over the same document richtext mode merely decorates, so these are tested once, in default (source)
+//  mode, rather than duplicated per mode — richtext's OWN decoration-renders-what-these-commands-write is
+//  already covered by the ADR-0147 describe blocks above.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-code-editor — bold/italic/inline-code toggle-wrap (both engines)', () => {
+  it('Mod-b wraps a selection in ** and toggles it back off on a second press', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="hello world" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(modKey('a')) // select all — "hello world"
+    await userEvent.keyboard(modKey('b'))
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('**hello world**')
+    await userEvent.keyboard(modKey('a'))
+    await userEvent.keyboard(modKey('b'))
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('hello world')
+  })
+
+  it('Mod-i wraps a selection in a single *; Mod-e wraps it in a single backtick', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="word" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(modKey('a'))
+    await userEvent.keyboard(modKey('i'))
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('*word*')
+    await userEvent.keyboard(modKey('a'))
+    await userEvent.keyboard(modKey('i')) // toggle italic back off
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('word')
+    await userEvent.keyboard(modKey('a'))
+    await userEvent.keyboard(modKey('e'))
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('`word`')
+  })
+
+  it('an empty selection (bare cursor) inserts an empty pair with the caret parked between', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(modKey('b'))
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('****')
+    await userEvent.keyboard('mid') // types where the caret was parked, between the two ** pairs
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('**mid**')
+  })
+})
+
+describe('ui-code-editor — heading level toggle (both engines)', () => {
+  it('Mod-Alt-1 sets an H1; a second press on the same line toggles it back to plain text', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="Title" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(`{${MOD}>}{Alt>}1{/Alt}{/${MOD}}`)
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('# Title')
+    await userEvent.keyboard(`{${MOD}>}{Alt>}1{/Alt}{/${MOD}}`)
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('Title')
+  })
+
+  it('setting H3 on a line already at H1 REPLACES the marker, never doubles it', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="# Title" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(`{${MOD}>}{Alt>}3{/Alt}{/${MOD}}`)
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('### Title')
+  })
+})
+
+describe('ui-code-editor — bullet/numbered list toggle (both engines)', () => {
+  it('Mod-Shift-8 bullet-lists every line the selection touches; a second press toggles back off', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = 'one\ntwo\nthree'
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(modKey('a'))
+    await userEvent.keyboard(`{${MOD}>}{Shift>}8{/Shift}{/${MOD}}`)
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('- one\n- two\n- three')
+    await userEvent.keyboard(modKey('a'))
+    await userEvent.keyboard(`{${MOD}>}{Shift>}8{/Shift}{/${MOD}}`)
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('one\ntwo\nthree')
+  })
+
+  it('Mod-Shift-7 numbers every line the selection touches sequentially, replacing a bullet if present', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = '- one\n- two'
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(modKey('a'))
+    await userEvent.keyboard(`{${MOD}>}{Shift>}7{/Shift}{/${MOD}}`)
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('1. one\n2. two')
+  })
+})
+
+describe('ui-code-editor — paste-to-link (both engines)', () => {
+  /** Dispatches a real ClipboardEvent with controlled data directly on the CM content node — proves the
+   *  `domEventHandlers({ paste })` code path itself, without depending on a real OS clipboard round-trip
+   *  (whose permission model differs across engines under automation). */
+  const pasteText = (target: HTMLElement, text: string): void => {
+    const dt = new DataTransfer()
+    dt.setData('text/plain', text)
+    target.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }))
+  }
+
+  it('pasting a bare URL over a selected word wraps it into a markdown link', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="see documentation here" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(modKey('a')) // select the whole (single-word-for-simplicity) content
+    pasteText(cmContentOf(field) as HTMLElement, 'https://example.com/docs')
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('[see documentation here](https://example.com/docs)')
+  })
+
+  it('an unsafe scheme (javascript:) is REJECTED — falls through to a normal paste, never becomes a link', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="word" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(modKey('a'))
+    pasteText(cmContentOf(field) as HTMLElement, 'javascript:alert(1)')
+    // preventDefault() is never called for a denied scheme, so the browser's own default paste applies —
+    // assert only the negative (never becomes a link); the exact resulting text is the engine's own
+    // default-paste behavior, not this handler's concern.
+    await new Promise((r) => setTimeout(r, 300))
+    expect(field.value, 'an unsafe scheme must never be accepted as a link destination').not.toContain('](javascript:')
+  })
+
+  it('pasting over an EMPTY selection (bare cursor) does nothing special — falls through to a normal paste', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    pasteText(cmContentOf(field) as HTMLElement, 'https://example.com')
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('https://example.com') // pasted verbatim, no [](...) wrap
+  })
+
+  it('a literal ] in the selected text is escaped so it can never prematurely close the link span', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="a [note] here" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(modKey('a'))
+    pasteText(cmContentOf(field) as HTMLElement, 'https://example.com')
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('[a \\[note\\] here](https://example.com)')
+  })
+
+  it('a trailing backslash in the selected text is escaped FIRST, so the link span still closes correctly', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = 'oops\\' // one real backslash — set via JS property (an HTML attribute can't carry it cleanly)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(modKey('a'))
+    pasteText(cmContentOf(field) as HTMLElement, 'https://example.com')
+    // escaping `\` -> `\\` FIRST, then `]` -> `\]`, must NOT let the pre-existing backslash "consume" the
+    // bracket escape into a single `\]` (an escaped literal `]`, never closing the link span) — a real bug
+    // caught in review.
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('[oops\\\\](https://example.com)')
+  })
+
+  it('plain prose (not a URL) pasted over a selection is REJECTED — falls through to a normal paste, never becomes a link', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="word" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(modKey('a'))
+    // "hello world" is NOT an absolute URL — a relative-URL resolution bug once made ANY pasted text
+    // resolve against document.baseURI and hijack a normal paste (caught in review); this proves it stays fixed.
+    pasteText(cmContentOf(field) as HTMLElement, 'hello world')
+    await new Promise((r) => setTimeout(r, 300))
+    expect(field.value, 'plain prose must never be accepted as a link destination').not.toContain('](')
+  })
+
+  it("an absolute URL whose path legally contains ( ) is percent-encoded in the destination slot — never splits into two links", async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" value="click here" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    await userEvent.click(cmContentOf(field) as HTMLElement)
+    await userEvent.keyboard(modKey('a'))
+    // the crafted destination-injection shape a prior review flagged: unescaped, this would close the
+    // link's `(...)` early and open a second, attacker-chosen link.
+    pasteText(cmContentOf(field) as HTMLElement, 'https://example.com/)[evil](javascript:alert(1))')
+    await expect
+      .poll(() => field.value, { timeout: 2000 })
+      .toBe('[click here](https://example.com/%29[evil]%28javascript:alert%281%29%29)')
+  })
+})
