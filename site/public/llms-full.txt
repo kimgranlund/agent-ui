@@ -3022,11 +3022,13 @@ dot/ring/pulse for the in-progress states.
 
 ## The imperative API (ADR-0122 F4)
 
-- **`appendEntry(entry: StatusEntry): UITimelineItemElement`** — creates a `ui-timeline-item`, assigns the
-  entry's fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?`), appends it,
-  tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element already
-  inherits a native, incompatible `Node.prototype.append()` (a build-time LLD deviation from SPEC-R9's
-  literal name, flagged for amendment; behaviour/signature otherwise identical).
+- **`appendEntry(entry: StatusEntry): UITimelineItemElement`** — for a NEW `key`, creates a `ui-timeline-item`,
+  assigns the entry's fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?`),
+  appends it, tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element
+  already inherits a native, incompatible `Node.prototype.append()` (a build-time LLD deviation from
+  SPEC-R9's literal name, flagged for amendment; behaviour/signature otherwise identical). A **duplicate**
+  `key` is a silent no-op — returns the existing element unchanged, never creating a second element or
+  throwing (GH #37); a consumer wanting to mutate an already-appended entry calls `update(key, patch)`.
 - **`update(key: string, patch: Partial<StatusEntry>): void`** — a **keyed** mutation to the
   already-rendered entry with that `key`: transitions `status`, grows/replaces streamed `text`, or reveals
   detail. A `key` with no matching entry is a silent no-op — never a throw (a late update after

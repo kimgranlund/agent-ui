@@ -29,7 +29,7 @@ attributes:               # attributes-as-API — mirrors status-stream.ts stati
 
 properties:               # IDL beyond attributes-as-API — the imperative streaming contract (ADR-0122 F4)
   - name: appendEntry
-    description: 'Method — appendEntry(entry: StatusEntry) => UITimelineItemElement. NAMED appendEntry, not append — every element inherits a native, incompatible Node.prototype.append(); a same-name override fails tsc outright (a build-time LLD deviation, flagged for the SPEC-R9/LLD amendment). Creates a ui-timeline-item, assigns the entry''s fields, appends it, tail-follows to it (iff the stick-to-bottom guard holds), and returns the created element (the ui-toast-region.show() return precedent). ADR-0146 F5: an entry carrying a KNOWN `parent` (another entry''s key) NESTS under that group''s `[data-role="nested"]` slot (a nested ui-timeline, mounted lazily once per parent) instead of as a top-level sibling; an unknown parent degrades to a flat append. The keyed registry stays FLAT — `update(childKey, patch)` reaches a nested entry identically.'
+    description: 'Method — appendEntry(entry: StatusEntry) => UITimelineItemElement. NAMED appendEntry, not append — every element inherits a native, incompatible Node.prototype.append(); a same-name override fails tsc outright (a build-time LLD deviation, flagged for the SPEC-R9/LLD amendment). A NEW key creates a ui-timeline-item, assigns the entry''s fields, appends it, tail-follows to it (iff the stick-to-bottom guard holds), and returns the created element (the ui-toast-region.show() return precedent). A DUPLICATE key is a silent no-op — returns the EXISTING element unchanged, never a second element or a throw (GH #37 — the registry/DOM-consistency guard; symmetric with update()''s own no-op-on-unknown-key). ADR-0146 F5: an entry carrying a KNOWN `parent` (another entry''s key) NESTS under that group''s `[data-role="nested"]` slot (a nested ui-timeline, mounted lazily once per parent) instead of as a top-level sibling; an unknown parent degrades to a flat append. The keyed registry stays FLAT — `update(childKey, patch)` reaches a nested entry identically.'
   - name: update
     description: 'Method — update(key: string, patch: Partial<StatusEntry>) => void. A KEYED, in-place mutation to the already-rendered entry with that key: transitions status, grows/replaces streamed text, or reveals detail. A key with no matching entry is a silent no-op (never a throw — SPEC-R9 AC2).'
   - name: finalize
@@ -115,11 +115,13 @@ dot/ring/pulse for the in-progress states.
 
 ## The imperative API (ADR-0122 F4)
 
-- **`appendEntry(entry: StatusEntry): UITimelineItemElement`** — creates a `ui-timeline-item`, assigns the
-  entry's fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?`), appends it,
-  tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element already
-  inherits a native, incompatible `Node.prototype.append()` (a build-time LLD deviation from SPEC-R9's
-  literal name, flagged for amendment; behaviour/signature otherwise identical).
+- **`appendEntry(entry: StatusEntry): UITimelineItemElement`** — for a NEW `key`, creates a `ui-timeline-item`,
+  assigns the entry's fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?`),
+  appends it, tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element
+  already inherits a native, incompatible `Node.prototype.append()` (a build-time LLD deviation from
+  SPEC-R9's literal name, flagged for amendment; behaviour/signature otherwise identical). A **duplicate**
+  `key` is a silent no-op — returns the existing element unchanged, never creating a second element or
+  throwing (GH #37); a consumer wanting to mutate an already-appended entry calls `update(key, patch)`.
 - **`update(key: string, patch: Partial<StatusEntry>): void`** — a **keyed** mutation to the
   already-rendered entry with that `key`: transitions `status`, grows/replaces streamed `text`, or reveals
   detail. A `key` with no matching entry is a silent no-op — never a throw (a late update after
