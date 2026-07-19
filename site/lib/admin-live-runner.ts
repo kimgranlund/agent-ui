@@ -90,7 +90,7 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
     const res = await fetch(PRODUCE_ENDPOINT, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ input, provider: PROVIDER, model: req.model, personaSystem: req.personaSystem }),
+      body: JSON.stringify({ input, provider: PROVIDER, model: req.model, personaSystem: req.personaSystem, integrations: req.integrations }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
     if (!res.ok || res.body === null) {

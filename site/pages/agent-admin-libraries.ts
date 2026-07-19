@@ -144,6 +144,28 @@ const HOSPITALITY_PLAYBOOKS: readonly NewEntryInput[] = [
   },
 ]
 
+// ── the Integrations pack (GH #49) — `tool`-kind entries whose LABELS are the dev proxy's registry ids ──
+// The registry itself (tools/agent/integrations.ts) is the node-side shell (ADR-0137's law) — the page
+// hardcodes the id/description trio and a data-integrity test pins parity against the real registry
+// (importable under vitest's node runtime), so a registry edit that forgets this pack goes red.
+const INTEGRATION_TOOLS: readonly NewEntryInput[] = [
+  {
+    label: 'weather',
+    description: 'Current conditions + short forecast for a named place (Open-Meteo, keyless).',
+    content: 'Use for any weather/forecast ask. Surface results as a compact facts Card or Stat row bound to the data model — never a prose dump.',
+  },
+  {
+    label: 'wikipedia-search',
+    description: 'Wikipedia topic search with one-line summaries (keyless).',
+    content: 'Use for factual/background lookups. Cite the article titles in the reply; surface comparisons as a List or Table.',
+  },
+  {
+    label: 'currency',
+    description: 'Currency conversion at latest ECB reference rates (Frankfurter, keyless).',
+    content: 'Use for price/FX asks. Show the converted figure prominently (Stat) with the rate + date as the caption.',
+  },
+]
+
 /** The packs the page hands `ui-agent-admin` (`admin.libraries`), keyed by entry kind. */
 export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
   [ENTRY_KINDS.skill]: [
@@ -172,6 +194,14 @@ export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
       label: 'Hospitality playbooks',
       description: 'Booking, reservation, and trip-planning playbooks (GH #46).',
       entries: HOSPITALITY_PLAYBOOKS,
+    },
+  ],
+  [ENTRY_KINDS.tool]: [
+    {
+      id: 'integrations',
+      label: 'Integrations',
+      description: 'Keyless live integrations executed by the dev proxy (GH #49) — enable + toolsEnabled to arm.',
+      entries: INTEGRATION_TOOLS,
     },
   ],
 }

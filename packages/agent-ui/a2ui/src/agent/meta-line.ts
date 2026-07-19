@@ -57,7 +57,10 @@ export interface AskDeclaration {
  * stages. A CLOSED union: an out-of-vocabulary stage is dropped at the guard (`readMetaLine`), never
  * rendered — the honesty-law guard (F2) that a stage never observed is never shown.
  */
-export const TURN_PROGRESS_STAGES = ['sent', 'started', 'reasoning', 'content', 'validating', 'retry', 'done'] as const
+// 'tool' joined with GH #49 (the integrations loop): a factual process claim — "executing <registry
+// tool name>" — from the closed integration registry, never model-composed prose; the F2 honesty law's
+// closed-table growth is recorded in the a2ui-live-agent SPEC's versioned amendment.
+export const TURN_PROGRESS_STAGES = ['sent', 'started', 'reasoning', 'content', 'validating', 'retry', 'tool', 'done'] as const
 export type TurnProgressStage = (typeof TURN_PROGRESS_STAGES)[number]
 const TURN_PROGRESS_STAGE_SET: ReadonlySet<string> = new Set(TURN_PROGRESS_STAGES)
 

@@ -53,7 +53,7 @@ import { heal } from '../corpus/heal.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import type { SurfaceSeed } from '../renderer/validate.ts'
 import type { A2uiComponent } from '../protocol.ts'
-import type { AgentProvider, ProviderEvent, Session, Turn, TurnInput } from './agent-transport.ts'
+import type { AgentProvider, ExecuteTool, ProviderEvent, Session, ToolDef, Turn, TurnInput } from './agent-transport.ts'
 import { buildSystemPrompt } from './system-prompt.ts'
 import { frameClientMessage } from './session.ts'
 import { readMetaLine } from './meta-line.ts'
@@ -93,6 +93,12 @@ export interface ProduceOptions {
    * (voice/content only; the wire contract stays authoritative, the fixed precedence sentence says so).
    * Absent/empty ⇒ byte-identical composition (the `mode`-absent precedent). */
   personaSystem?: string
+  /** GH #49 — tool declarations + executor, threaded VERBATIM to `provider.stream` (the adapter owns the
+   * whole tool-use loop; produce() only relays the seam and maps the 'tool' provider event onto the
+   * progress stage). Absent ⇒ the request shape is byte-identical to before (the `effort?` precedent).
+   * Both-or-neither: `tools` without `executeTool` is treated as no tools by the adapter contract. */
+  tools?: readonly ToolDef[]
+  executeTool?: ExecuteTool
   /** ADR-0146 F1 — opt IN to interleaved live-turn progress meta-lines. Absent/false ⇒ produce() streams
    * BYTE-IDENTICALLY to before (no progress lines) — the "note-only and halt paths byte-unchanged"
    * guarantee, and every deterministic gate/consumer that predates progress is untouched. `true` ⇒ the
@@ -405,6 +411,12 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
               pending.push({ stage: 'reasoning' }) // transition only — NO thinking text on the wire (F3 default)
             }
           }
+          else if (ev.kind === 'tool') {
+            // GH #49 — the adapter is executing a registry tool: a factual process claim (the tool NAME
+            // from the closed registry, never model prose — the F2 discipline the 'tool' stage's
+            // TURN_PROGRESS_STAGES note records).
+            pending.push({ stage: 'tool', ...(ev.text ? { detail: ev.text } : {}) })
+          }
           // block_stop/done provider events are NOT mapped to a stage — produce() is the pinned emitter of
           // `content`/`validating`/`done`, owning those transitions itself (F1).
         }
@@ -414,6 +426,11 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       system,
       messages: messagesFor(input, failures, lastRaw),
       onEvent,
+      // GH #49 — relayed verbatim; the adapter owns the tool loop (its buffered rounds mean 'tool'
+      // stages drain just before the final round's text under the queue design — a recorded latency
+      // limit, not a bug).
+      tools: opts.tools,
+      executeTool: opts.executeTool,
       signal: opts.signal,
     })) {
       while (pending.length > 0) yield formatProgressLine(pending.shift()!)

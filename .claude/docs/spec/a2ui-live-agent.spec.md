@@ -1,6 +1,19 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.5 · 2026-07-16 (v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.6 · 2026-07-19 (v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.6 changelog (GH #49 — the integrations/tool-use seam, built 2026-07-19): the `AgentProvider.stream`
+> request gains the OPTIONAL `tools` (JSON-Schema `ToolDef[]`) + `executeTool` pair (the `effort?`/`onEvent?`
+> additive precedent — both absent ⇒ the request shape is byte-identical); the Anthropic adapter owns the whole
+> provider-native tool loop INTERNALLY (bounded MAX_TOOL_ROUNDS=4; scratch text from a tool round is buffered
+> into the assistant context block and NEVER yielded — only the post-tools round reaches the accumulated wire
+> the validate-then-stream law governs, so SPEC-R5 is untouched). `ProduceOptions` relays the pair verbatim.
+> ADR-0146's closed progress vocabulary grows by exactly ONE stage, `tool` — a factual process claim carrying
+> the registry tool NAME, never model-composed prose (the F2 honesty law's sanctioned growth; under the queue
+> design tool stages drain just before the final round's text — a recorded latency limit). EXECUTION stays in
+> the dev proxy's node process (`tools/agent/integrations.ts` — the v0.5 shell law: registry/key/proxy shapes
+> never enter `src/agent/`); the browser forwards only ENABLED tool-entry LABELS (master-gated on
+> `toolsEnabled`), the proxy intersects with its keyless registry (weather/wikipedia-search/currency, v1) and
+> ignores the rest. Hotel booking/PMS integrations remain GH #49's named direction, out of this contract.
 > v0.5 changelog (docs-only, no requirement/ID/AC shape added or removed): **SPEC-N1** amended for the ADR-0137
 > producer-toolkit export (TKT-0072, built + ratified 2026-07-16). The package surface list gains a FOURTH
 > subpath — `.`/`./examples`/`./corpus`/`./agent` — and the blanket "the live infra is site/tools-scoped only"

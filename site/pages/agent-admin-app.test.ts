@@ -163,12 +163,41 @@ describe('ADMIN_LIBRARIES — data integrity (GH #47/#48)', () => {
   it('the a2ui-idioms pack derives from the REAL registry files — same count as the .md glob, known ids present', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
     const { ENTRY_KINDS } = await import('@agent-ui/app')
-    const files = readdirSync('packages/agent-ui/a2ui/src/agent/prompts/mini-skills').filter((f) => f.endsWith('.md'))
+    const files = (readdirSync('packages/agent-ui/a2ui/src/agent/prompts/mini-skills') as string[]).filter((f) => f.endsWith('.md'))
     const pack = ADMIN_LIBRARIES[ENTRY_KINDS.skill]!.find((p) => p.id === 'a2ui-idioms')!
     expect(pack.entries.length, 'one pack entry per registry .md file — drift-free derivation').toBe(files.length)
     const labels = new Set(pack.entries.map((e) => e.label))
     for (const known of ['game-table-chrome', 'card-game-sheet', 'game-hud', 'form-rhythm']) {
       expect(labels.has(known), `registry id ${known} present`).toBe(true)
     }
+  })
+})
+
+// ── GH #49 — the Integrations pack ↔ dev-proxy registry parity (the a2ui-idioms drift-gate discipline) ──
+
+describe('Integrations pack ↔ registry parity (GH #49)', () => {
+  it('every registry integration has a pack entry whose LABEL is its id, and vice versa', async () => {
+    const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const { INTEGRATIONS } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations.ts')
+    const pack = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.find((p) => p.id === 'integrations')!
+    expect(pack.entries.map((e) => e.label).sort()).toEqual(INTEGRATIONS.map((i) => i.id).sort())
+    // the tool wire name === the id — the whole enablement chain keys on this one string
+    for (const integration of INTEGRATIONS) expect(integration.tool.name).toBe(integration.id)
+  })
+
+  it('resolveIntegrations validates + intersects, and malformed input degrades to empty (never throws)', async () => {
+    const { resolveIntegrations, INTEGRATIONS } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations.ts')
+    expect(resolveIntegrations(['weather', 'nope', 42, 'currency']).map((i) => i.id)).toEqual(['weather', 'currency'])
+    expect(resolveIntegrations('weather')).toEqual([])
+    expect(resolveIntegrations(undefined)).toEqual([])
+    expect(resolveIntegrations(INTEGRATIONS.map((i) => i.id))).toHaveLength(INTEGRATIONS.length)
+  })
+
+  it('an integration validates its input BEFORE any network call (the currency guard)', async () => {
+    const { INTEGRATIONS } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations.ts')
+    const currency = INTEGRATIONS.find((i) => i.id === 'currency')!
+    await expect(currency.execute({ amount: 'ten', from: 'EUR', to: 'USD' })).rejects.toThrow('currency: needs numeric')
+    await expect(currency.execute({ amount: 5, from: 'EURO', to: 'USD' })).rejects.toThrow()
   })
 })
