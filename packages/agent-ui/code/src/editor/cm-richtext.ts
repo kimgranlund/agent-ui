@@ -15,6 +15,7 @@ import type { Extension, EditorState } from '@codemirror/state'
 import { Decoration, WidgetType, ViewPlugin, EditorView } from '@codemirror/view'
 import type { DecorationSet, ViewUpdate } from '@codemirror/view'
 import { syntaxTree } from '@codemirror/language'
+import { safeHref, LINK_REL, LINK_TARGET } from '@agent-ui/components/controls/text'
 
 // ── the bullet widget — a real text glyph (readable, matches the visual; no aria-hidden games) ──
 class BulletWidget extends WidgetType {
@@ -38,22 +39,10 @@ const HEADING_LEVEL: Record<string, number> = {
   ATXHeading6: 6,
 }
 
-// URL schemes the modifier-click handler will actually open (LLD-C3 Risk R2) — a relative URL (no scheme) is
-// allowed; anything else (`javascript:`, `data:`, …) is refused, the sanitize-by-construction posture
-// ui-markdown already set.
-const SAFE_SCHEME = /^(https?:|mailto:)/i
-const HAS_SCHEME = /^[a-z][a-z0-9+.-]*:/i
-
-function isSafeUrl(url: string): boolean {
-  if (!HAS_SCHEME.test(url)) return true // relative — no scheme to refuse
-  return SAFE_SCHEME.test(url)
-}
-
 interface Entry {
   from: number
   to: number
   deco: Decoration
-  order: number
 }
 
 /**
@@ -80,16 +69,15 @@ function buildDecorations(view: EditorView): DecorationSet {
   }
 
   const entries: Entry[] = []
-  let order = 0
   const style = (from: number, to: number, deco: Decoration): void => {
-    entries.push({ from, to, deco, order: order++ })
+    entries.push({ from, to, deco })
   }
   // A HIDE decoration is suppressed entirely when it sits on a revealed line — the raw markup then simply
   // renders as ordinary (unhidden) source text, with its styling decoration still applied (cl.3).
   const hide = (from: number, to: number): void => {
     if (to <= from) return
     if (touchesRevealedLine(from, to)) return
-    entries.push({ from, to, deco: Decoration.replace({}), order: order++ })
+    entries.push({ from, to, deco: Decoration.replace({}) })
   }
   // One following space folded into a hide range (headings/blockquote — "## " / "> " collapse together).
   const hideMarkAndSpace = (markFrom: number, markTo: number): void => {
@@ -165,10 +153,13 @@ function buildDecorations(view: EditorView): DecorationSet {
     })
   }
 
-  // Sorted by (from, startSide) — CodeMirror's own RangeSetBuilder contract; `order` breaks residual ties
-  // deterministically. Line decorations carry the lowest startSide, so they land first at an equal `from`
-  // (the heading/quote line class before its own hidden mark — ADR-0147 cl.8's ordering note).
-  entries.sort((a, b) => a.from - b.from || a.deco.startSide - b.deco.startSide || a.order - b.order)
+  // Sorted by (from, startSide) — CodeMirror's own RangeSetBuilder contract. No further tie-break is needed:
+  // `Array.prototype.sort` has been spec-guaranteed STABLE since ES2019 (both Chromium and WebKit, the two
+  // engines this fleet's browser tests target, implement it), and entries are pushed in tree-iteration
+  // (document) order — a stable sort preserves that order on ties with no extra bookkeeping. Line decorations
+  // carry the lowest startSide, so they land first at an equal `from` (the heading/quote line class before
+  // its own hidden mark — ADR-0147 cl.8's ordering note).
+  entries.sort((a, b) => a.from - b.from || a.deco.startSide - b.deco.startSide)
 
   const builder = new RangeSetBuilder<Decoration>()
   for (const entry of entries) builder.add(entry.from, entry.to, entry.deco)
@@ -206,18 +197,32 @@ function linkAt(state: EditorState, pos: number): string | null {
   return walkUp(start)
 }
 
-// Cmd/Ctrl+click opens the link's URL (`noopener`); a plain click falls through to CM (cursor placement stays
-// primary — editing is the whole story, ADR-0147 cl.3). A non-http(s)/mailto/relative scheme is refused
-// outright (LLD-C3 Risk R2 — the sanitize-by-construction posture ui-markdown already set).
+// Cmd+click ALWAYS opens the link's URL — the universal, collision-free "open" modifier. Ctrl+click does the
+// same off macOS (the Windows/Linux convention), but NOT on macOS: Ctrl+click is the platform's own
+// context-menu gesture on a single-button pointer, and a bare `ctrlKey` check would silently hijack it
+// (code-review finding) — a plain click falls through to CM either way (cursor placement stays primary,
+// editing is the whole story, ADR-0147 cl.3).
+const isMac = typeof navigator !== 'undefined' && /mac/i.test(navigator.platform || navigator.userAgent)
+function isOpenModifier(event: MouseEvent): boolean {
+  if (event.metaKey) return true
+  return event.ctrlKey && !isMac
+}
+
+// The fleet's own scheme gate (@agent-ui/components/controls/text, ADR-0114) — the SAME allowlist + `noopener
+// noreferrer` policy every other link-opening surface in the fleet uses, imported rather than re-declared
+// (code-review finding: a hand-rolled copy here had drifted weaker — a raw-string scheme check instead of
+// `safeHref`'s `new URL()` parse, and a bare `noopener` missing `noreferrer`).
 const linkClickHandler = EditorView.domEventHandlers({
   mousedown(event, view) {
-    if (!(event.metaKey || event.ctrlKey)) return false
+    if (!isOpenModifier(event)) return false
     const pos = view.posAtCoords({ x: event.clientX, y: event.clientY })
     if (pos == null) return false
     const url = linkAt(view.state, pos)
-    if (!url || !isSafeUrl(url)) return false
+    if (!url) return false
+    const allowed = safeHref(url, document.baseURI)
+    if (allowed === null) return false
     event.preventDefault()
-    window.open(url, '_blank', 'noopener')
+    window.open(allowed, LINK_TARGET, LINK_REL)
     return true
   },
 })

@@ -349,6 +349,12 @@ export class UICodeEditorElement extends UIFormElement {
       // be silently dropped — the mode effect no-ops while `#cm` is null and nothing re-fires later, since
       // `mode` didn't change again. Push the CURRENT mode in now, mirroring the value-side m7/M1a re-sync.
       this.#cm.setRichtext(this.mode === 'richtext' && this.#cm.richtextAvailable)
+      // Re-sync `editable` too (code-review finding, the same M1a/MINOR-1 shape as value/mode above):
+      // `disabled`/`readonly` may have changed DURING the async CM load — the disabled effect's
+      // `this.#cm?.setEditable(...)` was a no-op while `#cm` was still null, and nothing re-fires it later
+      // since disabled/readonly didn't necessarily change AGAIN. Push the CURRENT editable state in now so a
+      // disabled/readonly editor never mounts into an unexpectedly-editable CodeMirror surface.
+      this.#cm.setEditable(!this.effectiveDisabled() && !this.readonly)
       editor.hidden = true // the plain surface yields to CM (kept in the DOM, hidden — the reconnect restore)
       if (hadFocus) {
         this.#skipCmFocusBaseline = true // the handoff's own focus must not re-baseline #committed (M1b)
@@ -486,15 +492,18 @@ export class UICodeEditorElement extends UIFormElement {
     const toggle = this.ownerDocument.createElement('div')
     toggle.setAttribute('data-part', 'mode-toggle')
     toggle.setAttribute('role', 'button') // the no-native-form-elements law — role rides the PART
-    toggle.setAttribute('aria-label', 'Rendered markdown view')
     // Raw listeners (not this.listen) — the toggle's whole lifecycle is create/remove paired with the CM
     // mount (disconnected() removes the node), the same pattern the `mount` input-suppression listener uses.
-    toggle.addEventListener('click', () => this.#userToggleMode())
+    toggle.addEventListener('click', () => void this.#userToggleMode())
     toggle.addEventListener('keydown', (event) => {
       const key = (event as KeyboardEvent).key
       if (key !== 'Enter' && key !== ' ') return
+      // OS/browser key-auto-repeat fires many keydowns per physical press while a key is held — a real
+      // `<button>` (and the fleet's own pressActivation trait) only activates once per press; guard so
+      // holding Space/Enter doesn't flip mode (and fire `toggle`) repeatedly (code-review finding).
+      if ((event as KeyboardEvent).repeat) return
       event.preventDefault() // Space's default is page-scroll; harmless to prevent on Enter too
-      this.#userToggleMode()
+      void this.#userToggleMode()
     })
     this.prepend(toggle)
     this.#modeToggle = toggle
@@ -502,18 +511,31 @@ export class UICodeEditorElement extends UIFormElement {
   }
 
   /** A USER-initiated toggle (click/Enter/Space) flips `mode` and emits ONE host-targeted `toggle` — the
-   *  ONLY path that emits it (a programmatic `mode` set is silent, ADR-0147 F4 — the `value`/`input` symmetry). */
-  #userToggleMode(): void {
+   *  ONLY path that emits it (a programmatic `mode` set is silent, ADR-0147 F4 — the `value`/`input`
+   *  symmetry). Guarded on `effectiveDisabled()` (code-review finding): ADR-0147 cl.5's "disabled hosts
+   *  render no operable toggle" was enforced only cosmetically (tabindex removal, `aria-disabled`,
+   *  `pointer-events:none`) — none of which stop a keydown on a toggle that already held focus BEFORE the
+   *  host became disabled, since browsers don't blur a focused element merely because its tabindex is
+   *  removed. Awaits `updateComplete` before emitting (code-review finding) so a `toggle` listener observes
+   *  the ALREADY-applied `aria-pressed` + CodeMirror richtext state, never the one-microtask-stale
+   *  pre-toggle snapshot the deferred `this.effect()` would otherwise still be mid-flight on. */
+  async #userToggleMode(): Promise<void> {
+    if (this.effectiveDisabled()) return
     this.mode = this.mode === 'richtext' ? 'source' : 'richtext'
+    await this.updateComplete
     this.emit('toggle')
   }
 
-  /** Sync the toggle's `aria-pressed` (mirrors `mode === 'richtext'`) + its disabled/tabindex interplay
-   *  (ADR-0147 cl.5/F5) to the CURRENT state. A no-op before the toggle part exists. */
+  /** Sync the toggle's `aria-pressed` + `aria-label` (mirrors `mode === 'richtext'`, the text-field.ts
+   *  reveal-button "Show password"/"Hide password" precedent — code-review finding: a STATIC label never
+   *  told an assistive-tech user which mode was active or what activating the control would do next) + its
+   *  disabled/tabindex interplay (ADR-0147 cl.5/F5) to the CURRENT state. A no-op before the toggle exists. */
   #syncModeToggle(): void {
     const toggle = this.#modeToggle
     if (!toggle) return
-    toggle.setAttribute('aria-pressed', String(this.mode === 'richtext'))
+    const rich = this.mode === 'richtext'
+    toggle.setAttribute('aria-pressed', String(rich))
+    toggle.setAttribute('aria-label', rich ? 'Show markdown source' : 'Show rendered markdown')
     if (this.effectiveDisabled()) {
       toggle.removeAttribute('tabindex')
       toggle.setAttribute('aria-disabled', 'true')
