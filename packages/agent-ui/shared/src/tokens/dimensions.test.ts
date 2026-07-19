@@ -476,7 +476,10 @@ describe('dimensions.css — the compact-window body override (ADR-0150)', () =>
 
   it('declares the @media (width < 52.5rem) block AFTER the base `*` ramp (order is the win condition)', () => {
     expect(mediaMatch).not.toBeNull()
-    expect(bare.indexOf('@media')).toBeGreaterThan(bare.indexOf(universalBlock))
+    // Anchor the position probe on the CAPTURED match, not a bare '@media' search — a future earlier
+    // media block (prefers-reduced-motion etc.) must not silently repoint what this asserts (PR #43
+    // review nit, confirmed independently by the #54 panel).
+    expect(bare.indexOf((mediaMatch as RegExpMatchArray)[0]!)).toBeGreaterThan(bare.indexOf(universalBlock))
     // the breakpoint is the documented literal (ADR-0150 cl.2 — not tokenizable): exactly 52.5rem
     expect(bare).not.toMatch(/@media[^{]*992/)
   })

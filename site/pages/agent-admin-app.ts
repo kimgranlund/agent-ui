@@ -116,10 +116,15 @@ function applyPreset(preset: AgentPreset): void {
   agentTrigger.textContent = `${preset.label} ▾`
   agentTrigger.title = 'Switch agent'
   for (const [id, item] of agentItems) {
-    // aria-checked marks the active row (role=menuitem rows tolerate it as a light active marker for
-    // styling + AT); the menu control owns every other ARIA concern.
-    if (id === preset.id) item.setAttribute('aria-checked', 'true')
-    else item.removeAttribute('aria-checked')
+    // The active marker is REAL TEXT (a leading ✓, the platform menu convention) + a data attribute for
+    // the CSS weight — NOT aria-checked: these rows are role=menuitem (ui-menu roves over exactly that
+    // role, menu.ts:5), and aria-checked is invalid on menuitem (menu.ts:149 documents the same law for
+    // aria-selected). Real text is announced by AT for free; a menuitemradio variant is a ui-menu fleet
+    // follow-up (filed at #51 close-out), not a page-level hack.
+    const isActive = id === preset.id
+    const label = AGENT_PRESETS.find((p) => p.id === id)?.label ?? id
+    item.textContent = isActive ? `✓ ${label}` : label
+    item.toggleAttribute('data-active', isActive)
   }
 }
 

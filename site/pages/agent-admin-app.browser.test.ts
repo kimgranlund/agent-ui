@@ -52,9 +52,29 @@ describe('agent-admin-app — the canvas-header (GH #51)', () => {
     expect(localStorage.getItem(ACTIVE_PRESET_KEY), 'the committed agent persists').toBe(target.id)
     expect((document.querySelector('.canvas-header-name') as HTMLElement).textContent, 'the title zone follows the commit').toBe(target.label)
     expect((agentMenu.querySelector('[data-part="trigger"]') as HTMLElement).textContent).toContain(target.label)
-    // the active row carries the light marker; the previous one dropped it
-    expect(items.find((i) => i.dataset.value === target.id)!.getAttribute('aria-checked')).toBe('true')
-    expect(items.find((i) => i.dataset.value === before.id)!.hasAttribute('aria-checked')).toBe(false)
+    // The active row's marker is REAL TEXT (✓) + data-active — never aria-checked, which is invalid on
+    // role=menuitem (PR #54 review finding). Real text is what AT announces.
+    const activeRow = items.find((i) => i.dataset.value === target.id)!
+    const previousRow = items.find((i) => i.dataset.value === before.id)!
+    expect(activeRow.hasAttribute('data-active')).toBe(true)
+    expect(activeRow.textContent).toBe(`✓ ${target.label}`)
+    expect(activeRow.hasAttribute('aria-checked'), 'aria-checked must NOT appear on a menuitem').toBe(false)
+    expect(previousRow.hasAttribute('data-active')).toBe(false)
+    expect(previousRow.textContent).toBe(before.label)
+  })
+
+  it('a long tagline truncates INSIDE the header — the menu triggers stay in reach (the flexbox min-width:auto trap, PR #54 review finding)', async () => {
+    await raf()
+    const header = document.querySelector('header.canvas-header') as HTMLElement
+    const agentTrigger = document.querySelector('.agent-menu [data-part="trigger"]') as HTMLElement
+    const tagline = document.querySelector('.canvas-header-tagline') as HTMLElement
+    // The header is full-viewport-width; at the fleet's 414px default every preset tagline (70-90ch)
+    // exceeds the free space, so truncation MUST be doing the yielding for the triggers to fit.
+    const headerBox = header.getBoundingClientRect()
+    const triggerBox = agentTrigger.getBoundingClientRect()
+    expect(triggerBox.right, 'the agent-menu trigger must not be pushed past the header edge').toBeLessThanOrEqual(headerBox.right + 1)
+    expect(triggerBox.width, 'the trigger must remain a real, clickable target').toBeGreaterThan(20)
+    expect(tagline.scrollWidth, 'the tagline is genuinely truncated (content wider than its box)').toBeGreaterThan(tagline.clientWidth)
   })
 
   it('the "…" overflow carries Reset persona (the page action relocated off the strip)', async () => {
