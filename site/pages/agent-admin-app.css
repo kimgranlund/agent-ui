@@ -6,12 +6,21 @@
 html,
 body {
   block-size: 100%;
+  /* GH #130 — without this, an oversized descendant (e.g. the settings/context panel's content growing
+     past its own bounds) doesn't get clipped by #app's box; it spills past it, and the DOCUMENT grows to
+     fit instead of #app's own 100dvh box staying fixed — the whole page then scrolls, dragging the
+     composer/shell off-screen, instead of the panel's own `overflow-y: auto` region (agent-admin.css's
+     `[data-role='tabs']`) engaging as intended. */
+  overflow: hidden;
 }
 
 #app {
   display: flex;
   flex-direction: column;
   block-size: 100dvh;
+  /* Same fix, belt-and-braces at the shell's own box (not just html/body): #app is the element the
+     100dvh contract actually lives on — its content must never be allowed to push past it either. */
+  overflow: hidden;
   background: var(--md-sys-color-neutral-surface);
 }
 
