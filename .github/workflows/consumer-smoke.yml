@@ -1,0 +1,54 @@
+# consumer-smoke.yml — proves each release as CONSUMERS see it (GH #71), not just at the tarball level
+# publish.yml's own gate covers (dry-run pack + registry check). Runs scripts/verify-consumer-install.mjs,
+# which scaffolds a throwaway Vite app OUTSIDE this repo/workspace, `npm install`s the real
+# `@agent-ui-kit/{shared,icons,components}` packages from the real npm registry, builds it, and drives the
+# built output in a real headless browser to assert `<ui-button>` genuinely renders with real component CSS
+# applied — plus an independent esm.sh CDN probe (the README's no-build-step recipe). See that script's own
+# header for the full mechanics. Deliberately thin, matching publish.yml's own shape: this workflow gates
+# nothing, resolves the version, and calls that one script — it stays red when a published artifact breaks
+# consumers even if the repo's own `npm run check && npm test` gates are green (the script never imports
+# anything from `packages/agent-ui/*` source).
+#
+# Two ways in:
+#   - automatically after "Publish packages" completes (workflow_run) — the primary path, catching a
+#     just-shipped release before anyone else installs it. Only proceeds on that workflow's SUCCESS
+#     (a failed/dry-run publish left nothing new on the registry to verify).
+#   - workflow_dispatch (Actions tab, manual) with a version input — the on-demand path: re-verify an older
+#     release, or check right now without waiting for the next publish. Defaults to the CURRENT
+#     `@agent-ui-kit/components` `latest` dist-tag when left blank (the script resolves this itself).
+name: Consumer install smoke
+
+on:
+  workflow_run:
+    workflows: ['Publish packages']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to verify (semver, no leading v — e.g. 0.0.5). Blank = the current @agent-ui-kit/components `latest` dist-tag.'
+        required: false
+
+jobs:
+  smoke:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # This repo's own devDependencies (playwright, vite) are TEST INFRASTRUCTURE for driving/building the
+      # scratch consumer app — never installed INTO that app, so this install does not leak workspace
+      # resolution into what's being verified (the scratch app lives outside the repo entirely and gets its
+      # own real `npm install` from the real registry).
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Verify consumer install
+        env:
+          DISPATCH_VERSION: ${{ inputs.version }}
+        run: node scripts/verify-consumer-install.mjs "$DISPATCH_VERSION"
