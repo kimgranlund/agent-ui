@@ -56,6 +56,13 @@
     "section": "Guides"
   },
   {
+    "href": "./super-shell.html",
+    "label": "Super Shell",
+    "description": "ui-super-shell is the shell-archetype family's grammar ceiling (M5): a two-level recursive frame \u2014 header/rails/panes/canvas/footer, all optional, header-hosted per-side collapse.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./master-detail.html",
     "label": "Master Detail",
     "description": "ui-master-detail is a docked list | detail arrangement over the shipped ui-split, drilling into one record.",
@@ -93,7 +100,7 @@
   {
     "href": "./layout-overview.html",
     "label": "Layout Primitives",
-    "description": "The structural layout family — ui-row, ui-column, ui-list, ui-grid — sharing the UIContainerElement base and gap/align/justify props.",
+    "description": "The structural layout family \u2014 ui-row, ui-column, ui-list, ui-grid \u2014 sharing the UIContainerElement base and gap/align/justify props.",
     "level": "L2",
     "section": "Guides"
   },
