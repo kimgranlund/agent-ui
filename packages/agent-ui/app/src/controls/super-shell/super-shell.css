@@ -45,6 +45,16 @@
     padding-inline: calc(var(--ui-super-shell-module) / 3);
   }
 
+  /* The authored header/footer content fills the space between the toggles by construction (a row-flex
+     child defaults to flex:0 0 auto — content-width, never expanding — so without this the bar's OWN
+     content would shrink-wrap and leave the rest of the bar visibly empty; regression measured on the
+     docs site's real header/footer, GH #90). `min-inline-size:0` lets the content's own children manage
+     overflow (e.g. a `justify-content:space-between` row) instead of forcing the bar wider than the shell. */
+  [data-part='bar-content'] {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+
   [data-part='middle'] {
     display: flex;
     gap: var(--ui-super-shell-gap);

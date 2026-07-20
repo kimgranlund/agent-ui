@@ -33,6 +33,7 @@ const NAME_MAP = {
   plus: 'plus',
   'arrow-up': 'arrow-up',
   microphone: 'microphone',
+  list: 'list', // ui-super-shell's header-hosted collapse toggle (M5, GH #83/#90)
   warning: 'warning',
   'circle-notch': 'circle-notch',
   'check-circle': 'check-circle',

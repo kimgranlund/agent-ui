@@ -72,13 +72,21 @@ export class UISuperShellElement extends UIElement {
     const frame = document.createElement('div')
     frame.setAttribute('data-part', 'frame')
 
-    // header row — hosts the side toggles (SPEC-R2b) around the authored header content.
+    // header row — hosts the side toggles (SPEC-R2b) around the authored header content. The content
+    // is wrapped in its own `bar-content` box (flex:1 1 auto, super-shell.css) so it fills the space
+    // between the two toggles by construction — a consumer's header content (e.g. the docs site's own
+    // `.app-context-header`) needs no bespoke CSS of its own to stretch edge-to-edge (component-reviewer
+    // finding: an un-wrapped `flex:0 0 auto` header child shrink-wraps to its own content width in
+    // `[data-part='bar']`'s row-flex layout, leaving the rest of the bar visibly empty).
     const headerChildren = authored.get('header')!
     if (headerChildren.length > 0) {
       const header = document.createElement('div')
       header.setAttribute('data-part', 'bar')
       header.setAttribute('data-bar', 'header')
-      header.append(this.#makeToggle('left'), ...headerChildren, this.#makeToggle('right'))
+      const barContent = document.createElement('div')
+      barContent.setAttribute('data-part', 'bar-content')
+      barContent.append(...headerChildren)
+      header.append(this.#makeToggle('left'), barContent, this.#makeToggle('right'))
       frame.append(header)
     }
 
@@ -102,12 +110,17 @@ export class UISuperShellElement extends UIElement {
     place('global-options', 'rail', 'right')
     frame.append(middle)
 
+    // Footer has no toggles (SPEC-R2c: header/footer are permanent chrome) — but its content gets the
+    // SAME bar-content flex:1 wrapper, so a footer authored the same way as a header behaves identically.
     const footerChildren = authored.get('footer')!
     if (footerChildren.length > 0) {
       const footer = document.createElement('div')
       footer.setAttribute('data-part', 'bar')
       footer.setAttribute('data-bar', 'footer')
-      footer.append(...footerChildren)
+      const barContent = document.createElement('div')
+      barContent.setAttribute('data-part', 'bar-content')
+      barContent.append(...footerChildren)
+      footer.append(barContent)
       frame.append(footer)
     }
 
@@ -120,10 +133,14 @@ export class UISuperShellElement extends UIElement {
   #makeToggle(side: 'left' | 'right'): HTMLElement {
     const button = document.createElement('ui-button')
     button.setAttribute('variant', 'ghost')
+    button.setAttribute('icon-only', '') // button.md's icon-only-button idiom (the toast.ts close-button
+    // precedent) — WITHOUT this the button reserves a dead 1fr label track and renders non-square/
+    // near-invisible against the bar (the regression a real browser screenshot caught, GH #90).
     button.setAttribute('data-part', 'side-toggle')
     button.setAttribute('data-side', side)
     button.setAttribute('aria-label', side === 'left' ? 'Toggle left panes' : 'Toggle right panes')
     const icon = document.createElement('ui-icon')
+    icon.setAttribute('slot', 'leading') // the icon-only anatomy's ONE adornment cell (button.md)
     icon.setAttribute('data-role', 'icon')
     icon.setAttribute('glyph', 'list')
     button.append(icon)

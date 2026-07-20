@@ -72,9 +72,16 @@ ui-super-shell.ss-demo--inner {
 }
 
 /* Slot CELLS — visible content boxes so the grammar reads. Tinted per slot to distinguish header/rail/
- * pane/canvas/footer (ordinary attribute-free classes — not slot/data-role, which the site-canon guard
- * scans; the label/note are the cell's own light-DOM content, same shape as ui-super-shell's real slots). */
-.ss-slot {
+ * pane/canvas/footer. CRITICAL: every `[data-slot=…]` rule below is scoped under `.ss-demo` — the SAME
+ * attribute values (`header`/`content`/`nav-pane`/…) are also carried by the REAL site chrome's own
+ * elements (`_page.ts`'s `buildThemedShell` marks `.app-page`, `.app-context-header`, the nav, etc. with
+ * `data-slot`, since that's the real ui-super-shell's own grammar) — an unscoped `[data-slot='content']`
+ * here would leak straight onto `.app-page` and override its layout (measured regression: `.app-page`
+ * picked up `align-items: flex-start`, collapsing `.page-footer`/`[data-page-content]` to shrink-to-fit
+ * width — exactly the floating-pill bug this comment now guards against, root-caused via Playwright
+ * computed-style diffing after Kim's screenshot). `.ss-slot`/`.ss-slot-label`/`.ss-slot-note` are already
+ * safe (unique `ss-` class names, no collision risk). */
+.ss-demo .ss-slot {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -94,19 +101,19 @@ ui-super-shell.ss-demo--inner {
   color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: 0.72rem;
 }
-[data-slot='header'] .ss-slot,
-[data-slot='footer'] .ss-slot {
+.ss-demo [data-slot='header'] .ss-slot,
+.ss-demo [data-slot='footer'] .ss-slot {
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
 }
-[data-slot='header'] { background: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-neutral-surface)); }
-[data-slot='footer'] { background: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-neutral-surface)); }
-[data-slot='global-nav'],
-[data-slot='global-options'] { background: color-mix(in srgb, var(--md-sys-color-secondary, var(--md-sys-color-primary)) 16%, var(--md-sys-color-neutral-surface)); text-align: center; }
-[data-slot='nav-pane'],
-[data-slot='options-pane'] { background: color-mix(in srgb, var(--md-sys-color-primary) 8%, var(--md-sys-color-neutral-surface)); }
-[data-slot='content'] { background: var(--md-sys-color-neutral-surface); align-items: flex-start; }
+.ss-demo [data-slot='header'] { background: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-neutral-surface)); }
+.ss-demo [data-slot='footer'] { background: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-neutral-surface)); }
+.ss-demo [data-slot='global-nav'],
+.ss-demo [data-slot='global-options'] { background: color-mix(in srgb, var(--md-sys-color-secondary, var(--md-sys-color-primary)) 16%, var(--md-sys-color-neutral-surface)); text-align: center; }
+.ss-demo [data-slot='nav-pane'],
+.ss-demo [data-slot='options-pane'] { background: color-mix(in srgb, var(--md-sys-color-primary) 8%, var(--md-sys-color-neutral-surface)); }
+.ss-demo [data-slot='content'] { background: var(--md-sys-color-neutral-surface); }
 
 .ss-resize {
   resize: horizontal;
