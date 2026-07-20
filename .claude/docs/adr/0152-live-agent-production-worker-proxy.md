@@ -1,4 +1,4 @@
-# ADR-0151 — the live-agent overlay (`a2ui-chat`/`a2ui-live`/`agent-admin`/`agent-admin-app`) goes live in PRODUCTION via a Cloudflare Worker proxy — ADR-0136 Fork 1 and ADR-0131 cl.4/7's dev-only ruling are REVERSED for the deployed docs site, not merely narrowed
+# ADR-0152 — the live-agent overlay (`a2ui-chat`/`a2ui-live`/`agent-admin`/`agent-admin-app`) goes live in PRODUCTION via a Cloudflare Worker proxy — ADR-0136 Fork 1 and ADR-0131 cl.4/7's dev-only ruling are REVERSED for the deployed docs site, not merely narrowed
 
 > Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-20
 >
@@ -113,7 +113,7 @@ site's static assets, reachable by every visitor — not gated behind a build-ti
   wave as this ADR (tracked alongside; see the Repairs cell).
 - [ ] The four stale dev-only header claims (`live-proxy-transport.ts`, `admin-live-runner.ts`,
   `provider-switcher.ts`, `integrations.ts`) corrected in the same wave.
-- [ ] Kim ratifies (`ratify ADR-0151`) — until then this remains `proposed`; the code it describes is
+- [ ] Kim ratifies (`ratify ADR-0152`) — until then this remains `proposed`; the code it describes is
   already live (this ADR is documenting a shipped decision, not gating one still to build — the accepted
   pattern this repo already uses for e.g. ADR-0150, built and deployed same-session, ratified the
   following day).

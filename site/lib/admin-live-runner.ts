@@ -1,6 +1,6 @@
 // admin-live-runner.ts — ALM-C7 / TKT-0052 (ADR-0136): the live-turn runner for `ui-agent-admin`'s chat
-// preview, probed at runtime in EVERY environment as of ADR-0151 (which REVERSES ADR-0131 cl.4/7's
-// dev-only ruling for this page pair — see ADR-0151 for the full rationale). It is the site-side
+// preview, probed at runtime in EVERY environment as of ADR-0152 (which REVERSES ADR-0131 cl.4/7's
+// dev-only ruling for this page pair — see ADR-0152 for the full rationale). It is the site-side
 // implementation of the app-local `AdminAgentTurn` seam (agent-admin-schema.ts): one `AdminTurnRequest` in,
 // the model's full reply string out. Browser → the mounted proxy: in dev, `dev-proxy-plugin.ts`'s `/chat`
 // branch (holds the key SERVER-side, validates the {provider,model} pair against providers.json); in

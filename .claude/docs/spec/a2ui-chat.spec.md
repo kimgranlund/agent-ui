@@ -156,13 +156,13 @@ integration-proof, honest-labels site discipline extended from the feed/live pag
 default transport is `createRecordedTransport()` (ADR-0073's recorded-default posture); a dynamic import
 probes `/status` at runtime and, if a live provider is available, wires a live provider transport + the
 existing switcher component — the SAME pattern `a2ui-live.ts`'s `wireLiveOverlay()` already ships. As of
-**ADR-0151**, this probe resolves in every environment, not only dev: the production build ships against a
+**ADR-0152**, this probe resolves in every environment, not only dev: the production build ships against a
 Cloudflare Worker port of the dev proxy (`/__a2ui/agent`), so a configured Workers Secret makes the live arm
 reachable from the deployed site too. `a2a-artifact-feed.ts`'s `wireFeedLiveOverlay()` is explicitly OUT of
-ADR-0151's scope and stays hard-gated to dev only (`if (!import.meta.env.DEV) return`) — no new transport,
+ADR-0152's scope and stays hard-gated to dev only (`if (!import.meta.env.DEV) return`) — no new transport,
 no new provider code, no new switcher component either way.
 - **AC1** *Given* the static production build, *when* its output is inspected, *then* it contains no key
-  LITERAL or key VALUE anywhere — the live-proxy-transport module and switcher DO ship in `dist/` (ADR-0151
+  LITERAL or key VALUE anywhere — the live-proxy-transport module and switcher DO ship in `dist/` (ADR-0152
   reachability, not a tree-shake target), and the module resolves its live/recorded posture via a same-origin
   `/status` fetch, never a build-time env inline.
 - **AC2** *Given* no live provider key configured (dev: no `.env` entry; production: no Workers Secret set),

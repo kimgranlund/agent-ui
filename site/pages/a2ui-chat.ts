@@ -20,9 +20,9 @@
 // surface as the primitive's own system bubble via `AgentTurnHandle.fail()`).
 //
 // Recorded-default (`createRecordedTransport`, ADR-0073); the live arm reuses the identical runtime-probed
-// dynamic-import + switcher pattern `a2ui-live.ts` ships (SPEC-R8, superseded by ADR-0151 — the probe now
+// dynamic-import + switcher pattern `a2ui-live.ts` ships (SPEC-R8, superseded by ADR-0152 — the probe now
 // resolves in every environment, not only dev: production carries a Cloudflare Worker port of the dev
-// proxy under `/__a2ui/agent`). `a2a-artifact-feed.ts` stays dev-only by design — out of ADR-0151's scope.
+// proxy under `/__a2ui/agent`). `a2a-artifact-feed.ts` stays dev-only by design — out of ADR-0152's scope.
 import { mountFullBleedPage } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './a2ui-chat.css'
 import '@agent-ui/app/conversation.css' // ui-conversation's own thread/narration layout (LLD-C6)

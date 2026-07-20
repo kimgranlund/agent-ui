@@ -1,6 +1,6 @@
 // provider-switcher.ts — LLD-C12 / SPEC-R12: the in-chat provider→model switcher, dynamically imported
 // once a runtime `/status` probe confirms a live provider is reachable — in EVERY environment as of
-// ADR-0151 (supersedes the old dev-only framing: this module and the bundled providers.json DO ship in
+// ADR-0152 (supersedes the old dev-only framing: this module and the bundled providers.json DO ship in
 // `dist/`, alongside the rest of the live overlay). Renders its dropdowns FROM providers.json (the single
 // source of truth — no hand-listed second menu), DISABLES `implemented: false` providers ("coming soon" —
 // a visible roadmap, never selectable), persists the selection to localStorage, and exposes the current

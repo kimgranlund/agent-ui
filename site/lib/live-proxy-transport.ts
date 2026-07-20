@@ -1,5 +1,5 @@
 // live-proxy-transport.ts — LLD-C7 / SPEC-R9: the live overlay transport, probed at runtime in EVERY
-// environment (ADR-0151 supersedes the old dev-only framing). Browser → the proxy: in dev, a Vite
+// environment (ADR-0152 supersedes the old dev-only framing). Browser → the proxy: in dev, a Vite
 // middleware that holds the key SERVER-side (`process.env`, LLD-C6); in production, a Cloudflare Worker
 // port of the same proxy (`tools/agent/worker/index.ts`) holding the key as a Workers Secret, mounted at
 // the same `/__a2ui/agent` path. It POSTs the framed turn + the {provider,model,mode} selection and streams
