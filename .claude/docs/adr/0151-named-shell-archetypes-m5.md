@@ -207,3 +207,25 @@ This is an **intake** ADR — realized in stages:
   nothing imports the apex either way.
 - **A sibling PRD.** Rejected: Kim's ADR-0120 Q3 ruling — the chrome tier has ONE owning PRD; a
   sibling splits one tier's story across two documents.
+
+## Amendment (2026-07-20 build finding — stale context corrected, decision unchanged)
+
+This ADR's own Context/Decision text names `site/pages/a2ui-live.ts` as `ui-chat-shell`'s extraction
+source ("the third, `a2ui-live`, already carries the ADR-0088 §3 harness the other two would have to
+copy"; "a2ui-live re-hosts at M5"). Checked against the actual code during the round-4 build (the
+five-round shell-archetypes review plan, `shell-archetypes-m5.lld.md` §6's own amendment) and found
+FALSE: neither `a2ui-live.ts`, `ui-agent-admin` (`agent-admin.ts`), nor `a2ui-chat.ts` hand-rolls a
+conversation-list/nav-pane pane to extract — `ui-conversation` (the shared primitive all three
+compose) is pure message-feed + composer, with no header/nav concept of its own. `a2ui-live.ts` was
+not touched by the `ui-chat-shell` build at all.
+
+What genuinely shipped as the extraction: `a2ui-chat.ts`'s own hand-rolled `.chat-shell`/`.chat-head`
+PAGE CHROME (not a conversation-list) — deleted from that page's own CSS/DOM construction in favor of
+the shared `ui-chat-shell` composition (PR #118, closing GH #98). `nav-pane` ships as part of the
+archetype's grammar (matching `ui-workspace-shell`'s sibling shape) but has no content provider in
+this migration — the absence law (SPEC-R1), not a gap.
+
+This is a factual correction to the WHERE, not a reversal of the WHAT — the decision to ship
+`ui-chat-shell` as a thin, behavior-only composition stands exactly as ratified; only the specific
+extraction-source claim was wrong. Recorded here per this repo's own append-only convention (accepted
+ADRs are never edited in place) and its "stale context is a defect" operating law.
