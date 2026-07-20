@@ -5,12 +5,15 @@ import { playwright } from '@vitest/browser-playwright'
 // The browser-truth runner (decomp s12) — a SEPARATE vitest config from the jsdom inner loop
 // (`vitest.config.ts`). Real engines (Playwright-driven Chromium + WebKit) are where @scope, the
 // dimensional ramp, real computed geometry and the AX tree are actually true; jsdom can't resolve them.
-// Run with `npm run test:browser`. Split into THREE vitest PROJECTS (the `test.projects` array — vitest 4's
+// Run with `npm run test:browser`. Split into FOUR vitest PROJECTS (the `test.projects` array — vitest 4's
 // inline replacement for `vitest.workspace.ts`): `packages` (the framework's own *.browser.test.ts), `site`
-// (the docs-site's own *.browser.test.ts, e.g. site/lib/component-preview.browser.test.ts), and `visual`
-// (ADR-0110 — the pixel-diff harness, opt-in by filename). All three `extends: true` off this root config,
-// inheriting the browser instances below (the jsdom config excludes the `*.browser.test.ts` glob entirely,
-// so these suites never collide with it). No resolve aliases: the workspace packages are symlinked under
+// (the docs-site's own *.browser.test.ts, e.g. site/lib/component-preview.browser.test.ts), `focus-timing`
+// (GH #56 — a small, named set of focus/keyboard/scroll-timing files pulled out of `packages`/`site` and
+// run with zero file parallelism, since they flake under concurrent-page focus contention; see that
+// project's own comment below), and `visual` (ADR-0110 — the pixel-diff harness, opt-in by filename). All
+// four `extends: true` off this root config, inheriting the browser instances below (the jsdom config
+// excludes the `*.browser.test.ts` glob entirely, so these suites never collide with it). No resolve
+// aliases: the workspace packages are symlinked under
 // node_modules and Vite resolves the bare `@agent-ui/*` specifiers (incl. the `./components` + CSS
 // subpaths, and the barrels' inner `@import '@agent-ui/shared/...'`) through their package `exports` map.
 // vitest 4.1 takes the provider as a factory from `@vitest/browser-playwright` (no longer a string).
@@ -22,7 +25,7 @@ import { playwright } from '@vitest/browser-playwright'
 // retiring #22-era theory that an a2ui-live fetch-interception error cascade was the dominant driver (no
 // raw `fetch =` assignment exists in site/ or a2ui today; command-palette's stub is per-test scoped). The
 // durable fix is STRUCTURAL, not a bigger number: `npm run test:browser` now runs the three projects as
-// SEQUENTIAL SHARDS (packages → site → visual), each its own process whose peak sits far under node's
+// SEQUENTIAL SHARDS (packages → site → focus-timing → visual), each its own process whose peak sits far under node's
 // default ceiling — the crash class is gone regardless of future suite growth, and no NODE_OPTIONS
 // override is needed. Do not re-monolith the script or re-add a ceiling bump; if a single SHARD ever
 // approaches the default ceiling, split that project further instead. Known cost: full-shard concurrency
@@ -39,6 +42,19 @@ import { playwright } from '@vitest/browser-playwright'
 // only package.json's invocation sharding changed. THIRD SPLIT (same day): `:rest` itself flipped 134
 // under load once the M5 super-shell wave grew the app package — `:app` (packages/agent-ui/app) now runs
 // alone and `:rest` excludes components+app (still complementary by construction via --exclude).
+
+// GH #56 — the named, closed set of files pulled out of `packages`/`site` into the `focus-timing` project
+// below. Absolute repo-relative paths (not globs) so they match EXACTLY these files, never a same-named
+// file added later elsewhere; append here (never edit the individual file's own test code first) when a
+// new focus/keyboard/scroll-timing leg joins the flaky-under-concurrency class.
+const FOCUS_TIMING_FILES = [
+  'packages/agent-ui/code/src/editor/editor.browser.test.ts',
+  'packages/agent-ui/components/src/controls/swiper/swiper.browser.test.ts',
+  'packages/agent-ui/components/src/controls/textarea/textarea.browser.test.ts',
+  'packages/agent-ui/components/src/controls/toolbar/toolbar.browser.test.ts',
+  'packages/agent-ui/components/src/controls/tooltip/tooltip.browser.test.ts',
+  'site/pages/a2ui-chat.browser.test.ts',
+]
 
 export default defineConfig({
   test: {
@@ -81,7 +97,9 @@ export default defineConfig({
           include: ['packages/agent-ui/*/src/**/*.browser.test.ts'],
           // *.visual.browser.test.ts ends with .browser.test.ts too (glob `*` crosses `.`) — exclude it
           // explicitly so a visual file is routed to the `visual` project ONLY, never double-run here.
-          exclude: ['**/*.visual.browser.test.ts'],
+          // GH #56's known flaky-under-concurrency files are ALSO excluded here — routed instead to the
+          // `focus-timing` project below, which runs them with zero file parallelism.
+          exclude: ['**/*.visual.browser.test.ts', ...FOCUS_TIMING_FILES],
         },
       },
       {
@@ -89,7 +107,26 @@ export default defineConfig({
         test: {
           name: 'site',
           include: ['site/**/*.browser.test.ts'],
-          exclude: ['**/*.visual.browser.test.ts'],
+          exclude: ['**/*.visual.browser.test.ts', ...FOCUS_TIMING_FILES],
+        },
+      },
+      {
+        // GH #56 — a stable CLASS of focus/keyboard/scroll-timing interaction legs (editor mode-toggle
+        // keydown, swiper keyboard-scroll, textarea focus-vs-filled, toolbar roving Tab, tooltip focusin,
+        // a2ui-chat tail-follow scroll) flake ONLY under full-project-shard concurrency — every one passes
+        // 100% solo (verified 2026-07-19, both engines). Root cause: multiple Playwright pages/iframes
+        // sharing OS-level document focus while running concurrently within the SAME `packages`/`site`
+        // project — a real document can only be focused ONE page at a time, so a `:focus`/`:focus-visible`
+        // assertion in one file can observe another concurrently-running file's page stealing focus.
+        // FIX: pull exactly these files into their OWN project with `fileParallelism: false` (serial
+        // within this project — each file still runs BOTH engines, but never beside a SIBLING file from
+        // this list) while `packages`/`site` keep full concurrency for everything else. A future flaky
+        // addition to this class is a one-line append to `FOCUS_TIMING_FILES` below, not a per-file fix.
+        extends: true,
+        test: {
+          name: 'focus-timing',
+          include: FOCUS_TIMING_FILES,
+          fileParallelism: false,
         },
       },
       {
