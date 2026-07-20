@@ -39,6 +39,7 @@ const NAME_MAP = {
   'check-circle': 'check-circle',
   'x-circle': 'x-circle',
   clock: 'clock', // GH #147 / ADR-0153 — the group-level "Planned"/all-pending marker
+  'dots-three': 'dots-three', // GH #168 — the horizontal overflow/more-actions glyph (Phosphor has no `dots-three-horizontal`; `dots-three` IS the horizontal one)
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'
