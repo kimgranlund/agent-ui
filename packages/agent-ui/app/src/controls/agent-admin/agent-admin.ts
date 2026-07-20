@@ -158,6 +158,12 @@ const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: s
  *  ephemeral by design (like `#history`): the store persists the agent's CONFIG, never its traffic. */
 const TURN_LOG_CAP = 20
 
+/** GH #63 — max CONSECUTIVE renderer-error-driven surface turns before the loop halts visibly (the
+ *  produce() `maxRounds: 3` self-correct discipline, applied to the client-turn loop): an error turn is
+ *  the agent's chance to correct, not a license to loop. Reset by any non-error client message (a real
+ *  user action) or a typed intent. See the onClientMessage wiring for the full root-cause note. */
+const ERROR_TURN_BUDGET = 3
+
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
 export class UIAgentAdminElement extends UIElement {
   static props = agentAdminProps
@@ -227,6 +233,9 @@ export class UIAgentAdminElement extends UIElement {
   // with `undefined`" (a real state a later defined store can still differ from).
   #storeSeen = false
   #lastStore: SettingsStore | undefined
+  // GH #63 — the client-turn error-loop budget state (see the onClientMessage wiring + ERROR_TURN_BUDGET).
+  #consecutiveErrorTurns = 0
+  #errorLoopHalted = false
 
   protected connected(): void {
     this.#compose() // idempotent — builds ONLY the shell + the composed children, once ever
@@ -338,9 +347,41 @@ export class UIAgentAdminElement extends UIElement {
     // Surface client messages (an action click inside a mounted ui-surface-host, bubbled per LLD-C4) run
     // the NEXT surface turn — the Hit/Stand loop (TKT-0076). Callback registration, never a CustomEvent
     // (SPEC-R5). A no-op unless the surface arm is armed (the stub/text arms mount no surfaces anyway).
+    //
+    // GH #63 — two guards on the client-turn spawn, root-caused from the "page freeze" livelock:
+    // renderer-emitted ERRORS ride this SAME callback as action clicks (renderer.ts #emitInternalError →
+    // #emit → every onClientMessage listener), and an ingest error is emitted SYNCHRONOUSLY from inside
+    // the CURRENT turn's own handle.ingestLine. Un-deferred, that re-entered #runSurfaceTurn mid-ingest;
+    // with a producer that answers an error turn with another invalid payload (the scripted test runner
+    // replying a cross-turn root-resend, which the renderer's ADR-0128 IDGRAPH guard rejects every time),
+    // the turn→error→turn cycle became an UNBOUNDED synchronous loop — ~2000 turns/12s, starving
+    // macrotasks (setTimeout, CDP — the "even setTimeout stops firing" freeze). Live producers never hit
+    // it (produce()'s session-seeded validation, TKT-0081, can't ship the invalid line — and a real model
+    // answers an error turn with corrected content), which is why only scripted delivery detonated.
+    //   1. DEFER every client turn to a fresh macrotask — "the agent continues on the NEXT turn" (the
+    //      a2ui-live.ts law) now literally means the next event-loop task, never a mid-ingest re-entry.
+    //   2. BUDGET consecutive error-driven turns (the produce() maxRounds discipline, same bound of 3):
+    //      an error turn is the agent's chance to self-correct, not a license to loop — the budget
+    //      exhausting halts visibly (a failed turn bubble), and any non-error client message (a real
+    //      user action) or typed intent re-arms it.
     conversation.onClientMessage((message) => {
       if (this.agentSurfaceTurn === undefined) return
-      this.#runSurfaceTurn({ kind: 'client', message })
+      const isError = typeof message === 'object' && message !== null && 'error' in message
+      if (isError) {
+        if (this.#errorLoopHalted) return // already halted + reported; drop until a user action re-arms
+        this.#consecutiveErrorTurns += 1
+        if (this.#consecutiveErrorTurns > ERROR_TURN_BUDGET) {
+          this.#errorLoopHalted = true
+          conversation
+            .beginAgentTurn()
+            .fail(`surface loop halted — ${ERROR_TURN_BUDGET} consecutive turns ended in a renderer error`)
+          return
+        }
+      } else {
+        this.#consecutiveErrorTurns = 0
+        this.#errorLoopHalted = false
+      }
+      setTimeout(() => this.#runSurfaceTurn({ kind: 'client', message }), 0)
     })
     // Vision rev.6 — the Markdown surface rides ui-conversation's SPEC-R12 content-render seam: agent
     // notes/system bubbles render through <ui-markdown> (sanitized by construction) while the switch is
@@ -776,6 +817,9 @@ export class UIAgentAdminElement extends UIElement {
     // The SURFACE arm (TKT-0076) — takes precedence when armed AND the A2UI surface is on (vision
     // rev.6: switching the modality off bypasses even an armed runner — the prose arm answers instead).
     if (this.agentSurfaceTurn !== undefined && isEnabledFlag(store?.get(SURFACE_A2UI_KEY))) {
+      // GH #63 — a typed intent is a fresh user gesture: re-arm the error-loop budget.
+      this.#consecutiveErrorTurns = 0
+      this.#errorLoopHalted = false
       this.#runSurfaceTurn({ kind: 'intent', text })
       return
     }
