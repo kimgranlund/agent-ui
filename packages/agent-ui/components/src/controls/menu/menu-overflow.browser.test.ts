@@ -9,6 +9,7 @@ import type { UIMenuElement } from './menu.ts'
 // single-line (breaking the `--ui-menu-item-block-size` single-line-row contract, menu.css:55-77),
 // and — per #134's own hypothesis — that post-measurement reflow could leave the overlay
 // controller's shift-clamp (overlay.ts:135-137) computed against a stale panel width.
+// Also GH #166 (hidden-scrollbar seam) — the panel's vertical scroller, same geometry surface.
 //
 // Real, deterministic geometry is asserted directly (computed style + getBoundingClientRect) rather
 // than simulating scroll/resize behaviour — see agent-admin-app-scroll.browser.test.ts's header
@@ -92,5 +93,31 @@ describe('ui-menu — long-label overflow (GH #133/#134)', () => {
 
     const panel = el.querySelector('[data-part="panel"]') as HTMLElement
     expect(panel.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth)
+  })
+})
+
+const MANY_ITEMS = `
+  <ui-menu>
+    <button style="padding:6px 12px">Open</button>
+    ${Array.from({ length: 20 }, (_, i) => `<div data-value="i${i}">Item ${i + 1}</div>`).join('\n    ')}
+  </ui-menu>`
+
+describe('ui-menu — hidden-scrollbar seam (GH #166)', () => {
+  it('hides the native scrollbar on the scrolling panel (--ui-menu-scrollbar-width: none)', async () => {
+    const { el } = mount(MANY_ITEMS)
+    const trigger = el.querySelector('[data-part="trigger"]') as HTMLElement
+    await userEvent.click(trigger)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const panel = el.querySelector('[data-part="panel"]') as HTMLElement
+    // 20 items exceed the 12-row --ui-menu-max-block-size cap — the panel genuinely scrolls
+    // (real geometry, not a simulated scroll: the seam only matters on an overflowing panel).
+    expect(panel.scrollHeight).toBeGreaterThan(panel.clientHeight)
+    // The fleet convention (command-modal.css / card.css / surface-host.css): the native scrollbar
+    // is hidden via the consumer-overridable token; the scroll-fade (menu.ts, scrollFade) carries
+    // the affordance. Scrolling itself stays live (overflow-y: auto is untouched).
+    const style = getComputedStyle(panel) as CSSStyleDeclaration & { scrollbarWidth?: string }
+    expect(style.scrollbarWidth).toBe('none')
+    expect(style.overflowY).toBe('auto')
   })
 })
