@@ -2,9 +2,11 @@
  *   [1] TOKEN BLOCK — :where(ui-super-shell) declares ONLY --ui-super-shell-*: the 18px module
  *       ladder (SPEC-R1c: bars/rails = 3 modules, panes = 14) chained onto fleet roles.
  *   [2] STYLES BLOCK — @scope (ui-super-shell) consumes ONLY --ui-super-shell-*. Collapse rides the
- *       host's reflected [collapsed-start]/[collapsed-end] (SPEC-R2d); narrow (<40rem container,
- *       SPEC-R4) auto-collapses both sides via the query ALONE (never the attributes — the no-clobber
- *       law), and an attribute-restored side overlays the canvas instead of squeezing it.
+ *       host's reflected [collapsed-start]/[collapsed-end] (SPEC-R2d); narrow (<40rem container — LLD-C7/
+ *       GH #99's `shell-breakpoint.ts` is the shell family's one named source of truth for this literal,
+ *       mechanically checked by `shell-breakpoint.test.ts`, SPEC-R4) auto-collapses both sides via the
+ *       query ALONE (never the attributes — the no-clobber law), and an attribute-restored side overlays
+ *       the canvas instead of squeezing it.
  *   [3] LOGICAL DIRECTION (LLD-C4, GH #95) — every selector below reads `[data-side='start'|'end']`,
  *       never `left`/`right`. `[data-part='middle']` is plain row-flex with no `flex-direction`
  *       override, so an ambient `dir="rtl"` mirrors the DOM-first ("start") side to the physical

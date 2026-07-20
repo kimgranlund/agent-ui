@@ -2,8 +2,10 @@
  * blocks:
  *
  *   [1] TOKEN BLOCK — `:where(ui-master-detail)` declares ONLY `--ui-master-detail-*`: the narrow
- *       threshold (mirroring `ui-app-shell`'s own bare-literal 40rem, app-shell.css — a custom property
- *       cannot drive an `@container` condition, so the VALUE is restated here, not shared as a token).
+ *       threshold (mirroring `ui-app-shell`'s own bare-literal 40rem — an `@container` condition cannot
+ *       consume a custom property, the real CSS constraint LLD-C7/GH #99's `shell-breakpoint.ts` documents
+ *       once for the whole shell family; that file's own `shell-breakpoint.test.ts` is this literal's
+ *       consistency gate, not a live source).
  *   [2] STYLES BLOCK — `@scope (ui-master-detail)` consumes ONLY `--ui-master-detail-*` for the host; the
  *       composed `ui-split`/`ui-split-pane` children keep their OWN shipped CSS untouched — this sheet adds
  *       only the narrow drill-in (show one `[data-role]` pane at a time, hide the separator, let the
@@ -74,8 +76,8 @@
     outline-offset: calc(-1 * var(--md-sys-state-focus-ring-offset)); /* inset — the row spans the pane edge-to-edge (the nav-rail/tabs inset-ring precedent) */
   }
 
-  /* Narrow drill-in (SPEC-R7 AC1) — `40rem` mirrors ui-app-shell.css's own starting threshold (a bare
-     literal; custom properties cannot drive an @container condition). */
+  /* Narrow drill-in (SPEC-R7 AC1) — `40rem` mirrors ui-app-shell.css's own starting threshold (LLD-C7/
+     GH #99's `shell-breakpoint.ts` + `shell-breakpoint.test.ts`, this file's banner above). */
   @container (inline-size < 40rem) {
     :scope[data-view='list'] [data-role='detail'] {
       display: none;
