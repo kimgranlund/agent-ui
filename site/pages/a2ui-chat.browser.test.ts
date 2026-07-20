@@ -47,6 +47,28 @@ async function forceScrollTopStable(el: HTMLElement, target = 0, stableFrames = 
   }
 }
 
+/** GH #121 — the read-only sibling of `forceScrollTopStable`: waits until `el.scrollTop` stops CHANGING on
+ *  its own for `stableFrames` consecutive frames, without writing to it. Used to let an element's OWN
+ *  in-flight tail-follow settle before a test captures its scrollTop as a baseline — capturing mid-settle
+ *  and asserting against it later is exactly the off-by-one flake this closes (`ui-status-stream`'s own
+ *  tail-follow, driven by the turns sent just before the capture, hadn't necessarily finished yet). */
+async function waitScrollTopStable(el: HTMLElement, stableFrames = 3, timeoutMs = 3000): Promise<void> {
+  const start = Date.now()
+  let stable = 0
+  let last = el.scrollTop
+  for (;;) {
+    await raf()
+    if (el.scrollTop === last) {
+      stable += 1
+      if (stable >= stableFrames) return
+    } else {
+      stable = 0
+      last = el.scrollTop
+    }
+    if (Date.now() - start > timeoutMs) throw new Error('scrollTop never stopped changing (still being tail-followed?)')
+  }
+}
+
 function bubbles(): HTMLElement[] {
   return [...document.querySelectorAll<HTMLElement>('ui-conversation [data-part="bubble"]')]
 }
@@ -146,6 +168,9 @@ describe('a2ui-chat on ui-conversation — the log tail-follows independently of
     await waitUntil(() => chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight <= 24)
 
     const stream = document.querySelector('[data-part="narration"]') as HTMLElement
+    // GH #121 — let the stream's OWN tail-follow (driven by the turns just sent above) genuinely settle
+    // before snapshotting it as a baseline; capturing mid-settle made the later equality check flake ~1 in 3.
+    await waitScrollTopStable(stream)
     const streamScrollBefore = stream.scrollTop
 
     // Scroll UP to read history — breaks the log's OWN stick-to-bottom guard. Re-assert until it genuinely
