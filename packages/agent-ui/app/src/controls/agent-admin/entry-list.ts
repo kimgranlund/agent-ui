@@ -251,17 +251,22 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
       const header = document.createElement('div')
       header.setAttribute('data-part', 'entry-header')
 
-      const entryLabel = document.createElement('span')
-      entryLabel.setAttribute('data-part', 'entry-label')
-      entryLabel.textContent = entry.label
-
+      // GH #138 (row-pattern standardization, Kim's option-A ruling): switch leads, label next, a
+      // flexible spacer, then trailing action content (the Remove button) pinned to the right edge.
       const toggle = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
       toggle.setAttribute('data-part', 'entry-toggle')
       toggle.setAttribute('aria-label', `${entry.label} enabled`)
       toggle.checked = entry.enabled
       toggle.addEventListener('change', () => handlers.onToggle(entry.id, toggle.checked))
 
-      header.append(entryLabel, toggle)
+      const entryLabel = document.createElement('span')
+      entryLabel.setAttribute('data-part', 'entry-label')
+      entryLabel.textContent = entry.label
+
+      const entrySpacer = document.createElement('span')
+      entrySpacer.setAttribute('data-part', 'entry-spacer')
+
+      header.append(toggle, entryLabel, entrySpacer)
 
       if (!entry.builtin) {
         // TKT-0048: a real `<ui-button>` — its label is a plain word ("Remove"), never a glued glyph, so

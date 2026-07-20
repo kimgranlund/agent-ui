@@ -466,19 +466,24 @@ export class UIAgentAdminElement extends UIElement {
     const surfaceOptions = document.createElement('div')
     surfaceOptions.setAttribute('data-part', 'surface-options')
 
+    // GH #138 (row-pattern standardization, Kim's option-A ruling): switch leads, label next, a
+    // flexible spacer, then trailing action/selection content pinned to the right edge — every
+    // `surfaceRow` and its caller-appended trailing content (catalog select / note) follows this.
     const surfaceRow = (surface: string, label: string, title: string): { row: HTMLElement; toggle: HTMLElement & { checked: boolean; disabled: boolean } } => {
       const row = document.createElement('div')
       row.setAttribute('data-part', 'surface-row')
       row.setAttribute('data-surface', surface)
-      const rowLabel = document.createElement('span')
-      rowLabel.setAttribute('data-part', 'surface-label')
-      rowLabel.textContent = label
-      rowLabel.title = title
       const toggle = document.createElement('ui-switch') as HTMLElement & { checked: boolean; disabled: boolean }
       toggle.setAttribute('data-part', 'surface-toggle')
       toggle.setAttribute('aria-label', `${label} surface`)
       toggle.checked = true
-      row.append(rowLabel, toggle)
+      const rowLabel = document.createElement('span')
+      rowLabel.setAttribute('data-part', 'surface-label')
+      rowLabel.textContent = label
+      rowLabel.title = title
+      const spacer = document.createElement('span')
+      spacer.setAttribute('data-part', 'surface-spacer')
+      row.append(toggle, rowLabel, spacer)
       return { row, toggle }
     }
 

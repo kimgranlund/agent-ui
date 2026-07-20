@@ -236,7 +236,9 @@
     opacity: 0.45;
   }
 
-  /* ── Vision rev.6: the Surface Options card — [ label | toggle (| catalog picker) ] rows ────────── */
+  /* ── GH #138 (Kim's option-A ruling): the Surface Options card — [switch|label|spacer|action|
+     selection] rows — switch leads, label next, a flexible spacer, trailing content (catalog
+     picker / note) pinned to the right edge ─────────────────────────────────────────────────── */
 
   [data-part='surface-options-heading'] {
     margin: 0;
@@ -263,8 +265,13 @@
   }
 
   [data-part='surface-label'] {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     font-weight: 600;
+  }
+
+  [data-part='surface-spacer'] {
+    flex: 1 1 auto;
+    min-inline-size: 0.5rem;
   }
 
   /* The PRD-gated GenUI row reads as inert (its switch is genuinely disabled; the dim is the visual). */
@@ -346,6 +353,8 @@
     --ui-code-editor-min-inline-size: 0;
   }
 
+  /* GH #138 (Kim's option-A ruling): [switch|label|spacer|action] — switch leads, label next, a
+     flexible spacer, then trailing action content (the Remove button) pinned to the right edge. */
   [data-part='entry-header'] {
     display: flex;
     align-items: center;
@@ -353,9 +362,14 @@
   }
 
   [data-part='entry-label'] {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     font-weight: 600;
     color: var(--ui-agent-admin-ink);
+  }
+
+  [data-part='entry-spacer'] {
+    flex: 1 1 auto;
+    min-inline-size: 0.5rem;
   }
 
   [data-part='entry-description'] {
