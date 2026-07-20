@@ -1,10 +1,12 @@
-// provider-switcher.ts — LLD-C12 / SPEC-R12: the DEV-ONLY in-chat provider→model switcher. Renders its
-// dropdowns FROM providers.json (the single source of truth — no hand-listed second menu), DISABLES
-// `implemented: false` providers ("coming soon" — a visible roadmap, never selectable), persists the
-// selection to localStorage, and exposes the current {provider,model} to the live transport. Imported
-// ONLY under `import.meta.env.DEV`, so it — and the bundled providers.json — leave the production build
-// with the rest of the overlay (SPEC-R12/N2). The committed providers.json holds env-var NAMES only (no
-// secret), so bundling it in dev is safe. Vite bundles JSON natively (LLD §2 data-access decision).
+// provider-switcher.ts — LLD-C12 / SPEC-R12: the in-chat provider→model switcher, dynamically imported
+// once a runtime `/status` probe confirms a live provider is reachable — in EVERY environment as of
+// ADR-0151 (supersedes the old dev-only framing: this module and the bundled providers.json DO ship in
+// `dist/`, alongside the rest of the live overlay). Renders its dropdowns FROM providers.json (the single
+// source of truth — no hand-listed second menu), DISABLES `implemented: false` providers ("coming soon" —
+// a visible roadmap, never selectable), persists the selection to localStorage, and exposes the current
+// {provider,model} to the live transport. The committed providers.json holds env-var NAMES only (never a
+// secret VALUE), so bundling it into the production build is safe (SPEC-R12/N2 amended). Vite bundles JSON
+// natively (LLD §2 data-access decision).
 //
 // ADR-0090 §4/LLD-C12: a third `ui-select` — the same dogfooded pattern — offers the Gen-UI `mode` axis
 // (`GenUiMode`: `default`/`specific`/`blue-sky`), persisted + exposed on the SAME `SelectionRef` alongside

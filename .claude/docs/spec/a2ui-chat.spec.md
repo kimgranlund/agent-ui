@@ -153,16 +153,21 @@ integration-proof, honest-labels site discipline extended from the feed/live pag
 ### 3.5 The live arm
 
 **SPEC-R8 — Recorded-default; live optional, reusing the existing overlay wiring verbatim.** The page's
-default transport is `createRecordedTransport()` (ADR-0073's recorded-default posture); a dev-only,
-`import.meta.env.DEV`-guarded dynamic import wires a live provider transport + the existing switcher
-component — the SAME pattern `a2ui-live.ts`'s `wireLiveOverlay()` and `a2a-artifact-feed.ts`'s
-`wireFeedLiveOverlay()` already ship, twice. No new transport, no new provider code, no new switcher
-component.
-- **AC1** *Given* the static production build, *when* its output is inspected, *then* it contains no
-  reference to a live-proxy-transport module — tree-shaken via the existing `import.meta.env.DEV` +
-  dynamic-`import()` guard (the sibling pages' own verified contract).
-- **AC2** *Given* no live provider key configured, *when* the page loads, *then* the recorded demo functions
-  fully offline / under CI with zero live wiring ever reached.
+default transport is `createRecordedTransport()` (ADR-0073's recorded-default posture); a dynamic import
+probes `/status` at runtime and, if a live provider is available, wires a live provider transport + the
+existing switcher component — the SAME pattern `a2ui-live.ts`'s `wireLiveOverlay()` already ships. As of
+**ADR-0151**, this probe resolves in every environment, not only dev: the production build ships against a
+Cloudflare Worker port of the dev proxy (`/__a2ui/agent`), so a configured Workers Secret makes the live arm
+reachable from the deployed site too. `a2a-artifact-feed.ts`'s `wireFeedLiveOverlay()` is explicitly OUT of
+ADR-0151's scope and stays hard-gated to dev only (`if (!import.meta.env.DEV) return`) — no new transport,
+no new provider code, no new switcher component either way.
+- **AC1** *Given* the static production build, *when* its output is inspected, *then* it contains no key
+  LITERAL or key VALUE anywhere — the live-proxy-transport module and switcher DO ship in `dist/` (ADR-0151
+  reachability, not a tree-shake target), and the module resolves its live/recorded posture via a same-origin
+  `/status` fetch, never a build-time env inline.
+- **AC2** *Given* no live provider key configured (dev: no `.env` entry; production: no Workers Secret set),
+  *when* the page loads, *then* the recorded demo functions fully offline / under CI with the live probe
+  resolving `available: false` and no live call ever attempted.
 
 ### 3.6 Non-functional requirements
 

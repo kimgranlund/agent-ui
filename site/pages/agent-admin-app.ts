@@ -139,30 +139,32 @@ header.append(title, overflowMenu, agentMenu)
 applyPreset(active)
 root.append(header, admin)
 
-// The DEV-only live-model overlay (the agent-admin.ts/a2ui-live.ts construction-site precedent): the
-// `import.meta.env.DEV` guard lives HERE in the site page, never in the packaged component — the static
-// build never reaches the dynamic import (ADR-0131 cl.4/7). This page has no prose chrome, so the
-// stub-vs-live status goes to the console instead of a caption.
-if (import.meta.env.DEV) {
-  void (async () => {
-    try {
-      const overlay = await import('../lib/admin-live-runner.ts')
-      const probe = await overlay.probeLive()
-      if (probe.available) {
-        admin.agentTurn = overlay.createAdminAgentTurn()
-        // The SURFACE arm (TKT-0076/ADR-0138) — takes precedence over the text runner above: turns run
-        // through the a2ui producer (persona riding the ADR-0138 seam) and stream REAL surfaces into the
-        // conversation. A fresh runner per persona switch = a fresh producer session per persona.
-        armSurfaceTurn = () => {
-          admin.agentSurfaceTurn = overlay.createAdminSurfaceTurn()
-        }
-        armSurfaceTurn()
-        console.info(`[agent-admin-app] live model connected (${probe.providers} provider(s)) — surface turns armed`)
-      } else {
-        console.info('[agent-admin-app] stub preview — set a provider key in .env and restart `npm run dev` for a live model')
+// GH #114 (review finding): this page uses the SAME site/lib/admin-live-runner.ts backend as
+// agent-admin.ts (identical /__a2ui/agent/chat + /__a2ui/agent endpoints), but was missed when that
+// page's DEV-only gate was removed to go live in production (worker/index.ts, mounted at /__a2ui/agent
+// on this same site — a deliberate SPEC-N2/ADR-0131 cl.4/7 supersession, see agent-admin.ts's header for
+// the full rationale). This page has no prose chrome, so the stub-vs-live status goes to the console
+// instead of a caption; DEV is still read for wording only, same as agent-admin.ts's pattern.
+void (async () => {
+  try {
+    const overlay = await import('../lib/admin-live-runner.ts')
+    const probe = await overlay.probeLive()
+    if (probe.available) {
+      admin.agentTurn = overlay.createAdminAgentTurn()
+      // The SURFACE arm (TKT-0076/ADR-0138) — takes precedence over the text runner above: turns run
+      // through the a2ui producer (persona riding the ADR-0138 seam) and stream REAL surfaces into the
+      // conversation. A fresh runner per persona switch = a fresh producer session per persona.
+      armSurfaceTurn = () => {
+        admin.agentSurfaceTurn = overlay.createAdminSurfaceTurn()
       }
-    } catch {
-      console.info('[agent-admin-app] stub preview — the live overlay is unavailable')
+      armSurfaceTurn()
+      console.info(`[agent-admin-app] live model connected (${probe.providers} provider(s)) — surface turns armed`)
+    } else if (import.meta.env.DEV) {
+      console.info('[agent-admin-app] stub preview — set a provider key in .env and restart `npm run dev` for a live model')
+    } else {
+      console.info('[agent-admin-app] stub preview — the shipped build makes no live model call')
     }
-  })()
-}
+  } catch {
+    console.info('[agent-admin-app] stub preview — the live overlay is unavailable')
+  }
+})()
