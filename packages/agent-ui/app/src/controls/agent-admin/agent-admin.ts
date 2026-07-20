@@ -131,9 +131,13 @@ const agentAdminProps = {
   // (ADR-0129) instead of a prose reply.
   agentSurfaceTurn: { ...prop.json<AdminAgentSurfaceTurn | undefined>(undefined), attribute: false as const },
   // GH #47/#48 — entry-library packs, keyed by entry kind (skill/workflow/...). Non-reflected pure
-  // type-carrier (the schema/store precedent). Read ONCE at compose time (`#makeSection`) — set it
-  // BEFORE appending the element; a post-connect reassignment takes effect on the next fresh connect,
-  // matching the sections' own build-once law.
+  // type-carrier (the schema/store precedent). The section SHELL is still built once at compose time
+  // (`#makeSection`, the sections' build-once law) — but GH #143 made the add-from-library MENU inside
+  // each shell reactive: a post-connect reassignment (a new object reference, the `schema`/`store`
+  // identity-change law) re-runs the `connected()` effect and rebuilds just that menu per kind via
+  // `EntryListSection.updateLibraries` — e.g. a caller re-scoping which packs apply on a persona/preset
+  // switch. Only the menu updates; a section's rendered ENTRIES are unaffected (those already re-render
+  // off `store`, a separate signal).
   libraries: { ...prop.json<Record<string, readonly EntryLibraryPack[]> | undefined>(undefined), attribute: false as const },
 } satisfies PropsSchema
 
@@ -308,6 +312,7 @@ export class UIAgentAdminElement extends UIElement {
     this.effect(() => {
       const schema = this.schema
       const store = this.store
+      const libraries = this.libraries
       untracked(() => {
         // GH #145 — a REAL store reassignment (a persona switch: `admin.store = presetStore(other)`)
         // must start a genuinely fresh conversation for the newly-selected persona: the visible chat
@@ -324,6 +329,7 @@ export class UIAgentAdminElement extends UIElement {
           this.#settingsEl.store = store
         }
         this.#rewireAllSections(store)
+        this.#updateLibraries(libraries)
         this.#syncConversationConfig(store)
         this.#rewireContext(store)
       })
@@ -757,6 +763,17 @@ export class UIAgentAdminElement extends UIElement {
         if (key === entriesStoreKey(kind)) render()
       })
       if (unsubscribe) this.#unsubscribes.set(kind, unsubscribe)
+    }
+  }
+
+  /** GH #143 — rebuild each CAPABILITY kind's add-from-library menu from `libraries`' CURRENT contents.
+   *  Runs on every `connected()` effect tick (a fresh connect and a real `libraries` reassignment alike) —
+   *  cheap (a handful of menu rows per kind) and idempotent, the `#rewireAllSections` precedent. Prompt
+   *  sections never carry a library pack (only the four capability kinds do — `#makeSection`'s own
+   *  `{ libraries: this.libraries?.[kind] }` wiring), so this loop is scoped to `CAPABILITY_KINDS`. */
+  #updateLibraries(libraries: Record<string, readonly EntryLibraryPack[]> | undefined): void {
+    for (const { kind } of CAPABILITY_KINDS) {
+      this.#capabilitySections.get(kind)?.updateLibraries(libraries?.[kind] ?? [])
     }
   }
 
