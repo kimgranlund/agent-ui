@@ -72,7 +72,8 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   upward. (Enforced by the per-package `layering.test.ts` trip-wires.)
 - Naming: tags `ui-{name}`, classes `UI{Name}Element`, tokens `--ui-{name}-*` / color roles
   `--md-sys-color-{family}-{role}` / type scale `--md-sys-typescale-{role}-{size}-*` (ADR-0078);
-  event names ∈ `change · input · select · open · close · toggle`.
+  event names ∈ `change · input · select · open · close · toggle · action` (the seventh member,
+  GH #147/ADR-0153 — `ui-status-stream`'s inline retry affordance).
 - Components are light-DOM by default; ARIA via `ElementInternals`, never host attributes; no native form elements.
 - Props are typed signals via `static props` + `ReactiveProps<typeof props>` (plan §5).
 

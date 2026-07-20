@@ -100,7 +100,10 @@ describe('family-coherence — fleet discovery (T6, ADR-0081)', () => {
 // control mixing `click` with any other event, or any form-associated control, does NOT qualify — `click`
 // stays out-of-vocabulary for those (button.md is the one live control that qualifies today).
 
-const ALLOWED_EVENTS = new Set(['change', 'input', 'select', 'open', 'close', 'toggle'])
+// `action` (GH #147/ADR-0153, ui-status-stream's inline retry/action affordance): the closed vocabulary's
+// SEVENTH member, added 2026-07-20 — none of the original six name "a user committed a per-entry action
+// button," and `select`'s own commit semantics (naming.md §4) name a list selection, not this.
+const ALLOWED_EVENTS = new Set(['change', 'input', 'select', 'open', 'close', 'toggle', 'action'])
 
 const isPureActivation = (d: ParsedDescriptor): boolean =>
   d.scalars.get('extends') === 'UIElement' &&
@@ -111,7 +114,7 @@ const outOfVocabEvents = (d: ParsedDescriptor): string[] =>
 
 describe('API — events vocabulary (plan §9, ADR-0081 Amendment 2)', () => {
   for (const c of FLEET) {
-    it(`${c.name}.md events ⊆ {change,input,select,open,close,toggle} (∪ click iff pure-activation)`, () => {
+    it(`${c.name}.md events ⊆ {change,input,select,open,close,toggle,action} (∪ click iff pure-activation)`, () => {
       const bad = outOfVocabEvents(DESCRIPTORS.get(c.name)!)
       expect(bad, `${c.name}.md declares out-of-vocabulary event(s): ${bad.join(', ')}`).toEqual([])
     })

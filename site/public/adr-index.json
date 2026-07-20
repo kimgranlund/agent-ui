@@ -1055,5 +1055,12 @@
     "description": "The live-agent overlay (a2ui-chat/a2ui-live/agent-admin/agent-admin-app) goes live in PRODUCTION via a Cloudflare Worker proxy — ADR-0136 Fork 1 and ADR-0131 c…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0153",
+    "url": "./adr-index.html#adr-0153",
+    "description": "ui-status-stream gains a ticking elapsed timer (StatusEntry.startedAt), an inline retry/action affordance (StatusEntry.action + a new seventh closed-vocabulary…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

@@ -86,15 +86,19 @@ use fleet machinery (ComponentPreview's raw-HTMLElement shape is a recorded exce
 - `variant` is deliberately per-control (visual voice is context-bound); its VALUES still obey
   the closed-enum rule.
 
-## 4 · Events — the closed six + `click`
+## 4 · Events — the closed seven + `click`
 
-`change · input · select · open · close · toggle` (+ native `click` for pure activation). The
-inventory found ZERO out-of-vocabulary emits repo-wide — keep it that way: a new event name is an
-ADR-level decision (principle 2). Commit semantics: `change`/`select` are user commits, NEVER
+`change · input · select · open · close · toggle · action` (+ native `click` for pure activation).
+`action` is the seventh member (GH #147/ADR-0153, 2026-07-20) — `ui-status-stream`'s inline retry
+affordance emits it when a user clicks an entry's per-entry action button; none of the original six
+name "a user committed a per-entry action," and `select`'s own commit semantics (below) name a list
+selection, not an arbitrary action button. A new event name is an ADR-level decision (principle 2) —
+keep the vocabulary closed otherwise. Commit semantics: `change`/`select` are user commits, NEVER
 emitted from programmatic writes (the fleet law the codec/settings waves asserted); `input` is
-live; `open`/`close`/`toggle` are overlay/disclosure lifecycle. Detail shapes are per-event,
-documented in the descriptor's `events:` block — the descriptor allowlist is gated; the emit-seam
-gate is the planned closure (§11).
+live; `open`/`close`/`toggle` are overlay/disclosure lifecycle; `action` is a user-committed,
+per-entry action click, never emitted from a programmatic `update()`/`appendEntry()` write. Detail
+shapes are per-event, documented in the descriptor's `events:` block — the descriptor allowlist is
+gated; the emit-seam gate is the planned closure (§11).
 
 ## 5 · CSS custom properties — the two tiers, split by PREFIX (ADR-0140, 2026-07-17)
 
@@ -146,7 +150,10 @@ The prefix IS the ownership boundary — no allowlist needed:
   (the TKT-0085 `agent-content` wrapper discipline, renamed + doubled when the prompts column merged
   into Settings and the Context tab landed); all app-tier, not agent-emittable. `ui-timeline-item` adds `nested` (ADR-0143 F1, TKT-0091) — a genuine nested
   `<ui-timeline>` adopted into the same shared disclosure `detail` uses, recursion at arbitrary
-  authored depth; control-emitted, agent-emittable like `detail`.
+  authored depth; control-emitted, agent-emittable like `detail`. `ui-status-stream` adds `action`
+  (GH #147/ADR-0153 Fork 2) — the host-appended cell hosting an `error`-status entry's inline retry
+  `<ui-button>`; control-emitted, the SAME "host creates a plain cell outside the item's own anatomy"
+  shape `text` already uses.
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,
   kebab: ready · user-invalid · checked · dragging · revealed · disabled · collapsed · truncated
   · selected · indeterminate. A verb or noun is not a state name.

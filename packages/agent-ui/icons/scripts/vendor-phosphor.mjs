@@ -38,6 +38,7 @@ const NAME_MAP = {
   'circle-notch': 'circle-notch',
   'check-circle': 'check-circle',
   'x-circle': 'x-circle',
+  clock: 'clock', // GH #147 / ADR-0153 — the group-level "Planned"/all-pending marker
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'

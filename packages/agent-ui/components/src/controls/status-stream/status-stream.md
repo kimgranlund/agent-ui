@@ -29,15 +29,18 @@ attributes:               # attributes-as-API — mirrors status-stream.ts stati
 
 properties:               # IDL beyond attributes-as-API — the imperative streaming contract (ADR-0122 F4)
   - name: appendEntry
-    description: 'Method — appendEntry(entry: StatusEntry) => UITimelineItemElement. NAMED appendEntry, not append — every element inherits a native, incompatible Node.prototype.append(); a same-name override fails tsc outright (a build-time LLD deviation, flagged for the SPEC-R9/LLD amendment). A NEW key creates a ui-timeline-item, assigns the entry''s fields, appends it, tail-follows to it (iff the stick-to-bottom guard holds), and returns the created element (the ui-toast-region.show() return precedent). A DUPLICATE key is a silent no-op — returns the EXISTING element unchanged, never a second element or a throw (GH #37 — the registry/DOM-consistency guard; symmetric with update()''s own no-op-on-unknown-key). ADR-0146 F5: an entry carrying a KNOWN `parent` (another entry''s key) NESTS under that group''s `[data-role="nested"]` slot (a nested ui-timeline, mounted lazily once per parent) instead of as a top-level sibling; an unknown parent degrades to a flat append. The keyed registry stays FLAT — `update(childKey, patch)` reaches a nested entry identically.'
+    description: 'Method — appendEntry(entry: StatusEntry) => UITimelineItemElement. NAMED appendEntry, not append — every element inherits a native, incompatible Node.prototype.append(); a same-name override fails tsc outright (a build-time LLD deviation, flagged for the SPEC-R9/LLD amendment). A NEW key creates a ui-timeline-item, assigns the entry''s fields, appends it, tail-follows to it (iff the stick-to-bottom guard holds), and returns the created element (the ui-toast-region.show() return precedent). A DUPLICATE key is a silent no-op — returns the EXISTING element unchanged, never a second element or a throw (GH #37 — the registry/DOM-consistency guard; symmetric with update()''s own no-op-on-unknown-key). ADR-0146 F5: an entry carrying a KNOWN `parent` (another entry''s key) NESTS under that group''s `[data-role="nested"]` slot (a nested ui-timeline, mounted lazily once per parent) instead of as a top-level sibling; an unknown parent degrades to a flat append. The keyed registry stays FLAT — `update(childKey, patch)` reaches a nested entry identically. GH #147/ADR-0153: `entry.startedAt` (an ISO timestamp) arms a ticking elapsed-time display into the entry''s `timestamp` cell for as long as its status reads `active`; `entry.action` (`{ label }`) arms an inline retry `<ui-button>`, shown while its status reads `error`, that emits `action` on click — see StatusEntry''s own field docs.'
   - name: update
-    description: 'Method — update(key: string, patch: Partial<StatusEntry>) => void. A KEYED, in-place mutation to the already-rendered entry with that key: transitions status, grows/replaces streamed text, or reveals detail. A key with no matching entry is a silent no-op (never a throw — SPEC-R9 AC2).'
+    description: 'Method — update(key: string, patch: Partial<StatusEntry>) => void. A KEYED, in-place mutation to the already-rendered entry with that key: transitions status, grows/replaces streamed text, or reveals detail. A key with no matching entry is a silent no-op (never a throw — SPEC-R9 AC2). `patch.startedAt`/`patch.action` re-arm the SAME Fork 1/2 ticking-timer/retry-button mechanism appendEntry does.'
   - name: finalize
-    description: 'Method — finalize() => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED, then settles the header (when opted in) to the escalated FINAL status (ADR-0146 F8; a truncated entry contributes `warning`). Fail-closed — a torn stream never shows "still working."'
+    description: 'Method — finalize() => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED, then settles the header (when opted in) to the escalated FINAL status (ADR-0146 F8; a truncated entry contributes `warning`). Fail-closed — a torn stream never shows "still working." Also stops every ticking elapsed-time display (GH #147/ADR-0153) — a settled stream never keeps a clock running.'
   - name: fail
-    description: 'Method — fail() => void. A FAILED stream (ADR-0146 F8): the completion invariant (like finalize()) PLUS the header forced to `error` regardless of the entries'' own escalation — the completion invariant''s header-level face for a thrown turn. A no-op on the header when `header` is not set.'
+    description: 'Method — fail() => void. A FAILED stream (ADR-0146 F8): the completion invariant (like finalize()) PLUS the header forced to `error` regardless of the entries'' own escalation — the completion invariant''s header-level face for a thrown turn. A no-op on the header when `header` is not set. Also stops every ticking elapsed-time display, exactly as finalize() does.'
 
-events: []                # a display-first live host — streamed text/state ride the role=log live region, never a synthetic event (SPEC-R12)
+events:                    # GH #147/ADR-0153 Fork 2 — the ONE new closed-vocabulary member; everything else (streamed text/state) still rides the role=log live region, never a synthetic event (SPEC-R12's original scope, unchanged)
+  - name: action
+    detail: '{ key: string }'
+    description: Fired when the user clicks an entry's inline retry/action button (rendered when that entry carries `action` AND its effective status is `error`). `key` is the entry's own key — the SAME key passed to appendEntry/update. The component NEVER re-runs anything itself in response; the consumer's own listener owns the actual retry (or whatever the action's `label` names). A new closed-vocabulary member (naming.md §4) — none of change/input/select/open/close/toggle name "a user committed a per-entry action button," and `select`'s own commit semantics name a list selection, not this.
 
 slots: []                  # no consumer-authored light-DOM children — every ui-timeline-item child is created by this host's own imperative API (F4)
 
@@ -45,9 +48,11 @@ parts:                     # the appended ui-timeline-item children are the "ent
   - name: header
     description: The opt-in `<div data-part="header">` (present only when `header` is set) — chrome PINNED above the scroll region (position:sticky), carrying the visible label + the live overall-status marker. Its `[data-status]` reflects the escalated overall status.
   - name: header-marker
-    description: The overall-status marker inside the header — a done/error/warning glyph (currentColor) or a CSS dot/ring/pulse for the in-progress statuses, mirroring ui-timeline-item's own SHAPE-first marker law (ADR-0057).
+    description: The overall-status marker inside the header — a done/error/warning/pending glyph (currentColor) or a CSS dot/ring/pulse for the in-progress statuses, mirroring ui-timeline-item's own SHAPE-first marker law (ADR-0057). (GH #147/ADR-0153: `pending`'s glyph closes the same named gap `ui-timeline-item`'s GROUP_STATUS_GLYPH closes — see status-stream.ts's own HEADER_STATUS_GLYPH comment for the reachability caveat at THIS stream-level header.)
   - name: header-label
     description: The header's visible label cell — the SAME `label` prop that also sets `internals.ariaLabel` (ADR-0146 F8 makes it visible chrome, not aria-only).
+  - name: action
+    description: 'GH #147/ADR-0153 Fork 2 — the `[data-role="action"]` cell the host appends onto an entry''s `ui-timeline-item` when that entry carries `action` and its effective status is `error`; hosts one `<ui-button>` (`variant="soft"`, `size="sm"`) labelled from `action.label`.'
 
 customStates: []           # no :state() hooks of its own — the completion invariant rides the ITEM's own :state(truncated) (timeline-item.md)
 
@@ -116,8 +121,8 @@ dot/ring/pulse for the in-progress states.
 ## The imperative API (ADR-0122 F4)
 
 - **`appendEntry(entry: StatusEntry): UITimelineItemElement`** — for a NEW `key`, creates a `ui-timeline-item`,
-  assigns the entry's fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?`),
-  appends it, tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element
+  assigns the entry's fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?`,
+  `startedAt?`, `action?`), appends it, tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element
   already inherits a native, incompatible `Node.prototype.append()` (a build-time LLD deviation from
   SPEC-R9's literal name, flagged for amendment; behaviour/signature otherwise identical). A **duplicate**
   `key` is a silent no-op — returns the existing element unchanged, never creating a second element or
@@ -127,7 +132,8 @@ dot/ring/pulse for the in-progress states.
   detail. A `key` with no matching entry is a silent no-op — never a throw (a late update after
   truncation is tolerated).
 - **`finalize(): void`** — the completion invariant: every still-`pending`/`active` entry renders
-  TRUNCATED (a distinct, non-color-only interrupted affordance on the item). Fail-closed.
+  TRUNCATED (a distinct, non-color-only interrupted affordance on the item). Fail-closed. Also stops every
+  ticking elapsed-time display (GH #147/ADR-0153) — a settled stream never keeps a clock running.
 
 This host holds **no transport** of its own — no `fetch`/`ReadableStream` reference anywhere in its
 source. The consumer owns the stream and drives `appendEntry`/`update`/`finalize` as it yields.
@@ -152,6 +158,79 @@ authored: it escalates **worst-child-wins** over the closed ladder `error > warn
 done` (the exported `escalateStatus` reduce), recomputed live from the host's own `appendEntry`/`update`
 calls — no MutationObserver. The nested `<ui-timeline>` is `role="list"` inside the outer `role="log"`: one
 live region, one addition-announcement path, no bespoke `aria-live` on the nested host.
+
+## Elapsed-timer ticking (GH #147/ADR-0153 Fork 1)
+
+Set `startedAt` (an ISO 8601 timestamp) on an entry and the host itself ticks a live elapsed-time display
+("32s", "1m 12s") into that entry's `timestamp` cell — one shared interval per stream instance, armed the
+moment any tracked entry's status reads `active` and disarmed the instant none remain (including on
+`finalize()`/`fail()`, which force-stop every ticking display — a settled turn never keeps a clock
+running):
+
+```ts
+stream.appendEntry({ key: 'g', status: 'active', label: 'Task Group', startedAt: new Date().toISOString() })
+// … the group ticks "0s", "1s", "2s"… while `active`; freezes the instant its escalated status resolves
+```
+
+For a GROUP parent, "while any entry in that group is active" falls out of the group's own already-
+escalated `.status` (ADR-0146 F6) — no separate per-child check is needed. `startedAt` is a **routing
+fact** consumed by `appendEntry`/`update`, never projected onto the item as a prop (the same treatment
+`parent` already gets) — an unparsable or absent value is tolerated, never a throw.
+
+## Inline retry/action (GH #147/ADR-0153 Fork 2)
+
+Set `action: { label: string }` on an entry and, **while that entry's effective status reads `error`**,
+the host renders a `<ui-button>` (in the entry's own `[data-role="action"]` cell) labelled `action.label`.
+A click emits `action` (`{ key }`) on the **stream host** — a new closed-vocabulary member (`naming.md`
+§4): the fleet's existing six (`change`/`input`/`select`/`open`/`close`/`toggle`) has no "a user committed
+a per-entry action button" member, and `select`'s own commit semantics name a list selection, not this.
+**The component never re-runs anything itself** — the consumer's own listener owns the actual retry:
+
+```ts
+stream.appendEntry({ key: 'r1', status: 'error', label: 'Patch step', description: 'Merge conflict', action: { label: 'Retry' } })
+stream.addEventListener('action', (e) => {
+  const { key } = (e as CustomEvent<{ key: string }>).detail
+  stream.update(key, { status: 'active', description: 'Retrying…' }) // the consumer drives the retry, not the component
+})
+```
+
+## "Planned" — the pending group glyph (GH #147/ADR-0153 Fork 3)
+
+An all-`pending` group (every child still not-yet-started) escalates to `escalateStatus`'s `pending` rank
+the moment its children are appended — before any of them starts. `ui-timeline-item`'s `GROUP_STATUS_GLYPH`
+now paints this distinctly (a neutral outline `clock`), joining the existing spinning-ring/check-circle/
+x-circle set. Pair it with a `label`/`description` reading `'Planned'` on the not-yet-started child steps
+themselves (a freeform-text convention — no enforced field; see the doc page's own `g-progress-2`/
+`g-error-3` specimens) for the full Figma "Planned" treatment.
+
+## Step-count / score group-header summaries — a `description` convention, not `trailing`
+
+The Figma frames' "3 Steps" / "94/100" group-header summaries ship as a **documented convention, zero
+`StatusEntry` contract change** — but landing in the group entry's own **`description`** field, not the
+`trailing` cell the issue's own intake first proposed. Found while building this: `trailing` on a GROUP
+parent is **already live** — ADR-0143's collapsed-summary preview auto-fills it with the last nested
+descendant's status+label whenever the group is closed (`timeline-item.ts`'s `#renderTrailingPreview()`),
+and a consumer's own direct write there would be silently clobbered the next time any nested child
+mutates (the SAME MutationObserver that drives the preview). `description` carries none of that
+competition — it's a plain stamped prop cell, untouched by any auto-fill mechanism — so it is the
+conflict-free home for this pattern:
+
+```ts
+stream.appendEntry({ key: 'g', status: 'active', label: 'Task Group', description: '3 Steps', startedAt: … })
+// … later, on success:
+stream.update('g', { status: 'done', description: '3 Steps · 94/100' })
+```
+
+The genuine `trailing`-slot **consumer-content** pattern (a light-DOM child a consumer authors and the
+component's own status-glyph paint never overwrites, `timeline-item.ts:60-62,313-322`) still holds exactly
+as documented — for a **non-grouped** (leaf, no nested children) entry, where no auto-fill effect
+competes for the cell, a consumer can safely grab the item `appendEntry` returns and write into its
+`trailing` cell directly:
+
+```ts
+const item = stream.appendEntry({ key: 'leaf', status: 'done', label: 'Fetched 42 files' })
+item.querySelector('[data-role="trailing"]')!.textContent = 'v2' // safe — no nested content to compete with it
+```
 
 ## Tail-follow + the stick-to-bottom guard
 
