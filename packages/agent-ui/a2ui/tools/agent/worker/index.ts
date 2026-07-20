@@ -38,6 +38,10 @@ interface Env {
 
 const MOUNT = '/__a2ui/agent'
 const MAX_BODY = 1 << 20 // 1 MiB — matches dev-proxy-plugin.ts's cap
+// GH #144 — the user-facing fallback note when produce() halts or faults mid-stream (never leaks the
+// internal error message — ProduceHalt's own text names round bounds/failure codes, an implementation
+// detail, not something to show a user).
+const FAILURE_NOTE = "I couldn't put together a valid response for that — could you try rephrasing, or try again?"
 
 // GH #101 (review finding): dev-proxy-plugin.ts never needed a CSRF guard — it's a Vite dev middleware,
 // reachable only from localhost. Ported unmodified to the public internet, the POST routes had none: a
@@ -210,8 +214,21 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
         await writer.write(encoder.encode(line + '\n'))
       }
     } catch {
-      // ProduceHalt or an upstream fault mid-stream — headers are already committed (200/ndjson), so
-      // just stop, matching dev-proxy-plugin.ts's `res.end()` on a post-headersSent error.
+      // GH #144 — ProduceHalt (the round bound exhausted with no valid surface) or an upstream fault
+      // mid-stream: headers are already committed (200/ndjson), so there is no HTTP-level error path
+      // left — but silently closing here left the client with a fully empty `{"response":{"lines":[]}}`
+      // and no rendered explanation at all (the reported symptom). A client disconnect (GH #106's
+      // request.signal wiring) has no one left to read a note, so THAT case stays silent; anything
+      // else surfaces as an ordinary note-only meta-line — the SAME wire shape a model's own note-only
+      // turn already uses (ADR-0088 §1) — so every existing consumer renders it exactly like a real
+      // agent reply, with no new wire vocabulary needed.
+      if (!request.signal.aborted) {
+        try {
+          await writer.write(encoder.encode(JSON.stringify({ a2uiMeta: { note: FAILURE_NOTE } }) + '\n'))
+        } catch {
+          // the writer itself is broken (e.g. the underlying connection is already gone) — nothing left to do
+        }
+      }
     } finally {
       // GH #107 (review finding): closing a writer whose paired stream already errored (the common case on
       // a client disconnect — write() above throws first, caught above) itself rejects per WHATWG streams
