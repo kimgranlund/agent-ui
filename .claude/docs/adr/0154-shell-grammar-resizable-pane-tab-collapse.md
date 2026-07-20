@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-20 |
 > | **Proposed by** | planner seat (the GH #52 design dispatch — Kim's direction ruling, 2026-07-20: proceed by EXTENDING the shell-archetype grammar, overruling the "close as not-a-fit" and "cosmetic wrap" options the #52 investigation had scoped out) |
-> | **Ratified by** | *(pending — Kim; `ratify ADR-0154` per ADR-0149, or the in-tree hand-edit)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-07-20, via the [`ratify ADR-0154` utterance](https://github.com/kimgranlund/agent-ui/issues/52#issuecomment-5026864182) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | [`../spec/shell-archetypes-m5.spec.md`](../spec/shell-archetypes-m5.spec.md) → v0.3 (additive amendment §8: SPEC-R6 resizable inner pane · SPEC-R7 pane segments + `tabs` narrow arm + the grammar-level survival law; SPEC-R1–R5 untouched) |
 > | **Supersedes / Superseded by** | (none) — Extends [ADR-0151](./0151-named-shell-archetypes-m5.md) (the archetype family + its grammar-ceiling law; this delivers its F3 "named follow-up") · Relates [ADR-0132](./0132-agent-admin-instructions-capabilities-architecture.md) (`ui-agent-admin`, the chrome being generalized) · [ADR-0144](./0144-pane-tab-content-region-rule-system.md) (the pane/tab/content rule system SPEC-R7's segments compose with) · [ADR-0084](./0084-app-shell-narrow-reflow-collapse.md) (the narrow-reflow vocabulary `tabs` joins) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (prop-as-source-of-truth — deliberately NOT adopted for `size-*`; the R2d self-owned collapse-state model is) · TKT-0085 (the live-surface-survival hardening this lifts to grammar level) |
 

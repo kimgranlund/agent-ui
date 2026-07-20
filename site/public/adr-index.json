@@ -1062,5 +1062,12 @@
     "description": "ui-status-stream gains a ticking elapsed timer (StatusEntry.startedAt), an inline retry/action affordance (StatusEntry.action + a new seventh closed-vocabulary…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0154",
+    "url": "./adr-index.html#adr-0154",
+    "description": "The shell-archetype grammar gains resizable inner panes (SPEC-R6) + pane segments and a tab-based narrow-collapse arm (SPEC-R7) under a grammar-level visibilit…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
