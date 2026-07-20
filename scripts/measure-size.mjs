@@ -86,7 +86,10 @@ const targets = [
   // preview) landed in one wave — measured 42587 B gz 2026-07-11; the per-control marginal stays the
   // real gate (color-picker itself measures NEGATIVE — its bytes are already counted via text-field's
   // own static swatch/codec pull, a leave-one-out gzip-dictionary artifact, the split/swiper precedent).
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 44 * KB],
+  // 44.1 KB re-based GH #52/ADR-0154 (LLD-C6): `traits/pane-resize.ts` widened onto the package's public
+  // barrel (already bundled here via ui-split's own static import — no new module, only a re-export's own
+  // few bytes of export/type metadata). Measured 45141 B gz 2026-07-20 (up from 45056).
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 44.1 * KB],
 ]
 
 let over = false
@@ -245,7 +248,13 @@ const appCssQuerySuffixPlugin = {
 // that ~171 KB gz lazy CodeMirror chunk into the app's marginal figure, even though it is NEVER in a main
 // bundle (ADR-0139 cl.8c/8d) — this app entry is exactly such a case. Only entry-chunk code counts toward
 // the gated marginal; the lazy total is reported informationally, matching ./editor's own convention.
-const APP_MARGINAL_BUDGET = 68 * KB
+//
+// GH #52/ADR-0154 re-base — `ui-agent-admin` now composes `ui-chat-shell`(→`ui-super-shell`), which ride
+// this SAME barrel: real, new capability (SPEC-R6 resizable pane + SPEC-R7 segments/narrow-tabs), not
+// duplication — the TKT-0085 ResizeObserver + hand-rolled ui-split/ui-tabs docking this replaced was
+// net-negative on its OWN two files (agent-admin.ts/.css), but the grammar extension itself is real net-new
+// weight on the shared barrel. Measured 69921 B gz 2026-07-20 (up from 69632); ~2.5% headroom reserved.
+const APP_MARGINAL_BUDGET = 70 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })

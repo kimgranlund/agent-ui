@@ -22,6 +22,10 @@
   --ui-super-shell-radius: var(--md-sys-shape-corner-lg, var(--ui-super-shell-module));
   --ui-super-shell-surface: var(--md-sys-color-neutral-surface);
   --ui-super-shell-overlay-shadow: 0 0.25rem 1.5rem rgb(0 0 0 / 0.25);
+  /* SPEC-R6c (LLD-C1, ADR-0154) — the two-sided resize clamp: neither floor moves without a consumer
+     override (agent-admin's migration sets 20rem/16rem, its shipped ui-split's own floors). */
+  --ui-super-shell-pane-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
+  --ui-super-shell-canvas-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
 }
 
 @scope (ui-super-shell) {
@@ -90,6 +94,66 @@
     box-sizing: border-box;
   }
 
+  /* SPEC-R6 (LLD-C1) — the innermost pane's committed size (an inline custom property, written ONLY
+     on that one pane box) overrides the default token; every other pane on the same side has no such
+     inline property, so it falls through to --ui-super-shell-pane-size unchanged. */
+  [data-part='pane'][data-side='start'] { inline-size: var(--ui-super-shell-pane-size-start, var(--ui-super-shell-pane-size)); }
+  [data-part='pane'][data-side='end'] { inline-size: var(--ui-super-shell-pane-size-end, var(--ui-super-shell-pane-size)); }
+
+  /* SPEC-R6b — the drag/keyboard separator. A direct child of [data-part='middle'] carrying its side's
+     OWN data-side, so the EXISTING collapse (R2a) and narrow (R4) selectors below already hide/restore
+     it with the rest of its side (R6e) — zero new selectors needed for that half of the contract. */
+  [data-part='pane-resizer'] {
+    flex: 0 0 auto;
+    inline-size: 0.25rem;
+    cursor: col-resize;
+    touch-action: none;
+    border-radius: var(--ui-super-shell-radius);
+    background: transparent;
+  }
+  [data-part='pane-resizer']:hover,
+  [data-part='pane-resizer']:focus-visible {
+    background: var(--md-sys-color-primary);
+  }
+  [data-part='pane-resizer']:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: -2px;
+  }
+
+  /* SPEC-R7a — pane segments (wide): a segmented pane switches to a column layout (strip on top, the
+     active segment filling the rest) and shows exactly the segment JS marked [data-active]. */
+  [data-part='pane'][data-segmented] {
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden; /* the active segment now owns its own scroll, not the pane box */
+  }
+  [data-part='pane-tabs'] {
+    display: flex;
+    gap: calc(var(--ui-super-shell-module) / 3);
+    padding-block-end: calc(var(--ui-super-shell-module) / 3);
+    flex: 0 0 auto;
+  }
+  [data-segmented] > [data-segment] {
+    display: none;
+  }
+  [data-segmented] > [data-segment][data-active] {
+    display: block;
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+  }
+
+  /* SPEC-R7b — the shell-owned narrow-tabs strip. Hidden by default (wide); shown only under the narrow
+     container query, and only when the strip actually exists (a shell with no `tabs` side never pays
+     for this — the :has() guard also gives these rules enough specificity to win over the blanket
+     `[data-part='middle'] > [data-side]` narrow-hide rule below, the same way the `stack` arm does). */
+  [data-part='narrow-tabs'] {
+    display: none;
+    gap: var(--ui-super-shell-gap);
+    flex: 0 0 auto;
+    overflow-x: auto;
+  }
+
   [data-part='canvas'] {
     flex: 1 1 auto;
     min-inline-size: 0;
@@ -117,27 +181,66 @@
     }
     /* narrow-*="stack" (ADR-0084's region vocabulary) — the side stays IN FLOW, full width, the
        middle row turning into a column: [ start-side | canvas | end-side ] stacked. The side's own
-       content (e.g. ui-nav-rail collapse="menu") owns its narrow anatomy from here. */
+       content (e.g. ui-nav-rail collapse="menu") owns its narrow anatomy from here. `[data-part='pane-
+       resizer']` shares its side's own `data-side` (line ~103's comment) — EXCLUDED from both restore
+       arms below (never from the hide rule above): dragging doesn't apply once a side is stacked
+       full-width or overlaid, and without the exclusion the resizer's own `inline-size:0.25rem` gets
+       reset to `auto`/`position:absolute`, rendering it as a second full-size box on top of the pane. */
     :scope[narrow-start='stack'] [data-part='middle'],
     :scope[narrow-end='stack'] [data-part='middle'] {
       flex-direction: column;
     }
-    :scope[narrow-start='stack'] [data-part='middle'] > [data-side='start'],
-    :scope[narrow-end='stack'] [data-part='middle'] > [data-side='end'] {
+    :scope[narrow-start='stack'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']),
+    :scope[narrow-end='stack'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) {
       display: block;
       inline-size: auto;
       flex: 0 0 auto;
       overflow-y: visible;
     }
-    :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start'],
-    :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end'] {
+    :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']),
+    :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) {
       display: block;
       position: absolute;
       inset-block: 0;
       z-index: 2;
       box-shadow: var(--ui-super-shell-overlay-shadow);
     }
-    :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start'] { inset-inline-start: 0; }
-    :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end'] { inset-inline-end: 0; }
+    :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: 0; }
+    :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: 0; }
+
+    /* SPEC-R7b/R7c — the narrow-tabs strip + its addressed participant. The `:has()` guard is what
+       gives these rules enough specificity to win over the blanket `[data-side]` hide rule above (and
+       the `stack` arm's own restore rules) for a `tabs` side specifically — a side on `collapse`/`stack`
+       is untouched, never matching `[data-narrow-tab-target]` at all. */
+    :scope:has([data-part='narrow-tabs']) [data-part='narrow-tabs'] {
+      display: flex;
+    }
+    :scope:has([data-part='narrow-tabs']) [data-narrow-tab-target] {
+      display: none;
+    }
+    :scope:has([data-part='narrow-tabs']) [data-part='canvas'][data-narrow-tab-target][data-narrow-active] {
+      display: flex;
+      position: static;
+      inline-size: auto;
+    }
+    :scope:has([data-part='narrow-tabs']) [data-part='pane'][data-narrow-tab-target][data-narrow-active] {
+      display: block;
+      position: static;
+      inline-size: auto;
+      flex: 1 1 auto;
+      overflow-y: auto;
+    }
+    :scope:has([data-part='narrow-tabs']) [data-part='pane'][data-segmented][data-narrow-tab-target][data-narrow-active] {
+      display: flex;
+      flex-direction: column;
+    }
+    /* The wide pane-local tab strip (SPEC-R7a) is never shown at narrow for a `tabs`-participant pane —
+       even when its OWN pane is the active narrow-tab selection above, narrow selection happens
+       exclusively via the narrow-tabs strip (:scope > ... > [data-part='narrow-tabs']), never the wide
+       strip nested inside the now-visible pane. Scoped to `[data-narrow-tab-target]` descendants ONLY —
+       a `stack`-side segmented pane (never marked `data-narrow-tab-target`) keeps its own switcher. */
+    :scope:has([data-part='narrow-tabs']) [data-narrow-tab-target] [data-part='pane-tabs'] {
+      display: none;
+    }
   }
 }

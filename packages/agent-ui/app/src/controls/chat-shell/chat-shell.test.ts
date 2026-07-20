@@ -74,6 +74,43 @@ describe('ui-chat-shell — composition (LLD-C6, GH #98)', () => {
   })
 })
 
+describe('ui-chat-shell — SPEC-R6/R7 attribute forwarding (LLD-C3, ADR-0154)', () => {
+  it('forwards resizable-end/narrow-end (and every FORWARD_ATTRS member) onto the composed inner shell at compose', () => {
+    const el = document.createElement('ui-chat-shell') as UIChatShellElement
+    el.setAttribute('resizable-end', '')
+    el.setAttribute('narrow-end', 'tabs')
+    const content = document.createElement('div')
+    content.setAttribute('data-slot', 'content')
+    el.append(content)
+    document.body.append(el)
+    mounted.push(el)
+    const shell = el.querySelector('ui-super-shell')!
+    expect(shell.getAttribute('resizable-end')).toBe('')
+    expect(shell.getAttribute('narrow-end')).toBe('tabs')
+  })
+
+  it('an authored narrow-start overrides the "stack" default', () => {
+    const el = document.createElement('ui-chat-shell') as UIChatShellElement
+    el.setAttribute('narrow-start', 'collapse')
+    const content = document.createElement('div')
+    content.setAttribute('data-slot', 'content')
+    el.append(content)
+    document.body.append(el)
+    mounted.push(el)
+    expect(el.querySelector('ui-super-shell')?.getAttribute('narrow-start')).toBe('collapse')
+  })
+
+  it('size-start/size-end relay POST-connect (LLD-C3\'s persistence-restore case)', () => {
+    const el = mount({ content: 'C' })
+    const shell = el.querySelector('ui-super-shell')!
+    expect(shell.hasAttribute('size-end')).toBe(false)
+    el.setAttribute('size-end', '240')
+    expect(shell.getAttribute('size-end'), 'a post-connect change relays onto the inner shell').toBe('240')
+    el.removeAttribute('size-end')
+    expect(shell.hasAttribute('size-end'), 'removal relays too').toBe(false)
+  })
+})
+
 // ── descriptor — ADR-0004 (structural + contract↔props + contract↔source) ────────────────────────────────
 
 const DIR = `${process.cwd()}/packages/agent-ui/app/src/controls/chat-shell`

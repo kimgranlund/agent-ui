@@ -1,7 +1,9 @@
 // agent-admin-app-scroll.browser.test.ts — GH #130: the standalone `#app` shell (agent-admin-app.html,
 // a full-viewport 100dvh flex column) must stay pinned to the viewport when an inner region's content
-// grows past its own bounds — only that inner region (agent-admin.css's `[data-role='tabs']`, already
-// `overflow-y: auto`) should scroll, never the document itself.
+// grows past its own bounds — only that inner region should scroll, never the document itself. GH #52/
+// ADR-0154: the scrollable region is now the ACTIVE SEGMENT inside ui-super-shell's segmented
+// options-pane (`[data-segment][data-active]`, `overflow-y: auto`) — the outer pane box itself is
+// `overflow-y: hidden` by design (a segmented pane's strip stays fixed; only the active segment scrolls).
 //
 // Its own FILE (not folded into agent-admin-app.browser.test.ts): that file's module-level
 // `import './agent-admin-app.ts'` runs before any test body executes, so `root` (agent-admin-app.ts:33,
@@ -28,7 +30,7 @@ const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => 
 
 describe('agent-admin-app — the #app shell stays pinned when inner content overflows (GH #130)', () => {
   it('html/body/#app all compute overflow:hidden, and the inner panel stays reachable via its own scroll', async () => {
-    await page.viewport(1024, 700) // above agent-admin.css's 640px narrow-collapse threshold — the WIDE [data-role=tabs] layout
+    await page.viewport(1024, 700) // above ui-super-shell's 40rem/640px narrow container-query threshold — the WIDE options-pane layout
     const app = document.createElement('div')
     app.id = 'app'
     document.body.append(app)
@@ -38,7 +40,9 @@ describe('agent-admin-app — the #app shell stays pinned when inner content ove
 
     const appEl = document.getElementById('app') as HTMLElement
     const adminEl = document.querySelector('ui-agent-admin') as HTMLElement
-    const tabsEl = document.querySelector('[data-role="tabs"]') as HTMLElement | null
+    // The active segment (default: Settings) is the real scroll container now — the outer options-pane
+    // box is overflow-y:hidden by design (SPEC-R7a).
+    const tabsEl = document.querySelector('[data-slot-name="options-pane"] [data-segment][data-active]') as HTMLElement | null
     expect(appEl, "the real #app element must exist for this bug's own CSS selector to apply").not.toBeNull()
 
     // GH #130's own fix: the document must never be allowed to grow past the viewport regardless of what
@@ -60,7 +64,7 @@ describe('agent-admin-app — the #app shell stays pinned when inner content ove
     await raf()
 
     // The overflowing content must still be REACHABLE — the fix must not just clip it into oblivion; the
-    // inner panel's own overflow-y:auto (agent-admin.css) does the real containing+scrolling job.
+    // active segment's own overflow-y:auto (super-shell.css) does the real containing+scrolling job.
     if (tabsEl) {
       expect(getComputedStyle(tabsEl).overflowY, 'the inner panel must own its own scroll region').toBe('auto')
       tabsEl.scrollTop = 99999

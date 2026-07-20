@@ -1,6 +1,7 @@
 ---
 # super-shell.md — the attributes-as-API descriptor for ui-super-shell (M5, GH #83;
-# shell-archetypes-m5.spec.md — SPEC-R1 grammar · SPEC-R2 collapse · SPEC-R4 narrow).
+# shell-archetypes-m5.spec.md — SPEC-R1 grammar · SPEC-R2 collapse · SPEC-R4 narrow · SPEC-R6
+# resizable inner pane · SPEC-R7 pane segments + tabs narrow arm, LLD-C1/C2, ADR-0154).
 
 name: ui-super-shell
 
@@ -13,14 +14,52 @@ attributes:
     type: boolean
     default: false
     reflect: true
+  - name: narrow-start
+    type: enum(collapse|stack|tabs)
+    default: collapse      # SPEC-R7b widened the R4/F2 vocabulary with the tabs arm (ADR-0154)
+    reflect: true
+  - name: narrow-end
+    type: enum(collapse|stack|tabs)
+    default: collapse
+    reflect: true
+  - name: resizable-start
+    type: boolean
+    default: false          # SPEC-R6a — opt-in; applies only to the side's INNERMOST pane
+    reflect: true
+  - name: resizable-end
+    type: boolean
+    default: false
+    reflect: true
+  - name: size-start
+    type: number
+    default: null           # SPEC-R6d — the committed px size; null ⇒ --ui-super-shell-pane-size
+    reflect: true
+  - name: size-end
+    type: number
+    default: null
+    reflect: true
 
 properties:
   - name: collapsedStart
     description: The START side's paired collapse state (fork F1 — the rail+pane pair rides one state), LOGICAL not physical (LLD-C4, GH #95) — "start" means the DOM-first side (global-nav/nav-pane), whichever physical edge that renders on under the current `dir`. Flipped by the header's leading side-toggle at wide; at narrow the toggle drives the one-at-a-time overlay (`data-narrow-open`) instead, so a narrow visit never rewrites the persisted wide choice (SPEC-R4's no-clobber law).
   - name: collapsedEnd
     description: The END side's paired collapse state — the mirror (SPEC-R1a symmetry), LOGICAL (options-pane/global-options, DOM-second).
+  - name: narrowStart
+    description: What the START side does at narrow — `collapse` (default, overlay on toggle-restore) · `stack` (stays in flow) · `tabs` (SPEC-R7b — its panes join the shell-owned narrow-tabs strip instead; a segmented pane flattens to one tab per segment).
+  - name: narrowEnd
+    description: The mirror of `narrowStart` for the END side. Both sides may independently declare `tabs` — their panes join ONE shared strip, content always first.
+  - name: resizableStart
+    description: SPEC-R6a — opts the START side's INNERMOST pane (the one adjacent to content) into user resizing via a drag/keyboard separator. Rails and outer stacked panes stay token-fixed regardless.
+  - name: resizableEnd
+    description: The mirror of `resizableStart` for the END side.
+  - name: sizeStart
+    description: SPEC-R6d — the START pane's committed size in px, observable AND settable (a consumer persists/restores it the same way `collapsedStart` works). `null` until a first commit; the shell never persists it on its own (out of v1 scope per the LLD).
+  - name: sizeEnd
+    description: The mirror of `sizeStart` for the END side.
 
-events: []                 # behavior-only composition — no event vocabulary of its own (ADR-0151 rule 2)
+events:
+  - name: change
+    description: SPEC-R6d — fires on a resize COMMIT (pointer release or a keyboard step), never on a live drag move. The fleet's existing vocabulary member, the ui-split precedent — no new event kind.
 
 parts:
   - name: frame
@@ -34,9 +73,15 @@ parts:
   - name: rail
     description: A 3-module (54px) global bar (`data-slot-name="global-nav|global-options"`, `data-side`) — the OUTER level's ring; an inner nested shell simply authors no rails (SPEC-R1b ring-dropping recursion). Carries `role="navigation"` (global-nav) or `role="complementary"` (global-options) — LLD-C1.
   - name: pane
-    description: A 14-module (252px) side pane (`data-slot-name="nav-pane|section-nav|options-pane|options-section"`, `data-side`), its own scroll container. A side may stack MULTIPLE panes (SPEC-R5/GH #96) — DOM order is rail first, then panes outer-to-content (`nav-pane` before `section-nav`; `options-section` before `options-pane`, its mirror). Collapse is still WHOLE-SIDE: every part sharing a `data-side` value hides/restores together, never per-pane. Carries `role="navigation"` (nav-pane/section-nav) or `role="complementary"` (options-pane/options-section) — LLD-C1.
+    description: A 14-module (252px) side pane (`data-slot-name="nav-pane|section-nav|options-pane|options-section"`, `data-side`), its own scroll container. A side may stack MULTIPLE panes (SPEC-R5/GH #96) — DOM order is rail first, then panes outer-to-content (`nav-pane` before `section-nav`; `options-section` before `options-pane`, its mirror). Collapse is still WHOLE-SIDE: every part sharing a `data-side` value hides/restores together, never per-pane. Carries `role="navigation"` (nav-pane/section-nav) or `role="complementary"` (options-pane/options-section) — LLD-C1. The INNERMOST pane on an opted-in side additionally carries a `pane-resizer` sibling (SPEC-R6) and, when its authored children carry `data-segment`, `data-segmented` + a `pane-tabs` strip of its own (SPEC-R7a).
   - name: canvas
     description: The mandatory content region — `flex:1 1 auto; min-inline-size:0` (console.warn when unauthored). Hosts anything, including another ui-super-shell (depth 2 is the normative test ceiling, fork F3). Carries `role="main"` (LLD-C1) — an author must ensure only one `main` per document, the same cross-instance responsibility ui-app-shell's own `main` region carries.
+  - name: pane-resizer
+    description: SPEC-R6b — the drag/keyboard separator between `content` and an opted-in side's innermost pane (`data-side`, `role="separator"`, `aria-orientation="vertical"`, `aria-controls` referencing the pane's id). Reuses `@agent-ui/components`' `paneResize` trait (ADR-0154 LLD-C6) for the drag gesture; arrow keys step one module, Home/End jump to the SPEC-R6c bounds. Carries the side's OWN `data-side`, so the existing whole-side collapse/narrow selectors already hide/restore it with the rest of its side — zero part-specific CSS for that half of the contract.
+  - name: pane-tabs
+    description: SPEC-R7a — a segmented pane's OWN top-of-pane tab strip (`role="tablist"`, one `ui-button` `role="tab"` per `data-segment` child), switching which segment is visible in place (never a reparent — SPEC-R7c's survival law).
+  - name: narrow-tabs
+    description: SPEC-R7b — the shell-owned, top-level narrow strip composed once when at least one side declares `narrow-*="tabs"` (`role="tablist"`). Content is always the first tab; each `tabs`-side's panes follow in DOM order, a segmented pane flattening to one tab per segment. Hidden outside the narrow container query; a no-op part when no side opts in.
 
 customStates: []
 
@@ -47,7 +92,11 @@ aria:
   role: none               # the HOST carries no role of its own — LLD-C1's landmarks live on the control-created PARTS (bar/rail/pane/canvas above), not the host element
   roleSource: none
 
-keyboard: []               # the toggles are real ui-buttons (native activation); panes scroll natively
+keyboard:
+  - key: ArrowLeft / ArrowRight
+    description: On a focused `pane-resizer`, steps the pane's size by one module (`--ui-super-shell-module`) — RTL-aware (SPEC-R6b, the ui-split precedent); the toggles remain native ui-button activation, and panes scroll natively.
+  - key: Home / End
+    description: On a focused `pane-resizer`, jumps straight to the SPEC-R6c bound (pane minimum / the canvas-derived maximum).
 
 geometry:
   sizeClass: layout
@@ -72,3 +121,22 @@ overlays. Every part carries a real ARIA landmark by default (header→banner, f
 content→main, nav slots→navigation, options slots→complementary), overridable per slot via
 `data-landmark="…"` on the first authored child (LLD-C1). Normative frames: Figma 34-1486 / 34-1506
 (GH #44).
+
+## SPEC-R6 — the resizable inner pane (ADR-0154)
+
+Opt in per side (`resizable-start`/`resizable-end`) and only the side's INNERMOST pane — the one
+adjacent to `content` — gains a drag/keyboard separator. The committed size is the reflected
+`size-start`/`size-end` px prop; `change` fires on commit (release or a key step), never on a live
+drag move. Bounds: the pane never shrinks below `--ui-super-shell-pane-min-size`, and never grows
+past what `--ui-super-shell-canvas-min-size` leaves available (both default 9 modules = 162px,
+override per consumer). A collapsed side's committed size SURVIVES the round-trip.
+
+## SPEC-R7 — pane segments + the `tabs` narrow arm (ADR-0154)
+
+Authored children of a pane slot sharing the SAME `data-slot` value may each carry
+`data-segment="<Label>"` — the pane renders its own tab strip and shows exactly one segment at a
+time (visibility-only, never a reparent). Widen `narrow-start`/`narrow-end` to `'tabs'` and that
+side's panes join a SHELL-OWNED top-level strip instead of collapsing: content is always first,
+then each pane in DOM order, a segmented pane flattening to one tab per segment. Every state
+change here — resize, tab switch, segment switch, a band crossing — is visibility-only (SPEC-R7c):
+a live embedded surface in `content` or a pane survives every one of them un-cycled.

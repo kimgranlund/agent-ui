@@ -19,14 +19,16 @@ import type { ParsedAttribute } from '@agent-ui/components/descriptor'
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
-// jsdom probes for ui-agent-admin (TKT-0039, ADR-0131/ADR-0132). jsdom cannot resolve CSS Grid/flex
-// layout — the actual visual 3-pane geometry is agent-admin.browser.test.ts's job (the master-detail.test.ts
-// / master-detail.browser.test.ts split, mirrored). This file proves: the connect-time composition (one
-// ui-split hosting three panes, the settings pane composing the Agent config + four capability
-// entry-lists, the prompts pane composing the prompt-section entry-list), the generic entry-list
-// primitive's own behavior (toggle/edit/delete/add, fail-closed validation, built-in non-deletability),
-// the composed-prompt + enabled-capabilities live-apply wiring, persistence across a real reload,
-// reconnect idempotence, and the descriptor's structural + contract↔props + contract↔source trip-wires.
+// jsdom probes for ui-agent-admin (TKT-0039, ADR-0131/ADR-0132). jsdom cannot resolve CSS container-
+// query/flex layout — the actual visual geometry is agent-admin.browser.test.ts's job (the
+// master-detail.test.ts / master-detail.browser.test.ts split, mirrored). This file proves: the
+// connect-time composition (GH #52/ADR-0154: ONE ui-chat-shell hosting content=conversation + an
+// options-pane segmented into Settings/Context: System/Context: Dialog — the settings segment
+// composing the Agent config + four capability entry-lists, the prompts pane composing the
+// prompt-section entry-list), the generic entry-list primitive's own behavior (toggle/edit/delete/add,
+// fail-closed validation, built-in non-deletability), the composed-prompt + enabled-capabilities
+// live-apply wiring, persistence across a real reload, reconnect idempotence, and the descriptor's
+// structural + contract↔props + contract↔source trip-wires.
 
 // jsdom reality (the conversation.test.ts precedent, code-reviewer BLOCKER finding — this file composes
 // ui-switch/ui-textarea via entry-list.ts, and jsdom's ElementInternals carries no real setFormValue/
@@ -71,199 +73,104 @@ function contentFieldOf(row: HTMLElement): HTMLTextAreaElement {
   return row.querySelector('[data-part="entry-content"]') as HTMLTextAreaElement
 }
 
-// TKT-0085 — the responsive-shell breakpoint watcher. jsdom carries no real ResizeObserver, so
-// `connected()` falls back to unconditionally applying 'wide' (every OTHER describe block in this file
-// relies on that fallback for the pre-TKT-0085 3-pane shape). This stub restores an OBSERVABLE,
-// MANUALLY-DRIVEN ResizeObserver so `#applyLayout` can be exercised through its real public entry point
-// (a resize notification) rather than reaching into the private method — the same "test through the
-// real API" discipline the rest of this file follows. The actual painted CSS (@scope, [hidden]
-// specificity, real box geometry) is agent-admin.browser.test.ts's job; this file proves the DOM
-// RESTRUCTURING (which pane/tab-panel each content unit ends up in) is correct at each of the three
-// bands, and that content nodes are MOVED, never rebuilt, across a round trip.
-class FakeResizeObserver {
-  static instances: FakeResizeObserver[] = []
-  #callback: ResizeObserverCallback
-  target: Element | null = null
-  constructor(callback: ResizeObserverCallback) {
-    this.#callback = callback
-    FakeResizeObserver.instances.push(this)
-  }
-  observe(el: Element): void {
-    this.target = el
-  }
-  unobserve(): void {
-    this.target = null
-  }
-  disconnect(): void {
-    this.target = null
-  }
-  /** Synthesize a resize notification carrying `width` as `contentRect.width` — the one field
-   *  `agent-admin.ts`'s observer callback reads. */
-  trigger(width: number): void {
-    this.#callback([{ contentRect: { width } } as ResizeObserverEntry], this as unknown as ResizeObserver)
-  }
-}
-
-describe('UIAgentAdminElement — responsive shell (TKT-0085 → vision rev.5): split / narrow', () => {
-  let realResizeObserver: typeof ResizeObserver | undefined
-  beforeAll(() => {
-    realResizeObserver = globalThis.ResizeObserver
-    globalThis.ResizeObserver = FakeResizeObserver as unknown as typeof ResizeObserver
-  })
-  afterAll(() => {
-    globalThis.ResizeObserver = realResizeObserver as typeof ResizeObserver
-  })
-  afterEach(() => {
-    FakeResizeObserver.instances = []
-  })
-
-  function mountAndResize(width: number): { el: UIAgentAdminElement; ro: FakeResizeObserver } {
+// GH #52/ADR-0154 — the responsive shell is now ui-chat-shell/ui-super-shell's OWN grammar (SPEC-R6/
+// R7): content=conversation, options-pane segments=Settings/Context:System/Context:Dialog, narrow-end
+//="tabs" flattens them. TKT-0085's ResizeObserver-driven reparenting is GONE — there is no width
+// threshold in this element anymore, and content is authored once, never moved. jsdom cannot resolve
+// the real container query (super-shell.browser.test.ts's own precedent), but the segment/narrow-tab
+// SWITCHING is pure JS/DOM behavior, independent of which band is actually painted — this file proves
+// that DOM behavior; agent-admin.browser.test.ts proves the real cross-engine geometry/survival.
+describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments + narrow-tabs', () => {
+  it('composes ONE ui-chat-shell: content=conversation, options-pane segmented into Settings/Context: System/Context: Dialog', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const ro = FakeResizeObserver.instances.at(-1) as FakeResizeObserver
-    ro.trigger(width)
-    return { el, ro }
-  }
+    const shell = el.querySelector(':scope > ui-chat-shell') as HTMLElement
+    expect(shell).not.toBeNull()
+    expect(shell.getAttribute('resizable-end')).toBe('')
+    expect(shell.getAttribute('narrow-end')).toBe('tabs')
+    expect(el.querySelector('[data-part="canvas"] ui-conversation')).not.toBeNull()
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(pane.hasAttribute('data-segmented')).toBe(true)
+    const segmentLabels = [...pane.querySelectorAll(':scope > [data-segment]')].map((s) => s.getAttribute('data-segment'))
+    expect(segmentLabels).toEqual(['Settings', 'Context: System', 'Context: Dialog'])
+  })
 
-  it('connected() observes itself via ResizeObserver, disconnected() disconnects it', () => {
+  it('the Settings segment carries the WHOLE config column; each Context segment carries ONLY its own accordion — no cross-segment leakage', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const ro = FakeResizeObserver.instances.at(-1) as FakeResizeObserver
-    expect(ro.target).toBe(el)
-    el.remove()
-    expect(ro.target).toBeNull()
+    const settings = el.querySelector('[data-segment="Settings"]') as HTMLElement
+    const contextSystem = el.querySelector('[data-segment="Context: System"]') as HTMLElement
+    const contextDialog = el.querySelector('[data-segment="Context: Dialog"]') as HTMLElement
+    expect(settings.querySelector('[data-part="agent-heading"]')).not.toBeNull()
+    expect(settings.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
+    expect(contextSystem.matches('[data-role="context-system-content"]')).toBe(true)
+    expect(contextSystem.querySelector('[data-role="context-dialog-content"]')).toBeNull()
+    expect(contextSystem.querySelector('[data-part="context-turns"]')).toBeNull()
+    expect(contextDialog.matches('[data-role="context-dialog-content"]')).toBe(true)
+    expect(contextDialog.querySelector('[data-role="context-system-content"]')).toBeNull()
+    expect(contextDialog.querySelector('[data-part="context-system"]')).toBeNull()
   })
 
-  it('split (≥640px): [ chat | {Settings, Context: System, Context: Dialog} tabs ] — the narrow all-tabs shell stays hidden (vision rev.5, GH #161)', () => {
-    const { el } = mountAndResize(1200)
-    const split = el.querySelector(':scope > ui-split') as HTMLElement
-    expect(split.hidden).toBe(false)
-    const paneRoles = [...split.children].filter((c) => c.tagName === 'UI-SPLIT-PANE').map((c) => c.getAttribute('data-role'))
-    expect(paneRoles).toEqual(['canvas', 'tabs'])
-    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
-    expect(narrowTabs.hidden).toBe(true)
-    expect(el.querySelector('[data-role="canvas"] ui-conversation')).not.toBeNull()
-    const tabsPane = el.querySelector('[data-role="tabs"]') as HTMLElement
-    const tabLabels = [...tabsPane.querySelectorAll('ui-tab')].map((t) => t.textContent)
-    expect(tabLabels).toEqual(['Settings', 'Context: System', 'Context: Dialog'])
-    // The Settings panel carries the WHOLE config column (Agent header + prompts + capabilities merged);
-    // the two Context panels each carry ONE introspection group (GH #161 split them apart). Panel
-    // visibility is a CSS/ui-tabs concern — all three stay in the DOM, only the inactive ones are [hidden].
-    expect(tabsPane.querySelector('[data-part="agent-heading"]')).not.toBeNull()
-    expect(tabsPane.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
-    expect(tabsPane.querySelector('[data-role="context-system-content"]')).not.toBeNull()
-    expect(tabsPane.querySelector('[data-role="context-dialog-content"]')).not.toBeNull()
+  it('clicking the pane-tabs strip switches which segment is [data-active] — never a reparent (SPEC-R7c)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const settings = pane.querySelector('[data-segment="Settings"]') as HTMLElement
+    const contextSystem = pane.querySelector('[data-segment="Context: System"]') as HTMLElement
+    expect(settings.hasAttribute('data-active')).toBe(true)
+    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')]
+    expect(tabs.map((t) => t.textContent)).toEqual(['Settings', 'Context: System', 'Context: Dialog'])
+    ;(tabs[1] as HTMLElement).click()
+    expect(settings.hasAttribute('data-active')).toBe(false)
+    expect(contextSystem.hasAttribute('data-active')).toBe(true)
+    expect(settings.isConnected, 'switching segments never reparents').toBe(true)
   })
 
-  it('GH #161: in the split layout, each Context ui-tab-panel carries ONLY its own accordion — no cross-tab leakage', () => {
-    const { el } = mountAndResize(1200)
-    const tabsPane = el.querySelector('[data-role="tabs"]') as HTMLElement
-    const panels = [...tabsPane.querySelectorAll('ui-tab-panel')]
-    expect(panels).toHaveLength(3) // Settings, Context: System, Context: Dialog
-    const systemPanel = panels[1] as HTMLElement
-    const dialogPanel = panels[2] as HTMLElement
-    expect(systemPanel.querySelector('[data-role="context-system-content"]')).not.toBeNull()
-    expect(systemPanel.querySelector('[data-role="context-dialog-content"]')).toBeNull()
-    expect(systemPanel.querySelector('[data-part="context-turns"]')).toBeNull()
-    expect(dialogPanel.querySelector('[data-role="context-dialog-content"]')).not.toBeNull()
-    expect(dialogPanel.querySelector('[data-role="context-system-content"]')).toBeNull()
-    expect(dialogPanel.querySelector('[data-part="context-system"]')).toBeNull()
+  it('the narrow-tabs strip flattens content + every segment into ONE top-level strip: Chat, Settings, Context: System, Context: Dialog', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const strip = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
+    expect(strip).not.toBeNull()
+    const labels = [...strip.querySelectorAll('[data-part="narrow-tab"]')].map((t) => t.textContent)
+    expect(labels).toEqual(['Chat', 'Settings', 'Context: System', 'Context: Dialog'])
   })
 
-  it('the old medium band (640–1023px) now renders the SAME split shape — one layout above the threshold', () => {
-    const { el } = mountAndResize(800)
-    const split = el.querySelector(':scope > ui-split') as HTMLElement
-    expect(split.hidden).toBe(false)
-    const paneRoles = [...split.children].filter((c) => c.tagName === 'UI-SPLIT-PANE').map((c) => c.getAttribute('data-role'))
-    expect(paneRoles).toEqual(['canvas', 'tabs'])
+  it('clicking a narrow tab moves data-narrow-active to the addressed participant, syncing the wide segment strip too', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const canvasBox = el.querySelector('[data-part="canvas"]') as HTMLElement
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(canvasBox.hasAttribute('data-narrow-active')).toBe(true)
+
+    const narrowTabs = [...el.querySelectorAll('[data-part="narrow-tab"]')] as HTMLElement[]
+    const contextSystemNarrowTab = narrowTabs.find((t) => t.textContent === 'Context: System')!
+    contextSystemNarrowTab.click()
+    expect(canvasBox.hasAttribute('data-narrow-active')).toBe(false)
+    expect(pane.hasAttribute('data-narrow-active')).toBe(true)
+    expect(pane.querySelector('[data-segment="Context: System"]')?.hasAttribute('data-active')).toBe(true)
+
+    const chatNarrowTab = narrowTabs.find((t) => t.textContent === 'Chat')!
+    chatNarrowTab.click()
+    expect(canvasBox.hasAttribute('data-narrow-active')).toBe(true)
+    expect(pane.hasAttribute('data-narrow-active')).toBe(false)
   })
 
-  it('narrow (<640px): {Chat, Settings, Context: System, Context: Dialog} tabs — the split is hidden and empty (GH #161: a flat 4th/5th top-level tab, not a nested sub-tab-set)', () => {
-    const { el } = mountAndResize(500)
-    const split = el.querySelector(':scope > ui-split') as HTMLElement
-    expect(split.hidden).toBe(true)
-    expect([...split.children].filter((c) => c.tagName === 'UI-SPLIT-PANE')).toHaveLength(0)
-    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
-    expect(narrowTabs.hidden).toBe(false)
-    const tabLabels = [...narrowTabs.querySelectorAll('ui-tab')].map((t) => t.textContent)
-    expect(tabLabels).toEqual(['Chat', 'Settings', 'Context: System', 'Context: Dialog'])
-    expect(narrowTabs.querySelector('ui-conversation')).not.toBeNull()
-    expect(narrowTabs.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
-    expect(narrowTabs.querySelector('[data-part="agent-heading"]')).not.toBeNull()
-    expect(narrowTabs.querySelector('[data-role="context-system-content"]')).not.toBeNull()
-    expect(narrowTabs.querySelector('[data-role="context-dialog-content"]')).not.toBeNull()
-  })
-
-  it('GH #161: in narrow mode, each Context tab-panel carries ONLY its own accordion — no cross-tab leakage', () => {
-    const { el } = mountAndResize(500)
-    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
-    const panels = [...narrowTabs.querySelectorAll('ui-tab-panel')]
-    expect(panels).toHaveLength(4) // Chat, Settings, Context: System, Context: Dialog
-    const systemPanel = panels[2] as HTMLElement
-    const dialogPanel = panels[3] as HTMLElement
-    expect(systemPanel.querySelector('[data-role="context-system-content"]')).not.toBeNull()
-    expect(systemPanel.querySelector('[data-role="context-dialog-content"]')).toBeNull()
-    expect(systemPanel.querySelector('[data-part="context-turns"]')).toBeNull()
-    expect(dialogPanel.querySelector('[data-role="context-dialog-content"]')).not.toBeNull()
-    expect(dialogPanel.querySelector('[data-role="context-system-content"]')).toBeNull()
-    expect(dialogPanel.querySelector('[data-part="context-system"]')).toBeNull()
-  })
-
-  it('content nodes are MOVED (same identity), never rebuilt, across a split → narrow → split round trip', () => {
-    const { el, ro } = mountAndResize(1200)
+  it('content nodes are the SAME identity across repeated segment/narrow-tab switches — nothing is ever rebuilt', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const conversation = el.querySelector('ui-conversation')
     const settingsHeading = el.querySelector('[data-part="agent-heading"]')
     const instructionsHeading = el.querySelector('[data-part="entry-section-heading"]')
 
-    ro.trigger(500) // -> narrow
+    const tabs = [...el.querySelectorAll('[data-part="narrow-tab"]')] as HTMLElement[]
+    tabs.find((t) => t.textContent === 'Settings')!.click()
+    tabs.find((t) => t.textContent === 'Context: System')!.click()
+    tabs.find((t) => t.textContent === 'Chat')!.click()
+
     expect(el.querySelector('ui-conversation')).toBe(conversation)
     expect(el.querySelector('[data-part="agent-heading"]')).toBe(settingsHeading)
     expect(el.querySelector('[data-part="entry-section-heading"]')).toBe(instructionsHeading)
-
-    ro.trigger(1200) // -> back to split
-    expect(el.querySelector('ui-conversation')).toBe(conversation)
-    expect(el.querySelector('[data-part="agent-heading"]')).toBe(settingsHeading)
-    expect(el.querySelector('[data-part="entry-section-heading"]')).toBe(instructionsHeading)
-    // Landed back in the ORIGINAL split-shell panes, not left behind in a detached tab shell.
-    expect(el.querySelector('[data-role="canvas"] ui-conversation')).toBe(conversation)
-    expect(el.querySelector('[data-role="tabs"] [data-part="agent-heading"]')).toBe(settingsHeading)
   })
 
-  it('is idempotent — re-triggering a resize WITHIN the same band does not rebuild the shell', () => {
-    const { el, ro } = mountAndResize(1200)
-    const split = el.querySelector(':scope > ui-split') as HTMLElement
-    ro.trigger(700) // still split (≥640) — a different width, same band
-    expect(el.querySelector(':scope > ui-split')).toBe(split) // same node — #applyLayout no-op'd
-  })
-
-  it('pane order stays correct (left-to-right) across a long chain of back-and-forth crossings', () => {
-    const { el, ro } = mountAndResize(1200) // wide
-    const paneRoles = () =>
-      [...(el.querySelector(':scope > ui-split') as HTMLElement).children]
-        .filter((c) => c.tagName === 'UI-SPLIT-PANE')
-        .map((c) => c.getAttribute('data-role'))
-
-    ro.trigger(800) // still split (one layout above the threshold)
-    expect(paneRoles()).toEqual(['canvas', 'tabs'])
-    ro.trigger(500) // -> narrow
-    expect(paneRoles()).toEqual([])
-    ro.trigger(800) // -> split
-    expect(paneRoles()).toEqual(['canvas', 'tabs'])
-    ro.trigger(500) // -> narrow
-    expect(paneRoles()).toEqual([])
-    ro.trigger(1200) // -> split
-    expect(paneRoles()).toEqual(['canvas', 'tabs'])
-
-    // Content stays reachable at real DOM locations after the whole chain — not just structurally present.
-    expect(el.querySelector('[data-role="canvas"] ui-conversation')).not.toBeNull()
-    expect(el.querySelector('[data-role="tabs"] [data-part="entry-section-heading"]')).not.toBeNull()
-    expect(el.querySelector('[data-role="tabs"] [data-part="agent-heading"]')).not.toBeNull()
-  })
-
-  it('capability sections (Skills/Workflows/Resources/Tools) travel with the Settings content unit at every band', () => {
-    const { el } = mountAndResize(500) // narrow — the smallest content-unit-grouping test
-    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
-    const settingsPanel = [...narrowTabs.querySelectorAll('ui-tab-panel')][1] as HTMLElement
+  it('capability sections (Skills/Workflows/Resources/Tools) live in the Settings segment', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const settings = el.querySelector('[data-segment="Settings"]') as HTMLElement
     for (const label of ['Instructions', 'Skills', 'Workflows', 'Resources', 'Tools']) {
-      expect([...settingsPanel.querySelectorAll('[data-part="entry-section-heading"]')].some((h) => h.textContent === label), `missing ${label} section`).toBe(true)
+      expect([...settings.querySelectorAll('[data-part="entry-section-heading"]')].some((h) => h.textContent === label), `missing ${label} section`).toBe(true)
     }
   })
 })
@@ -308,7 +215,7 @@ describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)',
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const target = SUPPORTED_MODELS.find((m) => m.id !== DEFAULT_MODEL_ID)!
     el.store!.set('model', target.id)
-    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
     composer.value = 'ping' // the composer's own value prop (TKT-0058 — the nested field/form are gone)
     ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
     const bubbles = [...el.querySelectorAll('[data-role="agent"]')]
@@ -336,45 +243,30 @@ describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)',
   })
 })
 
-describe('UIAgentAdminElement — composition (vision rev.5: chat + {Settings, Context: System, Context: Dialog} tabs; ADR-0132 five entry-list instantiations; GH #161)', () => {
-  it('builds one ui-split with two ui-split-pane children: canvas, tabs', () => {
+describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings, Context: System, Context: Dialog} segments; ADR-0132 five entry-list instantiations; GH #161)', () => {
+  it('builds one ui-chat-shell with content=conversation and one segmented options-pane', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const split = el.querySelector(':scope > ui-split')
-    expect(split).not.toBeNull()
-    const panes = [...split!.querySelectorAll(':scope > ui-split-pane')]
-    expect(panes.map((p) => p.getAttribute('data-role'))).toEqual(['canvas', 'tabs'])
+    const shell = el.querySelector(':scope > ui-chat-shell')
+    expect(shell).not.toBeNull()
+    expect(shell?.querySelector('[data-part="canvas"] ui-conversation')).not.toBeNull()
+    expect(shell?.querySelector('[data-slot-name="options-pane"][data-segmented]')).not.toBeNull()
   })
 
-  it('TKT-0045: the three panes\' real content-floor `min`s sum (+ frame chrome) to the docs demo frame\'s stated minimum', () => {
-    // Coherence guard (component-reviewer M1 fix): site/pages/agent-admin.css's `.agent-admin-resize`
-    // hardcodes `min-inline-size: 48rem` as "the sum of the three panes' own `min` ... plus chrome" — a
-    // claim nothing else checks. If a pane's `min` here drifts without a matching frame-floor update (or
-    // vice versa), the docs demo silently regresses to the exact TKT-0045 clipping bug. This test is the
-    // gate: it re-derives the expected frame floor from the LIVE pane `min` attributes rather than from a
-    // second hardcoded copy of 16/10/20, so only the frame's own constant (asserted at the bottom) can
-    // drift out of sync.
-    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const panes = [...el.querySelectorAll(':scope > ui-split > ui-split-pane')]
-    const paneMinsRem = panes.map((p) => {
-      const min = p.getAttribute('min') ?? ''
-      const match = /^([\d.]+)rem$/.exec(min)
-      expect(match, `pane min "${min}" must be an explicit rem value`).not.toBeNull()
-      return Number.parseFloat(match![1]!)
-    })
-    const paneMinsSum = paneMinsRem.reduce((sum, n) => sum + n, 0)
-    // Divider (1 × 1px between two panes) + .agent-admin-resize padding (2 × 0.5rem) + its border
-    // (2 × 1px) + .agent-admin-demo border (2 × 1px) — site/pages/agent-admin.css's own chrome constants,
-    // restated here as the ONE other place this arithmetic lives.
-    const chromeRem = 1 / 16 + 1 + 2 / 16 + 2 / 16
-    const expectedFloorRem = Math.ceil(paneMinsSum + chromeRem)
-    expect(expectedFloorRem).toBeLessThanOrEqual(48) // the frame's actual stated floor must cover the real need
-    expect(paneMinsSum).toBe(36) // 16 + 20 — vision rev.5's TWO panes, pinned together as one changeset
+  it('LLD-C4: agent-admin.css sets the two R6c floor tokens to today\'s ui-split min values, verbatim (16rem/20rem)', () => {
+    // Coherence guard (the TKT-0045 lineage, re-pointed at the new mechanism): the old `min` ATTRIBUTES
+    // on `ui-split-pane` are gone with the shell; the SAME two floors now live as CSS custom properties
+    // on ui-super-shell's own R6c bounds tokens (agent-admin.css). This reads the live declaration
+    // rather than a second hardcoded copy, so a drift here fails loudly instead of silently regressing
+    // to the TKT-0045 clipping bug under a different mechanism.
+    const css = readFileSync(`${process.cwd()}/packages/agent-ui/app/src/controls/agent-admin/agent-admin.css`, 'utf8') as string
+    expect(/--ui-super-shell-canvas-min-size:\s*16rem/.test(css), 'the canvas floor (today\'s canvasPane min) must stay 16rem').toBe(true)
+    expect(/--ui-super-shell-pane-min-size:\s*20rem/.test(css), 'the options-pane floor (today\'s tabsPane min) must stay 20rem').toBe(true)
   })
 
-  it('the canvas pane composes a real ui-conversation', () => {
+  it('the canvas box composes a real ui-conversation', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const canvasPane = el.querySelector('[data-role="canvas"]')
-    expect(canvasPane?.querySelector('ui-conversation')).toBeInstanceOf(UIConversationElement)
+    const canvasBox = el.querySelector('[data-part="canvas"]')
+    expect(canvasBox?.querySelector('ui-conversation')).toBeInstanceOf(UIConversationElement)
   })
 
   it('the Settings content composes the Agent config (real ui-settings, wired to schema/store) PLUS all FIVE entry-sections (prompts merged in, vision rev.5)', () => {
@@ -630,7 +522,7 @@ describe('UIAgentAdminElement — composeSystemPrompt (ADR-0132 cl.2)', () => {
 
 describe('UIAgentAdminElement — live-apply turn loop (ADR-0132 cl.6: composed prompt + enabled-capabilities snapshot)', () => {
   function submit(el: UIAgentAdminElement, text: string): void {
-    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
     composer.value = text // the composer's own value prop (TKT-0058 — the nested field/form are gone)
     ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
   }
@@ -692,7 +584,7 @@ describe('UIAgentAdminElement — live-apply turn loop (ADR-0132 cl.6: composed 
 
 describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136)', () => {
   function submit(el: UIAgentAdminElement, text: string): void {
-    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
     composer.value = text // the composer's own value prop (TKT-0058 — the nested field/form are gone)
     ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
   }
@@ -925,7 +817,7 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     submit(el, 'boom')
     await waitFor(() => systemBubbleText(el).includes('network is down'), 'error system bubble')
     expect(systemBubbleText(el)).toContain('⚠')
-    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement
+    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement
     expect(composer.hasAttribute('busy'), 'the composer must re-enable after a failed live turn').toBe(false)
     // a subsequent turn still proceeds (the page recovered on the throw path)
     el.agentTurn = async () => 'recovered'
@@ -962,13 +854,13 @@ describe('UIAgentAdminElement — a bring-your-own store with NO subscribe() sti
 })
 
 describe('UIAgentAdminElement — composition survives a RECONNECT (the master-detail.ts/settings.ts precedent)', () => {
-  it('re-parenting a connected instance leaves EXACTLY ONE ui-split — no duplicate composition', () => {
+  it('re-parenting a connected instance leaves EXACTLY ONE ui-chat-shell — no duplicate composition', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const wrapper = document.createElement('div')
     document.body.append(wrapper)
     wrapper.append(el) // detach + reattach — connectedCallback fires again
-    expect(el.querySelectorAll(':scope > ui-split').length).toBe(1)
-    expect(el.querySelectorAll('[data-role="canvas"]').length).toBe(1)
+    expect(el.querySelectorAll(':scope > ui-chat-shell').length).toBe(1)
+    expect(el.querySelectorAll('[data-part="canvas"]').length).toBe(1)
     expect(el.querySelectorAll('[data-kind="skill"]').length).toBe(1)
     wrapper.remove()
   })
@@ -1016,7 +908,7 @@ describe('UIAgentAdminElement — composition survives a RECONNECT (the master-d
 // store-identity change is a "switch".
 describe('UIAgentAdminElement — a persona switch resets the conversation (GH #145)', () => {
   function submit(el: UIAgentAdminElement, text: string): void {
-    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
     composer.value = text
     ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
   }

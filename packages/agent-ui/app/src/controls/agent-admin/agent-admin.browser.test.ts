@@ -1,10 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest'
 
-// The CROSS-ENGINE ui-agent-admin smoke (TKT-0039, ADR-0131). jsdom cannot resolve CSS flex/@scope
-// layout — this file is where the three-pane side-by-side geometry becomes TRUE in BOTH Chromium and
-// WebKit (the master-detail.browser.test.ts precedent). CSS wiring: the foundation first, then
-// `component-styles.css` (the family barrel carries ui-split/ui-split-pane/ui-text-field/etc.'s shipped
-// CSS), then every composed sibling's own CSS, then this element's own.
+// The CROSS-ENGINE ui-agent-admin smoke (TKT-0039, ADR-0131; re-hosted GH #52/ADR-0154). jsdom cannot
+// resolve CSS flex/@scope/container-query layout — this file is where the chat+options-pane side-by-
+// side geometry (and the container-query narrow crossing) becomes TRUE in BOTH Chromium and WebKit
+// (the master-detail.browser.test.ts precedent). CSS wiring: the foundation first, then
+// `component-styles.css` (the family barrel carries ui-text-field/etc.'s shipped CSS), then every
+// composed sibling's own CSS (incl. chat-shell/super-shell below), then this element's own.
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import '@agent-ui/code/editor.css' // ADR-0139 — ui-code-editor's own sheet (the entry editors' frame + CM highlight tokens)
@@ -15,10 +16,10 @@ import '../settings/settings.css'
 import '../conversation/conversation.css'
 import '../conversation/conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '../surface-host/surface-host.css'
-// TKT-0085 — <ui-tabs>/<ui-tab>/<ui-tab-panel> registration for the responsive shell's medium/narrow
-// shells; its CSS is already carried by `component-styles.css` above (`@import
-// './controls/tabs/tabs.css'`), no separate stylesheet import needed.
-import '@agent-ui/components/controls/tabs'
+// GH #52/ADR-0154 — the re-host onto the shell-archetype grammar: chat-shell/super-shell's own CSS,
+// replacing TKT-0085's <ui-tabs>/<ui-tab>/<ui-tab-panel> registration (no longer composed here at all).
+import '../chat-shell/chat-shell.css'
+import '../super-shell/super-shell.css'
 import './agent-admin.css'
 import './agent-admin.ts'
 import type { UIAgentAdminElement } from './agent-admin.ts'
@@ -55,10 +56,10 @@ function mountAgentAdmin(): { wrapper: HTMLElement; el: UIAgentAdminElement } {
   return { wrapper, el }
 }
 
-/** TKT-0085 — a mount whose OWN width drives the real ResizeObserver `agent-admin.ts` installs
+/** GH #52/ADR-0154 — a mount whose OWN width drives ui-super-shell's real container query
  *  (`mountAgentAdmin()` above fixes 1200px on a flex-item host inside a sized wrapper; this widens that
- *  to an arbitrary width so each of the three responsive bands is reachable with a REAL browser-measured
- *  resize, not a simulated one). */
+ *  to an arbitrary width so both the wide and narrow bands are reachable with a REAL browser-measured
+ *  resize, not a simulated one — TKT-0085's own ResizeObserver is gone with the shell it drove). */
 function mountAgentAdminAt(widthPx: number): { wrapper: HTMLElement; el: UIAgentAdminElement } {
   const wrapper = document.createElement('div')
   wrapper.style.width = `${widthPx}px`
@@ -72,95 +73,95 @@ function mountAgentAdminAt(widthPx: number): { wrapper: HTMLElement; el: UIAgent
   return { wrapper, el }
 }
 
-describe('ui-agent-admin cross-engine smoke — the responsive shell (TKT-0085 → vision rev.5)', () => {
-  it('split (≥640px): the 2-pane split is visible; the narrow all-tabs shell computes display:none', async () => {
+describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-0154: resizable pane + segments/narrow-tabs)', () => {
+  it('wide (≥640px): the options-pane segment strip is visible; the narrow-tabs strip computes display:none', async () => {
     const { el } = mountAgentAdminAt(1200)
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))) // let the real ResizeObserver's first callback land
-    const split = el.querySelector(':scope > ui-split') as HTMLElement
-    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
-    expect(getComputedStyle(split).display).not.toBe('none')
-    expect(getComputedStyle(narrowTabs).display).toBe('none') // component-reviewer CRITICAL-class pin: [hidden] must actually compute none, not just carry the attribute (an author `display` declaration silently beats the UA [hidden] rule without an explicit guard — the entry-add-form/combo-box.css precedent this fix follows)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const narrowTabs = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
+    expect(getComputedStyle(pane.querySelector('[data-part="pane-tabs"]') as HTMLElement).display).not.toBe('none')
+    expect(getComputedStyle(narrowTabs).display).toBe('none') // the same [hidden]-specificity discipline TKT-0085 pinned, now owned by ui-super-shell itself
   })
 
-  it('GH #161: the {Settings, Context: System, Context: Dialog} tabs pane renders a real, non-zero tab strip; clicking each Context tab switches to its OWN distinct panel', async () => {
+  it('GH #161: the segmented options-pane renders a real, non-zero pane-tabs strip; clicking each Context segment switches to its OWN distinct content, no cross-segment leakage', async () => {
     const { el } = mountAgentAdminAt(800)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-    const canvas = el.querySelector('[data-role="canvas"]') as HTMLElement
-    const tabsPane = el.querySelector('[data-role="tabs"]') as HTMLElement
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
     expect(canvas.getBoundingClientRect().width).toBeGreaterThan(0)
-    expect(tabsPane.getBoundingClientRect().width).toBeGreaterThan(0)
-    expect(canvas.getBoundingClientRect().right).toBeLessThanOrEqual(tabsPane.getBoundingClientRect().left + 1)
-    const tabs = [...tabsPane.querySelectorAll('ui-tab')]
+    expect(pane.getBoundingClientRect().width).toBeGreaterThan(0)
+    expect(canvas.getBoundingClientRect().right).toBeLessThanOrEqual(pane.getBoundingClientRect().left + 1)
+    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')]
     expect(tabs.map((t) => t.textContent)).toEqual(['Settings', 'Context: System', 'Context: Dialog'])
     for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
-    // Settings is the default selection — the Agent header renders visibly.
+    // Settings is the default active segment — the Agent header renders visibly.
     const agentHeading = el.querySelector('[data-part="agent-heading"]') as HTMLElement
     expect(agentHeading.getBoundingClientRect().width).toBeGreaterThan(0)
 
-    // Clicking Context: System switches to a real, visible panel carrying ONLY the Agent System accordion.
+    // Clicking Context: System switches to a real, visible segment carrying ONLY the Agent System accordion.
     const systemTab = tabs.find((t) => t.textContent === 'Context: System') as HTMLElement
     systemTab.click()
     await new Promise((r) => requestAnimationFrame(r))
-    const systemContent = el.querySelector('[data-role="context-system-content"]') as HTMLElement
-    expect((systemContent.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(false)
+    const systemContent = pane.querySelector('[data-role="context-system-content"]') as HTMLElement
+    expect(systemContent.hasAttribute('data-active')).toBe(true)
     expect(systemContent.getBoundingClientRect().width).toBeGreaterThan(0)
     // The Agent System JSON preview is a real, visible mono block with the compiled config in it.
     const agentJson = systemContent.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]') as HTMLElement
     expect(agentJson.getBoundingClientRect().height).toBeGreaterThan(0)
     expect(agentJson.textContent).toContain('systemPrompt')
-    // Distinct content: the System panel carries NO Dialog Turns part.
+    // Distinct content: the System segment carries NO Dialog Turns part.
     expect(systemContent.querySelector('[data-part="context-turns"]')).toBeNull()
 
-    // Clicking Context: Dialog switches to a DIFFERENT, real, visible panel carrying ONLY Dialog Turns.
+    // Clicking Context: Dialog switches to a DIFFERENT, real, visible segment carrying ONLY Dialog Turns.
     const dialogTab = tabs.find((t) => t.textContent === 'Context: Dialog') as HTMLElement
     dialogTab.click()
     await new Promise((r) => requestAnimationFrame(r))
-    const dialogContent = el.querySelector('[data-role="context-dialog-content"]') as HTMLElement
-    expect((dialogContent.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(false)
+    const dialogContent = pane.querySelector('[data-role="context-dialog-content"]') as HTMLElement
+    expect(dialogContent.hasAttribute('data-active')).toBe(true)
     expect(dialogContent.getBoundingClientRect().width).toBeGreaterThan(0)
-    // The System panel (now inactive) is a DIFFERENT tab-panel than the Dialog one, and it's hidden again.
-    expect(systemContent.closest('ui-tab-panel')).not.toBe(dialogContent.closest('ui-tab-panel'))
-    expect((systemContent.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(true)
-    // Distinct content: the Dialog panel carries NO Agent System items.
+    // The System segment (now inactive) is a DIFFERENT segment than Dialog, and it's hidden again.
+    expect(systemContent).not.toBe(dialogContent)
+    expect(systemContent.hasAttribute('data-active')).toBe(false)
+    // Distinct content: the Dialog segment carries NO Agent System items.
     expect(dialogContent.querySelector('[data-part="context-item"]')).toBeNull()
   })
 
-  it('narrow (<640px): {Chat, Settings, Context: System, Context: Dialog} tabs fill the shell; the split computes display:none (GH #161: a flat 4th tab, not a nested sub-tab-set)', async () => {
+  it('narrow (<640px): {Chat, Settings, Context: System, Context: Dialog} narrow-tabs fill the shell; the wide pane-tabs strip computes display:none (GH #161: a flat 4th tab, not a nested sub-tab-set)', async () => {
     const { el } = mountAgentAdminAt(500)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-    const split = el.querySelector(':scope > ui-split') as HTMLElement
-    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
-    expect(getComputedStyle(split).display).toBe('none') // the SAME [hidden]-specificity pin, the other direction
+    const paneTabs = el.querySelector('[data-part="pane-tabs"]') as HTMLElement
+    const narrowTabs = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
+    expect(getComputedStyle(paneTabs).display).toBe('none') // the same [hidden]-specificity pin, the other direction
     expect(getComputedStyle(narrowTabs).display).not.toBe('none')
-    const tabs = [...narrowTabs.querySelectorAll('ui-tab')]
+    const tabs = [...narrowTabs.querySelectorAll('[data-part="narrow-tab"]')]
     expect(tabs.map((t) => t.textContent)).toEqual(['Chat', 'Settings', 'Context: System', 'Context: Dialog'])
     for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
-    // The composer is reachable and has real, non-zero geometry inside the Chat tab (the default selection).
-    const composer = narrowTabs.querySelector('ui-conversation-composer') as HTMLElement
+    // The composer is reachable and has real, non-zero geometry inside the Chat participant (the default selection).
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement
     expect(composer.getBoundingClientRect().height).toBeGreaterThan(0)
 
-    // Clicking Context: System, then Context: Dialog, lands on two DIFFERENT, real, distinctly-contented panels.
+    // Clicking Context: System, then Context: Dialog, lands on two DIFFERENT, real, distinctly-contented segments.
     const systemTab = tabs.find((t) => t.textContent === 'Context: System') as HTMLElement
     systemTab.click()
     await new Promise((r) => requestAnimationFrame(r))
-    const systemContent = narrowTabs.querySelector('[data-role="context-system-content"]') as HTMLElement
-    expect((systemContent.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(false)
+    const systemContent = el.querySelector('[data-role="context-system-content"]') as HTMLElement
+    expect(systemContent.hasAttribute('data-active')).toBe(true)
     expect(systemContent.getBoundingClientRect().width).toBeGreaterThan(0)
     expect(systemContent.querySelector('[data-part="context-turns"]')).toBeNull()
 
     const dialogTab = tabs.find((t) => t.textContent === 'Context: Dialog') as HTMLElement
     dialogTab.click()
     await new Promise((r) => requestAnimationFrame(r))
-    const dialogContent = narrowTabs.querySelector('[data-role="context-dialog-content"]') as HTMLElement
-    expect((dialogContent.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(false)
+    const dialogContent = el.querySelector('[data-role="context-dialog-content"]') as HTMLElement
+    expect(dialogContent.hasAttribute('data-active')).toBe(true)
     expect(dialogContent.getBoundingClientRect().width).toBeGreaterThan(0)
-    expect(systemContent.closest('ui-tab-panel')).not.toBe(dialogContent.closest('ui-tab-panel'))
+    expect(systemContent).not.toBe(dialogContent)
     expect(dialogContent.querySelector('[data-part="context-item"]')).toBeNull()
   })
 
   /** Opens a real A2UI surface (a Hit button) in the mounted conversation, returns it + the conversation. */
   async function openLiveSurface(el: UIAgentAdminElement): Promise<{ conversation: HTMLElement }> {
-    const conversation = el.querySelector('[data-role="canvas"] ui-conversation, ui-tabs ui-conversation') as HTMLElement & {
+    const conversation = el.querySelector('[data-part="canvas"] ui-conversation') as HTMLElement & {
       beginAgentTurn(): { ingestLine(l: string): void; finalize(): void }
     }
     const handle = conversation.beginAgentTurn()
@@ -179,53 +180,61 @@ describe('ui-agent-admin cross-engine smoke — the responsive shell (TKT-0085 �
     return { conversation }
   }
 
-  it('regression pin (rev.5 upgrade of the wide→medium survival pin): a live surface SURVIVES a 1200→800 resize — one split band now, #applyLayout genuinely no-ops', async () => {
+  it('regression pin (unchanged intent, simpler now): a live surface SURVIVES a 1200→800 resize — nothing ever reparents at all anymore', async () => {
     const { el, wrapper } = mountAgentAdminAt(1200)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const { conversation } = await openLiveSurface(el)
 
-    wrapper.style.width = '800px' // both widths are the SAME split band in rev.5 — nothing may move
+    wrapper.style.width = '800px' // still wide — nothing may move
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
-    expect(el.querySelector('[data-role="tabs"]'), 'the tabs pane should still be there').not.toBeNull()
+    expect(el.querySelector('[data-slot-name="options-pane"]'), 'the options-pane should still be there').not.toBeNull()
     expect(conversation.querySelector('[data-state="closed"]'), 'the surface closed on a same-band resize — it should have stayed open').toBeNull()
     expect(conversation.querySelector('ui-surface-host ui-button'), 'the rendered surface content should still be there').not.toBeNull()
   })
 
-  it('a live surface open at a crossing INTO narrow shows the documented "Closed." treatment (narrow genuinely reached via a real resize, not silently landing in medium)', async () => {
+  it('ADR-0154 cl.4 (the ratified behavior UPGRADE): a live surface SURVIVES a crossing INTO narrow — no more "Closed." on a real width crossing', async () => {
     const { el, wrapper } = mountAgentAdminAt(1200)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const { conversation } = await openLiveSurface(el)
 
-    wrapper.style.width = '500px' // real browser resize → the real ResizeObserver fires → 'narrow'
+    wrapper.style.width = '500px' // real browser resize → the real container query crosses into narrow
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
-    // component-reviewer MAJOR fix: assert the layout ACTUALLY reached narrow — the pre-fix host floored
-    // at its content's intrinsic width (~659px, missing `min-inline-size: 0`) and silently landed in
-    // medium instead, which made the "Closed." assertion below pass for the WRONG reason (medium's own
-    // wide-parity closure, itself a since-fixed bug) without ever exercising real narrow at all.
-    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
+    // Assert the layout ACTUALLY reached narrow (the component-reviewer MAJOR-fix discipline this pin
+    // preserves) — the narrow-tabs strip is visible, the wide pane-tabs strip computes none.
+    const narrowTabs = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
     expect(getComputedStyle(narrowTabs).display, 'did not actually reach narrow').not.toBe('none')
-    expect(el.querySelector(':scope > ui-split') && getComputedStyle(el.querySelector(':scope > ui-split') as HTMLElement).display).toBe('none')
+    expect(getComputedStyle(el.querySelector('[data-part="pane-tabs"]') as HTMLElement).display).toBe('none')
 
-    const bubble = conversation.querySelector('[data-state="closed"]')
-    expect(bubble, 'the surface bubble should carry data-state="closed", not vanish silently').not.toBeNull()
-    expect(bubble?.querySelector('[data-part="annotation"]')?.textContent).toBe('Closed.')
+    // The upgrade itself (SPEC-R7c's survival law, ADR-0154's ratified behavior delta): the surface is
+    // NEVER reparented crossing into narrow — it stays open, un-cycled, no "Closed." annotation anywhere.
+    expect(conversation.querySelector('[data-state="closed"]'), 'the surface should NOT have closed — R7c is visibility-only').toBeNull()
+    expect(conversation.querySelector('ui-surface-host ui-button'), 'the rendered surface content survives the crossing').not.toBeNull()
+
+    // A narrow tab round-trip (Chat → Settings → Chat) leaves it exactly as un-cycled.
+    const tabs = [...el.querySelectorAll('[data-part="narrow-tab"]')] as HTMLElement[]
+    tabs.find((t) => t.textContent === 'Settings')!.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    tabs.find((t) => t.textContent === 'Chat')!.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    expect(conversation.querySelector('[data-state="closed"]'), 'a full tab round-trip should not close the surface either').toBeNull()
+    expect(conversation.querySelector('ui-surface-host ui-button')).not.toBeNull()
   })
 })
 
-describe('ui-agent-admin cross-engine smoke — chat + tabs render side by side (vision rev.5)', () => {
-  it('canvas and the tabs pane each occupy a non-zero, non-overlapping box, left to right', () => {
+describe('ui-agent-admin cross-engine smoke — chat + options-pane render side by side (GH #52/ADR-0154)', () => {
+  it('canvas and the options-pane each occupy a non-zero, non-overlapping box, left to right', () => {
     const { el } = mountAgentAdmin()
-    const canvas = el.querySelector('[data-role="canvas"]') as HTMLElement
-    const tabsPane = el.querySelector('[data-role="tabs"]') as HTMLElement
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    const tabsPane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
     const c = canvas.getBoundingClientRect()
     const t = tabsPane.getBoundingClientRect()
     for (const box of [c, t]) {
       expect(box.width).toBeGreaterThan(0)
       expect(box.height).toBeGreaterThan(0)
     }
-    expect(c.right).toBeLessThanOrEqual(t.left + 1) // canvas is left of the tabs pane (integer rounding slop)
+    expect(c.right).toBeLessThanOrEqual(t.left + 1) // canvas is left of the options-pane (integer rounding slop)
   })
 
   it('a seeded prompt-section entry\'s content field is visibly focusable and legible (a real element, not display:none)', () => {
@@ -415,14 +424,14 @@ describe('ui-agent-admin cross-engine smoke — TKT-0045: no pane overflows at t
     // clipping via their own overflow-x, so every pane is checked independently too.
     expect(wrapper.scrollWidth).toBe(wrapper.clientWidth)
 
-    const split = el.querySelector('ui-split') as HTMLElement
-    expect(split.scrollWidth).toBe(split.clientWidth)
+    const shell = el.querySelector('ui-chat-shell') as HTMLElement
+    expect(shell.scrollWidth).toBe(shell.clientWidth)
 
-    const canvas = el.querySelector('[data-role="canvas"]') as HTMLElement
-    const tabsPane = el.querySelector('[data-role="tabs"]') as HTMLElement
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    const tabsPane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
     for (const [label, pane] of [
       ['canvas', canvas],
-      ['tabs', tabsPane],
+      ['options-pane', tabsPane],
     ] as const) {
       expect(pane.scrollWidth, `${label} pane must not overflow itself`).toBe(pane.clientWidth)
     }
@@ -648,7 +657,7 @@ describe('ui-agent-admin cross-engine smoke — the live-apply loop actually ren
     const store = el.store!
     store.set('name', 'Cross-engine Scout')
 
-    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
     composer.value = 'ping' // the composer's own value prop (TKT-0058 — the nested field/form are gone)
     ;(composer.querySelector('[data-part="send"]') as HTMLElement).click()
 

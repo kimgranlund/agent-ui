@@ -17,6 +17,10 @@ import '@agent-ui/app/settings.css'
 import '@agent-ui/app/conversation.css'
 import '@agent-ui/app/conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '@agent-ui/app/surface-host.css'
+// GH #52/ADR-0154 — ui-agent-admin now composes ui-chat-shell (which composes ui-super-shell); both
+// siblings' own CSS needs importing here too, matching every OTHER composed child above.
+import '@agent-ui/app/super-shell.css'
+import '@agent-ui/app/chat-shell.css'
 import '@agent-ui/app/agent-admin.css'
 import '@agent-ui/app/master-detail-pane' // self-defines ui-master-detail-pane (composed by ui-settings)
 import '@agent-ui/app/master-detail' // self-defines ui-master-detail (composed by ui-settings)
@@ -24,6 +28,8 @@ import '@agent-ui/app/nav-rail' // self-defines ui-nav-rail(-group|-item) (compo
 import '@agent-ui/app/settings' // self-defines ui-settings
 import '@agent-ui/app/surface-host' // self-defines ui-surface-host (composed by ui-conversation)
 import '@agent-ui/app/conversation' // self-defines ui-conversation
+import '@agent-ui/app/super-shell' // self-defines ui-super-shell (composed by ui-chat-shell)
+import '@agent-ui/app/chat-shell' // self-defines ui-chat-shell (composed by ui-agent-admin)
 import '@agent-ui/app/agent-admin' // self-defines ui-agent-admin
 import './agent-admin.css' // page-local demo chrome only (the resizable frame) — never restyles a control's internals
 import { renderApiTable, renderPropertiesTable, renderChangelogTable, heading } from '../lib/doc-page.ts'
