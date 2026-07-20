@@ -1048,5 +1048,12 @@
     "description": "Named shell archetypes join agent-app-surfaces as M5 — thin, BEHAVIOR-ONLY ui-{archetype}-shell compositions in @agent-ui/app, v1 THREE: ui-chat-shell + ui-wor…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0152",
+    "url": "./adr-index.html#adr-0152",
+    "description": "The live-agent overlay (a2ui-chat/a2ui-live/agent-admin/agent-admin-app) goes live in PRODUCTION via a Cloudflare Worker proxy — ADR-0136 Fork 1 and ADR-0131 c…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
