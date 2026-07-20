@@ -958,6 +958,95 @@ describe('UIAgentAdminElement — composition survives a RECONNECT (the master-d
   })
 })
 
+// GH #145 — switching personas (a real `admin.store = <other>` reassignment, the site's
+// agent-admin-app.ts `applyPreset()` mechanism) must start a genuinely FRESH conversation: the visible
+// chat log clears, the Dialog Turns/Context panel resets, and a new message starts its own thread rather
+// than appending onto the old persona's. Pre-fix, `applyPreset()`'s own source comment claimed the
+// reactive store effect "re-syncs the conversation", but the effect only ever re-rendered the settings
+// pane + entry sections — the chat log (`ui-conversation`'s own `#log`), the live-request `#history`
+// ring, and the Dialog Turns `#turnLog` were never cleared, so the OLD persona's thread stayed on screen
+// and a new persona's first message appended onto it. A bare RECONNECT with the SAME store (the
+// `master-detail.ts` precedent above, e.g. a TKT-0085 layout crossing) must NOT reset — only a genuine
+// store-identity change is a "switch".
+describe('UIAgentAdminElement — a persona switch resets the conversation (GH #145)', () => {
+  function submit(el: UIAgentAdminElement, text: string): void {
+    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = text
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+  }
+  function bubbleTexts(el: UIAgentAdminElement): string[] {
+    return [...el.querySelectorAll('[data-role="user"], [data-role="agent"]')].map((b) => b.textContent ?? '')
+  }
+  function turnLabels(el: UIAgentAdminElement): string[] {
+    return [...el.querySelectorAll('[data-part="context-turn"] [data-part="summary-text"]')].map((s) => s.textContent ?? '')
+  }
+
+  it('a real store reassignment clears the chat log AND the Dialog Turns log; a fresh message starts its own thread', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    submit(el, 'hello from persona A')
+    expect(bubbleTexts(el).some((t) => t.includes('hello from persona A'))).toBe(true)
+    expect(turnLabels(el)).toEqual(['01']) // one Dialog Turn logged
+
+    // A genuinely different store instance — exactly what `presetStore(otherPreset)` returns for a
+    // never-visited persona (agent-admin-presets.ts). The rewire rides the reactive store effect
+    // (agent-admin.ts's connected()), not a synchronous write — same `whenFlushed()` precedent the
+    // store-swap probe (agent-admin-app.test.ts) already follows.
+    el.store = createMemoryStore({ initial: initialEntryValues() })
+    await whenFlushed()
+
+    expect(bubbleTexts(el), 'the old thread must not survive the switch').toEqual([])
+    expect(turnLabels(el), 'the Dialog Turns log must reset too').toEqual([])
+
+    submit(el, 'hello from persona B')
+    // The fresh thread carries ONLY the new persona's exchange — no trace of persona A's message.
+    expect(bubbleTexts(el).some((t) => t.includes('hello from persona A'))).toBe(false)
+    expect(bubbleTexts(el).some((t) => t.includes('hello from persona B'))).toBe(true)
+    // The turn counter also restarts from 1 (not 2) — a fresh persona is not turn 2 of the old one.
+    expect(turnLabels(el)).toEqual(['01'])
+  })
+
+  it('the live request never replays a prior persona\'s history after a store reassignment', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    el.agentTurn = async (req) => {
+      calls.push(req)
+      return 'ack'
+    }
+    submit(el, 'first persona turn one')
+    // Wait for the turn to fully COMPLETE (not just the runner call) — `#recordTurn` (which feeds
+    // `#history`) runs after the awaited reply, so polling only `calls.length` races it: a store
+    // reassignment right after the runner call, but before `#recordTurn` lands, could see the reset
+    // land BEFORE the stale append rather than after. The Dialog Turns log is written in the same
+    // continuation immediately AFTER `#recordTurn`, so waiting for it orders correctly.
+    for (let i = 0; i < 100 && turnLabels(el).length < 1; i += 1) await Promise.resolve()
+    expect(calls).toHaveLength(1)
+    expect(calls[0]!.history).toEqual([]) // nothing prior yet
+
+    el.store = createMemoryStore({ initial: initialEntryValues() })
+    await whenFlushed()
+    submit(el, 'second persona turn one')
+    for (let i = 0; i < 100 && calls.length < 2; i += 1) await Promise.resolve()
+    expect(calls).toHaveLength(2)
+    // Pre-fix this replayed [{user: 'first persona turn one'}, {assistant: 'ack'}] — the OLD persona's
+    // exchange — instead of an empty history for the new persona's own first turn.
+    expect(calls[1]!.history).toEqual([])
+  })
+
+  it('a bare RECONNECT with the SAME store does NOT reset — no do-over on a layout crossing (TKT-0085)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    submit(el, 'still here after reconnect')
+    expect(turnLabels(el)).toEqual(['01'])
+
+    const wrapper = document.createElement('div')
+    document.body.append(wrapper)
+    wrapper.append(el) // detach + reattach with the SAME `el.store` reference — connectedCallback fires again
+
+    expect(bubbleTexts(el).some((t) => t.includes('still here after reconnect'))).toBe(true)
+    expect(turnLabels(el)).toEqual(['01'])
+    wrapper.remove()
+  })
+})
+
 const DIR = `${process.cwd()}/packages/agent-ui/app/src/controls/agent-admin`
 const agentAdminTs = readFileSync(`${DIR}/agent-admin.ts`, 'utf8') as string
 const agentAdminCss = readFileSync(`${DIR}/agent-admin.css`, 'utf8') as string

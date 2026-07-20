@@ -238,6 +238,14 @@ export class UIAgentAdminElement extends UIElement {
   // the settings pane either. Written into `#conversation.effort` imperatively whenever it changes — see
   // `#syncConversationConfig`.
   #effort: EffortLevel = 'medium'
+  // GH #145 — the store-swap effect's own "was this a real reassignment or a bare reconnect" memory
+  // (the #modelGridUnsub precedent, generalized): a REAL reassignment (a persona switch — a different
+  // store object) must start a fresh conversation; a bare reconnect with the SAME store (a layout
+  // crossing, TKT-0085) must not wipe an in-progress one. `#storeSeen` distinguishes "never run" (the
+  // element's first ever connect — nothing to reset, the conversation is already empty) from "ran once
+  // with `undefined`" (a real state a later defined store can still differ from).
+  #storeSeen = false
+  #lastStore: SettingsStore | undefined
 
   protected connected(): void {
     this.#compose() // idempotent — builds ONLY the split/pane shell + the composed children, once ever
@@ -301,6 +309,16 @@ export class UIAgentAdminElement extends UIElement {
       const schema = this.schema
       const store = this.store
       untracked(() => {
+        // GH #145 — a REAL store reassignment (a persona switch: `admin.store = presetStore(other)`)
+        // must start a genuinely fresh conversation for the newly-selected persona: the visible chat
+        // log + any open A2UI surfaces (`#conversation.reset()`), the multi-turn `#history` fed into
+        // live requests, and the Dialog Turns ring (`#turnLog`) the Context panel reads. Gated on
+        // `#storeSeen` so the element's FIRST ever connect (nothing to reset yet) and a bare reconnect
+        // with the SAME store (e.g. a TKT-0085 layout crossing) both skip it — only a genuine identity
+        // change resets. `#rewireContext` below re-renders the (now-empty) Dialog Turns view.
+        if (this.#storeSeen && this.#lastStore !== store) this.#resetConversationState()
+        this.#storeSeen = true
+        this.#lastStore = store
         if (this.#settingsEl) {
           this.#settingsEl.schema = schema
           this.#settingsEl.store = store
@@ -1150,6 +1168,19 @@ export class UIAgentAdminElement extends UIElement {
       { role: 'assistant', content: reply },
     ]
     this.#history.push(...turns)
+  }
+
+  /** GH #145 — every piece of PER-PERSONA conversation state, cleared together on a real store
+   *  reassignment: the visible chat log + any open A2UI surfaces (`ui-conversation.reset()`, the same
+   *  method a consumer calls for a user-facing "start over"), the live-request `#history` ring (so a
+   *  freshly-selected persona's first turn carries no prior persona's exchanges), and the Dialog Turns
+   *  log (`#turnLog`/`#turnCounter`) the Context panel's `#renderContextTurns` reads — the caller
+   *  (the connected() effect) re-renders that view immediately after via `#rewireContext`. */
+  #resetConversationState(): void {
+    this.#conversation?.reset()
+    this.#history = []
+    this.#turnLog = []
+    this.#turnCounter = 0
   }
 }
 

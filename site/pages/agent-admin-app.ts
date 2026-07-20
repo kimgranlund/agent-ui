@@ -35,7 +35,9 @@ const root = document.querySelector('#app') ?? document.body
 // ── the six A2UI-showcase personas (TKT-0074) ─────────────────────────────────────────────────────────────
 // Each preset is a persona-scoped store (its own persistKey; edits persist per persona). Switching swaps
 // `admin.store` — the component's reactive store effect re-pushes it into the settings pane, rewires every
-// entry section, and re-syncs the conversation (agent-admin.ts:162; the store-swap probe pins it).
+// entry section, and — GH #145 fix — genuinely resets the conversation (chat log, open surfaces, the
+// live-request history, and the Dialog Turns log) for a real store reassignment; the store-swap probe
+// (agent-admin-app.test.ts) and the reset regression (agent-admin.test.ts) both pin it.
 
 const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
 // GH #47/#48 — the library packs, set BEFORE the element ever connects (the compose-time capture law
