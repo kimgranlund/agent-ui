@@ -66,9 +66,10 @@ body {
   white-space: nowrap;
 }
 
-/* The active row's light marker inside the agent menu (data-active + a real-text ✓, set by the page —
-   aria-checked is invalid on role=menuitem, so the marker must not lean on it). */
-.agent-menu [data-active] {
+/* The active row's extra weight inside the agent menu — real aria-checked now (GH #55's
+   menuitemradio migration off the PR #54 ✓-text/data-active fallback); ui-menu's own CSS already
+   paints the checkmark indicator, this is page-local emphasis on top of it. */
+.agent-menu [aria-checked='true'] {
   font-weight: var(--md-sys-typescale-title-small-weight);
 }
 

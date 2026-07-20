@@ -1843,6 +1843,24 @@ When the user activates a menuitem (Enter/Space on a non-button item, or click),
 This programmatic close emits `close` + `toggle` like every other real hide (ADR-0101), with `open`
 already `false` at listener time.
 
+### Selectable items (GH #55)
+
+An item pre-marked `role="menuitemradio"` or `role="menuitemcheckbox"` (set by the author before
+handing it to `<ui-menu>`) joins the SAME roving-focus / type-ahead / commit machinery as a plain
+`menuitem` — `#itemsIn` reads all three roles as one ordered set, so there is no separate code path
+to opt into. On commit, the control also writes `aria-checked`:
+
+- **`menuitemcheckbox`** — the item's own `aria-checked` toggles, independent of every other item.
+- **`menuitemradio`** — the item is set `aria-checked="true"`; every OTHER `menuitemradio` item
+  sharing its `data-group` attribute (default: the ungrouped `''` bucket, so all ungrouped radio
+  items in one panel form a single group) is set `false` — one-true-at-a-time.
+
+Both roles always carry `aria-checked` (the role requires it); the control stamps a default
+`"false"` at connect for any item missing it, but leaves an author-pre-set `aria-checked="true"`
+(declaring the initial choice) untouched. A checkmark indicator (`--ui-menu-check-*` tokens) renders
+on `[aria-checked='true']` — plain `menuitem` rows are unaffected (still no `aria-checked`, which
+stays invalid on that role).
+
 ## Keyboard navigation
 
 `rovingFocus` wires the panel as the keyboard container (`container: panel`): ArrowDown/Up move

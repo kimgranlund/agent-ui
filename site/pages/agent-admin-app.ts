@@ -66,7 +66,14 @@ let active: AgentPreset =
 let armSurfaceTurn: (() => void) | undefined
 
 // The agent switcher — ui-menu owns the overlay/roving-focus/type-ahead; this page stages one
-// `div[data-value]` row per preset (the menu-demo idiom) and applies the committed selection.
+// `div[role=menuitemradio]` row per preset (the ui-menu selectable-item variant, GH #55 — the
+// fleet-level fix that replaces the PR #54 ✓-text/data-active fallback) and applies the committed
+// selection. Pre-marking `role="menuitemradio"` opts each row into the SAME roving-focus/
+// type-ahead/commit machinery as a plain menuitem, with the control itself managing `aria-checked`
+// on commit (one-true across the ungrouped default radio group — exactly the "exactly one active
+// agent" semantics this switcher needs). The initial `aria-checked` is seeded here (declaring the
+// already-active preset) since ui-menu only DEFAULTS a missing aria-checked to false at connect —
+// it never guesses which row should start checked.
 const agentMenu = document.createElement('ui-menu')
 agentMenu.className = 'agent-menu'
 const agentTrigger = document.createElement('ui-button') as UIButtonElement
@@ -77,6 +84,8 @@ const agentItems = new Map<string, HTMLElement>()
 for (const preset of AGENT_PRESETS) {
   const item = document.createElement('div')
   item.dataset.value = preset.id
+  item.setAttribute('role', 'menuitemradio')
+  item.setAttribute('aria-checked', String(preset.id === active.id))
   item.textContent = preset.label
   item.title = preset.tagline
   agentItems.set(preset.id, item)
@@ -122,16 +131,15 @@ function applyPreset(preset: AgentPreset): void {
   titleTagline.textContent = preset.tagline
   agentTrigger.textContent = `${preset.label} ▾`
   agentTrigger.title = 'Switch agent'
+  // ui-menu's own commit path (menu.ts's #commitRadio, GH #55) already sets aria-checked correctly
+  // for a row the user CLICKED — but applyPreset() also runs on paths that never go through a menu
+  // commit (initial load from a persisted localStorage id, the "Reset persona" overflow action):
+  // this loop is the single source of truth for those, simplified to just WRITING the real
+  // aria-checked state per id (no more hand-rolled ✓-text prefix or a parallel data-active
+  // attribute — the control's own checkmark indicator + real ARIA state carry the "current choice"
+  // signal now; agent-admin-app.css reads [aria-checked='true'] directly for the font-weight).
   for (const [id, item] of agentItems) {
-    // The active marker is REAL TEXT (a leading ✓, the platform menu convention) + a data attribute for
-    // the CSS weight — NOT aria-checked: these rows are role=menuitem (ui-menu roves over exactly that
-    // role, menu.ts:5), and aria-checked is invalid on menuitem (menu.ts:149 documents the same law for
-    // aria-selected). Real text is announced by AT for free; a menuitemradio variant is a ui-menu fleet
-    // follow-up (filed at #51 close-out), not a page-level hack.
-    const isActive = id === preset.id
-    const label = AGENT_PRESETS.find((p) => p.id === id)?.label ?? id
-    item.textContent = isActive ? `✓ ${label}` : label
-    item.toggleAttribute('data-active', isActive)
+    item.setAttribute('aria-checked', String(id === preset.id))
   }
 }
 
