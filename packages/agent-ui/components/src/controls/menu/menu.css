@@ -83,6 +83,15 @@
      subtracts the same --ui-box-inset the row margin reads. */
   --ui-menu-item-radius: calc(var(--md-sys-shape-corner-base) - var(--ui-box-inset, 0.375rem));
 
+  /* Selectable-item variant (GH #55) — the menuitemradio/menuitemcheckbox checkmark indicator.
+     A small fixed glyph slot, indented from the item's own inline padding; visible only on
+     [aria-checked='true']. Sized off the compact-widget ramp (the checkbox.css precedent) rather
+     than a menu-specific magic number, and inked with the same "selected" accent ui-select's
+     option rows already use (--md-sys-color-primary-high) — the fleet's one selected-row-ink role. */
+  --ui-menu-check-size: var(--md-sys-compact-sm);
+  --ui-menu-check-gap: var(--md-sys-space-xs);
+  --ui-menu-check-ink: var(--md-sys-color-primary-high);
+
   /* Item state colours — hover fill + disabled muted ink.
      FIXED (2026-07-07, overlay-list family-consistency pass): was --md-sys-color-neutral-tint-dimmer
      (a translucent 10% alpha wash) — the ONLY row-hover in the fleet using the tint ladder; every
@@ -126,8 +135,10 @@
 
   /* Menu-item rows — the LEGACY ITEM-PAD row (§4.6/§5.1). NOT --md-sys-height-* (a menuitem is a
      list row, not a single-line fixed-height control widget). cursor + user-select mirror the
-     interactive-row standard (pointer for items, not-allowed for disabled). */
-  :scope [role='menuitem'] {
+     interactive-row standard (pointer for items, not-allowed for disabled). `:is(...)` groups the
+     plain-command role with the GH #55 selectable-item roles — one shared row shape for all three;
+     the checkmark rule below is the only bit that is selectable-only. */
+  :scope :is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox']) {
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -148,7 +159,7 @@
   }
 
   /* Hover state — the fleet-wide solid elevated-surface fill (no border — like native menus). */
-  :scope [role='menuitem']:not([disabled]):not([aria-disabled='true']):hover {
+  :scope :is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox']):not([disabled]):not([aria-disabled='true']):hover {
     background-color: var(--ui-menu-item-bg-hover);
   }
 
@@ -160,17 +171,45 @@
      family-consistency pass): was the inset (negative-offset) treatment — the item's own
      --ui-box-inset margin (≥6px) comfortably clears an outset ring (width+offset = 4px) without
      touching the panel edge or a neighbouring row. */
-  :scope [role='menuitem']:not([disabled]):not([aria-disabled='true']):focus-visible {
+  :scope :is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox']):not([disabled]):not([aria-disabled='true']):focus-visible {
     outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* Disabled items — muted ink, no pointer, inert to hover/focus. */
-  :scope [role='menuitem'][disabled],
-  :scope [role='menuitem'][aria-disabled='true'] {
+  :scope :is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox'])[disabled],
+  :scope :is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox'])[aria-disabled='true'] {
     color: var(--ui-menu-item-ink-disabled);
     cursor: not-allowed;
     pointer-events: none;
+  }
+
+  /* Selectable-item variant (GH #55) — reserve a leading glyph slot on every menuitemradio/
+     menuitemcheckbox row (checked or not, so rows in the same group align identically), and paint
+     a checkmark only when aria-checked="true". `position: relative` makes the row the containing
+     block for the absolutely-positioned glyph (the checkbox.css ::before/::after precedent, ported
+     to a single ::before here since the row itself already provides the box/background). */
+  :scope :is([role='menuitemradio'], [role='menuitemcheckbox']) {
+    position: relative;
+    padding-inline-start: calc(var(--ui-menu-item-pad-inline) + var(--ui-menu-check-size) + var(--ui-menu-check-gap));
+  }
+
+  :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: var(--ui-menu-item-pad-inline);
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    inline-size: var(--ui-menu-check-size);
+    block-size: var(--ui-menu-check-size);
+    pointer-events: none;
+  }
+
+  /* Checkmark glyph — the same clip-path polygon tick as checkbox.css's ::after (fleet-consistent
+     shape), painted directly on the reserved ::before slot only when checked. */
+  :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true']::before {
+    background-color: var(--ui-menu-check-ink);
+    clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
   }
 
   /* Forced-colors (WHCM) — the surface, frame, and ink survive as system Canvas/CanvasText.
@@ -184,12 +223,20 @@
       border-color: CanvasText;
     }
 
-    :scope [role='menuitem']:not([disabled]):not([aria-disabled='true']):hover,
-    :scope [role='menuitem']:not([disabled]):not([aria-disabled='true']):focus-visible {
+    :scope :is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox']):not([disabled]):not([aria-disabled='true']):hover,
+    :scope :is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox']):not([disabled]):not([aria-disabled='true']):focus-visible {
       forced-color-adjust: none;
       background-color: Highlight;
       color: HighlightText;
       outline: none;
+    }
+
+    /* Checkmark glyph — HighlightText fill so it survives against both the idle Canvas surface and
+       a Highlight hover/focus wash (the checkbox.css forced-colors precedent: system Highlight for
+       the checked fill, HighlightText for the glyph riding on top of it). */
+    :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true']::before {
+      background-color: HighlightText;
+      forced-color-adjust: none;
     }
   }
 }

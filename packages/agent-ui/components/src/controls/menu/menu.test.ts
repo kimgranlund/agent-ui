@@ -683,6 +683,251 @@ describe('ui-menu — click commit (menu-click-commit)', () => {
   })
 })
 
+// ── Selectable-item variant (GH #55): menuitemradio / menuitemcheckbox ──────────────────────────
+//
+// Design call (per-item role-sniffing, documented in menu.ts's header banner): an item pre-marked
+// role=menuitemradio|menuitemcheckbox BEFORE being handed to <ui-menu> joins the SAME items() set
+// as plain menuitem — no separate opt-in prop. These probes cover: (1) roving focus / type-ahead
+// treat selectable items exactly like menuitem, including a MIXED panel; (2) aria-checked defaults
+// to 'false' at connect when absent, and an author-pre-set 'true' is left untouched; (3) commit
+// manages aria-checked — one-true-per-data-group for menuitemradio, independent toggle for
+// menuitemcheckbox; (4) click commit (not just keydown) drives the same aria-checked management.
+
+const RADIO_MARKUP = `
+  <button>Open menu</button>
+  <div role="menuitemradio" data-value="a">Alpha</div>
+  <div role="menuitemradio" data-value="b">Beta</div>
+  <div role="menuitemradio" data-value="c">Gamma</div>
+`
+
+const CHECKBOX_MARKUP = `
+  <button>Open menu</button>
+  <div role="menuitemcheckbox" data-value="a">Alpha</div>
+  <div role="menuitemcheckbox" data-value="b">Beta</div>
+`
+
+const MIXED_MARKUP = `
+  <button>Open menu</button>
+  <div data-value="new">New file</div>
+  <div role="menuitemradio" data-value="a">Alpha</div>
+  <div role="menuitemradio" data-value="b">Beta</div>
+  <div data-value="exit">Exit</div>
+`
+
+const GROUPED_RADIO_MARKUP = `
+  <button>Open menu</button>
+  <div role="menuitemradio" data-group="align" data-value="left">Left</div>
+  <div role="menuitemradio" data-group="align" data-value="right">Right</div>
+  <div role="menuitemradio" data-group="size" data-value="sm">Small</div>
+  <div role="menuitemradio" data-group="size" data-value="lg">Large</div>
+`
+
+describe('ui-menu — selectable items join roving focus + type-ahead exactly like menuitem (menu-selectable-roving)', () => {
+  it('menu-selectable-roving: ArrowDown roves across menuitemradio items in a radio-only panel', async () => {
+    const { el, panel, items } = makeMenu(RADIO_MARKUP)
+    expect(items.length, 'menuitem-only #itemsIn used by makeMenu finds none in a radio-only panel').toBe(0)
+    const radioItems = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+    expect(radioItems).toHaveLength(3)
+
+    el.open = true
+    await whenFlushed()
+
+    panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+    expect(radioItems[1]!.tabIndex, 'roving focus moved onto the second menuitemradio row').toBe(0)
+    expect(radioItems[0]!.tabIndex).toBe(-1)
+    el.remove()
+  })
+
+  it('menu-selectable-roving: type-ahead finds a menuitemradio row by its label prefix', async () => {
+    const { el, panel } = makeMenu(RADIO_MARKUP)
+    const radioItems = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+    el.open = true
+    await whenFlushed()
+
+    panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', bubbles: true }))
+    expect(radioItems[2]!.tabIndex, 'typing "g" focused Gamma').toBe(0)
+    el.remove()
+  })
+
+  it('menu-selectable-roving: a MIXED panel (plain menuitem + menuitemradio) roves over ALL of them as one ordered set', async () => {
+    const { el, panel } = makeMenu(MIXED_MARKUP)
+    const list = [...panel.children] as HTMLElement[]
+    expect(list.map((i) => i.getAttribute('role'))).toEqual(['menuitem', 'menuitemradio', 'menuitemradio', 'menuitem'])
+
+    el.open = true
+    await whenFlushed()
+
+    // 0 (New file) → ArrowDown → 1 (Alpha) → ArrowDown → 2 (Beta) → ArrowDown → 3 (Exit)
+    panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+    expect(list[1]!.tabIndex).toBe(0)
+    panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+    expect(list[2]!.tabIndex).toBe(0)
+    panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+    expect(list[3]!.tabIndex).toBe(0)
+    el.remove()
+  })
+
+  it('menu-selectable-roving: a disabled menuitemcheckbox is skipped by roving focus, exactly like a disabled menuitem', async () => {
+    const el = document.createElement('ui-menu') as UIMenuElement
+    el.innerHTML = `
+      <button>Open</button>
+      <div role="menuitemcheckbox" data-value="a">Alpha</div>
+      <div role="menuitemcheckbox" data-value="b" disabled>Beta (disabled)</div>
+      <div role="menuitemcheckbox" data-value="c">Gamma</div>
+    `
+    document.body.append(el)
+    const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    stubRects(trigger, panel)
+    const boxes = [...panel.querySelectorAll<HTMLElement>('[role="menuitemcheckbox"]')]
+    el.open = true
+    await whenFlushed()
+
+    panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+    expect(boxes[2]!.tabIndex, 'disabled Beta was skipped — landed on Gamma').toBe(0)
+    expect(boxes[1]!.tabIndex).toBe(-1)
+    el.remove()
+  })
+})
+
+describe('ui-menu — selectable-item aria-checked defaults at connect (menu-selectable-default)', () => {
+  it('menu-selectable-default: a menuitemradio/menuitemcheckbox item missing aria-checked gets "false" stamped at connect', () => {
+    const { panel } = makeMenu(RADIO_MARKUP)
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+    for (const item of items) expect(item.getAttribute('aria-checked')).toBe('false')
+  })
+
+  it('menu-selectable-default: an author-pre-set aria-checked="true" is left untouched at connect', () => {
+    const el = document.createElement('ui-menu') as UIMenuElement
+    el.innerHTML = `
+      <button>Open</button>
+      <div role="menuitemradio" data-value="a">Alpha</div>
+      <div role="menuitemradio" data-value="b" aria-checked="true">Beta</div>
+      <div role="menuitemradio" data-value="c">Gamma</div>
+    `
+    document.body.append(el)
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+    expect(items[0]!.getAttribute('aria-checked')).toBe('false')
+    expect(items[1]!.getAttribute('aria-checked'), 'the author-declared initial choice survives connect').toBe('true')
+    expect(items[2]!.getAttribute('aria-checked')).toBe('false')
+    el.remove()
+  })
+
+  it('menu-selectable-default: aria-checked never appears on a plain menuitem (the unchanged ban)', () => {
+    const { items } = makeMenu()
+    for (const item of items) expect(item.hasAttribute('aria-checked')).toBe(false)
+  })
+})
+
+describe('ui-menu — commit manages aria-checked (menu-selectable-commit-radio · menu-selectable-commit-checkbox)', () => {
+  it('menu-selectable-commit-radio: committing a menuitemradio row (Enter) sets it true, ALL siblings false — one-true', async () => {
+    const { el, panel } = makeMenu(RADIO_MARKUP)
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+    el.open = true
+    await whenFlushed()
+
+    items[1]!.focus() // Beta
+    panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    expect(items[0]!.getAttribute('aria-checked')).toBe('false')
+    expect(items[1]!.getAttribute('aria-checked')).toBe('true')
+    expect(items[2]!.getAttribute('aria-checked')).toBe('false')
+    el.remove()
+  })
+
+  it('menu-selectable-commit-radio: a SECOND commit flips the checked item — one-true holds across commits', async () => {
+    const { el, panel } = makeMenu(RADIO_MARKUP)
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+    el.open = true
+    await whenFlushed()
+
+    items[1]!.click() // Beta
+    await whenFlushed()
+    expect(items[1]!.getAttribute('aria-checked')).toBe('true')
+
+    el.open = true // re-open (commit closed it)
+    await whenFlushed()
+    items[2]!.click() // Gamma
+    await whenFlushed()
+    expect(items[0]!.getAttribute('aria-checked')).toBe('false')
+    expect(items[1]!.getAttribute('aria-checked'), 'the PREVIOUS choice flips back off').toBe('false')
+    expect(items[2]!.getAttribute('aria-checked')).toBe('true')
+    el.remove()
+  })
+
+  it('menu-selectable-commit-radio: separate data-group radio groups are independent — committing one group never touches the other', async () => {
+    const { el, panel } = makeMenu(GROUPED_RADIO_MARKUP)
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+    el.open = true
+    await whenFlushed()
+
+    items[0]!.click() // "align" group: Left
+    await whenFlushed()
+    items[3]!.click() // "size" group: Large
+    await whenFlushed()
+
+    expect(items[0]!.getAttribute('aria-checked'), 'align: Left checked').toBe('true')
+    expect(items[1]!.getAttribute('aria-checked'), 'align: Right unchecked').toBe('false')
+    expect(items[2]!.getAttribute('aria-checked'), 'size: Small unchecked').toBe('false')
+    expect(items[3]!.getAttribute('aria-checked'), 'size: Large checked').toBe('true')
+    el.remove()
+  })
+
+  it('menu-selectable-commit-checkbox: committing a menuitemcheckbox toggles ONLY that item — independent, not one-true', async () => {
+    const { el, panel } = makeMenu(CHECKBOX_MARKUP)
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemcheckbox"]')]
+    el.open = true
+    await whenFlushed()
+
+    items[0]!.click() // Alpha on
+    await whenFlushed()
+    el.open = true
+    await whenFlushed()
+    items[1]!.click() // Beta on — Alpha must stay on too (independent, unlike radio)
+    await whenFlushed()
+
+    expect(items[0]!.getAttribute('aria-checked'), 'Alpha stays checked — checkboxes do not exclude each other').toBe('true')
+    expect(items[1]!.getAttribute('aria-checked')).toBe('true')
+    el.remove()
+  })
+
+  it('menu-selectable-commit-checkbox: a second commit on the SAME checkbox toggles it back off', async () => {
+    const { el, panel } = makeMenu(CHECKBOX_MARKUP)
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemcheckbox"]')]
+    el.open = true
+    await whenFlushed()
+
+    items[0]!.click()
+    await whenFlushed()
+    expect(items[0]!.getAttribute('aria-checked')).toBe('true')
+
+    el.open = true
+    await whenFlushed()
+    items[0]!.click()
+    await whenFlushed()
+    expect(items[0]!.getAttribute('aria-checked')).toBe('false')
+    el.remove()
+  })
+
+  it('menu-selectable-commit-radio: commit still emits select + closes the menu, same contract as a plain menuitem', async () => {
+    const { el, panel } = makeMenu(RADIO_MARKUP)
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+    el.open = true
+    await whenFlushed()
+
+    const selects: { value: string; index: number }[] = []
+    el.addEventListener('select', (ev) => {
+      selects.push((ev as CustomEvent<{ value: string; index: number }>).detail)
+    })
+
+    items[0]!.click()
+    await whenFlushed()
+    expect(selects).toEqual([{ value: 'a', index: 0 }])
+    expect(el.open).toBe(false)
+    el.remove()
+  })
+})
+
 // ── Disabled item is skipped ──────────────────────────────────────────────────────────────────
 
 describe('ui-menu — disabled menuitem is inert (menu-commit-disabled)', () => {
@@ -899,7 +1144,10 @@ describe('menu.css — TKT-0027 panel max-block-size dial (menu-max-block-size-t
   })
 
   it('menu-max-block-size-token-chain: the menuitem row sets line-height: 1 (makes the row-height calc exact)', () => {
-    const itemRule = (menuCss.match(/:scope \[role='menuitem'\]\s*\{[^}]*\}/) ?? [''])[0]
+    // GH #55 widened the row selector to :is(menuitem, menuitemradio, menuitemcheckbox) — match
+    // the shared row rule by its distinctive box-sizing declaration rather than the old bare selector.
+    const itemRule = (menuCss.match(/:scope :is\(\[role='menuitem'\][^{]*\{[^}]*\}/) ?? [''])[0]
+    expect(itemRule).toMatch(/box-sizing:\s*border-box;/)
     expect(itemRule).toMatch(/line-height:\s*1;/)
   })
 })

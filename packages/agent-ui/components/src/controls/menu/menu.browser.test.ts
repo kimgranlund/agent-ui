@@ -694,3 +694,107 @@ describe('ui-menu — TKT-0027 panel max-block-size dial (default min(50vh, 12 i
     }
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [9] Selectable-item variant (GH #55) — menuitemradio/menuitemcheckbox, real-engine commit +
+//      the WHOLE-SHAPE checkmark render (Test-the-whole-shape law: a jsdom pass on aria-checked
+//      alone would miss a checkmark that never actually paints — measure it, both engines)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+const RADIO_ITEMS = `
+  <ui-menu>
+    <button style="padding:6px 12px">Agent ▾</button>
+    <div role="menuitemradio" data-value="a">Alpha</div>
+    <div role="menuitemradio" data-value="b">Beta</div>
+    <div role="menuitemradio" data-value="c">Gamma</div>
+  </ui-menu>`
+
+describe('ui-menu — selectable items: real-engine roving + commit-managed aria-checked (both engines, GH #55)', () => {
+  it('ArrowDown roves REAL focus across menuitemradio rows exactly like plain menuitem', async () => {
+    const { el } = mount(RADIO_ITEMS)
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+
+    el.open = true
+    await el.updateComplete
+    expect(panel.contains(document.activeElement), `${server.browser}: focus did not move into the panel`).toBe(true)
+
+    await userEvent.keyboard('{ArrowDown}')
+    await el.updateComplete
+    expect(document.activeElement, `${server.browser}: ArrowDown did not rove onto the second menuitemradio row`).toBe(items[1])
+  })
+
+  it('Enter commits a menuitemradio row: aria-checked flips to true, closes the menu, emits select — same contract as menuitem', async () => {
+    const { el } = mount(RADIO_ITEMS)
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+
+    const selects: { value: string; index: number }[] = []
+    el.addEventListener('select', (ev) => {
+      selects.push((ev as CustomEvent<{ value: string; index: number }>).detail)
+    })
+
+    el.open = true
+    await el.updateComplete
+    await userEvent.keyboard('{ArrowDown}') // → Beta
+    await userEvent.keyboard('{Enter}')
+    await el.updateComplete
+
+    expect(items[1]!.getAttribute('aria-checked'), `${server.browser}: committed row must be checked`).toBe('true')
+    expect(items[0]!.getAttribute('aria-checked')).toBe('false')
+    expect(items[2]!.getAttribute('aria-checked')).toBe('false')
+    expect(selects, `${server.browser}: select was not emitted`).toHaveLength(1)
+    expect(selects[0]!.value).toBe('b')
+    expect(panel.matches(':popover-open'), `${server.browser}: menu did not close after commit`).toBe(false)
+  })
+
+  it('a second click commit re-assigns the one-true checked row across two real commits', async () => {
+    const { el } = mount(RADIO_ITEMS)
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+
+    el.open = true
+    await el.updateComplete
+    await userEvent.click(items[0]!)
+    await el.updateComplete
+    expect(items[0]!.getAttribute('aria-checked')).toBe('true')
+
+    el.open = true
+    await el.updateComplete
+    await userEvent.click(items[2]!)
+    await el.updateComplete
+    expect(items[0]!.getAttribute('aria-checked'), `${server.browser}: the previous choice must flip off`).toBe('false')
+    expect(items[2]!.getAttribute('aria-checked')).toBe('true')
+  })
+
+  it('WHOLE-SHAPE: the checked row paints a real, non-transparent checkmark glyph; the unchecked rows do not', async () => {
+    const { el } = mount(RADIO_ITEMS)
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
+
+    el.open = true
+    await el.updateComplete
+    await userEvent.click(items[1]!) // Beta becomes checked; panel closes
+    el.open = true // re-open to inspect the now-checked row's paint
+    await el.updateComplete
+    await nextFrames()
+
+    const checkedStyle = getComputedStyle(items[1]!, '::before')
+    const uncheckedStyle = getComputedStyle(items[0]!, '::before')
+
+    // The glyph slot itself must be a genuinely sized box on BOTH rows (the reserved-space law —
+    // rows in the same group align identically whether checked or not), and the checked row's
+    // background must actually paint (non-transparent, non-zero alpha) while the unchecked row's
+    // does not — this is what a pure ARIA-state jsdom assertion cannot catch.
+    expect(px(checkedStyle.width), `${server.browser}: the checkmark glyph slot collapsed to zero width`).toBeGreaterThan(0)
+    expect(px(checkedStyle.height), `${server.browser}: the checkmark glyph slot collapsed to zero height`).toBeGreaterThan(0)
+    expect(
+      alphaOf(checkedStyle.backgroundColor),
+      `${server.browser}: the checked row's glyph never actually painted (background stayed transparent)`,
+    ).toBeGreaterThan(0)
+    expect(
+      alphaOf(uncheckedStyle.backgroundColor),
+      `${server.browser}: an UNCHECKED row painted a checkmark — should stay transparent`,
+    ).toBe(0)
+  })
+})

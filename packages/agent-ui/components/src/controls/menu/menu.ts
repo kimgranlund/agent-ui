@@ -2,10 +2,28 @@
 // (control-suite-wave4-overlay.decomp.md S3 · overlay-controller.lld.md LLD-C1..C4 · ADR-0043).
 //
 // Composition: a `UIElement` host + `overlay()` (Popover API + JS positioning + two-way `open`) +
-// `rovingFocus()` over [role=menuitem] items (Arrow roves focus; type-ahead; Enter/click commits).
-// NOT form-associated — ui-menu emits an action (`select` with {value,index}), carrying NO form
-// value. Like ui-tabs (non-value commit→select), but in an overlay. A trigger (first element child,
-// marked `data-part="trigger"`) opens the panel; commit closes it.
+// `rovingFocus()` over [role=menuitem]/[role=menuitemradio]/[role=menuitemcheckbox] items (Arrow
+// roves focus; type-ahead; Enter/click commits). NOT form-associated — ui-menu emits an action
+// (`select` with {value,index}), carrying NO form value. Like ui-tabs (non-value commit→select),
+// but in an overlay. A trigger (first element child, marked `data-part="trigger"`) opens the
+// panel; commit closes it.
+//
+// SELECTABLE-ITEM VARIANT (GH #55): an item PRE-MARKED by the author with `role="menuitemradio"`
+// or `role="menuitemcheckbox"` (before it is handed to `<ui-menu>`) is a per-item opt-in — NOT a
+// menu-level prop. Design call: per-item role-sniffing was chosen over a menu-level `selectable`
+// prop because (a) it matches the control's existing per-item conventions (`data-value`, the
+// roleless→menuitem auto-stamp) rather than adding a new attribute surface, and (b) it lets ONE
+// menu mix plain command rows with a selectable group (e.g. a "Sort by ▸" radio block beside plain
+// action rows) — a menu-level prop could only describe an all-or-nothing menu. Selectable items
+// are included in roving focus / type-ahead / click+Enter/Space commit exactly like plain
+// `menuitem` (`#itemsIn` below reads all three roles as one ordered set). The control itself
+// manages `aria-checked` ON COMMIT (`#commit`): a `menuitemcheckbox` item toggles its own
+// aria-checked; a `menuitemradio` item sets itself `true` and every OTHER `menuitemradio` item
+// sharing its `data-group` (default: the ungrouped '' bucket, so all ungrouped radio items in one
+// panel form a single group) `false` — one-true-at-a-time. Items missing `aria-checked` get a
+// default `false` stamped at connect (ARIA validity — the role requires it always be present);
+// an author-pre-set `aria-checked="true"` (declaring the initial choice) is left untouched at
+// connect and only changes on a subsequent commit.
 //
 // Anatomy (light-DOM, created once — idempotent across reconnect):
 //   <ui-menu>
@@ -30,7 +48,10 @@
 // ARIA: host has no explicit role (logical wrapper); panel has `role=menu` set on the div part
 // directly (a created part, not the host — the FACE rule "internals.role, never host attributes"
 // applies to the HOST element; direct parts use setAttribute). The trigger gets `aria-expanded`,
-// `aria-controls`, `aria-haspopup="menu"`. Item children auto-get `role=menuitem` if absent.
+// `aria-controls`, `aria-haspopup="menu"`. Item children auto-get `role=menuitem` if absent — an
+// item that already carries a role (author pre-marked `menuitemradio`/`menuitemcheckbox`) is left
+// alone. `aria-checked` remains invalid on plain `menuitem` (action semantics, no selected state);
+// it is valid — and control-managed on commit — on the two selectable roles only (GH #55).
 //
 // `controls → dom → traits` is the one allowed import direction.
 
@@ -231,10 +252,19 @@ export class UIMenuElement extends UIElement {
 
     // Auto-assign role=menuitem + tabindex=-1 to direct element children that do not already
     // carry a role. The roving-focus trait then manages the tabindexes from this base state.
+    // An item pre-marked role=menuitemradio|menuitemcheckbox (GH #55 selectable-item variant) is
+    // left with its author-given role — only the aria-checked default below applies to it.
     for (const child of panel.children) {
       if (child instanceof HTMLElement) {
         if (!child.hasAttribute('role')) child.setAttribute('role', 'menuitem')
         if (!child.hasAttribute('tabindex')) child.setAttribute('tabindex', '-1')
+        const role = child.getAttribute('role')
+        // ARIA validity: menuitemradio/menuitemcheckbox must always carry aria-checked. Stamp the
+        // default `false` only when absent — an author-pre-set value (declaring the initial
+        // choice, e.g. the currently-active radio row) is left untouched.
+        if ((role === 'menuitemradio' || role === 'menuitemcheckbox') && !child.hasAttribute('aria-checked')) {
+          child.setAttribute('aria-checked', 'false')
+        }
       }
     }
 
@@ -248,22 +278,53 @@ export class UIMenuElement extends UIElement {
     return { panel, trigger, items: () => this.#itemsIn(panel) }
   }
 
-  /** Return the live ordered set of [role=menuitem] elements within the panel. */
+  /**
+   * Return the live ordered set of item elements within the panel — plain `[role=menuitem]` rows
+   * PLUS the selectable-item variant roles (`menuitemradio`/`menuitemcheckbox`, GH #55), as ONE
+   * ordered set: roving focus, type-ahead, and commit all operate over whatever this returns, so a
+   * selectable item is included exactly like a plain menuitem with no separate code path.
+   */
   #itemsIn(panel: HTMLElement): HTMLElement[] {
-    return [...panel.querySelectorAll<HTMLElement>('[role="menuitem"]')]
+    return [
+      ...panel.querySelectorAll<HTMLElement>('[role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"]'),
+    ]
   }
 
   /**
-   * Commit a user-driven item selection: emit `select` with {value, index}, then close the panel.
-   * The value is the item's `data-value` attribute, falling back to trimmed text content.
-   * Close is driven programmatically (open=false → effect → handle.close()); the overlay trait
-   * announces exactly one close+toggle pair for this transition too (ADR-0101), with `el.open`
-   * already `false` by the time a listener observes either event (the ordering invariant).
+   * Commit a user-driven item selection: update aria-checked for a selectable item (GH #55), emit
+   * `select` with {value, index}, then close the panel. The value is the item's `data-value`
+   * attribute, falling back to trimmed text content. Close is driven programmatically (open=false
+   * → effect → handle.close()); the overlay trait announces exactly one close+toggle pair for this
+   * transition too (ADR-0101), with `el.open` already `false` by the time a listener observes
+   * either event (the ordering invariant).
    */
   #commit(index: number, item: HTMLElement): void {
     const value = item.dataset['value'] ?? item.textContent?.trim() ?? String(index)
+    const role = item.getAttribute('role')
+    if (role === 'menuitemcheckbox') {
+      // Independent toggle — this item's own aria-checked flips, no effect on any other item.
+      const checked = item.getAttribute('aria-checked') === 'true'
+      item.setAttribute('aria-checked', String(!checked))
+    } else if (role === 'menuitemradio') {
+      this.#commitRadio(item)
+    }
     this.emit('select', { value, index })
     this.open = false
+  }
+
+  /**
+   * One-true-at-a-time: set `item` checked and every OTHER menuitemradio sharing its `data-group`
+   * unchecked. Ungrouped radio items (no `data-group`) share the default '' group — so a panel
+   * with no explicit grouping still behaves as ONE radio group, the common case (e.g. the
+   * agent-admin canvas-header's single agent-switcher group).
+   */
+  #commitRadio(item: HTMLElement): void {
+    if (!this.#panel) return
+    const group = item.dataset['group'] ?? ''
+    for (const sibling of this.#panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')) {
+      if ((sibling.dataset['group'] ?? '') !== group) continue
+      sibling.setAttribute('aria-checked', sibling === item ? 'true' : 'false')
+    }
   }
 }
 

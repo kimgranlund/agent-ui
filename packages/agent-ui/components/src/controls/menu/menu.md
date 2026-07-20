@@ -46,7 +46,7 @@ slots:
     description: The menu trigger — provide an interactive element (e.g. <button>) as the FIRST child of ui-menu. The control marks it with data-part="trigger", wires aria-expanded + aria-controls + aria-haspopup="menu", and listens for clicks to toggle the panel. The trigger stays in document flow; only the panel enters the top layer.
   - name: items
     optional: false
-    description: Remaining children (after the first trigger child) are moved into the control-created panel at connect time. Provide the menu items as subsequent children; they auto-receive role=menuitem and tabindex=-1 if absent. Add `data-value="…"` to set the emitted select value; without it, the item's textContent is used. Add `disabled` or `aria-disabled="true"` to make an item inert (skipped by roving focus + commit).
+    description: Remaining children (after the first trigger child) are moved into the control-created panel at connect time. Provide the menu items as subsequent children; they auto-receive role=menuitem and tabindex=-1 if absent. Add `data-value="…"` to set the emitted select value; without it, the item's textContent is used. Add `disabled` or `aria-disabled="true"` to make an item inert (skipped by roving focus + commit). SELECTABLE-ITEM VARIANT (GH #55) — pre-mark an item's role as `menuitemradio` (single-select) or `menuitemcheckbox` (multi-select) BEFORE it is handed to `<ui-menu>` (the control never assigns these roles itself, only the roleless→menuitem default) to include it in the same roving-focus/type-ahead/commit machinery, with the control managing its `aria-checked` on commit. `menuitemradio` items share a `data-group` (default: ungrouped, so all ungrouped radio items in one panel form a single group) — committing one sets it `true` and every other item in its group `false`; `menuitemcheckbox` items toggle their own `aria-checked` independently.
 
 parts:
   - name: panel
@@ -61,8 +61,9 @@ face:
 
 aria:
   role: none            # the host has no explicit role (a logical disclosure wrapper); internals.role is not set
-  roleSource: none      # ARIA is provided by the trigger (aria-expanded/aria-controls/aria-haspopup set as child attributes) and the panel (role=menu on the div part; items get role=menuitem auto-assigned)
+  roleSource: none      # ARIA is provided by the trigger (aria-expanded/aria-controls/aria-haspopup set as child attributes) and the panel (role=menu on the div part; items get role=menuitem auto-assigned, or keep an author-pre-marked role=menuitemradio|menuitemcheckbox, GH #55)
   labelSource: aria-label on the trigger element
+  selectableItems: menuitemradio/menuitemcheckbox items always carry aria-checked (defaulted false at connect if the author omitted it); the control writes it on commit — one-true-per-data-group for menuitemradio, independent toggle for menuitemcheckbox. aria-checked stays invalid on plain menuitem (unchanged law).
 
 keyboard:
   - keys: Enter / Space
@@ -87,6 +88,8 @@ geometry:
   itemPadInline: var(--ui-menu-item-pad-inline)    # = var(--md-sys-space-md) — legacy item-pad inline axis
   itemBlockSize: var(--ui-menu-item-block-size)    # = font + 2×pad-block (line-height:1 makes it exact) — the real rendered row height, feeding panelMaxBlockSize
   itemRadius: var(--ui-menu-item-radius)           # nested-radius from panel corner = panelRadius − --ui-box-inset (FIXED 2026-07-06: was subtracting the unrelated --md-sys-space-xs, an ADR-0018 inset-inconsistency)
+  checkSize: var(--ui-menu-check-size)             # GH #55 — the menuitemradio/menuitemcheckbox checkmark glyph slot, = var(--md-sys-compact-sm) (the checkbox.css widget-box ramp precedent, not a menu-specific magic number)
+  checkGap: var(--ui-menu-check-gap)               # = var(--md-sys-space-xs) — gap between the glyph slot and the item's own inline padding
   note: ui-menu has NO `[size]` attribute and renders no trigger geometry (the trigger is fully author-owned) — the select/combo-box family's size-carrying derivation (panel inset + option pad off the trigger's own height/font) does not apply here; flagged as a structural divergence, not forced (2026-07-06 pass)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the panel surface (Canvas/CanvasText), frame (CanvasText border), and hovered/focused items (Highlight/HighlightText) visible. `forced-color-adjust: none` on hover/focus items commits to the system Highlight pair rather than letting the solid fill be discarded.
@@ -152,6 +155,24 @@ When the user activates a menuitem (Enter/Space on a non-button item, or click),
 `textContent` fallback) and `index` is its 0-based position — then closes the menu programmatically.
 This programmatic close emits `close` + `toggle` like every other real hide (ADR-0101), with `open`
 already `false` at listener time.
+
+### Selectable items (GH #55)
+
+An item pre-marked `role="menuitemradio"` or `role="menuitemcheckbox"` (set by the author before
+handing it to `<ui-menu>`) joins the SAME roving-focus / type-ahead / commit machinery as a plain
+`menuitem` — `#itemsIn` reads all three roles as one ordered set, so there is no separate code path
+to opt into. On commit, the control also writes `aria-checked`:
+
+- **`menuitemcheckbox`** — the item's own `aria-checked` toggles, independent of every other item.
+- **`menuitemradio`** — the item is set `aria-checked="true"`; every OTHER `menuitemradio` item
+  sharing its `data-group` attribute (default: the ungrouped `''` bucket, so all ungrouped radio
+  items in one panel form a single group) is set `false` — one-true-at-a-time.
+
+Both roles always carry `aria-checked` (the role requires it); the control stamps a default
+`"false"` at connect for any item missing it, but leaves an author-pre-set `aria-checked="true"`
+(declaring the initial choice) untouched. A checkmark indicator (`--ui-menu-check-*` tokens) renders
+on `[aria-checked='true']` — plain `menuitem` rows are unaffected (still no `aria-checked`, which
+stays invalid on that role).
 
 ## Keyboard navigation
 
