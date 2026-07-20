@@ -98,19 +98,43 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
       throw new Error(`Live agent proxy error (${res.status} ${res.statusText}).`)
     }
     const turnLines: string[] = []
-    for await (const line of readNdjsonLines(res.body)) {
-      const meta = readMetaLine(line)
-      if (meta) {
-        // ADR-0146 F1 — a progress meta-line routes to the conversation's handle.progress (live narration);
-        // it is never ingested as content (the SAME peel that already isolates note/trace, one arm added).
-        if (meta.a2uiMeta.progress) yield { kind: 'progress', progress: meta.a2uiMeta.progress }
-        if (typeof meta.a2uiMeta.note === 'string' && meta.a2uiMeta.note.length > 0) {
-          yield { kind: 'note', note: meta.a2uiMeta.note }
+    try {
+      for await (const line of readNdjsonLines(res.body)) {
+        const meta = readMetaLine(line)
+        if (meta) {
+          // GH #144: a transport-composed terminal `error` meta-line (`formatErrorLine`, worker/index.ts /
+          // dev-proxy-plugin.ts) means `produce()` halted or faulted AFTER headers already committed 200 —
+          // the ONLY way that failure crosses the wire. Throw here so it routes into the SAME visible
+          // fail() path a non-2xx response already uses (`#runSurfaceTurn`'s catch → `handle.fail(...)`),
+          // instead of this generator completing normally with an empty `turnLines` — which used to render
+          // as a silent, empty "success" (the reported "HTTP 200, `lines: []`, nothing shown").
+          if (typeof meta.a2uiMeta.error === 'string' && meta.a2uiMeta.error.length > 0) {
+            throw new Error(`Live agent turn failed (${meta.a2uiMeta.error}).`)
+          }
+          // ADR-0146 F1 — a progress meta-line routes to the conversation's handle.progress (live narration);
+          // it is never ingested as content (the SAME peel that already isolates note/trace, one arm added).
+          if (meta.a2uiMeta.progress) yield { kind: 'progress', progress: meta.a2uiMeta.progress }
+          if (typeof meta.a2uiMeta.note === 'string' && meta.a2uiMeta.note.length > 0) {
+            yield { kind: 'note', note: meta.a2uiMeta.note }
+          }
+          continue // the meta-line is never ingested (ADR-0088 §1)
         }
-        continue // the meta-line is never ingested (ADR-0088 §1)
+        turnLines.push(line)
+        yield { kind: 'line', line }
       }
-      turnLines.push(line)
-      yield { kind: 'line', line }
+    } catch (err) {
+      // GH #144: the OTHER silent-looking failure mode reported — the client's own `TIMEOUT_MS` firing
+      // mid-stream aborts the fetch, and reading `res.body` then rejects with a low-level stream error
+      // (Chromium: "BodyStreamBuffer was aborted") that names no cause a person can act on. `AbortSignal.
+      // timeout()` surfaces as either `'TimeoutError'` (its own DOMException `reason`, current spec) or
+      // `'AbortError'` (older/observed behavior reading an in-flight body) depending on engine — both name
+      // the SAME cause here (this runner's only abort source is `AbortSignal.timeout(TIMEOUT_MS)` above,
+      // never a user-triggered cancel), so both rethrow with the actual, actionable explanation; every
+      // other error (including the `error` meta-line throw just above) passes through unchanged.
+      if (err instanceof Error && (err.name === 'AbortError' || err.name === 'TimeoutError')) {
+        throw new Error(`Live agent turn timed out after ${TIMEOUT_MS / 1000}s (still self-correcting when the timeout fired).`)
+      }
+      throw err
     }
     session = appendUserTurn(
       session,

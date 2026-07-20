@@ -3,7 +3,7 @@
 // `A2uiServerMessage` shapes, so it stays provably disjoint from the protocol it rides beside.
 
 import { describe, it, expect } from 'vitest'
-import { readMetaLine, isMetaLine } from '../agent/meta-line.ts'
+import { readMetaLine, isMetaLine, formatErrorLine } from '../agent/meta-line.ts'
 import { dispatch } from '../renderer/dispatch.ts'
 import type { A2uiServerMessage } from '../protocol.ts'
 import type { DispatchHandlers } from '../renderer/dispatch.ts'
@@ -162,6 +162,61 @@ describe('readMetaLine — the progress field (ADR-0146 F1)', () => {
     // A leaked progress line is a plain object with NO `version` key — so dispatch()'s version gate
     // catches it and RETURNS the error, never throwing, never reaching a handler (ADR-0088 defense-in-depth).
     const leaked = JSON.parse('{"a2uiMeta":{"progress":{"stage":"reasoning"}}}') as A2uiServerMessage
+    const noopHandlers: DispatchHandlers = {
+      createSurface: () => {},
+      updateComponents: () => {},
+      updateDataModel: () => {},
+      deleteSurface: () => {},
+      actionResponse: () => {},
+      callFunction: () => {},
+    }
+    let err: ReturnType<typeof dispatch>
+    expect(() => {
+      err = dispatch(leaked, noopHandlers)
+    }).not.toThrow()
+    expect(err!).toEqual({ code: 'VERSION_UNSUPPORTED', message: expect.stringContaining('unsupported protocol version') })
+  })
+})
+
+// ── GH #144: the additive `error` field (a transport-composed terminal failure signal) ─────────────────────
+describe('readMetaLine / formatErrorLine — the error field (GH #144)', () => {
+  it('formatErrorLine round-trips through readMetaLine', () => {
+    const line = formatErrorLine('produce: no valid surface within the round bound (SCHEMA)')
+    const parsed = readMetaLine(line)
+    expect(parsed).toBeDefined()
+    expect(parsed!.a2uiMeta.error).toBe('produce: no valid surface within the round bound (SCHEMA)')
+  })
+
+  it('an error line carries no note/ask/trace/progress', () => {
+    const parsed = readMetaLine(formatErrorLine('boom'))
+    expect(parsed!.a2uiMeta.note).toBeUndefined()
+    expect(parsed!.a2uiMeta.ask).toBeUndefined()
+    expect(parsed!.a2uiMeta.trace).toBeUndefined()
+    expect(parsed!.a2uiMeta.progress).toBeUndefined()
+  })
+
+  it('a malformed error (non-string) drops only itself — the envelope still parses', () => {
+    const line = '{"a2uiMeta":{"note":"hi","error":42}}'
+    const parsed = readMetaLine(line)
+    expect(parsed).toBeDefined()
+    expect(parsed!.a2uiMeta.note).toBe('hi')
+    expect(parsed!.a2uiMeta.error).toBeUndefined()
+  })
+
+  it('a note-only line (no error at all) still parses with error undefined — zero blast radius', () => {
+    const parsed = readMetaLine('{"a2uiMeta":{"note":"hi"}}')
+    expect(parsed!.a2uiMeta.error).toBeUndefined()
+  })
+
+  it('the version discriminator still wins even when error is present (adversarial input)', () => {
+    const line = '{"version":"v1.0","a2uiMeta":{"error":"nope"}}'
+    expect(isMetaLine(line)).toBe(false)
+  })
+
+  it('fault isolation: an error line reaching dispatch() UNFILTERED routes to VERSION_UNSUPPORTED, returned not thrown (the ADR-0088 defense, extended)', () => {
+    // A leaked error line is a plain object with NO `version` key — so dispatch()'s version gate catches
+    // it and RETURNS the error, never throwing, never reaching a handler (ADR-0088 defense-in-depth).
+    const leaked = JSON.parse(formatErrorLine('boom')) as A2uiServerMessage
     const noopHandlers: DispatchHandlers = {
       createSurface: () => {},
       updateComponents: () => {},

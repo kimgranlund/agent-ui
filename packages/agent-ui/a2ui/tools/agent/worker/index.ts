@@ -10,6 +10,7 @@ import './process-shim.ts'
 
 import { produce } from '../../../src/agent/produce.ts'
 import type { ProduceDeps } from '../../../src/agent/produce.ts'
+import { formatErrorLine } from '../../../src/agent/meta-line.ts'
 import { resolvePair, validateProvidersConfig } from '../providers-config.ts'
 import type { ProvidersConfig } from '../providers-config.ts'
 import { providerFor } from '../providers/index.ts'
@@ -209,9 +210,24 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
       })) {
         await writer.write(encoder.encode(line + '\n'))
       }
-    } catch {
-      // ProduceHalt or an upstream fault mid-stream — headers are already committed (200/ndjson), so
-      // just stop, matching dev-proxy-plugin.ts's `res.end()` on a post-headersSent error.
+    } catch (err) {
+      // GH #144: ProduceHalt (the round bound exhausted, e.g. a persona's opening turn needing more
+      // self-correct rounds than the cap) or an upstream fault mid-stream — headers are already committed
+      // (200/ndjson), so the status can't change, but the failure must still reach the client SOMEHOW: a
+      // stream that just stops with zero content lines reads as a silent, empty "success" (the client's
+      // `for await` loop over `AdminSurfaceTurnEvent`s completes normally, `wireLines` stays `[]`, and the
+      // turn finalizes as if nothing were wrong — exactly the reported "HTTP 200, `lines: []`, nothing
+      // rendered, no error shown"). Writing ONE terminal `error` meta-line (`formatErrorLine`, GH #144)
+      // before closing gives `admin-live-runner.ts` something to throw on, routing into the SAME visible
+      // fail() path a non-2xx response already uses. `request.signal.aborted` means the CLIENT is the one
+      // that's gone (a disconnect, not a produce() failure) — this write is then a no-op at best, and the
+      // outer try/catch below already swallows a failed write, so no extra guard is needed.
+      const message = err instanceof Error ? err.message : 'produce error'
+      try {
+        await writer.write(encoder.encode(formatErrorLine(message) + '\n'))
+      } catch {
+        // the writer/stream is already broken (e.g. a genuine client disconnect) — nothing left to signal
+      }
     } finally {
       // GH #107 (review finding): closing a writer whose paired stream already errored (the common case on
       // a client disconnect — write() above throws first, caught above) itself rejects per WHATWG streams

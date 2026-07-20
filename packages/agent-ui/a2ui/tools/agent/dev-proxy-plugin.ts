@@ -19,6 +19,7 @@ import type { Plugin } from 'vite'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { produce } from '../../src/agent/produce.ts'
 import type { ProduceDeps } from '../../src/agent/produce.ts'
+import { formatErrorLine } from '../../src/agent/meta-line.ts'
 import { resolvePair, validateProvidersConfig } from './providers-config.ts'
 import type { ProvidersConfig } from './providers-config.ts'
 import { providerFor } from './providers/index.ts'
@@ -217,8 +218,20 @@ export function a2uiDevProxyPlugin(): Plugin {
               // (NO structural proxy change — a progress line is an ordinary NDJSON line; the browser's
               // readMetaLine filter routes it to handle.progress). progressDetail stays the 'stages' default,
               // so no raw thinking text crosses the wire (F3).
-              for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...toolOpts })) {
-                res.write(line + '\n')
+              try {
+                for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...toolOpts })) {
+                  res.write(line + '\n')
+                }
+              } catch (err) {
+                // GH #144: ProduceHalt (the round bound exhausted) or an upstream fault mid-stream — headers
+                // are already committed (200/ndjson) by the time this can fire (every earlier throw site
+                // sits before the first `res.write`, so this catch is reached only once bytes are already
+                // on the wire). Match worker/index.ts's fix: write ONE terminal `error` meta-line
+                // (`formatErrorLine`) before ending the response, so `admin-live-runner.ts` has something to
+                // throw on — routing into the SAME visible fail() path a non-2xx response already uses,
+                // instead of a stream that just stops and reads as an empty "success" client-side.
+                const message = err instanceof Error ? err.message : 'produce error'
+                res.write(formatErrorLine(message) + '\n')
               }
               res.end()
               return
