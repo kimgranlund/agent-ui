@@ -9,8 +9,13 @@
 // `createMemoryStore({ initial: seed, persistKey: 'agent-admin-app.<id>' })` — so edits persist PER
 // PERSONA and survive switching away and back (localStorage-persisted values WIN over the seed,
 // memory-store.ts's native-parity law). Switching personas swaps `admin.store`; the component's own
-// reactive store effect (agent-admin.ts:162) re-pushes it into the settings pane, rewires every entry
-// section, and re-syncs the conversation — proven by the store-swap probe in agent-admin-app.test.ts.
+// reactive store effect (agent-admin.ts's connected()) re-pushes it into the settings pane, rewires
+// every entry section, and — GH #145 fix — genuinely resets the conversation: a real store
+// reassignment (a different object reference from the previously-seen one) clears the visible chat
+// log + any open A2UI surfaces, the live-request history ring, and the Dialog Turns log, so a
+// freshly-selected persona starts a clean thread rather than appending onto the old one. A bare
+// reconnect with the SAME store (e.g. a layout crossing) is NOT a switch and does not reset. Proven
+// by the store-swap probe in agent-admin-app.test.ts and the reset regression in agent-admin.test.ts.
 //
 // Each persona steers a DIFFERENT A2UI catalog family + interaction mechanism: its Foundation builtin is
 // rewritten to the persona, a custom "Surface style" section teaches when to emit UI vs prose, and its
