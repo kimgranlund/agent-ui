@@ -5,12 +5,13 @@
 // dependency.
 //
 // Two fixed `ui-split-pane` children on ONE composed `ui-split` (vision rev.5, Kim's Figma frame
-// 33:1693 — superseding ADR-0131 cl.2's three-pane order): `[ chat canvas | {Settings ⇄ Context} tabs ]`.
-// The Settings tab carries the WHOLE config column (Agent header row + ui-settings + the Model grid +
-// prompt sections + capability sections — the old prompts pane merged in); the Context tab is the
-// read-only introspection surface (the compiled Agent System JSON + the Dialog Turns payload log).
-// Composition is idempotent — the `master-detail.ts`/`settings.ts` `#compose()` precedent: built ONCE at
-// first connect, never rebuilt on a later reconnect.
+// 33:1693 — superseding ADR-0131 cl.2's three-pane order): `[ chat canvas | {Settings ⇄ Context: System
+// ⇄ Context: Dialog} tabs ]`. The Settings tab carries the WHOLE config column (Agent header row +
+// ui-settings + the Model grid + prompt sections + capability sections — the old prompts pane merged
+// in); the Context tabs are the read-only introspection surface, split in two (GH #161, superseding the
+// single combined "Context" tab): "Context: System" (the compiled Agent System JSON) and "Context:
+// Dialog" (the Dialog Turns payload log). Composition is idempotent — the `master-detail.ts`/
+// `settings.ts` `#compose()` precedent: built ONCE at first connect, never rebuilt on a later reconnect.
 //
 // ADR-0132 replaced the single free-text prompt + flat-only settings with FIVE instantiations of one
 // generic entry-list primitive: prompt sections (Foundation/Personality/Critical Items, seeded,
@@ -62,7 +63,7 @@ import '@agent-ui/components/controls/radio'
 // TKT-0085: registers <ui-tabs>/<ui-tab>/<ui-tab-panel> — the responsive-collapse shells `#applyLayout`
 // moves pane content into below the wide breakpoint.
 import '@agent-ui/components/controls/tabs'
-import '@agent-ui/components/controls/disclosure' // vision rev.5 — the Context tab's accordion primitive
+import '@agent-ui/components/controls/disclosure' // vision rev.5 — the Context tabs' accordion primitive
 // Vision rev.6 (Surface Options): the Markdown modality renders agent notes through <ui-markdown> —
 // sanitized by construction. App → code is the ADR-0139-ruled edge this file already takes for
 // `@agent-ui/code/editor`; ui-conversation itself stays code-free (the SPEC-R12 renderer seam carries it).
@@ -155,7 +156,8 @@ type AgentAdminLayout = 'split' | 'narrow'
 
 // TKT-0085 → vision rev.5 (Kim's Figma frame 33:1693) — the responsive shell collapsed from THREE bands
 // to TWO: the old wide (chat | prompts | settings) and medium (chat | 2-tab) shapes both dissolve into
-// ONE `split` layout (chat | {Settings, Context} tabs), so a single threshold remains. Same px rationale
+// ONE `split` layout (chat | {Settings, Context: System, Context: Dialog} tabs, GH #161), so a single
+// threshold remains. Same px rationale
 // as before (a ResizeObserver measures px; 640px = 40rem is the repo's own app-shell.css/
 // master-detail.css collapse precedent). The 2-pane mechanical floor is canvas 16rem + tabs 20rem =
 // 36rem/576px, comfortably under the threshold.
@@ -187,22 +189,31 @@ export class UIAgentAdminElement extends UIElement {
   // doc-comment for the full design; fields here are the STABLE homes + content units it operates on,
   // all built once in `#compose()`.
   #canvasPane: HTMLElement | null = null // split-layout home for `#conversation`
-  #tabsPane: HTMLElement | null = null // split-layout home for the {Settings, Context} ui-tabs (vision rev.5)
+  #tabsPane: HTMLElement | null = null // split-layout home for the {Settings, Context: System, Context: Dialog} ui-tabs (vision rev.5; GH #161 split Context in two)
   #settingsPanel: HTMLElement | null = null // the Settings ui-tab-panel
-  #contextPanel: HTMLElement | null = null // the Context ui-tab-panel
-  #narrowTabs: HTMLElement | null = null // narrow-only, top-level: 3 tabs: Chat, Settings, Context
+  // GH #161: the old single Context ui-tab-panel split into two — Agent System and Dialog Turns each
+  // get their OWN tab now, in both the split layout (here) and narrow mode (below) — the flat
+  // one-content-unit-per-tab shape every OTHER tab (Chat/Settings) already uses, never a nested
+  // sub-tab-set special-cased for Context alone (see the #compose() doc comment at the tab strip
+  // construction for the full narrow-mode rationale).
+  #contextSystemPanel: HTMLElement | null = null // the Context: System ui-tab-panel
+  #contextDialogPanel: HTMLElement | null = null // the Context: Dialog ui-tab-panel
+  #narrowTabs: HTMLElement | null = null // narrow-only, top-level: 4 tabs: Chat, Settings, Context: System, Context: Dialog (GH #161)
   #narrowChatPanel: HTMLElement | null = null
   #narrowSettingsPanel: HTMLElement | null = null
-  #narrowContextPanel: HTMLElement | null = null
-  // The two content UNITS that migrate between a split-layout tab panel and a narrow tab panel —
-  // `#conversation` (already a single element) is the third; both are built once in `#compose()`.
+  #narrowContextSystemPanel: HTMLElement | null = null
+  #narrowContextDialogPanel: HTMLElement | null = null
+  // The three content UNITS that migrate between a split-layout tab panel and a narrow tab panel —
+  // `#conversation` (already a single element) is the fourth; all are built once in `#compose()`.
   // `#settingsContent` bundles the WHOLE config column (Agent header row + ui-settings + model grid +
   // prompt sections + capability sections — the old prompts pane merged in, vision rev.5);
-  // `#contextContent` is the read-only introspection column (Agent System + Dialog Turns).
+  // `#contextSystemContent`/`#contextDialogContent` are the two halves of the old combined read-only
+  // introspection column (Agent System / Dialog Turns respectively, GH #161).
   #settingsContent: HTMLElement | null = null
-  #contextContent: HTMLElement | null = null
+  #contextSystemContent: HTMLElement | null = null
+  #contextDialogContent: HTMLElement | null = null
   #currentLayout: AgentAdminLayout | null = null
-  // ── vision rev.5: the master switches + the Context tab's render slots ───────────────────────────────
+  // ── vision rev.5: the master switches + the Context tabs' render slots ──────────────────────────────
   #agentSwitch: (HTMLElement & { checked: boolean }) | null = null
   #kindSwitches: Map<string, HTMLElement & { checked: boolean }> = new Map()
   // ── vision rev.6: the Surface Options controls (built once; state re-applied per store change) ───────
@@ -211,8 +222,9 @@ export class UIAgentAdminElement extends UIElement {
   #surfaceCatalogSelect: (HTMLElement & { value: string; disabled: boolean }) | null = null
   #contextSystemHost: HTMLElement | null = null // Agent System — rebuilt wholesale per store change
   #contextTurnsHost: HTMLElement | null = null // Dialog Turns — rebuilt per logged turn
-  /** The Context tab's store subscription — its OWN slot (the #modelGridUnsub precedent): it must
-   *  outlive `#rewireAllSections`' clear-and-rebuild of the shared #unsubscribes map. */
+  /** The Context tabs' shared store subscription (both System and Dialog read off the same store) — its
+   *  OWN slot (the #modelGridUnsub precedent): it must outlive `#rewireAllSections`' clear-and-rebuild
+   *  of the shared #unsubscribes map. */
   #contextUnsub: (() => void) | undefined
   /** The Dialog Turns ring (newest LAST here; rendered newest-FIRST) — request/response per turn,
    *  every arm (stub, live, surface), failures included. Element-lifetime, never persisted. `n` is a
@@ -317,7 +329,7 @@ export class UIAgentAdminElement extends UIElement {
         // GH #145 — a REAL store reassignment (a persona switch: `admin.store = presetStore(other)`)
         // must start a genuinely fresh conversation for the newly-selected persona: the visible chat
         // log + any open A2UI surfaces (`#conversation.reset()`), the multi-turn `#history` fed into
-        // live requests, and the Dialog Turns ring (`#turnLog`) the Context panel reads. Gated on
+        // live requests, and the Dialog Turns ring (`#turnLog`) the Context: Dialog tab reads. Gated on
         // `#storeSeen` so the element's FIRST ever connect (nothing to reset yet) and a bare reconnect
         // with the SAME store (e.g. a TKT-0085 layout crossing) both skip it — only a genuine identity
         // change resets. `#rewireContext` below re-renders the (now-empty) Dialog Turns view.
@@ -400,9 +412,11 @@ export class UIAgentAdminElement extends UIElement {
     canvasPane.append(conversation)
 
     // ── Vision rev.5 (Kim's Figma frame 33:1693): the right side is ONE tabbed region — Settings (the
-    // whole config column) ⇄ Context (the read-only introspection surface). The old three-pane wide
-    // layout (chat | prompts | settings) and its medium two-tab collapse both dissolve into this ONE
-    // split shape; the prompts pane's content merges INTO the Settings column. ──────────────────────────
+    // whole config column) ⇄ Context: System ⇄ Context: Dialog (the read-only introspection surface,
+    // GH #161 — split from the old single combined "Context" tab into two, one per accordion section:
+    // Agent System and Dialog Turns). The old three-pane wide layout (chat | prompts | settings) and its
+    // medium two-tab collapse both dissolve into this ONE split shape; the prompts pane's content merges
+    // INTO the Settings column. ─────────────────────────────────────────────────────────────────────────
     const tabsPane = document.createElement('ui-split-pane')
     tabsPane.setAttribute('data-role', 'tabs')
     // The settings column's own field floor (TKT-0045 lineage — ui-settings' master-detail drill-in +
@@ -415,12 +429,16 @@ export class UIAgentAdminElement extends UIElement {
     const settingsTab = document.createElement('ui-tab')
     settingsTab.setAttribute('key', 'settings')
     settingsTab.textContent = 'Settings'
-    const contextTab = document.createElement('ui-tab')
-    contextTab.setAttribute('key', 'context')
-    contextTab.textContent = 'Context'
+    const contextSystemTab = document.createElement('ui-tab')
+    contextSystemTab.setAttribute('key', 'context-system')
+    contextSystemTab.textContent = 'Context: System'
+    const contextDialogTab = document.createElement('ui-tab')
+    contextDialogTab.setAttribute('key', 'context-dialog')
+    contextDialogTab.textContent = 'Context: Dialog'
     const settingsPanel = document.createElement('ui-tab-panel')
-    const contextPanel = document.createElement('ui-tab-panel')
-    rightTabs.append(settingsTab, contextTab, settingsPanel, contextPanel)
+    const contextSystemPanel = document.createElement('ui-tab-panel')
+    const contextDialogPanel = document.createElement('ui-tab-panel')
+    rightTabs.append(settingsTab, contextSystemTab, contextDialogTab, settingsPanel, contextSystemPanel, contextDialogPanel)
     tabsPane.append(rightTabs)
 
     // The Settings tab's content unit — the Agent header row (heading + the ACTIVE master switch, Kim's
@@ -557,12 +575,15 @@ export class UIAgentAdminElement extends UIElement {
       settingsContent.append(section.host)
     }
 
-    // The Context tab's content unit (vision rev.5): two accordion groups — the compiled Agent System
-    // (what the agent actually sees, derived fresh from the store per change) and the Dialog Turns
-    // payload log (per-turn request/response JSON, newest first). Group shells build ONCE; their bodies
-    // are render slots rebuilt wholesale (#renderContextSystem / #renderContextTurns).
-    const contextContent = document.createElement('div')
-    contextContent.setAttribute('data-role', 'context-content')
+    // GH #161 — the old single Context tab's ONE content unit (two accordion groups stacked) split into
+    // TWO content units, one accordion each: `#contextSystemContent` (Agent System — what the agent
+    // actually sees, derived fresh from the store per change) and `#contextDialogContent` (Dialog Turns —
+    // the per-turn request/response JSON log, newest first). Each is its own reparent-able node (the
+    // TKT-0085 wrapper discipline, unchanged) — `data-role`s renamed accordingly. The accordion SHELLS
+    // build ONCE; their bodies are render slots rebuilt wholesale (#renderContextSystem / #renderContextTurns),
+    // completely unaffected by which tab now hosts them.
+    const contextSystemContent = document.createElement('div')
+    contextSystemContent.setAttribute('data-role', 'context-system-content')
     const systemSection = document.createElement('ui-disclosure') as HTMLElement & { open: boolean; summary: string }
     systemSection.setAttribute('data-part', 'context-section')
     systemSection.setAttribute('data-section', 'agent-system')
@@ -572,6 +593,10 @@ export class UIAgentAdminElement extends UIElement {
     contextSystemHost.setAttribute('data-part', 'context-system')
     systemSection.append(contextSystemHost)
     this.#contextSystemHost = contextSystemHost
+    contextSystemContent.append(systemSection)
+
+    const contextDialogContent = document.createElement('div')
+    contextDialogContent.setAttribute('data-role', 'context-dialog-content')
     const turnsSection = document.createElement('ui-disclosure') as HTMLElement & { open: boolean; summary: string }
     turnsSection.setAttribute('data-part', 'context-section')
     turnsSection.setAttribute('data-section', 'dialog-turns')
@@ -581,22 +606,31 @@ export class UIAgentAdminElement extends UIElement {
     contextTurnsHost.setAttribute('data-part', 'context-turns')
     turnsSection.append(contextTurnsHost)
     this.#contextTurnsHost = contextTurnsHost
-    contextContent.append(systemSection, turnsSection)
+    contextDialogContent.append(turnsSection)
 
     // The split shell is the DEFAULT visible state until the first measurement lands (the TKT-0085
-    // discipline — the old code appended the content units into the wide panes right here too): both
-    // content units START in their split-layout tab panels, so a consumer that queries synchronously
+    // discipline — the old code appended the content units into the wide panes right here too): every
+    // content unit STARTS in its split-layout tab panel, so a consumer that queries synchronously
     // after append (and the pre-RO first paint) sees the real default shape; `#applyLayout` then MOVES
     // them only on a genuine narrow crossing.
     settingsPanel.append(settingsContent)
-    contextPanel.append(contextContent)
+    contextSystemPanel.append(contextSystemContent)
+    contextDialogPanel.append(contextDialogContent)
 
     split.append(canvasPane, tabsPane)
     this.append(split)
 
     // ── The narrow (all-tabs) shell — built ONCE alongside the split shell above, starting EMPTY:
-    // `#applyLayout` moves `conversation`/`settingsContent`/`contextContent` into whichever shell the
-    // resolved layout actually uses. ──────────────────────────────────────────────────────────────────
+    // `#applyLayout` moves `conversation`/`settingsContent`/`contextSystemContent`/`contextDialogContent`
+    // into whichever shell the resolved layout actually uses. GH #161's narrow-mode fork: narrow mode
+    // gets a FOURTH top-level tab here (Chat/Settings/Context: System/Context: Dialog) rather than
+    // nesting the split under one narrow "Context" tab — narrow mode is a flat re-parenting of the SAME
+    // content units into a differently-organized `ui-tabs` (this is exactly what it already does for
+    // Chat and Settings: one wide tab, one matching narrow tab, one content unit moved whole between
+    // them — see `#applyLayout`'s own doc comment). Nesting Context alone would introduce a sub-tab-set
+    // shape that exists NOWHERE else in this file, purely to keep narrow mode's top-level tab count at 3;
+    // the flat 4-tab shape costs nothing (the tab strip already scrolls/wraps under `fill`) and keeps
+    // every tab behaving identically across the wide/narrow boundary. ────────────────────────────────────
     const narrowTabs = document.createElement('ui-tabs')
     narrowTabs.setAttribute('fill', '') // #14 / ADR-0144 Q1 — the same shipped `fill` posture as the split shell
     narrowTabs.hidden = true // the split shell above is the DEFAULT visible state until the first measurement
@@ -606,13 +640,26 @@ export class UIAgentAdminElement extends UIElement {
     const narrowSettingsTab = document.createElement('ui-tab')
     narrowSettingsTab.setAttribute('key', 'settings')
     narrowSettingsTab.textContent = 'Settings'
-    const narrowContextTab = document.createElement('ui-tab')
-    narrowContextTab.setAttribute('key', 'context')
-    narrowContextTab.textContent = 'Context'
+    const narrowContextSystemTab = document.createElement('ui-tab')
+    narrowContextSystemTab.setAttribute('key', 'context-system')
+    narrowContextSystemTab.textContent = 'Context: System'
+    const narrowContextDialogTab = document.createElement('ui-tab')
+    narrowContextDialogTab.setAttribute('key', 'context-dialog')
+    narrowContextDialogTab.textContent = 'Context: Dialog'
     const narrowChatPanel = document.createElement('ui-tab-panel')
     const narrowSettingsPanel = document.createElement('ui-tab-panel')
-    const narrowContextPanel = document.createElement('ui-tab-panel')
-    narrowTabs.append(narrowChatTab, narrowSettingsTab, narrowContextTab, narrowChatPanel, narrowSettingsPanel, narrowContextPanel)
+    const narrowContextSystemPanel = document.createElement('ui-tab-panel')
+    const narrowContextDialogPanel = document.createElement('ui-tab-panel')
+    narrowTabs.append(
+      narrowChatTab,
+      narrowSettingsTab,
+      narrowContextSystemTab,
+      narrowContextDialogTab,
+      narrowChatPanel,
+      narrowSettingsPanel,
+      narrowContextSystemPanel,
+      narrowContextDialogPanel,
+    )
     this.append(narrowTabs)
 
     this.#split = split
@@ -621,13 +668,16 @@ export class UIAgentAdminElement extends UIElement {
     this.#canvasPane = canvasPane
     this.#tabsPane = tabsPane
     this.#settingsPanel = settingsPanel
-    this.#contextPanel = contextPanel
+    this.#contextSystemPanel = contextSystemPanel
+    this.#contextDialogPanel = contextDialogPanel
     this.#narrowTabs = narrowTabs
     this.#narrowChatPanel = narrowChatPanel
     this.#narrowSettingsPanel = narrowSettingsPanel
-    this.#narrowContextPanel = narrowContextPanel
+    this.#narrowContextSystemPanel = narrowContextSystemPanel
+    this.#narrowContextDialogPanel = narrowContextDialogPanel
     this.#settingsContent = settingsContent
-    this.#contextContent = contextContent
+    this.#contextSystemContent = contextSystemContent
+    this.#contextDialogContent = contextDialogContent
   }
 
   /**
@@ -665,7 +715,8 @@ export class UIAgentAdminElement extends UIElement {
     const narrowTabs = this.#narrowTabs as HTMLElement
     const conversation = this.#conversation as UIConversationElement
     const settingsContent = this.#settingsContent as HTMLElement
-    const contextContent = this.#contextContent as HTMLElement
+    const contextSystemContent = this.#contextSystemContent as HTMLElement
+    const contextDialogContent = this.#contextDialogContent as HTMLElement
 
     const moveInto = (node: Element, target: Element): void => {
       if (node.parentElement !== target) target.append(node)
@@ -674,14 +725,16 @@ export class UIAgentAdminElement extends UIElement {
     if (layout === 'narrow') {
       moveInto(conversation, this.#narrowChatPanel as HTMLElement)
       moveInto(settingsContent, this.#narrowSettingsPanel as HTMLElement)
-      moveInto(contextContent, this.#narrowContextPanel as HTMLElement)
+      moveInto(contextSystemContent, this.#narrowContextSystemPanel as HTMLElement)
+      moveInto(contextDialogContent, this.#narrowContextDialogPanel as HTMLElement)
       if (split.children.length > 0) split.replaceChildren() // guarded: an already-empty split needs no mutation
       split.hidden = true
       narrowTabs.hidden = false
     } else {
-      // Vision rev.5: ONE non-narrow shape — [ chat | {Settings, Context} tabs ]. The pane set is
-      // reconciled (never blind-rebuilt) so a narrow→split crossing re-adds both panes while a same-
-      // layout call touches nothing (the TKT-0085 guarded-move discipline, unchanged).
+      // Vision rev.5 + GH #161: ONE non-narrow shape — [ chat | {Settings, Context: System, Context:
+      // Dialog} tabs ]. The pane set is reconciled (never blind-rebuilt) so a narrow→split crossing
+      // re-adds both panes while a same-layout call touches nothing (the TKT-0085 guarded-move
+      // discipline, unchanged).
       const desiredPanes = [canvasPane, tabsPane]
       for (const child of [...split.children]) {
         if (child.tagName === 'UI-SPLIT-PANE' && !desiredPanes.includes(child as HTMLElement)) child.remove()
@@ -691,7 +744,8 @@ export class UIAgentAdminElement extends UIElement {
       narrowTabs.hidden = true
       moveInto(conversation, canvasPane)
       moveInto(settingsContent, this.#settingsPanel as HTMLElement)
-      moveInto(contextContent, this.#contextPanel as HTMLElement)
+      moveInto(contextSystemContent, this.#contextSystemPanel as HTMLElement)
+      moveInto(contextDialogContent, this.#contextDialogPanel as HTMLElement)
     }
   }
 
@@ -1053,10 +1107,10 @@ export class UIAgentAdminElement extends UIElement {
     }))
   }
 
-  // ── vision rev.5: master-state application + the Context tab's renderers ─────────────────────────────
+  // ── vision rev.5: master-state application + the Context tabs' renderers ────────────────────────────
 
-  /** (Re-)apply the master states + (re-)render the Context tab + (re-)arm its store subscription — the
-   *  Agent System view reads nearly every key (name/model/temperature, the master toggles,
+  /** (Re-)apply the master states + (re-)render both Context tabs + (re-)arm their shared store
+   *  subscription — the Agent System view reads nearly every key (name/model/temperature, the master toggles,
    *  all five entry lists) and writes are commit-time (never per-keystroke), so an unfiltered wholesale
    *  re-render per store write is the honest cheap option. Its OWN teardown slot (the #modelGridUnsub
    *  precedent — it must outlive `#rewireAllSections`' clears); re-armed per store (re)assignment via
@@ -1098,7 +1152,7 @@ export class UIAgentAdminElement extends UIElement {
     }
   }
 
-  /** Rebuild the Agent System view (the Context tab's first group) from the store's CURRENT contents:
+  /** Rebuild the Agent System view (the Context: System tab) from the store's CURRENT contents:
    *  one `Agent` accordion (open by default — the vision frame's expanded JSON preview) carrying the
    *  compiled config + the EXACT live system prompt a turn would send, then one accordion per capability
    *  kind (closed by default — the frame's caret-right rows; Kim's ruling: accordion with nested
@@ -1152,7 +1206,7 @@ export class UIAgentAdminElement extends UIElement {
     host.replaceChildren(...items)
   }
 
-  /** Rebuild the Dialog Turns view (the Context tab's second group) from `#turnLog`, NEWEST FIRST with
+  /** Rebuild the Dialog Turns view (the Context: Dialog tab) from `#turnLog`, NEWEST FIRST with
    *  zero-padded descending numbers (the vision frame's 04→01). The newest turn's fold defaults open;
    *  older folds keep whatever state the user left them in (turn-number keyed capture). */
   #renderContextTurns(): void {
@@ -1196,7 +1250,7 @@ export class UIAgentAdminElement extends UIElement {
    *  reassignment: the visible chat log + any open A2UI surfaces (`ui-conversation.reset()`, the same
    *  method a consumer calls for a user-facing "start over"), the live-request `#history` ring (so a
    *  freshly-selected persona's first turn carries no prior persona's exchanges), and the Dialog Turns
-   *  log (`#turnLog`/`#turnCounter`) the Context panel's `#renderContextTurns` reads — the caller
+   *  log (`#turnLog`/`#turnCounter`) the Context: Dialog tab's `#renderContextTurns` reads — the caller
    *  (the connected() effect) re-renders that view immediately after via `#rewireContext`. */
   #resetConversationState(): void {
     this.#conversation?.reset()

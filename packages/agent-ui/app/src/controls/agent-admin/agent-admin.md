@@ -101,7 +101,7 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: surface-note
     description: The GenUI row's "PRD pending" annotation (title carries the PRD path).
   - name: context-section
-    description: One of the Context tab's two accordion groups (vision rev.5) — `<ui-disclosure data-part="context-section" data-section="agent-system|dialog-turns">`, both open by default.
+    description: One of the two accordion groups behind the Context: System / Context: Dialog tabs (vision rev.5; GH #161 split them into separate tabs, one group per tab) — `<ui-disclosure data-part="context-section" data-section="agent-system|dialog-turns">`, both open by default.
   - name: context-system
     description: The Agent System group's render slot — rebuilt wholesale on ANY store write (the compiled view reads nearly every key; writes are commit-time, never per-keystroke). Carries one context-item per subject.
   - name: context-item
@@ -145,13 +145,17 @@ protocol dependency.
 ```
 
 A two-pane `ui-split` (vision rev.5, Kim's Figma frame 33:1693 — superseding ADR-0131 cl.2's
-three-pane order): `[ chat canvas | {Settings ⇄ Context} tabs ]`. The Settings tab carries the WHOLE
-config column — the Agent header row (heading + ACTIVE master switch) + `ui-settings` + the Model grid
-+ the prompt sections (the old prompts pane, merged in) + the Surface Options card (rev.6 — the
-output-modality contract: Markdown · A2UI + catalog picker · PRD-gated GenUI) + the four capability
-sections (each with its own kind master switch). The Context tab is the read-only introspection
-surface: the compiled Agent System JSON (incl. the `surface` block) and the Dialog Turns payload log. Below 640px the shell collapses to {Chat, Settings,
-Context} tabs (TKT-0085's mechanism, two bands instead of three).
+three-pane order): `[ chat canvas | {Settings ⇄ Context: System ⇄ Context: Dialog} tabs ]`. The Settings
+tab carries the WHOLE config column — the Agent header row (heading + ACTIVE master switch) +
+`ui-settings` + the Model grid + the prompt sections (the old prompts pane, merged in) + the Surface
+Options card (rev.6 — the output-modality contract: Markdown · A2UI + catalog picker · PRD-gated GenUI)
++ the four capability sections (each with its own kind master switch). The Context tabs are the
+read-only introspection surface, split in two (GH #161 — one tab per accordion, superseding the old
+single combined "Context" tab): **Context: System** (the compiled Agent System JSON, incl. the `surface`
+block) and **Context: Dialog** (the Dialog Turns payload log). Below 640px the shell collapses to
+{Chat, Settings, Context: System, Context: Dialog} tabs — a flat FOURTH top-level tab, not a nested
+sub-tab-set (TKT-0085's mechanism, two bands instead of three; every tab is one content unit moved
+whole between its wide tab-panel and its narrow tab-panel, Context included).
 
 ## One primitive, five instantiations (ADR-0132)
 

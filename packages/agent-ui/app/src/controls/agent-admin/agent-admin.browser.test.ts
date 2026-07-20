@@ -82,7 +82,7 @@ describe('ui-agent-admin cross-engine smoke â€” the responsive shell (TKT-0085 â
     expect(getComputedStyle(narrowTabs).display).toBe('none') // component-reviewer CRITICAL-class pin: [hidden] must actually compute none, not just carry the attribute (an author `display` declaration silently beats the UA [hidden] rule without an explicit guard â€” the entry-add-form/combo-box.css precedent this fix follows)
   })
 
-  it('the {Settings, Context} tabs pane renders a real, non-zero tab strip; clicking Context switches the visible panel', async () => {
+  it('GH #161: the {Settings, Context: System, Context: Dialog} tabs pane renders a real, non-zero tab strip; clicking each Context tab switches to its OWN distinct panel', async () => {
     const { el } = mountAgentAdminAt(800)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const canvas = el.querySelector('[data-role="canvas"]') as HTMLElement
@@ -91,25 +91,41 @@ describe('ui-agent-admin cross-engine smoke â€” the responsive shell (TKT-0085 â
     expect(tabsPane.getBoundingClientRect().width).toBeGreaterThan(0)
     expect(canvas.getBoundingClientRect().right).toBeLessThanOrEqual(tabsPane.getBoundingClientRect().left + 1)
     const tabs = [...tabsPane.querySelectorAll('ui-tab')]
-    expect(tabs.map((t) => t.textContent)).toEqual(['Settings', 'Context'])
+    expect(tabs.map((t) => t.textContent)).toEqual(['Settings', 'Context: System', 'Context: Dialog'])
     for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
     // Settings is the default selection â€” the Agent header renders visibly.
     const agentHeading = el.querySelector('[data-part="agent-heading"]') as HTMLElement
     expect(agentHeading.getBoundingClientRect().width).toBeGreaterThan(0)
-    // Clicking the Context tab actually switches the visible panel (a real click, real ui-tabs wiring).
-    const contextTab = tabs.find((t) => t.textContent === 'Context') as HTMLElement
-    contextTab.click()
+
+    // Clicking Context: System switches to a real, visible panel carrying ONLY the Agent System accordion.
+    const systemTab = tabs.find((t) => t.textContent === 'Context: System') as HTMLElement
+    systemTab.click()
     await new Promise((r) => requestAnimationFrame(r))
-    const contextContent = el.querySelector('[data-role="context-content"]') as HTMLElement
-    expect((contextContent.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(false)
-    expect(contextContent.getBoundingClientRect().width).toBeGreaterThan(0)
+    const systemContent = el.querySelector('[data-role="context-system-content"]') as HTMLElement
+    expect((systemContent.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(false)
+    expect(systemContent.getBoundingClientRect().width).toBeGreaterThan(0)
     // The Agent System JSON preview is a real, visible mono block with the compiled config in it.
-    const agentJson = contextContent.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]') as HTMLElement
+    const agentJson = systemContent.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]') as HTMLElement
     expect(agentJson.getBoundingClientRect().height).toBeGreaterThan(0)
     expect(agentJson.textContent).toContain('systemPrompt')
+    // Distinct content: the System panel carries NO Dialog Turns part.
+    expect(systemContent.querySelector('[data-part="context-turns"]')).toBeNull()
+
+    // Clicking Context: Dialog switches to a DIFFERENT, real, visible panel carrying ONLY Dialog Turns.
+    const dialogTab = tabs.find((t) => t.textContent === 'Context: Dialog') as HTMLElement
+    dialogTab.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    const dialogContent = el.querySelector('[data-role="context-dialog-content"]') as HTMLElement
+    expect((dialogContent.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(false)
+    expect(dialogContent.getBoundingClientRect().width).toBeGreaterThan(0)
+    // The System panel (now inactive) is a DIFFERENT tab-panel than the Dialog one, and it's hidden again.
+    expect(systemContent.closest('ui-tab-panel')).not.toBe(dialogContent.closest('ui-tab-panel'))
+    expect((systemContent.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(true)
+    // Distinct content: the Dialog panel carries NO Agent System items.
+    expect(dialogContent.querySelector('[data-part="context-item"]')).toBeNull()
   })
 
-  it('narrow (<640px): {Chat, Settings, Context} tabs fill the shell; the split computes display:none', async () => {
+  it('narrow (<640px): {Chat, Settings, Context: System, Context: Dialog} tabs fill the shell; the split computes display:none (GH #161: a flat 4th tab, not a nested sub-tab-set)', async () => {
     const { el } = mountAgentAdminAt(500)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const split = el.querySelector(':scope > ui-split') as HTMLElement
@@ -117,11 +133,29 @@ describe('ui-agent-admin cross-engine smoke â€” the responsive shell (TKT-0085 â
     expect(getComputedStyle(split).display).toBe('none') // the SAME [hidden]-specificity pin, the other direction
     expect(getComputedStyle(narrowTabs).display).not.toBe('none')
     const tabs = [...narrowTabs.querySelectorAll('ui-tab')]
-    expect(tabs.map((t) => t.textContent)).toEqual(['Chat', 'Settings', 'Context'])
+    expect(tabs.map((t) => t.textContent)).toEqual(['Chat', 'Settings', 'Context: System', 'Context: Dialog'])
     for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
     // The composer is reachable and has real, non-zero geometry inside the Chat tab (the default selection).
     const composer = narrowTabs.querySelector('ui-conversation-composer') as HTMLElement
     expect(composer.getBoundingClientRect().height).toBeGreaterThan(0)
+
+    // Clicking Context: System, then Context: Dialog, lands on two DIFFERENT, real, distinctly-contented panels.
+    const systemTab = tabs.find((t) => t.textContent === 'Context: System') as HTMLElement
+    systemTab.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    const systemContent = narrowTabs.querySelector('[data-role="context-system-content"]') as HTMLElement
+    expect((systemContent.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(false)
+    expect(systemContent.getBoundingClientRect().width).toBeGreaterThan(0)
+    expect(systemContent.querySelector('[data-part="context-turns"]')).toBeNull()
+
+    const dialogTab = tabs.find((t) => t.textContent === 'Context: Dialog') as HTMLElement
+    dialogTab.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    const dialogContent = narrowTabs.querySelector('[data-role="context-dialog-content"]') as HTMLElement
+    expect((dialogContent.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(false)
+    expect(dialogContent.getBoundingClientRect().width).toBeGreaterThan(0)
+    expect(systemContent.closest('ui-tab-panel')).not.toBe(dialogContent.closest('ui-tab-panel'))
+    expect(dialogContent.querySelector('[data-part="context-item"]')).toBeNull()
   })
 
   /** Opens a real A2UI surface (a Hit button) in the mounted conversation, returns it + the conversation. */
