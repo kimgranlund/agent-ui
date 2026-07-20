@@ -1114,6 +1114,48 @@ describe('UIAgentAdminElement — entry libraries (GH #47/#48)', () => {
   })
 })
 
+describe('UIAgentAdminElement — libraries is reactive post-connect (GH #143 — per-preset library scoping)', () => {
+  const PACK_A = { skill: [{ id: 'pack-a', label: 'Pack A', description: 'fixture', entries: [{ label: 'a-idiom', description: 'a', content: 'Use A.' }] }] }
+  const PACK_B = { skill: [{ id: 'pack-b', label: 'Pack B', description: 'fixture', entries: [{ label: 'b-idiom', description: 'b', content: 'Use B.' }] }] }
+
+  it('a new object reference rebuilds the menu — old pack rows gone, new pack rows present; entries/store untouched', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore()
+    el.libraries = PACK_A
+    mount(el)
+    await el.updateComplete
+    const section = el.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
+    expect(section.querySelectorAll('[data-value^="pack-a:"]')).toHaveLength(1)
+    expect(section.querySelectorAll('[data-value^="pack-b:"]')).toHaveLength(0)
+
+    el.libraries = PACK_B // a FRESH object — the identity-change law this reactivity relies on
+    await el.updateComplete
+
+    expect(section.querySelectorAll('[data-value^="pack-a:"]'), 'the stale pack is gone').toHaveLength(0)
+    expect(section.querySelectorAll('[data-value^="pack-b:"]'), 'the new pack rendered').toHaveLength(1)
+    // the section shell + any already-added entries are untouched — only the library MENU rebuilt.
+    expect(el.querySelector('[data-part="entry-section"][data-kind="skill"]')).toBe(section)
+  })
+
+  it('reassigning to empty removes the affordance entirely; reassigning back re-adds it', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore()
+    el.libraries = PACK_A
+    mount(el)
+    await el.updateComplete
+    const section = el.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
+    expect(section.querySelector('[data-part="entry-library-menu"]')).not.toBeNull()
+
+    el.libraries = { skill: [] }
+    await el.updateComplete
+    expect(section.querySelector('[data-part="entry-library-menu"]'), 'empty ⇒ affordance removed').toBeNull()
+
+    el.libraries = PACK_A
+    await el.updateComplete
+    expect(section.querySelector('[data-part="entry-library-menu"]'), 're-populated ⇒ affordance returns').not.toBeNull()
+  })
+})
+
 describe('UIAgentAdminElement — a REJECTED library entry surfaces the same error note as the hand path (PR #58 review)', () => {
   it('an empty-label pack entry shows showAddError feedback instead of failing silently', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement

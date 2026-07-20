@@ -239,6 +239,58 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
   })
 })
 
+// ── GH #143 — per-preset library scoping ──────────────────────────────────────────────────────────────
+
+describe('librariesForCategory — GH #143 per-preset library scoping', () => {
+  it('a hospitality preset sees the Hospitality packs, never Games, plus every generic pack', async () => {
+    const { librariesForCategory } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const scoped = librariesForCategory('hospitality')
+    expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id).sort()).toEqual(['a2ui-idioms', 'hospitality'])
+    expect(scoped[ENTRY_KINDS.workflow]!.map((p) => p.id).sort()).toEqual(['playbooks-core', 'playbooks-hospitality'])
+    expect(scoped[ENTRY_KINDS.tool]!.map((p) => p.id)).toEqual(['integrations'])
+  })
+
+  it('a games preset sees the Games packs, never Hospitality, plus every generic pack', async () => {
+    const { librariesForCategory } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const scoped = librariesForCategory('games')
+    expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id).sort()).toEqual(['a2ui-idioms', 'games'])
+    expect(scoped[ENTRY_KINDS.workflow]!.map((p) => p.id).sort()).toEqual(['playbooks-core', 'playbooks-games'])
+    expect(scoped[ENTRY_KINDS.tool]!.map((p) => p.id)).toEqual(['integrations'])
+  })
+
+  it('no category (undefined) drops BOTH flavored pairs — generic packs only', async () => {
+    const { librariesForCategory } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const scoped = librariesForCategory(undefined)
+    expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id)).toEqual(['a2ui-idioms'])
+    expect(scoped[ENTRY_KINDS.workflow]!.map((p) => p.id)).toEqual(['playbooks-core'])
+    expect(scoped[ENTRY_KINDS.tool]!.map((p) => p.id)).toEqual(['integrations'])
+  })
+
+  it('returns a FRESH object every call — never the same reference (the libraries prop identity-change law)', async () => {
+    const { librariesForCategory } = await import('./agent-admin-libraries.ts')
+    expect(librariesForCategory('hospitality')).not.toBe(librariesForCategory('hospitality'))
+  })
+
+  it('every preset carries the category its own roster placement implies (hospitality trio, games roster + Croupier/Quizmaster, the rest generic-only)', () => {
+    const HOSPITALITY_IDS = ['concierge', 'restaurant', 'travel']
+    const GAMES_IDS = ['croupier', 'quizmaster', 'mentalist', 'negotiator', 'lexicographer', 'admiral', 'alchemist', 'dungeon-master']
+    const GENERIC_ONLY_IDS = ['quant', 'curator', 'stylist']
+    expect(HOSPITALITY_IDS.length + GAMES_IDS.length + GENERIC_ONLY_IDS.length).toBe(AGENT_PRESETS.length)
+    for (const id of HOSPITALITY_IDS) {
+      expect(AGENT_PRESETS.find((p) => p.id === id)?.category, id).toBe('hospitality')
+    }
+    for (const id of GAMES_IDS) {
+      expect(AGENT_PRESETS.find((p) => p.id === id)?.category, id).toBe('games')
+    }
+    for (const id of GENERIC_ONLY_IDS) {
+      expect(AGENT_PRESETS.find((p) => p.id === id)?.category, id).toBeUndefined()
+    }
+  })
+})
+
 // ── the games-roster wave — seed integrity (the rev-d1 silently-empty-pick hazard, pinned) ──────────────
 
 describe('the games roster — every game persona seeds real capabilities from the packs', () => {

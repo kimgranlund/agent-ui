@@ -27,13 +27,20 @@ import type { Entry, NewEntryInput } from '@agent-ui/app'
 // GH #46 — the hospitality/travel trio seeds from the SAME pack texts the add-from-library menu offers
 // (agent-admin-libraries.ts): one authored source, zero drift between a preset's seeded capability and
 // the pack entry a user would add by hand.
-import { HOSPITALITY_SKILLS, HOSPITALITY_PLAYBOOKS, INTEGRATION_TOOLS, GAMES_SKILLS, GAMES_PLAYBOOKS, CORE_PLAYBOOKS } from './agent-admin-libraries.ts'
+import { HOSPITALITY_SKILLS, HOSPITALITY_PLAYBOOKS, INTEGRATION_TOOLS, GAMES_SKILLS, GAMES_PLAYBOOKS, CORE_PLAYBOOKS, type PresetCategory } from './agent-admin-libraries.ts'
 
 export interface AgentPreset {
   id: string
   label: string
   /** One line for the picker strip's title attribute — what this persona SHOWCASES. */
   tagline: string
+  /** GH #143 — the persona's library-pack scope: which FLAVORED (Hospitality/Games) library packs its
+   *  own "add from library" menu offers, on top of the generic packs every preset always sees
+   *  (`agent-admin-libraries.ts`'s `librariesForCategory`). Absent ⇒ neither flavor — a preset with no
+   *  persona-flavored home (The Quant/The Curator/The Stylist: dashboards, browsable collections, design
+   *  tokens — none of them a hotel or a game) sees generic packs only, never a stray Hospitality/Games
+   *  one. This is a SURFACING scope only — packs stay shared/reusable on the data side regardless. */
+  category?: PresetCategory
   config: { name: string; model: string; temperature: number; toolsEnabled: boolean }
   /** The persona's Foundation rewrite (the builtin keeps its id/label; only content changes). */
   foundation: string
@@ -71,6 +78,7 @@ function seedFrom(entries: readonly NewEntryInput[], pick?: readonly string[]): 
 export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
+    category: 'games', // GH #143 — a blackjack table, thematically a game even though it predates the games-roster wave
     label: 'The Croupier',
     tagline: 'Card game on ONE live surface — actions + updateDataModel in place (ADR-0129 routing)',
     config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
@@ -122,7 +130,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     ],
   },
   {
-    id: 'quant',
+    id: 'quant', // GH #143 — no `category`: a metrics dashboard is neither hospitality nor a game; generic packs only
     label: 'The Quant',
     tagline: 'Report family — Stat/BarChart/Sparkline/Table dashboards off one bound data model',
     config: { name: 'The Quant', model: 'claude-sonnet-5', temperature: 0.1, toolsEnabled: true }, // rev.4: opus retired from the roster
@@ -161,6 +169,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   },
   {
     id: 'concierge', // GH #46 — upgraded IN PLACE to the Hotel Concierge (same id: persisted stores key on it)
+    category: 'hospitality', // GH #143
     seedVersion: 2, // the in-place rewrite — migrates any pre-upgrade persisted store (PR #60 review)
     label: 'The Hotel Concierge',
     tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
@@ -186,6 +195,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   },
   {
     id: 'restaurant', // GH #46 — NEW
+    category: 'hospitality', // GH #143
     label: 'The Maître d’',
     tagline: 'Table booking + menus + wine lists — the reservation conversation as forms and menu cards (GH #46)',
     config: { name: 'The Maître d’', model: 'claude-sonnet-5', temperature: 0.5, toolsEnabled: false },
@@ -207,6 +217,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   },
   {
     id: 'travel', // GH #46 — NEW
+    category: 'hospitality', // GH #143
     label: 'The Travel Agent',
     tagline: 'Multi-leg trip planning — comparison cards, an accumulating itinerary, live weather/FX (GH #46/#49)',
     config: { name: 'The Travel Agent', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true },
@@ -227,7 +238,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     tools: seedFrom(INTEGRATION_TOOLS, ['weather', 'currency']),
   },
   {
-    id: 'curator',
+    id: 'curator', // GH #143 — no `category`: seeds its own hand-authored idioms (never the Hospitality pack), generic packs only
     label: 'The Curator',
     tagline: 'Feed family + Swiper/Tabs — ChildList depth, cards nested in a scroll-snap carousel',
     config: { name: 'The Curator', model: 'claude-sonnet-5', temperature: 0.8, toolsEnabled: false },
@@ -266,7 +277,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     disabledBuiltins: ['critical-items'],
   },
   {
-    id: 'stylist',
+    id: 'stylist', // GH #143 — no `category`: a design-token consultant is neither hospitality nor a game; generic packs only
     label: 'The Stylist',
     tagline: 'Token surfaces — Swatch/Ramp/Ladder render REAL color ramps (ADR-0118, fleet-unique)',
     config: { name: 'The Stylist', model: 'claude-sonnet-5', temperature: 0.5, toolsEnabled: false }, // rev.4
@@ -298,6 +309,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   },
   {
     id: 'quizmaster',
+    category: 'games', // GH #143 — trivia is a game genre even though it predates the games-roster wave
     label: 'The Quizmaster',
     tagline: 'Modal open/close lifecycle + progressive multi-turn state on one long-lived surface',
     config: { name: 'The Quizmaster', model: 'claude-haiku-4-5-20251001', temperature: 0.9, toolsEnabled: false },
@@ -333,6 +345,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   // (one source with the library menu, the GH #46 law). ──────────────────────────────────────────────────
   {
     id: 'mentalist',
+    category: 'games', // GH #143
     label: 'The Mentalist',
     tagline: 'Twenty Questions — the purest chat×surface mix: prose interrogation + a live HUD (Timeline · SegmentedControl · Modal)',
     config: { name: 'The Mentalist', model: 'claude-sonnet-5', temperature: 0.7, toolsEnabled: false },
@@ -352,6 +365,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   },
   {
     id: 'negotiator',
+    category: 'games', // GH #143
     label: 'The Negotiator',
     tagline: 'Market-stall haggling — two-way Slider offers, mood Stat deltas, a price-history Sparkline (the economy family as a game)',
     config: { name: 'The Negotiator', model: 'claude-sonnet-5', temperature: 0.8, toolsEnabled: false }, // rev.4
@@ -371,6 +385,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   },
   {
     id: 'lexicographer',
+    category: 'games', // GH #143
     label: 'The Lexicographer',
     tagline: 'Wordle-style word forge — Badge tile grids via list templates + a regex-checked TextField (the checks machinery as a game)',
     config: { name: 'The Lexicographer', model: 'claude-sonnet-5', temperature: 0.2, toolsEnabled: false },
@@ -390,6 +405,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   },
   {
     id: 'admiral',
+    category: 'games', // GH #143
     label: 'The Admiral',
     tagline: 'Battleship — 6×6 cell-Button Grids whose action.context carries coordinates (the context-payload pattern’s first showcase)',
     config: { name: 'The Admiral', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: false },
@@ -410,6 +426,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   },
   {
     id: 'alchemist',
+    category: 'games', // GH #143
     label: 'The Alchemist',
     tagline: 'Color Duel — Swatch targets, an oklch ColorPicker, Ramp reveals (the fleet-unique ADR-0118 token surfaces as game pieces)',
     config: { name: 'The Alchemist', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: false },
@@ -429,6 +446,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   },
   {
     id: 'dungeon-master',
+    category: 'games', // GH #143
     label: 'The Dungeon Master',
     tagline: 'A pocket dungeon crawl — Timeline quest log + HP/Gold Stats + inventory List (the longest multi-turn state horizon)',
     config: { name: 'The Dungeon Master', model: 'claude-sonnet-5', temperature: 0.9, toolsEnabled: false }, // rev.4
