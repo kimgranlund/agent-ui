@@ -916,3 +916,70 @@ describe('ui-code-editor — paste-to-link (both engines)', () => {
       .toBe('[click here](https://example.com/%29[evil]%28javascript:alert%281%29%29)')
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #164 — the mode-toggle is a zero-footprint STICKY OVERLAY on the top inline-end corner, not a
+//  float. Measured ground truth (both engines, 2026-07-20): `float: inline-end` + `position: sticky`
+//  DO coexist (H1 false — dropping sticky changed nothing), but CodeMirror's `.cm-editor` is a flex
+//  container and `.cm-scroller` an `overflow: auto` box — independent formatting-context roots a float
+//  can never intrude into (H2 true) — so the float could never make text wrap around the toggle; it
+//  instead narrowed the ENTIRE `.cm-editor` column by the toggle's width for the full document height
+//  (273px vs the mount's 297px at a 320px host). Wrap-around is structurally unachievable while CM owns
+//  the text layout; the shipped contract is the corner overlay the float (+ sticky) always intended.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-code-editor — the mode-toggle is a zero-footprint corner overlay (GH #164, both engines)', () => {
+  it('overlays the top inline-end corner reserving NO column and NO row, hit-testable above the CM surface', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    field.value = Array.from({ length: 12 }, (_, i) => `line ${i} with prose that runs fairly wide`).join('\n')
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
+    await expect.poll(() => field.querySelector('.cm-line') !== null, { timeout: 5000 }).toBe(true)
+    const toggle = field.querySelector('[data-part="mode-toggle"]') as HTMLElement
+    const cm = cmOf(field) as HTMLElement
+    const cmEditor = field.querySelector('.cm-editor') as HTMLElement
+
+    // the float is GONE (it never delivered wrap-around — see the banner above); sticky is the contract.
+    expect(getComputedStyle(toggle).float, 'float is dead here — it can never wrap CM-owned text').toBe('none')
+    expect(getComputedStyle(toggle).position).toBe('sticky')
+
+    const t = toggle.getBoundingClientRect()
+    const c = cm.getBoundingClientRect()
+    const e = cmEditor.getBoundingClientRect()
+    const host = field.getBoundingClientRect()
+    const cs = getComputedStyle(field)
+
+    // pinned to the top inline-end corner of the host's content box (LTR: the right padding edge)…
+    const contentRight = host.right - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingRight)
+    expect(Math.abs(t.right - contentRight), 'the toggle must hug the inline-end edge').toBeLessThan(2)
+    // …reserving NO row: the CM mount starts at the same block-start, not below the toggle.
+    expect(Math.abs(t.top - c.top), 'the toggle must not push the editor content down').toBeLessThan(2)
+    // …and NO column: the .cm-editor spans its mount's FULL inline size. The old float narrowed the whole
+    // .cm-editor beside it for the entire document height (measured 273 vs 297 at a 320px host) — the exact
+    // pre-fix defect this leg is the negative control for.
+    expect(e.width, 'the editor column must reclaim the full mount width — no dead toggle gutter').toBeGreaterThan(c.width - 2)
+
+    // the overlay paints + hit-tests ABOVE the CM surface (z-index: 1 over .cm-scroller's z-index: 0 —
+    // the scroller is a LATER positioned sibling subtree in tree order, so without the z-index it would
+    // paint over the toggle now that they genuinely overlap).
+    const hit = document.elementFromPoint(t.left + t.width / 2, t.top + t.height / 2)
+    expect(hit, 'the toggle must stay clickable above the CM surface').toBe(toggle)
+  })
+
+  it('stays stuck to the scrollport top while the host scrolls (the sticky leg of the contract)', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" style="inline-size: 320px; block-size: 160px; display: block"></ui-code-editor>`)
+    field.value = Array.from({ length: 40 }, (_, i) => `scroll line ${i}`).join('\n')
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
+    await expect.poll(() => field.querySelector('.cm-line') !== null, { timeout: 5000 }).toBe(true)
+    const toggle = field.querySelector('[data-part="mode-toggle"]') as HTMLElement
+
+    field.scrollTop = 100
+    await new Promise((r) => requestAnimationFrame(() => r(null)))
+    expect(field.scrollTop, 'the host itself is the scroller — it must actually have scrolled').toBeGreaterThan(50)
+    const t = toggle.getBoundingClientRect()
+    const host = field.getBoundingClientRect()
+    // stuck at the scrollport's block-start (inset-block-start: 0 — at/inside the border edge), NOT
+    // scrolled away with the content (100px up would put it far above the host's top edge).
+    expect(t.top - host.top).toBeGreaterThanOrEqual(0)
+    expect(t.top - host.top, 'the toggle must stick to the scrollport top, not ride the content away').toBeLessThan(10)
+  })
+})
