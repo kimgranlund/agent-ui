@@ -4,10 +4,14 @@
 > Refines: ADR-0151 — `adr/0151-named-shell-archetypes-m5.md`, in-flight on PR #45 (ratified in
 > substance 2026-07-18; the merge click is Kim's — the relative link lands when the ADR file does) ·
 > the agent-app-surfaces PRD's M5 (PRD-G9).
-> Composes on: [ADR-0082](../adr/0082-app-shell-per-instance-isolation.md) /
+> Follows the established PATTERNS of: [ADR-0082](../adr/0082-app-shell-per-instance-isolation.md) /
 > [ADR-0083](../adr/0083-app-shell-region-role-decouple.md) /
 > [ADR-0084](../adr/0084-app-shell-narrow-reflow-collapse.md) (the frame contract) ·
-> [ADR-0130](../adr/0130-nav-rail-family-unification.md) (the global-nav ring's family).
+> [ADR-0130](../adr/0130-nav-rail-family-unification.md) (the global-nav ring's family) — corrected
+> 2026-07-20 (LLD-C2, `shell-archetypes-m5.lld.md`): `ui-super-shell` is an INDEPENDENT
+> implementation that mirrors these ADRs' landmark-map + container-collapse PATTERNS, not code that
+> imports or composes their actual components — the review-plan LLD's §7 open fork covers whether
+> real code reuse should replace this independence later; it is not decided here.
 > Grounding (normative): Kim's Figma frames (Claude Code Gateway) — wireframe `34-1486` +
 > all-collapsed extreme `34-1506`, both recorded on GH #44 (2026-07-19). Work items: GH #82 (this
 > SPEC) · #83 (build) · #84 (site adoption) · #85 (chat/workspace extraction).

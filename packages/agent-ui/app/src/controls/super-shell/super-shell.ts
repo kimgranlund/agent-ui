@@ -18,6 +18,13 @@
 // side overlays the canvas (super-shell.css) rather than squeezing it — and the auto state never
 // writes the props, so the consumer's persisted wide-state choice survives (R4's no-clobber law).
 //
+// Landmarks (LLD-C1, GH #94): every wrapper part gets a real ARIA `role` at compose time, from a
+// slot→role map (header→banner, footer→contentinfo, content→main, the nav slots→navigation, the
+// options slots→complementary) mirroring ui-app-shell-region's own map (ADR-0083) for cross-family
+// vocabulary consistency — an independent implementation, not shared code (see the SPEC header's
+// corrected "follows the pattern of" line). An authored child's `data-landmark="…"` overrides its
+// slot's default, the same role-decoupled-from-placement idea ADR-0083 established.
+//
 // `controls → @agent-ui/components` + siblings only — never router/a2a (layering.test.ts).
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
@@ -26,6 +33,33 @@ import '@agent-ui/components/controls/icon'
 
 const SLOTS = ['header', 'global-nav', 'nav-pane', 'content', 'options-pane', 'global-options', 'footer'] as const
 type SlotName = (typeof SLOTS)[number]
+
+// LLD-C1 (GH #94) — every slot's default ARIA landmark, keyed by slot name. Set as a real `role="…"`
+// attribute directly on the plain <div> wrapper part at compose time (these wrappers are NOT custom
+// elements — no ElementInternals handle exists on them — so this is the honest mechanism, unlike
+// ui-app-shell-region's `internals.role`, which only a host custom element can use).
+const SLOT_ROLE: Record<SlotName, string> = {
+  header: 'banner',
+  footer: 'contentinfo',
+  content: 'main',
+  'global-nav': 'navigation',
+  'nav-pane': 'navigation',
+  'global-options': 'complementary',
+  'options-pane': 'complementary',
+}
+
+// The override vocabulary — reused verbatim from ui-app-shell-region's own LANDMARK_VALUES (ADR-0083)
+// for cross-family consistency, minus its own '' empty-string sentinel (here, ABSENCE of the
+// data-landmark attribute is the sentinel, so '' never needs to be a legal member).
+const LANDMARK_VALUES = new Set(['banner', 'navigation', 'main', 'complementary', 'contentinfo', 'region', 'form', 'search'])
+
+/** The role a slot's wrapper part gets: the FIRST authored child's `data-landmark` override (ADR-0083's
+ *  role-decoupled-from-placement precedent, data-attribute-driven since super-shell's placement is
+ *  itself data-attribute-driven) if present and a real landmark value, else the slot's own default. */
+function roleFor(slot: SlotName, children: readonly Element[]): string {
+  const override = children[0]?.getAttribute('data-landmark')
+  return override !== null && override !== undefined && LANDMARK_VALUES.has(override) ? override : SLOT_ROLE[slot]
+}
 
 const props = {
   // SPEC-R2d — the two side states, reflected so CSS keys off the host and a consumer can persist.
@@ -83,6 +117,7 @@ export class UISuperShellElement extends UIElement {
       const header = document.createElement('div')
       header.setAttribute('data-part', 'bar')
       header.setAttribute('data-bar', 'header')
+      header.setAttribute('role', roleFor('header', headerChildren)) // LLD-C1
       const barContent = document.createElement('div')
       barContent.setAttribute('data-part', 'bar-content')
       barContent.append(...headerChildren)
@@ -99,6 +134,7 @@ export class UISuperShellElement extends UIElement {
       const box = document.createElement('div')
       box.setAttribute('data-part', part)
       box.setAttribute('data-slot-name', slot)
+      box.setAttribute('role', roleFor(slot, children)) // LLD-C1
       if (side) box.setAttribute('data-side', side)
       box.append(...children)
       middle.append(box)
@@ -117,6 +153,7 @@ export class UISuperShellElement extends UIElement {
       const footer = document.createElement('div')
       footer.setAttribute('data-part', 'bar')
       footer.setAttribute('data-bar', 'footer')
+      footer.setAttribute('role', roleFor('footer', footerChildren)) // LLD-C1
       const barContent = document.createElement('div')
       barContent.setAttribute('data-part', 'bar-content')
       barContent.append(...footerChildren)
