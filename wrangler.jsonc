@@ -13,6 +13,13 @@
 	"name": "agent-ui-docs",
 	"compatibility_date": "2026-07-19",
 	"compatibility_flags": ["nodejs_compat"],
+	// GH #102 (review finding): omitting this defaults to `true`, which put the Custom Domain's zone-scoped
+	// rate-limit rule on ui.nonoun.io behind a second, completely unthrottled front door at
+	// agent-ui-docs.<account>.workers.dev — verified live (25/25 requests succeeded there with no limit).
+	// Independent of Custom Domains (a separate routing mechanism); disabling this does not affect
+	// ui.nonoun.io. Also disables Preview URLs as a side effect on Wrangler 4.44+ (another surface this
+	// closes).
+	"workers_dev": false,
 	"main": "packages/agent-ui/a2ui/tools/agent/worker/index.ts",
 	"assets": {
 		"directory": "./dist",

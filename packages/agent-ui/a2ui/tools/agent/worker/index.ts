@@ -36,6 +36,23 @@ interface Env {
 const MOUNT = '/__a2ui/agent'
 const MAX_BODY = 1 << 20 // 1 MiB — matches dev-proxy-plugin.ts's cap
 
+// GH #101 (review finding): dev-proxy-plugin.ts never needed a CSRF guard — it's a Vite dev middleware,
+// reachable only from localhost. Ported unmodified to the public internet, the POST routes had none: a
+// state-changing request with `content-type: text/plain` (a CORS-safelisted type) skips the browser's
+// preflight entirely, so ANY page a visitor merely loads could silently trigger a real, billed LLM call
+// under this Worker's key. `Origin`/`Referer` are both browser-controlled — unspoofable by page JS, unlike
+// a body field — so checking either against the one legitimate origin blocks every drive-by/cross-site
+// trigger while leaving the site's own same-origin fetches (which always send one or the other) untouched.
+const ALLOWED_ORIGIN = 'https://ui.nonoun.io'
+
+function isSameOriginRequest(request: Request): boolean {
+  const origin = request.headers.get('origin')
+  if (origin !== null) return origin === ALLOWED_ORIGIN
+  const referer = request.headers.get('referer')
+  if (referer !== null) return referer === ALLOWED_ORIGIN || referer.startsWith(`${ALLOWED_ORIGIN}/`)
+  return false // a browser fetch() always sends at least one — neither present means it isn't one
+}
+
 const config = providersConfigRaw as ProvidersConfig
 validateProvidersConfig(config) // fail fast at cold start, same as loadConfig()'s boot check in dev
 
@@ -179,6 +196,8 @@ export default {
     const sub = url.pathname.slice(MOUNT.length) || '/'
     try {
       if (request.method === 'GET' && sub.startsWith('/status')) return await handleStatus(env)
+      // Both POST routes dispatch a real, billed LLM call — gate BEFORE any body is read (GH #101).
+      if (request.method === 'POST' && !isSameOriginRequest(request)) return json(403, { error: 'forbidden-origin' })
       if (request.method === 'POST' && sub.startsWith('/chat')) return await handleChat(request, env)
       if (request.method === 'POST') return await handleProduce(request, env)
       return new Response(null, { status: 404 })
