@@ -107,12 +107,16 @@ ui-super-shell.ss-demo--inner {
   align-items: center;
   gap: 0.5rem;
 }
-.ss-demo [data-slot='header'] { background: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-neutral-surface)); }
-.ss-demo [data-slot='footer'] { background: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-neutral-surface)); }
+/* GH #124 (ADR-0008 — no color-mix, colour opinions live in the token layer): the three-step wash
+   ladder maps onto the token layer's own pre-computed container roles instead of a hand-mixed
+   ratio — -low for the lightest tint, the base role for the middle step, -high for the strongest
+   (the same idiom master-detail.css/a2ui-live.css/a2a-artifact-feed.css already use). */
+.ss-demo [data-slot='header'] { background: var(--md-sys-color-primary-container); }
+.ss-demo [data-slot='footer'] { background: var(--md-sys-color-primary-container); }
 .ss-demo [data-slot='global-nav'],
-.ss-demo [data-slot='global-options'] { background: color-mix(in srgb, var(--md-sys-color-secondary, var(--md-sys-color-primary)) 16%, var(--md-sys-color-neutral-surface)); text-align: center; }
+.ss-demo [data-slot='global-options'] { background: var(--md-sys-color-secondary-container-high); text-align: center; }
 .ss-demo [data-slot='nav-pane'],
-.ss-demo [data-slot='options-pane'] { background: color-mix(in srgb, var(--md-sys-color-primary) 8%, var(--md-sys-color-neutral-surface)); }
+.ss-demo [data-slot='options-pane'] { background: var(--md-sys-color-primary-container-low); }
 .ss-demo [data-slot='content'] { background: var(--md-sys-color-neutral-surface); }
 
 .ss-resize {
