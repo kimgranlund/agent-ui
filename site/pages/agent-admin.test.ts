@@ -1,10 +1,12 @@
-// agent-admin.test.ts (site) — ALM-C9 / TKT-0052 (ADR-0136). Two standing gates on the DEV-only live
-// overlay, both DETERMINISTIC (no live key in CI):
+// agent-admin.test.ts (site) — ALM-C9 / TKT-0052 (ADR-0136). Two standing gates on the live overlay, both
+// DETERMINISTIC (no live key in CI):
 //
-//  1. The tree-shake SOURCE gate — the a2ui-chat.test.ts:218 gate mirrored verbatim: the construction that
-//     causes Rolldown-Vite to tree-shake the overlay out of `vite build` (a dev-only DYNAMIC import behind
-//     an `import.meta.env.DEV` guard, never a static module-scope import) is genuinely present in the page
-//     source, so the static build's "no live-call code" guarantee (ADR-0131 cl.4/7) is proven, not trusted.
+//  1. The dynamic-import SOURCE gate — the a2ui-chat.test.ts sibling gate mirrored: `admin-live-runner.ts`/
+//     `live-proxy-transport.ts` stay code-split (never a static module-scope import), so the main chunk
+//     never bundles the live-call machinery whether or not it ends up used. SPEC-N2/ADR-0131 cl.4/7
+//     superseded: production now runs a Cloudflare Worker port of the dev proxy (worker/index.ts,
+//     `/__a2ui/agent`), so the overlay is no longer DEV-gated — it always attempts the probe and degrades
+//     to the stub whenever `GET /status` reports no live provider available, in every environment.
 //  2. The model-registry LOCKSTEP trip-wire — every `SUPPORTED_MODELS` id the admin UI offers must resolve
 //     against the REAL providers.json via `providerForModel`. A silent drift here (a model in the picker
 //     that no implemented provider owns) would be a live-only 400 no jsdom behavior test could ever see —
@@ -22,7 +24,7 @@ declare const process: { cwd(): string }
 const ROOT = process.cwd()
 const DEV_GUARD = ['import', 'meta', 'env', 'DEV'].join('.') // the guard token, assembled so no tooling reads it as a dotenv reference
 
-describe('site/pages/agent-admin.ts — the live overlay is genuinely DEV-guarded + dynamically imported (SPEC-N2)', () => {
+describe('site/pages/agent-admin.ts — the live overlay stays dynamically imported and probes unconditionally', () => {
   const source = readFileSync(`${ROOT}/site/pages/agent-admin.ts`, 'utf8') as string
 
   it('never statically imports admin-live-runner.ts or live-proxy-transport.ts at module scope', () => {
@@ -33,15 +35,16 @@ describe('site/pages/agent-admin.ts — the live overlay is genuinely DEV-guarde
     }
   })
 
-  it(`wireLiveOverlay checks the DEV guard BEFORE it reaches the dynamic import`, () => {
+  it('wireLiveOverlay attempts the live probe unconditionally (no import.meta.env.DEV gate before it)', () => {
     const fnStart = source.indexOf('function wireLiveOverlay')
     expect(fnStart, 'wireLiveOverlay() was not found').toBeGreaterThan(-1)
     const fnBody = source.slice(fnStart)
-    const devGuardIdx = fnBody.indexOf(DEV_GUARD)
     const dynImportIdx = fnBody.indexOf("import('../lib/admin-live-runner.ts')")
-    expect(devGuardIdx, 'the DEV guard was not found in wireLiveOverlay').toBeGreaterThan(-1)
     expect(dynImportIdx, 'the dynamic import was not found in wireLiveOverlay').toBeGreaterThan(-1)
-    expect(devGuardIdx, 'the DEV guard must be checked BEFORE the dynamic import is ever reached').toBeLessThan(dynImportIdx)
+    // DEV is still read for WORDING (dev vs prod fallback copy) on the no-live-key branch, but only
+    // AFTER the probe's dynamic import — never gating whether the probe is attempted at all.
+    const devGuardIdx = fnBody.indexOf(DEV_GUARD)
+    expect(devGuardIdx, 'the DEV guard must only appear after the dynamic import, never before it').toBeGreaterThan(dynImportIdx)
   })
 })
 

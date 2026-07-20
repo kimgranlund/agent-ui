@@ -105,7 +105,7 @@ shell.append(resetBar)
 let transport: AgentTransport = createRecordedTransport(recordedTranscript)
 
 /** Test-only injection seam (the `a2ui-live.ts` `__setTransportForTest` precedent) — otherwise reassigned
- *  ONLY by `wireLiveOverlay()`'s real, dev-only live-key probe. Never called by any production path. */
+ *  ONLY by `wireLiveOverlay()`'s real live-key probe. Never called by any other page-code path. */
 export function __setTransportForTest(next: AgentTransport): void {
   transport = next
 }
@@ -180,15 +180,14 @@ resetBtn.addEventListener('click', () => {
   session = { turns: [] }
   transport = createRecordedTransport(recordedTranscript)
   status('New conversation. Send a prompt to begin.')
-  wireLiveOverlay() // re-probe (dev only)
+  wireLiveOverlay() // re-probe
 })
 
-// ════════════════ the dev-only LIVE overlay (SPEC-R8/N2: dynamic + DEV-guarded ⇒ tree-shaken from build) ════
+// ════════════════ the LIVE overlay — probed dynamically in both dev and prod (SPEC-R8/N2 superseded: prod
+// now carries a Cloudflare Worker port of the dev proxy under `/__a2ui/agent`, worker/index.ts — see
+// a2ui-live.ts's header for the full rationale, identical here). A prompt still degrades cleanly to the
+// recorded transcript whenever `/status` reports no live provider available. ════════════════════════════
 function wireLiveOverlay(): void {
-  if (!import.meta.env.DEV) {
-    status('Recorded transcript demo. Send a prompt to render turn 1, then interact with the surface to continue.')
-    return
-  }
   void (async () => {
     try {
       const overlay = await import('../lib/live-proxy-transport.ts')
@@ -198,8 +197,10 @@ function wireLiveOverlay(): void {
         const selection = mountSwitcher(switcherSlot)
         transport = overlay.createLiveProxyTransport(selection)
         status(`Live agent connected (${probe.providers} provider(s) available). Prompt it to generate a real A2UI surface.`)
-      } else {
+      } else if (import.meta.env.DEV) {
         status('Recorded transcript (no live API key found). Set a provider key in .env and restart `npm run dev` for a live agent.')
+      } else {
+        status('Recorded transcript demo. Send a prompt to render turn 1, then interact with the surface to continue.')
       }
     } catch {
       status('Recorded transcript demo (live overlay unavailable).')
