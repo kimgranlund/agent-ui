@@ -186,7 +186,8 @@ non-essential enhancement: the source is legible as plain ink with or without it
 `mode="richtext"` turns on an Obsidian-style **live preview**: CodeMirror decorations style the markdown
 constructs (headings, **bold**, _emphasis_, `inline code`, links, bullets, blockquotes) and hide their raw
 markup — except on the line(s) the selection touches, where the raw source reveals for editing (**reveal-near-
-cursor**). This is a pure VIEW transform over the exact same `EditorView` and document as `mode="source"`:
+cursor**) as plain, unstyled text: a revealed construct shows its marks with NO styling, an unrevealed one
+shows styling with no marks — strictly either/or, never both at once (ADR-0147 as amended 2026-07-20, GH #165). This is a pure VIEW transform over the exact same `EditorView` and document as `mode="source"`:
 there is no second DOM tree, no serializer, and no round-trip step — `.value` is the markdown string in BOTH
 modes, byte-identical FACE participation and `input`/`change` timing. Fenced code blocks always render
 verbatim (fences visible, contents keep their `tok-*` highlight — code inside markdown is source by nature);
