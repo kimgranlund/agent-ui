@@ -1,0 +1,151 @@
+/* chat-shell.css — PAGE-LOCAL demo chrome for the ui-chat-shell composition guide (round 4, GH #98). It
+ * styles the DEMO's session-list / chat-log / composer-hint mocks + the prose scaffold — it never restyles
+ * a ui-* control's internals (ui-chat-shell/ui-super-shell's own geometry/collapse CSS is untouched). Every
+ * colour is a --md-sys-color-* role, so the demo tracks light/dark. The super-shell.ts doc page is this
+ * file's own precedent (class prefix `cs-` here, `ss-` there — no collision when both pages' CSS load on the
+ * same site build). */
+
+/* ── prose scaffold ─────────────────────────────────────────────────────────────────────────────────────── */
+.cs-prose {
+  max-inline-size: 60rem;
+  line-height: 1.6;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.cs-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  padding: 0.05em 0.35em;
+  border-radius: 5px;
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.cs-api-tag {
+  margin-block: 2rem 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--md-sys-color-primary-high);
+}
+.cs-snippet {
+  margin-block: 0.5rem 1.5rem;
+  padding: 0.9rem 1.1rem;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface-low);
+  color: var(--md-sys-color-neutral-on-surface);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* ── the framed live shell ──────────────────────────────────────────────────────────────────────────────── */
+/* A definite block-size makes the nav-pane/content row visible; the frame + radius give the demo an edge.
+ * ui-chat-shell is already display:flex/flex-direction:column from chat-shell.css — we only frame it. */
+ui-chat-shell.cs-demo {
+  block-size: 380px;
+  margin-block: 1rem 1.75rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--md-sys-color-neutral-surface-lowest);
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+/* Slot CELLS — visible content boxes so the fixed shape reads. CRITICAL: every `[data-slot=…]` rule below is
+ * scoped under `.cs-demo` — the SAME attribute values (`header`/`content`/`nav-pane`/`footer`) are ALSO
+ * carried by the REAL site chrome's own elements (`_page.ts`'s own shell rides ui-super-shell too) — an
+ * unscoped `[data-slot='content']` here would leak straight onto the real page shell and override its
+ * layout (super-shell.css's own comment documents the exact regression this scoping prevents). */
+.cs-demo [data-slot='header'] {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--md-sys-color-primary-container);
+}
+.cs-header-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.cs-header-note {
+  font-size: 0.7rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.cs-demo [data-slot='nav-pane'] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  overflow-y: auto;
+  background: var(--md-sys-color-primary-container-low);
+}
+.cs-session {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+  background: var(--md-sys-color-neutral-surface);
+}
+.cs-session--active {
+  background: var(--md-sys-color-primary-container-high);
+}
+.cs-session-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.cs-session-meta {
+  font-size: 0.68rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.cs-demo [data-slot='content'] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  overflow-y: auto;
+  background: var(--md-sys-color-neutral-surface);
+}
+.cs-bubble {
+  max-inline-size: 80%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 10px;
+  background: var(--md-sys-color-neutral-surface-high);
+}
+.cs-bubble--user {
+  align-self: flex-end;
+  background: var(--md-sys-color-primary-container);
+}
+.cs-bubble-role {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.cs-bubble-text {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+
+.cs-demo [data-slot='footer'] {
+  display: flex;
+  align-items: center;
+  padding: 0.45rem 0.75rem;
+  background: var(--md-sys-color-neutral-surface-low);
+}
+.cs-footer-hint {
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
