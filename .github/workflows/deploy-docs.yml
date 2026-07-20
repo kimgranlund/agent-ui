@@ -1,0 +1,53 @@
+# deploy-docs.yml — auto-deploys the docs site + live-agent Worker (`agent-ui-docs`, ui.nonoun.io) on
+# every push to main (GH #177, Kim's option-1 ruling: a GitHub Action over Cloudflare Workers Builds or
+# staying manual). Before this, the deploy was `npm run deploy:docs` run by hand, and the public site
+# repeatedly drifted days stale behind main (GH #72's record comment documents a measured instance).
+#
+# Deliberately THIN — checkout, install, build, `wrangler deploy` — no check/test gate here: every merge
+# to main already ran the full standing gates per the repo's own merge discipline (CLAUDE.md), and a
+# broken build fails this workflow at the build step anyway. Duplicating the ~10-minute browser gate on
+# every deploy would only slow the site's freshness, not add safety.
+#
+# Secrets/vars (GH #177): `CLOUDFLARE_API_TOKEN` (repo secret, "Edit Cloudflare Workers" template scoped
+# to the nonoun.io zone) + `CLOUDFLARE_ACCOUNT_ID` (repo variable, not sensitive). The wrangler-action
+# uses the repo's own `wrangler` devDependency (it runs the locally-installed binary when one exists), so
+# the deployed config is always wrangler.jsonc as of the deployed commit — same as the manual path.
+name: Deploy docs site
+
+on:
+  push:
+    branches:
+      - main
+  # Manual redeploy (Actions tab) — e.g. after rotating the token, or to re-push unchanged content.
+  workflow_dispatch:
+
+# Overlapping main pushes: the NEWEST commit is the only one worth deploying — cancel a stale in-flight
+# deploy rather than queueing it (unlike publish.yml's queue-don't-cancel: a Workers deploy is one atomic
+# version swap, so cancelling mid-run never leaves a half-deployed site the way a half-published 8-package
+# release would).
+concurrency:
+  group: deploy-docs
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
