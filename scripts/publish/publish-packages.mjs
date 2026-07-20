@@ -51,7 +51,7 @@ const REPO_URL = 'git+https://github.com/kimgranlund/agent-ui.git'
 // fresh `npm install agent-ui-app` from ever hitting a transient window where a dependency it needs isn't
 // on the registry yet. Mirrors CLAUDE.md's own documented DAG: shared/icons/a2a have no @agent-ui/* deps;
 // components depends on shared+icons; router/code/a2ui depend on components(+shared); app depends on all.
-const PACKAGE_ORDER = ['shared', 'icons', 'a2a', 'components', 'router', 'code', 'a2ui', 'app']
+export const PACKAGE_ORDER = ['shared', 'icons', 'a2a', 'components', 'router', 'code', 'a2ui', 'app']
 
 // npm-page metadata (publish concern, so it lives here, not in the workspace manifests): shared base
 // keywords + a per-package flavor. `description` is single-sourced from each workspace package.json.
@@ -150,15 +150,32 @@ function transformPackageJson(pkgJson, version) {
  *  NOT in .d.ts declaration output; a specifier ending in `.ts` there matches the standard, universally-
  *  resolvable `.js`-in-.d.ts-referencing-a-.d.ts convention every TS-authored npm package already relies on.
  *
- *  KNOWN HAZARD (flagged in review, not fixed here): this is a BLIND `replaceAll` over the whole file text,
- *  not scoped to import/export/`@import` specifier positions — it also mutates matching STRING LITERALS,
- *  e.g. a log/warning tag like `[@agent-ui/icons]` becomes `[@agent-ui-kit/icons]` in the published output,
- *  drifting from the repo's own source text. Cosmetic today (nothing currently asserts on such a literal),
- *  but a latent behavior-drift risk if one ever becomes load-bearing (a test string-matching a warning tag,
- *  for instance). Narrowing this to actual specifier positions is a real follow-up, not done here. */
-function rewriteSpecifiers(content, isDeclaration) {
-  let out = content
-  for (const pkg of PACKAGE_ORDER) out = out.replaceAll(`@agent-ui/${pkg}`, `@agent-ui-kit/${pkg}`)
+ *  GH #69 item 3 (was a KNOWN HAZARD, flagged in review): the rewrite is scoped to actual specifier
+ *  POSITIONS — a quoted string immediately after `from`/bare `import`/`require(`/CSS `@import` (optionally
+ *  wrapped in `url(...)`) — never an arbitrary string literal. Previously a blind `replaceAll` over the
+ *  whole file text also mutated matching STRING LITERALS, e.g. a log/warning tag like `[@agent-ui/icons]`
+ *  became `[@agent-ui-kit/icons]` in the published output, drifting from the repo's own source text —
+ *  cosmetic until such a literal became load-bearing (a test string-matching a warning tag, for instance).
+ *  `publish-packages.test.mjs` pins a string-literal survivor negative control. */
+// NOTE: `(?<![\w$])` — not `\b` — before the alternation: `@import`'s leading `@` is a non-word character,
+// so `\b` (which requires a word/non-word TRANSITION) never matches immediately before it; the lookbehind
+// correctly excludes only a PRECEDING identifier character (so e.g. `xfrom '...'` is not mistaken for a
+// real `from` keyword) while still matching `@import` (verified: `\b` silently matched zero `@import`
+// occurrences, including the url()-wrapped form, until this fix).
+const SPECIFIER_POSITION_RE = /(?<![\w$])(from\s+|import\s+|require\(\s*|@import\s+(?:url\(\s*)?)(['"])([^'"]*)\2/g
+
+export function rewriteSpecifiers(content, isDeclaration) {
+  let out = content.replace(SPECIFIER_POSITION_RE, (whole, prefix, quote, spec) => {
+    let rewritten = spec
+    for (const pkg of PACKAGE_ORDER) {
+      const from = `@agent-ui/${pkg}`
+      if (rewritten === from || rewritten.startsWith(`${from}/`)) {
+        rewritten = `@agent-ui-kit/${pkg}${rewritten.slice(from.length)}`
+        break
+      }
+    }
+    return `${prefix}${quote}${rewritten}${quote}`
+  })
   if (isDeclaration) out = out.replace(/(['"])(\.\.?\/[^'"]*?)\.ts\1/g, '$1$2.js$1')
   return out
 }
@@ -271,7 +288,13 @@ async function main() {
   console.log(`\n=== Done: ${PACKAGE_ORDER.length} packages ${dryRun ? '(dry-run) ' : ''}published at ${version} ===`)
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+// Only run the real publish flow when this file is EXECUTED directly (`node scripts/publish/publish-
+// packages.mjs <version>`), never when it's IMPORTED (publish-packages.test.mjs imports `rewriteSpecifiers`/
+// `PACKAGE_ORDER` for direct, cheap regression coverage — a bare top-level `main()` call would otherwise
+// run a real build + attempt real `npm publish` calls the instant the test file imports this module).
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}
