@@ -110,9 +110,9 @@ content.append(
     ') with its ACTIVE master switch, the model grid, a generic ordered-entry-list seeded with three ' +
       'built-in prompt sections (Foundation/Personality/Critical Items, each toggleable, none ' +
       'deletable), and four MORE instances of that same entry-list primitive — Skills, Workflows, ' +
-      'Resources, Tools — each unseeded, custom-authorable, and master-switchable; the Context tab is ' +
-      'the read-only introspection surface (the compiled Agent System JSON + the Dialog Turns payload ' +
-      'log). Toggle a section off, ' +
+      'Resources, Tools — each unseeded, custom-authorable, and master-switchable; the Context: System ' +
+      'and Context: Dialog tabs are the read-only introspection surface (the compiled Agent System JSON ' +
+      'and the Dialog Turns payload log, respectively). Toggle a section off, ' +
       'add a custom skill, then send a message — the reply is a deterministic stub that visibly cites ' +
       'the composed prompt AND every enabled capability, proving the wiring without a live model call: ' +
       'the shipped build makes no external network dependency.',

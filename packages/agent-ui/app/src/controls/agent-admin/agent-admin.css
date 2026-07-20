@@ -21,7 +21,7 @@
   --ui-agent-admin-error-ink: var(--md-sys-color-danger-on-surface-variant, var(--ui-agent-admin-ink)); /* TKT-0065: was --md-sys-color-error-on-surface — an ERROR family has never existed in tokens.css (the fleet family is danger), so the fallback ALWAYS won and validation errors rendered in plain neutral ink; danger-on-surface-variant is the AA-gated danger TEXT ink (the text-field message precedent) */
   --ui-agent-admin-entry-radius: var(--md-sys-shape-corner-base, 0.25rem); /* TKT-0066 item 5 ruling: dimensional constants route through the own chain */
   --ui-agent-admin-scrollbar-width: none; /* the app-chrome look: NO visible scrollbars in this surface's panes (scrolling stays live) */
-  --ui-agent-admin-code-surface: var(--md-sys-color-neutral-container-low, var(--md-sys-color-neutral-surface)); /* vision rev.5 — the Context tab's mono JSON preview plane (the frame's containerLow tint) */
+  --ui-agent-admin-code-surface: var(--md-sys-color-neutral-container-low, var(--md-sys-color-neutral-surface)); /* vision rev.5 — the Context tabs' mono JSON preview plane (the frame's containerLow tint) */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-agent-admin) consumes ONLY --ui-agent-admin-* ════════════════ */
@@ -84,9 +84,10 @@
     min-block-size: 0;
   }
 
-  /* Vision rev.5 — the split layout's right pane is the {Settings, Context} ui-tabs; its OWN padding
-     lives on ui-tab-panel (the shipped panel-padding token), the pane itself is purely the scroll
-     boundary, no doubled inset (the TKT-0085 tabs-medium discipline, renamed). */
+  /* Vision rev.5 — the split layout's right pane is the {Settings, Context: System, Context: Dialog}
+     ui-tabs (GH #161 split the old single Context tab in two); its OWN padding lives on ui-tab-panel
+     (the shipped panel-padding token), the pane itself is purely the scroll boundary, no doubled inset
+     (the TKT-0085 tabs-medium discipline, renamed). */
   [data-role='tabs'] {
     box-sizing: border-box;
     padding: 0;
@@ -96,7 +97,8 @@
   }
 
   [data-role='settings-content'],
-  [data-role='context-content'] {
+  [data-role='context-system-content'],
+  [data-role='context-dialog-content'] {
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -284,7 +286,8 @@
     color: var(--ui-agent-admin-label-ink);
   }
 
-  /* ── Vision rev.5: the Context tab — Agent System + Dialog Turns accordion groups ──────────────── */
+  /* ── Vision rev.5: the Context tabs — Agent System (Context: System) + Dialog Turns (Context: Dialog)
+     accordion groups, one per tab as of GH #161 (previously stacked in one combined Context tab) ──── */
 
   [data-part='context-section'] {
     border: 1px solid var(--ui-agent-admin-border);

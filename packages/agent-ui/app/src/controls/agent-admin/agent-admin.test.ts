@@ -132,7 +132,7 @@ describe('UIAgentAdminElement — responsive shell (TKT-0085 → vision rev.5): 
     expect(ro.target).toBeNull()
   })
 
-  it('split (≥640px): [ chat | {Settings, Context} tabs ] — the narrow all-tabs shell stays hidden (vision rev.5)', () => {
+  it('split (≥640px): [ chat | {Settings, Context: System, Context: Dialog} tabs ] — the narrow all-tabs shell stays hidden (vision rev.5, GH #161)', () => {
     const { el } = mountAndResize(1200)
     const split = el.querySelector(':scope > ui-split') as HTMLElement
     expect(split.hidden).toBe(false)
@@ -143,13 +143,29 @@ describe('UIAgentAdminElement — responsive shell (TKT-0085 → vision rev.5): 
     expect(el.querySelector('[data-role="canvas"] ui-conversation')).not.toBeNull()
     const tabsPane = el.querySelector('[data-role="tabs"]') as HTMLElement
     const tabLabels = [...tabsPane.querySelectorAll('ui-tab')].map((t) => t.textContent)
-    expect(tabLabels).toEqual(['Settings', 'Context'])
+    expect(tabLabels).toEqual(['Settings', 'Context: System', 'Context: Dialog'])
     // The Settings panel carries the WHOLE config column (Agent header + prompts + capabilities merged);
-    // the Context panel carries the introspection groups. Panel visibility is a CSS/ui-tabs concern —
-    // both stay in the DOM, only the inactive one is [hidden].
+    // the two Context panels each carry ONE introspection group (GH #161 split them apart). Panel
+    // visibility is a CSS/ui-tabs concern — all three stay in the DOM, only the inactive ones are [hidden].
     expect(tabsPane.querySelector('[data-part="agent-heading"]')).not.toBeNull()
     expect(tabsPane.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
-    expect(tabsPane.querySelector('[data-role="context-content"]')).not.toBeNull()
+    expect(tabsPane.querySelector('[data-role="context-system-content"]')).not.toBeNull()
+    expect(tabsPane.querySelector('[data-role="context-dialog-content"]')).not.toBeNull()
+  })
+
+  it('GH #161: in the split layout, each Context ui-tab-panel carries ONLY its own accordion — no cross-tab leakage', () => {
+    const { el } = mountAndResize(1200)
+    const tabsPane = el.querySelector('[data-role="tabs"]') as HTMLElement
+    const panels = [...tabsPane.querySelectorAll('ui-tab-panel')]
+    expect(panels).toHaveLength(3) // Settings, Context: System, Context: Dialog
+    const systemPanel = panels[1] as HTMLElement
+    const dialogPanel = panels[2] as HTMLElement
+    expect(systemPanel.querySelector('[data-role="context-system-content"]')).not.toBeNull()
+    expect(systemPanel.querySelector('[data-role="context-dialog-content"]')).toBeNull()
+    expect(systemPanel.querySelector('[data-part="context-turns"]')).toBeNull()
+    expect(dialogPanel.querySelector('[data-role="context-dialog-content"]')).not.toBeNull()
+    expect(dialogPanel.querySelector('[data-role="context-system-content"]')).toBeNull()
+    expect(dialogPanel.querySelector('[data-part="context-system"]')).toBeNull()
   })
 
   it('the old medium band (640–1023px) now renders the SAME split shape — one layout above the threshold', () => {
@@ -160,7 +176,7 @@ describe('UIAgentAdminElement — responsive shell (TKT-0085 → vision rev.5): 
     expect(paneRoles).toEqual(['canvas', 'tabs'])
   })
 
-  it('narrow (<640px): {Chat, Settings, Context} tabs — the split is hidden and empty', () => {
+  it('narrow (<640px): {Chat, Settings, Context: System, Context: Dialog} tabs — the split is hidden and empty (GH #161: a flat 4th/5th top-level tab, not a nested sub-tab-set)', () => {
     const { el } = mountAndResize(500)
     const split = el.querySelector(':scope > ui-split') as HTMLElement
     expect(split.hidden).toBe(true)
@@ -168,11 +184,27 @@ describe('UIAgentAdminElement — responsive shell (TKT-0085 → vision rev.5): 
     const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
     expect(narrowTabs.hidden).toBe(false)
     const tabLabels = [...narrowTabs.querySelectorAll('ui-tab')].map((t) => t.textContent)
-    expect(tabLabels).toEqual(['Chat', 'Settings', 'Context'])
+    expect(tabLabels).toEqual(['Chat', 'Settings', 'Context: System', 'Context: Dialog'])
     expect(narrowTabs.querySelector('ui-conversation')).not.toBeNull()
     expect(narrowTabs.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
     expect(narrowTabs.querySelector('[data-part="agent-heading"]')).not.toBeNull()
-    expect(narrowTabs.querySelector('[data-role="context-content"]')).not.toBeNull()
+    expect(narrowTabs.querySelector('[data-role="context-system-content"]')).not.toBeNull()
+    expect(narrowTabs.querySelector('[data-role="context-dialog-content"]')).not.toBeNull()
+  })
+
+  it('GH #161: in narrow mode, each Context tab-panel carries ONLY its own accordion — no cross-tab leakage', () => {
+    const { el } = mountAndResize(500)
+    const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
+    const panels = [...narrowTabs.querySelectorAll('ui-tab-panel')]
+    expect(panels).toHaveLength(4) // Chat, Settings, Context: System, Context: Dialog
+    const systemPanel = panels[2] as HTMLElement
+    const dialogPanel = panels[3] as HTMLElement
+    expect(systemPanel.querySelector('[data-role="context-system-content"]')).not.toBeNull()
+    expect(systemPanel.querySelector('[data-role="context-dialog-content"]')).toBeNull()
+    expect(systemPanel.querySelector('[data-part="context-turns"]')).toBeNull()
+    expect(dialogPanel.querySelector('[data-role="context-dialog-content"]')).not.toBeNull()
+    expect(dialogPanel.querySelector('[data-role="context-system-content"]')).toBeNull()
+    expect(dialogPanel.querySelector('[data-part="context-system"]')).toBeNull()
   })
 
   it('content nodes are MOVED (same identity), never rebuilt, across a split → narrow → split round trip', () => {
@@ -304,7 +336,7 @@ describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)',
   })
 })
 
-describe('UIAgentAdminElement — composition (vision rev.5: chat + {Settings, Context} tabs; ADR-0132 five entry-list instantiations)', () => {
+describe('UIAgentAdminElement — composition (vision rev.5: chat + {Settings, Context: System, Context: Dialog} tabs; ADR-0132 five entry-list instantiations; GH #161)', () => {
   it('builds one ui-split with two ui-split-pane children: canvas, tabs', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const split = el.querySelector(':scope > ui-split')
@@ -363,20 +395,34 @@ describe('UIAgentAdminElement — composition (vision rev.5: chat + {Settings, C
     ])
   })
 
-  it('the Context content composes the Agent System + Dialog Turns groups (vision rev.5)', () => {
+  it('GH #161: the Context: System content composes ONLY the Agent System group — no Dialog Turns content at all', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const contextContent = el.querySelector('[data-role="context-content"]') as HTMLElement
-    const groups = [...contextContent.querySelectorAll('[data-part="context-section"]')]
-    expect(groups.map((g) => g.getAttribute('data-section'))).toEqual(['agent-system', 'dialog-turns'])
-    // Agent System: the Agent item (open, with the compiled JSON) + one accordion per capability kind.
-    const items = [...contextContent.querySelectorAll('[data-part="context-system"] [data-part="context-item"]')]
+    const systemContent = el.querySelector('[data-role="context-system-content"]') as HTMLElement
+    const groups = [...systemContent.querySelectorAll('[data-part="context-section"]')]
+    expect(groups.map((g) => g.getAttribute('data-section'))).toEqual(['agent-system'])
+    // The Agent item (open, with the compiled JSON) + one accordion per capability kind.
+    const items = [...systemContent.querySelectorAll('[data-part="context-system"] [data-part="context-item"]')]
     expect(items.map((i) => i.getAttribute('data-item'))).toEqual(['agent', ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool])
     const agentJson = JSON.parse(items[0]!.querySelector('[data-part="context-json"]')!.textContent ?? '{}') as Record<string, unknown>
     expect(agentJson['model']).toBe(DEFAULT_MODEL_ID)
     expect(agentJson['active']).toBe(true)
     expect(typeof agentJson['systemPrompt']).toBe('string')
+    // Cross-tab isolation: no Dialog Turns section/parts leaked into the System tab's content unit.
+    expect(systemContent.querySelector('[data-section="dialog-turns"]')).toBeNull()
+    expect(systemContent.querySelector('[data-part="context-turns"]')).toBeNull()
+  })
+
+  it('GH #161: the Context: Dialog content composes ONLY the Dialog Turns group — no Agent System content at all', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const dialogContent = el.querySelector('[data-role="context-dialog-content"]') as HTMLElement
+    const groups = [...dialogContent.querySelectorAll('[data-part="context-section"]')]
+    expect(groups.map((g) => g.getAttribute('data-section'))).toEqual(['dialog-turns'])
     // Dialog Turns: empty until the first turn runs.
-    expect(contextContent.querySelectorAll('[data-part="context-turn"]')).toHaveLength(0)
+    expect(dialogContent.querySelectorAll('[data-part="context-turn"]')).toHaveLength(0)
+    // Cross-tab isolation: no Agent System section/parts leaked into the Dialog tab's content unit.
+    expect(dialogContent.querySelector('[data-section="agent-system"]')).toBeNull()
+    expect(dialogContent.querySelector('[data-part="context-system"]')).toBeNull()
+    expect(dialogContent.querySelector('[data-part="context-item"]')).toBeNull()
   })
 })
 
@@ -960,7 +1006,7 @@ describe('UIAgentAdminElement — composition survives a RECONNECT (the master-d
 
 // GH #145 — switching personas (a real `admin.store = <other>` reassignment, the site's
 // agent-admin-app.ts `applyPreset()` mechanism) must start a genuinely FRESH conversation: the visible
-// chat log clears, the Dialog Turns/Context panel resets, and a new message starts its own thread rather
+// chat log clears, the Dialog Turns/Context: Dialog tab resets, and a new message starts its own thread rather
 // than appending onto the old persona's. Pre-fix, `applyPreset()`'s own source comment claimed the
 // reactive store effect "re-syncs the conversation", but the effect only ever re-rendered the settings
 // pane + entry sections — the chat log (`ui-conversation`'s own `#log`), the live-request `#history`
