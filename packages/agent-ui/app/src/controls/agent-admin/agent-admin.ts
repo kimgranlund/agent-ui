@@ -46,8 +46,6 @@ import { UIElement, prop, untracked, type PropsSchema, type ReactiveProps } from
 // surface-host → the a2ui default catalog's factories.ts, which value-imports the whole family) that a
 // future tree-shaking change could sever. `field` (TKT-0073) registers the `<ui-field>` wrapper entry-list.ts
 // now hosts those two text-fields in, so their required-validation message renders outside their own box.
-import '@agent-ui/components/controls/split'
-import '@agent-ui/components/controls/split-pane'
 import '@agent-ui/components/controls/switch'
 import '@agent-ui/components/controls/select' // vision rev.6 — the Surface Options catalog picker
 import '@agent-ui/components/controls/button'
@@ -60,10 +58,13 @@ import '@agent-ui/components/controls/text-field'
 // pick-exactly-one control; selection coordination stays this element's render, not a ui-radio-group,
 // whose roving/one-group contract doesn't fit rows interleaved with switches across provider groups).
 import '@agent-ui/components/controls/radio'
-// TKT-0085: registers <ui-tabs>/<ui-tab>/<ui-tab-panel> — the responsive-collapse shells `#applyLayout`
-// moves pane content into below the wide breakpoint.
-import '@agent-ui/components/controls/tabs'
 import '@agent-ui/components/controls/disclosure' // vision rev.5 — the Context tabs' accordion primitive
+// GH #52 (ADR-0154, agent-admin-shell-rehost.lld.md LLD-C4) — the re-host onto the shell-archetype
+// grammar: content=chat, options-pane segments=Settings/Context:System/Context:Dialog (SPEC-R7a),
+// narrow-end="tabs" flattens them structurally (SPEC-R7b) — replacing the hand-rolled ui-split +
+// narrow ui-tabs dual-shell + the ResizeObserver-driven #applyLayout reparenting entirely.
+import '../chat-shell/chat-shell.ts'
+import type { UIChatShellElement } from '../chat-shell/chat-shell.ts'
 // Vision rev.6 (Surface Options): the Markdown modality renders agent notes through <ui-markdown> —
 // sanitized by construction. App → code is the ADR-0139-ruled edge this file already takes for
 // `@agent-ui/code/editor`; ui-conversation itself stays code-free (the SPEC-R12 renderer seam carries it).
@@ -152,21 +153,6 @@ const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: s
   { kind: ENTRY_KINDS.tool, label: 'Tools', addLabel: 'Add tool', liveHeading: 'Tools available to you' },
 ]
 
-type AgentAdminLayout = 'split' | 'narrow'
-
-// TKT-0085 → vision rev.5 (Kim's Figma frame 33:1693) — the responsive shell collapsed from THREE bands
-// to TWO: the old wide (chat | prompts | settings) and medium (chat | 2-tab) shapes both dissolve into
-// ONE `split` layout (chat | {Settings, Context: System, Context: Dialog} tabs, GH #161), so a single
-// threshold remains. Same px rationale
-// as before (a ResizeObserver measures px; 640px = 40rem is the repo's own app-shell.css/
-// master-detail.css collapse precedent). The 2-pane mechanical floor is canvas 16rem + tabs 20rem =
-// 36rem/576px, comfortably under the threshold.
-const NARROW_MAX_PX = 640
-
-function layoutFor(widthPx: number): AgentAdminLayout {
-  return widthPx >= NARROW_MAX_PX ? 'split' : 'narrow'
-}
-
 /** Dialog Turns retention cap (vision rev.5) — a bounded ring; the oldest records fall off. Session-
  *  ephemeral by design (like `#history`): the store persists the agent's CONFIG, never its traffic. */
 const TURN_LOG_CAP = 20
@@ -175,44 +161,24 @@ export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProp
 export class UIAgentAdminElement extends UIElement {
   static props = agentAdminProps
 
-  // The composed SHELL — created ONCE (idempotent, `#split` doubles as the guard) and PERSISTS across a
-  // reconnect (the `master-detail.ts`/`settings.ts` precedent).
-  #split: HTMLElement | null = null
+  // The composed SHELL — created ONCE (idempotent, `#shell` doubles as the guard) and PERSISTS across a
+  // reconnect (the `master-detail.ts`/`settings.ts` precedent). GH #52/ADR-0154: a `ui-chat-shell`
+  // hosting `#conversation` in `content` and the three panels below as `options-pane` SEGMENTS
+  // (SPEC-R7a) — replacing the old hand-rolled `ui-split` + narrow `ui-tabs` dual-shell + the
+  // ResizeObserver-driven `#applyLayout` reparenting entirely. The shell's own narrow-tabs mechanism
+  // (SPEC-R7b, `narrow-end="tabs"`) is VISIBILITY-ONLY — no JS layout code, no reparenting, ever.
+  #shell: UIChatShellElement | null = null
   #conversation: UIConversationElement | null = null
   #settingsEl: UISettingsElement | null = null
   // Every entry-list instantiation (prompt sections + all four capability kinds), keyed by `kind` — the
   // ONE registry `#rewireAllSections`/`#compose` both iterate uniformly.
   #capabilitySections: Map<string, EntryListSection> = new Map()
 
-  // ── TKT-0085: the responsive-collapse shell — three named layouts, ONE set of content nodes moved
-  // (never cloned/rebuilt) between whichever shell the current layout uses. See `#applyLayout`'s own
-  // doc-comment for the full design; fields here are the STABLE homes + content units it operates on,
-  // all built once in `#compose()`.
-  #canvasPane: HTMLElement | null = null // split-layout home for `#conversation`
-  #tabsPane: HTMLElement | null = null // split-layout home for the {Settings, Context: System, Context: Dialog} ui-tabs (vision rev.5; GH #161 split Context in two)
-  #settingsPanel: HTMLElement | null = null // the Settings ui-tab-panel
-  // GH #161: the old single Context ui-tab-panel split into two — Agent System and Dialog Turns each
-  // get their OWN tab now, in both the split layout (here) and narrow mode (below) — the flat
-  // one-content-unit-per-tab shape every OTHER tab (Chat/Settings) already uses, never a nested
-  // sub-tab-set special-cased for Context alone (see the #compose() doc comment at the tab strip
-  // construction for the full narrow-mode rationale).
-  #contextSystemPanel: HTMLElement | null = null // the Context: System ui-tab-panel
-  #contextDialogPanel: HTMLElement | null = null // the Context: Dialog ui-tab-panel
-  #narrowTabs: HTMLElement | null = null // narrow-only, top-level: 4 tabs: Chat, Settings, Context: System, Context: Dialog (GH #161)
-  #narrowChatPanel: HTMLElement | null = null
-  #narrowSettingsPanel: HTMLElement | null = null
-  #narrowContextSystemPanel: HTMLElement | null = null
-  #narrowContextDialogPanel: HTMLElement | null = null
-  // The three content UNITS that migrate between a split-layout tab panel and a narrow tab panel —
-  // `#conversation` (already a single element) is the fourth; all are built once in `#compose()`.
-  // `#settingsContent` bundles the WHOLE config column (Agent header row + ui-settings + model grid +
-  // prompt sections + capability sections — the old prompts pane merged in, vision rev.5);
-  // `#contextSystemContent`/`#contextDialogContent` are the two halves of the old combined read-only
-  // introspection column (Agent System / Dialog Turns respectively, GH #161).
-  #settingsContent: HTMLElement | null = null
-  #contextSystemContent: HTMLElement | null = null
-  #contextDialogContent: HTMLElement | null = null
-  #currentLayout: AgentAdminLayout | null = null
+  // GH #52/ADR-0154: the three `options-pane` segment content units (`#settingsContent` — the whole
+  // config column; `#contextSystemContent`/`#contextDialogContent` — the two Context halves, GH #161)
+  // are built ONCE in `#compose()` and authored directly into the shell — never moved again, so no
+  // field holds them past construction (the shell's own tab/segment strips drive visibility in place,
+  // SPEC-R7c; TKT-0085's reparenting machinery, and the field slots that tracked its targets, are gone).
   // ── vision rev.5: the master switches + the Context tabs' render slots ──────────────────────────────
   #agentSwitch: (HTMLElement & { checked: boolean }) | null = null
   #kindSwitches: Map<string, HTMLElement & { checked: boolean }> = new Map()
@@ -231,7 +197,6 @@ export class UIAgentAdminElement extends UIElement {
    *  MONOTONIC turn number (the vision frame's 04→01), stable as the bounded ring drops its oldest. */
   #turnLog: Array<{ n: number; arm: 'stub' | 'live' | 'surface'; request: unknown; response: unknown }> = []
   #turnCounter = 0
-  #layoutObserver: ResizeObserver | null = null
 
   #unsubscribes: Map<string, () => void> = new Map()
   /** The Model grid's host element (composed once, re-rendered wholesale per store change). */
@@ -263,26 +228,7 @@ export class UIAgentAdminElement extends UIElement {
   #lastStore: SettingsStore | undefined
 
   protected connected(): void {
-    this.#compose() // idempotent — builds ONLY the split/pane shell + the composed children, once ever
-
-    // TKT-0085: the responsive-collapse watcher. `ui-split`/`ui-app-shell`/`ui-master-detail`'s own
-    // `@container` breakpoints are CSS-only visibility toggles — they can never MOVE a node to a new
-    // parent, and this layout needs real reparenting (a pane's content becomes a tab panel's content).
-    // A ResizeObserver on this host's own content-box is the only mechanism that can drive that decision
-    // in JS; `#applyLayout` is idempotent (a same-layout call is a no-op), so a resize inside the SAME
-    // band costs nothing beyond the width comparison. Feature-detected (jsdom carries no
-    // ResizeObserver — the traits/scroll-fade.ts precedent) and disconnected in `disconnected()`.
-    if (typeof ResizeObserver !== 'undefined' && this.#layoutObserver === null) {
-      this.#layoutObserver = new ResizeObserver((entries) => {
-        const width = entries[0]?.contentRect.width
-        if (width !== undefined) this.#applyLayout(layoutFor(width))
-      })
-      this.#layoutObserver.observe(this)
-    } else if (typeof ResizeObserver === 'undefined') {
-      // jsdom (no real layout to measure anyway) — settle on the widest layout so every pane's content
-      // stays reachable via a stable DOM shape for jsdom-based tests.
-      this.#applyLayout('split')
-    }
+    this.#compose() // idempotent — builds ONLY the shell + the composed children, once ever
 
     // Lazily default `schema`/`store` (once ever — a later reconnect finds them already set and skips
     // this). `schema` shares the module-level constant (plain, read-only data); `store` gets its OWN
@@ -355,32 +301,28 @@ export class UIAgentAdminElement extends UIElement {
     this.#modelGridUnsub = undefined
     this.#contextUnsub?.()
     this.#contextUnsub = undefined
-    this.#layoutObserver?.disconnect() // TKT-0085 — otherwise the observer outlives the element (a real leak: it holds a live reference to `this`)
-    this.#layoutObserver = null
   }
 
   // ── composition (idempotent — the master-detail.ts/settings.ts `#compose` doc-comment precedent) ──────
 
-  /** Build the split/pane shell + the five composed entry-list sections + the composed ui-settings,
-   *  once ever. The store-driven CONTENT (each section's rendered entries) is the `connected()` effect's
-   *  job, not this method's. */
+  /** Build the ui-chat-shell + the five composed entry-list sections + the composed ui-settings, once
+   *  ever. GH #52/ADR-0154 — `content` = the conversation; the whole config column and both Context
+   *  halves ride as `options-pane` SEGMENTS (SPEC-R7a), never a separate ui-tabs/reparenting shell.
+   *  The store-driven CONTENT (each section's rendered entries) is the `connected()` effect's job, not
+   *  this method's. */
   #compose(): void {
-    if (this.#split) return
+    if (this.#shell) return
 
-    const split = document.createElement('ui-split')
+    const shell = document.createElement('ui-chat-shell') as UIChatShellElement
+    // SPEC-R6a/R7b — the ONE pane the old `ui-split`'s tabs side occupied is now the resizable,
+    // tabs-at-narrow options-pane; content (the conversation) has no separate narrow arm of its own
+    // (SPEC-R7b's content-always-first rule needs no opt-in).
+    shell.setAttribute('resizable-end', '')
+    shell.setAttribute('narrow-end', 'tabs')
 
-    const canvasPane = document.createElement('ui-split-pane')
-    canvasPane.setAttribute('data-role', 'canvas')
-    // TKT-0045: the composer has a genuine content-driven minimum — since the TKT-0058 v2 unroll that
-    // is ui-conversation-composer's OWN field frame (its 20ch entry-control min-inline-size floor,
-    // ADR-0021, plus frame padding/margins and the options row's picker pills + icon buttons) — below
-    // it, ui-conversation's own `overflow-x: hidden` clips the composer with no scrollbar (invisible,
-    // not just tight; re-verified against v2 by agent-admin.browser.test.ts's no-horizontal-overflow
-    // probe). ui-split-pane's generic --ui-split-pane-min (4rem) knows nothing about this pane's
-    // specific content; giving the pane a real `min` lets ui-split's own flex resolution (SPEC-R2)
-    // respect that floor instead of squeezing past it.
-    canvasPane.setAttribute('min', '16rem')
     const conversation = new UIConversationElement()
+    conversation.setAttribute('data-slot', 'content')
+    conversation.setAttribute('data-tab-label', 'Chat') // SPEC-R7b's narrow-tabs content label
     conversation.onSubmit((text) => this.#handleSubmit(text))
     // Models picker → the SAME persisted `model` store key the settings pane's own generated field reads/
     // writes (one source of truth, TKT-0021's own external-store-write precedent) — `#syncConversationConfig`'s
@@ -409,39 +351,11 @@ export class UIAgentAdminElement extends UIElement {
       node.markdown = text
       return node
     })
-    canvasPane.append(conversation)
+    // GH #52/ADR-0154 (SPEC-R7a) — Settings ⇄ Context: System ⇄ Context: Dialog are now THREE
+    // `data-segment` siblings sharing ONE `options-pane` slot (GH #161's three-way split, unchanged) —
+    // the shell composes its own pane-local tab strip; no `ui-tabs`/panels of this element's own.
 
-    // ── Vision rev.5 (Kim's Figma frame 33:1693): the right side is ONE tabbed region — Settings (the
-    // whole config column) ⇄ Context: System ⇄ Context: Dialog (the read-only introspection surface,
-    // GH #161 — split from the old single combined "Context" tab into two, one per accordion section:
-    // Agent System and Dialog Turns). The old three-pane wide layout (chat | prompts | settings) and its
-    // medium two-tab collapse both dissolve into this ONE split shape; the prompts pane's content merges
-    // INTO the Settings column. ─────────────────────────────────────────────────────────────────────────
-    const tabsPane = document.createElement('ui-split-pane')
-    tabsPane.setAttribute('data-role', 'tabs')
-    // The settings column's own field floor (TKT-0045 lineage — ui-settings' master-detail drill-in +
-    // the widest generated control put it at ~280px; 20rem gives headroom across engines).
-    tabsPane.setAttribute('min', '20rem')
-    const rightTabs = document.createElement('ui-tabs')
-    // #14 / ADR-0144 Q1: `fill` = the shipped [pinned tablist | internally-scrolling active panel]
-    // posture; the panel's scrollbar rides the `--ui-tabs-panel-scrollbar-width` seam (agent-admin.css).
-    rightTabs.setAttribute('fill', '')
-    const settingsTab = document.createElement('ui-tab')
-    settingsTab.setAttribute('key', 'settings')
-    settingsTab.textContent = 'Settings'
-    const contextSystemTab = document.createElement('ui-tab')
-    contextSystemTab.setAttribute('key', 'context-system')
-    contextSystemTab.textContent = 'Context: System'
-    const contextDialogTab = document.createElement('ui-tab')
-    contextDialogTab.setAttribute('key', 'context-dialog')
-    contextDialogTab.textContent = 'Context: Dialog'
-    const settingsPanel = document.createElement('ui-tab-panel')
-    const contextSystemPanel = document.createElement('ui-tab-panel')
-    const contextDialogPanel = document.createElement('ui-tab-panel')
-    rightTabs.append(settingsTab, contextSystemTab, contextDialogTab, settingsPanel, contextSystemPanel, contextDialogPanel)
-    tabsPane.append(rightTabs)
-
-    // The Settings tab's content unit — the Agent header row (heading + the ACTIVE master switch, Kim's
+    // The Settings segment's content unit — the Agent header row (heading + the ACTIVE master switch, Kim's
     // ruling: "the agent master toggle is just if the agent is active/available or not"), the ui-settings
     // card, the model grid, the prompt sections (the old prompts pane, merged in), and the capability
     // sections — ONE reparent-able node (the TKT-0085 wrapper discipline).
@@ -471,6 +385,8 @@ export class UIAgentAdminElement extends UIElement {
     settingsEl.addEventListener('change', (event) => event.stopPropagation())
     const settingsContent = document.createElement('div')
     settingsContent.setAttribute('data-role', 'settings-content')
+    settingsContent.setAttribute('data-slot', 'options-pane')
+    settingsContent.setAttribute('data-segment', 'Settings')
     // The Model GRID (Kim, 2026-07-19 rev.2): its own heading + card host, sitting between the Agent
     // form card and the prompt/capability sections. Content renders/rerenders from the store.
     const modelHeading = document.createElement('h3')
@@ -584,6 +500,8 @@ export class UIAgentAdminElement extends UIElement {
     // completely unaffected by which tab now hosts them.
     const contextSystemContent = document.createElement('div')
     contextSystemContent.setAttribute('data-role', 'context-system-content')
+    contextSystemContent.setAttribute('data-slot', 'options-pane')
+    contextSystemContent.setAttribute('data-segment', 'Context: System')
     const systemSection = document.createElement('ui-disclosure') as HTMLElement & { open: boolean; summary: string }
     systemSection.setAttribute('data-part', 'context-section')
     systemSection.setAttribute('data-section', 'agent-system')
@@ -597,6 +515,8 @@ export class UIAgentAdminElement extends UIElement {
 
     const contextDialogContent = document.createElement('div')
     contextDialogContent.setAttribute('data-role', 'context-dialog-content')
+    contextDialogContent.setAttribute('data-slot', 'options-pane')
+    contextDialogContent.setAttribute('data-segment', 'Context: Dialog')
     const turnsSection = document.createElement('ui-disclosure') as HTMLElement & { open: boolean; summary: string }
     turnsSection.setAttribute('data-part', 'context-section')
     turnsSection.setAttribute('data-section', 'dialog-turns')
@@ -608,145 +528,15 @@ export class UIAgentAdminElement extends UIElement {
     this.#contextTurnsHost = contextTurnsHost
     contextDialogContent.append(turnsSection)
 
-    // The split shell is the DEFAULT visible state until the first measurement lands (the TKT-0085
-    // discipline — the old code appended the content units into the wide panes right here too): every
-    // content unit STARTS in its split-layout tab panel, so a consumer that queries synchronously
-    // after append (and the pre-RO first paint) sees the real default shape; `#applyLayout` then MOVES
-    // them only on a genuine narrow crossing.
-    settingsPanel.append(settingsContent)
-    contextSystemPanel.append(contextSystemContent)
-    contextDialogPanel.append(contextDialogContent)
+    // GH #52/ADR-0154 — every content unit authors DIRECTLY into the shell, once, never moved again:
+    // the shell's own pane-tabs strip (wide) and narrow-tabs strip (narrow-end="tabs") drive visibility
+    // in place (SPEC-R7c) — the TKT-0085 guarded-move dance this replaced no longer has anything to do.
+    shell.append(conversation, settingsContent, contextSystemContent, contextDialogContent)
+    this.append(shell)
 
-    split.append(canvasPane, tabsPane)
-    this.append(split)
-
-    // ── The narrow (all-tabs) shell — built ONCE alongside the split shell above, starting EMPTY:
-    // `#applyLayout` moves `conversation`/`settingsContent`/`contextSystemContent`/`contextDialogContent`
-    // into whichever shell the resolved layout actually uses. GH #161's narrow-mode fork: narrow mode
-    // gets a FOURTH top-level tab here (Chat/Settings/Context: System/Context: Dialog) rather than
-    // nesting the split under one narrow "Context" tab — narrow mode is a flat re-parenting of the SAME
-    // content units into a differently-organized `ui-tabs` (this is exactly what it already does for
-    // Chat and Settings: one wide tab, one matching narrow tab, one content unit moved whole between
-    // them — see `#applyLayout`'s own doc comment). Nesting Context alone would introduce a sub-tab-set
-    // shape that exists NOWHERE else in this file, purely to keep narrow mode's top-level tab count at 3;
-    // the flat 4-tab shape costs nothing (the tab strip already scrolls/wraps under `fill`) and keeps
-    // every tab behaving identically across the wide/narrow boundary. ────────────────────────────────────
-    const narrowTabs = document.createElement('ui-tabs')
-    narrowTabs.setAttribute('fill', '') // #14 / ADR-0144 Q1 — the same shipped `fill` posture as the split shell
-    narrowTabs.hidden = true // the split shell above is the DEFAULT visible state until the first measurement
-    const narrowChatTab = document.createElement('ui-tab')
-    narrowChatTab.setAttribute('key', 'chat')
-    narrowChatTab.textContent = 'Chat'
-    const narrowSettingsTab = document.createElement('ui-tab')
-    narrowSettingsTab.setAttribute('key', 'settings')
-    narrowSettingsTab.textContent = 'Settings'
-    const narrowContextSystemTab = document.createElement('ui-tab')
-    narrowContextSystemTab.setAttribute('key', 'context-system')
-    narrowContextSystemTab.textContent = 'Context: System'
-    const narrowContextDialogTab = document.createElement('ui-tab')
-    narrowContextDialogTab.setAttribute('key', 'context-dialog')
-    narrowContextDialogTab.textContent = 'Context: Dialog'
-    const narrowChatPanel = document.createElement('ui-tab-panel')
-    const narrowSettingsPanel = document.createElement('ui-tab-panel')
-    const narrowContextSystemPanel = document.createElement('ui-tab-panel')
-    const narrowContextDialogPanel = document.createElement('ui-tab-panel')
-    narrowTabs.append(
-      narrowChatTab,
-      narrowSettingsTab,
-      narrowContextSystemTab,
-      narrowContextDialogTab,
-      narrowChatPanel,
-      narrowSettingsPanel,
-      narrowContextSystemPanel,
-      narrowContextDialogPanel,
-    )
-    this.append(narrowTabs)
-
-    this.#split = split
+    this.#shell = shell
     this.#conversation = conversation
     this.#settingsEl = settingsEl
-    this.#canvasPane = canvasPane
-    this.#tabsPane = tabsPane
-    this.#settingsPanel = settingsPanel
-    this.#contextSystemPanel = contextSystemPanel
-    this.#contextDialogPanel = contextDialogPanel
-    this.#narrowTabs = narrowTabs
-    this.#narrowChatPanel = narrowChatPanel
-    this.#narrowSettingsPanel = narrowSettingsPanel
-    this.#narrowContextSystemPanel = narrowContextSystemPanel
-    this.#narrowContextDialogPanel = narrowContextDialogPanel
-    this.#settingsContent = settingsContent
-    this.#contextSystemContent = contextSystemContent
-    this.#contextDialogContent = contextDialogContent
-  }
-
-  /**
-   * TKT-0085 — reconcile the composed shell's DOM shape to `layout`. Idempotent (a same-layout call is a
-   * no-op) and content-PRESERVING for its DOM identity: `#conversation`/`#instructionsContent`/
-   * `#agentContent` are MOVED (plain `append()`), never cloned or rebuilt, into whichever pane/tab-panel
-   * the target layout uses (the `master-detail.ts` "relocate a whole pane" idiom, generalized from 2
-   * possible homes to 3 per content unit).
-   *
-   * component-reviewer MAJOR fix: every move below is GUARDED (`if (node.parentElement !== target)`) —
-   * an UNguarded `append()`/`replaceChildren()` cycles `disconnectedCallback`+`connectedCallback` even
-   * when the node is ALREADY exactly where it needs to be (verified: a real Chromium/WebKit probe showed
-   * this for both same-parent re-append AND `replaceChildren()` re-listing an already-present child), so
-   * the FIRST draft's unconditional calls were closing `#conversation`'s open A2UI surfaces on EVERY
-   * band crossing, including wide↔medium — contradicting this feature's own design intent ("Chat stays
-   * its own split pane" in medium). `#split`'s pane SET is reconciled the same way (remove what's no
-   * longer wanted, add what's missing, leave what's already correct untouched) so `#canvasPane` — a
-   * member of BOTH the wide and medium pane sets — is never removed-then-re-added crossing between them.
-   * `#conversation` still disconnects+reconnects (closing any open surface) crossing INTO/OUT OF
-   * `narrow` specifically, since `#canvasPane` itself is not a narrow-layout pane and must genuinely
-   * leave/rejoin `#split`'s children there — see the ticket's Findings for why a `moveBefore`-based
-   * dodge of that ONE remaining case was tried and reverted (the corrected account, not the first
-   * draft's misdiagnosis: `moveBefore` provides no benefit here at all — this fleet has no
-   * `connectedMoveCallback` support, so it cycles the SAME lifecycle callbacks as `append()`, and a
-   * probe found the ORIGINAL narrow branch's detach-before-move ordering could throw
-   * `HierarchyRequestError` — zero callbacks fire on a THROW, which is what actually produced the
-   * reported "silent, callback-free content loss").
-   */
-  #applyLayout(layout: AgentAdminLayout): void {
-    if (layout === this.#currentLayout) return
-    this.#currentLayout = layout
-    const split = this.#split as HTMLElement
-    const canvasPane = this.#canvasPane as HTMLElement
-    const tabsPane = this.#tabsPane as HTMLElement
-    const narrowTabs = this.#narrowTabs as HTMLElement
-    const conversation = this.#conversation as UIConversationElement
-    const settingsContent = this.#settingsContent as HTMLElement
-    const contextSystemContent = this.#contextSystemContent as HTMLElement
-    const contextDialogContent = this.#contextDialogContent as HTMLElement
-
-    const moveInto = (node: Element, target: Element): void => {
-      if (node.parentElement !== target) target.append(node)
-    }
-
-    if (layout === 'narrow') {
-      moveInto(conversation, this.#narrowChatPanel as HTMLElement)
-      moveInto(settingsContent, this.#narrowSettingsPanel as HTMLElement)
-      moveInto(contextSystemContent, this.#narrowContextSystemPanel as HTMLElement)
-      moveInto(contextDialogContent, this.#narrowContextDialogPanel as HTMLElement)
-      if (split.children.length > 0) split.replaceChildren() // guarded: an already-empty split needs no mutation
-      split.hidden = true
-      narrowTabs.hidden = false
-    } else {
-      // Vision rev.5 + GH #161: ONE non-narrow shape — [ chat | {Settings, Context: System, Context:
-      // Dialog} tabs ]. The pane set is reconciled (never blind-rebuilt) so a narrow→split crossing
-      // re-adds both panes while a same-layout call touches nothing (the TKT-0085 guarded-move
-      // discipline, unchanged).
-      const desiredPanes = [canvasPane, tabsPane]
-      for (const child of [...split.children]) {
-        if (child.tagName === 'UI-SPLIT-PANE' && !desiredPanes.includes(child as HTMLElement)) child.remove()
-      }
-      for (const pane of desiredPanes) moveInto(pane, split)
-      split.hidden = false
-      narrowTabs.hidden = true
-      moveInto(conversation, canvasPane)
-      moveInto(settingsContent, this.#settingsPanel as HTMLElement)
-      moveInto(contextSystemContent, this.#contextSystemPanel as HTMLElement)
-      moveInto(contextDialogContent, this.#contextDialogPanel as HTMLElement)
-    }
   }
 
   /** Build ONE entry-list section wired to THIS element's store — the ONE shared mechanism every

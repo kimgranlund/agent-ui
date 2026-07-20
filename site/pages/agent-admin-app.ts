@@ -16,6 +16,11 @@ import '@agent-ui/app/settings.css'
 import '@agent-ui/app/conversation.css'
 import '@agent-ui/app/conversation-composer.css'
 import '@agent-ui/app/surface-host.css'
+// GH #52/ADR-0154 — the re-host onto the shell-archetype grammar: ui-agent-admin now composes
+// ui-chat-shell (which itself composes ui-super-shell), so both siblings' own CSS needs importing
+// here too, matching every OTHER composed child above.
+import '@agent-ui/app/super-shell.css'
+import '@agent-ui/app/chat-shell.css'
 import '@agent-ui/app/agent-admin.css'
 import '@agent-ui/app/master-detail-pane' // self-defines ui-master-detail-pane (composed by ui-settings)
 import '@agent-ui/app/master-detail' // self-defines ui-master-detail (composed by ui-settings)
@@ -23,6 +28,8 @@ import '@agent-ui/app/nav-rail' // self-defines ui-nav-rail(-group|-item) (compo
 import '@agent-ui/app/settings' // self-defines ui-settings
 import '@agent-ui/app/surface-host' // self-defines ui-surface-host (composed by ui-conversation)
 import '@agent-ui/app/conversation' // self-defines ui-conversation
+import '@agent-ui/app/super-shell' // self-defines ui-super-shell (composed by ui-chat-shell)
+import '@agent-ui/app/chat-shell' // self-defines ui-chat-shell (composed by ui-agent-admin)
 import '@agent-ui/app/agent-admin' // self-defines ui-agent-admin
 import './agent-admin-app.css' // page-local: full-viewport layout + the preset strip chrome
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'

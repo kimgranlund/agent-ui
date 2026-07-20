@@ -42,7 +42,7 @@
 //
 // `controls → @agent-ui/components` + siblings only — never router/a2a (layering.test.ts).
 
-import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import { UIElement, prop, paneResize, type PaneResizeHandle, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
 
@@ -93,15 +93,39 @@ const props = {
   // `collapse` (default: hide, overlay on toggle-restore — the frames' all-collapsed story) or
   // `stack` (stay in flow, full-width above/below the canvas — the docs site's shipped nav UX,
   // where the ui-nav-rail's OWN collapse="menu" dropdown takes over). Pure-CSS arms.
-  narrowStart: { ...prop.enum(['collapse', 'stack'] as const, 'collapse'), reflect: true, attribute: 'narrow-start' },
-  narrowEnd: { ...prop.enum(['collapse', 'stack'] as const, 'collapse'), reflect: true, attribute: 'narrow-end' },
+  // SPEC-R7b — widened with the 'tabs' arm (ADR-0154): a side's panes join the shell-owned
+  // narrow-tabs strip instead of collapsing/stacking (mutually exclusive with collapse/stack, per side).
+  narrowStart: { ...prop.enum(['collapse', 'stack', 'tabs'] as const, 'collapse'), reflect: true, attribute: 'narrow-start' },
+  narrowEnd: { ...prop.enum(['collapse', 'stack', 'tabs'] as const, 'collapse'), reflect: true, attribute: 'narrow-end' },
+  // SPEC-R6a — per-side opt-in for the INNERMOST pane only (rails/outer stacked panes stay fixed).
+  resizableStart: { ...prop.boolean(false), reflect: true, attribute: 'resizable-start' },
+  resizableEnd: { ...prop.boolean(false), reflect: true, attribute: 'resizable-end' },
+  // SPEC-R6d — the committed size in px; `null` ⇒ the token default (--ui-super-shell-pane-size).
+  sizeStart: { ...prop.number(null), reflect: true, attribute: 'size-start' },
+  sizeEnd: { ...prop.number(null), reflect: true, attribute: 'size-end' },
 } satisfies PropsSchema
+
+type NarrowTab = { value: string; label: string; participant: HTMLElement; segmentIndex?: number }
 
 export interface UISuperShellElement extends ReactiveProps<typeof props> {}
 export class UISuperShellElement extends UIElement {
   static props = props
 
   #frame: HTMLElement | null = null
+  // LLD-C1 (SPEC-R6) — the one resizable pane per side (undefined ⇒ that side has no pane, or isn't
+  // opted in). Captured at compose time so the drag/keyboard handlers never re-query the DOM per event.
+  #innermostPane: { start?: HTMLElement; end?: HTMLElement } = {}
+  #resizeHandle: PaneResizeHandle | null = null
+  // Per-drag baseline (pane's own start width + the canvas's start width, both real px) — set on the
+  // FIRST onResize of a drag (commit=false, baseline null), cleared on commit. Bounding the pane's growth
+  // by the canvas's OWN available slack (rather than re-deriving every other rail/pane's width) is what
+  // makes R6c's two-sided clamp correct regardless of how many other rails/panes a side stacks (R5b).
+  #dragBaseline: { pane: number; canvasAvail: number; paneMin: number; canvasMin: number } | null = null
+  // LLD-C2 (SPEC-R7b) — the shell-owned narrow-tabs strip + its derived tab list, built once at compose
+  // (build-once law) when at least one side declares `narrow-*="tabs"`.
+  #narrowTabsHost: HTMLElement | null = null
+  #narrowTabs: NarrowTab[] = []
+  #idSeq = 0
 
   protected connected(): void {
     this.#compose()
@@ -113,6 +137,32 @@ export class UISuperShellElement extends UIElement {
       start?.setAttribute('aria-expanded', String(!this.collapsedStart))
       end?.setAttribute('aria-expanded', String(!this.collapsedEnd))
     })
+    // SPEC-R6d — "observable AND settable": a consumer assigning `sizeStart`/`sizeEnd` (a persistence
+    // restore) must apply onto the pane, not just reflect the attribute. #onResize/#handleResizerKeydown
+    // also assign these props themselves on commit — this effect re-running then is a harmless idempotent
+    // re-write of the SAME value, never a second distinct source of truth.
+    this.effect(() => {
+      const start = this.sizeStart
+      const end = this.sizeEnd
+      if (start !== null && this.#innermostPane.start) this.#innermostPane.start.style.setProperty('--ui-super-shell-pane-size-start', `${start}px`)
+      if (end !== null && this.#innermostPane.end) this.#innermostPane.end.style.setProperty('--ui-super-shell-pane-size-end', `${end}px`)
+    })
+    // LLD-C1 — idempotent like #compose (guarded so a reconnect never installs a second listener); the
+    // trait's own outer pointerdown listener rides `host.listen`, auto-removed on disconnect.
+    if (this.#resizeHandle === null) {
+      this.#resizeHandle = paneResize(this, {
+        separators: () => [...this.querySelectorAll<HTMLElement>('[data-part="pane-resizer"]')],
+        axis: () => 'horizontal',
+        rtl: () => getComputedStyle(this).direction === 'rtl',
+        onResize: (index, deltaRatio, commit) => this.#onResize(index, deltaRatio, commit),
+      })
+    }
+  }
+
+  protected override disconnected(): void {
+    this.#resizeHandle?.release() // ends any in-flight drag WITHOUT a commit (the ui-split precedent)
+    this.#resizeHandle = null
+    this.#dragBaseline = null
   }
 
   /** Idempotent (the fleet's #compose law): sort the authored children into the frame ONCE. */
@@ -157,16 +207,18 @@ export class UISuperShellElement extends UIElement {
     // already apply to the WHOLE stack with zero CSS changes (R5d).
     const middle = document.createElement('div')
     middle.setAttribute('data-part', 'middle')
-    const place = (slot: SlotName, part: string, side?: 'start' | 'end'): void => {
+    const place = (slot: SlotName, part: string, side?: 'start' | 'end'): HTMLElement | undefined => {
       const children = authored.get(slot)!
-      if (children.length === 0) return
+      if (children.length === 0) return undefined
       const box = document.createElement('div')
       box.setAttribute('data-part', part)
       box.setAttribute('data-slot-name', slot)
       box.setAttribute('role', roleFor(slot, children)) // LLD-C1
       if (side) box.setAttribute('data-side', side)
       box.append(...children)
+      if (part === 'pane') this.#applySegments(box) // SPEC-R7a — a no-op when no child carries data-segment
       middle.append(box)
+      return box
     }
     const startStack: ReadonlyArray<readonly [SlotName, string]> = [
       ['global-nav', 'rail'],
@@ -178,10 +230,33 @@ export class UISuperShellElement extends UIElement {
       ['options-pane', 'pane'],
       ['global-options', 'rail'],
     ]
-    for (const [slot, part] of startStack) place(slot, part, 'start')
-    place('content', 'canvas')
-    for (const [slot, part] of endStack) place(slot, part, 'end')
+    // R5b's DOM order (rail outermost, panes inner-to-content) means the LAST pane a side's loop places
+    // is the one adjacent to content — the innermost, and the only one R6a allows to be resizable.
+    const startPaneBoxes: HTMLElement[] = []
+    for (const [slot, part] of startStack) {
+      const box = place(slot, part, 'start')
+      if (box && part === 'pane') startPaneBoxes.push(box)
+    }
+    // SPEC-R6b — the resizer sits directly adjacent to canvas, so it is ALWAYS the innermost pane's own
+    // separator regardless of how many outer panes/rails the side stacks (R5b's asymmetric-count case).
+    // `#innermostPane` is assigned BEFORE `#makeResizer` runs (code-reviewer MAJOR fix) — the resizer's
+    // own aria-controls/id-minting reads it at creation time, not after.
+    this.#innermostPane.start = startPaneBoxes.at(-1)
+    if (this.resizableStart && startPaneBoxes.length > 0) middle.append(this.#makeResizer('start'))
+    const canvasBox = place('content', 'canvas')
+    const endPaneBoxes: HTMLElement[] = []
+    for (const [slot, part] of endStack) {
+      const box = place(slot, part, 'end')
+      if (box && part === 'pane') endPaneBoxes.push(box)
+    }
+    this.#innermostPane.end = endPaneBoxes[0] // options-section (if present) is placed FIRST post-canvas
+    if (this.resizableEnd && endPaneBoxes.length > 0) {
+      // Inserted AFTER the end panes above (wrong DOM order) then moved into place — endPaneBoxes[0] is
+      // the innermost, adjacent to canvas, so the resizer belongs directly before it.
+      middle.insertBefore(this.#makeResizer('end'), endPaneBoxes[0]!)
+    }
     frame.append(middle)
+    this.#buildNarrowTabs(frame, canvasBox, startPaneBoxes, endPaneBoxes)
 
     // Footer has no toggles (SPEC-R2c: header/footer are permanent chrome) — but its content gets the
     // SAME bar-content flex:1 wrapper, so a footer authored the same way as a header behaves identically.
@@ -224,6 +299,11 @@ export class UISuperShellElement extends UIElement {
       // SPEC-R4 — at narrow, the toggle drives the one-at-a-time OVERLAY state instead of the
       // persisted side props (the no-clobber law: a narrow visit never rewrites the wide choice).
       if (this.getBoundingClientRect().width < 640 && this.getBoundingClientRect().width > 0) {
+        // A `narrow-*="tabs"` side is selected exclusively via the narrow-tabs strip (SPEC-R7c) — the
+        // header toggle no-ops here rather than ALSO setting `data-narrow-open`, which would otherwise
+        // race the tabs CSS's own show/hide (the specificity conflict a real fix, not a smell, closes).
+        const narrowMode = side === 'start' ? this.narrowStart : this.narrowEnd
+        if (narrowMode === 'tabs') return
         const open = this.getAttribute('data-narrow-open') === side ? null : side
         if (open) this.setAttribute('data-narrow-open', open)
         else this.removeAttribute('data-narrow-open')
@@ -233,6 +313,251 @@ export class UISuperShellElement extends UIElement {
       else this.collapsedEnd = !this.collapsedEnd
     })
     return button
+  }
+
+  // ── SPEC-R6: the resizable inner pane ──────────────────────────────────────────────────────────
+
+  /** One resize separator (SPEC-R6b) — `data-separator` is the pane-resize trait's own discovery
+   *  selector; `aria-controls` references the pane box's id (minted if the box has none yet). */
+  #makeResizer(side: 'start' | 'end'): HTMLElement {
+    const pane = side === 'start' ? this.#innermostPane.start : this.#innermostPane.end
+    if (pane && !pane.id) pane.id = this.#nextId('pane')
+    const el = document.createElement('div')
+    el.setAttribute('data-part', 'pane-resizer')
+    el.setAttribute('data-side', side)
+    el.setAttribute('data-separator', '')
+    el.setAttribute('role', 'separator')
+    el.setAttribute('aria-orientation', 'vertical')
+    el.setAttribute('tabindex', '0')
+    el.setAttribute('aria-label', side === 'start' ? 'Resize start pane' : 'Resize end pane')
+    if (pane?.id) el.setAttribute('aria-controls', pane.id)
+    el.addEventListener('keydown', (event) => this.#handleResizerKeydown(event as KeyboardEvent, side))
+    return el
+  }
+
+  /** The pane-resize trait's onResize callback. `deltaRatio` is measured since the press point against
+   *  the HOST's own live extent (pane-resize.ts); re-expanding it by the host's CURRENT width recovers a
+   *  real px delta. The FIRST call of a drag (baseline null) snapshots the pane's and canvas's own
+   *  current widths — R6c's bounds are expressed against the canvas's OWN available slack, not by
+   *  re-deriving every other rail/pane's width, so the clamp is correct regardless of how many other
+   *  boxes a side stacks (R5b). */
+  #onResize(index: number, deltaRatio: number, commit: boolean): void {
+    const separators = [...this.querySelectorAll<HTMLElement>('[data-part="pane-resizer"]')]
+    const sep = separators[index]
+    const side = sep?.dataset.side as 'start' | 'end' | undefined
+    const pane = side === 'start' ? this.#innermostPane.start : side === 'end' ? this.#innermostPane.end : undefined
+    const canvas = this.#frame?.querySelector<HTMLElement>('[data-part="canvas"]')
+    if (!side || !pane || !canvas) return
+
+    // A moveless click (pointerdown → pointerup/lostpointercapture with zero pointermoves between —
+    // pane-resize.ts's own commitEnd fires unconditionally) reaches here with the baseline still null
+    // AND commit already true: a real drag always calls at least one commit=false pointermove first, so
+    // this combination only ever means nothing moved — skip the commit below rather than firing a
+    // spurious `change` for an unchanged size.
+    const isMovelessClick = this.#dragBaseline === null && commit
+    if (this.#dragBaseline === null) {
+      this.#dragBaseline = {
+        pane: pane.getBoundingClientRect().width,
+        canvasAvail: canvas.getBoundingClientRect().width,
+        paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 162),
+        canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 162),
+      }
+    }
+    const hostWidth = this.getBoundingClientRect().width
+    const rawDeltaPx = deltaRatio * hostWidth
+    const signedDeltaPx = side === 'start' ? rawDeltaPx : -rawDeltaPx
+    const newSize = this.#clampPaneSize(this.#dragBaseline.pane + signedDeltaPx, this.#dragBaseline)
+
+    pane.style.setProperty(`--ui-super-shell-pane-size-${side}`, `${newSize}px`)
+    sep?.setAttribute('aria-valuenow', String(Math.round(newSize)))
+    if (commit) {
+      this.#dragBaseline = null
+      if (!isMovelessClick) {
+        if (side === 'start') this.sizeStart = newSize
+        else this.sizeEnd = newSize
+        this.emit('change')
+      }
+    }
+  }
+
+  /** Arrow keys step by one module (SPEC-R6b); Home/End jump straight to the resolved bounds (R6c) —
+   *  each keypress is both the live update and the commit in one atomic action (the ui-split keyboard
+   *  precedent), so no drag baseline is needed here. Growing the END pane is the physical MIRROR of
+   *  growing the START pane (dragging the end separator LEFT grows it, matching #onResize's own
+   *  `side === 'start' ? +delta : -delta` convention) — the key mapping inverts by side, THEN by RTL. */
+  #handleResizerKeydown(event: KeyboardEvent, side: 'start' | 'end'): void {
+    const pane = side === 'start' ? this.#innermostPane.start : this.#innermostPane.end
+    const canvas = this.#frame?.querySelector<HTMLElement>('[data-part="canvas"]')
+    if (!pane || !canvas) return
+    const rtl = getComputedStyle(this).direction === 'rtl'
+    const growsRight = side === 'start' ? !rtl : rtl
+    const growKey = growsRight ? 'ArrowRight' : 'ArrowLeft'
+    const shrinkKey = growsRight ? 'ArrowLeft' : 'ArrowRight'
+    const module = this.#resolvePx('--ui-super-shell-module', 18)
+    const current = pane.getBoundingClientRect().width
+    const baseline = {
+      pane: current,
+      canvasAvail: canvas.getBoundingClientRect().width,
+      paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 162),
+      canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 162),
+    }
+
+    let next: number | null = null
+    switch (event.key) {
+      case growKey: next = current + module; break
+      case shrinkKey: next = current - module; break
+      case 'Home': next = -Infinity; break // clamp drives it straight to the pane minimum
+      case 'End': next = Infinity; break // clamp drives it straight to the pane maximum
+      default: return
+    }
+    event.preventDefault()
+    const clamped = this.#clampPaneSize(next, baseline)
+    pane.style.setProperty(`--ui-super-shell-pane-size-${side}`, `${clamped}px`)
+    const sep = event.currentTarget as HTMLElement
+    sep.setAttribute('aria-valuenow', String(Math.round(clamped)))
+    if (side === 'start') this.sizeStart = clamped
+    else this.sizeEnd = clamped
+    this.emit('change')
+  }
+
+  /** R6c's two-sided clamp: the pane never shrinks below its own token floor, and never grows past
+   *  what the canvas's OWN token floor leaves available (measured from `baseline`, a real-px snapshot
+   *  taken once per drag/keypress — never re-derived from every other rail/pane on the side). `paneMin`/
+   *  `canvasMin` are resolved once into `baseline` at that same snapshot point (not re-probed here on
+   *  every pointermove of a drag — `#resolvePx` forces a throwaway-element layout each call). */
+  #clampPaneSize(want: number, baseline: { pane: number; canvasAvail: number; paneMin: number; canvasMin: number }): number {
+    const maxPane = baseline.pane + (baseline.canvasAvail - baseline.canvasMin)
+    return Math.min(maxPane, Math.max(baseline.paneMin, want))
+  }
+
+  /** Resolves a length custom property to a real px number — `--ui-super-shell-*` tokens are `calc()`
+   *  expressions the browser does not resolve through a bare `getComputedStyle().getPropertyValue()`
+   *  read (unlike a real layout property). A throwaway probe applies the var to `inline-size`, which
+   *  the browser DOES resolve concretely (the `min-inline-size` reads elsewhere in this fleet's own
+   *  bounds-checking code, `ui-split`'s precedent, use the same trick against a real property instead). */
+  #resolvePx(varName: string, fallbackPx: number): number {
+    const probe = document.createElement('div')
+    probe.style.position = 'absolute'
+    probe.style.visibility = 'hidden'
+    probe.style.inlineSize = `var(${varName})`
+    this.append(probe)
+    const px = probe.getBoundingClientRect().width
+    probe.remove()
+    return px > 0 ? px : fallbackPx
+  }
+
+  #nextId(prefix: string): string {
+    this.#idSeq += 1
+    return `ui-super-shell-${prefix}-${this.#idSeq}`
+  }
+
+  // ── SPEC-R7a: pane segments (wide) ──────────────────────────────────────────────────────────────
+
+  /** A no-op unless the pane's authored children carry `data-segment` (R7a). Builds the pane-local
+   *  `[data-part='pane-tabs']` strip once, at compose (the build-once law), and activates the first
+   *  segment by default. */
+  #applySegments(box: HTMLElement): void {
+    const segments = [...box.children].filter((c) => c.hasAttribute('data-segment'))
+    if (segments.length === 0) return
+    box.setAttribute('data-segmented', '')
+    const strip = document.createElement('div')
+    strip.setAttribute('data-part', 'pane-tabs')
+    strip.setAttribute('role', 'tablist')
+    segments.forEach((seg, i) => {
+      if (!seg.id) seg.id = this.#nextId('segment')
+      const tab = document.createElement('ui-button')
+      tab.setAttribute('variant', 'ghost')
+      tab.setAttribute('data-part', 'pane-tab')
+      tab.setAttribute('role', 'tab')
+      tab.setAttribute('aria-controls', seg.id)
+      tab.setAttribute('aria-selected', i === 0 ? 'true' : 'false')
+      tab.textContent = seg.getAttribute('data-segment') ?? `Segment ${i + 1}`
+      tab.addEventListener('click', () => this.#setActiveSegment(box, i))
+      strip.append(tab)
+    })
+    box.prepend(strip)
+    this.#setActiveSegment(box, 0)
+  }
+
+  /** The ONE mechanism both the wide pane-tabs strip and a narrow-tabs segment selection drive (SPEC-R7c
+   *  — visibility-only, never a reparent): sets `data-active` on the addressed segment, clears it from
+   *  its siblings, and syncs the strip's `aria-selected`. */
+  #setActiveSegment(box: HTMLElement, index: number): void {
+    const segments = [...box.querySelectorAll(':scope > [data-segment]')]
+    const clamped = Math.max(0, Math.min(index, segments.length - 1))
+    for (const s of segments) s.removeAttribute('data-active')
+    segments[clamped]?.setAttribute('data-active', '')
+    box.setAttribute('data-active-segment', String(clamped))
+    const strip = box.querySelector(':scope > [data-part="pane-tabs"]')
+    if (strip) for (const [i, tabEl] of [...strip.children].entries()) tabEl.setAttribute('aria-selected', String(i === clamped))
+  }
+
+  // ── SPEC-R7b: the shell-owned narrow-tabs strip ────────────────────────────────────────────────────
+
+  /** Composed ONCE (build-once law) when at least one side declares `narrow-*='tabs'` — content always
+   *  first, then each `tabs`-side's panes in DOM order, a segmented pane flattening to one tab per
+   *  segment (R7b — reproduces agent-admin's Chat/Settings/Context trio structurally). A no-op when
+   *  neither side opts in — sides on `collapse`/`stack` keep their existing R4 behavior untouched. */
+  #buildNarrowTabs(frame: HTMLElement, canvasBox: HTMLElement | undefined, startPaneBoxes: HTMLElement[], endPaneBoxes: HTMLElement[]): void {
+    const wantsStart = this.narrowStart === 'tabs' && startPaneBoxes.length > 0
+    const wantsEnd = this.narrowEnd === 'tabs' && endPaneBoxes.length > 0
+    if (!wantsStart && !wantsEnd || !canvasBox) return
+
+    const tabs: NarrowTab[] = []
+    canvasBox.setAttribute('data-narrow-tab-target', '')
+    tabs.push({ value: 'content', label: canvasBox.firstElementChild?.getAttribute('data-tab-label') ?? 'Content', participant: canvasBox })
+
+    const addSideTabs = (boxes: HTMLElement[]): void => {
+      for (const box of boxes) {
+        box.setAttribute('data-narrow-tab-target', '')
+        const slot = box.getAttribute('data-slot-name')!
+        const segments = [...box.querySelectorAll(':scope > [data-segment]')]
+        if (segments.length > 0) {
+          segments.forEach((seg, i) => {
+            tabs.push({ value: `${slot}:${i}`, label: seg.getAttribute('data-segment') ?? `Segment ${i + 1}`, participant: box, segmentIndex: i })
+          })
+        } else {
+          tabs.push({ value: slot, label: box.firstElementChild?.getAttribute('data-tab-label') ?? slot, participant: box })
+        }
+      }
+    }
+    if (wantsStart) addSideTabs(startPaneBoxes)
+    if (wantsEnd) addSideTabs(endPaneBoxes)
+
+    const strip = document.createElement('div')
+    strip.setAttribute('data-part', 'narrow-tabs')
+    strip.setAttribute('role', 'tablist')
+    for (const t of tabs) {
+      const btn = document.createElement('ui-button')
+      btn.setAttribute('variant', 'ghost')
+      btn.setAttribute('data-part', 'narrow-tab')
+      btn.setAttribute('role', 'tab')
+      btn.setAttribute('aria-selected', String(t.value === 'content'))
+      btn.textContent = t.label
+      btn.addEventListener('click', () => this.#selectNarrowTab(t.value))
+      strip.append(btn)
+    }
+    frame.querySelector('[data-part="middle"]')!.before(strip)
+    this.#narrowTabsHost = strip
+    this.#narrowTabs = tabs
+    this.setAttribute('data-narrow-tab', 'content')
+    canvasBox.setAttribute('data-narrow-active', '') // content is the always-legal default selection
+  }
+
+  /** Selects one narrow tab (content, a plain pane, or `{slot}:{i}` for one segment) — visibility-only
+   *  (R7c): moves `data-narrow-active` between participants, syncs the strip's `aria-selected`, and — for
+   *  a segment tab — drives the SAME `#setActiveSegment` the wide strip uses, so a wide↔narrow crossing
+   *  never disagrees about which segment is current. */
+  #selectNarrowTab(value: string): void {
+    const tab = this.#narrowTabs.find((t) => t.value === value)
+    if (!tab) return
+    this.setAttribute('data-narrow-tab', value)
+    for (const t of this.#narrowTabs) t.participant.removeAttribute('data-narrow-active')
+    tab.participant.setAttribute('data-narrow-active', '')
+    if (tab.segmentIndex !== undefined) this.#setActiveSegment(tab.participant, tab.segmentIndex)
+    if (this.#narrowTabsHost) {
+      for (const [i, tabEl] of [...this.#narrowTabsHost.children].entries()) tabEl.setAttribute('aria-selected', String(this.#narrowTabs[i] === tab))
+    }
   }
 }
 
