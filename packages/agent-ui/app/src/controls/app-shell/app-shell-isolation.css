@@ -99,6 +99,9 @@ ui-app-shell-region {
   grid-area: footer;
 }
 
+/* `40rem` mirrors app-shell.css's own literal — LLD-C7/GH #99's `shell-breakpoint.ts` documents once, for
+   the whole shell family, why this can't be a live custom property; this file's KEEP-IN-SYNC obligation
+   (above) covers the app-shell.css↔here duplication specifically. */
 @container (inline-size < 40rem) {
   :host {
     grid-template: 'banner' auto 'main' 1fr 'footer' auto / 1fr;
